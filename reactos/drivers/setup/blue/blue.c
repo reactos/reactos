@@ -88,6 +88,8 @@ static const UCHAR DefaultPalette[] =
    0xFF, 0xFF, 0xFF
 };
 
+static FAST_IO_DISPATCH ScrFastIoDispatch;
+
 /* FUNCTIONS **************************************************************/
 
 static VOID FASTCALL
@@ -818,6 +820,55 @@ ScrDispatch(PDEVICE_OBJECT DeviceObject,
     return (Status);
 }
 
+static FAST_IO_READ ScrFastIoRead;
+static
+BOOLEAN
+NTAPI
+ScrFastIoRead(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _Out_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    DBG_UNREFERENCED_PARAMETER(FileObject);
+    DBG_UNREFERENCED_PARAMETER(FileOffset);
+    DBG_UNREFERENCED_PARAMETER(Length);
+    DBG_UNREFERENCED_PARAMETER(Wait);
+    DBG_UNREFERENCED_PARAMETER(LockKey);
+    DBG_UNREFERENCED_PARAMETER(Buffer);
+    DBG_UNREFERENCED_PARAMETER(IoStatus);
+    DBG_UNREFERENCED_PARAMETER(DeviceObject);
+    return FALSE;
+}
+
+static FAST_IO_WRITE ScrFastIoWrite;
+static
+BOOLEAN
+NTAPI
+ScrFastIoWrite(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _In_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    DBG_UNREFERENCED_PARAMETER(FileObject);
+    DBG_UNREFERENCED_PARAMETER(FileOffset);
+    DBG_UNREFERENCED_PARAMETER(Length);
+    DBG_UNREFERENCED_PARAMETER(Wait);
+    DBG_UNREFERENCED_PARAMETER(LockKey);
+    DBG_UNREFERENCED_PARAMETER(Buffer);
+    DBG_UNREFERENCED_PARAMETER(IoStatus);
+    DBG_UNREFERENCED_PARAMETER(DeviceObject);
+    return FALSE;
+}
 
 /*
  * Module entry point
@@ -837,6 +888,10 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_READ]   = ScrDispatch;
     DriverObject->MajorFunction[IRP_MJ_WRITE]  = ScrWrite;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = ScrIoControl;
+
+    ScrFastIoDispatch.FastIoRead = ScrFastIoRead;
+    ScrFastIoDispatch.FastIoWrite = ScrFastIoWrite;
+    DriverObject->FastIoDispatch = &ScrFastIoDispatch;
 
     Status = IoCreateDevice (DriverObject,
                              sizeof(DEVICE_EXTENSION),
