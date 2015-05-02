@@ -780,23 +780,20 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
         /* Check if this block was allocated by the process */
         if (CurrentMcb->OwnerPsp == Psp)
         {
-            if (KeepResident == 0)
+            if (KeepResident)
             {
-                /* Free this entire block */
-                DosFreeMemory(McbSegment + 1);
-            }
-            else if (KeepResident < CurrentMcb->Size)
-            {
-                /* Reduce the size of the block */
-                DosResizeMemory(McbSegment + 1, KeepResident, NULL);
-
-                /* No further paragraphs need to stay resident */
-                KeepResident = 0;
+                /* Check if this is the PSP block and we should reduce its size */
+                if (McbSegment == Psp && KeepResident < CurrentMcb->Size)
+                {
+                    /* Reduce the size of the block */
+                    DosResizeMemory(McbSegment + 1, KeepResident, NULL);
+                    break;
+                }
             }
             else
             {
-                /* Just reduce the amount of paragraphs we need to keep resident */
-                KeepResident -= CurrentMcb->Size;
+                /* Free this entire block */
+                DosFreeMemory(McbSegment + 1);
             }
         }
 
@@ -848,6 +845,10 @@ Done:
 
     /* Save the return code - Normal termination */
     DosErrorLevel = MAKEWORD(ReturnCode, 0x00);
+
+    /* Restore the old stack */
+    setSS(HIWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
+    setSP(LOWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
 
     /* Return control to the parent process */
     CpuExecute(HIWORD(PspBlock->TerminateAddress),

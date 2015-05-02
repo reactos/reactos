@@ -178,6 +178,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
     (*InDos)++;
 
+    /* Save the value of SS:SP on entry in the PSP */
+    SEGMENT_TO_PSP(CurrentPsp)->LastStack =
+    MAKELONG(getSP() + (STACK_FLAGS + 1) * 2, getSS());
+
     /* Check the value in the AH register */
     switch (getAH())
     {
@@ -1817,6 +1821,11 @@ VOID WINAPI DosBreakInterrupt(LPWORD Stack)
     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 }
 
+VOID WINAPI DosInt27h(LPWORD Stack)
+{
+    DosTerminateProcess(getCS(), 0, (getDX() + 0x0F) >> 4);
+}
+
 VOID WINAPI DosFastConOut(LPWORD Stack)
 {
     /*
@@ -2002,6 +2011,7 @@ BOOLEAN DosKRNLInitialize(VOID)
 //  RegisterDosInt32(0x22, DosInt22h        ); // Termination
     RegisterDosInt32(0x23, DosBreakInterrupt); // Ctrl-C / Ctrl-Break
 //  RegisterDosInt32(0x24, DosInt24h        ); // Critical Error
+    RegisterDosInt32(0x27, DosInt27h        ); // Terminate and Stay Resident
     RegisterDosInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
     RegisterDosInt32(0x2F, DosInt2Fh        );
 
