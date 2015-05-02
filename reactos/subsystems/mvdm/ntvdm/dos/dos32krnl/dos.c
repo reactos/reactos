@@ -768,7 +768,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             setES(HIWORD(INDOS_POINTER));
             setBX(LOWORD(INDOS_POINTER));
-
             break;
         }
 
@@ -1650,7 +1649,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             if (getAL() == 0x00)
             {
                 /* Lock region of file */
-                if (DosLockFile(getBX(), MAKELONG(getCX(), getDX()), MAKELONG(getSI(), getDI())))
+                if (DosLockFile(getBX(), MAKELONG(getDX(), getCX()), MAKELONG(getDI(), getSI())))
                 {
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 }
@@ -1663,7 +1662,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else if (getAL() == 0x01)
             {
                 /* Unlock region of file */
-                if (DosUnlockFile(getBX(), MAKELONG(getCX(), getDX()), MAKELONG(getSI(), getDI())))
+                if (DosUnlockFile(getBX(), MAKELONG(getDX(), getCX()), MAKELONG(getDI(), getSI())))
                 {
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 }
@@ -2015,18 +2014,18 @@ BOOLEAN DosKRNLInitialize(VOID)
     RegisterDosInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
     RegisterDosInt32(0x2F, DosInt2Fh        );
 
+    /* Load the CON driver */
+    ConDrvInitialize();
+
+    /* Load the XMS driver (HIMEM) */
+    XmsInitialize();
+
     /* Load the EMS driver */
     if (!EmsDrvInitialize(EMS_TOTAL_PAGES))
     {
         DPRINT1("Could not initialize EMS. EMS will not be available.\n"
                 "Try reducing the number of EMS pages.\n");
     }
-
-    /* Load the XMS driver (HIMEM) */
-    XmsInitialize();
-
-    /* Load the CON driver */
-    ConDrvInitialize();
 
     return TRUE;
 }

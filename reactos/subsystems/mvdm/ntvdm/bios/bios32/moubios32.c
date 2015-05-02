@@ -17,11 +17,7 @@
 #include "bios32p.h"
 
 #include "io.h"
-#include "hardware/mouse.h"
 #include "hardware/ps2.h"
-
-// HACK: For the PS/2 bypass and MOUSE.COM driver direct call
-#include "dos/mouse32.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

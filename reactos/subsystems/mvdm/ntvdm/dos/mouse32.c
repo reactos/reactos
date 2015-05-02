@@ -29,16 +29,25 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-#define MICKEYS_PER_CELL_HORIZ 8
-#define MICKEYS_PER_CELL_VERT 16
+// FIXME: Because I don't know a better place to store the string
+// I temporarily put it in BIOS space. This need to be moved to a
+// proper place when this driver is interfaced correctly with DOS.
+#define COPYRIGHT_POINTER MAKELONG(0xE100, 0xF000)
+static const CHAR MouseCopyright[] = "ROS PS/2 16/32-bit Mouse Driver Compatible MS-MOUSE 6.26 Copyright (C) ReactOS Team 1996-2015";
+
+// See FIXME from above.
+#define VERSION_POINTER MAKELONG(0xE160, 0xF000)
+static PWORD Version;
+
+#define MICKEYS_PER_CELL_HORIZ  8
+#define MICKEYS_PER_CELL_VERT   16
 
 static BOOLEAN DriverEnabled = FALSE;
 static MOUSE_DRIVER_STATE DriverState;
 static DWORD OldIrqHandler;
+static DWORD OldIntHandler;
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-extern VOID WINAPI BiosMouseIrq(LPWORD Stack);
 
 static VOID PaintMouseCursor(VOID)
 {
@@ -590,6 +599,13 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             break;
         }
 
+        /* Define Double-Speed Threshold */
+        case 0x13:
+        {
+            DPRINT1("INT 33h, AH=13h: Mouse double-speed threshold is UNSUPPORTED\n");
+            break;
+        }
+
         /* Exchange Interrupt Subroutines, compatible MS MOUSE v3.0+ (see function 0x0C) */
         case 0x14:
         {
@@ -772,11 +788,31 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             break;
         }
 
+        /* Set Mouse Sensitivity */
+        case 0x1A:
+        {
+            DPRINT1("INT 33h, AH=1Ah: Mouse sensitivity is UNSUPPORTED\n");
+            break;
+        }
+
+        /* Return Mouse Sensitivity */
+        case 0x1B:
+        {
+            DPRINT1("INT 33h, AH=1Bh: Mouse sensitivity is UNSUPPORTED\n");
+
+            /* Return default values */
+            setBX(50); // Horizontal speed
+            setCX(50); //   Vertical speed
+            setDX(50); // Double speed threshold
+            break;
+        }
+
         /* Disable Mouse Driver */
         case 0x1F:
         {
-            setES(0x0000);
-            setBX(0x0000);
+            /* INT 33h vector before the mouse driver was first installed */
+            setES(HIWORD(OldIntHandler));
+            setBX(LOWORD(OldIntHandler));
 
             DosMouseDisable();
             break;
@@ -786,6 +822,75 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         case 0x20:
         {
             DosMouseEnable();
+            break;
+        }
+
+        /* Software Reset */
+        case 0x21:
+        {
+            /*
+             * See: http://www.htl-steyr.ac.at/~morg/pcinfo/hardware/interrupts/inte3sq8.htm
+             * for detailed information and differences with respect to subfunction 0x00:
+             * http://www.htl-steyr.ac.at/~morg/pcinfo/hardware/interrupts/inte3j74.htm
+             */
+
+            SHORT i;
+
+            DriverState.ShowCount = 0;
+            DriverState.ButtonState = 0;
+
+            /* Initialize the default clipping range */
+            DriverState.MinX = 0;
+            DriverState.MaxX = MOUSE_MAX_HORIZ - 1;
+            DriverState.MinY = 0;
+            DriverState.MaxY = MOUSE_MAX_VERT - 1;
+
+            /* Initialize the counters */
+            DriverState.HorizCount = DriverState.VertCount = 0;
+
+            for (i = 0; i < NUM_MOUSE_BUTTONS; i++)
+            {
+                DriverState.PressCount[i] = DriverState.ReleaseCount[i] = 0;
+            }
+
+            /* Return mouse information */
+            setAX(0xFFFF);  // Hardware & driver installed
+            setBX(NUM_MOUSE_BUTTONS);
+
+            break;
+        }
+
+        /* Get Software Version, Mouse Type, and IRQ Number, compatible MS MOUSE v6.26+ */
+        case 0x24:
+        {
+            setBX(MOUSE_VERSION); // Version Number
+
+            // FIXME: To be determined at runtime!
+            setCH(0x04); // PS/2 Type
+            setCL(0x00); // PS/2 Interrupt
+
+            break;
+        }
+
+        /* Return Pointer to Copyright String */
+        case 0x4D:
+        {
+            setES(HIWORD(COPYRIGHT_POINTER));
+            setDI(LOWORD(COPYRIGHT_POINTER));
+            break;
+        }
+
+        /* Get Version String (pointer) */
+        case 0x6D:
+        {
+            /*
+             * The format of the version "string" is:
+             * Offset  Size    Description
+             * 00h     BYTE    major version
+             * 01h     BYTE    minor version (BCD)
+             */
+            setES(HIWORD(VERSION_POINTER));
+            setDI(LOWORD(VERSION_POINTER));
             break;
         }
 
@@ -883,6 +988,16 @@ BOOLEAN DosMouseInitialize(VOID)
     /* Clear the state */
     RtlZeroMemory(&DriverState, sizeof(DriverState));
 
+    /* Setup the version variable in BCD format, compatible MS-MOUSE */
+    Version  = (PWORD)FAR_POINTER(VERSION_POINTER);
+    *Version = MAKEWORD(MOUSE_VERSION/0x0100, MOUSE_VERSION%0x0100);
+
+    /* Mouse Driver Copyright */
+    RtlCopyMemory(FAR_POINTER(COPYRIGHT_POINTER), MouseCopyright, sizeof(MouseCopyright)-1);
+
+    /* Get the old mouse service interrupt handler */
+    OldIntHandler = ((PDWORD)BaseAddress)[DOS_MOUSE_INTERRUPT];
+
     /* Initialize the interrupt handler */
     RegisterDosInt32(DOS_MOUSE_INTERRUPT, DosMouseService);
 
@@ -892,6 +1007,9 @@ BOOLEAN DosMouseInitialize(VOID)
 
 VOID DosMouseCleanup(VOID)
 {
+    /* Restore the old mouse service interrupt handler */
+    ((PDWORD)BaseAddress)[DOS_MOUSE_INTERRUPT] = OldIntHandler;
+
     if (DriverState.ShowCount > 0) EraseMouseCursor();
     DosMouseDisable();
 }

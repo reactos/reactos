@@ -11,6 +11,11 @@
 
 /* DEFINES ********************************************************************/
 
+//
+// We are ROS PS/2 Mouse Driver Version 6.26, compatible MS-MOUSE 6.26
+//
+#define MOUSE_VERSION   MAKEWORD(0x26, 0x06)
+
 #define DOS_MOUSE_INTERRUPT 0x33
 #define MOUSE_IRQ_INT       0x74
 #define MOUSE_MAX_HORIZ     640
