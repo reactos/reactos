@@ -633,7 +633,7 @@ WORD DosCreateProcess(LPCSTR ProgramName,
      */
     CmdLineSize = min(*(PBYTE)FAR_POINTER(Parameters->CommandLine), DOS_CMDLINE_LENGTH);
     RtlCopyMemory(CmdLine,
-                  FAR_POINTER(Parameters->CommandLine) + 1,
+                  (LPSTR)FAR_POINTER(Parameters->CommandLine) + 1,
                   CmdLineSize);
     /* NULL-terminate it */
     CmdLine[CmdLineSize] = '\0';

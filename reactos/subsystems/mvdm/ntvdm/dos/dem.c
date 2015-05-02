@@ -260,7 +260,7 @@ Command:
         DPRINT1("Starting '%s' ('%.*s')...\n",
                 AppName,
                 CommandInfo.CmdLen >= 2 ? CommandInfo.CmdLen - 2 /* Display the command line without the terminating 0d 0a */
-                                        : CommandInfo.CmdLen
+                                        : CommandInfo.CmdLen,
                 CmdLine);
         Result = DosStartProcess(AppName, CmdLine, Env);
         if (Result != ERROR_SUCCESS)
