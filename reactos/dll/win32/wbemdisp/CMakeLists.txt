@@ -27,6 +27,6 @@ add_library(wbemdisp SHARED
 set_module_type(wbemdisp win32dll)
 target_link_libraries(wbemdisp uuid wine)
 add_dependencies(wbemdisp stdole2 wbemdisp_idlheader)
-add_importlibs(wbemdisp oleaut32 msvcrt kernel32 ntdll)
+add_importlibs(wbemdisp oleaut32 ole32 msvcrt kernel32 ntdll)
 add_pch(wbemdisp wbemdisp_private.h SOURCE)
 add_cd_file(TARGET wbemdisp DESTINATION reactos/system32/wbem FOR all)

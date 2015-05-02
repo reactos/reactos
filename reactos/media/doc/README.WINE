@@ -200,7 +200,7 @@ reactos/dll/win32/usp10               # Synced to WineStaging-1.7.37
 reactos/dll/win32/uxtheme             # Forked
 reactos/dll/win32/vbscript            # Synced to WineStaging-1.7.37
 reactos/dll/win32/version             # Synced to WineStaging-1.7.37
-reactos/dll/win32/wbemdisp            # Synced to Wine-1.7.27
+reactos/dll/win32/wbemdisp            # Synced to WineStaging-1.7.37
 reactos/dll/win32/wbemprox            # Synced to WineStaging-1.7.37
 reactos/dll/win32/windowscodecs       # Synced to Wine-1.7.27
 reactos/dll/win32/windowscodecsext    # Synced to Wine-1.7.27

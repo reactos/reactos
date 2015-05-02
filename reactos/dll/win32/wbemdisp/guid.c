@@ -12,5 +12,7 @@
 #include <initguid.h>
 #include <wbemdisp_classes.h>
 #include <wbemdisp.h>
+#include <wbemcli.h>
+#include <wmiutils.h>
 
 /* NO CODE HERE, THIS IS JUST REQUIRED FOR THE GUID DEFINITIONS */
