@@ -3832,13 +3832,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovStoreSeg)
 {
-    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    BOOLEAN OperandSize, AddressSize;
     FAST486_MOD_REG_RM ModRegRm;
 
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x8C);
 
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
     TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3854,10 +3857,21 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovStoreSeg)
         return;
     }
 
-    Fast486WriteModrmWordOperands(State,
-                                  &ModRegRm,
-                                  FALSE,
-                                  State->SegmentRegs[ModRegRm.Register].Selector);
+    /* When the other operand is a memory location, always use 16-bit */
+    if (OperandSize && !ModRegRm.Memory)
+    {
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       FALSE,
+                                       State->SegmentRegs[ModRegRm.Register].Selector);
+    }
+    else
+    {
+        Fast486WriteModrmWordOperands(State,
+                                      &ModRegRm,
+                                      FALSE,
+                                      State->SegmentRegs[ModRegRm.Register].Selector);
+    }
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLea)
