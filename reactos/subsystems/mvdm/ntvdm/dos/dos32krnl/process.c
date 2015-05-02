@@ -46,6 +46,56 @@ static inline VOID DosSetPspCommandLine(WORD Segment, LPCSTR CommandLine)
     RtlCopyMemory(PspBlock->CommandLine, CommandLine, DOS_CMDLINE_LENGTH);
 }
 
+static inline VOID DosSaveState(VOID)
+{
+    PDOS_REGISTER_STATE State;
+    WORD StackPointer = getSP();
+
+    /* Allocate stack space for the registers */
+    StackPointer -= sizeof(DOS_REGISTER_STATE);
+    State = SEG_OFF_TO_PTR(getSS(), StackPointer);
+
+    /* Save */
+    State->EAX = getEAX();
+    State->ECX = getECX();
+    State->EDX = getEDX();
+    State->EBX = getEBX();
+    State->ESP = getESP();
+    State->EBP = getEBP();
+    State->ESI = getESI();
+    State->EDI = getEDI();
+    State->DS = getDS();
+    State->ES = getES();
+    State->FS = getFS();
+    State->GS = getGS();
+    State->Flags = getEFLAGS();
+}
+
+static inline VOID DosRestoreState(VOID)
+{
+    PDOS_REGISTER_STATE State;
+    WORD StackPointer = getSP();
+
+    /* SS:SP points to the stack on the last entry to INT 21h */
+    StackPointer -= (STACK_FLAGS + 1) * 2;      /* Interrupt parameters */
+    StackPointer -= sizeof(DOS_REGISTER_STATE); /* Pushed state structure */
+    State = SEG_OFF_TO_PTR(getSS(), StackPointer);
+
+    /* Restore */
+    setEAX(State->EAX);
+    setECX(State->ECX);
+    setEDX(State->EDX);
+    setEBX(State->EBX);
+    setEBP(State->EBP);
+    setESI(State->ESI);
+    setEDI(State->EDI);
+    setDS(State->DS);
+    setES(State->ES);
+    setFS(State->FS);
+    setGS(State->GS);
+    setEFLAGS(State->Flags);
+}
+
 static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
                                     LPCSTR ProgramName)
 {
@@ -432,6 +482,9 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
 
         if (LoadType == DOS_LOAD_AND_EXECUTE)
         {
+            /* Save the program state */
+            if (CurrentPsp != SYSTEM_PSP) DosSaveState();
+
             /* Set the initial segment registers */
             setDS(Segment);
             setES(Segment);
@@ -750,6 +803,9 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
     PDOS_MCB CurrentMcb;
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
+#ifndef STANDALONE
+    VDM_COMMAND_INFO CommandInfo;
+#endif
 
     DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X, KeepResident 0x%04X\n",
            Psp,
@@ -818,29 +874,25 @@ Done:
         {
             ResetEvent(VdmTaskEvent);
             CpuUnsimulate();
+            return;
         }
     }
 
 #ifndef STANDALONE
-    // FIXME: This is probably not the best way to do it
-    /* Check if this was a nested DOS task */
-    if (CurrentPsp != SYSTEM_PSP)
-    {
-        VDM_COMMAND_INFO CommandInfo;
 
-        /* Decrement the re-entry count */
-        CommandInfo.TaskId = SessionId;
-        CommandInfo.VDMState = VDM_DEC_REENTER_COUNT;
-        GetNextVDMCommand(&CommandInfo);
+    /* Decrement the re-entry count */
+    CommandInfo.TaskId = SessionId;
+    CommandInfo.VDMState = VDM_DEC_REENTER_COUNT;
+    GetNextVDMCommand(&CommandInfo);
 
-        /* Clear the structure */
-        RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
+    /* Clear the structure */
+    RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
-        /* Update the VDM state of the task */
-        CommandInfo.TaskId = SessionId;
-        CommandInfo.VDMState = VDM_FLAG_DONT_WAIT;
-        GetNextVDMCommand(&CommandInfo);
-    }
+    /* Update the VDM state of the task */
+    CommandInfo.TaskId = SessionId;
+    CommandInfo.VDMState = VDM_FLAG_DONT_WAIT;
+    GetNextVDMCommand(&CommandInfo);
+
 #endif
 
     /* Save the return code - Normal termination */
@@ -849,6 +901,9 @@ Done:
     /* Restore the old stack */
     setSS(HIWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
     setSP(LOWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
+
+    /* Restore the program state */
+    DosRestoreState();
 
     /* Return control to the parent process */
     CpuExecute(HIWORD(PspBlock->TerminateAddress),

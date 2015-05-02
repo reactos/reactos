@@ -72,6 +72,13 @@ typedef struct _DOS_EXEC_PARAM_BLOCK
     };
 } DOS_EXEC_PARAM_BLOCK, *PDOS_EXEC_PARAM_BLOCK;
 
+typedef struct _DOS_REGISTER_STATE
+{
+    DWORD Flags;
+    WORD GS, FS, ES, DS;
+    DWORD EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX;
+} DOS_REGISTER_STATE, *PDOS_REGISTER_STATE;
+
 #pragma pack(pop)
 
 /* VARIABLES ******************************************************************/
