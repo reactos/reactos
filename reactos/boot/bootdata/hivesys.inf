@@ -401,6 +401,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80867110",0x00010001,0x1
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB","CurrentConfig",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0000","FriendlyName",0x00000000,"New Hardware Profile"
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
 
 ; Keyboard Layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000401","Layout File",0x00000000,"kbda1.dll"
