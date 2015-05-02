@@ -192,6 +192,21 @@ typedef KIO_ACCESS_MAP *PKIO_ACCESS_MAP;
 #define NUMBER_POOL_LOOKASIDE_LISTS 32
 
 //
+// Structure for CPUID
+//
+typedef union _CPU_INFO
+{
+    UINT32 AsUINT32[4];
+    struct
+    {
+        ULONG Eax;
+        ULONG Ebx;
+        ULONG Ecx;
+        ULONG Edx;
+    };
+} CPU_INFO, *PCPU_INFO;
+
+//
 // Trap Frame Definition
 //
 typedef struct _KTRAP_FRAME

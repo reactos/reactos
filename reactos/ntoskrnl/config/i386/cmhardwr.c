@@ -230,11 +230,13 @@ VOID
 NTAPI
 CmpGetIntelBrandString(OUT PCHAR CpuString)
 {
-    ULONG BrandId, Ebx, Signature, Dummy;
-    
+    CPU_INFO CpuInfo;
+    ULONG BrandId, Signature;
+
     /* Get the Brand Id */
-    CPUID(0x00000001, &Signature, &Ebx, &Dummy, &Dummy);
-    BrandId = Ebx & 0xFF;
+    KiCpuId(&CpuInfo, 0x00000001);
+    Signature = CpuInfo.Eax;
+    BrandId = CpuInfo.Ebx & 0xFF;
 
     switch (BrandId)
     {
@@ -329,7 +331,8 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     HANDLE KeyHandle, BiosHandle, SystemHandle, FpuHandle, SectionHandle;
     CONFIGURATION_COMPONENT_DATA ConfigData;
     CHAR Buffer[128];
-    ULONG VendorId, ExtendedId, Dummy;
+    CPU_INFO CpuInfo;
+    ULONG VendorId, ExtendedId;
     PKPRCB Prcb;
     USHORT IndexTable[MaximumType + 1] = {0};
     ANSI_STRING TempString;
@@ -521,7 +524,8 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 else
                 {
                     /* Check if we have extended CPUID that supports name ID */
-                    CPUID(0x80000000, &ExtendedId, &Dummy, &Dummy, &Dummy);
+                    KiCpuId(&CpuInfo, 0x80000000);
+                    ExtendedId = CpuInfo.Eax;
                     if (ExtendedId >= 0x80000004)
                     {
                         /* Do all the CPUIDs required to get the full name */
@@ -529,11 +533,11 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                         for (ExtendedId = 2; ExtendedId <= 4; ExtendedId++)
                         {
                             /* Do the CPUID and save the name string */
-                            CPUID(0x80000000 | ExtendedId,
-                                  (PULONG)PartialString,
-                                  (PULONG)PartialString + 1,
-                                  (PULONG)PartialString + 2,
-                                  (PULONG)PartialString + 3);
+                            KiCpuId(&CpuInfo, 0x80000000 | ExtendedId);
+                            ((PULONG)PartialString)[0] = CpuInfo.Eax;
+                            ((PULONG)PartialString)[1] = CpuInfo.Ebx;
+                            ((PULONG)PartialString)[2] = CpuInfo.Ecx;
+                            ((PULONG)PartialString)[3] = CpuInfo.Edx;
 
                             /* Go to the next name string */
                             PartialString += 16;
@@ -544,7 +548,8 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                     }
                     else
                     {
-                        CPUID(0x00000000, &Dummy, &VendorId, &Dummy, &Dummy);
+                        KiCpuId(&CpuInfo, 0x00000000);
+                        VendorId = CpuInfo.Ebx;
                         PartialString = CpuString;
                         switch (VendorId)
                         {

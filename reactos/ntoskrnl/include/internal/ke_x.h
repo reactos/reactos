@@ -1660,3 +1660,24 @@ KiReleaseNmiListLock(IN KIRQL OldIrql)
 {
     KeReleaseSpinLock(&KiNmiCallbackListLock, OldIrql);
 }
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+FORCEINLINE
+VOID
+KiCpuId(
+    PCPU_INFO CpuInfo,
+    ULONG Function)
+{
+    __cpuid((INT*)CpuInfo->AsUINT32, Function);
+}
+
+FORCEINLINE
+VOID
+KiCpuIdEx(
+    PCPU_INFO CpuInfo,
+    ULONG Function,
+    ULONG SubFunction)
+{
+    __cpuidex((INT*)CpuInfo->AsUINT32, Function, SubFunction);
+}
+#endif /* _M_IX86 || _M_AMD64 */

@@ -62,43 +62,6 @@ static const CHAR CmpRiseID[]        = "RiseRiseRise";
 
 /* SUPPORT ROUTINES FOR MSVC COMPATIBILITY ***********************************/
 
-VOID
-NTAPI
-CPUID(IN ULONG InfoType,
-      OUT PULONG CpuInfoEax,
-      OUT PULONG CpuInfoEbx,
-      OUT PULONG CpuInfoEcx,
-      OUT PULONG CpuInfoEdx)
-{
-    ULONG CpuInfo[4];
-
-    /* Perform the CPUID Operation */
-    __cpuid((int*)CpuInfo, InfoType);
-
-    /* Return the results */
-    *CpuInfoEax = CpuInfo[0];
-    *CpuInfoEbx = CpuInfo[1];
-    *CpuInfoEcx = CpuInfo[2];
-    *CpuInfoEdx = CpuInfo[3];
-}
-
-VOID
-NTAPI
-WRMSR(IN ULONG Register,
-      IN LONGLONG Value)
-{
-   /* Write to the MSR */
-    __writemsr(Register, Value);
-}
-
-LONGLONG
-FASTCALL
-RDMSR(IN ULONG Register)
-{
-    /* Read from the MSR */
-    return __readmsr(Register);
-}
-
 /* NSC/Cyrix CPU configuration register index */
 #define CX86_CCR1 0xc1
 
@@ -128,7 +91,7 @@ INIT_FUNCTION
 KiSetProcessorType(VOID)
 {
     ULONG EFlags, NewEFlags;
-    ULONG Reg, Dummy;
+    CPU_INFO CpuInfo;
     ULONG Stepping, Type;
 
     /* Start by assuming no CPUID data */
@@ -150,11 +113,11 @@ KiSetProcessorType(VOID)
         __writeeflags(EFlags);
 
         /* Peform CPUID 0 to see if CPUID 1 is supported */
-        CPUID(0, &Reg, &Dummy, &Dummy, &Dummy);
-        if (Reg > 0)
+        KiCpuId(&CpuInfo, 0);
+        if (CpuInfo.Eax > 0)
         {
             /* Do CPUID 1 now */
-            CPUID(1, &Reg, &Dummy, &Dummy, &Dummy);
+            KiCpuId(&CpuInfo, 1);
 
             /*
              * Get the Stepping and Type. The stepping contains both the
@@ -163,11 +126,11 @@ KiSetProcessorType(VOID)
              *
              * For the stepping, we convert this: zzzzzzxy into this: x0y
              */
-            Stepping = Reg & 0xF0;
+            Stepping = CpuInfo.Eax & 0xF0;
             Stepping <<= 4;
-            Stepping += (Reg & 0xFF);
+            Stepping += (CpuInfo.Eax & 0xFF);
             Stepping &= 0xF0F;
-            Type = Reg & 0xF00;
+            Type = CpuInfo.Eax & 0xF00;
             Type >>= 8;
 
             /* Save them in the PRCB */
@@ -195,27 +158,20 @@ INIT_FUNCTION
 KiGetCpuVendor(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
-    ULONG Vendor[5];
-    ULONG Temp;
+    CPU_INFO CpuInfo;
 
     /* Assume no Vendor ID and fail if no CPUID Support. */
     Prcb->VendorString[0] = 0;
     if (!Prcb->CpuID) return 0;
 
-    /* Get the Vendor ID and null-terminate it */
-    CPUID(0, &Vendor[0], &Vendor[1], &Vendor[2], &Vendor[3]);
-    Vendor[4] = 0;
+    /* Get the Vendor ID */
+    KiCpuId(&CpuInfo, 0);
 
-    /* Re-arrange vendor string */
-    Temp = Vendor[2];
-    Vendor[2] = Vendor[3];
-    Vendor[3] = Temp;
-
-    /* Copy it to the PRCB and null-terminate it again */
-    RtlCopyMemory(Prcb->VendorString,
-                  &Vendor[1],
-                  sizeof(Prcb->VendorString) - sizeof(CHAR));
-    Prcb->VendorString[sizeof(Prcb->VendorString) - sizeof(CHAR)] = ANSI_NULL;
+    /* Copy it to the PRCB and null-terminate it */
+    *(ULONG*)&Prcb->VendorString[0] = CpuInfo.Ebx;
+    *(ULONG*)&Prcb->VendorString[4] = CpuInfo.Edx;
+    *(ULONG*)&Prcb->VendorString[8] = CpuInfo.Ecx;
+    Prcb->VendorString[12] = 0;
 
     /* Now check the CPU Type */
     if (!strcmp(Prcb->VendorString, CmpIntelID))
@@ -260,7 +216,7 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
-    ULONG Reg[4], Dummy;
+    CPU_INFO CpuInfo, DummyCpuInfo;
     UCHAR Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
@@ -272,10 +228,10 @@ KiGetFeatureBits(VOID)
     if (!Vendor) return FeatureBits;
 
     /* Get the CPUID Info. Features are in Reg[3]. */
-    CPUID(1, &Reg[0], &Reg[1], &Dummy, &Reg[3]);
+    KiCpuId(&CpuInfo, 1);
 
     /* Set the initial APIC ID */
-    Prcb->InitialApicId = (UCHAR)(Reg[1] >> 24);
+    Prcb->InitialApicId = (UCHAR)(CpuInfo.Ebx >> 24);
 
     switch (Vendor)
     {
@@ -286,9 +242,9 @@ KiGetFeatureBits(VOID)
             if (Prcb->CpuType == 6)
             {
                 /* Perform the special sequence to get the MicroCode Signature */
-                WRMSR(0x8B, 0);
-                CPUID(1, &Dummy, &Dummy, &Dummy, &Dummy);
-                Prcb->UpdateSignature.QuadPart = RDMSR(0x8B);
+                __writemsr(0x8B, 0);
+                KiCpuId(&DummyCpuInfo, 1);
+                Prcb->UpdateSignature.QuadPart = __readmsr(0x8B);
             }
             else if (Prcb->CpuType == 5)
             {
@@ -297,8 +253,8 @@ KiGetFeatureBits(VOID)
             }
 
             /* Check for broken P6 with bad SMP PTE implementation */
-            if (((Reg[0] & 0x0FF0) == 0x0610 && (Reg[0] & 0x000F) <= 0x9) ||
-                ((Reg[0] & 0x0FF0) == 0x0630 && (Reg[0] & 0x000F) <= 0x4))
+            if (((CpuInfo.Eax & 0x0FF0) == 0x0610 && (CpuInfo.Eax & 0x000F) <= 0x9) ||
+                ((CpuInfo.Eax & 0x0FF0) == 0x0630 && (CpuInfo.Eax & 0x000F) <= 0x4))
             {
                 /* Remove support for correct PTE support. */
                 FeatureBits &= ~KF_WORKING_PTE;
@@ -309,7 +265,7 @@ KiGetFeatureBits(VOID)
                 ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0303)))
             {
                 /* Disable it */
-                Reg[3] &= ~0x800;
+                CpuInfo.Edx &= ~0x800;
             }
 
             break;
@@ -318,29 +274,29 @@ KiGetFeatureBits(VOID)
         case CPU_AMD:
 
             /* Check if this is a K5 or K6. (family 5) */
-            if ((Reg[0] & 0x0F00) == 0x0500)
+            if ((CpuInfo.Eax & 0x0F00) == 0x0500)
             {
                 /* Get the Model Number */
-                switch (Reg[0] & 0x00F0)
+                switch (CpuInfo.Eax & 0x00F0)
                 {
                     /* Model 1: K5 - 5k86 (initial models) */
                     case 0x0010:
 
                         /* Check if this is Step 0 or 1. They don't support PGE */
-                        if ((Reg[0] & 0x000F) > 0x03) break;
+                        if ((CpuInfo.Eax & 0x000F) > 0x03) break;
 
                     /* Model 0: K5 - SSA5 */
                     case 0x0000:
 
                         /* Model 0 doesn't support PGE at all. */
-                        Reg[3] &= ~0x2000;
+                        CpuInfo.Edx &= ~0x2000;
                         break;
 
                     /* Model 8: K6-2 */
                     case 0x0080:
 
                         /* K6-2, Step 8 and over have support for MTRR. */
-                        if ((Reg[0] & 0x000F) >= 0x8) FeatureBits |= KF_AMDK6MTRR;
+                        if ((CpuInfo.Eax & 0x000F) >= 0x8) FeatureBits |= KF_AMDK6MTRR;
                         break;
 
                     /* Model 9: K6-III
@@ -352,10 +308,10 @@ KiGetFeatureBits(VOID)
                         break;
                 }
             }
-            else if((Reg[0] & 0x0F00) < 0x0500)
+            else if((CpuInfo.Eax & 0x0F00) < 0x0500)
             {
                 /* Families below 5 don't support PGE, PSE or CMOV at all */
-                Reg[3] &= ~(0x08 | 0x2000 | 0x8000);
+                CpuInfo.Edx &= ~(0x08 | 0x2000 | 0x8000);
 
                 /* They also don't support advanced CPUID functions. */
                 ExtendedCPUID = FALSE;
@@ -386,9 +342,9 @@ KiGetFeatureBits(VOID)
         case CPU_TRANSMETA:
 
             /* Enable CMPXCHG8B if the family (>= 5), model and stepping (>= 4.2) support it */
-            if ((Reg[0] & 0x0FFF) >= 0x0542)
+            if ((CpuInfo.Eax & 0x0FFF) >= 0x0542)
             {
-                WRMSR(0x80860004, RDMSR(0x80860004) | 0x0100);
+                __writemsr(0x80860004, __readmsr(0x80860004) | 0x0100);
                 FeatureBits |= KF_CMPXCHG8B;
             }
 
@@ -406,7 +362,7 @@ KiGetFeatureBits(VOID)
     }
 
     /* Set the current features */
-    CpuFeatures = Reg[3];
+    CpuFeatures = CpuInfo.Edx;
 
     /* Convert all CPUID Feature bits into our format */
     if (CpuFeatures & 0x00000002) FeatureBits |= KF_V86_VIS | KF_CR4;
@@ -428,7 +384,7 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & 0x10000000)
     {
         /* Set the number of logical CPUs */
-        Prcb->LogicalProcessorsPerPhysicalProcessor = (UCHAR)(Reg[1] >> 16);
+        Prcb->LogicalProcessorsPerPhysicalProcessor = (UCHAR)(CpuInfo.Ebx >> 16);
         if (Prcb->LogicalProcessorsPerPhysicalProcessor > 1)
         {
             /* We're on dual-core */
@@ -445,24 +401,24 @@ KiGetFeatureBits(VOID)
     if (ExtendedCPUID)
     {
         /* Do the call */
-        CPUID(0x80000000, &Reg[0], &Dummy, &Dummy, &Dummy);
-        if ((Reg[0] & 0xffffff00) == 0x80000000)
+        KiCpuId(&CpuInfo, 0x80000000);
+        if ((CpuInfo.Eax & 0xffffff00) == 0x80000000)
         {
             /* Check if CPUID 0x80000001 is supported */
-            if (Reg[0] >= 0x80000001)
+            if (CpuInfo.Eax >= 0x80000001)
             {
                 /* Check which extended features are available. */
-                CPUID(0x80000001, &Dummy, &Dummy, &Dummy, &Reg[3]);
+                KiCpuId(&CpuInfo, 0x80000001);
 
                 /* Check if NX-bit is supported */
-                if (Reg[3] & 0x00100000) FeatureBits |= KF_NX_BIT;
+                if (CpuInfo.Edx & 0x00100000) FeatureBits |= KF_NX_BIT;
 
                 /* Now handle each features for each CPU Vendor */
                 switch (Vendor)
                 {
                     case CPU_AMD:
                     case CPU_CENTAUR:
-                        if (Reg[3] & 0x80000000) FeatureBits |= KF_3DNOW;
+                        if (CpuInfo.Edx & 0x80000000) FeatureBits |= KF_3DNOW;
                         break;
                 }
             }
@@ -505,7 +461,7 @@ KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     ULONG Vendor;
-    ULONG Data[4], Dummy;
+    CPU_INFO CpuInfo;
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
     UCHAR RegisterByte, Associativity = 0;
@@ -526,14 +482,14 @@ KiGetCacheInformation(VOID)
         case CPU_INTEL:
 
             /*Check if we support CPUID 2 */
-            CPUID(0, &Data[0], &Dummy, &Dummy, &Dummy);
-            if (Data[0] >= 2)
+            KiCpuId(&CpuInfo, 0);
+            if (CpuInfo.Eax >= 2)
             {
                 /* We need to loop for the number of times CPUID will tell us to */
                 do
                 {
                     /* Do the CPUID call */
-                    CPUID(2, &Data[0], &Data[1], &Data[2], &Data[3]);
+                    KiCpuId(&CpuInfo, 2);
 
                     /* Check if it was the first call */
                     if (FirstPass)
@@ -542,8 +498,8 @@ KiGetCacheInformation(VOID)
                          * The number of times to loop is the first byte. Read
                          * it and then destroy it so we don't get confused.
                          */
-                        CacheRequests = Data[0] & 0xFF;
-                        Data[0] &= 0xFFFFFF00;
+                        CacheRequests = CpuInfo.Eax & 0xFF;
+                        CpuInfo.Eax &= 0xFFFFFF00;
 
                         /* Don't go over this again */
                         FirstPass = FALSE;
@@ -553,7 +509,7 @@ KiGetCacheInformation(VOID)
                     for (i = 0; i < 4; i++)
                     {
                         /* Get the current register */
-                        CurrentRegister = Data[i];
+                        CurrentRegister = CpuInfo.AsUINT32[i];
 
                         /*
                          * If the upper bit is set, then this register should
@@ -722,25 +678,25 @@ KiGetCacheInformation(VOID)
         case CPU_AMD:
 
             /* Check if we support CPUID 0x80000005 */
-            CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
-            if (Data[0] >= 0x80000006)
+            KiCpuId(&CpuInfo, 0x80000000);
+            if (CpuInfo.Eax >= 0x80000006)
             {
                 /* Get L1 size first */
-                CPUID(0x80000005, &Data[0], &Data[1], &Data[2], &Data[3]);
-                KePrefetchNTAGranularity = Data[2] & 0xFF;
+                KiCpuId(&CpuInfo, 0x80000005);
+                KePrefetchNTAGranularity = CpuInfo.Ecx & 0xFF;
 
                 /* Check if we support CPUID 0x80000006 */
-                CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
-                if (Data[0] >= 0x80000006)
+                KiCpuId(&CpuInfo, 0x80000000);
+                if (CpuInfo.Eax >= 0x80000006)
                 {
                     /* Get 2nd level cache and tlb size */
-                    CPUID(0x80000006, &Data[0], &Data[1], &Data[2], &Data[3]);
+                    KiCpuId(&CpuInfo, 0x80000006);
 
                     /* Cache line size */
-                    CacheLine = Data[2] & 0xFF;
+                    CacheLine = CpuInfo.Ecx & 0xFF;
 
                     /* Hardcode associativity */
-                    RegisterByte = (Data[2] >> 12) & 0xFF;
+                    RegisterByte = (CpuInfo.Ecx >> 12) & 0xFF;
                     switch (RegisterByte)
                     {
                         case 2:
@@ -766,7 +722,7 @@ KiGetCacheInformation(VOID)
                     }
 
                     /* Compute size */
-                    Size = (Data[2] >> 16) << 10;
+                    Size = (CpuInfo.Ecx >> 16) << 10;
 
                     /* Hack for Model 6, Steping 300 */
                     if ((KeGetCurrentPrcb()->CpuType == 6) &&
@@ -1047,11 +1003,11 @@ INIT_FUNCTION
 KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 {
     /* Set CS and ESP */
-    WRMSR(0x174, KGDT_R0_CODE);
-    WRMSR(0x175, (ULONG_PTR)KeGetCurrentPrcb()->DpcStack);
+    __writemsr(0x174, KGDT_R0_CODE);
+    __writemsr(0x175, (ULONG_PTR)KeGetCurrentPrcb()->DpcStack);
 
     /* Set LSTAR */
-    WRMSR(0x176, (ULONG_PTR)KiFastCallEntry);
+    __writemsr(0x176, (ULONG_PTR)KiFastCallEntry);
     return 0;
 }
 

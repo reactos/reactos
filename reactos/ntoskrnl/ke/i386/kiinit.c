@@ -43,7 +43,7 @@ KiInitMachineDependent(VOID)
     ULONG i, Affinity, Sample = 0;
     PFX_SAVE_AREA FxSaveArea;
     ULONG MXCsrMask = 0xFFBF;
-    ULONG Dummy;
+    CPU_INFO CpuInfo;
     KI_SAMPLE_MAP Samples[4];
     PKI_SAMPLE_MAP CurrentSample = Samples;
     LARGE_IDENTITY_MAP IdentityMap;
@@ -190,7 +190,7 @@ KiInitMachineDependent(VOID)
                 for (;;)
                 {
                     /* Do a dummy CPUID to start the sample */
-                    CPUID(0, &Dummy, &Dummy, &Dummy, &Dummy);
+                    KiCpuId(&CpuInfo, 0);
 
                     /* Fill out the starting data */
                     CurrentSample->PerfStart = KeQueryPerformanceCounter(NULL);
@@ -203,7 +203,7 @@ KiInitMachineDependent(VOID)
                                            &CurrentSample->PerfFreq);
 
                     /* Do another dummy CPUID */
-                    CPUID(0, &Dummy, &Dummy, &Dummy, &Dummy);
+                    KiCpuId(&CpuInfo, 0);
 
                     /* Fill out the ending data */
                     CurrentSample->PerfEnd =

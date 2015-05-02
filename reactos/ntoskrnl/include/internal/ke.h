@@ -153,36 +153,7 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
 
-#define KTS_SYSCALL_BIT (((KTRAP_STATE_BITS) { { .SystemCall   = TRUE } }).Bits)
-#define KTS_PM_BIT      (((KTRAP_STATE_BITS) { { .PreviousMode   = TRUE } }).Bits)
-#define KTS_SEG_BIT     (((KTRAP_STATE_BITS) { { .Segments  = TRUE } }).Bits)
-#define KTS_VOL_BIT     (((KTRAP_STATE_BITS) { { .Volatiles = TRUE } }).Bits)
-#define KTS_FULL_BIT    (((KTRAP_STATE_BITS) { { .Full = TRUE } }).Bits)
-
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
-
-VOID
-NTAPI
-CPUID(
-    IN ULONG InfoType,
-    OUT PULONG CpuInfoEax,
-    OUT PULONG CpuInfoEbx,
-    OUT PULONG CpuInfoEcx,
-    OUT PULONG CpuInfoEdx
-);
-
-LONGLONG
-FASTCALL
-RDMSR(
-    IN ULONG Register
-);
-
-VOID
-NTAPI
-WRMSR(
-    IN ULONG Register,
-    IN LONGLONG Value
-);
 
 /* Finds a new thread to run */
 LONG_PTR
