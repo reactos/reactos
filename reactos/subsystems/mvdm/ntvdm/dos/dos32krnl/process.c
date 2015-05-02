@@ -37,10 +37,13 @@ static inline VOID DosSetPspCommandLine(WORD Segment, LPCSTR CommandLine)
 {
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Segment);
 
-    /* Set the command line */
-    PspBlock->CommandLineSize = (BYTE)min(strlen(CommandLine), DOS_CMDLINE_LENGTH - 1);
-    RtlCopyMemory(PspBlock->CommandLine, CommandLine, PspBlock->CommandLineSize);
-    PspBlock->CommandLine[PspBlock->CommandLineSize] = '\r';
+    /*
+     * Copy the command line block.
+     * Format of the CommandLine parameter: 1 byte for size; 127 bytes for contents.
+     */
+    PspBlock->CommandLineSize = min(*(PBYTE)CommandLine, DOS_CMDLINE_LENGTH);
+    CommandLine++;
+    RtlCopyMemory(PspBlock->CommandLine, CommandLine, DOS_CMDLINE_LENGTH);
 }
 
 static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
@@ -115,8 +118,8 @@ static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
 
 VOID DosClonePsp(WORD DestSegment, WORD SourceSegment)
 {
-    PDOS_PSP DestPsp = SEGMENT_TO_PSP(DestSegment);
-    PDOS_PSP SourcePsp = SEGMENT_TO_PSP(SourceSegment);
+    PDOS_PSP DestPsp    = SEGMENT_TO_PSP(DestSegment);
+    PDOS_PSP SourcePsp  = SEGMENT_TO_PSP(SourceSegment);
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
     /* Literally copy the PSP first */
@@ -132,7 +135,7 @@ VOID DosClonePsp(WORD DestSegment, WORD SourceSegment)
 
     /* Set the handle table pointers to the internal handle table */
     DestPsp->HandleTableSize = DEFAULT_JFT_SIZE;
-    DestPsp->HandleTablePtr = MAKELONG(0x18, DestSegment);
+    DestPsp->HandleTablePtr  = MAKELONG(0x18, DestSegment);
 
     /* Copy the parent handle table without referencing the SFT */
     RtlCopyMemory(FAR_POINTER(DestPsp->HandleTablePtr),
@@ -142,7 +145,7 @@ VOID DosClonePsp(WORD DestSegment, WORD SourceSegment)
 
 VOID DosCreatePsp(WORD Segment, WORD ProgramSize)
 {
-    PDOS_PSP PspBlock = SEGMENT_TO_PSP(Segment);
+    PDOS_PSP PspBlock   = SEGMENT_TO_PSP(Segment);
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
     RtlZeroMemory(PspBlock, sizeof(*PspBlock));
@@ -170,7 +173,7 @@ VOID DosCreatePsp(WORD Segment, WORD ProgramSize)
 
     /* Set the handle table pointers to the internal handle table */
     PspBlock->HandleTableSize = DEFAULT_JFT_SIZE;
-    PspBlock->HandleTablePtr = MAKELONG(0x18, Segment);
+    PspBlock->HandleTablePtr  = MAKELONG(0x18, Segment);
 
     /* Set the DOS version */
     PspBlock->DosVersion = DOS_VERSION;
@@ -202,6 +205,9 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     WORD LoadSegment;
     WORD MaxAllocSize;
     DWORD i, FileSize;
+
+    /* Buffer for command line conversion: 1 byte for size; 127 bytes for contents */
+    CHAR CmdLineBuffer[1 + DOS_CMDLINE_LENGTH];
 
     DPRINT1("DosLoadExecutable(%d, %s, 0x%08X, 0x%08X)\n",
             LoadType,
@@ -249,24 +255,72 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
 
     if (LoadType != DOS_LOAD_OVERLAY)
     {
-        LPSTR CmdLinePtr;
-
-        if (CommandLine == NULL)
+        /* If an optional Win32 command line is given... */
+        if (CommandLine)
         {
-            /* Get the command line from the parameter block */
+            /* ... convert it into DOS format */
+            BYTE CmdLineLen;
+
+            PBYTE CmdLineSize  = (PBYTE)CmdLineBuffer;
+            LPSTR CmdLineStart = CmdLineBuffer + 1;
+            LPSTR CmdLinePtr   = CmdLineStart;
+
+            // For debugging purposes
+            RtlFillMemory(CmdLineBuffer, sizeof(CmdLineBuffer), 0xFF);
+
+            /*
+             * Set the command line: it is either an empty command line or has
+             * the format: " foo bar ..." (with at least one leading whitespace),
+             * and is then always followed by '\r' (and optionally by '\n').
+             */
+            CmdLineLen = (BYTE)strlen(CommandLine);
+            *CmdLineSize = 0;
+
+            /*
+             * Add the leading space if the command line is not empty
+             * and doesn't already start with some whitespace...
+             */
+            if (*CommandLine && *CommandLine != '\r' && *CommandLine != '\n' &&
+                *CommandLine != ' ' && *CommandLine != '\t')
+            {
+                (*CmdLineSize)++;
+                *CmdLinePtr++ = ' ';
+            }
+
+            /* Compute the number of characters we need to copy from the original command line */
+            CmdLineLen = min(CmdLineLen, DOS_CMDLINE_LENGTH - *CmdLineSize);
+
+            /* The trailing '\r' or '\n' do not count in the PSP command line size parameter */
+            while (CmdLineLen && (CommandLine[CmdLineLen - 1] == '\r' || CommandLine[CmdLineLen - 1] == '\n'))
+            {
+                CmdLineLen--;
+            }
+
+            /* Finally, set everything up */
+            *CmdLineSize += CmdLineLen;
+            RtlCopyMemory(CmdLinePtr, CommandLine, CmdLineLen);
+            CmdLineStart[*CmdLineSize] = '\r';
+
+            /* Finally make the pointer point to the static buffer */
+            CommandLine = CmdLineBuffer;
+        }
+        else
+        {
+            /*
+             * ... otherwise, get the one from the parameter block.
+             * Format of the command line: 1 byte for size; 127 bytes for contents.
+             */
+            ASSERT(Parameters);
             CommandLine = (LPCSTR)FAR_POINTER(Parameters->CommandLine);
         }
 
+        /* If no optional environment is given... */
         if (Environment == NULL)
         {
-            /* Get the environment from the parameter block */
+            /* ... get the one from the parameter block */
+            ASSERT(Parameters);
             Environment = (LPCSTR)SEG_OFF_TO_PTR(Parameters->Environment, 0);
         }
-
-        /* NULL-terminate the command line by removing the return carriage character */
-        CmdLinePtr = (LPSTR)CommandLine;
-        while (*CmdLinePtr && *CmdLinePtr != '\r') CmdLinePtr++;
-        *CmdLinePtr = '\0';
 
         /* Copy the environment block to DOS memory */
         EnvBlock = DosCopyEnvironmentBlock(Environment, ExecutablePath);
@@ -352,6 +406,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         }
         else
         {
+            ASSERT(Parameters);
             LoadSegment = Parameters->Overlay.Segment;
             RelocFactor = Parameters->Overlay.RelocationFactor;
         }
@@ -391,8 +446,9 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         }
         else if (LoadType == DOS_LOAD_ONLY)
         {
+            ASSERT(Parameters);
             Parameters->StackLocation = MAKELONG(Header->e_sp, LoadSegment + Header->e_ss);
-            Parameters->EntryPoint = MAKELONG(Header->e_ip, LoadSegment + Header->e_cs);
+            Parameters->EntryPoint    = MAKELONG(Header->e_ip, LoadSegment + Header->e_cs);
         }
     }
     else
@@ -436,9 +492,11 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         }
         else
         {
+            ASSERT(Parameters);
             LoadSegment = Parameters->Overlay.Segment;
         }
 
+        /* Copy the program to the code segment */
         RtlCopyMemory(SEG_OFF_TO_PTR(LoadSegment, 0),
                       Address,
                       FileSize);
@@ -465,8 +523,9 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         }
         else if (LoadType == DOS_LOAD_ONLY)
         {
+            ASSERT(Parameters);
             Parameters->StackLocation = MAKELONG(0xFFFE, Segment);
-            Parameters->EntryPoint = MAKELONG(0x0100, Segment);
+            Parameters->EntryPoint    = MAKELONG(0x0100, Segment);
         }
     }
 
@@ -513,8 +572,9 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
     // HACK: Simulate a ENTER key release scancode on the PS/2 port because
     // some apps expect to read a key release scancode (> 0x80) when they
     // are started.
-    IOWriteB(PS2_CONTROL_PORT, 0xD2);     // Next write is for the first PS/2 port
-    IOWriteB(PS2_DATA_PORT, 0x80 | 0x1C); // ENTER key release
+    // (hbelusca 2 May 2015: I'm not sure it's really useful. See r65012)
+    // IOWriteB(PS2_CONTROL_PORT, 0xD2);     // Next write is for the first PS/2 port
+    // IOWriteB(PS2_DATA_PORT, 0x80 | 0x1C); // ENTER key release
 
     /* Start simulation */
     SetEvent(VdmTaskEvent);
@@ -537,18 +597,24 @@ WORD DosCreateProcess(LPCSTR ProgramName,
     DWORD BinaryType;
     LPVOID Environment = NULL;
     VDM_COMMAND_INFO CommandInfo;
-    CHAR CmdLine[MAX_PATH];
+    CHAR CmdLine[MAX_PATH]; // DOS_CMDLINE_LENGTH + 1
     CHAR AppName[MAX_PATH];
     CHAR PifFile[MAX_PATH];
     CHAR Desktop[MAX_PATH];
     CHAR Title[MAX_PATH];
+    LPSTR CmdLinePtr;
+    ULONG CmdLineSize;
     ULONG EnvSize = 256;
-    PVOID Env = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
+    PVOID Env;
     STARTUPINFOA StartupInfo;
     PROCESS_INFORMATION ProcessInfo;
 
     /* Get the binary type */
     if (!GetBinaryTypeA(ProgramName, &BinaryType)) return GetLastError();
+
+    /* Initialize Win32-VDM environment */
+    Env = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
+    if (Env == NULL) return GetLastError();
 
     /* Did the caller specify an environment segment? */
     if (Parameters->Environment)
@@ -561,9 +627,25 @@ WORD DosCreateProcess(LPCSTR ProgramName,
     RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
 
+    /*
+     * Convert the DOS command line to Win32-compatible format.
+     * Format of the DOS command line: 1 byte for size; 127 bytes for contents.
+     */
+    CmdLineSize = min(*(PBYTE)FAR_POINTER(Parameters->CommandLine), DOS_CMDLINE_LENGTH);
+    RtlCopyMemory(CmdLine,
+                  FAR_POINTER(Parameters->CommandLine) + 1,
+                  CmdLineSize);
+    /* NULL-terminate it */
+    CmdLine[CmdLineSize] = '\0';
+
+    /* Remove any trailing return carriage character and NULL-terminate the command line */
+    CmdLinePtr = CmdLine;
+    while (*CmdLinePtr && *CmdLinePtr != '\r' && *CmdLinePtr != '\n') CmdLinePtr++;
+    *CmdLinePtr = '\0';
+
     /* Create the process */
     if (!CreateProcessA(ProgramName,
-                        FAR_POINTER(Parameters->CommandLine),
+                        CmdLine,
                         NULL,
                         NULL,
                         FALSE,
@@ -573,6 +655,7 @@ WORD DosCreateProcess(LPCSTR ProgramName,
                         &StartupInfo,
                         &ProcessInfo))
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Env);
         return GetLastError();
     }
 

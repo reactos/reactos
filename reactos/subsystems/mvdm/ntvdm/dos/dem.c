@@ -116,29 +116,33 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
     {
         case 0x08:  // Launch external command
         {
-#define CMDLINE_LENGTH  1024
-
             BOOL Result;
             DWORD dwExitCode;
 
             LPSTR Command = (LPSTR)SEG_OFF_TO_PTR(getDS(), getSI());
-            LPSTR CmdPtr  = Command;
-            CHAR CommandLine[CMDLINE_LENGTH] = "";
+            CHAR CmdLine[sizeof("cmd.exe /c ") + DOS_CMDLINE_LENGTH + 1] = "";
+            LPSTR CmdLinePtr;
+            ULONG CmdLineLen;
             STARTUPINFOA StartupInfo;
             PROCESS_INFORMATION ProcessInformation;
 
-            /* NULL-terminate the command line by removing the return carriage character */
-            while (*CmdPtr && *CmdPtr != '\r') CmdPtr++;
-            *CmdPtr = '\0';
-
-            DPRINT1("CMD Run Command '%s'\n", Command);
-
             /* Spawn a user-defined 32-bit command preprocessor */
 
-            /* Build the command line */
             // FIXME: Use COMSPEC env var!!
-            strcpy(CommandLine, "cmd.exe /c ");
-            strcat(CommandLine, Command);
+            CmdLinePtr = CmdLine;
+            strcpy(CmdLinePtr, "cmd.exe /c ");
+            CmdLinePtr += strlen(CmdLinePtr);
+
+            /* Build a Win32-compatible command-line */
+            CmdLineLen = min(strlen(Command), sizeof(CmdLine) - strlen(CmdLinePtr) - 1);
+            RtlCopyMemory(CmdLinePtr, Command, CmdLineLen);
+            CmdLinePtr[CmdLineLen] = '\0';
+
+            /* Remove any trailing return carriage character and NULL-terminate the command line */
+            while (*CmdLinePtr && *CmdLinePtr != '\r' && *CmdLinePtr != '\n') CmdLinePtr++;
+            *CmdLinePtr = '\0';
+
+            DPRINT1("CMD Run Command '%s' ('%s')\n", Command, CmdLine);
 
             RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
             RtlZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
@@ -148,7 +152,7 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
             VidBiosDetachFromConsole();
 
             Result = CreateProcessA(NULL,
-                                    CommandLine,
+                                    CmdLine,
                                     NULL,
                                     NULL,
                                     TRUE,
@@ -159,7 +163,7 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
                                     &ProcessInformation);
             if (Result)
             {
-                DPRINT1("Command '%s' launched successfully\n", Command);
+                DPRINT1("Command '%s' ('%s') launched successfully\n", Command, CmdLine);
 
                 /* Wait for process termination */
                 WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
@@ -173,7 +177,7 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
             }
             else
             {
-                DPRINT1("Failed when launched command '%s'\n");
+                DPRINT1("Failed when launched command '%s' ('%s')\n", Command, CmdLine);
                 dwExitCode = GetLastError();
             }
 
@@ -210,7 +214,7 @@ CommandThreadProc(LPVOID Parameter)
     PVOID Env = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
 
     UNREFERENCED_PARAMETER(Parameter);
-    ASSERT(Env != NULL);
+    ASSERT(Env);
 
     do
     {
@@ -253,7 +257,11 @@ Command:
         }
 
         /* Start the process from the command line */
-        DPRINT1("Starting '%s' ('%s')...\n", AppName, CmdLine);
+        DPRINT1("Starting '%s' ('%.*s')...\n",
+                AppName,
+                CommandInfo.CmdLen >= 2 ? CommandInfo.CmdLen - 2 /* Display the command line without the terminating 0d 0a */
+                                        : CommandInfo.CmdLen
+                CmdLine);
         Result = DosStartProcess(AppName, CmdLine, Env);
         if (Result != ERROR_SUCCESS)
         {
@@ -467,8 +475,7 @@ static VOID WINAPI DosStart(LPWORD Stack)
 
     /* Start the process from the command line */
     DPRINT1("Starting '%s' ('%s')...\n", ApplicationName, CommandLine);
-    Result = DosStartProcess(ApplicationName,
-                             CommandLine,
+    Result = DosStartProcess(ApplicationName, CommandLine,
                              SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0));
     if (Result != ERROR_SUCCESS)
     {

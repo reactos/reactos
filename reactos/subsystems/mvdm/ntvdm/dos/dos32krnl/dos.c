@@ -161,59 +161,6 @@ static BOOLEAN DosControlBreak(VOID)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID DosInitializePsp(WORD PspSegment,
-                      LPCSTR CommandLine,
-                      WORD ProgramSize,
-                      WORD Environment,
-                      DWORD ReturnAddress)
-{
-    PDOS_PSP PspBlock = SEGMENT_TO_PSP(PspSegment);
-    LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
-
-    RtlZeroMemory(PspBlock, sizeof(*PspBlock));
-
-    /* Set the exit interrupt */
-    PspBlock->Exit[0] = 0xCD; // int 0x20
-    PspBlock->Exit[1] = 0x20;
-
-    /* Set the number of the last paragraph */
-    PspBlock->LastParagraph = PspSegment + ProgramSize - 1;
-
-    /* Save the interrupt vectors */
-    PspBlock->TerminateAddress = ReturnAddress;
-    PspBlock->BreakAddress     = IntVecTable[0x23];
-    PspBlock->CriticalAddress  = IntVecTable[0x24];
-
-    /* Set the parent PSP */
-    PspBlock->ParentPsp = CurrentPsp;
-
-    /* Copy the parent handle table */
-    DosCopyHandleTable(PspBlock->HandleTable);
-
-    /* Set the environment block */
-    PspBlock->EnvBlock = Environment;
-
-    /* Set the handle table pointers to the internal handle table */
-    PspBlock->HandleTableSize = 20;
-    PspBlock->HandleTablePtr = MAKELONG(0x18, PspSegment);
-
-    /* Set the DOS version */
-    PspBlock->DosVersion = DOS_VERSION;
-
-    /* Set the far call opcodes */
-    PspBlock->FarCall[0] = 0xCD; // int 0x21
-    PspBlock->FarCall[1] = 0x21;
-    PspBlock->FarCall[2] = 0xCB; // retf
-
-    if (CommandLine)
-    {
-        /* Set the command line */
-        PspBlock->CommandLineSize = (BYTE)min(strlen(CommandLine), DOS_CMDLINE_LENGTH - 1);
-        RtlCopyMemory(PspBlock->CommandLine, CommandLine, PspBlock->CommandLineSize);
-        PspBlock->CommandLine[PspBlock->CommandLineSize] = '\r';
-    }
-}
-
 VOID WINAPI DosInt20h(LPWORD Stack)
 {
     /* This is the exit interrupt */
@@ -1388,30 +1335,45 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Execute */
         case 0x4B:
         {
-            DOS_EXEC_TYPE LoadType = (DOS_EXEC_TYPE)getAL();
+            BYTE OrgAL = getAL();
             LPSTR ProgramName = SEG_OFF_TO_PTR(getDS(), getDX());
             PDOS_EXEC_PARAM_BLOCK ParamBlock = SEG_OFF_TO_PTR(getES(), getBX());
             DWORD ReturnAddress = MAKELONG(Stack[STACK_IP], Stack[STACK_CS]);
             WORD ErrorCode;
-            
-#ifndef STANDALONE
-            if (LoadType == DOS_LOAD_AND_EXECUTE)
+
+            if (OrgAL <= DOS_LOAD_OVERLAY)
             {
-                /* Create a new process */
-                ErrorCode = DosCreateProcess(ProgramName, ParamBlock, ReturnAddress);
+                DOS_EXEC_TYPE LoadType = (DOS_EXEC_TYPE)OrgAL;
+
+#ifndef STANDALONE
+                if (LoadType == DOS_LOAD_AND_EXECUTE)
+                {
+                    /* Create a new process */
+                    ErrorCode = DosCreateProcess(ProgramName,
+                                                 ParamBlock,
+                                                 ReturnAddress);
+                }
+                else
+#endif
+                {
+                    /* Just load an executable */
+                    ErrorCode = DosLoadExecutable(LoadType,
+                                                  ProgramName,
+                                                  ParamBlock,
+                                                  NULL,
+                                                  NULL,
+                                                  ReturnAddress);
+                }
+            }
+            else if (OrgAL == 0x05)
+            {
+                // http://www.ctyme.com/intr/rb-2942.htm
+                DPRINT1("Set execution state is UNIMPLEMENTED\n");
+                ErrorCode = ERROR_CALL_NOT_IMPLEMENTED;
             }
             else
             {
-#else
-            {
-#endif
-                /* Just load an executable */
-                ErrorCode = DosLoadExecutable(LoadType,
-                                              ProgramName,
-                                              ParamBlock,
-                                              NULL,
-                                              NULL,
-                                              ReturnAddress);
+                ErrorCode = ERROR_INVALID_FUNCTION;
             }
 
             if (ErrorCode == ERROR_SUCCESS)
