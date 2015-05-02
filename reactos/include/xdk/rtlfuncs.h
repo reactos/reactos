@@ -3301,77 +3301,77 @@ RtlCheckBit(
 
 #if !defined(_WINBASE_)
 
-#if defined(_WIN64) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_NTOSP_))
+#if defined(_WIN64) && !defined(_NTSYSTEM_) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || !defined(_NTOSP_))
 
 NTKERNELAPI
 VOID
 InitializeSListHead(
   _Out_ PSLIST_HEADER SListHead);
 
-#else
+#else /* defined(_WIN64) &&  ... */
+
+/* HACK */
+_IRQL_requires_max_(APC_LEVEL)
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseStatus(
+  _In_ NTSTATUS Status);
 
 FORCEINLINE
 VOID
 InitializeSListHead(
   _Out_ PSLIST_HEADER SListHead)
 {
-#if defined(_IA64_)
-  ULONG64 FeatureBits;
-#endif
-
 #if defined(_WIN64)
-  if (((ULONG_PTR)SListHead & 0xf) != 0) {
-    RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
-  }
-#endif
-  RtlZeroMemory(SListHead, sizeof(SLIST_HEADER));
+    if (((ULONG_PTR)SListHead & 0xf) != 0) {
+        ExRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
+    }
 #if defined(_IA64_)
-  FeatureBits = __getReg(CV_IA64_CPUID4);
-  if ((FeatureBits & KF_16BYTE_INSTR) != 0) {
-    SListHead->Header16.HeaderType = 1;
-    SListHead->Header16.Init = 1;
-  }
-#endif
+    SListHead->Region = (ULONG_PTR)SListHead & VRN_MASK;
+#else
+    SListHead->Region = 0;
+#endif /* _IA64_ */
+#endif /* _WIN64 */
+    SListHead->Alignment = 0;
 }
 
-#endif
+#endif /* defined(_WIN64) &&  ... */
 
-#if defined(_WIN64)
-
-#define InterlockedPopEntrySList(Head) \
-    ExpInterlockedPopEntrySList(Head)
-
-#define InterlockedPushEntrySList(Head, Entry) \
-    ExpInterlockedPushEntrySList(Head, Entry)
-
-#define InterlockedFlushSList(Head) \
-    ExpInterlockedFlushSList(Head)
-
-#define QueryDepthSList(Head) \
-    ExQueryDepthSList(Head)
-
-#else /* !defined(_WIN64) */
-
-NTKERNELAPI
-PSLIST_ENTRY
-FASTCALL
-InterlockedPopEntrySList(
-  _Inout_ PSLIST_HEADER ListHead);
+#ifdef _X86_
 
 NTKERNELAPI
 PSLIST_ENTRY
 FASTCALL
 InterlockedPushEntrySList(
-  _Inout_ PSLIST_HEADER ListHead,
-  _Inout_ __drv_aliasesMem PSLIST_ENTRY ListEntry);
+  _Inout_ PSLIST_HEADER SListHead,
+  _Inout_ __drv_aliasesMem PSLIST_ENTRY SListEntry);
 
-#define InterlockedFlushSList(ListHead) \
-    ExInterlockedFlushSList(ListHead)
+NTKERNELAPI
+PSLIST_ENTRY
+FASTCALL
+InterlockedPopEntrySList(
+  _Inout_ PSLIST_HEADER SListHead);
 
-#define QueryDepthSList(Head) \
-    ExQueryDepthSList(Head)
+#define InterlockedFlushSList(SListHead) \
+    ExInterlockedFlushSList(SListHead)
 
-#endif /* !defined(_WIN64) */
+#else /* !_X86_ */
+
+#define InterlockedPushEntrySList(SListHead, SListEntry) \
+    ExpInterlockedPushEntrySList(SListHead, SListEntry)
+
+#define InterlockedPopEntrySList(SListHead) \
+    ExpInterlockedPopEntrySList(SListHead)
+
+#define InterlockedFlushSList(SListHead) \
+    ExpInterlockedFlushSList(SListHead)
+
+#endif /* _X86_ */
+
+#define QueryDepthSList(SListHead) \
+    ExQueryDepthSList(SListHead)
 
 #endif /* !defined(_WINBASE_) */
 

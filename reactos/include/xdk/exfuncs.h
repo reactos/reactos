@@ -84,77 +84,95 @@ ExTryToAcquireFastMutex(
 #define ExInterlockedPushEntryList ExfInterlockedPushEntryList
 #endif /* defined(_X86_) */
 
-#if defined(_WIN64)
+#ifdef _X86_
 
-#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || \
-    defined(_NTHAL_) || defined(_NTOSP_)
+#ifdef _WIN2K_COMPAT_SLIST_USAGE
+
 NTKERNELAPI
-USHORT
-ExQueryDepthSList(_In_ PSLIST_HEADER ListHead);
+PSLIST_ENTRY
+FASTCALL
+ExInterlockedPushEntrySList(
+    _Inout_ PSLIST_HEADER SListHead,
+    _Inout_ __drv_aliasesMem PSLIST_ENTRY SListEntry,
+    _Inout_opt_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
+
+NTKERNELAPI
+PSLIST_ENTRY
+FASTCALL
+ExInterlockedPopEntrySList(
+    _Inout_ PSLIST_HEADER SListHead,
+    _Inout_opt_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
+
+#else /* !_WIN2K_COMPAT_SLIST_USAGE */
+
+#define ExInterlockedPushEntrySList(SListHead, SListEntry, Lock) \
+    InterlockedPushEntrySList(SListHead, SListEntry)
+
+#define ExInterlockedPopEntrySList(SListHead, Lock) \
+    InterlockedPopEntrySList(SListHead)
+
+#endif /* _WIN2K_COMPAT_SLIST_USAGE */
+
+NTKERNELAPI
+PSLIST_ENTRY
+FASTCALL
+ExInterlockedFlushSList(
+    _Inout_ PSLIST_HEADER SListHead);
+
+#ifdef NONAMELESSUNION
+#define ExQueryDepthSList(SListHead) (SListHead)->s.Depth
 #else
-FORCEINLINE
-USHORT
-ExQueryDepthSList(_In_ PSLIST_HEADER ListHead)
-{
-  return (USHORT)(ListHead->Alignment & 0xffff);
-}
+#define ExQueryDepthSList(SListHead) (SListHead)->Depth
 #endif
 
-NTKERNELAPI
-PSLIST_ENTRY
-ExpInterlockedFlushSList(
-  PSLIST_HEADER ListHead);
-
-NTKERNELAPI
-PSLIST_ENTRY
-ExpInterlockedPopEntrySList(
-  _Inout_ PSLIST_HEADER ListHead);
+#else /* !_X86_ */
 
 NTKERNELAPI
 PSLIST_ENTRY
 ExpInterlockedPushEntrySList(
-  _Inout_ PSLIST_HEADER ListHead,
-  _Inout_ __drv_aliasesMem PSLIST_ENTRY ListEntry);
+    _Inout_ PSLIST_HEADER SListHead,
+    _Inout_ __drv_aliasesMem PSLIST_ENTRY SListEntry);
 
-#define ExInterlockedFlushSList(Head) \
-    ExpInterlockedFlushSList(Head)
-#define ExInterlockedPopEntrySList(Head, Lock) \
-    ExpInterlockedPopEntrySList(Head)
-#define ExInterlockedPushEntrySList(Head, Entry, Lock) \
-    ExpInterlockedPushEntrySList(Head, Entry)
+NTKERNELAPI
+PSLIST_ENTRY
+ExpInterlockedPopEntrySList(
+    _Inout_ PSLIST_HEADER SListHead);
 
-#else /* !defined(_WIN64) */
+NTKERNELAPI
+PSLIST_ENTRY
+ExpInterlockedFlushSList(
+    _Inout_ PSLIST_HEADER SListHead);
 
-#ifdef NONAMELESSUNION
-#define ExQueryDepthSList(listhead) (listhead)->s.Depth
+#if !defined(_NTSYSTEM_) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_NTOSP_))
+NTKERNELAPI
+USHORT
+ExQueryDepthSList(_In_ PSLIST_HEADER SListHead);
 #else
-#define ExQueryDepthSList(listhead) (listhead)->Depth
+FORCEINLINE
+USHORT
+ExQueryDepthSList(_In_ PSLIST_HEADER SListHead)
+{
+#ifdef _WIN64
+    return (USHORT)(SListHead->Alignment & 0xffff);
+#else /* !_WIN64 */
+    return (USHORT)SListHead->Depth;
+#endif /* _WIN64 */
+}
 #endif
 
-NTKERNELAPI
-PSINGLE_LIST_ENTRY
-FASTCALL
-ExInterlockedFlushSList(
-  _Inout_ PSLIST_HEADER ListHead);
+#define ExInterlockedPushEntrySList(SListHead, SListEntry, Lock) \
+    ExpInterlockedPushEntrySList(SListHead, SListEntry)
 
-#endif /* !defined(_WIN64) */
+#define ExInterlockedPopEntrySList(SListHead, Lock) \
+    ExpInterlockedPopEntrySList(SListHead)
+
+#define ExInterlockedFlushSList(SListHead) \
+    ExpInterlockedFlushSList(SListHead)
+
+#endif /* _X86_ */
+
 
 #if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
-
-NTKERNELAPI
-PSINGLE_LIST_ENTRY
-FASTCALL
-ExInterlockedPopEntrySList(
-  _Inout_ PSLIST_HEADER ListHead,
-  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
-
-NTKERNELAPI
-PSINGLE_LIST_ENTRY
-FASTCALL
-ExInterlockedPushEntrySList(
-  _Inout_ PSLIST_HEADER ListHead,
-  _Inout_ __drv_aliasesMem PSINGLE_LIST_ENTRY ListEntry,
-  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
 _IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
@@ -172,13 +190,6 @@ ExFreeToPagedLookasideList(
   _In_ PVOID Entry);
 
 #else /* !_WIN2K_COMPAT_SLIST_USAGE */
-
-#if !defined(_WIN64)
-#define ExInterlockedPopEntrySList(_ListHead, _Lock) \
-    InterlockedPopEntrySList(_ListHead)
-#define ExInterlockedPushEntrySList(_ListHead, _ListEntry, _Lock) \
-    InterlockedPushEntrySList(_ListHead, _ListEntry)
-#endif
 
 _IRQL_requires_max_(APC_LEVEL)
 static __inline
@@ -693,12 +704,7 @@ ExInterlockedAddUlong(
   _In_ ULONG Increment,
   _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
-#if defined(_AMD64_) || defined(_IA64_)
-
-#define ExInterlockedCompareExchange64(Destination, Exchange, Comperand, Lock) \
-    InterlockedCompareExchange64(Destination, *(Exchange), *(Comperand))
-
-#elif defined(_X86_)
+#if defined(_M_IX86)
 
 NTKERNELAPI
 LONGLONG
@@ -713,16 +719,10 @@ ExfInterlockedCompareExchange64(
 
 #else
 
-NTKERNELAPI
-LONGLONG
-FASTCALL
-ExInterlockedCompareExchange64(
-  IN OUT LONGLONG volatile *Destination,
-  IN PLONGLONG Exchange,
-  IN PLONGLONG Comparand,
-  IN PKSPIN_LOCK Lock);
+#define ExInterlockedCompareExchange64(Destination, Exchange, Comperand, Lock) \
+    InterlockedCompareExchange64(Destination, *(Exchange), *(Comperand))
 
-#endif /* defined(_AMD64_) || defined(_IA64_) */
+#endif /* defined(_M_IX86) */
 
 NTKERNELAPI
 PLIST_ENTRY
@@ -1189,6 +1189,12 @@ NTAPI
 ExFlushLookasideListEx(
   _Inout_ PLOOKASIDE_LIST_EX Lookaside);
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:__WARNING_MEMORY_NOT_ACQUIRED)
+#endif
+
+__drv_allocatesMem(Mem)
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 FORCEINLINE
@@ -1221,12 +1227,16 @@ ExAllocateFromLookasideListEx(
   return Entry;
 }
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 FORCEINLINE
 VOID
 ExFreeToLookasideListEx(
   _Inout_ PLOOKASIDE_LIST_EX Lookaside,
-  _In_ PVOID Entry)
+  _In_ __drv_freesMem(Entry) PVOID Entry)
 {
   Lookaside->L.TotalFrees += 1;
   if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
@@ -1255,8 +1265,12 @@ ExSetResourceOwnerPointerEx(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
+__drv_allocatesMem(Mem)
 _IRQL_requires_max_(DISPATCH_LEVEL)
-static __inline PVOID
+_Ret_maybenull_
+_Post_writable_byte_size_(Lookaside->L.Size)
+static __inline
+PVOID
 ExAllocateFromNPagedLookasideList(
   _Inout_ PNPAGED_LOOKASIDE_LIST Lookaside)
 {
@@ -1294,10 +1308,11 @@ ExAllocateFromNPagedLookasideList(
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-static __inline VOID
+static __inline
+VOID
 ExFreeToNPagedLookasideList(
   _Inout_ PNPAGED_LOOKASIDE_LIST Lookaside,
-  _In_ PVOID Entry)
+  _In_ __drv_freesMem(Mem) PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
 #ifdef NONAMELESSUNION
