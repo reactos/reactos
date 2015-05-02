@@ -9,6 +9,8 @@
 #include <asm.inc>
 #include <ksamd64.inc>
 
+EXTERN RtlpUse16ByteSLists:BYTE
+
 /*
 typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER
 {
@@ -99,11 +101,11 @@ ExpInterlockedPopEntrySList:
     /* Load ListHead->Alignment into rax */
     mov rax, [rcx]
 
-    /* Check what kind of header this is */
-    test rdx, SLIST8B_HEADERTYPE_MASK
-    jnz RtlInterlockedPopEntrySList16
+    /* Check for 16 byte SList support */
+    cmp byte ptr [RtlpUse16ByteSLists], 0
+    jne RtlInterlockedPopEntrySList16
 
-    /* We have an 8 byte header */
+    /* Use the 8 byte header */
 
 ExpInterlockedPopEntrySListResume:
 
@@ -229,6 +231,13 @@ ExpInterlockedPushEntrySList:
     /* Not aligned, raise an assertion */
     int HEX(2C)
 ExpInterlockedPushEntrySListChecked:
+
+    /* Make sure RtlpUse16ByteSLists is initialized */
+    cmp byte ptr [RtlpUse16ByteSLists], HEX(FF)
+    jne ExpInterlockedPushEntrySListChecked2
+    /* Not initialized, raise an assertion */
+    int HEX(2C)
+ExpInterlockedPushEntrySListChecked2:
 #endif
 
     /* Load ListHead->Alignment into rax */
@@ -237,11 +246,11 @@ ExpInterlockedPushEntrySListChecked:
     /* Load ListHead->Region into r9 */
     mov r9, [rcx + 8]
 
-    /* Check what kind of header this is */
-    test r9, SLIST8B_HEADERTYPE_MASK
-    jnz RtlInterlockedPushEntrySList16
+    /* Check for 16 byte SList support */
+    cmp byte ptr [RtlpUse16ByteSLists], 0
+    jne RtlInterlockedPushEntrySList16
 
-    /* We have an 8 byte header */
+    /* Use the 8 byte header */
 
 RtlInterlockedPushEntrySListLoop:
 
@@ -358,11 +367,11 @@ ExpInterlockedFlushSList:
     /* Load ListHead->Alignment into rax */
     mov rax, [rcx]
 
-    /* Check what kind of header this is */
-    test rdx, SLIST8B_HEADERTYPE_MASK
-    jnz RtlInterlockedFlushSList16
+    /* Check for 16 byte SList support */
+    cmp byte ptr [RtlpUse16ByteSLists], 0
+    jne RtlInterlockedFlushSList16
 
-    /* We have an 8 byte header */
+    /* Use the 8 byte header */
 
 RtlInterlockedFlushSListLoop:
 

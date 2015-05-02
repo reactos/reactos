@@ -203,14 +203,13 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
     if (CpuFeatures & 0x04000000) FeatureBits |= KF_XMMI64;
 
-#if 0
-    if (Reg[2] & 0x00000001) FeatureBits |= KF_SSE3NEW;
-    if (Reg[2] & 0x00000008) FeatureBits |= KF_MONITOR;
-    if (Reg[2] & 0x00000200) FeatureBits |= KF_SSE3SUP;
+    if (Reg[2] & 0x00000001) FeatureBits |= KF_SSE3;
+    //if (Reg[2] & 0x00000008) FeatureBits |= KF_MONITOR;
+    //if (Reg[2] & 0x00000200) FeatureBits |= KF_SSE3SUP;
     if (Reg[2] & 0x00002000) FeatureBits |= KF_CMPXCHG16B;
-    if (Reg[2] & 0x00080000) FeatureBits |= KF_SSE41;
-    if (Reg[2] & 0x00800000) FeatureBits |= KF_POPCNT;
-#endif
+    //if (Reg[2] & 0x00080000) FeatureBits |= KF_SSE41;
+    //if (Reg[2] & 0x00800000) FeatureBits |= KF_POPCNT;
+    if (Reg[2] & 0x04000000) FeatureBits |= KF_XSTATE;
 
     /* Check if the CPU has hyper-threading */
     if (CpuFeatures & 0x10000000)

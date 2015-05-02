@@ -87,6 +87,7 @@ ULONG RtlpShutdownProcessFlags; // TODO: Use it
 
 NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
 void actctx_init(void);
+extern BOOLEAN RtlpUse16ByteSLists;
 
 #ifdef _WIN64
 #define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
@@ -2182,6 +2183,11 @@ LdrpInit(PCONTEXT Context,
     DPRINT("LdrpInit() %p/%p\n",
         NtCurrentTeb()->RealClientId.UniqueProcess,
         NtCurrentTeb()->RealClientId.UniqueThread);
+
+#ifdef _WIN64
+    /* Set the SList header usage */
+    RtlpUse16ByteSLists = SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE128];
+#endif /* _WIN64 */
 
     /* Check if we have a deallocation stack */
     if (!Teb->DeallocationStack)
