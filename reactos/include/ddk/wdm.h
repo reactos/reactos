@@ -11528,15 +11528,9 @@ RtlCheckBit(
 #endif /* !defined(MIDL_PASS) */
 
 /* Byte Swap Functions */
-#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037 || defined(__GNUC__))) || \
-    ((defined(_M_AMD64) || defined(_M_IA64)) \
-        && (_MSC_FULL_VER > 13009175 || defined(__GNUC__)))
-
 #define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
-
-#endif
 
 #if DBG
 
