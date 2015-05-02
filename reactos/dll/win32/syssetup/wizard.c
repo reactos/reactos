@@ -1219,27 +1219,36 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
     BOOL bFound = FALSE;
     unsigned long iLanguageID;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
-                      0,
-                      KEY_ALL_ACCESS,
-                      &hKey))
-        return FALSE;
-
-    dwValueSize = 9 * sizeof(WCHAR);
-    if (RegQueryValueExW(hKey,
-                         L"Default",
-                         NULL,
-                         NULL,
-                         (LPBYTE)szLanguageIdString,
-                         &dwValueSize))
+    if (*lpIndex == -1)
     {
-        RegCloseKey(hKey);
-        return FALSE;
-    }
+        *lpIndex = 85; /* fallback to GMT time zone */
 
-    iLanguageID = wcstoul(szLanguageIdString, NULL, 16);
-    RegCloseKey(hKey);
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey))
+            return FALSE;
+
+        dwValueSize = 9 * sizeof(WCHAR);
+        if (RegQueryValueExW(hKey,
+                             L"Default",
+                             NULL,
+                             NULL,
+                             (LPBYTE)szLanguageIdString,
+                             &dwValueSize))
+        {
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+
+        iLanguageID = wcstoul(szLanguageIdString, NULL, 16);
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        iLanguageID = *lpIndex;
+    }
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
@@ -1515,7 +1524,7 @@ DateTimePageDlgProc(HWND hwndDlg,
             else
             {
                 ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
-                                 SetupData, 85 /* GMT time zone */);
+                                 SetupData, -1);
 
                 SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
             }
