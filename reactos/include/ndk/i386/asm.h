@@ -38,18 +38,6 @@ Author:
 #define UserMode                                0x1
 
 //
-// CPU Types
-//
-#define CPU_NONE                                0x0
-#define CPU_INTEL                               0x1
-#define CPU_AMD                                 0x2
-#define CPU_CYRIX                               0x3
-#define CPU_TRANSMETA                           0x4
-#define CPU_CENTAUR                             0x5
-#define CPU_RISE                                0x6
-#define CPU_UNKNOWN                             0x7
-
-//
 // Selector Names
 //
 #ifdef __ASM__

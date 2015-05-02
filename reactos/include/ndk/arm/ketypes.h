@@ -13,6 +13,7 @@ Abstract:
 Author:
 
     Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
+    Timo Kreuzer (timo.kreuzer@reactos.org) - Updated 19-Apr-2015
 
 --*/
 
@@ -27,19 +28,85 @@ extern "C" {
 // Dependencies
 //
 
+
+#define SYNCH_LEVEL DISPATCH_LEVEL
+
 //
 // CPSR Values
 //
-#define CPSR_THUMB_ENABLE    0x20
-#define CPSR_FIQ_DISABLE     0x40
-#define CPSR_IRQ_DISABLE     0x80
-#define CPSR_USER_MODE       0x10
-#define CPSR_FIQ_MODE        0x11
-#define CPSR_IRQ_MODE        0x12
-#define CPSR_SVC_MODE        0x13
-#define CPSR_ABORT_MODE      0x17
-#define CPSR_UND_MODE        0x1B
-#define CPSR_MODES           0x1F
+#define CPSRM_USER           0x10
+#define CPSRM_FIQ            0x11
+#define CPSRM_INT            0x12
+#define CPSRM_SVC            0x13
+#define CPSRM_ABT            0x17
+#define CPSRM_UDF            0x1b
+#define CPSRM_SYS            0x1f
+#define CPSRM_MASK           0x1f
+#define SYSCALL_PSR          0x30
+
+#define CPSRF_N 0x80000000
+#define CPSRF_Z 0x40000000
+#define CPSRF_C 0x20000000
+#define CPSRF_V 0x10000000
+#define CPSRF_Q 0x08000000
+#define CPSR_IT_MASK 0x600fc00
+
+#define FPSCRF_N  0x80000000
+#define FPSCRF_Z  0x40000000
+#define FPSCRF_C  0x20000000
+#define FPSCRF_V  0x10000000
+#define FPSCRF_QC 0x08000000
+
+#define FPSCRM_AHP 0x4000000
+#define FPSCRM_DN 0x2000000
+#define FPSCRM_FZ 0x1000000
+#define FPSCRM_RMODE_MASK 0xc00000
+#define FPSCRM_RMODE_RN 0x0
+#define FPSCRM_RMODE_RP 0x400000
+#define FPSCRM_RMODE_RM 0x800000
+#define FPSCRM_RMODE_RZ 0xc00000
+#define FPSCRM_DEPRECATED 0x370000
+
+#define FPSCR_IDE 0x8000
+#define FPSCR_IXE 0x1000
+#define FPSCR_UFE 0x800
+#define FPSCR_OFE 0x400
+#define FPSCR_DZE 0x200
+#define FPSCR_IOE 0x100
+#define FPSCR_IDC 0x80
+#define FPSCR_IXC 0x10
+#define FPSCR_UFC 0x8
+#define FPSCR_OFC 0x4
+#define FPSCR_DZC 0x2
+#define FPSCR_IOC 0x1
+
+#define CPSRC_INT 0x80
+#define CPSRC_ABORT 0x100
+#define CPSRC_THUMB 0x20
+
+#define SWFS_PAGE_FAULT 0x10
+#define SWFS_ALIGN_FAULT 0x20
+#define SWFS_HWERR_FAULT 0x40
+#define SWFS_DEBUG_FAULT 0x80
+#define SWFS_EXECUTE 0x8
+#define SWFS_WRITE 0x1
+
+#define CP14_DBGDSCR_MOE_MASK 0x3c
+#define CP14_DBGDSCR_MOE_SHIFT 0x2
+#define CP14_DBGDSCR_MOE_HALT 0x0
+#define CP14_DBGDSCR_MOE_BP 0x1
+#define CP14_DBGDSCR_MOE_WPASYNC 0x2
+#define CP14_DBGDSCR_MOE_BKPT 0x3
+#define CP14_DBGDSCR_MOE_EXTERNAL 0x4
+#define CP14_DBGDSCR_MOE_VECTOR 0x5
+#define CP14_DBGDSCR_MOE_WPSYNC 0xa
+
+#define CP15_PMCR_DP 0x20
+#define CP15_PMCR_X 0x10
+#define CP15_PMCR_CLKCNT_DIV 0x8
+#define CP15_PMCR_CLKCNT_RST 0x4
+#define CP15_PMCR_CNT_RST 0x2
+#define CP15_PMCR_ENABLE 0x1
 
 //
 // C1 Register Values
@@ -56,7 +123,7 @@ extern "C" {
 #define IPI_APC                 1
 #define IPI_DPC                 2
 #define IPI_FREEZE              4
-#define IPI_PACKET_READY        8
+#define IPI_PACKET_READY        6
 #define IPI_SYNCH_REQUEST       16
 
 //
@@ -87,69 +154,117 @@ extern "C" {
 #define NUMBER_POOL_LOOKASIDE_LISTS 32
 
 //
+// ARM VFP State
+// Based on Windows RT 8.1 symbols and ksarm.h
+//
+typedef struct _KARM_VFP_STATE
+{
+    struct _KARM_VFP_STATE* Link; // 0x00
+    ULONG Fpscr;                  // 0x04
+    ULONG Reserved;               // 0x08
+    ULONG Reserved2;              // 0x0c
+    ULONGLONG VfpD[32];           // 0x10
+} KARM_VFP_STATE, *PKARM_VFP_STATE; // size = 0x110
+
+//
 // Trap Frame Definition
+// Based on Windows RT 8.1 symbols and ksarm.h
 //
 typedef struct _KTRAP_FRAME
 {
-    ULONG DbgArgMark;
+    ULONG Arg3;
+    ULONG FaultStatus;
+    union
+    {
+        ULONG FaultAddress;
+        ULONG TrapFrame;
+    };
+    ULONG Reserved;
+    BOOLEAN ExceptionActive;
+    BOOLEAN ContextFromKFramesUnwound;
+    BOOLEAN DebugRegistersValid;
+    union
+    {
+        CHAR PreviousMode;
+        KIRQL PreviousIrql;
+    };
+    PKARM_VFP_STATE VfpState;
+    ULONG Bvr[8];
+    ULONG Bcr[8];
+    ULONG Wvr[1];
+    ULONG Wcr[1];
     ULONG R0;
     ULONG R1;
     ULONG R2;
     ULONG R3;
-    ULONG R4;
-    ULONG R5;
-    ULONG R6;
-    ULONG R7;
-    ULONG R8;
-    ULONG R9;
-    ULONG R10;
-    ULONG R11;
     ULONG R12;
-    ULONG UserSp;
-    ULONG UserLr;
-    ULONG SvcSp;
-    ULONG SvcLr;
+    ULONG Sp;
+    ULONG Lr;
+    ULONG R11;
     ULONG Pc;
-    ULONG Spsr;
-    ULONG OldIrql;
-    ULONG PreviousMode;
-    ULONG PreviousTrapFrame;
+    ULONG Cpsr;
 } KTRAP_FRAME, *PKTRAP_FRAME;
-
-//
-// Defines the Callback Stack Layout for User Mode Callbacks
-//
-// Just a stub with some required members for now
-//
-typedef struct _KCALLOUT_FRAME
-{
-    ULONG CallbackStack;
-    ULONG DummyFramePointer;
-} KCALLOUT_FRAME, *PKCALLOUT_FRAME;
 
 #ifndef NTOS_MODE_USER
 
 //
 // Exception Frame Definition
+// FIXME: this should go into ntddk.h
 //
 typedef struct _KEXCEPTION_FRAME
 {
-  //  ULONG R0;
-//    ULONG R1;
-//    ULONG R2;
-//    ULONG R3;
-    ULONG R4;
-    ULONG R5;
-    ULONG R6;
-    ULONG R7;
-    ULONG R8;
-    ULONG R9;
-    ULONG R10;
-    ULONG R11;
-//    ULONG R12;
-    ULONG Lr;
-    ULONG Psr;
-} KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
+    ULONG Param5;        // 0x00
+    ULONG TrapFrame;     // 0x04
+    ULONG OutputBuffer;  // 0x08
+    ULONG OutputLength;  // 0x0c
+    ULONG Pad;           // 0x04
+    ULONG R4;            // 0x14
+    ULONG R5;            // 0x18
+    ULONG R6;            // 0x1c
+    ULONG R7;            // 0x20
+    ULONG R8;            // 0x24
+    ULONG R9;            // 0x28
+    ULONG R10;           // 0x2c
+    ULONG R11;           // 0x30
+    ULONG Return;        // 0x34
+} KEXCEPTION_FRAME, *PKEXCEPTION_FRAME; // size = 0x38
+
+//
+// ARM Architecture State
+// Based on Windows RT 8.1 symbols and ksarm.h
+//
+typedef struct _KARM_ARCH_STATE
+{
+    ULONG Cp15_Cr0_CpuId;
+    ULONG Cp15_Cr1_Control;
+    ULONG Cp15_Cr1_AuxControl;
+    ULONG Cp15_Cr1_Cpacr;
+    ULONG Cp15_Cr2_TtbControl;
+    ULONG Cp15_Cr2_Ttb0;
+    ULONG Cp15_Cr2_Ttb1;
+    ULONG Cp15_Cr3_Dacr;
+    ULONG Cp15_Cr5_Dfsr;
+    ULONG Cp15_Cr5_Ifsr;
+    ULONG Cp15_Cr6_Dfar;
+    ULONG Cp15_Cr6_Ifar;
+    ULONG Cp15_Cr9_PmControl;
+    ULONG Cp15_Cr9_PmCountEnableSet;
+    ULONG Cp15_Cr9_PmCycleCounter;
+    ULONG Cp15_Cr9_PmEventCounter[31];
+    ULONG Cp15_Cr9_PmEventType[31];
+    ULONG Cp15_Cr9_PmInterruptSelect;
+    ULONG Cp15_Cr9_PmOverflowStatus;
+    ULONG Cp15_Cr9_PmSelect;
+    ULONG Cp15_Cr9_PmUserEnable;
+    ULONG Cp15_Cr10_PrimaryMemoryRemap;
+    ULONG Cp15_Cr10_NormalMemoryRemap;
+    ULONG Cp15_Cr12_VBARns;
+    ULONG Cp15_Cr13_ContextId;
+} KARM_ARCH_STATE, *PKARM_ARCH_STATE;
+
+///
+/// "Custom" definition start
+///
 
 //
 // ARM Internal Registers
@@ -314,164 +429,442 @@ typedef enum _ARM_DOMAINS
     Domain15
 } ARM_DOMAINS;
 
+///
+/// "Custom" definition end
+///
+
 //
 // Special Registers Structure (outside of CONTEXT)
+// Based on Windows RT 8.1 symbols and ksarm.h
 //
 typedef struct _KSPECIAL_REGISTERS
 {
-    ARM_CONTROL_REGISTER ControlRegister;
-    ARM_LOCKDOWN_REGISTER LockdownRegister;
-    ARM_CACHE_REGISTER CacheRegister;
-    ARM_STATUS_REGISTER StatusRegister;
+    ULONG Reserved[7];     // 0x00
+    ULONG Cp15_Cr13_UsrRW; // 0x1c
+    ULONG Cp15_Cr13_UsrRO; // 0x20
+    ULONG Cp15_Cr13_SvcRW; // 0x24
+    ULONG KernelBvr[8];    // 0x28
+    ULONG KernelBcr[8];    // 0x48
+    ULONG KernelWvr[1];    // 0x68
+    ULONG KernelWcr[1];    // 0x6c
+    ULONG Fpexc;           // 0x70
+    ULONG Fpinst;          // 0x74
+    ULONG Fpinst2;         // 0x78
+    ULONG UserSp;          // 0x7c
+    ULONG UserLr;          // 0x80
+    ULONG AbortSp;         // 0x84
+    ULONG AbortLr;         // 0x88
+    ULONG AbortSpsr;       // 0x8c
+    ULONG UdfSp;           // 0x90
+    ULONG UdfLr;           // 0x94
+    ULONG UdfSpsr;         // 0x98
+    ULONG IrqSp;           // 0x9c
+    ULONG IrqLr;           // 0xa0
+    ULONG IrqSpsr;         // 0xa4
 } KSPECIAL_REGISTERS, *PKSPECIAL_REGISTERS;
 
 //
 // Processor State
+// Based on Windows RT 8.1 symbols and ksarm.h
 //
 typedef struct _KPROCESSOR_STATE
 {
-    struct _CONTEXT ContextFrame;
-    struct _KSPECIAL_REGISTERS SpecialRegisters;
+    KSPECIAL_REGISTERS SpecialRegisters; // 0x000
+    KARM_ARCH_STATE ArchState;           // 0x0a8
+    CONTEXT ContextFrame;                // 0x200
 } KPROCESSOR_STATE, *PKPROCESSOR_STATE;
+C_ASSERT(sizeof(KPROCESSOR_STATE) == 0x3a0);
+
+//
+// ARM Mini Stack
+// Based on Windows RT 8.1 symbols and ksarm.h
+//
+typedef struct _KARM_MINI_STACK
+{
+    ULONG Pc;
+    ULONG Cpsr;
+    ULONG R4;
+    ULONG R5;
+    ULONG R6;
+    ULONG R7;
+    ULONG Reserved[2];
+} KARM_MINI_STACK, *PKARM_MINI_STACK; // size = 0x20
+
+typedef struct _DISPATCHER_CONTEXT
+{
+    ULONG ControlPc; // 0x0
+    PVOID ImageBase; // 0x4
+    PVOID FunctionEntry; // 0x8
+    PVOID EstablisherFrame; // 0xc
+    ULONG TargetPc; // 0x10
+    PVOID ContextRecord; // 0x14
+    PVOID LanguageHandler; // 0x18
+    PVOID HandlerData; // 0x1c
+    PVOID HistoryTable; // 0x20
+    ULONG ScopeIndex; // 0x24
+    ULONG ControlPcIsUnwound; // 0x28
+    PVOID NonVolatileRegisters; // 0x2c
+    ULONG Reserved; // 0x30
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
+//
+// Machine Frame
+// Based on ksarm.h
+//
+typedef struct _MACHINE_FRAME
+{
+    ULONG Sp;
+    ULONG Pc;
+} MACHINE_FRAME, *PMACHINE_FRAME;
+
+//
+// Defines the Callback Stack Layout for User Mode Callbacks
+//
+typedef KEXCEPTION_FRAME KCALLOUT_FRAME, PKCALLOUT_FRAME;
+
+//
+// User mode callout frame
+//
+typedef struct _UCALLOUT_FRAME
+{
+    PVOID Buffer;
+    ULONG Length;
+    ULONG ApiNumber;
+    ULONG OriginalLr;
+    MACHINE_FRAME MachineFrame;
+} UCALLOUT_FRAME, *PUCALLOUT_FRAME;
+
+typedef struct _KSTART_FRAME
+{
+    ULONG R0;
+    ULONG R1;
+    ULONG R2;
+    ULONG Return;
+} KSTART_FRAME, *PKSTART_FRAME;
+
+typedef struct _KSWITCH_FRAME
+{
+    KIRQL ApcBypass;
+    UCHAR Fill[7];
+    ULONG R11;
+    ULONG Return;
+} KSWITCH_FRAME, *PKSWITCH_FRAME;
+
+//
+// Cache types
+// (These are made up constants!)
+//
+enum _ARM_CACHE_TYPES
+{
+    FirstLevelDcache = 0,
+    SecondLevelDcache = 1,
+    FirstLevelIcache = 2,
+    SecondLevelIcache = 3,
+    GlobalDcache = 4,
+    GlobalIcache = 5
+};
+
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+#define GENERAL_LOOKASIDE_POOL PP_LOOKASIDE_LIST
+#endif
 
 //
 // Processor Region Control Block
+// Based on Windows RT 8.1 symbols
 //
 typedef struct _KPRCB
 {
+    UCHAR LegacyNumber;
+    UCHAR ReservedMustBeZero;
+    UCHAR IdleHalt;
+    PKTHREAD CurrentThread;
+    PKTHREAD NextThread;
+    PKTHREAD IdleThread;
+    UCHAR NestingLevel;
+    UCHAR ClockOwner;
+    union
+    {
+        UCHAR PendingTickFlags;
+        struct
+        {
+            UCHAR PendingTick : 1;
+            UCHAR PendingBackupTick : 1;
+        };
+    };
+    UCHAR PrcbPad00[1];
+    ULONG Number;
+    ULONG PrcbLock;
+    PCHAR PriorityState;
+    KPROCESSOR_STATE ProcessorState;
+    USHORT ProcessorModel;
+    USHORT ProcessorRevision;
+    ULONG MHz;
+    UINT64 CycleCounterFrequency;
+    ULONG HalReserved[15];
     USHORT MinorVersion;
     USHORT MajorVersion;
-    struct _KTHREAD *CurrentThread;
-    struct _KTHREAD *NextThread;
-    struct _KTHREAD *IdleThread;
-    UCHAR Number;
-    UCHAR Reserved;
-    USHORT BuildType;
-    KAFFINITY SetMember;
-    UCHAR CpuType;
-    UCHAR CpuID;
-    USHORT CpuStep;
-    KPROCESSOR_STATE ProcessorState;
-    ULONG KernelReserved[16];
-    ULONG HalReserved[16];
-    UCHAR PrcbPad0[92];
-    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
-    struct _KTHREAD *NpxThread;
-    ULONG InterruptCount;
-    ULONG KernelTime;
-    ULONG UserTime;
-    ULONG DpcTime;
-    ULONG DebugDpcTime;
-    ULONG InterruptTime;
-    ULONG AdjustDpcThreshold;
-    ULONG PageColor;
-    UCHAR SkipTick;
-    UCHAR DebuggerSavedIRQL;
-    UCHAR NodeColor;
-    UCHAR Spare1;
-    ULONG NodeShiftedColor;
-    struct _KNODE *ParentNode;
-    ULONG MultiThreadProcessorSet;
-    struct _KPRCB *MultiThreadSetMaster;
-    ULONG SecondaryColorMask;
-    LONG Sleeping;
+    UCHAR BuildType;
+    UCHAR CpuVendor;
+    UCHAR CoresPerPhysicalProcessor;
+    UCHAR LogicalProcessorsPerCore;
+    PVOID AcpiReserved;
+    ULONG GroupSetMember;
+    UCHAR Group;
+    UCHAR GroupIndex;
+    //UCHAR _PADDING1_[0x62];
+    KSPIN_LOCK_QUEUE DECLSPEC_ALIGN(128) LockQueue[17];
+    UCHAR ProcessorVendorString[2];
+    UCHAR _PADDING2_[0x2];
+    ULONG FeatureBits;
+    ULONG MaxBreakpoints;
+    ULONG MaxWatchpoints;
+    PCONTEXT Context;
+    ULONG ContextFlagsInit;
+    //UCHAR _PADDING3_[0x60];
+    PP_LOOKASIDE_LIST DECLSPEC_ALIGN(128) PPLookasideList[16];
+    LONG PacketBarrier;
+    SINGLE_LIST_ENTRY DeferredReadyListHead;
+    LONG MmPageFaultCount;
+    LONG MmCopyOnWriteCount;
+    LONG MmTransitionCount;
+    LONG MmDemandZeroCount;
+    LONG MmPageReadCount;
+    LONG MmPageReadIoCount;
+    LONG MmDirtyPagesWriteCount;
+    LONG MmDirtyWriteIoCount;
+    LONG MmMappedPagesWriteCount;
+    LONG MmMappedWriteIoCount;
+    ULONG KeSystemCalls;
+    ULONG KeContextSwitches;
     ULONG CcFastReadNoWait;
     ULONG CcFastReadWait;
     ULONG CcFastReadNotPossible;
     ULONG CcCopyReadNoWait;
     ULONG CcCopyReadWait;
     ULONG CcCopyReadNoWaitMiss;
-    ULONG KeAlignmentFixupCount;
-    ULONG SpareCounter0;
-    ULONG KeDcacheFlushCount;
-    ULONG KeExceptionDispatchCount;
-    ULONG KeFirstLevelTbFills;
-    ULONG KeFloatingEmulationCount;
-    ULONG KeIcacheFlushCount;
-    ULONG KeSecondLevelTbFills;
-    ULONG KeSystemCalls;
-    volatile ULONG IoReadOperationCount;
-    volatile ULONG IoWriteOperationCount;
-    volatile ULONG IoOtherOperationCount;
+    LONG LookasideIrpFloat;
+    LONG IoReadOperationCount;
+    LONG IoWriteOperationCount;
+    LONG IoOtherOperationCount;
     LARGE_INTEGER IoReadTransferCount;
     LARGE_INTEGER IoWriteTransferCount;
     LARGE_INTEGER IoOtherTransferCount;
-    ULONG SpareCounter1[8];
-    PP_LOOKASIDE_LIST PPLookasideList[16];
-    PP_LOOKASIDE_LIST PPNPagedLookasideList[32];
-    PP_LOOKASIDE_LIST PPPagedLookasideList[32];
-    volatile ULONG PacketBarrier;
-    volatile ULONG ReverseStall;
-    PVOID IpiFrame;
-    UCHAR PrcbPad2[52];
-    volatile PVOID CurrentPacket[3];
-    volatile ULONG TargetSet;
-    volatile PKIPI_WORKER WorkerRoutine;
-    volatile ULONG IpiFrozen;
-    UCHAR PrcbPad3[40];
-    volatile ULONG RequestSummary;
-    volatile struct _KPRCB *SignalDone;
-    UCHAR PrcbPad4[56];
-    struct _KDPC_DATA DpcData[2];
+    UCHAR _PADDING4_[0x8];
+    struct _REQUEST_MAILBOX* Mailbox;
+    LONG TargetCount;
+    ULONG IpiFrozen;
+    ULONG RequestSummary;
+    KDPC_DATA DpcData[2];
     PVOID DpcStack;
-    ULONG MaximumDpcQueueDepth;
+    PVOID SpBase;
+    LONG MaximumDpcQueueDepth;
     ULONG DpcRequestRate;
     ULONG MinimumDpcRate;
+    ULONG DpcLastCount;
+    UCHAR ThreadDpcEnable;
+    UCHAR QuantumEnd;
+    UCHAR DpcRoutineActive;
+    UCHAR IdleSchedule;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    union
+    {
+        LONG DpcRequestSummary;
+        SHORT DpcRequestSlot[2];
+        struct
+        {
+            SHORT NormalDpcState;
+            SHORT ThreadDpcState;
+        };
+        struct
+        {
+            ULONG DpcNormalProcessingActive : 1;
+            ULONG DpcNormalProcessingRequested : 1;
+            ULONG DpcNormalThreadSignal : 1;
+            ULONG DpcNormalTimerExpiration : 1;
+            ULONG DpcNormalDpcPresent : 1;
+            ULONG DpcNormalLocalInterrupt : 1;
+            ULONG DpcNormalSpare : 10;
+            ULONG DpcThreadActive : 1;
+            ULONG DpcThreadRequested : 1;
+            ULONG DpcThreadSpare : 14;
+        };
+    };
+#else
+    LONG DpcSetEventRequest;
+#endif
+    ULONG LastTimerHand;
+    ULONG LastTick;
+    ULONG ClockInterrupts;
+    ULONG ReadyScanTick;
+    ULONG PrcbPad10[1];
+    ULONG InterruptLastCount;
+    ULONG InterruptRate;
+    UCHAR _PADDING5_[0x4];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    KGATE DpcGate;
+#else
+    KEVENT DpcEvent;
+#endif
+    ULONG MPAffinity;
+    KDPC CallDpc;
+    LONG ClockKeepAlive;
+    UCHAR ClockCheckSlot;
+    UCHAR ClockPollCycle;
+    //UCHAR _PADDING6_[0x2];
+    LONG DpcWatchdogPeriod;
+    LONG DpcWatchdogCount;
+    LONG KeSpinLockOrdering;
+    UCHAR _PADDING7_[0x38];
+    LIST_ENTRY WaitListHead;
+    ULONG WaitLock;
+    ULONG ReadySummary;
+    LONG AffinitizedSelectionMask;
+    ULONG QueueIndex;
+    KDPC TimerExpirationDpc;
+    //RTL_RB_TREE ScbQueue;
+    LIST_ENTRY ScbList;
+    UCHAR _PADDING8_[0x38];
+    LIST_ENTRY DispatcherReadyListHead[32];
+    ULONG InterruptCount;
+    ULONG KernelTime;
+    ULONG UserTime;
+    ULONG DpcTime;
+    ULONG InterruptTime;
+    ULONG AdjustDpcThreshold;
+    UCHAR SkipTick;
+    UCHAR DebuggerSavedIRQL;
+    UCHAR PollSlot;
+    UCHAR GroupSchedulingOverQuota;
+    ULONG DpcTimeCount;
+    ULONG DpcTimeLimit;
+    ULONG PeriodicCount;
+    ULONG PeriodicBias;
+    ULONG AvailableTime;
+    ULONG ScbOffset;
+    ULONG KeExceptionDispatchCount;
+    struct _KNODE* ParentNode;
+    UCHAR _PADDING9_[0x4];
+    ULONG64 AffinitizedCycles;
+    ULONG64 StartCycles;
+    ULONG64 GenerationTarget;
+    ULONG64 CycleCounterHigh;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    KENTROPY_TIMING_STATE EntropyTimingState;
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+    LONG MmSpinLockOrdering;
+    ULONG PageColor;
+    ULONG NodeColor;
+    ULONG NodeShiftedColor;
+    ULONG SecondaryColorMask;
+    ULONG64 CycleTime;
+    UCHAR _PADDING10_[0x58];
+    ULONG CcFastMdlReadNoWait;
+    ULONG CcFastMdlReadWait;
+    ULONG CcFastMdlReadNotPossible;
+    ULONG CcMapDataNoWait;
+    ULONG CcMapDataWait;
+    ULONG CcPinMappedDataCount;
+    ULONG CcPinReadNoWait;
+    ULONG CcPinReadWait;
+    ULONG CcMdlReadNoWait;
+    ULONG CcMdlReadWait;
+    ULONG CcLazyWriteHotSpots;
+    ULONG CcLazyWriteIos;
+    ULONG CcLazyWritePages;
+    ULONG CcDataFlushes;
+    ULONG CcDataPages;
+    ULONG CcLostDelayedWrites;
+    ULONG CcFastReadResourceMiss;
+    ULONG CcCopyReadWaitMiss;
+    ULONG CcFastMdlReadResourceMiss;
+    ULONG CcMapDataNoWaitMiss;
+    ULONG CcMapDataWaitMiss;
+    ULONG CcPinReadNoWaitMiss;
+    ULONG CcPinReadWaitMiss;
+    ULONG CcMdlReadNoWaitMiss;
+    ULONG CcMdlReadWaitMiss;
+    ULONG CcReadAheadIos;
+    LONG MmCacheTransitionCount;
+    LONG MmCacheReadCount;
+    LONG MmCacheIoCount;
+    UCHAR _PADDING11_[0xC];
+    PROCESSOR_POWER_STATE PowerState;
+    ULONG SharedReadyQueueOffset;
+    ULONG PrcbPad15[2];
+    ULONG DeviceInterrupts;
+    PVOID IsrDpcStats;
+    ULONG KeAlignmentFixupCount;
+    KDPC DpcWatchdogDpc;
+    KTIMER DpcWatchdogTimer;
+    SLIST_HEADER InterruptObjectPool;
+    //KAFFINITY_EX PackageProcessorSet;
+    UCHAR _PADDING12_[0x4];
+    ULONG SharedReadyQueueMask;
+    struct _KSHARED_READY_QUEUE* SharedReadyQueue;
+    ULONG CoreProcessorSet;
+    ULONG ScanSiblingMask;
+    ULONG LLCMask;
+    ULONG CacheProcessorMask[5];
+    ULONG ScanSiblingIndex;
+    CACHE_DESCRIPTOR Cache[6];
+    UCHAR CacheCount;
+    UCHAR PrcbPad20[3];
+    ULONG CachedCommit;
+    ULONG CachedResidentAvailable;
+    PVOID HyperPte;
+    PVOID WheaInfo;
+    PVOID EtwSupport;
+    UCHAR _PADDING13_[0x74];
+    SYNCH_COUNTERS SynchCounters;
+    //FILESYSTEM_DISK_COUNTERS FsCounters;
+    UCHAR _PADDING14_[0x8];
+    KARM_MINI_STACK FiqMiniStack;
+    KARM_MINI_STACK IrqMiniStack;
+    KARM_MINI_STACK UdfMiniStack;
+    KARM_MINI_STACK AbtMiniStack;
+    KARM_MINI_STACK PanicMiniStack;
+    ULONG PanicStackBase;
+    PVOID IsrStack;
+    ULONG PteBitCache;
+    ULONG PteBitOffset;
+    KTIMER_TABLE TimerTable;
+    GENERAL_LOOKASIDE_POOL PPNxPagedLookasideList[32];
+    GENERAL_LOOKASIDE_POOL PPNPagedLookasideList[32];
+    GENERAL_LOOKASIDE_POOL PPPagedLookasideList[32];
+    SINGLE_LIST_ENTRY AbSelfIoBoostsList;
+    SINGLE_LIST_ENTRY AbPropagateBoostsList;
+    KDPC AbDpc;
+    UCHAR _PADDING15_[0x58];
+    //REQUEST_MAILBOX RequestMailbox[1];
+
+    // FIXME: Oldstyle stuff
+#if (NTDDI_VERSION < NTDDI_WIN8) // FIXME
+    UCHAR CpuType;
     volatile UCHAR DpcInterruptRequested;
     volatile UCHAR DpcThreadRequested;
-    volatile UCHAR DpcRoutineActive;
     volatile UCHAR DpcThreadActive;
-    ULONG PrcbLock;
-    ULONG DpcLastCount;
     volatile ULONG TimerHand;
     volatile ULONG TimerRequest;
-    PVOID DpcThread;
-    KEVENT DpcEvent;
-    UCHAR ThreadDpcEnable;
-    volatile BOOLEAN QuantumEnd;
-    UCHAR PrcbPad50;
-    volatile UCHAR IdleSchedule;
-    LONG DpcSetEventRequest;
-    UCHAR PrcbPad5[18];
-    LONG TickOffset;
-    KDPC CallDpc;
-    ULONG PrcbPad7[8];
-    LIST_ENTRY WaitListHead;
-    ULONG ReadySummary;
-    ULONG QueueIndex;
-    LIST_ENTRY DispatcherReadyListHead[32];
-    SINGLE_LIST_ENTRY DeferredReadyListHead;
-    ULONG PrcbPad72[11];
-    PVOID ChainedInterruptList;
-    LONG LookasideIrpFloat;
-    volatile LONG MmPageFaultCount;
-    volatile LONG MmCopyOnWriteCount;
-    volatile LONG MmTransitionCount;
-    volatile LONG MmCacheTransitionCount;
-    volatile LONG MmDemandZeroCount;
-    volatile LONG MmPageReadCount;
-    volatile LONG MmPageReadIoCount;
-    volatile LONG MmCacheReadCount;
-    volatile LONG MmCacheIoCount;
-    volatile LONG MmDirtyPagesWriteCount;
-    volatile LONG MmDirtyWriteIoCount;
-    volatile LONG MmMappedPagesWriteCount;
-    volatile LONG MmMappedWriteIoCount;
-    ULONG SpareFields0[1];
+    ULONG DebugDpcTime;
+    LONG Sleeping;
+    KAFFINITY SetMember;
     CHAR VendorString[13];
-    UCHAR InitialApicId;
-    UCHAR LogicalProcessorsPerPhysicalProcessor;
-    ULONG MHz;
-    ULONG FeatureBits;
-    LARGE_INTEGER UpdateSignature;
-    volatile LARGE_INTEGER IsrTime;
-    LARGE_INTEGER SpareField1;
-    //FX_SAVE_AREA NpxSaveArea;
-    PROCESSOR_POWER_STATE PowerState;
+#endif
+
 } KPRCB, *PKPRCB;
+C_ASSERT(FIELD_OFFSET(KPRCB, ProcessorState) == 0x20);
+C_ASSERT(FIELD_OFFSET(KPRCB, ProcessorModel) == 0x3C0);
+C_ASSERT(FIELD_OFFSET(KPRCB, LockQueue) == 0x480);
+C_ASSERT(FIELD_OFFSET(KPRCB, PacketBarrier) == 0x600);
+C_ASSERT(FIELD_OFFSET(KPRCB, Mailbox) == 0x680);
+C_ASSERT(FIELD_OFFSET(KPRCB, DpcData) == 0x690);
+C_ASSERT(FIELD_OFFSET(KPRCB, DpcStack) == 0x6c0);
+//C_ASSERT(FIELD_OFFSET(KPRCB, CallDpc) == 0x714);
+
 
 //
 // Processor Control Region
+// Based on Windows RT 8.1 symbols
 //
 typedef struct _KIPCR
 {
@@ -480,60 +873,47 @@ typedef struct _KIPCR
         NT_TIB NtTib;
         struct
         {
-            struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList; // Unused
-            PVOID Used_StackBase; // Unused
-            PVOID PerfGlobalGroupMask;
-            PVOID TssCopy; // Unused
-            ULONG ContextSwitches;
-            KAFFINITY SetMemberCopy; // Unused
+            ULONG TibPad0[2];
+            PVOID Spare1;
+            struct _KPCR *Self;
+            struct _KPRCB *CurrentPrcb;
+            struct _KSPIN_LOCK_QUEUE* LockArray;
             PVOID Used_Self;
         };
     };
-    struct _KPCR *Self;
-    struct _KPRCB *Prcb;
-    KIRQL Irql;
-    ULONG IRR; // Unused
-    ULONG IrrActive; // Unused
-    ULONG IDR; // Unused
-    PVOID KdVersionBlock;
-    PVOID IDT; // Unused
-    PVOID GDT; // Unused
-    PVOID TSS; // Unused
+    KIRQL CurrentIrql;
+    UCHAR SecondLevelCacheAssociativity;
+    ULONG Unused0[3];
     USHORT MajorVersion;
     USHORT MinorVersion;
-    KAFFINITY SetMember;
     ULONG StallScaleFactor;
-    UCHAR SpareUnused;
-    UCHAR Number;
-    UCHAR Spare0;
-    UCHAR SecondLevelCacheAssociativity;
-    ULONG VdmAlert;
-    ULONG KernelReserved[14];
+    PVOID Unused1[3];
+    ULONG KernelReserved[15];
     ULONG SecondLevelCacheSize;
-    ULONG HalReserved[16];
-    // arm part
-    UCHAR IrqlMask[32];
-    ULONG IrqlTable[32];
-    PKINTERRUPT_ROUTINE InterruptRoutine[32];
-    ULONG ReservedVectors;
-    ULONG FirstLevelDcacheSize;
-    ULONG FirstLevelDcacheFillSize;
-    ULONG FirstLevelIcacheSize;
-    ULONG FirstLevelIcacheFillSize;
-    ULONG SecondLevelDcacheSize;
-    ULONG SecondLevelDcacheFillSize;
-    ULONG SecondLevelIcacheSize;
-    ULONG SecondLevelIcacheFillSize;
-    ULONG DcacheFillSize;
-    ULONG DcacheAlignment;
-    ULONG IcacheAlignment;
-    ULONG IcacheFillSize;
-    ULONG ProcessorId;
-    PVOID InterruptStack;
-    PVOID PanicStack;
-    PVOID InitialStack;
-    KPRCB PrcbData;
+    union
+    {
+        USHORT SoftwareInterruptPending;
+        struct
+        {
+            UCHAR ApcInterrupt;
+            UCHAR DispatchInterrupt;
+        };
+    };
+    USHORT InterruptPad;
+    ULONG HalReserved[32];
+    PVOID KdVersionBlock;
+    PVOID Unused3;
+    ULONG PcrAlign1[8];
+
+    /* Private members, not in ntddk.h */
+    PVOID Idt[256];
+    PVOID* IdtExt;
+    ULONG PcrAlign2[19];
+    UCHAR _PADDING1_[0x4];
+    KPRCB Prcb;
 } KIPCR, *PKIPCR;
+
+C_ASSERT(FIELD_OFFSET(KIPCR, Prcb.LegacyNumber) == 0x580);
 
 //
 // Macro to get current KPRCB
@@ -542,20 +922,19 @@ FORCEINLINE
 struct _KPRCB *
 KeGetCurrentPrcb(VOID)
 {
-    return PCR->Prcb;
+    return KeGetPcr()->CurrentPrcb;
 }
 
 //
 // Just read it from the PCR
 //
-#define KeGetCurrentProcessorNumber()  (int)PCR->Number
-#define KeGetCurrentIrql()             PCR->Irql
+#define KeGetCurrentIrql()             KeGetPcr()->CurrentIrql
 #define _KeGetCurrentThread()          KeGetCurrentPrcb()->CurrentThread
 #define _KeGetPreviousMode()           KeGetCurrentPrcb()->CurrentThread->PreviousMode
 #define _KeIsExecutingDpc()            (KeGetCurrentPrcb()->DpcRoutineActive != 0)
 #define KeGetCurrentThread()           _KeGetCurrentThread()
 #define KeGetPreviousMode()            _KeGetPreviousMode()
-#define KeGetDcacheFillSize()          PCR->DcacheFillSize
+//#define KeGetDcacheFillSize()          PCR->DcacheFillSize
 
 #endif // !NTOS_MODE_USER
 

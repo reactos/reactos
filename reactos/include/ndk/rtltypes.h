@@ -1395,6 +1395,98 @@ typedef struct _RTL_USER_PROCESS_INFORMATION
     SECTION_IMAGE_INFORMATION ImageInformation;
 } RTL_USER_PROCESS_INFORMATION, *PRTL_USER_PROCESS_INFORMATION;
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef enum _RTL_UMS_SCHEDULER_REASON
+{
+    UmsSchedulerStartup = 0,
+    UmsSchedulerThreadBlocked = 1,
+    UmsSchedulerThreadYield = 2,
+} RTL_UMS_SCHEDULER_REASON, *PRTL_UMS_SCHEDULER_REASON;
+
+enum _RTL_UMSCTX_FLAGS
+{
+    UMSCTX_SCHEDULED_THREAD_BIT = 0,
+#if (NTDDI_VERSION < NTDDI_WIN8)
+    UMSCTX_HAS_QUANTUM_REQ_BIT,
+    UMSCTX_HAS_AFFINITY_REQ_BIT,
+    UMSCTX_HAS_PRIORITY_REQ_BIT,
+#endif
+    UMSCTX_SUSPENDED_BIT,
+    UMSCTX_VOLATILE_CONTEXT_BIT,
+    UMSCTX_TERMINATED_BIT,
+    UMSCTX_DEBUG_ACTIVE_BIT,
+    UMSCTX_RUNNING_ON_SELF_THREAD_BIT
+    UMSCTX_DENY_RUNNING_ON_SELF_THREAD_BIT
+
+} RTL_UMSCTX_FLAGS, *PRTL_UMSCTX_FLAGS;
+
+#define UMSCTX_SCHEDULED_THREAD_MASK (1 << UMSCTX_SCHEDULED_THREAD_BIT)
+#define UMSCTX_SUSPENDED_MASK        (1 << UMSCTX_SUSPENDED_BIT)
+#define UMSCTX_VOLATILE_CONTEXT_MASK (1 << UMSCTX_VOLATILE_CONTEXT_BIT)
+#define UMSCTX_TERMINATED_MASK       (1 << UMSCTX_TERMINATED_BIT)
+#define UMSCTX_DEBUG_ACTIVE_MASK     (1 << UMSCTX_DEBUG_ACTIVE_BIT)
+#define UMSCTX_RUNNING_ON_SELF_THREAD_MASK (1 << UMSCTX_RUNNING_ON_SELF_THREAD_BIT)
+#define UMSCTX_DENY_RUNNING_ON_SELF_THREAD_MASK (1 << UMSCTX_DENY_RUNNING_ON_SELF_THREAD_BIT)
+
+//
+// UMS Context
+//
+typedef struct DECLSPEC_ALIGN(16) _RTL_UMS_CONTEXT
+{
+    SINGLE_LIST_ENTRY Link;
+    CONTEXT Context;
+    PVOID Teb;
+    PVOID UserContext;
+    union
+    {
+        struct
+        {
+            ULONG ScheduledThread : 1;
+#if (NTDDI_VERSION < NTDDI_WIN8)
+            ULONG HasQuantumReq : 1;
+            ULONG HasAffinityReq : 1;
+            ULONG HasPriorityReq : 1;
+#endif
+            ULONG Suspended : 1;
+            ULONG VolatileContext : 1;
+            ULONG Terminated : 1;
+            ULONG DebugActive : 1;
+            ULONG RunningOnSelfThread : 1;
+            ULONG DenyRunningOnSelfThread : 1;
+#if (NTDDI_VERSION < NTDDI_WIN8)
+            ULONG ReservedFlags : 22;
+#endif
+        };
+        LONG Flags;
+    };
+    union
+    {
+        struct
+        {
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+            ULONG64 KernelUpdateLock : 2;
+#else
+            ULONG64 KernelUpdateLock : 1;
+            ULONG64 Reserved : 1;
+#endif
+            ULONG64 PrimaryClientID : 62;
+        };
+        ULONG64 ContextLock;
+    };
+#if (NTDDI_VERSION < NTDDI_WIN8)
+    ULONG64 QuantumValue;
+    GROUP_AFFINITY AffinityMask;
+    LONG Priority;
+#endif
+    struct _RTL_UMS_CONTEXT* PrimaryUmsContext;
+    ULONG SwitchCount;
+    ULONG KernelYieldCount;
+    ULONG MixedYieldCount;
+    ULONG YieldCount;
+} RTL_UMS_CONTEXT, *PRTL_UMS_CONTEXT;
+#endif // #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 //
 // RTL Atom Table Structures
 //
@@ -1593,7 +1685,7 @@ struct tagSTATSTG;
 
 typedef struct _RTL_MEMORY_STREAM RTL_MEMORY_STREAM, *PRTL_MEMORY_STREAM;
 
-typedef VOID 
+typedef VOID
 (NTAPI *PRTL_MEMORY_STREAM_FINAL_RELEASE_ROUTINE)(
     _In_ PRTL_MEMORY_STREAM Stream
 );

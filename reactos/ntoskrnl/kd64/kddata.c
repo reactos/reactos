@@ -396,8 +396,13 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {(ULONG_PTR)RtlpBreakWithStatusInstruction},
     0,
     FIELD_OFFSET(KTHREAD, CallbackStack),
+#if defined(_M_ARM) || defined(_M_AMD64)
+    0,
+    0,
+#else
     FIELD_OFFSET(KCALLOUT_FRAME, CallbackStack),
     FIELD_OFFSET(KCALLOUT_FRAME, CBSTACK_FRAME_POINTER),
+#endif
     FALSE,
     {(ULONG_PTR)KiCallUserMode},
     0,

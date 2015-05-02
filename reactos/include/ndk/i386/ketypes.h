@@ -34,6 +34,22 @@ Author:
 #endif
 
 //
+// CPU Vendors
+//
+typedef enum
+{
+    CPU_NONE      = 0,
+    CPU_INTEL     = 1,
+    CPU_AMD       = 2,
+    CPU_CYRIX     = 3,
+    CPU_TRANSMETA = 4,
+    CPU_VIA       = 5,
+    CPU_CENTAUR   = CPU_VIA,
+    CPU_RISE      = 6,
+    CPU_UNKNOWN   = 7
+} CPU_VENDORS;
+
+//
 // Machine Types
 //
 #define MACHINE_TYPE_ISA        0x0000
@@ -115,6 +131,20 @@ Author:
 #define FSW_UNDERFLOW           0x10
 #define FSW_PRECISION           0x20
 #define FSW_STACK_FAULT         0x40
+
+//
+// Machine Specific Registers
+//
+#define MSR_AMD_ACCESS          0x9C5A203A
+#define MSR_IA32_MISC_ENABLE    0x01A0
+#define MSR_EFER                0xC0000080
+
+//
+// MSR internal Values
+//
+#define MSR_NXE                 0x0800
+#define XHF_NOEXECUTE           0x100000
+#define MSR_XD_ENABLE_MASK      0xFFFFFFFB
 
 //
 // IPI Types
@@ -802,5 +832,82 @@ typedef struct _KTSS
 // i386 CPUs don't have exception frames
 //
 typedef struct _KEXCEPTION_FRAME KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
-#endif
-#endif
+
+#endif /* NTOS_MODE_USER */
+
+typedef enum _WOW64_SERVICE_TYPES
+{
+    ServiceNoTurbo = 0x0000,
+    Service0Arg = 0x0001,
+    Service0ArgReloadState = 0x0002,
+    Service1ArgSp = 0x0003,
+    Service1ArgNSp = 0x0004,
+    Service2ArgNSpNSp = 0x0005,
+    Service2ArgNSpNSpReloadState = 0x0006,
+    Service2ArgSpNSp = 0x0007,
+    Service2ArgSpSp = 0x0008,
+    Service2ArgNSpSp = 0x0009,
+    Service3ArgNSpNSpNSp = 0x000A,
+    Service3ArgSpSpSp = 0x000B,
+    Service3ArgSpNSpNSp = 0x000C,
+    Service3ArgSpNSpNSpReloadState = 0x000D,
+    Service3ArgSpSpNSp = 0x000E,
+    Service3ArgNSpSpNSp = 0x000F,
+    Service3ArgSpNSpSp = 0x0010,
+    Service4ArgNSpNSpNSpNSp = 0x0011,
+    Service4ArgSpSpNSpNSp = 0x0012,
+    Service4ArgSpSpNSpNSpReloadState = 0x0013,
+    Service4ArgSpNSpNSpNSp = 0x0014,
+    Service4ArgSpNSpNSpNSpReloadState = 0x0015,
+    Service4ArgNSpSpNSpNSp = 0x0016,
+    Service4ArgSpSpSpNSp = 0x0017,
+    ServiceCpupTdQuerySystemTime = 0x0018,
+    ServiceCpupTdGetCurrentProcessorNumber = 0x0019,
+    ServiceCpupTdReadWriteFile = 0x001A,
+    ServiceCpupTdDeviceIoControlFile = 0x001B,
+    ServiceCpupTdRemoveIoCompletion = 0x001C,
+    ServiceCpupTdWaitForMultipleObjects = 0x001D,
+    ServiceCpupTdWaitForMultipleObjects32 = 0x001E,
+    Wow64ServiceTypesCount // = 0x001F
+} WOW64_SERVICE_TYPES, *PWOW64_SERVICE_TYPES;
+
+typedef enum _VDM_INDEX
+{
+    VDM_INDEX_Invalid = 0,
+    VDM_INDEX_0F,
+    VDM_INDEX_ESPrefix,
+    VDM_INDEX_CSPrefix,
+    VDM_INDEX_SSPrefix,
+    VDM_INDEX_DSPrefix,
+    VDM_INDEX_FSPrefix,
+    VDM_INDEX_GSPrefix,
+    VDM_INDEX_OPER32Prefix,
+    VDM_INDEX_ADDR32Prefix,
+    VDM_INDEX_INSB,
+    VDM_INDEX_INSW,
+    VDM_INDEX_OUTSB,
+    VDM_INDEX_OUTSW,
+    VDM_INDEX_PUSHF,
+    VDM_INDEX_POPF,
+    VDM_INDEX_INTnn,
+    VDM_INDEX_INTO,
+    VDM_INDEX_IRET,
+    VDM_INDEX_NPX,
+    VDM_INDEX_INBimm,
+    VDM_INDEX_INWimm,
+    VDM_INDEX_OUTBimm,
+    VDM_INDEX_OUTWimm,
+    VDM_INDEX_INB,
+    VDM_INDEX_INW,
+    VDM_INDEX_OUTB,
+    VDM_INDEX_OUTW,
+    VDM_INDEX_LOCKPrefix,
+    VDM_INDEX_REPNEPrefix,
+    VDM_INDEX_REPPrefix,
+    VDM_INDEX_CLI,
+    VDM_INDEX_STI,
+    VDM_INDEX_HLT,
+    MAX_VDM_INDEX
+} VDM_INDEX, *PVDM_INDEX;
+
+#endif /* _I386_KETYPES_H */

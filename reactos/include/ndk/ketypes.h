@@ -158,9 +158,17 @@ Author:
 #define KF_AMDK6MTRR                    0x00008000
 #define KF_XMMI64                       0x00010000
 #define KF_DTS                          0x00020000
+#define KF_BRANCH                       0x00020000 // from ksamd64.inc
+#define KF_SSE3                         0x00080000
+#define KF_CMPXCHG16B                   0x00100000
+#define KF_XSTATE                       0x00800000 // from ks386.inc, ksamd64.inc
 #define KF_NX_BIT                       0x20000000
 #define KF_NX_DISABLED                  0x40000000
 #define KF_NX_ENABLED                   0x80000000
+
+#define KF_XSAVEOPT_BIT                 15
+#define KF_XSTATE_BIT                   23
+#define KF_RDWRFSGSBASE_BIT             28
 
 //
 // Internal Exception Codes
@@ -775,6 +783,17 @@ typedef struct _KNODE
     struct _SINGLE_LIST_ENTRY *PfnDeferredList;
 } KNODE, *PKNODE;
 #include <poppack.h>
+
+//
+// Structure for Get/SetContext APC
+//
+typedef struct _GETSETCONTEXT
+{
+    KAPC Apc;
+    KEVENT Event;
+    KPROCESSOR_MODE Mode;
+    CONTEXT Context;
+} GETSETCONTEXT, *PGETSETCONTEXT;
 
 //
 // Kernel Profile Object
@@ -1427,6 +1446,28 @@ typedef struct _KSERVICE_TABLE_DESCRIPTOR
 #endif
     PUCHAR Number;
 } KSERVICE_TABLE_DESCRIPTOR, *PKSERVICE_TABLE_DESCRIPTOR;
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+//
+// Entropy Timing State
+//
+typedef struct _KENTROPY_TIMING_STATE
+{
+    ULONG EntropyCount;
+    ULONG Buffer[64];
+    KDPC Dpc;
+    ULONG LastDeliveredBuffer;
+    PULONG RawDataBuffer;
+} KENTROPY_TIMING_STATE, *PKENTROPY_TIMING_STATE;
+
+//
+// Constants from ks386.inc, ksamd64.inc and ksarm.h
+//
+#define KENTROPY_TIMING_INTERRUPTS_PER_BUFFER 0x400
+#define KENTROPY_TIMING_BUFFER_MASK 0x7ff
+#define KENTROPY_TIMING_ANALYSIS 0x0
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
 
 //
 // Exported Loader Parameter Block

@@ -36,6 +36,17 @@ Author:
 //#endif
 
 //
+// CPU Vendors
+//
+typedef enum
+{
+    CPU_UNKNOWN,
+    CPU_AMD,
+    CPU_INTEL,
+    CPU_VIA
+} CPU_VENDORS;
+
+//
 // Machine Types
 //
 #define MACHINE_TYPE_ISA        0x0000
@@ -65,7 +76,7 @@ Author:
 #define KGDT64_R3_CODE          0x0030
 #define KGDT64_SYS_TSS          0x0040
 #define KGDT64_R3_CMTEB         0x0050
-
+#define KGDT64_R0_LDT           0x0060
 
 //
 // CR4
@@ -81,6 +92,30 @@ Author:
 #define CR4_FXSR                0x200
 #define CR4_XMMEXCPT            0x400
 #define CR4_CHANNELS            0x800
+#define CR4_XSAVE               0x40000
+
+//
+// DR7
+//
+#define DR7_LEGAL               0xFFFF0355
+#define DR7_ACTIVE              0x00000355
+#define DR7_TRACE_BRANCH        0x00000200
+#define DR7_LAST_BRANCH         0x00000100
+
+//
+// Debug flags
+//
+#define DEBUG_ACTIVE_DR7                        0x0001
+#define DEBUG_ACTIVE_INSTRUMENTED               0x0002
+#define DEBUG_ACTIVE_DBG_INSTRUMENTED           0x0003
+#define DEBUG_ACTIVE_MINIMAL_THREAD             0x0004
+#define DEBUG_ACTIVE_PRIMARY_THREAD             0x0080
+#define DEBUG_ACTIVE_PRIMARY_THREAD_BIT         0x0007
+#define DEBUG_ACTIVE_PRIMARY_THREAD_LOCK_BIT    0x001F
+#define DEBUG_ACTIVE_SCHEDULED_THREAD           0x0040
+#define DEBUG_ACTIVE_SCHEDULED_THREAD_BIT       0x0006
+#define DEBUG_ACTIVE_SCHEDULED_THREAD_LOCK_BIT  0x001E
+#define DEBUG_ACTIVE_SCHEDULED_THREAD_LOCK      0x40000000
 
 //
 // EFlags
@@ -105,24 +140,60 @@ Author:
 #define EFLAGS_IF_SHIFT         0x0009
 
 //
+// MXCSR Floating Control/Status Bit Masks
+//
+#define XSW_INVALID_OPERATION   0x0001
+#define XSW_DENORMAL            0x0002
+#define XSW_ZERO_DIVIDE         0x0004
+#define XSW_OVERFLOW            0x0008
+#define XSW_UNDERFLOW           0x0010
+#define XSW_PRECISION           0x0020
+#define XCW_INVALID_OPERATION   0x0080
+#define XCW_DENORMAL            0x0100
+#define XCW_ZERO_DIVIDE         0x0200
+#define XCW_OVERFLOW            0x0400
+#define XCW_UNDERFLOW           0x0800
+#define XCW_PRECISION           0x1000
+#define XCW_ROUND_CONTROL       0x6000
+#define XCW_FLUSH_ZERO          0x8000
+#define XSW_ERROR_MASK          0x003F
+#define XSW_ERROR_SHIFT         7
+
+//
+// Legacy floating status word bit masks.
+//
+#define FSW_INVALID_OPERATION   0x0001
+#define FSW_DENORMAL            0x0002
+#define FSW_ZERO_DIVIDE         0x0004
+#define FSW_OVERFLOW            0x0008
+#define FSW_UNDERFLOW           0x0010
+#define FSW_PRECISION           0x0020
+#define FSW_STACK_FAULT         0x0040
+#define FSW_ERROR_SUMMARY       0x0080
+#define FSW_CONDITION_CODE_0    0x0100
+#define FSW_CONDITION_CODE_1    0x0200
+#define FSW_CONDITION_CODE_2    0x0400
+#define FSW_CONDITION_CODE_3    0x4000
+#define FSW_ERROR_MASK          0x003F
+
+//
 // Machine Specific Registers
 //
+#define MSR_EFER                0xC0000080
+#define MSR_STAR                0xC0000081
+#define MSR_LSTAR               0xC0000082
+#define MSR_CSTAR               0xC0000083
+#define MSR_SYSCALL_MASK        0xC0000084
+#define MSR_FS_BASE             0xC0000100
+#define MSR_GS_BASE             0xC0000101
+#define MSR_GS_SWAP             0xC0000102
 #define MSR_MCG_STATUS          0x017A
-#define MSR_DEGUG_CTL           0x01D9
+#define MSR_AMD_ACCESS          0x9C5A203A
+#define MSR_IA32_MISC_ENABLE    0x01A0
 #define MSR_LAST_BRANCH_FROM    0x01DB
 #define MSR_LAST_BRANCH_TO      0x01DC
 #define MSR_LAST_EXCEPTION_FROM 0x01DD
 #define MSR_LAST_EXCEPTION_TO   0x01DE
-#define MSR_PAT                 0x0277
-#define MSR_AMD_ACCESS      0x9C5A203A
-#define MSR_EFER            0xC0000080
-#define MSR_STAR            0xC0000081
-#define MSR_LSTAR           0xC0000082
-#define MSR_CSTAR           0xC0000083
-#define MSR_SYSCALL_MASK    0xC0000084
-#define MSR_FS_BASE         0xC0000100
-#define MSR_GS_BASE         0xC0000101
-#define MSR_GS_SWAP         0xC0000102
 
 //
 // Caching values for the PAT MSR
@@ -137,10 +208,23 @@ Author:
 //
 // Flags in MSR_EFER
 //
-#define MSR_LMA                 0x0400
-#define MSR_LME                 0x0100
 #define MSR_SCE                 0x0001
+#define MSR_LME                 0x0100
+#define MSR_LMA                 0x0400
 #define MSR_NXE                 0x0800
+#define MSR_PAT                 0x0277
+#define MSR_DEBUG_CTL           0x01D9
+
+//
+//  Flags in MSR_IA32_MISC_ENABLE
+//
+#define MSR_XD_ENABLE_MASK      0xFFFFFFFB
+
+//
+//  Flags in MSR_DEBUG_CTL
+//
+#define MSR_DEBUG_CTL_LBR equ   0x0001
+#define MSR_DEBUG_CTL_BTF equ   0x0002
 
 //
 // IPI Types
@@ -157,6 +241,13 @@ Author:
 #define PRCB_MAJOR_VERSION      1
 #define PRCB_BUILD_DEBUG        1
 #define PRCB_BUILD_UNIPROCESSOR 2
+
+//
+// Exception active flags
+//
+#define KEXCEPTION_ACTIVE_INTERRUPT_FRAME 0x0000
+#define KEXCEPTION_ACTIVE_EXCEPTION_FRAME 0x0001
+#define KEXCEPTION_ACTIVE_SERVICE_FRAME   0x0002
 
 //
 // HAL Variables
@@ -188,11 +279,27 @@ Author:
 #define SYNCH_LEVEL 12
 
 #define NMI_STACK_SIZE 0x2000
+#define ISR_STACK_SIZE 0x6000
 
 //
 // Number of pool lookaside lists per pool in the PRCB
 //
 #define NUMBER_POOL_LOOKASIDE_LISTS 32
+
+//
+// Structure for CPUID
+//
+typedef union _CPU_INFO
+{
+    UINT32 AsUINT32[4];
+    struct
+    {
+        ULONG Eax;
+        ULONG Ebx;
+        ULONG Ecx;
+        ULONG Edx;
+    };
+} CPU_INFO, *PCPU_INFO;
 
 //
 // Trap Frame Definition
@@ -282,23 +389,6 @@ typedef struct _KTRAP_FRAME
     USHORT Fill3;
     LONG CodePatchCycle;
 } KTRAP_FRAME, *PKTRAP_FRAME;
-
-//
-// Defines the Callback Stack Layout for User Mode Callbacks
-//
-typedef struct _KCALLOUT_FRAME
-{
-    ULONG64 InitialStack;
-    ULONG64 TrapFrame;
-    ULONG64 CallbackStack;
-    ULONG64 Rdi;
-    ULONG64 Rsi;
-    ULONG64 Rbx;
-    ULONG64 Rbp;
-    ULONG64 ReturnAddress;
-    ULONG64 Result;
-    ULONG64 ResultLength;
-} KCALLOUT_FRAME, *PKCALLOUT_FRAME;
 
 //
 // Dummy LDT_ENTRY
@@ -404,33 +494,33 @@ typedef struct _KDESCRIPTOR
 //
 typedef struct _KSPECIAL_REGISTERS
 {
-    UINT64 Cr0;
-    UINT64 Cr2;
-    UINT64 Cr3;
-    UINT64 Cr4;
-    UINT64 KernelDr0;
-    UINT64 KernelDr1;
-    UINT64 KernelDr2;
-    UINT64 KernelDr3;
-    UINT64 KernelDr6;
-    UINT64 KernelDr7;
-    struct _KDESCRIPTOR Gdtr;
-    struct _KDESCRIPTOR Idtr;
+    ULONG64 Cr0;
+    ULONG64 Cr2;
+    ULONG64 Cr3;
+    ULONG64 Cr4;
+    ULONG64 KernelDr0;
+    ULONG64 KernelDr1;
+    ULONG64 KernelDr2;
+    ULONG64 KernelDr3;
+    ULONG64 KernelDr6;
+    ULONG64 KernelDr7;
+    KDESCRIPTOR Gdtr;
+    KDESCRIPTOR Idtr;
     USHORT Tr;
     USHORT Ldtr;
     ULONG MxCsr;
-    UINT64 DebugControl;
-    UINT64 LastBranchToRip;
-    UINT64 LastBranchFromRip;
-    UINT64 LastExceptionToRip;
-    UINT64 LastExceptionFromRip;
-    UINT64 Cr8;
-    UINT64 MsrGsBase;
-    UINT64 MsrGsSwap;
-    UINT64 MsrStar;
-    UINT64 MsrLStar;
-    UINT64 MsrCStar;
-    UINT64 MsrSyscallMask;
+    ULONG64 DebugControl;
+    ULONG64 LastBranchToRip;
+    ULONG64 LastBranchFromRip;
+    ULONG64 LastExceptionToRip;
+    ULONG64 LastExceptionFromRip;
+    ULONG64 Cr8;
+    ULONG64 MsrGsBase;
+    ULONG64 MsrGsSwap;
+    ULONG64 MsrStar;
+    ULONG64 MsrLStar;
+    ULONG64 MsrCStar;
+    ULONG64 MsrSyscallMask;
 } KSPECIAL_REGISTERS, *PKSPECIAL_REGISTERS;
 
 //
@@ -756,8 +846,7 @@ typedef struct _KPRCB
     CACHE_DESCRIPTOR Cache[5];
     ULONG CacheCount;
 #endif
-}
- KPRCB, *PKPRCB;
+} KPRCB, *PKPRCB;
 
 //
 // Processor Control Region
@@ -837,12 +926,12 @@ typedef struct _KTSS64
 //
 typedef struct _KEXCEPTION_FRAME
 {
-    UINT64 P1Home;
-    UINT64 P2Home;
-    UINT64 P3Home;
-    UINT64 P4Home;
-    UINT64 P5;
-    UINT64 InitialStack;
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5;
+    ULONG64 Spare1;
     M128A Xmm6;
     M128A Xmm7;
     M128A Xmm8;
@@ -853,21 +942,54 @@ typedef struct _KEXCEPTION_FRAME
     M128A Xmm13;
     M128A Xmm14;
     M128A Xmm15;
-    UINT64 TrapFrame;
-    UINT64 CallbackStack;
-    UINT64 OutputBuffer;
-    UINT64 OutputLength;
-    UINT64 MxCsr;
-    UINT64 Rbp;
-    UINT64 Rbx;
-    UINT64 Rdi;
-    UINT64 Rsi;
-    UINT64 R12;
-    UINT64 R13;
-    UINT64 R14;
-    UINT64 R15;
-    UINT64 Return;
+    ULONG64 TrapFrame;
+    //ULONG64 CallbackStack;
+    ULONG64 OutputBuffer;
+    ULONG64 OutputLength;
+    ULONG64 Spare2;
+    ULONG64 MxCsr;
+    ULONG64 Rbp;
+    ULONG64 Rbx;
+    ULONG64 Rdi;
+    ULONG64 Rsi;
+    ULONG64 R12;
+    ULONG64 R13;
+    ULONG64 R14;
+    ULONG64 R15;
+    ULONG64 Return;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
+
+typedef struct _MACHINE_FRAME
+{
+    ULONG64 Rip;
+    USHORT SegCs;
+    USHORT Fill1[3];
+    ULONG EFlags;
+    ULONG Fill2;
+    ULONG64 Rsp;
+    USHORT SegSs;
+    USHORT Fill3[3];
+} MACHINE_FRAME, *PMACHINE_FRAME;
+
+//
+// Defines the Callback Stack Layout for User Mode Callbacks
+//
+typedef KEXCEPTION_FRAME KCALLOUT_FRAME, PKCALLOUT_FRAME;
+
+//
+// User side callout frame
+//
+typedef struct _UCALLOUT_FRAME
+{
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    PVOID Buffer;
+    ULONG Length;
+    ULONG ApiNumber;
+    MACHINE_FRAME MachineFrame;
+} UCALLOUT_FRAME, *PUCALLOUT_FRAME; // size = 0x0058
 
 typedef struct _DISPATCHER_CONTEXT
 {
@@ -883,14 +1005,13 @@ typedef struct _DISPATCHER_CONTEXT
     ULONG ScopeIndex;
 } DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
 
-
 typedef struct _KSTART_FRAME
 {
     ULONG64 P1Home;
     ULONG64 P2Home;
     ULONG64 P3Home;
     ULONG64 P4Home;
-    ULONG64 P5Home;
+    ULONG64 Reserved;
     ULONG64 Return;
 } KSTART_FRAME, *PKSTART_FRAME;
 
@@ -901,10 +1022,30 @@ typedef struct _KSWITCH_FRAME
     ULONG64 P3Home;
     ULONG64 P4Home;
     ULONG64 P5Home;
-    ULONG64 ApcBypass;
+    KIRQL ApcBypass;
+    UCHAR Fill1[7];
     ULONG64 Rbp;
     ULONG64 Return;
 } KSWITCH_FRAME, *PKSWITCH_FRAME;
+
+#define PROCESSOR_START_FLAG_FORCE_ENABLE_NX 0x0001
+typedef struct _KPROCESSOR_START_BLOCK
+{
+    ULONG CompletionFlag; // 0x0004
+    ULONG Flags; // 0x0008
+    ULONG Gdt32; // 0x000C
+    ULONG Idt32; // 0x0012
+    PVOID Gdt; // 0x0018
+    // ???
+    ULONG64 TiledMemoryMap; // 0x0058
+    UCHAR PmTarget[6]; // 0x0060
+    UCHAR LmIdentityTarget[6]; // 0x0066
+    ULONG64 LmTarget; // 0x0070
+    struct _KPROCESSOR_START_BLOCK *SelfMap; // 0x0078
+    ULONG64 MsrPat; // 0x0080
+    ULONG64 MsrEFER; // 0x0088
+    KPROCESSOR_STATE ProcessorState; // 0x0090
+} KPROCESSOR_START_BLOCK, *PKPROCESSOR_START_BLOCK; // size 00640
 
 //
 // Inline function to get current KPRCB
