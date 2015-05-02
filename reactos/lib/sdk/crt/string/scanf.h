@@ -297,7 +297,7 @@ _FUNCTION_ {
 		    if (!seendigit) break; /* not a valid number */
                     st = 1;
                     if (!suppress) {
-#define _SET_NUMBER_(type) *va_arg(ap, type*) = negative ? -cur : cur
+#define _SET_NUMBER_(type) *va_arg(ap, type*) = negative ? -(LONGLONG)cur : cur
 			if (I64_prefix) _SET_NUMBER_(LONGLONG);
 			else if (l_prefix) _SET_NUMBER_(LONG);
 			else if (h_prefix == 1) _SET_NUMBER_(short int);
@@ -640,7 +640,7 @@ _FUNCTION_ {
 			    if ((*(format - 1)) < *(format + 1))
 				RtlSetBits(&bitMask, *(format - 1) +1 , *(format + 1) - *(format - 1));
 			    else
-				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));			      
+				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));
 			    format++;
 			} else
 			    RtlSetBits(&bitMask, *format, 1);
