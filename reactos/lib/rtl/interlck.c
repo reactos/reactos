@@ -15,17 +15,6 @@
 
 /* FUNCTIONS ***************************************************************/
 
-PSLIST_ENTRY
-NTAPI
-RtlInterlockedPushListSList(IN PSLIST_HEADER ListHead,
-                            IN PSLIST_ENTRY List,
-                            IN PSLIST_ENTRY ListEnd,
-                            IN ULONG Count)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
 LONGLONG
 NTAPI
 RtlInterlockedCompareExchange64(LONGLONG volatile *Destination,

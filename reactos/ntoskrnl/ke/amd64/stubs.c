@@ -453,15 +453,6 @@ KiCallUserMode(
     return STATUS_UNSUCCESSFUL;
 }
 
-#undef ExQueryDepthSList
-NTKERNELAPI
-USHORT
-ExQueryDepthSList(IN PSLIST_HEADER ListHead)
-{
-    return (USHORT)(ListHead->Alignment & 0xffff);
-}
-
-
 ULONG ProcessCount;
 BOOLEAN CcPfEnablePrefetcher;
 

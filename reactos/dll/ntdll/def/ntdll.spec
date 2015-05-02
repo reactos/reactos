@@ -3,7 +3,7 @@
 ;@ stdcall RtlConvertVariantToProperty(ptr long ptr ptr ptr long ptr)
 @ fastcall RtlActivateActivationContextUnsafeFast(ptr ptr)
 @ fastcall RtlDeactivateActivationContextUnsafeFast(ptr)
-@ stdcall RtlInterlockedPushListSList(ptr ptr ptr long)
+@ fastcall RtlInterlockedPushListSList(ptr ptr ptr long)
 @ fastcall -arch=i386 RtlUlongByteSwap(long)
 @ fastcall -ret64 RtlUlonglongByteSwap(double)
 @ fastcall -arch=i386 RtlUshortByteSwap(long)
