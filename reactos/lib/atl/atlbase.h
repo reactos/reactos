@@ -58,8 +58,8 @@ namespace ATL
 class CAtlModule;
 class CComModule;
 class CAtlComModule;
-__declspec(selectany) CAtlModule			*_pAtlModule = NULL;
-__declspec(selectany) CComModule			*_pModule = NULL;
+__declspec(selectany) CAtlModule *_pAtlModule = NULL;
+__declspec(selectany) CComModule *_pModule = NULL;
 extern CAtlComModule _AtlComModule;
 
 typedef HRESULT (WINAPI _ATL_CREATORFUNC)(void *pv, REFIID riid, LPVOID *ppv);
@@ -68,41 +68,41 @@ typedef const struct _ATL_CATMAP_ENTRY * (_ATL_CATMAPFUNC)();
 
 struct _ATL_OBJMAP_ENTRY30
 {
-	const CLSID								*pclsid;
-	HRESULT (WINAPI *pfnUpdateRegistry)(BOOL bRegister);
-	_ATL_CREATORFUNC						*pfnGetClassObject;
-	_ATL_CREATORFUNC						*pfnCreateInstance;
-	IUnknown								*pCF;
-	DWORD									dwRegister;
-	_ATL_DESCRIPTIONFUNC					*pfnGetObjectDescription;
-	_ATL_CATMAPFUNC							*pfnGetCategoryMap;
-	void (WINAPI *pfnObjectMain)(bool bStarting);
+    const CLSID *pclsid;
+    HRESULT (WINAPI *pfnUpdateRegistry)(BOOL bRegister);
+    _ATL_CREATORFUNC *pfnGetClassObject;
+    _ATL_CREATORFUNC *pfnCreateInstance;
+    IUnknown *pCF;
+    DWORD dwRegister;
+    _ATL_DESCRIPTIONFUNC *pfnGetObjectDescription;
+    _ATL_CATMAPFUNC *pfnGetCategoryMap;
+    void (WINAPI *pfnObjectMain)(bool bStarting);
 
-	HRESULT WINAPI RevokeClassObject()
-	{
-		if (dwRegister == 0)
-			return S_OK;
-		return CoRevokeClassObject(dwRegister);
-	}
+    HRESULT WINAPI RevokeClassObject()
+    {
+        if (dwRegister == 0)
+            return S_OK;
+        return CoRevokeClassObject(dwRegister);
+    }
 
-	HRESULT WINAPI RegisterClassObject(DWORD dwClsContext, DWORD dwFlags)
-	{
-		IUnknown							*p;
-		HRESULT								hResult;
+    HRESULT WINAPI RegisterClassObject(DWORD dwClsContext, DWORD dwFlags)
+    {
+        IUnknown *p;
+        HRESULT hResult;
 
-		p = NULL;
-		if (pfnGetClassObject == NULL)
-			return S_OK;
+        p = NULL;
+        if (pfnGetClassObject == NULL)
+            return S_OK;
 
-		hResult = pfnGetClassObject(reinterpret_cast<LPVOID *>(pfnCreateInstance), IID_IUnknown, reinterpret_cast<LPVOID *>(&p));
-		if (SUCCEEDED(hResult))
-			hResult = CoRegisterClassObject(*pclsid, p, dwClsContext, dwFlags, &dwRegister);
+        hResult = pfnGetClassObject(reinterpret_cast<LPVOID *>(pfnCreateInstance), IID_IUnknown, reinterpret_cast<LPVOID *>(&p));
+        if (SUCCEEDED(hResult))
+            hResult = CoRegisterClassObject(*pclsid, p, dwClsContext, dwFlags, &dwRegister);
 
-		if (p != NULL)
-			p->Release();
+        if (p != NULL)
+            p->Release();
 
-		return hResult;
-	}
+        return hResult;
+    }
 };
 
 typedef _ATL_OBJMAP_ENTRY30 _ATL_OBJMAP_ENTRY;
@@ -111,17 +111,17 @@ typedef void (__stdcall _ATL_TERMFUNC)(DWORD_PTR dw);
 
 struct _ATL_TERMFUNC_ELEM
 {
-	_ATL_TERMFUNC							*pFunc;
-	DWORD_PTR								dw;
-	_ATL_TERMFUNC_ELEM						*pNext;
+    _ATL_TERMFUNC *pFunc;
+    DWORD_PTR dw;
+    _ATL_TERMFUNC_ELEM *pNext;
 };
 
 struct _ATL_MODULE70
 {
-	UINT									cbSize;
-	LONG									m_nLockCnt;
-	_ATL_TERMFUNC_ELEM						*m_pTermFuncs;
-	CComCriticalSection						m_csStaticDataInitAndTypeInfo;
+    UINT cbSize;
+    LONG m_nLockCnt;
+    _ATL_TERMFUNC_ELEM *m_pTermFuncs;
+    CComCriticalSection m_csStaticDataInitAndTypeInfo;
 };
 typedef _ATL_MODULE70 _ATL_MODULE;
 
@@ -131,43 +131,43 @@ typedef HRESULT (WINAPI _ATL_CREATORARGFUNC)(void *pv, REFIID riid, LPVOID *ppv,
 
 struct _ATL_INTMAP_ENTRY
 {
-	const IID								*piid;
-	DWORD_PTR								dw;
-	_ATL_CREATORARGFUNC						*pFunc;
+    const IID *piid;
+    DWORD_PTR dw;
+    _ATL_CREATORARGFUNC *pFunc;
 };
 
 struct _AtlCreateWndData
 {
-	void									*m_pThis;
-	DWORD									m_dwThreadID;
-	_AtlCreateWndData						*m_pNext;
+    void *m_pThis;
+    DWORD m_dwThreadID;
+    _AtlCreateWndData *m_pNext;
 };
 
 struct _ATL_COM_MODULE70
 {
-	UINT									cbSize;
-	HINSTANCE								m_hInstTypeLib;
-	_ATL_OBJMAP_ENTRY						**m_ppAutoObjMapFirst;
-	_ATL_OBJMAP_ENTRY						**m_ppAutoObjMapLast;
-	CComCriticalSection						m_csObjMap;
+    UINT cbSize;
+    HINSTANCE m_hInstTypeLib;
+    _ATL_OBJMAP_ENTRY **m_ppAutoObjMapFirst;
+    _ATL_OBJMAP_ENTRY **m_ppAutoObjMapLast;
+    CComCriticalSection m_csObjMap;
 };
 typedef _ATL_COM_MODULE70 _ATL_COM_MODULE;
 
 struct _ATL_WIN_MODULE70
 {
-	UINT									cbSize;
-	CComCriticalSection						m_csWindowCreate;
-	_AtlCreateWndData						*m_pCreateWndList;
+    UINT cbSize;
+    CComCriticalSection m_csWindowCreate;
+    _AtlCreateWndData *m_pCreateWndList;
 #ifdef NOTYET
-	CSimpleArray<ATOM>						m_rgWindowClassAtoms;
+    CSimpleArray<ATOM>                        m_rgWindowClassAtoms;
 #endif
 };
 typedef _ATL_WIN_MODULE70 _ATL_WIN_MODULE;
 
 struct _ATL_REGMAP_ENTRY
 {
-	LPCOLESTR								szKey;
-	LPCOLESTR								szData;
+    LPCOLESTR szKey;
+    LPCOLESTR szData;
 };
 
 HRESULT __stdcall AtlWinModuleInit(_ATL_WIN_MODULE *pWinModule);
@@ -181,137 +181,137 @@ template<class TLock>
 class CComCritSecLock
 {
 private:
-	bool										m_bLocked;
-	TLock										&m_cs;
+    bool m_bLocked;
+    TLock &m_cs;
 public:
-	CComCritSecLock(TLock &cs, bool bInitialLock = true) : m_cs(cs)
-	{
-		HRESULT									hResult;
+    CComCritSecLock(TLock &cs, bool bInitialLock = true) : m_cs(cs)
+    {
+        HRESULT hResult;
 
-		m_bLocked = false;
-		if (bInitialLock)
-		{
-			hResult = Lock();
-			if (FAILED(hResult))
-			{
-				ATLASSERT(false);
-			}
-		}
-	}
+        m_bLocked = false;
+        if (bInitialLock)
+        {
+            hResult = Lock();
+            if (FAILED(hResult))
+            {
+                ATLASSERT(false);
+            }
+        }
+    }
 
-	~CComCritSecLock()
-	{
-		if (m_bLocked)
-			Unlock();
-	}
+    ~CComCritSecLock()
+    {
+        if (m_bLocked)
+            Unlock();
+    }
 
-	HRESULT Lock()
-	{
-		HRESULT									hResult;
+    HRESULT Lock()
+    {
+        HRESULT                                    hResult;
 
-		ATLASSERT(!m_bLocked);
-		hResult = m_cs.Lock();
-		if (FAILED(hResult))
-			return hResult;
-		m_bLocked = true;
+        ATLASSERT(!m_bLocked);
+        hResult = m_cs.Lock();
+        if (FAILED(hResult))
+            return hResult;
+        m_bLocked = true;
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	void Unlock()
-	{
-		HRESULT									hResult;
+    void Unlock()
+    {
+        HRESULT                                    hResult;
 
-		ATLASSERT(m_bLocked);
-		hResult = m_cs.Unlock();
-		if (FAILED(hResult))
-		{
-			ATLASSERT(false);
-		}
-		m_bLocked = false;
-	}
+        ATLASSERT(m_bLocked);
+        hResult = m_cs.Unlock();
+        if (FAILED(hResult))
+        {
+            ATLASSERT(false);
+        }
+        m_bLocked = false;
+    }
 };
 
 inline BOOL WINAPI InlineIsEqualUnknown(REFGUID rguid1)
 {
    return (
-	  ((unsigned long *)&rguid1)[0] == 0 &&
-	  ((unsigned long *)&rguid1)[1] == 0 &&
-	  ((unsigned long *)&rguid1)[2] == 0x000000C0 &&
-	  ((unsigned long *)&rguid1)[3] == 0x46000000);
+      ((unsigned long *)&rguid1)[0] == 0 &&
+      ((unsigned long *)&rguid1)[1] == 0 &&
+      ((unsigned long *)&rguid1)[2] == 0x000000C0 &&
+      ((unsigned long *)&rguid1)[3] == 0x46000000);
 }
 
 class CComMultiThreadModelNoCS
 {
 public:
-	typedef CComFakeCriticalSection AutoCriticalSection;
-	typedef CComFakeCriticalSection CriticalSection;
-	typedef CComMultiThreadModelNoCS ThreadModelNoCS;
-	typedef CComFakeCriticalSection AutoDeleteCriticalSection;
+    typedef CComFakeCriticalSection AutoCriticalSection;
+    typedef CComFakeCriticalSection CriticalSection;
+    typedef CComMultiThreadModelNoCS ThreadModelNoCS;
+    typedef CComFakeCriticalSection AutoDeleteCriticalSection;
 
-	static ULONG WINAPI Increment(LPLONG p)
-	{
-		return InterlockedIncrement(p);
-	}
+    static ULONG WINAPI Increment(LPLONG p)
+    {
+        return InterlockedIncrement(p);
+    }
 
-	static ULONG WINAPI Decrement(LPLONG p)
-	{
-		return InterlockedDecrement(p);
-	}
+    static ULONG WINAPI Decrement(LPLONG p)
+    {
+        return InterlockedDecrement(p);
+    }
 };
 
 class CComMultiThreadModel
 {
 public:
-	typedef CComAutoCriticalSection AutoCriticalSection;
-	typedef CComCriticalSection CriticalSection;
-	typedef CComMultiThreadModelNoCS ThreadModelNoCS;
-	typedef CComAutoDeleteCriticalSection AutoDeleteCriticalSection;
+    typedef CComAutoCriticalSection AutoCriticalSection;
+    typedef CComCriticalSection CriticalSection;
+    typedef CComMultiThreadModelNoCS ThreadModelNoCS;
+    typedef CComAutoDeleteCriticalSection AutoDeleteCriticalSection;
 
-	static ULONG WINAPI Increment(LPLONG p)
-	{
-		return InterlockedIncrement(p);
-	}
+    static ULONG WINAPI Increment(LPLONG p)
+    {
+        return InterlockedIncrement(p);
+    }
 
-	static ULONG WINAPI Decrement(LPLONG p)
-	{
-		return InterlockedDecrement(p);
-	}
+    static ULONG WINAPI Decrement(LPLONG p)
+    {
+        return InterlockedDecrement(p);
+    }
 };
 
 class CComSingleThreadModel
 {
 public:
-	typedef CComFakeCriticalSection AutoCriticalSection;
-	typedef CComFakeCriticalSection CriticalSection;
-	typedef CComSingleThreadModel ThreadModelNoCS;
-	typedef CComFakeCriticalSection AutoDeleteCriticalSection;
+    typedef CComFakeCriticalSection AutoCriticalSection;
+    typedef CComFakeCriticalSection CriticalSection;
+    typedef CComSingleThreadModel ThreadModelNoCS;
+    typedef CComFakeCriticalSection AutoDeleteCriticalSection;
 
-	static ULONG WINAPI Increment(LPLONG p)
-	{
-		return ++*p;
-	}
+    static ULONG WINAPI Increment(LPLONG p)
+    {
+        return ++*p;
+    }
 
-	static ULONG WINAPI Decrement(LPLONG p)
-	{
-		return --*p;
-	}
+    static ULONG WINAPI Decrement(LPLONG p)
+    {
+        return --*p;
+    }
 };
 
 #if defined(_ATL_FREE_THREADED)
 
-	typedef CComMultiThreadModel CComObjectThreadModel;
-	typedef CComMultiThreadModel CComGlobalsThreadModel;
+    typedef CComMultiThreadModel CComObjectThreadModel;
+    typedef CComMultiThreadModel CComGlobalsThreadModel;
 
 #elif defined(_ATL_APARTMENT_THREADED)
 
-	typedef CComSingleThreadModel CComObjectThreadModel;
-	typedef CComMultiThreadModel CComGlobalsThreadModel;
+    typedef CComSingleThreadModel CComObjectThreadModel;
+    typedef CComMultiThreadModel CComGlobalsThreadModel;
 
 #elif defined(_ATL_SINGLE_THREADED)
 
-	typedef CComSingleThreadModel CComObjectThreadModel;
-	typedef CComSingleThreadModel CComGlobalsThreadModel;
+    typedef CComSingleThreadModel CComObjectThreadModel;
+    typedef CComSingleThreadModel CComGlobalsThreadModel;
 
 #else
 #error No threading model
@@ -320,416 +320,416 @@ public:
 class CAtlModule : public _ATL_MODULE
 {
 protected:
-	static GUID								m_libid;
+    static GUID m_libid;
 public:
-	CAtlModule()
-	{
-		ATLASSERT(_pAtlModule == NULL);
-		_pAtlModule = this;
-		cbSize = sizeof(_ATL_MODULE);
-		m_nLockCnt = 0;
-	}
+    CAtlModule()
+    {
+        ATLASSERT(_pAtlModule == NULL);
+        _pAtlModule = this;
+        cbSize = sizeof(_ATL_MODULE);
+        m_nLockCnt = 0;
+    }
 
-	virtual LONG GetLockCount()
-	{
-		return m_nLockCnt;
-	}
+    virtual LONG GetLockCount()
+    {
+        return m_nLockCnt;
+    }
 
-	virtual LONG Lock()
-	{
-		return CComGlobalsThreadModel::Increment(&m_nLockCnt);
-	}
+    virtual LONG Lock()
+    {
+        return CComGlobalsThreadModel::Increment(&m_nLockCnt);
+    }
 
-	virtual LONG Unlock()
-	{
-		return CComGlobalsThreadModel::Decrement(&m_nLockCnt);
-	}
+    virtual LONG Unlock()
+    {
+        return CComGlobalsThreadModel::Decrement(&m_nLockCnt);
+    }
 
-	virtual HRESULT AddCommonRGSReplacements(IRegistrarBase* /*pRegistrar*/) = 0;
+    virtual HRESULT AddCommonRGSReplacements(IRegistrarBase* /*pRegistrar*/) = 0;
 
-	HRESULT WINAPI UpdateRegistryFromResource(LPCTSTR lpszRes, BOOL bRegister, struct _ATL_REGMAP_ENTRY *pMapEntries = NULL)
-	{
-		CRegObject								registrar;
-		TCHAR									modulePath[MAX_PATH];
-		HRESULT									hResult;
+    HRESULT WINAPI UpdateRegistryFromResource(LPCTSTR lpszRes, BOOL bRegister, struct _ATL_REGMAP_ENTRY *pMapEntries = NULL)
+    {
+        CRegObject registrar;
+        TCHAR modulePath[MAX_PATH];
+        HRESULT hResult;
 
-		hResult = CommonInitRegistrar(registrar, modulePath, sizeof(modulePath) / sizeof(modulePath[0]), pMapEntries);
-		if (FAILED(hResult))
-			return hResult;
+        hResult = CommonInitRegistrar(registrar, modulePath, sizeof(modulePath) / sizeof(modulePath[0]), pMapEntries);
+        if (FAILED(hResult))
+            return hResult;
 
-		if (bRegister != FALSE)
-			hResult = registrar.ResourceRegisterSz(modulePath, lpszRes, _T("REGISTRY"));
-		else
-			hResult = registrar.ResourceUnregisterSz(modulePath, lpszRes, _T("REGISTRY"));
+        if (bRegister != FALSE)
+            hResult = registrar.ResourceRegisterSz(modulePath, lpszRes, _T("REGISTRY"));
+        else
+            hResult = registrar.ResourceUnregisterSz(modulePath, lpszRes, _T("REGISTRY"));
 
-		return hResult;
-	}
+        return hResult;
+    }
 
-	HRESULT WINAPI UpdateRegistryFromResource(UINT nResID, BOOL bRegister, struct _ATL_REGMAP_ENTRY *pMapEntries = NULL)
-	{
-		CRegObject								registrar;
-		TCHAR									modulePath[MAX_PATH];
-		HRESULT									hResult;
+    HRESULT WINAPI UpdateRegistryFromResource(UINT nResID, BOOL bRegister, struct _ATL_REGMAP_ENTRY *pMapEntries = NULL)
+    {
+        CRegObject registrar;
+        TCHAR modulePath[MAX_PATH];
+        HRESULT hResult;
 
-		hResult = CommonInitRegistrar(registrar, modulePath, sizeof(modulePath) / sizeof(modulePath[0]), pMapEntries);
-		if (FAILED(hResult))
-			return hResult;
+        hResult = CommonInitRegistrar(registrar, modulePath, sizeof(modulePath) / sizeof(modulePath[0]), pMapEntries);
+        if (FAILED(hResult))
+            return hResult;
 
-		if (bRegister != FALSE)
-			hResult = registrar.ResourceRegister(modulePath, nResID, _T("REGISTRY"));
-		else
-			hResult = registrar.ResourceUnregister(modulePath, nResID, _T("REGISTRY"));
+        if (bRegister != FALSE)
+            hResult = registrar.ResourceRegister(modulePath, nResID, _T("REGISTRY"));
+        else
+            hResult = registrar.ResourceUnregister(modulePath, nResID, _T("REGISTRY"));
 
-		return hResult;
-	}
+        return hResult;
+    }
 
 private:
-	HRESULT CommonInitRegistrar(CRegObject &registrar, TCHAR *modulePath, DWORD modulePathCount, struct _ATL_REGMAP_ENTRY *pMapEntries)
-	{
-		HINSTANCE								hInstance;
-		DWORD									dwFLen;
-		HRESULT									hResult;
+    HRESULT CommonInitRegistrar(CRegObject &registrar, TCHAR *modulePath, DWORD modulePathCount, struct _ATL_REGMAP_ENTRY *pMapEntries)
+    {
+        HINSTANCE hInstance;
+        DWORD dwFLen;
+        HRESULT hResult;
 
-		hInstance = _AtlBaseModule.GetModuleInstance();
-		dwFLen = GetModuleFileName(hInstance, modulePath, modulePathCount);
-		if (dwFLen == modulePathCount)
-			return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-		else if (dwFLen == 0)
-			return HRESULT_FROM_WIN32(GetLastError());
+        hInstance = _AtlBaseModule.GetModuleInstance();
+        dwFLen = GetModuleFileName(hInstance, modulePath, modulePathCount);
+        if (dwFLen == modulePathCount)
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        else if (dwFLen == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
 
-		if (pMapEntries != NULL)
-		{
-			while (pMapEntries->szKey != NULL)
-			{
-				ATLASSERT(pMapEntries->szData != NULL);
-				hResult = registrar.AddReplacement(pMapEntries->szKey, pMapEntries->szData);
-				if (FAILED(hResult))
-					return hResult;
-				pMapEntries++;
-			}
-		}
+        if (pMapEntries != NULL)
+        {
+            while (pMapEntries->szKey != NULL)
+            {
+                ATLASSERT(pMapEntries->szData != NULL);
+                hResult = registrar.AddReplacement(pMapEntries->szKey, pMapEntries->szData);
+                if (FAILED(hResult))
+                    return hResult;
+                pMapEntries++;
+            }
+        }
 
-		hResult = AddCommonRGSReplacements(&registrar);
-		if (FAILED(hResult))
-			return hResult;
+        hResult = AddCommonRGSReplacements(&registrar);
+        if (FAILED(hResult))
+            return hResult;
 
-		hResult = registrar.AddReplacement(_T("Module"), modulePath);
-		if (FAILED(hResult))
-			return hResult;
+        hResult = registrar.AddReplacement(_T("Module"), modulePath);
+        if (FAILED(hResult))
+            return hResult;
 
-		hResult = registrar.AddReplacement(_T("Module_Raw"), modulePath);
-		if (FAILED(hResult))
-			return hResult;
+        hResult = registrar.AddReplacement(_T("Module_Raw"), modulePath);
+        if (FAILED(hResult))
+            return hResult;
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 };
 
-__declspec(selectany) GUID					CAtlModule::m_libid = {0x0, 0x0, 0x0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0} };
+__declspec(selectany) GUID CAtlModule::m_libid = {0x0, 0x0, 0x0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0} };
 
 template <class T>
 class CAtlModuleT : public CAtlModule
 {
 public:
 
-	virtual HRESULT AddCommonRGSReplacements(IRegistrarBase *pRegistrar)
-	{
-		return pRegistrar->AddReplacement(L"APPID", T::GetAppId());
-	}
+    virtual HRESULT AddCommonRGSReplacements(IRegistrarBase *pRegistrar)
+    {
+        return pRegistrar->AddReplacement(L"APPID", T::GetAppId());
+    }
 
-	static LPCOLESTR GetAppId()
-	{
-		return L"";
-	}
+    static LPCOLESTR GetAppId()
+    {
+        return L"";
+    }
 };
 
 class CAtlComModule : public _ATL_COM_MODULE
 {
 public:
-	CAtlComModule()
-	{
-		GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)this, &m_hInstTypeLib);
-		m_ppAutoObjMapFirst = NULL;
-		m_ppAutoObjMapLast = NULL;
-		if (FAILED(m_csObjMap.Init()))
-		{
-			ATLASSERT(0);
-			CAtlBaseModule::m_bInitFailed = true;
-			return;
-		}
-		cbSize = sizeof(_ATL_COM_MODULE);
-	}
+    CAtlComModule()
+    {
+        GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)this, &m_hInstTypeLib);
+        m_ppAutoObjMapFirst = NULL;
+        m_ppAutoObjMapLast = NULL;
+        if (FAILED(m_csObjMap.Init()))
+        {
+            ATLASSERT(0);
+            CAtlBaseModule::m_bInitFailed = true;
+            return;
+        }
+        cbSize = sizeof(_ATL_COM_MODULE);
+    }
 
-	~CAtlComModule()
-	{
-		Term();
-	}
+    ~CAtlComModule()
+    {
+        Term();
+    }
 
-	void Term()
-	{
-		if (cbSize != 0)
-		{
-			ATLASSERT(m_ppAutoObjMapFirst == NULL);
-			ATLASSERT(m_ppAutoObjMapLast == NULL);
-			m_csObjMap.Term();
-			cbSize = 0;
-		}
-	}
+    void Term()
+    {
+        if (cbSize != 0)
+        {
+            ATLASSERT(m_ppAutoObjMapFirst == NULL);
+            ATLASSERT(m_ppAutoObjMapLast == NULL);
+            m_csObjMap.Term();
+            cbSize = 0;
+        }
+    }
 };
 
 template <class T>
 class CAtlDllModuleT : public CAtlModuleT<T>
 {
 public:
-	CAtlDllModuleT()
-	{
-	}
+    CAtlDllModuleT()
+    {
+    }
 
-	HRESULT DllCanUnloadNow()
-	{
-		T									*pThis;
+    HRESULT DllCanUnloadNow()
+    {
+        T *pThis;
 
-		pThis = static_cast<T *>(this);
-		if (pThis->GetLockCount() == 0)
-			return S_OK;
-		return S_FALSE;
-	}
+        pThis = static_cast<T *>(this);
+        if (pThis->GetLockCount() == 0)
+            return S_OK;
+        return S_FALSE;
+    }
 
-	HRESULT DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-	{
-		T									*pThis;
+    HRESULT DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+    {
+        T *pThis;
 
-		pThis = static_cast<T *>(this);
-		return pThis->GetClassObject(rclsid, riid, ppv);
-	}
+        pThis = static_cast<T *>(this);
+        return pThis->GetClassObject(rclsid, riid, ppv);
+    }
 
-	HRESULT DllRegisterServer(BOOL bRegTypeLib = TRUE)
-	{
-		T									*pThis;
-		HRESULT								hResult;
+    HRESULT DllRegisterServer(BOOL bRegTypeLib = TRUE)
+    {
+        T *pThis;
+        HRESULT hResult;
 
-		pThis = static_cast<T *>(this);
-		hResult = pThis->RegisterServer(bRegTypeLib);
-		return hResult;
-	}
+        pThis = static_cast<T *>(this);
+        hResult = pThis->RegisterServer(bRegTypeLib);
+        return hResult;
+    }
 
-	HRESULT DllUnregisterServer(BOOL bUnRegTypeLib = TRUE)
-	{
-		T									*pThis;
-		HRESULT								hResult;
+    HRESULT DllUnregisterServer(BOOL bUnRegTypeLib = TRUE)
+    {
+        T *pThis;
+        HRESULT hResult;
 
-		pThis = static_cast<T *>(this);
-		hResult = pThis->UnregisterServer(bUnRegTypeLib);
-		return hResult;
-	}
+        pThis = static_cast<T *>(this);
+        hResult = pThis->UnregisterServer(bUnRegTypeLib);
+        return hResult;
+    }
 
-	HRESULT GetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-	{
-		return AtlComModuleGetClassObject(&_AtlComModule, rclsid, riid, ppv);
-	}
+    HRESULT GetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+    {
+        return AtlComModuleGetClassObject(&_AtlComModule, rclsid, riid, ppv);
+    }
 };
 
 class CComModule : public CAtlModuleT<CComModule>
 {
 public:
-	_ATL_OBJMAP_ENTRY						*m_pObjMap;
+    _ATL_OBJMAP_ENTRY *m_pObjMap;
 public:
-	CComModule()
-	{
-		ATLASSERT(_pModule == NULL);
-		_pModule = this;
-		_pModule->m_pObjMap = NULL;
-	}
+    CComModule()
+    {
+        ATLASSERT(_pModule == NULL);
+        _pModule = this;
+        _pModule->m_pObjMap = NULL;
+    }
 
-	~CComModule()
-	{
-		_pModule = NULL;
-	}
+    ~CComModule()
+    {
+        _pModule = NULL;
+    }
 
-	HRESULT Init(_ATL_OBJMAP_ENTRY *p, HINSTANCE /* h */, const GUID *plibid)
-	{
-		_ATL_OBJMAP_ENTRY					*objectMapEntry;
+    HRESULT Init(_ATL_OBJMAP_ENTRY *p, HINSTANCE /* h */, const GUID *plibid)
+    {
+        _ATL_OBJMAP_ENTRY *objectMapEntry;
 
-		if (plibid != NULL)
-			m_libid = *plibid;
+        if (plibid != NULL)
+            m_libid = *plibid;
 
-		if (p != reinterpret_cast<_ATL_OBJMAP_ENTRY *>(-1))
-		{
-			m_pObjMap = p;
-			if (p != NULL)
-			{
-				objectMapEntry = p;
-				while (objectMapEntry->pclsid != NULL)
-				{
-					objectMapEntry->pfnObjectMain(true);
-					objectMapEntry++;
-				}
-			}
-		}
-		return S_OK;
-	}
+        if (p != reinterpret_cast<_ATL_OBJMAP_ENTRY *>(-1))
+        {
+            m_pObjMap = p;
+            if (p != NULL)
+            {
+                objectMapEntry = p;
+                while (objectMapEntry->pclsid != NULL)
+                {
+                    objectMapEntry->pfnObjectMain(true);
+                    objectMapEntry++;
+                }
+            }
+        }
+        return S_OK;
+    }
 
-	void Term()
-	{
-		_ATL_OBJMAP_ENTRY					*objectMapEntry;
+    void Term()
+    {
+        _ATL_OBJMAP_ENTRY                    *objectMapEntry;
 
-		if (m_pObjMap != NULL)
-		{
-			objectMapEntry = m_pObjMap;
-			while (objectMapEntry->pclsid != NULL)
-			{
-				if (objectMapEntry->pCF != NULL)
-					objectMapEntry->pCF->Release();
-				objectMapEntry->pCF = NULL;
-				objectMapEntry->pfnObjectMain(false);
-				objectMapEntry++;
-			}
-		}
-	}
+        if (m_pObjMap != NULL)
+        {
+            objectMapEntry = m_pObjMap;
+            while (objectMapEntry->pclsid != NULL)
+            {
+                if (objectMapEntry->pCF != NULL)
+                    objectMapEntry->pCF->Release();
+                objectMapEntry->pCF = NULL;
+                objectMapEntry->pfnObjectMain(false);
+                objectMapEntry++;
+            }
+        }
+    }
 
-	HRESULT GetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-	{
-		_ATL_OBJMAP_ENTRY					*objectMapEntry;
-		HRESULT								hResult;
+    HRESULT GetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+    {
+        _ATL_OBJMAP_ENTRY                    *objectMapEntry;
+        HRESULT                                hResult;
 
-		ATLASSERT(ppv != NULL);
-		if (ppv == NULL)
-			return E_POINTER;
-		*ppv = NULL;
-		hResult = S_OK;
-		if (m_pObjMap != NULL)
-		{
-			objectMapEntry = m_pObjMap;
-			while (objectMapEntry->pclsid != NULL)
-			{
-				if (objectMapEntry->pfnGetClassObject != NULL && InlineIsEqualGUID(rclsid, *objectMapEntry->pclsid) != FALSE)
-				{
-					if (objectMapEntry->pCF == NULL)
-					{
-						CComCritSecLock<CComCriticalSection> lock(_AtlComModule.m_csObjMap, true);
+        ATLASSERT(ppv != NULL);
+        if (ppv == NULL)
+            return E_POINTER;
+        *ppv = NULL;
+        hResult = S_OK;
+        if (m_pObjMap != NULL)
+        {
+            objectMapEntry = m_pObjMap;
+            while (objectMapEntry->pclsid != NULL)
+            {
+                if (objectMapEntry->pfnGetClassObject != NULL && InlineIsEqualGUID(rclsid, *objectMapEntry->pclsid) != FALSE)
+                {
+                    if (objectMapEntry->pCF == NULL)
+                    {
+                        CComCritSecLock<CComCriticalSection> lock(_AtlComModule.m_csObjMap, true);
 
-						if (objectMapEntry->pCF == NULL)
-							hResult = objectMapEntry->pfnGetClassObject(reinterpret_cast<void *>(objectMapEntry->pfnCreateInstance), IID_IUnknown, reinterpret_cast<LPVOID *>(&objectMapEntry->pCF));
-					}
-					if (objectMapEntry->pCF != NULL)
-						hResult = objectMapEntry->pCF->QueryInterface(riid, ppv);
-					break;
-				}
-				objectMapEntry++;
-			}
-		}
-		if (hResult == S_OK && *ppv == NULL)
-		{
-			// FIXME: call AtlComModuleGetClassObject
-			hResult = CLASS_E_CLASSNOTAVAILABLE;
-		}
-		return hResult;
-	}
+                        if (objectMapEntry->pCF == NULL)
+                            hResult = objectMapEntry->pfnGetClassObject(reinterpret_cast<void *>(objectMapEntry->pfnCreateInstance), IID_IUnknown, reinterpret_cast<LPVOID *>(&objectMapEntry->pCF));
+                    }
+                    if (objectMapEntry->pCF != NULL)
+                        hResult = objectMapEntry->pCF->QueryInterface(riid, ppv);
+                    break;
+                }
+                objectMapEntry++;
+            }
+        }
+        if (hResult == S_OK && *ppv == NULL)
+        {
+            // FIXME: call AtlComModuleGetClassObject
+            hResult = CLASS_E_CLASSNOTAVAILABLE;
+        }
+        return hResult;
+    }
 
-	HRESULT RegisterServer(BOOL bRegTypeLib = FALSE, const CLSID *pCLSID = NULL)
-	{
-		_ATL_OBJMAP_ENTRY					*objectMapEntry;
-		HRESULT								hResult;
+    HRESULT RegisterServer(BOOL bRegTypeLib = FALSE, const CLSID *pCLSID = NULL)
+    {
+        _ATL_OBJMAP_ENTRY *objectMapEntry;
+        HRESULT hResult;
 
-		hResult = S_OK;
-		objectMapEntry = m_pObjMap;
-		if (objectMapEntry != NULL)
-		{
-			while (objectMapEntry->pclsid != NULL)
-			{
-				if (pCLSID == NULL || IsEqualGUID(*pCLSID, *objectMapEntry->pclsid) != FALSE)
-				{
-					hResult = objectMapEntry->pfnUpdateRegistry(TRUE);
-					if (FAILED(hResult))
-						break;
-				}
-				objectMapEntry++;
-			}
-		}
-		return hResult;
-	}
+        hResult = S_OK;
+        objectMapEntry = m_pObjMap;
+        if (objectMapEntry != NULL)
+        {
+            while (objectMapEntry->pclsid != NULL)
+            {
+                if (pCLSID == NULL || IsEqualGUID(*pCLSID, *objectMapEntry->pclsid) != FALSE)
+                {
+                    hResult = objectMapEntry->pfnUpdateRegistry(TRUE);
+                    if (FAILED(hResult))
+                        break;
+                }
+                objectMapEntry++;
+            }
+        }
+        return hResult;
+    }
 
-	HRESULT UnregisterServer(BOOL bUnRegTypeLib, const CLSID *pCLSID = NULL)
-	{
-		_ATL_OBJMAP_ENTRY					*objectMapEntry;
-		HRESULT								hResult;
+    HRESULT UnregisterServer(BOOL bUnRegTypeLib, const CLSID *pCLSID = NULL)
+    {
+        _ATL_OBJMAP_ENTRY *objectMapEntry;
+        HRESULT hResult;
 
-		hResult = S_OK;
-		objectMapEntry = m_pObjMap;
-		if (objectMapEntry != NULL)
-		{
-			while (objectMapEntry->pclsid != NULL)
-			{
-				if (pCLSID == NULL || IsEqualGUID(*pCLSID, *objectMapEntry->pclsid) != FALSE)
-				{
-					hResult = objectMapEntry->pfnUpdateRegistry(FALSE); //unregister
-					if (FAILED(hResult))
-						break;
-				}
-				objectMapEntry++;
-			}
-		}
-		return hResult;
-	}
+        hResult = S_OK;
+        objectMapEntry = m_pObjMap;
+        if (objectMapEntry != NULL)
+        {
+            while (objectMapEntry->pclsid != NULL)
+            {
+                if (pCLSID == NULL || IsEqualGUID(*pCLSID, *objectMapEntry->pclsid) != FALSE)
+                {
+                    hResult = objectMapEntry->pfnUpdateRegistry(FALSE); //unregister
+                    if (FAILED(hResult))
+                        break;
+                }
+                objectMapEntry++;
+            }
+        }
+        return hResult;
+    }
 
-	HRESULT DllCanUnloadNow()
-	{
-		if (GetLockCount() == 0)
-			return S_OK;
-		return S_FALSE;
-	}
+    HRESULT DllCanUnloadNow()
+    {
+        if (GetLockCount() == 0)
+            return S_OK;
+        return S_FALSE;
+    }
 
-	HRESULT DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-	{
-		return GetClassObject(rclsid, riid, ppv);
-	}
+    HRESULT DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+    {
+        return GetClassObject(rclsid, riid, ppv);
+    }
 
-	HRESULT DllRegisterServer(BOOL bRegTypeLib = TRUE)
-	{
-		return RegisterServer(bRegTypeLib);
-	}
+    HRESULT DllRegisterServer(BOOL bRegTypeLib = TRUE)
+    {
+        return RegisterServer(bRegTypeLib);
+    }
 
-	HRESULT DllUnregisterServer(BOOL bUnRegTypeLib = TRUE)
-	{
-		return UnregisterServer(bUnRegTypeLib);
-	}
+    HRESULT DllUnregisterServer(BOOL bUnRegTypeLib = TRUE)
+    {
+        return UnregisterServer(bUnRegTypeLib);
+    }
 
 };
 
 class CAtlWinModule : public _ATL_WIN_MODULE
 {
 public:
-	CAtlWinModule()
-	{
-		HRESULT								hResult;
+    CAtlWinModule()
+    {
+        HRESULT hResult;
 
-		hResult = AtlWinModuleInit(this);
-		if (FAILED(hResult))
-		{
-			CAtlBaseModule::m_bInitFailed = true;
-			ATLASSERT(0);
-		}
-	}
+        hResult = AtlWinModuleInit(this);
+        if (FAILED(hResult))
+        {
+            CAtlBaseModule::m_bInitFailed = true;
+            ATLASSERT(0);
+        }
+    }
 
-	~CAtlWinModule()
-	{
-		Term();
-	}
+    ~CAtlWinModule()
+    {
+        Term();
+    }
 
-	void Term()
-	{
+    void Term()
+    {
         AtlWinModuleTerm(this, _AtlBaseModule.GetModuleInstance());
-	}
+    }
 
-	void AddCreateWndData(_AtlCreateWndData *pData, void *pObject)
-	{
-		AtlWinModuleAddCreateWndData(this, pData, pObject);
-	}
+    void AddCreateWndData(_AtlCreateWndData *pData, void *pObject)
+    {
+        AtlWinModuleAddCreateWndData(this, pData, pObject);
+    }
 
-	void *ExtractCreateWndData()
-	{
-		return AtlWinModuleExtractCreateWndData(this);
-	}
+    void *ExtractCreateWndData()
+    {
+        return AtlWinModuleExtractCreateWndData(this);
+    }
 };
 
 extern CAtlWinModule _AtlWinModule;
@@ -738,271 +738,271 @@ template<class T>
 class CComPtr
 {
 public:
-	T										*p;
+    T *p;
 public:
-	CComPtr()
-	{
-		p = NULL;
-	}
+    CComPtr()
+    {
+        p = NULL;
+    }
 
-	CComPtr(T *lp)
-	{
-		p = lp;
-		if (p != NULL)
-			p->AddRef();
-	}
+    CComPtr(T *lp)
+    {
+        p = lp;
+        if (p != NULL)
+            p->AddRef();
+    }
 
-	CComPtr(const CComPtr<T> &lp)
-	{
-		p = lp.p;
-		if (p != NULL)
-			p->AddRef();
-	}
+    CComPtr(const CComPtr<T> &lp)
+    {
+        p = lp.p;
+        if (p != NULL)
+            p->AddRef();
+    }
 
-	~CComPtr()
-	{
-		if (p != NULL)
-			p->Release();
-	}
+    ~CComPtr()
+    {
+        if (p != NULL)
+            p->Release();
+    }
 
-	T *operator = (T *lp)
-	{
-		if (p != NULL)
-			p->Release();
-		p = lp;
-		if (p != NULL)
-			p->AddRef();
+    T *operator = (T *lp)
+    {
+        if (p != NULL)
+            p->Release();
+        p = lp;
+        if (p != NULL)
+            p->AddRef();
         return *this;
-	}
+    }
 
-	T *operator = (const CComPtr<T> &lp)
-	{
-		if (p != NULL)
-			p->Release();
-		p = lp.p;
-		if (p != NULL)
-			p->AddRef();
+    T *operator = (const CComPtr<T> &lp)
+    {
+        if (p != NULL)
+            p->Release();
+        p = lp.p;
+        if (p != NULL)
+            p->AddRef();
         return *this;
-	}
+    }
 
-	void Release()
-	{
-		if (p != NULL)
-		{
-			p->Release();
-			p = NULL;
-		}
-	}
+    void Release()
+    {
+        if (p != NULL)
+        {
+            p->Release();
+            p = NULL;
+        }
+    }
 
-	void Attach(T *lp)
-	{
-		if (p != NULL)
-			p->Release();
-		p = lp;
-	}
+    void Attach(T *lp)
+    {
+        if (p != NULL)
+            p->Release();
+        p = lp;
+    }
 
-	T *Detach()
-	{
-		T									*saveP;
+    T *Detach()
+    {
+        T *saveP;
 
-		saveP = p;
-		p = NULL;
-		return saveP;
-	}
+        saveP = p;
+        p = NULL;
+        return saveP;
+    }
 
-	T **operator & ()
-	{
-		ATLASSERT(p == NULL);
-		return &p;
-	}
+    T **operator & ()
+    {
+        ATLASSERT(p == NULL);
+        return &p;
+    }
 
-	operator T * ()
-	{
-		return p;
-	}
+    operator T * ()
+    {
+        return p;
+    }
 
-	T *operator -> ()
-	{
-		ATLASSERT(p != NULL);
-		return p;
-	}
+    T *operator -> ()
+    {
+        ATLASSERT(p != NULL);
+        return p;
+    }
 };
 
 class CComBSTR
 {
 public:
-	BSTR									m_str;
+    BSTR m_str;
 public:
-	CComBSTR(LPCOLESTR pSrc)
-	{
-		if (pSrc == NULL)
-			m_str = NULL;
-		else
-			m_str = ::SysAllocString(pSrc);
-	}
-	~CComBSTR()
-	{
-		::SysFreeString(m_str);
-		m_str = NULL;
-	}
+    CComBSTR(LPCOLESTR pSrc)
+    {
+        if (pSrc == NULL)
+            m_str = NULL;
+        else
+            m_str = ::SysAllocString(pSrc);
+    }
+    ~CComBSTR()
+    {
+        ::SysFreeString(m_str);
+        m_str = NULL;
+    }
 };
 
 class CComVariant : public tagVARIANT
 {
 public:
-	CComVariant()
-	{
-		::VariantInit(this);
-	}
+    CComVariant()
+    {
+        ::VariantInit(this);
+    }
 
-	~CComVariant()
-	{
-		Clear();
-	}
+    ~CComVariant()
+    {
+        Clear();
+    }
 
-	HRESULT Clear()
-	{
-		return ::VariantClear(this);
-	}
+    HRESULT Clear()
+    {
+        return ::VariantClear(this);
+    }
 };
 
 inline HRESULT __stdcall AtlAdvise(IUnknown *pUnkCP, IUnknown *pUnk, const IID &iid, LPDWORD pdw)
 {
-	CComPtr<IConnectionPointContainer>		container;
-	CComPtr<IConnectionPoint>				connectionPoint;
-	HRESULT									hResult;
+    CComPtr<IConnectionPointContainer>        container;
+    CComPtr<IConnectionPoint>                connectionPoint;
+    HRESULT                                    hResult;
 
-	if (pUnkCP == NULL)
-		return E_INVALIDARG;
-	hResult = pUnkCP->QueryInterface(IID_IConnectionPointContainer, (void **)&container);
-	if (FAILED(hResult))
-		return hResult;
-	hResult = container->FindConnectionPoint(iid, &connectionPoint);
-	if (FAILED(hResult))
-		return hResult;
-	return connectionPoint->Advise(pUnk, pdw);
+    if (pUnkCP == NULL)
+        return E_INVALIDARG;
+    hResult = pUnkCP->QueryInterface(IID_IConnectionPointContainer, (void **)&container);
+    if (FAILED(hResult))
+        return hResult;
+    hResult = container->FindConnectionPoint(iid, &connectionPoint);
+    if (FAILED(hResult))
+        return hResult;
+    return connectionPoint->Advise(pUnk, pdw);
 }
 
 inline HRESULT __stdcall AtlUnadvise(IUnknown *pUnkCP, const IID &iid, DWORD dw)
 {
-	CComPtr<IConnectionPointContainer>		container;
-	CComPtr<IConnectionPoint>				connectionPoint;
-	HRESULT									hResult;
+    CComPtr<IConnectionPointContainer>        container;
+    CComPtr<IConnectionPoint>                connectionPoint;
+    HRESULT                                    hResult;
 
-	if (pUnkCP == NULL)
-		return E_INVALIDARG;
-	hResult = pUnkCP->QueryInterface(IID_IConnectionPointContainer, (void **)&container);
-	if (FAILED(hResult))
-		return hResult;
-	hResult = container->FindConnectionPoint(iid, &connectionPoint);
-	if (FAILED(hResult))
-		return hResult;
-	return connectionPoint->Unadvise(dw);
+    if (pUnkCP == NULL)
+        return E_INVALIDARG;
+    hResult = pUnkCP->QueryInterface(IID_IConnectionPointContainer, (void **)&container);
+    if (FAILED(hResult))
+        return hResult;
+    hResult = container->FindConnectionPoint(iid, &connectionPoint);
+    if (FAILED(hResult))
+        return hResult;
+    return connectionPoint->Unadvise(dw);
 }
 
 inline HRESULT __stdcall AtlInternalQueryInterface(void *pThis, const _ATL_INTMAP_ENTRY *pEntries, REFIID iid, void **ppvObject)
 {
-	int							i;
-	IUnknown					*resultInterface;
-	HRESULT						hResult;
+    int i;
+    IUnknown *resultInterface;
+    HRESULT hResult;
 
-	ATLASSERT(pThis != NULL && pEntries != NULL);
-	if (pThis == NULL || pEntries == NULL)
-		return E_INVALIDARG;
-	ATLASSERT(ppvObject != NULL);
-	if (ppvObject == NULL)
-		return E_POINTER;
+    ATLASSERT(pThis != NULL && pEntries != NULL);
+    if (pThis == NULL || pEntries == NULL)
+        return E_INVALIDARG;
+    ATLASSERT(ppvObject != NULL);
+    if (ppvObject == NULL)
+        return E_POINTER;
 
-	if (InlineIsEqualUnknown(iid))
-	{
-		resultInterface = reinterpret_cast<IUnknown *>(reinterpret_cast<char *>(pThis) + pEntries[0].dw);
-		*ppvObject = resultInterface;
-		resultInterface->AddRef();
-		return S_OK;
-	}
+    if (InlineIsEqualUnknown(iid))
+    {
+        resultInterface = reinterpret_cast<IUnknown *>(reinterpret_cast<char *>(pThis) + pEntries[0].dw);
+        *ppvObject = resultInterface;
+        resultInterface->AddRef();
+        return S_OK;
+    }
 
-	i = 0;
-	while (pEntries[i].pFunc != 0)
-	{
-		if (pEntries[i].piid == NULL || InlineIsEqualGUID(iid, *pEntries[i].piid))
-		{
-			if (pEntries[i].pFunc == reinterpret_cast<_ATL_CREATORARGFUNC *>(1))
-			{
-				ATLASSERT(pEntries[i].piid != NULL);
-				resultInterface = reinterpret_cast<IUnknown *>(reinterpret_cast<char *>(pThis) + pEntries[i].dw);
-				*ppvObject = resultInterface;
-				resultInterface->AddRef();
-				return S_OK;
-			}
-			else
-			{
-				hResult = pEntries[i].pFunc(pThis, iid, ppvObject, 0);
-				if (hResult == S_OK || (FAILED(hResult) && pEntries[i].piid != NULL))
-					return hResult;
-			}
-			break;
-		}
-		i++;
-	}
-	*ppvObject = NULL;
-	return E_NOINTERFACE;
+    i = 0;
+    while (pEntries[i].pFunc != 0)
+    {
+        if (pEntries[i].piid == NULL || InlineIsEqualGUID(iid, *pEntries[i].piid))
+        {
+            if (pEntries[i].pFunc == reinterpret_cast<_ATL_CREATORARGFUNC *>(1))
+            {
+                ATLASSERT(pEntries[i].piid != NULL);
+                resultInterface = reinterpret_cast<IUnknown *>(reinterpret_cast<char *>(pThis) + pEntries[i].dw);
+                *ppvObject = resultInterface;
+                resultInterface->AddRef();
+                return S_OK;
+            }
+            else
+            {
+                hResult = pEntries[i].pFunc(pThis, iid, ppvObject, 0);
+                if (hResult == S_OK || (FAILED(hResult) && pEntries[i].piid != NULL))
+                    return hResult;
+            }
+            break;
+        }
+        i++;
+    }
+    *ppvObject = NULL;
+    return E_NOINTERFACE;
 }
 
 inline HRESULT __stdcall AtlWinModuleInit(_ATL_WIN_MODULE *pWinModule)
 {
-	if (pWinModule == NULL)
-		return E_INVALIDARG;
-	pWinModule->m_pCreateWndList = NULL;
-	return pWinModule->m_csWindowCreate.Init();
+    if (pWinModule == NULL)
+        return E_INVALIDARG;
+    pWinModule->m_pCreateWndList = NULL;
+    return pWinModule->m_csWindowCreate.Init();
 }
 
 inline HRESULT __stdcall AtlWinModuleTerm(_ATL_WIN_MODULE *pWinModule, HINSTANCE hInst)
 {
-	if (pWinModule == NULL)
-		return E_INVALIDARG;
-	pWinModule->m_csWindowCreate.Term();
-	return S_OK;
+    if (pWinModule == NULL)
+        return E_INVALIDARG;
+    pWinModule->m_csWindowCreate.Term();
+    return S_OK;
 }
 
 inline void __stdcall AtlWinModuleAddCreateWndData(_ATL_WIN_MODULE *pWinModule, _AtlCreateWndData *pData, void *pObject)
 {
-	CComCritSecLock<CComCriticalSection>	lock(pWinModule->m_csWindowCreate, true);
+    CComCritSecLock<CComCriticalSection> lock(pWinModule->m_csWindowCreate, true);
 
-	ATLASSERT(pWinModule != NULL);
-	ATLASSERT(pObject != NULL);
+    ATLASSERT(pWinModule != NULL);
+    ATLASSERT(pObject != NULL);
 
-	pData->m_pThis = pObject;
-	pData->m_dwThreadID = ::GetCurrentThreadId();
-	pData->m_pNext = pWinModule->m_pCreateWndList;
-	pWinModule->m_pCreateWndList = pData;
+    pData->m_pThis = pObject;
+    pData->m_dwThreadID = ::GetCurrentThreadId();
+    pData->m_pNext = pWinModule->m_pCreateWndList;
+    pWinModule->m_pCreateWndList = pData;
 }
 
 inline void *__stdcall AtlWinModuleExtractCreateWndData(_ATL_WIN_MODULE *pWinModule)
 {
-	CComCritSecLock<CComCriticalSection>	lock(pWinModule->m_csWindowCreate, true);
-	void									*result;
-	_AtlCreateWndData						*currentEntry;
-	_AtlCreateWndData						**previousLink;
-	DWORD									threadID;
+    CComCritSecLock<CComCriticalSection> lock(pWinModule->m_csWindowCreate, true);
+    void *result;
+    _AtlCreateWndData *currentEntry;
+    _AtlCreateWndData **previousLink;
+    DWORD threadID;
 
-	ATLASSERT(pWinModule != NULL);
+    ATLASSERT(pWinModule != NULL);
 
-	result = NULL;
-	threadID = GetCurrentThreadId();
-	currentEntry = pWinModule->m_pCreateWndList;
-	previousLink = &pWinModule->m_pCreateWndList;
-	while (currentEntry != NULL)
-	{
-		if (currentEntry->m_dwThreadID == threadID)
-		{
-			*previousLink = currentEntry->m_pNext;
-			result = currentEntry->m_pThis;
-			break;
-		}
-		previousLink = &currentEntry->m_pNext;
-		currentEntry = currentEntry->m_pNext;
-	}
-	return result;
+    result = NULL;
+    threadID = GetCurrentThreadId();
+    currentEntry = pWinModule->m_pCreateWndList;
+    previousLink = &pWinModule->m_pCreateWndList;
+    while (currentEntry != NULL)
+    {
+        if (currentEntry->m_dwThreadID == threadID)
+        {
+            *previousLink = currentEntry->m_pNext;
+            result = currentEntry->m_pThis;
+            break;
+        }
+        previousLink = &currentEntry->m_pNext;
+        currentEntry = currentEntry->m_pNext;
+    }
+    return result;
 }
 
 }; // namespace ATL

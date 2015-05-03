@@ -44,141 +44,141 @@ namespace ATL
 class CComCriticalSection
 {
 public:
-	CRITICAL_SECTION						m_sec;
+    CRITICAL_SECTION m_sec;
 public:
-	CComCriticalSection()
-	{
-		memset(&m_sec, 0, sizeof(CRITICAL_SECTION));
-	}
+    CComCriticalSection()
+    {
+        memset(&m_sec, 0, sizeof(CRITICAL_SECTION));
+    }
 
-	virtual ~CComCriticalSection()
-	{
-	}
+    virtual ~CComCriticalSection()
+    {
+    }
 
-	HRESULT Lock()
-	{
-		EnterCriticalSection(&m_sec);
-		return S_OK;
-	}
+    HRESULT Lock()
+    {
+        EnterCriticalSection(&m_sec);
+        return S_OK;
+    }
 
-	HRESULT Unlock()
-	{
-		LeaveCriticalSection(&m_sec);
-		return S_OK;
-	}
+    HRESULT Unlock()
+    {
+        LeaveCriticalSection(&m_sec);
+        return S_OK;
+    }
 
-	HRESULT Init()
-	{
-		InitializeCriticalSection(&m_sec);
-		return S_OK;
-	}
+    HRESULT Init()
+    {
+        InitializeCriticalSection(&m_sec);
+        return S_OK;
+    }
 
-	HRESULT Term()
-	{
-		DeleteCriticalSection(&m_sec);
-		return S_OK;
-	}
+    HRESULT Term()
+    {
+        DeleteCriticalSection(&m_sec);
+        return S_OK;
+    }
 };
 
 class CComFakeCriticalSection
 {
 public:
-	HRESULT Lock()
-	{
-		return S_OK;
-	}
+    HRESULT Lock()
+    {
+        return S_OK;
+    }
 
-	HRESULT Unlock()
-	{
-		return S_OK;
-	}
+    HRESULT Unlock()
+    {
+        return S_OK;
+    }
 
-	HRESULT Init()
-	{
-		return S_OK;
-	}
+    HRESULT Init()
+    {
+        return S_OK;
+    }
 
-	HRESULT Term()
-	{
-		return S_OK;
-	}
+    HRESULT Term()
+    {
+        return S_OK;
+    }
 };
 
 class CComAutoCriticalSection : public CComCriticalSection
 {
 public:
-	CComAutoCriticalSection()
-	{
-		HRESULT hResult __MINGW_ATTRIB_UNUSED;
+    CComAutoCriticalSection()
+    {
+        HRESULT hResult __MINGW_ATTRIB_UNUSED;
 
-		hResult = CComCriticalSection::Init();
-		ATLASSERT(SUCCEEDED(hResult));
-	}
-	~CComAutoCriticalSection()
-	{
-		CComCriticalSection::Term();
-	}
+        hResult = CComCriticalSection::Init();
+        ATLASSERT(SUCCEEDED(hResult));
+    }
+    ~CComAutoCriticalSection()
+    {
+        CComCriticalSection::Term();
+    }
 };
 
 class CComSafeDeleteCriticalSection : public CComCriticalSection
 {
 private:
-	bool									m_bInitialized;
+    bool m_bInitialized;
 public:
-	CComSafeDeleteCriticalSection()
-	{
-		m_bInitialized = false;
-	}
+    CComSafeDeleteCriticalSection()
+    {
+        m_bInitialized = false;
+    }
 
-	~CComSafeDeleteCriticalSection()
-	{
-		Term();
-	}
+    ~CComSafeDeleteCriticalSection()
+    {
+        Term();
+    }
 
-	HRESULT Lock()
-	{
-		ATLASSERT(m_bInitialized);
-		return CComCriticalSection::Lock();
-	}
+    HRESULT Lock()
+    {
+        ATLASSERT(m_bInitialized);
+        return CComCriticalSection::Lock();
+    }
 
-	HRESULT Init()
-	{
-		HRESULT								hResult;
+    HRESULT Init()
+    {
+        HRESULT hResult;
 
-		ATLASSERT(!m_bInitialized);
-		hResult = CComCriticalSection::Init();
-		if (SUCCEEDED(hResult))
-			m_bInitialized = true;
-		return hResult;
-	}
+        ATLASSERT(!m_bInitialized);
+        hResult = CComCriticalSection::Init();
+        if (SUCCEEDED(hResult))
+            m_bInitialized = true;
+        return hResult;
+    }
 
-	HRESULT Term()
-	{
-		if (!m_bInitialized)
-			return S_OK;
-		m_bInitialized = false;
-		return CComCriticalSection::Term();
-	}
+    HRESULT Term()
+    {
+        if (!m_bInitialized)
+            return S_OK;
+        m_bInitialized = false;
+        return CComCriticalSection::Term();
+    }
 };
 
 class CComAutoDeleteCriticalSection : public CComSafeDeleteCriticalSection
 {
 private:
-	// CComAutoDeleteCriticalSection::Term should never be called
-	HRESULT Term();
+    // CComAutoDeleteCriticalSection::Term should never be called
+    HRESULT Term();
 };
 
 struct _ATL_BASE_MODULE70
 {
-	UINT									cbSize;
-	HINSTANCE								m_hInst;
-	HINSTANCE								m_hInstResource;
-	bool									m_bNT5orWin98;
-	DWORD									dwAtlBuildVer;
-	GUID									*pguidVer;
-	CRITICAL_SECTION						m_csResource;
+    UINT cbSize;
+    HINSTANCE m_hInst;
+    HINSTANCE m_hInstResource;
+    bool m_bNT5orWin98;
+    DWORD dwAtlBuildVer;
+    GUID *pguidVer;
+    CRITICAL_SECTION m_csResource;
 #ifdef NOTYET
-	CSimpleArray<HINSTANCE>					m_rgResourceInstance;
+    CSimpleArray<HINSTANCE> m_rgResourceInstance;
 #endif
 };
 typedef _ATL_BASE_MODULE70 _ATL_BASE_MODULE;
@@ -186,24 +186,24 @@ typedef _ATL_BASE_MODULE70 _ATL_BASE_MODULE;
 class CAtlBaseModule : public _ATL_BASE_MODULE
 {
 public :
-	static bool								m_bInitFailed;
+    static bool m_bInitFailed;
 public:
-	CAtlBaseModule()
-	{
-		cbSize = sizeof(_ATL_BASE_MODULE);
-		GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)this, &m_hInst);
-		m_hInstResource = m_hInst;
-	}
+    CAtlBaseModule()
+    {
+        cbSize = sizeof(_ATL_BASE_MODULE);
+        GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)this, &m_hInst);
+        m_hInstResource = m_hInst;
+    }
 
-	HINSTANCE GetModuleInstance()
-	{
-		return m_hInst;
-	}
+    HINSTANCE GetModuleInstance()
+    {
+        return m_hInst;
+    }
 
-	HINSTANCE GetResourceInstance()
-	{
-		return m_hInstResource;
-	}
+    HINSTANCE GetResourceInstance()
+    {
+        return m_hInstResource;
+    }
 };
 
 extern CAtlBaseModule _AtlBaseModule;

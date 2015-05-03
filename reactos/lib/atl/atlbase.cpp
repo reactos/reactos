@@ -24,8 +24,8 @@
 namespace ATL
 {
 
-CAtlBaseModule								_AtlBaseModule;
-CAtlWinModule								_AtlWinModule = CAtlWinModule();
-CAtlComModule								_AtlComModule;
+CAtlBaseModule _AtlBaseModule;
+CAtlWinModule _AtlWinModule = CAtlWinModule();
+CAtlComModule _AtlComModule;
 
 };  // namespace ATL
