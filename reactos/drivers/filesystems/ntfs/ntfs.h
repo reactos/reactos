@@ -642,10 +642,8 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
 
 /* finfo.c */
 
-DRIVER_DISPATCH NtfsFsdQueryInformation;
-NTSTATUS NTAPI
-NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
-                        PIRP Irp);
+NTSTATUS
+NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* fsctl.c */

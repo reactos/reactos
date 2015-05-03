@@ -253,7 +253,7 @@ NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext)
 
     Irp = IrpContext->Irp;
     DeviceObject = IrpContext->DeviceObject;
-    Stack = IoGetCurrentIrpStackLocation(Irp);
+    Stack = IrpContext->Stack;
     FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
     BufferLength = Stack->Parameters.QueryVolume.Length;
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;

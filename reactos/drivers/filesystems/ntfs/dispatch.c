@@ -68,6 +68,10 @@ NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
             case IRP_MJ_SET_VOLUME_INFORMATION:
                 Status = NtfsSetVolumeInformation(IrpContext);
                 break;
+
+            case IRP_MJ_QUERY_INFORMATION:
+                Status = NtfsQueryInformation(IrpContext);
+                break;
         }
     }
     else

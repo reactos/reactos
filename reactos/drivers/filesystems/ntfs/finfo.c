@@ -222,9 +222,7 @@ NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
  * FUNCTION: Retrieve the specified file information
  */
 NTSTATUS
-NTAPI
-NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
-                        PIRP Irp)
+NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
 {
     FILE_INFORMATION_CLASS FileInformationClass;
     PIO_STACK_LOCATION Stack;
@@ -232,13 +230,17 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
     PNTFS_FCB Fcb;
     PVOID SystemBuffer;
     ULONG BufferLength;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT1("NtfsQueryInformation(%p, %p)\n", DeviceObject, Irp);
+    DPRINT1("NtfsQueryInformation(%p)\n", IrpContext);
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
+    Irp = IrpContext->Irp;
+    Stack = IrpContext->Stack;
+    DeviceObject = IrpContext->DeviceObject;
     FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
-    FileObject = Stack->FileObject;
+    FileObject = IrpContext->FileObject;
     Fcb = FileObject->FsContext;
 
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
