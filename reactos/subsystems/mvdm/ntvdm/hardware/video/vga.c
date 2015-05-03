@@ -644,7 +644,9 @@ static inline DWORD VgaTranslateReadAddress(DWORD Address)
         Plane = VgaGcRegisters[VGA_GC_READ_MAP_SEL_REG] & 0x03;
     }
 
-    return Offset + Plane * VGA_BANK_SIZE;
+    /* Return the offset on plane 0 for read mode 1 */
+    if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_READ) return Offset;
+    else return Offset + Plane * VGA_BANK_SIZE;
 }
 
 static inline DWORD VgaTranslateWriteAddress(DWORD Address)
@@ -1900,7 +1902,7 @@ VOID VgaRefreshDisplay(VOID)
 
 VOID NTAPI VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
-    DWORD i;
+    DWORD i, j;
     DWORD VideoAddress;
     PUCHAR BufPtr = (PUCHAR)Buffer;
 
@@ -1909,13 +1911,47 @@ VOID NTAPI VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
     /* Ignore if video RAM access is disabled */
     if ((VgaMiscRegister & VGA_MISC_RAM_ENABLED) == 0) return;
 
-    /* Loop through each byte */
-    for (i = 0; i < Size; i++)
+    if (!(VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_READ))
     {
-        VideoAddress = VgaTranslateReadAddress(Address + i);
+        /* Loop through each byte */
+        for (i = 0; i < Size; i++)
+        {
+            VideoAddress = VgaTranslateReadAddress(Address + i);
+    
+            /* Copy the value to the buffer */
+            BufPtr[i] = VgaMemory[VideoAddress];
+        }
+    }
+    else
+    {
+        /* Loop through each byte */
+        for (i = 0; i < Size; i++)
+        {
+            BYTE Result = 0xFF;
 
-        /* Copy the value to the buffer */
-        BufPtr[i] = VgaMemory[VideoAddress];
+            /* This should always return a plane 0 address for read mode 1 */
+            VideoAddress = VgaTranslateReadAddress(Address + i);
+
+            for (j = 0; j < VGA_NUM_BANKS; j++)
+            {
+                /* Don't consider ignored banks */
+                if (!(VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG] & (1 << j))) continue;
+
+                if (VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] & (1 << j))
+                {
+                    /* Comparing with 11111111 */
+                    Result &= VgaMemory[j * VGA_BANK_SIZE + LOWORD(VideoAddress)];
+                }
+                else
+                {
+                    /* Comparing with 00000000 */
+                    Result &= ~(VgaMemory[j * VGA_BANK_SIZE + LOWORD(VideoAddress)]);
+                }
+            }
+
+            /* Copy the value to the buffer */
+            BufPtr[i] = Result;
+        }
     }
 
     /* Load the latch registers */
