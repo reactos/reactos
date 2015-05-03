@@ -11,4 +11,7 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Грешка: Неправилни параметри на командия ред\n"
     STRING_NO_REMOTE, "Грешка: Неуспешно добавяне на ключове в отдалечената машина\n"
     STRING_CANNOT_FIND, "Грешка: Уредбата не откри указания регистърен ключ или стойност\n"
+    STRING_ERROR, "Unexpected error: "
+    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
+    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

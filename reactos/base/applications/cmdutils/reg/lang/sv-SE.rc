@@ -11,4 +11,7 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Fel: ogiltiga kommandoradsparametrar\n"
     STRING_NO_REMOTE, "Fel: Kan inte lägga till nycklar till fjärrmaskin\n"
     STRING_CANNOT_FIND, "Fel: Systemet kunde inte hitta angiven nyckel eller värde i registret\n"
+    STRING_ERROR, "Unexpected error: "
+    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
+    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

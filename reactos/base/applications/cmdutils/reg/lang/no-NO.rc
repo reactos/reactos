@@ -11,4 +11,7 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Feil: Ugyldige parametere på kommandolinjen\n"
     STRING_NO_REMOTE, "Feil: Kan ikke legge til nøkler på ekstern maskin\n"
     STRING_CANNOT_FIND, "Feil: Systemet klarte ikke finne den angitte registernøkkelen eller -verdien\n"
+    STRING_ERROR, "Unexpected error: "
+    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
+    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

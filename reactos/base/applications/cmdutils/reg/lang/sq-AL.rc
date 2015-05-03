@@ -15,4 +15,7 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Error: Parametrat e pavlefshme ne vijën komanduse\n"
     STRING_NO_REMOTE, "Error: Në pamundësi për të shtuar çelësat në makinë në distancë\n"
     STRING_CANNOT_FIND, "Error: Sistemi nuk ishte në gjendje për të gjetur çelësat të caktuar të regjistrit ose vlerës\n"
+    STRING_ERROR, "Unexpected error: "
+    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
+    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

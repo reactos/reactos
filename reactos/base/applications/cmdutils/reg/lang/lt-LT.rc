@@ -11,4 +11,7 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Klaida: Netinkami komandos eilutės parametrai\n"
     STRING_NO_REMOTE, "Klaida: Negalima pridėti raktų nuotoliniame kompiuteryje\n"
     STRING_CANNOT_FIND, "Klaida: Sistemai nepavyko rasti nurodyto registro rakto ar reikšmės\n"
+    STRING_ERROR, "Unexpected error: "
+    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
+    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

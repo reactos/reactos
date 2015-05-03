@@ -11,4 +11,7 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "에러:올바르지 않은 명령라인 매개변수\n"
     STRING_NO_REMOTE, "에러: 원격 머신에  키를 더하는 것은 가능하지 않습니다\n"
     STRING_CANNOT_FIND, "에러: 이 시스템에서 지정된 레지스트리 키나 값을 찾을수 없습니다\n"
+    STRING_ERROR, "Unexpected error: "
+    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
+    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }
