@@ -29,6 +29,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winreg.h"
+#include "winnls.h"
 #include "setupapi.h"
 
 #include "wine/test.h"
@@ -48,57 +49,35 @@ static HSTRING_TABLE (WINAPI *pStringTableInitializeEx)(DWORD, DWORD);
 static DWORD    (WINAPI *pStringTableLookUpString)(HSTRING_TABLE, LPWSTR, DWORD);
 static DWORD    (WINAPI *pStringTableLookUpStringEx)(HSTRING_TABLE, LPWSTR, DWORD, LPVOID, DWORD);
 static LPWSTR   (WINAPI *pStringTableStringFromId)(HSTRING_TABLE, DWORD);
+static BOOL     (WINAPI *pStringTableGetExtraData)(HSTRING_TABLE, ULONG, void*, ULONG);
 
-static HMODULE hdll;
 static WCHAR string[] = {'s','t','r','i','n','g',0};
 static WCHAR String[] = {'S','t','r','i','n','g',0};
 static WCHAR foo[] = {'f','o','o',0};
 
 static void load_it_up(void)
 {
-    hdll = GetModuleHandleA("setupapi.dll");
+    HMODULE hdll = GetModuleHandleA("setupapi.dll");
 
-    pStringTableInitialize = (void*)GetProcAddress(hdll, "StringTableInitialize");
-    if (!pStringTableInitialize)
-        pStringTableInitialize = (void*)GetProcAddress(hdll, "pSetupStringTableInitialize");
-
-    pStringTableInitializeEx = (void*)GetProcAddress(hdll, "StringTableInitializeEx");
-    if (!pStringTableInitializeEx)
-        pStringTableInitializeEx = (void*)GetProcAddress(hdll, "pSetupStringTableInitializeEx");
-
-    pStringTableAddString = (void*)GetProcAddress(hdll, "StringTableAddString");
-    if (!pStringTableAddString)
-        pStringTableAddString = (void*)GetProcAddress(hdll, "pSetupStringTableAddString");
-
-    pStringTableAddStringEx = (void*)GetProcAddress(hdll, "StringTableAddStringEx");
-    if (!pStringTableAddStringEx)
-        pStringTableAddStringEx = (void*)GetProcAddress(hdll, "pSetupStringTableAddStringEx");
-
-    pStringTableDuplicate = (void*)GetProcAddress(hdll, "StringTableDuplicate");
-    if (!pStringTableDuplicate)
-        pStringTableDuplicate = (void*)GetProcAddress(hdll, "pSetupStringTableDuplicate");
-
-    pStringTableDestroy = (void*)GetProcAddress(hdll, "StringTableDestroy");
-    if (!pStringTableDestroy)
-        pStringTableDestroy = (void*)GetProcAddress(hdll, "pSetupStringTableDestroy");
-
-    pStringTableLookUpString = (void*)GetProcAddress(hdll, "StringTableLookUpString");
-    if (!pStringTableLookUpString)
-        pStringTableLookUpString = (void*)GetProcAddress(hdll, "pSetupStringTableLookUpString");
-
-    pStringTableLookUpStringEx = (void*)GetProcAddress(hdll, "StringTableLookUpStringEx");
-    if (!pStringTableLookUpStringEx)
-        pStringTableLookUpStringEx = (void*)GetProcAddress(hdll, "pSetupStringTableLookUpStringEx");
-
-    pStringTableStringFromId = (void*)GetProcAddress(hdll, "StringTableStringFromId");
-    if (!pStringTableStringFromId)
-        pStringTableStringFromId = (void*)GetProcAddress(hdll, "pSetupStringTableStringFromId");
+#define X(f) if (!(p##f = (void*)GetProcAddress(hdll, #f))) \
+                 p##f = (void*)GetProcAddress(hdll, "pSetup"#f);
+    X(StringTableInitialize);
+    X(StringTableInitializeEx);
+    X(StringTableAddString);
+    X(StringTableAddStringEx);
+    X(StringTableDuplicate);
+    X(StringTableDestroy);
+    X(StringTableLookUpString);
+    X(StringTableLookUpStringEx);
+    X(StringTableStringFromId);
+    X(StringTableGetExtraData);
+#undef X
 }
 
 static void test_StringTableAddString(void)
 {
     DWORD retval, hstring, hString, hfoo;
-    HANDLE table;
+    HSTRING_TABLE table;
 
     table = pStringTableInitialize();
     ok(table != NULL, "failed to initialize string table\n");
@@ -106,7 +85,7 @@ static void test_StringTableAddString(void)
     /* case insensitive */
     hstring=pStringTableAddString(table,string,0);
     ok(hstring!=-1,"Failed to add string to String Table\n");
-    
+
     retval=pStringTableAddString(table,String,0);
     ok(retval!=-1,"Failed to add String to String Table\n");    
     ok(hstring==retval,"string handle %x != String handle %x in String Table\n", hstring, retval);        
@@ -124,22 +103,23 @@ static void test_StringTableAddString(void)
 
 static void test_StringTableAddStringEx(void)
 {
-    DWORD retval, hstring, hString, hfoo;
+    DWORD retval, hstring, hString, hfoo, extra;
     HANDLE table;
+    BOOL ret;
 
     table = pStringTableInitialize();
     ok(table != NULL,"Failed to Initialize String Table\n");
 
     /* case insensitive */
     hstring = pStringTableAddStringEx(table, string, 0, NULL, 0);
-    ok(hstring != ~0u, "Failed to add string to String Table\n");
+    ok(hstring != -1, "Failed to add string to String Table\n");
 
     retval = pStringTableAddStringEx(table, String, 0, NULL, 0);
-    ok(retval != ~0u, "Failed to add String to String Table\n");
+    ok(retval != -1, "Failed to add String to String Table\n");
     ok(hstring == retval, "string handle %x != String handle %x in String Table\n", hstring, retval);
 
     hfoo = pStringTableAddStringEx(table, foo, 0, NULL, 0);
-    ok(hfoo != ~0u, "Failed to add foo to String Table\n");
+    ok(hfoo != -1, "Failed to add foo to String Table\n");
     ok(hfoo != hstring, "foo and string share the same ID %x in String Table\n", hfoo);
 
     /* case sensitive */
@@ -147,11 +127,33 @@ static void test_StringTableAddStringEx(void)
     ok(hstring != hString, "String handle and string share same ID %x in Table\n", hstring);
 
     pStringTableDestroy(table);
+
+    /* set same string twice but with different extra */
+    table = pStringTableInitializeEx(4, 0);
+    ok(table != NULL, "Failed to Initialize String Table\n");
+
+    extra = 10;
+    hstring = pStringTableAddStringEx(table, string, 0, &extra, 4);
+    ok(hstring != -1, "failed to add string, %d\n", hstring);
+
+    extra = 0;
+    ret = pStringTableGetExtraData(table, hstring, &extra, 4);
+    ok(ret && extra == 10, "got %d, extra %d\n", ret, extra);
+
+    extra = 11;
+    hstring = pStringTableAddStringEx(table, string, 0, &extra, 4);
+    ok(hstring != -1, "failed to add string, %d\n", hstring);
+
+    extra = 0;
+    ret = pStringTableGetExtraData(table, hstring, &extra, 4);
+    ok(ret && extra == 10, "got %d, extra %d\n", ret, extra);
+
+    pStringTableDestroy(table);
 }
 
 static void test_StringTableDuplicate(void)
 {
-    HANDLE table, table2;
+    HSTRING_TABLE table, table2;
 
     table = pStringTableInitialize();
     ok(table != NULL,"Failed to Initialize String Table\n");
@@ -166,7 +168,7 @@ static void test_StringTableDuplicate(void)
 static void test_StringTableLookUpString(void)
 {   
     DWORD retval, retval2, hstring, hString, hfoo;
-    HANDLE table, table2;
+    HSTRING_TABLE table, table2;
 
     table = pStringTableInitialize();
     ok(table != NULL,"failed to initialize string table\n");
@@ -224,7 +226,7 @@ static void test_StringTableLookUpStringEx(void)
 {
     static WCHAR uilevel[] = {'U','I','L','E','V','E','L',0};
     DWORD retval, retval2, hstring, hString, hfoo, data;
-    HANDLE table, table2;
+    HSTRING_TABLE table, table2;
     char buffer[4];
 
     table = pStringTableInitialize();
@@ -305,23 +307,55 @@ static void test_StringTableLookUpStringEx(void)
 
 static void test_StringTableStringFromId(void)
 {
-    HANDLE table;
-    DWORD hstring;
+    HSTRING_TABLE table;
     WCHAR *string2;
-    int result;
+    DWORD id, id2;
 
     table = pStringTableInitialize();
-    ok(table != NULL,"Failed to Initialize String Table\n");
+    ok(table != NULL, "Failed to Initialize String Table\n");
 
-    hstring = pStringTableAddString(table, string, 0);
-    ok(hstring != ~0u,"failed to add 'string' to string table\n");
+    id = pStringTableAddString(table, string, 0);
+    ok(id != -1, "failed to add 'string' to string table\n");
 
     /* correct */
-    string2=pStringTableStringFromId(table,pStringTableLookUpString(table,string,0));
-    ok(string2!=NULL,"Failed to look up string by ID from String Table\n");
-    
-    result=lstrcmpiW(string, string2);
-    ok(result==0,"StringID %p does not match requested StringID %p\n",string,string2);
+    id2 = pStringTableLookUpString(table, string, 0);
+    ok(id2 == id, "got %d and %d\n", id2, id);
+
+    string2 = pStringTableStringFromId(table, id2);
+    ok(string2 != NULL, "failed to lookup string %d\n", id2);
+    ok(!lstrcmpiW(string, string2), "got %s, expected %s\n", wine_dbgstr_w(string2), wine_dbgstr_w(string));
+
+    pStringTableDestroy(table);
+}
+
+struct stringtable {
+    char     *data;
+    ULONG     nextoffset;
+    ULONG     allocated;
+    DWORD_PTR unk[2];
+    ULONG     max_extra_size;
+    LCID      lcid;
+};
+
+static void test_stringtable_layout(void)
+{
+    struct stringtable *ptr;
+    HSTRING_TABLE table;
+
+    table = pStringTableInitialize();
+    ok(table != NULL,"failed to initialize string table\n");
+
+    ptr = (struct stringtable*)table;
+    ok(ptr->data != NULL, "got %p\n", ptr->data);
+    /* first data offset is right after bucket area */
+    ok(ptr->nextoffset == 509*sizeof(DWORD), "got %d\n", ptr->nextoffset);
+    ok(ptr->allocated != 0, "got %d\n", ptr->allocated);
+todo_wine {
+    ok(ptr->unk[0] != 0, "got %lx\n", ptr->unk[0]);
+    ok(ptr->unk[1] != 0, "got %lx\n", ptr->unk[1]);
+}
+    ok(ptr->max_extra_size == 0, "got %d\n", ptr->max_extra_size);
+    ok(ptr->lcid == GetThreadLocale(), "got %x, thread lcid %x\n", ptr->lcid, GetThreadLocale());
 
     pStringTableDestroy(table);
 }
@@ -336,4 +370,5 @@ START_TEST(stringtable)
     test_StringTableLookUpString();
     test_StringTableLookUpStringEx();
     test_StringTableStringFromId();
+    test_stringtable_layout();
 }

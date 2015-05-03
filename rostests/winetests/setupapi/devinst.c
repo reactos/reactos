@@ -1572,7 +1572,7 @@ START_TEST(devinst)
 
     if (!winetest_interactive)
     {
-        win_skip("testSetupDiGetINFClassA(), ROSTESTS-124.\n");
+        win_skip("testSetupDiGetINFClassA(), ROSTESTS-66.\n");
     }
     else
     {

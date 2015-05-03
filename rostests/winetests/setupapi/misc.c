@@ -731,6 +731,51 @@ static void test_SetupUninstallOEMInf(void)
     }
 }
 
+struct default_callback_context
+{
+    DWORD     magic;
+    HWND      owner;
+    DWORD     unk1[4];
+    DWORD_PTR unk2[7];
+    HWND      progress;
+    UINT      message;
+    DWORD_PTR unk3[5];
+};
+
+static void test_defaultcallback(void)
+{
+    struct default_callback_context *ctxt;
+    static const DWORD magic = 0x43515053; /* "SPQC" */
+    HWND owner, progress;
+
+    owner = (HWND)0x123;
+    progress = (HWND)0x456;
+    ctxt = SetupInitDefaultQueueCallbackEx(owner, progress, WM_USER, 0, NULL);
+    ok(ctxt != NULL, "got %p\n", ctxt);
+
+    ok(ctxt->magic == magic || broken(ctxt->magic != magic) /* win2000 */, "got magic 0x%08x\n", ctxt->magic);
+    if (ctxt->magic == magic)
+    {
+        ok(ctxt->owner == owner, "got %p, expected %p\n", ctxt->owner, owner);
+        ok(ctxt->progress == progress, "got %p, expected %p\n", ctxt->progress, progress);
+        ok(ctxt->message == WM_USER, "got %d, expected %d\n", ctxt->message, WM_USER);
+        SetupTermDefaultQueueCallback(ctxt);
+    }
+    else
+    {
+        win_skip("Skipping tests on old systems.\n");
+        SetupTermDefaultQueueCallback(ctxt);
+        return;
+    }
+
+    ctxt = SetupInitDefaultQueueCallback(owner);
+    ok(ctxt->magic == magic, "got magic 0x%08x\n", ctxt->magic);
+    ok(ctxt->owner == owner, "got %p, expected %p\n", ctxt->owner, owner);
+    ok(ctxt->progress == NULL, "got %p, expected %p\n", ctxt->progress, progress);
+    ok(ctxt->message == 0, "got %d\n", ctxt->message);
+    SetupTermDefaultQueueCallback(ctxt);
+}
+
 START_TEST(misc)
 {
     HMODULE hsetupapi = GetModuleHandleA("setupapi.dll");
@@ -760,4 +805,6 @@ START_TEST(misc)
         test_SetupUninstallOEMInf();
     else
         win_skip("SetupUninstallOEMInfA is not available\n");
+
+    test_defaultcallback();
 }
