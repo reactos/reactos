@@ -121,7 +121,7 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
     Opcode = (PBYTE)SEG_OFF_TO_PTR(CodeSegment, InstructionPointer);
 
     /* Display a message to the user */
-    DisplayMessage(L"Exception: %s occured at %04X:%04X\n"
+    DisplayMessage(L"Exception: %s occurred at %04X:%04X\n"
                    L"Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
                    ExceptionName[ExceptionNumber],
                    CodeSegment,

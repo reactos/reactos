@@ -62,7 +62,7 @@ BYTE DosFindWin32Descriptor(HANDLE Win32Handle)
         for (i = 0; i < Sft->NumDescriptors; i++)
         {
             if ((Sft->FileDescriptors[i].RefCount > 0)
-                && !(Sft->FileDescriptors[i].DeviceInfo & (1 << 7))
+                && !(Sft->FileDescriptors[i].DeviceInfo & FILE_INFO_DEVICE)
                 && (Sft->FileDescriptors[i].Win32Handle == Win32Handle))
             {
                 return Count;
@@ -92,7 +92,7 @@ BYTE DosFindDeviceDescriptor(DWORD DevicePointer)
         for (i = 0; i < Sft->NumDescriptors; i++)
         {
             if ((Sft->FileDescriptors[i].RefCount > 0)
-                && (Sft->FileDescriptors[i].DeviceInfo & (1 << 7))
+                && (Sft->FileDescriptors[i].DeviceInfo & FILE_INFO_DEVICE)
                 && (Sft->FileDescriptors[i].DevicePointer == DevicePointer))
             {
                 return Count;
@@ -369,7 +369,7 @@ WORD DosCreateFileEx(LPWORD Handle,
     if (Node != NULL)
     {
         Descriptor->DevicePointer = Node->Driver;
-        Descriptor->DeviceInfo = Node->DeviceAttributes | (1 << 7);
+        Descriptor->DeviceInfo = Node->DeviceAttributes | FILE_INFO_DEVICE;
     }
     else
     {
@@ -445,7 +445,7 @@ WORD DosCreateFile(LPWORD Handle,
     if (Node != NULL)
     {
         Descriptor->DevicePointer = Node->Driver;
-        Descriptor->DeviceInfo = Node->DeviceAttributes | (1 << 7);
+        Descriptor->DeviceInfo = Node->DeviceAttributes | FILE_INFO_DEVICE;
     }
     else
     {
@@ -593,7 +593,7 @@ WORD DosOpenFile(LPWORD Handle,
     if (Node != NULL)
     {
         Descriptor->DevicePointer = Node->Driver;
-        Descriptor->DeviceInfo = Node->DeviceAttributes | (1 << 7);
+        Descriptor->DeviceInfo = Node->DeviceAttributes | FILE_INFO_DEVICE;
     }
     else
     {
@@ -634,7 +634,7 @@ WORD DosReadFile(WORD FileHandle,
         return ERROR_INVALID_HANDLE;
     }
 
-    if (Descriptor->DeviceInfo & (1 << 7))
+    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
     {
         PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
         if (!Node->ReadRoutine) return ERROR_INVALID_FUNCTION;
@@ -689,7 +689,7 @@ WORD DosWriteFile(WORD FileHandle,
         return ERROR_INVALID_HANDLE;
     }
 
-    if (Descriptor->DeviceInfo & (1 << 7))
+    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
     {
         PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
         if (!Node->WriteRoutine) return ERROR_INVALID_FUNCTION;
@@ -749,7 +749,7 @@ WORD DosSeekFile(WORD FileHandle,
         return ERROR_INVALID_HANDLE;
     }
 
-    if (Descriptor->DeviceInfo & (1 << 7))
+    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
     {
         /* For character devices, always return success */
         return ERROR_SUCCESS;
@@ -797,7 +797,7 @@ BOOL DosFlushFileBuffers(WORD FileHandle)
         return FALSE;
     }
 
-    if (Descriptor->DeviceInfo & (1 << 7))
+    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
     {
         PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
 
@@ -824,7 +824,7 @@ BOOLEAN DosLockFile(WORD DosHandle, DWORD Offset, DWORD Size)
     }
 
     /* Always succeed for character devices */
-    if (Descriptor->DeviceInfo & (1 << 7)) return TRUE;
+    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE) return TRUE;
 
     if (!LockFile(Descriptor->Win32Handle, Offset, 0, Size, 0))
     {
@@ -847,7 +847,7 @@ BOOLEAN DosUnlockFile(WORD DosHandle, DWORD Offset, DWORD Size)
     }
 
     /* Always succeed for character devices */
-    if (Descriptor->DeviceInfo & (1 << 7)) return TRUE;
+    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE) return TRUE;
 
     if (!UnlockFile(Descriptor->Win32Handle, Offset, 0, Size, 0))
     {
@@ -869,7 +869,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
         return FALSE;
     }
 
-    if (Descriptor->DeviceInfo & (1 << 7))
+    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
     {
         Node = DosGetDriverNode(Descriptor->DevicePointer);
     }

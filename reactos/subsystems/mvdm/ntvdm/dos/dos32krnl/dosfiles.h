@@ -8,6 +8,8 @@
 
 /* DEFINES ********************************************************************/
 
+#define FILE_INFO_DEVICE (1 << 7)
+
 #pragma pack(push, 1)
 
 typedef struct _DOS_FILE_DESCRIPTOR

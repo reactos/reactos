@@ -103,7 +103,7 @@ VOID DosCopyHandleTable(LPBYTE DestinationTable)
                 {
                     PDOS_DEVICE_NODE Node = DosGetDriverNode(SysVars->ActiveCon);
 
-                    Descriptor->DeviceInfo = Node->DeviceAttributes | (1 << 7);
+                    Descriptor->DeviceInfo = Node->DeviceAttributes | FILE_INFO_DEVICE;
                     Descriptor->DevicePointer = SysVars->ActiveCon;
 
                     /* Call the open routine */
