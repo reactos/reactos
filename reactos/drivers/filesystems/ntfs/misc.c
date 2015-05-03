@@ -83,16 +83,10 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
     IrpContext->Identifier.Size = sizeof(NTFS_IRP_CONTEXT);
     IrpContext->Irp = Irp;
     IrpContext->DeviceObject = DeviceObject;
-
-    if (Irp)
-    {
-        IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-        ASSERT(IoStackLocation);
-
-        IrpContext->MajorFunction = IoStackLocation->MajorFunction;
-        IrpContext->MinorFunction = IoStackLocation->MinorFunction;
-        IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
-    }
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    IrpContext->MajorFunction = IoStackLocation->MajorFunction;
+    IrpContext->MinorFunction = IoStackLocation->MinorFunction;
+    IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
 
     return IrpContext;
 }
