@@ -4739,8 +4739,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
         State->Cpl = GET_SEGMENT_RPL(CodeSel);
 
         /* Set the new flags */
-        if (Size) State->Flags.Long = NewFlags.Long & PROT_MODE_FLAGS_MASK;
-        else State->Flags.LowWord = NewFlags.LowWord & PROT_MODE_FLAGS_MASK;
+        if (Size)
+        {
+            State->Flags.Long = (State->Flags.Long & ~PROT_MODE_FLAGS_MASK)
+                                | (NewFlags.Long & PROT_MODE_FLAGS_MASK);
+        }
+        else
+        {
+            State->Flags.LowWord = (State->Flags.LowWord & ~PROT_MODE_FLAGS_MASK)
+                                   | (NewFlags.LowWord & PROT_MODE_FLAGS_MASK);
+        }
         State->Flags.AlwaysSet = TRUE;
 
         /* Set additional flags */
