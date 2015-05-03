@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * common.c
  *
- * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2015 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -264,7 +264,9 @@ Fast486GetIntVector(PFAST486_STATE State,
 static inline BOOLEAN
 FASTCALL
 Fast486InterruptInternal(PFAST486_STATE State,
-                         PFAST486_IDT_ENTRY IdtEntry)
+                         PFAST486_IDT_ENTRY IdtEntry,
+                         BOOLEAN PushErrorCode,
+                         ULONG ErrorCode)
 {
     USHORT SegmentSelector = IdtEntry->Selector;
     ULONG  Offset          = MAKELONG(IdtEntry->Offset, IdtEntry->OffsetHigh);
@@ -400,6 +402,16 @@ Fast486InterruptInternal(PFAST486_STATE State,
     /* Push the instruction pointer */
     if (!Fast486StackPush(State, State->InstPtr.Long)) goto Cleanup;
 
+    if (PushErrorCode)
+    {
+        /* Push the error code */
+        if (!Fast486StackPush(State, ErrorCode))
+        {
+            /* An exception occurred */
+            goto Cleanup;
+        }
+    }
+
     if ((GateType == FAST486_IDT_INT_GATE) || (GateType == FAST486_IDT_INT_GATE_32))
     {
         /* Disable interrupts after a jump to an interrupt gate handler */
@@ -448,7 +460,7 @@ Fast486PerformInterrupt(PFAST486_STATE State,
     }
 
     /* Perform the interrupt */
-    if (!Fast486InterruptInternal(State, &IdtEntry))
+    if (!Fast486InterruptInternal(State, &IdtEntry, FALSE, 0))
     {
         /* Exception occurred */
         return FALSE;
@@ -463,6 +475,8 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
                               FAST486_EXCEPTIONS ExceptionCode,
                               ULONG ErrorCode)
 {
+    FAST486_IDT_ENTRY IdtEntry;
+
     /* Increment the exception count */
     State->ExceptionCount++;
 
@@ -491,8 +505,8 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
     /* Restore the IP to the saved IP */
     State->InstPtr = State->SavedInstPtr;
 
-    /* Perform the interrupt */
-    if (!Fast486PerformInterrupt(State, ExceptionCode))
+    /* Get the interrupt vector */
+    if (!Fast486GetIntVector(State, ExceptionCode, &IdtEntry))
     {
         /*
          * If this function failed, that means Fast486Exception
@@ -501,18 +515,18 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
         return;
     }
 
-    if (EXCEPTION_HAS_ERROR_CODE(ExceptionCode)
-        && (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE))
+    /* Perform the interrupt */
+    if (!Fast486InterruptInternal(State,
+                                  &IdtEntry,
+                                  EXCEPTION_HAS_ERROR_CODE(ExceptionCode)
+                                  && (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE),
+                                  ErrorCode))
     {
-        /* Push the error code */
-        if (!Fast486StackPush(State, ErrorCode))
-        {
-            /*
-             * If this function failed, that means Fast486Exception
-             * was called again, so just return in this case.
-             */
-            return;
-        }
+        /*
+         * If this function failed, that means Fast486Exception
+         * was called again, so just return in this case.
+         */
+        return;
     }
 
     /* Reset the exception count */
@@ -702,10 +716,16 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     /* Flush the TLB */
     if (State->Tlb) RtlZeroMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG));
 
+    /* Update the CPL */
+    State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
+
 #ifndef FAST486_NO_PREFETCH
     /* Context switching invalidates the prefetch */
     State->PrefetchValid = FALSE;
 #endif
+
+    /* Update the CPL */
+    State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
 
     /* Load the registers */
     State->InstPtr.Long = State->SavedInstPtr.Long = NewTss.Eip;

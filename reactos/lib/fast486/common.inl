@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * common.inl
  *
- * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2015 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -782,6 +782,9 @@ Fast486ProcessGate(PFAST486_STATE State, USHORT Selector, ULONG Offset, BOOLEAN 
         {
             // TODO: NOT IMPLEMENTED
             UNIMPLEMENTED;
+
+            Fast486Exception(State, FAST486_EXCEPTION_UD);
+            return FALSE;
         }
 
         default:
