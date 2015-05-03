@@ -143,12 +143,69 @@ public:
 #pragma pack(push,1)
 struct thunkCode
 {
-    DWORD m_mov;
-    DWORD m_this;
-    BYTE m_jmp;
-    DWORD m_relproc;
+    DWORD  m_mov; /* mov dword ptr [esp+4], m_this */
+    DWORD  m_this;
+    BYTE   m_jmp; /* jmp relproc */
+    DWORD  m_relproc;
+
+    void
+    Init(WNDPROC proc, void *pThis)
+    {
+        m_mov = 0x042444C7;
+        m_this = PtrToUlong(pThis);
+        m_jmp = 0xe9;
+        m_relproc = DWORD(reinterpret_cast<char *>(proc) - (reinterpret_cast<char *>(this) + sizeof(thunkCode)));
+    }
 };
 #pragma pack(pop)
+
+#elif defined(_AMD64_)
+
+#pragma pack(push,1)
+struct thunkCode
+{
+    USHORT  m_mov_rcx; /* mov rcx, m_this */
+    ULONG64 m_this;
+    USHORT  m_mov_rax; /* mov rax, m_proc */
+    ULONG64 m_proc;
+    USHORT  m_jmp;    /* jmp rax */
+
+    void
+    Init(WNDPROC proc, void *pThis)
+    {
+        m_mov_rcx = 0xb948;
+        m_this = (ULONG64)pThis;
+        m_mov_rax = 0xb848;
+        m_proc = (ULONG64)proc;
+        m_jmp = 0xe0ff;
+    }
+};
+#pragma pack(pop)
+
+#elif defined(_M_ARM)
+
+#pragma pack(push,4)
+struct thunkCode
+{
+    DWORD m_mov_r0; /* mov r0, m_this */
+    DWORD m_mov_pc; /* mov pc, m_proc */
+    DWORD m_this;
+    DWORD m_proc;
+
+    void
+    Init(WNDPROC proc, void *pThis)
+    {
+        m_mov_r0 = 0xE59F0000;
+        m_mov_pc = 0xE59FF000;
+        m_this = (DWORD)pThis;
+        m_proc = (DWORD)proc;
+    }
+};
+#pragma pack(pop)
+
+#else
+#error ARCH not supported
+#endif
 
 class CWndProcThunk
 {
@@ -164,15 +221,15 @@ public:
 
     ~CWndProcThunk()
     {
-        VirtualFree(m_pthunk, 0, MEM_RELEASE);
+        if (m_pthunk != NULL)
+            VirtualFree(m_pthunk, 0, MEM_RELEASE);
     }
 
     BOOL Init(WNDPROC proc, void *pThis)
     {
-        m_pthunk->m_mov = 0x042444C7;
-        m_pthunk->m_this = PtrToUlong(pThis);
-        m_pthunk->m_jmp = 0xe9;
-        m_pthunk->m_relproc = DWORD(reinterpret_cast<char *>(proc) - (reinterpret_cast<char *>(m_pthunk) + sizeof(thunkCode)));
+        if (m_pthunk == NULL)
+            return FALSE;
+        m_pthunk->Init(proc, pThis);
         return TRUE;
     }
 
@@ -181,41 +238,6 @@ public:
         return reinterpret_cast<WNDPROC>(m_pthunk);
     }
 };
-
-#elif _AMD64_ //WARNING: NOT VERIFIED
-#pragma pack(push,1)
-struct thunkCode
-{
-    DWORD_PTR m_mov;
-    DWORD_PTR m_this;
-    BYTE m_jmp;
-    DWORD_PTR m_relproc;
-};
-#pragma pack(pop)
-
-class CWndProcThunk
-{
-public:
-    thunkCode m_thunk;
-    _AtlCreateWndData cd;
-public:
-    BOOL Init(WNDPROC proc, void *pThis)
-    {
-        m_thunk.m_mov = 0xffff8000042444C7LL;
-        m_thunk.m_this = (DWORD_PTR)pThis;
-        m_thunk.m_jmp = 0xe9;
-        m_thunk.m_relproc = DWORD_PTR(reinterpret_cast<char *>(proc) - (reinterpret_cast<char *>(this) + sizeof(thunkCode)));
-        return TRUE;
-    }
-
-    WNDPROC GetWNDPROC()
-    {
-        return reinterpret_cast<WNDPROC>(&m_thunk);
-    }
-};
-#else
-#error ARCH not supported
-#endif
 
 class CMessageMap
 {
