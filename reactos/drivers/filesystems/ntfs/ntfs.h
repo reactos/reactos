@@ -397,12 +397,14 @@ typedef struct
 {
     NTFSIDENTIFIER Identifier;
     ULONG Flags;
+    PIO_STACK_LOCATION Stack;
     UCHAR MajorFunction;
     UCHAR MinorFunction;
     WORK_QUEUE_ITEM WorkQueueItem;
     PIRP Irp;
     BOOLEAN IsTopLevel;
     PDEVICE_OBJECT DeviceObject;
+    PFILE_OBJECT FileObject;
     NTSTATUS SavedExceptionCode;
 } NTFS_IRP_CONTEXT, *PNTFS_IRP_CONTEXT;
 

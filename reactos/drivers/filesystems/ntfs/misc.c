@@ -67,7 +67,6 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
                        PIRP Irp)
 {
     PNTFS_IRP_CONTEXT IrpContext;
-    PIO_STACK_LOCATION IoStackLocation;
 
     TRACE_(NTFS, "NtfsAllocateIrpContext()\n");
 
@@ -83,16 +82,17 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
     IrpContext->Identifier.Size = sizeof(NTFS_IRP_CONTEXT);
     IrpContext->Irp = Irp;
     IrpContext->DeviceObject = DeviceObject;
-    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    IrpContext->MajorFunction = IoStackLocation->MajorFunction;
-    IrpContext->MinorFunction = IoStackLocation->MinorFunction;
+    IrpContext->Stack = IoGetCurrentIrpStackLocation(Irp);
+    IrpContext->MajorFunction = IrpContext->Stack->MajorFunction;
+    IrpContext->MinorFunction = IrpContext->Stack->MinorFunction;
+    IrpContext->FileObject = IrpContext->Stack->FileObject;
     IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
 
-    if (IoStackLocation->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
-        IoStackLocation->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
-        IoStackLocation->MajorFunction == IRP_MJ_SHUTDOWN ||
-        (IoStackLocation->MajorFunction != IRP_MJ_CLEANUP &&
-         IoStackLocation->MajorFunction != IRP_MJ_CLOSE &&
+    if (IrpContext->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
+        IrpContext->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
+        IrpContext->MajorFunction == IRP_MJ_SHUTDOWN ||
+        (IrpContext->MajorFunction != IRP_MJ_CLEANUP &&
+         IrpContext->MajorFunction != IRP_MJ_CLOSE &&
          IoIsOperationSynchronous(Irp)))
     {
         IrpContext->Flags |= IRPCONTEXT_CANWAIT;
