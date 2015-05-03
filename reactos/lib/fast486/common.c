@@ -47,11 +47,23 @@ Fast486ReadMemory(PFAST486_STATE State,
     /* Get the cached descriptor */
     CachedDescriptor = &State->SegmentRegs[SegmentReg];
 
-    if ((Offset + Size - 1) > CachedDescriptor->Limit)
+    if (InstFetch || !CachedDescriptor->DirConf)
     {
-        /* Read beyond limit */
-        Fast486Exception(State, FAST486_EXCEPTION_GP);
-        return FALSE;
+        if ((Offset + Size - 1) > CachedDescriptor->Limit)
+        {
+            /* Read beyond limit */
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (Offset < CachedDescriptor->Limit)
+        {
+            /* Read beyond limit */
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            return FALSE;
+        }
     }
 
     /* Check for protected mode */
@@ -157,11 +169,23 @@ Fast486WriteMemory(PFAST486_STATE State,
     /* Get the cached descriptor */
     CachedDescriptor = &State->SegmentRegs[SegmentReg];
 
-    if ((Offset + Size - 1) > CachedDescriptor->Limit)
+    if (!CachedDescriptor->DirConf)
     {
-        /* Write beyond limit */
-        Fast486Exception(State, FAST486_EXCEPTION_GP);
-        return FALSE;
+        if ((Offset + Size - 1) > CachedDescriptor->Limit)
+        {
+            /* Write beyond limit */
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (Offset < CachedDescriptor->Limit)
+        {
+            /* Read beyond limit */
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            return FALSE;
+        }
     }
 
     /* Check for protected mode */
