@@ -391,6 +391,8 @@ typedef struct {
     UCHAR Data[1];
 } REPARSE_POINT_ATTRIBUTE, *PREPARSE_POINT_ATTRIBUTE;
 
+#define IRPCONTEXT_CANWAIT 0x1
+
 typedef struct
 {
     NTFSIDENTIFIER Identifier;

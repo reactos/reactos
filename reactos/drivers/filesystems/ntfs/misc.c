@@ -88,6 +88,16 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
     IrpContext->MinorFunction = IoStackLocation->MinorFunction;
     IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
 
+    if (IoStackLocation->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
+        IoStackLocation->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
+        IoStackLocation->MajorFunction == IRP_MJ_SHUTDOWN ||
+        (IoStackLocation->MajorFunction != IRP_MJ_CLEANUP &&
+         IoStackLocation->MajorFunction != IRP_MJ_CLOSE &&
+         IoIsOperationSynchronous(Irp)))
+    {
+        IrpContext->Flags |= IRPCONTEXT_CANWAIT;
+    }
+
     return IrpContext;
 }
 
