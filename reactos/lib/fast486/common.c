@@ -1030,9 +1030,6 @@ Fast486CallGate(PFAST486_STATE State,
             }
         }
 
-        /* Push the parameter count */
-        if (!Fast486StackPushInternal(State, GateSize, Gate->ParamCount)) return FALSE;
-
         /* Push CS selector */
         if (!Fast486StackPushInternal(State, GateSize, OldCs)) return FALSE;
 
