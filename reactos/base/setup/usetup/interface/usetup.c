@@ -392,7 +392,7 @@ ConfirmQuit(PINPUT_RECORD Ir)
             Result = TRUE;
             break;
         }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
             Result = FALSE;
             break;
@@ -701,7 +701,7 @@ LanguagePage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
         {
             /* a-z */
-            GenericListKeyPress (LanguageList, Ir->Event.KeyEvent.uChar.AsciiChar);
+            GenericListKeyPress(LanguageList, Ir->Event.KeyEvent.uChar.AsciiChar);
             RefreshPage = TRUE;
         }
 
@@ -1678,30 +1678,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 }
 
 
-static VOID
-DrawInputField(ULONG FieldLength,
-               SHORT Left,
-               SHORT Top,
-               PCHAR FieldContent)
-{
-    CHAR buf[100];
-    COORD coPos;
-    DWORD Written;
-
-    coPos.X = Left;
-    coPos.Y = Top;
-    memset(buf, '_', sizeof(buf));
-    buf[FieldLength - strlen(FieldContent)] = 0;
-    strcat(buf, FieldContent);
-
-    WriteConsoleOutputCharacterA(StdOutput,
-                                 buf,
-                                 strlen(buf),
-                                 coPos,
-                                 &Written);
-}
-
-
 #define PARTITION_SIZE_INPUT_FIELD_LENGTH 6
 /* Restriction for MaxSize: pow(10, PARTITION_SIZE_INPUT_FIELD_LENGTH)-1 */
 #define PARTITION_MAXSIZE 999999
@@ -1720,8 +1696,9 @@ ShowPartitionSizeInputBox(SHORT Left,
     COORD coPos;
     DWORD Written;
     CHAR Buffer[100];
+    WCHAR PartitionSizeBuffer[100];
     ULONG Index;
-    CHAR ch;
+    WCHAR ch;
     SHORT iLeft;
     SHORT iTop;
 
@@ -1742,7 +1719,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 
     WriteConsoleOutputCharacterA(StdOutput,
                                  Buffer,
-                                 strlen (Buffer),
+                                 strlen(Buffer),
                                  coPos,
                                  &Written);
 
@@ -1751,16 +1728,16 @@ ShowPartitionSizeInputBox(SHORT Left,
     coPos.Y = iTop;
     WriteConsoleOutputCharacterA(StdOutput,
                                  Buffer,
-                                 strlen (Buffer),
+                                 strlen(Buffer),
                                  coPos,
                                  &Written);
 
-    sprintf(Buffer, "%lu", MaxSize);
-    Index = strlen(Buffer);
-    DrawInputField(PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                   iLeft,
-                   iTop,
-                   Buffer);
+    swprintf(PartitionSizeBuffer, L"%lu", MaxSize);
+    Index = wcslen(PartitionSizeBuffer);
+    CONSOLE_SetInputTextXY(iLeft,
+                           iTop,
+                           PARTITION_SIZE_INPUT_FIELD_LENGTH,
+                           PartitionSizeBuffer);
 
     while (TRUE)
     {
@@ -1772,52 +1749,53 @@ ShowPartitionSizeInputBox(SHORT Left,
             if (Quit != NULL)
                 *Quit = TRUE;
 
-            Buffer[0] = 0;
+            PartitionSizeBuffer[0] = 0;
             break;
         }
-        else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_RETURN)	/* ENTER */
+        else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_RETURN)    /* ENTER */
         {
             break;
         }
-        else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)	/* ESCAPE */
+        else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)    /* ESCAPE */
         {
             if (Cancel != NULL)
                 *Cancel = TRUE;
 
-            Buffer[0] = 0;
+            PartitionSizeBuffer[0] = 0;
             break;
         }
         else if ((Ir.Event.KeyEvent.wVirtualKeyCode == VK_BACK) &&  /* BACKSPACE */
                  (Index > 0))
         {
             Index--;
-            Buffer[Index] = 0;
+            PartitionSizeBuffer[Index] = 0;
 
-            DrawInputField(PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                           iLeft,
-                           iTop,
-                           Buffer);
+            CONSOLE_SetInputTextXY(iLeft,
+                                   iTop,
+                                   PARTITION_SIZE_INPUT_FIELD_LENGTH,
+                                   PartitionSizeBuffer);
         }
         else if ((Ir.Event.KeyEvent.uChar.AsciiChar != 0x00) &&
                  (Index < PARTITION_SIZE_INPUT_FIELD_LENGTH))
         {
-            ch = Ir.Event.KeyEvent.uChar.AsciiChar;
+            ch = (WCHAR)Ir.Event.KeyEvent.uChar.AsciiChar;
 
-            if ((ch >= '0') && (ch <= '9'))
+            if ((ch >= L'0') && (ch <= L'9'))
             {
-                Buffer[Index] = ch;
+                PartitionSizeBuffer[Index] = ch;
                 Index++;
-                Buffer[Index] = 0;
+                PartitionSizeBuffer[Index] = 0;
 
-                DrawInputField(PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                               iLeft,
-                               iTop,
-                               Buffer);
+                CONSOLE_SetInputTextXY(iLeft,
+                                       iTop,
+                                       PARTITION_SIZE_INPUT_FIELD_LENGTH,
+                                       PartitionSizeBuffer);
             }
         }
     }
 
-    strcpy(InputBuffer, Buffer);
+    /* Convert UNICODE --> ANSI the poor man's way */
+    sprintf(InputBuffer, "%S", PartitionSizeBuffer);
 }
 
 
@@ -3910,7 +3888,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
             break;
         }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
         {
             if (Line == 12)
             {
@@ -3958,7 +3936,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 
             break;
         }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
         {
             if (DoesFileExist(L"\\Device\\Floppy0", L"\\") == FALSE)
             {

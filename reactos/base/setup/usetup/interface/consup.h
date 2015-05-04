@@ -146,13 +146,6 @@ CONSOLE_SetInputTextXY(
 	IN LPCWSTR Text);
 
 VOID
-CONSOLE_SetInputTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT len,
-	IN LPCWSTR Text);
-
-VOID
 CONSOLE_SetInvertedTextXY(
 	IN SHORT x,
 	IN SHORT y,
