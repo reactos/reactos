@@ -4707,17 +4707,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             return;
         }
 
-        /* Load the new CS */
-        if (!Fast486LoadSegment(State, FAST486_REG_CS, CodeSel))
-        {
-            /* Exception occurred */
-            return;
-        }
-
-        /* Set EIP */
-        if (Size) State->InstPtr.Long = InstPtr;
-        else State->InstPtr.LowWord = LOWORD(InstPtr);
-
         if (GET_SEGMENT_RPL(CodeSel) > OldCpl)
         {
             /* Pop ESP */
@@ -4734,6 +4723,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
                 return;
             }
         }
+
+        /* Load the new CS */
+        if (!Fast486LoadSegment(State, FAST486_REG_CS, CodeSel))
+        {
+            /* Exception occurred */
+            return;
+        }
+
+        /* Set EIP */
+        if (Size) State->InstPtr.Long = InstPtr;
+        else State->InstPtr.LowWord = LOWORD(InstPtr);
 
         /* Update the CPL */
         State->Cpl = GET_SEGMENT_RPL(CodeSel);

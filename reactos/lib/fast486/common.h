@@ -183,6 +183,15 @@ Fast486TaskSwitch
     USHORT Selector
 );
 
+BOOLEAN
+FASTCALL
+Fast486CallGate
+(
+    PFAST486_STATE State,
+    PFAST486_CALL_GATE Gate,
+    BOOLEAN Call
+);
+
 /* INLINED FUNCTIONS **********************************************************/
 
 #include "common.inl"

@@ -292,38 +292,30 @@ Fast486InterruptInternal(PFAST486_STATE State,
                          BOOLEAN PushErrorCode,
                          ULONG ErrorCode)
 {
-    USHORT SegmentSelector = IdtEntry->Selector;
-    ULONG  Offset          = MAKELONG(IdtEntry->Offset, IdtEntry->OffsetHigh);
-    ULONG  GateType        = IdtEntry->Type;
-    BOOLEAN GateSize = (GateType == FAST486_IDT_INT_GATE_32) ||
-                       (GateType == FAST486_IDT_TRAP_GATE_32);
-
-    BOOLEAN Success = FALSE;
-    ULONG OldPrefixFlags = State->PrefixFlags;
+    BOOLEAN GateSize = (IdtEntry->Type == FAST486_IDT_INT_GATE_32) ||
+                       (IdtEntry->Type == FAST486_IDT_TRAP_GATE_32);
+    USHORT OldCs = State->SegmentRegs[FAST486_REG_CS].Selector;
+    ULONG OldEip = State->InstPtr.Long;
+    ULONG OldFlags = State->Flags.Long;
+    UCHAR OldCpl = State->Cpl;
 
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
-        FAST486_TSS Tss;
         USHORT OldSs = State->SegmentRegs[FAST486_REG_SS].Selector;
         ULONG OldEsp = State->GeneralRegs[FAST486_REG_ESP].Long;
 
-        if (GateType == FAST486_TASK_GATE_SIGNATURE)
+        if (IdtEntry->Type == FAST486_TASK_GATE_SIGNATURE)
         {
             /* Task call */
             return Fast486TaskSwitch(State, FAST486_TASK_CALL, IdtEntry->Selector);
         }
 
-        if (GateSize != (State->SegmentRegs[FAST486_REG_CS].Size))
-        {
-            /* The gate size doesn't match the current operand size, so set the OPSIZE flag. */
-            State->PrefixFlags |= FAST486_PREFIX_OPSIZE;
-        }
-
         /* Check if the interrupt handler is more privileged or if we're in V86 mode */
-        if ((Fast486GetCurrentPrivLevel(State) > GET_SEGMENT_RPL(SegmentSelector))
-            || State->Flags.Vm)
+        if ((OldCpl > GET_SEGMENT_RPL(IdtEntry->Selector)) || State->Flags.Vm)
         {
+            FAST486_TSS Tss;
+
             /* Read the TSS */
             if (!Fast486ReadLinearMemory(State,
                                          State->TaskReg.Base,
@@ -331,29 +323,11 @@ Fast486InterruptInternal(PFAST486_STATE State,
                                          sizeof(Tss)))
             {
                 /* Exception occurred */
-                goto Cleanup;
+                return FALSE;
             }
 
             /* Switch to the new privilege level */
-            State->Cpl = GET_SEGMENT_RPL(SegmentSelector);
-
-            if (State->Flags.Vm)
-            {
-                /* Clear the VM flag */
-                State->Flags.Vm = FALSE;
-
-                /* Push GS, FS, DS and ES */
-                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_GS].Selector)) goto Cleanup;
-                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_FS].Selector)) goto Cleanup;
-                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_DS].Selector)) goto Cleanup;
-                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_ES].Selector)) goto Cleanup;
-
-                /* Now load them with NULL selectors, since they are useless in protected mode */
-                if (!Fast486LoadSegment(State, FAST486_REG_GS, 0)) goto Cleanup;
-                if (!Fast486LoadSegment(State, FAST486_REG_FS, 0)) goto Cleanup;
-                if (!Fast486LoadSegment(State, FAST486_REG_DS, 0)) goto Cleanup;
-                if (!Fast486LoadSegment(State, FAST486_REG_ES, 0)) goto Cleanup;
-            }
+            State->Cpl = GET_SEGMENT_RPL(IdtEntry->Selector);
 
             /* Check the new (higher) privilege level */
             switch (State->Cpl)
@@ -363,7 +337,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
                     if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss0))
                     {
                         /* Exception occurred */
-                        goto Cleanup;
+                        return FALSE;
                     }
                     State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp0;
 
@@ -375,7 +349,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
                     if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss1))
                     {
                         /* Exception occurred */
-                        goto Cleanup;
+                        return FALSE;
                     }
                     State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp1;
 
@@ -387,7 +361,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
                     if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss2))
                     {
                         /* Exception occurred */
-                        goto Cleanup;
+                        return FALSE;
                     }
                     State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp2;
 
@@ -400,73 +374,90 @@ Fast486InterruptInternal(PFAST486_STATE State,
                     ASSERT(FALSE);
                 }
             }
+        }
+
+        /* Load new CS */
+        if (!Fast486LoadSegment(State, FAST486_REG_CS, IdtEntry->Selector))
+        {
+            /* An exception occurred during the jump */
+            return FALSE;
+        }
+
+        if (GateSize)
+        {
+            /* 32-bit code segment, use EIP */
+            State->InstPtr.Long = MAKELONG(IdtEntry->Offset, IdtEntry->OffsetHigh);
+        }
+        else
+        {
+            /* 16-bit code segment, use IP */
+            State->InstPtr.LowWord = IdtEntry->Offset;
+        }
+
+        /* Check if the interrupt handler is more privileged or we're in VM86 mode (again) */
+        if ((OldCpl > GET_SEGMENT_RPL(IdtEntry->Selector)) || State->Flags.Vm)
+        {
+            if (State->Flags.Vm)
+            {
+                /* Clear the VM flag */
+                State->Flags.Vm = FALSE;
+
+                /* Push GS, FS, DS and ES */
+                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_GS].Selector)) return FALSE;
+                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_FS].Selector)) return FALSE;
+                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_DS].Selector)) return FALSE;
+                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_ES].Selector)) return FALSE;
+
+                /* Now load them with NULL selectors, since they are useless in protected mode */
+                if (!Fast486LoadSegment(State, FAST486_REG_GS, 0)) return FALSE;
+                if (!Fast486LoadSegment(State, FAST486_REG_FS, 0)) return FALSE;
+                if (!Fast486LoadSegment(State, FAST486_REG_DS, 0)) return FALSE;
+                if (!Fast486LoadSegment(State, FAST486_REG_ES, 0)) return FALSE;
+            }
 
             /* Push SS selector */
-            if (!Fast486StackPush(State, OldSs)) goto Cleanup;
+            if (!Fast486StackPushInternal(State, GateSize, OldSs)) return FALSE;
 
-            /* Push stack pointer */
-            if (!Fast486StackPush(State, OldEsp)) goto Cleanup;
+            /* Push the stack pointer */
+            if (!Fast486StackPushInternal(State, GateSize, OldEsp)) return FALSE;
         }
     }
     else
     {
-        if (State->SegmentRegs[FAST486_REG_CS].Size)
+        /* Load new CS */
+        if (!Fast486LoadSegment(State, FAST486_REG_CS, IdtEntry->Selector))
         {
-            /* Set OPSIZE, because INT always pushes 16-bit values in real mode */
-            State->PrefixFlags |= FAST486_PREFIX_OPSIZE;
+            /* An exception occurred during the jump */
+            return FALSE;
         }
+
+        /* Set the new IP */
+        State->InstPtr.LowWord = IdtEntry->Offset;
     }
 
     /* Push EFLAGS */
-    if (!Fast486StackPush(State, State->Flags.Long)) goto Cleanup;
+    if (!Fast486StackPushInternal(State, GateSize, OldFlags)) return FALSE;
 
     /* Push CS selector */
-    if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector)) goto Cleanup;
+    if (!Fast486StackPushInternal(State, GateSize, OldCs)) return FALSE;
 
     /* Push the instruction pointer */
-    if (!Fast486StackPush(State, State->InstPtr.Long)) goto Cleanup;
+    if (!Fast486StackPushInternal(State, GateSize, OldEip)) return FALSE;
 
     if (PushErrorCode)
     {
         /* Push the error code */
-        if (!Fast486StackPush(State, ErrorCode))
-        {
-            /* An exception occurred */
-            goto Cleanup;
-        }
+        if (!Fast486StackPushInternal(State, GateSize, ErrorCode)) return FALSE;
     }
 
-    if ((GateType == FAST486_IDT_INT_GATE) || (GateType == FAST486_IDT_INT_GATE_32))
+    if ((IdtEntry->Type == FAST486_IDT_INT_GATE)
+        || (IdtEntry->Type == FAST486_IDT_INT_GATE_32))
     {
         /* Disable interrupts after a jump to an interrupt gate handler */
         State->Flags.If = FALSE;
     }
 
-    /* Load new CS */
-    if (!Fast486LoadSegment(State, FAST486_REG_CS, SegmentSelector))
-    {
-        /* An exception occurred during the jump */
-        goto Cleanup;
-    }
-
-    if (GateSize)
-    {
-        /* 32-bit code segment, use EIP */
-        State->InstPtr.Long = Offset;
-    }
-    else
-    {
-        /* 16-bit code segment, use IP */
-        State->InstPtr.LowWord = LOWORD(Offset);
-    }
-
-    Success = TRUE;
-
-Cleanup:
-    /* Restore the prefix flags */
-    State->PrefixFlags = OldPrefixFlags;
-
-    return Success;
+    return TRUE;
 }
 
 BOOLEAN
@@ -871,6 +862,182 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
                                     FAST486_EXCEPTION_TS))
     {
         return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Fast486CallGate(PFAST486_STATE State,
+                PFAST486_CALL_GATE Gate,
+                BOOLEAN Call)
+{
+    BOOLEAN Valid;
+    FAST486_GDT_ENTRY NewCodeSegment;
+    BOOLEAN GateSize = (Gate->Type == FAST486_CALL_GATE_SIGNATURE);
+    FAST486_TSS Tss;
+    USHORT OldCs = State->SegmentRegs[FAST486_REG_CS].Selector;
+    ULONG OldEip = State->InstPtr.Long;
+    USHORT OldCpl = State->Cpl;
+    USHORT OldSs = State->SegmentRegs[FAST486_REG_SS].Selector;
+    ULONG OldEsp = State->GeneralRegs[FAST486_REG_ESP].Long;
+    ULONG ParamBuffer[32]; /* Maximum possible size - 32 DWORDs */
+    PULONG LongParams = (PULONG)ParamBuffer;
+    PUSHORT ShortParams = (PUSHORT)ParamBuffer;
+
+    if (!Gate->Selector)
+    {
+        /* The code segment is NULL */
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    if (!Fast486ReadDescriptorEntry(State, Gate->Selector, &Valid, &NewCodeSegment))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Valid || (NewCodeSegment.Dpl > Fast486GetCurrentPrivLevel(State)))
+    {
+        /* Code segment invalid */
+        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Gate->Selector);
+        return FALSE;
+    }
+
+    if (Call && Gate->ParamCount)
+    {
+        /* Read the parameters */
+        if (!Fast486ReadMemory(State,
+                               FAST486_REG_SS,
+                               OldEsp,
+                               FALSE,
+                               ParamBuffer,
+                               Gate->ParamCount * sizeof(ULONG)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    /* Check if the new code segment is more privileged */
+    if (NewCodeSegment.Dpl < OldCpl)
+    {
+        if (Call)
+        {
+            /* Read the TSS */
+            if (!Fast486ReadLinearMemory(State,
+                                         State->TaskReg.Base,
+                                         &Tss,
+                                         sizeof(Tss)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Switch to the new privilege level */
+            State->Cpl = NewCodeSegment.Dpl;
+
+            /* Check the new (higher) privilege level */
+            switch (State->Cpl)
+            {
+                case 0:
+                {
+                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss0))
+                    {
+                        /* Exception occurred */
+                        return FALSE;
+                    }
+                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp0;
+
+                    break;
+                }
+
+                case 1:
+                {
+                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss1))
+                    {
+                        /* Exception occurred */
+                        return FALSE;
+                    }
+                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp1;
+
+                    break;
+                }
+
+                case 2:
+                {
+                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss2))
+                    {
+                        /* Exception occurred */
+                        return FALSE;
+                    }
+                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp2;
+
+                    break;
+                }
+
+                default:
+                {
+                    /* Should never reach here! */
+                    ASSERT(FALSE);
+                }
+            }
+        }
+        else if (!NewCodeSegment.DirConf)
+        {
+            /* This is not allowed for jumps */
+            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Gate->Selector);
+            return FALSE;
+        }
+    }
+
+    /* Load new CS */
+    if (!Fast486LoadSegment(State, FAST486_REG_CS, Gate->Selector))
+    {
+        /* An exception occurred during the jump */
+        return FALSE;
+    }
+
+    /* Set the instruction pointer */
+    if (GateSize) State->InstPtr.Long = MAKELONG(Gate->Offset, Gate->OffsetHigh);
+    else State->InstPtr.Long = Gate->Offset;
+
+    if (Call)
+    {
+        INT i;
+
+        /* Check if the new code segment is more privileged (again) */
+        if (NewCodeSegment.Dpl < OldCpl)
+        {
+            /* Push SS selector */
+            if (!Fast486StackPushInternal(State, GateSize, OldSs)) return FALSE;
+
+            /* Push stack pointer */
+            if (!Fast486StackPushInternal(State, GateSize, OldEsp)) return FALSE;
+        }
+
+        /* Push the parameters in reverse order */
+        for (i = Gate->ParamCount - 1; i >= 0; i--)
+        {
+            if (!Fast486StackPushInternal(State,
+                                          GateSize,
+                                          GateSize ? LongParams[i] : ShortParams[i]))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+
+        /* Push the parameter count */
+        if (!Fast486StackPushInternal(State, GateSize, Gate->ParamCount)) return FALSE;
+
+        /* Push CS selector */
+        if (!Fast486StackPushInternal(State, GateSize, OldCs)) return FALSE;
+
+        /* Push the instruction pointer */
+        if (!Fast486StackPushInternal(State, GateSize, OldEip)) return FALSE;
     }
 
     return TRUE;

@@ -297,19 +297,12 @@ Fast486Exception(PFAST486_STATE State,
 FORCEINLINE
 BOOLEAN
 FASTCALL
-Fast486StackPush(PFAST486_STATE State,
-                 ULONG Value)
+Fast486StackPushInternal(PFAST486_STATE State, BOOLEAN Size, ULONG Value)
 {
-    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
     ULONG StackPointer = State->GeneralRegs[FAST486_REG_ESP].Long;
-
-    /* The OPSIZE prefix toggles the size */
-    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
-        /* 32-bit size */
-
         /* Check if ESP is between 1 and 3 */
         if (State->GeneralRegs[FAST486_REG_ESP].Long >= 1
             && State->GeneralRegs[FAST486_REG_ESP].Long <= 3)
@@ -344,9 +337,6 @@ Fast486StackPush(PFAST486_STATE State,
     }
     else
     {
-        /* 16-bit size */
-        USHORT ShortValue = LOWORD(Value);
-
         /* Check if SP is 1 */
         if (State->GeneralRegs[FAST486_REG_ESP].LowWord == 1)
         {
@@ -360,7 +350,7 @@ Fast486StackPush(PFAST486_STATE State,
                                 State->SegmentRegs[FAST486_REG_SS].Size
                                 ? StackPointer - sizeof(USHORT)
                                 : LOWORD(StackPointer - sizeof(USHORT)),
-                                &ShortValue,
+                                &Value,
                                 sizeof(USHORT)))
         {
             /* Exception occurred */
@@ -380,6 +370,20 @@ Fast486StackPush(PFAST486_STATE State,
     }
 
     return TRUE;
+}
+
+FORCEINLINE
+BOOLEAN
+FASTCALL
+Fast486StackPush(PFAST486_STATE State, ULONG Value)
+{
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    /* The OPSIZE prefix toggles the size */
+    TOGGLE_OPSIZE(Size);
+
+    /* Call the internal function */
+    return Fast486StackPushInternal(State, Size, Value);
 }
 
 FORCEINLINE
@@ -778,12 +782,25 @@ Fast486ProcessGate(PFAST486_STATE State, USHORT Selector, ULONG Offset, BOOLEAN 
             return FALSE;
         }
 
+        case FAST486_CALL_GATE_16_SIGNATURE:
         case FAST486_CALL_GATE_SIGNATURE:
         {
-            // TODO: NOT IMPLEMENTED
-            UNIMPLEMENTED;
+            if ((Descriptor.Dpl < Fast486GetCurrentPrivLevel(State))
+                && (Descriptor.Dpl < GET_SEGMENT_RPL(Selector)))
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                return FALSE;
+            }
 
-            Fast486Exception(State, FAST486_EXCEPTION_UD);
+            if (!Descriptor.Present)
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
+                return FALSE;
+            }
+
+            Fast486CallGate(State, (PFAST486_CALL_GATE)&Descriptor, Call);
+
+            /* The gate has been processed here, so return FALSE */
             return FALSE;
         }
 

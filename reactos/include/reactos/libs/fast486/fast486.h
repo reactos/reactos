@@ -75,15 +75,18 @@
 #define FAST486_DR4_RESERVED 0xFFFF1FF0
 #define FAST486_DR5_RESERVED 0x0000DC00
 
-#define FAST486_LDT_SIGNATURE       0x02
-#define FAST486_TASK_GATE_SIGNATURE 0x05
-#define FAST486_IDT_INT_GATE        0x06
-#define FAST486_IDT_TRAP_GATE       0x07
-#define FAST486_TSS_SIGNATURE       0x09
-#define FAST486_BUSY_TSS_SIGNATURE  0x0B
-#define FAST486_CALL_GATE_SIGNATURE 0x0C
-#define FAST486_IDT_INT_GATE_32     0x0E
-#define FAST486_IDT_TRAP_GATE_32    0x0F
+#define FAST486_TSS_16_SIGNATURE       0x01
+#define FAST486_LDT_SIGNATURE          0x02
+#define FAST486_BUSY_TSS_16_SIGNATURE  0x03
+#define FAST486_CALL_GATE_16_SIGNATURE 0x04
+#define FAST486_TASK_GATE_SIGNATURE    0x05
+#define FAST486_IDT_INT_GATE           0x06
+#define FAST486_IDT_TRAP_GATE          0x07
+#define FAST486_TSS_SIGNATURE          0x09
+#define FAST486_BUSY_TSS_SIGNATURE     0x0B
+#define FAST486_CALL_GATE_SIGNATURE    0x0C
+#define FAST486_IDT_INT_GATE_32        0x0E
+#define FAST486_IDT_TRAP_GATE_32       0x0F
 
 #define FAST486_PREFIX_SEG      (1 << 0)
 #define FAST486_PREFIX_OPSIZE   (1 << 1)
@@ -354,6 +357,62 @@ typedef struct
 /* Verify the structure size */
 C_ASSERT(sizeof(FAST486_IDT_ENTRY) == sizeof(ULONGLONG));
 
+typedef struct _FAST486_TSS
+{
+    ULONG Link;
+    ULONG Esp0;
+    ULONG Ss0;
+    ULONG Esp1;
+    ULONG Ss1;
+    ULONG Esp2;
+    ULONG Ss2;
+    ULONG Cr3;
+    ULONG Eip;
+    ULONG Eflags;
+    ULONG Eax;
+    ULONG Ecx;
+    ULONG Edx;
+    ULONG Ebx;
+    ULONG Esp;
+    ULONG Ebp;
+    ULONG Esi;
+    ULONG Edi;
+    ULONG Es;
+    ULONG Cs;
+    ULONG Ss;
+    ULONG Ds;
+    ULONG Fs;
+    ULONG Gs;
+    ULONG Ldtr;
+    ULONG IopbOffset;
+} FAST486_TSS, *PFAST486_TSS;
+
+typedef struct _FAST486_LEGACY_TSS
+{
+    USHORT Link;
+    USHORT Sp0;
+    USHORT Ss0;
+    USHORT Sp1;
+    USHORT Ss1;
+    USHORT Sp2;
+    USHORT Ss2;
+    USHORT Ip;
+    USHORT Flags;
+    USHORT Ax;
+    USHORT Cx;
+    USHORT Dx;
+    USHORT Bx;
+    USHORT Sp;
+    USHORT Bp;
+    USHORT Si;
+    USHORT Di;
+    USHORT Es;
+    USHORT Cs;
+    USHORT Ss;
+    USHORT Ds;
+    USHORT Ldtr;
+} FAST486_LEGACY_TSS, *PFAST486_LEGACY_TSS;
+
 #include <poppack.h>
 
 typedef struct _FAST486_TABLE_REG
@@ -391,36 +450,6 @@ typedef union _FAST486_FLAGS_REG
         // ULONG Reserved : 13;
     };
 } FAST486_FLAGS_REG, *PFAST486_FLAGS_REG;
-
-typedef struct _FAST486_TSS
-{
-    ULONG Link;
-    ULONG Esp0;
-    ULONG Ss0;
-    ULONG Esp1;
-    ULONG Ss1;
-    ULONG Esp2;
-    ULONG Ss2;
-    ULONG Cr3;
-    ULONG Eip;
-    ULONG Eflags;
-    ULONG Eax;
-    ULONG Ecx;
-    ULONG Edx;
-    ULONG Ebx;
-    ULONG Esp;
-    ULONG Ebp;
-    ULONG Esi;
-    ULONG Edi;
-    ULONG Es;
-    ULONG Cs;
-    ULONG Ss;
-    ULONG Ds;
-    ULONG Fs;
-    ULONG Gs;
-    ULONG Ldtr;
-    ULONG IopbOffset;
-} FAST486_TSS, *PFAST486_TSS;
 
 typedef struct _FAST486_FPU_DATA_REG
 {
