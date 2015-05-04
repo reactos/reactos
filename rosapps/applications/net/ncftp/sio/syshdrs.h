@@ -14,7 +14,7 @@
 #	include "wincfg.h"
 #	include <winsock2.h>	/* includes <windows.h> */
 #	include <io.h>
-#	define _POSIX_ 1
+//#	define _POSIX_ 1
 #	ifdef HAVE_UNISTD_H
 #		include <unistd.h>
 #	endif
