@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDS_USAGE                1000
 
 #define IDS_HOST_NAME            100
