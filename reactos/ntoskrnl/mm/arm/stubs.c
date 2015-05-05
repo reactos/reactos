@@ -97,7 +97,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
     //
     // Get the PDE
     //
-    PointerPde = MiGetPdeAddress(Address);
+    PointerPde = MiAddressToPde(Address);
     if (PointerPde->u.Hard.Coarse.Valid)
     {
         //
@@ -141,7 +141,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
                 // Save it
                 //
                 //MmGlobalKernelPageDirectory[PdeOffset] = TempPde.u.Hard.AsUlong;
-                //DPRINT1("KPD: %p PDEADDR: %p\n", &MmGlobalKernelPageDirectory[PdeOffset], MiGetPdeAddress(Address));
+                //DPRINT1("KPD: %p PDEADDR: %p\n", &MmGlobalKernelPageDirectory[PdeOffset], MiAddressToPde(Address));
 
                 //
                 // FIXFIX: Double check with Felix tomorrow
@@ -150,7 +150,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
                 //
                 // Get the PTE for this 1MB region
                 //
-                PointerPte = MiGetPteAddress(MiGetPteAddress(Address));
+                PointerPte = MiAddressToPte(MiAddressToPte(Address));
                 DPRINT1("PointerPte: %p\n", PointerPte);
 
                 //
@@ -206,7 +206,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
     //
     // Return the PTE
     //
-    return MiGetPteAddress(Address);
+    return MiAddressToPte(Address);
 }
 
 MMPTE
@@ -647,8 +647,8 @@ MmInitGlobalKernelPageDirectory(VOID)
     // Good place to setup template PTE/PDEs.
     // We are lazy and pick a known-good PTE
     //
-    MiArmTemplatePte = *MiGetPteAddress(0x80000000);
-    MiArmTemplatePde = *MiGetPdeAddress(0x80000000);
+    MiArmTemplatePte = *MiAddressToPte(0x80000000);
+    MiArmTemplatePde = *MiAddressToPde(0x80000000);
 
     //
     // Loop the 2GB of address space which belong to the kernel
@@ -693,7 +693,7 @@ MmGetPhysicalAddress(IN PVOID Address)
         // ARM Hack while we still use a section PTE
         //
         PMMPDE_HARDWARE PointerPde;
-        PointerPde = MiGetPdeAddress(PCR);
+        PointerPde = MiAddressToPde(PCR);
         ASSERT(PointerPde->u.Hard.Section.Valid == 1);
         PhysicalAddress.QuadPart = PointerPde->u.Hard.Section.PageFrameNumber;
         PhysicalAddress.QuadPart <<= CPT_SHIFT;

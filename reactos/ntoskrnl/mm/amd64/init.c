@@ -20,6 +20,10 @@
 extern PMMPTE MmDebugPte;
 #endif
 
+/* Helper macros */
+#define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
+#define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
+
 /* GLOBALS *****************************************************************/
 
 /* Template PTE and PDE for a kernel page */

@@ -18,6 +18,8 @@
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
 #endif
 
+#define ADDR_TO_PDE_OFFSET MiAddressToPdeOffset
+#define ADDR_TO_PAGE_TABLE(v)  (((ULONG)(v)) / (1024 * PAGE_SIZE))
 
 /* GLOBALS *****************************************************************/
 

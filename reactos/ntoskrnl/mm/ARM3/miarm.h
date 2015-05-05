@@ -6,54 +6,7 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#ifndef _M_AMD64
-
-#define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING   ((255 * _1MB) >> PAGE_SHIFT)
-#define MI_MIN_PAGES_FOR_SYSPTE_TUNING          ((19 * _1MB) >> PAGE_SHIFT)
-#define MI_MIN_PAGES_FOR_SYSPTE_BOOST           ((32 * _1MB) >> PAGE_SHIFT)
-#define MI_MIN_PAGES_FOR_SYSPTE_BOOST_BOOST     ((256 * _1MB) >> PAGE_SHIFT)
-#define MI_MAX_INIT_NONPAGED_POOL_SIZE          (128 * _1MB)
-#define MI_MAX_NONPAGED_POOL_SIZE               (128 * _1MB)
-#define MI_MAX_FREE_PAGE_LISTS                  4
-
-#define MI_MIN_INIT_PAGED_POOLSIZE              (32 * _1MB)
-
-#define MI_SESSION_VIEW_SIZE                    (48 * _1MB)
-#define MI_SESSION_POOL_SIZE                    (16 * _1MB)
-#define MI_SESSION_IMAGE_SIZE                   (8 * _1MB)
-#define MI_SESSION_WORKING_SET_SIZE             (4 * _1MB)
-#define MI_SESSION_SIZE                         (MI_SESSION_VIEW_SIZE + \
-                                                 MI_SESSION_POOL_SIZE + \
-                                                 MI_SESSION_IMAGE_SIZE + \
-                                                 MI_SESSION_WORKING_SET_SIZE)
-
-#define MI_SYSTEM_VIEW_SIZE                     (32 * _1MB)
-
-#define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
-#define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
-#define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
-#define MI_PAGED_POOL_START                     (PVOID)0xE1000000
-#define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
-#define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
-
-#define MI_SYSTEM_PTE_BASE                      (PVOID)MiAddressToPte(NULL)
-
-#define MI_MIN_SECONDARY_COLORS                 8
-#define MI_SECONDARY_COLORS                     64
-#define MI_MAX_SECONDARY_COLORS                 1024
-
-#define MI_MIN_ALLOCATION_FRAGMENT              (4 * _1KB)
-#define MI_ALLOCATION_FRAGMENT                  (64 * _1KB)
-#define MI_MAX_ALLOCATION_FRAGMENT              (2  * _1MB)
-
-#define MM_HIGHEST_VAD_ADDRESS \
-    (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
-
-#define MI_DEFAULT_SYSTEM_PTE_COUNT             50000
-#define MI_MAX_ZERO_BITS                        21
-
-#endif /* !_M_AMD64 */
 
 /* Make the code cleaner with some definitions for size multiples */
 #define _1KB (1024u)
@@ -72,28 +25,15 @@
 /* Size of a page directory */
 #define PD_SIZE  (PDE_COUNT * sizeof(MMPDE))
 
-/* Size of all page directories for a process */
-#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
-
-/* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
-#ifdef _M_IX86
-#define PD_COUNT  1
-#define PDE_COUNT 1024
-#define PTE_COUNT 1024
-C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
-#define MiIsPteOnPdeBoundary(PointerPte) \
-    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
-#elif _M_ARM
-#define PPE_PER_PAGE 1
-#define PDE_PER_PAGE 4096
-#define PTE_PER_PAGE 256
-#define PD_COUNT  1
-#define PDE_COUNT 4096
-#define PTE_COUNT 256
-#else
+/* Stop using these! */
 #define PD_COUNT  PPE_PER_PAGE
 #define PDE_COUNT PDE_PER_PAGE
 #define PTE_COUNT PTE_PER_PAGE
+
+/* Size of all page directories for a process */
+#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
+#ifdef _M_IX86
+C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
 
 //
@@ -211,19 +151,6 @@ extern const ULONG MmProtectToValue[32];
     (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)MmHyperSpaceEnd))
 
 //
-// Corresponds to MMPTE_SOFTWARE.Protection
-//
-#ifdef _M_IX86
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
-#elif _M_ARM
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   6
-#elif _M_AMD64
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
-#else
-#error Define these please!
-#endif
-
-//
 // Creates a software PTE with the given protection
 //
 #define MI_MAKE_SOFTWARE_PTE(p, x)          ((p)->u.Long = (x << MM_PTE_SOFTWARE_PROTECTION_BITS))
@@ -237,8 +164,13 @@ extern const ULONG MmProtectToValue[32];
 //
 // Special values for LoadedImports
 //
+#ifdef _WIN64
+#define MM_SYSLDR_NO_IMPORTS   (PVOID)0xFFFFFFFFFFFFFFFEULL
+#define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFFFFFFFFFFULL
+#else
 #define MM_SYSLDR_NO_IMPORTS   (PVOID)0xFFFFFFFE
 #define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFF
+#endif
 #define MM_SYSLDR_SINGLE_ENTRY 0x1
 
 //
@@ -277,47 +209,13 @@ extern const ULONG MmProtectToValue[32];
 #define MI_GET_NEXT_COLOR()                 (MI_GET_PAGE_COLOR(++MmSystemPageColor))
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
-#ifndef _M_AMD64
-//
-// Decodes a Prototype PTE into the underlying PTE
-//
-#define MiProtoPteToPte(x)                  \
-    (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
-             (((x)->u.Proto.ProtoAddressHigh << 9) | (x)->u.Proto.ProtoAddressLow << 2))
-
-//
-// Decodes a Prototype PTE into the underlying PTE
-//
-#define MiSubsectionPteToSubsection(x)                              \
-    ((x)->u.Subsect.WhichPool == PagedPool) ?                       \
-        (PMMPTE)((ULONG_PTR)MmSubsectionBase +                      \
-                 (((x)->u.Subsect.SubsectionAddressHigh << 7) |     \
-                   (x)->u.Subsect.SubsectionAddressLow << 3)) :     \
-        (PMMPTE)((ULONG_PTR)MmNonPagedPoolEnd -                     \
-                (((x)->u.Subsect.SubsectionAddressHigh << 7) |      \
-                  (x)->u.Subsect.SubsectionAddressLow << 3))
-#endif
-
 //
 // Prototype PTEs that don't yet have a pagefile association
 //
-#ifdef _M_AMD64
+#ifdef _WIN64
 #define MI_PTE_LOOKUP_NEEDED 0xffffffffULL
 #else
 #define MI_PTE_LOOKUP_NEEDED 0xFFFFF
-#endif
-
-//
-// Number of session lists in the MM_SESSIONS_SPACE structure
-//
-#if defined(_M_AMD64)
-#define SESSION_POOL_LOOKASIDES 21
-#elif defined(_M_IX86)
-#define SESSION_POOL_LOOKASIDES 26
-#elif defined(_M_ARM)
-#define SESSION_POOL_LOOKASIDES 26 // CHECKME
-#else
-#error Not Defined!
 #endif
 
 //
@@ -342,7 +240,7 @@ extern const ULONG MmProtectToValue[32];
 //
 // FIXFIX: These should go in ex.h after the pool merge
 //
-#ifdef _M_AMD64
+#ifdef _WIN64
 #define POOL_BLOCK_SIZE 16
 #else
 #define POOL_BLOCK_SIZE  8
@@ -385,11 +283,6 @@ extern const ULONG MmProtectToValue[32];
 #define POOL_BILLED_PROCESS_INVALID 13
 #define POOL_HEADER_SIZE_INVALID 32
 
-#ifdef _M_ARM
-#define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
-#endif
-
-
 typedef struct _POOL_DESCRIPTOR
 {
     POOL_TYPE PoolType;
@@ -413,7 +306,7 @@ typedef struct _POOL_HEADER
     {
         struct
         {
-#ifdef _M_AMD64
+#ifdef _WIN64
             USHORT PreviousSize:8;
             USHORT PoolIndex:8;
             USHORT BlockSize:8;
@@ -427,12 +320,12 @@ typedef struct _POOL_HEADER
         };
         ULONG Ulong1;
     };
-#ifdef _M_AMD64
+#ifdef _WIN64
     ULONG PoolTag;
 #endif
     union
     {
-#ifdef _M_AMD64
+#ifdef _WIN64
         PEPROCESS ProcessBilled;
 #else
         ULONG PoolTag;

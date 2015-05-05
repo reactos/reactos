@@ -17,7 +17,6 @@
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
 #endif
 
-
 /* GLOBALS *****************************************************************/
 
 #define PA_BIT_PRESENT   (0)

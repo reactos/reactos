@@ -83,7 +83,7 @@ typedef struct _HARDWARE_LARGE_PTE_ARMV6
     ULONG NoExecute:1;
     ULONG Domain:4;
     ULONG Ecc:1;
-    ULONG Sbo:1;
+    ULONG Sbo:1; // ULONG Accessed:1;?
     ULONG Owner:1;
     ULONG CacheAttributes:3;
     ULONG ReadOnly:1;
@@ -100,7 +100,7 @@ typedef struct _HARDWARE_PTE_ARMV6
     ULONG Valid:1;
     ULONG Buffered:1;
     ULONG Cached:1;
-    ULONG Sbo:1;
+    ULONG Sbo:1; // ULONG Accessed:1;?
     ULONG Owner:1;
     ULONG CacheAttributes:3;
     ULONG ReadOnly:1;
