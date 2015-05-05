@@ -42,8 +42,8 @@ WORD NTAPI ConDrvReadInput(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length)
     {
         if (!ExtendedCode)
         {
-            /* Call the BIOS INT 16h, AH=00h "Get Keystroke" */
-            setAH(0x00);
+            /* Call the BIOS INT 16h, AH=10h "Get Extended Keystroke" */
+            setAH(0x10);
             Int32Call(&DosContext, BIOS_KBD_INTERRUPT);
 
             /* Retrieve the character in AL (scan code is in AH) */
@@ -59,7 +59,7 @@ WORD NTAPI ConDrvReadInput(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length)
         }
 
         /* Check if this is a special character */
-        if (Character == 0) ExtendedCode = getAH();
+        if (Character == 0 || Character == 0xE0) ExtendedCode = getAH();
 
         if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
         Pointer[BytesRead++] = Character;
