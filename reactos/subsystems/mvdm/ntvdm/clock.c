@@ -188,8 +188,12 @@ VOID SetHardwareTimerDelay(PHARDWARE_TIMER Timer, ULONGLONG NewDelay)
 
 VOID DestroyHardwareTimer(PHARDWARE_TIMER Timer)
 {
-    if (Timer->Flags & HARDWARE_TIMER_ENABLED) RemoveEntryList(&Timer->Link);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Timer);
+    if (Timer)
+    {
+        if (Timer->Flags & HARDWARE_TIMER_ENABLED) RemoveEntryList(&Timer->Link);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Timer);
+        Timer = NULL;
+    }
 }
 
 BOOLEAN ClockInitialize(VOID)
