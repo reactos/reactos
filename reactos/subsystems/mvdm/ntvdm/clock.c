@@ -192,7 +192,6 @@ VOID DestroyHardwareTimer(PHARDWARE_TIMER Timer)
     {
         if (Timer->Flags & HARDWARE_TIMER_ENABLED) RemoveEntryList(&Timer->Link);
         RtlFreeHeap(RtlGetProcessHeap(), 0, Timer);
-        Timer = NULL;
     }
 }
 
