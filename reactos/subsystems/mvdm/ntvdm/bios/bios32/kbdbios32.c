@@ -122,18 +122,19 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
             {
                 /* There is a character, clear ZF and return it */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
+
+                if (getAH() == 0x01 && LOBYTE(Character) == 0xE0)
+                {
+                    /* Clear the extended code */
+                    Character &= 0xFF00;
+                }
+
                 setAX(Character);
             }
             else
             {
                 /* No character, set ZF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_ZF;
-            }
-
-            if (getAH() == 0x01 && LOBYTE(Character) == 0xE0)
-            {
-                /* Clear the extended code */
-                Character &= 0xFF00;
             }
 
             break;
