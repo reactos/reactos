@@ -4,9 +4,6 @@
 
 #pragma once
 
-struct _EPROCESS;
-PULONG MmGetPageDirectory(VOID);
-
 #ifdef _PAE_
 #define _MI_PAGING_LEVELS 3
 #else

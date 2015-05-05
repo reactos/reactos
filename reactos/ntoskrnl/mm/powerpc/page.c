@@ -74,15 +74,6 @@ MiFlushTlb(PULONG Pt, PVOID Address)
     __asm__("tlbi %0" : "=r" (Address));
 }
 
-
-
-PULONG
-MmGetPageDirectory(VOID)
-{
-   unsigned int page_dir=0;
-   return((PULONG)page_dir);
-}
-
 static ULONG
 ProtectToFlags(ULONG flProtect)
 {

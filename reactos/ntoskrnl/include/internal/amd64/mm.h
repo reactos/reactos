@@ -154,13 +154,6 @@
 
 #define ValidKernelPpe ValidKernelPde
 
-PULONG64
-FORCEINLINE
-MmGetPageDirectory(VOID)
-{
-    return (PULONG64)__readcr3();
-}
-
 PMMPTE
 FORCEINLINE
 MiAddressToPxe(PVOID Address)

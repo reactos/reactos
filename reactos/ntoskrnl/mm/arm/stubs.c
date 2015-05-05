@@ -315,16 +315,6 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     return TRUE;
 }
 
-PULONG
-NTAPI
-MmGetPageDirectory(VOID)
-{
-    //
-    // Return the TTB
-    //
-    return (PULONG)KeArmTranslationTableRegisterGet().AsUlong;
-}
-
 NTSTATUS
 NTAPI
 MmCreateVirtualMappingInternal(IN PEPROCESS Process,

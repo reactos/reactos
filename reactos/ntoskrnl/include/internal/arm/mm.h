@@ -108,9 +108,6 @@ typedef enum _ARM_DOMAIN
     ManagerDomain
 } ARM_DOMAIN;
 
-struct _EPROCESS;
-PULONG MmGetPageDirectory(VOID);
-
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
 #define MI_MAKE_DIRTY_PAGE(x)
 #define MI_MAKE_ACCESSED_PAGE(x)

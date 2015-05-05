@@ -105,14 +105,6 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 #endif
 }
 
-
-
-PULONG
-MmGetPageDirectory(VOID)
-{
-   return (PULONG)__readcr3();
-}
-
 static ULONG
 ProtectToPTE(ULONG flProtect)
 {
