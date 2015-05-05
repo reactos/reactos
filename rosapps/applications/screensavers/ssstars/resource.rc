@@ -39,13 +39,27 @@ IDI_STARFIELD           ICON    DISCARDABLE     "res/icon_stars.ico"
 IDB_COSMOS              BITMAP  DISCARDABLE     "res/cosmicfractal.bmp"
 IDB_STAR                BITMAP  DISCARDABLE     "res/star.bmp"
 
+#include <reactos/manifest_exe.rc>
 
 // Language resources
 /* UTF-8 */
 #pragma code_page(65001)
 
-#include "lang/en-US.rc"
-#include "lang/it-IT.rc"
-#include "lang/ro-RO.rc"
-#include "lang/ru-RU.rc"
-#include "lang/pl-PL.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif

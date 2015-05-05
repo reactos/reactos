@@ -26,14 +26,14 @@ BEGIN
                     4,4,284,92
     GROUPBOX        "Avanzate",IDC_STATIC,16,180,260,72
     CONTROL         "Attiva blending sullo sfondo",IDC_CHECK_DOBLENDING,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,102,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
     CONTROL         "Attiva correzione prospettica accurata",
                     IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,24,208,135,10
+                    WS_TABSTOP,24,208,160,10
     CONTROL         "Attiva filtraggio delle texture",IDC_CHECK_FILTERING,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,110,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,160,10
     CONTROL         "Attiva illuminazione accurata",IDC_CHECK_SHADING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,24,232,110,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
     PUSHBUTTON      "OK",IDOK,60,260,52,16
     PUSHBUTTON      "Annulla",IDCANCEL,120,260,52,16
     PUSHBUTTON      "Info",IDC_BUTTON_ABOUT,179,260,52,16

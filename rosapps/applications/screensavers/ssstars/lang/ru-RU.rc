@@ -26,14 +26,14 @@ BEGIN
                     4,4,284,92
     GROUPBOX        "Дополнительные настройки",IDC_STATIC,16,180,260,72
     CONTROL         "Включить фоновое смешивание",IDC_CHECK_DOBLENDING,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,110,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
     CONTROL         "Включить точную коррекцию перспективы",
                     IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,24,208,142,10
+                    WS_TABSTOP,24,208,160,10
     CONTROL         "Включить фильтрацию текстур",IDC_CHECK_FILTERING,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,90,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,160,10
     CONTROL         "Включить мягкие тени",IDC_CHECK_SHADING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,24,232,100,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
     PUSHBUTTON      "OK",IDOK,60,260,52,16
     PUSHBUTTON      "Отмена",IDCANCEL,120,260,52,16
     PUSHBUTTON      "О программе",IDC_BUTTON_ABOUT,179,260,52,16

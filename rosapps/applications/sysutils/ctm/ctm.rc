@@ -11,11 +11,27 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
-#include "lang/en-US.rc"
-#include "lang/fr-FR.rc"
-#include "lang/de-DE.rc"
-#include "lang/el-GR.rc"
-#include "lang/no-NO.rc"
-#include "lang/ro-RO.rc"
-#include "lang/ru-RU.rc"
-#include "lang/uk-UA.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "lang/el-GR.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif

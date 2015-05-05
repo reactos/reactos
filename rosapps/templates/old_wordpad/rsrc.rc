@@ -2,20 +2,50 @@
 #include <commctrl.h>
 #include "resource.h"
 
+#include <reactos/manifest_exe.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
-#include "lang/bg-BG.rc"
-#include "lang/de-DE.rc"
-#include "lang/el-GR.rc"
-#include "lang/en-US.rc"
-#include "lang/fi-FI.rc"
-#include "lang/fr-FR.rc"
-#include "lang/it-IT.rc"
-#include "lang/no-NO.rc"
-#include "lang/nl-NL.rc"
-#include "lang/pl-PL.rc"
-#include "lang/ru-RU.rc"
-#include "lang/th-TH.rc"
-#include "lang/uk-UA.rc"
-#include "lang/zh-CN.rc"
+#ifdef LANGUAGE_BG_BG
+    #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "lang/el-GR.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_FI_FI
+    #include "lang/fi-FI.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/nl-NL.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "lang/th-TH.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif

@@ -1,52 +1,52 @@
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 // Dialog
 
 DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 292, 282
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Ustawienia"
+CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Opcje",IDC_STATIC,16,100,260,76
-    RTEXT           "Liczba gwiazd:",IDC_STATIC,24,116,68,12,
+    GROUPBOX        "Optionen",IDC_STATIC,16,100,260,76
+    RTEXT           "Anzahl an Sternen:",IDC_STATIC,24,116,68,12,
                     SS_CENTERIMAGE
     CONTROL         "Slider1",IDC_SLIDER_NUM_OF_STARS,"msctls_trackbar32",
                     TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,96,116,140,12
     CTEXT           "Static",IDC_TEXT_NUM_OF_STARS,240,116,24,12,
                     SS_CENTERIMAGE,WS_EX_STATICEDGE
-    RTEXT           "Szybkość:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
+    RTEXT           "Geschwindigkeit:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
     CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH | 
                     TBS_NOTICKS | WS_TABSTOP,96,137,140,12
     CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    RTEXT           "Obroty:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
+    RTEXT           "Rotation:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
     COMBOBOX        IDC_COMBO_ROTATION,100,156,80,60,CBS_DROPDOWNLIST | 
                     WS_TABSTOP
     CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
                     4,4,284,92
-    GROUPBOX        "Zaawansowane",IDC_STATIC,16,180,260,72
-    CONTROL         "Włącz łączenie tła",IDC_CHECK_DOBLENDING,
+    GROUPBOX        "Erweitert",IDC_STATIC,16,180,260,72
+    CONTROL         "Hintergrund-Blending aktivieren",IDC_CHECK_DOBLENDING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
-    CONTROL         "Włącz precyzyjną poprawę perspektywy",
+    CONTROL         "Genaue Perspektivenkorrektur aktivieren",
                     IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,24,208,160,10
-    CONTROL         "Włącz filtrowanie tekstur",IDC_CHECK_FILTERING,
+    CONTROL         "Texturfilterung aktivieren",IDC_CHECK_FILTERING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,160,10
-    CONTROL         "Włącz wygładzanie cieni",IDC_CHECK_SHADING,"Button",
+    CONTROL         "Weiche Schattierungen aktivieren",IDC_CHECK_SHADING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
     PUSHBUTTON      "OK",IDOK,60,260,52,16
-    PUSHBUTTON      "Anuluj",IDCANCEL,120,260,52,16
-    PUSHBUTTON      "O wygaszaczu",IDC_BUTTON_ABOUT,179,260,52,16
+    PUSHBUTTON      "Abbrechen",IDCANCEL,120,260,52,16
+    PUSHBUTTON      "Über",IDC_BUTTON_ABOUT,179,260,52,16
 END
 
 // String Tables
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DESCRIPTION         "Gwiezdne pole"
-    IDS_ROTATION_NONE       "brak"
-    IDS_ROTATION_LINEAR     "Liniowo"
-    IDS_ROTATION_PERIODIC   "Okresowo"
-    IDS_LICENSE             "Gwiezdne pole to darmowe oprogramowanie wydane na licencji GNU GPL."
-    IDS_AUTHOR              "Napisane przez Carlo Bramini"
+    IDS_DESCRIPTION         "Starfield"
+    IDS_ROTATION_NONE       "Keine"
+    IDS_ROTATION_LINEAR     "Linear"
+    IDS_ROTATION_PERIODIC   "Periodisch"
+    IDS_LICENSE             "Starfield ist freie Software veröffentlicht unter der GNU GPL Lizenz."
+    IDS_AUTHOR              "Erstellt von Carlo Bramini"
 END
