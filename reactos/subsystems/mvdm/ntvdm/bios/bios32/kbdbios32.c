@@ -87,7 +87,7 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
         /* Wait for keystroke and read */
         case 0x00:
         /* Wait for extended keystroke and read */
-        case 0x10:  // FIXME: Temporarily do the same as INT 16h, 00h
+        case 0x10:
         {
             WORD Character;
 
@@ -99,6 +99,12 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
                 break;
             }
 
+            if (getAH() == 0x00 && LOBYTE(Character) == 0xE0)
+            {
+                /* Clear the extended code */
+                Character &= 0xFF00;
+            }
+
             BiosKbdBufferPop();
             setAX(Character);
 
@@ -108,7 +114,7 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
         /* Get keystroke status */
         case 0x01:
         /* Get extended keystroke status */
-        case 0x11:  // FIXME: Temporarily do the same as INT 16h, 01h
+        case 0x11:
         {
             WORD Character;
             
@@ -122,6 +128,12 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
             {
                 /* No character, set ZF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_ZF;
+            }
+
+            if (getAH() == 0x01 && LOBYTE(Character) == 0xE0)
+            {
+                /* Clear the extended code */
+                Character &= 0xFF00;
             }
 
             break;
@@ -176,6 +188,7 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
 // Keyboard IRQ 1
 static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 {
+    static BOOLEAN Extended = FALSE;
     BOOLEAN SkipScanCode;
     BYTE ScanCode, VirtualKey;
     WORD Character;
@@ -203,6 +216,12 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 
     setAX(AX);
     setCF(CF);
+
+    if (ScanCode == 0xE0)
+    {
+        Extended = TRUE;
+        goto Quit;
+    }
 
     /* Check whether CF is clear. If so, skip the scan code. */
     if (SkipScanCode) goto Quit;
@@ -242,10 +261,10 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 
             default:
             {
-                Character = 0;
+                Character = Extended ? 0xE0 : 0x00;
 
-                /* If ALT isn't held down, find out which character this is */
-                if (!(Bda->KeybdShiftFlags & (BDA_KBDFLAG_ALT | BDA_KBDFLAG_LALT | BDA_KBDFLAG_RALT)))
+                /* If this is not an extended scancode, and ALT isn't held down, find out which character this is */
+                if (!Extended && !(Bda->KeybdShiftFlags & (BDA_KBDFLAG_ALT | BDA_KBDFLAG_LALT | BDA_KBDFLAG_RALT)))
                 {
                     if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
                     {
@@ -286,6 +305,9 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
     if (BiosKeyboardMap[VK_NUMLOCK]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_NUMLOCK;
     if (BiosKeyboardMap[VK_CAPITAL]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CAPSLOCK;
     if (BiosKeyboardMap[VK_INSERT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_INSERT;
+
+    /* Clear the extended key flag */
+    Extended = FALSE;
 
     DPRINT("BiosKeyboardIrq - Character = 0x%X, ScanCode = 0x%X, KeybdShiftFlags = 0x%X\n",
            Character, ScanCode, Bda->KeybdShiftFlags);
