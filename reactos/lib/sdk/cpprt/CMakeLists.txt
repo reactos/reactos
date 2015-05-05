@@ -1,10 +1,13 @@
 
 set_cpp(WITH_EXCEPTIONS)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/lib/sdk/crt/include
+    ${REACTOS_SOURCE_DIR}/include/c++)
 
 list(APPEND SOURCE
     ehvec.cpp
+    new_nothrow.cpp
     typeinfo.cpp)
 
 if(ARCH STREQUAL "i386")

@@ -39,4 +39,10 @@ DEFINE_ALIAS ??_M@YGXPAXIIP6EX0@Z@Z, ?MSVCRTEX_eh_vector_destructor_iterator@@YG
 ; void __cdecl operator delete(void *,unsigned int)
 DEFINE_ALIAS ??3@YAXPAXI@Z, ??3@YAXPAX@Z
 
+; void __cdecl operator delete(void *,struct std::nothrow_t const &)
+DEFINE_ALIAS ??3@YAXPAXABUnothrow_t@std@@@Z, ??3@YAXPAX@Z
+
+; void __cdecl operator delete[](void *,struct std::nothrow_t const &)
+DEFINE_ALIAS ??_V@YAXPAXABUnothrow_t@std@@@Z, ??3@YAXPAX@Z
+
 END
