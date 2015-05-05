@@ -138,7 +138,7 @@ CAPTION "Používateľské profily"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Používateľské profily obsahujú nastavenia pracovnej plochy a iné informácie týkajúce sa používateľského konta. Na každom používanom počítači je možné vytvoriť iný profil alebo je možné vybrať zdieľaný profil, ktorý je rovnaký na všetkých používaných počítačoch.", IDC_STATIC, 40, 11, 204, 44
+    LTEXT "Používateľské profily obsahujú nastavenia pracovnej plochy a iné informácie týkajúce sa používateľského konta. Na každom používanom počítači je možné vytvoriť iný profil alebo je možné vybrať zdieľaný profil, ktorý je rovnaký na všetkých používaných počítačoch.", IDC_STATIC, 40, 11, 204, 44 //TOO LONG, MAX 256 CHARS ALLOWED
     LTEXT "&Profily uložené na tomto počítači:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE

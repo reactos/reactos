@@ -130,7 +130,7 @@ CAPTION "Gebruikersprofielen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "In gebruikersprofielen liggen instellingen voor het bureaublad en andere informatie over uw gebruikerssessie opgeslagen. U kunt op elke computer die u gebruikt een ander profiel maken, of kiezen voor een zwevend profiel dat op elke computer die u gebruikt hetzelfde is.", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "In gebruikersprofielen liggen instellingen voor het bureaublad en andere informatie over uw gebruikerssessie opgeslagen. U kunt op elke computer die u gebruikt een ander profiel maken, of kiezen voor een zwevend profiel dat op elke computer die u gebruikt hetzelfde is.", IDC_STATIC, 40, 11, 211, 35 //TOO LONG, MAX 256 CHARS ALLOWED
     LTEXT "&Profielen die op deze computer zijn opgeslagen:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE

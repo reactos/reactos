@@ -137,7 +137,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Not Defteri Üzerine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Not Defteri - Sürüm: 1.0\r\nTelif Hakları:\r\n1997,98 - Marcel Baur (mbaur@g26.ethz.ch)\r\n2000 - Mike McCormack (Mike_McCormack@looksmart.com.au)\r\n2002 - Sylvain Petreolle (spetreolle@yahoo.fr)\r\n2002 - Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL "Not Defteri - Sürüm: 1.0\r\nTelif Hakları:\r\n1997,98 - Marcel Baur\r\n2000 - Mike McCormack\r\n2002 - Sylvain Petreolle\r\n2002 - Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
     DEFPUSHBUTTON "Kapat", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30

@@ -140,7 +140,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Despre Carnețelul ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Carnețelul ReactOS v1.0\r\nDrept de autor 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nDrept de autor 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nDrept de autor 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nDrept de autor 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 242, 39
+    CONTROL "Carnețelul ReactOS v1.0\r\nDrept de autor 1997,98 Marcel Baur\r\nDrept de autor 2000 Mike McCormack\r\nDrept de autor 2002 Sylvain Petreolle\r\nDrept de autor 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 242, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
     DEFPUSHBUTTON "Î&nchide", IDOK, 119, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30

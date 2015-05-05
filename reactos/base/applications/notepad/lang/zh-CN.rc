@@ -135,7 +135,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "关于 ReactOS 记事本"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS 记事本 v1.0\r\n版权 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\n版权 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\n版权 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\n版权 2002 Andriy Palamarchuk\r\n ", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL "ReactOS 记事本 v1.0\r\n版权 1997,98 Marcel Baur\r\n版权 2000 Mike McCormack\r\n版权 2002 Sylvain Petreolle\r\n版权 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "静态", 0x50000000, 8, 48, 272, 11
     DEFPUSHBUTTON "关闭", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30

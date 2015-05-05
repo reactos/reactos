@@ -130,7 +130,7 @@ CAPTION "Profili Përdoruesit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Profilet e përdoruesve përmbajnë parametrat e desktop-it dhe informacione të tjera në lidhje me hyrjen tuaj. Një profil i ndryshëm mund të krijohet në çdo kompjuter që ju përdorni, ose ju mund të zgjidhni një profil kryesorë që është i njëjtë në çdo kompjuter që ju përdorni.", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "Profilet e përdoruesve përmbajnë parametrat e desktop-it dhe informacione të tjera në lidhje me hyrjen tuaj. Një profil i ndryshëm mund të krijohet në çdo kompjuter që ju përdorni, ose ju mund të zgjidhni një profil kryesorë që është i njëjtë në çdo kompjuter që ju përdorni.", IDC_STATIC, 40, 11, 211, 35 //TOO LONG, MAX 256 CHARS ALLOWED
     LTEXT "Profilet e ruajtura në këtë kompjuter:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE

@@ -41,10 +41,10 @@ BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
     LTEXT "Eine oder mehrere Leitungen konnten keine Verbindung herstellen.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
-    AUTOCHECKBOX "&Fehlgeschlagene Leitungen zukünftig nicht mehr verwenden.", 1030, 38, 226, 222, 10
+    AUTOCHECKBOX "&Fehlgeschlagene Leitungen zukünftig nicht verwenden.", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Annehmen", 1, 135, 242, 60, 14
     PUSHBUTTON "A&uflegen", 2, 201, 242, 60, 14
-    LTEXT "Wenn nur eine Verbindung aufgebaut werden konnte, dann ist der Server vermutlich nicht für Mehrfachverbindungen ausgelegt. Aktivieren Sie das Kontrollkästchen Fehlgeschlagene Leitungen zukünftig nicht verwenden, um unnötige Verbindungsgebühren zu vermeiden.", -1, 37, 36, 224, 44
+    LTEXT "Wenn nur eine nur einzige Leitung verbunden ist, ist der Server nicht zum Multi-Link-Anrufe annehmen ausgelegt. Aktivieren Sie das Kontrollkästchen 'Fehlgeschlagene Leitungen zukünftig nicht verwenden', um unnötige Verbindungskosten zu vermeiden.", -1, 37, 36, 224, 44
 END
 
 105 DIALOGEX 0, 0, 261, 253
@@ -706,7 +706,7 @@ BEGIN
     LTEXT "Telefonnummer unten eingeben. ", -1, 7, 4, 306, 14
     LTEXT "&Telefonnummer:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
-    LTEXT "Sie müssen eventuell eine 1 bzw. eine Vorwahl oder beides einbeziehen. Wählen Sie die Telefonnummer auf Ihrem Telefon, wenn Sie sich nicht sicher sind, ob diese zusätzlichen Nummern erforderlich sind. Die gewählte Nummer ist korrekt, wenn Sie bei dem Telefonanruf einen Modemton hören.", -1, 20, 50, 291, 53
+    LTEXT "Sie müssen eventuell eine ""1"", eine Vorwahl oder beides einbeziehen. Wenn Sie nicht sicher sind, ob zusätzliche Nummern erforderlich sind, wählen Sie die Telefonnummer auf Ihrem Telefon. Wenn Sie ein Modem hören, ist die gewählte Nummer richtig.", -1, 20, 50, 291, 53
 END
 
 169 DIALOGEX 6, 18, 235, 135
