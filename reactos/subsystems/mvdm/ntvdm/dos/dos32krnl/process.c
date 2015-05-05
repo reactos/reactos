@@ -839,7 +839,7 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
             if (KeepResident)
             {
                 /* Check if this is the PSP block and we should reduce its size */
-                if (McbSegment == Psp && KeepResident < CurrentMcb->Size)
+                if ((McbSegment + 1) == Psp && KeepResident < CurrentMcb->Size)
                 {
                     /* Reduce the size of the block */
                     DosResizeMemory(McbSegment + 1, KeepResident, NULL);
