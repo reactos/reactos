@@ -1,7 +1,6 @@
 /*
- * Lowlevel memory managment definitions
+ * kernel internal memory management definitions for x86
  */
-
 #pragma once
 
 #ifdef _PAE_
@@ -10,17 +9,9 @@
 #define _MI_PAGING_LEVELS 2
 #endif
 
-#define PAGE_MASK(x)		((x)&(~0xfff))
-#define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
-
 /* MMPTE related defines */
 #define MM_EMPTY_PTE_LIST  ((ULONG)0xFFFFF)
 #define MM_EMPTY_LIST  ((ULONG_PTR)-1)
-
-/* Base addresses of PTE and PDE */
-#define PAGETABLE_MAP       (0xc0000000)
-#define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
-
 /* FIXME: These are different for PAE */
 #define PTE_BASE    0xC0000000
 #define PDE_BASE    0xC0300000
@@ -30,18 +21,17 @@
 #define HYPER_SPACE_END 0xC07FFFFF
 
 #define PTE_PER_PAGE 0x400
+#define PDE_PER_PAGE 0x400
 
 /* Converting address to a corresponding PDE or PTE entry */
 #define MiAddressToPde(x) \
-    ((PMMPDE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
+    ((PMMPDE)(((((ULONG)(x)) >> 22) << 2) + PDE_BASE))
 #define MiAddressToPte(x) \
-    ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PAGETABLE_MAP))
+    ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PTE_BASE))
 #define MiAddressToPteOffset(x) \
     ((((ULONG)(x)) << 10) >> 22)
 
-//
-// Convert a PTE into a corresponding address
-//
+/* Convert a PTE into a corresponding address */
 #define MiPteToAddress(PTE) ((PVOID)((ULONG)(PTE) << 10))
 #define MiPdeToAddress(PDE) ((PVOID)((ULONG)(PDE) << 20))
 #define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
@@ -56,6 +46,7 @@
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
 
+/* Macros for portable PTE modification */
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.Global = 0)
 #define MI_MAKE_DIRTY_PAGE(x)      ((x)->u.Hard.Dirty = 1)
 #define MI_MAKE_ACCESSED_PAGE(x)   ((x)->u.Hard.Accessed = 1)
@@ -77,17 +68,6 @@
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 1)
 #endif
 
-#define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
-    ((x) / (4*1024*1024))
-
-#define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) \
-    ((((x)) % (4*1024*1024)) / (4*1024))
-
-#define NR_SECTION_PAGE_TABLES              1024
-#define NR_SECTION_PAGE_ENTRIES             1024
-
-#define TEB_BASE                            0x7FFDE000
-
 #define MI_HYPERSPACE_PTES                  (256 - 1)
 #define MI_ZERO_PTES                        (32)
 #define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
@@ -104,7 +84,3 @@
 #define MMPDE MMPTE
 #define PMMPDE PMMPTE
 
-/*
-* FIXME - different architectures have different cache line sizes...
-*/
-#define MM_CACHE_LINE_SIZE                  32

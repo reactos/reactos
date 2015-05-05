@@ -44,6 +44,8 @@
 #define PTE_TO_PFN(X)  ((X) >> PAGE_SHIFT)
 #define PFN_TO_PTE(X)  ((X) << PAGE_SHIFT)
 
+#define PAGE_MASK(x)		((x)&(~0xfff))
+
 const
 ULONG
 MmProtectToPteMask[32] =

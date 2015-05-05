@@ -1,3 +1,6 @@
+/*
+ * kernel internal memory management definitions for arm
+ */
 #pragma once
 
 #define _MI_PAGING_LEVELS 2
@@ -124,9 +127,6 @@ typedef enum _ARM_DOMAIN
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
 
-#define NR_SECTION_PAGE_TABLES              1024
-#define NR_SECTION_PAGE_ENTRIES             256
-
 /* See PDR definition */
 #define MI_HYPERSPACE_PTES                  (256 - 1)
 #define MI_ZERO_PTES                        (32)
@@ -159,10 +159,3 @@ typedef enum _ARM_DOMAIN
 #define MiPteToAddress(x) ((PVOID)((ULONG)(x) << 10))
 #define MiPdeToAddress(x) ((PVOID)((ULONG)(x) << 18))
 
-#define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
-    ((x) / (4*1024*1024))
-
-#define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) \
-    ((((x)) % (4*1024*1024)) / (4*1024))
-
-#define MM_CACHE_LINE_SIZE 64

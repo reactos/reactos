@@ -1,27 +1,26 @@
 /*
- * kernel internal memory managment definitions for amd64
+ * kernel internal memory management definitions for amd64
  */
 #pragma once
 
+#define _MI_PAGING_LEVELS                   4
+
 /* Memory layout base addresses */
-#define MI_LOWEST_VAD_ADDRESS           (PVOID)0x000000007FF00000ULL
+#define MI_LOWEST_VAD_ADDRESS           (PVOID)0x0000000000010000ULL
 #define MI_USER_PROBE_ADDRESS           (PVOID)0x000007FFFFFF0000ULL
 #define MI_DEFAULT_SYSTEM_RANGE_START   (PVOID)0xFFFF080000000000ULL
 #define MI_REAL_SYSTEM_RANGE_START             0xFFFF800000000000ULL
-#define MI_PAGE_TABLE_BASE                     0xFFFFF68000000000ULL
 #define HYPER_SPACE                            0xFFFFF70000000000ULL
 #define HYPER_SPACE_END                        0xFFFFF77FFFFFFFFFULL
-#define MI_SHARED_SYSTEM_PAGE                  0xFFFFF78000000000ULL
 #define MI_SYSTEM_CACHE_WS_START               0xFFFFF78000001000ULL
-#define MI_LOADER_MAPPINGS                     0xFFFFF80000000000ULL
-#define MI_PAGED_SYSTEM_START                  0xFFFFF88000000000ULL
 #define MI_PAGED_POOL_START             (PVOID)0xFFFFF8A000000000ULL
-#define MI_PAGED_POOL_END                      0xFFFFF8BFFFFFFFFFULL
-#define MI_SESSION_SPACE_START                 0xFFFFF90000000000ULL
+//#define MI_PAGED_POOL_END                      0xFFFFF8BFFFFFFFFFULL
+//#define MI_SESSION_SPACE_START                 0xFFFFF90000000000ULL
 #define MI_SESSION_VIEW_END                    0xFFFFF97FFF000000ULL
 #define MI_SESSION_SPACE_END                   0xFFFFF97FFFFFFFFFULL
 #define MM_SYSTEM_SPACE_START                  0xFFFFF98000000000ULL
 #define MI_PFN_DATABASE                        0xFFFFFA8000000000ULL
+#define MI_NONPAGED_POOL_END            (PVOID)0xFFFFFFFFFFBFFFFFULL
 #define MI_HIGHEST_SYSTEM_ADDRESS       (PVOID)0xFFFFFFFFFFFFFFFFULL
 
 /* WOW64 address definitions */
@@ -39,7 +38,6 @@
 #define MI_DUMMY_PTE                        (MI_MAPPING_RANGE_END + PAGE_SIZE)
 #define MI_VAD_BITMAP                       (MI_DUMMY_PTE + PAGE_SIZE)
 #define MI_WORKING_SET_LIST                 (MI_VAD_BITMAP + PAGE_SIZE)
-#define MI_NONPAGED_POOL_END 0
 
 /* Memory sizes */
 #define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING ((255*1024*1024) >> PAGE_SHIFT)
@@ -68,20 +66,14 @@
 #define MmSystemRangeStart ((PVOID)MI_REAL_SYSTEM_RANGE_START)
 
 /* Misc constants */
-#define _MI_PAGING_LEVELS                   4
 #define MI_NUMBER_SYSTEM_PTES               22000
 #define MI_MAX_FREE_PAGE_LISTS              4
-#define NR_SECTION_PAGE_TABLES              1024
-#define NR_SECTION_PAGE_ENTRIES             1024
 #define MI_HYPERSPACE_PTES                  (256 - 1)
 #define MI_ZERO_PTES                        (32)
 /* FIXME - different architectures have different cache line sizes... */
-#define MM_CACHE_LINE_SIZE                  32
 #define MI_MAX_ZERO_BITS                    53
 
 /* Helper macros */
-#define PAGE_MASK(x)		((x)&(~0xfff))
-#define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 #define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
 #define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
 
@@ -134,14 +126,6 @@
 #else
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 1)
 #endif
-
-// FIXME!!!
-#define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
-    ((x) / (4*1024*1024))
-#define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) \
-    ((((x)) % (4*1024*1024)) / (4*1024))
-
-//#define TEB_BASE                            0x7FFDE000
 
 /* On x64, these are the same */
 #define MMPDE MMPTE

@@ -445,37 +445,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 #endif
 }
 
-PVOID
-NTAPI
-MmCreateHyperspaceMapping(PFN_NUMBER Page)
-{
-    PVOID Address;
-    ppc_map_info_t info = { 0 };
-
-    Address = (PVOID)((ULONG_PTR)HYPERSPACE * PAGE_SIZE);
-    info.proc = 0;
-    info.addr = (vaddr_t)Address;
-    info.flags = MMU_KRW;
-    MmuMapPage(&info, 1);
-
-    return Address;
-}
-
-PFN_NUMBER
-NTAPI
-MmDeleteHyperspaceMapping(PVOID Address)
-{
-    ppc_map_info_t info = { 0 };
-    ASSERT (IS_HYPERSPACE(Address));
-
-    info.proc = 0;
-    info.addr = (vaddr_t)Address;
-
-    MmuUnmapPage(&info, 1);
-
-    return (PFN_NUMBER)info.phys;
-}
-
 VOID
 INIT_FUNCTION
 NTAPI
