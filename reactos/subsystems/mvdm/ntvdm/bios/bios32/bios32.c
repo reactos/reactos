@@ -619,6 +619,30 @@ Bios32Post(VOID)
     /* Set data segment */
     setDS(BDA_SEGMENT);
 
+    /*
+     * Check the word at 0040h:0072h (Bda->SoftReset) and do one of the
+     * following actions:
+     * - if the word is 0000h, perform a cold reboot (aka. Reset). Everything gets initialized.
+     * - if the word is 1234h, perform a warm reboot (aka. Ctrl-Alt-Del). Some stuff is skipped.
+     * In case we do a warm reboot, we need to check for the CMOS shutdown flag
+     * and take a suitable action.
+     */
+
+    // FIXME: This is a debug temporary check:
+    // Since NTVDM memory is by default initialized with 0xCC, it is also
+    // the case for the BDA. So at first boot we get SoftReset == 0xCCCC.
+    // After we zero out the BDA and put valid values in it.
+    // If for some reason an app calls the BIOS initialization code,
+    // SoftReset is normally zero (unless the app puts a non-null value in SoftReset)
+    // and we can detect that. With the current state of NTVDM, apps calling
+    // by hand the BIOS init code is a sign of a bug, e.g. see MSD.EXE version 2+.
+    if (Bda->SoftReset != 0xCCCC)
+    {
+        DisplayMessage(L"NTVDM is performing a COLD reboot! The program you are currently testing seems to not behave correctly! The VDM is stopping...");
+        EmulatorTerminate();
+        return;
+    }
+
     /* Initialize the BDA and the BIOS ROM Information */
     InitializeBiosData();
     InitializeBiosInfo();
@@ -676,11 +700,6 @@ static VOID WINAPI Bios32ResetBop(LPWORD Stack)
 
     /* Disable interrupts */
     setIF(0);
-
-    // FIXME: Check the word at 0040h:0072h (Bda->SoftReset) and do one of the
-    // following actions:
-    // - if the word is 1234h, perform a warm reboot (aka. Ctrl-Alt-Del);
-    // - if the word is 0000h, perform a cold reboot (aka. Reset).
 
     /* Do the POST */
     Bios32Post();
