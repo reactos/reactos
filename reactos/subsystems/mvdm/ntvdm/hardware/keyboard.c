@@ -38,6 +38,7 @@ VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent)
     /* Push the scan code into the PS/2 queue */
     for (i = 0; i < KeyEvent->wRepeatCount; i++)
     {
+        if (KeyEvent->dwControlKeyState & ENHANCED_KEY) PS2QueuePush(PS2Port, 0xE0);
         PS2QueuePush(PS2Port, ScanCode);
     }
 
