@@ -256,7 +256,27 @@ private:
         NOTIFYICONDATA * notifyItem = GetItemData(wIndex);
 
         if (!::IsWindow(notifyItem->hWnd))
+        {
+            // We detect and destroy icons with invalid handles only on mouse move over systray, same as MS does.
+            // Alternatively we could search for them periodically (would waste more resources).
+            TRACE("destroying icon with invalid handle\n");
+
+            HWND parentHWND = GetParent();
+            parentHWND = ::GetParent(parentHWND);
+
+            RECT windowRect;
+            ::GetClientRect(parentHWND, &windowRect);
+
+            RemoveButton(notifyItem);
+
+            SendMessage(parentHWND,
+                WM_SIZE,
+                0,
+                MAKELONG(windowRect.right - windowRect.left,
+                         windowRect.bottom - windowRect.top));
+
             return;
+        }
 
         if (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST)
         {
