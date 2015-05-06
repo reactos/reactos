@@ -162,6 +162,8 @@ static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
 
 static VOID WINAPI EmsIntHandler(LPWORD Stack)
 {
+    static PVOID MappingBackup[EMS_PHYSICAL_PAGES] = { NULL };
+
     switch (getAH())
     {
         /* Get Manager Status */
@@ -218,6 +220,20 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         {
             setAH(EMS_STATUS_OK);
             setAL(EMS_VERSION_NUM);
+            break;
+        }
+
+        /* Save Page Map */
+        case 0x47:
+        {
+            RtlCopyMemory(MappingBackup, Mapping, sizeof(PVOID) * EMS_PHYSICAL_PAGES);
+            break;
+        }
+
+        /* Restore Page Map */
+        case 0x48:
+        {
+            RtlCopyMemory(Mapping, MappingBackup, sizeof(PVOID) * EMS_PHYSICAL_PAGES);
             break;
         }
 
