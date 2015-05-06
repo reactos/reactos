@@ -255,6 +255,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     WORD LoadSegment;
     WORD MaxAllocSize;
     DWORD i, FileSize;
+    CHAR FullPath[MAX_PATH];
+    CHAR ShortFullPath[MAX_PATH];
 
     /* Buffer for command line conversion: 1 byte for size; 127 bytes for contents */
     CHAR CmdLineBuffer[1 + DOS_CMDLINE_LENGTH];
@@ -264,6 +266,17 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             ExecutablePath,
             Parameters,
             ReturnAddress);
+
+    /* Try to get the full path to the executable */
+    if (GetFullPathNameA(ExecutablePath, sizeof(FullPath), FullPath, NULL))
+    {
+        /* Try to shorten the full path */
+        if (GetShortPathNameA(FullPath, ShortFullPath, sizeof(ShortFullPath)))
+        {
+            /* Use the shortened full path from now on */
+            ExecutablePath = ShortFullPath;
+        }
+    }
 
     /* Open a handle to the executable */
     FileHandle = CreateFileA(ExecutablePath,
