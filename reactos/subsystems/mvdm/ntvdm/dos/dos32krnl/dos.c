@@ -402,6 +402,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 }
 
                 if (Character == '\r') break;
+                if (Character == '\b') continue;
                 Count++; /* Carriage returns are NOT counted */
             }
 

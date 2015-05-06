@@ -11,7 +11,7 @@
 
 /* DEFINITIONS ****************************************************************/
 
-#define EMS_VERSION_NUM     0x04
+#define EMS_VERSION_NUM     0x40
 #define EMS_INTERRUPT_NUM   0x67
 #define EMS_SEGMENT         0xD000
 #define EMS_MAX_HANDLES     16
