@@ -1,6 +1,16 @@
 
-add_executable(spoolsv spoolsv.c spoolsv.rc)
-target_link_libraries(spoolsv wine)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/idl)
+add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/winspool.idl)
+
+list(APPEND SOURCE
+    main.c
+    rpcserver.c
+    precomp.h
+    ${CMAKE_CURRENT_BINARY_DIR}/winspool_s.c)
+
+add_executable(spoolsv ${SOURCE} spoolsv.rc)
 set_module_type(spoolsv win32cui UNICODE)
-add_importlibs(spoolsv advapi32 msvcrt kernel32 ntdll)
+target_link_libraries(spoolsv wine)
+add_importlibs(spoolsv advapi32 kernel32 msvcrt ntdll rpcrt4)
+add_pch(spoolsv precomp.h SOURCE)
 add_cd_file(TARGET spoolsv DESTINATION reactos/system32 FOR all)

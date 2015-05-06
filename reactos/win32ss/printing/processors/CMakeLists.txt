@@ -1,1 +1,1 @@
-#add_subdirectory(winprint)
+add_subdirectory(winprint)

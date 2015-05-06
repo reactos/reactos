@@ -1,0 +1,48 @@
+/*
+ * PROJECT:     ReactOS Spooler API
+ * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
+ * PURPOSE:     WIDL-compatible interface definition for the Spooler API
+ * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ */
+
+#include <ms-dtyp.idl>
+
+typedef [context_handle] void* WINSPOOL_PRINTER_HANDLE;
+typedef [handle, string, unique] WCHAR* WINSPOOL_HANDLE;
+
+typedef struct _DEVMODE_CONTAINER
+{
+    DWORD cbBuf;
+    BYTE* pDevMode;
+}
+WINSPOOL_DEVMODE_CONTAINER;
+
+
+[
+    uuid(12345678-1234-ABCD-EF00-0123456789AB),
+    version(1.0),
+    endpoint("ncacn_np:[\\pipe\\spoolss]"),
+    pointer_default(unique)
+]
+
+interface winspool {
+    /* Function 0 */
+    DWORD _RpcEnumPrinters(
+        [in] DWORD Flags,
+        [in] WINSPOOL_HANDLE Name,
+        [in] DWORD Level,
+        [out] BYTE* pPrinterEnum,
+        [in] DWORD cbBuf,
+        [out] DWORD* pcbNeeded,
+        [out] DWORD* pcReturned
+    );
+
+    /* Function 1 */
+    DWORD _RpcOpenPrinter(
+        [in] WINSPOOL_HANDLE pPrinterName,
+        [out] WINSPOOL_PRINTER_HANDLE* phPrinter,
+        [in, string, unique] WCHAR* pDatatype,
+        [in] WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer,
+        [in] DWORD AccessRequired
+    );
+}
