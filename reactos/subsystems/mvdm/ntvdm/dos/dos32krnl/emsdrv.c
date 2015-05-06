@@ -221,6 +221,41 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             break;
         }
 
+        /* Get/Set Handle Name */
+        case 0x53:
+        {
+            PEMS_HANDLE HandleEntry = GetHandleRecord(getDX());
+            if (HandleEntry == NULL || !HandleEntry->Allocated)
+            {
+                setAL(EMS_STATUS_INVALID_HANDLE);
+                break;
+            }
+
+            if (getAL() == 0x00)
+            {
+                /* Retrieve the name */
+                RtlCopyMemory(SEG_OFF_TO_PTR(getES(), getDI()),
+                              HandleEntry->Name,
+                              sizeof(HandleEntry->Name));
+                setAH(EMS_STATUS_OK);
+            }
+            else if (getAL() == 0x01)
+            {
+                /* Store the name */
+                RtlCopyMemory(HandleEntry->Name,
+                              SEG_OFF_TO_PTR(getDS(), getSI()),
+                              sizeof(HandleEntry->Name));
+                setAH(EMS_STATUS_OK);
+            }
+            else
+            {
+                DPRINT1("Invalid subfunction %02X for EMS function AH = 53h\n", getAL());
+                setAH(EMS_STATUS_UNKNOWN_FUNCTION);
+            }
+
+            break;
+        }
+
         /* Move/Exchange Memory */
         case 0x57:
         {
@@ -418,12 +453,17 @@ BOOLEAN EmsDrvInitialize(ULONG TotalPages)
                              EmsReadMemory,
                              EmsWriteMemory);
 
-    RegisterDosInt32(EMS_INTERRUPT_NUM, EmsIntHandler);
 
     /* Create the device */
-    Node = DosCreateDevice(DOS_DEVATTR_IOCTL | DOS_DEVATTR_CHARACTER,
-                           EMS_DEVICE_NAME);
+    Node = DosCreateDeviceEx(DOS_DEVATTR_IOCTL | DOS_DEVATTR_CHARACTER,
+                             EMS_DEVICE_NAME,
+                             32);
     Node->IoctlReadRoutine = EmsDrvDispatchIoctlRead;
+
+    RegisterInt32(MAKELONG(sizeof(DOS_DRIVER) + DEVICE_CODE_SIZE, HIWORD(Node->Driver)),
+                  EMS_INTERRUPT_NUM,
+                  EmsIntHandler,
+                  NULL);
 
     return TRUE;
 }

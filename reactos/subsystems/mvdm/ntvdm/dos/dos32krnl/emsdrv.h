@@ -34,6 +34,7 @@ typedef struct _EMS_HANDLE
     BOOLEAN Allocated;
     USHORT PageCount;
     LIST_ENTRY PageList;
+    UCHAR Name[8];
 } EMS_HANDLE, *PEMS_HANDLE;
 
 typedef struct _EMS_PAGE
