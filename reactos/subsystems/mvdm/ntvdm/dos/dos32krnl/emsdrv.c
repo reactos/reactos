@@ -361,6 +361,36 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             break;
         }
 
+        /* Get Expanded Memory Hardware Information */
+        case 0x59:
+        {
+            if (getAL() == 0x00)
+            {
+                PEMS_HARDWARE_INFO HardwareInfo = (PEMS_HARDWARE_INFO)SEG_OFF_TO_PTR(getES(), getDI());
+
+                /* Return the hardware information */
+                HardwareInfo->RawPageSize         = EMS_PAGE_SIZE >> 4;
+                HardwareInfo->AlternateRegSets    = 0;
+                HardwareInfo->ContextAreaSize     = sizeof(Mapping);
+                HardwareInfo->DmaRegisterSets     = 0;
+                HardwareInfo->DmaChannelOperation = 0;
+            }
+            else if (getAL() == 0x01)
+            {
+                /* Same as function AH = 42h */
+                setAH(EMS_STATUS_OK);
+                setBX(RtlNumberOfClearBits(&AllocBitmap));
+                setDX(EmsTotalPages);
+            }
+            else
+            {
+                DPRINT1("Invalid subfunction %02X for EMS function AH = 59h\n", getAL());
+                setAH(EMS_STATUS_UNKNOWN_FUNCTION);
+            }
+
+            break;
+        }
+
         default:
         {
             DPRINT1("EMS function AH = %02X NOT IMPLEMENTED\n", getAH());

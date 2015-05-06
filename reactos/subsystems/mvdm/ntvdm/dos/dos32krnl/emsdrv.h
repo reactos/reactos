@@ -58,6 +58,15 @@ typedef struct _EMS_COPY_DATA
     USHORT DestSegment;
 } EMS_COPY_DATA, *PEMS_COPY_DATA;
 
+typedef struct _EMS_HARDWARE_INFO
+{
+    WORD RawPageSize;
+    WORD AlternateRegSets;
+    WORD ContextAreaSize;
+    WORD DmaRegisterSets;
+    WORD DmaChannelOperation;
+} EMS_HARDWARE_INFO, *PEMS_HARDWARE_INFO;
+
 #pragma pack(pop)
 
 #endif
