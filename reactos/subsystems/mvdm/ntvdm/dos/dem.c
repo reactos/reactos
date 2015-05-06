@@ -257,11 +257,6 @@ Command:
         }
 
         /* Start the process from the command line */
-        DPRINT1("Starting '%s' ('%.*s')...\n",
-                AppName,
-                CommandInfo.CmdLen >= 2 ? CommandInfo.CmdLen - 2 /* Display the command line without the terminating 0d 0a */
-                                        : CommandInfo.CmdLen,
-                CmdLine);
         Result = DosStartProcess(AppName, CmdLine, Env);
         if (Result != ERROR_SUCCESS)
         {
@@ -474,7 +469,6 @@ static VOID WINAPI DosStart(LPWORD Stack)
     }
 
     /* Start the process from the command line */
-    DPRINT1("Starting '%s' ('%s')...\n", ApplicationName, CommandLine);
     Result = DosStartProcess(ApplicationName, CommandLine,
                              SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0));
     if (Result != ERROR_SUCCESS)

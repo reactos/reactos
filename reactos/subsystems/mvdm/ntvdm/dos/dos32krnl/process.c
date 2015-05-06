@@ -622,6 +622,15 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
     DWORD Result;
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
+    SIZE_T CmdLen = strlen(CommandLine);
+    DPRINT1("Starting '%s' ('%.*s')...\n",
+            ExecutablePath,
+            /* Display the command line without the terminating 0d 0a (and skip the terminating NULL) */
+            CmdLen >= 2 ? (CommandLine[CmdLen - 2] == '\r' ? CmdLen - 2
+                                                           : CmdLen)
+                        : CmdLen,
+            CommandLine);
+
     Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
                                ExecutablePath,
                                NULL,
