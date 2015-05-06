@@ -213,8 +213,8 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
             MultiByteToWideChar(CP_ACP, 0, pDefault->pDevMode->dmFormName, -1, wDevMode.dmFormName, sizeof(wDevMode.dmFormName) / sizeof(WCHAR));
 
             // Use CopyMemory to copy over several structure values in one step
-            CopyMemory(&wDevMode.dmSpecVersion, &pDefault->pDevMode->dmSpecVersion, (ULONG_PTR)&wDevMode.dmCollate - (ULONG_PTR)&wDevMode.dmSpecVersion);
-            CopyMemory(&wDevMode.dmLogPixels, &pDefault->pDevMode->dmLogPixels, (ULONG_PTR)&wDevMode.dmPanningHeight - (ULONG_PTR)&wDevMode.dmLogPixels);
+            CopyMemory(&wDevMode.dmSpecVersion, &pDefault->pDevMode->dmSpecVersion, (ULONG_PTR)&wDevMode.dmCollate - (ULONG_PTR)&wDevMode.dmSpecVersion + sizeof(wDevMode.dmCollate));
+            CopyMemory(&wDevMode.dmLogPixels, &pDefault->pDevMode->dmLogPixels, (ULONG_PTR)&wDevMode.dmPanningHeight - (ULONG_PTR)&wDevMode.dmLogPixels + sizeof(wDevMode.dmPanningHeight));
 
             wDefault.pDevMode = &wDevMode;
         }
