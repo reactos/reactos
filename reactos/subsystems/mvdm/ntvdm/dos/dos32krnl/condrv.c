@@ -92,7 +92,7 @@ WORD NTAPI ConDrvInputStatus(PDOS_DEVICE_NODE Device)
     setAX(AX);
 
     /* If ZF is set, set the busy bit */
-    if (getZF()) return DOS_DEVSTAT_BUSY;
+    if (getZF() && !ExtendedCode) return DOS_DEVSTAT_BUSY;
     else return DOS_DEVSTAT_DONE;
 }
 
