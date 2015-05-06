@@ -242,7 +242,7 @@ static CHAR XmsAlloc(WORD Size, PWORD Handle)
             HandleEntry->Address = XMS_ADDRESS + RunStart * XMS_BLOCK_SIZE;
 
             FreeBlocks -= Size;
-            RtlSetBits(&AllocBitmap, RunStart, RunSize);
+            RtlSetBits(&AllocBitmap, RunStart, HandleEntry->Size);
 
             return XMS_STATUS_SUCCESS;
         }
