@@ -120,6 +120,12 @@ namespace ATL
             Attach(pNewData);
         }
 
+
+        operator PCXSTR() const throw()
+        {
+            return m_pszData;
+        }
+
     };
 }
 
