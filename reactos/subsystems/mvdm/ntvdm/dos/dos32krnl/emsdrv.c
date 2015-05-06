@@ -374,6 +374,8 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 HardwareInfo->ContextAreaSize     = sizeof(Mapping);
                 HardwareInfo->DmaRegisterSets     = 0;
                 HardwareInfo->DmaChannelOperation = 0;
+
+                setAH(EMS_STATUS_OK);
             }
             else if (getAL() == 0x01)
             {
