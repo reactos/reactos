@@ -315,12 +315,16 @@ Fast486InterruptInternal(PFAST486_STATE State,
         if ((OldCpl > GET_SEGMENT_RPL(IdtEntry->Selector)) || State->Flags.Vm)
         {
             FAST486_TSS Tss;
+            PFAST486_LEGACY_TSS LegacyTss = (PFAST486_LEGACY_TSS)&Tss;
+            USHORT NewSs;
+            ULONG NewEsp;
 
             /* Read the TSS */
             if (!Fast486ReadLinearMemory(State,
                                          State->TaskReg.Base,
                                          &Tss,
-                                         sizeof(Tss)))
+                                         State->TaskReg.Limit >= sizeof(FAST486_TSS)
+                                         ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -334,36 +338,48 @@ Fast486InterruptInternal(PFAST486_STATE State,
             {
                 case 0:
                 {
-                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss0))
+                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
                     {
-                        /* Exception occurred */
-                        return FALSE;
+                        NewSs = Tss.Ss0;
+                        NewEsp = Tss.Esp0;
                     }
-                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp0;
+                    else
+                    {
+                        NewSs = LegacyTss->Ss0;
+                        NewEsp = LegacyTss->Sp0;
+                    }
 
                     break;
                 }
 
                 case 1:
                 {
-                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss1))
+                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
                     {
-                        /* Exception occurred */
-                        return FALSE;
+                        NewSs = Tss.Ss1;
+                        NewEsp = Tss.Esp1;
                     }
-                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp1;
+                    else
+                    {
+                        NewSs = LegacyTss->Ss1;
+                        NewEsp = LegacyTss->Sp1;
+                    }
 
                     break;
                 }
 
                 case 2:
                 {
-                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss2))
+                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
                     {
-                        /* Exception occurred */
-                        return FALSE;
+                        NewSs = Tss.Ss2;
+                        NewEsp = Tss.Esp2;
                     }
-                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp2;
+                    else
+                    {
+                        NewSs = LegacyTss->Ss2;
+                        NewEsp = LegacyTss->Sp2;
+                    }
 
                     break;
                 }
@@ -374,6 +390,14 @@ Fast486InterruptInternal(PFAST486_STATE State,
                     ASSERT(FALSE);
                 }
             }
+
+            if (!Fast486LoadSegment(State, FAST486_REG_SS, NewSs))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            State->GeneralRegs[FAST486_REG_ESP].Long = NewEsp;
         }
 
         /* Load new CS */
@@ -935,6 +959,7 @@ Fast486CallGate(PFAST486_STATE State,
     FAST486_GDT_ENTRY NewCodeSegment;
     BOOLEAN GateSize = (Gate->Type == FAST486_CALL_GATE_SIGNATURE);
     FAST486_TSS Tss;
+    PFAST486_LEGACY_TSS LegacyTss = (PFAST486_LEGACY_TSS)&Tss;
     USHORT OldCs = State->SegmentRegs[FAST486_REG_CS].Selector;
     ULONG OldEip = State->InstPtr.Long;
     USHORT OldCpl = State->Cpl;
@@ -984,11 +1009,15 @@ Fast486CallGate(PFAST486_STATE State,
     {
         if (Call)
         {
+            USHORT NewSs;
+            ULONG NewEsp;
+
             /* Read the TSS */
             if (!Fast486ReadLinearMemory(State,
                                          State->TaskReg.Base,
                                          &Tss,
-                                         sizeof(Tss)))
+                                         State->TaskReg.Limit >= sizeof(FAST486_TSS)
+                                         ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -1002,36 +1031,48 @@ Fast486CallGate(PFAST486_STATE State,
             {
                 case 0:
                 {
-                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss0))
+                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
                     {
-                        /* Exception occurred */
-                        return FALSE;
+                        NewSs = Tss.Ss0;
+                        NewEsp = Tss.Esp0;
                     }
-                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp0;
+                    else
+                    {
+                        NewSs = LegacyTss->Ss0;
+                        NewEsp = LegacyTss->Sp0;
+                    }
 
                     break;
                 }
 
                 case 1:
                 {
-                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss1))
+                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
                     {
-                        /* Exception occurred */
-                        return FALSE;
+                        NewSs = Tss.Ss1;
+                        NewEsp = Tss.Esp1;
                     }
-                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp1;
+                    else
+                    {
+                        NewSs = LegacyTss->Ss1;
+                        NewEsp = LegacyTss->Sp1;
+                    }
 
                     break;
                 }
 
                 case 2:
                 {
-                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss2))
+                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
                     {
-                        /* Exception occurred */
-                        return FALSE;
+                        NewSs = Tss.Ss2;
+                        NewEsp = Tss.Esp2;
                     }
-                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp2;
+                    else
+                    {
+                        NewSs = LegacyTss->Ss2;
+                        NewEsp = LegacyTss->Sp2;
+                    }
 
                     break;
                 }
@@ -1042,6 +1083,14 @@ Fast486CallGate(PFAST486_STATE State,
                     ASSERT(FALSE);
                 }
             }
+
+            if (!Fast486LoadSegment(State, FAST486_REG_SS, NewSs))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            State->GeneralRegs[FAST486_REG_ESP].Long = NewEsp;
         }
         else if (!NewCodeSegment.DirConf)
         {
