@@ -52,6 +52,13 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
  */
 // #define WIN2K_COMPLIANT
 
+/*
+ * Activate this line if you want advanced hardcoded debug facilities
+ * (called interrupts, etc...), that break PC-AT compatibility.
+ * USE AT YOUR OWN RISK! (disabled by default)
+ */
+// #define ADVANCED_DEBUGGING
+
 /* FUNCTIONS ******************************************************************/
 
 extern HANDLE VdmTaskEvent;

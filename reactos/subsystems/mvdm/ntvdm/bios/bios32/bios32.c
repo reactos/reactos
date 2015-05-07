@@ -528,37 +528,72 @@ static VOID InitializeBiosInt32(VOID)
     /* Initialize the callback context */
     InitializeContext(&BiosContext, BIOS_SEGMENT, 0x0000);
 
-    /* Register the default BIOS 32-bit Interrupts */
-    for (i = 0x00; i <= 0xFF; i++)
-    {
-        RegisterBiosInt32(i, NULL);
-    }
+    /* Register the default BIOS interrupt vectors */
 
-    /* Initialize the exception vector interrupts to a default Exception handler */
-    for (i = 0; i < 8; i++)
+    /* Zero out all of the IVT (0x00 -- 0xFF) */
+    RtlZeroMemory(BaseAddress, 0x0100 * sizeof(ULONG));
+
+#ifdef ADVANCED_DEBUGGING
+    // Initialize all the interrupt vectors to the default one.
+    for (i = 0x00; i <= 0xFF; i++)
+        RegisterBiosInt32(i, NULL);
+#endif
+
+    /* Initialize the exception interrupt vectors to a default Exception handler */
+    for (i = 0x00; i <= 0x07; i++)
         RegisterBiosInt32(i, BiosException);
 
-    /* Initialize HW vector interrupts to a default HW handler */
-    for (i = BIOS_PIC_MASTER_INT; i < BIOS_PIC_MASTER_INT + 8; i++)
+    /* Initialize HW interrupt vectors to a default HW handler */
+    for (i = BIOS_PIC_MASTER_INT; i < BIOS_PIC_MASTER_INT + 8; i++) // 0x08 -- 0x0F
         RegisterBiosInt32(i, BiosHandleMasterPicIRQ);
-    for (i = BIOS_PIC_SLAVE_INT ; i < BIOS_PIC_SLAVE_INT  + 8; i++)
+    for (i = BIOS_PIC_SLAVE_INT ; i < BIOS_PIC_SLAVE_INT  + 8; i++) // 0x70 -- 0x77
         RegisterBiosInt32(i, BiosHandleSlavePicIRQ);
 
     /* Initialize software vector handlers */
+    // BIOS_VIDEO_INTERRUPT  : 0x10 (vidbios32.c)
     RegisterBiosInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
     RegisterBiosInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
+    // BIOS_DISK_INTERRUPT   : 0x13 -- UNIMPLEMENTED
+    // BIOS_SERIAL_INTERRUPT : 0x14 -- UNIMPLEMENTED
     RegisterBiosInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
+    // BIOS_KBD_INTERRUPT    : 0x16 (kbdbios32.c)
+    // BIOS_PRINTER_INTERRUPT: 0x17 -- UNIMPLEMENTED
     RegisterBiosInt32(BIOS_ROM_BASIC          , BiosRomBasic            );
     RegisterBiosInt32(BIOS_BOOTSTRAP_LOADER   , BiosBootstrapLoader     );
     RegisterBiosInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
+    // BIOS_KBD_CTRL_BREAK_INTERRUPT: 0x1B -- UNIMPLEMENTED
     RegisterBiosInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
 
-    /* Some interrupts are in fact addresses to tables */
-    ((PULONG)BaseAddress)[0x1E] = (ULONG)NULL;
-    ((PULONG)BaseAddress)[0x41] = (ULONG)NULL;
-    ((PULONG)BaseAddress)[0x46] = (ULONG)NULL;
-    ((PULONG)BaseAddress)[0x48] = (ULONG)NULL;
-    ((PULONG)BaseAddress)[0x49] = (ULONG)NULL;
+    /* Vectors that should be implemented (see above) */
+    RegisterBiosInt32(0x13, NULL);
+    RegisterBiosInt32(0x14, NULL);
+    RegisterBiosInt32(0x17, NULL);
+    RegisterBiosInt32(0x1B, NULL);
+    RegisterBiosInt32(0x4A, NULL); // User Alarm Handler
+    RegisterBiosInt32(0x6D, NULL); // Video BIOS Entry Point
+
+    /* Relocated services by the BIOS (when needed) */
+    RegisterBiosInt32(0x40, NULL); // ROM BIOS Diskette Handler relocated by Hard Disk BIOS
+    RegisterBiosInt32(0x42, NULL); // Relocated Default INT 10h Video Services
+
+    /* Miscellaneous unimplemented vector handlers that should better have a default one */
+    RegisterBiosInt32(0x4B, NULL); // Virtual DMA Specification Services
+    RegisterBiosInt32(0x5C, NULL); // NetBIOS
+
+    // ROM-BASIC interrupts span from 0x80 up to 0xEF.
+    // They don't have any default handler at the moment.
+
+    /* Some vectors are in fact addresses to tables */
+    ((PULONG)BaseAddress)[0x1D] = (ULONG)NULL; // Video Parameter Tables
+    ((PULONG)BaseAddress)[0x1E] = (ULONG)NULL; // Diskette Parameters
+    ((PULONG)BaseAddress)[0x1F] = (ULONG)NULL; // 8x8 Graphics Font
+    ((PULONG)BaseAddress)[0x41] = (ULONG)NULL; // Hard Disk 0 Parameter Table Address
+    ((PULONG)BaseAddress)[0x43] = (ULONG)NULL; // Character Table (EGA, MCGA, VGA)
+    ((PULONG)BaseAddress)[0x46] = (ULONG)NULL; // Hard Disk 1 Drive Parameter Table Address
+    /* Tables that are always uninitialized */
+    ((PULONG)BaseAddress)[0x44] = (ULONG)NULL; // ROM BIOS Character Font, Characters 00h-7Fh (PCjr)
+    ((PULONG)BaseAddress)[0x48] = (ULONG)NULL; // Cordless Keyboard Translation (PCjr)
+    ((PULONG)BaseAddress)[0x49] = (ULONG)NULL; // Non-Keyboard Scan-code Translation Table (PCJr)
 }
 
 static VOID InitializeBiosData(VOID)
