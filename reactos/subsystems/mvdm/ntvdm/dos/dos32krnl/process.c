@@ -641,9 +641,11 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
 
     if (Result != ERROR_SUCCESS) goto Quit;
 
+#ifndef STANDALONE
     /* Update console title if we run in a separate console */
     if (SessionId != 0)
         SetConsoleTitleA(ExecutablePath);
+#endif
 
     /* Attach to the console */
     ConsoleAttach();
