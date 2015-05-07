@@ -409,7 +409,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         Header = (PIMAGE_DOS_HEADER)Address;
 
         /* Get the base size of the file, in paragraphs (rounded up) */
-        BaseSize = (((Header->e_cp - 1) * 512) + Header->e_cblp + 0x0F) >> 4;
+        BaseSize = (((Header->e_cp - (Header->e_cblp != 0)) * 512)
+                    + Header->e_cblp - Header->e_cparhdr + 0x0F) >> 4;
 
         if (LoadType != DOS_LOAD_OVERLAY)
         {
