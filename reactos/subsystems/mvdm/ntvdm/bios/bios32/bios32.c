@@ -570,7 +570,6 @@ static VOID InitializeBiosInt32(VOID)
     RegisterBiosInt32(0x17, NULL);
     RegisterBiosInt32(0x1B, NULL);
     RegisterBiosInt32(0x4A, NULL); // User Alarm Handler
-    RegisterBiosInt32(0x6D, NULL); // Video BIOS Entry Point
 
     /* Relocated services by the BIOS (when needed) */
     RegisterBiosInt32(0x40, NULL); // ROM BIOS Diskette Handler relocated by Hard Disk BIOS

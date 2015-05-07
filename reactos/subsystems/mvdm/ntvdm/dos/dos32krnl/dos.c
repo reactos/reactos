@@ -775,7 +775,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get Interrupt Vector */
         case 0x35:
         {
-            DWORD FarPointer = ((PDWORD)BaseAddress)[getAL()];
+            ULONG FarPointer = ((PULONG)BaseAddress)[getAL()];
 
             /* Read the address from the IDT into ES:BX */
             setES(HIWORD(FarPointer));
@@ -2014,6 +2014,9 @@ BOOLEAN DosKRNLInitialize(VOID)
     RegisterDosInt32(0x27, DosInt27h        ); // Terminate and Stay Resident
     RegisterDosInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
     RegisterDosInt32(0x2F, DosInt2Fh        );
+
+    /* Unimplemented DOS interrupts */
+    RegisterDosInt32(0x2A, NULL); // Network - Installation Check
 
     /* Load the CON driver */
     ConDrvInitialize();

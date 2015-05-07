@@ -29,6 +29,10 @@ BOOLEAN VidBios32Initialize(VOID)
     /* Register the BIOS 32-bit Interrupts */
     RegisterBiosInt32(BIOS_VIDEO_INTERRUPT, VidBiosVideoService);
 
+    /* Vectors that should be implemented */
+    RegisterBiosInt32(0x42, NULL); // Relocated Default INT 10h Video Services
+    RegisterBiosInt32(0x6D, NULL); // Video BIOS Entry Point
+
     return TRUE;
 }
 
