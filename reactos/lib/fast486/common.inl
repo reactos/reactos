@@ -573,7 +573,7 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
         {
             /* Loading the stack segment */
 
-            if (GET_SEGMENT_INDEX(Selector) == 0)
+            if (!(Selector & SEGMENT_TABLE_INDICATOR) && GET_SEGMENT_INDEX(Selector) == 0)
             {
                 Fast486Exception(State, Exception);
                 return FALSE;
@@ -614,7 +614,7 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
             State->PrefetchValid = FALSE;
 #endif
 
-            if (GET_SEGMENT_INDEX(Selector) == 0)
+            if (!(Selector & SEGMENT_TABLE_INDICATOR) && GET_SEGMENT_INDEX(Selector) == 0)
             {
                 Fast486Exception(State, Exception);
                 return FALSE;
@@ -665,7 +665,7 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
         {
             /* Loading a data segment */
 
-            if (GET_SEGMENT_INDEX(Selector) != 0)
+            if (GET_SEGMENT_INDEX(Selector) != 0 || (Selector & SEGMENT_TABLE_INDICATOR))
             {
                 if (!GdtEntry.SystemType)
                 {
