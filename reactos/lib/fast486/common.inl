@@ -773,7 +773,10 @@ Fast486ProcessGate(PFAST486_STATE State, USHORT Selector, ULONG Offset, BOOLEAN 
             return FALSE;
         }
 
+        case FAST486_TSS_16_SIGNATURE:
+        case FAST486_BUSY_TSS_16_SIGNATURE:
         case FAST486_TSS_SIGNATURE:
+        case FAST486_BUSY_TSS_SIGNATURE:
         {
             Fast486TaskSwitch(State,
                               Call ? FAST486_TASK_CALL : FAST486_TASK_JUMP,

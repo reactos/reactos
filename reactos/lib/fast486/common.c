@@ -554,22 +554,39 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
 {
     ULONG NewTssAddress;
     ULONG NewTssLimit;
-    FAST486_TSS OldTss;
-    FAST486_TSS NewTss;
     FAST486_SYSTEM_DESCRIPTOR NewTssDescriptor;
+    FAST486_TSS OldTss;
+    PFAST486_LEGACY_TSS OldLegacyTss = (PFAST486_LEGACY_TSS)&OldTss;
+    FAST486_TSS NewTss;
+    PFAST486_LEGACY_TSS NewLegacyTss = (PFAST486_LEGACY_TSS)&NewTss;
+    USHORT NewLdtr, NewEs, NewCs, NewSs, NewDs;
+
+    if (State->TaskReg.Limit < sizeof(FAST486_TSS)
+        && State->TaskReg.Limit != sizeof(FAST486_LEGACY_TSS))
+    {
+        /* Invalid task register limit */
+        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, State->TaskReg.Selector);
+        return FALSE;
+    }
 
     /* Read the old TSS */
     if (!Fast486ReadLinearMemory(State,
                                  State->TaskReg.Base,
                                  &OldTss,
-                                 sizeof(OldTss)))
+                                 State->TaskReg.Limit >= sizeof(FAST486_TSS)
+                                 ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
     {
         /* Exception occurred */
         return FALSE;
     }
 
+
     /* If this is a task return, use the linked previous selector */
-    if (Type == FAST486_TASK_RETURN) Selector = LOWORD(OldTss.Link);
+    if (Type == FAST486_TASK_RETURN)
+    {
+        if (State->TaskReg.Limit >= sizeof(FAST486_TSS)) Selector = LOWORD(OldTss.Link);
+        else Selector = OldLegacyTss->Link;
+    }
 
     /* Make sure the entry exists in the GDT (not LDT!) */
     if ((GET_SEGMENT_INDEX(Selector) == 0)
@@ -611,9 +628,9 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         NewTssLimit |= 0x00000FFF;
     }
 
-    if (NewTssLimit < sizeof(FAST486_TSS))
+    if (NewTssLimit < sizeof(FAST486_TSS) && NewTssLimit != sizeof(FAST486_LEGACY_TSS))
     {
-        /* TSS limit too small */
+        /* TSS limit invalid */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, Selector);
         return FALSE;
     }
@@ -622,9 +639,11 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
      * The incoming task shouldn't be busy if we're executing it as a
      * new task, and it should be busy if we're returning to it.
      */
-    if (((NewTssDescriptor.Signature != FAST486_TSS_SIGNATURE)
+    if ((((NewTssDescriptor.Signature != FAST486_TSS_SIGNATURE)
+        && (NewTssDescriptor.Signature != FAST486_TSS_16_SIGNATURE))
         || (Type == FAST486_TASK_RETURN))
-        && ((NewTssDescriptor.Signature != FAST486_BUSY_TSS_SIGNATURE)
+        && (((NewTssDescriptor.Signature != FAST486_BUSY_TSS_SIGNATURE)
+        && (NewTssDescriptor.Signature != FAST486_BUSY_TSS_16_SIGNATURE))
         || (Type != FAST486_TASK_RETURN)))
     {
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
@@ -635,7 +654,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (!Fast486ReadLinearMemory(State,
                                  NewTssAddress,
                                  &NewTss,
-                                 sizeof(NewTss)))
+                                 NewTssLimit >= sizeof(FAST486_TSS)
+                                 ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
     {
         /* Exception occurred */
         return FALSE;
@@ -671,34 +691,57 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     else
     {
         /* Store the link */
-        NewTss.Link = State->TaskReg.Selector;
+        if (NewTssLimit >= sizeof(FAST486_TSS)) NewTss.Link = State->TaskReg.Selector;
+        else NewLegacyTss->Link = State->TaskReg.Selector;
     }
 
     /* Save the current task into the TSS */
-    OldTss.Cr3 = State->ControlRegisters[FAST486_REG_CR3];
-    OldTss.Eip = State->InstPtr.Long;
-    OldTss.Eflags = State->Flags.Long;
-    OldTss.Eax = State->GeneralRegs[FAST486_REG_EAX].Long;
-    OldTss.Ecx = State->GeneralRegs[FAST486_REG_ECX].Long;
-    OldTss.Edx = State->GeneralRegs[FAST486_REG_EDX].Long;
-    OldTss.Ebx = State->GeneralRegs[FAST486_REG_EBX].Long;
-    OldTss.Esp = State->GeneralRegs[FAST486_REG_ESP].Long;
-    OldTss.Ebp = State->GeneralRegs[FAST486_REG_EBP].Long;
-    OldTss.Esi = State->GeneralRegs[FAST486_REG_ESI].Long;
-    OldTss.Edi = State->GeneralRegs[FAST486_REG_EDI].Long;
-    OldTss.Es = State->SegmentRegs[FAST486_REG_ES].Selector;
-    OldTss.Cs = State->SegmentRegs[FAST486_REG_CS].Selector;
-    OldTss.Ss = State->SegmentRegs[FAST486_REG_SS].Selector;
-    OldTss.Ds = State->SegmentRegs[FAST486_REG_DS].Selector;
-    OldTss.Fs = State->SegmentRegs[FAST486_REG_FS].Selector;
-    OldTss.Gs = State->SegmentRegs[FAST486_REG_GS].Selector;
-    OldTss.Ldtr = State->Ldtr.Selector;
+    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
+    {
+        OldTss.Cr3 = State->ControlRegisters[FAST486_REG_CR3];
+        OldTss.Eip = State->InstPtr.Long;
+        OldTss.Eflags = State->Flags.Long;
+        OldTss.Eax = State->GeneralRegs[FAST486_REG_EAX].Long;
+        OldTss.Ecx = State->GeneralRegs[FAST486_REG_ECX].Long;
+        OldTss.Edx = State->GeneralRegs[FAST486_REG_EDX].Long;
+        OldTss.Ebx = State->GeneralRegs[FAST486_REG_EBX].Long;
+        OldTss.Esp = State->GeneralRegs[FAST486_REG_ESP].Long;
+        OldTss.Ebp = State->GeneralRegs[FAST486_REG_EBP].Long;
+        OldTss.Esi = State->GeneralRegs[FAST486_REG_ESI].Long;
+        OldTss.Edi = State->GeneralRegs[FAST486_REG_EDI].Long;
+        OldTss.Es = State->SegmentRegs[FAST486_REG_ES].Selector;
+        OldTss.Cs = State->SegmentRegs[FAST486_REG_CS].Selector;
+        OldTss.Ss = State->SegmentRegs[FAST486_REG_SS].Selector;
+        OldTss.Ds = State->SegmentRegs[FAST486_REG_DS].Selector;
+        OldTss.Fs = State->SegmentRegs[FAST486_REG_FS].Selector;
+        OldTss.Gs = State->SegmentRegs[FAST486_REG_GS].Selector;
+        OldTss.Ldtr = State->Ldtr.Selector;
+    }
+    else
+    {
+        OldLegacyTss->Ip = State->InstPtr.LowWord;
+        OldLegacyTss->Flags = State->Flags.LowWord;
+        OldLegacyTss->Ax = State->GeneralRegs[FAST486_REG_EAX].LowWord;
+        OldLegacyTss->Cx = State->GeneralRegs[FAST486_REG_ECX].LowWord;
+        OldLegacyTss->Dx = State->GeneralRegs[FAST486_REG_EDX].LowWord;
+        OldLegacyTss->Bx = State->GeneralRegs[FAST486_REG_EBX].LowWord;
+        OldLegacyTss->Sp = State->GeneralRegs[FAST486_REG_ESP].LowWord;
+        OldLegacyTss->Bp = State->GeneralRegs[FAST486_REG_EBP].LowWord;
+        OldLegacyTss->Si = State->GeneralRegs[FAST486_REG_ESI].LowWord;
+        OldLegacyTss->Di = State->GeneralRegs[FAST486_REG_EDI].LowWord;
+        OldLegacyTss->Es = State->SegmentRegs[FAST486_REG_ES].Selector;
+        OldLegacyTss->Cs = State->SegmentRegs[FAST486_REG_CS].Selector;
+        OldLegacyTss->Ss = State->SegmentRegs[FAST486_REG_SS].Selector;
+        OldLegacyTss->Ds = State->SegmentRegs[FAST486_REG_DS].Selector;
+        OldLegacyTss->Ldtr = State->Ldtr.Selector;
+    }
 
     /* Write back the old TSS */
     if (!Fast486WriteLinearMemory(State,
                                   State->TaskReg.Base,
                                   &OldTss,
-                                  sizeof(OldTss)))
+                                  State->TaskReg.Limit >= sizeof(FAST486_TSS)
+                                  ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
     {
         /* Exception occurred */
         return FALSE;
@@ -725,54 +768,78 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     State->TaskReg.Base = NewTssAddress;
     State->TaskReg.Limit = NewTssLimit;
 
-    /* Change the page directory */
-    State->ControlRegisters[FAST486_REG_CR3] = NewTss.Cr3;
+    if (NewTssLimit >= sizeof(FAST486_TSS))
+    {
+        /* Change the page directory */
+        State->ControlRegisters[FAST486_REG_CR3] = NewTss.Cr3;
+    }
 
     /* Flush the TLB */
     if (State->Tlb) RtlZeroMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG));
 
     /* Update the CPL */
-    State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
+    if (NewTssLimit >= sizeof(FAST486_TSS)) State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
+    else State->Cpl = GET_SEGMENT_RPL(NewLegacyTss->Cs);
 
 #ifndef FAST486_NO_PREFETCH
     /* Context switching invalidates the prefetch */
     State->PrefetchValid = FALSE;
 #endif
 
-    /* Update the CPL */
-    State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
-
     /* Load the registers */
-    State->InstPtr.Long = State->SavedInstPtr.Long = NewTss.Eip;
-    State->Flags.Long = NewTss.Eflags;
-    State->GeneralRegs[FAST486_REG_EAX].Long = NewTss.Eax;
-    State->GeneralRegs[FAST486_REG_ECX].Long = NewTss.Ecx;
-    State->GeneralRegs[FAST486_REG_EDX].Long = NewTss.Edx;
-    State->GeneralRegs[FAST486_REG_EBX].Long = NewTss.Ebx;
-    State->GeneralRegs[FAST486_REG_ESP].Long = NewTss.Esp;
-    State->GeneralRegs[FAST486_REG_EBP].Long = NewTss.Ebp;
-    State->GeneralRegs[FAST486_REG_ESI].Long = NewTss.Esi;
-    State->GeneralRegs[FAST486_REG_EDI].Long = NewTss.Edi;
+    if (NewTssLimit >= sizeof(FAST486_TSS))
+    {
+        State->InstPtr.Long = State->SavedInstPtr.Long = NewTss.Eip;
+        State->Flags.Long = NewTss.Eflags;
+        State->GeneralRegs[FAST486_REG_EAX].Long = NewTss.Eax;
+        State->GeneralRegs[FAST486_REG_ECX].Long = NewTss.Ecx;
+        State->GeneralRegs[FAST486_REG_EDX].Long = NewTss.Edx;
+        State->GeneralRegs[FAST486_REG_EBX].Long = NewTss.Ebx;
+        State->GeneralRegs[FAST486_REG_ESP].Long = NewTss.Esp;
+        State->GeneralRegs[FAST486_REG_EBP].Long = NewTss.Ebp;
+        State->GeneralRegs[FAST486_REG_ESI].Long = NewTss.Esi;
+        State->GeneralRegs[FAST486_REG_EDI].Long = NewTss.Edi;
+        NewEs = NewTss.Es;
+        NewCs = NewTss.Cs;
+        NewSs = NewTss.Ss;
+        NewDs = NewTss.Ds;
+        NewLdtr = NewTss.Ldtr;
+    }
+    else
+    {
+        State->InstPtr.LowWord = State->SavedInstPtr.LowWord = NewLegacyTss->Ip;
+        State->Flags.LowWord = NewLegacyTss->Flags;
+        State->GeneralRegs[FAST486_REG_EAX].LowWord = NewLegacyTss->Ax;
+        State->GeneralRegs[FAST486_REG_ECX].LowWord = NewLegacyTss->Cx;
+        State->GeneralRegs[FAST486_REG_EDX].LowWord = NewLegacyTss->Dx;
+        State->GeneralRegs[FAST486_REG_EBX].LowWord = NewLegacyTss->Bx;
+        State->GeneralRegs[FAST486_REG_ESP].LowWord = NewLegacyTss->Sp;
+        State->GeneralRegs[FAST486_REG_EBP].LowWord = NewLegacyTss->Bp;
+        State->GeneralRegs[FAST486_REG_ESI].LowWord = NewLegacyTss->Si;
+        State->GeneralRegs[FAST486_REG_EDI].LowWord = NewLegacyTss->Di;
+        NewEs = NewLegacyTss->Es;
+        NewCs = NewLegacyTss->Cs;
+        NewSs = NewLegacyTss->Ss;
+        NewDs = NewLegacyTss->Ds;
+        NewLdtr = NewLegacyTss->Ldtr;
+    }
 
     /* Set the NT flag if nesting */
     if (Type == FAST486_TASK_CALL) State->Flags.Nt = TRUE;
 
-    if (GET_SEGMENT_INDEX(NewTss.Ldtr) != 0)
+    if (GET_SEGMENT_INDEX(NewLdtr) != 0)
     {
         BOOLEAN Valid;
         FAST486_SYSTEM_DESCRIPTOR GdtEntry;
 
-        if (NewTss.Ldtr & SEGMENT_TABLE_INDICATOR)
+        if (NewLdtr & SEGMENT_TABLE_INDICATOR)
         {
             /* This selector doesn't point to the GDT */
-            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, NewTss.Ldtr);
+            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, NewLdtr);
             return FALSE;
         }
 
-        if (!Fast486ReadDescriptorEntry(State,
-                                        NewTss.Ldtr,
-                                        &Valid,
-                                        (PFAST486_GDT_ENTRY)&GdtEntry))
+        if (!Fast486ReadDescriptorEntry(State, NewLdtr, &Valid, (PFAST486_GDT_ENTRY)&GdtEntry))
         {
             /* Exception occurred */
             return FALSE;
@@ -781,25 +848,25 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         if (!Valid)
         {
             /* Invalid selector */
-            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, NewTss.Ldtr);
+            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, NewLdtr);
             return FALSE;
         }
 
         if (GdtEntry.Signature != FAST486_LDT_SIGNATURE)
         {
             /* This is not an LDT descriptor */
-            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, NewTss.Ldtr);
+            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, NewLdtr);
             return FALSE;
         }
 
         if (!GdtEntry.Present)
         {
-            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, NewTss.Ldtr);
+            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, NewLdtr);
             return FALSE;
         }
 
         /* Update the LDTR */
-        State->Ldtr.Selector = NewTss.Ldtr;
+        State->Ldtr.Selector = NewLdtr;
         State->Ldtr.Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
         State->Ldtr.Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
 
@@ -816,52 +883,43 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     }
 
     /* Load the new segments */
-    if (!Fast486LoadSegmentInternal(State,
-                                    FAST486_REG_CS,
-                                    NewTss.Cs,
-                                    FAST486_EXCEPTION_TS))
+    if (!Fast486LoadSegmentInternal(State, FAST486_REG_CS, NewCs, FAST486_EXCEPTION_TS))
     {
         return FALSE;
     }
 
-    if (!Fast486LoadSegmentInternal(State,
-                                    FAST486_REG_SS,
-                                    NewTss.Ss,
-                                    FAST486_EXCEPTION_TS))
+    if (!Fast486LoadSegmentInternal(State, FAST486_REG_SS, NewSs, FAST486_EXCEPTION_TS))
     {
         return FALSE;
     }
 
-    if (!Fast486LoadSegmentInternal(State,
-                                    FAST486_REG_ES,
-                                    NewTss.Es,
-                                    FAST486_EXCEPTION_TS))
+    if (!Fast486LoadSegmentInternal(State, FAST486_REG_ES, NewEs, FAST486_EXCEPTION_TS))
     {
         return FALSE;
     }
 
-    if (!Fast486LoadSegmentInternal(State,
-                                    FAST486_REG_DS,
-                                    NewTss.Ds,
-                                    FAST486_EXCEPTION_TS))
+    if (!Fast486LoadSegmentInternal(State, FAST486_REG_DS, NewDs, FAST486_EXCEPTION_TS))
     {
         return FALSE;
     }
 
-    if (!Fast486LoadSegmentInternal(State,
-                                    FAST486_REG_FS,
-                                    NewTss.Fs,
-                                    FAST486_EXCEPTION_TS))
+    if (NewTssLimit >= sizeof(FAST486_TSS))
     {
-        return FALSE;
-    }
+        if (!Fast486LoadSegmentInternal(State,
+                                        FAST486_REG_FS,
+                                        NewTss.Fs,
+                                        FAST486_EXCEPTION_TS))
+        {
+            return FALSE;
+        }
 
-    if (!Fast486LoadSegmentInternal(State,
-                                    FAST486_REG_GS,
-                                    NewTss.Gs,
-                                    FAST486_EXCEPTION_TS))
-    {
-        return FALSE;
+        if (!Fast486LoadSegmentInternal(State,
+                                        FAST486_REG_GS,
+                                        NewTss.Gs,
+                                        FAST486_EXCEPTION_TS))
+        {
+            return FALSE;
+        }
     }
 
     return TRUE;
