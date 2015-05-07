@@ -641,16 +641,13 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
 
     if (Result != ERROR_SUCCESS) goto Quit;
 
+    /* Update console title if we run in a separate console */
+    if (SessionId != 0)
+        SetConsoleTitleA(ExecutablePath);
+
     /* Attach to the console */
     ConsoleAttach();
     VidBiosAttachToConsole();
-
-    // HACK: Simulate a ENTER key release scancode on the PS/2 port because
-    // some apps expect to read a key release scancode (> 0x80) when they
-    // are started.
-    // (hbelusca 2 May 2015: I'm not sure it's really useful. See r65012)
-    // IOWriteB(PS2_CONTROL_PORT, 0xD2);     // Next write is for the first PS/2 port
-    // IOWriteB(PS2_DATA_PORT, 0x80 | 0x1C); // ENTER key release
 
     /* Start simulation */
     SetEvent(VdmTaskEvent);

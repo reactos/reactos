@@ -24,13 +24,6 @@ static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
 
-// For DOS
-#ifndef STANDALONE
-BOOLEAN AcceptCommands = TRUE;
-HANDLE CommandThread = NULL;
-ULONG SessionId = 0;
-#endif
-
 HANDLE VdmTaskEvent = NULL;
 
 // Command line of NTVDM
@@ -258,13 +251,19 @@ static BOOL
 WINAPI
 ConsoleCtrlHandler(DWORD ControlType)
 {
+// HACK: Should be removed!
+#ifndef STANDALONE
+extern BOOLEAN AcceptCommands;
+extern HANDLE CommandThread;
+#endif
+
     switch (ControlType)
     {
         case CTRL_LAST_CLOSE_EVENT:
         {
             if (WaitForSingleObject(VdmTaskEvent, 0) == WAIT_TIMEOUT)
             {
-                /* Exit immediately */
+                /* Nothing runs, so exit immediately */
 #ifndef STANDALONE
                 if (CommandThread) TerminateThread(CommandThread, 0);
 #endif
@@ -273,7 +272,7 @@ ConsoleCtrlHandler(DWORD ControlType)
 #ifndef STANDALONE
             else
             {
-                /* Stop accepting new commands */
+                /* A command is running, let it run, but stop accepting new commands */
                 AcceptCommands = FALSE;
             }
 #endif
@@ -434,9 +433,60 @@ VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent)
     DPRINT1("Focus events not handled\n");
 }
 
+static BOOL
+LoadGlobalSettings(VOID)
+{
+// FIXME: These strings should be localized.
+#define ERROR_MEMORYVDD L"Insufficient memory to load installable Virtual Device Drivers."
+#define ERROR_REGVDD    L"Virtual Device Driver format in the registry is invalid."
+#define ERROR_LOADVDD   L"An installable Virtual Device Driver failed Dll initialization."
+
+    BOOL  Success = TRUE;
+    LONG  Error   = 0;
+
+    HKEY    hNTVDMKey;
+    LPCWSTR NTVDMKeyName   = L"SYSTEM\\CurrentControlSet\\Control\\NTVDM";
+
+    /* Try to open the NTVDM registry key */
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          NTVDMKeyName,
+                          0,
+                          KEY_QUERY_VALUE,
+                          &hNTVDMKey);
+    if (Error == ERROR_FILE_NOT_FOUND)
+    {
+        /* If the key just doesn't exist, don't do anything else */
+        return TRUE;
+    }
+    else if (Error != ERROR_SUCCESS)
+    {
+        /* The key exists but there was an access error: display an error and quit */
+        DisplayMessage(ERROR_REGVDD);
+        return FALSE;
+    }
+
+    /*
+     * Now we can do:
+     * - CPU core choice
+     * - Video choice
+     * - Sound choice
+     * - Mem?
+     * - ...
+     * - Standalone mode?
+     * - Debug settings
+     */
+
+// Quit:
+    RegCloseKey(hNTVDMKey);
+    return Success;
+}
+
 INT
 wmain(INT argc, WCHAR *argv[])
 {
+    NtVdmArgc = argc;
+    NtVdmArgv = argv;
+
 #ifdef STANDALONE
 
     if (argc < 2)
@@ -446,28 +496,10 @@ wmain(INT argc, WCHAR *argv[])
         return 0;
     }
 
-#else
-
-    INT i;
-    WCHAR *endptr;
-
-    /* Parse the command line arguments */
-    for (i = 1; i < argc; i++)
-    {
-        if (wcsncmp(argv[i], L"-i", 2) == 0)
-        {
-            /* This is the session ID */
-            SessionId = wcstoul(argv[i] + 2, &endptr, 10);
-
-            /* The VDM hasn't been started from a console, so quit when the task is done */
-            AcceptCommands = FALSE;
-        }
-    }
-
 #endif
 
-    NtVdmArgc = argc;
-    NtVdmArgv = argv;
+    /* Load global VDM settings */
+    LoadGlobalSettings();
 
     DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
 

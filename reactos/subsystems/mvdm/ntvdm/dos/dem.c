@@ -274,6 +274,14 @@ Command:
 }
 #endif
 
+/* PUBLIC VARIABLES ***********************************************************/
+
+#ifndef STANDALONE
+BOOLEAN AcceptCommands = TRUE;
+HANDLE CommandThread = NULL;
+ULONG SessionId = 0;
+#endif
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 //
@@ -422,6 +430,8 @@ static VOID WINAPI DosStart(LPWORD Stack)
     DWORD Result;
     CHAR ApplicationName[MAX_PATH];
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
+#else
+    INT i;
 #endif
 
     DPRINT("DosStart\n");
@@ -436,6 +446,19 @@ static VOID WINAPI DosStart(LPWORD Stack)
     DosMouseInitialize();
 
 #ifndef STANDALONE
+
+    /* Parse the command line arguments */
+    for (i = 1; i < NtVdmArgc; i++)
+    {
+        if (wcsncmp(NtVdmArgv[i], L"-i", 2) == 0)
+        {
+            /* This is the session ID */
+            SessionId = wcstoul(NtVdmArgv[i] + 2, NULL, 10);
+
+            /* The VDM hasn't been started from a console, so quit when the task is done */
+            AcceptCommands = FALSE;
+        }
+    }
 
     /* Create the GetNextVDMCommand thread */
     CommandThread = CreateThread(NULL, 0, &CommandThreadProc, NULL, 0, NULL);

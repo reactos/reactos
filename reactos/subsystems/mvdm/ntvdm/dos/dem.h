@@ -25,6 +25,14 @@
 #define BOP_DOS         0x50    // DOS System BOP (for NTIO.SYS and NTDOS.SYS)
 #define BOP_CMD         0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
 
+/* VARIABLES ******************************************************************/
+
+#ifndef STANDALONE
+extern BOOLEAN AcceptCommands;
+extern HANDLE CommandThread;
+extern ULONG SessionId;
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 DWORD

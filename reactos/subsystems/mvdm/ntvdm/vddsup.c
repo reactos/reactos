@@ -234,6 +234,7 @@ Quit:
 
 static BOOL LoadInstallableVDD(VOID)
 {
+// FIXME: These strings should be localized.
 #define ERROR_MEMORYVDD L"Insufficient memory to load installable Virtual Device Drivers."
 #define ERROR_REGVDD    L"Virtual Device Driver format in the registry is invalid."
 #define ERROR_LOADVDD   L"An installable Virtual Device Driver failed Dll initialization."
