@@ -1,0 +1,217 @@
+/*
+ * PROJECT:  PAINT for ReactOS
+ * LICENSE:  LGPL
+ * Превод на Български/ Bulgarian translation
+ * http://www.reactos.org/wiki/Bulgarian_translation
+ * LOCATION: base/applications/mspaint/lang
+ */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+ID_MENU MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Нов\tCtrl+N", IDM_FILENEW
+        MENUITEM "&Отваряне...\tAlt+tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&Запис\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Запис &като...", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "Поставяне като тапет (настелено)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Поставяне като тапет (в средата)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Поставяне като тапет (разпънато)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Изход\tAlt+F4", IDM_FILEEXIT
+    END
+    POPUP "&Обработка"
+    BEGIN
+        MENUITEM "Отмяна\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "Връщане\tCtrl+Y", IDM_EDITREDO
+        MENUITEM SEPARATOR
+        MENUITEM "Отрязване\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Запомняне\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Поставяне\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Изтриване на избраното\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Обръщане на избора", IDM_EDITINVERTSELECTION
+        MENUITEM "Избиране на всичко\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Запомняне в...", IDM_EDITCOPYTO
+        MENUITEM "Поставяне в...", IDM_EDITPASTEFROM
+    END
+    POPUP "Из&глед"
+    BEGIN
+        MENUITEM "Кутия с принадлежности\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Палитра\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Лента на състоянието", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Лента за текстови инструменти", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM SEPARATOR
+        POPUP "Приближение"
+        BEGIN
+            POPUP "Потребителско"
+            BEGIN
+                MENUITEM "12,5%", IDM_VIEWZOOM125
+                MENUITEM "25%", IDM_VIEWZOOM25
+                MENUITEM "50%", IDM_VIEWZOOM50
+                MENUITEM "100%", IDM_VIEWZOOM100
+                MENUITEM "200%", IDM_VIEWZOOM200
+                MENUITEM "400%", IDM_VIEWZOOM400
+                MENUITEM "800%", IDM_VIEWZOOM800
+            END
+            MENUITEM SEPARATOR
+            MENUITEM "Решетка\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "Изображенийца", IDM_VIEWSHOWMINIATURE
+        END
+        MENUITEM "Цял екран", IDM_VIEWFULLSCREEN
+    END
+    POPUP "Из&ображение"
+    BEGIN
+        MENUITEM "Завъртане/Огледало\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Stretch/Skew\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Изрязване", IDM_IMAGECROP
+        MENUITEM "Обръщане на цветовете\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Принадлежности\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Изтриване на изображението\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Непрозрачно изчертаване", IDM_IMAGEDRAWOPAQUE
+    END
+    POPUP "&Цветове"
+    BEGIN
+        MENUITEM "Промяна на палитрите...", IDM_COLORSEDITPALETTE
+        MENUITEM SEPARATOR
+        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
+        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+    END
+    POPUP "&Помощ"
+    BEGIN
+        MENUITEM "Помощ", IDM_HELPHELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "Сведения", IDM_HELPINFO
+    END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^N", IDM_FILENEW
+    "^O", IDM_FILEOPEN
+    "^S", IDM_FILESAVE
+    "^Z", IDM_EDITUNDO
+    "^Y", IDM_EDITREDO
+    "^X", IDM_EDITCUT
+    "^C", IDM_EDITCOPY
+    "^V", IDM_EDITPASTE
+    VK_DELETE, IDM_EDITDELETESELECTION, VIRTKEY
+    "^A", IDM_EDITSELECTALL
+    "^T", IDM_VIEWTOOLBOX
+    "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
+    "^F", IDM_VIEWFULLSCREEN
+    "^R", IDM_IMAGEROTATEMIRROR
+    "^W", IDM_IMAGESTRETCHSKEW
+    "^I", IDM_IMAGEINVERTCOLORS
+    "^E", IDM_IMAGEATTRIBUTES
+    "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+END
+
+IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Завъртане и огледало на изображението"
+BEGIN
+    GROUPBOX "Завъртане или огледало", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "Водоравно огледало", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "Отвесно огледало", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "Завъртане на ъгъл", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    DEFPUSHBUTTON "Добре", IDOK, 125, 8, 48, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 125, 24, 48, 14
+END
+
+IDD_ATTRIBUTES DIALOGEX 100, 100, 225, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Принадлежности"
+BEGIN
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
+    LTEXT "Ширина:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    LTEXT "Височина:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    LTEXT "Дата на файла:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Файлов размер:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Разделителна:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Неналично", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Неналично", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Неналично", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    GROUPBOX "Единици", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
+    AUTORADIOBUTTON "Цолове", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
+    AUTORADIOBUTTON "см", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
+    AUTORADIOBUTTON "Точки", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    GROUPBOX "Цветове", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
+    AUTORADIOBUTTON "Черно- бяло", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "Цветове", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    DEFPUSHBUTTON "Добре", IDOK, 170, 8, 48, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 170, 24, 48, 14
+    PUSHBUTTON "Подразбирано", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+END
+
+IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Stretch and skew image"
+BEGIN
+    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
+    LTEXT "Водоравно:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTHPERCENT, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_STRETCHSKEWICONVSTRETCH, 12, 43, 32, 32
+    LTEXT "Отвесно:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
+    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
+    LTEXT "Водоравно:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
+    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
+    LTEXT "Отвесно:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
+    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    DEFPUSHBUTTON "Добре", IDOK, 170, 8, 48, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 170, 24, 48, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMNAME "Рисуване"
+    IDS_WINDOWTITLE "%s - рисуване"
+    IDS_INFOTITLE "Рисувач (Paint) за РеактОС"
+    IDS_INFOTEXT "Рисувач (Paint) за РеактОС е достъпен под GNU Lesser General Public License (LGPL, see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Искате ли да запишете промените в %s?"
+    IDS_DEFAULTFILENAME "Без име.bmp"
+    IDS_MINIATURETITLE "Изображенийце"
+    IDS_TOOLTIP1 "Свободно избиране"
+    IDS_TOOLTIP2 "Избор"
+    IDS_TOOLTIP3 "Гумичка"
+    IDS_TOOLTIP4 "Запълване с цвят"
+    IDS_TOOLTIP5 "Избор на цвят"
+    IDS_TOOLTIP6 "Приближение"
+    IDS_TOOLTIP7 "Молив"
+    IDS_TOOLTIP8 "Четка"
+    IDS_TOOLTIP9 "Пръскалка"
+    IDS_TOOLTIP10 "Текст"
+    IDS_TOOLTIP11 "Черта"
+    IDS_TOOLTIP12 "Крива на Безие"
+    IDS_TOOLTIP13 "Правоъгълник"
+    IDS_TOOLTIP14 "Многоъгълник"
+    IDS_TOOLTIP15 "Елипса"
+    IDS_TOOLTIP16 "Заоблен правоъгълник"
+    IDS_OPENFILTER "Файлове bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Всички файлове (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24 разрядни файлове bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d разряда"
+    IDS_PRINTRES "%d x %d точки на метър"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
+END
