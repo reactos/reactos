@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/main.c
+ * FILE:        base/applications/mspaint_new/main.cpp
  * PURPOSE:     Initializing everything
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -221,9 +221,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* preloading the draw transparent/nontransparent icons for later use */
     hNontranspIcon =
-        LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_NONTRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
+        (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_NONTRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
     hTranspIcon =
-        LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_TRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
+        (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_TRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
 
     hCurFill     = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_FILL));
     hCurColor    = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_COLOR));
@@ -250,7 +250,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
                        1, -2, 50, 205, hToolBoxContainer, NULL, hThisInstance, NULL);
     hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     SendMessage(hToolbar, TB_SETIMAGELIST, 0, (LPARAM) hImageList);
-    tempBm = LoadImage(hThisInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
+    tempBm = (HBITMAP) LoadImage(hThisInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
     ImageList_AddMasked(hImageList, tempBm, 0xff00ff);
     DeleteObject(tempBm);
     SendMessage(hToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
@@ -447,7 +447,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* Run the message loop. It will run until GetMessage() returns 0 */
     while (GetMessage(&messages, NULL, 0, 0))
     {
-        TranslateAccelerator(hwnd, haccel, &messages);
+        TranslateAccelerator(hwnd, (HACCEL) haccel, &messages);
 
         /* Translate virtual-key messages into character messages */
         TranslateMessage(&messages);

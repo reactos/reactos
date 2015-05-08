@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/selection.c
+ * FILE:        base/applications/mspaint_new/selection.cpp
  * PURPOSE:     Window procedure of the selection window
  * PROGRAMMERS: Benedikt Freisen
  */

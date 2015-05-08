@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/palette.h
+ * FILE:        base/applications/mspaint_new/palette.h
  * PURPOSE:     Window procedure of the palette window
  * PROGRAMMERS: Benedikt Freisen
  */

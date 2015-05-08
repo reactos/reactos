@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/dialogs.c
+ * FILE:        base/applications/mspaint_new/dialogs.cpp
  * PURPOSE:     Window procedures of the dialog windows plus launching functions
  * PROGRAMMERS: Benedikt Freisen
  */

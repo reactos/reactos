@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        scrollbox.c
+ * FILE:        base/applications/mspaint_new/scrollbox.cpp
  * PURPOSE:     Functionality surrounding the scroll box window class
  * PROGRAMMERS: Benedikt Freisen
  */

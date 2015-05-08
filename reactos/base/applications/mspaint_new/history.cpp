@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/history.c
+ * FILE:        base/applications/mspaint_new/history.cpp
  * PURPOSE:     Undo and redo functionality
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -29,7 +29,7 @@ void
 newReversible()
 {
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-    hBms[(currInd + 1) % HISTORYSIZE] = CopyImage(hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    hBms[(currInd + 1) % HISTORYSIZE] = (HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
     currInd = (currInd + 1) % HISTORYSIZE;
     if (undoSteps < HISTORYSIZE - 1)
         undoSteps++;
@@ -75,7 +75,7 @@ resetToU1()
 {
     DeleteObject(hBms[currInd]);
     hBms[currInd] =
-        CopyImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+        (HBITMAP) CopyImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
     SelectObject(hDrawingDC, hBms[currInd]);
     imgXRes = GetDIBWidth(hBms[currInd]);
     imgYRes = GetDIBHeight(hBms[currInd]);
@@ -119,8 +119,8 @@ cropReversible(int width, int height, int xOffset, int yOffset)
     hdc = CreateCompatibleDC(hDrawingDC);
     SelectObject(hdc, hBms[currInd]);
 
-    oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, bgColor));
-    oldBrush = SelectObject(hdc, CreateSolidBrush(bgColor));
+    oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, bgColor));
+    oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(bgColor));
     Rectangle(hdc, 0, 0, width, height);
     BitBlt(hdc, -xOffset, -yOffset, imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
     DeleteObject(SelectObject(hdc, oldBrush));

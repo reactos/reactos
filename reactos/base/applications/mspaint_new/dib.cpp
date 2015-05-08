@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/dib.c
+ * FILE:        base/applications/mspaint_new/dib.cpp
  * PURPOSE:     Some DIB related functions
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -71,7 +71,7 @@ SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int 
     bi.biXPelsPerMeter = hRes;
     bi.biYPelsPerMeter = vRes;
 
-    buffer = HeapAlloc(GetProcessHeap(), 0, imgDataSize);
+    buffer = (char*) HeapAlloc(GetProcessHeap(), 0, imgDataSize);
     if (!buffer)
         return;
 
@@ -153,7 +153,7 @@ LoadDIBFromFile(HBITMAP * hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size, in
     if (size)
         *size = GetFileSize(hFile, NULL);
 
-    bi = HeapAlloc(GetProcessHeap(), 0, bfh.bfOffBits - sizeof(BITMAPFILEHEADER));
+    bi = (BITMAPINFO*) HeapAlloc(GetProcessHeap(), 0, bfh.bfOffBits - sizeof(BITMAPFILEHEADER));
     if (!bi)
     {
         CloseHandle(hFile);

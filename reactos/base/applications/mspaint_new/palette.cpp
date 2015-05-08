@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/palette.c
+ * FILE:        base/applications/mspaint_new/palette.cpp
  * PURPOSE:     Window procedure of the palette window
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -57,13 +57,13 @@ PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_TOPLEFT | BF_BOTTOMRIGHT);
             SetRect(&rc, 11, 12, 26, 27);
             DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT | BF_MIDDLE);
-            oldPen = SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
-            oldBrush = SelectObject(hDC, CreateSolidBrush(bgColor));
+            oldPen = (HPEN) SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
+            oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(bgColor));
             Rectangle(hDC, rc.left, rc.top + 2, rc.right - 1, rc.bottom - 1);
             DeleteObject(SelectObject(hDC, oldBrush));
             SetRect(&rc, 4, 5, 19, 20);
             DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT | BF_MIDDLE);
-            oldBrush = SelectObject(hDC, CreateSolidBrush(fgColor));
+            oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(fgColor));
             Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
             DeleteObject(SelectObject(hDC, oldBrush));
             DeleteObject(SelectObject(hDC, oldPen));
@@ -74,8 +74,8 @@ PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         0 + (i / 14) * 16, 16 + 31 + (i % 14) * 16, 16 + 0 + (i / 14) * 16);
                 DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
                 DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
-                oldPen = SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
-                oldBrush = SelectObject(hDC, CreateSolidBrush(palColors[i]));
+                oldPen = (HPEN) SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
+                oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(palColors[i]));
                 Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
                 DeleteObject(SelectObject(hDC, oldBrush));
                 DeleteObject(SelectObject(hDC, oldPen));

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/toolsettings.c
+ * FILE:        base/applications/mspaint_new/toolsettings.cpp
  * PURPOSE:     Window procedure of the tool settings window
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -58,7 +58,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case TOOL_RECTSEL:
                 case TOOL_TEXT:
                 {
-                    HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
+                    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
                     Rectangle(hdc, 2, transpBg * 31 + 2, 41, transpBg * 31 + 33);
                     DeleteObject(SelectObject(hdc, oldPen));
@@ -69,7 +69,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case TOOL_RUBBER:
                 {
                     int i;
-                    HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
+                    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                     for(i = 0; i < 4; i++)
                     {
                         if (rubberRadius == i + 2)
@@ -88,7 +88,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case TOOL_BRUSH:
                 {
                     int i;
-                    HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
+                    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
                     Rectangle(hdc, brushStyle % 3 * 13 + 2, brushStyle / 3 * 15 + 2, brushStyle % 3 * 13 + 15,
                               brushStyle / 3 * 15 + 17);
@@ -100,7 +100,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 case TOOL_AIRBRUSH:
                 {
-                    HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
+                    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
                     switch (airBrushWidth)
                     {
@@ -132,7 +132,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case TOOL_BEZIER:
                 {
                     int i;
-                    HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
+                    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                     for(i = 0; i < 5; i++)
                     {
                         if (lineWidth == i + 1)
@@ -154,7 +154,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case TOOL_RRECT:
                 {
                     int i;
-                    HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
+                    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                     for(i = 0; i < 3; i++)
                     {
                         if (shapeStyle == i)

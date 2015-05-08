@@ -1,19 +1,24 @@
+project(MSPAINT_NEW)
+
+set_cpp(WITH_RUNTIME)
+
+include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 
 list(APPEND SOURCE
-    dialogs.c
-    dib.c
-    drawing.c
-    history.c
-    main.c
-    mouse.c
-    palette.c
-    registry.c
-    scrollbox.c
-    selection.c
-    sizebox.c
-    textedit.c
-    toolsettings.c
-    winproc.c
+    dialogs.cpp
+    dib.cpp
+    drawing.cpp
+    history.cpp
+    main.cpp
+    mouse.cpp
+    palette.cpp
+    registry.cpp
+    scrollbox.cpp
+    selection.cpp
+    sizebox.cpp
+    textedit.cpp
+    toolsettings.cpp
+    winproc.cpp
     precomp.h)
 
 add_executable(mspaint_new ${SOURCE} rsrc.rc)

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/textedit.c
+ * FILE:        base/applications/mspaint_new/textedit.cpp
  * PURPOSE:     Text editor and font chooser for the text tool
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -55,7 +55,7 @@ TextEditWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     HeapFree(GetProcessHeap(), 0, textToolText);
                     textToolTextMaxLen = GetWindowTextLength(hwndEditCtl) + 1;
-                    textToolText = HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(TCHAR) * textToolTextMaxLen);
+                    textToolText = (LPTSTR) HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(TCHAR) * textToolTextMaxLen);
                     GetWindowText(hwndEditCtl, textToolText, textToolTextMaxLen);
                     ForceRefreshSelectionContents();
                     break;

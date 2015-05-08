@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/winproc.c
+ * FILE:        base/applications/mspaint_new/winproc.cpp
  * PURPOSE:     Window procedure of the main window and all children apart from
  *              hPalWin, hToolSettings and hSelection
  * PROGRAMMERS: Benedikt Freisen
@@ -115,9 +115,9 @@ drawZoomFrame(int mouseX, int mouseY)
     y = max(0, min(clientRectImageArea.bottom - h, mouseY - h / 2));
 
     hdc = GetDC(hImageArea);
-    oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 0, 0));
+    oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 0, 0));
     logbrush.lbStyle = BS_HOLLOW;
-    oldBrush = SelectObject(hdc, CreateBrushIndirect(&logbrush));
+    oldBrush = (HBRUSH) SelectObject(hdc, CreateBrushIndirect(&logbrush));
     rop = SetROP2(hdc, R2_NOT);
     Rectangle(hdc, x, y, x + w, y + h);
     SetROP2(hdc, rop);
@@ -209,9 +209,9 @@ InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
     SendMessage(window, WM_COMMAND, ID_RECTSEL, 0);
 
-    DeleteObject(SelectObject(hSelDC, hSelBm = CopyImage(bitmap,
-                                                         IMAGE_BITMAP, 0, 0,
-                                                         LR_COPYRETURNORG)));
+    DeleteObject(SelectObject(hSelDC, hSelBm = (HBITMAP) CopyImage(bitmap,
+                                                                   IMAGE_BITMAP, 0, 0,
+                                                                   LR_COPYRETURNORG)));
     newReversible();
     SetRectEmpty(&rectSel_src);
     rectSel_dest.left = rectSel_dest.top = 0;
@@ -411,7 +411,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                            imgYRes, SRCCOPY);
                 if (showGrid && (zoom >= 4000))
                 {
-                    HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, 0x00a0a0a0));
+                    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, 0x00a0a0a0));
                     int counter;
                     for(counter = 0; counter <= imgYRes; counter++)
                     {
@@ -522,7 +522,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 InvalidateRect(hImageArea, NULL, FALSE);
                 if (activeTool == TOOL_COLOR)
                 {
-                    int tempColor =
+                    COLORREF tempColor =
                         GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom);
                     if (tempColor != CLR_INVALID)
                         fgColor = tempColor;
@@ -542,7 +542,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 InvalidateRect(hImageArea, NULL, FALSE);
                 if (activeTool == TOOL_COLOR)
                 {
-                    int tempColor =
+                    COLORREF tempColor =
                         GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom);
                     if (tempColor != CLR_INVALID)
                         bgColor = tempColor;
@@ -788,7 +788,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     OpenClipboard(hMainWnd);
                     if (GetClipboardData(CF_BITMAP) != NULL)
                     {
-                        InsertSelectionFromHBITMAP(GetClipboardData(CF_BITMAP), hwnd);
+                        InsertSelectionFromHBITMAP((HBITMAP) GetClipboardData(CF_BITMAP), hwnd);
                     }
                     CloseClipboard();
                     break;
@@ -946,9 +946,9 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     if (changeSizeDlg())
                     {
-                        insertReversible(CopyImage(hBms[currInd], IMAGE_BITMAP,
-                                                   imgXRes * stretchSkew.percentage.x / 100,
-                                                   imgYRes * stretchSkew.percentage.y / 100, 0));
+                        insertReversible((HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP,
+                                                             imgXRes * stretchSkew.percentage.x / 100,
+                                                             imgYRes * stretchSkew.percentage.y / 100, 0));
                         updateCanvasAndScrollbars();
                     }
                     break;
@@ -958,7 +958,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     InvalidateRect(hToolSettings, NULL, TRUE);
                     break;
                 case IDM_IMAGECROP:
-                    insertReversible(CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
+                    insertReversible((HBITMAP) CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
                     updateCanvasAndScrollbars();
                     break;
 

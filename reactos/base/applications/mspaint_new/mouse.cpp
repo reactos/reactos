@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/mouse.c
+ * FILE:        base/applications/mspaint_new/mouse.cpp
  * PURPOSE:     Things which should not be in the mouse event handler itself
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -67,7 +67,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             ShowWindow(hSelection, SW_HIDE);
             if (ptStack != NULL)
                 HeapFree(GetProcessHeap(), 0, ptStack);
-            ptStack = HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * 1024);
+            ptStack = (POINT*) HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * 1024);
             ptSP = 0;
             ptStack[0].x = x;
             ptStack[0].y = y;
@@ -138,7 +138,7 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 newReversible();
             ptSP++;
             if (ptSP % 1024 == 0)
-                ptStack = HeapReAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, ptStack, sizeof(POINT) * (ptSP + 1024));
+                ptStack = (POINT*) HeapReAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, ptStack, sizeof(POINT) * (ptSP + 1024));
             ptStack[ptSP].x = max(0, min(x, imgXRes));
             ptStack[ptSP].y = max(0, min(y, imgYRes));
             resetToU1();
@@ -261,7 +261,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 DeleteObject(hSelMask);
                 hSelMask = CreateBitmap(RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), 1, 1, NULL);
                 DeleteObject(SelectObject(hSelDC, hSelMask));
-                ptStackCopy = HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * (ptSP + 1));
+                ptStackCopy = (POINT*) HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * (ptSP + 1));
                 for (i = 0; i <= ptSP; i++)
                 {
                     ptStackCopy[i].x = ptStack[i].x - rectSel_src.left;
