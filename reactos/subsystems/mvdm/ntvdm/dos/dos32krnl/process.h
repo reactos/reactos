@@ -97,8 +97,7 @@ DWORD DosLoadExecutable
     IN LPCSTR ExecutablePath,
     IN PDOS_EXEC_PARAM_BLOCK Parameters,
     IN LPCSTR CommandLine OPTIONAL,
-    IN LPCSTR Environment OPTIONAL,
-    IN DWORD ReturnAddress OPTIONAL
+    IN LPCSTR Environment OPTIONAL
 );
 
 DWORD DosStartProcess(
@@ -110,8 +109,7 @@ DWORD DosStartProcess(
 WORD DosCreateProcess
 (
     LPCSTR ProgramName,
-    PDOS_EXEC_PARAM_BLOCK Parameters,
-    DWORD ReturnAddress
+    PDOS_EXEC_PARAM_BLOCK Parameters
 );
 
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident);

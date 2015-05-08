@@ -54,6 +54,7 @@ static inline VOID DosSaveState(VOID)
     /* Allocate stack space for the registers */
     StackPointer -= sizeof(DOS_REGISTER_STATE);
     State = SEG_OFF_TO_PTR(getSS(), StackPointer);
+    setSP(StackPointer);
 
     /* Save */
     State->EAX = getEAX();
@@ -74,12 +75,10 @@ static inline VOID DosSaveState(VOID)
 static inline VOID DosRestoreState(VOID)
 {
     PDOS_REGISTER_STATE State;
-    WORD StackPointer = getSP();
 
-    /* SS:SP points to the stack on the last entry to INT 21h */
-    StackPointer -= (STACK_FLAGS + 1) * 2;      /* Interrupt parameters */
-    StackPointer -= sizeof(DOS_REGISTER_STATE); /* Pushed state structure */
-    State = SEG_OFF_TO_PTR(getSS(), StackPointer);
+    /* Pop the state structure from the stack */
+    State = SEG_OFF_TO_PTR(getSS(), getSP());
+    setSP(getSP() + sizeof(DOS_REGISTER_STATE));
 
     /* Restore */
     setEAX(State->EAX);
@@ -244,8 +243,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
                         IN LPCSTR ExecutablePath,
                         IN PDOS_EXEC_PARAM_BLOCK Parameters,
                         IN LPCSTR CommandLine OPTIONAL,
-                        IN LPCSTR Environment OPTIONAL,
-                        IN DWORD ReturnAddress OPTIONAL)
+                        IN LPCSTR Environment OPTIONAL)
 {
     DWORD Result = ERROR_SUCCESS;
     HANDLE FileHandle = INVALID_HANDLE_VALUE, FileMapping = NULL;
@@ -264,8 +262,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     DPRINT1("DosLoadExecutable(%d, %s, 0x%08X, 0x%08X)\n",
             LoadType,
             ExecutablePath,
-            Parameters,
-            ReturnAddress);
+            Parameters);
 
     /* Try to get the full path to the executable */
     if (GetFullPathNameA(ExecutablePath, sizeof(FullPath), FullPath, NULL))
@@ -454,8 +451,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             DosChangeMemoryOwner(Segment, Segment);
             DosChangeMemoryOwner(EnvBlock, Segment);
 
-            /* Set INT 22h to the return address */
-            ((PULONG)BaseAddress)[0x22] = ReturnAddress;
+            /* Set INT 22h to the current CS:IP */
+            ((PULONG)BaseAddress)[0x22] = MAKELONG(getIP(), getCS());
 
             /* Create the PSP */
             DosCreatePsp(Segment, (WORD)TotalSize);
@@ -497,7 +494,14 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         if (LoadType == DOS_LOAD_AND_EXECUTE)
         {
             /* Save the program state */
-            if (CurrentPsp != SYSTEM_PSP) DosSaveState();
+            if (CurrentPsp != SYSTEM_PSP)
+            {
+                /* Push the task state */
+                DosSaveState();
+
+                /* Update the last stack in the PSP */
+                SEGMENT_TO_PSP(CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
+            }
 
             /* Set the initial segment registers */
             setDS(Segment);
@@ -546,8 +550,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             DosChangeMemoryOwner(Segment, Segment);
             DosChangeMemoryOwner(EnvBlock, Segment);
 
-            /* Set INT 22h to the return address */
-            ((PULONG)BaseAddress)[0x22] = ReturnAddress;
+            /* Set INT 22h to the current CS:IP */
+            ((PULONG)BaseAddress)[0x22] = MAKELONG(getIP(), getCS());
 
             /* Create the PSP */
             DosCreatePsp(Segment, MaxAllocSize);
@@ -570,6 +574,16 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
 
         if (LoadType == DOS_LOAD_AND_EXECUTE)
         {
+            /* Save the program state */
+            if (CurrentPsp != SYSTEM_PSP)
+            {
+                /* Push the task state */
+                DosSaveState();
+
+                /* Update the last stack in the PSP */
+                SEGMENT_TO_PSP(CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
+            }
+
             /* Set the initial segment registers */
             setDS(Segment);
             setES(Segment);
@@ -621,7 +635,6 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
                       IN LPCSTR Environment OPTIONAL)
 {
     DWORD Result;
-    LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
     SIZE_T CmdLen = strlen(CommandLine);
     DPRINT1("Starting '%s' ('%.*s')...\n",
@@ -636,8 +649,7 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
                                ExecutablePath,
                                NULL,
                                CommandLine,
-                               Environment,
-                               IntVecTable[0x20]);
+                               Environment);
 
     if (Result != ERROR_SUCCESS) goto Quit;
 
@@ -665,8 +677,7 @@ Quit:
 
 #ifndef STANDALONE
 WORD DosCreateProcess(LPCSTR ProgramName,
-                      PDOS_EXEC_PARAM_BLOCK Parameters,
-                      DWORD ReturnAddress)
+                      PDOS_EXEC_PARAM_BLOCK Parameters)
 {
     DWORD Result;
     DWORD BinaryType;
@@ -784,8 +795,7 @@ Command:
                                        AppName,
                                        Parameters,
                                        CmdLine,
-                                       Env,
-                                       ReturnAddress);
+                                       Env);
             if (Result == ERROR_SUCCESS)
             {
                 /* Increment the re-entry count */
@@ -924,8 +934,14 @@ Done:
     setSS(HIWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
     setSP(LOWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
 
-    /* Restore the program state */
-    DosRestoreState();
+    DPRINT1("Terminate returning to %08X\n", PspBlock->TerminateAddress);
+
+    /* Are we returning to DOS code? */
+    if (HIWORD(PspBlock->TerminateAddress) == DOS_CODE_SEGMENT)
+    {
+        /* Pop the task state */
+        DosRestoreState();
+    }
 
     /* Return control to the parent process */
     CpuExecute(HIWORD(PspBlock->TerminateAddress),

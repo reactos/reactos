@@ -1342,7 +1342,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             BYTE OrgAL = getAL();
             LPSTR ProgramName = SEG_OFF_TO_PTR(getDS(), getDX());
             PDOS_EXEC_PARAM_BLOCK ParamBlock = SEG_OFF_TO_PTR(getES(), getBX());
-            DWORD ReturnAddress = MAKELONG(Stack[STACK_IP], Stack[STACK_CS]);
             WORD ErrorCode;
 
             if (OrgAL <= DOS_LOAD_OVERLAY)
@@ -1353,9 +1352,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 if (LoadType == DOS_LOAD_AND_EXECUTE)
                 {
                     /* Create a new process */
-                    ErrorCode = DosCreateProcess(ProgramName,
-                                                 ParamBlock,
-                                                 ReturnAddress);
+                    ErrorCode = DosCreateProcess(ProgramName, ParamBlock);
                 }
                 else
 #endif
@@ -1365,8 +1362,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                                                   ProgramName,
                                                   ParamBlock,
                                                   NULL,
-                                                  NULL,
-                                                  ReturnAddress);
+                                                  NULL);
                 }
             }
             else if (OrgAL == 0x05)
@@ -2003,7 +1999,7 @@ BOOLEAN DosKRNLInitialize(VOID)
 #endif
 
     /* Initialize the callback context */
-    InitializeContext(&DosContext, 0x0070, 0x0000);
+    InitializeContext(&DosContext, DOS_CODE_SEGMENT, 0x0000);
 
     /* Register the DOS 32-bit Interrupts */
     RegisterDosInt32(0x20, DosInt20h        );
