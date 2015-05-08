@@ -4433,6 +4433,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
     ULONG Offset = 0;
     USHORT BytesToPop = 0;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
+    ULONG StackPtr;
+    ULONG StackSel;
+    UCHAR OldCpl = Fast486GetCurrentPrivLevel(State);
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0xCA);
@@ -4460,20 +4463,18 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
         return;
     }
 
-    /* Load the new CS */
-    if (!Fast486LoadSegment(State, FAST486_REG_CS, Segment))
+    /* Pop the parameters */
+    if (State->SegmentRegs[FAST486_REG_SS].Size)
     {
-        /* Exception occurred */
-        return;
+        State->GeneralRegs[FAST486_REG_ESP].Long += BytesToPop;
+    }
+    else
+    {
+        State->GeneralRegs[FAST486_REG_ESP].LowWord += BytesToPop;
     }
 
     if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
-        UINT i;
-        UINT OldCpl = Fast486GetCurrentPrivLevel(State);
-        ULONG StackPtr;
-        ULONG StackSel;
-
         if (GET_SEGMENT_RPL(Segment) > OldCpl)
         {
             /* Pop ESP */
@@ -4490,6 +4491,22 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
                 return;
             }
         }
+    }
+
+    /* Load the new CS */
+    if (!Fast486LoadSegment(State, FAST486_REG_CS, Segment))
+    {
+        /* Exception occurred */
+        return;
+    }
+
+    /* Load new (E)IP */
+    if (Size) State->InstPtr.Long = Offset;
+    else State->InstPtr.LowWord = LOWORD(Offset);
+
+    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
+    {
+        UINT i;
 
         /* Update the CPL */
         State->Cpl = GET_SEGMENT_RPL(Segment);
@@ -4522,18 +4539,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
                 }
             }
         }
-    }
-
-    /* Load new (E)IP, and if necessary, pop the parameters */
-    if (Size)
-    {
-        State->InstPtr.Long = Offset;
-        State->GeneralRegs[FAST486_REG_ESP].Long += BytesToPop;
-    }
-    else
-    {
-        State->InstPtr.LowWord = LOWORD(Offset);
-        State->GeneralRegs[FAST486_REG_ESP].LowWord += BytesToPop;
     }
 }
 
