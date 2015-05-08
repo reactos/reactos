@@ -358,7 +358,7 @@ PDOS_DEVICE_NODE DosCreateDeviceEx(WORD Attributes, PCHAR DeviceName, WORD Priva
     }
 
     /* Create a driver header for this device */
-    Segment = DosAllocateMemory(sizeof(DOS_DRIVER) + 10 + PrivateDataSize, NULL);
+    Segment = DosAllocateMemory(sizeof(DOS_DRIVER) + DEVICE_CODE_SIZE + PrivateDataSize, NULL);
     if (Segment == 0) return NULL;
 
     /* Fill the header with data */
