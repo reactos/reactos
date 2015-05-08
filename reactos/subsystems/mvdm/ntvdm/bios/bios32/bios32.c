@@ -635,8 +635,9 @@ static VOID InitializeBiosInfo(VOID)
 /*
  * The BIOS POST (Power On-Self Test)
  */
-VOID
-Bios32Post(VOID)
+static VOID
+WINAPI
+Bios32Post(LPWORD Stack)
 {
 #if 0
     BOOLEAN Success;
@@ -644,6 +645,9 @@ Bios32Post(VOID)
     BYTE ShutdownStatus;
 
     DPRINT("Bios32Post\n");
+
+    /* Disable interrupts */
+    setIF(0);
 
     /* Initialize the stack */
     // That's what says IBM... (stack at 30:00FF going downwards)
@@ -686,7 +690,7 @@ Bios32Post(VOID)
         case 0x04:
         {
             DPRINT1("Fast restart to Bootstrap Loader...\n");
-            return;
+            goto Quit; // Reenable interrupts and exit.
         }
 
         /* Flush keyboard, issue an EOI... */
@@ -711,7 +715,7 @@ Bios32Post(VOID)
                     HIWORD(Bda->ResumeEntryPoint),
                     LOWORD(Bda->ResumeEntryPoint));
 
-            /* Position execution pointers to Bda->ResumeEntryPoint and return */
+            /* Position execution pointers and return with interrupts disabled */
             setCS(HIWORD(Bda->ResumeEntryPoint));
             setIP(LOWORD(Bda->ResumeEntryPoint));
             return;
@@ -764,8 +768,6 @@ Bios32Post(VOID)
     /* Initialize the Keyboard, Video and Mouse BIOS */
     if (!KbdBios32Initialize() || !VidBios32Initialize() || !MouseBios32Initialize())
     {
-        // return FALSE;
-
         /* Stop the VDM */
         EmulatorTerminate();
         return;
@@ -796,18 +798,8 @@ Bios32Post(VOID)
      * the rest of the POST code is executed, typically calling INT 19h
      * to boot up the OS.
      */
-}
 
-static VOID WINAPI Bios32ResetBop(LPWORD Stack)
-{
-    DPRINT("Bios32ResetBop\n");
-
-    /* Disable interrupts */
-    setIF(0);
-
-    /* Do the POST */
-    Bios32Post();
-
+Quit:
     /* Enable interrupts */
     setIF(1);
 }
@@ -839,7 +831,7 @@ BOOLEAN Bios32Initialize(VOID)
     *(PBYTE)(SEG_OFF_TO_PTR(0xF000, 0xFFFE)) = BIOS_MODEL;
 
     /* Redefine our POST function */
-    RegisterBop(BOP_RESET, Bios32ResetBop);
+    RegisterBop(BOP_RESET, Bios32Post);
 
     /* We are done */
     return TRUE;
