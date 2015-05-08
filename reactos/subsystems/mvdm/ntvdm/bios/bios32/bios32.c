@@ -31,6 +31,7 @@
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
 #include "hardware/pit.h"
+#include "hardware/ps2.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -131,7 +132,7 @@ static BYTE Bootstrap[] =
 static BYTE PostCode[] =
 {
     LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_RESET,  // Call BIOS POST
-    0xCD, 0x19,                                             // INT 0x19, the bootstrap loader interrupt
+    0xCD, BIOS_BOOTSTRAP_LOADER,                            // INT 0x19
 //  LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_UNSIMULATE
 };
 
@@ -233,9 +234,9 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
              * Return the (usable) extended memory (after 1 MB)
              * size in kB from CMOS.
              */
-            IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_ACTUAL_EXT_MEMORY_LOW);
+            IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_ACTUAL_EXT_MEMORY_LOW  | CMOS_DISABLE_NMI);
             Low  = IOReadB(CMOS_DATA_PORT);
-            IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_ACTUAL_EXT_MEMORY_HIGH);
+            IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_ACTUAL_EXT_MEMORY_HIGH | CMOS_DISABLE_NMI);
             High = IOReadB(CMOS_DATA_PORT);
             setAX(MAKEWORD(Low, High));
 
@@ -607,9 +608,9 @@ static VOID InitializeBiosData(VOID)
      * Retrieve the conventional memory size
      * in kB from CMOS, typically 640 kB.
      */
-    IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_BASE_MEMORY_LOW);
+    IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_BASE_MEMORY_LOW  | CMOS_DISABLE_NMI);
     Low  = IOReadB(CMOS_DATA_PORT);
-    IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_BASE_MEMORY_HIGH);
+    IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_BASE_MEMORY_HIGH | CMOS_DISABLE_NMI);
     High = IOReadB(CMOS_DATA_PORT);
     Bda->MemorySize = MAKEWORD(Low, High);
 }
@@ -640,6 +641,7 @@ Bios32Post(VOID)
 #if 0
     BOOLEAN Success;
 #endif
+    BYTE ShutdownStatus;
 
     DPRINT("Bios32Post\n");
 
@@ -654,12 +656,80 @@ Bios32Post(VOID)
     setDS(BDA_SEGMENT);
 
     /*
+     * Perform early CMOS shutdown status checks
+     */
+
+    /* Read the CMOS shutdown status byte and reset it */
+    IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_SHUTDOWN_STATUS | CMOS_DISABLE_NMI);
+    ShutdownStatus = IOReadB(CMOS_DATA_PORT);
+    IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_SHUTDOWN_STATUS | CMOS_DISABLE_NMI);
+    IOWriteB(CMOS_DATA_PORT, 0x00);
+
+    DPRINT1("Bda->SoftReset = 0x%04X ; ShutdownStatus = 0x%02X\n",
+            Bda->SoftReset, ShutdownStatus);
+
+    switch (ShutdownStatus)
+    {
+        /* Shutdown after Memory Tests (unsupported) */
+        case 0x01: case 0x02: case 0x03:
+        /* Shutdown after Protected Mode Tests (unsupported) */
+        case 0x06: case 0x07: case 0x08:
+        /* Shutdown after Block Move Test (unsupported) */
+        case 0x09:
+        {
+            DisplayMessage(L"Unsupported CMOS Shutdown Status value 0x%02X. The VDM is stopping...", ShutdownStatus);
+            EmulatorTerminate();
+            return;
+        }
+
+        /* Shutdown to Boot Loader */
+        case 0x04:
+        {
+            DPRINT1("Fast restart to Bootstrap Loader...\n");
+            return;
+        }
+
+        /* Flush keyboard, issue an EOI... */
+        case 0x05:
+        {
+            IOReadB(PS2_DATA_PORT);
+
+            /* Send EOI */
+            IOWriteB(PIC_SLAVE_CMD , PIC_OCW2_EOI);
+            IOWriteB(PIC_MASTER_CMD, PIC_OCW2_EOI);
+
+            // Fall back
+        }
+
+        /*
+         * ... and far JMP to user-specified location at 0040:0067
+         * (Bda->ResumeEntryPoint) with interrupts and NMI disabled.
+         */
+        case 0x0A:
+        {
+            DPRINT1("Bda->ResumeEntryPoint = %04X:%04X\n",
+                    HIWORD(Bda->ResumeEntryPoint),
+                    LOWORD(Bda->ResumeEntryPoint));
+
+            /* Position execution pointers to Bda->ResumeEntryPoint and return */
+            setCS(HIWORD(Bda->ResumeEntryPoint));
+            setIP(LOWORD(Bda->ResumeEntryPoint));
+            return;
+        }
+
+        /* Soft reset or unexpected shutdown... */
+        case 0x00:
+        /* ... or other possible shutdown codes: just continue the POST */
+        default:
+            break;
+    }
+
+    /*
+     * FIXME: UNIMPLEMENTED!
      * Check the word at 0040h:0072h (Bda->SoftReset) and do one of the
      * following actions:
      * - if the word is 0000h, perform a cold reboot (aka. Reset). Everything gets initialized.
      * - if the word is 1234h, perform a warm reboot (aka. Ctrl-Alt-Del). Some stuff is skipped.
-     * In case we do a warm reboot, we need to check for the CMOS shutdown flag
-     * and take a suitable action.
      */
 
     // FIXME: This is a debug temporary check:

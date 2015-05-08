@@ -74,7 +74,13 @@ typedef struct
     WORD CrtBasePort;                           // 0x63
     BYTE CrtModeControl;                        // 0x65
     BYTE CrtColorPaletteMask;                   // 0x66
-    BYTE CassetteData[5];                       // 0x67
+
+    union                                       // 0x67
+    {
+        BYTE  CassetteData[5];  // Cassette tape control (unused)
+        DWORD ResumeEntryPoint; // CS:IP for 286 return from Protected Mode
+    };
+
     DWORD TickCounter;                          // 0x6c
     BYTE MidnightPassed;                        // 0x70
     BYTE BreakFlag;                             // 0x71
