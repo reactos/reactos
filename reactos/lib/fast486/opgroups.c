@@ -1629,6 +1629,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
                 return;
             }
 
+            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+            {
+                if (!Fast486ProcessGate(State, Selector, Value, FALSE))
+                {
+                    /* Gate processed or exception occurred */
+                    return;
+                }
+            }
+
             /* Push the current value of CS */
             if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector))
             {
@@ -1686,6 +1695,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
             {
                 /* Exception occurred */
                 return;
+            }
+
+            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+            {
+                if (!Fast486ProcessGate(State, Selector, Value, FALSE))
+                {
+                    /* Gate processed or exception occurred */
+                    return;
+                }
             }
 
             /* Load the new code segment */
