@@ -934,8 +934,6 @@ Done:
     setSS(HIWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
     setSP(LOWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
 
-    DPRINT1("Terminate returning to %08X\n", PspBlock->TerminateAddress);
-
     /* Are we returning to DOS code? */
     if (HIWORD(PspBlock->TerminateAddress) == DOS_CODE_SEGMENT)
     {
