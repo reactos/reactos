@@ -43,6 +43,7 @@
 #include <ntstatus.h>
 #include <kernelspecs.h>
 #include <ntiologc.h>
+#include <suppress.h>
 
 #ifndef GUID_DEFINED
 #include <guiddef.h>
