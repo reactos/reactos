@@ -309,7 +309,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
                 setCX(Above1M);
                 setDX(Above16M);
             }
-            else if (getAL() == 0x20 && getEDX() == 'PAMS')
+            else if (getAL() == 0x20 && getEDX() == 'SMAP')
             {
                 ULONG Offset = getEBX();
                 ULONG Length;
@@ -340,7 +340,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
                     BytesWritten += sizeof(BIOS_MEMORY_MAP);
                 }
 
-                setEAX('PAMS');
+                setEAX('SMAP');
                 setEBX(Offset);
                 setECX(BytesWritten);
             }
