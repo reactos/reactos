@@ -59,11 +59,12 @@ add_compile_flags("/wd4244 /wd4290 /wd4800")
 # - C4129: unrecognized escape sequence
 # - TODO: C4133: incompatible types
 # - C4163: 'identifier': not available as an intrinsic function
+# - C4189: local variable initialized but not referenced
 # - C4229: modifiers on data are ignored
 # - C4700: uninitialized variable usage
 # - C4603: macro is not defined or definition is different after precompiled header use
 # - C4716: function must return a value
-add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603 /we4716")
+add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4189 /we4229 /we4700 /we4603 /we4716")
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
