@@ -283,7 +283,23 @@ MemRemoveFastMemoryHook(PVOID Address, ULONG Size)
     return TRUE;
 }
 
+BOOLEAN
+MemQueryMemoryZone(ULONG StartAddress, PULONG Length, PBOOLEAN Hooked)
+{
+    ULONG Page = StartAddress >> 12;
+    if (Page >= TOTAL_PAGES) return FALSE;
 
+    *Length = 0;
+    *Hooked = PageTable[Page] != NULL;
+
+    while (Page < TOTAL_PAGES && (PageTable[Page] != NULL) == *Hooked)
+    {
+        *Length += PAGE_SIZE;
+        Page++;
+    }
+
+    return TRUE;
+}
 
 PBYTE
 WINAPI

@@ -15,6 +15,21 @@
 
 /* DEFINES ********************************************************************/
 
+enum
+{
+    BIOS_MEMORY_AVAILABLE        = 1,
+    BIOS_MEMORY_RESERVED         = 2,
+    BIOS_MEMORY_ACPI_RECLAIMABLE = 3,
+    BIOS_MEMORY_ACPI_NVS         = 4
+};
+
+typedef struct
+{
+    ULONGLONG BaseAddress;
+    ULONGLONG Length;
+    ULONG Type;
+} BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
+
 // #define BIOS_EQUIPMENT_INTERRUPT    0x11
 // #define BIOS_MEMORY_SIZE            0x12
 // #define BIOS_MISC_INTERRUPT         0x15

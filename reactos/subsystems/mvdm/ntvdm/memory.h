@@ -67,6 +67,14 @@ MemRemoveFastMemoryHook
     ULONG Size
 );
 
+BOOLEAN
+MemQueryMemoryZone
+(
+    ULONG StartAddress,
+    PULONG Length,
+    PBOOLEAN Hooked
+);
+
 #endif // _MEMORY_H_
 
 /* EOF */

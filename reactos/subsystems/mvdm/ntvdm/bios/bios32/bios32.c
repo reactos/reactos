@@ -27,6 +27,7 @@
 #include "vidbios32.h"
 #include "moubios32.h"
 
+#include "memory.h"
 #include "io.h"
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
@@ -288,6 +289,68 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
         case 0xC2:
         {
             BiosMousePs2Interface(Stack);
+            break;
+        }
+
+        /* Get System Memory Map */
+        case 0xE8:
+        {
+            if (getAL() == 0x01)
+            {
+                /* The amount of memory between 1M and 16M, in kilobytes */
+                ULONG Above1M = (min(MAX_ADDRESS, 0x01000000) - 0x00100000) >> 10;
+
+                /* The amount of memory above 16M, in 64K blocks */
+                ULONG Above16M = (MAX_ADDRESS > 0x01000000) ? (MAX_ADDRESS - 0x01000000) >> 16: 0;
+
+                setCF(0);
+                setAX(Above1M);
+                setBX(Above16M);
+                setCX(Above1M);
+                setDX(Above16M);
+            }
+            else if (getAL() == 0x20 && getEDX() == 'PAMS')
+            {
+                ULONG Offset = getEBX();
+                ULONG Length;
+                ULONG BytesWritten = 0;
+                BOOLEAN Hooked;
+                PBIOS_MEMORY_MAP Map = (PBIOS_MEMORY_MAP)SEG_OFF_TO_PTR(getES(), getDI());
+
+                /* Assume the buffer won't be large enough */
+                setCF(0);
+
+                while (BytesWritten < getECX() && (ULONG_PTR)Map < (MAX_ADDRESS - sizeof(BIOS_MEMORY_MAP)))
+                {
+                    /* Let's ask our memory controller */
+                    if (!MemQueryMemoryZone(Offset, &Length, &Hooked))
+                    {
+                        /* No more memory blocks */
+                        setCF(1);
+                        break;
+                    }
+
+                    Map->BaseAddress = (ULONGLONG)Offset;
+                    Map->Length = (ULONGLONG)Length;
+                    Map->Type = Hooked ? BIOS_MEMORY_RESERVED : BIOS_MEMORY_AVAILABLE;
+
+                    /* Go to the next record */
+                    Map++;
+                    Offset += Length;
+                    BytesWritten += sizeof(BIOS_MEMORY_MAP);
+                }
+
+                setEAX('PAMS');
+                setEBX(Offset);
+                setECX(BytesWritten);
+            }
+            else
+            {
+                DPRINT1("BIOS Function INT 15h, AH = 0xE8 - unexpected AL = %02X, EDX = %08X\n",
+                        getAL(),
+                        getEDX());
+            }
+
             break;
         }
 
