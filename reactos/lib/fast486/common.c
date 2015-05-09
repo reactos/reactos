@@ -47,7 +47,7 @@ Fast486ReadMemory(PFAST486_STATE State,
     /* Get the cached descriptor */
     CachedDescriptor = &State->SegmentRegs[SegmentReg];
 
-    if (InstFetch || !CachedDescriptor->DirConf)
+    if (InstFetch || CachedDescriptor->Executable || !CachedDescriptor->DirConf)
     {
         if ((Offset + Size - 1) > CachedDescriptor->Limit)
         {
@@ -169,7 +169,7 @@ Fast486WriteMemory(PFAST486_STATE State,
     /* Get the cached descriptor */
     CachedDescriptor = &State->SegmentRegs[SegmentReg];
 
-    if (!CachedDescriptor->DirConf)
+    if (CachedDescriptor->Executable || !CachedDescriptor->DirConf)
     {
         if ((Offset + Size - 1) > CachedDescriptor->Limit)
         {
