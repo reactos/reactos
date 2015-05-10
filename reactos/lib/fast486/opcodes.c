@@ -3727,7 +3727,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushByteImm)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteModrm)
 {
-    UCHAR FirstValue, SecondValue, Result;
+    UCHAR Result;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
@@ -3743,24 +3743,28 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteModrm)
         return;
     }
 
-    if (!Fast486ReadModrmByteOperands(State,
-                                      &ModRegRm,
-                                      &FirstValue,
-                                      &SecondValue))
+    if (Opcode & FAST486_OPCODE_WRITE_REG)
     {
-        /* Exception occurred */
-        return;
+        if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, &Result))
+        {
+            /* Exception occurred */
+            return;
+        }
     }
-
-    if (Opcode & FAST486_OPCODE_WRITE_REG) Result = SecondValue;
-    else Result = FirstValue;
+    else
+    {
+        if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Result, NULL))
+        {
+            /* Exception occurred */
+            return;
+        }
+    }
 
     /* Write back the result */
     Fast486WriteModrmByteOperands(State,
                                   &ModRegRm,
                                   Opcode & FAST486_OPCODE_WRITE_REG,
                                   Result);
-
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
@@ -3786,19 +3790,26 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
     /* Check the operand size */
     if (OperandSize)
     {
-        ULONG FirstValue, SecondValue, Result;
+        ULONG Result;
 
-        if (!Fast486ReadModrmDwordOperands(State,
-                                          &ModRegRm,
-                                          &FirstValue,
-                                          &SecondValue))
+
+
+        if (Opcode & FAST486_OPCODE_WRITE_REG)
         {
-            /* Exception occurred */
-            return;
+            if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Result))
+            {
+                /* Exception occurred */
+                return;
+            }
         }
-
-        if (Opcode & FAST486_OPCODE_WRITE_REG) Result = SecondValue;
-        else Result = FirstValue;
+        else
+        {
+            if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Result, NULL))
+            {
+                /* Exception occurred */
+                return;
+            }
+        }
 
         /* Write back the result */
         Fast486WriteModrmDwordOperands(State,
@@ -3808,19 +3819,24 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
     }
     else
     {
-        USHORT FirstValue, SecondValue, Result;
+        USHORT Result;
 
-        if (!Fast486ReadModrmWordOperands(State,
-                                          &ModRegRm,
-                                          &FirstValue,
-                                          &SecondValue))
+        if (Opcode & FAST486_OPCODE_WRITE_REG)
         {
-            /* Exception occurred */
-            return;
+            if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Result))
+            {
+                /* Exception occurred */
+                return;
+            }
         }
-
-        if (Opcode & FAST486_OPCODE_WRITE_REG) Result = SecondValue;
-        else Result = FirstValue;
+        else
+        {
+            if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Result, NULL))
+            {
+                /* Exception occurred */
+                return;
+            }
+        }
 
         /* Write back the result */
         Fast486WriteModrmWordOperands(State,
@@ -4696,10 +4712,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             /* Set the new IP */
             State->InstPtr.Long = LOWORD(InstPtr);
 
+            /* Set the new SP */
+            State->GeneralRegs[FAST486_REG_ESP].Long = StackPtr;
+
             /* Set the new flags */
             if (Size) State->Flags.Long = NewFlags.Long & REAL_MODE_FLAGS_MASK;
             else State->Flags.LowWord = NewFlags.LowWord & REAL_MODE_FLAGS_MASK;
             State->Flags.AlwaysSet = State->Flags.Vm = TRUE;
+
+            /* Switch to CPL 3 */
+            State->Cpl = 3;
 
             /* Load the new segments */
             if (!Fast486LoadSegment(State, FAST486_REG_CS, CodeSel)) return;

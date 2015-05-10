@@ -67,7 +67,7 @@ Fast486ReadMemory(PFAST486_STATE State,
     }
 
     /* Check for protected mode */
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
         /* Privilege checks */
 
@@ -189,7 +189,7 @@ Fast486WriteMemory(PFAST486_STATE State,
     }
 
     /* Check for protected mode */
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
         /* Privilege checks */
 
@@ -304,6 +304,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
     {
         USHORT OldSs = State->SegmentRegs[FAST486_REG_SS].Selector;
         ULONG OldEsp = State->GeneralRegs[FAST486_REG_ESP].Long;
+        BOOLEAN OldVm = State->Flags.Vm;
 
         if (IdtEntry->Type == FAST486_TASK_GATE_SIGNATURE)
         {
@@ -398,6 +399,12 @@ Fast486InterruptInternal(PFAST486_STATE State,
             }
 
             State->GeneralRegs[FAST486_REG_ESP].Long = NewEsp;
+
+            if (State->Flags.Vm)
+            {
+                /* Clear the VM flag */
+                State->Flags.Vm = FALSE;
+            }
         }
 
         /* Load new CS */
@@ -418,27 +425,44 @@ Fast486InterruptInternal(PFAST486_STATE State,
             State->InstPtr.LowWord = IdtEntry->Offset;
         }
 
-        /* Check if the interrupt handler is more privileged or we're in VM86 mode (again) */
-        if ((OldCpl > GET_SEGMENT_RPL(IdtEntry->Selector)) || State->Flags.Vm)
+        if (OldVm)
         {
-            if (State->Flags.Vm)
+            /* Push GS, FS, DS and ES */
+            if (!Fast486StackPushInternal(State,
+                                          GateSize,
+                                          State->SegmentRegs[FAST486_REG_GS].Selector))
             {
-                /* Clear the VM flag */
-                State->Flags.Vm = FALSE;
-
-                /* Push GS, FS, DS and ES */
-                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_GS].Selector)) return FALSE;
-                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_FS].Selector)) return FALSE;
-                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_DS].Selector)) return FALSE;
-                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_ES].Selector)) return FALSE;
-
-                /* Now load them with NULL selectors, since they are useless in protected mode */
-                if (!Fast486LoadSegment(State, FAST486_REG_GS, 0)) return FALSE;
-                if (!Fast486LoadSegment(State, FAST486_REG_FS, 0)) return FALSE;
-                if (!Fast486LoadSegment(State, FAST486_REG_DS, 0)) return FALSE;
-                if (!Fast486LoadSegment(State, FAST486_REG_ES, 0)) return FALSE;
+                return FALSE;
+            }
+            if (!Fast486StackPushInternal(State,
+                                          GateSize,
+                                          State->SegmentRegs[FAST486_REG_FS].Selector))
+            {
+                return FALSE;
+            }
+            if (!Fast486StackPushInternal(State,
+                                          GateSize,
+                                          State->SegmentRegs[FAST486_REG_DS].Selector))
+            {
+                return FALSE;
+            }
+            if (!Fast486StackPushInternal(State,
+                                          GateSize,
+                                          State->SegmentRegs[FAST486_REG_ES].Selector))
+            {
+                return FALSE;
             }
 
+            /* Now load them with NULL selectors, since they are useless in protected mode */
+            if (!Fast486LoadSegment(State, FAST486_REG_GS, 0)) return FALSE;
+            if (!Fast486LoadSegment(State, FAST486_REG_FS, 0)) return FALSE;
+            if (!Fast486LoadSegment(State, FAST486_REG_DS, 0)) return FALSE;
+            if (!Fast486LoadSegment(State, FAST486_REG_ES, 0)) return FALSE;
+        }
+
+        /* Check if the interrupt handler is more privileged or we're in VM86 mode (again) */
+        if ((OldCpl > GET_SEGMENT_RPL(IdtEntry->Selector)) || OldVm)
+        {
             /* Push SS selector */
             if (!Fast486StackPushInternal(State, GateSize, OldSs)) return FALSE;
 

@@ -554,8 +554,24 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
     CachedDescriptor = &State->SegmentRegs[Segment];
 
     /* Check for protected mode */
-    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
+        /* Check for VM86 mode */
+        if (State->Flags.Vm)
+        {
+            /* Update the cached descriptor with VM86 values */
+            CachedDescriptor->Selector = Selector;
+            CachedDescriptor->Base = Selector << 4;
+            CachedDescriptor->Limit = 0xFFFF;
+            CachedDescriptor->ReadWrite = TRUE;
+            CachedDescriptor->DirConf = FALSE;
+            CachedDescriptor->SystemType = TRUE;
+            CachedDescriptor->Dpl = CachedDescriptor->Rpl = 3;
+            CachedDescriptor->Present = TRUE;
+            CachedDescriptor->Size = FALSE;
+            return TRUE;
+        }
+
         if (!Fast486ReadDescriptorEntry(State, Selector, &Valid, &GdtEntry))
         {
             /* Exception occurred */
