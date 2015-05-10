@@ -10,72 +10,73 @@
 
     TEXTAREA
 
-    NESTED_ENTRY DbgBreakPoint
-    PROLOG_END DbgBreakPoint
-
-    //
-    // Do a breakpoint and return
-    //
-    bkpt BREAKPOINT_BREAK
+    LEAF_ENTRY DbgBreakPoint
+    __debugbreak
     bx lr
-    ENTRY_END DbgBreakPoint
+    LEAF_END DbgBreakPoint
 
-    NESTED_ENTRY DebugService
-    PROLOG_END DebugService
-
-    //
-    // Do a breakpoint and return
-    //
-    bkpt BREAKPOINT_PRINT // Could be prompt too, we check this later
+    LEAF_ENTRY DbgUserBreakPoint
+    __debugbreak
     bx lr
-    ENTRY_END DebugService
+    LEAF_END DbgUserBreakPoint
 
-    NESTED_ENTRY DebugService2
-    PROLOG_END DebugService2
+    LEAF_ENTRY DbgBreakPointWithStatus
+    __debugbreak
+    bx lr
+    LEAF_END
 
-    //
-    // FIXME-TODO: Do a breakpoint and return
-    //
+    LEAF_ENTRY RtlpBreakWithStatusInstruction
+    __debugbreak
+    bx lr
+    LEAF_END
+
+    LEAF_ENTRY DebugService
+    __debugservice
+    //bkpt BREAKPOINT_PRINT // Could be prompt too, we check this later
+    bx lr
+    LEAF_END DebugService
+
+    LEAF_ENTRY DebugService2
     //bkpt BREAKPOINT_LOAD_SYMBOLS // Could be unload too, we check this later
     bx lr
-    ENTRY_END DebugService2
+    LEAF_END DebugService2
 
-    NESTED_ENTRY RtlCaptureContext
-    PROLOG_END RtlCaptureContext
+    LEAF_ENTRY RtlCaptureContext
 
-    //
     // FIXME-PERF: Change to stmdb later
-    //
-    str r0, [a1, #CsR0]
-    str r1, [a1, #CsR1]
-    str r2, [a1, #CsR2]
-    str r3, [a1, #CsR3]
-    str r4, [a1, #CsR4]
-    str r5, [a1, #CsR5]
-    str r6, [a1, #CsR6]
-    str r7, [a1, #CsR7]
-    str r8, [a1, #CsR8]
-    str r9, [a1, #CsR9]
-    str r10, [a1, #CsR10]
-    str r11, [a1, #CsR11]
-    str r12, [a1, #CsR12]
-    str sp, [a1, #CsSp]
-    str lr, [a1, #CsLr]
-//    str pc, [a1, #CsPc] // FIXME: error A2193: this instruction generates unpredictable behavior
+    str r0, [a1, #CxR0]
+    str r1, [a1, #CxR1]
+    str r2, [a1, #CxR2]
+    str r3, [a1, #CxR3]
+    str r4, [a1, #CxR4]
+    str r5, [a1, #CxR5]
+    str r6, [a1, #CxR6]
+    str r7, [a1, #CxR7]
+    str r8, [a1, #CxR8]
+    str r9, [a1, #CxR9]
+    str r10, [a1, #CxR10]
+    str r11, [a1, #CxR11]
+    str r12, [a1, #CxR12]
+
+    str sp, [a1, #CxSp]
+    str lr, [a1, #CxLr]
+
+    /* Need to do this indirectly, since "str pc, [a1, #CxPc]" generates
+       unpredictable behavior (error A2193) */
+    mov ip, pc
+    str ip, [a1, #CxPc]
     mrs ip, spsr
-    str ip, [a1, #CsCpsr]
+    str ip, [a1, #CxCpsr]
 
-    //
-    // Set flags
-    //
-    mov ip, #CONTEXT_FULL
-    str ip, [a1, #CsContextFlags]
+    // FIXME: Fpscr and remaining stuff
 
-    //
-    // Return
-    //
+    /* Set flags */
+    mov32 r0, #CONTEXT_FULL
+    str ip, [a1, #CxContextFlags]
+
+    /* Return */
     bx lr
-    ENTRY_END RtlCaptureContext
+    LEAF_END RtlCaptureContext
 
     END
 /* EOF */
