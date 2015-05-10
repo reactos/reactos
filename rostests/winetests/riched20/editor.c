@@ -5423,6 +5423,7 @@ static void test_unicode_conversions(void)
 #define set_textA(hwnd, wm_set_text, txt) \
     do { \
         SETTEXTEX stex = { ST_DEFAULT, CP_ACP }; \
+        UNREFERENCED_LOCAL_VARIABLE(stex); \
         WPARAM wparam = (wm_set_text == WM_SETTEXT) ? 0 : (WPARAM)&stex; \
         assert(wm_set_text == WM_SETTEXT || wm_set_text == EM_SETTEXTEX); \
         ret = SendMessageA(hwnd, wm_set_text, wparam, (LPARAM)txt); \
@@ -5431,6 +5432,7 @@ static void test_unicode_conversions(void)
 #define expect_textA(hwnd, wm_get_text, txt) \
     do { \
         GETTEXTEX gtex = { 64, GT_DEFAULT, CP_ACP, NULL, NULL }; \
+        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         WPARAM wparam = (wm_get_text == WM_GETTEXT) ? 64 : (WPARAM)&gtex; \
         assert(wm_get_text == WM_GETTEXT || wm_get_text == EM_GETTEXTEX); \
         memset(bufA, 0xAA, sizeof(bufA)); \
@@ -5443,6 +5445,7 @@ static void test_unicode_conversions(void)
 #define set_textW(hwnd, wm_set_text, txt) \
     do { \
         SETTEXTEX stex = { ST_DEFAULT, 1200 }; \
+        UNREFERENCED_LOCAL_VARIABLE(stex); \
         WPARAM wparam = (wm_set_text == WM_SETTEXT) ? 0 : (WPARAM)&stex; \
         assert(wm_set_text == WM_SETTEXT || wm_set_text == EM_SETTEXTEX); \
         ret = SendMessageW(hwnd, wm_set_text, wparam, (LPARAM)txt); \
@@ -5451,6 +5454,7 @@ static void test_unicode_conversions(void)
 #define expect_textW(hwnd, wm_get_text, txt) \
     do { \
         GETTEXTEX gtex = { 64, GT_DEFAULT, 1200, NULL, NULL }; \
+        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         WPARAM wparam = (wm_get_text == WM_GETTEXT) ? 64 : (WPARAM)&gtex; \
         assert(wm_get_text == WM_GETTEXT || wm_get_text == EM_GETTEXTEX); \
         memset(bufW, 0xAA, sizeof(bufW)); \
@@ -5462,6 +5466,7 @@ static void test_unicode_conversions(void)
 #define expect_empty(hwnd, wm_get_text) \
     do { \
         GETTEXTEX gtex = { 64, GT_DEFAULT, CP_ACP, NULL, NULL }; \
+        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         WPARAM wparam = (wm_get_text == WM_GETTEXT) ? 64 : (WPARAM)&gtex; \
         assert(wm_get_text == WM_GETTEXT || wm_get_text == EM_GETTEXTEX); \
         memset(bufA, 0xAA, sizeof(bufA)); \
