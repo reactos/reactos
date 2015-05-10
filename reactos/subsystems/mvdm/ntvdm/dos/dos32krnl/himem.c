@@ -513,6 +513,35 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
             break;
         }
 
+        /* Get Handle Information */
+        case 0x0E:
+        {
+            PXMS_HANDLE Entry = GetHandleRecord(getDX());
+
+            if (Entry)
+            {
+                INT i;
+                UCHAR Handles = 0;
+
+                for (i = 0; i < XMS_MAX_HANDLES; i++)
+                {
+                    if (HandleTable[i].Handle == 0) Handles++;
+                }
+
+                setAX(1);
+                setBH(Entry->LockCount);
+                setBL(Handles);
+                setDX(Entry->Size);
+            }
+            else
+            {
+                setAX(0);
+                setBL(XMS_STATUS_INVALID_HANDLE);
+            }
+
+            break;
+        }
+
         default:
         {
             DPRINT1("XMS command AH = 0x%02X NOT IMPLEMENTED\n", getAH());

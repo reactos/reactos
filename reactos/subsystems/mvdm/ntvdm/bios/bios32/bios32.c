@@ -318,7 +318,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
                 PBIOS_MEMORY_MAP Map = (PBIOS_MEMORY_MAP)SEG_OFF_TO_PTR(getES(), getDI());
 
                 /* Assume the buffer won't be large enough */
-                setCF(0);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
                 while (BytesWritten < getECX() && (ULONG_PTR)Map < (MAX_ADDRESS - sizeof(BIOS_MEMORY_MAP)))
                 {
@@ -326,7 +326,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
                     if (!MemQueryMemoryZone(Offset, &Length, &Hooked))
                     {
                         /* No more memory blocks */
-                        setCF(1);
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                         break;
                     }
 
