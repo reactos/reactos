@@ -85,13 +85,17 @@ NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
-    ASSERT(((IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
+    ASSERT((!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
+           ((IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
            (!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && (IrpContext->Flags & IRPCONTEXT_QUEUE)));
 
-    Irp->IoStatus.Status = Status;
+
 
     if (IrpContext->Flags & IRPCONTEXT_COMPLETE)
+    {
+        Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IrpContext->PriorityBoost);
+    }
 
     if (IrpContext)
         ExFreePoolWithTag(IrpContext, 'PRIN');
