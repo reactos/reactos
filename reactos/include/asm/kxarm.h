@@ -1,72 +1,162 @@
 
+#define ENABLE_FRAME_POINTER 1
+
+#undef TRUE
+//#define TRUE 1
+#undef FALSE
+//#define FALSE 0
+
+//#include "kxarmunw.h"
 
 #ifdef _MSC_VER
 
     /* Globals */
-    GBLS    AreaName
-    GBLS    FuncName
-    GBLS    PrologName
-    GBLS    FuncEndName
-AreaName    SETS    "|.text|"
+    GBLS __FuncStartLabel
+    GBLS __FuncEpilog1StartLabel
+    GBLS __FuncEpilog2StartLabel
+    GBLS __FuncEpilog3StartLabel
+    GBLS __FuncEpilog4StartLabel
+    GBLS __FuncXDataLabel
+    GBLS __FuncXDataPrologLabel
+    GBLS __FuncXDataEpilog1Label
+    GBLS __FuncXDataEpilog2Label
+    GBLS __FuncXDataEpilog3Label
+    GBLS __FuncXDataEpilog4Label
+    GBLS __FuncXDataEndLabel
+    GBLS __FuncEndLabel
+    GBLS __FuncArea
+    GBLS __FuncExceptionHandler
+
+    MACRO
+    __DeriveFunctionLabels $FuncName
+__FuncStartLabel        SETS "|$FuncName|"
+__FuncEndLabel          SETS "|$FuncName._end|"
+__FuncEpilog1StartLabel SETS "|$FuncName._epilog1_start|"
+__FuncEpilog2StartLabel SETS "|$FuncName._epilog2_start|"
+__FuncEpilog3StartLabel SETS "|$FuncName._epilog3_start|"
+__FuncEpilog4StartLabel SETS "|$FuncName._epilog4_start|"
+__FuncXDataLabel        SETS "|$FuncName._xdata|"
+__FuncXDataPrologLabel  SETS "|$FuncName._xdata_prolog|"
+__FuncXDataEpilog1Label SETS "|$FuncName._xdata_epilog1|"
+__FuncXDataEpilog2Label SETS "|$FuncName._xdata_epilog2|"
+__FuncXDataEpilog3Label SETS "|$FuncName._xdata_epilog3|"
+__FuncXDataEpilog4Label SETS "|$FuncName._xdata_epilog4|"
+__FuncXDataEndLabel     SETS "|$FuncName._xdata_end|"
+    MEND
+
+    MACRO
+    __ExportName $FuncName
+        LCLS Name
+Name    SETS "|$FuncName|"
+        ALIGN 4
+        EXPORT $Name
+$Name
+    MEND
+
+    MACRO
+    __ExportProc $FuncName
+        LCLS Name
+Name    SETS "|$FuncName|"
+        ALIGN 4
+        EXPORT $Name
+$Name   PROC
+    MEND
 
     MACRO
     TEXTAREA
-    AREA |.text|,ALIGN=2,CODE,READONLY
-AreaName    SETS    "|.text|"
+#if defined(_CONTROL_FLOW_GUARD)
+        AREA |.text|,ALIGN=4,CODE,READONLY
+#else
+        AREA |.text|,ALIGN=2,CODE,READONLY
+#endif
     MEND
 
     MACRO
-    NESTED_ENTRY    $Name
-FuncName    SETS    "$Name"
-PrologName  SETS    "$Name":CC:"_Prolog"
-FuncEndName SETS    "$Name":CC:"_end"
-    //AREA |.pdata|,ALIGN=2,PDATA
-    ALIGN 2
-    EXPORT $FuncName [FUNC]
-$FuncName
-    ROUT
+    DATAAREA
+        AREA |.data|,DATA
     MEND
 
+    MACRO
+    RODATAAREA
+        AREA |.rdata|,DATA,READONLY
+    MEND
+
+    MACRO
+    NESTED_ENTRY $FuncName, $AreaName, $ExceptHandler
+        __DeriveFunctionLabels $FuncName
+__FuncArea SETS "|.text|"
+        IF "$AreaName" != ""
+__FuncArea SETS "$AreaName"
+        ENDIF
+__FuncExceptionHandler SETS ""
+        IF "$ExceptHandler" != ""
+__FuncExceptionHandler SETS "|$ExceptHandler|"
+        ENDIF
+        AREA $__FuncArea,CODE,READONLY
+        __ExportProc $FuncName
+        ROUT
+        // __ResetUnwindState
+    MEND
+
+    // FIXME: this does not exist in native
     MACRO
     PROLOG_END
-$PrologName
+        /* Ignore for now */
     MEND
 
     MACRO
-    ENTRY_END $Name
-$FuncEndName
-    MEND
-
-	MACRO
-	LEAF_ENTRY $Name
-FuncName    SETS    "$Name"
-PrologName  SETS	"Invalid Prolog"
-FuncEndName SETS    "$Name":CC:"_end"
-	ALIGN 2
-	EXPORT $FuncName [FUNC]
-$FuncName
-	ROUT
-	MEND
-
-    MACRO
-    LEAF_END $Name
-$FuncEndName
+    NESTED_END $FuncName
+$__FuncEndLabel
+        LTORG
+        ENDP
+        //AREA |.pdata|,ALIGN=2,READONLY
+        //DCD $__FuncStartLabel
+        //RELOC 2
+        //DCD $__FuncXDataLabel
+        //RELOC 2
+        //__EmitUnwindXData
+        //AREA $__FuncArea,CODE,READONLY
+__FuncStartLabel SETS ""
+__FuncEndLabel SETS ""
     MEND
 
     MACRO
-    TRAP_PROLOG $Abort
-        fixme
+    LEAF_ENTRY $FuncName, $AreaName
+        NESTED_ENTRY $FuncName, $AreaName
     MEND
 
     MACRO
-    SYSCALL_PROLOG $Abort
-        fixme
+    LEAF_END $FuncName
+        NESTED_END $FuncName
     MEND
 
     MACRO
-    TRAP_EPILOG $SystemCall
-        fixme
+    LEAF_ENTRY_NO_PDATA $FuncName, $AreaName
+        __DeriveFunctionLabels $FuncName
+__FuncArea SETS "|.text|"
+        IF "$AreaName" != ""
+__FuncArea SETS "$AreaName"
+        ENDIF
+        AREA $__FuncArea,CODE,READONLY
+        __ExportProc $FuncName
+        ROUT
     MEND
+
+    MACRO
+    LEAF_END_NO_PDATA $FuncName
+$__FuncEndLabel
+        LTORG
+        ENDP
+__FuncStartLabel SETS ""
+__FuncEndLabel SETS ""
+    MEND
+
+    MACRO
+    ALTERNATE_ENTRY $FuncName
+        __ExportName $FuncName
+        ROUT
+    MEND
+
 
     #define CR 13
     #define LF 10
@@ -87,9 +177,25 @@ $FuncEndName
     /* Ignore */
 .endm
 
+.macro EXPORT Name
+    .global &Name
+.endm
+
 .macro TEXTAREA
     .section .text, "rx"
+#if defined(_CONTROL_FLOW_GUARD)
+    .align 4
+#else
     .align 2
+#endif
+.endm
+
+.macro DATAAREA
+    .section .data, "rw"
+.endm
+
+.macro RODATAAREA
+    .section .rdata, "rw"
 .endm
 
 .macro NESTED_ENTRY Name
@@ -102,152 +208,51 @@ FuncEndName .equ    &Name&_end
     &FuncName:
 .endm
 
+// FIXME: should go to kxarmunw.h
 .macro PROLOG_END
     \PrologName:
 .endm
 
-.macro ENTRY_END Name
+.macro NESTED_END Name
     &FuncEndName:
    .endfunc
 .endm
 
-.macro TRAP_PROLOG Abort
-    //
-    // Fixup lr
-    //
-.if \Abort
-    sub lr, lr, #8
-.else
-    sub lr, lr, #4
-.endif
-
-    // Save the bottom 4 registers
-    stmdb sp, {r0-r3}
-
-    // Save the abort lr, sp, spsr, cpsr
-    mov r0, lr
-    mov r1, sp
-    mrs r2, cpsr
-    mrs r3, spsr
-
-    // Switch to SVC mode
-    bic r2, r2, #CPSR_MODES
-    orr r2, r2, #CPSR_SVC_MODE
-    msr cpsr_c, r2
-
-    // Save the SVC sp before we modify it
-    mov r2, sp
-
-    // Make space for the trap frame
-    sub sp, sp, #TrapFrameLength
-
-    // Save abt32 state
-    str r0, [sp, #TrPc]
-    str lr, [sp, #TrSvcLr]
-    str r2, [sp, #TrSvcSp]
-
-    // Restore the saved SPSR
-    msr spsr_all, r3
-
-    // Restore our 4 registers
-    ldmdb r1, {r0-r3}
-
-    // Build trap frame
-    // FIXME: Change to stmdb later
-    str r0, [sp, #TrR0]
-    str r1, [sp, #TrR1]
-    str r2, [sp, #TrR2]
-    str r3, [sp, #TrR3]
-    str r4, [sp, #TrR4]
-    str r5, [sp, #TrR5]
-    str r6, [sp, #TrR6]
-    str r7, [sp, #TrR7]
-    str r8, [sp, #TrR8]
-    str r9, [sp, #TrR9]
-    str r10, [sp, #TrR10]
-    str r11, [sp, #TrR11]
-    str r12, [sp, #TrR12]
-    mov r12, sp
-    add r12, r12, #TrUserSp
-    stm r12, {sp, lr}^
-    mrs r0, spsr_all
-    str r0, [sp, #TrSpsr]
-    ldr r0, =0xBADB0D00
-    str r0, [sp, #TrDbgArgMark]
+.macro LEAF_ENTRY $FuncName, $AreaName
+    NESTED_ENTRY $FuncName, $AreaName
 .endm
 
-.macro SYSCALL_PROLOG
-    // Make space for the trap frame
-    sub sp, sp, #TrapFrameLength
-
-    // Build trap frame
-    // FIXME: Change to stmdb later
-    str r0, [sp, #TrR0]
-    str r1, [sp, #TrR1]
-    str r2, [sp, #TrR2]
-    str r3, [sp, #TrR3]
-    str r4, [sp, #TrR4]
-    str r5, [sp, #TrR5]
-    str r6, [sp, #TrR6]
-    str r7, [sp, #TrR7]
-    str r8, [sp, #TrR8]
-    str r9, [sp, #TrR9]
-    str r10, [sp, #TrR10]
-    str r11, [sp, #TrR11]
-    str r12, [sp, #TrR12]
-    mov r12, sp
-    add r12, r12, #TrUserSp
-    stm r12, {sp, lr}^
-    str sp, [sp, #TrSvcSp]
-    str lr, [sp, #TrPc]
-    mrs r0, spsr_all
-    str r0, [sp, #TrSpsr]
-    ldr r0, =0xBADB0D00
-    str r0, [sp, #TrDbgArgMark]
+.macro LEAF_END $FuncName
+    NESTED_END $FuncName
 .endm
 
-.macro TRAP_EPILOG SystemCall
-    // ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00)
-    ldr r0, [sp, #TrDbgArgMark]
-    ldr r1, =0xBADB0D00
-    cmp r0, r1
-    bne 1f
 
-    // Get the SPSR and restore it
-    ldr r0, [sp, #TrSpsr]
-    msr spsr_all, r0
+/* Some "intrinsics", see http://codemachine.com/article_armasm.html */
 
-    // Restore the registers
-    // FIXME: Use LDMIA later
-    mov r0, sp
-    add r0, r0, #TrUserSp
-    ldm r0, {sp, lr}^
-    ldr r0, [sp, #TrR0]
-    ldr r1, [sp, #TrR1]
-    ldr r2, [sp, #TrR2]
-    ldr r3, [sp, #TrR3]
-    ldr r4, [sp, #TrR4]
-    ldr r5, [sp, #TrR5]
-    ldr r6, [sp, #TrR6]
-    ldr r7, [sp, #TrR7]
-    ldr r8, [sp, #TrR8]
-    ldr r9, [sp, #TrR9]
-    ldr r10, [sp, #TrR10]
-    ldr r11, [sp, #TrR11]
-    ldr r12, [sp, #TrR12]
-
-    // Restore program execution state
-.if \SystemCall
-    ldr lr, [sp, #TrPc]
-    add sp, sp, #TrapFrameLength
-    movs pc, lr
-.else
-    add sp, sp, #TrSvcSp
-    ldmia sp, {sp, lr, pc}^
-.endif
-1:
-    b .
+.macro __debugbreak
+    DCD 0xDEFE
 .endm
+
+.macro __assertfail
+    DCD 0xDEFC
+.endm
+
+.macro __fastfail
+    DCD 0xDEFB
+.endm
+
+.macro __rdpmccntr64
+    DCD 0xDEFA
+.endm
+
+.macro __debugservice
+    DCD 0xDEFD
+.endm
+
+.macro __brkdiv0
+    DCD 0xDEF9
+.endm
+
 
 #endif
 
