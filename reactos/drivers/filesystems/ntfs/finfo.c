@@ -301,15 +301,11 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_PARAMETER;
     }
 
-    Irp->IoStatus.Status = Status;
-
     if (NT_SUCCESS(Status))
         Irp->IoStatus.Information =
             Stack->Parameters.QueryFile.Length - BufferLength;
     else
         Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 }
