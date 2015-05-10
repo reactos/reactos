@@ -38,7 +38,7 @@
 
 CALLBACK16 DosContext;
 
-/*static*/ BYTE CurrentDrive;
+/*static*/ BYTE CurrentDrive = 0x00;
 static CHAR LastDrive = 'Z'; // The last drive can be redefined with the LASTDRIVE command. At the moment, set the real maximum possible, 'Z'.
 static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
 static PBYTE InDos;
@@ -81,6 +81,8 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     BYTE DriveNumber;
     DWORD Attributes;
     LPSTR Path;
+    CHAR CurrentDirectory[MAX_PATH];
+    CHAR DosDirectory[DOS_DIR_LENGTH];
 
     /* Make sure the directory path is not too long */
     if (strlen(Directory) >= DOS_DIR_LENGTH)
@@ -89,14 +91,23 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
         return FALSE;
     }
 
-    /* Get the drive number */
-    DriveNumber = Directory[0] - 'A';
-
-    /* Make sure the drive exists */
-    if (DriveNumber > (LastDrive - 'A'))
+    /* Check whether the directory string is of format "?:..." */
+    if (strlen(Directory) >= 2 && Directory[1] == ':')
     {
-        DosLastError = ERROR_PATH_NOT_FOUND;
-        return FALSE;
+        /* Get the drive number */
+        DriveNumber = RtlUpperChar(Directory[0]) - 'A';
+
+        /* Make sure the drive exists */
+        if (DriveNumber > (LastDrive - 'A'))
+        {
+            DosLastError = ERROR_PATH_NOT_FOUND;
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Keep the current drive number */
+        DriveNumber = CurrentDrive;
     }
 
     /* Get the file attributes */
@@ -120,9 +131,23 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
             return FALSE;
         }
     }
+    
+    /* Get the (possibly new) current directory (needed if we specified a relative directory) */
+    if (!GetCurrentDirectoryA(sizeof(CurrentDirectory), CurrentDirectory))
+    {
+        // TODO: Use some kind of default path?
+        return FALSE;
+    }
+
+    /* Convert it to a DOS path */
+    if (!GetShortPathNameA(CurrentDirectory, DosDirectory, sizeof(DosDirectory)))
+    {
+        // TODO: Use some kind of default path?
+        return FALSE;
+    }
 
     /* Get the directory part of the path */
-    Path = strchr(Directory, '\\');
+    Path = strchr(DosDirectory, '\\');
     if (Path != NULL)
     {
         /* Skip the backslash */
@@ -786,7 +811,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get Free Disk Space */
         case 0x36:
         {
-            CHAR RootPath[3] = "X:\\";
+            CHAR RootPath[3] = "?:\\";
             DWORD SectorsPerCluster;
             DWORD BytesPerSector;
             DWORD NumberOfFreeClusters;
@@ -1896,10 +1921,10 @@ BOOLEAN DosKRNLInitialize(VOID)
 #if 1
 
     UCHAR i;
+    PDOS_SFT Sft;
+    LPSTR Path;
     CHAR CurrentDirectory[MAX_PATH];
     CHAR DosDirectory[DOS_DIR_LENGTH];
-    LPSTR Path;
-    PDOS_SFT Sft;
 
     const BYTE NullDriverRoutine[] = {
         /* Strategy routine entry */
@@ -1925,21 +1950,21 @@ BOOLEAN DosKRNLInitialize(VOID)
     RtlZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
 
     /* Get the current directory */
-    if (!GetCurrentDirectoryA(MAX_PATH, CurrentDirectory))
+    if (!GetCurrentDirectoryA(sizeof(CurrentDirectory), CurrentDirectory))
     {
         // TODO: Use some kind of default path?
         return FALSE;
     }
 
-    /* Convert that to a DOS path */
-    if (!GetShortPathNameA(CurrentDirectory, DosDirectory, DOS_DIR_LENGTH))
+    /* Convert it to a DOS path */
+    if (!GetShortPathNameA(CurrentDirectory, DosDirectory, sizeof(DosDirectory)))
     {
         // TODO: Use some kind of default path?
         return FALSE;
     }
 
     /* Set the drive */
-    CurrentDrive = DosDirectory[0] - 'A';
+    CurrentDrive = RtlUpperChar(DosDirectory[0]) - 'A';
 
     /* Get the directory part of the path */
     Path = strchr(DosDirectory, '\\');
