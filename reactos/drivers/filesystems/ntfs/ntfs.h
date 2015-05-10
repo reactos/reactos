@@ -759,10 +759,8 @@ NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
 
 /* rw.c */
 
-DRIVER_DISPATCH NtfsFsdRead;
-NTSTATUS NTAPI
-NtfsFsdRead(PDEVICE_OBJECT DeviceObject,
-            PIRP Irp);
+NTSTATUS
+NtfsRead(PNTFS_IRP_CONTEXT IrpContext);
 
 DRIVER_DISPATCH NtfsFsdWrite;
 NTSTATUS NTAPI

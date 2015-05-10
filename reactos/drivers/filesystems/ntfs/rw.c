@@ -161,9 +161,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
 
 NTSTATUS
-NTAPI
-NtfsFsdRead(PDEVICE_OBJECT DeviceObject,
-            PIRP Irp)
+NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
 {
     PDEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION Stack;
@@ -173,13 +171,17 @@ NtfsFsdRead(PDEVICE_OBJECT DeviceObject,
     LARGE_INTEGER ReadOffset;
     ULONG ReturnedReadLength = 0;
     NTSTATUS Status = STATUS_SUCCESS;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
 
-    DPRINT("NtfsRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+    DPRINT("NtfsRead(DeviceObject %p)\n", IrpContext);
+
+    DeviceObject = IrpContext->DeviceObject;
+    Irp = IrpContext->Irp;
+    Stack = IrpContext->Stack;
+    FileObject = IrpContext->FileObject;
 
     DeviceExt = DeviceObject->DeviceExtension;
-    Stack = IoGetCurrentIrpStackLocation(Irp);
-    FileObject = Stack->FileObject;
-
     ReadLength = Stack->Parameters.Read.Length;
     ReadOffset = Stack->Parameters.Read.ByteOffset;
     Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
@@ -205,9 +207,6 @@ NtfsFsdRead(PDEVICE_OBJECT DeviceObject,
     {
         Irp->IoStatus.Information = 0;
     }
-
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp,IO_NO_INCREMENT);
 
     return Status;
 }
