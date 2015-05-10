@@ -546,36 +546,48 @@ demFileFindFirst(OUT PVOID  lpFindFileData,
 {
     BOOLEAN Success = TRUE;
     WIN32_FIND_DATAA FindData;
+    HANDLE SearchHandle;
     PDOS_FIND_FILE_BLOCK FindFileBlock = (PDOS_FIND_FILE_BLOCK)lpFindFileData;
 
-    /* Fill the block */
-    FindFileBlock->DriveLetter  = CurrentDrive + 'A';
-    FindFileBlock->AttribMask   = AttribMask;
-    FindFileBlock->SearchHandle = FindFirstFileA(FileName, &FindData);
-    if (FindFileBlock->SearchHandle == INVALID_HANDLE_VALUE) return GetLastError();
+    /* Start a search */
+    SearchHandle = FindFirstFileA(FileName, &FindData);
+    if (SearchHandle == INVALID_HANDLE_VALUE) return GetLastError();
 
     do
     {
-        /* Check the attributes */
-        if (!((FindData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN |
-                                            FILE_ATTRIBUTE_SYSTEM |
-                                            FILE_ATTRIBUTE_DIRECTORY))
-            & ~AttribMask))
+        /* Check the attributes and retry as long as we haven't found a matching file */
+        if (((FindData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN |
+                                           FILE_ATTRIBUTE_SYSTEM |
+                                           FILE_ATTRIBUTE_DIRECTORY))
+             & ~AttribMask))
         {
             break;
         }
     }
-    while ((Success = FindNextFileA(FindFileBlock->SearchHandle, &FindData)));
+    while ((Success = FindNextFileA(SearchHandle, &FindData)));
 
-    if (!Success) return GetLastError();
+    /* If we failed at some point, close the search and return an error */
+    if (!Success)
+    {
+        FindClose(SearchHandle);
+        return GetLastError();
+    }
 
-    FindFileBlock->Attributes = LOBYTE(FindData.dwFileAttributes);
+    /* Fill the block */
+    FindFileBlock->DriveLetter  = CurrentDrive + 'A';
+    FindFileBlock->AttribMask   = AttribMask;
+    FindFileBlock->SearchHandle = SearchHandle;
+    FindFileBlock->Attributes   = LOBYTE(FindData.dwFileAttributes);
     FileTimeToDosDateTime(&FindData.ftLastWriteTime,
                           &FindFileBlock->FileDate,
                           &FindFileBlock->FileTime);
     FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
                                                      : FindData.nFileSizeLow;
-    strcpy(FindFileBlock->FileName, FindData.cAlternateFileName);
+    /* Build a short path name */
+    if (*FindData.cAlternateFileName)
+        strncpy(FindFileBlock->FileName, FindData.cAlternateFileName, sizeof(FindFileBlock->FileName));
+    else
+        GetShortPathNameA(FindData.cFileName, FindFileBlock->FileName, sizeof(FindFileBlock->FileName));
 
     return ERROR_SUCCESS;
 }
@@ -589,22 +601,32 @@ demFileFindNext(OUT PVOID lpFindFileData)
 
     do
     {
-        if (!FindNextFileA(FindFileBlock->SearchHandle, &FindData))
-            return GetLastError();
+        /* Continue searching as long as we haven't found a matching file */
 
-        /* Update the block */
-        FindFileBlock->Attributes = LOBYTE(FindData.dwFileAttributes);
-        FileTimeToDosDateTime(&FindData.ftLastWriteTime,
-                              &FindFileBlock->FileDate,
-                              &FindFileBlock->FileTime);
-        FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
-                                                         : FindData.nFileSizeLow;
-        strcpy(FindFileBlock->FileName, FindData.cAlternateFileName);
+        /* If we failed at some point, close the search and return an error */
+        if (!FindNextFileA(FindFileBlock->SearchHandle, &FindData))
+        {
+            FindClose(FindFileBlock->SearchHandle);
+            return GetLastError();
+        }
     }
-    while((FindData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN |
-                                        FILE_ATTRIBUTE_SYSTEM |
-                                        FILE_ATTRIBUTE_DIRECTORY))
-          & ~FindFileBlock->AttribMask);
+    while ((FindData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN |
+                                         FILE_ATTRIBUTE_SYSTEM |
+                                         FILE_ATTRIBUTE_DIRECTORY))
+           & ~FindFileBlock->AttribMask);
+
+    /* Update the block */
+    FindFileBlock->Attributes = LOBYTE(FindData.dwFileAttributes);
+    FileTimeToDosDateTime(&FindData.ftLastWriteTime,
+                          &FindFileBlock->FileDate,
+                          &FindFileBlock->FileTime);
+    FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
+                                                     : FindData.nFileSizeLow;
+    /* Build a short path name */
+    if (*FindData.cAlternateFileName)
+        strncpy(FindFileBlock->FileName, FindData.cAlternateFileName, sizeof(FindFileBlock->FileName));
+    else
+        GetShortPathNameA(FindData.cFileName, FindFileBlock->FileName, sizeof(FindFileBlock->FileName));
 
     return ERROR_SUCCESS;
 }
