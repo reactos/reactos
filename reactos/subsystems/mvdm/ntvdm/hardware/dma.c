@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            dma.c
- * PURPOSE:         Direct Memory Access Controller emulation -
+ * PURPOSE:         ISA DMA - Direct Memory Access Controller emulation -
  *                  i8237A compatible with 74LS612 Memory Mapper extension
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -16,6 +16,7 @@
 #include "dma.h"
 
 #include "io.h"
+#include "memory.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -41,7 +42,7 @@ do {                                            \
 #define READ_CNT(CtrlIndex, ChanIndex, Data)    \
 do {                                            \
     (Data) =                                    \
-    *((PBYTE)&DmaControllers[(CtrlIndex)].DmaChannel[(ChanIndex)].CurrWordCnt + \
+    *((PBYTE)&DmaControllers[(CtrlIndex)].DmaChannel[(ChanIndex)].CurrElemCnt + \
              (DmaControllers[(CtrlIndex)].FlipFlop & 0x01));                    \
     DmaControllers[(CtrlIndex)].FlipFlop ^= 1;                                  \
 } while(0)
@@ -49,6 +50,8 @@ do {                                            \
 static BYTE WINAPI DmaReadPort(USHORT Port)
 {
     BYTE ReadValue = 0xFF;
+
+    DPRINT1("DmaReadPort(Port = 0x%04X)\n", Port);
 
     switch (Port)
     {
@@ -123,6 +126,14 @@ static BYTE WINAPI DmaReadPort(USHORT Port)
         case 0xDA:
             return DmaControllers[1].TempReg;
         }
+
+        /* Multi-Channel Mask Registers */
+        {
+        case 0x0F:
+            return DmaControllers[0].Mask;
+        case 0xDE:
+            return DmaControllers[1].Mask;
+        }
     }
 
     return 0x00;
@@ -139,15 +150,17 @@ do {                                            \
 
 #define WRITE_CNT(CtrlIndex, ChanIndex, Data)   \
 do {                                            \
-    *((PBYTE)&DmaControllers[(CtrlIndex)].DmaChannel[(ChanIndex)].BaseWordCnt + \
+    *((PBYTE)&DmaControllers[(CtrlIndex)].DmaChannel[(ChanIndex)].BaseElemCnt + \
              (DmaControllers[(CtrlIndex)].FlipFlop & 0x01)) = (Data);           \
-    *((PBYTE)&DmaControllers[(CtrlIndex)].DmaChannel[(ChanIndex)].CurrWordCnt + \
+    *((PBYTE)&DmaControllers[(CtrlIndex)].DmaChannel[(ChanIndex)].CurrElemCnt + \
              (DmaControllers[(CtrlIndex)].FlipFlop & 0x01)) = (Data);           \
     DmaControllers[(CtrlIndex)].FlipFlop ^= 1;                                  \
 } while(0)
 
 static VOID WINAPI DmaWritePort(USHORT Port, BYTE Data)
 {
+    DPRINT1("DmaWritePort(Port = 0x%04X, Data = 0x%02X)\n", Port, Data);
+
     switch (Port)
     {
         /* Start Address Registers */
@@ -216,6 +229,16 @@ static VOID WINAPI DmaWritePort(USHORT Port, BYTE Data)
             break;
         }
 
+        /* Mode Registers */
+        {
+        case 0x0B:
+            DmaControllers[0].DmaChannel[Data & 0x03].Mode = (Data & ~0x03);
+            break;
+        case 0xD6:
+            DmaControllers[1].DmaChannel[Data & 0x03].Mode = (Data & ~0x03);
+            break;
+        }
+
         /* Request Registers */
         {
         case 0x09:
@@ -223,6 +246,32 @@ static VOID WINAPI DmaWritePort(USHORT Port, BYTE Data)
             break;
         case 0xD2:
             DmaControllers[1].Request = Data;
+            break;
+        }
+
+        /* Single Channel Mask Registers */
+        {
+        case 0x0A:
+            if (Data & 0x04)
+                DmaControllers[0].Mask |=  (1 << (Data & 0x03));
+            else
+                DmaControllers[0].Mask &= ~(1 << (Data & 0x03));
+            break;
+        case 0xD4:
+            if (Data & 0x04)
+                DmaControllers[1].Mask |=  (1 << (Data & 0x03));
+            else
+                DmaControllers[1].Mask &= ~(1 << (Data & 0x03));
+            break;
+        }
+
+        /* Multi-Channel Mask Registers */
+        {
+        case 0x0F:
+            DmaControllers[0].Mask = (Data & 0x0F);
+            break;
+        case 0xDE:
+            DmaControllers[1].Mask = (Data & 0x0F);
             break;
         }
 
@@ -236,7 +285,7 @@ static VOID WINAPI DmaWritePort(USHORT Port, BYTE Data)
             break;
         }
 
-        /* DMA Master Reset */
+        /* DMA Master Reset Registers */
         {
         case 0x0D:
             DmaControllers[0].Command  = 0x00;
@@ -255,6 +304,16 @@ static VOID WINAPI DmaWritePort(USHORT Port, BYTE Data)
             DmaControllers[1].Mask     = 0x0F;
             break;
         }
+
+        /* Mask Reset Registers */
+        {
+        case 0x0E:
+            DmaControllers[0].Mask = 0x00;
+            break;
+        case 0xDC:
+            DmaControllers[1].Mask = 0x00;
+            break;
+        }
     }
 }
 
@@ -262,6 +321,8 @@ static VOID WINAPI DmaWritePort(USHORT Port, BYTE Data)
 
 static BYTE WINAPI DmaPageReadPort(USHORT Port)
 {
+    DPRINT1("DmaPageReadPort(Port = 0x%04X)\n", Port);
+
     switch (Port)
     {
         case 0x87:
@@ -287,6 +348,8 @@ static BYTE WINAPI DmaPageReadPort(USHORT Port)
 
 static VOID WINAPI DmaPageWritePort(USHORT Port, BYTE Data)
 {
+    DPRINT1("DmaPageWritePort(Port = 0x%04X, Data = 0x%02X)\n", Port, Data);
+
     switch (Port)
     {
         case 0x87:
@@ -318,6 +381,169 @@ static VOID WINAPI DmaPageWritePort(USHORT Port, BYTE Data)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+DWORD DmaRequest(IN WORD      iChannel,
+                 IN OUT PVOID Buffer,
+                 IN DWORD     length)
+{
+/*
+ * NOTE: This function is adapted from Wine's krnl386.exe,
+ * DMA emulation by Christian Costa.
+ */
+    PDMA_CONTROLLER pDcp;
+    WORD Channel;
+
+    DWORD i, Size, ret = 0;
+    BYTE RegMode, OpMode, Increment, Autoinit, TrMode;
+    PBYTE dmabuf = Buffer;
+
+    ULONG CurrAddress;
+
+    if (iChannel >= DMA_CONTROLLERS * DMA_CONTROLLER_CHANNELS)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return 0;
+    }
+
+    pDcp    = &DmaControllers[iChannel / DMA_CONTROLLER_CHANNELS];
+    Channel = iChannel % DMA_CONTROLLER_CHANNELS; // == (iChannel & 0x03)
+
+    RegMode = pDcp->DmaChannel[Channel].Mode;
+
+    DPRINT1("DMA_Command = %x length=%d\n", RegMode, length);
+
+    /* Exit if the controller is disabled or the channel is masked */
+    if ((pDcp->Command & 0x04) || (pDcp->Mask & (1 << Channel)))
+        return 0;
+
+    OpMode    =  (RegMode & 0xC0) >> 6;
+    Increment = !(RegMode & 0x20);
+    Autoinit  =   RegMode & 0x10;
+    TrMode    =  (RegMode & 0x0C) >> 2;
+
+    /* Process operating mode */
+    switch (OpMode)
+    {
+        case 0:
+            /* Request mode */
+            DPRINT1("Request Mode - Not Implemented\n");
+            return 0;
+        case 1:
+            /* Single Mode */
+            break;
+        case 2:
+            /* Request mode */
+            DPRINT1("Block Mode - Not Implemented\n");
+            return 0;
+        case 3:
+            /* Cascade Mode */
+            DPRINT1("Cascade Mode should not be used by regular apps\n");
+            return 0;
+    }
+
+    /* Perform one the 4 transfer modes */
+    if (TrMode == 4)
+    {
+        /* Illegal */
+        DPRINT1("DMA Transfer Type Illegal\n");
+        return 0;
+    }
+
+    /* Transfer size : 8 bits for channels 0..3, 16 bits for channels 4..7 */
+    Size = (iChannel < 4) ? sizeof(BYTE) : sizeof(WORD);
+
+    // FIXME: Handle wrapping?
+    /* Get the number of elements to transfer */
+    ret = min(pDcp->DmaChannel[Channel].CurrElemCnt, length / Size);
+    length = ret * Size;
+
+    /* 16-bit mode addressing, see: http://wiki.osdev.org/ISA_DMA#16_bit_issues */
+    CurrAddress = (iChannel < 4) ? (DmaPageRegisters[iChannel].Page << 16) | (pDcp->DmaChannel[Channel].CurrAddress << 0)
+                                 : (DmaPageRegisters[iChannel].Page << 16) | (pDcp->DmaChannel[Channel].CurrAddress << 1);
+
+    switch (TrMode)
+    {
+        /* Verification (no real transfer) */
+        case 0:
+        {
+            DPRINT1("Verification DMA operation\n");
+            break;
+        }
+
+        /* Write */
+        case 1:
+        {
+            DPRINT1("Perform Write transfer of %d elements (%d bytes) at 0x%x %s with count %x\n",
+                    ret, length, CurrAddress, Increment ? "up" : "down", pDcp->DmaChannel[Channel].CurrElemCnt);
+
+            if (Increment)
+            {
+                MemWrite(CurrAddress, dmabuf, length);
+            }
+            else
+            {
+                for (i = 0; i < length; i++)
+                {
+                    MemWrite(CurrAddress - i, dmabuf + i, sizeof(BYTE));
+                }
+            }
+
+            break;
+        }
+
+        /* Read */
+        case 2:
+        {
+            DPRINT1("Perform Read transfer of %d elements (%d bytes) at 0x%x %s with count %x\n",
+                    ret, length, CurrAddress, Increment ? "up" : "down", pDcp->DmaChannel[Channel].CurrElemCnt);
+
+            if (Increment)
+            {
+                MemRead(CurrAddress, dmabuf, length);
+            }
+            else
+            {
+                for (i = 0; i < length; i++)
+                {
+                    MemRead(CurrAddress - i, dmabuf + i, sizeof(BYTE));
+                }
+            }
+
+            break;
+        }
+    }
+
+    /* Update DMA registers */
+    pDcp->DmaChannel[Channel].CurrElemCnt -= ret;
+    if (Increment)
+        pDcp->DmaChannel[Channel].CurrAddress += ret;
+    else
+        pDcp->DmaChannel[Channel].CurrAddress -= ret;
+
+    /* Check for end of transfer */
+    if (pDcp->DmaChannel[Channel].CurrElemCnt == 0)
+    {
+        DPRINT1("DMA buffer empty\n");
+
+        /* Update status register of the DMA chip corresponding to the channel */
+        pDcp->Status |=   1 <<  Channel;       /* Mark transfer as finished */
+        pDcp->Status &= ~(1 << (Channel + 4)); /* Reset soft request if any */
+
+        if (Autoinit)
+        {
+            /* Reload Current* registers to their initial values */
+            pDcp->DmaChannel[Channel].CurrAddress = pDcp->DmaChannel[Channel].BaseAddress;
+            pDcp->DmaChannel[Channel].CurrElemCnt = pDcp->DmaChannel[Channel].BaseElemCnt;
+        }
+        else
+        {
+            /* Set the mask bit for the channel */
+            pDcp->Mask |= (1 << Channel);
+        }
+    }
+
+    return length;
+}
+
 VOID DmaInitialize(VOID)
 {
     /* Register the I/O Ports */
@@ -339,7 +565,7 @@ VOID DmaInitialize(VOID)
     RegisterIoPort(0x0C, NULL, DmaWritePort);           /* Flip-Flop Reset Register */
     RegisterIoPort(0x0D, DmaReadPort, DmaWritePort);    /* Intermediate (Read) / Master Reset (Write) Registers */
     RegisterIoPort(0x0E, NULL, DmaWritePort);           /* Mask Reset Register */
-    RegisterIoPort(0x0F, DmaReadPort, DmaWritePort);    /* Multi-Channel Mask Reset Register */
+    RegisterIoPort(0x0F, DmaReadPort, DmaWritePort);    /* Multi-Channel Mask Register */
 
 
     /* Channels 4(Reserved)..7 */
@@ -359,7 +585,7 @@ VOID DmaInitialize(VOID)
     RegisterIoPort(0xD8, NULL, DmaWritePort);           /* Flip-Flop Reset Register */
     RegisterIoPort(0xDA, DmaReadPort, DmaWritePort);    /* Intermediate (Read) / Master Reset (Write) Registers */
     RegisterIoPort(0xDC, NULL, DmaWritePort);           /* Mask Reset Register */
-    RegisterIoPort(0xDE, DmaReadPort, DmaWritePort);    /* Multi-Channel Mask Reset Register */
+    RegisterIoPort(0xDE, DmaReadPort, DmaWritePort);    /* Multi-Channel Mask Register */
 
 
     /* Channels Page Address Registers */
@@ -390,8 +616,13 @@ VDDRequestDMA(IN HANDLE    hVdd,
         return FALSE;
     }
 
-    UNIMPLEMENTED;
-    return 0;
+    /*
+     * We assume success first. If something fails,
+     * DmaRequest sets an adequate last error.
+     */
+    SetLastError(ERROR_SUCCESS);
+
+    return DmaRequest(iChannel, Buffer, length);
 }
 
 BOOL
@@ -415,9 +646,9 @@ VDDQueryDMA(IN HANDLE        hVdd,
     Channel = iChannel % DMA_CONTROLLER_CHANNELS;
 
     pDmaInfo->addr  = pDcp->DmaChannel[Channel].CurrAddress;
-    pDmaInfo->count = pDcp->DmaChannel[Channel].CurrWordCnt;
+    pDmaInfo->count = pDcp->DmaChannel[Channel].CurrElemCnt;
 
-    // pDmaInfo->page   = DmaPageRegisters[iChannel].Page;
+    pDmaInfo->page   = DmaPageRegisters[iChannel].Page;
     pDmaInfo->status = pDcp->Status;
     pDmaInfo->mode   = pDcp->DmaChannel[Channel].Mode;
     pDmaInfo->mask   = pDcp->Mask;
@@ -450,10 +681,10 @@ VDDSetDMA(IN HANDLE        hVdd,
         pDcp->DmaChannel[Channel].CurrAddress = pDmaInfo->addr;
 
     if (fDMA & VDD_DMA_COUNT)
-        pDcp->DmaChannel[Channel].CurrWordCnt = pDmaInfo->count;
+        pDcp->DmaChannel[Channel].CurrElemCnt = pDmaInfo->count;
 
-    // if (fDMA & VDD_DMA_PAGE)
-        // DmaPageRegisters[iChannel].Page = pDmaInfo->page;
+    if (fDMA & VDD_DMA_PAGE)
+        DmaPageRegisters[iChannel].Page = pDmaInfo->page;
 
     if (fDMA & VDD_DMA_STATUS)
         pDcp->Status = pDmaInfo->status;

@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            dma.h
- * PURPOSE:         Direct Memory Access Controller emulation -
+ * PURPOSE:         ISA DMA - Direct Memory Access Controller emulation -
  *                  i8237A compatible with 74LS612 Memory Mapper extension
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -18,9 +18,9 @@
 typedef struct _DMA_CHANNEL
 {
     WORD BaseAddress;
-    WORD BaseWordCnt;
+    WORD BaseElemCnt;
     WORD CurrAddress;
-    WORD CurrWordCnt;
+    WORD CurrElemCnt;
     BYTE Mode;
 } DMA_CHANNEL, *PDMA_CHANNEL;
 
@@ -29,7 +29,7 @@ typedef struct _DMA_CONTROLLER
     DMA_CHANNEL DmaChannel[DMA_CONTROLLER_CHANNELS];
 
     WORD TempAddress;
-    WORD TempWordCnt;
+    WORD TempElemCnt;
 
     BYTE TempReg;
 
@@ -49,9 +49,13 @@ typedef struct _DMA_PAGE_REGISTER
 } DMA_PAGE_REGISTER, *PDMA_PAGE_REGISTER;
 
 // The 74LS612 contains 16 bytes, each of them being a page register.
-// They are accessible via ports 0x80 through 0x8F .
+// They are accessible via ports 0x80 through 0x8F.
 
 /* FUNCTIONS ******************************************************************/
+
+DWORD DmaRequest(IN WORD      iChannel,
+                 IN OUT PVOID Buffer,
+                 IN DWORD     length);
 
 VOID DmaInitialize(VOID);
 
