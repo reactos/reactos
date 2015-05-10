@@ -164,6 +164,89 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             break;
         }
 
+        /* Wait On External Event */
+        case 0x41:
+        {
+            BYTE Value;
+            BOOLEAN Return;
+            static DWORD StartingCount;
+
+            /* Check if this is the first time this BOP occurred */
+            if (!getCF())
+            {
+                /* Set the starting count */
+                StartingCount = Bda->TickCounter;
+            }
+
+            if (getBL() != 0 && (Bda->TickCounter - StartingCount) >= getBL())
+            {
+                /* Timeout expired */
+                break;
+            }
+
+            if (getAL() & (1 << 4))
+            {
+                /* Read from the I/O port */
+                Value = IOReadB(getDX());
+            }
+            else
+            {
+                /* Read from the memory */
+                Value = *(LPBYTE)SEG_OFF_TO_PTR(getES(), getDI());
+            }
+
+            switch (getAL() & 7)
+            {
+                /* Any external event */
+                case 0:
+                {
+                    /* Return if this is not the first time the BOP occurred */
+                    Return = getCF();
+                    break;
+                }
+
+                /* Compare and return if equal */
+                case 1:
+                {
+                    Return = Value == getBH();
+                    break;
+                }
+
+                /* Compare and return if not equal */
+                case 2:
+                {
+                    Return = Value != getBH();
+                    break;
+                }
+
+                /* Test and return if not zero */
+                case 3:
+                {
+                    Return = (Value & getBH()) != 0;
+                    break;
+                }
+                
+                /* Test and return if zero */
+                case 4:
+                {
+                    Return = (Value & getBH()) == 0;
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT1("INT 15h, AH = 41h - Unknown condition type: %u\n", getAL() & 7);
+                    Return = TRUE;
+                    break;
+                }
+            }
+
+            /* Repeat the BOP if we shouldn't return */
+            setCF(!Return);
+
+            break;
+        }
+
         /* Keyboard intercept */
         case 0x4F:
         {
@@ -303,11 +386,12 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
                 /* The amount of memory above 16M, in 64K blocks */
                 ULONG Above16M = (MAX_ADDRESS > 0x01000000) ? (MAX_ADDRESS - 0x01000000) >> 16: 0;
 
-                setCF(0);
                 setAX(Above1M);
                 setBX(Above16M);
                 setCX(Above1M);
                 setDX(Above16M);
+
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else if (getAL() == 0x20 && getEDX() == 'SMAP')
             {

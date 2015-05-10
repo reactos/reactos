@@ -40,9 +40,10 @@ static BYTE Int16To32[] =
     /* Push the value of the interrupt to be called */
     0x6A, 0xFF,         // push i (patchable to 0x6A, 0xIntNum)
 
+    0xF8,               // clc
+
     /* The BOP Sequence */
 // BOP_SEQ:
-    0xF8,               // clc
     BOP(BOP_CONTROL),   // Control BOP
     BOP_CONTROL_INT32,  // 32-bit Interrupt dispatcher
 
@@ -52,7 +53,7 @@ static BYTE Int16To32[] =
 
     0xF4,               // hlt
 
-    0xEB, 0xF5,         // jmp BOP_SEQ (offset -11)
+    0xEB, 0xF6,         // jmp BOP_SEQ (offset -10)
 
 // EXIT:
     0x44, 0x44,         // inc sp, inc sp

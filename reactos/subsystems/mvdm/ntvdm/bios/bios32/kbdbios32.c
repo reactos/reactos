@@ -107,6 +107,7 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
 
             BiosKbdBufferPop();
             setAX(Character);
+            setCF(0);
 
             break;
         }
