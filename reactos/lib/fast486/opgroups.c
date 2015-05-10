@@ -2239,11 +2239,14 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F01)
         {
             USHORT MachineStatusWord;
 
-            /* This is a privileged instruction */
-            if (Fast486GetCurrentPrivLevel(State) != 0)
+            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
             {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
-                return;
+                /* This is a privileged instruction */
+                if (Fast486GetCurrentPrivLevel(State) != 0)
+                {
+                    Fast486Exception(State, FAST486_EXCEPTION_GP);
+                    return;
+                }
             }
 
             /* Read the new Machine Status Word */
@@ -2253,16 +2256,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F01)
                 return;
             }
 
-            /* This instruction cannot be used to return to real mode */
-            if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
-                && !(MachineStatusWord & FAST486_CR0_PE))
-            {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
-                return;
-            }
-
-            /* Set the lowest 4 bits */
-            State->ControlRegisters[FAST486_REG_CR0] &= 0xFFFFFFF0;
+            /* Set the lowest 4 bits, but never clear bit 0 */
+            State->ControlRegisters[FAST486_REG_CR0] &= 0xFFFFFFF1;
             State->ControlRegisters[FAST486_REG_CR0] |= MachineStatusWord & 0x0F;
 
             break;
