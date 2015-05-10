@@ -89,8 +89,6 @@ NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
            ((IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
            (!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && (IrpContext->Flags & IRPCONTEXT_QUEUE)));
 
-
-
     if (IrpContext->Flags & IRPCONTEXT_COMPLETE)
     {
         Irp->IoStatus.Status = Status;

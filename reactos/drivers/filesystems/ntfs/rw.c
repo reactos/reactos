@@ -184,7 +184,7 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     DeviceExt = DeviceObject->DeviceExtension;
     ReadLength = Stack->Parameters.Read.Length;
     ReadOffset = Stack->Parameters.Read.ByteOffset;
-    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+    Buffer = NtfsGetUserBuffer(Irp);
 
     Status = NtfsReadFile(DeviceExt,
                           FileObject,
