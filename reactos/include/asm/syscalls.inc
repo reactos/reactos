@@ -1,4 +1,57 @@
 
+#ifdef _M_ARM
+
+#include <ksarm.h>
+
+    GBLA SyscallId
+
+SyscallId SETA 0
+
+	MACRO
+	STUB_K $Name
+	LCLS ZwFuncName
+	LCLS ZwFuncEndName
+ZwFuncName    SETS "Zw$Name"
+ZwFuncEndName SETS "$ZwFuncName":CC:"_end"
+	ALIGN 2
+	EXPORT $ZwFuncName [FUNC]
+$ZwFuncName
+	ROUT
+    mov r12, #SyscallId
+    svc #1
+    bx lr
+$ZwFuncEndName
+    MEND
+
+	MACRO
+	STUB_U $Name
+	LCLS NtFuncName
+	LCLS NtFuncEndName
+	LCLS ZwFuncName
+	LCLS ZwFuncEndName
+NtFuncName    SETS "Nt$Name"
+NtFuncEndName SETS "$NtFuncName":CC:"_end"
+ZwFuncName    SETS "Zw$Name"
+ZwFuncEndName SETS "$ZwFuncName":CC:"_end"
+	ALIGN 2
+	EXPORT $NtFuncName [FUNC]
+$NtFuncName
+	EXPORT $ZwFuncName [FUNC]
+$ZwFuncName
+	ROUT
+    mov r12, #SyscallId
+    svc #1
+    bx lr
+$NtFuncEndName
+$ZwFuncEndName
+    MEND
+
+#else
+
+#include <asm.inc>
+
+SyscallId = 0
+
 #ifdef _M_IX86
 #define KUSER_SHARED_SYSCALL HEX(7ffe0300)
 #define KGDT_R0_CODE 8
@@ -34,16 +87,6 @@ MACRO(STUBCODE_K, Name, SyscallId, ArgCount)
     lea rax, Nt&Name[rip]
     mov r10, ArgCount * 8
     jmp KiZwSystemService
-ENDM
-#elif defined(_M_ARM)
-MACRO(STUBCODE_U, Name, SyscallId, ArgCount)
-    swi #SyscallId
-    bx lr
-ENDM
-MACRO(STUBCODE_K, Name, SyscallId, ArgCount)
-    mov ip, lr
-    swi #SyscallId
-    bx ip
 ENDM
 #elif defined(_M_PPC)
 MACRO(STUBCODE_U, Name, SyscallId, ArgCount)
@@ -107,3 +150,5 @@ MACRO(STUB_K, Name, ArgCount)
     .ENDP
     SyscallId = SyscallId + 1
 ENDM
+
+#endif

@@ -1,6 +1,17 @@
 
-#include <asm.inc>
 #include <syscalls.inc>
+
+#ifdef _M_ARM
+
+    TEXTAREA
+
+#define SVC_(name, argcount) STUB_U name
+
+#include "w32ksvc.h"
+
+    END
+
+#else
 
 .code
 
@@ -9,4 +20,6 @@ SyscallId = HEX(1000)
 
 #include "w32ksvc.h"
 
-END
+    END
+#endif
+
