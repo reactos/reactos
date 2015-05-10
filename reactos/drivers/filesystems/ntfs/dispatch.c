@@ -82,7 +82,7 @@ NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IrpContext->PriorityBoost);
 
     if (IrpContext)
         ExFreePoolWithTag(IrpContext, 'PRIN');

@@ -87,6 +87,7 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
     IrpContext->MinorFunction = IrpContext->Stack->MinorFunction;
     IrpContext->FileObject = IrpContext->Stack->FileObject;
     IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
+    IrpContext->PriorityBoost = IO_NO_INCREMENT;
 
     if (IrpContext->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
         IrpContext->MajorFunction == IRP_MJ_DEVICE_CONTROL ||

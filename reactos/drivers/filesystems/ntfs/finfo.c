@@ -271,10 +271,10 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
 
         case FileNameInformation:
             Status = NtfsGetNameInformation(FileObject,
-                                      Fcb,
-                                      DeviceObject,
-                                      SystemBuffer,
-                                      &BufferLength);
+                                            Fcb,
+                                            DeviceObject,
+                                            SystemBuffer,
+                                            &BufferLength);
             break;
 
         case FileInternalInformation:

@@ -406,6 +406,7 @@ typedef struct
     PDEVICE_OBJECT DeviceObject;
     PFILE_OBJECT FileObject;
     NTSTATUS SavedExceptionCode;
+    CCHAR PriorityBoost;
 } NTFS_IRP_CONTEXT, *PNTFS_IRP_CONTEXT;
 
 typedef struct _NTFS_ATTR_CONTEXT
