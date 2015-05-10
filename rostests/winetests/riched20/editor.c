@@ -194,7 +194,7 @@ static struct find_s find_tests2[] = {
   {10, -1, "winewine", FR_DOWN | FR_WHOLEWORD, 23},
   {11, -1, "winewine", FR_WHOLEWORD, 0},
   {31, -1, "winewine", FR_WHOLEWORD, 23},
-  
+
   /* Bad ranges */
   {5, 200, "XXX", FR_DOWN, -1},
   {-20, 20, "Wine", FR_DOWN, -1},
@@ -1327,7 +1327,7 @@ static void test_TM_PLAINTEXT(void)
   ok((cf2.dwMask == cf2test.dwMask) && (cf2.dwEffects == cf2test.dwEffects),
      "two selections' formats differ - cf2.dwMask: %x, cf2test.dwMask %x, cf2.dwEffects: %x, cf2test.dwEffects: %x\n",
      cf2.dwMask, cf2test.dwMask, cf2.dwEffects, cf2test.dwEffects);
-  
+
   /*Fill the control with a "wine" string, which when inserted will be bold*/
 
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"wine");
@@ -1399,7 +1399,7 @@ static void test_WM_GETTEXT(void)
         "WM_GETTEXT returned %d, expected %d\n", result, lstrlenA(buffer));
     SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
     result = strcmp(buffer,text);
-    ok(result == 0, 
+    ok(result == 0,
         "WM_GETTEXT: settext and gettext differ. strcmp: %d\n", result);
 
     /* Test for returned value of WM_GETTEXTLENGTH */
@@ -1586,7 +1586,7 @@ static void test_EM_SETOPTIONS(void)
     /* testing no readonly by sending 'a' to the control*/
     SendMessageA(hwndRichEdit, WM_CHAR, 'a', 0x1E0001);
     SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
-    ok(buffer[0]=='a', 
+    ok(buffer[0]=='a',
        "EM_SETOPTIONS: Text not changed! s1:%s s2:%s\n", text, buffer);
     SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text);
 
@@ -1595,8 +1595,8 @@ static void test_EM_SETOPTIONS(void)
     SendMessageA(hwndRichEdit, EM_SETOPTIONS, ECOOP_SET, ECO_READONLY);
     SendMessageA(hwndRichEdit, WM_CHAR, 'a', 0x1E0001);
     SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
-    ok(buffer[0]==text[0], 
-       "EM_SETOPTIONS: Text changed! s1:%s s2:%s\n", text, buffer); 
+    ok(buffer[0]==text[0],
+       "EM_SETOPTIONS: Text changed! s1:%s s2:%s\n", text, buffer);
 
     /* EM_SETOPTIONS changes the window style, but changing the
      * window style does not change the options. */
@@ -1634,11 +1634,11 @@ static void check_CFE_LINK_rcvd(HWND hwnd, BOOL is_url, const char * url)
   BOOL link_present = FALSE;
 
   link_present = check_CFE_LINK_selection(hwnd, 0, 1);
-  if (is_url) 
+  if (is_url)
   { /* control text is url; should get CFE_LINK */
     ok(link_present, "URL Case: CFE_LINK not set for [%s].\n", url);
   }
-  else 
+  else
   {
     ok(!link_present, "Non-URL Case: CFE_LINK set for [%s].\n", url);
   }
@@ -2414,7 +2414,7 @@ static void test_EM_SCROLL(void)
        "(line %d scrolled to line %d\n", y_before, y_after);
 
     y_before = y_after;
-    
+
     r = SendMessageA(hwndRichEdit, EM_SCROLL, SB_PAGEUP, 0); /* page up */
     y_after = SendMessageA(hwndRichEdit, EM_GETFIRSTVISIBLELINE, 0, 0);
     ok(((r & 0xffffff00) == 0x0001ff00),
@@ -2422,7 +2422,7 @@ static void test_EM_SCROLL(void)
        "(r == 0x%08x)\n", r);
     ok(y_after < y_before, "EM_SCROLL page up not functioning (line "
        "%d scrolled to line %d\n", y_before, y_after);
-    
+
     y_before = y_after;
 
     r = SendMessageA(hwndRichEdit, EM_SCROLL, SB_LINEDOWN, 0); /* line down */
@@ -3220,16 +3220,16 @@ static void test_scrollbar_visibility(void)
 static void test_EM_SETUNDOLIMIT(void)
 {
   /* cases we test for:
-   * default behaviour - limiting at 100 undo's 
+   * default behaviour - limiting at 100 undo's
    * undo disabled - setting a limit of 0
    * undo limited -  undo limit set to some to some number, like 2
    * bad input - sending a negative number should default to 100 undo's */
- 
+
   HWND hwndRichEdit = new_richedit(NULL);
   CHARRANGE cr;
   int i;
   int result;
-  
+
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"x");
   cr.cpMin = 0;
   cr.cpMax = 1;
@@ -3270,13 +3270,13 @@ static void test_EM_SETUNDOLIMIT(void)
   SendMessageA(hwndRichEdit, WM_UNDO, 0, 0);
   ok(!SendMessageA(hwndRichEdit, EM_CANUNDO, 0, 0),
      "EM_SETUNDOLIMIT allowed a third undo with UNDOLIMIT set to 2\n");
-  
+
   /* fourth case - setting negative numbers should default to 100 undos */
   SendMessageA(hwndRichEdit,EM_EMPTYUNDOBUFFER, 0,0);
   result = SendMessageA(hwndRichEdit, EM_SETUNDOLIMIT, -1, 0);
-  ok (result == 100, 
+  ok (result == 100,
       "EM_SETUNDOLIMIT returned %d when set to -1, instead of 100\n",result);
-      
+
   DestroyWindow(hwndRichEdit);
 }
 
@@ -3515,9 +3515,9 @@ static void test_EM_SETTEXTEX(void)
   int sel_start, sel_end;
   SETTEXTEX setText;
   GETTEXTEX getText;
-  WCHAR TestItem1[] = {'T', 'e', 's', 't', 
-                       'S', 'o', 'm', 'e', 
-                       'T', 'e', 'x', 't', 0}; 
+  WCHAR TestItem1[] = {'T', 'e', 's', 't',
+                       'S', 'o', 'm', 'e',
+                       'T', 'e', 'x', 't', 0};
   WCHAR TestItem1alt[] = {'T', 'T', 'e', 's',
                           't', 'S', 'o', 'm',
                           'e', 'T', 'e', 'x',
@@ -3732,8 +3732,8 @@ static void test_EM_SETTEXTEX(void)
   /* !ST_SELECTION && Unicode && !\rtf */
   result = SendMessageA(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, 0);
   SendMessageA(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM)buf);
-  
-  ok (result == 1, 
+
+  ok (result == 1,
       "EM_SETTEXTEX returned %d, instead of 1\n",result);
   ok(!buf[0], "EM_SETTEXTEX with NULL lParam should clear rich edit.\n");
 
@@ -3751,7 +3751,7 @@ static void test_EM_SETTEXTEX(void)
       "EM_SETTEXTEX with NULL lParam to replace selection"
       " with no text should return 0. Got %i\n",
       result);
-  
+
   /* put some text back: !ST_SELECTION && Unicode && !\rtf */
   setText.flags = 0;
   SendMessageA(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM)TestItem1);
@@ -3962,68 +3962,68 @@ static void test_EM_EXLIMITTEXT(void)
   char buffer[1024 + 1];
   int textlimit = 0; /* multiple of 100 */
   HWND hwndRichEdit = new_richedit(NULL);
-  
+
   i = SendMessageA(hwndRichEdit, EM_GETLIMITTEXT, 0, 0);
   ok(32767 == i, "EM_EXLIMITTEXT: expected: %d, actual: %d\n", 32767, i); /* default */
-  
+
   textlimit = 256000;
   SendMessageA(hwndRichEdit, EM_EXLIMITTEXT, 0, textlimit);
   i = SendMessageA(hwndRichEdit, EM_GETLIMITTEXT, 0, 0);
   /* set higher */
   ok(textlimit == i, "EM_EXLIMITTEXT: expected: %d, actual: %d\n", textlimit, i);
-  
+
   textlimit = 1000;
   SendMessageA(hwndRichEdit, EM_EXLIMITTEXT, 0, textlimit);
   i = SendMessageA(hwndRichEdit, EM_GETLIMITTEXT, 0, 0);
   /* set lower */
   ok(textlimit == i, "EM_EXLIMITTEXT: expected: %d, actual: %d\n", textlimit, i);
- 
+
   SendMessageA(hwndRichEdit, EM_EXLIMITTEXT, 0, 0);
   i = SendMessageA(hwndRichEdit, EM_GETLIMITTEXT, 0, 0);
   /* default for WParam = 0 */
   ok(65536 == i, "EM_EXLIMITTEXT: expected: %d, actual: %d\n", 65536, i);
- 
+
   textlimit = sizeof(text)-1;
   memset(text, 'W', textlimit);
   text[sizeof(text)-1] = 0;
   SendMessageA(hwndRichEdit, EM_EXLIMITTEXT, 0, textlimit);
   /* maxed out text */
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text);
-  
+
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);  /* select everything */
   SendMessageA(hwndRichEdit, EM_GETSEL, (WPARAM)&selBegin, (LPARAM)&selEnd);
   len1 = selEnd - selBegin;
-  
+
   SendMessageA(hwndRichEdit, WM_KEYDOWN, VK_BACK, 1);
   SendMessageA(hwndRichEdit, WM_CHAR, VK_BACK, 1);
   SendMessageA(hwndRichEdit, WM_KEYUP, VK_BACK, 1);
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
   SendMessageA(hwndRichEdit, EM_GETSEL, (WPARAM)&selBegin, (LPARAM)&selEnd);
   len2 = selEnd - selBegin;
-  
+
   ok(len1 != len2,
     "EM_EXLIMITTEXT: Change Expected\nOld Length: %d, New Length: %d, Limit: %d\n",
     len1,len2,i);
-  
+
   SendMessageA(hwndRichEdit, WM_KEYDOWN, 'A', 1);
   SendMessageA(hwndRichEdit, WM_CHAR, 'A', 1);
   SendMessageA(hwndRichEdit, WM_KEYUP, 'A', 1);
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
   SendMessageA(hwndRichEdit, EM_GETSEL, (WPARAM)&selBegin, (LPARAM)&selEnd);
   len1 = selEnd - selBegin;
-  
+
   ok(len1 != len2,
     "EM_EXLIMITTEXT: Change Expected\nOld Length: %d, New Length: %d, Limit: %d\n",
     len1,len2,i);
-  
+
   SendMessageA(hwndRichEdit, WM_KEYDOWN, 'A', 1);
   SendMessageA(hwndRichEdit, WM_CHAR, 'A', 1);
   SendMessageA(hwndRichEdit, WM_KEYUP, 'A', 1);  /* full; should be no effect */
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
   SendMessageA(hwndRichEdit, EM_GETSEL, (WPARAM)&selBegin, (LPARAM)&selEnd);
   len2 = selEnd - selBegin;
-  
-  ok(len1 == len2, 
+
+  ok(len1 == len2,
     "EM_EXLIMITTEXT: No Change Expected\nOld Length: %d, New Length: %d, Limit: %d\n",
     len1,len2,i);
 
@@ -4103,26 +4103,26 @@ static void test_EM_GETLIMITTEXT(void)
 static void test_WM_SETFONT(void)
 {
   /* There is no invalid input or error conditions for this function.
-   * NULL wParam and lParam just fall back to their default values 
+   * NULL wParam and lParam just fall back to their default values
    * It should be noted that even if you use a gibberish name for your fonts
    * here, it will still work because the name is stored. They will display as
    * System, but will report their name to be whatever they were created as */
-  
+
   HWND hwndRichEdit = new_richedit(NULL);
-  HFONT testFont1 = CreateFontA (0,0,0,0,FW_LIGHT, 0, 0, 0, ANSI_CHARSET, 
-    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | 
+  HFONT testFont1 = CreateFontA (0,0,0,0,FW_LIGHT, 0, 0, 0, ANSI_CHARSET,
+    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
     FF_DONTCARE, "Marlett");
-  HFONT testFont2 = CreateFontA (0,0,0,0,FW_LIGHT, 0, 0, 0, ANSI_CHARSET, 
-    OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | 
+  HFONT testFont2 = CreateFontA (0,0,0,0,FW_LIGHT, 0, 0, 0, ANSI_CHARSET,
+    OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
     FF_DONTCARE, "MS Sans Serif");
-  HFONT testFont3 = CreateFontA (0,0,0,0,FW_LIGHT, 0, 0, 0, ANSI_CHARSET, 
-    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | 
+  HFONT testFont3 = CreateFontA (0,0,0,0,FW_LIGHT, 0, 0, 0, ANSI_CHARSET,
+    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
     FF_DONTCARE, "Courier");
   LOGFONTA sentLogFont;
   CHARFORMAT2A returnedCF2A;
-  
+
   returnedCF2A.cbSize = sizeof(returnedCF2A);
-  
+
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"x");
   SendMessageA(hwndRichEdit, WM_SETFONT, (WPARAM)testFont1, MAKELPARAM(TRUE, 0));
   SendMessageA(hwndRichEdit, EM_GETCHARFORMAT,   SCF_DEFAULT,  (LPARAM)&returnedCF2A);
@@ -4138,26 +4138,26 @@ static void test_WM_SETFONT(void)
   ok (!strcmp(sentLogFont.lfFaceName,returnedCF2A.szFaceName),
     "EM_GETCHARFORMAT: Returned wrong font on test 2. Sent: %s, Returned: %s\n",
     sentLogFont.lfFaceName,returnedCF2A.szFaceName);
-    
+
   SendMessageA(hwndRichEdit, WM_SETFONT, (WPARAM)testFont3, MAKELPARAM(TRUE, 0));
   SendMessageA(hwndRichEdit, EM_GETCHARFORMAT,   SCF_DEFAULT,  (LPARAM)&returnedCF2A);
   GetObjectA(testFont3, sizeof(LOGFONTA), &sentLogFont);
   ok (!strcmp(sentLogFont.lfFaceName,returnedCF2A.szFaceName),
     "EM_GETCHARFORMAT: Returned wrong font on test 3. Sent: %s, Returned: %s\n",
     sentLogFont.lfFaceName,returnedCF2A.szFaceName);
-   
+
   /* This last test is special since we send in NULL. We clear the variables
    * and just compare to "System" instead of the sent in font name. */
   ZeroMemory(&returnedCF2A,sizeof(returnedCF2A));
   ZeroMemory(&sentLogFont,sizeof(sentLogFont));
   returnedCF2A.cbSize = sizeof(returnedCF2A);
-  
+
   SendMessageA(hwndRichEdit, WM_SETFONT, 0, MAKELPARAM((WORD) TRUE, 0));
   SendMessageA(hwndRichEdit, EM_GETCHARFORMAT,   SCF_DEFAULT,  (LPARAM)&returnedCF2A);
   GetObjectA(NULL, sizeof(LOGFONTA), &sentLogFont);
   ok (!strcmp("System",returnedCF2A.szFaceName),
     "EM_GETCHARFORMAT: Returned wrong font on test 4. Sent: NULL, Returned: %s. Expected \"System\".\n",returnedCF2A.szFaceName);
-  
+
   DestroyWindow(hwndRichEdit);
 }
 
@@ -4187,43 +4187,43 @@ static void test_EM_GETMODIFY(void)
   HWND hwndRichEdit = new_richedit(NULL);
   LRESULT result;
   SETTEXTEX setText;
-  WCHAR TestItem1[] = {'T', 'e', 's', 't', 
-                       'S', 'o', 'm', 'e', 
-                       'T', 'e', 'x', 't', 0}; 
-  WCHAR TestItem2[] = {'T', 'e', 's', 't', 
-                       'S', 'o', 'm', 'e', 
+  WCHAR TestItem1[] = {'T', 'e', 's', 't',
+                       'S', 'o', 'm', 'e',
+                       'T', 'e', 'x', 't', 0};
+  WCHAR TestItem2[] = {'T', 'e', 's', 't',
+                       'S', 'o', 'm', 'e',
                        'O', 't', 'h', 'e', 'r',
-                       'T', 'e', 'x', 't', 0}; 
+                       'T', 'e', 'x', 't', 0};
   const char* streamText = "hello world";
   CHARFORMAT2A cf2;
   PARAFORMAT2 pf2;
   EDITSTREAM es;
-  
-  HFONT testFont = CreateFontA (0,0,0,0,FW_LIGHT, 0, 0, 0, ANSI_CHARSET, 
-    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | 
+
+  HFONT testFont = CreateFontA (0,0,0,0,FW_LIGHT, 0, 0, 0, ANSI_CHARSET,
+    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
     FF_DONTCARE, "Courier");
-  
+
   setText.codepage = 1200;  /* no constant for unicode */
   setText.flags = ST_KEEPUNDO;
-  
+
 
   /* modify flag shouldn't be set when richedit is first created */
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
-  ok (result == 0, 
+  ok (result == 0,
       "EM_GETMODIFY returned non-zero, instead of zero on create\n");
-  
+
   /* setting modify flag should actually set it */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, TRUE, 0);
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
-  ok (result != 0, 
+  ok (result != 0,
       "EM_GETMODIFY returned zero, instead of non-zero on EM_SETMODIFY\n");
-  
+
   /* clearing modify flag should actually clear it */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
-  ok (result == 0, 
+  ok (result == 0,
       "EM_GETMODIFY returned non-zero, instead of zero on EM_SETMODIFY\n");
- 
+
   /* setting font doesn't change modify flag */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   SendMessageA(hwndRichEdit, WM_SETFONT, (WPARAM)testFont, MAKELPARAM(TRUE, 0));
@@ -4237,13 +4237,13 @@ static void test_EM_GETMODIFY(void)
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result != 0,
       "EM_GETMODIFY returned zero, instead of non-zero on setting text\n");
-  
+
   /* undo previous text doesn't reset modify flag */
   SendMessageA(hwndRichEdit, WM_UNDO, 0, 0);
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result != 0,
       "EM_GETMODIFY returned zero, instead of non-zero on undo after setting text\n");
-  
+
   /* set text with no flag to keep undo stack should not set modify flag */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   setText.flags = 0;
@@ -4251,21 +4251,21 @@ static void test_EM_GETMODIFY(void)
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result == 0,
       "EM_GETMODIFY returned non-zero, instead of zero when setting text while not keeping undo stack\n");
-  
+
   /* WM_SETTEXT doesn't modify */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)TestItem2);
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result == 0,
       "EM_GETMODIFY returned non-zero for WM_SETTEXT\n");
-  
+
   /* clear the text */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   SendMessageA(hwndRichEdit, WM_CLEAR, 0, 0);
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result == 0,
       "EM_GETMODIFY returned non-zero, instead of zero for WM_CLEAR\n");
-  
+
   /* replace text */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   SendMessageA(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM)TestItem1);
@@ -4274,7 +4274,7 @@ static void test_EM_GETMODIFY(void)
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result != 0,
       "EM_GETMODIFY returned zero, instead of non-zero when replacing text\n");
-  
+
   /* copy/paste text 1 */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, 2);
@@ -4283,7 +4283,7 @@ static void test_EM_GETMODIFY(void)
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result != 0,
       "EM_GETMODIFY returned zero, instead of non-zero when pasting identical text\n");
-  
+
   /* copy/paste text 2 */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, 2);
@@ -4293,7 +4293,7 @@ static void test_EM_GETMODIFY(void)
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result != 0,
       "EM_GETMODIFY returned zero, instead of non-zero when pasting different text\n");
-  
+
   /* press char */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, 1);
@@ -4309,7 +4309,7 @@ static void test_EM_GETMODIFY(void)
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result != 0,
       "EM_GETMODIFY returned zero, instead of non-zero for backspace\n");
-  
+
   /* set char format */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   cf2.cbSize = sizeof(CHARFORMAT2A);
@@ -4322,7 +4322,7 @@ static void test_EM_GETMODIFY(void)
   result = SendMessageA(hwndRichEdit, EM_GETMODIFY, 0, 0);
   ok (result != 0,
       "EM_GETMODIFY returned zero, instead of non-zero for EM_SETCHARFORMAT\n");
-  
+
   /* set para format */
   SendMessageA(hwndRichEdit, EM_SETMODIFY, FALSE, 0);
   pf2.cbSize = sizeof(PARAFORMAT2);
@@ -5423,8 +5423,8 @@ static void test_unicode_conversions(void)
 #define set_textA(hwnd, wm_set_text, txt) \
     do { \
         SETTEXTEX stex = { ST_DEFAULT, CP_ACP }; \
-        UNREFERENCED_LOCAL_VARIABLE(stex); \
         WPARAM wparam = (wm_set_text == WM_SETTEXT) ? 0 : (WPARAM)&stex; \
+        UNREFERENCED_LOCAL_VARIABLE(stex); \
         assert(wm_set_text == WM_SETTEXT || wm_set_text == EM_SETTEXTEX); \
         ret = SendMessageA(hwnd, wm_set_text, wparam, (LPARAM)txt); \
         ok(ret, "SendMessageA(%02x) error %u\n", wm_set_text, GetLastError()); \
@@ -5432,8 +5432,8 @@ static void test_unicode_conversions(void)
 #define expect_textA(hwnd, wm_get_text, txt) \
     do { \
         GETTEXTEX gtex = { 64, GT_DEFAULT, CP_ACP, NULL, NULL }; \
-        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         WPARAM wparam = (wm_get_text == WM_GETTEXT) ? 64 : (WPARAM)&gtex; \
+        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         assert(wm_get_text == WM_GETTEXT || wm_get_text == EM_GETTEXTEX); \
         memset(bufA, 0xAA, sizeof(bufA)); \
         ret = SendMessageA(hwnd, wm_get_text, wparam, (LPARAM)bufA); \
@@ -5445,8 +5445,8 @@ static void test_unicode_conversions(void)
 #define set_textW(hwnd, wm_set_text, txt) \
     do { \
         SETTEXTEX stex = { ST_DEFAULT, 1200 }; \
-        UNREFERENCED_LOCAL_VARIABLE(stex); \
         WPARAM wparam = (wm_set_text == WM_SETTEXT) ? 0 : (WPARAM)&stex; \
+        UNREFERENCED_LOCAL_VARIABLE(stex); \
         assert(wm_set_text == WM_SETTEXT || wm_set_text == EM_SETTEXTEX); \
         ret = SendMessageW(hwnd, wm_set_text, wparam, (LPARAM)txt); \
         ok(ret, "SendMessageW(%02x) error %u\n", wm_set_text, GetLastError()); \
@@ -5454,8 +5454,8 @@ static void test_unicode_conversions(void)
 #define expect_textW(hwnd, wm_get_text, txt) \
     do { \
         GETTEXTEX gtex = { 64, GT_DEFAULT, 1200, NULL, NULL }; \
-        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         WPARAM wparam = (wm_get_text == WM_GETTEXT) ? 64 : (WPARAM)&gtex; \
+        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         assert(wm_get_text == WM_GETTEXT || wm_get_text == EM_GETTEXTEX); \
         memset(bufW, 0xAA, sizeof(bufW)); \
         ret = SendMessageW(hwnd, wm_get_text, wparam, (LPARAM)bufW); \
@@ -5466,8 +5466,8 @@ static void test_unicode_conversions(void)
 #define expect_empty(hwnd, wm_get_text) \
     do { \
         GETTEXTEX gtex = { 64, GT_DEFAULT, CP_ACP, NULL, NULL }; \
-        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         WPARAM wparam = (wm_get_text == WM_GETTEXT) ? 64 : (WPARAM)&gtex; \
+        UNREFERENCED_LOCAL_VARIABLE(gtex); \
         assert(wm_get_text == WM_GETTEXT || wm_get_text == EM_GETTEXTEX); \
         memset(bufA, 0xAA, sizeof(bufA)); \
         ret = SendMessageA(hwnd, wm_get_text, wparam, (LPARAM)bufA); \
