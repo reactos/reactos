@@ -259,10 +259,12 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     /* Buffer for command line conversion: 1 byte for size; 127 bytes for contents */
     CHAR CmdLineBuffer[1 + DOS_CMDLINE_LENGTH];
 
-    DPRINT1("DosLoadExecutable(%d, %s, 0x%08X, 0x%08X)\n",
+    DPRINT1("DosLoadExecutable(%d, '%s', 0x%08X, 0x%08X, 0x%08X)\n",
             LoadType,
             ExecutablePath,
-            Parameters);
+            Parameters,
+            CommandLine,
+            Environment);
 
     /* Try to get the full path to the executable */
     if (GetFullPathNameA(ExecutablePath, sizeof(FullPath), FullPath, NULL))
@@ -683,7 +685,7 @@ WORD DosCreateProcess(LPCSTR ProgramName,
     DWORD BinaryType;
     LPVOID Environment = NULL;
     VDM_COMMAND_INFO CommandInfo;
-    CHAR CmdLine[MAX_PATH]; // DOS_CMDLINE_LENGTH + 1
+    CHAR CmdLine[MAX_PATH + DOS_CMDLINE_LENGTH + 1];
     CHAR AppName[MAX_PATH];
     CHAR PifFile[MAX_PATH];
     CHAR Desktop[MAX_PATH];
@@ -714,18 +716,23 @@ WORD DosCreateProcess(LPCSTR ProgramName,
     StartupInfo.cb = sizeof(StartupInfo);
 
     /*
-     * Convert the DOS command line to Win32-compatible format.
+     * Convert the DOS command line to Win32-compatible format, by concatenating
+     * the program name with the converted command line.
      * Format of the DOS command line: 1 byte for size; 127 bytes for contents.
      */
+    CmdLinePtr = CmdLine;
+    strncpy(CmdLinePtr, ProgramName, MAX_PATH); // Concatenate the program name
+    CmdLinePtr += strlen(CmdLinePtr);
+    *CmdLinePtr++ = ' ';                        // Add separating space
+
     CmdLineSize = min(*(PBYTE)FAR_POINTER(Parameters->CommandLine), DOS_CMDLINE_LENGTH);
-    RtlCopyMemory(CmdLine,
+    RtlCopyMemory(CmdLinePtr,
                   (LPSTR)FAR_POINTER(Parameters->CommandLine) + 1,
                   CmdLineSize);
     /* NULL-terminate it */
-    CmdLine[CmdLineSize] = '\0';
+    CmdLinePtr[CmdLineSize] = '\0';
 
     /* Remove any trailing return carriage character and NULL-terminate the command line */
-    CmdLinePtr = CmdLine;
     while (*CmdLinePtr && *CmdLinePtr != '\r' && *CmdLinePtr != '\n') CmdLinePtr++;
     *CmdLinePtr = '\0';
 
