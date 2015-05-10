@@ -1945,7 +1945,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
                 return;
             }
 
-            if (GdtEntry.Signature != FAST486_TSS_SIGNATURE)
+            if (GdtEntry.Signature != FAST486_TSS_SIGNATURE
+                && GdtEntry.Signature != FAST486_BUSY_TSS_SIGNATURE
+                && GdtEntry.Signature != FAST486_TSS_16_SIGNATURE
+                && GdtEntry.Signature != FAST486_BUSY_TSS_16_SIGNATURE)
             {
                 /* This is not a TSS descriptor */
                 Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
@@ -1961,6 +1964,18 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
             {
                 State->TaskReg.Limit <<= 12;
                 State->TaskReg.Limit |= 0x00000FFF;
+            }
+
+            if (GdtEntry.Signature != FAST486_BUSY_TSS_SIGNATURE
+                && GdtEntry.Signature != FAST486_BUSY_TSS_16_SIGNATURE)
+            {
+                /* Set the busy bit of this TSS descriptor and write it back */
+                GdtEntry.Signature |= 2;
+
+                Fast486WriteLinearMemory(State,
+                                         State->Gdtr.Address + GET_SEGMENT_INDEX(Selector),
+                                         &GdtEntry,
+                                         sizeof(GdtEntry));
             }
 
             break;
