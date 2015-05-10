@@ -166,6 +166,7 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
 #define CheckSpinLockLock(SpinLock, CheckData, Value) do                            \
 {                                                                                   \
     PKTHREAD Thread = KeGetCurrentThread();                                         \
+    UNREFERENCED_LOCAL_VARIABLE(Thread);                                            \
     if (KmtIsMultiProcessorBuild)                                                   \
     {                                                                               \
         ok_eq_bool(Ret, (Value) == 0);                                              \
