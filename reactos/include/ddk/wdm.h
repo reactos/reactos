@@ -8623,7 +8623,7 @@ _KeQueryTickCount(
 #define HIGH_LEVEL              15
 
 #define KI_USER_SHARED_DATA     0xFFFFF78000000000ULL
-#define SharedUserData          ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+#define SharedUserData          ((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
 #define SharedInterruptTime     (KI_USER_SHARED_DATA + 0x8)
 #define SharedSystemTime        (KI_USER_SHARED_DATA + 0x14)
 #define SharedTickCount         (KI_USER_SHARED_DATA + 0x320)
@@ -8635,8 +8635,9 @@ _KeQueryTickCount(
 #define EFLAG_ZERO              0x4000
 #define EFLAG_SELECT            (EFLAG_SIGN | EFLAG_ZERO)
 
-typedef struct _KFLOATING_SAVE {
-  ULONG Dummy;
+typedef struct _KFLOATING_SAVE
+{
+    ULONG Dummy;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
 typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
@@ -8662,78 +8663,101 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 
 FORCEINLINE
 VOID
-KeMemoryBarrier(VOID)
+KeMemoryBarrier(
+    VOID)
 {
-  // FIXME: Do we really need lfence after the __faststorefence ?
-  FastFence();
-  LFENCE_ACQUIRE();
+    // FIXME: Do we really need lfence after the __faststorefence ?
+    FastFence();
+    LFENCE_ACQUIRE();
 }
 
 #define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
 
+_IRQL_requires_max_(HIGH_LEVEL)
+_IRQL_saves_
 FORCEINLINE
 KIRQL
 KeGetCurrentIrql(VOID)
 {
-  return (KIRQL)__readcr8();
+    return (KIRQL)__readcr8();
 }
 
+_IRQL_requires_max_(HIGH_LEVEL)
 FORCEINLINE
 VOID
-KeLowerIrql(IN KIRQL NewIrql)
+KeLowerIrql(
+    _In_ _IRQL_restores_ _Notliteral_ KIRQL NewIrql)
 {
-  //ASSERT((KIRQL)__readcr8() >= NewIrql);
-  __writecr8(NewIrql);
+    //ASSERT((KIRQL)__readcr8() >= NewIrql);
+    __writecr8(NewIrql);
 }
 
+_IRQL_requires_max_(HIGH_LEVEL)
+_IRQL_raises_(NewIrql)
+_IRQL_saves_
 FORCEINLINE
 KIRQL
-KfRaiseIrql(IN KIRQL NewIrql)
+KfRaiseIrql(
+    _In_ KIRQL NewIrql)
 {
-  KIRQL OldIrql;
+    KIRQL OldIrql;
 
-  OldIrql = (KIRQL)__readcr8();
-  //ASSERT(OldIrql <= NewIrql);
-  __writecr8(NewIrql);
-  return OldIrql;
+    OldIrql = (KIRQL)__readcr8();
+    //ASSERT(OldIrql <= NewIrql);
+    __writecr8(NewIrql);
+    return OldIrql;
 }
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_saves_
+_IRQL_raises_(DISPATCH_LEVEL)
 FORCEINLINE
 KIRQL
-KeRaiseIrqlToDpcLevel(VOID)
+KeRaiseIrqlToDpcLevel(
+    VOID)
 {
-  return KfRaiseIrql(DISPATCH_LEVEL);
+    return KfRaiseIrql(DISPATCH_LEVEL);
 }
 
 FORCEINLINE
 KIRQL
 KeRaiseIrqlToSynchLevel(VOID)
 {
-  return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+    return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
 }
 
 FORCEINLINE
 PKTHREAD
 KeGetCurrentThread(VOID)
 {
-  return (struct _KTHREAD *)__readgsqword(0x188);
+    return (struct _KTHREAD *)__readgsqword(0x188);
 }
 
+_Always_(_Post_satisfies_(return<=0))
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Kernel_float_saved_
+_At_(*FloatSave, _Kernel_requires_resource_not_held_(FloatState) _Kernel_acquires_resource_(FloatState))
 FORCEINLINE
 NTSTATUS
-KeSaveFloatingPointState(PVOID FloatingState)
+KeSaveFloatingPointState(
+    _Out_ PKFLOATING_SAVE FloatSave)
 {
-  UNREFERENCED_PARAMETER(FloatingState);
-  return STATUS_SUCCESS;
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
 }
 
+_Success_(1)
+_Kernel_float_restored_
+_At_(*FloatSave, _Kernel_requires_resource_held_(FloatState) _Kernel_releases_resource_(FloatState))
 FORCEINLINE
 NTSTATUS
-KeRestoreFloatingPointState(PVOID FloatingState)
+KeRestoreFloatingPointState(
+    _In_ PKFLOATING_SAVE FloatSave)
 {
-  UNREFERENCED_PARAMETER(FloatingState);
-  return STATUS_SUCCESS;
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
 }
 
 /* VOID
@@ -8956,9 +8980,206 @@ KeRaiseIrqlToSynchLevel(VOID);
 
 
 #elif defined(_M_ARM)
-#include <armddk.h>
+/** Kernel definitions for ARM **/
+
+/* Interrupt request levels */
+#define PASSIVE_LEVEL           0
+#define LOW_LEVEL               0
+#define APC_LEVEL               1
+#define DISPATCH_LEVEL          2
+#define CLOCK_LEVEL             13
+#define IPI_LEVEL               14
+#define DRS_LEVEL               14
+#define POWER_LEVEL             14
+#define PROFILE_LEVEL           15
+#define HIGH_LEVEL              15
+
+#define KIP0PCRADDRESS          0xFFDFF000
+#define KI_USER_SHARED_DATA     0xFFFF9000
+#define SharedUserData          ((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
+
+#define PAGE_SIZE               0x1000
+#define PAGE_SHIFT              12L
+
+typedef struct _KFLOATING_SAVE
+{
+    ULONG Reserved;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
+
+FORCEINLINE
+VOID
+YieldProcessor(
+    VOID)
+{
+    __dmb(_ARM_BARRIER_ISHST);
+    __yield();
+}
+
+#define MemoryBarrier()         __dmb(_ARM_BARRIER_SY)
+#define PreFetchCacheLine(l,a)  __prefetch((const void *) (a))
+#define PrefetchForWrite(p)     __prefetch((const void *) (p))
+#define ReadForWriteAccess(p)   (*(p))
+
+FORCEINLINE
+VOID
+KeMemoryBarrier(
+    VOID)
+{
+    _ReadWriteBarrier();
+    MemoryBarrier();
+}
 
 #define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
+
+_IRQL_requires_max_(HIGH_LEVEL)
+_IRQL_saves_
+NTHALAPI
+KIRQL
+NTAPI
+KeGetCurrentIrql(
+    VOID);
+
+_IRQL_requires_max_(HIGH_LEVEL)
+NTHALAPI
+VOID
+FASTCALL
+KfLowerIrql(
+    _In_ _IRQL_restores_ _Notliteral_ KIRQL NewIrql);
+#define KeLowerIrql(a) KfLowerIrql(a)
+
+_IRQL_requires_max_(HIGH_LEVEL)
+_IRQL_raises_(NewIrql)
+_IRQL_saves_
+NTHALAPI
+KIRQL
+FASTCALL
+KfRaiseIrql(
+    _In_ KIRQL NewIrql);
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_saves_
+_IRQL_raises_(DISPATCH_LEVEL)
+NTHALAPI
+KIRQL
+NTAPI
+KeRaiseIrqlToDpcLevel(VOID);
+
+NTHALAPI
+KIRQL
+NTAPI
+KeRaiseIrqlToSynchLevel(VOID);
+
+_Requires_lock_not_held_(*SpinLock)
+_Acquires_lock_(*SpinLock)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_saves_
+_IRQL_raises_(DISPATCH_LEVEL)
+NTHALAPI
+KIRQL
+FASTCALL
+KfAcquireSpinLock(
+  _Inout_ PKSPIN_LOCK SpinLock);
+#define KeAcquireSpinLock(a,b) *(b) = KfAcquireSpinLock(a)
+
+_Requires_lock_held_(*SpinLock)
+_Releases_lock_(*SpinLock)
+_IRQL_requires_(DISPATCH_LEVEL)
+NTHALAPI
+VOID
+FASTCALL
+KfReleaseSpinLock(
+  _Inout_ PKSPIN_LOCK SpinLock,
+  _In_ _IRQL_restores_ KIRQL NewIrql);
+#define KeReleaseSpinLock(a,b) KfReleaseSpinLock(a,b)
+
+_Requires_lock_not_held_(*SpinLock)
+_Acquires_lock_(*SpinLock)
+_IRQL_requires_min_(DISPATCH_LEVEL)
+NTKERNELAPI
+VOID
+FASTCALL
+KefAcquireSpinLockAtDpcLevel(
+  _Inout_ PKSPIN_LOCK SpinLock);
+#define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
+
+_Requires_lock_held_(*SpinLock)
+_Releases_lock_(*SpinLock)
+_IRQL_requires_min_(DISPATCH_LEVEL)
+NTKERNELAPI
+VOID
+FASTCALL
+KefReleaseSpinLockFromDpcLevel(
+  _Inout_ PKSPIN_LOCK SpinLock);
+#define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
+
+NTSYSAPI
+PKTHREAD
+NTAPI
+KeGetCurrentThread(VOID);
+
+_Always_(_Post_satisfies_(return<=0))
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Kernel_float_saved_
+_At_(*FloatSave, _Kernel_requires_resource_not_held_(FloatState) _Kernel_acquires_resource_(FloatState))
+FORCEINLINE
+NTSTATUS
+KeSaveFloatingPointState(
+    _Out_ PKFLOATING_SAVE FloatSave)
+{
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
+}
+
+_Success_(1)
+_Kernel_float_restored_
+_At_(*FloatSave, _Kernel_requires_resource_held_(FloatState) _Kernel_releases_resource_(FloatState))
+FORCEINLINE
+NTSTATUS
+KeRestoreFloatingPointState(
+    _In_ PKFLOATING_SAVE FloatSave)
+{
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
+}
+
+VOID
+KeFlushIoBuffers(
+    _In_ PMDL Mdl,
+    _In_ BOOLEAN ReadOperation,
+    _In_ BOOLEAN DmaOperation);
+
+#define DbgRaiseAssertionFailure() __emit(0xdefc)
+
+FORCEINLINE
+VOID
+_KeQueryTickCount(
+  OUT PLARGE_INTEGER CurrentCount)
+{
+  for (;;) {
+#ifdef NONAMELESSUNION
+    CurrentCount->s.HighPart = KeTickCount.High1Time;
+    CurrentCount->s.LowPart = KeTickCount.LowPart;
+    if (CurrentCount->s.HighPart == KeTickCount.High2Time) break;
+#else
+    CurrentCount->HighPart = KeTickCount.High1Time;
+    CurrentCount->LowPart = KeTickCount.LowPart;
+    if (CurrentCount->HighPart == KeTickCount.High2Time) break;
+#endif
+    YieldProcessor();
+  }
+}
+#define KeQueryTickCount(CurrentCount) _KeQueryTickCount(CurrentCount)
+
+#define CP15_PMSELR     15, 0,  9, 12, 5 /* Event Counter Selection Register */
+#define CP15_PMXEVCNTR  15, 0,  9, 13, 2 /* Event Count Register */
+#define CP15_TPIDRURW   15, 0, 13,  0, 2 /* Software Thread ID Register, UsRW */
+#define CP15_TPIDRURO   15, 0, 13,  0, 3 /* Software Thread ID Register, UsRO */
+#define CP15_TPIDRPRW   15, 0, 13,  0, 4 /* Software Thread ID Register, Kernel */
+
 #else
 #error Unknown Architecture
 #endif

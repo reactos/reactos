@@ -2023,10 +2023,10 @@ typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
 #define XSTATE_LEGACY_SSE                   1
 #define XSTATE_GSSE                         2
 
-#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1i64 << (XSTATE_LEGACY_FLOATING_POINT))
-#define XSTATE_MASK_LEGACY_SSE              (1i64 << (XSTATE_LEGACY_SSE))
+#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1LL << (XSTATE_LEGACY_FLOATING_POINT))
+#define XSTATE_MASK_LEGACY_SSE              (1LL << (XSTATE_LEGACY_SSE))
 #define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
-#define XSTATE_MASK_GSSE                    (1i64 << (XSTATE_GSSE))
+#define XSTATE_MASK_GSSE                    (1LL << (XSTATE_GSSE))
 
 #define MAXIMUM_XSTATE_FEATURES             64
 
@@ -3327,12 +3327,16 @@ extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG64 MmUserProbeAddress;
 
-#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
-#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
-#define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
+#define MM_HIGHEST_USER_ADDRESS MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START MmSystemRangeStart
+#if defined(_LOCAL_COPY_USER_PROBE_ADDRESS_)
+#define MM_USER_PROBE_ADDRESS _LOCAL_COPY_USER_PROBE_ADDRESS_
+extern ULONG64 _LOCAL_COPY_USER_PROBE_ADDRESS_;
+#else
+#define MM_USER_PROBE_ADDRESS MmUserProbeAddress
+#endif
+#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
 #define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xFFFF080000000000ULL
-
 
 #elif defined(_M_IA64)
 
@@ -3343,7 +3347,184 @@ extern NTKERNELAPI ULONG64 MmUserProbeAddress;
 
 #elif defined(_M_ARM)
 
-#define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
+#define PAUSE_PROCESSOR __yield();
+
+#define KERNEL_STACK_SIZE         0x3000
+#define KERNEL_LARGE_STACK_SIZE   0xF000
+#define KERNEL_LARGE_STACK_COMMIT KERNEL_STACK_SIZE
+
+#define KERNEL_MCA_EXCEPTION_STACK_SIZE 0x2000
+
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
+/* The following flags control the contents of the CONTEXT structure. */
+#define CONTEXT_ARM             0x200000L
+#define CONTEXT_CONTROL         (CONTEXT_ARM | 0x00000001L)
+#define CONTEXT_INTEGER         (CONTEXT_ARM | 0x00000002L)
+#define CONTEXT_FLOATING_POINT  (CONTEXT_ARM | 0x00000004L)
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_ARM | 0x00000008L)
+#define CONTEXT_FULL            (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT)
+
+typedef struct _NEON128
+{
+    ULONGLONG Low;
+    LONGLONG High;
+} NEON128, *PNEON128;
+
+#define ARM_MAX_BREAKPOINTS 8
+#define ARM_MAX_WATCHPOINTS 1
+
+typedef struct _CONTEXT
+{
+    /* The flags values within this flag control the contents of
+       a CONTEXT record.
+
+       If the context record is used as an input parameter, then
+       for each portion of the context record controlled by a flag
+       whose value is set, it is assumed that that portion of the
+       context record contains valid context. If the context record
+       is being used to modify a thread's context, then only that
+       portion of the threads context will be modified.
+
+       If the context record is used as an IN OUT parameter to capture
+       the context of a thread, then only those portions of the thread's
+       context corresponding to set flags will be returned.
+
+       The context record is never used as an OUT only parameter. */
+    ULONG ContextFlags;
+
+    /* This section is specified/returned if the ContextFlags word contains
+       the flag CONTEXT_INTEGER. */
+    ULONG R0;
+    ULONG R1;
+    ULONG R2;
+    ULONG R3;
+    ULONG R4;
+    ULONG R5;
+    ULONG R6;
+    ULONG R7;
+    ULONG R8;
+    ULONG R9;
+    ULONG R10;
+    ULONG R11;
+    ULONG R12;
+
+    ULONG Sp;
+    ULONG Lr;
+    ULONG Pc;
+    ULONG Cpsr;
+
+    /* Floating Point/NEON Registers */
+    ULONG Fpscr;
+    ULONG Padding;
+    union
+    {
+        NEON128 Q[16];
+        ULONGLONG D[32];
+        ULONG S[32];
+    } DUMMYUNIONNAME;
+
+    /* Debug registers */
+    ULONG Bvr[ARM_MAX_BREAKPOINTS];
+    ULONG Bcr[ARM_MAX_BREAKPOINTS];
+    ULONG Wvr[ARM_MAX_WATCHPOINTS];
+    ULONG Wcr[ARM_MAX_WATCHPOINTS];
+
+    ULONG Padding2[2];
+} CONTEXT;
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
+typedef struct _KPCR
+{
+    _ANONYMOUS_UNION union
+    {
+        NT_TIB NtTib;
+        _ANONYMOUS_STRUCT struct
+        {
+            ULONG TibPad0[2];
+            PVOID Spare1;
+            struct _KPCR *Self;
+            struct _KPRCB *CurrentPrcb;
+            PKSPIN_LOCK_QUEUE LockArray;
+            PVOID Used_Self;
+        };
+    };
+    KIRQL CurrentIrql;
+    UCHAR SecondLevelCacheAssociativity;
+    ULONG Unused0[3];
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    ULONG StallScaleFactor;
+    PVOID Unused1[3];
+    ULONG KernelReserved[15];
+    ULONG SecondLevelCacheSize;
+    _ANONYMOUS_UNION union
+    {
+        USHORT SoftwareInterruptPending; // Software Interrupt Pending Flag
+        struct
+        {
+            UCHAR ApcInterrupt;          // 0x01 if APC int pending
+            UCHAR DispatchInterrupt;     // 0x01 if dispatch int pending
+        };
+    };
+    USHORT InterruptPad;
+    ULONG HalReserved[32];
+    PVOID KdVersionBlock;
+    PVOID Unused3;
+    ULONG PcrAlign1[8];
+} KPCR, *PKPCR;
+
+#define CP15_PCR_RESERVED_MASK 0xFFF
+//#define KIPCR() ((ULONG_PTR)(_MoveFromCoprocessor(CP15_TPIDRPRW)) & ~CP15_PCR_RESERVED_MASK)
+
+FORCEINLINE
+PKPCR
+KeGetPcr(
+    VOID)
+{
+    return (PKPCR)(_MoveFromCoprocessor(CP15_TPIDRPRW) & ~CP15_PCR_RESERVED_MASK);
+}
+
+#if (NTDDI_VERSION < NTDDI_WIN7) || !defined(NT_PROCESSOR_GROUPS)
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorNumber(
+    VOID)
+
+{
+    return *((PUCHAR)KeGetPcr() + 0x580);
+}
+#endif /* (NTDDI_VERSION < NTDDI_WIN7) || !defined(NT_PROCESSOR_GROUPS) */
+
+
+#define PTI_SHIFT 12
+#define PDI_SHIFT 22
+
+#define PDE_BASE 0xC0300000
+#define PTE_BASE 0xC0000000
+#define PDE_TOP  0xC0300FFF
+#define PTE_TOP  0xC03FFFFF
+
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG MmUserProbeAddress;
+
+#define MM_HIGHEST_USER_ADDRESS MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START MmSystemRangeStart
+#if defined(_LOCAL_COPY_USER_PROBE_ADDRESS_)
+#define MM_USER_PROBE_ADDRESS _LOCAL_COPY_USER_PROBE_ADDRESS_
+extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
+#else
+#define MM_USER_PROBE_ADDRESS MmUserProbeAddress
+#endif
+#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
+#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
+#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
+
 #else
 #error Unknown Architecture
 #endif

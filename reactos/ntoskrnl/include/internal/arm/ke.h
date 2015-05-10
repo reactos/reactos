@@ -4,6 +4,9 @@
 
 #define KiServiceExit2 KiExceptionExit
 
+#define SYNCH_LEVEL DISPATCH_LEVEL
+#define PCR                     ((KPCR * const)KIP0PCRADDRESS)
+
 //
 //Lockdown TLB entries
 //
@@ -16,6 +19,11 @@
 #define KD_BREAKPOINT_TYPE        ULONG
 #define KD_BREAKPOINT_SIZE        sizeof(ULONG)
 //#define KD_BREAKPOINT_VALUE
+
+//
+// Maximum IRQs
+//
+#define MAXIMUM_VECTOR          16
 
 //
 // Macros for getting and setting special purpose registers in portable code
@@ -134,6 +142,19 @@ KiApcInterrupt(
 
 VOID
 KeFlushTb(
+    VOID
+);
+
+//
+// Cache clean and flush
+//
+VOID
+HalSweepDcache(
+    VOID
+);
+
+VOID
+HalSweepIcache(
     VOID
 );
 

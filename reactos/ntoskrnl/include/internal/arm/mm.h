@@ -15,11 +15,6 @@
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
 #define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
 
-#define PTE_BASE    0xC0000000
-#define PDE_BASE    0xC0400000
-#define PDE_TOP     0xC04FFFFF
-#define PTE_TOP     0xC03FFFFF
-
 #define PTE_PER_PAGE 256
 #define PDE_PER_PAGE 4096
 #define PPE_PER_PAGE 1

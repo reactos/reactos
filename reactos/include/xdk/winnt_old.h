@@ -2412,13 +2412,19 @@ typedef struct _CONTEXT {
 
 /* The following flags control the contents of the CONTEXT structure. */
 
-#define CONTEXT_ARM    0x0000040
+#define CONTEXT_ARM             0x200000L
 #define CONTEXT_CONTROL         (CONTEXT_ARM | 0x00000001L)
 #define CONTEXT_INTEGER         (CONTEXT_ARM | 0x00000002L)
+#define CONTEXT_FLOATING_POINT  (CONTEXT_ARM | 0x00000004L)
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_ARM | 0x00000008L)
+#define CONTEXT_FULL            (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT)
 
-#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER)
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
 
-typedef struct _NEON128 {
+typedef struct _NEON128
+{
     ULONGLONG Low;
     LONGLONG High;
 } NEON128, *PNEON128;
@@ -2426,7 +2432,8 @@ typedef struct _NEON128 {
 #define ARM_MAX_BREAKPOINTS 8
 #define ARM_MAX_WATCHPOINTS 1
 
-typedef struct _CONTEXT {
+typedef struct _CONTEXT
+{
     /* The flags values within this flag control the contents of
        a CONTEXT record.
 
@@ -2442,7 +2449,6 @@ typedef struct _CONTEXT {
        context corresponding to set flags will be returned.
 
        The context record is never used as an OUT only parameter. */
-
     DWORD ContextFlags;
 
     /* This section is specified/returned if the ContextFlags word contains
@@ -2469,7 +2475,8 @@ typedef struct _CONTEXT {
     /* Floating Point/NEON Registers */
     DWORD Fpscr;
     DWORD Padding;
-    union {
+    union
+    {
         NEON128 Q[16];
         ULONGLONG D[32];
         DWORD S[32];

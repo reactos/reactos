@@ -410,7 +410,6 @@ NtCreateThread(
     _In_ BOOLEAN CreateSuspended
 );
 
-#ifndef _M_ARM
 #ifndef NTOS_MODE_USER
 FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
@@ -418,11 +417,12 @@ FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
     return (PTEB)__readfsdword(0x18);
 #elif defined (_M_AMD64)
     return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
+#elif defined (_M_ARM)
+    return (struct _TEB *)KeGetPcr()->Used_Self;
 #endif
 }
 #else
 struct _TEB * NtCurrentTeb(void);
-#endif
 #endif
 
 NTSYSCALLAPI
