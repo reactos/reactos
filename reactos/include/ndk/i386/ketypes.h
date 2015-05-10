@@ -166,11 +166,6 @@ typedef enum
 // HAL Variables
 //
 #define INITIAL_STALL_COUNT     100
-#ifdef PAE
-#define HYPERSPACE_BASE         0xc0400000
-#else
-#define HYPERSPACE_BASE         0xc0800000
-#endif
 #define MM_HAL_VA_START         0xFFC00000
 #define MM_HAL_VA_END           0xFFFFFFFF
 #define APIC_BASE               0xFFFE0000

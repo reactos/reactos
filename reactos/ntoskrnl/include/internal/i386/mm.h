@@ -12,8 +12,13 @@
 /* Memory layout base addresses */
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
 #define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
+#ifndef PAE
 #define HYPER_SPACE                                    0xC0400000
 #define HYPER_SPACE_END                                0xC07FFFFF
+#else
+#define HYPER_SPACE                                    0xC0800000
+#define HYPER_SPACE_END                                0xC0BFFFFF
+#endif
 #define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
 #define MI_PAGED_POOL_START                     (PVOID)0xE1000000
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000

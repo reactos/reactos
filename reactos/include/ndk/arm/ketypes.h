@@ -142,6 +142,8 @@ extern "C" {
 // HAL Variables
 //
 #define INITIAL_STALL_COUNT     100
+#define MM_HAL_VA_START         0xFFC00000
+#define MM_HAL_VA_END           0xFFFFFFFF
 
 //
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
