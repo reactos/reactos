@@ -72,6 +72,10 @@ NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
             case IRP_MJ_QUERY_INFORMATION:
                 Status = NtfsQueryInformation(IrpContext);
                 break;
+
+            case IRP_MJ_DIRECTORY_CONTROL:
+                Status = NtfsDirectoryControl(IrpContext);
+                break;
         }
     }
     else

@@ -541,10 +541,8 @@ NtfsFsdDeviceControl(PDEVICE_OBJECT DeviceObject,
 
 /* dirctl.c */
 
-DRIVER_DISPATCH NtfsFsdDirectoryControl;
-NTSTATUS NTAPI
-NtfsFsdDirectoryControl(PDEVICE_OBJECT DeviceObject,
-                        PIRP Irp);
+NTSTATUS
+NtfsDirectoryControl(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* dispatch.c */

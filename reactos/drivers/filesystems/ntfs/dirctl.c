@@ -436,52 +436,30 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 
 
 NTSTATUS
-NTAPI
-NtfsFsdDirectoryControl(PDEVICE_OBJECT DeviceObject,
-                        PIRP Irp)
+NtfsDirectoryControl(PNTFS_IRP_CONTEXT IrpContext)
 {
-    PNTFS_IRP_CONTEXT IrpContext = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     DPRINT1("NtfsDirectoryControl() called\n");
 
-    FsRtlEnterFileSystem();
-    ASSERT(DeviceObject);
-    ASSERT(Irp);
-
-    NtfsIsIrpTopLevel(Irp);
-
-    IrpContext = NtfsAllocateIrpContext(DeviceObject, Irp);
-    if (IrpContext)
+    switch (IrpContext->MinorFunction)
     {
-        switch (IrpContext->MinorFunction)
-        {
-            case IRP_MN_QUERY_DIRECTORY:
-                Status = NtfsQueryDirectory(IrpContext);
-                break;
+        case IRP_MN_QUERY_DIRECTORY:
+            Status = NtfsQueryDirectory(IrpContext);
+            break;
 
-            case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-                DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
-                Status = STATUS_NOT_IMPLEMENTED;
-                break;
+        case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
+            DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
 
-            default:
-                Status = STATUS_INVALID_DEVICE_REQUEST;
-                break;
-        }
+        default:
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
     }
-    else
-        Status = STATUS_INSUFFICIENT_RESOURCES;
 
-    Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IrpContext->Irp->IoStatus.Information = 0;
 
-    if (IrpContext)
-        ExFreePoolWithTag(IrpContext, 'PRIN');
-
-    IoSetTopLevelIrp(NULL);
-    FsRtlExitFileSystem();
     return Status;
 }
 
