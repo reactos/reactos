@@ -181,6 +181,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             if (getBL() != 0 && (Bda->TickCounter - StartingCount) >= getBL())
             {
                 /* Timeout expired */
+                setCF(0);
                 break;
             }
 
