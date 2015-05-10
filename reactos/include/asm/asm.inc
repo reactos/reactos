@@ -6,6 +6,9 @@
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
+#ifndef __ASM_INC__
+#define __ASM_INC__
+
 #ifdef _USE_ML
 
 /* Allow ".name" identifiers */
@@ -350,3 +353,5 @@ ENDM
 #define FRAME_TRAP 1
 #define FRAME_TSS 2
 #define FRAME_NONFPO 3
+
+#endif /* __ASM_INC__ */

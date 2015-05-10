@@ -60,9 +60,6 @@ __attribute__ ((section(".asmdef")))
 
 ASMGENDATA Table[] =
 {
-/* PORTABLE CONSTANTS ********************************************************/
-#include "ksx.template.h"
-
 /* ARCHITECTURE SPECIFIC CONTSTANTS ******************************************/
 #ifdef _M_IX86
 #include "ks386.template.h"
@@ -71,6 +68,9 @@ ASMGENDATA Table[] =
 #elif defined(_M_ARM)
 #include "ksarm.template.h"
 #endif
+
+/* PORTABLE CONSTANTS ********************************************************/
+#include "ksx.template.h"
 
     /* End of list */
     {TYPE_END, "", 0}
