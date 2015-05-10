@@ -4073,7 +4073,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
         return;
     }
 
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
         if (!Fast486ProcessGate(State, Segment, Offset, TRUE))
         {
@@ -5126,7 +5126,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
         return;
     }
 
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
         if (!Fast486ProcessGate(State, Segment, Offset, FALSE))
         {

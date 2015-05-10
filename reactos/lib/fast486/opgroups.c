@@ -1467,7 +1467,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
                 return;
             }
 
-            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+            if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                && !State->Flags.Vm)
             {
                 if (!Fast486ProcessGate(State, Selector, Value, TRUE))
                 {
@@ -1529,7 +1530,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
                 return;
             }
 
-            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+            if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                && !State->Flags.Vm)
             {
                 if (!Fast486ProcessGate(State, Selector, Value, FALSE))
                 {
@@ -1629,7 +1631,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
                 return;
             }
 
-            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+            if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                && !State->Flags.Vm)
             {
                 if (!Fast486ProcessGate(State, Selector, Value, TRUE))
                 {
@@ -1697,7 +1700,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
                 return;
             }
 
-            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+            if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                && !State->Flags.Vm)
             {
                 if (!Fast486ProcessGate(State, Selector, Value, FALSE))
                 {
