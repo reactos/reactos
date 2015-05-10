@@ -39,7 +39,7 @@
 CALLBACK16 DosContext;
 
 /*static*/ BYTE CurrentDrive;
-static CHAR LastDrive = 'E';
+static CHAR LastDrive = 'Z'; // The last drive can be redefined with the LASTDRIVE command. At the moment, set the real maximum possible, 'Z'.
 static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
 static PBYTE InDos;
 
