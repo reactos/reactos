@@ -1,8 +1,7 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
+ * PROJECT:           ReactOS CRT librariy
  * PURPOSE:           Implementation of _abnormal_termination
- * FILE:              lib/sdk/crt/except/arm/_abnormal_termination.s
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -14,7 +13,7 @@
     TEXTAREA
 
     LEAF_ENTRY _abnormal_termination
-    DCD 0xdefc // __assertfail
+    __assertfail
     bx lr
     LEAF_END _abnormal_termination
 

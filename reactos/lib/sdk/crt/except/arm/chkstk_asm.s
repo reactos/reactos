@@ -1,8 +1,7 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
+ * PROJECT:           ReactOS CRT librariy
  * PURPOSE:           Implementation of _chkstk and _alloca_probe
- * FILE:              lib/sdk/crt/except/arm/chkstk_asm.s
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  *                    Yuntian Zhang (yuntian.zh@gmail.com)
  */
@@ -14,15 +13,13 @@
 /* CODE **********************************************************************/
     TEXTAREA
 
-MsgUnimplemented ASCII "Unimplemented", CR, LF, NUL
-
     LEAF_ENTRY __chkstk
-    UNIMPLEMENTED chkstk
+    __assertfail
     bx lr
     LEAF_END __chkstk
 
     LEAF_ENTRY __alloca_probe
-    UNIMPLEMENTED alloca_probe
+    __assertfail
     bx lr
     LEAF_END __alloca_probe
 

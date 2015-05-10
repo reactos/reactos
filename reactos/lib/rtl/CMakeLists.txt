@@ -93,6 +93,7 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE arm/debug_asm.S)
     list(APPEND SOURCE
+        arm/except.c
         byteswap.c
         mem.c)
 elseif(ARCH STREQUAL "powerpc")

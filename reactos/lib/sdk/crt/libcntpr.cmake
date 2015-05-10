@@ -135,19 +135,48 @@ elseif(ARCH STREQUAL "amd64")
         math/sin.c)
 elseif(ARCH STREQUAL "arm")
     list(APPEND LIBCNTPR_SOURCE
+        except/arm/chkstk_asm.s
+        except/arm/__jump_unwind.s
         math/arm/__rt_sdiv.c
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
         math/arm/__rt_udiv64_worker.c
     )
     list(APPEND LIBCNTPR_ASM_SOURCE
+        except/arm/_abnormal_termination.s
+        except/arm/_except_handler2.s
+        except/arm/_except_handler3.s
+        except/arm/_global_unwind2.s
+        except/arm/_local_unwind2.s
+        except/arm/chkstk_asm.s
+        except/arm/ehandler.c
+        float/arm/_clearfp.s
+        float/arm/_controlfp.s
+        float/arm/_fpreset.s
+        float/arm/_statusfp.s
+        math/arm/atan.s
+        math/arm/atan2.s
+        math/arm/ceil.s
+        math/arm/exp.s
+        math/arm/fabs.s
+        math/arm/fmod.s
         math/arm/floor.s
+        math/arm/ldexp.s
+        math/arm/log.s
         math/arm/log10.s
         math/arm/pow.s
+        math/arm/sqrt.s
+        math/arm/tan.s
+        math/arm/__dtoi64.s
         math/arm/__dtou64.s
+        math/arm/__i64tod.s
+        math/arm/__i64tos.s
         math/arm/__u64tod.s
+        math/arm/__u64tos.s
         math/arm/__rt_sdiv64.s
+        math/arm/__rt_srsh.s
         math/arm/__rt_udiv64.s
+        setjmp/arm/setjmp.s
     )
 endif()
 
@@ -178,6 +207,8 @@ if(ARCH STREQUAL "i386")
         string/i386/wcsrchr_asm.s)
 else()
     list(APPEND LIBCNTPR_SOURCE
+        math/cos.c
+        math/sin.c
         mem/memchr.c
         mem/memcpy.c
         mem/memmove.c

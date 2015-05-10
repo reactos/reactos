@@ -1,7 +1,7 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
+ * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
  * PROJECT:           ReactOS CRT library
- * PURPOSE:           Implementation of __jmp_unwind
+ * PURPOSE:           Implementation of __jump_unwind
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -12,10 +12,10 @@
 /* CODE **********************************************************************/
     TEXTAREA
 
-    LEAF_ENTRY __jmp_unwind
+    LEAF_ENTRY __jump_unwind
     __assertfail
     bx lr
-    LEAF_END __jmp_unwind
+    LEAF_END __jump_unwind
 
     END
 /* EOF */

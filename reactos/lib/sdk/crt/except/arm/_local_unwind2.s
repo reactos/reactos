@@ -1,8 +1,7 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
+ * PROJECT:           ReactOS CRT librariy
  * PURPOSE:           Implementation of _local_unwind2
- * FILE:              lib/sdk/crt/except/arm/_local_unwind2.s
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -14,7 +13,7 @@
     TEXTAREA
 
     LEAF_ENTRY _local_unwind2
-    DCD 0xdefc // __assertfail
+    __assertfail
     bx lr
     LEAF_END _local_unwind2
 
