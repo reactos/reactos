@@ -556,9 +556,9 @@ demFileFindFirst(OUT PVOID  lpFindFileData,
     do
     {
         /* Check the attributes and retry as long as we haven't found a matching file */
-        if (((FindData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN |
-                                           FILE_ATTRIBUTE_SYSTEM |
-                                           FILE_ATTRIBUTE_DIRECTORY))
+        if (!((FindData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN |
+                                            FILE_ATTRIBUTE_SYSTEM |
+                                            FILE_ATTRIBUTE_DIRECTORY))
              & ~AttribMask))
         {
             break;
