@@ -1083,15 +1083,15 @@ MiInitializePfnAndMakePteValid(IN PFN_NUMBER PageFrameIndex,
 NTSTATUS
 NTAPI
 MiInitializeAndChargePfn(OUT PPFN_NUMBER PageFrameIndex,
-                         IN PMMPTE PointerPde,
+                         IN PMMPDE PointerPde,
                          IN PFN_NUMBER ContainingPageFrame,
                          IN BOOLEAN SessionAllocation)
 {
-    MMPTE TempPte;
+    MMPDE TempPde;
     KIRQL OldIrql;
 
     /* Use either a global or local PDE */
-    TempPte = SessionAllocation ? ValidKernelPdeLocal : ValidKernelPde;
+    TempPde = SessionAllocation ? ValidKernelPdeLocal : ValidKernelPde;
 
     /* Lock the PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -1106,8 +1106,8 @@ MiInitializeAndChargePfn(OUT PPFN_NUMBER PageFrameIndex,
 
     /* Grab a zero page and set the PFN, then make it valid */
     *PageFrameIndex = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
-    TempPte.u.Hard.PageFrameNumber = *PageFrameIndex;
-    MI_WRITE_VALID_PTE(PointerPde, TempPte);
+    TempPde.u.Hard.PageFrameNumber = *PageFrameIndex;
+    MI_WRITE_VALID_PDE(PointerPde, TempPde);
 
     /* Initialize the PFN */
     MiInitializePfnForOtherProcess(*PageFrameIndex,
@@ -1270,14 +1270,14 @@ MiDecrementReferenceCount(IN PMMPFN Pfn1,
 VOID
 NTAPI
 MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
-                               IN PMMPTE PointerPte,
+                               IN PVOID PteAddress,
                                IN PFN_NUMBER PteFrame)
 {
     PMMPFN Pfn1;
 
     /* Setup the PTE */
     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
-    Pfn1->PteAddress = PointerPte;
+    Pfn1->PteAddress = PteAddress;
 
     /* Make this a software PTE */
     MI_MAKE_SOFTWARE_PTE(&Pfn1->OriginalPte, MM_READWRITE);

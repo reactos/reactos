@@ -45,7 +45,8 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
                           IN PMMVAD Vad,
                           IN PEPROCESS Process)
 {
-    PMMPTE PointerPte, LastPte, PointerPde;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde;
     ULONG CommittedPages;
 
     /* Compute starting and ending PTE and PDE addresses */
@@ -60,7 +61,7 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
         CommittedPages = (ULONG)BYTES_TO_PAGES(EndingAddress - StartingAddress);
 
         /* Is the PDE demand-zero? */
-        PointerPde = MiAddressToPte(PointerPte);
+        PointerPde = MiPteToPde(PointerPte);
         if (PointerPde->u.Long != 0)
         {
             /* It is not. Is it valid? */
@@ -86,7 +87,7 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
             if (MiIsPteOnPdeBoundary(PointerPte))
             {
                 /* Is this PDE demand zero? */
-                PointerPde = MiAddressToPte(PointerPte);
+                PointerPde = MiPteToPde(PointerPte);
                 if (PointerPde->u.Long != 0)
                 {
                     /* It isn't -- is it valid? */
@@ -132,7 +133,7 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
     CommittedPages = 0;
 
     /* Is the PDE demand-zero? */
-    PointerPde = MiAddressToPte(PointerPte);
+    PointerPde = MiPteToPde(PointerPte);
     if (PointerPde->u.Long != 0)
     {
         /* It isn't -- is it invalid? */
@@ -158,7 +159,7 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
         if (MiIsPteOnPdeBoundary(PointerPte))
         {
             /* Is this new PDE demand-zero? */
-            PointerPde = MiAddressToPte(PointerPte);
+            PointerPde = MiPteToPde(PointerPte);
             if (PointerPde->u.Long != 0)
             {
                 /* It isn't. Is it valid? */
@@ -1978,7 +1979,8 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
                          IN PMMVAD Vad,
                          IN PEPROCESS Process)
 {
-    PMMPTE PointerPte, LastPte, PointerPde;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde;
     BOOLEAN OnBoundary = TRUE;
     PAGED_CODE();
 
@@ -2098,7 +2100,8 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     PMMVAD Vad;
     PMMSUPPORT AddressSpace;
     ULONG_PTR StartingAddress, EndingAddress;
-    PMMPTE PointerPde, PointerPte, LastPte;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde;
     MMPTE PteContents;
     PMMPFN Pfn1;
     ULONG ProtectionMask, OldProtect;
@@ -2273,7 +2276,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
             /* Check if we've crossed a PDE boundary and make the new PDE valid too */
             if (MiIsPteOnPdeBoundary(PointerPte))
             {
-                PointerPde = MiAddressToPte(PointerPte);
+                PointerPde = MiPteToPde(PointerPte);
                 MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
             }
 
@@ -2366,7 +2369,7 @@ FailPath:
 
 VOID
 NTAPI
-MiMakePdeExistAndMakeValid(IN PMMPTE PointerPde,
+MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
                            IN PEPROCESS TargetProcess,
                            IN KIRQL OldIrql)
 {
@@ -2502,7 +2505,8 @@ MiDecommitPages(IN PVOID StartingAddress,
                 IN PEPROCESS Process,
                 IN PMMVAD Vad)
 {
-    PMMPTE PointerPde, PointerPte, CommitPte = NULL;
+    PMMPTE PointerPte, CommitPte = NULL;
+    PMMPDE PointerPde;
     ULONG CommitReduction = 0;
     PMMPTE ValidPteList[256];
     ULONG PteCount = 0;
@@ -4316,7 +4320,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     ULONG ProtectionMask, QuotaCharge = 0, QuotaFree = 0;
     BOOLEAN Attached = FALSE, ChangeProtection = FALSE;
     MMPTE TempPte;
-    PMMPTE PointerPte, PointerPde, LastPte;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde;
     TABLE_SEARCH_RESULT Result;
     PAGED_CODE();
 
@@ -4891,7 +4896,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             //
             // Get the PDE and now make it valid too
             //
-            PointerPde = MiAddressToPte(PointerPte);
+            PointerPde = MiPteToPde(PointerPte);
             MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
         }
 

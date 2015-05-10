@@ -336,7 +336,7 @@ FASTCALL
 MiCheckPdeForSessionSpace(IN PVOID Address)
 {
     MMPTE TempPde;
-    PMMPTE PointerPde;
+    PMMPDE PointerPde;
     PVOID SessionAddress;
     ULONG Index;
 
@@ -1959,7 +1959,7 @@ UserFault:
         }
 
         /* Write a demand-zero PDE */
-        MI_WRITE_INVALID_PTE(PointerPde, DemandZeroPde);
+        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
 
         /* Dispatch the fault */
         Status = MiDispatchFault(TRUE,
@@ -2087,7 +2087,12 @@ UserFault:
             if (PointerPde == MiAddressToPde(PTE_BASE))
             {
                 /* Then it's really a demand-zero PDE (on behalf of user-mode) */
+#ifdef _M_ARM
+                _WARN("This is probably completely broken!");
+                MI_WRITE_INVALID_PDE((PMMPDE)PointerPte, DemandZeroPde);
+#else
                 MI_WRITE_INVALID_PTE(PointerPte, DemandZeroPde);
+#endif
             }
             else
             {

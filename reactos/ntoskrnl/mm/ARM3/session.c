@@ -480,8 +480,10 @@ NTAPI
 MiSessionInitializeWorkingSetList(VOID)
 {
     KIRQL OldIrql;
-    PMMPTE PointerPte, PointerPde;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
     MMPTE TempPte;
+    MMPDE TempPde;
     ULONG Color, Index;
     PFN_NUMBER PageFrameIndex;
     PMM_SESSION_SPACE SessionGlobal;
@@ -501,7 +503,9 @@ MiSessionInitializeWorkingSetList(VOID)
     if (PointerPde->u.Hard.Valid == 1)
     {
         /* Nope, we'll have to do it */
+#ifndef _M_ARM
         ASSERT(PointerPde->u.Hard.Global == 0);
+#endif
         AllocatedPageTable = FALSE;
     }
     else
@@ -536,14 +540,14 @@ MiSessionInitializeWorkingSetList(VOID)
         }
 
         /* Write a valid PDE for it */
-        TempPte.u.Long = ValidKernelPdeLocal.u.Long;
-        TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-        MI_WRITE_VALID_PTE(PointerPde, TempPte);
+        TempPde.u.Long = ValidKernelPdeLocal.u.Long;
+        TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
+        MI_WRITE_VALID_PDE(PointerPde, TempPde);
 
         /* Add this into the list */
         Index = ((ULONG_PTR)WorkingSetList - (ULONG_PTR)MmSessionBase) >> 22;
 #ifndef _M_AMD64
-        MmSessionSpace->PageTables[Index] = TempPte;
+        MmSessionSpace->PageTables[Index] = TempPde;
 #endif
         /* Initialize the page directory page, and now zero the working set list itself */
         MiInitializePfnForOtherProcess(PageFrameIndex,
@@ -614,10 +618,11 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     PEPROCESS Process = PsGetCurrentProcess();
     ULONG NewFlags, Flags, Size, i, Color;
     KIRQL OldIrql;
-    PMMPTE PointerPte, PageTables, SessionPte;
-    PMMPDE PointerPde;
+    PMMPTE PointerPte, SessionPte;
+    PMMPDE PointerPde, PageTables;
     PMM_SESSION_SPACE SessionGlobal;
     MMPTE TempPte;
+    MMPDE TempPde;
     NTSTATUS Status;
     BOOLEAN Result;
     PFN_NUMBER SessionPageDirIndex;
@@ -725,13 +730,13 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     }
 
     /* Fill the PTE out */
-    TempPte.u.Long = ValidKernelPdeLocal.u.Long;
-    TempPte.u.Hard.PageFrameNumber = SessionPageDirIndex;
+    TempPde.u.Long = ValidKernelPdeLocal.u.Long;
+    TempPde.u.Hard.PageFrameNumber = SessionPageDirIndex;
 
     /* Setup, allocate, fill out the MmSessionSpace PTE */
     PointerPde = MiAddressToPde(MmSessionSpace);
     ASSERT(PointerPde->u.Long == 0);
-    MI_WRITE_VALID_PTE(PointerPde, TempPte);
+    MI_WRITE_VALID_PDE(PointerPde, TempPde);
     MiInitializePfnForOtherProcess(SessionPageDirIndex,
                                    PointerPde,
                                    SessionPageDirIndex);

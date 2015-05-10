@@ -459,7 +459,7 @@ typedef struct _MM_SESSION_SPACE
     SIZE_T CommittedPages;
     PVOID PagedPoolStart;
     PVOID PagedPoolEnd;
-    PMMPTE PagedPoolBasePde;
+    PMMPDE PagedPoolBasePde;
     ULONG Color;
     LONG ResidentProcessCount;
     ULONG SessionPoolAllocationFailures[4];
@@ -479,9 +479,9 @@ typedef struct _MM_SESSION_SPACE
     PDRIVER_UNLOAD Win32KDriverUnload;
     POOL_DESCRIPTOR PagedPool;
 #if defined (_M_AMD64)
-    MMPTE PageDirectory;
+    MMPDE PageDirectory;
 #else
-    PMMPTE PageTables;
+    PMMPDE PageTables;
 #endif
 #if defined (_M_AMD64)
     PMMPTE SpecialPoolFirstPte;
@@ -1887,7 +1887,7 @@ NTSTATUS
 NTAPI
 MiInitializeAndChargePfn(
     OUT PPFN_NUMBER PageFrameIndex,
-    IN PMMPTE PointerPde,
+    IN PMMPDE PointerPde,
     IN PFN_NUMBER ContainingPageFrame,
     IN BOOLEAN SessionAllocation
 );
@@ -1904,7 +1904,7 @@ VOID
 NTAPI
 MiInitializePfnForOtherProcess(
     IN PFN_NUMBER PageFrameIndex,
-    IN PMMPTE PointerPte,
+    IN PVOID PteAddress,
     IN PFN_NUMBER PteFrame
 );
 
@@ -2210,7 +2210,7 @@ MmDeterminePoolType(
 VOID
 NTAPI
 MiMakePdeExistAndMakeValid(
-    IN PMMPTE PointerPde,
+    IN PMMPDE PointerPde,
     IN PEPROCESS TargetProcess,
     IN KIRQL OldIrql
 );

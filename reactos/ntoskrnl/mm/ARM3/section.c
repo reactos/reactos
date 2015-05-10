@@ -937,8 +937,8 @@ MiSessionCommitPageTables(IN PVOID StartVa,
 {
     KIRQL OldIrql;
     ULONG Color, Index;
-    PMMPTE StartPde, EndPde;
-    MMPTE TempPte = ValidKernelPdeLocal;
+    PMMPDE StartPde, EndPde;
+    MMPDE TempPde = ValidKernelPdeLocal;
     PMMPFN Pfn1;
     PFN_NUMBER PageCount = 0, ActualPages = 0, PageFrameNumber;
 
@@ -976,7 +976,7 @@ MiSessionCommitPageTables(IN PVOID StartVa,
 _WARN("MiSessionCommitPageTables halfplemented for amd64")
     DBG_UNREFERENCED_LOCAL_VARIABLE(OldIrql);
     DBG_UNREFERENCED_LOCAL_VARIABLE(Color);
-    DBG_UNREFERENCED_LOCAL_VARIABLE(TempPte);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(TempPde);
     DBG_UNREFERENCED_LOCAL_VARIABLE(Pfn1);
     DBG_UNREFERENCED_LOCAL_VARIABLE(PageFrameNumber);
     ASSERT(FALSE);
@@ -996,12 +996,12 @@ _WARN("MiSessionCommitPageTables halfplemented for amd64")
             OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
             Color = (++MmSessionSpace->Color) & MmSecondaryColorMask;
             PageFrameNumber = MiRemoveZeroPage(Color);
-            TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
-            MI_WRITE_VALID_PTE(StartPde, TempPte);
+            TempPde.u.Hard.PageFrameNumber = PageFrameNumber;
+            MI_WRITE_VALID_PDE(StartPde, TempPde);
 
             /* Write the page table in session space structure */
             ASSERT(MmSessionSpace->PageTables[Index].u.Long == 0);
-            MmSessionSpace->PageTables[Index] = TempPte;
+            MmSessionSpace->PageTables[Index] = TempPde;
 
             /* Initialize the PFN */
             MiInitializePfnForOtherProcess(PageFrameNumber,
@@ -2053,7 +2053,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
         //
         if ((((ULONG_PTR)PointerPte) & (SYSTEM_PD_SIZE - 1)) == 0)
         {
-            PointerPde = MiAddressToPte(PointerPte);
+            PointerPde = MiPteToPde(PointerPte);
             MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
         }
 
@@ -2157,7 +2157,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
             Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(&PteContents));
 
             /* Get the PTE */
-            PointerPde = MiAddressToPte(PointerPte);
+            PointerPde = MiPteToPde(PointerPte);
 
             /* Lock the PFN database and make sure this isn't a mapped file */
             OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);

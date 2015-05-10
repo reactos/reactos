@@ -507,7 +507,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // We can only support this much then
                 //
-                PointerPde = MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool);
+                PointerPde = MiPteToPde(MmPagedPoolInfo.LastPteForPagedPool);
                 PageTableCount = (PFN_COUNT)(PointerPde + 1 -
                                  MmPagedPoolInfo.NextPdeForPagedPoolExpansion);
                 ASSERT(PageTableCount < i);
@@ -1277,7 +1277,8 @@ NTSTATUS
 NTAPI
 MiInitializeSessionPool(VOID)
 {
-    PMMPTE PointerPde, PointerPte, LastPte, LastPde;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde, LastPde;
     PFN_NUMBER PageFrameIndex, PdeCount;
     PPOOL_DESCRIPTOR PoolDescriptor;
     PMM_SESSION_SPACE SessionGlobal;
