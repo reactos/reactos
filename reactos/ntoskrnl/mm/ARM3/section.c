@@ -2164,7 +2164,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
             ASSERT(((Pfn1->u3.e1.PrototypePte) && (Pfn1->OriginalPte.u.Soft.Prototype)) == 0);
 
             /* Mark the page as modified accordingly */
-            if (PteContents.u.Hard.Dirty)
+            if (MI_IS_PAGE_DIRTY(&PteContents))
                 Pfn1->u3.e1.Modified = 1;
 
             /* Was the PDE invalid */

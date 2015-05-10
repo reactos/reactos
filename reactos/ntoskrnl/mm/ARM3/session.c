@@ -572,7 +572,7 @@ MiSessionInitializeWorkingSetList(VOID)
 
     /* Write a valid PTE for it */
     TempPte.u.Long = ValidKernelPteLocal.u.Long;
-    TempPte.u.Hard.Dirty = TRUE;
+    MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
 
     /* Initialize the working set list page */

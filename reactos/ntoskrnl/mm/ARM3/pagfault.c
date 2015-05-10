@@ -165,7 +165,8 @@ MiAccessCheck(IN PMMPTE PointerPte,
         if (StoreInstruction)
         {
             /* Is it writable?*/
-            if ((TempPte.u.Hard.Write) || (TempPte.u.Hard.CopyOnWrite))
+            if (MI_IS_PAGE_WRITEABLE(&TempPte) ||
+                MI_IS_PAGE_COPY_ON_WRITE(&TempPte))
             {
                 /* Then there's nothing to worry about */
                 return STATUS_SUCCESS;
@@ -791,7 +792,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     }
 
     /* Set the dirty flag if needed */
-    if (DirtyPage) TempPte.u.Hard.Dirty = TRUE;
+    if (DirtyPage) MI_MAKE_DIRTY_PAGE(&TempPte);
 
     /* Write the PTE */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
@@ -1004,16 +1005,17 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
                      MiDetermineUserGlobalPteMask(PointerPte);
 
     /* Is the PTE writeable? */
-    if (((Pfn1->u3.e1.Modified) && (TempPte.u.Hard.Write)) &&
-        (TempPte.u.Hard.CopyOnWrite == 0))
+    if ((Pfn1->u3.e1.Modified) &&
+        MI_IS_PAGE_WRITEABLE(&TempPte) &&
+        !MI_IS_PAGE_COPY_ON_WRITE(&TempPte))
     {
         /* Make it dirty */
-        TempPte.u.Hard.Dirty = TRUE;
+        MI_MAKE_DIRTY_PAGE(&TempPte);
     }
     else
     {
         /* Make it clean */
-        TempPte.u.Hard.Dirty = FALSE;
+        MI_MAKE_CLEAN_PAGE(&TempPte);
     }
 
     /* Write the valid PTE */
@@ -1302,19 +1304,20 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                     TempPte.u.Long = (PointerProtoPte->u.Long & ~0xFFF) |
                                      MmProtectToPteMask[PointerProtoPte->u.Trans.Protection];
                     TempPte.u.Hard.Valid = 1;
-                    TempPte.u.Hard.Accessed = 1;
+                    MI_MAKE_ACCESSED_PAGE(&TempPte);
 
                     /* Is the PTE writeable? */
-                    if (((Pfn1->u3.e1.Modified) && (TempPte.u.Hard.Write)) &&
-                        (TempPte.u.Hard.CopyOnWrite == 0))
+                    if ((Pfn1->u3.e1.Modified) &&
+                        MI_IS_PAGE_WRITEABLE(&TempPte) &&
+                        !MI_IS_PAGE_COPY_ON_WRITE(&TempPte))
                     {
                         /* Make it dirty */
-                        TempPte.u.Hard.Dirty = TRUE;
+                        MI_MAKE_DIRTY_PAGE(&TempPte);
                     }
                     else
                     {
                         /* Make it clean */
-                        TempPte.u.Hard.Dirty = FALSE;
+                        MI_MAKE_CLEAN_PAGE(&TempPte);
                     }
 
                     /* Write the valid PTE */
@@ -1561,7 +1564,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
         /* Not yet implemented in ReactOS */
         ASSERT(MI_IS_PAGE_LARGE(PointerPde) == FALSE);
-        ASSERT(((StoreInstruction) && (PointerPte->u.Hard.CopyOnWrite)) == FALSE);
+        ASSERT(((StoreInstruction) && MI_IS_PAGE_COPY_ON_WRITE(PointerPte)) == FALSE);
 
         /* Check if this was a write */
         if (StoreInstruction)
@@ -1740,7 +1743,7 @@ _WARN("Session space stuff is not implemented yet!")
                 Pfn1 = MI_PFN_ELEMENT(PointerPte->u.Hard.PageFrameNumber);
                 if (!(TempPte.u.Long & PTE_READWRITE) &&
                     !(Pfn1->OriginalPte.u.Soft.Protection & MM_READWRITE) &&
-                    !(TempPte.u.Hard.CopyOnWrite))
+                    !MI_IS_PAGE_COPY_ON_WRITE(&TempPte))
                 {
                     /* Case not yet handled */
                     ASSERT(!IsSessionAddress);
@@ -1757,13 +1760,13 @@ _WARN("Session space stuff is not implemented yet!")
             /* Check for read-only write in session space */
             if ((IsSessionAddress) &&
                 (StoreInstruction) &&
-                !(TempPte.u.Hard.Write))
+                !MI_IS_PAGE_WRITEABLE(&TempPte))
             {
                 /* Sanity check */
                 ASSERT(MI_IS_SESSION_IMAGE_ADDRESS(Address));
 
                 /* Was this COW? */
-                if (TempPte.u.Hard.CopyOnWrite == 0)
+                if (!MI_IS_PAGE_COPY_ON_WRITE(&TempPte))
                 {
                     /* Then this is not allowed */
                     KeBugCheckEx(ATTEMPTED_WRITE_TO_READONLY_MEMORY,
@@ -1993,14 +1996,14 @@ UserFault:
         if (StoreInstruction)
         {
             /* Is this a copy on write PTE? */
-            if (TempPte.u.Hard.CopyOnWrite)
+            if (MI_IS_PAGE_COPY_ON_WRITE(&TempPte))
             {
                 /* Not supported yet */
                 ASSERT(FALSE);
             }
 
             /* Is this a read-only PTE? */
-            if (!TempPte.u.Hard.Write)
+            if (!MI_IS_PAGE_WRITEABLE(&TempPte))
             {
                 /* Return the status */
                 MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);

@@ -76,6 +76,7 @@
 /* Macros for portable PTE modification */
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
 #define MI_MAKE_DIRTY_PAGE(x)
+#define MI_MAKE_CLEAN_PAGE(x)
 #define MI_MAKE_ACCESSED_PAGE(x)
 #define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
 #define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.Buffered = 0)
