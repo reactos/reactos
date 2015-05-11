@@ -56,7 +56,7 @@ static struct addrinfoW *addrinfo_AtoW(const struct addrinfo *ai)
     if (ai->ai_canonname)
     {
         int len = MultiByteToWideChar(CP_ACP, 0, ai->ai_canonname, -1, NULL, 0);
-        if (!(ret->ai_canonname = HeapAlloc(GetProcessHeap(), 0, len)))
+        if (!(ret->ai_canonname = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR))))
         {
             HeapFree(GetProcessHeap(), 0, ret);
             return NULL;
