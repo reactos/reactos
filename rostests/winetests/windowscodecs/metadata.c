@@ -846,17 +846,24 @@ static void test_create_reader(void)
     stream = create_stream(metadata_tEXt, sizeof(metadata_tEXt));
 
     hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
+        NULL, NULL, WICPersistOptionsDefault,
+        stream, &reader);
+    ok(hr == E_INVALIDARG, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
+
+    hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
+        &GUID_ContainerFormatPng, NULL, WICPersistOptionsDefault,
+        NULL, &reader);
+    ok(hr == E_INVALIDARG, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
+
+    hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
+        &GUID_ContainerFormatPng, NULL, WICPersistOptionsDefault,
+        stream, NULL);
+    ok(hr == E_INVALIDARG, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
+
+    hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
         &GUID_ContainerFormatPng, NULL, WICPersistOptionsDefault,
         stream, &reader);
-todo_wine
     ok(hr == S_OK, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
-    /* NOTE: removed once Wine is fixed */
-    if (FAILED(hr))
-    {
-        IStream_Release(stream);
-        IWICComponentFactory_Release(factory);
-        return;
-    }
 
     if (SUCCEEDED(hr))
     {
@@ -912,7 +919,7 @@ static void test_metadata_png(void)
     IWICMetadataReader *reader;
     GUID containerformat;
     HRESULT hr;
-    UINT count;
+    UINT count=0xdeadbeef;
 
     hr = CoCreateInstance(&CLSID_WICPngDecoder, NULL, CLSCTX_INPROC_SERVER,
         &IID_IWICBitmapDecoder, (void**)&decoder);
