@@ -953,15 +953,19 @@ __INTRIN_INLINE unsigned char _bittest(const long * a, long b)
 }
 
 #ifdef __x86_64__
-__INTRIN_INLINE unsigned char _BitScanForward64(unsigned long * Index, unsigned long long Mask);
+__INTRIN_INLINE unsigned char _BitScanForward64(unsigned long * Index, unsigned long long Mask)
 {
-	__asm__("bsfq %[Mask], %[Index]" : [Index] "=r" (*Index) : [Mask] "mr" (Mask));
+	unsigned long long Index64;
+	__asm__("bsfq %[Mask], %[Index]" : [Index] "=r" (Index64) : [Mask] "mr" (Mask));
+	*Index = Index64;
 	return Mask ? 1 : 0;
 }
 
-__INTRIN_INLINE unsigned char _BitScanReverse64(unsigned long * Index, unsigned long long Mask);
+__INTRIN_INLINE unsigned char _BitScanReverse64(unsigned long * Index, unsigned long long Mask)
 {
-	__asm__("bsrq %[Mask], %[Index]" : [Index] "=r" (*Index) : [Mask] "mr" (Mask));
+	unsigned long long Index64;
+	__asm__("bsrq %[Mask], %[Index]" : [Index] "=r" (Index64) : [Mask] "mr" (Mask));
+	*Index = Index64;
 	return Mask ? 1 : 0;
 }
 
@@ -1016,7 +1020,7 @@ __INTRIN_INLINE unsigned char _bittestandset(long * a, long b)
 
 #ifdef __x86_64__
 
-__INTRIN_INLINE unsigned char _bittestandset64(long long * a, long long b);
+__INTRIN_INLINE unsigned char _bittestandset64(long long * a, long long b)
 {
 	unsigned char retval;
 
@@ -1028,7 +1032,7 @@ __INTRIN_INLINE unsigned char _bittestandset64(long long * a, long long b);
 	return retval;
 }
 
-__INTRIN_INLINE unsigned char _bittestandreset64(long long * a, long long b);
+__INTRIN_INLINE unsigned char _bittestandreset64(long long * a, long long b)
 {
 	unsigned char retval;
 
@@ -1040,7 +1044,7 @@ __INTRIN_INLINE unsigned char _bittestandreset64(long long * a, long long b);
 	return retval;
 }
 
-__INTRIN_INLINE unsigned char _bittestandcomplement64(long long * a, long long b);
+__INTRIN_INLINE unsigned char _bittestandcomplement64(long long * a, long long b)
 {
 	unsigned char retval;
 
