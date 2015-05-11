@@ -853,7 +853,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeHalt)
     }
 
     /* Privileged instructions can only be executed under CPL = 0 */
-    if (State->SegmentRegs[FAST486_REG_CS].Dpl != 0)
+    if (Fast486GetCurrentPrivLevel(State) != 0)
     {
         Fast486Exception(State, FAST486_EXCEPTION_GP);
         return;
