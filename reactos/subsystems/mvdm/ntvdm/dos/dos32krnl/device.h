@@ -12,7 +12,6 @@
 /* DEFINITIONS ****************************************************************/
 
 #define MAX_DEVICE_NAME 8
-#define REQUEST_LOCATION 0x00700100 // 0070:0100
 #define DEVICE_CODE_SIZE 10
 #define DEVICE_PRIVATE_AREA(Driver) (Driver + sizeof(DOS_DRIVER) + DEVICE_CODE_SIZE)
 

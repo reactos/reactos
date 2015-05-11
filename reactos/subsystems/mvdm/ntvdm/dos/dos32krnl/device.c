@@ -47,23 +47,22 @@ static PDOS_REQUEST_HEADER DeviceRequest;
 static VOID DosCallDriver(DWORD Driver, PDOS_REQUEST_HEADER Request)
 {
     PDOS_DRIVER DriverBlock = (PDOS_DRIVER)FAR_POINTER(Driver);
-    PDOS_REQUEST_HEADER RemoteRequest = FAR_POINTER(REQUEST_LOCATION);
     WORD ES = getES();
     WORD BX = getBX();
 
     /* Set ES:BX to the location of the request */
-    setES(HIWORD(REQUEST_LOCATION));
-    setBX(LOWORD(REQUEST_LOCATION));
+    setES(DOS_DATA_SEGMENT);
+    setBX(DOS_DATA_OFFSET(Sda.Request));
 
     /* Copy the request structure to ES:BX */
-    RtlMoveMemory(RemoteRequest, Request, Request->RequestLength);
+    RtlMoveMemory(&Sda->Request, Request, Request->RequestLength);
 
     /* Call the strategy routine, and then the interrupt routine */
     Call16(HIWORD(Driver), DriverBlock->StrategyRoutine);
     Call16(HIWORD(Driver), DriverBlock->InterruptRoutine);
 
     /* Get the request structure from ES:BX */
-    RtlMoveMemory(Request, RemoteRequest, Request->RequestLength);
+    RtlMoveMemory(Request, &Sda->Request, Request->RequestLength);
 
     /* Restore ES:BX */
     setES(ES);

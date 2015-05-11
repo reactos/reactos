@@ -178,12 +178,9 @@ typedef struct _DOS_SDA
     BYTE ConsoleSwappedFlag;
     BYTE Int28CallOk;
     BYTE Int24AbortFlag;
-    DOS_RW_REQUEST ReadWriteRequest;
+    DOS_RW_REQUEST Request;
     DWORD DriverEntryPoint;
-    DOS_IOCTL_RW_REQUEST IoctlRequest;
-    DOS_PEEK_REQUEST StatusRequest;
-    DWORD DeviceIoBuffer;
-    DWORD Unused2;
+    BYTE Unused2[44];
     BYTE PspCopyType;
     BYTE Unused3;
     BYTE UserNumber[3];
