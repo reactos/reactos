@@ -1253,12 +1253,12 @@ __INTRIN_INLINE unsigned short __popcnt16(unsigned short value)
 }
 
 #ifdef __x86_64__
-unsigned long long __lzcnt64(unsigned long long value)
+__INTRIN_INLINE unsigned long long __lzcnt64(unsigned long long value)
 {
 	return __builtin_clzll(value);
 }
 
-unsigned long long __popcnt64(unsigned long long value)
+__INTRIN_INLINE unsigned long long __popcnt64(unsigned long long value)
 {
 	return __builtin_popcountll(value);
 }
