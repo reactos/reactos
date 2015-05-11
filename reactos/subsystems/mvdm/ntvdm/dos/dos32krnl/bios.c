@@ -43,16 +43,18 @@
 
 CHAR DosReadCharacter(WORD FileHandle)
 {
-    PCHAR Character = (PCHAR)FAR_POINTER(CHARACTER_ADDRESS);
     WORD BytesRead;
 
-    *Character = '\0';
+    Sda->ByteBuffer = '\0';
     DPRINT("DosReadCharacter\n");
 
     /* Use the file reading function */
-    DosReadFile(FileHandle, CHARACTER_ADDRESS, 1, &BytesRead);
+    DosReadFile(FileHandle,
+                MAKELONG(DOS_DATA_OFFSET(Sda.ByteBuffer), DOS_DATA_SEGMENT),
+                1,
+                &BytesRead);
 
-    return *Character;
+    return Sda->ByteBuffer;
 }
 
 BOOLEAN DosCheckInput(VOID)
@@ -62,7 +64,7 @@ BOOLEAN DosCheckInput(VOID)
     if (Descriptor == NULL)
     {
         /* Invalid handle */
-        DosLastError = ERROR_INVALID_HANDLE; // ERROR_FILE_NOT_FOUND
+        Sda->LastErrorCode = ERROR_INVALID_HANDLE; // ERROR_FILE_NOT_FOUND
         return FALSE;
     }
 
@@ -90,10 +92,14 @@ BOOLEAN DosCheckInput(VOID)
 VOID DosPrintCharacter(WORD FileHandle, CHAR Character)
 {
     WORD BytesWritten;
-    *((PCHAR)FAR_POINTER(CHARACTER_ADDRESS)) = Character;
+
+    Sda->ByteBuffer = Character;
 
     /* Use the file writing function */
-    DosWriteFile(FileHandle, CHARACTER_ADDRESS, 1, &BytesWritten);
+    DosWriteFile(FileHandle,
+                 MAKELONG(DOS_DATA_OFFSET(Sda.ByteBuffer), DOS_DATA_SEGMENT),
+                 1,
+                 &BytesWritten);
 }
 
 BOOLEAN DosBIOSInitialize(VOID)

@@ -34,25 +34,19 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-#define INDOS_POINTER MAKELONG(0x00FE, 0x0070)
-
 CALLBACK16 DosContext;
 
 /*static*/ BYTE CurrentDrive = 0x00;
 static CHAR LastDrive = 'Z'; // The last drive can be redefined with the LASTDRIVE command. At the moment, set the real maximum possible, 'Z'.
-static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
-static PBYTE InDos;
+static PCHAR CurrentDirectories;
 
 /* PUBLIC VARIABLES ***********************************************************/
 
 PDOS_SYSVARS SysVars;
+PDOS_SDA Sda;
 
 /* Echo state for INT 21h, AH = 01h and AH = 3Fh */
 BOOLEAN DoEcho = FALSE;
-
-DWORD DiskTransferArea;
-WORD DosErrorLevel = 0x0000;
-WORD DosLastError = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -64,7 +58,7 @@ static BOOLEAN DosChangeDrive(BYTE Drive)
     if (Drive > (LastDrive - 'A')) return FALSE;
 
     /* Find the path to the new current directory */
-    swprintf(DirectoryPath, L"%c\\%S", Drive + 'A', CurrentDirectories[Drive]);
+    swprintf(DirectoryPath, L"%c\\%S", Drive + 'A', &CurrentDirectories[Drive * DOS_DIR_LENGTH]);
 
     /* Change the current directory of the process */
     if (!SetCurrentDirectory(DirectoryPath)) return FALSE;
@@ -87,7 +81,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     /* Make sure the directory path is not too long */
     if (strlen(Directory) >= DOS_DIR_LENGTH)
     {
-        DosLastError = ERROR_PATH_NOT_FOUND;
+        Sda->LastErrorCode = ERROR_PATH_NOT_FOUND;
         return FALSE;
     }
 
@@ -100,7 +94,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
         /* Make sure the drive exists */
         if (DriveNumber > (LastDrive - 'A'))
         {
-            DosLastError = ERROR_PATH_NOT_FOUND;
+            Sda->LastErrorCode = ERROR_PATH_NOT_FOUND;
             return FALSE;
         }
     }
@@ -117,7 +111,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     if ((Attributes == INVALID_FILE_ATTRIBUTES)
         || !(Attributes & FILE_ATTRIBUTE_DIRECTORY))
     {
-        DosLastError = ERROR_PATH_NOT_FOUND;
+        Sda->LastErrorCode = ERROR_PATH_NOT_FOUND;
         return FALSE;
     }
 
@@ -127,7 +121,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
         /* Change the directory */
         if (!SetCurrentDirectoryA(Directory))
         {
-            DosLastError = LOWORD(GetLastError());
+            Sda->LastErrorCode = LOWORD(GetLastError());
             return FALSE;
         }
     }
@@ -157,11 +151,11 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     /* Set the directory for the drive */
     if (Path != NULL)
     {
-        strncpy(CurrentDirectories[DriveNumber], Path, DOS_DIR_LENGTH);
+        strncpy(&CurrentDirectories[DriveNumber * DOS_DIR_LENGTH], Path, DOS_DIR_LENGTH);
     }
     else
     {
-        CurrentDirectories[DriveNumber][0] = '\0';
+        CurrentDirectories[DriveNumber * DOS_DIR_LENGTH] = '\0';
     }
 
     /* Return success */
@@ -177,7 +171,7 @@ static BOOLEAN DosControlBreak(VOID)
 
     if (getCF())
     {
-        DosTerminateProcess(CurrentPsp, 0, 0);
+        DosTerminateProcess(Sda->CurrentPsp, 0, 0);
         return TRUE;
     }
 
@@ -201,10 +195,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
     PDOS_COUNTRY_CODE_BUFFER CountryCodeBuffer;
     INT Return;
 
-    (*InDos)++;
+    Sda->InDos++;
 
     /* Save the value of SS:SP on entry in the PSP */
-    SEGMENT_TO_PSP(CurrentPsp)->LastStack =
+    SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack =
     MAKELONG(getSP() + (STACK_FLAGS + 1) * 2, getSS());
 
     /* Check the value in the AH register */
@@ -471,7 +465,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Disk Reset */
         case 0x0D:
         {
-            PDOS_PSP PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+            PDOS_PSP PspBlock = SEGMENT_TO_PSP(Sda->CurrentPsp);
 
             // TODO: Flush what's needed.
             DPRINT1("INT 21h, 0Dh is UNIMPLEMENTED\n");
@@ -517,7 +511,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Set Disk Transfer Area */
         case 0x1A:
         {
-            DiskTransferArea = MAKELONG(getDX(), getDS());
+            Sda->DiskTransferArea = MAKELONG(getDX(), getDS());
             break;
         }
 
@@ -697,15 +691,15 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get Disk Transfer Area */
         case 0x2F:
         {
-            setES(HIWORD(DiskTransferArea));
-            setBX(LOWORD(DiskTransferArea));
+            setES(HIWORD(Sda->DiskTransferArea));
+            setBX(LOWORD(Sda->DiskTransferArea));
             break;
         }
 
         /* Get DOS Version */
         case 0x30:
         {
-            PDOS_PSP PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+            PDOS_PSP PspBlock = SEGMENT_TO_PSP(Sda->CurrentPsp);
 
             /*
              * DOS 2+ - GET DOS VERSION
@@ -751,7 +745,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x31:
         {
             DPRINT1("Process going resident: %u paragraphs kept\n", getDX());
-            DosTerminateProcess(CurrentPsp, getAL(), getDX());
+            DosTerminateProcess(Sda->CurrentPsp, getAL(), getDX());
             break;
         }
 
@@ -792,8 +786,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get Address of InDOS flag */
         case 0x34:
         {
-            setES(HIWORD(INDOS_POINTER));
-            setBX(LOWORD(INDOS_POINTER));
+            setES(DOS_DATA_SEGMENT);
+            setBX(DOS_DATA_OFFSET(Sda.InDos));
             break;
         }
 
@@ -1002,7 +996,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                setAX(DosLastError);
+                setAX(Sda->LastErrorCode);
             }
 
             break;
@@ -1228,7 +1222,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                setAX(DosLastError);
+                setAX(Sda->LastErrorCode);
             }
 
             break;
@@ -1247,7 +1241,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                setAX(DosLastError);
+                setAX(Sda->LastErrorCode);
             }
 
             break;
@@ -1292,7 +1286,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                  * Copy the current directory into the target buffer.
                  * It doesn't contain the drive letter and the backslash.
                  */
-                strncpy(String, CurrentDirectories[DriveNumber], DOS_DIR_LENGTH);
+                strncpy(String, &CurrentDirectories[DriveNumber * DOS_DIR_LENGTH], DOS_DIR_LENGTH);
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 setAX(0x0100); // Undocumented, see Ralf Brown: http://www.ctyme.com/intr/rb-2933.htm
             }
@@ -1319,7 +1313,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                setAX(DosLastError);
+                setAX(Sda->LastErrorCode);
                 setBX(MaxAvailable);
             }
 
@@ -1354,7 +1348,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                setAX(DosLastError);
+                setAX(Sda->LastErrorCode);
                 setBX(Size);
             }
 
@@ -1417,7 +1411,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Terminate With Return Code */
         case 0x4C:
         {
-            DosTerminateProcess(CurrentPsp, getAL(), 0);
+            DosTerminateProcess(Sda->CurrentPsp, getAL(), 0);
             break;
         }
 
@@ -1429,15 +1423,15 @@ VOID WINAPI DosInt21h(LPWORD Stack)
              * DosErrorLevel is cleared after being read by this function.
              */
             Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-            setAX(DosErrorLevel);
-            DosErrorLevel = 0x0000; // Clear it
+            setAX(Sda->ErrorLevel);
+            Sda->ErrorLevel = 0x0000; // Clear it
             break;
         }
 
         /* Find First File */
         case 0x4E:
         {
-            WORD Result = (WORD)demFileFindFirst(FAR_POINTER(DiskTransferArea),
+            WORD Result = (WORD)demFileFindFirst(FAR_POINTER(Sda->DiskTransferArea),
                                                  SEG_OFF_TO_PTR(getDS(), getDX()),
                                                  getCX());
 
@@ -1454,7 +1448,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Find Next File */
         case 0x4F:
         {
-            WORD Result = (WORD)demFileFindNext(FAR_POINTER(DiskTransferArea));
+            WORD Result = (WORD)demFileFindNext(FAR_POINTER(Sda->DiskTransferArea));
 
             setAX(Result);
 
@@ -1484,7 +1478,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
              * and http://www.ctyme.com/intr/rb-3140.htm
              * for more information.
              */
-            setBX(CurrentPsp);
+            setBX(Sda->CurrentPsp);
             break;
         }
 
@@ -1542,7 +1536,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             {
                 /* Get allocation strategy */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-                setAX(DosAllocStrategy);
+                setAX(Sda->AllocStrategy);
             }
             else if (getAL() == 0x01)
             {
@@ -1565,7 +1559,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                DosAllocStrategy = getBL();
+                Sda->AllocStrategy = getBL();
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else if (getAL() == 0x02)
@@ -1678,7 +1672,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 else
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    setAX(DosLastError);
+                    setAX(Sda->LastErrorCode);
                 }
             }
             else if (getAL() == 0x01)
@@ -1691,7 +1685,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 else
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    setAX(DosLastError);
+                    setAX(Sda->LastErrorCode);
                 }
             }
             else
@@ -1740,13 +1734,40 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Miscellaneous Internal Functions */
+        case 0x5D:
+        {
+            switch (getAL())
+            {
+                /* Get Swappable Data Area */
+                case 0x06:
+                {
+                    setDS(DOS_DATA_SEGMENT);
+                    setSI(DOS_DATA_OFFSET(Sda.ErrorMode));
+                    setCX(sizeof(DOS_SDA));
+                    setDX(FIELD_OFFSET(DOS_SDA, LastAX));
+
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT1("INT 21h, AH = 5Dh, subfunction AL = %Xh NOT IMPLEMENTED\n",
+                            getAL());
+                }
+            }
+
+            break;
+        }
+
         /* Set Handle Count */
         case 0x67:
         {
             if (!DosResizeHandleTable(getBX()))
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                setAX(DosLastError);
+                setAX(Sda->LastErrorCode);
             }
             else Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
@@ -1833,7 +1854,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         }
     }
 
-    (*InDos)--;
+    Sda->InDos--;
 }
 
 VOID WINAPI DosBreakInterrupt(LPWORD Stack)
@@ -1942,9 +1963,9 @@ BOOLEAN DosKRNLInitialize(VOID)
     FILE *Stream;
     WCHAR Buffer[256];
 
-    /* Setup the InDOS flag */
-    InDos = (PBYTE)FAR_POINTER(INDOS_POINTER);
-    *InDos = 0;
+    /* Get a pointer to the current directory buffer */
+    CurrentDirectories = (PCHAR)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT,
+                                               DOS_DATA_OFFSET(CurrentDirectories));
 
     /* Clear the current directory buffer */
     RtlZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
@@ -1977,7 +1998,7 @@ BOOLEAN DosKRNLInitialize(VOID)
     /* Set the directory */
     if (Path != NULL)
     {
-        strncpy(CurrentDirectories[CurrentDrive], Path, DOS_DIR_LENGTH);
+        strncpy(&CurrentDirectories[CurrentDrive * DOS_DIR_LENGTH], Path, DOS_DIR_LENGTH);
     }
 
     /* Read CONFIG.SYS */
@@ -1995,7 +2016,9 @@ BOOLEAN DosKRNLInitialize(VOID)
     SysVars = (PDOS_SYSVARS)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, 0);
     RtlZeroMemory(SysVars, sizeof(DOS_SYSVARS));
     SysVars->FirstMcb = FIRST_MCB_SEGMENT;
-    SysVars->FirstSft = MAKELONG(MASTER_SFT_OFFSET, DOS_DATA_SEGMENT);
+    SysVars->FirstSft = MAKELONG(DOS_DATA_OFFSET(Sft), DOS_DATA_SEGMENT);
+    SysVars->CurrentDirs = MAKELONG(DOS_DATA_OFFSET(CurrentDirectories),
+                                    DOS_DATA_SEGMENT);
 
     /* Initialize the NUL device driver */
     SysVars->NullDevice.Link = 0xFFFFFFFF;
@@ -2009,6 +2032,16 @@ BOOLEAN DosKRNLInitialize(VOID)
     RtlCopyMemory(SysVars->NullDriverRoutine,
                   NullDriverRoutine,
                   sizeof(NullDriverRoutine));
+
+    /* Initialize the swappable data area */
+    Sda = (PDOS_SDA)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, sizeof(DOS_SYSVARS));
+    RtlZeroMemory(Sda, sizeof(DOS_SDA));
+
+    /* Set the current PSP to the system PSP */
+    Sda->CurrentPsp = SYSTEM_PSP;
+
+    /* Set the initial allocation strategy to "best fit" */
+    Sda->AllocStrategy = DOS_ALLOC_BEST_FIT;
 
     /* Initialize the SFT */
     Sft = (PDOS_SFT)FAR_POINTER(SysVars->FirstSft);

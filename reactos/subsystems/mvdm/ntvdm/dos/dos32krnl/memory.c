@@ -20,7 +20,6 @@
 
 /* PUBLIC VARIABLES ***********************************************************/
 
-BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 BOOLEAN DosUmbLinked = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -63,7 +62,7 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
 
     DPRINT("DosAllocateMemory: Size 0x%04X\n", Size);
 
-    if (DosUmbLinked && (DosAllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
+    if (DosUmbLinked && (Sda->AllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
     {
         /* Search UMB first */
         Segment = UMB_START_SEGMENT;
@@ -79,7 +78,7 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
         if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z')
         {
             DPRINT("The DOS memory arena is corrupted!\n");
-            DosLastError = ERROR_ARENA_TRASHED;
+            Sda->LastErrorCode = ERROR_ARENA_TRASHED;
             return 0;
         }
 
@@ -95,7 +94,7 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
         /* Check if this block is big enough */
         if (CurrentMcb->Size < Size) goto Next;
 
-        switch (DosAllocStrategy & 0x3F)
+        switch (Sda->AllocStrategy & 0x3F)
         {
             case DOS_ALLOC_FIRST_FIT:
             {
@@ -128,7 +127,7 @@ Next:
         if (CurrentMcb->BlockType == 'Z')
         {
             /* Check if nothing was found while searching through UMBs */
-            if ((Result == 0) && SearchUmb && (DosAllocStrategy & DOS_ALLOC_HIGH_LOW))
+            if ((Result == 0) && SearchUmb && (Sda->AllocStrategy & DOS_ALLOC_HIGH_LOW))
             {
                 /* Search low memory */
                 Segment = FIRST_MCB_SEGMENT;
@@ -148,7 +147,7 @@ Done:
     /* If we didn't find a free block, return 0 */
     if (Result == 0)
     {
-        DosLastError = ERROR_NOT_ENOUGH_MEMORY;
+        Sda->LastErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         if (MaxAvailable) *MaxAvailable = MaxSize;
         return 0;
     }
@@ -160,7 +159,7 @@ Done:
     if (CurrentMcb->Size > Size)
     {
         /* It is, split it into two blocks */
-        if ((DosAllocStrategy & 0x3F) != DOS_ALLOC_LAST_FIT)
+        if ((Sda->AllocStrategy & 0x3F) != DOS_ALLOC_LAST_FIT)
         {
             PDOS_MCB NextMcb = SEGMENT_TO_MCB(Result + Size + 1);
 
@@ -194,7 +193,7 @@ Done:
     }
 
     /* Take ownership of the block */
-    CurrentMcb->OwnerPsp = CurrentPsp;
+    CurrentMcb->OwnerPsp = Sda->CurrentPsp;
 
     /* Return the segment of the data portion of the block */
     return Result + 1;
@@ -216,7 +215,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         || Mcb->OwnerPsp == 0)
     {
         Success = FALSE;
-        DosLastError = ERROR_INVALID_HANDLE;
+        Sda->LastErrorCode = ERROR_INVALID_HANDLE;
         goto Done;
     }
 
@@ -240,7 +239,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         if (NextMcb->OwnerPsp != 0)
         {
             DPRINT("Cannot expand memory block: next segment is not free!\n");
-            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
+            Sda->LastErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             Success = FALSE;
             goto Done;
         }
@@ -254,7 +253,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         if (ReturnSize < NewSize)
         {
             DPRINT("Cannot expand memory block: insufficient free segments available!\n");
-            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
+            Sda->LastErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             Success = FALSE;
             goto Done;
         }

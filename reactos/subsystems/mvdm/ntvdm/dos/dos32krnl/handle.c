@@ -59,7 +59,7 @@ VOID DosCopyHandleTable(LPBYTE DestinationTable)
     for (i = 0; i < DEFAULT_JFT_SIZE; i++) DestinationTable[i] = 0xFF;
 
     /* Check if this is the initial process */
-    if (CurrentPsp == SYSTEM_PSP)
+    if (Sda->CurrentPsp == SYSTEM_PSP)
     {
         BYTE DescriptorId;
         HANDLE StandardHandles[3];
@@ -122,7 +122,7 @@ VOID DosCopyHandleTable(LPBYTE DestinationTable)
     else
     {
         /* Get the parent PSP block and handle table */
-        PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+        PspBlock = SEGMENT_TO_PSP(Sda->CurrentPsp);
         SourceTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
 
         /* Copy the first 20 handles into the new table */
@@ -144,7 +144,7 @@ BOOLEAN DosResizeHandleTable(WORD NewSize)
     WORD Segment;
 
     /* Get the PSP block */
-    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    PspBlock = SEGMENT_TO_PSP(Sda->CurrentPsp);
 
     if (NewSize == PspBlock->HandleTableSize)
     {
@@ -170,7 +170,7 @@ BOOLEAN DosResizeHandleTable(WORD NewSize)
 
             /* Update the handle table pointer and size */
             PspBlock->HandleTableSize = NewSize;
-            PspBlock->HandleTablePtr = MAKELONG(0x18, CurrentPsp);
+            PspBlock->HandleTablePtr = MAKELONG(0x18, Sda->CurrentPsp);
         }
         else
         {
@@ -232,10 +232,10 @@ WORD DosOpenHandle(BYTE DescriptorId)
     if (Descriptor == NULL) return INVALID_DOS_HANDLE;
 
     /* The system PSP has no handle table */
-    if (CurrentPsp == SYSTEM_PSP) return INVALID_DOS_HANDLE;
+    if (Sda->CurrentPsp == SYSTEM_PSP) return INVALID_DOS_HANDLE;
 
     /* Get a pointer to the handle table */
-    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    PspBlock = SEGMENT_TO_PSP(Sda->CurrentPsp);
     HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
 
     /* Find a free entry in the JFT */
@@ -265,10 +265,10 @@ BYTE DosQueryHandle(WORD DosHandle)
     DPRINT("DosQueryHandle: DosHandle 0x%04X\n", DosHandle);
 
     /* The system PSP has no handle table */
-    if (CurrentPsp == SYSTEM_PSP) return 0xFF;
+    if (Sda->CurrentPsp == SYSTEM_PSP) return 0xFF;
 
     /* Get a pointer to the handle table */
-    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    PspBlock = SEGMENT_TO_PSP(Sda->CurrentPsp);
     HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
 
     /* Return the descriptor ID */
@@ -281,7 +281,7 @@ WORD DosDuplicateHandle(WORD DosHandle)
 
     if (DescriptorId == 0xFF)
     {
-        DosLastError = ERROR_INVALID_HANDLE;
+        Sda->LastErrorCode = ERROR_INVALID_HANDLE;
         return INVALID_DOS_HANDLE;
     }
 
@@ -300,10 +300,10 @@ BOOLEAN DosForceDuplicateHandle(WORD OldHandle, WORD NewHandle)
            NewHandle);
 
     /* The system PSP has no handle table */
-    if (CurrentPsp == SYSTEM_PSP) return FALSE;
+    if (Sda->CurrentPsp == SYSTEM_PSP) return FALSE;
 
     /* Get a pointer to the handle table */
-    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    PspBlock = SEGMENT_TO_PSP(Sda->CurrentPsp);
     HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
 
     /* Make sure the old handle is open */
@@ -339,10 +339,10 @@ BOOLEAN DosCloseHandle(WORD DosHandle)
     DPRINT("DosCloseHandle: DosHandle 0x%04X\n", DosHandle);
 
     /* The system PSP has no handle table */
-    if (CurrentPsp == SYSTEM_PSP) return FALSE;
+    if (Sda->CurrentPsp == SYSTEM_PSP) return FALSE;
 
     /* Get a pointer to the handle table */
-    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    PspBlock = SEGMENT_TO_PSP(Sda->CurrentPsp);
     HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
 
     /* Make sure the handle is open */

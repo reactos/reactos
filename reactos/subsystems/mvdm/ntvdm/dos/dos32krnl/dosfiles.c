@@ -376,7 +376,7 @@ WORD DosCreateFileEx(LPWORD Handle,
         Descriptor->OpenMode = AccessShareModes;
         Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
         Descriptor->Size = GetFileSize(FileHandle, NULL);
-        Descriptor->OwnerPsp = CurrentPsp;
+        Descriptor->OwnerPsp = Sda->CurrentPsp;
         Descriptor->Win32Handle = FileHandle;
     }
 
@@ -451,7 +451,7 @@ WORD DosCreateFile(LPWORD Handle,
     {
         Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
         Descriptor->Size = GetFileSize(FileHandle, NULL);
-        Descriptor->OwnerPsp = CurrentPsp;
+        Descriptor->OwnerPsp = Sda->CurrentPsp;
         Descriptor->Win32Handle = FileHandle;
     }
 
@@ -600,7 +600,7 @@ WORD DosOpenFile(LPWORD Handle,
         Descriptor->OpenMode = AccessShareModes;
         Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
         Descriptor->Size = GetFileSize(FileHandle, NULL);
-        Descriptor->OwnerPsp = CurrentPsp;
+        Descriptor->OwnerPsp = Sda->CurrentPsp;
         Descriptor->Win32Handle = FileHandle;
     }
 
@@ -793,7 +793,7 @@ BOOL DosFlushFileBuffers(WORD FileHandle)
     if (Descriptor == NULL)
     {
         /* Invalid handle */
-        DosLastError = ERROR_INVALID_HANDLE;
+        Sda->LastErrorCode = ERROR_INVALID_HANDLE;
         return FALSE;
     }
 
@@ -819,7 +819,7 @@ BOOLEAN DosLockFile(WORD DosHandle, DWORD Offset, DWORD Size)
     if (Descriptor == NULL)
     {
         /* Invalid handle */
-        DosLastError = ERROR_INVALID_HANDLE;
+        Sda->LastErrorCode = ERROR_INVALID_HANDLE;
         return FALSE;
     }
 
@@ -828,7 +828,7 @@ BOOLEAN DosLockFile(WORD DosHandle, DWORD Offset, DWORD Size)
 
     if (!LockFile(Descriptor->Win32Handle, Offset, 0, Size, 0))
     {
-        DosLastError = GetLastError();
+        Sda->LastErrorCode = GetLastError();
         return FALSE;
     }
 
@@ -842,7 +842,7 @@ BOOLEAN DosUnlockFile(WORD DosHandle, DWORD Offset, DWORD Size)
     if (Descriptor == NULL)
     {
         /* Invalid handle */
-        DosLastError = ERROR_INVALID_HANDLE;
+        Sda->LastErrorCode = ERROR_INVALID_HANDLE;
         return FALSE;
     }
 
@@ -851,7 +851,7 @@ BOOLEAN DosUnlockFile(WORD DosHandle, DWORD Offset, DWORD Size)
 
     if (!UnlockFile(Descriptor->Win32Handle, Offset, 0, Size, 0))
     {
-        DosLastError = GetLastError();
+        Sda->LastErrorCode = GetLastError();
         return FALSE;
     }
 
@@ -865,7 +865,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
 
     if (!Descriptor)
     {
-        DosLastError = ERROR_INVALID_HANDLE;
+        Sda->LastErrorCode = ERROR_INVALID_HANDLE;
         return FALSE;
     }
 
@@ -901,7 +901,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
         {
             if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
             {
-                DosLastError = ERROR_INVALID_FUNCTION;
+                Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
                 return FALSE;
             }
 
@@ -921,7 +921,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
         {
             if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
             {
-                DosLastError = ERROR_INVALID_FUNCTION;
+                Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
                 return FALSE;
             }
 
@@ -941,7 +941,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
         {
             DPRINT1("Unsupported IOCTL: 0x%02X\n", ControlCode);
 
-            DosLastError = ERROR_INVALID_PARAMETER;
+            Sda->LastErrorCode = ERROR_INVALID_PARAMETER;
             return FALSE;
         }
     }

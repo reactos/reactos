@@ -27,10 +27,6 @@
 #include "io.h"
 #include "hardware/ps2.h"
 
-/* PUBLIC VARIABLES ***********************************************************/
-
-WORD CurrentPsp = SYSTEM_PSP;
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static inline VOID DosSetPspCommandLine(WORD Segment, LPCSTR CommandLine)
@@ -212,7 +208,7 @@ VOID DosCreatePsp(WORD Segment, WORD ProgramSize)
     PspBlock->CriticalAddress  = IntVecTable[0x24];
 
     /* Set the parent PSP */
-    PspBlock->ParentPsp = CurrentPsp;
+    PspBlock->ParentPsp = Sda->CurrentPsp;
 
     /* No environment block yet */
     PspBlock->EnvBlock = 0;
@@ -235,8 +231,8 @@ VOID DosCreatePsp(WORD Segment, WORD ProgramSize)
 
 VOID DosSetProcessContext(WORD Segment)
 {
-    CurrentPsp = Segment;
-    DiskTransferArea = MAKELONG(0x80, Segment);
+    Sda->CurrentPsp = Segment;
+    Sda->DiskTransferArea = MAKELONG(0x80, Segment);
 }
 
 DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
@@ -439,7 +435,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
                 /* Check if there's at least enough memory for the minimum size */
                 if (MaxAllocSize < (BaseSize + (sizeof(DOS_PSP) >> 4) + Header->e_minalloc))
                 {
-                    Result = DosLastError;
+                    Result = Sda->LastErrorCode;
                     goto Cleanup;
                 }
 
@@ -496,13 +492,13 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         if (LoadType == DOS_LOAD_AND_EXECUTE)
         {
             /* Save the program state */
-            if (CurrentPsp != SYSTEM_PSP)
+            if (Sda->CurrentPsp != SYSTEM_PSP)
             {
                 /* Push the task state */
                 DosSaveState();
 
                 /* Update the last stack in the PSP */
-                SEGMENT_TO_PSP(CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
+                SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
             }
 
             /* Set the initial segment registers */
@@ -544,7 +540,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             Segment = DosAllocateMemory(MaxAllocSize, NULL);
             if (Segment == 0)
             {
-                Result = DosLastError;
+                Result = Sda->LastErrorCode;
                 goto Cleanup;
             }
 
@@ -577,13 +573,13 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         if (LoadType == DOS_LOAD_AND_EXECUTE)
         {
             /* Save the program state */
-            if (CurrentPsp != SYSTEM_PSP)
+            if (Sda->CurrentPsp != SYSTEM_PSP)
             {
                 /* Push the task state */
                 DosSaveState();
 
                 /* Update the last stack in the PSP */
-                SEGMENT_TO_PSP(CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
+                SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
             }
 
             /* Set the initial segment registers */
@@ -906,10 +902,10 @@ Done:
     IntVecTable[0x24] = PspBlock->CriticalAddress;
 
     /* Update the current PSP */
-    if (Psp == CurrentPsp)
+    if (Psp == Sda->CurrentPsp)
     {
-        CurrentPsp = PspBlock->ParentPsp;
-        if (CurrentPsp == SYSTEM_PSP)
+        Sda->CurrentPsp = PspBlock->ParentPsp;
+        if (Sda->CurrentPsp == SYSTEM_PSP)
         {
             ResetEvent(VdmTaskEvent);
             CpuUnsimulate();
@@ -935,11 +931,11 @@ Done:
 #endif
 
     /* Save the return code - Normal termination */
-    DosErrorLevel = MAKEWORD(ReturnCode, 0x00);
+    Sda->ErrorLevel = MAKEWORD(ReturnCode, 0x00);
 
     /* Restore the old stack */
-    setSS(HIWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
-    setSP(LOWORD(SEGMENT_TO_PSP(CurrentPsp)->LastStack));
+    setSS(HIWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));
+    setSP(LOWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));
 
     /* Are we returning to DOS code? */
     if (HIWORD(PspBlock->TerminateAddress) == DOS_CODE_SEGMENT)

@@ -587,7 +587,7 @@ DWORD DosLoadDriver(LPCSTR DriverFile)
     Segment = DosAllocateMemory(FileSize >> 4, NULL);
     if (Segment == 0)
     {
-        Result = DosLastError;
+        Result = Sda->LastErrorCode;
         goto Cleanup;
     }
 

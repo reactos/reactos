@@ -32,7 +32,8 @@
 #define SYSTEM_ENV_BLOCK 0x800
 #define DOS_CODE_SEGMENT 0x70
 #define DOS_DATA_SEGMENT 0xA0
-#define MASTER_SFT_OFFSET 0x100
+
+#define DOS_DATA_OFFSET(x) FIELD_OFFSET(DOS_DATA, x)
 
 #define INVALID_DOS_HANDLE  0xFFFF
 #define DOS_INPUT_HANDLE    0
@@ -92,6 +93,15 @@ typedef struct _DOS_SYSVARS
     BYTE NullDriverRoutine[7];
 } DOS_SYSVARS, *PDOS_SYSVARS;
 
+typedef struct _DOS_CLOCK_TRANSFER_RECORD
+{
+    WORD NumberOfDays;
+    BYTE Minutes;
+    BYTE Hours;
+    BYTE Hundredths;
+    BYTE Seconds;
+} DOS_CLOCK_TRANSFER_RECORD, *PDOS_CLOCK_TRANSFER_RECORD;
+
 typedef struct _DOS_INPUT_BUFFER
 {
     BYTE MaxLength;
@@ -123,15 +133,127 @@ typedef struct _DOS_COUNTRY_CODE_BUFFER
     WORD DecimalSep;
 } DOS_COUNTRY_CODE_BUFFER, *PDOS_COUNTRY_CODE_BUFFER;
 
+typedef struct _DOS_SDA
+{
+    BYTE PrinterEchoFlag;
+    CHAR CurrentSwitchChar;
+    BYTE AllocStrategy;
+    BYTE Unused0[28];
+
+    /* This is where the SDA really starts */
+    BYTE ErrorMode;
+    BYTE InDos;
+    BYTE ErrorDrive;
+    BYTE LastErrorLocus;
+    WORD LastErrorCode;
+    BYTE LastErrorAction;
+    BYTE LastErrorClass;
+    DWORD LastErrorPointer;
+    DWORD DiskTransferArea;
+    WORD CurrentPsp;
+    WORD Int23StackPointer;
+    WORD ErrorLevel;
+    BYTE CurrentDrive;
+    BYTE ExtendedBreakFlag;
+
+    /* This part is only valid while in DOS */
+    WORD LastAX;
+    WORD NetworkPsp;
+    WORD NetworkMachineNumber;
+    WORD FirstFreeMcb;
+    WORD BestFreeMcb;
+    WORD LastFreeMcb;
+    WORD MemorySize;
+    WORD LastSearchDirEntry;
+    BYTE Int24FailFlag;
+    BYTE DirectoryFlag;
+    BYTE CtrlBreakFlag;
+    BYTE AllowFcbBlanks;
+    BYTE Unused1;
+    BYTE DayOfMonth;
+    BYTE Month;
+    WORD Year;
+    WORD NumDays;
+    BYTE DayOfWeek;
+    BYTE ConsoleSwappedFlag;
+    BYTE Int28CallOk;
+    BYTE Int24AbortFlag;
+    DOS_RW_REQUEST ReadWriteRequest;
+    DWORD DriverEntryPoint;
+    DOS_IOCTL_RW_REQUEST IoctlRequest;
+    DOS_PEEK_REQUEST StatusRequest;
+    DWORD DeviceIoBuffer;
+    DWORD Unused2;
+    BYTE PspCopyType;
+    BYTE Unused3;
+    BYTE UserNumber[3];
+    BYTE OemNumber;
+    WORD ErrorCodeTable;
+    DOS_CLOCK_TRANSFER_RECORD ClockTransferRecord;
+    BYTE ByteBuffer;
+    BYTE Unused4;
+    CHAR FileNameBuffer[256];
+    BYTE Unused5[53];
+    CHAR CurrentDirectory[81];
+    CHAR FcbFilename[12];
+    CHAR FcbRenameDest[12];
+    BYTE Unused6[8];
+    BYTE ExtendedAttribute;
+    BYTE FcbType;
+    BYTE DirSearchAttributes;
+    BYTE FileOpenMode;
+    BYTE FileFound;
+    BYTE DeviceNameFound;
+    BYTE SpliceFlag;
+    BYTE DosCallFlag;
+    BYTE Unused7[5];
+    BYTE InsertMode;
+    BYTE ParsedFcbExists;
+    BYTE VolumeIDFlag;
+    BYTE TerminationType;
+    BYTE CreateFileFlag;
+    BYTE FileDeletedChar;
+    DWORD CriticalErrorDpb;
+    DWORD UserRegistersStack;
+    WORD Int24StackPointer;
+    BYTE Unused8[14];
+    DWORD DeviceHeader;
+    DWORD CurrentSft;
+    DWORD CurrentDirPointer;
+    DWORD CallerFcb;
+    WORD SftNumber;
+    WORD TempFileHandle;
+    DWORD JftEntry;
+    WORD FirstArgument;
+    WORD SecondArgument;
+    WORD LastComponent;
+    WORD TransferOffset;
+    BYTE Unused9[38];
+    DWORD WorkingSft;
+    WORD Int21CallerBX;
+    WORD Int21CallerDS;
+    WORD Unused10;
+    DWORD PrevCallFrame;
+} DOS_SDA, *PDOS_SDA;
+
+/* This structure is only used for DOS_DATA_OFFSET calculations */
+typedef struct _DOS_DATA
+{
+    DOS_SYSVARS SysVars;
+    DOS_SDA Sda;
+    CHAR CurrentDirectories[NUM_DRIVES * DOS_DIR_LENGTH];
+    BYTE Sft[ANYSIZE_ARRAY];
+} DOS_DATA, *PDOS_DATA;
+
 #pragma pack(pop)
 
 /* VARIABLES ******************************************************************/
 
 extern BOOLEAN DoEcho;
-extern DWORD DiskTransferArea;
 extern WORD DosErrorLevel;
 extern WORD DosLastError;
 extern PDOS_SYSVARS SysVars;
+extern PDOS_SDA Sda;
 
 /* FUNCTIONS ******************************************************************/
 
