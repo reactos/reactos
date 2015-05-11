@@ -217,6 +217,7 @@
 #define __deref_out_ecount(size) __deref_ecount(size) __post __deref __valid __refparam
 #define __deref_out_nz __deref_out
 #define __deref_out_nz_opt __deref_out_opt
+#define __deref_out_range(x,y) /* FIXME */
 #define __deref_out_opt __deref_out __post __deref __exceptthat __maybenull
 #define __deref_out_z __post __deref __valid __refparam __post __deref __nullterminated
 #define __deref_out_z_opt __post __deref __valid __refparam __execeptthat __maybenull __post __deref __nullterminated
