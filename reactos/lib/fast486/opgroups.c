@@ -1979,7 +1979,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
                 Fast486WriteLinearMemory(State,
                                          State->Gdtr.Address + GET_SEGMENT_INDEX(Selector),
                                          &GdtEntry,
-                                         sizeof(GdtEntry));
+                                         sizeof(GdtEntry),
+                                         FALSE /* We already made sure CPL is 0 */);
             }
 
             break;

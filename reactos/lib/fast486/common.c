@@ -123,7 +123,7 @@ Fast486ReadMemory(PFAST486_STATE State,
             {
                 /* We can't prefetch without possibly violating page permissions */
                 State->PrefetchValid = FALSE;
-                return Fast486ReadLinearMemory(State, LinearAddress, Buffer, Size);
+                return Fast486ReadLinearMemory(State, LinearAddress, Buffer, Size, TRUE);
             }
         }
 
@@ -131,7 +131,8 @@ Fast486ReadMemory(PFAST486_STATE State,
         if (Fast486ReadLinearMemory(State,
                                     State->PrefetchAddress,
                                     State->PrefetchCache,
-                                    FAST486_CACHE_SIZE))
+                                    FAST486_CACHE_SIZE,
+                                    TRUE))
         {
             State->PrefetchValid = TRUE;
 
@@ -150,7 +151,7 @@ Fast486ReadMemory(PFAST486_STATE State,
 #endif
     {
         /* Read from the linear address */
-        return Fast486ReadLinearMemory(State, LinearAddress, Buffer, Size);
+        return Fast486ReadLinearMemory(State, LinearAddress, Buffer, Size, TRUE);
     }
 }
 
@@ -236,7 +237,7 @@ Fast486WriteMemory(PFAST486_STATE State,
 #endif
 
     /* Write to the linear address */
-    return Fast486WriteLinearMemory(State, LinearAddress, Buffer, Size);
+    return Fast486WriteLinearMemory(State, LinearAddress, Buffer, Size, TRUE);
 }
 
 static inline BOOLEAN
@@ -253,7 +254,8 @@ Fast486GetIntVector(PFAST486_STATE State,
                                      State->Idtr.Address
                                      + Number * sizeof(*IdtEntry),
                                      IdtEntry,
-                                     sizeof(*IdtEntry)))
+                                     sizeof(*IdtEntry),
+                                     FALSE))
         {
             /* Exception occurred */
             return FALSE;
@@ -325,7 +327,8 @@ Fast486InterruptInternal(PFAST486_STATE State,
                                          State->TaskReg.Base,
                                          &Tss,
                                          State->TaskReg.Limit >= sizeof(FAST486_TSS)
-                                         ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
+                                         ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
+                                         FALSE))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -622,7 +625,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
                                  State->TaskReg.Base,
                                  &OldTss,
                                  State->TaskReg.Limit >= sizeof(FAST486_TSS)
-                                 ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
+                                 ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
+                                 FALSE))
     {
         /* Exception occurred */
         return FALSE;
@@ -649,7 +653,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (!Fast486ReadLinearMemory(State,
                                  State->Gdtr.Address + GET_SEGMENT_INDEX(Selector),
                                  &NewTssDescriptor,
-                                 sizeof(NewTssDescriptor)))
+                                 sizeof(NewTssDescriptor),
+                                 FALSE))
     {
         /* Exception occurred */
         return FALSE;
@@ -703,7 +708,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
                                  NewTssAddress,
                                  &NewTss,
                                  NewTssLimit >= sizeof(FAST486_TSS)
-                                 ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
+                                 ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
+                                 FALSE))
     {
         /* Exception occurred */
         return FALSE;
@@ -718,7 +724,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
                                      State->Gdtr.Address
                                      + GET_SEGMENT_INDEX(State->TaskReg.Selector),
                                      &OldTssDescriptor,
-                                     sizeof(OldTssDescriptor)))
+                                     sizeof(OldTssDescriptor),
+                                     FALSE))
         {
             /* Exception occurred */
             return FALSE;
@@ -730,7 +737,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
                                       State->Gdtr.Address
                                       + GET_SEGMENT_INDEX(State->TaskReg.Selector),
                                       &OldTssDescriptor,
-                                      sizeof(OldTssDescriptor)))
+                                      sizeof(OldTssDescriptor),
+                                      FALSE))
         {
             /* Exception occurred */
             return FALSE;
@@ -789,7 +797,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
                                   State->TaskReg.Base,
                                   &OldTss,
                                   State->TaskReg.Limit >= sizeof(FAST486_TSS)
-                                  ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
+                                  ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
+                                  FALSE))
     {
         /* Exception occurred */
         return FALSE;
@@ -802,7 +811,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (!Fast486WriteLinearMemory(State,
                                   State->Gdtr.Address + GET_SEGMENT_INDEX(Selector),
                                   &NewTssDescriptor,
-                                  sizeof(NewTssDescriptor)))
+                                  sizeof(NewTssDescriptor),
+                                  FALSE))
     {
         /* Exception occurred */
         return FALSE;
@@ -1041,7 +1051,8 @@ Fast486CallGate(PFAST486_STATE State,
                                          State->TaskReg.Base,
                                          &Tss,
                                          State->TaskReg.Limit >= sizeof(FAST486_TSS)
-                                         ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS)))
+                                         ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
+                                         FALSE))
             {
                 /* Exception occurred */
                 return FALSE;

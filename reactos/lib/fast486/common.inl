@@ -150,7 +150,8 @@ FASTCALL
 Fast486ReadLinearMemory(PFAST486_STATE State,
                         ULONG LinearAddress,
                         PVOID Buffer,
-                        ULONG Size)
+                        ULONG Size,
+                        BOOLEAN CheckPrivilege)
 {
     /* Check if paging is enabled */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
@@ -177,7 +178,7 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
                 PageLength -= PageOffset;
             }
 
-            if (!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
+            if (CheckPrivilege && (!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0))))
             {
                 State->ControlRegisters[FAST486_REG_CR2] = Page + PageOffset;
 
@@ -219,7 +220,8 @@ FASTCALL
 Fast486WriteLinearMemory(PFAST486_STATE State,
                          ULONG LinearAddress,
                          PVOID Buffer,
-                         ULONG Size)
+                         ULONG Size,
+                         BOOLEAN CheckPrivilege)
 {
     /* Check if paging is enabled */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
@@ -246,9 +248,10 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
                 PageLength -= PageOffset;
             }
 
-            if ((!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
+            if (CheckPrivilege
+                && ((!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
                 || ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_WP)
-                && !TableEntry.Writeable))
+                && !TableEntry.Writeable)))
             {
                 State->ControlRegisters[FAST486_REG_CR2] = Page + PageOffset;
 
@@ -503,7 +506,8 @@ Fast486ReadDescriptorEntry(PFAST486_STATE State,
                                      State->Gdtr.Address
                                      + GET_SEGMENT_INDEX(Selector),
                                      Entry,
-                                     sizeof(*Entry)))
+                                     sizeof(*Entry),
+                                     FALSE))
         {
             /* Exception occurred */
             *EntryValid = FALSE;
@@ -524,7 +528,8 @@ Fast486ReadDescriptorEntry(PFAST486_STATE State,
                                      State->Ldtr.Base
                                      + GET_SEGMENT_INDEX(Selector),
                                      Entry,
-                                     sizeof(*Entry)))
+                                     sizeof(*Entry),
+                                     FALSE))
         {
             /* Exception occurred */
             *EntryValid = FALSE;
