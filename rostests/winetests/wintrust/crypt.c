@@ -789,7 +789,7 @@ static void test_create_catalog_file(void)
 
     /* Only enumerate the attributes */
     trace("Only attributes\n");
-    attrcount = membercount = 0;
+    attrcount = 0;
     catcdf = pCryptCATCDFOpen(cdffileW, NULL);
 
     catattr = NULL;
