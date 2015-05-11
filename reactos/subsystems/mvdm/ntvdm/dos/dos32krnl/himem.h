@@ -9,7 +9,7 @@
 /* DEFINITIONS ****************************************************************/
 
 #define XMS_ADDRESS     0x110000
-#define XMS_BLOCKS      0x37C0
+#define XMS_BLOCKS      0x3BC0
 #define XMS_BLOCK_SIZE  1024
 #define XMS_MAX_HANDLES 16
 

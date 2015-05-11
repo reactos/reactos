@@ -326,7 +326,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
             if (!Fast486ReadLinearMemory(State,
                                          State->TaskReg.Base,
                                          &Tss,
-                                         State->TaskReg.Limit >= sizeof(FAST486_TSS)
+                                         State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1)
                                          ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
                                          FALSE))
             {
@@ -342,7 +342,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
             {
                 case 0:
                 {
-                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
+                    if (State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1))
                     {
                         NewSs = Tss.Ss0;
                         NewEsp = Tss.Esp0;
@@ -358,7 +358,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
 
                 case 1:
                 {
-                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
+                    if (State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1))
                     {
                         NewSs = Tss.Ss1;
                         NewEsp = Tss.Esp1;
@@ -374,7 +374,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
 
                 case 2:
                 {
-                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
+                    if (State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1))
                     {
                         NewSs = Tss.Ss2;
                         NewEsp = Tss.Esp2;
@@ -612,8 +612,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     PFAST486_LEGACY_TSS NewLegacyTss = (PFAST486_LEGACY_TSS)&NewTss;
     USHORT NewLdtr, NewEs, NewCs, NewSs, NewDs;
 
-    if (State->TaskReg.Limit < sizeof(FAST486_TSS)
-        && State->TaskReg.Limit != sizeof(FAST486_LEGACY_TSS))
+    if (State->TaskReg.Limit < (sizeof(FAST486_TSS) - 1)
+        && State->TaskReg.Limit != (sizeof(FAST486_LEGACY_TSS) - 1))
     {
         /* Invalid task register limit */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, State->TaskReg.Selector);
@@ -624,7 +624,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (!Fast486ReadLinearMemory(State,
                                  State->TaskReg.Base,
                                  &OldTss,
-                                 State->TaskReg.Limit >= sizeof(FAST486_TSS)
+                                 State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1)
                                  ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
                                  FALSE))
     {
@@ -636,7 +636,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     /* If this is a task return, use the linked previous selector */
     if (Type == FAST486_TASK_RETURN)
     {
-        if (State->TaskReg.Limit >= sizeof(FAST486_TSS)) Selector = LOWORD(OldTss.Link);
+        if (State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1)) Selector = LOWORD(OldTss.Link);
         else Selector = OldLegacyTss->Link;
     }
 
@@ -681,7 +681,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         NewTssLimit |= 0x00000FFF;
     }
 
-    if (NewTssLimit < sizeof(FAST486_TSS) && NewTssLimit != sizeof(FAST486_LEGACY_TSS))
+    if (NewTssLimit < (sizeof(FAST486_TSS) - 1)
+        && NewTssLimit != (sizeof(FAST486_LEGACY_TSS) - 1))
     {
         /* TSS limit invalid */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, Selector);
@@ -707,7 +708,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (!Fast486ReadLinearMemory(State,
                                  NewTssAddress,
                                  &NewTss,
-                                 NewTssLimit >= sizeof(FAST486_TSS)
+                                 NewTssLimit >= (sizeof(FAST486_TSS) - 1)
                                  ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
                                  FALSE))
     {
@@ -747,12 +748,12 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     else
     {
         /* Store the link */
-        if (NewTssLimit >= sizeof(FAST486_TSS)) NewTss.Link = State->TaskReg.Selector;
+        if (NewTssLimit >= (sizeof(FAST486_TSS) - 1)) NewTss.Link = State->TaskReg.Selector;
         else NewLegacyTss->Link = State->TaskReg.Selector;
     }
 
     /* Save the current task into the TSS */
-    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
+    if (State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1))
     {
         OldTss.Cr3 = State->ControlRegisters[FAST486_REG_CR3];
         OldTss.Eip = State->InstPtr.Long;
@@ -796,7 +797,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (!Fast486WriteLinearMemory(State,
                                   State->TaskReg.Base,
                                   &OldTss,
-                                  State->TaskReg.Limit >= sizeof(FAST486_TSS)
+                                  State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1)
                                   ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
                                   FALSE))
     {
@@ -826,7 +827,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     State->TaskReg.Base = NewTssAddress;
     State->TaskReg.Limit = NewTssLimit;
 
-    if (NewTssLimit >= sizeof(FAST486_TSS))
+    if (NewTssLimit >= (sizeof(FAST486_TSS) - 1))
     {
         /* Change the page directory */
         State->ControlRegisters[FAST486_REG_CR3] = NewTss.Cr3;
@@ -836,7 +837,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (State->Tlb) RtlZeroMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG));
 
     /* Update the CPL */
-    if (NewTssLimit >= sizeof(FAST486_TSS)) State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
+    if (NewTssLimit >= (sizeof(FAST486_TSS) - 1)) State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
     else State->Cpl = GET_SEGMENT_RPL(NewLegacyTss->Cs);
 
 #ifndef FAST486_NO_PREFETCH
@@ -845,7 +846,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
 #endif
 
     /* Load the registers */
-    if (NewTssLimit >= sizeof(FAST486_TSS))
+    if (NewTssLimit >= (sizeof(FAST486_TSS) - 1))
     {
         State->InstPtr.Long = State->SavedInstPtr.Long = NewTss.Eip;
         State->Flags.Long = NewTss.Eflags;
@@ -961,7 +962,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         return FALSE;
     }
 
-    if (NewTssLimit >= sizeof(FAST486_TSS))
+    if (NewTssLimit >= (sizeof(FAST486_TSS) - 1))
     {
         if (!Fast486LoadSegmentInternal(State,
                                         FAST486_REG_FS,
@@ -1050,7 +1051,7 @@ Fast486CallGate(PFAST486_STATE State,
             if (!Fast486ReadLinearMemory(State,
                                          State->TaskReg.Base,
                                          &Tss,
-                                         State->TaskReg.Limit >= sizeof(FAST486_TSS)
+                                         State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1)
                                          ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
                                          FALSE))
             {
@@ -1066,7 +1067,7 @@ Fast486CallGate(PFAST486_STATE State,
             {
                 case 0:
                 {
-                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
+                    if (State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1))
                     {
                         NewSs = Tss.Ss0;
                         NewEsp = Tss.Esp0;
@@ -1082,7 +1083,7 @@ Fast486CallGate(PFAST486_STATE State,
 
                 case 1:
                 {
-                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
+                    if (State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1))
                     {
                         NewSs = Tss.Ss1;
                         NewEsp = Tss.Esp1;
@@ -1098,7 +1099,7 @@ Fast486CallGate(PFAST486_STATE State,
 
                 case 2:
                 {
-                    if (State->TaskReg.Limit >= sizeof(FAST486_TSS))
+                    if (State->TaskReg.Limit >= (sizeof(FAST486_TSS) - 1))
                     {
                         NewSs = Tss.Ss2;
                         NewEsp = Tss.Esp2;
