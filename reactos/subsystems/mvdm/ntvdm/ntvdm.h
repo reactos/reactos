@@ -53,7 +53,7 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 /*
  * Activate this line for Win2k compliancy
  */
-#define WIN2K_COMPLIANT
+// #define WIN2K_COMPLIANT
 
 /*
  * Activate this line if you want advanced hardcoded debug facilities
