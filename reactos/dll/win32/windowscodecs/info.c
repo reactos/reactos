@@ -39,6 +39,7 @@ static const WCHAR supportstransparency_valuename[] = {'S','u','p','p','o','r','
 static const WCHAR requiresfullstream_valuename[] = {'R','e','q','u','i','r','e','s','F','u','l','l','S','t','r','e','a','m',0};
 static const WCHAR supportspadding_valuename[] = {'S','u','p','p','o','r','t','s','P','a','d','d','i','n','g',0};
 static const WCHAR fileextensions_valuename[] = {'F','i','l','e','E','x','t','e','n','s','i','o','n','s',0};
+static const WCHAR containers_keyname[] = {'C','o','n','t','a','i','n','e','r','s',0};
 
 static HRESULT ComponentInfo_GetStringValue(HKEY classkey, LPCWSTR value,
     UINT buffer_size, WCHAR *buffer, UINT *actual_size)
@@ -134,7 +135,12 @@ static HRESULT ComponentInfo_GetGuidList(HKEY classkey, LPCWSTR subkeyname,
         return E_INVALIDARG;
 
     ret = RegOpenKeyExW(classkey, subkeyname, 0, KEY_READ, &subkey);
-    if (ret != ERROR_SUCCESS) return HRESULT_FROM_WIN32(ret);
+    if (ret == ERROR_FILE_NOT_FOUND)
+    {
+        *actual_size = 0;
+        return S_OK;
+    }
+    else if (ret != ERROR_SUCCESS) return HRESULT_FROM_WIN32(ret);
 
     if (buffer)
     {
@@ -1613,10 +1619,11 @@ static HRESULT WINAPI MetadataReaderInfo_GetMetadataFormat(IWICMetadataReaderInf
 static HRESULT WINAPI MetadataReaderInfo_GetContainerFormats(IWICMetadataReaderInfo *iface,
     UINT length, GUID *formats, UINT *actual_length)
 {
-    if (!actual_length) return E_INVALIDARG;
+    MetadataReaderInfo *This = impl_from_IWICMetadataReaderInfo(iface);
+    TRACE("(%p,%u,%p,%p)\n", iface, length, formats, actual_length);
 
-    FIXME("(%p,%u,%p,%p): stub\n", iface, length, formats, actual_length);
-    return E_NOTIMPL;
+    return ComponentInfo_GetGuidList(This->classkey, containers_keyname, length,
+        formats, actual_length);
 }
 
 static HRESULT WINAPI MetadataReaderInfo_GetDeviceManufacturer(IWICMetadataReaderInfo *iface,
@@ -1657,19 +1664,187 @@ static HRESULT WINAPI MetadataReaderInfo_DoesRequireFixedSize(IWICMetadataReader
 }
 
 static HRESULT WINAPI MetadataReaderInfo_GetPatterns(IWICMetadataReaderInfo *iface,
-    REFGUID container, UINT length, WICMetadataPattern *pattern, UINT *count, UINT *actual_length)
+    REFGUID container, UINT length, WICMetadataPattern *patterns, UINT *count, UINT *actual_length)
 {
-    if (!actual_length) return E_INVALIDARG;
+    MetadataReaderInfo *This = impl_from_IWICMetadataReaderInfo(iface);
+    HRESULT hr=S_OK;
+    LONG res;
+    UINT pattern_count=0, patterns_size=0;
+    DWORD valuesize, patternsize;
+    BYTE *bPatterns=(BYTE*)patterns;
+    HKEY containers_key, guid_key, pattern_key;
+    WCHAR subkeyname[11];
+    WCHAR guidkeyname[39];
+    int i;
+    static const WCHAR uintformatW[] = {'%','u',0};
+    static const WCHAR patternW[] = {'P','a','t','t','e','r','n',0};
+    static const WCHAR positionW[] = {'P','o','s','i','t','i','o','n',0};
+    static const WCHAR maskW[] = {'M','a','s','k',0};
+    static const WCHAR dataoffsetW[] = {'D','a','t','a','O','f','f','s','e','t',0};
 
-    FIXME("(%p,%s,%u,%p,%p,%p): stub\n", iface, debugstr_guid(container), length, pattern, count, actual_length);
-    return E_NOTIMPL;
+    TRACE("(%p,%s,%u,%p,%p,%p)\n", iface, debugstr_guid(container), length, patterns, count, actual_length);
+
+    if (!actual_length || !container) return E_INVALIDARG;
+
+    res = RegOpenKeyExW(This->classkey, containers_keyname, 0, KEY_READ, &containers_key);
+    if (res == ERROR_SUCCESS)
+    {
+        StringFromGUID2(container, guidkeyname, 39);
+
+        res = RegOpenKeyExW(containers_key, guidkeyname, 0, KEY_READ, &guid_key);
+        if (res == ERROR_FILE_NOT_FOUND) hr = WINCODEC_ERR_COMPONENTNOTFOUND;
+        else if (res != ERROR_SUCCESS) hr = HRESULT_FROM_WIN32(res);
+
+        RegCloseKey(containers_key);
+    }
+    else if (res == ERROR_FILE_NOT_FOUND) hr = WINCODEC_ERR_COMPONENTNOTFOUND;
+    else hr = HRESULT_FROM_WIN32(res);
+
+    if (SUCCEEDED(hr))
+    {
+        res = RegQueryInfoKeyW(guid_key, NULL, NULL, NULL, &pattern_count, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        if (res != ERROR_SUCCESS) hr = HRESULT_FROM_WIN32(res);
+
+        if (SUCCEEDED(hr))
+        {
+            patterns_size = pattern_count * sizeof(WICMetadataPattern);
+
+            for (i=0; i<pattern_count; i++)
+            {
+                snprintfW(subkeyname, 11, uintformatW, i);
+                res = RegOpenKeyExW(guid_key, subkeyname, 0, KEY_READ, &pattern_key);
+                if (res == ERROR_SUCCESS)
+                {
+                    res = RegGetValueW(pattern_key, NULL, patternW, RRF_RT_REG_BINARY, NULL,
+                        NULL, &patternsize);
+                    patterns_size += patternsize*2;
+
+                    if ((length >= patterns_size) && (res == ERROR_SUCCESS))
+                    {
+                        patterns[i].Length = patternsize;
+
+                        patterns[i].DataOffset.QuadPart = 0;
+                        valuesize = sizeof(ULARGE_INTEGER);
+                        RegGetValueW(pattern_key, NULL, dataoffsetW, RRF_RT_DWORD|RRF_RT_QWORD, NULL,
+                            &patterns[i].DataOffset, &valuesize);
+
+                        patterns[i].Position.QuadPart = 0;
+                        valuesize = sizeof(ULARGE_INTEGER);
+                        res = RegGetValueW(pattern_key, NULL, positionW, RRF_RT_DWORD|RRF_RT_QWORD, NULL,
+                            &patterns[i].Position, &valuesize);
+
+                        if (res == ERROR_SUCCESS)
+                        {
+                            patterns[i].Pattern = bPatterns+patterns_size-patternsize*2;
+                            valuesize = patternsize;
+                            res = RegGetValueW(pattern_key, NULL, patternW, RRF_RT_REG_BINARY, NULL,
+                                patterns[i].Pattern, &valuesize);
+                        }
+
+                        if (res == ERROR_SUCCESS)
+                        {
+                            patterns[i].Mask = bPatterns+patterns_size-patternsize;
+                            valuesize = patternsize;
+                            res = RegGetValueW(pattern_key, NULL, maskW, RRF_RT_REG_BINARY, NULL,
+                                patterns[i].Mask, &valuesize);
+                        }
+                    }
+
+                    RegCloseKey(pattern_key);
+                }
+                if (res != ERROR_SUCCESS)
+                {
+                    hr = HRESULT_FROM_WIN32(res);
+                    break;
+                }
+            }
+        }
+
+        RegCloseKey(guid_key);
+    }
+
+    if (hr == S_OK)
+    {
+        *count = pattern_count;
+        *actual_length = patterns_size;
+        if (patterns && length < patterns_size)
+            hr = WINCODEC_ERR_INSUFFICIENTBUFFER;
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI MetadataReaderInfo_MatchesPattern(IWICMetadataReaderInfo *iface,
     REFGUID container, IStream *stream, BOOL *matches)
 {
-    FIXME("(%p,%s,%p,%p): stub\n", iface, debugstr_guid(container), stream, matches);
-    return E_NOTIMPL;
+    HRESULT hr;
+    WICMetadataPattern *patterns;
+    UINT pattern_count=0, patterns_size=0;
+    ULONG datasize=0;
+    BYTE *data=NULL;
+    ULONG bytesread;
+    UINT i;
+    LARGE_INTEGER seekpos;
+    ULONG pos;
+
+    TRACE("(%p,%s,%p,%p)\n", iface, debugstr_guid(container), stream, matches);
+
+    hr = MetadataReaderInfo_GetPatterns(iface, container, 0, NULL, &pattern_count, &patterns_size);
+    if (FAILED(hr)) return hr;
+
+    patterns = HeapAlloc(GetProcessHeap(), 0, patterns_size);
+    if (!patterns) return E_OUTOFMEMORY;
+
+    hr = MetadataReaderInfo_GetPatterns(iface, container, patterns_size, patterns, &pattern_count, &patterns_size);
+    if (FAILED(hr)) goto end;
+
+    for (i=0; i<pattern_count; i++)
+    {
+        if (datasize < patterns[i].Length)
+        {
+            HeapFree(GetProcessHeap(), 0, data);
+            datasize = patterns[i].Length;
+            data = HeapAlloc(GetProcessHeap(), 0, patterns[i].Length);
+            if (!data)
+            {
+                hr = E_OUTOFMEMORY;
+                break;
+            }
+        }
+
+        seekpos.QuadPart = patterns[i].Position.QuadPart;
+        hr = IStream_Seek(stream, seekpos, STREAM_SEEK_SET, NULL);
+        if (FAILED(hr)) break;
+
+        hr = IStream_Read(stream, data, patterns[i].Length, &bytesread);
+        if (hr == S_FALSE || (hr == S_OK && bytesread != patterns[i].Length)) /* past end of stream */
+            continue;
+        if (FAILED(hr)) break;
+
+        for (pos=0; pos<patterns[i].Length; pos++)
+        {
+            if ((data[pos] & patterns[i].Mask[pos]) != patterns[i].Pattern[pos])
+                break;
+        }
+        if (pos == patterns[i].Length) /* matches pattern */
+        {
+            hr = S_OK;
+            *matches = TRUE;
+            break;
+        }
+    }
+
+    if (i == pattern_count) /* does not match any pattern */
+    {
+        hr = S_OK;
+        *matches = FALSE;
+    }
+
+end:
+    HeapFree(GetProcessHeap(), 0, patterns);
+    HeapFree(GetProcessHeap(), 0, data);
+
+    return hr;
 }
 
 static HRESULT WINAPI MetadataReaderInfo_CreateInstance(IWICMetadataReaderInfo *iface,

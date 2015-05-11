@@ -133,21 +133,6 @@ static HRESULT unregister_pixelformats(struct regsvr_pixelformat const *list);
  */
 static const WCHAR clsid_keyname[] = {
     'C', 'L', 'S', 'I', 'D', 0 };
-static const WCHAR curver_keyname[] = {
-    'C', 'u', 'r', 'V', 'e', 'r', 0 };
-static const WCHAR ips_keyname[] = {
-    'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
-    0 };
-static const WCHAR ips32_keyname[] = {
-    'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
-    '3', '2', 0 };
-static const WCHAR progid_keyname[] = {
-    'P', 'r', 'o', 'g', 'I', 'D', 0 };
-static const WCHAR viprogid_keyname[] = {
-    'V', 'e', 'r', 's', 'i', 'o', 'n', 'I', 'n', 'd', 'e', 'p',
-    'e', 'n', 'd', 'e', 'n', 't', 'P', 'r', 'o', 'g', 'I', 'D',
-    0 };
-static const char tmodel_valuename[] = "ThreadingModel";
 static const char author_valuename[] = "Author";
 static const char friendlyname_valuename[] = "FriendlyName";
 static const WCHAR vendor_valuename[] = {'V','e','n','d','o','r',0};

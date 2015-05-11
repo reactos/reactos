@@ -938,9 +938,129 @@ static HRESULT WINAPI ComponentFactory_CreateMetadataReader(IWICComponentFactory
 static HRESULT WINAPI ComponentFactory_CreateMetadataReaderFromContainer(IWICComponentFactory *iface,
         REFGUID format, const GUID *vendor, DWORD options, IStream *stream, IWICMetadataReader **reader)
 {
-    FIXME("%p,%s,%s,%x,%p,%p: stub\n", iface, debugstr_guid(format), debugstr_guid(vendor),
+    HRESULT hr;
+    IEnumUnknown *enumreaders;
+    IUnknown *unkreaderinfo;
+    IWICMetadataReaderInfo *readerinfo;
+    IWICPersistStream *wicpersiststream;
+    ULONG num_fetched;
+    GUID decoder_vendor;
+    BOOL matches;
+    LARGE_INTEGER zero;
+
+    TRACE("%p,%s,%s,%x,%p,%p\n", iface, debugstr_guid(format), debugstr_guid(vendor),
         options, stream, reader);
-    return E_NOTIMPL;
+
+    if (!format || !stream || !reader)
+        return E_INVALIDARG;
+
+    zero.QuadPart = 0;
+
+    hr = CreateComponentEnumerator(WICMetadataReader, WICComponentEnumerateDefault, &enumreaders);
+    if (FAILED(hr)) return hr;
+
+    *reader = NULL;
+
+start:
+    while (!*reader)
+    {
+        hr = IEnumUnknown_Next(enumreaders, 1, &unkreaderinfo, &num_fetched);
+
+        if (hr == S_OK)
+        {
+            hr = IUnknown_QueryInterface(unkreaderinfo, &IID_IWICMetadataReaderInfo, (void**)&readerinfo);
+
+            if (SUCCEEDED(hr))
+            {
+                if (vendor)
+                {
+                    hr = IWICMetadataReaderInfo_GetVendorGUID(readerinfo, &decoder_vendor);
+
+                    if (FAILED(hr) || !IsEqualIID(vendor, &decoder_vendor))
+                    {
+                        IWICMetadataReaderInfo_Release(readerinfo);
+                        IUnknown_Release(unkreaderinfo);
+                        continue;
+                    }
+                }
+
+                hr = IWICMetadataReaderInfo_MatchesPattern(readerinfo, format, stream, &matches);
+
+                if (SUCCEEDED(hr) && matches)
+                {
+                    hr = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
+
+                    if (SUCCEEDED(hr))
+                        hr = IWICMetadataReaderInfo_CreateInstance(readerinfo, reader);
+
+                    if (SUCCEEDED(hr))
+                    {
+                        hr = IWICMetadataReader_QueryInterface(*reader, &IID_IWICPersistStream, (void**)&wicpersiststream);
+
+                        if (SUCCEEDED(hr))
+                        {
+                            hr = IWICPersistStream_LoadEx(wicpersiststream,
+                                stream, vendor, options & WICPersistOptionsMask);
+
+                            IWICPersistStream_Release(wicpersiststream);
+                        }
+
+                        if (FAILED(hr))
+                        {
+                            IWICMetadataReader_Release(*reader);
+                            *reader = NULL;
+                        }
+                    }
+                }
+
+                IUnknown_Release(readerinfo);
+            }
+
+            IUnknown_Release(unkreaderinfo);
+        }
+        else
+            break;
+    }
+
+    if (!*reader && vendor)
+    {
+        vendor = NULL;
+        IEnumUnknown_Reset(enumreaders);
+        goto start;
+    }
+
+    IEnumUnknown_Release(enumreaders);
+
+    if (!*reader && !(options & WICMetadataCreationFailUnknown))
+    {
+        hr = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
+
+        if (SUCCEEDED(hr))
+            hr = UnknownMetadataReader_CreateInstance(&IID_IWICMetadataReader, (void**)reader);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = IWICMetadataReader_QueryInterface(*reader, &IID_IWICPersistStream, (void**)&wicpersiststream);
+
+            if (SUCCEEDED(hr))
+            {
+                hr = IWICPersistStream_LoadEx(wicpersiststream, stream, NULL, options & WICPersistOptionsMask);
+
+                IWICPersistStream_Release(wicpersiststream);
+            }
+
+            if (FAILED(hr))
+            {
+                IWICMetadataReader_Release(*reader);
+                *reader = NULL;
+            }
+        }
+    }
+
+    if (*reader)
+        return S_OK;
+    else
+        return WINCODEC_ERR_COMPONENTNOTFOUND;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateMetadataWriter(IWICComponentFactory *iface,

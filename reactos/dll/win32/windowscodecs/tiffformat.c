@@ -309,7 +309,19 @@ static HRESULT tiff_get_decode_info(TIFF *tiff, tiff_decode_info *decode_info)
         decode_info->invert_grayscale = 1;
         /* fall through */
     case 1: /* BlackIsZero */
-        if (samples != 1)
+        if (samples == 2)
+        {
+            ret = pTIFFGetField(tiff, TIFFTAG_EXTRASAMPLES, &extra_sample_count, &extra_samples);
+            if (!ret)
+            {
+                extra_sample_count = 1;
+                extra_sample = 0;
+                extra_samples = &extra_sample;
+            }
+            else
+                FIXME("ignoring extra alpha %u/%u bps %u\n", extra_sample_count, extra_samples[0], bps);
+        }
+        else if (samples != 1)
         {
             FIXME("unhandled grayscale sample count %u\n", samples);
             return E_FAIL;

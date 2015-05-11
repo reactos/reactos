@@ -181,13 +181,28 @@ MAKE_FUNCPTR(png_write_info);
 MAKE_FUNCPTR(png_write_rows);
 #undef MAKE_FUNCPTR
 
+static CRITICAL_SECTION init_png_cs;
+static CRITICAL_SECTION_DEBUG init_png_cs_debug =
+{
+    0, 0, &init_png_cs,
+    { &init_png_cs_debug.ProcessLocksList,
+      &init_png_cs_debug.ProcessLocksList },
+    0, 0, { (DWORD_PTR)(__FILE__ ": init_png_cs") }
+};
+static CRITICAL_SECTION init_png_cs = { &init_png_cs_debug, -1, 0, 0, 0, 0 };
+
 static void *load_libpng(void)
 {
-    if((libpng_handle = wine_dlopen(SONAME_LIBPNG, RTLD_NOW, NULL, 0)) != NULL) {
+    void *result;
+
+    EnterCriticalSection(&init_png_cs);
+
+    if(!libpng_handle && (libpng_handle = wine_dlopen(SONAME_LIBPNG, RTLD_NOW, NULL, 0)) != NULL) {
 
 #define LOAD_FUNCPTR(f) \
     if((p##f = wine_dlsym(libpng_handle, #f, NULL, 0)) == NULL) { \
         libpng_handle = NULL; \
+        LeaveCriticalSection(&init_png_cs); \
         return NULL; \
     }
         LOAD_FUNCPTR(png_create_read_struct);
@@ -232,7 +247,12 @@ static void *load_libpng(void)
 
 #undef LOAD_FUNCPTR
     }
-    return libpng_handle;
+
+    result = libpng_handle;
+
+    LeaveCriticalSection(&init_png_cs);
+
+    return result;
 }
 
 static void user_error_fn(png_structp png_ptr, png_const_charp error_message)
@@ -978,7 +998,7 @@ HRESULT PngDecoder_CreateInstance(REFIID iid, void** ppv)
 
     *ppv = NULL;
 
-    if (!libpng_handle && !load_libpng())
+    if (!load_libpng())
     {
         ERR("Failed reading PNG because unable to find %s\n",SONAME_LIBPNG);
         return E_FAIL;
@@ -1707,7 +1727,7 @@ HRESULT PngEncoder_CreateInstance(REFIID iid, void** ppv)
 
     *ppv = NULL;
 
-    if (!libpng_handle && !load_libpng())
+    if (!load_libpng())
     {
         ERR("Failed writing PNG because unable to find %s\n",SONAME_LIBPNG);
         return E_FAIL;
