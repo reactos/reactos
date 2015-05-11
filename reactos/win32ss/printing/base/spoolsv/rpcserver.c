@@ -35,18 +35,6 @@ RpcThreadProc(LPVOID lpParameter)
     return 0;
 }
 
-DWORD
-_RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterEnum, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
-{
-    return 0;
-}
-
-DWORD
-_RpcOpenPrinter(WINSPOOL_HANDLE pPrinterName, WINSPOOL_PRINTER_HANDLE* phPrinter, WCHAR* pDatatype, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, DWORD AccessRequired)
-{
-    return 0;
-}
-
 void __RPC_FAR* __RPC_USER
 midl_user_allocate(SIZE_T len)
 {
@@ -57,6 +45,11 @@ void __RPC_USER
 midl_user_free(void __RPC_FAR* ptr)
 {
     HeapFree(GetProcessHeap(), 0, ptr);
+}
+
+void __RPC_USER
+WINSPOOL_GDI_HANDLE_rundown(WINSPOOL_GDI_HANDLE hGdiHandle)
+{
 }
 
 void __RPC_USER
