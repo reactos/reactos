@@ -212,7 +212,7 @@ reactos/dll/win32/winmm               # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap       # Forked at Wine-20050628
 reactos/dll/win32/winmm/wavemap       # Forked at Wine-20050628
 reactos/dll/win32/winscard            # Synced to Wine-1.7.27
-reactos/dll/win32/wintrust            # Synced to Wine-1.7.27
+reactos/dll/win32/wintrust            # Synced to WineStaging-1.7.37
 reactos/dll/win32/wldap32             # Synced to Wine-1.7.27
 reactos/dll/win32/wmi                 # Synced to Wine-1.7.27
 reactos/dll/win32/wmiutils            # Synced to Wine-1.7.27
