@@ -388,7 +388,12 @@ VDDInstallMemoryHook(IN HANDLE hVdd,
     PLIST_ENTRY Pointer;
 
     /* Check validity of the VDD handle */
-    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE) return FALSE;
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     if (dwCount == 0) return FALSE;
 
     /* Make sure none of these pages are already allocated */
@@ -407,7 +412,11 @@ VDDInstallMemoryHook(IN HANDLE hVdd,
     {
         /* Create and initialize a new hook entry... */
         Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Hook));
-        if (Hook == NULL) return FALSE;
+        if (Hook == NULL)
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
 
         Hook->hVdd = hVdd;
         Hook->Count = 0;
@@ -455,6 +464,13 @@ VDDDeInstallMemoryHook(IN HANDLE hVdd,
     ULONG LastPage = ((ULONG_PTR)PHYS_TO_REAL(pStart) + dwCount - 1) >> 12;
     PVOID Address = (PVOID)REAL_TO_PHYS(FirstPage * PAGE_SIZE);
     SIZE_T Size = (LastPage - FirstPage + 1) * PAGE_SIZE;
+
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     if (dwCount == 0) return FALSE;
 
@@ -504,6 +520,13 @@ VDDAllocMem(IN HANDLE hVdd,
     ULONG LastPage = ((ULONG_PTR)PHYS_TO_REAL(Address) + Size - 1) >> 12;
     SIZE_T RealSize = (LastPage - FirstPage + 1) * PAGE_SIZE;
 
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     if (Size == 0) return FALSE;
 
     /* Fixup the address */
@@ -544,6 +567,13 @@ VDDFreeMem(IN HANDLE hVdd,
     ULONG FirstPage = (ULONG_PTR)PHYS_TO_REAL(Address) >> 12;
     ULONG LastPage = ((ULONG_PTR)PHYS_TO_REAL(Address) + Size - 1) >> 12;
     SIZE_T RealSize = (LastPage - FirstPage + 1) * PAGE_SIZE;
+
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     if (Size == 0) return FALSE;
 

@@ -26,6 +26,9 @@
 #include <winuser.h>
 #include <subsys/win/vdm.h>
 
+// Do not include stuff that is only defined
+// for backwards compatibility in nt_vdd.h
+#define NO_NTVDD_COMPAT
 #include <vddsvc.h>
 
 DWORD WINAPI SetLastConsoleEventActive(VOID);
@@ -50,7 +53,7 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 /*
  * Activate this line for Win2k compliancy
  */
-// #define WIN2K_COMPLIANT
+#define WIN2K_COMPLIANT
 
 /*
  * Activate this line if you want advanced hardcoded debug facilities

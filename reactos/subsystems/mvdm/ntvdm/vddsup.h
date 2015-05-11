@@ -11,6 +11,11 @@
 
 /* FUNCTIONS ******************************************************************/
 
+VOID VDDCreateUserHook(USHORT DosPDB);
+VOID VDDTerminateUserHook(USHORT DosPDB);
+VOID VDDBlockUserHook(VOID);
+VOID VDDResumeUserHook(VOID);
+
 VOID VDDSupInitialize(VOID);
 
 #endif // _VDDSUP_H_

@@ -25,6 +25,20 @@ typedef struct _VDD_MODULE
     VDD_PROC DispatchRoutine;
 } VDD_MODULE, *PVDD_MODULE;
 
+// WARNING: A structure with the same name exists in nt_vdd.h,
+// however it is not declared because its inclusion was prevented
+// with #define NO_NTVDD_COMPAT, see ntvdm.h
+typedef struct _VDD_USER_HANDLERS
+{
+    LIST_ENTRY Entry;
+
+    HANDLE            hVdd;
+    PFNVDD_UCREATE    Ucr_Handler;
+    PFNVDD_UTERMINATE Uterm_Handler;
+    PFNVDD_UBLOCK     Ublock_Handler;
+    PFNVDD_URESUME    Uresume_Handler;
+} VDD_USER_HANDLERS, *PVDD_USER_HANDLERS;
+
 /* PRIVATE VARIABLES **********************************************************/
 
 // TODO: Maybe use a linked list.
@@ -36,6 +50,8 @@ static VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}};
 #define ENTRY_TO_HANDLE(Entry)  ((Entry)  + 1)
 #define HANDLE_TO_ENTRY(Handle) ((Handle) - 1)
 #define IS_VALID_HANDLE(Handle) ((Handle) > 0 && (Handle) <= MAX_VDD_MODULES)
+
+static LIST_ENTRY VddUserHooksList = {&VddUserHooksList, &VddUserHooksList};
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -144,7 +160,7 @@ static VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
                 goto Quit;
             }
 
-            /* If we arrived there, that means everything is OK */
+            /* If we reached this point, that means everything is OK */
 
             /* Register the VDD DLL */
             VDDList[Entry].hDll = hDll;
@@ -346,6 +362,145 @@ Quit:
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * NOTE: This function can be called multiple times by the same VDD, if
+ * it wants to install different hooks for a same action. The most recent
+ * registered hooks are called first.
+ */
+BOOL
+WINAPI
+VDDInstallUserHook(IN HANDLE hVdd,
+                   IN PFNVDD_UCREATE Ucr_Handler,
+                   IN PFNVDD_UTERMINATE Uterm_Handler,
+                   IN PFNVDD_UBLOCK Ublock_Handler,
+                   IN PFNVDD_URESUME Uresume_Handler)
+{
+    PVDD_USER_HANDLERS UserHook;
+
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    // NOTE: If we want that a VDD can install hooks only once, it's here
+    // that we need to check whether a hook entry is already registered.
+
+    /* Create and initialize a new hook entry... */
+    UserHook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*UserHook));
+    if (UserHook == NULL)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
+    UserHook->hVdd            = hVdd;
+    UserHook->Ucr_Handler     = Ucr_Handler;
+    UserHook->Uterm_Handler   = Uterm_Handler;
+    UserHook->Ublock_Handler  = Ublock_Handler;
+    UserHook->Uresume_Handler = Uresume_Handler;
+
+    /* ... and add it at the top of the list of hooks */
+    InsertHeadList(&VddUserHooksList, &UserHook->Entry);
+
+    return TRUE;
+}
+
+/*
+ * NOTE: This function uninstalls the latest installed hooks for a given VDD.
+ * It can be called multiple times by the same VDD to uninstall many hooks
+ * installed by multiple invocations of VDDInstallUserHook.
+ */
+BOOL
+WINAPI
+VDDDeInstallUserHook(IN HANDLE hVdd)
+{
+    PLIST_ENTRY Pointer;
+    PVDD_USER_HANDLERS UserHook;
+
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Uninstall the latest installed hooks */
+    for (Pointer = VddUserHooksList.Flink; Pointer != &VddUserHooksList; Pointer = Pointer->Flink)
+    {
+        UserHook = CONTAINING_RECORD(Pointer, VDD_USER_HANDLERS, Entry);
+        if (UserHook->hVdd == hVdd)
+        {
+            RemoveEntryList(&UserHook->Entry);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, UserHook);
+            return TRUE;
+        }
+    }
+
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+/*
+ * Internal functions for calling the VDD user hooks.
+ * Their names come directly from the Windows 2kX DDK.
+ */
+
+VOID VDDCreateUserHook(USHORT DosPDB)
+{
+    PLIST_ENTRY Pointer;
+    PVDD_USER_HANDLERS UserHook;
+
+    /* Call the hooks starting from the most recent ones */
+    for (Pointer = VddUserHooksList.Flink; Pointer != &VddUserHooksList; Pointer = Pointer->Flink)
+    {
+        UserHook = CONTAINING_RECORD(Pointer, VDD_USER_HANDLERS, Entry);
+        if (UserHook->Ucr_Handler) UserHook->Ucr_Handler(DosPDB);
+    }
+}
+
+VOID VDDTerminateUserHook(USHORT DosPDB)
+{
+    PLIST_ENTRY Pointer;
+    PVDD_USER_HANDLERS UserHook;
+
+    /* Call the hooks starting from the most recent ones */
+    for (Pointer = VddUserHooksList.Flink; Pointer != &VddUserHooksList; Pointer = Pointer->Flink)
+    {
+        UserHook = CONTAINING_RECORD(Pointer, VDD_USER_HANDLERS, Entry);
+        if (UserHook->Uterm_Handler) UserHook->Uterm_Handler(DosPDB);
+    }
+}
+
+VOID VDDBlockUserHook(VOID)
+{
+    PLIST_ENTRY Pointer;
+    PVDD_USER_HANDLERS UserHook;
+
+    /* Call the hooks starting from the most recent ones */
+    for (Pointer = VddUserHooksList.Flink; Pointer != &VddUserHooksList; Pointer = Pointer->Flink)
+    {
+        UserHook = CONTAINING_RECORD(Pointer, VDD_USER_HANDLERS, Entry);
+        if (UserHook->Ublock_Handler) UserHook->Ublock_Handler();
+    }
+}
+
+VOID VDDResumeUserHook(VOID)
+{
+    PLIST_ENTRY Pointer;
+    PVDD_USER_HANDLERS UserHook;
+
+    /* Call the hooks starting from the most recent ones */
+    for (Pointer = VddUserHooksList.Flink; Pointer != &VddUserHooksList; Pointer = Pointer->Flink)
+    {
+        UserHook = CONTAINING_RECORD(Pointer, VDD_USER_HANDLERS, Entry);
+        if (UserHook->Uresume_Handler) UserHook->Uresume_Handler();
+    }
+}
+
+
 
 VOID VDDSupInitialize(VOID)
 {

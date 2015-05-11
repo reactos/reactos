@@ -27,6 +27,8 @@
 #include "io.h"
 #include "hardware/ps2.h"
 
+#include "vddsup.h"
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static inline VOID DosSetPspCommandLine(WORD Segment, LPCSTR CommandLine)
@@ -509,6 +511,9 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             setSS(LoadSegment + Header->e_ss);
             setSP(Header->e_sp);
 
+            /* Notify VDDs of process execution */
+            VDDCreateUserHook(Segment);
+
             /* Execute */
             DosSetProcessContext(Segment);
             CpuExecute(LoadSegment + Header->e_cs, Header->e_ip);
@@ -596,6 +601,9 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
              */
             *((LPWORD)SEG_OFF_TO_PTR(Segment, 0xFFFE)) = 0;
 
+            /* Notify VDDs of process execution */
+            VDDCreateUserHook(Segment);
+
             /* Execute */
             DosSetProcessContext(Segment);
             CpuExecute(Segment, 0x100);
@@ -613,7 +621,7 @@ Cleanup:
     {
         /* It was not successful, cleanup the DOS memory */
         if (EnvBlock) DosFreeMemory(EnvBlock);
-        if (Segment) DosFreeMemory(Segment);
+        if (Segment)  DosFreeMemory(Segment);
     }
 
     /* Unmap the file*/
@@ -849,6 +857,9 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
 
     /* Check if this PSP is it's own parent */
     if (PspBlock->ParentPsp == Psp) goto Done;
+
+    /* Notify VDDs of process termination */
+    VDDTerminateUserHook(Psp);
 
     if (KeepResident == 0)
     {

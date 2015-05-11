@@ -39,6 +39,47 @@ WINAPI
 VDDTerminateVDM(VOID);
 
 
+/* VDD User Hooks */
+
+typedef VOID
+(WINAPI *PFNVDD_UCREATE)(USHORT DosPDB);
+
+typedef VOID
+(WINAPI *PFNVDD_UTERMINATE)(USHORT DosPDB);
+
+typedef VOID
+(WINAPI *PFNVDD_UBLOCK)(VOID);
+
+typedef VOID
+(WINAPI *PFNVDD_URESUME)(VOID);
+
+// NOTE: Kept there for WinDDK compatibility, but it is in any case unused.
+#ifndef NO_NTVDD_COMPAT
+typedef struct _VDD_USER_HANDLERS {
+  HANDLE hvdd;
+  PFNVDD_UCREATE ucr_handler;
+  PFNVDD_UTERMINATE uterm_handler;
+  PFNVDD_UBLOCK ublock_handler;
+  PFNVDD_URESUME uresume_handler;
+  struct _VDD_USER_HANDLERS* next;
+} VDD_USER_HANDLERS, *PVDD_USER_HANDLERS;
+#endif
+
+BOOL
+WINAPI
+VDDInstallUserHook(
+  _In_ HANDLE hVdd,
+  _In_ PFNVDD_UCREATE Ucr_Handler,
+  _In_ PFNVDD_UTERMINATE Uterm_Handler,
+  _In_ PFNVDD_UBLOCK Ublock_Handler,
+  _In_ PFNVDD_URESUME Uresume_Handler);
+
+BOOL
+WINAPI
+VDDDeInstallUserHook(
+  _In_ HANDLE hVdd);
+
+
 /* IRQ services */
 
 WORD
@@ -122,7 +163,7 @@ VDDInstallIOHook(
   _In_ HANDLE hVdd,
   _In_ WORD cPortRange,
   _In_ PVDD_IO_PORTRANGE pPortRange,
-  _In_ PVDD_IO_HANDLERS IOhandler);
+  _In_ PVDD_IO_HANDLERS IoHandlers);
 
 VOID
 WINAPI

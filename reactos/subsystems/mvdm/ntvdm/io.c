@@ -497,19 +497,23 @@ EmulatorWriteIo(PFAST486_STATE State,
 
 BOOL
 WINAPI
-VDDInstallIOHook(HANDLE            hVdd,
-                 WORD              cPortRange,
-                 PVDD_IO_PORTRANGE pPortRange,
-                 PVDD_IO_HANDLERS  IOhandler)
+VDDInstallIOHook(IN HANDLE            hVdd,
+                 IN WORD              cPortRange,
+                 IN PVDD_IO_PORTRANGE pPortRange,
+                 IN PVDD_IO_HANDLERS  IoHandlers)
 {
+    WORD i;
+
     /* Check validity of the VDD handle */
-    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE) return FALSE;
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* Loop for each range of I/O ports */
     while (cPortRange--)
     {
-        WORD i;
-
         /* Register the range of I/O ports */
         for (i = pPortRange->First; i <= pPortRange->Last; ++i)
         {
@@ -544,12 +548,11 @@ VDDInstallIOHook(HANDLE            hVdd,
             IoPortProc[i].IoHandlers.OutsD = NULL;
 
             /* Save our handlers */
-            IoPortProc[i].VddIoHandlers = *IOhandler;
+            IoPortProc[i].VddIoHandlers = *IoHandlers;
         }
 
         /* Go to the next range */
         ++pPortRange;
-        ++IOhandler;
     }
 
     return TRUE;
@@ -557,18 +560,22 @@ VDDInstallIOHook(HANDLE            hVdd,
 
 VOID
 WINAPI
-VDDDeInstallIOHook(HANDLE            hVdd,
-                   WORD              cPortRange,
-                   PVDD_IO_PORTRANGE pPortRange)
+VDDDeInstallIOHook(IN HANDLE            hVdd,
+                   IN WORD              cPortRange,
+                   IN PVDD_IO_PORTRANGE pPortRange)
 {
+    WORD i;
+
     /* Check validity of the VDD handle */
-    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE) return;
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return;
+    }
 
     /* Loop for each range of I/O ports */
     while (cPortRange--)
     {
-        WORD i;
-
         /* Unregister the range of I/O ports */
         for (i = pPortRange->First; i <= pPortRange->Last; ++i)
         {

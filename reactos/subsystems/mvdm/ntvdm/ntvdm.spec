@@ -233,3 +233,6 @@
 @ stdcall VDDSimulate16()
 @ stdcall host_simulate()   VDDSimulate16
 @ stdcall VDDTerminateVDM()
+
+@ stdcall VDDInstallUserHook(long ptr ptr ptr ptr)
+@ stdcall VDDDeInstallUserHook(long)

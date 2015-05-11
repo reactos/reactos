@@ -16,10 +16,11 @@
 #define NDEBUG
 #include <debug.h>
 
+
+/* DEBUGGING HELPERS **********************************************************/
+
 // Enable this define to use DPRINT1 instead of MessageBox
 // #define DBG_SILENT
-
-/* GLOBALS ********************************************************************/
 
 #ifdef DBG_SILENT
 
@@ -81,7 +82,13 @@
     #define VDD_DBG VddDbgMsg
 #endif
 
+
+/* GLOBALS ********************************************************************/
+
 HANDLE hVdd = NULL;
+
+
+/* VDD I/O PORTS TESTING ******************************************************/
 
 /*
  * Port hooks (serial ports) -- Each port range is for testing different port handlers.
@@ -95,26 +102,6 @@ VDD_IO_PORTRANGE PortDefs[NUM_PORTS] =
     {0x3E8, 0x3EF},
     {0x2E8, 0x2EF}
 };
-
-// PFNVDD_INB   PortInB;
-// PFNVDD_INW   PortInW;
-// PFNVDD_INSB  PortInsB;
-// PFNVDD_INSW  PortInsW;
-// PFNVDD_OUTB  PortOutB;
-// PFNVDD_OUTW  PortOutW;
-// PFNVDD_OUTSB PortOutsB;
-// PFNVDD_OUTSW PortOutsW;
-
-// VDD_IO_HANDLERS PortHandlers[NUM_PORTS] =
-// {
-    // {PortInB, NULL   , NULL    , NULL    , PortOutB, NULL    , NULL     , NULL     },
-    // {PortInB, PortInW, NULL    , NULL    , PortOutB, PortOutW, NULL     , NULL     },
-    // {PortInB, NULL   , PortInsB, NULL    , PortOutB, NULL    , PortOutsB, NULL     },
-    // {PortInB, NULL   , NULL    , PortInsW, PortOutB, NULL    , NULL     , PortOutsW},
-// };
-
-
-/* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
 WINAPI
@@ -149,8 +136,6 @@ PortOutW(IN USHORT Port,
 {
     VDD_DBG("(WORD 0x%04x) --> Port 0x%04x", Data, Port);
 }
-
-
 
 
 VOID
@@ -192,7 +177,6 @@ PortOutsW(IN USHORT  Port,
 }
 
 
-
 VDD_IO_HANDLERS PortHandlers[NUM_PORTS] =
 {
     {PortInB, NULL   , NULL    , NULL    , PortOutB, NULL    , NULL     , NULL     },
@@ -201,8 +185,11 @@ VDD_IO_HANDLERS PortHandlers[NUM_PORTS] =
     {PortInB, NULL   , NULL    , PortInsW, PortOutB, NULL    , NULL     , PortOutsW},
 };
 
+
+/* VDD MEMORY HOOKS TESTING ***************************************************/
+
 /*
- * Memory hooking. Everything should be page-rounded.
+ * Everything should be page-rounded.
  */
 
 #ifndef PAGE_SIZE
@@ -300,60 +287,66 @@ FindHookableMemory(IN  USHORT  StartSegment,
 }
 
 
-BOOLEAN
-RegisterVDD(BOOLEAN Register)
+/* VDD USER HOOKS TESTING *****************************************************/
+
+VOID
+WINAPI
+Create1Handler(USHORT DosPDB)
 {
-    BOOLEAN Success = FALSE;
-
-    if (Register)
-    {
-        /* Hook some IO ports */
-        VDD_DBG("VDDInstallIOHook");
-        Success = VDDInstallIOHook(hVdd, NUM_PORTS, PortDefs, PortHandlers);
-        if (!Success)
-        {
-            VDD_DBG("Unable to hook IO ports, terminate...");
-            VDDTerminateVDM();
-        }
-
-        /* Add a memory handler */
-        VDD_DBG("FindHookableMemory");
-        HookedAddress = FindHookableMemory(MEM_SEG_START, 0x0000,
-                                           &HookedSegment, &HookedOffset);
-        if (HookedAddress == NULL)
-        {
-            VDD_DBG("Unable to install memory handler, terminate...");
-            VDDTerminateVDM();
-        }
-        VDD_DBG("Initialization finished!");
-    }
-    else
-    {
-        Success = VDDFreeMem(hVdd, HookedAddress, MEM_SIZE);
-        if (!Success) VDD_DBG("Unable to free memory");
-
-        /* Uninstall the memory handler */
-        VDD_DBG("VDDDeInstallMemoryHook");
-        Success = VDDDeInstallMemoryHook(hVdd, HookedAddress, MEM_SIZE);
-        if (!Success) VDD_DBG("Memory handler uninstall failed");
-
-        VDD_DBG("VdmUnmapFlat");
-        Success = VdmUnmapFlat(HookedSegment, HookedOffset, HookedAddress, getMODE());
-        // FreeVDMPointer(GetVDMAddress(HookedSegment, HookedOffset), MEM_SIZE, HookedAddress, (getMSW() & MSW_PE));
-        if (!Success) VDD_DBG("VdmUnmapFlat failed!");
-
-        /* Deregister the hooked IO ports */
-        VDD_DBG("VDDDeInstallIOHook");
-        VDDDeInstallIOHook(hVdd, NUM_PORTS, PortDefs);
-
-        VDD_DBG("Cleanup finished!");
-        Success = TRUE;
-    }
-
-    return Success;
+    VDD_DBG("Create1Handler(0x%04x)", DosPDB);
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+VOID
+WINAPI
+Create2Handler(USHORT DosPDB)
+{
+    VDD_DBG("Create2Handler(0x%04x)", DosPDB);
+}
+
+VOID
+WINAPI
+Terminate1Handler(USHORT DosPDB)
+{
+    VDD_DBG("Terminate1Handler(0x%04x)", DosPDB);
+}
+
+VOID
+WINAPI
+Terminate2Handler(USHORT DosPDB)
+{
+    VDD_DBG("Terminate2Handler(0x%04x)", DosPDB);
+}
+
+VOID
+WINAPI
+Block1Handler(VOID)
+{
+    VDD_DBG("Block1Handler");
+}
+
+VOID
+WINAPI
+Block2Handler(VOID)
+{
+    VDD_DBG("Block2Handler");
+}
+
+VOID
+WINAPI
+Resume1Handler(VOID)
+{
+    VDD_DBG("Resume1Handler");
+}
+
+VOID
+WINAPI
+Resume2Handler(VOID)
+{
+    VDD_DBG("Resume2Handler");
+}
+
+
+/* VDD INITIALIZATION AND REGISTRATION ****************************************/
 
 VOID
 WINAPI
@@ -385,7 +378,99 @@ TestVDDDispatch(VOID)
     setCF(0);
 }
 
-/* ENTRY-POINT ****************************************************************/
+BOOLEAN
+RegisterVDD(BOOLEAN Register)
+{
+    BOOLEAN Success = FALSE;
+
+    if (Register)
+    {
+        /* Hook some IO ports */
+        VDD_DBG("VDDInstallIOHook");
+        Success = VDDInstallIOHook(hVdd, NUM_PORTS, PortDefs, PortHandlers);
+        if (!Success)
+        {
+            VDD_DBG("Unable to hook IO ports, terminate...");
+            VDDTerminateVDM();
+        }
+
+        /* Add a memory handler */
+        VDD_DBG("FindHookableMemory");
+        HookedAddress = FindHookableMemory(MEM_SEG_START, 0x0000,
+                                           &HookedSegment, &HookedOffset);
+        if (HookedAddress == NULL)
+        {
+            VDD_DBG("Unable to install memory handler, terminate...");
+            VDDTerminateVDM();
+        }
+
+        /* Add some user hooks -- Test order of initialization and calling */
+        VDD_DBG("VDDInstallUserHook (1)");
+        Success = VDDInstallUserHook(hVdd,
+                                     Create1Handler,
+                                     Terminate1Handler,
+                                     Block1Handler,
+                                     Resume1Handler);
+        if (!Success)
+        {
+            VDD_DBG("Unable to install user hooks (1)...");
+        }
+
+        VDD_DBG("VDDInstallUserHook (2)");
+        Success = VDDInstallUserHook(hVdd,
+                                     Create2Handler,
+                                     Terminate2Handler,
+                                     Block2Handler,
+                                     Resume2Handler);
+        if (!Success)
+        {
+            VDD_DBG("Unable to install user hooks (2)...");
+        }
+
+        /* We have finished! */
+        VDD_DBG("Initialization finished!");
+    }
+    else
+    {
+        /* Remove the user hooks */
+        VDD_DBG("VDDDeInstallUserHook (1)");
+        Success = VDDDeInstallUserHook(hVdd);
+        if (!Success) VDD_DBG("Unable to uninstall user hooks (1)");
+
+        // TODO: See which hooks are still existing there...
+
+        VDD_DBG("VDDDeInstallUserHook (2)");
+        Success = VDDDeInstallUserHook(hVdd);
+        if (!Success) VDD_DBG("Unable to uninstall user hooks (2)");
+
+        VDD_DBG("VDDDeInstallUserHook (3)");
+        Success = VDDDeInstallUserHook(hVdd);
+        if (!Success) VDD_DBG("EXPECTED ERROR: Unable to uninstall user hooks (3)");
+        else          VDD_DBG("UNEXPECTED ERROR: Uninstalling user hooks (3) succeeded?!");
+
+        /* Uninstall the memory handler */
+        Success = VDDFreeMem(hVdd, HookedAddress, MEM_SIZE);
+        if (!Success) VDD_DBG("Unable to free memory");
+
+        VDD_DBG("VDDDeInstallMemoryHook");
+        Success = VDDDeInstallMemoryHook(hVdd, HookedAddress, MEM_SIZE);
+        if (!Success) VDD_DBG("Memory handler uninstall failed");
+
+        VDD_DBG("VdmUnmapFlat");
+        Success = VdmUnmapFlat(HookedSegment, HookedOffset, HookedAddress, getMODE());
+        // FreeVDMPointer(GetVDMAddress(HookedSegment, HookedOffset), MEM_SIZE, HookedAddress, (getMSW() & MSW_PE));
+        if (!Success) VDD_DBG("VdmUnmapFlat failed!");
+
+        /* Deregister the hooked IO ports */
+        VDD_DBG("VDDDeInstallIOHook");
+        VDDDeInstallIOHook(hVdd, NUM_PORTS, PortDefs);
+
+        VDD_DBG("Cleanup finished!");
+        Success = TRUE;
+    }
+
+    return Success;
+}
 
 BOOL
 WINAPI // VDDInitialize
