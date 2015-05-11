@@ -80,6 +80,10 @@ NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
             case IRP_MJ_READ:
                 Status = NtfsRead(IrpContext);
                 break;
+
+            case IRP_MJ_DEVICE_CONTROL:
+                Status = NtfsDeviceControl(IrpContext);
+                break;
         }
     }
     else

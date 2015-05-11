@@ -33,14 +33,16 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-NTAPI
-NtfsFsdDeviceControl(PDEVICE_OBJECT DeviceObject,
-                     PIRP Irp)
+NtfsDeviceControl(PNTFS_IRP_CONTEXT IrpContext)
 {
     PDEVICE_EXTENSION DeviceExt;
+    PIRP Irp = IrpContext->Irp;
 
-    DeviceExt = DeviceObject->DeviceExtension;
+    DeviceExt = IrpContext->DeviceObject->DeviceExtension;
     IoSkipCurrentIrpStackLocation(Irp);
+
+    /* Lower driver will complete - we don't have to */
+    IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
 
     return IoCallDriver(DeviceExt->StorageDevice, Irp);
 }
