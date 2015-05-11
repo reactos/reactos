@@ -18,8 +18,11 @@
 #include <config.h>
 #include <stdarg.h>
 //#include <stdlib.h>
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+#include <wine/winternl.h>
 #include <wtsapi32.h>
 #include <wine/debug.h>
 
@@ -84,8 +87,13 @@ BOOL WINAPI WTSEnumerateProcessesA(HANDLE hServer, DWORD Reserved, DWORD Version
 BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version,
     PWTS_PROCESS_INFOW* ppProcessInfo, DWORD* pCount)
 {
-    FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
-          ppProcessInfo, pCount);
+    WTS_PROCESS_INFOW *processInfo;
+    SYSTEM_PROCESS_INFORMATION *spi;
+    ULONG size = 0x4000;
+    void *buf = NULL;
+    NTSTATUS status;
+    DWORD count;
+    WCHAR *name;
 
     if (!ppProcessInfo || !pCount || Reserved != 0 || Version != 1)
     {
@@ -93,9 +101,71 @@ BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version
         return FALSE;
     }
 
-    *pCount = 0;
-    *ppProcessInfo = NULL;
+    if (hServer != WTS_CURRENT_SERVER_HANDLE)
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
 
+    do
+    {
+        size *= 2;
+        HeapFree(GetProcessHeap(), 0, buf);
+        buf = HeapAlloc(GetProcessHeap(), 0, size);
+        if (!buf)
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+        status = NtQuerySystemInformation(SystemProcessInformation, buf, size, NULL);
+    }
+    while (status == STATUS_INFO_LENGTH_MISMATCH);
+
+    if (status != STATUS_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, buf);
+        SetLastError(RtlNtStatusToDosError(status));
+        return FALSE;
+    }
+
+    spi = buf;
+    count = size = 0;
+    for (;;)
+    {
+        size += sizeof(WTS_PROCESS_INFOW) + spi->ProcessName.Length + sizeof(WCHAR);
+        count++;
+        if (spi->NextEntryOffset == 0) break;
+        spi = (SYSTEM_PROCESS_INFORMATION *)(((PCHAR)spi) + spi->NextEntryOffset);
+    }
+
+    processInfo = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!processInfo)
+    {
+        HeapFree(GetProcessHeap(), 0, buf);
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+    name = (WCHAR *)&processInfo[count];
+
+    *ppProcessInfo = processInfo;
+    *pCount = count;
+
+    spi = buf;
+    while (count--)
+    {
+        processInfo->SessionId = 0;
+        processInfo->ProcessId = HandleToUlong(spi->UniqueProcessId);
+        processInfo->pProcessName = name;
+        processInfo->pUserSid = NULL;
+        memcpy( name, spi->ProcessName.Buffer, spi->ProcessName.Length );
+        name[ spi->ProcessName.Length/sizeof(WCHAR) ] = 0;
+
+        processInfo++;
+        name += (spi->ProcessName.Length + sizeof(WCHAR))/sizeof(WCHAR);
+        spi = (SYSTEM_PROCESS_INFORMATION *)(((PCHAR)spi) + spi->NextEntryOffset);
+    }
+
+    HeapFree(GetProcessHeap(), 0, buf);
     return TRUE;
 }
 
@@ -159,9 +229,7 @@ BOOL WINAPI WTSEnumerateSessionsW(HANDLE hServer, DWORD Reserved, DWORD Version,
  */
 void WINAPI WTSFreeMemory(PVOID pMemory)
 {
-    static int once;
-
-    if (!once++) FIXME("Stub %p\n", pMemory);
+    HeapFree(GetProcessHeap(), 0, pMemory);
 }
 
 /************************************************************
