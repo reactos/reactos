@@ -311,120 +311,74 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInvalid)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePrefix)
 {
-    BOOLEAN Valid = FALSE;
-
     switch (Opcode)
     {
         /* ES: */
         case 0x26:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_SEG;
-                State->SegmentOverride = FAST486_REG_ES;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_SEG;
+            State->SegmentOverride = FAST486_REG_ES;
             break;
         }
 
         /* CS: */
         case 0x2E:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_SEG;
-                State->SegmentOverride = FAST486_REG_CS;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_SEG;
+            State->SegmentOverride = FAST486_REG_CS;
             break;
         }
 
         /* SS: */
         case 0x36:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_SEG;
-                State->SegmentOverride = FAST486_REG_SS;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_SEG;
+            State->SegmentOverride = FAST486_REG_SS;
             break;
         }
 
         /* DS: */
         case 0x3E:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_SEG;
-                State->SegmentOverride = FAST486_REG_DS;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_SEG;
+            State->SegmentOverride = FAST486_REG_DS;
             break;
         }
 
         /* FS: */
         case 0x64:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_SEG;
-                State->SegmentOverride = FAST486_REG_FS;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_SEG;
+            State->SegmentOverride = FAST486_REG_FS;
             break;
         }
 
         /* GS: */
         case 0x65:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_SEG;
-                State->SegmentOverride = FAST486_REG_GS;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_SEG;
+            State->SegmentOverride = FAST486_REG_GS;
             break;
         }
 
         /* OPSIZE */
         case 0x66:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_OPSIZE))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_OPSIZE;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_OPSIZE;
             break;
         }
 
         /* ADSIZE */
         case 0x67:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_ADSIZE))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_ADSIZE;
-                Valid = TRUE;
-            }
+            State->PrefixFlags |= FAST486_PREFIX_ADSIZE;
             break;
         }
 
         /* LOCK */
         case 0xF0:
         {
-            if (!(State->PrefixFlags & FAST486_PREFIX_LOCK))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_LOCK;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_LOCK;
             break;
         }
 
@@ -432,13 +386,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePrefix)
         case 0xF2:
         {
             /* Mutually exclusive with REP */
-            if (!(State->PrefixFlags
-                & (FAST486_PREFIX_REPNZ | FAST486_PREFIX_REP)))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_REPNZ;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_REPNZ;
+            State->PrefixFlags &= ~FAST486_PREFIX_REP;
             break;
         }
 
@@ -446,24 +395,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePrefix)
         case 0xF3:
         {
             /* Mutually exclusive with REPNZ */
-            if (!(State->PrefixFlags
-                & (FAST486_PREFIX_REPNZ | FAST486_PREFIX_REP)))
-            {
-                State->PrefixFlags |= FAST486_PREFIX_REP;
-                Valid = TRUE;
-            }
-
+            State->PrefixFlags |= FAST486_PREFIX_REP;
+            State->PrefixFlags &= ~FAST486_PREFIX_REPNZ;
             break;
         }
-    }
 
-    if (!Valid)
-    {
-        /* Clear all prefixes */
-        State->PrefixFlags = 0;
-
-        /* Throw an exception */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        default:
+        {
+            /* Shouldn't happen */
+            ASSERT(FALSE);
+        }
     }
 }
 
