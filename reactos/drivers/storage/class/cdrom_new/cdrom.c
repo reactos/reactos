@@ -537,8 +537,10 @@ Return Value:
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
+#if 0
     PCLASS_DRIVER_EXTENSION driverExtension = ClassGetDriverExtension(
                                                 Fdo->DriverObject);
+#endif
 
     PVOID senseData = NULL;
 
@@ -2760,8 +2762,10 @@ CdRomStartIo(
 
         case IOCTL_CDROM_READ_Q_CHANNEL: {
 
+#if 0
             PSUB_Q_CHANNEL_DATA userChannelData =
                              Irp->AssociatedIrp.SystemBuffer;
+#endif
             PCDROM_SUB_Q_DATA_FORMAT inputBuffer =
                              Irp->AssociatedIrp.SystemBuffer;
 
@@ -2951,7 +2955,7 @@ CdRomStartIo(
         case IOCTL_CDROM_GET_CONTROL: {
 
             //PAUDIO_OUTPUT audioOutput;
-            PCDROM_AUDIO_CONTROL audioControl = Irp->AssociatedIrp.SystemBuffer;
+            //PCDROM_AUDIO_CONTROL audioControl = Irp->AssociatedIrp.SystemBuffer;
 
             //
             // Allocate buffer for volume control information.
@@ -3317,10 +3321,10 @@ Return Value:
     ULONG               transferByteCount = currentIrpStack->Parameters.Read.Length;
     LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
 
-    PCDROM_DATA         cdData = (PCDROM_DATA)(commonExtension->DriverData);
+    //PCDROM_DATA         cdData = (PCDROM_DATA)(commonExtension->DriverData);
 
-    SCSI_REQUEST_BLOCK  srb;
-    PCDB                cdb = (PCDB)srb.Cdb;
+    //SCSI_REQUEST_BLOCK  srb;
+    //PCDB                cdb = (PCDB)srb.Cdb;
     //NTSTATUS            status;
 
     PAGED_CODE();
@@ -3388,7 +3392,7 @@ CdRomSwitchModeCompletion(
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PCDROM_DATA         cdData = (PCDROM_DATA)(commonExtension->DriverData);
     PIO_STACK_LOCATION  irpStack = IoGetCurrentIrpStackLocation(Irp);
-    BOOLEAN             use6Byte = TEST_FLAG(cdData->XAFlags, XA_USE_6_BYTE);
+    //BOOLEAN             use6Byte = TEST_FLAG(cdData->XAFlags, XA_USE_6_BYTE);
     ULONG retryCount;
 
     //
@@ -6444,7 +6448,7 @@ CdRomMmcErrorHandler(
     )
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
-    BOOLEAN queryCapabilities = FALSE;
+    //BOOLEAN queryCapabilities = FALSE;
 
     if (TEST_FLAG(Srb->SrbStatus, SRB_STATUS_AUTOSENSE_VALID)) {
         

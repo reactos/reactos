@@ -854,7 +854,7 @@ CdRomUpdateMmcDriveCapabilitiesCompletion(
     )
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-    PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
+    //PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
     PCDROM_DATA cdData = fdoExtension->CommonExtension.DriverData;
     PCDROM_MMC_EXTENSION mmcData = &(cdData->Mmc);
     PSCSI_REQUEST_BLOCK srb = &(mmcData->CapabilitiesSrb);
@@ -980,7 +980,7 @@ CdRomPrepareUpdateCapabilitiesIrp(
     )
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-    PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
+    //PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
     PCDROM_DATA cdData = fdoExtension->CommonExtension.DriverData;
     PCDROM_MMC_EXTENSION mmcData = &(cdData->Mmc);
     PIO_STACK_LOCATION nextStack;
