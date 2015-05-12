@@ -33,16 +33,16 @@ BEGIN
 END
 
 /* @makedep: winemine.ico */
-WINEMINE ICON "rc/winemine.ico"
+IDI_WINEMINE ICON "rc/winemine.ico"
 
 /* @makedep: faces.bmp */
-FACES BITMAP "rc/faces.bmp"
+IDI_FACES BITMAP "rc/faces.bmp"
 
 /* @makedep: leds.bmp */
-LEDS BITMAP "rc/leds.bmp"
+IDI_LEDS BITMAP "rc/leds.bmp"
 
 /* @makedep: mines.bmp */
-MINES BITMAP "rc/mines.bmp"
+IDI_MINES BITMAP "rc/mines.bmp"
 
 #include <reactos/manifest_exe.rc>
 

@@ -8,7 +8,7 @@ BEGIN
     IDS_ABOUT "Drept de autor 2000 Joshua Thielen"
 END
 
-MENU_WINEMINE MENU
+IDM_WINEMINE MENU
 BEGIN
     POPUP "J&oc"
     BEGIN

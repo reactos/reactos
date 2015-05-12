@@ -59,16 +59,15 @@ INT_PTR CALLBACK CongratsDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     switch( uMsg ) {
     case WM_INITDIALOG:
         p_board = (BOARD*) lParam;
-        SetDlgItemText( hDlg, IDC_EDITNAME,
-                p_board->best_name[p_board->difficulty] );
+        SetDlgItemTextW( hDlg, IDC_EDITNAME, p_board->best_name[p_board->difficulty] );
         return TRUE;
 
     case WM_COMMAND:
         switch( LOWORD( wParam ) ) {
         case IDOK:
-            GetDlgItemText( hDlg, IDC_EDITNAME,
-                p_board->best_name[p_board->difficulty],
-                sizeof( p_board->best_name[p_board->difficulty] ) );
+            GetDlgItemTextW( hDlg, IDC_EDITNAME,
+                             p_board->best_name[p_board->difficulty],
+                             sizeof( p_board->best_name[p_board->difficulty] ) / sizeof(WCHAR) );
             EndDialog( hDlg, 0 );
             return TRUE;
 
@@ -92,7 +91,7 @@ INT_PTR CALLBACK TimesDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
         /* set best names */
         for( i = 0; i < 3; i++ )
-            SetDlgItemText( hDlg, (IDC_NAME1) + i, p_board->best_name[i] );
+            SetDlgItemTextW( hDlg, (IDC_NAME1) + i, p_board->best_name[i] );
 
     	/* set best times */
         for( i = 0; i < 3; i++ )

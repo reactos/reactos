@@ -32,8 +32,19 @@
 WINE_DEFAULT_DEBUG_CHANNEL(winemine);
 
 static const DWORD wnd_style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
-static const char* registry_key = "Software\\Microsoft\\WinMine";
+static const WCHAR registry_key[] = {'S','o','f','t','w','a','r','e','\\',
+                                     'M','i','c','r','o','s','o','f','t','\\',
+                                     'W','i','n','M','i','n','e',0};
 
+static const WCHAR xposW[] = {'X','p','o','s',0};
+static const WCHAR yposW[] = {'Y','p','o','s',0};
+static const WCHAR heightW[] = {'H','e','i','g','h','t',0};
+static const WCHAR widthW[] = {'W','i','d','t','h',0};
+static const WCHAR minesW[] = {'M','i','n','e','s',0};
+static const WCHAR difficultyW[] = {'D','i','f','f','i','c','u','l','t','y',0};
+static const WCHAR markW[] = {'M','a','r','k',0};
+static const WCHAR nameW[] = {'N','a','m','e','%','u',0};
+static const WCHAR timeW[] = {'T','i','m','e','%','u',0};
 
 void CheckLevel( BOARD *p_board )
 {
@@ -61,62 +72,61 @@ static void LoadBoard( BOARD *p_board )
     DWORD size;
     DWORD type;
     HKEY hkey;
-    char data[MAX_PLAYER_NAME_SIZE+1];
-    char key_name[8];
+    WCHAR data[MAX_PLAYER_NAME_SIZE+1];
+    WCHAR key_name[8];
     unsigned i;
 
-    RegOpenKeyEx( HKEY_CURRENT_USER, registry_key,
-            0, KEY_QUERY_VALUE, &hkey );
+    RegOpenKeyExW( HKEY_CURRENT_USER, registry_key, 0, KEY_QUERY_VALUE, &hkey );
 
     size = sizeof( p_board->pos.x );
-    if( !RegQueryValueEx( hkey, "Xpos", NULL, &type,
+    if( !RegQueryValueExW( hkey, xposW, NULL, &type,
             (LPBYTE) &p_board->pos.x, &size ) == ERROR_SUCCESS )
 	p_board->pos.x = 0;
 
     size = sizeof( p_board->pos.y );
-    if( !RegQueryValueEx( hkey, "Ypos", NULL, &type,
+    if( !RegQueryValueExW( hkey, yposW, NULL, &type,
             (LPBYTE) &p_board->pos.y, &size ) == ERROR_SUCCESS )
         p_board->pos.y = 0;
 
     size = sizeof( p_board->rows );
-    if( !RegQueryValueEx( hkey, "Height", NULL, &type,
+    if( !RegQueryValueExW( hkey, heightW, NULL, &type,
             (LPBYTE) &p_board->rows, &size ) == ERROR_SUCCESS )
         p_board->rows = BEGINNER_ROWS;
 
     size = sizeof( p_board->cols );
-    if( !RegQueryValueEx( hkey, "Width", NULL, &type,
+    if( !RegQueryValueExW( hkey, widthW, NULL, &type,
             (LPBYTE) &p_board->cols, &size ) == ERROR_SUCCESS )
         p_board->cols = BEGINNER_COLS;
 
     size = sizeof( p_board->mines );
-    if( !RegQueryValueEx( hkey, "Mines", NULL, &type,
+    if( !RegQueryValueExW( hkey, minesW, NULL, &type,
             (LPBYTE) &p_board->mines, &size ) == ERROR_SUCCESS )
         p_board->mines = BEGINNER_MINES;
 
     size = sizeof( p_board->difficulty );
-    if( !RegQueryValueEx( hkey, "Difficulty", NULL, &type,
+    if( !RegQueryValueExW( hkey, difficultyW, NULL, &type,
             (LPBYTE) &p_board->difficulty, &size ) == ERROR_SUCCESS )
         p_board->difficulty = BEGINNER;
 
     size = sizeof( p_board->IsMarkQ );
-    if( !RegQueryValueEx( hkey, "Mark", NULL, &type,
+    if( !RegQueryValueExW( hkey, markW, NULL, &type,
             (LPBYTE) &p_board->IsMarkQ, &size ) == ERROR_SUCCESS )
         p_board->IsMarkQ = TRUE;
 
     for( i = 0; i < 3; i++ ) {
-        wsprintf( key_name, "Name%u", i+1 );
+        wsprintfW( key_name, nameW, i+1 );
         size = sizeof( data );
-        if( RegQueryValueEx( hkey, key_name, NULL, &type,
+        if( RegQueryValueExW( hkey, key_name, NULL, &type,
                 (LPBYTE) data, &size ) == ERROR_SUCCESS )
-            lstrcpynA( p_board->best_name[i], data, sizeof(p_board->best_name[i]) );
+            lstrcpynW( p_board->best_name[i], data, sizeof(p_board->best_name[i])/sizeof(WCHAR) );
         else
-            LoadString( p_board->hInst, IDS_NOBODY, p_board->best_name[i], MAX_PLAYER_NAME_SIZE+1 );
+            LoadStringW( p_board->hInst, IDS_NOBODY, p_board->best_name[i], MAX_PLAYER_NAME_SIZE+1 );
     }
 
     for( i = 0; i < 3; i++ ) {
-        wsprintf( key_name, "Time%u", i+1 );
+        wsprintfW( key_name, timeW, i+1 );
         size = sizeof( p_board->best_time[i] );
-        if( !RegQueryValueEx( hkey, key_name, NULL, &type,
+        if( !RegQueryValueExW( hkey, key_name, NULL, &type,
                 (LPBYTE) &p_board->best_time[i], &size ) == ERROR_SUCCESS )
             p_board->best_time[i] = 999;
     }
@@ -127,9 +137,9 @@ static void InitBoard( BOARD *p_board )
 {
     HMENU hMenu;
 
-    p_board->hMinesBMP = LoadBitmap( p_board->hInst, "mines");
-    p_board->hFacesBMP = LoadBitmap( p_board->hInst, "faces");
-    p_board->hLedsBMP = LoadBitmap( p_board->hInst, "leds");
+    p_board->hMinesBMP = LoadBitmapW( p_board->hInst, MAKEINTRESOURCEW(IDI_MINES));
+    p_board->hFacesBMP = LoadBitmapW( p_board->hInst, MAKEINTRESOURCEW(IDI_FACES));
+    p_board->hLedsBMP = LoadBitmapW( p_board->hInst, MAKEINTRESOURCEW(IDI_LEDS));
 
     LoadBoard( p_board );
 
@@ -147,32 +157,32 @@ static void SaveBoard( BOARD *p_board )
 {
     HKEY hkey;
     unsigned i;
-    char data[MAX_PLAYER_NAME_SIZE+1];
-    char key_name[8];
+    WCHAR data[MAX_PLAYER_NAME_SIZE+1];
+    WCHAR key_name[8];
 
-    if( RegCreateKeyEx( HKEY_CURRENT_USER, registry_key,
+    if( RegCreateKeyExW( HKEY_CURRENT_USER, registry_key,
 	        0, NULL,
                 REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL,
                 &hkey, NULL ) != ERROR_SUCCESS)
         return;
 
-    RegSetValueEx( hkey, "Xpos", 0, REG_DWORD, (LPBYTE) &p_board->pos.x, sizeof(p_board->pos.x) );
-    RegSetValueEx( hkey, "Ypos", 0, REG_DWORD, (LPBYTE) &p_board->pos.y, sizeof(p_board->pos.y) );
-    RegSetValueEx( hkey, "Difficulty", 0, REG_DWORD, (LPBYTE) &p_board->difficulty, sizeof(p_board->difficulty) );
-    RegSetValueEx( hkey, "Height", 0, REG_DWORD, (LPBYTE) &p_board->rows, sizeof(p_board->rows) );
-    RegSetValueEx( hkey, "Width", 0, REG_DWORD, (LPBYTE) &p_board->cols, sizeof(p_board->cols) );
-    RegSetValueEx( hkey, "Mines", 0, REG_DWORD, (LPBYTE) &p_board->mines, sizeof(p_board->mines) );
-    RegSetValueEx( hkey, "Mark", 0, REG_DWORD, (LPBYTE) &p_board->IsMarkQ, sizeof(p_board->IsMarkQ) );
+    RegSetValueExW( hkey, xposW, 0, REG_DWORD, (LPBYTE) &p_board->pos.x, sizeof(p_board->pos.x) );
+    RegSetValueExW( hkey, yposW, 0, REG_DWORD, (LPBYTE) &p_board->pos.y, sizeof(p_board->pos.y) );
+    RegSetValueExW( hkey, difficultyW, 0, REG_DWORD, (LPBYTE) &p_board->difficulty, sizeof(p_board->difficulty) );
+    RegSetValueExW( hkey, heightW, 0, REG_DWORD, (LPBYTE) &p_board->rows, sizeof(p_board->rows) );
+    RegSetValueExW( hkey, widthW, 0, REG_DWORD, (LPBYTE) &p_board->cols, sizeof(p_board->cols) );
+    RegSetValueExW( hkey, minesW, 0, REG_DWORD, (LPBYTE) &p_board->mines, sizeof(p_board->mines) );
+    RegSetValueExW( hkey, markW, 0, REG_DWORD, (LPBYTE) &p_board->IsMarkQ, sizeof(p_board->IsMarkQ) );
 
     for( i = 0; i < 3; i++ ) {
-        wsprintf( key_name, "Name%u", i+1 );
-        lstrcpyn( data, p_board->best_name[i], sizeof( data ) );
-        RegSetValueEx( hkey, key_name, 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
+        wsprintfW( key_name, nameW, i+1 );
+        lstrcpynW( data, p_board->best_name[i], sizeof(data)/sizeof(WCHAR) );
+        RegSetValueExW( hkey, key_name, 0, REG_SZ, (LPBYTE) data, (lstrlenW(data)+1) * sizeof(WCHAR) );
     }
 
     for( i = 0; i < 3; i++ ) {
-        wsprintf( key_name, "Time%u", i+1 );
-        RegSetValueEx( hkey, key_name, 0, REG_DWORD, (LPBYTE) &p_board->best_time[i], sizeof(p_board->best_time[i]) );
+        wsprintfW( key_name, timeW, i+1 );
+        RegSetValueExW( hkey, key_name, 0, REG_DWORD, (LPBYTE) &p_board->best_time[i], sizeof(p_board->best_time[i]) );
     }
     RegCloseKey( hkey );
 }
@@ -189,7 +199,7 @@ static void SetDifficulty( BOARD *p_board, DIFFICULTY difficulty )
     HMENU hMenu;
 
     if ( difficulty == CUSTOM )
-        if (DialogBoxParam( p_board->hInst, "DLG_CUSTOM", p_board->hWnd,
+        if (DialogBoxParamW( p_board->hInst, MAKEINTRESOURCEW(DLG_CUSTOM), p_board->hWnd,
                     CustomDlgProc, (LPARAM) p_board) != 0)
            return;
 
@@ -245,7 +255,7 @@ static void MoveOnScreen(RECT* rect)
 
     /* ... and move it into the work area (ie excluding task bar)*/
     mi.cbSize = sizeof(mi);
-    GetMonitorInfo(hMonitor, &mi);
+    GetMonitorInfoW(hMonitor, &mi);
 
     ShiftBetween(&rect->left, &rect->right, mi.rcWork.left, mi.rcWork.right);
     ShiftBetween(&rect->top, &rect->bottom, mi.rcWork.top, mi.rcWork.bottom);
@@ -820,11 +830,10 @@ static void TestBoard( HWND hWnd, BOARD *p_board, int x, int y, int msg )
                     p_board->time < p_board->best_time[p_board->difficulty] ) {
             p_board->best_time[p_board->difficulty] = p_board->time;
 
-            DialogBoxParam( p_board->hInst, "DLG_CONGRATS", hWnd,
-                    CongratsDlgProc, (LPARAM) p_board);
-
-            DialogBoxParam( p_board->hInst, "DLG_TIMES", hWnd,
-                    TimesDlgProc, (LPARAM) p_board);
+            DialogBoxParamW( p_board->hInst, MAKEINTRESOURCEW(DLG_CONGRATS), hWnd,
+                             CongratsDlgProc, (LPARAM) p_board);
+            DialogBoxParamW( p_board->hInst, MAKEINTRESOURCEW(DLG_TIMES), hWnd,
+                             TimesDlgProc, (LPARAM) p_board);
         }
     }
     TestFace( p_board, pt, msg );
@@ -840,7 +849,7 @@ static LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
     switch( msg ) {
     case WM_CREATE:
-        board.hInst = ((LPCREATESTRUCT) lParam)->hInstance;
+        board.hInst = ((LPCREATESTRUCTW) lParam)->hInstance;
         board.hWnd = hWnd;
         InitBoard( &board );
         CreateBoard( &board );
@@ -884,7 +893,7 @@ static LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
     case WM_LBUTTONDOWN:
         WINE_TRACE("WM_LBUTTONDOWN\n");
-        if( wParam & (MK_RBUTTON | MK_SHIFT) )
+        if( wParam & MK_RBUTTON )
             msg = WM_MBUTTONDOWN;
         TestBoard( hWnd, &board, (short)LOWORD(lParam), (short)HIWORD(lParam), msg );
         SetCapture( hWnd );
@@ -892,7 +901,7 @@ static LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
     case WM_LBUTTONUP:
         WINE_TRACE("WM_LBUTTONUP\n");
-        if( wParam & (MK_RBUTTON | MK_SHIFT) )
+        if( wParam & MK_RBUTTON )
             msg = WM_MBUTTONUP;
         TestBoard( hWnd, &board, (short)LOWORD(lParam), (short)HIWORD(lParam), msg );
         ReleaseCapture();
@@ -979,12 +988,12 @@ static LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             return 0;
 
         case IDM_EXIT:
-            SendMessage( hWnd, WM_CLOSE, 0, 0);
+            SendMessageW( hWnd, WM_CLOSE, 0, 0);
             return 0;
 
         case IDM_TIMES:
-            DialogBoxParam( board.hInst, "DLG_TIMES", hWnd,
-                    TimesDlgProc, (LPARAM) &board);
+            DialogBoxParamW( board.hInst, MAKEINTRESOURCEW(DLG_TIMES), hWnd,
+                             TimesDlgProc, (LPARAM) &board);
             return 0;
 
         case IDM_ABOUT:
@@ -1001,18 +1010,18 @@ static LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             break;
         }
     }
-    return( DefWindowProc( hWnd, msg, wParam, lParam ));
+    return DefWindowProcW( hWnd, msg, wParam, lParam );
 }
 
-int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmdshow )
+int WINAPI wWinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cmdshow )
 {
     MSG msg;
-    WNDCLASSEX wc;
+    WNDCLASSEXW wc;
     HWND hWnd;
     HACCEL haccel;
-    char appname[20];
+    WCHAR appname[20];
 
-    LoadString( hInst, IDS_APPNAME, appname, sizeof(appname));
+    LoadStringW( hInst, IDS_APPNAME, appname, sizeof(appname)/sizeof(WCHAR));
 
     wc.cbSize = sizeof(wc);
     wc.style = 0;
@@ -1020,16 +1029,16 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
     wc.hInstance = hInst;
-    wc.hIcon = LoadIcon( hInst, "WINEMINE" );
-    wc.hCursor = LoadCursor( 0, IDI_APPLICATION );
+    wc.hIcon = LoadIconW( hInst, MAKEINTRESOURCEW(IDI_WINEMINE) );
+    wc.hCursor = LoadCursorW( 0, (LPWSTR)IDI_APPLICATION );
     wc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE); //MOD for ROS
-    wc.lpszMenuName = "MENU_WINEMINE";
+    wc.lpszMenuName = MAKEINTRESOURCEW(IDM_WINEMINE);
     wc.lpszClassName = appname;
-    wc.hIconSm = LoadImage( hInst, "WINEMINE", IMAGE_ICON,
+    wc.hIconSm = LoadImageW( hInst, MAKEINTRESOURCEW(IDI_WINEMINE), IMAGE_ICON,
                             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED );
 
-    if (!RegisterClassEx(&wc)) ExitProcess(1);
-    hWnd = CreateWindow( appname, appname,
+    if (!RegisterClassExW(&wc)) ExitProcess(1);
+    hWnd = CreateWindowW( appname, appname,
 	wnd_style,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         0, 0, hInst, NULL );
@@ -1039,14 +1048,14 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     ShowWindow( hWnd, cmdshow );
     UpdateWindow( hWnd );
 
-    haccel = LoadAccelerators( hInst, MAKEINTRESOURCE(IDA_WINEMINE) );
+    haccel = LoadAcceleratorsW( hInst, MAKEINTRESOURCEW(IDA_WINEMINE) );
     SetTimer( hWnd, ID_TIMER, 1000, NULL );
 
-    while( GetMessage(&msg, 0, 0, 0) ) {
-        if (!TranslateAccelerator( hWnd, haccel, &msg ))
+    while( GetMessageW(&msg, 0, 0, 0) ) {
+        if (!TranslateAcceleratorW( hWnd, haccel, &msg ))
             TranslateMessage( &msg );
 
-        DispatchMessage( &msg );
+        DispatchMessageW( &msg );
     }
     return msg.wParam;
 }

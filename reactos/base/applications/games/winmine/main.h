@@ -95,7 +95,7 @@ typedef struct tagBOARD
     unsigned rows;
     unsigned cols;
     unsigned mines;
-    char best_name [3][MAX_PLAYER_NAME_SIZE+1];
+    WCHAR best_name [3][MAX_PLAYER_NAME_SIZE+1];
     DWORD best_time [3];
     DIFFICULTY difficulty;
 
