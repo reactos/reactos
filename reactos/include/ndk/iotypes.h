@@ -52,6 +52,13 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define SYMBOLIC_LINK_ALL_ACCESS                STANDARD_RIGHTS_REQUIRED | 0x0001
 #endif
 
+#ifdef NTOS_MODE_USER
+
+/* File System Attributes Flags */
+#define FILE_READ_ONLY_VOLUME 0x00080000
+
+#endif
+
 //
 // NtCreateFile Result Flags
 //

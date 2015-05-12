@@ -14,9 +14,6 @@ TODO:
 
 #include "precomp.h"
 
-/* FIXME: ntifs.h */
-#define FILE_READ_ONLY_VOLUME 0x00080000
-
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
 typedef struct _DynamicShellEntry_
