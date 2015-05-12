@@ -9,7 +9,6 @@
 #	include <config.h>
 #endif
 
-#if defined(WIN32) || defined(_WINDOWS)
 #	define SELECT_TYPE_ARG1 int
 #	define SELECT_TYPE_ARG234 (fd_set *)
 #	define SELECT_TYPE_ARG5 (struct timeval *)
@@ -84,68 +83,6 @@
 #		define FOPEN_WRITE_TEXT "wt"
 #		define FOPEN_APPEND_TEXT "at"
 #	endif
-#else	/* UNIX */
-#	if defined(AIX) || defined(_AIX)
-#		define _ALL_SOURCE 1
-#	endif
-#	ifdef HAVE_UNISTD_H
-#		include <unistd.h>
-#	endif
-#	include <sys/types.h>
-#	include <sys/stat.h>
-#	include <sys/socket.h>
-#	include <sys/wait.h>
-#	ifdef CAN_USE_SYS_SELECT_H
-#		include <sys/select.h>
-#	endif
-#	if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
-#		include <sys/utsname.h>
-#	endif
-#	include <netinet/in.h>
-#	include <arpa/inet.h>
-#	include <netdb.h>
-#	include <errno.h>
-#	include <stdio.h>
-#	include <string.h>
-#	ifdef HAVE_STRINGS_H
-#		include <strings.h>
-#	endif
-#	include <stddef.h>
-#	include <stdlib.h>
-#	include <ctype.h>
-#	include <signal.h>
-#	include <setjmp.h>
-#	include <stdarg.h>
-#	include <assert.h>
-#	include <time.h>
-#	include <pwd.h>
-#	include <fcntl.h>
-#	if defined(HAVE_SYS_IOCTL_H) && defined(HAVE_TERMIOS_H)
-#		include <sys/ioctl.h>
-#		include <termios.h>
-#	endif
-#	ifdef HAVE_LOCALE_H
-#		include <locale.h>
-#	endif
-#	ifdef HAVE_GETCWD
-#		ifndef HAVE_UNISTD_H
-			extern char *getcwd();
-#		endif
-#	else
-#		ifdef HAVE_GETWD
-#			include <sys/param.h>
-#			ifndef MAXPATHLEN
-#				define MAXPATHLEN 1024
-#			endif
-			extern char *getwd(char *);
-#		endif
-#	endif
-#	ifndef FOPEN_READ_TEXT
-#		define FOPEN_READ_TEXT "r"
-#		define FOPEN_WRITE_TEXT "w"
-#		define FOPEN_APPEND_TEXT "a"
-#	endif
-#endif	/* UNIX */
 
 #ifndef STDIN_FILENO
 #	define STDIN_FILENO    0

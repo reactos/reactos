@@ -34,7 +34,7 @@ CListNode::CListNode(PVOID element, CListNode *next, CListNode *prev)
 	Prev = prev;
 }
 
-void* CListNode::operator new(/*size_t*/ UINT size)
+void* CListNode::operator new(size_t size)
 {
     PVOID p;
     if (hHeap == NULL) {

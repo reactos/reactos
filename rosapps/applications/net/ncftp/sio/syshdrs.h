@@ -9,12 +9,10 @@
 #	include "config.h"
 #endif
 
-#if defined(WIN32) || defined(_WINDOWS)
 	/* Include "wincfg.h" in place of "config.h" */
 #	include "wincfg.h"
 #	include <winsock2.h>	/* includes <windows.h> */
 #	include <io.h>
-//#	define _POSIX_ 1
 #	ifdef HAVE_UNISTD_H
 #		include <unistd.h>
 #	endif
@@ -56,77 +54,6 @@
 #	endif
 #	define NO_SIGNALS 1
 #	define NO_UNIX_DOMAIN_SOCKETS 1
-#else	/* UNIX */
-
-#if defined(AIX) || defined(_AIX)
-#	define _ALL_SOURCE 1
-#endif
-#ifdef HAVE_UNISTD_H
-#	include <unistd.h>
-#endif
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <sys/ioctl.h>
-#if !defined(HAVE_GETCWD) && defined(HAVE_GETWD)
-#	include <sys/param.h>
-#endif
-
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <arpa/telnet.h>
-#include <netdb.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef HAVE_STRINGS_H
-#	include <strings.h>
-#endif
-#include <stddef.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <signal.h>
-#include <setjmp.h>
-#include <stdarg.h>
-#include <time.h>
-#include <fcntl.h>
-
-#ifdef HAVE_NET_ERRNO_H
-#	include <net/errno.h>
-#endif
-#ifdef HAVE_ARPA_NAMESER_H
-#	include <arpa/nameser.h>
-#endif
-#ifdef HAVE_NSERVE_H
-#	include <nserve.h>
-#endif
-#ifdef HAVE_RESOLV_H
-#	include <resolv.h>
-#endif
-#ifdef CAN_USE_SYS_SELECT_H
-#	include <sys/select.h>
-#endif
-
-#ifdef HAVE_GETCWD
-#	ifndef HAVE_UNISTD_H
-		extern char *getcwd();
-#	endif
-#else
-#	ifdef HAVE_GETWD
-#		include <sys/param.h>
-#		ifndef MAXPATHLEN
-#			define MAXPATHLEN 1024
-#		endif
-		extern char *getwd(char *);
-#	endif
-#endif
-
-#define HAVE_RECVMSG 1
-
-#endif	/* UNIX */
 
 #if defined(HAVE_LONG_LONG) && defined(HAVE_OPEN64)
 #	define Open open64
