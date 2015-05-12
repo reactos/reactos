@@ -640,10 +640,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg)
     State->PrefetchValid = FALSE;
 #endif
 
-    if (State->Tlb && (ModRegRm.Register == (INT)FAST486_REG_CR3))
+    if (ModRegRm.Register == (INT)FAST486_REG_CR3)
     {
         /* Flush the TLB */
-        RtlFillMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG), 0xFF);
+        Fast486FlushTlb(State);
     }
 
     /* Load a value to the control register */

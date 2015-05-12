@@ -284,6 +284,9 @@ Fast486Reset(PFAST486_STATE State)
     State->IntAckCallback   = IntAckCallback;
     State->FpuCallback      = FpuCallback;
     State->Tlb              = Tlb;
+
+    /* Flush the TLB */
+    Fast486FlushTlb(State);
 }
 
 VOID

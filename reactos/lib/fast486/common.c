@@ -834,7 +834,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     }
 
     /* Flush the TLB */
-    if (State->Tlb) RtlFillMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG), 0xFF);
+    Fast486FlushTlb(State);
 
     /* Update the CPL */
     if (NewTssLimit >= (sizeof(FAST486_TSS) - 1)) State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);

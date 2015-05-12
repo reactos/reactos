@@ -138,10 +138,21 @@ Fast486GetPageTableEntry(PFAST486_STATE State,
     {
         /* Set the TLB entry */
         State->Tlb[VirtualAddress >> 12] = TableEntry.Value;
+        State->TlbEmpty = FALSE;
     }
 
     /* Return the table entry */
     return TableEntry.Value;
+}
+
+FORCEINLINE
+VOID
+FASTCALL
+Fast486FlushTlb(PFAST486_STATE State)
+{
+    if (!State->Tlb || State->TlbEmpty) return;
+    RtlFillMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG), 0xFF);
+    State->TlbEmpty = TRUE;
 }
 
 FORCEINLINE
