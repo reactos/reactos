@@ -635,12 +635,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearCarry)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xF8);
 
-    /* No prefixes allowed */
-    if (State->PrefixFlags)
-    {
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Clear CF and return success */
     State->Flags.Cf = FALSE;
@@ -651,12 +646,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetCarry)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xF9);
 
-    /* No prefixes allowed */
-    if (State->PrefixFlags)
-    {
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Set CF and return success*/
     State->Flags.Cf = TRUE;
@@ -667,12 +657,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeComplCarry)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xF5);
 
-    /* No prefixes allowed */
-    if (State->PrefixFlags)
-    {
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Toggle CF and return success */
     State->Flags.Cf = !State->Flags.Cf;
@@ -684,12 +669,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearInt)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xFA);
 
-    /* No prefixes allowed */
-    if (State->PrefixFlags)
-    {
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
@@ -719,12 +699,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetInt)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xFB);
 
-    /* No prefixes allowed */
-    if (State->PrefixFlags)
-    {
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
@@ -754,12 +729,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearDir)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xFC);
 
-    /* No prefixes allowed */
-    if (State->PrefixFlags)
-    {
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Clear DF */
     State->Flags.Df = FALSE;
@@ -770,12 +740,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetDir)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xFD);
 
-    /* No prefixes allowed */
-    if (State->PrefixFlags)
-    {
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Set DF */
     State->Flags.Df = TRUE;
@@ -786,12 +751,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeHalt)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xF4);
 
-    /* No prefixes allowed */
-    if (State->PrefixFlags)
-    {
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Privileged instructions can only be executed under CPL = 0 */
     if (Fast486GetCurrentPrivLevel(State) != 0)
