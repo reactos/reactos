@@ -493,7 +493,7 @@ static int AlertFileDoesNotExist(LPCTSTR szFileName)
 
 static BOOL HandleCommandLine(LPTSTR cmdline)
 {
-    int opt_print = 0;
+    BOOL opt_print = FALSE;
 
     while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
     {
@@ -509,7 +509,7 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
         {
             case 'p':
             case 'P':
-                opt_print = 1;
+                opt_print = TRUE;
                 break;
         }
     }
