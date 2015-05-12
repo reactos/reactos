@@ -157,7 +157,7 @@
 @ stub SetPrinterW
 @ stub SplDriverUnloadComplete
 @ stub SpoolerDevQueryPrintW
-@ stub SpoolerInit
+@ stdcall SpoolerInit()
 @ stub SpoolerPrinterEvent
 @ stub StartDocDlgA
 @ stub StartDocDlgW

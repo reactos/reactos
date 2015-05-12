@@ -449,13 +449,6 @@ _RpcRemoteFindFirstPrinterChangeNotification(WINSPOOL_PRINTER_HANDLE hPrinter, D
 }
 
 DWORD
-_RpcSpoolerInit()
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
 _RpcResetPrinterEx()
 {
     UNIMPLEMENTED;

@@ -15,7 +15,7 @@ WINSPOOL_HANDLE_bind(WINSPOOL_HANDLE wszName)
     RPC_STATUS Status;
 
     // Get us a string binding handle from the supplied connection information
-    Status = RpcStringBindingComposeW(NULL, L"ncacn_np", wszStringBinding, L"\\pipe\\spoolss", NULL, &wszStringBinding);
+    Status = RpcStringBindingComposeW(NULL, L"ncacn_np", wszName, L"\\pipe\\spoolss", NULL, &wszStringBinding);
     if (Status != RPC_S_OK)
     {
         ERR("RpcStringBindingComposeW failed with status %u!\n", Status);
@@ -209,8 +209,8 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
         if (pDefault->pDevMode)
         {
             // Fixed size strings, so no additional memory needs to be allocated
-            MultiByteToWideChar(CP_ACP, 0, pDefault->pDevMode->dmDeviceName, -1, wDevMode.dmDeviceName, sizeof(wDevMode.dmDeviceName) / sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, pDefault->pDevMode->dmFormName, -1, wDevMode.dmFormName, sizeof(wDevMode.dmFormName) / sizeof(WCHAR));
+            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pDefault->pDevMode->dmDeviceName, -1, wDevMode.dmDeviceName, sizeof(wDevMode.dmDeviceName) / sizeof(WCHAR));
+            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pDefault->pDevMode->dmFormName, -1, wDevMode.dmFormName, sizeof(wDevMode.dmFormName) / sizeof(WCHAR));
 
             // Use CopyMemory to copy over several structure values in one step
             CopyMemory(&wDevMode.dmSpecVersion, &pDefault->pDevMode->dmSpecVersion, (ULONG_PTR)&wDevMode.dmCollate - (ULONG_PTR)&wDevMode.dmSpecVersion + sizeof(wDevMode.dmCollate));
@@ -266,6 +266,32 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         ERR("_RpcOpenPrinter failed with exception code %u!\n", RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ReturnValue;
+}
+
+BOOL WINAPI
+SpoolerInit()
+{
+    BOOL ReturnValue = FALSE;
+    DWORD ErrorCode;
+
+    // Nothing to initialize here yet, but pass this call to the Spool Service as well.
+    RpcTryExcept
+    {
+        ErrorCode = _RpcSpoolerInit();
+        if (ErrorCode)
+        {
+            ERR("_RpcSpoolerInit failed with error %u!\n", ErrorCode);
+        }
+
+        ReturnValue = (ErrorCode == ERROR_SUCCESS);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("_RpcSpoolerInit failed with exception code %u!\n", RpcExceptionCode());
     }
     RpcEndExcept;
 

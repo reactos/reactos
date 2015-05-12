@@ -89,7 +89,7 @@
 @ stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
 @ stub GetServerPolicy
 @ stub GetShrinkedSize
-@ stub ImpersonatePrinterClient
+@ stdcall ImpersonatePrinterClient(long)
 @ stdcall InitializeRouter(long)
 @ stub IsNamedPipeRpcCall
 @ stub LoadDriver
@@ -122,7 +122,7 @@
 @ stub ReplyOpenPrinter
 @ stub ReplyPrinterChangeNotification
 @ stub ResetPrinterW
-@ stub RevertToPrinterSelf
+@ stdcall RevertToPrinterSelf()
 @ stub RouterAllocBidiMem
 @ stub RouterAllocBidiResponseContainer
 @ stub RouterAllocPrinterNotifyInfo
@@ -161,7 +161,7 @@
 @ stub SpoolerFindNextPrinterChangeNotification
 @ stub SpoolerFreePrinterNotifyInfo
 @ stub SpoolerHasInitialized
-@ stub SpoolerInit
+@ stdcall SpoolerInit()
 @ stdcall StartDocPrinterW(long long ptr)
 @ stdcall StartPagePrinter(long)
 @ stub UndoAlignKMPtr

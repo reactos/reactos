@@ -67,6 +67,13 @@ StartDocPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
     return 0;
 }
 
+DWORD WINAPI
+SpoolerInit()
+{
+    // Nothing to do here yet
+    return ERROR_SUCCESS;
+}
+
 BOOL WINAPI
 StartPagePrinter(HANDLE hPrinter)
 {

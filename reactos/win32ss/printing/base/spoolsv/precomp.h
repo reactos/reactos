@@ -19,4 +19,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);
 // rpcserver.c
 extern DWORD WINAPI RpcThreadProc(LPVOID lpParameter);
 
+// Undocumented spoolss
+DWORD WINAPI SpoolerInit();
+
 #endif
