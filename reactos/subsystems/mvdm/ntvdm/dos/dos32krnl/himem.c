@@ -281,7 +281,7 @@ static CHAR XmsFree(WORD Handle)
     DWORD BlockNumber;
     PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
-    if (HandleEntry == NULL) return XMS_STATUS_INVALID_HANDLE;
+    if (HandleEntry == NULL || HandleEntry->Handle == 0) return XMS_STATUS_INVALID_HANDLE;
     if (HandleEntry->LockCount) return XMS_STATUS_LOCKED;
 
     BlockNumber = (HandleEntry->Address - XMS_ADDRESS) / XMS_BLOCK_SIZE;
@@ -540,7 +540,7 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         {
             PXMS_HANDLE Entry = GetHandleRecord(getDX());
 
-            if (Entry)
+            if (Entry && Entry->Handle != 0)
             {
                 INT i;
                 UCHAR Handles = 0;
