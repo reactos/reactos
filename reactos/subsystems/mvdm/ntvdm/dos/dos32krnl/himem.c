@@ -185,6 +185,28 @@ static inline PXMS_HANDLE GetHandleRecord(WORD Handle)
     return Entry->Size ? Entry : NULL;
 }
 
+static WORD XmsGetLargestFreeBlock(VOID)
+{
+    WORD Result = 0;
+    DWORD CurrentIndex = 0;
+    ULONG RunStart;
+    ULONG RunSize;
+
+    while (CurrentIndex < XMS_BLOCKS)
+    {
+        RunSize = RtlFindNextForwardRunClear(&AllocBitmap, CurrentIndex, &RunStart);
+        if (RunSize == 0) break;
+
+        /* Update the maximum */
+        if (RunSize > Result) Result = RunSize;
+
+        /* Go to the next run */
+        CurrentIndex = RunStart + RunSize;
+    }
+
+    return Result;
+}
+
 static CHAR XmsAlloc(WORD Size, PWORD Handle)
 {
     BYTE i;
@@ -380,8 +402,8 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         /* Query Free Extended Memory */
         case 0x08:
         {
-            setAX(FreeBlocks);
-            setDX(XMS_BLOCKS);
+            setAX(XmsGetLargestFreeBlock());
+            setDX(FreeBlocks);
             setBL(XMS_STATUS_SUCCESS);
             break;
         }
