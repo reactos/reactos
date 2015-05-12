@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "&Témakörök", CMD_HELP_CONTENTS
         MENUITEM "&Keresés...", CMD_HELP_SEARCH
-        MENUITEM "&Használat", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "Inf&ormáció...", CMD_HELP_ABOUT_NOTEPAD

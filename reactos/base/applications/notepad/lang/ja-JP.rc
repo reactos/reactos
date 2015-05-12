@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "目次(&C)", CMD_HELP_CONTENTS
         MENUITEM "検索(&S)...", CMD_HELP_SEARCH
-        MENUITEM "ヘルプの使い方(&H)", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "バージョン情報(&A)", CMD_ABOUT
         MENUITEM "情報(&O)", CMD_HELP_ABOUT_NOTEPAD

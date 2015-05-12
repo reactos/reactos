@@ -70,7 +70,6 @@ BEGIN
     BEGIN
         MENUITEM "&Témy Pomocníka", CMD_HELP_CONTENTS
         MENUITEM "&Hľadať...", CMD_HELP_SEARCH
-        MENUITEM "&Pomoc", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "Č&o je Poznámkový blok", CMD_ABOUT
         MENUITEM "Čo je &Víno (Wine)", CMD_HELP_ABOUT_NOTEPAD

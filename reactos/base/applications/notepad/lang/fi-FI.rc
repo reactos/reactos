@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "&Sisältö", CMD_HELP_CONTENTS
         MENUITEM "&Etsi...", CMD_HELP_SEARCH
-        MENUITEM "Apua &Opastuksesta", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "Inf&o...", CMD_HELP_ABOUT_NOTEPAD

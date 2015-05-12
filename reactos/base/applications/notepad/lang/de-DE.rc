@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "&Inhalt", CMD_HELP_CONTENTS
         MENUITEM "&Suchen...", CMD_HELP_SEARCH
-        MENUITEM "&Hilfe benutzen", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Über", CMD_ABOUT
         MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD

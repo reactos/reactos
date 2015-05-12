@@ -67,7 +67,6 @@ BEGIN
     BEGIN
         MENUITEM "&Manual…", CMD_HELP_CONTENTS
         MENUITEM "&Căutare…", CMD_HELP_SEARCH
-        MENUITEM "M&anualul manualului", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Despre…", CMD_ABOUT
         MENUITEM "&Info…", CMD_HELP_ABOUT_NOTEPAD

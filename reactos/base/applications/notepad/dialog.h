@@ -49,7 +49,6 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID);
 
 VOID DIALOG_HelpContents(VOID);
 VOID DIALOG_HelpSearch(VOID);
-VOID DIALOG_HelpHelp(VOID);
 VOID DIALOG_HelpLicense(VOID);
 VOID DIALOG_HelpNoWarranty(VOID);
 VOID DIALOG_HelpAboutNotepad(VOID);

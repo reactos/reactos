@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "&Содержание", CMD_HELP_CONTENTS
         MENUITEM "&Поиск...", CMD_HELP_SEARCH
-        MENUITEM "&Использование справки", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "Bloknot h&aqida", CMD_ABOUT
         MENUITEM "&Сведения...", CMD_HELP_ABOUT_NOTEPAD

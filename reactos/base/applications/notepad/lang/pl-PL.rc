@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "&Tematy pomocy", CMD_HELP_CONTENTS
         MENUITEM "&Szukaj...", CMD_HELP_SEARCH
-        MENUITEM "Pomo&c", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Notatnik - informacje", CMD_ABOUT
         MENUITEM "&ReactOS - informacje", CMD_HELP_ABOUT_NOTEPAD

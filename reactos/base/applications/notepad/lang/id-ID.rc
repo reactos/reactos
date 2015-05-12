@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "&Daftar Isi", CMD_HELP_CONTENTS
         MENUITEM "&Cari...", CMD_HELP_SEARCH
-        MENUITEM "&Bantuan pada bantuan", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Tentang", CMD_ABOUT
         MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD

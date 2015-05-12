@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "&Բովանդակություն", CMD_HELP_CONTENTS
         MENUITEM "&Փնտրել...", CMD_HELP_SEARCH
-        MENUITEM "&Օգնությոն օգտագործում", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Ծրագրի մասին", CMD_ABOUT
         MENUITEM "&Տեղեկություն...", CMD_HELP_ABOUT_NOTEPAD

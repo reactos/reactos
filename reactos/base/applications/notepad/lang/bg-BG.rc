@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "&Съдържание", CMD_HELP_CONTENTS
         MENUITEM "&Търсене...", CMD_HELP_SEARCH
-        MENUITEM "&Помощ за помощта", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&За", CMD_ABOUT
         MENUITEM "С&ведения", CMD_HELP_ABOUT_NOTEPAD

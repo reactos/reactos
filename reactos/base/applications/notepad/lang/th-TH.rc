@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "เนื้อหา", CMD_HELP_CONTENTS
         MENUITEM "ค้นหา...", CMD_HELP_SEARCH
-        MENUITEM "เกี่ยวกับช่วยเหลีอ", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "รายละเอียด...", CMD_HELP_ABOUT_NOTEPAD

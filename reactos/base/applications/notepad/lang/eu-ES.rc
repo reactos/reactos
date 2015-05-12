@@ -62,7 +62,6 @@ BEGIN
     BEGIN
         MENUITEM "Í&ndizea", CMD_HELP_CONTENTS
         MENUITEM "&Bilatu...", CMD_HELP_SEARCH
-        MENUITEM "Laguntzari buruz laguntza", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Ohar-blokari buruz", CMD_ABOUT
         MENUITEM "&Informazioa...", CMD_HELP_ABOUT_NOTEPAD

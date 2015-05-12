@@ -1110,11 +1110,6 @@ VOID DIALOG_HelpSearch(VOID)
     /* Search Help */
 }
 
-VOID DIALOG_HelpHelp(VOID)
-{
-    WinHelp(Globals.hMainWnd, helpfile, HELP_HELPONHELP, 0);
-}
-
 VOID DIALOG_HelpAboutNotepad(VOID)
 {
     TCHAR szNotepad[MAX_STRING_LEN];
