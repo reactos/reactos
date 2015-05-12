@@ -64,6 +64,10 @@ include(cmake/compilerflags.cmake)
 
 add_definitions(-D__REACTOS__)
 
+if(MSVC_IDE)
+    add_compile_flags("/MP")
+endif()
+
 if(NOT CMAKE_CROSSCOMPILING)
 
     add_definitions(-DTARGET_${ARCH})

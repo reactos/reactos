@@ -82,11 +82,8 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_flags("/Ob2 /D NDEBUG")
 endif()
 
-if(MSVC_IDE)
-    add_compile_flags("/MP")
-    if(NOT DEFINED USE_FOLDER_STRUCTURE)
-        set(USE_FOLDER_STRUCTURE FALSE)
-    endif()
+if(MSVC_IDE AND (NOT DEFINED USE_FOLDER_STRUCTURE))
+    set(USE_FOLDER_STRUCTURE FALSE)
 endif()
 
 if(NOT DEFINED RUNTIME_CHECKS)
