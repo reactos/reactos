@@ -210,10 +210,11 @@ function(set_entrypoint _module _entrypoint)
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
+    string(TOUPPER ${SUBSYSTEM} _subsystem)
     if(ARCH STREQUAL "amd64")
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.02")
+        add_target_link_flags(${MODULE} "/SUBSYSTEM:${_subsystem},5.02")
     else()
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.01")
+        add_target_link_flags(${MODULE} "/SUBSYSTEM:${_subsystem},5.01")
     endif()
 endfunction()
 
