@@ -373,12 +373,10 @@ VOID DIALOG_FileNew(VOID)
 VOID DIALOG_FileOpen(VOID)
 {
     OPENFILENAME openfilename;
-    TCHAR szDir[MAX_PATH];
     TCHAR szPath[MAX_PATH];
 
     ZeroMemory(&openfilename, sizeof(openfilename));
 
-    GetCurrentDirectory(ARRAY_SIZE(szDir), szDir);
     if (Globals.szFileName[0] == 0)
         _tcscpy(szPath, txt_files);
     else
@@ -390,7 +388,6 @@ VOID DIALOG_FileOpen(VOID)
     openfilename.lpstrFilter = Globals.szFilter;
     openfilename.lpstrFile = szPath;
     openfilename.nMaxFile = ARRAY_SIZE(szPath);
-    openfilename.lpstrInitialDir = szDir;
     openfilename.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     openfilename.lpstrDefExt = szDefaultExt;
 
@@ -471,12 +468,10 @@ DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 BOOL DIALOG_FileSaveAs(VOID)
 {
     OPENFILENAME saveas;
-    TCHAR szDir[MAX_PATH];
     TCHAR szPath[MAX_PATH];
 
     ZeroMemory(&saveas, sizeof(saveas));
 
-    GetCurrentDirectory(ARRAY_SIZE(szDir), szDir);
     if (Globals.szFileName[0] == 0)
         _tcscpy(szPath, txt_files);
     else
@@ -488,7 +483,6 @@ BOOL DIALOG_FileSaveAs(VOID)
     saveas.lpstrFilter = Globals.szFilter;
     saveas.lpstrFile = szPath;
     saveas.nMaxFile = ARRAY_SIZE(szPath);
-    saveas.lpstrInitialDir = szDir;
     saveas.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY |
                    OFN_EXPLORER | OFN_ENABLETEMPLATE | OFN_ENABLEHOOK;
     saveas.lpstrDefExt = szDefaultExt;
