@@ -61,7 +61,6 @@ BEGIN
     POPUP "&Apua"
     BEGIN
         MENUITEM "&Sisältö", CMD_HELP_CONTENTS
-        MENUITEM "&Etsi...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "Inf&o...", CMD_HELP_ABOUT_NOTEPAD

@@ -62,7 +62,6 @@
 #define CMD_STATUSBAR_WND_ID 0x151
 
 #define CMD_HELP_CONTENTS 0x130
-#define CMD_HELP_SEARCH   0x131
 #define CMD_ABOUT         0x135
 #define CMD_HELP_ABOUT_NOTEPAD    0x137
 

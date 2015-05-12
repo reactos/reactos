@@ -61,7 +61,6 @@ BEGIN
     POPUP "ヘルプ(&H)"
     BEGIN
         MENUITEM "目次(&C)", CMD_HELP_CONTENTS
-        MENUITEM "検索(&S)...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "バージョン情報(&A)", CMD_ABOUT
         MENUITEM "情報(&O)", CMD_HELP_ABOUT_NOTEPAD

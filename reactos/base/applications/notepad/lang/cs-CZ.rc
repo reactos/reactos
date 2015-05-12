@@ -61,7 +61,6 @@ BEGIN
     POPUP "&Nápověda"
     BEGIN
         MENUITEM "O&bsah", CMD_HELP_CONTENTS
-        MENUITEM "&Najít...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&O programu...", CMD_ABOUT
         MENUITEM "In&fo...", CMD_HELP_ABOUT_NOTEPAD

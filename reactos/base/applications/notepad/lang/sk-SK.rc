@@ -69,7 +69,6 @@ BEGIN
     POPUP "&Pomocník"
     BEGIN
         MENUITEM "&Témy Pomocníka", CMD_HELP_CONTENTS
-        MENUITEM "&Hľadať...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "Č&o je Poznámkový blok", CMD_ABOUT
         MENUITEM "Čo je &Víno (Wine)", CMD_HELP_ABOUT_NOTEPAD

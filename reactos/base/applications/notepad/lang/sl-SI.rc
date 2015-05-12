@@ -61,7 +61,6 @@ BEGIN
     POPUP "&Pomoè"
     BEGIN
         MENUITEM "&Teme pomoèi", CMD_HELP_CONTENTS
-        MENUITEM "&Najdi ...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "Inf&ormacije ...", CMD_HELP_ABOUT_NOTEPAD

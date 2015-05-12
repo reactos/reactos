@@ -87,7 +87,6 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_STATUSBAR: DIALOG_ViewStatusBar(); break;
 
     case CMD_HELP_CONTENTS: DIALOG_HelpContents(); break;
-    case CMD_HELP_SEARCH:   DIALOG_HelpSearch(); break;
 
     case CMD_ABOUT:
         DialogBox(GetModuleHandle(NULL),

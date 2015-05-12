@@ -61,7 +61,6 @@ BEGIN
     POPUP "&Help"
     BEGIN
         MENUITEM "&Help-onderwerpen", CMD_HELP_CONTENTS
-        MENUITEM "&Zoeken...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "Inf&o...", CMD_HELP_ABOUT_NOTEPAD

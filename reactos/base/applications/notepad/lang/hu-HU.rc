@@ -61,7 +61,6 @@ BEGIN
     POPUP "&Súgó"
     BEGIN
         MENUITEM "&Témakörök", CMD_HELP_CONTENTS
-        MENUITEM "&Keresés...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "Inf&ormáció...", CMD_HELP_ABOUT_NOTEPAD

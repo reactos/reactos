@@ -61,7 +61,6 @@ BEGIN
     POPUP "Pomo&c"
     BEGIN
         MENUITEM "&Tematy pomocy", CMD_HELP_CONTENTS
-        MENUITEM "&Szukaj...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&Notatnik - informacje", CMD_ABOUT
         MENUITEM "&ReactOS - informacje", CMD_HELP_ABOUT_NOTEPAD

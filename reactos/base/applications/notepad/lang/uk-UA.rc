@@ -61,7 +61,6 @@ BEGIN
     POPUP "Дов&ідка"
     BEGIN
         MENUITEM "Змі&ст", CMD_HELP_CONTENTS
-        MENUITEM "Пош&ук...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&Про", CMD_ABOUT
         MENUITEM "Про програм&у", CMD_HELP_ABOUT_NOTEPAD

@@ -61,7 +61,6 @@ BEGIN
     POPUP "Տեղե&կություն"
     BEGIN
         MENUITEM "&Բովանդակություն", CMD_HELP_CONTENTS
-        MENUITEM "&Փնտրել...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&Ծրագրի մասին", CMD_ABOUT
         MENUITEM "&Տեղեկություն...", CMD_HELP_ABOUT_NOTEPAD

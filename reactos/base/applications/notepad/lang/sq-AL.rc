@@ -65,7 +65,6 @@ BEGIN
     POPUP "Ndihmë"
     BEGIN
         MENUITEM "përmbajtje", CMD_HELP_CONTENTS
-        MENUITEM "Kerko...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "Rreth", CMD_ABOUT
         MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD

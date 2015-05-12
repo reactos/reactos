@@ -61,7 +61,6 @@ BEGIN
     POPUP "&Hjælp"
     BEGIN
         MENUITEM "&Indhold", CMD_HELP_CONTENTS
-        MENUITEM "&Søg efter hjælp om...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "&Om Notesblok", CMD_HELP_ABOUT_NOTEPAD

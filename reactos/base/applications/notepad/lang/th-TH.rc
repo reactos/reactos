@@ -61,7 +61,6 @@ BEGIN
     POPUP "ช่วยเหลีอ"
     BEGIN
         MENUITEM "เนื้อหา", CMD_HELP_CONTENTS
-        MENUITEM "ค้นหา...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "รายละเอียด...", CMD_HELP_ABOUT_NOTEPAD

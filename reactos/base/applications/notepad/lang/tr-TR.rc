@@ -63,7 +63,6 @@ BEGIN
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&İçindekiler", CMD_HELP_CONTENTS
-        MENUITEM "&Ara", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&Bilgi...", CMD_ABOUT
         MENUITEM "&Üzerine...", CMD_HELP_ABOUT_NOTEPAD

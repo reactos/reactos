@@ -61,7 +61,6 @@ BEGIN
     POPUP "&Pagalba"
     BEGIN
         MENUITEM "&Turinys", CMD_HELP_CONTENTS
-        MENUITEM "&Ieškoti...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&Apie Notepad", CMD_ABOUT
         MENUITEM "Apie &ReactOS", CMD_HELP_ABOUT_NOTEPAD

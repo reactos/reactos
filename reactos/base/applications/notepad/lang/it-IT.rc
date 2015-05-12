@@ -61,7 +61,6 @@ BEGIN
     POPUP "&?"
     BEGIN
         MENUITEM "&Guida in linea", CMD_HELP_CONTENTS
-        MENUITEM "&Trova...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "Informazioni &su blocco note", CMD_ABOUT
         MENUITEM "Inf&o...", CMD_HELP_ABOUT_NOTEPAD

@@ -61,7 +61,6 @@ BEGIN
     POPUP "&עזרה"
     BEGIN
         MENUITEM "תוכן העניינים", CMD_HELP_CONTENTS
-        MENUITEM "חפש...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "אודות", CMD_ABOUT
         MENUITEM "מידע", CMD_HELP_ABOUT_NOTEPAD

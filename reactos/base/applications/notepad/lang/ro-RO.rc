@@ -66,7 +66,6 @@ BEGIN
     POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", CMD_HELP_CONTENTS
-        MENUITEM "&Căutare…", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&Despre…", CMD_ABOUT
         MENUITEM "&Info…", CMD_HELP_ABOUT_NOTEPAD

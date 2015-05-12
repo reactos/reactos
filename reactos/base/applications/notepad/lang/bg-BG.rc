@@ -61,7 +61,6 @@ BEGIN
     POPUP "Помо&щ"
     BEGIN
         MENUITEM "&Съдържание", CMD_HELP_CONTENTS
-        MENUITEM "&Търсене...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&За", CMD_ABOUT
         MENUITEM "С&ведения", CMD_HELP_ABOUT_NOTEPAD

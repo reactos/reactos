@@ -61,7 +61,6 @@ BEGIN
     POPUP "&Βοήθεια"
     BEGIN
         MENUITEM "&Περιεχόμενα", CMD_HELP_CONTENTS
-        MENUITEM "&Αναζήτηση...", CMD_HELP_SEARCH
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
         MENUITEM "Πληρο&φορίες", CMD_HELP_ABOUT_NOTEPAD
