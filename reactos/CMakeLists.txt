@@ -68,6 +68,9 @@ if(MSVC_IDE)
     add_compile_flags("/MP")
 endif()
 
+# We don't need CMake importlib handling
+unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
+
 if(NOT CMAKE_CROSSCOMPILING)
 
     add_definitions(-DTARGET_${ARCH})
