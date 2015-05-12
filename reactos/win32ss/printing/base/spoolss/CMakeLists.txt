@@ -14,6 +14,6 @@ add_library(spoolss SHARED
 
 set_module_type(spoolss win32dll UNICODE)
 target_link_libraries(spoolss wine)
-add_importlibs(spoolss msvcrt kernel32 advapi32 ntdll)
+add_importlibs(spoolss advapi32 msvcrt kernel32 ntdll)
 add_pch(spoolss precomp.h SOURCE)
 add_cd_file(TARGET spoolss DESTINATION reactos/system32 FOR all)
