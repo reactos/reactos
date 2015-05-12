@@ -1074,7 +1074,8 @@ Fast486ParseModRegRm(PFAST486_STATE State,
                 }
             }
 
-            if ((SibByte & 0x07) == FAST486_REG_ESP)
+            if (((SibByte & 0x07) == FAST486_REG_ESP)
+                || ((SibByte & 0x07) == FAST486_REG_EBP && Mode != 0))
             {
                 /* Check if there is no segment override */
                 if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
