@@ -14,6 +14,9 @@ TODO:
 
 #include "precomp.h"
 
+/* FIXME: ntifs.h */
+#define FILE_READ_ONLY_VOLUME 0x00080000
+
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
 typedef struct _DynamicShellEntry_
@@ -880,11 +883,20 @@ CDefaultContextMenu::BuildShellItemContextMenu(
 
     if (_ILIsDrive(m_apidl[0]))
     {
-        /* The 'Format' option must be always available,
-         * thus it is not registered as a static shell extension */
-        _InsertMenuItemW(hMenu, IndexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-        _InsertMenuItemW(hMenu, IndexMenu++, TRUE, 0x7ABC, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
-        bAddSep = TRUE;
+        char szDrive[8] = {0};
+        DWORD dwFlags;
+
+        _ILGetDrive(m_apidl[0], szDrive, sizeof(szDrive));
+        if (GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0))
+        {
+            /* Disable format if read only */
+            if (!(dwFlags & FILE_READ_ONLY_VOLUME))
+            {
+                _InsertMenuItemW(hMenu, IndexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+                _InsertMenuItemW(hMenu, IndexMenu++, TRUE, 0x7ABC, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
+                bAddSep = TRUE;
+            }
+        }
     }
 
     BOOL bClipboardData = (HasClipboardData() && (rfg & SFGAO_FILESYSTEM));
