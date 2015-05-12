@@ -1046,12 +1046,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteRegImm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF8) == 0xB0);
 
-    if (State->PrefixFlags != 0)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     /* Fetch the byte */
     if (!Fast486FetchByte(State, &Value))
@@ -1211,12 +1206,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddAl)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x04);
 
-    if (State->PrefixFlags)
-    {
-        /* This opcode doesn't take any prefixes */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
@@ -1437,12 +1427,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrAl)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x0C);
 
-    if (State->PrefixFlags)
-    {
-        /* This opcode doesn't take any prefixes */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
@@ -1872,12 +1857,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorAl)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x34);
 
-    if (State->PrefixFlags)
-    {
-        /* This opcode doesn't take any prefixes */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
@@ -2073,12 +2053,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestAl)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xA8);
 
-    if (State->PrefixFlags)
-    {
-        /* This opcode doesn't take any prefixes */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
@@ -2454,12 +2429,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcAl)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x14);
 
-    if (State->PrefixFlags)
-    {
-        /* This opcode doesn't take any prefixes */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
@@ -2746,12 +2716,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbAl)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x1C);
 
-    if (State->PrefixFlags)
-    {
-        /* This opcode doesn't take any prefixes */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
@@ -3073,12 +3038,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubAl)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xEF) == 0x2C);
 
-    if (State->PrefixFlags)
-    {
-        /* This opcode doesn't take any prefixes */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return;
-    }
+    NO_LOCK_PREFIX();
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
