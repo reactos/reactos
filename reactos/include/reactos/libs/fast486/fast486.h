@@ -529,6 +529,7 @@ struct _FAST486_STATE
     BOOLEAN IntSignaled;
     BOOLEAN DoNotInterrupt;
     PULONG Tlb;
+    BOOLEAN TlbEmpty;
 #ifndef FAST486_NO_PREFETCH
     BOOLEAN PrefetchValid;
     ULONG PrefetchAddress;
