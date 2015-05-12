@@ -58,7 +58,7 @@ add_livecd_shortcut("Paint" mspaint.exe "Profiles/All Users/Start Menu/Programs/
 add_livecd_shortcut("Notepad" notepad.exe "Profiles/All Users/Start Menu/Programs/Accessories")
 add_livecd_shortcut("Remote desktop" mstsc.exe "Profiles/All Users/Start Menu/Programs/Accessories")
 add_livecd_shortcut("WordPad" wordpad.exe "Profiles/All Users/Start Menu/Programs/Accessories")
-add_livecd_shortcut("Audiorecorder" sndrec32.exe "Profiles/All Users/Start Menu/Programs/Entertainment")
+add_livecd_shortcut("Sound Recorder" sndrec32.exe "Profiles/All Users/Start Menu/Programs/Entertainment")
 add_livecd_shortcut("Multimedia Player" mplay32.exe "Profiles/All Users/Start Menu/Programs/Entertainment")
 add_livecd_shortcut("Volume Control" sndvol32.exe "Profiles/All Users/Start Menu/Programs/Entertainment")
 add_livecd_shortcut("Solitaire" sol.exe "Profiles/All Users/Start Menu/Programs/Games")
