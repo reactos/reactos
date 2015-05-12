@@ -643,7 +643,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg)
     if (State->Tlb && (ModRegRm.Register == (INT)FAST486_REG_CR3))
     {
         /* Flush the TLB */
-        RtlZeroMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG));
+        RtlFillMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG), 0xFF);
     }
 
     /* Load a value to the control register */
