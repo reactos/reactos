@@ -428,6 +428,9 @@ Fast486InterruptInternal(PFAST486_STATE State,
             State->InstPtr.LowWord = IdtEntry->Offset;
         }
 
+        /* Clear TF and NT */
+        State->Flags.Tf = State->Flags.Nt = FALSE;
+
         if (OldVm)
         {
             /* Push GS, FS, DS and ES */
