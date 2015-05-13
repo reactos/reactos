@@ -1044,8 +1044,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+#ifndef FAST486_NO_FPU
     PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
     FAST486_FPU_DATA_REG MemoryData;
+#endif
 
     TOGGLE_ADSIZE(AddressSize);
 
@@ -1692,9 +1694,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+#ifndef FAST486_NO_FPU
     PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
     LONG Value;
     FAST486_FPU_DATA_REG MemoryData;
+#endif
 
     TOGGLE_ADSIZE(AddressSize);
 
@@ -2013,8 +2017,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+#ifndef FAST486_NO_FPU
     PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
     FAST486_FPU_DATA_REG MemoryData;
+#endif
 
     TOGGLE_ADSIZE(AddressSize);
 
@@ -2389,7 +2395,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+#ifndef FAST486_NO_FPU
     PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
+#endif
 
     TOGGLE_ADSIZE(AddressSize);
 

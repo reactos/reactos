@@ -137,6 +137,7 @@ C_ASSERT(sizeof(FAST486_PAGE_DIR) == sizeof(ULONG));
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN
+FASTCALL
 Fast486ReadMemory
 (
     PFAST486_STATE State,
@@ -148,6 +149,7 @@ Fast486ReadMemory
 );
 
 BOOLEAN
+FASTCALL
 Fast486WriteMemory
 (
     PFAST486_STATE State,

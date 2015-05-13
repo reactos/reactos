@@ -32,6 +32,7 @@
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN
+FASTCALL
 Fast486ReadMemory(PFAST486_STATE State,
                   FAST486_SEG_REGS SegmentReg,
                   ULONG Offset,
@@ -156,6 +157,7 @@ Fast486ReadMemory(PFAST486_STATE State,
 }
 
 BOOLEAN
+FASTCALL
 Fast486WriteMemory(PFAST486_STATE State,
                    FAST486_SEG_REGS SegmentReg,
                    ULONG Offset,
