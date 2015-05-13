@@ -73,8 +73,16 @@ VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer
     /* If the A20 line is disabled, mask bit 20 */
     if (!A20Line) Address &= ~(1 << 20); 
 
-    if (Address >= MAX_ADDRESS) return;
-    Size = min(Size, MAX_ADDRESS - Address);
+    if ((Address + Size - 1) >= MAX_ADDRESS)
+    {
+        ULONG ExtraStart = (Address < MAX_ADDRESS) ? MAX_ADDRESS - Address : 0;
+
+        /* Fill the memory that was above the limit with 0xFF */
+        RtlFillMemory((PVOID)((ULONG_PTR)Buffer + ExtraStart), Size - ExtraStart, 0xFF);
+
+        if (Address < MAX_ADDRESS) Size = MAX_ADDRESS - Address;
+        else return;
+    }
 
     /* Read while calling fast memory hooks */
     MemRead(Address, Buffer, Size);
