@@ -1,5 +1,5 @@
 
-spec2def(spoolss spoolss.spec ADD_IMPORTLIB)
+spec2def(spoolss.dll spoolss.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     context.c
