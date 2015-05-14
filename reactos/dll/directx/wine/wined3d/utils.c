@@ -26,10 +26,6 @@
 
 #include "wined3d_private.h"
 
-#ifdef _MSC_VER
-#define copysignf(x, y) ((x) < 0.0f ? -fabsf(y) : fabsf(y))
-#endif
-
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 struct wined3d_format_channels
@@ -3991,7 +3987,7 @@ void wined3d_ftoa(float value, char *s)
 {
     int idx = 1;
 
-    if (copysignf(1.0f, value) < 0.0f)
+    if (value < 0.0f)
         ++idx;
 
     /* Be sure to allocate a buffer of at least 17 characters for the result
