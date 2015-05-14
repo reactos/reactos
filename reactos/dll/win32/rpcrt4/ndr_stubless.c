@@ -1062,6 +1062,13 @@ __ASM_GLOBAL_FUNC( call_server_func,
                    __ASM_CFI(".cfi_adjust_cfa_offset -8\n\t")
                    __ASM_CFI(".cfi_same_value %rbp\n\t")
                    "ret")
+#elif defined(__arm__)
+LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, unsigned short stack_size)
+{
+    FIXME("Not implemented for ARM\n");
+    assert(FALSE);
+    return 0;
+}
 #else
 #warning call_server_func not implemented for your architecture
 LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, unsigned short stack_size)
@@ -1389,7 +1396,7 @@ LONG WINAPI NdrStubCall2(
 
                 pRpcMsg->BufferLength = stubMsg.BufferLength;
                 /* allocate buffer for [out] and [ret] params */
-                Status = I_RpcGetBuffer(pRpcMsg); 
+                Status = I_RpcGetBuffer(pRpcMsg);
                 if (Status)
                     RpcRaiseException(Status);
                 stubMsg.Buffer = pRpcMsg->Buffer;
