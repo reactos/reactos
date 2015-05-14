@@ -3604,6 +3604,11 @@ RegQueryInfoKeyA(HKEY hKey,
     NTSTATUS Status;
     DWORD cClass = 0;
 
+    if ((lpClass) && (!lpcClass))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
     RtlInitUnicodeString(&UnicodeString,
                          NULL);
     if (lpClass != NULL)
