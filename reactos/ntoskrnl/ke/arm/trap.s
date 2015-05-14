@@ -6,12 +6,18 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-    .title "ARM Trap Dispatching and Handling"
-    #include "ntoskrnl/include/internal/arm/kxarm.h"
-    .include "ntoskrnl/include/internal/arm/ksarm.h"
+#include <ksarm.h>
 
-    .global KiArmVectorTable
-    KiArmVectorTable:
+    IMPORT KiUndefinedExceptionHandler
+    IMPORT KiSoftwareInterruptHandler
+    IMPORT KiPrefetchAbortHandler
+    IMPORT KiDataAbortHandler
+    IMPORT KiInterruptHandler
+
+    TEXTAREA
+
+    EXPORT KiArmVectorTable
+KiArmVectorTable
         b .                                     // Reset
         ldr pc, _KiUndefinedInstructionJump     // Undefined Instruction
         ldr pc, _KiSoftwareInterruptJump        // Software Interrupt
@@ -20,117 +26,131 @@
         b .                                     // Reserved
         ldr pc, _KiInterruptJump                // Interrupt
         ldr pc, _KiFastInterruptJump            // Fast Interrupt
-        
-    _KiUndefinedInstructionJump:    .word KiUndefinedInstructionException
-    _KiSoftwareInterruptJump:       .word KiSoftwareInterruptException
-    _KiPrefetchAbortJump:           .word KiPrefetchAbortException
-    _KiDataAbortJump:               .word KiDataAbortException
-    _KiInterruptJump:               .word KiInterruptException
-    _KiFastInterruptJump:           .word KiFastInterruptException
-    
-    TEXTAREA
+
+_KiUndefinedInstructionJump    DCD KiUndefinedInstructionException
+_KiSoftwareInterruptJump       DCD KiSoftwareInterruptException
+_KiPrefetchAbortJump           DCD KiPrefetchAbortException
+_KiDataAbortJump               DCD KiDataAbortException
+_KiInterruptJump               DCD KiInterruptException
+_KiFastInterruptJump           DCD KiFastInterruptException
+
+    // Might need to move these to a custom header, when used by HAL as well
+
+    MACRO
+    TRAP_PROLOG $Abort
+        __debugbreak
+    MEND
+
+    MACRO
+    SYSCALL_PROLOG $Abort
+        __debugbreak
+    MEND
+
+    MACRO
+    TRAP_EPILOG $SystemCall
+        __debugbreak
+    MEND
+
     NESTED_ENTRY KiUndefinedInstructionException
     PROLOG_END KiUndefinedInstructionException
-    //
-    // Handle trap entry
-    //
+
+    /* Handle trap entry */
     TRAP_PROLOG 0 // NotFromAbort
-    
-    //
-    // Call the C handler
-    //
+
+    /* Call the C handler */
     ldr lr, =KiExceptionExit
     mov r0, sp
     ldr pc, =KiUndefinedExceptionHandler
-    ENTRY_END KiUndefinedInstructionException
-    
-    
+
+    NESTED_END KiUndefinedInstructionException
+
+
     NESTED_ENTRY KiSoftwareInterruptException
     PROLOG_END KiSoftwareInterruptException
-    //
-    // Handle trap entry
-    //
+
+    /* Handle trap entry */
     SYSCALL_PROLOG
-    
-    //
-    // Call the C handler
-    //
+
+    /* Call the C handler */
     ldr lr, =KiServiceExit
     mov r0, sp
     ldr pc, =KiSoftwareInterruptHandler
-    ENTRY_END KiSoftwareInterruptException
+
+    NESTED_END KiSoftwareInterruptException
 
 
     NESTED_ENTRY KiPrefetchAbortException
     PROLOG_END KiPrefetchAbortException
-    //
-    // Handle trap entry
-    //
+
+    /* Handle trap entry */
     TRAP_PROLOG 0 // NotFromAbort
-    
-    //
-    // Call the C handler
-    //
+
+    /* Call the C handler */
     ldr lr, =KiExceptionExit
     mov r0, sp
     ldr pc, =KiPrefetchAbortHandler
-    ENTRY_END KiPrefetchAbortException
+
+    NESTED_END KiPrefetchAbortException
 
 
     NESTED_ENTRY KiDataAbortException
     PROLOG_END KiDataAbortException
-    //
-    // Handle trap entry
-    //
+
+    /* Handle trap entry */
     TRAP_PROLOG 1 // FromAbort
-    
-    //
-    // Call the C handler
-    //
+
+    /* Call the C handler */
     ldr lr, =KiExceptionExit
     mov r0, sp
     ldr pc, =KiDataAbortHandler
-    ENTRY_END KiDataAbortException
+
+    NESTED_END KiDataAbortException
 
 
     NESTED_ENTRY KiInterruptException
     PROLOG_END KiInterruptException
-    //
-    // Handle trap entry
-    //
+
+    /* Handle trap entry */
     TRAP_PROLOG 0 // NotFromAbort
-    
-    //
-    // Call the C handler
-    //
+
+    /* Call the C handler */
     ldr lr, =KiExceptionExit
     mov r0, sp
     mov r1, #0
     ldr pc, =KiInterruptHandler
-    ENTRY_END KiInterruptException
+
+    NESTED_END KiInterruptException
 
 
     NESTED_ENTRY KiFastInterruptException
     PROLOG_END KiFastInterruptException
-    //
+
     // FIXME-PERF: Implement FIQ exception
-    //
-    b .
-    ENTRY_END KiFastInterruptException
-    
-    
+    __debugbreak
+
+    NESTED_END KiFastInterruptException
+
+
     NESTED_ENTRY KiExceptionExit
     PROLOG_END KiExceptionExit
-    //
-    // Handle trap exit
-    // 
+
+    /* Handle trap exit */
     TRAP_EPILOG 0 // NotFromSystemCall
-    ENTRY_END KiExceptionExit
+
+    NESTED_END KiExceptionExit
 
     NESTED_ENTRY KiServiceExit
     PROLOG_END KiServiceExit
-    //
-    // Handle trap exit
-    // 
+
+    /* Handle trap exit */
     TRAP_EPILOG 1 // FromSystemCall
-    ENTRY_END KiServiceExit
+
+    NESTED_END KiServiceExit
+
+
+    LEAF_ENTRY KiInterruptTemplate
+    DCD 0
+    LEAF_END KiInterruptTemplate
+
+    END
+/* EOF */
