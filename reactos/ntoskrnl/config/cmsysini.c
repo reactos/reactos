@@ -446,6 +446,78 @@ Quickie:
     return (ExpInTextModeSetup ? STATUS_SUCCESS : Status);
 }
 
+static
+NTSTATUS
+INIT_FUNCTION
+CmpCreateHardwareProfile(HANDLE ControlSetHandle)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    HANDLE ProfilesHandle = NULL;
+    HANDLE ProfileHandle = NULL;
+    ULONG Disposition;
+    NTSTATUS Status;
+
+    DPRINT("CmpCreateHardwareProfile()\n");
+
+    /* Create the Hardware Profiles key */
+    RtlInitUnicodeString(&KeyName, L"Hardware Profiles");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ControlSetHandle,
+                               NULL);
+    Status = NtCreateKey(&ProfilesHandle,
+                         KEY_ALL_ACCESS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         &Disposition);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Creating the Hardware Profile key failed\n");
+        goto done;
+    }
+
+    /* Sanity check */
+    ASSERT(Disposition == REG_CREATED_NEW_KEY);
+
+    /* Create the 0000 key */
+    RtlInitUnicodeString(&KeyName, L"0000");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ProfilesHandle,
+                               NULL);
+    Status = NtCreateKey(&ProfileHandle,
+                         KEY_ALL_ACCESS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         &Disposition);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Creating the Hardware Profile\\0000 key failed\n");
+        goto done;
+    }
+
+    /* Sanity check */
+    ASSERT(Disposition == REG_CREATED_NEW_KEY);
+
+done:
+    if (ProfilesHandle)
+        NtClose(ProfilesHandle);
+
+    if (ProfileHandle)
+        NtClose(ProfileHandle);
+
+    DPRINT1("CmpCreateHardwareProfile() done\n");
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 INIT_FUNCTION
@@ -497,6 +569,11 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  0,
                                  &Disposition);
             if (!NT_SUCCESS(Status)) return Status;
+
+            /* Create the Hardware Profile keys */
+            Status = CmpCreateHardwareProfile(KeyHandle);
+            if (!NT_SUCCESS(Status))
+                return Status;
 
             /* Don't need the handle */
             ZwClose(KeyHandle);
@@ -583,23 +660,31 @@ UseSet:
         goto Cleanup;
     }
 
-    /* Now get the current config */
-    RtlInitUnicodeString(&KeyName, L"CurrentConfig");
-    Status = NtQueryValueKey(ConfigHandle,
-                             &KeyName,
-                             KeyValueFullInformation,
-                             ValueInfoBuffer,
-                             sizeof(ValueInfoBuffer),
-                             &ResultLength);
+    /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
+    if (!LoaderBlock->RegistryBase)
+    {
+        HwProfile = 0;
+    }
+    else
+    {
+        /* Now get the current config */
+        RtlInitUnicodeString(&KeyName, L"CurrentConfig");
+        Status = NtQueryValueKey(ConfigHandle,
+                                 &KeyName,
+                                 KeyValueFullInformation,
+                                 ValueInfoBuffer,
+                                 sizeof(ValueInfoBuffer),
+                                 &ResultLength);
 
-    /* Set pointer to buffer */
-    ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
+        /* Set pointer to buffer */
+        ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
 
-    /* Check if we failed or got a non DWORD-value */
-    if (!(NT_SUCCESS(Status)) || (ValueInfo->Type != REG_DWORD)) goto Cleanup;
+        /* Check if we failed or got a non DWORD-value */
+        if (!(NT_SUCCESS(Status)) || (ValueInfo->Type != REG_DWORD)) goto Cleanup;
 
-    /* Get the hadware profile */
-    HwProfile = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
+        /* Get the hadware profile */
+        HwProfile = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
+    }
 
     /* Open the hardware profile key */
     RtlInitUnicodeString(&KeyName,
@@ -704,6 +789,8 @@ Cleanup:
     if (ConfigHandle) NtClose(ConfigHandle);
     if (ProfileHandle) NtClose(ProfileHandle);
     if (ParentHandle) NtClose(ParentHandle);
+
+    DPRINT1("CmpCreateControlSet() done\n");
 
     /* Return success */
     return STATUS_SUCCESS;
