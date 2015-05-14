@@ -606,6 +606,33 @@ BaseInitializeContext(IN PCONTEXT Context,
 
     /* Give it some room for the Parameter */
     Context->Rsp -= sizeof(PVOID);
+#elif defined(_M_ARM)
+    DPRINT("BaseInitializeContext: %p\n", Context);
+
+    // FIXME: check if this is correct!
+    /* Setup the Initial Win32 Thread Context */
+    Context->R0 = (ULONG_PTR)StartAddress;
+    Context->R1 = (ULONG_PTR)Parameter;
+    Context->Sp = (ULONG_PTR)StackAddress;
+
+    if (ContextType == 1)      /* For Threads */
+    {
+        Context->Pc = (ULONG_PTR)BaseThreadStartupThunk;
+    }
+    else if (ContextType == 2) /* For Fibers */
+    {
+        Context->Pc = (ULONG_PTR)BaseFiberStartup;
+    }
+    else                       /* For first thread in a Process */
+    {
+        Context->Pc = (ULONG_PTR)BaseProcessStartThunk;
+    }
+
+    /* Set the Context Flags */
+    Context->ContextFlags = CONTEXT_FULL;
+
+    /* Give it some room for the Parameter */
+    Context->Sp -= sizeof(PVOID);
 #else
 #warning Unknown architecture
     UNIMPLEMENTED;
@@ -907,7 +934,7 @@ BasepCheckWinSaferRestrictions(IN HANDLE UserToken,
                                OUT PHANDLE JobHandle)
 {
     NTSTATUS Status;
-    
+
     /* Validate that there's a name */
     if ((ApplicationName) && *(ApplicationName))
     {

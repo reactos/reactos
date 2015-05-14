@@ -15,3 +15,5 @@ list(APPEND SOURCES
 
 add_library(hal SHARED
     ${SOURCES})
+
+set_module_type(hal kerneldll ENTRYPOINT 0)

@@ -138,8 +138,14 @@ extern void push_dc_driver_ros(PHYSDEV *dev, PHYSDEV physdev, const struct gdi_d
 BOOL WINAPI SetWorldTransformForMetafile(HDC hdc, const XFORM *pxform);
 #define SetWorldTransform SetWorldTransformForMetafile
 
+#ifdef _M_ARM
+#define DbgRaiseAssertionFailure() __emit(0xdefc)
+#else
+#define DbgRaiseAssertionFailure() __int2c()
+#endif // _M_ARM
+
 #undef ASSERT
-#define ASSERT(x) if (!(x)) __int2c()
+#define ASSERT(x) if (!(x)) DbgRaiseAssertionFailure()
 
 #endif /* __WINE_GDI_PRIVATE_H */
 

@@ -516,7 +516,7 @@ _assert (
     const char *file,
     unsigned line)
 {
-    __int2c();
+    DbgRaiseAssertionFailure();
 }
 
 double

@@ -243,11 +243,17 @@ endif()
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR livecd hybridcd NAME_ON_CD setupldr.sys)
 
-concatenate_files(
-    ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys
-    ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-    ${_freeldr_pe_output_file})
+if(NOT ARCH STREQUAL "arm")
 
-add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
+    concatenate_files(
+        ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys
+        ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
+        ${_freeldr_pe_output_file})
+
+    add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
+else()
+    add_custom_target(setupldr ALL DEPENDS ${_freeldr_pe_output_file})
+endif()
+
 add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
 

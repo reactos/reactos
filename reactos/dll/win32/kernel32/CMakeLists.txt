@@ -90,6 +90,10 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
         client/amd64/fiber.S
         client/amd64/thread.S)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND ASM_SOURCE
+        client/arm/fiber.S
+        client/arm/thread.S)
 endif()
 
 add_asm_files(kernel32_asm ${ASM_SOURCE})

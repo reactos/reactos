@@ -76,6 +76,11 @@ KsecReadMachineSpecificCounters(
         MachineSpecificCounters->Pmc1 = __readpmc(1);
     }
 #endif
+#elif defined(_M_ARM)
+/* FIXME: this should go into a public header (from ksarm.h) */
+#define CP15_PMCCNTR           15, 0,  9, 13, 0
+    /* Read the Cycle Counter Register */
+    MachineSpecificCounters->Ccr = _MoveFromCoprocessor(CP15_PMCCNTR);
 #else
     #error Implement me!
 #endif
