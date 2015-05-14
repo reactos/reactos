@@ -56,7 +56,6 @@ list(APPEND CRT_SOURCE
     math/modf.c
     math/powf.c
     math/rand.c
-    math/sqrtf.c
     math/s_modf.c
     math/sinf.c
     math/sinh.c
