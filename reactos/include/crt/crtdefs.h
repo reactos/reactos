@@ -228,6 +228,10 @@
 #define _CRT_OBSOLETE(_NewItem)
 #endif
 
+#ifndef _CRT_JIT_INTRINSIC
+#define _CRT_JIT_INTRINSIC
+#endif
+
 
 /** Constants ****************************************************************/
 

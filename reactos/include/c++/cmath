@@ -1,6 +1,7 @@
 //Standard C++ math declarations
 
 #pragma once
+#define _CMATH_
 
 #include <math.h>
 
