@@ -445,23 +445,23 @@ elseif(ARCH STREQUAL "amd64")
         float/amd64/fpreset.S
         float/amd64/logb.S
         # math/amd64/acos.S
-        math/amd64/acosf.S
+        # math/amd64/acosf.S
         math/amd64/atan.S
         math/amd64/atan2.S
         math/amd64/ceil.S
-        math/amd64/ceilf.S
+        # math/amd64/ceilf.S
         math/amd64/exp.S
         math/amd64/fabs.S
         math/amd64/floor.S
-        math/amd64/floorf.S
+        # math/amd64/floorf.S
         math/amd64/fmod.S
-        math/amd64/fmodf.S
+        # math/amd64/fmodf.S
         math/amd64/ldexp.S
         math/amd64/log.S
         math/amd64/log10.S
         math/amd64/pow.S
         math/amd64/sqrt.S
-        math/amd64/sqrtf.S
+        # math/amd64/sqrtf.S
         math/amd64/tan.S
         setjmp/amd64/setjmp.s)
 
@@ -511,6 +511,8 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__dtou64.s
         math/arm/__i64tod.s
         math/arm/__i64tos.s
+        math/arm/__stoi64.s
+        math/arm/__stou64.s
         math/arm/__u64tod.s
         math/arm/__u64tos.s
         math/arm/__rt_sdiv64.s
@@ -526,8 +528,26 @@ endif()
 
 if(NOT ARCH STREQUAL "i386")
     list(APPEND CRT_SOURCE
+        math/_chgsignf.c
+        math/_copysignf.c
+        math/_hypotf.c
+        math/acosf.c
+        math/asinf.c
+        math/atan2f.c
+        math/atanf.c
+        math/ceilf.c
         math/cos.c
+        math/coshf.c
+        math/expf.c
+        math/floorf.c
+        math/fmodf.c
+        math/log10f.c
+        math/modff.c
         math/sin.c
+        math/sinhf.c
+        math/sqrtf.c
+        math/tanf.c
+        math/tanhf.c
         math/stubs.c
         mem/memchr.c
         mem/memcpy.c

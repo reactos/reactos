@@ -171,6 +171,8 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__dtou64.s
         math/arm/__i64tod.s
         math/arm/__i64tos.s
+        math/arm/__stoi64.s
+        math/arm/__stou64.s
         math/arm/__u64tod.s
         math/arm/__u64tos.s
         math/arm/__rt_sdiv64.s
