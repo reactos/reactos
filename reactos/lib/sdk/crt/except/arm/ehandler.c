@@ -25,7 +25,7 @@ __C_specific_handler(
 }
 
 DWORD
-__CxxFrameHandler(
+__CxxFrameHandler3(
     PEXCEPTION_RECORD rec,
     EXCEPTION_REGISTRATION_RECORD* ExceptionRegistrationFrame,
     PCONTEXT context,
