@@ -117,6 +117,10 @@ MMPTE DemandZeroPte  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BI
 /* Template PTE for prototype page */
 MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)};
 
+MMPTE ValidKernelPteLocal = {{0}};
+MMPDE ValidKernelPdeLocal = {{0}};
+MMPTE MmDecommittedPte = {{0}};
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -288,5 +292,31 @@ MmInitGlobalKernelPageDirectory(VOID)
             MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
         }
     }
+}
+
+VOID
+NTAPI
+MmGetPageFileMapping(
+    PEPROCESS Process,
+    PVOID Address,
+    SWAPENTRY* SwapEntry)
+{
+    NT_ASSERT(FALSE);
+}
+
+BOOLEAN
+NTAPI
+MmIsDisabledPage(PEPROCESS Process, PVOID Address)
+{
+    NT_ASSERT(FALSE);
+    return FALSE;
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+MiInitializeSessionSpaceLayout(VOID)
+{
+    NT_ASSERT(FALSE);
 }
 

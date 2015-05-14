@@ -383,7 +383,7 @@ KiRescheduleThread(IN BOOLEAN NewThread,
                    IN ULONG Cpu)
 {
     /* Check if a new thread needs to be scheduled on a different CPU */
-    if ((NewThread) && !(KeGetPcr()->Number == Cpu))
+    if ((NewThread) && !(KeGetCurrentPrcb()->Number == Cpu))
     {
         /* Send an IPI to request delivery */
         KiIpiSend(AFFINITY_MASK(Cpu), IPI_DPC);
@@ -534,7 +534,7 @@ KiRequestApcInterrupt(IN BOOLEAN NeedApc,
     if (NeedApc)
     {
         /* Check if it's on another CPU */
-        if (KeGetPcr()->Number != Processor)
+        if (KeGetCurrentPrcb()->Number != Processor)
         {
             /* Send an IPI to request delivery */
             KiIpiSend(AFFINITY_MASK(Processor), IPI_APC);

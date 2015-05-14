@@ -725,7 +725,7 @@ KiSetAffinityThread(IN PKTHREAD Thread,
 #elif _M_AMD64
 #define KiGetCurrentReadySummary() __readgsdword(FIELD_OFFSET(KIPCR, Prcb.ReadySummary))
 #else
-#error Implement me!
+#define KiGetCurrentReadySummary() KeGetCurrentPrcb()->ReadySummary
 #endif
 
 /*

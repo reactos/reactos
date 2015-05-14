@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/arm/ksarm.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -92,20 +91,20 @@ KiSystemService(IN PKTHREAD Thread,
     PVOID* Argument;
     PVOID Arguments[0x11]; // Maximum 17 arguments
     KIRQL OldIrql;
-    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
-    
+    ASSERT(TrapFrame->Reserved == 0xBADB0D00);
+
     //
     // Increase count of system calls
     //
-    Pcr = (PKPCR)KeGetPcr();
-    Pcr->Prcb->KeSystemCalls++;
-    
+    Pcr = KeGetPcr();
+    Pcr->CurrentPrcb->KeSystemCalls++;
+
     //
     // Get the system call ID
     //
     Id = Instruction & 0xFFFFF;
     //DPRINT1("[SWI] (%x) %p (%d) \n", Id, Thread, Thread->PreviousMode);
-    
+
     //
     // Get the descriptor table
     //
@@ -113,7 +112,7 @@ KiSystemService(IN PKTHREAD Thread,
     Offset = ((Id >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK);
     ServiceTable += Offset;
     DescriptorTable = (PVOID)ServiceTable;
-    
+
     //
     // Get the service call number and validate it
     //
@@ -126,12 +125,12 @@ KiSystemService(IN PKTHREAD Thread,
         UNIMPLEMENTED;
         ASSERT(FALSE);
     }
-    
+
     //
     // Save the function responsible for handling this system call
     //
     SystemCall = (PVOID)DescriptorTable->Base[Number];
-    
+
     //
     // Check if this is a GUI call
     //
@@ -143,13 +142,13 @@ KiSystemService(IN PKTHREAD Thread,
         UNIMPLEMENTED;
         ASSERT(FALSE);
     }
-    
+
     //
     // Check how many arguments this system call takes
     //
     ArgumentCount = DescriptorTable->Number[Number] / 4;
     ASSERT(ArgumentCount <= 17);
-    
+
     //
     // Copy the register-arguments first
     // First four arguments are in a1, a2, a3, a4
@@ -163,7 +162,7 @@ KiSystemService(IN PKTHREAD Thread,
         Arguments[i] = *Argument;
         Argument++;
     }
-    
+
     //
     // If more than four, we'll have some on the user stack
     //
@@ -178,7 +177,7 @@ KiSystemService(IN PKTHREAD Thread,
             // FIXME-USER: Validate the user stack
             //
             ASSERT(FALSE);
-            Argument = (PVOID*)TrapFrame->UserSp;
+            Argument = (PVOID*)TrapFrame->Sp;
         }
         else
         {
@@ -200,18 +199,18 @@ KiSystemService(IN PKTHREAD Thread,
             Argument++;
         }
     }
-    
+
     //
     // We can safely enable interrupts here
     //
     _enable();
-    
+
     //
     // Do the system call and save result in EAX
     //
     TrapFrame->R0 = KiSyscallHandlers[ArgumentCount]((PVOID)SystemCall,
                                                      (PVOID)Arguments);
-                                                     
+
     //
     // Check if this was a user call
     //
@@ -226,9 +225,9 @@ KiSystemService(IN PKTHREAD Thread,
             //
             // Forcibly put us in a sane state
             //
-            KeGetPcr()->Irql = 0;
+            KeGetPcr()->CurrentIrql = 0;
             _disable();
-            
+
             //
             // Fail
             //
@@ -238,7 +237,7 @@ KiSystemService(IN PKTHREAD Thread,
                          0,
                          0);
         }
-        
+
         //
         // Make sure we're not attached and that APCs are not disabled
         //
@@ -255,11 +254,11 @@ KiSystemService(IN PKTHREAD Thread,
                          0);
         }
     }
-    
+
     //
     // Restore the old trap frame
     //
-    Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->PreviousTrapFrame;
+    Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
 }
 
 VOID
@@ -275,19 +274,19 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     ULONG_PTR Stack;
     ULONG ContextLength;
     DPRINT1("User APC: %p %p %p\n", NormalContext, SystemArgument1, SystemArgument2);
-    
+
     //
     // Build the user mode context
     //
     Context.ContextFlags = CONTEXT_FULL;
     KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
-    
+
     //
     // Setup the context on the user stack
     //
     ContextLength = sizeof(CONTEXT);
     Stack = (ULONG_PTR)(Context.Sp & ~7) - ContextLength;
-        
+
     //
     // Make sure the stack is valid, and copy the context
     //
@@ -301,7 +300,40 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     TrapFrame->R1 = (ULONG)SystemArgument1;
     TrapFrame->R2 = (ULONG)SystemArgument2;
     TrapFrame->R3 = (ULONG)NormalRoutine;
-    TrapFrame->R8 = Stack;
-    TrapFrame->UserSp = Stack;
-    TrapFrame->UserLr = (ULONG)KeUserApcDispatcher;
+    TrapFrame->Sp = Stack;
+    TrapFrame->Lr = (ULONG)KeUserApcDispatcher;
 }
+
+NTSTATUS
+NTAPI
+KeUserModeCallback(IN ULONG RoutineIndex,
+                   IN PVOID Argument,
+                   IN ULONG ArgumentLength,
+                   OUT PVOID *Result,
+                   OUT PULONG ResultLength)
+{
+    NT_ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+KiCallUserMode(
+    IN PVOID *OutputBuffer,
+    IN PULONG OutputLength)
+{
+    NT_ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtCallbackReturn(
+    _In_ PVOID Result,
+    _In_ ULONG ResultLength,
+    _In_ NTSTATUS CallbackStatus)
+{
+    NT_ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+

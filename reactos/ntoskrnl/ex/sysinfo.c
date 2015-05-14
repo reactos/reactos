@@ -1597,7 +1597,9 @@ QSI_DEF(SystemExceptionInformation)
         {
             AlignmentFixupCount += Prcb->KeAlignmentFixupCount;
             ExceptionDispatchCount += Prcb->KeExceptionDispatchCount;
+#ifndef _M_ARM
             FloatingEmulationCount += Prcb->KeFloatingEmulationCount;
+#endif // _M_ARM
         }
     }
 
@@ -2353,7 +2355,7 @@ NtFlushInstructionCache(IN HANDLE ProcessHandle,
     DPRINT1("NtFlushInstructionCache() is not implemented\n");
     for (;;);
 #elif defined(_M_ARM)
-    __asm__ __volatile__("mov r1, #0; mcr p15, 0, r1, c7, c5, 0");
+    //__asm__ __volatile__("mov r1, #0; mcr p15, 0, r1, c7, c5, 0");
 #else
 #error Unknown architecture
 #endif

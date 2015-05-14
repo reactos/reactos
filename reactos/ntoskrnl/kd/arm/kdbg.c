@@ -55,24 +55,24 @@ KdPortInitializeEx(IN PCPPORT PortInformation,
     //
     // Disable interrupts
     //
-    WRITE_REGISTER_ULONG(UART_PL011_CR, 0);
+    WRITE_REGISTER_ULONG((PULONG)UART_PL011_CR, 0);
 
     //
     // Set the baud rate
     //
-    WRITE_REGISTER_ULONG(UART_PL011_IBRD, Divider);
-    WRITE_REGISTER_ULONG(UART_PL011_FBRD, Fraction);
+    WRITE_REGISTER_ULONG((PULONG)UART_PL011_IBRD, Divider);
+    WRITE_REGISTER_ULONG((PULONG)UART_PL011_FBRD, Fraction);
 
     //
     // Set 8 bits for data, 1 stop bit, no parity, FIFO enabled
     //
-    WRITE_REGISTER_ULONG(UART_PL011_LCRH,
+    WRITE_REGISTER_ULONG((PULONG)UART_PL011_LCRH,
                          UART_PL011_LCRH_WLEN_8 | UART_PL011_LCRH_FEN);
 
     //
     // Clear and enable FIFO
     //
-    WRITE_REGISTER_ULONG(UART_PL011_CR,
+    WRITE_REGISTER_ULONG((PULONG)UART_PL011_CR,
                          UART_PL011_CR_UARTEN |
                          UART_PL011_CR_TXE |
                          UART_PL011_CR_RXE);
@@ -101,12 +101,12 @@ KdPortPutByteEx(IN PCPPORT PortInformation,
     //
     // Wait for ready
     //
-    while ((READ_REGISTER_ULONG(UART_PL01x_FR) & UART_PL01x_FR_TXFF) != 0);
-    
+    while ((READ_REGISTER_ULONG((PULONG)UART_PL01x_FR) & UART_PL01x_FR_TXFF) != 0);
+
     //
     // Send the character
     //
-    WRITE_REGISTER_ULONG(UART_PL01x_DR, ByteToSend);
+    WRITE_REGISTER_ULONG((PULONG)UART_PL01x_DR, ByteToSend);
 }
 
 /* EOF */

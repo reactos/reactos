@@ -530,7 +530,12 @@ KeStartThread(IN OUT PKTHREAD Thread)
     NodePrcb = KiProcessorBlock[Process->ThreadSeed];
 
     /* Calculate affinity mask */
+#ifdef _M_ARM
+    DbgBreakPoint();
+    Set = 0;
+#else
     Set = ~NodePrcb->MultiThreadProcessorSet;
+#endif
     Mask = (ULONG)(Node->ProcessorMask & Process->Affinity);
     Set &= Mask;
     if (Set) Mask = Set;

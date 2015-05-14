@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/arm/ksarm.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -24,13 +23,13 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                      IN KPROCESSOR_MODE PreviousMode)
 {
     KIRQL OldIrql;
-    
+
     //
     // Do this at APC_LEVEL
     //
     OldIrql = KeGetCurrentIrql();
     if (OldIrql < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
-    
+
     //
     // Start with the Control flags
     //
@@ -39,30 +38,20 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         //
         // So this basically means all the special stuff
         //
-        if (PreviousMode == UserMode)
-        {
-            //
-            // ARM has register banks
-            //
-            TrapFrame->UserSp = Context->Sp;
-            TrapFrame->UserLr = Context->Lr;
-        }
-        else
-        {
-            //
-            // ARM has register banks
-            //
-            TrapFrame->SvcSp = Context->Sp;
-            TrapFrame->SvcLr = Context->Lr;
-        }
-        
+
+        //
+        // ARM has register banks
+        //
+        TrapFrame->Sp = Context->Sp;
+        TrapFrame->Lr = Context->Lr;
+
         //
         // The rest is already in the right mode
         //
         TrapFrame->Pc = Context->Pc;
-        TrapFrame->Spsr = Context->Psr;
+        TrapFrame->Cpsr = Context->Cpsr;
     }
-    
+
     //
     // Now do the integers
     //
@@ -75,21 +64,21 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         TrapFrame->R1 = Context->R1;
         TrapFrame->R2 = Context->R2;
         TrapFrame->R3 = Context->R3;
-        TrapFrame->R4 = Context->R4;
-        TrapFrame->R5 = Context->R5;
-        TrapFrame->R6 = Context->R6;
-        TrapFrame->R7 = Context->R7;
-        TrapFrame->R8 = Context->R8;
-        TrapFrame->R0 = Context->R9;
-        TrapFrame->R10 = Context->R10;
-        TrapFrame->R11 = Context->R11;
+        ExceptionFrame->R4 = Context->R4;
+        ExceptionFrame->R5 = Context->R5;
+        ExceptionFrame->R6 = Context->R6;
+        ExceptionFrame->R7 = Context->R7;
+        ExceptionFrame->R8 = Context->R8;
+        ExceptionFrame->R9 = Context->R9;
+        ExceptionFrame->R10 = Context->R10;
+        ExceptionFrame->R11 = Context->R11;
         TrapFrame->R12 = Context->R12;
     }
-    
+
     //
     // Restore IRQL
     //
-    if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);  
+    if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
 }
 
 VOID
@@ -99,13 +88,13 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
                      IN OUT PCONTEXT Context)
 {
     KIRQL OldIrql;
-    
+
     //
     // Do this at APC_LEVEL
     //
     OldIrql = KeGetCurrentIrql();
     if (OldIrql < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
-    
+
     //
     // Start with the Control flags
     //
@@ -114,30 +103,20 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         //
         // So this basically means all the special stuff
         //
-        if (KiGetPreviousMode(TrapFrame) == UserMode)
-        {
-            //
-            // ARM has register banks
-            //
-            Context->Sp = TrapFrame->UserSp;
-            Context->Lr = TrapFrame->UserLr;
-        }
-        else
-        {
-            //
-            // ARM has register banks
-            //
-            Context->Sp = TrapFrame->SvcSp;
-            Context->Lr = TrapFrame->SvcLr;
-        }
-        
+
+        //
+        // ARM has register banks
+        //
+        Context->Sp = TrapFrame->Sp;
+        Context->Lr = TrapFrame->Lr;
+
         //
         // The rest is already in the right mode
         //
         Context->Pc = TrapFrame->Pc;
-        Context->Psr = TrapFrame->Spsr;
+        Context->Cpsr = TrapFrame->Cpsr;
     }
-    
+
     //
     // Now do the integers
     //
@@ -150,21 +129,21 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         Context->R1 = TrapFrame->R1;
         Context->R2 = TrapFrame->R2;
         Context->R3 = TrapFrame->R3;
-        Context->R4 = TrapFrame->R4;
-        Context->R5 = TrapFrame->R5;
-        Context->R6 = TrapFrame->R6;
-        Context->R7 = TrapFrame->R7;
-        Context->R8 = TrapFrame->R8;
-        Context->R0 = TrapFrame->R9;
-        Context->R10 = TrapFrame->R10;
-        Context->R11 = TrapFrame->R11;
+        Context->R4 = ExceptionFrame->R4;
+        Context->R5 = ExceptionFrame->R5;
+        Context->R6 = ExceptionFrame->R6;
+        Context->R7 = ExceptionFrame->R7;
+        Context->R8 = ExceptionFrame->R8;
+        Context->R0 = ExceptionFrame->R9;
+        Context->R10 = ExceptionFrame->R10;
+        Context->R11 = ExceptionFrame->R11;
         Context->R12 = TrapFrame->R12;
     }
-           
+
     //
     // Restore IRQL
     //
-    if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);    
+    if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
 }
 
 VOID
@@ -182,7 +161,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_FULL;
-    
+
     /* Check if User Mode or if the kernel debugger is enabled */
     if ((PreviousMode == UserMode) || (KeGetPcr()->KdVersionBlock))
     {
@@ -280,4 +259,13 @@ Handled:
                          Context.ContextFlags,
                          PreviousMode);
     return;
+}
+
+NTSTATUS
+NTAPI
+KeRaiseUserException(
+    _In_ NTSTATUS ExceptionCode)
+{
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
 }

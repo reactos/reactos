@@ -46,7 +46,7 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 #elif defined(_ARM_)
 
 #define KPCR_SELF_PCR_OFFSET           0
-#define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
+#define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KIPCR, Prcb)
 #define KPCR_CONTAINED_PRCB_OFFSET     0
 #define KPCR_INITIAL_STACK_OFFSET      FIELD_OFFSET(KPCR, InitialStack)
 #define KPCR_STACK_LIMIT_OFFSET        FIELD_OFFSET(KPCR, StackLimit)
@@ -510,9 +510,16 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     KPCR_CONTAINED_PRCB_OFFSET,
     0,
     0,
+#if defined(_M_ARM)
+    _WARN("KPCR_INITIAL_STACK_OFFSET, KPCR_STACK_LIMIT_OFFSET and KPRCB_PCR_PAGE_OFFSET not properly defined on ARM")
+    0,
+    0,
+    0,
+#else
     KPCR_INITIAL_STACK_OFFSET,
     KPCR_STACK_LIMIT_OFFSET,
     KPRCB_PCR_PAGE_OFFSET,
+#endif
     FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
 #if defined(_X86_)
     //
