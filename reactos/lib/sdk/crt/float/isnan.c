@@ -19,6 +19,10 @@
 
 #include <precomp.h>
 
+#if defined(_MSC_VER) && defined(_M_ARM)
+#pragma function(_isnan)
+#endif /* _MSC_VER */
+
 /*
  * @implemented
  */

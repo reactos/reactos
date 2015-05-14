@@ -6,6 +6,11 @@
  * PROGRAMMER:       Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
+#ifdef _MSC_VER
+#pragma warning(suppress:4164) /* intrinsic not declared */
+#pragma function(cos)
+#endif /* _MSC_VER */
+
 #define PRECISION 9
 #define M_PI 3.141592653589793238462643
 

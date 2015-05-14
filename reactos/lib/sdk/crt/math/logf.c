@@ -7,7 +7,12 @@
 #include <math.h>
 #undef logf
 
-float logf(float _X)
+#if defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_AMD64))
+#pragma warning(suppress:4164) /* intrinsic not declared */
+#pragma function(logf)
+#endif /* _MSC_VER */
+
+float logf(float x)
 {
-  return ((float)log((double)_X));
+    return ((float)log((double)x));
 }

@@ -2,6 +2,10 @@
 #include <stddef.h>
 #include <tchar.h>
 
+#ifdef _MSC_VER
+#pragma function(_tcslen)
+#endif /* _MSC_VER */
+
 size_t _tcslen(const _TCHAR * str)
 {
  const _TCHAR * s;

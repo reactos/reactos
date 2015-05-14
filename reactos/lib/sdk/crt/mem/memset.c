@@ -1,6 +1,10 @@
 
 #include <string.h>
 
+#ifdef _MSC_VER
+#pragma function(memset)
+#endif /* _MSC_VER */
+
 void* memset(void* src, int val, size_t count)
 {
     char *char_src = (char *)src;
