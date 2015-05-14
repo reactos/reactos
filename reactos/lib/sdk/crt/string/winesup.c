@@ -75,11 +75,14 @@ _internal_handle_float(
     long double cur = 1, expcnt = 10;
     unsigned fpcontrol;
     BOOL negexp;
-
+#ifdef _M_ARM
+    DbgBreakPoint();
+    fpcontrol = _controlfp(0, 0);
+#else
     fpcontrol = _control87(0, 0);
     _control87(_EM_DENORMAL|_EM_INVALID|_EM_ZERODIVIDE
             |_EM_OVERFLOW|_EM_UNDERFLOW|_EM_INEXACT, 0xffffffff);
-
+#endif
     negexp = (exp < 0);
     if(negexp)
         exp = -exp;
@@ -92,7 +95,12 @@ _internal_handle_float(
     }
     cur = (negexp ? d/cur : d*cur);
 
+#ifdef _M_ARM
+    DbgBreakPoint();
+    _controlfp(fpcontrol, 0xffffffff);
+#else
     _control87(fpcontrol, 0xffffffff);
+#endif
 
     if (!suppress) {
         if (l_or_L_prefix) _SET_NUMBER_(double);
