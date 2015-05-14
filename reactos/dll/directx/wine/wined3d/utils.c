@@ -3987,7 +3987,7 @@ void wined3d_ftoa(float value, char *s)
 {
     int idx = 1;
 
-    if (value < 0.0f)
+    if (copysignf(1.0f, value) < 0.0f)
         ++idx;
 
     /* Be sure to allocate a buffer of at least 17 characters for the result
