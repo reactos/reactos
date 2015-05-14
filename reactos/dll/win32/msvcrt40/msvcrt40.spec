@@ -265,7 +265,7 @@
 @ stub ??_Gstrstream@@UAEPAXI@Z
 @ stub ??_Gstrstreambuf@@UAEPAXI@Z
 @ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler
-@ cdecl ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
+@ cdecl -i386 ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
 @ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) MSVCRT__set_new_handler
 @ cdecl ?_set_new_mode@@YAHH@Z(long) MSVCRT__set_new_mode
 @ cdecl ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) MSVCRT__set_se_translator
@@ -407,7 +407,7 @@
 @ stub ?seekp@ostream@@QAEAAV1@J@Z
 @ stub ?seekp@ostream@@QAEAAV1@JW4seek_dir@ios@@@Z
 @ stub ?seekpos@streambuf@@UAEJJH@Z
-@ cdecl ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_new_handler
+@ cdecl -i386 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_new_handler
 @ cdecl ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_terminate
 @ cdecl ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_unexpected
 @ stub ?setb@streambuf@@IAEXPAD0H@Z
@@ -596,7 +596,7 @@
 @ cdecl _close(long)
 @ cdecl _commit(long)
 @ extern _commode
-@ cdecl _control87(long long)
+@ cdecl -arch=i386,x86_64 _control87(long long)
 @ cdecl _controlfp(long long)
 @ cdecl _copysign( double double )
 @ varargs _cprintf(str)
@@ -833,7 +833,7 @@
 @ stdcall -i386 _seh_longjmp_unwind(ptr)
 @ cdecl _set_error_mode(long)
 @ cdecl _seterrormode(long)
-@ cdecl -i386 _setjmp(ptr)
+@ cdecl _setjmp(ptr)
 @ cdecl -i386 _setjmp3(ptr long)
 @ cdecl _setmaxstdio(long)
 @ cdecl _setmbcp(long)
@@ -1062,7 +1062,7 @@
 @ cdecl localtime(ptr)
 @ cdecl log(double)
 @ cdecl log10(double)
-@ cdecl -i386 longjmp(ptr long)
+@ cdecl longjmp(ptr long)
 @ cdecl malloc(long)
 @ cdecl mblen(ptr long)
 @ cdecl mbstowcs(ptr str long)
