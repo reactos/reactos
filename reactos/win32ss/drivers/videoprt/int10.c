@@ -135,6 +135,15 @@ IntInitializeVideoAddressSpace(VOID)
     /* Return success */
     return STATUS_SUCCESS;
 }
+#else
+NTSTATUS
+NTAPI
+IntInitializeVideoAddressSpace(VOID)
+{
+    UNIMPLEMENTED;
+    NT_ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
 #endif
 
 #if defined(_M_IX86)
