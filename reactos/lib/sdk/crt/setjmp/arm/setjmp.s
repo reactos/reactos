@@ -12,14 +12,13 @@
 /* CODE **********************************************************************/
     TEXTAREA
 
-    LEAF_ENTRY _setjmp
-
-    mov r1, sp
+    LEAF_ENTRY _setjmpex
 
     /* Store r1 (->Frame) and r4 - r11 */
     stmia r0!, {r1,r4-r11}
 
-    /* Store r1 (->Sp), lr (->Pc), fp (->Fpscr) */
+    /* Store sp (->Sp), lr (->Pc), fp (->Fpscr) */
+    mov r1, sp
     stmia r0!, {r1,lr,fp}
 
     /* Store NEON registers */
@@ -35,7 +34,10 @@
     /* Return 0 */
     mov r0, #0
     bx lr
-    LEAF_END _setjmp
+    LEAF_END _setjmpex
+
+    IMPORT _setjmp, WEAK _setjmpex
+    IMPORT setjmp, WEAK _setjmpex
 
     LEAF_ENTRY longjmp
 
