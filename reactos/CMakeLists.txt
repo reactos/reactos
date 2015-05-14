@@ -164,7 +164,7 @@ else()
         add_definitions(-D_M_AMD64 -D_AMD64_ -D__x86_64__ -D_WIN64)
     elseif(ARCH STREQUAL "arm")
         # _M_ARM is already defined by toolchain
-        add_definitions(-D_ARM_ -D__arm__)
+        add_definitions(-D_ARM_ -D__arm__ -DWIN32)
         if(SARCH STREQUAL "omap-zoom2")
             add_definitions(-D_ZOOM2_)
         endif()
