@@ -35,6 +35,7 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 
 #define NTOS_MODE_USER
 #include <ndk/kefuncs.h>
+#include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/rtltypes.h>

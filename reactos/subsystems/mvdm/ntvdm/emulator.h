@@ -71,10 +71,6 @@ BCD_TO_BINARY(USHORT Value)
     return Result;
 }
 
-/* System I/O ports */
-#define CONTROL_SYSTEM_PORT61H  0x61
-
-
 enum
 {
     EMULATOR_EXCEPTION_DIVISION_BY_ZERO,

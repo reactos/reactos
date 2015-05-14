@@ -201,7 +201,7 @@ static VOID WINAPI PS2WritePort(USHORT Port, BYTE Data)
             {
                 /* Stop the VDM */
                 EmulatorTerminate();
-                break;
+                return;
             }
         }
     }
@@ -230,6 +230,7 @@ static VOID WINAPI PS2WritePort(USHORT Port, BYTE Data)
                     {
                         /* CPU disabled - Stop the VDM */
                         EmulatorTerminate();
+                        return;
                     }
 
                     /* Update the A20 line setting */

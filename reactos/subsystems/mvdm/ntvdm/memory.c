@@ -14,9 +14,6 @@
 #include "emulator.h"
 #include "memory.h"
 
-/* Extra PSDK/NDK Headers */
-#include <ndk/mmfuncs.h>
-
 /* PRIVATE VARIABLES **********************************************************/
 
 typedef struct _MEM_HOOK

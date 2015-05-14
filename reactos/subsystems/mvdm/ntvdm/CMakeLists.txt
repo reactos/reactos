@@ -24,6 +24,7 @@ list(APPEND SOURCE
     hardware/mouse.c
     hardware/pic.c
     hardware/pit.c
+    hardware/ppi.c
     hardware/ps2.c
     hardware/sound/speaker.c
     hardware/video/vga.c

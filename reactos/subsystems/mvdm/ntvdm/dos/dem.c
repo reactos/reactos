@@ -78,6 +78,7 @@ Quit:
             {
                 /* We failed everything, stop the VDM */
                 EmulatorTerminate();
+                return;
             }
 
             break;

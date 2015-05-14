@@ -542,7 +542,8 @@ Cleanup:
 
     /* Quit the VDM */
     DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
-
+    /* Some VDDs rely on the fact that NTVDM calls ExitProcess on Windows */
+    ExitProcess(0);
     return 0;
 }
 

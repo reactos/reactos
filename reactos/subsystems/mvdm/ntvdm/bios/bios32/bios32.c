@@ -454,7 +454,6 @@ static VOID WINAPI BiosRomBasic(LPWORD Stack)
 
     /* Stop the VDM */
     EmulatorTerminate();
-    return;
 }
 
 

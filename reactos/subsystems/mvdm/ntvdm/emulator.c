@@ -28,9 +28,10 @@
 #include "hardware/keyboard.h"
 #include "hardware/mouse.h"
 #include "hardware/pic.h"
+#include "hardware/pit.h"
+#include "hardware/ppi.h"
 #include "hardware/ps2.h"
 #include "hardware/sound/speaker.h"
-#include "hardware/pit.h"
 #include "hardware/video/vga.h"
 
 #include "vddsup.h"
@@ -41,8 +42,7 @@
 LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
 
-static BOOLEAN A20Line   = FALSE;
-static BYTE Port61hState = 0x00;
+static BOOLEAN A20Line = FALSE;
 
 static HANDLE InputThread = NULL;
 
@@ -149,7 +149,6 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
 
     /* Stop the VDM */
     EmulatorTerminate();
-    return;
 }
 
 VOID EmulatorTerminate(VOID)
@@ -179,36 +178,6 @@ static VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)
 {
     DPRINT1("NTVDM: BOP_DEBUGGER\n");
     DebugBreak();
-}
-
-static BYTE WINAPI Port61hRead(USHORT Port)
-{
-    return Port61hState;
-}
-
-static VOID WINAPI Port61hWrite(USHORT Port, BYTE Data)
-{
-    // BOOLEAN SpeakerStateChange = FALSE;
-    BYTE OldPort61hState = Port61hState;
-
-    /* Only the four lowest bytes can be written */
-    Port61hState = (Port61hState & 0xF0) | (Data & 0x0F);
-
-    if ((OldPort61hState ^ Port61hState) & 0x01)
-    {
-        DPRINT("PIT 2 Gate %s\n", Port61hState & 0x01 ? "on" : "off");
-        PitSetGate(2, !!(Port61hState & 0x01));
-        // SpeakerStateChange = TRUE;
-    }
-
-    if ((OldPort61hState ^ Port61hState) & 0x02)
-    {
-        /* There were some change for the speaker... */
-        DPRINT("Speaker %s\n", Port61hState & 0x02 ? "on" : "off");
-        // SpeakerStateChange = TRUE;
-    }
-    // if (SpeakerStateChange) SpeakerChange(Port61hState);
-    SpeakerChange(Port61hState);
 }
 
 static VOID WINAPI PitChan0Out(LPVOID Param, BOOLEAN State)
@@ -466,21 +435,18 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     /* Initialize DMA */
     DmaInitialize();
 
-    /* Initialize the PIC, the PIT, the CMOS and the PC Speaker */
+    /* Initialize PIC, PIT, CMOS, PC Speaker and PS/2 */
     PicInitialize();
-    PitInitialize();
-    CmosInitialize();
-    SpeakerInitialize();
 
-    /* Set output functions */
+    PitInitialize();
     PitSetOutFunction(0, NULL, PitChan0Out);
     PitSetOutFunction(1, NULL, PitChan1Out);
     PitSetOutFunction(2, NULL, PitChan2Out);
 
-    /* Register the I/O Ports */
-    RegisterIoPort(CONTROL_SYSTEM_PORT61H, Port61hRead, Port61hWrite);
+    CmosInitialize();
+    SpeakerInitialize();
+    PpiInitialize();
 
-    /* Initialize the PS/2 port */
     PS2Initialize();
 
     /* Initialize the keyboard and mouse and connect them to their PS/2 ports */
