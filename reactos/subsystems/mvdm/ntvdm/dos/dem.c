@@ -28,7 +28,7 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-/**/extern BYTE CurrentDrive;/**/
+extern PDOS_DATA DosData;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -575,7 +575,7 @@ demFileFindFirst(OUT PVOID  lpFindFileData,
     }
 
     /* Fill the block */
-    FindFileBlock->DriveLetter  = CurrentDrive + 'A';
+    FindFileBlock->DriveLetter  = DosData->Sda.CurrentDrive + 'A';
     FindFileBlock->AttribMask   = AttribMask;
     FindFileBlock->SearchHandle = SearchHandle;
     FindFileBlock->Attributes   = LOBYTE(FindData.dwFileAttributes);

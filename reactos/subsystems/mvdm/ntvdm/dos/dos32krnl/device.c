@@ -239,7 +239,7 @@ static VOID DosAddDriver(DWORD Driver)
 
 static VOID DosRemoveDriver(DWORD Driver)
 {
-    DWORD CurrentDriver = MAKELONG(FIELD_OFFSET(DOS_SYSVARS, NullDevice), DOS_DATA_SEGMENT);
+    DWORD CurrentDriver = MAKELONG(DOS_DATA_OFFSET(SysVars.NullDevice), DOS_DATA_SEGMENT);
 
     while (LOWORD(CurrentDriver) != 0xFFFF)
     {
@@ -325,7 +325,7 @@ PDOS_DEVICE_NODE DosGetDriverNode(DWORD Driver)
 
 PDOS_DEVICE_NODE DosGetDevice(LPCSTR DeviceName)
 {
-    DWORD CurrentDriver = MAKELONG(FIELD_OFFSET(DOS_SYSVARS, NullDevice), DOS_DATA_SEGMENT);
+    DWORD CurrentDriver = MAKELONG(DOS_DATA_OFFSET(SysVars.NullDevice), DOS_DATA_SEGMENT);
     ANSI_STRING DeviceNameString;
 
     RtlInitAnsiString(&DeviceNameString, DeviceName);

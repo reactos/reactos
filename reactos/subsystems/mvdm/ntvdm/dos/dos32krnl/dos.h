@@ -88,7 +88,7 @@ typedef struct _DOS_SYSVARS
     DWORD CurrentDirs;
     BYTE Reserved1[6];
     BYTE NumBlockDevices;
-    BYTE NumLocalDrives;
+    BYTE NumLocalDrives; // Set by LASTDRIVE
     DOS_DRIVER NullDevice;
     BYTE NullDriverRoutine[7];
 } DOS_SYSVARS, *PDOS_SYSVARS;
@@ -233,12 +233,11 @@ typedef struct _DOS_SDA
     DWORD PrevCallFrame;
 } DOS_SDA, *PDOS_SDA;
 
-/* This structure is only used for DOS_DATA_OFFSET calculations */
 typedef struct _DOS_DATA
 {
     DOS_SYSVARS SysVars;
     DOS_SDA Sda;
-    CHAR CurrentDirectories[NUM_DRIVES * DOS_DIR_LENGTH];
+    CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
     BYTE Sft[ANYSIZE_ARRAY];
 } DOS_DATA, *PDOS_DATA;
 

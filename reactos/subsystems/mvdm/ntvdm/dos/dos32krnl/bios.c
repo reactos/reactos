@@ -74,7 +74,7 @@ BOOLEAN DosCheckInput(VOID)
         PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
 
         if (!Node->InputStatusRoutine) return FALSE;
-        
+
         Result = Node->InputStatusRoutine(Node);
         return !(Result & DOS_DEVSTAT_BUSY);
     }
@@ -199,7 +199,7 @@ BOOLEAN DosBIOSInitialize(VOID)
     }
 
     /* Set the drive */
-    CurrentDrive = DosDirectory[0] - 'A';
+    Sda->CurrentDrive = DosDirectory[0] - 'A';
 
     /* Get the directory part of the path */
     Path = strchr(DosDirectory, '\\');
@@ -212,7 +212,7 @@ BOOLEAN DosBIOSInitialize(VOID)
     /* Set the directory */
     if (Path != NULL)
     {
-        strncpy(CurrentDirectories[CurrentDrive], Path, DOS_DIR_LENGTH);
+        strncpy(CurrentDirectories[Sda->CurrentDrive], Path, DOS_DIR_LENGTH);
     }
 
     /* Read CONFIG.SYS */

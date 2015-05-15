@@ -36,12 +36,11 @@
 
 CALLBACK16 DosContext;
 
-/*static*/ BYTE CurrentDrive = 0x00;
-static CHAR LastDrive = 'Z'; // The last drive can be redefined with the LASTDRIVE command. At the moment, set the real maximum possible, 'Z'.
-static PCHAR CurrentDirectories;
-
 /* PUBLIC VARIABLES ***********************************************************/
 
+/* Global DOS data area contained in guest memory */
+PDOS_DATA DosData;
+/* Easy accessors to useful DOS data area parts */
 PDOS_SYSVARS SysVars;
 PDOS_SDA Sda;
 
@@ -55,7 +54,7 @@ static BOOLEAN DosChangeDrive(BYTE Drive)
     CHAR DirectoryPath[DOS_CMDLINE_LENGTH + 1];
 
     /* Make sure the drive exists */
-    if (Drive > (LastDrive - 'A')) return FALSE;
+    if (Drive >= SysVars->NumLocalDrives) return FALSE;
 
     RtlZeroMemory(DirectoryPath, sizeof(DirectoryPath));
 
@@ -63,14 +62,14 @@ static BOOLEAN DosChangeDrive(BYTE Drive)
     snprintf(DirectoryPath,
              DOS_CMDLINE_LENGTH,
              "%c:\\%s",
-             Drive + 'A',
-             &CurrentDirectories[Drive * DOS_DIR_LENGTH]);
+             'A' + Drive,
+             DosData->CurrentDirectories[Drive]);
 
     /* Change the current directory of the process */
     if (!SetCurrentDirectoryA(DirectoryPath)) return FALSE;
 
     /* Set the current drive */
-    CurrentDrive = Drive;
+    Sda->CurrentDrive = Drive;
 
     /* Return success */
     return TRUE;
@@ -98,7 +97,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
         DriveNumber = RtlUpperChar(Directory[0]) - 'A';
 
         /* Make sure the drive exists */
-        if (DriveNumber > (LastDrive - 'A'))
+        if (DriveNumber >= SysVars->NumLocalDrives)
         {
             Sda->LastErrorCode = ERROR_PATH_NOT_FOUND;
             return FALSE;
@@ -107,7 +106,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     else
     {
         /* Keep the current drive number */
-        DriveNumber = CurrentDrive;
+        DriveNumber = Sda->CurrentDrive;
     }
 
     /* Get the file attributes */
@@ -122,7 +121,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     }
 
     /* Check if this is the current drive */
-    if (DriveNumber == CurrentDrive)
+    if (DriveNumber == Sda->CurrentDrive)
     {
         /* Change the directory */
         if (!SetCurrentDirectoryA(Directory))
@@ -131,7 +130,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
             return FALSE;
         }
     }
-    
+
     /* Get the (possibly new) current directory (needed if we specified a relative directory) */
     if (!GetCurrentDirectoryA(sizeof(CurrentDirectory), CurrentDirectory))
     {
@@ -157,11 +156,11 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     /* Set the directory for the drive */
     if (Path != NULL)
     {
-        strncpy(&CurrentDirectories[DriveNumber * DOS_DIR_LENGTH], Path, DOS_DIR_LENGTH);
+        strncpy(DosData->CurrentDirectories[DriveNumber], Path, DOS_DIR_LENGTH);
     }
     else
     {
-        CurrentDirectories[DriveNumber * DOS_DIR_LENGTH] = '\0';
+        DosData->CurrentDirectories[DriveNumber][0] = '\0';
     }
 
     /* Return success */
@@ -198,8 +197,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
     SYSTEMTIME SystemTime;
     PCHAR String;
     PDOS_INPUT_BUFFER InputBuffer;
-    PDOS_COUNTRY_CODE_BUFFER CountryCodeBuffer;
-    INT Return;
 
     Sda->InDos++;
 
@@ -487,7 +484,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x0E:
         {
             DosChangeDrive(getDL());
-            setAL(LastDrive - 'A' + 1);
+            setAL(SysVars->NumLocalDrives);
             break;
         }
 
@@ -510,7 +507,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get Default Drive */
         case 0x19:
         {
-            setAL(CurrentDrive);
+            setAL(Sda->CurrentDrive);
             break;
         }
 
@@ -582,8 +579,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             PCHAR FileName = (PCHAR)SEG_OFF_TO_PTR(getDS(), getSI());
             PDOS_FCB Fcb = (PDOS_FCB)SEG_OFF_TO_PTR(getES(), getDI());
             BYTE Options = getAL();
-            INT i;
             CHAR FillChar = ' ';
+            UINT i;
 
             if (FileName[1] == ':')
             {
@@ -596,7 +593,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else
             {
                 /* No drive number specified */
-                if (Options & (1 << 1)) Fcb->DriveNumber = CurrentDrive + 1;
+                if (Options & (1 << 1)) Fcb->DriveNumber = Sda->CurrentDrive + 1;
                 else Fcb->DriveNumber = 0;
             }
 
@@ -811,13 +808,13 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get Free Disk Space */
         case 0x36:
         {
-            CHAR RootPath[3] = "?:\\";
+            CHAR RootPath[] = "?:\\";
             DWORD SectorsPerCluster;
             DWORD BytesPerSector;
             DWORD NumberOfFreeClusters;
             DWORD TotalNumberOfClusters;
 
-            if (getDL() == 0) RootPath[0] = 'A' + CurrentDrive;
+            if (getDL() == 0x00) RootPath[0] = 'A' + Sda->CurrentDrive;
             else RootPath[0] = 'A' + getDL() - 1;
 
             if (GetDiskFreeSpaceA(RootPath,
@@ -898,14 +895,16 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get/Set Country-dependent Information */
         case 0x38:
         {
-            CountryCodeBuffer = (PDOS_COUNTRY_CODE_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
+            INT Return;
+            PDOS_COUNTRY_CODE_BUFFER CountryCodeBuffer =
+                (PDOS_COUNTRY_CODE_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
 
             if (getAL() == 0x00)
             {
                 /* Get */
-                Return = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IDATE,
-                                       &CountryCodeBuffer->TimeFormat,
-                                       sizeof(CountryCodeBuffer->TimeFormat) / sizeof(TCHAR));
+                Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_IDATE,
+                                        &CountryCodeBuffer->TimeFormat,
+                                        sizeof(CountryCodeBuffer->TimeFormat));
                 if (Return == 0)
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
@@ -913,9 +912,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                Return = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SCURRENCY,
-                                       &CountryCodeBuffer->CurrencySymbol,
-                                       sizeof(CountryCodeBuffer->CurrencySymbol) / sizeof(TCHAR));
+                Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SCURRENCY,
+                                        &CountryCodeBuffer->CurrencySymbol,
+                                        sizeof(CountryCodeBuffer->CurrencySymbol));
                 if (Return == 0)
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
@@ -923,9 +922,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                Return = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND,
-                                       &CountryCodeBuffer->ThousandSep,
-                                       sizeof(CountryCodeBuffer->ThousandSep) / sizeof(TCHAR));
+                Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND,
+                                        &CountryCodeBuffer->ThousandSep,
+                                        sizeof(CountryCodeBuffer->ThousandSep));
                 if (Return == 0)
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
@@ -933,9 +932,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                Return = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL,
-                                       &CountryCodeBuffer->DecimalSep,
-                                       sizeof(CountryCodeBuffer->DecimalSep) / sizeof(TCHAR));
+                Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL,
+                                        &CountryCodeBuffer->DecimalSep,
+                                        sizeof(CountryCodeBuffer->DecimalSep));
                 if (Return == 0)
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
@@ -1278,7 +1277,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             /* Get the real drive number */
             if (DriveNumber == 0)
             {
-                DriveNumber = CurrentDrive;
+                DriveNumber = Sda->CurrentDrive;
             }
             else
             {
@@ -1286,13 +1285,13 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 DriveNumber--;
             }
 
-            if (DriveNumber <= LastDrive - 'A')
+            if (DriveNumber < SysVars->NumLocalDrives)
             {
                 /*
                  * Copy the current directory into the target buffer.
                  * It doesn't contain the drive letter and the backslash.
                  */
-                strncpy(String, &CurrentDirectories[DriveNumber * DOS_DIR_LENGTH], DOS_DIR_LENGTH);
+                strncpy(String, DosData->CurrentDirectories[DriveNumber], DOS_DIR_LENGTH);
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 setAX(0x0100); // Undocumented, see Ralf Brown: http://www.ctyme.com/intr/rb-2933.htm
             }
@@ -1499,7 +1498,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             /* Return the DOS "list of lists" in ES:BX */
             setES(DOS_DATA_SEGMENT);
-            setBX(FIELD_OFFSET(DOS_SYSVARS, FirstDpb));
+            setBX(DOS_DATA_OFFSET(SysVars.FirstDpb));
 
             break;
         }
@@ -1933,7 +1932,7 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
 
             break;
         }
-        
+
         default:
         {
             DPRINT1("DOS Internal System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
@@ -1969,12 +1968,36 @@ BOOLEAN DosKRNLInitialize(VOID)
     FILE *Stream;
     WCHAR Buffer[256];
 
-    /* Get a pointer to the current directory buffer */
-    CurrentDirectories = (PCHAR)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT,
-                                               DOS_DATA_OFFSET(CurrentDirectories));
+    /* Initialize the global DOS data area */
+    DosData = (PDOS_DATA)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, 0x0000);
+    RtlZeroMemory(DosData, sizeof(*DosData));
 
-    /* Clear the current directory buffer */
-    RtlZeroMemory(CurrentDirectories, NUM_DRIVES * DOS_DIR_LENGTH * sizeof(CHAR));
+    /* Initialize the list of lists */
+    SysVars = &DosData->SysVars;
+    RtlZeroMemory(SysVars, sizeof(*SysVars));
+    SysVars->FirstMcb = FIRST_MCB_SEGMENT;
+    SysVars->FirstSft = MAKELONG(DOS_DATA_OFFSET(Sft), DOS_DATA_SEGMENT);
+    SysVars->CurrentDirs = MAKELONG(DOS_DATA_OFFSET(CurrentDirectories),
+                                    DOS_DATA_SEGMENT);
+    /* The last drive can be redefined with the LASTDRIVE command. At the moment, set the real maximum possible, 'Z'. */
+    SysVars->NumLocalDrives = 'Z' - 'A' + 1;
+
+    /* Initialize the NUL device driver */
+    SysVars->NullDevice.Link = 0xFFFFFFFF;
+    SysVars->NullDevice.DeviceAttributes = DOS_DEVATTR_NUL | DOS_DEVATTR_CHARACTER;
+    SysVars->NullDevice.StrategyRoutine = FIELD_OFFSET(DOS_SYSVARS, NullDriverRoutine);
+    SysVars->NullDevice.InterruptRoutine = SysVars->NullDevice.StrategyRoutine + 6;
+    RtlFillMemory(SysVars->NullDevice.DeviceName,
+                  sizeof(SysVars->NullDevice.DeviceName),
+                  ' ');
+    RtlCopyMemory(SysVars->NullDevice.DeviceName, "NUL", strlen("NUL"));
+    RtlCopyMemory(SysVars->NullDriverRoutine,
+                  NullDriverRoutine,
+                  sizeof(NullDriverRoutine));
+
+    /* Initialize the swappable data area */
+    Sda = &DosData->Sda;
+    RtlZeroMemory(Sda, sizeof(*Sda));
 
     /* Get the current directory */
     if (!GetCurrentDirectoryA(sizeof(CurrentDirectory), CurrentDirectory))
@@ -1991,7 +2014,7 @@ BOOLEAN DosKRNLInitialize(VOID)
     }
 
     /* Set the drive */
-    CurrentDrive = RtlUpperChar(DosDirectory[0]) - 'A';
+    Sda->CurrentDrive = RtlUpperChar(DosDirectory[0]) - 'A';
 
     /* Get the directory part of the path */
     Path = strchr(DosDirectory, '\\');
@@ -2004,44 +2027,8 @@ BOOLEAN DosKRNLInitialize(VOID)
     /* Set the directory */
     if (Path != NULL)
     {
-        strncpy(&CurrentDirectories[CurrentDrive * DOS_DIR_LENGTH], Path, DOS_DIR_LENGTH);
+        strncpy(DosData->CurrentDirectories[Sda->CurrentDrive], Path, DOS_DIR_LENGTH);
     }
-
-    /* Read CONFIG.SYS */
-    Stream = _wfopen(DOS_CONFIG_PATH, L"r");
-    if (Stream != NULL)
-    {
-        while (fgetws(Buffer, 256, Stream))
-        {
-            // TODO: Parse the line
-        }
-        fclose(Stream);
-    }
-
-    /* Initialize the list of lists */
-    SysVars = (PDOS_SYSVARS)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, DOS_DATA_OFFSET(SysVars));
-    RtlZeroMemory(SysVars, sizeof(DOS_SYSVARS));
-    SysVars->FirstMcb = FIRST_MCB_SEGMENT;
-    SysVars->FirstSft = MAKELONG(DOS_DATA_OFFSET(Sft), DOS_DATA_SEGMENT);
-    SysVars->CurrentDirs = MAKELONG(DOS_DATA_OFFSET(CurrentDirectories),
-                                    DOS_DATA_SEGMENT);
-
-    /* Initialize the NUL device driver */
-    SysVars->NullDevice.Link = 0xFFFFFFFF;
-    SysVars->NullDevice.DeviceAttributes = DOS_DEVATTR_NUL | DOS_DEVATTR_CHARACTER;
-    SysVars->NullDevice.StrategyRoutine = FIELD_OFFSET(DOS_SYSVARS, NullDriverRoutine);
-    SysVars->NullDevice.InterruptRoutine = SysVars->NullDevice.StrategyRoutine + 6;
-    RtlFillMemory(SysVars->NullDevice.DeviceName,
-                  sizeof(SysVars->NullDevice.DeviceName),
-                  ' ');
-    RtlCopyMemory(SysVars->NullDevice.DeviceName, "NUL", strlen("NUL"));
-    RtlCopyMemory(SysVars->NullDriverRoutine,
-                  NullDriverRoutine,
-                  sizeof(NullDriverRoutine));
-
-    /* Initialize the swappable data area */
-    Sda = (PDOS_SDA)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, DOS_DATA_OFFSET(Sda));
-    RtlZeroMemory(Sda, sizeof(DOS_SDA));
 
     /* Set the current PSP to the system PSP */
     Sda->CurrentPsp = SYSTEM_PSP;
@@ -2058,6 +2045,17 @@ BOOLEAN DosKRNLInitialize(VOID)
     {
         /* Clear the file descriptor entry */
         RtlZeroMemory(&Sft->FileDescriptors[i], sizeof(DOS_FILE_DESCRIPTOR));
+    }
+
+    /* Read CONFIG.SYS */
+    Stream = _wfopen(DOS_CONFIG_PATH, L"r");
+    if (Stream != NULL)
+    {
+        while (fgetws(Buffer, 256, Stream))
+        {
+            // TODO: Parse the line
+        }
+        fclose(Stream);
     }
 
 #endif
