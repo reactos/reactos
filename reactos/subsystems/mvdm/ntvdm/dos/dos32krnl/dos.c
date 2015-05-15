@@ -62,7 +62,7 @@ static BOOLEAN DosChangeDrive(BYTE Drive)
     /* Find the path to the new current directory */
     snprintf(DirectoryPath,
              DOS_CMDLINE_LENGTH,
-             "%c\\%s",
+             "%c:\\%s",
              Drive + 'A',
              &CurrentDirectories[Drive * DOS_DIR_LENGTH]);
 
@@ -1974,7 +1974,7 @@ BOOLEAN DosKRNLInitialize(VOID)
                                                DOS_DATA_OFFSET(CurrentDirectories));
 
     /* Clear the current directory buffer */
-    RtlZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
+    RtlZeroMemory(CurrentDirectories, NUM_DRIVES * DOS_DIR_LENGTH * sizeof(CHAR));
 
     /* Get the current directory */
     if (!GetCurrentDirectoryA(sizeof(CurrentDirectory), CurrentDirectory))
