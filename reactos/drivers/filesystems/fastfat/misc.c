@@ -85,8 +85,6 @@ VfatLockControl(
     Status = FsRtlProcessFileLock(&Fcb->FileLock,
                                   IrpContext->Irp,
                                   NULL);
-
-    VfatFreeIrpContext(IrpContext);
     return Status;
 }
 
