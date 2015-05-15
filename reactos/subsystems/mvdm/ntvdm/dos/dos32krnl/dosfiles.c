@@ -936,6 +936,52 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
             return TRUE;
         }
 
+        /* Get Input Status */
+        case 0x06:
+        {
+            if (Node == NULL)
+            {
+                Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
+                return FALSE;
+            }
+
+            if (Node->InputStatusRoutine && Node->InputStatusRoutine(Node))
+            {
+                /* Set the length to 0xFF to mark that it's ready */
+                *Length = 0xFF;
+            }
+            else
+            {
+                /* Not ready */
+                *Length = 0;
+            }
+
+            return TRUE;
+        }
+
+        /* Get Output Status */
+        case 0x07:
+        {
+            if (Node == NULL)
+            {
+                Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
+                return FALSE;
+            }
+
+            if (Node->OutputStatusRoutine && Node->OutputStatusRoutine(Node))
+            {
+                /* Set the length to 0xFF to mark that it's ready */
+                *Length = 0xFF;
+            }
+            else
+            {
+                /* Not ready */
+                *Length = 0;
+            }
+
+            return TRUE;
+        }
+
         /* Unsupported control code */
         default:
         {
