@@ -52,16 +52,22 @@ BOOLEAN DoEcho = FALSE;
 
 static BOOLEAN DosChangeDrive(BYTE Drive)
 {
-    WCHAR DirectoryPath[DOS_CMDLINE_LENGTH];
+    CHAR DirectoryPath[DOS_CMDLINE_LENGTH + 1];
 
     /* Make sure the drive exists */
     if (Drive > (LastDrive - 'A')) return FALSE;
 
+    RtlZeroMemory(DirectoryPath, sizeof(DirectoryPath));
+
     /* Find the path to the new current directory */
-    swprintf(DirectoryPath, L"%c\\%S", Drive + 'A', &CurrentDirectories[Drive * DOS_DIR_LENGTH]);
+    snprintf(DirectoryPath,
+             DOS_CMDLINE_LENGTH,
+             "%c\\%s",
+             Drive + 'A',
+             &CurrentDirectories[Drive * DOS_DIR_LENGTH]);
 
     /* Change the current directory of the process */
-    if (!SetCurrentDirectory(DirectoryPath)) return FALSE;
+    if (!SetCurrentDirectoryA(DirectoryPath)) return FALSE;
 
     /* Set the current drive */
     CurrentDrive = Drive;
@@ -2013,7 +2019,7 @@ BOOLEAN DosKRNLInitialize(VOID)
     }
 
     /* Initialize the list of lists */
-    SysVars = (PDOS_SYSVARS)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, 0);
+    SysVars = (PDOS_SYSVARS)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, DOS_DATA_OFFSET(SysVars));
     RtlZeroMemory(SysVars, sizeof(DOS_SYSVARS));
     SysVars->FirstMcb = FIRST_MCB_SEGMENT;
     SysVars->FirstSft = MAKELONG(DOS_DATA_OFFSET(Sft), DOS_DATA_SEGMENT);
@@ -2034,7 +2040,7 @@ BOOLEAN DosKRNLInitialize(VOID)
                   sizeof(NullDriverRoutine));
 
     /* Initialize the swappable data area */
-    Sda = (PDOS_SDA)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, sizeof(DOS_SYSVARS));
+    Sda = (PDOS_SDA)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, DOS_DATA_OFFSET(Sda));
     RtlZeroMemory(Sda, sizeof(DOS_SDA));
 
     /* Set the current PSP to the system PSP */
