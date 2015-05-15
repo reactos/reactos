@@ -155,12 +155,7 @@ UserProfileDlgProc(HWND hwndDlg,
 
             if (nmhdr->idFrom == IDC_USERACCOUNT_LINK && nmhdr->code == NM_CLICK)
             {
-                ShellExecute(hwndDlg,
-                             TEXT("open"),
-                             TEXT("rundll32.exe"),
-                             TEXT("shell32.dll, Control_RunDLL usrmgr.cpl"),
-                             NULL,
-                             SW_SHOWNORMAL);
+                ShellExecuteW(hwndDlg, NULL, L"usrmgr.cpl", NULL, NULL, 0);
             }
             break;
         }
