@@ -903,7 +903,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             {
                 /* Get */
                 Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_IDATE,
-                                        &CountryCodeBuffer->TimeFormat,
+                                        (LPSTR)&CountryCodeBuffer->TimeFormat,
                                         sizeof(CountryCodeBuffer->TimeFormat));
                 if (Return == 0)
                 {
@@ -913,7 +913,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 }
 
                 Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SCURRENCY,
-                                        &CountryCodeBuffer->CurrencySymbol,
+                                        (LPSTR)&CountryCodeBuffer->CurrencySymbol,
                                         sizeof(CountryCodeBuffer->CurrencySymbol));
                 if (Return == 0)
                 {
@@ -923,7 +923,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 }
 
                 Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND,
-                                        &CountryCodeBuffer->ThousandSep,
+                                        (LPSTR)&CountryCodeBuffer->ThousandSep,
                                         sizeof(CountryCodeBuffer->ThousandSep));
                 if (Return == 0)
                 {
@@ -933,7 +933,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 }
 
                 Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL,
-                                        &CountryCodeBuffer->DecimalSep,
+                                        (LPSTR)&CountryCodeBuffer->DecimalSep,
                                         sizeof(CountryCodeBuffer->DecimalSep));
                 if (Return == 0)
                 {
