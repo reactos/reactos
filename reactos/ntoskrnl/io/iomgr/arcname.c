@@ -253,7 +253,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     for (DiskNumber = 0, EnabledDisks = 0; DiskNumber < CdRomCount; DiskNumber++)
     {
         /* Check if we have an enabled disk */
-        if (SymbolicLinkList && *SymbolicLinkList != UNICODE_NULL)
+        if (lSymbolicLinkList && *lSymbolicLinkList != UNICODE_NULL)
         {
             /* Create its device name using first symbolic link */
             RtlInitUnicodeString(&DeviceStringW, lSymbolicLinkList);
