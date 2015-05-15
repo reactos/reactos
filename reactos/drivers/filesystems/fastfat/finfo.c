@@ -1381,7 +1381,7 @@ VfatQueryInformation(
         if (!ExAcquireResourceSharedLite(&FCB->MainResource,
                                          (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
         {
-            return VfatQueueRequest(IrpContext);
+            return VfatMarkIrpContextForQueue(IrpContext);
         }
     }
 
@@ -1459,14 +1459,11 @@ VfatQueryInformation(
         ExReleaseResourceLite(&FCB->MainResource);
     }
 
-    IrpContext->Irp->IoStatus.Status = Status;
     if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW)
         IrpContext->Irp->IoStatus.Information =
             IrpContext->Stack->Parameters.QueryFile.Length - BufferLength;
     else
         IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
 
     return Status;
 }
@@ -1510,10 +1507,7 @@ VfatSetInformation(
                                   (PLARGE_INTEGER)SystemBuffer))
         {
             DPRINT("Couldn't set file size!\n");
-            IrpContext->Irp->IoStatus.Status = STATUS_USER_MAPPED_FILE;
             IrpContext->Irp->IoStatus.Information = 0;
-            IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-            VfatFreeIrpContext(IrpContext);
             return STATUS_USER_MAPPED_FILE;
         }
         DPRINT("Can set file size\n");
@@ -1524,7 +1518,7 @@ VfatSetInformation(
         if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
                                             (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
         {
-            return VfatQueueRequest(IrpContext);
+            return VfatMarkIrpContextForQueue(IrpContext);
         }
     }
 
@@ -1537,7 +1531,8 @@ VfatSetInformation(
             {
                 ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
             }
-            return VfatQueueRequest(IrpContext);
+
+            return VfatMarkIrpContextForQueue(IrpContext);
         }
     }
 
@@ -1592,11 +1587,7 @@ VfatSetInformation(
         ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
     }
 
-    IrpContext->Irp->IoStatus.Status = Status;
     IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
-
     return Status;
 }
 

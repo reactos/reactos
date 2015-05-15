@@ -572,9 +572,9 @@ VfatRead(
         PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
         IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
         IoSkipCurrentIrpStackLocation(IrpContext->Irp);
+        IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
         DPRINT("Read from page file, disk offset %I64x\n", IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart);
         Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
-        VfatFreeIrpContext(IrpContext);
         return Status;
     }
 
@@ -740,13 +740,7 @@ ByeBye:
         Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
         if (NT_SUCCESS(Status))
         {
-            Status = VfatQueueRequest(IrpContext);
-        }
-        else
-        {
-            IrpContext->Irp->IoStatus.Status = Status;
-            IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-            VfatFreeIrpContext(IrpContext);
+            Status = VfatMarkIrpContextForQueue(IrpContext);
         }
     }
     else
@@ -760,9 +754,8 @@ ByeBye:
                 ByteOffset.QuadPart + IrpContext->Irp->IoStatus.Information;
         }
 
-        IoCompleteRequest(IrpContext->Irp,
-                          (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
-        VfatFreeIrpContext(IrpContext);
+        if (NT_SUCCESS(Status))
+            IrpContext->PriorityBoost = IO_DISK_INCREMENT;
     }
     DPRINT("%x\n", Status);
     return Status;
@@ -805,9 +798,9 @@ VfatWrite(
         PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
         IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
         IoSkipCurrentIrpStackLocation(IrpContext->Irp);
+        IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
         DPRINT("Write to page file, disk offset %I64x\n", IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart);
         Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
-        VfatFreeIrpContext(IrpContext);
         return Status;
     }
 
@@ -1074,13 +1067,7 @@ ByeBye:
         Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoReadAccess);
         if (NT_SUCCESS(Status))
         {
-            Status = VfatQueueRequest(IrpContext);
-        }
-        else
-        {
-            IrpContext->Irp->IoStatus.Status = Status;
-            IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-            VfatFreeIrpContext(IrpContext);
+            Status = VfatMarkIrpContextForQueue(IrpContext);
         }
     }
     else
@@ -1093,9 +1080,8 @@ ByeBye:
                 ByteOffset.QuadPart + IrpContext->Irp->IoStatus.Information;
         }
 
-        IoCompleteRequest(IrpContext->Irp,
-                          (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
-        VfatFreeIrpContext(IrpContext);
+        if (NT_SUCCESS(Status))
+            IrpContext->PriorityBoost = IO_DISK_INCREMENT;
     }
     DPRINT("%x\n", Status);
     return Status;

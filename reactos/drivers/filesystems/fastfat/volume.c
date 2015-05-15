@@ -363,7 +363,8 @@ VfatQueryVolumeInformation(
     if (!ExAcquireResourceSharedLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
                                      (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
     {
-        return VfatQueueRequest(IrpContext);
+        DPRINT1("DirResource failed!\n");
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     /* INITIALIZATION */
@@ -405,14 +406,12 @@ VfatQueryVolumeInformation(
     }
 
     ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
-    IrpContext->Irp->IoStatus.Status = RC;
+
     if (NT_SUCCESS(RC))
         IrpContext->Irp->IoStatus.Information =
             IrpContext->Stack->Parameters.QueryVolume.Length - BufferLength;
     else
         IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
 
     return RC;
 }
@@ -439,7 +438,7 @@ VfatSetVolumeInformation(
     if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
                                         (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
     {
-        return VfatQueueRequest(IrpContext);
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     FsInformationClass = Stack->Parameters.SetVolume.FsInformationClass;
@@ -462,10 +461,7 @@ VfatSetVolumeInformation(
     }
 
     ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
-    IrpContext->Irp->IoStatus.Status = Status;
     IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
 
     return Status;
 }

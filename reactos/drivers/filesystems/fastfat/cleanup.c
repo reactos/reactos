@@ -152,14 +152,14 @@ VfatCleanup(
 
     if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_SUCCESS;
     }
 
     if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
                                         (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
     {
-        return VfatQueueRequest(IrpContext);
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     Status = VfatCleanupFile(IrpContext);
@@ -168,15 +168,10 @@ VfatCleanup(
 
     if (Status == STATUS_PENDING)
     {
-        return VfatQueueRequest(IrpContext);
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
-ByeBye:
-    IrpContext->Irp->IoStatus.Status = Status;
     IrpContext->Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
     return Status;
 }
 

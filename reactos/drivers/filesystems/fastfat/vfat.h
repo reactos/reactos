@@ -446,8 +446,10 @@ typedef struct __DOSDATE
 }
 DOSDATE, *PDOSDATE;
 
-#define IRPCONTEXT_CANWAIT	    0x0001
-#define IRPCONTEXT_PENDINGRETURNED  0x0002
+#define IRPCONTEXT_CANWAIT          0x0001
+#define IRPCONTEXT_COMPLETE         0x0002
+#define IRPCONTEXT_QUEUE            0x0004
+#define IRPCONTEXT_PENDINGRETURNED  0x0008
 
 typedef struct
 {
@@ -462,6 +464,7 @@ typedef struct
     PFILE_OBJECT FileObject;
     ULONG RefCount;
     KEVENT Event;
+    CCHAR PriorityBoost;
 } VFAT_IRP_CONTEXT, *PVFAT_IRP_CONTEXT;
 
 typedef struct _VFAT_DIRENTRY_CONTEXT
@@ -480,6 +483,18 @@ typedef struct _VFAT_MOVE_CONTEXT
     USHORT CreationDate;
     USHORT CreationTime;
 } VFAT_MOVE_CONTEXT, *PVFAT_MOVE_CONTEXT;
+
+FORCEINLINE
+NTSTATUS
+VfatMarkIrpContextForQueue(PVFAT_IRP_CONTEXT IrpContext)
+{
+    PULONG Flags = &IrpContext->Flags;
+
+    *Flags &= ~IRPCONTEXT_COMPLETE;
+    *Flags |= IRPCONTEXT_QUEUE;
+
+    return STATUS_PENDING;
+}
 
 /* blockdev.c */
 
@@ -901,19 +916,6 @@ DriverEntry(
 
 
 /* misc.c */
-
-NTSTATUS
-VfatQueueRequest(
-    PVFAT_IRP_CONTEXT IrpContext);
-
-PVFAT_IRP_CONTEXT
-VfatAllocateIrpContext(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp);
-
-VOID
-VfatFreeIrpContext(
-    PVFAT_IRP_CONTEXT IrpContext);
 
 DRIVER_DISPATCH
 VfatBuildRequest;

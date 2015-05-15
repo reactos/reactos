@@ -1066,9 +1066,5 @@ VfatFileSystemControl(
             break;
     }
 
-    IrpContext->Irp->IoStatus.Status = Status;
-
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
     return Status;
 }

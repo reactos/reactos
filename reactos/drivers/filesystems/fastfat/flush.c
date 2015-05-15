@@ -150,8 +150,8 @@ VfatFlush(
     /* This request is not allowed on the main device object. */
     if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-        goto ByeBye;
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_DEVICE_REQUEST;
     }
 
     Fcb = (PVFATFCB)IrpContext->FileObject->FsContext;
@@ -170,12 +170,7 @@ VfatFlush(
         ExReleaseResourceLite (&Fcb->MainResource);
     }
 
-ByeBye:
-    IrpContext->Irp->IoStatus.Status = Status;
     IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
-
     return Status;
 }
 

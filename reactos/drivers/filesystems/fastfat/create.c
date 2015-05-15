@@ -941,15 +941,14 @@ VfatCreate(
         /* DeviceObject represents FileSystem instead of logical volume */
         DPRINT ("FsdCreate called with file system\n");
         IrpContext->Irp->IoStatus.Information = FILE_OPENED;
-        IrpContext->Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(IrpContext->Irp, IO_DISK_INCREMENT);
-        VfatFreeIrpContext(IrpContext);
+        IrpContext->PriorityBoost = IO_DISK_INCREMENT;
+
         return STATUS_SUCCESS;
     }
 
     if (!(IrpContext->Flags & IRPCONTEXT_CANWAIT))
     {
-        return(VfatQueueRequest(IrpContext));
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     IrpContext->Irp->IoStatus.Information = 0;
@@ -957,10 +956,9 @@ VfatCreate(
     Status = VfatCreateFile(IrpContext->DeviceObject, IrpContext->Irp);
     ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
 
-    IrpContext->Irp->IoStatus.Status = Status;
-    IoCompleteRequest(IrpContext->Irp,
-                      (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
-    VfatFreeIrpContext(IrpContext);
+    if (NT_SUCCESS(Status))
+        IrpContext->PriorityBoost = IO_DISK_INCREMENT;
+
     return Status;
 }
 

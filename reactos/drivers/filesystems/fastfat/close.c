@@ -83,8 +83,8 @@ VfatClose(
     if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {
         DPRINT("Closing file system\n");
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_SUCCESS;
     }
 #if 0
     /* There occurs a dead look at the call to CcRosDeleteFileCache/ObDereferenceObject/VfatClose
@@ -94,17 +94,13 @@ VfatClose(
     if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, TRUE))
 #endif
     {
-        return VfatQueueRequest(IrpContext);
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     Status = VfatCloseFile(IrpContext->DeviceExt, IrpContext->FileObject);
     ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
 
-ByeBye:
-    IrpContext->Irp->IoStatus.Status = Status;
     IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
 
     return Status;
 }

@@ -508,7 +508,7 @@ DoQuery(
                                         (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
     {
         ExReleaseResourceLite(&pFcb->MainResource);
-        return VfatQueueRequest(IrpContext);
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     while ((Status == STATUS_SUCCESS) && (BufferLength > 0))
@@ -592,29 +592,28 @@ DoQuery(
     return Status;
 }
 
-NTSTATUS VfatNotifyChangeDirectory(PVFAT_IRP_CONTEXT * IrpContext)
+NTSTATUS VfatNotifyChangeDirectory(PVFAT_IRP_CONTEXT IrpContext)
 {
     PVCB pVcb;
     PVFATFCB pFcb;
     PIO_STACK_LOCATION Stack;
-    Stack = (*IrpContext)->Stack;
-    pVcb = (*IrpContext)->DeviceExt;
-    pFcb = (PVFATFCB) (*IrpContext)->FileObject->FsContext;
+    Stack = IrpContext->Stack;
+    pVcb = IrpContext->DeviceExt;
+    pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
  
     FsRtlNotifyFullChangeDirectory(pVcb->NotifySync,
                                    &(pVcb->NotifyList),
-                                   (*IrpContext)->FileObject->FsContext2,
+                                   IrpContext->FileObject->FsContext2,
                                    (PSTRING)&(pFcb->PathNameU),
                                    BooleanFlagOn(Stack->Flags, SL_WATCH_TREE),
                                    FALSE,
                                    Stack->Parameters.NotifyDirectory.CompletionFilter,
-                                   (*IrpContext)->Irp,
+                                   IrpContext->Irp,
                                    NULL,
                                    NULL);
 
-    /* We don't need the IRP context as we won't handle IRP completion */
-    VfatFreeIrpContext(*IrpContext);
-    *IrpContext = NULL;
+    /* We won't handle IRP completion */
+    IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
 
     return STATUS_PENDING;
 }
@@ -637,7 +636,7 @@ VfatDirectoryControl(
             break;
 
         case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-            Status = VfatNotifyChangeDirectory(&IrpContext);
+            Status = VfatNotifyChangeDirectory(IrpContext);
             break;
 
         default:
@@ -648,19 +647,9 @@ VfatDirectoryControl(
             break;
     }
 
-    if (Status == STATUS_PENDING)
+    if (Status == STATUS_PENDING && IrpContext->Flags & IRPCONTEXT_COMPLETE)
     {
-        /* Only queue if there's IRP context */
-        if (IrpContext)
-        {
-            Status = VfatQueueRequest(IrpContext);
-        }
-    }
-    else
-    {
-        IrpContext->Irp->IoStatus.Status = Status;
-        IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
-        VfatFreeIrpContext(IrpContext);
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     return Status;
