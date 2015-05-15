@@ -1393,15 +1393,21 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
         case VGA_INSTAT1_READ_COLOR:
         {
             BYTE Result = 0;
+            BOOLEAN Vsync = InVerticalRetrace;
+            BOOLEAN Hsync = InHorizontalRetrace;
 
             /* Reset the AC latch */
             VgaAcLatch = FALSE;
 
+            /* Reverse the polarity, if needed */
+            if (VgaMiscRegister & VGA_MISC_VSYNCP) Vsync = !Vsync;
+            if (VgaMiscRegister & VGA_MISC_HSYNCP) Hsync = !Hsync;
+
             /* Set a flag if there is a vertical or horizontal retrace */
-            if (InVerticalRetrace || InHorizontalRetrace) Result |= VGA_STAT_DD;
+            if (Vsync || Hsync) Result |= VGA_STAT_DD;
 
             /* Set an additional flag if there was a vertical retrace */
-            if (InVerticalRetrace) Result |= VGA_STAT_VRETRACE;
+            if (Vsync) Result |= VGA_STAT_VRETRACE;
 
             /* Clear the flags */
             InHorizontalRetrace = InVerticalRetrace = FALSE;
