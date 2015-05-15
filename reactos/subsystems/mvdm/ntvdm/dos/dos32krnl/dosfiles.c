@@ -939,21 +939,36 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
         /* Get Input Status */
         case 0x06:
         {
-            if (Node == NULL)
+            /* Check if this is a file or a device */
+            if (Node)
             {
-                Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
-                return FALSE;
-            }
+                /* Device*/
 
-            if (Node->InputStatusRoutine && Node->InputStatusRoutine(Node))
-            {
-                /* Set the length to 0xFF to mark that it's ready */
-                *Length = 0xFF;
+                if (Node->InputStatusRoutine && Node->InputStatusRoutine(Node))
+                {
+                    /* Set the length to 0xFF to mark that it's ready */
+                    *Length = 0xFF;
+                }
+                else
+                {
+                    /* Not ready */
+                    *Length = 0;
+                }
             }
             else
             {
-                /* Not ready */
-                *Length = 0;
+                /* File */
+
+                if (Descriptor->Position < Descriptor->Size)
+                {
+                    /* Set the length to 0xFF to mark that it's ready */
+                    *Length = 0xFF;
+                }
+                else
+                {
+                    /* Not ready */
+                    *Length = 0;
+                } 
             }
 
             return TRUE;
@@ -962,21 +977,26 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
         /* Get Output Status */
         case 0x07:
         {
-            if (Node == NULL)
+            /* Check if this is a file or a device */
+            if (Node)
             {
-                Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
-                return FALSE;
-            }
+                /* Device*/
 
-            if (Node->OutputStatusRoutine && Node->OutputStatusRoutine(Node))
-            {
-                /* Set the length to 0xFF to mark that it's ready */
-                *Length = 0xFF;
+                if (Node->OutputStatusRoutine && Node->OutputStatusRoutine(Node))
+                {
+                    /* Set the length to 0xFF to mark that it's ready */
+                    *Length = 0xFF;
+                }
+                else
+                {
+                    /* Not ready */
+                    *Length = 0;
+                }
             }
             else
             {
-                /* Not ready */
-                *Length = 0;
+                /* Files are always ready for output */
+                *Length = 0xFF;
             }
 
             return TRUE;
