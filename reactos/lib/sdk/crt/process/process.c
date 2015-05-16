@@ -152,13 +152,14 @@ argvtosT(const _TCHAR* const* argv, _TCHAR delim)
 static _TCHAR*
 valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
 {
-   va_list alist2 = alist;
+   va_list alist2;
    _TCHAR *ptr, *str;
    size_t len;
 
    if (arg0 == NULL)
       return NULL;
 
+   va_copy(alist2, alist);
    ptr = (_TCHAR*)arg0;
    len = 0;
    do
@@ -170,7 +171,10 @@ valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
 
    str = (_TCHAR*) malloc((len + 1) * sizeof(_TCHAR));
    if (str == NULL)
+   {
+      va_end(alist2);
       return NULL;
+   }
 
    ptr = str;
    do
@@ -184,6 +188,7 @@ valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
    while(arg0 != NULL);
    *ptr = 0;
 
+   va_end(alist2);
    return str;
 }
 
