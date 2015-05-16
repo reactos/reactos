@@ -551,7 +551,6 @@ _MiMapViewOfSegment(PMMSUPPORT AddressSpace,
                                 ViewSize,
                                 Protect,
                                 &MArea,
-                                FALSE,
                                 AllocationType,
                                 *BaseAddress ?
                                 PAGE_SIZE : MM_ALLOCATION_GRANULARITY);

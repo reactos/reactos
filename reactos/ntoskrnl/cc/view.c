@@ -595,7 +595,6 @@ CcRosMapVacb(
                                 VACB_MAPPING_GRANULARITY,
                                 PAGE_READWRITE,
                                 (PMEMORY_AREA*)&Vacb->MemoryArea,
-                                FALSE,
                                 0,
                                 PAGE_SIZE);
     MmUnlockAddressSpace(MmGetKernelAddressSpace());

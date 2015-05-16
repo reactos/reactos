@@ -57,7 +57,6 @@ MiInitSystemMemoryAreas()
                                 MmBootImageSize,
                                 PAGE_EXECUTE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -72,7 +71,6 @@ MiInitSystemMemoryAreas()
                                 PTE_TOP - PTE_BASE + 1,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -87,7 +85,6 @@ MiInitSystemMemoryAreas()
                                 HYPER_SPACE_END - HYPER_SPACE + 1,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -102,7 +99,6 @@ MiInitSystemMemoryAreas()
                                 (MxPfnAllocation << PAGE_SHIFT),
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -117,7 +113,6 @@ MiInitSystemMemoryAreas()
                                 MmSizeOfNonPagedPoolInBytes,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -132,7 +127,6 @@ MiInitSystemMemoryAreas()
                                 MiNonPagedSystemSize,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -147,7 +141,6 @@ MiInitSystemMemoryAreas()
                                 MmSystemViewSize,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -163,7 +156,6 @@ MiInitSystemMemoryAreas()
                                 (ULONG_PTR)MmSessionBase,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -178,7 +170,6 @@ MiInitSystemMemoryAreas()
                                 MmSizeOfPagedPoolInBytes,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -193,7 +184,6 @@ MiInitSystemMemoryAreas()
                                 PAGE_SIZE * KeNumberProcessors,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -208,7 +198,6 @@ MiInitSystemMemoryAreas()
                                 PAGE_SIZE,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -223,7 +212,6 @@ MiInitSystemMemoryAreas()
                                 PAGE_SIZE,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
@@ -239,7 +227,6 @@ MiInitSystemMemoryAreas()
                                 PAGE_SIZE * 2,
                                 PAGE_READWRITE,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);

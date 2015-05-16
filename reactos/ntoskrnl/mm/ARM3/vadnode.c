@@ -146,13 +146,19 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
         PVOID AllocatedBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
 
         Size = ((Vad->EndingVpn + 1) - Vad->StartingVpn) << PAGE_SHIFT;
+
+        if (AllocatedBase == NULL)
+        {
+            AllocatedBase = (PVOID)(ULONG_PTR)1;
+            Size -= 1;
+        }
+
         Status = MmCreateMemoryArea(&Process->Vm,
                                     MEMORY_AREA_OWNED_BY_ARM3,
                                     &AllocatedBase,
                                     Size,
                                     PAGE_READWRITE,
                                     &MemoryArea,
-                                    TRUE,
                                     0,
                                     PAGE_SIZE);
         ASSERT(NT_SUCCESS(Status));

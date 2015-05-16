@@ -487,7 +487,6 @@ MmCreateMemoryArea(
     SIZE_T Length,
     ULONG Protection,
     PMEMORY_AREA *Result,
-    BOOLEAN FixedAddress,
     ULONG AllocationFlags,
     ULONG AllocationGranularity
 );

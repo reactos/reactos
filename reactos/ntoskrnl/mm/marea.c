@@ -923,7 +923,6 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
                    ULONG_PTR Length,
                    ULONG Protect,
                    PMEMORY_AREA *Result,
-                   BOOLEAN FixedAddress,
                    ULONG AllocationFlags,
                    ULONG Granularity)
 {
@@ -933,11 +932,11 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
     DPRINT("MmCreateMemoryArea(Type 0x%lx, BaseAddress %p, "
            "*BaseAddress %p, Length %p, AllocationFlags %x, "
-           "FixedAddress %x, Result %p)\n",
+           "Result %p)\n",
            Type, BaseAddress, *BaseAddress, Length, AllocationFlags,
-           FixedAddress, Result);
+           Result);
 
-    if ((*BaseAddress) == 0 && !FixedAddress)
+    if (*BaseAddress == 0)
     {
         tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, PAGE_SIZE);
         *BaseAddress = MmFindGap(AddressSpace,

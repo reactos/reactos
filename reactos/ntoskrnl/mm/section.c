@@ -3965,7 +3965,6 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
                                 ViewSize,
                                 Protect,
                                 &MArea,
-                                FALSE,
                                 AllocationType,
                                 Granularity);
     if (!NT_SUCCESS(Status))

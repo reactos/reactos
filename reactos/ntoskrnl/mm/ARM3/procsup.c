@@ -38,7 +38,6 @@ MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
                                 PAGE_SIZE,
                                 PAGE_READWRITE,
                                 &MemoryArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(NT_SUCCESS(Status));
