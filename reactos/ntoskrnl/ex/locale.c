@@ -35,7 +35,7 @@ ExpGetCurrentUserUILanguage(IN PWSTR MuiName,
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName =
-        RTL_CONSTANT_STRING(L"Control Panel\\International");
+        RTL_CONSTANT_STRING(L"Control Panel\\Desktop");
     UNICODE_STRING ValueName;
     UNICODE_STRING ValueString;
     ULONG ValueLength;
