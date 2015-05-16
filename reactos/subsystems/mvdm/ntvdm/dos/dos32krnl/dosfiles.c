@@ -944,7 +944,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
             {
                 /* Device*/
 
-                if (Node->InputStatusRoutine && Node->InputStatusRoutine(Node))
+                if (!Node->InputStatusRoutine || Node->InputStatusRoutine(Node))
                 {
                     /* Set the length to 0xFF to mark that it's ready */
                     *Length = 0xFF;
@@ -982,7 +982,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
             {
                 /* Device*/
 
-                if (Node->OutputStatusRoutine && Node->OutputStatusRoutine(Node))
+                if (!Node->OutputStatusRoutine || Node->OutputStatusRoutine(Node))
                 {
                     /* Set the length to 0xFF to mark that it's ready */
                     *Length = 0xFF;
