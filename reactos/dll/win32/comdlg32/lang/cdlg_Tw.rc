@@ -24,120 +24,120 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 {
     IDS_FILENOTFOUND        "找不到檔案"
-    IDS_VERIFYFILE          "請檢驗是否給予正確的檔案名稱。"
-    IDS_CREATEFILE          "找不到檔案\n\
-是否創建新檔案?"
+    IDS_VERIFYFILE          "請檢查檔案名稱。"
+    IDS_CREATEFILE          "檔案不存在。\n\
+要建立這個檔案嗎?"
     IDS_OVERWRITEFILE       "檔案已經存在。\n\
-要替換嗎?"
-    IDS_INVALID_FILENAME_TITLE "檔案名中存在無效的字符"
-    IDS_INVALID_FILENAME    "檔案名中不能包含任何一下字符::\n\
+要取代這個檔案嗎?"
+    IDS_INVALID_FILENAME_TITLE "檔案名稱含有無效的字元"
+    IDS_INVALID_FILENAME    "檔案名稱不能含有以下的字元:\n\
                           / : < > |"
-    IDS_PATHNOTEXISTING     "資料夾不存在"
+    IDS_PATHNOTEXISTING     "路徑不存在"
     IDS_FILENOTEXISTING     "檔案不存在"
-    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+    IDS_INVALID_FOLDERNAME  "選取範圍含有非資料夾的物件"
 }
 
 STRINGTABLE
 {
-    IDS_UPFOLDER         "向上一層"
+    IDS_UPFOLDER         "移到上一層"
     IDS_NEWFOLDER        "建立新資料夾"
     IDS_LISTVIEW         "清單"
     IDS_REPORTVIEW       "詳細資料"
-    IDS_TODESKTOP        "顯示桌面"
+    IDS_TODESKTOP        "瀏覽桌面"
 }
 
 STRINGTABLE
 {
     PD32_PRINT_TITLE       "列印"
 
-    PD32_VALUE_UREADABLE                  "數值不可讀"
-    PD32_INVALID_PAGE_RANGE "這個值不在頁數範圍。\n\
- 請輸入一個 %d 和 %d 之間的數。"
-    PD32_FROM_NOT_ABOVE_TO                "'從'項的值不能大於'到'項的值。"
-    PD32_MARGINS_OVERLAP                  "邊緣空白重迭或落於紙外,\n\
-請重新輸入邊緣空白。"
-    PD32_NR_OF_COPIES_EMPTY               "'份數' 項不能空."
-    PD32_TOO_LARGE_COPIES                 "你的印表機不支持這麼大的份數。\n\
- 請輸入一個 1 和 %d 之間的數。"
-    PD32_PRINT_ERROR                      "印表機錯誤。"
-    PD32_NO_DEFAULT_PRINTER               "沒有默認印表機。"
-    PD32_CANT_FIND_PRINTER                "找不到印表機。"
-    PD32_OUT_OF_MEMORY                    "內存不夠。"
-    PD32_GENERIC_ERROR                    "出現一些錯誤。"
-    PD32_DRIVER_UNKNOWN                   "找不到印表機驅動器。"
-    PD32_NO_DEVICES                       "在使用與印表機有關功能(版面設定, 列印檔案)之前, 你必須先裝印表機。請裝一個印表機再試。"
+    PD32_VALUE_UREADABLE                  "資料不能讀取"
+    PD32_INVALID_PAGE_RANGE               "這個數值不在有效頁數範圍之內。\n\
+請輸入介於 %1!d! 和 %2!d! 之間的值。"
+    PD32_FROM_NOT_ABOVE_TO                "「從」的數值不能大於「到」的值。"
+    PD32_MARGINS_OVERLAP                  "邊界重疊或者超出紙張範圍。\n\
+請修正邊界大小。"
+    PD32_NR_OF_COPIES_EMPTY               "「份數」的數值不可為空白。"
+    PD32_TOO_LARGE_COPIES                 "您的印表機不支援這樣大的份數。\n\
+請輸入介於 1 和 %d 之間的值。"
+    PD32_PRINT_ERROR                      "列印發生錯誤。"
+    PD32_NO_DEFAULT_PRINTER               "沒有預設的印表機。"
+    PD32_CANT_FIND_PRINTER                "找不到印表機"
+    PD32_OUT_OF_MEMORY                    "記憶體不足。"
+    PD32_GENERIC_ERROR                    "發生錯誤。"
+    PD32_DRIVER_UNKNOWN                   "不明的印表機驅動程式。"
+    PD32_NO_DEVICES                       "在您可以進行與印表機相關的操作之前，您必須先安裝一台印表機。請在安裝印表機後重試。"
 
-    PD32_DEFAULT_PRINTER                  "默認印表機; "
-    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "有 %d 個文檔正在等待列印"
-    PD32_MARGINS_IN_INCHES                "邊緣空白 [英寸]"
-    PD32_MARGINS_IN_MILLIMETERS           "邊緣空白 [毫米]"
-    PD32_MILLIMETERS                      "毫米"
+    PD32_DEFAULT_PRINTER                  "預設印表機; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "有 %d 份文件等候中"
+    PD32_MARGINS_IN_INCHES                "邊界 (英吋)"
+    PD32_MARGINS_IN_MILLIMETERS           "邊界 (mm)"
+    PD32_MILLIMETERS                      "mm"
 
-    PD32_PRINTER_STATUS_READY             "待命"
+    PD32_PRINTER_STATUS_READY             "就緒"
     PD32_PRINTER_STATUS_PAUSED            "暫停; "
-    PD32_PRINTER_STATUS_ERROR             "錯誤; "
+    PD32_PRINTER_STATUS_ERROR             "發生錯誤; "
     PD32_PRINTER_STATUS_PENDING_DELETION  "等待刪除; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "卡紙; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "無紙; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "手動進紙; "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "紙的問題; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "夾紙; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "紙張用完; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "手動送紙; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "紙張問題; "
     PD32_PRINTER_STATUS_OFFLINE           "印表機離線; "
-    PD32_PRINTER_STATUS_IO_ACTIVE         "I/O 活動; "
-    PD32_PRINTER_STATUS_BUSY              "繁忙; "
-    PD32_PRINTER_STATUS_PRINTING          "正在列印; "
-    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "出紙托盤已滿; "
-    PD32_PRINTER_STATUS_NOT_AVAILABLE     "不可用; "
-    PD32_PRINTER_STATUS_WAITING           "等待; "
-    PD32_PRINTER_STATUS_PROCESSING        "正在處理; "
-    PD32_PRINTER_STATUS_INITIALIZING      "正在啓動; "
-    PD32_PRINTER_STATUS_WARMING_UP        "預熱; "
-    PD32_PRINTER_STATUS_TONER_LOW         "墨低; "
-    PD32_PRINTER_STATUS_NO_TONER          "沒墨; "
-    PD32_PRINTER_STATUS_PAGE_PUNT         "頁處理內存超支; "
-    PD32_PRINTER_STATUS_USER_INTERVENTION "用戶干預; "
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "內存不夠; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "印表機蓋是打開的; "
-    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "找不到列印服務器; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "省電狀態; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "I/O 使用中; "
+    PD32_PRINTER_STATUS_BUSY              "忙碌中; "
+    PD32_PRINTER_STATUS_PRINTING          "列印中; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "出紙匣已滿; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "無法使用; "
+    PD32_PRINTER_STATUS_WAITING           "等候中; "
+    PD32_PRINTER_STATUS_PROCESSING        "處理中; "
+    PD32_PRINTER_STATUS_INITIALIZING      "正在初始化; "
+    PD32_PRINTER_STATUS_WARMING_UP        "暖機中; "
+    PD32_PRINTER_STATUS_TONER_LOW         "碳粉不足; "
+    PD32_PRINTER_STATUS_NO_TONER          "碳粉用完; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "紙張有問題; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "使用者中斷; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "記憶體不足; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "印表機門未關上; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "列印伺服器不明; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "省電模式; "
 }
 
 STRINGTABLE /* Font styles */
 {
-    IDS_FONT_REGULAR       "Regular"
-    IDS_FONT_BOLD          "Bold"
-    IDS_FONT_ITALIC        "Italic"
-    IDS_FONT_BOLD_ITALIC   "Bold Italic"
+    IDS_FONT_REGULAR       "標準"
+    IDS_FONT_BOLD          "粗體"
+    IDS_FONT_ITALIC        "斜體"
+    IDS_FONT_BOLD_ITALIC   "粗斜體"
 }
 
 STRINGTABLE /* Color names */
 {
-    IDS_COLOR_BLACK     "Black"
-    IDS_COLOR_MAROON    "Maroon"
-    IDS_COLOR_GREEN     "Green"
-    IDS_COLOR_OLIVE     "Olive"
-    IDS_COLOR_NAVY      "Navy"
-    IDS_COLOR_PURPLE    "Purple"
-    IDS_COLOR_TEAL      "Teal"
-    IDS_COLOR_GRAY      "Gray"
-    IDS_COLOR_SILVER    "Silver"
-    IDS_COLOR_RED       "倒回"
-    IDS_COLOR_LIME      "Lime"
-    IDS_COLOR_YELLOW    "Yellow"
-    IDS_COLOR_BLUE      "Blue"
-    IDS_COLOR_FUCHSIA   "Fuchsia"
-    IDS_COLOR_AQUA      "Aqua"
-    IDS_COLOR_WHITE     "White"
+    IDS_COLOR_BLACK     "黑色"
+    IDS_COLOR_MAROON    "暗紅"
+    IDS_COLOR_GREEN     "綠色"
+    IDS_COLOR_OLIVE     "深黃"
+    IDS_COLOR_NAVY      "海軍藍"
+    IDS_COLOR_PURPLE    "紫色"
+    IDS_COLOR_TEAL      "藍綠"
+    IDS_COLOR_GRAY      "灰色"
+    IDS_COLOR_SILVER    "銀色"
+    IDS_COLOR_RED       "紅色"
+    IDS_COLOR_LIME      "亮綠"
+    IDS_COLOR_YELLOW    "黃色"
+    IDS_COLOR_BLUE      "藍色"
+    IDS_COLOR_FUCHSIA   "桃紅"
+    IDS_COLOR_AQUA      "青色"
+    IDS_COLOR_WHITE     "白色"
 }
 
 STRINGTABLE
 {
-    IDS_FONT_SIZE   "Select a font size between %1!d! and %2!d! points."
-    IDS_SAVE_BUTTON "&Save"
-    IDS_SAVE_IN     "另存為(&A)..."
-    IDS_SAVE        "Save"
+    IDS_FONT_SIZE   "選取介於 %1!d! 和 %2!d! 之間的字體大小。"
+    IDS_SAVE_BUTTON "儲存(&S)"
+    IDS_SAVE_IN     "儲存於(&I):"
+    IDS_SAVE        "儲存"
     IDS_SAVE_AS     "另存新檔"
-    IDS_OPEN_FILE   "Open File"
-    IDS_SELECT_FOLDER "Select Folder"
+    IDS_OPEN_FILE   "開啟檔案"
+    IDS_SELECT_FOLDER "選擇資料夾"
 }
 
 /*
@@ -152,7 +152,7 @@ FONT 9, "MS Shell Dlg"
  LTEXT "檔案名稱(&N):", stc3, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "目錄(&D):", -1, 110, 6, 92, 9
+ LTEXT "資料夾(&D):", -1, 110, 6, 92, 9
  LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "檔案類型(&T):", stc2, 6, 104, 90, 9
@@ -161,7 +161,7 @@ FONT 9, "MS Shell Dlg"
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "開啟", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "幫助(&H)", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "說明(&H)", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "唯讀(&R)", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -174,7 +174,7 @@ FONT 9, "MS Shell Dlg"
  LTEXT "檔案名稱(&N):", stc3, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "目錄(&D):", -1, 110, 6, 92, 9
+ LTEXT "資料夾(&D):", -1, 110, 6, 92, 9
  LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "檔案類型(&T):", stc2, 6, 104, 90, 9
@@ -183,7 +183,7 @@ FONT 9, "MS Shell Dlg"
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "另存新檔", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "幫助(&H)", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "說明(&H)", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "唯讀(&R)", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -193,45 +193,45 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "列印"
 FONT 9, "MS Shell Dlg"
 {
- LTEXT "列印", stc1, 6, 6, 40, 9
+ LTEXT "印表機:", stc1, 6, 6, 40, 9
  LTEXT "", stc2, 60, 6, 150, 9
- GROUPBOX "列印目標(&P)", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ GROUPBOX "列印範圍", grp1, 6, 30, 160, 65, BS_GROUPBOX
  RADIOBUTTON "全部(&A)", rad1, 16, 45, 60, 12
- RADIOBUTTON "選择區文字", rad2, 16, 60, 60, 12
- RADIOBUTTON "向上翻頁", rad3, 16, 75, 60, 12
+ RADIOBUTTON "選擇範圍(&E)", rad2, 16, 60, 60, 12
+ RADIOBUTTON "頁(&P)", rad3, 16, 75, 60, 12
  DEFPUSHBUTTON "列印", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "版面設定", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- LTEXT "&From:", stc3, 60, 80, 30, 9
- LTEXT "&To:", stc4, 120, 80, 30, 9
- LTEXT "壓縮質量(&Q):", stc5, 6, 100, 76, 9
+ PUSHBUTTON "設定(&S)", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "從(&F):", stc3, 60, 80, 30, 9
+ LTEXT "到(&T):", stc4, 120, 80, 30, 9
+ LTEXT "列印品質(&Q):", stc5, 6, 100, 76, 9
  COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "列印到檔案", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Condensed", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "列印到檔案(&L)", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "縮小", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT_SETUP DIALOG 36, 24, 264, 134
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "列印設定(&R)..."
+CAPTION "列印設定"
 FONT 9, "MS Shell Dlg"
 {
- GROUPBOX "列印", grp1, 6, 6, 180, 72, BS_GROUPBOX
- RADIOBUTTON "默認印表機; ", rad1, 16, 16, 150, 12
- LTEXT "[none]", stc1, 35, 30, 120, 9
- RADIOBUTTON "Specific &Printer", rad2, 16, 44, 150, 12
+ GROUPBOX "印表機", grp1, 6, 6, 180, 72, BS_GROUPBOX
+ RADIOBUTTON "預設印表機(&D)", rad1, 16, 16, 150, 12
+ LTEXT "(無)", stc1, 35, 30, 120, 9
+ RADIOBUTTON "選取印表機(&P)", rad2, 16, 44, 150, 12
  COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "確定", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "版面設定", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- GROUPBOX "方向", grp2, 6, 82, 100, 50, BS_GROUPBOX
- RADIOBUTTON "縱向(&P)", rad3, 50, 95, 50, 12
- RADIOBUTTON "橫向(&L)", rad4, 50, 110, 50, 12
+ PUSHBUTTON "設定(&S)", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "列印方向", grp2, 6, 82, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "直印(&R)", rad3, 50, 95, 50, 12
+ RADIOBUTTON "橫印(&L)", rad4, 50, 110, 50, 12
  ICON "LANDSCAP", stc10, 10, 95, 32, 32
  ICON "PORTRAIT", stc11, 10, 95, 32, 32
  GROUPBOX "紙張", grp3, 116, 82, 178, 50, BS_GROUPBOX
- LTEXT "大小(&z)：", stc2, 126, 95, 35, 9
- LTEXT "原始檔案:", stc3, 126, 110, 35, 9
+ LTEXT "大小(&Z)", stc2, 126, 95, 35, 9
+ LTEXT "來源(&S)", stc3, 126, 110, 35, 9
  COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
 }
@@ -248,22 +248,22 @@ FONT 9, "MS Shell Dlg"
     LTEXT           "字型樣式(&Y):",stc2 ,108,3,60,9
     COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "大小(&S)：",stc3,179,3,32,9
+    LTEXT           "大小(&S):",stc3,179,3,32,9
     COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "確定",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "取消",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "套用(&A)", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "幫助(&H)" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "說明(&H)" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
     GROUPBOX        "效果",grp1,6,72,84,36,WS_GROUP
     CHECKBOX	    "刪除線(&K)", chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX 	    "底線(&U)", chx2, 10,94,78,10, BS_AUTOCHECKBOX
-    LTEXT           "配色(&C)：", stc4 ,6,114,80,9
+    LTEXT           "色彩(&C):", stc4 ,6,114,80,9
     COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "範例",grp2,98,72,120,36,WS_GROUP
     CTEXT           "",stc5,103,81,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "语言:",stc7 ,98,114,40,9
+    LTEXT           "字集(&I):",stc7 ,98,114,40,9
     COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
@@ -275,8 +275,8 @@ CAPTION "色彩"
 FONT 9, "MS Shell Dlg"
 {
  LTEXT "基本色彩(&B):",   stc1, 4,    4,  140, 10
- LTEXT "自定色彩(&C):",  stc2, 4,   106, 140, 10
- LTEXT "色彩 | 實心(&I)",  stc3, 150, 151,  48, 10
+ LTEXT "自訂色彩(&C):",  stc2, 4,   106, 140, 10
+ LTEXT "色彩|實色(&I)",  stc3, 150, 151,  48, 10
  LTEXT   "紅(&R):", IDC_COLOR_RL /*1094*/,247,126,27,10
  EDITTEXT IDC_COLOR_EDIT_R, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "綠(&G):", IDC_COLOR_GL /*1095*/,247,140,27,10
@@ -296,29 +296,29 @@ FONT 9, "MS Shell Dlg"
  CONTROL "" , IDC_COLOR_RESULT, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "確定",  IDOK,  4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "幫助", pshHelp,100,166, 44, 14
- PUSHBUTTON "新增自定色彩(&A)",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "定義自定色彩(&D) >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "色彩 | 實心(&I)", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
+ PUSHBUTTON "說明", pshHelp,100,166, 44, 14
+ PUSHBUTTON "加入到自訂色彩(&A)",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "定義自訂色彩(&D) >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "色彩|實色(&I)", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
 }
 
 
 FINDDLGORD DIALOG 36, 24, 276, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "查找"
+CAPTION "尋找"
 FONT 9, "MS Shell Dlg"
 {
- LTEXT "搜尋目標(&N):", -1, 4, 8, 52, 8
+ LTEXT "尋找目標(&N):", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "全字拼寫須符合(&W)", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "大小寫視為相異(&C)", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "方向", grp1, 147, 21, 58, 38
- CONTROL "上(&U)", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "下(&D)", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ CHECKBOX "符合全字拼寫(&W)", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "符合大小寫(&C)", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "搜尋方向", grp1, 147, 21, 58, 38
+ CONTROL "向上(&U)", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
+ CONTROL "向下(&D)", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
 
  DEFPUSHBUTTON "找下一個(&F)", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "取消", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "幫助(&H)", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "說明(&H)", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -327,18 +327,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "取代"
 FONT 9, "MS Shell Dlg"
 {
- LTEXT "搜尋目標(&N):", -1, 4, 8, 52, 8
+ LTEXT "尋找目標(&N):", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT "取代為(&P):", -1, 4, 26, 52, 8
  EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "全字拼寫須符合(&W)", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "大小寫視為相異(&C)", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "符合全字拼寫(&W)", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "符合大小寫(&C)", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
  DEFPUSHBUTTON "找下一個(&F)", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "取代(&R)", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "取代全部(&A)", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "全部取代(&A)", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "幫助(&H)", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "說明(&H)", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -350,100 +350,100 @@ FONT 9, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "確定",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "取消", IDCANCEL, 230,164, 50,14, WS_GROUP
-    PUSHBUTTON      "幫助(&H)",  pshHelp,  50, 161, 50,14, WS_GROUP
+    PUSHBUTTON      "說明(&H)",  pshHelp,  50, 161, 50,14, WS_GROUP
 
-    GROUPBOX        "列印",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "列印到檔案", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
-    PUSHBUTTON      "屬性(&P)",    psh2, 212, 17,  60,14, WS_GROUP
+    GROUPBOX        "印表機",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "列印到檔案(&L)", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    PUSHBUTTON      "內容(&P)",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "名稱(&N):",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "狀態欄(&S)",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "狀態:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "類型(&T)：",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "類型:",          stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Where:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "位置:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "備註:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "註解:",       stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Copies",         grp2, 160, 92, 120,64, WS_GROUP
-    LTEXT           "Number of &copies:",stc5,168,105,68,8
+    GROUPBOX        "份數",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "份數(&C):",stc5,168,105,68,8
     ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "C&ollate",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "自動分頁(&O)",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "列印目標(&P)",    grp1,   8,92,  144,64, WS_GROUP
+    GROUPBOX        "列印範圍",    grp1,   8,92,  144,64, WS_GROUP
     CONTROL         "全部(&A)",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "Pa&ges",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "選擇(&S)",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    CONTROL         "頁(&G)",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "選取範圍(&S)",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&from:",         stc2,  52,124,  20,8
-    RTEXT           "&to:",           stc3,  99,124,  20,8
+    RTEXT           "從(&F):",         stc2,  52,124,  20,8
+    RTEXT           "到(&T):",           stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
-CAPTION "列印設定(&R)..."
+CAPTION "列印設定"
 FONT 9, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "確定",IDOK,176,156,50,14,WS_GROUP
     PUSHBUTTON      "取消",IDCANCEL,230,156,50,14
-/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+/*    PUSHBUTTON      "網絡...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "列印",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "屬性(&P)",    psh2, 212, 17,  60,14, WS_GROUP
+    GROUPBOX        "印表機",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "內容(&P)",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "名稱(&N):",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "狀態欄(&S)",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "狀態:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "類型(&T)：",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "類型:",          stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Where:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "位置:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "備註:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "註解:",       stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "紙張",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "大小(&z)：",         stc2,  16,108,  36, 8
+    LTEXT           "大小(&Z):",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "原始檔案:",       stc3,  16,128,  36, 8
+    LTEXT           "來源(&S):",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
-    GROUPBOX        "方向",    grp1, 180, 92, 100,56, WS_GROUP
+    GROUPBOX        "列印方向",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "縱向(&P)",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "橫向(&L)",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    CONTROL         "直印(&O)",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "橫印(&A)",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Setup Page"
+CAPTION "設定頁面"
 FONT 9, "MS Shell Dlg"
 BEGIN
   CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
   CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
   CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
   GROUPBOX "紙張", grp2, 8, 96, 224, 56, BS_GROUPBOX
-  LTEXT "大小(&S)：", stc2, 16, 112, 36, 8
+  LTEXT "大小(&S):", stc2, 16, 112, 36, 8
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  LTEXT "&Tray:", stc3, 16, 132, 36, 8
+  LTEXT "紙匣(&T):", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "方向", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "縱向(&P)", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "橫向(&L)", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
-  GROUPBOX "當前標題欄", grp4, 80, 156, 152, 56, BS_GROUPBOX
-  LTEXT "左(&L):", stc15, 88, 172, 30, 8
+  GROUPBOX "列印方向", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "直印(&P)", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "橫印(&L)", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "邊界", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "左(&E):", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "右(&R):", stc16, 159, 172, 30, 8
   EDITTEXT edt6, 190, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  LTEXT "T&op:", stc17, 88, 192, 30, 8
+  LTEXT "上(&O):", stc17, 88, 192, 30, 8
   EDITTEXT edt5, 119, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "下(&B):", stc18, 159, 192, 30, 8
   EDITTEXT edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "確定", IDOK, 70, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "取消", IDCANCEL, 126, 220, 50, 14
-  PUSHBUTTON "列印", psh3, 182, 220, 50, 14
+  PUSHBUTTON "印表機(&R)...", psh3, 182, 220, 50, 14
 END
 
 NEWFILEOPENORD DIALOG 0, 0, 280, 164
@@ -451,7 +451,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS
 CAPTION "開啟"
 FONT 9, "MS Shell Dlg"
 {
-    LTEXT	"搜尋位置(&I)",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    LTEXT	"搜尋位置(&I):",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
     COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
@@ -464,11 +464,11 @@ FONT 9, "MS Shell Dlg"
     LTEXT	"檔案類型(&T):",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"開啟成唯讀(&R)",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+    CONTROL	"以唯讀方式開啟(&R)",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
 
     DEFPUSHBUTTON	"開啟(&O)",		 IDOK,222,110,54,14
     PUSHBUTTON		"取消",		 IDCANCEL,222,128,54,14
-    PUSHBUTTON		"幫助(&H)",		 pshHelp,222,145,54,14
+    PUSHBUTTON		"說明(&H)",		 pshHelp,222,145,54,14
 }
 
 NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
@@ -477,14 +477,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS
 CAPTION "開啟"
 FONT 9, "MS Shell Dlg"
 {
-    LTEXT           "檔案名(&F):", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
+    LTEXT           "檔案名稱:", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
     EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
-    LTEXT           "檔案類型(&T):", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
-    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+    LTEXT           "檔案類型:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
+    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL |
                     CBS_HASSTRINGS | CBS_DROPDOWNLIST
 
     DEFPUSHBUTTON   "開啟(&O)",  IDOK,     350, 240, 40, 14, WS_GROUP
     PUSHBUTTON      "取消", IDCANCEL, 395, 240, 40, 14
-    PUSHBUTTON      "幫助(&H)",  pshHelp,  350, 272, 40, 14
+    PUSHBUTTON      "說明(&H)",  pshHelp,  350, 272, 40, 14
 }

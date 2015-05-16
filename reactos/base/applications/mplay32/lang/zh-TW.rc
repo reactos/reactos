@@ -17,23 +17,23 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "結束(&E)", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "播放(&P)"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
-        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM "播放/暫停(&P)\tCtrl+P", IDC_PLAY
+        MENUITEM "停止(&O)\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "重複(&T)\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "視圖(&V)"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "單窗模式(&M)", IDM_SWITCHVIEW
     END
-    POPUP "&Device"
+    POPUP "設備(&D)"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "屬性(&P)", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "音量控制(&V)", IDM_VOLUMECTL
     END
     POPUP "說明(&H)"
     BEGIN
@@ -68,8 +68,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "後退"
     IDS_TOOLTIP_SEEKFORW "前進"
     IDS_TOOLTIP_FORWARD "快轉"
-    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_TOOLTIP_PAUSE "暫停"
     IDS_APPTITLE "ReactOS 多媒體播放器"
     IDS_PLAY "播放"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error."
+    IDS_DEFAULTMCIERRMSG "該錯誤沒有可用的描述."
 END
