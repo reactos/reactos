@@ -344,6 +344,7 @@ intptr_t _tspawnl(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ...)
       ret = do_spawnT(mode, cmdname, args, NULL);
       free(args);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -398,6 +399,7 @@ intptr_t _tspawnle(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ... /*, 
    {
       free(envs);
    }
+   va_end(argp);
    return ret;
 
 }
@@ -459,6 +461,7 @@ intptr_t _tspawnlp(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, N
       ret = do_spawnT(mode, find_execT(cmdname, pathname), args, NULL);
       free(args);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -495,6 +498,7 @@ intptr_t _tspawnlpe(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, 
    {
       free(envs);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -529,6 +533,7 @@ intptr_t _texecl(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
       ret = do_spawnT(_P_OVERLAY, cmdname, args, NULL);
       free(args);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -572,6 +577,7 @@ intptr_t _texecle(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char*
    {
       free(envs);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -604,6 +610,7 @@ intptr_t _texeclp(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
       ret = do_spawnT(_P_OVERLAY, find_execT(cmdname, pathname), args, NULL);
       free(args);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -648,6 +655,7 @@ intptr_t _texeclpe(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char
    {
       free(envs);
    }
+   va_end(argp);
    return ret;
 }
 
