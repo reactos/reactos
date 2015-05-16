@@ -43,7 +43,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Alarmă baterie decongestionată", -1, 6, 7, 239, 104
     CONTROL "Alarmează „baterie &decongestionată” când se ajunge la:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
-    LTEXT "unknown", IDC_ALARMVALUE1, 209, 20, 33, 10
+    LTEXT "unknown", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
     LTEXT "100%", -1, 214, 43, 25, 10

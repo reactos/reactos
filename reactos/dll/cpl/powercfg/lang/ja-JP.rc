@@ -40,7 +40,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "バッテリ低下アラーム", -1, 6, 7, 239, 104
     CONTROL "電源レベルが次に達したらバッテリ低下アラームで知らせる(&L):", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
-    LTEXT "不明", IDC_ALARMVALUE1, 209, 20, 33, 10
+    LTEXT "不明", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
     LTEXT "100%", -1, 214, 43, 25, 10
@@ -53,7 +53,7 @@ BEGIN
     LTEXT "不明", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "バッテリ限界アラーム", -1, 6, 120, 239, 106
     CONTROL "電源レベルが次に達したらバッテリ限界アラームで知らせる(&C):", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
-    LTEXT "不明", IDC_ALARMVALUE2, 209, 133, 33, 10
+    LTEXT "不明", IDC_ALARMVALUE2, 215, 134, 20, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
     LTEXT "100%", -1, 214, 154, 25, 10
