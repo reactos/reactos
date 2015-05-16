@@ -524,18 +524,10 @@ static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 
     srand((unsigned) time(NULL));
 
-#if 0
-    /* FIXME GetPrivateProfileInt not yet implemented in ReactOS */
-    size = GetPrivateProfileInt("maze", "gridsize", 0, "maze.ini");
-    pre_solve_delay = GetPrivateProfileInt("maze", "predelay", 5000, "maze.ini");
-    post_solve_delay = GetPrivateProfileInt("maze", "postdelay", 5000, "maze.ini");
-    solve_delay = GetPrivateProfileInt("maze", "solvedelay", 10, "maze.ini");
-#else
-    size = 10;
-    pre_solve_delay = 5000;
-    post_solve_delay = 5000;
-    solve_delay = 1;
-#endif
+    size = GetPrivateProfileIntW(L"maze", L"gridsize", 10, L"maze.ini");
+    pre_solve_delay = GetPrivateProfileIntW(L"maze", L"predelay", 5000, L"maze.ini");
+    post_solve_delay = GetPrivateProfileIntW(L"maze", L"postdelay", 5000, L"maze.ini");
+    solve_delay = GetPrivateProfileIntW(L"maze", L"solvedelay", 1, L"maze.ini");
 
     if (size < 2) {
         size = 7 + (rand() % 30);
