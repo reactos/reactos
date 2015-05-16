@@ -9,6 +9,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME   "butterflies.scr\0"
 #include <reactos/version.rc>
 
+IDI_ICON         ICON     "res/icon_butterflies.ico"
 IDB_BUTTERFLY1   BITMAP   "res/butterfly1.bmp"
 IDB_BUTTERFLY2   BITMAP   "res/butterfly2.bmp"
 IDB_BUTTERFLY3   BITMAP   "res/butterfly3.bmp"
