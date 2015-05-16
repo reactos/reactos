@@ -26,5 +26,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Giriş Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "DENEME", -1, 74, 19, 62, 8, WS_GROUP
+    GROUPBOX "Filter Resource Method", -1, 6, 6, 237, 75, WS_GROUP
+    AUTORADIOBUTTON "Try not to use an interrupt", IDC_TRY_INTERRUPT, 11, 22, 98, 10
+    AUTORADIOBUTTON "Never use an interrupt", IDC_NEVER_INTERRUPT, 11, 44, 98, 10
+    AUTORADIOBUTTON "Use any interrupt assigned to the port", IDC_ANY_INTERRUPT, 11, 66, 98, 10, WS_GROUP
+    AUTOCHECKBOX "Enable legacy Plug and Play detection", -1, 6, 90, 135, 10
+    LTEXT "LPT Port Number:", -1, 6, 105, 140, 10, WS_GROUP
+    COMBOBOX IDC_PARALLEL_NAME, 65, 105, 75, 20, WS_TABSTOP | CBS_DROPDOWNLIST
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LPT1 "LPT1"
+    IDS_LPT2 "LPT2"
+    IDS_LPT3 "LPT3"
 END

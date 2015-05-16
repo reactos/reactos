@@ -32,6 +32,7 @@ ParallelSettingsDlgProc(HWND hwnd,
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            SendDlgItemMessage(hwnd, IDC_NEVER_INTERRUPT, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
             return OnInitDialog(hwnd, wParam, lParam);
     }
 
