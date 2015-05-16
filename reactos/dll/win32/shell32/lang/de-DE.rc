@@ -755,8 +755,8 @@ BEGIN
     IDS_DRIVE_CDROM "CD-Laufwerk"
     IDS_DRIVE_NETWORK "Netzlaufwerk"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_REMOVABLE "Wechseldatenträger"
+    IDS_FS_UNKNOWN "Unbekannt"
 
     /* Open With */
     IDS_OPEN_WITH "Öffnen mit..."
