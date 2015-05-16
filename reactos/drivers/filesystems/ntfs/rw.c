@@ -101,6 +101,10 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     if (FileRecord == NULL)
     {
         DPRINT1("Not enough memory!\n");
+        if (AllocatedBuffer)
+        {
+            ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
+        }
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -109,6 +113,10 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("Can't find record!\n");
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        if (AllocatedBuffer)
+        {
+            ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
+        }
         return Status;
     }
 
@@ -117,6 +125,10 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("No data associated with file!\n");
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        if (AllocatedBuffer)
+        {
+            ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
+        }
         return Status;
     }
 
