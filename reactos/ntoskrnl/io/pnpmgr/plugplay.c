@@ -76,7 +76,10 @@ IopQueueTargetDeviceEvent(const GUID *Guid,
     Copy.Buffer = EventEntry->Event.TargetDevice.DeviceIds;
     Status = RtlAppendUnicodeStringToString(&Copy, DeviceIds);
     if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(EventEntry);
         return Status;
+    }
 
     InsertHeadList(&IopPnpEventQueueHead,
                    &EventEntry->ListEntry);
