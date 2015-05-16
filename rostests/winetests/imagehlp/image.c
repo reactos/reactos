@@ -33,6 +33,10 @@ static HMODULE hImageHlp;
 static BOOL (WINAPI *pImageGetDigestStream)(HANDLE, DWORD, DIGEST_FUNCTION, DIGEST_HANDLE);
 static BOOL (WINAPI *pBindImageEx)(DWORD Flags, const char *ImageName, const char *DllPath,
                                    const char *SymbolPath, PIMAGEHLP_STATUS_ROUTINE StatusRoutine);
+static DWORD (WINAPI* pGetImageUnusedHeaderBytes)(PLOADED_IMAGE, LPDWORD);
+static PLOADED_IMAGE (WINAPI* pImageLoad)(PCSTR, PCSTR);
+static BOOL (WINAPI* pImageUnload)(PLOADED_IMAGE);
+
 
 /* minimal PE file image */
 #define VA_START 0x400000
@@ -428,6 +432,101 @@ static void test_bind_image_ex(void)
     DeleteFileA(temp_file);
 }
 
+static void test_image_load(void)
+{
+    char temp_file[MAX_PATH];
+    PLOADED_IMAGE img;
+    DWORD ret, count;
+    HANDLE file;
+
+    if (!pImageLoad || !pImageUnload)
+    {
+        win_skip("ImageLoad or ImageUnload function is not available\n");
+        return;
+    }
+    if (!pGetImageUnusedHeaderBytes)
+    {
+        win_skip("GetImageUnusedHeaderBytes function is not available\n");
+        return;
+    }
+
+    file = create_temp_file(temp_file);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        skip("couldn't create temp file\n");
+        return;
+    }
+
+    WriteFile(file, &bin, sizeof(bin), &count, NULL);
+    CloseHandle(file);
+
+    img = pImageLoad(temp_file, NULL);
+    ok(img != NULL, "ImageLoad unexpectedly failed\n");
+
+    if (img)
+    {
+        todo_wine
+        ok(!strcmp(img->ModuleName, temp_file),
+           "unexpected ModuleName, got %s instead of %s\n", img->ModuleName, temp_file);
+        todo_wine
+        ok(img->MappedAddress != NULL, "MappedAddress != NULL\n");
+        if (img->MappedAddress)
+        {
+            ok(!memcmp(img->MappedAddress, &bin.dos_header, sizeof(bin.dos_header)),
+               "MappedAddress doesn't point to IMAGE_DOS_HEADER\n");
+        }
+        ok(img->FileHeader != NULL, "FileHeader != NULL\n");
+        if (img->FileHeader)
+        {
+            todo_wine
+            ok(!memcmp(img->FileHeader, &bin.nt_headers, sizeof(bin.nt_headers)),
+                "FileHeader doesn't point to IMAGE_NT_HEADERS32\n");
+        }
+        todo_wine
+        ok(img->NumberOfSections == 3,
+           "unexpected NumberOfSections, got %d instead of 3\n", img->NumberOfSections);
+        if (img->NumberOfSections >= 3)
+        {
+            ok(!strcmp((const char *)img->Sections[0].Name, ".text"),
+               "unexpected name for section 0, expected .text, got %s\n",
+               (const char *)img->Sections[0].Name);
+            ok(!strcmp((const char *)img->Sections[1].Name, ".bss"),
+               "unexpected name for section 1, expected .bss, got %s\n",
+               (const char *)img->Sections[1].Name);
+            ok(!strcmp((const char *)img->Sections[2].Name, ".idata"),
+               "unexpected name for section 2, expected .idata, got %s\n",
+               (const char *)img->Sections[2].Name);
+        }
+        todo_wine
+        ok(img->Characteristics == 0x102,
+           "unexpected Characteristics, got 0x%x instead of 0x102\n", img->Characteristics);
+        ok(img->fSystemImage == 0,
+           "unexpected fSystemImage, got %d instead of 0\n", img->fSystemImage);
+        ok(img->fDOSImage == 0,
+           "unexpected fDOSImage, got %d instead of 0\n", img->fDOSImage);
+        todo_wine
+        ok(img->fReadOnly == 1 || broken(!img->fReadOnly) /* <= WinXP */,
+           "unexpected fReadOnly, got %d instead of 1\n", img->fReadOnly);
+        todo_wine
+        ok(img->Version == 1 || broken(!img->Version) /* <= WinXP */,
+           "unexpected Version, got %d instead of 1\n", img->Version);
+        todo_wine
+        ok(img->SizeOfImage == 0x600,
+           "unexpected SizeOfImage, got 0x%x instead of 0x600\n", img->SizeOfImage);
+
+        count = 0xdeadbeef;
+        ret = pGetImageUnusedHeaderBytes(img, &count);
+        todo_wine
+        ok(ret == 448, "GetImageUnusedHeaderBytes returned %u instead of 448\n", ret);
+        todo_wine
+        ok(count == 64, "unexpected size for unused header bytes, got %u instead of 64\n", count);
+
+        pImageUnload(img);
+    }
+
+    DeleteFileA(temp_file);
+}
+
 START_TEST(image)
 {
     hImageHlp = LoadLibraryA("imagehlp.dll");
@@ -440,9 +539,13 @@ START_TEST(image)
 
     pImageGetDigestStream = (void *) GetProcAddress(hImageHlp, "ImageGetDigestStream");
     pBindImageEx = (void *) GetProcAddress(hImageHlp, "BindImageEx");
+    pGetImageUnusedHeaderBytes = (void *) GetProcAddress(hImageHlp, "GetImageUnusedHeaderBytes");
+    pImageLoad = (void *) GetProcAddress(hImageHlp, "ImageLoad");
+    pImageUnload = (void *) GetProcAddress(hImageHlp, "ImageUnload");
 
     test_get_digest_stream();
     test_bind_image_ex();
+    test_image_load();
 
     FreeLibrary(hImageHlp);
 }
