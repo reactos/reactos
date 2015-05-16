@@ -381,32 +381,16 @@ MmInsertMemoryArea(
     if ((MA_GetEndingAddress(marea) < (ULONG_PTR)MmSystemRangeStart) &&
         (marea->Type != MEMORY_AREA_OWNED_BY_ARM3))
     {
-        PMMVAD Vad;
-
         ASSERT(marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
-        Vad = &marea->VadNode;
 
-        RtlZeroMemory(Vad, sizeof(MMVAD));
-        Vad->StartingVpn = PAGE_ROUND_DOWN(MA_GetStartingAddress(marea)) >> PAGE_SHIFT;
-        /*
-         * For some strange reason, it is perfectly valid to create a MAREA from 0x1000 to... 0x1000.
-         * In a normal OS/Memory Manager, this would be retarded, but ReactOS allows this (how it works
-         * I don't even want to know).
-         */
-        if (MA_GetEndingAddress(marea) != MA_GetStartingAddress(marea))
-        {
-            Vad->EndingVpn = PAGE_ROUND_DOWN((ULONG_PTR)MA_GetEndingAddress(marea) - 1) >> PAGE_SHIFT;
-        }
-        else
-        {
-            Vad->EndingVpn = Vad->StartingVpn;
-        }
-        Vad->u.VadFlags.Spare = 1;
-        Vad->u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
+        marea->VadNode.StartingVpn = marea->StartingVpn;
+        marea->VadNode.EndingVpn = marea->EndingVpn;
+        marea->VadNode.u.VadFlags.Spare = 1;
+        marea->VadNode.u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
 
         /* Insert the VAD */
-        MiInsertVad(Vad, Process);
-        marea->Vad = Vad;
+        MiInsertVad(&marea->VadNode, Process);
+        marea->Vad = &marea->VadNode;
     }
     else
     {
@@ -936,46 +920,6 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
            Type, BaseAddress, *BaseAddress, Length, AllocationFlags,
            Result);
 
-    if (*BaseAddress == 0)
-    {
-        tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, PAGE_SIZE);
-        *BaseAddress = MmFindGap(AddressSpace,
-                                 tmpLength,
-                                 Granularity,
-                                 (AllocationFlags & MEM_TOP_DOWN) == MEM_TOP_DOWN);
-        if ((*BaseAddress) == 0)
-        {
-            DPRINT("No suitable gap\n");
-            return STATUS_NO_MEMORY;
-        }
-    }
-    else
-    {
-        EndingAddress = ((ULONG_PTR)*BaseAddress + Length - 1) | (PAGE_SIZE - 1);
-        *BaseAddress = ALIGN_DOWN_POINTER_BY(*BaseAddress, Granularity);
-        tmpLength = EndingAddress + 1 - (ULONG_PTR)*BaseAddress;
-
-        if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
-        {
-            return STATUS_ACCESS_VIOLATION;
-        }
-
-        if (MmGetAddressSpaceOwner(AddressSpace) &&
-                (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
-        {
-            DPRINT("Memory area for user mode address space exceeds MmSystemRangeStart\n");
-            return STATUS_ACCESS_VIOLATION;
-        }
-
-        if (MmLocateMemoryAreaByRegion(AddressSpace,
-                                       *BaseAddress,
-                                       tmpLength) != NULL)
-        {
-            DPRINT("Memory area already occupied\n");
-            return STATUS_CONFLICTING_ADDRESSES;
-        }
-    }
-
     //
     // Is this a static memory area?
     //
@@ -986,7 +930,6 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
         //
         ASSERT(MiStaticMemoryAreaCount < MI_STATIC_MEMORY_AREAS);
         MemoryArea = &MiStaticMemoryAreas[MiStaticMemoryAreaCount++];
-        Type &= ~MEMORY_AREA_STATIC;
     }
     else
     {
@@ -1005,16 +948,65 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
     }
 
     RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
-    MemoryArea->Type = Type;
-    MemoryArea->StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
-    MemoryArea->EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
+    MemoryArea->Type = Type & ~MEMORY_AREA_STATIC;
     MemoryArea->Protect = Protect;
     MemoryArea->Flags = AllocationFlags;
     //MemoryArea->LockCount = 0;
     MemoryArea->Magic = 'erAM';
     MemoryArea->DeleteInProgress = FALSE;
 
-    MmInsertMemoryArea(AddressSpace, MemoryArea);
+    if (*BaseAddress == 0)
+    {
+        tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, PAGE_SIZE);
+        *BaseAddress = MmFindGap(AddressSpace,
+                                 tmpLength,
+                                 Granularity,
+                                 (AllocationFlags & MEM_TOP_DOWN) == MEM_TOP_DOWN);
+        if ((*BaseAddress) == 0)
+        {
+            DPRINT("No suitable gap\n");
+            if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);
+            return STATUS_NO_MEMORY;
+        }
+
+        MemoryArea->StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
+        MemoryArea->EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
+        MmInsertMemoryArea(AddressSpace, MemoryArea);
+    }
+    else
+    {
+        EndingAddress = ((ULONG_PTR)*BaseAddress + Length - 1) | (PAGE_SIZE - 1);
+        *BaseAddress = ALIGN_DOWN_POINTER_BY(*BaseAddress, Granularity);
+        tmpLength = EndingAddress + 1 - (ULONG_PTR)*BaseAddress;
+
+        if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
+        {
+            ASSERT(FALSE);
+            if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);
+            return STATUS_ACCESS_VIOLATION;
+        }
+
+        if (MmGetAddressSpaceOwner(AddressSpace) &&
+                (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
+        {
+            DPRINT("Memory area for user mode address space exceeds MmSystemRangeStart\n");
+            if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);
+            return STATUS_ACCESS_VIOLATION;
+        }
+
+        if (MmLocateMemoryAreaByRegion(AddressSpace,
+                                       *BaseAddress,
+                                       tmpLength) != NULL)
+        {
+            DPRINT("Memory area already occupied\n");
+            if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);
+            return STATUS_CONFLICTING_ADDRESSES;
+        }
+
+        MemoryArea->StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
+        MemoryArea->EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
+        MmInsertMemoryArea(AddressSpace, MemoryArea);
+    }
 
     *Result = MemoryArea;
 
