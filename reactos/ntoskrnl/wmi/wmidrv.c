@@ -435,7 +435,9 @@ WmipOpenGuidForEvents(
 
 static
 NTSTATUS
-WmiSetMark(PWMI_SET_MARK Buffer, ULONG Length)
+WmiSetMark(
+    PWMI_SET_MARK Buffer,
+    ULONG Length)
 {
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_SUCCESS;
