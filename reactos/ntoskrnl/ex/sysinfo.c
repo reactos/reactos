@@ -2341,24 +2341,78 @@ NtSetSystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 
 NTSTATUS
 NTAPI
-NtFlushInstructionCache(IN HANDLE ProcessHandle,
-                        IN PVOID BaseAddress,
-                        IN ULONG NumberOfBytesToFlush)
+NtFlushInstructionCache(
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress,
+    _In_ ULONG FlushSize)
 {
+    KAPC_STATE ApcState;
+    PKPROCESS Process;
+    NTSTATUS Status;
     PAGED_CODE();
 
+    /* Is a base address given? */
+    if (BaseAddress != NULL)
+    {
+        /* If the requested size is 0, there is nothing to do */
+        if (FlushSize == 0)
+        {
+            return STATUS_SUCCESS;
+        }
+
+        /* Is this a user mode call? */
+        if (KeGetPreviousMode() != KernelMode)
+        {
+            /* Make sure the base address is in user space */
+            if (BaseAddress > MmHighestUserAddress)
+            {
+                DPRINT1("Invalid BaseAddress 0x%p\n", BaseAddress);
+                return STATUS_ACCESS_VIOLATION;
+            }
+        }
+    }
+
+    /* Is another process requested? */
+    if (ProcessHandle != NtCurrentProcess())
+    {
+        /* Reference the process */
+        Status = ObReferenceObjectByHandle(ProcessHandle,
+                                           PROCESS_VM_WRITE,
+                                           PsProcessType,
+                                           KeGetPreviousMode(),
+                                           (PVOID*)&Process,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to reference the process %p\n", ProcessHandle);
+            return Status;
+        }
+
+        /* Attach to the process */
+        KeStackAttachProcess(Process, &ApcState);
+    }
+
+    /* FIXME: don't flush everything if a range is requested */
 #if defined(_M_IX86) || defined(_M_AMD64)
     __wbinvd();
 #elif defined(_M_PPC)
     __asm__ __volatile__("tlbsync");
 #elif defined(_M_MIPS)
     DPRINT1("NtFlushInstructionCache() is not implemented\n");
-    for (;;);
+    DbgBreakPoint();
 #elif defined(_M_ARM)
-    //__asm__ __volatile__("mov r1, #0; mcr p15, 0, r1, c7, c5, 0");
+    _MoveToCoprocessor(0, CP15_ICIALLU);
 #else
 #error Unknown architecture
 #endif
+
+    /* Check if we attached */
+    if (ProcessHandle != NtCurrentProcess())
+    {
+        /* Detach from the process */
+        KeUnstackDetachProcess(&ApcState);
+    }
+
     return STATUS_SUCCESS;
 }
 

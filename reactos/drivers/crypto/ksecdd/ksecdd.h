@@ -9,6 +9,7 @@
 #define _NO_KSECDD_IMPORT_
 #include <ntifs.h>
 #include <ndk/exfuncs.h>
+#include <ndk/ketypes.h>
 #include <pseh/pseh2.h>
 #include <ntstrsafe.h>
 
