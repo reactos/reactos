@@ -68,8 +68,11 @@ if(MSVC_IDE)
     add_compile_flags("/MP")
 endif()
 
-# We don't need CMake importlib handling
-unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
+# We don't need CMake importlib handling.
+# FIXME: Remove the MSVC_IDE condition when the upcoming RosBE lands.
+if(NOT MSVC_IDE)
+    unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
+endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
 
