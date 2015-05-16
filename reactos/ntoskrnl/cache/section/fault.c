@@ -123,7 +123,7 @@ MmNotPresentFaultCachePage (
            AddressSpace,
            Address,
            MA_GetStartingAddress(MemoryArea),
-           MemoryArea->EndingAddress);
+           MA_GetEndingAddress(MemoryArea));
 
     /*
      * There is a window between taking the page fault and locking the
@@ -585,7 +585,7 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
         DPRINT("Type %x (%p -> %p)\n",
                MemoryArea->Type,
                MA_GetStartingAddress(MemoryArea),
-               MemoryArea->EndingAddress);
+               MA_GetEndingAddress(MemoryArea));
 
         Resources.DoAcquisition = NULL;
 
@@ -661,7 +661,7 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
         DPRINT1("Type %x (%p -> %p)\n",
                 MemoryArea->Type,
                 MA_GetStartingAddress(MemoryArea),
-                MemoryArea->EndingAddress);
+                MA_GetEndingAddress(MemoryArea));
     }
 
     if (!FromMdl)
@@ -790,7 +790,7 @@ MmNotPresentFaultCacheSectionInner(KPROCESSOR_MODE Mode,
                 MemoryArea->Type,
                 MA_GetStartingAddress(MemoryArea),
                 Address,
-                MemoryArea->EndingAddress,
+                MA_GetEndingAddress(MemoryArea),
                 PsGetCurrentThread());
 
         Resources.DoAcquisition = NULL;

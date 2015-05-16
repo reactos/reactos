@@ -161,7 +161,7 @@ _MiFlushMappedSection(PVOID BaseAddress,
         return STATUS_NOT_MAPPED_DATA;
     }
     BeginningAddress = PAGE_ROUND_DOWN(MA_GetStartingAddress(MemoryArea));
-    EndingAddress = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress);
+    EndingAddress = PAGE_ROUND_UP(MA_GetEndingAddress(MemoryArea));
     Segment = MemoryArea->Data.SectionData.Segment;
     ViewOffset.QuadPart = MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 

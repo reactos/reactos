@@ -205,7 +205,7 @@ typedef struct _ROS_SECTION_OBJECT
 typedef struct _MEMORY_AREA
 {
     ULONG_PTR StartingVpn;
-    ULONG_PTR EndingAddress;
+    ULONG_PTR EndingVpn;
     struct _MEMORY_AREA *Parent;
     struct _MEMORY_AREA *LeftChild;
     struct _MEMORY_AREA *RightChild;

@@ -2520,7 +2520,7 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
     NTSTATUS Status;
     ULONG_PTR MaxLength;
 
-    MaxLength = MemoryArea->EndingAddress - (ULONG_PTR)BaseAddress;
+    MaxLength = MA_GetEndingAddress(MemoryArea) - (ULONG_PTR)BaseAddress;
     if (Length > MaxLength)
         Length = (ULONG)MaxLength;
 

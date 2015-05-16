@@ -458,7 +458,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
             DPRINTC("Type %x (%p -> %p)\n",
                     MemoryArea->Type,
                     MA_GetStartingAddress(MemoryArea),
-                    MemoryArea->EndingAddress);
+                    MA_GetEndingAddress(MemoryArea));
 
             Resources.DoAcquisition = NULL;
             Resources.Page[0] = Page;
