@@ -275,6 +275,9 @@ static VOID PitWriteData(BYTE Channel, BYTE Value)
         PitChannels[Channel].CountRegister =
             WRITE_PIT_VALUE(PitChannels[Channel], PitChannels[Channel].CountRegister);
         PitChannels[Channel].ReloadValue = PitChannels[Channel].CountRegister;
+
+        /* Reload now the new count */
+        PitChannels[Channel].CurrentValue = PitChannels[Channel].ReloadValue;
     }
 }
 
