@@ -126,11 +126,13 @@ PciIdPrintf(IN PPCI_ID_BUFFER IdBuffer,
     ULONG Size, Length;
     PANSI_STRING AnsiString;
     va_list va;
-    va_start(va, Format);
+
     ASSERT(IdBuffer->Count < MAX_ANSI_STRINGS);
  
     /* Do the actual string formatting into the character buffer */
+    va_start(va, Format);
     vsprintf(IdBuffer->CharBuffer, Format, va);
+    va_end(va);
 
     /* Initialize the ANSI_STRING that will hold this string buffer */
     AnsiString = &IdBuffer->Strings[IdBuffer->Count];
@@ -161,7 +163,7 @@ PciIdPrintfAppend(IN PPCI_ID_BUFFER IdBuffer,
     ULONG NextId, Size, Length, MaxLength;
     PANSI_STRING AnsiString;
     va_list va;
-    va_start(va, Format);
+
     ASSERT(IdBuffer->Count);
   
     /* Choose the next static ANSI_STRING to use */
@@ -171,7 +173,9 @@ PciIdPrintfAppend(IN PPCI_ID_BUFFER IdBuffer,
     MaxLength = (PCHAR)(IdBuffer + 1) - IdBuffer->CharBuffer; 
     
     /* Do the actual append, and return the length this string took */
+    va_start(va, Format);
     Length = vsprintf(IdBuffer->CharBuffer - 1, Format, va);
+    va_end(va);
     ASSERT(Length < MaxLength);
 
     /* Select the static ANSI_STRING, and update its length information */
