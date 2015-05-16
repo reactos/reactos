@@ -44,18 +44,18 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Annulla\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "&Taglia\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copia\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Incolla\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "I&ncolla collegamento", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Co&pia nella cartella...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Spo&sta nella cartella...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "Sele&ziona tutto\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "In&verti selezione", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -221,12 +221,12 @@ BEGIN
     EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Dimensione:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "Dimensione sul disco:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Contenente:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Created:", 14014, 8, 128, 55, 10
+    LTEXT "Creato:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 68, 128, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Attributi:", 14020, 8, 152, 46, 10
@@ -591,7 +591,7 @@ END
 
 IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Verifica disco"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Inizia", IDOK, 63, 95, 60, 14
@@ -619,14 +619,14 @@ END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "Attenzione"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
+    LTEXT "Questo file potrebbe essere utilizzato dal sistema operativo o da \n\
+un'altra applicazione. Modificare questo file potrebbe danneggiare il \n\
+sistema o renderlo meno funzionale.\n\n\
+Si desidera comunque aprire questo file?", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
     PUSHBUTTON "No", IDNO, 180, 55, 50, 14
 END
@@ -689,20 +689,20 @@ BEGIN
     IDS_DELETEITEM_TEXT "Sei sicuro di voler cancellare '%1'?"
     IDS_DELETEMULTIPLE_TEXT "Sei sicuro di voler cancellare questi %1 elementi?"
     IDS_DELETESELECTED_TEXT "Sei sicuro di voler cancellare gli elementi selezionati?"
-    IDS_TRASHITEM_TEXT "Sei sicuro di voler spostare '%1' Nel cestino?"
+    IDS_TRASHITEM_TEXT "Sei sicuro di voler spostare '%1' nel cestino?"
     IDS_TRASHFOLDER_TEXT "Sei sicuro di voler spostare '%1' e tutto il suo contenuto nel cestino?"
     IDS_TRASHMULTIPLE_TEXT "Sei sicuro di voler spostare %1 elementi nel cestino?"
     IDS_CANTTRASH_TEXT "L'elemento '%1' non può essere spostato nel cestino. Volete cancellarlo?"
     IDS_OVERWRITEFILE_TEXT "Questa cartella contiene già un file con nome '%1'.\n\nVolete sostituirlo?"
-    IDS_OVERWRITEFILE_CAPTION "Confermare la sovrascrittura del File"
+    IDS_OVERWRITEFILE_CAPTION "Confermare la sovrascrittura del file"
     IDS_OVERWRITEFOLDER_TEXT "Questa cartella contiene già una cartella con nome '%1'.\n\nSe i file nella cartella di destinazione hanno gli stessi nomi di quelli della \ncartella selezionata saranno sovrascritti. Volete procedere comunque?\n"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_COPYING "Copia in corso..."
+    IDS_FILEOOP_MOVING "Spostamento in corso..."
+    IDS_FILEOOP_DELETING "Cancellazione in corso..."
+    IDS_FILEOOP_FROM_TO "Da %1 a %2"
+    IDS_FILEOOP_FROM "Da %1"
+    IDS_FILEOOP_PREFLIGHT "Verifia preliminare"
 
     /* message box strings */
     IDS_RESTART_TITLE "Riavvia"
@@ -755,7 +755,7 @@ BEGIN
     IDS_DRIVE_NETWORK "Disco di Rete"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
     IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_FS_UNKNOWN "Sconosciuto"
 
     /* Open With */
     IDS_OPEN_WITH "Apri con"
@@ -793,8 +793,8 @@ BEGIN
     IDS_SYS_FILE "File di sistema"
 
     IDS_OPEN_VERB "Apri"
-    IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Eseguire come "
+    IDS_EXPLORE_VERB "Esplora"
+    IDS_RUNAS_VERB "Esegui come "
     IDS_EDIT_VERB "Modifica"
     IDS_FIND_VERB "Cerca"
     IDS_PRINT_VERB "Stampa"
@@ -817,5 +817,5 @@ BEGIN
     IDS_UNKNOWN_APP "Applicazione sconosciuta"
     IDS_EXE_DESCRIPTION "Descrizione:"
 
-    IDS_MENU_EMPTY "(Empty)"
+    IDS_MENU_EMPTY "(Vuoto)"
 END
