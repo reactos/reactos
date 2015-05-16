@@ -7,5 +7,5 @@ __cdecl
 floorf(
     _In_ float x)
 {
-    return (float)floorf((double)x);
+    return (float)floor((double)x);
 }
