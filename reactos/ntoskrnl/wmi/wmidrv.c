@@ -63,6 +63,12 @@ typedef struct _WMI_NOTIFICATION
     WMI_GUID_OBJECT_ENTRY GuidObjects[0];
 } WMI_NOTIFICATION, *PWMI_NOTIFICATION;
 
+typedef struct _WMI_SET_MARK
+{
+    ULONG Flags;
+    WCHAR Mark[1];
+} WMI_SET_MARK, *PWMI_SET_MARK;
+
 PDEVICE_OBJECT WmipServiceDeviceObject;
 PDEVICE_OBJECT WmipAdminDeviceObject;
 FAST_IO_DISPATCH WmipFastIoDispatch;
@@ -427,6 +433,14 @@ WmipOpenGuidForEvents(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+WmiSetMark(PWMI_SET_MARK Buffer, ULONG Length)
+{
+    UNIMPLEMENTED_DBGBREAK();
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 WmipIoControl(
@@ -488,6 +502,18 @@ WmipIoControl(
         case IOCTL_WMI_OPEN_GUID_FOR_EVENTS:
         {
             Status = WmipOpenGuidForEvents(Buffer, InputLength, &OutputLength);
+            break;
+        }
+
+        case IOCTL_WMI_SET_MARK:
+        {
+            if (InputLength < FIELD_OFFSET(WMI_SET_MARK, Mark))
+            {
+                Status = STATUS_UNSUCCESSFUL;
+                break;
+            }
+
+            Status = WmiSetMark(Buffer, InputLength);
             break;
         }
 
