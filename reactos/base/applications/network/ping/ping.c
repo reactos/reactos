@@ -127,13 +127,13 @@ void FormatOutput(UINT uID, ...)
     UINT DataLength;
     int AnsiLength;
 
-    va_start(valist, uID);
-
     if (!LoadString(GetModuleHandle(NULL), uID,
                     Format, sizeof(Format) / sizeof(WCHAR)))
     {
         return;
     }
+
+    va_start(valist, uID);
 
     DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING, Format, 0, 0, Buf,\
                   sizeof(Buf) / sizeof(WCHAR), &valist);
@@ -141,14 +141,20 @@ void FormatOutput(UINT uID, ...)
     if(!DataLength)
     {
         if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            va_end(valist);
             return;
+        }
 
         DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING |\
                                     FORMAT_MESSAGE_ALLOCATE_BUFFER,\
                                     Format, 0, 0, (LPWSTR)&pBuf, 0, &valist);
+    }
 
-        if(!DataLength)
-            return;
+    if(!DataLength)
+    {
+        va_end(valist);
+        return;
     }
 
     if(GetFileType(hStdOutput) == FILE_TYPE_CHAR)
