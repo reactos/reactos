@@ -172,14 +172,14 @@ MmLocateMemoryAreaByAddress(
 
     while (Node != NULL)
     {
-        if (Address < Node->StartingAddress)
+        if (Address < MA_GetStartingAddress(Node))
             Node = Node->LeftChild;
         else if (Address >= Node->EndingAddress)
             Node = Node->RightChild;
         else
         {
             DPRINT("MmLocateMemoryAreaByAddress(%p): %p [%p - %p]\n",
-                   Address, Node, Node->StartingAddress, Node->EndingAddress);
+                   Address, Node, MA_GetStartingAddress(Node), Node->EndingAddress);
             return Node;
         }
     }
@@ -207,11 +207,11 @@ MmLocateMemoryAreaByRegion(
             Node != NULL;
             Node = MmIterateNextNode(Node))
     {
-        if (Node->StartingAddress >= Address &&
-                Node->StartingAddress < Extent)
+        if (MA_GetStartingAddress(Node) >= Address &&
+                MA_GetStartingAddress(Node) < Extent)
         {
             DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
-                   Address, (ULONG_PTR)Address + Length, Node->StartingAddress,
+                   Address, (ULONG_PTR)Address + Length, MA_GetStartingAddress(Node),
                    Node->EndingAddress);
             return Node;
         }
@@ -219,19 +219,19 @@ MmLocateMemoryAreaByRegion(
                 Node->EndingAddress < Extent)
         {
             DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
-                   Address, (ULONG_PTR)Address + Length, Node->StartingAddress,
+                   Address, (ULONG_PTR)Address + Length, MA_GetStartingAddress(Node),
                    Node->EndingAddress);
             return Node;
         }
-        if (Node->StartingAddress <= Address &&
+        if (MA_GetStartingAddress(Node) <= Address &&
                 Node->EndingAddress >= Extent)
         {
             DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
-                   Address, (ULONG_PTR)Address + Length, Node->StartingAddress,
+                   Address, (ULONG_PTR)Address + Length, MA_GetStartingAddress(Node),
                    Node->EndingAddress);
             return Node;
         }
-        if (Node->StartingAddress >= Extent)
+        if (MA_GetStartingAddress(Node) >= Extent)
         {
             DPRINT("Finished MmLocateMemoryAreaByRegion() = NULL\n");
             return NULL;
@@ -387,13 +387,13 @@ MmInsertMemoryArea(
         Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), TAG_MVAD);
         ASSERT(Vad);
         RtlZeroMemory(Vad, sizeof(MMVAD));
-        Vad->StartingVpn = PAGE_ROUND_DOWN(marea->StartingAddress) >> PAGE_SHIFT;
+        Vad->StartingVpn = PAGE_ROUND_DOWN(MA_GetStartingAddress(marea)) >> PAGE_SHIFT;
         /*
          * For some strange reason, it is perfectly valid to create a MAREA from 0x1000 to... 0x1000.
          * In a normal OS/Memory Manager, this would be retarded, but ReactOS allows this (how it works
          * I don't even want to know).
          */
-        if (marea->EndingAddress != marea->StartingAddress)
+        if (marea->EndingAddress != MA_GetStartingAddress(marea))
         {
             Vad->EndingVpn = PAGE_ROUND_DOWN((ULONG_PTR)marea->EndingAddress - 1) >> PAGE_SHIFT;
         }
@@ -424,16 +424,16 @@ MmInsertMemoryArea(
     do
     {
         DPRINT("marea->EndingAddress: %p Node->StartingAddress: %p\n",
-               marea->EndingAddress, Node->StartingAddress);
+               marea->EndingAddress, MA_GetStartingAddress(Node));
         DPRINT("marea->StartingAddress: %p Node->EndingAddress: %p\n",
-               marea->StartingAddress, Node->EndingAddress);
-        ASSERT(marea->EndingAddress <= Node->StartingAddress ||
-               marea->StartingAddress >= Node->EndingAddress);
-        ASSERT(marea->StartingAddress != Node->StartingAddress);
+               MA_GetStartingAddress(marea), Node->EndingAddress);
+        ASSERT(marea->EndingAddress <= MA_GetStartingAddress(Node) ||
+               MA_GetStartingAddress(marea) >= Node->EndingAddress);
+        ASSERT(MA_GetStartingAddress(marea) != MA_GetStartingAddress(Node));
 
         PreviousNode = Node;
 
-        if (marea->StartingAddress < Node->StartingAddress)
+        if (MA_GetStartingAddress(marea) < MA_GetStartingAddress(Node))
             Node = Node->LeftChild;
         else
             Node = Node->RightChild;
@@ -452,7 +452,7 @@ MmInsertMemoryArea(
 
     marea->LeftChild = marea->RightChild = NULL;
     marea->Parent = PreviousNode;
-    if (marea->StartingAddress < PreviousNode->StartingAddress)
+    if (MA_GetStartingAddress(marea) < MA_GetStartingAddress(PreviousNode))
         PreviousNode->LeftChild = marea;
     else
         PreviousNode->RightChild = marea;
@@ -499,7 +499,7 @@ MmFindGapBottomUp(
     while (Node && ((ULONG_PTR)Node->EndingAddress < HighestAddress))
     {
         /* Check if the memory area fits before the current node */
-        if ((ULONG_PTR)Node->StartingAddress >= (Candidate + Length))
+        if (MA_GetStartingAddress(Node) >= (Candidate + Length))
         {
             DPRINT("MmFindGapBottomUp: %p\n", Candidate);
             ASSERT(Candidate >= LowestAddress);
@@ -561,13 +561,13 @@ MmFindGapTopDown(
 
     /* Go to the node with highest address in the tree. */
     Node = Root ? MmIterateLastNode(Root) : NULL;
-    while (Node && ((ULONG_PTR)Node->StartingAddress > HighestAddress))
+    while (Node && (MA_GetStartingAddress(Node) > HighestAddress))
     {
         Node = MmIteratePrevNode(Node);
     }
 
     /* Traverse the tree from high to low addresses */
-    while (Node && ((ULONG_PTR)Node->StartingAddress > LowestAddress))
+    while (Node && (MA_GetStartingAddress(Node) > LowestAddress))
     {
         /* Check if the memory area fits after the current node */
         if ((ULONG_PTR)Node->EndingAddress <= Candidate)
@@ -577,11 +577,11 @@ MmFindGapTopDown(
         }
 
         /* Calculate next possible adress below this node */
-        Candidate = ALIGN_DOWN_BY((ULONG_PTR)Node->StartingAddress - Length,
+        Candidate = ALIGN_DOWN_BY(MA_GetStartingAddress(Node) - Length,
                                   Granularity);
 
         /* Check for overflow. */
-        if (Candidate > (ULONG_PTR)Node->StartingAddress)
+        if (Candidate > MA_GetStartingAddress(Node))
             return NULL;
 
         /* Go to the next lower node */
@@ -630,10 +630,10 @@ MiRosCheckMemoryAreasRecursive(
 
     /* Check some fields */
     ASSERT(Node->Magic == 'erAM');
-    ASSERT(PAGE_ALIGN(Node->StartingAddress) == (PVOID)Node->StartingAddress);
+    ASSERT(PAGE_ALIGN(MA_GetStartingAddress(Node)) == (PVOID)MA_GetStartingAddress(Node));
     ASSERT(Node->EndingAddress != 0);
     ASSERT(PAGE_ALIGN(Node->EndingAddress) == (PVOID)Node->EndingAddress);
-    ASSERT(Node->StartingAddress < Node->EndingAddress);
+    ASSERT(MA_GetStartingAddress(Node) < Node->EndingAddress);
     ASSERT((Node->Type == 0) ||
            (Node->Type == MEMORY_AREA_CACHE) ||
            // (Node->Type == MEMORY_AREA_CACHE_SEGMENT) ||
@@ -766,7 +766,7 @@ MmFreeMemoryArea(
         }
 
         EndAddress = MM_ROUND_UP(MemoryArea->EndingAddress, PAGE_SIZE);
-        for (Address = (ULONG_PTR)MemoryArea->StartingAddress;
+        for (Address = MA_GetStartingAddress(MemoryArea);
                 Address < (ULONG_PTR)EndAddress;
                 Address += PAGE_SIZE)
         {
@@ -1008,7 +1008,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
     RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
     MemoryArea->Type = Type;
-    MemoryArea->StartingAddress = (ULONG_PTR)*BaseAddress;
+    MemoryArea->StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
     MemoryArea->EndingAddress = ((ULONG_PTR)*BaseAddress + tmpLength);
     MemoryArea->Protect = Protect;
     MemoryArea->Flags = AllocationFlags;
@@ -1049,14 +1049,14 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
         switch (MemoryArea->Type)
         {
         case MEMORY_AREA_SECTION_VIEW:
-            Address = (PVOID)MemoryArea->StartingAddress;
+            Address = (PVOID)MA_GetStartingAddress(MemoryArea);
             MmUnlockAddressSpace(&Process->Vm);
             MmUnmapViewOfSection(Process, Address);
             MmLockAddressSpace(&Process->Vm);
             break;
 
         case MEMORY_AREA_CACHE:
-            Address = (PVOID)MemoryArea->StartingAddress;
+            Address = (PVOID)MA_GetStartingAddress(MemoryArea);
             MmUnlockAddressSpace(&Process->Vm);
             MmUnmapViewOfCacheSegment(&Process->Vm, Address);
             MmLockAddressSpace(&Process->Vm);

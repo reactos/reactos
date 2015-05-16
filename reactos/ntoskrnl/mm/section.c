@@ -1323,12 +1323,12 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     }
 
     PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-    Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress
+    Offset.QuadPart = (ULONG_PTR)PAddress - MA_GetStartingAddress(MemoryArea)
                       + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     Segment = MemoryArea->Data.SectionData.Segment;
     Section = MemoryArea->Data.SectionData.Section;
-    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
+    Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
                           &MemoryArea->Data.SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
@@ -1700,12 +1700,12 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
      * Find the offset of the page
      */
     PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-    Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress
+    Offset.QuadPart = (ULONG_PTR)PAddress - MA_GetStartingAddress(MemoryArea)
                       + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     Segment = MemoryArea->Data.SectionData.Segment;
     Section = MemoryArea->Data.SectionData.Section;
-    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
+    Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
                           &MemoryArea->Data.SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
@@ -1895,7 +1895,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     Context.SectionEntry = Entry;
     Context.CallingProcess = Process;
 
-    Context.Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
+    Context.Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)
                               + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     DirectMapped = FALSE;
@@ -2294,7 +2294,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
 
     Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-    Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
+    Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)
                       + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     /*
@@ -2478,7 +2478,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
                 ULONG_PTR Entry;
                 PFN_NUMBER Page;
 
-                Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
+                Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)
                                   + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
                 Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
                 /*
@@ -2524,7 +2524,7 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
     if (Length > MaxLength)
         Length = (ULONG)MaxLength;
 
-    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
+    Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
                           &MemoryArea->Data.SectionData.RegionListHead,
                           BaseAddress, NULL);
     ASSERT(Region != NULL);
@@ -2536,7 +2536,7 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
     }
 
     *OldProtect = Region->Protect;
-    Status = MmAlterRegion(AddressSpace, (PVOID)MemoryArea->StartingAddress,
+    Status = MmAlterRegion(AddressSpace, (PVOID)MA_GetStartingAddress(MemoryArea),
                            &MemoryArea->Data.SectionData.RegionListHead,
                            BaseAddress, Length, Region->Type, Protect,
                            MmAlterViewAttributes);
@@ -2555,7 +2555,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
     PROS_SECTION_OBJECT Section;
     PMM_SECTION_SEGMENT Segment;
 
-    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
+    Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
                           &MemoryArea->Data.SectionData.RegionListHead,
                           Address, &RegionBaseAddress);
     if (Region == NULL)
@@ -2567,12 +2567,12 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
     if (Section->AllocationAttributes & SEC_IMAGE)
     {
         Segment = MemoryArea->Data.SectionData.Segment;
-        Info->AllocationBase = (PUCHAR)MemoryArea->StartingAddress - Segment->Image.VirtualAddress;
+        Info->AllocationBase = (PUCHAR)MA_GetStartingAddress(MemoryArea) - Segment->Image.VirtualAddress;
         Info->Type = MEM_IMAGE;
     }
     else
     {
-        Info->AllocationBase = (PVOID)MemoryArea->StartingAddress;
+        Info->AllocationBase = (PVOID)MA_GetStartingAddress(MemoryArea);
         Info->Type = MEM_MAPPED;
     }
     Info->BaseAddress = RegionBaseAddress;
@@ -4008,7 +4008,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 
     Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-    Offset.QuadPart = ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress) +
+    Offset.QuadPart = ((ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)) +
                       MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     Section = MemoryArea->Data.SectionData.Section;

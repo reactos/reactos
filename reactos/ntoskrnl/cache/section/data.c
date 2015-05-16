@@ -160,7 +160,7 @@ _MiFlushMappedSection(PVOID BaseAddress,
         DPRINT("STATUS_NOT_MAPPED_DATA\n");
         return STATUS_NOT_MAPPED_DATA;
     }
-    BeginningAddress = PAGE_ROUND_DOWN((ULONG_PTR)MemoryArea->StartingAddress);
+    BeginningAddress = PAGE_ROUND_DOWN(MA_GetStartingAddress(MemoryArea));
     EndingAddress = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress);
     Segment = MemoryArea->Data.SectionData.Segment;
     ViewOffset.QuadPart = MemoryArea->Data.SectionData.ViewOffset.QuadPart;
@@ -681,7 +681,7 @@ MmFreeCacheSectionPage(PVOID Context,
     Process = MmGetAddressSpaceOwner(AddressSpace);
     Address = (PVOID)PAGE_ROUND_DOWN(Address);
     Segment = ContextData[1];
-    Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress +
+    Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea) +
                       MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
@@ -732,7 +732,7 @@ MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
 
     DPRINT("MmFreeMemoryArea(%p,%p)\n",
            MmGetAddressSpaceOwner(AddressSpace),
-           MemoryArea->StartingAddress);
+           MA_GetStartingAddress(MemoryArea));
 
     MmLockAddressSpace(AddressSpace);
 

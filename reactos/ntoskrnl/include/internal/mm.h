@@ -199,9 +199,12 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
+#define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->StartingVpn << PAGE_SHIFT)
+#define MA_GetEndingAddress(_MemoryArea) (((_MemoryArea)->EndingVpn + 1) << PAGE_SHIFT)
+
 typedef struct _MEMORY_AREA
 {
-    ULONG_PTR StartingAddress;
+    ULONG_PTR StartingVpn;
     ULONG_PTR EndingAddress;
     struct _MEMORY_AREA *Parent;
     struct _MEMORY_AREA *LeftChild;

@@ -137,7 +137,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
     {
         ULONG_PTR Entry;
         Offset = MemoryArea->Data.SectionData.ViewOffset.QuadPart +
-                 ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress);
+                 ((ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea));
 
         MmLockSectionSegment(MemoryArea->Data.SectionData.Segment);
 

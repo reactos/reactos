@@ -289,7 +289,8 @@ MmPageOutCacheSection(PMMSUPPORT AddressSpace,
     PMM_SECTION_SEGMENT Segment;
     PVOID PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
 
-    TotalOffset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress +
+    TotalOffset.QuadPart = (ULONG_PTR)PAddress -
+                           MA_GetStartingAddress(MemoryArea) +
                            MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     Segment = MemoryArea->Data.SectionData.Segment;
@@ -456,7 +457,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 
             DPRINTC("Type %x (%p -> %p)\n",
                     MemoryArea->Type,
-                    MemoryArea->StartingAddress,
+                    MA_GetStartingAddress(MemoryArea),
                     MemoryArea->EndingAddress);
 
             Resources.DoAcquisition = NULL;

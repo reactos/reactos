@@ -1886,7 +1886,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("MmQuerySectionView failed. MemoryArea=%p (%p-%p), BaseAddress=%p\n",
-                    MemoryArea, MemoryArea->StartingAddress, MemoryArea->EndingAddress, BaseAddress);
+                    MemoryArea, MA_GetStartingAddress(MemoryArea), MemoryArea->EndingAddress, BaseAddress);
             NT_ASSERT(NT_SUCCESS(Status));
         }
     }
@@ -5317,7 +5317,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
                     // For ReactOS: shrink the corresponding memory area
                     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)StartingAddress);
-                    ASSERT(Vad->StartingVpn << PAGE_SHIFT == MemoryArea->StartingAddress);
+                    ASSERT(Vad->StartingVpn << PAGE_SHIFT == MA_GetStartingAddress(MemoryArea));
                     ASSERT((Vad->EndingVpn + 1) << PAGE_SHIFT == MemoryArea->EndingAddress);
                     Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
                     MemoryArea->EndingAddress = StartingAddress;
