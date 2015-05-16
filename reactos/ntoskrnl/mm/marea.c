@@ -162,9 +162,10 @@ static PMEMORY_AREA MmIteratePrevNode(PMEMORY_AREA Node)
 PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByAddress(
     PMMSUPPORT AddressSpace,
-    PVOID Address)
+    PVOID Address_)
 {
     PMEMORY_AREA Node = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
+    ULONG_PTR Address = (ULONG_PTR)Address_;
 
     DPRINT("MmLocateMemoryAreaByAddress(AddressSpace %p, Address %p)\n",
            AddressSpace, Address);
@@ -190,11 +191,12 @@ MmLocateMemoryAreaByAddress(
 PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByRegion(
     PMMSUPPORT AddressSpace,
-    PVOID Address,
+    PVOID Address_,
     ULONG_PTR Length)
 {
     PMEMORY_AREA Node;
-    PVOID Extent = (PVOID)((ULONG_PTR)Address + Length);
+    ULONG_PTR Address = (ULONG_PTR)Address_;
+    ULONG_PTR Extent = Address + Length;
 
     /* Special case for empty tree. */
     if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
@@ -376,7 +378,8 @@ MmInsertMemoryArea(
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
     /* Build a lame VAD if this is a user-space allocation */
-    if ((marea->EndingAddress < MmSystemRangeStart) && (marea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+    if ((marea->EndingAddress < (ULONG_PTR)MmSystemRangeStart) &&
+        (marea->Type != MEMORY_AREA_OWNED_BY_ARM3))
     {
         PMMVAD Vad;
 
@@ -610,66 +613,6 @@ MmFindGap(
     return MmFindGapBottomUp(AddressSpace, Length, Granularity);
 }
 
-ULONG_PTR NTAPI
-MmFindGapAtAddress(
-    PMMSUPPORT AddressSpace,
-    PVOID Address)
-{
-    PMEMORY_AREA Node = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
-    PMEMORY_AREA RightNeighbour = NULL;
-    PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
-    PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
-                           (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
-
-    Address = MM_ROUND_DOWN(Address, PAGE_SIZE);
-
-    if (LowestAddress < MmSystemRangeStart)
-    {
-        if (Address >= MmSystemRangeStart)
-        {
-            return 0;
-        }
-    }
-    else
-    {
-        if (Address < LowestAddress)
-        {
-            return 0;
-        }
-    }
-
-    while (Node != NULL)
-    {
-        if (Address < Node->StartingAddress)
-        {
-            RightNeighbour = Node;
-            Node = Node->LeftChild;
-        }
-        else if (Address >= Node->EndingAddress)
-        {
-            Node = Node->RightChild;
-        }
-        else
-        {
-            DPRINT("MmFindGapAtAddress: 0\n");
-            return 0;
-        }
-    }
-
-    if (RightNeighbour)
-    {
-        DPRINT("MmFindGapAtAddress: %p [%p]\n", Address,
-               (ULONG_PTR)RightNeighbour->StartingAddress - (ULONG_PTR)Address);
-        return (ULONG_PTR)RightNeighbour->StartingAddress - (ULONG_PTR)Address;
-    }
-    else
-    {
-        DPRINT("MmFindGapAtAddress: %p [%p]\n", Address,
-               (ULONG_PTR)HighestAddress - (ULONG_PTR)Address);
-        return (ULONG_PTR)HighestAddress - (ULONG_PTR)Address;
-    }
-}
-
 VOID
 NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
@@ -687,10 +630,10 @@ MiRosCheckMemoryAreasRecursive(
 
     /* Check some fields */
     ASSERT(Node->Magic == 'erAM');
-    ASSERT(PAGE_ALIGN(Node->StartingAddress) == Node->StartingAddress);
-    ASSERT(Node->EndingAddress != NULL);
-    ASSERT(PAGE_ALIGN(Node->EndingAddress) == Node->EndingAddress);
-    ASSERT((ULONG_PTR)Node->StartingAddress < (ULONG_PTR)Node->EndingAddress);
+    ASSERT(PAGE_ALIGN(Node->StartingAddress) == (PVOID)Node->StartingAddress);
+    ASSERT(Node->EndingAddress != 0);
+    ASSERT(PAGE_ALIGN(Node->EndingAddress) == (PVOID)Node->EndingAddress);
+    ASSERT(Node->StartingAddress < Node->EndingAddress);
     ASSERT((Node->Type == 0) ||
            (Node->Type == MEMORY_AREA_CACHE) ||
            // (Node->Type == MEMORY_AREA_CACHE_SEGMENT) ||
@@ -872,7 +815,7 @@ MmFreeMemoryArea(
 
         if (MemoryArea->Vad)
         {
-            ASSERT(MemoryArea->EndingAddress < MmSystemRangeStart);
+            ASSERT(MemoryArea->EndingAddress < (ULONG_PTR)MmSystemRangeStart);
             ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
 
             /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
@@ -1065,8 +1008,8 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
     RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
     MemoryArea->Type = Type;
-    MemoryArea->StartingAddress = *BaseAddress;
-    MemoryArea->EndingAddress = (PVOID)((ULONG_PTR)*BaseAddress + tmpLength);
+    MemoryArea->StartingAddress = (ULONG_PTR)*BaseAddress;
+    MemoryArea->EndingAddress = ((ULONG_PTR)*BaseAddress + tmpLength);
     MemoryArea->Protect = Protect;
     MemoryArea->Flags = AllocationFlags;
     //MemoryArea->LockCount = 0;

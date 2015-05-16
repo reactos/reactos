@@ -1328,7 +1328,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
     Segment = MemoryArea->Data.SectionData.Segment;
     Section = MemoryArea->Data.SectionData.Section;
-    Region = MmFindRegion(MemoryArea->StartingAddress,
+    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
                           &MemoryArea->Data.SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
@@ -1705,7 +1705,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
 
     Segment = MemoryArea->Data.SectionData.Segment;
     Section = MemoryArea->Data.SectionData.Section;
-    Region = MmFindRegion(MemoryArea->StartingAddress,
+    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
                           &MemoryArea->Data.SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
@@ -2520,11 +2520,11 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
     NTSTATUS Status;
     ULONG_PTR MaxLength;
 
-    MaxLength = (ULONG_PTR)MemoryArea->EndingAddress - (ULONG_PTR)BaseAddress;
+    MaxLength = MemoryArea->EndingAddress - (ULONG_PTR)BaseAddress;
     if (Length > MaxLength)
         Length = (ULONG)MaxLength;
 
-    Region = MmFindRegion(MemoryArea->StartingAddress,
+    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
                           &MemoryArea->Data.SectionData.RegionListHead,
                           BaseAddress, NULL);
     ASSERT(Region != NULL);
@@ -2536,7 +2536,7 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
     }
 
     *OldProtect = Region->Protect;
-    Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
+    Status = MmAlterRegion(AddressSpace, (PVOID)MemoryArea->StartingAddress,
                            &MemoryArea->Data.SectionData.RegionListHead,
                            BaseAddress, Length, Region->Type, Protect,
                            MmAlterViewAttributes);
@@ -2572,7 +2572,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
     }
     else
     {
-        Info->AllocationBase = MemoryArea->StartingAddress;
+        Info->AllocationBase = (PVOID)MemoryArea->StartingAddress;
         Info->Type = MEM_MAPPED;
     }
     Info->BaseAddress = RegionBaseAddress;

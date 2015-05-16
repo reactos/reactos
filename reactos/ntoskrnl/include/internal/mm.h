@@ -201,8 +201,8 @@ typedef struct _ROS_SECTION_OBJECT
 
 typedef struct _MEMORY_AREA
 {
-    PVOID StartingAddress;
-    PVOID EndingAddress;
+    ULONG_PTR StartingAddress;
+    ULONG_PTR EndingAddress;
     struct _MEMORY_AREA *Parent;
     struct _MEMORY_AREA *LeftChild;
     struct _MEMORY_AREA *RightChild;
@@ -491,14 +491,6 @@ MmCreateMemoryArea(
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByAddress(
-    PMMSUPPORT AddressSpace,
-    PVOID Address
-);
-
-// fixme: unused?
-ULONG_PTR
-NTAPI
-MmFindGapAtAddress_(
     PMMSUPPORT AddressSpace,
     PVOID Address
 );
