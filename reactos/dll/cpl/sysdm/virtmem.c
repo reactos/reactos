@@ -442,7 +442,7 @@ OnSet(PVIRTMEM pVirtMem)
             }
 
             /* Check the valid range of the minimum size */
-            if (MinSize < 2 ||
+            if (MinSize < 16 ||
                 MinSize > pVirtMem->Pagefile[DriveIndex].FreeSize)
             {
                 ResourceMessageBox(hApplet,
@@ -455,7 +455,8 @@ OnSet(PVIRTMEM pVirtMem)
 
             /* Check the valid range of the maximum size */
             if (MaxSize < MinSize ||
-                MaxSize > pVirtMem->Pagefile[DriveIndex].FreeSize)
+                MaxSize > pVirtMem->Pagefile[DriveIndex].FreeSize ||
+                MaxSize > 4095)
             {
                 ResourceMessageBox(hApplet,
                                    NULL,
@@ -568,7 +569,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         }
 
         /* Set minimum pagefile size */
-        SetDlgItemText(hwndDlg, IDC_MINIMUM, _T("2 MB"));
+        SetDlgItemText(hwndDlg, IDC_MINIMUM, _T("16 MB"));
 
         /* Set recommended pagefile size */
         MemoryStatus.dwLength = sizeof(MEMORYSTATUSEX);

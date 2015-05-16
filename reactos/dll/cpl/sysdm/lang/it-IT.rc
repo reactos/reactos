@@ -273,7 +273,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Applet di sistema del pannello di controllo"
     IDS_WARNINITIALSIZE "Immettere la dimensione iniziale del file di paging."
     IDS_WARNMAXIMUMSIZE "Immettere la dimensione massima del file di paging."
-    IDS_WARNINITIALRANGE "La dimensione iniziale del file di paging non può essere inferiore a 2 MB e non può superare lo spazio disponibile nell'unità selezionata."
+    IDS_WARNINITIALRANGE "La dimensione iniziale del file di paging non può essere inferiore a 16 MB e non può superare lo spazio disponibile nell'unità selezionata."
     IDS_WARNMAXIMUMRANGE "La dimensione massima del file di paging non può essere inferiore a quella iniziale e non può superare lo spazio disponibile nell'unità selezionata."
     IDS_PAGEFILE_NONE "none"
     IDS_PAGEFILE_SYSTEM "system managed"

@@ -282,7 +282,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "System"
     IDS_WARNINITIALSIZE "Wprowadź wielkość dla początkowego rozmiaru pliku stronicowania."
     IDS_WARNMAXIMUMSIZE "Wprowadź wielkość dla maksymalnego rozmiaru pliku stronicowania."
-    IDS_WARNINITIALRANGE "Początkowy rozmiar pliku stronicowania nie może być mniejszy niż 2MB i nie może przekraczać dostępnej ilości miejsca w wybranym napędzie."
+    IDS_WARNINITIALRANGE "Początkowy rozmiar pliku stronicowania nie może być mniejszy niż 16MB i nie może przekraczać dostępnej ilości miejsca w wybranym napędzie."
     IDS_WARNMAXIMUMRANGE "Maksymalny rozmiar pliku stronicowania nie może być mniejszy niż jego rozmiar początkowy i nie może przekraczać dostępnej ilości miejsca w wybranym napędzie."
     IDS_PAGEFILE_NONE "brak"
     IDS_PAGEFILE_SYSTEM "Kontrolowany przez system"

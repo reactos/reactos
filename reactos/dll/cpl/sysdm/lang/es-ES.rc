@@ -275,7 +275,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Applet de sistema del Panel de control"
     IDS_WARNINITIALSIZE "Introduzca el tamaño inicial del archivo de paginación."
     IDS_WARNMAXIMUMSIZE "Introduzca el tamaño máximo del archivo de paginación."
-    IDS_WARNINITIALRANGE "El tamaño inicial del archivo de paginación no puede ser inferior a 2 MB y no puede exceder el espacio disponible en la unidad seleccionada."
+    IDS_WARNINITIALRANGE "El tamaño inicial del archivo de paginación no puede ser inferior a 16 MB y no puede exceder el espacio disponible en la unidad seleccionada."
     IDS_WARNMAXIMUMRANGE "El tamaño máximo del archivo de paginación no puede ser inferior al tamaño inicial y no puede exceder el espacio disponible en la unidad seleccionada."
     IDS_PAGEFILE_NONE "ninguno"
     IDS_PAGEFILE_SYSTEM "administrado por el sistema"

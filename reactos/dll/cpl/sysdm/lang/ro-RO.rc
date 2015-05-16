@@ -282,7 +282,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Specificare valori de sistem"
     IDS_WARNINITIALSIZE "Introduceți o valoare numerică pentru dimensiunea inițială a fișierului de paginare."
     IDS_WARNMAXIMUMSIZE "Introduceți o valoare numerică pentru dimensiunea maximă a fișierului de paginare."
-    IDS_WARNINITIALRANGE "Dimensiunea inițială a fișierului de paginare trebuie să fie încadrată între 2 Mo și spațiul liber disponibil al unității selectate."
+    IDS_WARNINITIALRANGE "Dimensiunea inițială a fișierului de paginare trebuie să fie încadrată între 16 Mo și spațiul liber disponibil al unității selectate."
     IDS_WARNMAXIMUMRANGE "Dimensiunea maximă a fișierului de paginare trebuie să fie încadrată între dimensiunea inițială și spațiul liber disponibil al unității selectate."
     IDS_PAGEFILE_NONE "nespecificat"
     IDS_PAGEFILE_SYSTEM "gestionat de sistem"

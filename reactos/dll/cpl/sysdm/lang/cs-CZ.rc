@@ -1,6 +1,6 @@
 /* FILE:       dll/cpl/sysdm/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2010-06-03
+ * UPDATED:    2015-05-04
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -276,10 +276,10 @@ BEGIN
     IDS_USERPROFILE_STATUS "Stav"
     IDS_USERPROFILE_MODIFIED "Upraveno"
     IDS_MESSAGEBOXTITLE "Systémový aplet kontrolních panelů"
-    IDS_WARNINITIALSIZE "Zadejte číselnou hodnotu pro úvodní velikost stránkovacího souboru."
+    IDS_WARNINITIALSIZE "Zadejte číselnou hodnotu pro počáteční velikost stránkovacího souboru."
     IDS_WARNMAXIMUMSIZE "Zadejte číselnou hodnotu pro maximální velikost stránkovacího souboru."
-    IDS_WARNINITIALRANGE "Výchozí velikost stránkovacího souboru nesmí být menší než 2 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
-    IDS_WARNMAXIMUMRANGE "Maximální velikost stránkovacího souboru nesmí být menší než velikost výchozí a nesmí překročit množství volného místa na zvolené diskové jednotce."
+    IDS_WARNINITIALRANGE "Počáteční velikost stránkovacího souboru nesmí být menší než 16 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
+    IDS_WARNMAXIMUMRANGE "Maximální velikost stránkovacího souboru nesmí být menší než velikost počáteční, nesmí být větší než 4095 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
     IDS_PAGEFILE_NONE "není"
     IDS_PAGEFILE_SYSTEM "spravováno systémem"
     IDS_INFOREBOOT "Změny se projeví po restartování počítače."

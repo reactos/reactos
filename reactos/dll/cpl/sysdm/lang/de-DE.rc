@@ -282,7 +282,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Systemsteuerungsoption ""System"""
     IDS_WARNINITIALSIZE "Geben Sie einen numerischen Wert für die Anfangsgröße der Auslagerungsdatei an."
     IDS_WARNMAXIMUMSIZE "Geben Sie einen numerischen Wert für die Maximalgröße der Auslagerungsdatei an."
-    IDS_WARNINITIALRANGE "Die Anfangsgröße der Auslagerungsdatei darf nicht kleiner als 2 MB sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
+    IDS_WARNINITIALRANGE "Die Anfangsgröße der Auslagerungsdatei darf nicht kleiner als 16 MB sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
     IDS_WARNMAXIMUMRANGE "Die Maximalgröße der Auslagerungsdatei darf nicht kleiner als die Anfangsgröße sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
     IDS_PAGEFILE_NONE "Keine"
     IDS_PAGEFILE_SYSTEM "Systemverwaltet"

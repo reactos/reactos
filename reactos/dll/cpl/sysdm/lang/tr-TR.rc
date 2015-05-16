@@ -275,7 +275,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Dizge Denetim Masası Uygulaması"
     IDS_WARNINITIALSIZE "Sayfalama kütüğünün başlangıç büyüklüğü için bir sayılık değer giriniz."
     IDS_WARNMAXIMUMSIZE "Sayfalama kütüğünün en çok büyüklüğü için bir sayılık değer giriniz."
-    IDS_WARNINITIALRANGE "Sayfalama kütüğünün başlangıç büyüklüğü, 2 MB'tan küçük olmamalıdır ve seçili sürücüde var olan boşluğu aşmamalıdır."
+    IDS_WARNINITIALRANGE "Sayfalama kütüğünün başlangıç büyüklüğü, 16 MB'tan küçük olmamalıdır ve seçili sürücüde var olan boşluğu aşmamalıdır."
     IDS_WARNMAXIMUMRANGE "Sayfalama kütüğünün en çok büyüklüğü, kendisinin başlangıç büyüklüğünden küçük olmamalıdır ve seçili sürücüde var olan boşluğu aşmamalıdır."
     IDS_PAGEFILE_NONE "Yok"
     IDS_PAGEFILE_SYSTEM "Dizge Yönetimli"
