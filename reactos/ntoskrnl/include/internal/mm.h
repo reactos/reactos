@@ -204,6 +204,7 @@ typedef struct _ROS_SECTION_OBJECT
 
 typedef struct _MEMORY_AREA
 {
+    MMVAD VadNode;
     ULONG_PTR StartingVpn;
     ULONG_PTR EndingVpn;
     struct _MEMORY_AREA *Parent;

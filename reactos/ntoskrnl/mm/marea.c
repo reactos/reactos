@@ -384,8 +384,8 @@ MmInsertMemoryArea(
         PMMVAD Vad;
 
         ASSERT(marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
-        Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), TAG_MVAD);
-        ASSERT(Vad);
+        Vad = &marea->VadNode;
+
         RtlZeroMemory(Vad, sizeof(MMVAD));
         Vad->StartingVpn = PAGE_ROUND_DOWN(MA_GetStartingAddress(marea)) >> PAGE_SHIFT;
         /*
@@ -825,7 +825,6 @@ MmFreeMemoryArea(
                 MiRemoveNode(MemoryArea->Vad, &Process->VadRoot);
             }
 
-            ExFreePoolWithTag(MemoryArea->Vad, TAG_MVAD);
             MemoryArea->Vad = NULL;
         }
     }
