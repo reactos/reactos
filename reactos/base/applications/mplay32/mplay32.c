@@ -648,7 +648,7 @@ StopPlayback(HWND hwnd)
     SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)1);
 
     mciGeneric.dwCallback = (DWORD_PTR)hwnd;
-    mciError = mciSendCommand(wDeviceId, MCI_STOP, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
+    mciError = mciSendCommand(wDeviceId, MCI_STOP, MCI_WAIT, (DWORD_PTR)&mciGeneric);
     if (mciError != 0)
     {
         ShowMCIError(hwnd, mciError);
@@ -744,7 +744,6 @@ VOID CALLBACK
 PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
     MCI_STATUS_PARMS mciStatus;
-    MCI_PLAY_PARMS mciPlay;
     DWORD dwPos;
 
     if (wDeviceId == 0) KillTimer(hwnd, IDT_PLAYTIMER);
@@ -753,24 +752,8 @@ PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
     dwPos = mciStatus.dwReturn;
 
-    if ((UINT)dwPos >= MaxFilePos)
-    {
-        if (!bRepeat)
-        {
-            StopPlayback(hwnd);
-        }
-        else
-        {
-            mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
-            mciPlay.dwCallback = (DWORD_PTR)hwnd;
-            mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY, (DWORD_PTR)&mciPlay);
-        }
-    }
-    else
-    {
-        SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)dwPos);
-        UpdateTimeDisplay(hTimeDisplay);
-    }
+    SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)dwPos);
+    UpdateTimeDisplay(hTimeDisplay);
 }
 
 static VOID
@@ -829,7 +812,7 @@ TogglePlaybackState(HWND hwnd)
         case MCI_MODE_PLAY:
         {
             mciGeneric.dwCallback = (DWORD_PTR)hwnd;
-            mciError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_NOTIFY | MCI_WAIT, (DWORD_PTR)&mciGeneric);
+            mciError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
             idBmp = IDB_PLAYICON;
             idCmd = IDC_PLAY;
             break;
@@ -838,7 +821,7 @@ TogglePlaybackState(HWND hwnd)
         case MCI_MODE_PAUSE:
         {
             mciGeneric.dwCallback = (DWORD_PTR)hwnd;
-            mciError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
+            mciError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_WAIT, (DWORD_PTR)&mciGeneric);
             idBmp = IDB_PAUSEICON;
             idCmd = IDC_PAUSE;
             break;
@@ -1234,6 +1217,19 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             DragQueryFile(drophandle, 0, droppedfile, ARRAYSIZE(droppedfile));
             DragFinish(drophandle);
             OpenMediaFile(hwnd, droppedfile, NULL);
+            break;
+        }
+
+        case MM_MCINOTIFY:
+        {
+            if (wParam == MCI_NOTIFY_SUCCESSFUL)
+            {
+                StopPlayback(hwnd);
+                if (bRepeat)
+                {
+                    StartPlayback(hwnd);
+                }
+            }
             break;
         }
 
