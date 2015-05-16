@@ -751,8 +751,10 @@ BEGIN
     IDS_NEWFOLDER "Nuova cartella"
 
     IDS_DRIVE_FIXED "Disco locale"
-    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_CDROM "CD Drive"
     IDS_DRIVE_NETWORK "Disco di Rete"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
     IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */

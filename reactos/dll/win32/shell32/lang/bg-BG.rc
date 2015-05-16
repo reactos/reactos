@@ -753,6 +753,8 @@ BEGIN
     IDS_DRIVE_FIXED "Местен диск"
     IDS_DRIVE_CDROM "КД четец"
     IDS_DRIVE_NETWORK "Мрежов диск"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
     IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */

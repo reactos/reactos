@@ -753,6 +753,8 @@ BEGIN
     IDS_DRIVE_FIXED "Lokálny disk"
     IDS_DRIVE_CDROM "Jednotka CD"
     IDS_DRIVE_NETWORK "Sieťový disk"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
     IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */

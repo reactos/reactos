@@ -753,8 +753,10 @@ BEGIN
     IDS_NEWFOLDER "Новая папка"
 
     IDS_DRIVE_FIXED "Локальный диск"
-    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_CDROM "CD Drive"
     IDS_DRIVE_NETWORK "Сетевой диск"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
     IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */

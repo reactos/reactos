@@ -753,6 +753,8 @@ BEGIN
     IDS_DRIVE_FIXED "Yerel Disk"
     IDS_DRIVE_CDROM "Optik Sürücü"
     IDS_DRIVE_NETWORK "Ağ Sürücüsü"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
     IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
