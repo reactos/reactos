@@ -359,13 +359,16 @@ MmRebalanceTree(
 VOID
 NTAPI
 MiInsertVad(IN PMMVAD Vad,
-            IN PEPROCESS Process);
+            IN PMM_AVL_TABLE VadRoot);
 
 ULONG
 NTAPI
 MiMakeProtectionMask(
     IN ULONG Protect
 );
+
+MM_AVL_TABLE MiRosKernelVadRoot;
+BOOLEAN MiRosKernelVadRootInitialized;
 
 static VOID
 MmInsertMemoryArea(
@@ -377,23 +380,37 @@ MmInsertMemoryArea(
     ULONG Depth = 0;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
+    marea->VadNode.StartingVpn = marea->StartingVpn;
+    marea->VadNode.EndingVpn = marea->EndingVpn;
+    marea->VadNode.u.VadFlags.Spare = 1;
+    marea->VadNode.u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
+
     /* Build a lame VAD if this is a user-space allocation */
-    if ((MA_GetEndingAddress(marea) < (ULONG_PTR)MmSystemRangeStart) &&
-        (marea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+    if (MA_GetEndingAddress(marea) < (ULONG_PTR)MmSystemRangeStart)
     {
-        ASSERT(marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
+        if (marea->Type != MEMORY_AREA_OWNED_BY_ARM3)
+        {
+            ASSERT(marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
 
-        marea->VadNode.StartingVpn = marea->StartingVpn;
-        marea->VadNode.EndingVpn = marea->EndingVpn;
-        marea->VadNode.u.VadFlags.Spare = 1;
-        marea->VadNode.u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
-
-        /* Insert the VAD */
-        MiInsertVad(&marea->VadNode, Process);
-        marea->Vad = &marea->VadNode;
+            /* Insert the VAD */
+            MiLockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
+            MiInsertVad(&marea->VadNode, &Process->VadRoot);
+            MiUnlockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
+            marea->Vad = &marea->VadNode;
+        }
     }
     else
     {
+        if (!MiRosKernelVadRootInitialized)
+        {
+            MiRosKernelVadRoot.BalancedRoot.u1.Parent = &MiRosKernelVadRoot.BalancedRoot;
+            MiRosKernelVadRootInitialized = TRUE;
+        }
+
+        /* Insert the VAD */
+        MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+        MiInsertVad(&marea->VadNode, &MiRosKernelVadRoot);
+        MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
         marea->Vad = NULL;
     }
 
@@ -797,19 +814,24 @@ MmFreeMemoryArea(
             KeDetachProcess();
         }
 
+        //if (MemoryArea->VadNode.StartingVpn < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT
         if (MemoryArea->Vad)
         {
             ASSERT(MA_GetEndingAddress(MemoryArea) < (ULONG_PTR)MmSystemRangeStart);
             ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
 
             /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
-            ASSERT(((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare != 0);
+            ASSERT(MemoryArea->VadNode.u.VadFlags.Spare != 0);
             if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
             {
-                MiRemoveNode(MemoryArea->Vad, &Process->VadRoot);
+                MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &Process->VadRoot);
             }
 
             MemoryArea->Vad = NULL;
+        }
+        else
+        {
+            MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &MiRosKernelVadRoot);
         }
     }
 

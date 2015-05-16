@@ -2039,13 +2039,6 @@ MiCheckSecuredVad(
     IN ULONG ProtectionMask
 );
 
-VOID
-NTAPI
-MiInsertVad(
-    IN PMMVAD Vad,
-    IN PEPROCESS Process
-);
-
 NTSTATUS
 NTAPI
 MiInsertVadEx(

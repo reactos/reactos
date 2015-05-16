@@ -181,24 +181,22 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
 VOID
 NTAPI
 MiInsertVad(IN PMMVAD Vad,
-            IN PEPROCESS Process)
+            IN PMM_AVL_TABLE VadRoot)
 {
     TABLE_SEARCH_RESULT Result;
     PMMADDRESS_NODE Parent = NULL;
 
     /* Validate the VAD and set it as the current hint */
     ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
-    Process->VadRoot.NodeHint = Vad;
+    VadRoot->NodeHint = Vad;
 
     /* Find the parent VAD and where this child should be inserted */
-    Result = RtlpFindAvlTableNodeOrParent(&Process->VadRoot, (PVOID)Vad->StartingVpn, &Parent);
+    Result = RtlpFindAvlTableNodeOrParent(VadRoot, (PVOID)Vad->StartingVpn, &Parent);
     ASSERT(Result != TableFoundNode);
     ASSERT((Parent != NULL) || (Result == TableEmptyTree));
 
     /* Do the actual insert operation */
-    MiLockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
-    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
-    MiUnlockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
+    MiInsertNode(VadRoot, (PVOID)Vad, Parent, Result);
 }
 
 NTSTATUS
