@@ -75,6 +75,36 @@ static const FAST486_FPU_DATA_REG FpuInverseNumber[INVERSE_NUMBERS_COUNT] =
     {0xE38E38E38E38E38EULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 18 */
     {0xD79435E50D79435EULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 19 */
     {0xCCCCCCCCCCCCCCCDULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 20 */
+    {0xC30C30C30C30C30CULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 21 */
+    {0xBA2E8BA2E8BA2E8BULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 22 */
+    {0xB21642C8590B2164ULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 23 */
+    {0xAAAAAAAAAAAAAAABULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 24 */
+    {0xA3D70A3D70A3D70AULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 25 */
+    {0x9D89D89D89D89D8AULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 26 */
+    {0x97B425ED097B425FULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 27 */
+    {0x9249249249249249ULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 28 */
+    {0x8D3DCB08D3DCB08DULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 29 */
+    {0x8888888888888889ULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 30 */
+    {0x8421084210842108ULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 31 */
+    {0x8000000000000000ULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 32 */
+    {0xF83E0F83E0F83E0FULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 33 */
+    {0xF0F0F0F0F0F0F0F0ULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 34 */
+    {0xEA0EA0EA0EA0EA0EULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 35 */
+    {0xE38E38E38E38E38EULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 36 */
+    {0xDD67C8A60DD67C8AULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 37 */
+    {0xD79435E50D79435EULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 38 */
+    {0xD20D20D20D20D20DULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 39 */
+    {0xCCCCCCCCCCCCCCCDULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 40 */
+    {0xC7CE0C7CE0C7CE0CULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 41 */
+    {0xC30C30C30C30C30CULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 42 */
+    {0xBE82FA0BE82FA0BFULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 43 */
+    {0xBA2E8BA2E8BA2E8BULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 44 */
+    {0xB60B60B60B60B60BULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 45 */
+    {0xB21642C8590B2164ULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 46 */
+    {0xAE4C415C9882B931ULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 47 */
+    {0xAAAAAAAAAAAAAAABULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 48 */
+    {0xA72F05397829CBC1ULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 49 */
+    {0xA3D70A3D70A3D70AULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 50 */
 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -953,11 +983,11 @@ Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
     FAST486_FPU_DATA_REG SeriesElement;
 
     /* Calculate the first series element, which is 2 * (x - 1) * ln(2) */
-    Fast486FpuSubtract(State, Operand, &FpuOne, &Value);
-    Fast486FpuMultiply(State, &Value, &FpuLnTwo, &Value);
-    Fast486FpuAdd(State, &Value, &Value, &SeriesElement);
+    if (!Fast486FpuSubtract(State, Operand, &FpuOne, &Value)) return;
+    if (!Fast486FpuMultiply(State, &Value, &FpuLnTwo, &Value)) return;
+    if (!Fast486FpuAdd(State, &Value, &Value, &SeriesElement)) return;
 
-    for (i = 2; i < INVERSE_NUMBERS_COUNT; i++)
+    for (i = 2; i <= INVERSE_NUMBERS_COUNT / 2; i++)
     {
         /* Add the series element to the final sum */
         if (!Fast486FpuAdd(State, &TempResult, &SeriesElement, &TempResult))
@@ -977,7 +1007,10 @@ Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
         }
 
         /* And now multiply the series element by the inverse counter */
-        if (!Fast486FpuMultiply(State, &SeriesElement, &FpuInverseNumber[i], &SeriesElement))
+        if (!Fast486FpuMultiply(State,
+                                &SeriesElement,
+                                &FpuInverseNumber[i - 1],
+                                &SeriesElement))
         {
             /* An exception occurred */
             return;
@@ -985,6 +1018,102 @@ Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
     }
 
     *Result = TempResult;
+}
+
+/*
+ * Calculates using the identity:
+ * sin(x) = sum { -1^n * x^(2n + 1) / (2n + 1)!, n >= 0 }
+ */
+static inline BOOLEAN FASTCALL
+Fast486FpuCalculateSine(PFAST486_STATE State,
+                        PFAST486_FPU_DATA_REG Operand,
+                        PFAST486_FPU_DATA_REG Result)
+{
+    INT i;
+    FAST486_FPU_DATA_REG TempResult = *Operand;
+    FAST486_FPU_DATA_REG OperandSquared = *Operand;
+    FAST486_FPU_DATA_REG SeriesElement = *Operand;
+
+    /* Calculate the square of the operand */
+    if (!Fast486FpuMultiply(State, Operand, Operand, &OperandSquared)) return FALSE;
+
+    for (i = 2; (i * (i + 1)) <= INVERSE_NUMBERS_COUNT; i += 2)
+    {
+        if (!Fast486FpuMultiply(State, &SeriesElement, &OperandSquared, &SeriesElement))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        if (!Fast486FpuMultiply(State,
+                                &SeriesElement,
+                                &FpuInverseNumber[i * (i + 1) - 1],
+                                &SeriesElement))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        /* Toggle the sign of the series element */
+        SeriesElement.Sign = !SeriesElement.Sign;
+
+        if (!Fast486FpuAdd(State, &TempResult, &SeriesElement, &TempResult))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+    }
+
+    *Result = TempResult;
+    return TRUE;
+}
+
+/*
+ * Calculates using the identity:
+ * cos(x) = sum { -1^n * x^(2n) / (2n)!, n >= 0 }
+ */
+static inline BOOLEAN FASTCALL
+Fast486FpuCalculateCosine(PFAST486_STATE State,
+                          PFAST486_FPU_DATA_REG Operand,
+                          PFAST486_FPU_DATA_REG Result)
+{
+    INT i;
+    FAST486_FPU_DATA_REG TempResult = FpuOne;
+    FAST486_FPU_DATA_REG OperandSquared = *Operand;
+    FAST486_FPU_DATA_REG SeriesElement = FpuOne;
+
+    /* Calculate the square of the operand */
+    if (!Fast486FpuMultiply(State, Operand, Operand, &OperandSquared)) return FALSE;
+
+    for (i = 1; (i * (i + 1)) <= INVERSE_NUMBERS_COUNT; i += 2)
+    {
+        if (!Fast486FpuMultiply(State, &SeriesElement, &OperandSquared, &SeriesElement))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        if (!Fast486FpuMultiply(State,
+                                &SeriesElement,
+                                &FpuInverseNumber[i * (i + 1) - 1],
+                                &SeriesElement))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        /* Toggle the sign of the series element */
+        SeriesElement.Sign = !SeriesElement.Sign;
+
+        if (!Fast486FpuAdd(State, &TempResult, &SeriesElement, &TempResult))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+    }
+
+    *Result = TempResult;
+    return TRUE;
 }
 
 static inline VOID FASTCALL
@@ -1699,8 +1828,16 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FSINCOS */
             case 0x3B:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FAST486_FPU_DATA_REG Number = FPU_ST(0);
+                FPU_SAVE_LAST_INST();
+
+                /* Replace FP0 with the sine */
+                if (!Fast486FpuCalculateSine(State, &Number, &FPU_ST(0))) break;
+                FPU_UPDATE_TAG(0);
+
+                /* Push the cosine */
+                if (!Fast486FpuCalculateCosine(State, &Number, &Number)) break;
+                Fast486FpuPush(State, &Number);
 
                 break;
             }
@@ -1762,8 +1899,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FSIN */
             case 0x3E:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FPU_SAVE_LAST_INST();
+
+                Fast486FpuCalculateSine(State, &FPU_ST(0), &FPU_ST(0));
+                FPU_UPDATE_TAG(0);
 
                 break;
             }
@@ -1771,8 +1910,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FCOS */
             case 0x3F:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FPU_SAVE_LAST_INST();
+
+                Fast486FpuCalculateCosine(State, &FPU_ST(0), &FPU_ST(0));
+                FPU_UPDATE_TAG(0);
 
                 break;
             }
