@@ -147,6 +147,10 @@ static void test_acquire(IDirectInputA *pDI, HWND hwnd)
     hr = IDirectInputDevice_Acquire(pMouse);
     ok(hr == S_OK, "Acquire() failed: %08x\n", hr);
 
+if (!winetest_interactive)
+    skip("ROSTESTS-176/CORE-9710: Skipping randomly failing tests\n");
+else {
+
     mouse_event(MOUSEEVENTF_MOVE, 10, 10, 0, 0);
     cnt = 1;
     hr = IDirectInputDevice_GetDeviceData(pMouse, sizeof(mouse_state), &mouse_state, &cnt, 0);
@@ -176,7 +180,7 @@ static void test_acquire(IDirectInputA *pDI, HWND hwnd)
     cnt = 1;
     hr = IDirectInputDevice_GetDeviceData(pMouse, sizeof(mouse_state), &mouse_state, &cnt, 0);
     ok(hr == DI_OK && cnt == 1, "GetDeviceData() failed: %08x cnt:%d\n", hr, cnt);
-
+}
     if (pMouse) IUnknown_Release(pMouse);
 
     DestroyWindow( hwnd2 );
