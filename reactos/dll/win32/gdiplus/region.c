@@ -1098,12 +1098,16 @@ static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
     {
         new_hdc = CreateCompatibleDC(0);
         if (!new_hdc)
+        {
+            ERR("CreateCompatibleDC failed\n");
             return OutOfMemory;
+        }
 
         stat = GdipCreateFromHDC(new_hdc, &new_graphics);
         graphics = new_graphics;
         if (stat != Ok)
         {
+            ERR("GdipCreateFromHDC failed: 0x%x\n", stat);
             DeleteDC(new_hdc);
             return stat;
         }
@@ -1112,7 +1116,10 @@ static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
     {
         graphics->hdc = new_hdc = CreateCompatibleDC(0);
         if (!new_hdc)
+        {
+            ERR("CreateCompatibleDC failed\n");
             return OutOfMemory;
+        }
     }
 
     save_state = SaveDC(graphics->hdc);
@@ -1125,7 +1132,15 @@ static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
     if (stat == Ok)
     {
         *hrgn = PathToRegion(graphics->hdc);
+        if (*hrgn == NULL)
+        {
+            ERR("PathToRegion failed\n");
+        }
         stat = *hrgn ? Ok : OutOfMemory;
+    }
+    else
+    {
+        ERR("trace_path failed: 0x%x\n", stat);
     }
 
     RestoreDC(graphics->hdc, save_state);
@@ -1282,12 +1297,18 @@ static GpStatus get_region_hrgn(struct region_element *element, GpGraphics *grap
  */
 GpStatus WINGDIPAPI GdipGetRegionHRgn(GpRegion *region, GpGraphics *graphics, HRGN *hrgn)
 {
+    GpStatus status;
     TRACE("(%p, %p, %p)\n", region, graphics, hrgn);
 
     if (!region || !hrgn)
         return InvalidParameter;
 
-    return get_region_hrgn(&region->node, graphics, hrgn);
+    status = get_region_hrgn(&region->node, graphics, hrgn);
+    if (status != Ok)
+    {
+        ERR("get_region_hrgn() failed. region->node.type = 0x%x\n", region->node.type);
+    }
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipIsEmptyRegion(GpRegion *region, GpGraphics *graphics, BOOL *res)
