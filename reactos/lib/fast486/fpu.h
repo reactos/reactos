@@ -71,6 +71,8 @@
 #define FPU_IS_NEG_INF(x)       (FPU_IS_INFINITY(x) && (x)->Sign)
 #define FPU_IS_INDEFINITE(x)    (FPU_IS_NAN(x) && !FPU_IS_INFINITY(x))
 
+#define INVERSE_NUMBERS_COUNT   21
+
 enum
 {
     FPU_SINGLE_PRECISION = 0,

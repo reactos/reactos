@@ -53,6 +53,30 @@ static const FAST486_FPU_DATA_REG FpuLgTwo = {0x9A209A84FBCFF798ULL, FPU_REAL10_
 /* ln(2) */
 static const FAST486_FPU_DATA_REG FpuLnTwo = {0xB17217F7D1CF79ABULL, FPU_REAL10_BIAS - 1, FALSE};
 
+static const FAST486_FPU_DATA_REG FpuInverseNumber[INVERSE_NUMBERS_COUNT] =
+{
+    {0x8000000000000000ULL, FPU_REAL10_BIAS,     FALSE}, /* 1 / 1 */
+    {0x8000000000000000ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 1 / 2 */
+    {0xAAAAAAAAAAAAAAABULL, FPU_REAL10_BIAS - 2, FALSE}, /* 1 / 3 */
+    {0x8000000000000000ULL, FPU_REAL10_BIAS - 2, FALSE}, /* 1 / 4 */
+    {0xCCCCCCCCCCCCCCCDULL, FPU_REAL10_BIAS - 3, FALSE}, /* 1 / 5 */
+    {0xAAAAAAAAAAAAAAAAULL, FPU_REAL10_BIAS - 3, FALSE}, /* 1 / 6 */
+    {0x9249249249249249ULL, FPU_REAL10_BIAS - 3, FALSE}, /* 1 / 7 */
+    {0x8000000000000000ULL, FPU_REAL10_BIAS - 3, FALSE}, /* 1 / 8 */
+    {0xE38E38E38E38E38EULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 9 */
+    {0xCCCCCCCCCCCCCCCDULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 10 */
+    {0xBA2E8BA2E8BA2E8CULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 11 */
+    {0xAAAAAAAAAAAAAAABULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 12 */
+    {0x9D89D89D89D89D8AULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 13 */
+    {0x9249249249249249ULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 14 */
+    {0x8888888888888889ULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 15 */
+    {0x8000000000000000ULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 16 */
+    {0xF0F0F0F0F0F0F0F0ULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 17 */
+    {0xE38E38E38E38E38EULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 18 */
+    {0xD79435E50D79435EULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 19 */
+    {0xCCCCCCCCCCCCCCCDULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 20 */
+};
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 #ifndef FAST486_NO_FPU
@@ -527,7 +551,7 @@ Fast486FpuToPackedBcd(PFAST486_STATE State,
     return TRUE;
 }
 
-static inline VOID FASTCALL
+static inline BOOLEAN FASTCALL
 Fast486FpuAdd(PFAST486_STATE State,
               PCFAST486_FPU_DATA_REG FirstOperand,
               PCFAST486_FPU_DATA_REG SecondOperand,
@@ -545,7 +569,7 @@ Fast486FpuAdd(PFAST486_STATE State,
         if (!State->FpuControl.Dm)
         {
             Fast486FpuException(State);
-            return;
+            return FALSE;
         }
     }
 
@@ -604,7 +628,7 @@ Fast486FpuAdd(PFAST486_STATE State,
             else
             {
                 Fast486FpuException(State);
-                return;
+                return FALSE;
             }
         }
         else
@@ -617,11 +641,17 @@ Fast486FpuAdd(PFAST486_STATE State,
     }
 
     /* Normalize the result and return it */
-    Fast486FpuNormalize(State, &TempResult);
+    if (!Fast486FpuNormalize(State, &TempResult))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
     *Result = TempResult;
+    return TRUE;
 }
 
-static inline VOID FASTCALL
+static inline BOOLEAN FASTCALL
 Fast486FpuSubtract(PFAST486_STATE State,
                    PCFAST486_FPU_DATA_REG FirstOperand,
                    PCFAST486_FPU_DATA_REG SecondOperand,
@@ -633,7 +663,7 @@ Fast486FpuSubtract(PFAST486_STATE State,
     NegativeSecondOperand.Sign = !NegativeSecondOperand.Sign;
 
     /* And perform an addition instead */
-    Fast486FpuAdd(State, FirstOperand, &NegativeSecondOperand, Result);
+    return Fast486FpuAdd(State, FirstOperand, &NegativeSecondOperand, Result);
 }
 
 static inline VOID FASTCALL
@@ -689,7 +719,7 @@ Fast486FpuCompare(PFAST486_STATE State,
     }
 }
 
-static inline VOID FASTCALL
+static inline BOOLEAN FASTCALL
 Fast486FpuMultiply(PFAST486_STATE State,
                    PCFAST486_FPU_DATA_REG FirstOperand,
                    PCFAST486_FPU_DATA_REG SecondOperand,
@@ -707,7 +737,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
         Result->Sign = TRUE;
         Result->Exponent = FPU_MAX_EXPONENT + 1;
         Result->Mantissa = FPU_INDEFINITE_MANTISSA;
-        return;
+        return TRUE;
     }
 
     if (FPU_IS_ZERO(FirstOperand) || FPU_IS_ZERO(SecondOperand))
@@ -716,7 +746,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
         Result->Sign = FirstOperand->Sign ^ SecondOperand->Sign;
         Result->Exponent = 0;
         Result->Mantissa = 0ULL;
-        return;
+        return TRUE;
     }
 
     if (FPU_IS_INFINITY(FirstOperand) || FPU_IS_INFINITY(SecondOperand))
@@ -725,7 +755,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
         Result->Sign = FirstOperand->Sign ^ SecondOperand->Sign;
         Result->Exponent = FPU_MAX_EXPONENT + 1;
         Result->Mantissa = FPU_MANTISSA_HIGH_BIT;
-        return;
+        return TRUE;
     }
 
     if ((!FPU_IS_NORMALIZED(FirstOperand) || !FPU_IS_NORMALIZED(SecondOperand)))
@@ -736,7 +766,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
         if (!State->FpuControl.Dm)
         {
             Fast486FpuException(State);
-            return;
+            return FALSE;
         }
     }
 
@@ -759,7 +789,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
         if (!State->FpuControl.Um)
         {
             Fast486FpuException(State);
-            return;
+            return FALSE;
         }
 
         /* The exponent will be zero */
@@ -777,7 +807,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
         if (!State->FpuControl.Om)
         {
             Fast486FpuException(State);
-            return;
+            return FALSE;
         }
 
         /* Make the result infinity */
@@ -787,11 +817,17 @@ Fast486FpuMultiply(PFAST486_STATE State,
     else TempResult.Exponent = (USHORT)Exponent;
 
     /* Normalize the result */
-    Fast486FpuNormalize(State, &TempResult);
+    if (!Fast486FpuNormalize(State, &TempResult))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
     *Result = TempResult;
+    return TRUE;
 }
 
-static inline VOID FASTCALL
+static inline BOOLEAN FASTCALL
 Fast486FpuDivide(PFAST486_STATE State,
                  PCFAST486_FPU_DATA_REG FirstOperand,
                  PCFAST486_FPU_DATA_REG SecondOperand,
@@ -815,10 +851,13 @@ Fast486FpuDivide(PFAST486_STATE State,
             Result->Sign = TRUE;
             Result->Exponent = FPU_MAX_EXPONENT + 1;
             Result->Mantissa = FPU_INDEFINITE_MANTISSA;
+            return TRUE;
         }
-        else Fast486FpuException(State);
-
-        return;
+        else
+        {
+            Fast486FpuException(State);
+            return FALSE;
+        }
     }
 
     if (FPU_IS_ZERO(SecondOperand) || FPU_IS_INFINITY(FirstOperand))
@@ -832,10 +871,13 @@ Fast486FpuDivide(PFAST486_STATE State,
             Result->Sign = FirstOperand->Sign;
             Result->Exponent = FPU_MAX_EXPONENT + 1;
             Result->Mantissa = FPU_MANTISSA_HIGH_BIT;
+            return TRUE;
         }
-        else Fast486FpuException(State);
-
-        return;
+        else
+        {
+            Fast486FpuException(State);
+            return FALSE;
+        }
     }
 
     /* Calculate the sign of the result */
@@ -847,7 +889,7 @@ Fast486FpuDivide(PFAST486_STATE State,
         Result->Sign = TempResult.Sign;
         Result->Mantissa = 0ULL;
         Result->Exponent = 0;
-        return;
+        return TRUE;
     }
 
     /* Calculate the exponent of the result */
@@ -886,7 +928,62 @@ Fast486FpuDivide(PFAST486_STATE State,
     TempResult.Exponent = (USHORT)(Exponent + FPU_REAL10_BIAS);
 
     /* Normalize the result */
-    Fast486FpuNormalize(State, &TempResult);
+    if (!Fast486FpuNormalize(State, &TempResult))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    *Result = TempResult;
+    return TRUE;
+}
+
+/*
+ * Calculates using the identity:
+ * 2 ^ x - 1 = 1 + sum { 2 * (((x - 1) * ln(2)) ^ n) / n! }
+ */
+static inline VOID FASTCALL
+Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
+                                    PFAST486_FPU_DATA_REG Operand,
+                                    PFAST486_FPU_DATA_REG Result)
+{
+    INT i;
+    FAST486_FPU_DATA_REG TempResult = FpuOne;
+    FAST486_FPU_DATA_REG Value;
+    FAST486_FPU_DATA_REG SeriesElement;
+
+    /* Calculate the first series element, which is 2 * (x - 1) * ln(2) */
+    Fast486FpuSubtract(State, Operand, &FpuOne, &Value);
+    Fast486FpuMultiply(State, &Value, &FpuLnTwo, &Value);
+    Fast486FpuAdd(State, &Value, &Value, &SeriesElement);
+
+    for (i = 2; i < INVERSE_NUMBERS_COUNT; i++)
+    {
+        /* Add the series element to the final sum */
+        if (!Fast486FpuAdd(State, &TempResult, &SeriesElement, &TempResult))
+        {
+            /* An exception occurred */
+            return;
+        }
+
+        /*
+         * Calculate the next series element (partially) by multiplying
+         * it with (x - 1) * ln(2)
+         */
+        if (!Fast486FpuMultiply(State, &SeriesElement, &Value, &SeriesElement))
+        {
+            /* An exception occurred */
+            return;
+        }
+
+        /* And now multiply the series element by the inverse counter */
+        if (!Fast486FpuMultiply(State, &SeriesElement, &FpuInverseNumber[i], &SeriesElement))
+        {
+            /* An exception occurred */
+            return;
+        }
+    }
+
     *Result = TempResult;
 }
 
@@ -1471,8 +1568,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* F2XM1 */
             case 0x30:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FPU_SAVE_LAST_INST();
+
+                Fast486FpuCalculateTwoPowerMinusOne(State, &FPU_ST(0), &FPU_ST(0));
+                FPU_UPDATE_TAG(0);
 
                 break;
             }
