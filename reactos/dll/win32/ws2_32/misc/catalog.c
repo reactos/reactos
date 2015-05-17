@@ -68,7 +68,7 @@ CreateCatalogEntry(LPWSTR LibraryName)
 
     if (!RtlCreateUnicodeString(&Provider->LibraryName, LibraryName))
     {
-        RtlFreeHeap(GlobalHeap, 0, Provider);
+        HeapFree(GlobalHeap, 0, Provider);
         return NULL;
     }
 
