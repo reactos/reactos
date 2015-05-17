@@ -1161,11 +1161,18 @@ static GpStatus get_region_hrgn(struct region_element *element, GpGraphics *grap
 
             stat = GdipCreatePath(FillModeAlternate, &path);
             if (stat != Ok)
+            {
+                ERR("GdipCreatePath failed: 0x%x\n", stat);
                 return stat;
+            }
             stat = GdipAddPathRectangle(path, rc->X, rc->Y, rc->Width, rc->Height);
 
             if (stat == Ok)
                 stat = get_path_hrgn(path, graphics, hrgn);
+            else
+            {
+                ERR("GdipAddPathRectangle failed: 0x%x\n", stat);
+            }
 
             GdipDeletePath(path);
 
