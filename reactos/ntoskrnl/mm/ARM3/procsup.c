@@ -1279,6 +1279,14 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         /* Grab the current VAD */
         Vad = (PMMVAD)VadTree->BalancedRoot.RightChild;
 
+        /* Check for old-style memory areas */
+        if (Vad->u.VadFlags.Spare == 1)
+        {
+            /* Let RosMm handle this */
+            MiRosCleanupMemoryArea(Process, Vad);
+            continue;
+        }
+
         /* Lock the working set */
         MiLockProcessWorkingSetUnsafe(Process, Thread);
 
@@ -1306,7 +1314,7 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
             MiUnlockProcessWorkingSetUnsafe(Process, Thread);
         }
 
-        /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
+         /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
         if (Vad->u.VadFlags.Spare == 1)
         {
             /* Set a flag so MmDeleteMemoryArea knows to free, but not to remove */

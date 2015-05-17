@@ -1103,6 +1103,50 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
     return STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+MiRosCleanupMemoryArea(
+    PEPROCESS Process,
+    PMMVAD Vad)
+{
+    PMEMORY_AREA MemoryArea;
+    PVOID BaseAddress;
+    NTSTATUS Status;
+
+    /* We must be called from MmCleanupAddressSpace and nowhere else!
+       Make sure things are as expected... */
+    ASSERT(Process == PsGetCurrentProcess());
+    ASSERT(Process->VmDeleted == TRUE);
+    ASSERT(((PsGetCurrentThread()->ThreadsProcess == Process) &&
+            (Process->ActiveThreads == 1)) ||
+           (Process->ActiveThreads == 0));
+
+    /* We are in cleanup, we don't need to synchronize */
+    MmUnlockAddressSpace(&Process->Vm);
+
+    MemoryArea = (PMEMORY_AREA)Vad;
+    BaseAddress = (PVOID)MA_GetStartingAddress(MemoryArea);
+
+    if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+    {
+        Status = MiRosUnmapViewOfSection(Process, BaseAddress, 0);
+    }
+    else if (MemoryArea->Type == MEMORY_AREA_CACHE)
+    {
+        Status = MmUnmapViewOfCacheSegment(&Process->Vm, BaseAddress);
+    }
+    else
+    {
+        /* There shouldn't be anything else! */
+        ASSERT(FALSE);
+    }
+
+    /* Make sure this worked! */
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Lock the address space again */
+    MmLockAddressSpace(&Process->Vm);
+}
 
 VOID
 NTAPI
@@ -1125,32 +1169,13 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 
     while ((MemoryArea = (PMEMORY_AREA)Process->Vm.WorkingSetExpansionLinks.Flink) != NULL)
     {
-        switch (MemoryArea->Type)
-        {
-        case MEMORY_AREA_SECTION_VIEW:
-            Address = (PVOID)MA_GetStartingAddress(MemoryArea);
-            MmUnlockAddressSpace(&Process->Vm);
-            MmUnmapViewOfSection(Process, Address);
-            MmLockAddressSpace(&Process->Vm);
-            break;
+        /* There should be nothing else left */
+        ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
 
-        case MEMORY_AREA_CACHE:
-            Address = (PVOID)MA_GetStartingAddress(MemoryArea);
-            MmUnlockAddressSpace(&Process->Vm);
-            MmUnmapViewOfCacheSegment(&Process->Vm, Address);
-            MmLockAddressSpace(&Process->Vm);
-            break;
-
-        case MEMORY_AREA_OWNED_BY_ARM3:
-            MmFreeMemoryArea(&Process->Vm,
-                             MemoryArea,
-                             NULL,
-                             NULL);
-            break;
-
-        default:
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
+        MmFreeMemoryArea(&Process->Vm,
+                         MemoryArea,
+                         NULL,
+                         NULL);
     }
 
 #if (_MI_PAGING_LEVELS == 2)
@@ -1176,6 +1201,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
                         MiQueryPageTableReferences(Address));
                 ASSERT(MiQueryPageTableReferences(Address) == 0);
             }
+
             pointerPde = MiAddressToPde(Address);
             /* Unlike in ARM3, we don't necesarrily free the PDE page as soon as reference reaches 0,
              * so we must clean up a bit when process closes */
@@ -1183,6 +1209,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
                 MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
             ASSERT(pointerPde->u.Hard.Valid == 0);
         }
+
         /* Release lock */
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 

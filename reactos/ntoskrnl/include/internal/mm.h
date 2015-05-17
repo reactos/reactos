@@ -507,6 +507,12 @@ MmFreeMemoryArea(
     PVOID FreePageContext
 );
 
+VOID
+NTAPI
+MiRosCleanupMemoryArea(
+    PEPROCESS Process,
+    PMMVAD Vad);
+
 NTSTATUS
 NTAPI
 MmFreeMemoryAreaByPtr(
