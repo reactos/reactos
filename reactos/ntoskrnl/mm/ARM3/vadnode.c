@@ -506,13 +506,19 @@ MiFindEmptyAddressRangeInTree(IN SIZE_T Length,
                               OUT PULONG_PTR Base)
 {
     PMMADDRESS_NODE Node, PreviousNode;
-    ULONG_PTR PageCount, AlignmentVpn, LowVpn, HighVpn;
+    ULONG_PTR PageCount, AlignmentVpn, LowVpn, HighestVpn;
     ASSERT(Length != 0);
 
     /* Calculate page numbers for the length, alignment, and starting address */
     PageCount = BYTES_TO_PAGES(Length);
     AlignmentVpn = Alignment >> PAGE_SHIFT;
     LowVpn = ALIGN_UP_BY((ULONG_PTR)MM_LOWEST_USER_ADDRESS >> PAGE_SHIFT, AlignmentVpn);
+
+    /* Check for kernel mode table (memory areas) */
+    if (Table->Unused == 1)
+    {
+        LowVpn = ALIGN_UP_BY((ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT, AlignmentVpn);
+    }
 
     /* Check if the table is empty */
     if (Table->NumberGenericTableElements == 0)
@@ -566,8 +572,15 @@ MiFindEmptyAddressRangeInTree(IN SIZE_T Length,
     }
 
     /* We're up to the highest VAD, will this allocation fit above it? */
-    HighVpn = ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1) / PAGE_SIZE;
-    if (HighVpn >= LowVpn + PageCount)
+    HighestVpn = ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1) / PAGE_SIZE;
+
+    /* Check for kernel mode table (memory areas) */
+    if (Table->Unused == 1)
+    {
+        HighestVpn = ALIGN_UP_BY((ULONG_PTR)(LONG_PTR)-1 >> PAGE_SHIFT, AlignmentVpn);
+    }
+
+    if (HighestVpn >= LowVpn + PageCount)
     {
         /* Yes! Use this VAD to store the allocation */
         *PreviousVad = PreviousNode;
@@ -602,9 +615,18 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     PageCount = Length >> PAGE_SHIFT;
     AlignmentVpn = Alignment / PAGE_SIZE;
 
+    /* Check for kernel mode table (memory areas) */
+    if (Table->Unused == 1)
+    {
+        LowVpn = ALIGN_UP_BY((ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT, AlignmentVpn);
+    }
+    else
+    {
+        LowVpn = ALIGN_UP_BY((ULONG_PTR)MM_LOWEST_USER_ADDRESS, Alignment);
+    }
+
     /* Check if there is enough space below the boundary */
-    if ((ALIGN_UP_BY((ULONG_PTR)MM_LOWEST_USER_ADDRESS, Alignment) + Length) >
-        (BoundaryAddress + 1))
+    if ((LowVpn + Length) > (BoundaryAddress + 1))
     {
         return TableFoundNode;
     }
