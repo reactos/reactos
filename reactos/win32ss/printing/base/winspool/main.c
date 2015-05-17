@@ -165,7 +165,6 @@ BOOL WINAPI
 OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefault)
 {
     BOOL ReturnValue = FALSE;
-    DEVMODEW wDevMode;
     PWSTR pwszPrinterName = NULL;
     PWSTR pwszDatatype = NULL;
     PRINTER_DEFAULTSW wDefault = { 0 };
@@ -207,22 +206,15 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
         }
 
         if (pDefault->pDevMode)
-        {
-            // Fixed size strings, so no additional memory needs to be allocated
-            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pDefault->pDevMode->dmDeviceName, -1, wDevMode.dmDeviceName, sizeof(wDevMode.dmDeviceName) / sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pDefault->pDevMode->dmFormName, -1, wDevMode.dmFormName, sizeof(wDevMode.dmFormName) / sizeof(WCHAR));
-
-            // Use CopyMemory to copy over several structure values in one step
-            CopyMemory(&wDevMode.dmSpecVersion, &pDefault->pDevMode->dmSpecVersion, (ULONG_PTR)&wDevMode.dmCollate - (ULONG_PTR)&wDevMode.dmSpecVersion + sizeof(wDevMode.dmCollate));
-            CopyMemory(&wDevMode.dmLogPixels, &pDefault->pDevMode->dmLogPixels, (ULONG_PTR)&wDevMode.dmPanningHeight - (ULONG_PTR)&wDevMode.dmLogPixels + sizeof(wDevMode.dmPanningHeight));
-
-            wDefault.pDevMode = &wDevMode;
-        }
+            wDefault.pDevMode = GdiConvertToDevmodeW(pDefault->pDevMode);
     }
 
     ReturnValue = OpenPrinterW(pwszPrinterName, phPrinter, &wDefault);
 
 Cleanup:
+    if (wDefault.pDevMode)
+        HeapFree(GetProcessHeap(), 0, wDefault.pDevMode);
+
     if (pwszPrinterName)
         HeapFree(GetProcessHeap(), 0, pwszPrinterName);
 
