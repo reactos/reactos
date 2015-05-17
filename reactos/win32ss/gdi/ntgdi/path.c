@@ -1252,6 +1252,7 @@ PATH_PathToRegion(
 
     if (numStrokes == 0)
     {
+        DPRINT1("numStrokes is 0\n");
         return FALSE;
     }
 
@@ -1259,6 +1260,7 @@ PATH_PathToRegion(
     pNumPointsInStroke = ExAllocatePoolWithTag(PagedPool, sizeof(ULONG) * numStrokes, TAG_PATH);
     if (!pNumPointsInStroke)
     {
+        DPRINT1("Failed to allocate %lu strokes\n", numStrokes);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -1285,6 +1287,10 @@ PATH_PathToRegion(
                                    pNumPointsInStroke,
                                    numStrokes,
                                    nPolyFillMode);
+    if (!Ret)
+    {
+        DPRINT1("REGION_SetPolyPolygonRgn failed\n");
+    }
 
     /* Free memory for number-of-points-in-stroke array */
     ExFreePoolWithTag(pNumPointsInStroke, TAG_PATH);

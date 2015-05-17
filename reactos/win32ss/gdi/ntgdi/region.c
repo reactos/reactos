@@ -3253,7 +3253,10 @@ REGION_SetPolyPolygonRgn(
 
     /* Check if iMode is valid */
     if ((iMode != ALTERNATE) && (iMode != WINDING))
+    {
+        DPRINT1("Invalid iMode: %lu\n", iMode);
         return FALSE;
+    }
 
     /* Special case a rectangle */
     if (((cPolygons == 1) && ((pcPoints[0] == 4) ||
@@ -3283,6 +3286,7 @@ REGION_SetPolyPolygonRgn(
                                   TAG_REGION);
     if (pETEs == NULL)
     {
+        DPRINT1("Failed to allocate %lu edge entries\n", total);
         return FALSE;
     }
 
@@ -3320,7 +3324,7 @@ REGION_SetPolyPolygonRgn(
                                                        TAG_REGION);
                     if (tmpPtBlock == NULL)
                     {
-                        DPRINT1("Can't alloc tPB\n");
+                        DPRINT1("Can't alloc tmpPtBlock\n");
                         ExFreePoolWithTag(pETEs, TAG_REGION);
                         return FALSE;
                     }
