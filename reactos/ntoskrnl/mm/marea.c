@@ -56,112 +56,6 @@ BOOLEAN MiRosKernelVadRootInitialized;
 
 /* FUNCTIONS *****************************************************************/
 
-/**
- * @name MmIterateFirstNode
- *
- * @param Node
- *        Head node of the MEMORY_AREA tree.
- *
- * @return The leftmost MEMORY_AREA node (ie. the one with lowest
- *         address)
- */
-
-static PMEMORY_AREA MmIterateFirstNode(PMEMORY_AREA Node)
-{
-    while (Node->LeftChild != NULL)
-        Node = Node->LeftChild;
-
-    return Node;
-}
-
-/**
- * @name MmIterateNextNode
- *
- * @param Node
- *        Current node in the tree.
- *
- * @return Next node in the tree (sorted by address).
- */
-
-static PMEMORY_AREA MmIterateNextNode(PMEMORY_AREA Node)
-{
-    if (Node->RightChild != NULL)
-    {
-        Node = Node->RightChild;
-        while (Node->LeftChild != NULL)
-            Node = Node->LeftChild;
-    }
-    else
-    {
-        PMEMORY_AREA TempNode = NULL;
-
-        do
-        {
-            /* Check if we're at the end of tree. */
-            if (Node->Parent == NULL)
-                return NULL;
-
-            TempNode = Node;
-            Node = Node->Parent;
-        }
-        while (TempNode == Node->RightChild);
-    }
-    return Node;
-}
-
-/**
- * @name MmIterateLastNode
- *
- * @param Node
- *        Head node of the MEMORY_AREA tree.
- *
- * @return The rightmost MEMORY_AREA node (ie. the one with highest
- *         address)
- */
-
-static PMEMORY_AREA MmIterateLastNode(PMEMORY_AREA Node)
-{
-    while (Node->RightChild != NULL)
-        Node = Node->RightChild;
-
-    return Node;
-}
-
-/**
- * @name MmIteratePreviousNode
- *
- * @param Node
- *        Current node in the tree.
- *
- * @return Previous node in the tree (sorted by address).
- */
-
-static PMEMORY_AREA MmIteratePrevNode(PMEMORY_AREA Node)
-{
-    if (Node->LeftChild != NULL)
-    {
-        Node = Node->LeftChild;
-        while (Node->RightChild != NULL)
-            Node = Node->RightChild;
-    }
-    else
-    {
-        PMEMORY_AREA TempNode = NULL;
-
-        do
-        {
-            /* Check if we're at the end of tree. */
-            if (Node->Parent == NULL)
-                return NULL;
-
-            TempNode = Node;
-            Node = Node->Parent;
-        }
-        while (TempNode == Node->LeftChild);
-    }
-    return Node;
-}
-
 PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByAddress(
     PMMSUPPORT AddressSpace,
@@ -256,59 +150,6 @@ MmLocateMemoryAreaByRegion(
     return MemoryArea;
 }
 
-PMEMORY_AREA
-NTAPI
-MmLocateMemoryAreaByRegionOld(
-    PMMSUPPORT AddressSpace,
-    PVOID Address_,
-    ULONG_PTR Length)
-{
-    PMEMORY_AREA Node;
-    ULONG_PTR Address = (ULONG_PTR)Address_;
-    ULONG_PTR Extent = Address + Length;
-
-    /* Special case for empty tree. */
-    if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
-        return NULL;
-
-    /* Traverse the tree from left to right. */
-    for (Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
-            Node != NULL;
-            Node = MmIterateNextNode(Node))
-    {
-        if (MA_GetStartingAddress(Node) >= Address &&
-                MA_GetStartingAddress(Node) < Extent)
-        {
-            DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
-                   Address, (ULONG_PTR)Address + Length, MA_GetStartingAddress(Node),
-                   MA_GetEndingAddress(Node));
-            return Node;
-        }
-        if (MA_GetEndingAddress(Node) > Address &&
-                MA_GetEndingAddress(Node) < Extent)
-        {
-            DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
-                   Address, (ULONG_PTR)Address + Length, MA_GetStartingAddress(Node),
-                   MA_GetEndingAddress(Node));
-            return Node;
-        }
-        if (MA_GetStartingAddress(Node) <= Address &&
-                MA_GetEndingAddress(Node) >= Extent)
-        {
-            DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
-                   Address, (ULONG_PTR)Address + Length, MA_GetStartingAddress(Node),
-                   MA_GetEndingAddress(Node));
-            return Node;
-        }
-        if (MA_GetStartingAddress(Node) >= Extent)
-        {
-            DPRINT("Finished MmLocateMemoryAreaByRegion() = NULL\n");
-            return NULL;
-        }
-    }
-
-    return NULL;
-}
 
 /**
  * @name MmCompressHelper
@@ -980,20 +821,8 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
             return STATUS_ACCESS_VIOLATION;
         }
 
-        /* Check if this is a region owned by ARM3 */
-        if (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)
-        {
-            /* ARM3 is inserting this MA to synchronize the old tree, use the old tree */
-            if (MmLocateMemoryAreaByRegionOld(AddressSpace,
-                                           *BaseAddress,
-                                           tmpLength) != NULL)
-            {
-                DPRINT("Memory area already occupied\n");
-                if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);
-                return STATUS_CONFLICTING_ADDRESSES;
-            }
-        }
-        else
+        /* No need to check ARM3 owned memory areas, the range MUST be free */
+        if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
         {
             if (MmLocateMemoryAreaByRegion(AddressSpace,
                                            *BaseAddress,
