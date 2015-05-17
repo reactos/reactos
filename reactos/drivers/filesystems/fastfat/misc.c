@@ -327,15 +327,14 @@ VfatQueueRequest(
 
 PVOID
 VfatGetUserBuffer(
-    IN PIRP Irp)
+    IN PIRP Irp,
+    IN BOOLEAN Paging)
 {
     ASSERT(Irp);
 
     if (Irp->MdlAddress)
     {
-        /* This call may be in the paging path, so use maximum priority */
-        /* FIXME: call with normal priority in the non-paging path */
-        return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, HighPagePriority);
+        return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, (Paging ? HighPagePriority : NormalPagePriority));
     }
     else
     {

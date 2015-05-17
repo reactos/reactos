@@ -419,7 +419,7 @@ DoQuery(
         ProbeForWrite(IrpContext->Irp->UserBuffer, BufferLength, 1);
     }
 #endif
-    Buffer = VfatGetUserBuffer(IrpContext->Irp);
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, FALSE);
 
     if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
                                      (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))

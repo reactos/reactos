@@ -928,7 +928,8 @@ VfatBuildRequest(
 
 PVOID
 VfatGetUserBuffer(
-    IN PIRP);
+    IN PIRP,
+    IN BOOLEAN Paging);
 
 NTSTATUS
 VfatLockUserBuffer(
