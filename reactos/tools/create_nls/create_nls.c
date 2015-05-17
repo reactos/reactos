@@ -424,6 +424,8 @@ static WCHAR *Load_OEM2Unicode_Table(char *table_name, WCHAR *def_table, UINT cp
         return NULL;
     }
 
+    line = 0;
+
     while(fgets(buf, sizeof(buf), file)) {
         line++;
         p = buf;
