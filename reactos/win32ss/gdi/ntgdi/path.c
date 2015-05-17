@@ -2703,6 +2703,7 @@ NtGdiPathToRegion(HDC  hDC)
     pDc = DC_LockDc(hDC);
     if (!pDc)
     {
+        DPRINT1("Failed to lock DC %p\n", hDC);
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
@@ -2712,6 +2713,7 @@ NtGdiPathToRegion(HDC  hDC)
     pPath = PATH_LockPath(pDc->dclevel.hPath);
     if (!pPath)
     {
+        DPRINT1("Failed to lock DC path %p\n", pDc->dclevel.hPath);
         DC_UnlockDc(pDc);
         return NULL;
     }
@@ -2719,6 +2721,7 @@ NtGdiPathToRegion(HDC  hDC)
     if (pPath->state != PATH_Closed)
     {
         // FIXME: Check that setlasterror is being called correctly
+        DPRINT1("Path is not closed!\n");
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
     }
     else
@@ -2727,6 +2730,7 @@ NtGdiPathToRegion(HDC  hDC)
         Rgn = REGION_AllocUserRgnWithHandle(1);
         if (!Rgn)
         {
+            DPRINT1("Failed to allocate a region\n");
             PATH_UnlockPath(pPath);
             DC_UnlockDc(pDc);
             return NULL;
@@ -2740,6 +2744,7 @@ NtGdiPathToRegion(HDC  hDC)
         }
         else
         {
+            DPRINT1("PATH_PathToRegion failed\n");
             REGION_Delete(Rgn);
             hrgnRval = NULL;
         }
