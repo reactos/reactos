@@ -1699,6 +1699,25 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             {
                 FPU_SAVE_LAST_INST();
 
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (!FPU_IS_NORMALIZED(&FPU_ST(0)))
+                {
+                    State->FpuStatus.De = TRUE;
+
+                    if (!State->FpuControl.Dm)
+                    {
+                        Fast486FpuException(State);
+                        break;
+                    }
+                }
+
                 Fast486FpuCalculateTwoPowerMinusOne(State, &FPU_ST(0), &FPU_ST(0));
                 FPU_UPDATE_TAG(0);
 
@@ -1831,6 +1850,25 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                 FAST486_FPU_DATA_REG Number = FPU_ST(0);
                 FPU_SAVE_LAST_INST();
 
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (!FPU_IS_NORMALIZED(&FPU_ST(0)))
+                {
+                    State->FpuStatus.De = TRUE;
+
+                    if (!State->FpuControl.Dm)
+                    {
+                        Fast486FpuException(State);
+                        break;
+                    }
+                }
+
                 /* Replace FP0 with the sine */
                 if (!Fast486FpuCalculateSine(State, &Number, &FPU_ST(0))) break;
                 FPU_UPDATE_TAG(0);
@@ -1890,8 +1928,82 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FSCALE */
             case 0x3D:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                LONGLONG Scale;
+                LONGLONG UnbiasedExp = (LONGLONG)((SHORT)FPU_ST(0).Exponent) - FPU_REAL10_BIAS;
+
+                FPU_SAVE_LAST_INST();
+
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY || FPU_GET_TAG(1) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (!FPU_IS_NORMALIZED(&FPU_ST(0)))
+                {
+                    State->FpuStatus.De = TRUE;
+
+                    if (!State->FpuControl.Dm)
+                    {
+                        Fast486FpuException(State);
+                        break;
+                    }
+                }
+
+                if (!Fast486FpuToInteger(State, &FPU_ST(1), &Scale))
+                {
+                    /* Exception occurred */
+                    break;
+                }
+
+                /* Adjust the unbiased exponent */
+                UnbiasedExp += Scale;
+
+                /* Check for underflow */
+                if (UnbiasedExp < -1023)
+                {
+                    /* Raise the underflow exception */
+                    State->FpuStatus.Ue = TRUE;
+
+                    if (State->FpuControl.Um)
+                    {
+                        /* Make the result zero */
+                        FPU_ST(0) = FpuZero;
+                        FPU_UPDATE_TAG(0);
+                    }
+                    else
+                    {
+                        Fast486FpuException(State);
+                    }
+
+                    break;
+                }
+
+                /* Check for overflow */
+                if (UnbiasedExp > 1023)
+                {
+                    /* Raise the overflow exception */
+                    State->FpuStatus.Oe = TRUE;
+
+                    if (State->FpuControl.Om)
+                    {
+                        /* Make the result infinity */
+                        FPU_ST(0).Mantissa = FPU_MANTISSA_HIGH_BIT;
+                        FPU_ST(0).Exponent = FPU_MAX_EXPONENT + 1;
+                        FPU_UPDATE_TAG(0);
+                    }
+                    else
+                    {
+                        Fast486FpuException(State);
+                    }
+
+                    break;
+                }
+
+                FPU_ST(0).Exponent = (USHORT)(UnbiasedExp + FPU_REAL10_BIAS);
+                FPU_UPDATE_TAG(0);
 
                 break;
             }
@@ -1900,6 +2012,25 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             case 0x3E:
             {
                 FPU_SAVE_LAST_INST();
+
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (!FPU_IS_NORMALIZED(&FPU_ST(0)))
+                {
+                    State->FpuStatus.De = TRUE;
+
+                    if (!State->FpuControl.Dm)
+                    {
+                        Fast486FpuException(State);
+                        break;
+                    }
+                }
 
                 Fast486FpuCalculateSine(State, &FPU_ST(0), &FPU_ST(0));
                 FPU_UPDATE_TAG(0);
@@ -1911,6 +2042,25 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             case 0x3F:
             {
                 FPU_SAVE_LAST_INST();
+
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (!FPU_IS_NORMALIZED(&FPU_ST(0)))
+                {
+                    State->FpuStatus.De = TRUE;
+
+                    if (!State->FpuControl.Dm)
+                    {
+                        Fast486FpuException(State);
+                        break;
+                    }
+                }
 
                 Fast486FpuCalculateCosine(State, &FPU_ST(0), &FPU_ST(0));
                 FPU_UPDATE_TAG(0);
