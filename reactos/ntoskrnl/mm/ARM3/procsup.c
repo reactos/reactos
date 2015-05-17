@@ -24,25 +24,6 @@ SLIST_HEADER MmDeadStackSListHead;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID
-NTAPI
-MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
-{
-    NTSTATUS Status;
-    PMEMORY_AREA MemoryArea;
-    PVOID AllocatedBase = (PVOID)MM_SHARED_USER_DATA_VA;
-
-    Status = MmCreateMemoryArea(&Process->Vm,
-                                MEMORY_AREA_OWNED_BY_ARM3,
-                                &AllocatedBase,
-                                PAGE_SIZE,
-                                PAGE_READWRITE,
-                                &MemoryArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(NT_SUCCESS(Status));
-}
-
 NTSTATUS
 NTAPI
 MiCreatePebOrTeb(IN PEPROCESS Process,
@@ -973,9 +954,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     /* Release PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-    /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverSharedUserPage(Process);
-
     /* Check if there's a Section Object */
     if (SectionObject)
     {
@@ -1077,7 +1055,6 @@ INIT_FUNCTION
 MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
 {
     /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverSharedUserPage(Process);
     return STATUS_SUCCESS;
 }
 

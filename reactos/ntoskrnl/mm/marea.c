@@ -1173,7 +1173,6 @@ NTAPI
 MmDeleteProcessAddressSpace(PEPROCESS Process)
 {
     PVOID Address;
-    PMEMORY_AREA MemoryArea;
 
     DPRINT("MmDeleteProcessAddressSpace(Process %p (%s))\n", Process,
            Process->ImageFileName);
@@ -1183,16 +1182,8 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 #endif
     MmLockAddressSpace(&Process->Vm);
 
-    while ((MemoryArea = (PMEMORY_AREA)Process->Vm.WorkingSetExpansionLinks.Flink) != NULL)
-    {
-        /* There should be nothing else left */
-        ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
-
-        MmFreeMemoryArea(&Process->Vm,
-                         MemoryArea,
-                         NULL,
-                         NULL);
-    }
+    /* There should not be any memory areas left! */
+    ASSERT(Process->Vm.WorkingSetExpansionLinks.Flink == NULL);
 
 #if (_MI_PAGING_LEVELS == 2)
     {
