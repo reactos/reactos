@@ -58,7 +58,7 @@
 
 #define APPNAME _T("Maze")
 
-static BOOL InitInstance(HWND hParent);
+//static BOOL InitInstance(HWND hParent);
 LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT message, WPARAM uParam, LPARAM lParam);
 static int choose_door();
 static long backup();
@@ -71,7 +71,7 @@ HBRUSH hBrushDead;
 HBRUSH hBrushLiving;
 HPEN   hPenWall;
 HDC    hDC;
-static BOOL waiting;
+//static BOOL waiting;
 
 static int solve_delay, pre_solve_delay, post_solve_delay;
 
