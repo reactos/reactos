@@ -14,13 +14,77 @@
 typedef struct _PROFILE
 {
     WCHAR szFriendlyName[256];
+    WCHAR szName[5];
+    DWORD dwProfileNumber;
+    DWORD dwPreferenceOrder;
 } PROFILE, *PPROFILE;
 
 typedef struct _PROFILEDATA
 {
     DWORD dwProfileCount;
+    DWORD dwLastProfile;
+    DWORD dwSelectedProfile;
+    DWORD dwSelectedProfileIndex;
     PPROFILE pProfiles;
+    HWND hwndProfileDlg;
 } PROFILEDATA, *PPROFILEDATA;
+
+
+static
+VOID
+OnCopyProfileInit(HWND hwndDlg,
+                  PPROFILEDATA pProfileData,
+                  UINT idFrom,
+                  UINT idTo)
+{
+    WCHAR szNewProfileName[256];
+
+    SetDlgItemText(hwndDlg, idFrom, pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex].szFriendlyName);
+
+    swprintf(szNewProfileName, L"Profile %lu", pProfileData->dwProfileCount);
+    SetDlgItemText(hwndDlg, idTo, szNewProfileName);
+}
+
+
+static
+VOID
+CopyProfile(
+    HWND hwndDlg,
+    PPROFILEDATA pProfileData)
+{
+    PPROFILE pProfiles;
+//    PPROFILE pSrcProfile
+    PPROFILE pDstProfile;
+
+    /* Allocate memory for the new profile */
+    pProfiles = HeapReAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            pProfileData->pProfiles,
+                            (pProfileData->dwProfileCount + 1) * sizeof(PROFILE));
+    if (pProfiles == NULL)
+    {
+        DPRINT1("HeapReAlloc() failed!\n");
+        return;
+    }
+
+    pProfileData->dwProfileCount++;
+    pProfileData->pProfiles = pProfiles;
+
+//    pSrcProfile = &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex];
+    pDstProfile = &pProfileData->pProfiles[pProfileData->dwProfileCount - 1];
+
+    GetDlgItemText(hwndDlg,
+                   IDC_COPYPROFILETO,
+                   pDstProfile->szFriendlyName,
+                   256);
+
+    pDstProfile->dwProfileNumber = ++pProfileData->dwLastProfile;
+    swprintf(pDstProfile->szName, L"%04lu", pDstProfile->dwProfileNumber);
+
+    pDstProfile->dwPreferenceOrder = pDstProfile->dwProfileNumber;
+
+    SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_ADDSTRING, 0, (LPARAM)pDstProfile->szFriendlyName);
+}
 
 
 static
@@ -31,22 +95,54 @@ CopyProfileDlgProc(HWND hwndDlg,
                    WPARAM wParam,
                    LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
+    PPROFILEDATA pProfileData;
+
+    pProfileData = (PPROFILEDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
+        case WM_INITDIALOG:
+            SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
+            pProfileData = (PPROFILEDATA)lParam;
+            OnCopyProfileInit(hwndDlg, pProfileData, IDC_COPYPROFILEFROM, IDC_COPYPROFILETO);
+            break;
+
         case WM_COMMAND:
-            if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
+            switch (LOWORD(wParam))
             {
-                EndDialog(hwndDlg,
-                          LOWORD(wParam));
-                return TRUE;
+                case IDOK:
+                    CopyProfile(hwndDlg, pProfileData);
+                    EndDialog(hwndDlg, IDOK);
+                    return TRUE;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                   return TRUE;
             }
             break;
     }
     return FALSE;
+}
+
+
+static
+VOID
+RenameProfile(
+    HWND hwndDlg,
+    PPROFILEDATA pProfileData)
+{
+    PPROFILE pProfile;
+
+    pProfile = &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex];
+
+    GetDlgItemText(hwndDlg,
+                   IDC_RENPROFEDITTO,
+                   pProfile->szFriendlyName,
+                   256);
+
+    /* Replace the listbox string */
+    SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
+    SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_INSERTSTRING, pProfileData->dwSelectedProfileIndex, (LPARAM)pProfile->szFriendlyName);
 }
 
 
@@ -58,21 +154,33 @@ RenameProfileDlgProc(HWND hwndDlg,
                      WPARAM wParam,
                      LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
+    PPROFILEDATA pProfileData;
+
+    pProfileData = (PPROFILEDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
+        case WM_INITDIALOG:
+            SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
+            pProfileData = (PPROFILEDATA)lParam;
+            OnCopyProfileInit(hwndDlg, pProfileData, IDC_RENPROFEDITFROM, IDC_RENPROFEDITTO);
+            break;
+
         case WM_COMMAND:
-            if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
+            switch (LOWORD(wParam))
             {
-                EndDialog(hwndDlg,
-                          LOWORD(wParam));
-                return TRUE;
+                case IDOK:
+                    RenameProfile(hwndDlg, pProfileData);
+                    EndDialog(hwndDlg, IDOK);
+                    return TRUE;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                   return TRUE;
             }
             break;
     }
+
     return FALSE;
 }
 
@@ -161,7 +269,12 @@ GetProfileCount(LPDWORD lpProfileCount)
 
 static
 VOID
-GetProfile(HWND hwndDlg, HKEY hKey, LPWSTR lpName, PPROFILE pProfile)
+GetProfile(
+    HWND hwndDlg,
+    HKEY hKey,
+    LPWSTR lpName,
+    DWORD dwProfileNumber,
+    PPROFILE pProfile)
 {
     HKEY hProfileKey;
     DWORD dwSize;
@@ -185,8 +298,23 @@ GetProfile(HWND hwndDlg, HKEY hKey, LPWSTR lpName, PPROFILE pProfile)
     if (lError == ERROR_SUCCESS)
     {
         DPRINT1("Profile: %S\n", pProfile->szFriendlyName);
-        SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_ADDSTRING, 0, (LPARAM)pProfile->szFriendlyName);
     }
+
+    dwSize = sizeof(DWORD);
+    lError = RegQueryValueExW(hProfileKey,
+                              L"PreferenceOrder",
+                              NULL,
+                              NULL,
+                              (LPBYTE)pProfile->dwPreferenceOrder,
+                              &dwSize);
+    if (lError == ERROR_SUCCESS)
+    {
+        DPRINT1("PreferenceOrder: %lu\n", pProfile->dwPreferenceOrder);
+    }
+
+    pProfile->dwProfileNumber = dwProfileNumber;
+
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_ADDSTRING, 0, (LPARAM)pProfile->szFriendlyName);
 
     RegCloseKey(hProfileKey);
 }
@@ -199,6 +327,7 @@ GetProfiles(HWND hwndDlg)
     PPROFILEDATA pProfileData;
     WCHAR szName[8];
     DWORD dwNameLength;
+    DWORD dwProfileNumber;
     DWORD dwIndex = 0;
     HKEY hKey;
     LONG lError;
@@ -206,6 +335,10 @@ GetProfiles(HWND hwndDlg)
     pProfileData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PROFILEDATA));
     if (pProfileData == NULL)
         return FALSE;
+
+    pProfileData->hwndProfileDlg = hwndDlg;
+    pProfileData->dwLastProfile = (DWORD)-1;
+    pProfileData->dwSelectedProfileIndex = (DWORD)-1;
 
     if (!GetProfileCount(&pProfileData->dwProfileCount))
     {
@@ -244,9 +377,17 @@ GetProfiles(HWND hwndDlg)
         if (lError != ERROR_SUCCESS)
             break;
 
+        dwProfileNumber = wcstoul(szName, NULL, 10);
         DPRINT("Profile name: %S\n", szName);
+        DPRINT("Profile number: %lu\n", dwProfileNumber);
 
-        GetProfile(hwndDlg, hKey, szName, &pProfileData->pProfiles[dwIndex]);
+        if ((pProfileData->dwLastProfile == (DWORD)-1) ||
+            (pProfileData->dwLastProfile < dwProfileNumber))
+            pProfileData->dwLastProfile = dwProfileNumber;
+
+        DPRINT("Last Profile number: %lu\n", pProfileData->dwLastProfile);
+
+        GetProfile(hwndDlg, hKey, szName, dwProfileNumber, &pProfileData->pProfiles[dwIndex]);
     }
 
     RegCloseKey(hKey);
@@ -345,17 +486,19 @@ HardProfDlgProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDC_HRDPROFCOPY:
-                    DialogBox(hApplet,
-                              MAKEINTRESOURCE(IDD_COPYPROFILE),
-                              hwndDlg,
-                              (DLGPROC)CopyProfileDlgProc);
+                    DialogBoxParam(hApplet,
+                                   MAKEINTRESOURCE(IDD_COPYPROFILE),
+                                   hwndDlg,
+                                   (DLGPROC)CopyProfileDlgProc,
+                                   (LPARAM)pProfileData);
                     break;
 
                 case IDC_HRDPROFRENAME:
-                    DialogBox(hApplet,
-                              MAKEINTRESOURCE(IDD_RENAMEPROFILE),
-                              hwndDlg,
-                              (DLGPROC)RenameProfileDlgProc);
+                    DialogBoxParam(hApplet,
+                                   MAKEINTRESOURCE(IDD_RENAMEPROFILE),
+                                   hwndDlg,
+                                   (DLGPROC)RenameProfileDlgProc,
+                                   (LPARAM)pProfileData);
                     break;
 
                 case IDC_HRDPROFWAIT:
@@ -366,12 +509,21 @@ HardProfDlgProc(HWND hwndDlg,
                     EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFEDIT), TRUE);
                     return TRUE;
 
+                case IDC_HRDPROFLSTBOX:
+                    if (HIWORD(wParam) == LBN_SELCHANGE)
+                    {
+                        pProfileData->dwSelectedProfileIndex = (DWORD)SendDlgItemMessage(hwndDlg, IDC_HRDPROFLSTBOX, LB_GETCURSEL, 0, 0);
+
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFCOPY), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFRENAME), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
+                    }
+                    return TRUE;
+
                 case IDOK:
                     OnOk(hwndDlg);
 
                 case IDCANCEL:
-                    EndDialog(hwndDlg,
-                              LOWORD(wParam));
+                    EndDialog(hwndDlg, LOWORD(wParam));
                     return TRUE;
             }
             break;
