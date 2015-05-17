@@ -140,6 +140,7 @@ PaintText(LPDRAWITEMSTRUCT drawItem,
     if (Font == NULL)
     {
         DPRINT1("PaintText: CreateFont failed\n");
+        DeleteObject(hBrush);
         return FALSE;
     }
 
@@ -147,6 +148,7 @@ PaintText(LPDRAWITEMSTRUCT drawItem,
     if (OldFont == NULL)
     {
         DeleteObject(Font);
+        DeleteObject(hBrush);
         return FALSE;
     }
 
