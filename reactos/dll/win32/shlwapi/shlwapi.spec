@@ -560,7 +560,7 @@
 560 stdcall -stub -noname SHWindowsPolicyGetValue(ptr ptr ptr)
 561 stub -noname AssocGetUrlAction
 562 stub -noname SHGetPrivateProfileInt
-563 stub -noname SHGetPrivateProfileSection
+563 stdcall -stub -noname SHGetPrivateProfileSection(wstr ptr long ptr)
 564 stub -noname SHGetPrivateProfileSectionNames
 565 stub -noname SHGetPrivateProfileString
 566 stub -noname SHGetPrivateProfileStruct
