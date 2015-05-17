@@ -1603,6 +1603,69 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+MiGetFileObjectForSectionAddress(
+    IN PVOID Address,
+    OUT PFILE_OBJECT *FileObject)
+{
+    PMMVAD Vad;
+    PCONTROL_AREA ControlArea;
+
+    /* Get the VAD */
+    Vad = MiLocateAddress(Address);
+    if (Vad == NULL)
+    {
+        /* Fail, the address does not exist */
+        DPRINT1("Invalid address\n");
+        return STATUS_INVALID_ADDRESS;
+    }
+
+    /* Check if this is a RosMm memory area */
+    if (Vad->u.VadFlags.Spare != 0)
+    {
+        PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
+        PROS_SECTION_OBJECT Section;
+
+        /* Check if it's a section view (RosMm section) */
+        if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+        {
+            /* Get the section pointer to the SECTION_OBJECT */
+            Section = MemoryArea->Data.SectionData.Section;
+            *FileObject = Section->FileObject;
+        }
+        else
+        {
+            ASSERT(MemoryArea->Type == MEMORY_AREA_CACHE);
+            DPRINT1("Address is a cache section!\n");
+            return STATUS_SECTION_NOT_IMAGE;
+        }
+    }
+    else
+    {
+        /* Make sure it's not a VM VAD */
+        if (Vad->u.VadFlags.PrivateMemory == 1)
+        {
+            DPRINT1("Address is not a section\n");
+            return STATUS_SECTION_NOT_IMAGE;
+        }
+
+        /* Get the control area */
+        ControlArea = Vad->ControlArea;
+        if (!(ControlArea) || !(ControlArea->u.Flags.Image))
+        {
+            DPRINT1("Address is not a section\n");
+            return STATUS_SECTION_NOT_IMAGE;
+        }
+
+        /* Get the file object */
+        *FileObject = ControlArea->FilePointer;
+    }
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
 PFILE_OBJECT
 NTAPI
 MmGetFileObjectForSection(IN PVOID SectionObject)
@@ -1705,92 +1768,46 @@ NTAPI
 MmGetFileNameForAddress(IN PVOID Address,
                         OUT PUNICODE_STRING ModuleName)
 {
-   PVOID Section;
-   PMEMORY_AREA MemoryArea;
-   POBJECT_NAME_INFORMATION ModuleNameInformation;
-   PVOID AddressSpace;
-   NTSTATUS Status;
-   PFILE_OBJECT FileObject = NULL;
-   PMMVAD Vad;
-   PCONTROL_AREA ControlArea;
+    POBJECT_NAME_INFORMATION ModuleNameInformation;
+    PVOID AddressSpace;
+    NTSTATUS Status;
+    PFILE_OBJECT FileObject = NULL;
 
-   /* Lock address space */
-   AddressSpace = MmGetCurrentAddressSpace();
-   MmLockAddressSpace(AddressSpace);
+    /* Lock address space */
+    AddressSpace = MmGetCurrentAddressSpace();
+    MmLockAddressSpace(AddressSpace);
 
-   /* Locate the memory area for the process by address */
-   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
-   if (!MemoryArea)
-   {
-       /* Fail, the address does not exist */
-InvalidAddress:
-       DPRINT1("Invalid address\n");
-       MmUnlockAddressSpace(AddressSpace);
-       return STATUS_INVALID_ADDRESS;
-   }
+    /* Get the file object pointer for the address */
+    Status = MiGetFileObjectForSectionAddress(Address, &FileObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get file object for Address %p\n", Address);
+        MmUnlockAddressSpace(AddressSpace);
+        return Status;
+    }
 
-   /* Check if it's a section view (RosMm section) or ARM3 section */
-   if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
-   {
-      /* Get the section pointer to the SECTION_OBJECT */
-      Section = MemoryArea->Data.SectionData.Section;
+    /* Reference the file object */
+    ObReferenceObject(FileObject);
 
-      /* Unlock address space */
-      MmUnlockAddressSpace(AddressSpace);
+    /* Unlock address space */
+    MmUnlockAddressSpace(AddressSpace);
 
-      /* Get the filename of the section */
-      Status = MmGetFileNameForSection(Section, &ModuleNameInformation);
-   }
-   else if (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)
-   {
-       /* Get the VAD */
-       Vad = MiLocateAddress(Address);
-       if (!Vad) goto InvalidAddress;
+    /* Get the filename of the file object */
+    Status = MmGetFileNameForFileObject(FileObject, &ModuleNameInformation);
 
-       /* Make sure it's not a VM VAD */
-       if (Vad->u.VadFlags.PrivateMemory == 1)
-       {
-NotSection:
-           DPRINT1("Address is not a section\n");
-           MmUnlockAddressSpace(AddressSpace);
-           return STATUS_SECTION_NOT_IMAGE;
-       }
+    /* Dereference the file object */
+    ObDereferenceObject(FileObject);
 
-       /* Get the control area */
-       ControlArea = Vad->ControlArea;
-       if (!(ControlArea) || !(ControlArea->u.Flags.Image)) goto NotSection;
-
-       /* Get the file object */
-       FileObject = ControlArea->FilePointer;
-       ASSERT(FileObject != NULL);
-       ObReferenceObject(FileObject);
-
-       /* Unlock address space */
-       MmUnlockAddressSpace(AddressSpace);
-
-       /* Get the filename of the file object */
-       Status = MmGetFileNameForFileObject(FileObject, &ModuleNameInformation);
-
-       /* Dereference it */
-       ObDereferenceObject(FileObject);
-   }
-   else
-   {
-       /* Trying to access virtual memory or something */
-       goto InvalidAddress;
-   }
-
-   /* Check if we were able to get the file object name */
-   if (NT_SUCCESS(Status))
-   {
+    /* Check if we were able to get the file object name */
+    if (NT_SUCCESS(Status))
+    {
         /* Init modulename */
-       RtlCreateUnicodeString(ModuleName,
-                              ModuleNameInformation->Name.Buffer);
+        RtlCreateUnicodeString(ModuleName, ModuleNameInformation->Name.Buffer);
 
-       /* Free temp taged buffer from MmGetFileNameForFileObject() */
-       ExFreePoolWithTag(ModuleNameInformation, TAG_MM);
-       DPRINT("Found ModuleName %S by address %p\n", ModuleName->Buffer, Address);
-   }
+        /* Free temp taged buffer from MmGetFileNameForFileObject() */
+        ExFreePoolWithTag(ModuleNameInformation, TAG_MM);
+        DPRINT("Found ModuleName %S by address %p\n", ModuleName->Buffer, Address);
+    }
 
    /* Return status */
    return Status;
@@ -3082,74 +3099,41 @@ NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
                         IN PVOID File2MappedAsFile)
 {
     PVOID AddressSpace;
-    PMEMORY_AREA MemoryArea1, MemoryArea2;
-    PROS_SECTION_OBJECT Section1, Section2;
+    PFILE_OBJECT FileObject1, FileObject2;
+    NTSTATUS Status;
 
     /* Lock address space */
     AddressSpace = MmGetCurrentAddressSpace();
     MmLockAddressSpace(AddressSpace);
 
-    /* Locate the memory area for the process by address */
-    MemoryArea1 = MmLocateMemoryAreaByAddress(AddressSpace, File1MappedAsAnImage);
-    if (!MemoryArea1)
+    /* Get the file object pointer for address 1 */
+    Status = MiGetFileObjectForSectionAddress(File1MappedAsAnImage, &FileObject1);
+    if (!NT_SUCCESS(Status))
     {
-        /* Fail, the address does not exist */
+        DPRINT1("Failed to get file object for Address %p\n", File1MappedAsAnImage);
         MmUnlockAddressSpace(AddressSpace);
-        return STATUS_INVALID_ADDRESS;
+        return Status;
     }
 
-    /* Check if it's a section view (RosMm section) or ARM3 section */
-    if (MemoryArea1->Type != MEMORY_AREA_SECTION_VIEW)
+    /* Get the file object pointer for address 2 */
+    Status = MiGetFileObjectForSectionAddress(File2MappedAsFile, &FileObject2);
+    if (!NT_SUCCESS(Status))
     {
-        /* Fail, the address is not a section */
+        DPRINT1("Failed to get file object for Address %p\n", File1MappedAsAnImage);
         MmUnlockAddressSpace(AddressSpace);
-        return STATUS_CONFLICTING_ADDRESSES;
+        return Status;
     }
 
-    /* Get the section pointer to the SECTION_OBJECT */
-    Section1 = MemoryArea1->Data.SectionData.Section;
-    if (Section1->FileObject == NULL)
+    /* SectionObjectPointer is equal if the files are equal */
+    if (FileObject1->SectionObjectPointer != FileObject2->SectionObjectPointer)
     {
         MmUnlockAddressSpace(AddressSpace);
-        return STATUS_CONFLICTING_ADDRESSES;
-    }
-
-    /* Locate the memory area for the process by address */
-    MemoryArea2 = MmLocateMemoryAreaByAddress(AddressSpace, File2MappedAsFile);
-    if (!MemoryArea2)
-    {
-        /* Fail, the address does not exist */
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_INVALID_ADDRESS;
-    }
-
-    /* Check if it's a section view (RosMm section) or ARM3 section */
-    if (MemoryArea2->Type != MEMORY_AREA_SECTION_VIEW)
-    {
-        /* Fail, the address is not a section */
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_CONFLICTING_ADDRESSES;
-    }
-
-    /* Get the section pointer to the SECTION_OBJECT */
-    Section2 = MemoryArea2->Data.SectionData.Section;
-    if (Section2->FileObject == NULL)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_CONFLICTING_ADDRESSES;
-    }
-
-    /* The shared cache map seems to be the same if both of these are equal */
-    if (Section1->FileObject->SectionObjectPointer->SharedCacheMap ==
-        Section2->FileObject->SectionObjectPointer->SharedCacheMap)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_SUCCESS;
+        return STATUS_NOT_SAME_DEVICE;
     }
 
     /* Unlock address space */
     MmUnlockAddressSpace(AddressSpace);
-    return STATUS_NOT_SAME_DEVICE;
+    return STATUS_SUCCESS;
 }
 
 /*
