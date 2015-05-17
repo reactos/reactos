@@ -51,6 +51,9 @@
 MEMORY_AREA MiStaticMemoryAreas[MI_STATIC_MEMORY_AREAS];
 ULONG MiStaticMemoryAreaCount;
 
+MM_AVL_TABLE MiRosKernelVadRoot;
+BOOLEAN MiRosKernelVadRootInitialized;
+
 /* FUNCTIONS *****************************************************************/
 
 /**
@@ -188,8 +191,58 @@ MmLocateMemoryAreaByAddress(
     return NULL;
 }
 
-PMEMORY_AREA NTAPI
+PMEMORY_AREA
+NTAPI
 MmLocateMemoryAreaByRegion(
+    PMMSUPPORT AddressSpace,
+    PVOID Address_,
+    ULONG_PTR Length)
+{
+    ULONG_PTR StartVpn = (ULONG_PTR)Address_ / PAGE_SIZE;
+    ULONG_PTR EndVpn = ((ULONG_PTR)Address_ + Length - 1) / PAGE_SIZE;
+    PEPROCESS Process;
+    PMM_AVL_TABLE Table;
+    PMMADDRESS_NODE Node;
+    PMEMORY_AREA MemoryArea;
+    TABLE_SEARCH_RESULT Result;
+    PMMVAD_LONG Vad;
+
+    Process = MmGetAddressSpaceOwner(AddressSpace);
+    Table = (Process != NULL) ? &Process->VadRoot : &MiRosKernelVadRoot;
+
+    Result = MiCheckForConflictingNode(StartVpn, EndVpn, Table, &Node);
+    if (Result != TableFoundNode)
+    {
+        return NULL;
+    }
+
+    Vad = (PMMVAD_LONG)Node;
+    if (Vad->u.VadFlags.Spare == 0)
+    {
+        /* Check if this is VM VAD */
+        if (Vad->ControlArea == NULL)
+        {
+            /* We store the reactos MEMORY_AREA here */
+            MemoryArea = (PMEMORY_AREA)Vad->FirstPrototypePte;
+        }
+        else
+        {
+            /* This is a section VAD. Store the MAREA here for now */
+            MemoryArea = (PMEMORY_AREA)Vad->u4.Banked;
+        }
+    }
+    else
+    {
+        MemoryArea = (PMEMORY_AREA)Node;
+    }
+
+    ASSERT(MemoryArea != NULL);
+    return MemoryArea;
+}
+
+PMEMORY_AREA
+NTAPI
+MmLocateMemoryAreaByRegionOld(
     PMMSUPPORT AddressSpace,
     PVOID Address_,
     ULONG_PTR Length)
@@ -367,8 +420,6 @@ MiMakeProtectionMask(
     IN ULONG Protect
 );
 
-MM_AVL_TABLE MiRosKernelVadRoot;
-BOOLEAN MiRosKernelVadRootInitialized;
 
 static VOID
 MmInsertMemoryArea(
@@ -1016,13 +1067,29 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
             return STATUS_ACCESS_VIOLATION;
         }
 
-        if (MmLocateMemoryAreaByRegion(AddressSpace,
-                                       *BaseAddress,
-                                       tmpLength) != NULL)
+        /* Check if this is a region owned by ARM3 */
+        if (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)
         {
-            DPRINT("Memory area already occupied\n");
-            if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);
-            return STATUS_CONFLICTING_ADDRESSES;
+            /* ARM3 is inserting this MA to synchronize the old tree, use the old tree */
+            if (MmLocateMemoryAreaByRegionOld(AddressSpace,
+                                           *BaseAddress,
+                                           tmpLength) != NULL)
+            {
+                DPRINT("Memory area already occupied\n");
+                if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);
+                return STATUS_CONFLICTING_ADDRESSES;
+            }
+        }
+        else
+        {
+            if (MmLocateMemoryAreaByRegion(AddressSpace,
+                                           *BaseAddress,
+                                           tmpLength) != NULL)
+            {
+                DPRINT("Memory area already occupied\n");
+                if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);
+                return STATUS_CONFLICTING_ADDRESSES;
+            }
         }
 
         MemoryArea->StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
