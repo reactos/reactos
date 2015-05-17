@@ -150,122 +150,6 @@ MmLocateMemoryAreaByRegion(
     return MemoryArea;
 }
 
-
-/**
- * @name MmCompressHelper
- *
- * This is helper of MmRebalanceTree. Performs a compression transformation
- * count times, starting at root.
- */
-
-static VOID
-MmCompressHelper(
-    PMMSUPPORT AddressSpace,
-    ULONG Count)
-{
-    PMEMORY_AREA Root = NULL;
-    PMEMORY_AREA Red = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
-    PMEMORY_AREA Black = Red->LeftChild;
-
-    while (Count--)
-    {
-        if (Root)
-            Root->LeftChild = Black;
-        else
-            AddressSpace->WorkingSetExpansionLinks.Flink = (PVOID)Black;
-        Black->Parent = Root;
-        Red->LeftChild = Black->RightChild;
-        if (Black->RightChild)
-            Black->RightChild->Parent = Red;
-        Black->RightChild = Red;
-        Red->Parent = Black;
-        Root = Black;
-
-        if (Count)
-        {
-            Red = Root->LeftChild;
-            Black = Red->LeftChild;
-        }
-    }
-}
-
-/**
- * @name MmRebalanceTree
- *
- * Rebalance a memory area tree using the Tree->Vine->Balanced Tree
- * method described in libavl documentation in chapter 4.12.
- * (http://www.stanford.edu/~blp/avl/libavl.html/)
- */
-
-static VOID
-MmRebalanceTree(
-    PMMSUPPORT AddressSpace)
-{
-    PMEMORY_AREA PreviousNode;
-    PMEMORY_AREA CurrentNode;
-    PMEMORY_AREA TempNode;
-    ULONG NodeCount = 0;
-    ULONG Vine;   /* Number of nodes in main vine. */
-    ULONG Leaves; /* Nodes in incomplete bottom level, if any. */
-    INT Height;   /* Height of produced balanced tree. */
-
-    /* Transform the tree into Vine. */
-
-    PreviousNode = NULL;
-    CurrentNode = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
-    while (CurrentNode != NULL)
-    {
-        if (CurrentNode->RightChild == NULL)
-        {
-            PreviousNode = CurrentNode;
-            CurrentNode = CurrentNode->LeftChild;
-            NodeCount++;
-        }
-        else
-        {
-            TempNode = CurrentNode->RightChild;
-
-            CurrentNode->RightChild = TempNode->LeftChild;
-            if (TempNode->LeftChild)
-                TempNode->LeftChild->Parent = CurrentNode;
-
-            TempNode->LeftChild = CurrentNode;
-            CurrentNode->Parent = TempNode;
-
-            CurrentNode = TempNode;
-
-            if (PreviousNode != NULL)
-                PreviousNode->LeftChild = TempNode;
-            else
-                AddressSpace->WorkingSetExpansionLinks.Flink = (PVOID)TempNode;
-            TempNode->Parent = PreviousNode;
-        }
-    }
-
-    /* Transform Vine back into a balanced tree. */
-
-    Leaves = NodeCount + 1;
-    for (;;)
-    {
-        ULONG Next = Leaves & (Leaves - 1);
-        if (Next == 0)
-            break;
-        Leaves = Next;
-    }
-    Leaves = NodeCount + 1 - Leaves;
-
-    MmCompressHelper(AddressSpace, Leaves);
-
-    Vine = NodeCount - Leaves;
-    Height = 1 + (Leaves > 0);
-    while (Vine > 1)
-    {
-        MmCompressHelper(AddressSpace, Vine / 2);
-        Vine /= 2;
-        Height++;
-    }
-}
-
 VOID
 NTAPI
 MiInsertVad(IN PMMVAD Vad,
@@ -283,9 +167,6 @@ MmInsertMemoryArea(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA marea)
 {
-    PMEMORY_AREA Node;
-    PMEMORY_AREA PreviousNode;
-    ULONG Depth = 0;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
     marea->VadNode.StartingVpn = marea->StartingVpn;
@@ -325,50 +206,6 @@ MmInsertMemoryArea(
         MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
         marea->Vad = NULL;
     }
-
-    if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
-    {
-        AddressSpace->WorkingSetExpansionLinks.Flink = (PVOID)marea;
-        marea->LeftChild = marea->RightChild = marea->Parent = NULL;
-        return;
-    }
-
-    Node = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
-    do
-    {
-        DPRINT("MA_GetEndingAddress(marea): %p Node->StartingAddress: %p\n",
-               MA_GetEndingAddress(marea), MA_GetStartingAddress(Node));
-        DPRINT("marea->StartingAddress: %p MA_GetEndingAddress(Node): %p\n",
-               MA_GetStartingAddress(marea), MA_GetEndingAddress(Node));
-        ASSERT(MA_GetEndingAddress(marea) <= MA_GetStartingAddress(Node) ||
-               MA_GetStartingAddress(marea) >= MA_GetEndingAddress(Node));
-        ASSERT(MA_GetStartingAddress(marea) != MA_GetStartingAddress(Node));
-
-        PreviousNode = Node;
-
-        if (MA_GetStartingAddress(marea) < MA_GetStartingAddress(Node))
-            Node = Node->LeftChild;
-        else
-            Node = Node->RightChild;
-
-        if (Node)
-        {
-            Depth++;
-            if (Depth == 22)
-            {
-                MmRebalanceTree(AddressSpace);
-                PreviousNode = Node->Parent;
-            }
-        }
-    }
-    while (Node != NULL);
-
-    marea->LeftChild = marea->RightChild = NULL;
-    marea->Parent = PreviousNode;
-    if (MA_GetStartingAddress(marea) < MA_GetStartingAddress(PreviousNode))
-        PreviousNode->LeftChild = marea;
-    else
-        PreviousNode->RightChild = marea;
 }
 
 PVOID NTAPI
@@ -396,12 +233,6 @@ MmFindGap(
                                                  VadRoot,
                                                  &StartingAddress,
                                                  &Parent);
-        if (Result == TableFoundNode)
-        {
-            return NULL;
-        }
-
-        return (PVOID)StartingAddress;
     }
     else
     {
@@ -410,13 +241,14 @@ MmFindGap(
                                                VadRoot,
                                                &Parent,
                                                &StartingAddress);
-        if (Result == TableFoundNode)
-        {
-            return NULL;
-        }
-
-        return (PVOID)StartingAddress;
     }
+
+    if (Result == TableFoundNode)
+    {
+        return NULL;
+    }
+
+    return (PVOID)StartingAddress;
 }
 
 VOID
@@ -424,99 +256,6 @@ NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table);
 
-#if DBG
-
-static
-VOID
-MiRosCheckMemoryAreasRecursive(
-    PMEMORY_AREA Node)
-{
-    /* Check if the allocation is ok */
-    ExpCheckPoolAllocation(Node, NonPagedPool, 'ERAM');
-
-    /* Check some fields */
-    ASSERT(Node->Magic == 'erAM');
-    ASSERT(PAGE_ALIGN(MA_GetStartingAddress(Node)) == (PVOID)MA_GetStartingAddress(Node));
-    ASSERT(MA_GetEndingAddress(Node) != 0);
-    ASSERT(PAGE_ALIGN(MA_GetEndingAddress(Node)) == (PVOID)MA_GetEndingAddress(Node));
-    ASSERT(MA_GetStartingAddress(Node) < MA_GetEndingAddress(Node));
-    ASSERT((Node->Type == 0) ||
-           (Node->Type == MEMORY_AREA_CACHE) ||
-           // (Node->Type == MEMORY_AREA_CACHE_SEGMENT) ||
-           (Node->Type == MEMORY_AREA_SECTION_VIEW) ||
-           (Node->Type == MEMORY_AREA_OWNED_BY_ARM3) ||
-           (Node->Type == (MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC)));
-
-    /* Recursively check children */
-    if (Node->LeftChild != NULL)
-        MiRosCheckMemoryAreasRecursive(Node->LeftChild);
-    if (Node->RightChild != NULL)
-        MiRosCheckMemoryAreasRecursive(Node->RightChild);
-}
-
-VOID
-NTAPI
-MiRosCheckMemoryAreas(
-    PMMSUPPORT AddressSpace)
-{
-    PMEMORY_AREA RootNode;
-    PEPROCESS AddressSpaceOwner;
-    BOOLEAN NeedReleaseLock;
-
-    NeedReleaseLock = FALSE;
-
-    /* Get the address space owner */
-    AddressSpaceOwner = CONTAINING_RECORD(AddressSpace, EPROCESS, Vm);
-
-    /* Check if we already own the address space lock */
-    if (AddressSpaceOwner->AddressCreationLock.Owner != KeGetCurrentThread())
-    {
-        /* We must own it! */
-        MmLockAddressSpace(AddressSpace);
-        NeedReleaseLock = TRUE;
-    }
-
-    /* Check all memory areas */
-    RootNode = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
-    MiRosCheckMemoryAreasRecursive(RootNode);
-
-    /* Release the lock, if we acquired it */
-    if (NeedReleaseLock)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-    }
-}
-
-extern KGUARDED_MUTEX PspActiveProcessMutex;
-
-VOID
-NTAPI
-MiCheckAllProcessMemoryAreas(VOID)
-{
-    PEPROCESS Process;
-    PLIST_ENTRY Entry;
-
-    /* Acquire the Active Process Lock */
-    KeAcquireGuardedMutex(&PspActiveProcessMutex);
-
-    /* Loop the process list */
-    Entry = PsActiveProcessHead.Flink;
-    while (Entry != &PsActiveProcessHead)
-    {
-        /* Get the process */
-        Process = CONTAINING_RECORD(Entry, EPROCESS, ActiveProcessLinks);
-
-        /* Check memory areas */
-        MiRosCheckMemoryAreas(&Process->Vm);
-
-        Entry = Entry->Flink;
-    }
-
-    /* Release the lock */
-    KeReleaseGuardedMutex(&PspActiveProcessMutex);
-}
-
-#endif
 
 /**
  * @name MmFreeMemoryArea
@@ -550,7 +289,6 @@ MmFreeMemoryArea(
     PMM_FREE_PAGE_FUNC FreePage,
     PVOID FreePageContext)
 {
-    PMEMORY_AREA *ParentReplace;
     ULONG_PTR Address;
     PVOID EndAddress;
 
@@ -640,60 +378,6 @@ MmFreeMemoryArea(
         }
     }
 
-    /* Remove the tree item. */
-    {
-        if (MemoryArea->Parent != NULL)
-        {
-            if (MemoryArea->Parent->LeftChild == MemoryArea)
-                ParentReplace = &MemoryArea->Parent->LeftChild;
-            else
-                ParentReplace = &MemoryArea->Parent->RightChild;
-        }
-        else
-            ParentReplace = (PMEMORY_AREA*)&AddressSpace->WorkingSetExpansionLinks.Flink;
-
-        if (MemoryArea->RightChild == NULL)
-        {
-            *ParentReplace = MemoryArea->LeftChild;
-            if (MemoryArea->LeftChild)
-                MemoryArea->LeftChild->Parent = MemoryArea->Parent;
-        }
-        else
-        {
-            if (MemoryArea->RightChild->LeftChild == NULL)
-            {
-                MemoryArea->RightChild->LeftChild = MemoryArea->LeftChild;
-                if (MemoryArea->LeftChild)
-                    MemoryArea->LeftChild->Parent = MemoryArea->RightChild;
-
-                *ParentReplace = MemoryArea->RightChild;
-                MemoryArea->RightChild->Parent = MemoryArea->Parent;
-            }
-            else
-            {
-                PMEMORY_AREA LowestNode;
-
-                LowestNode = MemoryArea->RightChild->LeftChild;
-                while (LowestNode->LeftChild != NULL)
-                    LowestNode = LowestNode->LeftChild;
-
-                LowestNode->Parent->LeftChild = LowestNode->RightChild;
-                if (LowestNode->RightChild)
-                    LowestNode->RightChild->Parent = LowestNode->Parent;
-
-                LowestNode->LeftChild = MemoryArea->LeftChild;
-                if (MemoryArea->LeftChild)
-                    MemoryArea->LeftChild->Parent = LowestNode;
-
-                LowestNode->RightChild = MemoryArea->RightChild;
-                MemoryArea->RightChild->Parent = LowestNode;
-
-                *ParentReplace = LowestNode;
-                LowestNode->Parent = MemoryArea->Parent;
-            }
-        }
-    }
-
     ExFreePoolWithTag(MemoryArea, TAG_MAREA);
 
     DPRINT("MmFreeMemoryAreaByNode() succeeded\n");
@@ -747,22 +431,16 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
            Type, BaseAddress, *BaseAddress, Length, AllocationFlags,
            Result);
 
-    //
-    // Is this a static memory area?
-    //
+    /* Is this a static memory area? */
     if (Type & MEMORY_AREA_STATIC)
     {
-        //
-        // Use the static array instead of the pool
-        //
+        /* Use the static array instead of the pool */
         ASSERT(MiStaticMemoryAreaCount < MI_STATIC_MEMORY_AREAS);
         MemoryArea = &MiStaticMemoryAreas[MiStaticMemoryAreaCount++];
     }
     else
     {
-        //
-        // Allocate the memory area from nonpaged pool
-        //
+        /* Allocate the memory area from nonpaged pool */
         MemoryArea = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(MEMORY_AREA),
                                            TAG_MAREA);
@@ -778,7 +456,6 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
     MemoryArea->Type = Type & ~MEMORY_AREA_STATIC;
     MemoryArea->Protect = Protect;
     MemoryArea->Flags = AllocationFlags;
-    //MemoryArea->LockCount = 0;
     MemoryArea->Magic = 'erAM';
     MemoryArea->DeleteInProgress = FALSE;
 
