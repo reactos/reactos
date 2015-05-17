@@ -586,6 +586,7 @@ SetupDiOpenDeviceInterfaceRegKey(
         Slash = wcsrchr(Path, '\\');
         if (!Guid || !Slash)
         {
+            HeapFree(GetProcessHeap(), 0, Path);
             SetLastError(ERROR_INVALID_PARAMETER);
             return INVALID_HANDLE_VALUE;
         }
