@@ -221,6 +221,14 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
     }
 
+    /* Handle shared user page, which doesn't have a VAD / MemoryArea */
+    if (PAGE_ALIGN(Address) == (PVOID)MM_SHARED_USER_DATA_VA)
+    {
+        /* This is an ARM3 fault */
+        DPRINT("ARM3 fault %p\n", MemoryArea);
+        return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
+    }
+
     /* Is there a ReactOS address space yet? */
     if (MmGetKernelAddressSpace())
     {
