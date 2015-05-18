@@ -11,9 +11,11 @@
 
 #include <debug.h>
 
+#define PROFILE_NAME_LENGTH 80
+
 typedef struct _PROFILE
 {
-    WCHAR szFriendlyName[256];
+    WCHAR szFriendlyName[PROFILE_NAME_LENGTH];
     WCHAR szName[5];
     DWORD dwProfileNumber;
     DWORD dwPreferenceOrder;
@@ -37,11 +39,12 @@ OnCopyProfileInit(HWND hwndDlg,
                   UINT idFrom,
                   UINT idTo)
 {
-    WCHAR szNewProfileName[256];
+    WCHAR szNewProfileName[PROFILE_NAME_LENGTH];
 
     SetDlgItemText(hwndDlg, idFrom, pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex].szFriendlyName);
 
     swprintf(szNewProfileName, L"Profile %lu", pProfileData->dwProfileCount);
+    SendDlgItemMessageW(hwndDlg, idTo, EM_SETLIMITTEXT, PROFILE_NAME_LENGTH - 1, 0);
     SetDlgItemText(hwndDlg, idTo, szNewProfileName);
 }
 
@@ -76,7 +79,7 @@ CopyProfile(
     GetDlgItemText(hwndDlg,
                    IDC_COPYPROFILETO,
                    pDstProfile->szFriendlyName,
-                   256);
+                   PROFILE_NAME_LENGTH);
 
     pDstProfile->dwProfileNumber = ++pProfileData->dwLastProfile;
     swprintf(pDstProfile->szName, L"%04lu", pDstProfile->dwProfileNumber);
@@ -138,7 +141,7 @@ RenameProfile(
     GetDlgItemText(hwndDlg,
                    IDC_RENPROFEDITTO,
                    pProfile->szFriendlyName,
-                   256);
+                   PROFILE_NAME_LENGTH);
 
     /* Replace the listbox string */
     SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
@@ -288,7 +291,7 @@ GetProfile(
     if (lError != ERROR_SUCCESS)
         return;
 
-    dwSize = 256 * sizeof(WCHAR);
+    dwSize = PROFILE_NAME_LENGTH * sizeof(WCHAR);
     lError = RegQueryValueExW(hProfileKey,
                               L"FriendlyName",
                               NULL,
