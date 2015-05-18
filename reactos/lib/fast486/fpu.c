@@ -277,7 +277,7 @@ Fast486FpuFromInteger(PFAST486_STATE State,
 
     if (Value < 0LL)
     {
-        Result->Sign = 1;
+        Result->Sign = TRUE;
         Value = -Value;
     }
 
@@ -804,7 +804,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
     TempResult.Sign = FirstOperand->Sign ^ SecondOperand->Sign;
 
     /* Calculate the exponent */
-    Exponent = (LONG)FirstOperand->Exponent + (LONG)SecondOperand->Exponent - FPU_REAL10_BIAS;
+    Exponent = (LONG)FirstOperand->Exponent + (LONG)SecondOperand->Exponent - FPU_REAL10_BIAS + 1;
 
     /* Calculate the mantissa */
     UnsignedMult128(FirstOperand->Mantissa,

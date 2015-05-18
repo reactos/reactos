@@ -63,7 +63,7 @@
 #define FPU_REAL8_INFINITY      0x7FF0000000000000ULL
 #define FPU_REAL8_INDEFINITE    0xFFF8000000000000ULL
 
-#define FPU_IS_NORMALIZED(x)    (!FPU_IS_ZERO(x) && (((x)->Mantissa & FPU_MANTISSA_HIGH_BIT) != 0ULL))
+#define FPU_IS_NORMALIZED(x)    (FPU_IS_ZERO(x) || (((x)->Mantissa & FPU_MANTISSA_HIGH_BIT) != 0ULL))
 #define FPU_IS_ZERO(x)          ((x)->Mantissa == 0ULL)
 #define FPU_IS_NAN(x)           ((x)->Exponent == (FPU_MAX_EXPONENT + 1))
 #define FPU_IS_INFINITY(x)      (FPU_IS_NAN(x) && ((x)->Mantissa == FPU_MANTISSA_HIGH_BIT))

@@ -1626,12 +1626,13 @@ Fast486FpuNormalize(PFAST486_STATE State,
 {
     UINT LeadingZeros;
 
-    if (FPU_IS_NORMALIZED(Data)) return TRUE;
     if (FPU_IS_ZERO(Data))
     {
         Data->Exponent = 0;
         return TRUE;
     }
+
+    if (FPU_IS_NORMALIZED(Data)) return TRUE;
 
     LeadingZeros = CountLeadingZeros64(Data->Mantissa);
 
