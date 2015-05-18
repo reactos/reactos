@@ -203,9 +203,9 @@ UnsignedDivMod128(ULONGLONG DividendLow,
      * Calculate the number of significant bits the current
      * divisor has more than the original divisor
      */
-    Bits = CountLeadingZeros64(Divisor) + 64;
-    Bits -= (CurrentHigh > 0ULL) ? CountLeadingZeros64(CurrentHigh) : 64;
-    Bits -= (CurrentLow > 0ULL) ? CountLeadingZeros64(CurrentLow) : 64;
+    Bits = CountLeadingZeros64(Divisor);
+    if (CurrentHigh > 0ULL) Bits -= CountLeadingZeros64(CurrentHigh);
+    else Bits -= CountLeadingZeros64(CurrentLow);
 
     if (Bits)
     {
@@ -923,11 +923,10 @@ Fast486FpuDivide(PFAST486_STATE State,
     }
 
     /* Calculate the exponent of the result */
-    Exponent = (LONG)FirstOperand->Exponent - (LONG)SecondOperand->Exponent - 64;
+    Exponent = (LONG)FirstOperand->Exponent - (LONG)SecondOperand->Exponent - 1;
 
     /* Divide the two mantissas */
     Remainder = UnsignedDivMod128(0ULL,
-                                  /* Notice the 64 above - this is the high part */
                                   FirstOperand->Mantissa,
                                   SecondOperand->Mantissa,
                                   &QuotientLow,
@@ -1169,14 +1168,14 @@ Fast486FpuArithmeticOperation(PFAST486_STATE State,
         /* FDIV */
         case 6:
         {
-            Fast486FpuDivide(State, DestOperand, SourceOperand, DestOperand);
+            Fast486FpuDivide(State, SourceOperand, DestOperand, DestOperand);
             break;
         }
 
         /* FDIVR */
         case 7:
         {
-            Fast486FpuDivide(State, SourceOperand, DestOperand, DestOperand);
+            Fast486FpuDivide(State, DestOperand, SourceOperand, DestOperand);
             break;
         }
     }
