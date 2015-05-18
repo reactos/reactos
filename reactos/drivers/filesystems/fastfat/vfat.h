@@ -875,6 +875,20 @@ vfatMakeFCBFromDirEntry(
 /* finfo.c */
 
 NTSTATUS
+VfatGetStandardInformation(
+    PVFATFCB FCB,
+    PFILE_STANDARD_INFORMATION StandardInfo,
+    PULONG BufferLength);
+
+NTSTATUS
+VfatGetBasicInformation(
+    PFILE_OBJECT FileObject,
+    PVFATFCB FCB,
+    PDEVICE_OBJECT DeviceObject,
+    PFILE_BASIC_INFORMATION BasicInfo,
+    PULONG BufferLength);
+
+NTSTATUS
 VfatQueryInformation(
     PVFAT_IRP_CONTEXT IrpContext);
 

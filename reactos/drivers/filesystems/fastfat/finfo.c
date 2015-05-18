@@ -71,7 +71,6 @@ const char* FileInformationClassNames[] =
 /*
  * FUNCTION: Retrieve the standard file information
  */
-static
 NTSTATUS
 VfatGetStandardInformation(
     PVFATFCB FCB,
@@ -236,7 +235,6 @@ VfatSetBasicInformation(
     return STATUS_SUCCESS;
 }
 
-static
 NTSTATUS
 VfatGetBasicInformation(
     PFILE_OBJECT FileObject,
