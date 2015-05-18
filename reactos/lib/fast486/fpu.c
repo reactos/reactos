@@ -1020,6 +1020,110 @@ Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
 }
 
 /*
+ * Calculates using the identities:
+ * log2(x) = log10(x) / log10(2)
+ * log10(x)= sum { -1^(n+1) * x^n / n!, n >= 1 }
+ */
+static inline BOOLEAN FASTCALL
+Fast486FpuCalculateLogBase2(PFAST486_STATE State,
+                            PFAST486_FPU_DATA_REG Operand,
+                            PFAST486_FPU_DATA_REG Result)
+{
+    INT i;
+    FAST486_FPU_DATA_REG Value = *Operand;
+    FAST486_FPU_DATA_REG SeriesElement;
+    FAST486_FPU_DATA_REG TempResult;
+    FAST486_FPU_DATA_REG TempValue;
+    LONGLONG UnbiasedExp = (LONGLONG)Operand->Exponent - FPU_REAL10_BIAS;
+
+    if (Operand->Sign)
+    {
+        /* Raise the invalid operation exception */
+        State->FpuStatus.Ie = TRUE;
+
+        if (State->FpuControl.Im)
+        {
+            /* Return the indefinite NaN */
+            Result->Sign = TRUE;
+            Result->Exponent = FPU_MAX_EXPONENT + 1;
+            Result->Mantissa = FPU_INDEFINITE_MANTISSA;
+            return TRUE;
+        }
+        else
+        {
+            Fast486FpuException(State);
+            return FALSE;
+        }
+    }
+
+    /* Get only the mantissa as a floating-pointer number between 1 and 2 */
+    Value.Exponent = FPU_REAL10_BIAS;
+
+    /* Check if it's denormalized */
+    if (!FPU_IS_NORMALIZED(&Value))
+    {
+        ULONG Bits;
+        State->FpuStatus.De = TRUE;
+
+        if (!State->FpuControl.Dm)
+        {
+            Fast486FpuException(State);
+            return FALSE;
+        }
+
+        /* Normalize the number */
+        Bits = CountLeadingZeros64(Value.Mantissa);
+        UnbiasedExp -= Bits;
+        Value.Mantissa <<= Bits;
+    }
+
+    /* Subtract one from the value */
+    if (!Fast486FpuSubtract(State, &Value, &FpuOne, &Value)) return FALSE;
+
+    /* Calculate the base 10 logarithm */
+    SeriesElement = TempResult = Value;
+
+    for (i = 2; i < INVERSE_NUMBERS_COUNT / 2; i++)
+    {
+        if (!Fast486FpuMultiply(State, &SeriesElement, &Value, &SeriesElement))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        /* Toggle the sign of the series element */
+        SeriesElement.Sign = !SeriesElement.Sign;
+
+        /* Divide it by the counter */
+        if (!Fast486FpuMultiply(State, &SeriesElement, &FpuInverseNumber[i - 1], &TempValue))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        /* And add it to the result */
+        if (!Fast486FpuAdd(State, &TempResult, &TempValue, &TempResult))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+    }
+
+    /* Now convert the base 10 logarithm into a base 2 logarithm */
+    if (!Fast486FpuDivide(State, &TempResult, &FpuLgTwo, &TempResult)) return FALSE;
+
+    /*
+     * Add the exponent to the result
+     * log2(x * 2^y) = log2(x) + log2(2^y) = log2(x) + y
+     */
+    Fast486FpuFromInteger(State, UnbiasedExp, &TempValue);
+    if (!Fast486FpuAdd(State, &TempValue, &TempResult, &TempResult)) return FALSE;
+
+    *Result = TempResult;
+    return TRUE;
+}
+
+/*
  * Calculates using the identity:
  * sin(x) = sum { -1^n * x^(2n + 1) / (2n + 1)!, n >= 0 }
  */
@@ -1726,8 +1830,31 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FYL2X */
             case 0x31:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FAST486_FPU_DATA_REG Logarithm;
+
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY || FPU_GET_TAG(1) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (!Fast486FpuCalculateLogBase2(State, &FPU_ST(0), &Logarithm))
+                {
+                    /* Exception occurred */
+                    break;
+                }
+
+                if (!Fast486FpuMultiply(State, &Logarithm, &FPU_ST(1), &FPU_ST(1)))
+                {
+                    /* Exception occurred */
+                    break;
+                }
+
+                /* Pop the stack so that the result ends up in ST0 */
+                Fast486FpuPop(State);
+                FPU_UPDATE_TAG(0);
 
                 break;
             }
@@ -1828,8 +1955,37 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FYL2XP1 */
             case 0x39:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FAST486_FPU_DATA_REG Value, Logarithm;
+
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY || FPU_GET_TAG(1) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (!Fast486FpuAdd(State, &FPU_ST(0), &FpuOne, &Value))
+                {
+                    /* Exception occurred */
+                    break;
+                }
+
+                if (!Fast486FpuCalculateLogBase2(State, &Value, &Logarithm))
+                {
+                    /* Exception occurred */
+                    break;
+                }
+
+                if (!Fast486FpuMultiply(State, &Logarithm, &FPU_ST(1), &FPU_ST(1)))
+                {
+                    /* Exception occurred */
+                    break;
+                }
+
+                /* Pop the stack so that the result ends up in ST0 */
+                Fast486FpuPop(State);
+                FPU_UPDATE_TAG(0);
 
                 break;
             }
