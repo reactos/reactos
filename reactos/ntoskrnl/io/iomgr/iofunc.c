@@ -1,11 +1,12 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/iofunc.c
+ * FILE:            ntoskrnl/io/iomgr/iofunc.c
  * PURPOSE:         Generic I/O Functions that build IRPs for various operations
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gunnar Dalsnes
  *                  Filip Navara (navaraf@reactos.org)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -339,6 +340,113 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     {
         /* Otherwise get the related device */
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+
+    /* If that's FS I/O, try to do it with FastIO path */
+    if (!IsDevIoCtl)
+    {
+        PFAST_IO_DISPATCH FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+        /* Check whether FSD is FastIO aware and provide an appropriate routine */
+        if (FastIoDispatch != NULL && FastIoDispatch->FastIoDeviceControl != NULL)
+        {
+            IO_STATUS_BLOCK KernelIosb;
+
+            /* If we have an output buffer coming from usermode */
+            if (PreviousMode != KernelMode && OutputBuffer != NULL)
+            {
+                /* Probe it according to its usage */
+                _SEH2_TRY
+                {
+                    if (AccessType == METHOD_IN_DIRECT)
+                    {
+                        ProbeForRead(OutputBuffer, OutputBufferLength, sizeof(CHAR));
+                    }
+                    else if (AccessType == METHOD_OUT_DIRECT)
+                    {
+                        ProbeForWrite(OutputBuffer, OutputBufferLength, sizeof(CHAR));
+                    }
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* Cleanup after exception and return */
+                    IopCleanupAfterException(FileObject, NULL, EventObject, NULL);
+
+                    /* Return the exception code */
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                }
+                _SEH2_END;
+            }
+
+            /* If we're to dismount a volume, increaase the dismount count */
+            if (IoControlCode == FSCTL_DISMOUNT_VOLUME)
+            {
+                InterlockedExchangeAdd((PLONG)&SharedUserData->DismountCount, 1);
+            }
+
+            /* Call the FSD */
+            if (FastIoDispatch->FastIoDeviceControl(FileObject,
+                                                    TRUE,
+                                                    InputBuffer,
+                                                    InputBufferLength,
+                                                    OutputBuffer,
+                                                    OutputBufferLength,
+                                                    IoControlCode,
+                                                    &KernelIosb,
+                                                    DeviceObject))
+            {
+                IO_COMPLETION_CONTEXT CompletionInfo = { NULL, NULL };
+
+                /* Write the IOSB back */
+                _SEH2_TRY
+                {
+                    *IoStatusBlock = KernelIosb;
+
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    KernelIosb.Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                /* Backup our complete context in case it exists */
+                if (FileObject->CompletionContext)
+                {
+                     CompletionInfo = *(FileObject->CompletionContext);
+                }
+
+                /* If we had an event, signal it */
+                if (Event)
+                {
+                    KeSetEvent(EventObject, IO_NO_INCREMENT, FALSE);
+                    ObDereferenceObject(EventObject);
+                }
+
+                /* If FO was locked, unlock it */
+                if (LockedForSynch)
+                {
+                    IopUnlockFileObject(FileObject);
+                }
+
+                /* Set completion if required */
+                if (CompletionInfo.Port != NULL && UserApcContext != NULL)
+                {
+                    if (!NT_SUCCESS(IoSetIoCompletion(CompletionInfo.Port,
+                                                      CompletionInfo.Key,
+                                                      UserApcContext,
+                                                      KernelIosb.Status,
+                                                      KernelIosb.Information,
+                                                      TRUE)))
+                    {
+                        KernelIosb.Status = STATUS_INSUFFICIENT_RESOURCES;
+                    }
+                }
+
+                /* We're done with FastIO! */
+                ObDereferenceObject(FileObject);
+                return KernelIosb.Status;
+            }
+        }
     }
 
     /* Clear the event */
@@ -1491,6 +1599,7 @@ NtLockFile(IN HANDLE FileHandle,
     LARGE_INTEGER CapturedByteOffset, CapturedLength;
     NTSTATUS Status;
     OBJECT_HANDLE_INFORMATION HandleInformation;
+    PFAST_IO_DISPATCH FastIoDispatch;
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
     CapturedLength.QuadPart = 0;
@@ -1557,6 +1666,62 @@ NtLockFile(IN HANDLE FileHandle,
 
     /* Get the device object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* Try to do it the FastIO way if possible */
+    FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    if (FastIoDispatch != NULL && FastIoDispatch->FastIoLock != NULL)
+    {
+        IO_STATUS_BLOCK KernelIosb;
+
+        if (FastIoDispatch->FastIoLock(FileObject,
+                                       &CapturedByteOffset,
+                                       &CapturedLength,
+                                       PsGetCurrentProcess(),
+                                       Key,
+                                       FailImmediately,
+                                       ExclusiveLock,
+                                       &KernelIosb,
+                                       DeviceObject))
+        {
+            /* Write the IOSB back */
+            _SEH2_TRY
+            {
+                *IoStatusBlock = KernelIosb;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                KernelIosb.Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* If we had an event, signal it */
+            if (EventHandle)
+            {
+                KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+                ObDereferenceObject(Event);
+            }
+
+            /* Set completion if required */
+            if (FileObject->CompletionContext != NULL && ApcContext != NULL)
+            {
+                if (!NT_SUCCESS(IoSetIoCompletion(FileObject->CompletionContext->Port,
+                                                  FileObject->CompletionContext->Key,
+                                                  ApcContext,
+                                                  KernelIosb.Status,
+                                                  KernelIosb.Information,
+                                                  TRUE)))
+                {
+                    KernelIosb.Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+            }
+
+            FileObject->LockOperation = TRUE;
+
+            /* We're done with FastIO! */
+            ObDereferenceObject(FileObject);
+            return KernelIosb.Status;
+        }
+    }
 
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
@@ -1897,6 +2062,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     PFILE_MODE_INFORMATION ModeBuffer;
     PFILE_ALIGNMENT_INFORMATION AlignmentBuffer;
     PFILE_ALL_INFORMATION AllBuffer;
+    PFAST_IO_DISPATCH FastIoDispatch;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
@@ -2018,6 +2184,52 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         }
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
+    }
+
+    /* Check if FastIO is possible for the two available information classes */
+    FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    if (FastIoDispatch != NULL &&
+        ((FileInformationClass == FileBasicInformation && FastIoDispatch->FastIoQueryBasicInfo != NULL) ||
+         (FileInformationClass == FileStandardInformation && FastIoDispatch->FastIoQueryStandardInfo != NULL)))
+    {
+        BOOLEAN Success = FALSE;
+
+        if (FileInformationClass == FileBasicInformation)
+        {
+            Success = FastIoDispatch->FastIoQueryBasicInfo(FileObject, TRUE,
+                                                           FileInformation,
+                                                           &KernelIosb,
+                                                           DeviceObject);
+        }
+        else
+        {
+            Success = FastIoDispatch->FastIoQueryStandardInfo(FileObject, TRUE,
+                                                              FileInformation,
+                                                              &KernelIosb,
+                                                              DeviceObject);
+        }
+
+        /* If call succeed */
+        if (Success)
+        {
+            /* Write the IOSB back */
+            _SEH2_TRY
+            {
+                *IoStatusBlock = KernelIosb;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                KernelIosb.Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Unlock FO */
+            IopUnlockFileObject(FileObject);
+
+            /* We're done with FastIO! */
+            ObDereferenceObject(FileObject);
+            return KernelIosb.Status;
+        }
     }
 
     /* Clear the File Object event */
@@ -2668,6 +2880,9 @@ NtSetInformationFile(IN HANDLE FileHandle,
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
 
+    DPRINT("Will call: %p\n", DeviceObject);
+    DPRINT("Associated driver: %p (%wZ)\n", DeviceObject->DriverObject, &DeviceObject->DriverObject->DriverName);
+
     /* Check if this is a file that was opened for Synch I/O */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
@@ -3028,6 +3243,7 @@ NtUnlockFile(IN HANDLE FileHandle,
     NTSTATUS Status;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     IO_STATUS_BLOCK KernelIosb;
+    PFAST_IO_DISPATCH FastIoDispatch;
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
     CapturedLength.QuadPart = 0;
@@ -3086,6 +3302,35 @@ NtUnlockFile(IN HANDLE FileHandle,
     else
     {
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+
+    /* Try to do it the FastIO way if possible */
+    FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    if (FastIoDispatch != NULL && FastIoDispatch->FastIoUnlockSingle != NULL)
+    {
+        if (FastIoDispatch->FastIoUnlockSingle(FileObject,
+                                               &CapturedByteOffset,
+                                               &CapturedLength,
+                                               PsGetCurrentProcess(),
+                                               Key,
+                                               &KernelIosb,
+                                               DeviceObject))
+        {
+            /* Write the IOSB back */
+            _SEH2_TRY
+            {
+                *IoStatusBlock = KernelIosb;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                KernelIosb.Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* We're done with FastIO! */
+            ObDereferenceObject(FileObject);
+            return KernelIosb.Status;
+        }
     }
 
     /* Check if we should use Sync IO or not */
