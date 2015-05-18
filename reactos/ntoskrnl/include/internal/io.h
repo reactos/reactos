@@ -1247,6 +1247,17 @@ IopDeleteIoCompletion(
     PVOID ObjectBody
 );
 
+NTSTATUS
+NTAPI
+IoSetIoCompletion(
+    IN PVOID IoCompletion,
+    IN PVOID KeyContext,
+    IN PVOID ApcContext,
+    IN NTSTATUS IoStatus,
+    IN ULONG_PTR IoStatusInformation,
+    IN BOOLEAN Quota 
+);
+
 //
 // Ramdisk Routines
 //
