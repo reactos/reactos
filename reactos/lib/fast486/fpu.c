@@ -591,6 +591,18 @@ Fast486FpuAdd(PFAST486_STATE State,
     FAST486_FPU_DATA_REG SecondAdjusted = *SecondOperand;
     FAST486_FPU_DATA_REG TempResult;
 
+    if (FPU_IS_INDEFINITE(FirstOperand)
+        || FPU_IS_INDEFINITE(SecondOperand)
+        || (FPU_IS_POS_INF(FirstOperand) && FPU_IS_NEG_INF(SecondOperand))
+        || (FPU_IS_NEG_INF(FirstOperand) && FPU_IS_POS_INF(SecondOperand)))
+    {
+        /* The result will be indefinite */
+        Result->Sign = TRUE;
+        Result->Exponent = FPU_MAX_EXPONENT + 1;
+        Result->Mantissa = FPU_INDEFINITE_MANTISSA;
+        return TRUE;
+    }
+
     if ((!FPU_IS_NORMALIZED(FirstOperand) || !FPU_IS_NORMALIZED(SecondOperand)))
     {
         /* Raise the denormalized exception */
@@ -601,6 +613,20 @@ Fast486FpuAdd(PFAST486_STATE State,
             Fast486FpuException(State);
             return FALSE;
         }
+    }
+
+    if (FPU_IS_ZERO(FirstOperand) || FPU_IS_INFINITY(SecondOperand))
+    {
+        /* The second operand is the result */
+        *Result = *SecondOperand;
+        return TRUE;
+    }
+
+    if (FPU_IS_ZERO(SecondOperand) || FPU_IS_INFINITY(FirstOperand))
+    {
+        /* The first operand is the result */
+        *Result = *FirstOperand;
+        return TRUE;
     }
 
     /* Find the largest exponent */
@@ -2942,6 +2968,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 #ifndef FAST486_NO_FPU
     PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
+    FAST486_FPU_DATA_REG MemoryData;
 #endif
 
     TOGGLE_ADSIZE(AddressSize);
@@ -2962,7 +2989,6 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
     if (ModRegRm.Memory)
     {
         SHORT Value;
-        FAST486_FPU_DATA_REG MemoryData;
 
         /* The destination operand is ST0 */
         DestOperand = &FPU_ST(0);
