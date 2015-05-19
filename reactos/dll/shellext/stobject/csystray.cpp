@@ -206,6 +206,8 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 
     switch (uMsg)
     {
+    case WM_NCCREATE:
+        return FALSE;
     case WM_CREATE:
         InitIcons();
         SetTimer(1, 2000, NULL);
