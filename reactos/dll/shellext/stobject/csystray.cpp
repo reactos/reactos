@@ -87,11 +87,12 @@ HRESULT CSysTray::ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (FAILED(hr))
             return hr;
 
-        if (hr != S_FALSE)
+        if (hr == S_OK)
             return hr;
     }
 
-    return S_OK;
+    // Not handled by anyone, so return accordingly.
+    return S_FALSE;
 }
 
 HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip)
@@ -207,6 +208,7 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     switch (uMsg)
     {
     case WM_NCCREATE:
+    case WM_NCDESTROY:
         return FALSE;
     case WM_CREATE:
         InitIcons();
@@ -227,8 +229,5 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     if (FAILED(hr))
         return FALSE;
 
-    if (hr == S_FALSE)
-        return FALSE;
-
-    return TRUE;
+    return (hr == S_OK);
 }
