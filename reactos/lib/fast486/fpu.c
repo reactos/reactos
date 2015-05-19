@@ -204,8 +204,15 @@ UnsignedDivMod128(ULONGLONG DividendLow,
      * divisor has more than the original divisor
      */
     Bits = CountLeadingZeros64(Divisor);
-    if (CurrentHigh > 0ULL) Bits -= CountLeadingZeros64(CurrentHigh);
+    if (CurrentHigh > 0ULL) Bits += 64 - CountLeadingZeros64(CurrentHigh);
     else Bits -= CountLeadingZeros64(CurrentLow);
+
+    if (Bits >= 64)
+    {
+        *QuotientHigh = *QuotientLow;
+        *QuotientLow = 0ULL;
+        Bits -= 64;
+    }
 
     if (Bits)
     {
@@ -635,15 +642,33 @@ Fast486FpuAdd(PFAST486_STATE State,
     /* Adjust the first operand to it... */
     if (FirstAdjusted.Exponent < TempResult.Exponent)
     {
-        FirstAdjusted.Mantissa >>= (TempResult.Exponent - FirstAdjusted.Exponent);
-        FirstAdjusted.Exponent = TempResult.Exponent;
+        if ((TempResult.Exponent - FirstAdjusted.Exponent) < 64)
+        {
+            FirstAdjusted.Mantissa >>= (TempResult.Exponent - FirstAdjusted.Exponent);
+            FirstAdjusted.Exponent = TempResult.Exponent;
+        }
+        else
+        {
+            /* The second operand is the result */
+            *Result = *SecondOperand;
+            return TRUE;
+        }
     }
 
     /* ... and the second one too */
     if (SecondAdjusted.Exponent < TempResult.Exponent)
     {
-        SecondAdjusted.Mantissa >>= (TempResult.Exponent - SecondAdjusted.Exponent);
-        SecondAdjusted.Exponent = TempResult.Exponent;
+        if ((TempResult.Exponent - FirstAdjusted.Exponent) < 64)
+        {
+            SecondAdjusted.Mantissa >>= (TempResult.Exponent - SecondAdjusted.Exponent);
+            SecondAdjusted.Exponent = TempResult.Exponent;
+        }
+        else
+        {
+            /* The first operand is the result */
+            *Result = *FirstOperand;
+            return TRUE;
+        }
     }
 
     if (FirstAdjusted.Sign == SecondAdjusted.Sign)
