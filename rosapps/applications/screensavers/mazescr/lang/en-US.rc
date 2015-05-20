@@ -1,8 +1,45 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-STRINGTABLE DISCARDABLE
+IDD_DLG_SCREEN DIALOGEX DISCARDABLE  0, 0, 276, 112
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Maze ScreenSaver Settings"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    IDS_DESCRIPTION "Maze ScreenSaver"
-    IDS_TITLE       "About"
-    IDS_TEXT        "No options need to be set."
+    LTEXT           "Maze Size:",IDC_STATIC,7,7,90,12,SS_CENTERIMAGE
+    CONTROL         "Slider1",IDC_SLIDER_SIZE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,101,7,140,12
+    CTEXT           "Static",IDC_TEXT_SIZE,245,7,24,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    LTEXT           "Pre Solve Delay:",IDC_STATIC,7,28,90,12,SS_CENTERIMAGE
+    CONTROL         "Slider2",IDC_SLIDER_PRESD,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,101,28,140,12
+    CTEXT           "Static",IDC_TEXT_PRESD,245,28,24,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    LTEXT           "Post Solve Delay:",IDC_STATIC,7,49,90,12,SS_CENTERIMAGE
+    CONTROL         "Slider3",IDC_SLIDER_POSTSD,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,101,49,140,12
+    CTEXT           "Static",IDC_TEXT_POSTSD,245,49,24,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    LTEXT           "Solve Delay:",IDC_STATIC,7,70,90,12,SS_CENTERIMAGE
+    CONTROL         "Slider4",IDC_SLIDER_SD,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,101,70,140,12
+    CTEXT           "Static",IDC_TEXT_SD,245,70,24,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    DEFPUSHBUTTON   "OK",IDOK,59,91,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,113,91,50,14
+    PUSHBUTTON      "About",IDABOUT,167,91,50,14
+END
+
+IDD_DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 229, 121
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT           "Maze ScreenSaver 1.0",IDC_STATIC,7,7,215,9
+    LTEXT           "[06-21-85] Martin Weiss - Original Code",IDC_STATIC,7,20,215,8
+    LTEXT           "[01-29-88] Dave Lemke - Hacked for X11",IDC_STATIC,7,29,215,8
+    LTEXT           "[10-04-88] Richard Hess - UnHacked for X11",IDC_STATIC,7,38,215,8
+    LTEXT           "[03-03-93] Jim Randell - UnHacked for X11",IDC_STATIC,7,47,215,8
+    LTEXT           "[03-07-93] Jamie Zawinski - Cleanup and Code tidiness",IDC_STATIC,7,56,215,8
+    LTEXT           "[10-08-94] Ge van Geldorp - Ported to Windows",IDC_STATIC,7,65,215,8
+    LTEXT           "[08-15-03] Ge van Geldorp - Ported to ReactOS",IDC_STATIC,7,74,215,8
+    CTEXT           "R.I.P. Ge van Geldorp, we miss you!",IDC_STATIC,7,87,215,10,SS_SUNKEN
+    DEFPUSHBUTTON   "OK",IDOK,87,100,56,14
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DESCRIPTION         "Maze Screensaver"
 END

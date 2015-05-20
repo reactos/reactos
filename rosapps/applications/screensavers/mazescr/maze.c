@@ -49,16 +49,17 @@
 
 #define STRICT
 
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <windows.h>       /* required for all Windows applications */
 #include <scrnsave.h>
+#include <tchar.h>
+#include <stdlib.h>
+#include <commctrl.h>
+#include <string.h>
+#include <time.h>
 #include "resource.h"
 
 #define APPNAME _T("Maze")
 
-//static BOOL InitInstance(HWND hParent);
 LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT message, WPARAM uParam, LPARAM lParam);
 static int choose_door();
 static long backup();
@@ -71,9 +72,8 @@ HBRUSH hBrushDead;
 HBRUSH hBrushLiving;
 HPEN   hPenWall;
 HDC    hDC;
-//static BOOL waiting;
 
-static int solve_delay, pre_solve_delay, post_solve_delay;
+static int solve_delay, pre_solve_delay, post_solve_delay, size;
 
 #define MAX_MAZE_SIZE_X    ((unsigned long) 1000) // Dynamic detection?
 #define MAX_MAZE_SIZE_Y    ((unsigned long) 1000) // Dynamic detection?
@@ -119,6 +119,63 @@ static int start_x, start_y, start_dir, end_x, end_y, end_dir;
 static int grid_width, grid_height;
 static int bw;
 static int state = 1, pathi = 0;
+static LPCWSTR registryPath = _T("Software\\Microsoft\\ScreenSavers\\mazescr");
+
+static void SetDefaults()
+{
+    size = 10;
+    pre_solve_delay = 5000;
+    post_solve_delay = 5000;
+    solve_delay = 1;
+}
+
+static void ReadRegistry()
+{
+    LONG result;
+    HKEY skey;
+    DWORD valuetype, valuesize, val_size, val_presd, val_postsd, val_sd;
+
+    SetDefaults();
+
+    result = RegOpenKeyEx(HKEY_CURRENT_USER, registryPath, 0, KEY_READ, &skey);
+    if(result != ERROR_SUCCESS)
+        return;
+
+    valuesize = sizeof(DWORD);
+
+    result = RegQueryValueEx(skey, _T("size"), NULL, &valuetype, (LPBYTE)&val_size, &valuesize);
+    if(result == ERROR_SUCCESS)
+        size = val_size;
+    result = RegQueryValueEx(skey, _T("pre_solve_delay"), NULL, &valuetype, (LPBYTE)&val_presd, &valuesize);
+    if(result == ERROR_SUCCESS)
+        pre_solve_delay = val_presd;
+    result = RegQueryValueEx(skey, _T("post_solve_delay"), NULL, &valuetype, (LPBYTE)&val_postsd, &valuesize);
+    if(result == ERROR_SUCCESS)
+        post_solve_delay = val_postsd;
+    result = RegQueryValueEx(skey, _T("solve_delay"), NULL, &valuetype, (LPBYTE)&val_sd, &valuesize);
+    if(result == ERROR_SUCCESS)
+        solve_delay = val_sd;
+
+    RegCloseKey(skey);
+}
+
+static void WriteRegistry()
+{
+    LONG result;
+    HKEY skey;
+    DWORD disp;
+
+    result = RegCreateKeyEx(HKEY_CURRENT_USER, registryPath, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &skey, &disp);
+    if(result != ERROR_SUCCESS)
+        return;
+
+    RegSetValueEx(skey, _T("size"), 0, REG_DWORD, (LPBYTE)&size, sizeof(size));
+    RegSetValueEx(skey, _T("pre_solve_delay"), 0, REG_DWORD, (LPBYTE)&pre_solve_delay, sizeof(pre_solve_delay));
+    RegSetValueEx(skey, _T("post_solve_delay"), 0, REG_DWORD, (LPBYTE)&post_solve_delay, sizeof(post_solve_delay));
+    RegSetValueEx(skey, _T("solve_delay"), 0, REG_DWORD, (LPBYTE)&solve_delay, sizeof(solve_delay));
+
+    RegCloseKey(skey);
+}
 
 static void set_maze_sizes(width, height)
 int width, height;
@@ -417,7 +474,7 @@ static void draw_maze_border(HWND hWnd)    /* draw the maze outline */
         }
     }
 
-    hBrush = GetStockObject(WHITE_BRUSH);  // FIXME: do not hardcode
+    hBrush = GetStockObject(WHITE_BRUSH);
     draw_solid_square(start_x, start_y, start_dir, hDC, hBrush);
     draw_solid_square(end_x, end_y, end_dir, hDC, hBrush);
 }
@@ -520,14 +577,9 @@ static void start_timer(HWND hWnd, int iTimeout)
 
 static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 {
-    int size;
-
     srand((unsigned) time(NULL));
 
-    size = GetPrivateProfileIntW(L"maze", L"gridsize", 10, L"maze.ini");
-    pre_solve_delay = GetPrivateProfileIntW(L"maze", L"predelay", 5000, L"maze.ini");
-    post_solve_delay = GetPrivateProfileIntW(L"maze", L"postdelay", 5000, L"maze.ini");
-    solve_delay = GetPrivateProfileIntW(L"maze", L"solvedelay", 1, L"maze.ini");
+    ReadRegistry();
 
     if (size < 2) {
         size = 7 + (rand() % 30);
@@ -578,6 +630,34 @@ static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     start_timer(hWnd, 1);
 
     return TRUE;
+}
+
+BOOL WINAPI AboutProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
+{
+    switch(message){
+    case WM_COMMAND:
+        switch(LOWORD(wparam)){
+        case IDOK:
+            EndDialog(hWnd, LOWORD(wparam));
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static void ReadSettings(HWND hWnd)
+{
+    size = SendDlgItemMessage(hWnd, IDC_SLIDER_SIZE, TBM_GETPOS, 0, 0);
+    SetDlgItemInt(hWnd, IDC_TEXT_SIZE, size, FALSE);
+
+    pre_solve_delay = SendDlgItemMessage(hWnd, IDC_SLIDER_PRESD, TBM_GETPOS, 0, 0);
+    SetDlgItemInt(hWnd, IDC_TEXT_PRESD, pre_solve_delay, FALSE);
+    
+    post_solve_delay = SendDlgItemMessage(hWnd, IDC_SLIDER_POSTSD, TBM_GETPOS, 0, 0);
+    SetDlgItemInt(hWnd, IDC_TEXT_POSTSD, post_solve_delay, FALSE);
+
+    solve_delay = SendDlgItemMessage(hWnd, IDC_SLIDER_SD, TBM_GETPOS, 0, 0);
+    SetDlgItemInt(hWnd, IDC_TEXT_SD, solve_delay, FALSE);
 }
 
 LRESULT CALLBACK ScreenSaverProc(
@@ -646,18 +726,48 @@ LRESULT CALLBACK ScreenSaverProc(
 
 BOOL WINAPI ScreenSaverConfigureDialog(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-    return TRUE;
+    switch (message)
+    {
+        case WM_INITDIALOG:
+            ReadRegistry();
+            //Set slider ranges
+            SendDlgItemMessage(hWnd, IDC_SLIDER_SIZE, TBM_SETRANGE, FALSE, MAKELPARAM(5, 64));
+            SendDlgItemMessage(hWnd, IDC_SLIDER_PRESD, TBM_SETRANGE, FALSE, MAKELPARAM(1, 10000));
+            SendDlgItemMessage(hWnd, IDC_SLIDER_POSTSD, TBM_SETRANGE, FALSE, MAKELPARAM(1, 10000));
+            SendDlgItemMessage(hWnd, IDC_SLIDER_SD, TBM_SETRANGE, FALSE, MAKELPARAM(1, 10000));
+            //Set current values to slider
+            SendDlgItemMessage(hWnd, IDC_SLIDER_SIZE, TBM_SETPOS, TRUE, size);
+            SendDlgItemMessage(hWnd, IDC_SLIDER_PRESD, TBM_SETPOS, TRUE, pre_solve_delay);
+            SendDlgItemMessage(hWnd, IDC_SLIDER_POSTSD, TBM_SETPOS, TRUE, post_solve_delay);
+            SendDlgItemMessage(hWnd, IDC_SLIDER_SD, TBM_SETPOS, TRUE, solve_delay);
+            //Set current values to texts
+            SetDlgItemInt(hWnd, IDC_TEXT_SIZE, size, FALSE);
+            SetDlgItemInt(hWnd, IDC_TEXT_PRESD, pre_solve_delay, FALSE);
+            SetDlgItemInt(hWnd, IDC_TEXT_POSTSD, post_solve_delay, FALSE);
+            SetDlgItemInt(hWnd, IDC_TEXT_SD, solve_delay, FALSE);
+            return TRUE;
+        case WM_COMMAND:
+            switch (LOWORD(wparam))
+            {
+                case IDOK:
+                    WriteRegistry();
+                    EndDialog(hWnd, TRUE);
+                    return TRUE;
+                case IDCANCEL:
+                    EndDialog(hWnd, TRUE);
+                    break;
+                case IDABOUT:
+                    DialogBox(hMainInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hWnd, (DLGPROC)AboutProc);
+                    break;
+            }
+        case WM_HSCROLL:
+            ReadSettings(hWnd);
+            return TRUE;
+    }
+    return FALSE;
 }
 
 BOOL WINAPI RegisterDialogClasses(HANDLE hmodule)
 {
-    TCHAR szTitle[256];
-    TCHAR szText[256];
-
-    LoadString(hmodule, IDS_TITLE, szTitle, 256);
-
-    LoadString(hmodule, IDS_TEXT, szText, 256);
-
-    MessageBox(0, szText, szTitle, MB_OK | MB_ICONWARNING);
     return TRUE;
 }

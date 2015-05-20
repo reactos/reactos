@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <scrnsave.h>
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -8,46 +7,23 @@ IDI_ICON  ICON  DISCARDABLE  "res/icon_mazescr.ico"
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION    "Maze ScreenSaver\0"
-#define REACTOS_STR_INTERNAL_NAME       "maze\0"
-#define REACTOS_STR_ORIGINAL_FILENAME   "maze.scr\0"
+#define REACTOS_STR_INTERNAL_NAME       "Maze\0"
+#define REACTOS_STR_ORIGINAL_FILENAME   "mazescr.scr\0"
 
 #include <reactos/version.rc>
 
 #include <reactos/manifest_exe.rc>
 
+#ifndef IDC_STATIC
+#define IDC_STATIC    -1
+#endif
+
 /* UTF-8 */
 #pragma code_page(65001)
 
-#ifdef LANGUAGE_BG_BG
-    #include "lang/bg-BG.rc"
-#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "lang/es-ES.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/fr-FR.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/lt-LT.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/no-NO.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/pl-PL.rc"
-#endif
-#ifdef LANGUAGE_RO_RO
-    #include "lang/ro-RO.rc"
-#endif
-#ifdef LANGUAGE_SK_SK
-    #include "lang/sk-SK.rc"
-#endif
-#ifdef LANGUAGE_UK_UA
-    #include "lang/uk-UA.rc"
 #endif
