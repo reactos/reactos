@@ -74,7 +74,7 @@ IntAddFormatedData(PWINSTATION_OBJECT pWinStaObj, UINT fmt, HANDLE hData, BOOLEA
 {
     PCLIP pElement = NULL;
 
-    /* Use exisiting entry with specified format */
+    /* Use existing entry with specified format */
     if (!bEnd)
         pElement = IntIsFormatAvailable(pWinStaObj, fmt);
 
