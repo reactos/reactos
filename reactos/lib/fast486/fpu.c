@@ -2088,9 +2088,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FRNDINT */
             case 0x3C:
             {
-                INT Bits;
-                ULONGLONG Result = 0ULL;
-                ULONGLONG Remainder;
+                LONGLONG Result = 0LL;
 
                 if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                 {
@@ -2111,18 +2109,12 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                     }
                 }
 
-                Bits = min(max(0, (INT)FPU_ST(0).Exponent - FPU_REAL10_BIAS + 1), 64);
-                if (Bits == 64) break;
-
-                if (Bits)
-                {
-                    Result = FPU_ST(0).Mantissa >> (64 - Bits);
-                    Remainder = FPU_ST(0).Mantissa & ((1 << (64 - Bits)) - 1);
-                }
-                else Remainder = FPU_ST(0).Mantissa;
+                /* Do nothing if it's too big to not be an integer */
+                if (FPU_ST(0).Exponent >= FPU_REAL10_BIAS + 63) break;
 
                 /* Perform the rounding */
-                Fast486FpuRound(State, &Result, FPU_ST(0).Sign, Remainder, 63 - Bits);
+                Fast486FpuToInteger(State, &FPU_ST(0), &Result);
+                Fast486FpuFromInteger(State, Result, &FPU_ST(0));
 
                 State->FpuStatus.Pe = TRUE;
                 if (!State->FpuControl.Pm) Fast486FpuException(State);
