@@ -457,7 +457,7 @@ Fast486FpuFromDoubleReal(PFAST486_STATE State,
     /* If this is a zero, we're done */
     if (Value == 0) return;
 
-    if (Result->Exponent == 0x3FF) Result->Exponent = FPU_MAX_EXPONENT + 1;
+    if (Result->Exponent == 0x7FF) Result->Exponent = FPU_MAX_EXPONENT + 1;
     else
     {
         /* Adjust the exponent bias */
