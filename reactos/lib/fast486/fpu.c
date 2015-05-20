@@ -430,13 +430,13 @@ Fast486FpuToSingleReal(PFAST486_STATE State,
     /* Calculate the remainder */
     Remainder = Value->Mantissa & ((1ULL << 40) - 1);
 
+    /* Store the biased exponent */
+    *Result |= (ULONG)(UnbiasedExp + FPU_REAL4_BIAS) << 23;
+
     /* Perform rounding */
     Result64 = (ULONGLONG)*Result;
     Fast486FpuRound(State, &Result64, Value->Sign, Remainder, 39);
     *Result = (ULONG)Result64;
-
-    /* Store the biased exponent */
-    *Result |= (ULONG)(UnbiasedExp + FPU_REAL4_BIAS) << 23;
 
 SetSign:
 
@@ -529,11 +529,11 @@ Fast486FpuToDoubleReal(PFAST486_STATE State,
     /* Calculate the remainder */
     Remainder = Value->Mantissa & ((1 << 11) - 1);
 
-    /* Perform rounding */
-    Fast486FpuRound(State, Result, Value->Sign, Remainder, 10);
-
     /* Store the biased exponent */
     *Result |= (ULONGLONG)(UnbiasedExp + FPU_REAL8_BIAS) << 52;
+
+    /* Perform rounding */
+    Fast486FpuRound(State, Result, Value->Sign, Remainder, 10);
 
 SetSign:
 
@@ -658,7 +658,7 @@ Fast486FpuAdd(PFAST486_STATE State,
     /* ... and the second one too */
     if (SecondAdjusted.Exponent < TempResult.Exponent)
     {
-        if ((TempResult.Exponent - FirstAdjusted.Exponent) < 64)
+        if ((TempResult.Exponent - SecondAdjusted.Exponent) < 64)
         {
             SecondAdjusted.Mantissa >>= (TempResult.Exponent - SecondAdjusted.Exponent);
             SecondAdjusted.Exponent = TempResult.Exponent;
@@ -693,31 +693,64 @@ Fast486FpuAdd(PFAST486_STATE State,
     }
 
     /* Did it overflow? */
-    if (FPU_IS_NORMALIZED(&FirstAdjusted) && FPU_IS_NORMALIZED(&SecondAdjusted))
+    if (FirstAdjusted.Sign == SecondAdjusted.Sign)
     {
-        if (TempResult.Exponent == FPU_MAX_EXPONENT)
+        if (TempResult.Mantissa < FirstAdjusted.Mantissa
+            || TempResult.Mantissa < SecondAdjusted.Mantissa)
         {
-            /* Raise the overflow exception */
-            State->FpuStatus.Oe = TRUE;
-
-            if (State->FpuControl.Om)
+            if (TempResult.Exponent == FPU_MAX_EXPONENT)
             {
-                /* Total overflow, return infinity */
-                TempResult.Mantissa = FPU_MANTISSA_HIGH_BIT;
-                TempResult.Exponent = FPU_MAX_EXPONENT + 1;
+                /* Raise the overflow exception */
+                State->FpuStatus.Oe = TRUE;
+
+                if (State->FpuControl.Om)
+                {
+                    /* Total overflow, return infinity */
+                    TempResult.Mantissa = FPU_MANTISSA_HIGH_BIT;
+                    TempResult.Exponent = FPU_MAX_EXPONENT + 1;
+                }
+                else
+                {
+                    Fast486FpuException(State);
+                    return FALSE;
+                }
             }
             else
             {
-                Fast486FpuException(State);
-                return FALSE;
+                /* Lose the LSB in favor of the carry */
+                TempResult.Mantissa >>= 1;
+                TempResult.Mantissa |= FPU_MANTISSA_HIGH_BIT;
+                TempResult.Exponent++;
             }
         }
-        else
+    }
+    else
+    {
+        if (TempResult.Mantissa >= FirstAdjusted.Mantissa
+            && TempResult.Mantissa >= SecondAdjusted.Mantissa)
         {
-            /* Lose the LSB in favor of the carry */
-            TempResult.Mantissa >>= 1;
-            TempResult.Mantissa |= FPU_MANTISSA_HIGH_BIT;
-            TempResult.Exponent++;
+            if (TempResult.Exponent == 0)
+            {
+                /* Raise the underflow exception */
+                State->FpuStatus.Ue = TRUE;
+
+                if (State->FpuControl.Um)
+                {
+                    /* Total overflow, return zero */
+                    TempResult.Mantissa = 0ULL;
+                }
+                else
+                {
+                    Fast486FpuException(State);
+                    return FALSE;
+                }
+            }
+            else
+            {
+                /* Lose the MSB */
+                TempResult.Mantissa <<= 1;
+                TempResult.Exponent--;
+            }
         }
     }
 
