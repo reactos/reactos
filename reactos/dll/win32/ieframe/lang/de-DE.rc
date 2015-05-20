@@ -8,7 +8,7 @@ IDR_BROWSE_MAIN_MENU MENU
         {
             MENUITEM "&Fenster",                 ID_BROWSE_NEW_WINDOW
         }
-        MENUITEM "Ö&ffnen...",                    ID_BROWSE_OPEN
+        MENUITEM "Ã–&ffnen...",                    ID_BROWSE_OPEN
         MENUITEM "Spe&ichern",                       ID_BROWSE_SAVE
         MENUITEM "Speichern &unter...",                 ID_BROWSE_SAVE_AS
         MENUITEM SEPARATOR
@@ -29,19 +29,19 @@ IDR_BROWSE_MAIN_MENU MENU
     }
     POPUP "&Favoriten"
     {
-        MENUITEM "&Zu Favoriten hinzufügen...",        ID_BROWSE_ADDFAV
+        MENUITEM "&Zu Favoriten hinzufÃ¼gen...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Hilfe"
     {
-        MENUITEM "&Über Internet Explorer", ID_BROWSE_ABOUT
+        MENUITEM "&Ãœber Internet Explorer", ID_BROWSE_ABOUT
     }
 }
 
 STRINGTABLE
 {
-    IDS_TB_BACK             "Zurück"
-    IDS_TB_FORWARD          "Vorwärts"
+    IDS_TB_BACK             "ZurÃ¼ck"
+    IDS_TB_FORWARD          "VorwÃ¤rts"
     IDS_TB_STOP             "Stop"
     IDS_TB_REFRESH          "Aktualisieren"
     IDS_TB_HOME             "Startseite"
@@ -64,11 +64,11 @@ STRINGTABLE
 
 IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
-CAPTION "URL öffnen"
+CAPTION "URL Ã¶ffnen"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Geben Sie die URL an, die Sie im Internet Explorer öffnen möchten",-1, 35,5,160,25
-    LTEXT "Öffnen:", -1, 5, 32, 30, 15
+    LTEXT "Geben Sie die URL an, die Sie im Internet Explorer Ã¶ffnen mÃ¶chten",-1, 35,5,160,25
+    LTEXT "Ã–ffnen:", -1, 5, 32, 30, 15
 #ifdef __REACTOS__
     ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
 #endif
