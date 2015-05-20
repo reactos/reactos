@@ -160,10 +160,8 @@ VOID PulseSample(VOID)
     /*
      * Magic begins there...
      */
-#ifndef ABS
-#define ABS(x) ((x) < 0 ? -(x) : (x))
-#endif
-    if (ABS(CurrPulsesFreq - LastPulsesFreq) > 7)
+#define UABS(x) (ULONG)((LONG)(x) < 0 ? -(LONG)(x) : (x))
+    if (UABS(CurrPulsesFreq - LastPulsesFreq) > 7)
     {
         /*
          * This can be a "large" fluctuation so ignore it for now, but take
