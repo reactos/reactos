@@ -189,6 +189,60 @@ RenameProfileDlgProc(HWND hwndDlg,
 
 
 static
+VOID
+DeleteHardwareProfile(PPROFILEDATA pProfileData)
+{
+    WCHAR szMessage[256];
+    WCHAR szBuffer[128];
+    WCHAR szCaption[80];
+    PPROFILE pProfiles;
+    PPROFILE pProfile;
+    INT n;
+
+    pProfile = &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex];
+
+    LoadStringW(hApplet, IDS_HWPROFILE_CONFIRM_DELETE_TITLE, szCaption, sizeof(szCaption) / sizeof(WCHAR));
+    LoadStringW(hApplet, IDS_HWPROFILE_CONFIRM_DELETE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+    swprintf(szMessage, szBuffer, pProfile->szFriendlyName);
+
+    n = MessageBox(NULL,
+                   szMessage,
+                   szCaption,
+                   MB_YESNO | MB_ICONQUESTION);
+    if (n == IDYES)
+    {
+        SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
+
+        if (pProfileData->dwSelectedProfileIndex != pProfileData->dwProfileCount - 1)
+        {
+            RtlMoveMemory(&pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex],
+                          &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex + 1],
+                          (pProfileData->dwProfileCount - pProfileData->dwSelectedProfileIndex - 1) * sizeof(PPROFILE));
+        }
+        else
+        {
+            pProfileData->dwSelectedProfileIndex--;
+        }
+
+        pProfiles = HeapReAlloc(GetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                pProfileData->pProfiles,
+                                (pProfileData->dwProfileCount - 1) * sizeof(PROFILE));
+        if (pProfiles == NULL)
+        {
+            DPRINT1("HeapReAlloc() failed!\n");
+            return;
+        }
+
+        pProfileData->dwProfileCount--;
+        pProfileData->pProfiles = pProfiles;
+
+        SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_SETCURSEL, pProfileData->dwSelectedProfileIndex, 0);
+    }
+}
+
+
+static
 DWORD
 GetUserWaitInterval(VOID)
 {
@@ -504,6 +558,10 @@ HardProfDlgProc(HWND hwndDlg,
                                    (LPARAM)pProfileData);
                     break;
 
+                case IDC_HRDPROFDEL:
+                    DeleteHardwareProfile(pProfileData);
+                    break;
+
                 case IDC_HRDPROFWAIT:
                     EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFEDIT), FALSE);
                     return TRUE;
@@ -519,6 +577,7 @@ HardProfDlgProc(HWND hwndDlg,
 
                         EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFCOPY), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFRENAME), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFDEL), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
                     }
                     return TRUE;
 
