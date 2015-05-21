@@ -729,27 +729,8 @@ Fast486FpuAdd(PFAST486_STATE State,
         if (TempResult.Mantissa >= FirstAdjusted.Mantissa
             && TempResult.Mantissa >= SecondAdjusted.Mantissa)
         {
-            if (TempResult.Exponent == 0)
-            {
-                /* Raise the underflow exception */
-                State->FpuStatus.Ue = TRUE;
-
-                if (State->FpuControl.Um)
-                {
-                    /* Total overflow, return zero */
-                    TempResult.Mantissa = 0ULL;
-                }
-                else
-                {
-                    Fast486FpuException(State);
-                    return FALSE;
-                }
-            }
-            else
-            {
-                /* Reverse the mantissa */
-                TempResult.Mantissa = -(LONGLONG)TempResult.Mantissa;
-            }
+            /* Reverse the mantissa */
+            TempResult.Mantissa = -(LONGLONG)TempResult.Mantissa;
         }
     }
 
