@@ -1085,8 +1085,8 @@ Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
 
 /*
  * Calculates using the identities:
- * log2(x) = log10(x) / log10(2)
- * log10(x)= sum { -1^(n+1) * x^n / n!, n >= 1 }
+ * log2(x) = ln(x) / ln(2)
+ * ln(x)= sum { -1^(n+1) * x^n / n!, n >= 1 }
  */
 static inline BOOLEAN FASTCALL
 Fast486FpuCalculateLogBase2(PFAST486_STATE State,
@@ -1144,7 +1144,7 @@ Fast486FpuCalculateLogBase2(PFAST486_STATE State,
     /* Subtract one from the value */
     if (!Fast486FpuSubtract(State, &Value, &FpuOne, &Value)) return FALSE;
 
-    /* Calculate the base 10 logarithm */
+    /* Calculate the natural logarithm */
     SeriesElement = TempResult = Value;
 
     for (i = 2; i < INVERSE_NUMBERS_COUNT / 2; i++)
@@ -1173,8 +1173,8 @@ Fast486FpuCalculateLogBase2(PFAST486_STATE State,
         }
     }
 
-    /* Now convert the base 10 logarithm into a base 2 logarithm */
-    if (!Fast486FpuDivide(State, &TempResult, &FpuLgTwo, &TempResult)) return FALSE;
+    /* Now convert the natural logarithm into a base 2 logarithm */
+    if (!Fast486FpuDivide(State, &TempResult, &FpuLnTwo, &TempResult)) return FALSE;
 
     /*
      * Add the exponent to the result
