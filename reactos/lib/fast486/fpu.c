@@ -747,9 +747,8 @@ Fast486FpuAdd(PFAST486_STATE State,
             }
             else
             {
-                /* Lose the MSB */
-                TempResult.Mantissa <<= 1;
-                TempResult.Exponent--;
+                /* Reverse the mantissa */
+                TempResult.Mantissa = -(LONGLONG)TempResult.Mantissa;
             }
         }
     }
