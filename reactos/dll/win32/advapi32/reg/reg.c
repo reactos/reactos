@@ -3783,6 +3783,8 @@ RegQueryInfoKeyW(HKEY hKey,
                                        lpcbSecurityDescriptor);
         if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
         {
+            ERR("NtQuerySecurityObject for key %p (%p) failed with %lx\n",
+                KeyHandle, hKey, Status);
             ErrorCode = RtlNtStatusToDosError(Status);
             goto Cleanup;
         }
