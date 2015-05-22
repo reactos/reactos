@@ -1990,9 +1990,46 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FPREM1 */
             case 0x35:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FAST486_FPU_DATA_REG Temp;
+                LONGLONG Integer;
+                INT OldRoundingMode = State->FpuControl.Rc;
 
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY || FPU_GET_TAG(1) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                /* Divide ST0 by ST1 */
+                if (!Fast486FpuDivide(State, &FPU_ST(0), &FPU_ST(1), &Temp)) break;
+
+                /* Round the result to the nearest integer */
+                if (FPU_ST(0).Exponent < FPU_REAL10_BIAS + 63)
+                {
+                    State->FpuControl.Rc = FPU_ROUND_NEAREST;
+
+                    if (Fast486FpuToInteger(State, &Temp, &Integer))
+                    {
+                        Fast486FpuFromInteger(State, Integer, &Temp);
+                        State->FpuControl.Rc = OldRoundingMode;
+                    }
+                    else
+                    {
+                        /* Restore the rounding mode and exit */
+                        State->FpuControl.Rc = OldRoundingMode;
+                        break;
+                    }
+                }
+
+                /* Multiply the result by ST1 */
+                if (!Fast486FpuMultiply(State, &Temp, &FPU_ST(1), &Temp)) break;
+
+                /* Subtract the result from ST0 */
+                if (!Fast486FpuSubtract(State, &FPU_ST(0), &Temp, &FPU_ST(0))) break;
+
+                FPU_UPDATE_TAG(0);
                 break;
             }
 
@@ -2013,9 +2050,46 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FPREM */
             case 0x38:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FAST486_FPU_DATA_REG Temp;
+                LONGLONG Integer;
+                INT OldRoundingMode = State->FpuControl.Rc;
 
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY || FPU_GET_TAG(1) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                /* Divide ST0 by ST1 */
+                if (!Fast486FpuDivide(State, &FPU_ST(0), &FPU_ST(1), &Temp)) break;
+
+                /* Round the result to an integer, towards zero */
+                if (FPU_ST(0).Exponent < FPU_REAL10_BIAS + 63)
+                {
+                    State->FpuControl.Rc = FPU_ROUND_DOWN;
+
+                    if (Fast486FpuToInteger(State, &Temp, &Integer))
+                    {
+                        Fast486FpuFromInteger(State, Integer, &Temp);
+                        State->FpuControl.Rc = OldRoundingMode;
+                    }
+                    else
+                    {
+                        /* Restore the rounding mode and exit */
+                        State->FpuControl.Rc = OldRoundingMode;
+                        break;
+                    }
+                }
+
+                /* Multiply the result by ST1 */
+                if (!Fast486FpuMultiply(State, &Temp, &FPU_ST(1), &Temp)) break;
+
+                /* Subtract the result from ST0 */
+                if (!Fast486FpuSubtract(State, &FPU_ST(0), &Temp, &FPU_ST(0))) break;
+
+                FPU_UPDATE_TAG(0);
                 break;
             }
 
