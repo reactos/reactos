@@ -2086,7 +2086,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                 /* Round the result to an integer, towards zero */
                 if (FPU_ST(0).Exponent < FPU_REAL10_BIAS + 63)
                 {
-                    State->FpuControl.Rc = FPU_ROUND_DOWN;
+                    State->FpuControl.Rc = FPU_ROUND_TRUNCATE;
 
                     if (Fast486FpuToInteger(State, &Temp, &Integer))
                     {
@@ -2543,7 +2543,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
                 }
 
                 /* Check if it can fit in a signed 32-bit integer */
-                if ((((ULONGLONG)Temp >> 31) + 1ULL) > 1ULL)
+                if ((LONGLONG)((LONG)Temp) != Temp)
                 {
                     State->FpuStatus.Ie = TRUE;
 
@@ -3240,7 +3240,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
                 }
 
                 /* Check if it can fit in a signed 16-bit integer */
-                if ((((ULONGLONG)Temp >> 15) + 1ULL) > 1ULL)
+                if ((LONGLONG)((SHORT)Temp) != Temp)
                 {
                     /* Raise the invalid operation exception */
                     State->FpuStatus.Ie = TRUE;
