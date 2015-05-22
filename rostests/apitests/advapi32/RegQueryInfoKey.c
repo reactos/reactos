@@ -63,13 +63,13 @@ START_TEST(RegQueryInfoKey)
     TestKeyAccess(KEY_QUERY_VALUE,                  NO_ERROR, FALSE);
     /* With the two combined we get everything */
     TestKeyAccess(KEY_QUERY_VALUE | READ_CONTROL,   NO_ERROR, TRUE);
-    /* Write rights give us everything too */
-    TestKeyAccess(KEY_SET_VALUE,                    NO_ERROR, TRUE);
-    TestKeyAccess(KEY_CREATE_SUB_KEY,               NO_ERROR, TRUE);
-    TestKeyAccess(KEY_CREATE_LINK,                  NO_ERROR, TRUE);
-    TestKeyAccess(DELETE,                           NO_ERROR, TRUE);
-    TestKeyAccess(WRITE_DAC,                        NO_ERROR, TRUE);
-    TestKeyAccess(WRITE_OWNER,                      NO_ERROR, TRUE);
+    /* Write rights return nothing on 2003 (but succeed and return SD size on Win7) */
+    TestKeyAccess(KEY_SET_VALUE,                    ERROR_ACCESS_DENIED, FALSE);
+    TestKeyAccess(KEY_CREATE_SUB_KEY,               ERROR_ACCESS_DENIED, FALSE);
+    TestKeyAccess(KEY_CREATE_LINK,                  ERROR_ACCESS_DENIED, FALSE);
+    TestKeyAccess(DELETE,                           ERROR_ACCESS_DENIED, FALSE);
+    TestKeyAccess(WRITE_DAC,                        ERROR_ACCESS_DENIED, FALSE);
+    TestKeyAccess(WRITE_OWNER,                      ERROR_ACCESS_DENIED, FALSE);
     /* But these return nothing */
     TestKeyAccess(KEY_ENUMERATE_SUB_KEYS,           ERROR_ACCESS_DENIED, FALSE);
     TestKeyAccess(KEY_NOTIFY,                       ERROR_ACCESS_DENIED, FALSE);
