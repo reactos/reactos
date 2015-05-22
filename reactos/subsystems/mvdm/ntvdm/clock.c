@@ -118,13 +118,16 @@ VOID ClockUpdate(VOID)
             /* Update the time of the last timer tick */
             Timer->LastTick.QuadPart += Ticks * Timer->Delay;
         }
+
+        /* Yield execution to other threads */
+        NtYieldExecution();
     }
 }
 
 PHARDWARE_TIMER CreateHardwareTimer(ULONG Flags, ULONGLONG Delay, PHARDWARE_TIMER_PROC Callback)
 {
     PHARDWARE_TIMER Timer;
-    
+
     Timer = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Timer));
     if (Timer == NULL) return NULL;
 
