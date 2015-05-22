@@ -6,6 +6,7 @@ list(APPEND SOURCE
     LockDatabase.c
     QueryServiceConfig2.c
     RegEnumValueW.c
+    RegQueryInfoKey.c
     RtlEncryptMemory.c
     SaferIdentifyLevel.c
     testlist.c)
