@@ -310,8 +310,7 @@ Fast486FpuToInteger(PFAST486_STATE State,
         return TRUE;
     }
 
-    if (FPU_IS_NAN(Value) || !FPU_IS_NORMALIZED(Value)
-        || (UnbiasedExp < 0) || (UnbiasedExp > 63))
+    if (FPU_IS_NAN(Value) || !FPU_IS_NORMALIZED(Value) || (UnbiasedExp >= 63))
     {
         /* Raise an invalid operation exception */
         State->FpuStatus.Ie = TRUE;
@@ -328,11 +327,31 @@ Fast486FpuToInteger(PFAST486_STATE State,
         }
     }
 
-    Bits = 63 - UnbiasedExp;
+    if (UnbiasedExp >= 0)
+    {
+        Bits = 63 - UnbiasedExp;
 
-    /* Calculate the result and the remainder */
-    *Result = (LONGLONG)(Value->Mantissa >> Bits);
-    Remainder = Value->Mantissa & ((1 << Bits) - 1);
+        /* Calculate the result and the remainder */
+        *Result = (LONGLONG)(Value->Mantissa >> Bits);
+        Remainder = Value->Mantissa & ((1 << Bits) - 1);
+    }
+    else
+    {
+        /* The result is zero */
+        *Result = 0LL;
+
+        if (UnbiasedExp > -64)
+        {
+            Bits = 65 + UnbiasedExp;
+            Remainder = Value->Mantissa >> (64 - Bits);
+        }
+        else
+        {
+            /* Too small to even have a remainder */
+            Bits = 1;
+            Remainder = 0ULL;
+        }
+    }
 
     /* The result must be positive here */
     ASSERT(*Result >= 0LL);
