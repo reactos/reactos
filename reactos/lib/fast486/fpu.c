@@ -767,13 +767,17 @@ Fast486FpuCompare(PFAST486_STATE State,
 {
     if (FPU_IS_NAN(FirstOperand) || FPU_IS_NAN(SecondOperand))
     {
-        if (FPU_IS_POS_INF(FirstOperand) && FPU_IS_NEG_INF(SecondOperand))
+        if ((FPU_IS_POS_INF(FirstOperand)
+            && (!FPU_IS_NAN(SecondOperand) || FPU_IS_NEG_INF(SecondOperand)))
+            || (!FPU_IS_NAN(FirstOperand) && FPU_IS_NEG_INF(SecondOperand)))
         {
             State->FpuStatus.Code0 = FALSE;
             State->FpuStatus.Code2 = FALSE;
             State->FpuStatus.Code3 = FALSE;
         }
-        else if (FPU_IS_NEG_INF(FirstOperand) && FPU_IS_POS_INF(SecondOperand))
+        else if ((FPU_IS_POS_INF(SecondOperand)
+                 && (!FPU_IS_NAN(FirstOperand) || FPU_IS_NEG_INF(FirstOperand)))
+                 || (!FPU_IS_NAN(SecondOperand) && FPU_IS_NEG_INF(FirstOperand)))
         {
             State->FpuStatus.Code0 = TRUE;
             State->FpuStatus.Code2 = FALSE;
