@@ -317,7 +317,7 @@ Fast486FpuToInteger(PFAST486_STATE State,
 
         if (State->FpuControl.Im)
         {
-            *Result = 0LL;
+            *Result = 0x8000000000000000LL;
             return TRUE;
         }
         else
@@ -339,16 +339,15 @@ Fast486FpuToInteger(PFAST486_STATE State,
     {
         /* The result is zero */
         *Result = 0LL;
+        Bits = 64;
 
-        if (UnbiasedExp > -64)
+        if (UnbiasedExp >= -64)
         {
-            Bits = 65 + UnbiasedExp;
-            Remainder = Value->Mantissa >> (64 - Bits);
+            Remainder = Value->Mantissa >> (-1 - UnbiasedExp);
         }
         else
         {
             /* Too small to even have a remainder */
-            Bits = 1;
             Remainder = 0ULL;
         }
     }
@@ -2536,7 +2535,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
                         return;
                     }
                 }
-                else if (!Fast486FpuToInteger(State, &FPU_ST(0), &Temp))
+
+                if (!Fast486FpuToInteger(State, &FPU_ST(0), &Temp))
                 {
                     /* Exception occurred */
                     return;
@@ -2547,7 +2547,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
                 {
                     State->FpuStatus.Ie = TRUE;
 
-                    if (State->FpuControl.Im) Temp = 0LL;
+                    if (State->FpuControl.Im)
+                    {
+                        Temp = 0x80000000LL;
+                    }
                     else
                     {
                         Fast486FpuException(State);
@@ -3229,7 +3232,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
                         return;
                     }
                 }
-                else if (!Fast486FpuToInteger(State, &FPU_ST(0), &Temp))
+
+                if (!Fast486FpuToInteger(State, &FPU_ST(0), &Temp))
                 {
                     /* Exception occurred */
                     return;
@@ -3241,7 +3245,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
                     /* Raise the invalid operation exception */
                     State->FpuStatus.Ie = TRUE;
 
-                    if (State->FpuControl.Im) Temp = 0LL;
+                    if (State->FpuControl.Im)
+                    {
+                        Temp = 0x8000LL;
+                    }
                     else
                     {
                         Fast486FpuException(State);
@@ -3365,7 +3372,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
                         return;
                     }
                 }
-                else if (!Fast486FpuToInteger(State, &FPU_ST(0), &Temp))
+
+                if (!Fast486FpuToInteger(State, &FPU_ST(0), &Temp))
                 {
                     /* Exception occurred */
                     return;
