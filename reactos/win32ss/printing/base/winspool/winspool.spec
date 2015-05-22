@@ -91,8 +91,8 @@
 @ stub EnumPrinterKeyW
 @ stdcall EnumPrintersA(long ptr long ptr long ptr ptr)
 @ stdcall EnumPrintersW(long ptr long ptr long ptr ptr)
-@ stub EnumPrintProcessorDatatypesA
-@ stub EnumPrintProcessorDatatypesW
+@ stdcall EnumPrintProcessorDatatypesA(ptr ptr long ptr long ptr ptr)
+@ stdcall EnumPrintProcessorDatatypesW(ptr ptr long ptr long ptr ptr)
 @ stub EnumPrintProcessorsA
 @ stub EnumPrintProcessorsW
 @ stub EXTDEVICEMODE

@@ -10,16 +10,22 @@
 
 #define WIN32_NO_STATUS
 #include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 #include <winsvc.h>
+#include <wingdi.h>
+#include <winspool.h>
+#include <winsplp.h>
 #include <winspool_s.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);
 
 // rpcserver.c
-extern DWORD WINAPI RpcThreadProc(LPVOID lpParameter);
+DWORD WINAPI RpcThreadProc(LPVOID lpParameter);
 
 // Undocumented spoolss
+BOOL WINAPI InitializeRouter(HANDLE SpoolerStatusHandle);
 DWORD WINAPI SpoolerInit();
 
 #endif

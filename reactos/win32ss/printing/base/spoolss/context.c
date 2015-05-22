@@ -21,7 +21,7 @@ ImpersonatePrinterClient(HANDLE hToken)
 
     if (!SetThreadToken(NULL, hToken))
     {
-        ERR("SetThreadToken failed with error %u!\n", GetLastError());
+        ERR("SetThreadToken failed with error %lu!\n", GetLastError());
         CloseHandle(hToken);
         return FALSE;
     }
@@ -46,14 +46,14 @@ RevertToPrinterSelf()
     // Retrieve our current impersonation token
     if (!OpenThreadToken(GetCurrentThread(), TOKEN_IMPERSONATE, TRUE, &hToken))
     {
-        ERR("OpenThreadToken failed with error %u!\n", GetLastError());
+        ERR("OpenThreadToken failed with error %lu!\n", GetLastError());
         return NULL;
     }
 
     // Tell the thread to stop impersonating
     if (!SetThreadToken(NULL, NULL))
     {
-        ERR("SetThreadToken failed with error %u!\n", GetLastError());
+        ERR("SetThreadToken failed with error %lu!\n", GetLastError());
         return NULL;
     }
 

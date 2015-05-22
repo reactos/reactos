@@ -10,23 +10,23 @@
 DWORD
 _RpcSpoolerInit()
 {
-    DWORD ErrorCode;
+    DWORD dwErrorCode;
 
     // Call SpoolerInit in the security context of the client.
     // This delay-loads spoolss.dll in the user context and all further calls to functions in spoolss.dll will be done in the user context as well.
-    ErrorCode = RpcImpersonateClient(NULL);
-    if (ErrorCode != ERROR_SUCCESS)
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RpcImpersonateClient failed with status %u!\n", ErrorCode);
-        return ErrorCode;
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
     }
 
-    ErrorCode = SpoolerInit();
-    if (ErrorCode != ERROR_SUCCESS)
+    dwErrorCode = SpoolerInit();
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("SpoolerInit failed with status %u!\n", ErrorCode);
+        ERR("SpoolerInit failed with error %lu!\n", dwErrorCode);
         RpcRevertToSelf();
-        return ErrorCode;
+        return dwErrorCode;
     }
 
     return RpcRevertToSelf();

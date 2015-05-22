@@ -18,7 +18,7 @@ WINSPOOL_HANDLE_bind(WINSPOOL_HANDLE wszName)
     Status = RpcStringBindingComposeW(NULL, L"ncacn_np", wszName, L"\\pipe\\spoolss", NULL, &wszStringBinding);
     if (Status != RPC_S_OK)
     {
-        ERR("RpcStringBindingComposeW failed with status %u!\n", Status);
+        ERR("RpcStringBindingComposeW failed with status %ld!\n", Status);
         return NULL;
     }
 
@@ -26,7 +26,7 @@ WINSPOOL_HANDLE_bind(WINSPOOL_HANDLE wszName)
     Status = RpcBindingFromStringBindingW(wszStringBinding, &hBinding);
     if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBindingW failed with status %u!\n", Status);
+        ERR("RpcBindingFromStringBindingW failed with status %ld!\n", Status);
         return NULL;
     }
 
@@ -34,7 +34,7 @@ WINSPOOL_HANDLE_bind(WINSPOOL_HANDLE wszName)
     Status = RpcStringFreeW(&wszStringBinding);
     if (Status != RPC_S_OK)
     {
-        ERR("RpcStringFreeW failed with status %u!\n", Status);
+        ERR("RpcStringFreeW failed with status %ld!\n", Status);
         return NULL;
     }
 
@@ -49,7 +49,7 @@ WINSPOOL_HANDLE_unbind(WINSPOOL_HANDLE wszName, handle_t hBinding)
     Status = RpcBindingFree(&hBinding);
     if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFree failed with status %u!\n", Status);
+        ERR("RpcBindingFree failed with status %ld!\n", Status);
     }
 }
 
@@ -120,6 +120,18 @@ EnumPrintersW(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD 
 }
 
 BOOL WINAPI
+EnumPrintProcessorDatatypesA(LPSTR pName, LPSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+{
+    return FALSE;
+}
+
+BOOL WINAPI
+EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+{
+    return FALSE;
+}
+
+BOOL WINAPI
 GetDefaultPrinterA(LPSTR pszBuffer, LPDWORD pcchBuffer)
 {
     return FALSE;
@@ -178,7 +190,7 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
         pwszPrinterName = HeapAlloc(GetProcessHeap(), 0, StringLength * sizeof(WCHAR));
         if (!pwszPrinterName)
         {
-            ERR("HeapAlloc failed for pwszPrinterName with last error %u!\n", GetLastError());
+            ERR("HeapAlloc failed for pwszPrinterName with last error %lu!\n", GetLastError());
             goto Cleanup;
         }
 
@@ -197,7 +209,7 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
             pwszDatatype = HeapAlloc(GetProcessHeap(), 0, StringLength * sizeof(WCHAR));
             if (!pwszDatatype)
             {
-                ERR("HeapAlloc failed for pwszDatatype with last error %u!\n", GetLastError());
+                ERR("HeapAlloc failed for pwszDatatype with last error %lu!\n", GetLastError());
                 goto Cleanup;
             }
 
@@ -250,14 +262,14 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
         ErrorCode = _RpcOpenPrinter(pPrinterName, phPrinter, pDatatype, pDevModeContainer, AccessRequired);
         if (ErrorCode)
         {
-            ERR("_RpcOpenPrinter failed with error %u!\n", ErrorCode);
+            ERR("_RpcOpenPrinter failed with error %lu!\n", ErrorCode);
         }
 
         ReturnValue = (ErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("_RpcOpenPrinter failed with exception code %u!\n", RpcExceptionCode());
+        ERR("_RpcOpenPrinter failed with exception code %lu!\n", RpcExceptionCode());
     }
     RpcEndExcept;
 
@@ -276,14 +288,14 @@ SpoolerInit()
         ErrorCode = _RpcSpoolerInit();
         if (ErrorCode)
         {
-            ERR("_RpcSpoolerInit failed with error %u!\n", ErrorCode);
+            ERR("_RpcSpoolerInit failed with error %lu!\n", ErrorCode);
         }
 
         ReturnValue = (ErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("_RpcSpoolerInit failed with exception code %u!\n", RpcExceptionCode());
+        ERR("_RpcSpoolerInit failed with exception code %lu!\n", RpcExceptionCode());
     }
     RpcEndExcept;
 

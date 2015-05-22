@@ -1,5 +1,5 @@
 
-spec2def(winprint winprint.spec ADD_IMPORTLIB)
+spec2def(winprint.dll winprint.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     main.c

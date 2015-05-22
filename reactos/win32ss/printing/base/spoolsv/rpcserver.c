@@ -15,21 +15,21 @@ RpcThreadProc(LPVOID lpParameter)
     Status = RpcServerUseProtseqEpW(L"ncacn_np", 20, L"\\pipe\\spoolss", NULL);
     if (Status != RPC_S_OK)
     {
-        ERR("RpcServerUseProtseqEpW failed with status %u!\n", Status);
+        ERR("RpcServerUseProtseqEpW failed with status %ld!\n", Status);
         return 0;
     }
 
     Status = RpcServerRegisterIf(winspool_v1_0_s_ifspec, NULL, NULL);
     if (Status != RPC_S_OK)
     {
-        ERR("RpcServerRegisterIf failed with status %u!\n", Status);
+        ERR("RpcServerRegisterIf failed with status %ld!\n", Status);
         return 0;
     }
 
     Status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, 0);
     if (Status != RPC_S_OK)
     {
-        ERR("RpcServerListen() failed with status %u!\n", Status);
+        ERR("RpcServerListen() failed with status %ld!\n", Status);
     }
 
     return 0;

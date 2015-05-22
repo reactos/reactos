@@ -7,6 +7,9 @@
 
 #include "precomp.h"
 
+PRINTPROVIDOR LocalSplFuncs;
+
+
 BOOL WINAPI
 ClosePrinter(HANDLE hPrinter)
 {
@@ -52,7 +55,32 @@ GetPrintProcessorDirectoryW(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBY
 BOOL WINAPI
 InitializeRouter(HANDLE SpoolerStatusHandle)
 {
-    return FALSE;
+    HINSTANCE hinstLocalSpl;
+    PInitializePrintProvidor pfnInitializePrintProvidor;
+
+    // Only initialize localspl.dll for now.
+    // This function should later look for all available print providers in the registry and initialize all of them.
+    hinstLocalSpl = LoadLibraryW(L"localspl");
+    if (!hinstLocalSpl)
+    {
+        ERR("LoadLibraryW for localspl failed with error %lu!\n", GetLastError());
+        return FALSE;
+    }
+
+    pfnInitializePrintProvidor = (PInitializePrintProvidor)GetProcAddress(hinstLocalSpl, "InitializePrintProvidor");
+    if (!pfnInitializePrintProvidor)
+    {
+        ERR("GetProcAddress failed with error %lu!\n", GetLastError());
+        return FALSE;
+    }
+
+    if (!pfnInitializePrintProvidor(&LocalSplFuncs, sizeof(PRINTPROVIDOR), NULL))
+    {
+        ERR("InitializePrintProvidor failed for localspl with error %lu!\n", GetLastError());
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 BOOL WINAPI

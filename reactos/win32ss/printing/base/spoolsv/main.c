@@ -60,18 +60,26 @@ _ServiceMain(DWORD dwArgc, LPWSTR* lpszArgv)
 
     // Create a thread for serving RPC requests
     hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)RpcThreadProc, NULL, 0, NULL);
-
-    if (hThread)
-    {
-        // We don't need the thread handle. Keeping it open blocks the thread from terminating.
-        CloseHandle(hThread);
-        _UpdateServiceStatus(SERVICE_RUNNING, 0);
-    }
-    else
+    if (!hThread)
     {
         ERR("CreateThread failed with error %u!\n", GetLastError());
         _UpdateServiceStatus(SERVICE_STOPPED, 0);
+        return;
     }
+
+    // We don't need the thread handle. Keeping it open blocks the thread from terminating.
+    CloseHandle(hThread);
+
+    // Initialize the routing layer in spoolss.dll
+    if (!InitializeRouter(hServiceStatus))
+    {
+        ERR("InitializeRouter failed with error %lu!\n", GetLastError());
+        _UpdateServiceStatus(SERVICE_STOPPED, 0);
+        return;
+    }
+
+    // We're alive!
+    _UpdateServiceStatus(SERVICE_RUNNING, 0);
 }
 
 int

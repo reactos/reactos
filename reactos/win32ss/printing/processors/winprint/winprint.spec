@@ -1,6 +1,6 @@
 @ stub ClosePrintProcessor
 @ stub ControlPrintProcessor
-@ stub EnumPrintProcessorDatatypesW
+@ stdcall EnumPrintProcessorDatatypesW(ptr ptr long ptr long ptr ptr)
 @ stub GetPrintProcessorCapabilities
 @ stub OpenPrintProcessor
 @ stub PrintDocumentOnPrintProcessor
