@@ -103,7 +103,7 @@ CaretSystemTimerProc(HWND hwnd,
 
    if (ThreadQueue->CaretInfo->hWnd != hwnd)
    {
-      ERR("Not the same caret window!\n");
+      TRACE("Not the same caret window!\n");
       return;
    }
 
