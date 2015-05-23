@@ -6,6 +6,7 @@ add_subdirectory(packages)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/txtsetup.sif DESTINATION reactos NO_CAB FOR bootcd regtest)
 
 add_registry_inf(
+    caroots.inf
     hivecls.inf
     hivedef.inf
     hivesft.inf
