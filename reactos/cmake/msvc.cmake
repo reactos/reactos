@@ -75,6 +75,10 @@ add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we41
 # - C4115: named type definition in parentheses
 add_compile_flags("/w14115")
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_flags("/w14189")
+endif()
+
 # Debugging
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
