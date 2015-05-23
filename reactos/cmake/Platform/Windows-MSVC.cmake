@@ -237,7 +237,7 @@ macro(__windows_compiler_msvc lang)
 
   set(CMAKE_${lang}_FLAGS_INIT "")
   set(CMAKE_${lang}_FLAGS_DEBUG_INIT "")
-  set(CMAKE_${lang}_FLAGS_RELEASE_INIT "/MD /O2 /Ob2 /D NDEBUG")
+  set(CMAKE_${lang}_FLAGS_RELEASE_INIT "")
   set(CMAKE_${lang}_FLAGS_RELWITHDEBINFO_INIT "/MD /Zi /O2 /Ob1 /D NDEBUG")
   set(CMAKE_${lang}_FLAGS_MINSIZEREL_INIT "/MD /O1 /Ob1 /D NDEBUG")
 endmacro()
