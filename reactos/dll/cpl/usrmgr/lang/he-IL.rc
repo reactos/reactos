@@ -202,7 +202,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "User Accounts"
-    IDS_CPLDESCRIPTION "Manages Users and Groups."
+    IDS_CPLDESCRIPTION "Manages users and groups."
 END
 
 STRINGTABLE

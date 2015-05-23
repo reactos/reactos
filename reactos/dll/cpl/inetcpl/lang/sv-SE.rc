@@ -26,7 +26,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "Internet Settings"
-    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
+    IDS_CPL_INFO        "Configure WINE Internet Explorer and related settings."
     IDS_SEC_SETTINGS    "Security settings for zone: "
     IDS_SEC_LEVEL0      "Custom"
     IDS_SEC_LEVEL1      "Very Low"
