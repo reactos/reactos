@@ -34,6 +34,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "WineD3D"
+    IDS_CPLNAME "WineD3D Options"
     IDS_CPLDESCRIPTION "Задание параметров WineD3D библиотеки."
 END

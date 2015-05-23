@@ -36,6 +36,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "WineD3D"
+    IDS_CPLNAME "WineD3D Options"
     IDS_CPLDESCRIPTION "Konfiguro WineD3D kohen e punës."
 END

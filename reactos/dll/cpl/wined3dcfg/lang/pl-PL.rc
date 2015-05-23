@@ -39,6 +39,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "WineD3D"
+    IDS_CPLNAME "WineD3D Options"
     IDS_CPLDESCRIPTION "Konfiguracja środowiska WineD3D."
 END

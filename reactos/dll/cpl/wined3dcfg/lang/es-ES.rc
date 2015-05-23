@@ -37,6 +37,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "WineD3D"
+    IDS_CPLNAME "WineD3D Options"
     IDS_CPLDESCRIPTION "Configura los ajustes del motor de compatibilidad WineD3D."
 END
