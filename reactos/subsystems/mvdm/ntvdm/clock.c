@@ -120,7 +120,8 @@ VOID ClockUpdate(VOID)
         }
 
         /* Yield execution to other threads */
-        NtYieldExecution();
+        // FIXME: Disabled because it causes timing issues (slowdowns).
+        // NtYieldExecution();
     }
 }
 
