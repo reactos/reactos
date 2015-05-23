@@ -53,6 +53,9 @@ static const FAST486_FPU_DATA_REG FpuLgTwo = {0x9A209A84FBCFF798ULL, FPU_REAL10_
 /* ln(2) */
 static const FAST486_FPU_DATA_REG FpuLnTwo = {0xB17217F7D1CF79ABULL, FPU_REAL10_BIAS - 1, FALSE};
 
+/* 2.00 */
+static const FAST486_FPU_DATA_REG FpuTwo = {0x8000000000000000ULL, FPU_REAL10_BIAS + 1, FALSE};
+
 static const FAST486_FPU_DATA_REG FpuInverseNumber[INVERSE_NUMBERS_COUNT] =
 {
     {0x8000000000000000ULL, FPU_REAL10_BIAS,     FALSE}, /* 1 / 1 */
@@ -1105,11 +1108,6 @@ Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
     *Result = TempResult;
 }
 
-/*
- * Calculates using the identities:
- * log2(x) = ln(x) / ln(2)
- * ln(x)= sum { -1^(n+1) * x^n / n!, n >= 1 }
- */
 static inline BOOLEAN FASTCALL
 Fast486FpuCalculateLogBase2(PFAST486_STATE State,
                             PFAST486_FPU_DATA_REG Operand,
@@ -1117,7 +1115,6 @@ Fast486FpuCalculateLogBase2(PFAST486_STATE State,
 {
     INT i;
     FAST486_FPU_DATA_REG Value = *Operand;
-    FAST486_FPU_DATA_REG SeriesElement;
     FAST486_FPU_DATA_REG TempResult;
     FAST486_FPU_DATA_REG TempValue;
     LONGLONG UnbiasedExp = (LONGLONG)Operand->Exponent - FPU_REAL10_BIAS;
@@ -1163,40 +1160,31 @@ Fast486FpuCalculateLogBase2(PFAST486_STATE State,
         Value.Mantissa <<= Bits;
     }
 
-    /* Subtract one from the value */
-    if (!Fast486FpuSubtract(State, &Value, &FpuOne, &Value)) return FALSE;
+    TempResult.Sign = FALSE;
+    TempResult.Exponent = FPU_REAL10_BIAS - 1;
+    TempResult.Mantissa = 0ULL;
 
-    /* Calculate the natural logarithm */
-    SeriesElement = TempResult = Value;
-
-    for (i = 2; i < INVERSE_NUMBERS_COUNT / 2; i++)
+    for (i = 63; i >= 0; i--)
     {
-        if (!Fast486FpuMultiply(State, &SeriesElement, &Value, &SeriesElement))
-        {
-            /* An exception occurred */
-            return FALSE;
-        }
+        /* Square the value */
+        if (!Fast486FpuMultiply(State, &Value, &Value, &Value)) return FALSE;
 
-        /* Toggle the sign of the series element */
-        SeriesElement.Sign = !SeriesElement.Sign;
+        /* Subtract two from it */
+        if (!Fast486FpuSubtract(State, &Value, &FpuTwo, &TempValue)) return FALSE;
 
-        /* Divide it by the counter */
-        if (!Fast486FpuMultiply(State, &SeriesElement, &FpuInverseNumber[i - 1], &TempValue))
+        /* Is the result positive? */
+        if (!TempValue.Sign)
         {
-            /* An exception occurred */
-            return FALSE;
-        }
+            /* Yes, set the appropriate bit in the mantissa */
+            TempResult.Mantissa |= 1ULL << i;
 
-        /* And add it to the result */
-        if (!Fast486FpuAdd(State, &TempResult, &TempValue, &TempResult))
-        {
-            /* An exception occurred */
-            return FALSE;
+            /* Halve the value */
+            if (!Fast486FpuMultiply(State, &Value, &FpuInverseNumber[1], &Value)) return FALSE;
         }
     }
 
-    /* Now convert the natural logarithm into a base 2 logarithm */
-    if (!Fast486FpuDivide(State, &TempResult, &FpuLnTwo, &TempResult)) return FALSE;
+    /* Normalize the result */
+    if (!Fast486FpuNormalize(State, &TempResult)) return FALSE;
 
     /*
      * Add the exponent to the result
@@ -1207,6 +1195,35 @@ Fast486FpuCalculateLogBase2(PFAST486_STATE State,
 
     *Result = TempResult;
     return TRUE;
+}
+
+static inline BOOLEAN FASTCALL
+Fast486FpuRemainder(PFAST486_STATE State,
+                    PCFAST486_FPU_DATA_REG FirstOperand,
+                    PCFAST486_FPU_DATA_REG SecondOperand,
+                    BOOLEAN RoundToNearest,
+                    PFAST486_FPU_DATA_REG Result)
+{
+    BOOLEAN Success = FALSE;
+    INT OldRoundingMode = State->FpuControl.Rc;
+    LONGLONG Integer;
+    FAST486_FPU_DATA_REG Temp;
+
+    if (!Fast486FpuDivide(State, FirstOperand, SecondOperand, &Temp)) return FALSE;
+
+    State->FpuControl.Rc = RoundToNearest ? FPU_ROUND_NEAREST : FPU_ROUND_TRUNCATE;
+
+    if (!Fast486FpuToInteger(State, &Temp, &Integer)) goto Cleanup;
+    Fast486FpuFromInteger(State, Integer, &Temp);
+
+    if (!Fast486FpuMultiply(State, &Temp, SecondOperand, &Temp)) goto Cleanup;
+    if (!Fast486FpuSubtract(State, FirstOperand, &Temp, Result)) goto Cleanup;
+
+    Success = TRUE;
+
+Cleanup:
+    State->FpuControl.Rc = OldRoundingMode;
+    return Success;
 }
 
 /*
@@ -2008,10 +2025,6 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FPREM1 */
             case 0x35:
             {
-                FAST486_FPU_DATA_REG Temp;
-                LONGLONG Integer;
-                INT OldRoundingMode = State->FpuControl.Rc;
-
                 if (FPU_GET_TAG(0) == FPU_TAG_EMPTY || FPU_GET_TAG(1) == FPU_TAG_EMPTY)
                 {
                     State->FpuStatus.Ie = TRUE;
@@ -2020,34 +2033,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                     break;
                 }
 
-                /* Divide ST0 by ST1 */
-                if (!Fast486FpuDivide(State, &FPU_ST(0), &FPU_ST(1), &Temp)) break;
-
-                /* Round the result to the nearest integer */
-                if (FPU_ST(0).Exponent < FPU_REAL10_BIAS + 63)
-                {
-                    State->FpuControl.Rc = FPU_ROUND_NEAREST;
-
-                    if (Fast486FpuToInteger(State, &Temp, &Integer))
-                    {
-                        Fast486FpuFromInteger(State, Integer, &Temp);
-                        State->FpuControl.Rc = OldRoundingMode;
-                    }
-                    else
-                    {
-                        /* Restore the rounding mode and exit */
-                        State->FpuControl.Rc = OldRoundingMode;
-                        break;
-                    }
-                }
-
-                /* Multiply the result by ST1 */
-                if (!Fast486FpuMultiply(State, &Temp, &FPU_ST(1), &Temp)) break;
-
-                /* Subtract the result from ST0 */
-                if (!Fast486FpuSubtract(State, &FPU_ST(0), &Temp, &FPU_ST(0))) break;
-
+                Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), TRUE, &FPU_ST(0));
                 FPU_UPDATE_TAG(0);
+
                 break;
             }
 
@@ -2068,10 +2056,6 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FPREM */
             case 0x38:
             {
-                FAST486_FPU_DATA_REG Temp;
-                LONGLONG Integer;
-                INT OldRoundingMode = State->FpuControl.Rc;
-
                 if (FPU_GET_TAG(0) == FPU_TAG_EMPTY || FPU_GET_TAG(1) == FPU_TAG_EMPTY)
                 {
                     State->FpuStatus.Ie = TRUE;
@@ -2080,34 +2064,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                     break;
                 }
 
-                /* Divide ST0 by ST1 */
-                if (!Fast486FpuDivide(State, &FPU_ST(0), &FPU_ST(1), &Temp)) break;
-
-                /* Round the result to an integer, towards zero */
-                if (FPU_ST(0).Exponent < FPU_REAL10_BIAS + 63)
-                {
-                    State->FpuControl.Rc = FPU_ROUND_TRUNCATE;
-
-                    if (Fast486FpuToInteger(State, &Temp, &Integer))
-                    {
-                        Fast486FpuFromInteger(State, Integer, &Temp);
-                        State->FpuControl.Rc = OldRoundingMode;
-                    }
-                    else
-                    {
-                        /* Restore the rounding mode and exit */
-                        State->FpuControl.Rc = OldRoundingMode;
-                        break;
-                    }
-                }
-
-                /* Multiply the result by ST1 */
-                if (!Fast486FpuMultiply(State, &Temp, &FPU_ST(1), &Temp)) break;
-
-                /* Subtract the result from ST0 */
-                if (!Fast486FpuSubtract(State, &FPU_ST(0), &Temp, &FPU_ST(0))) break;
-
+                Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), FALSE, &FPU_ST(0));
                 FPU_UPDATE_TAG(0);
+
                 break;
             }
 
