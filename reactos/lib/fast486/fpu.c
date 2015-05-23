@@ -39,19 +39,19 @@ static const FAST486_FPU_DATA_REG FpuZero = {0ULL, 0, FALSE};
 static const FAST486_FPU_DATA_REG FpuOne = {0x8000000000000000ULL, FPU_REAL10_BIAS, FALSE};
 
 /* Pi */
-static const FAST486_FPU_DATA_REG FpuPi = {0xC90FDAA22168C234ULL, FPU_REAL10_BIAS + 1, FALSE};
+static const FAST486_FPU_DATA_REG FpuPi = {0xC90FDAA22168C235ULL, FPU_REAL10_BIAS + 1, FALSE};
 
 /* lb(10) */
-static const FAST486_FPU_DATA_REG FpuL2Ten = {0xD49A784BCD1D8AFEULL, FPU_REAL10_BIAS + 1, FALSE};
+static const FAST486_FPU_DATA_REG FpuL2Ten = {0xD49A784BCD1B8AFEULL, FPU_REAL10_BIAS + 1, FALSE};
 
 /* lb(e) */
-static const FAST486_FPU_DATA_REG FpuL2E = {0xB8AA3B295C17F0BBULL, FPU_REAL10_BIAS, FALSE};
+static const FAST486_FPU_DATA_REG FpuL2E = {0xB8AA3B295C17F0BCULL, FPU_REAL10_BIAS, FALSE};
 
 /* lg(2) */
-static const FAST486_FPU_DATA_REG FpuLgTwo = {0x9A209A84FBCFF798ULL, FPU_REAL10_BIAS - 2, FALSE};
+static const FAST486_FPU_DATA_REG FpuLgTwo = {0x9A209A84FBCFF799ULL, FPU_REAL10_BIAS - 2, FALSE};
 
 /* ln(2) */
-static const FAST486_FPU_DATA_REG FpuLnTwo = {0xB17217F7D1CF79ABULL, FPU_REAL10_BIAS - 1, FALSE};
+static const FAST486_FPU_DATA_REG FpuLnTwo = {0xB17217F7D1CF79ACULL, FPU_REAL10_BIAS - 1, FALSE};
 
 /* 2.00 */
 static const FAST486_FPU_DATA_REG FpuTwo = {0x8000000000000000ULL, FPU_REAL10_BIAS + 1, FALSE};
@@ -246,10 +246,10 @@ Fast486FpuRound(PFAST486_STATE State,
                 (*Result)++;
 
                 /* Check if all the other bits are clear */
-                if (!(Remainder & ((1ULL << RemainderHighBit) - 1)))
+                if (!(Remainder & ((1ULL << RemainderHighBit) - 1ULL)))
                 {
                     /* Round to even */
-                    *Result &= ~1;
+                    *Result &= ~1ULL;
                 }
             }
 
@@ -336,7 +336,7 @@ Fast486FpuToInteger(PFAST486_STATE State,
 
         /* Calculate the result and the remainder */
         *Result = (LONGLONG)(Value->Mantissa >> Bits);
-        Remainder = Value->Mantissa & ((1 << Bits) - 1);
+        Remainder = Value->Mantissa & ((1ULL << Bits) - 1);
     }
     else
     {
@@ -548,7 +548,7 @@ Fast486FpuToDoubleReal(PFAST486_STATE State,
     }
 
     /* Calculate the remainder */
-    Remainder = Value->Mantissa & ((1 << 11) - 1);
+    Remainder = Value->Mantissa & ((1ULL << 11) - 1ULL);
 
     /* Store the biased exponent */
     *Result |= (ULONGLONG)(UnbiasedExp + FPU_REAL8_BIAS) << 52;
@@ -1075,7 +1075,7 @@ Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
     if (!Fast486FpuMultiply(State, &Value, &FpuLnTwo, &Value)) return;
     if (!Fast486FpuAdd(State, &Value, &Value, &SeriesElement)) return;
 
-    for (i = 2; i <= INVERSE_NUMBERS_COUNT / 2; i++)
+    for (i = 2; i <= INVERSE_NUMBERS_COUNT; i++)
     {
         /* Add the series element to the final sum */
         if (!Fast486FpuAdd(State, &TempResult, &SeriesElement, &TempResult))
@@ -2195,6 +2195,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             {
                 LONGLONG Scale;
                 LONGLONG UnbiasedExp = (LONGLONG)((SHORT)FPU_ST(0).Exponent) - FPU_REAL10_BIAS;
+                INT OldRoundingMode = State->FpuControl.Rc;
 
                 FPU_SAVE_LAST_INST();
 
@@ -2217,11 +2218,16 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                     }
                 }
 
+                State->FpuControl.Rc = FPU_ROUND_TRUNCATE;
+
                 if (!Fast486FpuToInteger(State, &FPU_ST(1), &Scale))
                 {
                     /* Exception occurred */
+                    State->FpuControl.Rc = OldRoundingMode;
                     break;
                 }
+
+                State->FpuControl.Rc = OldRoundingMode;
 
                 /* Adjust the unbiased exponent */
                 UnbiasedExp += Scale;
