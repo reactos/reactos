@@ -23,6 +23,12 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
     HBITMAP hbmOld;
     BOOL bDone = FALSE;
 
+    if (pWnd == NULL)
+    {
+       TRACE("Null Window!\n");
+       return;
+    }
+
     hdc = UserGetDCEx(pWnd, 0, DCX_USESTYLE | DCX_WINDOW);
     if (!hdc)
     {
