@@ -1390,6 +1390,63 @@ Fast486FpuArithmeticOperation(PFAST486_STATE State,
     }
 }
 
+/*
+ * Calculates using:
+ * x[0] = s
+ * x[n + 1] = (x[n] + s / x[n]) / 2
+ */
+static inline BOOLEAN FASTCALL
+Fast486FpuCalculateSquareRoot(PFAST486_STATE State,
+                              PCFAST486_FPU_DATA_REG Operand,
+                              PFAST486_FPU_DATA_REG Result)
+{
+    FAST486_FPU_DATA_REG Value = *Operand;
+    FAST486_FPU_DATA_REG PrevValue = FpuZero;
+
+    if (Operand->Sign)
+    {
+        /* Raise the invalid operation exception */
+        State->FpuStatus.Ie = TRUE;
+
+        if (State->FpuControl.Im)
+        {
+            /* Return the indefinite NaN */
+            Result->Sign = TRUE;
+            Result->Exponent = FPU_MAX_EXPONENT + 1;
+            Result->Mantissa = FPU_INDEFINITE_MANTISSA;
+            return TRUE;
+        }
+        else
+        {
+            Fast486FpuException(State);
+            return FALSE;
+        }
+    }
+
+    /* Loop until it converges */
+    while (Value.Sign != PrevValue.Sign
+           || Value.Exponent != PrevValue.Exponent
+           || Value.Mantissa != PrevValue.Mantissa)
+    {
+        FAST486_FPU_DATA_REG Temp;
+
+        /* Save the current value */
+        PrevValue = Value;
+
+        /* Divide the operand by the current value */
+        if (!Fast486FpuDivide(State, Operand, &Value, &Temp)) return FALSE;
+
+        /* Add the result of that division to the current value */
+        if (!Fast486FpuAdd(State, &Value, &Temp, &Value)) return FALSE;
+
+        /* Halve the current value */
+        if (!Fast486FpuMultiply(State, &Value, &FpuInverseNumber[1], &Value)) return FALSE;
+    }
+
+    *Result = Value;
+    return TRUE;
+}
+
 static inline BOOLEAN FASTCALL
 Fast486FpuLoadEnvironment(PFAST486_STATE State,
                           INT Segment,
@@ -2111,8 +2168,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FSQRT */
             case 0x3A:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                Fast486FpuCalculateSquareRoot(State, &FPU_ST(0), &FPU_ST(0));
+                FPU_UPDATE_TAG(0);
 
                 break;
             }
