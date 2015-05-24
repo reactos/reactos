@@ -87,8 +87,17 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
         IoCompleteRequest(Irp, IrpContext->PriorityBoost);
     }
 
-    if (IrpContext)
+    if (IrpContext->Flags & IRPCONTEXT_QUEUE)
+    {
+        /* Reset our status flags before queueing the IRP */
+        IrpContext->Flags |= IRPCONTEXT_COMPLETE;
+        IrpContext->Flags &= ~IRPCONTEXT_QUEUE;
+        UNIMPLEMENTED_DBGBREAK();
+    }
+    else
+    {
         ExFreePoolWithTag(IrpContext, 'PRIN');
+    }
 
     IoSetTopLevelIrp(NULL);
     FsRtlExitFileSystem();
