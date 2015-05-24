@@ -1942,6 +1942,8 @@ static CONST UCHAR Font8x16[VGA_FONT_CHARACTERS * 16] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
+PVGA_STATIC_FUNC_TABLE VgaStaticFuncTable;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
@@ -2127,7 +2129,14 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
     Bda->CrtBasePort = (Registers->Misc & 0x01) ? VGA_CRTC_INDEX_COLOR
                                                 : VGA_CRTC_INDEX_MONO;
     /* Bit 1 indicates whether display is color (0) or monochrome (1) */
-    Bda->VGAOptions  = (Bda->VGAOptions & 0xFD) | (!(Registers->Misc & 0x01) << 1);
+    Bda->VGAOptions     = (Bda->VGAOptions     & 0xFD) | (!(Registers->Misc & 0x01) << 1);
+    Bda->CrtModeControl = (Bda->CrtModeControl & 0xFB) | (!(Registers->Misc & 0x01) << 1);
+
+    /* Update blink bit in BDA */
+    if (Registers->Attribute[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_BLINK)
+        Bda->CrtModeControl |= (1 << 5);
+    else
+        Bda->CrtModeControl &= ~(1 << 5);
 
     /* Turn the video off */
     IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_CLOCK_REG);
@@ -2408,11 +2417,6 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     /* Clear the VGA memory if needed */
     if (!DoNotClear) VgaClearMemory();
 
-    // Bda->CrtModeControl;
-    // Bda->CrtColorPaletteMask;
-    // Bda->EGAFlags;
-    // Bda->VGAFlags;
-
     /* Update the values in the BDA */
     Bda->VideoMode       = ModeNumber;
     Bda->VideoPageSize   = VideoModePageSize[ModeNumber];
@@ -2422,6 +2426,10 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     /* 256 KB Video RAM; set bit 7 if we do not clear the screen */
     Bda->VGAOptions      = 0x60 | (Bda->VGAOptions & 0x7F) | (DoNotClear ? 0x80 : 0x00);
     Bda->VGASwitches     = 0xF9;    /* High-resolution  */
+
+    // Bda->VGAFlags;
+    // Bda->CrtModeControl;
+    // Bda->CrtColorPaletteMask;
 
     /* Set the start address in the CRTC */
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_LOW_REG);
@@ -2885,6 +2893,35 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     break;
                 }
 
+                /* Toggle Intensity/Blinking Bit */
+                case 0x03:
+                {
+                    /* Read the old AC mode control register value */
+                    BYTE VgaAcControlReg;
+                    IOWriteB(VGA_AC_INDEX, VGA_AC_CONTROL_REG);
+                    VgaAcControlReg = IOReadB(VGA_AC_READ);
+
+                    /* Toggle the blinking bit and write the new value */
+                    if (getBL())
+                    {
+                        VgaAcControlReg |= VGA_AC_CONTROL_BLINK;
+                        Bda->CrtModeControl |= (1 << 5);
+                    }
+                    else
+                    {
+                        VgaAcControlReg &= ~VGA_AC_CONTROL_BLINK;
+                        Bda->CrtModeControl &= ~(1 << 5);
+                    }
+
+                    IOWriteB(VGA_AC_INDEX, VGA_AC_CONTROL_REG);
+                    IOWriteB(VGA_AC_WRITE, VgaAcControlReg);
+
+                    /* Enable screen and disable palette access */
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
+                    break;
+                }
+
                 /* Get Single Palette Register */
                 case 0x07:
                 {
@@ -3223,15 +3260,70 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             switch (getAL())
             {
                 case 0x00: /* Get Display combination code */
-                   setAX(MAKEWORD(0x1A, 0x1A));
-                   setBX(MAKEWORD(0x08, 0x00)); /* VGA w/ color analog display */
-                   break;
+                {
+                    setBL(Bda->VGADccIDActive);
+                    setBH(0x00); // No alternate display
+
+                    /* Return success */
+                    setAL(0x1A);
+                    break;
+                }
                 case 0x01: /* Set Display combination code */
-                   DPRINT1("Set Display combination code - Unsupported\n");
-                   break;
+                {
+                    DPRINT1("Set Display combination code - Unsupported\n");
+                    break;
+                }
                 default:
-                   break;
+                    break;
             }
+            break;
+        }
+
+        /* Functionality/State Information (VGA) */
+        case 0x1B:
+        {
+            PVGA_DYNAMIC_FUNC_TABLE Table = SEG_OFF_TO_PTR(getES(), getDI());
+
+            /* Check for only supported subfunction */
+            if (getBX() != 0x0000)
+            {
+                DPRINT1("INT 10h, AH=1Bh, unsupported subfunction 0x%04x\n", getBX());
+                break;
+            }
+
+            /* Fill the VGA dynamic functionality table with our information */
+
+            Table->StaticFuncTablePtr = MAKELONG(VIDEO_STATE_INFO_OFFSET, VIDEO_BIOS_DATA_SEG);
+
+            Table->VideoMode       = Bda->VideoMode;
+            Table->ScreenColumns   = Bda->ScreenColumns;
+            Table->VideoPageSize   = Bda->VideoPageSize;
+            Table->VideoPageOffset = Bda->VideoPageOffset;
+            RtlCopyMemory(Table->CursorPosition, Bda->CursorPosition, sizeof(Bda->CursorPosition));
+            Table->CursorEndLine   = Bda->CursorEndLine;
+            Table->CursorStartLine = Bda->CursorStartLine;
+            Table->VideoPage       = Bda->VideoPage;
+            Table->CrtBasePort     = Bda->CrtBasePort;
+            Table->CrtModeControl  = Bda->CrtModeControl;
+            Table->CrtColorPaletteMask = Bda->CrtColorPaletteMask;
+            Table->ScreenRows      = Bda->ScreenRows;
+            Table->CharacterHeight = Bda->CharacterHeight;
+
+            Table->VGADccIDActive    = Bda->VGADccIDActive;
+            Table->VGADccIDAlternate = 0x00; // No alternate display
+            // Table->CurrModeSupportedColorsNum;
+            // Table->CurrModeSupportedPagesNum;
+            // Table->Scanlines;
+            // Table->PrimaryCharTable;
+            // Table->SecondaryCharTable;
+            // Table->VGAFlags;
+            Table->VGAAvailMemory = (Bda->VGAOptions & 0x60) >> 5;
+            // Table->VGASavePtrStateFlags;
+            // Table->VGADispInfo;
+            UNIMPLEMENTED;
+
+            /* Return success */
+            setAL(0x1B);
             break;
         }
 
@@ -3287,7 +3379,19 @@ BOOLEAN VidBiosInitialize(VOID)
     ((PULONG)BaseAddress)[0x42] = (ULONG)NULL; // Relocated Default INT 10h Video Services
     ((PULONG)BaseAddress)[0x6D] = (ULONG)NULL; // Video BIOS Entry Point
 
-    /* Fill the tables */
+    /* Initialize the VGA static function table */
+    VgaStaticFuncTable = SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, VIDEO_STATE_INFO_OFFSET);
+    RtlZeroMemory(VgaStaticFuncTable, sizeof(*VgaStaticFuncTable));
+    VgaStaticFuncTable->SupportedModes[0] = 0xFF; // Modes 0x00 to 0x07 supported
+    VgaStaticFuncTable->SupportedModes[1] = 0xFF; // Modes 0x08 to 0x0F supported
+    VgaStaticFuncTable->SupportedModes[2] = 0x0F; // Modes 0x10 to 0x13 supported
+    VgaStaticFuncTable->SupportedScanlines   = 0x07; // Scanlines 200, 350 and 400 supported
+    VgaStaticFuncTable->TextCharBlocksNumber = 0;
+    VgaStaticFuncTable->MaxActiveTextCharBlocksNumber = 0;
+    VgaStaticFuncTable->VGAFuncSupportFlags = 0x0CFD; // See: http://www.ctyme.com/intr/rb-0221.htm#Table46
+    VgaStaticFuncTable->VGASavePtrFuncFlags = 0x18;   // See: http://www.ctyme.com/intr/rb-0221.htm#Table47
+
+    /* Fill the font tables */
     RtlMoveMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, FONT_8x8_OFFSET),
                   Font8x8, sizeof(Font8x8));
     RtlMoveMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, FONT_8x16_OFFSET),
@@ -3306,6 +3410,10 @@ BOOLEAN VidBiosInitialize(VOID)
     // - or starts to use non-stream I/O interrupts
     //   (that should be done here, or maybe in VGA ??)
     //
+
+    Bda->CrtModeControl      = 0x00;
+    Bda->CrtColorPaletteMask = 0x00;
+    Bda->VGADccIDActive = 0x08; // VGA w/ color analog active display
 
     /* Set the default video mode */
     VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);

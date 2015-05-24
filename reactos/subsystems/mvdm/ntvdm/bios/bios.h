@@ -97,7 +97,8 @@ typedef struct
     WORD CharacterHeight;                       // 0x85
     BYTE VGAOptions;                            // 0x87
     BYTE VGASwitches;                           // 0x88
-    BYTE VGAFlags[2];                           // 0x89
+    BYTE VGAFlags;                              // 0x89
+    BYTE VGADccIDActive;                        // 0x8a
     DWORD Reserved3;                            // 0x8b
     BYTE Reserved4;                             // 0x8f
     BYTE Reserved5[2];                          // 0x90
