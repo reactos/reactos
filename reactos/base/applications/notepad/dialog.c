@@ -515,6 +515,7 @@ BOOL DIALOG_FileSaveAs(VOID)
 VOID DIALOG_FilePrint(VOID)
 {
     DOCINFO di;
+    TEXTMETRIC tm;
     PRINTDLG printer;
     SIZE szMetric;
     int cWidthPels, cHeightPels, border;
@@ -557,7 +558,7 @@ VOID DIALOG_FilePrint(VOID)
     printer.nFromPage = 0;
     printer.nMinPage = 1;
     /* we really need to calculate number of pages to set nMaxPage and nToPage */
-    printer.nToPage = 0;
+    printer.nToPage = (WORD)-1;
     printer.nMaxPage = (WORD)-1;
 
     /* Let commdlg manage copy settings */
@@ -622,22 +623,39 @@ VOID DIALOG_FilePrint(VOID)
         size = GetWindowText(Globals.hEdit, pTemp, size);
     }
 
+    /* Ensure that each logical unit maps to one pixel */
+    SetMapMode(printer.hDC, MM_TEXT);
+
+    /* Needed to get the correct height of a text line */
+    GetTextMetrics(printer.hDC, &tm);
+
     border = 150;
     for (copycount=1; copycount <= printer.nCopies; copycount++) {
         i = 0;
         pagecount = 1;
         do {
-            static const TCHAR letterM[] = _T("M");
+            /* Don't start a page if none of the conditions below are true */
+            dopage = 0;
 
-            if (pagecount >= printer.nFromPage &&
-    /*          ((printer.Flags & PD_PAGENUMS) == 0 ||  pagecount <= printer.nToPage))*/
-            pagecount <= printer.nToPage)
+            /* The user wants to print the current selection */
+            if (printer.Flags & PD_SELECTION)
+            {
                 dopage = 1;
-            else
-                dopage = 0;
+            }
+
+            /* The user wants to print the entire document */
+            if (!(printer.Flags & PD_PAGENUMS) && !(printer.Flags & PD_SELECTION))
+            {
+                dopage = 1;
+            }
+
+            /* The user wants to print a specified range of pages */
+            if ((pagecount >= printer.nFromPage && pagecount <= printer.nToPage))
+            {
+                dopage = 1;
+            }
 
             old_font = SelectObject(printer.hDC, font);
-            GetTextExtentPoint32(printer.hDC, letterM, 1, &szMetric);
 
             if (dopage) {
                 if (StartPage(printer.hDC) <= 0) {
@@ -650,35 +668,44 @@ VOID DIALOG_FilePrint(VOID)
                     return;
                 }
                 /* Write a rectangle and header at the top of each page */
-                Rectangle(printer.hDC, border, border, cWidthPels-border, border+szMetric.cy*2);
+                Rectangle(printer.hDC, border, border, cWidthPels-border, border + tm.tmHeight * 2);
                 /* I don't know what's up with this TextOut command. This comes out
                 kind of mangled.
                 */
                 TextOut(printer.hDC,
                         border * 2,
-                        border + szMetric.cy / 2,
+                        border + tm.tmHeight / 2,
                         Globals.szFileTitle,
                         lstrlen(Globals.szFileTitle));
             }
 
             /* The starting point for the main text */
             xLeft = border * 2;
-            yTop = border + szMetric.cy * 4;
+            yTop = border + tm.tmHeight * 4;
 
             SelectObject(printer.hDC, old_font);
-            GetTextExtentPoint32(printer.hDC, letterM, 1, &szMetric);
 
             /* Since outputting strings is giving me problems, output the main
              * text one character at a time. */
             do {
                 if (pTemp[i] == '\n') {
                     xLeft = border * 2;
-                    yTop += szMetric.cy;
+                    yTop += tm.tmHeight;
                 }
                 else if (pTemp[i] != '\r') {
                     if (dopage)
                         TextOut(printer.hDC, xLeft, yTop, &pTemp[i], 1);
+
+                    /* We need to get the width for each individual char, since a proportional font may be used */
+                    GetTextExtentPoint32(printer.hDC, &pTemp[i], 1, &szMetric);
                     xLeft += szMetric.cx;
+
+                    /* Insert a line break if the current line does not fit into the printing area */
+                    if (xLeft > (cWidthPels - border * 2))
+                    {
+                        xLeft = border * 2;
+                        yTop = yTop + tm.tmHeight;
+                    }
                 }
             } while (i++ < size && yTop < (cHeightPels - border * 2));
 
