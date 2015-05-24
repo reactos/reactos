@@ -34,16 +34,39 @@ typedef struct _PROFILENAMES
 {
     WCHAR szSourceName[PROFILE_NAME_LENGTH];
     WCHAR szDestinationName[PROFILE_NAME_LENGTH];
+    PPROFILEDATA pProfileData;
 } PROFILENAMES, *PPROFILENAMES;
+
+
+static
+BOOL
+IsProfileNameInUse(
+    PPROFILENAMES pProfileNames,
+    BOOL bIgnoreCurrent)
+{
+    DWORD i;
+
+    for (i = 0; i < pProfileNames->pProfileData->dwProfileCount; i++)
+    {
+        if (bIgnoreCurrent == TRUE && i == pProfileNames->pProfileData->dwSelectedProfileIndex)
+            continue;
+
+        if (wcscmp(pProfileNames->pProfileData->pProfiles[i].szFriendlyName, pProfileNames->szDestinationName) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
 
 
 static
 INT_PTR
 CALLBACK
-CopyProfileDlgProc(HWND hwndDlg,
-                   UINT uMsg,
-                   WPARAM wParam,
-                   LPARAM lParam)
+CopyProfileDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     PPROFILENAMES pProfileNames;
 
@@ -71,7 +94,14 @@ CopyProfileDlgProc(HWND hwndDlg,
                                    IDC_COPYPROFILETO,
                                    pProfileNames->szDestinationName,
                                    PROFILE_NAME_LENGTH);
-                    EndDialog(hwndDlg, IDOK);
+                    if (IsProfileNameInUse(pProfileNames, FALSE))
+                        ResourceMessageBox(hApplet,
+                                           NULL,
+                                           MB_OK | MB_ICONERROR,
+                                           IDS_HWPROFILE_WARNING,
+                                           IDS_HWPROFILE_ALREADY_IN_USE);
+                    else
+                        EndDialog(hwndDlg, IDOK);
                     return TRUE;
 
                 case IDCANCEL:
@@ -101,6 +131,8 @@ CopyHardwareProfile(
 
     wcscpy(ProfileNames.szSourceName, pProfile->szFriendlyName);
     swprintf(ProfileNames.szDestinationName, L"%s %lu", szBuffer, pProfileData->dwProfileCount);
+
+    ProfileNames.pProfileData = pProfileData;
 
     if (DialogBoxParam(hApplet,
                        MAKEINTRESOURCE(IDD_COPYPROFILE),
@@ -145,10 +177,11 @@ CopyHardwareProfile(
 static
 INT_PTR
 CALLBACK
-RenameProfileDlgProc(HWND hwndDlg,
-                     UINT uMsg,
-                     WPARAM wParam,
-                     LPARAM lParam)
+RenameProfileDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     PPROFILENAMES pProfileNames;
 
@@ -176,7 +209,14 @@ RenameProfileDlgProc(HWND hwndDlg,
                                    IDC_RENPROFEDITTO,
                                    pProfileNames->szDestinationName,
                                    PROFILE_NAME_LENGTH);
-                    EndDialog(hwndDlg, IDOK);
+                    if (IsProfileNameInUse(pProfileNames, TRUE))
+                        ResourceMessageBox(hApplet,
+                                           NULL,
+                                           MB_OK | MB_ICONERROR,
+                                           IDS_HWPROFILE_WARNING,
+                                           IDS_HWPROFILE_ALREADY_IN_USE);
+                    else
+                        EndDialog(hwndDlg, IDOK);
                     return TRUE;
 
                 case IDCANCEL:
@@ -206,6 +246,8 @@ RenameHardwareProfile(
 
     wcscpy(ProfileNames.szSourceName, pProfile->szFriendlyName);
     swprintf(ProfileNames.szDestinationName, L"%s %lu", szBuffer, pProfileData->dwProfileCount);
+
+    ProfileNames.pProfileData = pProfileData;
 
     if (DialogBoxParam(hApplet,
                        MAKEINTRESOURCE(IDD_RENAMEPROFILE),
@@ -248,36 +290,36 @@ DeleteHardwareProfile(
     if (MessageBox(NULL,
                    szMessage,
                    szCaption,
-                   MB_YESNO | MB_ICONQUESTION) == IDYES)
+                   MB_YESNO | MB_ICONQUESTION) != IDYES)
+        return;
+
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
+
+    if (pProfileData->dwSelectedProfileIndex != pProfileData->dwProfileCount - 1)
     {
-        SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
-
-        if (pProfileData->dwSelectedProfileIndex != pProfileData->dwProfileCount - 1)
-        {
-            RtlMoveMemory(&pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex],
-                          &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex + 1],
-                          (pProfileData->dwProfileCount - pProfileData->dwSelectedProfileIndex - 1) * sizeof(PPROFILE));
-        }
-        else
-        {
-            pProfileData->dwSelectedProfileIndex--;
-        }
-
-        pProfiles = HeapReAlloc(GetProcessHeap(),
-                                HEAP_ZERO_MEMORY,
-                                pProfileData->pProfiles,
-                                (pProfileData->dwProfileCount - 1) * sizeof(PROFILE));
-        if (pProfiles == NULL)
-        {
-            DPRINT1("HeapReAlloc() failed!\n");
-            return;
-        }
-
-        pProfileData->dwProfileCount--;
-        pProfileData->pProfiles = pProfiles;
-
-        SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_SETCURSEL, pProfileData->dwSelectedProfileIndex, 0);
+        RtlMoveMemory(&pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex],
+                      &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex + 1],
+                      (pProfileData->dwProfileCount - pProfileData->dwSelectedProfileIndex - 1) * sizeof(PPROFILE));
     }
+    else
+    {
+        pProfileData->dwSelectedProfileIndex--;
+    }
+
+    pProfiles = HeapReAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            pProfileData->pProfiles,
+                            (pProfileData->dwProfileCount - 1) * sizeof(PROFILE));
+    if (pProfiles == NULL)
+    {
+        DPRINT1("HeapReAlloc() failed!\n");
+        return;
+    }
+
+    pProfileData->dwProfileCount--;
+    pProfileData->pProfiles = pProfiles;
+
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_SETCURSEL, pProfileData->dwSelectedProfileIndex, 0);
 }
 
 

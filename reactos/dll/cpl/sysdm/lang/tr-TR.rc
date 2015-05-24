@@ -285,4 +285,5 @@ BEGIN
     IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
     IDS_HWPROFILE_PROFILE "Profile"
+    IDS_HWPROFILE_WARNING "Warning"
 END
