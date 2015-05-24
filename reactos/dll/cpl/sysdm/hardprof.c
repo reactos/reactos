@@ -28,66 +28,13 @@ typedef struct _PROFILEDATA
     DWORD dwSelectedProfile;
     DWORD dwSelectedProfileIndex;
     PPROFILE pProfiles;
-    HWND hwndProfileDlg;
 } PROFILEDATA, *PPROFILEDATA;
 
-
-static
-VOID
-OnCopyProfileInit(HWND hwndDlg,
-                  PPROFILEDATA pProfileData,
-                  UINT idFrom,
-                  UINT idTo)
+typedef struct _PROFILENAMES
 {
-    WCHAR szNewProfileName[PROFILE_NAME_LENGTH];
-
-    SetDlgItemText(hwndDlg, idFrom, pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex].szFriendlyName);
-
-    swprintf(szNewProfileName, L"Profile %lu", pProfileData->dwProfileCount);
-    SendDlgItemMessageW(hwndDlg, idTo, EM_SETLIMITTEXT, PROFILE_NAME_LENGTH - 1, 0);
-    SetDlgItemText(hwndDlg, idTo, szNewProfileName);
-}
-
-
-static
-VOID
-CopyProfile(
-    HWND hwndDlg,
-    PPROFILEDATA pProfileData)
-{
-    PPROFILE pProfiles;
-//    PPROFILE pSrcProfile
-    PPROFILE pDstProfile;
-
-    /* Allocate memory for the new profile */
-    pProfiles = HeapReAlloc(GetProcessHeap(),
-                            HEAP_ZERO_MEMORY,
-                            pProfileData->pProfiles,
-                            (pProfileData->dwProfileCount + 1) * sizeof(PROFILE));
-    if (pProfiles == NULL)
-    {
-        DPRINT1("HeapReAlloc() failed!\n");
-        return;
-    }
-
-    pProfileData->dwProfileCount++;
-    pProfileData->pProfiles = pProfiles;
-
-//    pSrcProfile = &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex];
-    pDstProfile = &pProfileData->pProfiles[pProfileData->dwProfileCount - 1];
-
-    GetDlgItemText(hwndDlg,
-                   IDC_COPYPROFILETO,
-                   pDstProfile->szFriendlyName,
-                   PROFILE_NAME_LENGTH);
-
-    pDstProfile->dwProfileNumber = ++pProfileData->dwLastProfile;
-    swprintf(pDstProfile->szName, L"%04lu", pDstProfile->dwProfileNumber);
-
-    pDstProfile->dwPreferenceOrder = pDstProfile->dwProfileNumber;
-
-    SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_ADDSTRING, 0, (LPARAM)pDstProfile->szFriendlyName);
-}
+    WCHAR szSourceName[PROFILE_NAME_LENGTH];
+    WCHAR szDestinationName[PROFILE_NAME_LENGTH];
+} PROFILENAMES, *PPROFILENAMES;
 
 
 static
@@ -98,54 +45,100 @@ CopyProfileDlgProc(HWND hwndDlg,
                    WPARAM wParam,
                    LPARAM lParam)
 {
-    PPROFILEDATA pProfileData;
+    PPROFILENAMES pProfileNames;
 
-    pProfileData = (PPROFILEDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pProfileNames = (PPROFILENAMES)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
-            pProfileData = (PPROFILEDATA)lParam;
-            OnCopyProfileInit(hwndDlg, pProfileData, IDC_COPYPROFILEFROM, IDC_COPYPROFILETO);
+            pProfileNames = (PPROFILENAMES)lParam;
+
+            /* Set the old name */
+            SetDlgItemText(hwndDlg, IDC_COPYPROFILEFROM, pProfileNames->szSourceName);
+
+            /* Set the new name */
+            SendDlgItemMessageW(hwndDlg, IDC_COPYPROFILETO, EM_SETLIMITTEXT, PROFILE_NAME_LENGTH - 1, 0);
+            SetDlgItemText(hwndDlg, IDC_COPYPROFILETO, pProfileNames->szDestinationName);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    CopyProfile(hwndDlg, pProfileData);
+                    GetDlgItemText(hwndDlg,
+                                   IDC_COPYPROFILETO,
+                                   pProfileNames->szDestinationName,
+                                   PROFILE_NAME_LENGTH);
                     EndDialog(hwndDlg, IDOK);
                     return TRUE;
 
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
-                   return TRUE;
+                    return TRUE;
             }
             break;
     }
+
     return FALSE;
 }
 
 
 static
 VOID
-RenameProfile(
+CopyHardwareProfile(
     HWND hwndDlg,
     PPROFILEDATA pProfileData)
 {
-    PPROFILE pProfile;
+    PROFILENAMES ProfileNames;
+    PPROFILE pProfile, pNewProfiles, pNewProfile;
+    WCHAR szBuffer[80];
 
     pProfile = &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex];
 
-    GetDlgItemText(hwndDlg,
-                   IDC_RENPROFEDITTO,
-                   pProfile->szFriendlyName,
-                   PROFILE_NAME_LENGTH);
+    LoadStringW(hApplet, IDS_HWPROFILE_PROFILE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
 
-    /* Replace the listbox string */
-    SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
-    SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_INSERTSTRING, pProfileData->dwSelectedProfileIndex, (LPARAM)pProfile->szFriendlyName);
+    wcscpy(ProfileNames.szSourceName, pProfile->szFriendlyName);
+    swprintf(ProfileNames.szDestinationName, L"%s %lu", szBuffer, pProfileData->dwProfileCount);
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_COPYPROFILE),
+                       hwndDlg,
+                       (DLGPROC)CopyProfileDlgProc,
+                       (LPARAM)&ProfileNames) != IDOK)
+        return;
+
+    /* Apply new name only if it has been changed */
+    if (wcscmp(ProfileNames.szSourceName, ProfileNames.szDestinationName) == 0)
+        return;
+
+    /* Allocate memory for the new profile */
+    pNewProfiles = HeapReAlloc(GetProcessHeap(),
+                               HEAP_ZERO_MEMORY,
+                               pProfileData->pProfiles,
+                               (pProfileData->dwProfileCount + 1) * sizeof(PROFILE));
+    if (pNewProfiles == NULL)
+    {
+        DPRINT1("HeapReAlloc() failed!\n");
+        return;
+    }
+
+    pProfileData->dwProfileCount++;
+    pProfileData->pProfiles = pNewProfiles;
+
+    pNewProfile = &pProfileData->pProfiles[pProfileData->dwProfileCount - 1];
+
+    CopyMemory(pNewProfile, pProfile, sizeof(PROFILE));
+
+    wcscpy(pNewProfile->szFriendlyName, ProfileNames.szDestinationName);
+
+    pNewProfile->dwProfileNumber = ++pProfileData->dwLastProfile;
+    swprintf(pNewProfile->szName, L"%04lu", pNewProfile->dwProfileNumber);
+
+    pNewProfile->dwPreferenceOrder = pNewProfile->dwProfileNumber;
+
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_ADDSTRING, 0, (LPARAM)pNewProfile->szFriendlyName);
 }
 
 
@@ -157,29 +150,38 @@ RenameProfileDlgProc(HWND hwndDlg,
                      WPARAM wParam,
                      LPARAM lParam)
 {
-    PPROFILEDATA pProfileData;
+    PPROFILENAMES pProfileNames;
 
-    pProfileData = (PPROFILEDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pProfileNames = (PPROFILENAMES)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
-            pProfileData = (PPROFILEDATA)lParam;
-            OnCopyProfileInit(hwndDlg, pProfileData, IDC_RENPROFEDITFROM, IDC_RENPROFEDITTO);
+            pProfileNames = (PPROFILENAMES)lParam;
+
+            /* Set the old name */
+            SetDlgItemText(hwndDlg, IDC_RENPROFEDITFROM, pProfileNames->szSourceName);
+
+            /* Set the new name */
+            SendDlgItemMessageW(hwndDlg, IDC_RENPROFEDITTO, EM_SETLIMITTEXT, PROFILE_NAME_LENGTH - 1, 0);
+            SetDlgItemText(hwndDlg, IDC_RENPROFEDITTO, pProfileNames->szDestinationName);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    RenameProfile(hwndDlg, pProfileData);
+                    GetDlgItemText(hwndDlg,
+                                   IDC_RENPROFEDITTO,
+                                   pProfileNames->szDestinationName,
+                                   PROFILE_NAME_LENGTH);
                     EndDialog(hwndDlg, IDOK);
                     return TRUE;
 
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
-                   return TRUE;
+                    return TRUE;
             }
             break;
     }
@@ -190,14 +192,52 @@ RenameProfileDlgProc(HWND hwndDlg,
 
 static
 VOID
-DeleteHardwareProfile(PPROFILEDATA pProfileData)
+RenameHardwareProfile(
+    HWND hwndDlg,
+    PPROFILEDATA pProfileData)
+{
+    PROFILENAMES ProfileNames;
+    PPROFILE pProfile;
+    WCHAR szBuffer[80];
+
+    pProfile = &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex];
+
+    LoadStringW(hApplet, IDS_HWPROFILE_PROFILE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+
+    wcscpy(ProfileNames.szSourceName, pProfile->szFriendlyName);
+    swprintf(ProfileNames.szDestinationName, L"%s %lu", szBuffer, pProfileData->dwProfileCount);
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_RENAMEPROFILE),
+                       hwndDlg,
+                       (DLGPROC)RenameProfileDlgProc,
+                       (LPARAM)&ProfileNames) != IDOK)
+        return;
+
+    /* Apply new name only if it has been changed */
+    if (wcscmp(pProfile->szFriendlyName, ProfileNames.szDestinationName) == 0)
+        return;
+
+    /* Replace the profile name in the profile list */
+    wcscpy(pProfile->szFriendlyName, ProfileNames.szDestinationName);
+
+    /* Replace the profile name in the listbox */
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_INSERTSTRING, pProfileData->dwSelectedProfileIndex, (LPARAM)pProfile->szFriendlyName);
+}
+
+
+static
+VOID
+DeleteHardwareProfile(
+    HWND hwndDlg,
+    PPROFILEDATA pProfileData)
 {
     WCHAR szMessage[256];
     WCHAR szBuffer[128];
     WCHAR szCaption[80];
     PPROFILE pProfiles;
     PPROFILE pProfile;
-    INT n;
 
     pProfile = &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex];
 
@@ -205,13 +245,12 @@ DeleteHardwareProfile(PPROFILEDATA pProfileData)
     LoadStringW(hApplet, IDS_HWPROFILE_CONFIRM_DELETE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
     swprintf(szMessage, szBuffer, pProfile->szFriendlyName);
 
-    n = MessageBox(NULL,
+    if (MessageBox(NULL,
                    szMessage,
                    szCaption,
-                   MB_YESNO | MB_ICONQUESTION);
-    if (n == IDYES)
+                   MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
-        SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
+        SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
 
         if (pProfileData->dwSelectedProfileIndex != pProfileData->dwProfileCount - 1)
         {
@@ -237,7 +276,7 @@ DeleteHardwareProfile(PPROFILEDATA pProfileData)
         pProfileData->dwProfileCount--;
         pProfileData->pProfiles = pProfiles;
 
-        SendDlgItemMessageW(pProfileData->hwndProfileDlg, IDC_HRDPROFLSTBOX, LB_SETCURSEL, pProfileData->dwSelectedProfileIndex, 0);
+        SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_SETCURSEL, pProfileData->dwSelectedProfileIndex, 0);
     }
 }
 
@@ -393,7 +432,6 @@ GetProfiles(HWND hwndDlg)
     if (pProfileData == NULL)
         return FALSE;
 
-    pProfileData->hwndProfileDlg = hwndDlg;
     pProfileData->dwLastProfile = (DWORD)-1;
     pProfileData->dwSelectedProfileIndex = (DWORD)-1;
 
@@ -543,23 +581,15 @@ HardProfDlgProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDC_HRDPROFCOPY:
-                    DialogBoxParam(hApplet,
-                                   MAKEINTRESOURCE(IDD_COPYPROFILE),
-                                   hwndDlg,
-                                   (DLGPROC)CopyProfileDlgProc,
-                                   (LPARAM)pProfileData);
+                    CopyHardwareProfile(hwndDlg, pProfileData);
                     break;
 
                 case IDC_HRDPROFRENAME:
-                    DialogBoxParam(hApplet,
-                                   MAKEINTRESOURCE(IDD_RENAMEPROFILE),
-                                   hwndDlg,
-                                   (DLGPROC)RenameProfileDlgProc,
-                                   (LPARAM)pProfileData);
+                    RenameHardwareProfile(hwndDlg, pProfileData);
                     break;
 
                 case IDC_HRDPROFDEL:
-                    DeleteHardwareProfile(pProfileData);
+                    DeleteHardwareProfile(hwndDlg, pProfileData);
                     break;
 
                 case IDC_HRDPROFWAIT:

@@ -45,6 +45,8 @@
 
 #define IDS_HWPROFILE_CONFIRM_DELETE_TITLE 85
 #define IDS_HWPROFILE_CONFIRM_DELETE       86
+#define IDS_HWPROFILE_ALREADY_IN_USE       87
+#define IDS_HWPROFILE_PROFILE              88
 
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100
