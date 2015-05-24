@@ -17,7 +17,7 @@ The following build tools are shared with Wine.
 
 reactos/tools/unicode             # Synced to WineStaging-1.7.37
 reactos/tools/widl                # Synced to Wine-1.7.17
-reactos/tools/wpp                 # Synced to Wine-1.7.27
+reactos/tools/wpp                 # Synced to WineStaging-1.7.37
 
 The following libraries are shared with Wine.
 
@@ -43,8 +43,8 @@ reactos/dll/directx/wine/qedit          # Synced to WineStaging-1.7.37
 reactos/dll/directx/wine/quartz         # Synced to WineStaging-1.7.37
 reactos/dll/directx/wine/wined3d        # Synced to WineStaging-1.7.37
 
-reactos/dll/win32/activeds            # Synced to Wine-1.7.27
-reactos/dll/win32/actxprxy            # Synced to Wine-1.7.27
+reactos/dll/win32/activeds            # Synced to WineStaging-1.7.37
+reactos/dll/win32/actxprxy            # Synced to WineStaging-1.7.37
 reactos/dll/win32/advpack             # Synced to WineStaging-1.7.37
 reactos/dll/win32/atl                 # Synced to WineStaging-1.7.37
 reactos/dll/win32/atl80               # Synced to WineStaging-1.7.37
@@ -53,15 +53,15 @@ reactos/dll/win32/avifil32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/bcrypt              # Synced to WineStaging-1.7.37
 reactos/dll/win32/browseui            # Out of sync
 reactos/dll/win32/cabinet             # Synced to WineStaging-1.7.37
-reactos/dll/win32/clusapi             # Synced to Wine-1.7.27
-reactos/dll/win32/comcat              # Synced to Wine-1.7.27
+reactos/dll/win32/clusapi             # Synced to WineStaging-1.7.37
+reactos/dll/win32/comcat              # Synced to WineStaging-1.7.37
 reactos/dll/win32/comctl32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/comdlg32            # Synced to WineStaging-1.7.37
-reactos/dll/win32/compstui            # Synced to Wine-1.7.27
-reactos/dll/win32/credui              # Synced to Wine-1.7.27
+reactos/dll/win32/compstui            # Synced to WineStaging-1.7.37
+reactos/dll/win32/credui              # Synced to WineStaging-1.7.37
 reactos/dll/win32/crypt32             # Synced to WineStaging-1.7.37
-reactos/dll/win32/cryptdlg            # Synced to Wine-1.7.27
-reactos/dll/win32/cryptdll            # Synced to Wine-1.7.27
+reactos/dll/win32/cryptdlg            # Synced to WineStaging-1.7.37
+reactos/dll/win32/cryptdll            # Synced to WineStaging-1.7.37
 reactos/dll/win32/cryptnet            # Synced to WineStaging-1.7.37
 reactos/dll/win32/cryptui             # Synced to Wine-1.7.27
 reactos/dll/win32/dbghelp             # Synced to WineStaging-1.7.37
