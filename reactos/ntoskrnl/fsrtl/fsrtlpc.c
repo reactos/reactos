@@ -170,6 +170,7 @@ FsRtlInitSystem(VOID)
                                    IFS_POOL_TAG,
                                    0);
 
+    FsRtlInitializeTunnels();
     FsRtlInitializeLargeMcbs();
 
     /* Allocate the Resource Buffer */

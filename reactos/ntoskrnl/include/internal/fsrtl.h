@@ -114,6 +114,12 @@ FsRtlInitializeLargeMcbs(
     VOID
 );
 
+VOID
+NTAPI
+FsRtlInitializeTunnels(
+    VOID
+);
+
 //
 // File contexts Routines
 //
