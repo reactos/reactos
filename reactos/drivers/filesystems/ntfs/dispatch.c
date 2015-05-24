@@ -71,6 +71,10 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
         case IRP_MJ_DEVICE_CONTROL:
             Status = NtfsDeviceControl(IrpContext);
              break;
+
+        case IRP_MJ_WRITE:
+            Status = NtfsWrite(IrpContext);
+            break;
     }
 
     ASSERT((!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||

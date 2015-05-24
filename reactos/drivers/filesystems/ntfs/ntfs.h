@@ -762,10 +762,8 @@ NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
 NTSTATUS
 NtfsRead(PNTFS_IRP_CONTEXT IrpContext);
 
-DRIVER_DISPATCH NtfsFsdWrite;
-NTSTATUS NTAPI
-NtfsFsdWrite(PDEVICE_OBJECT DeviceObject,
-             PIRP Irp);
+NTSTATUS
+NtfsWrite(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* volinfo.c */

@@ -122,7 +122,7 @@ NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject)
     DriverObject->MajorFunction[IRP_MJ_CREATE]                   = NtfsFsdCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = NtfsFsdClose;
     DriverObject->MajorFunction[IRP_MJ_READ]                     = NtfsFsdDispatch;
-    DriverObject->MajorFunction[IRP_MJ_WRITE]                    = NtfsFsdWrite;
+    DriverObject->MajorFunction[IRP_MJ_WRITE]                    = NtfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]        = NtfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = NtfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION]   = NtfsFsdDispatch;

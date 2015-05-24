@@ -186,7 +186,7 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
 
-    DPRINT("NtfsRead(DeviceObject %p)\n", IrpContext);
+    DPRINT("NtfsRead(IrpContext %p)\n", IrpContext);
 
     DeviceObject = IrpContext->DeviceObject;
     Irp = IrpContext->Irp;
@@ -225,14 +225,11 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
 
 
 NTSTATUS
-NTAPI
-NtfsFsdWrite(PDEVICE_OBJECT DeviceObject,
-             PIRP Irp)
+NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
 {
-    DPRINT("NtfwWrite(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
+    DPRINT("NtfsWrite(IrpContext %p)\n",IrpContext);
 
-    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-    Irp->IoStatus.Information = 0;
+    IrpContext->Irp->IoStatus.Information = 0;
     return STATUS_NOT_SUPPORTED;
 }
 
