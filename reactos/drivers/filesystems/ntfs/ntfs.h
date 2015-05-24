@@ -521,10 +521,8 @@ NTSTATUS
 NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
               PFILE_OBJECT FileObject);
 
-DRIVER_DISPATCH NtfsFsdClose;
-NTSTATUS NTAPI
-NtfsFsdClose(PDEVICE_OBJECT DeviceObject,
-             PIRP Irp);
+NTSTATUS
+NtfsClose(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* create.c */
