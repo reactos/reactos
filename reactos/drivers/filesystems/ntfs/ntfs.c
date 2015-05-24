@@ -96,6 +96,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     NtfsGlobalData->FastIoDispatch.FastIoWrite = NtfsFastIoWrite;
     DriverObject->FastIoDispatch = &NtfsGlobalData->FastIoDispatch;
 
+    /* Initialize lookaside list for IRP contexts */
+    ExInitializeNPagedLookasideList(&NtfsGlobalData->IrpContextLookasideList,
+                                    NULL, NULL, 0, sizeof(NTFS_IRP_CONTEXT), 'PRIN', 0);
+
     /* Driver can't be unloaded */
     DriverObject->DriverUnload = NULL;
 

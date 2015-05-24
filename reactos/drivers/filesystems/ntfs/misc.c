@@ -70,9 +70,7 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
 
     TRACE_(NTFS, "NtfsAllocateIrpContext()\n");
 
-    IrpContext = (PNTFS_IRP_CONTEXT)ExAllocatePoolWithTag(NonPagedPool,
-                                                          sizeof(NTFS_IRP_CONTEXT),
-                                                          'PRIN');
+    IrpContext = (PNTFS_IRP_CONTEXT)ExAllocateFromNPagedLookasideList(&NtfsGlobalData->IrpContextLookasideList);
     if (IrpContext == NULL)
         return NULL;
 

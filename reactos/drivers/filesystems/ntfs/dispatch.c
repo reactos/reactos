@@ -117,7 +117,7 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
     }
     else
     {
-        ExFreePoolWithTag(IrpContext, 'PRIN');
+        ExFreeToNPagedLookasideList(&NtfsGlobalData->IrpContextLookasideList, IrpContext);
     }
 
     IoSetTopLevelIrp(NULL);

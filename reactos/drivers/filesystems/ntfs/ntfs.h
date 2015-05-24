@@ -137,6 +137,7 @@ typedef struct
     CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
     ULONG Flags;
     FAST_IO_DISPATCH FastIoDispatch;
+    NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
 } NTFS_GLOBAL_DATA, *PNTFS_GLOBAL_DATA;
 
 
