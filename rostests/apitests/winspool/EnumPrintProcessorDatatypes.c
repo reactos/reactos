@@ -16,6 +16,7 @@
 START_TEST(EnumPrintProcessorDatatypes)
 {
     DWORD cbNeeded;
+    DWORD cbTemp;
     DWORD dwReturned;
     PDATATYPES_INFO_1W pDatatypesInfo1;
 
@@ -45,22 +46,28 @@ START_TEST(EnumPrintProcessorDatatypes)
     ok(!EnumPrintProcessorDatatypesW(NULL, L"wInPrInT", 1, NULL, 0, &cbNeeded, &dwReturned), "EnumPrintProcessorDatatypesW returns TRUE!\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "EnumPrintProcessorDatatypesW returns error %lu!\n", GetLastError());
     ok(cbNeeded > 0, "cbNeeded is 0!\n");
-    ok(dwReturned > 0, "dwReturned is 0!\n");
+    ok(dwReturned == 0, "dwReturned is %lu!\n", dwReturned);
 
     // Now provide the demanded size, but no buffer.
     SetLastError(0xDEADBEEF);
-    ok(!EnumPrintProcessorDatatypesW(NULL, L"wInPrInT", 1, NULL, cbNeeded, &cbNeeded, &dwReturned), "EnumPrintProcessorDatatypesW returns TRUE!\n");
+    ok(!EnumPrintProcessorDatatypesW(NULL, L"wInPrInT", 1, NULL, cbNeeded, &cbTemp, &dwReturned), "EnumPrintProcessorDatatypesW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "EnumPrintProcessorDatatypesW returns error %lu!\n", GetLastError());
+    ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
+    ok(dwReturned == 0, "dwReturned is %lu!\n", dwReturned);
 
     // This also has to fail the same way when no Print Processor was given at all.
     SetLastError(0xDEADBEEF);
-    ok(!EnumPrintProcessorDatatypesW(NULL, NULL, 1, NULL, cbNeeded, &cbNeeded, &dwReturned), "EnumPrintProcessorDatatypesW returns TRUE!\n");
+    ok(!EnumPrintProcessorDatatypesW(NULL, NULL, 1, NULL, cbNeeded, &cbTemp, &dwReturned), "EnumPrintProcessorDatatypesW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "EnumPrintProcessorDatatypesW returns error %lu!\n", GetLastError());
+    ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
+    ok(dwReturned == 0, "dwReturned is %lu!\n", dwReturned);
 
     // Same error has to occur with a valid Print Processor, but a size too small.
     SetLastError(0xDEADBEEF);
-    ok(!EnumPrintProcessorDatatypesW(NULL, L"wInPrInT", 1, NULL, cbNeeded, &cbNeeded, &dwReturned), "EnumPrintProcessorDatatypesW returns TRUE!\n");
+    ok(!EnumPrintProcessorDatatypesW(NULL, L"wInPrInT", 1, NULL, cbNeeded, &cbTemp, &dwReturned), "EnumPrintProcessorDatatypesW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "EnumPrintProcessorDatatypesW returns error %lu!\n", GetLastError());
+    ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
+    ok(dwReturned == 0, "dwReturned is %lu!\n", dwReturned);
 
     // Finally use the function as intended and aim for success!
     pDatatypesInfo1 = HeapAlloc(GetProcessHeap(), 0, cbNeeded);

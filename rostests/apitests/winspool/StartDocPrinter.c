@@ -21,12 +21,12 @@ START_TEST(StartDocPrinter)
     SetLastError(0xDEADBEEF);
     dwResult = StartDocPrinterW(NULL, 0, NULL);
     ok(dwResult == 0, "StartDocPrinterW returns %lu!\n", dwResult);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "StartDocPrinter returns error %lu!\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "StartDocPrinter returns error %lu!\n", GetLastError());
 
     SetLastError(0xDEADBEEF);
     dwResult = StartDocPrinterW(NULL, 1, NULL);
     ok(dwResult == 0, "StartDocPrinterW returns %lu!\n", dwResult);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "StartDocPrinter returns error %lu!\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "StartDocPrinter returns error %lu!\n", GetLastError());
 
     SetLastError(0xDEADBEEF);
     dwResult = StartDocPrinterW(NULL, 0, (LPBYTE)&docInfo);

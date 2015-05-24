@@ -17,11 +17,14 @@ START_TEST(OpenPrinter)
 {
     HANDLE hPrinter;
 
+    // Give no handle at all, this has to fail
     SetLastError(0xDEADBEEF);
     ok(!OpenPrinterW(NULL, NULL, NULL), "OpenPrinterW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "OpenPrinterW returns error %lu!\n", GetLastError());
 
+    // Open a handle to the local print server
     SetLastError(0xDEADBEEF);
-    ok(!OpenPrinterW(NULL, &hPrinter, NULL), "OpenPrinterW returns TRUE!\n");
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "OpenPrinterW returns error %lu!\n", GetLastError());
+    ok(OpenPrinterW(NULL, &hPrinter, NULL), "OpenPrinterW returns FALSE!\n");
+    ok(GetLastError() == ERROR_SUCCESS, "OpenPrinterW returns error %lu!\n", GetLastError());
+    ClosePrinter(hPrinter);
 }

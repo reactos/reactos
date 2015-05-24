@@ -16,6 +16,7 @@
 START_TEST(GetPrintProcessorDirectory)
 {
     DWORD cbNeeded;
+    DWORD cbTemp;
     PWSTR pwszBuffer;
 
     // Try with an invalid level, this needs to be caught first.
@@ -28,6 +29,12 @@ START_TEST(GetPrintProcessorDirectory)
     ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, 0, NULL), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == RPC_X_NULL_REF_POINTER, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
 
+    // Try with an invalid environment as well.
+    SetLastError(0xDEADBEEF);
+    ok(!GetPrintProcessorDirectoryW(NULL, L"invalid", 1, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryW returns TRUE!\n");
+    ok(GetLastError() == ERROR_INVALID_ENVIRONMENT, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
+    ok(cbNeeded == 0, "cbNeeded is %lu!\n", cbNeeded);
+
     // Now get the required buffer size by supplying pcbNeeded. This needs to fail with ERROR_INSUFFICIENT_BUFFER.
     SetLastError(0xDEADBEEF);
     ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryW returns TRUE!\n");
@@ -36,18 +43,15 @@ START_TEST(GetPrintProcessorDirectory)
 
     // Now provide the demanded size, but no buffer.
     SetLastError(0xDEADBEEF);
-    ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, cbNeeded, &cbNeeded), "GetPrintProcessorDirectoryW returns TRUE!\n");
+    ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, cbNeeded, &cbTemp), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
+    ok(cbTemp == 0, "cbNeeded is %lu!\n", cbNeeded);
 
     // Same error has to occur with a size too small.
     SetLastError(0xDEADBEEF);
-    ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, 1, &cbNeeded), "GetPrintProcessorDirectoryW returns TRUE!\n");
+    ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, 1, &cbTemp), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
-
-    // Try with an invalid environment as well.
-    SetLastError(0xDEADBEEF);
-    ok(!GetPrintProcessorDirectoryW(NULL, L"invalid", 1, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryW returns TRUE!\n");
-    ok(GetLastError() == ERROR_INVALID_ENVIRONMENT, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
+    ok(cbTemp == 0, "cbNeeded is %lu!\n", cbNeeded);
 
     // Finally use the function as intended and aim for success!
     pwszBuffer = HeapAlloc(GetProcessHeap(), 0, cbNeeded);
