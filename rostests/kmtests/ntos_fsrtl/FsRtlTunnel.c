@@ -97,6 +97,13 @@ void TestFsRtlAddToTunnelCache(ULONGLONG DirectoryKey, PUNICODE_STRING s_name, P
     ok (b == 0, "long name after call FsRtlAddToTunnelCache != long name befo call FsRtlAddToTunnelCache\n\n");
     b = RtlCompareUnicodeString(s_name, bs_name, TRUE);
     ok (b == 0, "short name after call FsRtlAddToTunnelCache != short name befo call FsRtlAddToTunnelCache\n\n");
+
+    if (bs_name->Buffer) ExFreePool(bs_name->Buffer);
+    ExFreePool(bs_name);
+    if (bl_name->Buffer) ExFreePool(bl_name->Buffer);
+    ExFreePool(bl_name);
+    ExFreePool(Bufb);
+    ExFreePool(Buf);
 }
 
 BOOLEAN TestFsRtlFindInTunnelCache(ULONG DirectoryKey, PUNICODE_STRING name, PUNICODE_STRING s_name, PUNICODE_STRING l_name)
@@ -168,4 +175,12 @@ START_TEST(FsRtlTunnel)
 
     is = TestFsRtlFindInTunnelCache(12347, name, s_name, l_name);
     ok(is == FALSE, "FsRtlDeleteTunnelCache dosn't clear cash\n");
+
+    ExFreePool(a);
+    ExFreePool(name);
+    ExFreePool(l_name);
+    ExFreePool(s_name);
+
+    ExFreePool(Tb);
+    ExFreePool(T);
 }
