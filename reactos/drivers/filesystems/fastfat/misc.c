@@ -112,6 +112,8 @@ VfatDispatchRequest(
 
     ASSERT(IrpContext);
 
+    FsRtlEnterFileSystem();
+
     switch (IrpContext->MajorFunction)
     {
         case IRP_MJ_CLOSE:
@@ -202,6 +204,8 @@ VfatDispatchRequest(
         VfatFreeIrpContext(IrpContext);
     }
 
+    FsRtlExitFileSystem();
+
     return Status;
 }
 
@@ -228,9 +232,7 @@ VfatBuildRequest(
     }
     else
     {
-        FsRtlEnterFileSystem();
         Status = VfatDispatchRequest(IrpContext);
-        FsRtlExitFileSystem();
     }
     return Status;
 }
@@ -302,9 +304,7 @@ VfatDoRequest(
     InterlockedDecrement(&QueueCount);
     DPRINT("VfatDoRequest(IrpContext %p), MajorFunction %x, %d\n",
            IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);
-    FsRtlEnterFileSystem();
     VfatDispatchRequest((PVFAT_IRP_CONTEXT)IrpContext);
-    FsRtlExitFileSystem();
 }
 
 static
@@ -317,6 +317,8 @@ VfatQueueRequest(
 
     ASSERT(IrpContext != NULL);
     ASSERT(IrpContext->Irp != NULL);
+    ASSERT(!(IrpContext->Flags & IRPCONTEXT_QUEUE) &&
+           (IrpContext->Flags & IRPCONTEXT_COMPLETE));
 
     IrpContext->Flags |= IRPCONTEXT_CANWAIT;
     IoMarkIrpPending(IrpContext->Irp);
