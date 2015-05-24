@@ -33,61 +33,45 @@
 
 /* FUNCTIONS ****************************************************************/
 
-/*
- * FUNCTION: This function manages IRP for various major functions
- * ARGUMENTS:
- *           DriverObject = object describing this driver
- *           Irp = IRP to be passed to internal functions
- * RETURNS: Status of I/O Request
- */
+static
 NTSTATUS
-NTAPI
-NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
-                PIRP Irp)
+NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
 {
-    PNTFS_IRP_CONTEXT IrpContext = NULL;
+    PIRP Irp = IrpContext->Irp;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-    TRACE_(NTFS, "NtfsFsdDispatch()\n");
+    TRACE_(NTFS, "NtfsDispatch()\n");
 
     FsRtlEnterFileSystem();
-    ASSERT(DeviceObject);
-    ASSERT(Irp);
 
     NtfsIsIrpTopLevel(Irp);
 
-    IrpContext = NtfsAllocateIrpContext(DeviceObject, Irp);
-    if (IrpContext)
+    switch (IrpContext->MajorFunction)
     {
-        switch (IrpContext->MajorFunction)
-        {
-            case IRP_MJ_QUERY_VOLUME_INFORMATION:
-                Status = NtfsQueryVolumeInformation(IrpContext);
-                break;
+        case IRP_MJ_QUERY_VOLUME_INFORMATION:
+            Status = NtfsQueryVolumeInformation(IrpContext);
+            break;
 
-            case IRP_MJ_SET_VOLUME_INFORMATION:
-                Status = NtfsSetVolumeInformation(IrpContext);
-                break;
+        case IRP_MJ_SET_VOLUME_INFORMATION:
+            Status = NtfsSetVolumeInformation(IrpContext);
+            break;
 
-            case IRP_MJ_QUERY_INFORMATION:
-                Status = NtfsQueryInformation(IrpContext);
-                break;
+        case IRP_MJ_QUERY_INFORMATION:
+            Status = NtfsQueryInformation(IrpContext);
+            break;
 
-            case IRP_MJ_DIRECTORY_CONTROL:
-                Status = NtfsDirectoryControl(IrpContext);
-                break;
+        case IRP_MJ_DIRECTORY_CONTROL:
+            Status = NtfsDirectoryControl(IrpContext);
+            break;
 
-            case IRP_MJ_READ:
-                Status = NtfsRead(IrpContext);
-                break;
+        case IRP_MJ_READ:
+            Status = NtfsRead(IrpContext);
+            break;
 
-            case IRP_MJ_DEVICE_CONTROL:
-                Status = NtfsDeviceControl(IrpContext);
-                break;
-        }
+        case IRP_MJ_DEVICE_CONTROL:
+            Status = NtfsDeviceControl(IrpContext);
+             break;
     }
-    else
-        Status = STATUS_INSUFFICIENT_RESOURCES;
 
     ASSERT((!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
            ((IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
@@ -106,4 +90,36 @@ NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
     FsRtlExitFileSystem();
 
     return Status;
+}
+
+/*
+ * FUNCTION: This function manages IRP for various major functions
+ * ARGUMENTS:
+ *           DriverObject = object describing this driver
+ *           Irp = IRP to be passed to internal functions
+ * RETURNS: Status of I/O Request
+ */
+NTSTATUS
+NTAPI
+NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
+                PIRP Irp)
+{
+    PNTFS_IRP_CONTEXT IrpContext = NULL;
+    NTSTATUS Status;
+
+    TRACE_(NTFS, "NtfsFsdDispatch()\n");
+
+    IrpContext = NtfsAllocateIrpContext(DeviceObject, Irp);
+    if (IrpContext == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    else
+    {
+        Status = NtfsDispatch(IrpContext);
+    }
+
+     return Status;
 }
