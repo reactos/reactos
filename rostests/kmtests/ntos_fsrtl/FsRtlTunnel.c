@@ -33,9 +33,16 @@ PUNICODE_STRING CopyUS(PUNICODE_STRING a)
     ok(b != NULL, "US is NULL after allocated memory\n");
     b->Length = 0;
     b->MaximumLength =a->MaximumLength;
-    b->Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, b->MaximumLength, 1633);
-    ok(b->Buffer != NULL, "US->Buffer is NULL after allocated memory\n");
-    RtlCopyUnicodeString(b, a);
+    if (b->MaximumLength)
+    {
+        b->Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, b->MaximumLength, 1633);
+        ok(b->Buffer != NULL, "US->Buffer is NULL after allocated memory\n");
+        RtlCopyUnicodeString(b, a);
+    }
+    else
+    {
+        b->Buffer = NULL;
+    }
     return b;
 }
 
@@ -147,6 +154,7 @@ START_TEST(FsRtlTunnel)
     TestFsRtlAddToTunnelCache(12345, s_name, l_name, TRUE);
     TestFsRtlAddToTunnelCache(12347, s_name, l_name, TRUE);
     a = (PUNICODE_STRING)ExAllocatePool(PagedPool,sizeof(UNICODE_STRING));
+    RtlInitUnicodeString(a, NULL);
     TestFsRtlAddToTunnelCache(12346, a, l_name, FALSE);
 
     //Clear all
