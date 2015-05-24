@@ -31,7 +31,28 @@
 #define NDEBUG
 #include <debug.h>
 
+static LONG QueueCount = 0;
+
 /* FUNCTIONS ****************************************************************/
+
+static WORKER_THREAD_ROUTINE NtfsDoRequest;
+
+static
+NTSTATUS
+NtfsQueueRequest(PNTFS_IRP_CONTEXT IrpContext)
+{
+    InterlockedIncrement(&QueueCount);
+    DPRINT("NtfsQueueRequest(IrpContext %p), %d\n", IrpContext, QueueCount);
+
+    ASSERT(!(IrpContext->Flags & IRPCONTEXT_QUEUE) &&
+           (IrpContext->Flags & IRPCONTEXT_COMPLETE));
+    IrpContext->Flags |= IRPCONTEXT_CANWAIT;
+    IoMarkIrpPending(IrpContext->Irp);
+    ExInitializeWorkItem(&IrpContext->WorkQueueItem, NtfsDoRequest, IrpContext);
+    ExQueueWorkItem(&IrpContext->WorkQueueItem, CriticalWorkQueue);
+
+    return STATUS_PENDING;
+}
 
 static
 NTSTATUS
@@ -92,7 +113,7 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
         /* Reset our status flags before queueing the IRP */
         IrpContext->Flags |= IRPCONTEXT_COMPLETE;
         IrpContext->Flags &= ~IRPCONTEXT_QUEUE;
-        UNIMPLEMENTED_DBGBREAK();
+        Status = NtfsQueueRequest(IrpContext);
     }
     else
     {
@@ -103,6 +124,17 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
     FsRtlExitFileSystem();
 
     return Status;
+}
+
+static
+VOID
+NTAPI
+NtfsDoRequest(PVOID IrpContext)
+{
+    InterlockedDecrement(&QueueCount);
+    DPRINT("NtfsDoRequest(IrpContext %p), MajorFunction %x, %d\n",
+           IrpContext, ((PNTFS_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);
+    NtfsDispatch((PNTFS_IRP_CONTEXT)IrpContext);
 }
 
 /*
