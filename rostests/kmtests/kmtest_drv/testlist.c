@@ -80,7 +80,7 @@ const KMT_TEST TestList[] =
     { "Example",                            Test_Example },
     { "FsRtlExpression",                    Test_FsRtlExpression },
     { "FsRtlMcb",                           Test_FsRtlMcb },
-    { "-FsRtlTunnel",                       Test_FsRtlTunnel },
+    { "FsRtlTunnel",                        Test_FsRtlTunnel },
     { "IoCreateFile",                       Test_IoCreateFile },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
     { "IoEvent",                            Test_IoEvent },
