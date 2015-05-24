@@ -846,14 +846,14 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
         /* Initialize the name */
         RtlInitUnicodeString(&AutoName, AutoNameBuffer);
         DeviceName = &AutoName;
-   }
+    }
 
     /* Initialize the Object Attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                DeviceName,
                                OBJ_KERNEL_HANDLE,
                                NULL,
-                               NULL);
+                               SePublicOpenUnrestrictedSd);
 
     /* Honor exclusive flag */
     if (Exclusive) ObjectAttributes.Attributes |= OBJ_EXCLUSIVE;
