@@ -47,12 +47,12 @@ VfatCleanupFile(
     else
     {
         if(!ExAcquireResourceExclusiveLite(&pFcb->MainResource,
-                                           (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                           BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             return STATUS_PENDING;
         }
         if(!ExAcquireResourceExclusiveLite(&pFcb->PagingIoResource,
-                                           (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                           BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             ExReleaseResourceLite(&pFcb->MainResource);
             return STATUS_PENDING;
@@ -157,7 +157,7 @@ VfatCleanup(
     }
 
     if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
-                                        (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         return VfatMarkIrpContextForQueue(IrpContext);
     }

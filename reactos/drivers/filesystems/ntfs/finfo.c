@@ -247,7 +247,7 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
     BufferLength = Stack->Parameters.QueryFile.Length;
 
     if (!ExAcquireResourceSharedLite(&Fcb->MainResource,
-                                     (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                     BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         return NtfsMarkIrpContextForQueue(IrpContext);
     }

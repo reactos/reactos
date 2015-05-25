@@ -361,7 +361,7 @@ VfatQueryVolumeInformation(
     DPRINT("VfatQueryVolumeInformation(IrpContext %p)\n", IrpContext);
 
     if (!ExAcquireResourceSharedLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
-                                     (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                     BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         DPRINT1("DirResource failed!\n");
         return VfatMarkIrpContextForQueue(IrpContext);
@@ -436,7 +436,7 @@ VfatSetVolumeInformation(
     DPRINT("VfatSetVolumeInformation(IrpContext %p)\n", IrpContext);
 
     if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
-                                        (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         return VfatMarkIrpContextForQueue(IrpContext);
     }

@@ -887,7 +887,7 @@ VfatWrite(
     if (Fcb->Flags & FCB_IS_PAGE_FILE)
     {
         if (!ExAcquireResourceSharedLite(Resource,
-                                         (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                         BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             Resource = NULL;
             Status = STATUS_PENDING;
@@ -897,7 +897,7 @@ VfatWrite(
     else
     {
         if (!ExAcquireResourceExclusiveLite(Resource,
-                                            (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                            BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             Resource = NULL;
             Status = STATUS_PENDING;

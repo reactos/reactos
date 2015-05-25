@@ -422,7 +422,7 @@ DoQuery(
     Buffer = VfatGetUserBuffer(IrpContext->Irp, FALSE);
 
     if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
-                                     (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                     BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         Status = VfatLockUserBuffer(IrpContext->Irp, BufferLength, IoWriteAccess);
         if (NT_SUCCESS(Status))
@@ -505,7 +505,7 @@ DoQuery(
     DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
 
     if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
-                                        (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         ExReleaseResourceLite(&pFcb->MainResource);
         return VfatMarkIrpContextForQueue(IrpContext);

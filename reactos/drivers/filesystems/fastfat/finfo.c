@@ -1377,7 +1377,7 @@ VfatQueryInformation(
     if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceSharedLite(&FCB->MainResource,
-                                         (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                         BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             return VfatMarkIrpContextForQueue(IrpContext);
         }
@@ -1514,7 +1514,7 @@ VfatSetInformation(
     if (FileInformationClass == FileRenameInformation)
     {
         if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
-                                            (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                            BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             return VfatMarkIrpContextForQueue(IrpContext);
         }
@@ -1523,7 +1523,7 @@ VfatSetInformation(
     if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,
-                                            (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                            BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             if (FileInformationClass == FileRenameInformation)
             {
