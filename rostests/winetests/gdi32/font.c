@@ -3708,9 +3708,10 @@ static void test_text_metrics(const LOGFONTA *lf, const NEWTEXTMETRICA *ntm)
         default_char = GET_BE_WORD(tt_os2.usDefaultChar);
         break_char = GET_BE_WORD(tt_os2.usBreakChar);
 
-        trace("font %s charset %u: %x-%x (%x-%x) default %x break %x OS/2 version %u vendor %4.4s\n",
-              font_name, lf->lfCharSet, os2_first_char, os2_last_char, cmap_first, cmap_last,
-              default_char, break_char, version, (LPCSTR)&tt_os2.achVendID);
+        if (winetest_debug > 1)
+            trace("font %s charset %u: %x-%x (%x-%x) default %x break %x OS/2 version %u vendor %4.4s\n",
+                  font_name, lf->lfCharSet, os2_first_char, os2_last_char, cmap_first, cmap_last,
+                  default_char, break_char, version, (LPCSTR)&tt_os2.achVendID);
 
         if (cmap_type == cmap_ms_symbol || (cmap_first >= 0xf000 && cmap_first < 0xf100))
         {

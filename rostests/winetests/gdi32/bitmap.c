@@ -56,8 +56,9 @@ static void test_bitmap_info(HBITMAP hbm, INT expected_depth, const BITMAPINFOHE
 {
     BITMAP bm;
     BITMAP bma[2];
-    INT ret, width_bytes;
+    INT ret, width_bytes, i;
     BYTE buf[512], buf_cmp[512];
+    INT test_size[] = {0 /*first value will be changed */, 0, -1, -1000, ~0, sizeof(buf)};
 
     ret = GetObjectW(hbm, sizeof(bm), &bm);
     ok(ret == sizeof(bm), "GetObject returned %d\n", ret);
@@ -75,17 +76,28 @@ static void test_bitmap_info(HBITMAP hbm, INT expected_depth, const BITMAPINFOHE
     assert(sizeof(buf) == sizeof(buf_cmp));
 
     SetLastError(0xdeadbeef);
-    ret = GetBitmapBits(hbm, 0, NULL);
-    ok(ret == bm.bmWidthBytes * bm.bmHeight, "%d != %d\n", ret, bm.bmWidthBytes * bm.bmHeight);
+    test_size[0] = bm.bmWidthBytes * bm.bmHeight;
+    /* NULL output buffer with different count values */
+    for (i = 0; i < sizeof(test_size) / sizeof(test_size[0]); i++)
+    {
+        ret = GetBitmapBits(hbm, test_size[i], NULL);
+        ok(ret == bm.bmWidthBytes * bm.bmHeight, "%d != %d\n", ret, bm.bmWidthBytes * bm.bmHeight);
+    }
 
     memset(buf_cmp, 0xAA, sizeof(buf_cmp));
     memset(buf_cmp, 0, bm.bmWidthBytes * bm.bmHeight);
 
-    memset(buf, 0xAA, sizeof(buf));
-    ret = GetBitmapBits(hbm, sizeof(buf), buf);
-    ok(ret == bm.bmWidthBytes * bm.bmHeight, "%d != %d\n", ret, bm.bmWidthBytes * bm.bmHeight);
-    ok(!memcmp(buf, buf_cmp, sizeof(buf)),
-        "buffers do not match, depth %d\n", bmih->biBitCount);
+    /* Correct output buffer with different count values */
+    for (i = 0; i < sizeof(test_size) / sizeof(test_size[0]); i++)
+    {
+        int expect = i == 1 ? 0 : bm.bmWidthBytes * bm.bmHeight;
+        memset(buf, 0xAA, sizeof(buf));
+        ret = GetBitmapBits(hbm, test_size[i], buf);
+        ok(ret == expect, "Test[%d]: %d != %d\n", i, ret, expect);
+        if (expect)
+            ok(!memcmp(buf, buf_cmp, sizeof(buf)),
+               "Test[%d]: buffers do not match, depth %d\n", i, bmih->biBitCount);
+    }
 
     /* test various buffer sizes for GetObject */
     ret = GetObjectW(hbm, sizeof(*bma) * 2, bma);
