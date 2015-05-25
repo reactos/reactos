@@ -3,7 +3,7 @@
 3 stub CryptUIDlgFreeCAContext
 4 stub CryptUIDlgSelectCA
 5 stdcall CryptUIDlgSelectCertificateA(ptr)
-6 stub CryptUIDlgSelectCertificateFromStore
+6 stdcall CryptUIDlgSelectCertificateFromStore(ptr ptr wstr wstr long long ptr)
 7 stdcall CryptUIDlgSelectCertificateW(ptr)
 8 stdcall CryptUIDlgSelectStoreA(ptr)
 9 stdcall CryptUIDlgSelectStoreW(ptr)
@@ -30,7 +30,7 @@
 30 stub CryptUIWizBuildCTL
 31 stub CryptUIWizCertRequest
 32 stub CryptUIWizCreateCertRequestNoDS
-33 stub CryptUIWizDigitalSign
+33 stdcall CryptUIWizDigitalSign(long long wstr ptr ptr)
 34 stdcall CryptUIWizExport(long ptr wstr ptr ptr)
 35 stub CryptUIWizFreeCertRequestNoDS
 36 stub CryptUIWizFreeDigitalSignContext

@@ -20,7 +20,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <config.h>
+#include <wine/config.h>
 
 #include <stdarg.h>
 
@@ -7052,4 +7052,19 @@ PCCERT_CONTEXT WINAPI CryptUIDlgSelectCertificateA(PCCRYPTUI_SELECTCERTIFICATE_S
 {
     FIXME("%p: stub\n", pcsc);
     return NULL;
+}
+
+PCCERT_CONTEXT WINAPI CryptUIDlgSelectCertificateFromStore(HCERTSTORE hCertStore, HWND hwnd, LPCWSTR pwszTitle,
+                                                           LPCWSTR pwszDisplayString, DWORD dwDontUseColumn,
+                                                           DWORD dwFlags, void *pvReserved)
+{
+    FIXME("%p %p %s %s %d %d %p: stub\n", hCertStore, hwnd, debugstr_w(pwszTitle), debugstr_w(pwszDisplayString), dwDontUseColumn, dwFlags, pvReserved);
+    return NULL;
+}
+
+BOOL WINAPI CryptUIWizDigitalSign(DWORD flags, HWND parent, LPCWSTR title, PCCRYPTUI_WIZ_DIGITAL_SIGN_INFO info,
+                                  PCCRYPTUI_WIZ_DIGITAL_SIGN_CONTEXT *context)
+{
+    FIXME("%d %p %s %p %p: stub\n", flags, parent, debugstr_w(title), info, context);
+    return FALSE;
 }

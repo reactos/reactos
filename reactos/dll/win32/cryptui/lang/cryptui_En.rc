@@ -107,7 +107,7 @@ STRINGTABLE
     IDS_WARN_REMOVE_MY "You will no longer be able to decrypt messages with this certificate, or sign messages with it.\nAre you sure you want to remove this certificate?"
     IDS_WARN_REMOVE_PLURAL_MY "You will no longer be able to decrypt messages with these certificates, or sign messages with them.\nAre you sure you want to remove these certificates?"
     IDS_WARN_REMOVE_ADDRESSBOOK "You will no longer be able to encrypt messages with this certificate, or verify messages signed with it.\nAre you sure you want to remove this certificate?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "You will no longer be able to encrypt messages with these certificates, or verify messages signed with it.\nAre you sure you want to remove these certificates?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "You will no longer be able to encrypt messages with these certificates, or verify messages signed with them.\nAre you sure you want to remove these certificates?"
     IDS_WARN_REMOVE_CA "Certificates issued by this certification authority will no longer be trusted.\nAre you sure you want to remove this certificate?"
     IDS_WARN_REMOVE_PLURAL_CA "Certificates issued by these certification authorities will no longer be trusted.\nAre you sure you want to remove these certificates?"
     IDS_WARN_REMOVE_ROOT "Certificates issued by this root certification authority, or any certification authorities it issued, will no longer be trusted.\nAre you sure you want to remove this trusted root certificate?"
