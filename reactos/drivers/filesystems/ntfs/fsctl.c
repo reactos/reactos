@@ -866,20 +866,19 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
 
 
 NTSTATUS
-NTAPI
-NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
-                         PIRP Irp)
+NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext)
 {
-    PIO_STACK_LOCATION Stack;
     NTSTATUS Status;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
 
     DPRINT1("NtfsFileSystemControl() called\n");
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
-
+    DeviceObject = IrpContext->DeviceObject;
+    Irp = IrpContext->Irp;
     Irp->IoStatus.Information = 0;
 
-    switch (Stack->MinorFunction)
+    switch (IrpContext->MinorFunction)
     {
         case IRP_MN_KERNEL_CALL:
             DPRINT1("NTFS: IRP_MN_USER_FS_REQUEST\n");
@@ -901,14 +900,10 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
             break;
 
         default:
-            DPRINT1("NTFS FSC: MinorFunction %d\n", Stack->MinorFunction);
+            DPRINT1("NTFS FSC: MinorFunction %d\n", IrpContext->MinorFunction);
             Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
     }
-
-    Irp->IoStatus.Status = Status;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 }

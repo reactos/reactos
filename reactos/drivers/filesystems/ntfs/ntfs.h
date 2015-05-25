@@ -644,10 +644,8 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext);
 
 /* fsctl.c */
 
-DRIVER_DISPATCH NtfsFsdFileSystemControl;
-NTSTATUS NTAPI
-NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
-                         PIRP Irp);
+NTSTATUS
+NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* mft.c */
