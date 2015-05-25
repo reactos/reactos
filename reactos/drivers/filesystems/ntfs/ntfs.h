@@ -527,10 +527,8 @@ NtfsClose(PNTFS_IRP_CONTEXT IrpContext);
 
 /* create.c */
 
-DRIVER_DISPATCH NtfsFsdCreate;
-NTSTATUS NTAPI
-NtfsFsdCreate(PDEVICE_OBJECT DeviceObject,
-              PIRP Irp);
+NTSTATUS
+NtfsCreate(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* devctl.c */

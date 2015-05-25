@@ -405,43 +405,34 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
      * fail immediately
      */
     Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
-    Irp->IoStatus.Status = Status;
 
     return Status;
 }
 
 
 NTSTATUS
-NTAPI
-NtfsFsdCreate(PDEVICE_OBJECT DeviceObject,
-              PIRP Irp)
+NtfsCreate(PNTFS_IRP_CONTEXT IrpContext)
 {
     PDEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
 
+    DeviceObject = IrpContext->DeviceObject;
     if (DeviceObject == NtfsGlobalData->DeviceObject)
     {
         /* DeviceObject represents FileSystem instead of logical volume */
         DPRINT("Opening file system\n");
-        Irp->IoStatus.Information = FILE_OPENED;
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
+        IrpContext->Irp->IoStatus.Information = FILE_OPENED;
+        return STATUS_SUCCESS;
     }
 
     DeviceExt = DeviceObject->DeviceExtension;
 
-    FsRtlEnterFileSystem();
     ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
                                    TRUE);
     Status = NtfsCreateFile(DeviceObject,
-                            Irp);
+                            IrpContext->Irp);
     ExReleaseResourceLite(&DeviceExt->DirResource);
-    FsRtlExitFileSystem();
-
-ByeBye:
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp,
-                      NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
 
     return Status;
 }

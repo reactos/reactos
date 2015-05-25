@@ -100,6 +100,10 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
         case IRP_MJ_CLOSE:
             Status = NtfsClose(IrpContext);
             break;
+
+        case IRP_MJ_CREATE:
+            Status = NtfsCreate(IrpContext);
+            break;
     }
 
     ASSERT((!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
