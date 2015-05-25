@@ -304,15 +304,8 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
         Ccb->Entry = 0;
     }
 
-    /* Determine Buffer for result */
-    if (Irp->MdlAddress)
-    {
-        Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-    }
-    else
-    {
-        Buffer = Irp->UserBuffer;
-    }
+    /* Get Buffer for result */
+    Buffer = NtfsGetUserBuffer(Irp, FALSE);
 
     DPRINT("Buffer=%p tofind=%S\n", Buffer, Ccb->DirectorySearchPattern);
 
