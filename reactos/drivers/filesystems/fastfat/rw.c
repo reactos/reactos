@@ -655,7 +655,7 @@ VfatRead(
         }
     }
 
-    Buffer = VfatGetUserBuffer(IrpContext->Irp, IrpContext->Irp->Flags & IRP_PAGING_IO);
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO));
     if (!Buffer)
     {
         Status = STATUS_INVALID_USER_BUFFER;
@@ -926,7 +926,7 @@ VfatWrite(
 
     OldFileSize = Fcb->RFCB.FileSize;
 
-    Buffer = VfatGetUserBuffer(IrpContext->Irp, IrpContext->Irp->Flags & IRP_PAGING_IO);
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO));
     if (!Buffer)
     {
         Status = STATUS_INVALID_USER_BUFFER;

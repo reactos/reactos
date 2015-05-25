@@ -196,7 +196,7 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     DeviceExt = DeviceObject->DeviceExtension;
     ReadLength = Stack->Parameters.Read.Length;
     ReadOffset = Stack->Parameters.Read.ByteOffset;
-    Buffer = NtfsGetUserBuffer(Irp, Irp->Flags & IRP_PAGING_IO);
+    Buffer = NtfsGetUserBuffer(Irp, BooleanFlagOn(Irp->Flags, IRP_PAGING_IO));
 
     Status = NtfsReadFile(DeviceExt,
                           FileObject,
