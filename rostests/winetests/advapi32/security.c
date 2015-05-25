@@ -28,6 +28,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
+#include "wine/winternl.h"
 #include "aclapi.h"
 #include "winnt.h"
 #include "sddl.h"
@@ -61,29 +62,6 @@
 
 #define THREAD_ALL_ACCESS_NT4 (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3ff)
 #define THREAD_ALL_ACCESS_VISTA (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0xffff)
-
-/* copied from Wine winternl.h - not included in the Windows SDK */
-typedef enum _OBJECT_INFORMATION_CLASS {
-    ObjectBasicInformation,
-    ObjectNameInformation,
-    ObjectTypeInformation,
-    ObjectAllInformation,
-    ObjectDataInformation
-} OBJECT_INFORMATION_CLASS, *POBJECT_INFORMATION_CLASS;
-
-typedef struct _OBJECT_BASIC_INFORMATION {
-    ULONG  Attributes;
-    ACCESS_MASK  GrantedAccess;
-    ULONG  HandleCount;
-    ULONG  PointerCount;
-    ULONG  PagedPoolUsage;
-    ULONG  NonPagedPoolUsage;
-    ULONG  Reserved[3];
-    ULONG  NameInformationLength;
-    ULONG  TypeInformationLength;
-    ULONG  SecurityDescriptorLength;
-    LARGE_INTEGER  CreateTime;
-} OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
 
 #define expect_eq(expr, value, type, format) { type ret_ = expr; ok((value) == ret_, #expr " expected " format "  got " format "\n", (value), (ret_)); }
 
@@ -150,6 +128,10 @@ static BOOL (WINAPI *pCreateRestrictedToken)(HANDLE, DWORD, DWORD, PSID_AND_ATTR
                                              PLUID_AND_ATTRIBUTES, DWORD, PSID_AND_ATTRIBUTES, PHANDLE);
 static BOOL (WINAPI *pGetAclInformation)(PACL,LPVOID,DWORD,ACL_INFORMATION_CLASS);
 static BOOL (WINAPI *pGetAce)(PACL,DWORD,LPVOID*);
+static NTSTATUS (WINAPI *pNtSetSecurityObject)(HANDLE,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR);
+static NTSTATUS (WINAPI *pNtCreateFile)(PHANDLE,ACCESS_MASK,POBJECT_ATTRIBUTES,PIO_STATUS_BLOCK,PLARGE_INTEGER,ULONG,ULONG,ULONG,ULONG,PVOID,ULONG);
+static BOOL     (WINAPI *pRtlDosPathNameToNtPathName_U)(LPCWSTR,PUNICODE_STRING,PWSTR*,CURDIR*);
+static NTSTATUS (WINAPI *pRtlAnsiStringToUnicodeString)(PUNICODE_STRING,PCANSI_STRING,BOOLEAN);
 
 static HMODULE hmod;
 static int     myARGC;
@@ -176,6 +158,10 @@ static void init(void)
     hntdll = GetModuleHandleA("ntdll.dll");
     pNtQueryObject = (void *)GetProcAddress( hntdll, "NtQueryObject" );
     pNtAccessCheck = (void *)GetProcAddress( hntdll, "NtAccessCheck" );
+    pNtSetSecurityObject = (void *)GetProcAddress(hntdll, "NtSetSecurityObject");
+    pNtCreateFile = (void *)GetProcAddress(hntdll, "NtCreateFile");
+    pRtlDosPathNameToNtPathName_U = (void *)GetProcAddress(hntdll, "RtlDosPathNameToNtPathName_U");
+    pRtlAnsiStringToUnicodeString = (void *)GetProcAddress(hntdll, "RtlAnsiStringToUnicodeString");
 
     hmod = GetModuleHandleA("advapi32.dll");
     pAddAccessAllowedAceEx = (void *)GetProcAddress(hmod, "AddAccessAllowedAceEx");
@@ -2531,19 +2517,21 @@ static void test_granted_access(HANDLE handle, ACCESS_MASK access,
 static void test_process_security(void)
 {
     BOOL res;
+    PTOKEN_USER user;
     PTOKEN_OWNER owner;
     PTOKEN_PRIMARY_GROUP group;
-    PSID AdminSid = NULL, UsersSid = NULL;
+    PSID AdminSid = NULL, UsersSid = NULL, UserSid = NULL;
     PACL Acl = NULL, ThreadAcl = NULL;
     SECURITY_DESCRIPTOR *SecurityDescriptor = NULL, *ThreadSecurityDescriptor = NULL;
-    char buffer[MAX_PATH];
+    char buffer[MAX_PATH], account[MAX_PATH], domain[MAX_PATH];
     PROCESS_INFORMATION info;
     STARTUPINFOA startup;
     SECURITY_ATTRIBUTES psa, tsa;
     HANDLE token, event;
-    DWORD size;
+    DWORD size, acc_size, dom_size, ret;
     SID_IDENTIFIER_AUTHORITY SIDAuthWorld = { SECURITY_WORLD_SID_AUTHORITY };
     PSID EveryoneSid = NULL;
+    SID_NAME_USE use;
 
     Acl = HeapAlloc(GetProcessHeap(), 0, 256);
     res = InitializeAcl(Acl, 256, ACL_REVISION);
@@ -2575,7 +2563,8 @@ static void test_process_security(void)
     owner = HeapAlloc(GetProcessHeap(), 0, size);
     res = GetTokenInformation( token, TokenOwner, owner, size, &size );
     ok(res, "GetTokenInformation failed with error %d\n", GetLastError());
-    AdminSid = ((TOKEN_OWNER*)owner)->Owner;
+    AdminSid = owner->Owner;
+    test_sid_str(AdminSid);
 
     res = GetTokenInformation( token, TokenPrimaryGroup, NULL, 0, &size );
     ok(!res, "Expected failure, got %d\n", res);
@@ -2585,13 +2574,34 @@ static void test_process_security(void)
     group = HeapAlloc(GetProcessHeap(), 0, size);
     res = GetTokenInformation( token, TokenPrimaryGroup, group, size, &size );
     ok(res, "GetTokenInformation failed with error %d\n", GetLastError());
-    UsersSid = ((TOKEN_PRIMARY_GROUP*)group)->PrimaryGroup;
+    UsersSid = group->PrimaryGroup;
+    test_sid_str(UsersSid);
+
+    acc_size = sizeof(account);
+    dom_size = sizeof(domain);
+    ret = LookupAccountSidA( NULL, UsersSid, account, &acc_size, domain, &dom_size, &use );
+    ok(ret, "LookupAccountSid failed with %d\n", ret);
+    ok(use == SidTypeGroup, "expect SidTypeGroup, got %d\n", use);
+    ok(!strcmp(account, "None"), "expect None, got %s\n", account);
+
+    res = GetTokenInformation( token, TokenUser, NULL, 0, &size );
+    ok(!res, "Expected failure, got %d\n", res);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+
+    user = HeapAlloc(GetProcessHeap(), 0, size);
+    res = GetTokenInformation( token, TokenUser, user, size, &size );
+    ok(res, "GetTokenInformation failed with error %d\n", GetLastError());
+    UserSid = user->User.Sid;
+    test_sid_str(UserSid);
+    ok(EqualPrefixSid(UsersSid, UserSid), "TokenPrimaryGroup Sid and TokenUser Sid don't match.\n");
 
     CloseHandle( token );
     if (!res)
     {
         HeapFree(GetProcessHeap(), 0, group);
         HeapFree(GetProcessHeap(), 0, owner);
+        HeapFree(GetProcessHeap(), 0, user);
         HeapFree(GetProcessHeap(), 0, Acl);
         return;
     }
@@ -2698,6 +2708,7 @@ static void test_process_security(void)
     CloseHandle( event );
     HeapFree(GetProcessHeap(), 0, group);
     HeapFree(GetProcessHeap(), 0, owner);
+    HeapFree(GetProcessHeap(), 0, user);
     HeapFree(GetProcessHeap(), 0, Acl);
     HeapFree(GetProcessHeap(), 0, SecurityDescriptor);
     HeapFree(GetProcessHeap(), 0, ThreadAcl);
@@ -3142,6 +3153,98 @@ static void test_SetEntriesInAclA(void)
     HeapFree(GetProcessHeap(), 0, OldAcl);
 }
 
+/* helper function for test_CreateDirectoryA */
+static void get_nt_pathW(const char *name, UNICODE_STRING *nameW)
+{
+    UNICODE_STRING strW;
+    ANSI_STRING str;
+    NTSTATUS status;
+    BOOLEAN ret;
+    RtlInitAnsiString(&str, name);
+
+    status = pRtlAnsiStringToUnicodeString(&strW, &str, TRUE);
+    ok(!status, "RtlAnsiStringToUnicodeString failed with %08x\n", status);
+
+    ret = pRtlDosPathNameToNtPathName_U(strW.Buffer, nameW, NULL, NULL);
+    ok(ret, "RtlDosPathNameToNtPathName_U failed\n");
+
+    RtlFreeUnicodeString(&strW);
+}
+
+static void test_inherited_dacl(PACL dacl, PSID admin_sid, PSID user_sid, DWORD flags, DWORD mask,
+                                BOOL todo_count, BOOL todo_sid, BOOL todo_flags, int line)
+{
+    ACL_SIZE_INFORMATION acl_size;
+    ACCESS_ALLOWED_ACE *ace;
+    BOOL bret;
+
+    bret = pGetAclInformation(dacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok_(__FILE__, line)(bret, "GetAclInformation failed\n");
+
+    if (todo_count)
+        todo_wine
+        ok_(__FILE__, line)(acl_size.AceCount == 2,
+            "GetAclInformation returned unexpected entry count (%d != 2)\n",
+            acl_size.AceCount);
+    else
+        ok_(__FILE__, line)(acl_size.AceCount == 2,
+            "GetAclInformation returned unexpected entry count (%d != 2)\n",
+            acl_size.AceCount);
+
+    if (acl_size.AceCount > 0)
+    {
+        bret = pGetAce(dacl, 0, (VOID **)&ace);
+        ok_(__FILE__, line)(bret, "Failed to get Current User ACE\n");
+
+        bret = EqualSid(&ace->SidStart, user_sid);
+        if (todo_sid)
+            todo_wine
+            ok_(__FILE__, line)(bret, "Current User ACE != Current User SID\n");
+        else
+            ok_(__FILE__, line)(bret, "Current User ACE != Current User SID\n");
+
+        if (todo_flags)
+            todo_wine
+            ok_(__FILE__, line)(((ACE_HEADER *)ace)->AceFlags == flags,
+                "Current User ACE has unexpected flags (0x%x != 0x%x)\n",
+                ((ACE_HEADER *)ace)->AceFlags, flags);
+        else
+            ok_(__FILE__, line)(((ACE_HEADER *)ace)->AceFlags == flags,
+                "Current User ACE has unexpected flags (0x%x != 0x%x)\n",
+                ((ACE_HEADER *)ace)->AceFlags, flags);
+
+        ok_(__FILE__, line)(ace->Mask == mask,
+            "Current User ACE has unexpected mask (0x%x != 0x%x)\n",
+            ace->Mask, mask);
+    }
+    if (acl_size.AceCount > 1)
+    {
+        bret = pGetAce(dacl, 1, (VOID **)&ace);
+        ok_(__FILE__, line)(bret, "Failed to get Administators Group ACE\n");
+
+        bret = EqualSid(&ace->SidStart, admin_sid);
+        if (todo_sid)
+            todo_wine
+            ok_(__FILE__, line)(bret, "Administators Group ACE != Administators Group SID\n");
+        else
+            ok_(__FILE__, line)(bret, "Administators Group ACE != Administators Group SID\n");
+
+        if (todo_flags)
+            todo_wine
+            ok_(__FILE__, line)(((ACE_HEADER *)ace)->AceFlags == flags,
+                "Administators Group ACE has unexpected flags (0x%x != 0x%x)\n",
+                ((ACE_HEADER *)ace)->AceFlags, flags);
+        else
+            ok_(__FILE__, line)(((ACE_HEADER *)ace)->AceFlags == flags,
+                "Administators Group ACE has unexpected flags (0x%x != 0x%x)\n",
+                ((ACE_HEADER *)ace)->AceFlags, flags);
+
+        ok_(__FILE__, line)(ace->Mask == mask,
+            "Administators Group ACE has unexpected mask (0x%x != 0x%x)\n",
+            ace->Mask, mask);
+    }
+}
+
 static void test_CreateDirectoryA(void)
 {
     char admin_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES], *user;
@@ -3150,17 +3253,20 @@ static void test_CreateDirectoryA(void)
     char sd[SECURITY_DESCRIPTOR_MIN_LENGTH];
     PSECURITY_DESCRIPTOR pSD = &sd;
     ACL_SIZE_INFORMATION acl_size;
-    ACCESS_ALLOWED_ACE *ace;
+    UNICODE_STRING tmpfileW;
     SECURITY_ATTRIBUTES sa;
+    OBJECT_ATTRIBUTES attr;
     char tmpfile[MAX_PATH];
     char tmpdir[MAX_PATH];
     HANDLE token, hTemp;
+    IO_STATUS_BLOCK io;
     struct _SID *owner;
     BOOL bret = TRUE;
+    NTSTATUS status;
     DWORD error;
     PACL pDacl;
 
-    if (!pGetNamedSecurityInfoA || !pCreateWellKnownSid)
+    if (!pGetSecurityInfo || !pGetNamedSecurityInfoA || !pCreateWellKnownSid)
     {
         win_skip("Required functions are not available\n");
         return;
@@ -3218,72 +3324,288 @@ static void test_CreateDirectoryA(void)
         goto done;
     }
     ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
-
-    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
-    ok(bret, "GetAclInformation failed\n");
-    ok(acl_size.AceCount == 2, "GetAclInformation returned unexpected entry count (%d != 2).\n",
-                               acl_size.AceCount);
-    if (acl_size.AceCount > 0)
-    {
-        bret = pGetAce(pDacl, 0, (VOID **)&ace);
-        ok(bret, "Failed to get Current User ACE.\n");
-        bret = EqualSid(&ace->SidStart, user_sid);
-        ok(bret, "Current User ACE != Current User SID.\n");
-        ok(((ACE_HEADER *)ace)->AceFlags == (OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE),
-           "Current User ACE has unexpected flags (0x%x != 0x03)\n",
-           ((ACE_HEADER *)ace)->AceFlags);
-        ok(ace->Mask == 0x1f01ff, "Current User ACE has unexpected mask (0x%x != 0x1f01ff)\n",
-                                  ace->Mask);
-    }
-    if (acl_size.AceCount > 1)
-    {
-        bret = pGetAce(pDacl, 1, (VOID **)&ace);
-        ok(bret, "Failed to get Administators Group ACE.\n");
-        bret = EqualSid(&ace->SidStart, admin_sid);
-        ok(bret, "Administators Group ACE != Administators Group SID.\n");
-        ok(((ACE_HEADER *)ace)->AceFlags == (OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE),
-           "Administators Group ACE has unexpected flags (0x%x != 0x03)\n",
-           ((ACE_HEADER *)ace)->AceFlags);
-        ok(ace->Mask == 0x1f01ff, "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n",
-                                  ace->Mask);
-    }
+    test_inherited_dacl(pDacl, admin_sid, user_sid, OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE,
+                        0x1f01ff, FALSE, FALSE, FALSE, __LINE__);
     LocalFree(pSD);
 
-    /* Test inheritance of ACLs */
+    /* Test inheritance of ACLs in CreateFile without security descriptor */
     strcpy(tmpfile, tmpdir);
     lstrcatA(tmpfile, "/tmpfile");
-    hTemp = CreateFileA(tmpfile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_NEW,
-                        FILE_FLAG_DELETE_ON_CLOSE, NULL);
+
+    hTemp = CreateFileA(tmpfile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_NEW, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    ok(hTemp != INVALID_HANDLE_VALUE, "CreateFile error %u\n", GetLastError());
+
     error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
-                                   OWNER_SECURITY_INFORMATION|DACL_SECURITY_INFORMATION, (PSID*)&owner,
-                                   NULL, &pDacl, NULL, &pSD);
-    ok(error == ERROR_SUCCESS, "Failed to get permissions on file.\n");
+                                   OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                   (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "Failed to get permissions on file\n");
+    test_inherited_dacl(pDacl, admin_sid, user_sid, INHERITED_ACE,
+                        0x1f01ff, FALSE, FALSE, FALSE, __LINE__);
+    LocalFree(pSD);
+    CloseHandle(hTemp);
+
+    /* Test inheritance of ACLs in CreateFile with security descriptor -
+     * When a security descriptor is set, then inheritance doesn't take effect */
+    pSD = &sd;
+    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
+    pDacl = HeapAlloc(GetProcessHeap(), 0, sizeof(ACL));
+    bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
+    ok(bret, "Failed to initialize ACL\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor\n");
+
+    strcpy(tmpfile, tmpdir);
+    lstrcatA(tmpfile, "/tmpfile");
+
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = pSD;
+    sa.bInheritHandle = TRUE;
+    hTemp = CreateFileA(tmpfile, GENERIC_WRITE, FILE_SHARE_READ, &sa,
+                        CREATE_NEW, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    ok(hTemp != INVALID_HANDLE_VALUE, "CreateFile error %u\n", GetLastError());
+    HeapFree(GetProcessHeap(), 0, pDacl);
+
+    error = pGetSecurityInfo(hTemp, SE_FILE_OBJECT,
+                             OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                             (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
     bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
     ok(bret, "GetAclInformation failed\n");
-    ok(acl_size.AceCount == 2, "GetAclInformation returned unexpected entry count (%d != 2).\n",
+    ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
                                acl_size.AceCount);
-    if (acl_size.AceCount > 0)
-    {
-        bret = pGetAce(pDacl, 0, (VOID **)&ace);
-        ok(bret, "Inherited Failed to get Current User ACE.\n");
-        bret = EqualSid(&ace->SidStart, user_sid);
-        ok(bret, "Inherited Current User ACE != Current User SID.\n");
-        ok(((ACE_HEADER *)ace)->AceFlags == INHERITED_ACE,
-           "Inherited Current User ACE has unexpected flags (0x%x != 0x10)\n", ((ACE_HEADER *)ace)->AceFlags);
-        ok(ace->Mask == 0x1f01ff, "Current User ACE has unexpected mask (0x%x != 0x1f01ff)\n",
-                                  ace->Mask);
-    }
-    if (acl_size.AceCount > 1)
-    {
-        bret = pGetAce(pDacl, 1, (VOID **)&ace);
-        ok(bret, "Inherited Failed to get Administators Group ACE.\n");
-        bret = EqualSid(&ace->SidStart, admin_sid);
-        ok(bret, "Inherited Administators Group ACE != Administators Group SID.\n");
-        ok(((ACE_HEADER *)ace)->AceFlags == INHERITED_ACE,
-           "Inherited Administators Group ACE has unexpected flags (0x%x != 0x10)\n", ((ACE_HEADER *)ace)->AceFlags);
-        ok(ace->Mask == 0x1f01ff, "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n",
-                                  ace->Mask);
-    }
+    LocalFree(pSD);
+
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
+                                   OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                   (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
+                               acl_size.AceCount);
+    LocalFree(pSD);
+    CloseHandle(hTemp);
+
+    /* Test inheritance of ACLs in NtCreateFile without security descriptor */
+    strcpy(tmpfile, tmpdir);
+    lstrcatA(tmpfile, "/tmpfile");
+    get_nt_pathW(tmpfile, &tmpfileW);
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = 0;
+    attr.ObjectName = &tmpfileW;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    status = pNtCreateFile(&hTemp, GENERIC_WRITE | DELETE, &attr, &io, NULL, 0,
+                           FILE_SHARE_READ, FILE_CREATE, FILE_DELETE_ON_CLOSE, NULL, 0);
+    ok(!status, "NtCreateFile failed with %08x\n", status);
+    RtlFreeUnicodeString(&tmpfileW);
+
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
+                                   OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                   (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "Failed to get permissions on file\n");
+    test_inherited_dacl(pDacl, admin_sid, user_sid, INHERITED_ACE,
+                        0x1f01ff, FALSE, FALSE, FALSE, __LINE__);
+    LocalFree(pSD);
+    CloseHandle(hTemp);
+
+    /* Test inheritance of ACLs in NtCreateFile with security descriptor -
+     * When a security descriptor is set, then inheritance doesn't take effect */
+    pSD = &sd;
+    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
+    pDacl = HeapAlloc(GetProcessHeap(), 0, sizeof(ACL));
+    bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
+    ok(bret, "Failed to initialize ACL\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor\n");
+
+    strcpy(tmpfile, tmpdir);
+    lstrcatA(tmpfile, "/tmpfile");
+    get_nt_pathW(tmpfile, &tmpfileW);
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = 0;
+    attr.ObjectName = &tmpfileW;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.SecurityDescriptor = pSD;
+    attr.SecurityQualityOfService = NULL;
+
+    status = pNtCreateFile(&hTemp, GENERIC_WRITE | DELETE, &attr, &io, NULL, 0,
+                           FILE_SHARE_READ, FILE_CREATE, FILE_DELETE_ON_CLOSE, NULL, 0);
+    ok(!status, "NtCreateFile failed with %08x\n", status);
+    RtlFreeUnicodeString(&tmpfileW);
+    HeapFree(GetProcessHeap(), 0, pDacl);
+
+    error = pGetSecurityInfo(hTemp, SE_FILE_OBJECT,
+                             OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                             (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    todo_wine
+    ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
+                               acl_size.AceCount);
+    LocalFree(pSD);
+
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
+                                   OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                   (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    todo_wine
+    ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
+                               acl_size.AceCount);
+    LocalFree(pSD);
+    CloseHandle(hTemp);
+
+    /* Test inheritance of ACLs in CreateDirectory without security descriptor */
+    strcpy(tmpfile, tmpdir);
+    lstrcatA(tmpfile, "/tmpdir");
+    bret = CreateDirectoryA(tmpfile, NULL);
+    ok(bret == TRUE, "CreateDirectoryA failed with error %u\n", GetLastError());
+
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
+                                   OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                   (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "Failed to get permissions on file\n");
+    test_inherited_dacl(pDacl, admin_sid, user_sid,
+                        OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERITED_ACE,
+                        0x1f01ff, FALSE, FALSE, FALSE, __LINE__);
+    LocalFree(pSD);
+    bret = RemoveDirectoryA(tmpfile);
+    ok(bret == TRUE, "RemoveDirectoryA failed with error %u\n", GetLastError());
+
+    /* Test inheritance of ACLs in CreateDirectory with security descriptor */
+    pSD = &sd;
+    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
+    pDacl = HeapAlloc(GetProcessHeap(), 0, sizeof(ACL));
+    bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
+    ok(bret, "Failed to initialize ACL\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor\n");
+
+    strcpy(tmpfile, tmpdir);
+    lstrcatA(tmpfile, "/tmpdir1");
+
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = pSD;
+    sa.bInheritHandle = TRUE;
+    bret = CreateDirectoryA(tmpfile, &sa);
+    ok(bret == TRUE, "CreateDirectoryA failed with error %u\n", GetLastError());
+    HeapFree(GetProcessHeap(), 0, pDacl);
+
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
+                                   OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                   (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
+                               acl_size.AceCount);
+    LocalFree(pSD);
+
+    SetLastError(0xdeadbeef);
+    bret = RemoveDirectoryA(tmpfile);
+    error = GetLastError();
+    ok(bret == FALSE, "RemoveDirectoryA unexpected succeeded\n");
+    ok(error == ERROR_ACCESS_DENIED, "expected ERROR_ACCESS_DENIED, got %u\n", error);
+
+    pSD = &sd;
+    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
+    pDacl = HeapAlloc(GetProcessHeap(), 0, 100);
+    bret = InitializeAcl(pDacl, 100, ACL_REVISION);
+    ok(bret, "Failed to initialize ACL.\n");
+    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
+    ok(bret, "Failed to add Current User to ACL.\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor.\n");
+    error = pSetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL,
+                                   NULL, pDacl, NULL);
+    ok(error == ERROR_SUCCESS, "SetNamedSecurityInfoA failed with error %u\n", error);
+    HeapFree(GetProcessHeap(), 0, pDacl);
+
+    bret = RemoveDirectoryA(tmpfile);
+    ok(bret == TRUE, "RemoveDirectoryA failed with error %u\n", GetLastError());
+
+    /* Test inheritance of ACLs in NtCreateFile(..., FILE_DIRECTORY_FILE, ...) without security descriptor */
+    strcpy(tmpfile, tmpdir);
+    lstrcatA(tmpfile, "/tmpdir");
+    get_nt_pathW(tmpfile, &tmpfileW);
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = 0;
+    attr.ObjectName = &tmpfileW;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    status = pNtCreateFile(&hTemp, GENERIC_READ | DELETE, &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL,
+                           FILE_SHARE_READ, FILE_CREATE, FILE_DIRECTORY_FILE | FILE_DELETE_ON_CLOSE, NULL, 0);
+    ok(!status, "NtCreateFile failed with %08x\n", status);
+    RtlFreeUnicodeString(&tmpfileW);
+
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
+                                   OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                   (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "Failed to get permissions on file\n");
+    test_inherited_dacl(pDacl, admin_sid, user_sid,
+                        OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERITED_ACE,
+                        0x1f01ff, FALSE, FALSE, FALSE, __LINE__);
+    LocalFree(pSD);
+    CloseHandle(hTemp);
+
+    /* Test inheritance of ACLs in NtCreateFile(..., FILE_DIRECTORY_FILE, ...) with security descriptor */
+    pSD = &sd;
+    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
+    pDacl = HeapAlloc(GetProcessHeap(), 0, sizeof(ACL));
+    bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
+    ok(bret, "Failed to initialize ACL\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor\n");
+
+    strcpy(tmpfile, tmpdir);
+    lstrcatA(tmpfile, "/tmpdir2");
+    get_nt_pathW(tmpfile, &tmpfileW);
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = 0;
+    attr.ObjectName = &tmpfileW;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.SecurityDescriptor = pSD;
+    attr.SecurityQualityOfService = NULL;
+
+    status = pNtCreateFile(&hTemp, GENERIC_READ | DELETE, &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL,
+                           FILE_SHARE_READ, FILE_CREATE, FILE_DIRECTORY_FILE | FILE_DELETE_ON_CLOSE, NULL, 0);
+    ok(!status, "NtCreateFile failed with %08x\n", status);
+    RtlFreeUnicodeString(&tmpfileW);
+    HeapFree(GetProcessHeap(), 0, pDacl);
+
+    error = pGetSecurityInfo(hTemp, SE_FILE_OBJECT,
+                             OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                             (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    todo_wine
+    ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
+                               acl_size.AceCount);
+    LocalFree(pSD);
+
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
+                                   OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                   (PSID *)&owner, NULL, &pDacl, NULL, &pSD);
+    ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    todo_wine
+    ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
+                               acl_size.AceCount);
+    LocalFree(pSD);
     CloseHandle(hTemp);
 
 done:
@@ -3303,7 +3625,7 @@ static void test_GetNamedSecurityInfoA(void)
     char invalid_path[] = "/an invalid file path";
     int users_ace_id = -1, admins_ace_id = -1, i;
     char software_key[] = "MACHINE\\Software";
-    char sd[SECURITY_DESCRIPTOR_MIN_LENGTH];
+    char sd[SECURITY_DESCRIPTOR_MIN_LENGTH+sizeof(void*)];
     SECURITY_DESCRIPTOR_CONTROL control;
     ACL_SIZE_INFORMATION acl_size;
     CHAR windows_dir[MAX_PATH];
@@ -3315,11 +3637,12 @@ static void test_GetNamedSecurityInfoA(void)
     BOOL owner_defaulted;
     BOOL group_defaulted;
     BOOL dacl_defaulted;
-    HANDLE token, hTemp;
+    HANDLE token, hTemp, h;
     PSID owner, group;
     BOOL dacl_present;
     PACL pDacl;
     BYTE flags;
+    NTSTATUS status;
 
     if (!pSetNamedSecurityInfoA || !pGetNamedSecurityInfoA || !pCreateWellKnownSid)
     {
@@ -3424,8 +3747,8 @@ static void test_GetNamedSecurityInfoA(void)
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
     ok(bret, "Failed to add ACL to security desciptor.\n");
     GetTempFileNameA(".", "foo", 0, tmpfile);
-    hTemp = CreateFileA(tmpfile, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                        FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    hTemp = CreateFileA(tmpfile, WRITE_DAC|GENERIC_WRITE, FILE_SHARE_DELETE|FILE_SHARE_READ,
+                        NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
     SetLastError(0xdeadbeef);
     error = pSetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL,
                                    NULL, pDacl, NULL);
@@ -3460,8 +3783,8 @@ static void test_GetNamedSecurityInfoA(void)
         ok(bret, "Current User ACE != Current User SID.\n");
         ok(((ACE_HEADER *)ace)->AceFlags == 0,
            "Current User ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
-        ok(ace->Mask == 0x1f01ff, "Current User ACE has unexpected mask (0x%x != 0x1f01ff)\n",
-                                  ace->Mask);
+        ok(ace->Mask == 0x1f01ff,
+           "Current User ACE has unexpected mask (0x%x != 0x1f01ff)\n", ace->Mask);
     }
     if (acl_size.AceCount > 1)
     {
@@ -3475,47 +3798,18 @@ static void test_GetNamedSecurityInfoA(void)
            "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n", ace->Mask);
     }
     LocalFree(pSD);
-    CloseHandle(hTemp);
 
-    /* Create security descriptor with no inheritance and test that it comes back the same */
-    pSD = &sd;
-    pDacl = HeapAlloc(GetProcessHeap(), 0, 100);
-    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
-    pCreateWellKnownSid(WinBuiltinAdministratorsSid, NULL, admin_sid, &sid_size);
-    bret = InitializeAcl(pDacl, 100, ACL_REVISION);
+    /* show that setting empty DACL is not removing all file permissions */
+    pDacl = HeapAlloc(GetProcessHeap(), 0, sizeof(ACL));
+    bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
     ok(bret, "Failed to initialize ACL.\n");
-    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
-    ok(bret, "Failed to add Current User to ACL.\n");
-    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, admin_sid);
-    ok(bret, "Failed to add Administrator Group to ACL.\n");
-    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor.\n");
-    GetTempFileNameA(".", "foo", 0, tmpfile);
-    hTemp = CreateFileA(tmpfile, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                        FILE_FLAG_DELETE_ON_CLOSE, NULL);
-    SetLastError(0xdeadbeef);
-    error = pSetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
-                                   DACL_SECURITY_INFORMATION|PROTECTED_DACL_SECURITY_INFORMATION,
-                                    NULL, NULL, pDacl, NULL);
-    HeapFree(GetProcessHeap(), 0, pDacl);
-    if (error != ERROR_SUCCESS && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
-    {
-        win_skip("SetNamedSecurityInfoA is not implemented\n");
-        HeapFree(GetProcessHeap(), 0, user);
-        CloseHandle(hTemp);
-        return;
-    }
+    error =  pSetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+            NULL, NULL, pDacl, NULL);
     ok(!error, "SetNamedSecurityInfoA failed with error %d\n", error);
-    SetLastError(0xdeadbeef);
+    HeapFree(GetProcessHeap(), 0, pDacl);
+
     error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
-                                   NULL, NULL, &pDacl, NULL, &pSD);
-    if (error != ERROR_SUCCESS && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
-    {
-        win_skip("GetNamedSecurityInfoA is not implemented\n");
-        HeapFree(GetProcessHeap(), 0, user);
-        CloseHandle(hTemp);
-        return;
-    }
+            NULL, NULL, &pDacl, NULL, &pSD);
     ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
 
     bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
@@ -3523,26 +3817,100 @@ static void test_GetNamedSecurityInfoA(void)
     if (acl_size.AceCount > 0)
     {
         bret = pGetAce(pDacl, 0, (VOID **)&ace);
-        ok(bret, "Failed to get Current User ACE.\n");
-        bret = EqualSid(&ace->SidStart, user_sid);
-        ok(bret, "Current User ACE != Current User SID.\n");
-        ok(((ACE_HEADER *)ace)->AceFlags == 0,
-           "Current User ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
-        ok(ace->Mask == 0x1f01ff, "Current User ACE has unexpected mask (0x%x != 0x1f01ff)\n",
-                                  ace->Mask);
-    }
-    if (acl_size.AceCount > 1)
-    {
-        bret = pGetAce(pDacl, 1, (VOID **)&ace);
-        ok(bret, "Failed to get Administators Group ACE.\n");
-        bret = EqualSid(&ace->SidStart, admin_sid);
-        ok(bret || broken(!bret) /* win2k */, "Administators Group ACE != Administators Group SID.\n");
-        ok(((ACE_HEADER *)ace)->AceFlags == 0,
-           "Administators Group ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
-        ok(ace->Mask == 0x1f01ff || broken(ace->Mask == GENERIC_ALL) /* win2k */,
-           "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n", ace->Mask);
+        ok(bret, "Failed to get ACE.\n");
+        ok(((ACE_HEADER *)ace)->AceFlags & INHERITED_ACE,
+           "ACE has unexpected flags: 0x%x\n", ((ACE_HEADER *)ace)->AceFlags);
     }
     LocalFree(pSD);
+
+    h = CreateFileA(tmpfile, GENERIC_READ, FILE_SHARE_DELETE|FILE_SHARE_WRITE|FILE_SHARE_READ,
+            NULL, OPEN_EXISTING, 0, NULL);
+    ok(h != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+    CloseHandle(h);
+
+    /* test setting NULL DACL */
+    error = pSetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
+            DACL_SECURITY_INFORMATION, NULL, NULL, NULL, NULL);
+    ok(!error, "SetNamedSecurityInfoA failed with error %d\n", error);
+
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                NULL, NULL, &pDacl, NULL, &pSD);
+    ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
+    todo_wine ok(!pDacl, "pDacl != NULL\n");
+    LocalFree(pSD);
+
+    h = CreateFileA(tmpfile, GENERIC_READ, FILE_SHARE_DELETE|FILE_SHARE_WRITE|FILE_SHARE_READ,
+            NULL, OPEN_EXISTING, 0, NULL);
+    ok(h != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+    CloseHandle(h);
+
+    /* NtSetSecurityObject doesn't inherit DACL entries */
+    pSD = sd+sizeof(void*)-((ULONG_PTR)sd)%sizeof(void*);
+    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
+    pDacl = HeapAlloc(GetProcessHeap(), 0, 100);
+    bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
+    ok(bret, "Failed to initialize ACL.\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor.\n");
+    status = pNtSetSecurityObject(hTemp, DACL_SECURITY_INFORMATION, pSD);
+    ok(status == ERROR_SUCCESS, "NtSetSecurityObject returned %x\n", status);
+
+    h = CreateFileA(tmpfile, GENERIC_READ, FILE_SHARE_DELETE|FILE_SHARE_WRITE|FILE_SHARE_READ,
+            NULL, OPEN_EXISTING, 0, NULL);
+    ok(h == INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+    CloseHandle(h);
+
+    pSetSecurityDescriptorControl(pSD, SE_DACL_AUTO_INHERIT_REQ, SE_DACL_AUTO_INHERIT_REQ);
+    status = pNtSetSecurityObject(hTemp, DACL_SECURITY_INFORMATION, pSD);
+    ok(status == ERROR_SUCCESS, "NtSetSecurityObject returned %x\n", status);
+
+    h = CreateFileA(tmpfile, GENERIC_READ, FILE_SHARE_DELETE|FILE_SHARE_WRITE|FILE_SHARE_READ,
+            NULL, OPEN_EXISTING, 0, NULL);
+    ok(h == INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+    CloseHandle(h);
+
+    pSetSecurityDescriptorControl(pSD, SE_DACL_AUTO_INHERIT_REQ|SE_DACL_AUTO_INHERITED,
+            SE_DACL_AUTO_INHERIT_REQ|SE_DACL_AUTO_INHERITED);
+    status = pNtSetSecurityObject(hTemp, DACL_SECURITY_INFORMATION, pSD);
+    ok(status == ERROR_SUCCESS, "NtSetSecurityObject returned %x\n", status);
+
+    h = CreateFileA(tmpfile, GENERIC_READ, FILE_SHARE_DELETE|FILE_SHARE_WRITE|FILE_SHARE_READ,
+            NULL, OPEN_EXISTING, 0, NULL);
+    ok(h == INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+    CloseHandle(h);
+
+    /* test if DACL is properly mapped to permission */
+    bret = InitializeAcl(pDacl, 100, ACL_REVISION);
+    ok(bret, "Failed to initialize ACL.\n");
+    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
+    ok(bret, "Failed to add Current User to ACL.\n");
+    bret = pAddAccessDeniedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
+    ok(bret, "Failed to add Current User to ACL.\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor.\n");
+    status = pNtSetSecurityObject(hTemp, DACL_SECURITY_INFORMATION, pSD);
+    ok(status == ERROR_SUCCESS, "NtSetSecurityObject returned %x\n", status);
+
+    h = CreateFileA(tmpfile, GENERIC_READ, FILE_SHARE_DELETE|FILE_SHARE_WRITE|FILE_SHARE_READ,
+            NULL, OPEN_EXISTING, 0, NULL);
+    ok(h != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+    CloseHandle(h);
+
+    bret = InitializeAcl(pDacl, 100, ACL_REVISION);
+    ok(bret, "Failed to initialize ACL.\n");
+    bret = pAddAccessDeniedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
+    ok(bret, "Failed to add Current User to ACL.\n");
+    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
+    ok(bret, "Failed to add Current User to ACL.\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor.\n");
+    status = pNtSetSecurityObject(hTemp, DACL_SECURITY_INFORMATION, pSD);
+    ok(status == ERROR_SUCCESS, "NtSetSecurityObject returned %x\n", status);
+
+    h = CreateFileA(tmpfile, GENERIC_READ, FILE_SHARE_DELETE|FILE_SHARE_WRITE|FILE_SHARE_READ,
+            NULL, OPEN_EXISTING, 0, NULL);
+    ok(h == INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+    HeapFree(GetProcessHeap(), 0, pDacl);
     HeapFree(GetProcessHeap(), 0, user);
     CloseHandle(hTemp);
 
@@ -3728,6 +4096,13 @@ static void test_ConvertStringSecurityDescriptor(void)
         Blank, SDDL_REVISION_1, &pSD, NULL);
     ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
     LocalFree(pSD);
+
+    SetLastError(0xdeadbeef);
+    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
+        "D:P(A;;GRGW;;;BA)(A;;GRGW;;;S-1-5-21-0-0-0-1000)S:(ML;;NWNR;;;S-1-16-12288)", SDDL_REVISION_1, &pSD, NULL);
+    ok(ret || broken(!ret && GetLastError() == ERROR_INVALID_DATATYPE) /* win2k */,
+       "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %u\n", GetLastError());
+    if (ret) LocalFree(pSD);
 }
 
 static void test_ConvertSecurityDescriptorToString(void)
@@ -4201,7 +4576,7 @@ static void test_GetSecurityInfo(void)
         ok(((ACE_HEADER *)ace)->AceFlags == 0,
            "Current User ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
         ok(ace->Mask == 0x1f01ff, "Current User ACE has unexpected mask (0x%x != 0x1f01ff)\n",
-                                    ace->Mask);
+                                  ace->Mask);
     }
     if (acl_size.AceCount > 1)
     {
@@ -4211,8 +4586,8 @@ static void test_GetSecurityInfo(void)
         ok(bret, "Administators Group ACE != Administators Group SID.\n");
         ok(((ACE_HEADER *)ace)->AceFlags == 0,
            "Administators Group ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
-        ok(ace->Mask == 0x1f01ff, "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n",
-                                  ace->Mask);
+        ok(ace->Mask == 0x1f01ff,
+                     "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n", ace->Mask);
     }
     LocalFree(pSD);
     CloseHandle(obj);
@@ -5695,6 +6070,51 @@ static void test_AdjustTokenPrivileges(void)
     CloseHandle(token);
 }
 
+static void test_AddAce(void)
+{
+    static SID const sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
+
+    char acl_buf[1024], ace_buf[256];
+    ACCESS_ALLOWED_ACE *ace = (ACCESS_ALLOWED_ACE*)ace_buf;
+    PACL acl = (PACL)acl_buf;
+    BOOL ret;
+
+    memset(ace, 0, sizeof(ace_buf));
+    ace->Header.AceType = ACCESS_ALLOWED_ACE_TYPE;
+    ace->Header.AceSize = sizeof(ACCESS_ALLOWED_ACE)-sizeof(DWORD)+sizeof(SID);
+    memcpy(&ace->SidStart, &sidWorld, sizeof(sidWorld));
+
+    ret = InitializeAcl(acl, sizeof(acl_buf), ACL_REVISION2);
+    ok(ret, "InitializeAcl failed: %d\n", GetLastError());
+
+    ret = AddAce(acl, ACL_REVISION1, MAXDWORD, ace, ace->Header.AceSize);
+    ok(ret, "AddAce failed: %d\n", GetLastError());
+    ret = AddAce(acl, ACL_REVISION2, MAXDWORD, ace, ace->Header.AceSize);
+    ok(ret, "AddAce failed: %d\n", GetLastError());
+    ret = AddAce(acl, ACL_REVISION3, MAXDWORD, ace, ace->Header.AceSize);
+    ok(ret, "AddAce failed: %d\n", GetLastError());
+    ok(acl->AclRevision == ACL_REVISION3, "acl->AclRevision = %d\n", acl->AclRevision);
+    ret = AddAce(acl, ACL_REVISION4, MAXDWORD, ace, ace->Header.AceSize);
+    ok(ret, "AddAce failed: %d\n", GetLastError());
+    ok(acl->AclRevision == ACL_REVISION4, "acl->AclRevision = %d\n", acl->AclRevision);
+    ret = AddAce(acl, ACL_REVISION1, MAXDWORD, ace, ace->Header.AceSize);
+    ok(ret, "AddAce failed: %d\n", GetLastError());
+    ok(acl->AclRevision == ACL_REVISION4, "acl->AclRevision = %d\n", acl->AclRevision);
+    ret = AddAce(acl, ACL_REVISION2, MAXDWORD, ace, ace->Header.AceSize);
+    ok(ret, "AddAce failed: %d\n", GetLastError());
+
+    ret = AddAce(acl, MIN_ACL_REVISION-1, MAXDWORD, ace, ace->Header.AceSize);
+    ok(ret, "AddAce failed: %d\n", GetLastError());
+    /* next test succeededs but corrupts ACL */
+    ret = AddAce(acl, MAX_ACL_REVISION+1, MAXDWORD, ace, ace->Header.AceSize);
+    ok(ret, "AddAce failed: %d\n", GetLastError());
+    ok(acl->AclRevision == MAX_ACL_REVISION+1, "acl->AclRevision = %d\n", acl->AclRevision);
+    SetLastError(0xdeadbeef);
+    ret = AddAce(acl, ACL_REVISION1, MAXDWORD, ace, ace->Header.AceSize);
+    ok(!ret, "AddAce succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() = %d\n", GetLastError());
+}
+
 START_TEST(security)
 {
     init();
@@ -5736,4 +6156,5 @@ START_TEST(security)
     test_TokenIntegrityLevel();
     test_default_dacl_owner_sid();
     test_AdjustTokenPrivileges();
+    test_AddAce();
 }

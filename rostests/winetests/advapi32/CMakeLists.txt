@@ -22,5 +22,5 @@ if(NOT MSVC)
 endif()
 
 set_module_type(advapi32_winetest win32cui)
-add_importlibs(advapi32_winetest advapi32 ole32 msvcrt kernel32)
+add_importlibs(advapi32_winetest advapi32 ole32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET advapi32_winetest DESTINATION reactos/bin FOR all)

@@ -53,6 +53,7 @@ static BOOL (WINAPI *pQueryServiceStatusEx)(SC_HANDLE, SC_STATUS_TYPE, LPBYTE,
                                             DWORD, LPDWORD);
 static BOOL (WINAPI *pQueryServiceObjectSecurity)(SC_HANDLE, SECURITY_INFORMATION,
                                                   PSECURITY_DESCRIPTOR, DWORD, LPDWORD);
+static DWORD (WINAPI *pNotifyServiceStatusChangeW)(SC_HANDLE,DWORD,SERVICE_NOTIFYW*);
 
 static void init_function_pointers(void)
 {
@@ -66,6 +67,7 @@ static void init_function_pointers(void)
     pQueryServiceConfig2W= (void*)GetProcAddress(hadvapi32, "QueryServiceConfig2W");
     pQueryServiceStatusEx= (void*)GetProcAddress(hadvapi32, "QueryServiceStatusEx");
     pQueryServiceObjectSecurity = (void*)GetProcAddress(hadvapi32, "QueryServiceObjectSecurity");
+    pNotifyServiceStatusChangeW = (void*)GetProcAddress(hadvapi32, "NotifyServiceStatusChangeW");
 }
 
 static void test_open_scm(void)
@@ -2201,6 +2203,75 @@ static DWORD try_start_stop(SC_HANDLE svc_handle, const char* name, DWORD is_nt4
     return le1;
 }
 
+struct notify_data {
+    SERVICE_NOTIFYW notify;
+    SC_HANDLE svc;
+};
+
+static void CALLBACK cb_stopped(void *user)
+{
+    struct notify_data *data = user;
+    BOOL br;
+
+    ok(data->notify.dwNotificationStatus == ERROR_SUCCESS,
+            "Got wrong notification status: %u\n", data->notify.dwNotificationStatus);
+    ok(data->notify.ServiceStatus.dwCurrentState == SERVICE_STOPPED,
+            "Got wrong service state: 0x%x\n", data->notify.ServiceStatus.dwCurrentState);
+    ok(data->notify.dwNotificationTriggered == SERVICE_NOTIFY_STOPPED,
+            "Got wrong notification triggered: 0x%x\n", data->notify.dwNotificationTriggered);
+
+    br = StartServiceA(data->svc, 0, NULL);
+    ok(br, "StartService failed: %u\n", GetLastError());
+}
+
+static void CALLBACK cb_running(void *user)
+{
+    struct notify_data *data = user;
+    BOOL br;
+    SERVICE_STATUS status;
+
+    ok(data->notify.dwNotificationStatus == ERROR_SUCCESS,
+            "Got wrong notification status: %u\n", data->notify.dwNotificationStatus);
+    ok(data->notify.ServiceStatus.dwCurrentState == SERVICE_RUNNING,
+            "Got wrong service state: 0x%x\n", data->notify.ServiceStatus.dwCurrentState);
+    ok(data->notify.dwNotificationTriggered == SERVICE_NOTIFY_RUNNING,
+            "Got wrong notification triggered: 0x%x\n", data->notify.dwNotificationTriggered);
+
+    br = ControlService(data->svc, SERVICE_CONTROL_STOP, &status);
+    ok(br, "ControlService failed: %u\n", GetLastError());
+}
+
+static void test_servicenotify(SC_HANDLE svc)
+{
+    DWORD dr;
+    struct notify_data data;
+
+    if(!pNotifyServiceStatusChangeW){
+        win_skip("No NotifyServiceStatusChangeW\n");
+        return;
+    }
+
+    memset(&data.notify, 0, sizeof(data.notify));
+    data.notify.dwVersion = SERVICE_NOTIFY_STATUS_CHANGE;
+    data.notify.pfnNotifyCallback = &cb_stopped;
+    data.notify.pContext = &data;
+    data.svc = svc;
+
+    dr = pNotifyServiceStatusChangeW(svc, SERVICE_NOTIFY_STOPPED | SERVICE_NOTIFY_RUNNING, &data.notify);
+    ok(dr == ERROR_SUCCESS, "NotifyServiceStatusChangeW failed: %u\n", dr);
+
+    dr = SleepEx(100, TRUE);
+    ok(dr == WAIT_IO_COMPLETION, "APC wasn't called\n");
+
+    data.notify.pfnNotifyCallback = &cb_running;
+
+    dr = pNotifyServiceStatusChangeW(svc, SERVICE_NOTIFY_STOPPED | SERVICE_NOTIFY_RUNNING, &data.notify);
+    ok(dr == ERROR_SUCCESS, "NotifyServiceStatusChangeW failed: %u\n", dr);
+
+    dr = SleepEx(100, TRUE);
+    ok(dr == WAIT_IO_COMPLETION, "APC wasn't called\n");
+}
+
 static void test_start_stop(void)
 {
     BOOL ret;
@@ -2279,17 +2350,12 @@ static void test_start_stop(void)
     le = try_start_stop(svc_handle, displayname, is_nt4);
     ok(le == ERROR_SERVICE_REQUEST_TIMEOUT, "%d != ERROR_SERVICE_REQUEST_TIMEOUT\n", le);
 
-    /* And finally with a service that plays dead, forcing a timeout.
-     * This time we will put no quotes. That should work too, even if there are
-     * spaces in the path.
-     */
-    sprintf(cmd, "%s service sleep", selfname);
-    displayname = "Winetest Sleep Service";
+    /* create a real service and test notifications */
+    sprintf(cmd, "%s service serve", selfname);
+    displayname = "Winetest Service";
     ret = ChangeServiceConfigA(svc_handle, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE, cmd, NULL, NULL, NULL, NULL, NULL, displayname);
     ok(ret, "ChangeServiceConfig() failed le=%u\n", GetLastError());
-
-    le = try_start_stop(svc_handle, displayname, is_nt4);
-    ok(le == ERROR_SERVICE_REQUEST_TIMEOUT, "%d != ERROR_SERVICE_REQUEST_TIMEOUT\n", le);
+    test_servicenotify(svc_handle);
 
 cleanup:
     if (svc_handle)
@@ -2394,6 +2460,57 @@ static void test_refcount(void)
     CloseServiceHandle(scm_handle);
 }
 
+static DWORD WINAPI ctrl_handler(DWORD ctl, DWORD type, void *data, void *user)
+{
+    HANDLE evt = user;
+
+    switch(ctl){
+    case SERVICE_CONTROL_STOP:
+        SetEvent(evt);
+        break;
+    case SERVICE_CONTROL_INTERROGATE:
+        return NO_ERROR;
+    }
+
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static void WINAPI service_main(DWORD argc, char **argv)
+{
+    SERVICE_STATUS_HANDLE st_handle;
+    SERVICE_STATUS st;
+    HANDLE evt = CreateEventW(0, FALSE, FALSE, 0);
+
+    st_handle = RegisterServiceCtrlHandlerExA("", &ctrl_handler, evt);
+
+    st.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    st.dwServiceSpecificExitCode = 0;
+    st.dwCurrentState = SERVICE_RUNNING;
+    st.dwWin32ExitCode = NO_ERROR;
+    st.dwWaitHint = 0;
+    st.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+    st.dwCheckPoint = 0;
+
+    SetServiceStatus(st_handle, &st);
+
+    WaitForSingleObject(evt, 5000);
+
+    st.dwCurrentState = SERVICE_STOPPED;
+
+    SetServiceStatus(st_handle, &st);
+}
+
+static void run_service(void)
+{
+    char empty[] = {0};
+    SERVICE_TABLE_ENTRYA table[] = {
+        {empty, &service_main },
+        {0, 0}
+    };
+
+    StartServiceCtrlDispatcherA(table);
+}
+
 START_TEST(service)
 {
     SC_HANDLE scm_handle;
@@ -2404,10 +2521,8 @@ START_TEST(service)
     GetFullPathNameA(myARGV[0], sizeof(selfname), selfname, NULL);
     if (myARGC >= 3)
     {
-        if (strcmp(myARGV[2], "sleep") == 0)
-            /* Cause a service startup timeout */
-            Sleep(90000);
-        /* then, or if myARGV[2] == "exit", just exit */
+        if (strcmp(myARGV[2], "serve") == 0)
+            run_service();
         return;
     }
 
