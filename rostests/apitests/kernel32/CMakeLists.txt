@@ -12,6 +12,7 @@ list(APPEND SOURCE
     SetCurrentDirectory.c
     SetUnhandledExceptionFilter.c
     TerminateProcess.c
+    TunnelCache.c
     testlist.c)
 
 add_executable(kernel32_apitest ${SOURCE})

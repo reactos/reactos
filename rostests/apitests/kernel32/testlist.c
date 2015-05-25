@@ -15,6 +15,7 @@ extern void func_PrivMoveFileIdentityW(void);
 extern void func_SetCurrentDirectory(void);
 extern void func_SetUnhandledExceptionFilter(void);
 extern void func_TerminateProcess(void);
+extern void func_TunnelCache(void);
 
 const struct test winetest_testlist[] =
 {
@@ -30,6 +31,7 @@ const struct test winetest_testlist[] =
     { "SetCurrentDirectory",         func_SetCurrentDirectory },
     { "SetUnhandledExceptionFilter", func_SetUnhandledExceptionFilter },
     { "TerminateProcess",            func_TerminateProcess },
+    { "TunnelCache",                 func_TunnelCache },
     { 0, 0 }
 };
 
