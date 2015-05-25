@@ -225,25 +225,25 @@ reactos/dll/win32/xinput1_3           # Synced to WineStaging-1.7.37
 reactos/dll/win32/xinput9_1_0         # Synced to WineStaging-1.7.37
 reactos/dll/win32/xmllite             # Synced to WineStaging-1.7.37
 
-reactos/dll/cpl/inetcpl               # Synced to Wine-1.7.27
+reactos/dll/cpl/inetcpl               # Synced to WineStaging-1.7.37
 
 ReactOS shares the following programs with Winehq.
 
-reactos/base/applications/cmdutils/cscript  # Synced to Wine-1.7.27
+reactos/base/applications/cmdutils/cscript  # Synced to WineStaging-1.7.37
 reactos/base/applications/cmdutils/reg      # Synced to WineStaging-1.7.37
-reactos/base/applications/cmdutils/taskkill # Synced to Wine-1.7.27
-reactos/base/applications/cmdutils/wmic     # Synced to Wine-1.7.27
+reactos/base/applications/cmdutils/taskkill # Synced to WineStaging-1.7.37
+reactos/base/applications/cmdutils/wmic     # Synced to WineStaging-1.7.37
 reactos/base/applications/cmdutils/wscript  # Synced to WineStaging-1.7.37
 reactos/base/applications/cmdutils/xcopy    # Synced to WineStaging-1.7.37
 reactos/base/applications/games/winmine     # Synced to WineStaging-1.7.37 with our own resources.
-reactos/base/applications/extrac32          # Synced to Wine-1.7.27
-reactos/base/applications/iexplore          # Synced to Wine-1.7.27
+reactos/base/applications/extrac32          # Synced to WineStaging-1.7.37
+reactos/base/applications/iexplore          # Synced to WineStaging-1.7.37
 reactos/base/applications/notepad           # Forked at Wine-20041201
 reactos/base/applications/regedit           # Out of sync
 reactos/base/applications/winhlp32          # Synced to WineStaging-1.7.37
 reactos/base/applications/wordpad           # Synced to WineStaging-1.7.37
-reactos/base/services/rpcss                 # Synced to Wine-1.7.27
-reactos/base/system/expand                  # Synced to Wine-1.7.27
+reactos/base/services/rpcss                 # Synced to WineStaging-1.7.37
+reactos/base/system/expand                  # Synced to WineStaging-1.7.37
 reactos/base/system/msiexec                 # Synced to WineStaging-1.7.37
 reactos/modules/rosapps/winfile             # Autosync
 
@@ -256,10 +256,10 @@ reactos/lib/3rdparty/strmbase               # Synced to WineStaging-1.7.37
 reactos/lib/rtl/actctx.c                    # Partly synced with WineStaging-1.7.37
 
 advapi32 -
-  reactos/dll/win32/advapi32/wine/cred.c         # Synced to Wine-1.7.27
+  reactos/dll/win32/advapi32/wine/cred.c         # Synced to WineStaging-1.7.37
   reactos/dll/win32/advapi32/wine/crypt.c        # Synced to Wine-1.7.27
-  reactos/dll/win32/advapi32/wine/crypt_des.c    # Synced to Wine-1.7.27
-  reactos/dll/win32/advapi32/wine/crypt_lmhash.c # Synced to Wine-1.7.27
+  reactos/dll/win32/advapi32/wine/crypt_des.c    # Synced to WineStaging-1.7.37
+  reactos/dll/win32/advapi32/wine/crypt_lmhash.c # Synced to WineStaging-1.7.37
   reactos/dll/win32/advapi32/wine/security.c     # Out of Sync
 
 gdi32 -
@@ -271,7 +271,7 @@ kernel32 -
   reactos/dll/win32/kernel32/wine/lzexpand.c             # Synced in r52754
   reactos/dll/win32/kernel32/wine/profile.c              # Synced in r52754
   reactos/dll/win32/kernel32/wine/res.c                  # Synced in r52754
-  reactos/dll/win32/kernel32/winnls/string/casemap.c     # Synced to Wine-1.7.27
+  reactos/dll/win32/kernel32/winnls/string/casemap.c     # Synced to WineStaging-1.7.37
   reactos/dll/win32/kernel32/winnls/string/chartype.c    # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/collation.c   # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/format_msg.c  # Synced to Wine-1.7.27
@@ -284,7 +284,7 @@ msvcrt -
   reactos/lib/sdk/crt/except/cpp.c              # Synced at 20080528
   reactos/lib/sdk/crt/except/cppexcept.c        # Synced at 20071111
   reactos/lib/sdk/crt/process/_cwait.c          # Synced to WineStaging-1.7.37
-  reactos/lib/sdk/crt/signal/xcptinfo.c         # Synced to Wine-1.7.17
+  reactos/lib/sdk/crt/signal/xcptinfo.c         # Synced to WineStaging-1.7.37
   reactos/lib/sdk/crt/string/scanf.c/h          # Synced to Wine-1.7.17
   reactos/lib/sdk/crt/strings/wcs.c             # Synced at 20080611
   reactos/lib/sdk/crt/wine/heap.c               # Synced at 20080529
@@ -323,13 +323,13 @@ User32 -
 
 schannel.c
   reactos/dll/win32/schannel/schannel_wine.c    # synced to wine-1.7.17 (secur32/schannel.c)
-  reactos/dll/win32/schannel/schannel_gnutls.c  # synced to wine-1.7.17 (secur32/schannel_gnutls.c)
+  reactos/dll/win32/schannel/schannel_gnutls.c  # Synced to WineStaging-1.7.37 (secur32/schannel_gnutls.c)
   reactos/dll/win32/schannel/secur32_wine.c     # partial sync to wine-1.7.17 (secur32/secur32.c)
 
 secur32 -
   reactos/dll/win32/secur32/sspi.c              # partial sync to wine-1.7.17 (secur32.c)
-  reactos/dll/win32/secur32/thunks.c            # synced to wine-1.7.17
-  reactos/dll/win32/secur32/wrapper.c           # synced to wine-1.7.17
+  reactos/dll/win32/secur32/thunks.c            # Synced to WineStaging-1.7.37
+  reactos/dll/win32/secur32/wrapper.c           # Synced to WineStaging-1.7.37
 
 ws2_32 -
   reactos/dll/win32/ws2_32/misc/async.c         # Synced to Wine-1.5.4
