@@ -56,6 +56,9 @@ static const FAST486_FPU_DATA_REG FpuLnTwo = {0xB17217F7D1CF79ACULL, FPU_REAL10_
 /* 2.00 */
 static const FAST486_FPU_DATA_REG FpuTwo = {0x8000000000000000ULL, FPU_REAL10_BIAS + 1, FALSE};
 
+/* Pi / 2 */
+static const FAST486_FPU_DATA_REG FpuHalfPi = {0xC90FDAA22168C235ULL, FPU_REAL10_BIAS, FALSE};
+
 static const FAST486_FPU_DATA_REG FpuInverseNumber[INVERSE_NUMBERS_COUNT] =
 {
     {0x8000000000000000ULL, FPU_REAL10_BIAS,     FALSE}, /* 1 / 1 */
@@ -108,6 +111,114 @@ static const FAST486_FPU_DATA_REG FpuInverseNumber[INVERSE_NUMBERS_COUNT] =
     {0xAAAAAAAAAAAAAAABULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 48 */
     {0xA72F05397829CBC1ULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 49 */
     {0xA3D70A3D70A3D70AULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 50 */
+};
+
+static const FAST486_FPU_DATA_REG FpuInverseNumberSine[INVERSE_NUMBERS_COUNT] =
+{
+    {0xAAAAAAAAAAAAAAAAULL, FPU_REAL10_BIAS - 3, FALSE}, /* 1 / 6 */
+    {0xCCCCCCCCCCCCCCCCULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 20 */
+    {0xC30C30C30C30C30CULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 42 */
+    {0xE38E38E38E38E38EULL, FPU_REAL10_BIAS - 7, FALSE}, /* 1 / 72 */
+    {0x94F2094F2094F209ULL, FPU_REAL10_BIAS - 7, FALSE}, /* 1 / 110 */
+    {0xD20D20D20D20D20DULL, FPU_REAL10_BIAS - 8, FALSE}, /* 1 / 156 */
+    {0x9C09C09C09C09C09ULL, FPU_REAL10_BIAS - 8, FALSE}, /* 1 / 210 */
+    {0xF0F0F0F0F0F0F0F0ULL, FPU_REAL10_BIAS - 9, FALSE}, /* 1 / 272 */
+    {0xBFA02FE80BFA02FEULL, FPU_REAL10_BIAS - 9, FALSE}, /* 1 / 342 */
+    {0x9C09C09C09C09C09ULL, FPU_REAL10_BIAS - 9, FALSE}, /* 1 / 420 */
+    {0x81848DA8FAF0D277ULL, FPU_REAL10_BIAS - 9, FALSE}, /* 1 / 506 */
+    {0xDA740DA740DA740DULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 600 */
+    {0xBAB656100BAB6561ULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 702 */
+    {0xA16B312EA8FC377CULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 812 */
+    {0x8CF008CF008CF008ULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 930 */
+    {0xF83E0F83E0F83E0FULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1056 */
+    {0xDC4A00DC4A00DC4AULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1190 */
+    {0xC4CE07B00C4CE07BULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1332 */
+    {0xB0E2A2600B0E2A26ULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1482 */
+    {0x9FD809FD809FD809ULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1640 */
+    {0x9126D6E4802449B5ULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1806 */
+    {0x84655D9BAB2F1008ULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1980 */
+    {0xF2805AF0221A0CC9ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2162 */
+    {0xDEE95C4CA037BA57ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2352 */
+    {0xCD9A673400CD9A67ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2550 */
+    {0xBE3C310B84A4F832ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2756 */
+    {0xB087277A39941560ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2970 */
+    {0xA44029100A440291ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 3192 */
+    {0x9936034AA9121AA1ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 3422 */
+    {0x8F3F82A86DACA008ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 3660 */
+    {0x8639F00218E7C008ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 3906 */
+    {0xFC0FC0FC0FC0FC0FULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 4160 */
+    {0xED208916CF412FD1ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 4422 */
+    {0xDF7B4EC93886702DULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 4692 */
+    {0xD2FB287C7224E167ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 4970 */
+    {0xC78031E00C78031EULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 5256 */
+    {0xBCEEBFB33F021F2EULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 5550 */
+    {0xB32EB86E96D5D441ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 5852 */
+    {0xAA2B0A62E08248F3ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 6162 */
+    {0xA1D139855F7268EDULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 6480 */
+    {0x9A1100604AA03C2EULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 6806 */
+    {0x92DC0092DC0092DCULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 7140 */
+    {0x8C258008C258008CULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 7482 */
+    {0x85E230A32BAB46DDULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 7832 */
+    {0x8008008008008008ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 8190 */
+    {0xF51BE2CC2D7AAC94ULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 8556 */
+    {0xEAD7EC46DDA80C62ULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 8930 */
+    {0xE135A9C97500E135ULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 9312 */
+    {0xD8281B71177BDB7BULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 9702 */
+    {0xCFA3892CE9FFCC17ULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 10100 */
+};
+
+static const FAST486_FPU_DATA_REG FpuInverseNumberCosine[INVERSE_NUMBERS_COUNT] =
+{
+    {0x8000000000000000ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 1 / 2 */
+    {0xAAAAAAAAAAAAAAAAULL, FPU_REAL10_BIAS - 4, FALSE}, /* 1 / 12 */
+    {0x8888888888888888ULL, FPU_REAL10_BIAS - 5, FALSE}, /* 1 / 30 */
+    {0x9249249249249249ULL, FPU_REAL10_BIAS - 6, FALSE}, /* 1 / 56 */
+    {0xB60B60B60B60B60BULL, FPU_REAL10_BIAS - 7, FALSE}, /* 1 / 90 */
+    {0xF83E0F83E0F83E0FULL, FPU_REAL10_BIAS - 8, FALSE}, /* 1 / 132 */
+    {0xB40B40B40B40B40BULL, FPU_REAL10_BIAS - 8, FALSE}, /* 1 / 182 */
+    {0x8888888888888888ULL, FPU_REAL10_BIAS - 8, FALSE}, /* 1 / 240 */
+    {0xD62B80D62B80D62BULL, FPU_REAL10_BIAS - 9, FALSE}, /* 1 / 306 */
+    {0xAC7691840AC76918ULL, FPU_REAL10_BIAS - 9, FALSE}, /* 1 / 380 */
+    {0x8DDA520237694808ULL, FPU_REAL10_BIAS - 9, FALSE}, /* 1 / 462 */
+    {0xED7303B5CC0ED730ULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 552 */
+    {0xC9A633FCD967300CULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 650 */
+    {0xAD602B580AD602B5ULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 756 */
+    {0x96A850096A850096ULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 870 */
+    {0x8421084210842108ULL, FPU_REAL10_BIAS - 10, FALSE}, /* 1 / 992 */
+    {0xE9A3D25E00E9A3D2ULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1122 */
+    {0xD00D00D00D00D00DULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1260 */
+    {0xBA7258200BA72582ULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1406 */
+    {0xA80A80A80A80A80AULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1560 */
+    {0x983B773A92E16009ULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1722 */
+    {0x8A8DCD1FEEAE465CULL, FPU_REAL10_BIAS - 11, FALSE}, /* 1 / 1892 */
+    {0xFD477B6C956529CDULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2070 */
+    {0xE865AC7B7603A196ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2256 */
+    {0xD5FEBF01E17D2DC4ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2450 */
+    {0xC5B200C5B200C5B2ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2652 */
+    {0xB7307B1492B1D28FULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 2862 */
+    {0xAA392F35DC17F00AULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 3080 */
+    {0x9E96394D47B46C68ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 3306 */
+    {0x941A9CC82BF7E68BULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 3540 */
+    {0x8AA08EF5936D4008ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 3782 */
+    {0x8208208208208208ULL, FPU_REAL10_BIAS - 12, FALSE}, /* 1 / 4032 */
+    {0xF46C5E0BB22F800FULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 4290 */
+    {0xE6271BA5329217D3ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 4556 */
+    {0xD918B2EF5B7B4866ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 4830 */
+    {0xCD1ED923A7DCBEB2ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 5112 */
+    {0xC21BDD800C21BDD8ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 5402 */
+    {0xB7F5F08CD84C2BD5ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 5700 */
+    {0xAE968C517F46800AULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 6006 */
+    {0xA5E9F6ED347F0721ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 6320 */
+    {0x9DDEDA75A1CD4726ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 6642 */
+    {0x9665EE14DB2283E4ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 6972 */
+    {0x8F71AD362448008FULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 7310 */
+    {0x88F61A371B048C2BULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 7656 */
+    {0x82E88A942AB2D933ULL, FPU_REAL10_BIAS - 13, FALSE}, /* 1 / 8010 */
+    {0xFA7EF5D91AC9538AULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 8372 */
+    {0xEFE4D31416B96CFEULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 8742 */
+    {0xE5F36CB00E5F36CBULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 9120 */
+    {0xDC9D0ECFCB6E9378ULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 9506 */
+    {0xD3D56292AB7E800DULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 9900 */
 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -1202,7 +1313,8 @@ Fast486FpuRemainder(PFAST486_STATE State,
                     PCFAST486_FPU_DATA_REG FirstOperand,
                     PCFAST486_FPU_DATA_REG SecondOperand,
                     BOOLEAN RoundToNearest,
-                    PFAST486_FPU_DATA_REG Result)
+                    PFAST486_FPU_DATA_REG Result,
+                    PLONGLONG Quotient OPTIONAL)
 {
     BOOLEAN Success = FALSE;
     INT OldRoundingMode = State->FpuControl.Rc;
@@ -1219,6 +1331,7 @@ Fast486FpuRemainder(PFAST486_STATE State,
     if (!Fast486FpuMultiply(State, &Temp, SecondOperand, &Temp)) goto Cleanup;
     if (!Fast486FpuSubtract(State, FirstOperand, &Temp, Result)) goto Cleanup;
 
+    if (Quotient) *Quotient = Integer;
     Success = TRUE;
 
 Cleanup:
@@ -1236,14 +1349,43 @@ Fast486FpuCalculateSine(PFAST486_STATE State,
                         PFAST486_FPU_DATA_REG Result)
 {
     INT i;
-    FAST486_FPU_DATA_REG TempResult = *Operand;
-    FAST486_FPU_DATA_REG OperandSquared = *Operand;
-    FAST486_FPU_DATA_REG SeriesElement = *Operand;
+    ULONGLONG Quadrant;
+    FAST486_FPU_DATA_REG Normalized = *Operand;
+    FAST486_FPU_DATA_REG TempResult;
+    FAST486_FPU_DATA_REG OperandSquared;
+    FAST486_FPU_DATA_REG SeriesElement;
+    PCFAST486_FPU_DATA_REG Inverse;
+
+    if (!Fast486FpuRemainder(State,
+                             Operand,
+                             &FpuHalfPi,
+                             FALSE,
+                             &Normalized,
+                             (PLONGLONG)&Quadrant))
+    {
+        return FALSE;
+    }
+
+    /* Normalize the quadrant number */
+    Quadrant &= 3;
+
+    if (!(Quadrant & 1))
+    {
+        /* This is a sine */
+        Inverse = FpuInverseNumberSine;
+        TempResult = SeriesElement = Normalized;
+    }
+    else
+    {
+        /* This is a cosine */
+        Inverse = FpuInverseNumberCosine;
+        TempResult = SeriesElement = FpuOne;
+    }
 
     /* Calculate the square of the operand */
-    if (!Fast486FpuMultiply(State, Operand, Operand, &OperandSquared)) return FALSE;
+    if (!Fast486FpuMultiply(State, &Normalized, &Normalized, &OperandSquared)) return FALSE;
 
-    for (i = 2; (i * (i + 1)) <= INVERSE_NUMBERS_COUNT; i += 2)
+    for (i = 0; i < INVERSE_NUMBERS_COUNT; i++)
     {
         if (!Fast486FpuMultiply(State, &SeriesElement, &OperandSquared, &SeriesElement))
         {
@@ -1253,7 +1395,7 @@ Fast486FpuCalculateSine(PFAST486_STATE State,
 
         if (!Fast486FpuMultiply(State,
                                 &SeriesElement,
-                                &FpuInverseNumber[i * (i + 1) - 1],
+                                &Inverse[i],
                                 &SeriesElement))
         {
             /* An exception occurred */
@@ -1269,6 +1411,9 @@ Fast486FpuCalculateSine(PFAST486_STATE State,
             return FALSE;
         }
     }
+
+    /* Flip the sign for the third and fourth quadrant */
+    if (Quadrant >= 2) TempResult.Sign = !TempResult.Sign;
 
     *Result = TempResult;
     return TRUE;
@@ -1283,43 +1428,13 @@ Fast486FpuCalculateCosine(PFAST486_STATE State,
                           PFAST486_FPU_DATA_REG Operand,
                           PFAST486_FPU_DATA_REG Result)
 {
-    INT i;
-    FAST486_FPU_DATA_REG TempResult = FpuOne;
-    FAST486_FPU_DATA_REG OperandSquared = *Operand;
-    FAST486_FPU_DATA_REG SeriesElement = FpuOne;
+    FAST486_FPU_DATA_REG Value = *Operand;
 
-    /* Calculate the square of the operand */
-    if (!Fast486FpuMultiply(State, Operand, Operand, &OperandSquared)) return FALSE;
+    /* Add pi / 2 */
+    if (!Fast486FpuAdd(State, &Value, &FpuHalfPi, &Value)) return FALSE;
 
-    for (i = 1; (i * (i + 1)) <= INVERSE_NUMBERS_COUNT; i += 2)
-    {
-        if (!Fast486FpuMultiply(State, &SeriesElement, &OperandSquared, &SeriesElement))
-        {
-            /* An exception occurred */
-            return FALSE;
-        }
-
-        if (!Fast486FpuMultiply(State,
-                                &SeriesElement,
-                                &FpuInverseNumber[i * (i + 1) - 1],
-                                &SeriesElement))
-        {
-            /* An exception occurred */
-            return FALSE;
-        }
-
-        /* Toggle the sign of the series element */
-        SeriesElement.Sign = !SeriesElement.Sign;
-
-        if (!Fast486FpuAdd(State, &TempResult, &SeriesElement, &TempResult))
-        {
-            /* An exception occurred */
-            return FALSE;
-        }
-    }
-
-    *Result = TempResult;
-    return TRUE;
+    /* Calculate the sine */
+    return Fast486FpuCalculateSine(State, &Value, Result);
 }
 
 static inline VOID FASTCALL
@@ -2090,7 +2205,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                     break;
                 }
 
-                Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), TRUE, &FPU_ST(0));
+                Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), TRUE, &FPU_ST(0), NULL);
                 FPU_UPDATE_TAG(0);
 
                 break;
@@ -2121,7 +2236,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                     break;
                 }
 
-                Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), FALSE, &FPU_ST(0));
+                Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), FALSE, &FPU_ST(0), NULL);
                 FPU_UPDATE_TAG(0);
 
                 break;
