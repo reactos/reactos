@@ -105,7 +105,7 @@ FsRtlPruneTunnelCache(
     while(Entry != &Cache->TimerQueue)
     {
         /* get node entry */
-        CurEntry = (PTUNNEL_NODE_ENTRY)CONTAINING_RECORD(Entry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
+        CurEntry = CONTAINING_RECORD(Entry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
 
         /* get next entry */
          NextEntry = Entry->Flink;
@@ -124,7 +124,7 @@ FsRtlPruneTunnelCache(
     /* If we have too many entries */
     while (Cache->NumEntries > TunnelMaxEntries)
     {
-        CurEntry = (PTUNNEL_NODE_ENTRY)CONTAINING_RECORD(Entry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
+        CurEntry = CONTAINING_RECORD(Entry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
         FsRtlRemoveNodeFromTunnel(Cache, CurEntry, PoolList, &Rebalance);
     }
 }
@@ -295,7 +295,7 @@ FsRtlEmptyFreePoolList(
     {
         /* and free them, one by one */
         CurEntry = RemoveHeadList(PoolList);
-        CurNode = (PTUNNEL_NODE_ENTRY)CONTAINING_RECORD(CurEntry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
+        CurNode = CONTAINING_RECORD(CurEntry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
         FsRtlFreeTunnelNode(CurNode, 0);
     }
 }
@@ -609,7 +609,7 @@ FsRtlDeleteKeyFromTunnelCache(IN PTUNNEL Cache,
     CurEntry = Cache->Cache;
     while (CurEntry)
     {
-        CurNode = (PTUNNEL_NODE_ENTRY)CONTAINING_RECORD(CurEntry, TUNNEL_NODE_ENTRY, SplayInfo);
+        CurNode = CONTAINING_RECORD(CurEntry, TUNNEL_NODE_ENTRY, SplayInfo);
 
         if (CurNode->DirectoryKey > DirectoryKey)
         {
@@ -647,7 +647,7 @@ FsRtlDeleteKeyFromTunnelCache(IN PTUNNEL Cache,
     /* delete any matching key */
     do
     {
-        CurNode = (PTUNNEL_NODE_ENTRY)CONTAINING_RECORD(LastEntry, TUNNEL_NODE_ENTRY, SplayInfo);
+        CurNode = CONTAINING_RECORD(LastEntry, TUNNEL_NODE_ENTRY, SplayInfo);
 
         Successors = RtlRealSuccessor(LastEntry);
         if (CurNode->DirectoryKey != DirectoryKey)
@@ -704,7 +704,7 @@ FsRtlDeleteTunnelCache(IN PTUNNEL Cache)
     while(Entry != &Cache->TimerQueue)
     {
         /* get node entry */
-        CurEntry = (PTUNNEL_NODE_ENTRY)CONTAINING_RECORD(Entry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
+        CurEntry = CONTAINING_RECORD(Entry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
 
         /* get next entry */
          NextEntry = Entry->Flink;

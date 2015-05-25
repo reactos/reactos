@@ -438,9 +438,9 @@ RtlGetElementGenericTable(IN PRTL_GENERIC_TABLE Table,
     if (NextI == OrderedElement)
     {
         /* Return it */
-        return &((PTABLE_ENTRY_HEADER)CONTAINING_RECORD(OrderedNode,
-                                                        TABLE_ENTRY_HEADER,
-                                                        ListEntry))->UserData;
+        return &CONTAINING_RECORD(OrderedNode,
+                                  TABLE_ENTRY_HEADER,
+                                  ListEntry)->UserData;
     }
 
     /* Now check if we're farther behind */
@@ -505,9 +505,9 @@ RtlGetElementGenericTable(IN PRTL_GENERIC_TABLE Table,
     Table->WhichOrderedElement = NextI;
 
     /* Return the element */
-    return &((PTABLE_ENTRY_HEADER)CONTAINING_RECORD(OrderedNode,
-                                                    TABLE_ENTRY_HEADER,
-                                                    ListEntry))->UserData;
+    return &CONTAINING_RECORD(OrderedNode,
+                              TABLE_ENTRY_HEADER,
+                              ListEntry)->UserData;
 }
 
 /* EOF */

@@ -918,8 +918,7 @@ QSI_DEF(SystemProcessInformation)
                 CurrentEntry = Process->Pcb.ThreadListHead.Flink;
                 while (CurrentEntry != &Process->Pcb.ThreadListHead)
                 {
-                    CurrentThread = (PETHREAD)CONTAINING_RECORD(CurrentEntry, KTHREAD,
-                        ThreadListEntry);
+                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
 
                     ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
                     ThreadInfo->UserTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.UserTime, KeMaximumIncrement);
