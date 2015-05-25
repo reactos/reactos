@@ -246,6 +246,12 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
     BufferLength = Stack->Parameters.QueryFile.Length;
 
+    if (!ExAcquireResourceSharedLite(&Fcb->MainResource,
+                                     (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+    {
+        return NtfsMarkIrpContextForQueue(IrpContext);
+    }
+
     switch (FileInformationClass)
     {
         case FileStandardInformation:
@@ -300,6 +306,8 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
             DPRINT1("Unimplemented information class %u\n", FileInformationClass);
             Status = STATUS_INVALID_PARAMETER;
     }
+
+    ExReleaseResourceLite(&Fcb->MainResource);
 
     if (NT_SUCCESS(Status))
         Irp->IoStatus.Information =
