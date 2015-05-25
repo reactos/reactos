@@ -244,7 +244,7 @@ FsRtlInitializeTunnels()
     }
 
     /* initialize look aside list */
-    ExInitializePagedLookasideList(&TunnelLookasideList, NULL, NULL, 0, DEFAULT_ENTRY_SIZE, 0 /*FIXME*/, TunnelEntries);
+    ExInitializePagedLookasideList(&TunnelLookasideList, NULL, NULL, 0, DEFAULT_ENTRY_SIZE, 'TunL', TunnelEntries);
 }
 
 LONG
