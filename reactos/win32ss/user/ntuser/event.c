@@ -184,8 +184,9 @@ IntNotifyWinEvent(
    DWORD flags)
 {
    PEVENTHOOK pEH;
-   PLIST_ENTRY pLE;
+   PLIST_ENTRY ListEntry;
    PTHREADINFO pti, ptiCurrent;
+   USER_REFERENCE_ENTRY Ref;
 
    TRACE("IntNotifyWinEvent GlobalEvents = %p pWnd %p\n", GlobalEvents, pWnd);
 
@@ -200,12 +201,13 @@ IntNotifyWinEvent(
    else
       pti = ptiCurrent;
 
-   pLE = GlobalEvents->Events.Flink;
-   pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
-   do
+   ListEntry = GlobalEvents->Events.Flink;
+   ASSERT(ListEntry != &GlobalEvents->Events);
+   while (ListEntry != &GlobalEvents->Events)
    {
-     if (!pEH) break;
-     UserReferenceObject(pEH);
+     pEH = CONTAINING_RECORD(ListEntry, EVENTHOOK, Chain);
+     ListEntry = ListEntry->Flink;
+
      // Must be inside the event window.
      if ( Event >= pEH->eventMin && Event <= pEH->eventMax )
      {
@@ -217,6 +219,7 @@ IntNotifyWinEvent(
                (pEH->Flags & WINEVENT_SKIPOWNTHREAD && pEH->head.pti == pti) ||
                 pEH->head.pti->rpdesk != ptiCurrent->rpdesk ) ) // Same as hooks.
         {
+           UserRefObjectCo(pEH, &Ref);
            if (pEH->Flags & WINEVENT_INCONTEXT)
            {
               TRACE("In       Event 0x%x, idObject %d hwnd %p\n", Event, idObject, pWnd ? UserHMGetHandle(pWnd) : NULL);
@@ -241,12 +244,10 @@ IntNotifyWinEvent(
                                     idChild,
                                     PtrToUint(NtCurrentTeb()->ClientId.UniqueThread));
            }
+           UserDerefObjectCo(pEH);
         }
      }
-     UserDereferenceObject(pEH);
-     pLE = pEH->Chain.Flink;
-     pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
-   } while (pLE != &GlobalEvents->Events);
+   }
 }
 
 VOID
