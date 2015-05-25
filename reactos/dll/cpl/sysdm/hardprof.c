@@ -44,6 +44,7 @@ UpdateButtons(
     HWND hwndDlg,
     PPROFILEDATA pProfileData)
 {
+    EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFPROP), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
     EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFCOPY), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
     EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFRENAME), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
     EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFDEL), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
@@ -384,6 +385,69 @@ MoveHardwareProfile(
 
 
 static
+INT_PTR
+CALLBACK
+HardwareProfilePropertiesDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(hwndDlg);
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
+
+    }
+
+    return FALSE;
+}
+
+
+static
+VOID
+HardwareProfileProperties(
+    HWND hwndDlg,
+    PPROFILEDATA pProfileData)
+{
+    HPROPSHEETPAGE hpsp;
+    PROPSHEETHEADER psh;
+    PROPSHEETPAGE psp;
+
+    ZeroMemory(&psp, sizeof(psp));
+    psp.dwSize = sizeof(psp);
+    psp.dwFlags = PSP_DEFAULT;
+    psp.hInstance = hApplet;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_HARDWAREPROFILE);
+    psp.pfnDlgProc = HardwareProfilePropertiesDlgProc;
+
+    hpsp = CreatePropertySheetPage(&psp);
+    if (hpsp == NULL)
+    {
+        return;
+    }
+
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags =  PSH_PROPTITLE;
+    psh.hwndParent = hwndDlg;
+    psh.hInstance = hApplet;
+    psh.hIcon = NULL;
+    psh.pszCaption = NULL;
+    psh.nPages = 1;
+    psh.nStartPage = 0;
+    psh.phpage = &hpsp;
+    psh.pfnCallback = NULL;
+
+    PropertySheet(&psh);
+}
+
+
+static
 DWORD
 GetUserWaitInterval(VOID)
 {
@@ -682,6 +746,10 @@ HardProfDlgProc(HWND hwndDlg,
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_HRDPROFPROP:
+                    HardwareProfileProperties(hwndDlg, pProfileData);
+                    break;
+
                 case IDC_HRDPROFCOPY:
                     CopyHardwareProfile(hwndDlg, pProfileData);
                     break;
