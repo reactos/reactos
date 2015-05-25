@@ -743,7 +743,8 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
                        PIRP Irp);
 
 PVOID
-NtfsGetUserBuffer(PIRP Irp);
+NtfsGetUserBuffer(PIRP Irp,
+                  BOOLEAN Paging);
 
 #if 0
 BOOLEAN

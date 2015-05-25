@@ -117,11 +117,12 @@ NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
 }
 
 PVOID
-NtfsGetUserBuffer(PIRP Irp)
+NtfsGetUserBuffer(PIRP Irp,
+                  BOOLEAN Paging)
 {
     if (Irp->MdlAddress != NULL)
     {
-        return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, HighPagePriority);
+        return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, (Paging ? HighPagePriority : NormalPagePriority));
     }
     else
     {

@@ -712,7 +712,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    BitmapBuffer = NtfsGetUserBuffer(Irp);
+    BitmapBuffer = NtfsGetUserBuffer(Irp, FALSE);
     if (Irp->RequestorMode == UserMode)
     {
         _SEH2_TRY
