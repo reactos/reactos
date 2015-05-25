@@ -461,9 +461,17 @@ typedef struct _FCB
 
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 
-//int CdfsStrcmpi( wchar_t *str1, wchar_t *str2 );
-//void CdfsWstrcpy( wchar_t *str1, wchar_t *str2, int max );
+FORCEINLINE
+NTSTATUS
+NtfsMarkIrpContextForQueue(PNTFS_IRP_CONTEXT IrpContext)
+{
+    PULONG Flags = &IrpContext->Flags;
 
+    *Flags &= ~IRPCONTEXT_COMPLETE;
+    *Flags |= IRPCONTEXT_QUEUE;
+
+    return STATUS_PENDING;
+}
 
 /* attrib.c */
 
