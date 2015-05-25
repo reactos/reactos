@@ -428,6 +428,11 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext)
 
     DeviceExt = DeviceObject->DeviceExtension;
 
+    if (!(IrpContext->Flags & IRPCONTEXT_CANWAIT))
+    {
+        return NtfsMarkIrpContextForQueue(IrpContext);
+    }
+
     ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
                                    TRUE);
     Status = NtfsCreateFile(DeviceObject,
