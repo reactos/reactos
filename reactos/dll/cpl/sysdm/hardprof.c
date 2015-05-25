@@ -39,6 +39,31 @@ typedef struct _PROFILENAMES
 
 
 static
+VOID
+UpdateButtons(
+    HWND hwndDlg,
+    PPROFILEDATA pProfileData)
+{
+    EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFCOPY), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFRENAME), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFDEL), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
+
+    if (pProfileData->dwProfileCount < 2)
+    {
+        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFUP), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFDWN), FALSE);
+    }
+    else
+    {
+        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFUP),
+                     (pProfileData->dwSelectedProfileIndex > 0) ? TRUE : FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFDWN),
+                     (pProfileData->dwSelectedProfileIndex < pProfileData->dwProfileCount - 1) ? TRUE : FALSE);
+    }
+}
+
+
+static
 BOOL
 IsProfileNameInUse(
     PPROFILENAMES pProfileNames,
@@ -171,6 +196,8 @@ CopyHardwareProfile(
     pNewProfile->dwPreferenceOrder = pNewProfile->dwProfileNumber;
 
     SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_ADDSTRING, 0, (LPARAM)pNewProfile->szFriendlyName);
+
+    UpdateButtons(hwndDlg, pProfileData);
 }
 
 
@@ -320,6 +347,39 @@ DeleteHardwareProfile(
     pProfileData->pProfiles = pProfiles;
 
     SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_SETCURSEL, pProfileData->dwSelectedProfileIndex, 0);
+
+    UpdateButtons(hwndDlg, pProfileData);
+}
+
+
+static
+VOID
+MoveHardwareProfile(
+    HWND hwndDlg,
+    PPROFILEDATA pProfileData,
+    BOOL bMoveUp)
+{
+    PROFILE TempProfile;
+    PPROFILE pSrcProfile, pDstProfile;
+    DWORD dwSrcIndex, dwDstIndex;
+
+    dwSrcIndex = pProfileData->dwSelectedProfileIndex;
+    dwDstIndex = bMoveUp ? (dwSrcIndex - 1) : (dwSrcIndex + 1);
+
+    pSrcProfile = &pProfileData->pProfiles[dwSrcIndex];
+    pDstProfile = &pProfileData->pProfiles[dwDstIndex];
+
+    CopyMemory(&TempProfile, pDstProfile, sizeof(PROFILE));
+    CopyMemory(pDstProfile, pSrcProfile, sizeof(PROFILE));
+    CopyMemory(pSrcProfile, &TempProfile, sizeof(PROFILE));
+
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, dwSrcIndex, 0);
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_INSERTSTRING, dwDstIndex, (LPARAM)pDstProfile->szFriendlyName);
+
+    pProfileData->dwSelectedProfileIndex = dwDstIndex;
+    SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_SETCURSEL, pProfileData->dwSelectedProfileIndex, 0);
+
+    UpdateButtons(hwndDlg, pProfileData);
 }
 
 
@@ -634,6 +694,14 @@ HardProfDlgProc(HWND hwndDlg,
                     DeleteHardwareProfile(hwndDlg, pProfileData);
                     break;
 
+                case IDC_HRDPROFUP:
+                    MoveHardwareProfile(hwndDlg, pProfileData, TRUE);
+                    break;
+
+                case IDC_HRDPROFDWN:
+                    MoveHardwareProfile(hwndDlg, pProfileData, FALSE);
+                    break;
+
                 case IDC_HRDPROFWAIT:
                     EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFEDIT), FALSE);
                     return TRUE;
@@ -646,10 +714,7 @@ HardProfDlgProc(HWND hwndDlg,
                     if (HIWORD(wParam) == LBN_SELCHANGE)
                     {
                         pProfileData->dwSelectedProfileIndex = (DWORD)SendDlgItemMessage(hwndDlg, IDC_HRDPROFLSTBOX, LB_GETCURSEL, 0, 0);
-
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFCOPY), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFRENAME), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_HRDPROFDEL), (pProfileData->dwSelectedProfileIndex != (DWORD)-1) ? TRUE : FALSE);
+                        UpdateButtons(hwndDlg, pProfileData);
                     }
                     return TRUE;
 
