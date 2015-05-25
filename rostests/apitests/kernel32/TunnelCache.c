@@ -13,6 +13,92 @@
 
 static
 void
+Test_LongTests(void)
+{
+    UCHAR i = 0;
+    HANDLE hFile;
+    CHAR TestDir[] = "XTestDirTunnelCache";
+    CHAR OldDir[MAX_PATH];
+    FILETIME FileTime, File1Time;
+
+    /* Create a blank test directory */
+    if (GetCurrentDirectory(MAX_PATH, OldDir) == 0)
+    {
+        win_skip("No test directory available\n");
+        return;
+    }
+
+    /* Create a blank test directory */
+    for (; i < 10; ++i)
+    {
+        TestDir[0] = '0' + i;
+        if (CreateDirectory(TestDir, NULL))
+        {
+            if (SetCurrentDirectory(TestDir) == 0)
+            {
+                RemoveDirectory(TestDir);
+                win_skip("No test directory available\n");
+                return;
+            }
+	
+            break;
+        }
+    }
+
+    if (i == 10)
+    {
+        win_skip("No test directory available\n");
+        return;
+    }
+
+    hFile = CreateFile("file1",
+                       GENERIC_READ | GENERIC_WRITE,
+                       0, NULL,
+                       CREATE_NEW,
+                       FILE_ATTRIBUTE_NORMAL,
+                       NULL);
+    ok(hFile != INVALID_HANDLE_VALUE, "CreateFile() failed\n");
+    ok(GetFileTime(hFile, &FileTime, NULL, NULL) != FALSE, "GetFileTime() failed\n");
+    CloseHandle(hFile);
+
+    /* Wait a least 10ms (resolution of FAT) */
+    /* XXX: Increased to 1s for ReactOS... */
+    Sleep(1000);
+
+    hFile = CreateFile("file2",
+                       GENERIC_READ | GENERIC_WRITE,
+                       0, NULL,
+                       CREATE_NEW,
+                       FILE_ATTRIBUTE_NORMAL,
+                       NULL);
+    ok(hFile != INVALID_HANDLE_VALUE, "CreateFile() failed\n");
+    CloseHandle(hFile);
+
+    ok(MoveFile("file1", "file") != FALSE, "MoveFile() failed\n");
+    ok(MoveFile("file2", "file1") != FALSE, "MoveFile() failed\n");
+
+    hFile = CreateFile("file1",
+                       GENERIC_READ,
+                       0, NULL,
+                       OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL,
+                       NULL);
+    ok(hFile != INVALID_HANDLE_VALUE, "CreateFile() failed\n");
+    ok(GetFileTime(hFile, &File1Time, NULL, NULL) != FALSE, "GetFileTime() failed\n");
+    CloseHandle(hFile);
+
+    ok(RtlCompareMemory(&FileTime, &File1Time, sizeof(FILETIME)) == sizeof(FILETIME), "Tunnel cache failed\n");
+
+    DeleteFile("file2");
+    DeleteFile("file1");
+    DeleteFile("file");
+
+    SetCurrentDirectory(OldDir);
+    RemoveDirectory(TestDir);
+}
+
+static
+void
 Test_ShortTests(void)
 {
     UCHAR i = 0;
@@ -98,4 +184,5 @@ Test_ShortTests(void)
 START_TEST(TunnelCache)
 {
     Test_ShortTests();
+    Test_LongTests();
 }
