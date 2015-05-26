@@ -1,6 +1,6 @@
 /* FILE:       dll/win32/shell32/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2014-04-25
+ * UPDATED:    2015-04-12
  * THANKS TO:  navaraf, who translated major part of this file
  */
 
@@ -50,18 +50,18 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Zpět\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "Vy&jmou&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Kopírovat\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Vložit\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Vložit zá&stupce", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Ko&pírovat do složky...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Pře&sunout do složky...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "Vybr&at vše\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invertovat výběr", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -340,11 +340,11 @@ BEGIN
     PUSHBUTTON "Zkontrolovat...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentace", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "Tento nástroj zdefragmentuje soubory na svazku", -1, 40, 85, 160, 20
+    LTEXT "Tento nástroj zdefragmentuje soubory na svazku.", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragmentovat...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Záloha", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "Tímto nástrojem zazálohuje soubory na svazku.", -1, 40, 150, 160, 20
+    LTEXT "Tento nástroj zazálohuje soubory na svazku.", -1, 40, 150, 160, 20
     PUSHBUTTON "Zálohovat...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
@@ -603,7 +603,7 @@ BEGIN
     DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
     GROUPBOX "Možnosti kontroly disku", -1, 7, 6, 179, 40
     PUSHBUTTON "Storno", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "Automaticky opravovat chyby souborového systému", 14000, 12, 15, 155, 10
+    AUTOCHECKBOX "Automaticky opravovat chyby", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Vyhledat a pokusit se obnovit vadné sektory", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
@@ -625,16 +625,16 @@ END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "Varování"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    LTEXT "Tento soubor může být využíván operačním systémem nebo\n\
+jinou aplikací. Změnou tohoto souboru může být systém\n\
+poškozen nebo omezena jeho funkcionalita.\n\n\
+Určitě chcete otevřít tento soubor?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Ano", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "Ne", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -703,11 +703,11 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Potvrdit přepsání souboru"
     IDS_OVERWRITEFOLDER_TEXT "Tato složka již obsahuje složku s názvem '%1'.\n\nPokud mají soubory v cílové složce stejné názvy jako soubory ve zvolené\nsložce, budou přepsány. Opravdu chcete přesunout nebo zkopírovat tuto složku?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_COPYING "Kopírování"
+    IDS_FILEOOP_MOVING "Přesouvání"
+    IDS_FILEOOP_DELETING "Odstraňování"
+    IDS_FILEOOP_FROM_TO "Z %1 do %2"
+    IDS_FILEOOP_FROM "Z %1"
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
@@ -823,5 +823,5 @@ BEGIN
     IDS_UNKNOWN_APP "Neznámá aplikace"
     IDS_EXE_DESCRIPTION "Popis:"
 
-    IDS_MENU_EMPTY "(Empty)"
+    IDS_MENU_EMPTY "(Prázdné)"
 END

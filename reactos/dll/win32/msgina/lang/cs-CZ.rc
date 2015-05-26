@@ -1,8 +1,8 @@
 /* FILE:       dll/win32/msgina/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2013-02-17
+ * UPDATED:    2015-04-12
  */
- 
+
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 80
@@ -34,7 +34,7 @@ BEGIN
     EDITTEXT IDC_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
     LTEXT "Heslo:", IDC_STATIC, 6, 78, 52, 8
     EDITTEXT IDC_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Log on to:", IDC_STATIC, 6, 96, 52, 8
+    LTEXT "Přihlásit na:", IDC_STATIC, 6, 96, 52, 8
     COMBOBOX IDC_LOGON_TO, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Storno", IDCANCEL, 160, 122, 50, 14
@@ -54,7 +54,7 @@ BEGIN
     PUSHBUTTON "Uzamknout počítač", IDC_LOCK, 10, 135, 70, 14
     PUSHBUTTON "Odhlásit", IDC_LOGOFF, 90, 135, 70, 14
     PUSHBUTTON "Vypnout", IDC_SHUTDOWN, 170, 135, 70, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
+    PUSHBUTTON "Změnit heslo", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Správce úloh", IDC_TASKMGR, 90, 154, 70, 14
     PUSHBUTTON "Storno", IDCANCEL, 170, 154, 70, 14
 END
@@ -90,33 +90,33 @@ END
 
 IDD_CHANGE_PASSWORD DIALOGEX 0, 0, 275, 166
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Change Password"
+CAPTION "Změnit heslo"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "User name:", IDC_STATIC, 7, 61, 78, 8
+    LTEXT "Uživatelské jméno:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Log on to:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Doména:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
-    LTEXT "Old Password:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Staré heslo:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "New Password:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Nové heslo:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirm new Password:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Potvrzení nového hesla:", IDC_STATIC, 7, 127, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 218, 145, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 218, 145, 50, 14
 END
 
 IDD_LOGOFF_DLG DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Log Off ReactOS"
+CAPTION "Odhlásit se ze systému"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
-    LTEXT "Are you sure you want to log off?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "Yes", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "No", IDNO, 95, 39, 50, 14
+    LTEXT "Určitě se chcete odhlásit?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Ano", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Ne", IDNO, 95, 39, 50, 14
 END
 
 IDD_SHUTDOWN_DLG DIALOGEX 0, 0, 275, 146
@@ -149,7 +149,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_SHELL_SHUTDOWN, IDI_SHELL_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
-    LTEXT "&What do you want the computer to do?", IDC_STATIC, 39, 57, 167, 10
+    LTEXT "&Co má počítač provést?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
     DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
@@ -168,31 +168,31 @@ BEGIN
     IDS_LOCKMSG "Pouze %s nebo Administrátor může odemknout tento počítač."
     IDS_LOGONMSG "Jste přihlášeni jako %s."
     IDS_LOGONDATE "Datum přihlášení: %s %s"
-    IDS_COMPUTERLOCKED "Computer locked"
-    IDS_LOCKEDWRONGPASSWORD "The password is wrong. Please enter your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOCKEDWRONGUSER "This computer is locked. Only %s\\%s or an Administrator can unlock this computer."
-    IDS_CHANGEPWDTITLE "Change Password"
-    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
-    IDS_PASSWORDCHANGED "Your password has been changed."
-    IDS_LOGONTITLE "Logon Message"
-    IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
-    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
-    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
+    IDS_COMPUTERLOCKED "Počítač je uzamčen"
+    IDS_LOCKEDWRONGPASSWORD "Zadané heslo není správné. Prosím zadejte jej znovu. V heslech se rozlišuje mezi velkými a malými písmeny."
+    IDS_LOCKEDWRONGUSER "Tento počítač je uzamčen. Jen %s\\%s nebo Administrátor mohou odemknout tento počítač."
+    IDS_CHANGEPWDTITLE "Změnit heslo"
+    IDS_NONMATCHINGPASSWORDS "Zadaná hesla se neshodují. V obou polích musí být zadáno stejné heslo."
+    IDS_PASSWORDCHANGED "Heslo bylo změněno."
+    IDS_LOGONTITLE "Zpráva o přihlášení"
+    IDS_LOGONWRONGUSERORPWD "Systém nemohl provést přihlášení. Zkontrolujte, že uživatelské jméno a název domény jsou správně, poté znovu zadejte heslo. V heslech se rozlišuje mezi velkými a malými písmeny."
+    IDS_LOGONUSERDISABLED "Tento účet byl vypnut. Prosím kontaktujte administrátora tohoto systému."
+    IDS_PASSWORDMUSTCHANGE "Při prvním přihlášení je nutné změnit heslo."
+    IDS_PASSWORDEXPIRED "Heslu vypršela platnost a musí být změněno."
 END
 
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "Log off ""%s"""
-    IDS_SHUTDOWN_SHUTDOWN "Shut down"
-    IDS_SHUTDOWN_RESTART "Restart"
-    IDS_SHUTDOWN_SLEEP "Sleep"
-    IDS_SHUTDOWN_HIBERNATE "Hibernate"
+    IDS_SHUTDOWN_LOGOFF "Odhlásit ""%s"""
+    IDS_SHUTDOWN_SHUTDOWN "Vypnout"
+    IDS_SHUTDOWN_RESTART "Restartovat"
+    IDS_SHUTDOWN_SLEEP "Uspat"
+    IDS_SHUTDOWN_HIBERNATE "Hibernace"
     /* Shut down descriptions */
-    IDS_SHUTDOWN_LOGOFF_DESC "Ends your current session and allows other users to log on to the system."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Ends your current session and shuts down the system so you can safely shut down the power."
-    IDS_SHUTDOWN_RESTART_DESC "Ends your current session and reboots the system."
-    IDS_SHUTDOWN_SLEEP_DESC "Puts the system in sleep mode."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Saves the current session and shuts down the computer."
+    IDS_SHUTDOWN_LOGOFF_DESC "Ukončí současnou relaci a umožní přihlášení k systému ostatním uživatelům."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Ukončí současnou relaci a vypne počítač."
+    IDS_SHUTDOWN_RESTART_DESC "Ukončí současnou relaci a restartuje systém."
+    IDS_SHUTDOWN_SLEEP_DESC "Přepne systém do režimu spánku."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Uloží současnou relaci na disk a vypne počítač."
 END

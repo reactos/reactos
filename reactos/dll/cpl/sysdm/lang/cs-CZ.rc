@@ -72,7 +72,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informace o verzi", IDC_STATIC, 6, 3, 210, 73
     CONTROL "Hlásit se jako pracovní stanice", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
-    LTEXT "ReactOS je vytvořen jako serverový OS a jako takový se i hlásí. Po zaškrtnutí tohoto políčka se pro aplikace toto chování změní.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "ReactOS je vytvořen jako serverový OS a jako takový se také hlásí. Po zaškrtnutí tohoto políčka se pro aplikace toto chování změní.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
 

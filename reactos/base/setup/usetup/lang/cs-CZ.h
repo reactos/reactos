@@ -1,7 +1,7 @@
-/* FILE:        setup/usetup/lang/cs-CZ.rc
+/* FILE:        base/setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * THANKS TO:   preston for bugfix advice at line 842
- * UPDATED:     2014-08-31
+ * THANKS TO:   preston for bugfix advice at line 848
+ * UPDATED:     2015-04-12
  */
 
 #pragma once
@@ -1502,14 +1502,14 @@ MUI_ERROR csCZErrorEntries[] =
     },
     {
         //ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        "Neplatnì n zev adres ýe.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        "Zvolenì odd¡l nen¡ pro instalaci ReactOS dostateŸnØ velkì.\n"
+        "InstalaŸn¡ odd¡l mus¡ m¡t velikost alespoå %lu MB.\n"
         "\n"
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
         NULL

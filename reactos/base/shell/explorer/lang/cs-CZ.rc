@@ -1,7 +1,7 @@
 /*
- * FILE:       base/shell/explorer-new/lang/cs-CZ.rc
+ * FILE:       base/shell/explorer/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2010-05-31
+ * UPDATED:    2015-04-12
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -11,18 +11,18 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Adjust Date/Time", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "&Customize Notifications...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "Změnit &datum a čas", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Upravit notifikace...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
-        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
-        MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM "Okna na &sebe", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Zobrazit okna &vedle sebe", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Zobrazit okna &nad sebou", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "Zobrazit &plochu", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Zpět", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "Správce úloh", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "Sp&rávce úloh", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Uzamknout hlavní panel", ID_LOCKTASKBAR
+        MENUITEM "Uzamknout &hlavní panel", ID_LOCKTASKBAR
         MENUITEM "Vl&astnosti", ID_SHELL_CMD_PROPERTIES
     END
 END
@@ -105,7 +105,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 6, 238, 21, WS_DISABLED
     GROUPBOX "Ikony", IDC_STATIC, 6, 33, 240, 58, WS_DISABLED
-    LTEXT "Přehledost oznamovací oblasti lze zachovat pomocí skrytí nepoužívaných ikon.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
+    LTEXT "Přehlednost oznamovací oblasti lze zachovat pomocí skrytí nepoužívaných ikon.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
     AUTOCHECKBOX "Sk&rýt neaktivní ikony", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
     PUSHBUTTON "&Upravit...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14, WS_DISABLED
     GROUPBOX "Systémové ikony", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
@@ -121,17 +121,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Panely nástrojů"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Vyberte panely nástrojů, které mají být přídány na hlavní panel.", IDC_STATIC, 7, 7, 223, 12, WS_DISABLED
+    LTEXT "Vyberte panely nástrojů, které mají být přidány na hlavní panel.", IDC_STATIC, 7, 7, 223, 12, WS_DISABLED
     CONTROL "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32", WS_BORDER | WS_TABSTOP | WS_DISABLED, 7, 20, 236, 160, WS_EX_CLIENTEDGE
 END
 
 IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced"
+CAPTION "Rozšířené"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Advanced options", IDC_STATIC, 6, 6, 240, 121
-    AUTOCHECKBOX "Show s&econds", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    GROUPBOX "Rozšířené možnosti", IDC_STATIC, 6, 6, 240, 121
+    AUTOCHECKBOX "Zobrazit &vteřiny u hodin", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
     AUTOCHECKBOX "Zobrazit &náhledy oken", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
 

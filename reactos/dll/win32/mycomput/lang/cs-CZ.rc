@@ -1,0 +1,11 @@
+/* FILE:        dll/win32/mycomput/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2015-04-12
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_MANAGE "Spravovat"
+END
