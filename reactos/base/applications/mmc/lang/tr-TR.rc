@@ -12,7 +12,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Yönetim Konsolu Üzerine...", IDM_HELP_ABOUT
     END
 END
 
@@ -30,7 +30,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Yönetim Konsolu Üzerine...", IDM_HELP_ABOUT
     END
 END
 

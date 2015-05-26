@@ -50,7 +50,7 @@ MAIN_MENU MENU
  POPUP "&Yardım" {
    MENUITEM "&Yardım İçin Yardım", MNID_HELP_HELPON
    MENUITEM "&Sürekli Üstte", MNID_HELP_HELPTOP
-   MENUITEM "&Üzerine...", MNID_HELP_ABOUT
+   MENUITEM "&ReactOS Yardım Üzerine...", MNID_HELP_ABOUT
  }
 }
 

@@ -15,7 +15,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDC_ABOUT
+        MENUITEM "&Ses Düzeyi Denetimi Üzerine...", IDC_ABOUT
     END
 END
 

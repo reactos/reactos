@@ -267,7 +267,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         12,
-        "îzgÅn ruhsatçyla birlikte GNU GPL altçnda yayçnlançr.",
+        "îzgÅn ruhsatçyla birlikte GNU GPL altçnda yayçmlançr.",
         TEXT_STYLE_NORMAL
     },
     {

@@ -64,7 +64,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", ID_HELP_ABOUT
+        MENUITEM "&Görev Yöneticisi Üzerine...", ID_HELP_ABOUT
     END
 END
 

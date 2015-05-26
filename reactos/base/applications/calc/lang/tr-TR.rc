@@ -351,7 +351,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
 END
 
@@ -384,7 +384,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
 END
 
@@ -407,7 +407,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
 END
 

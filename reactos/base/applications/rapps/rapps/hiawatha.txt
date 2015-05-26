@@ -15,7 +15,7 @@ CDPath = none
 [Section.0407]
 Description = Quelloffener Webserver mit einem Augenmerk auf Sicherheit.
 
-[Section]
+[Section.041f]
 License = GPL sürüm 2
 Description = Güvenlik üzerine odaklı açık kaynak bir Umûmî Ağ sunucusu.
 Size = 3,4 MB

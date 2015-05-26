@@ -85,7 +85,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", ID_HELP_ABOUT
+        MENUITEM "&Değer Defteri Düzenleyicisi Üzerine...", ID_HELP_ABOUT
     END
 END
 

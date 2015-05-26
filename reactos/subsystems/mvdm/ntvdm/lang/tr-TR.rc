@@ -1,0 +1,17 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HIDE_MOUSE, "&Fâre İmlecini Gizle"
+    IDS_SHOW_MOUSE, "Fâre &İmlecini Göster"
+    IDS_VDM_MENU  , "&ReactOS VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_DUMPMEM_TXT,    "&Bellek Dökümünü Al (Metin)"
+    IDS_VDM_DUMPMEM_BIN,    "B&ellek Dökümünü Al (İkili)"
+    IDS_VDM_QUIT       ,    "&ReactOS VDM'den Çık"
+END

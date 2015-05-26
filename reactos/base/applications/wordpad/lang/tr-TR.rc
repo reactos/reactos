@@ -30,7 +30,7 @@ BEGIN
         MENUITEM "Ay&rı Sakla...",        ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Ya&zdır...\tCtrl+P",    ID_PRINT
-        MENUITEM "&Baskı Ön İzlemesi...", ID_PREVIEW
+        MENUITEM "Yaz&dırma Ön İzlemesi...", ID_PREVIEW
         MENUITEM "Say&fa Ayarla...",      ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                ID_FILE_EXIT
@@ -89,7 +89,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine...",              ID_ABOUT
+        MENUITEM "&ReactOS Wordpad Üzerine...",              ID_ABOUT
     END
 END
 

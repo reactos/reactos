@@ -1,5 +1,6 @@
 ﻿; UTF-8
 ; Spanish translation by Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = GnuCash
@@ -18,6 +19,10 @@ Description = Privat und Small-Business Finanzbuchhaltungssoftware, unter der GN
 [Section.0418]
 Description = Program de contabilitate financiară pentru uz personal și întreprinderi mici, oferit sub licența gratuită GNU GPL. Este disponibil pentru GNU/Linux, BSD, Solaris, Mac OS X și Windows.
 Size = 92,6 Mo
+
+[Section.041f]
+Description = GNU GPL altında özgürce ruhsatlanmış, GNU/Linux, BSD, Solaris, Mac OS X ve Microsoft Windows için kullanılabilir, bir şahsî ve küçük iş mâlî muhâsebe yazılımı.
+Size = 92,6 MB
 
 [Section.0a]
 Description = Un programa de contabilidad personal y de PYMEs liberado bajo los términos de la GNU GPL. Está disponible para GNU/Linux, BSD, Solaris, Mac OS X y Microsoft Windows.
