@@ -66,7 +66,7 @@ static NET_API_STATUS (WINAPI *pNetUserDel)(LPCWSTR,LPCWSTR)=NULL;
 static NET_API_STATUS (WINAPI *pNetLocalGroupGetInfo)(LPCWSTR,LPCWSTR,DWORD,LPBYTE*)=NULL;
 static NET_API_STATUS (WINAPI *pNetLocalGroupGetMembers)(LPCWSTR,LPCWSTR,DWORD,LPBYTE*,DWORD,LPDWORD,LPDWORD,PDWORD_PTR)=NULL;
 
-static int init_access_tests(void)
+static BOOL init_access_tests(void)
 {
     DWORD dwSize;
     BOOL rc;
@@ -77,14 +77,14 @@ static int init_access_tests(void)
     if (rc==FALSE && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
         win_skip("GetUserNameW is not available.\n");
-        return 0;
+        return FALSE;
     }
     ok(rc, "User Name Retrieved\n");
 
     computer_name[0] = 0;
     dwSize = sizeof(computer_name)/sizeof(WCHAR);
     ok(GetComputerNameW(computer_name, &dwSize), "Computer Name Retrieved\n");
-    return 1;
+    return TRUE;
 }
 
 static NET_API_STATUS create_test_user(void)
@@ -348,6 +348,8 @@ static void run_localgroupgetinfo_tests(void)
 
     for(i=0;i<entries_read;i++)
         trace("domain and name: %s\n", wine_dbgstr_w(buffer[i].lgrmi3_domainandname));
+
+    pNetApiBufferFree(buffer);
 }
 
 START_TEST(access)
