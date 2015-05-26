@@ -1173,7 +1173,7 @@ Fast486FpuDivide(PFAST486_STATE State,
  */
 static inline VOID FASTCALL
 Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
-                                    PFAST486_FPU_DATA_REG Operand,
+                                    PCFAST486_FPU_DATA_REG Operand,
                                     PFAST486_FPU_DATA_REG Result)
 {
     INT i;
@@ -1221,7 +1221,7 @@ Fast486FpuCalculateTwoPowerMinusOne(PFAST486_STATE State,
 
 static inline BOOLEAN FASTCALL
 Fast486FpuCalculateLogBase2(PFAST486_STATE State,
-                            PFAST486_FPU_DATA_REG Operand,
+                            PCFAST486_FPU_DATA_REG Operand,
                             PFAST486_FPU_DATA_REG Result)
 {
     INT i;
@@ -1345,7 +1345,7 @@ Cleanup:
  */
 static inline BOOLEAN FASTCALL
 Fast486FpuCalculateSine(PFAST486_STATE State,
-                        PFAST486_FPU_DATA_REG Operand,
+                        PCFAST486_FPU_DATA_REG Operand,
                         PFAST486_FPU_DATA_REG Result)
 {
     INT i;
@@ -1425,7 +1425,7 @@ Fast486FpuCalculateSine(PFAST486_STATE State,
  */
 static inline BOOLEAN FASTCALL
 Fast486FpuCalculateCosine(PFAST486_STATE State,
-                          PFAST486_FPU_DATA_REG Operand,
+                          PCFAST486_FPU_DATA_REG Operand,
                           PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG Value = *Operand;
@@ -2136,9 +2136,23 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FPTAN */
             case 0x32:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FAST486_FPU_DATA_REG Sine;
+                FAST486_FPU_DATA_REG Cosine;
 
+                /* Compute the sine */
+                if (!Fast486FpuCalculateSine(State, &FPU_ST(0), &Sine)) break;
+
+                /* Find the cosine by calculating sqrt(1 - sin(x) ^ 2) */
+                if (!Fast486FpuMultiply(State, &Sine, &Sine, &Cosine)) break;
+                if (!Fast486FpuSubtract(State, &FpuOne, &Cosine, &Cosine)) break;
+                if (!Fast486FpuCalculateSquareRoot(State, &Cosine, &Cosine)) break;
+
+                /* Divide the sine by the cosine to get the tangent */
+                if (!Fast486FpuDivide(State, &Sine, &Cosine, &FPU_ST(0))) break;
+                FPU_UPDATE_TAG(0);
+
+                /* Push 1.00 */
+                Fast486FpuPush(State, &FpuOne);
                 break;
             }
 
