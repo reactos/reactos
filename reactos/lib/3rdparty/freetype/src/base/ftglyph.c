@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType convenience functions to handle glyphs (body).              */
 /*                                                                         */
-/*  Copyright 1996-2005, 2007, 2008, 2010, 2012, 2013 by                   */
+/*  Copyright 1996-2005, 2007, 2008, 2010, 2012-2014 by                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -314,13 +314,13 @@
 
 
     /* check arguments */
-    if ( !target )
+    if ( !target || !source || !source->clazz )
     {
       error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
-    *target = 0;
+    *target = NULL;
 
     if ( !source || !source->clazz )
     {
@@ -359,7 +359,7 @@
     FT_Error    error;
     FT_Glyph    glyph;
 
-    const FT_Glyph_Class*  clazz = 0;
+    const FT_Glyph_Class*  clazz = NULL;
 
 
     if ( !slot )
@@ -512,7 +512,7 @@
     FT_BitmapGlyph            bitmap = NULL;
     const FT_Glyph_Class*     clazz;
 
-    /* FT_BITMAP_GLYPH_CLASS_GET derefers `library' in PIC mode */
+    /* FT_BITMAP_GLYPH_CLASS_GET dereferences `library' in PIC mode */
     FT_Library                library;
 
 

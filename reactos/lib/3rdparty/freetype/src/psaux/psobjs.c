@@ -1338,7 +1338,15 @@
     {
       parser->cursor = token->start;
       parser->limit  = token->limit;
-      ps_parser_load_field( parser, &fieldrec, objects, max_objects, 0 );
+
+      error = ps_parser_load_field( parser,
+                                    &fieldrec,
+                                    objects,
+                                    max_objects,
+                                    0 );
+      if ( error )
+        break;
+
       fieldrec.offset += fieldrec.size;
     }
 

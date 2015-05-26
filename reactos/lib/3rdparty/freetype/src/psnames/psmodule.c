@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PSNames module implementation (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2003, 2005-2008, 2012, 2013 by                          */
+/*  Copyright 1996-2003, 2005-2008, 2012-2014 by                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -563,7 +563,7 @@
   psnames_get_service( FT_Module    module,
                        const char*  service_id )
   {
-    /* PSCMAPS_SERVICES_GET derefers `library' in PIC mode */
+    /* PSCMAPS_SERVICES_GET dereferences `library' in PIC mode */
 #ifdef FT_CONFIG_OPTION_PIC
     FT_Library  library;
 

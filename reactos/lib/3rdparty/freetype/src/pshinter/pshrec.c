@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PostScript hints recorder (body).                           */
 /*                                                                         */
-/*  Copyright 2001-2004, 2007, 2009, 2013 by                               */
+/*  Copyright 2001-2004, 2007, 2009, 2013, 2014 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -797,13 +797,12 @@
   }
 
 
-  FT_LOCAL( FT_Error )
+  FT_LOCAL( void )
   ps_hints_init( PS_Hints   hints,
                  FT_Memory  memory )
   {
     FT_MEM_ZERO( hints, sizeof ( *hints ) );
     hints->memory = memory;
-    return FT_Err_Ok;
   }
 
 

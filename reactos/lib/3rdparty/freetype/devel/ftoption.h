@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2013 by                                                 */
+/*  Copyright 1996-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -61,7 +61,7 @@ FT_BEGIN_HEADER
   /*    that are statically linked to the library at compile time.  By     */
   /*    default, this file is <config/ftmodule.h>.                         */
   /*                                                                       */
-  /*  We highly recommend using the third method whenever possible.        */
+  /* We highly recommend using the third method whenever possible.         */
   /*                                                                       */
   /*************************************************************************/
 
@@ -205,7 +205,7 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /*  PNG bitmap support.                                                  */
+  /* PNG bitmap support.                                                   */
   /*                                                                       */
   /*   FreeType now handles loading color bitmap glyphs in the PNG format. */
   /*   This requires help from the external libpng library.  Uncompressed  */
@@ -219,7 +219,7 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /*  HarfBuzz support.                                                    */
+  /* HarfBuzz support.                                                     */
   /*                                                                       */
   /*   FreeType uses the HarfBuzz library to improve auto-hinting of       */
   /*   OpenType fonts.  If available, many glyphs not directly addressable */
@@ -773,6 +773,30 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* Using CFF_CONFIG_OPTION_DARKENING_PARAMETER_{X,Y}{1,2,3,4} it is      */
+  /* possible to set up the default values of the four control points that */
+  /* define the stem darkening behaviour of the (new) CFF engine.  For     */
+  /* more details please read the documentation of the                     */
+  /* `darkening-parameters' property of the cff driver module (file        */
+  /* `ftcffdrv.h'), which allows the control at run-time.                  */
+  /*                                                                       */
+  /* Do *not* undefine these macros!                                       */
+  /*                                                                       */
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1   500
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1   400
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2  1000
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2   275
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3  1667
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3   275
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4  2333
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4     0
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* CFF_CONFIG_OPTION_OLD_ENGINE controls whether the pre-Adobe CFF       */
   /* engine gets compiled into FreeType.  If defined, it is possible to    */
   /* switch between the two engines using the `hinting-engine' property of */
@@ -820,8 +844,8 @@ FT_BEGIN_HEADER
 
 
   /*
-   *  This macro is obsolete.  Support has been removed in FreeType
-   *  version 2.5.
+   * This macro is obsolete.  Support has been removed in FreeType
+   * version 2.5.
    */
 /* #define FT_CONFIG_OPTION_OLD_INTERNALS */
 
@@ -835,6 +859,35 @@ FT_BEGIN_HEADER
 #undef   TT_CONFIG_OPTION_UNPATENTED_HINTING
 #elif defined TT_CONFIG_OPTION_UNPATENTED_HINTING
 #define  TT_USE_BYTECODE_INTERPRETER
+#endif
+
+
+  /*
+   * Check CFF darkening parameters.  The checks are the same as in function
+   * `cff_property_set' in file `cffdrivr.c'.
+   */
+#if CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4 < 0   || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 < 0   || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2     || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3     || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4     || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 > 500
+#error "Invalid CFF darkening parameters!"
 #endif
 
 FT_END_HEADER

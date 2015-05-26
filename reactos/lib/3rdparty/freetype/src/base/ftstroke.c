@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (body).                                        */
 /*                                                                         */
-/*  Copyright 2002-2006, 2008-2011, 2013 by                                */
+/*  Copyright 2002-2006, 2008-2011, 2013, 2014 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -795,6 +795,9 @@
 
 
     if ( !library )
+      return FT_THROW( Invalid_Library_Handle );
+
+    if ( !astroker )
       return FT_THROW( Invalid_Argument );
 
     memory = library->memory;
@@ -822,14 +825,17 @@
                   FT_Stroker_LineJoin  line_join,
                   FT_Fixed             miter_limit )
   {
+    if ( !stroker )
+      return;
+
     stroker->radius      = radius;
     stroker->line_cap    = line_cap;
     stroker->line_join   = line_join;
     stroker->miter_limit = miter_limit;
 
     /* ensure miter limit has sensible value */
-    if ( stroker->miter_limit < 0x10000 )
-      stroker->miter_limit = 0x10000;
+    if ( stroker->miter_limit < 0x10000L )
+      stroker->miter_limit = 0x10000L;
 
     /* save line join style:                                           */
     /* line join style can be temporarily changed when stroking curves */
@@ -1002,7 +1008,8 @@
                                                     FT_Tan( theta ) ) );
 
 
-      intersect = FT_BOOL( stroker->line_length >= min_length &&
+      intersect = FT_BOOL( min_length                         &&
+                           stroker->line_length >= min_length &&
                            line_length          >= min_length );
     }
 
@@ -1287,6 +1294,9 @@
     FT_Fixed         line_length;
 
 
+    if ( !stroker || !to )
+      return FT_THROW( Invalid_Argument );
+
     delta.x = to->x - stroker->center.x;
     delta.y = to->y - stroker->center.y;
 
@@ -1359,6 +1369,12 @@
     FT_Vector*  limit = bez_stack + 30;
     FT_Bool     first_arc = TRUE;
 
+
+    if ( !stroker || !control || !to )
+    {
+      error = FT_THROW( Invalid_Argument );
+      goto Exit;
+    }
 
     /* if all control points are coincident, this is a no-op; */
     /* avoid creating a spurious corner                       */
@@ -1555,6 +1571,12 @@
     FT_Vector*  limit = bez_stack + 32;
     FT_Bool     first_arc = TRUE;
 
+
+    if ( !stroker || !control1 || !control2 || !to )
+    {
+      error = FT_THROW( Invalid_Argument );
+      goto Exit;
+    }
 
     /* if all control points are coincident, this is a no-op; */
     /* avoid creating a spurious corner */
@@ -1758,6 +1780,9 @@
                            FT_Vector*  to,
                            FT_Bool     open )
   {
+    if ( !stroker || !to )
+      return FT_THROW( Invalid_Argument );
+
     /* We cannot process the first point, because there is not enough      */
     /* information regarding its corner/cap.  The latter will be processed */
     /* in the `FT_Stroker_EndSubPath' routine.                             */
@@ -1857,6 +1882,12 @@
   {
     FT_Error  error = FT_Err_Ok;
 
+
+    if ( !stroker )
+    {
+      error = FT_THROW( Invalid_Argument );
+      goto Exit;
+    }
 
     if ( stroker->subpath_open )
     {
@@ -1983,6 +2014,12 @@
     FT_Error  error;
 
 
+    if ( !stroker )
+    {
+      error = FT_THROW( Invalid_Argument );
+      goto Exit;
+    }
+
     error = ft_stroke_border_get_counts( stroker->borders + 0,
                                          &count1, &count2 );
     if ( error )
@@ -1997,8 +2034,12 @@
     num_contours = count2 + count4;
 
   Exit:
-    *anum_points   = num_points;
-    *anum_contours = num_contours;
+    if ( anum_points )
+      *anum_points   = num_points;
+
+    if ( anum_contours )
+      *anum_contours = num_contours;
+
     return error;
   }
 
@@ -2010,6 +2051,9 @@
                            FT_StrokerBorder  border,
                            FT_Outline*       outline )
   {
+    if ( !stroker || !outline )
+      return;
+
     if ( border == FT_STROKER_BORDER_LEFT  ||
          border == FT_STROKER_BORDER_RIGHT )
     {
@@ -2059,7 +2103,10 @@
     FT_Int      tag;       /* current point's state           */
 
 
-    if ( !outline || !stroker )
+    if ( !outline )
+      return FT_THROW( Invalid_Outline );
+
+    if ( !stroker )
       return FT_THROW( Invalid_Argument );
 
     FT_Stroker_Rewind( stroker );
@@ -2258,18 +2305,20 @@
                    FT_Stroker   stroker,
                    FT_Bool      destroy )
   {
-    FT_Error    error   = FT_ERR( Invalid_Argument );
-    FT_Glyph    glyph   = NULL;
+    FT_Error  error = FT_ERR( Invalid_Argument );
+    FT_Glyph  glyph = NULL;
+
+    /* for FT_OUTLINE_GLYPH_CLASS_GET (in PIC mode) */
     FT_Library  library = stroker->library;
 
     FT_UNUSED( library );
 
 
-    if ( pglyph == NULL )
+    if ( !pglyph )
       goto Exit;
 
     glyph = *pglyph;
-    if ( glyph == NULL || glyph->clazz != FT_OUTLINE_GLYPH_CLASS_GET )
+    if ( !glyph || glyph->clazz != FT_OUTLINE_GLYPH_CLASS_GET )
       goto Exit;
 
     {
@@ -2293,7 +2342,7 @@
       if ( error )
         goto Fail;
 
-      (void)FT_Stroker_GetCounts( stroker, &num_points, &num_contours );
+      FT_Stroker_GetCounts( stroker, &num_points, &num_contours );
 
       FT_Outline_Done( glyph->library, outline );
 
@@ -2334,18 +2383,20 @@
                          FT_Bool      inside,
                          FT_Bool      destroy )
   {
-    FT_Error    error   = FT_ERR( Invalid_Argument );
-    FT_Glyph    glyph   = NULL;
+    FT_Error  error = FT_ERR( Invalid_Argument );
+    FT_Glyph  glyph = NULL;
+
+    /* for FT_OUTLINE_GLYPH_CLASS_GET (in PIC mode) */
     FT_Library  library = stroker->library;
 
     FT_UNUSED( library );
 
 
-    if ( pglyph == NULL )
+    if ( !pglyph )
       goto Exit;
 
     glyph = *pglyph;
-    if ( glyph == NULL || glyph->clazz != FT_OUTLINE_GLYPH_CLASS_GET )
+    if ( !glyph || glyph->clazz != FT_OUTLINE_GLYPH_CLASS_GET )
       goto Exit;
 
     {
@@ -2379,8 +2430,8 @@
       if ( error )
         goto Fail;
 
-      (void)FT_Stroker_GetBorderCounts( stroker, border,
-                                        &num_points, &num_contours );
+      FT_Stroker_GetBorderCounts( stroker, border,
+                                  &num_points, &num_contours );
 
       FT_Outline_Done( glyph->library, outline );
 

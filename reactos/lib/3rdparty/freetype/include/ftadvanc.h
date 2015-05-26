@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Quick computation of advance widths (specification only).            */
 /*                                                                         */
-/*  Copyright 2008, 2013 by                                                */
+/*  Copyright 2008, 2013, 2014 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -48,6 +48,11 @@ FT_BEGIN_HEADER
    * @description:
    *   This section contains functions to quickly extract advance values
    *   without handling glyph outlines, if possible.
+   *
+   * @order:
+   *   FT_Get_Advance
+   *   FT_Get_Advances
+   *
    */
 
 
@@ -171,7 +176,7 @@ FT_BEGIN_HEADER
                    FT_Int32   load_flags,
                    FT_Fixed  *padvances );
 
-/* */
+  /* */
 
 
 FT_END_HEADER

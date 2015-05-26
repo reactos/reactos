@@ -55,7 +55,7 @@
 
 
     if ( !face )
-      return FT_THROW( Invalid_Argument );
+      return FT_THROW( Invalid_Face_Handle );
 
     globals = (AF_FaceGlobals)face->autohint.data;
     if ( !globals )
@@ -103,8 +103,8 @@
         AF_StyleClass  style_class = AF_STYLE_CLASSES_GET[ss];
 
 
-        if ( style_class->script == *fallback_script      &&
-             style_class->coverage == AF_COVERAGE_DEFAULT )
+        if ( (FT_UInt)style_class->script == *fallback_script &&
+             style_class->coverage == AF_COVERAGE_DEFAULT     )
         {
           module->fallback_style = ss;
           break;
@@ -226,7 +226,7 @@
   af_get_interface( FT_Module    module,
                     const char*  module_interface )
   {
-    /* AF_SERVICES_GET derefers `library' in PIC mode */
+    /* AF_SERVICES_GET dereferences `library' in PIC mode */
 #ifdef FT_CONFIG_OPTION_PIC
     FT_Library  library;
 

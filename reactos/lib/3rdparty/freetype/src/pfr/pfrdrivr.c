@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR driver interface (body).                                */
 /*                                                                         */
-/*  Copyright 2002-2004, 2006, 2008, 2010, 2011, 2013 by                   */
+/*  Copyright 2002-2004, 2006, 2008, 2010, 2011, 2013, 2014 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -37,7 +37,7 @@
     PFR_PhyFont  phys = &face->phy_font;
 
 
-    pfr_face_get_kerning( pfrface, left, right, avector );
+    (void)pfr_face_get_kerning( pfrface, left, right, avector );
 
     /* convert from metrics to outline units when necessary */
     if ( phys->outline_resolution != phys->metrics_resolution )
@@ -134,7 +134,7 @@
   }
 
 
-  FT_CALLBACK_TABLE_DEF
+  static
   const FT_Service_PfrMetricsRec  pfr_metrics_service_rec =
   {
     pfr_get_metrics,

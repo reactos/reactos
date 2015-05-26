@@ -5,7 +5,7 @@
 /*    FreeType API for color filtering of subpixel bitmap glyphs           */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2006-2008, 2010, 2013 by                                     */
+/*  Copyright 2006-2008, 2010, 2013, 2014 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -56,7 +56,7 @@ FT_BEGIN_HEADER
    *
    *   FreeType generates alpha coverage maps, which are linear by nature.
    *   For instance, the value 0x80 in bitmap representation means that
-   *   (within numerical precision) 0x80/0xff fraction of that pixel is
+   *   (within numerical precision) 0x80/0xFF fraction of that pixel is
    *   covered by the glyph's outline.  The blending function for placing
    *   text over a background is
    *

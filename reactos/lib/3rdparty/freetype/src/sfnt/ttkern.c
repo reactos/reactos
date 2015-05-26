@@ -99,7 +99,7 @@
       length   = FT_NEXT_USHORT( p );
       coverage = FT_NEXT_USHORT( p );
 
-      if ( length <= 6 )
+      if ( length <= 6 + 8 )
         break;
 
       p_next += length;

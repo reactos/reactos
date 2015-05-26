@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2005, 2008-2013 by                                      */
+/*  Copyright 1996-2005, 2008-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -47,6 +47,25 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    This section contains the definition of TrueType-specific tables   */
   /*    as well as some routines used to access and process them.          */
+  /*                                                                       */
+  /* <Order>                                                               */
+  /*    TT_Header                                                          */
+  /*    TT_HoriHeader                                                      */
+  /*    TT_VertHeader                                                      */
+  /*    TT_OS2                                                             */
+  /*    TT_Postscript                                                      */
+  /*    TT_PCLT                                                            */
+  /*    TT_MaxProfile                                                      */
+  /*                                                                       */
+  /*    FT_Sfnt_Tag                                                        */
+  /*    FT_Get_Sfnt_Table                                                  */
+  /*    FT_Load_Sfnt_Table                                                 */
+  /*    FT_Sfnt_Table_Info                                                 */
+  /*                                                                       */
+  /*    FT_Get_CMap_Language_ID                                            */
+  /*    FT_Get_CMap_Format                                                 */
+  /*                                                                       */
+  /*    FT_PARAM_TAG_UNPATENTED_HINTING                                    */
   /*                                                                       */
   /*************************************************************************/
 
@@ -559,21 +578,44 @@ FT_BEGIN_HEADER
   /*    An enumeration used to specify the index of an SFNT table.         */
   /*    Used in the @FT_Get_Sfnt_Table API function.                       */
   /*                                                                       */
+  /* <Values>                                                              */
+  /*    FT_SFNT_HEAD :: To access the font's @TT_Header structure.         */
+  /*                                                                       */
+  /*    FT_SFNT_MAXP :: To access the font's @TT_MaxProfile structure.     */
+  /*                                                                       */
+  /*    FT_SFNT_OS2  :: To access the font's @TT_OS2 structure.            */
+  /*                                                                       */
+  /*    FT_SFNT_HHEA :: To access the font's @TT_HoriHeader structure.     */
+  /*                                                                       */
+  /*    FT_SFNT_VHEA :: To access the font's @TT_VertHeader struture.      */
+  /*                                                                       */
+  /*    FT_SFNT_POST :: To access the font's @TT_Postscript structure.     */
+  /*                                                                       */
+  /*    FT_SFNT_PCLT :: To access the font's @TT_PCLT structure.           */
+  /*                                                                       */
   typedef enum  FT_Sfnt_Tag_
   {
-    ft_sfnt_head = 0,    /* TT_Header     */
-    ft_sfnt_maxp = 1,    /* TT_MaxProfile */
-    ft_sfnt_os2  = 2,    /* TT_OS2        */
-    ft_sfnt_hhea = 3,    /* TT_HoriHeader */
-    ft_sfnt_vhea = 4,    /* TT_VertHeader */
-    ft_sfnt_post = 5,    /* TT_Postscript */
-    ft_sfnt_pclt = 6,    /* TT_PCLT       */
+    FT_SFNT_HEAD,
+    FT_SFNT_MAXP,
+    FT_SFNT_OS2,
+    FT_SFNT_HHEA,
+    FT_SFNT_VHEA,
+    FT_SFNT_POST,
+    FT_SFNT_PCLT,
 
-    sfnt_max   /* internal end mark */
+    FT_SFNT_MAX
 
   } FT_Sfnt_Tag;
 
-  /* */
+  /* these constants are deprecated; use the corresponding `FT_Sfnt_Tag' */
+  /* values instead                                                      */
+#define ft_sfnt_head  FT_SFNT_HEAD
+#define ft_sfnt_maxp  FT_SFNT_MAXP
+#define ft_sfnt_os2   FT_SFNT_OS2
+#define ft_sfnt_hhea  FT_SFNT_HHEA
+#define ft_sfnt_vhea  FT_SFNT_VHEA
+#define ft_sfnt_post  FT_SFNT_POST
+#define ft_sfnt_pclt  FT_SFNT_PCLT
 
 
   /*************************************************************************/
@@ -611,7 +653,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*                                                                       */
   /*      vert_header =                                                    */
-  /*        (TT_VertHeader*)FT_Get_Sfnt_Table( face, ft_sfnt_vhea );       */
+  /*        (TT_VertHeader*)FT_Get_Sfnt_Table( face, FT_SFNT_VHEA );       */
   /*    }                                                                  */
   /*                                                                       */
   FT_EXPORT( void* )

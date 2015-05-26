@@ -1,57 +1,81 @@
-#  Content (c) 2002, 2004, 2006-2009, 2012, 2013
-#    David Turner <david@freetype.org>
 #
-#  This file contains routines used to parse the content of documentation
-#  comment blocks and build more structured objects out of them.
+#  content.py
+#
+#    Parse comment blocks to build content blocks (library file).
+#
+#  Copyright 2002, 2004, 2006-2009, 2012-2014 by
+#  David Turner.
+#
+#  This file is part of the FreeType project, and may only be used,
+#  modified, and distributed under the terms of the FreeType project
+#  license, LICENSE.TXT.  By continuing to use, modify, or distribute
+#  this file you indicate that you have read the license and
+#  understand and accept it fully.
+
+#
+# This file contains routines to parse documentation comment blocks,
+# building more structured objects out of them.
 #
 
+
 from sources import *
-from utils import *
+from utils   import *
+
 import string, re
 
 
-# this regular expression is used to detect code sequences. these
-# are simply code fragments embedded in '{' and '}' like in:
 #
-#  {
-#    x = y + z;
-#    if ( zookoo == 2 )
-#    {
-#      foobar();
-#    }
-#  }
+# Regular expressions to detect code sequences.  `Code sequences' are simply
+# code fragments embedded in '{' and '}', as demonstrated in the following
+# example.
 #
-# note that indentation of the starting and ending accolades must be
-# exactly the same. the code sequence can contain accolades at greater
-# indentation
+#   {
+#     x = y + z;
+#     if ( zookoo == 2 )
+#     {
+#       foobar();
+#     }
+#   }
+#
+# Note that the indentation of the first opening brace and the last closing
+# brace must be exactly the same.  The code sequence itself should have a
+# larger indentation than the surrounding braces.
 #
 re_code_start = re.compile( r"(\s*){\s*$" )
 re_code_end   = re.compile( r"(\s*)}\s*$" )
 
 
-# this regular expression is used to isolate identifiers from
-# other text
+#
+# A regular expression to isolate identifiers from other text.
 #
 re_identifier = re.compile( r'((?:\w|-)*)' )
 
 
-# we collect macros ending in `_H'; while outputting the object data, we use
-# this info together with the object's file location to emit the appropriate
-# header file macro and name before the object itself
+#
+# We collect macro names ending in `_H' (group 1), as defined in
+# `config/ftheader.h'.  While outputting the object data, we use this info
+# together with the object's file location (group 2) to emit the appropriate
+# header file macro and its associated file name before the object itself.
+#
+# Example:
+#
+#   #define FT_FREETYPE_H <freetype.h>
 #
 re_header_macro = re.compile( r'^#define\s{1,}(\w{1,}_H)\s{1,}<(.*)>' )
 
 
-#############################################################################
-#
-# The DocCode class is used to store source code lines.
-#
-#   'self.lines' contains a set of source code lines that will be dumped as
-#   HTML in a <PRE> tag.
-#
-#   The object is filled line by line by the parser; it strips the leading
-#   "margin" space from each input line before storing it in 'self.lines'.
-#
+################################################################
+##
+##  DOC CODE CLASS
+##
+##  The `DocCode' class is used to store source code lines.
+##
+##  `self.lines' contains a set of source code lines that will be dumped as
+##  HTML in a <PRE> tag.
+##
+##  The object is filled line by line by the parser; it strips the leading
+##  `margin' space from each input line before storing it in `self.lines'.
+##
 class  DocCode:
 
     def  __init__( self, margin, lines ):
@@ -77,12 +101,14 @@ class  DocCode:
 
 
 
-#############################################################################
-#
-# The DocPara class is used to store "normal" text paragraph.
-#
-#   'self.words' contains the list of words that make up the paragraph
-#
+################################################################
+##
+##  DOC PARA CLASS
+##
+##  `Normal' text paragraphs are stored in the `DocPara' class.
+##
+##  `self.words' contains the list of words that make up the paragraph.
+##
 class  DocPara:
 
     def  __init__( self, lines ):
@@ -123,17 +149,18 @@ class  DocPara:
         return result
 
 
-
-#############################################################################
-#
-#  The DocField class is used to store a list containing either DocPara or
-#  DocCode objects. Each DocField also has an optional "name" which is used
-#  when the object corresponds to a field or value definition
-#
+################################################################
+##
+##  DOC FIELD CLASS
+##
+##  The `DocField' class stores a list containing either `DocPara' or
+##  `DocCode' objects.  Each DocField object also has an optional `name'
+##  that is used when the object corresponds to a field or value definition.
+##
 class  DocField:
 
     def  __init__( self, name, lines ):
-        self.name  = name  # can be None for normal paragraphs/sources
+        self.name  = name  # can be `None' for normal paragraphs/sources
         self.items = []    # list of items
 
         mode_none  = 0     # start parsing mode
@@ -143,14 +170,14 @@ class  DocField:
         margin     = -1    # current code sequence indentation
         cur_lines  = []
 
-        # now analyze the markup lines to see if they contain paragraphs,
-        # code sequences or fields definitions
+        # analyze the markup lines to check whether they contain paragraphs,
+        # code sequences, or fields definitions
         #
         start = 0
         mode  = mode_none
 
         for l in lines:
-            # are we parsing a code sequence ?
+            # are we parsing a code sequence?
             if mode == mode_code:
                 m = re_code_end.match( l )
                 if m and len( m.group( 1 ) ) <= margin:
@@ -161,10 +188,10 @@ class  DocField:
                     cur_lines = []
                     mode      = mode_none
                 else:
-                    # nope, continue the code sequence
+                    # otherwise continue the code sequence
                     cur_lines.append( l[margin:] )
             else:
-                # start of code sequence ?
+                # start of code sequence?
                 m = re_code_start.match( l )
                 if m:
                     # save current lines
@@ -222,13 +249,29 @@ class  DocField:
         return result
 
 
-
-# this regular expression is used to detect field definitions
 #
-re_field = re.compile( r"\s*(\w*|\w(\w|\.)*\w)\s*::" )
+# A regular expression to detect field definitions.
+#
+# Examples:
+#
+#   foo     ::
+#   foo.bar ::
+#
+re_field = re.compile( r"""
+                         \s*
+                           (
+                             \w*
+                           |
+                             \w (\w | \.)* \w
+                           )
+                         \s* ::
+                       """, re.VERBOSE )
 
 
-
+################################################################
+##
+##  DOC MARKUP CLASS
+##
 class  DocMarkup:
 
     def  __init__( self, tag, lines ):
@@ -242,7 +285,7 @@ class  DocMarkup:
         for l in lines:
             m = re_field.match( l )
             if m:
-                # we detected the start of a new field definition
+                # We detected the start of a new field definition.
 
                 # first, save the current one
                 if cur_lines:
@@ -275,7 +318,10 @@ class  DocMarkup:
         print " " * margin + "</" + self.tag + ">"
 
 
-
+################################################################
+##
+##  DOC CHAPTER CLASS
+##
 class  DocChapter:
 
     def  __init__( self, block ):
@@ -291,7 +337,10 @@ class  DocChapter:
             self.order = []
 
 
-
+################################################################
+##
+##  DOC SECTION CLASS
+##
 class  DocSection:
 
     def  __init__( self, name = "Other" ):
@@ -320,18 +369,21 @@ class  DocSection:
                 self.title       = title
                 self.abstract    = block.get_markup_words( "abstract" )
                 self.description = block.get_markup_items( "description" )
-                self.order       = block.get_markup_words( "order" )
+                self.order       = block.get_markup_words_all( "order" )
                 return
 
     def  reorder( self ):
         self.block_names = sort_order_list( self.block_names, self.order )
 
 
-
+################################################################
+##
+##  CONTENT PROCESSOR CLASS
+##
 class  ContentProcessor:
 
     def  __init__( self ):
-        """initialize a block content processor"""
+        """Initialize a block content processor."""
         self.reset()
 
         self.sections = {}    # dictionary of documentation sections
@@ -342,8 +394,8 @@ class  ContentProcessor:
         self.headers  = {}    # dictionary of header macros
 
     def  set_section( self, section_name ):
-        """set current section during parsing"""
-        if not self.sections.has_key( section_name ):
+        """Set current section during parsing."""
+        if not section_name in self.sections:
             section = DocSection( section_name )
             self.sections[section_name] = section
             self.section                = section
@@ -354,15 +406,14 @@ class  ContentProcessor:
         chapter = DocChapter( block )
         self.chapters.append( chapter )
 
-
     def  reset( self ):
-        """reset the content processor for a new block"""
+        """Reset the content processor for a new block."""
         self.markups      = []
         self.markup       = None
         self.markup_lines = []
 
     def  add_markup( self ):
-        """add a new markup section"""
+        """Add a new markup section."""
         if self.markup and self.markup_lines:
 
             # get rid of last line of markup if it's empty
@@ -378,8 +429,8 @@ class  ContentProcessor:
             self.markup_lines = []
 
     def  process_content( self, content ):
-        """process a block content and return a list of DocMarkup objects
-           corresponding to it"""
+        """Process a block content and return a list of DocMarkup objects
+           corresponding to it."""
         markup       = None
         markup_lines = []
         first        = 1
@@ -437,7 +488,7 @@ class  ContentProcessor:
         # listed there
         for chap in self.chapters:
             for sec in chap.order:
-                if self.sections.has_key( sec ):
+                if sec in self.sections:
                     section = self.sections[sec]
                     section.chapter = chap
                     section.reorder()
@@ -452,6 +503,7 @@ class  ContentProcessor:
         others = []
         for sec in self.sections.values():
             if not sec.chapter:
+                sec.reorder()
                 others.append( sec )
 
         # create a new special chapter for all remaining sections
@@ -463,7 +515,10 @@ class  ContentProcessor:
             self.chapters.append( chap )
 
 
-
+################################################################
+##
+##  DOC BLOCK CLASS
+##
 class  DocBlock:
 
     def  __init__( self, source, follow, processor ):
@@ -540,7 +595,7 @@ class  DocBlock:
         return self.source.location()
 
     def  get_markup( self, tag_name ):
-        """return the DocMarkup corresponding to a given tag in a block"""
+        """Return the DocMarkup corresponding to a given tag in a block."""
         for m in self.markups:
             if m.tag == string.lower( tag_name ):
                 return m
@@ -550,6 +605,21 @@ class  DocBlock:
         try:
             m = self.get_markup( tag_name )
             return m.fields[0].items[0].words
+        except:
+            return []
+
+    def  get_markup_words_all( self, tag_name ):
+        try:
+            m = self.get_markup( tag_name )
+            words = []
+            for item in m.fields[0].items:
+                # We honour empty lines in an `<Order>' section element by
+                # adding the sentinel `/empty/'.  The formatter should then
+                # convert it to an appropriate representation in the
+                # `section_enter' function.
+                words += item.words
+                words.append( "/empty/" )
+            return words
         except:
             return []
 

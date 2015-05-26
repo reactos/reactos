@@ -1,3 +1,1960 @@
+2014-12-30  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.5.5 released.
+	=========================
+
+
+	Tag sources with `VER-2-5-5'.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.5.5.
+
+	* README, Jamfile (RefDoc), builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2005/index.html,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2008/index.html,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/index.html,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.5.4/2.5.5/, s/254/255/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 5.
+
+	* builds/unix/configure.raw (version_info): Set to 17:4:11.
+	* CMakeLists.txt (VERSION_PATCH): Set to 5.
+	* docs/CHANGES: Updated.
+
+2014-12-24  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	[base] Formatting and nanooptimizations.
+
+	* src/base/ftcalc.c,
+	* src/base/fttrigon.c: Revise sign restoration.
+
+2014-12-13  Werner Lemberg  <wl@gnu.org>
+
+	* src/pcf/pcfread.c (pcf_read_TOC): Improve fix from 2014-12-08.
+
+2014-12-11  Werner Lemberg  <wl@gnu.org>
+
+	* builds/toplevel.mk (dist): Use older POSIX standard for `tar'.
+
+	Apparently, BSD tar isn't capable yet of handling POSIX-1.2001
+	(contrary to GNU tar), so force the POSIX-1.1988 format.
+
+	Problem reported by Stephen Fisher <sfisher@SDF.ORG>.
+
+2014-12-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Reject invalid TTF size.
+
+2014-12-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftobjs.c (FT_Get_Glyph_Name): Fix off-by-one check.
+
+	Problem reported by Dennis Felsing <dennis@felsin9.de>.
+
+2014-12-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Check `string_size'.
+
+	Problem reported by Dennis Felsing <dennis@felsin9.de>.
+
+2014-12-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix a naming convention conflicting with ftvalid.
+
+	See previous changeset for otvalid.
+
+	* src/gxvalid/{gxvcommn.h, gxvmort.h, gxvmorx.h}: Replace
+	`valid' by `gxvalid'.
+	* src/gxvalid/{gxvbsln.c, gxvcommn.c, gxvfeat.c, gxvjust.c,
+	gxvkern.c, gxvlcar.c, gxvmort.c, gxvmort0.c, gxvmort1.c,
+	gxvmort2.c, gxvmort4.c, gxvmort5.c, gxvmorx.c, gxvmorx0.c,
+	gxvmorx1.c, gxvmorx2.c, gxvmorx4.c, gxvmorx5.c, gxvopbd.c,
+	gxvprop.c, gxvtrak.c}: Replace `valid' by `gxvalid' if
+	it is typed as GXV_Validator.
+
+2014-12-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[otvalid] Fix a naming convention conflicting with ftvalid.
+
+	Some prototypes in ftvalid.h use `valid' for the variables
+	typed as FT_Validator.  Their implementations in src/base/
+	ftobjs.c and utilizations in src/sfnt/ttcmap.c do similar.
+
+	Some macros in otvcommn.h assume the exist of the variable
+	`valid' typed as OTV_Validator in the caller.
+
+	Mixing these two conventions cause invalid pointer conversion
+	and unexpected SEGV in longjmp.  To prevent it, all variables
+	typed as OTV_Validator are renamed to `otvalid'.
+
+	* src/otvalid/otvcommn.h: Replace `valid' by `otvalid'.
+	* src/otvalid/{otvcommn.c, otvbase.c, otvgdef.c, otvgpos.c,
+	otvgsub.c, otvjstf.c, otvmath.c}: Replace `valid' by `otvalid'
+	if it is typed as OTV_Validator.
+
+2014-12-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[ftvalid] Introduce FT_THROW() in FT_INVALID_XXX macros.
+
+	Original patch is designed by Werner Lemberg.  Extra part
+	for otvalid and gxvalid are added by suzuki toshiya, see
+	discussion:
+	http://lists.nongnu.org/archive/html/freetype-devel/2014-12/msg00002.html
+	http://lists.nongnu.org/archive/html/freetype-devel/2014-12/msg00007.html
+
+	* include/internal/ftvalid.h: Introduce FT_THROW() in FT_INVALID_().
+	* src/gxvalid/gxvcommn.h: Ditto.
+	* src/otvalid/otvcommn.h: Ditto.
+
+2014-12-08  Werner Lemberg  <wl@gnu.org>
+
+	[pcf] Fix Savannah bug #43774.
+
+	Work around `features' of X11's `pcfWriteFont' and `pcfReadFont'
+	functions.  Since the PCF format doesn't have an official
+	specification, we have to exactly follow these functions' behaviour.
+
+	The problem was unveiled with a patch from 2014-11-06, fixing issue
+	#43547.
+
+	* src/pcf/pcfread.c (pcf_read_TOC): Don't check table size for last
+	element.  Instead, assign real size.
+
+2014-12-07  Werner Lemberg  <wl@gnu.org>
+
+	Work around a bug in Borland's C++ compiler.
+
+	See
+
+	  http://qc.embarcadero.com/wc/qcmain.aspx?d=118998
+
+	for Borland's bug tracker entry.
+
+	Reported by Yuliana Zigangirova <zigangirova@inbox.ru>,
+	http://lists.gnu.org/archive/html/freetype-devel/2014-04/msg00001.html.
+
+	* include/internal/ftvalid.h (FT_ValidatorRec), src/smooth/ftgrays.c
+	(gray_TWorker_): Move `ft_jmp_buf' field to be the first element.
+
+2014-12-07  Werner Lemberg  <wl@gnu.org>
+
+	*/*: Decorate hex constants with `U' and `L' where appropriate.
+
+2014-12-07  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Prevent memory leak for buggy fonts.
+
+	* src/truetype/ttobjs.c (tt_size_done): Unconditionally call
+	`tt_size_done_bytecode'.
+
+2014-12-06  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.5.4 released.
+	=========================
+
+
+	Tag sources with `VER-2-5-4'.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.5.4.
+
+	* README, Jamfile (RefDoc), builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2005/index.html,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2008/index.html,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/index.html,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.5.3/2.5.4/, s/253/254/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 4.
+
+	* builds/unix/configure.raw (version_info): Set to 17:3:11.
+	* CMakeLists.txt (VERSION_PATCH): Set to 4.
+	* docs/CHANGES: Updated.
+
+2014-12-04  Werner Lemberg  <wl@gnu.org>
+
+	docs/CHANGES: Updated, formatted.
+
+2014-12-04  Dave Arnold  <darnold@adobe.com>
+
+	[cff] Modify an FT_ASSERT.
+
+	* src/cff/cf2hints.c (cf2_hintmap_map): After the fix for Savannah
+	bug #43661, the test font `...aspartam.otf' still triggers an
+	FT_ASSERT.  Since hintmap still works with count==0, ...
+	(cf2_glyphpath_lineTo, cf2_glyphpath_curveTo): ... add that term to
+	suppress the assert.
+
+2014-12-04  Dave Arnold  <darnold@adobe.com>
+
+	[cff] Fix Savannah bug #43661.
+
+	* src/cff/cf2intrp.c (cf2_interpT2CharString) <cf2_cmdHSTEM,
+	cf2_cmdVSTEM, cf2_cmdHINTMASK>: Don't append to stem arrays after
+	hintmask is constructed.
+
+	* src/cff/cf2hints.c (cf2_hintmap_build): Add defensive code to
+	avoid reading past end of hintmask.
+
+2014-12-03  Werner Lemberg  <wl@gnu.org>
+
+	docs/CHANGES: Updated.
+
+2014-12-03  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Better fix for conversion specifiers in debug messages.
+
+	Using `%ld' for pointer differences causes warnings on 32bit
+	platforms.  The correct type would be (the relatively new) `%td',
+	however, this is missing on some important platforms.
+
+	This patch improves the change from 2014-11-28.
+
+	* src/autofit/afhints.c (AF_INDEX_NUM): Use `int' typecast.  Our
+	pointer differences are always sufficiently small.
+	(af_glyph_hints_dump_points, af_glyph_hints_dump_segments,
+	af_glyph_hints_dump_edge): Revert to `%d' and use `AF_INDEX_NUM'.
+
+2014-12-03  Werner Lemberg  <wl@gnu.org>
+
+	FT_Sfnt_Tag: s/ft_sfnt_xxx/FT_SFNT_XXX/ for orthogonality.
+
+	All public FreeType enumeration and flag values are uppercase...
+
+	* include/tttables.h (FT_Sfnt_Tag): Implement it.  For backwards
+	compatilibity, retain the old values as macros.
+
+	* src/base/ftfstype.c (FT_Get_FSType_Flags), src/sfnt/sfdriver.c
+	(get_sfnt_table): Updated.
+
+2014-12-02  Werner Lemberg  <wl@gnu.org>
+
+	* include/*: Improve structure of documentation.
+
+	. Add and update many `<Order>' tags.
+	. Apply various documentation fixes.
+	. Remove details to deprecated (or never implemented) data.
+
+2014-12-02  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Always handle `<Order>' section elements.
+
+	Previously, those elements were handled only for sections present in
+	a `<Sections>' chapter element.
+
+	* src/tools/docmaker/content.py (ContentProcessor::finish):
+	Implement it.
+
+2014-12-02  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Properly handle empty rows in Synopsis.
+
+	* src/tools/docmaker/tohtml.py (HtmlFormatter::section_enter): Emit
+	`&nbsp;' for empty fields.
+
+2014-12-02  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Thinko.
+
+	* src/tools/docmaker/content.py (DocBlock::get_markup_words_all):
+	Emit `/empty/' string for first element also.
+
+2014-12-02  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Honour empty lines in `<Order>' section element.
+
+	This greatly improves the readability of the `Synopsis' links.
+
+	* src/tools/docmaker/content.py (DocBlock::get_markup_words_all):
+	Insert string `/empty/' between items.
+
+	* src/tools/docmaker/formatter.py (Formatter::section_dump): Make it
+	robust against nonexistent keys.
+
+	* src/tools/docmaker/tohtml.py (HtmlFormatter::section_enter): Emit
+	empty <td> elements for `/empty/'.
+
+2014-12-02  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Ensure Python 3 compatibility.
+
+	* src/tools/docmaker/content.py (ContentProcessor::set_section,
+	ContentProcessor::finish): Replace `has_key' function with `in'
+	keyword.
+
+	* src/tools/docmaker/formatter.py (Formatter::__init__): Replace
+	sorting function with a key generator.
+	(Formatter::add_identifier): Replace `has_key' function with `in'
+	keyword.
+
+	* src/tools/docmaker/tohtml.py (HtmlFormatter::html_source_quote):
+	Replace `has_key' function with `in' keyword.
+	(HtmlFormatter::index_exit, HtmlFormatter::section_enter): Use
+	integer division.
+	s/<>/>/.
+
+	* src/tools/docmaker/utils.py: Import `itertools'.
+	(index_sort): Replaced by...
+	(index_key): ... this new key generator (doing exactly the same).
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Don't output a block multiple times.
+
+	This bug was hidden by not processing all lines of `<Order>' blocks.
+
+	* src/tools/docmaker/formatter.py (Formatter::section_dump): Filter
+	out field names.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Use field values as HTML link targets where possible.
+
+	* src/tools/docmaker/tohtml.py (HtmlFormatter::make_block_url):
+	Accept second, optional argument to specify a name.
+	(HtmlFormatter::html_source_quote): Link to field ID if possible.
+	(HtmlFormatter::print_html_field_list): Emit `id' attribute.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Allow empty lines in `<Order>' blocks.
+
+	Before this patch, the suggested order of entries stopped at the
+	first empty line.
+
+	Obviously, nobody noticed that this problem caused a much reduced
+	set of links in the `Synopsis' sections; in particular, the
+	`<Order>' blocks contain a lot of entries that wouldn't be listed
+	otherwise...
+
+	* src/tools/docmaker/content.py (DocBlock::get_markup_words_all):
+	New function to iterate over all items.
+	(DocSection::process): Use it.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/sources.py (column) [Format 2]: Fix regexp.
+
+	After the single asterisk there must be no other immediately following
+	asterisk.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Improve CSS for vertical spacing.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Improve HTML code for table of contents.
+
+	* src/tools/docmaker/tohtml.py: Introduce a new table class `toc',
+	together with proper CSS.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Provide higher-level markup and simplify HTML.
+
+	* src/tools/docmaker/tohtml.py: Instead of using extraneous `<div>'
+	elements, use CSS descendants (of class `section') to format the
+	data.
+
+	Also remove reduntant <p> and <br> elements, replacing them with
+	proper CSS.
+
+	Globally reduce page width to 75%.
+
+	(block_header): Rename <div> class to `section'.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Add `top' links after blocks.
+
+	* src/tools/docmaker/tohtml.py (block_footer_middle): Implement it.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Improve CSS for fields.
+
+	Make fields align horizontally relative to full line width.
+
+2014-11-29  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Fix index and TOC templates.
+
+	This thinko was introduced 2014-11-27.
+
+2014-11-28  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Format field lists with CSS.
+
+	This also simplifies the inserted HTML code.
+
+	* src/tools/docmaker/tohtml.py
+	(HtmlFormatter::print_html_field_list): Do it.
+
+2014-11-28  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix compiler warning to the comparison between signed and
+	unsigned variable.
+
+	* src/pfr/pfrsbit.c (pfr_slot_load_bitmap): Fix the comparison
+	between `ypos + ysize' and FT_INT_{MAX,MIN}.
+
+2014-11-28  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Replace empty `<td>' with CSS.
+
+	* src/tools/docmaker/tohtml.py (HtmlFormatter::section_enter): Do
+	it.
+
+2014-11-28  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Replace some `<table>' tags with `<h4>' and `<div>'.
+
+	* src/tools/docmaker/tohtml.py (marker_*): Use `<h4>'.
+	(source_*): Use `<div>'.
+	(HtmlFormatter::block_enter): s/<h4>/<h3>/.
+
+2014-11-28  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix compiler warning to conversion specifiers in debug messages.
+
+	* src/autofit/afhints.c (af_glyph_hints_dump_points): Add length
+	modifier to dump long integers.
+	(af_glyph_hints_dump_segments, af_glyph_hints_dump_edges): Ditto.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Use more CSS for index.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Replace `name' attribute of `<a>' with `id'.
+
+	* src/tools/docmaker/tohtml.py (HtmlFormatter::block_enter): Do it.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Remove remaining `width' attributes.
+
+	For `Index' and `TOC' links, we now simply use the `text-align' CSS
+	property of `<td>' to enforce flush-left and flush-right,
+	eliminating the hack with an empty, full-width `<td>' element
+	inbetween.
+
+	The change also enforces the same (smaller) size for all index and
+	TOC links.
+
+2014-11-27  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* src/cff/cf2font.c: Include `ftcalc.h' to use FT_MSB(),
+	cf2font.c could not find it under `make multi' build.
+
+2014-11-27  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Remove
+	unrequired negative value check for `width' and `height'.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: More HTML table refactoring.
+
+	Replace some `<table>' tags with `<div>' to simplify structure.
+
+	Move `bgcolor' attribute to CSS.
+
+	Replace most `width' attributes with CSS.  The remaining instances
+	(providing a similar effect as LaTeX's `\hfill' command) are removed
+	in a later patch.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Replace <font> with CSS.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Center <table> with CSS.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Replace `<center>' with `<div>'.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/tohtml.py: Remove redundant `<center>' tags.
+
+	This starts a series of commits into the direction of generating
+	valid HTML 5 code, especially using much more CSS.
+
+2014-11-27  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Prevent too negative values (< FT_INT_MIN) in bitmap metrics,
+	suggested by Alexei.
+
+	* src/pfr/pfrsbit.c (pfr_slot_load_bitmap): Prevent too
+	negative values in `xpos' and `ypos + ysize'.
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Prevent
+	too negative values in `x_left' and `y_top'.  Either negative
+	values in `width' and `height' are checked.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Produce better HTML code.
+
+	* src/tools/docmaker/tohtml.py: Always use double quotes for
+	attribute values.
+	(source_footer): Close `td' and `tr' groups.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	Use better way to disable creation of .pyc files for `make refdoc'.
+
+	Python 2.6 was released in 2008...
+
+	* builds/freetype.mk (refdoc): Use python's `-B' option.
+
+	* builds/detect.mk (std_setup, dos_setup): Mention required python
+	version for `refdoc' target.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/docmaker/sources.py (re_bold, re_italic): Use
+	non-grouping parentheses.
+	* src/tools/docmaker/tohtml.py (HtmlFormatter::make_html_word):
+	Updated.
+
+2014-11-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftobjs.c (FT_Get_Glyph_Name): Fix compiler warning.
+
+	Introdruced in previous change.  Reported by Alexei.
+
+2014-11-26  Werner Lemberg  <wl@gnu.org>
+
+	* src/*: Add checks for parameters of API functions where missing.
+
+	`API functions' are functions tagged with `FT_EXPORT_DEF'.
+
+	Besides trivial fixes, the following changes are included, too.
+
+	* src/base/ftbdf.c (FT_Get_BDF_Charset_ID, FT_Get_BDF_Property): Set
+	error code if no service is available.
+
+	* src/base/ftinit.c (FT_Done_FreeType): Change return value for
+	invalid `library' parameter to `Invalid_Library_Handle'.
+
+	* src/base/ftobjs.c (FT_New_Size): Change return value for invalid
+	`asize' parameter to `Invalid_Argument'.
+
+	* src/base/ftoutln.c (FT_Outline_Copy): Change return value for
+	invalid `source' and `target' parameters to `Invalid_Outline'.
+	(FT_Outline_Done_Internal): Change return value for invalid
+	`outline' parameter to `Invalid_Outline'.
+
+2014-11-26  Werner Lemberg  <wl@gnu.org>
+
+	* src/cache/ftcbasic.c: Use single calls to `FT_TRACE'.
+
+2014-11-26  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* src/base/ftobj.c (Mac_Read_POST_Resource): Additional
+	overflow check in the summation of POST fragment lengths,
+	suggested by Mateusz Jurczyk <mjurczyk@google.com>.
+
+2014-11-26  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Insert comments
+	and fold too long tracing messages.
+
+2014-11-26  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix Savannah bug #43540.
+
+	* src/base/ftmac.c (parse_fond): Prevent a buffer overrun
+	caused by a font including too many (> 63) strings to store
+	names[] table.
+
+2014-11-26  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Use unsigned long
+	variables to read the lengths in POST fragments.  Suggested by
+	Mateusz Jurczyk <mjurczyk@google.com>.
+
+2014-11-26  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix Savannah bug #43539.
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Fix integer overflow
+	by a broken POST table in resource-fork.
+
+2014-11-26  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix Savannah bug #43538.
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Fix integer overflow
+	by a broken POST table in resource-fork.
+
+2014-11-26  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Avoid memory leak
+	by a broken POST table in resource-fork.  Return after freeing
+	the buffered POST table when it is found to be broken.
+
+2014-11-25  Werner Lemberg  <wl@gnu.org>
+
+	*/*: s/Invalid_Argument/Invalid_Size_Handle/ where appropriate.
+
+2014-11-25  Werner Lemberg  <wl@gnu.org>
+
+	*/*: s/Invalid_Argument/Invalid_Stream_Handle/ where appropriate.
+
+2014-11-25  Werner Lemberg  <wl@gnu.org>
+
+	*/*: s/Invalid_Argument/Invalid_Library_Handle/ where appropriate.
+
+2014-11-25  Werner Lemberg  <wl@gnu.org>
+
+	*/*: s/Invalid_Argument/Invalid_Outline/ where appropriate.
+
+2014-11-25  Werner Lemberg  <wl@gnu.org>
+
+	*/*: s/Invalid_Argument/Invalid_Face_Handle/ where appropriate.
+
+2014-11-24  Werner Lemberg  <wl@gnu.org>
+
+	[Savannah bug #43682] Adjust some renderer callbacks.
+
+	* src/raster/ftraster.c (ft_black_set_mode): Change return type to
+	`int' to stay in sync with `FT_Renderer_SetModeFunc' prototype.
+
+	* src/smooth/ftgrays.c (gray_raster_set_mode): New dummy function
+	for orthogonality.
+	(ft_grays_raster): Use it.
+
+2014-11-25  Werner Lemberg  <wl@gnu.org>
+
+	[Savannah bug #43682] Properly handle missing return errors.
+
+	The functions in this patch *do* return non-trivial errors that must
+	be taken care of.
+
+	* src/autofit/afloader.c (af_loader_load_g), src/base/ftobjs.c
+	(FT_Render_Glyph_Internal), src/base/ftoutln.c (FT_Outline_Render),
+	src/cff/cffgload.c (cff_decoder_parse_charstrings) <cff_op_endchar>,
+	src/psaux/psobjs.c (ps_parser_load_field_table), src/psaux/t1decode
+	(t1_decoder_parse_charstrings) <op_endchar>, src/truetype/ttgload.c
+	(load_truetype_glyph <subglyph loop>, tt_loader_init,
+	TT_Load_Glyph), src/truetype/ttgxvar.c (TT_Set_MM_Blend),
+	src/truetype/ttobjs.c (tt_size_run_fpgm, tt_size_run_prep): Do it.
+
+2014-11-25  Werner Lemberg  <wl@gnu.org>
+
+	[Savannah bug #43682] Add/remove `void' casts to some functions.
+
+	We use a cast to indicate that we intentionally ignore a function's
+	return value.  However, this doesn't apply to API functions where
+	errors can only happen for trivially invalid input.
+
+	* src/base/ftstroke.c (FT_Glyph_Stroke, FT_Glyph_StrokeBorder),
+	src/base/ftsynth.c (FT_GlyphSlot_Embolden), src/cff/cffgload.c
+	(cff_slot_load), src/pfr/pfrdrivr.c (pfr_get_kerning),
+	src/type1/t1load.c (parse_encoding), src/type42/t42parse.c
+	(t42_parse_encoding): Do it.
+
+2014-11-25  Werner Lemberg  <wl@gnu.org>
+
+	[Savannah bug #43682] Change some signatures to `void' return type.
+
+	* include/internal/pshints.h (PSH_Globals_SetScaleFunc),
+	include/internal/sfnt.h (TT_Get_Metrics_Func),
+	src/pshinter/pshglob.c (psh_globals_set_scale),
+	src/pshinter/pshrec.c (ps_hints_init), src/sfnt/ttmtx.c
+	(tt_face_get_metrics), src/truetype/ttinterp.c (TT_Goto_CodeRange,
+	TT_Set_CodeRange, TT_Clear_CodeRange, TT_Done_Context,
+	TT_Save_Context): Do it.
+
+	* src/pshinter/pshglob.h, src/pshinter/pshrec.h, src/sfnt/ttmtx.h,
+	src/truetype/ttgload.c (TT_Hint_Glyph), src/truetype/ttinterp.c
+	(TT_Run_Context), src/truetype/ttinterp.h, src/truetype/ttobjs.c
+	(tt_size_run_fpgm, tt_size_run_prep): Updated.
+
+2014-11-24  Werner Lemberg  <wl@gnu.org>
+
+	Remove all code related to FT_MAX_CHARMAP_CACHEABLE.
+
+	This is no longer used.
+
+	* src/base/ftobjs.c, src/cache/ftccmap.c, src/cff/cffobjs.c,
+	src/sfnt/ttcmap.c: Do it.
+
+2014-11-24  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43680.
+
+	This adds an additional constraint to make the fix from 2013-01-25
+	really work.
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_load_image) <index_format==4>:
+	Check `p' before `num_glyphs'.
+
+2014-11-24  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix Savannah bug #43679.
+
+	* src/truetype/ttpload.c (tt_face_load_hdmx): Check minimum size of
+	`record_size'.
+
+2014-11-24  Jarkko Pöyry  <jarkko.poyry@gmail.com>
+
+	[cff, pfr, psaux, winfonts] Fix Savannah bug #43676.
+
+	Don't cast cmap init function pointers to an incompatible type.
+
+	Without this patch, the number of parameters between declaration and
+	the real signature differs.  Calling such a function results in
+	undefined behavior.
+
+	  ISO/IEC 9899:TC3 (Committee Draft September 7, 2007)
+	    6.5.2.2 Function calls
+	      9 If the function is defined with a type that is not
+	        compatible with the type (of the expression) pointed to by
+	        the expression that denotes the called function, the
+	        behavior is undefined.
+
+	On certain platforms (c -> js with emscripten) this causes
+	termination of execution or invalid calls because in the emscripten
+	implementation, function pointers of different types are stored in
+	different pointer arrays.  Incorrect pointer type here results in
+	indexing of an incorrect array.
+
+	* src/cff/cffcmap.c (cff_cmap_encoding_init, cff_cmap_unicode_init),
+	src/pfr/pfrcmap.c (pfr_cmap_init), src/psaux/t1cmap.c
+	t1_cmap_standard_init, t1_cmap_expert_init, t1_cmap_custom_init,
+	t1_cmap_unicode_init), src/winfonts/winfnt.c (fnt_cmap_init): Fix
+	signature.
+
+2014-11-24  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43672.
+
+	* src/sfnt/ttkern.c (tt_face_load_kern): Use correct value for
+	minimum table length test.
+
+2014-11-24  Werner Lemberg  <wl@gnu.org>
+
+	[type1, type42] Another fix for Savannah bug #43655.
+
+	* src/type1/t1load.c (parse_charstrings), src/type42/t42parse.c
+	(t42_parse_charstrings): Add another boundary testing.
+
+2014-11-24  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Formatting, copyright, improved documentation.
+
+	* src/tools/docmaker/*: No code changes besides trivial
+	modifications.
+
+2014-11-22  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bug #43660.
+
+	* src/bdf/bdflib.c (_bdf_parse_glyphs) <"ENDFONT">: Check
+	`_BDF_GLYPH_BITS'.
+
+2014-11-22  Werner Lemberg  <wl@gnu.org>
+
+	[type42] Allow only embedded TrueType fonts.
+
+	This is a follow-up to Savannah bug #43659.
+
+	* src/type42/t42objs.c (T42_Face_Init): Exclusively use the
+	`truetype' font driver for loading the font contained in the `sfnts'
+	array.
+
+2014-11-22  Werner Lemberg  <wl@gnu.org>
+
+	[type42] Fix Savannah bug #43659.
+
+	* src/type42/t42objs.c (T42_Open_Face): Initialize `face->ttf_size'.
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Always set
+	`face->ttf_size' directly.  This ensures a correct stream size in
+	the call to `FT_Open_Face', which follows after parsing, even for
+	buggy input data.
+	Fix error messages.
+
+2014-11-22  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix Savannah bug #43658.
+
+	* src/cff/cf2ft.c (cf2_builder_lineTo, cf2_builder_cubeTo): Handle
+	return values of point allocation routines.
+
+2014-11-22  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43656.
+
+	* src/sfnt/ttcmap.c (tt_cmap4_validate): Fix order of validity
+	tests.
+
+2014-11-21  Werner Lemberg  <wl@gnu.org>
+
+	[type1, type42] Fix Savannah bug #43655.
+
+	* src/type1/t1load.c (parse_charstrings), src/type42/t42parse.c
+	(t42_parse_charstrings): Fix boundary testing.
+
+2014-11-21  Werner Lemberg  <wl@gnu.org>
+
+	* src/pcf/pcfread.c (pcf_get_metrics): Sanitize invalid metrics.
+
+2014-11-21  Werner Lemberg  <wl@gnu.org>
+
+	[ftlcdfil] Obey flow direction.
+
+	* src/base/ftlcdfil.c (_ft_lcd_filter_fir, _ft_lcd_filter_legacy):
+	Handle `up' flow.
+
+2014-11-21  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftbitmap.c (FT_Bitmap_Convert): Improve.
+
+	This commit completes argument checks and adds support for different
+	flow directions.
+
+2014-11-21  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftbitmap.c (FT_Bitmap_Copy): Improve.
+
+	This commit adds argument checks and support for different flow
+	directions.
+
+2014-11-20  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftbitmap.c (FT_Bitmap_New): Check argument.
+
+2014-11-19  Werner Lemberg  <wl@gnu.org>
+
+	Change some fields in `FT_Bitmap' to unsigned type.
+
+	This doesn't break ABI.
+
+	* include/ftimage.h (FT_Bitmap): Make `rows', `width', `num_grays',
+	`pixel_mode', and `palette_mode' unsigned types.
+
+	* src/base/ftbitmap.c: Updated.
+	(FT_Bitmap_Copy): Fix casts.
+
+	* src/cache/ftcsbits.c, src/raster/ftraster.c, src/sfnt/pngshim.c:
+	Updated.
+
+2014-11-19  Werner Lemberg  <wl@gnu.org>
+
+	Make `FT_Bitmap_Convert' correctly handle negative `pitch' values.
+
+	* src/base/ftbitmap.c (FT_Bitmap_Convert): Always use positive value
+	for the pitch while copying data.
+	Correctly set pitch sign in target bitmap.
+
+2014-11-19  Werner Lemberg  <wl@gnu.org>
+
+	Minor code improvement in `FT_Bitmap_Embolden'.
+
+	* src/base/ftbitmap.c (FT_Bitmap_Embolden) <FT_PIXEL_MODE_GRAY[24]>:
+	Fix thinko.
+
+2014-11-19  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/fttrigon.c: Use dedicated `FT_Angle' for arctan table.
+
+2014-11-19  Behdad Esfahbod  <behdad@behdad.org>
+
+	Avoid compiler warnings on x86-64 for `FT_MulFix'.
+
+	`FT_MulFix' takes `FT_Long' parameters as defined in `freetype.h',
+	but several inline implementations of it in `ftcalc.h' take
+	`FT_Int32' arguments.  This is causing compiler warnings on x86-64:
+	If parameters of type `FT_Fixed' (= `FT_Long') are passed to the
+	inline implementation of this function, integer values are truncated
+	from 64bit to 32bit.
+
+	* include/internal/ftcalc.h (FT_MulFix) [FT_MULFIX_ASSEMBLER]: Add
+	casts.
+
+2014-11-15  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43597.
+
+	* src/sfnt/pngshim.c (Load_SBit_Png): Protect against too large
+	bitmaps.
+
+2014-11-12  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43591.
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_init): Protect against addition
+	and multiplication overflow.
+
+2014-11-12  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43590.
+
+	* src/sfnt/ttload.c (check_table_dir, tt_face_load_font_dir):
+	Protect against addition overflow.
+
+2014-11-12  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43589.
+
+	* src/sfnt/sfobjs.c (woff_open_font): Protect against addition
+	overflow.
+
+2014-11-12  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43588.
+
+	* src/sfnt/ttcmap.c (tt_cmap8_validate, tt_cmap10_validate,
+	tt_cmap12_validate, tt_cmap13_validate, tt_cmap14_validate): Protect
+	against overflow in additions and multiplications.
+
+2014-11-10  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] CORDIC improvements.
+
+	The scaling between the hypotenuse and its CORDIC approximation is
+	based on regression analysis. The smaller padding for `theta' is
+	justifed by its maximum error of less than 6.
+
+	* src/base/fttrigon.c (ft_trig_downscale): Borrow code from
+	./ftcalc.c (ft_multo64), change linear intercept.
+	(ft_trig_pseudo_polarize): Decrease `theta' padding.
+
+2014-11-09  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftstroke.c (ft_stroker_inside): Fix border intersections.
+
+	One more place to check whether `radius' is zero.
+
+	Problem reported by Marco Wertz <marco.wertz@gmx.de>.
+
+2014-11-07  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bug #43535.
+
+	* src/bdf/bdflib.c (_bdf_strncmp): New macro that checks one
+	character more than `strncmp'.
+	s/ft_strncmp/_bdf_strncmp/ everywhere.
+
+2014-11-06  Werner Lemberg  <wl@gnu.org>
+
+	[pcf] Fix Savannah bug #43548.
+
+	* src/pcf/pcfread.c (pcf_get_encodings): Add sanity checks for row
+	and column values.
+
+2014-11-06  Werner Lemberg  <wl@gnu.org>
+
+	[pcf] Fix Savannah bug #43547.
+
+	* src/pcf/pcfread.c (pcf_read_TOC): Check `size' and `offset'
+	values.
+
+2014-11-06  Werner Lemberg  <wl@gnu.org>
+
+	* src/pcf/pcfread.c (pcf_read_TOC): Avoid memory leak.
+
+2014-11-03  Infinality  <infinality@infinality.net>
+
+	* src/truetype/ttsubpix.c (COMPATIBILITY_MODE_Rules): Updated.
+
+	The previous commit deteriorates rendering of DejaVu and similar
+	fonts; this gets compensated with this rule.
+
+2014-11-03  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttinterp.c (Ins_DELTAP): Fix subpixel hinting.
+
+	Before this patch, it was impossible to ever call DELTAP[123] in
+	subpixel hinting mode as described in the ClearType whitepaper; it
+	only worked if in `compatibility mode'.  However, compatibility mode
+	essentially disables SHPIX, completely ruining hinting of
+	ttfautohint output, for example.
+
+	We now follow the whitepaper more closely so that DELTAP[123]
+	instructions for touched points in the non-subpixel direction are
+	executed.
+
+2014-10-31  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Improve code readability.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Rearrange code.
+
+2014-10-31  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Reduce outline translations during rendering.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Translate origin
+	virtually by modifying cbox, actually translate outline if cumulative
+	shift is not zero.
+
+2014-10-30  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Fix Savannah bug #35604 (cont'd).
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Remove checks and
+	casts that became unnecessary after the variable type upgrades.
+
+2014-10-29  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Improve code readability.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Rearrange code.
+
+2014-10-29  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Unify hypotenuse approximations.
+
+	* include/internal/ftcalc.h (FT_HYPOT): Move macro from here...
+	* include/internal/ftobjs.h: ... to here, next to required `FT_ABS'.
+	* src/smooth/ftgrays.c (gray_render_cubic): Use it here.
+
+2014-10-25  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Test valid darkening parameter macros in `ftoption.h'.
+
+	We no longer need an otherwise unused typedef that can cause a gcc
+	warning.
+	Problem reported by Alexei.
+
+	* src/cff/cffobjs.c (cff_driver_init): Use
+	`CFF_CONFIG_OPTION_DARKENING_PARAMETER_XXX' macros directly.
+	(SET_DARKENING_PARAMETERS): Removed.
+	Compile time tests are now ...
+
+	* devel/ftoption.h, include/config/ftoption.h: ... here.
+
+2014-10-25  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Improve flat corner definition.
+
+	* include/internal/ftcalc.h (FT_HYPOT): Macro to approximate Euclidean
+	distance with the alpha max plus beta min algorithm.
+	* src/base/ftcalc.c (ft_corner_is_flat): Use it instead of Taxicab
+	metric.
+
+2014-10-23  David Weiß  <David.Weiss@ptvgroup.com>
+
+	[build] Improve property file for vc2010.
+
+	User-defined properties should be empty by default to prevent linker
+	failures.
+
+	* builds/windows/vc2010/freetype.user.props,
+	builds/windows/vc2010/freetype.vcxproj:
+	s/OptionsDirectory/UserOptionDirectory/.
+	Comment out all user options.
+
+2014-10-23  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Work around bug in preprocessor of MSVC 2010.
+
+	We have been hit by
+
+	  https://connect.microsoft.com/VisualStudio/feedback/details/718976/msvc-pr
+
+	* devel/ftoption.h, include/config/ftoption.h: Replace
+	`CFF_CONFIG_OPTION_DARKENING_PARAMETERS' with eight macros
+	`CFF_CONFIG_OPTION_DARKENING_PARAMETER_{X,Y}{1,2,3,4}'.
+
+	* src/cff/cffobjs.c (SET_DARKENING_PARAMETERS): Removed.  We no
+	longer need double expansion.
+	(SET_DARKENING_PARAMETERS_0): Renamed to ...
+	(SET_DARKENING_PARAMETERS): ... this.
+	Update call.
+
+2014-10-20  Werner Lemberg  <wl@gnu.org>
+
+	[sbit] Minor fixes.
+
+	* src/sfnt/ttsbit.c (tt_face_load_sbit) [TT_SBIT_TABLE_TYPE_SBIX]:
+	Accept overlay format also, but emit warning message in that case.
+	(tt_sbit_decoder_load_metrics): Add missing newline to error
+	message.
+	(tt_sbit_load_sbix_image): Add `rgbl' graphic type (as used on iOS
+	7.1) to the list of unsupported formats.
+
+2014-10-19  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Clean up bytecode rounding.
+
+	Zero distance does not have to be treated specially if you follow
+	specifications and check the sign as the very last step of rounding.
+
+	* src/truetype/ttinterp.c (Round_None, Round_To_Grid,
+	Round_Down_To_Grid, Round_Up_To_Grid, Round_To_Double_Grid): Use
+	macros when available, do not check for non-zero distance.
+	(Round_To_Half_Grid, Round_Super, Round_Super_45): Ditto, return phase
+	if sign changed.
+
+2014-10-18  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Unwrap engine compensation settings.
+
+	* src/truetype/ttobjs.c (tt_size_init_bytecode): Updated.
+
+2014-10-18  David Weiß  <David.Weiss@ptvgroup.com>
+
+	[build] Add property file to vc2010 project.
+
+	This simplifies custom build configurations, especially for
+	automated build environments.
+
+	* builds/windows/vc2010/freetype.user.props: New configuration file.
+
+	* builds/windows/vc2010/freetype.vcxproj: Include
+	`freetype.user.props' and use its data fields.
+
+	* builds/windows/vc2010/index.html: Updated.
+
+2014-10-18  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add blue-zone support for Telugu.
+
+	This essentially moves the Telugu script from the `Indic' hinter to
+	the `Latin' hinter.
+
+	Note that this is a first shot and quite certainly needs
+	refinements.
+
+	* src/autofit/afblue.dat: Add blue zone data for Telugu.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Telugu standard characters and move
+	data out of AF_CONFIG_OPTION_INDIC block.
+
+	* src/autofit/afranges.c: Move Telugu data out of
+	AF_CONFIG_OPTION_INDIC block.
+
+	* src/autofit/afstyles.h: Update Telugu data; in particular, use
+	AF_WRITING_SYSTEM_LATIN.
+
+2014-10-18  David Wimsey  <david@wimsey.us>
+
+	[cmake] Add iOS build support.
+	From Savannah patch #8497.
+
+	* builds/cmake/iOS.cmake: New file.  Universal binaries are built
+	with both 32 and 64 bit arm architectures.
+
+	* CMakeLists.txt (IOS_PLATFORM): New variable for running the iOS
+	toolchain.  Possible values are `OS' to build on iOS, or
+	`SIMULATOR' to build on APPLE.
+
+2014-10-16  Behdad Esfahbod  <behdad@behdad.org>
+	    Werner Lemberg  <wl@gnu.org>
+
+	[cff] Add `CFF_CONFIG_OPTION_DARKENING_PARAMETERS' config macro.
+
+	* devel/ftoption.h, include/config/ftoption.h
+	(CFF_CONFIG_OPTION_DARKENING_PARAMETERS): New macro.
+
+	* src/cff/cffobjs.c (SET_DARKENING_PARAMETERS,
+	SET_DARKENING_PARAMETERS_0): New macros.
+	(cff_driver_init): Use new macros.
+
+2014-10-14  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Limit delta shift range.
+
+	The valid range for delta shift is zero through six.  Negative values
+	are invalid according to
+
+	  https://developer.apple.com/fonts/TrueType-Reference-Manual/RM04/Chap4.html#delta%20shift
+
+	* src/truetype/ttobjs.h (delta_shift, delta_base): Make unsigned.
+	* src/truetype/ttinterp.h (DO_SDS): Throw an error if `delta_shift'
+	is out of range.
+	(Ins_DELTAP, Ins_DELTAC): Optimize for valid `delta_shift'.
+
+2014-10-16  Werner Lemberg  <wl@gnu.org>
+
+	A better fix for Savannah bug #43392.
+	Suggested by Doug Felt <dougfelt@gmail.com>.
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_load_metrics): Set
+	`vertAdvance' to zero...
+
+	* src/truetype/ttgload.c (TT_Load_Glyph): ... and set here a default
+	value for `vertAdvance' based on `linearVertAdvance' in case
+	`vertAdvance' is zero.  Note that the previous computed ad-hoc value
+	for `linearVertAdvance' was apparently not tested in a real-life
+	situation.
+
+2014-10-14  David Weiß  <David.Weiss@ptvgroup.com>
+
+	[build] Better optimization settings for vc2010 solution file.
+
+	* builds/windows/vc2010/freetype.sln,
+	builds/windows/vc2010/freetype.vcxproj: Updated.
+
+2014-10-14  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Adjust Devenagari character range.
+
+	* src/autofit/afranges.c (af_deva_uniranges): Omit characters that
+	are common to all other Indic scripts.
+
+2014-10-12  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #43392.
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_load_metrics): Don't let
+	vertical metrics uninitialized.
+
+2014-10-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Small bbox correction.
+
+	* src/base/ftbbox.c (FT_Outline_Get_BBox): Start from nonsense bbox
+	instead of initial point that could be `off' in conic outlines.
+
+2014-10-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Fix Savannah bug #43356.
+
+	* src/base/ftbbox.c (BBox_Move_To, BBox_Conic_To): Update bbox in case
+	of implicit `to'.
+	(BBox_Line_To): New emitter that does not update bbox.
+
+2014-10-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Introduce and use new macro `FT_UPDATE_BBOX'
+
+	* src/base/ftbbox.c (FT_UPDATE_BBOX): New macro.
+	(FT_Outline_Get_BBox): Use it here.
+
+2014-10-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Significant optimization of `ft_div64by32'
+
+	We shift as many bits as we can into the high register, perform
+	32-bit division with modulo there, then work through the remaining
+	bits with long division. This optimization is especially noticeable
+	for smaller dividends that barely use the high register.
+
+	* src/base/ftcalc.c (ft_div64by32): Updated.
+
+2014-10-02  Dave Arnold  <darnold@adobe.com>
+
+	[cff] Fix Savannah bug #43271.
+
+	* src/cff/cf2font.c (cf2_computeDarkening): Change overflow
+	detection to use logarithms and clamp `scaledStem'.
+
+2014-10-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftcalc.c: Remove miscellaneous type casts.
+
+2014-10-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Use more common `FT_MSB' implementation with masks.
+
+	* src/base/ftcalc.c (FT_MSB): Updated.
+
+2014-09-30  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Clean up.
+
+	* src/base/ftcalc.c (FT_MOVE_SIGN): New macro for frequently used
+	code.
+
+2014-09-25  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Avoid unnecessary long division.
+
+	This applies to `FT_MulDiv' but not to `FT_DivFix', where overflows or
+	lack thereof are predicted accurately.
+
+	* src/base/ftcalc.c (ft_div64by32): Improve readability.
+	(FT_MulDiv, FT_MulDiv_No_Round) [!FT_LONG64]: Use straight division
+	when multiplication stayed within 32 bits.
+
+2014-09-24  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Minor clean-ups.
+
+	* src/autofit/afhints.c (AF_FLAGS): Remove obsolete values.
+
+	* src/autofit/afhints.c (af_glyph_hints_dump_points,
+	af_glyph_hints_align_strong_points): Updated.
+
+	* src/autofit/aflatin.c (af_latin_hints_link_segments,
+	af_latin_hints_compute_segments), src/autofit/afcjk.c
+	(af_cjk_hints_link_segments), src/autofit/aflatin2.c
+	(af_latin2_hints_link_segments, af_latin2_hints_compute_segments):
+	There are no longer fake segments since more than 10 years...
+
+2014-09-22  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Minor code streamlining.
+
+	* src/autofit/afhints.c (af_axis_hints_new_edge): Remove redundant
+	initialization.
+
+2014-09-19  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftcalc.c: Harmonize code.
+
+2014-09-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Tighten the overflow check in `FT_MulDiv'.
+
+	* src/base/ftcalc.c (FT_MulDiv) [!FT_LONG64]: Updated.
+
+2014-09-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Fix Savannah bug #43153.
+
+	* src/psaux/psconv.c (PS_Conv_ToFixed): Add protection against
+	overflow in `divider'.
+
+2014-09-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Tighten the overflow check in `FT_DivFix'.
+
+	This fixes a 13-year old bug. The original overflow check should have
+	been updated when rounding was introduced into this function
+	(c2cd00443b).
+
+	* src/base/ftcalc.c (FT_DivFix) [!FT_LONG64]: Updated.
+	* include/freetype.h (FT_DivFix): Updated documentation.
+
+2014-09-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Tighten the overflow check in `FT_MulFix'.
+
+	* src/base/ftcalc.c (FT_MulFix) [!FT_LONG64]: Updated.
+
+2014-09-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Shortcut ppem calculations for square pixels.
+
+	* src/truetype/ttinterp.h (TT_ExecContextRec): New field
+	`cur_ppem_func' with a function pointer.
+	* src/truetype/ttinterp.c (TT_RunIns): Initialize `cur_ppem_func'
+	depending on the pixel geometry to either...
+	(Current_Ppem_Stretched): ... this for stretched pixels.
+	(Current_Ppem): ... or this for square pixels.
+	(DO_MPPEM, DO_MPS, Ins_DELTAP, Ins_DELTAC): Use `cur_ppem_func'.
+
+2014-08-31  Behdad Esfahbod  <behdad@behdad.org>
+
+	Don't use `register' keyword.  Fixes compiler warnings.
+
+	* src/base/ftcalc.c (FT_Add64) [!FT_LONG64]: Do it.
+	* src/gzip/inftrees.c (huft_build): Ditto.
+	* src/truetype/ttinterp.c (TT_MulFix14_arm): Ditto.
+
+2014-08-24  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Optimize DELTAP and DELTAC.
+
+	* src/truetype/ttinterp.c (Ins_DELTAP, Ins_DELTAC): Move ppem
+	calculations outside of the loop.
+
+2014-08-21  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Fix Savannah bug #43033.
+
+	* include/config/ftconfig.h, builds/unix/ftconfig.in,
+	builds/vms/ftconfig.h [FT_LONG64]: Do not disable the macro when
+	64-bit type is `long'.
+
+2014-08-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Small optimization of `FT_MulFix'.
+
+	* src/base/ftcalc.c (FT_MulFix): Loosen up the condition for direct
+	32-bit calculations.
+
+2014-08-19  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Use unsigned calculation in `FT_MulDiv'.
+
+	* src/base/ftcalc.c (FT_MulDiv): Updated to expand 32-bit range.
+
+2014-08-18  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Remove truncation in `FT_DivFix'.
+
+	* src/base/ftcalc.c (FT_DivFix): Updated.
+
+2014-08-14  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Minor refactoring.
+
+	* src/base/ftcalc.c (FT_MulDiv, FT_MulDiv_No_Round): Updated.
+
+2014-08-14  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Turn FT_MSB into a macro when using gcc builtins.
+
+	* src/base/ftcalc.c, include/internal/ftcalc.h: Updated.
+
+2014-08-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Avoid undefined FT_MSB in `BBox_Cubic_Check'.
+
+	* src/base/ftbbox.c (BBox_Cubic_Check): Update.
+	(update_cubic_max): Repalce with...
+	(cubic_peak): ... this, which now handles upscaling.
+
+2014-08-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Handle collapsed outlines to avoid undefined FT_MSB.
+
+	* src/base/ftoutln.c (FT_Outline_Get_Orientation): Update.
+
+2014-08-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Restore FT_MulFix inlining.
+
+	* include/freetype.h (FT_MulFix): Unconditionally defined.
+
+	* src/base/ftcalc.c [FT_MULFIX_ASSEMBLER]: Move code from here...
+
+	* include/internal/ftcalc.h [FT_MULFIX_ASSEMBLER]: ... to here,
+	which conditionally replaces the function with an inline version
+	through the macro.
+
+2014-08-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftbitmap.c (ft_gray_for_premultiplied_srgb_bgra): Refactor.
+
+2014-07-26  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix typo.
+
+	* src/cff/cf2hints.c (cf2_glyphpath_computeOffset): Use correct
+	offsets in third quadrant.
+
+	Reported by maks <maksqwe1@ukr.net>.
+
+2014-07-17  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #42788.
+
+	* src/pfr/pfrobjs.c: Include `ftcalc.h'.
+
+2014-07-16  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Replace `ft_highpow2' function.
+
+	* src/pfr/pfrobjs.c (pfr_face_get_kerning): Use `FT_MSB' instead of
+	`ft_highpow2'.
+
+	* src/base/ftutil.c, include/internal/ftobjs.h (ft_highpow2): Remove
+	it.
+
+2014-07-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftcalc.c (FT_MSB): Utilize gcc builtins.
+
+2014-07-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Move assembler code back in the source file.
+
+	FT_MulFix assembler used to reside in ftcalc.c before f47d263f1b.
+
+	* include/config/ftconfig.h, builds/unix/ftconfig.in,
+	builds/vms/ftconfig.h [FT_MULFIX_ASSEMBLER]: Move code from here...
+
+	* src/base/ftcalc.c [FT_MULFIX_ASSEMBLER]: ... to here.
+
+2014-07-14  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Further clean up color bitmap conversion.
+
+	* src/base/ftbitmap.c (ft_gray_for_premultiplied_srgb_bgra): Stop
+	using FT_MulFix and FT_DivFix since all calculations fit into 32 bits.
+
+2014-07-13  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Improve handling of buggy `prep' tables.
+
+	In case of an error in the `prep' table, no longer try to execute it
+	again and again.  This makes FreeType handle endless loops in buggy
+	fonts much faster.
+
+	* src/truetype/ttobjs.h (TT_SizeRec): The fields `bytecode_ready'
+	and `cvt_ready' are now negative if not initialized yet, otherwise
+	they indicate the error code of the last run.
+
+	* src/truetype/ttobjs.c (tt_size_run_fpgm, tt_size_run_prep,
+	tt_size_done_bytecode, tt_size_init_bytecode,
+	tt_size_ready_bytecode, tt_size_init, tt_size_done, tt_size_reset):
+	Updated.
+
+	* src/truetype/ttgload.c (tt_loader_init): Updated.
+	* src/truetype/ttinterp.c (TT_RunIns): Force reexecution of `fpgm'
+	and `prep' only if we are in the `glyf' table.
+
+2014-07-12  Werner Lemberg  <wl@gnu.org>
+
+	* builds/vms/ftconfig.h: Synchronize.
+	Problem reported by Alexei.
+
+2014-07-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Clean up bitmap conversion.
+
+	* src/base/ftbitmap.c (ft_gray_for_premultiplied_srgb_bgra): Use
+	appropriate FT_DivFix and remove superfluous upscaling.
+
+2014-07-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Small optimization of the ancient code.
+
+	* src/base/ftcalc.c (FT_MulDiv, FT_MulDiv_No_Round): Loosen up the
+	condition for direct 32-bit calculations.
+
+2014-06-27  Werner Lemberg  <wl@gnu.org>
+
+	Fix Apple standard glyph names.
+
+	* src/sfnt/ttpost.c (tt_post_default_names): Synchronize with
+	`tools/glnames.py'
+
+	Problem reported by Adam Twardoch <adam@fontlab.com>.
+
+2014-06-17  Werner Lemberg  <wl@gnu.org>
+
+	Partially revert commit from 2014-06-13.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Move
+	declaration of `p_first' and `p_last' out of the loop.
+
+2014-06-17  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/freetype2.m4: s/AC_PATH_PROG/AC_PATH_TOOL/.
+
+	This simplifies cross-compiling.
+
+2014-06-13  Werner Lemberg  <wl@gnu.org>
+
+	Fix more compiler warnings.
+	Reported by Wojciech Mamrak <wmamrak@gmail.com>.
+
+	* src/autofit/afglobal.c (af_face_globals_compute_style_coverage):
+	Make integer constant unsigned.
+
+	* src/sfnt/ttsbit.c (tt_face_load_strike_metrics)
+	<TT_SBIT_TABLE_TYPE_SBIX>: Fix types.
+	(tt_sbit_decoder_load_compound, tt_face_load_sbix_image): Add proper
+	casts.
+
+2014-06-13  Werner Lemberg  <wl@gnu.org>
+
+	Fix compiler warnings.
+	Reported by Wojciech Mamrak <wmamrak@gmail.com>.
+
+	* src/autofit/afglobal.c (af_face_globals_compute_style_coverage),
+	src/autofit/afmodule.c (af_property_set): Fix `signed' vs.
+	`unsigned' issues.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Make compiler
+	happy.
+
+	* src/base/ftlcdfil.c (_ft_lcd_filter_fir): Use only four elements
+	for `fir'.
+	Fix `signed' vs. `unsigned' issues.
+
+	* src/sfnt/sfobjs.c (WRITE_BYTE): Removed, unused.
+	(WRITE_USHORT, WRITE_ULONG): Add proper casts.
+
+	* src/truetype/ttgload.c (TT_Get_VMetrics): Add proper casts.
+
+	* src/truetype/ttinterp.c (Ins_DELTAP): Add proper casts for `B1'
+	and `B2'.
+
+2014-05-16  Alexey Petruchik  <alexey.petruchik@gmail.com>
+
+	[cmake] Add option to build OS X framework.
+
+	* CMakeLists.txt: Update accordingly.
+
+	* builds/mac/freetype-Info.plist: New file.
+
+2014-05-13  Pavel Koshevoy  <pkoshevoy@gmail.com>
+
+	* CMakeLists.txt (BASE_SRCS): Add missing `ftbdf.c'.
+
+2014-05-11  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix variable initializations.
+
+	* src/autofit/afhints.c (af_glyph_hints_reload): Assign default
+	values to `in_dir' and `out_dir' for all points.
+
+2014-05-11  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix crash with font `CabinSketch-Bold.ttf'.
+
+	Problem reported by Ralf S. Engelschall <rse@engelschall.com>.
+
+	* src/autofit/afhints.c (af_glyph_hints_reload): Fix threshold for
+	finding first non-near point.
+	Properly initialize non-near point deltas.
+
+2014-05-01  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add blue-zone support for Devanagari.
+
+	This essentially moves the Devanagari script from the `Indic' hinter
+	to the `Latin' hinter.  Thanks to Girish Dalvi
+	<girish.dalvi@gmail.com> for guidance with blue zone characters!
+
+	* src/autofit/afblue.dat: Add blue zone data for Devanagari.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Devanagari standard characters and
+	move data out of AF_CONFIG_OPTION_INDIC block.
+
+	* src/autofit/afranges.c: Move Devanagari data out of
+	AF_CONFIG_OPTION_INDIC block.
+	Move U+20B9, (new) Rupee sign, from Latin to Devanagari.
+
+	* src/autofit/afstyles.h: Update Devanagari data; in particular, use
+	AF_WRITING_SYSTEM_LATIN.
+
+2014-05-01  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix handling of neutral blue zones in stems.
+
+	* src/autofit/afhints.h (AF_Edge_Flags): New value
+	`AF_EDGE_NEUTRAL'.
+
+	* src/autofit/aflatin.c (af_latin_hints_compute_blue_edges): Trace
+	neutral blue zones with AF_EDGE_NEUTRAL.
+	(af_latin_hint_edges): Skip neutral blue zones if necessary.
+
+2014-04-28  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Introduce neutral blue zones to the latin module.
+
+	Such blue zones match either the top or the bottom of a contour.  We
+	need them for scripts where accent-like elements directly touch the
+	base character (for example, some vowel signs in Devanagari, cf.
+	U+0913 or U+0914).
+
+	* src/autofit/afblue.hin (AF_BLUE_PROPERTY_LATIN_NEUTRAL): New
+	property.
+
+	* src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/aflatin.h (AF_LATIN_IS_NEUTRAL_BLUE): New macro.
+	(AF_LATIN_BLUE_NEUTRAL): New enumeration value.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues,
+	af_latin_hints_compute_blue_edges): Handle neutral blue zones.
+
+2014-04-25  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/hbshim.c: Partially revert commit from 2014-04-17.
+
+	Using input glyph coverage data is simply wrong.
+
+	Problem reported by Nikolaus Waxweiler <madigens@gmail.com> and
+	Mantas Mikulėnas <grawity@gmail.com>.
+
+2014-04-23  Werner Lemberg  <wl@gnu.org>
+
+	* src/raster/ftraster.c (Vertical_Sweep_Span): Use drop-out mode.
+
+	This spot has been missed while introducing support for various
+	drop-out modes years ago (including no drop-out mode, which this
+	commit fixes).
+
+	Problem reported by Patrick Thomas <pthomas505@gmail.com>.
+
+2014-04-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/pngshim.c (error_callback): s/longjmp/ft_longjmp/.
+
+2014-04-20  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix Savannah bug #42148.
+
+	The adaptation of the cjk auto-hinter module to blue stringsets in
+	2013-08-25 had three severe bugs.  Mea culpa.
+
+	1. Contrary to the latin auto-hinter, characters for reference and
+	   overshoot values of a blue zone are specified separately.  Due to
+	   the screwed-up change it didn't work at all.
+
+	2. A boolean comparison was erroneously replaced with a cast,
+	   causing invalid results with the `^' operator later on.  The
+	   visual artifact caused by this problem is the topic of the bug
+	   report.
+
+	3. Two flag values were inverted, causing incorrect assignment of
+	   reference and overshoot values.
+
+	* src/autofit/afblue.dat: Fix CJK bluestrings, introducing a new
+	syntax to have both reference and overshoot characters in a single
+	string.  This is error #1.
+	Add extensive comments.
+
+	* src/autofit/afblue.hin (AF_BLUE_PROPERTY_CJK_FILL): Removed, no
+	longer used.
+	(AF_BLUE_PROPERTY_CJK_TOP, AF_BLUE_PROPERTY_CJK_HORIZ): Fix values.
+	This is error #3.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_init_blues): Correct error #1.
+	Use character `|' to separate characters for reference and overshoot
+	values.
+	Improve tracing messages, synchronizing them with the latin
+	auto-hinter.
+	(af_cjk_hints_compute_blue_edges): Fix value of `is_top_right_blue'.
+	This is error #2.
+	(af_cjk_align_linked_edge): Add tracing message.
+
+	* src/autofit/afcjk.h (AF_CJK_IS_FILLED_BLUE): Removed, no longer
+	used.
+
+2014-04-17  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] More coverage fixes for complex scripts.
+
+	* src/autofit/hbshim.c (af_get_coverage): Merge input glyph coverage
+	of GSUB lookups into output coverage.  Otherwise, ligatures are not
+	handled properly.
+	Don't check blue zone characters for default coverage.
+
+2014-04-17  Werner Lemberg  <wl@gnu.org>
+
+	Make `FT_Get_SubGlyph_Info' actually work.
+
+	* src/base/ftobjs.c (FT_Get_SubGlyph_Info): Return FT_Err_Ok
+	if there is no error.
+
+2014-04-15  Werner Lemberg  <wl@gnu.org>
+
+	[afblue.pl]: Minor improvements.
+
+	* src/tools/afblue.pl: Allow whitespace before comments.
+	Ignore whitespace in strings.
+
+2014-04-14  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve coverage handling.
+
+	* src/autofit/hbshim.c (af_get_coverage): Don't exclude glyphs
+	appearing in the GPOS table if we are processing the default
+	coverage.
+
+2014-04-13  David Weber <weber.aulendorf@googlemail.com>
+
+	[smooth] Fix stand-alone compilation.
+
+	* src/smooth/ftgrays.c (FT_BEGIN_STMNT, FT_END_STMNT): Define.
+
+2014-04-12  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Redesign the recognition algorithm of strong points.
+
+	In particular, local extrema without horizontal or vertical segments
+	are better recognized:
+
+	  + A                + D
+	   \                /
+	    \              /
+	     \            /
+	      \          /
+	       \        + C
+	        \    /
+	       B +/
+
+	If the distances AB and CD are large, point B wasn't previously
+	detected as an extremum since the `ft_corner_is_flat' function
+	`swallowed' BC regardless of its direction, tagging point B as weak.
+	The next iteration started at B and made `ft_corner_is_flat' swallow
+	point C, tagging it as weak also, et voilà.
+
+	To improve that, another pass gets now performed before calling
+	`ft_corner_is_flat' to improve the `topology' of an outline: A
+	sequence of non-horizontal or non-vertical vectors that point into
+	the same quadrant are handled as a single, large vector.
+
+	Additionally, distances of near points are now accumulated, which
+	makes the auto-hinter handle them as if they were prepended to the
+	next non-near vector.
+
+	This generally improves the auto-hinter's rendering results.
+
+	* src/autofit/afhints.c (af_glyph_hints_reload): Implement it.
+
+	* src/autofit/afhints.h (AF_FLAGS): Remove no longer used flag
+	`AF_FLAG_NEAR'.
+
+2014-04-05  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve scoring algorithm for identifying stems.
+
+	Problem reported by Karsten Lücke <karsten.luecke@kltf.de>.
+
+	The new algorithm takes care of the width of stems: If the distance
+	between two segments is larger than the largest stem width, the
+	demerits quickly increase for larger distances.  This improves
+	hinting of slanted fonts (especially if the inner parts of serifs
+	have non-horizontal `shoulders'), avoiding false stem links.
+
+	* src/autofit/aflatin.c (af_latin_hints_link_segments): Use largest
+	stem width (if available) to compute better demerits for distances
+	between stems.
+	(af_latin_hints_detect_features): Pass stem width array and array
+	size.
+	(af_latin_metrics_init_widths): Updated to use original algorithm.
+	(af_latin_hints_apply): Updated to use new algorithm.
+
+	* src/autofit/aflatin.h: Updated.
+	* src/autofit/afcjk.c: Updated.
+
+2014-04-03  Werner Lemberg  <wl@gnu.org>
+
+	Don't require `gzip' module for `sfnt'.
+
+	Reported by Preet <prismatic.project@gmail.com>.
+
+	* src/sfnt/sfobjs.c (woff_open_font): Guard use of
+	FT_Gzip_Uncompress with FT_CONFIG_OPTION_USE_ZLIB.
+
+2014-03-27  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #38235.
+
+	Work around a bug in pkg-config version 0.28 and earlier: If a
+	variable value gets surrounded by doublequotes (in particular values
+	for the `prefix' variable), the prefix override mechanism fails.
+
+	* builds/unix/freetype2.in: Don't use doublequotes.
+	* builds/unix/unix-def.in (freetype.pc): Escape spaces in directory
+	names with backslashes.
+
+2014-03-24  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #41946.
+
+	Based on a patch from Marek Kašík <mkasik@redhat.com>.
+
+	* builds/unix/configure.raw (LIBS_CONFIG): Remove.
+	* builds/unix/freetype-config.in (libs): Hard-code value.
+	* builds/unix/unix-def.in: Updated.
+
+2014-03-22  Werner Lemberg  <wl@gnu.org>
+
+	Another revert for the change from 2014-03-18.
+
+	Problem reported by Nikolaus Waxweiler <madigens@gmail.com>.
+
+	* src/base/ftcalc.c (FT_MulFix): Ensure that an `FT_MulFix' symbol
+	gets always exported.
+
+2014-03-20  Werner Lemberg  <wl@gnu.org>
+
+	CMakeLists.txt: Another fix for include directories.
+
+	Problem reported by Taylor Holberton <taylorcholberton@gmail.com>.
+
+2014-03-19  Werner Lemberg  <wl@gnu.org>
+
+	CMakeLists.txt: Fix include directories.
+
+	Problem reported by Taylor Holberton <taylorcholberton@gmail.com>.
+
+2014-03-19  Werner Lemberg  <wl@gnu.org>
+
+	Partially revert last commit.
+
+	Found by Alexei.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Initializing
+	those variables is plain wrong, since we are in a loop.
+
+2014-03-18  Sean McBride  <sean@rogue-research.com>
+	    Werner Lemberg  <wl@gnu.org>
+
+	Fix clang warnings.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Initialize
+	some variables.
+
+	* src/base/ftcalc.c (FT_MulFix): Only use code if
+	`FT_MULFIX_INLINED' is not defined.
+
+	* src/bdf/bdfdrivr.c (bdf_cmap_class), src/cache/ftcbasic.c
+	(ftc_basic_image_family_class, ftc_basic_image_cache_class,
+	ftc_basic_sbit_family_class, ftc_basic_sbit_cache_class),
+	src/cache/ftccmap.c (ftc_cmap_cache_class), src/cache/ftcmanag.c
+	(ftc_size_list_class, ftc_face_list_class), src/pcf/pcfdrivr.c
+	(pcf_cmap_class), src/pfr/pfrdrivr.c (pfr_metrics_service_rec): Make
+	function static.
+
+	* src/type1/t1driver.c (t1_ps_get_font_value): Remove redundant
+	code.
+
+2014-03-17  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #41869.
+
+	This works around a problem with HarfBuzz (<= 0.9.26), which doesn't
+	validate glyph indices returned by
+	`hb_ot_layout_lookup_collect_glyphs'.
+
+	* src/autofit/hbshim.c (af_get_coverage): Guard `idx'.
+
+	* docs/CHANGES: Updated.
+
+2014-03-14  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/configure.raw: Don't show error messages of `which'.
+
+2014-03-09  Alan Coopersmith  <alan.coopersmith@oracle.com>
+
+	Fix cppcheck 1.64 warning.
+
+	* src/autofit/afglobal.c (af_face_globals_new): Catch NULL pointer
+	dereference in case of error.
+
+2014-03-09  Sean McBride  <sean@rogue-research.com>
+
+	* src/sfnt/ttcmap.c (tt_face_build_cmaps): Remove clang warning.
+
 2014-03-06  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.5.3 released.
@@ -106,7 +2063,7 @@
 	option.
 	(libs): Updated.
 	(staticlibs): New variable, to be used if `--static' is given.
-	* builds/doc/freetype-config.1: Document `--static'.
+	* docs/freetype-config.1: Document `--static'.
 
 	* builds/unix/freetype2.in, builds/unix/unix-def.in: Updated.
 

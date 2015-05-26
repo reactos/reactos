@@ -41,7 +41,7 @@
 #define LZW_CLEAR         256
 #define LZW_FIRST         257
 
-#define LZW_BIT_MASK      0x1f
+#define LZW_BIT_MASK      0x1F
 #define LZW_BLOCK_MASK    0x80
 #define LZW_MASK( n )     ( ( 1U << (n) ) - 1U )
 

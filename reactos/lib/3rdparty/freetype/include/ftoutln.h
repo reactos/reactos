@@ -52,7 +52,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Order>                                                               */
   /*    FT_Outline                                                         */
-  /*    FT_OUTLINE_FLAGS                                                   */
   /*    FT_Outline_New                                                     */
   /*    FT_Outline_Done                                                    */
   /*    FT_Outline_Copy                                                    */
@@ -68,13 +67,17 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_Outline_Get_Bitmap                                              */
   /*    FT_Outline_Render                                                  */
-  /*                                                                       */
   /*    FT_Outline_Decompose                                               */
   /*    FT_Outline_Funcs                                                   */
-  /*    FT_Outline_MoveTo_Func                                             */
-  /*    FT_Outline_LineTo_Func                                             */
-  /*    FT_Outline_ConicTo_Func                                            */
-  /*    FT_Outline_CubicTo_Func                                            */
+  /*    FT_Outline_MoveToFunc                                              */
+  /*    FT_Outline_LineToFunc                                              */
+  /*    FT_Outline_ConicToFunc                                             */
+  /*    FT_Outline_CubicToFunc                                             */
+  /*                                                                       */
+  /*    FT_Orientation                                                     */
+  /*    FT_Outline_Get_Orientation                                         */
+  /*                                                                       */
+  /*    FT_OUTLINE_XXX                                                     */
   /*                                                                       */
   /*************************************************************************/
 
@@ -535,7 +538,7 @@ FT_BEGIN_HEADER
   *
   * @description:
   *   This function analyzes a glyph outline and tries to compute its
-  *   fill orientation (see @FT_Orientation).  This is done by integrating 
+  *   fill orientation (see @FT_Orientation).  This is done by integrating
   *   the total area covered by the outline. The positive integral
   *   corresponds to the clockwise orientation and @FT_ORIENTATION_POSTSCRIPT
   *   is returned. The negative integral corresponds to the counter-clockwise
@@ -554,7 +557,6 @@ FT_BEGIN_HEADER
   */
   FT_EXPORT( FT_Orientation )
   FT_Outline_Get_Orientation( FT_Outline*  outline );
-
 
   /* */
 

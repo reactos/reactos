@@ -508,9 +508,9 @@
     record_size = FT_NEXT_ULONG( p );
 
     /* The maximum number of bytes in an hdmx device record is the */
-    /* maximum number of glyphs + 2; this is 0xFFFF + 2; this is   */
-    /* the reason why `record_size' is a long (which we read as    */
-    /* unsigned long for convenience).  In practice, two bytes     */
+    /* maximum number of glyphs + 2; this is 0xFFFF + 2, thus      */
+    /* explaining why `record_size' is a long (which we read as    */
+    /* unsigned long for convenience).  In practice, two bytes are */
     /* sufficient to hold the size value.                          */
     /*                                                             */
     /* There are at least two fonts, HANNOM-A and HANNOM-B version */
@@ -522,8 +522,10 @@
       record_size &= 0xFFFFU;
 
     /* The limit for `num_records' is a heuristic value. */
-
-    if ( version != 0 || num_records > 255 || record_size > 0x10001L )
+    if ( version != 0           ||
+         num_records > 255      ||
+         record_size > 0x10001L ||
+         record_size < 4        )
     {
       error = FT_THROW( Invalid_File_Format );
       goto Fail;

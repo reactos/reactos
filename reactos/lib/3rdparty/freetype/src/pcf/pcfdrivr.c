@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf files
 
-    Copyright (C) 2000-2004, 2006-2011, 2013 by
+    Copyright (C) 2000-2004, 2006-2011, 2013, 2014 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -189,7 +189,7 @@ THE SOFTWARE.
   }
 
 
-  FT_CALLBACK_TABLE_DEF
+  static
   const FT_CMap_ClassRec  pcf_cmap_class =
   {
     sizeof ( PCF_CMapRec ),
@@ -494,7 +494,13 @@ THE SOFTWARE.
 
     FT_TRACE1(( "PCF_Glyph_Load: glyph index %d\n", glyph_index ));
 
-    if ( !face || glyph_index >= (FT_UInt)face->root.num_glyphs )
+    if ( !face )
+    {
+      error = FT_THROW( Invalid_Face_Handle );
+      goto Exit;
+    }
+
+    if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
     {
       error = FT_THROW( Invalid_Argument );
       goto Exit;

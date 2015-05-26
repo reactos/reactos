@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2013 by                                                 */
+/*  Copyright 1996-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -267,7 +267,7 @@
       /* use the scaled metrics, even when tt_size_reset fails */
       FT_Select_Metrics( size->face, strike_index );
 
-      tt_size_reset( ttsize );
+      tt_size_reset( ttsize ); /* ignore return value */
     }
     else
     {
@@ -370,7 +370,7 @@
       return FT_THROW( Invalid_Size_Handle );
 
     if ( !face )
-      return FT_THROW( Invalid_Argument );
+      return FT_THROW( Invalid_Face_Handle );
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     if ( glyph_index >= (FT_UInt)face->num_glyphs &&
@@ -481,7 +481,7 @@
     SFNT_Service         sfnt;
 
 
-    /* TT_SERVICES_GET derefers `library' in PIC mode */
+    /* TT_SERVICES_GET dereferences `library' in PIC mode */
 #ifdef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;

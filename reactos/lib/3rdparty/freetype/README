@@ -1,4 +1,4 @@
-  FreeType 2.5.3
+  FreeType 2.5.5
   ==============
 
   Homepage: http://www.freetype.org
@@ -24,9 +24,9 @@
 
   and download one of the following files.
 
-    freetype-doc-2.5.3.tar.bz2
-    freetype-doc-2.5.3.tar.gz
-    ftdoc253.zip
+    freetype-doc-2.5.5.tar.bz2
+    freetype-doc-2.5.5.tar.gz
+    ftdoc255.zip
 
   To view the documentation online, go to
 
@@ -53,14 +53,14 @@
   Bugs
   ====
 
-  Please report bugs  by e-mail to `freetype-devel@nongnu.org'.  Don't
-  forget to  send a  detailed explanation of  the problem --  there is
-  nothing  worse than  receiving a  terse message  that only  says `it
-  doesn't work'.
-
-  Alternatively, you may submit a bug report at
+  Please submit bug reports at
 
     https://savannah.nongnu.org/bugs/?group=freetype
+
+  Alternatively,    you   might    report    bugs    by   e-mail    to
+  `freetype-devel@nongnu.org'.   Don't  forget   to  send  a  detailed
+  explanation of the problem --  there is nothing worse than receiving
+  a terse message that only says `it doesn't work'.
 
 
   Enjoy!

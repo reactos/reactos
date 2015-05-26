@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType CharMap cache (body)                                        */
 /*                                                                         */
-/*  Copyright 2000-2013 by                                                 */
+/*  Copyright 2000-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -202,7 +202,7 @@
   /*************************************************************************/
 
 
-  FT_CALLBACK_TABLE_DEF
+  static
   const FTC_CacheClassRec  ftc_cmap_cache_class =
   {
     ftc_cmap_node_new,
@@ -263,6 +263,9 @@
       return 0;
     }
 
+    if ( !face_id )
+      return 0;
+
     query.face_id    = face_id;
     query.cmap_index = (FT_UInt)cmap_index;
     query.char_code  = char_code;
@@ -300,12 +303,6 @@
                                       &face );
       if ( error )
         goto Exit;
-
-#ifdef FT_MAX_CHARMAP_CACHEABLE
-      /* something rotten can happen with rogue clients */
-      if ( cmap_index > FT_MAX_CHARMAP_CACHEABLE )
-        return 0; /* XXX: should return appropriate error */
-#endif
 
       if ( (FT_UInt)cmap_index < (FT_UInt)face->num_charmaps )
       {

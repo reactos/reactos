@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2013 by                                                 */
+/*  Copyright 2000-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1098,10 +1098,12 @@
               goto Syntax_Error;
 
             /* apply hints to the loaded glyph outline now */
-            hinter->apply( hinter->hints,
-                           builder->current,
-                           (PSH_Globals)builder->hints_globals,
-                           decoder->hint_mode );
+            error = hinter->apply( hinter->hints,
+                                   builder->current,
+                                   (PSH_Globals)builder->hints_globals,
+                                   decoder->hint_mode );
+            if ( error )
+              goto Fail;
           }
 
           /* add current outline to the glyph slot */

@@ -179,7 +179,7 @@
     if ( header->signature  != 0x50465230L ||   /* "PFR0" */
          header->version     > 4           ||
          header->header_size < 58          ||
-         header->signature2 != 0x0d0a      )    /* CR/LF  */
+         header->signature2 != 0x0D0A      )    /* CR/LF  */
     {
       result = 0;
     }

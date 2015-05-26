@@ -161,7 +161,7 @@ FT_BEGIN_HEADER
                       FT_UInt   gindex,
                       FT_Pos   *aadvance );
 
- /* */
+  /* */
 
 
 FT_END_HEADER

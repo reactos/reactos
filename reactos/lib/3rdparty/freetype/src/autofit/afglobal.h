@@ -66,16 +66,16 @@ FT_BEGIN_HEADER
 
   /* index of fallback style in `af_style_classes' */
 #ifdef AF_CONFIG_OPTION_CJK
-#define AF_STYLE_FALLBACK  AF_STYLE_HANI_DFLT
+#define AF_STYLE_FALLBACK    AF_STYLE_HANI_DFLT
 #else
-#define AF_STYLE_FALLBACK  AF_STYLE_NONE_DFLT
+#define AF_STYLE_FALLBACK    AF_STYLE_NONE_DFLT
 #endif
   /* default script for OpenType; ignored if HarfBuzz isn't used */
-#define AF_SCRIPT_DEFAULT  AF_SCRIPT_LATN
+#define AF_SCRIPT_DEFAULT    AF_SCRIPT_LATN
   /* a bit mask indicating an uncovered glyph        */
 #define AF_STYLE_UNASSIGNED  0x7F
   /* if this flag is set, we have an ASCII digit     */
-#define AF_DIGIT              0x80
+#define AF_DIGIT             0x80
 
   /* `increase-x-height' property */
 #define AF_PROP_INCREASE_X_HEIGHT_MIN  6

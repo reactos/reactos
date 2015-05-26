@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2002-2006, 2009-2013 by                                      */
+/*  Copyright 2002-2006, 2009-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -208,8 +208,8 @@
 
     /* head[0] && head[1] are the magic numbers;    */
     /* head[2] is the method, and head[3] the flags */
-    if ( head[0] != 0x1f              ||
-         head[1] != 0x8b              ||
+    if ( head[0] != 0x1F              ||
+         head[1] != 0x8B              ||
          head[2] != Z_DEFLATED        ||
         (head[3] & FT_GZIP_RESERVED)  )
     {
@@ -603,9 +603,17 @@
                       FT_Stream  source )
   {
     FT_Error     error;
-    FT_Memory    memory = source->memory;
+    FT_Memory    memory;
     FT_GZipFile  zip = NULL;
 
+
+    if ( !stream || !source )
+    {
+      error = FT_THROW( Invalid_Stream_Handle );
+      goto Exit;
+    }
+
+    memory = source->memory;
 
     /*
      *  check the header right now; this prevents allocating un-necessary
@@ -699,6 +707,11 @@
     z_stream  stream;
     int       err;
 
+
+    /* check for `input' delayed to `inflate' */
+
+    if ( !memory || ! output_len || !output )
+      return FT_THROW( Invalid_Argument );
 
     /* this function is modeled after zlib's `uncompress' function */
 

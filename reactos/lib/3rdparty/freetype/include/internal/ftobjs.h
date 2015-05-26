@@ -72,6 +72,16 @@ FT_BEGIN_HEADER
 
 #define FT_ABS( a )     ( (a) < 0 ? -(a) : (a) )
 
+  /*
+   *  Approximate sqrt(x*x+y*y) using the `alpha max plus beta min'
+   *  algorithm.  We use alpha = 1, beta = 3/8, giving us results with a
+   *  largest error less than 7% compared to the exact value.
+   */
+#define FT_HYPOT( x, y )                 \
+          ( x = FT_ABS( x ),             \
+            y = FT_ABS( y ),             \
+            x > y ? x + ( 3 * y >> 3 )   \
+                  : y + ( 3 * x >> 3 ) )
 
 #define FT_PAD_FLOOR( x, n )  ( (x) & ~((n)-1) )
 #define FT_PAD_ROUND( x, n )  FT_PAD_FLOOR( (x) + ((n)/2), n )
@@ -80,14 +90,6 @@ FT_BEGIN_HEADER
 #define FT_PIX_FLOOR( x )     ( (x) & ~63 )
 #define FT_PIX_ROUND( x )     FT_PIX_FLOOR( (x) + 32 )
 #define FT_PIX_CEIL( x )      FT_PIX_FLOOR( (x) + 63 )
-
-
-  /*
-   *  Return the highest power of 2 that is <= value; this correspond to
-   *  the highest bit in a given 32-bit value.
-   */
-  FT_BASE( FT_UInt32 )
-  ft_highpow2( FT_UInt32  value );
 
 
   /*

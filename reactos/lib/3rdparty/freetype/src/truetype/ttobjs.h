@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2009, 2011-2013 by                                      */
+/*  Copyright 1996-2009, 2011-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -95,8 +95,8 @@ FT_BEGIN_HEADER
     FT_F26Dot6     control_value_cutin;
     FT_F26Dot6     single_width_cutin;
     FT_F26Dot6     single_width_value;
-    FT_Short       delta_base;
-    FT_Short       delta_shift;
+    FT_UShort      delta_base;
+    FT_UShort      delta_shift;
 
     FT_Byte        instruct_control;
     /* According to Greg Hitchcock from Microsoft, the `scan_control'     */
@@ -333,8 +333,10 @@ FT_BEGIN_HEADER
     FT_Bool            debug;
     TT_ExecContext     context;
 
-    FT_Bool            bytecode_ready;
-    FT_Bool            cvt_ready;
+    /* if negative, `fpgm' (resp. `prep'), wasn't executed yet; */
+    /* otherwise it is the returned error code                  */
+    FT_Error           bytecode_ready;
+    FT_Error           cvt_ready;
 
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 

@@ -259,8 +259,8 @@ FT_BEGIN_HEADER
   FT_Get_WinFNT_Header( FT_Face               face,
                         FT_WinFNT_HeaderRec  *aheader );
 
-
   /* */
+
 
 FT_END_HEADER
 

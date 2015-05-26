@@ -20,66 +20,6 @@
 #include "aftypes.h"
 
 
-#if 0
-
-  FT_LOCAL_DEF( FT_Int )
-  af_corner_is_flat( FT_Pos  x_in,
-                     FT_Pos  y_in,
-                     FT_Pos  x_out,
-                     FT_Pos  y_out )
-  {
-    FT_Pos  ax = x_in;
-    FT_Pos  ay = y_in;
-
-    FT_Pos  d_in, d_out, d_corner;
-
-
-    if ( ax < 0 )
-      ax = -ax;
-    if ( ay < 0 )
-      ay = -ay;
-    d_in = ax + ay;
-
-    ax = x_out;
-    if ( ax < 0 )
-      ax = -ax;
-    ay = y_out;
-    if ( ay < 0 )
-      ay = -ay;
-    d_out = ax + ay;
-
-    ax = x_out + x_in;
-    if ( ax < 0 )
-      ax = -ax;
-    ay = y_out + y_in;
-    if ( ay < 0 )
-      ay = -ay;
-    d_corner = ax + ay;
-
-    return ( d_in + d_out - d_corner ) < ( d_corner >> 4 );
-  }
-
-
-  FT_LOCAL_DEF( FT_Int )
-  af_corner_orientation( FT_Pos  x_in,
-                         FT_Pos  y_in,
-                         FT_Pos  x_out,
-                         FT_Pos  y_out )
-  {
-    FT_Pos  delta;
-
-
-    delta = x_in * y_out - y_in * x_out;
-
-    if ( delta == 0 )
-      return 0;
-    else
-      return 1 - 2 * ( delta < 0 );
-  }
-
-#endif /* 0 */
-
-
   /*
    *  We are not using `af_angle_atan' anymore, but we keep the source
    *  code below just in case...

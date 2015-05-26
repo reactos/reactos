@@ -75,6 +75,33 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    Note that the FreeType Cache sub-system is not a FreeType module.  */
   /*                                                                       */
+  /* <Order>                                                               */
+  /*    FT_Module                                                          */
+  /*    FT_Module_Constructor                                              */
+  /*    FT_Module_Destructor                                               */
+  /*    FT_Module_Requester                                                */
+  /*    FT_Module_Class                                                    */
+  /*                                                                       */
+  /*    FT_Add_Module                                                      */
+  /*    FT_Get_Module                                                      */
+  /*    FT_Remove_Module                                                   */
+  /*    FT_Add_Default_Modules                                             */
+  /*                                                                       */
+  /*    FT_Property_Set                                                    */
+  /*    FT_Property_Get                                                    */
+  /*                                                                       */
+  /*    FT_New_Library                                                     */
+  /*    FT_Done_Library                                                    */
+  /*    FT_Reference_Library                                               */
+  /*                                                                       */
+  /*    FT_Renderer                                                        */
+  /*    FT_Renderer_Class                                                  */
+  /*                                                                       */
+  /*    FT_Get_Renderer                                                    */
+  /*    FT_Set_Renderer                                                    */
+  /*                                                                       */
+  /*    FT_Set_Debug_Hook                                                  */
+  /*                                                                       */
   /*************************************************************************/
 
 
@@ -491,7 +518,7 @@ FT_BEGIN_HEADER
   FT_EXPORT( FT_Error )
   FT_Done_Library( FT_Library  library );
 
-/* */
+  /* */
 
   typedef void
   (*FT_DebugHook_Func)( void*  arg );
@@ -628,7 +655,6 @@ FT_BEGIN_HEADER
    */
   FT_EXPORT( FT_TrueTypeEngineType )
   FT_Get_TrueType_Engine_Type( FT_Library  library );
-
 
   /* */
 

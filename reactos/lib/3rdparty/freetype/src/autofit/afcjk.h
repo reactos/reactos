@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK writing system (specification). */
 /*                                                                         */
-/*  Copyright 2006, 2007, 2011-2013 by                                     */
+/*  Copyright 2006, 2007, 2011-2014 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,8 +50,6 @@ FT_BEGIN_HEADER
           ( (b)->properties & AF_BLUE_PROPERTY_CJK_TOP )
 #define AF_CJK_IS_HORIZ_BLUE( b ) \
           ( (b)->properties & AF_BLUE_PROPERTY_CJK_HORIZ )
-#define AF_CJK_IS_FILLED_BLUE( b ) \
-          ( (b)->properties & AF_BLUE_PROPERTY_CJK_FILL )
 #define AF_CJK_IS_RIGHT_BLUE  AF_CJK_IS_TOP_BLUE
 
 #define AF_CJK_MAX_WIDTHS  16

@@ -67,14 +67,14 @@
   static void
   gxv_lcar_partial_validate( FT_UShort      partial,
                              FT_UShort      glyph,
-                             GXV_Validator  valid )
+                             GXV_Validator  gxvalid )
   {
     GXV_NAME_ENTER( "partial" );
 
     if ( GXV_LCAR_DATA( format ) != 1 )
       goto Exit;
 
-    gxv_ctlPoint_validate( glyph, partial, valid );
+    gxv_ctlPoint_validate( glyph, partial, gxvalid );
 
   Exit:
     GXV_EXIT;
@@ -84,10 +84,10 @@
   static void
   gxv_lcar_LookupValue_validate( FT_UShort            glyph,
                                  GXV_LookupValueCPtr  value_p,
-                                 GXV_Validator        valid )
+                                 GXV_Validator        gxvalid )
   {
-    FT_Bytes   p     = valid->root->base + value_p->u;
-    FT_Bytes   limit = valid->root->limit;
+    FT_Bytes   p     = gxvalid->root->base + value_p->u;
+    FT_Bytes   limit = gxvalid->root->limit;
     FT_UShort  count;
     FT_Short   partial;
     FT_UShort  i;
@@ -102,7 +102,7 @@
     for ( i = 0; i < count; i++ )
     {
       partial = FT_NEXT_SHORT( p );
-      gxv_lcar_partial_validate( partial, glyph, valid );
+      gxv_lcar_partial_validate( partial, glyph, gxvalid );
     }
 
     GXV_EXIT;
@@ -148,7 +148,7 @@
   gxv_lcar_LookupFmt4_transit( FT_UShort            relative_gindex,
                                GXV_LookupValueCPtr  base_value_p,
                                FT_Bytes             lookuptbl_limit,
-                               GXV_Validator        valid )
+                               GXV_Validator        gxvalid )
   {
     FT_Bytes             p;
     FT_Bytes             limit;
@@ -160,8 +160,8 @@
     /* XXX: check range? */
     offset = (FT_UShort)( base_value_p->u +
                           relative_gindex * sizeof ( FT_UShort ) );
-    p      = valid->root->base + offset;
-    limit  = valid->root->limit;
+    p      = gxvalid->root->base + offset;
+    limit  = gxvalid->root->limit;
 
     GXV_LIMIT_CHECK ( 2 );
     value.u = FT_NEXT_USHORT( p );
@@ -185,8 +185,8 @@
   {
     FT_Bytes          p     = table;
     FT_Bytes          limit = 0;
-    GXV_ValidatorRec  validrec;
-    GXV_Validator     valid = &validrec;
+    GXV_ValidatorRec  gxvalidrec;
+    GXV_Validator     gxvalid = &gxvalidrec;
 
     GXV_lcar_DataRec  lcarrec;
     GXV_lcar_Data     lcar = &lcarrec;
@@ -194,9 +194,9 @@
     FT_Fixed          version;
 
 
-    valid->root       = ftvalid;
-    valid->table_data = lcar;
-    valid->face       = face;
+    gxvalid->root       = ftvalid;
+    gxvalid->table_data = lcar;
+    gxvalid->face       = face;
 
     FT_TRACE3(( "validating `lcar' table\n" ));
     GXV_INIT;
@@ -211,10 +211,10 @@
     if ( GXV_LCAR_DATA( format ) > 1 )
       FT_INVALID_FORMAT;
 
-    valid->lookupval_sign   = GXV_LOOKUPVALUE_UNSIGNED;
-    valid->lookupval_func   = gxv_lcar_LookupValue_validate;
-    valid->lookupfmt4_trans = gxv_lcar_LookupFmt4_transit;
-    gxv_LookupTable_validate( p, limit, valid );
+    gxvalid->lookupval_sign   = GXV_LOOKUPVALUE_UNSIGNED;
+    gxvalid->lookupval_func   = gxv_lcar_LookupValue_validate;
+    gxvalid->lookupfmt4_trans = gxv_lcar_LookupFmt4_transit;
+    gxv_LookupTable_validate( p, limit, gxvalid );
 
     FT_TRACE4(( "\n" ));
   }

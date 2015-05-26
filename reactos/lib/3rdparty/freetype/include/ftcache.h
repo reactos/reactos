@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache subsystem (specification).                            */
 /*                                                                         */
-/*  Copyright 1996-2008, 2010, 2013 by                                     */
+/*  Copyright 1996-2008, 2010, 2013, 2014 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -209,10 +209,10 @@ FT_BEGIN_HEADER
   typedef FT_Error
   (*FTC_Face_Requester)( FTC_FaceID  face_id,
                          FT_Library  library,
-                         FT_Pointer  request_data,
+                         FT_Pointer  req_data,
                          FT_Face*    aface );
 
- /* */
+  /* */
 
 
   /*************************************************************************/
@@ -1046,8 +1046,8 @@ FT_BEGIN_HEADER
                               FTC_SBit      *sbit,
                               FTC_Node      *anode );
 
+  /* */
 
- /* */
 
 FT_END_HEADER
 

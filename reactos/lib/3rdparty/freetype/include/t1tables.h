@@ -5,7 +5,7 @@
 /*    Basic Type 1/Type 2 tables definitions and interface (specification  */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2004, 2006, 2008, 2009, 2011 by                         */
+/*  Copyright 1996-2004, 2006, 2008, 2009, 2011, 2014 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -48,6 +48,26 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    This section contains the definition of Type 1-specific tables,    */
   /*    including structures related to other PostScript font formats.     */
+  /*                                                                       */
+  /* <Order>                                                               */
+  /*    PS_FontInfoRec                                                     */
+  /*    PS_FontInfo                                                        */
+  /*    PS_PrivateRec                                                      */
+  /*    PS_Private                                                         */
+  /*                                                                       */
+  /*    CID_FaceDictRec                                                    */
+  /*    CID_FaceDict                                                       */
+  /*    CID_FaceInfoRec                                                    */
+  /*    CID_FaceInfo                                                       */
+  /*                                                                       */
+  /*    FT_Has_PS_Glyph_Names                                              */
+  /*    FT_Get_PS_Font_Info                                                */
+  /*    FT_Get_PS_Font_Private                                             */
+  /*    FT_Get_PS_Font_Value                                               */
+  /*                                                                       */
+  /*    T1_Blend_Flags                                                     */
+  /*    T1_EncodingType                                                    */
+  /*    PS_Dict_Keys                                                       */
   /*                                                                       */
   /*************************************************************************/
 
@@ -190,14 +210,30 @@ FT_BEGIN_HEADER
   /*    given blend dictionary (font info or private).  Used to support    */
   /*    Multiple Masters fonts.                                            */
   /*                                                                       */
+  /* <Values>                                                              */
+  /*    T1_BLEND_UNDERLINE_POSITION ::                                     */
+  /*    T1_BLEND_UNDERLINE_THICKNESS ::                                    */
+  /*    T1_BLEND_ITALIC_ANGLE ::                                           */
+  /*    T1_BLEND_BLUE_VALUES ::                                            */
+  /*    T1_BLEND_OTHER_BLUES ::                                            */
+  /*    T1_BLEND_STANDARD_WIDTH ::                                         */
+  /*    T1_BLEND_STANDARD_HEIGHT ::                                        */
+  /*    T1_BLEND_STEM_SNAP_WIDTHS ::                                       */
+  /*    T1_BLEND_STEM_SNAP_HEIGHTS ::                                      */
+  /*    T1_BLEND_BLUE_SCALE ::                                             */
+  /*    T1_BLEND_BLUE_SHIFT ::                                             */
+  /*    T1_BLEND_FAMILY_BLUES ::                                           */
+  /*    T1_BLEND_FAMILY_OTHER_BLUES ::                                     */
+  /*    T1_BLEND_FORCE_BOLD ::                                             */
+  /*                                                                       */
   typedef enum  T1_Blend_Flags_
   {
-    /*# required fields in a FontInfo blend dictionary */
+    /* required fields in a FontInfo blend dictionary */
     T1_BLEND_UNDERLINE_POSITION = 0,
     T1_BLEND_UNDERLINE_THICKNESS,
     T1_BLEND_ITALIC_ANGLE,
 
-    /*# required fields in a Private blend dictionary */
+    /* required fields in a Private blend dictionary */
     T1_BLEND_BLUE_VALUES,
     T1_BLEND_OTHER_BLUES,
     T1_BLEND_STANDARD_WIDTH,
@@ -210,15 +246,13 @@ FT_BEGIN_HEADER
     T1_BLEND_FAMILY_OTHER_BLUES,
     T1_BLEND_FORCE_BOLD,
 
-    /*# never remove */
-    T1_BLEND_MAX
+    T1_BLEND_MAX    /* do not remove */
 
   } T1_Blend_Flags;
 
-  /* */
 
-
-  /*# backwards compatible definitions */
+  /* these constants are deprecated; use the corresponding */
+  /* `T1_Blend_Flags' values instead                       */
 #define t1_blend_underline_position   T1_BLEND_UNDERLINE_POSITION
 #define t1_blend_underline_thickness  T1_BLEND_UNDERLINE_THICKNESS
 #define t1_blend_italic_angle         T1_BLEND_ITALIC_ANGLE
@@ -234,6 +268,8 @@ FT_BEGIN_HEADER
 #define t1_blend_family_other_blues   T1_BLEND_FAMILY_OTHER_BLUES
 #define t1_blend_force_bold           T1_BLEND_FORCE_BOLD
 #define t1_blend_max                  T1_BLEND_MAX
+
+  /* */
 
 
   /* maximum number of Multiple Masters designs, as defined in the spec */
@@ -333,10 +369,17 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct CID_FaceDictRec_*  CID_FaceDict;
 
-  /* */
 
-
-  /* backwards-compatible definition */
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    CID_FontDict                                                       */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    This type is equivalent to @CID_FaceDictRec.  It is deprecated but */
+  /*    kept to maintain source compatibility between various versions of  */
+  /*    FreeType.                                                          */
+  /*                                                                       */
   typedef CID_FaceDictRec  CID_FontDict;
 
 
@@ -503,6 +546,13 @@ FT_BEGIN_HEADER
   /*    An enumeration describing the `Encoding' entry in a Type 1         */
   /*    dictionary.                                                        */
   /*                                                                       */
+  /* <Values>                                                              */
+  /*    T1_ENCODING_TYPE_NONE ::                                           */
+  /*    T1_ENCODING_TYPE_ARRAY ::                                          */
+  /*    T1_ENCODING_TYPE_STANDARD ::                                       */
+  /*    T1_ENCODING_TYPE_ISOLATIN1 ::                                      */
+  /*    T1_ENCODING_TYPE_EXPERT ::                                         */
+  /*                                                                       */
   typedef enum  T1_EncodingType_
   {
     T1_ENCODING_TYPE_NONE = 0,
@@ -522,6 +572,54 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    An enumeration used in calls to @FT_Get_PS_Font_Value to identify  */
   /*    the Type~1 dictionary entry to retrieve.                           */
+  /*                                                                       */
+  /* <Values>                                                              */
+  /*    PS_DICT_FONT_TYPE ::                                               */
+  /*    PS_DICT_FONT_MATRIX ::                                             */
+  /*    PS_DICT_FONT_BBOX ::                                               */
+  /*    PS_DICT_PAINT_TYPE ::                                              */
+  /*    PS_DICT_FONT_NAME ::                                               */
+  /*    PS_DICT_UNIQUE_ID ::                                               */
+  /*    PS_DICT_NUM_CHAR_STRINGS ::                                        */
+  /*    PS_DICT_CHAR_STRING_KEY ::                                         */
+  /*    PS_DICT_CHAR_STRING ::                                             */
+  /*    PS_DICT_ENCODING_TYPE ::                                           */
+  /*    PS_DICT_ENCODING_ENTRY ::                                          */
+  /*    PS_DICT_NUM_SUBRS ::                                               */
+  /*    PS_DICT_SUBR ::                                                    */
+  /*    PS_DICT_STD_HW ::                                                  */
+  /*    PS_DICT_STD_VW ::                                                  */
+  /*    PS_DICT_NUM_BLUE_VALUES ::                                         */
+  /*    PS_DICT_BLUE_VALUE ::                                              */
+  /*    PS_DICT_BLUE_FUZZ ::                                               */
+  /*    PS_DICT_NUM_OTHER_BLUES ::                                         */
+  /*    PS_DICT_OTHER_BLUE ::                                              */
+  /*    PS_DICT_NUM_FAMILY_BLUES ::                                        */
+  /*    PS_DICT_FAMILY_BLUE ::                                             */
+  /*    PS_DICT_NUM_FAMILY_OTHER_BLUES ::                                  */
+  /*    PS_DICT_FAMILY_OTHER_BLUE ::                                       */
+  /*    PS_DICT_BLUE_SCALE ::                                              */
+  /*    PS_DICT_BLUE_SHIFT ::                                              */
+  /*    PS_DICT_NUM_STEM_SNAP_H ::                                         */
+  /*    PS_DICT_STEM_SNAP_H ::                                             */
+  /*    PS_DICT_NUM_STEM_SNAP_V ::                                         */
+  /*    PS_DICT_STEM_SNAP_V ::                                             */
+  /*    PS_DICT_FORCE_BOLD ::                                              */
+  /*    PS_DICT_RND_STEM_UP ::                                             */
+  /*    PS_DICT_MIN_FEATURE ::                                             */
+  /*    PS_DICT_LEN_IV ::                                                  */
+  /*    PS_DICT_PASSWORD ::                                                */
+  /*    PS_DICT_LANGUAGE_GROUP ::                                          */
+  /*    PS_DICT_VERSION ::                                                 */
+  /*    PS_DICT_NOTICE ::                                                  */
+  /*    PS_DICT_FULL_NAME ::                                               */
+  /*    PS_DICT_FAMILY_NAME ::                                             */
+  /*    PS_DICT_WEIGHT ::                                                  */
+  /*    PS_DICT_IS_FIXED_PITCH ::                                          */
+  /*    PS_DICT_UNDERLINE_POSITION ::                                      */
+  /*    PS_DICT_UNDERLINE_THICKNESS ::                                     */
+  /*    PS_DICT_FS_TYPE ::                                                 */
+  /*    PS_DICT_ITALIC_ANGLE ::                                            */
   /*                                                                       */
   typedef enum  PS_Dict_Keys_
   {

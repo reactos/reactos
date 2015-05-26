@@ -75,36 +75,36 @@
 
     switch ( tag )
     {
-    case ft_sfnt_head:
+    case FT_SFNT_HEAD:
       table = &face->header;
       break;
 
-    case ft_sfnt_hhea:
+    case FT_SFNT_HHEA:
       table = &face->horizontal;
       break;
 
-    case ft_sfnt_vhea:
-      table = face->vertical_info ? &face->vertical : 0;
+    case FT_SFNT_VHEA:
+      table = face->vertical_info ? &face->vertical : NULL;
       break;
 
-    case ft_sfnt_os2:
-      table = face->os2.version == 0xFFFFU ? 0 : &face->os2;
+    case FT_SFNT_OS2:
+      table = face->os2.version == 0xFFFFU ? NULL : &face->os2;
       break;
 
-    case ft_sfnt_post:
+    case FT_SFNT_POST:
       table = &face->postscript;
       break;
 
-    case ft_sfnt_maxp:
+    case FT_SFNT_MAXP:
       table = &face->max_profile;
       break;
 
-    case ft_sfnt_pclt:
-      table = face->pclt.Version ? &face->pclt : 0;
+    case FT_SFNT_PCLT:
+      table = face->pclt.Version ? &face->pclt : NULL;
       break;
 
     default:
-      table = 0;
+      table = NULL;
     }
 
     return table;
@@ -427,7 +427,7 @@
   sfnt_get_interface( FT_Module    module,
                       const char*  module_interface )
   {
-    /* SFNT_SERVICES_GET derefers `library' in PIC mode */
+    /* SFNT_SERVICES_GET dereferences `library' in PIC mode */
 #ifdef FT_CONFIG_OPTION_PIC
     FT_Library  library;
 

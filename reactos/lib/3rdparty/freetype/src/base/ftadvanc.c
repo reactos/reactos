@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Quick computation of advance widths (body).                          */
 /*                                                                         */
-/*  Copyright 2008, 2009, 2011, 2013 by                                    */
+/*  Copyright 2008, 2009, 2011, 2013, 2014 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -80,6 +80,9 @@
     if ( !face )
       return FT_THROW( Invalid_Face_Handle );
 
+    if ( !padvance )
+      return FT_THROW( Invalid_Argument );
+
     if ( gindex >= (FT_UInt)face->num_glyphs )
       return FT_THROW( Invalid_Glyph_Index );
 
@@ -117,6 +120,9 @@
 
     if ( !face )
       return FT_THROW( Invalid_Face_Handle );
+
+    if ( !padvances )
+      return FT_THROW( Invalid_Argument );
 
     num = (FT_UInt)face->num_glyphs;
     end = start + count;

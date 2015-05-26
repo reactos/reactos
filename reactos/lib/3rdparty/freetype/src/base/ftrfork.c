@@ -182,10 +182,10 @@
         return error;
 
       FT_TRACE2(( "Resource tags: %c%c%c%c\n",
-                  (char)( 0xff & ( tag_internal >> 24 ) ),
-                  (char)( 0xff & ( tag_internal >> 16 ) ),
-                  (char)( 0xff & ( tag_internal >>  8 ) ),
-                  (char)( 0xff & ( tag_internal >>  0 ) ) ));
+                  (char)( 0xFF & ( tag_internal >> 24 ) ),
+                  (char)( 0xFF & ( tag_internal >> 16 ) ),
+                  (char)( 0xFF & ( tag_internal >>  8 ) ),
+                  (char)( 0xFF & ( tag_internal >>  0 ) ) ));
       FT_TRACE3(( "             : subcount=%d, suboffset=0x%04x\n",
                   subcnt, rpos ));
 

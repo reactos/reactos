@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000-2010, 2012, 2013 by
+  Copyright 2000-2010, 2012-2014 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -78,7 +78,7 @@ THE SOFTWARE.
     FT_FRAME_START( 16  ),
       FT_FRAME_ULONG_LE( type ),
       FT_FRAME_ULONG_LE( format ),
-      FT_FRAME_ULONG_LE( size ),
+      FT_FRAME_ULONG_LE( size ),   /* rounded up to a multiple of 4 */
       FT_FRAME_ULONG_LE( offset ),
     FT_FRAME_END
   };
@@ -95,9 +95,11 @@ THE SOFTWARE.
     FT_Memory  memory = FT_FACE( face )->memory;
     FT_UInt    n;
 
+    FT_ULong   size;
 
-    if ( FT_STREAM_SEEK ( 0 )                          ||
-         FT_STREAM_READ_FIELDS ( pcf_toc_header, toc ) )
+
+    if ( FT_STREAM_SEEK( 0 )                          ||
+         FT_STREAM_READ_FIELDS( pcf_toc_header, toc ) )
       return FT_THROW( Cannot_Open_Resource );
 
     if ( toc->version != PCF_FILE_VERSION                 ||
@@ -144,12 +146,61 @@ THE SOFTWARE.
 
         if ( ( tables[i].size   > tables[i + 1].offset )                  ||
              ( tables[i].offset > tables[i + 1].offset - tables[i].size ) )
-          return FT_THROW( Invalid_Offset );
+        {
+          error = FT_THROW( Invalid_Offset );
+          goto Exit;
+        }
       }
 
       if ( !have_change )
         break;
     }
+
+    /*
+     *  We now check whether the `size' and `offset' values are reasonable:
+     *  `offset' + `size' must not exceed the stream size.
+     *
+     *  Note, however, that X11's `pcfWriteFont' routine (used by the
+     *  `bdftopcf' program to create PDF font files) has two special
+     *  features.
+     *
+     *  - It always assigns the accelerator table a size of 100 bytes in the
+     *    TOC, regardless of its real size, which can vary between 34 and 72
+     *    bytes.
+     *
+     *  - Due to the way the routine is designed, it ships out the last font
+     *    table with its real size, ignoring the TOC's size value.  Since
+     *    the TOC size values are always rounded up to a multiple of 4, the
+     *    difference can be up to three bytes for all tables except the
+     *    accelerator table, for which the difference can be as large as 66
+     *    bytes.
+     *
+     */
+
+    tables = face->toc.tables;
+    size   = stream->size;
+
+    for ( n = 0; n < toc->count - 1; n++ )
+    {
+      /* we need two checks to avoid overflow */
+      if ( ( tables->size   > size                ) ||
+           ( tables->offset > size - tables->size ) )
+      {
+        error = FT_THROW( Invalid_Table );
+        goto Exit;
+      }
+      tables++;
+    }
+
+    /* only check `tables->offset' for last table element ... */
+    if ( ( tables->offset > size ) )
+    {
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
+    /* ... and adjust `tables->size' to the real value if necessary */
+    if ( tables->size > size - tables->offset )
+      tables->size = size - tables->offset;
 
 #ifdef FT_DEBUG_LEVEL_TRACE
 
@@ -631,24 +682,40 @@ THE SOFTWARE.
       return FT_THROW( Out_Of_Memory );
 
     metrics = face->metrics;
-    for ( i = 0; i < nmetrics; i++ )
+    for ( i = 0; i < nmetrics; i++, metrics++ )
     {
-      error = pcf_get_metric( stream, format, metrics + i );
+      error = pcf_get_metric( stream, format, metrics );
 
-      metrics[i].bits = 0;
+      metrics->bits = 0;
 
       FT_TRACE5(( "  idx %d: width=%d, "
                   "lsb=%d, rsb=%d, ascent=%d, descent=%d, swidth=%d\n",
                   i,
-                  ( metrics + i )->characterWidth,
-                  ( metrics + i )->leftSideBearing,
-                  ( metrics + i )->rightSideBearing,
-                  ( metrics + i )->ascent,
-                  ( metrics + i )->descent,
-                  ( metrics + i )->attributes ));
+                  metrics->characterWidth,
+                  metrics->leftSideBearing,
+                  metrics->rightSideBearing,
+                  metrics->ascent,
+                  metrics->descent,
+                  metrics->attributes ));
 
       if ( error )
         break;
+
+      /* sanity checks -- those values are used in `PCF_Glyph_Load' to     */
+      /* compute a glyph's bitmap dimensions, thus setting them to zero in */
+      /* case of an error disables this particular glyph only              */
+      if ( metrics->rightSideBearing < metrics->leftSideBearing ||
+           metrics->ascent + metrics->descent < 0               )
+      {
+        metrics->characterWidth   = 0;
+        metrics->leftSideBearing  = 0;
+        metrics->rightSideBearing = 0;
+        metrics->ascent           = 0;
+        metrics->descent          = 0;
+
+        FT_TRACE0(( "pcf_get_metrics:"
+                    " invalid metrics for glyph %d\n", i ));
+      }
     }
 
     if ( error )
@@ -699,8 +766,8 @@ THE SOFTWARE.
 
     FT_TRACE4(( "  number of bitmaps: %d\n", nbitmaps ));
 
-    /* XXX: PCF_Face->nmetrics is singed FT_Long, see pcf.h */
-    if ( face->nmetrics < 0 || nbitmaps != ( FT_ULong )face->nmetrics )
+    /* XXX: PCF_Face->nmetrics is signed FT_Long, see pcf.h */
+    if ( face->nmetrics < 0 || nbitmaps != (FT_ULong)face->nmetrics )
       return FT_THROW( Invalid_File_Format );
 
     if ( FT_NEW_ARRAY( offsets, nbitmaps ) )
@@ -811,6 +878,15 @@ THE SOFTWARE.
 
     if ( !PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT ) )
       return FT_THROW( Invalid_File_Format );
+
+    /* sanity checks */
+    if ( firstCol < 0       ||
+         firstCol > lastCol ||
+         lastCol  > 0xFF    ||
+         firstRow < 0       ||
+         firstRow > lastRow ||
+         lastRow  > 0xFF    )
+      return FT_THROW( Invalid_Table );
 
     FT_TRACE4(( "pdf_get_encodings:\n" ));
 

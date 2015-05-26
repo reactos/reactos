@@ -6,7 +6,7 @@
 /*    recorders (specification only).  These are used to support native    */
 /*    T1/T2 hints in the `type1', `cid', and `cff' font drivers.           */
 /*                                                                         */
-/*  Copyright 2001-2003, 2005-2007, 2009, 2012 by                          */
+/*  Copyright 2001-2003, 2005-2007, 2009, 2012, 2014 by                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -45,7 +45,7 @@ FT_BEGIN_HEADER
                           T1_Private*   private_dict,
                           PSH_Globals*  aglobals );
 
-  typedef FT_Error
+  typedef void
   (*PSH_Globals_SetScaleFunc)( PSH_Globals  globals,
                                FT_Fixed     x_scale,
                                FT_Fixed     y_scale,

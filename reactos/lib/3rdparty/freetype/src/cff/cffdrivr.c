@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2013 by                                                 */
+/*  Copyright 1996-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -753,7 +753,7 @@
     FT_Module_Interface  result;
 
 
-    /* CFF_SERVICES_GET derefers `library' in PIC mode */
+    /* CFF_SERVICES_GET dereferences `library' in PIC mode */
 #ifdef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;

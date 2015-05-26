@@ -1,19 +1,37 @@
-#  Formatter (c) 2002, 2004, 2007, 2008 David Turner <david@freetype.org>
 #
+#  formatter.py
+#
+#    Convert parsed content blocks to a structured document (library file).
+#
+#  Copyright 2002, 2004, 2007, 2008, 2014 by
+#  David Turner.
+#
+#  This file is part of the FreeType project, and may only be used,
+#  modified, and distributed under the terms of the FreeType project
+#  license, LICENSE.TXT.  By continuing to use, modify, or distribute
+#  this file you indicate that you have read the license and
+#  understand and accept it fully.
+
+#
+# This is the base Formatter class.  Its purpose is to convert a content
+# processor's data into specific documents (i.e., table of contents, global
+# index, and individual API reference indices).
+#
+# You need to sub-class it to output anything sensible.  For example, the
+# file `tohtml.py' contains the definition of the `HtmlFormatter' sub-class
+# to output HTML.
+#
+
 
 from sources import *
 from content import *
 from utils   import *
 
-# This is the base Formatter class.  Its purpose is to convert
-# a content processor's data into specific documents (i.e., table of
-# contents, global index, and individual API reference indices).
-#
-# You need to sub-class it to output anything sensible.  For example,
-# the file tohtml.py contains the definition of the HtmlFormatter sub-class
-# used to output -- you guessed it -- HTML.
-#
 
+################################################################
+##
+##  FORMATTER CLASS
+##
 class  Formatter:
 
     def  __init__( self, processor ):
@@ -36,20 +54,22 @@ class  Formatter:
                             self.add_identifier( field.name, block )
 
         self.block_index = self.identifiers.keys()
-        self.block_index.sort( index_sort )
+        self.block_index.sort( key = index_key )
 
     def  add_identifier( self, name, block ):
-        if self.identifiers.has_key( name ):
+        if name in self.identifiers:
             # duplicate name!
-            sys.stderr.write(                                           \
-               "WARNING: duplicate definition for '" + name + "' in " + \
-               block.location() + ", previous definition in " +         \
-               self.identifiers[name].location() + "\n" )
+            sys.stderr.write( "WARNING: duplicate definition for"
+                              + " '" + name + "' "
+                              + "in " + block.location() + ", "
+                              + "previous definition in "
+                              + self.identifiers[name].location()
+                              + "\n" )
         else:
             self.identifiers[name] = block
 
     #
-    #  Formatting the table of contents
+    # formatting the table of contents
     #
     def  toc_enter( self ):
         pass
@@ -97,7 +117,7 @@ class  Formatter:
             close_output( output )
 
     #
-    #  Formatting the index
+    # formatting the index
     #
     def  index_enter( self ):
         pass
@@ -128,7 +148,7 @@ class  Formatter:
             close_output( output )
 
     #
-    #  Formatting a section
+    # formatting a section
     #
     def  section_enter( self, section ):
         pass
@@ -162,7 +182,22 @@ class  Formatter:
         self.section_enter( section )
 
         for name in section.block_names:
-            block = self.identifiers[name]
+            skip_entry = 0
+            try:
+                block = self.identifiers[name]
+                # `block_names' can contain field names also,
+                # which we filter out
+                for markup in block.markups:
+                    if markup.tag == 'values':
+                        for field in markup.fields:
+                            if field.name == name:
+                                skip_entry = 1
+            except:
+                skip_entry = 1   # this happens e.g. for `/empty/' entries
+
+            if skip_entry:
+              continue
+
             self.block_enter( block )
 
             for markup in block.markups[1:]:   # always ignore first markup!

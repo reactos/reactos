@@ -67,7 +67,7 @@
     GXV_StateTable_GlyphOffsetCPtr  glyphOffset_p,
     FT_Bytes                        table,
     FT_Bytes                        limit,
-    GXV_Validator                   valid )
+    GXV_Validator                   gxvalid )
   {
     FT_UShort  markFirst;
     FT_UShort  dontAdvance;
@@ -125,7 +125,7 @@
   FT_LOCAL_DEF( void )
   gxv_mort_subtable_type0_validate( FT_Bytes       table,
                                     FT_Bytes       limit,
-                                    GXV_Validator  valid )
+                                    GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
 
@@ -135,14 +135,14 @@
 
     GXV_LIMIT_CHECK( GXV_STATETABLE_HEADER_SIZE );
 
-    valid->statetable.optdata               = NULL;
-    valid->statetable.optdata_load_func     = NULL;
-    valid->statetable.subtable_setup_func   = NULL;
-    valid->statetable.entry_glyphoffset_fmt = GXV_GLYPHOFFSET_NONE;
-    valid->statetable.entry_validate_func =
+    gxvalid->statetable.optdata               = NULL;
+    gxvalid->statetable.optdata_load_func     = NULL;
+    gxvalid->statetable.subtable_setup_func   = NULL;
+    gxvalid->statetable.entry_glyphoffset_fmt = GXV_GLYPHOFFSET_NONE;
+    gxvalid->statetable.entry_validate_func =
       gxv_mort_subtable_type0_entry_validate;
 
-    gxv_StateTable_validate( p, limit, valid );
+    gxv_StateTable_validate( p, limit, gxvalid );
 
     GXV_EXIT;
   }

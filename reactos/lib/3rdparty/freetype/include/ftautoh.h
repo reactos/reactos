@@ -245,12 +245,12 @@ FT_BEGIN_HEADER
    *   The data exchange structure for the @glyph-to-script-map property.
    *
    */
-   typedef struct  FT_Prop_GlyphToScriptMap_
-   {
-     FT_Face   face;
-     FT_Byte*  map;
+  typedef struct  FT_Prop_GlyphToScriptMap_
+  {
+    FT_Face   face;
+    FT_Byte*  map;
 
-   } FT_Prop_GlyphToScriptMap;
+  } FT_Prop_GlyphToScriptMap;
 
 
   /**************************************************************************
@@ -384,15 +384,15 @@ FT_BEGIN_HEADER
    *   The data exchange structure for the @increase-x-height property.
    *
    */
-   typedef struct  FT_Prop_IncreaseXHeight_
-   {
-     FT_Face  face;
-     FT_UInt  limit;
+  typedef struct  FT_Prop_IncreaseXHeight_
+  {
+    FT_Face  face;
+    FT_UInt  limit;
 
-   } FT_Prop_IncreaseXHeight;
+  } FT_Prop_IncreaseXHeight;
 
+  /* */
 
- /* */
 
 FT_END_HEADER
 

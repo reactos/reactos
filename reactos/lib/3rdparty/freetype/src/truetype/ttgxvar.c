@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType GX Font Variation loader                                    */
 /*                                                                         */
-/*  Copyright 2004-2013 by                                                 */
+/*  Copyright 2004-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, Werner Lemberg, and George Williams.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -938,13 +938,13 @@
         FT_FREE( face->cvt );
         face->cvt = NULL;
 
-        tt_face_load_cvt( face, face->root.stream );
+        error = tt_face_load_cvt( face, face->root.stream );
         break;
 
       case mcvt_modify:
         /* The original cvt table is in memory.  All we need to do is */
         /* apply the `cvar' table (if any).                           */
-        tt_face_vary_cvt( face, face->root.stream );
+        error = tt_face_vary_cvt( face, face->root.stream );
         break;
 
       case mcvt_retain:

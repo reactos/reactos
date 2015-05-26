@@ -8,7 +8,7 @@
 /*  This file is for Mac OS X only; see builds/mac/ftoldmac.c for          */
 /*  classic platforms built by MPW.                                        */
 /*                                                                         */
-/*  Copyright 1996-2009, 2013 by                                           */
+/*  Copyright 1996-2009, 2013, 2014 by                                     */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -227,6 +227,9 @@
     FT_Error  err;
 
 
+    if ( !fontName || !face_index )
+      return FT_THROW( Invalid_Argument) ;
+
     err = FT_GetFileRef_From_Mac_ATS_Name( fontName, &ref, face_index );
     if ( err )
       return err;
@@ -255,6 +258,9 @@
     FSRef     ref;
     FT_Error  err;
 
+
+    if ( !fontName || !face_index )
+      return FT_THROW( Invalid_Argument );
 
     err = FT_GetFileRef_From_Mac_ATS_Name( fontName, &ref, face_index );
     if ( err )
@@ -440,9 +446,10 @@
       style = (StyleTable*)p;
       p += sizeof ( StyleTable );
       string_count = EndianS16_BtoN( *(short*)(p) );
+      string_count = FT_MIN( 64, string_count );
       p += sizeof ( short );
 
-      for ( i = 0; i < string_count && i < 64; i++ )
+      for ( i = 0; i < string_count; i++ )
       {
         names[i] = p;
         p       += names[i][0];
@@ -459,7 +466,7 @@
           ps_name[ps_name_len] = 0;
         }
         if ( style->indexes[face_index] > 1 &&
-             style->indexes[face_index] <= FT_MIN( string_count, 64 ) )
+             style->indexes[face_index] <= string_count )
         {
           unsigned char*  suffixes = names[style->indexes[face_index] - 1];
 
@@ -852,6 +859,8 @@
     FT_Error  error = FT_Err_Ok;
 
 
+    /* check of `library' and `aface' delayed to `FT_New_Face_From_XXX' */
+
     GetResInfo( fond, &fond_id, &fond_type, fond_name );
     if ( ResError() != noErr || fond_type != TTAG_FOND )
       return FT_THROW( Invalid_File_Format );
@@ -997,9 +1006,13 @@
   {
     FT_Error      error;
     FT_Open_Args  args;
-    OSErr   err;
-    UInt8   pathname[PATH_MAX];
 
+    OSErr  err;
+    UInt8  pathname[PATH_MAX];
+
+
+    /* check of `library' and `aface' delayed to */
+    /* `FT_New_Face_From_Resource'               */
 
     if ( !ref )
       return FT_THROW( Invalid_Argument );
@@ -1046,6 +1059,8 @@
 #else
     FSRef  ref;
 
+
+    /* check of `library' and `aface' delayed to `FT_New_Face_From_FSRef' */
 
     if ( !spec || FSpMakeFSRef( spec, &ref ) != noErr )
       return FT_THROW( Invalid_Argument );

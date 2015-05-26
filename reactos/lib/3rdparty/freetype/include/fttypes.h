@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType simple types definitions (specification only).              */
 /*                                                                         */
-/*  Copyright 1996-2002, 2004, 2006-2009, 2012, 2013 by                    */
+/*  Copyright 1996-2002, 2004, 2006-2009, 2012-2014 by                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -57,6 +57,8 @@ FT_BEGIN_HEADER
   /*    FT_UInt16                                                          */
   /*    FT_Int32                                                           */
   /*    FT_UInt32                                                          */
+  /*    FT_Int64                                                           */
+  /*    FT_UInt64                                                          */
   /*    FT_Short                                                           */
   /*    FT_UShort                                                          */
   /*    FT_Long                                                            */
@@ -78,7 +80,9 @@ FT_BEGIN_HEADER
   /*    FT_F2Dot14                                                         */
   /*    FT_UnitVector                                                      */
   /*    FT_F26Dot6                                                         */
+  /*    FT_Data                                                            */
   /*                                                                       */
+  /*    FT_MAKE_TAG                                                        */
   /*                                                                       */
   /*    FT_Generic                                                         */
   /*    FT_Generic_Finalizer                                               */
@@ -567,8 +571,8 @@ FT_BEGIN_HEADER
 
   } FT_ListRec;
 
-
   /* */
+
 
 #define FT_IS_EMPTY( list )  ( (list).head == 0 )
 #define FT_BOOL( x )  ( (FT_Bool)( x ) )

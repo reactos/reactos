@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PNG Bitmap glyph support.                                            */
 /*                                                                         */
-/*  Copyright 2013 by Google, Inc.                                         */
+/*  Copyright 2013, 2014 by Google, Inc.                                   */
 /*  Written by Stuart Gill and Behdad Esfahbod.                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -129,7 +129,7 @@
 
     *error = FT_THROW( Out_Of_Memory );
 #ifdef PNG_SETJMP_SUPPORTED
-    longjmp( png_jmpbuf( png ), 1 );
+    ft_longjmp( png_jmpbuf( png ), 1 );
 #endif
     /* if we get here, then we have no choice but to abort ... */
   }
@@ -205,11 +205,11 @@
       goto Exit;
     }
 
-    if ( !populate_map_and_metrics                   &&
-         ( x_offset + metrics->width  > map->width ||
-           y_offset + metrics->height > map->rows  ||
-           pix_bits != 32                          ||
-           map->pixel_mode != FT_PIXEL_MODE_BGRA   ) )
+    if ( !populate_map_and_metrics                            &&
+         ( (FT_UInt)x_offset + metrics->width  > map->width ||
+           (FT_UInt)y_offset + metrics->height > map->rows  ||
+           pix_bits != 32                                   ||
+           map->pixel_mode != FT_PIXEL_MODE_BGRA            ) )
     {
       error = FT_THROW( Invalid_Argument );
       goto Exit;
@@ -269,6 +269,14 @@
       map->pitch      = map->width * 4;
       map->num_grays  = 256;
 
+      /* reject too large bitmaps similarly to the rasterizer */
+      if ( map->rows > 0x7FFF || map->width > 0x7FFF )
+      {
+        error = FT_THROW( Array_Too_Large );
+        goto DestroyExit;
+      }
+
+      /* this doesn't overflow: 0x7FFF * 0x7FFF * 4 < 2^32 */
       size = map->rows * map->pitch;
 
       error = ft_glyphslot_alloc_bitmap( slot, size );

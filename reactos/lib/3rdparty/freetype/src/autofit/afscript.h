@@ -31,6 +31,11 @@
           HB_SCRIPT_CYRILLIC,
           0x43E, 0x41E, 0x0 ) /* оО */
 
+  SCRIPT( deva, DEVA,
+          "Devanagari",
+          HB_SCRIPT_DEVANAGARI,
+          0x920, 0x935, 0x91F ) /* ठ व ट */
+
   SCRIPT( grek, GREK,
           "Greek",
           HB_SCRIPT_GREEK,
@@ -51,16 +56,17 @@
           HB_SCRIPT_INVALID,
           0x0, 0x0, 0x0 )
 
+  /* there are no simple forms for letters; we thus use two digit shapes */
+  SCRIPT( telu, TELU,
+          "Telugu",
+          HB_SCRIPT_TELUGU,
+          0xC66, 0xC67, 0x0 ) /* ౦ ౧ */
+
 #ifdef AF_CONFIG_OPTION_INDIC
 
   SCRIPT( beng, BENG,
           "Bengali",
           HB_SCRIPT_BENGALI,
-          'o', 0x0, 0x0 ) /* XXX */
-
-  SCRIPT( deva, DEVA,
-          "Devanagari",
-          HB_SCRIPT_DEVANAGARI,
           'o', 0x0, 0x0 ) /* XXX */
 
   SCRIPT( gujr, GUJR,
@@ -111,11 +117,6 @@
   SCRIPT( taml, TAML,
           "Tamil",
           HB_SCRIPT_TAMIL,
-          'o', 0x0, 0x0 ) /* XXX */
-
-  SCRIPT( telu, TELU,
-          "Telugu",
-          HB_SCRIPT_TELUGU,
           'o', 0x0, 0x0 ) /* XXX */
 
   SCRIPT( tibt, TIBT,

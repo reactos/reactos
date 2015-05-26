@@ -182,7 +182,7 @@ THE SOFTWARE.
   }
 
 
-  FT_CALLBACK_TABLE_DEF
+  static
   const FT_CMap_ClassRec  bdf_cmap_class =
   {
     sizeof ( BDF_CMapRec ),
@@ -384,7 +384,7 @@ THE SOFTWARE.
       BDF_Face_Done( bdfface );
       return FT_THROW( Invalid_Argument );
     }
- 
+
     {
       bdf_property_t*  prop = NULL;
 
@@ -679,7 +679,13 @@ THE SOFTWARE.
     FT_UNUSED( load_flags );
 
 
-    if ( !face || glyph_index >= (FT_UInt)face->num_glyphs )
+    if ( !face )
+    {
+      error = FT_THROW( Invalid_Face_Handle );
+      goto Exit;
+    }
+
+    if ( glyph_index >= (FT_UInt)face->num_glyphs )
     {
       error = FT_THROW( Invalid_Argument );
       goto Exit;

@@ -266,7 +266,16 @@ FT_BEGIN_HEADER
 #define FT_INT64   long
 #define FT_UINT64  unsigned long
 
-#elif defined( _MSC_VER ) && _MSC_VER >= 900  /* Visual C++ (and Intel C++) */
+  /*************************************************************************/
+  /*                                                                       */
+  /* A 64-bit data type may create compilation problems if you compile     */
+  /* in strict ANSI mode.  To avoid them, we disable other 64-bit data     */
+  /* types if __STDC__ is defined.  You can however ignore this rule       */
+  /* by defining the FT_CONFIG_OPTION_FORCE_INT64 configuration macro.     */
+  /*                                                                       */
+#elif !defined( __STDC__ ) || defined( FT_CONFIG_OPTION_FORCE_INT64 )
+
+#if defined( _MSC_VER ) && _MSC_VER >= 900  /* Visual C++ (and Intel C++) */
 
   /* this compiler provides the __int64 type */
 #define FT_LONG64
@@ -300,27 +309,9 @@ FT_BEGIN_HEADER
 #define FT_INT64   long long int
 #define FT_UINT64  unsigned long long int
 
+#endif /* _MSC_VER */
+
 #endif /* FT_SIZEOF_LONG == (64 / FT_CHAR_BIT) */
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* A 64-bit data type will create compilation problems if you compile    */
-  /* in strict ANSI mode.  To avoid them, we disable its use if __STDC__   */
-  /* is defined.  You can however ignore this rule by defining the         */
-  /* FT_CONFIG_OPTION_FORCE_INT64 configuration macro.                     */
-  /*                                                                       */
-#if defined( FT_LONG64 ) && !defined( FT_CONFIG_OPTION_FORCE_INT64 )
-
-#ifdef __STDC__
-
-  /* undefine the 64-bit macros in strict ANSI compilation mode */
-#undef FT_LONG64
-#undef FT_INT64
-
-#endif /* __STDC__ */
-
-#endif /* FT_LONG64 && !FT_CONFIG_OPTION_FORCE_INT64 */
 
 #ifdef FT_LONG64
   typedef FT_INT64   FT_Int64;
@@ -331,219 +322,6 @@ FT_BEGIN_HEADER
 #define FT_BEGIN_STMNT  do {
 #define FT_END_STMNT    } while ( 0 )
 #define FT_DUMMY_STMNT  FT_BEGIN_STMNT FT_END_STMNT
-
-
-#ifndef  FT_CONFIG_OPTION_NO_ASSEMBLER
-  /* Provide assembler fragments for performance-critical functions. */
-  /* These must be defined `static __inline__' with GCC.             */
-
-#if defined( __CC_ARM ) || defined( __ARMCC__ )  /* RVCT */
-
-#define FT_MULFIX_ASSEMBLER  FT_MulFix_arm
-
-  /* documentation is in freetype.h */
-
-  static __inline FT_Int32
-  FT_MulFix_arm( FT_Int32  a,
-                 FT_Int32  b )
-  {
-    register FT_Int32  t, t2;
-
-
-    __asm
-    {
-      smull t2, t,  b,  a           /* (lo=t2,hi=t) = a*b */
-      mov   a,  t,  asr #31         /* a   = (hi >> 31) */
-      add   a,  a,  #0x8000         /* a  += 0x8000 */
-      adds  t2, t2, a               /* t2 += a */
-      adc   t,  t,  #0              /* t  += carry */
-      mov   a,  t2, lsr #16         /* a   = t2 >> 16 */
-      orr   a,  a,  t,  lsl #16     /* a  |= t << 16 */
-    }
-    return a;
-  }
-
-#endif /* __CC_ARM || __ARMCC__ */
-
-
-#ifdef __GNUC__
-
-#if defined( __arm__ )                                 && \
-    ( !defined( __thumb__ ) || defined( __thumb2__ ) ) && \
-    !( defined( __CC_ARM ) || defined( __ARMCC__ ) )
-
-#define FT_MULFIX_ASSEMBLER  FT_MulFix_arm
-
-  /* documentation is in freetype.h */
-
-  static __inline__ FT_Int32
-  FT_MulFix_arm( FT_Int32  a,
-                 FT_Int32  b )
-  {
-    register FT_Int32  t, t2;
-
-
-    __asm__ __volatile__ (
-      "smull  %1, %2, %4, %3\n\t"       /* (lo=%1,hi=%2) = a*b */
-      "mov    %0, %2, asr #31\n\t"      /* %0  = (hi >> 31) */
-#if defined( __clang__ ) && defined( __thumb2__ )
-      "add.w  %0, %0, #0x8000\n\t"      /* %0 += 0x8000 */
-#else
-      "add    %0, %0, #0x8000\n\t"      /* %0 += 0x8000 */
-#endif
-      "adds   %1, %1, %0\n\t"           /* %1 += %0 */
-      "adc    %2, %2, #0\n\t"           /* %2 += carry */
-      "mov    %0, %1, lsr #16\n\t"      /* %0  = %1 >> 16 */
-      "orr    %0, %0, %2, lsl #16\n\t"  /* %0 |= %2 << 16 */
-      : "=r"(a), "=&r"(t2), "=&r"(t)
-      : "r"(a), "r"(b)
-      : "cc" );
-    return a;
-  }
-
-#endif /* __arm__                      && */
-       /* ( __thumb2__ || !__thumb__ ) && */
-       /* !( __CC_ARM || __ARMCC__ )      */
-
-
-#if defined( __i386__ )
-
-#define FT_MULFIX_ASSEMBLER  FT_MulFix_i386
-
-  /* documentation is in freetype.h */
-
-  static __inline__ FT_Int32
-  FT_MulFix_i386( FT_Int32  a,
-                  FT_Int32  b )
-  {
-    register FT_Int32  result;
-
-
-    __asm__ __volatile__ (
-      "imul  %%edx\n"
-      "movl  %%edx, %%ecx\n"
-      "sarl  $31, %%ecx\n"
-      "addl  $0x8000, %%ecx\n"
-      "addl  %%ecx, %%eax\n"
-      "adcl  $0, %%edx\n"
-      "shrl  $16, %%eax\n"
-      "shll  $16, %%edx\n"
-      "addl  %%edx, %%eax\n"
-      : "=a"(result), "=d"(b)
-      : "a"(a), "d"(b)
-      : "%ecx", "cc" );
-    return result;
-  }
-
-#endif /* i386 */
-
-#endif /* __GNUC__ */
-
-
-#ifdef _MSC_VER /* Visual C++ */
-
-#ifdef _M_IX86
-
-#define FT_MULFIX_ASSEMBLER  FT_MulFix_i386
-
-  /* documentation is in freetype.h */
-
-  static __inline FT_Int32
-  FT_MulFix_i386( FT_Int32  a,
-                  FT_Int32  b )
-  {
-    register FT_Int32  result;
-
-    __asm
-    {
-      mov eax, a
-      mov edx, b
-      imul edx
-      mov ecx, edx
-      sar ecx, 31
-      add ecx, 8000h
-      add eax, ecx
-      adc edx, 0
-      shr eax, 16
-      shl edx, 16
-      add eax, edx
-      mov result, eax
-    }
-    return result;
-  }
-
-#endif /* _M_IX86 */
-
-#endif /* _MSC_VER */
-
-
-#if defined( __GNUC__ ) && defined( __x86_64__ )
-
-#define FT_MULFIX_ASSEMBLER  FT_MulFix_x86_64
-
-  static __inline__ FT_Int32
-  FT_MulFix_x86_64( FT_Int32  a,
-                    FT_Int32  b )
-  {
-    /* Temporarily disable the warning that C90 doesn't support */
-    /* `long long'.                                             */
-#if ( __GNUC__ > 4 ) || ( ( __GNUC__ == 4 ) && ( __GNUC_MINOR__ >= 6 ) )
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wlong-long"
-#endif
-
-#if 1
-    /* Technically not an assembly fragment, but GCC does a really good */
-    /* job at inlining it and generating good machine code for it.      */
-    long long  ret, tmp;
-
-
-    ret  = (long long)a * b;
-    tmp  = ret >> 63;
-    ret += 0x8000 + tmp;
-
-    return (FT_Int32)( ret >> 16 );
-#else
-
-    /* For some reason, GCC 4.6 on Ubuntu 12.04 generates invalid machine  */
-    /* code from the lines below.  The main issue is that `wide_a' is not  */
-    /* properly initialized by sign-extending `a'.  Instead, the generated */
-    /* machine code assumes that the register that contains `a' on input   */
-    /* can be used directly as a 64-bit value, which is wrong most of the  */
-    /* time.                                                               */
-    long long  wide_a = (long long)a;
-    long long  wide_b = (long long)b;
-    long long  result;
-
-
-    __asm__ __volatile__ (
-      "imul %2, %1\n"
-      "mov %1, %0\n"
-      "sar $63, %0\n"
-      "lea 0x8000(%1, %0), %0\n"
-      "sar $16, %0\n"
-      : "=&r"(result), "=&r"(wide_a)
-      : "r"(wide_b)
-      : "cc" );
-
-    return (FT_Int32)result;
-#endif
-
-#if ( __GNUC__ > 4 ) || ( ( __GNUC__ == 4 ) && ( __GNUC_MINOR__ >= 6 ) )
-#pragma GCC diagnostic pop
-#endif
-  }
-
-#endif /* __GNUC__ && __x86_64__ */
-
-#endif /* !FT_CONFIG_OPTION_NO_ASSEMBLER */
-
-
-#ifdef FT_CONFIG_OPTION_INLINE_MULFIX
-#ifdef FT_MULFIX_ASSEMBLER
-#define FT_MULFIX_INLINED  FT_MULFIX_ASSEMBLER
-#endif
-#endif
 
 
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT

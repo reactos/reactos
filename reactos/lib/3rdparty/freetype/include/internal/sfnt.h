@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level `sfnt' driver interface (specification).                  */
 /*                                                                         */
-/*  Copyright 1996-2006, 2009, 2012-2013 by                                */
+/*  Copyright 1996-2006, 2009, 2012-2014 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -405,14 +405,18 @@ FT_BEGIN_HEADER
   /* <Input>                                                               */
   /*    face     :: A handle to the target face object.                    */
   /*                                                                       */
-  /*    stream   :: The input stream.                                      */
-  /*                                                                       */
   /*    vertical :: A boolean flag.  If set, load vertical metrics.        */
   /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    gindex   :: The glyph index.                                       */
   /*                                                                       */
-  typedef FT_Error
+  /* <Output>                                                              */
+  /*    abearing :: The horizontal (or vertical) bearing.  Set to zero in  */
+  /*                case of error.                                         */
+  /*                                                                       */
+  /*    aadvance :: The horizontal (or vertical) advance.  Set to zero in  */
+  /*                case of error.                                         */
+  /*                                                                       */
+  typedef void
   (*TT_Get_Metrics_Func)( TT_Face     face,
                           FT_Bool     vertical,
                           FT_UInt     gindex,

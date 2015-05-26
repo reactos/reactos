@@ -142,6 +142,8 @@
   cf2_builder_lineTo( CF2_OutlineCallbacks      callbacks,
                       const CF2_CallbackParams  params )
   {
+    FT_Error  error;
+
     /* downcast the object pointer */
     CF2_Outline   outline = (CF2_Outline)callbacks;
     CFF_Builder*  builder;
@@ -156,15 +158,27 @@
     {
       /* record the move before the line; also check points and set */
       /* `path_begun'                                               */
-      cff_builder_start_point( builder,
-                               params->pt0.x,
-                               params->pt0.y );
+      error = cff_builder_start_point( builder,
+                                       params->pt0.x,
+                                       params->pt0.y );
+      if ( error )
+      {
+        if ( !*callbacks->error )
+          *callbacks->error =  error;
+        return;
+      }
     }
 
     /* `cff_builder_add_point1' includes a check_points call for one point */
-    cff_builder_add_point1( builder,
-                            params->pt1.x,
-                            params->pt1.y );
+    error = cff_builder_add_point1( builder,
+                                    params->pt1.x,
+                                    params->pt1.y );
+    if ( error )
+    {
+      if ( !*callbacks->error )
+        *callbacks->error =  error;
+      return;
+    }
   }
 
 
@@ -172,6 +186,8 @@
   cf2_builder_cubeTo( CF2_OutlineCallbacks      callbacks,
                       const CF2_CallbackParams  params )
   {
+    FT_Error  error;
+
     /* downcast the object pointer */
     CF2_Outline   outline = (CF2_Outline)callbacks;
     CFF_Builder*  builder;
@@ -186,13 +202,25 @@
     {
       /* record the move before the line; also check points and set */
       /* `path_begun'                                               */
-      cff_builder_start_point( builder,
-                               params->pt0.x,
-                               params->pt0.y );
+      error = cff_builder_start_point( builder,
+                                       params->pt0.x,
+                                       params->pt0.y );
+      if ( error )
+      {
+        if ( !*callbacks->error )
+          *callbacks->error =  error;
+        return;
+      }
     }
 
     /* prepare room for 3 points: 2 off-curve, 1 on-curve */
-    cff_check_points( builder, 3 );
+    error = cff_check_points( builder, 3 );
+    if ( error )
+    {
+      if ( !*callbacks->error )
+        *callbacks->error =  error;
+      return;
+    }
 
     cff_builder_add_point( builder,
                            params->pt1.x,

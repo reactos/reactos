@@ -40,7 +40,7 @@
 
   static void
   gxv_mort_feature_validate( GXV_mort_feature  f,
-                             GXV_Validator     valid )
+                             GXV_Validator     gxvalid )
   {
     if ( f->featureType >= gxv_feat_registry_length )
     {
@@ -89,7 +89,7 @@
   gxv_mort_featurearray_validate( FT_Bytes       table,
                                   FT_Bytes       limit,
                                   FT_ULong       nFeatureFlags,
-                                  GXV_Validator  valid )
+                                  GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
     FT_ULong  i;
@@ -106,22 +106,22 @@
       f.enableFlags    = FT_NEXT_ULONG( p );
       f.disableFlags   = FT_NEXT_ULONG( p );
 
-      gxv_mort_feature_validate( &f, valid );
+      gxv_mort_feature_validate( &f, gxvalid );
     }
 
     if ( !IS_GXV_MORT_FEATURE_OFF( f ) )
       FT_INVALID_DATA;
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = p - table;
     GXV_EXIT;
   }
 
 
   FT_LOCAL_DEF( void )
   gxv_mort_coverage_validate( FT_UShort      coverage,
-                              GXV_Validator  valid )
+                              GXV_Validator  gxvalid )
   {
-    FT_UNUSED( valid );
+    FT_UNUSED( gxvalid );
 
 #ifdef FT_DEBUG_LEVEL_TRACE
     if ( coverage & 0x8000U )
@@ -150,7 +150,7 @@
   gxv_mort_subtables_validate( FT_Bytes       table,
                                FT_Bytes       limit,
                                FT_UShort      nSubtables,
-                               GXV_Validator  valid )
+                               GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
 
@@ -198,7 +198,7 @@
       rest = length - ( 2 + 2 + 4 );
 
       GXV_LIMIT_CHECK( rest );
-      gxv_mort_coverage_validate( coverage, valid );
+      gxv_mort_coverage_validate( coverage, gxvalid );
 
       if ( type > 5 )
         FT_INVALID_FORMAT;
@@ -207,13 +207,13 @@
       if ( func == NULL )
         GXV_TRACE(( "morx type %d is reserved\n", type ));
 
-      func( p, p + rest, valid );
+      func( p, p + rest, gxvalid );
 
       p += rest;
       /* TODO: validate subFeatureFlags */
     }
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = p - table;
 
     GXV_EXIT;
   }
@@ -222,7 +222,7 @@
   static void
   gxv_mort_chain_validate( FT_Bytes       table,
                            FT_Bytes       limit,
-                           GXV_Validator  valid )
+                           GXV_Validator  gxvalid )
   {
     FT_Bytes   p = table;
 #ifdef GXV_LOAD_UNUSED_VARS
@@ -246,10 +246,10 @@
     nSubtables    = FT_NEXT_USHORT( p );
 
     gxv_mort_featurearray_validate( p, table + chainLength,
-                                    nFeatureFlags, valid );
-    p += valid->subtable_length;
-    gxv_mort_subtables_validate( p, table + chainLength, nSubtables, valid );
-    valid->subtable_length = chainLength;
+                                    nFeatureFlags, gxvalid );
+    p += gxvalid->subtable_length;
+    gxv_mort_subtables_validate( p, table + chainLength, nSubtables, gxvalid );
+    gxvalid->subtable_length = chainLength;
 
     /* TODO: validate defaultFlags */
     GXV_EXIT;
@@ -261,8 +261,8 @@
                      FT_Face       face,
                      FT_Validator  ftvalid )
   {
-    GXV_ValidatorRec  validrec;
-    GXV_Validator     valid = &validrec;
+    GXV_ValidatorRec  gxvalidrec;
+    GXV_Validator     gxvalid = &gxvalidrec;
     FT_Bytes          p     = table;
     FT_Bytes          limit = 0;
     FT_ULong          version;
@@ -270,9 +270,9 @@
     FT_ULong          i;
 
 
-    valid->root = ftvalid;
-    valid->face = face;
-    limit       = valid->root->limit;
+    gxvalid->root = ftvalid;
+    gxvalid->face = face;
+    limit         = gxvalid->root->limit;
 
     FT_TRACE3(( "validating `mort' table\n" ));
     GXV_INIT;
@@ -288,8 +288,8 @@
     {
       GXV_TRACE(( "validating chain %d/%d\n", i + 1, nChains ));
       GXV_32BIT_ALIGNMENT_VALIDATE( p - table );
-      gxv_mort_chain_validate( p, limit, valid );
-      p += valid->subtable_length;
+      gxv_mort_chain_validate( p, limit, gxvalid );
+      p += gxvalid->subtable_length;
     }
 
     FT_TRACE4(( "\n" ));

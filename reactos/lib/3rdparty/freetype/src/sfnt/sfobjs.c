@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    SFNT object management (base).                                       */
 /*                                                                         */
-/*  Copyright 1996-2008, 2010-2013 by                                      */
+/*  Copyright 1996-2008, 2010-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -348,29 +348,22 @@
   }
 
 
-#define WRITE_BYTE( p, v )     \
-          do                   \
-          {                    \
-            *(p)++ = (v) >> 0; \
-                               \
+#define WRITE_USHORT( p, v )                \
+          do                                \
+          {                                 \
+            *(p)++ = (FT_Byte)( (v) >> 8 ); \
+            *(p)++ = (FT_Byte)( (v) >> 0 ); \
+                                            \
           } while ( 0 )
 
-#define WRITE_USHORT( p, v )   \
-          do                   \
-          {                    \
-            *(p)++ = (v) >> 8; \
-            *(p)++ = (v) >> 0; \
-                               \
-          } while ( 0 )
-
-#define WRITE_ULONG( p, v )     \
-          do                    \
-          {                     \
-            *(p)++ = (v) >> 24; \
-            *(p)++ = (v) >> 16; \
-            *(p)++ = (v) >>  8; \
-            *(p)++ = (v) >>  0; \
-                                \
+#define WRITE_ULONG( p, v )                  \
+          do                                 \
+          {                                  \
+            *(p)++ = (FT_Byte)( (v) >> 24 ); \
+            *(p)++ = (FT_Byte)( (v) >> 16 ); \
+            *(p)++ = (FT_Byte)( (v) >>  8 ); \
+            *(p)++ = (FT_Byte)( (v) >>  0 ); \
+                                             \
           } while ( 0 )
 
 
@@ -574,8 +567,10 @@
 
 
       if ( table->Offset != woff_offset                         ||
-           table->Offset + table->CompLength > woff.length      ||
-           sfnt_offset + table->OrigLength > woff.totalSfntSize ||
+           table->CompLength > woff.length                      ||
+           table->Offset > woff.length - table->CompLength      ||
+           table->OrigLength > woff.totalSfntSize               ||
+           sfnt_offset > woff.totalSfntSize - table->OrigLength ||
            table->CompLength > table->OrigLength                )
       {
         error = FT_THROW( Invalid_Table );
@@ -661,6 +656,8 @@
       }
       else
       {
+#ifdef FT_CONFIG_OPTION_USE_ZLIB
+
         /* Uncompress with zlib. */
         FT_ULong  output_len = table->OrigLength;
 
@@ -675,6 +672,13 @@
           error = FT_THROW( Invalid_Table );
           goto Exit;
         }
+
+#else /* !FT_CONFIG_OPTION_USE_ZLIB */
+
+        error = FT_THROW( Unimplemented_Feature );
+        goto Exit;
+
+#endif /* !FT_CONFIG_OPTION_USE_ZLIB */
       }
 
       FT_FRAME_EXIT();
@@ -717,7 +721,6 @@
   }
 
 
-#undef WRITE_BYTE
 #undef WRITE_USHORT
 #undef WRITE_ULONG
 
@@ -1014,7 +1017,6 @@
      * the 'glyf' outline and advertise it as a bitmap-only font. */
     if ( is_apple_sbix )
       has_outline = FALSE;
-
 
     /* if this font doesn't contain outlines, we try to load */
     /* a `bhed' table                                        */

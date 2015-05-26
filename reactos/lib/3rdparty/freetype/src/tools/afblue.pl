@@ -63,8 +63,8 @@ my $enum_element_re = qr/ ^ \s* ( [A-Za-z0-9_]+ ) \s* $ /x;
 # '#' <preprocessor directive> '\n'
 my $preprocessor_re = qr/ ^ \# /x;
 
-# '/' '/' <comment> '\n'
-my $comment_re = qr| ^ // |x;
+# [<ws>] '/' '/' <comment> '\n'
+my $comment_re = qr| ^ \s* // |x;
 
 # empty line
 my $whitespace_only_re = qr/ ^ \s* $ /x;
@@ -158,6 +158,9 @@ sub convert_ascii_chars
 {
   # A series of ASCII characters in the printable range.
   my $s = shift;
+
+  # We ignore spaces.
+  $s =~ s/ //g;
 
   my $count = $s =~ s/\G(.)/'$1', /g;
   $curr_offset += $count;

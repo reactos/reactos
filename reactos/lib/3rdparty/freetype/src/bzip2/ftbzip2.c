@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2010, 2012, 2013 by                                          */
+/*  Copyright 2010, 2012-2014 by                                           */
 /*  Joel Klinghed.                                                         */
 /*                                                                         */
 /*  Based on src/gzip/ftgzip.c, Copyright 2002 - 2010 by                   */
@@ -131,7 +131,7 @@
     /* head[0] && head[1] are the magic numbers;    */
     /* head[2] is the version, and head[3] the blocksize */
     if ( head[0] != 0x42  ||
-         head[1] != 0x5a  ||
+         head[1] != 0x5A  ||
          head[2] != 0x68  )  /* only support bzip2 (huffman) */
     {
       error = FT_THROW( Invalid_File_Format );
@@ -456,9 +456,17 @@
                        FT_Stream  source )
   {
     FT_Error      error;
-    FT_Memory     memory = source->memory;
+    FT_Memory     memory;
     FT_BZip2File  zip = NULL;
 
+
+    if ( !stream || !source )
+    {
+      error = FT_THROW( Invalid_Stream_Handle );
+      goto Exit;
+    }
+
+    memory = source->memory;
 
     /*
      *  check the header right now; this prevents allocating unnecessary

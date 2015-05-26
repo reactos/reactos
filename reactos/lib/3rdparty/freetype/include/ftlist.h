@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Generic list support for FreeType (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2007, 2010, 2013 by                         */
+/*  Copyright 1996-2001, 2003, 2007, 2010, 2013, 2014 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -248,7 +248,7 @@ FT_BEGIN_HEADER
   /*    list    :: A handle to the list.                                   */
   /*                                                                       */
   /*    destroy :: A list destructor that will be applied to each element  */
-  /*               of the list.                                            */
+  /*               of the list.  Set this to NULL if not needed.           */
   /*                                                                       */
   /*    memory  :: The current memory object that handles deallocation.    */
   /*                                                                       */
@@ -264,7 +264,6 @@ FT_BEGIN_HEADER
                     FT_List_Destructor  destroy,
                     FT_Memory           memory,
                     void*               user );
-
 
   /* */
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (specification).                               */
 /*                                                                         */
-/*  Copyright 2002-2006, 2008, 2009, 2011-2012 by                          */
+/*  Copyright 2002-2006, 2008, 2009, 2011-2012, 2014 by                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -46,6 +46,38 @@ FT_BEGIN_HEADER
   *    This can be useful to generate `bordered' glyph, i.e., glyphs
   *    displayed with a coloured (and anti-aliased) border around their
   *    shape.
+  *
+  * @order:
+  *    FT_Stroker
+  *
+  *    FT_Stroker_LineJoin
+  *    FT_Stroker_LineCap
+  *    FT_StrokerBorder
+  *
+  *    FT_Outline_GetInsideBorder
+  *    FT_Outline_GetOutsideBorder
+  *
+  *    FT_Glyph_Stroke
+  *    FT_Glyph_StrokeBorder
+  *
+  *    FT_Stroker_New
+  *    FT_Stroker_Set
+  *    FT_Stroker_Rewind
+  *    FT_Stroker_ParseOutline
+  *    FT_Stroker_Done
+  *
+  *    FT_Stroker_BeginSubPath
+  *    FT_Stroker_EndSubPath
+  *
+  *    FT_Stroker_LineTo
+  *    FT_Stroker_ConicTo
+  *    FT_Stroker_CubicTo
+  *
+  *    FT_Stroker_GetBorderCounts
+  *    FT_Stroker_ExportBorder
+  *    FT_Stroker_GetCounts
+  *    FT_Stroker_Export
+  *
   */
 
 
@@ -55,7 +87,7 @@ FT_BEGIN_HEADER
   *   FT_Stroker
   *
   * @description:
-  *   Opaque handler to a path stroker object.
+  *   Opaque handle to a path stroker object.
   */
   typedef struct FT_StrokerRec_*  FT_Stroker;
 
@@ -276,6 +308,8 @@ FT_BEGIN_HEADER
    * @note:
    *   The radius is expressed in the same units as the outline
    *   coordinates.
+   *
+   *   This function calls @FT_Stroker_Rewind automatically.
    */
   FT_EXPORT( void )
   FT_Stroker_Set( FT_Stroker           stroker,
@@ -570,10 +604,10 @@ FT_BEGIN_HEADER
    *   receive all new data.
    *
    *   When an outline, or a sub-path, is `closed', the stroker generates
-   *   two independent `border' outlines, named `left' and `right'
+   *   two independent `border' outlines, named `left' and `right'.
    *
    *   When the outline, or a sub-path, is `opened', the stroker merges
-   *   the `border' outlines with caps. The `left' border receives all
+   *   the `border' outlines with caps.  The `left' border receives all
    *   points, while the `right' border becomes empty.
    *
    *   Use the function @FT_Stroker_Export instead if you want to
@@ -736,7 +770,7 @@ FT_BEGIN_HEADER
                          FT_Bool      inside,
                          FT_Bool      destroy );
 
- /* */
+  /* */
 
 FT_END_HEADER
 
