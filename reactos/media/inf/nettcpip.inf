@@ -76,5 +76,8 @@ ReactOS = "Ekipa ReactOS"
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"

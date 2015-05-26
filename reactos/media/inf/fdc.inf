@@ -131,6 +131,13 @@ FDCClassName = "Radiče disketových mechaník"
 GenericMfg = "(Generické radiče disketových mechaník)"
 *PNP0700.DeviceDesc = "Generický radič disketovej mechaniky"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+FDCClassName = "Yumuşak Disk Denetleyicileri"
+
+GenericMfg = "(Umûmî Yumuşak Disk Denetleyicileri)"
+*PNP0700.DeviceDesc = "Umûmî Yumuşak Disk Denetleyicisi"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 FDCClassName = "Контроллери гнучких дисків"

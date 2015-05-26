@@ -90,6 +90,12 @@ GenericMfg = "(Стандартные системные устройства)"
 GenericMfg = "(Generické systémové zariadenia)"
 *PNP0C08.DeviceDesc = "ACPI hardvér"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+
+GenericMfg = "(Umûmî Dizge Aygıtları)"
+*PNP0C08.DeviceDesc = "ACPI Donanım"
+
 [Strings.0422]
 GenericMfg = "(Стандартні системні пристрої)"
 *PNP0C08.DeviceDesc = "Пристрої ACPI"

@@ -262,6 +262,20 @@ USB\ROOT_HUB.DeviceDesc = "Pagrindinis šakotuvas"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB valdiklis"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB valdiklis"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+USBClassName = "USB Denetleyicileri"
+
+GenericMfg = "(Umûmî USB Aygıtları)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB Denetleyicisi"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB Denetleyicisi"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB Denetleyicisi"
+USB\ROOT_HUB.DeviceDesc = "Kök Göbek"
+
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB Denetleyicisi"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB Denetleyicisi"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 USBClassName = "Контроллери USB"

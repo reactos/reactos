@@ -114,6 +114,14 @@ HID.DeviceDesc = "Dispozitiv USB de interfațare umană"
 HID_DEVICE =  "Dispozitiv compatibil de interfațare umană"
 StdMfg = "(dispozitive generice de interfațare umană)"
 
+[Strings.041f]
+ReactOS               = "ReactOS Takımı"
+HID.ClassName         = "İnsan Arabirimi Aygıtları"
+HID.DeviceDesc        = "USB İnsan Arabirimi Aygıtı"
+
+HID_DEVICE            =  "HID Uyumlu Aygıt"
+StdMfg                = "(Ölçünlü İnsan Arabirimi Aygıtları)"
+
 [Strings.0422]
 ReactOS               = "Команда ReactOS"
 HID_DEVICE            =  "HID-сумісний пристрій"

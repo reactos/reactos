@@ -33,4 +33,8 @@ LegacyDriverClassName = "Controladores incompatibles con PnP"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
-LegacyDriverClassName = "Modúle-pilot de cuplare statică (non-PnP)"
+LegacyDriverClassName = "Modúle pilot de cuplare statică (non-PnP)"
+
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+LegacyDriverClassName = "Tak ve Çalıştır Olmayan Sürücüler"

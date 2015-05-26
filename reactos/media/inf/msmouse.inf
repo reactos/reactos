@@ -356,6 +356,28 @@ HID_MOUSE.DeviceDesc = "HID myš"
 *PNP0F01.DeviceDesc = "Microsoft sériová myš"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 myš"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+MouseClassName = "Fâre ve Başka İmleme Aygıtları"
+LocationOverride = "PS/2 fâre girişine takılı"
+
+StdMfg = "(Ölçünlü Fâre)"
+SERIAL_MOUSE.DeviceDesc = "Ölçünlü Dizilik Fâre"
+PS2_MOUSE.DeviceDesc = "Ölçünlü PS/2 Fâre"
+HID_MOUSE.DeviceDesc = "HID Fâre"
+*PNP0F13.DeviceDesc = "PS/2 Türünde Fâre İçin PS/2 Girişi"
+
+IbmMfg = "IBM"
+*IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
+
+LogMfg = "Logitech"
+*PNP0F08.DeviceDesc = "Logitech Dizilik Fâre"
+*PNP0F12.DeviceDesc = "Logitech PS/2 Türünde Fâre"
+
+MSMfg = "Microsoft"
+*PNP0F01.DeviceDesc = "Microsoft Dizilik Fâre"
+*PNP0F03.DeviceDesc = "Microsoft PS/2 Türünde Fâre"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 MouseClassName = "Миші та інші вказівні пристрої"

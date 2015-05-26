@@ -58,11 +58,17 @@ LoadOrderGroup = Base
 
 ;-------------------------------- STRINGS -------------------------------
 
+[Strings]
+ReactOS = "ReactOS Team"
+
+GenericMfg = "(Generic USB Hubs)"
+USB\COMPOSITE.DeviceDesc = "USB Composite Device"
+USB\CLASS_09.DeviceDesc = "Generic USB Hub"
+
 ; Spanish
 [Strings.0C0A]
 GenericMfg = "(Concentrador raíz USB estándar)"
 USB\CLASS_09.DeviceDesc = "Concentrador raíz USB estándar"
-
 
 [Strings.0405]
 GenericMfg = "(Obecné USB rozbočovače)"
@@ -107,6 +113,13 @@ USB\CLASS_09.DeviceDesc = "Стандартный USB хаб"
 [Strings.041B]
 GenericMfg = "(Generický rozbočovač USB)"
 USB\CLASS_09.DeviceDesc = "Generický rozbočovač USB"
+
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+
+GenericMfg = "(Umûmî USB Göbekleri)"
+USB\COMPOSITE.DeviceDesc = "USB Bileşik Aygıt"
+USB\CLASS_09.DeviceDesc = "Umûmî USB Göbeği"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

@@ -1281,16 +1281,16 @@ SPIDER_TITLE=Pavúčí solitér
 SPIDER_DESC=Pavúčí solitér
 
 ; Turkish
-[Strings.041F]
+[Strings.041f]
 ACCESSORIES=Donatılar
-SYSTOOLS=Sistem Araçları
+SYSTOOLS=Dizge Araçları
 ACCESSIBILITY=Erişilebilirlik
 ENTERTAINMENT=Eğlence
-COMMUNICATIONS=Communications
+COMMUNICATIONS=İletişim
 GAMES=Oyunlar
 
 CMD_TITLE=Komut İstemi
-CMD_DESC=Komut istemini aç
+CMD_DESC=Komut İstemi'ni aç
 EXPLORER_TITLE=ReactOS Gezgini
 EXPLORER_DESC=Gezgin'i başlat
 RAPPS_TITLE=ReactOS Uygulama Yöneticisi
@@ -1301,45 +1301,45 @@ SERVMAN_DESC=Hizmet Yöneticisi'ni başlat
 DEVMGMT_TITLE=Aygıt Yöneticisi
 DEVMGMT_DESC=Aygıt Yöneticisi'ni başlat
 EVENTVWR_TITLE=Olay Görüntüleyicisi
-EVENTVWR_DESC=Olay Görüntüleyici'yi başlat
-MSCONFIG_TITLE=Sistem Konfigürasyonu
-MSCONFIG_DESC=Sistem Konfigürasyon uygulaması'nı başlat
+EVENTVWR_DESC=Olay Görüntüleyicisi'ni başlat
+MSCONFIG_TITLE=Dizge Yapılandırma İzlencesi
+MSCONFIG_DESC=Dizge Yapılandırma İzlencesi'ni başlat
 CALC_TITLE=Hesap Makinesi
 CALC_DESC=Hesap Makinesi'ni başlat
 NOTEPAD_TITLE=Not Defteri
 NOTEPAD_DESC=Metin Düzenleyicisi'ni başlat
 MSTSC_TITLE=Uzak Masaüstü Bağlantısı
-MSTSC_DESC=Launch Remote Desktop Connection
+MSTSC_DESC=Uzak Masaüstü Bağlantısı'nı başlat
 SCREENSHOT_TITLE=Ekran Görüntüsü
 SCREENSHOT_DESC=Ekran görüntüsü al
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Belge Düzenleyicisi'ni başlat
-MSPAINT_TITLE=MSPaint
+MSPAINT_TITLE=Paint
 MSPAINT_DESC=Paint'i başlat
-CHARMAP_TITLE=Karakter Eşlem
-CHARMAP_DESC=Karakter Eşlem'i Başlat
-KBSWITCH_TITLE=Klavye Giriş Değiştirici
-KBSWITCH_DESC=Klavye Giriş Aracısı'nı Başlat
-REGEDIT_TITLE=Kayıt Düzenleyicisi
-REGEDIT_DESC=Kayıt Düzenleyicisi'ni başlat
+CHARMAP_TITLE=Damga Eşlem
+CHARMAP_DESC=Damga Eşlem'i başlat
+KBSWITCH_TITLE=Düğme Takımı Düzeni Değiştiricisi
+KBSWITCH_DESC=Düğme Takımı Düzeni Değiştiricisi
+REGEDIT_TITLE=Değer Defteri Düzenleyicisi
+REGEDIT_DESC=Değer Defteri Düzenleyicisi'ni başlat
 DXDIAG_TITLE=ReactX Tanı Aracı
-DXDIAG_DESC=ReactX Tanı Aracı'nı Başlat
+DXDIAG_DESC=ReactX Tanı Aracı'nı başlat
 MAGNIFY_TITLE=Büyüteç
 MAGNIFY_DESC=Büyüteç
 OSK_TITLE=Görüntülük Düğme Takımı
-OSK_DESC=Lansman Ekran Klavye
+OSK_DESC=Görüntülük Düğme Takımı'nı başlat
 MPLAY_TITLE=Çoklu Ortam Oynatıcısı
-MPLAY_DESC=Çoklu Ortam Oynatıcısı'nı Başlat
+MPLAY_DESC=Çoklu Ortam Oynatıcısı'nı başlat
 SNDVOL_TITLE=Ses Denetimi
-SNDVOL_DESC=Ses Denetimi'ni Başlat
+SNDVOL_DESC=Ses Denetimi'ni başlat
 SNDREC32_TITLE=Ses Kaydedicisi
-SNDREC32_DESC=Ses Kaydedicisi'ni Başlat
+SNDREC32_DESC=Ses Kaydedicisi'ni başlat
 SOL_TITLE=Solitaire
 SOL_DESC=Solitaire
-WINMINE_TITLE=WineMine
-WINMINE_DESC=WineMine
-SPIDER_TITLE=Spider Solitaire
-SPIDER_DESC=Spider Solitaire
+WINMINE_TITLE=Mayın Tarlası
+WINMINE_DESC=Mayın Tarlası
+SPIDER_TITLE=Örümcek Solitaire
+SPIDER_DESC=Örümcek Solitaire
 
 ; Ukrainian
 [Strings.0422]

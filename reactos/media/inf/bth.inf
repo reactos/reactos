@@ -80,3 +80,7 @@ ReactOS="Команда ReactOS"
 BTUSB.DeviceDesc="Стандартный USB Bluetooth радиомодуль"
 BluetoothClassName="Радиомодули Bluetooth"
 
+[Strings.041f]
+ReactOS="ReactOS Takımı"
+BTUSB.DeviceDesc="Umûmî USB Bluetooth Radyo"
+BluetoothClassName="Bluetooth Radyoları"

@@ -90,3 +90,11 @@ MonitorClassName = "Ecrane"
 StdMfg = "(ecrane de tip standard)"
 DefaultMonitor.DeviceDesc = "Ecran implicit"
 PnPMonitor.DeviceDesc = "Ecran cuplare dinamică (PnP)"
+
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+MonitorClassName = "Göstergeçler"
+
+StdMfg = "(Ölçünlü Göstergeç Türleri)"
+DefaultMonitor.DeviceDesc = "Ön Tanımlı Göstergeç"
+PnPMonitor.DeviceDesc = "Tak ve Çalıştır Göstergeç"

@@ -127,6 +127,13 @@ SCSIClassName = "SCSI a RAID radiče"
 GenericMfg = "(Štandardné SCSI a RAID radiče)"
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI radič"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+SCSIClassName = "SCSI ve RAID Denetleyicileri"
+
+GenericMfg = "(Ölçünlü SCSI ve RAID Denetleyicileri)"
+PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Denetleyicisi"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 SCSIClassName = "SCSI і RAID контроллери"

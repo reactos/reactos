@@ -92,3 +92,12 @@ AcctonEN1207D.DeviceDesc = "Adaptor Ethernet Accton EN-1207D (RTL8139)"
 DLinkDFE538TX.DeviceDesc = "Adaptor Ethernet D-Link DFE-538TX (RTL8139)"
 LevelOneFPC0106TX.DeviceDesc = "Adaptor Ethernet LevelOne FPC-0106Tx (RTL8139)"
 CompaqHNE300.DeviceDesc = "Adaptor Ethernet Compaq HNE-300 (RTL8139C)"
+
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+
+Realtek8139.DeviceDesc = "Realtek RTL8139 Ethernet Bağdaştırıcısı"
+AcctonEN1207D.DeviceDesc = "Accton EN-1207D (RTL8139) Ethernet Bağdaştırıcısı"
+DLinkDFE538TX.DeviceDesc = "D-Link DFE-538TX (RTL8139) Ethernet Bağdaştırıcısı"
+LevelOneFPC0106TX.DeviceDesc = "LevelOne FPC-0106Tx (RTL8139) Ethernet Bağdaştırıcısı"
+CompaqHNE300.DeviceDesc = "Compaq HNE-300 (RTL8139C) Ethernet Bağdaştırıcısı"

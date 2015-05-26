@@ -506,4 +506,9 @@ CPLFILE_OPENWITH="Deschide în panou de control"
 CPLFILE="Элемент панели управления"
 CPLFILE_OPENWITH="Открыть с помощью Панели управления"
 
+; Turkish
+[Strings.041f]
+CPLFILE="Denetim Masası Uzantısı"
+CPLFILE_OPENWITH="Denetim Masası'yla Aç"
+
 ; EOF

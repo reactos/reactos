@@ -140,6 +140,13 @@ DisplayClassName = "Grafické karty"
 StdMfg = "(Štandardné grafické karty)"
 VGA.DeviceDesc = "VGA kompatibilná grafická karta"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+DisplayClassName = "Görüntü Bağdaştırıcıları"
+
+StdMfg = "(Ölçünlü Görüntü Bağdaştırıcıları)"
+VGA.DeviceDesc = "VGA Uyumlu Çizge Kartı"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 DisplayClassName = "Графічні адаптери"

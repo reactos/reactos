@@ -74,6 +74,15 @@ GenericMfg = "(calculatoare generice)"
 acpipic_up.DeviceDesc = "PC uniprocesor ACPI"
 e_isa_up.DeviceDesc = "PC uniprocesor standard"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+
+ComputerClassName = "Bilgisayar"
+
+GenericMfg = "(Umûmî Bilgisayarlar)"
+acpipic_up.DeviceDesc = "ACPI Tek İşlemcili PC"
+e_isa_up.DeviceDesc = "Ölçünlü Tek İşlemcili PC"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 ComputerClassName = "Комп'ютер"

@@ -98,6 +98,14 @@ Disk.DeviceDesc = "Дисковое устройство"
 OpticalDisk.DeviceDesc = "Оптическое дисковое устройство"
 Disk.ServiceDesc = "Драйвер диска"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+GenericMfg = "(Umûmî Disk Sürücüleri)"
+DiskClassName = "Disk Sürücüleri"
+Disk.DeviceDesc = "Disk Sürücüsü"
+OpticalDisk.DeviceDesc = "Optik Disk Sürücüsü"
+Disk.ServiceDesc = "Disk Sürücüsü"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартні приводи дисків)"

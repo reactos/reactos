@@ -89,6 +89,12 @@ GenericBulkOnlyTransport.DeviceDesc = "Запоминающее устройст
 GenericMfg = "(Generické USB zariadenia)"
 GenericBulkOnlyTransport.DeviceDesc = "USB úložné zariadenie"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+
+GenericMfg = "(Umûmî USB Aygıtları)"
+GenericBulkOnlyTransport.DeviceDesc = "USB Depolama Aygıtı"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартні пристрої USB)"

@@ -68,6 +68,10 @@ DisplayClassName = "Сетевые адаптеры"
 [Strings.041B]
 DisplayClassName = "Sieťové adaptéry"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+DisplayClassName = "Ağ Bağdaştırıcıları"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 DisplayClassName = "Мережеві адаптери"

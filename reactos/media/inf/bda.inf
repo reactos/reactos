@@ -215,6 +215,18 @@ PlugIn_BdaDevice="Extensie control dispozitiv BDA"
 PlugIn_BdaCA="Extensie BDA pentru acces condițional"
 Pin.Name.AtscTS="Transport MPEG2"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+Category_BdaTuner="BDA-Kaynak Süzgeci"
+Category_BdaComponent="BDA-Alıcı Bileşeni"
+Category_BdaRenderer="BDA-Yeniden Çalma Süzgeci"
+PlugIn_BdaDevice="BDA-Aygıt Denetim Eklentisi"
+PlugIn_BdaCA="BDA-Koşullu Erişim İçin Eklenti"
+Pin.Name.AtscTS="MPEG2-Taşıma"
+Pin.Name.IPV4="IPv4"
+Pin.Name.MPE="MPE"
+Pin.Name.NABTS="NABTS"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 Category_BdaTuner="Фільтр джерела BDA"

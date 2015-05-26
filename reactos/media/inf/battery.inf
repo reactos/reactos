@@ -115,6 +115,14 @@ GenericMfg = "(Стандартные батареи)"
 ACPI\PNP0C0A.DeviceDesc = "Батареи с ACPI-совместимым методом управления"
 ACPI\ACPI0003.DeviceDesc = "AC адаптер"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+BatteryClassName = "Piller"
+
+GenericMfg = "(Umûmî Piler)"
+ACPI\PNP0C0A.DeviceDesc = "ACPI Uyumlu Denetim Yöntemi Pili"
+ACPI\ACPI0003.DeviceDesc = "AC Uyarlayıcı"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 BatteryClassName = "Батареї"

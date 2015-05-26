@@ -192,6 +192,16 @@ StdMfg = "(Štandardné porty)"
 *PNP0400.DeviceDesc = "Štandardný LPT tlačový port"
 *PNP0401.DeviceDesc = "ECP tlačový port"
 
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+PortsClassName = "Dizilik ve Koşut Girişler"
+
+StdMfg = "(Ölçünlü Girişler)"
+*PNP0500.DeviceDesc = "Dizilik Bağlantı Girişi"
+*PNP0501.DeviceDesc = "Dizilik Bağlantı Girişi"
+*PNP0400.DeviceDesc = "Ölçünlü LPT Yazıcı Girişi"
+*PNP0401.DeviceDesc = "ECP Yazıcı Girişi"
+
 [Strings.0422]
 ReactOS = "Команди ReactOS"
 PortsClassName = "Порти (COM і LPT)"
