@@ -1,31 +1,12 @@
-//Microsoft Developer Studio generated resource script.
-//
-// #include "resrc1.h"
-
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
 #include <windows.h>
 #include "resource.h"
 
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
+#define REACTOS_STR_FILE_DESCRIPTION  "Tab Control Test\0"
+#define REACTOS_STR_INTERNAL_NAME	  "template_dialog\0"
+#define REACTOS_STR_ORIGINAL_FILENAME "template_dialog.exe\0"
+#include <reactos/version.rc>
 
-/////////////////////////////////////////////////////////////////////////////
-// English (Australia) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDD_TABBED_DIALOG DIALOGEX DISCARDABLE  0, 0, 243, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -62,47 +43,3 @@ BEGIN
     CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_BOTH |
                     TBS_NOTICKS | WS_TABSTOP,40,30,92,17
 END
-
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "resrc1.h\0"
-END
-
-2 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "#include ""windows.h""\r\n"
-    "#include ""reactos\\resource.h""\r\n"
-    "#include ""resource.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-#endif    // English (Australia) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
