@@ -98,8 +98,6 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT1("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
 
-    Id = Id & NTFS_MFT_MASK;
-
     RtlZeroMemory(FullPath, sizeof(FullPath));
     MftRecord = ExAllocatePoolWithTag(NonPagedPool,
                                       DeviceExt->NtfsInfo.BytesPerFileRecord,
@@ -123,6 +121,13 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
         }
 
         FileName = GetBestFileNameFromRecord(MftRecord);
+        if (FileName == NULL)
+        {
+            DPRINT1("$FILE_NAME attribute not found for %I64x\n", Id);
+            Status = STATUS_OBJECT_PATH_NOT_FOUND;
+            break;
+        }
+
         WritePosition -= FileName->NameLength;
         ASSERT(WritePosition < MAX_PATH);
         RtlCopyMemory(FullPath + WritePosition, FileName->Name, FileName->NameLength * sizeof(WCHAR));
@@ -276,10 +281,19 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
     if ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID)
     {
+        ULONGLONG MFTId;
+
         if (FileObject->FileName.Length != sizeof(ULONGLONG))
             return STATUS_INVALID_PARAMETER;
 
-        Status = NtfsMoonWalkID(DeviceExt, (*(PULONGLONG)FileObject->FileName.Buffer), &FullPath);
+        MFTId = (*(PULONGLONG)FileObject->FileName.Buffer) & NTFS_MFT_MASK;
+        if (MFTId < 0xf)
+        {
+            UNIMPLEMENTED;
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        Status = NtfsMoonWalkID(DeviceExt, MFTId, &FullPath);
         if (!NT_SUCCESS(Status))
         {
             return Status;
