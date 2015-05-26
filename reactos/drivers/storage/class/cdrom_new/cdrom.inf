@@ -295,24 +295,6 @@ HKR,,"TypesSupported",0x00010001,7
 
 
 
-[Strings.0418]
-DDK_SAMPLE="Mostră de producător DDK"
-CDClassName = "Dispozitive DVD/CD-ROM"
-
-;; Manufacturer specific strings
-ATAPI_CHGR      = "Dispozitive Atapi 2.5 Changer"
-
-GenManufacturer = "(Dispozitive CD-ROM standard)"
-
-[Strings.0418]
-DDK_SAMPLE="Mostră de producător DDK"
-CDClassName = "Dispozitive DVD/CD-ROM"
-
-;; Manufacturer specific strings
-ATAPI_CHGR      = "Dispozitive Atapi 2.5 Changer"
-
-GenManufacturer = "(Dispozitive CD-ROM standard)"
-
 [Strings]
 DDK_SAMPLE="DDK Sample Provider"
 CDClassName = "DVD/CD-ROM drives"
@@ -368,3 +350,30 @@ ATAPI_CHGR      = "Dispozitive Atapi 2.5 Changer"
 
 GenManufacturer = "(Dispozitive CD-ROM standard)"
 
+;; Descriptions for enumerated brands and models
+AlpsChanger_devdesc      = "Dispozitiv CD-ROM-multiple Alps"
+chinon_devdesc           = "Dispozitiv CD-ROM Chinon"
+denon_devdesc            = "Dispozitiv Denon"
+fujitsu_devdesc          = "Dispozitiv Fujitsu"
+hp_devdesc               = "Dispozitiv CD-ROM Hewlett Packard"
+hitachi_devdesc          = "Dispozitiv CD-ROM Hitachi"
+Mitsumi_cdrom_devdesc    = "Dispozitiv CD-ROM Mitsumi"
+NecChanger_devdesc       = "Dispozitiv CD-ROM-multiple NEC"
+NecIntersect_devdesc     = "Dispozitiv CD-ROM NEC Intersect"
+NecMultispin_devdesc     = "Dispozitiv CD-ROM NEC Multispin"
+NecOem_devdesc           = "Dispozitiv CD-ROM NEC"
+oti_devdesc              = "Dispozitiv CD-ROM OTI"
+PanasonicChanger_devdesc = "Dispozitiv CD-ROM-multiple Panasonic"
+pioneer_devdesc          = "Dispozitiv CD-ROM Pioneer"
+TorisanChanger_devdesc   = "Dispozitiv CD-ROM-multiple Torisan"
+wearnes_devdesc          = "Dispozitiv CD-ROM Wearnes"
+gencdrom_devdesc         = "Dispozitiv CD-ROM"
+
+;; Mitsumi Friendly name explictly listed
+Mitsumi_Generic_FriendlyName = "Dispozitiv CD-ROM Mitsumi"
+
+;; Service descriptions
+cdrom_ServiceDesc   = "Modúl-pilot CD-ROM"
+cdaudio_ServiceDesc = "Modúl-pilot filtru CD-Audio"
+changer_ServiceDesc = "Modúl-pilot filtru multi-CD"
+redbook_ServiceDesc = "Modúl-pilot filtru pentru CD audio digital"
