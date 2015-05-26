@@ -1144,6 +1144,65 @@ static void test_mbcjmsjis(void)
     _setmbcp(prev_cp);
 }
 
+static void test_mbctohira(void)
+{
+    static const unsigned int mbchira_932[][2] = {
+        {0x8152, 0x8152}, {0x8153, 0x8153}, {0x8154, 0x8154}, {0x8155, 0x8155},
+        {0x82a0, 0x82a0}, {0x833f, 0x833f}, {0x8340, 0x829f}, {0x837e, 0x82dd},
+        {0x837f, 0x837f}, {0x8380, 0x82de}, {0x8393, 0x82f1}, {0x8394, 0x8394},
+        {0x8396, 0x8396}, {0x8397, 0x8397},
+        {0xa5, 0xa5}, {0xb0, 0xb0}, {0xdd, 0xdd} };
+    unsigned int i;
+    unsigned int prev_cp = _getmbcp();
+
+    _setmbcp(_MB_CP_SBCS);
+    for (i = 0; i < sizeof(mbchira_932)/sizeof(mbchira_932[0]); i++)
+    {
+        int ret, exp = mbchira_932[i][0];
+        ret = _mbctohira(mbchira_932[i][0]);
+        ok(ret == exp, "Expected 0x%x, got 0x%x\n", exp, ret);
+    }
+
+    _setmbcp(932);
+    for (i = 0; i < sizeof(mbchira_932)/sizeof(mbchira_932[0]); i++)
+    {
+        unsigned int ret, exp;
+        ret = _mbctohira(mbchira_932[i][0]);
+        exp = mbchira_932[i][1];
+        ok(ret == exp, "Expected 0x%x, got 0x%x\n", exp, ret);
+    }
+    _setmbcp(prev_cp);
+}
+
+static void test_mbctokata(void)
+{
+    static const unsigned int mbckata_932[][2] = {
+        {0x8152, 0x8152}, {0x8153, 0x8153}, {0x8154, 0x8154}, {0x8155, 0x8155},
+        {0x833f, 0x833f}, {0x829f, 0x8340}, {0x82dd, 0x837e}, {0x837f, 0x837f},
+        {0x82de, 0x8380}, {0x8394, 0x8394}, {0x8397, 0x8397},
+        {0xa5, 0xa5}, {0xb0, 0xb0}, {0xdd, 0xdd} };
+    unsigned int i;
+    unsigned int prev_cp = _getmbcp();
+
+    _setmbcp(_MB_CP_SBCS);
+    for (i = 0; i < sizeof(mbckata_932)/sizeof(mbckata_932[0]); i++)
+    {
+        int ret, exp = mbckata_932[i][0];
+        ret = _mbctokata(mbckata_932[i][0]);
+        ok(ret == exp, "Expected 0x%x, got 0x%x\n", exp, ret);
+    }
+
+    _setmbcp(932);
+    for (i = 0; i < sizeof(mbckata_932)/sizeof(mbckata_932[0]); i++)
+    {
+        unsigned int ret, exp;
+        ret = _mbctokata(mbckata_932[i][0]);
+        exp = mbckata_932[i][1];
+        ok(ret == exp, "Expected 0x%x, got 0x%x\n", exp, ret);
+    }
+    _setmbcp(prev_cp);
+}
+
 static void test_mbbtombc(void)
 {
     static const unsigned int mbbmbc[][2] = {
@@ -1189,6 +1248,37 @@ static void test_mbctombb(void)
         exp = mbcmbb_932[i][1];
         ok(ret == exp, "Expected 0x%x, got 0x%x\n", exp, ret);
     }
+    _setmbcp(prev_cp);
+}
+
+static void test_ismbckata(void) {
+    struct katakana_pair {
+        UINT c;
+        BOOL exp;
+    };
+    static const struct katakana_pair tests[] = {
+        {0x8152, FALSE}, {0x8153, FALSE}, {0x8154, FALSE}, {0x8155, FALSE},
+        {0x82a0, FALSE}, {0x833f, FALSE}, {0x8340, TRUE }, {0x837e, TRUE },
+        {0x837f, FALSE}, {0x8380, TRUE }, {0x8396, TRUE }, {0x8397, FALSE},
+        {0xa5, FALSE}, {0xb0, FALSE}, {0xdd, FALSE}
+    };
+    unsigned int prev_cp = _getmbcp();
+    int ret;
+    unsigned int i;
+
+    _setmbcp(_MB_CP_SBCS);
+    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++) {
+        ret = _ismbckata(tests[i].c);
+        ok(!ret, "expected 0, got %d for %04x\n", ret, tests[i].c);
+    }
+
+    _setmbcp(932);
+    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++) {
+        ret = _ismbckata(tests[i].c);
+        ok(!!ret == tests[i].exp, "expected %d, got %d for %04x\n",
+           tests[i].exp, !!ret, tests[i].c);
+    }
+
     _setmbcp(prev_cp);
 }
 
@@ -2838,6 +2928,36 @@ static void test__wcsset_s(void)
     ok(str[2] == 'b', "str[2] = %d\n", str[2]);
 }
 
+static void test__mbscmp(void)
+{
+    static const unsigned char a[] = {'a',0}, b[] = {'b',0};
+    int ret;
+
+    if (!p_mbrlen)
+    {
+        win_skip("_mbscmp tests\n");
+        return;
+    }
+
+    ret = _mbscmp(NULL, NULL);
+    ok(ret == INT_MAX, "got %d\n", ret);
+
+    ret = _mbscmp(a, NULL);
+    ok(ret == INT_MAX, "got %d\n", ret);
+
+    ret = _mbscmp(NULL, a);
+    ok(ret == INT_MAX, "got %d\n", ret);
+
+    ret = _mbscmp(a, a);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _mbscmp(a, b);
+    ok(ret == -1, "got %d\n", ret);
+
+    ret = _mbscmp(b, a);
+    ok(ret == 1, "got %d\n", ret);
+}
+
 START_TEST(string)
 {
     char mem[100];
@@ -2913,8 +3033,11 @@ START_TEST(string)
     test__mbscpy_s();
     test_mbcjisjms();
     test_mbcjmsjis();
+    test_mbctohira();
+    test_mbctokata();
     test_mbbtombc();
     test_mbctombb();
+    test_ismbckata();
     test_ismbclegal();
     test_strtok();
     test__mbstok();
@@ -2945,4 +3068,5 @@ START_TEST(string)
     test_strxfrm();
     test__strnset_s();
     test__wcsset_s();
+    test__mbscmp();
 }

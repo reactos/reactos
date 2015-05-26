@@ -23,6 +23,26 @@
 #include <stdio.h>
 #include "msvcrt.h"
 
+static inline float __port_infinity(void)
+{
+    static const unsigned __inf_bytes = 0x7f800000;
+    return *(const float *)&__inf_bytes;
+}
+#define INFINITY __port_infinity()
+
+static inline float __port_nan(void)
+{
+    static const unsigned __nan_bytes = 0x7fc00000;
+    return *(const float *)&__nan_bytes;
+}
+#define NAN __port_nan()
+
+static inline BOOL almost_equal(double d1, double d2) {
+    if(d1-d2>-1e-30 && d1-d2<1e-30)
+        return TRUE;
+    return FALSE;
+}
+
 static int (__cdecl *prand_s)(unsigned int *);
 static int (__cdecl *pI10_OUTPUT)(long double, int, int, void*);
 static int (__cdecl *pstrerror_s)(char *, MSVCRT_size_t, int);
@@ -34,6 +54,9 @@ static void (__cdecl *p__invalid_parameter)(const wchar_t*,
         const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
 static void (__cdecl *p_qsort_s)(void*, MSVCRT_size_t, MSVCRT_size_t,
         int (__cdecl*)(void*, const void*, const void*), void*);
+static double (__cdecl *p_atan)(double);
+static double (__cdecl *p_exp)(double);
+static double (__cdecl *p_tanh)(double);
 
 static void init(void)
 {
@@ -48,6 +71,9 @@ static void init(void)
     p_set_errno = (void *)GetProcAddress(hmod, "_set_errno");
     p__invalid_parameter = (void *)GetProcAddress(hmod, "_invalid_parameter");
     p_qsort_s = (void *)GetProcAddress(hmod, "qsort_s");
+    p_atan = (void *)GetProcAddress(hmod, "atan");
+    p_exp = (void *)GetProcAddress(hmod, "exp");
+    p_tanh = (void *)GetProcAddress(hmod, "tanh");
 }
 
 static void test_rand_s(void)
@@ -477,6 +503,42 @@ static void test_qsort_s(void)
         ok(tab[i] == i, "data sorted incorrectly on position %d: %d\n", i, tab[i]);
 }
 
+static void test_math_functions(void)
+{
+    double ret;
+
+    errno = 0xdeadbeef;
+    p_atan(NAN);
+    ok(errno == EDOM, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p_atan(INFINITY);
+    ok(almost_equal(ret, 1.57079632679489661923), "ret = %lf\n", ret);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p_atan(-INFINITY);
+    ok(almost_equal(ret, -1.57079632679489661923), "ret = %lf\n", ret);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    p_tanh(NAN);
+    ok(errno == EDOM, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p_tanh(INFINITY);
+    ok(almost_equal(ret, 1.0), "ret = %lf\n", ret);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    p_exp(NAN);
+    ok(errno == EDOM, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    p_exp(INFINITY);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+}
+
 START_TEST(misc)
 {
     int arg_c;
@@ -504,4 +566,5 @@ START_TEST(misc)
     test__popen(arg_v[0]);
     test__invalid_parameter();
     test_qsort_s();
+    test_math_functions();
 }
