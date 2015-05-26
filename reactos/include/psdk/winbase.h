@@ -1056,6 +1056,18 @@ typedef struct _SYSTEM_POWER_STATUS {
 	DWORD BatteryFullLifeTime;
 } SYSTEM_POWER_STATUS,*LPSYSTEM_POWER_STATUS;
 
+typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
+  LONG Bias;
+  WCHAR StandardName[32];
+  SYSTEMTIME StandardDate;
+  LONG StandardBias;
+  WCHAR DaylightName[32];
+  SYSTEMTIME DaylightDate;
+  LONG DaylightBias;
+  WCHAR TimeZoneKeyName[128];
+  BOOLEAN DynamicDaylightTimeDisabled;
+} DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
+
 typedef struct _TIME_ZONE_INFORMATION {
 	LONG Bias;
 	WCHAR StandardName[32];
@@ -2678,6 +2690,15 @@ DWORD WINAPI QueueUserAPC(PAPCFUNC,HANDLE,ULONG_PTR);
 BOOL WINAPI QueueUserWorkItem(LPTHREAD_START_ROUTINE,PVOID,ULONG);
 #endif
 void WINAPI RaiseException(DWORD,DWORD,DWORD,const ULONG_PTR*);
+
+BOOL
+WINAPI
+QueryInformationJobObject(
+  _In_opt_ HANDLE hJob,
+  _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+  _Out_writes_bytes_to_(cbJobObjectInformationLength, *lpReturnLength) LPVOID lpJobObjectInformation,
+  _In_ DWORD cbJobObjectInformationLength,
+  _Out_opt_ LPDWORD lpReturnLength);
 
 BOOL
 WINAPI
