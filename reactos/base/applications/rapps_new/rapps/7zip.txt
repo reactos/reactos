@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = 7-Zip
@@ -44,6 +45,9 @@ Size = 1,14 MB
 
 [Section.0422]
 Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.
+
+[Section.0804]
+Description = 一个文件归档实用程序与支持 7zip、 zip、 tar、 rar 和许多其他存档格式。
 
 [Section.0813]
 Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and andere archiefbestanden.

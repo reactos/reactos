@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Audio Grabber
@@ -46,6 +47,9 @@ Size = 3,43 MB
 
 [Section.0422]
 Description = Чудовий CD Ріппер/Конвертер аудіо файлів.
+
+[Section.0804]
+Description = 一个很好的 CD 提取器/音频文件转换器。
 
 [Section.0813]
 Description = Een goede CD Ripper/Audio-bestandsomzetter.

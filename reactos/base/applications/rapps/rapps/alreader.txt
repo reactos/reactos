@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = AlReader
@@ -29,3 +30,6 @@ Size = 4,56 Mo
 [Section.041f]
 Description = Bir FB2 elektronik kitap okuyucusu. Desteklenen okuma biçimleri: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. ZIP ve GZ belgeliklerini destekler.
 Size = 4,56 MB
+
+[Section.0804]
+Description = 一个 FB2 电子书阅读器。支持的读取的格式： fb2、 fbz、 txt、 epub、 html、 doc、 docx、 odt、 rtf、 mobi、 prc (PalmDoc)与 tcr。支持 ZIP 和 GZ 档案。

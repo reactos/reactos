@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = BitTorrent
@@ -36,3 +37,6 @@ Size = 1,61 Mo
 License = Tecimlik olmayan kullanımlar için ücretsiz.
 Description = Özgün BitTorrent istemcisi.
 Size = 1,61 MB
+
+[Section.0804]
+Description = 原本的 BitTorrent 客户端。

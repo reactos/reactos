@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Abyss Web server X1
@@ -46,6 +47,9 @@ Size = 2,09 MB
 
 [Section.0422]
 Description = Abyss Web Server дозволить вам утримувати веб-сайти на вашому комп'ютері. Від підтримує безпечні SSL/TLS з'єднання (HTTPS) та великий ряд веб-технологій. Він також запускає PHP, Perl, Python, ASP, ASP.NET, та Ruby on Rails веб-додатки, які можуть підтримуватись такими базами даних, як MySQL, SQLite, MS SQL Server, MS Access, чи Oracle.
+
+[Section.0804]
+Description = 使您能够承载您在您的计算机上的网站。它支持 SSL/TLS 的安全连接 (HTTPS) 以及种类繁多的网络技术。它还可以对 Rails 的网络应用程序，可以由数据库 MySQL，SQLite，MS SQL Server，MS Access 或 Oracle 支持运行高级 PHP、 Perl、 Python、 ASP、 ASP.NET、 和Ruby。
 
 [Section.0813]
 Description = Abyss Web Server staat u toe om websites aan te bieden op uw computer. Het ondersteunt beveiligde SSL/TLS verbindingen (HTTPS) en ook een breed gamma aan andere Web technologieën. Het kan ook gevorderde PHP, Perl, Python, ASP, ASP.NET en Ruby on Rails Web applicaties uitvoeren, die kunnen ondersteund zijn door databanken zoals MySQL, SQLite, MS SQL Server, MS Access or Oracle.

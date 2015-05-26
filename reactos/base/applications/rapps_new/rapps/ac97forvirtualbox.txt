@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = AC'97 Driver for VirtualBox
@@ -73,6 +74,9 @@ Size = 185,5 KB
 Name = Драйвер AC97 для VirtualBox
 License = Невідома
 Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
+
+[Section.0804]
+Description = AC'97 兼容设备的音频驱动程序。在电脑文件夹中解压缩并重新启动两次。
 
 [Section.0813]
 Name = AC97 Driver voor VirtualBox

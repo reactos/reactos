@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Bochs
@@ -33,3 +34,6 @@ Size = 4,8 Mo
 License = LGPL sürüm 2
 Description = Bochs; çok taşınabilir, C++ ile yazılmış, en yaygın platformlarda çalışan, açık kaynak bir IA-32 (x86) PC öykünücüsüdür.
 Size = 4,8 MB
+
+[Section.0804]
+Description = C++ 编写的便携式开源 IA-32 (86) PC 模拟器，最流行的平台上运行的。
