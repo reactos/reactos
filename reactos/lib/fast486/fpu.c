@@ -221,6 +221,60 @@ static const FAST486_FPU_DATA_REG FpuInverseNumberCosine[INVERSE_NUMBERS_COUNT] 
     {0xD3D56292AB7E800DULL, FPU_REAL10_BIAS - 14, FALSE}, /* 1 / 9900 */
 };
 
+static const FAST486_FPU_DATA_REG FpuInverseNumberAtan[INVERSE_NUMBERS_COUNT] =
+{
+    {0xAAAAAAAAAAAAAAAAULL, FPU_REAL10_BIAS - 1, FALSE}, /* 2 / 3 */
+    {0xCCCCCCCCCCCCCCCCULL, FPU_REAL10_BIAS - 1, FALSE}, /* 4 / 5 */
+    {0xDB6DB6DB6DB6DB6DULL, FPU_REAL10_BIAS - 1, FALSE}, /* 6 / 7 */
+    {0xE38E38E38E38E38EULL, FPU_REAL10_BIAS - 1, FALSE}, /* 8 / 9 */
+    {0xE8BA2E8BA2E8BA2EULL, FPU_REAL10_BIAS - 1, FALSE}, /* 10 / 11 */
+    {0xEC4EC4EC4EC4EC4EULL, FPU_REAL10_BIAS - 1, FALSE}, /* 12 / 13 */
+    {0xEEEEEEEEEEEEEEEEULL, FPU_REAL10_BIAS - 1, FALSE}, /* 14 / 15 */
+    {0xF0F0F0F0F0F0F0F0ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 16 / 17 */
+    {0xF286BCA1AF286BCAULL, FPU_REAL10_BIAS - 1, FALSE}, /* 18 / 19 */
+    {0xF3CF3CF3CF3CF3CFULL, FPU_REAL10_BIAS - 1, FALSE}, /* 20 / 21 */
+    {0xF4DE9BD37A6F4DE9ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 22 / 23 */
+    {0xF5C28F5C28F5C28FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 24 / 25 */
+    {0xF684BDA12F684BDAULL, FPU_REAL10_BIAS - 1, FALSE}, /* 26 / 27 */
+    {0xF72C234F72C234F7ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 28 / 29 */
+    {0xF7BDEF7BDEF7BDEFULL, FPU_REAL10_BIAS - 1, FALSE}, /* 30 / 31 */
+    {0xF83E0F83E0F83E0FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 32 / 33 */
+    {0xF8AF8AF8AF8AF8AFULL, FPU_REAL10_BIAS - 1, FALSE}, /* 34 / 35 */
+    {0xF914C1BACF914C1BULL, FPU_REAL10_BIAS - 1, FALSE}, /* 36 / 37 */
+    {0xF96F96F96F96F96FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 38 / 39 */
+    {0xF9C18F9C18F9C18FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 40 / 41 */
+    {0xFA0BE82FA0BE82FAULL, FPU_REAL10_BIAS - 1, FALSE}, /* 42 / 43 */
+    {0xFA4FA4FA4FA4FA4FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 44 / 45 */
+    {0xFA8D9DF51B3BEA36ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 46 / 47 */
+    {0xFAC687D6343EB1A1ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 48 / 49 */
+    {0xFAFAFAFAFAFAFAFAULL, FPU_REAL10_BIAS - 1, FALSE}, /* 50 / 51 */
+    {0xFB2B78C13521CFB2ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 52 / 53 */
+    {0xFB586FB586FB586FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 54 / 55 */
+    {0xFB823EE08FB823EEULL, FPU_REAL10_BIAS - 1, FALSE}, /* 56 / 57 */
+    {0xFBA9386822B63CBEULL, FPU_REAL10_BIAS - 1, FALSE}, /* 58 / 59 */
+    {0xFBCDA3AC10C9714FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 60 / 61 */
+    {0xFBEFBEFBEFBEFBEFULL, FPU_REAL10_BIAS - 1, FALSE}, /* 62 / 63 */
+    {0xFC0FC0FC0FC0FC0FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 64 / 65 */
+    {0xFC2DD9CA81E9131AULL, FPU_REAL10_BIAS - 1, FALSE}, /* 66 / 67 */
+    {0xFC4A33F128CFC4A3ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 68 / 69 */
+    {0xFC64F52EDF8C9EA5ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 70 / 71 */
+    {0xFC7E3F1F8FC7E3F1ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 72 / 73 */
+    {0xFC962FC962FC962FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 74 / 75 */
+    {0xFCACE213F2B3884FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 76 / 77 */
+    {0xFCC26E2D5DF984DCULL, FPU_REAL10_BIAS - 1, FALSE}, /* 78 / 79 */
+    {0xFCD6E9E06522C3F3ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 80 / 81 */
+    {0xFCEA68DE12818ACBULL, FPU_REAL10_BIAS - 1, FALSE}, /* 82 / 83 */
+    {0xFCFCFCFCFCFCFCFCULL, FPU_REAL10_BIAS - 1, FALSE}, /* 84 / 85 */
+    {0xFD0EB66FD0EB66FDULL, FPU_REAL10_BIAS - 1, FALSE}, /* 86 / 87 */
+    {0xFD1FA3F47E8FD1FAULL, FPU_REAL10_BIAS - 1, FALSE}, /* 88 / 89 */
+    {0xFD2FD2FD2FD2FD2FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 90 / 91 */
+    {0xFD3F4FD3F4FD3F4FULL, FPU_REAL10_BIAS - 1, FALSE}, /* 92 / 93 */
+    {0xFD4E25B9EFD4E25BULL, FPU_REAL10_BIAS - 1, FALSE}, /* 94 / 95 */
+    {0xFD5C5F02A3A0FD5CULL, FPU_REAL10_BIAS - 1, FALSE}, /* 96 / 97 */
+    {0xFD6A052BF5A814AFULL, FPU_REAL10_BIAS - 1, FALSE}, /* 98 / 99 */
+    {0xFD7720F353A4C0A2ULL, FPU_REAL10_BIAS - 1, FALSE}, /* 100 / 101 */
+};
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 #ifndef FAST486_NO_FPU
@@ -1313,7 +1367,7 @@ Fast486FpuRemainder(PFAST486_STATE State,
                     PCFAST486_FPU_DATA_REG FirstOperand,
                     PCFAST486_FPU_DATA_REG SecondOperand,
                     BOOLEAN RoundToNearest,
-                    PFAST486_FPU_DATA_REG Result,
+                    PFAST486_FPU_DATA_REG Result OPTIONAL,
                     PLONGLONG Quotient OPTIONAL)
 {
     BOOLEAN Success = FALSE;
@@ -1326,10 +1380,13 @@ Fast486FpuRemainder(PFAST486_STATE State,
     State->FpuControl.Rc = RoundToNearest ? FPU_ROUND_NEAREST : FPU_ROUND_TRUNCATE;
 
     if (!Fast486FpuToInteger(State, &Temp, &Integer)) goto Cleanup;
-    Fast486FpuFromInteger(State, Integer, &Temp);
 
-    if (!Fast486FpuMultiply(State, &Temp, SecondOperand, &Temp)) goto Cleanup;
-    if (!Fast486FpuSubtract(State, FirstOperand, &Temp, Result)) goto Cleanup;
+    if (Result)
+    {
+        Fast486FpuFromInteger(State, Integer, &Temp);
+        if (!Fast486FpuMultiply(State, &Temp, SecondOperand, &Temp)) goto Cleanup;
+        if (!Fast486FpuSubtract(State, FirstOperand, &Temp, Result)) goto Cleanup;
+    }
 
     if (Quotient) *Quotient = Integer;
     Success = TRUE;
@@ -1559,6 +1616,123 @@ Fast486FpuCalculateSquareRoot(PFAST486_STATE State,
     }
 
     *Result = Value;
+    return TRUE;
+}
+
+/*
+ * Calculates arctan using Euler's formula:
+ * arctan(x) = (x / (1 + x^2)) * sum { prod { (2j * x^2)
+ * / ((2j + 1) * (1 + x^2)), j >= 1, j <= i }, i >= 0 }
+ */
+static inline BOOLEAN FASTCALL
+Fast486FpuCalculateArcTangent(PFAST486_STATE State,
+                              PCFAST486_FPU_DATA_REG Numerator,
+                              PCFAST486_FPU_DATA_REG Denominator,
+                              PFAST486_FPU_DATA_REG Result)
+{
+    INT i;
+    BOOLEAN Inverted = FALSE;
+    FAST486_FPU_DATA_REG TempNumerator = *Numerator;
+    FAST486_FPU_DATA_REG TempDenominator = *Denominator;
+    FAST486_FPU_DATA_REG Value;
+    FAST486_FPU_DATA_REG TempResult;
+    FAST486_FPU_DATA_REG ValDivValSqP1;
+    FAST486_FPU_DATA_REG SeriesElement = FpuOne;
+
+    TempNumerator.Sign = FALSE;
+    TempDenominator.Sign = FALSE;
+
+    /* Compare the numerator to the denominator */
+    if (!Fast486FpuSubtract(State, &TempNumerator, &TempDenominator, &TempResult))
+    {
+        return FALSE;
+    }
+
+    if ((Inverted = !TempResult.Sign))
+    {
+        if (!Fast486FpuDivide(State, &TempDenominator, &TempNumerator, &Value))
+        {
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (!Fast486FpuDivide(State, &TempNumerator, &TempDenominator, &Value))
+        {
+            return FALSE;
+        }
+    }
+
+    /* Apparently, atan2(0, 0) = +/- 0 or +/- pi for some reason... */
+    if (FPU_IS_INDEFINITE(&Value)) Value = FpuZero;
+
+    /* Calculate the value divided by the value squared plus one */
+    if (!Fast486FpuMultiply(State, &Value, &Value, &ValDivValSqP1)) return FALSE;
+    if (!Fast486FpuAdd(State, &ValDivValSqP1, &FpuOne, &ValDivValSqP1)) return FALSE;
+    if (!Fast486FpuDivide(State, &Value, &ValDivValSqP1, &ValDivValSqP1)) return FALSE;
+
+    TempResult = FpuOne;
+
+    for (i = 0; i < INVERSE_NUMBERS_COUNT; i++)
+    {
+        if (!Fast486FpuMultiply(State, &SeriesElement, &Value, &SeriesElement))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        if (!Fast486FpuMultiply(State, &SeriesElement, &ValDivValSqP1, &SeriesElement))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        if (!Fast486FpuMultiply(State,
+                                &SeriesElement,
+                                &FpuInverseNumberAtan[i],
+                                &SeriesElement))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        if (!Fast486FpuAdd(State, &TempResult, &SeriesElement, &TempResult))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+    }
+
+    if (!Fast486FpuMultiply(State, &TempResult, &ValDivValSqP1, &TempResult))
+    {
+        /* An exception occurred */
+        return FALSE;
+    }
+
+    if (Inverted)
+    {
+        /* Since y/x is positive, arctan(y/x) = pi/2 - arctan(x/y) */
+        if (!Fast486FpuSubtract(State, &FpuHalfPi, &TempResult, &TempResult)) return FALSE;
+    }
+
+    /* Adjust the sign */
+    if (!(!Numerator->Sign == !Denominator->Sign)) TempResult.Sign = !TempResult.Sign;
+
+    if (Denominator->Sign)
+    {
+        if (Numerator->Sign)
+        {
+            /* Subtract PI */
+            if (!Fast486FpuSubtract(State, &TempResult, &FpuPi, &TempResult)) return FALSE;
+        }
+        else
+        {
+            /* Add PI */
+            if (!Fast486FpuAdd(State, &TempResult, &FpuPi, &TempResult)) return FALSE;
+        }
+    }
+
+    *Result = TempResult;
     return TRUE;
 }
 
@@ -2138,14 +2312,32 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             {
                 FAST486_FPU_DATA_REG Sine;
                 FAST486_FPU_DATA_REG Cosine;
+                ULONGLONG Quadrant;
 
                 /* Compute the sine */
                 if (!Fast486FpuCalculateSine(State, &FPU_ST(0), &Sine)) break;
+
+                /* Normalize the angle */
+                if (!Fast486FpuRemainder(State,
+                                         &FPU_ST(0),
+                                         &FpuHalfPi,
+                                         FALSE,
+                                         NULL,
+                                         (PLONGLONG)&Quadrant))
+                {
+                    break;
+                }
+
+                /* Normalize the quadrant number */
+                Quadrant &= 3;
 
                 /* Find the cosine by calculating sqrt(1 - sin(x) ^ 2) */
                 if (!Fast486FpuMultiply(State, &Sine, &Sine, &Cosine)) break;
                 if (!Fast486FpuSubtract(State, &FpuOne, &Cosine, &Cosine)) break;
                 if (!Fast486FpuCalculateSquareRoot(State, &Cosine, &Cosine)) break;
+
+                /* Adjust the sign of the cosine */
+                if (Quadrant == 1 || Quadrant == 2) Cosine.Sign = TRUE;
 
                 /* Divide the sine by the cosine to get the tangent */
                 if (!Fast486FpuDivide(State, &Sine, &Cosine, &FPU_ST(0))) break;
@@ -2159,9 +2351,17 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FPATAN */
             case 0x33:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                if (!Fast486FpuCalculateArcTangent(State,
+                                                   &FPU_ST(1),
+                                                   &FPU_ST(0),
+                                                   &FPU_ST(1)))
+                {
+                    break;
+                }
 
+                FPU_UPDATE_TAG(1);
+
+                Fast486FpuPop(State);
                 break;
             }
 
