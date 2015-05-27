@@ -672,7 +672,6 @@ enum EmfPlusRecordType {
     EmfPlusRecordTypeSetAntiAliasMode,
     EmfPlusRecordTypeSetTextRenderingHint,
     EmfPlusRecordTypeSetTextContrast,
-    EmfPlusRecordTypeSetGammaValue,
     EmfPlusRecordTypeSetInterpolationMode,
     EmfPlusRecordTypeSetPixelOffsetMode,
     EmfPlusRecordTypeSetCompositingMode,
