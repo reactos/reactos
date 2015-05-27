@@ -1077,6 +1077,12 @@ NtUserSetCursor(
         if (pcurOld->CURSORF_flags & CURSORF_GLOBAL)
         {
            TRACE("Returning Global Cursor hcur %p\n",hOldCursor);
+
+           if (pcurOld->head.cLockObj > 2) // Throttle down to 2.
+           {
+              UserDereferenceObject(pcurOld);
+           }
+
            goto leave;
         }
 
