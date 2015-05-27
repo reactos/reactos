@@ -1,6 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Parallel Port Function Driver
+ * FILE:            drivers/parallel/parport/parport.h
  * PURPOSE:         Parport driver header
  */
 
@@ -11,6 +12,8 @@
 #include <ndk/haltypes.h>
 #include <ntddpar.h>
 #include <stdio.h>
+
+#include "hardware.h"
 
 //#define NDEBUG
 #include <debug.h>
@@ -37,9 +40,11 @@ typedef struct _FDO_DEVICE_EXTENSION
     PDEVICE_OBJECT Pdo;
     PDEVICE_OBJECT LowerDevice;
 
-    ULONG ParallelPortNumber;
+    PDEVICE_OBJECT AttachedRawPdo;
+    PDEVICE_OBJECT AttachedPdo[2];
 
-    ULONG LptPort;
+    ULONG PortNumber;
+
     ULONG OpenCount;
 
     ULONG BaseAddress;
@@ -51,8 +56,16 @@ typedef struct _PDO_DEVICE_EXTENSION
 {
     COMMON_DEVICE_EXTENSION Common;
 
+    PDEVICE_OBJECT AttachedFdo;
+
+    ULONG PortNumber;
+    ULONG LptPort;
+
+    ULONG OpenCount;
+
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
+#define PARPORT_TAG 'trpP'
 
 /* fdo.c */
 

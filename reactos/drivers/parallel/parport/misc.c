@@ -61,7 +61,10 @@ ForwardIrpAndForget(IN PDEVICE_OBJECT DeviceObject,
 {
     PDEVICE_OBJECT LowerDevice;
 
-    LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+    if (((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
+        LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+    else
+        LowerDevice = ((PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->AttachedFdo;
     ASSERT(LowerDevice);
 
     IoSkipCurrentIrpStackLocation(Irp);

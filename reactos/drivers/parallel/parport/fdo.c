@@ -7,37 +7,6 @@
 
 #include "parport.h"
 
-/*
- * The following constants describe the various signals of the printer port
- * hardware.  Note that the hardware inverts some signals and that some
- * signals are active low.  An example is LP_STROBE, which must be programmed
- * with 1 for being active and 0 for being inactive, because the strobe signal
- * gets inverted, but it is also active low.
- */
-
-/*
- * bit defines for 8255 status port
- * base + 1
- * accessed with LP_S(minor), which gets the byte...
- */
-#define LP_PBUSY    0x80  /* inverted input, active high */
-#define LP_PACK     0x40  /* unchanged input, active low */
-#define LP_POUTPA   0x20  /* unchanged input, active high */
-#define LP_PSELECD  0x10  /* unchanged input, active high */
-#define LP_PERRORP  0x08  /* unchanged input, active low */
-
-/*
- * defines for 8255 control port
- * base + 2
- * accessed with LP_C(minor)
- */
-#define LP_PINTEN   0x10
-#define LP_PSELECP  0x08  /* inverted output, active low */
-#define LP_PINITP   0x04  /* unchanged output, active low */
-#define LP_PAUTOLF  0x02  /* inverted output, active low */
-#define LP_PSTROBE  0x01  /* inverted output, active low */
-
-
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
@@ -86,11 +55,7 @@ AddDeviceInternal(IN PDRIVER_OBJECT DriverObject,
     DeviceExtension->Common.IsFDO = TRUE;
     DeviceExtension->Common.PnpState = dsStopped;
 
-    DeviceExtension->ParallelPortNumber = IoGetConfigurationInformation()->ParallelCount++;
-    if (pLptPortNumber == NULL)
-        DeviceExtension->LptPort = DeviceExtension->ParallelPortNumber + 1;
-    else
-        DeviceExtension->LptPort = *pLptPortNumber;
+    DeviceExtension->PortNumber = IoGetConfigurationInformation()->ParallelCount++;
     DeviceExtension->Pdo = Pdo;
 
     Status = IoAttachDeviceToDeviceStackSafe(Fdo,
@@ -141,22 +106,12 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
                IN PCM_RESOURCE_LIST ResourceListTranslated)
 {
     PFDO_DEVICE_EXTENSION DeviceExtension;
-    WCHAR DeviceNameBuffer[32];
-    WCHAR LinkNameBuffer[32];
-    WCHAR LptPortBuffer[32];
-    UNICODE_STRING DeviceName;
-    UNICODE_STRING LinkName;
-    UNICODE_STRING LptPort;
     ULONG i;
 //    ULONG Vector = 0;
 //    KIRQL Dirql = 0;
 //    KAFFINITY Affinity = 0;
 //    KINTERRUPT_MODE InterruptMode = Latched;
 //    BOOLEAN ShareInterrupt = TRUE;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    HANDLE KeyHandle;
-    NTSTATUS Status;
 
     DPRINT("FdoStartDevice ()\n");
 
@@ -247,21 +202,89 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
         return STATUS_INSUFFICIENT_RESOURCES;
 #endif
 
-    /* Create link \DosDevices\LPTX -> \Device\ParallelPortX */
-    swprintf(DeviceNameBuffer, L"\\Device\\ParallelPort%lu", DeviceExtension->ParallelPortNumber);
-    swprintf(LinkNameBuffer, L"\\DosDevices\\LPT%lu", DeviceExtension->LptPort);
-    swprintf(LptPortBuffer, L"LPT%lu", DeviceExtension->LptPort);
-    RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
+    DeviceExtension->Common.PnpState = dsStarted;
+
+
+    /* We don't really care if the call succeeded or not... */
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+FdoCreateRawParallelPdo(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension = NULL;
+    PDEVICE_OBJECT Pdo = NULL;
+    WCHAR DeviceNameBuffer[32];
+    WCHAR LinkNameBuffer[32];
+    WCHAR LptPortBuffer[32];
+    UNICODE_STRING DeviceName;
+    UNICODE_STRING LinkName;
+    UNICODE_STRING LptPort;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    DPRINT("FdoCreateRawParallelPdo()\n");
+
+    FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* Create new device object */
+    swprintf(DeviceNameBuffer,
+             L"\\Device\\Parallel%lu",
+             FdoDeviceExtension->PortNumber);
+    RtlInitUnicodeString(&DeviceName,
+                         DeviceNameBuffer);
+
+    Status = IoCreateDevice(DeviceObject->DriverObject,
+                            sizeof(PDO_DEVICE_EXTENSION),
+                            &DeviceName,
+                            FILE_DEVICE_CONTROLLER,
+                            0,
+                            FALSE,
+                            &Pdo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IoCreateDevice() failed with status 0x%08x\n", Status);
+        goto done;
+    }
+
+    Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
+    Pdo->Flags |= DO_POWER_PAGABLE;
+
+    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)Pdo->DeviceExtension;
+    RtlZeroMemory(PdoDeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
+
+    PdoDeviceExtension->Common.IsFDO = FALSE;
+    PdoDeviceExtension->Common.PnpState = dsStopped;
+
+    Pdo->StackSize = DeviceObject->StackSize + 1;
+
+    FdoDeviceExtension->AttachedRawPdo = Pdo;
+    PdoDeviceExtension->AttachedFdo = DeviceObject;
+
+    PdoDeviceExtension->PortNumber = FdoDeviceExtension->PortNumber;
+    PdoDeviceExtension->LptPort = PdoDeviceExtension->PortNumber + 1;
+
+
+    /* Create link \DosDevices\LPTX -> \Device\ParallelY */
+    swprintf(LinkNameBuffer, L"\\DosDevices\\LPT%lu", PdoDeviceExtension->LptPort);
     RtlInitUnicodeString(&LinkName, LinkNameBuffer);
-    RtlInitUnicodeString(&LptPort, LptPortBuffer);
     Status = IoCreateSymbolicLink(&LinkName,
                                   &DeviceName);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IoCreateSymbolicLink() failed with status 0x%08x\n", Status);
-        return Status;
+        goto done;
     }
 
+    swprintf(LptPortBuffer, L"LPT%lu", PdoDeviceExtension->LptPort);
+    RtlInitUnicodeString(&LptPort, LptPortBuffer);
 
     /* Write an entry value under HKLM\HARDWARE\DeviceMap\PARALLEL PORTS. */
     /* This step is not mandatory, so do not exit in case of error. */
@@ -292,10 +315,66 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
         ZwClose(KeyHandle);
     }
 
-    DeviceExtension->Common.PnpState = dsStarted;
+    Pdo->Flags |= DO_BUFFERED_IO;
+    Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (Pdo)
+        {
+            ASSERT(PdoDeviceExtension);
+            IoDeleteDevice(Pdo);
+        }
+    }
+
+    return Status;
+}
 
 
-    /* We don't really care if the call succeeded or not... */
+static
+NTSTATUS
+FdoQueryBusRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    PIO_STACK_LOCATION IrpSp)
+{
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_RELATIONS DeviceRelations;
+    ULONG Size;
+    ULONG i;
+    ULONG PdoCount = 0;
+    NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(IrpSp);
+
+    DPRINT("FdoQueryBusRelations()\n");
+
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension->Common.IsFDO);
+
+    /* TODO: Enumerate parallel devices and create their PDOs */
+
+    Status = FdoCreateRawParallelPdo(DeviceObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    PdoCount++;
+
+    /* Allocate a buffer for the device relations */
+    Size = sizeof(DEVICE_RELATIONS) + sizeof(PDEVICE_OBJECT) * (PdoCount - 1);
+    DeviceRelations = ExAllocatePoolWithTag(PagedPool, Size, PARPORT_TAG);
+    if (DeviceRelations == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Fill the buffer */
+    i = 0;
+    ObReferenceObject(DeviceExtension->AttachedRawPdo);
+    DeviceRelations->Objects[i] = DeviceExtension->AttachedRawPdo;
+
+    Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+
+    DPRINT("Done\n");
 
     return STATUS_SUCCESS;
 }
@@ -345,7 +424,7 @@ FdoCreate(IN PDEVICE_OBJECT DeviceObject,
         goto done;
     }
 
-    DPRINT("Open LPT%lu: successful\n", DeviceExtension->LptPort);
+    DPRINT("Open parallel port %lu: successful\n", DeviceExtension->PortNumber);
     DeviceExtension->OpenCount++;
 
 done:
@@ -397,68 +476,11 @@ NTAPI
 FdoWrite(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
-    PFDO_DEVICE_EXTENSION DeviceExtension;
-    PIO_STACK_LOCATION IoStack;
-    PUCHAR Buffer;
-    ULONG i;
-    UCHAR PortStatus;
-    ULONG ulCount;
-
     DPRINT("FdoWrite()\n");
-
-    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    Buffer = GetUserBuffer(Irp);
-    DPRINT("Length: %lu\n", IoStack->Parameters.Write.Length);
-    DPRINT("Buffer: %p\n", Buffer);
-
-    if (Buffer != NULL)
-    {
-        DPRINT("%s\n", Buffer);
-    }
-
-    for (i = 0; i < IoStack->Parameters.Write.Length; i++)
-    {
-        DPRINT("%lu: %c\n", i, Buffer[i]);
-
-        ulCount = 0;
-
-        do
-        {
-            KeStallExecutionProcessor(10);
-            PortStatus = READ_PORT_UCHAR((PUCHAR)(DeviceExtension->BaseAddress + 1));
-            ulCount++;
-        }
-        while (ulCount < 500000 && !(PortStatus & LP_PBUSY));
-
-        if (ulCount == 500000)
-        {
-            DPRINT1("Timed out\n");
-
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_TIMEOUT;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-            return STATUS_TIMEOUT;
-        }
-
-        /* Write character */
-        WRITE_PORT_UCHAR((PUCHAR)DeviceExtension->BaseAddress, Buffer[i]);
-
-        KeStallExecutionProcessor(10);
-
-        WRITE_PORT_UCHAR((PUCHAR)(DeviceExtension->BaseAddress + 2), (LP_PSELECP | LP_PINITP | LP_PSTROBE));
-
-        KeStallExecutionProcessor(10);
-
-        WRITE_PORT_UCHAR((PUCHAR)(DeviceExtension->BaseAddress + 2), (LP_PSELECP | LP_PINITP));
-    }
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
     return STATUS_SUCCESS;
 }
 
@@ -524,26 +546,29 @@ FdoPnp(IN PDEVICE_OBJECT DeviceObject,
             switch (Stack->Parameters.QueryDeviceRelations.Type)
             {
                 case BusRelations:
-                    DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-                    return ForwardIrpAndForget(DeviceObject, Irp);
+                    DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+                    Status = FdoQueryBusRelations(DeviceObject, Irp, Stack);
+                    Irp->IoStatus.Status = Status;
+                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    return Status;
 
                 case RemovalRelations:
-                    DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
+                    DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
                     return ForwardIrpAndForget(DeviceObject, Irp);
 
                 default:
-                    DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+                    DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
                         Stack->Parameters.QueryDeviceRelations.Type);
                     return ForwardIrpAndForget(DeviceObject, Irp);
             }
             break;
 
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0xd */
-            DPRINT1("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
             return ForwardIrpAndForget(DeviceObject, Irp);
 
         default:
-            DPRINT1("Unknown minor function 0x%x\n", MinorFunction);
+            DPRINT("Unknown minor function 0x%x\n", MinorFunction);
             return ForwardIrpAndForget(DeviceObject, Irp);
     }
 
