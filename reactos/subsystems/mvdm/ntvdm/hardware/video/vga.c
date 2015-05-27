@@ -1059,9 +1059,11 @@ static VOID VgaUpdateFramebuffer(VOID)
 {
     SHORT i, j, k;
     DWORD AddressSize = VgaGetAddressSize();
-    DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
-                             VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG]);
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
+    BYTE PresetRowScan = VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F;
+    DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
+                             VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
+                    + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
 
     /*
      * If console framebuffer is NULL, that means something went wrong
@@ -1075,6 +1077,7 @@ static VOID VgaUpdateFramebuffer(VOID)
         /* Graphics mode */
         PBYTE GraphicsBuffer = (PBYTE)ConsoleFramebuffer;
         DWORD InterlaceHighBit = VGA_INTERLACE_HIGH_BIT;
+        SHORT X, Y;
 
         /*
          * Synchronize access to the graphics framebuffer
@@ -1096,6 +1099,10 @@ static VOID VgaUpdateFramebuffer(VOID)
                 /* Odd-numbered line in interlaced mode - set the high bit */
                 Address |= InterlaceHighBit;
             }
+
+            /* Apply the preset row scan */
+            Y = i - PresetRowScan;
+            if (Y < 0) Y += CurrResolution.Y;
 
             /* Loop through the pixels */
             for (j = 0; j < CurrResolution.X; j++)
@@ -1216,58 +1223,71 @@ static VOID VgaUpdateFramebuffer(VOID)
                                                  : 0);
                 }
 
+                /* Apply horizontal pixel panning */
+                if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
+                {
+                    X = j - ((VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F) >> 1);
+                }
+                else
+                {
+                    X = j - (VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F);
+                }
+
+                /* Wrap around */
+                if (X < 0) X += CurrResolution.X;
+
                 /* Take into account DoubleVision mode when checking for pixel updates */
                 if (DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2)] != PixelData)
+                    if (GraphicsBuffer[(Y * 2 * CurrResolution.X * 2) + (X * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(Y * 2 * CurrResolution.X * 2) + (X * 2)] = PixelData;
+                        GraphicsBuffer[(Y * 2 * CurrResolution.X * 2) + (X * 2 + 1)] = PixelData;
+                        GraphicsBuffer[((Y * 2 + 1) * CurrResolution.X * 2) + (X * 2)] = PixelData;
+                        GraphicsBuffer[((Y * 2 + 1) * CurrResolution.X * 2) + (X * 2 + 1)] = PixelData;
 
                         /* Mark the specified pixel as changed */
-                        VgaMarkForUpdate(i, j);
+                        VgaMarkForUpdate(Y, X);
                     }
                 }
                 else if (DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2)] != PixelData)
+                    if (GraphicsBuffer[(Y * CurrResolution.X * 2) + (X * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(Y * CurrResolution.X * 2) + (X * 2)] = PixelData;
+                        GraphicsBuffer[(Y * CurrResolution.X * 2) + (X * 2 + 1)] = PixelData;
 
                         /* Mark the specified pixel as changed */
-                        VgaMarkForUpdate(i, j);
+                        VgaMarkForUpdate(Y, X);
                     }
                 }
                 else if (!DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * 2 * CurrResolution.X) + j] != PixelData)
+                    if (GraphicsBuffer[(Y * 2 * CurrResolution.X) + X] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * 2 * CurrResolution.X) + j] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X) + j] = PixelData;
+                        GraphicsBuffer[(Y * 2 * CurrResolution.X) + X] = PixelData;
+                        GraphicsBuffer[((Y * 2 + 1) * CurrResolution.X) + X] = PixelData;
 
                         /* Mark the specified pixel as changed */
-                        VgaMarkForUpdate(i, j);
+                        VgaMarkForUpdate(Y, X);
                     }
                 }
                 else // if (!DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[i * CurrResolution.X + j] != PixelData)
+                    if (GraphicsBuffer[Y * CurrResolution.X + X] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[i * CurrResolution.X + j] = PixelData;
+                        GraphicsBuffer[Y * CurrResolution.X + X] = PixelData;
 
                         /* Mark the specified pixel as changed */
-                        VgaMarkForUpdate(i, j);
+                        VgaMarkForUpdate(Y, X);
                     }
                 }
             }
@@ -1297,6 +1317,12 @@ static VOID VgaUpdateFramebuffer(VOID)
         DWORD CurrentAddr;
         PCHAR_CELL CharBuffer = (PCHAR_CELL)ConsoleFramebuffer;
         CHAR_CELL CharInfo;
+
+        /*
+         * Technically, the horizontal panning and preset row count should
+         * affect text mode too. However, it works on pixels and not characters,
+         * so we can't support it currently.
+         */
 
         /* Loop through the scanlines */
         for (i = 0; i < CurrResolution.Y; i++)
