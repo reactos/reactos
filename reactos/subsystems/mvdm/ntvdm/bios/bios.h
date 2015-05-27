@@ -33,7 +33,7 @@
 // by all applications (e.g. QBasic runtime would use the native FPU if the bit
 // is set, but then subsequently fails, unless the FPU bit is unset in that case
 // QBasic uses its emulated FPU).
-#define BIOS_EQUIPMENT_LIST 0x2C    // Bit1: FPU, Bit 2: Mouse
+#define BIOS_EQUIPMENT_LIST 0x2E    // Bit1: FPU, Bit 2: Mouse
 
 #pragma pack(push, 1)
 
