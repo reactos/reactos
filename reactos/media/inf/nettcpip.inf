@@ -1,6 +1,6 @@
 ; NETTCPIP.INF
 
-; Installation file for TCP/IP protocol
+; Installation file for TCP/IP Version 4 Protocol
 
 [Version]
 Signature  = "$Windows NT$"
@@ -11,24 +11,24 @@ ClassGUID  = {4D36E975-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
 DriverVer  = 04/12/2006,1.00
 
-;----------------------------- TCP/IP DRIVER ----------------------------
+;----------------------------- TCP/IPv4 DRIVER ----------------------------
 
 [MS_TCPIP.PrimaryInstall]
 AddReg = TCPIP_AddReg_Global.NT
 
 [TCPIP_AddReg_Global.NT]
 ; The following entries should be generated from .inf files during installation
-; TCPIP Protocol
+; TCPIPv4 Protocol
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","Characteristics",0x00010001,0x00000080
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","ComponentId",0x00000000,"ms_tcpip"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","Description",0x00000000,"Internet Protocol (TCP/IP)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","Description",0x00000000,"Internet Protocol Version 4 (TCP/IPv4)"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","InfPath",0x00000000,"BUGBUG_Create from Inffile.inf"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","InfSection",0x00000000,"BUGBUG_Create from Inffile.inf"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","ClsId",0x00000000,"{A907657F-6FDF-11D0-8EFB-00C04FD912B2}"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","HelpText",0x00000000,"Transmission Control Protocol/Internet Protocol"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","Service",0x00000000,"Tcpip"
 
-; TCP/IP driver
+; TCP/IPv4 driver
 ; NOTE: These settings should be added by the network setup
 ; These bindings are of the windows 2000 type, and will probably need to be
 ; twiddled to get 3rd-party network-related software to work.

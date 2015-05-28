@@ -1,5 +1,5 @@
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "TCP/IP protocol driver"
+#define REACTOS_STR_FILE_DESCRIPTION  "TCP/IPv4 protocol driver"
 #define REACTOS_STR_INTERNAL_NAME     "tcpip"
 #define REACTOS_STR_ORIGINAL_FILENAME "tcpip.sys"
 #include <reactos/version.rc>
