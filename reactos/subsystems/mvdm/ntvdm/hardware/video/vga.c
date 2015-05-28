@@ -1063,6 +1063,7 @@ static VOID VgaUpdateFramebuffer(VOID)
     BYTE PresetRowScan = VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F;
     DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
+                    + PresetRowScan * ScanlineSize
                     + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
 
     /*
@@ -1077,7 +1078,7 @@ static VOID VgaUpdateFramebuffer(VOID)
         /* Graphics mode */
         PBYTE GraphicsBuffer = (PBYTE)ConsoleFramebuffer;
         DWORD InterlaceHighBit = VGA_INTERLACE_HIGH_BIT;
-        SHORT X, Y;
+        SHORT X;
 
         /*
          * Synchronize access to the graphics framebuffer
@@ -1100,14 +1101,20 @@ static VOID VgaUpdateFramebuffer(VOID)
                 Address |= InterlaceHighBit;
             }
 
-            /* Apply the preset row scan */
-            Y = i - PresetRowScan;
-            if (Y < 0) Y += CurrResolution.Y;
-
             /* Loop through the pixels */
             for (j = 0; j < CurrResolution.X; j++)
             {
                 BYTE PixelData = 0;
+
+                /* Apply horizontal pixel panning */
+                if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
+                {
+                    X = j + ((VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F) >> 1);
+                }
+                else
+                {
+                    X = j + (VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F);
+                }
 
                 /* Check the shifting mode */
                 if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_SHIFT256)
@@ -1118,20 +1125,20 @@ static VOID VgaUpdateFramebuffer(VOID)
                     if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                     {
                         /* One byte per pixel */
-                        PixelData = VgaMemory[(j % VGA_NUM_BANKS) * VGA_BANK_SIZE
-                                              + LOWORD((Address + (j / VGA_NUM_BANKS))
+                        PixelData = VgaMemory[(X % VGA_NUM_BANKS) * VGA_BANK_SIZE
+                                              + LOWORD((Address + (X / VGA_NUM_BANKS))
                                               * AddressSize)];
                     }
                     else
                     {
                         /* 4-bits per pixel */
 
-                        PixelData = VgaMemory[(j % VGA_NUM_BANKS) * VGA_BANK_SIZE
-                                              + LOWORD((Address + (j / (VGA_NUM_BANKS * 2)))
+                        PixelData = VgaMemory[(X % VGA_NUM_BANKS) * VGA_BANK_SIZE
+                                              + LOWORD((Address + (X / (VGA_NUM_BANKS * 2)))
                                               * AddressSize)];
 
                         /* Check if we should use the highest 4 bits or lowest 4 */
-                        if (((j / VGA_NUM_BANKS) % 2) == 0)
+                        if (((X / VGA_NUM_BANKS) % 2) == 0)
                         {
                             /* Highest 4 */
                             PixelData >>= 4;
@@ -1157,14 +1164,14 @@ static VOID VgaUpdateFramebuffer(VOID)
                          * 2 bits shifted from plane 0 and 2 for the first 4 pixels,
                          * then 2 bits shifted from plane 1 and 3 for the next 4
                          */
-                        DWORD BankNumber = (j / 4) % 2;
-                        DWORD Offset = Address + (j / 8);
+                        DWORD BankNumber = (X / 4) % 2;
+                        DWORD Offset = Address + (X / 8);
                         BYTE LowPlaneData = VgaMemory[BankNumber * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
                         BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
 
                         /* Extract the two bits from each plane */
-                        LowPlaneData  = (LowPlaneData  >> (6 - ((j % 4) * 2))) & 0x03;
-                        HighPlaneData = (HighPlaneData >> (6 - ((j % 4) * 2))) & 0x03;
+                        LowPlaneData  = (LowPlaneData  >> (6 - ((X % 4) * 2))) & 0x03;
+                        HighPlaneData = (HighPlaneData >> (6 - ((X % 4) * 2))) & 0x03;
 
                         /* Combine them into the pixel */
                         PixelData = LowPlaneData | (HighPlaneData << 2);
@@ -1183,11 +1190,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                         {
                             /* The data is on plane k, 4 pixels per byte */
                             BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
-                                                       + LOWORD((Address + (j / VGA_NUM_BANKS))
+                                                       + LOWORD((Address + (X / VGA_NUM_BANKS))
                                                        * AddressSize)];
 
                             /* The mask of the first bit in the pair */
-                            BYTE BitMask = 1 << (((3 - (j % VGA_NUM_BANKS)) * 2) + 1);
+                            BYTE BitMask = 1 << (((3 - (X % VGA_NUM_BANKS)) * 2) + 1);
 
                             /* Bits 0, 1, 2 and 3 come from the first bit of the pair */
                             if (PlaneData & BitMask) PixelData |= 1 << k;
@@ -1203,11 +1210,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                         for (k = 0; k < VGA_NUM_BANKS; k++)
                         {
                             BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
-                                                       + LOWORD((Address + (j / (VGA_NUM_BANKS * 2)))
+                                                       + LOWORD((Address + (X / (VGA_NUM_BANKS * 2)))
                                                        * AddressSize)];
 
                             /* If the bit on that plane is set, set it */
-                            if (PlaneData & (1 << (7 - (j % 8)))) PixelData |= 1 << k;
+                            if (PlaneData & (1 << (7 - (X % 8)))) PixelData |= 1 << k;
                         }
                     }
                 }
@@ -1223,71 +1230,58 @@ static VOID VgaUpdateFramebuffer(VOID)
                                                  : 0);
                 }
 
-                /* Apply horizontal pixel panning */
-                if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
-                {
-                    X = j - ((VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F) >> 1);
-                }
-                else
-                {
-                    X = j - (VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F);
-                }
-
-                /* Wrap around */
-                if (X < 0) X += CurrResolution.X;
-
                 /* Take into account DoubleVision mode when checking for pixel updates */
                 if (DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(Y * 2 * CurrResolution.X * 2) + (X * 2)] != PixelData)
+                    if (GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(Y * 2 * CurrResolution.X * 2) + (X * 2)] = PixelData;
-                        GraphicsBuffer[(Y * 2 * CurrResolution.X * 2) + (X * 2 + 1)] = PixelData;
-                        GraphicsBuffer[((Y * 2 + 1) * CurrResolution.X * 2) + (X * 2)] = PixelData;
-                        GraphicsBuffer[((Y * 2 + 1) * CurrResolution.X * 2) + (X * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
 
                         /* Mark the specified pixel as changed */
-                        VgaMarkForUpdate(Y, X);
+                        VgaMarkForUpdate(i, j);
                     }
                 }
                 else if (DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(Y * CurrResolution.X * 2) + (X * 2)] != PixelData)
+                    if (GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(Y * CurrResolution.X * 2) + (X * 2)] = PixelData;
-                        GraphicsBuffer[(Y * CurrResolution.X * 2) + (X * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
 
                         /* Mark the specified pixel as changed */
-                        VgaMarkForUpdate(Y, X);
+                        VgaMarkForUpdate(i, j);
                     }
                 }
                 else if (!DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(Y * 2 * CurrResolution.X) + X] != PixelData)
+                    if (GraphicsBuffer[(i * 2 * CurrResolution.X) + j] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(Y * 2 * CurrResolution.X) + X] = PixelData;
-                        GraphicsBuffer[((Y * 2 + 1) * CurrResolution.X) + X] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X) + j] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X) + j] = PixelData;
 
                         /* Mark the specified pixel as changed */
-                        VgaMarkForUpdate(Y, X);
+                        VgaMarkForUpdate(i, j);
                     }
                 }
                 else // if (!DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[Y * CurrResolution.X + X] != PixelData)
+                    if (GraphicsBuffer[i * CurrResolution.X + j] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[Y * CurrResolution.X + X] = PixelData;
+                        GraphicsBuffer[i * CurrResolution.X + j] = PixelData;
 
                         /* Mark the specified pixel as changed */
-                        VgaMarkForUpdate(Y, X);
+                        VgaMarkForUpdate(i, j);
                     }
                 }
             }
