@@ -624,8 +624,8 @@ BOOL WINAPI SetConsoleIcon(_In_ HICON);
 BOOL WINAPI SetConsolePalette(_In_ HANDLE, _In_ HPALETTE, _In_ UINT);
 /* Undocumented */
 BOOL WINAPI CloseConsoleHandle(_In_ HANDLE);
-// HANDLE WINAPI GetStdHandle(_In_ DWORD);
-// BOOL WINAPI SetStdHandle(_In_ DWORD, _In_ HANDLE);
+/* Undocumented */
+HANDLE WINAPI GetConsoleInputWaitHandle(VOID);
 /* Undocumented */
 BOOL WINAPI VerifyConsoleIoHandle(_In_ HANDLE);
 /* Undocumented */
