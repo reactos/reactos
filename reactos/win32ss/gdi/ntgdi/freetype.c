@@ -2062,8 +2062,8 @@ ftGdiGetGlyphOutline(
         case ft_glyph_format_bitmap:
         {
             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
-            INT w = (ft_face->glyph->bitmap.width + 7) >> 3;
-            INT h = ft_face->glyph->bitmap.rows;
+            INT w = min( pitch, (ft_face->glyph->bitmap.width + 7) >> 3 );
+            INT h = min( height, ft_face->glyph->bitmap.rows );
             while (h--)
             {
                 RtlCopyMemory(dst, src, w);
@@ -2120,7 +2120,7 @@ ftGdiGetGlyphOutline(
         case ft_glyph_format_bitmap:
         {
             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
-            INT h = ft_face->glyph->bitmap.rows;
+            INT h = min( height, ft_face->glyph->bitmap.rows );
             INT x;
             while (h--)
             {
