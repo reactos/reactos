@@ -2053,6 +2053,9 @@ ftGdiGetGlyphOutline(
         needed = pitch * height;
 
         if (!pvBuf || !cjBuf) break;
+        if (!needed) return GDI_ERROR;  /* empty glyph */
+        if (needed > cjBuf)
+            return GDI_ERROR;
 
         switch (ft_face->glyph->format)
         {
@@ -2108,6 +2111,9 @@ ftGdiGetGlyphOutline(
         needed = pitch * height;
 
         if (!pvBuf || !cjBuf) break;
+        if (!needed) return GDI_ERROR;  /* empty glyph */
+        if (needed > cjBuf)
+            return GDI_ERROR;
 
         switch (ft_face->glyph->format)
         {
