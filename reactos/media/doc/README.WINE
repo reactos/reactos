@@ -293,7 +293,7 @@ msvcrt -
 
 User32 -
   reactos/win32ss/user/user32/controls/button.c    # Synced to WineStaging-1.7.37
-  reactos/win32ss/user/user32/controls/combo.c     # Synced to Wine-1.5.10
+  reactos/win32ss/user/user32/controls/combo.c     # Synced to WineStaging-1.7.37
   reactos/win32ss/user/user32/controls/edit.c      # Synced to Wine-1_1_40
   reactos/win32ss/user/user32/controls/icontitle.c # Synced to WineStaging-1.7.37
   reactos/win32ss/user/user32/controls/listbox.c   # Synced to Wine-1_1_39
