@@ -1,9 +1,6 @@
 /*
- * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Bezier functions
- * FILE:             subsys/win32k/objects/bezier.c
- * PROGRAMER:        Unknown
+ * COPYRIGHT: GNU LGPL
+ * PURPOSE:   Bezier functions
  */
 
 #include <win32k.h>
@@ -11,12 +8,14 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Based on Wine Staging 1.7.37 - dlls/gdi32/painting.c */
+
 /******************************************************************
  *
  *   *Very* simple bezier drawing code,
  *
  *   It uses a recursive algorithm to divide the curve in a series
- *   of straight line segements. Not ideal but for me sufficient.
+ *   of straight line segments. Not ideal but sufficient for me.
  *   If you are in need for something better look for some incremental
  *   algorithm.
  *
@@ -24,14 +23,14 @@
  */
 
  /*
-  * Some macro definitions for bezier drawing.
+  * some macro definitions for bezier drawing
   *
-  * To avoid trucation errors the coordinates are
+  * to avoid truncation errors the coordinates are
   * shifted upwards. When used in drawing they are
   * shifted down again, including correct rounding
-  * and avoiding floating point arithmatic
+  * and avoiding floating point arithmetic
   * 4 bits should allow 27 bits coordinates which I saw
-  * somewere in the win32 doc's
+  * somewhere in the win32 doc's
   *
   */
 
@@ -39,20 +38,20 @@
 #define BEZIERSHIFTUP(x)    ((x)<<BEZIERSHIFTBITS)
 #define BEZIERPIXEL        BEZIERSHIFTUP(1)
 #define BEZIERSHIFTDOWN(x)  (((x)+(1<<(BEZIERSHIFTBITS-1)))>>BEZIERSHIFTBITS)
-/* Maximum depth of recursion */
+/* maximum depth of recursion */
 #define BEZIERMAXDEPTH  8
 
-/* Size of array to store points on */
+/* size of array to store points on */
 /* enough for one curve */
 #define BEZIER_INITBUFSIZE    (150)
 
-/* Calculate Bezier average, in this case the middle
+/* calculate Bezier average, in this case the middle
  * correctly rounded...
  * */
 
 #define BEZIERMIDDLE(Mid, P1, P2) \
-  (Mid).x=((P1).x+(P2).x + 1) >> 1;\
-  (Mid).y=((P1).y+(P2).y + 1) >> 1;
+    (Mid).x=((P1).x+(P2).x + 1)/2;\
+    (Mid).y=((P1).y+(P2).y + 1)/2;
 
 /**********************************************************
 * BezierCheck helper function to check
@@ -60,119 +59,108 @@
 *       Points[0] and Points[3] are begin and endpoint
 *       Points[1] and Points[2] are control points
 *       level is the recursion depth
-*       returns true if the recusion can be terminated
+*       returns true if the recursion can be terminated
 */
-static BOOL FASTCALL BezierCheck( int level, POINT *Points)
+static BOOL BezierCheck( int level, POINT *Points)
 {
-  INT dx, dy;
-
-  dx=Points[3].x-Points[0].x;
-  dy=Points[3].y-Points[0].y;
-  if ( abs(dy) <= abs(dx) ) /* Shallow line */
-  {
-    /* Check that control points are between begin and end */
-    if ( Points[1].x < Points[0].x )
-    {
-      if ( Points[1].x < Points[3].x )
-	return FALSE;
-    }
-    else if ( Points[1].x > Points[3].x )
-      return FALSE;
-    if ( Points[2].x < Points[0].x)
-    {
-      if ( Points[2].x < Points[3].x )
-	return FALSE;
-    }
-    else if ( Points[2].x > Points[3].x )
-      return FALSE;
-    dx = BEZIERSHIFTDOWN(dx);
-    if ( !dx )
-      return TRUE;
-    if ( abs(Points[1].y-Points[0].y-(dy/dx)*
-	BEZIERSHIFTDOWN(Points[1].x-Points[0].x)) > BEZIERPIXEL ||
-	abs(Points[2].y-Points[0].y-(dy/dx)*
-	BEZIERSHIFTDOWN(Points[2].x-Points[0].x)) > BEZIERPIXEL
-	)
-	return FALSE;
-      else
-        return TRUE;
-  }
-  else
-  {
-      /* Steep line */
-      /* Check that control points are between begin and end */
-      if(Points[1].y < Points[0].y)
-      {
-        if(Points[1].y < Points[3].y)
-	  return FALSE;
-      }
-      else if(Points[1].y > Points[3].y)
-	return FALSE;
-      if ( Points[2].y < Points[0].y )
-      {
-        if ( Points[2].y < Points[3].y )
-	  return FALSE;
-      }
-      else if ( Points[2].y > Points[3].y )
-	return FALSE;
-      dy = BEZIERSHIFTDOWN(dy);
-      if ( !dy )
-	return TRUE;
-      if ( abs(Points[1].x-Points[0].x-(dx/dy)*
-        BEZIERSHIFTDOWN(Points[1].y-Points[0].y)) > BEZIERPIXEL ||
-        abs(Points[2].x-Points[0].x-(dx/dy)*
-        BEZIERSHIFTDOWN(Points[2].y-Points[0].y)) > BEZIERPIXEL
-	)
-	return FALSE;
-      else
-        return TRUE;
+    INT dx, dy;
+    dx=Points[3].x-Points[0].x;
+    dy=Points[3].y-Points[0].y;
+    if(abs(dy)<=abs(dx)){/* shallow line */
+        /* check that control points are between begin and end */
+        if(Points[1].x < Points[0].x){
+            if(Points[1].x < Points[3].x)
+                return FALSE;
+        }else
+            if(Points[1].x > Points[3].x)
+                return FALSE;
+        if(Points[2].x < Points[0].x){
+            if(Points[2].x < Points[3].x)
+                return FALSE;
+        }else
+            if(Points[2].x > Points[3].x)
+                return FALSE;
+        dx=BEZIERSHIFTDOWN(dx);
+        if(!dx) return TRUE;
+        if(abs(Points[1].y-Points[0].y-(dy/dx)*
+                BEZIERSHIFTDOWN(Points[1].x-Points[0].x)) > BEZIERPIXEL ||
+           abs(Points[2].y-Points[0].y-(dy/dx)*
+                   BEZIERSHIFTDOWN(Points[2].x-Points[0].x)) > BEZIERPIXEL )
+            return FALSE;
+        else
+            return TRUE;
+    }else{ /* steep line */
+        /* check that control points are between begin and end */
+        if(Points[1].y < Points[0].y){
+            if(Points[1].y < Points[3].y)
+                return FALSE;
+        }else
+            if(Points[1].y > Points[3].y)
+                return FALSE;
+        if(Points[2].y < Points[0].y){
+            if(Points[2].y < Points[3].y)
+                return FALSE;
+        }else
+            if(Points[2].y > Points[3].y)
+                return FALSE;
+        dy=BEZIERSHIFTDOWN(dy);
+        if(!dy) return TRUE;
+        if(abs(Points[1].x-Points[0].x-(dx/dy)*
+                BEZIERSHIFTDOWN(Points[1].y-Points[0].y)) > BEZIERPIXEL ||
+           abs(Points[2].x-Points[0].x-(dx/dy)*
+                   BEZIERSHIFTDOWN(Points[2].y-Points[0].y)) > BEZIERPIXEL )
+            return FALSE;
+        else
+            return TRUE;
     }
 }
 
 /* Helper for GDI_Bezier.
  * Just handles one Bezier, so Points should point to four POINTs
  */
-static void APIENTRY GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
+static void GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
 				INT *nPtsOut, INT level )
 {
-  if(*nPtsOut == *dwOut) {
-    *dwOut *= 2;
-    *PtsOut = ExAllocatePoolWithTag(PagedPool, *dwOut * sizeof(POINT), TAG_BEZIER);
-    if (*PtsOut == NULL)
-    {
-        /// \todo FIXME!
-        NT_ASSERT(FALSE);
-        return;
+    if(*nPtsOut == *dwOut) {
+        *dwOut *= 2;
+        *PtsOut = ExAllocatePoolWithTag(PagedPool, *dwOut * sizeof(POINT), TAG_BEZIER);
+        if (*PtsOut == NULL)
+        {
+            /// \todo FIXME!
+            NT_ASSERT(FALSE);
+            return;
+        }
     }
-  }
 
-  if(!level || BezierCheck(level, Points)) {
-    if(*nPtsOut == 0) {
-      (*PtsOut)[0].x = BEZIERSHIFTDOWN(Points[0].x);
-      (*PtsOut)[0].y = BEZIERSHIFTDOWN(Points[0].y);
-       *nPtsOut = 1;
+    if(!level || BezierCheck(level, Points)) {
+        if(*nPtsOut == 0) {
+            (*PtsOut)[0].x = BEZIERSHIFTDOWN(Points[0].x);
+            (*PtsOut)[0].y = BEZIERSHIFTDOWN(Points[0].y);
+            *nPtsOut = 1;
+        }
+	(*PtsOut)[*nPtsOut].x = BEZIERSHIFTDOWN(Points[3].x);
+        (*PtsOut)[*nPtsOut].y = BEZIERSHIFTDOWN(Points[3].y);
+        (*nPtsOut) ++;
+    } else {
+        POINT Points2[4]; /* for the second recursive call */
+        Points2[3]=Points[3];
+        BEZIERMIDDLE(Points2[2], Points[2], Points[3]);
+        BEZIERMIDDLE(Points2[0], Points[1], Points[2]);
+        BEZIERMIDDLE(Points2[1],Points2[0],Points2[2]);
+
+        BEZIERMIDDLE(Points[1], Points[0],  Points[1]);
+        BEZIERMIDDLE(Points[2], Points[1], Points2[0]);
+        BEZIERMIDDLE(Points[3], Points[2], Points2[1]);
+
+        Points2[0]=Points[3];
+
+        /* do the two halves */
+        GDI_InternalBezier(Points, PtsOut, dwOut, nPtsOut, level-1);
+        GDI_InternalBezier(Points2, PtsOut, dwOut, nPtsOut, level-1);
     }
-    (*PtsOut)[*nPtsOut].x = BEZIERSHIFTDOWN(Points[3].x);
-    (*PtsOut)[*nPtsOut].y = BEZIERSHIFTDOWN(Points[3].y);
-    (*nPtsOut) ++;
-  } else {
-    POINT Points2[4]; /* For the second recursive call */
-    Points2[3]=Points[3];
-    BEZIERMIDDLE(Points2[2], Points[2], Points[3]);
-    BEZIERMIDDLE(Points2[0], Points[1], Points[2]);
-    BEZIERMIDDLE(Points2[1],Points2[0],Points2[2]);
-
-    BEZIERMIDDLE(Points[1], Points[0],  Points[1]);
-    BEZIERMIDDLE(Points[2], Points[1], Points2[0]);
-    BEZIERMIDDLE(Points[3], Points[2], Points2[1]);
-
-    Points2[0]=Points[3];
-
-    /* Do the two halves */
-    GDI_InternalBezier(Points, PtsOut, dwOut, nPtsOut, level-1);
-    GDI_InternalBezier(Points2, PtsOut, dwOut, nPtsOut, level-1);
-  }
 }
+
+
 
 /***********************************************************************
  *           GDI_Bezier   [INTERNAL]
@@ -191,38 +179,37 @@ static void APIENTRY GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwO
  *
  *  RETURNS
  *
- *  Ptr to an array of POINTs that contain the lines that approximinate the
+ *  Ptr to an array of POINTs that contain the lines that approximate the
  *  Beziers.  The array is allocated on the process heap and it is the caller's
  *  responsibility to HeapFree it. [this is not a particularly nice interface
- *  but since we can't know in advance how many points will generate, the
+ *  but since we can't know in advance how many points we will generate, the
  *  alternative would be to call the function twice, once to determine the size
  *  and a second time to do the work - I decided this was too much of a pain].
  */
-POINT * FASTCALL GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
+POINT *GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
 {
-  POINT *out;
-  INT Bezier, dwOut = BEZIER_INITBUFSIZE, i;
+    POINT *out;
+    INT Bezier, dwOut = BEZIER_INITBUFSIZE, i;
 
-  if((count - 1) % 3 != 0) {
-    return NULL;
-  }
-  *nPtsOut = 0;
-
-  out = ExAllocatePoolWithTag(PagedPool, dwOut * sizeof(POINT), TAG_BEZIER);
-  if(!out) {
-    return NULL;
-  }
-
-  for(Bezier = 0; Bezier < (count-1)/3; Bezier++) {
-    POINT ptBuf[4];
-    memcpy(ptBuf, Points + Bezier * 3, sizeof(POINT) * 4);
-    for(i = 0; i < 4; i++) {
-      ptBuf[i].x = BEZIERSHIFTUP(ptBuf[i].x);
-      ptBuf[i].y = BEZIERSHIFTUP(ptBuf[i].y);
+    if (count == 1 || (count - 1) % 3 != 0) {
+        DPRINT1("Invalid no. of points %d\n", count);
+	return NULL;
     }
-    GDI_InternalBezier( ptBuf, &out, &dwOut, nPtsOut, BEZIERMAXDEPTH );
-  }
+    *nPtsOut = 0;
 
-  return out;
+    out = ExAllocatePoolWithTag(PagedPool, dwOut * sizeof(POINT), TAG_BEZIER);
+    if (!out) return NULL;
+
+    for(Bezier = 0; Bezier < (count-1)/3; Bezier++) {
+	POINT ptBuf[4];
+	memcpy(ptBuf, Points + Bezier * 3, sizeof(POINT) * 4);
+	for(i = 0; i < 4; i++) {
+	    ptBuf[i].x = BEZIERSHIFTUP(ptBuf[i].x);
+	    ptBuf[i].y = BEZIERSHIFTUP(ptBuf[i].y);
+	}
+        GDI_InternalBezier( ptBuf, &out, &dwOut, nPtsOut, BEZIERMAXDEPTH );
+    }
+    DPRINT("Produced %d points\n", *nPtsOut);
+    return out;
 }
 /* EOF */
