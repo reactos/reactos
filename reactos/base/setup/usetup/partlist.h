@@ -222,18 +222,18 @@ ScrollUpPartitionList(
 VOID
 CreatePrimaryPartition(
     PPARTLIST List,
-    ULONGLONG PartitionSize,
+    ULONGLONG SectorCount,
     BOOLEAN AutoCreate);
 
 VOID
 CreateExtendedPartition(
     PPARTLIST List,
-    ULONGLONG PartitionSize);
+    ULONGLONG SectorCount);
 
 VOID
 CreateLogicalPartition(
     PPARTLIST List,
-    ULONGLONG PartitionSize);
+    ULONGLONG SectorCount);
 
 VOID
 DeleteCurrentPartition(
