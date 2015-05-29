@@ -292,34 +292,34 @@ msvcrt -
   reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
 
 User32 -
-  reactos/dll/win32/user32/controls/button.c    # Synced to Wine-1_1_39
-  reactos/dll/win32/user32/controls/combo.c     # Synced to Wine-1.5.10
-  reactos/dll/win32/user32/controls/edit.c      # Synced to Wine-1_1_40
-  reactos/dll/win32/user32/controls/icontitle.c # Synced to Wine-1_1_39
-  reactos/dll/win32/user32/controls/listbox.c   # Synced to Wine-1_1_39
-  reactos/dll/win32/user32/controls/scrollbar.c # Forked
-  reactos/dll/win32/user32/controls/static.c    # Synced to Wine-1_1_39
+  reactos/win32ss/user/user32/controls/button.c    # Synced to Wine-1_1_39
+  reactos/win32ss/user/user32/controls/combo.c     # Synced to Wine-1.5.10
+  reactos/win32ss/user/user32/controls/edit.c      # Synced to Wine-1_1_40
+  reactos/win32ss/user/user32/controls/icontitle.c # Synced to Wine-1_1_39
+  reactos/win32ss/user/user32/controls/listbox.c   # Synced to Wine-1_1_39
+  reactos/win32ss/user/user32/controls/scrollbar.c # Forked
+  reactos/win32ss/user/user32/controls/static.c    # Synced to Wine-1_1_39
 
-  reactos/dll/win32/user32/include/dde_private.h # Synced to Wine-1.1.24
+  reactos/win32ss/user/user32/include/dde_private.h # Synced to Wine-1.1.24
 
-  reactos/dll/win32/user32/misc/dde.c           # Synced to Wine-1.1.24 (dde_misc.c)
-  reactos/dll/win32/user32/misc/ddeclient.c     # Synced to Wine-1_1_23
-  reactos/dll/win32/user32/misc/ddeserver.c     # Synced to Wine-1_1_23
-  reactos/dll/win32/user32/misc/exticon.c       # Synced to Wine-1_1_22
-  reactos/dll/win32/user32/misc/resources.c     # Forked?
-  reactos/dll/win32/user32/misc/winhelp.c       # Last sync date unknown
-  reactos/dll/win32/user32/misc/wsprintf.c      # Synced to Wine-1_1_23
+  reactos/win32ss/user/user32/misc/dde.c           # Synced to Wine-1.1.24 (dde_misc.c)
+  reactos/win32ss/user/user32/misc/ddeclient.c     # Synced to Wine-1_1_23
+  reactos/win32ss/user/user32/misc/ddeserver.c     # Synced to Wine-1_1_23
+  reactos/win32ss/user/user32/misc/exticon.c       # Synced to Wine-1_1_22
+  reactos/win32ss/user/user32/misc/resources.c     # Forked?
+  reactos/win32ss/user/user32/misc/winhelp.c       # Last sync date unknown
+  reactos/win32ss/user/user32/misc/wsprintf.c      # Synced to Wine-1_1_23
 
-  reactos/dll/win32/user32/windows/cursoricon   # Forked from Wine-1.2-rc7
-  reactos/dll/win32/user32/windows/defwnd.c     # Forked
-  reactos/dll/win32/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
-  reactos/dll/win32/user32/windows/mdi.c        # Synced to Wine-1_1_40
-  reactos/dll/win32/user32/windows/menu.c       # Forked
-  reactos/dll/win32/user32/windows/messagebox.c # Forked
-  reactos/dll/win32/user32/windows/rect.c       # Forked (uitools.c)
-  reactos/dll/win32/user32/windows/spy.c        # Synced to Wine-1_1_40
-  reactos/dll/win32/user32/windows/text.c       # Forked (lstr.c)
-  reactos/dll/win32/user32/windows/winpos.c     # Forked
+  reactos/win32ss/user/user32/windows/cursoricon   # Forked from Wine-1.2-rc7
+  reactos/win32ss/user/user32/windows/defwnd.c     # Forked
+  reactos/win32ss/user/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
+  reactos/win32ss/user/user32/windows/mdi.c        # Synced to Wine-1_1_40
+  reactos/win32ss/user/user32/windows/menu.c       # Forked
+  reactos/win32ss/user/user32/windows/messagebox.c # Forked
+  reactos/win32ss/user/user32/windows/rect.c       # Forked (uitools.c)
+  reactos/win32ss/user/user32/windows/spy.c        # Synced to Wine-1_1_40
+  reactos/win32ss/user/user32/windows/text.c       # Forked (lstr.c)
+  reactos/win32ss/user/user32/windows/winpos.c     # Forked
 
 schannel.c
   reactos/dll/win32/schannel/schannel_wine.c    # synced to wine-1.7.17 (secur32/schannel.c)
