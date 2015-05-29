@@ -99,19 +99,19 @@ static void test_ntncdf(void)
     r = pNtNotifyChangeDirectoryFile(hdir,hEvent,NULL,NULL,&iosb,buffer,sizeof buffer,filter,0);
     ok(r==STATUS_PENDING, "should return status pending\n");
 
-    r = WaitForSingleObject( hEvent, 0 );
+    r = WaitForSingleObject( hEvent, 100 );
     ok( r == STATUS_TIMEOUT, "should timeout\n" );
 
-    r = WaitForSingleObject( hdir, 0 );
+    r = WaitForSingleObject( hdir, 100 );
     ok( r == STATUS_TIMEOUT, "should timeout\n" );
 
     r = CreateDirectoryW( subdir, NULL );
     ok( r == TRUE, "failed to create directory\n");
 
-    r = WaitForSingleObject( hdir, 0 );
+    r = WaitForSingleObject( hdir, 100 );
     ok( r == STATUS_TIMEOUT, "should timeout\n" );
 
-    r = WaitForSingleObject( hEvent, 0 );
+    r = WaitForSingleObject( hEvent, 100 );
     ok( r == WAIT_OBJECT_0, "event should be ready\n" );
 
     ok( U(iosb).Status == STATUS_SUCCESS, "information wrong\n");
@@ -299,7 +299,7 @@ static void test_ntncdf_async(void)
     CloseHandle(hdir);
 
     ok(U(iosb).Status == STATUS_SUCCESS, "status wrong\n");
-    todo_wine ok(U(iosb2).Status == STATUS_CANCELLED, "status wrong\n");
+    ok(U(iosb2).Status == STATUS_CANCELLED, "status wrong %x\n",U(iosb2).Status);
 
     ok(iosb.Information == 0, "info wrong\n");
     ok(iosb2.Information == 0, "info wrong\n");

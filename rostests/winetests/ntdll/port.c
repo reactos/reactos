@@ -115,7 +115,7 @@ static UNICODE_STRING port;
 static HMODULE hntdll = 0;
 static NTSTATUS (WINAPI *pNtCompleteConnectPort)(HANDLE);
 static NTSTATUS (WINAPI *pNtAcceptConnectPort)(PHANDLE,ULONG,PLPC_MESSAGE,ULONG,
-                                               ULONG,PLPC_SECTION_READ);
+                                               PLPC_SECTION_WRITE,PLPC_SECTION_READ);
 static NTSTATUS (WINAPI *pNtReplyPort)(HANDLE,PLPC_MESSAGE);
 static NTSTATUS (WINAPI *pNtReplyWaitReceivePort)(PHANDLE,PULONG,PLPC_MESSAGE,
                                                   PLPC_MESSAGE);
@@ -182,7 +182,7 @@ static void ProcessConnectionRequest(union lpc_message *LpcMessage, PHANDLE pAcc
         ok(!*LpcMessage->msg.Data, "Expected empty string!\n");
     }
 
-    status = pNtAcceptConnectPort(pAcceptPortHandle, 0, &LpcMessage->msg, 1, 0, NULL);
+    status = pNtAcceptConnectPort(pAcceptPortHandle, 0, &LpcMessage->msg, 1, NULL, NULL);
     ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
     
     status = pNtCompleteConnectPort(*pAcceptPortHandle);

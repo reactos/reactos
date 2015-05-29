@@ -111,6 +111,16 @@ static inline BOOL is_signaled( HANDLE obj )
     return WaitForSingleObject( obj, 0 ) == WAIT_OBJECT_0;
 }
 
+static const char* debugstr_longlong(ULONGLONG ll)
+{
+    static char str[17];
+    if (sizeof(ll) > sizeof(unsigned long) && ll >> 32)
+        sprintf(str, "%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll);
+    else
+        sprintf(str, "%lx", (unsigned long)ll);
+    return str;
+}
+
 #define PIPENAME "\\\\.\\pipe\\ntdll_tests_file.c"
 #define TEST_BUF_LEN 3
 
@@ -685,7 +695,7 @@ static void read_file_test(void)
     ok( U(iosb).Status == STATUS_CANCELLED, "wrong status %x\n", U(iosb).Status );
     ok( iosb.Information == 0, "wrong info %lu\n", iosb.Information );
     ok( is_signaled( event ), "event is signaled\n" );
-    todo_wine ok( !apc_count, "apc was called\n" );
+    ok( !apc_count, "apc was called\n" );
     SleepEx( 1, TRUE ); /* alertable sleep */
     ok( apc_count == 1, "apc was not called\n" );
 
@@ -711,7 +721,7 @@ static void read_file_test(void)
     ok( U(iosb).Status == STATUS_CANCELLED, "wrong status %x\n", U(iosb).Status );
     ok( iosb.Information == 0, "wrong info %lu\n", iosb.Information );
     ok( is_signaled( event ), "event is signaled\n" );
-    todo_wine ok( !apc_count, "apc was called\n" );
+    ok( !apc_count, "apc was called\n" );
     SleepEx( 1, TRUE ); /* alertable sleep */
     ok( apc_count == 1, "apc was not called\n" );
     CloseHandle( handle );
@@ -737,7 +747,7 @@ static void read_file_test(void)
         ok( U(iosb).Status == STATUS_CANCELLED, "wrong status %x\n", U(iosb).Status );
         ok( iosb.Information == 0, "wrong info %lu\n", iosb.Information );
         ok( is_signaled( event ), "event is signaled\n" );
-        todo_wine ok( !apc_count, "apc was called\n" );
+        ok( !apc_count, "apc was called\n" );
         SleepEx( 1, TRUE ); /* alertable sleep */
         ok( apc_count == 1, "apc was not called\n" );
 
@@ -763,7 +773,7 @@ static void read_file_test(void)
         ok( U(iosb).Status == STATUS_CANCELLED, "wrong status %x\n", U(iosb).Status );
         ok( iosb.Information == 0, "wrong info %lu\n", iosb.Information );
         ok( is_signaled( event ), "event is signaled\n" );
-        todo_wine ok( !apc_count, "apc was called\n" );
+        ok( !apc_count, "apc was called\n" );
         SleepEx( 1, TRUE ); /* alertable sleep */
         ok( apc_count == 2, "apc was not called\n" );
 
@@ -1232,6 +1242,62 @@ static void test_iocp_fileio(HANDLE h)
     CloseHandle( hPipeClt );
 }
 
+static void test_file_full_size_information(void)
+{
+    IO_STATUS_BLOCK io;
+    FILE_FS_FULL_SIZE_INFORMATION ffsi;
+    FILE_FS_SIZE_INFORMATION fsi;
+    HANDLE h;
+    NTSTATUS res;
+
+    if(!(h = create_temp_file(0))) return ;
+
+    memset(&ffsi,0,sizeof(ffsi));
+    memset(&fsi,0,sizeof(fsi));
+
+    /* Assume No Quota Settings configured on Wine Testbot */
+    res = pNtQueryVolumeInformationFile(h, &io, &ffsi, sizeof ffsi, FileFsFullSizeInformation);
+    ok(res == STATUS_SUCCESS, "cannot get attributes, res %x\n", res);
+    res = pNtQueryVolumeInformationFile(h, &io, &fsi, sizeof fsi, FileFsSizeInformation);
+    ok(res == STATUS_SUCCESS, "cannot get attributes, res %x\n", res);
+
+    /* Test for FileFsSizeInformation */
+    ok(fsi.TotalAllocationUnits.QuadPart > 0,
+        "[fsi] TotalAllocationUnits expected positive, got 0x%s\n",
+        debugstr_longlong(fsi.TotalAllocationUnits.QuadPart));
+    ok(fsi.AvailableAllocationUnits.QuadPart > 0,
+        "[fsi] AvailableAllocationUnits expected positive, got 0x%s\n",
+        debugstr_longlong(fsi.AvailableAllocationUnits.QuadPart));
+
+    /* Assume file system is NTFS */
+    ok(fsi.BytesPerSector == 512, "[fsi] BytesPerSector expected 512, got %d\n",fsi.BytesPerSector);
+    ok(fsi.SectorsPerAllocationUnit == 8, "[fsi] SectorsPerAllocationUnit expected 8, got %d\n",fsi.SectorsPerAllocationUnit);
+
+    ok(ffsi.TotalAllocationUnits.QuadPart > 0,
+        "[ffsi] TotalAllocationUnits expected positive, got negative value 0x%s\n",
+        debugstr_longlong(ffsi.TotalAllocationUnits.QuadPart));
+    ok(ffsi.CallerAvailableAllocationUnits.QuadPart > 0,
+        "[ffsi] CallerAvailableAllocationUnits expected positive, got negative value 0x%s\n",
+        debugstr_longlong(ffsi.CallerAvailableAllocationUnits.QuadPart));
+    ok(ffsi.ActualAvailableAllocationUnits.QuadPart > 0,
+        "[ffsi] ActualAvailableAllocationUnits expected positive, got negative value 0x%s\n",
+        debugstr_longlong(ffsi.ActualAvailableAllocationUnits.QuadPart));
+    ok(ffsi.TotalAllocationUnits.QuadPart == fsi.TotalAllocationUnits.QuadPart,
+        "[ffsi] TotalAllocationUnits error fsi:0x%s, ffsi:0x%s\n",
+        debugstr_longlong(fsi.TotalAllocationUnits.QuadPart),
+        debugstr_longlong(ffsi.TotalAllocationUnits.QuadPart));
+    ok(ffsi.CallerAvailableAllocationUnits.QuadPart == fsi.AvailableAllocationUnits.QuadPart,
+        "[ffsi] CallerAvailableAllocationUnits error fsi:0x%s, ffsi: 0x%s\n",
+        debugstr_longlong(fsi.AvailableAllocationUnits.QuadPart),
+        debugstr_longlong(ffsi.CallerAvailableAllocationUnits.QuadPart));
+
+    /* Assume file system is NTFS */
+    ok(ffsi.BytesPerSector == 512, "[ffsi] BytesPerSector expected 512, got %d\n",ffsi.BytesPerSector);
+    ok(ffsi.SectorsPerAllocationUnit == 8, "[ffsi] SectorsPerAllocationUnit expected 8, got %d\n",ffsi.SectorsPerAllocationUnit);
+
+    CloseHandle( h );
+}
+
 static void test_file_basic_information(void)
 {
     IO_STATUS_BLOCK io;
@@ -1382,11 +1448,12 @@ static void test_file_disposition_information(void)
 {
     char tmp_path[MAX_PATH], buffer[MAX_PATH + 16];
     DWORD dirpos;
-    HANDLE handle, handle2;
+    HANDLE handle, handle2, mapping;
     NTSTATUS res;
     IO_STATUS_BLOCK io;
     FILE_DISPOSITION_INFORMATION fdi;
     BOOL fileDeleted;
+    void *ptr;
 
     GetTempPathA( MAX_PATH, tmp_path );
 
@@ -1550,6 +1617,72 @@ static void test_file_disposition_information(void)
     todo_wine
     ok( !fileDeleted, "Directory shouldn't have been deleted\n" );
     RemoveDirectoryA( buffer );
+
+    /* cannot set disposition on file with file mapping opened */
+    GetTempFileNameA( tmp_path, "dis", 0, buffer );
+    handle = CreateFileA(buffer, GENERIC_READ | GENERIC_WRITE | DELETE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok( handle != INVALID_HANDLE_VALUE, "failed to create temp file\n" );
+    mapping = CreateFileMappingA( handle, NULL, PAGE_READWRITE, 0, 64 * 1024, "DelFileTest" );
+    ok( mapping != NULL, "failed to create file mapping\n");
+    fdi.DoDeleteFile = TRUE;
+    res = pNtSetInformationFile( handle, &io, &fdi, sizeof fdi, FileDispositionInformation );
+    ok( res == STATUS_CANNOT_DELETE, "unexpected FileDispositionInformation result (expected STATUS_CANNOT_DELETE, got %x)\n", res );
+    CloseHandle( handle );
+    fileDeleted = GetFileAttributesA( buffer ) == INVALID_FILE_ATTRIBUTES && GetLastError() == ERROR_FILE_NOT_FOUND;
+    ok( !fileDeleted, "File shouldn't have been deleted\n" );
+    CloseHandle( mapping );
+    DeleteFileA( buffer );
+
+    /* can set disposition on file with file mapping closed */
+    GetTempFileNameA( tmp_path, "dis", 0, buffer );
+    handle = CreateFileA(buffer, GENERIC_READ | GENERIC_WRITE | DELETE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok( handle != INVALID_HANDLE_VALUE, "failed to create temp file\n" );
+    mapping = CreateFileMappingA( handle, NULL, PAGE_READWRITE, 0, 64 * 1024, "DelFileTest" );
+    ok( mapping != NULL, "failed to create file mapping\n");
+    CloseHandle( mapping );
+    fdi.DoDeleteFile = TRUE;
+    res = pNtSetInformationFile( handle, &io, &fdi, sizeof fdi, FileDispositionInformation );
+    ok( res == STATUS_SUCCESS, "unexpected FileDispositionInformation result (expected STATUS_SUCCESS, got %x)\n", res );
+    CloseHandle( handle );
+    fileDeleted = GetFileAttributesA( buffer ) == INVALID_FILE_ATTRIBUTES && GetLastError() == ERROR_FILE_NOT_FOUND;
+    ok( fileDeleted, "File should have been deleted\n" );
+    DeleteFileA( buffer );
+
+    /* cannot set disposition on file which is mapped to memory */
+    GetTempFileNameA( tmp_path, "dis", 0, buffer );
+    handle = CreateFileA(buffer, GENERIC_READ | GENERIC_WRITE | DELETE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok( handle != INVALID_HANDLE_VALUE, "failed to create temp file\n" );
+    mapping = CreateFileMappingA( handle, NULL, PAGE_READWRITE, 0, 64 * 1024, "DelFileTest" );
+    ok( mapping != NULL, "failed to create file mapping\n");
+    ptr = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 4096 );
+    ok( ptr != NULL, "MapViewOfFile failed\n");
+    CloseHandle( mapping );
+    fdi.DoDeleteFile = TRUE;
+    res = pNtSetInformationFile( handle, &io, &fdi, sizeof fdi, FileDispositionInformation );
+    ok( res == STATUS_CANNOT_DELETE, "unexpected FileDispositionInformation result (expected STATUS_CANNOT_DELETE, got %x)\n", res );
+    CloseHandle( handle );
+    fileDeleted = GetFileAttributesA( buffer ) == INVALID_FILE_ATTRIBUTES && GetLastError() == ERROR_FILE_NOT_FOUND;
+    ok( !fileDeleted, "File shouldn't have been deleted\n" );
+    UnmapViewOfFile( ptr );
+    DeleteFileA( buffer );
+
+    /* can set disposition on file which is mapped to memory and unmapped again */
+    GetTempFileNameA( tmp_path, "dis", 0, buffer );
+    handle = CreateFileA(buffer, GENERIC_READ | GENERIC_WRITE | DELETE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok( handle != INVALID_HANDLE_VALUE, "failed to create temp file\n" );
+    mapping = CreateFileMappingA( handle, NULL, PAGE_READWRITE, 0, 64 * 1024, "DelFileTest" );
+    ok( mapping != NULL, "failed to create file mapping\n");
+    ptr = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 4096 );
+    ok( ptr != NULL, "MapViewOfFile failed\n");
+    CloseHandle( mapping );
+    UnmapViewOfFile( ptr );
+    fdi.DoDeleteFile = TRUE;
+    res = pNtSetInformationFile( handle, &io, &fdi, sizeof fdi, FileDispositionInformation );
+    ok( res == STATUS_SUCCESS, "unexpected FileDispositionInformation result (expected STATUS_SUCCESS, got %x)\n", res );
+    CloseHandle( handle );
+    fileDeleted = GetFileAttributesA( buffer ) == INVALID_FILE_ATTRIBUTES && GetLastError() == ERROR_FILE_NOT_FOUND;
+    ok( fileDeleted, "File should have been deleted\n" );
+    DeleteFileA( buffer );
 }
 
 static void test_iocompletion(void)
@@ -2496,7 +2629,6 @@ static void test_read_write(void)
     ret = ReadFile(hfile, buf, 0, &bytes, &ovl);
     /* ReadFile return value depends on Windows version and testing it is not practical */
     if (!ret)
-todo_wine
         ok(GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %d\n", GetLastError());
     ret = GetLastError();
     ok(bytes == 0, "bytes %u\n", bytes);
@@ -2527,7 +2659,6 @@ todo_wine
     ret = ReadFile(hfile, NULL, 0, &bytes, &ovl);
     /* ReadFile return value depends on Windows version and testing it is not practical */
     if (!ret)
-todo_wine
         ok(GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %d\n", GetLastError());
     ret = GetLastError();
     ok(bytes == 0, "bytes %u\n", bytes);
@@ -2676,6 +2807,8 @@ todo_wine
     {
         ok(GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %d\n", GetLastError());
         ok(bytes == 0, "bytes %u\n", bytes);
+        ret = WaitForSingleObject(hfile, 3000);
+        ok(ret == WAIT_OBJECT_0, "WaitForSingleObject error %d\n", ret);
     }
     else ok(bytes == 4, "bytes %u\n", bytes);
     ok((NTSTATUS)ovl.Internal == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %#lx\n", ovl.Internal);
@@ -2707,6 +2840,8 @@ todo_wine
     {
         ok(GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %d\n", GetLastError());
         ok(bytes == 0, "bytes %u\n", bytes);
+        ret = WaitForSingleObject(hfile, 3000);
+        ok(ret == WAIT_OBJECT_0, "WaitForSingleObject error %d\n", ret);
     }
     else ok(bytes == 14, "bytes %u\n", bytes);
     ok((NTSTATUS)ovl.Internal == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %#lx\n", ovl.Internal);
@@ -2951,6 +3086,7 @@ START_TEST(file)
     test_file_all_information();
     test_file_both_information();
     test_file_name_information();
+    test_file_full_size_information();
     test_file_all_name_information();
     test_file_disposition_information();
     test_query_volume_information_file();

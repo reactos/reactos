@@ -64,6 +64,7 @@ static inline USHORT __my_ushort_swap(USHORT s)
 /* Function ptrs for ntdll calls */
 static HMODULE hntdll = 0;
 static PVOID     (WINAPI *pWinSqmStartSession)(PVOID unknown1, DWORD unknown2, DWORD unknown3);
+static BOOL      (WINAPI *pWinSqmIsOptedIn)(void);
 static NTSTATUS  (WINAPI *pWinSqmEndSession)(PVOID unknown1);
 static SIZE_T    (WINAPI  *pRtlCompareMemory)(LPCVOID,LPCVOID,SIZE_T);
 static SIZE_T    (WINAPI  *pRtlCompareMemoryUlong)(PULONG, SIZE_T, ULONG);
@@ -125,6 +126,7 @@ static void InitFunctionPtrs(void)
     ok(hntdll != 0, "LoadLibrary failed\n");
     if (hntdll) {
         pWinSqmStartSession = (void *)GetProcAddress(hntdll, "WinSqmStartSession");
+        pWinSqmIsOptedIn = (void *)GetProcAddress(hntdll, "WinSqmIsOptedIn");
         pWinSqmEndSession = (void *)GetProcAddress(hntdll, "WinSqmEndSession");
 	pRtlCompareMemory = (void *)GetProcAddress(hntdll, "RtlCompareMemory");
 	pRtlCompareMemoryUlong = (void *)GetProcAddress(hntdll, "RtlCompareMemoryUlong");
@@ -211,6 +213,8 @@ static void test_WinSqm(void)
 
     args = 3 - call_stdcall_func3( pWinSqmStartSession, NULL, 0, 0 ) / 4;
     ok(args == 3, "WinSqmStartSession expected to take %d arguments instead of 3\n", args);
+    args = 3 - call_stdcall_func3( pWinSqmIsOptedIn, NULL, 0, 0 ) / 4;
+    ok(args == 0, "WinSqmIsOptedIn expected to take %d arguments instead of 0\n", args);
     args = 3 - call_stdcall_func3( pWinSqmEndSession, NULL, 0, 0 ) / 4;
     ok(args == 1, "WinSqmEndSession expected to take %d arguments instead of 1\n", args);
 
