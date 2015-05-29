@@ -165,7 +165,6 @@ elseif(ARCH STREQUAL "arm")
         math/arm/log.s
         math/arm/log10.s
         math/arm/pow.s
-        math/arm/sqrt.s
         math/arm/tan.s
         math/arm/__dtoi64.s
         math/arm/__dtou64.s

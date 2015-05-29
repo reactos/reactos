@@ -477,6 +477,7 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND CRT_SOURCE
         except/arm/ehandler.c
         math/fabsf.c
+        math/sqrt.c
         math/arm/__rt_sdiv.c
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
