@@ -1508,9 +1508,7 @@ ftGdiGlyphCacheSet(
 }
 
 
-static
-void
-FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
+static void FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
 {
     pt->x.value = vec->x >> 6;
     pt->x.fract = (vec->x & 0x3f) << 10;
@@ -1518,7 +1516,6 @@ FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
     pt->y.value = vec->y >> 6;
     pt->y.fract = (vec->y & 0x3f) << 10;
     pt->y.fract |= ((pt->y.fract >> 6) | (pt->y.fract >> 12));
-    return;
 }
 
 /*
