@@ -162,11 +162,31 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
 
         if (dwPointSize != 0)
             Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
+        else
+            Globals.lfFont.lfHeight = HeightFromPointSize(100);
 
         RegCloseKey(hKey);
     }
+    else
+    {
+        /* If no settings are found in the registry, then use default values */
+        Globals.lfFont.lfCharSet = 163;
+        Globals.lfFont.lfClipPrecision = 2;
+        Globals.lfFont.lfEscapement = 0;
+        _tcscpy(Globals.lfFont.lfFaceName, _T("Arial"));
+        Globals.lfFont.lfItalic = 0;
+        Globals.lfFont.lfOrientation = 0;
+        Globals.lfFont.lfOutPrecision = 3;
+        Globals.lfFont.lfPitchAndFamily = 34;
+        Globals.lfFont.lfQuality = 1;
+        Globals.lfFont.lfStrikeOut = 0;
+        Globals.lfFont.lfUnderline = 0;
+        Globals.lfFont.lfWeight = 400;
+        Globals.lfFont.lfHeight = HeightFromPointSize(100);
+    }
 
     hFont = CreateFontIndirect(&Globals.lfFont);
+    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)hFont, (LPARAM)TRUE);
     if (hFont)
     {
         if (Globals.hFont)
@@ -199,7 +219,7 @@ void NOTEPAD_SaveSettingsToRegistry(void)
     GetWindowRect(Globals.hMainWnd, &Globals.main_rect);
 
     if (RegCreateKeyEx(HKEY_CURRENT_USER, s_szRegistryKey,
-                       0, NULL, 0, KEY_ALL_ACCESS, NULL,
+                       0, NULL, 0, KEY_SET_VALUE, NULL,
                        &hKey, &dwDisposition) == ERROR_SUCCESS)
     {
         SaveDword(hKey, _T("lfCharSet"), Globals.lfFont.lfCharSet);
