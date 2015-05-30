@@ -15,7 +15,7 @@ class CDeviceView : public CDevices
     HWND m_hMainWnd;
     HWND m_hTreeView;
     HWND m_hPropertyDialog;
-    HWND m_hShortcutMenu;
+    HMENU m_hShortcutMenu;
     ListDevices m_ListDevices;
 
     HIMAGELIST m_ImageList;
@@ -34,6 +34,11 @@ public:
     BOOL Initialize();
     BOOL Uninitialize();
 
+    VOID ShowContextMenu(
+        _In_ INT xPos,
+        _In_ INT yPos
+        );
+    
     VOID Size(
         _In_ INT x,
         _In_ INT y,

@@ -449,6 +449,10 @@ CMainWindow::OnNotify(LPARAM lParam)
 LRESULT
 CMainWindow::OnContext(LPARAM lParam)
 {
+    INT xPos = GET_X_LPARAM(lParam);
+    INT yPos = GET_Y_LPARAM(lParam);
+
+    m_DeviceView->ShowContextMenu(xPos, yPos);
     return 0;
 }
 

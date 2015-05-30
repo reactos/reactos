@@ -53,6 +53,8 @@ CDeviceView::~CDeviceView(void)
 {
     delete m_Devices;
     m_Devices = NULL;
+
+    DestroyMenu(m_hShortcutMenu);
 }
 
 BOOL
@@ -63,6 +65,14 @@ CDeviceView::Initialize()
     /* Initialize the devices class */
     bSuccess = m_Devices->Initialize();
     if (bSuccess == FALSE) return FALSE;
+
+    /* Create Popup Menu */
+    m_hShortcutMenu = LoadMenu(g_hInstance,
+                                   MAKEINTRESOURCE(IDR_POPUP));
+    m_hShortcutMenu = GetSubMenu(m_hShortcutMenu,
+                                     0);
+    SetMenuDefaultItem(m_hShortcutMenu, IDC_PROP, FALSE);
+
 
     /* Create the main treeview */
     m_hTreeView = CreateWindowExW(WS_EX_CLIENTEDGE,
@@ -100,6 +110,36 @@ CDeviceView::Uninitialize()
     (VOID)m_Devices->Uninitialize();
 
     return TRUE;
+}
+
+VOID
+CDeviceView::ShowContextMenu(
+    _In_ INT xPos,
+    _In_ INT yPos)
+{
+    HTREEITEM hSelected;
+    POINT pt;
+    RECT rc;
+
+    hSelected = TreeView_GetSelection(m_hTreeView);
+
+    if (TreeView_GetItemRect(m_hTreeView,
+                         hSelected,
+                         &rc,
+                         TRUE))
+    {
+        if (GetCursorPos(&pt) &&
+            ScreenToClient(m_hTreeView, &pt) &&
+            PtInRect(&rc, pt))
+        {
+            TrackPopupMenuEx(m_hShortcutMenu,
+                             TPM_RIGHTBUTTON,
+                             xPos,
+                             yPos,
+                             m_hMainWnd,
+                             NULL);
+        }
+    }
 }
 
 VOID
