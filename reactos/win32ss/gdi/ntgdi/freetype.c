@@ -2027,11 +2027,11 @@ ftGdiGetGlyphOutline(
 
     IntUnLockFreeType;
 
-    if (pgm) RtlCopyMemory(pgm, &gm, sizeof(GLYPHMETRICS));
 
     if (iFormat == GGO_METRICS)
     {
         DPRINT("GGO_METRICS Exit!\n");
+        *pgm = gm;
         return 1; /* FIXME */
     }
 
@@ -2234,6 +2234,7 @@ ftGdiGetGlyphOutline(
     }
 
     DPRINT("ftGdiGetGlyphOutline END and needed %lu\n", needed);
+    *pgm = gm;
     return needed;
 }
 
