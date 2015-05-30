@@ -126,7 +126,11 @@ VdmMenuExists(HMENU hConsoleMenu)
     for (i = 0; i <= MenuPos; i++)
     {
         if (GetMenuItemID(hConsoleMenu, i) == ID_SHOWHIDE_MOUSE)
+        {
+            /* set VdmMenuPos to the position of the existing menu */
+            VdmMenuPos = i - 1;
             return TRUE;
+        }
     }
     return FALSE;
 }
@@ -141,8 +145,6 @@ CreateVdmMenu(HANDLE ConOutHandle)
 
     /* Get the position where we are going to insert our menu items */
     VdmMenuPos = GetMenuItemCount(hConsoleMenu);
-    // FIXME: What happens if the menu already exist?
-    // VdmMenuPos points *after* the already existing menu!
 
     /* Really add the menu if it doesn't already exist (in case eg. NTVDM crashed) */
     if (!VdmMenuExists(hConsoleMenu))
