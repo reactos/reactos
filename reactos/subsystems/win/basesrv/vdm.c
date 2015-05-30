@@ -976,6 +976,13 @@ CSR_API(BaseSrvGetNextVDMCommand)
                 goto Cleanup;
             }
 
+            /* Check if the console handle hasn't been set yet */
+            if (ConsoleRecord->ConsoleHandle == NULL)
+            {
+                /* Set it now */
+                ConsoleRecord->ConsoleHandle = GetNextVdmCommandRequest->ConsoleHandle;
+            }
+
             /* Fill the command information */
             Status = BaseSrvFillCommandInfo(DosRecord->CommandInfo, GetNextVdmCommandRequest);
             goto Cleanup;
@@ -1204,7 +1211,7 @@ CSR_API(BaseSrvGetVDMExitCode)
     }
 
     /* Check if this task is still running */
-    if (DosRecord->State == VDM_READY)
+    if (DosRecord->State != VDM_READY)
     {
         GetVDMExitCodeRequest->ExitCode = STATUS_PENDING;
         goto Cleanup;

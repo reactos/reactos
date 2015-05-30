@@ -217,6 +217,14 @@ CommandThreadProc(LPVOID Parameter)
     UNREFERENCED_PARAMETER(Parameter);
     ASSERT(Env);
 
+    /* Clear the structure */
+    RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
+
+    /* Get the initial information */
+    CommandInfo.TaskId = SessionId;
+    CommandInfo.VDMState = VDM_GET_FIRST_COMMAND | VDM_FLAG_DOS;
+    GetNextVDMCommand(&CommandInfo);
+
     do
     {
         /* Clear the structure */
