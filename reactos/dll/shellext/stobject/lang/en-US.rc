@@ -19,7 +19,6 @@ BEGIN
     //Power related strings
     IDS_PWR_PROPERTIES        "&Adjust Power Properties"
     IDS_PWR_METER             "&Open Power Meter"
-    IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%1!u!%% remaining"
     IDS_PWR_CHARGING          " (charging)"
     IDS_PWR_UNKNOWN_REMAINING "Unknown remaining"
@@ -31,7 +30,6 @@ BEGIN
     IDS_HOTPLUG_REMOVE_1 "Safely Remove Hardware"
     IDS_HOTPLUG_REMOVE_2 "&Safely Remove Hardware"
     IDS_HOTPLUG_REMOVE_3 "Safely remove %s"
-    IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
     IDS_HOTPLUG_COMMA ", "
     IDS_HOTPLUG_DRIVE " - Drive(%s)"
     IDS_HOTPLUG_DRIVES " - Drives(%s)"
@@ -43,7 +41,6 @@ BEGIN
     IDS_VOL_VOLUME "Volume"
     IDS_VOL_ADJUST "&Adjust Audio Properties"
     IDS_VOL_OPEN "&Open Volume Control"
-    IDS_VOL_RUN "SNDVOL32.EXE"
     IDS_VOL_MUTED "Volume (muted)"
 
     //Keyboard-Mouse related strings
