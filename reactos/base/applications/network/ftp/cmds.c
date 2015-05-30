@@ -1842,10 +1842,10 @@ dotrans(const char *name)
     char *cp2 = new;
 	register int i, ostop, found;
 
-	for (ostop = 0; *(ntout + ostop) && ostop < 16; ostop++);
+	for (ostop = 0; ostop < 16 && *(ntout + ostop); ostop++);
 	for (cp1 = name; *cp1; cp1++) {
 		found = 0;
-		for (i = 0; *(ntin + i) && i < 16; i++) {
+		for (i = 0; i < 16 && *(ntin + i); i++) {
 			if (*cp1 == *(ntin + i)) {
 				found++;
 				if (i < ostop) {
