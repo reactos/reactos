@@ -1075,7 +1075,7 @@ VOID DIALOG_GoTo(VOID)
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
     nLine = 1;
-    for (i = 0; pszText[i] && (i < (int) dwStart); i++)
+    for (i = 0; (i < (int) dwStart) && pszText[i]; i++)
     {
         if (pszText[i] == '\n')
             nLine++;
