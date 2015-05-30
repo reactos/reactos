@@ -163,7 +163,7 @@ static int NetBTNameEncode(const UCHAR *p, UCHAR *buffer)
     if (!buffer) return 0;
 
     buffer[len++] = NCBNAMSZ * 2;
-    for (i = 0; p[i] && i < NCBNAMSZ; i++)
+    for (i = 0; i < NCBNAMSZ && p[i]; i++)
     {
         buffer[len++] = ((p[i] & 0xf0) >> 4) + 'A';
         buffer[len++] =  (p[i] & 0x0f) + 'A';
