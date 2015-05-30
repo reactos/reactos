@@ -8,19 +8,19 @@ BEGIN
   END
   POPUP "Aktion"
   BEGIN
-    MENUITEM "Scan for hardware changes",    IDC_REFRESH
-    MENUITEM "Drucken",                   IDC_PRINT, GRAYED
+    MENUITEM "Nach Hardwareänderungen suchen", IDC_REFRESH
+    MENUITEM "Drucken",                        IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Eigenschaften",              IDC_PROP, GRAYED
+    MENUITEM "Eigenschaften",                  IDC_PROP, GRAYED
   END
   POPUP "Ansicht"
   BEGIN
-    MENUITEM "Geräte nach Typ",              IDC_DEVBYTYPE
-    MENUITEM "Geräte nach Verbindung",       IDC_DEVBYCONN
-    MENUITEM "Resourcen nach Typ",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resourcen nach Verbindung",    IDC_RESBYCONN, GRAYED
+    MENUITEM "Geräte nach Typ",                IDC_DEVBYTYPE
+    MENUITEM "Geräte nach Verbindung",         IDC_DEVBYCONN
+    MENUITEM "Ressourcen nach Typ",            IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ressourcen nach Verbindung",     IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Ausgeblendete Geräte anzeigen",  IDC_SHOWHIDDEN
   END
   POPUP "&?"
   BEGIN
@@ -70,10 +70,10 @@ BEGIN
   IDS_HINT_HELP         " Hilfe-Fenster anzeigen."
   IDS_HINT_ABOUT        " Über ReactOS Geräte-Manager."
 
-  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
-  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
-  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
-  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
+  IDS_HINT_DEV_BY_TYPE  "Geräte nach Typ anzeigen"
+  IDS_HINT_DEV_BY_CONN  "Geräte nach Verbindung anzeigen"
+  IDS_HINT_RES_BY_TYPE  "Resourcen nach Typ anzeigen"
+  IDS_HINT_RES_BY_CONN  "Resourcen nach Verbindung anzeigen"
 
   IDS_HINT_SYS_RESTORE  " Dieses Fenster auf normale Größe wiederherstellen."
   IDS_HINT_SYS_MOVE     " Dieses Fenster verschieben."
