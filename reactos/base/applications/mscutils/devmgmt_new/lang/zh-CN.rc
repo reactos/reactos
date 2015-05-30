@@ -12,16 +12,19 @@ BEGIN
   END
   POPUP "动作"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "打印",                     IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "属性",                     IDC_PROP, GRAYED
   END
   POPUP "查看"
   BEGIN
-    MENUITEM "设备，按类型",              IDC_DEVBYTYPE, CHECKED
-    MENUITEM "设备，按连接",              IDC_STATIC, GRAYED
-    MENUITEM "资源，按类型",              IDC_STATIC, GRAYED
-    MENUITEM "资源，按连接",              IDC_STATIC, GRAYED
+    MENUITEM "设备，按类型",    IDC_DEVBYTYPE
+    MENUITEM "设备，按连接",    IDC_DEVBYCONN
+    MENUITEM "资源，按类型",    IDC_RESBYTYPE, GRAYED
+    MENUITEM "资源，按连接",    IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "帮助"
   BEGIN
@@ -42,7 +45,7 @@ CAPTION "关于设备管理器"
 FONT 9,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "设备管理器 v0.1\版权所有 (C) 2006\n作者 Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
+  LTEXT "设备管理器 v0.2\n版权所有 (C) 2012\n作者 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "关闭", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -58,7 +61,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "属性"
   IDS_TOOLTIP_REFRESH   "刷新"
   IDS_TOOLTIP_HELP      "帮助"
-  IDS_TOOLTIP_EXIT      "退出"
 END
 
 /* Hints */
@@ -71,6 +73,11 @@ BEGIN
   IDS_HINT_PROP         " 为当前选择项打开属性页。"
   IDS_HINT_HELP         " 显示帮助窗口。"
   IDS_HINT_ABOUT        " 关于 ReactOS 设备管理器。"
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " 将窗口恢复到默认大小。"
   IDS_HINT_SYS_MOVE     " 移动这个窗口。"

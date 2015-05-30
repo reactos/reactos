@@ -8,16 +8,19 @@ BEGIN
   END
   POPUP "פעולות"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "הדפס",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "מאפיינים",              IDC_PROP, GRAYED
   END
   POPUP "תצוגה"
   BEGIN
-    MENUITEM "התקנים לפי סוג",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "התקנים לפי חיבור",   IDC_STATIC, GRAYED
-    MENUITEM "משאבים לפי סוג",       IDC_STATIC, GRAYED
-    MENUITEM "משאבים לפי חיבור", IDC_STATIC, GRAYED
+    MENUITEM "התקנים לפי סוג",     IDC_DEVBYTYPE
+    MENUITEM "התקנים לפי חיבור",   IDC_DEVBYCONN
+    MENUITEM "משאבים לפי סוג",     IDC_RESBYTYPE, GRAYED
+    MENUITEM "משאבים לפי חיבור",   IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "עזרה"
   BEGIN
@@ -38,7 +41,7 @@ CAPTION "אודות מנהל ההתקנים"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Device Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
+  LTEXT "Device Manager v0.1\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "סגור", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -54,7 +57,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "מאפיינים"
   IDS_TOOLTIP_REFRESH   "רענן"
   IDS_TOOLTIP_HELP      "עזרה"
-  IDS_TOOLTIP_EXIT      "יציאה"
 END
 
 /* Hints */
@@ -67,6 +69,11 @@ BEGIN
   IDS_HINT_PROP         " Open property sheet for the current selection."
   IDS_HINT_HELP         " Display help window."
   IDS_HINT_ABOUT        " אודות מנהל ההתקנים של ReactOS"
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
   IDS_HINT_SYS_MOVE     " Moves this window."

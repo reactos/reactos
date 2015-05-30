@@ -8,16 +8,19 @@ BEGIN
   END
   POPUP "Aksi"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "Cetak",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Properti",                IDC_PROP, GRAYED
   END
   POPUP "Lihat"
   BEGIN
-    MENUITEM "Device dengan tipe",      IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Device dengan koneksi",   IDC_STATIC, GRAYED
-    MENUITEM "Resource dengan tipe",    IDC_STATIC, GRAYED
-    MENUITEM "Resource dengan koneksi", IDC_STATIC, GRAYED
+    MENUITEM "Device dengan tipe",         IDC_DEVBYTYPE
+    MENUITEM "Device dengan koneksi",      IDC_DEVBYCONN
+    MENUITEM "Resource dengan tipe",       IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resource dengan koneksi",    IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Bantuan"
   BEGIN
@@ -38,7 +41,7 @@ CAPTION "Tentang Manajer Device"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Manajer Device v0.1\nHak Cipta (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Manajer Device v0.1\nHak Cipta (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Tutup", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -54,7 +57,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "Properti"
   IDS_TOOLTIP_REFRESH   "Segarkan"
   IDS_TOOLTIP_HELP      "Bantuan"
-  IDS_TOOLTIP_EXIT      "Keluar"
 END
 
 /* Hints */
@@ -67,6 +69,11 @@ BEGIN
   IDS_HINT_PROP         " VBuka lembar properti untuk pilihan saat ini."
   IDS_HINT_HELP         " Menampilkan jendela bantuan."
   IDS_HINT_ABOUT        " Tentang Manajer Device ReactOS."
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Menyimpan kembali jendela ini ke ukuran normal."
   IDS_HINT_SYS_MOVE     " Memindahkan jendela ini."

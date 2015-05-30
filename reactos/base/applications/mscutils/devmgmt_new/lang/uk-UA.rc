@@ -16,16 +16,19 @@ BEGIN
   END
   POPUP "Дія"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "Друк",                    IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Властивості",             IDC_PROP, GRAYED
   END
   POPUP "Вигляд"
   BEGIN
-    MENUITEM "Пристрої за типом",       IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Пристрої за підключенням",   IDC_STATIC, GRAYED
-    MENUITEM "Ресурси за типом",        IDC_STATIC, GRAYED
-    MENUITEM "Ресурси за підключенням", IDC_STATIC, GRAYED
+    MENUITEM "Пристрої за типом",           IDC_DEVBYTYPE
+    MENUITEM "Пристрої за підключенням",    IDC_DEVBYCONN
+    MENUITEM "Ресурси за типом",            IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ресурси за підключенням",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Довідка"
   BEGIN
@@ -46,7 +49,7 @@ CAPTION "Про програму Диспетчер пристроїв"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Диспетчер пристроїв v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Диспетчер пристроїв v0.1\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Закрити", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -62,7 +65,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "Властивості"
   IDS_TOOLTIP_REFRESH   "Оновити"
   IDS_TOOLTIP_HELP      "Довідка"
-  IDS_TOOLTIP_EXIT      "Вихід"
 END
 
 /* Hints */
@@ -75,6 +77,11 @@ BEGIN
   IDS_HINT_PROP         " Відкрити властивості для вибраного елементу."
   IDS_HINT_HELP         " Показати вікно довідки."
   IDS_HINT_ABOUT        " Про Диспетчер пристроїв ReactOS."
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Відновити вихідний розмір вікна."
   IDS_HINT_SYS_MOVE     " Змінити розташування вікна."

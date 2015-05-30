@@ -17,16 +17,19 @@ BEGIN
   END
   POPUP "เริ่มทำ"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "พิมพ์",                        IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "คุณสมบัติ",                    IDC_PROP, GRAYED
   END
   POPUP "มุมมอง"
   BEGIN
-    MENUITEM "อุปกรณ์แบ่งตามประเภท",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "อุปกรณ์แบ่งตามการเชื่อมต่อ",   IDC_STATIC, GRAYED
-    MENUITEM "แหล่งข้อมูลตามประเภท",         IDC_STATIC, GRAYED
-    MENUITEM "แหล่งข้อมูลตามการเชื่อมต่อ",   IDC_STATIC, GRAYED
+    MENUITEM "อุปกรณ์แบ่งตามประเภท",      IDC_DEVBYTYPE
+    MENUITEM "อุปกรณ์แบ่งตามการเชื่อมต่อ",    IDC_DEVBYCONN
+    MENUITEM "แหล่งข้อมูลตามประเภท",      IDC_RESBYTYPE, GRAYED 
+    MENUITEM "แหล่งข้อมูลตามการเชื่อมต่อ",    IDC_RESBYCONN, GRAYED 
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "ช่วยเหลือ"
   BEGIN
@@ -47,7 +50,7 @@ CAPTION "เกี่ยวกับการจัดการอุปกร�
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Device Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Device Manager v0.1\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -63,7 +66,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "คุณสมบัติ"
   IDS_TOOLTIP_REFRESH   "ฟื้นฟู"
   IDS_TOOLTIP_HELP      "ช่วยเหลือ"
-  IDS_TOOLTIP_EXIT      "ออกจากโปรแกรม"
 END
 
 /* Hints */
@@ -76,6 +78,11 @@ BEGIN
   IDS_HINT_PROP         " เปิดคุณสมบัติของแผ่นงานตามการเลือกในปัจจุบัน"
   IDS_HINT_HELP         " แสดงหน้าต่างช่วยเหลือ"
   IDS_HINT_ABOUT        " เกี่ยวกับการจัดการอุปกรณ์ของ ReactOS"
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " คืนสภาพของหน้าต่างนี้สู่ขนาดปกติ"
   IDS_HINT_SYS_MOVE     " ย้ายหน้าต่างนี้"

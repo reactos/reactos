@@ -7,8 +7,7 @@
 *
 */
 
-#include "stdafx.h"
-#include "devmgmt.h"
+#include "precomp.h"
 #include "Devices.h"
 
 
@@ -67,7 +66,7 @@ CDevices::GetDeviceTreeRoot(
     _Out_ PINT RootImageIndex
     )
 {
-    wcscpy_s(RootName, RootNameSize, m_RootName);
+    StringCbCopy(RootName, RootNameSize, m_RootName);
     *RootImageIndex = m_RootImageIndex;
 
     return TRUE;
@@ -325,7 +324,7 @@ CDevices::EnumClasses(
     if (Success != ERROR_SUCCESS)
     {
         /* Use the class name as the description */
-        wcscpy_s(ClassDesc, ClassDescSize, ClassName);
+        StringCbCopy(ClassDesc, ClassDescSize, ClassName);
     }
 
     /* Get the image index for this class */
@@ -485,7 +484,7 @@ CDevices::EnumDevicesForClass(
     if (bSuccess == FALSE && bUnknown == TRUE)
     {
         /* We add in our own text */
-        wcscpy_s(DeviceName, 256, L"Unknown device");
+        StringCbCopy(DeviceName, 256, L"Unknown device");
         bSuccess = TRUE;
     }
 
@@ -570,7 +569,7 @@ CDevices::ConvertResourceDescriptorToString(
     if (ptr)
     {
         /* This must be an inf based descriptor, the desc is after the semi colon */
-        wcscpy_s(ResourceDescriptor, ResourceDescriptorSize, ++ptr);
+        StringCbCopy(ResourceDescriptor, ResourceDescriptorSize, ++ptr);
         dwError = ERROR_SUCCESS;
     }
     else
@@ -604,7 +603,7 @@ CDevices::ConvertResourceDescriptorToString(
         /* Load the string from the dll */
         if (LoadStringW(hModule, ResourceId, ResString, 256))
         {
-            wcscpy_s(ResourceDescriptor, ResourceDescriptorSize, ResString);
+            StringCbCopy(ResourceDescriptor, ResourceDescriptorSize, ResString);
             dwError = ERROR_SUCCESS;
         }
         else

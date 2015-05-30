@@ -8,6 +8,7 @@ BEGIN
   END
   POPUP "Действие"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "Отпечатване",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Свойства",              IDC_PROP, GRAYED
@@ -38,7 +39,7 @@ CAPTION "За управителя на устройствата"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Device Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Device Manager v0.2\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -54,7 +55,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "Свойства"
   IDS_TOOLTIP_REFRESH   "Опресняване"
   IDS_TOOLTIP_HELP      "Помощ"
-  IDS_TOOLTIP_EXIT      "Изход"
 END
 
 /* Hints */
@@ -67,6 +67,11 @@ BEGIN
   IDS_HINT_PROP         " Отваря лист за свойства за текущия избор."
   IDS_HINT_HELP         " Показва помощен прозорец."
   IDS_HINT_ABOUT        " За управителя на устрйствата на РеактОС."
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Възстановява прозореца до обичайния му рамер."
   IDS_HINT_SYS_MOVE     " Премества прозореца."

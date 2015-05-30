@@ -9,16 +9,19 @@ BEGIN
   END
   POPUP "A&cțiune"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "Im&primare",                    IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "P&roprietăți",                  IDC_PROP, GRAYED
   END
   POPUP "&Afișare"
   BEGIN
-    MENUITEM "Dispozitive după &tip",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispozitive după &conexiune",   IDC_STATIC, GRAYED
-    MENUITEM "Resurse după t&ip",             IDC_STATIC, GRAYED
-    MENUITEM "Resurse după c&onexiune",       IDC_STATIC, GRAYED
+    MENUITEM "Dispozitive după &tip",          IDC_DEVBYTYPE
+    MENUITEM "Dispozitive după &conexiune",    IDC_DEVBYCONN
+    MENUITEM "Resurse după t&ip",              IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resurse după c&onexiune",        IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Aj&utor"
   BEGIN
@@ -39,7 +42,7 @@ CAPTION "Despre Gestionarul de dispozitive"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT       "Gestionar de Dispozitive v0.1\nDrept de autor (C) 2006\nde Ged Murphy (gedmurphy@gmail.com)\nTraducere de Petru Dimitriu", IDC_STATIC, 48, 7, 130, 35
+  LTEXT       "Gestionar de Dispozitive v0.1\nDrept de autor (C) 2012\nde Ged Murphy (gedmurphy@reactos.org)\nTraducere de Petru Dimitriu", IDC_STATIC, 48, 7, 130, 35
   PUSHBUTTON  "Î&nchide", IDOK, 75, 162, 44, 15
   ICON                    IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT                IDC_LICENSE_EDIT, 8, 47, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -55,7 +58,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "Proprietăți"
   IDS_TOOLTIP_REFRESH   "Împrospătare"
   IDS_TOOLTIP_HELP      "Manual de utilizare"
-  IDS_TOOLTIP_EXIT      "Ieșire"
 END
 
 /* Hints */
@@ -68,6 +70,11 @@ BEGIN
   IDS_HINT_PROP         " Afișează tabel cu proprietăți pentru selecția curentă."
   IDS_HINT_HELP         " Afișează manualul de utilizare."
   IDS_HINT_ABOUT        " Despre Gestionarul de dispozitive."
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Aduce fereastra la mărime normală."
   IDS_HINT_SYS_MOVE     " Mută fereastra."

@@ -12,16 +12,19 @@ BEGIN
   END
   POPUP "Veprim"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "Printo",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Tipar",              IDC_PROP, GRAYED
   END
   POPUP "Vëzhgo"
   BEGIN
-    MENUITEM "Pajisje nga tipi",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Pajisje nga lidhja",   IDC_STATIC, GRAYED
-    MENUITEM "Burime nga tipi",       IDC_STATIC, GRAYED
-    MENUITEM "Burime nga lidhja", IDC_STATIC, GRAYED
+    MENUITEM "Pajisje nga tipi",      IDC_DEVBYTYPE
+    MENUITEM "Pajisje nga lidhja",    IDC_DEVBYCONN
+    MENUITEM "Burime nga tipi",       IDC_RESBYTYPE, GRAYED
+    MENUITEM "Burime nga lidhja",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Ndihmë"
   BEGIN
@@ -42,7 +45,7 @@ CAPTION "Rreth Menaxhimit të pajisjeve"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Menaxhues pajisjesh v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
+  LTEXT "Menaxhues pajisjesh v0.1\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "Mbyll", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -58,7 +61,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "Tipar"
   IDS_TOOLTIP_REFRESH   "Rifresko"
   IDS_TOOLTIP_HELP      "Ndihmë"
-  IDS_TOOLTIP_EXIT      "Dil"
 END
 
 /* Hints */
@@ -71,6 +73,11 @@ BEGIN
   IDS_HINT_PROP         " Hap tiparet e fletes për perzgjedhjen aktuale."
   IDS_HINT_HELP         " Shfaq dritaren e ndihmës."
   IDS_HINT_ABOUT        " Rreth menaxhusit të pajisjeve të ReactOS."
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Kthe kete dritare ne mase normale."
   IDS_HINT_SYS_MOVE     " Leviz kete dritare."

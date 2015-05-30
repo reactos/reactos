@@ -9,7 +9,7 @@ typedef struct _MENU_HINT
 
 class CMainWindow
 {
-    CAtlString m_szMainWndClass;
+    PCWSTR m_szMainWndClass;
     CDeviceView *m_DeviceView;
     HWND m_hMainWnd;
     HWND m_hStatusBar;

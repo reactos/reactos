@@ -14,16 +14,19 @@ BEGIN
   END
   POPUP "Åtgärd"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "Skriv ut",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Egenskaper",              IDC_PROP, GRAYED
   END
   POPUP "Visa"
   BEGIN
-    MENUITEM "Enheter efter typ",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Enheter efter koppling",   IDC_STATIC, GRAYED
-    MENUITEM "Resurcer efter typ",       IDC_STATIC, GRAYED
-    MENUITEM "Resurcer efter koppling", IDC_STATIC, GRAYED
+    MENUITEM "Enheter efter typ",          IDC_DEVBYTYPE
+    MENUITEM "Enheter efter koppling",     IDC_DEVBYCONN
+    MENUITEM "Resurcer efter typ",         IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resurcer efter koppling",    IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Hjälp"
   BEGIN
@@ -44,7 +47,7 @@ CAPTION "Om Enhetshanteraren"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Enhetshanteraren v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
+  LTEXT "Enhetshanteraren v0.1\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "Stäng", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -60,7 +63,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "Egenskaper"
   IDS_TOOLTIP_REFRESH   "Uppdater"
   IDS_TOOLTIP_HELP      "Hjälp"
-  IDS_TOOLTIP_EXIT      "Avsluta"
 END
 
 /* Hints */
@@ -73,6 +75,11 @@ BEGIN
   IDS_HINT_PROP         " Öppna egenskaper för markerat val."
   IDS_HINT_HELP         " Visa hjälpfönstret."
   IDS_HINT_ABOUT        " Om ReactOS Enhetshanterare."
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Återställ detta fönstret till normal storlek."
   IDS_HINT_SYS_MOVE     " Flytta detta fönstret."

@@ -1,5 +1,4 @@
-#include "stdafx.h"
-#include "devmgmt.h"
+#include "precomp.h"
 #include "MainWindow.h"
 
 HINSTANCE g_hInstance = NULL;
@@ -14,7 +13,7 @@ wWinMain(HINSTANCE hThisInstance,
     CMainWindow MainWindow;
     INITCOMMONCONTROLSEX icex;
     HANDLE hMutex;
-    CAtlString szAppName;
+    WCHAR szAppName[256];
 
     int Ret = 1;
 
@@ -37,7 +36,7 @@ wWinMain(HINSTANCE hThisInstance,
     InitCommonControlsEx(&icex);
 
     /* Load the application name */
-    if (szAppName.LoadStringW(g_hInstance, IDS_APPNAME))
+    if (LoadStringW(g_hInstance, IDS_APPNAME, szAppName, _countof(szAppName)))
     {
         /* Initialize the main window */
         if (MainWindow.Initialize(szAppName, nCmdShow))

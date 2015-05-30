@@ -14,16 +14,19 @@ BEGIN
   END
   POPUP "Acción"
   BEGIN
+    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "Imprimir",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Propiedades",              IDC_PROP, GRAYED
   END
   POPUP "Ver"
   BEGIN
-    MENUITEM "Dispositivos por tipo",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispositivos por conexión",   IDC_STATIC, GRAYED
-    MENUITEM "Recursos por tipo",       IDC_STATIC, GRAYED
-    MENUITEM "Recursos por conexión", IDC_STATIC, GRAYED
+    MENUITEM "Dispositivos por tipo",     IDC_DEVBYTYPE
+    MENUITEM "Dispositivos por conexión", IDC_DEVBYCONN
+    MENUITEM "Recursos por tipo",         IDC_RESBYTYPE, GRAYED
+    MENUITEM "Recursos por conexión",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Ayuda"
   BEGIN
@@ -44,7 +47,7 @@ CAPTION "Acerca del Administrador de dispositivos"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Administrador de dispositivos v0.1\nCopyright (C) 2006\nCreado por Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Administrador de dispositivos v0.2\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "Cerrar", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -60,7 +63,6 @@ BEGIN
   IDS_TOOLTIP_PROP      "Propiedades"
   IDS_TOOLTIP_REFRESH   "Actualizar"
   IDS_TOOLTIP_HELP      "Ayuda"
-  IDS_TOOLTIP_EXIT      "Salir"
 END
 
 /* Hints */
@@ -73,6 +75,11 @@ BEGIN
   IDS_HINT_PROP         " Abre la pestaña de propiedades de la selección actual."
   IDS_HINT_HELP         " Mostrar la ventana de ayuda."
   IDS_HINT_ABOUT        " Acerca del Administrador de dispositivos de ReactOS."
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Devuelve esta ventana al tamaño normal."
   IDS_HINT_SYS_MOVE     " Mueve esta ventana."

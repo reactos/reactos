@@ -7,8 +7,7 @@
 *
 */
 
-#include "stdafx.h"
-#include "devmgmt.h"
+#include "precomp.h"
 #include "MainWindow.h"
 
 
@@ -48,10 +47,10 @@ static const MENU_HINT SystemMenuHintTable[] =
 /* PUBLIC METHODS **********************************************/
 
 CMainWindow::CMainWindow(void) :
-    m_ToolbarhImageList(NULL),
     m_hMainWnd(NULL),
     m_hStatusBar(NULL),
     m_hToolBar(NULL),
+    m_ToolbarhImageList(NULL),
     m_CmdShow(0)
 {
     m_szMainWndClass = L"DevMgmtWndClass";
@@ -67,7 +66,6 @@ BOOL
 CMainWindow::Initialize(LPCTSTR lpCaption,
                         int nCmdShow)
 {
-    CAtlString szCaption;
     WNDCLASSEXW wc = {0};
 
     /* Store the show window value */
@@ -171,7 +169,6 @@ BOOL
 CMainWindow::UpdateDevicesDisplay(ListDevices List)
 {
     UINT CheckId;
-    BOOL bSuccess;
 
     /* Set the new type*/
     m_DeviceView->SetDeviceListType(List);
@@ -187,7 +184,7 @@ CMainWindow::UpdateDevicesDisplay(ListDevices List)
     }
 
     /* Set the new check item */
-    bSuccess = CheckMenuRadioItem(m_hMenu,
+    CheckMenuRadioItem(m_hMenu,
                                   IDC_DEVBYTYPE,
                                   IDC_RESBYCONN,
                                   CheckId,
@@ -330,17 +327,17 @@ CMainWindow::StatusBarLoadString(IN HWND hStatusBar,
                                  IN HINSTANCE hInstance,
                                  IN UINT uID)
 {
-    CAtlString szMessage;
+    WCHAR szMessage[4096];
     BOOL bRet = FALSE;
 
     /* Load the string */
-    if (szMessage.LoadStringW(hInstance, uID))
+    if (LoadStringW(hInstance, uID, szMessage, _countof(szMessage)))
     {
         /* Send the message to the status bar */
         bRet = (BOOL)SendMessageW(hStatusBar,
                                   SB_SETTEXT,
                                   (WPARAM)PartId,
-                                  (LPARAM)szMessage.GetBuffer());
+                                  (LPARAM)szMessage);
     }
 
     return bRet;

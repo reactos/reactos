@@ -10,17 +10,17 @@ BEGIN
     END
     POPUP "&Eylem"
     BEGIN
-        MENUITEM "&Donanım Değişiklikleri İçin Tara"   IDC_REFRESH
+        MENUITEM "&Donanım Değişiklikleri İçin Tara",   IDC_REFRESH
         MENUITEM "&Yazdır",                            IDC_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Husûsiyetler",                      IDC_PROP, GRAYED
         END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Türe Göre Aygıtlar",                IDC_DEVBYTYPE, CHECKED
-        MENUITEM "&Bağlantıya Göre Aygıtlar",          IDC_STATIC, GRAYED
-        MENUITEM "T&üre Göre Kaynaklar",               IDC_STATIC, GRAYED
-        MENUITEM "B&ağlantıya Göre Kaynaklar",         IDC_STATIC, GRAYED
+        MENUITEM "&Türe Göre Aygıtlar",           IDC_DEVBYTYPE
+        MENUITEM "&Bağlantıya Göre Aygıtlar",     IDC_DEVBYCONN
+        MENUITEM "T&üre Göre Kaynaklar",          IDC_RESBYTYPE, GRAYED
+        MENUITEM "B&ağlantıya Göre Kaynaklar",    IDC_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Gizli Aygıtları Göster",            IDC_SHOWHIDDEN
     END
@@ -43,7 +43,7 @@ CAPTION "Aygıt Yöneticisi Üzerine"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    LTEXT "Aygıt Yöneticisi - Sürüm: 0.2\nTelif Hakkı: 2012\nGed Murphy (gedmurphy@gmail.com) ile.", IDC_STATIC, 48, 7, 130, 30
+    LTEXT "Aygıt Yöneticisi - Sürüm: 0.2\nTelif Hakkı: 2012\nGed Murphy (gedmurphy@reactos.org) ile.", IDC_STATIC, 48, 7, 130, 30
     PUSHBUTTON "Tamam", IDOK, 75, 162, 44, 15
     ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
