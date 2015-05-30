@@ -1,15 +1,16 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = LibreOffice
-Version = 4.4.2
+Version = 4.4.3
 License = LGPL
 Description = A powerful and open source office suite. It has been forked from OpenOffice.
 Size = 213.93 MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.2/win/x86/LibreOffice_4.4.2_Win_x86.msi
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.3/win/x86/LibreOffice_4.4.3_Win_x86.msi
 CDPath = none
 
 [Section.0407]
@@ -41,6 +42,9 @@ Size = 213,93 MB
 
 [Section.0422]
 Description = Відкритий офісний пакет.
+
+[Section.0804]
+Description = 功能强大的开源办公套件。它已经从 OpenOffice 中分叉。
 
 [Section.0813]
 Description = Voorheen OpenOffice. Open-bron Office pakket.
