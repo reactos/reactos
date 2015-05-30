@@ -35,3 +35,5 @@ Size = 100 MB
 
 [Section.0804]
 Description = 开源、 跨平台的强大的 IDE。它包含 (4.8.1 版本 32 位) 的 TDM GCC 编译器。
+
+

@@ -4,13 +4,13 @@
 
 [Section]
 Name = Lazarus
-Version = 1.2.6
+Version = 1.4.0
 License = modified LGPL, GPL
 Description = A cross-platform IDE that lets you create Object Pascal programs. It uses the Free Pascal compiler to build your projects.
-Size = 107 MB
+Size = 108 MB
 Category = 7
 URLSite = http://www.lazarus.freepascal.org/
-URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.2.6/lazarus-1.2.6-fpc-2.6.4-win32.exe
+URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.4/lazarus-1.4.0-fpc-2.6.4-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -28,7 +28,7 @@ Description = Un ambiente di sviluppo integrato (IDE) cross-platform che consent
 [Section.0418]
 License = GPL, LGPL modificată
 Description = Mediu integrat de dezvoltare (IDE) multiplatformă care vă permite crearea de programe Object Pascal. Pentru compilarea proiectelor este utilizat compilatorul Free Pascal.
-Size = 107 Mo
+Size = 108 Mo
 
 [Section.041f]
 License = Değiştirilmiş LGPL, GPL

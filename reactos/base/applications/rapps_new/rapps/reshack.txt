@@ -4,10 +4,10 @@
 
 [Section]
 Name = Resource Hacker
-Version = 3.6.0
+Version = 4.0.0
 License = Freeware
 Description = A freeware utility to view, modify, rename, add, delete and extract resources in 32bit & 64bit Windows executables and resource files (*.res).
-Size = 730 kB
+Size = 1.57 MB
 Category = 7
 URLSite = http://www.angusj.com/resourcehacker/
 URLDownload = http://www.angusj.com/resourcehacker/reshack_setup.exe
@@ -28,9 +28,9 @@ Description = Resource Hacker to darmowe narzędzie do podglądu, modyfikacji, z
 [Section.0418]
 License = Gratuită
 Description = Utilitar gratuit pentru inspectarea, modificarea, redenumirea, adăugarea, ștergerea și extragerea resurselor din fișierele resursă (*.res) și fișierele executabile pe 32 și 64 de biți pentru Windows.
-Size = 730 ko
+Size = 1,57 Mo
 
 [Section.041f]
 License = Ücretsiz
 Description = Resoure Hacker, 32 ve 64 bitlik Windows çaılştırılabilirlerindeki ve kaynak kütüklerindeki (*.res) kaynakları görüntülemek, değiştirmek, yeniden adlandırmak, eklemek, silmek ve çıkartmak için ücretsiz bir araçtır.
-Size = 730 KB
+Size = 1,57 Mo

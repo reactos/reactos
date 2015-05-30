@@ -44,7 +44,7 @@ Size = 2,05 MB
 Description = DosBlaster це розширення оболонки, яке дозволяє запустити будь-який виконавчий файл DOS в DOSBox через правий клік. Ця версія містить DOSBox 0.70, але може бути оновлена встановленням новішої версії DOSBox в теки DosBlaster.
 
 [Section.0804]
-Description = 这使得能够打开任何 DOS 可执行文件在 DOSBox 中通过右键单击的一个外壳扩展。此版本包含 DOSBox 0.70，但可以简单地更新 DosBlaster 文件夹中安装更加新的 DOSBox。
+Description = 这使得能够打开任何 DOS 可执行文件在 DOSBox 中通过右键单击的一个外壳扩展。此版本包含 DOSBox 0.70，但可以简单地更新的 DosBlaster 文件夹中安装更加新的 DOSBox。
 
 [Section.0813]
 Description = DosBlaster is een Shell uitbreiding dat het mogelijk maakt om een DOS executable in DOSBox te openen via een rechterklik. Deze versie bevat DOSBox 0.70, maar kan eenvoudig worden geupdatet door een recentere versie van DOSBox te installeren in de DosBlaster mappen.

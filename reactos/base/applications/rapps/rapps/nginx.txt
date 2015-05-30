@@ -3,13 +3,13 @@
 
 [Section]
 Name = nginx
-Version = 1.7.12
+Version = 1.8.0
 License = FreeBSD
 Description = An HTTP and reverse proxy server, as well as a mail proxy server, written by Igor Sysoev.
-Size = 1.2 MB
+Size = 1.22 MB
 Category = 5
 URLSite = http://nginx.org/
-URLDownload = http://nginx.org/download/nginx-1.7.12.zip
+URLDownload = http://nginx.org/download/nginx-1.8.0.zip
 CDPath = none
 
 [Section.0407]
@@ -18,4 +18,4 @@ Description = HTTP- und Reverse Proxy Server, sowie Mail Proxy Server, erstellt 
 [Section.0418]
 License = FreeBSD
 Description = Server HTTP, cu funcționalități de mandatar-invers (reverse proxy) și mandatar poștal, creat de Igor Sysoev.
-Size = 1,2 Mo
+Size = 1,22 Mo

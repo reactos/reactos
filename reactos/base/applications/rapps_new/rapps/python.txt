@@ -3,13 +3,13 @@
 
 [Section]
 Name = Python 3
-Version = 3.5
+Version = 3.5B1
 License = GPL/LGPL
 Description = A remarkably powerful dynamic programming language.
-Size = 26.86 MB
+Size = 26.65 MB
 Category = 7
 URLSite = http://www.python.org/
-URLDownload = http://www.python.org/ftp/python/3.5.0/python-3.5.0a3.exe
+URLDownload = http://www.python.org/ftp/python/3.5.0/python-3.5.0b1.exe
 CDPath = none
 
 [Section.0407]
@@ -20,7 +20,7 @@ Description = Un lenguaje de programación dinámico sumamente potente.
 
 [Section.040c]
 Description = Un langage de programmation dynamique remarquablement puissant.
-Size = 26,86 Mo
+Size = 26,65 Mo
 
 [Section.0410]
 Description = Un Linguaggio di programmazione dinamico e potente.
@@ -33,11 +33,11 @@ Description = Potęży i dynamiczny język programowania.
 
 [Section.0418]
 Description = Limbaj de programare dinamic și puternic.
-Size = 26,86 Mo
+Size = 26,65 Mo
 
 [Section.041f]
 Description = Dikkat çekici, güçlü ve devingen bir izlenceleme dili.
-Size = 26,86 MB
+Size = 26,65 MB
 
 [Section.0422]
 Description = Дуже потужна динамічна мова програмування.

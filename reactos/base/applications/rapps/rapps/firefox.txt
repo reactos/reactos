@@ -3,101 +3,101 @@
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
-Name = Mozilla Firefox 37
-Version = 37.0.1
+Name = Mozilla Firefox 38
+Version = 38.0.1
 License = MPL/GPL/LGPL
 Description = A popular Web browser. Free and open source, made by a global community.
-Size = 38.97 MB
+Size = 37.79 MB
 Category = 5
 URLSite = http://www.mozilla.org/en-US/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/en-US/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/en-US/Firefox%20Setup%2038.0.1.exe
 CDPath = none
 
 [Section.0405]
 Description = Nejpopulárnější a jeden z nejlepších svobodných webových prohlížečů.
-Size = 38.79 MB
+Size = 37.62 MB
 URLSite = http://www.mozilla.org/cs/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/cs/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/cs/Firefox%20Setup%2038.0.1.exe
 
 [Section.0407]
 Description = Populärer, freier und quelloffener Webbrowser.
-Size = 38.79 MB
+Size = 37.62 MB
 URLSite = http://www.mozilla.org/de/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/de/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/de/Firefox%20Setup%2038.0.1.exe
 
 [Section.0a]
 Description = Navegador web popular, libre y gratuito.
-Size = 38.72 MB
+Size = 37.54 MB
 URLSite = http://www.mozilla.org/es-ES/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/es-ES/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/es-ES/Firefox%20Setup%2038.0.1.exe
 
 [Section.040c]
 Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
-Size = 39,08 Mo
+Size = 37,91 Mo
 URLSite = http://www.mozilla.org/fr/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/fr/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/fr/Firefox%20Setup%2038.0.1.exe
 
 [Section.0410]
 Description = Il più popolare e uno dei migliori web browser gratuiti.
-Size = 38.71 MB
+Size = 37.53 MB
 URLSite = http://www.mozilla.org/it/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/it/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/it/Firefox%20Setup%2038.0.1.exe
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis Web browsers.
-Size = 39.43 MB
+Size = 38.25 MB
 URLSite = http://www.mozilla.org/nl/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/nl/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/nl/Firefox%20Setup%2038.0.1.exe
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
-Size = 38.78 MB
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/nb-NO/Firefox%20Setup%2037.0.1.exe
+Size = 37.60 MB
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/nb-NO/Firefox%20Setup%2038.0.1.exe
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
-Size = 39.64 MB
+Size = 38.46 MB
 URLSite = http://www.mozilla.org/pl/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/pl/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/pl/Firefox%20Setup%2038.0.1.exe
 
 [Section.0418]
 Description = Navigator web popular. Gratuit, cu surse deschise, creat de o comunitate globală.
-Size = 39,29 Mo
+Size = 38,11 Mo
 URLSite = http://www.mozilla.org/ro/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/ro/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/ro/Firefox%20Setup%2038.0.1.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
-Size = 39.16 MB
+Size = 37.98 MB
 URLSite = http://www.mozilla.org/ru/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/ru/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/ru/Firefox%20Setup%2038.0.1.exe
 
 [Section.041b] 
 Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
-Size = 39.46 MB
+Size = 38.28 MB
 URLSite = http://www.mozilla.org/sk/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/sk/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/sk/Firefox%20Setup%2038.0.1.exe
 
 [Section.041f]
 Description = Özgür Umûmî Ağ tarayıcıları arasında en tutulanı ve en iyilerinden biri.
-Size = 38,82 MB
+Size = 37,65 MB
 URLSite = http://www.mozilla.org/tr/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/tr/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/tr/Firefox%20Setup%2038.0.1.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
-Size = 39.21 MB
+Size = 38.03 MB
 URLSite = http://www.mozilla.org/uk/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/uk/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/uk/Firefox%20Setup%2038.0.1.exe
 
 [Section.0804]
 Description = 一个流行的网页浏览器。自由和开放源码，由一个全球社区作出。
-Size = 38.80 MB
+Size = 37.65 MB
 URLSite = https://www.mozilla.org/zh-CN/firefox/new/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/zh-CN/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/zh-CN/Firefox%20Setup%2038.0.1.exe
 
 [Section.0813]
 Description = De meest populaire en een van de beste gratis Web browsers.
 Size = 39.43 MB
 URLSite = http://www.mozilla.org/nl/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.1/win32/nl/Firefox%20Setup%2037.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/38.0.1/win32/nl/Firefox%20Setup%2038.0.1.exe

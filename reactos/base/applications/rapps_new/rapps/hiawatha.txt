@@ -3,13 +3,13 @@
 
 [Section]
 Name = Hiawatha
-Version = 9.12
+Version = 9.13
 License = GPLv2
 Description = An open source webserver with a focus on security.
 Size = 3.4 MB
 Category = 5
 URLSite = https://www.hiawatha-webserver.org/
-URLDownload = https://www.hiawatha-webserver.org/files/hiawatha-9.12.zip
+URLDownload = https://www.hiawatha-webserver.org/files/hiawatha-9.13.zip
 CDPath = none
 
 [Section.0407]

@@ -3,14 +3,13 @@
 
 [Section]
 Name = VLC media player
-Version = 2.2.0
+Version = 2.2.1
 License = GPL
 Description = A fully featured FOSS media player with built-in codecs.
-Size = 27.19 MB
+Size = 27.51 MB
 Category = 2
 URLSite = http://www.videolan.org/vlc/
-URLDownload = http://get.videolan.org/vlc/2.2.0/win32/vlc-2.2.0-win32.exe
-SHA1 = 560497a560eaf13ad46489b9239487401e575548
+URLDownload = http://mirror.netcologne.de/videolan.org/vlc/2.2.1/win32/vlc-2.2.1-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -21,7 +20,7 @@ Description = Completo reproductor multimedia, de código abierto y con códecs 
 
 [Section.040c]
 Description = Un lecteur media.
-Size = 27,19 Mo
+Size = 27,51 Mo
 
 [Section.0410]
 Description = Lettore multimediale.
@@ -34,7 +33,7 @@ Description = Odtwarzacz multimediów.
 
 [Section.0418]
 Description = Lector multimedia complet, gratuit cu surse deschise și codecuri încorporate.
-Size = 27,19 Mo
+Size = 27,51 Mo
 
 [Section.0419]
 Description = Мультимедийный проигрыватель.
@@ -45,7 +44,7 @@ Description = Multimediálny prehrávač.
 [Section.041f]
 Name = VLC Ortam Oynatıcısı
 Description = Bir ortam oynatıcısı.
-Size = 27,19 MB
+Size = 27,51 MB
 
 [Section.0422]
 Description = Мультимедійний програвач.
