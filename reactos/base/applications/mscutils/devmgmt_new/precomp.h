@@ -15,8 +15,8 @@
 #include <setupapi.h>
 #include <cfgmgr32.h>
 #include <commctrl.h>
-#include <Uxtheme.h>
-#include <Cfgmgr32.h>
+#include <uxtheme.h>
+#include <cfgmgr32.h>
 #include <devguid.h>
 
 #include <atlbase.h>
