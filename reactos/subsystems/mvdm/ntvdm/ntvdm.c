@@ -116,6 +116,21 @@ AppendMenuItems(HMENU hMenu,
     } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
 }
 
+BOOL
+VdmMenuExists(HMENU hConsoleMenu)
+{
+    INT MenuPos, i;
+    MenuPos = GetMenuItemCount(hConsoleMenu);
+
+    /* Check for the presence of one of the VDM menu items */
+    for (i = 0; i <= MenuPos; i++)
+    {
+        if (GetMenuItemID(hConsoleMenu, i) == ID_SHOWHIDE_MOUSE)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 /*static*/ VOID
 CreateVdmMenu(HANDLE ConOutHandle)
 {
@@ -124,9 +139,17 @@ CreateVdmMenu(HANDLE ConOutHandle)
                                       ID_VDM_QUIT);
     if (hConsoleMenu == NULL) return;
 
+    /* Get the position where we are going to insert our menu items */
     VdmMenuPos = GetMenuItemCount(hConsoleMenu);
-    AppendMenuItems(hConsoleMenu, VdmMainMenuItems);
-    DrawMenuBar(GetConsoleWindow());
+    // FIXME: What happens if the menu already exist?
+    // VdmMenuPos points *after* the already existing menu!
+
+    /* Really add the menu if it doesn't already exist (in case eg. NTVDM crashed) */
+    if (!VdmMenuExists(hConsoleMenu))
+    {
+        AppendMenuItems(hConsoleMenu, VdmMainMenuItems);
+        DrawMenuBar(GetConsoleWindow());
+    }
 }
 
 /*static*/ VOID
