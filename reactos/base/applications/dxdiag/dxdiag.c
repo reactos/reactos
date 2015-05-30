@@ -288,11 +288,6 @@ DxDiagWndProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case WM_DESTROY:
             DestroyTabCtrlDialogs(pContext);
-            if (pContext->hDisplayWnd)
-                HeapFree(GetProcessHeap(), 0, pContext->hDisplayWnd);
-            if (pContext->hSoundWnd)
-                HeapFree(GetProcessHeap(), 0, pContext->hSoundWnd);
-            HeapFree(GetProcessHeap(), 0, pContext);
             return DefWindowProc(hwndDlg, message, wParam, lParam);
     }
     return 0;

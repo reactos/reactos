@@ -315,6 +315,10 @@ InitializeDirectPlayDialog(HWND hwndDlg)
         return;
 
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_LIST_PROVIDER);
+
+    /* Highlights the entire row instead of just the selected item in the first column */
+    SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT);
+
     /* initialize list ctrl */
     InitListViewColumns(hDlgCtrl);
 

@@ -224,7 +224,7 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
             if (dwCertified == DS_CERTIFIED)
                 LoadStringW(hInst, IDS_OPTION_YES, szText, sizeof(szText)/sizeof(WCHAR));
             else if (dwCertified == DS_UNCERTIFIED)
-                LoadStringW(hInst, IDS_OPTION_NO, szText, sizeof(szText)/sizeof(WCHAR));
+                LoadStringW(hInst, IDS_NOT_APPLICABLE, szText, sizeof(szText)/sizeof(WCHAR));
         }
         else
         {

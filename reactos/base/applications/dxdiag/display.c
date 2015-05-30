@@ -236,14 +236,14 @@ InitializeDialog(HWND hwndDlg, PDISPLAY_DEVICEW pDispDevice)
             }
             else
             {
-                LoadStringW(hInst, IDS_OPTION_NO, szText, sizeof(szText)/sizeof(WCHAR));
+                LoadStringW(hInst, IDS_NOT_APPLICABLE, szText, sizeof(szText)/sizeof(WCHAR));
             }
         }
         IDirect3D9_Release(ppObj);
     }
     else
     {
-        LoadStringW(hInst, IDS_DEVICE_STATUS_UNKNOWN, szText, sizeof(szText)/sizeof(WCHAR));
+        LoadStringW(hInst, IDS_NOT_APPLICABLE, szText, sizeof(szText)/sizeof(WCHAR));
     }
     szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
     SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_LOGO, WM_SETTEXT, 0, (LPARAM)szText);

@@ -21,6 +21,7 @@
 #include <ddraw.h>
 #include <initguid.h>
 #include <devguid.h>
+#include <strsafe.h>
 
 #include "resource.h"
 

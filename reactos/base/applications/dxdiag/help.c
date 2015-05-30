@@ -20,6 +20,16 @@ HelpPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
             return TRUE;
         }
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam)) {
+                case IDC_BUTTON_SYSINFO:
+                    break;
+                case IDC_BUTTON_DDRAW_REFRESH:
+                    break;
+            }
+            break;
+        }
     }
 
     return FALSE;
