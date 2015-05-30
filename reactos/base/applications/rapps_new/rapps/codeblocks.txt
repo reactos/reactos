@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Code::Blocks (without compiler)
@@ -32,3 +33,7 @@ Name = Code::Blocks (Derleyicisiz)
 License = GPL sürüm 3
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. Bir derleyici içermez.
 Size = 29,2 MB
+
+[Section.0804]
+Description = 开源、 跨平台的强大的 IDE。它不包含一个编译器。
+

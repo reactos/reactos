@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = DVD Write Now
@@ -39,3 +40,6 @@ URLSite = http://dwn.alter.org.ua/ru/
 License = Ücretsiz
 Description = Ücretsiz bir doğrudan CD/DVD saklayıcı yazılımı. Kurulduktan sonra CD/DVD RW'lerinizi, USB Flash veyâ çıkarılabilir sâbit disk sürücüleri olarak kullanabilirsiniz. Bununla birlikte UDF kütük dizgesiyle saklanmış CD/DVD RW'lere yazabilirsiniz. Ayrıca Microsoft DVD−ROM'ları, Ahead InCD ile saklanmış RW diskleri gibi başka yazılımlarla oluşturulmuş UDF diskleri okuyabilirsiniz. Kurmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 1,2 MB
+
+[Section.0804]
+Description = 免费的直接的 CD/DVD 刻录软件。安装完成后，您可以使用您的 CD/DVD RW 作为 USB 闪存或可移动硬盘。这你可以写入 CD/DVD RW 记录使用 UDF 文件系统。您还可以阅读 UDF 磁盘创建与其他软件 （Microsoft DVD−ROMs，RW 磁盘记录与 Ahead InCD)。你需要一个 ZIP 减压程序来安装它。

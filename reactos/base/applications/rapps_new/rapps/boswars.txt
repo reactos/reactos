@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Bos Wars
@@ -32,3 +33,6 @@ Size = 62,3 Mo
 [Section.041f]
 Description = Bos Wars, gelecekçi ve gerçek zamanlı bir izlem oyunudur. Oyunu başlatmak için Microsoft Visual C++ 2008 Yürütücü'yü kurunuz.
 Size = 62,3 MB
+
+[Section.0804]
+Description = 一个未来派的实时战略游戏。需要 Microsoft Visual C++ 2008运行工作。

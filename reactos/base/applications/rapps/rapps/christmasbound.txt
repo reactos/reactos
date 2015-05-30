@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Christmas Bound
@@ -31,3 +32,6 @@ Size = 892 ko
 License = Ücretsiz
 Description = Frozen Fruits benzeri bir oyun.
 Size = 892 KB
+
+[Section.0804]
+Description = 一个冷冻水果类似的游戏。

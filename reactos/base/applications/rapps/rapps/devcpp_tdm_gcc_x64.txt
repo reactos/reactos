@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
@@ -29,3 +29,6 @@ Size = 44,9 Mo
 License = GPL sürüm 2
 Description = Dev-C++'nın sürdürülen bir sürümü. 64 bitlik TDM-GCC derleyicisi içerir.
 Size = 44,9 MB
+
+[Section.0804]
+Description = Dev-C++ 维护的版本。它包含 64 位 TDM GCC 编译器。

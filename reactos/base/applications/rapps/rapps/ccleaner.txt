@@ -1,5 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
 
 [Section]
 Name = CCleaner
@@ -24,3 +26,6 @@ Size = 5,1 MB
 License = Gratuită
 Description = Utilitar pentru mentenanța ordinii în configurația sistemului.
 Size = 5,1 Mo
+
+[Section.0804]
+Description = 非常好的工具，清理您的电脑。

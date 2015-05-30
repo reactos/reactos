@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Code::Blocks TDM-GCC (version 4.7.1, 32 bit)
@@ -31,3 +32,6 @@ Name = Code::Blocks TDM-GCC (sürüm 4.7.1, 32 bitlik)
 License = GPL sürüm 3
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. TDM-GCC (sürüm 4.7.1, 32 bitlik) derleyicisini içerir.
 Size = 97,8 MB
+
+[Section.0804]
+Description = 开源、 跨平台的强大的 IDE。它包含 (4.7.1 版本 32 位) 的 TDM GCC 编译器。

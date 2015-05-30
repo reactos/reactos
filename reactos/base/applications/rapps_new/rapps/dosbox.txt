@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = DOSBox
@@ -38,3 +39,6 @@ Size = 1,38 MB
 
 [Section.0422]
 Description = DOSBox - емулятор DOSу.
+
+[Section.0804]
+Description = 开放源码的 DOS 仿真器。

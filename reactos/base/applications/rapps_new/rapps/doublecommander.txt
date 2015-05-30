@@ -1,5 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
 
 [Section]
 Name = Double Commander
@@ -41,6 +43,9 @@ Size = 8,8 MB
 
 [Section.0422]
 Description = Double Commander - це відкритий двопанельний файловий менеджер. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.
+
+[Section.0804]
+Description = 含有两个面板并排的开放源码文件管理器。您将需要一个像 7-ZIP 文件的解压工具来解压它。
 
 [Section.0813]
 Description = Double Commander is een open-bron file-manager met twee panelen zij-aan-zij. Gebruik 7-Zip of een gelijkaardige applicatie om het uit te pakken.

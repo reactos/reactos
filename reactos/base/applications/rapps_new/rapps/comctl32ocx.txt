@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Visual Basic 6.0 Common Controls
@@ -62,6 +63,11 @@ Size = 913,73 KB
 [Section.0422]
 License = Невідома
 Description = Файл потрібен декотрим програмам. включає: comctl32.ocx, mscomctl.ocx, advpack.dll.
+
+[Section.0804]
+Description = 一些应用程序所需的文件。包含： comctl32.ocx、 mscomctl.ocx、 advpack.dll。
+URLSite = http://www.microsoft.com/zh-CN/download/details.aspx?id=10019
+URLDownload = http://download.microsoft.com/download/4/9/f/49f00daa-e664-4cc9-9c0c-be282cc899d6/VisualBasic6-KB896559-v1-CHS.exe
 
 [Section.0813]
 License = Ongekend

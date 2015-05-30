@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = D+ Browser
@@ -31,3 +32,6 @@ Name = D+ Tarayıcı
 License = GPL sürüm 3
 Description = DPlus; güvenlik, başarım ve taşınabilirlik üzerine bir vurguyla, çizgelik bir Umûmî Ağ tarayıcısıdır. Dillo tabanlıdır ve Dillo-Win32 tasarısından çatallanmıştır.
 Size = 1,36 MB
+
+[Section.0804]
+Description = 强调在安全、 性能和可移植性的互联网浏览器。它基于 Dillo，它是从 Dillo-Win32 方案分叉的。

@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Chromium B.S.U.
@@ -32,3 +33,6 @@ Size = 2,3 Mo
 [Section.041f]
 Description = Chromium B.S.U., atari salonu oyunu türünde, üstten kaydırmalı bir uzay gezleyicisidir.
 Size = 2,3 MB
+
+[Section.0804]
+Description = 一个街机风格，滚动条太空射击游戏。
