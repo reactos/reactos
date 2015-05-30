@@ -237,7 +237,14 @@ static HBRUSH EDIT_NotifyCtlColor(EDITSTATE *es, HDC hdc)
 		msg = WM_CTLCOLOREDIT;
 
 	/* why do we notify to es->hwndParent, and we send this one to GetParent()? */
-        hbrush = GetControlBrush(es->hwndSelf, hdc, msg); // reactos r54259
+#ifdef __REACTOS__
+        /* ReactOS r54259 */
+        hbrush = GetControlBrush(es->hwndSelf, hdc, msg);
+#else
+        hbrush = (HBRUSH)SendMessageW(GetParent(es->hwndSelf), msg, (WPARAM)hdc, (LPARAM)es->hwndSelf);
+        if (!hbrush)
+            hbrush = (HBRUSH)DefWindowProcW(GetParent(es->hwndSelf), msg, (WPARAM)hdc, (LPARAM)es->hwndSelf);
+#endif
         return hbrush;
 }
 
@@ -255,11 +262,11 @@ static inline UINT get_text_length(EDITSTATE *es)
  *	EDIT_WordBreakProc
  *
  *	Find the beginning of words.
- *	Note:	unlike the specs for a WordBreakProc, this function only
- *		allows to be called without linebreaks between s[0] up to
+ *	Note:	unlike the specs for a WordBreakProc, this function can
+ *		only be called without linebreaks between s[0] up to
  *		s[count - 1].  Remember it is only called
  *		internally, so we can decide this for ourselves.
- *		Additional we will always be breaking the full string.
+ *		Additionally we will always be breaking the full string.
  *
  */
 static INT EDIT_WordBreakProc(EDITSTATE *es, LPWSTR s, INT index, INT count, INT action)
@@ -342,7 +349,10 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 
 		countA = WideCharToMultiByte(CP_ACP, 0, es->text + start, count, NULL, 0, NULL, NULL);
 		textA = HeapAlloc(GetProcessHeap(), 0, countA);
-		if (textA == NULL) return 0; // reactos r33503
+#ifdef __REACTOS__
+		/* ReactOS r33503 */
+		if (textA == NULL) return 0;
+#endif
 		WideCharToMultiByte(CP_ACP, 0, es->text + start, count, textA, countA, NULL, NULL);
 		TRACE_(relay)("(ANSI wordbrk=%p,str=%s,idx=%d,cnt=%d,act=%d)\n",
 			es->word_break_proc, debugstr_an(textA, countA), index, countA, action);
@@ -402,31 +412,29 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData_linedef(EDITSTATE *es, HD
 		tabdef.iScale = 0;
 		tabdef.pTabStops = es->tabs;
 		tabdef.iTabOrigin = 0;
-                //// ReactOS r57679
+
 		hr = ScriptStringAnalyse(udc, &es->text[index], line_def->net_length,
-		                         (3*line_def->net_length/2+16), -1,
-		                         SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_TAB, -1,
-		                         NULL, NULL, NULL, &tabdef, NULL, &line_def->ssa);
-                ////
+#ifdef __REACTOS__
+                                         /* ReactOS r57679 */
+                                         (3*line_def->net_length/2+16), -1,
+#else
+                                         (1.5*line_def->net_length+16), -1,
+#endif
+                                         SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_TAB, -1,
+                                         NULL, NULL, NULL, &tabdef, NULL, &line_def->ssa);
 		if (FAILED(hr))
 		{
-                       WARN("ScriptStringAnalyse failed (%x)\n",hr);
-                       line_def->ssa = NULL;
-                }
-                                                                                
-    		if (es->font)
+			WARN("ScriptStringAnalyse failed (%x)\n",hr);
+			line_def->ssa = NULL;
+		}
+
+		if (es->font)
 			SelectObject(udc, old_font);
 		if (udc != dc)
 			ReleaseDC(es->hwndSelf, udc);
 	}
 
 	return line_def->ssa;
-}
-
-static inline INT get_vertical_line_count(EDITSTATE *es)
-{
-	INT vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
-	return max(1,vlc);
 }
 
 static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData(EDITSTATE *es, HDC dc, INT line)
@@ -445,12 +453,22 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData(EDITSTATE *es, HDC dc, IN
 				udc = GetDC(es->hwndSelf);
 			if (es->font)
 				old_font = SelectObject(udc, es->font);
-                        //// ReactOS r57677
+
 			if (es->style & ES_PASSWORD)
+#ifdef __REACTOS__
+				/* ReactOS r57677 */
 				ScriptStringAnalyse(udc, &es->password_char, length, (3*length/2+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_PASSWORD, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
+#else
+				ScriptStringAnalyse(udc, &es->password_char, length, (1.5*length+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_PASSWORD, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
+#endif
 			else
+#ifdef __REACTOS__
+				/* ReactOS r57677 */
 				ScriptStringAnalyse(udc, es->text, length, (3*length/2+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
-                        ////
+#else
+				ScriptStringAnalyse(udc, es->text, length, (1.5*length+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
+#endif
+
 			if (es->font)
 				SelectObject(udc, old_font);
 			if (udc != dc)
@@ -469,6 +487,12 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData(EDITSTATE *es, HDC dc, IN
 
 		return EDIT_UpdateUniscribeData_linedef(es,dc,line_def);
 	}
+}
+
+static inline INT get_vertical_line_count(EDITSTATE *es)
+{
+	INT vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
+	return max(1,vlc);
 }
 
 /*********************************************************************
@@ -541,8 +565,11 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 				/* The buffer has been expanded, create a new line and
 				   insert it into the link list */
 				LINEDEF *new_line = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINEDEF));
-				if (new_line == NULL) // reactos r33509
-					break; // reactos r33509
+#ifdef __REACTOS__
+				/* ReactOS r33509 */
+				if (new_line == NULL)
+					break;
+#endif
 				new_line->next = previous_line->next;
 				previous_line->next = new_line;
 				current_line = new_line;
@@ -573,7 +600,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		while (*cp) {
                     if (*cp == '\n') break;
                     if ((*cp == '\r') && (*(cp + 1) == '\n'))
-			break;
+                        break;
                     cp++;
 		}
 
@@ -598,12 +625,12 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 			EDIT_InvalidateUniscribeData_linedef(current_line);
 			EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
 			if (current_line->ssa)
-                        {
-                                sz = ScriptString_pSize(current_line->ssa);
-                                /* Calculate line width */
-                                current_line->width = sz->cx;
-                        }
-                        else current_line->width = es->char_width * current_line->net_length;
+			{
+				sz = ScriptString_pSize(current_line->ssa);
+				/* Calculate line width */
+				current_line->width = sz->cx;
+			}
+			else current_line->width = es->char_width * current_line->net_length;
 		}
 		else current_line->width = 0;
 
@@ -649,23 +676,23 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 				EDIT_InvalidateUniscribeData_linedef(current_line);
 				EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
 
-                                if (current_line->ssa)
-                                {
-				        count = ScriptString_pcOutChars(current_line->ssa);
-				        piDx = HeapAlloc(GetProcessHeap(),0,sizeof(INT) * (*count));
-				        ScriptStringGetLogicalWidths(current_line->ssa,piDx);
+				if (current_line->ssa)
+				{
+					count = ScriptString_pcOutChars(current_line->ssa);
+					piDx = HeapAlloc(GetProcessHeap(),0,sizeof(INT) * (*count));
+					ScriptStringGetLogicalWidths(current_line->ssa,piDx);
 
-				        prev = current_line->net_length-1;
-				        do {
-					        current_line->width -= piDx[prev];
-					        prev--;
-                                        } while ( prev > 0 && current_line->width > fw);
-                                        if (prev<=0)
-					        prev = 1;
-                                        HeapFree(GetProcessHeap(),0,piDx);
-                                }
-                                else
-                                        prev = (fw / es->char_width);
+					prev = current_line->net_length-1;
+					do {
+						current_line->width -= piDx[prev];
+						prev--;
+					} while ( prev > 0 && current_line->width > fw);
+					if (prev<=0)
+						prev = 1;
+					HeapFree(GetProcessHeap(),0,piDx);
+				}
+				else
+					prev = (fw / es->char_width);
 			}
 
 			/* If the first line we are calculating, wrapped before istart, we must
@@ -780,7 +807,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		if ((es->style & ES_CENTER) || (es->style & ES_RIGHT))
 			rc.left = es->format_rect.left;
 		else
-            rc.left = LOWORD(EDIT_EM_PosFromChar(es, nstart_index, FALSE));
+                        rc.left = LOWORD(EDIT_EM_PosFromChar(es, nstart_index, FALSE));
 		rc.right = es->format_rect.right;
 		SetRectRgn(hrgn, rc.left, rc.top, rc.right, rc.bottom);
 
@@ -1258,6 +1285,8 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 
 	if (!es->text) {
 
+#ifdef __REACTOS__
+/* FIXME: What is this ? */
 	    CHAR *textA = NULL; // ReactOS Hacked! r45670
 	    //UINT countA = 0;
 
@@ -1277,6 +1306,13 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 
 	    if (textA) //// ReactOS
 	    {
+#else
+	    if(!es->hloc32W) return;
+
+            if(es->hloc32A)
+            {
+                CHAR *textA = LocalLock(es->hloc32A);
+#endif
 		HLOCAL hloc32W_new;
 		UINT countW_new = MultiByteToWideChar(CP_ACP, 0, textA, -1, NULL, 0);
 		if(countW_new > es->buffer_size + 1)
@@ -1310,6 +1346,7 @@ static void EDIT_LockBuffer(EDITSTATE *es)
  */
 static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 {
+        if (es->hlocapp) return;
 
 	/* Edit window might be already destroyed */
 	if(!IsWindow(es->hwndSelf))
@@ -1385,7 +1422,7 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size)
 
 	TRACE("trying to ReAlloc to %d+1 characters\n", size);
 
-	/* Force edit to unlock it's buffer. es->text now NULL */
+        /* Force edit to unlock its buffer. es->text now NULL */
 	EDIT_UnlockBuffer(es, TRUE);
 
 	if (es->hloc32W) {
@@ -2603,7 +2640,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 		es->text_width = 0;
 
 	/* Issue the EN_MAXTEXT notification and continue with replacing text
-	 * such that buffer limit is honored. */
+         * so that buffer limit is honored. */
 	if ((honor_limit) && (size > es->buffer_limit)) {
 		EDIT_NOTIFY_PARENT(es, EN_MAXTEXT);
 		/* Buffer limit can be smaller than the actual length of text in combobox */
@@ -2835,11 +2872,11 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
 
 	es->buffer_size = LocalSize(es->hloc32W)/sizeof(WCHAR) - 1;
 
-	/* The text buffer handle belongs to the control */
+        /* The text buffer handle belongs to the control */
         es->hlocapp = NULL;
 
 	EDIT_LockBuffer(es);
-	text_buffer_changed(es);
+        text_buffer_changed(es);
 
 	es->x_offset = es->y_offset = 0;
 	es->selection_start = es->selection_end = 0;
@@ -2998,11 +3035,14 @@ static BOOL EDIT_EM_SetTabStops(EDITSTATE *es, INT count, const INT *tabs)
 		es->tabs = NULL;
 	else {
 		es->tabs = HeapAlloc(GetProcessHeap(), 0, count * sizeof(INT));
-        if (es->tabs == NULL) // reactos r33503
+#ifdef __REACTOS__
+        /* ReactOS r33503 */
+        if (es->tabs == NULL)
         {
             es->tabs_count = 0;
             return FALSE;
-        } // reactos r33503
+        }
+#endif
 		memcpy(es->tabs, tabs, count * sizeof(INT));
 	}
 	EDIT_InvalidateUniscribeData(es);
@@ -3047,8 +3087,11 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 	ulength = strlenW(es->undo_text);
 
 	utext = HeapAlloc(GetProcessHeap(), 0, (ulength + 1) * sizeof(WCHAR));
-	if (utext == NULL) // reactos r33503
-		return FALSE; // reactos r33503
+#ifdef __REACTOS__
+	/* ReactOS r33503 */
+	if (utext == NULL) 
+		return FALSE;
+#endif
 
 	strcpyW(utext, es->undo_text);
 
@@ -3277,7 +3320,7 @@ static void EDIT_ContextMenuCommand(EDITSTATE *es, UINT id)
                         SendMessageW(es->hwndSelf, WM_CLEAR, 0, 0);
 			break;
 		case EM_SETSEL:
-			SendMessageW(es->hwndSelf, EM_SETSEL, 0, -1);
+                        SendMessageW(es->hwndSelf, EM_SETSEL, 0, -1);
 			break;
 		default:
 			ERR("unknown menu item, please report\n");
@@ -3329,10 +3372,13 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
         {
             RECT rc;
             /* Windows places the menu at the edit's center in this case */
-            // reactos r55202
+#ifdef __REACTOS__
+            /* ReactOS r55202 */
             GetClientRect(es->hwndSelf, &rc);
             MapWindowPoints(es->hwndSelf, 0, (POINT *)&rc, 2);
-            //WIN_GetRectangles( es->hwndSelf, COORDS_SCREEN, NULL, &rc );
+#else
+            WIN_GetRectangles( es->hwndSelf, COORDS_SCREEN, NULL, &rc );
+#endif
             x = rc.left + (rc.right - rc.left) / 2;
             y = rc.top + (rc.bottom - rc.top) / 2;
         }
@@ -3419,7 +3465,7 @@ static BOOL EDIT_CheckCombo(EDITSTATE *es, UINT msg, INT key)
 
       case WM_SYSKEYDOWN: /* Handle Alt+up/down arrows */
          if (nEUI)
-            SendMessageW(hCombo, CB_SHOWDROPDOWN, bDropped ? FALSE : TRUE, 0);
+            SendMessageW(hCombo, CB_SHOWDROPDOWN, !bDropped, 0);
          else
             SendMessageW(hLBox, WM_KEYDOWN, VK_F4, 0);
          break;
@@ -3559,12 +3605,15 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
             if ((es->style & ES_MULTILINE) && EDIT_IsInsideDialog(es))
                 SendMessageW(es->hwndParent, WM_NEXTDLGCTL, shift, 0);
             break;
+#ifdef __REACTOS__
+        /* ReactOS CORE-1419 */
         case VK_BACK:
             if (control)
             {
-               FIXME("Ctrl+Backspace\n"); // See bug 1419.
+               FIXME("Ctrl+Backspace\n");
             }
             break;
+#endif
 	}
         return TRUE;
 }
@@ -3582,8 +3631,8 @@ static LRESULT EDIT_WM_KillFocus(EDITSTATE *es)
 	if(!(es->style & ES_NOHIDESEL))
 		EDIT_InvalidateText(es, es->selection_start, es->selection_end);
 	EDIT_NOTIFY_PARENT(es, EN_KILLFOCUS);
-        /* throw away left over scroll when we lose focus */
-        es->wheelDeltaRemainder = 0;
+	/* throw away left over scroll when we lose focus */
+	es->wheelDeltaRemainder = 0;
 	return 0;
 }
 
@@ -4443,10 +4492,16 @@ static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
         return;
 
     if (CompFlag & GCS_RESULTSTR)
+    {
         EDIT_GetResultStr(hIMC, es);
-    if (CompFlag & GCS_COMPSTR)
-        EDIT_GetCompositionStr(hIMC, CompFlag, es);
-    cursor = ImmGetCompositionStringW(hIMC, GCS_CURSORPOS, 0, 0);
+        cursor = 0;
+    }
+    else
+    {
+        if (CompFlag & GCS_COMPSTR)
+            EDIT_GetCompositionStr(hIMC, CompFlag, es);
+        cursor = ImmGetCompositionStringW(hIMC, GCS_CURSORPOS, 0, 0);
+    }
     ImmReleaseContext(hwnd, hIMC);
     EDIT_SetCaretPos(es, es->selection_start + cursor, es->flags & EF_AFTER_WRAP);
 }
@@ -4629,12 +4684,12 @@ static LRESULT EDIT_WM_NCDestroy(EDITSTATE *es)
 
         /* The app can own the text buffer handle */
         if (es->hloc32W && (es->hloc32W != es->hlocapp)) {
-                LocalFree(es->hloc32W);
-        }
+		LocalFree(es->hloc32W);
+	}
         if (es->hloc32A && (es->hloc32A != es->hlocapp)) {
-                LocalFree(es->hloc32A);
-        }
-        EDIT_InvalidateUniscribeData(es);
+		LocalFree(es->hloc32A);
+	}
+	EDIT_InvalidateUniscribeData(es);
 	pc = es->first_line_def;
 	while (pc)
 	{
@@ -4670,25 +4725,26 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 {
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongPtrW( hwnd, 0 );
 	LRESULT result = 0;
-#ifdef __REACTOS__ // r50219
-        PWND pWnd;
+#ifdef __REACTOS__
+    /* ReactOS r50219 */
+    PWND pWnd;
 
-        pWnd = ValidateHwnd(hwnd);
-        if (pWnd)
+    pWnd = ValidateHwnd(hwnd);
+    if (pWnd)
+    {
+        if (!pWnd->fnid)
         {
-           if (!pWnd->fnid)
-           {
-              NtUserSetWindowFNID(hwnd, FNID_EDIT);
-           }
-           else
-           {
-              if (pWnd->fnid != FNID_EDIT)
-              {
-                 ERR("Wrong window class for Edit! fnId 0x%x\n",pWnd->fnid);
-                 return 0;
-              }
-           }
+            NtUserSetWindowFNID(hwnd, FNID_EDIT);
         }
+        else
+        {
+            if (pWnd->fnid != FNID_EDIT)
+            {
+                ERR("Wrong window class for Edit! fnId 0x%x\n",pWnd->fnid);
+                return 0;
+            }
+        }
+    }
 #endif
 
         TRACE("hwnd=%p msg=%x (%s) wparam=%lx lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
@@ -4932,9 +4988,10 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 	case WM_NCDESTROY:
 		result = EDIT_WM_NCDestroy(es);
-//		es = NULL; reactos
 #ifdef __REACTOS__
 		NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+#else
+		es = NULL;
 #endif
 		break;
 
@@ -4958,7 +5015,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
                                 if (SendMessageW(GetParent(hwnd), CB_GETDROPPEDSTATE, 0, 0))
                                     result |= DLGC_WANTMESSAGE;
                         }
-                  }
+                    }
                 }
 		break;
 
@@ -5240,22 +5297,26 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		}
 		break;
 
-
 	default:
 		result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
 		break;
 	}
 
-	/* reactos: check GetWindowLong in case es has been destroyed during processing */
+#ifdef __REACTOS__
+	/* ReactOS: check GetWindowLong in case es has been destroyed during processing */
 	if (IsWindow(hwnd) && es && GetWindowLongPtrW(hwnd, 0))
 		EDIT_UnlockBuffer(es, FALSE);
+#else
+	if (IsWindow(hwnd) && es) EDIT_UnlockBuffer(es, FALSE);
+#endif
 
         TRACE("hwnd=%p msg=%x (%s) -- 0x%08lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), result);
 
 	return result;
 }
 
-// reactos
+#ifdef __REACTOS__
+
 /*********************************************************************
  *
  *	EditWndProc   (USER32.@)
@@ -5274,6 +5335,8 @@ LRESULT WINAPI EditWndProcW(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return EditWndProc_common(hWnd, uMsg, wParam, lParam, TRUE);
 }
 
+#endif /* __REACTOS__ */
+
 /*********************************************************************
  * edit class descriptor
  */
@@ -5282,9 +5345,12 @@ const struct builtin_class_descr EDIT_builtin_class =
 {
     editW,                /* name */
     CS_DBLCLKS | CS_PARENTDC,   /* style */
-    // reactos
+#ifdef __REACTOS__
     EditWndProcA,         /* procA */
     EditWndProcW,         /* procW */
+#else
+    WINPROC_EDIT,         /* proc */
+#endif
 #ifndef _WIN64
     sizeof(EDITSTATE *) + sizeof(WORD), /* extra */
 #else
