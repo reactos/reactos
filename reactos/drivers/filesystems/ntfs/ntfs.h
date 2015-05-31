@@ -643,6 +643,14 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
                      ULONG NameLength,
                      PVOID * Data);
 
+NTSTATUS
+NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
+                        PNTFS_FCB DirectoryFCB,
+                        PUNICODE_STRING Name,
+                        PFILE_RECORD_HEADER Record,
+                        ULONGLONG MFTIndex,
+                        PNTFS_FCB * fileFCB);
+
 
 /* finfo.c */
 

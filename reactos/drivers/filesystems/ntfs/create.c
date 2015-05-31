@@ -31,6 +31,21 @@
 #define NDEBUG
 #include <debug.h>
 
+static PCWSTR MftIdToName[] = {
+    L"$MFT",
+    L"$MFTMirr",
+    L"$LogFile",
+    L"$Volume",
+    L"AttrDef",
+    L".",
+    L"$Bitmap",
+    L"$Boot",
+    L"$BadClus",
+    L"$Quota",
+    L"$UpCase",
+    L"$Extended",
+};
+
 /* FUNCTIONS ****************************************************************/
 
 static
@@ -157,6 +172,72 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
     return Status;
 }
 
+static
+NTSTATUS
+NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
+                 PFILE_OBJECT FileObject,
+                 ULONGLONG MftId,
+                 PNTFS_FCB * FoundFCB)
+{
+    NTSTATUS Status;
+    PNTFS_FCB FCB;
+    PFILE_RECORD_HEADER MftRecord;
+
+    DPRINT1("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
+
+    ASSERT(MftId < 0x10);
+    if (MftId > 0xb) /* No entries are used yet beyond this */
+    {
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                      DeviceExt->NtfsInfo.BytesPerFileRecord,
+                                      TAG_NTFS);
+    if (MftRecord == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(DeviceExt, MftId, MftRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        return Status;
+    }
+
+    if (!(MftRecord->Flags & FRH_IN_USE))
+    {
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        return STATUS_OBJECT_PATH_NOT_FOUND;
+    }
+
+    FCB = NtfsGrabFCBFromTable(DeviceExt, MftIdToName[MftId]);
+    if (FCB == NULL)
+    {
+        UNICODE_STRING Name;
+
+        RtlInitUnicodeString(&Name, MftIdToName[MftId]);
+        Status = NtfsMakeFCBFromDirEntry(DeviceExt, NULL, &Name, MftRecord, MftId, &FCB);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(MftRecord, TAG_NTFS);
+            return Status;
+        }
+    }
+
+    ASSERT(FCB != NULL);
+
+    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+
+    Status = NtfsAttachFCBToFileObject(DeviceExt,
+                                       FCB,
+                                       FileObject);
+    *FoundFCB = FCB;
+
+    return Status;
+}
+
 /*
  * FUNCTION: Opens a file
  */
@@ -249,7 +330,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     PFILE_OBJECT FileObject;
     ULONG RequestedDisposition;
     ULONG RequestedOptions;
-    PNTFS_FCB Fcb;
+    PNTFS_FCB Fcb = NULL;
 //    PWSTR FileName;
     NTSTATUS Status;
     UNICODE_STRING FullPath;
@@ -287,13 +368,15 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return STATUS_INVALID_PARAMETER;
 
         MFTId = (*(PULONGLONG)FileObject->FileName.Buffer) & NTFS_MFT_MASK;
-        if (MFTId < 0xf)
+        if (MFTId < 0x10)
         {
-            UNIMPLEMENTED;
-            return STATUS_NOT_IMPLEMENTED;
+            Status = NtfsOpenFileById(DeviceExt, FileObject, MFTId, &Fcb);
+        }
+        else
+        {
+            Status = NtfsMoonWalkID(DeviceExt, MFTId, &FullPath);
         }
 
-        Status = NtfsMoonWalkID(DeviceExt, MFTId, &FullPath);
         if (!NT_SUCCESS(Status))
         {
             return Status;
@@ -324,14 +407,17 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         return STATUS_SUCCESS;
     }
 
-    Status = NtfsOpenFile(DeviceExt,
-                          FileObject,
-                          ((RequestedOptions & FILE_OPEN_BY_FILE_ID) ? FullPath.Buffer : FileObject->FileName.Buffer),
-                          &Fcb);
-
-    if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
+    if (Fcb == NULL)
     {
-        ExFreePoolWithTag(FullPath.Buffer, TAG_NTFS);
+        Status = NtfsOpenFile(DeviceExt,
+                              FileObject,
+                              ((RequestedOptions & FILE_OPEN_BY_FILE_ID) ? FullPath.Buffer : FileObject->FileName.Buffer),
+                              &Fcb);
+
+        if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
+        {
+            ExFreePoolWithTag(FullPath.Buffer, TAG_NTFS);
+        }
     }
 
     if (NT_SUCCESS(Status))
