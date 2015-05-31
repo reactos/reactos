@@ -42,7 +42,7 @@ BEGIN
     EDITTEXT IDC_STATIC_MEM, 155, 130, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_SWAP, 155, 140, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_VERSION, 155, 150, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CHECKBOX "Check for WHQL digital signatures", IDC_WHQL_SIGN_CHECK, 15, 170, 120, 10, WS_DISABLED
+    CHECKBOX "&Auf digitale WHQL-Signaturen prüfen", IDC_WHQL_SIGN_CHECK, 15, 170, 135, 10, WS_DISABLED
 END
 
 IDD_DISPLAY_DIALOG DIALOGEX 0, 0, 462, 220
@@ -54,8 +54,8 @@ BEGIN
     RTEXT "Hersteller:", IDC_STATIC, 20, 20, 70, 10
     RTEXT "Chiptyp:", IDC_STATIC, 20, 30, 70, 10
     RTEXT "DAC-Typ:", IDC_STATIC, 20, 40, 70, 10
-    RTEXT "Gesamtspeicher ca.:", IDC_STATIC, 14, 50, 75, 10
-    RTEXT "Anzeigemodus:", IDC_STATIC, 14, 60, 75, 10
+    RTEXT "Gesamtspeicher ca.:", IDC_STATIC, 20, 50, 70, 10
+    RTEXT "Anzeigemodus:", IDC_STATIC, 20, 60, 70, 10
     RTEXT "Monitor:", IDC_STATIC, 20, 70, 70, 10
     EDITTEXT IDC_STATIC_ADAPTER_ID, 95, 10, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_ADAPTER_VENDOR, 95, 20, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -65,7 +65,7 @@ BEGIN
     EDITTEXT IDC_STATIC_ADAPTER_MODE, 95, 60, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_ADAPTER_MONITOR, 95, 70, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Treiber", IDC_STATIC, 260, 0, 197, 95
-    RTEXT "Hauptreiber:", IDC_STATIC, 275, 10, 55, 10
+    RTEXT "Haupttreiber:", IDC_STATIC, 275, 10, 55, 10
     RTEXT "Version:", IDC_STATIC, 275, 20, 55, 10
     RTEXT "Datum:", IDC_STATIC, 275, 30, 55, 10
     RTEXT "Mit WHQL-Logo:", IDC_STATIC, 275, 40, 55, 10
@@ -128,7 +128,7 @@ BEGIN
     GROUPBOX "ReactX-Funktionen", IDC_STATIC, 5, 97, 452, 70
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 110, 125, 80, 17
     RTEXT "Einstellung der Sound-\nhardwarebeschleunigung:", IDC_STATIC, 10, 125, 90, 20, WS_DISABLED
-    PUSHBUTTON "DirectSound testen", IDC_BUTTON_TESTDSOUND, 270, 125, 80, 14, WS_DISABLED
+    PUSHBUTTON "DirectSound &testen", IDC_BUTTON_TESTDSOUND, 270, 125, 80, 14, WS_DISABLED
     GROUPBOX "Hinweise", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_TEXT_DSOUNDINFO, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
@@ -137,17 +137,17 @@ IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "General MIDI DLS Collection:", IDC_STATIC, 0, 0, 100, 10
+    RTEXT "Standard-MIDI-DLS-Sammlung:", IDC_STATIC, 0, 0, 100, 10
     EDITTEXT IDC_MIDI_DLS_COLLECTION, 105, 0, 250, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Music Ports", IDC_STATIC, 5, 10, 452, 85
-    GROUPBOX "ReactX Features", IDC_STATIC, 5, 97, 452, 70
-    RTEXT "Default Port Acceleration:", IDC_STATIC, 15, 120, 95, 10
+    GROUPBOX "Musikanschlüsse", IDC_STATIC, 5, 10, 452, 85
+    GROUPBOX "ReactX Funktionen", IDC_STATIC, 5, 97, 452, 70
+    LTEXT "Standardanschluss- Beschleunigung:", IDC_STATIC, 15, 116, 95, 17
     LTEXT "", IDC_STATIC_DEFAULT_PORT_ACCELERATION, 115, 120, 50, 10
-    PUSHBUTTON "Disable", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
-    LTEXT "Test using this port:", IDC_STATIC, 180, 105, 70, 10
+    PUSHBUTTON "&Deaktivieren", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
+    LTEXT "Mit diesem Anschluss testen:", IDC_STATIC, 180, 105, 100, 10
     LISTBOX IDC_DMUSIC_TEST_LIST, 180, 115, 180, 45, LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Test DirectMusic", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED
-    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
+    PUSHBUTTON "DirectMusic &testen", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED
+    GROUPBOX "Hinweise", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_MUSIC_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -160,7 +160,7 @@ BEGIN
     GROUPBOX "Eingabegeräte", IDC_STATIC, 5, 87, 452, 81
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
             WS_VISIBLE | WS_BORDER | WS_TABSTOP, 15, 99, 432, 60, 0x00000200
-    GROUPBOX "Hinweis", IDC_STATIC, 5, 170, 452, 50
+    GROUPBOX "Hinweise", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_RICH_INFO, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -170,11 +170,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Registrierte DirectPlay-Dienstanbieter", IDC_STATIC, 5, 0, 452, 75
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 15, 12, 432, 55
-    GROUPBOX "Registered Lobbyable DirectPlay Applications", IDC_STATIC, 5, 77, 452, 55
-    GROUPBOX "ReactX Features", IDC_STATIC, 5, 133, 452, 35
-    PUSHBUTTON "DirectPlay Voice Options", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
-    PUSHBUTTON "Test DirectPlay", IDC_BUTTON_TESTDPLAY, 130, 145, 80, 14, WS_DISABLED
-    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
+    GROUPBOX "Registrierte veränderbare DirectPlay-Anwendungen", IDC_STATIC, 5, 77, 452, 55
+    GROUPBOX "ReactX Funktionen", IDC_STATIC, 5, 133, 452, 35
+    PUSHBUTTON "DirectPlay &Voice-Optionen", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
+    PUSHBUTTON "DirectPlay &testen", IDC_BUTTON_TESTDPLAY, 130, 145, 80, 14, WS_DISABLED
+    GROUPBOX "Hinweise", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_NETWORK_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -182,11 +182,11 @@ IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Still can't find the information you're looking for? Here are some additional things you can do:", IDC_STATIC, 5, 0, 300, 10
-    PUSHBUTTON "System Information", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
-    LTEXT "Displays additional system information", IDC_STATIC, 90, 20, 300, 14
-    PUSHBUTTON "Refresh Rate Override", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
-    LTEXT "Overrides the Refresh Rate for DirectDraw", IDC_STATIC, 90, 40, 300, 14
+    LTEXT "Informationen, die Sie suchen immer noch nicht gefunden? Hier sind einige zusätzliche Dinge, die Sie tun können:", IDC_STATIC, 5, 0, 300, 10
+    PUSHBUTTON "Systeminformationen...", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
+    LTEXT "Zeigt zusätzliche Systeminformationen an", IDC_STATIC, 90, 23, 300, 10
+    PUSHBUTTON "Außer Kraft setzen...", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
+    LTEXT "Überschreibt die Aktualisierungsrate für DirectDraw", IDC_STATIC, 90, 43, 300, 10
 END
 
 STRINGTABLE
@@ -243,12 +243,12 @@ BEGIN
     IDS_D3DTEST_DESCRIPTION "Dies wird den Direct3D-Interfacetest starten. Fortfahren?"
     IDS_D3DTEST_D3Dx "Dieser Test wird das hardwarebeschleunigte Direct3D %u Interface verwenden."
     IDS_OS_VERSION "%s %s (%d.%d, Build %d)"
-    IDS_DMUSIC_DESC "Description"
-    IDS_DMUSIC_TYPE "Type"
-    IDS_DMUSIC_KERNEL "Kernel Mode"
-    IDS_DMUSIC_IO "In/Out"
-    IDS_DMUSIC_DLS "Supports DLS"
-    IDS_DMUSIC_EXT "External"
-    IDS_DMUSIC_PORT "Default Port"
-    IDS_DDDISABLE_MSG "This will disable all hardware acceleration for DirectDraw on all display devices\n.Do you wish to continue?\n"
+    IDS_DMUSIC_DESC "Beschreibung"
+    IDS_DMUSIC_TYPE "Typ"
+    IDS_DMUSIC_KERNEL "Kernelmodus"
+    IDS_DMUSIC_IO "Ein/Aus"
+    IDS_DMUSIC_DLS "Unterstützt DLS"
+    IDS_DMUSIC_EXT "Extern"
+    IDS_DMUSIC_PORT "Standardanschluss"
+    IDS_DDDISABLE_MSG "Dies wird die Hardwarebeschleunigung von DirectDraw für alle Anzeigegeräte deaktivieren.\nMöchten Sie fortfahren?\n"
 END
