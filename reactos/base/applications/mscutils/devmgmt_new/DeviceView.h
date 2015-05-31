@@ -34,6 +34,11 @@ public:
     BOOL Initialize();
     BOOL Uninitialize();
 
+    VOID EnableContextMenuItem(
+        _In_ UINT Id,
+        _In_ UINT Enabled
+        );
+    
     VOID ShowContextMenu(
         _In_ INT xPos,
         _In_ INT yPos
@@ -49,12 +54,27 @@ public:
     VOID Refresh();
     VOID DisplayPropertySheet();
     VOID SetFocus();
-
+    
+    BOOL IsRootItemSelected();
+    
+    BOOL IsRootItem(
+        _In_ HTREEITEM Item
+        );
+    
+    BOOL HasChildItem(
+        _In_ HTREEITEM Item
+        );
+    
     VOID SetDeviceListType(ListDevices List)
     {
         m_ListDevices = List;
     }
 
+    ListDevices GetDeviceListType()
+    {
+        return m_ListDevices;
+    }
+    
     VOID ShowHiddenDevices(_In_ BOOL ShowHidden)
     {
         m_ShowHidden = ShowHidden;

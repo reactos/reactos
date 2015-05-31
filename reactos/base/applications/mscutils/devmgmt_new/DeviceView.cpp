@@ -112,6 +112,30 @@ CDeviceView::Uninitialize()
     return TRUE;
 }
 
+BOOL CDeviceView::HasChildItem(
+    _In_ HTREEITEM Item)
+{
+    return (TreeView_GetChild(m_hTreeView, Item) != NULL);
+}
+
+BOOL CDeviceView::IsRootItem(
+    _In_ HTREEITEM Item)
+{
+    return (TreeView_GetRoot(m_hTreeView) == Item);
+}
+
+BOOL CDeviceView::IsRootItemSelected()
+{
+    return (TreeView_GetRoot(m_hTreeView) == TreeView_GetSelection(m_hTreeView));
+}
+
+VOID CDeviceView::EnableContextMenuItem(
+    _In_ UINT Id,
+    _In_ UINT Enabled)
+{
+    EnableMenuItem(m_hShortcutMenu, Id, Enabled);
+}
+
 VOID
 CDeviceView::ShowContextMenu(
     _In_ INT xPos,

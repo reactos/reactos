@@ -429,7 +429,61 @@ CMainWindow::OnNotify(LPARAM lParam)
 
             break;
         }
+        
+        case TVN_SELCHANGED:
+        {
+            LPNM_TREEVIEW pnmtv = (LPNM_TREEVIEW)lParam;
+            ListDevices ListType = m_DeviceView->GetDeviceListType();
+            
+            if (ListType == DevicesByType)
+            {
+                if (!m_DeviceView->HasChildItem(pnmtv->itemNew.hItem))
+                {
+                    SendMessage(m_hToolBar,
+                                TB_SETSTATE,
+                                IDC_PROP,
+                                (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
 
+                    EnableMenuItem(GetMenu(m_hMainWnd), IDC_PROP, MF_ENABLED);
+                    m_DeviceView->EnableContextMenuItem(IDC_PROP, MF_ENABLED);
+                }
+                else
+                {
+                    SendMessage(m_hToolBar,
+                                TB_SETSTATE,
+                                IDC_PROP,
+                                (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+
+                    EnableMenuItem(GetMenu(m_hMainWnd), IDC_PROP, MF_GRAYED);
+                    m_DeviceView->EnableContextMenuItem(IDC_PROP, MF_GRAYED);
+                }
+            }
+            else if (ListType == DevicesByConnection)
+            {
+                if (m_DeviceView->IsRootItem(pnmtv->itemNew.hItem))
+                {
+                    SendMessage(m_hToolBar,
+                                TB_SETSTATE,
+                                IDC_PROP,
+                                (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+
+                    EnableMenuItem(GetMenu(m_hMainWnd), IDC_PROP, MF_GRAYED);
+                    m_DeviceView->EnableContextMenuItem(IDC_PROP, MF_GRAYED);
+                }
+                else
+                {
+                    SendMessage(m_hToolBar,
+                                TB_SETSTATE,
+                                IDC_PROP,
+                                (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+
+                    EnableMenuItem(GetMenu(m_hMainWnd), IDC_PROP, MF_ENABLED);
+                    m_DeviceView->EnableContextMenuItem(IDC_PROP, MF_ENABLED);
+                }
+            }
+        }
+        break;
+        
         case NM_DBLCLK:
         {
             m_DeviceView->DisplayPropertySheet();
@@ -438,7 +492,18 @@ CMainWindow::OnNotify(LPARAM lParam)
 
         case NM_RETURN:
         {
-            m_DeviceView->DisplayPropertySheet();
+            ListDevices ListType = m_DeviceView->GetDeviceListType();
+            if (ListType == DevicesByType)
+            {
+                m_DeviceView->DisplayPropertySheet();
+            }
+            else if (ListType == DevicesByConnection)
+            {
+                if (!m_DeviceView->IsRootItemSelected())
+                {
+                    m_DeviceView->DisplayPropertySheet();
+                }
+            }    
             break;
         }
     }
