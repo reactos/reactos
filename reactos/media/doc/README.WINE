@@ -286,6 +286,7 @@ msvcrt -
   reactos/lib/sdk/crt/process/_cwait.c          # Synced to WineStaging-1.7.37
   reactos/lib/sdk/crt/signal/xcptinfo.c         # Synced to WineStaging-1.7.37
   reactos/lib/sdk/crt/string/scanf.c/h          # Synced to Wine-1.7.17
+  reactos/lib/sdk/crt/string/strtoul.c          # Synced to WineStaging-1.7.37
   reactos/lib/sdk/crt/strings/wcs.c             # Synced at 20080611
   reactos/lib/sdk/crt/wine/heap.c               # Synced at 20080529
   reactos/lib/sdk/crt/wine/undname.c            # Synced at 20081130

@@ -1,75 +1,110 @@
 #include <precomp.h>
-#include <ctype.h>
 
-/*
- * Convert a string to an unsigned long integer.
+/* Based on Wine Staging 1.7.37 - dlls/msvcrt/string.c */
+
+/*********************************************************************
+ *  _strtoi64_l (MSVCRT.@)
  *
- * Ignores `locale' stuff.  Assumes that the upper and lower case
- * alphabets and digits are each contiguous.
- *
- * @implemented
+ * FIXME: locale parameter is ignored
  */
-unsigned long
-strtoul(const char *nptr, char **endptr, int base)
+__int64 CDECL strtoi64_l(const char *nptr, char **endptr, int base, _locale_t locale)
 {
-  const char *s = nptr;
-  unsigned long acc;
-  int c;
-  unsigned long cutoff;
-  int neg = 0, any, cutlim;
+    BOOL negative = FALSE;
+    __int64 ret = 0;
 
-  /*
-   * See strtol for comments as to the logic used.
-   */
-  do {
-    c = *s++;
-  } while (isspace(c));
-  if (c == '-')
-  {
-    neg = 1;
-    c = *s++;
-  }
-  else if (c == '+')
-    c = *s++;
-  if ((base == 0 || base == 16) &&
-      c == '0' && (*s == 'x' || *s == 'X'))
-  {
-    c = s[1];
-    s += 2;
-    base = 16;
-  }
-  if (base == 0)
-    base = c == '0' ? 8 : 10;
-  cutoff = (unsigned long)ULONG_MAX / (unsigned long)base;
-  cutlim = (unsigned long)ULONG_MAX % (unsigned long)base;
-  for (acc = 0, any = 0;; c = *s++)
-  {
-    if (isdigit(c))
-      c -= '0';
-    else if (isalpha(c))
-      c -= isupper(c) ? 'A' - 10 : 'a' - 10;
-    else
-      break;
-    if (c >= base)
-      break;
-    if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
-      any = -1;
-    else {
-      any = 1;
-      acc *= base;
-      acc += c;
-    }
-  }
-  if (any < 0)
-  {
-    acc = ULONG_MAX;
 #ifndef _LIBCNT_
-    _set_errno(ERANGE);
+    TRACE("(%s %p %d %p)\n", debugstr_a(nptr), endptr, base, locale);
 #endif
-  }
-  else if (neg)
-    acc = 0-acc;
-  if (endptr != 0)
-    *endptr = any ? (char *)((size_t)(s - 1)) : (char *)((size_t)nptr);
-  return acc;
+
+    if (!MSVCRT_CHECK_PMT(nptr != NULL)) return 0;
+    if (!MSVCRT_CHECK_PMT(base == 0 || base >= 2)) return 0;
+    if (!MSVCRT_CHECK_PMT(base <= 36)) return 0;
+
+    while(isspace(*nptr)) nptr++;
+
+    if(*nptr == '-') {
+        negative = TRUE;
+        nptr++;
+    } else if(*nptr == '+')
+        nptr++;
+
+    if((base==0 || base==16) && *nptr=='0' && tolower(*(nptr+1))=='x') {
+        base = 16;
+        nptr += 2;
+    }
+
+    if(base == 0) {
+        if(*nptr=='0')
+            base = 8;
+        else
+            base = 10;
+    }
+
+    while(*nptr) {
+        char cur = tolower(*nptr);
+        int v;
+
+        if(isdigit(cur)) {
+            if(cur >= '0'+base)
+                break;
+            v = cur-'0';
+        } else {
+            if(cur<'a' || cur>='a'+base-10)
+                break;
+            v = cur-'a'+10;
+        }
+
+        if(negative)
+            v = -v;
+
+        nptr++;
+
+        if(!negative && (ret>_I64_MAX/base || ret*base>_I64_MAX-v)) {
+            ret = _I64_MAX;
+#ifndef _LIBCNT_
+            *_errno() = ERANGE;
+#endif
+        } else if(negative && (ret<_I64_MIN/base || ret*base<_I64_MIN-v)) {
+            ret = _I64_MIN;
+#ifndef _LIBCNT_
+            *_errno() = ERANGE;
+#endif
+        } else
+            ret = ret*base + v;
+    }
+
+    if(endptr)
+        *endptr = (char*)nptr;
+
+    return ret;
+}
+
+/******************************************************************
+ *		_strtoul_l (MSVCRT.@)
+ */
+unsigned long CDECL strtoul_l(const char* nptr, char** end, int base, _locale_t locale)
+{
+    __int64 ret = strtoi64_l(nptr, end, base, locale);
+
+    if(ret > ULONG_MAX) {
+        ret = ULONG_MAX;
+#ifndef _LIBCNT_
+        *_errno() = ERANGE;
+#endif
+    }else if(ret < -(__int64)ULONG_MAX) {
+        ret = 1;
+#ifndef _LIBCNT_
+        *_errno() = ERANGE;
+#endif
+    }
+
+    return ret;
+}
+
+/******************************************************************
+ *		strtoul (MSVCRT.@)
+ */
+unsigned long CDECL strtoul(const char* nptr, char** end, int base)
+{
+    return strtoul_l(nptr, end, base, NULL);
 }
