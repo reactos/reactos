@@ -784,18 +784,23 @@ CdfsNotifyChangeDirectory(PDEVICE_OBJECT DeviceObject,
 
 
 NTSTATUS NTAPI
-CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
-                     PIRP Irp)
+CdfsDirectoryControl(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
-    PIO_STACK_LOCATION Stack;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
 
     DPRINT("CdfsDirectoryControl() called\n");
+
+    ASSERT(IrpContext);
+
+    Irp = IrpContext->Irp;
+    DeviceObject = IrpContext->DeviceObject;
+
     FsRtlEnterFileSystem();
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
-
-    switch (Stack->MinorFunction)
+    switch (IrpContext->MinorFunction)
     {
     case IRP_MN_QUERY_DIRECTORY:
         Status = CdfsQueryDirectory(DeviceObject,
@@ -808,7 +813,7 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
         break;
 
     default:
-        DPRINT1("CDFS: MinorFunction %u\n", Stack->MinorFunction);
+        DPRINT1("CDFS: MinorFunction %u\n", IrpContext->MinorFunction);
         Status = STATUS_INVALID_DEVICE_REQUEST;
         break;
     }
@@ -817,7 +822,6 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
     {
         Irp->IoStatus.Status = Status;
         Irp->IoStatus.Information = 0;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
     FsRtlExitFileSystem();
 

@@ -338,12 +338,10 @@ CdfsDeviceControl(
 
 /* dirctl.c */
 
-DRIVER_DISPATCH CdfsDirectoryControl;
-
 NTSTATUS
 NTAPI
-CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
-                     PIRP Irp);
+CdfsDirectoryControl(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 /* dispatch.c */
 
@@ -452,13 +450,9 @@ CdfsSetInformation(
 
 /* fsctl.c */
 
-//DRIVER_DISPATCH CdfsFileSystemControl;
-
 NTSTATUS NTAPI
 CdfsFileSystemControl(
     PCDFS_IRP_CONTEXT IrpContext);
-//    PDEVICE_OBJECT DeviceObject,
-//                      PIRP Irp);
 
 
 /* misc.c */

@@ -18,7 +18,7 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystem/cdfs/dispatch.c
+ * FILE:             drivers/filesystems/cdfs/dispatch.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Pierre Schweitzer
  */
@@ -85,7 +85,7 @@ CdfsDispatch(PCDFS_IRP_CONTEXT IrpContext)
             break;
 
         case IRP_MJ_DIRECTORY_CONTROL:
-//            Status = CdfsDirectoryControl(IrpContext);
+            Status = CdfsDirectoryControl(IrpContext);
             break;
 
         case IRP_MJ_READ:
