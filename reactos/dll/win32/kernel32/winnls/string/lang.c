@@ -1759,10 +1759,16 @@ INT WINAPI FoldStringW(DWORD dwFlags, LPCWSTR src, INT srclen,
  *
  * See CompareStringA.
  */
-INT WINAPI CompareStringW(LCID lcid, DWORD style,
+INT WINAPI CompareStringW(LCID lcid, DWORD flags,
                           LPCWSTR str1, INT len1, LPCWSTR str2, INT len2)
 {
+    static const DWORD supported_flags = NORM_IGNORECASE|NORM_IGNORENONSPACE|NORM_IGNORESYMBOLS|SORT_STRINGSORT
+                                        |NORM_IGNOREKANATYPE|NORM_IGNOREWIDTH|LOCALE_USE_CP_ACP
+                                        |NORM_LINGUISTIC_CASING|LINGUISTIC_IGNORECASE|0x10000000;
+    static DWORD semistub_flags = NORM_LINGUISTIC_CASING|LINGUISTIC_IGNORECASE|0x10000000;
+    /* 0x10000000 is related to diacritics in Arabic, Japanese, and Hebrew */
     INT ret;
+
 
     if (!str1 || !str2)
     {
@@ -1770,21 +1776,22 @@ INT WINAPI CompareStringW(LCID lcid, DWORD style,
         return 0;
     }
 
-    if( style & ~(NORM_IGNORECASE|NORM_IGNORENONSPACE|NORM_IGNORESYMBOLS|
-        SORT_STRINGSORT|NORM_IGNOREKANATYPE|NORM_IGNOREWIDTH|LOCALE_USE_CP_ACP|0x10000000) )
+    if (flags & ~supported_flags)
     {
         SetLastError(ERROR_INVALID_FLAGS);
         return 0;
     }
 
-    /* this style is related to diacritics in Arabic, Japanese, and Hebrew */
-    if (style & 0x10000000)
-        WARN("Ignoring unknown style 0x10000000\n");
+    if (flags & semistub_flags)
+    {
+        FIXME("semi-stub behavior for flag(s) 0x%x\n", flags & semistub_flags);
+        semistub_flags &= ~flags;
+    }
 
     if (len1 < 0) len1 = strlenW(str1);
     if (len2 < 0) len2 = strlenW(str2);
 
-    ret = wine_compare_string(style, str1, len1, str2, len2);
+    ret = wine_compare_string(flags, str1, len1, str2, len2);
 
     if (ret) /* need to translate result */
         return (ret < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
@@ -1798,7 +1805,7 @@ INT WINAPI CompareStringW(LCID lcid, DWORD style,
  *
  * PARAMS
  *  lcid  [I] LCID for the comparison
- *  style [I] Flags for the comparison (NORM_ constants from "winnls.h").
+ *  flags [I] Flags for the comparison (NORM_ constants from "winnls.h").
  *  str1  [I] First string to compare
  *  len1  [I] Length of str1, or -1 if str1 is NUL terminated
  *  str2  [I] Second string to compare
