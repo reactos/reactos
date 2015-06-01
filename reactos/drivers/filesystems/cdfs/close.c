@@ -76,15 +76,23 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 
 
 NTSTATUS NTAPI
-CdfsClose(PDEVICE_OBJECT DeviceObject,
-          PIRP Irp)
+CdfsClose(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
     PDEVICE_EXTENSION DeviceExtension;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
 
     DPRINT("CdfsClose() called\n");
+
+    ASSERT(IrpContext);
+
+    Irp = IrpContext->Irp;
+    DeviceObject = IrpContext->DeviceObject;
+    Stack = IrpContext->Stack;
 
     if (DeviceObject == CdfsGlobalData->DeviceObject)
     {
@@ -93,17 +101,14 @@ CdfsClose(PDEVICE_OBJECT DeviceObject,
         goto ByeBye;
     }
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = Stack->FileObject;
     DeviceExtension = DeviceObject->DeviceExtension;
 
     Status = CdfsCloseFile(DeviceExtension,FileObject);
 
 ByeBye:
-    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return(Status);
 }
 

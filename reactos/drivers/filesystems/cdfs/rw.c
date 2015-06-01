@@ -175,9 +175,11 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
 
 NTSTATUS NTAPI
-CdfsRead(PDEVICE_OBJECT DeviceObject,
-         PIRP Irp)
+CdfsRead(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
     PDEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
@@ -187,10 +189,15 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
     ULONG ReturnedReadLength = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("CdfsRead(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
+    DPRINT("CdfsRead(%p)\n", IrpContext);
+
+    ASSERT(IrpContext);
+
+    Irp = IrpContext->Irp;
+    DeviceObject = IrpContext->DeviceObject;
+    Stack = IrpContext->Stack;
 
     DeviceExt = DeviceObject->DeviceExtension;
-    Stack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = Stack->FileObject;
 
     ReadLength = Stack->Parameters.Read.Length;
@@ -218,19 +225,21 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus.Information = 0;
     }
 
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp,IO_NO_INCREMENT);
-
     return(Status);
 }
 
 
 NTSTATUS NTAPI
-CdfsWrite(PDEVICE_OBJECT DeviceObject,
-          PIRP Irp)
+CdfsWrite(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
-    DPRINT("CdfsWrite(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+    PIRP Irp;
 
+    DPRINT("CdfsWrite(%p)\n", IrpContext);
+
+    ASSERT(IrpContext);
+
+    Irp = IrpContext->Irp;
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;
     return(STATUS_NOT_SUPPORTED);

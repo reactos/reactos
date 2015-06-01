@@ -281,22 +281,18 @@ DriverEntry(
 
 /* cleanup.c */
 
-DRIVER_DISPATCH CdfsCleanup;
-
 NTSTATUS
 NTAPI
-CdfsCleanup(PDEVICE_OBJECT DeviceObject,
-            PIRP Irp);
+CdfsCleanup(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 
 /* close.c */
 
-DRIVER_DISPATCH CdfsClose;
-
 NTSTATUS
 NTAPI
-CdfsClose(PDEVICE_OBJECT DeviceObject,
-          PIRP Irp);
+CdfsClose(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
@@ -488,19 +484,15 @@ CdfsShortNameCacheGet
 
 /* rw.c */
 
-DRIVER_DISPATCH CdfsRead;
+NTSTATUS
+NTAPI
+CdfsRead(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 NTAPI
-CdfsRead(PDEVICE_OBJECT DeviceObject,
-         PIRP Irp);
-
-DRIVER_DISPATCH CdfsWrite;
-
-NTSTATUS
-NTAPI
-CdfsWrite(PDEVICE_OBJECT DeviceObject,
-          PIRP Irp);
+CdfsWrite(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 
 /* volinfo.c */

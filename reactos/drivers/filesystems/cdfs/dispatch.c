@@ -89,7 +89,7 @@ CdfsDispatch(PCDFS_IRP_CONTEXT IrpContext)
             break;
 
         case IRP_MJ_READ:
-//            Status = CdfsRead(IrpContext);
+            Status = CdfsRead(IrpContext);
             break;
 
         case IRP_MJ_DEVICE_CONTROL:
@@ -97,15 +97,19 @@ CdfsDispatch(PCDFS_IRP_CONTEXT IrpContext)
             break;
 
         case IRP_MJ_WRITE:
-//            Status = CdfsWrite(IrpContext);
+            Status = CdfsWrite(IrpContext);
             break;
 
         case IRP_MJ_CLOSE:
-//            Status = CdfsClose(IrpContext);
+            Status = CdfsClose(IrpContext);
             break;
 
         case IRP_MJ_CREATE:
 //            Status = CdfsCreate(IrpContext);
+            break;
+
+        case IRP_MJ_CLEANUP:
+            Status = CdfsCleanup(IrpContext);
             break;
 
         case IRP_MJ_FILE_SYSTEM_CONTROL:

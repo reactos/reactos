@@ -79,11 +79,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     /* Initialize driver data */
     DeviceObject->Flags = DO_DIRECT_IO;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE] = CdfsClose;
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = CdfsCleanup;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = CdfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = CdfsCreate;
-    DriverObject->MajorFunction[IRP_MJ_READ] = CdfsRead;
-    DriverObject->MajorFunction[IRP_MJ_WRITE] = CdfsWrite;
+    DriverObject->MajorFunction[IRP_MJ_READ] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = CdfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = CdfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = CdfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = CdfsFsdDispatch;
