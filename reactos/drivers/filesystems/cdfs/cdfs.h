@@ -238,17 +238,46 @@ typedef struct _CCB
 #define CDFS_SEARCH_PATTERN_TAG 'eedC'
 #define CDFS_FILENAME_TAG       'nFdC'
 
-typedef struct
+typedef struct _CDFS_GLOBAL_DATA
 {
   PDRIVER_OBJECT DriverObject;
   PDEVICE_OBJECT DeviceObject;
   ULONG Flags;
   CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
   FAST_IO_DISPATCH FastIoDispatch;
+    NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
 } CDFS_GLOBAL_DATA, *PCDFS_GLOBAL_DATA;
+
+#define IRPCONTEXT_CANWAIT 0x1
+#define IRPCONTEXT_COMPLETE 0x2
+#define IRPCONTEXT_QUEUE 0x4
+
+typedef struct _CDFS_IRP_CONTEXT
+{
+//    NTFSIDENTIFIER Identifier;
+    ULONG Flags;
+    PIO_STACK_LOCATION Stack;
+    UCHAR MajorFunction;
+    UCHAR MinorFunction;
+    WORK_QUEUE_ITEM WorkQueueItem;
+    PIRP Irp;
+    BOOLEAN IsTopLevel;
+    PDEVICE_OBJECT DeviceObject;
+    PFILE_OBJECT FileObject;
+    NTSTATUS SavedExceptionCode;
+    CCHAR PriorityBoost;
+} CDFS_IRP_CONTEXT, *PCDFS_IRP_CONTEXT;
+
 
 extern PCDFS_GLOBAL_DATA CdfsGlobalData;
 
+/* cdfs.c */
+
+NTSTATUS
+NTAPI
+DriverEntry(
+    PDRIVER_OBJECT DriverObject,
+    PUNICODE_STRING RegistryPath);
 
 /* cleanup.c */
 
@@ -303,11 +332,9 @@ CdfsCreate(PDEVICE_OBJECT DeviceObject,
 
 /* devctrl.c */
 
-DRIVER_DISPATCH CdfsDeviceControl;
-
 NTSTATUS NTAPI
-CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
-                  PIRP Irp);
+CdfsDeviceControl(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 /* dirctl.c */
 
@@ -318,6 +345,29 @@ NTAPI
 CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
                      PIRP Irp);
 
+/* dispatch.c */
+
+DRIVER_DISPATCH CdfsFsdDispatch;
+NTSTATUS
+NTAPI
+CdfsFsdDispatch(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
+
+/* fastio.c */
+
+BOOLEAN
+NTAPI
+CdfsAcquireForLazyWrite(IN PVOID Context,
+                        IN BOOLEAN Wait);
+
+VOID
+NTAPI
+CdfsReleaseFromLazyWrite(IN PVOID Context);
+
+FAST_IO_CHECK_IF_POSSIBLE CdfsFastIoCheckIfPossible;
+FAST_IO_READ CdfsFastIoRead;
+FAST_IO_WRITE CdfsFastIoWrite;
 
 /* fcb.c */
 
@@ -389,31 +439,38 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 
 /* finfo.c */
 
-DRIVER_DISPATCH CdfsQueryInformation;
+NTSTATUS
+NTAPI
+CdfsQueryInformation(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 NTAPI
-CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
-                     PIRP Irp);
-
-DRIVER_DISPATCH CdfsSetInformation;
-
-NTSTATUS
-NTAPI
-CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
-                   PIRP Irp);
+CdfsSetInformation(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 
 /* fsctl.c */
 
-DRIVER_DISPATCH CdfsFileSystemControl;
+//DRIVER_DISPATCH CdfsFileSystemControl;
 
 NTSTATUS NTAPI
-CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
-                      PIRP Irp);
+CdfsFileSystemControl(
+    PCDFS_IRP_CONTEXT IrpContext);
+//    PDEVICE_OBJECT DeviceObject,
+//                      PIRP Irp);
 
 
 /* misc.c */
+
+BOOLEAN
+CdfsIsIrpTopLevel(
+    PIRP Irp);
+
+PCDFS_IRP_CONTEXT
+CdfsAllocateIrpContext(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
 
 VOID
 CdfsSwapString(PWCHAR Out,
@@ -454,35 +511,14 @@ CdfsWrite(PDEVICE_OBJECT DeviceObject,
 
 /* volinfo.c */
 
-DRIVER_DISPATCH CdfsQueryVolumeInformation;
+NTSTATUS
+NTAPI
+CdfsQueryVolumeInformation(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 NTAPI
-CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
-                           PIRP Irp);
-
-DRIVER_DISPATCH CdfsSetVolumeInformation;
-
-NTSTATUS
-NTAPI
-CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
-                         PIRP Irp);
-
-/* cdfs.c */
-
-NTSTATUS NTAPI
-DriverEntry(PDRIVER_OBJECT DriverObject,
-	    PUNICODE_STRING RegistryPath);
-
-BOOLEAN NTAPI
-CdfsAcquireForLazyWrite(IN PVOID Context,
-                        IN BOOLEAN Wait);
-
-VOID NTAPI
-CdfsReleaseFromLazyWrite(IN PVOID Context);
-
-FAST_IO_CHECK_IF_POSSIBLE CdfsFastIoCheckIfPossible;
-FAST_IO_READ CdfsFastIoRead;
-FAST_IO_WRITE CdfsFastIoWrite;
+CdfsSetVolumeInformation(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 #endif /* CDFS_H */

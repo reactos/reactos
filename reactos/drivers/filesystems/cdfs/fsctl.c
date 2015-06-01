@@ -550,17 +550,25 @@ CdfsSetCompression(
 
 
 NTSTATUS NTAPI
-CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
-                      PIRP Irp)
+CdfsFileSystemControl(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status;
 
     DPRINT("CdfsFileSystemControl() called\n");
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IrpContext);
 
-    switch (Stack->MinorFunction)
+    DeviceObject = IrpContext->DeviceObject;
+    Irp = IrpContext->Irp;
+    Stack = IrpContext->Stack;
+
+    Irp->IoStatus.Information = 0;
+
+    switch (IrpContext->MinorFunction)
     {
     case IRP_MN_KERNEL_CALL:
     case IRP_MN_USER_FS_REQUEST:
@@ -593,11 +601,6 @@ CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
         Status = STATUS_INVALID_DEVICE_REQUEST;
         break;
     }
-
-    Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return(Status);
 }

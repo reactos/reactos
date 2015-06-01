@@ -9,6 +9,8 @@ list(APPEND SOURCE
     create.c
     devctrl.c
     dirctl.c
+    dispatch.c
+    fastio.c
     fcb.c
     finfo.c
     fsctl.c

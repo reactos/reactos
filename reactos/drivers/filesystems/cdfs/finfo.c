@@ -334,9 +334,11 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
 * FUNCTION: Retrieve the specified file information
 */
 NTSTATUS NTAPI
-CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
-                     PIRP Irp)
+CdfsQueryInformation(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
     FILE_INFORMATION_CLASS FileInformationClass;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
@@ -348,7 +350,9 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("CdfsQueryInformation() called\n");
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
+    Irp = IrpContext->Irp;
+    DeviceObject = IrpContext->DeviceObject;
+    Stack = IrpContext->Stack;
     FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
     FileObject = Stack->FileObject;
     Fcb = FileObject->FsContext;
@@ -423,8 +427,6 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
     else
         Irp->IoStatus.Information = 0;
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
     return(Status);
 }
 
@@ -452,9 +454,10 @@ CdfsSetPositionInformation(PFILE_OBJECT FileObject,
 * FUNCTION: Set the specified file information
 */
 NTSTATUS NTAPI
-CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
-                   PIRP Irp)
+CdfsSetInformation(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
     FILE_INFORMATION_CLASS FileInformationClass;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
@@ -462,11 +465,10 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 
     NTSTATUS Status = STATUS_SUCCESS;
 
-    UNREFERENCED_PARAMETER(DeviceObject);
-
     DPRINT("CdfsSetInformation() called\n");
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
+    Irp = IrpContext->Irp;
+    Stack = IrpContext->Stack;
     FileInformationClass = Stack->Parameters.SetFile.FileInformationClass;
     FileObject = Stack->FileObject;
 
@@ -491,8 +493,6 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 }

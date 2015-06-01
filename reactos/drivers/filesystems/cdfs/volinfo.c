@@ -168,9 +168,11 @@ CdfsGetFsDeviceInformation
 
 
 NTSTATUS NTAPI
-CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
-                           PIRP Irp)
+CdfsQueryVolumeInformation(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
     FS_INFORMATION_CLASS FsInformationClass;
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -179,7 +181,11 @@ CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("CdfsQueryVolumeInformation() called\n");
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IrpContext);
+
+    Irp = IrpContext->Irp;
+    DeviceObject = IrpContext->DeviceObject;
+    Stack = IrpContext->Stack;
     FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
     BufferLength = Stack->Parameters.QueryVolume.Length;
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
@@ -223,23 +229,24 @@ CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
         Stack->Parameters.QueryVolume.Length - BufferLength;
     else
         Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return(Status);
 }
 
 
 NTSTATUS NTAPI
-CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
-                         PIRP Irp)
+CdfsSetVolumeInformation(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
+
     DPRINT("CdfsSetVolumeInformation() called\n");
 
-    UNREFERENCED_PARAMETER(DeviceObject);
+    ASSERT(IrpContext);
 
+    Irp = IrpContext->Irp;
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return(STATUS_NOT_SUPPORTED);
 }

@@ -34,6 +34,78 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * FUNCTION: Used with IRP to set them to TopLevelIrp field
+ * ARGUMENTS:
+ *           Irp = The IRP to set
+ * RETURNS: TRUE if top level was null, else FALSE
+ */
+BOOLEAN
+CdfsIsIrpTopLevel(
+    PIRP Irp)
+{
+    BOOLEAN ReturnCode = FALSE;
+
+    DPRINT("CdfsIsIrpTopLevel()\n");
+
+    if (IoGetTopLevelIrp() == NULL)
+    {
+        IoSetTopLevelIrp(Irp);
+        ReturnCode = TRUE;
+    }
+
+    return ReturnCode;
+}
+
+
+/*
+ * FUNCTION: Allocate and fill a CDFS_IRP_CONTEXT struct in order to use it for IRP
+ * ARGUMENTS:
+ *           DeviceObject = Used to fill in struct 
+ *           Irp = The IRP that need IRP_CONTEXT struct
+ * RETURNS: NULL or PCDFS_IRP_CONTEXT
+ */
+PCDFS_IRP_CONTEXT
+CdfsAllocateIrpContext(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    PCDFS_IRP_CONTEXT IrpContext;
+
+    DPRINT("CdfsAllocateIrpContext()\n");
+
+    IrpContext = (PCDFS_IRP_CONTEXT)ExAllocateFromNPagedLookasideList(&CdfsGlobalData->IrpContextLookasideList);
+    if (IrpContext == NULL)
+        return NULL;
+
+    RtlZeroMemory(IrpContext, sizeof(CDFS_IRP_CONTEXT));
+
+//    IrpContext->Identifier.Type = NTFS_TYPE_IRP_CONTEST;
+//    IrpContext->Identifier.Size = sizeof(NTFS_IRP_CONTEXT);
+    IrpContext->Irp = Irp;
+    IrpContext->DeviceObject = DeviceObject;
+    IrpContext->Stack = IoGetCurrentIrpStackLocation(Irp);
+    IrpContext->MajorFunction = IrpContext->Stack->MajorFunction;
+    IrpContext->MinorFunction = IrpContext->Stack->MinorFunction;
+    IrpContext->FileObject = IrpContext->Stack->FileObject;
+    IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
+    IrpContext->PriorityBoost = IO_NO_INCREMENT;
+    IrpContext->Flags = IRPCONTEXT_COMPLETE;
+
+    if (IrpContext->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
+        IrpContext->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
+        IrpContext->MajorFunction == IRP_MJ_SHUTDOWN ||
+        (IrpContext->MajorFunction != IRP_MJ_CLEANUP &&
+         IrpContext->MajorFunction != IRP_MJ_CLOSE &&
+         IoIsOperationSynchronous(Irp)))
+    {
+        IrpContext->Flags |= IRPCONTEXT_CANWAIT;
+    }
+
+    return IrpContext;
+}
+
+
 VOID
 CdfsSwapString(PWCHAR Out,
                PUCHAR In,
