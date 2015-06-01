@@ -8,7 +8,8 @@
 */
 
 
-#include "precomp.h"
+#include "stdafx.h"
+#include "devmgmt.h"
 #include "DeviceView.h"
 
 
@@ -18,7 +19,6 @@
 #define CLASS_NAME_LEN      256
 #define CLASS_DESC_LEN      256
 
-extern "C"
 INT_PTR
 WINAPI
 DevicePropertiesExW(
@@ -191,7 +191,12 @@ CDeviceView::Refresh()
     HANDLE hThread;
 
     /* Run on a new thread to keep the gui responsive */
-    hThread = CreateThread(NULL, 0, ListDevicesThread, this, 0, NULL);
+    hThread = (HANDLE)_beginthreadex(NULL,
+                                     0,
+                                     &ListDevicesThread,
+                                     this,
+                                     0,
+                                     NULL);
 
     if (hThread) CloseHandle(hThread);
 }
@@ -243,7 +248,7 @@ CDeviceView::SetFocus()
 
 /* PRIVATE METHODS ********************************************/
 
-DWORD CALLBACK CDeviceView::ListDevicesThread(PVOID Param)
+unsigned int __stdcall CDeviceView::ListDevicesThread(void *Param)
 {
     CDeviceView *This = (CDeviceView *)Param;
 
@@ -372,7 +377,7 @@ CDeviceView::ListDevicesByType()
                                                       ClassDescription,
                                                       NULL,
                                                       ClassImage,
-                                                      OverlayImage);
+                                                      0);
 
                         /* Don't add it again */
                         AddedParent = TRUE;
@@ -471,6 +476,8 @@ CDeviceView::RecurseChildDevices(
     WCHAR DeviceName[DEVICE_NAME_LEN];
     LPTSTR DeviceId = NULL;
     INT ClassImage;
+    BOOL IsUnknown = FALSE;
+    BOOL IsHidden = FALSE;
     ULONG DeviceStatus = 0;
     ULONG ProblemNumber = 0;
     UINT OverlayImage = 0;
@@ -510,7 +517,7 @@ CDeviceView::RecurseChildDevices(
                                           DeviceName,
                                           (LPARAM)DeviceId,
                                           ClassImage,
-                                          OverlayImage);
+                                          0);
 
 
             if (hDevItem)
@@ -563,7 +570,7 @@ CDeviceView::RecurseChildDevices(
                                             DeviceName,
                                             (LPARAM)DeviceId,
                                             ClassImage,
-                                            OverlayImage);
+                                            0);
             if (hDevItem)
             {
                 /* Check if this child has any children itself */

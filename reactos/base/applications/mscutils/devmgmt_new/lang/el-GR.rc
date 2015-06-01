@@ -8,19 +8,16 @@ BEGIN
   END
   POPUP "Ενέργεια"
   BEGIN
-    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "Εκτύπωση",             IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Ιδιότητες",            IDC_PROP, GRAYED
   END
   POPUP "Εμφάνιση"
   BEGIN
-    MENUITEM "Συσκευές ανά τύπο",    IDC_DEVBYTYPE
-    MENUITEM "Συσκευές ανά σύνδεση", IDC_DEVBYCONN
-    MENUITEM "Πηγές ανά τύπο",       IDC_RESBYTYPE, GRAYED
-    MENUITEM "Πηγές ανά σύνδεση",    IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Συσκευές ανά τύπο",    IDC_DEVBYTYPE, CHECKED
+    MENUITEM "Συσκευές ανά σύνδεση", IDC_STATIC, GRAYED
+    MENUITEM "Πηγές ανά τύπο",       IDC_STATIC, GRAYED
+    MENUITEM "Πηγές ανά σύνδεση",    IDC_STATIC, GRAYED
   END
   POPUP "Βοήθεια"
   BEGIN
@@ -41,7 +38,7 @@ CAPTION "Σχετικά με η διαχείριση συσκεών"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Device Manager v0.2\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 30
+  LTEXT "Device Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -57,6 +54,7 @@ BEGIN
   IDS_TOOLTIP_PROP      "Ιδιότητες"
   IDS_TOOLTIP_REFRESH   "Ανανέωση"
   IDS_TOOLTIP_HELP      "Βοήθεια"
+  IDS_TOOLTIP_EXIT      "Έξοδος"
 END
 
 /* Hints */
@@ -69,11 +67,6 @@ BEGIN
   IDS_HINT_PROP         " Άνοιγμα παραθύρου ιδιοτήτων για τη συγκεκριμένη επιλογή."
   IDS_HINT_HELP         " Εμφάνιση παραθύρου βοήθειας."
   IDS_HINT_ABOUT        " Σχετικά με τη Διαχείριση Συσκευών του ReactOS."
-
-  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
-  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
-  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
-  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Επαναφέρει το παράθυρο αυτό στο κανονικο του μέγεθος."
   IDS_HINT_SYS_MOVE     " Μετακινεί αυτό το παράθυρο."

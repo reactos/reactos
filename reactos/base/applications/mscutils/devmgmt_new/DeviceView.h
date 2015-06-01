@@ -81,7 +81,9 @@ public:
     }
 
 private:
-    static DWORD CALLBACK ListDevicesThread(PVOID Param);
+    static unsigned int __stdcall ListDevicesThread(
+        void *Param
+        );
 
     BOOL ListDevicesByConnection(
         );

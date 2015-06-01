@@ -8,19 +8,16 @@ BEGIN
   END
   POPUP "操作"
   BEGIN
-    MENUITEM "Scan for hardware changes",    IDC_REFRESH
     MENUITEM "印刷",                    IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "プロパティ",              IDC_PROP, GRAYED
   END
-  POPUP "表\\示"
+  POPUP "表\示"
   BEGIN
-    MENUITEM "デバイス (種類別)",      IDC_DEVBYTYPE
-    MENUITEM "デバイス (接続別)",      IDC_DEVBYCONN
-    MENUITEM "リソ\\ース (種類別)",      IDC_RESBYTYPE, GRAYED
-    MENUITEM "リソ\\ース (接続別)",      IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "デバイス (種類別)",       IDC_DEVBYTYPE, CHECKED
+    MENUITEM "デバイス (接続別)",       IDC_STATIC, GRAYED
+    MENUITEM "リソ\ース (種類別)",      IDC_STATIC, GRAYED
+    MENUITEM "リソ\ース (接続別)",      IDC_STATIC, GRAYED
   END
   POPUP "ヘルプ"
   BEGIN
@@ -41,7 +38,7 @@ CAPTION "デバイス マネージャについて"
 FONT 9, "MS UI Gothic",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "デバイス マネージャ v0.1\nCopyright (C) 2012\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 30
+  LTEXT "デバイス マネージャ v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "閉じる", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -57,6 +54,7 @@ BEGIN
   IDS_TOOLTIP_PROP      "プロパティ"
   IDS_TOOLTIP_REFRESH   "更新"
   IDS_TOOLTIP_HELP      "ヘルプ"
+  IDS_TOOLTIP_EXIT      "終了"
 END
 
 /* Hints */
@@ -67,13 +65,8 @@ BEGIN
   IDS_HINT_EXIT         " このプログラムを終了します。"
   IDS_HINT_REFRESH      " サービスのリストを更新します。"
   IDS_HINT_PROP         " 現在選択されているシートのプロパティを開きます。"
-  IDS_HINT_HELP         " ヘルプ ウィンドウを表\\示します。"
-  IDS_HINT_ABOUT        " ReactOS デバイス マネージャについて表\\示します。"
-
-  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
-  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
-  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
-  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
+  IDS_HINT_HELP         " ヘルプ ウィンドウを表\示します。"
+  IDS_HINT_ABOUT        " ReactOS デバイス マネージャについて表\示します。"
 
   IDS_HINT_SYS_RESTORE  " このウィンドウを通常の大きさに復元します。"
   IDS_HINT_SYS_MOVE     " このウィンドウを移動します。"
