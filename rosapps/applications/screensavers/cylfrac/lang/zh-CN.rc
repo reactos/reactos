@@ -1,0 +1,10 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "圆筒形"
+    IDS_TITLE       "关于"
+    IDS_TEXT        "圆筒形 by unC0Rr.\nSpecial for ReactOS."
+END

@@ -1,0 +1,54 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+// Dialog
+
+DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 292, 282
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "设置"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "选项",IDC_STATIC,16,100,260,76
+    RTEXT           "恒星数目:",IDC_STATIC,24,116,68,12,
+                    SS_CENTERIMAGE
+    CONTROL         "Slider1",IDC_SLIDER_NUM_OF_STARS,"msctls_trackbar32",
+                    TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,96,116,140,12
+    CTEXT           "Static",IDC_TEXT_NUM_OF_STARS,240,116,24,12,
+                    SS_CENTERIMAGE,WS_EX_STATICEDGE
+    RTEXT           "速度:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
+    CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH | 
+                    TBS_NOTICKS | WS_TABSTOP,96,137,140,12
+    CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    RTEXT           "旋转:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_COMBO_ROTATION,100,156,80,60,CBS_DROPDOWNLIST | 
+                    WS_TABSTOP
+    CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    4,4,284,92
+    GROUPBOX        "高级",IDC_STATIC,16,180,260,72
+    CONTROL         "启用背景混合",IDC_CHECK_DOBLENDING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
+    CONTROL         "启用准确的角度校正",
+                    IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,24,208,160,10
+    CONTROL         "启用纹理过滤",IDC_CHECK_FILTERING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,160,10
+    CONTROL         "启用光滑着色",IDC_CHECK_SHADING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
+    PUSHBUTTON      "确定",IDOK,60,260,52,16
+    PUSHBUTTON      "取消",IDCANCEL,120,260,52,16
+    PUSHBUTTON      "关于",IDC_BUTTON_ABOUT,179,260,52,16
+END
+
+// String Tables
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DESCRIPTION         "星空"
+    IDS_ROTATION_NONE       "无"
+    IDS_ROTATION_LINEAR     "线性"
+    IDS_ROTATION_PERIODIC   "定期"
+    IDS_LICENSE             "星空是 GNU GPL 许可证下发布的免费软件。"
+    IDS_AUTHOR              "开发者：Carlo Bramini"
+END

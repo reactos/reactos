@@ -63,3 +63,6 @@ IDB_STAR                BITMAP  DISCARDABLE     "res/star.bmp"
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif

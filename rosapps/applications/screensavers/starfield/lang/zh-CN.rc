@@ -1,0 +1,10 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "星空屏幕保护程序"
+    IDS_TITLE       "关于"
+    IDS_TEXT        "没有选择需要为其设置。"
+END
