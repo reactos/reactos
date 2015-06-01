@@ -2144,7 +2144,8 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
             return GetLocaleInfoW(Locale, LOCALE_ICALENDARTYPE, lpCalData, cchData);
 	case CAL_SCALNAME:
             FIXME("Unimplemented caltype %d\n", CalType & 0xffff);
-	    return 0;
+            if (lpCalData) *lpCalData = 0;
+	    return 1;
 	case CAL_IYEAROFFSETRANGE:
             FIXME("Unimplemented caltype %d\n", CalType & 0xffff);
 	    return 0;
