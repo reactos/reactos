@@ -52,7 +52,7 @@ BEGIN
         MENUITEM "层叠(&C)", ID_WINDOWS_CASCADE
         MENUITEM "前置(&B)", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "关机(%U)"
+    POPUP "关机(&U)"
     BEGIN
         MENUITEM "待机(&B)",                  ID_SHUTDOWN_STANDBY
         MENUITEM "休眠(&H)",                 ID_SHUTDOWN_HIBERNATE

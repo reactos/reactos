@@ -90,6 +90,9 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
 
 #define WINE_FILENAME_STR "inetcpl.cpl"
 #define WINE_FILEDESCRIPTION_STR "Internet Control Panel"

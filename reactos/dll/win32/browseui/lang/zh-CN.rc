@@ -1,0 +1,294 @@
+/*
+ * Copyright 2009 Andrew Hill
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+/* Menus */
+
+IDM_CABINET_CONTEXTMENU MENUEX
+BEGIN
+    POPUP "", 264,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "标准按钮(&S)", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "地址栏(&A)", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "链接(&L)", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "锁定工具栏(&B)", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "自定义...(&C)", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "文本标签(&T)", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "转到按钮(&G)", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDM_CABINET_MAINMENU MENUEX
+BEGIN
+    POPUP "文件(&F)", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "关闭(&C)", IDM_FILE_CLOSE
+    END
+    POPUP "编辑(&E)", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+    END
+    POPUP "视图(&V)", FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "工具栏(&T)", IDM_VIEW_TOOLBARS
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "状态栏(&B)", IDM_VIEW_STATUSBAR
+        POPUP "浏览器栏(&E)", IDM_VIEW_EXPLORERBAR
+        BEGIN
+            MENUITEM "搜索(&S)\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "收藏夹(&F)\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "媒体(&M)", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "历史(&H)\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "文件夹(&O)", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
+        END
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "转到(&O)", FCIDM_MENU_EXPLORE
+        BEGIN
+            MENUITEM "后退(&B)\tAlt+Left Arrow", IDM_GOTO_BACK
+            MENUITEM "前进(&F)\tAlt+Right Arrow", IDM_GOTO_FORWARD
+            MENUITEM "上移一级(&U)", IDM_GOTO_UPONELEVEL
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "主页(&H)\tAlt+Home", IDM_GOTO_HOMEPAGE
+        END
+        MENUITEM "刷新(&R)", IDM_VIEW_REFRESH
+    END
+    POPUP "收藏夹(&A)", FCIDM_MENU_FAVORITES
+    BEGIN
+        MENUITEM "添加到收藏夹...(&A)", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "整理收藏夹...(&O)", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(空)", IDM_FAVORITES_EMPTY
+    END
+    POPUP "工具(&T)", FCIDM_MENU_TOOLS
+    BEGIN
+        MENUITEM "映射网络磁盘...(&N)", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "断开网络磁盘...(&D)", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "同步...(&S)", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "文件夹选项...(&O)", IDM_TOOLS_FOLDEROPTIONS
+    END
+    POPUP "帮助(&H)", FCIDM_MENU_HELP
+    BEGIN
+        MENUITEM "此副本的 ReactOS 是合法的吗？(&L)", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "关于 ReactOS(&A)", IDM_HELP_ABOUT
+    END
+END
+
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+	POPUP "工具栏(&T)", -1, MFT_STRING, MFS_ENABLED, 0
+	BEGIN
+		MENUITEM "桌面(&D)", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "快速启动(&Q)", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+		MENUITEM "新的工具栏...(&N)", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+	END
+END
+
+/* Dialogs */
+
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 25 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "取消", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+}
+
+IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "文本选项(&X):", -1, 4, 2, 48, 15
+    COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "图标选项(&N):", -1, 4, 20, 48, 15
+    COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+/* Accelerators */
+
+IDR_ACCELERATORS ACCELERATORS
+BEGIN
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+    "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    VK_BACK, 41010, NOINVERT, VIRTKEY
+    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+    "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CANCELLING "正在取消..."
+    IDS_REMAINING  "剩余"
+END
+
+STRINGTABLE
+BEGIN
+    800 "包含用于处理所选的项目的命令。"
+END
+
+STRINGTABLE
+BEGIN
+    864 "包含编辑命令。"
+END
+
+STRINGTABLE
+BEGIN
+    928 "包含操作视图的命令。"
+END
+
+STRINGTABLE
+BEGIN
+    992 "包含工具命令。"
+END
+
+STRINGTABLE
+BEGIN
+    1056 "包含显示帮助的命令。"
+END
+
+STRINGTABLE
+BEGIN
+    9025 "关闭窗口。"
+    9026 "向上一个级别。"
+END
+
+STRINGTABLE
+BEGIN
+    9121 "连接到网络磁盘。"
+    9122 "从网络磁盘断开连接。"
+END
+
+STRINGTABLE
+BEGIN
+    9250 "显示程序信息、 版本号和版权信息。"
+    9252 "显示调试信息。"
+END
+
+STRINGTABLE
+BEGIN
+    9281 "转到前一页。"
+    9282 "转到下一个页面。"
+    9283 "使您能够更改设置。"
+    9285 "转到您的主页。"
+END
+
+STRINGTABLE
+BEGIN
+    9362 "打开收藏夹文件夹。"
+    9363 "将当前页添加到您的收藏夹列表。"
+END
+
+STRINGTABLE
+BEGIN
+    9505 "显示或隐藏工具栏。"
+    9506 "显示或隐藏状态栏。"
+    9508 "显示标准按钮工具栏。"
+    9509 "显示地址栏。"
+    9510 "显示快速链接栏。"
+    9516 "锁定的大小和位置的工具栏。"
+END
+
+STRINGTABLE
+BEGIN
+    9533 "自定义工具栏。"
+END
+
+STRINGTABLE
+BEGIN
+    9552 "显示或隐藏一个浏览器栏。"
+    9553 "显示搜索栏。"
+    9554 "显示收藏夹栏。"
+    9555 "显示历史记录栏。"
+    9557 "显示文件夹栏。"
+    9559 "显示媒体栏。"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMALLICONS "小图标"
+    IDS_LARGEICONS "大图标"
+    IDS_SHOWTEXTLABELS "显示文本标签"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTEXTLABELS "没有文本标签"
+    IDS_SELECTIVETEXTONRIGHT "右侧选择性文本"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GOBUTTONLABEL "|去||"
+    IDS_GOBUTTONTIPTEMPLATE "转到 ""%s"""
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHLABEL "搜索"
+    IDS_ADDRESSBANDLABEL "地址(&D)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FOLDERSLABEL "文件夹"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HISTORYTEXT "历史(&H)\tCtrl+H"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UP "向上"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BACK "后退"
+    IDS_FORWARD "前进"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|后退|前进|向上|搜索|文件夹|移动到|复制到|删除|撤消|视图|停止|刷新|首页|映射磁盘|断开连接|收藏夹|历史|全屏幕|属性|剪下|复制|贴下|文件夹选项||"
+END
