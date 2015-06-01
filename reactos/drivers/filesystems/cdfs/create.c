@@ -247,26 +247,30 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
     * fail immediately
     */
     Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
-    Irp->IoStatus.Status = Status;
 
     return Status;
 }
 
 
 NTSTATUS NTAPI
-CdfsCreate(PDEVICE_OBJECT DeviceObject,
-           PIRP Irp)
+CdfsCreate(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PDEVICE_OBJECT DeviceObject;
     PDEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
 
+    DPRINT("CdfsCreate()\n");
+
+    ASSERT(IrpContext);
+
+    DeviceObject = IrpContext->DeviceObject;
     if (DeviceObject == CdfsGlobalData->DeviceObject)
     {
         /* DeviceObject represents FileSystem instead of logical volume */
         DPRINT("Opening file system\n");
-        Irp->IoStatus.Information = FILE_OPENED;
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
+        IrpContext->Irp->IoStatus.Information = FILE_OPENED;
+        return STATUS_SUCCESS;
     }
 
     DeviceExt = DeviceObject->DeviceExtension;
@@ -275,14 +279,9 @@ CdfsCreate(PDEVICE_OBJECT DeviceObject,
     ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
         TRUE);
     Status = CdfsCreateFile(DeviceObject,
-        Irp);
+                            IrpContext->Irp);
     ExReleaseResourceLite(&DeviceExt->DirResource);
     KeLeaveCriticalRegion();
-
-ByeBye:
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp,
-        NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
 
     return Status;
 }

@@ -319,12 +319,10 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
 /* create.c */
 
-DRIVER_DISPATCH CdfsCreate;
-
 NTSTATUS
 NTAPI
-CdfsCreate(PDEVICE_OBJECT DeviceObject,
-           PIRP Irp);
+CdfsCreate(
+    PCDFS_IRP_CONTEXT IrpContext);
 
 /* devctrl.c */
 

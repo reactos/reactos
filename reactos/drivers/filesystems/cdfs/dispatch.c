@@ -105,7 +105,7 @@ CdfsDispatch(PCDFS_IRP_CONTEXT IrpContext)
             break;
 
         case IRP_MJ_CREATE:
-//            Status = CdfsCreate(IrpContext);
+            Status = CdfsCreate(IrpContext);
             break;
 
         case IRP_MJ_CLEANUP:
