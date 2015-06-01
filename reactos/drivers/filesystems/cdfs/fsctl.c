@@ -19,7 +19,7 @@
 /*
 * COPYRIGHT:        See COPYING in the top level directory
 * PROJECT:          ReactOS kernel
-* FILE:             drivers/fs/cdfs/fsctl.c
+* FILE:             drivers/filesystems/cdfs/fsctl.c
 * PURPOSE:          CDROM (ISO 9660) filesystem driver
 * PROGRAMMER:       Art Yerkes
 *                   Eric Kohl
@@ -41,9 +41,11 @@ int msf_to_lba (UCHAR m, UCHAR s, UCHAR f)
 }
 
 
-static VOID
-CdfsGetPVDData(PUCHAR Buffer,
-               PCDINFO CdInfo)
+static
+VOID
+CdfsGetPVDData(
+    PUCHAR Buffer,
+    PCDINFO CdInfo)
 {
     PPVD Pvd;
     USHORT i;
@@ -150,9 +152,11 @@ CdfsGetPVDData(PUCHAR Buffer,
 }
 
 
-static VOID
-CdfsGetSVDData(PUCHAR Buffer,
-               PCDINFO CdInfo)
+static
+VOID
+CdfsGetSVDData(
+    PUCHAR Buffer,
+    PCDINFO CdInfo)
 {
     PSVD Svd;
     ULONG JolietLevel = 0;
@@ -190,9 +194,11 @@ CdfsGetSVDData(PUCHAR Buffer,
 }
 
 
-static NTSTATUS
-CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
-                  PCDINFO CdInfo)
+static
+NTSTATUS
+CdfsGetVolumeData(
+    PDEVICE_OBJECT DeviceObject,
+    PCDINFO CdInfo)
 {
     PUCHAR Buffer;
     NTSTATUS Status;
@@ -210,12 +216,12 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
     Size = sizeof(Toc);
     Status = CdfsDeviceIoControl(DeviceObject,
-        IOCTL_CDROM_READ_TOC,
-        NULL,
-        0,
-        &Toc,
-        &Size,
-        TRUE);
+                                 IOCTL_CDROM_READ_TOC,
+                                 NULL,
+                                 0,
+                                 &Toc,
+                                 &Size,
+                                 TRUE);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(Buffer, CDFS_TAG);
@@ -223,7 +229,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     }
 
     DPRINT("FirstTrack %u, LastTrack %u, TrackNumber %u\n",
-        Toc.FirstTrack, Toc.LastTrack, Toc.TrackData[0].TrackNumber);
+           Toc.FirstTrack, Toc.LastTrack, Toc.TrackData[0].TrackNumber);
 
     Offset =  Toc.TrackData[0].Address[1] * 60 * 75;
     Offset += Toc.TrackData[0].Address[2] * 75;
@@ -245,11 +251,11 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     for (Sector = CDFS_PRIMARY_DESCRIPTOR_LOCATION; Sector < 100 && Buffer[0] != 255; Sector++)
     {
         /* Read the Primary Volume Descriptor (PVD) */
-        Status = CdfsReadSectors (DeviceObject,
-            Sector + Offset,
-            1,
-            Buffer,
-            TRUE);
+        Status = CdfsReadSectors(DeviceObject,
+                                 Sector + Offset,
+                                 1,
+                                 Buffer,
+                                 TRUE);
         if (!NT_SUCCESS(Status))
         {
             ExFreePoolWithTag(Buffer, CDFS_TAG);
@@ -270,43 +276,45 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
         switch (VdHeader->VdType)
         {
-        case 0:
-            DPRINT("BootVolumeDescriptor found!\n");
-            break;
+            case 0:
+                DPRINT("BootVolumeDescriptor found!\n");
+                break;
 
-        case 1:
-            DPRINT("PrimaryVolumeDescriptor found!\n");
-            CdfsGetPVDData(Buffer, CdInfo);
-            break;
+            case 1:
+                DPRINT("PrimaryVolumeDescriptor found!\n");
+                CdfsGetPVDData(Buffer, CdInfo);
+                break;
 
-        case 2:
-            DPRINT("SupplementaryVolumeDescriptor found!\n");
-            CdfsGetSVDData(Buffer, CdInfo);
-            break;
+            case 2:
+                DPRINT("SupplementaryVolumeDescriptor found!\n");
+                CdfsGetSVDData(Buffer, CdInfo);
+                break;
 
-        case 3:
-            DPRINT("VolumePartitionDescriptor found!\n");
-            break;
+            case 3:
+                DPRINT("VolumePartitionDescriptor found!\n");
+                break;
 
-        case 255:
-            DPRINT("VolumeDescriptorSetTerminator found!\n");
-            break;
+            case 255:
+                DPRINT("VolumeDescriptorSetTerminator found!\n");
+                break;
 
-        default:
-            DPRINT1("Unknown volume descriptor type %u found!\n", VdHeader->VdType);
-            break;
+            default:
+                DPRINT1("Unknown volume descriptor type %u found!\n", VdHeader->VdType);
+                break;
         }
     }
 
     ExFreePoolWithTag(Buffer, CDFS_TAG);
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
-static NTSTATUS
-CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
-                PIRP Irp)
+static
+NTSTATUS
+CdfsMountVolume(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExt = NULL;
     PDEVICE_OBJECT NewDeviceObject = NULL;
@@ -337,12 +345,12 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     }
 
     Status = IoCreateDevice(CdfsGlobalData->DriverObject,
-        sizeof(DEVICE_EXTENSION),
-        NULL,
-        FILE_DEVICE_CD_ROM_FILE_SYSTEM,
-        DeviceToMount->Characteristics,
-        FALSE,
-        &NewDeviceObject);
+                            sizeof(DEVICE_EXTENSION),
+                            NULL,
+                            FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+                            DeviceToMount->Characteristics,
+                            FALSE,
+                            &NewDeviceObject);
     if (!NT_SUCCESS(Status))
         goto ByeBye;
 
@@ -350,7 +358,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     NewDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
     DeviceExt = (PVOID)NewDeviceObject->DeviceExtension;
     RtlZeroMemory(DeviceExt,
-        sizeof(DEVICE_EXTENSION));
+                  sizeof(DEVICE_EXTENSION));
 
     Vpb->SerialNumber = CdInfo.SerialNumber;
     Vpb->VolumeLabelLength = CdInfo.VolumeLabelLength;
@@ -373,7 +381,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     ExInitializeResourceLite(&DeviceExt->DirResource);
 
     DeviceExt->StreamFileObject = IoCreateStreamFileObject(NULL,
-        DeviceExt->StorageDevice);
+                                                           DeviceExt->StorageDevice);
 
     Fcb = CdfsCreateFCB(NULL);
     if (Fcb == NULL)
@@ -388,8 +396,9 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
         Status =  STATUS_INSUFFICIENT_RESOURCES;
         goto ByeBye;
     }
+
     RtlZeroMemory(Ccb,
-        sizeof(CCB));
+                  sizeof(CCB));
 
     DeviceExt->StreamFileObject->ReadAccess = TRUE;
     DeviceExt->StreamFileObject->WriteAccess = FALSE;
@@ -414,10 +423,10 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     _SEH2_TRY
     {
         CcInitializeCacheMap(DeviceExt->StreamFileObject,
-            (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-            TRUE,
-            &(CdfsGlobalData->CacheMgrCallbacks),
-            Fcb);
+                             (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                             TRUE,
+                             &(CdfsGlobalData->CacheMgrCallbacks),
+                             Fcb);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -450,13 +459,15 @@ ByeBye:
 
     DPRINT("CdfsMountVolume() done (Status: %lx)\n", Status);
 
-    return(Status);
+    return Status;
 }
 
 
-static NTSTATUS
-CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
-                 PIRP Irp)
+static
+NTSTATUS
+CdfsVerifyVolume(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION Stack;
@@ -466,7 +477,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     PFCB Fcb;
     PVPB VpbToVerify;
 
-    DPRINT1 ("CdfsVerifyVolume() called\n");
+    DPRINT("CdfsVerifyVolume() called\n");
 
     DeviceExt = DeviceObject->DeviceExtension;
 
@@ -474,12 +485,12 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     VpbToVerify = Stack->Parameters.VerifyVolume.Vpb;
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceExclusiveLite (&DeviceExt->VcbResource,
-        TRUE);
+    ExAcquireResourceExclusiveLite(&DeviceExt->VcbResource,
+                                   TRUE);
 
     if (!(VpbToVerify->RealDevice->Flags & DO_VERIFY_VOLUME))
     {
-        DPRINT1 ("Volume has been verified!\n");
+        DPRINT1("Volume has been verified!\n");
         ExReleaseResourceLite (&DeviceExt->VcbResource);
         FsRtlExitFileSystem();
         return STATUS_SUCCESS;
@@ -488,13 +499,13 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     DPRINT1("Device object %p  Device to verify %p\n", DeviceObject, VpbToVerify->RealDevice);
 
     Status = CdfsGetVolumeData(VpbToVerify->RealDevice,
-        &CdInfo);
+                               &CdInfo);
     if (NT_SUCCESS(Status) &&
         CdInfo.SerialNumber == VpbToVerify->SerialNumber &&
         CdInfo.VolumeLabelLength == VpbToVerify->VolumeLabelLength &&
         !wcsncmp(CdInfo.VolumeLabel, VpbToVerify->VolumeLabel, CdInfo.VolumeLabelLength))
     {
-        DPRINT1 ("Same volume!\n");
+        DPRINT1("Same volume!\n");
 
         /* FIXME: Flush and purge metadata */
 
@@ -502,7 +513,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     }
     else
     {
-        DPRINT1 ("Different volume!\n");
+        DPRINT1("Different volume!\n");
 
         /* FIXME: force volume dismount */
         Entry = DeviceExt->FcbListHead.Flink;
@@ -519,17 +530,18 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
 
     VpbToVerify->RealDevice->Flags &= ~DO_VERIFY_VOLUME;
 
-    ExReleaseResourceLite (&DeviceExt->VcbResource);
+    ExReleaseResourceLite(&DeviceExt->VcbResource);
     FsRtlExitFileSystem();
 
     return Status;
 }
 
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 CdfsSetCompression(
-                   IN PDEVICE_OBJECT DeviceObject,
-                   IN PIRP Irp)
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
 {
     PIO_STACK_LOCATION Stack;
     USHORT CompressionState;
@@ -549,7 +561,8 @@ CdfsSetCompression(
 }
 
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 CdfsFileSystemControl(
     PCDFS_IRP_CONTEXT IrpContext)
 {
@@ -570,39 +583,39 @@ CdfsFileSystemControl(
 
     switch (IrpContext->MinorFunction)
     {
-    case IRP_MN_KERNEL_CALL:
-    case IRP_MN_USER_FS_REQUEST:
-        switch (Stack->Parameters.DeviceIoControl.IoControlCode)
-        {
-        case FSCTL_SET_COMPRESSION:
-            DPRINT("CDFS: IRP_MN_USER_FS_REQUEST / FSCTL_SET_COMPRESSION\n");
-            Status = CdfsSetCompression(DeviceObject, Irp);
+        case IRP_MN_KERNEL_CALL:
+        case IRP_MN_USER_FS_REQUEST:
+            switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+            {
+                case FSCTL_SET_COMPRESSION:
+                    DPRINT("CDFS: IRP_MN_USER_FS_REQUEST / FSCTL_SET_COMPRESSION\n");
+                    Status = CdfsSetCompression(DeviceObject, Irp);
+                    break;
+
+                default:
+                    DPRINT1("CDFS: IRP_MN_USER_FS_REQUEST / Unknown IoControlCode 0x%x\n",
+                    Stack->Parameters.DeviceIoControl.IoControlCode);
+                    Status = STATUS_INVALID_DEVICE_REQUEST;
+            }
+            break;
+
+        case IRP_MN_MOUNT_VOLUME:
+            DPRINT("CDFS: IRP_MN_MOUNT_VOLUME\n");
+            Status = CdfsMountVolume(DeviceObject, Irp);
+            break;
+
+        case IRP_MN_VERIFY_VOLUME:
+            DPRINT1("CDFS: IRP_MN_VERIFY_VOLUME\n");
+            Status = CdfsVerifyVolume(DeviceObject, Irp);
             break;
 
         default:
-            DPRINT1("CDFS: IRP_MN_USER_FS_REQUEST / Unknown IoControlCode 0x%x\n",
-                Stack->Parameters.DeviceIoControl.IoControlCode);
+            DPRINT1("CDFS FSC: MinorFunction %u\n", Stack->MinorFunction);
             Status = STATUS_INVALID_DEVICE_REQUEST;
-        }
-        break;
-
-    case IRP_MN_MOUNT_VOLUME:
-        DPRINT("CDFS: IRP_MN_MOUNT_VOLUME\n");
-        Status = CdfsMountVolume(DeviceObject, Irp);
-        break;
-
-    case IRP_MN_VERIFY_VOLUME:
-        DPRINT1("CDFS: IRP_MN_VERIFY_VOLUME\n");
-        Status = CdfsVerifyVolume(DeviceObject, Irp);
-        break;
-
-    default:
-        DPRINT1("CDFS FSC: MinorFunction %u\n", Stack->MinorFunction);
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-        break;
+            break;
     }
 
-    return(Status);
+    return Status;
 }
 
 /* EOF */

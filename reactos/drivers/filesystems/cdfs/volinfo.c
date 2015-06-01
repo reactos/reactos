@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/volume.c
+ * FILE:             drivers/filesystems/cdfs/volume.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  *                   Eric Kohl
@@ -34,10 +34,12 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
-CdfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
-                           PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
-                           PULONG BufferLength)
+static
+NTSTATUS
+CdfsGetFsVolumeInformation(
+    PDEVICE_OBJECT DeviceObject,
+    PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
+    PULONG BufferLength)
 {
     DPRINT("CdfsGetFsVolumeInformation() called\n");
     DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
@@ -59,8 +61,8 @@ CdfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
     FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
     FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
     memcpy(FsVolumeInfo->VolumeLabel,
-        DeviceObject->Vpb->VolumeLabel,
-        DeviceObject->Vpb->VolumeLabelLength);
+           DeviceObject->Vpb->VolumeLabel,
+           DeviceObject->Vpb->VolumeLabelLength);
 
     /* dummy entries */
     FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
@@ -72,14 +74,16 @@ CdfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("BufferLength %lu\n", *BufferLength);
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
-static NTSTATUS
-CdfsGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
-                              PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
-                              PULONG BufferLength)
+static
+NTSTATUS
+CdfsGetFsAttributeInformation(
+    PDEVICE_EXTENSION DeviceExt,
+    PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
+    PULONG BufferLength)
 {
     DPRINT("CdfsGetFsAttributeInformation()\n");
     DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
@@ -106,14 +110,15 @@ CdfsGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
     *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8);
     DPRINT("BufferLength %lu\n", *BufferLength);
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
 static NTSTATUS
-CdfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
-                         PFILE_FS_SIZE_INFORMATION FsSizeInfo,
-                         PULONG BufferLength)
+CdfsGetFsSizeInformation(
+    PDEVICE_OBJECT DeviceObject,
+    PFILE_FS_SIZE_INFORMATION FsSizeInfo,
+    PULONG BufferLength)
 {
     PDEVICE_EXTENSION DeviceExt;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -122,7 +127,7 @@ CdfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
     DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
 
     if (*BufferLength < sizeof(FILE_FS_SIZE_INFORMATION))
-        return(STATUS_BUFFER_OVERFLOW);
+        return STATUS_BUFFER_OVERFLOW;
 
     DeviceExt = DeviceObject->DeviceExtension;
 
@@ -135,17 +140,16 @@ CdfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
     if (NT_SUCCESS(Status))
         *BufferLength -= sizeof(FILE_FS_SIZE_INFORMATION);
 
-    return(Status);
+    return Status;
 }
 
 
-static NTSTATUS
-CdfsGetFsDeviceInformation
-(
+static
+NTSTATUS
+CdfsGetFsDeviceInformation(
     PDEVICE_OBJECT DeviceObject,
     PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
-    PULONG BufferLength
-)
+    PULONG BufferLength)
 {
     DPRINT("CdfsGetFsDeviceInformation()\n");
     DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
@@ -153,7 +157,7 @@ CdfsGetFsDeviceInformation
     DPRINT("Required length %lu\n", sizeof(FILE_FS_DEVICE_INFORMATION));
 
     if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
-        return(STATUS_BUFFER_OVERFLOW);
+        return STATUS_BUFFER_OVERFLOW;
 
     FsDeviceInfo->DeviceType = FILE_DEVICE_CD_ROM;
     FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
@@ -163,11 +167,12 @@ CdfsGetFsDeviceInformation
     *BufferLength -= sizeof(FILE_FS_DEVICE_INFORMATION);
     DPRINT("BufferLength %lu\n", *BufferLength);
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 CdfsQueryVolumeInformation(
     PCDFS_IRP_CONTEXT IrpContext)
 {
@@ -195,32 +200,32 @@ CdfsQueryVolumeInformation(
 
     switch (FsInformationClass)
     {
-    case FileFsVolumeInformation:
-        Status = CdfsGetFsVolumeInformation(DeviceObject,
-            SystemBuffer,
-            &BufferLength);
+        case FileFsVolumeInformation:
+            Status = CdfsGetFsVolumeInformation(DeviceObject,
+                                                SystemBuffer,
+                                                &BufferLength);
+            break;
+
+        case FileFsAttributeInformation:
+            Status = CdfsGetFsAttributeInformation(DeviceObject->DeviceExtension,
+                                                   SystemBuffer,
+                                                   &BufferLength);
+            break;
+
+        case FileFsSizeInformation:
+            Status = CdfsGetFsSizeInformation(DeviceObject,
+                                              SystemBuffer,
+                                              &BufferLength);
         break;
 
-    case FileFsAttributeInformation:
-        Status = CdfsGetFsAttributeInformation(DeviceObject->DeviceExtension,
-            SystemBuffer,
-            &BufferLength);
-        break;
+        case FileFsDeviceInformation:
+            Status = CdfsGetFsDeviceInformation(DeviceObject,
+                                                SystemBuffer,
+                                                &BufferLength);
+            break;
 
-    case FileFsSizeInformation:
-        Status = CdfsGetFsSizeInformation(DeviceObject,
-            SystemBuffer,
-            &BufferLength);
-        break;
-
-    case FileFsDeviceInformation:
-        Status = CdfsGetFsDeviceInformation(DeviceObject,
-            SystemBuffer,
-            &BufferLength);
-        break;
-
-    default:
-        Status = STATUS_NOT_SUPPORTED;
+        default:
+            Status = STATUS_NOT_SUPPORTED;
     }
 
     Irp->IoStatus.Status = Status;
@@ -230,11 +235,12 @@ CdfsQueryVolumeInformation(
     else
         Irp->IoStatus.Information = 0;
 
-    return(Status);
+    return Status;
 }
 
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 CdfsSetVolumeInformation(
     PCDFS_IRP_CONTEXT IrpContext)
 {
@@ -248,7 +254,7 @@ CdfsSetVolumeInformation(
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;
 
-    return(STATUS_NOT_SUPPORTED);
+    return STATUS_NOT_SUPPORTED;
 }
 
 /* EOF */
