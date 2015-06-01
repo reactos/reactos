@@ -26,6 +26,8 @@ CdfsDeviceControl(
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION Stack;
 
+    DPRINT("CdfsDeviceControl()\n");
+
     ASSERT(IrpContext);
 
     Irp = IrpContext->Irp;
@@ -59,6 +61,10 @@ CdfsDeviceControl(
         /* Pass it to storage driver */
         IoSkipCurrentIrpStackLocation(Irp);
         Vcb = (PVCB)Stack->DeviceObject->DeviceExtension;
+
+        /* Lower driver will complete - we don't have to */
+        IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
+
         Status = IoCallDriver(Vcb->StorageDevice, Irp);
     }
 
