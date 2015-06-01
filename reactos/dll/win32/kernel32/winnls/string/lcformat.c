@@ -2138,8 +2138,10 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
      * for the CALTYPES not requiring GetLocaleInfoA */
     switch (CalType & ~(CAL_NOUSEROVERRIDE|CAL_RETURN_NUMBER|CAL_USE_CP_ACP)) {
 	case CAL_ICALINTVALUE:
-            FIXME("Unimplemented caltype %d\n", CalType & 0xffff);
-	    return 0;
+            if (CalType & CAL_RETURN_NUMBER)
+                return GetLocaleInfoW(Locale, LOCALE_RETURN_NUMBER | LOCALE_ICALENDARTYPE,
+                        (LPWSTR)lpValue, 2);
+            return GetLocaleInfoW(Locale, LOCALE_ICALENDARTYPE, lpCalData, cchData);
 	case CAL_SCALNAME:
             FIXME("Unimplemented caltype %d\n", CalType & 0xffff);
 	    return 0;
