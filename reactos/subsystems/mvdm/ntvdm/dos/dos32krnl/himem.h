@@ -28,6 +28,9 @@
 #define XMS_STATUS_LOCKED          0xAB
 #define XMS_STATUS_LOCK_OVERFLOW   0xAC
 #define XMS_STATUS_CANNOT_LOCK     0xAD
+#define XMS_STATUS_SMALLER_UMB     0xB0
+#define XMS_STATUS_OUT_OF_UMBS     0xB1
+#define XMS_STATUS_INVALID_UMB     0xB2
 
 typedef struct _XMS_HANDLE
 {

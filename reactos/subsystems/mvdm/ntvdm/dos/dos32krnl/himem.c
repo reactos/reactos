@@ -20,6 +20,7 @@
 #include "dos/dem.h"
 #include "device.h"
 #include "himem.h"
+#include "memory.h"
 
 #define XMS_DEVICE_NAME "XMSXXXX0"
 
@@ -559,6 +560,74 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
             {
                 setAX(0);
                 setBL(XMS_STATUS_INVALID_HANDLE);
+            }
+
+            break;
+        }
+
+        /* Allocate UMB */
+        case 0x10:
+        {
+            WORD Segment;
+            WORD MaxAvailable;
+            BYTE OldAllocStrategy = Sda->AllocStrategy;
+            BOOLEAN OldLinkState = DosUmbLinked;
+
+            DosLinkUmb();
+            Sda->AllocStrategy = DOS_ALLOC_HIGH  | DOS_ALLOC_BEST_FIT;
+            Segment = DosAllocateMemory(getDX(), &MaxAvailable);
+
+            if (Segment)
+            {
+                setAX(1);
+                setBX(Segment);
+            }
+            else
+            {
+                setAX(0);
+                setBL(MaxAvailable ? XMS_STATUS_SMALLER_UMB : XMS_STATUS_OUT_OF_UMBS);
+                setDX(MaxAvailable);
+            }
+
+            Sda->AllocStrategy = OldAllocStrategy;
+            if (!OldLinkState) DosUnlinkUmb();
+            break;
+        }
+
+        /* Free UMB */
+        case 0x11:
+        {
+            if (DosFreeMemory(getDX()))
+            {
+                setAX(1);
+            }
+            else
+            {
+                setAX(0);
+                setBL(XMS_STATUS_INVALID_UMB);
+            }
+
+            break;
+        }
+
+        /* Reallocate UMB */
+        case 0x12:
+        {
+            WORD Segment;
+            WORD MaxAvailable;
+            
+            Segment = DosResizeMemory(getDX(), getBX(), &MaxAvailable);
+
+            if (Segment)
+            {
+                setAX(1);
+            }
+            else
+            {
+                setAX(0);
+                setBL(Sda->LastErrorCode == ERROR_INVALID_HANDLE
+                      ? XMS_STATUS_INVALID_UMB : XMS_STATUS_SMALLER_UMB);
+                setDX(MaxAvailable);
             }
 
             break;
