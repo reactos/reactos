@@ -182,6 +182,38 @@ FsdGetFsDeviceInformation(
 
 static
 NTSTATUS
+FsdGetFsFullSizeInformation(
+    PDEVICE_OBJECT DeviceObject,
+    PFILE_FS_FULL_SIZE_INFORMATION FsSizeInfo,
+    PULONG BufferLength)
+{
+    PDEVICE_EXTENSION DeviceExt;
+    NTSTATUS Status;
+
+    DPRINT("FsdGetFsFullSizeInformation()\n");
+    DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
+
+    if (*BufferLength < sizeof(FILE_FS_FULL_SIZE_INFORMATION))
+        return STATUS_BUFFER_OVERFLOW;
+
+    DeviceExt = DeviceObject->DeviceExtension;
+    Status = CountAvailableClusters(DeviceExt, &FsSizeInfo->CallerAvailableAllocationUnits);
+
+    FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->FatInfo.NumberOfClusters;
+    FsSizeInfo->ActualAvailableAllocationUnits.QuadPart = FsSizeInfo->CallerAvailableAllocationUnits.QuadPart;
+    FsSizeInfo->SectorsPerAllocationUnit = DeviceExt->FatInfo.SectorsPerCluster;
+    FsSizeInfo->BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
+
+    DPRINT("Finished FsdGetFsFullSizeInformation()\n");
+    if (NT_SUCCESS(Status))
+        *BufferLength -= sizeof(FILE_FS_FULL_SIZE_INFORMATION);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
 FsdSetFsLabelInformation(
     PDEVICE_OBJECT DeviceObject,
     PFILE_FS_LABEL_INFORMATION FsLabelInfo)
@@ -399,6 +431,12 @@ VfatQueryVolumeInformation(
             RC = FsdGetFsDeviceInformation(IrpContext->DeviceObject,
                                            SystemBuffer,
                                            &BufferLength);
+            break;
+
+        case FileFsFullSizeInformation:
+            RC = FsdGetFsFullSizeInformation(IrpContext->DeviceObject,
+                                             SystemBuffer,
+                                             &BufferLength);
             break;
 
         default:
