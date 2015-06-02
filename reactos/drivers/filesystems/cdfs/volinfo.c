@@ -171,6 +171,38 @@ CdfsGetFsDeviceInformation(
 }
 
 
+static
+NTSTATUS
+CdfsGetFsFullSizeInformation(
+    PDEVICE_OBJECT DeviceObject,
+    PFILE_FS_FULL_SIZE_INFORMATION FsSizeInfo,
+    PULONG BufferLength)
+{
+    PDEVICE_EXTENSION DeviceExt;
+    NTSTATUS Status;
+
+    DPRINT("CdfsGetFsFullSizeInformation()\n");
+    DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
+
+    if (*BufferLength < sizeof(FILE_FS_FULL_SIZE_INFORMATION))
+        return STATUS_BUFFER_OVERFLOW;
+
+    DeviceExt = DeviceObject->DeviceExtension;
+
+    FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize;
+    FsSizeInfo->CallerAvailableAllocationUnits.QuadPart = 0;
+    FsSizeInfo->ActualAvailableAllocationUnits.QuadPart = 0;
+    FsSizeInfo->SectorsPerAllocationUnit = 1;
+    FsSizeInfo->BytesPerSector = BLOCKSIZE;
+
+    DPRINT("Finished CdfsGetFsFullSizeInformation()\n");
+    if (NT_SUCCESS(Status))
+        *BufferLength -= sizeof(FILE_FS_FULL_SIZE_INFORMATION);
+
+    return Status;
+}
+
+
 NTSTATUS
 NTAPI
 CdfsQueryVolumeInformation(
@@ -216,12 +248,18 @@ CdfsQueryVolumeInformation(
             Status = CdfsGetFsSizeInformation(DeviceObject,
                                               SystemBuffer,
                                               &BufferLength);
-        break;
+            break;
 
         case FileFsDeviceInformation:
             Status = CdfsGetFsDeviceInformation(DeviceObject,
                                                 SystemBuffer,
                                                 &BufferLength);
+            break;
+
+        case FileFsFullSizeInformation:
+            Status = CdfsGetFsFullSizeInformation(DeviceObject,
+                                                  SystemBuffer,
+                                                  &BufferLength);
             break;
 
         default:
