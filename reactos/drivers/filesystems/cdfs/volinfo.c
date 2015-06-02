@@ -179,7 +179,7 @@ CdfsGetFsFullSizeInformation(
     PULONG BufferLength)
 {
     PDEVICE_EXTENSION DeviceExt;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("CdfsGetFsFullSizeInformation()\n");
     DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
