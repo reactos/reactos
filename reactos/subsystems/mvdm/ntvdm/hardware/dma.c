@@ -55,7 +55,7 @@ static BYTE WINAPI DmaReadPort(USHORT Port)
 
     switch (Port)
     {
-        /* Start Address Registers */
+        /* Current Address Registers */
         {
         case 0x00:
             READ_ADDR(0, 0, ReadValue);
@@ -83,7 +83,7 @@ static BYTE WINAPI DmaReadPort(USHORT Port)
             return ReadValue;
         }
 
-        /* Count Address Registers */
+        /* Current Count Registers */
         {
         case 0x01:
             READ_CNT(0, 0, ReadValue);
@@ -191,7 +191,7 @@ static VOID WINAPI DmaWritePort(USHORT Port, BYTE Data)
             break;
         }
 
-        /* Count Address Registers */
+        /* Base Count Registers */
         {
         case 0x01:
             WRITE_CNT(0, 0, Data);
@@ -457,8 +457,8 @@ DWORD DmaRequest(IN WORD      iChannel,
     length = ret * Size;
 
     /* 16-bit mode addressing, see: http://wiki.osdev.org/ISA_DMA#16_bit_issues */
-    CurrAddress = (iChannel < 4) ? (DmaPageRegisters[iChannel].Page << 16) | (pDcp->DmaChannel[Channel].CurrAddress << 0)
-                                 : (DmaPageRegisters[iChannel].Page << 16) | (pDcp->DmaChannel[Channel].CurrAddress << 1);
+    CurrAddress = (iChannel < 4) ? (DmaPageRegisters[iChannel].Page << 16) | ((pDcp->DmaChannel[Channel].CurrAddress << 0) & 0xFFFF)
+                                 : (DmaPageRegisters[iChannel].Page << 16) | ((pDcp->DmaChannel[Channel].CurrAddress << 1) & 0xFFFF);
 
     switch (TrMode)
     {
@@ -549,14 +549,14 @@ VOID DmaInitialize(VOID)
     /* Register the I/O Ports */
 
     /* Channels 0(Reserved)..3 */
-    RegisterIoPort(0x00, NULL, DmaWritePort);           /* Start Address Register 0 (Reserved) */
-    RegisterIoPort(0x01, NULL, DmaWritePort);           /* Count Address Register 0 (Reserved) */
-    RegisterIoPort(0x02, NULL, DmaWritePort);           /* Start Address Register 1 */
-    RegisterIoPort(0x03, NULL, DmaWritePort);           /* Count Address Register 1 */
-    RegisterIoPort(0x04, NULL, DmaWritePort);           /* Start Address Register 2 */
-    RegisterIoPort(0x05, NULL, DmaWritePort);           /* Count Address Register 2 */
-    RegisterIoPort(0x06, NULL, DmaWritePort);           /* Start Address Register 3 */
-    RegisterIoPort(0x07, NULL, DmaWritePort);           /* Count Address Register 3 */
+    RegisterIoPort(0x00, DmaReadPort, DmaWritePort);    /* Current(R) / Start(W) Address Register 0 (Reserved) */
+    RegisterIoPort(0x01, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 0 (Reserved) */
+    RegisterIoPort(0x02, DmaReadPort, DmaWritePort);    /* Current(R) / Start(W) Address Register 1 */
+    RegisterIoPort(0x03, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 1 */
+    RegisterIoPort(0x04, DmaReadPort, DmaWritePort);    /* Current(R) / Start(W) Address Register 2 */
+    RegisterIoPort(0x05, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 2 */
+    RegisterIoPort(0x06, DmaReadPort, DmaWritePort);    /* Current(R) / Start(W) Address Register 3 */
+    RegisterIoPort(0x07, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 3 */
 
     RegisterIoPort(0x08, DmaReadPort, DmaWritePort);    /* Status (Read) / Command (Write) Registers */
     RegisterIoPort(0x09, NULL, DmaWritePort);           /* Request Register */
@@ -569,14 +569,14 @@ VOID DmaInitialize(VOID)
 
 
     /* Channels 4(Reserved)..7 */
-    RegisterIoPort(0xC0, NULL, DmaWritePort);           /* Start Address Register 4 (Reserved) */
-    RegisterIoPort(0xC2, NULL, DmaWritePort);           /* Count Address Register 4 (Reserved) */
-    RegisterIoPort(0xC4, NULL, DmaWritePort);           /* Start Address Register 5 */
-    RegisterIoPort(0xC6, NULL, DmaWritePort);           /* Count Address Register 5 */
-    RegisterIoPort(0xC8, NULL, DmaWritePort);           /* Start Address Register 6 */
-    RegisterIoPort(0xCA, NULL, DmaWritePort);           /* Count Address Register 6 */
-    RegisterIoPort(0xCC, NULL, DmaWritePort);           /* Start Address Register 7 */
-    RegisterIoPort(0xCE, NULL, DmaWritePort);           /* Count Address Register 7 */
+    RegisterIoPort(0xC0, DmaReadPort, DmaWritePort);    /* Current(R) / Start(W) Address Register 4 (Reserved) */
+    RegisterIoPort(0xC2, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 4 (Reserved) */
+    RegisterIoPort(0xC4, DmaReadPort, DmaWritePort);    /* Current(R) / Start(W) Address Register 5 */
+    RegisterIoPort(0xC6, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 5 */
+    RegisterIoPort(0xC8, DmaReadPort, DmaWritePort);    /* Current(R) / Start(W) Address Register 6 */
+    RegisterIoPort(0xCA, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 6 */
+    RegisterIoPort(0xCC, DmaReadPort, DmaWritePort);    /* Current(R) / Start(W) Address Register 7 */
+    RegisterIoPort(0xCE, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 7 */
 
     RegisterIoPort(0xD0, DmaReadPort, DmaWritePort);    /* Status (Read) / Command (Write) Registers */
     RegisterIoPort(0xD2, NULL, DmaWritePort);           /* Request Register */
