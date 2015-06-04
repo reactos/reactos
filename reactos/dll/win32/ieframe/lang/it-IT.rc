@@ -16,7 +16,7 @@ IDR_BROWSE_MAIN_MENU MENU
         MENUITEM "S&tampa...",                   ID_BROWSE_PRINT
         MENUITEM "A&nteprima di Stampa",              ID_BROWSE_PRINT_PREVIEW
         MENUITEM SEPARATOR
-        MENUITEM "&Propiet‡",                 ID_BROWSE_PROPERTIES
+        MENUITEM "&Propriet√†",                 ID_BROWSE_PROPERTIES
         MENUITEM "&Chiudi",                      ID_BROWSE_QUIT
     }
     POPUP "&Visualizza"
