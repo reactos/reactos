@@ -105,6 +105,8 @@ VOID DosCopyHandleTable(LPBYTE DestinationTable)
 
                     Descriptor->DeviceInfo = Node->DeviceAttributes | FILE_INFO_DEVICE;
                     Descriptor->DevicePointer = SysVars->ActiveCon;
+                    RtlFillMemory(Descriptor->FileName, sizeof(Descriptor->FileName), ' ');
+                    RtlCopyMemory(Descriptor->FileName, Node->Name.Buffer, Node->Name.Length);
 
                     /* Call the open routine */
                     if (Node->OpenRoutine) Node->OpenRoutine(Node);

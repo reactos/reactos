@@ -26,7 +26,8 @@ typedef struct _DOS_FILE_DESCRIPTOR
     DWORD Reserved;
     WORD OwnerPsp;
     HANDLE Win32Handle;
-    BYTE Padding[0x1E - sizeof(HANDLE)];
+    CHAR FileName[11];
+    BYTE Padding[0x13 - sizeof(HANDLE)];
 } DOS_FILE_DESCRIPTOR, *PDOS_FILE_DESCRIPTOR;
 
 C_ASSERT(sizeof(DOS_FILE_DESCRIPTOR) == 0x3B);

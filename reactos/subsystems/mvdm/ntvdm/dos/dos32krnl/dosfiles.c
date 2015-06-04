@@ -23,6 +23,45 @@
 
 #include "bios/bios.h"
 
+/* PRIVATE FUNCTIONS **********************************************************/
+
+static VOID StoreNameInSft(LPCSTR FilePath, PDOS_FILE_DESCRIPTOR Descriptor)
+{
+    CHAR ShortPath[MAX_PATH];
+    PCHAR Name;
+    PCHAR Extension;
+
+    /* Try to get the short path */
+    if (!GetShortPathNameA(FilePath, ShortPath, sizeof(ShortPath)))
+    {
+        /* If it failed, just use the uppercase long path */
+        strncpy(ShortPath, FilePath, sizeof(ShortPath) - 1);
+        _strupr(ShortPath);
+    }
+
+    /* Get the name part */
+    Name = strrchr(ShortPath, '\\');
+    if (Name == NULL) Name = ShortPath;
+
+    /* Find the extension */
+    Extension = strchr(Name, '.');
+
+    if (Extension)
+    {
+        /* Terminate the name string, and move the pointer to after the dot */
+        *Extension++ = 0;
+    }
+
+    /* Copy the name into the SFT descriptor */
+    RtlCopyMemory(Descriptor->FileName, Name, min(strlen(Name), 8));
+
+    if (Extension)
+    {
+        /* Copy the extension too */
+        RtlCopyMemory(&Descriptor->FileName[8], Extension, min(strlen(Extension), 3));
+    }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BYTE DosFindFreeDescriptor(VOID)
@@ -365,20 +404,24 @@ WORD DosCreateFileEx(LPWORD Handle,
     /* Set up the new descriptor */
     Descriptor = DosGetFileDescriptor(DescriptorId);
     RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+    RtlFillMemory(Descriptor->FileName, sizeof(Descriptor->FileName), ' ');
 
     if (Node != NULL)
     {
         Descriptor->DevicePointer = Node->Driver;
         Descriptor->DeviceInfo = Node->DeviceAttributes | FILE_INFO_DEVICE;
+        RtlCopyMemory(Descriptor->FileName, Node->Name.Buffer, Node->Name.Length);
     }
     else
     {
         Descriptor->OpenMode = AccessShareModes;
         Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
         Descriptor->Size = GetFileSize(FileHandle, NULL);
-        Descriptor->OwnerPsp = Sda->CurrentPsp;
         Descriptor->Win32Handle = FileHandle;
+        StoreNameInSft(FilePath, Descriptor);
     }
+
+    Descriptor->OwnerPsp = Sda->CurrentPsp;
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(DescriptorId);
@@ -441,19 +484,23 @@ WORD DosCreateFile(LPWORD Handle,
     /* Set up the new descriptor */
     Descriptor = DosGetFileDescriptor(DescriptorId);
     RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+    RtlFillMemory(Descriptor->FileName, sizeof(Descriptor->FileName), ' ');
 
     if (Node != NULL)
     {
         Descriptor->DevicePointer = Node->Driver;
         Descriptor->DeviceInfo = Node->DeviceAttributes | FILE_INFO_DEVICE;
+        RtlCopyMemory(Descriptor->FileName, Node->Name.Buffer, Node->Name.Length);
     }
     else
     {
         Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
         Descriptor->Size = GetFileSize(FileHandle, NULL);
-        Descriptor->OwnerPsp = Sda->CurrentPsp;
         Descriptor->Win32Handle = FileHandle;
+        StoreNameInSft(FilePath, Descriptor);
     }
+
+    Descriptor->OwnerPsp = Sda->CurrentPsp;
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(DescriptorId);
@@ -589,20 +636,24 @@ WORD DosOpenFile(LPWORD Handle,
     /* Set up the new descriptor */
     Descriptor = DosGetFileDescriptor(DescriptorId);
     RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+    RtlFillMemory(Descriptor->FileName, sizeof(Descriptor->FileName), ' ');
 
     if (Node != NULL)
     {
         Descriptor->DevicePointer = Node->Driver;
         Descriptor->DeviceInfo = Node->DeviceAttributes | FILE_INFO_DEVICE;
+        RtlCopyMemory(Descriptor->FileName, Node->Name.Buffer, Node->Name.Length);
     }
     else
     {
         Descriptor->OpenMode = AccessShareModes;
         Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
         Descriptor->Size = GetFileSize(FileHandle, NULL);
-        Descriptor->OwnerPsp = Sda->CurrentPsp;
         Descriptor->Win32Handle = FileHandle;
+        StoreNameInSft(FilePath, Descriptor);
     }
+
+    Descriptor->OwnerPsp = Sda->CurrentPsp;
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(DescriptorId);
