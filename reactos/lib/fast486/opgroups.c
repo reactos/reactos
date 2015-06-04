@@ -2002,13 +2002,6 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
                 return;
             }
 
-            /* This is a privileged instruction */
-            if (Fast486GetCurrentPrivLevel(State) != 0)
-            {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
-                return;
-            }
-
             if (!Fast486ReadModrmWordOperands(State,
                                               &ModRegRm,
                                               NULL,
@@ -2033,23 +2026,23 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
 
             /* Set ZF if it is valid and accessible */
             State->Flags.Zf = GdtEntry.Present // must be present
-                               && GdtEntry.SystemType // must be a segment
-                               && (((ModRegRm.Register == 4)
-                               /* code segments are only readable if the RW bit is set */
-                               && (!GdtEntry.Executable || GdtEntry.ReadWrite))
-                               || ((ModRegRm.Register == 5)
-                               /* code segments are never writable, data segments are writable when RW is set */
-                               && (!GdtEntry.Executable && GdtEntry.ReadWrite)))
-                               /*
-                                * for segments other than conforming code segments,
-                                * both RPL and CPL must be less than or equal to DPL
-                                */
-                               && ((!GdtEntry.Executable || !GdtEntry.DirConf)
-                               && ((GET_SEGMENT_RPL(Selector) <= GdtEntry.Dpl)
-                               && (Fast486GetCurrentPrivLevel(State) <= GdtEntry.Dpl)))
-                               /* for conforming code segments, DPL must be less than or equal to CPL */
-                               && ((GdtEntry.Executable && GdtEntry.DirConf)
-                               && (GdtEntry.Dpl <= Fast486GetCurrentPrivLevel(State)));
+                              && GdtEntry.SystemType // must be a segment
+                              && (((ModRegRm.Register == 4)
+                              /* code segments are only readable if the RW bit is set */
+                              && (!GdtEntry.Executable || GdtEntry.ReadWrite))
+                              || ((ModRegRm.Register == 5)
+                              /* code segments are never writable, data segments are writable when RW is set */
+                              && (!GdtEntry.Executable && GdtEntry.ReadWrite)))
+                              /*
+                               * for segments other than conforming code segments,
+                               * both RPL and CPL must be less than or equal to DPL
+                               */
+                              && (((!GdtEntry.Executable || !GdtEntry.DirConf)
+                              && (GET_SEGMENT_RPL(Selector) <= GdtEntry.Dpl)
+                              && (Fast486GetCurrentPrivLevel(State) <= GdtEntry.Dpl))
+                              /* for conforming code segments, DPL must be less than or equal to CPL */
+                              || ((GdtEntry.Executable && GdtEntry.DirConf)
+                              && (GdtEntry.Dpl <= Fast486GetCurrentPrivLevel(State))));
 
 
             break;
