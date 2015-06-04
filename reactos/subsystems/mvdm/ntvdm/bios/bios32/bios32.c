@@ -125,10 +125,8 @@ static BYTE Bootstrap[] =
 };
 
 /*
- * Normally at F000:E05B there is the POST that finally calls the bootstrap
- * interrupt. It should also check the value of Bda->SoftReset. Since we do
- * all the POST in 32 bit from the start, we just place there the bootstrap
- * interrupt call.
+ * POST code at F000:E05B. All the POST is done in 32 bit
+ * and only at the end it calls the bootstrap interrupt.
  */
 static BYTE PostCode[] =
 {
@@ -828,7 +826,7 @@ Bios32Post(LPWORD Stack)
         /* Shutdown after Block Move Test (unsupported) */
         case 0x09:
         {
-            DisplayMessage(L"Unsupported CMOS Shutdown Status value 0x%02X. The VDM is stopping...", ShutdownStatus);
+            DisplayMessage(L"Unsupported CMOS Shutdown Status value 0x%02X. The VDM will shut down.", ShutdownStatus);
             EmulatorTerminate();
             return;
         }
@@ -883,19 +881,18 @@ Bios32Post(LPWORD Stack)
      * - if the word is 1234h, perform a warm reboot (aka. Ctrl-Alt-Del). Some stuff is skipped.
      */
 
-    // FIXME: This is a debug temporary check:
-    // Since NTVDM memory is by default initialized with 0xCC, it is also
-    // the case for the BDA. So at first boot we get SoftReset == 0xCCCC.
-    // After we zero out the BDA and put valid values in it.
-    // If for some reason an app calls the BIOS initialization code,
-    // SoftReset is normally zero (unless the app puts a non-null value in SoftReset)
-    // and we can detect that. With the current state of NTVDM, apps calling
-    // by hand the BIOS init code is a sign of a bug, e.g. see MSD.EXE version 2+.
-    if (Bda->SoftReset != 0xCCCC)
+    switch (Bda->SoftReset)
     {
-        DisplayMessage(L"NTVDM is performing a COLD reboot! The program you are currently testing seems to not behave correctly! The VDM is stopping...");
-        EmulatorTerminate();
-        return;
+        case 0x0000:
+            DisplayMessage(L"NTVDM is performing a COLD reboot! The program you are currently testing does not seem to behave correctly! The VDM will shut down...");
+            // Fall through
+        case 0x1234:
+            DisplayMessage(L"NTVDM is performing a WARM reboot! This is not supported at the moment. The VDM will shut down...");
+            EmulatorTerminate();
+            return;
+
+        default:
+            break;
     }
 
     /* Initialize the BDA and the BIOS ROM Information */
