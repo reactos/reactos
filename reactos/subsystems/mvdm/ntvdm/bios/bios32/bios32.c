@@ -784,6 +784,7 @@ static VOID
 WINAPI
 Bios32Post(LPWORD Stack)
 {
+    static BOOLEAN FirstBoot = TRUE;
 #if 0
     BOOLEAN Success;
 #endif
@@ -884,12 +885,23 @@ Bios32Post(LPWORD Stack)
     switch (Bda->SoftReset)
     {
         case 0x0000:
-            DisplayMessage(L"NTVDM is performing a COLD reboot! The program you are currently testing does not seem to behave correctly! The VDM will shut down...");
-            // Fall through
+        {
+            if (!FirstBoot)
+            {
+                DisplayMessage(L"NTVDM is performing a COLD reboot! The program you are currently testing does not seem to behave correctly! The VDM will shut down...");
+                EmulatorTerminate();
+                return;
+            }
+            FirstBoot = FALSE;
+            break;
+        }
+
         case 0x1234:
+        {
             DisplayMessage(L"NTVDM is performing a WARM reboot! This is not supported at the moment. The VDM will shut down...");
             EmulatorTerminate();
             return;
+        }
 
         default:
             break;
