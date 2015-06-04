@@ -141,8 +141,12 @@ ENDM
     ENDM
 ENDM
 
-.space MACRO count
-    DB 0 DUP (count)
+.skip MACRO size, fill:=<0>
+    DB size DUP (fill)
+ENDM
+
+.space MACRO size, fill:=<0>
+    .skip size, fill
 ENDM
 
 ljmp MACRO segment, offset
