@@ -793,7 +793,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
                 {
                     _ILSimpleGetText (pidl, szPath, MAX_PATH);
                     GetDiskFreeSpaceExA (szPath, NULL, &ulBytes, NULL);
-                    StrFormatByteSizeA (ulBytes.LowPart, psd->str.cStr, MAX_PATH);
+                    StrFormatByteSize64A (ulBytes.QuadPart, psd->str.cStr, MAX_PATH);
                 }
                 break;
             case 3:        /* free size */
@@ -801,7 +801,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
                 {
                     _ILSimpleGetText (pidl, szPath, MAX_PATH);
                     GetDiskFreeSpaceExA (szPath, &ulBytes, NULL, NULL);
-                    StrFormatByteSizeA (ulBytes.LowPart, psd->str.cStr, MAX_PATH);
+                    StrFormatByteSize64A (ulBytes.QuadPart, psd->str.cStr, MAX_PATH);
                 }
                 break;
         }
