@@ -430,8 +430,8 @@ Fast486InterruptInternal(PFAST486_STATE State,
             State->InstPtr.LowWord = IdtEntry->Offset;
         }
 
-        /* Clear TF and NT */
-        State->Flags.Tf = State->Flags.Nt = FALSE;
+        /* Clear NT */
+       State->Flags.Nt = FALSE;
 
         if (OldVm)
         {
@@ -512,6 +512,9 @@ Fast486InterruptInternal(PFAST486_STATE State,
         /* Disable interrupts after a jump to an interrupt gate handler */
         State->Flags.If = FALSE;
     }
+
+    /* Clear TF */
+    State->Flags.Tf = FALSE;
 
     return TRUE;
 }

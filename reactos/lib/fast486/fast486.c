@@ -50,10 +50,13 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
     UCHAR Opcode;
     FAST486_OPCODE_HANDLER_PROC CurrentHandler;
     INT ProcedureCallCount = 0;
+    BOOLEAN Trap;
 
     /* Main execution loop */
     do
     {
+        Trap = State->Flags.Tf;
+
         if (!State->Halted)
         {
 NextInst:
@@ -90,19 +93,10 @@ NextInst:
             /* Clear the interrupt delay flag */
             State->DoNotInterrupt = FALSE;
         }
-        else if (State->Flags.Tf && !State->Halted)
+        else if (Trap && !State->Halted)
         {
             /* Perform the interrupt */
-            Fast486PerformInterrupt(State, 0x01);
-
-            /*
-             * Flags and TF are pushed on stack so we can reset TF now,
-             * to not break into the INT 0x01 handler.
-             * After the INT 0x01 handler returns, the flags and therefore
-             * TF are popped back off the stack and restored, so TF will be
-             * automatically reset to its previous state.
-             */
-            State->Flags.Tf = FALSE;
+            Fast486PerformInterrupt(State, FAST486_EXCEPTION_DB);
         }
         else if (State->Flags.If && State->IntSignaled)
         {
