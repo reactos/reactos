@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Glide wrapper by Zeckensack
@@ -45,6 +46,9 @@ Size = 249,02 KB
 
 [Section.0422]
 Description = glidewrapper необхідний для запуску Diablo2 в ReactOS.
+
+[Section.0804]
+Description = （仿真 3dfx 卡与 OpenGL） 的 Glide API shim需要在 ReactOS 上运行 Diablo II。
 
 [Section.0813]
 Description = glidewrapper is nodig om Diablo2 te gebruiken op ReactOS.

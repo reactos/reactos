@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Lazarus
@@ -33,3 +34,6 @@ Size = 108 Mo
 [Section.041f]
 License = Değiştirilmiş LGPL, GPL
 Description = Görmelik (GUI) ve görmelik olmayan Object Pascal izlenceleri oluşturmanızı sağlayan, çalıştırılabilir kütüğünüzü oluşturmak için Free Pascal derleyicisini kullanan bir çapraz platform bir tümleşik geliştirme ortamı (IDE).
+
+[Section.0804]
+Description = 允许您创建 Object Pascal 程序的跨平台 IDE。它使用 Free Pascal 语言编译器来生成您的项目。

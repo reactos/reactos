@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = LibreCAD
@@ -26,3 +27,6 @@ Description = Un editor CAD (de diseño asistido) 2D para Windows, Linux y OS X.
 License = GPL sürüm 2
 Description = LibreCAD; Windows, Linux ve OS X için özgür ve açık kaynak bir 2 boyutlu CAD uygulamasıdır.
 Size = 25,5 MB
+
+[Section.0804]
+Description = 为 Windows、 Linux 和 OS X 的自由和开放源码二维 CAD 应用程序。

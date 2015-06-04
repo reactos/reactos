@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = GSview
@@ -27,3 +28,6 @@ Size = 1,94 Mo
 License = Aladdin Özgür Kamu Ruhsatı
 Description = Ghostscript için bir çizgelik arayüz.
 Size = 1,94 MB
+
+[Section.0804]
+Description = 一个用于 Ghostscript 的图形界面。

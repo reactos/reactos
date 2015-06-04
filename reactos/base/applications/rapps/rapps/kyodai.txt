@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Kyodai Mahjongg
@@ -34,3 +35,6 @@ Size = 13,8 Mo
 License = Paylaşımlı
 Description = Mahjong solitaire oyunları arasında en iyilerinden biri.
 Size = 13,8 MB
+
+[Section.0804]
+Description = 最棒的麻将纸牌游戏之一。

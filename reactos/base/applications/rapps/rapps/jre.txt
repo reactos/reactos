@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Java SE Runtime Environment 7
@@ -25,3 +26,7 @@ Size = 28,1 MB
 License = Licență Oracle pentru cod binar
 Description = Platformă necesară pentru aplicațiile Java.
 Size = 28,1 Mo
+
+[Section.0804]
+License = Oracle 二进制代码许可
+Description = 你想要运行 Java 程序吗？如果是这样，下载 Java Runtime Environment。

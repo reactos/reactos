@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Excel Viewer
@@ -62,6 +63,9 @@ URLDownload = http://download.microsoft.com/download/8/5/D/85DCDD24-8237-4334-86
 License = Невідома
 Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/7/4/9/749A8D59-A2D5-4A64-99CF-5FF4DD7C5AC6/ExcelViewer.exe
+
+[Section.0804]
+Description = 免费软件电子表格查看器 Office 格式 (*.xls)。
 
 [Section.0813]
 License = Ongekend

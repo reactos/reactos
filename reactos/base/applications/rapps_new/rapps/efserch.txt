@@ -1,5 +1,6 @@
 ﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Effective File search
@@ -28,3 +29,6 @@ Name = Etkili Kütük Arama
 Licence = Ücretsiz
 Description = ReactOS'la uyumlu kütük arama.
 Size = 944 KB
+
+[Section.0804]
+Description = 文件搜索实用程序与 ReactOS 兼容。

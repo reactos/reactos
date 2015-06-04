@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = LGeneral
@@ -41,6 +42,9 @@ Size = 1,92 MB
 
 [Section.0422]
 Description = Клон гри Panzer General, що використовує бібліотеки SDL.
+
+[Section.0804]
+Description = 使用 SDL libs的 Panzer General Clone。
 
 [Section.0813]
 Description = Panzer General kloon, gebruikt SDL.

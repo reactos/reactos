@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = IrfanView
@@ -50,6 +51,9 @@ Size = 1,81 MB
 [Section.0422]
 License = Freeware (для домашнього використання)
 Description = Переглядач для всіх видів графічних та аудіо/відео файлів.
+
+[Section.0804]
+Description = 各种各样的图形和音频文件和视频文件的查看器。
 
 [Section.0813]
 License = Freeware (voor persoonlijk gebruik)

@@ -1,6 +1,8 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
 
 [Section]
 Name = Mozilla Fira Font
@@ -38,3 +40,6 @@ Name = Mozilla Fira Yazı Tipi
 License = Bilinmiyor
 Description = Mozilla Fira Yazı Tipi Paketi, Mono ve Sans yazı tiplerini kapsar. ReactOS'un dizinine çıkartınız.
 Size = 2,36 MB
+
+[Section.0804]
+Description = 含有 Mono 和 Sans 字体的字体包。在 ReactOS 文件夹中解压缩。

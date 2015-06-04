@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Fox Audio Player
@@ -42,6 +43,9 @@ Size = 1,9 MB
 
 [Section.0422]
 Description = Простий та маленький програвач аудіо файлів.
+
+[Section.0804]
+Description = 简单、 轻量级的音频播放器。
 
 [Section.0813]
 Description = Eenvoudige en lichte audio speler.

@@ -1,6 +1,7 @@
 ﻿; UTF-8
 ; Spanish translation by Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = GnuCash
@@ -26,3 +27,6 @@ Size = 92,6 MB
 
 [Section.0a]
 Description = Un programa de contabilidad personal y de PYMEs liberado bajo los términos de la GNU GPL. Está disponible para GNU/Linux, BSD, Solaris, Mac OS X y Microsoft Windows.
+
+[Section.0804]
+Description = 个人和小企业财务会计软件，免费 GNU GPL 许可的， 供 GNU/Linux、 BSD、 Solaris、 Mac OS X 和 Windows。

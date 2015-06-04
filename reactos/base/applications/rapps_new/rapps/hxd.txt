@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = HxD
@@ -40,3 +41,8 @@ License = Ücretsiz
 Description = İyi bir onaltılık düzenleyici. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 853 KB
 URLDownload = http://mh-nexus.de/downloads/HxDSetupTR.zip
+
+[Section.0804]
+Description = 一个很好的十六进制编辑器。您将需要一个像 7-Zip 文件中解压它的工具。
+Size = 852 KB
+URLDownload = http://mh-nexus.de/downloads/HxDSetupCHS.zip

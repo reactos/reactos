@@ -1,5 +1,6 @@
 ﻿; UTF-8
 ; Spanish translation by Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = GIMP
@@ -21,3 +22,6 @@ Size = 87,7 Mo
 
 [Section.0a]
 Description = Es un acrónimo en inglés de «Programa de Manipulación de Imágenes GNU». Se distribuye libremente y está pensado para el retoque fotográfico, composición de imágenes y dibujo.
+
+[Section.0804]
+Description = GNU 图片编辑程序的首字母缩写。它是一个免费分发的程序相片编修、 图象合成和图像创作等任务。

@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = IndiFTPD
@@ -33,3 +34,6 @@ Size = 556 ko
 Version = 1.0.9 Gelişme
 Description = IndiFTPD, bir tek çalıştırılabilir kütükten çalışan tek başına bir FTP sunucusudur. Bir kullanıcının, çabucak, çalışan bir sunucuya iye olmak istediği ve dizgesinde bir sunucu kurmak/yapılandırmak istemediği (veyâ bunu yapmaya izni olmadığı) durumlar için tasarlanmıştır.
 Size = 556 KB
+
+[Section.0804]
+Description = 作为一个单一的可执行文件的功能的独立 FTP 服务器。它专为情况下，当用户不想安装/配置系统上的服务器 （或不具有权限这样做），想要快速运行的服务器。

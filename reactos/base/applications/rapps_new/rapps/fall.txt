@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Fall
@@ -23,3 +24,6 @@ Size = 371 KB
 [Section.0418]
 Description = Joc cu pinguini care cad de pe aisberg, iar jucătorul trebuie să-i salte pe docuri.
 Size = 371 ko
+
+[Section.0804]
+Description = 企鹅从冰山落下，你不得不弹起他们进码头。

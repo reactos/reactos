@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Hover!
@@ -31,3 +32,6 @@ Size = 6,2 Mo
 [Section.041f]
 Description = Windows 95 CD'sinde bulunan kökleşik Hover CTF oyunu.
 Size = 6,2 MB
+
+[Section.0804]
+Description = 经典的 Hover CTF 游戏在 Windows 95 安装光盘中可找到。

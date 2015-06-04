@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = FreeBASIC
@@ -38,3 +39,6 @@ Size = 10,3 MB
 
 [Section.0422]
 Description = Відкритий компілятор BASIC. Синтаксис сумісний з QBASIC.
+
+[Section.0804]
+Description = 开放源码 BASIC 编译器。BASIC语法是与 QBASIC 兼容。

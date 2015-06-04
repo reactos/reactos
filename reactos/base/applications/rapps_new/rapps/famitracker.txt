@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = FamiTracker
@@ -24,3 +25,6 @@ Size = 1,53 Mo
 License = Ücretsiz
 Description = FamiTracker, NES ve Famicom dizgeleri için mûsikî üretmeye bir ücretsiz pencere izleyicisidir.
 Size = 1,53 MB
+
+[Section.0804]
+Description = 一个免费的 Windows 跟踪器来制作 NES 和 Famicom 系统音乐。

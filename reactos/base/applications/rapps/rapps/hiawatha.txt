@@ -1,5 +1,6 @@
 ; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Hiawatha
@@ -23,3 +24,6 @@ Size = 3,4 MB
 [Section.0418]
 Description = Server web cu surse deschise, av鈔d securitatea 頽 prim plan.
 Size = 3,4 Mo
+
+[Section.0804]
+Description = 强调在安全的开源网络服务器。

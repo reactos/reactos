@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Ghostscript
@@ -25,3 +26,6 @@ Size = 13,48 Mo
 [Section.041f]
 Description = PostScript dili ve PDF için bir açık kaynak yorumlayıcı.
 Size = 13,48 MB
+
+[Section.0804]
+Description = 开放的翻译为 PostScript 语言和 PDF。

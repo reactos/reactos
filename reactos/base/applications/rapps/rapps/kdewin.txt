@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = K Desktop Environment
@@ -42,6 +43,9 @@ Size = 2,16 MB
 
 [Section.0422]
 Description = KDE для Windows.
+
+[Section.0804]
+Description = 对于 Windows 的 KDE。
 
 [Section.0813]
 Description = KDE voor Windows.
