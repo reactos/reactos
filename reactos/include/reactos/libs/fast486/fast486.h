@@ -515,6 +515,7 @@ struct _FAST486_STATE
     FAST486_REG GeneralRegs[FAST486_NUM_GEN_REGS];
     FAST486_SEG_REG SegmentRegs[FAST486_NUM_SEG_REGS];
     FAST486_REG InstPtr, SavedInstPtr;
+    FAST486_REG SavedStackPtr;
     FAST486_FLAGS_REG Flags;
     FAST486_TABLE_REG Gdtr, Idtr;
     FAST486_LDT_REG Ldtr;

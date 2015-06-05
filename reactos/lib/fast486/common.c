@@ -579,6 +579,9 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
     /* Restore the IP to the saved IP */
     State->InstPtr = State->SavedInstPtr;
 
+    /* Restore  the SP to the saved SP */
+    State->GeneralRegs[FAST486_REG_ESP] = State->SavedStackPtr;
+
     /* Get the interrupt vector */
     if (!Fast486GetIntVector(State, ExceptionCode, &IdtEntry))
     {
@@ -1040,7 +1043,7 @@ Fast486CallGate(PFAST486_STATE State,
                                OldEsp,
                                FALSE,
                                ParamBuffer,
-                               Gate->ParamCount * sizeof(ULONG)))
+                               Gate->ParamCount * (GateSize ? sizeof(ULONG) : sizeof(USHORT))))
         {
             /* Exception occurred */
             return FALSE;

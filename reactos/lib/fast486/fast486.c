@@ -61,7 +61,11 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
         {
 NextInst:
             /* Check if this is a new instruction */
-            if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
+            if (State->PrefixFlags == 0)
+            {
+                State->SavedInstPtr = State->InstPtr;
+                State->SavedStackPtr = State->GeneralRegs[FAST486_REG_ESP];
+            }
 
             /* Perform an instruction fetch */
             if (!Fast486FetchByte(State, &Opcode))
