@@ -4,7 +4,8 @@ spec2def(spoolss.dll spoolss.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     context.c
     main.c
-    precomp.h)
+    precomp.h
+    tools.c)
 
 add_library(spoolss SHARED
     ${SOURCE}

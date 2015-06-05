@@ -106,7 +106,7 @@
 @ stub OpenPrinterExW
 @ stub OpenPrinterPortW
 @ stdcall OpenPrinterW(wstr ptr ptr)
-@ stub PackStrings
+@ stdcall PackStrings(ptr ptr ptr ptr)
 @ stub PartialReplyPrinterChangeNotification
 @ stub PlayGdiScriptOnPrinterIC
 @ stub PrinterHandleRundown
