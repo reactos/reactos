@@ -212,8 +212,11 @@ VOID DosCreatePsp(WORD Segment, WORD ProgramSize)
     /* Set the parent PSP */
     PspBlock->ParentPsp = Sda->CurrentPsp;
 
-    /* No environment block yet */
-    PspBlock->EnvBlock = 0;
+    if (Sda->CurrentPsp != SYSTEM_PSP)
+    {
+        /* Link to the parent's environment block */
+        PspBlock->EnvBlock = SEGMENT_TO_PSP(Sda->CurrentPsp)->EnvBlock;
+    }
 
     /* Copy the parent handle table */
     DosCopyHandleTable(PspBlock->HandleTable);
