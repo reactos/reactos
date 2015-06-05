@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/storage/mountmgr/database.c
+ * FILE:        dll/win32/syssetup/classinst.c
  * PURPOSE:     Class installers
  * PROGRAMMERS: Copyright 2006 Hervé Poussineau (hpoussin@reactos.org)
  */
@@ -99,6 +99,7 @@ HdcClassInstaller(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
+    DPRINT("HdcClassInstaller()\n");
     return ERROR_DI_DO_DEFAULT;
 }
 
@@ -200,7 +201,7 @@ StorageCoInstaller(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
@@ -209,12 +210,23 @@ TapeClassInstaller(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
-    switch (InstallFunction)
-    {
-        default:
-            DPRINT("Install function %u ignored\n", InstallFunction);
-            return ERROR_DI_DO_DEFAULT;
-    }
+    DPRINT("TapeClassInstaller()\n");
+    return ERROR_DI_DO_DEFAULT;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+VolumeClassInstaller(
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+{
+    DPRINT("VolumeClassInstaller()\n");
+    return ERROR_DI_DO_DEFAULT;
 }
 
 /* EOF */

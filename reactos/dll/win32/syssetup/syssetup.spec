@@ -82,5 +82,6 @@
 @ stub UpdatePnpDeviceDrivers
 @ stub UpgradePrinters
 @ stub ViewSetupActionLog
+@ stdcall VolumeClassInstaller(long ptr ptr)
 @ stub pSetupDebugPrint
 @ stub pSetuplogSfcError
