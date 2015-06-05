@@ -494,10 +494,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8F)
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
-        /* Exception occurred - restore SP */
-        if (OperandSize) State->GeneralRegs[FAST486_REG_ESP].Long -= sizeof(ULONG);
-        else State->GeneralRegs[FAST486_REG_ESP].LowWord -= sizeof(USHORT);
-
+        /* Exception occurred */
         return;
     }
 

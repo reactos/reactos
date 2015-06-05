@@ -579,7 +579,7 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
     /* Restore the IP to the saved IP */
     State->InstPtr = State->SavedInstPtr;
 
-    /* Restore  the SP to the saved SP */
+    /* Restore the SP to the saved SP */
     State->GeneralRegs[FAST486_REG_ESP] = State->SavedStackPtr;
 
     /* Get the interrupt vector */
