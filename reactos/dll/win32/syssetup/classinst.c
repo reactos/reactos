@@ -35,6 +35,26 @@ ComputerClassInstaller(
  */
 DWORD
 WINAPI
+CriticalDeviceCoInstaller(
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN OUT PCOINSTALLER_CONTEXT_DATA Context)
+{
+    switch (InstallFunction)
+    {
+        default:
+            DPRINT1("Install function %u ignored\n", InstallFunction);
+            return ERROR_SUCCESS;
+    }
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
 DeviceBayClassInstaller(
     IN DI_FUNCTION InstallFunction,
     IN HDEVINFO DeviceInfoSet,
@@ -45,6 +65,26 @@ DeviceBayClassInstaller(
         default:
             DPRINT("Install function %u ignored\n", InstallFunction);
             return ERROR_DI_DO_DEFAULT;
+    }
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+EisaUpHalCoInstaller(
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN OUT PCOINSTALLER_CONTEXT_DATA Context)
+{
+    switch (InstallFunction)
+    {
+        default:
+            DPRINT1("Install function %u ignored\n", InstallFunction);
+            return ERROR_SUCCESS;
     }
 }
 
@@ -135,6 +175,26 @@ ScsiClassInstaller(
         default:
             DPRINT("Install function %u ignored\n", InstallFunction);
             return ERROR_DI_DO_DEFAULT;
+    }
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+StorageCoInstaller(
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN OUT PCOINSTALLER_CONTEXT_DATA Context)
+{
+    switch (InstallFunction)
+    {
+        default:
+            DPRINT1("Install function %u ignored\n", InstallFunction);
+            return ERROR_SUCCESS;
     }
 }
 
