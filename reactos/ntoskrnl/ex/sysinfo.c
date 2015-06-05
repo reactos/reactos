@@ -1291,9 +1291,10 @@ QSI_DEF(SystemFileCacheInformation)
 {
     SYSTEM_FILECACHE_INFORMATION *Sci = (SYSTEM_FILECACHE_INFORMATION *) Buffer;
 
-    if (Size < sizeof(SYSTEM_FILECACHE_INFORMATION))
+    *ReqSize = sizeof(SYSTEM_FILECACHE_INFORMATION);
+
+    if (Size < *ReqSize)
     {
-        *ReqSize = sizeof(SYSTEM_FILECACHE_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
