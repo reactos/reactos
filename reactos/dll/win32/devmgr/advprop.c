@@ -1069,6 +1069,96 @@ DisplayMatchingDeviceId(IN PDEVADVPROP_INFO dap,
 
 
 static VOID
+DisplayClassCoinstallers(IN PDEVADVPROP_INFO dap,
+                          IN HWND hwndListView)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    WCHAR szClassGuid[45];
+    HKEY hKey = INVALID_HANDLE_VALUE;
+    DWORD dwSize;
+    DWORD dwType;
+    LPBYTE lpBuffer = NULL;
+    LPWSTR lpStr;
+    INT index;
+    INT len;
+    LONG lError;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    dwSize = 45 * sizeof(WCHAR);
+    if (!SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          SPDRP_CLASSGUID,
+                                          &dwType,
+                                          (LPBYTE)szClassGuid,
+                                          dwSize,
+                                          &dwSize))
+        return;
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SYSTEM\\CurrentControlSet\\Control\\CoDeviceInstallers",
+                           0,
+                           GENERIC_READ,
+                           &hKey);
+    if (lError != ERROR_SUCCESS)
+        return;
+
+    dwSize = 0;
+    lError = RegQueryValueEx(hKey,
+                             szClassGuid,
+                             NULL,
+                             &dwType,
+                             NULL,
+                             &dwSize);
+    if (lError != ERROR_SUCCESS)
+        goto done;
+
+    if (dwSize == 0)
+        goto done;
+
+    lpBuffer = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         dwSize);
+
+    RegQueryValueEx(hKey,
+                    szClassGuid,
+                    NULL,
+                    &dwType,
+                    lpBuffer,
+                    &dwSize);
+
+    lpStr = (LPWSTR)lpBuffer;
+    index = 0;
+    while (*lpStr != 0)
+    {
+        len = wcslen(lpStr) + 1;
+
+        SetListViewText(hwndListView, index, lpStr);
+
+        lpStr += len;
+        index++;
+    }
+
+done:
+    if (lpBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBuffer);
+
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
+}
+
+
+static VOID
 DisplayDeviceCoinstallers(IN PDEVADVPROP_INFO dap,
                           IN HWND hwndListView)
 {
@@ -1351,10 +1441,10 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                                    L"Installer32");
             break;
 
-#if 0
         case 18: /* Class Coinstaller */
+            DisplayClassCoinstallers(dap,
+                                     hwndListView);
             break;
-#endif
 
         case 19: /* Device Coinstaller */
             DisplayDeviceCoinstallers(dap,
