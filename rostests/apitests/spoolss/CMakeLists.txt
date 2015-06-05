@@ -1,4 +1,6 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/win32ss/printing/include)
+
 list(APPEND SOURCE
     PackStrings.c
     testlist.c)

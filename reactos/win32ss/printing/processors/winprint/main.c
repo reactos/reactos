@@ -48,18 +48,14 @@ PCWSTR pwszDatatypes[] = {
 BOOL WINAPI
 EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
-    DATATYPES_INFO_1W DatatypesInfo1;
     DWORD cbDatatype;
-    PBYTE pCurrentOutputDatatype;
-    PBYTE pCurrentOutputDatatypeInfo;
+    DWORD dwOffsets[_countof(pwszDatatypes)];
     PCWSTR* pCurrentDatatype;
+    PDWORD pCurrentOffset = dwOffsets;
 
     // Sanity checks
     if (Level != 1 || !pcbNeeded || !pcReturned)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
-    }
 
     // Count the required buffer size and the number of datatypes.
     *pcbNeeded = 0;
@@ -69,7 +65,12 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
     {
         cbDatatype = (wcslen(*pCurrentDatatype) + 1) * sizeof(WCHAR);
         *pcbNeeded += sizeof(DATATYPES_INFO_1W) + cbDatatype;
+
+        // Also calculate the offset in the output buffer of the pointer to this datatype string.
+        *pCurrentOffset = *pcReturned * sizeof(DATATYPES_INFO_1W) + FIELD_OFFSET(DATATYPES_INFO_1W, pName);
+
         *pcReturned++;
+        pCurrentOffset++;
     }
 
     // Check if the supplied buffer is large enough.
@@ -79,25 +80,16 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
         return FALSE;
     }
 
-    // Put the datatype strings right after the last DATATYPES_INFO_1W structure.
-    pCurrentOutputDatatypeInfo = pDatatypes;
-    pCurrentOutputDatatype = pDatatypes + *pcReturned * sizeof(DATATYPES_INFO_1W);
+    // Check if a buffer was supplied at all.
+    if (!pDatatypes)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     // Copy over all datatypes.
-    for (pCurrentDatatype = pwszDatatypes; *pCurrentDatatype; pCurrentDatatype++)
-    {
-        // Copy the datatype string into the output buffer.
-        cbDatatype = (wcslen(*pCurrentDatatype) + 1) * sizeof(WCHAR);
-        CopyMemory(pCurrentOutputDatatype, *pCurrentDatatype, cbDatatype);
-
-        // Fill and copy the DATATYPES_INFO_1W structure belonging to this datatype.
-        DatatypesInfo1.pName = (PWSTR)pCurrentOutputDatatype;
-        CopyMemory(pCurrentOutputDatatypeInfo, &DatatypesInfo1, sizeof(DATATYPES_INFO_1W));
-        
-        // Advance to the next DATATYPES_INFO_1W location and string location in the output buffer.
-        pCurrentOutputDatatype += cbDatatype;
-        pCurrentOutputDatatypeInfo += sizeof(DATATYPES_INFO_1W);
-    }
+    *pCurrentOffset = MAXDWORD;
+    PackStrings(pwszDatatypes, pDatatypes, dwOffsets, &pDatatypes[*pcbNeeded]);
 
     return TRUE;
 }

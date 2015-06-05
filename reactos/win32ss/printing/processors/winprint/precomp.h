@@ -9,12 +9,15 @@
 #define _PRECOMP_H
 
 #define WIN32_NO_STATUS
+#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winreg.h>
 #include <winspool.h>
 #include <winsplp.h>
+
+#include <spoolss.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(winprint);

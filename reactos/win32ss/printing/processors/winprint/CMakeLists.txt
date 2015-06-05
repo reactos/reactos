@@ -13,6 +13,6 @@ add_library(winprint SHARED
 
 set_module_type(winprint win32dll UNICODE)
 target_link_libraries(winprint wine)
-add_importlibs(winprint kernel32 msvcrt ntdll)
+add_importlibs(winprint spoolss msvcrt kernel32 ntdll)
 add_pch(winprint precomp.h SOURCE)
 add_cd_file(TARGET winprint DESTINATION reactos/system32/spool/prtprocs/w32x86 FOR all)

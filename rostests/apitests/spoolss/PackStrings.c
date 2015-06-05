@@ -10,8 +10,7 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-
-PBYTE WINAPI PackStrings(PCWSTR*, PBYTE, PDWORD, PBYTE);
+#include <spoolss.h>
 
 typedef struct _EXAMPLE_STRUCT
 {
