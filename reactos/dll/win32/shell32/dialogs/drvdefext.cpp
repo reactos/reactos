@@ -308,9 +308,18 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
         default: IconId = IDI_SHELL_DRIVE; TypeStrId = IDS_DRIVE_FIXED;
     }
 
-    if (DriveType != DRIVE_FIXED)
+    if (DriveType == DRIVE_CDROM)
+    {
+        /* volume label textbox */
         EnableWindow(GetDlgItem(hwndDlg, 14000), false);
+        
+        /* disk compression */
+        ShowWindow(GetDlgItem(hwndDlg, 14011), false);
 
+        /* index */
+        ShowWindow(GetDlgItem(hwndDlg, 14012), false);
+    }
+    
     HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IconId), IMAGE_ICON, 32, 32, LR_SHARED);
     if (hIcon)
         SendDlgItemMessageW(hwndDlg, 14016, STM_SETICON, (WPARAM)hIcon, 0);
@@ -367,6 +376,9 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     GetDlgItemTextW(hwndDlg, 14009, wszFormat, _countof(wszFormat));
     swprintf(wszBuf, wszFormat, m_wszDrive[0]);
     SetDlgItemTextW(hwndDlg, 14009, wszBuf);
+    
+    /* show disk cleanup button only for fixed drives */
+    ShowWindow(GetDlgItem(hwndDlg, 14010), DriveType == DRIVE_FIXED);
 }
 
 INT_PTR CALLBACK
