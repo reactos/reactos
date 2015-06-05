@@ -133,7 +133,7 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST
     psh.phpage = hpsp;
 
     WCHAR wszName[256];
-    if (GetVolumeInformationW(pwszDrive, wszName, sizeof(wszName) / sizeof(WCHAR), NULL, NULL, NULL, NULL, 0))
+    if (GetVolumeInformationW(pwszDrive, wszName, _countof(wszName), NULL, NULL, NULL, NULL, 0))
     {
         psh.pszCaption = wszName;
         psh.dwFlags |= PSH_PROPTITLE;
@@ -230,7 +230,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             return;
         }
 
-        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
+        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, _countof(wszBuf)))
         {
             hDlgCtrl = GetDlgItem(hwndDlg, 28680);
             SendMessageW(hDlgCtrl, CB_RESETCONTENT, 0, 0);
@@ -249,7 +249,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             return;
         }
 
-        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
+        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, _countof(wszBuf)))
         {
             hDlgCtrl = GetDlgItem(hwndDlg, 28680);
             SendMessageW(hDlgCtrl, CB_RESETCONTENT, 0, 0);
@@ -269,7 +269,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         }
 
         hDlgCtrl = GetDlgItem(hwndDlg, 28680);
-        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
+        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, _countof(wszBuf)))
         {
             SendMessageW(hDlgCtrl, CB_RESETCONTENT, 0, 0);
             lIndex = SendMessageW(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)wszBuf);
@@ -281,7 +281,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         for (lIndex = 0; lIndex < 4; lIndex++)
         {
             TotalNumberOfBytes.QuadPart = ClusterSize;
-            if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
+            if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, wszBuf, _countof(wszBuf)))
             {
                 lIndex = SendMessageW(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)wszBuf);
                 if (lIndex != CB_ERR)
@@ -311,17 +311,17 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     BOOLEAN Latest;
     HWND hwndFileSystems;
 
-    cchText = GetWindowTextW(hwndDlg, szText, sizeof(szText) / sizeof(WCHAR) - 1);
+    cchText = GetWindowTextW(hwndDlg, szText, _countof(szText) - 1);
     if (cchText < 0)
         cchText = 0;
     szText[cchText++] = L' ';
     szDrive[0] = pContext->Drive + L'A';
-    if (GetVolumeInformationW(szDrive, &szText[cchText], (sizeof(szText) / sizeof(WCHAR)) - cchText, NULL, NULL, NULL, szFs, sizeof(szFs) / sizeof(WCHAR)))
+    if (GetVolumeInformationW(szDrive, &szText[cchText], _countof(szText) - cchText, NULL, NULL, NULL, szFs, _countof(szFs)))
     {
         if (szText[cchText] == UNICODE_NULL)
         {
             /* load default volume label */
-            cchText += LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, &szText[cchText], (sizeof(szText) / sizeof(WCHAR)) - cchText);
+            cchText += LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, &szText[cchText], _countof(szText) - cchText);
         }
         else
         {
@@ -338,7 +338,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 
     if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailableUser, &TotalNumberOfBytes, NULL))
     {
-        if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, szText, sizeof(szText) / sizeof(WCHAR)))
+        if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, szText, _countof(szText)))
         {
             /* add drive capacity */
             SendDlgItemMessageW(hwndDlg, 28673, CB_ADDSTRING, 0, (LPARAM)szText);
@@ -441,7 +441,7 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         return;
     }
     Length = SendMessageW(hDlgCtrl, CB_GETLBTEXTLEN, iSelIndex, 0);
-    if ((int)Length == CB_ERR || Length + 1 > sizeof(szFileSys) / sizeof(WCHAR))
+    if ((int)Length == CB_ERR || Length + 1 > _countof(szFileSys))
     {
         FIXME("\n");
         return;
@@ -449,17 +449,17 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 
     /* retrieve the file system */
     SendMessageW(hDlgCtrl, CB_GETLBTEXT, iSelIndex, (LPARAM)szFileSys);
-    szFileSys[(sizeof(szFileSys)/sizeof(WCHAR))-1] = L'\0';
+    szFileSys[_countof(szFileSys)-1] = L'\0';
 
     /* retrieve the volume label */
     hDlgCtrl = GetWindow(hwndDlg, 28679);
     Length = SendMessageW(hDlgCtrl, WM_GETTEXTLENGTH, 0, 0);
-    if (Length + 1 > sizeof(szLabel) / sizeof(WCHAR))
+    if (Length + 1 > _countof(szLabel))
     {
         FIXME("\n");
         return;
     }
-    SendMessageW(hDlgCtrl, WM_GETTEXT, sizeof(szLabel) / sizeof(WCHAR), (LPARAM)szLabel);
+    SendMessageW(hDlgCtrl, WM_GETTEXT, _countof(szLabel), (LPARAM)szLabel);
     szLabel[(sizeof(szLabel)/sizeof(WCHAR))-1] = L'\0';
 
     /* check for quickformat */
