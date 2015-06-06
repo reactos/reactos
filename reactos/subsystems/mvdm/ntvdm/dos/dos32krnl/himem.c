@@ -76,58 +76,19 @@ static LONG A20EnableCount = 0;
 
 /* HELPERS FOR A20 LINE *******************************************************/
 
-static BOOLEAN PCAT_A20Control(BYTE Control, PBOOLEAN A20Status)
-{
-    BYTE ControllerOutput;
-
-    /* Retrieve PS/2 controller output byte */
-    IOWriteB(PS2_CONTROL_PORT, 0xD0);
-    ControllerOutput = IOReadB(PS2_DATA_PORT);
-
-    switch (Control)
-    {
-        case 0: /* Disable A20 line */
-            ControllerOutput &= ~0x02;
-            IOWriteB(PS2_CONTROL_PORT, 0xD1);
-            IOWriteB(PS2_DATA_PORT, ControllerOutput);
-            break;
-
-        case 1: /* Enable A20 line */
-            ControllerOutput |= 0x02;
-            IOWriteB(PS2_CONTROL_PORT, 0xD1);
-            IOWriteB(PS2_DATA_PORT, ControllerOutput);
-            break;
-
-        default: /* Get A20 status */
-            break;
-    }
-
-    if (A20Status)
-        *A20Status = (ControllerOutput & 0x02) != 0;
-
-    /* Return success */
-    return TRUE;
-}
-
 static VOID XmsLocalEnableA20(VOID)
 {
     /* Enable A20 only if we can do so, otherwise make the caller believe we enabled it */
     if (!CanChangeA20) goto Quit;
 
     /* The count is zero so enable A20 */
-    if (A20EnableCount == 0 && !PCAT_A20Control(1, NULL))
-        goto Fail;
+    if (A20EnableCount == 0) EmulatorSetA20(TRUE);
 
     ++A20EnableCount;
 
 Quit:
     setAX(0x0001); /* Line successfully enabled */
     setBL(XMS_STATUS_SUCCESS);
-    return;
-
-Fail:
-    setAX(0x0000); /* Line failed to be enabled */
-    setBL(XMS_STATUS_A20_ERROR);
     return;
 }
 
@@ -142,8 +103,7 @@ static VOID XmsLocalDisableA20(VOID)
     --A20EnableCount;
 
     /* The count is zero so disable A20 */
-    if (A20EnableCount == 0 && !PCAT_A20Control(0, NULL))
-        goto Fail;
+    if (A20EnableCount == 0) EmulatorSetA20(FALSE);
 
 Quit:
     setAX(0x0001); /* Line successfully disabled */
@@ -154,25 +114,6 @@ Fail:
     setAX(0x0000); /* Line failed to be enabled */
     setBL(XMS_STATUS_A20_ERROR);
     return;
-}
-
-static VOID XmsGetA20State(VOID)
-{
-    BOOLEAN A20Status = FALSE;
-
-    /*
-     * NOTE: The XMS specification explicitely says that this check is done
-     * in a hardware-independent manner, by checking whether high memory wraps.
-     * For our purposes we just call the emulator API.
-     */
-
-    /* Get A20 status */
-    if (PCAT_A20Control(2, &A20Status))
-        setBL(XMS_STATUS_SUCCESS);
-    else
-        setBL(XMS_STATUS_A20_ERROR);
-
-    setAX(A20Status);
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -395,8 +336,8 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         /* Query A20 State */
         case 0x07:
         {
-            /* This call sets AX and BL to their correct values */
-            XmsGetA20State();
+            setAX(EmulatorGetA20());
+            setBL(XMS_STATUS_SUCCESS);
             break;
         }
 
