@@ -126,7 +126,7 @@ HKCR,"hlpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-24"
 HKCR,"hlpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\winhlp32.exe %1"
 
 HKCR,".chm","",0x00000000,"chm.file"
-HKCR,"chm.file","",0x00000000,"Help File"
+HKCR,"chm.file","",0x00000000,"Compiled HTML Help File"
 HKCR,"chm.file","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
 HKCR,"chm.file\DefaultIcon","",0x00020000,"%SystemRoot%\hh.exe,0"
 HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe %1"
@@ -136,6 +136,8 @@ HKCR,".htm","",0x00000000,"htmlfile"
 HKCR,".htm","Content Type",0x00000000,"text/html"
 HKCR,".html","",0x00000000,"htmlfile"
 HKCR,".html","Content Type",0x00000000,"text/html"
+HKCR,"htmlfile","",0x00000000,"HTML File"
+HKCR,"htmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\ieframe.dll,0"
 HKCR,"htmlfile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; Icons
@@ -166,7 +168,7 @@ HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\syste
 HKCR,".gif","",0x00000000,"giffile"
 HKCR,"giffile","",0x00000000,"GIF Image"
 HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
-HKCR,"giffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"giffile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; Configuration Files
 HKCR,".ini","",0x00000000,"inifile"
@@ -225,6 +227,7 @@ HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.e
 ; MSI files
 HKCR,".msi","",0x00000000,"MSI.Package"
 HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
+HKCR,"Msi.Package","",0x00000000,"ReactOS Installer Package"
 HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /i ""%1"""
 HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /f ""%1"""
 HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /x ""%1"""
