@@ -454,6 +454,6 @@ typedef NTSTATUS (*ptrFsRtlNotifyVolumeEvent) (
     IN ULONG EventCode
     );
 
-#include "..\Include\ntddk_ex.h"
+#include "Include\ntddk_ex.h"
 
 #endif //__NTIFS_EX_H__
