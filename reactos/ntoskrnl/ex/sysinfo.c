@@ -1839,6 +1839,13 @@ QSI_DEF(SystemDockInformation)
 /* Class 42 - Power Information */
 QSI_DEF(SystemPowerInformation)
 {
+    *ReqSize = sizeof(PROCESSOR_POWER_INFORMATION) * KeNumberProcessors;
+
+    if (sizeof(PROCESSOR_POWER_INFORMATION) * KeNumberProcessors > Size)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+    
     /* FIXME */
     DPRINT1("NtQuerySystemInformation - SystemPowerInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;

@@ -960,6 +960,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             Length = sizeof(ULONG_PTR);
             if (ProcessInformationLength != Length)
             {
+                Length = 0;
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
