@@ -18,4 +18,9 @@ BEGIN
     IDS_ERROR_NOMEM "沒有足夠的記憶體來完成操作。"
     IDS_ERROR_NOFONT "%1 不是一個有效的字體檔案。"
     IDS_ERROR_NOCLASS "窗口無法初始化。"
+    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType Font (*.ttf)\0*.ttf\0\
+OpenType Font (*.otf)\0*.otf\0\
+Font File (*.fon)\0*.fon\0\
+All Files (*.*)\0*.*\0"
 END

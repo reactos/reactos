@@ -12,4 +12,9 @@ BEGIN
     IDS_ERROR_NOMEM "אין מספיק זיכרון כדי להשלים את הפעולה."
     IDS_ERROR_NOFONT "הקובץ %1 אינו קובץ גופנים חוקי."
     IDS_ERROR_NOCLASS "Could not initialize window class."
+    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType Font (*.ttf)\0*.ttf\0\
+OpenType Font (*.otf)\0*.otf\0\
+Font File (*.fon)\0*.fon\0\
+All Files (*.*)\0*.*\0"
 END

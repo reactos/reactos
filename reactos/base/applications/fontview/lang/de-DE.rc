@@ -10,4 +10,9 @@ BEGIN
     IDS_ERROR_NOMEM "Es steht nicht genügend Speicher zur Verfügung."
     IDS_ERROR_NOFONT "Die angegebene Datei %1 ist keine gültige Schriftartendatei."
     IDS_ERROR_NOCLASS "Fehler beim Initialisieren der Fensterklasse."
+    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType Font (*.ttf)\0*.ttf\0\
+OpenType Font (*.otf)\0*.otf\0\
+Font File (*.fon)\0*.fon\0\
+All Files (*.*)\0*.*\0"
 END

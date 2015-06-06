@@ -4,6 +4,7 @@
 #define IDS_ERROR_NOMEM   101
 #define IDS_ERROR_NOFONT  102
 #define IDS_ERROR_NOCLASS 103
+#define IDS_FILTER_LIST   104
 
 #define IDS_INSTALL 500
 #define IDS_PRINT   501

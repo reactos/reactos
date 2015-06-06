@@ -110,15 +110,22 @@ HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002
 
 ; Fonts
 HKCR,".fon","",0x00000000,"fonfile"
-HKCR,"fonfile","",0x00000000,"Font File"
+HKCR,"fonfile","",0x00000000,"Font file"
 HKCR,"fonfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-166"
 HKCR,"fonfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-155"
+HKCR,"fonfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
 
 HKCR,".ttf","",0x00000000,"ttffile"
-HKCR,"ttffile","",0x00000000,"TrueType Font File"
-HKCR,"ttffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
+HKCR,"ttffile","",0x00000000,"TrueType font file"
 HKCR,"ttffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-167"
+HKCR,"ttffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
 HKCR,"ttffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
+
+HKCR,".otf","",0x00000000,"otffile"
+HKCR,"otffile","",0x00000000,"OpenType font file"
+HKCR,"otffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
+HKCR,"otffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-167"
+HKCR,"otffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
 
 ; Help Files
 HKCR,".hlp","",0x00000000,"hlpfile"
