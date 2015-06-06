@@ -2084,7 +2084,7 @@ BOOL WINAPI EnumCalendarInfoExW( CALINFO_ENUMPROCEXW calinfoproc,LCID locale,
 int WINAPI GetCalendarInfoA(LCID lcid, CALID Calendar, CALTYPE CalType,
 			    LPSTR lpCalData, int cchData, LPDWORD lpValue)
 {
-    int ret;
+    int ret, cchDataW = cchData;
     LPWSTR lpCalDataW = NULL;
 
     if (NLS_IsUnicodeOnlyLcid(lcid))
@@ -2093,13 +2093,14 @@ int WINAPI GetCalendarInfoA(LCID lcid, CALID Calendar, CALTYPE CalType,
       return 0;
     }
 
-    if (cchData &&
-        !(lpCalDataW = HeapAlloc(GetProcessHeap(), 0, cchData*sizeof(WCHAR))))
-      return 0;
+    if (!cchData && !(CalType & CAL_RETURN_NUMBER))
+        cchDataW = GetCalendarInfoW(lcid, Calendar, CalType, NULL, 0, NULL);
+    if (!(lpCalDataW = HeapAlloc(GetProcessHeap(), 0, cchDataW*sizeof(WCHAR))))
+        return 0;
 
-    ret = GetCalendarInfoW(lcid, Calendar, CalType, lpCalDataW, cchData, lpValue);
+    ret = GetCalendarInfoW(lcid, Calendar, CalType, lpCalDataW, cchDataW, lpValue);
     if(ret && lpCalDataW && lpCalData)
-      WideCharToMultiByte(CP_ACP, 0, lpCalDataW, -1, lpCalData, cchData, NULL, NULL);
+        ret = WideCharToMultiByte(CP_ACP, 0, lpCalDataW, -1, lpCalData, cchData, NULL, NULL);
     else if (CalType & CAL_RETURN_NUMBER)
         ret *= sizeof(WCHAR);
     HeapFree(GetProcessHeap(), 0, lpCalDataW);
