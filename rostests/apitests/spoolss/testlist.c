@@ -11,10 +11,12 @@
 #include <apitest.h>
 
 extern void func_PackStrings(void);
+extern void func_SplInitializeWinSpoolDrv(void);
 
 const struct test winetest_testlist[] =
 {
     { "PackStrings", func_PackStrings },
+    { "SplInitializeWinSpoolDrv", func_SplInitializeWinSpoolDrv },
 
     { 0, 0 }
 };

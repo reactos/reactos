@@ -3,6 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/win32ss/printing/include)
 
 list(APPEND SOURCE
     PackStrings.c
+    SplInitializeWinSpoolDrv.c
     testlist.c)
 
 add_executable(spoolss_apitest ${SOURCE})
