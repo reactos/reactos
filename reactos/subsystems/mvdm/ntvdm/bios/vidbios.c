@@ -3068,6 +3068,8 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         {
             switch (getAL())
             {
+                // FIXME: At the moment we support only graphics-mode functions!
+
                 /* Set User 8x8 Graphics Chars (Setup INT 1Fh Vector) */
                 case 0x20:
                 {
@@ -3077,11 +3079,56 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     break;
                 }
 
+                /* Set User Graphics Characters */
+                case 0x21:
+                {
+                    // /* Write the font to the VGA font plane */
+                    // VgaWriteFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
+
+                    /* Update the BIOS INT 43h vector */
+                    ((PULONG)BaseAddress)[0x43] = MAKELONG(getBP(), getES());
+
+                    /* Update BDA */
+                    Bda->CharacterHeight = getCX();
+                    switch (getBL())
+                    {
+                        case 0x00: Bda->ScreenRows = getDL()-1; break;
+                        case 0x01: Bda->ScreenRows = 13;        break;
+                        case 0x03: Bda->ScreenRows = 42;        break;
+                        case 0x02:
+                        default  : Bda->ScreenRows = 24;        break;
+                    }
+
+                    break;
+                }
+
+                /* Setup ROM 8x14 Font for Graphics Mode */
+                case 0x22:
+                {
+                    /* Write the default font to the VGA font plane */
+                    VgaWriteFont(0, Font8x14, ARRAYSIZE(Font8x14) / VGA_FONT_CHARACTERS);
+
+                    /* Update the BIOS INT 43h vector */
+                    // Far pointer to the 8x14 characters 00h-...
+                    ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x14_OFFSET, VIDEO_BIOS_DATA_SEG);
+
+                    /* Update BDA */
+                    Bda->CharacterHeight = 14;
+                    switch (getBL())
+                    {
+                        case 0x00: Bda->ScreenRows = getDL()-1; break;
+                        case 0x01: Bda->ScreenRows = 13;        break;
+                        case 0x03: Bda->ScreenRows = 42;        break;
+                        case 0x02:
+                        default  : Bda->ScreenRows = 24;        break;
+                    }
+
+                    break;
+                }
+
                 /* Setup ROM 8x8 Font for Graphics Mode */
                 case 0x23:
                 {
-                    // FIXME: Use BL and DL for the number of screen rows
-
                     /* Write the default font to the VGA font plane */
                     VgaWriteFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
 
@@ -3089,20 +3136,40 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     // Far pointer to the 8x8 characters 00h-...
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x8_OFFSET, VIDEO_BIOS_DATA_SEG);
 
+                    /* Update BDA */
+                    Bda->CharacterHeight = 8;
+                    switch (getBL())
+                    {
+                        case 0x00: Bda->ScreenRows = getDL()-1; break;
+                        case 0x01: Bda->ScreenRows = 13;        break;
+                        case 0x03: Bda->ScreenRows = 42;        break;
+                        case 0x02:
+                        default  : Bda->ScreenRows = 24;        break;
+                    }
+
                     break;
                 }
 
                 /* Setup ROM 8x16 Font for Graphics Mode */
                 case 0x24:
                 {
-                    // FIXME: Use BL and DL for the number of screen rows
-
                     /* Write the default font to the VGA font plane */
                     VgaWriteFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
 
                     /* Update the BIOS INT 43h vector */
                     // Far pointer to the 8x16 characters 00h-...
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
+
+                    /* Update BDA */
+                    Bda->CharacterHeight = 16;
+                    switch (getBL())
+                    {
+                        case 0x00: Bda->ScreenRows = getDL()-1; break;
+                        case 0x01: Bda->ScreenRows = 13;        break;
+                        case 0x03: Bda->ScreenRows = 42;        break;
+                        case 0x02:
+                        default  : Bda->ScreenRows = 24;        break;
+                    }
 
                     break;
                 }
