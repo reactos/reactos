@@ -953,7 +953,7 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
                     dwSerial = -1;
                 }
 
-                swprintf(szVolume, L"%s (%c)", szName, szDrive[0]);
+                swprintf(szVolume, L"%s (%c:)", szName, szDrive[0]);
                 memset(&li, 0x0, sizeof(LVITEMW));
                 li.mask = LVIF_TEXT | LVIF_PARAM;
                 li.iSubItem = 0;
