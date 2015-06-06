@@ -352,7 +352,8 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     rcPart.top += 3 ;
 
     /* Draw the icon */
-    if(hIcon && !(pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW))
+    if(hIcon && !(pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW)
+             && !(pcontext->wi.dwExStyle & WS_EX_DLGMODALFRAME))
     {
         int IconHeight = GetSystemMetrics(SM_CYSMICON);
         int IconWidth = GetSystemMetrics(SM_CXSMICON);
