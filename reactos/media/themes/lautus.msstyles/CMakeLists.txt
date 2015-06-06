@@ -4,6 +4,7 @@ list(APPEND TEXTFILES
     textfiles/LargeFontsNormal.INI
     textfiles/NormalNormal.INI)
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/textfiles)
 foreach(_file ${TEXTFILES})
     get_filename_component(_file_name ${_file} NAME_WE)
     string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _converted_file "${_file}")
