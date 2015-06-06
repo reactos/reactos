@@ -1,0 +1,28 @@
+////////////////////////////////////////////////////////////////////
+// Copyright (C) Alexander Telyatnikov, Ivan Keliukh, Yegor Anchishkin, SKIF Software, 1999-2013. Kiev, Ukraine
+// All rights reserved
+////////////////////////////////////////////////////////////////////
+//+-------------------------------------------------------------------------
+//
+//  File:           product.h
+//
+//  Description:    Product header template file
+//--------------------------------------------------------------------------
+
+#ifndef __UDF_PRODUCT__H__
+#define __UDF_PRODUCT__H__
+
+#define VER_STR_PRODUCT             "%UdfVersionNumber%.%UdfBuildNumber%"
+#define VER_RAW_STR_PRODUCT         %UdfVersionNumber%
+#define VER_BIN_PRODUCT             %UdfVersionNumberBin%,%UdfBuildNumber%
+
+#define UDF_CURRENT_BUILD           %UdfBuildNumber%
+
+#define VER_STR_PRODUCT_NAME        "DVD Write Now"
+#define VER_STR_VENDOR_NAME         "DVD Write Now"
+#define VER_STR_VENDOR_SHORT_NAME   "DVD Write Now"
+
+#define VER_LEGALCOPYRIGHT_YEARS    "1999-2007"
+#define VER_LEGALCOPYRIGHT_STR      "Copyright \251 " VER_STR_VENDOR_NAME " " VER_LEGALCOPYRIGHT_YEARS
+
+#endif //__UDF_PRODUCT__H__

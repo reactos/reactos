@@ -1,0 +1,8 @@
+////////////////////////////////////////////////////////////////////
+// Copyright (C) Alexander Telyatnikov, Ivan Keliukh, Yegor Anchishkin, SKIF Software, 1999-2013. Kiev, Ukraine
+// All rights reserved
+////////////////////////////////////////////////////////////////////
+
+#include "Include\platform.h"
+#include "udffs.h"
+#include "NameSup.h"

@@ -1,0 +1,169 @@
+////////////////////////////////////////////////////////////////////
+// Copyright (C) Alexander Telyatnikov, Ivan Keliukh, Yegor Anchishkin, SKIF Software, 1999-2013. Kiev, Ukraine
+// All rights reserved
+////////////////////////////////////////////////////////////////////
+/*++
+
+Copyright (c) 1997-1999  Microsoft Corporation
+
+Module Name:
+
+    mountmgr.h
+
+Abstract:
+
+    This file defines the external mount point interface for administering
+    mount points.
+
+Author:
+
+    norbertk
+
+Revision History:
+
+--*/
+
+#ifndef _MOUNTMGR_
+#define _MOUNTMGR_
+
+#if _MSC_VER > 1000
+#pragma once
+#endif
+
+#ifndef FAR
+#define FAR
+#endif
+
+
+#define MOUNTMGR_DEVICE_NAME        L"\\Device\\MountPointManager"
+#define MOUNTMGR_DOS_DEVICE_NAME    L"\\\\.\\MountPointManager"
+
+#define MOUNTMGRCONTROLTYPE  ((ULONG) 'm')
+#define MOUNTDEVCONTROLTYPE  ((ULONG) 'M')
+
+//
+// These are the IOCTLs supported by the mount point manager.
+//
+
+#define IOCTL_MOUNTMGR_CREATE_POINT                 CTL_CODE(MOUNTMGRCONTROLTYPE, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_MOUNTMGR_DELETE_POINTS                CTL_CODE(MOUNTMGRCONTROLTYPE, 1, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_MOUNTMGR_QUERY_POINTS                 CTL_CODE(MOUNTMGRCONTROLTYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_MOUNTMGR_DELETE_POINTS_DBONLY         CTL_CODE(MOUNTMGRCONTROLTYPE, 3, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER            CTL_CODE(MOUNTMGRCONTROLTYPE, 4, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_MOUNTMGR_AUTO_DL_ASSIGNMENTS          CTL_CODE(MOUNTMGRCONTROLTYPE, 5, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_MOUNTMGR_VOLUME_MOUNT_POINT_CREATED   CTL_CODE(MOUNTMGRCONTROLTYPE, 6, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_MOUNTMGR_VOLUME_MOUNT_POINT_DELETED   CTL_CODE(MOUNTMGRCONTROLTYPE, 7, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_MOUNTMGR_CHANGE_NOTIFY                CTL_CODE(MOUNTMGRCONTROLTYPE, 8, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define IOCTL_MOUNTMGR_KEEP_LINKS_WHEN_OFFLINE      CTL_CODE(MOUNTMGRCONTROLTYPE, 9, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_MOUNTMGR_CHECK_UNPROCESSED_VOLUMES    CTL_CODE(MOUNTMGRCONTROLTYPE, 10, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION  CTL_CODE(MOUNTMGRCONTROLTYPE, 11, METHOD_BUFFERED, FILE_READ_ACCESS)
+
+//
+// Input structure for IOCTL_MOUNTMGR_CREATE_POINT.
+//
+
+typedef struct _MOUNTMGR_CREATE_POINT_INPUT {
+    USHORT  SymbolicLinkNameOffset;
+    USHORT  SymbolicLinkNameLength;
+    USHORT  DeviceNameOffset;
+    USHORT  DeviceNameLength;
+} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;
+
+//
+// Input structure for IOCTL_MOUNTMGR_DELETE_POINTS,
+// IOCTL_MOUNTMGR_QUERY_POINTS, and IOCTL_MOUNTMGR_DELETE_POINTS_DBONLY.
+//
+
+typedef struct _MOUNTMGR_MOUNT_POINT {
+    ULONG   SymbolicLinkNameOffset;
+    USHORT  SymbolicLinkNameLength;
+    ULONG   UniqueIdOffset;
+    USHORT  UniqueIdLength;
+    ULONG   DeviceNameOffset;
+    USHORT  DeviceNameLength;
+} MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;
+
+//
+// Output structure for IOCTL_MOUNTMGR_DELETE_POINTS,
+// IOCTL_MOUNTMGR_QUERY_POINTS, and IOCTL_MOUNTMGR_DELETE_POINTS_DBONLY.
+//
+
+typedef struct _MOUNTMGR_MOUNT_POINTS {
+    ULONG                   Size;
+    ULONG                   NumberOfMountPoints;
+    MOUNTMGR_MOUNT_POINT    MountPoints[1];
+} MOUNTMGR_MOUNT_POINTS, *PMOUNTMGR_MOUNT_POINTS;
+
+//
+// Input structure for IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER.
+//
+
+typedef struct _MOUNTMGR_DRIVE_LETTER_TARGET {
+    USHORT  DeviceNameLength;
+    WCHAR   DeviceName[1];
+} MOUNTMGR_DRIVE_LETTER_TARGET, *PMOUNTMGR_DRIVE_LETTER_TARGET;
+
+//
+// Output structure for IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER.
+//
+
+typedef struct _MOUNTMGR_DRIVE_LETTER_INFORMATION {
+    BOOLEAN DriveLetterWasAssigned;
+    UCHAR   CurrentDriveLetter;
+} MOUNTMGR_DRIVE_LETTER_INFORMATION, *PMOUNTMGR_DRIVE_LETTER_INFORMATION;
+
+//
+// Input structure for IOCTL_MOUNTMGR_VOLUME_MOUNT_POINT_CREATED and
+// IOCTL_MOUNTMGR_VOLUME_MOUNT_POINT_DELETED.
+//
+
+typedef struct _MOUNTMGR_VOLUME_MOUNT_POINT {
+    USHORT  SourceVolumeNameOffset;
+    USHORT  SourceVolumeNameLength;
+    USHORT  TargetVolumeNameOffset;
+    USHORT  TargetVolumeNameLength;
+} MOUNTMGR_VOLUME_MOUNT_POINT, *PMOUNTMGR_VOLUME_MOUNT_POINT;
+
+//
+// Input structure for IOCTL_MOUNTMGR_CHANGE_NOTIFY.
+// Output structure for IOCTL_MOUNTMGR_CHANGE_NOTIFY.
+//
+
+typedef struct _MOUNTMGR_CHANGE_NOTIFY_INFO {
+    ULONG   EpicNumber;
+} MOUNTMGR_CHANGE_NOTIFY_INFO, *PMOUNTMGR_CHANGE_NOTIFY_INFO;
+
+//
+// Input structure for IOCTL_MOUNTMGR_KEEP_LINKS_WHEN_OFFLINE and
+// IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION.
+//
+
+typedef struct _MOUNTMGR_TARGET_NAME {
+    USHORT  DeviceNameLength;
+    WCHAR   DeviceName[1];
+} MOUNTMGR_TARGET_NAME, *PMOUNTMGR_TARGET_NAME;
+
+//
+// The following IOCTL is supported by mounted devices.
+//
+
+#define IOCTL_MOUNTDEV_QUERY_DEVICE_NAME    CTL_CODE(MOUNTDEVCONTROLTYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+//
+// Output structure for IOCTL_MOUNTDEV_QUERY_DEVICE_NAME.
+//
+
+typedef struct _MOUNTDEV_NAME {
+    USHORT  NameLength;
+    WCHAR   Name[1];
+} MOUNTDEV_NAME, *PMOUNTDEV_NAME;
+
+//
+// Devices that wish to be mounted should report this GUID in
+// IoRegisterDeviceInterface.
+//
+
+//DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53f5630d, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
+
+#endif
+

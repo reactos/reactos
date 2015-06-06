@@ -1,0 +1,34 @@
+#////////////////////////////////////////////////////////////////////
+#// Copyright (C) Alexander Telyatnikov, Ivan Keliukh, Yegor Anchishkin, SKIF Software, 1999-2013. Kiev, Ukraine
+#// All rights reserved
+#////////////////////////////////////////////////////////////////////
+#  Dependency File, included by udf_info.mak
+
+#!IF "$(UDFINFO_DEPENDENCES)" == ""
+#UDFINFO_DEPENDENCES=\
+#    $(CDRW_DEPENDENCES)\
+#    "$(UDF_INFO_PATH)\Udf_info.h"\
+#    "$(UDF_INFO_PATH)\Udf_rel.h"
+#!ENDIF
+
+$(UDF_INFO_PATH)\alloc.cpp : \
+    $(UDFINFO_DEPENDENCES)
+
+$(UDF_INFO_PATH)\dirtree.cpp : \
+    $(UDFINFO_DEPENDENCES)
+
+$(UDF_INFO_PATH)\extent.cpp : \
+    $(UDFINFO_DEPENDENCES)
+
+$(UDF_INFO_PATH)\mount.cpp : \
+    $(UDFINFO_DEPENDENCES)
+
+$(UDF_INFO_PATH)\phys_eject.cpp : \
+    $(UDFINFO_DEPENDENCES)
+
+$(UDF_INFO_PATH)\physical.cpp : \
+    $(UDFINFO_DEPENDENCES)
+
+$(UDF_INFO_PATH)\udf_info.cpp : \
+    $(UDFINFO_DEPENDENCES)
+

@@ -1,0 +1,62 @@
+////////////////////////////////////////////////////////////////////
+// Copyright (C) Alexander Telyatnikov, Ivan Keliukh, Yegor Anchishkin, SKIF Software, 1999-2013. Kiev, Ukraine
+// All rights reserved
+////////////////////////////////////////////////////////////////////
+//+-------------------------------------------------------------------------
+//
+//  File:           protect_reg.h.h
+//
+//  Description:    Protection header template file
+//--------------------------------------------------------------------------
+
+
+
+#define REG_DATE_XOR_0          0x167ff6c9
+#define REG_DATE_XOR_1          0x4f76baac
+
+#define REG_VERSION_XOR_0       0x938bcfa2
+#define REG_VERSION_XOR_1       0xf8d9614c
+
+#define REG_TRIAL_XOR_0         0x87cbadef
+#define REG_TRIAL_XOR_1         0xd8736da6
+
+// TYPE_X  0 - dword
+// TYPE_X  1 - string
+
+#define REG_DATE_TYPE_0     1
+#define REG_DATE_TYPE_1     1
+
+#define REG_VERSION_TYPE_0  1
+#define REG_VERSION_TYPE_1  0
+
+#define REG_TRIAL_TYPE_0    0
+#define REG_TRIAL_TYPE_1    0
+
+#if defined(_NTDDK_) || defined(_NTIFS_) || defined(NT_DEFINED)
+
+%BeginStringDefines%
+#define REG_DATE_KEY_NAME_0 L"\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Compatibility"
+#define REG_DATE_VAL_NAME_0 L"RUN32"
+#define REG_DATE_KEY_NAME_1 L"\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ModuleCompatibility"
+#define REG_DATE_VAL_NAME_1 L"EXPLORER2"
+
+#define REG_VERSION_KEY_NAME_0 L"\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WOW\\Compatibility"
+#define REG_VERSION_VAL_NAME_0 L"CMD32"
+#define REG_VERSION_KEY_NAME_1 L"\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"
+#define REG_VERSION_VAL_NAME_1 L"InstallTime"
+
+#define REG_TRIAL_KEY_NAME_0 L"\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer"
+#define REG_TRIAL_VAL_NAME_0 L"SmallIcons"
+#define REG_TRIAL_KEY_NAME_1 L"\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Nls\\LocaleMapIDs"
+#define REG_TRIAL_VAL_NAME_1 L"CurrentLocaleID"
+%EndStringDefines%
+
+#define XCHAR PWCHAR
+
+#else // defined(_NTDDK_) || defined(_NTIFS_) || defined(NT_DEFINED)
+
+%PlaceStringDefines%
+                                                                                                               
+#define XCHAR PCHAR
+
+#endif // defined(_NTDDK_) || defined(_NTIFS_) || defined(NT_DEFINED) and K'
