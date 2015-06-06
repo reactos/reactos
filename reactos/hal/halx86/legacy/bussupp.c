@@ -1266,7 +1266,7 @@ HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
     if (!(Handler) || !(Handler->TranslateBusAddress))
     {
-        DPRINT1("No translator Interface: %x, Bus: %x, Handler: %p!\n", InterfaceType, BusNumber, Handler);
+        DPRINT1("No translator Interface: %x, Bus: %x, Handler: %p, BusAddress: %x!\n", InterfaceType, BusNumber, Handler, BusAddress);
         return FALSE;
     }
 

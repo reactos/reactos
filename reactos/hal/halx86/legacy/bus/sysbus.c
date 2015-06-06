@@ -32,7 +32,7 @@ HalpTranslateSystemBusAddress(IN PBUS_HANDLER BusHandler,
         /* Memory address */
         case 0:
             
-            /* Loop all prefetech memory */
+            /* Loop all prefetch memory */
             for (Range = &BusHandler->BusAddresses->PrefetchMemory;
                  Range;
                  Range = Range->Next)
