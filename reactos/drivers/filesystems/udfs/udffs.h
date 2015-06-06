@@ -121,7 +121,7 @@ extern "C" {
 
 #include <pseh/pseh2.h>
 
-#include "..\Include\check_env.h"
+#include "Include/check_env.h"
 
 #define PEXTENDED_IO_STACK_LOCATION  PIO_STACK_LOCATION
 
@@ -138,7 +138,7 @@ extern "C" {
 #ifndef _CONSOLE
 #include "ntdddisk.h"
 #include <devioctl.h>
-#include "..\include\crossnt\crossnt.h"
+#include "Include/CrossNt/CrossNt.h"
 #endif //_CONSOLE
 
 #include <stddef.h>
@@ -147,13 +147,13 @@ extern "C" {
 //#include "ecma_167.h"
 //#include "osta_misc.h"
 #include "wcache.h"
-#include "..\CDRW\cdrw_usr.h"
+#include "CDRW/cdrw_usr.h"
 
-#include "..\Include\regtools.h"
+#include "Include/regtools.h"
 
 #ifdef _CONSOLE
-#include "udf_info\udf_rel.h"
-#include "..\include\udf_common.h"
+#include "udf_info/udf_rel.h"
+#include "Include/udf_common.h"
 #else
 #include "struct.h"
 #endif //_CONSOLE
@@ -163,28 +163,28 @@ extern UDFData              UDFGlobalData;
 
 #ifndef _CONSOLE
 #include "env_spec.h"
-#include "DLDetect.h"
-#include "Udf_dbg.h"
+#include "dldetect.h"
+#include "udf_dbg.h"
 #else
-#include "..\include\env_spec_w32.h"
+#include "Include/env_spec_w32.h"
 #endif //_CONSOLE
 
 #include "sys_spec.h"
 
-#include "Udf_info\Udf_info.h"
+#include "udf_info/udf_info.h"
 
 #ifndef _CONSOLE
 #include "protos.h"
 #endif //_CONSOLE
 
-#include "..\Include\phys_lib.h"
+#include "Include/phys_lib.h"
 #include "errmsg.h"
-//#include "..\Include\tools.h"
-#include "Include\protect.h"
+//#include "Include/tools.h"
+#include "Include/protect.h"
 #include "udfpubl.h"
 //#include "ntifs.h"
 #include "mem.h"
-#include "..\Include\key_lib.h"
+#include "Include/key_lib.h"
 
 extern CCHAR   DefLetter[];
 
@@ -376,7 +376,7 @@ extern CCHAR   DefLetter[];
 
 //Device names
 
-#include "../Include/udf_reg.h"
+#include "Include/udf_reg.h"
 
 #include <ddk/mountmgr.h>
 

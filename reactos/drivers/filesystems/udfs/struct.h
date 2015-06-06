@@ -24,7 +24,7 @@
     some useful definitions
 **************************************************************************/
 
-#include "..\Include\platform.h"
+#include "Include/platform.h"
 
 /**************************************************************************
     some empty typedefs defined here so we can reference them easily
@@ -48,7 +48,7 @@ struct _UDFTrackMap;
 /**************************************************************************
  include udf related structures *here* (because we need definition of Fcb)
 **************************************************************************/
-#include "udf_info\udf_rel.h"
+#include "udf_info/udf_rel.h"
 
 /**************************************************************************
     each structure has a unique "node type" or signature associated with it
@@ -329,7 +329,7 @@ typedef struct _UDFFileControlBlock {
 #define _BROWSE_UDF_
 
 // Common UDF-related definitions
-#include "..\Include\udf_common.h"
+#include "Include/udf_common.h"
 
 // One for root
 #define         UDF_RESIDUAL_REFERENCE              (2)

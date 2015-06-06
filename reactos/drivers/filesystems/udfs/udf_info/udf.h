@@ -3,6 +3,6 @@
 // All rights reserved
 ////////////////////////////////////////////////////////////////////
 
-#include "Include\platform.h"
+#include "Include/platform.h"
 #include "udffs.h"
-#include "NameSup.h"
+#include "namesup.h"

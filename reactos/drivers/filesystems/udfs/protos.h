@@ -714,7 +714,7 @@ extern NTSTATUS UDFWCacheErrorHandler(
 * Prototypes for the file NameSup.cpp
 *************************************************************************/
 
-#include "NameSup.h"
+#include "namesup.h"
 
 /*************************************************************************
 * Prototypes for the file Udf_info\physical.cpp

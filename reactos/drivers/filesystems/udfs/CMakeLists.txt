@@ -1,5 +1,5 @@
 
-include_directories(include)
+include_directories(Include)
 
 set_cpp(WITH_RUNTIME)
 

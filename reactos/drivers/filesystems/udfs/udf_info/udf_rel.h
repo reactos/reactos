@@ -19,8 +19,8 @@
 #ifndef _UDF_REL_H_
 #define _UDF_REL_H_
 
-#include "Include\platform.h"
-#include "Ecma_167.h"
+#include "Include/platform.h"
+#include "ecma_167.h"
 
 #ifdef UDF_LIMIT_DIR_SIZE
 typedef uint8 uint_di;

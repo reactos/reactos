@@ -15,10 +15,10 @@
 
 #include "udffs.h"
 
-#include "..\CDRW\scsi_port.h"
+#include "CDRW/scsi_port.h"
 
 #ifdef EVALUATION_TIME_LIMIT
-#include "..\Include\protect.h"
+#include "Include/protect.h"
 #endif //EVALUATION_TIME_LIMIT
 
 #define UDF_CURRENT_BUILD 123456789

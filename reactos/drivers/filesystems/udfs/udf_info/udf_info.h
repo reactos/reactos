@@ -6,10 +6,10 @@
 #ifndef __UDF_STRUCT_SUPPORT_H__
 #define __UDF_STRUCT_SUPPORT_H__
 
-#include "Ecma_167.h"
+#include "ecma_167.h"
 #include "osta_misc.h"
 #include "udf_rel.h"
-#include "..\wcache.h"
+#include "wcache.h"
 
 // memory re-allocation (returns new buffer size)
 uint32    UDFMemRealloc(IN int8* OldBuff,     // old buffer

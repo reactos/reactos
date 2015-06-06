@@ -2591,5 +2591,6 @@ UDFWCacheErrorHandler(
     return ErrorInfo->Status;
 }
 
-#include "..\include\misc_common.cpp"
-#include "..\include\regtools.cpp"
+#include "Include/misc_common.cpp"
+#include "Include/regtools.cpp"
+
