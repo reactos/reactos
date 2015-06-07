@@ -32,6 +32,7 @@ extern "C" {
 
 $define(UCHAR=UCHAR)
 $define(ULONG=ULONG)
+$define(USHORT=USHORT)
 
 /* Dependencies */
 #include <ntddk.h>
