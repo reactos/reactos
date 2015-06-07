@@ -1903,7 +1903,7 @@ VOID WINAPI DosAbsoluteWrite(LPWORD Stack)
 
     /* General failure */
     setAX(0x800C);
-    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+    Stack[STACK_FLAGS - 1] |= EMULATOR_FLAG_CF;
 }
 
 VOID WINAPI DosInt27h(LPWORD Stack)
