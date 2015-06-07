@@ -651,6 +651,7 @@ typedef struct _TOKEN_SOURCE {
   LUID SourceIdentifier;
 } TOKEN_SOURCE, *PTOKEN_SOURCE;
 
+#include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
   LUID TokenId;
   LUID AuthenticationId;
@@ -663,6 +664,7 @@ typedef struct _TOKEN_STATISTICS {
   ULONG PrivilegeCount;
   LUID ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
+#include <poppack.h>
 
 typedef struct _TOKEN_CONTROL {
   LUID TokenId;
