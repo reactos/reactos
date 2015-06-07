@@ -1868,6 +1868,44 @@ VOID WINAPI DosBreakInterrupt(LPWORD Stack)
     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 }
 
+VOID WINAPI DosAbsoluteRead(LPWORD Stack)
+{
+    /*
+     * This call should leave the flags on the stack for some reason,
+     * so move the stack by one word.
+     */
+    Stack[STACK_INT_NUM] = Stack[STACK_IP];
+    Stack[STACK_IP] = Stack[STACK_CS];
+    Stack[STACK_CS] = Stack[STACK_FLAGS];
+    setSP(LOWORD(getSP() - 2));
+
+    // TODO: NOT IMPLEMENTED;
+    UNIMPLEMENTED;
+
+    /* General failure */
+    setAX(0x800C);
+    Stack[STACK_FLAGS - 1] |= EMULATOR_FLAG_CF;
+}
+
+VOID WINAPI DosAbsoluteWrite(LPWORD Stack)
+{
+    /*
+     * This call should leave the flags on the stack for some reason,
+     * so move the stack by one word.
+     */
+    Stack[STACK_INT_NUM] = Stack[STACK_IP];
+    Stack[STACK_IP] = Stack[STACK_CS];
+    Stack[STACK_CS] = Stack[STACK_FLAGS];
+    setSP(LOWORD(getSP() - 2));
+
+    // TODO: NOT IMPLEMENTED;
+    UNIMPLEMENTED;
+
+    /* General failure */
+    setAX(0x800C);
+    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+}
+
 VOID WINAPI DosInt27h(LPWORD Stack)
 {
     DosTerminateProcess(getCS(), 0, (getDX() + 0x0F) >> 4);
@@ -2078,14 +2116,14 @@ BOOLEAN DosKRNLInitialize(VOID)
 //  RegisterDosInt32(0x22, DosInt22h        ); // Termination
     RegisterDosInt32(0x23, DosBreakInterrupt); // Ctrl-C / Ctrl-Break
 //  RegisterDosInt32(0x24, DosInt24h        ); // Critical Error
+    RegisterDosInt32(0x25, DosAbsoluteRead  ); // Absolute Disk Read
+    RegisterDosInt32(0x26, DosAbsoluteWrite ); // Absolute Disk Write
     RegisterDosInt32(0x27, DosInt27h        ); // Terminate and Stay Resident
     RegisterDosInt32(0x28, DosIdle          ); // DOS Idle Interrupt
     RegisterDosInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
     RegisterDosInt32(0x2F, DosInt2Fh        );
 
     /* Unimplemented DOS interrupts */
-    RegisterDosInt32(0x25, NULL); // Absolute Disk Read
-    RegisterDosInt32(0x26, NULL); // Absolute Disk Write
     RegisterDosInt32(0x2A, NULL); // Network - Installation Check
 
     /* Load the CON driver */
