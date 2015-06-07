@@ -4809,7 +4809,6 @@ Return Value:
     ULONG                     numberListElements;
     BOOLEAN                   found;
 
-            DPRINT1("UpdateDeviceObjects()\n");
     partitionCount = ((partitionList->PartitionCount + 3) / 4) * 4;
 
     //
@@ -4910,11 +4909,10 @@ Return Value:
             if (partitionEntry->PartitionLength.QuadPart ==
                       deviceExtension->PartitionLength.QuadPart) {
 
-//                DebugPrint((3,
-            DPRINT1(
+                DebugPrint((3,
                            "UpdateDeviceObjects: Found match for \\Harddisk%d\\Partition%d\n",
                            physicalExtension->DeviceNumber,
-                           diskData->PartitionNumber);
+                           diskData->PartitionNumber));
 
                 //
                 // Indicate match is found and set partition number
@@ -4950,12 +4948,11 @@ Return Value:
 
             diskData->PartitionOrdinal = partitionOrdinal;
 
-//            DebugPrint((1,
-            DPRINT1(
+            DebugPrint((1,
                        "UpdateDeviceObjects: Disk %d ordinal %d is partition %d\n",
                        physicalExtension->DeviceNumber,
                        diskData->PartitionOrdinal,
-                       diskData->PartitionNumber);
+                       diskData->PartitionNumber));
 
         } else {
 
@@ -4963,11 +4960,10 @@ Return Value:
             // no match was found, indicate this partition is gone.
             //
 
-//            DebugPrint((1,
-            DPRINT1(
+            DebugPrint((1,
                        "UpdateDeviceObjects: Deleting \\Device\\Harddisk%x\\Partition%x\n",
                        physicalExtension->DeviceNumber,
-                       diskData->PartitionNumber);
+                       diskData->PartitionNumber));
 
             deviceExtension->PartitionLength.QuadPart = (LONGLONG) 0;
         }
@@ -5089,10 +5085,9 @@ Return Value:
                 continue;
             }
 
-//            DebugPrint((3,
-            DPRINT1(
+            DebugPrint((3,
                         "UpdateDeviceObjects: Create device object %s\n",
-                        ntNameBuffer);
+                        ntNameBuffer));
 
             //
             // This is a new name. Create the device object to represent it.
@@ -5107,10 +5102,9 @@ Return Value:
                                     &deviceObject);
 
             if (!NT_SUCCESS(status)) {
-//                DebugPrint((1,
-            DPRINT1(
+                DebugPrint((1,
                             "UpdateDeviceObjects: Can't create device %s\n",
-                            ntNameBuffer);
+                            ntNameBuffer));
                 RtlFreeUnicodeString(&ntUnicodeString);
                 continue;
             }
@@ -5201,11 +5195,10 @@ Return Value:
 
             diskData = (PDISK_DATA)(deviceExtension + 1);
 
-//            DebugPrint((1,
-            DPRINT1(
+            DebugPrint((1,
                         "UpdateDeviceObjects: Used existing device object \\Device\\Harddisk%x\\Partition%x\n",
                         physicalExtension->DeviceNumber,
-                        partitionNumber);
+                        partitionNumber));
         }
 
         //
@@ -5220,11 +5213,10 @@ Return Value:
         diskData->HiddenSectors = partitionEntry->HiddenSectors;
         diskData->PartitionOrdinal = partitionOrdinal;
 
-//        DebugPrint((1,
-            DPRINT1(
+        DebugPrint((1,
                    "UpdateDeviceObjects: Ordinal %d is partition %d\n",
                    diskData->PartitionOrdinal,
-                   diskData->PartitionNumber);
+                   diskData->PartitionNumber));
 
         //
         // Update partition number passed in to indicate the
