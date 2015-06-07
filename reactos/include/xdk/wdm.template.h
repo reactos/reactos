@@ -76,6 +76,8 @@ __drv_Mode_impl(WDM_INCLUDED)
 extern "C" {
 #endif
 
+$define(ULONG=ULONG)
+
 #if !defined(_NTHALDLL_) && !defined(_BLDR_)
 #define NTHALAPI DECLSPEC_IMPORT
 #else
