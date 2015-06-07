@@ -937,36 +937,6 @@
 #define SERVICE_ERROR_SEVERE 2
 #define SERVICE_ERROR_CRITICAL 3
 
-/* also in ddk/ntifs.h */
-#define TOKEN_ASSIGN_PRIMARY            (0x0001)
-#define TOKEN_DUPLICATE                 (0x0002)
-#define TOKEN_IMPERSONATE               (0x0004)
-#define TOKEN_QUERY                     (0x0008)
-#define TOKEN_QUERY_SOURCE              (0x0010)
-#define TOKEN_ADJUST_PRIVILEGES         (0x0020)
-#define TOKEN_ADJUST_GROUPS             (0x0040)
-#define TOKEN_ADJUST_DEFAULT            (0x0080)
-#define TOKEN_ADJUST_SESSIONID          (0x0100)
-#define TOKEN_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED |\
-                          TOKEN_ASSIGN_PRIMARY     |\
-                          TOKEN_DUPLICATE          |\
-                          TOKEN_IMPERSONATE        |\
-                          TOKEN_QUERY              |\
-                          TOKEN_QUERY_SOURCE       |\
-                          TOKEN_ADJUST_PRIVILEGES  |\
-                          TOKEN_ADJUST_GROUPS      |\
-                          TOKEN_ADJUST_DEFAULT     |\
-                          TOKEN_ADJUST_SESSIONID)
-#define TOKEN_READ       (STANDARD_RIGHTS_READ     |\
-                          TOKEN_QUERY)
-#define TOKEN_WRITE      (STANDARD_RIGHTS_WRITE    |\
-                          TOKEN_ADJUST_PRIVILEGES  |\
-                          TOKEN_ADJUST_GROUPS      |\
-                          TOKEN_ADJUST_DEFAULT)
-
-#define TOKEN_EXECUTE    (STANDARD_RIGHTS_EXECUTE)
-#define TOKEN_SOURCE_LENGTH 8
-/* end ddk/ntifs.h */
 #define DLL_PROCESS_DETACH    0
 #define DLL_PROCESS_ATTACH    1
 #define DLL_THREAD_ATTACH    2
@@ -2200,122 +2170,11 @@ typedef struct _SYSTEM_ALARM_CALLBACK_OBJECT_ACE {
   DWORD SidStart;
 } SYSTEM_ALARM_CALLBACK_OBJECT_ACE, *PSYSTEM_ALARM_CALLBACK_OBJECT_ACE;
 
-typedef struct _TOKEN_SOURCE {
-  CHAR SourceName[TOKEN_SOURCE_LENGTH];
-  LUID SourceIdentifier;
-} TOKEN_SOURCE,*PTOKEN_SOURCE;
-
-typedef struct _TOKEN_CONTROL {
-  LUID TokenId;
-  LUID AuthenticationId;
-  LUID ModifiedId;
-  TOKEN_SOURCE TokenSource;
-} TOKEN_CONTROL,*PTOKEN_CONTROL;
-
-typedef struct _TOKEN_DEFAULT_DACL {
-  PACL DefaultDacl;
-} TOKEN_DEFAULT_DACL,*PTOKEN_DEFAULT_DACL;
-
-typedef struct _TOKEN_GROUPS {
-  DWORD GroupCount;
-  SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
-} TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
-
-typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
-  DWORD SidCount;
-  DWORD SidLength;
-  PSID_AND_ATTRIBUTES Sids;
-  DWORD RestrictedSidCount;
-  DWORD RestrictedSidLength;
-  PSID_AND_ATTRIBUTES RestrictedSids;
-  DWORD PrivilegeCount;
-  DWORD PrivilegeLength;
-  PLUID_AND_ATTRIBUTES Privileges;
-  LUID AuthenticationId;
-} TOKEN_GROUPS_AND_PRIVILEGES, *PTOKEN_GROUPS_AND_PRIVILEGES;
-
-typedef struct _TOKEN_ORIGIN {
-  LUID OriginatingLogonSession;
-} TOKEN_ORIGIN, *PTOKEN_ORIGIN;
-
-typedef struct _TOKEN_OWNER {
-  PSID Owner;
-} TOKEN_OWNER,*PTOKEN_OWNER;
-
-typedef struct _TOKEN_PRIMARY_GROUP {
-  PSID PrimaryGroup;
-} TOKEN_PRIMARY_GROUP,*PTOKEN_PRIMARY_GROUP;
-
-typedef struct _TOKEN_PRIVILEGES {
-  DWORD PrivilegeCount;
-  LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
-} TOKEN_PRIVILEGES,*PTOKEN_PRIVILEGES,*LPTOKEN_PRIVILEGES;
-
-typedef enum tagTOKEN_TYPE {
-    TokenPrimary = 1,
-    TokenImpersonation
-} TOKEN_TYPE,*PTOKEN_TYPE;
-
 typedef enum _TOKEN_ELEVATION_TYPE {
     TokenElevationTypeDefault = 1,
     TokenElevationTypeFull,
     TokenElevationTypeLimited,
 } TOKEN_ELEVATION_TYPE, *PTOKEN_ELEVATION_TYPE;
-
-typedef struct _TOKEN_MANDATORY_LABEL {
-  SID_AND_ATTRIBUTES Label;
-} TOKEN_MANDATORY_LABEL, * PTOKEN_MANDATORY_LABEL;
-
-#include <pshpack4.h>
-typedef struct _TOKEN_STATISTICS {
-  LUID TokenId;
-  LUID AuthenticationId;
-  LARGE_INTEGER ExpirationTime;
-  TOKEN_TYPE TokenType;
-  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-  DWORD DynamicCharged;
-  DWORD DynamicAvailable;
-  DWORD GroupCount;
-  DWORD PrivilegeCount;
-  LUID ModifiedId;
-} TOKEN_STATISTICS, *PTOKEN_STATISTICS;
-#include <poppack.h>
-
-typedef struct _TOKEN_USER {
-  SID_AND_ATTRIBUTES User;
-} TOKEN_USER, *PTOKEN_USER;
-
-typedef enum _TOKEN_INFORMATION_CLASS {
-  TokenUser = 1,
-  TokenGroups,
-  TokenPrivileges,
-  TokenOwner,
-  TokenPrimaryGroup,
-  TokenDefaultDacl,
-  TokenSource,
-  TokenType,
-  TokenImpersonationLevel,
-  TokenStatistics,
-  TokenRestrictedSids,
-  TokenSessionId,
-  TokenGroupsAndPrivileges,
-  TokenSessionReference,
-  TokenSandBoxInert,
-  TokenAuditPolicy,
-  TokenOrigin,
-  TokenElevationType,
-  TokenLinkedToken,
-  TokenElevation,
-  TokenHasRestrictions,
-  TokenAccessInformation,
-  TokenVirtualizationAllowed,
-  TokenVirtualizationEnabled,
-  TokenIntegrityLevel,
-  TokenUIAccess,
-  TokenMandatoryPolicy,
-  TokenLogonSid,
-  MaxTokenInfoClass
-} TOKEN_INFORMATION_CLASS;
 
 typedef struct _QUOTA_LIMITS {
   SIZE_T PagedPoolLimit;
