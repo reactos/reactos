@@ -1510,6 +1510,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x55:
         {
             DosCreatePsp(getDX(), getSI());
+            DosSetProcessContext(getDX());
             break;
         }
 

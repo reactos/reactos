@@ -74,8 +74,7 @@ typedef struct _DOS_EXEC_PARAM_BLOCK
 
 typedef struct _DOS_REGISTER_STATE
 {
-    WORD DI, SI, BP, BX, DX, CX, AX;
-    WORD ES, DS;
+    WORD AX, BX, CX, DX, SI, DI, BP, DS, ES;
 } DOS_REGISTER_STATE, *PDOS_REGISTER_STATE;
 
 #pragma pack(pop)
