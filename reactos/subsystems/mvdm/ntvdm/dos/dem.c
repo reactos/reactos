@@ -266,7 +266,7 @@ Command:
         }
 
         /* Start the process from the command line */
-        Result = DosStartProcess(AppName, CmdLine, Env);
+        Result = DosStartProcess(AppName, CmdLine, Env, 0);
         if (Result != ERROR_SUCCESS)
         {
             DisplayMessage(L"Could not start '%S'. Error: %u", AppName, Result);

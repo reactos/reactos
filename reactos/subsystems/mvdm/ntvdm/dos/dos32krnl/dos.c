@@ -1376,7 +1376,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 if (LoadType == DOS_LOAD_AND_EXECUTE)
                 {
                     /* Create a new process */
-                    ErrorCode = DosCreateProcess(ProgramName, ParamBlock);
+                    ErrorCode = DosCreateProcess(ProgramName,
+                                                 ParamBlock,
+                                                 MAKELONG(Stack[STACK_IP], Stack[STACK_CS]));
                 }
                 else
 #endif
@@ -1386,7 +1388,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                                                   ProgramName,
                                                   ParamBlock,
                                                   NULL,
-                                                  NULL);
+                                                  NULL,
+                                                  MAKELONG(Stack[STACK_IP], Stack[STACK_CS]));
                 }
             }
             else if (OrgAL == 0x05)

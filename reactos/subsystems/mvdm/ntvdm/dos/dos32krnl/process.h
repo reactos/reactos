@@ -74,9 +74,8 @@ typedef struct _DOS_EXEC_PARAM_BLOCK
 
 typedef struct _DOS_REGISTER_STATE
 {
-    DWORD Flags;
-    WORD GS, FS, ES, DS;
-    DWORD EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX;
+    WORD DI, SI, BP, BX, DX, CX, AX;
+    WORD ES, DS;
 } DOS_REGISTER_STATE, *PDOS_REGISTER_STATE;
 
 #pragma pack(pop)
@@ -97,19 +96,22 @@ DWORD DosLoadExecutable
     IN LPCSTR ExecutablePath,
     IN PDOS_EXEC_PARAM_BLOCK Parameters,
     IN LPCSTR CommandLine OPTIONAL,
-    IN LPCSTR Environment OPTIONAL
+    IN LPCSTR Environment OPTIONAL,
+    IN DWORD ReturnAddress OPTIONAL
 );
 
 DWORD DosStartProcess(
     IN LPCSTR ExecutablePath,
     IN LPCSTR CommandLine,
-    IN LPCSTR Environment OPTIONAL
+    IN LPCSTR Environment OPTIONAL,
+    IN DWORD ReturnAddress OPTIONAL
 );
 
 WORD DosCreateProcess
 (
     LPCSTR ProgramName,
-    PDOS_EXEC_PARAM_BLOCK Parameters
+    PDOS_EXEC_PARAM_BLOCK Parameters,
+    IN DWORD ReturnAddress OPTIONAL
 );
 
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident);
