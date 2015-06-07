@@ -7,8 +7,15 @@ $if (_WDMDDK_)
 typedef PVOID PSECURITY_DESCRIPTOR;
 typedef ULONG SECURITY_INFORMATION, *PSECURITY_INFORMATION;
 typedef ULONG ACCESS_MASK, *PACCESS_MASK;
+
+$endif (_WDMDDK_)
+$if (_WDMDDK_ || _WINNT_)
+
 typedef PVOID PACCESS_TOKEN;
 typedef PVOID PSID;
+
+$endif (_WDMDDK_ || _WINNT_)
+$if (_WDMDDK_)
 
 #define DELETE                           0x00010000L
 #define READ_CONTROL                     0x00020000L
@@ -87,12 +94,18 @@ typedef struct _PRIVILEGE_SET {
   LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
 } PRIVILEGE_SET,*PPRIVILEGE_SET;
 
+$endif(_WDMDDK_)
+$if(_WDMDDK_ || _WINNT_)
+
 typedef enum _SECURITY_IMPERSONATION_LEVEL {
   SecurityAnonymous,
   SecurityIdentification,
   SecurityImpersonation,
   SecurityDelegation
 } SECURITY_IMPERSONATION_LEVEL, * PSECURITY_IMPERSONATION_LEVEL;
+
+$endif (_WDMDDK_ || _WINNT_)
+$if (_WDMDDK_)
 
 #define SECURITY_MAX_IMPERSONATION_LEVEL SecurityDelegation
 #define SECURITY_MIN_IMPERSONATION_LEVEL SecurityAnonymous
@@ -102,10 +115,13 @@ typedef enum _SECURITY_IMPERSONATION_LEVEL {
 #define SECURITY_DYNAMIC_TRACKING (TRUE)
 #define SECURITY_STATIC_TRACKING (FALSE)
 
+$endif (_WDMDDK_)
+$if (_WDMDDK_ || _WINNT_)
+
 typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE, *PSECURITY_CONTEXT_TRACKING_MODE;
 
 typedef struct _SECURITY_QUALITY_OF_SERVICE {
-  ULONG Length;
+  $ULONG Length;
   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
   SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
   BOOLEAN EffectiveOnly;
@@ -117,6 +133,9 @@ typedef struct _SE_IMPERSONATION_STATE {
   BOOLEAN EffectiveOnly;
   SECURITY_IMPERSONATION_LEVEL Level;
 } SE_IMPERSONATION_STATE, *PSE_IMPERSONATION_STATE;
+
+$endif (_WDMDDK_ || _WINNT_)
+$if (_WDMDDK_)
 
 #define OWNER_SECURITY_INFORMATION       (0x00000001L)
 #define GROUP_SECURITY_INFORMATION       (0x00000002L)
@@ -393,27 +412,31 @@ typedef enum _WELL_KNOWN_SID_TYPE {
   WinThisOrganizationCertificateSid = 82,
 } WELL_KNOWN_SID_TYPE;
 $endif (_NTDDK_)
-$if (_NTIFS_)
+$if (_NTIFS_ || _WINNT_)
+
 #ifndef SID_IDENTIFIER_AUTHORITY_DEFINED
 #define SID_IDENTIFIER_AUTHORITY_DEFINED
 typedef struct _SID_IDENTIFIER_AUTHORITY {
-  UCHAR Value[6];
+  $UCHAR Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
 #endif
 
 #ifndef SID_DEFINED
 #define SID_DEFINED
 typedef struct _SID {
-  UCHAR Revision;
-  UCHAR SubAuthorityCount;
+  $UCHAR Revision;
+  $UCHAR SubAuthorityCount;
   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
 #ifdef MIDL_PASS
-  [size_is(SubAuthorityCount)] ULONG SubAuthority[*];
+  [size_is(SubAuthorityCount)] $ULONG SubAuthority[*];
 #else
-  ULONG SubAuthority[ANYSIZE_ARRAY];
+  $ULONG SubAuthority[ANYSIZE_ARRAY];
 #endif
 } SID, *PISID;
 #endif
+
+$endif (_NTIFS_ || _WINNT_)
+$if (_NTIFS_)
 
 #define SID_REVISION                    1
 #define SID_MAX_SUB_AUTHORITIES         15

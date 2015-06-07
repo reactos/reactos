@@ -4462,43 +4462,60 @@ typedef struct _SECURITY_ATTRIBUTES {
     BOOL bInheritHandle;
 } SECURITY_ATTRIBUTES,*PSECURITY_ATTRIBUTES,*LPSECURITY_ATTRIBUTES;
 
+/******************************************************************************
+ *                            Security Manager Types                          *
+ ******************************************************************************/
+
+typedef PVOID PACCESS_TOKEN;
+typedef PVOID PSID;
+
+
 typedef enum _SECURITY_IMPERSONATION_LEVEL {
   SecurityAnonymous,
   SecurityIdentification,
   SecurityImpersonation,
   SecurityDelegation
-} SECURITY_IMPERSONATION_LEVEL,*PSECURITY_IMPERSONATION_LEVEL;
+} SECURITY_IMPERSONATION_LEVEL, * PSECURITY_IMPERSONATION_LEVEL;
 
-typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE,*PSECURITY_CONTEXT_TRACKING_MODE;
+
+typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE, *PSECURITY_CONTEXT_TRACKING_MODE;
 
 typedef struct _SECURITY_QUALITY_OF_SERVICE {
   DWORD Length;
   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
   SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
   BOOLEAN EffectiveOnly;
-} SECURITY_QUALITY_OF_SERVICE,*PSECURITY_QUALITY_OF_SERVICE;
-
-typedef PVOID PACCESS_TOKEN;
+} SECURITY_QUALITY_OF_SERVICE, *PSECURITY_QUALITY_OF_SERVICE;
 
 typedef struct _SE_IMPERSONATION_STATE {
   PACCESS_TOKEN Token;
   BOOLEAN CopyOnOpen;
   BOOLEAN EffectiveOnly;
   SECURITY_IMPERSONATION_LEVEL Level;
-} SE_IMPERSONATION_STATE,*PSE_IMPERSONATION_STATE;
+} SE_IMPERSONATION_STATE, *PSE_IMPERSONATION_STATE;
 
+
+#ifndef SID_IDENTIFIER_AUTHORITY_DEFINED
+#define SID_IDENTIFIER_AUTHORITY_DEFINED
 typedef struct _SID_IDENTIFIER_AUTHORITY {
   BYTE Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
+#endif
 
-typedef PVOID PSID;
-
+#ifndef SID_DEFINED
+#define SID_DEFINED
 typedef struct _SID {
   BYTE Revision;
   BYTE SubAuthorityCount;
   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+#ifdef MIDL_PASS
+  [size_is(SubAuthorityCount)] DWORD SubAuthority[*];
+#else
   DWORD SubAuthority[ANYSIZE_ARRAY];
+#endif
 } SID, *PISID;
+#endif
+
 
 #define SECURITY_MIN_SID_SIZE (sizeof(SID))
 #define SECURITY_MAX_SID_SIZE (FIELD_OFFSET(SID, SubAuthority) + SID_MAX_SUB_AUTHORITIES * sizeof(DWORD))

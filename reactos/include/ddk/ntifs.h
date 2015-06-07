@@ -30,6 +30,7 @@
 extern "C" {
 #endif
 
+
 /* Dependencies */
 #include <ntddk.h>
 #include <excpt.h>
@@ -63,6 +64,7 @@ typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
 /******************************************************************************
  *                            Security Manager Types                          *
  ******************************************************************************/
+
 #ifndef SID_IDENTIFIER_AUTHORITY_DEFINED
 #define SID_IDENTIFIER_AUTHORITY_DEFINED
 typedef struct _SID_IDENTIFIER_AUTHORITY {
@@ -83,6 +85,7 @@ typedef struct _SID {
 #endif
 } SID, *PISID;
 #endif
+
 
 #define SID_REVISION                    1
 #define SID_MAX_SUB_AUTHORITIES         15
