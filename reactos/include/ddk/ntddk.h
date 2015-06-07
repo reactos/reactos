@@ -2903,6 +2903,7 @@ typedef struct _RTL_DYNAMIC_HASH_TABLE {
  ******************************************************************************/
 #define SE_UNSOLICITED_INPUT_PRIVILEGE    6
 
+
 typedef enum _WELL_KNOWN_SID_TYPE {
   WinNullSid = 0,
   WinWorldSid = 1,
@@ -2988,6 +2989,7 @@ typedef enum _WELL_KNOWN_SID_TYPE {
   WinConsoleLogonSid = 81,
   WinThisOrganizationCertificateSid = 82,
 } WELL_KNOWN_SID_TYPE;
+
 
 #if defined(_M_IX86)
 

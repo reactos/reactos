@@ -118,26 +118,6 @@
 #define SYSTEM_AUDIT_ACE_TYPE           (0x2)
 #define SYSTEM_ALARM_ACE_TYPE           (0x3)
 /*end ntifs.h */
-#define OBJECT_INHERIT_ACE    1
-#define CONTAINER_INHERIT_ACE    2
-#define NO_PROPAGATE_INHERIT_ACE    4
-#define INHERIT_ONLY_ACE    8
-#define INHERITED_ACE    16
-#define VALID_INHERIT_FLAGS    0x1F
-#define SUCCESSFUL_ACCESS_ACE_FLAG    64
-#define FAILED_ACCESS_ACE_FLAG    128
-#define DELETE    0x00010000L
-#define READ_CONTROL    0x20000L
-#define WRITE_DAC    0x40000L
-#define WRITE_OWNER    0x80000L
-#define SYNCHRONIZE    0x100000L
-#define STANDARD_RIGHTS_REQUIRED    0xF0000
-#define STANDARD_RIGHTS_READ    0x20000
-#define STANDARD_RIGHTS_WRITE    0x20000
-#define STANDARD_RIGHTS_EXECUTE    0x20000
-#define STANDARD_RIGHTS_ALL    0x1F0000
-#define SPECIFIC_RIGHTS_ALL    0xFFFF
-#define ACCESS_SYSTEM_SECURITY    0x1000000
 
 #define REG_STANDARD_FORMAT 1
 #define REG_LATEST_FORMAT   2
@@ -191,12 +171,6 @@
 #define DBG_EXCEPTION_NOT_HANDLED   ((DWORD)0x80010001)
 
 #endif /* WIN32_NO_STATUS */
-
-#define MAXIMUM_ALLOWED    0x2000000
-#define GENERIC_READ    0x80000000
-#define GENERIC_WRITE    0x40000000
-#define GENERIC_EXECUTE    0x20000000
-#define GENERIC_ALL    0x10000000
 
 #define INVALID_FILE_ATTRIBUTES    ((DWORD)-1)
 
@@ -375,204 +349,6 @@
 #define PROCESS_SET_LIMITED_INFORMATION 0x2000
 #define THREAD_RESUME 0x1000
 
-/*
- * To prevent gcc compiler warnings, bracket these defines when initialising
- * a  SID_IDENTIFIER_AUTHORITY, eg.
- * SID_IDENTIFIER_AUTHORITY aNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};
- */
-#define SID_MAX_SUB_AUTHORITIES     15
-
-/* security entities */
-#define SECURITY_NULL_RID            (0x00000000L)
-#define SECURITY_WORLD_RID            (0x00000000L)
-#define SECURITY_LOCAL_RID            (0X00000000L)
-
-#define SECURITY_NULL_SID_AUTHORITY        {0,0,0,0,0,0}
-
-/* S-1-1 */
-#define SECURITY_WORLD_SID_AUTHORITY        {0,0,0,0,0,1}
-
-/* S-1-2 */
-#define SECURITY_LOCAL_SID_AUTHORITY        {0,0,0,0,0,2}
-
-/* S-1-3 */
-#define SECURITY_CREATOR_SID_AUTHORITY        {0,0,0,0,0,3}
-#define SECURITY_CREATOR_OWNER_RID        (0x00000000L)
-#define SECURITY_CREATOR_GROUP_RID        (0x00000001L)
-#define SECURITY_CREATOR_OWNER_SERVER_RID    (0x00000002L)
-#define SECURITY_CREATOR_GROUP_SERVER_RID    (0x00000003L)
-
-/* S-1-4 */
-#define SECURITY_NON_UNIQUE_AUTHORITY        {0,0,0,0,0,4}
-
-/* S-1-5 */
-#define SECURITY_NT_AUTHORITY            {0,0,0,0,0,5}
-#define SECURITY_DIALUP_RID                     0x00000001L
-#define SECURITY_NETWORK_RID                    0x00000002L
-#define SECURITY_BATCH_RID                      0x00000003L
-#define SECURITY_INTERACTIVE_RID                0x00000004L
-#define SECURITY_LOGON_IDS_RID                  0x00000005L
-#define SECURITY_SERVICE_RID                    0x00000006L
-#define SECURITY_ANONYMOUS_LOGON_RID            0x00000007L
-#define SECURITY_PROXY_RID                      0x00000008L
-#define SECURITY_ENTERPRISE_CONTROLLERS_RID     0x00000009L
-#define SECURITY_SERVER_LOGON_RID               SECURITY_ENTERPRISE_CONTROLLERS_RID
-#define SECURITY_PRINCIPAL_SELF_RID             0x0000000AL
-#define SECURITY_AUTHENTICATED_USER_RID         0x0000000BL
-#define SECURITY_RESTRICTED_CODE_RID            0x0000000CL
-#define SECURITY_TERMINAL_SERVER_RID            0x0000000DL
-#define SECURITY_REMOTE_LOGON_RID               0x0000000EL
-#define SECURITY_THIS_ORGANIZATION_RID          0x0000000FL
-#define SECURITY_LOCAL_SYSTEM_RID               0x00000012L
-#define SECURITY_LOCAL_SERVICE_RID              0x00000013L
-#define SECURITY_NETWORK_SERVICE_RID            0x00000014L
-#define SECURITY_NT_NON_UNIQUE                  0x00000015L
-#define SECURITY_BUILTIN_DOMAIN_RID             0x00000020L
-
-#define SECURITY_PACKAGE_BASE_RID               0x00000040L
-#define SECURITY_PACKAGE_NTLM_RID               0x0000000AL
-#define SECURITY_PACKAGE_SCHANNEL_RID           0x0000000EL
-#define SECURITY_PACKAGE_DIGEST_RID             0x00000015L
-#define SECURITY_OTHER_ORGANIZATION_RID         0x000003E8L
-
-#define SECURITY_LOGON_IDS_RID_COUNT 0x3
-#define SID_REVISION 1
-
-#define FOREST_USER_RID_MAX                     0x000001F3L
-#define DOMAIN_USER_RID_ADMIN                   0x000001F4L
-#define DOMAIN_USER_RID_GUEST                   0x000001F5L
-#define DOMAIN_USER_RID_KRBTGT                  0x000001F6L
-#define DOMAIN_USER_RID_MAX                     0x000003E7L
-
-#define DOMAIN_GROUP_RID_ADMINS                 0x00000200L
-#define DOMAIN_GROUP_RID_USERS                  0x00000201L
-#define DOMAIN_GROUP_RID_GUESTS                 0x00000202L
-#define DOMAIN_GROUP_RID_COMPUTERS              0x00000203L
-#define DOMAIN_GROUP_RID_CONTROLLERS            0x00000204L
-#define DOMAIN_GROUP_RID_CERT_ADMINS            0x00000205L
-#define DOMAIN_GROUP_RID_SCHEMA_ADMINS          0x00000206L
-#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS      0x00000207L
-#define DOMAIN_GROUP_RID_POLICY_ADMINS          0x00000208L
-
-#define SECURITY_MANDATORY_LABEL_AUTHORITY {0,0,0,0,0,16}
-#define SECURITY_MANDATORY_UNTRUSTED_RID        0x00000000L
-#define SECURITY_MANDATORY_LOW_RID              0x00001000L
-#define SECURITY_MANDATORY_MEDIUM_RID           0x00002000L
-#define SECURITY_MANDATORY_HIGH_RID             0x00003000L
-#define SECURITY_MANDATORY_SYSTEM_RID           0x00004000L
-#define SECURITY_MANDATORY_PROTECTED_PROCESS_RID 0x00005000L
-
-#define DOMAIN_ALIAS_RID_ADMINS                 0x00000220L
-#define DOMAIN_ALIAS_RID_USERS                  0x00000221L
-#define DOMAIN_ALIAS_RID_GUESTS                 0x00000222L
-#define DOMAIN_ALIAS_RID_POWER_USERS            0x00000223L
-
-#define DOMAIN_ALIAS_RID_ACCOUNT_OPS            0x00000224L
-#define DOMAIN_ALIAS_RID_SYSTEM_OPS             0x00000225L
-#define DOMAIN_ALIAS_RID_PRINT_OPS              0x00000226L
-#define DOMAIN_ALIAS_RID_BACKUP_OPS             0x00000227L
-
-#define DOMAIN_ALIAS_RID_REPLICATOR             0x00000228L
-#define DOMAIN_ALIAS_RID_RAS_SERVERS            0x00000229L
-#define DOMAIN_ALIAS_RID_PREW2KCOMPACCESS       0x0000022AL
-#define DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS   0x0000022BL
-#define DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS 0x0000022CL
-#define DOMAIN_ALIAS_RID_INCOMING_FOREST_TRUST_BUILDERS 0x0000022DL
-
-#define DOMAIN_ALIAS_RID_MONITORING_USERS       0x0000022EL
-#define DOMAIN_ALIAS_RID_LOGGING_USERS          0x0000022FL
-#define DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS    0x00000230L
-#define DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS     0x00000231L
-#define DOMAIN_ALIAS_RID_DCOM_USERS             0x00000232L
-
-#define SECURITY_MANDATORY_LABEL_AUTHORITY  {0,0,0,0,0,16}
-
-typedef enum {
-  WinNullSid = 0,
-  WinWorldSid = 1,
-  WinLocalSid = 2,
-  WinCreatorOwnerSid = 3,
-  WinCreatorGroupSid = 4,
-  WinCreatorOwnerServerSid = 5,
-  WinCreatorGroupServerSid = 6,
-  WinNtAuthoritySid = 7,
-  WinDialupSid = 8,
-  WinNetworkSid = 9,
-  WinBatchSid = 10,
-  WinInteractiveSid = 11,
-  WinServiceSid = 12,
-  WinAnonymousSid = 13,
-  WinProxySid = 14,
-  WinEnterpriseControllersSid = 15,
-  WinSelfSid = 16,
-  WinAuthenticatedUserSid = 17,
-  WinRestrictedCodeSid = 18,
-  WinTerminalServerSid = 19,
-  WinRemoteLogonIdSid = 20,
-  WinLogonIdsSid = 21,
-  WinLocalSystemSid = 22,
-  WinLocalServiceSid = 23,
-  WinNetworkServiceSid = 24,
-  WinBuiltinDomainSid = 25,
-  WinBuiltinAdministratorsSid = 26,
-  WinBuiltinUsersSid = 27,
-  WinBuiltinGuestsSid = 28,
-  WinBuiltinPowerUsersSid = 29,
-  WinBuiltinAccountOperatorsSid = 30,
-  WinBuiltinSystemOperatorsSid = 31,
-  WinBuiltinPrintOperatorsSid = 32,
-  WinBuiltinBackupOperatorsSid = 33,
-  WinBuiltinReplicatorSid = 34,
-  WinBuiltinPreWindows2000CompatibleAccessSid = 35,
-  WinBuiltinRemoteDesktopUsersSid = 36,
-  WinBuiltinNetworkConfigurationOperatorsSid = 37,
-  WinAccountAdministratorSid = 38,
-  WinAccountGuestSid = 39,
-  WinAccountKrbtgtSid = 40,
-  WinAccountDomainAdminsSid = 41,
-  WinAccountDomainUsersSid = 42,
-  WinAccountDomainGuestsSid = 43,
-  WinAccountComputersSid = 44,
-  WinAccountControllersSid = 45,
-  WinAccountCertAdminsSid = 46,
-  WinAccountSchemaAdminsSid = 47,
-  WinAccountEnterpriseAdminsSid = 48,
-  WinAccountPolicyAdminsSid = 49,
-  WinAccountRasAndIasServersSid = 50,
-  WinNTLMAuthenticationSid = 51,
-  WinDigestAuthenticationSid = 52,
-  WinSChannelAuthenticationSid = 53,
-  WinThisOrganizationSid = 54,
-  WinOtherOrganizationSid = 55,
-  WinBuiltinIncomingForestTrustBuildersSid = 56,
-  WinBuiltinPerfMonitoringUsersSid = 57,
-  WinBuiltinPerfLoggingUsersSid = 58,
-  WinBuiltinAuthorizationAccessSid = 59,
-  WinBuiltinTerminalServerLicenseServersSid = 60,
-  WinBuiltinDCOMUsersSid = 61,
-  WinBuiltinIUsersSid = 62,
-  WinIUserSid = 63,
-  WinBuiltinCryptoOperatorsSid = 64,
-  WinUntrustedLabelSid = 65,
-  WinLowLabelSid = 66,
-  WinMediumLabelSid = 67,
-  WinHighLabelSid = 68,
-  WinSystemLabelSid = 69,
-  WinWriteRestrictedCodeSid = 70,
-  WinCreatorOwnerRightsSid = 71,
-  WinCacheablePrincipalsGroupSid = 72,
-  WinNonCacheablePrincipalsGroupSid = 73,
-  WinEnterpriseReadonlyControllersSid = 74,
-  WinAccountReadonlyControllersSid = 75,
-  WinBuiltinEventLogReadersGroup = 76,
-  WinNewEnterpriseReadonlyControllersSid = 77,
-  WinBuiltinCertSvcDComAccessGroup = 78,
-  WinMediumPlusLabelSid = 79,
-  WinLocalLogonSid = 80,
-  WinConsoleLogonSid = 81,
-  WinThisOrganizationCertificateSid = 82,
-} WELL_KNOWN_SID_TYPE;
-
 #define SE_CREATE_TOKEN_NAME    TEXT("SeCreateTokenPrivilege")
 #define SE_ASSIGNPRIMARYTOKEN_NAME    TEXT("SeAssignPrimaryTokenPrivilege")
 #define SE_LOCK_MEMORY_NAME    TEXT("SeLockMemoryPrivilege")
@@ -630,14 +406,6 @@ typedef enum {
 #define LANG_MANX_GAELIC    0x94
 #define SUBLANG_PORTUGUESE_PORTUGAL   0x02
 
-#define ACL_REVISION    2
-#define ACL_REVISION_DS 4
-#define ACL_REVISION1 1
-#define ACL_REVISION2 2
-#define ACL_REVISION3 3
-#define ACL_REVISION4 4
-#define MIN_ACL_REVISION 2
-#define MAX_ACL_REVISION 4
 #define PROCESSOR_INTEL_386 386
 #define PROCESSOR_INTEL_486 486
 #define PROCESSOR_INTEL_PENTIUM 586
@@ -763,14 +531,6 @@ typedef enum {
 #define REG_OPTION_BACKUP_RESTORE    4
 #define REG_OPTION_OPEN_LINK    8
 #define REG_LEGAL_OPTION    15
-#define OWNER_SECURITY_INFORMATION 1
-#define GROUP_SECURITY_INFORMATION 2
-#define DACL_SECURITY_INFORMATION 4
-#define SACL_SECURITY_INFORMATION 8
-#define PROTECTED_DACL_SECURITY_INFORMATION     0x80000000
-#define PROTECTED_SACL_SECURITY_INFORMATION     0x40000000
-#define UNPROTECTED_DACL_SECURITY_INFORMATION   0x20000000
-#define UNPROTECTED_SACL_SECURITY_INFORMATION   0x10000000
 #define MAXIMUM_PROCESSORS 32
 #define PAGE_NOACCESS    0x0001
 #define PAGE_READONLY    0x0002
@@ -1176,33 +936,7 @@ typedef enum {
 #define SERVICE_ERROR_NORMAL 1
 #define SERVICE_ERROR_SEVERE 2
 #define SERVICE_ERROR_CRITICAL 3
-#define SE_OWNER_DEFAULTED              0x0001
-#define SE_GROUP_DEFAULTED              0x0002
-#define SE_DACL_PRESENT                 0x0004
-#define SE_DACL_DEFAULTED               0x0008
-#define SE_SACL_PRESENT                 0x0010
-#define SE_SACL_DEFAULTED               0x0020
-#define SE_DACL_UNTRUSTED               0x0040
-#define SE_SERVER_SECURITY              0x0080
-#define SE_DACL_AUTO_INHERIT_REQ        0x0100
-#define SE_SACL_AUTO_INHERIT_REQ        0x0200
-#define SE_DACL_AUTO_INHERITED          0x0400
-#define SE_SACL_AUTO_INHERITED          0x0800
-#define SE_DACL_PROTECTED               0x1000
-#define SE_SACL_PROTECTED               0x2000
-#define SE_RM_CONTROL_VALID             0x4000
-#define SE_SELF_RELATIVE                0x8000
-#define SECURITY_DESCRIPTOR_MIN_LENGTH 20
-#define SECURITY_DESCRIPTOR_REVISION 1
-#define SECURITY_DESCRIPTOR_REVISION1 1
-#define SE_PRIVILEGE_ENABLED_BY_DEFAULT 1
-#define SE_PRIVILEGE_ENABLED 2
-#define SE_PRIVILEGE_USED_FOR_ACCESS 0x80000000
-#define PRIVILEGE_SET_ALL_NECESSARY 1
-#define SECURITY_MAX_IMPERSONATION_LEVEL SecurityDelegation
-#define DEFAULT_IMPERSONATION_LEVEL SecurityImpersonation
-#define SECURITY_DYNAMIC_TRACKING TRUE
-#define SECURITY_STATIC_TRACKING FALSE
+
 /* also in ddk/ntifs.h */
 #define TOKEN_ASSIGN_PRIMARY            (0x0001)
 #define TOKEN_DUPLICATE                 (0x0002)
@@ -1394,7 +1128,6 @@ typedef VOID (NTAPI *WORKERCALLBACKFUNC)(PVOID);
 #define IO_REPARSE_TAG_MOUNT_POINT 0xA0000003
 #define IO_REPARSE_TAG_SYMLINK 0xA000000CL
 #ifndef RC_INVOKED
-typedef DWORD ACCESS_MASK, *PACCESS_MASK;
 
 #ifdef _GUID_DEFINED
 # warning _GUID_DEFINED is deprecated, use GUID_DEFINED instead
@@ -1409,189 +1142,6 @@ typedef struct _GUID {
     unsigned char  Data4[8];
 } GUID, *REFGUID, *LPGUID;
 #endif /* GUID_DEFINED */
-
-#define SYSTEM_LUID { 0x3E7, 0x0 }
-
-/* ACE Access Types, also in ntifs.h */
-#define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
-#define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
-#define ACCESS_DENIED_ACE_TYPE                  (0x1)
-#define SYSTEM_AUDIT_ACE_TYPE                   (0x2)
-#define SYSTEM_ALARM_ACE_TYPE                   (0x3)
-#define ACCESS_MAX_MS_V2_ACE_TYPE               (0x3)
-#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
-#define ACCESS_MAX_MS_V3_ACE_TYPE               (0x4)
-#define ACCESS_MIN_MS_OBJECT_ACE_TYPE           (0x5)
-#define ACCESS_ALLOWED_OBJECT_ACE_TYPE          (0x5)
-#define ACCESS_DENIED_OBJECT_ACE_TYPE           (0x6)
-#define SYSTEM_AUDIT_OBJECT_ACE_TYPE            (0x7)
-#define SYSTEM_ALARM_OBJECT_ACE_TYPE            (0x8)
-#define ACCESS_MAX_MS_OBJECT_ACE_TYPE           (0x8)
-#define ACCESS_MAX_MS_V4_ACE_TYPE               (0x8)
-#define ACCESS_MAX_MS_ACE_TYPE                  (0x8)
-#define ACCESS_ALLOWED_CALLBACK_ACE_TYPE        (0x9)
-#define ACCESS_DENIED_CALLBACK_ACE_TYPE         (0xA)
-#define ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE (0xB)
-#define ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  (0xC)
-#define SYSTEM_AUDIT_CALLBACK_ACE_TYPE          (0xD)
-#define SYSTEM_ALARM_CALLBACK_ACE_TYPE          (0xE)
-#define SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   (0xF)
-#define SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   (0x10)
-#define SYSTEM_MANDATORY_LABEL_ACE_TYPE         (0x11)
-#define ACCESS_MAX_MS_V5_ACE_TYPE               (0x11)
-/* end ntifs.h */
-
-typedef struct _GENERIC_MAPPING {
-  ACCESS_MASK GenericRead;
-  ACCESS_MASK GenericWrite;
-  ACCESS_MASK GenericExecute;
-  ACCESS_MASK GenericAll;
-} GENERIC_MAPPING, *PGENERIC_MAPPING;
-
-typedef struct _ACE_HEADER {
-  BYTE AceType;
-  BYTE AceFlags;
-  WORD AceSize;
-} ACE_HEADER, *PACE_HEADER;
-
-typedef struct _ACCESS_ALLOWED_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} ACCESS_ALLOWED_ACE, *PACCESS_ALLOWED_ACE;
-
-typedef struct _ACCESS_DENIED_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} ACCESS_DENIED_ACE, *PACCESS_DENIED_ACE;
-
-typedef struct _SYSTEM_AUDIT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} SYSTEM_AUDIT_ACE, *PSYSTEM_AUDIT_ACE;
-
-typedef struct _SYSTEM_ALARM_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} SYSTEM_ALARM_ACE,*PSYSTEM_ALARM_ACE;
-
-typedef struct _SYSTEM_MANDATORY_LABEL_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} SYSTEM_MANDATORY_LABEL_ACE, *PSYSTEM_MANDATORY_LABEL_ACE;
-
-#define SYSTEM_MANDATORY_LABEL_NO_WRITE_UP  0x1
-#define SYSTEM_MANDATORY_LABEL_NO_READ_UP   0x2
-#define SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP    0x4
-#define SYSTEM_MANDATORY_LABEL_VALID_MASK (SYSTEM_MANDATORY_LABEL_NO_WRITE_UP | SYSTEM_MANDATORY_LABEL_NO_READ_UP | SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP)
-
-typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} ACCESS_ALLOWED_OBJECT_ACE,*PACCESS_ALLOWED_OBJECT_ACE;
-
-typedef struct _ACCESS_DENIED_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} ACCESS_DENIED_OBJECT_ACE,*PACCESS_DENIED_OBJECT_ACE;
-
-typedef struct _SYSTEM_AUDIT_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} SYSTEM_AUDIT_OBJECT_ACE,*PSYSTEM_AUDIT_OBJECT_ACE;
-
-typedef struct _SYSTEM_ALARM_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} SYSTEM_ALARM_OBJECT_ACE,*PSYSTEM_ALARM_OBJECT_ACE;
-
-typedef struct _ACCESS_ALLOWED_CALLBACK_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} ACCESS_ALLOWED_CALLBACK_ACE, *PACCESS_ALLOWED_CALLBACK_ACE;
-
-typedef struct _ACCESS_DENIED_CALLBACK_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} ACCESS_DENIED_CALLBACK_ACE, *PACCESS_DENIED_CALLBACK_ACE;
-
-typedef struct _SYSTEM_AUDIT_CALLBACK_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} SYSTEM_AUDIT_CALLBACK_ACE, *PSYSTEM_AUDIT_CALLBACK_ACE;
-
-typedef struct _SYSTEM_ALARM_CALLBACK_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD SidStart;
-} SYSTEM_ALARM_CALLBACK_ACE, *PSYSTEM_ALARM_CALLBACK_ACE;
-
-typedef struct _ACCESS_ALLOWED_CALLBACK_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} ACCESS_ALLOWED_CALLBACK_OBJECT_ACE, *PACCESS_ALLOWED_CALLBACK_OBJECT_ACE;
-
-typedef struct _ACCESS_DENIED_CALLBACK_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} ACCESS_DENIED_CALLBACK_OBJECT_ACE, *PACCESS_DENIED_CALLBACK_OBJECT_ACE;
-
-typedef struct _SYSTEM_AUDIT_CALLBACK_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} SYSTEM_AUDIT_CALLBACK_OBJECT_ACE, *PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE;
-
-typedef struct _SYSTEM_ALARM_CALLBACK_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} SYSTEM_ALARM_CALLBACK_OBJECT_ACE, *PSYSTEM_ALARM_CALLBACK_OBJECT_ACE;
-
-typedef struct _ACL {
-  BYTE AclRevision;
-  BYTE Sbz1;
-  WORD AclSize;
-  WORD AceCount;
-  WORD Sbz2;
-} ACL,*PACL;
 
 typedef enum _ACL_INFORMATION_CLASS {
   AclRevisionInformation = 1,
@@ -2544,40 +2094,111 @@ typedef struct _EXCEPTION_POINTERS {
   PCONTEXT ContextRecord;
 } EXCEPTION_POINTERS,*PEXCEPTION_POINTERS, *LPEXCEPTION_POINTERS;
 
-#include <pshpack4.h>
-
-typedef struct _LUID_AND_ATTRIBUTES {
-  LUID Luid;
-  DWORD Attributes;
-} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
-typedef LUID_AND_ATTRIBUTES LUID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
-typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
-
-#include <poppack.h>
-
-typedef struct _PRIVILEGE_SET {
-  DWORD PrivilegeCount;
-  DWORD Control;
-  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
-} PRIVILEGE_SET,*PPRIVILEGE_SET;
-
 typedef struct _SECURITY_ATTRIBUTES {
     DWORD nLength;
     LPVOID lpSecurityDescriptor;
     BOOL bInheritHandle;
-} SECURITY_ATTRIBUTES,*PSECURITY_ATTRIBUTES,*LPSECURITY_ATTRIBUTES;
+} SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
+
+#define SECURITY_MIN_SID_SIZE (sizeof(SID))
 
 $include(setypes.h)
 
-#define SECURITY_MIN_SID_SIZE (sizeof(SID))
-#define SECURITY_MAX_SID_SIZE (FIELD_OFFSET(SID, SubAuthority) + SID_MAX_SUB_AUTHORITIES * sizeof(DWORD))
+typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
+} ACCESS_ALLOWED_OBJECT_ACE,*PACCESS_ALLOWED_OBJECT_ACE;
 
-typedef struct _SID_AND_ATTRIBUTES {
-  PSID Sid;
-  DWORD Attributes;
-} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
-typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
-typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
+typedef struct _ACCESS_DENIED_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
+} ACCESS_DENIED_OBJECT_ACE,*PACCESS_DENIED_OBJECT_ACE;
+
+typedef struct _SYSTEM_AUDIT_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
+} SYSTEM_AUDIT_OBJECT_ACE,*PSYSTEM_AUDIT_OBJECT_ACE;
+
+typedef struct _SYSTEM_ALARM_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
+} SYSTEM_ALARM_OBJECT_ACE,*PSYSTEM_ALARM_OBJECT_ACE;
+
+typedef struct _ACCESS_ALLOWED_CALLBACK_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
+} ACCESS_ALLOWED_CALLBACK_ACE, *PACCESS_ALLOWED_CALLBACK_ACE;
+
+typedef struct _ACCESS_DENIED_CALLBACK_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
+} ACCESS_DENIED_CALLBACK_ACE, *PACCESS_DENIED_CALLBACK_ACE;
+
+typedef struct _SYSTEM_AUDIT_CALLBACK_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
+} SYSTEM_AUDIT_CALLBACK_ACE, *PSYSTEM_AUDIT_CALLBACK_ACE;
+
+typedef struct _SYSTEM_ALARM_CALLBACK_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
+} SYSTEM_ALARM_CALLBACK_ACE, *PSYSTEM_ALARM_CALLBACK_ACE;
+
+typedef struct _ACCESS_ALLOWED_CALLBACK_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
+} ACCESS_ALLOWED_CALLBACK_OBJECT_ACE, *PACCESS_ALLOWED_CALLBACK_OBJECT_ACE;
+
+typedef struct _ACCESS_DENIED_CALLBACK_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
+} ACCESS_DENIED_CALLBACK_OBJECT_ACE, *PACCESS_DENIED_CALLBACK_OBJECT_ACE;
+
+typedef struct _SYSTEM_AUDIT_CALLBACK_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
+} SYSTEM_AUDIT_CALLBACK_OBJECT_ACE, *PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE;
+
+typedef struct _SYSTEM_ALARM_CALLBACK_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
+} SYSTEM_ALARM_CALLBACK_OBJECT_ACE, *PSYSTEM_ALARM_CALLBACK_OBJECT_ACE;
 
 typedef struct _TOKEN_SOURCE {
   CHAR SourceName[TOKEN_SOURCE_LENGTH];
@@ -2664,33 +2285,6 @@ typedef struct _TOKEN_USER {
   SID_AND_ATTRIBUTES User;
 } TOKEN_USER, *PTOKEN_USER;
 
-typedef DWORD SECURITY_INFORMATION,*PSECURITY_INFORMATION;
-typedef WORD SECURITY_DESCRIPTOR_CONTROL,*PSECURITY_DESCRIPTOR_CONTROL;
-
-#ifndef _SECURITY_ATTRIBUTES_
-#define _SECURITY_ATTRIBUTES_
-typedef struct _SECURITY_DESCRIPTOR {
-  BYTE Revision;
-  BYTE Sbz1;
-  SECURITY_DESCRIPTOR_CONTROL Control;
-  PSID Owner;
-  PSID Group;
-  PACL Sacl;
-  PACL Dacl;
-} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
-typedef PVOID PSECURITY_DESCRIPTOR;
-#endif
-
-typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
-  BYTE Revision;
-  BYTE Sbz1;
-  SECURITY_DESCRIPTOR_CONTROL Control;
-  DWORD Owner;
-  DWORD Group;
-  DWORD Sacl;
-  DWORD Dacl;
-} SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
-
 typedef enum _TOKEN_INFORMATION_CLASS {
   TokenUser = 1,
   TokenGroups,
@@ -2722,19 +2316,6 @@ typedef enum _TOKEN_INFORMATION_CLASS {
   TokenLogonSid,
   MaxTokenInfoClass
 } TOKEN_INFORMATION_CLASS;
-
-typedef enum _SID_NAME_USE {
-  SidTypeUser=1,
-  SidTypeGroup,
-  SidTypeDomain,
-  SidTypeAlias,
-  SidTypeWellKnownGroup,
-  SidTypeDeletedAccount,
-  SidTypeInvalid,
-  SidTypeUnknown,
-  SidTypeComputer,
-  SidTypeLabel
-} SID_NAME_USE,*PSID_NAME_USE;
 
 typedef struct _QUOTA_LIMITS {
   SIZE_T PagedPoolLimit;
@@ -4342,14 +3923,6 @@ typedef struct _SYSTEM_POWER_INFORMATION {
 } SYSTEM_POWER_INFORMATION,*PSYSTEM_POWER_INFORMATION;
 #endif
 
-#if (_WIN32_WINNT >= 0x0500)
-#define _AUDIT_EVENT_TYPE_HACK 1
-typedef enum _AUDIT_EVENT_TYPE {
-  AuditEventObjectAccess,
-  AuditEventDirectoryServiceAccess
-} AUDIT_EVENT_TYPE, *PAUDIT_EVENT_TYPE;
-#endif
-
 #if (_WIN32_WINNT >= 0x0501)
 
 typedef enum _ACTIVATION_CONTEXT_INFO_CLASS {
@@ -4568,12 +4141,6 @@ RtlSecureZeroMemory(_Out_writes_bytes_all_(Length) PVOID Buffer,
     /* Return the pointer to ensure the compiler won't optimize this away */
     return Buffer;
 }
-
-typedef struct _OBJECT_TYPE_LIST {
-  WORD Level;
-  WORD Sbz;
-  GUID *ObjectType;
-} OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
 
 #if defined(_M_IX86)
 FORCEINLINE struct _TEB * NtCurrentTeb(void)
