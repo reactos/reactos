@@ -2007,23 +2007,20 @@ static void test_icons(void)
 
     res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL, 0 );
     ok( res == 0, "wrong small icon %p/0\n", res );
-    /* this test is XP specific */
-    /*res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
-    ok( res != 0, "wrong small icon %p\n", res );*/
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
+    ok( (res && res != small_icon && res != icon2) || broken(!res), "wrong small2 icon %p\n", res );
     res = (HICON)SendMessageA( hwnd, WM_SETICON, ICON_SMALL, (LPARAM)icon );
     ok( res == 0, "wrong previous small icon %p/0\n", res );
     res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL, 0 );
     ok( res == icon, "wrong small icon after set %p/%p\n", res, icon );
-    /* this test is XP specific */
-    /*res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
-    ok( res == icon, "wrong small icon after set %p/%p\n", res, icon );*/
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
+    ok( res == icon || broken(!res), "wrong small2 icon after set %p/%p\n", res, icon );
     res = (HICON)SendMessageA( hwnd, WM_SETICON, ICON_SMALL, (LPARAM)small_icon );
     ok( res == icon, "wrong previous small icon %p/%p\n", res, icon );
     res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL, 0 );
     ok( res == small_icon, "wrong small icon after set %p/%p\n", res, small_icon );
-    /* this test is XP specific */
-    /*res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
-    ok( res == small_icon, "wrong small icon after set %p/%p\n", res, small_icon );*/
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
+    ok( res == small_icon || broken(!res), "wrong small2 icon after set %p/%p\n", res, small_icon );
 
     /* make sure the big icon hasn't changed */
     res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_BIG, 0 );
@@ -3797,7 +3794,7 @@ static LRESULT WINAPI StyleCheckProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
 
             ok((lpss->styleOld & ~WS_EX_WINDOWEDGE) == (lpcs->dwExStyle & ~WS_EX_WINDOWEDGE),
                 "Ex style (0x%08x) should match what the caller passed to CreateWindowEx (0x%08x)\n",
-                (lpss->styleOld & ~WS_EX_WINDOWEDGE), (lpcs->dwExStyle & ~WS_EX_WINDOWEDGE));
+                lpss->styleOld, lpcs->dwExStyle);
 
             ok(lpss->styleNew == lpcs->style,
                 "Style (0x%08x) should match what the caller passed to CreateWindowEx (0x%08x)\n",
@@ -3985,14 +3982,14 @@ static void check_dialog_style(DWORD style_in, DWORD ex_style_in, DWORD style_ou
 
     style = GetWindowLongA(hwnd, GWL_STYLE);
     ex_style = GetWindowLongA(hwnd, GWL_EXSTYLE);
-    ok(style == (style_out | DS_3DLOOK), "expected style %#x, got %#x\n", style_out | DS_3DLOOK, style);
+    ok(style == (style_out | DS_3DLOOK), "got %#x\n", style);
     ok(ex_style == ex_style_out, "expected ex_style %#x, got %#x\n", ex_style_out, ex_style);
 
     /* try setting the styles explicitly */
     SetWindowLongA(hwnd, GWL_EXSTYLE, ex_style_in);
     style = GetWindowLongA(hwnd, GWL_STYLE);
     ex_style = GetWindowLongA(hwnd, GWL_EXSTYLE);
-    ok(style == (style_out | DS_3DLOOK), "expected style %#x, got %#x\n", style_out|DS_3DLOOK, style);
+    ok(style == (style_out | DS_3DLOOK), "got %#x\n", style);
     /* WS_EX_WINDOWEDGE can't always be changed */
     if (ex_style_in & WS_EX_DLGMODALFRAME)
         ex_style_out = ex_style_in | WS_EX_WINDOWEDGE;
@@ -4883,6 +4880,7 @@ static void test_IsWindowUnicode(void)
     WNDCLASSA classA;
     WNDCLASSW classW;
     HWND hwnd;
+    ATOM atom;
 
     memset(&classW, 0, sizeof(classW));
     classW.hInstance = GetModuleHandleA(0);
@@ -4894,7 +4892,8 @@ static void test_IsWindowUnicode(void)
     classA.hInstance = GetModuleHandleA(0);
     classA.lpfnWndProc = def_window_procA;
     classA.lpszClassName = ansi_class_nameA;
-    assert(RegisterClassA(&classA));
+    atom = RegisterClassA(&classA);
+    assert(atom);
 
     /* unicode class: window proc */
     hwnd = CreateWindowExW(0, unicode_class_nameW, NULL, WS_POPUP,
@@ -5794,7 +5793,7 @@ static void test_gettext(void)
         num_msgs++;
     }
     CloseHandle( thread );
-    ok( num_msgs == 1, "got %u wakeups from MsgWaitForMultipleObjects\n", num_msgs );
+    ok( num_msgs >= 1, "got %u wakeups from MsgWaitForMultipleObjects\n", num_msgs );
 
     /* test interthread SetWindowText */
     num_msgs = 0;
@@ -5807,7 +5806,7 @@ static void test_gettext(void)
         num_msgs++;
     }
     CloseHandle( thread );
-    ok( num_msgs == 1, "got %u wakeups from MsgWaitForMultipleObjects\n", num_msgs );
+    ok( num_msgs >= 1, "got %u wakeups from MsgWaitForMultipleObjects\n", num_msgs );
 
     num_gettext_msgs = 0;
     memset( buf, 0, sizeof(buf) );
@@ -8006,35 +8005,40 @@ static void test_GetMessagePos(void)
     GetMessageA(&msg, button, 0, 0);
     ok(msg.message == WM_APP, "msg.message = %x\n", msg.message);
     pos = GetMessagePos();
-    todo_wine ok(pos == MAKELONG(340, 320), "pos = %08x\n", pos);
+    ok(pos == MAKELONG(340, 320), "pos = %08x\n", pos);
 
     PostMessageA(button, WM_APP, 0, 0);
     SetCursorPos(350, 330);
     GetMessageA(&msg, button, 0, 0);
     ok(msg.message == WM_APP, "msg.message = %x\n", msg.message);
     pos = GetMessagePos();
-    todo_wine ok(pos == MAKELONG(340, 320), "pos = %08x\n", pos);
+    ok(pos == MAKELONG(340, 320), "pos = %08x\n", pos);
 
     PostMessageA(button, WM_APP, 0, 0);
     SetCursorPos(320, 340);
     PostMessageA(button, WM_APP+1, 0, 0);
     pos = GetMessagePos();
-    todo_wine ok(pos == MAKELONG(340, 320), "pos = %08x\n", pos);
+    ok(pos == MAKELONG(340, 320), "pos = %08x\n", pos);
     GetMessageA(&msg, button, 0, 0);
     ok(msg.message == WM_APP, "msg.message = %x\n", msg.message);
     pos = GetMessagePos();
-    todo_wine ok(pos == MAKELONG(350, 330), "pos = %08x\n", pos);
+    ok(pos == MAKELONG(350, 330), "pos = %08x\n", pos);
     GetMessageA(&msg, button, 0, 0);
     ok(msg.message == WM_APP+1, "msg.message = %x\n", msg.message);
     pos = GetMessagePos();
-    todo_wine ok(pos == MAKELONG(320, 340), "pos = %08x\n", pos);
+    ok(pos == MAKELONG(320, 340), "pos = %08x\n", pos);
 
     SetTimer(button, 1, 250, NULL);
     SetCursorPos(330, 350);
     GetMessageA(&msg, button, 0, 0);
+    while (msg.message == WM_PAINT)
+    {
+        UpdateWindow( button );
+        GetMessageA(&msg, button, 0, 0);
+    }
     ok(msg.message == WM_TIMER, "msg.message = %x\n", msg.message);
     pos = GetMessagePos();
-    todo_wine ok(pos == MAKELONG(330, 350), "pos = %08x\n", pos);
+    ok(pos == MAKELONG(330, 350), "pos = %08x\n", pos);
     KillTimer(button, 1);
 
     DestroyWindow(button);

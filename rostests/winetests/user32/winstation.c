@@ -880,7 +880,10 @@ static void test_foregroundwindow(void)
                     if (input_desk_id == thread_desk_id)
                     {
                         ok(ret, "SetForegroundWindow failed!\n");
-                        ok(hwnd == hwnd_test , "unexpected foreground window %p\n", hwnd);
+                        if (hwnd)
+                            ok(hwnd == hwnd_test , "unexpected foreground window %p\n", hwnd);
+                        else
+                            todo_wine ok(hwnd == hwnd_test , "unexpected foreground window %p\n", hwnd);
                     }
                     else
                     {
@@ -893,12 +896,18 @@ static void test_foregroundwindow(void)
                     if (input_desk_id == thread_desk_id)
                     {
                         ok(!ret, "SetForegroundWindow should fail!\n");
-                        ok(hwnd == partners[input_desk_id] , "unexpected foreground window %p\n", hwnd);
+                        if (hwnd)
+                            ok(hwnd == partners[input_desk_id] , "unexpected foreground window %p\n", hwnd);
+                        else
+                            todo_wine ok(hwnd == partners[input_desk_id] , "unexpected foreground window %p\n", hwnd);
                     }
                     else
                     {
                         todo_wine ok(!ret, "SetForegroundWindow should fail!\n");
-                        todo_wine ok(hwnd == 0, "unexpected foreground window %p\n", hwnd);
+                        if (!hwnd)
+                            ok(hwnd == 0, "unexpected foreground window %p\n", hwnd);
+                        else
+                            todo_wine ok(hwnd == 0, "unexpected foreground window %p\n", hwnd);
                     }
                 }
             }

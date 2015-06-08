@@ -1002,6 +1002,13 @@ static void test_icons(void)
     hsmicon = (HICON)GetClassLongPtrW(hwnd, GCLP_HICONSM);
     ok(hsmicon != NULL, "GetClassLong should return non-zero handle\n");
 
+    ok(SendMessageA(hwnd, WM_GETICON, ICON_BIG, 0) == 0,
+                    "WM_GETICON with ICON_BIG should not return the class icon\n");
+    ok(SendMessageA(hwnd, WM_GETICON, ICON_SMALL, 0) == 0,
+                    "WM_GETICON with ICON_SMALL should not return the class icon\n");
+    ok(SendMessageA(hwnd, WM_GETICON, ICON_SMALL2, 0) == 0,
+                    "WM_GETICON with ICON_SMALL2 should not return the class icon\n");
+
     hsmallnew = CopyImage(wcex.hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
                                                 GetSystemMetrics(SM_CYSMICON), 0);
     ok(!SetClassLongPtrW(hwnd, GCLP_HICONSM, (LONG_PTR)hsmallnew),

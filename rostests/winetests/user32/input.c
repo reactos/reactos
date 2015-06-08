@@ -1542,7 +1542,7 @@ static void test_ToUnicode(void)
 {
     WCHAR wStr[4];
     BYTE state[256];
-    const BYTE SC_RETURN = 0x1c, SC_TAB = 0x0f;
+    const BYTE SC_RETURN = 0x1c, SC_TAB = 0x0f, SC_A = 0x1e;
     const BYTE HIGHEST_BIT = 0x80;
     int i, ret;
     for(i=0; i<256; i++)
@@ -1564,9 +1564,13 @@ static void test_ToUnicode(void)
         ok(wStr[1]==0 || broken(wStr[1]!=0) /* nt4 */,
            "ToUnicode didn't null-terminate the buffer when there was room.\n");
     }
+
+    ret = ToUnicode('A', SC_A, state, wStr, 4, 0);
+    ok(ret == 1, "ToUnicode for character A didn't return 1 (was %i)\n", ret);
+    ok(wStr[0] == 'a', "ToUnicode for character 'A' was %i (expected %i)\n", wStr[0], 'a');
+
     state[VK_CONTROL] |= HIGHEST_BIT;
     state[VK_LCONTROL] |= HIGHEST_BIT;
-
     ret = ToUnicode(VK_TAB, SC_TAB, state, wStr, 2, 0);
     ok(ret == 0, "ToUnicode for CTRL + Tab didn't return 0 (was %i)\n", ret);
 
@@ -1575,12 +1579,76 @@ static void test_ToUnicode(void)
     if(ret == 1)
         ok(wStr[0]=='\n', "ToUnicode for CTRL + Return was %i (expected 10)\n", wStr[0]);
 
+    ret = ToUnicode('A', SC_A, state, wStr, 4, 0);
+    ok(ret == 1, "ToUnicode for CTRL + character A didn't return 1 (was %i)\n", ret);
+    ok(wStr[0] == 1, "ToUnicode for CTRL + character 'A' was %i (expected 1)\n", wStr[0]);
+
     state[VK_SHIFT] |= HIGHEST_BIT;
     state[VK_LSHIFT] |= HIGHEST_BIT;
     ret = ToUnicode(VK_TAB, SC_TAB, state, wStr, 2, 0);
     ok(ret == 0, "ToUnicode for CTRL + SHIFT + Tab didn't return 0 (was %i)\n", ret);
     ret = ToUnicode(VK_RETURN, SC_RETURN, state, wStr, 2, 0);
     todo_wine ok(ret == 0, "ToUnicode for CTRL + SHIFT + Return didn't return 0 (was %i)\n", ret);
+
+    ret = ToUnicode(VK_TAB, SC_TAB, NULL, wStr, 4, 0);
+    ok(ret == 0, "ToUnicode with NULL keystate didn't return 0 (was %i)\n", ret);
+    ret = ToUnicode(VK_RETURN, SC_RETURN, NULL, wStr, 4, 0);
+    ok(ret == 0, "ToUnicode with NULL keystate didn't return 0 (was %i)\n", ret);
+    ret = ToUnicode('A', SC_A, NULL, wStr, 4, 0);
+    ok(ret == 0, "ToUnicode with NULL keystate didn't return 0 (was %i)\n", ret);
+    ret = ToUnicodeEx(VK_TAB, SC_TAB, NULL, wStr, 4, 0, GetKeyboardLayout(0));
+    ok(ret == 0, "ToUnicodeEx with NULL keystate didn't return 0 (was %i)\n", ret);
+    ret = ToUnicodeEx(VK_RETURN, SC_RETURN, NULL, wStr, 4, 0, GetKeyboardLayout(0));
+    ok(ret == 0, "ToUnicodeEx with NULL keystate didn't return 0 (was %i)\n", ret);
+    ret = ToUnicodeEx('A', SC_A, NULL, wStr, 4, 0, GetKeyboardLayout(0));
+    ok(ret == 0, "ToUnicodeEx with NULL keystate didn't return 0 (was %i)\n", ret);
+}
+
+static void test_ToAscii(void)
+{
+    WORD character;
+    BYTE state[256];
+    const BYTE SC_RETURN = 0x1c, SC_A = 0x1e;
+    const BYTE HIGHEST_BIT = 0x80;
+    int ret;
+
+    memset(state, 0, sizeof(state));
+
+    character = 0;
+    ret = ToAscii(VK_RETURN, SC_RETURN, state, &character, 0);
+    ok(ret == 1, "ToAscii for Return key didn't return 1 (was %i)\n", ret);
+    ok(character == '\r', "ToAscii for Return was %i (expected 13)\n", character);
+
+    character = 0;
+    ret = ToAscii('A', SC_A, state, &character, 0);
+    ok(ret == 1, "ToAscii for character 'A' didn't return 1 (was %i)\n", ret);
+    ok(character == 'a', "ToAscii for character 'A' was %i (expected %i)\n", character, 'a');
+
+    state[VK_CONTROL] |= HIGHEST_BIT;
+    state[VK_LCONTROL] |= HIGHEST_BIT;
+    character = 0;
+    ret = ToAscii(VK_RETURN, SC_RETURN, state, &character, 0);
+    ok(ret == 1, "ToAscii for CTRL + Return key didn't return 1 (was %i)\n", ret);
+    ok(character == '\n', "ToAscii for CTRL + Return was %i (expected 10)\n", character);
+
+    character = 0;
+    ret = ToAscii('A', SC_A, state, &character, 0);
+    ok(ret == 1, "ToAscii for CTRL + character 'A' didn't return 1 (was %i)\n", ret);
+    ok(character == 1, "ToAscii for CTRL + character 'A' was %i (expected 1)\n", character);
+
+    state[VK_SHIFT] |= HIGHEST_BIT;
+    state[VK_LSHIFT] |= HIGHEST_BIT;
+    ret = ToAscii(VK_RETURN, SC_RETURN, state, &character, 0);
+    todo_wine ok(ret == 0, "ToAscii for CTRL + Shift + Return key didn't return 0 (was %i)\n", ret);
+
+    ret = ToAscii(VK_RETURN, SC_RETURN, NULL, &character, 0);
+    ok(ret == 0, "ToAscii for NULL keystate didn't return 0 (was %i)\n", ret);
+    ret = ToAscii('A', SC_A, NULL, &character, 0);
+    ok(ret == 0, "ToAscii for NULL keystate didn't return 0 (was %i)\n", ret);
+    ret = ToAsciiEx(VK_RETURN, SC_RETURN, NULL, &character, 0, GetKeyboardLayout(0));
+    ok(ret == 0, "ToAsciiEx for NULL keystate didn't return 0 (was %i)\n", ret);
+    ret = ToAsciiEx('A', SC_A, NULL, &character, 0, GetKeyboardLayout(0));
+    ok(ret == 0, "ToAsciiEx for NULL keystate didn't return 0 (was %i)\n", ret);
 }
 
 static void test_get_async_key_state(void)
@@ -1899,6 +1967,9 @@ static void test_Input_mouse(void)
     ok(!got_button_up, "unexpected WM_LBUTTONUP message\n");
 
     /* click after SetCapture call */
+    hwnd = CreateWindowA("button", "button", WS_VISIBLE | WS_POPUP,
+            0, 0, 100, 100, 0, NULL, NULL, NULL);
+    ok(hwnd != 0, "CreateWindow failed\n");
     SetCapture(button_win);
     got_button_down = got_button_up = FALSE;
     simulate_click(FALSE, 50, 50);
@@ -1920,6 +1991,7 @@ static void test_Input_mouse(void)
     }
     ok(got_button_down, "expected WM_RBUTTONDOWN message\n");
     ok(got_button_up, "expected WM_RBUTTONUP message\n");
+    DestroyWindow(hwnd);
 
     /* click on child window after SetCapture call */
     hwnd = CreateWindowA("button", "button2", WS_VISIBLE | WS_CHILD,
@@ -1953,6 +2025,307 @@ static void test_Input_mouse(void)
     DestroyWindow(button_win);
 }
 
+
+static LRESULT WINAPI MsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    if (message == WM_USER+1)
+    {
+        HWND hwnd = (HWND)lParam;
+        ok(GetFocus() == hwnd, "thread expected focus %p, got %p\n", hwnd, GetFocus());
+        ok(GetActiveWindow() == hwnd, "thread expected active %p, got %p\n", hwnd, GetActiveWindow());
+    }
+    return DefWindowProcA(hwnd, message, wParam, lParam);
+}
+
+struct wnd_event
+{
+    HWND hwnd;
+    HANDLE wait_event;
+    HANDLE start_event;
+    DWORD attach_from;
+    DWORD attach_to;
+    BOOL setWindows;
+};
+
+static DWORD WINAPI thread_proc(void *param)
+{
+    MSG msg;
+    struct wnd_event *wnd_event = param;
+    BOOL ret;
+
+    if (wnd_event->wait_event)
+    {
+        ok(WaitForSingleObject(wnd_event->wait_event, INFINITE) == WAIT_OBJECT_0,
+           "WaitForSingleObject failed\n");
+        CloseHandle(wnd_event->wait_event);
+    }
+
+    if (wnd_event->attach_from)
+    {
+        ret = AttachThreadInput(wnd_event->attach_from, GetCurrentThreadId(), TRUE);
+        ok(ret, "AttachThreadInput error %d\n", GetLastError());
+    }
+
+    if (wnd_event->attach_to)
+    {
+        ret = AttachThreadInput(GetCurrentThreadId(), wnd_event->attach_to, TRUE);
+        ok(ret, "AttachThreadInput error %d\n", GetLastError());
+    }
+
+    wnd_event->hwnd = CreateWindowExA(0, "TestWindowClass", "window caption text", WS_OVERLAPPEDWINDOW,
+                                      100, 100, 200, 200, 0, 0, 0, NULL);
+    ok(wnd_event->hwnd != 0, "Failed to create overlapped window\n");
+
+    if (wnd_event->setWindows)
+    {
+        SetFocus(wnd_event->hwnd);
+        SetActiveWindow(wnd_event->hwnd);
+    }
+
+    SetEvent(wnd_event->start_event);
+
+    while (GetMessageA(&msg, 0, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    return 0;
+}
+
+static void test_attach_input(void)
+{
+    HANDLE hThread;
+    HWND ourWnd, Wnd2;
+    DWORD ret, tid;
+    struct wnd_event wnd_event;
+    WNDCLASSA cls;
+
+    cls.style = 0;
+    cls.lpfnWndProc = MsgCheckProcA;
+    cls.cbClsExtra = 0;
+    cls.cbWndExtra = 0;
+    cls.hInstance = GetModuleHandleA(0);
+    cls.hIcon = 0;
+    cls.hCursor = LoadCursorW( NULL, (LPCWSTR)IDC_ARROW);
+    cls.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    cls.lpszMenuName = NULL;
+    cls.lpszClassName = "TestWindowClass";
+    if(!RegisterClassA(&cls)) return;
+
+    wnd_event.wait_event = NULL;
+    wnd_event.start_event = CreateEventW(NULL, 0, 0, NULL);
+    wnd_event.attach_from = 0;
+    wnd_event.attach_to = 0;
+    wnd_event.setWindows = FALSE;
+    if (!wnd_event.start_event)
+    {
+        win_skip("skipping interthread message test under win9x\n");
+        return;
+    }
+
+    hThread = CreateThread(NULL, 0, thread_proc, &wnd_event, 0, &tid);
+    ok(hThread != NULL, "CreateThread failed, error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(wnd_event.start_event, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(wnd_event.start_event);
+
+    ourWnd = CreateWindowExA(0, "TestWindowClass", NULL, WS_OVERLAPPEDWINDOW,
+                            0, 0, 0, 0, 0, 0, 0, NULL);
+    ok(ourWnd!= 0, "failed to create ourWnd window\n");
+
+    Wnd2 = CreateWindowExA(0, "TestWindowClass", NULL, WS_OVERLAPPEDWINDOW,
+                            0, 0, 0, 0, 0, 0, 0, NULL);
+    ok(Wnd2!= 0, "failed to create Wnd2 window\n");
+
+    SetFocus(ourWnd);
+    SetActiveWindow(ourWnd);
+
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, TRUE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+
+    ok(GetActiveWindow() == ourWnd, "expected active %p, got %p\n", ourWnd, GetActiveWindow());
+    ok(GetFocus() == ourWnd, "expected focus %p, got %p\n", ourWnd, GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, (LPARAM)ourWnd);
+
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, FALSE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+    ok(GetActiveWindow() == ourWnd, "expected active %p, got %p\n", ourWnd, GetActiveWindow());
+    ok(GetFocus() == ourWnd, "expected focus %p, got %p\n", ourWnd, GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, 0);
+
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, TRUE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+
+    ok(GetActiveWindow() == ourWnd, "expected active %p, got %p\n", ourWnd, GetActiveWindow());
+    ok(GetFocus() == ourWnd, "expected focus %p, got %p\n", ourWnd, GetFocus());
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, (LPARAM)ourWnd);
+
+    SetActiveWindow(Wnd2);
+    SetFocus(Wnd2);
+    ok(GetActiveWindow() == Wnd2, "expected active %p, got %p\n", Wnd2, GetActiveWindow());
+    ok(GetFocus() == Wnd2, "expected focus %p, got %p\n", Wnd2, GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, (LPARAM)Wnd2);
+
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, FALSE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+    ok(GetActiveWindow() == Wnd2, "expected active %p, got %p\n", Wnd2, GetActiveWindow());
+    ok(GetFocus() == Wnd2, "expected focus %p, got %p\n", Wnd2, GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, 0);
+
+    ret = PostMessageA(wnd_event.hwnd, WM_QUIT, 0, 0);
+    ok(ret, "PostMessageA(WM_QUIT) error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(hThread, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(hThread);
+
+    wnd_event.wait_event = NULL;
+    wnd_event.start_event = CreateEventW(NULL, 0, 0, NULL);
+    wnd_event.attach_from = 0;
+    wnd_event.attach_to = 0;
+    wnd_event.setWindows = TRUE;
+
+    hThread = CreateThread(NULL, 0, thread_proc, &wnd_event, 0, &tid);
+    ok(hThread != NULL, "CreateThread failed, error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(wnd_event.start_event, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(wnd_event.start_event);
+
+    SetFocus(ourWnd);
+    SetActiveWindow(ourWnd);
+
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, TRUE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+
+    ok(GetActiveWindow() == wnd_event.hwnd, "expected active %p, got %p\n", wnd_event.hwnd, GetActiveWindow());
+    ok(GetFocus() == wnd_event.hwnd, "expected focus %p, got %p\n", wnd_event.hwnd, GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, (LPARAM)wnd_event.hwnd);
+
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, FALSE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+
+    ok(GetActiveWindow() == 0, "expected active 0, got %p\n", GetActiveWindow());
+    ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, (LPARAM)wnd_event.hwnd);
+
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, TRUE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+
+    ok(GetActiveWindow() == wnd_event.hwnd, "expected active %p, got %p\n", wnd_event.hwnd, GetActiveWindow());
+    ok(GetFocus() == wnd_event.hwnd, "expected focus %p, got %p\n", wnd_event.hwnd, GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, (LPARAM)wnd_event.hwnd);
+
+    SetFocus(Wnd2);
+    SetActiveWindow(Wnd2);
+    ok(GetActiveWindow() == Wnd2, "expected active %p, got %p\n", Wnd2, GetActiveWindow());
+    ok(GetFocus() == Wnd2, "expected focus %p, got %p\n", Wnd2, GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, (LPARAM)Wnd2);
+
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, FALSE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+
+    ok(GetActiveWindow() == Wnd2, "expected active %p, got %p\n", Wnd2, GetActiveWindow());
+    ok(GetFocus() == Wnd2, "expected focus %p, got %p\n", Wnd2, GetFocus());
+
+    SendMessageA(wnd_event.hwnd, WM_USER+1, 0, 0);
+
+    ret = PostMessageA(wnd_event.hwnd, WM_QUIT, 0, 0);
+    ok(ret, "PostMessageA(WM_QUIT) error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(hThread, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(hThread);
+
+    wnd_event.wait_event = CreateEventW(NULL, 0, 0, NULL);
+    wnd_event.start_event = CreateEventW(NULL, 0, 0, NULL);
+    wnd_event.attach_from = 0;
+    wnd_event.attach_to = 0;
+    wnd_event.setWindows = TRUE;
+
+    hThread = CreateThread(NULL, 0, thread_proc, &wnd_event, 0, &tid);
+    ok(hThread != NULL, "CreateThread failed, error %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, TRUE);
+    ok(!ret, "AttachThreadInput succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* <= Win XP */,
+       "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = AttachThreadInput(tid, GetCurrentThreadId(), TRUE);
+    ok(!ret, "AttachThreadInput succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* <= Win XP */,
+       "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    SetEvent(wnd_event.wait_event);
+
+    ok(WaitForSingleObject(wnd_event.start_event, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(wnd_event.start_event);
+
+    ret = PostMessageA(wnd_event.hwnd, WM_QUIT, 0, 0);
+    ok(ret, "PostMessageA(WM_QUIT) error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(hThread, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(hThread);
+
+    wnd_event.wait_event = NULL;
+    wnd_event.start_event = CreateEventW(NULL, 0, 0, NULL);
+    wnd_event.attach_from = GetCurrentThreadId();
+    wnd_event.attach_to = 0;
+    wnd_event.setWindows = FALSE;
+
+    SetFocus(ourWnd);
+    SetActiveWindow(ourWnd);
+
+    hThread = CreateThread(NULL, 0, thread_proc, &wnd_event, 0, &tid);
+    ok(hThread != NULL, "CreateThread failed, error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(wnd_event.start_event, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(wnd_event.start_event);
+
+    ok(GetActiveWindow() == ourWnd, "expected active %p, got %p\n", ourWnd, GetActiveWindow());
+    ok(GetFocus() == ourWnd, "expected focus %p, got %p\n", ourWnd, GetFocus());
+
+    ret = PostMessageA(wnd_event.hwnd, WM_QUIT, 0, 0);
+    ok(ret, "PostMessageA(WM_QUIT) error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(hThread, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(hThread);
+
+    wnd_event.wait_event = NULL;
+    wnd_event.start_event = CreateEventW(NULL, 0, 0, NULL);
+    wnd_event.attach_from = 0;
+    wnd_event.attach_to = GetCurrentThreadId();
+    wnd_event.setWindows = FALSE;
+
+    SetFocus(ourWnd);
+    SetActiveWindow(ourWnd);
+
+    hThread = CreateThread(NULL, 0, thread_proc, &wnd_event, 0, &tid);
+    ok(hThread != NULL, "CreateThread failed, error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(wnd_event.start_event, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(wnd_event.start_event);
+
+    ok(GetActiveWindow() == ourWnd, "expected active %p, got %p\n", ourWnd, GetActiveWindow());
+    ok(GetFocus() == ourWnd, "expected focus %p, got %p\n", ourWnd, GetFocus());
+
+    ret = PostMessageA(wnd_event.hwnd, WM_QUIT, 0, 0);
+    ok(ret, "PostMessageA(WM_QUIT) error %d\n", GetLastError());
+
+    ok(WaitForSingleObject(hThread, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(hThread);
+    DestroyWindow(ourWnd);
+    DestroyWindow(Wnd2);
+}
+
 START_TEST(input)
 {
     init_function_pointers();
@@ -1970,9 +2343,11 @@ START_TEST(input)
     test_mouse_ll_hook();
     test_key_map();
     test_ToUnicode();
+    test_ToAscii();
     test_get_async_key_state();
     test_keyboard_layout_name();
     test_key_names();
+    test_attach_input();
 
     if(pGetMouseMovePointsEx)
         test_GetMouseMovePointsEx();

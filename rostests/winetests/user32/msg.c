@@ -10440,6 +10440,115 @@ done:
     flush_events();
 }
 
+static void test_PeekMessage3(void)
+{
+    HWND hwnd;
+    BOOL ret;
+    MSG msg;
+
+    hwnd = CreateWindowA("TestWindowClass", "PeekMessage3", WS_OVERLAPPEDWINDOW,
+                         10, 10, 800, 800, NULL, NULL, NULL, NULL);
+    ok(hwnd != NULL, "expected hwnd != NULL\n");
+    flush_events();
+
+    /* GetMessage() and PeekMessage(..., PM_REMOVE) should prefer messages which
+     * were already seen. */
+
+    SetTimer(hwnd, 1, 0, NULL);
+    while (!PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE));
+    ok(msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    PostMessageA(hwnd, WM_USER, 0, 0);
+    ret = PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE);
+    ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_USER, "msg.message = %u instead of WM_USER\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, 0, 0, 0);
+    ok(!ret, "expected PeekMessage to return FALSE, got %u\n", ret);
+
+    SetTimer(hwnd, 1, 0, NULL);
+    while (!PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE));
+    ok(msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    PostMessageA(hwnd, WM_USER, 0, 0);
+    ret = PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE);
+    ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE);
+    ok(ret && msg.message == WM_USER, "msg.message = %u instead of WM_USER\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, 0, 0, 0);
+    ok(!ret, "expected PeekMessage to return FALSE, got %u\n", ret);
+
+    /* It doesn't matter if a message range is specified or not. */
+
+    SetTimer(hwnd, 1, 0, NULL);
+    while (!PeekMessageA(&msg, NULL, WM_TIMER, WM_TIMER, PM_NOREMOVE));
+    ok(msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    PostMessageA(hwnd, WM_USER, 0, 0);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_USER, "msg.message = %u instead of WM_USER\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, 0, 0, 0);
+    ok(!ret, "expected PeekMessage to return FALSE, got %u\n", ret);
+
+    /* But not if the post messages were added before the PeekMessage() call. */
+
+    PostMessageA(hwnd, WM_USER, 0, 0);
+    SetTimer(hwnd, 1, 0, NULL);
+    while (!PeekMessageA(&msg, NULL, WM_TIMER, WM_TIMER, PM_NOREMOVE));
+    ok(msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_USER, "msg.message = %u instead of WM_USER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, 0, 0, 0);
+    ok(!ret, "expected PeekMessage to return FALSE, got %u\n", ret);
+
+    /* More complicated test with multiple messages. */
+
+    PostMessageA(hwnd, WM_USER, 0, 0);
+    SetTimer(hwnd, 1, 0, NULL);
+    while (!PeekMessageA(&msg, NULL, WM_TIMER, WM_TIMER, PM_NOREMOVE));
+    ok(msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    PostMessageA(hwnd, WM_USER + 1, 0, 0);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_USER, "msg.message = %u instead of WM_USER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_USER + 1, "msg.message = %u instead of WM_USER + 1\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, 0, 0, 0);
+    ok(!ret, "expected PeekMessage to return FALSE, got %u\n", ret);
+
+    /* Also works for posted messages, but the situation is a bit different,
+     * because both messages are in the same queue. */
+
+    PostMessageA(hwnd, WM_TIMER, 0, 0);
+    while (!PeekMessageA(&msg, NULL, WM_TIMER, WM_TIMER, PM_NOREMOVE));
+    ok(msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    PostMessageA(hwnd, WM_USER, 0, 0);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_USER, "msg.message = %u instead of WM_USER\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, 0, 0, 0);
+    ok(!ret, "expected PeekMessage to return FALSE, got %u\n", ret);
+
+    PostMessageA(hwnd, WM_USER, 0, 0);
+    PostMessageA(hwnd, WM_TIMER, 0, 0);
+    while (!PeekMessageA(&msg, NULL, WM_TIMER, WM_TIMER, PM_NOREMOVE));
+    ok(msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_USER, "msg.message = %u instead of WM_USER\n", msg.message);
+    ret = GetMessageA(&msg, NULL, 0, 0);
+    ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, 0, 0, 0);
+    ok(!ret, "expected PeekMessage to return FALSE, got %u\n", ret);
+
+    DestroyWindow(hwnd);
+    flush_events();
+}
+
 static INT_PTR CALLBACK wm_quit_dlg_proc(HWND hwnd, UINT message, WPARAM wp, LPARAM lp)
 {
     struct recvd_message msg;
@@ -14124,10 +14233,9 @@ todo_wine
     ret = AttachThreadInput(GetCurrentThreadId(), tid, TRUE);
     ok(ret, "AttachThreadInput error %d\n", GetLastError());
 
-todo_wine {
     ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
     ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
-}
+
     flush_events();
     flush_sequence();
 
@@ -14484,6 +14592,160 @@ static void test_TrackPopupMenuEmpty(void)
     DestroyWindow(hwnd);
 }
 
+static const struct message send_message_1[] = {
+    { WM_USER+2, sent|wparam|lparam, 0, 0 },
+    { WM_USER, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message send_message_2[] = {
+    { WM_USER+4, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message send_message_3[] = {
+    { WM_USER+3, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message send_message_4[] = {
+    { WM_USER+1, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+
+static DWORD WINAPI SendMessage_thread_1(void *param)
+{
+    struct wnd_event *wnd_event = param;
+
+    trace("thread: starting\n");
+    WaitForSingleObject(wnd_event->start_event, INFINITE);
+
+    trace("thread: call PostMessage\n");
+    PostMessageA(wnd_event->hwnd, WM_USER, 0, 0);
+
+    trace("thread: call PostMessage\n");
+    PostMessageA(wnd_event->hwnd, WM_USER+1, 0, 0);
+
+    trace("thread: call SendMessage\n");
+    SendMessageA(wnd_event->hwnd, WM_USER+2, 0, 0);
+
+    trace("thread: call SendMessage\n");
+    SendMessageA(wnd_event->hwnd, WM_USER+3, 0, 0);
+
+    return 0;
+}
+
+static DWORD WINAPI SendMessage_thread_2(void *param)
+{
+    struct wnd_event *wnd_event = param;
+
+    trace("thread: starting\n");
+    WaitForSingleObject(wnd_event->start_event, INFINITE);
+
+    trace("thread: call PostMessage\n");
+    PostMessageA(wnd_event->hwnd, WM_USER, 0, 0);
+
+    trace("thread: call PostMessage\n");
+    PostMessageA(wnd_event->hwnd, WM_USER+1, 0, 0);
+
+    /* this leads to sending an internal message under Wine */
+    trace("thread: call EnableWindow\n");
+    EnableWindow(wnd_event->hwnd, TRUE);
+
+    trace("thread: call SendMessage\n");
+    SendMessageA(wnd_event->hwnd, WM_USER+2, 0, 0);
+
+    trace("thread: call SendMessage\n");
+    SendMessageA(wnd_event->hwnd, WM_USER+3, 0, 0);
+
+    return 0;
+}
+
+static void test_SendMessage_other_thread(int thread_n)
+{
+    DWORD qs_all_input = QS_ALLINPUT & ~QS_RAWINPUT;
+    HANDLE hthread;
+    struct wnd_event wnd_event;
+    DWORD tid, ret;
+    MSG msg;
+
+    wnd_event.start_event = CreateEventA(NULL, 0, 0, NULL);
+
+    wnd_event.hwnd = CreateWindowExA(0, "TestWindowClass", NULL, WS_OVERLAPPEDWINDOW,
+                                     100, 100, 200, 200, 0, 0, 0, NULL);
+    ok(wnd_event.hwnd != 0, "CreateWindowEx failed\n");
+
+    hthread = CreateThread(NULL, 0, thread_n == 1 ? SendMessage_thread_1 : SendMessage_thread_2, &wnd_event, 0, &tid);
+    ok(hthread != NULL, "CreateThread failed, error %d\n", GetLastError());
+    CloseHandle(hthread);
+
+    flush_events();
+    flush_sequence();
+
+    ret = GetQueueStatus(QS_SENDMESSAGE);
+    ok(ret == 0, "wrong status %08x\n", ret);
+
+    SetEvent(wnd_event.start_event);
+
+    /* wait for other thread's SendMessage */
+    for (;;)
+    {
+        ret = GetQueueStatus(QS_SENDMESSAGE);
+        if (ret == MAKELONG(QS_SENDMESSAGE, QS_SENDMESSAGE)) break;
+        Sleep(50);
+    }
+
+    ret = GetQueueStatus(QS_SENDMESSAGE|QS_POSTMESSAGE);
+    ok(ret == MAKELONG(QS_POSTMESSAGE, QS_SENDMESSAGE|QS_POSTMESSAGE), "wrong status %08x\n", ret);
+
+    trace("main: call GetMessage\n");
+    GetMessageA(&msg, 0, 0, 0);
+    ok(msg.message == WM_USER, "expected WM_USER, got %04x\n", msg.message);
+    DispatchMessageA(&msg);
+    ok_sequence(send_message_1, "SendMessage from other thread 1", thread_n == 2);
+
+    /* intentionally yield */
+    MsgWaitForMultipleObjects(0, NULL, FALSE, 100, qs_all_input);
+
+    trace("main: call SendMessage\n");
+    SendMessageA(wnd_event.hwnd, WM_USER+4, 0, 0);
+    ok_sequence(send_message_2, "SendMessage from other thread 2", FALSE);
+
+    ret = GetQueueStatus(QS_SENDMESSAGE|QS_POSTMESSAGE);
+    ok(ret == MAKELONG(QS_SENDMESSAGE, QS_SENDMESSAGE|QS_POSTMESSAGE), "wrong status %08x\n", ret);
+
+    trace("main: call PeekMessage\n");
+    ok(PeekMessageA(&msg, 0, 0, 0, PM_NOREMOVE), "PeekMessage should not fail\n");
+    ok(msg.message == WM_USER+1, "expected WM_USER+1, got %04x\n", msg.message);
+    ok_sequence(send_message_3, "SendMessage from other thread 3", thread_n == 2);
+
+    trace("main: call PeekMessage\n");
+    ok(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "PeekMessage should not fail\n");
+    ok(msg.message == WM_USER+1, "expected WM_USER+1, got %04x\n", msg.message);
+    DispatchMessageA(&msg);
+    ok_sequence(send_message_4, "SendMessage from other thread 4", FALSE);
+
+    /* intentionally yield */
+    MsgWaitForMultipleObjects(0, NULL, FALSE, 100, qs_all_input);
+
+    ret = GetQueueStatus(QS_SENDMESSAGE|QS_POSTMESSAGE);
+    /* FIXME: remove once Wine is fixed */
+if (thread_n == 2) todo_wine
+    ok(ret == 0, "wrong status %08x\n", ret);
+else
+    ok(ret == 0, "wrong status %08x\n", ret);
+
+    trace("main: call PeekMessage\n");
+    ok(!PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "PeekMessage should fail\n");
+    ok_sequence(WmEmptySeq, "SendMessage from other thread 5", thread_n == 2);
+
+    ret = GetQueueStatus(QS_SENDMESSAGE|QS_POSTMESSAGE);
+    ok(ret == 0, "wrong status %08x\n", ret);
+
+    trace("main: call DestroyWindow\n");
+    DestroyWindow(msg.hwnd);
+
+    flush_events();
+    flush_sequence();
+}
+
 static void init_funcs(void)
 {
     HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
@@ -14562,12 +14824,16 @@ START_TEST(msg)
         pUnhookWinEvent = 0;
     }
     hEvent_hook = 0;
+
+    test_SendMessage_other_thread(1);
+    test_SendMessage_other_thread(2);
     test_SetFocus();
     test_SetParent();
     test_PostMessage();
     test_ShowWindow();
     test_PeekMessage();
     test_PeekMessage2();
+    test_PeekMessage3();
     test_WaitForInputIdle( test_argv[0] );
     test_scrollwindowex();
     test_messages();
@@ -14700,9 +14966,12 @@ START_TEST(msg_queue)
     }
 
     init_tests();
+    test_SendMessage_other_thread(1);
+    test_SendMessage_other_thread(2);
     test_PostMessage();
     test_PeekMessage();
     test_PeekMessage2();
+    test_PeekMessage3();
     test_interthread_messages();
     test_DispatchMessage();
     test_SendMessageTimeout();
