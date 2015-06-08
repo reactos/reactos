@@ -798,6 +798,10 @@ HRESULT CInternetToolbar::CommandStateChanged(bool newValue, int commandID)
             // back
             hResult = SetState(&CLSID_CommonButtons, IDM_GOTO_BACK, newValue ? TBSTATE_ENABLED : 0);
             break;
+        case 3:
+            // up
+            hResult = SetState(&CLSID_CommonButtons, IDM_GOTO_UPONELEVEL, newValue ? TBSTATE_ENABLED : 0);
+            break;
     }
     return hResult;
 }

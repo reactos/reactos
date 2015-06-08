@@ -342,6 +342,7 @@ public:
     HRESULT FireCommandStateChange(bool newState, int commandID);
     HRESULT FireCommandStateChangeAll();
     HRESULT UpdateForwardBackState();
+    HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
 
@@ -1065,6 +1066,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
 
     FireCommandStateChangeAll();
     hResult = UpdateForwardBackState();
+    hResult = UpdateUpState();
     return S_OK;
 }
 
@@ -1193,6 +1195,11 @@ HRESULT CShellBrowser::NavigateToParent()
     LPITEMIDLIST newDirectory = ILClone(fCurrentDirectoryPIDL);
     if (newDirectory == NULL)
         return E_OUTOFMEMORY;
+    if (_ILIsDesktop(newDirectory))
+    {
+        ILFree(newDirectory);
+        return E_INVALIDARG;
+    }
     ILRemoveLastID(newDirectory);
     HRESULT hResult = BrowseToPIDL(newDirectory, BTP_UPDATE_CUR_HISTORY | BTP_UPDATE_NEXT_HISTORY);
     ILFree(newDirectory);
@@ -1495,6 +1502,18 @@ HRESULT CShellBrowser::UpdateForwardBackState()
     }
     hResult = FireCommandStateChange(canGoBack, 2);
     hResult = FireCommandStateChange(canGoForward, 1);
+    return S_OK;
+}
+
+HRESULT CShellBrowser::UpdateUpState()
+{
+    bool canGoUp;
+    HRESULT hResult;
+
+    canGoUp = true;
+    if (_ILIsDesktop(fCurrentDirectoryPIDL))
+        canGoUp = false;
+    hResult = FireCommandStateChange(canGoUp, 3);
     return S_OK;
 }
 
