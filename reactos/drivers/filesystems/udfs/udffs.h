@@ -21,8 +21,6 @@
 
 //#define UDF_TRACK_UNICODE_STR
 
-//#define DEMO
-
 //#define UDF_LIMIT_NAME_LEN
 
 //#define UDF_LIMIT_DIR_SIZE
@@ -53,10 +51,6 @@
 #else // UDF_LIMIT_DIR_SIZE
     #define UDF_DEFAULT_DIR_PACK_THRESHOLD (16)
 #endif // UDF_LIMIT_DIR_SIZE
-
-#ifdef DEMO
-    #define UDF_DEMO_VOLUME_LABEL L"UDF Demo"
-#endif //DEMO
 
 #define UDF_DEFAULT_READAHEAD_GRAN 0x10000
 #define UDF_DEFAULT_SPARSE_THRESHOLD (256*PACKETSIZE_UDF)
@@ -181,11 +175,9 @@ extern UDFData              UDFGlobalData;
 #include "Include/phys_lib.h"
 #include "errmsg.h"
 //#include "Include/tools.h"
-#include "Include/protect.h"
 #include "udfpubl.h"
 //#include "ntifs.h"
 #include "mem.h"
-#include "Include/key_lib.h"
 
 extern CCHAR   DefLetter[];
 

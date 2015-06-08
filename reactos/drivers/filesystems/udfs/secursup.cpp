@@ -219,7 +219,6 @@ try_exit: NOTHING;
 }
 
 #ifndef UDF_READ_ONLY_BUILD
-#ifndef DEMO
 /*************************************************************************
 *
 * Function: UDFSetSecurity()
@@ -414,7 +413,6 @@ try_exit: NOTHING;
     return(RC);
 } // ens UDFCommonSetSecurity()
 
-#endif //DEMO
 #endif //UDF_READ_ONLY_BUILD
 #endif //UDF_ENABLE_SECURITY
 
@@ -806,24 +804,22 @@ UDFWriteSecurity(
     PUDF_FILE_INFO SDirInfo = NULL;
     PUDF_FILE_INFO AclInfo = NULL;
     PERESOURCE Res1 = NULL;
-#ifndef DEMO
     NTSTATUS RC;
     ULONG NumberBytesRead;
-#endif //DEMO
 
 //    KdPrint(("UDFWriteSecurity\n"));
 
-#if !defined(DEMO) && !defined(UDF_READ_ONLY_BUILD)
+#if !defined(UDF_READ_ONLY_BUILD)
 
     if(!Vcb->WriteSecurity ||
        (Vcb->VCBFlags & (UDF_VCB_FLAGS_VOLUME_READ_ONLY |
                          UDF_VCB_FLAGS_MEDIA_READ_ONLY)))
 
-#endif //!defined(DEMO) && !defined(UDF_READ_ONLY_BUILD)
+#endif //!defined(UDF_READ_ONLY_BUILD)
 
         return STATUS_SUCCESS;
 
-#if !defined(DEMO) && !defined(UDF_READ_ONLY_BUILD)
+#if !defined(UDF_READ_ONLY_BUILD)
 
     _SEH2_TRY {
 
@@ -908,7 +904,7 @@ try_exit: NOTHING;
 
     return RC;
 
-#endif //!defined(DEMO) && !defined(UDF_READ_ONLY_BUILD)
+#endif //!defined(UDF_READ_ONLY_BUILD)
 #endif //UDF_ENABLE_SECURITY
 
     return STATUS_SUCCESS;
@@ -953,12 +949,6 @@ UDFCheckAccessRights(
     goto treat_as_ro;
 #endif //UDF_READ_ONLY_BUILD
 
-#ifdef EVALUATION_TIME_LIMIT
-    if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-        Fcb->Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-        goto treat_as_ro;
-    }
-#endif //EVALUATION_TIME_LIMIT
     if(Fcb->FCBFlags & UDF_FCB_READ_ONLY) {
         ROCheck = TRUE;
     } else
@@ -969,9 +959,9 @@ UDFCheckAccessRights(
         ROCheck = TRUE;
     }
     if(ROCheck) {
-#if defined(EVALUATION_TIME_LIMIT) || defined(UDF_READ_ONLY_BUILD)
+#ifdef UDF_READ_ONLY_BUILD
 treat_as_ro:
-#endif //EVALUATION_TIME_LIMIT
+#endif //UDF_READ_ONLY_BUILD
         ACCESS_MASK  DesiredAccessMask = 0;
        
         if(Fcb->Vcb->CompatFlags & UDF_VCB_IC_WRITE_IN_RO_DIR) {
@@ -1029,11 +1019,6 @@ treat_as_ro:
 #ifdef UDF_ENABLE_SECURITY
     }
 #endif //UDF_ENABLE_SECURITY
-#ifdef EVALUATION_TIME_LIMIT
-    if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-        Fcb->Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-    }
-#endif //EVALUATION_TIME_LIMIT
     if(FileObject) {
         if (Fcb->OpenHandleCount) {
             // The FCB is currently in use by some thread.
@@ -1058,11 +1043,6 @@ treat_as_ro:
         // we get here if given file was opened for internal purposes
         RC = STATUS_SUCCESS;
     }
-#ifdef EVALUATION_TIME_LIMIT
-    if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-        Fcb->Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-    }
-#endif //EVALUATION_TIME_LIMIT
     return RC;
 } // end UDFCheckAccessRights()
 

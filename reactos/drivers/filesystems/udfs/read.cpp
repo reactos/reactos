@@ -420,11 +420,6 @@ UDFCommonRead(
             }
 #endif
 
-#ifdef EVALUATION_TIME_LIMIT
-            if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-                Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-            }
-#endif //EVALUATION_TIME_LIMIT
             // Forward the request to the lower level driver
             // Lock the callers buffer
             if (!NT_SUCCESS(RC = UDFLockCallersBuffer(PtrIrpContext, Irp, TRUE, ReadLength))) {
@@ -470,11 +465,6 @@ UDFCommonRead(
             try_return(RC);
         }
 
-#ifdef EVALUATION_TIME_LIMIT
-        if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-            Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-        }
-#endif //EVALUATION_TIME_LIMIT
         NtReqFcb = Fcb->NTRequiredFCB;
 
         Res1Acq = UDFIsResourceAcquired(&(NtReqFcb->MainResource));

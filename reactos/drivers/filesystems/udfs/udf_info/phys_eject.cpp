@@ -84,9 +84,6 @@ UDFEjectReqWaiter(
                 ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->Immed = TRUE;
                 ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->EventClass = evt_type;
                 
-#ifdef EVALUATION_TIME_LIMIT
-                KeQuerySystemTime(&UDFGlobalData.UDFCurrentTime);
-#endif //EVALUATION_TIME_LIMIT
                 RC = UDFPhSendIOCTL( IOCTL_CDRW_GET_EVENT,
                                      TargetDevObj,
                                      &(WC->EjectReqBuffer),sizeof(GET_EVENT_USER_IN),
@@ -103,10 +100,6 @@ UDFEjectReqWaiter(
                     supported_evt_classes = WC->EjectReqBuffer.MediaChange.Header.SupportedClasses;
                 }
             }
-        } else {
-#ifdef EVALUATION_TIME_LIMIT
-            KeQuerySystemTime(&UDFGlobalData.UDFCurrentTime);
-#endif //EVALUATION_TIME_LIMIT
         }
         if(!UseEvent)
             break;
@@ -142,15 +135,6 @@ stop_waiter:
             BM_FlushPriod = Vcb->BM_FlushPriod;
             Tree_FlushPriod = Vcb->Tree_FlushPriod;
 
-#ifdef EVALUATION_TIME_LIMIT
-            if(!UDFGlobalData.LicenseKeyItemStarted) {
-                UDFGlobalData.LicenseKeyItemStarted = TRUE;
-                ExInitializeWorkItem(&(UDFGlobalData.LicenseKeyItem), UDFKeyWaiter, NULL);
-      //            KdPrint(("UDFLicenseWaiter: create thread\n"));
-                ExQueueWorkItem(&(UDFGlobalData.LicenseKeyItem), DelayedWorkQueue);
-            }
-#endif //EVALUATION_TIME_LIMIT
-
             // check if we approaching end of disk
             if(space_check_counter > 2) {
                 // update FreeAllocUnits if it is necessary
@@ -168,10 +152,6 @@ stop_waiter:
                 space_check_counter = 0;
             }
             space_check_counter++;
-
-#ifdef EVALUATION_TIME_LIMIT
-            KeQuerySystemTime(&UDFGlobalData.UDFCurrentTime);
-#endif //EVALUATION_TIME_LIMIT
 
             if(Vcb->VCBFlags & UDF_VCB_SKIP_EJECT_CHECK) {
                 SkipCount++;
@@ -310,9 +290,7 @@ wait_eject:
                             Vcb->Tree_FlushTime));
 
                         // do not touch unchanged volume
-                        if(((Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) &&
-                            !(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED))
-                                ||
+                        if((Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) ||
                            !Vcb->Modified)
                             goto skip_BM_flush;
 
@@ -327,11 +305,6 @@ wait_eject:
                                 try_return(RC);
                             }
                             VcbAcquired = TRUE;
-                        }
-                        // License Key check
-                        if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-                            Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-                            goto skip_BM_flush;
                         }
 
                         KdPrint(("UDF: Flushing Directory Tree....\n"));
@@ -360,8 +333,7 @@ skip_BM_flush:
 
 
                         // do not touch unchanged volume
-                        if((Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) &&
-                           !(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED))
+                        if(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY)
                             goto skip_BM_flush2;
                         if(!Vcb->Modified)
                             goto skip_BM_flush2;

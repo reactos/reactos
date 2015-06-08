@@ -229,14 +229,6 @@ UDFCommonWrite(
         }
         Vcb->VCBFlags |= UDF_VCB_SKIP_EJECT_CHECK;
 
-#ifdef EVALUATION_TIME_LIMIT
-        // License Key check
-        if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-            Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-            try_return(RC = STATUS_ACCESS_DENIED);
-        }
-#endif //EVALUATION_TIME_LIMIT
-
         // Disk based file systems might decide to verify the logical volume
         //  (if required and only if removable media are supported) at this time
         // As soon as Tray is locked, we needn't call UDFVerifyVcb()
@@ -435,14 +427,6 @@ UDFCommonWrite(
         if (Vcb->VCBFlags & UDF_VCB_FLAGS_SHUTDOWN) {
             try_return(RC = STATUS_TOO_LATE);
         }
-
-#ifdef EVALUATION_TIME_LIMIT
-        // License Key check
-        if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-            Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-            try_return(RC = STATUS_ACCESS_DENIED);
-        }
-#endif //EVALUATION_TIME_LIMIT
 
         // Paging I/O write operations are special. If paging i/o write
         // requests begin beyond end-of-file, the request should be no-oped

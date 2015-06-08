@@ -18,10 +18,6 @@
 
 #include "CDRW/scsi_port.h"
 
-#ifdef EVALUATION_TIME_LIMIT
-#include "Include/protect.h"
-#endif //EVALUATION_TIME_LIMIT
-
 #define UDF_CURRENT_BUILD 123456789
 
 // define the file specific bug-check id
@@ -219,18 +215,8 @@ UDFCommonDeviceControl(
             if (Fcb->NodeIdentifier.NodeType == UDF_NODE_TYPE_VCB) {
                 // Everything is acceptable for Volume
                 Vcb = (PVCB)(Fcb);
-#ifdef EVALUATION_TIME_LIMIT
-                if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-                    Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-                }
-#endif //EVALUATION_TIME_LIMIT
             } else {
                 Vcb = Fcb->Vcb;
-#ifdef EVALUATION_TIME_LIMIT
-                if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-                    Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-                }
-#endif //EVALUATION_TIME_LIMIT
                 CompleteIrp = TRUE;
                 // For files/disrs only the following are acceptable
                 switch (IoControlCode) {
@@ -327,23 +313,6 @@ UDFCommonDeviceControl(
 
                 UnsafeIoctl = FALSE;
                 break;
-#ifdef EVALUATION_TIME_LIMIT
-            case IOCTL_CDRW_RESERVE_TRACK:
-            case IOCTL_CDRW_SET_STREAMING:
-            case IOCTL_CDRW_SYNC_CACHE:
-            case IOCTL_CDRW_BLANK:
-            case IOCTL_CDRW_LL_WRITE:
-            case IOCTL_CDRW_FORMAT_UNIT:
-            case IOCTL_CDRW_SET_WRITE_MODE:
-            case IOCTL_CDRW_CLOSE_TRK_SES:
-                if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-                    KdPrint(("Unregistered version. IOCTL blocked\n"));
-                    Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-                    CompleteIrp = TRUE;
-                    try_return(RC = STATUS_INVALID_PARAMETER);
-                }
-                break;
-#endif //EVALUATION_TIME_LIMIT
             }
 
             if(IoControlCode != IOCTL_CDROM_DISK_TYPE) {
@@ -670,14 +639,10 @@ notify_media_change:
             break;
 #ifndef UDF_READ_ONLY_BUILD
         case IOCTL_UDF_SEND_LICENSE_KEY:
-#ifdef EVALUATION_TIME_LIMIT
-            RC = UDFProcessLicenseKey( PtrIrpContext, Irp );
-#else //EVALUATION_TIME_LIMIT
             RC = STATUS_SUCCESS;
 
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_SUCCESS;
-#endif //EVALUATION_TIME_LIMIT
             CompleteIrp = TRUE;
             break;
 #endif //UDF_READ_ONLY_BUILD
@@ -842,16 +807,6 @@ notify_media_change:
             Vcb->MediaLockCount = 0;
             Vcb->VCBFlags &= ~UDF_VCB_FLAGS_MEDIA_LOCKED;
             goto ioctl_do_default;
-
-#ifdef EVALUATION_TIME_LIMIT
-        case IOCTL_CDRW_GET_SIGNATURE:
-            if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-                Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-//                CompleteIrp = TRUE;
-//                try_return(RC = STATUS_INVALID_PARAMETER);
-            }
-            goto ioctl_do_default;
-#endif //EVALUATION_TIME_LIMIT
 
         case FSCTL_ALLOW_EXTENDED_DASD_IO:
 
@@ -1262,326 +1217,3 @@ UDFSetFileAllocModeFromICB(
     return STATUS_SUCCESS;
 } // end UDFSetFileAllocModeFromICB()
 #endif //UDF_READ_ONLY_BUILD
-
-#ifdef EVALUATION_TIME_LIMIT
-
-#define UDF_MD5Init      UDF_MD5Init3
-#define UDF_MD5Update    UDF_MD5Update3
-#define UDF_MD5Pad       UDF_MD5Pad3
-#define UDF_MD5Final     UDF_MD5Final3
-#define UDF_MD5End       UDF_MD5End3
-#define UDF_MD5Transform UDF_MD5Transform3
-#define UDF_Encode       UDF_Encode3
-#define UDF_Decode       UDF_Decode3
-#define PADDING          PADDING3
-
-#define ROTATE_LEFT      ROTATE_LEFT3
-#define FF               FF3
-#define GG               GG3
-#define HH               HH3
-#define II               II3
-
-#define UDF_MD5Transform_dwords   UDF_MD5Transform_dwords3
-#define UDF_MD5Transform_idx      UDF_MD5Transform_idx3
-#define UDF_MD5Transform_Sxx      UDF_MD5Transform_Sxx3
-#define UDF_MD5Rotate             UDF_MD5Rotate3
-
-#include "..\Include\md5.h"
-#include "..\Include\md5c.c"
-
-#define UDF_FibonachiNum UDF_FibonachiNum3
-#define XPEHb            XPEHb3
-#define UDF_build_long_key    UDF_build_long_key3
-#define UDF_build_hash_by_key UDF_build_hash_by_key3
-
-#include "..\Include\key_lib.h"
-#include "..\Include\key_lib.cpp"
-
-extern ULONG UDFNumberOfKeys;
-extern PCHAR pUDFLongKey;
-extern PUDF_KEY_LIST pUDFKeyList;
-extern PUCHAR pRegKeyName0;
-
-NTSTATUS
-UDFProcessLicenseKey(
-    PtrUDFIrpContext IrpContext,
-    PIRP             Irp
-    )
-{
-    WCHAR           RegPath[128];
-    WCHAR           RegKeyName[64];
-    CHAR            LicenseKey[16+1];
-    WCHAR           LicenseKeyW[16+1];
-    HKEY            hUdfRootKey;
-    NTSTATUS        RC = STATUS_INVALID_USER_BUFFER;
-
-    ULONG i, j;
-    int checksum[4] = {0,0,0,0};
-
-    PEXTENDED_IO_STACK_LOCATION IrpSp =
-        (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation( Irp );
-/*
-    PVCB Vcb;
-    PtrUDFFCB Fcb;
-    PtrUDFCCB Ccb;
-*/
-    PUDF_KEY_LIST OutputBuffer;
-
-    // Decode the file object, the only type of opens we accept are
-    // user volume opens.
-/*
-    Ccb = (PtrUDFCCB)(IrpSp->FileObject->FsContext2);
-    Fcb = Ccb->Fcb;
-    Vcb = Fcb->Vcb;
-*/
-    Irp->IoStatus.Information = 0;
-    if(IrpSp->Parameters.FileSystemControl.InputBufferLength < 16)
-        return STATUS_BUFFER_TOO_SMALL;
-    if(IrpSp->Parameters.FileSystemControl.OutputBufferLength < 16)
-        return STATUS_BUFFER_TOO_SMALL;
-
-    OutputBuffer = (PUDF_KEY_LIST)UDFGetCallersBuffer(Irp->AssociatedIrp.SystemBuffer);
-    if(!OutputBuffer)
-        return STATUS_INVALID_USER_BUFFER;
-
-    // Build Registry Value name for License Key 
-    for(i=0; i<UDFNumberOfKeys; i++) {
-        for(j=0; j<4; j++) {
-            checksum[j] += pUDFKeyList[i].d[j];
-        }
-    }
-
-    // Read Key
-    for(i=0; i<sizeof(UDF_LICENSE_KEY_USER)-1; i++) {
-        RegKeyName[i] = pRegKeyName0[(i*sizeof(UDF_LICENSE_KEY_USER))] ^ (UCHAR)(checksum[i%4] ^ (checksum[i%4] >> 16));
-    }
-    RegKeyName[i] = 0;
-
-    RegTGetKeyHandle(NULL, UDFGlobalData.SavedRegPath.Buffer, &hUdfRootKey);
-    if(hUdfRootKey) {
-        if(!RegTGetStringValue(hUdfRootKey, NULL,
-                                          RegKeyName, LicenseKeyW, (16+1)*sizeof(WCHAR)) ) {
-            UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-        }
-        RegTCloseKeyHandle(hUdfRootKey);
-    }
-    LicenseKeyW[16] = 0;
-    // convert WCHAR Key to CHAR key
-    for(i=0; i<16; i++) {
-        LicenseKey[i] = (UCHAR)(LicenseKeyW[i]);
-    }
-
-    // build hash
-    UDF_build_hash_by_key(pUDFLongKey, UDF_LONG_KEY_SIZE, (PCHAR)&(UDFGlobalData.CurrentKeyHash), LicenseKey);
-    // check if it is correct
-    for(i=0; i<UDFNumberOfKeys; i++) {
-        for(j=0; j<4; j++) {
-            if(pUDFKeyList[i].d[j] ^ UDFGlobalData.CurrentKeyHash.d[j]) {
-                break;
-            }
-        }
-        if(j==4)
-            break;
-    }
-    if(j == 4) {
-        RC = STATUS_SUCCESS;
-    } else {
-        RC = STATUS_ACCESS_DENIED;
-    }
-
-    KeQuerySystemTime((PLARGE_INTEGER)&UDFGlobalData.UDFCurrentTime);
-    {
-        uint32 t2;
-
-        t2 = (uint32)(((UDFGlobalData.UDFCurrentTime.QuadPart / 100I64) / 60I64) / (200I64*120I64*24I64));
-        t2 /= 250;
-        KdPrint(("t2 = %x (%x, %x)\n", t2, UDF_MIN_DATE+TIME_JAN_1_2003, UDF_MAX_DATE+TIME_JAN_1_2003));
-        if(t2 > (UDF_MAX_DATE+TIME_JAN_1_2003) ||
-           t2 < (UDF_MIN_DATE+TIME_JAN_1_2003)) {
-            KdPrint(("Eval time expired: %x <= %x <= %x\n",
-                     UDF_MIN_DATE+TIME_JAN_1_2003, t2, UDF_MAX_DATE+TIME_JAN_1_2003));
-        } else {
-            ULONG iTime;
-            ULONG iVer;
-            if(!UDFGetInstallVersion((PULONG)&iVer) ||
-               !UDFGetInstallTime(&iTime)) {
-                KdPrint(("UDFGetInstallTime() or UDFGetInstallVersion() failed\n"));
-            } else
-            if(iVer > UDF_CURRENT_BUILD) {
-                KdPrint(("Init: Detected newer build\n"));
-            } else
-            if(UDFGetTrialEnd((PULONG)&iVer)) {
-                KdPrint(("UDFGetTrialEnd() read TRUE from Registry !!!\n"));
-            } else {
-                iTime += TIME_JAN_1_2003;
-                KdPrint(("cTime = %x, iTime = %x\n", t2, iTime));
-                if((ULONG)t2 < (ULONG)iTime) {
-                    KdPrint(("Eval time expired: System (%x) < Install (%x)\n",
-                              t2, iTime));
-                } else
-                if((ULONG)t2 > (ULONG)iTime + EVALUATION_TERM) {
-                    KdPrint(("Eval time expired above EVALUATION_TERM: System (%x) > Install+Eval (%x)\n",
-                              t2, iTime+EVALUATION_TERM));
-                } else
-                if((iTime >> 2) & (0x80000000 >> 2)) {
-                    KdPrint(("Eval time expired (negative install time)\n"));
-                } else {
-                    j = 4;
-                }
-            }
-            KdPrint(("Eval time %s\n", j == 4 ? "ok" : "failed"));
-            //RC = STATUS_SUCCESS;
-        }
-    }
-
-    UDFGlobalData.Saved_j = j;
-
-    {
-        PIO_STACK_LOCATION  IrpSp = NULL;
-        PVCB Vcb;
-        PLIST_ENTRY Link;
-        PPREVENT_MEDIA_REMOVAL_USER_IN Buf = NULL;
-
-        // Acquire GlobalDataResource
-        UDFAcquireResourceExclusive(&(UDFGlobalData.GlobalDataResource), TRUE);
-        // Walk through all of the Vcb's attached to the global data.
-        Link = UDFGlobalData.VCBQueue.Flink;
-
-        while (Link != &(UDFGlobalData.VCBQueue)) {
-            // Get 'next' Vcb
-            Vcb = CONTAINING_RECORD( Link, VCB, NextVCB );
-            // Move to the next link now
-            Link = Link->Flink;
-            ASSERT(Link != Link->Flink);
-
-            if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_SHUTDOWN)) {
-
-                UDFAcquireResourceExclusive(&(Vcb->VCBResource), TRUE);
-                if(j!=4) {
-                    KdPrint(("DevCtl: unregistered\n"));
-                    if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY)) {
-                        Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-                    }
-                    UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-                } else {
-                    KdPrint(("DevCtl: registered :)\n"));
-                    if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_MEDIA_READ_ONLY)) {
-                        Vcb->VCBFlags &= ~UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-                    }
-                    UDFGlobalData.UDFFlags &= ~UDF_DATA_FLAGS_UNREGISTERED;
-                }
-                UDFReleaseResource(&(Vcb->VCBResource));
-            }
-        }
-        if(j == 4) {
-            KdPrint(("DevCtl: registered (2)\n"));
-            UDFGlobalData.UDFFlags &= ~UDF_DATA_FLAGS_UNREGISTERED;
-        } else {
-            KdPrint(("DevCtl: unregistered (2)\n"));
-            UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-        }
-        // Once we have processed all the mounted logical volumes, we can release
-        // all acquired global resources and leave (in peace :-)
-        UDFReleaseResource( &(UDFGlobalData.GlobalDataResource) );
-    }
-
-    if(j == 4) {
-        KdPrint(("DevCtl: registered (3)\n"));
-        RtlCopyMemory(UDFGlobalData.LicenseKeyW, LicenseKeyW, 16*sizeof(WCHAR));
-        UDFGlobalData.UDFFlags &= ~UDF_DATA_FLAGS_UNREGISTERED;
-    } else {
-        WCHAR s[16];
-        ULONG type, sz;
-        ULONG d;
-        PVOID pdata;
-        NTSTATUS RC;
-
-        KdPrint(("DevCtl: unregistered (3): Write BIAKAs to Registry\n"));
-        UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-
-        // End of trial
-        d = 1 ^ XOR_VAR(TrialEnd, 0);
-        swprintf(s, L"0x%8.8x\0", d);
-        GET_TRIAL_REG_KEY_NAME(RegPath, 0);
-        GET_TRIAL_REG_VAL_NAME(RegKeyName, 0);
-        type = GET_XXX_REG_VAL_TYPE(TRIAL, 0) ? REG_SZ : REG_DWORD;
-        pdata = GET_XXX_REG_VAL_TYPE(TRIAL, 0) ? (PVOID)s : (PVOID)&d;
-        sz = GET_XXX_REG_VAL_TYPE(TRIAL, 0) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-        KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-        RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                              RegPath, RegKeyName,
-                              type, pdata, sz );
-        KdPrint(("status %#x\n", RC));
-        d = 1 ^ XOR_VAR(TrialEnd, 1);
-        swprintf(s, L"0x%8.8x\0", d);
-        GET_TRIAL_REG_KEY_NAME(RegPath, 1);
-        GET_TRIAL_REG_VAL_NAME(RegKeyName, 1);
-        type = GET_XXX_REG_VAL_TYPE(TRIAL, 1) ? REG_SZ : REG_DWORD;
-        pdata = GET_XXX_REG_VAL_TYPE(TRIAL, 1) ? (PVOID)s : (PVOID)&d;
-        sz = GET_XXX_REG_VAL_TYPE(TRIAL, 1) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-        KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-        RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                              RegPath, RegKeyName,
-                              type, pdata, sz );
-        KdPrint(("status %#x\n", RC));
-        // Install Date
-        if(!TrialEndOnStart) {
-            d = UDFGlobalData.iTime ^ XOR_VAR(Date, 0);
-            swprintf(s, L"0x%8.8x\0", d);
-            GET_DATE_REG_KEY_NAME(RegPath, 0);
-            GET_DATE_REG_VAL_NAME(RegKeyName, 0);
-            type = GET_XXX_REG_VAL_TYPE(DATE, 0) ? REG_SZ : REG_DWORD;
-            pdata = GET_XXX_REG_VAL_TYPE(DATE, 0) ? (PVOID)s : (PVOID)&d;
-            sz = GET_XXX_REG_VAL_TYPE(DATE, 0) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-            if(PresentDateMask & (1 << 0)) {
-                KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-                RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                                      RegPath, RegKeyName,
-                                      type, pdata, sz );
-                KdPrint(("status %#x\n", RC));
-            }
-            d = UDFGlobalData.iTime ^ XOR_VAR(Date, 1);
-            swprintf(s, L"0x%8.8x\0", d);
-            GET_DATE_REG_KEY_NAME(RegPath, 1);
-            GET_DATE_REG_VAL_NAME(RegKeyName, 1);
-            type = GET_XXX_REG_VAL_TYPE(DATE, 1) ? REG_SZ : REG_DWORD;
-            pdata = GET_XXX_REG_VAL_TYPE(DATE, 1) ? (PVOID)s : (PVOID)&d;
-            sz = GET_XXX_REG_VAL_TYPE(DATE, 1) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-            if(PresentDateMask & (1 << 1)) {
-                KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-                RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                                      RegPath, RegKeyName,
-                                      type, pdata, sz );
-                KdPrint(("status %#x\n", RC));
-            }
-        }
-        // Highest version
-        d = UDFGlobalData.iVer ^ XOR_VAR(Version, 0);
-        swprintf(s, L"0x%8.8x\0", d);
-        GET_VERSION_REG_KEY_NAME(RegPath, 0);
-        GET_VERSION_REG_VAL_NAME(RegKeyName, 0);
-        type = GET_XXX_REG_VAL_TYPE(VERSION, 0) ? REG_SZ : REG_DWORD;
-        pdata = GET_XXX_REG_VAL_TYPE(VERSION, 0) ? (PVOID)s : (PVOID)&d;
-        sz = GET_XXX_REG_VAL_TYPE(VERSION, 0) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-        KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-        RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                              RegPath, RegKeyName,
-                              type, pdata, sz );
-        KdPrint(("status %#x\n", RC));
-        d = UDFGlobalData.iVer ^ XOR_VAR(Version, 1);
-        swprintf(s, L"0x%8.8x\0", d);
-        GET_VERSION_REG_KEY_NAME(RegPath, 1);
-        GET_VERSION_REG_VAL_NAME(RegKeyName, 1);
-        type = GET_XXX_REG_VAL_TYPE(VERSION, 1) ? REG_SZ : REG_DWORD;
-        pdata = GET_XXX_REG_VAL_TYPE(VERSION, 1) ? (PVOID)s : (PVOID)&d;
-        sz = GET_XXX_REG_VAL_TYPE(VERSION, 1) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-        KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-        RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                              RegPath, RegKeyName,
-                              type, pdata, sz );
-        KdPrint(("status %#x\n", RC));
-    }
-    return RC;
-} // end UDFProcessLicenseKey()
-
-#endif //EVALUATION_TIME_LIMIT

@@ -520,8 +520,7 @@ UDFFlushLogicalVolume(
         if(Vcb->VCBFlags & (UDF_VCB_FLAGS_RAW_DISK/* |
                             UDF_VCB_FLAGS_MEDIA_READ_ONLY*/))
             return 0;
-        if((Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) &&
-           !(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED))
+        if(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY)
             return 0;
         if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_MOUNTED))
             return 0;

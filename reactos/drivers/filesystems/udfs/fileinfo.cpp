@@ -200,12 +200,6 @@ UDFCommonFileInfo(
         ASSERT(Fcb->NodeIdentifier.NodeType == UDF_NODE_TYPE_FCB);
         //Vcb->VCBFlags |= UDF_VCB_SKIP_EJECT_CHECK;
 
-#ifdef EVALUATION_TIME_LIMIT
-        if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-            Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-        }
-#endif //EVALUATION_TIME_LIMIT
-
         // The NT I/O Manager always allocates and supplies a system
         // buffer for query and set file information calls.
         // Copying information to/from the user buffer and the system
@@ -648,11 +642,7 @@ UDFGetStandardInformation(
         Vcb = Fcb->Vcb;
         PtrBuffer->NumberOfLinks = UDFGetFileLinkCount(FileInfo);
         PtrBuffer->DeletePending = (Fcb->FCBFlags & UDF_FCB_DELETE_ON_CLOSE) ? TRUE : FALSE;
-#ifdef EVALUATION_TIME_LIMIT
-        if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-            Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-        }
-#endif //EVALUATION_TIME_LIMIT
+
         //  Case on whether this is a file or a directory, and extract
         //  the information and fill in the fcb/dcb specific parts
         //  of the output buffer

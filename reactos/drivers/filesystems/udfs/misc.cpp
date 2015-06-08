@@ -55,7 +55,6 @@ UDFInitializeZones(VOID)
 
         // determine memory requirements
         switch (MmQuerySystemSize()) {
-#ifndef DEMO
         case MmMediumSystem:
             SizeOfObjectNameZone = (4 * SizeOfZone * UDFQuadAlign(sizeof(UDFObjectName))) + sizeof(ZONE_SEGMENT_HEADER);
             SizeOfCCBZone = (4 * SizeOfZone * UDFQuadAlign(sizeof(UDFCCB))) + sizeof(ZONE_SEGMENT_HEADER);
@@ -82,7 +81,6 @@ UDFInitializeZones(VOID)
             UDFGlobalData.WCacheBlocksPerFrameSh = 8;
             UDFGlobalData.WCacheFramesToKeepFree = 8;
             break;
-#endif //DEMO
         case MmSmallSystem:
         default:
             SizeOfObjectNameZone = (2 * SizeOfZone * UDFQuadAlign(sizeof(UDFObjectName))) + sizeof(ZONE_SEGMENT_HEADER);
@@ -1303,12 +1301,10 @@ UDFCommonDispatch(
                 RC = UDFCommonQueryVolInfo(PtrIrpContext, Irp);
                 break;
 #ifndef UDF_READ_ONLY_BUILD
-#ifndef DEMO // release
             case IRP_MJ_SET_VOLUME_INFORMATION:
                 // Invoke the common query volume routine
                 RC = UDFCommonSetVolInfo(PtrIrpContext, Irp);
                 break;
-#endif // DEMO
 #endif //UDF_READ_ONLY_BUILD
 #ifdef UDF_HANDLE_EAS
 /*            case IRP_MJ_QUERY_EA:
@@ -1326,12 +1322,10 @@ UDFCommonDispatch(
                 RC = UDFCommonGetSecurity(PtrIrpContext, Irp);
                 break;
 #ifndef UDF_READ_ONLY_BUILD
-#ifndef DEMO // release
             case IRP_MJ_SET_SECURITY:
                 // Invoke the common set Security routine
                 RC = UDFCommonSetSecurity(PtrIrpContext, Irp);
                 break;
-#endif // DEMO
 #endif //UDF_READ_ONLY_BUILD
 #endif // UDF_ENABLE_SECURITY
             // Continue with the remaining possible dispatch routines below ...

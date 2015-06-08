@@ -21,10 +21,6 @@ Abstract:
 // define the file specific bug-check id
 #define         UDF_BUG_CHECK_ID                UDF_FILE_VOL_INFORMATION
 
-#ifdef DEMO
-PWCHAR DemoVolIdent = UDF_DEMO_VOLUME_LABEL;
-#endif // DEMO
-
 //  Local support routines
 NTSTATUS
 UDFQueryFsVolumeInfo (
@@ -313,11 +309,7 @@ UDFQueryFsVolumeInfo(
     KdPrint(("  UDFQueryFsVolumeInfo: \n"));
     //  Fill in the data from the Vcb.
     Buffer->VolumeCreationTime.QuadPart = Vcb->VolCreationTime;
-#ifndef DEMO // release
     Buffer->VolumeSerialNumber = Vcb->PhSerialNumber;
-#else   // DEMO
-    Buffer->VolumeSerialNumber = 0xDE1770;
-#endif  // DEMO
     KdPrint(("  SN %x\n", Vcb->PhSerialNumber));
 
     Buffer->SupportsObjects = FALSE;
@@ -326,11 +318,7 @@ UDFQueryFsVolumeInfo(
 
     //  Check if the buffer we're given is long enough
     if (*Length >= (ULONG) Vcb->VolIdent.Length) {
-#ifndef DEMO // release
         BytesToCopy = Vcb->VolIdent.Length;
-#else   // DEMO
-        BytesToCopy = sizeof(UDF_DEMO_VOLUME_LABEL) - sizeof(WCHAR);
-#endif  // DEMO
         Status = STATUS_SUCCESS;
     } else {
         BytesToCopy = *Length;
@@ -340,11 +328,7 @@ UDFQueryFsVolumeInfo(
     Buffer->VolumeLabelLength = BytesToCopy;
 
     if (BytesToCopy)
-#ifndef DEMO // release
         RtlCopyMemory( &(Buffer->VolumeLabel[0]), Vcb->VolIdent.Buffer, BytesToCopy );
-#else   // DEMO
-        RtlCopyMemory( &(Buffer->VolumeLabel[0]), DemoVolIdent, BytesToCopy );
-#endif  // DEMO
     *Length -= BytesToCopy;
 
     return Status;
@@ -618,7 +602,6 @@ UDFQueryFsAttributeInfo(
 
 
 #ifndef UDF_READ_ONLY_BUILD
-#ifndef DEMO // release
 
 NTSTATUS
 NTAPI
@@ -827,5 +810,4 @@ UDFSetLabelInfo (
     return STATUS_SUCCESS;
 } // end UDFSetLabelInfo ()
 
-#endif // DEMO
 #endif //UDF_READ_ONLY_BUILD

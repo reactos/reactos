@@ -577,9 +577,6 @@ typedef struct _UDFData {
     //  type of zone (e.g. a default size for the FCB zone might be
     //  different from the default size for the ByteLock zone).
 
-#ifdef EVALUATION_TIME_LIMIT
-    UDF_KEY_LIST                CurrentKeyHash;
-#endif //EVALUATION_TIME_LIMIT
     //  Of course, you will need to use different values (min/max)
     //  for lookaside lists (if you decide to use them instead)
     uint32                      DefaultZoneSizeInNumStructs;
@@ -589,9 +586,6 @@ typedef struct _UDFData {
 //    ERESOURCE                   IsSyncResource;
     // Is operation synchronous flag
 //    BOOLEAN                     IsSync;
-#ifdef EVALUATION_TIME_LIMIT
-    ULONG                       Saved_j;
-#endif //EVALUATION_TIME_LIMIT
 
     // delayed close support
     ERESOURCE                   DelayedCloseResource;
@@ -610,19 +604,11 @@ typedef struct _UDFData {
     BOOLEAN                     ReduceDelayedClose;
     BOOLEAN                     ReduceDirDelayedClose;
 
-#ifdef EVALUATION_TIME_LIMIT
-    LARGE_INTEGER               UDFCurrentTime;
-#endif //EVALUATION_TIME_LIMIT
     ULONG                       CPU_Count;
     LARGE_INTEGER               UDFLargeZero;
 
     // mount event (for udf gui app)
     PKEVENT                     MountEvent;
-
-#ifdef EVALUATION_TIME_LIMIT
-    WCHAR                       LicenseKeyW[16+1];
-    WCHAR                       LKPadding[1];
-#endif //EVALUATION_TIME_LIMIT
 
 #endif //_UDF_STRUCTURES_H_
     //HKEY                        hUdfRootKey;
@@ -631,20 +617,11 @@ typedef struct _UDFData {
     UNICODE_STRING              UnicodeStrSDir;
     UNICODE_STRING              AclName;
 //    WCHAR                       UnicodeStrRootBuffer[2];
-#ifdef EVALUATION_TIME_LIMIT
-    ULONG                       iTime;
-    ULONG                       iVer;
-    ULONG                       iTrial;
-#endif //EVALUATION_TIME_LIMIT
 
     ULONG                       WCacheMaxFrames;
     ULONG                       WCacheMaxBlocks;
     ULONG                       WCacheBlocksPerFrameSh;
     ULONG                       WCacheFramesToKeepFree;
-
-#ifdef EVALUATION_TIME_LIMIT
-    UCHAR                       Page2Padding[PAGE_SIZE];
-#endif //EVALUATION_TIME_LIMIT
 
     // some state information is maintained in the flags field
     uint32                      UDFFlags;
@@ -657,7 +634,6 @@ typedef struct _UDFData {
 #define     UDF_DATA_FLAGS_RESOURCE_INITIALIZED     (0x00000001)
 #define     UDF_DATA_FLAGS_ZONES_INITIALIZED        (0x00000002)
 #define     UDF_DATA_FLAGS_BEING_UNLOADED           (0x00000004)
-#define     UDF_DATA_FLAGS_UNREGISTERED             (0x00000008)
 
 /**/
 

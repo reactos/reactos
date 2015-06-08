@@ -24,55 +24,6 @@
 // global variables are declared here
 UDFData                 UDFGlobalData;
 
-#ifdef EVALUATION_TIME_LIMIT
-
-ULONG   PresentDateMask = 0;
-BOOLEAN TrialEndOnStart = FALSE;
-
-#define UDF_MD5Init      UDF_MD5Init2
-#define UDF_MD5Update    UDF_MD5Update2
-#define UDF_MD5Pad       UDF_MD5Pad2
-#define UDF_MD5Final     UDF_MD5Final2
-#define UDF_MD5End       UDF_MD5End2
-#define UDF_MD5Transform UDF_MD5Transform2
-#define UDF_Encode       UDF_Encode2
-#define UDF_Decode       UDF_Decode2
-#define PADDING          PADDING2
-
-#define ROTATE_LEFT      ROTATE_LEFT2
-#define FF               FF2
-#define GG               GG2
-#define HH               HH2
-#define II               II2
-
-#define UDF_MD5Transform_dwords   UDF_MD5Transform_dwords2
-#define UDF_MD5Transform_idx      UDF_MD5Transform_idx2
-#define UDF_MD5Transform_Sxx      UDF_MD5Transform_Sxx2
-#define UDF_MD5Rotate             UDF_MD5Rotate2
-
-#include "..\Include\md5.h"
-#include "..\Include\md5c.c"
-
-#define UDF_FibonachiNum UDF_FibonachiNum2
-#define XPEHb            XPEHb2
-#define UDF_build_long_key    UDF_build_long_key2
-#define UDF_build_hash_by_key UDF_build_hash_by_key2
-
-#include "..\Include\key_lib.h"
-#include "..\Include\key_lib.cpp"
-
-extern ULONG UDFNumberOfKeys;
-extern PCHAR pUDFLongKey;
-extern PUDF_KEY_LIST pUDFKeyList;
-extern PUCHAR pRegKeyName0;
-
-#include "..\Include\protect.h"
-#define INCLUDE_XOR_DECL_ONLY
-#include "..\Include\protect.h"
-#undef INCLUDE_XOR_DECL_ONLY
-
-#endif //EVALUATION_TIME_LIMIT
-
 #define KD_PREFIX
 
 struct UDF_MEDIA_CLASS_NAMES UDFMediaClassName[] = {
@@ -150,31 +101,13 @@ DriverEntry(
 //    UNICODE_STRING  unicodeCdRomDeviceName;
     PUDFFS_DEV_EXTENSION FSDevExt;
     HKEY            hUdfRootKey;
-#ifdef EVALUATION_TIME_LIMIT
-    WCHAR           RegPath[128];
-    WCHAR           RegKeyName[64];
-    CHAR            LicenseKey[16+1];
-    ULONG           iVer;
-
-    ULONG i, j;
-    int checksum[4] = {0,0,0,0};
-#else
     LARGE_INTEGER   delay;
-#endif //EVALUATION_TIME_LIMIT
 
 //    KdPrint(("UDF: Entered " VER_STR_PRODUCT_NAME " UDF DriverEntry \n"));
 //    KdPrint((KD_PREFIX "Build " VER_STR_PRODUCT "\n"));
 
-#ifdef EVALUATION_TIME_LIMIT
-    BrutePoint();
-#endif //EVALUATION_TIME_LIMIT
-
     _SEH2_TRY {
         _SEH2_TRY {
-
-#ifdef EVALUATION_TIME_LIMIT
-            LARGE_INTEGER cTime;
-#endif //EVALUATION_TIME_LIMIT
 
 /*
             CrNtInit(DriverObject, RegistryPath);
@@ -193,159 +126,6 @@ DriverEntry(
             // initialize some required fields
             UDFGlobalData.NodeIdentifier.NodeType = UDF_NODE_TYPE_GLOBAL_DATA;
             UDFGlobalData.NodeIdentifier.NodeSize = sizeof(UDFGlobalData);
-
-#ifdef EVALUATION_TIME_LIMIT
-
-            KeQuerySystemTime((PLARGE_INTEGER)&cTime);
-
-            {
-                uint64 t, t2;
-                t = cTime.QuadPart / 100;
-                t /= 60;
-                t /= 200*120*24;
-                t /= 250;
-                t2 = (int32)t;
-                KdPrint((KD_PREFIX "t2 = %x\n", t2));
-                if(t2-TIME_JAN_1_2003 > UDF_MAX_DATE ||
-                   t2-TIME_JAN_1_2003 < UDF_MIN_DATE) {
-                    KdPrint((KD_PREFIX "Ssytem time is out of range: %x <= %x <= %x\n",
-                            UDF_MIN_DATE, (uint32)t2-TIME_JAN_1_2003, UDF_MAX_DATE));
-                    UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-                }
-            }
-
-            if(UDFGetTrialEnd(&iVer)) {
-                TrialEndOnStart = TRUE;
-                KdPrint((KD_PREFIX "Eval time expired some time ago\n"));
-                UDFGlobalData.UDFFlags = (UDFGlobalData.UDFFlags & ~UDF_DATA_FLAGS_UNREGISTERED) + UDF_DATA_FLAGS_UNREGISTERED;
-            }
-            cTime.QuadPart /= (10*1000*1000);
-            cTime.QuadPart /= (60*60*24);
-
-            KdPrint((KD_PREFIX "cTime = %x, jTime = %x\n", cTime.LowPart, TIME_JAN_1_2003));
-            if(cTime.QuadPart < TIME_JAN_1_2003) {
-                KdPrint((KD_PREFIX "System time %x < TIME_JAN_1_2003\n", cTime.LowPart));
-                UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-            }
-            cTime.LowPart -= TIME_JAN_1_2003;
-            KdPrint(("cTime = %x\n", cTime.LowPart));
-
-            if(!UDFGetInstallVersion((PULONG)&iVer) ||
-               !UDFGetInstallTime((PULONG)&cTime.HighPart)) {
-                KdPrint((KD_PREFIX "UDFGetInstallTime() or UDFGetInstallVersion() failed\n"));
-                UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-            } else {
-                KdPrint((KD_PREFIX "cTime = %x, iTime = %x\n", cTime.LowPart, cTime.HighPart));
-                if(iVer > UDF_CURRENT_BUILD) {
-                    KdPrint(("Init: Detected newer build (0)\n"));
-                    UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-                }
-                if((ULONG)cTime.LowPart < (ULONG)cTime.HighPart) {
-                    KdPrint(("Eval time expired: current (%x) < install (%x)\n",
-                             cTime.LowPart, cTime.HighPart));
-                    UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-                }
-                if((ULONG)cTime.LowPart > (ULONG)cTime.HighPart + EVALUATION_TERM) {
-                    KdPrint(("Eval time expired above EVALUATION_TERM\n"));
-                    UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-                }
-                if((cTime.HighPart >> 16) & 0x8000) {
-                    KdPrint(("Eval time expired (negative install time)\n"));
-                    UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-                }
-            }
-            if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-                WCHAR s[16];
-                ULONG type, sz;
-                ULONG d;
-                PVOID pdata;
-
-                KdPrint(("Init: unregistered (3). Write BIAKAs to Registry\n"));
-                UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-
-                // End of trial
-                d = 1 ^ XOR_VAR(TrialEnd, 0);
-                swprintf(s, L"0x%8.8x\0", d);
-                GET_TRIAL_REG_KEY_NAME(RegPath, 0);
-                GET_TRIAL_REG_VAL_NAME(RegKeyName, 0);
-                type = GET_XXX_REG_VAL_TYPE(TRIAL, 0) ? REG_SZ : REG_DWORD;
-                pdata = GET_XXX_REG_VAL_TYPE(TRIAL, 0) ? (PVOID)s : (PVOID)&d;
-                sz = GET_XXX_REG_VAL_TYPE(TRIAL, 0) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-                KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-                RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                                      RegPath, RegKeyName,
-                                      type, pdata, sz );
-                KdPrint(("status %#x\n", RC));
-                d = 1 ^ XOR_VAR(TrialEnd, 1);
-                swprintf(s, L"0x%8.8x\0", d);
-                GET_TRIAL_REG_KEY_NAME(RegPath, 1);
-                GET_TRIAL_REG_VAL_NAME(RegKeyName, 1);
-                type = GET_XXX_REG_VAL_TYPE(TRIAL, 1) ? REG_SZ : REG_DWORD;
-                pdata = GET_XXX_REG_VAL_TYPE(TRIAL, 1) ? (PVOID)s : (PVOID)&d;
-                sz = GET_XXX_REG_VAL_TYPE(TRIAL, 1) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-                KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-                RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                                      RegPath, RegKeyName,
-                                      type, pdata, sz );
-                KdPrint(("status %#x\n", RC));
-                // Install Date
-                if(!TrialEndOnStart) {
-                    d = UDFGlobalData.iTime ^ XOR_VAR(Date, 0);
-                    swprintf(s, L"0x%8.8x\0", d);
-                    GET_DATE_REG_KEY_NAME(RegPath, 0);
-                    GET_DATE_REG_VAL_NAME(RegKeyName, 0);
-                    type = GET_XXX_REG_VAL_TYPE(DATE, 0) ? REG_SZ : REG_DWORD;
-                    pdata = GET_XXX_REG_VAL_TYPE(DATE, 0) ? (PVOID)s : (PVOID)&d;
-                    sz = GET_XXX_REG_VAL_TYPE(DATE, 0) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-                    if(!(PresentDateMask & (1 << 0))) {
-                        KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-                        RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                                              RegPath, RegKeyName,
-                                              type, pdata, sz );
-                        KdPrint(("status %#x\n", RC));
-                    }
-                    d = UDFGlobalData.iTime ^ XOR_VAR(Date, 1);
-                    swprintf(s, L"0x%8.8x\0", d);
-                    GET_DATE_REG_KEY_NAME(RegPath, 1);
-                    GET_DATE_REG_VAL_NAME(RegKeyName, 1);
-                    type = GET_XXX_REG_VAL_TYPE(DATE, 1) ? REG_SZ : REG_DWORD;
-                    pdata = GET_XXX_REG_VAL_TYPE(DATE, 1) ? (PVOID)s : (PVOID)&d;
-                    sz = GET_XXX_REG_VAL_TYPE(DATE, 1) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-                    if(!(PresentDateMask & (1 << 1))) {
-                        KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-                        RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                                              RegPath, RegKeyName,
-                                              type, pdata, sz );
-                        KdPrint(("status %#x\n", RC));
-                    }
-                }
-                // Highest version
-                d = UDFGlobalData.iVer ^ XOR_VAR(Version, 0);
-                swprintf(s, L"0x%8.8x\0", d);
-                GET_VERSION_REG_KEY_NAME(RegPath, 0);
-                GET_VERSION_REG_VAL_NAME(RegKeyName, 0);
-                type = GET_XXX_REG_VAL_TYPE(VERSION, 0) ? REG_SZ : REG_DWORD;
-                pdata = GET_XXX_REG_VAL_TYPE(VERSION, 0) ? (PVOID)s : (PVOID)&d;
-                sz = GET_XXX_REG_VAL_TYPE(VERSION, 0) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-                KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-                RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                                      RegPath, RegKeyName,
-                                      type, pdata, sz );
-                KdPrint(("status %#x\n", RC));
-                d = UDFGlobalData.iVer ^ XOR_VAR(Version, 1);
-                swprintf(s, L"0x%8.8x\0", d);
-                GET_VERSION_REG_KEY_NAME(RegPath, 1);
-                GET_VERSION_REG_VAL_NAME(RegKeyName, 1);
-                type = GET_XXX_REG_VAL_TYPE(VERSION, 1) ? REG_SZ : REG_DWORD;
-                pdata = GET_XXX_REG_VAL_TYPE(VERSION, 1) ? (PVOID)s : (PVOID)&d;
-                sz = GET_XXX_REG_VAL_TYPE(VERSION, 1) ? (10+1+1)*sizeof(WCHAR) : sizeof(d);
-                KdPrint(("%ws\n  %ws\n", RegPath, RegKeyName));
-                RC = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
-                                      RegPath, RegKeyName,
-                                      type, pdata, sz );
-                KdPrint(("status %#x\n", RC));
-            }
-#endif //EVALUATION_TIME_LIMIT
 
             // initialize the global data resource and remember the fact that
             //  the resource has been initialized
@@ -430,9 +210,6 @@ DriverEntry(
             UDFInitializeFunctionPointers(DriverObject);
 
             UDFGlobalData.CPU_Count = KeNumberProcessors;
-#ifdef EVALUATION_TIME_LIMIT
-            UDFGlobalData.Saved_j = 4;
-#endif //EVALUATION_TIME_LIMIT
 
             // create a device object representing the driver itself
             //  so that requests can be targeted to the driver ...
@@ -548,56 +325,8 @@ DriverEntry(
 //            delay.QuadPart = -10000000;
 //            KeDelayExecutionThread(KernelMode, FALSE, &delay);        //10 microseconds
 
-#ifdef EVALUATION_TIME_LIMIT
-            // Build Registry Value name for License Key 
-            for(i=0; i<UDFNumberOfKeys; i++) {
-                for(j=0; j<4; j++) {
-                    checksum[j] += pUDFKeyList[i].d[j];
-                }
-            }
-
-            // Read Key
-            for(i=0; i<sizeof(UDF_LICENSE_KEY_USER)-1; i++) {
-                RegKeyName[i] = pRegKeyName0[(i*sizeof(UDF_LICENSE_KEY_USER))] ^ (UCHAR)(checksum[i%4] ^ (checksum[i%4] >> 16));
-            }
-            RegKeyName[i] = 0;
-
-//            RtlZeroMemory(UDFGlobalData.LicenseKeyW, sizeof(UDFGlobalData.LicenseKeyW));
-            RegTGetStringValue(hUdfRootKey, NULL,
-                                              RegKeyName, UDFGlobalData.LicenseKeyW, (16+1)*sizeof(WCHAR));
-//                UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-//            }
-            RegTCloseKeyHandle(hUdfRootKey);
-
-            UDFGlobalData.LicenseKeyW[16] = 0;
-            // convert WCHAR Key to CHAR key
-            for(i=0; i<16; i++) {
-                LicenseKey[i] = (UCHAR)(UDFGlobalData.LicenseKeyW[i]);
-            }
-
-            // build hash
-            UDF_build_hash_by_key(pUDFLongKey, UDF_LONG_KEY_SIZE, (PCHAR)&(UDFGlobalData.CurrentKeyHash), LicenseKey);
-            // check if it is correct
-            for(i=0; i<UDFNumberOfKeys; i++) {
-                for(j=0; j<4; j++) {
-                    if(pUDFKeyList[i].d[j] ^ UDFGlobalData.CurrentKeyHash.d[j]) {
-                        break;
-                    }
-                }
-                if(j==4)
-                    break;
-            }
-            if((UDFGlobalData.Saved_j = j) == 4) {
-                UDFGlobalData.UDFFlags &= ~UDF_DATA_FLAGS_UNREGISTERED;
-            } else {
-                if(!(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED)) {
-                    UDFGlobalData.Saved_j = 4;
-                }
-            }
-#else //EVALUATION_TIME_LIMIT
            delay.QuadPart = -10000000; // 1 sec
            KeDelayExecutionThread(KernelMode, FALSE, &delay);
-#endif //EVALUATION_TIME_LIMIT
 
 #if 0
             if(!WinVer_IsNT) {
@@ -764,9 +493,7 @@ UDFInitializeFunctionPointers(
     // functions.
     DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = UDFQueryVolInfo;
 #ifndef UDF_READ_ONLY_BUILD
-#ifndef DEMO
     DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = UDFSetVolInfo;
-#endif //DEMO
 #endif //UDF_READ_ONLY_BUILD
     DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]   = UDFDirControl;
     // To implement support for file system IOCTL calls, enable initialization
@@ -790,9 +517,7 @@ UDFInitializeFunctionPointers(
 #ifdef UDF_ENABLE_SECURITY
     DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY]   = UDFGetSecurity;
 #ifndef UDF_READ_ONLY_BUILD
-#ifndef DEMO
     DriverObject->MajorFunction[IRP_MJ_SET_SECURITY]     = UDFSetSecurity;
-#endif //DEMO
 #endif //UDF_READ_ONLY_BUILD
 #endif //UDF_ENABLE_SECURITY
 
@@ -1169,254 +894,3 @@ UDFRemountAll(
         if (!NT_SUCCESS(RC)) break;
     }
 }*/
-
-
-#ifdef EVALUATION_TIME_LIMIT
-
-BOOLEAN
-UDFGetInstallVersion(
-    PULONG iVer
-    )
-{
-    WCHAR RegPath[128];
-    WCHAR RegVal[64];
-    WCHAR Str[32];
-    ULONG i, j;
-    ULONG a, v;
-    ULONG type;
-    ULONG sz;
-
-    KdPrint((KD_PREFIX "UDFGetInstallVersion:\n"));
-
-    (*iVer) = UDF_CURRENT_BUILD;
-    for(j=0; j<UDF_INSTALL_INFO_LOCATIONS; j++) {
-        RtlZeroMemory(Str, sizeof(Str));
-        switch(j) {
-        case 0: GET_VERSION_REG_KEY_NAME(RegPath, 0); break;
-        case 1: GET_VERSION_REG_KEY_NAME(RegPath, 1); break;
-        }
-        v = 0;
-        switch(j) {
-        case 0: GET_VERSION_REG_VAL_NAME(RegVal, 0); break;
-        case 1: GET_VERSION_REG_VAL_NAME(RegVal, 1); break;
-        }
-        type = 0;
-        if(j) {
-            type = GET_XXX_REG_VAL_TYPE(VERSION, 1);
-        } else {
-            type = GET_XXX_REG_VAL_TYPE(VERSION, 0);
-        }
-        if(!type &&
-            RegTGetDwordValue(NULL, RegPath, RegVal, &v)) {
-            // ok
-            KdPrint((KD_PREFIX "val: %x\n", v));
-            goto de_xor;
-        } else
-        if(type &&
-           (sz = 30) &&
-           RegTGetStringValue(NULL, RegPath, RegVal,
-                                         &Str[0], sz) &&
-           wcslen(Str) == 10)
-        {
-            for(i=2; i<10; i++) {
-                if(Str[i] >= 'a' && Str[i] <= 'f') {
-                    a = 10 + Str[i] - 'a';
-                } else {
-                    a = Str[i] - '0';
-                }
-                KdPrint((KD_PREFIX "val: %x\n", a));
-                v *= 16;
-                v += a;
-            }
-de_xor:
-            switch(j) {
-            case 0: v ^= XOR_VAR(Version, 0); break;
-            case 1: v ^= XOR_VAR(Version, 1); break;
-            }
-            if(v & 0x80000000)
-                continue;
-            if((*iVer) == -1 || (*iVer) < v) {
-                (*iVer) = v;
-            }
-            UDFGlobalData.iVer = (*iVer);
-        }
-    }
-    UDFGlobalData.iVer = (*iVer);
-/*    if(UDFGlobalData.iVer == -1)
-        return FALSE;*/
-    KdPrint((KD_PREFIX "ret val: %x\n", *iVer));
-    if((*iVer) > UDF_CURRENT_BUILD) {
-        return FALSE;
-    }
-    return TRUE;
-} // end UDFGetInstallVersion()
-
-BOOLEAN
-UDFGetInstallTime(
-    PULONG iTime
-    )
-{
-    WCHAR RegPath[128];
-    WCHAR RegVal[64];
-    WCHAR Str[32];
-    ULONG i, j;
-    ULONG a, v;
-    ULONG type;
-    ULONG sz;
-
-    KdPrint((KD_PREFIX "UDFGetInstallTime:\n"));
-
-    (*iTime) = -1;
-    for(j=0; j<UDF_INSTALL_INFO_LOCATIONS; j++) {
-        RtlZeroMemory(Str, sizeof(Str));
-        switch(j) {
-        case 0: GET_DATE_REG_KEY_NAME(RegPath, 0); break;
-        case 1: GET_DATE_REG_KEY_NAME(RegPath, 1); break;
-        }
-        v = 0;
-        switch(j) {
-        case 0: GET_DATE_REG_VAL_NAME(RegVal, 0); break;
-        case 1: GET_DATE_REG_VAL_NAME(RegVal, 1); break;
-        }
-        type = 0;
-        if(j) {
-            type = GET_XXX_REG_VAL_TYPE(DATE, 1);
-        } else {
-            type = GET_XXX_REG_VAL_TYPE(DATE, 0);
-        }
-        if(!type &&
-           RegTGetDwordValue(NULL, RegPath, RegVal, &v)) {
-           // ok
-            KdPrint((KD_PREFIX "val: %x\n", v));
-            goto de_xor;
-        } else
-        if(type &&
-           (sz = 30) &&
-           RegTGetStringValue(NULL, RegPath, RegVal,
-                                         &Str[0], sz) &&
-           wcslen(Str) == 10)
-        {
-            for(i=2; i<10; i++) {
-                if(Str[i] >= 'a' && Str[i] <= 'f') {
-                    a = 10 + Str[i] - 'a';
-                } else {
-                    a = Str[i] - '0';
-                }
-                KdPrint((KD_PREFIX "val: %x\n", a));
-                v *= 16;
-                v += a;
-            }
-de_xor:
-            switch(j) {
-            case 0: v ^= XOR_VAR(Date, 0); break;
-            case 1: v ^= XOR_VAR(Date, 1); break;
-            }
-            PresentDateMask |= 0x00000001 << j;
-            if(v & 0x80000000)
-                continue;
-            if((*iTime) == -1 || (*iTime) < v) {
-                (*iTime) = v;
-            }
-            UDFGlobalData.iTime = (*iTime);
-        }
-    }
-    UDFGlobalData.iTime = (*iTime);
-    if(UDFGlobalData.iTime == -1) {
-
-        LARGE_INTEGER cTime;
-        KeQuerySystemTime((PLARGE_INTEGER)&cTime);
-
-        cTime.QuadPart /= (10*1000*1000);
-        cTime.QuadPart /= (60*60*24);
-
-        KdPrint((KD_PREFIX "cTime = %x, jTime = %x\n", cTime.LowPart, TIME_JAN_1_2003));
-        if(cTime.QuadPart < TIME_JAN_1_2003) {
-            KdPrint((KD_PREFIX "Eval time expired (1)\n"));
-            UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-        }
-        cTime.LowPart -= TIME_JAN_1_2003;
-        KdPrint(("cTime = %x\n", cTime.LowPart));
-
-        UDFGlobalData.iTime = (*iTime) = cTime.LowPart;
-        return FALSE;
-    }
-    UDFGlobalData.iTime = (*iTime);
-    KdPrint((KD_PREFIX "ret val: %x\n", *iTime));
-    return TRUE;
-} // end UDFGetInstallTime()
-
-BOOLEAN
-UDFGetTrialEnd(
-    PULONG iTrial
-    )
-{
-    WCHAR RegPath[128];
-    WCHAR RegVal[64];
-    WCHAR Str[32];
-    ULONG i, j;
-    ULONG a, v;
-    ULONG type;
-    ULONG sz;
-
-    KdPrint((KD_PREFIX "UDFGetTrialEnd:\n"));
-
-    (*iTrial) = 0;
-    for(j=0; j<UDF_INSTALL_INFO_LOCATIONS; j++) {
-        RtlZeroMemory(Str, sizeof(Str));
-        switch(j) {
-        case 0: GET_TRIAL_REG_KEY_NAME(RegPath, 0); break;
-        case 1: GET_TRIAL_REG_KEY_NAME(RegPath, 1); break;
-        }
-        v = 0;
-        switch(j) {
-        case 0: GET_TRIAL_REG_VAL_NAME(RegVal, 0); break;
-        case 1: GET_TRIAL_REG_VAL_NAME(RegVal, 1); break;
-        }
-        type = 0;
-        if(j) {
-            type = GET_XXX_REG_VAL_TYPE(TRIAL, 1);
-        } else {
-            type = GET_XXX_REG_VAL_TYPE(TRIAL, 0);
-        }
-        if(!type &&
-           RegTGetDwordValue(NULL, RegPath, RegVal, &v)) {
-           // ok
-            KdPrint((KD_PREFIX "val: %x\n", v));
-            goto de_xor;
-        } else
-        if(type &&
-           (sz = 30) &&
-           RegTGetStringValue(NULL, RegPath, RegVal,
-                                         &Str[0], sz) &&
-           wcslen(Str) == 10)
-        {
-            for(i=2; i<10; i++) {
-                if(Str[i] >= 'a' && Str[i] <= 'f') {
-                    a = 10 + Str[i] - 'a';
-                } else {
-                    a = Str[i] - '0';
-                }
-                KdPrint((KD_PREFIX "val: %x\n", a));
-                v *= 16;
-                v += a;
-            }
-de_xor:
-            switch(j) {
-            case 0: v ^= XOR_VAR(TrialEnd, 0); break;
-            case 1: v ^= XOR_VAR(TrialEnd, 1); break;
-            }
-            if((*iTrial) < v) {
-                (*iTrial) = v;
-            }
-            if(UDFGlobalData.iTrial = (*iTrial)) {
-                return TRUE;
-            }
-        }
-    }
-    return FALSE;
-} // end UDFGetTrialEnd()
-
-#endif //EVALUATION_TRIAL_LIMIT
-
-
-

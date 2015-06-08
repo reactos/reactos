@@ -155,9 +155,6 @@ UDFCommonCleanup(
     PDIR_INDEX_HDR          DirNdx;
 #endif // UDF_DBG
 //    PUDF_DATALOC_INFO       Dloc;
-#ifdef EVALUATION_TIME_LIMIT
-    ULONG t;
-#endif //EVALUATION_TIME_LIMIT
 
     TmPrint(("UDFCommonCleanup\n"));
 
@@ -580,17 +577,6 @@ DiscardDelete:
                     ChangeTime = TRUE;
                 }
             }
-#ifdef EVALUATION_TIME_LIMIT
-            KeQuerySystemTime(&UDFGlobalData.UDFCurrentTime);
-            t = (ULONG)(UDFGlobalData.UDFCurrentTime.QuadPart / (10*1000*1000));
-            t /= (60*60*24);
-            if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-                if(t-TIME_JAN_1_2003 > UDF_MAX_DATE ||
-                   t-TIME_JAN_1_2003 < UDF_MIN_DATE) {
-                    Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-                }
-            }
-#endif //EVALUATION_TIME_LIMIT
             if(!(Fcb->FCBFlags & UDF_FCB_DIRECTORY)) {
                 // Update sizes in DirIndex
                 if(!Fcb->OpenHandleCount) {

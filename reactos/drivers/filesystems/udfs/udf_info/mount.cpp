@@ -921,8 +921,7 @@ UDFUmount__(
 #ifndef UDF_READ_ONLY_BUILD
     uint32 flags = 0;
 
-    if(((Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) &&
-       !(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED))
+    if((Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY)
         || !Vcb->Modified)
         return STATUS_SUCCESS;
     // prevent discarding metadata

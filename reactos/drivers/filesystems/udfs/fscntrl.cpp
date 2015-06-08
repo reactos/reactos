@@ -550,12 +550,6 @@ UDFMountVolume(
             try_return(RC);
         }
 
-#ifdef EVALUATION_TIME_LIMIT
-        if(UDFGlobalData.Saved_j != 4) {
-            UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-        }
-#endif //EVALUATION_TIME_LIMIT
-
         VolDo = NULL;
         Vpb = NULL;
 
@@ -626,11 +620,6 @@ UDFMountVolume(
         Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
         Vcb->VCBFlags |= UDF_VCB_FLAGS_MEDIA_READ_ONLY;
 #endif //UDF_READ_ONLY_BUILD
-#ifdef EVALUATION_TIME_LIMIT
-        if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-            Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-        }
-#endif //EVALUATION_TIME_LIMIT
 
         if(!NT_SUCCESS(RC)) {
             KdPrint(("UDFMountVolume: try raw mount\n"));
@@ -866,12 +855,6 @@ UDFStartEjectWaiter(
     PREVENT_MEDIA_REMOVAL_USER_IN Buff;
     KdPrint(("UDFStartEjectWaiter:\n"));
 
-#ifdef EVALUATION_TIME_LIMIT
-    if(UDFGlobalData.Saved_j != 4) {
-        UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_UNREGISTERED;
-    }
-#endif //EVALUATION_TIME_LIMIT
-
     if(Vcb->VCBFlags & UDF_VCB_FLAGS_MEDIA_READ_ONLY) {
         KdPrint(("  UDF_VCB_FLAGS_MEDIA_READ_ONLY\n"));
     }
@@ -920,13 +903,6 @@ UDFStartEjectWaiter(
         ExInitializeWorkItem(&(Vcb->EjectWaiter->EjectReqWorkQueueItem), (PWORKER_THREAD_ROUTINE)UDFEjectReqWaiter, Vcb->EjectWaiter);
         KdPrint(("UDFStartEjectWaiter: create thread\n"));
         ExQueueWorkItem(&(Vcb->EjectWaiter->EjectReqWorkQueueItem), DelayedWorkQueue);
-
-#ifdef EVALUATION_TIME_LIMIT
-        if(UDFGlobalData.UDFFlags & UDF_DATA_FLAGS_UNREGISTERED) {
-            Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
-        }
-#endif //EVALUATION_TIME_LIMIT
-
     } else {
         KdPrint(("  ignore\n"));
     }
