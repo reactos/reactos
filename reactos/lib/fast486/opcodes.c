@@ -3532,7 +3532,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
         Product = (LONGLONG)Multiplicand * (LONGLONG)Multiplier;
 
         /* Check for carry/overflow */
-        State->Flags.Cf = State->Flags.Of = ((Product < MINLONG) || (Product > MAXLONG));
+        State->Flags.Cf = State->Flags.Of = ((Product < -2147483648LL) || (Product > 2147483647LL));
 
         /* Write-back the result */
         Fast486WriteModrmDwordOperands(State,
@@ -3559,7 +3559,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
         Product = (LONG)Multiplicand * (LONG)Multiplier;
 
         /* Check for carry/overflow */
-        State->Flags.Cf = State->Flags.Of = ((Product < MINSHORT) || (Product > MAXSHORT));
+        State->Flags.Cf = State->Flags.Of = ((Product < -32768) || (Product > 32767));
 
         /* Write-back the result */
         Fast486WriteModrmWordOperands(State,
