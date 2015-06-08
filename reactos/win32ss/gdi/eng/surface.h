@@ -86,8 +86,6 @@ enum _SURFACEFLAGS
 /*  Internal interface  */
 
 #define SURFACE_AllocSurfaceWithHandle()    ((PSURFACE) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP, sizeof(SURFACE)))
-#define SURFACE_FreeSurface(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDIObjType_SURF_TYPE)
-#define SURFACE_FreeSurfaceByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 
 /* NOTE: Use shared locks! */
 #define  SURFACE_ShareLockSurface(hBMObj) \
