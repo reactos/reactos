@@ -27,38 +27,4 @@
 
 DEFINE_GUID(CLSID_MenuBandSite, 0xE13EF4E4, 0xD2F2, 0x11D0, 0x98, 0x16, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72);
 
-template<typename Interface>
-class CUnknownBase : public Interface
-{
-    LONG m_lRef;
-protected:
-    virtual const QITAB* GetQITab() = 0;
-public:
-
-    CUnknownBase()
-    {
-        m_lRef = 0;
-    }
-
-   ULONG STDMETHODCALLTYPE AddRef ()
-   {
-       return InterlockedIncrement( &m_lRef );
-   }
-
-   ULONG STDMETHODCALLTYPE Release()
-   {
-       long newref = InterlockedDecrement( &m_lRef );
-       if (newref<=0) delete this;
-       return newref;
-   }
-
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv)
-    {
-        HRESULT hresult = QISearch(this, GetQITab(), riid, ppv);
-        if(SUCCEEDED(hresult)) AddRef();
-        return hresult;
-    }
-
-    virtual ~CUnknownBase() {}
-};
-
+#include "unknownbase.h"

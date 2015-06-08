@@ -34,6 +34,7 @@ protected:
 
 public:
     CDummyWindow(HWND hwnd)
+        :CUnknownBase( true, 0 )
     {
         m_hwnd = hwnd;
     }
@@ -220,6 +221,7 @@ protected:
 
 public:
     CMenuCallback(struct _test_info *testResults, int testsCount)
+        :CUnknownBase( true, 0 )
     {
         m_iTest = 0;
         m_iCallback = 0;
