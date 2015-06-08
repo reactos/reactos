@@ -1329,6 +1329,58 @@ DisplayClassProperties(IN PDEVADVPROP_INFO dap,
 
 
 static VOID
+DisplayDeviceRelations(
+    IN PDEVADVPROP_INFO dap,
+    IN HWND hwndListView,
+    IN ULONG ulFlags)
+{
+    ULONG ulLength = 0;
+    LPWSTR pszBuffer = NULL, pszStr;
+    INT index = 0, len;
+
+    CONFIGRET ret;
+
+    ret = CM_Get_Device_ID_List_Size_ExW(&ulLength,
+                                         dap->szDeviceID,
+                                         ulFlags,
+                                         NULL);
+    if (ret != CR_SUCCESS)
+        return;
+
+    pszBuffer = HeapAlloc(GetProcessHeap(),
+                          HEAP_ZERO_MEMORY,
+                          ulLength);
+    if (pszBuffer == NULL)
+        return;
+
+    ret = CM_Get_Device_ID_List_ExW(dap->szDeviceID,
+                                    pszBuffer,
+                                    ulLength,
+                                    ulFlags,
+                                    NULL);
+    if (ret != CR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, pszBuffer);
+        return;
+    }
+
+    pszStr = pszBuffer;
+    index = 0;
+    while (*pszStr != 0)
+    {
+        len = wcslen(pszStr) + 1;
+
+        SetListViewText(hwndListView, index, pszStr);
+
+        pszStr += len;
+        index++;
+    }
+
+    HeapFree(GetProcessHeap(), 0, pszBuffer);
+}
+
+
+static VOID
 DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                         IN HWND hwndComboBox,
                         IN HWND hwndListView)
@@ -1400,16 +1452,23 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                            hwndListView);
             break;
 
-#if 0
         case 10: /* Ejection relation */
+            DisplayDeviceRelations(dap,
+                                   hwndListView,
+                                   CM_GETIDLIST_FILTER_EJECTRELATIONS);
             break;
 
         case 11: /* Removal relations */
+            DisplayDeviceRelations(dap,
+                                   hwndListView,
+                                   CM_GETIDLIST_FILTER_REMOVALRELATIONS);
             break;
 
         case 12: /* Bus relation */
+            DisplayDeviceRelations(dap,
+                                   hwndListView,
+                                   CM_GETIDLIST_FILTER_BUSRELATIONS);
             break;
-#endif
 
         case 13: /* Device Upper Filters */
             DisplayDevicePropertyText(dap,
