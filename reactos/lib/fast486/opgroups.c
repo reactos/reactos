@@ -969,7 +969,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
             SHORT Result = (SHORT)((CHAR)Value) * (SHORT)((CHAR)State->GeneralRegs[FAST486_REG_EAX].LowByte);
 
             /* Update the flags */
-            State->Flags.Cf = State->Flags.Of = ((Result < -128) || (Result > 127));
+            State->Flags.Cf = State->Flags.Of = ((Result < FAST486_CHAR_MIN) || (Result > FAST486_CHAR_MAX));
 
             /* Write back the result */
             State->GeneralRegs[FAST486_REG_EAX].LowWord = (USHORT)Result;
@@ -1023,7 +1023,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
             Quotient = (SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord / (CHAR)Value;
             Remainder = (SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord % (CHAR)Value;
 
-            if (Quotient > 127 || Quotient < -128)
+            if (Quotient > FAST486_CHAR_MAX || Quotient < FAST486_CHAR_MIN)
             {
                 /* Divide error */
                 Fast486Exception(State, FAST486_EXCEPTION_DE);
@@ -1205,7 +1205,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
                 LONGLONG Result = (LONGLONG)((LONG)Value) * (LONGLONG)((LONG)State->GeneralRegs[FAST486_REG_EAX].Long);
 
                 /* Update the flags */
-                State->Flags.Cf = State->Flags.Of = ((Result < -2147483648LL) || (Result > 2147483647LL));
+                State->Flags.Cf = State->Flags.Of = ((Result < FAST486_LONG_MIN) || (Result > FAST486_LONG_MAX));
 
                 /* Write back the result */
                 State->GeneralRegs[FAST486_REG_EAX].Long = Result & 0xFFFFFFFFULL;
@@ -1216,7 +1216,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
                 LONG Result = (LONG)((SHORT)Value) * (LONG)((SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord);
 
                 /* Update the flags */
-                State->Flags.Cf = State->Flags.Of = ((Result < -32768) || (Result > 32767));
+                State->Flags.Cf = State->Flags.Of = ((Result < FAST486_SHORT_MIN) || (Result > FAST486_SHORT_MAX));
 
                 /* Write back the result */
                 State->GeneralRegs[FAST486_REG_EAX].LowWord = LOWORD(Result);
@@ -1293,7 +1293,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
                 LONGLONG Quotient = Dividend / (LONG)Value;
                 LONG Remainder = Dividend % (LONG)Value;
 
-                if (Quotient > 2147483647LL || Quotient < -2147483648LL)
+                if (Quotient > FAST486_LONG_MAX || Quotient < FAST486_LONG_MIN)
                 {
                     /* Divide error */
                     Fast486Exception(State, FAST486_EXCEPTION_DE);
@@ -1311,7 +1311,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
                 LONG Quotient = Dividend / (SHORT)LOWORD(Value);
                 SHORT Remainder = Dividend % (SHORT)LOWORD(Value);
 
-                if (Quotient > 32767 || Quotient < -32768)
+                if (Quotient > FAST486_SHORT_MAX || Quotient < FAST486_SHORT_MIN)
                 {
                     /* Divide error */
                     Fast486Exception(State, FAST486_EXCEPTION_DE);
