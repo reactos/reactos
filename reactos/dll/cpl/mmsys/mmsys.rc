@@ -14,7 +14,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Icons */
 IDI_CPLICON ICON "resources/3004.ico"
-IDI_MIDICON ICON "resources/3004.ico"
+IDI_MIDICON ICON "resources/4353.ico"
 4353 ICON "resources/4353.ico"
 4354 ICON "resources/4354.ico"
 4355 ICON "resources/4355.ico"
