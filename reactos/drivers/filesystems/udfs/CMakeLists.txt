@@ -38,7 +38,8 @@ list(APPEND SOURCE
     verfysup.cpp
     volinfo.cpp
     wcache.cpp
-    write.cpp)
+    write.cpp
+    udffs.h)
 
 add_library(udfs SHARED ${SOURCE} udffs.rc)
 if(MSVC)
@@ -52,4 +53,5 @@ endif()
 set_module_type(udfs kernelmodedriver)
 target_link_libraries(udfs ${PSEH_LIB})
 add_importlibs(udfs ntoskrnl hal)
+add_pch(udfs udffs.h SOURCE)
 add_cd_file(TARGET udfs DESTINATION reactos/system32/drivers NO_CAB FOR all)
