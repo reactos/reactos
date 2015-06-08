@@ -552,6 +552,7 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     {
         return Status;
     }
+
     DPRINT("Device name: '%wZ'\n", &DeviceInstance);
 
     _SEH2_TRY
@@ -616,6 +617,16 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     return Status;
 }
 
+static
+NTSTATUS
+IopGetDeviceRelations(PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA RelationsData)
+{
+    DPRINT("IopGetDeviceRelations() called\n");
+    DPRINT("Device name: %wZ\n", &RelationsData->DeviceInstance);
+    DPRINT("Relations: %lu\n", &RelationsData->Relations);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 static NTSTATUS
 IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
@@ -673,6 +684,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     {
         return Status;
     }
+
     DPRINT("IopResetDevice(%wZ)\n", &DeviceInstance);
 
     /* Get the device object */
@@ -961,10 +973,20 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 
     switch (PlugPlayControlClass)
     {
+//        case PlugPlayControlEnumerateDevice:
+//        case PlugPlayControlRegisterNewDevice:
+//        case PlugPlayControlDeregisterDevice:
+//        case PlugPlayControlInitializeDevice:
+//        case PlugPlayControlStartDevice:
+//        case PlugPlayControlUnlockDevice:
+//        case PlugPlayControlQueryAndRemoveDevice:
+
         case PlugPlayControlUserResponse:
             if (Buffer || BufferLength != 0)
                 return STATUS_INVALID_PARAMETER;
             return IopRemovePlugPlayEvent();
+
+//        case PlugPlayControlGenerateLegacyDevice:
 
         case PlugPlayControlGetInterfaceDeviceList:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA))
@@ -976,10 +998,14 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                 return STATUS_INVALID_PARAMETER;
             return IopGetDeviceProperty((PPLUGPLAY_CONTROL_PROPERTY_DATA)Buffer);
 
+//        case PlugPlayControlDeviceClassAssociation:
+
         case PlugPlayControlGetRelatedDevice:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RELATED_DEVICE_DATA))
                 return STATUS_INVALID_PARAMETER;
             return IopGetRelatedDevice((PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA)Buffer);
+
+//        case PlugPlayControlGetInterfaceDeviceAlias:
 
         case PlugPlayControlDeviceStatus:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_STATUS_DATA))
@@ -991,10 +1017,22 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                 return STATUS_INVALID_PARAMETER;
             return IopGetDeviceDepth((PPLUGPLAY_CONTROL_DEPTH_DATA)Buffer);
 
+        case PlugPlayControlQueryDeviceRelations:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopGetDeviceRelations((PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA)Buffer);
+
+//        case PlugPlayControlTargetDeviceRelation:
+//        case PlugPlayControlQueryConflictList:
+//        case PlugPlayControlRetrieveDock:
+
         case PlugPlayControlResetDevice:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA))
                 return STATUS_INVALID_PARAMETER;
             return IopResetDevice((PPLUGPLAY_CONTROL_RESET_DEVICE_DATA)Buffer);
+
+//        case PlugPlayControlHaltDevice:
+//        case PlugPlayControlGetBlockedDriverList:
 
         default:
             return STATUS_NOT_IMPLEMENTED;
