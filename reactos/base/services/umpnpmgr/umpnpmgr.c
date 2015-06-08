@@ -488,8 +488,78 @@ PNP_GetDeviceList(
     PNP_RPC_STRING_LEN *pulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
+    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    DPRINT("PNP_GetDeviceList() called\n");
+
+    if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
+        return CR_INVALID_FLAG;
+
+    if (pulLength == NULL || pszFilter == NULL)
+        return CR_INVALID_POINTER;
+
+//    if (Buffer == NULL)
+//        return 
+
+    *pulLength = 0;
+
+    if (ulFlags &
+        (CM_GETIDLIST_FILTER_BUSRELATIONS |
+         CM_GETIDLIST_FILTER_POWERRELATIONS |
+         CM_GETIDLIST_FILTER_REMOVALRELATIONS |
+         CM_GETIDLIST_FILTER_EJECTRELATIONS))
+    {
+        RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                             pszFilter);
+        if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
+        {
+            PlugPlayData.Relations = 3;
+        }
+        else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
+        {
+            /* FIXME */
+            PlugPlayData.Relations = 0;
+        }
+        else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
+        {
+            PlugPlayData.Relations = 1;
+        }
+        else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
+        {
+            PlugPlayData.Relations = 0;
+        }
+
+        PlugPlayData.BufferSize = *pulLength;
+        PlugPlayData.Buffer = Buffer;
+
+        Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
+                                   (PVOID)&PlugPlayData,
+                                   sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
+        if (NT_SUCCESS(Status))
+        {
+            *pulLength = PlugPlayData.BufferSize;
+        }
+        else
+        {
+            ret = NtStatusToCrError(Status);
+        }
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
+    {
+
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
+    {
+
+    }
+    else /* CM_GETIDLIST_FILTER_NONE */
+    {
+
+    }
+
+    return ret;
 }
 
 
@@ -499,11 +569,78 @@ WINAPI
 PNP_GetDeviceListSize(
     handle_t hBinding,
     LPWSTR pszFilter,
-    PNP_RPC_BUFFER_SIZE *pulLen,
+    PNP_RPC_BUFFER_SIZE *pulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
+    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    DPRINT("PNP_GetDeviceListSize() called\n");
+
+    if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
+        return CR_INVALID_FLAG;
+
+    if (pulLength == NULL || pszFilter == NULL)
+        return CR_INVALID_POINTER;
+
+    *pulLength = 0;
+
+    if (ulFlags &
+        (CM_GETIDLIST_FILTER_BUSRELATIONS |
+         CM_GETIDLIST_FILTER_POWERRELATIONS |
+         CM_GETIDLIST_FILTER_REMOVALRELATIONS |
+         CM_GETIDLIST_FILTER_EJECTRELATIONS))
+    {
+        RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                             pszFilter);
+        if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
+        {
+            PlugPlayData.Relations = 3;
+        }
+        else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
+        {
+            /* FIXME */
+            PlugPlayData.Relations = 0;
+        }
+        else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
+        {
+            PlugPlayData.Relations = 1;
+        }
+        else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
+        {
+            PlugPlayData.Relations = 0;
+        }
+
+        PlugPlayData.BufferSize = 0;
+        PlugPlayData.Buffer = NULL;
+
+        Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
+                                   (PVOID)&PlugPlayData,
+                                   sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
+        if (NT_SUCCESS(Status))
+        {
+            *pulLength = PlugPlayData.BufferSize;
+        }
+        else
+        {
+            ret = NtStatusToCrError(Status);
+        }
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
+    {
+
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
+    {
+
+    }
+    else /* CM_GETIDLIST_FILTER_NONE */
+    {
+
+    }
+
+    return ret;
 }
 
 
@@ -3030,7 +3167,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     WCHAR PipeName[74];
     WCHAR UuidString[39];
 
-    DPRINT("InstallDevice(%S, %d)\n", DeviceInstance, ShowWizard);
+    DPRINT1("InstallDevice(%S, %d)\n", DeviceInstance, ShowWizard);
 
     ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
 
@@ -3512,7 +3649,7 @@ ServiceControlHandler(DWORD dwControl,
             return ERROR_SUCCESS;
 
         default :
-            DPRINT1("  Control %lu received\n");
+            DPRINT1("  Control %lu received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
 }
