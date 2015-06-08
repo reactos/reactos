@@ -892,7 +892,6 @@ Bios32Post(LPWORD Stack)
                 EmulatorTerminate();
                 return;
             }
-            FirstBoot = FALSE;
             break;
         }
 
@@ -906,6 +905,8 @@ Bios32Post(LPWORD Stack)
         default:
             break;
     }
+
+    FirstBoot = FALSE;
 
     /* Initialize the BDA and the BIOS ROM Information */
     InitializeBiosData();
