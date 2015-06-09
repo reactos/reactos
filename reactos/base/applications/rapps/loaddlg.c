@@ -377,6 +377,7 @@ DownloadDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     switch (Msg)
     {
         case WM_INITDIALOG:
+        {
             HICON hIconSm = NULL, hIconBg = NULL;
 
             hIconBg = (HICON)GetClassLongPtr(hMainWnd, GCLP_HICON);
@@ -400,6 +401,7 @@ DownloadDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
             if (!Thread) return FALSE;
             CloseHandle(Thread);
             return TRUE;
+        }
 
         case WM_COMMAND:
             if (wParam == IDCANCEL)
