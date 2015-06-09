@@ -2445,6 +2445,9 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     Bda->ScreenColumns = Resolution.X;
     Bda->ScreenRows    = Resolution.Y - 1;
 
+    /* Adjust the number of columns for graphics modes */
+    if (ModeNumber > 3) Bda->ScreenColumns >>= 3;
+
     /* Update the current font */
     Bda->CharacterHeight = VideoModes[ModeNumber].CharacterHeight;
     switch (Bda->CharacterHeight)
@@ -2614,15 +2617,17 @@ static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row
 
                     /* Read from VGA memory to load the latch register */
                     EmulatorReadMemory(&EmulatorContext,
-                                       TO_LINEAR(CgaSegment[(Row + i) & 1],
-                                                 ((((Row + i) >> 1) * Bda->ScreenColumns) >> 2) + Column * 2),
+                                       TO_LINEAR(CgaSegment[(Row * Bda->CharacterHeight + i) & 1],
+                                                 (((Row * Bda->CharacterHeight + i) >> 1)
+                                                 * Bda->ScreenColumns + Column) * 2),
                                        (LPVOID)&Dummy,
                                        sizeof(USHORT));
                 }
 
                 EmulatorWriteMemory(&EmulatorContext,
-                                    TO_LINEAR(CgaSegment[(Row + i) & 1],
-                                              ((((Row + i) >> 1) * Bda->ScreenColumns) >> 2) + Column * 2),
+                                    TO_LINEAR(CgaSegment[(Row * Bda->CharacterHeight + i) & 1],
+                                              (((Row * Bda->CharacterHeight + i) >> 1)
+                                              * Bda->ScreenColumns + Column) * 2),
                                     (LPVOID)&Pixel,
                                     sizeof(USHORT));
             }
@@ -2662,15 +2667,17 @@ static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row
 
                     /* Read from VGA memory to load the latch register */
                     EmulatorReadMemory(&EmulatorContext,
-                                       TO_LINEAR(CgaSegment[(Row + i) & 1],
-                                                 ((((Row + i) >> 1) * Bda->ScreenColumns) >> 3) + Column),
+                                       TO_LINEAR(CgaSegment[(Row * Bda->CharacterHeight + i) & 1],
+                                                 (((Row * Bda->CharacterHeight + i) >> 1)
+                                                 * Bda->ScreenColumns) + Column),
                                        (LPVOID)&Dummy,
                                        sizeof(UCHAR));
                 }
 
                 EmulatorWriteMemory(&EmulatorContext,
-                                    TO_LINEAR(CgaSegment[(Row + i) & 1],
-                                              ((((Row + i) >> 1) * Bda->ScreenColumns) >> 3) + Column),
+                                    TO_LINEAR(CgaSegment[(Row * Bda->CharacterHeight + i) & 1],
+                                              (((Row * Bda->CharacterHeight + i) >> 1)
+                                              * Bda->ScreenColumns) + Column),
                                     (LPVOID)&Glyph[i],
                                     sizeof(UCHAR));
             }
@@ -2734,14 +2741,16 @@ static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row
                     /* Read from VGA memory to load the latch register */
                     EmulatorReadMemory(&EmulatorContext,
                                        TO_LINEAR(GRAPHICS_VIDEO_SEG,
-                                                 (((Row + i) * Bda->ScreenColumns) >> 3) + Column),
+                                                 ((Row * Bda->CharacterHeight + i)
+                                                 * Bda->ScreenColumns) + Column),
                                        (LPVOID)&Dummy,
                                        sizeof(UCHAR));
                 }
 
                 EmulatorWriteMemory(&EmulatorContext,
                                     TO_LINEAR(GRAPHICS_VIDEO_SEG,
-                                              (((Row + i) * Bda->ScreenColumns) >> 3) + Column),
+                                              ((Row * Bda->CharacterHeight + i)
+                                              * Bda->ScreenColumns) + Column),
                                     (LPVOID)&Glyph[i],
                                     sizeof(UCHAR));
             }
@@ -2782,7 +2791,8 @@ static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row
 
                 EmulatorWriteMemory(&EmulatorContext,
                                     TO_LINEAR(GRAPHICS_VIDEO_SEG,
-                                              (Row + i) * Bda->ScreenColumns + Column * 8),
+                                              ((Row * Bda->CharacterHeight + i)
+                                              * Bda->ScreenColumns + Column) << 3),
                                     (LPVOID)PixelBuffer,
                                     sizeof(PixelBuffer));
             }
