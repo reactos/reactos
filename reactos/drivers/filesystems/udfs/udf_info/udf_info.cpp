@@ -356,11 +356,15 @@ UDFUnicodeInString(
     Decides whether character passed is an illegal character for a
     DOS file name.
 */
+#ifdef _MSC_VER
 #pragma warning(push)               
 #pragma warning(disable:4035)               // re-enable below
+#endif
 
 #ifdef _X86_
+#ifdef _MSC_VER
 __declspec (naked)
+#endif
 #endif // _X86_
 BOOLEAN
 __fastcall
@@ -398,7 +402,9 @@ ERR_IIC2:
 #endif // _X86_
 } // end UDFIsIllegalChar()
 
+#ifdef _MSC_VER
 #pragma warning(pop)  // re-enable warning #4035
+#endif
 
 /*
     Translate udfName to dosName using OSTA compliant.
@@ -881,7 +887,7 @@ UDFDOSName201(
     /* If the name has illegal characters or and extension, it */
     /* is not a DOS device name. */
 
-/*    if (needsCRC == FALSE && extLen == 0) {
+/*    if (needsCRC == FALSE && extLen == 0) { */
         /* If this is the name of a DOS device, a CRC code should */
         /* be appended to the file name. 
         if (IsDeviceName(udfName, udfLen))
@@ -976,7 +982,7 @@ UDFBuildFileEntry(
 {
     PFILE_ENTRY FileEntry;
     OSSTATUS status;
-    EntityID* eID;
+//    EntityID* eID;
     uint32 l;
     EXTENT_INFO _FEExtInfo;
     uint16* lcp;
@@ -1021,11 +1027,11 @@ UDFBuildFileEntry(
     FileEntry->gid = Vcb->DefaultGID;
 
     if(Extended) {
-        eID = &(((PEXTENDED_FILE_ENTRY)FileEntry)->impIdent);
+//        eID = &(((PEXTENDED_FILE_ENTRY)FileEntry)->impIdent);
         lcp = &(((PEXTENDED_FILE_ENTRY)FileEntry)->fileLinkCount);
         ((PEXTENDED_FILE_ENTRY)FileEntry)->checkpoint = 1;
     } else {
-        eID = &(FileEntry->impIdent);
+//        eID = &(FileEntry->impIdent);
         lcp = &(FileEntry->fileLinkCount);
         ((PFILE_ENTRY)FileEntry)->checkpoint = 1;
     }
@@ -1523,7 +1529,7 @@ UDFChangeFileCounter(
     counter = FileCounter ?
         &(Vcb->numFiles) :
         &(Vcb->numDirs);
-    if(*counter == -1)
+    if(*counter == (ULONG)-1)
         return;
     if(Increase) {
         UDFInterlockedIncrement((int32*)counter);
@@ -1950,13 +1956,13 @@ UDFUnlinkAllFilesInDir(
 
     hCurDirNdx = DirInfo->Dloc->DirIndex;
     // check if we can delete all files
-    for(i=2; CurDirNdx = UDFDirIndex(hCurDirNdx,i); i++) {
+    for(i=2; (CurDirNdx = UDFDirIndex(hCurDirNdx,i)); i++) {
         // try to open Stream
         if(CurDirNdx->FileInfo)
             return STATUS_CANNOT_DELETE;
     }
     // start deletion
-    for(i=2; CurDirNdx = UDFDirIndex(hCurDirNdx,i); i++) {
+    for(i=2; (CurDirNdx = UDFDirIndex(hCurDirNdx,i)); i++) {
         // try to open Stream
         status = UDFOpenFile__(Vcb, FALSE, TRUE, NULL, DirInfo, &FileInfo, &i);
         if(status == STATUS_FILE_DELETED) {
@@ -2030,7 +2036,7 @@ UDFOpenFile__(
     // some routines may send invalid Index
     if(!(DirNdx = UDFDirIndex(hDirNdx,i)))
         return STATUS_OBJECT_NAME_NOT_FOUND;
-    if(FileInfo = DirNdx->FileInfo) {
+    if((FileInfo = DirNdx->FileInfo)) {
         // file is already opened.
         if((DirNdx->FileCharacteristics & FILE_DELETED) && NotDeleted) {
             AdPrint(("  FILE_DELETED on open\n"));
@@ -2307,7 +2313,7 @@ UDFCleanUpFile__(
 
     IsASDir = UDFIsAStreamDir(FileInfo);
 
-    if(Dloc = FileInfo->Dloc) {
+    if((Dloc = FileInfo->Dloc)) {
 
 #ifdef UDF_DBG
         DirInfo = FileInfo->ParentFile;
@@ -2349,7 +2355,7 @@ UDFCleanUpFile__(
 
         if(Dloc->DirIndex) {
             uint_di i;
-            for(i=2; DirNdx = UDFDirIndex(Dloc->DirIndex,i); i++) {
+            for(i=2; (DirNdx = UDFDirIndex(Dloc->DirIndex,i)); i++) {
                 if(DirNdx->FileInfo) {
                     if(!KeepDloc) {
                         BrutePoint();
@@ -2433,7 +2439,7 @@ UDFCleanUpFile__(
 #endif //UDF_TRACK_ONDISK_ALLOCATION
             if(FileInfo->Dloc->DirIndex) {
                 uint_di i;
-                for(i=2; DirNdx = UDFDirIndex(Dloc->DirIndex,i); i++) {
+                for(i=2; (DirNdx = UDFDirIndex(Dloc->DirIndex,i)); i++) {
                     ASSERT(!DirNdx->FileInfo);
                     if(DirNdx->FName.Buffer)
                         MyFreePool__(DirNdx->FName.Buffer);
@@ -2736,7 +2742,7 @@ CreateUndel:
 #endif // UDF_LIMIT_DIR_SIZE
             // search for suitable unused entry
             if(UDFDirIndexInitScan(DirInfo, &ScanContext, 2)) {
-                while(DirNdx = UDFDirIndexScan(&ScanContext, NULL)) {
+                while((DirNdx = UDFDirIndexScan(&ScanContext, NULL))) {
                     if((DirNdx->Length == l) && UDFIsDeleted(DirNdx) &&
                        !DirNdx->FileInfo ) {
                         // free unicode-buffer with old name
@@ -2773,7 +2779,7 @@ CreateUndel:
             DirNdx->Offset = 0;
         }
         // new terminator is recorded by UDFDirIndexGrow()
-        if( ((d = (LBS - (DirNdx->Offset + l + DirInfo->Dloc->DataLoc.Offset) & (LBS-1) )) < sizeof(FILE_IDENT_DESC)) &&
+        if( ((d = ((LBS - (DirNdx->Offset + l + DirInfo->Dloc->DataLoc.Offset)) & (LBS-1) )) < sizeof(FILE_IDENT_DESC)) &&
               d ) {
             // insufficient space at the end of last sector for
             // next FileIdent's tag. fill it with ImpUse data
@@ -4269,8 +4275,10 @@ UDFCompareFileInfo(
     This routine computes 32-bit hash based on CRC-32 from SSH
  */
 
+#ifdef _MSC_VER
 #pragma warning(push)               
 #pragma warning(disable:4035)               // re-enable below
+#endif
 
 //#ifdef _X86_
 #ifdef _MSC_VER
@@ -4573,7 +4581,9 @@ EO_CRC:
 
 } // end UDFCrc()
 
+#ifdef _MSC_VER
 #pragma warning(pop)    // re-enable warning #4035
+#endif
 
 /*
     Read the first block of a tagged descriptor & check it.

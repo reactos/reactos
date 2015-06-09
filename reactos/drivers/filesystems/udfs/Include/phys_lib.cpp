@@ -1291,7 +1291,7 @@ UDFRecoverFromError(
 {
     PGET_LAST_ERROR_USER_OUT Error = NULL;
     LARGE_INTEGER delay;
-    OSSTATUS RC;
+//    OSSTATUS RC;
     uint32 i;
     BOOLEAN UpdateBB = FALSE;
 
@@ -1361,7 +1361,7 @@ UDFRecoverFromError(
             }
             KdPrint(("Error recovery: sync cache\n"));
             // ...flush device cache...
-            RC = UDFSyncCache(Vcb);
+            UDFSyncCache(Vcb);
             // wait again & retry
             delay.QuadPart = -1000000; // 0.1 sec
             KeDelayExecutionThread(KernelMode, FALSE, &delay);
@@ -1396,7 +1396,7 @@ UDFRecoverFromError(
                 KeDelayExecutionThread(KernelMode, FALSE, &delay);
                 KdPrint(("Error recovery: sync cache\n"));
                 // ...flush device cache...
-                RC = UDFSyncCache(Vcb);
+                UDFSyncCache(Vcb);
                 // wait again & retry
                 delay.QuadPart = -1000000; // 0.1 sec
                 KeDelayExecutionThread(KernelMode, FALSE, &delay);
@@ -1519,7 +1519,7 @@ bad_rw_seek_recovery:
                Lba+BCount <= Vcb->LastLBA+1) {
                 KdPrint(("bad Session in streaming mode. Lba %x, try fix-up\n", Lba));
                 // ...flush device cache...
-                RC = UDFSyncCache(Vcb);
+                UDFSyncCache(Vcb);
                 // we should wait
                 delay.QuadPart = -10000000; // 1 sec
                 KeDelayExecutionThread(KernelMode, FALSE, &delay);
@@ -1572,7 +1572,7 @@ bad_rw_seek_recovery:
                Lba+BCount <= Vcb->LastLBA+1) {
                 KdPrint(("bad LBA %x in streaming mode, try fix-up\n", Lba));
                 // ...flush device cache...
-                RC = UDFSyncCache(Vcb);
+                UDFSyncCache(Vcb);
                 try_return(status = STATUS_SUCCESS);
             }
 
@@ -1595,7 +1595,7 @@ try_exit: NOTHING;
 #endif //UDF_DBG
     } _SEH2_END;
     if(!OS_SUCCESS(status)) {
-        if((Vcb->MountPhErrorCount != -1) &&
+        if((Vcb->MountPhErrorCount != (ULONG)-1) &&
            (Vcb->MountPhErrorCount < 0x7fffffff)) {
             Vcb->MountPhErrorCount++;
         }
@@ -1647,7 +1647,7 @@ UDFReadDiscTrackInfo(
     BOOLEAN                     ForceFP = FALSE;
     BOOLEAN                     PacketTrack = FALSE;
     BOOLEAN                     MRWRetry = FALSE;
-    BOOLEAN                     ReadCapacityOk = FALSE;
+//    BOOLEAN                     ReadCapacityOk = FALSE;
 #ifdef UDF_FORMAT_MEDIA
     PUDFFmtState            fms = Vcb->fms;
 #endif
@@ -1697,7 +1697,7 @@ MRWRetry_label:
                 // good value from ReadCapacity
                 KdPrint(("Update Last possible LBA %#x.\n", CapacityBuffer.LogicalBlockAddress));
                 Vcb->LastPossibleLBA = CapacityBuffer.LogicalBlockAddress;
-                ReadCapacityOk = TRUE;
+//                ReadCapacityOk = TRUE;
 #ifdef UDF_FORMAT_MEDIA
                 if(fms && fms->opt_disk_info) {
                     UserPrint(("ReadCapacity OK\n"));
@@ -2392,7 +2392,7 @@ UDFUseStandard(
     PREAD_TOC_USER_OUT      toc = (PREAD_TOC_USER_OUT)MyAllocatePool__(NonPagedPool,max(Vcb->BlockSize, sizeof(READ_TOC_USER_OUT)) );
     PGET_LAST_SESSION_USER_OUT LastSes = (PGET_LAST_SESSION_USER_OUT)MyAllocatePool__(NonPagedPool,sizeof(GET_LAST_SESSION_USER_OUT) );
     uint32                  LocalTrackCount;
-    uint32                  LocalTocLength;
+//    uint32                  LocalTocLength;
     uint32                  TocEntry;
 #ifdef _BROWSE_UDF_
     uint32                  OldTrkNum;
@@ -2479,7 +2479,7 @@ UDFUseStandard(
 #endif //_CONSOLE
     
         LocalTrackCount = toc->Tracks.Last_TrackSes - toc->Tracks.First_TrackSes + 1;
-        LocalTocLength = PtrOffset( toc, &(toc->TrackData[LocalTrackCount + 1]) );
+//        LocalTocLength = PtrOffset( toc, &(toc->TrackData[LocalTrackCount + 1]) );  /* FIXME ReactOS Assume PtrOffset is not changing it's arguments? */
       
         // Get out if there is an immediate problem with the TOC.
         if(toc->Tracks.First_TrackSes > toc->Tracks.Last_TrackSes) {
@@ -2720,7 +2720,7 @@ UDFGetBlockSize(
                 TRUE,NULL );
             if(!NT_SUCCESS(RC)) {
                 KdPrint(("UDFGetBlockSize: IOCTL_DISK_GET_PARTITION_INFO failed\n"));
-                if(RC = STATUS_INVALID_DEVICE_REQUEST)
+                if(RC == STATUS_INVALID_DEVICE_REQUEST) /* ReactOS Code Change (was =) */
                     RC = STATUS_UNRECOGNIZED_VOLUME;
                 try_return(RC);
             }
@@ -3704,7 +3704,7 @@ UDFPrepareForReadOperation(
        !(Vcb->VCBFlags & UDF_VCB_FLAGS_NO_SYNC_CACHE) &&
        !(Vcb->CompatFlags & UDF_VCB_IC_NO_SYNCCACHE_AFTER_WRITE)){
 
-        OSSTATUS RC;
+//        OSSTATUS RC;
 
         RC = UDFSyncCache(Vcb);
     }
@@ -3715,8 +3715,8 @@ UDFPrepareForReadOperation(
 #endif //UDF_FORMAT_MEDIA
         TRUE)
     {
-        OSSTATUS RC;
-        RC = UDFSyncCache(Vcb);
+//        OSSTATUS RC;
+        UDFSyncCache(Vcb);
     }
 
 #ifdef _BROWSE_UDF_
@@ -3969,7 +3969,7 @@ UDFReadData(
         return STATUS_NO_SUCH_DEVICE;
     // read tail of the 1st sector if Offset is not sector_size-aligned
     Lba = (uint32)(Offset >> BSh);
-    if(i = (uint32)(Offset & (BS-1))) {
+    if((i = (uint32)(Offset & (BS-1)))) {
         l = (BS - i) < Length ?
             (BS - i) : Length;
         // here we use 'ReadBytes' 'cause now it's set to zero
@@ -4161,7 +4161,7 @@ UDFWriteData(
         return STATUS_NO_SUCH_DEVICE;
     // write tail of the 1st sector if Offset is not sector_size-aligned
     Lba = (uint32)(Offset >> BSh);
-    if(i = ((uint32)Offset & (BS-1))) {
+    if((i = ((uint32)Offset & (BS-1)))) {
         l = (BS - i) < Length ?
             (BS - i) : Length;
         status = UDFWriteInSector(Vcb, Translate, Lba, i, l, Direct, Buffer, WrittenBytes);
@@ -4276,7 +4276,11 @@ UDFSetCaching(
         MODE_READ_WRITE_RECOVERY_PAGE Data;
         CHAR Padding [16];
     } RecoveryPage;
+#ifdef _MSC_VER
 #pragma pack(pop,1)
+#else
+#pragma pack(pop)
+#endif
 
     MODE_SENSE_USER_IN ModeSenseCtl;
     OSSTATUS RC;

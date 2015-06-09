@@ -109,7 +109,7 @@ UDFCommonLockControl(
     NTSTATUS            RC = STATUS_SUCCESS;
     PIO_STACK_LOCATION  IrpSp = NULL;
     //IO_STATUS_BLOCK     LocalIoStatus;
-    BOOLEAN             CompleteRequest = FALSE;
+//    BOOLEAN             CompleteRequest = FALSE;
     BOOLEAN             PostRequest = FALSE;
     BOOLEAN             CanWait = FALSE;
     PtrUDFNTRequiredFCB NtReqFcb = NULL;
@@ -137,7 +137,7 @@ UDFCommonLockControl(
         if ( (Fcb->NodeIdentifier.NodeType == UDF_NODE_TYPE_VCB) ||
              (Fcb->FCBFlags & UDF_FCB_DIRECTORY)) {
 
-            CompleteRequest = TRUE;
+//            CompleteRequest = TRUE;
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
 
@@ -153,7 +153,7 @@ UDFCommonLockControl(
         AcquiredFCB = TRUE;
 
         RC = FsRtlProcessFileLock(&(NtReqFcb->FileLock), Irp, NULL);
-        CompleteRequest = TRUE;
+//        CompleteRequest = TRUE;
 
 try_exit: NOTHING;
 
@@ -253,7 +253,7 @@ UDFFastLock (
 
         //  Now call the FsRtl routine to do the actual processing of the
         //  Lock request
-        if (Results = FsRtlFastLock( &(Fcb->NTRequiredFCB->FileLock),
+        if ((Results = FsRtlFastLock( &(Fcb->NTRequiredFCB->FileLock),
                                      FileObject,
                                      FileOffset,
                                      Length,
@@ -263,7 +263,7 @@ UDFFastLock (
                                      ExclusiveLock,
                                      IoStatus,
                                      NULL,
-                                     FALSE )) {
+                                     FALSE ))) {
 
             //  Set the flag indicating if Fast I/O is possible
             Fcb->NTRequiredFCB->CommonFCBHeader.IsFastIoPossible = UDFIsFastIoPossible(Fcb);

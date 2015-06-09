@@ -17,7 +17,11 @@
 
 #include "udf.h"
 
-/* FIXME*/
+/* FIXME */
+#ifdef XCHG_DD
+#undef XCHG_DD
+#endif
+
 #define XCHG_DD(a,b)              \
 {                                 \
     ULONG  _temp_;                \
@@ -197,13 +201,13 @@ UDFUpdateXSpaceBitmaps(
     int8* FSBM=NULL;
     uint32 USl, FSl;
     EXTENT_INFO FSBMExtInfo, USBMExtInfo;
-    lb_addr locAddr;
+//    lb_addr locAddr;
     uint32 WrittenBytes;
 
     UDF_CHECK_BITMAP_RESOURCE(Vcb);
 
     plen = UDFPartLen(Vcb, PartNum);
-    locAddr.partitionReferenceNum = (uint16)PartNum;
+//    locAddr.partitionReferenceNum = (uint16)PartNum;
     // prepare bitmaps for updating
 
     status =  UDFPrepareXSpaceBitmap(Vcb, &(phd->unallocatedSpaceBitmap), &USBMExtInfo, &USBM, &USl);
@@ -996,7 +1000,7 @@ UDFUmount__(
     return STATUS_SUCCESS;
 } // end UDFUmount__()
 
-/*************************************************************************
+/*************************************************************************/
 
 /*
     Find an anchor volume descriptor.
@@ -1668,9 +1672,9 @@ UDFVerifyXSpaceBitmap(
     )
 {
     int8* tmp;
-    int8* tmp_bm;
-//    uint32 i, lim, j, lba, l, lim2, l2, k;
-    uint32 i, lim, j, lba, lim2;
+//    int8* tmp_bm;
+//    uint32 i, l2, k, lim, j, lim2;
+    uint32 lba;
     lb_addr locAddr;
     OSSTATUS status;
     uint16 Ident;
@@ -1684,7 +1688,7 @@ UDFVerifyXSpaceBitmap(
     KdPrint((" UDFVerifyXSpaceBitmap: part %x\n", PartNum));
 
     if(!(Length = (bm->extLength & UDF_EXTENT_LENGTH_MASK))) return STATUS_SUCCESS;
-    i=UDFPartStart(Vcb, PartNum);
+//    i=UDFPartStart(Vcb, PartNum);
     flags = bm->extLength >> 30;
     if(!flags /*|| flags == EXTENT_NOT_RECORDED_ALLOCATED*/) {
         tmp = (int8*)DbgAllocatePool(NonPagedPool, max(Length, Vcb->BlockSize));
@@ -1707,9 +1711,9 @@ err_vfyxsbm_1:
         if(!OS_SUCCESS(status = UDFReadData(Vcb, FALSE, ((uint64)lba)<<Vcb->BlockSizeBits, Length, FALSE, tmp, &ReadBytes)))
             goto err_vfyxsbm_1;
         UDFRegisterFsStructure(Vcb, lba, Length);
-        lim = min(i + ((lim2 = ((PSPACE_BITMAP_DESC)tmp)->numOfBits) << Vcb->LB2B_Bits), Vcb->FSBM_BitCount);
-        tmp_bm = tmp + sizeof(SPACE_BITMAP_DESC);
-        j = 0;
+//        lim = min(i + ((lim2 = ((PSPACE_BITMAP_DESC)tmp)->numOfBits) << Vcb->LB2B_Bits), Vcb->FSBM_BitCount);
+//        tmp_bm = tmp + sizeof(SPACE_BITMAP_DESC);
+//        j = 0;
 /*        for(;(l = UDFGetBitmapLen((uint32*)tmp_bm, j, lim2)) && (i<lim);) {
             // expand LBlocks to Sectors...
             l2 = l << Vcb->LB2B_Bits;
@@ -2364,7 +2368,7 @@ UDFProcessSequence(
     OSSTATUS    RC = STATUS_SUCCESS;
     int8*       Buf = (int8*)MyAllocatePool__(NonPagedPool,Vcb->BlockSize);
     UDF_VDS_RECORD vds[VDS_POS_LENGTH];
-    GenericDesc   *gd;
+//    GenericDesc   *gd;
     uint32   i,j;
     uint16  ident;
     int8*  Buf2 = NULL;
@@ -2416,7 +2420,7 @@ UDFProcessSequence(
                         RC = UDFReadTagged(Vcb,Buf2, j, j, &ident);
                         if(!OS_SUCCESS(RC)) try_return(RC);
                         UDFRegisterFsStructure(Vcb, j, Vcb->BlockSize);
-                        gd = (struct GenericDesc *)Buf2;
+//                        gd = (struct GenericDesc *)Buf2;
                         if(ident == TID_PARTITION_DESC) {
                             RC = UDFLoadPartDesc(Vcb,Buf2);
                             if(!OS_SUCCESS(RC)) try_return(RC);
@@ -2465,7 +2469,7 @@ UDFVerifySequence(
     OSSTATUS    RC = STATUS_SUCCESS;
     int8*       Buf = (int8*)MyAllocatePool__(NonPagedPool,Vcb->BlockSize);
     UDF_VDS_RECORD vds[VDS_POS_LENGTH];
-    GenericDesc   *gd;
+//    GenericDesc   *gd;
     uint32   i,j;
     uint16  ident;
     int8*  Buf2 = NULL;
@@ -2502,7 +2506,7 @@ UDFVerifySequence(
                         RC = UDFReadTagged(Vcb,Buf2, j, j, &ident);
                         if(!OS_SUCCESS(RC)) try_return(RC);
                         UDFRegisterFsStructure(Vcb, j, Vcb->BlockSize);
-                        gd = (struct GenericDesc *)Buf2;
+//                        gd = (struct GenericDesc *)Buf2;
                         if(ident == TID_PARTITION_DESC) {
                             RC = UDFVerifyPartDesc(Vcb,Buf2);
                             if(!OS_SUCCESS(RC)) try_return(RC);
@@ -2927,10 +2931,11 @@ UDFCheckZeroBuf(
     IN uint32 Length
     )
 {
-    BOOLEAN RC = FALSE;
 
 //#ifdef _X86_
 #ifdef _MSC_VER
+
+    BOOLEAN RC = FALSE;
 
     uint32 len = Length;
     __asm push  ecx

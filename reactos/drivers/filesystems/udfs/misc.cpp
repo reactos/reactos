@@ -1750,7 +1750,7 @@ UDFGetMediaClass(
 typedef ULONG
 (*ptrUDFGetParameter)(
     IN PVCB Vcb, 
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN ULONG DefValue
     );
 
@@ -1759,7 +1759,7 @@ UDFUpdateCompatOption(
     PVCB Vcb,
     BOOLEAN Update,
     BOOLEAN UseCfg,
-    PWCHAR Name,
+    PCWSTR Name,
     ULONG Flag,
     BOOLEAN Default
     )
@@ -1824,7 +1824,7 @@ UDFReadRegKeys(
     if(!Vcb->BM_FlushPriod) {
         Vcb->BM_FlushPriod = UDF_DEFAULT_BM_FLUSH_TIMEOUT;
     } else
-    if(Vcb->BM_FlushPriod == -1) {
+    if(Vcb->BM_FlushPriod == (ULONG)-1) {
         Vcb->BM_FlushPriod = 0;
     }
     Vcb->Tree_FlushPriod = UDFGetParameter(Vcb, UDF_TREE_FLUSH_PERIOD_NAME,
@@ -1832,7 +1832,7 @@ UDFReadRegKeys(
     if(!Vcb->Tree_FlushPriod) {
         Vcb->Tree_FlushPriod = UDF_DEFAULT_TREE_FLUSH_TIMEOUT;
     } else
-    if(Vcb->Tree_FlushPriod == -1) {
+    if(Vcb->Tree_FlushPriod == (ULONG)-1) {
         Vcb->Tree_FlushPriod = 0;
     }
     Vcb->SkipCountLimit = UDFGetParameter(Vcb, UDF_NO_UPDATE_PERIOD_NAME,
@@ -1982,7 +1982,7 @@ UDFReadRegKeys(
 ULONG
 UDFGetRegParameter(
     IN PVCB Vcb, 
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN ULONG DefValue
     )
 {
@@ -1996,7 +1996,7 @@ UDFGetRegParameter(
 ULONG
 UDFGetCfgParameter(
     IN PVCB Vcb, 
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN ULONG DefValue
     )
 {
@@ -2221,9 +2221,9 @@ UDFReleaseVCB(
 ULONG
 UDFRegCheckParameterValue(
     IN PUNICODE_STRING RegistryPath,
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN PUNICODE_STRING PtrVolumePath,
-    IN PWSTR DefaultPath,
+    IN PCWSTR DefaultPath,
     IN ULONG DefValue
     )
 {
@@ -2357,19 +2357,19 @@ UDFRegCheckParameterValue(
 
 
         // *** Read GLOBAL_DEFAULTS from
-        // \DwUdf\Parameters_Unknown\
+        // "\DwUdf\Parameters_Unknown\"
 
         status = RegTGetDwordValue(NULL, paramPath.Buffer, Name, &val);
 
         // *** Read DEV_CLASS_SPEC_DEFAULTS (if any) from
-        // \DwUdf\Parameters_%DevClass%\
+        // "\DwUdf\Parameters_%DevClass%\"
 
         if(DefaultPath) {
             status = RegTGetDwordValue(NULL, defaultParamPath.Buffer, Name, &val);
         }
 
         // *** Read DEV_SPEC_PARAMS from (if device supports GetDevName)
-        // \DwUdf\Parameters\%DevName%\
+        // "\DwUdf\Parameters\%DevName%\"
 
         status = RegTGetDwordValue(NULL, paramDevPath.Buffer, Name, &val);
 

@@ -663,7 +663,7 @@ UDFNormalizeFileName(
         if (trailIndex != (newIndex - 1)) {
             newIndex = trailIndex + 1;
             needsCRC = TRUE;
-            hasExt = FALSE; //* Trailing period does not make an extension.
+            hasExt = FALSE; // Trailing period does not make an extension.
         }
     }
 
@@ -671,10 +671,10 @@ UDFNormalizeFileName(
         int localExtIndex = 0;
         if (hasExt) {
             int maxFilenameLen;
-            //* Translate extension, and store it in ext. 
+            // Translate extension, and store it in ext. 
             for(index = 0; index<UDF_EXT_SIZE && extIndex + index +1 < udfLen; index++ ) {
                 current = udfName[extIndex + index + 1];
-                if (UDFIsIllegalChar(current) /*|| !UnicodeIsPrint(current)) {
+                if (UDFIsIllegalChar(current) //|| !UnicodeIsPrint(current)) {
                     needsCRC = TRUE;
                     // Replace Illegal and non-displayable chars
                     // with underscore.
@@ -791,7 +791,7 @@ MyAppendUnicodeStringToString_(
 NTSTATUS
 MyAppendUnicodeToString_(
     IN PUNICODE_STRING Str1,
-    IN PWSTR Str2
+    IN PCWSTR Str2
 #ifdef UDF_TRACK_UNICODE_STR
    ,IN PCHAR Tag
 #endif 
@@ -937,7 +937,7 @@ UDFIsDirInfoCached(
 {
     PDIR_INDEX_HDR hDirNdx = DirInfo->Dloc->DirIndex;
     PDIR_INDEX_ITEM DirNdx;
-    for(uint_di i=2; DirNdx = UDFDirIndex(hDirNdx,i); i++) {
+    for(uint_di i=2; (DirNdx = UDFDirIndex(hDirNdx,i)); i++) {
         if(!(DirNdx->FI_Flags & UDF_FI_FLAG_SYS_ATTR) ||
             (DirNdx->FI_Flags & UDF_FI_FLAG_LINKED)) return FALSE;
     }
@@ -1008,7 +1008,7 @@ UDFDoesOSAllowFileToBeUnlinked__(
 //    UDFFlushAFile(FileInfo->Fcb, NULL, &IoStatus, 0);
     hCurDirNdx = FileInfo->Dloc->DirIndex;
     // check if we can delete all files
-    for(i=2; CurDirNdx = UDFDirIndex(hCurDirNdx,i); i++) {
+    for(i=2; (CurDirNdx = UDFDirIndex(hCurDirNdx,i)); i++) {
         // try to open Stream
         if(CurDirNdx->FileInfo)
             return STATUS_CANNOT_DELETE;

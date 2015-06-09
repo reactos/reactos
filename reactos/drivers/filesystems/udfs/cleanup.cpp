@@ -549,7 +549,7 @@ DiscardDelete:
         if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) &&
            !(Fcb->FCBFlags & (UDF_FCB_DELETE_ON_CLOSE |
                               UDF_FCB_DELETED /*|
-                              UDF_FCB_DIRECTORY /*|
+                              UDF_FCB_DIRECTORY |
                               UDF_FCB_READ_ONLY*/)) &&
            !UDFIsAStreamDir(NextFileInfo)) {
             LONGLONG NtTime;
@@ -719,7 +719,7 @@ UDFCloseFileInfoChain(
         ValidateFileInfo(fi);
 
         // acquire parent
-        if(ParentFI = fi->ParentFile) {
+        if((ParentFI = fi->ParentFile)) {
             ParentFcb = fi->Fcb->ParentFcb;
             ASSERT(ParentFcb);
             ASSERT(ParentFcb->NTRequiredFCB);
@@ -734,7 +734,7 @@ UDFCloseFileInfoChain(
         }
         // acquire current file/dir
         // we must assure that no more threads try to reuse this object
-        if(Fcb = fi->Fcb) {
+        if((Fcb = fi->Fcb)) {
             UDF_CHECK_PAGING_IO_RESOURCE(Fcb->NTRequiredFCB);
             UDFAcquireResourceExclusive(&(Fcb->NTRequiredFCB->MainResource),TRUE);
             ASSERT_REF(Fcb->ReferenceCount >= fi->RefCount);

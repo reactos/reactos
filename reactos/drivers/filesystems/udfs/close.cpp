@@ -150,7 +150,7 @@ UDFCommonClose(
     BOOLEAN                 AcquiredGD = FALSE;
     PUDF_FILE_INFO          fi;
     ULONG                   i = 0;
-    ULONG                   clean_stat = 0;
+//    ULONG                   clean_stat = 0;
 
 //    BOOLEAN                 CompleteIrp = TRUE;
     BOOLEAN                 PostRequest = FALSE;
@@ -337,7 +337,7 @@ UDFCommonClose(
         AdPrint(("UDF: ReferenceCount:  %x\n",Fcb->ReferenceCount));
 #endif // UDF_DBG
         // try to clean up as long chain as it is possible
-        clean_stat = UDFCleanUpFcbChain(Vcb, fi, i, TRUE);
+        UDFCleanUpFcbChain(Vcb, fi, i, TRUE);
 
 try_exit: NOTHING;
 
@@ -426,7 +426,7 @@ UDFCleanUpFcbChain(
     while(fi) {
 
         // acquire parent
-        if(ParentFI = fi->ParentFile) {
+        if((ParentFI = fi->ParentFile)) {
             ASSERT(fi->Fcb);
             ParentFcb = fi->Fcb->ParentFcb;
             ASSERT(ParentFcb);
@@ -545,7 +545,7 @@ UDFCleanUpFcbChain(
                 fi->Dloc->CommonFcb = NULL;
             }
 
-            if(CleanCode = UDFCleanUpFile__(Vcb, fi)) {
+            if((CleanCode = UDFCleanUpFile__(Vcb, fi))) {
                 // Check, if we can uninitialize & deallocate CommonFcb part
                 // kill some cross links
                 Fcb->FileInfo = NULL;
@@ -865,12 +865,12 @@ UDFBuildTreeItemsList(
     }
 
     // walk through SDir (if any)
-    if(SDirInfo = FileInfo->Dloc->SDirInfo)
+    if((SDirInfo = FileInfo->Dloc->SDirInfo))
         UDFBuildTreeItemsList(Vcb, SDirInfo, CheckItemProc,
                  PassedList, PassedListSize, FoundList, FoundListSize);
 
     // walk through subsequent objects (if any)
-    if(hDirNdx = FileInfo->Dloc->DirIndex) {
+    if((hDirNdx = FileInfo->Dloc->DirIndex)) {
 
         // scan DirIndex
         UDF_DIR_SCAN_CONTEXT ScanContext;
@@ -878,7 +878,7 @@ UDFBuildTreeItemsList(
         PUDF_FILE_INFO CurFileInfo;
 
         if(UDFDirIndexInitScan(FileInfo, &ScanContext, 2)) {
-            while(DirNdx = UDFDirIndexScan(&ScanContext, &CurFileInfo)) {
+            while((DirNdx = UDFDirIndexScan(&ScanContext, &CurFileInfo))) {
                 if(!CurFileInfo)
                     continue;
                 UDFBuildTreeItemsList(Vcb, CurFileInfo, CheckItemProc,

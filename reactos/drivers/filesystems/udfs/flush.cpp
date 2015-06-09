@@ -293,7 +293,7 @@ UDFFlushAFile(
     )
 {
     BOOLEAN SetArchive = FALSE;
-    BOOLEAN PurgeCache = FALSE;
+//    BOOLEAN PurgeCache = FALSE;
     ULONG ret_val = 0;
 
     KdPrint(("UDFFlushAFile: \n"));
@@ -339,7 +339,7 @@ UDFFlushAFile(
             // notice, that we should purge cache
             // we can't do it now, because it may cause last Close
             // request & thus, structure deallocation
-            PurgeCache = TRUE;
+//            PurgeCache = TRUE;
 
 #ifndef UDF_READ_ONLY_BUILD
             if(Ccb) {
@@ -420,7 +420,7 @@ UDFFlushADirectory(
     )
 {
     KdPrint(("UDFFlushADirectory: \n"));
-    PDIR_INDEX_HDR hDI;
+//    PDIR_INDEX_HDR hDI;
     PDIR_INDEX_ITEM DI;
 //    BOOLEAN Referenced = FALSE;
     ULONG ret_val = 0;
@@ -429,7 +429,7 @@ UDFFlushADirectory(
         return 0;
 
     if(!FI || !FI->Dloc || !FI->Dloc->DirIndex) goto SkipFlushDir;
-    hDI = FI->Dloc->DirIndex;
+//    hDI = FI->Dloc->DirIndex;
 
     // Flush Security if required
     _SEH2_TRY {
@@ -455,7 +455,7 @@ UDFFlushADirectory(
         PUDF_FILE_INFO      tempFI;
 
         if(UDFDirIndexInitScan(FI, &ScanContext, 2)) {
-            while(DI = UDFDirIndexScan(&ScanContext, &tempFI)) {
+            while((DI = UDFDirIndexScan(&ScanContext, &tempFI))) {
                 // Flush Dir entry
                 _SEH2_TRY {
                     if(!tempFI) continue;

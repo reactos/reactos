@@ -117,7 +117,7 @@ UDFVWaitQueued(
         w = InterlockedIncrement((PLONG)&(VerifyCtx->WaiterCount));
         KdPrint(("  %d waiters\n", w));
         DbgWaitForSingleObject(&(VerifyCtx->vrfEvent), NULL);
-        if(w = InterlockedDecrement((PLONG)&(VerifyCtx->WaiterCount))) {
+        if((w = InterlockedDecrement((PLONG)&(VerifyCtx->WaiterCount)))) {
             KdPrint(("  still %d waiters, q %d\n", w, VerifyCtx->QueuedCount));
             if(!VerifyCtx->QueuedCount) {
                 KdPrint(("  pulse event\n", w));
@@ -543,7 +543,7 @@ UDFVWorkItem(
 {
     PVCB Vcb = VerifyReq->Vcb;
     ULONG ReadBytes;
-    OSSTATUS RC;
+//    OSSTATUS RC;
     ULONG i;
 
     ReadBytes = (ULONG)Vcb;
@@ -551,20 +551,20 @@ UDFVWorkItem(
     if(Vcb->SparingCountFree) {
         WCacheStartDirect__(&(Vcb->FastCache), Vcb, TRUE);
         for(i=0; i<VerifyReq->nReq; i++) {
-            RC = UDFTIOVerify(Vcb,
-                           VerifyReq->Buffer,     // Target buffer
-                           VerifyReq->vr[i].BCount << Vcb->BlockSizeBits,
-                           VerifyReq->vr[i].lba,
-                           &ReadBytes,
-                           PH_TMP_BUFFER | PH_VCB_IN_RETLEN /*| PH_LOCK_CACHE*/);
+            UDFTIOVerify(Vcb,
+                         VerifyReq->Buffer,     // Target buffer
+                         VerifyReq->vr[i].BCount << Vcb->BlockSizeBits,
+                         VerifyReq->vr[i].lba,
+                         &ReadBytes,
+                         PH_TMP_BUFFER | PH_VCB_IN_RETLEN /*| PH_LOCK_CACHE*/);
         }
         WCacheEODirect__(&(Vcb->FastCache), Vcb);
     } else {
         for(i=0; i<VerifyReq->nReq; i++) {
             KdPrint(("!!! No more space for remap !!!\n"));
             KdPrint(("  try del from verify cache @ %x\n", VerifyReq->vr[i].lba));
-            RC = UDFVRead(Vcb, VerifyReq->Buffer, VerifyReq->vr[i].BCount, VerifyReq->vr[i].lba,
-                          PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER);
+            UDFVRead(Vcb, VerifyReq->Buffer, VerifyReq->vr[i].BCount, VerifyReq->vr[i].lba,
+                     PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER);
         }
     }
 #else
@@ -775,7 +775,7 @@ UDFCheckArea(
     buff = (uint8*)DbgAllocatePoolWithTag(NonPagedPool, Vcb->WriteBlockSize, 'bNWD' );
     if(buff) {
         for(i=0; i<BCount; i+=d) {
-            if(!(LBA+i & (PS-1)) &&
+            if(!((LBA+i) & (PS-1)) &&
                (i+PS <= BCount)) {
                 d = PS;
             } else {
@@ -821,7 +821,7 @@ UDFRemapPacket(
         BS = Vcb->SparingBlockSize;
 
         // use sparing table for relocation
-        if(Vcb->SparingCountFree == -1) {
+        if(Vcb->SparingCountFree == (ULONG)-1) {
             KdPrint(("calculate free spare areas\n"));
 re_check:
             KdPrint(("verify spare area\n"));

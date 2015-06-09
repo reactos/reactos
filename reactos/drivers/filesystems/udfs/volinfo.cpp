@@ -493,11 +493,10 @@ UDFQueryFsAttributeInfo(
     ULONG BytesToCopy;
 
     NTSTATUS Status = STATUS_SUCCESS;
-    PWCHAR FsTypeTitle;
+    PCWSTR FsTypeTitle;
     ULONG FsTypeTitleLen;
 
     PAGED_CODE();
-
     KdPrint(("  UDFQueryFsAttributeInfo: \n"));
     //  Fill out the fixed portion of the buffer.
     Buffer->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH |

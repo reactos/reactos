@@ -260,7 +260,7 @@ UDFFastIoQueryStdInfo(
     LONG             Length = sizeof(FILE_STANDARD_INFORMATION);
     PtrUDFFCB        Fcb;
     PtrUDFCCB        Ccb;
-    PtrUDFNTRequiredFCB NtReqFcb = NULL;
+//    PtrUDFNTRequiredFCB NtReqFcb = NULL;
 //    BOOLEAN          MainResourceAcquired = FALSE;
 
     FsRtlEnterFileSystem();
@@ -277,7 +277,7 @@ UDFFastIoQueryStdInfo(
             ASSERT(Ccb);
             Fcb = Ccb->Fcb;
             ASSERT(Fcb);
-            NtReqFcb = Fcb->NTRequiredFCB;
+//            NtReqFcb = Fcb->NTRequiredFCB;
             //Fcb->Vcb->VCBFlags |= UDF_VCB_SKIP_EJECT_CHECK;
 
 /*                

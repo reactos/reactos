@@ -658,13 +658,13 @@ UDFReadRegKeys(
 
 extern ULONG UDFGetRegParameter(
     IN PVCB Vcb, 
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN ULONG DefValue = 0);
 
 extern ULONG
 UDFGetCfgParameter(
     IN PVCB Vcb, 
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN ULONG DefValue
     );
 
@@ -673,9 +673,9 @@ extern VOID UDFReleaseVCB(
 
 extern ULONG UDFRegCheckParameterValue(
     IN PUNICODE_STRING RegistryPath,
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN PUNICODE_STRING PtrVolumePath,
-    IN PWSTR DefaultPath,
+    IN PCWSTR DefaultPath,
     IN ULONG DefValue = 0);
 
 extern VOID UDFInitializeIrpContextFromLite (

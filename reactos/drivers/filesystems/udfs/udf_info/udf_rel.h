@@ -423,8 +423,8 @@ typedef struct _FE_LIST_ENTRY {
 #define UNICODE_PERIOD    0x002E
 #define UNICODE_SPACE     0x0020
 
-#define LBA_OUT_OF_EXTENT       ((LONG)(-1))
-#define LBA_NOT_ALLOCATED       ((LONG)(-2))
+#define LBA_OUT_OF_EXTENT       ((ULONG)(-1))
+#define LBA_NOT_ALLOCATED       ((ULONG)(-2))
 
 typedef struct _EXT_RELOCATION_ENTRY {
     uint32 extLength;

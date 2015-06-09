@@ -544,7 +544,7 @@ UDFGetBasicInformation(
 
     _SEH2_TRY {
 
-        if(*PtrReturnedLength < sizeof(FILE_BASIC_INFORMATION)) {
+        if(*PtrReturnedLength < (LONG)sizeof(FILE_BASIC_INFORMATION)) {
             try_return(RC = STATUS_BUFFER_OVERFLOW);
         }
 
@@ -619,13 +619,13 @@ UDFGetStandardInformation(
 {
     NTSTATUS            RC = STATUS_SUCCESS;
     PUDF_FILE_INFO      FileInfo;
-    PVCB Vcb;
+//    PVCB Vcb;
 
     AdPrint(("UDFGetStandardInformation: \n"));
 
     _SEH2_TRY {
 
-        if(*PtrReturnedLength < sizeof(FILE_STANDARD_INFORMATION)) {
+        if(*PtrReturnedLength < (LONG)sizeof(FILE_STANDARD_INFORMATION)) {
             try_return(RC = STATUS_BUFFER_OVERFLOW);
         }
 
@@ -639,7 +639,7 @@ UDFGetStandardInformation(
             AdPrint(("!!!! GetStandardInfo to unopened file !!!!\n"));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
-        Vcb = Fcb->Vcb;
+//        Vcb = Fcb->Vcb;
         PtrBuffer->NumberOfLinks = UDFGetFileLinkCount(FileInfo);
         PtrBuffer->DeletePending = (Fcb->FCBFlags & UDF_FCB_DELETE_ON_CLOSE) ? TRUE : FALSE;
 
@@ -686,7 +686,7 @@ UDFGetNetworkInformation(
 
     _SEH2_TRY {
 
-        if(*PtrReturnedLength < sizeof(FILE_NETWORK_OPEN_INFORMATION)) {
+        if(*PtrReturnedLength < (LONG)sizeof(FILE_NETWORK_OPEN_INFORMATION)) {
             try_return(RC = STATUS_BUFFER_OVERFLOW);
         }
 
@@ -752,7 +752,7 @@ UDFGetInternalInformation(
 
     _SEH2_TRY {
 
-        if(*PtrReturnedLength < sizeof(FILE_INTERNAL_INFORMATION)) {
+        if(*PtrReturnedLength < (LONG)sizeof(FILE_INTERNAL_INFORMATION)) {
             try_return(RC = STATUS_BUFFER_OVERFLOW);
         }
 
@@ -803,7 +803,7 @@ UDFGetEaInformation(
 
     _SEH2_TRY {
 
-        if(*PtrReturnedLength < sizeof(FILE_EA_INFORMATION)) {
+        if(*PtrReturnedLength < (LONG)sizeof(FILE_EA_INFORMATION)) {
             try_return(RC = STATUS_BUFFER_OVERFLOW);
         }
 
@@ -903,7 +903,7 @@ UDFGetPositionInformation(
  IN OUT PLONG                     PtrReturnedLength
     )
 {
-    if(*PtrReturnedLength < sizeof(FILE_POSITION_INFORMATION)) {
+    if(*PtrReturnedLength < (LONG)sizeof(FILE_POSITION_INFORMATION)) {
         return(STATUS_BUFFER_OVERFLOW);
     }
     PtrBuffer->CurrentByteOffset = FileObject->CurrentByteOffset;
@@ -960,7 +960,7 @@ UDFGetFileStreamInformation(
         NTFileInfo = (PFILE_BOTH_DIR_INFORMATION)MyAllocatePool__(NonPagedPool, sizeof(FILE_BOTH_DIR_INFORMATION)+UDF_NAME_LEN*sizeof(WCHAR));
         if(!NTFileInfo) try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
 
-        for(i=2; SDirIndex = UDFDirIndex(hSDirIndex,i); i++) {
+        for(i=2; (SDirIndex = UDFDirIndex(hSDirIndex,i)); i++) {
             if((SDirIndex->FI_Flags & UDF_FI_FLAG_FI_INTERNAL) ||
                 UDFIsDeleted(SDirIndex) ||
                 !SDirIndex->FName.Buffer )
@@ -1176,7 +1176,7 @@ UDFMarkStreamsForDeletion(
                 UDFDirIndexInitScan(SDirInfo, &ScanContext, 2)) {
 
                 // Check if we can delete Streams 
-                while(DirNdx = UDFDirIndexScan(&ScanContext, &FileInfo)) {
+                while((DirNdx = UDFDirIndexScan(&ScanContext, &FileInfo))) {
                     if(!FileInfo)
                         continue;
                     if(FileInfo->Fcb) {
@@ -1631,7 +1631,7 @@ UDFSetEOF(
     PDIR_INDEX_ITEM DirNdx;
     PtrUDFNTRequiredFCB NtReqFcb = NULL;
     LONGLONG        OldFileSize;
-    BOOLEAN         ZeroBlock;
+//    BOOLEAN         ZeroBlock;
     BOOLEAN         CacheMapInitialized = FALSE;
     BOOLEAN         AcquiredPagingIo = FALSE;
 
@@ -1712,8 +1712,10 @@ UDFSetEOF(
 
             // Yes. Do the FSD specific stuff i.e. increase reserved
             // space on disk.
+/*
             if (FileObject->PrivateCacheMap)
                 ZeroBlock = TRUE;
+*/
 
             // reference file to pretend that it is opened
             UDFReferenceFile__(Fcb->FileInfo);
@@ -1828,7 +1830,7 @@ UDFSetEOF(
                 UDFZeroDataEx(NtReqFcb,
                               OldFileSize,
                               PtrBuffer->EndOfFile.QuadPart - OldFileSize,
-                              TRUE/*CanWait, Vcb, FileObject);
+                              TRUE // CanWait, Vcb, FileObject);
             }*/
             Fcb->NTRequiredFCB->NtReqFCBFlags |= UDF_NTREQ_FCB_MODIFIED;
 

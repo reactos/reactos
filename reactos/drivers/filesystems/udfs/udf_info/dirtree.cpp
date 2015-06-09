@@ -236,11 +236,15 @@ UDFDirIndexTrunc(
 } // end UDFDirIndexTrunc()
 
 #if defined _X86_ && !defined UDF_LIMIT_DIR_SIZE
+#ifdef _MSC_VER
 #pragma warning(disable:4035)               // re-enable below
+#endif
 /*
     This routine returns pointer to DirIndex item with index i.
  */
+#ifdef _MSC_VER
 __declspec (naked)
+#endif
 PDIR_INDEX_ITEM
 __fastcall
 UDFDirIndex(
@@ -299,7 +303,9 @@ udi_OK:
     return NULL;
 #endif
 }
+#ifdef _MSC_VER
 #pragma warning(default:4035)
+#endif
 #endif // _X86_
 
 /*
@@ -397,7 +403,7 @@ UDFDirIndexScan(
     }
 
     if(_FileInfo) {
-        if(FileInfo = Context->DirNdx->FileInfo) {
+        if((FileInfo = Context->DirNdx->FileInfo)) {
             if(FileInfo->ParentFile != Context->DirInfo) {
                 ParFileInfo = UDFLocateParallelFI(Context->DirInfo, 
                                                   Context->i,
@@ -507,7 +513,7 @@ UDFIndexDirectory(
     PDIR_INDEX_ITEM DirNdx;
     PFILE_IDENT_DESC FileId;
     uint32 Offset = 0;
-    uint32 prevOffset = 0;
+//    uint32 prevOffset = 0;
     uint_di Count = 0;
     OSSTATUS status;
     int8* buff;
@@ -541,7 +547,7 @@ UDFIndexDirectory(
     // scan Dir to get entry counter
     FileId = (PFILE_IDENT_DESC)buff;
     DirPrint(("  ExtInfo->Length %x\n", ExtInfo->Length));
-    prevOffset = 0;
+//    prevOffset = 0;
     while(Offset<ExtInfo->Length) {
         DirPrint(("  Offset %x\n", Offset));
         if(!FileId->descTag.tagIdent) {
@@ -566,7 +572,7 @@ UDFIndexDirectory(
                 FileInfo->Dloc->DirIndex->DelCount = Vcb->PackDirThreshold+1;
             }
         }
-        prevOffset = Offset;
+//        prevOffset = Offset;
         Offset += (FileId->lengthFileIdent + FileId->lengthOfImpUse + sizeof(FILE_IDENT_DESC) + 3) & (~((uint32)3));
         FileId = (PFILE_IDENT_DESC)((buff)+Offset);
         Count++;
@@ -603,7 +609,7 @@ UDFIndexDirectory(
     ASSERT(PartNum != -1);
     DirNdx->FileEntryLoc.logicalBlockNum =
         UDFPhysLbaToPart(Vcb, PartNum, FileInfo->Dloc->FELoc.Mapping[0].extLocation);
-    if(DirNdx->FileEntryLoc.logicalBlockNum == -1) {
+    if(DirNdx->FileEntryLoc.logicalBlockNum == (ULONG)-1) {
         DirPrint(("  err: FileEntryLoc=-1\n"));
         DbgFreePool(buff);
         return STATUS_FILE_CORRUPT_ERROR;
@@ -613,9 +619,7 @@ UDFIndexDirectory(
                          FILE_DIRECTORY;
 //    DirNdx->Offset = 0;
 //    DirNdx->Length = 0;
-    DirNdx->FName.Buffer = L".";
-    DirNdx->FName.Length =
-    (DirNdx->FName.MaximumLength = sizeof(L".")) - sizeof(WCHAR);
+    RtlInitUnicodeString(&DirNdx->FName, L".");
     DirNdx->FileInfo = FileInfo;
     DirNdx->FI_Flags |= UDF_FI_FLAG_KEEP_NAME;
     DirNdx->FI_Flags |= UDFBuildHashEntry(Vcb, &(DirNdx->FName), &(DirNdx->hashes),
@@ -623,7 +627,7 @@ UDFIndexDirectory(
     Count++;
     FileId = (PFILE_IDENT_DESC)buff;
     status = STATUS_SUCCESS;
-    prevOffset = 0;
+//    prevOffset = 0;
     while((Offset<ExtInfo->Length) && FileId->descTag.tagIdent) {
         // add new entry to index list
         if(FileId->descTag.tagIdent != TID_FILE_IDENT_DESC) {
@@ -656,9 +660,7 @@ UDFIndexDirectory(
             // init 'parent' entry
             // '..' points to Parent Object (if any),
             // otherwise it points to the Dir itself
-            DirNdx->FName.Buffer = L"..";
-            DirNdx->FName.Length =
-            (DirNdx->FName.MaximumLength = sizeof(L"..")) - sizeof(WCHAR);
+            RtlInitUnicodeString(&DirNdx->FName, L"..");
             DirNdx->FileInfo = (FileInfo->ParentFile) ?
                                       FileInfo->ParentFile : FileInfo;
             DirNdx->FI_Flags |= UDF_FI_FLAG_KEEP_NAME;
@@ -707,7 +709,7 @@ UDFIndexDirectory(
             FileId->fileCharacteristics |= FILE_DELETED;
         }
 #endif // UDF_CHECK_DISK_ALLOCATION
-        prevOffset = Offset;
+//        prevOffset = Offset;
         Offset += DirNdx->Length;
         FileId = (PFILE_IDENT_DESC)(((int8*)FileId)+DirNdx->Length);
         Count++;
@@ -788,7 +790,7 @@ UDFPackDirectory__(
     PartNum = (uint16)UDFGetPartNumByPhysLba(Vcb, FileInfo->Dloc->FELoc.Mapping[0].extLocation);
     ASSERT(PartNum != -1);
 
-    while(DirNdx = UDFDirIndexScan(&ScanContext, NULL)) {
+    while((DirNdx = UDFDirIndexScan(&ScanContext, NULL))) {
 
         if(UDFIsDeleted(DirNdx))
             dc++;
@@ -932,7 +934,7 @@ UDFReTagDirectory(
     PartNum = (uint16)UDFGetPartNumByPhysLba(Vcb, FileInfo->Dloc->FELoc.Mapping[0].extLocation);
     ASSERT(PartNum != -1);
 
-    while(DirNdx = UDFDirIndexScan(&ScanContext, NULL)) {
+    while((DirNdx = UDFDirIndexScan(&ScanContext, NULL))) {
 
         status = UDFReadFile__(Vcb, FileInfo, Offset = DirNdx->Offset,
                                                    l = DirNdx->Length, FALSE, Buf, &ReadBytes);
@@ -996,7 +998,7 @@ UDFFindFile(
 
     UDFBuildHashEntry(Vcb, Name, &hashes, HASH_POSIX | HASH_ULFN);
 
-    if(CanBe8d3 = UDFCanNameBeA8dot3(Name)) {
+    if((CanBe8d3 = UDFCanNameBeA8dot3(Name))) {
         ShortName.MaximumLength = 13 * sizeof(WCHAR);
         ShortName.Buffer = (PWCHAR)&ShortNameBuffer;
     }
@@ -1007,7 +1009,7 @@ UDFFindFile(
     if(!IgnoreCase && !CanBe8d3) {
         // perform case sensetive sequential directory scan
 
-        while(DirNdx = UDFDirIndexScan(&ScanContext, NULL)) {
+        while((DirNdx = UDFDirIndexScan(&ScanContext, NULL))) {
             if( (DirNdx->hashes.hPosix == hashes.hPosix) &&
                  DirNdx->FName.Buffer &&
                 (!RtlCompareUnicodeString(&(DirNdx->FName), Name, FALSE)) &&
@@ -1021,7 +1023,7 @@ UDFFindFile(
 
     if(hashes.hPosix == hashes.hLfn) {
 
-        while(DirNdx = UDFDirIndexScan(&ScanContext, NULL)) {
+        while((DirNdx = UDFDirIndexScan(&ScanContext, NULL))) {
             if(!DirNdx->FName.Buffer ||
                (NotDeleted && UDFIsDeleted(DirNdx)) )
                 continue;
@@ -1042,7 +1044,7 @@ UDFFindFile(
 
     } else {
 
-        while(DirNdx = UDFDirIndexScan(&ScanContext, NULL)) {
+        while((DirNdx = UDFDirIndexScan(&ScanContext, NULL))) {
             // perform sequential directory scan
             if(!DirNdx->FName.Buffer ||
                (NotDeleted && UDFIsDeleted(DirNdx)) )
@@ -1244,7 +1246,7 @@ UDFStoreDloc(
     PUDF_DATALOC_INFO Dloc;
 
     if(!Lba) return STATUS_INVALID_PARAMETER;
-    if(Lba == (-1)) return STATUS_INVALID_PARAMETER;
+    if(Lba == (ULONG)-1) return STATUS_INVALID_PARAMETER;
 
     UDFAcquireResourceExclusive(&(Vcb->DlocResource),TRUE);
 

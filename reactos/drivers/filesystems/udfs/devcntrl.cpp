@@ -884,7 +884,7 @@ notify_media_change:
             //  Copy the data from the Vcb.
             ((PCDROM_DISK_DATA_USER_OUT)(Irp->AssociatedIrp.SystemBuffer))->DiskData = CDROM_DISK_DATA_TRACK;
             for(TrackNumber=Vcb->FirstTrackNum; TrackNumber<Vcb->LastTrackNum; TrackNumber++) {
-                if(Vcb->TrackMap[TrackNumber].TrackParam & Trk_QSubChan_Type_Mask ==
+                if((Vcb->TrackMap[TrackNumber].TrackParam & Trk_QSubChan_Type_Mask) ==
                     Trk_QSubChan_Type_Audio) {
                     ((PCDROM_DISK_DATA_USER_OUT)(Irp->AssociatedIrp.SystemBuffer))->DiskData |= CDROM_DISK_AUDIO_TRACK;
                     break;
@@ -1137,7 +1137,7 @@ UDFGetFileAllocModeFromICB(
     PEXTENDED_IO_STACK_LOCATION IrpSp =
         (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation( Irp );
 
-    PVCB Vcb;
+//    PVCB Vcb;
     PtrUDFFCB Fcb;
     PtrUDFCCB Ccb;
     PUDF_GET_FILE_ALLOCATION_MODE_OUT OutputBuffer;
@@ -1148,7 +1148,7 @@ UDFGetFileAllocModeFromICB(
     // user volume opens.
     Ccb = (PtrUDFCCB)(IrpSp->FileObject->FsContext2);
     Fcb = Ccb->Fcb;
-    Vcb = Fcb->Vcb;
+//    Vcb = Fcb->Vcb;
 
     Irp->IoStatus.Information = 0;
     if(IrpSp->Parameters.FileSystemControl.OutputBufferLength < sizeof(UDF_GET_FILE_ALLOCATION_MODE_OUT))

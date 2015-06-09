@@ -27,7 +27,7 @@ typedef struct _UDF_KEY_LIST {
 struct UDF_MEDIA_CLASS_NAMES
 {
     UDFFSD_MEDIA_TYPE MediaClass;
-    PWCHAR ClassName;
+    PCWSTR ClassName;
 };
 
 extern struct UDF_MEDIA_CLASS_NAMES UDFMediaClassName[];
@@ -114,7 +114,7 @@ typedef struct _UDFVolumeControlBlock {
     // device object when requesting a mount operation.
     PDEVICE_OBJECT                      TargetDeviceObject;
     UNICODE_STRING                      TargetDevName;
-    PWSTR                               DefaultRegName;
+    PCWSTR                               DefaultRegName;
     // the volume structure contains a pointer to the root directory FCB
     PtrUDFFCB                           RootDirFCB;
     // the complete name of the user visible drive letter we serve

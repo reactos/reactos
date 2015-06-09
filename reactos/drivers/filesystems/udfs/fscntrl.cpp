@@ -851,7 +851,7 @@ UDFStartEjectWaiter(
     IN PVCB    Vcb
     )
 {
-    NTSTATUS RC;
+//    NTSTATUS RC;
     PREVENT_MEDIA_REMOVAL_USER_IN Buff;
     KdPrint(("UDFStartEjectWaiter:\n"));
 
@@ -879,11 +879,11 @@ UDFStartEjectWaiter(
             // prevent media removal
             KdPrint(("UDFStartEjectWaiter: lock media\n"));
             Buff.PreventMediaRemoval = TRUE;
-            RC = UDFTSendIOCTL( IOCTL_STORAGE_MEDIA_REMOVAL,
-                                 Vcb,
-                                 &Buff,sizeof(PREVENT_MEDIA_REMOVAL_USER_IN),
-                                 NULL,0,
-                                 FALSE,NULL );
+            UDFTSendIOCTL( IOCTL_STORAGE_MEDIA_REMOVAL,
+                           Vcb,
+                           &Buff,sizeof(PREVENT_MEDIA_REMOVAL_USER_IN),
+                           NULL,0,
+                           FALSE,NULL );
             Vcb->VCBFlags |= UDF_VCB_FLAGS_MEDIA_LOCKED;
         }
         KdPrint(("UDFStartEjectWaiter: prepare to start\n"));
@@ -1267,9 +1267,7 @@ bl_unwind_1:
     DirNdx->FileCharacteristics = FILE_DIRECTORY;
     DirNdx->FI_Flags = UDF_FI_FLAG_SYS_ATTR;
     DirNdx->SysAttr = FILE_ATTRIBUTE_READONLY;
-    DirNdx->FName.Buffer = L".";
-    DirNdx->FName.Length =
-    (DirNdx->FName.MaximumLength = sizeof(L".")) - sizeof(WCHAR);
+    RtlInitUnicodeString(&DirNdx->FName, L".");
     DirNdx->FileInfo = RootFcb->FileInfo;
     DirNdx->FI_Flags |= UDFBuildHashEntry(Vcb, &(DirNdx->FName), &(DirNdx->hashes), HASH_ALL | HASH_KEEP_NAME);
 
@@ -1279,9 +1277,7 @@ bl_unwind_1:
         DirNdx->FI_Flags |= UDF_FI_FLAG_FI_INTERNAL;
     }
     DirNdx->SysAttr = FILE_ATTRIBUTE_READONLY;
-    DirNdx->FName.Buffer = L"Blank.CD";
-    DirNdx->FName.Length =
-    (DirNdx->FName.MaximumLength = sizeof(L"Blank.CD")) - sizeof(WCHAR);
+    RtlInitUnicodeString(&DirNdx->FName, L"Blank.CD");
     DirNdx->FI_Flags |= UDFBuildHashEntry(Vcb, &(DirNdx->FName), &(DirNdx->hashes), HASH_ALL);
 
     RootFcb->FileInfo->Dloc->DirIndex = hDirNdx;
@@ -1820,12 +1816,12 @@ UDFLockVolume(
     IoAcquireVpbSpinLock( &SavedIrql );
 
     if (!(Vcb->Vpb->Flags & VPB_LOCKED) &&
-        (Vcb->VolumeLockPID == -1) &&
+        (Vcb->VolumeLockPID == (ULONG)-1) &&
         (Vcb->VCBOpenCount <= UDF_RESIDUAL_REFERENCE+1) &&
         (Vcb->Vpb->ReferenceCount == 2)) {
 
         // Mark volume as locked
-        if(PID == -1) {
+        if(PID == (ULONG)-1) {
             Vcb->Vpb->Flags |= VPB_LOCKED;
         }
         Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_LOCKED;
@@ -2075,7 +2071,7 @@ UDFGetVolumeBitmap(
     IN PIRP Irp
     )
 {
-    NTSTATUS RC;
+//    NTSTATUS RC;
 
     PEXTENDED_IO_STACK_LOCATION IrpSp =
         (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation( Irp );
@@ -2095,7 +2091,8 @@ UDFGetVolumeBitmap(
     LARGE_INTEGER StartingLcn;
     PVOLUME_BITMAP_BUFFER OutputBuffer;
     ULONG i, lim;
-    PULONG FSBM, Dest;
+    PULONG FSBM;
+//    PULONG Dest;
     ULONG LSh;
 
     // Decode the file object, the only type of opens we accept are
@@ -2149,12 +2146,12 @@ UDFGetVolumeBitmap(
     if (OutputBufferLength < (DesiredClusters + 7) / 8) {
 
         BytesToCopy = OutputBufferLength;
-        RC = STATUS_BUFFER_OVERFLOW;
+//        RC = STATUS_BUFFER_OVERFLOW;
 
     } else {
 
         BytesToCopy = (DesiredClusters + 7) / 8;
-        RC = STATUS_SUCCESS;
+//        RC = STATUS_SUCCESS;
     }
 
     UDFAcquireResourceExclusive(&(Vcb->VCBResource), TRUE );
@@ -2169,7 +2166,7 @@ UDFGetVolumeBitmap(
         lim = BytesToCopy * 8;
         FSBM = (PULONG)(Vcb->FSBM_Bitmap);
         LSh = Vcb->LB2B_Bits;
-        Dest = (PULONG)(&OutputBuffer->Buffer[0]);
+//        Dest = (PULONG)(&OutputBuffer->Buffer[0]);
 
         for(i=StartingCluster & ~7; i<lim; i++) {
             if(UDFGetFreeBit(FSBM, i<<LSh))

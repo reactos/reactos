@@ -169,17 +169,9 @@ DriverEntry(
 
             RegTGetKeyHandle(NULL, UDFGlobalData.SavedRegPath.Buffer, &hUdfRootKey);
 
-            UDFGlobalData.UnicodeStrRoot.Buffer = L"\\"; //(PWCHAR)&(UDFGlobalData.UnicodeStrRootBuffer);
-            UDFGlobalData.UnicodeStrRoot.Length = sizeof(WCHAR);
-            UDFGlobalData.UnicodeStrRoot.MaximumLength = 2*sizeof(WCHAR);
-
-            UDFGlobalData.UnicodeStrSDir.Buffer = L":";
-            UDFGlobalData.UnicodeStrSDir.Length = sizeof(WCHAR);
-            UDFGlobalData.UnicodeStrSDir.MaximumLength = 2*sizeof(WCHAR);
-
-            UDFGlobalData.AclName.Buffer = UDF_SN_NT_ACL;
-            UDFGlobalData.AclName.Length =
-            (UDFGlobalData.AclName.MaximumLength = sizeof(UDF_SN_NT_ACL)) - sizeof(WCHAR);
+            RtlInitUnicodeString(&UDFGlobalData.UnicodeStrRoot, L"\\");
+            RtlInitUnicodeString(&UDFGlobalData.UnicodeStrSDir, L":");
+            RtlInitUnicodeString(&UDFGlobalData.AclName, UDF_SN_NT_ACL);
 
             KdPrint(("UDF: Init delayed close queues\n"));
 #ifdef UDF_DELAYED_CLOSE
@@ -214,7 +206,7 @@ DriverEntry(
             // create a device object representing the driver itself
             //  so that requests can be targeted to the driver ...
             //  e.g. for a disk-based FSD, "mount" requests will be sent to
-            //        this device object by the I/O Manager.\
+            //        this device object by the I/O Manager.
             //        For a redirector/server, you may have applications
             //        send "special" IOCTL's using this device object ...
 
@@ -689,13 +681,13 @@ UDFDismountDevice(
             DbgCompareMemory(&Buffer->FileSystemName[0],name  , sizeof(name)) == sizeof(name))
                     
         if (NT_SUCCESS(RC) &&
-           (UDF_CHECK_FS_NAME(UDF_FS_TITLE_CDR)    ||
-            UDF_CHECK_FS_NAME(UDF_FS_TITLE_CDRW)   ||
-            UDF_CHECK_FS_NAME(UDF_FS_TITLE_DVDR)   ||
-            UDF_CHECK_FS_NAME(UDF_FS_TITLE_DVDRW)  ||
-            UDF_CHECK_FS_NAME(UDF_FS_TITLE_DVDpR)  ||
-            UDF_CHECK_FS_NAME(UDF_FS_TITLE_DVDpRW) ||
-            UDF_CHECK_FS_NAME(UDF_FS_TITLE_DVDRAM) )) try_return(STATUS_SUCCESS);
+           (UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_CDR)    ||
+            UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_CDRW)   ||
+            UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDR)   ||
+            UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDRW)  ||
+            UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDpR)  ||
+            UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDpRW) ||
+            UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDRAM) )) try_return(STATUS_SUCCESS);
         
         KdPrint(("\n*** UDFDismountDevice: LockVolume\n"));
         RC = ZwFsControlFile(NtFileHandle,
@@ -874,6 +866,7 @@ UDFRemountAll(
     UNICODE_STRING  unicodeCdRomDeviceName;
     LARGE_INTEGER   delay;
 
+*/
 /*    delay.QuadPart = -80*10000000;
     KeDelayExecutionThread(KernelMode, FALSE, &delay);        //10 seconds*/
     

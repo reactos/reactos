@@ -439,8 +439,10 @@ WCacheFindFrameToRelease(
   Internal routine
  */
 
+#ifdef _MSC_VER
 #pragma warning(push)               
 #pragma warning(disable:4035)               // re-enable below
+#endif
 
 ULONG
 //__fastcall
@@ -566,7 +568,9 @@ EO_while_2:
 
 }
 
+#ifdef _MSC_VER
 #pragma warning(pop) // re-enable warning #4035
+#endif
 
 /*
   WCacheInsertRangeToList() inserts values laying in range described
@@ -823,7 +827,7 @@ WCacheRemoveFrame(
   Internal routine
  */
 #define WCacheGetModFlag(block_array, i) \
-    (((UCHAR)(block_array[i].Sector)) & WCACHE_FLAG_MODIFIED)
+    (*((PULONG)&(block_array[i].Sector)) & WCACHE_FLAG_MODIFIED)
 
 #if 0
 /*
@@ -1643,9 +1647,9 @@ WCacheCheckLimitsRAM(
 //    ULONG BS = Cache->BlockSize;
 //    ULONG PS = BS << Cache->PacketSizeSh; // packet size (bytes)
     ULONG PSs = Cache->PacketSize;
-    ULONG try_count = 0;
+//    ULONG try_count = 0;
     PW_CACHE_ENTRY block_array;
-    OSSTATUS status;
+//    OSSTATUS status;
     ULONG FreeFrameCount = 0;
 //    PVOID addr;
 
@@ -1679,11 +1683,13 @@ Try_Another_Frame:
             try_count = 0;
         }
 #else
+/*
         if(Cache->FrameList[frame].UpdateCount) {
             try_count = MAX_TRIES_FOR_NA;
         } else {
             try_count = 0;
         }
+*/
 #endif
 
         if(FreeFrameCount)
@@ -1700,7 +1706,7 @@ Try_Another_Frame:
             BrutePoint();
             return STATUS_DRIVER_INTERNAL_ERROR;
         }
-        status = WCacheFlushBlocksRAM(Cache, Context, block_array, List, firstPos, lastPos, TRUE);
+        WCacheFlushBlocksRAM(Cache, Context, block_array, List, firstPos, lastPos, TRUE);
 
         WCacheRemoveRangeFromList(List, &(Cache->BlockCount), firstLba, Cache->BlocksPerFrame);
         WCacheRemoveRangeFromList(Cache->CachedModifiedBlocksList, &(Cache->WriteCount), firstLba, Cache->BlocksPerFrame);
@@ -1715,7 +1721,7 @@ Try_Another_Frame:
     // remove(flush) packet
     while((Cache->BlockCount + WCacheGetSortedListIndex(Cache->BlockCount, List, ReqLba) +
            BCount - WCacheGetSortedListIndex(Cache->BlockCount, List, ReqLba+BCount)) > Cache->MaxBlocks) {
-        try_count = 0;
+//        try_count = 0;
 //Try_Another_Block:
 
         ASSERT(Cache->FrameCount <= Cache->MaxFrames);
@@ -1734,7 +1740,7 @@ Try_Another_Frame:
             ASSERT(FALSE);
             return STATUS_DRIVER_INTERNAL_ERROR;
         }
-        status = WCacheFlushBlocksRAM(Cache, Context, block_array, List, firstPos, lastPos, TRUE);
+        WCacheFlushBlocksRAM(Cache, Context, block_array, List, firstPos, lastPos, TRUE);
         WCacheRemoveRangeFromList(List, &(Cache->BlockCount), Lba, PSs);
         WCacheRemoveRangeFromList(Cache->CachedModifiedBlocksList, &(Cache->WriteCount), Lba, PSs);
         // check if frame is empty
@@ -1765,7 +1771,7 @@ WCachePurgeAllRAM(
     ULONG firstPos;
     ULONG lastPos;
     PW_CACHE_ENTRY block_array;
-    OSSTATUS status;
+//    OSSTATUS status;
 
     // remove(flush) some frames
     while(Cache->FrameCount) {
@@ -1783,7 +1789,7 @@ WCachePurgeAllRAM(
             BrutePoint();
             return STATUS_DRIVER_INTERNAL_ERROR;
         }
-        status = WCacheFlushBlocksRAM(Cache, Context, block_array, List, firstPos, lastPos, TRUE);
+        WCacheFlushBlocksRAM(Cache, Context, block_array, List, firstPos, lastPos, TRUE);
 
         WCacheRemoveRangeFromList(List, &(Cache->BlockCount), firstLba, Cache->BlocksPerFrame);
         WCacheRemoveRangeFromList(Cache->CachedModifiedBlocksList, &(Cache->WriteCount), firstLba, Cache->BlocksPerFrame);
@@ -1813,7 +1819,7 @@ WCacheFlushAllRAM(
     ULONG firstPos;
     ULONG lastPos;
     PW_CACHE_ENTRY block_array;
-    OSSTATUS status;
+//    OSSTATUS status;
 
     // flush frames
     while(Cache->WriteCount) {
@@ -1831,7 +1837,7 @@ WCacheFlushAllRAM(
             BrutePoint();
             return STATUS_DRIVER_INTERNAL_ERROR;
         }
-        status = WCacheFlushBlocksRAM(Cache, Context, block_array, List, firstPos, lastPos, FALSE);
+        WCacheFlushBlocksRAM(Cache, Context, block_array, List, firstPos, lastPos, FALSE);
 
         WCacheRemoveRangeFromList(Cache->CachedModifiedBlocksList, &(Cache->WriteCount), firstLba, Cache->BlocksPerFrame);
     }
@@ -2621,14 +2627,14 @@ WCachePurgeAllRW(
     lba_t firstLba;
     lba_t* List = Cache->CachedBlocksList;
     lba_t Lba;
-    ULONG firstPos;
-    ULONG lastPos;
+//    ULONG firstPos;
+//    ULONG lastPos;
     ULONG BSh = Cache->BlockSizeSh;
     ULONG BS = Cache->BlockSize;
     ULONG PS = BS << Cache->PacketSizeSh; // packet size (bytes)
     ULONG PSs = Cache->PacketSize;
     PW_CACHE_ENTRY block_array;
-    OSSTATUS status;
+//    OSSTATUS status;
     ULONG ReadBytes;
     PW_CACHE_ASYNC FirstWContext = NULL;
     PW_CACHE_ASYNC PrevWContext = NULL;
@@ -2640,15 +2646,15 @@ WCachePurgeAllRW(
         Lba = List[0] & ~(PSs-1);
         frame = Lba >> Cache->BlocksPerFrameSh;
         firstLba = frame << Cache->BlocksPerFrameSh;
-        firstPos = WCacheGetSortedListIndex(Cache->BlockCount, List, Lba);
-        lastPos = WCacheGetSortedListIndex(Cache->BlockCount, List, Lba+PSs);
+//        firstPos = WCacheGetSortedListIndex(Cache->BlockCount, List, Lba);
+//        lastPos = WCacheGetSortedListIndex(Cache->BlockCount, List, Lba+PSs);
         block_array = Cache->FrameList[frame].Frame;
         if(!block_array) {
             BrutePoint();   
             return;
         }
 
-        status = WCacheUpdatePacket(Cache, Context, &FirstWContext, &PrevWContext, block_array, firstLba,
+        WCacheUpdatePacket(Cache, Context, &FirstWContext, &PrevWContext, block_array, firstLba,
             Lba, BSh, BS, PS, PSs, &ReadBytes, TRUE, ASYNC_STATE_NONE);
 
         // free memory
@@ -2688,15 +2694,15 @@ WCacheFlushAllRW(
     lba_t firstLba;
     lba_t* List = Cache->CachedModifiedBlocksList;
     lba_t Lba;
-    ULONG firstPos;
-    ULONG lastPos;
+//    ULONG firstPos;
+//    ULONG lastPos;
     ULONG BSh = Cache->BlockSizeSh;
     ULONG BS = Cache->BlockSize;
     ULONG PS = BS << Cache->PacketSizeSh; // packet size (bytes)
     ULONG PSs = Cache->PacketSize;
     ULONG BFs = Cache->BlocksPerFrameSh;
     PW_CACHE_ENTRY block_array;
-    OSSTATUS status;
+//    OSSTATUS status;
     ULONG ReadBytes;
     PW_CACHE_ASYNC FirstWContext = NULL;
     PW_CACHE_ASYNC PrevWContext = NULL;
@@ -2710,15 +2716,15 @@ WCacheFlushAllRW(
         Lba = List[0] & ~(PSs-1);
         frame = Lba >> BFs;
         firstLba = frame << BFs;
-        firstPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba);
-        lastPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba+PSs);
+//        firstPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba);
+//        lastPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba+PSs);
         block_array = Cache->FrameList[frame].Frame;
         if(!block_array) {
             BrutePoint();   
             continue;;
         }
         // queue modify request
-        status = WCacheUpdatePacket(Cache, Context, &FirstWContext, &PrevWContext, block_array, firstLba,
+        WCacheUpdatePacket(Cache, Context, &FirstWContext, &PrevWContext, block_array, firstLba,
             Lba, BSh, BS, PS, PSs, &ReadBytes, TRUE, ASYNC_STATE_NONE);
         // clear MODIFIED flag for queued blocks
         WCacheRemoveRangeFromList(List, &(Cache->WriteCount), Lba, PSs);
@@ -2827,15 +2833,15 @@ WCacheFlushBlocksRW(
     lba_t firstLba;
     lba_t* List = Cache->CachedModifiedBlocksList;
     lba_t Lba;
-    ULONG firstPos;
-    ULONG lastPos;
+//    ULONG firstPos;
+//    ULONG lastPos;
     ULONG BSh = Cache->BlockSizeSh;
     ULONG BS = Cache->BlockSize;
     ULONG PS = BS << Cache->PacketSizeSh; // packet size (bytes)
     ULONG PSs = Cache->PacketSize;
     ULONG BFs = Cache->BlocksPerFrameSh;
     PW_CACHE_ENTRY block_array;
-    OSSTATUS status;
+//    OSSTATUS status;
     ULONG ReadBytes;
     PW_CACHE_ASYNC FirstWContext = NULL;
     PW_CACHE_ASYNC PrevWContext = NULL;
@@ -2850,8 +2856,8 @@ WCacheFlushBlocksRW(
     for(Lba = _Lba & ~(PSs-1);Lba < lim ; Lba += PSs) {
         frame = Lba >> BFs;
         firstLba = frame << BFs;
-        firstPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba);
-        lastPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba+PSs);
+//        firstPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba);
+//        lastPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba+PSs);
         block_array = Cache->FrameList[frame].Frame;
         if(!block_array) {
             // not cached block may be requested for flush
@@ -2859,7 +2865,7 @@ WCacheFlushBlocksRW(
             continue;
         }
         // queue modify request
-        status = WCacheUpdatePacket(Cache, Context, &FirstWContext, &PrevWContext, block_array, firstLba,
+        WCacheUpdatePacket(Cache, Context, &FirstWContext, &PrevWContext, block_array, firstLba,
             Lba, BSh, BS, PS, PSs, &ReadBytes, TRUE, ASYNC_STATE_NONE);
         // clear MODIFIED flag for queued blocks
         WCacheRemoveRangeFromList(List, &(Cache->WriteCount), Lba, PSs);

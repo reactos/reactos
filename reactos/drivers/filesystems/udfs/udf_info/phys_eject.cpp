@@ -55,7 +55,7 @@ UDFEjectReqWaiter(
     BOOLEAN SkipEject = FALSE;
     BOOLEAN SkipFlush = FALSE;
 
-    BOOLEAN FlushAndEject = FALSE;
+//    BOOLEAN FlushAndEject = FALSE;
 
     KdPrint(("    UDFEjectReqWaiter: start\n"));
     uint8 supported_evt_classes = 0;
@@ -604,7 +604,7 @@ media_loss:
                     try_return(RC);
                 }
             }
-            FlushAndEject = TRUE;
+//            FlushAndEject = TRUE;
 device_failure:
             // Ok. Lets flush all we have in memory, dismount volume & eject disc
             // Acquire Vcb resource
@@ -707,7 +707,7 @@ UDFDoDismountSequence(
     )
 {
     LARGE_INTEGER delay;
-    OSSTATUS      RC;
+//    OSSTATUS      RC;
     ULONG i;
 
     // flush system cache
@@ -731,11 +731,11 @@ UDFDoDismountSequence(
         KdPrint(("  cleanup tray-lock (%d+2):\n", Vcb->MediaLockCount));
         for(i=0; i<Vcb->MediaLockCount+2; i++) {
             Buf->PreventMediaRemoval = FALSE;
-            RC = UDFPhSendIOCTL(IOCTL_STORAGE_MEDIA_REMOVAL,
-                                Vcb->TargetDeviceObject,
-                                Buf,sizeof(PREVENT_MEDIA_REMOVAL_USER_IN),
-                                NULL,0,
-                                FALSE,NULL);
+            UDFPhSendIOCTL(IOCTL_STORAGE_MEDIA_REMOVAL,
+                           Vcb->TargetDeviceObject,
+                           Buf,sizeof(PREVENT_MEDIA_REMOVAL_USER_IN),
+                           NULL,0,
+                           FALSE,NULL);
             KeDelayExecutionThread(KernelMode, FALSE, &delay);
         }
         delay.QuadPart = -2000000; // 0.2 sec
@@ -771,11 +771,11 @@ UDFDoDismountSequence(
                 CBuff.Byte2.Flags = CloseTrkSes_Ses;
                 CBuff.TrackNum = 1;
 
-                RC = UDFPhSendIOCTL(IOCTL_CDRW_CLOSE_TRK_SES,
-                                    Vcb->TargetDeviceObject,
-                                    &CBuff,sizeof(CLOSE_TRK_SES_USER_IN),
-                                    &CBuff,sizeof(CLOSE_TRK_SES_USER_IN),
-                                    FALSE, NULL );
+                UDFPhSendIOCTL(IOCTL_CDRW_CLOSE_TRK_SES,
+                               Vcb->TargetDeviceObject,
+                               &CBuff,sizeof(CLOSE_TRK_SES_USER_IN),
+                               &CBuff,sizeof(CLOSE_TRK_SES_USER_IN),
+                               FALSE, NULL );
     /*        } else
             if(Vcb->MediaClassEx == CdMediaClass_DVDRW) {
                 KdPrint(("    Close BG-formatted track\n"));
@@ -800,11 +800,11 @@ UDFDoDismountSequence(
         if(Eject &&
            (Vcb->VCBFlags & UDF_VCB_FLAGS_REMOVABLE_MEDIA)) {
 
-            RC = UDFPhSendIOCTL(IOCTL_STORAGE_EJECT_MEDIA,
-                                Vcb->TargetDeviceObject,
-                                NULL,0,
-                                NULL,0,
-                                FALSE,NULL);
+            UDFPhSendIOCTL(IOCTL_STORAGE_EJECT_MEDIA,
+                           Vcb->TargetDeviceObject,
+                           NULL,0,
+                           NULL,0,
+                           FALSE,NULL);
         }
         // notify media change
     /*    if(Vcb->VCBFlags & UDF_VCB_FLAGS_OUR_DEVICE_DRIVER) {

@@ -16,7 +16,7 @@
 NTSTATUS
 RegTGetKeyHandle(
     IN HKEY hRootKey,
-    IN PWCHAR KeyName,
+    IN PCWSTR KeyName,
     OUT HKEY* hKey
     );
 
@@ -28,16 +28,16 @@ RegTCloseKeyHandle(
 BOOLEAN
 RegTGetDwordValue(
     IN HKEY hRootKey,
-    IN PWSTR RegistryPath,
-    IN PWSTR Name,
+    IN PCWSTR RegistryPath,
+    IN PCWSTR Name,
     IN PULONG pUlong
     );
 
 BOOLEAN
 RegTGetStringValue(
     IN HKEY hRootKey,
-    IN PWSTR RegistryPath,
-    IN PWSTR Name,
+    IN PCWSTR RegistryPath,
+    IN PCWSTR Name,
     IN PWCHAR pStr,
     IN ULONG MaxLen
     );

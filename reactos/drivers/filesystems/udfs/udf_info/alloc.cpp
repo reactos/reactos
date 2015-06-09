@@ -1151,7 +1151,7 @@ UDFGetTotalSpace(
             s+=Vcb->Partitions[i].PartitionLen;
         }
     } else {
-        if(s & ((int64)1 << 64)) s=0;
+        if(s & ((int64)1 << 63)) s=0;  /* FIXME ReactOS this shift value was 64, which is undefiened behavior. */
         s= Vcb->LastPossibleLBA - Vcb->Partitions[0].PartitionRoot;
     }
     return s >> Vcb->LB2B_Bits;
@@ -1197,9 +1197,13 @@ UDFIsBlockAllocated(
 
 #ifdef _X86_
 
+#ifdef _MSC_VER
 #pragma warning(disable:4035)               // re-enable below
+#endif
 
+#ifdef _MSC_VER
 __declspec (naked)
+#endif
 BOOLEAN
 __fastcall
 UDFGetBit__(
@@ -1233,7 +1237,9 @@ UDFGetBit__(
 #endif
 } // end UDFGetBit__()
 
+#ifdef _MSC_VER
 __declspec (naked)
+#endif
 void
 __fastcall
 UDFSetBit__(
@@ -1339,7 +1345,9 @@ EO_sb_loop:
 #endif
 } // end UDFSetBits__()
 
+#ifdef _MSC_VER
 __declspec (naked)
+#endif
 void
 __fastcall
 UDFClrBit__(
@@ -1445,5 +1453,7 @@ EO_cp_loop:
 #endif
 } // end UDFClrBits__()
 
+#ifdef _MSC_VER
 #pragma warning(default:4035)
+#endif
 #endif // _X86_

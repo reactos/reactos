@@ -11,7 +11,7 @@
 NTSTATUS
 RegTGetKeyHandle(
     IN HKEY hRootKey,
-    IN PWCHAR KeyName,
+    IN PCWSTR KeyName,
     OUT HKEY* hKey
     )
 {
@@ -21,9 +21,7 @@ RegTGetKeyHandle(
 
     //KdPrint(("RegTGetKeyHandle: h=%x, %S\n", hRootKey, KeyName));
 
-    NameString.Buffer = KeyName;
-    NameString.Length = wcslen(KeyName)*sizeof(WCHAR);
-    NameString.MaximumLength = NameString.Length + sizeof(WCHAR);
+    RtlInitUnicodeString(&NameString, KeyName);
 
     InitializeObjectAttributes(
         &ObjectAttributes,
@@ -100,8 +98,8 @@ RegTCloseKeyHandle(
 BOOLEAN
 RegTGetDwordValue(
     IN HKEY hRootKey,
-    IN PWSTR RegistryPath,
-    IN PWSTR Name,
+    IN PCWSTR RegistryPath,
+    IN PCWSTR Name,
     IN PULONG pUlong
     )
 {
@@ -150,9 +148,7 @@ RegTGetDwordValue(
         return FALSE;
     }
 
-    NameString.Buffer = Name;
-    NameString.Length = wcslen(Name)*sizeof(WCHAR);
-    NameString.MaximumLength = NameString.Length + sizeof(WCHAR);
+    RtlInitUnicodeString(&NameString, Name);
 
     status = ZwQueryValueKey(hKey,
                              &NameString,
@@ -192,8 +188,8 @@ RegTGetDwordValue(
 BOOLEAN
 RegTGetStringValue(
     IN HKEY hRootKey,
-    IN PWSTR RegistryPath,
-    IN PWSTR Name,
+    IN PCWSTR RegistryPath,
+    IN PCWSTR Name,
     IN PWCHAR pStr,
     IN ULONG MaxLen
     )
@@ -240,9 +236,7 @@ RegTGetStringValue(
         return FALSE;
     }
 
-    NameString.Buffer = Name;
-    NameString.Length = wcslen(Name)*sizeof(WCHAR);
-    NameString.MaximumLength = NameString.Length + sizeof(WCHAR);
+    RtlInitUnicodeString(&NameString, Name);
 
     status = ZwQueryValueKey(hKey,
                              &NameString,

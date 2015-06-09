@@ -452,7 +452,7 @@ UDFCommonRead(
             NonBufferedIo = TRUE;
         }
 
-        if(ByteOffset.HighPart == 0xFFFFFFFF) {
+        if(ByteOffset.HighPart == -1) {
             if(ByteOffset.LowPart == FILE_USE_FILE_POINTER_POSITION) {
                 ByteOffset = FileObject->CurrentByteOffset;
             }

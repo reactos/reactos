@@ -316,10 +316,14 @@ UDFPhWriteSynchronous(
 
 #ifdef DBG
     if(UDF_SIMULATE_WRITES) {
+/* FIXME ReactOS
+   If this function is to force a read from the bufffer to simulate any segfaults, then it makes sense.
+   Else, this forloop is useless.
         UCHAR a;
         for(ULONG i=0; i<Length; i++) {
             a = ((PUCHAR)Buffer)[i];
         }
+*/
         *WrittenBytes = Length;
         return STATUS_SUCCESS;
     }
@@ -621,7 +625,8 @@ UDFNotifyVolumeEvent(
     IN ULONG EventCode
     )
 {
-    if(!FsRtlNotifyVolumeEvent)
+/* ReactOS FIXME This is always true, and we return anyway. */
+//    if(!FsRtlNotifyVolumeEvent)
         return;
     //FsRtlNotifyVolumeEvent(FileObject, EventCode);
 } // end UDFNotifyVolumeEvent()

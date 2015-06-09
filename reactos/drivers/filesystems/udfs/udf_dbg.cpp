@@ -498,12 +498,12 @@ DbgWaitForSingleObject_(
 {
     PLARGE_INTEGER to;
     LARGE_INTEGER dto;
-    LARGE_INTEGER cto;
+//    LARGE_INTEGER cto;
     NTSTATUS RC;
     ULONG c = 20;
 
     dto.QuadPart = -5LL*1000000LL*10LL; // 5 sec
-    cto.QuadPart = Timeout->QuadPart;
+//    cto.QuadPart = Timeout->QuadPart;
     if(Timeout) {
         if(dto.QuadPart > Timeout->QuadPart) {
             to = Timeout;

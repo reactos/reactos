@@ -545,6 +545,9 @@ UDFQueryDirectory(
                 NamesInfo->FileIndex = NextMatch;
                 NamesInfo->FileNameLength = FileNameBytes;
                 break;
+
+            default:
+                break;
             }
             if (FileNameBytes) {
                 //  This is a Unicode name, we can copy the bytes directly.
@@ -634,7 +637,7 @@ UDFFindNextMatch(
 #define IgnoreCase    (FNM_Flags & UDF_FNM_FLAG_IGNORE_CASE)
 #define ContainsWC    (FNM_Flags & UDF_FNM_FLAG_CONTAINS_WC)
 
-    for(;DirNdx = UDFDirIndex(hDirIndex, EntryNumber);EntryNumber++) {
+    for(;(DirNdx = UDFDirIndex(hDirIndex, EntryNumber));EntryNumber++) {
         if(!DirNdx->FName.Buffer ||
            UDFIsDeleted(DirNdx))
             continue;

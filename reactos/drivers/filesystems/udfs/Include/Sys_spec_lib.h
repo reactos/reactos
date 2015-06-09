@@ -108,7 +108,7 @@ NTSTATUS MyAppendUnicodeStringToString_(IN PUNICODE_STRING Str1,
                                        );
 
 NTSTATUS MyAppendUnicodeToString_(IN PUNICODE_STRING Str1,
-                                  IN PWSTR Str2
+                                  IN PCWSTR Str2
 #ifdef UDF_TRACK_UNICODE_STR
                                  ,IN PCHAR Tag
 #endif 

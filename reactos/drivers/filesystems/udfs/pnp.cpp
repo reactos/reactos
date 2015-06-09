@@ -414,7 +414,7 @@ UDFPnpRemove (
     //  The device will be going away.  Remove our lock (benign
     //  if we never had it).
     if((Vcb->Vpb->Flags & VPB_LOCKED) ||
-       (Vcb->VolumeLockPID != -1) ) {
+       (Vcb->VolumeLockPID != (ULONG)-1) ) {
         Vcb->Vpb->Flags &= ~VPB_LOCKED;
         Vcb->VCBFlags &= ~UDF_VCB_FLAGS_VOLUME_LOCKED;
         Vcb->VolumeLockFileObject = NULL;
@@ -628,7 +628,7 @@ try_exit:   NOTHING;
     return RC;
 }
 
-/*
+/*
 NTSTATUS
 UDFPnpCancelRemove (
     PtrUDFIrpContext PtrIrpContext,
@@ -636,6 +636,7 @@ UDFPnpCancelRemove (
     PVCB Vcb
     )
 
+*/
 /*++
 
 Routine Description:
