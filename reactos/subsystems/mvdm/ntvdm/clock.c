@@ -36,25 +36,27 @@
 /* VARIABLES ******************************************************************/
 
 static LIST_ENTRY Timers;
+static ULONGLONG Cycles = 0ULL;
+static ULONGLONG CurrentIps = 20000000ULL; // 20 MIPS is a good estimate
 static LARGE_INTEGER StartPerfCount, Frequency;
 // static ULONG StartTickCount;
 static LARGE_INTEGER Counter;
 static ULONG CurrentTickCount;
-
-#ifdef IPS_DISPLAY
+static ULONGLONG LastCycles = 0ULL;
 static PHARDWARE_TIMER IpsTimer;
-static ULONGLONG Cycles = 0ULL;
-#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-#ifdef IPS_DISPLAY
-static VOID FASTCALL IpsDisplayCallback(ULONGLONG ElapsedTime)
+static VOID FASTCALL IpsCallback(ULONGLONG ElapsedTime)
 {
-    DPRINT1("NTVDM: %I64u Instructions Per Second\n", Cycles / ElapsedTime);
-    Cycles = 0ULL;
-}
+    CurrentIps = (Cycles - LastCycles) / ElapsedTime;
+
+#ifdef IPS_DISPLAY
+    DPRINT1("NTVDM: %I64u Instructions Per Second\n", CurrentIps);
 #endif
+
+    LastCycles = Cycles;
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -76,10 +78,7 @@ VOID ClockUpdate(VOID)
         for (i = 0; VdmRunning && CpuRunning && (i < STEPS_PER_CYCLE); i++)
         {
             CpuStep();
-
-#ifdef IPS_DISPLAY
             ++Cycles;
-#endif
         }
 
         for (Entry = Timers.Flink; Entry != &Timers; Entry = Entry->Flink)
@@ -199,6 +198,16 @@ VOID DestroyHardwareTimer(PHARDWARE_TIMER Timer)
     }
 }
 
+ULONGLONG GetCycleCount(VOID)
+{
+    return Cycles;
+}
+
+ULONGLONG GetCycleSpeed(VOID)
+{
+    return CurrentIps;
+}
+
 BOOLEAN ClockInitialize(VOID)
 {
     InitializeListHead(&Timers);
@@ -215,16 +224,12 @@ BOOLEAN ClockInitialize(VOID)
     /* Find the starting tick count */
     // StartTickCount = GetTickCount();
 
-#ifdef IPS_DISPLAY
-
-    IpsTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(1), IpsDisplayCallback);
+    IpsTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(1), IpsCallback);
     if (IpsTimer == NULL)
     {
-        wprintf(L"FATAL: Cannot create IPS display timer.\n");
+        wprintf(L"FATAL: Cannot create IPS timer.\n");
         return FALSE;
     }
-
-#endif
 
     return TRUE;
 }

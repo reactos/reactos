@@ -282,8 +282,8 @@ static BYTE VgaDacRegisters[VGA_PALETTE_SIZE];
 
 // static VGA_REGISTERS VgaRegisters;
 
-static BOOLEAN InVerticalRetrace   = FALSE;
-static BOOLEAN InHorizontalRetrace = FALSE;
+static ULONGLONG VerticalRetraceCycle = 0ULL;
+static ULONGLONG HorizontalRetraceCycle = 0ULL;
 
 static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = FALSE;
@@ -1413,8 +1413,31 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
         case VGA_INSTAT1_READ_COLOR:
         {
             BYTE Result = 0;
-            BOOLEAN Vsync = InVerticalRetrace;
-            BOOLEAN Hsync = InHorizontalRetrace;
+            BOOLEAN Vsync, Hsync;
+            ULONGLONG Cycles = GetCycleCount();
+            ULONG CyclesPerMicrosecond = (ULONG)((GetCycleSpeed() + 500000ULL) / 1000000ULL);
+            ULONG Dots = (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & 1) ? 9 : 8;
+            ULONG Clock = ((VgaMiscRegister >> 2) & 1) ? 28 : 25;
+            ULONG HorizTotalDots = ((ULONG)VgaCrtcRegisters[VGA_CRTC_HORZ_TOTAL_REG] + 5) * Dots;
+            ULONG VblankStart, VblankEnd, HblankStart, HblankEnd;
+            ULONG HblankDuration, VblankDuration;
+
+            /* Calculate the vertical blanking duration in cycles */
+            VblankStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_BLANKING_REG] & 0x7F;
+            VblankEnd = VgaCrtcRegisters[VGA_CRTC_END_VERT_BLANKING_REG] & 0x7F;
+            if (VblankEnd < VblankStart) VblankEnd |= 0x80;
+            VblankDuration = ((VblankEnd - VblankStart) * HorizTotalDots
+                             * CyclesPerMicrosecond + (Clock >> 1)) / Clock;
+
+            /* Calculate the horizontal blanking duration in cycles */
+            HblankStart = VgaCrtcRegisters[VGA_CRTC_START_HORZ_BLANKING_REG] & 0x1F;
+            HblankEnd = VgaCrtcRegisters[VGA_CRTC_END_HORZ_BLANKING_REG] & 0x1F;
+            if (HblankEnd < HblankStart) HblankEnd |= 0x20;
+            HblankDuration = ((HblankEnd - HblankStart) * Dots
+                             * CyclesPerMicrosecond + (Clock >> 1)) / Clock;
+
+            Vsync = (Cycles - VerticalRetraceCycle) < (ULONGLONG)VblankDuration;
+            Hsync = (Cycles - HorizontalRetraceCycle) < (ULONGLONG)HblankDuration;
 
             /* Reset the AC latch */
             VgaAcLatch = FALSE;
@@ -1428,9 +1451,6 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
 
             /* Set an additional flag if there was a vertical retrace */
             if (Vsync) Result |= VGA_STAT_VRETRACE;
-
-            /* Clear the flags */
-            InHorizontalRetrace = InVerticalRetrace = FALSE;
 
             return Result;
         }
@@ -1787,8 +1807,8 @@ static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
 
     UNREFERENCED_PARAMETER(ElapsedTime);
 
-    /* Set the vertical retrace flag */
-    InVerticalRetrace = TRUE;
+    /* Set the vertical retrace cycle */
+    VerticalRetraceCycle = GetCycleCount();
 
     /* If nothing has changed, just return */
     // if (!ModeChanged && !CursorChanged && !PaletteChanged && !NeedsUpdate)
@@ -1859,8 +1879,8 @@ static VOID FASTCALL VgaHorizontalRetrace(ULONGLONG ElapsedTime)
 {
     UNREFERENCED_PARAMETER(ElapsedTime);
 
-    /* Set the flag */
-    InHorizontalRetrace = TRUE;
+    /* Set the cycle */
+    HorizontalRetraceCycle = GetCycleCount();
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

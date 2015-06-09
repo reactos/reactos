@@ -44,6 +44,9 @@ VOID DisableHardwareTimer(PHARDWARE_TIMER Timer);
 VOID SetHardwareTimerDelay(PHARDWARE_TIMER Timer, ULONGLONG NewDelay);
 VOID DestroyHardwareTimer(PHARDWARE_TIMER Timer);
 
+ULONGLONG GetCycleCount(VOID);
+ULONGLONG GetCycleSpeed(VOID);
+
 VOID ClockUpdate(VOID);
 BOOLEAN ClockInitialize(VOID);
 
