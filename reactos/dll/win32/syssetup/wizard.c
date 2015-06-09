@@ -1992,8 +1992,11 @@ FinishDlgProc(HWND hwndDlg,
             /* Get pointer to the global setup data */
             PSETUPDATA SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 
-            /* Run the Wine Gecko prompt */
-            Control_RunDLLW(hwndDlg, 0, L"appwiz.cpl install_gecko", SW_SHOW);
+            if (!SetupData->UnattendSetup || !SetupData->DisableGeckoInst)
+            {
+                /* Run the Wine Gecko prompt */
+                Control_RunDLLW(hwndDlg, 0, L"appwiz.cpl install_gecko", SW_SHOW);
+            }
 
             /* Set title font */
             SendDlgItemMessage(hwndDlg,
@@ -2179,10 +2182,16 @@ ProcessUnattendInf(HINF hUnattendedInf)
             else
                 SetupData.DisableVmwInst = 0;
         }
+        else if (!wcscmp(szName, L"DisableGeckoInst"))
+        {
+            if(!wcscmp(szValue, L"yes"))
+                SetupData.DisableGeckoInst = 1;
+            else
+                SetupData.DisableGeckoInst = 0;
+        }
 
     }
     while (SetupFindNextLine(&InfContext, &InfContext));
-
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
                       0,

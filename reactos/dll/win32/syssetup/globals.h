@@ -48,6 +48,7 @@ typedef struct _SETUPDATA
     WCHAR AdminPassword[128];              /* max. 127 characters */
     BOOL  UnattendSetup;
     BOOL  DisableVmwInst;
+    BOOL  DisableGeckoInst;
 
     SYSTEMTIME SystemTime;
     PTIMEZONE_ENTRY TimeZoneListHead;
