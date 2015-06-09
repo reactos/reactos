@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = SoundBlaster Driver for VMWare
@@ -68,6 +69,11 @@ Size = 2,22 MB
 Name = Драйвер SoundBlaster для VMWare
 License = Невідома
 Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
+
+[Section.0804]
+Name = VMWare 的 SoundBlaster 驱动程序
+License = 未知
+Description = Sound Blaster兼容设备的音频驱动程序。解压在电脑文件夹中并重新启动两次。
 
 [Section.0813]
 Name = SoundBlaster Driver voor VMWare

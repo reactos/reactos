@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = mIRC 7
@@ -43,6 +44,9 @@ Size = 2,36 MB
 
 [Section.0422]
 Description = Найпопулярніший клієнт IRC (Internet Relay Chat).
+
+[Section.0804]
+Description = 最受欢迎的客户端的互联网中继聊天 （IRC）。
 
 [Section.0813]
 Description = De meest populaire afnemer voor Internet Relay Chat (IRC).

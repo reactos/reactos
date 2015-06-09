@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Mono .NET Development Framework
@@ -41,3 +42,7 @@ Size = 116,02 MB
 
 [Section.0422]
 Description = Відкритий .NET Фреймворк.
+
+[Section.0804]
+Description = 开放源码 .NET 框架。
+

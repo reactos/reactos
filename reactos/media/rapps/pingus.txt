@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Pingus
@@ -32,3 +33,6 @@ Size = 16,0 Mo
 [Section.041f]
 Description = Pingus, ücretsiz, Lemmings gibi bir bulmaca oyunudur.
 Size = 16,0 MB
+
+[Section.0804]
+Description = 一个免费的旅鼠般益智游戏。

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Midnight Commander
@@ -37,3 +38,6 @@ Version = Yapı 186 (4.8.13)
 License = GPL sürüm 3
 Description = GNU Midnight Commander'ın 32 bitlik Windows uyarlamasıdır.
 Size = 2,35 MB
+
+[Section.0804]
+Description = 32 位 Windows 端口的 GNU Midnight Commander。

@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = SuperTux
@@ -32,3 +33,6 @@ Size = 7,3 Mo
 [Section.041f]
 Description = SuperTux, ücretsiz, açık kaynak ve iki boyutlu bir platform oyunudur.
 Size = 7,3 MB
+
+[Section.0804]
+Description = 一个免费、 开源的二维平台游戏。

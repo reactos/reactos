@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft .NET Framework Version 1.1 Redistributable Package
@@ -55,3 +56,10 @@ Description = Microsoft .NET Çatısı Sürüm 1.1 - Yeniden Dağıtılabilir Pa
 Size = 23,14 MB
 URLSite = http://www.microsoft.com/tr-TR/download/details.aspx?id=26
 URLDownload = http://download.microsoft.com/download/a/f/7/af738ebf-dc15-4c61-a20d-1c29306cd9bc/dotnetfx.exe
+
+[Section.0804]
+License = 未知
+Description = 运行在中间的语言，如 C# 中编译托管的 Windows 应用程序所需的组件。
+Size = 23.20 MB
+URLSite = http://www.microsoft.com/zh-CN/download/details.aspx?id=26
+URLDownload = http://download.microsoft.com/download/7/b/9/7b90644d-1af0-42b9-b76d-a2770319a568/dotnetfx.exe

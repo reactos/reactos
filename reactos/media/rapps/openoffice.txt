@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = OpenOffice 4.1
@@ -62,6 +63,12 @@ URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1
 [Section.0422]
 Description = Відкритий офісний пакет.
 URLSite = http://www.openoffice.org/ua/
+
+[Section.0804]
+Description = 开源办公套件。
+Size = 137.00 MB
+URLSite = http://www.openoffice.org/zh-cn/
+URLDownload = http://sourceforge.net/projects/openofficeorg.mirror/files/4.1.1/binaries/zh-CN/Apache_OpenOffice_4.1.1_Win_x86_install_zh-CN.exe
 
 [Section.0813]
 Description = Open-bron Office Pakket.

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Summer Bound
@@ -31,3 +32,6 @@ Size = 764 ko
 License = Ücretsiz
 Description = Frozen Fruits'e benzeyen bir oyun.
 Size = 764 KB
+
+[Section.0804]
+Description = 游戏类似的冷冻水果。

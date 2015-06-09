@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Mozilla Thunderbird 31
@@ -71,6 +72,12 @@ Description = Найпопулярніший та один з кращих по�
 Size = 27.86 MB
 URLSite = https://www.mozilla.org/uk/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/uk/Thunderbird%20Setup%2031.7.0.exe
+
+[Section.0804]
+Description = 最受欢迎的开源电子邮件客户端。
+Size = 27.50 MB
+URLSite = https://www.mozilla.org/zh-CN/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/zh-CN/Thunderbird%20Setup%2031.7.0.exe
 
 [Section.0813]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.

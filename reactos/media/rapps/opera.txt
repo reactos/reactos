@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Opera
@@ -49,6 +50,9 @@ Size = 12,57 MB
 
 [Section.0422]
 Description = Популярний браузер з багатьма додатковими можливостями, який включає в себе поштовий та BitTorrent клієнти.
+
+[Section.0804]
+Description = 最受欢迎的 Opera 浏览器有许多高级功能，包括电子邮件和 BitTorrent 客户端。
 
 [Section.0813]
 Description = De populaire Opera Browser met vele gevorderde mogelijkheden, inclusief e-mail en BitTorrent afnemers.

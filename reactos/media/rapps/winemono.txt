@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Wine Mono .NET Framework
@@ -37,3 +38,6 @@ Name = Wine Mono .NET Çatısı
 License = GPL sürüm 2, LGPL sürüm 2, MIT, BSD, MS-PL, MPL sürüm 1.1
 Description = Wine Mono .NET Çatısı
 Size = 53,7 MB
+
+Section.0804]
+Description = 免费重新实现由 Wine 库使用的.NET 框架。

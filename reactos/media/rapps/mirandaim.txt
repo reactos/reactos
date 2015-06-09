@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Miranda IM
@@ -41,6 +42,9 @@ Size = 7,6 MB
 
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.
+
+[Section.0804]
+Description = 开源协议的即时消息应用程序。可能会完全不起作用。
 
 [Section.0813]
 Description = Open-bron multi-protocol instant message toepassing - werkt mogelijk niet volledig.

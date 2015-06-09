@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = RFSTool
@@ -22,3 +23,6 @@ Size = 54 KB
 [Section.0418]
 Description = Utilitar pentru accesarea de partiții ReiserFS din sistemul Windows.
 Size = 54 ko
+
+[Section.0804]
+Description = 允许您从 Windows 系统访问 ReiserFS 分区。

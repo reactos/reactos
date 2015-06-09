@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = OLE Viewer and Microsoft Foundation Classes version 4
@@ -56,6 +57,11 @@ Size = 865,04 KB
 Name = Переглядач OLE та MFC (Microsoft Foundation Classes) версія 4
 License = Невідома
 Description = Бібліотека MFC 4 необхідна декотрим програмам. включає: mfc40.dll, msvcrt40.dll.
+
+[Section.0804]
+Name = OLE 查看器和 Microsoft Foundation Classes 第 4 版
+License = 未知
+Description = MFC 4 是一些应用程序所需的。包含： mfc40.dll、 msvcrt40.dll。
 
 [Section.0813]
 License = Ongekend

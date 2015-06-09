@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = SumatraPDF
@@ -43,6 +44,10 @@ URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
 License = GPL sürüm 3
 Description = SumatraPDF; yeğni, ücretsiz ve açık kaynak bir PDF okuyucusudur. Kutunun dışında taşınabilirdir.
 Size = 4,34 MB
+
+[Section.0804]
+Description = 一个纤细、 免费、 开源的 PDF 阅读器。开箱即用的便携式。
+URLSite = http://www.sumatrapdfreader.org/free-pdf-reader-cn.html
 
 [Section.0813]
 Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.

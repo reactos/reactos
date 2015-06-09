@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Pengupop
@@ -31,3 +32,6 @@ Size = 384 ko
 [Section.041f]
 Description = Bu oyunun amacı, oyun alanınızda üç ya da daha çok takımdan oluşan renkli küreleri vurmaktır.
 Size = 384 KB
+
+[Section.0804]
+Description = 这个游戏的目的是要射进你的操场，彩色的球体，所以他们组成的三人或以上团体。

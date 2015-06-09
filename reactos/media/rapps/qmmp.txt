@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Qmmp (Qt-based Multimedia Player)
@@ -38,3 +39,6 @@ Description = Аудиоплеер Qmmp (Qt-based Multimedia Player).
 Name = Qmmp (Qt Tabanlı Çoklu Ortam Oynatıcısı)
 Description = Qmmp, Qt kitaplığının yardımıyla yazılmış bir ses oynatıcısıdır. Kullanıcı arayüzü WinAMP'a ve XMMS'ye benzer. Başka kullanıcı arayüzleri de vardır.
 Size = 12,76 MB
+
+[Section.0804]
+Description = 基于 Qt 库音频播放器。用户界面是类似于 WinAMP 或 XMMS。替代用户界面也是可用的。

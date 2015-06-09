@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Powerpoint Viewer
@@ -63,6 +64,12 @@ URLDownload = http://download.microsoft.com/download/4/6/4/4641DACB-5DE8-4E3A-B8
 License = Невідома
 Size = 60.52 MB
 URLDownload = http://download.microsoft.com/download/C/E/8/CE879E6E-D3F3-4234-A968-9651A3A85D98/PowerPointViewer.exe
+
+[Section.0804]
+Licence = 未知
+Size = 60.80 MB
+Description = 免费软件演示文稿查看器 Office 格式 (*.ppt)。
+URLDownload = http://download.microsoft.com/download/2/9/C/29CA8826-374F-4EFB-B477-A26D1CF6E1BD/PowerPointViewer.exe
 
 [Section.0813]
 License = Ongekend

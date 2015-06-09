@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = PeaZip
@@ -32,3 +33,6 @@ Size = 6,0 Mo
 License = LGPL sürüm 3, OpenCandy EULA
 Description = PeaZip; ücretsiz, çapraz platform, açık kaynak kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.
 Size = 6,0 MB
+
+[Section.0804]
+Description = 免费的、 跨平台的、 开放源代码文件和档案管理器。它支持超过 150 的档案格式。

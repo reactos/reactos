@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Visual C++ 2005 SP1 Redistributable
@@ -51,6 +52,10 @@ Size = 2,58 MB
 [Section.0422]
 License = Невідома
 Description = Бібліотеки Microsoft Visual Studio 2005 SP1. включає: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+
+[Section.0804]
+License = 未知
+Description = 用 Visual Studio 2005 编译的应用程序所需。包含: atl80.dll、 mfc80.dll、 mfcm80.dll、 mfcm80u.dll、 msdia80.dll、 msvcm80.dll、 msvcp80.dll、 msvcr80.dll、 vcomp.dll。
 
 [Section.0813]
 License = Ongekend

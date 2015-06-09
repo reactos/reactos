@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Mpxplay
@@ -35,3 +36,6 @@ Description = Mpxplay - 32-разрядный консольный аудиоп�
 [Section.041f]
 Description = Mpxplay; Windows için, 32 bitlik, konsolluk bir ses oynatıcısıdır. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 520 KB
+
+[Section.0804]
+Description = Windows 32 位控制台音频播放器。像 7-Zip 这样的工具被需要解压缩它。

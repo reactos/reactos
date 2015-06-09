@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Revo Uninstaller
@@ -25,3 +26,6 @@ Size = 2,5 MB
 License = Gratuită
 Description = Program de dezinstalare a programelor și de eliminare a programelor nedorite.
 Size = 2,5 Mo
+
+[Section.0804]
+Description = 可以帮助卸载软件并删除有害的程序，安装方便。

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Super Finder XT
@@ -43,6 +44,9 @@ Size = 4,94 MB
 
 [Section.0422]
 Description = Швидка та потужна програма пошуку.
+
+[Section.0804]
+Description = 一个快速和功能丰富的搜索应用程序。
 
 [Section.0813]
 Description = Een snelle zoekapplicatie rijk aan mogelijkheden.

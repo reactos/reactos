@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = nginx
@@ -19,3 +20,6 @@ Description = HTTP- und Reverse Proxy Server, sowie Mail Proxy Server, erstellt 
 License = FreeBSD
 Description = Server HTTP, cu funcționalități de mandatar-invers (reverse proxy) și mandatar poștal, creat de Igor Sysoev.
 Size = 1,22 Mo
+
+[Section.0804]
+Description = HTTP 和反向代理服务器，以及一个邮件代理服务器，由 Igor Sysoev 写。

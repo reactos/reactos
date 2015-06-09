@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = QB64 (SDL version)
@@ -35,3 +36,6 @@ Name = QB64 (SDL sürümü)
 License = Ücretsiz
 Description = QB64; Microsoft Windows, Linux ve Mac OS X için, Microsoft QBasic ve Microsoft QuickBASIC ile uyumlu olacak biçimde tasarlanmış, kendi kendini derleyen bir BASIC derleyicisidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 104,69 MB
+
+[Section.0804]
+Description = BASIC 自托管的编译器为 Microsoft Windows、 Linux 和 Mac OS X，设计要与微软 QBasic 和 Microsoft QuickBASIC 兼容。您将需要一个像 7-Zip 文件中解压它的工具。

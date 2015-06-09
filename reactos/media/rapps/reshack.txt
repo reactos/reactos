@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Resource Hacker
@@ -34,3 +35,6 @@ Size = 1,57 Mo
 License = Ücretsiz
 Description = Resoure Hacker, 32 ve 64 bitlik Windows çaılştırılabilirlerindeki ve kaynak kütüklerindeki (*.res) kaynakları görüntülemek, değiştirmek, yeniden adlandırmak, eklemek, silmek ve çıkartmak için ücretsiz bir araçtır.
 Size = 1,57 Mo
+
+[Section.0804]
+Description = 一个免费软件实用程序来查看、 修改、 重命名、 添加、 删除和提取资源在 32 位与 64 位的 Windows 可执行文件和资源文件 (*.res)。

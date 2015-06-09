@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Visual Basic 5 Runtime
@@ -51,6 +52,10 @@ Size = 969,59 KB
 [Section.0422]
 License = Невідома
 Description = Бібліотеки Microsoft Visual Basic 5. включає: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0804]
+License = 未知
+Description = 在 Visual Basic 5 编写的应用程序所需。包含: advpack.dll、 asycfilt.dll、 comcat.dll、 msvbvm50.dll、 oleaut32.dll，olepro32.dll。
 
 [Section.0813]
 License = Ongekend

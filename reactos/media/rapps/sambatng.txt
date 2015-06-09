@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Samba TNG
@@ -41,6 +42,9 @@ Size = 2,13 MB
 
 [Section.0422]
 Description = Цей інструмент дозволяє отримати доступ до спільних тек/принтерів Windows з ReactOSа.
+
+[Section.0804]
+Description = 允许您访问 Windows 共享的文件夹/打印机与电脑。
 
 [Section.0813]
 Description = Maakt het mogelijk om Windows gedeelde printers te gebruiken met ReactOS.

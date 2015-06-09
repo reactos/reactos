@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft .NET Framework Version 2.0 Service Pack 2
@@ -45,3 +46,8 @@ License = Bilinmiyor
 Description = Microsoft .NET Çatısı Sürüm 2.0 - Hizmet Paketi 2
 Size = 23,84 MB
 URLSite = http://www.microsoft.com/tr-TR/download/details.aspx?id=1639
+
+[Section.0804]
+License = 未知 
+Description = 运行在中间的语言，如 C# 中编译托管的 Windows 应用程序所需的组件。
+URLSite = https://www.microsoft.com/zh-CN/download/details.aspx?id=1639

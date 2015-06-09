@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = ReMooD
@@ -44,6 +45,9 @@ Size = 1,15 MB
 
 [Section.0422]
 Description = ReMooD э Портом вихідних кодів Doom Legacy. Його метою є додати нові можливості та стабільність до досвіду класичного Legacy.
+
+[Section.0804]
+Description = 源端口的 Doom Legacy。它旨在提供新功能的经典传统经验和更多的稳定性。
 
 [Section.0813]
 Description = ReMood is een broncodeoverdracht van Doom Legacy. Het biedt de klassieke Legacy Ervaring met nieuwe mogelijkheden en betere stabiliteit.

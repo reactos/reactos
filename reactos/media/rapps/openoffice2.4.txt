@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = OpenOffice 2.4
@@ -65,6 +66,12 @@ Description = Відкритий офісний пакет.
 Size = 114.76 MB
 URLSite = http://www.openoffice.org/ua/
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/ru/2.4.3/OOo_2.4.3_Win32Intel_install_ru.exe
+
+[Section.0804]
+Description = 开源办公套件。
+Size = 114.00 MB
+URLSite = http://www.openoffice.org/cn/
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/zh-CN/2.4.3/OOo_2.4.3_Win32Intel_install_zh-CN.exe
 
 [Section.0813]
 Version = 2.4.2

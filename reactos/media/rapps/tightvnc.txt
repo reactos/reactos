@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = TightVNC
@@ -23,3 +24,6 @@ Size = 2,0 MB
 [Section.0418]
 Description = Program gratuit de control la distanță.
 Size = 2,0 Mo
+
+[Section.0804]
+Description = 一套免费的远程控制软件。

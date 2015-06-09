@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Mozilla SeaMonkey
@@ -55,3 +56,8 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33.1/w
 Description = Mozilla Bohçası sağ. Bu, bir gereksinim duymayacağınız, yalnızca Tarayıcı, Posta, Söyleşi ve Yazar bohçasıdır.
 Size = 29,89 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33.1/win32/tr/SeaMonkey%20Setup%202.33.1.exe
+
+[Section.0804]
+Description = Mozilla 套件活跃了。这是一只包包括浏览器、 邮件、 聊天和你所需要的设计者。
+Size = 30.80 MB
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33.1/win32/zh-CN/SeaMonkey%20Setup%202.33.1.exe

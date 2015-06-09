@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = PSPad
@@ -56,6 +57,9 @@ Size = 4,50 MB
 
 [Section.0422]
 Description = Текстовый редактор.
+
+[Section.0804]
+Description = 一个轻量级的文本编辑器。
 
 [Section.0813]
 Description = Een teksteditor.

@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Pocket Tanks
@@ -34,3 +35,6 @@ Size = 2,86 Mo
 License = Paylaşımlı
 Description = Şimdiye dek oynayacağınız en hızlı topçuluk oyunu.
 Size = 2,86 MB
+
+[Section.0804]
+Description = 你玩过的火炮最快的游戏。

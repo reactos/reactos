@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Steam
@@ -51,6 +52,10 @@ URLSite = http://store.steampowered.com/?l=turkish
 [Section.0422]
 Description = Ігрова платформа, що використовується багатьма іграми.
 URLSite = http://store.steampowered.com/?l=ukrainian
+
+[Section.0804]
+Description = 最受欢迎的互联网游戏分销平台和社交网络。包括数字版权管理 (DRM)。
+URLSite = http://store.steampowered.com/?l=schinese
 
 [Section.0813]
 Description = Het Steam platform, veel gebruikt voor spelletjes.

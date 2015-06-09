@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = PhotoFiltre 7
@@ -34,3 +35,6 @@ Size = 5,0 Mo
 License = Ücretsiz
 Description = Bu sürüm, katmanlarla gelmektedir ancak Studio X sürümünden daha kısıtlıdır. PhotoFiltre Studio eksiksiz bir resim düzeltme yazılımıdır.
 Size = 5,0 MB
+
+[Section.0804]
+Description = 一个完整的图像修饰的程序。此版本附带层，但是比 Studio X 版本更有限。

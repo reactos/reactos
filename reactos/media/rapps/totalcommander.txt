@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Total Commander
@@ -37,6 +38,10 @@ Size = 3,55 Mo
 License = Paylaşımlı
 Description = Total Commander, yan yana iki bölmeli bir kütük yöneticisidir.
 Size = 3,55 MB
+
+[Section.0804]
+Description = 电力用户提供两个面板并排的的文件管理器。
+URLSite = http://xbeta.info/tc/
 
 [Section.0813]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.

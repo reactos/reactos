@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = NVidia Display drivers
@@ -28,3 +29,8 @@ Name = Modúl-pilot video pentru NVidia
 License = Nespecificată
 Description = Modúl-pilot video pentru plăcile grafice RIVA TNT2, GeForce/Quadro 1/2/3/4.
 Size = 18,5 Mo
+
+[Section.0804]
+Name = NVidia 显示驱动程序
+License = 未知
+Description = 从 NVidia GeForce/Quadro 1/2/3/4 卡 RIVA TNT2 的显示驱动程序。

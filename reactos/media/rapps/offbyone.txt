@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Off By One Browser
@@ -47,6 +48,9 @@ Size = 1010,89 KB
 
 [Section.0422]
 Description = Дуже малий та швидкий веб-браузер з повною підтримкою HTML 3.2.
+
+[Section.0804]
+Description = 完整的 HTML 3.2 支持非常小且快速的网络浏览器。
 
 [Section.0813]
 Description = Off By One Browser is een uiterst kleine en snelle web browser met volledige HTTP 3.2 ondersteuning.

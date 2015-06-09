@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Stamina
@@ -32,3 +33,6 @@ Size = 4,8 Mo
 [Section.041f]
 Description = Ücretsiz düğme takımında yazma öğreticisi.
 Size = 4,8 MB
+
+[Section.0804]
+Description = 免费打字导师。

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Visual C++ 2012 Redistributable Update 4
@@ -51,6 +52,10 @@ Size = 6,25 MB
 [Section.0422]
 License = Невідома
 Description = Бібліотеки Microsoft Visual Studio 2012 Update 4. включає: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+
+[Section.0804]
+License = 未知
+Description = 用 Visual Studio 2012 编译的应用程序所需。包含: atl110.dll、 mfc110.dll、 mfc110u.dll、 mfcm110.dll、 mfcm110u.dll、 msdia110.dll、 msvcm110.dll、 msvcp110.dll、 msvcr110.dll、 vcomp110.dll。
 
 [Section.0813]
 License = Ongekend

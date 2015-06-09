@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Office Compatibility Pack for Word, Excel, and PowerPoint File Formats
@@ -27,3 +28,8 @@ Name = Pachet de compatibilitate pentru Microsoft Office
 License = Nespecificată
 Description = Pachet pentru suita de aplicații Microsoft Office 2003, necesar pentru a deschide formaturile de fișiere *.docx, *.xlsx, etc.
 Size = 37,0 Mo
+
+[Section.0804]
+Name = Microsoft Office 兼容包为 Word、 Excel、 PowerPoint 文件格式
+License = 未知
+Description = 打开 *.docx、 *.xlsx 等所需 Word/Excel Viewer 和 Office 2003。

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Tile World
@@ -41,6 +42,9 @@ Size = 1,16 MB
 
 [Section.0422]
 Description = Чудовий клон гри Chip's Challenge для Atari Lynx. Включено безплатний графічний пакет CCLP2, тому вам не потрібен оригінальний.
+
+[Section.0804]
+Description = 好的 Chip's Challenge 克隆最初作 Atari Lynx。包括免费的 CCLP2 图形包，所以你不需要受版权保护的原件。
 
 [Section.0813]
 Description = Kloon van Chip's Challenge origineel gemaakt voor de Atari Lynx. Bevat het gratis CCLP2 Graphics Pack, zodat je zonder het origineel kan, dat onder auteursrecht valt.

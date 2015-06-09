@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Snoopy
@@ -31,3 +32,6 @@ Size = 704 ko
 License = Ücretsiz
 Description = Özgün C64 Snoopy'in yeniden yapılmışı.
 Size = 704 KB
+
+[Section.0804]
+Description = 原始的 C64 史努比翻拍。

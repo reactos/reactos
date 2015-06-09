@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Windows Media Encoder 9
@@ -49,6 +50,10 @@ Size = 9,46 MB
 
 [Section.0422]
 License = Невідома
+
+[Section.0804]
+License = 未知
+Description = 转换和播放音频和视频在 Windows 媒体格式。
 
 [Section.0813]
 License = Ongekend

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Winamp
@@ -25,3 +26,7 @@ Version = 5.666 Eksiksiz
 License = Ücretsiz Seçkin
 Description = Winamp, eklentilerle ve dış görünümlerle genişletilebilirliği destekleyen, mûsikî farazîleştirmeyi, çalma dizelgesini ve büyük bir çevrim içi topluluk eliyle desteklenen bir ortam kitaplığını barındıran bir ortam oynatıcısıdır.
 Size = 14,3 MB
+
+[Section.0804]
+License = 免费商业模式
+Description = 一个媒体播放器，支持可扩展性与插件、 兽皮和音乐可视化功能，播放列表和媒体库，支持由一个大型的在线社区。

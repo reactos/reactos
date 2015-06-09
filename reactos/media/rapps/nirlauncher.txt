@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = NirLauncher
@@ -30,3 +31,6 @@ Size = 20,75 Mo
 [Section.041f]
 License = Ücretsiz
 Description = Windows için 180 araçtan daha çoğunun bir paketi.
+
+[Section.0804]
+Description = 超过 180 实用程序可用于 Windows 的一整套行动。

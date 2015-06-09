@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = TuxPaint
@@ -47,6 +48,9 @@ Size = 13,5 MB
 
 [Section.0422]
 Description = Відкритий графічний редактор для малих дітей.
+
+[Section.0804]
+Description = 开放源位图图形编辑器面向年幼的孩子。
 
 [Section.0813]
 Description = Een open-bron grafische ontwerker voor kinderen.

@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Spanish translation by Ismael Ferreras Morezuelas (swyter)
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Neverball
@@ -27,3 +28,6 @@ Description = Gira el suelo para mover una bola a través de una pista de obstá
 License = GPL sürüm 2
 Description = Süre bitmeden önce bir engel gidişi boyunca bir topu yuvarlamak için odayı eğiniz. Neverball, tikelik bulmaca oyunu, tikelik devingen oyun ve büsbütün bir ustalık sınamasıdır. Oyunu çıkartmak için 7-Zip benzeri bir araç gereklidir.
 Size = 72,2 MB
+
+[Section.0804]
+Description = 倾斜地板滚球通过障碍的路线，在时间耗尽之前。个综合了 Neverball 是技能的一部分的益智游戏、 部分动作游戏，和完全测试。像 7-Zip 提取游戏所需的工具。

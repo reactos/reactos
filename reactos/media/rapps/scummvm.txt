@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = ScummVM
@@ -41,6 +42,9 @@ Size = 6,9 MB
 
 [Section.0422]
 Description = Дозволить грати Sam and Max, Day of the Tentacle та інші класичні ігри в ReactOS.
+
+[Section.0804]
+Description = 开放源码重新实现的经典冒险游戏引擎 (如 Monkey Island，Sam and Max 或 Day of the Tentacle)，使他们能运行在 ReactOS。
 
 [Section.0813]
 Description = Sam and Max, Day of the Tentacle, enz. op ReactOS.

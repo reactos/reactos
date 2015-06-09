@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Tahoma Font
@@ -49,6 +50,10 @@ Size = 305,12 KB
 [Section.0422]
 License = Невідома
 Description = Пакет шрифтів Tahoma, що необхідні деяким програмам (Steam). включає: Tahoma.ttf, Tahomabd.ttf.
+
+[Section.0804]
+Licence = 未知
+Description = Tahoma 字体包所需的一些应用程序 (Steam)。包含: Tahoma.ttf，Tahomabd.ttf。
 
 [Section.0813]
 License = Ongekend

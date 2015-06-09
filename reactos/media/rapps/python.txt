@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Python 3
@@ -41,6 +42,9 @@ Size = 26,65 MB
 
 [Section.0422]
 Description = Дуже потужна динамічна мова програмування.
+
+[Section.0804]
+Description = 一种非常强大的动态编程语言。
 
 [Section.0813]
 Description = Een opmerkelijk krachtige dynamische programmeertaal.

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Word Viewer
@@ -62,6 +63,12 @@ URLDownload = http://download.microsoft.com/download/7/6/e/76efefb4-9575-4903-ac
 License = Невідома
 Size = 24.56 MB
 URLDownload = http://download.microsoft.com/download/2/b/d/2bd08f27-822b-4c20-936a-0f1d91cb9e69/wordview_uk-ua.exe
+
+[Section.0804]
+License = 未知
+Description = 查看应用程序对于 Office 格式的免费软件文档 (*.doc)
+Size = 24.50MB
+URLDownload = http://download.microsoft.com/download/3/a/c/3ac87e64-8099-46d6-8e04-363d2da30f5a/wordview_zh-cn.exe
 
 [Section.0813]
 License = Ongekend

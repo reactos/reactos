@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Media Player Classic Home Cinema
@@ -47,6 +48,9 @@ Size = 10,9 MB
 
 [Section.0422]
 Description = Мультимедійний програвач.
+
+[Section.0804]
+Description = 替代的媒体播放器。
 
 [Section.0813]
 Description = Mediaspeler.

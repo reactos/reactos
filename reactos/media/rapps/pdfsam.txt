@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = PDFsam
@@ -19,3 +20,6 @@ Description = Freies, quelloffenes, Plattformunabhängiges Werkzeug zum spiltten
 License = GPL sürüm 2
 Description = PDF belgesi üzerinde bölme, birleştirme ve başka oynamalar yapmak için tasarlanmış, ücretsiz, açık kaynak, platform bağımsız bir araç. Java Yürütücüsü gereklidir!
 Size = 15,6 MB
+
+[Section.0804]
+Description = 免费、 开源、 平台独立的工具，旨在对 PDF 文档执行拆分、 合并和其他操作。Java Runtime 所需!

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft .NET Framework Version 2.0 Redistributable Package
@@ -40,3 +41,7 @@ Name = Microsoft .NET Çatısı Sürüm 2.0 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
 Description = Yeniden Dağıtılabilir Paket
 Size = 22,42 MB
+
+[Section.0804]
+License = 未知
+Description = 运行在中间的语言，如 C# 中编译托管的 Windows 应用程序所需的组件。

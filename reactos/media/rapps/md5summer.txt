@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = MD5summer
@@ -24,3 +25,6 @@ Size = 452 ko
 License = Ücretsiz
 Description = MD5summer, md5 sağlama toplamlarını oluşturan ve doğrulayan, Microsoft Windows için bir uygulamadır.
 Size = 452 KB
+
+[Section.0804]
+Description = 生成并验证 md5 校验的应用程序。

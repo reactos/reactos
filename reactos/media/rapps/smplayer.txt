@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = SMPlayer
@@ -46,6 +47,10 @@ URLSite = http://smplayer.sourceforge.net/tr/
 [Section.0422]
 Description = Графічний інтерфейс для MPlayer (мультимедійний плеєр).
 URLSite = http://smplayer.sourceforge.net/uk/
+
+[Section.0804]
+Description = MPlayer 用户图形界面。
+URLSite = http://smplayer.sourceforge.net/zh
 
 [Section.0813]
 Description = Mediaspeler, grafische interface voor MPlayer.

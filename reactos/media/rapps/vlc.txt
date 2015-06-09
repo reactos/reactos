@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = VLC media player
@@ -48,6 +49,10 @@ Size = 27,51 MB
 
 [Section.0422]
 Description = Мультимедійний програвач.
+
+[Section.0804]
+Description = 齐全的自由和开放源码媒体播放器内置编码解码器。
+URLSite = http://www.videolan.org/vlc/index.zh.html
 
 [Section.0813]
 Description = Een mediaspeler.

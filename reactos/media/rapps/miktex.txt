@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = MikTEX 2.9
@@ -28,3 +29,6 @@ Size = 163,18 Mo
 License = Ücretsiz
 Description = MiKTeX, Windows için, TeX'in, LaTeX'in ve ilişkili izlencelerin bir şimdiki uygulaması.
 Size = 163,18 MB
+
+[Section.0804]
+Description = TeX/LaTeX 和相关的程序的 Windows 的一个最新执行情况。

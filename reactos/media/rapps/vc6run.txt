@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Visual C++ 6 Redistributable Package
@@ -51,6 +52,10 @@ Size = 1,75 MB
 [Section.0422]
 License = Невідома
 Description = Бібліотеки Microsoft Visual Studio 6. включає: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0804]
+License = 未知
+Description = 用 Visual Studio 6 编译的应用程序所需。包含: advpack.dll、 asycfilt.dll、 atla.dll、 atlu.dll、 comcat.dll、 mfc42.dll、 mfc42u.dll、 msvcirt.dll、 msvcp60.dll、 msvcrt.dll，oleaut32.dll、 olepro32.dll。
 
 [Section.0813]
 License = Ongekend

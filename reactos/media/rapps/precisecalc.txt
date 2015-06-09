@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Precise Calculator
@@ -27,3 +28,6 @@ Name = Precise Hesap Makinesi
 License = GPL sürüm 3
 Description = Precise Hesap Makinesi, Windows için özgür ve açık kaynak bir bilimlik hesap makinesidir. Kurmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 151 KB
+
+[Section.0804]
+Description = Windows 一个自由和开放源码科学计算器。你将需要一个 ZIP 减压程序来安装它。

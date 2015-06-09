@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = µTorrent
@@ -58,6 +59,10 @@ Size = 1,66 MB
 [Section.0422]
 License = Безплатна для некомерційного використання
 Description = Маленький і швидкий клієнт BitTorrent.
+
+[Section.0804]
+License = 非商业用途的免费软件
+Description = 小而快的 BitTorrent 客户端。
 
 [Section.0813]
 License = Freeware voor niet-commerciëel gebruik

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = SciTE
@@ -43,6 +44,9 @@ Size = 752 KB
 
 [Section.0422]
 Description = Текстовий редактор на основі SCIntilla. Був зібраний як презентація Scintilla, але виріс до редактора загального користування з засобами збирання та запуску програм.
+
+[Section.0804]
+Description = 一个 Scintilla 基于文本编辑器。最初建立以证明的 Scintilla，它已经发展成为一般有用的编辑器与设施建设和运行的程序。
 
 [Section.0813]
 Description = SciTE is een tekstbewerker gebaseerd op SCIntilla. Origineel bedoeld om Scontilla te demonstreren, is uitgegroeid tot een handige editor met mogelijkheden voor ontwerken en uitvoeren van programma's.

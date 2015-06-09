@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Zaz
@@ -32,3 +33,6 @@ Size = 21,0 Mo
 [Section.041f]
 Description = Zaz; ücretsiz, atari salonu oyunu türünde, devingen bir bulmaca oyunudur, birazcık Frozen Bubble'a benzer.
 Size = 21,0 MB
+
+[Section.0804]
+Description = 一个免费街机动作益智电脑游戏，有点像 Frozen Bubble。

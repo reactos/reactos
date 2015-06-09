@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = WinBoard
@@ -42,6 +43,9 @@ Size = 5,93 MB
 
 [Section.0422]
 Description = Графічна шахматна дошка для Windows/ReactOS, що може слугувати графічним інтерфейсом для GNU Chess, Crafty, та інших шахматних двигунів, для серверів інтернет-шахмат та для шахматної переписки по е-мейл.
+
+[Section.0804]
+Description = 为 Windows/ReactOS，可以作为一个用户界面，GNU 象棋、 Crafty，和其他象棋引擎、 互联网棋服务器，和电子邮件函授国际象棋棋盘图形。
 
 [Section.0813]
 Description = WinBoard is een grafisch schaakbord voor Windows/ReactOS dat kan worden gebruikt als gebruikersinterface voor GNU Check, Crafty en andere schaakmotoren, voor Internet Chess Servers en voor schaak via elektronische post.

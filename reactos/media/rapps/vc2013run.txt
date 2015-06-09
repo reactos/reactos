@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Microsoft Visual C++ 2013 Redistributable
@@ -51,6 +52,10 @@ Size = 6,20 MB
 [Section.0422]
 License = Невідома
 Description = Бібліотеки Microsoft Visual Studio 2013. включає: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+
+[Section.0804]
+License = 未知
+Description = 用 Visual Studio 2013年编译的应用程序所需。包含: atl120.dll、 mfc120.dll、 mfc120u.dll、 mfcm120.dll、 mfcm120u.dll、 msdia120.dll、 msvcm120.dll、 msvcp120.dll、 msvcr120.dll、 vcomp120.dll。
 
 [Section.0813]
 License = Ongekend

@@ -1,6 +1,7 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Super DX-Ball
@@ -34,3 +35,6 @@ Size = 3,8 Mo
 License = Paylaşımlı
 Description = Super DX-Ball canlı ve renkli bir tuğla kırma oyunudur.
 Size = 3,8 MB
+
+[Section.0804]
+Description = 一个充满活力、 多姿多彩的砖破游戏。

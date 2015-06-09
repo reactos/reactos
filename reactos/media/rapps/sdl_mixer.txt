@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Simple Direct Media Layer (SDL) Mixer
@@ -45,6 +46,9 @@ Size = 548,02 KB
 
 [Section.0422]
 Description = Необхідний для роботи декотрих відкритих ігор. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.
+
+[Section.0804]
+Description = 需要一些开源游戏来运行。您将需要一个像 7-Zip 文件中解压它的工具。
 
 [Section.0813]
 Description = Gebruikt door veel open-bron-spelletjes. Gebruik 7-zip om het uit te pakken.

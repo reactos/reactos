@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = ReactOS Build Environment
@@ -45,6 +46,9 @@ Size = 28,3 MB
 
 [Section.0422]
 Description = Дозволяє зібрати ReactOS з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
+
+[Section.0804]
+Description = 允许您建立 ReactOS 源。更多的说明请参阅 ReactOS 维基百科。
 
 [Section.0813]
 Description = Maakt het mogelijk om de ReactOS broncode te bouwen. Meer instructies vind u op de ReastOS wiki.

@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Notepad++
@@ -48,6 +49,9 @@ Size = 6,62 MB
 
 [Section.0422]
 Description = Текстовый редактор.
+
+[Section.0804]
+Description = 一种全功能，带有很多插件的免费文本编辑器。
 
 [Section.0813]
 Description = Een teksteditor.
