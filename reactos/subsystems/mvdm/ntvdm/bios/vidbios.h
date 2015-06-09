@@ -22,6 +22,8 @@
 
 #define GRAPHICS_VIDEO_SEG      0xA000
 #define TEXT_VIDEO_SEG          0xB800
+#define CGA_EVEN_VIDEO_SEG      0xB800
+#define CGA_ODD_VIDEO_SEG       0xBA00
 #define VIDEO_BIOS_DATA_SEG     0xC000
 
 #define FONT_8x8_OFFSET         0x0000

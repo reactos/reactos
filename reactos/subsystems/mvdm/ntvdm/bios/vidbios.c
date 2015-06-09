@@ -2561,8 +2561,245 @@ static BOOLEAN VidBiosSetVideoPage(BYTE PageNumber)
     return TRUE;
 }
 
-static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
+static VOID VidBiosDrawGlyph(WORD CharData, BYTE Page, BYTE Row, BYTE Column)
 {
+    switch (Bda->VideoMode)
+    {
+        /* Alphanumeric mode */
+        case 0x00:
+        case 0x01:
+        case 0x02:
+        case 0x03:
+        {
+            EmulatorWriteMemory(&EmulatorContext,
+                                TO_LINEAR(TEXT_VIDEO_SEG,
+                                    Page * Bda->VideoPageSize +
+                                    (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                                (LPVOID)&CharData,
+                                sizeof(WORD));
+
+            break;
+        }
+
+        /* 4-color CGA */
+        case 0x04:
+        case 0x05:
+        {
+            WORD i;
+            WORD CgaSegment[] = { CGA_EVEN_VIDEO_SEG, CGA_ODD_VIDEO_SEG };
+            PUCHAR Font = (PUCHAR)FAR_POINTER(((PULONG)BaseAddress)[0x43]);
+            PUCHAR Glyph = &Font[LOBYTE(CharData) * Bda->CharacterHeight];
+            BOOLEAN Xor = (HIBYTE(CharData) & 0x80) ? TRUE : FALSE;
+            BYTE OldRotate;
+            BYTE DoubledBits[] =
+            {
+                0x00, 0x03, 0x0C, 0x0F, 0x30, 0x33, 0x3C, 0x3F,
+                0xC0, 0xC3, 0xCC, 0xCF, 0xF0, 0xF3, 0xFC, 0xFF
+            };
+
+            if (Xor)
+            {
+                /* Set the logical operation to XOR */
+                IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
+                OldRotate = IOReadB(VGA_GC_DATA);
+                IOWriteB(VGA_GC_DATA, OldRotate | 0x18);
+            }
+
+            for (i = 0; i < Bda->CharacterHeight; i++)
+            {
+                WORD Pixel = MAKEWORD(DoubledBits[Glyph[i] >> 4],
+                                      DoubledBits[Glyph[i] & 0x0F]);
+                if (Xor)
+                {
+                    USHORT Dummy;
+
+                    /* Read from VGA memory to load the latch register */
+                    EmulatorReadMemory(&EmulatorContext,
+                                       TO_LINEAR(CgaSegment[(Row + i) & 1],
+                                                 ((((Row + i) >> 1) * Bda->ScreenColumns) >> 2) + Column * 2),
+                                       (LPVOID)&Dummy,
+                                       sizeof(USHORT));
+                }
+
+                EmulatorWriteMemory(&EmulatorContext,
+                                    TO_LINEAR(CgaSegment[(Row + i) & 1],
+                                              ((((Row + i) >> 1) * Bda->ScreenColumns) >> 2) + Column * 2),
+                                    (LPVOID)&Pixel,
+                                    sizeof(USHORT));
+            }
+
+            if (Xor)
+            {
+                IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
+                IOWriteB(VGA_GC_DATA, OldRotate);
+            }
+
+            break;
+        }
+
+        /* 2-color CGA */
+        case 0x06:
+        {
+            WORD i;
+            WORD CgaSegment[] = { CGA_EVEN_VIDEO_SEG, CGA_ODD_VIDEO_SEG };
+            PUCHAR Font = (PUCHAR)FAR_POINTER(((PULONG)BaseAddress)[0x43]);
+            PUCHAR Glyph = &Font[LOBYTE(CharData) * Bda->CharacterHeight];
+            BOOLEAN Xor = (HIBYTE(CharData) & 0x80) ? TRUE : FALSE;
+            BYTE OldRotate;
+
+            if (Xor)
+            {
+                /* Set the logical operation to XOR */
+                IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
+                OldRotate = IOReadB(VGA_GC_DATA);
+                IOWriteB(VGA_GC_DATA, OldRotate | 0x18);
+            }
+
+            for (i = 0; i < Bda->CharacterHeight; i++)
+            {
+                if (Xor)
+                {
+                    UCHAR Dummy;
+
+                    /* Read from VGA memory to load the latch register */
+                    EmulatorReadMemory(&EmulatorContext,
+                                       TO_LINEAR(CgaSegment[(Row + i) & 1],
+                                                 ((((Row + i) >> 1) * Bda->ScreenColumns) >> 3) + Column),
+                                       (LPVOID)&Dummy,
+                                       sizeof(UCHAR));
+                }
+
+                EmulatorWriteMemory(&EmulatorContext,
+                                    TO_LINEAR(CgaSegment[(Row + i) & 1],
+                                              ((((Row + i) >> 1) * Bda->ScreenColumns) >> 3) + Column),
+                                    (LPVOID)&Glyph[i],
+                                    sizeof(UCHAR));
+            }
+
+            if (Xor)
+            {
+                IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
+                IOWriteB(VGA_GC_DATA, OldRotate);
+            }
+
+            break;
+        }
+
+        /* 16-color modes */
+        case 0x0D:
+        case 0x0E:
+        case 0x10:
+        case 0x11:
+        case 0x12:
+        {
+            WORD i;
+            PUCHAR Font = (PUCHAR)FAR_POINTER(((PULONG)BaseAddress)[0x43]);
+            PUCHAR Glyph = &Font[LOBYTE(CharData) * Bda->CharacterHeight];
+            BOOLEAN Xor = (HIBYTE(CharData) & 0x80) ? TRUE : FALSE;
+            BYTE OldPlaneWrite, OldReset, OldEnableReset, OldRotate, OldMode;
+
+            /* Write to all planes */
+            IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_MASK_REG);
+            OldPlaneWrite = IOReadB(VGA_SEQ_DATA);
+            IOWriteB(VGA_SEQ_DATA, 0x0F);
+
+            /* Zero the planes whose bits are set in the enable set/reset register */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_RESET_REG);
+            OldReset = IOReadB(VGA_GC_DATA);
+            IOWriteB(VGA_GC_DATA, 0x00);
+
+            /* Set the enable set/reset register to the inverse of the color */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_ENABLE_RESET_REG);
+            OldEnableReset = IOReadB(VGA_GC_DATA);
+            IOWriteB(VGA_GC_DATA, (~HIBYTE(CharData)) & 0x0F);
+
+            /* Make sure we're in write mode 0 */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_MODE_REG);
+            OldMode = IOReadB(VGA_GC_DATA);
+            IOWriteB(VGA_GC_DATA, 0x00);
+
+            if (Xor)
+            {
+                /* Set the logical operation to XOR */
+                IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
+                OldRotate = IOReadB(VGA_GC_DATA);
+                IOWriteB(VGA_GC_DATA, OldRotate | 0x18);
+            }
+
+            for (i = 0; i < Bda->CharacterHeight; i++)
+            {
+                if (Xor)
+                {
+                    UCHAR Dummy;
+
+                    /* Read from VGA memory to load the latch register */
+                    EmulatorReadMemory(&EmulatorContext,
+                                       TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                                 (((Row + i) * Bda->ScreenColumns) >> 3) + Column),
+                                       (LPVOID)&Dummy,
+                                       sizeof(UCHAR));
+                }
+
+                EmulatorWriteMemory(&EmulatorContext,
+                                    TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                              (((Row + i) * Bda->ScreenColumns) >> 3) + Column),
+                                    (LPVOID)&Glyph[i],
+                                    sizeof(UCHAR));
+            }
+
+            /* Restore the registers */
+            IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_MASK_REG);
+            IOWriteB(VGA_SEQ_DATA, OldPlaneWrite);
+            IOWriteB(VGA_GC_INDEX, VGA_GC_RESET_REG);
+            IOWriteB(VGA_GC_DATA, OldReset);
+            IOWriteB(VGA_GC_INDEX, VGA_GC_ENABLE_RESET_REG);
+            IOWriteB(VGA_GC_DATA, OldEnableReset);
+            IOWriteB(VGA_GC_INDEX, VGA_GC_MODE_REG);
+            IOWriteB(VGA_GC_DATA, OldMode);
+
+            if (Xor)
+            {
+                IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
+                IOWriteB(VGA_GC_DATA, OldRotate);
+            }
+
+            break;
+        }
+
+        /* 256-color mode */
+        case 0x13:
+        {
+            WORD i, j;
+            PUCHAR Font = (PUCHAR)FAR_POINTER(((PULONG)BaseAddress)[0x43]);
+            PUCHAR Glyph = &Font[LOBYTE(CharData) * Bda->CharacterHeight];
+            BYTE PixelBuffer[8];
+
+            for (i = 0; i < Bda->CharacterHeight; i++)
+            {
+                for (j = 0; j < 8; j++)
+                {
+                    PixelBuffer[j] = (Glyph[i] & (1 << (7 - j))) ? HIBYTE(CharData) : 0;
+                }
+
+                EmulatorWriteMemory(&EmulatorContext,
+                                    TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                              (Row + i) * Bda->ScreenColumns + Column * 8),
+                                    (LPVOID)PixelBuffer,
+                                    sizeof(PixelBuffer));
+            }
+
+            break;
+        }
+
+        default:
+        {
+            DPRINT1("Drawing glyphs in mode %02Xh is not supported.\n", Bda->VideoMode);
+        }
+    }
+}
+
+static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
+ {
     WORD CharData = MAKEWORD(Character, Attribute);
     BYTE Row, Column;
 
@@ -2594,12 +2831,7 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
 
         /* Erase the existing character */
         CharData = MAKEWORD(' ', Attribute);
-        EmulatorWriteMemory(&EmulatorContext,
-                            TO_LINEAR(TEXT_VIDEO_SEG,
-                                Page * Bda->VideoPageSize +
-                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                            (LPVOID)&CharData,
-                            sizeof(WORD));
+        VidBiosDrawGlyph(CharData, Page, Row, Column);
     }
     else if (Character == '\t')
     {
@@ -2626,12 +2858,7 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
         /* Default character */
 
         /* Write the character */
-        EmulatorWriteMemory(&EmulatorContext,
-                            TO_LINEAR(TEXT_VIDEO_SEG,
-                                Page * Bda->VideoPageSize +
-                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                            (LPVOID)&CharData,
-                            sizeof(WORD));
+        VidBiosDrawGlyph(CharData, Page, Row, Column);
 
         /* Advance the cursor */
         Column++;
@@ -2761,24 +2988,18 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         {
             WORD  CharacterData = MAKEWORD(getAL(), getBL());
             BYTE  Page = getBH();
-            DWORD Offset, Counter = getCX();
+            DWORD Counter = getCX();
 
             /* Check if the page exists */
             if (Page >= BIOS_MAX_PAGES) break;
 
-            /* Find the offset of the character */
-            Offset = Page * Bda->VideoPageSize +
-                     (HIBYTE(Bda->CursorPosition[Page])  * Bda->ScreenColumns +
-                      LOBYTE(Bda->CursorPosition[Page])) * 2;
-
             /* Write to video memory a certain number of times */
             while (Counter > 0)
             {
-                EmulatorWriteMemory(&EmulatorContext,
-                                    TO_LINEAR(TEXT_VIDEO_SEG, Offset),
-                                    (LPVOID)&CharacterData,
-                                    (getAH() == 0x09) ? sizeof(WORD) : sizeof(BYTE));
-                Offset += 2;
+                VidBiosDrawGlyph(CharacterData,
+                                 CharacterData,
+                                 HIBYTE(Bda->CursorPosition[Page]),
+                                 LOBYTE(Bda->CursorPosition[Page]));
                 Counter--;
             }
 
