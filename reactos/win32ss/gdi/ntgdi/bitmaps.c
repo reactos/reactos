@@ -2,7 +2,7 @@
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Bitmap functions
- * FILE:             subsys/win32k/objects/bitmaps.c
+ * FILE:             win32ss/gdi/ntgdi/bitmaps.c
  * PROGRAMER:        Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 

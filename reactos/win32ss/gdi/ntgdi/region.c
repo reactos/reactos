@@ -2387,7 +2387,7 @@ IntSysCreateRectpRgn(
 {
     PREGION prgn;
 
-    /* Allocate a region, witout a handle */
+    /* Allocate a region, without a handle */
     prgn = (PREGION)GDIOBJ_AllocateObject(GDIObjType_RGN_TYPE, sizeof(REGION), BASEFLAG_LOOKASIDE);
     if (prgn == NULL)
     {
