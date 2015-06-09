@@ -2387,6 +2387,44 @@ static inline BYTE VidBiosGetVideoMode(VOID)
     return Bda->VideoMode | (Bda->VGAOptions & 0x80);
 }
 
+static inline VOID VidBiosClearScreen(VOID)
+{
+    static const DWORD MemoryMaps[4] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
+    static const DWORD MemorySizes[4] = { 0x20000, 0x10000, 0x10000, 0x8000 };
+
+    DWORD VideoAddress;
+    BYTE Buffer[0x20000];
+    DWORD BufferSize;
+    BYTE Misc;
+
+    /* Read the misc register */
+    IOWriteB(VGA_GC_INDEX, VGA_GC_MISC_REG);
+    Misc = IOReadB(VGA_GC_DATA);
+
+    /* Get the video address */
+    VideoAddress = MemoryMaps[(Misc >> 2) & 3];
+    BufferSize = MemorySizes[(Misc >> 2) & 3];
+
+    if (Misc & 1)
+    {
+        /* Graphics mode */
+        RtlZeroMemory(Buffer, BufferSize);
+    }
+    else
+    {
+        INT i;
+
+        /* Text mode */
+        for (i = 0; i < (BufferSize >> 1); i++)
+        {
+            ((PWORD)Buffer)[i] = MAKEWORD(' ', DEFAULT_ATTRIBUTE);
+        }
+    }
+
+    /* Write to video memory */
+    EmulatorWriteMemory(&EmulatorContext, VideoAddress, Buffer, BufferSize);
+}
+
 static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 {
     BYTE Page;
@@ -2503,30 +2541,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     for (Page = 0; Page < BIOS_MAX_PAGES; ++Page)
         VidBiosSetCursorPosition(0, 0, Page);
 
-    // HACK: We clear here all the text memory. TODO: Do it better!
-    if (!DoNotClear && ((ModeNumber >= 0x00 && ModeNumber <= 0x03) || (ModeNumber == 0x07)))
-    {
-        INT i, j;
-        DWORD VideoAddress;
-        WORD FillCharacter = MAKEWORD(' ', DEFAULT_ATTRIBUTE);
-
-        for (Page = 0; Page < BIOS_MAX_PAGES; ++Page)
-        {
-            VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
-
-            for (i = 0; i <= Bda->ScreenRows; i++)
-            {
-                for (j = 0; j <= Bda->ScreenColumns - 1; j++)
-                {
-                    /* Write to video memory */
-                    EmulatorWriteMemory(&EmulatorContext,
-                                        VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
-                                        (LPVOID)&FillCharacter,
-                                        sizeof(FillCharacter));
-                }
-            }
-        }
-    }
+    if (!DoNotClear) VidBiosClearScreen();
 
     /* Refresh display */
     VgaRefreshDisplay();
