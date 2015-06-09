@@ -43,6 +43,7 @@
  * VGA Register Configurations for BIOS Video Modes.
  * The configurations were checked against SeaBIOS VGA BIOS.
  */
+
 static VGA_REGISTERS VideoMode_40x25_text =
 {
     /* Miscellaneous Register */
@@ -255,41 +256,6 @@ static VGA_REGISTERS VideoMode_320x200_256color =
      0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x00, 0x0F, 0x00, 0x00}
 };
 
-/* See http://wiki.osdev.org/Drawing_In_Protected_Mode#Locating_Video_Memory */
-static PVGA_REGISTERS VideoModes[BIOS_MAX_VIDEO_MODE + 1] =
-{
-    &VideoMode_40x25_text,          /* Mode 00h */      // 16 color (mono)
-    &VideoMode_40x25_text,          /* Mode 01h */      // 16 color
-    &VideoMode_80x25_text,          /* Mode 02h */      // 16 color (mono)
-    &VideoMode_80x25_text,          /* Mode 03h */      // 16 color
-    &VideoMode_320x200_4color,      /* Mode 04h */      // CGA 4 color
-    &VideoMode_320x200_4color,      /* Mode 05h */      // CGA same (m) (uses 3rd CGA palette)
-    &VideoMode_640x200_2color,      /* Mode 06h */      // CGA 640*200 2 color
-    NULL,                           /* Mode 07h */      // MDA monochrome text 80*25
-    NULL,                           /* Mode 08h */      // PCjr
-    NULL,                           /* Mode 09h */      // PCjr
-    NULL,                           /* Mode 0Ah */      // PCjr
-    NULL,                           /* Mode 0Bh */      // Reserved
-    NULL,                           /* Mode 0Ch */      // Reserved
-    &VideoMode_320x200_16color,     /* Mode 0Dh */      // EGA 320*200 16 color
-    &VideoMode_640x200_16color,     /* Mode 0Eh */      // EGA 640*200 16 color
-    NULL,                           /* Mode 0Fh */      // EGA 640*350 mono
-    &VideoMode_640x350_16color,     /* Mode 10h */      // EGA 640*350 HiRes 16 color
-    &VideoMode_640x480_2color,      /* Mode 11h */      // VGA 640*480 mono
-    &VideoMode_640x480_16color,     /* Mode 12h */      // VGA
-    &VideoMode_320x200_256color,    /* Mode 13h */      // VGA
-};
-
-// FIXME: Are they computable with the previous data ??
-// Values taken from DOSBox.
-static WORD VideoModePageSize[BIOS_MAX_VIDEO_MODE + 1] =
-{
-    0x0800, 0x0800, 0x1000, 0x1000,
-    0x4000, 0x4000, 0x4000, 0x1000,
-    0x0000, 0x0000, 0x0000, 0x0000,
-    0x0000, 0x2000, 0x4000, 0x8000,
-    0x8000, 0xA000, 0xA000, 0x2000
-};
 
 /*
  * BIOS Mode Palettes
@@ -1942,7 +1908,48 @@ static CONST UCHAR Font8x16[VGA_FONT_CHARACTERS * 16] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-PVGA_STATIC_FUNC_TABLE VgaStaticFuncTable;
+
+/*
+ * Table of supported Video Modes.
+ *
+ * See http://wiki.osdev.org/Drawing_In_Protected_Mode#Locating_Video_Memory
+ * Values of PageSize taken from DOSBox.
+ */
+
+typedef struct _VGA_MODE
+{
+    PVGA_REGISTERS VgaRegisters;
+    WORD PageSize;
+    WORD CharacterHeight;
+    // PCOLORREF Palette;
+} VGA_MODE, *PVGA_MODE;
+
+static CONST VGA_MODE VideoModes[BIOS_MAX_VIDEO_MODE + 1] =
+{
+    {&VideoMode_40x25_text,         0x0800, 16},    /* Mode 00h - 16 color (mono)                       */
+    {&VideoMode_40x25_text,         0x0800, 16},    /* Mode 01h - 16 color                              */
+    {&VideoMode_80x25_text,         0x1000, 16},    /* Mode 02h - 16 color (mono)                       */
+    {&VideoMode_80x25_text,         0x1000, 16},    /* Mode 03h - 16 color                              */
+    {&VideoMode_320x200_4color,     0x4000,  8},    /* Mode 04h - CGA 4 color                           */
+    {&VideoMode_320x200_4color,     0x4000,  8},    /* Mode 05h - CGA same (m) (uses 3rd CGA palette)   */
+    {&VideoMode_640x200_2color,     0x4000,  8},    /* Mode 06h - CGA 640*200 2 color                   */
+    {NULL,                          0x1000,  0},    /* Mode 07h - MDA monochrome text 80*25             */
+    {NULL,                          0x0000,  0},    /* Mode 08h - PCjr                                  */
+    {NULL,                          0x0000,  0},    /* Mode 09h - PCjr                                  */
+    {NULL,                          0x0000,  0},    /* Mode 0Ah - PCjr                                  */
+    {NULL,                          0x0000,  0},    /* Mode 0Bh - Reserved                              */
+    {NULL,                          0x0000,  0},    /* Mode 0Ch - Reserved                              */
+    {&VideoMode_320x200_16color,    0x2000,  8},    /* Mode 0Dh - EGA 320*200 16 color                  */
+    {&VideoMode_640x200_16color,    0x4000,  8},    /* Mode 0Eh - EGA 640*200 16 color                  */
+    {NULL,                          0x8000,  0},    /* Mode 0Fh - EGA 640*350 mono                      */
+    {&VideoMode_640x350_16color,    0x8000, 14},    /* Mode 10h - EGA 640*350 HiRes 16 color            */
+    {&VideoMode_640x480_2color,     0xA000, 16},    /* Mode 11h - VGA 640*480 mono                      */
+    {&VideoMode_640x480_16color,    0xA000, 16},    /* Mode 12h - VGA                                   */
+    {&VideoMode_320x200_256color,   0x2000,  8},    /* Mode 13h - VGA                                   */
+};
+
+
+static PVGA_STATIC_FUNC_TABLE VgaStaticFuncTable;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -2384,8 +2391,6 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 {
     BYTE Page;
     COORD Resolution;
-    PVGA_REGISTERS VgaMode;
-
     BYTE OrgModeNumber = ModeNumber;
 
     /*
@@ -2405,12 +2410,10 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
         return FALSE;
     }
 
-    VgaMode = VideoModes[ModeNumber];
+    DPRINT1("Switching to mode %02Xh (%02Xh) %s clearing the screen; VgaRegisters = 0x%p\n",
+            ModeNumber, OrgModeNumber, (DoNotClear ? "without" : "and"), VideoModes[ModeNumber].VgaRegisters);
 
-    DPRINT1("Switching to mode %02Xh (%02Xh) %s clearing the screen; VgaMode = 0x%p\n",
-            ModeNumber, OrgModeNumber, (DoNotClear ? "without" : "and"), VgaMode);
-
-    if (!VgaSetRegisters(VgaMode)) return FALSE;
+    if (!VgaSetRegisters(VideoModes[ModeNumber].VgaRegisters)) return FALSE;
 
     VgaChangePalette(ModeNumber);
 
@@ -2419,7 +2422,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 
     /* Update the values in the BDA */
     Bda->VideoMode       = ModeNumber;
-    Bda->VideoPageSize   = VideoModePageSize[ModeNumber];
+    Bda->VideoPageSize   = VideoModes[ModeNumber].PageSize;
     Bda->VideoPage       = 0;
     Bda->VideoPageOffset = Bda->VideoPage * Bda->VideoPageSize;
 
@@ -2437,14 +2440,52 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_HIGH_REG);
     IOWriteB(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
 
-    /* Update the character height */
-    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_MAX_SCAN_LINE_REG);
-    Bda->CharacterHeight = 1 + (IOReadB(VGA_CRTC_DATA) & 0x1F);
-
     /* Update the screen size */
     Resolution = VgaGetDisplayResolution();
     Bda->ScreenColumns = Resolution.X;
     Bda->ScreenRows    = Resolution.Y - 1;
+
+    /* Update the current font */
+    Bda->CharacterHeight = VideoModes[ModeNumber].CharacterHeight;
+    switch (Bda->CharacterHeight)
+    {
+        /*
+         * Write the default font to the VGA font plane
+         * and update the BIOS INT 43h vector (far pointer
+         * to the character range 00h-...)
+         */
+        case 8:
+        {
+            VgaWriteFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
+            ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x8_OFFSET, VIDEO_BIOS_DATA_SEG);
+            break;
+        }
+        case 14:
+        {
+            VgaWriteFont(0, Font8x14, ARRAYSIZE(Font8x14) / VGA_FONT_CHARACTERS);
+            ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x14_OFFSET, VIDEO_BIOS_DATA_SEG);
+            break;
+        }
+        case 16:
+        {
+            VgaWriteFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
+            ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
+            break;
+        }
+    }
+
+#if 0 // Commented, because I need to think about how to change correctly the ScreenRows
+      // in the code that really use it (the Font generator functions of INT 10h, AH=11h)
+      // so that it also changes the screen resolution *in text mode only*.
+    switch (getBL())
+    {
+        case 0x00: Bda->ScreenRows = getDL()-1; break;
+        case 0x01: Bda->ScreenRows = 13;        break;
+        case 0x03: Bda->ScreenRows = 42;        break;
+        case 0x02:
+        default  : Bda->ScreenRows = 24;        break;
+    }
+#endif
 
     /*
      * Update the cursor shape (text-mode only).
@@ -2458,8 +2499,6 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     /* Set the cursor position for each page */
     for (Page = 0; Page < BIOS_MAX_PAGES; ++Page)
         VidBiosSetCursorPosition(0, 0, Page);
-
-    // FIXME: We need to reset the fonts and the font vectors. (INT 1Fh and 43h).
 
     // HACK: We clear here all the text memory. TODO: Do it better!
     if (!DoNotClear && ((ModeNumber >= 0x00 && ModeNumber <= 0x03) || (ModeNumber == 0x07)))
@@ -3105,11 +3144,12 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Setup ROM 8x14 Font for Graphics Mode */
                 case 0x22:
                 {
-                    /* Write the default font to the VGA font plane */
+                    /*
+                     * Write the default font to the VGA font plane
+                     * and update the BIOS INT 43h vector (far pointer
+                     * to the character range 00h-...)
+                     */
                     VgaWriteFont(0, Font8x14, ARRAYSIZE(Font8x14) / VGA_FONT_CHARACTERS);
-
-                    /* Update the BIOS INT 43h vector */
-                    // Far pointer to the 8x14 characters 00h-...
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x14_OFFSET, VIDEO_BIOS_DATA_SEG);
 
                     /* Update BDA */
@@ -3129,11 +3169,12 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Setup ROM 8x8 Font for Graphics Mode */
                 case 0x23:
                 {
-                    /* Write the default font to the VGA font plane */
+                    /*
+                     * Write the default font to the VGA font plane
+                     * and update the BIOS INT 43h vector (far pointer
+                     * to the character range 00h-...)
+                     */
                     VgaWriteFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
-
-                    /* Update the BIOS INT 43h vector */
-                    // Far pointer to the 8x8 characters 00h-...
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x8_OFFSET, VIDEO_BIOS_DATA_SEG);
 
                     /* Update BDA */
@@ -3153,11 +3194,12 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Setup ROM 8x16 Font for Graphics Mode */
                 case 0x24:
                 {
-                    /* Write the default font to the VGA font plane */
+                    /*
+                     * Write the default font to the VGA font plane
+                     * and update the BIOS INT 43h vector (far pointer
+                     * to the character range 00h-...)
+                     */
                     VgaWriteFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
-
-                    /* Update the BIOS INT 43h vector */
-                    // Far pointer to the 8x16 characters 00h-...
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
 
                     /* Update BDA */
@@ -3466,9 +3508,6 @@ BOOLEAN VidBiosInitialize(VOID)
     RtlMoveMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, FONT_8x14_OFFSET),
                   Font8x14, sizeof(Font8x14));
 
-    /* Write the default font to the VGA font plane */
-    VgaWriteFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
-
     //
     // FIXME: At the moment we always set a VGA mode. In the future,
     // we should set this mode **only** when:
@@ -3480,7 +3519,7 @@ BOOLEAN VidBiosInitialize(VOID)
 
     Bda->CrtModeControl      = 0x00;
     Bda->CrtColorPaletteMask = 0x00;
-    Bda->VGADccIDActive = 0x08; // VGA w/ color analog active display
+    Bda->VGADccIDActive      = 0x08; // VGA w/ color analog active display
 
     /* Set the default video mode */
     VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
