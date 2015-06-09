@@ -14,9 +14,9 @@ BEGIN
     POPUP "播放(&P)"
     BEGIN
         MENUITEM "播放/暂停(&P)\tCtrl+P", IDC_PLAY
-        MENUITEM "停止(&S)\tCtrl+S", IDC_STOP
+        MENUITEM "停止(&O)\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "重复(&R)\tCtrl+T", IDM_REPEAT
+        MENUITEM "重复(&T)\tCtrl+T", IDM_REPEAT
     END
     POPUP "视图(&V)"
     BEGIN
@@ -46,14 +46,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
-    IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
-    IDS_MODE_NOT_READY "Not ready"
+    IDS_MODE_UNKNOWN "未知"
+    IDS_MODE_OPEN "已打开"
+    IDS_MODE_STOP "已停止"
+    IDS_MODE_PLAY "播放中"
+    IDS_MODE_PAUSE "已暂停"
+    IDS_MODE_RECORD "录音中"
+    IDS_MODE_SEEK "查找中"
+    IDS_MODE_NOT_READY "未准备好"
     IDS_ALL_TYPES_FILTER "所有支持的格式"
     IDS_TOOLTIP_PLAY "播放"
     IDS_TOOLTIP_STOP "停止"
@@ -62,7 +62,7 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "快退"
     IDS_TOOLTIP_SEEKFORW "快进"
     IDS_TOOLTIP_FORWARD "向前跳过"
-    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_TOOLTIP_PAUSE "暂停"
     IDS_APPTITLE "ReactOS 多媒体播放器"
     IDS_PLAY "播放"
     IDS_DEFAULTMCIERRMSG "该错误没有可用的描述."

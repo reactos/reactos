@@ -71,37 +71,37 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 9, "MS Shell Dlg"
-CAPTION "Page Setup"
+CAPTION "页面设置"
 BEGIN
-    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "预览", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
     GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    LTEXT "大小:(&S)", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    LTEXT "任务栏:(&T)", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
-    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
-    LTEXT "L&eft:", stc15, 88, 82, 30, 8
+    GROUPBOX "方向", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "直向(&P)", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "横向(&L)", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "边框", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "左:(&E)", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Right:", stc16, 159, 82, 30, 8
+    LTEXT "右:(&R)", stc16, 159, 82, 30, 8
     EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "T&op:", stc17, 88, 102, 30, 8
+    LTEXT "上:(&O)", stc17, 88, 102, 30, 8
     EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
+    LTEXT "下:(&B)", stc18, 159, 102, 30, 8
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Header:", 0x140, 8, 132, 40, 15
+    LTEXT "页眉:(&H)", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Footer:", 0x142, 8, 149, 40, 15
+    LTEXT "页脚:(&F)", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "帮助", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "确定", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "取消", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "打印机...(&R)", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -180,5 +180,5 @@ BEGIN
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "线 %d, 列 %d"
-    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+    STRING_PRINTERROR "不能打印文件 '%s'。\n\n请确保打印机已打开，并且已正确配置。"
 END
