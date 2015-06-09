@@ -2561,7 +2561,7 @@ static BOOLEAN VidBiosSetVideoPage(BYTE PageNumber)
     return TRUE;
 }
 
-static VOID VidBiosDrawGlyph(WORD CharData, BYTE Page, BYTE Row, BYTE Column)
+static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row, BYTE Column)
 {
     switch (Bda->VideoMode)
     {
@@ -2576,8 +2576,7 @@ static VOID VidBiosDrawGlyph(WORD CharData, BYTE Page, BYTE Row, BYTE Column)
                                     Page * Bda->VideoPageSize +
                                     (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
                                 (LPVOID)&CharData,
-                                sizeof(WORD));
-
+                                UseAttr ? sizeof(WORD) : sizeof(BYTE));
             break;
         }
 
@@ -2831,7 +2830,7 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
 
         /* Erase the existing character */
         CharData = MAKEWORD(' ', Attribute);
-        VidBiosDrawGlyph(CharData, Page, Row, Column);
+        VidBiosDrawGlyph(CharData, TRUE, Page, Row, Column);
     }
     else if (Character == '\t')
     {
@@ -2857,10 +2856,8 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
     {
         /* Default character */
 
-        /* Write the character */
-        VidBiosDrawGlyph(CharData, Page, Row, Column);
-
-        /* Advance the cursor */
+        /* Write the character and advance the cursor */
+        VidBiosDrawGlyph(CharData, TRUE, Page, Row, Column);
         Column++;
     }
 
@@ -2957,7 +2954,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Read Character and Attribute at Cursor Position */
         case 0x08:
         {
-            WORD  CharacterData;
+            WORD  CharData;
             BYTE  Page = getBH();
             DWORD Offset;
 
@@ -2972,11 +2969,11 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             /* Read from the video memory */
             EmulatorReadMemory(&EmulatorContext,
                                TO_LINEAR(TEXT_VIDEO_SEG, Offset),
-                               (LPVOID)&CharacterData,
+                               (LPVOID)&CharData,
                                sizeof(WORD));
 
             /* Return the character data in AX */
-            setAX(CharacterData);
+            setAX(CharData);
 
             break;
         }
@@ -2986,21 +2983,40 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Write Character only (PCjr: + Attribute) at Cursor Position */
         case 0x0A:
         {
-            WORD  CharacterData = MAKEWORD(getAL(), getBL());
-            BYTE  Page = getBH();
-            DWORD Counter = getCX();
+            WORD Counter = getCX();
+            WORD CharData = MAKEWORD(getAL(), getBL());
+            BOOLEAN UseAttr = (getAH() == 0x09);
+            BYTE Page = getBH();
+            BYTE Row, Column;
 
             /* Check if the page exists */
             if (Page >= BIOS_MAX_PAGES) break;
 
+            /* Get the cursor location */
+            // VidBiosGetCursorPosition(&Row, &Column, Page);
+            Row    = HIBYTE(Bda->CursorPosition[Page]);
+            Column = LOBYTE(Bda->CursorPosition[Page]);
+
             /* Write to video memory a certain number of times */
-            while (Counter > 0)
+            while (Counter-- > 0)
             {
-                VidBiosDrawGlyph(CharacterData,
-                                 CharacterData,
-                                 HIBYTE(Bda->CursorPosition[Page]),
-                                 LOBYTE(Bda->CursorPosition[Page]));
-                Counter--;
+                /* Write the character and advance the position */
+                VidBiosDrawGlyph(CharData, UseAttr, Page, Row, Column);
+                Column++;
+
+                /* Check if it passed the end of the row */
+                if (Column >= Bda->ScreenColumns)
+                {
+                    /* Return to the first column and go to the next line */
+                    Column = 0;
+                    Row++;
+                }
+
+                /* Contrary to the "Teletype Output" function, the screen is not scrolled */
+                if (Row > Bda->ScreenRows)
+                {
+                    Row = Bda->ScreenRows;
+                }
             }
 
             break;
