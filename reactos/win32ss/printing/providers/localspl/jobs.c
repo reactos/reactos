@@ -13,7 +13,7 @@ void
 InitializeJobQueue()
 {
     const WCHAR wszPath[] = L"\\PRINTERS\\?????.SHD";
-    const DWORD cchPath = sizeof(wszPath) / sizeof(WCHAR) - 1;
+    const DWORD cchPath = _countof(wszPath) - 1;
     const DWORD cchFolders = sizeof("\\PRINTERS\\") - 1;
     const DWORD cchPattern = sizeof("?????") - 1;
 
@@ -86,10 +86,10 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
 
     // Get its file size (small enough for a single DWORD) and allocate memory for all of it.
     cbFileSize = GetFileSize(hFile, NULL);
-    pShadowFile = HeapAlloc(hProcessHeap, 0, cbFileSize);
+    pShadowFile = DllAllocSplMem(cbFileSize);
     if (!pShadowFile)
     {
-        ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         goto Cleanup;
     }
 
@@ -117,17 +117,17 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     }
 
     // Create a new job structure and copy over the relevant fields.
-    pJob = HeapAlloc(hProcessHeap, 0, sizeof(LOCAL_JOB));
+    pJob = DllAllocSplMem(sizeof(LOCAL_JOB));
     if (!pJob)
     {
-        ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         goto Cleanup;
     }
 
     pJob->dwJobID = pShadowFile->dwJobID;
     pJob->Printer = pPrinter;
-    pJob->pwszDatatype = DuplicateStringW((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDatatype));
-    pJob->pwszDocumentName = DuplicateStringW((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDocumentName));
+    pJob->pwszDatatype = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDatatype));
+    pJob->pwszDocumentName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDocumentName));
     pJob->pwszOutputFile = NULL;
     CopyMemory(&pJob->DevMode, (PDEVMODEW)((ULONG_PTR)pShadowFile + pShadowFile->offDevMode), sizeof(DEVMODEW));
 
@@ -135,7 +135,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
 
 Cleanup:
     if (pShadowFile)
-        HeapFree(hProcessHeap, 0, pShadowFile);
+        DllFreeSplMem(pShadowFile);
 
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
@@ -171,10 +171,10 @@ WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob)
     cbFileSize = sizeof(SHD_HEADER) + cbDatatype + cbDocumentName + cbPrinterName;
 
     // Allocate memory for it.
-    pShadowFile = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, cbFileSize);
+    pShadowFile = DllAllocSplMem(cbFileSize);
     if (!pShadowFile)
     {
-        ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         goto Cleanup;
     }
 
@@ -210,7 +210,7 @@ WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob)
 
 Cleanup:
     if (pShadowFile)
-        HeapFree(hProcessHeap, 0, pShadowFile);
+        DllFreeSplMem(pShadowFile);
 
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
@@ -223,10 +223,10 @@ FreeJob(PLOCAL_JOB pJob)
 {
     ////////// TODO /////////
     /// Add some checks
-    HeapFree(hProcessHeap, 0, pJob->pwszDatatype);
-    HeapFree(hProcessHeap, 0, pJob->pwszDocumentName);
-    HeapFree(hProcessHeap, 0, pJob->pwszOutputFile);
-    HeapFree(hProcessHeap, 0, pJob);
+    DllFreeSplStr(pJob->pwszDatatype);
+    DllFreeSplStr(pJob->pwszDocumentName);
+    DllFreeSplStr(pJob->pwszOutputFile);
+    DllFreeSplMem(pJob);
 
     return TRUE;
 }

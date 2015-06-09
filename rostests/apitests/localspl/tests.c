@@ -40,14 +40,17 @@
 static void
 _RunRemoteTest(const char* szTestName)
 {
+    BOOL bSuccessful = FALSE;
     char szBuffer[1024];
     DWORD cbRead;
     DWORD cbWritten;
-    HANDLE hCommandPipe;
-    HANDLE hOutputPipe;
+    HANDLE hCommandPipe = INVALID_HANDLE_VALUE;
+    HANDLE hFind = NULL;
+    HANDLE hOutputPipe = INVALID_HANDLE_VALUE;
     PWSTR p;
-    SC_HANDLE hSC;
-    SC_HANDLE hService;
+    SC_HANDLE hSC = NULL;
+    SC_HANDLE hService = NULL;
+    SERVICE_STATUS ServiceStatus;
     WCHAR wszFilePath[MAX_PATH + 20];
     WIN32_FIND_DATAW fd;
 
@@ -59,7 +62,7 @@ _RunRemoteTest(const char* szTestName)
     if (!GetModuleFileNameW(NULL, wszFilePath, MAX_PATH))
     {
         skip("GetModuleFileNameW failed with error %lu!\n", GetLastError());
-        return;
+        goto Cleanup;
     }
 
     // Replace the extension.
@@ -67,16 +70,17 @@ _RunRemoteTest(const char* szTestName)
     if (!p)
     {
         skip("File path has no file extension: %S\n", wszFilePath);
-        return;
+        goto Cleanup;
     }
 
     wcscpy(p, L".dll");
 
     // Check if the corresponding DLL file exists.
-    if (!FindFirstFileW(wszFilePath, &fd))
+    hFind = FindFirstFileW(wszFilePath, &fd);
+    if (!hFind)
     {
         skip("My DLL file \"%S\" does not exist!\n", wszFilePath);
-        return;
+        goto Cleanup;
     }
 
     // Change the extension back to .exe and add the parameters.
@@ -87,8 +91,30 @@ _RunRemoteTest(const char* szTestName)
     if (!hSC)
     {
         skip("OpenSCManagerW failed with error %lu!\n", GetLastError());
-        return;
+        goto Cleanup;
     }
+
+    // Ensure that the spooler service is running.
+    hService = OpenServiceW(hSC, L"spooler", SERVICE_QUERY_STATUS);
+    if (!hService)
+    {
+        skip("OpenServiceW failed for the spooler service with error %lu!\n", GetLastError());
+        goto Cleanup;
+    }
+
+    if (!QueryServiceStatus(hService, &ServiceStatus))
+    {
+        skip("QueryServiceStatus failed for the spooler service with error %lu!\n", GetLastError());
+        goto Cleanup;
+    }
+
+    if (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
+    {
+        skip("Spooler Service is not running!\n");
+        goto Cleanup;
+    }
+
+    CloseServiceHandle(hService);
 
     // Try to open the service if we've created it in a previous run.
     hService = OpenServiceW(hSC, SERVICE_NAME, SERVICE_ALL_ACCESS);
@@ -101,13 +127,13 @@ _RunRemoteTest(const char* szTestName)
             if (!hService)
             {
                 skip("CreateServiceW failed with error %lu!\n", GetLastError());
-                return;
+                goto Cleanup;
             }
         }
         else
         {
             skip("OpenServiceW failed with error %lu!\n", GetLastError());
-            return;
+            goto Cleanup;
         }
     }
 
@@ -116,57 +142,70 @@ _RunRemoteTest(const char* szTestName)
     if (hCommandPipe == INVALID_HANDLE_VALUE)
     {
         skip("CreateNamedPipeW failed for the command pipe with error %lu!\n", GetLastError());
-        return;
+        goto Cleanup;
     }
 
     hOutputPipe = CreateNamedPipeW(OUTPUT_PIPE_NAME, PIPE_ACCESS_INBOUND, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 1024, 1024, 10000, NULL);
     if (hOutputPipe == INVALID_HANDLE_VALUE)
     {
         skip("CreateNamedPipeW failed for the output pipe with error %lu!\n", GetLastError());
-        return;
+        goto Cleanup;
     }
 
     // Start the service with "service" and a dummy parameter (to distinguish it from a call by rosautotest to localspl_apitest:service)
     if (!StartServiceW(hService, 0, NULL))
     {
         skip("StartServiceW failed with error %lu!\n", GetLastError());
-        return;
+        goto Cleanup;
     }
-
-    CloseServiceHandle(hService);
-    CloseServiceHandle(hSC);
 
     // Wait till it has injected the DLL and the DLL expects its test name.
     if (!ConnectNamedPipe(hCommandPipe, NULL) && GetLastError() != ERROR_PIPE_CONNECTED)
     {
         skip("ConnectNamedPipe failed for the command pipe with error %lu!\n", GetLastError());
-        return;
+        goto Cleanup;
     }
 
     // Send the test name.
     if (!WriteFile(hCommandPipe, szTestName, strlen(szTestName) + sizeof(char), &cbWritten, NULL))
     {
         skip("WriteFile failed with error %lu!\n", GetLastError());
-        return;
+        goto Cleanup;
     }
-
-    CloseHandle(hCommandPipe);
 
     // Now wait for the DLL to connect to the output pipe.
     if (!ConnectNamedPipe(hOutputPipe, NULL))
     {
         skip("ConnectNamedPipe failed for the output pipe with error %lu!\n", GetLastError());
-        return;
+        goto Cleanup;
     }
 
     // Get all testing messages from the pipe and output them on stdout.
     while (ReadFile(hOutputPipe, szBuffer, sizeof(szBuffer), &cbRead, NULL) && cbRead)
         fwrite(szBuffer, sizeof(char), cbRead, stdout);
 
-    CloseHandle(hOutputPipe);
+    bSuccessful = TRUE;
 
-    // Prevent the testing framework from outputting a "0 tests executed" line here.
-    ExitProcess(0);
+Cleanup:
+    if (hCommandPipe)
+        CloseHandle(hCommandPipe);
+
+    if (hOutputPipe)
+        CloseHandle(hOutputPipe);
+
+    if (hFind)
+        FindClose(hFind);
+
+    if (hService)
+        CloseServiceHandle(hService);
+
+    if (hSC)
+        CloseServiceHandle(hSC);
+
+    // If we successfully received test output through the named pipe, we have also output a summary line already.
+    // Prevent the testing framework from outputting another "0 tests executed" line in this case.
+    if (bSuccessful)
+        ExitProcess(0);
 }
 
 START_TEST(fpEnumPrinters)

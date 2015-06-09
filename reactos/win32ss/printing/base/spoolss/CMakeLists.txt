@@ -4,6 +4,7 @@ spec2def(spoolss.dll spoolss.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     context.c
     main.c
+    memory.c
     precomp.h
     tools.c)
 

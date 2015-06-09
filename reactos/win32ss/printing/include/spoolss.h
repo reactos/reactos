@@ -8,7 +8,13 @@
 #ifndef _REACTOS_SPOOLSS_H
 #define _REACTOS_SPOOLSS_H
 
-PBYTE WINAPI
-PackStrings(PCWSTR* pSource, PBYTE pDest, PDWORD DestOffsets, PBYTE pEnd);
+PWSTR WINAPI AllocSplStr(PCWSTR pwszInput);
+PVOID WINAPI DllAllocSplMem(DWORD dwBytes);
+BOOL WINAPI DllFreeSplMem(PVOID pMem);
+BOOL WINAPI DllFreeSplStr(PWSTR pwszString);
+PBYTE WINAPI PackStrings(PCWSTR* pSource, PBYTE pDest, PDWORD DestOffsets, PBYTE pEnd);
+PVOID WINAPI ReallocSplMem(PVOID pOldMem, DWORD cbOld, DWORD cbNew);
+BOOL WINAPI ReallocSplStr(PWSTR* ppwszString, PCWSTR pwszInput);
+BOOL WINAPI SplInitializeWinSpoolDrv(PVOID* pTable);
 
 #endif

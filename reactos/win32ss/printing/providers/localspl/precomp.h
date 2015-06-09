@@ -10,6 +10,7 @@
 
 #define WIN32_NO_STATUS
 #include <limits.h>
+#include <stdlib.h>
 #include <wchar.h>
 
 #include <windef.h>
@@ -19,6 +20,8 @@
 #include <winspool.h>
 #include <winsplp.h>
 #include <ndk/rtlfuncs.h>
+
+#include <spoolss.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(localspl);
@@ -62,6 +65,8 @@ LOCAL_PRINT_PROCESSOR, *PLOCAL_PRINT_PROCESSOR;
 typedef struct _LOCAL_PRINTER
 {
     PWSTR pwszPrinterName;
+    PWSTR pwszPrinterDriver;
+    PWSTR pwszDescription;
     PWSTR pwszDefaultDatatype;
     DEVMODEW DefaultDevMode;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
@@ -157,7 +162,7 @@ BOOL WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob);
 
 // main.c
 extern const WCHAR wszCurrentEnvironment[];
-extern HANDLE hProcessHeap;
+extern const WCHAR* wszPrintProviderInfo[3];
 extern WCHAR wszSpoolDirectory[MAX_PATH];
 extern DWORD cchSpoolDirectory;
 
@@ -182,7 +187,6 @@ BOOL WINAPI LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, D
 
 // tools.c
 PWSTR AllocAndRegQueryWSZ(HKEY hKey, PCWSTR pwszValueName);
-PWSTR DuplicateStringW(PCWSTR pwszInput);
 PVOID NTAPI GenericTableAllocateRoutine(PRTL_GENERIC_TABLE Table, CLONG ByteSize);
 VOID NTAPI GenericTableFreeRoutine(PRTL_GENERIC_TABLE Table, PVOID Buffer);
 

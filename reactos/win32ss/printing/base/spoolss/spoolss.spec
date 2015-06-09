@@ -17,7 +17,7 @@
 @ stub AdjustPointersInStructuresArray
 @ stub AlignKMPtr
 @ stub AlignRpcPtr
-@ stub AllocSplStr
+@ stdcall AllocSplStr(ptr)
 @ stub AllowRemoteCalls
 @ stub AppendPrinterNotifyInfoData
 @ stub bGetDevModePerUser
@@ -53,9 +53,9 @@
 @ stub DeletePrinterKeyW
 @ stub DeletePrintProcessorW
 @ stub DeletePrintProvidorW
-@ stub DllAllocSplMem
-@ stub DllFreeSplMem
-@ stub DllFreeSplStr
+@ stdcall DllAllocSplMem(long)
+@ stdcall DllFreeSplMem(ptr)
+@ stdcall DllFreeSplStr(ptr)
 @ stdcall EndDocPrinter(long)
 @ stdcall EndPagePrinter(long)
 @ stub EnumFormsW
@@ -115,8 +115,8 @@
 @ stub ProvidorFindFirstPrinterChangeNotification
 @ stub pszDbgAllocMsgA
 @ stub ReadPrinter
-@ stub ReallocSplMem
-@ stub ReallocSplStr
+@ stdcall ReallocSplMem(ptr long long)
+@ stdcall ReallocSplStr(ptr ptr)
 @ stub RemoteFindFirstPrinterChangeNotification
 @ stub ReplyClosePrinter
 @ stub ReplyOpenPrinter
@@ -146,9 +146,9 @@
 @ stub SplCommitSpoolData
 @ stub SplDriverUnloadComplete
 @ stub SplGetSpoolFileInfo
-@ stub SplInitializeWinSpoolDrv
+@ stdcall SplInitializeWinSpoolDrv(ptr)
 @ stub SplIsSessionZero
-@ stub SplIsUpgrade
+@ stdcall SplIsUpgrade()
 @ stub SplPowerEvent
 @ stub SplProcessPnPEvent
 @ stub SplPromptUIInUsersSession

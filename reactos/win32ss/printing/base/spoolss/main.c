@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 
+HANDLE hProcessHeap;
 PRINTPROVIDOR LocalSplFuncs;
 
 
@@ -14,6 +15,20 @@ BOOL WINAPI
 ClosePrinter(HANDLE hPrinter)
 {
     return FALSE;
+}
+
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            hProcessHeap = GetProcessHeap();
+            break;
+    }
+
+    return TRUE;
 }
 
 BOOL WINAPI
@@ -93,6 +108,44 @@ DWORD WINAPI
 StartDocPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
 {
     return 0;
+}
+
+BOOL WINAPI
+SplInitializeWinSpoolDrv(PVOID* pTable)
+{
+    HINSTANCE hWinspool;
+    int i;
+
+    hWinspool = LoadLibraryW(L"winspool.drv");
+    if (!hWinspool)
+    {
+        ERR("Could not load winspool.drv, last error is %lu!\n", GetLastError());
+        return FALSE;
+    }
+
+    // Get the function pointers which are meant to be returned by this function.
+    pTable[0] = GetProcAddress(hWinspool, "OpenPrinterW");
+    pTable[1] = GetProcAddress(hWinspool, "ClosePrinter");
+    pTable[2] = GetProcAddress(hWinspool, "SpoolerDevQueryPrintW");
+    pTable[3] = GetProcAddress(hWinspool, "SpoolerPrinterEvent");
+    pTable[4] = GetProcAddress(hWinspool, "DocumentPropertiesW");
+    pTable[5] = GetProcAddress(hWinspool, (LPSTR)212);
+    pTable[6] = GetProcAddress(hWinspool, (LPSTR)213);
+    pTable[7] = GetProcAddress(hWinspool, (LPSTR)214);
+    pTable[8] = GetProcAddress(hWinspool, (LPSTR)215);
+
+    // Verify that all calls succeeded.
+    for (i = 0; i < 9; i++)
+        if (!pTable[i])
+            return FALSE;
+
+    return TRUE;
+}
+
+BOOL WINAPI
+SplIsUpgrade()
+{
+	return FALSE;
 }
 
 DWORD WINAPI

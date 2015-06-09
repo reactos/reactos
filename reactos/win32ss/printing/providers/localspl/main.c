@@ -8,7 +8,6 @@
 #include "precomp.h"
 
 // Global Variables
-HANDLE hProcessHeap;
 WCHAR wszSpoolDirectory[MAX_PATH];
 DWORD cchSpoolDirectory;
 
@@ -23,6 +22,12 @@ const WCHAR wszCurrentEnvironment[] =
 #else
     #error Unsupported architecture
 #endif
+
+const WCHAR* wszPrintProviderInfo[3] = {
+    L"Windows NT Local Print Providor",     // Name
+    L"Windows NT Local Printers",           // Description
+    L"Locally connected Printers"           // Comment
+};
 
 static const PRINTPROVIDOR PrintProviderFunctions = {
     LocalOpenPrinter,                           // fpOpenPrinter
@@ -117,7 +122,7 @@ static void
 _GetSpoolDirectory()
 {
     const WCHAR wszSpoolPath[] = L"\\spool";
-    const DWORD cchSpoolPath = sizeof(wszSpoolPath) / sizeof(WCHAR) - 1;
+    const DWORD cchSpoolPath = _countof(wszSpoolPath) - 1;
 
     // Get the system directory and append the "spool" subdirectory.
     // Forget about length checks here. If this doesn't fit into MAX_PATH, our OS has more serious problems...
@@ -133,7 +138,6 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
-            hProcessHeap = GetProcessHeap();
             _GetSpoolDirectory();
             InitializePrintProcessorTable();
             InitializePrinterTable();
@@ -146,14 +150,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 BOOL WINAPI
 InitializePrintProvidor(LPPRINTPROVIDOR pPrintProvidor, DWORD cbPrintProvidor, LPWSTR pFullRegistryPath)
 {
-    DWORD cbCopy;
-
-    if (cbPrintProvidor < sizeof(PRINTPROVIDOR))
-        cbCopy = cbPrintProvidor;
-    else
-        cbCopy = sizeof(PRINTPROVIDOR);
-
-    CopyMemory(pPrintProvidor, &PrintProviderFunctions, cbCopy);
+    CopyMemory(pPrintProvidor, &PrintProviderFunctions, min(cbPrintProvidor, sizeof(PRINTPROVIDOR)));
 
     return TRUE;
 }

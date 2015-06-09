@@ -90,20 +90,20 @@ InitializePrinterTable()
         if (pPrinter)
         {
             if (pPrinter->pwszDefaultDatatype)
-                HeapFree(hProcessHeap, 0, pPrinter->pwszDefaultDatatype);
+                DllFreeSplStr(pPrinter->pwszDefaultDatatype);
 
-            HeapFree(hProcessHeap, 0, pPrinter);
+            DllFreeSplMem(pPrinter);
             pPrinter = NULL;
         }
 
         if (pwszPrintProcessor)
         {
-            HeapFree(hProcessHeap, 0, pwszPrintProcessor);
+            DllFreeSplStr(pwszPrintProcessor);
             pwszPrintProcessor = NULL;
         }
 
         // Get the name of this printer.
-        cchPrinterName = sizeof(wszPrinterName) / sizeof(WCHAR);
+        cchPrinterName = _countof(wszPrinterName);
         lStatus = RegEnumKeyExW(hKey, i, wszPrinterName, &cchPrinterName, NULL, NULL, NULL, NULL);
         if (lStatus == ERROR_MORE_DATA)
         {
@@ -138,16 +138,26 @@ InitializePrinterTable()
         }
 
         // Create a new LOCAL_PRINTER structure for it.
-        pPrinter = HeapAlloc(hProcessHeap, 0, sizeof(LOCAL_PRINTER));
+        pPrinter = DllAllocSplMem(sizeof(LOCAL_PRINTER));
         if (!pPrinter)
         {
-            ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
             goto Cleanup;
         }
 
-        pPrinter->pwszPrinterName = DuplicateStringW(wszPrinterName);
+        pPrinter->pwszPrinterName = AllocSplStr(wszPrinterName);
         pPrinter->pPrintProcessor = pPrintProcessor;
         InitializeListHead(&pPrinter->JobQueue);
+
+        // Get the printer driver.
+        pPrinter->pwszPrinterDriver = AllocAndRegQueryWSZ(hSubKey, L"Printer Driver");
+        if (!pPrinter->pwszPrinterDriver)
+            continue;
+
+        // Get the description.
+        pPrinter->pwszDescription = AllocAndRegQueryWSZ(hSubKey, L"Description");
+        if (!pPrinter->pwszDescription)
+            continue;
 
         // Get the default datatype.
         pPrinter->pwszDefaultDatatype = AllocAndRegQueryWSZ(hSubKey, L"Datatype");
@@ -183,14 +193,14 @@ InitializePrinterTable()
 
 Cleanup:
     if (pwszPrintProcessor)
-        HeapFree(hProcessHeap, 0, pwszPrintProcessor);
+        DllFreeSplStr(pwszPrintProcessor);
 
     if (pPrinter)
     {
         if (pPrinter->pwszDefaultDatatype)
-            HeapFree(hProcessHeap, 0, pPrinter->pwszDefaultDatatype);
+            DllFreeSplStr(pPrinter->pwszDefaultDatatype);
 
-        HeapFree(hProcessHeap, 0, pPrinter);
+        DllFreeSplMem(pPrinter);
     }
 
     if (hSubKey)
@@ -201,11 +211,189 @@ Cleanup:
 }
 
 
+BOOL
+_LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+{
+    const WCHAR wszComma[] = L",";
+
+    DWORD cbName;
+    DWORD cbComment;
+    DWORD cbDescription;
+    DWORD cchComputerName = 0;
+    DWORD i;
+    PBYTE pPrinterInfo;
+    PBYTE pPrinterString;
+    PLOCAL_PRINTER pPrinter;
+    PRINTER_INFO_1W PrinterInfo1;
+    PVOID pRestartKey = NULL;
+    WCHAR wszComputerName[2 + MAX_COMPUTERNAME_LENGTH + 1 + 1];
+
+    DWORD dwOffsets[] = {
+        FIELD_OFFSET(PRINTER_INFO_1W, pName),
+        FIELD_OFFSET(PRINTER_INFO_1W, pDescription),
+        FIELD_OFFSET(PRINTER_INFO_1W, pComment),
+        MAXDWORD
+    };
+
+    if (Flags & PRINTER_ENUM_NAME)
+    {
+        if (Name)
+        {
+            // The user supplied a Computer Name (with leading double backslashes) or Print Provider Name.
+            // Only process what's directed at us and dismiss every other request with ERROR_INVALID_NAME.
+            if (Name[0] == L'\\' && Name[1] == L'\\')
+            {
+                // Prepend slashes to the computer name.
+                wszComputerName[0] = L'\\';
+                wszComputerName[1] = L'\\';
+
+                // Get the local computer name for comparison.
+                cchComputerName = MAX_COMPUTERNAME_LENGTH + 1;
+                if (!GetComputerNameW(&wszComputerName[2], &cchComputerName))
+                {
+                    ERR("GetComputerNameW failed with error %lu!\n", GetLastError());
+                    return FALSE;
+                }
+
+                // Add the leading slashes to the total length.
+                cchComputerName += 2;
+
+                // Now compare this with the local computer name and reject if it doesn't match.
+                if (wcsicmp(&Name[2], &wszComputerName[2]) != 0)
+                {
+                    SetLastError(ERROR_INVALID_NAME);
+                    return FALSE;
+                }
+
+                // Add a trailing backslash to wszComputerName, which will later be prepended in front of the printer names.
+                wszComputerName[cchComputerName++] = L'\\';
+                wszComputerName[cchComputerName] = 0;
+            }
+            else if (wcsicmp(Name, wszPrintProviderInfo[0]) != 0)
+            {
+                // The user supplied a name that cannot be processed by the local print provider.
+                SetLastError(ERROR_INVALID_NAME);
+                return FALSE;
+            }
+        }
+        else
+        {
+            // The caller wants information about this Print Provider.
+            // spoolss packs this into an array of information about all Print Providers.
+            *pcbNeeded = sizeof(PRINTER_INFO_1W);
+
+            for (i = 0; i < 3; i++)
+                *pcbNeeded += (wcslen(wszPrintProviderInfo[i]) + 1) * sizeof(WCHAR);
+
+            *pcReturned = 1;
+
+            // Check if the supplied buffer is large enough.
+            if (cbBuf < *pcbNeeded)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return FALSE;
+            }
+
+            // Copy over the print processor information.
+            ((PPRINTER_INFO_1W)pPrinterEnum)->Flags = 0;
+            PackStrings(wszPrintProviderInfo, pPrinterEnum, dwOffsets, &pPrinterEnum[*pcbNeeded]);
+            return TRUE;
+        }
+    }
+
+    // Count the required buffer size and the number of printers.
+    for (pPrinter = RtlEnumerateGenericTableWithoutSplaying(&PrinterTable, &pRestartKey); pPrinter; pPrinter = RtlEnumerateGenericTableWithoutSplaying(&PrinterTable, &pRestartKey))
+    {
+        // This looks wrong, but is totally right. PRINTER_INFO_1W has three members pName, pComment and pDescription.
+        // But pComment equals the "Description" registry value while pDescription is concatenated out of pName and pComment.
+        // On top of this, the computer name is prepended to the printer name if the user supplied the local computer name during the query.
+        cbName = (wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+        cbComment = (wcslen(pPrinter->pwszDescription) + 1) * sizeof(WCHAR);
+        cbDescription = cchComputerName * sizeof(WCHAR) + cbName + cbComment + sizeof(WCHAR);
+
+        *pcbNeeded += sizeof(PRINTER_INFO_1W) + cchComputerName * sizeof(WCHAR) + cbName + cbComment + cbDescription;
+        *pcReturned++;
+    }
+
+    // Check if the supplied buffer is large enough.
+    if (cbBuf < *pcbNeeded)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
+    // Put the strings right after the last PRINTER_INFO_1W structure.
+    // Due to all the required string processing, we can't just use PackStrings here :(
+    pPrinterInfo = pPrinterEnum;
+    pPrinterString = pPrinterEnum + *pcReturned * sizeof(PRINTER_INFO_1W);
+
+    // Copy over the printer information.
+    for (pPrinter = RtlEnumerateGenericTableWithoutSplaying(&PrinterTable, &pRestartKey); pPrinter; pPrinter = RtlEnumerateGenericTableWithoutSplaying(&PrinterTable, &pRestartKey))
+    {
+        // FIXME: As for now, the Flags member returns no information.
+        PrinterInfo1.Flags = 0;
+
+        // Copy the printer name.
+        PrinterInfo1.pName = (PWSTR)pPrinterString;
+        CopyMemory(pPrinterString, wszComputerName, cchComputerName * sizeof(WCHAR));
+        pPrinterString += cchComputerName * sizeof(WCHAR);
+        cbName = (wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+        CopyMemory(pPrinterString, pPrinter->pwszPrinterName, cbName);
+        pPrinterString += cbName;
+
+        // Copy the printer comment (equals the "Description" registry value).
+        PrinterInfo1.pComment = (PWSTR)pPrinterString;
+        cbComment = (wcslen(pPrinter->pwszDescription) + 1) * sizeof(WCHAR);
+        CopyMemory(pPrinterString, pPrinter->pwszDescription, cbComment);
+        pPrinterString += cbComment;
+
+        // Copy the description, which for PRINTER_INFO_1W has the form "Name,Comment,"
+        PrinterInfo1.pDescription = (PWSTR)pPrinterString;
+        CopyMemory(pPrinterString, wszComputerName, cchComputerName * sizeof(WCHAR));
+        pPrinterString += cchComputerName * sizeof(WCHAR);
+        CopyMemory(pPrinterString, pPrinter->pwszPrinterName, cbName - sizeof(WCHAR));
+        pPrinterString += cbName - sizeof(WCHAR);
+        CopyMemory(pPrinterString, wszComma, sizeof(WCHAR));
+        pPrinterString += sizeof(WCHAR);
+        CopyMemory(pPrinterString, pPrinter->pwszDescription, cbComment - sizeof(WCHAR));
+        pPrinterString += cbComment - sizeof(WCHAR);
+        CopyMemory(pPrinterString, wszComma, sizeof(wszComma));
+        pPrinterString += sizeof(wszComma);
+                
+        // Finally copy the structure and advance to the next one in the output buffer.
+        CopyMemory(pPrinterInfo, &PrinterInfo1, sizeof(PRINTER_INFO_1W));
+        pPrinterInfo += sizeof(PRINTER_INFO_1W);
+    }
+
+    return TRUE;
+}
+
 BOOL WINAPI
 LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
-    ///////////// TODO /////////////////////
-    return FALSE;
+    // Do no sanity checks here. This is verified by localspl_apitest!
+
+    // Begin counting.
+    *pcbNeeded = 0;
+    *pcReturned = 0;
+
+    // Think positive :)
+    SetLastError(ERROR_SUCCESS);
+
+    if (Flags & PRINTER_ENUM_LOCAL)
+    {
+        // The function behaves quite differently for each level.
+        if (Level == 1)
+            return _LocalEnumPrintersLevel1(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+
+        // TODO: Handle other levels.
+
+        // The caller supplied an invalid level.
+        return FALSE;
+    }
+
+    // Treat it as success if the caller queried no information and we don't need to return any.
+    return TRUE;
 }
 
 BOOL WINAPI
@@ -250,7 +438,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         *p = 0;
 
         // Get the local computer name for comparison.
-        cchComputerName = sizeof(wszComputerName) / sizeof(WCHAR);
+        cchComputerName = _countof(wszComputerName);
         if (!GetComputerNameW(wszComputerName, &cchComputerName))
         {
             ERR("GetComputerNameW failed with error %lu!\n", GetLastError());
@@ -286,7 +474,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     if (cchPrinterName)
     {
         // Yes, extract it.
-        pwszPrinterName = HeapAlloc(hProcessHeap, 0, (cchPrinterName + 1) * sizeof(WCHAR));
+        pwszPrinterName = DllAllocSplMem((cchPrinterName + 1) * sizeof(WCHAR));
         CopyMemory(pwszPrinterName, lpPrinterName, cchPrinterName * sizeof(WCHAR));
         pwszPrinterName[cchPrinterName] = 0;
 
@@ -300,7 +488,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         }
 
         // Create a new printer handle.
-        pPrinterHandle = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(LOCAL_PRINTER_HANDLE));
+        pPrinterHandle = DllAllocSplMem(sizeof(LOCAL_PRINTER_HANDLE));
         pPrinterHandle->Printer = pPrinter;
 
         // Check if a datatype was given.
@@ -313,12 +501,12 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
                 goto Cleanup;
             }
 
-            pPrinterHandle->pwszDatatype = DuplicateStringW(pDefault->pDatatype);
+            pPrinterHandle->pwszDatatype = AllocSplStr(pDefault->pDatatype);
         }
         else
         {
             // Use the default datatype.
-            pPrinterHandle->pwszDatatype = DuplicateStringW(pPrinter->pwszDefaultDatatype);
+            pPrinterHandle->pwszDatatype = AllocSplStr(pPrinter->pwszDefaultDatatype);
         }
 
         // Check if a DevMode was given, otherwise use the default.
@@ -389,7 +577,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         }
 
         // Create a new handle that references a printer.
-        pHandle = HeapAlloc(hProcessHeap, 0, sizeof(LOCAL_HANDLE));
+        pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
         pHandle->HandleType = Printer;
         pHandle->SpecificHandle = pPrinterHandle;
     }
@@ -413,7 +601,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             p += sizeof("XcvMonitor ") - 1;
 
             ///////////// TODO /////////////////////
-            pHandle = HeapAlloc(hProcessHeap, 0, sizeof(LOCAL_HANDLE));
+            pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
             pHandle->HandleType = Monitor;
             //pHandle->SpecificHandle = pMonitorHandle;
         }
@@ -423,7 +611,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             p += sizeof("XcvPort ") - 1;
 
             //////////// TODO //////////////////////
-            pHandle = HeapAlloc(hProcessHeap, 0, sizeof(LOCAL_HANDLE));
+            pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
             pHandle->HandleType = Port;
             //pHandle->SpecificHandle = pPortHandle;
         }
@@ -445,13 +633,13 @@ Cleanup:
     if (pPrinterHandle)
     {
         if (pPrinterHandle->pwszDatatype)
-            HeapFree(hProcessHeap, 0, pPrinterHandle->pwszDatatype);
+            DllFreeSplStr(pPrinterHandle->pwszDatatype);
 
-        HeapFree(hProcessHeap, 0, pPrinterHandle);
+        DllFreeSplMem(pPrinterHandle);
     }
 
     if (pwszPrinterName)
-        HeapFree(hProcessHeap, 0, pwszPrinterName);
+        DllFreeSplMem(pwszPrinterName);
 
     return bReturnValue;
 }
@@ -498,7 +686,7 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
     pDocumentInfo1 = (PDOC_INFO_1W)pDocInfo;
 
     // Create a new job.
-    pJob = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(LOCAL_JOB));
+    pJob = DllAllocSplMem(sizeof(LOCAL_JOB));
     pJob->Printer = pPrinterHandle->Printer;
 
     // Check if a datatype was given.
@@ -511,12 +699,12 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
             goto Cleanup;
         }
 
-        pJob->pwszDatatype = DuplicateStringW(pDocumentInfo1->pDatatype);
+        pJob->pwszDatatype = AllocSplStr(pDocumentInfo1->pDatatype);
     }
     else
     {
         // Use the printer handle datatype.
-        pJob->pwszDatatype = DuplicateStringW(pPrinterHandle->pwszDatatype);
+        pJob->pwszDatatype = AllocSplStr(pPrinterHandle->pwszDatatype);
     }
 
     // Copy over printer defaults.
@@ -524,17 +712,17 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
 
     // Copy over supplied information.
     if (pDocumentInfo1->pDocName)
-        pJob->pwszDocumentName = DuplicateStringW(pDocumentInfo1->pDocName);
+        pJob->pwszDocumentName = AllocSplStr(pDocumentInfo1->pDocName);
 
     if (pDocumentInfo1->pOutputFile)
-        pJob->pwszOutputFile = DuplicateStringW(pDocumentInfo1->pOutputFile);
+        pJob->pwszOutputFile = AllocSplStr(pDocumentInfo1->pOutputFile);
 
     // Enqueue the job.
     ///////////// TODO /////////////////////
 
 Cleanup:
     if (pJob)
-        HeapFree(hProcessHeap, 0, pJob);
+        DllFreeSplMem(pJob);
 
     return dwReturnValue;
 }
@@ -584,7 +772,7 @@ LocalClosePrinter(HANDLE hPrinter)
     /// Check the handle type, do thoroughful checks on all data fields and clean them.
     ////////////////////////////////////////
 
-    HeapFree(hProcessHeap, 0, pHandle);
+    DllFreeSplMem(pHandle);
 
     return TRUE;
 }

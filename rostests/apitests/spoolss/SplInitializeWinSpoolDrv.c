@@ -15,9 +15,14 @@
 START_TEST(SplInitializeWinSpoolDrv)
 {
     HINSTANCE hWinspool;
-    void* Table[9];
+    PVOID Table[9];
 
     hWinspool = LoadLibraryW(L"winspool.drv");
+    if (!hWinspool)
+    {
+        skip("Could not load winspool.drv, last error is %lu!\n", GetLastError());
+        return;
+    }
 
     ok(SplInitializeWinSpoolDrv(Table), "SplInitializeWinSpoolDrv returns FALSE!\n");
     ok(Table[0] == GetProcAddress(hWinspool, "OpenPrinterW"), "Table[0] is %p\n", Table[0]);

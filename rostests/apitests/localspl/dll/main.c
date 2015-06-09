@@ -19,7 +19,6 @@
 #include <winspool.h>
 #include <winsplp.h>
 
-
 #include "../localspl_apitest.h"
 
 //#define NDEBUG

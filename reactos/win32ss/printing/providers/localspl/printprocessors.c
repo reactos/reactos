@@ -31,7 +31,7 @@ static BOOL
 _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
 {
     const WCHAR wszEnvironmentsKey[] = L"SYSTEM\\CurrentControlSet\\Control\\Print\\Environments\\";
-    const DWORD cchEnvironmentsKey = sizeof(wszEnvironmentsKey) / sizeof(WCHAR) - 1;
+    const DWORD cchEnvironmentsKey = _countof(wszEnvironmentsKey) - 1;
 
     BOOL bReturnValue = FALSE;
     DWORD cchEnvironment;
@@ -44,10 +44,10 @@ _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
 
     // Construct the registry key of the demanded environment.
     cchEnvironment = wcslen(pEnvironment);
-    pwszEnvironmentKey = HeapAlloc(hProcessHeap, 0, (cchEnvironmentsKey + cchEnvironment + 1) * sizeof(WCHAR));
+    pwszEnvironmentKey = DllAllocSplMem((cchEnvironmentsKey + cchEnvironment + 1) * sizeof(WCHAR));
     if (!pwszEnvironmentKey)
     {
-        ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         goto Cleanup;
     }
 
@@ -71,7 +71,7 @@ _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
 
 Cleanup:
     if (pwszEnvironmentKey)
-        HeapFree(hProcessHeap, 0, pwszEnvironmentKey);
+        DllFreeSplMem(pwszEnvironmentKey);
 
     return bReturnValue;
 }
@@ -182,10 +182,10 @@ InitializePrintProcessorTable()
     }
 
     // Allocate a temporary buffer for the Print Processor names.
-    pwszPrintProcessorName = HeapAlloc(hProcessHeap, 0, (cchMaxSubKey + 1) * sizeof(WCHAR));
+    pwszPrintProcessorName = DllAllocSplMem((cchMaxSubKey + 1) * sizeof(WCHAR));
     if (!pwszPrintProcessorName)
     {
-        ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         goto Cleanup;
     }
 
@@ -202,15 +202,15 @@ InitializePrintProcessorTable()
         if (pPrintProcessor)
         {
             if (pPrintProcessor->pwszName)
-                HeapFree(hProcessHeap, 0, pPrintProcessor->pwszName);
+                DllFreeSplStr(pPrintProcessor->pwszName);
 
-            HeapFree(hProcessHeap, 0, pPrintProcessor);
+            DllFreeSplMem(pPrintProcessor);
             pPrintProcessor = NULL;
         }
 
         if (pDatatypesInfo1)
         {
-            HeapFree(hProcessHeap, 0, pDatatypesInfo1);
+            DllFreeSplMem(pDatatypesInfo1);
             pDatatypesInfo1 = NULL;
         }
 
@@ -259,8 +259,8 @@ InitializePrintProcessorTable()
         }
 
         // Create a new LOCAL_PRINT_PROCESSOR structure for it.
-        pPrintProcessor = HeapAlloc(hProcessHeap, 0, sizeof(LOCAL_PRINT_PROCESSOR));
-        pPrintProcessor->pwszName = DuplicateStringW(pwszPrintProcessorName);
+        pPrintProcessor = DllAllocSplMem(sizeof(LOCAL_PRINT_PROCESSOR));
+        pPrintProcessor->pwszName = AllocSplStr(pwszPrintProcessorName);
 
         // Get and verify all its function pointers.
         pPrintProcessor->pfnClosePrintProcessor = (PClosePrintProcessor)GetProcAddress(hinstPrintProcessor, "ClosePrintProcessor");
@@ -307,10 +307,10 @@ InitializePrintProcessorTable()
 
         // Get all supported datatypes.
         pPrintProcessor->pfnEnumPrintProcessorDatatypesW(NULL, NULL, 1, NULL, 0, &cbDatatypes, &dwDatatypes);
-        pDatatypesInfo1 = HeapAlloc(hProcessHeap, 0, cbDatatypes);
+        pDatatypesInfo1 = DllAllocSplMem(cbDatatypes);
         if (!pDatatypesInfo1)
         {
-            ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
             goto Cleanup;
         }
 
@@ -325,7 +325,7 @@ InitializePrintProcessorTable()
 
         for (j = 0; j < dwDatatypes; j++)
         {
-            pwszDatatype = DuplicateStringW(pDatatypesInfo1->pName);
+            pwszDatatype = AllocSplStr(pDatatypesInfo1->pName);
 
             if (!RtlInsertElementGenericTable(&pPrintProcessor->DatatypeTable, pDatatypesInfo1->pName, sizeof(PWSTR), NULL))
             {
@@ -350,21 +350,21 @@ InitializePrintProcessorTable()
 
 Cleanup:
     if (pwszDatatype)
-        HeapFree(hProcessHeap, 0, pwszDatatype);
+        DllFreeSplStr(pwszDatatype);
 
     if (pDatatypesInfo1)
-        HeapFree(hProcessHeap, 0, pDatatypesInfo1);
+        DllFreeSplMem(pDatatypesInfo1);
 
     if (pPrintProcessor)
     {
         if (pPrintProcessor->pwszName)
-            HeapFree(hProcessHeap, 0, pPrintProcessor->pwszName);
+            DllFreeSplStr(pPrintProcessor->pwszName);
 
-        HeapFree(hProcessHeap, 0, pPrintProcessor);
+        DllFreeSplMem(pPrintProcessor);
     }
 
     if (pwszPrintProcessorName)
-        HeapFree(hProcessHeap, 0, pwszPrintProcessorName);
+        DllFreeSplStr(pwszPrintProcessorName);
 
     if (hSubSubKey)
         RegCloseKey(hSubSubKey);
@@ -482,7 +482,6 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     PBYTE pCurrentOutputPrintProcessor;
     PBYTE pCurrentOutputPrintProcessorInfo;
     PRINTPROCESSOR_INFO_1W PrintProcessorInfo1;
-    PWSTR pwszEnvironmentKey = NULL;
     PWSTR pwszTemp = NULL;
 
     // Sanity checks
@@ -520,10 +519,10 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     }
 
     // Allocate a temporary buffer to let RegEnumKeyExW succeed.
-    pwszTemp = HeapAlloc(hProcessHeap, 0, (cchMaxSubKey + 1) * sizeof(WCHAR));
+    pwszTemp = DllAllocSplMem((cchMaxSubKey + 1) * sizeof(WCHAR));
     if (!pwszTemp)
     {
-        ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         goto Cleanup;
     }
 
@@ -585,10 +584,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
 
 Cleanup:
     if (pwszTemp)
-        HeapFree(hProcessHeap, 0, pwszTemp);
-
-    if (pwszEnvironmentKey)
-        HeapFree(hProcessHeap, 0, pwszEnvironmentKey);
+        DllFreeSplMem(pwszTemp);
 
     if (hSubKey)
         RegCloseKey(hSubKey);
@@ -634,13 +630,12 @@ BOOL WINAPI
 LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     const WCHAR wszPath[] = L"\\PRTPROCS\\";
-    const DWORD cchPath = sizeof(wszPath) / sizeof(WCHAR) - 1;
+    const DWORD cchPath = _countof(wszPath) - 1;
 
     BOOL bReturnValue = FALSE;
     DWORD cbDataWritten;
     HKEY hKey = NULL;
     LONG lStatus;
-    PWSTR pwszEnvironmentKey = NULL;
 
     // Sanity checks
     if (Level != 1)
@@ -695,9 +690,6 @@ LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, 
     bReturnValue = TRUE;
 
 Cleanup:
-    if (pwszEnvironmentKey)
-        HeapFree(hProcessHeap, 0, pwszEnvironmentKey);
-
     if (hKey)
         RegCloseKey(hKey);
 
