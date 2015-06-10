@@ -40,7 +40,7 @@ BEGIN
     IDS_RESOURCE_MEMORY_RANGE "Zakres pamięci"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
-    IDS_RESOURCE_PORT "Zakres E/A"
+    IDS_RESOURCE_PORT "Zakres I/O"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
