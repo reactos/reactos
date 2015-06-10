@@ -11,7 +11,7 @@
 #if DBG
 #define DPRINT(x, ...)    printf(x)
 #else
-#define DPRINT(x...)
+#define DPRINT(x, ...)
 #endif
 
 #endif /* __DEBUG_H */
