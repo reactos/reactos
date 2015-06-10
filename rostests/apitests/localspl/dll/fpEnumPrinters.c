@@ -88,9 +88,6 @@ START_TEST(fpEnumPrinters)
     // In contrast to EnumPrintersW, which only accepts levels 0, 1, 2, 4 and 5, localspl returns information for level 0 to 7.
     for (i = 0; i <= 7; i++)
     {
-        // FIXME: For some reason, using SEH here works only once.
-        // We experience a hang in the testing process when you run the test again for a second time without restarting spoolsv.
-#if 0
         // Try with no valid arguments at all.
         // This scenario is usually caugt by RPC, so it just raises an exception here.
         _SEH2_TRY
@@ -105,7 +102,6 @@ START_TEST(fpEnumPrinters)
         _SEH2_END;
 
         ok(dwReturned == EXCEPTION_ACCESS_VIOLATION, "dwReturned is %lu for Level %lu!\n", dwReturned, i);
-#endif
 
         // Now get the required buffer size.
         cbNeeded = 0xDEADBEEF;
@@ -116,6 +112,7 @@ START_TEST(fpEnumPrinters)
         ok(cbNeeded > 0, "cbNeeded is 0 for Level %lu!\n", i);
         ok(dwReturned == 0, "dwReturned is %lu for Level %lu!\n", dwReturned, i);
 
+        // This test corrupts something inside spoolsv so that it's only runnable once without restarting spoolsv. Therefore it's disabled.
 #if 0
         // Now provide the demanded size, but no buffer. This also mustn't touch cbNeeded.
         // This scenario is also caught by RPC and we just have an exception here.
