@@ -771,7 +771,7 @@ static VOID VgaRestoreDefaultPalette(PPALETTEENTRY Entries, USHORT NumOfEntries)
 
 static BOOLEAN VgaInitializePalette(VOID)
 {
-    INT i;
+    UINT i;
     BOOLEAN Result = FALSE;
     LPLOGPALETTE Palette, TextPalette;
 
@@ -1576,7 +1576,7 @@ static inline VOID VgaWriteCrtc(BYTE Data)
 
 static inline VOID VgaWriteDac(BYTE Data)
 {
-    INT i, PaletteIndex;
+    UINT i, PaletteIndex;
     PALETTEENTRY Entry;
 
     /* Set the value */

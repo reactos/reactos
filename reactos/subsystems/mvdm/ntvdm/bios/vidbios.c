@@ -2120,7 +2120,7 @@ static __inline VOID VgaSetSinglePaletteRegister(BYTE Index, BYTE Value)
 
 static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
 {
-    INT i;
+    UINT i;
 
     if (Registers == NULL) return FALSE;
 
@@ -2389,21 +2389,21 @@ static inline BYTE VidBiosGetVideoMode(VOID)
 
 static inline VOID VidBiosClearScreen(VOID)
 {
-    static const DWORD MemoryMaps[4] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
-    static const DWORD MemorySizes[4] = { 0x20000, 0x10000, 0x10000, 0x8000 };
+    static const DWORD MemoryMaps[4]  = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
+    static const DWORD MemorySizes[4] = { 0x20000, 0x10000, 0x08000, 0x08000 };
 
     DWORD VideoAddress;
-    BYTE Buffer[0x20000];
     DWORD BufferSize;
     BYTE Misc;
+    BYTE Buffer[0x20000];
 
     /* Read the misc register */
     IOWriteB(VGA_GC_INDEX, VGA_GC_MISC_REG);
     Misc = IOReadB(VGA_GC_DATA);
 
-    /* Get the video address */
+    /* Get the video address and buffer size */
     VideoAddress = MemoryMaps[(Misc >> 2) & 3];
-    BufferSize = MemorySizes[(Misc >> 2) & 3];
+    BufferSize  = MemorySizes[(Misc >> 2) & 3];
 
     if (Misc & 1)
     {
@@ -2412,9 +2412,8 @@ static inline VOID VidBiosClearScreen(VOID)
     }
     else
     {
-        INT i;
-
         /* Text mode */
+        UINT i;
         for (i = 0; i < (BufferSize >> 1); i++)
         {
             ((PWORD)Buffer)[i] = MAKEWORD(' ', DEFAULT_ATTRIBUTE);
@@ -3174,7 +3173,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Set All Palette Registers */
                 case 0x02:
                 {
-                    INT i;
+                    UINT i;
                     LPBYTE Buffer = SEG_OFF_TO_PTR(getES(), getDX());
 
                     /* Set the palette registers */
@@ -3258,7 +3257,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Get All Palette Registers */
                 case 0x09:
                 {
-                    INT i;
+                    UINT i;
                     LPBYTE Buffer = SEG_OFF_TO_PTR(getES(), getDX());
 
                     /* Get the palette registers */
@@ -3300,7 +3299,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Set Block of DAC Registers */
                 case 0x12:
                 {
-                    INT i;
+                    UINT i;
                     LPBYTE Buffer = SEG_OFF_TO_PTR(getES(), getDX());
 
                     /* Write the index */
@@ -3335,7 +3334,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Get Block of DAC Registers */
                 case 0x17:
                 {
-                    INT i;
+                    UINT i;
                     LPBYTE Buffer = SEG_OFF_TO_PTR(getES(), getDX());
 
                     /* Write the index */
