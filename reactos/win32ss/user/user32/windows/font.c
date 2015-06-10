@@ -46,6 +46,9 @@ DWORD WINAPI GdiGetCodePage(HDC hdc);
 
 #define assert(e) ((e) ? (void)0 : _font_assert(#e, __FILE__, __LINE__))
 
+#else
+#include <assert.h> 
+
 #endif
 
 void _font_assert(const char *msg, const char *file, int line)

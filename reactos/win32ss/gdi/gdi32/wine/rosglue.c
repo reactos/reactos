@@ -519,6 +519,10 @@ _assert (
     DbgRaiseAssertionFailure();
 }
 
+#if defined(_MSC_VER) && (DBG != 1)
+// MSVC uses it's own in this case. Thus skipping it.
+#else
+
 double
 __cdecl
 atan2(
@@ -528,6 +532,8 @@ atan2(
     __debugbreak();
     return 0.;
 }
+
+#endif
 
 /******************************************************************************/
 
