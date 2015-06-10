@@ -1189,9 +1189,9 @@ AddDiskToList(
             {
                 DPRINT("Use %lu Sector alignment!\n", DiskEntry->SectorsPerTrack);
             }
-            else if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart % 1048756 == 0)
+            else if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart % (1024 * 1024) == 0)
             {
-                DPRINT1("Use megabyte (%lu Sectors) alignment!\n", 1048756 / DiskEntry->BytesPerSector);
+                DPRINT1("Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
             }
             else
             {
@@ -1200,7 +1200,7 @@ AddDiskToList(
         }
         else
         {
-            DPRINT1("No valid partiton table found! Use megabyte (%lu Sectors) alignment!\n", 1048756 / DiskEntry->BytesPerSector);
+            DPRINT1("No valid partiton table found! Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
         }
 
 
