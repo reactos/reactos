@@ -50,7 +50,7 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
         /* Allocate address ranges and zero them out */
         Bus->BusAddresses = ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
                                                   sizeof(SUPPORTED_RANGES),
-                                                  ' laH');
+                                                  TAG_HAL);
         RtlZeroMemory(Bus->BusAddresses, sizeof(SUPPORTED_RANGES));
 
         /* Build the data structure */

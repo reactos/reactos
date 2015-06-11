@@ -656,7 +656,7 @@ HalpQueryPciRegistryInfo(VOID)
             /* Allocate the return structure */
             PciRegistryInfo = ExAllocatePoolWithTag(NonPagedPool,
                                                     sizeof(PCI_REGISTRY_INFO_INTERNAL),
-                                                    ' laH');
+                                                    TAG_HAL);
             if (!PciRegistryInfo) return NULL;
 
             /* Fill it out */

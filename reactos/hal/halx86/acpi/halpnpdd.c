@@ -218,7 +218,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                                                  FIELD_OFFSET(DEVICE_RELATIONS,
                                                               Objects) +
                                                  sizeof(PDEVICE_OBJECT) * PdoCount,
-                                                 ' laH');
+                                                 TAG_HAL);
             if (!FdoRelations) return STATUS_INSUFFICIENT_RESOURCES;
 
             /* Save our count */
@@ -275,7 +275,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
             /* Only one entry */
             PdoRelations = ExAllocatePoolWithTag(PagedPool,
                                                  sizeof(DEVICE_RELATIONS),
-                                                 ' laH');
+                                                 TAG_HAL);
             if (!PdoRelations) return STATUS_INSUFFICIENT_RESOURCES;
 
             /* Fill it out and reference us */
@@ -376,12 +376,12 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         /* Allocate the resourcel ist */
         ResourceList = ExAllocatePoolWithTag(PagedPool,
                                              sizeof(CM_RESOURCE_LIST),
-                                             ' laH');
+                                             TAG_HAL);
         if (!ResourceList )
         {
             /* Fail, no memory */
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            ExFreePoolWithTag(RequirementsList, ' laH');
+            ExFreePoolWithTag(RequirementsList, TAG_HAL);
             return Status;
         }
 
@@ -425,7 +425,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         /* Return resources and success */
         *Resources = ResourceList;
 
-        ExFreePoolWithTag(RequirementsList, ' laH');
+        ExFreePoolWithTag(RequirementsList, TAG_HAL);
 
         return STATUS_SUCCESS;
     }
@@ -541,7 +541,7 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
                                    Length + sizeof(UNICODE_NULL),
-                                   ' laH');
+                                   TAG_HAL);
     if (Buffer)
     {
         /* Copy the string and null-terminate it */
@@ -607,7 +607,7 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
                                    Length + sizeof(UNICODE_NULL),
-                                   ' laH');
+                                   TAG_HAL);
     if (Buffer)
     {
         /* Copy the string and null-terminate it */

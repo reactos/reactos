@@ -261,8 +261,8 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
     HalpBuildAddressMap();
 
     /* Allocate the master raw and translated lists */
-    RawList = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE * 2, ' laH');
-    TranslatedList = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE * 2, ' laH');
+    RawList = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE * 2, TAG_HAL);
+    TranslatedList = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE * 2, TAG_HAL);
     if (!(RawList) || !(TranslatedList))
     {
         /* Bugcheck the system */
