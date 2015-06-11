@@ -339,6 +339,9 @@ Fast486InterruptInternal(PFAST486_STATE State,
             /* Switch to the new privilege level */
             State->Cpl = GET_SEGMENT_RPL(IdtEntry->Selector);
 
+            /* Clear the VM flag */
+            State->Flags.Vm = FALSE;
+
             /* Check the new (higher) privilege level */
             switch (State->Cpl)
             {
@@ -404,12 +407,6 @@ Fast486InterruptInternal(PFAST486_STATE State,
             }
 
             State->GeneralRegs[FAST486_REG_ESP].Long = NewEsp;
-
-            if (State->Flags.Vm)
-            {
-                /* Clear the VM flag */
-                State->Flags.Vm = FALSE;
-            }
         }
 
         /* Load new CS */
