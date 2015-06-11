@@ -99,6 +99,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     /* Initialize lookaside list for IRP contexts */
     ExInitializeNPagedLookasideList(&NtfsGlobalData->IrpContextLookasideList,
                                     NULL, NULL, 0, sizeof(NTFS_IRP_CONTEXT), 'PRIN', 0);
+    /* Initialize lookaside list for FCBs */
+    ExInitializeNPagedLookasideList(&NtfsGlobalData->FcbLookasideList,
+                                    NULL, NULL, 0, sizeof(NTFS_FCB), TAG_FCB, 0);
 
     /* Driver can't be unloaded */
     DriverObject->DriverUnload = NULL;

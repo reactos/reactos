@@ -127,6 +127,7 @@ typedef struct
 } NTFS_CCB, *PNTFS_CCB;
 
 #define TAG_CCB 'BCCI'
+#define TAG_FCB 'BCFI'
 
 typedef struct
 {
@@ -138,6 +139,7 @@ typedef struct
     ULONG Flags;
     FAST_IO_DISPATCH FastIoDispatch;
     NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
+    NPAGED_LOOKASIDE_LIST FcbLookasideList;
 } NTFS_GLOBAL_DATA, *PNTFS_GLOBAL_DATA;
 
 

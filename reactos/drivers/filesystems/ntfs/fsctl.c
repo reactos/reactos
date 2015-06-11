@@ -524,7 +524,7 @@ ByeBye:
             ObDereferenceObject(Vcb->StreamFileObject);
 
         if (Fcb)
-            ExFreePool(Fcb);
+            NtfsDestroyFCB(Fcb);
 
         if (Ccb)
             ExFreePool(Ccb);

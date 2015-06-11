@@ -32,10 +32,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* MACROS *******************************************************************/
-
-#define TAG_FCB 'BCFI'
-
 /* FUNCTIONS ****************************************************************/
 
 static
@@ -76,7 +72,7 @@ NtfsCreateFCB(PCWSTR FileName,
     ASSERT(Vcb);
     ASSERT(Vcb->Identifier.Type == NTFS_TYPE_VCB);
 
-    Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_FCB), TAG_FCB);
+    Fcb = ExAllocateFromNPagedLookasideList(&NtfsGlobalData->FcbLookasideList);
     RtlZeroMemory(Fcb, sizeof(NTFS_FCB));
 
     Fcb->Identifier.Type = NTFS_TYPE_FCB;
@@ -113,7 +109,7 @@ NtfsDestroyFCB(PNTFS_FCB Fcb)
 
     ExDeleteResourceLite(&Fcb->MainResource);
 
-    ExFreePool(Fcb);
+    ExFreeToNPagedLookasideList(&NtfsGlobalData->FcbLookasideList, Fcb);
 }
 
 
