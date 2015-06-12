@@ -31,7 +31,7 @@
 typedef struct _FILE_SYSTEM_ITEM
 {
     LIST_ENTRY ListEntry;
-    LPCWSTR FileSystem; /* Not owned by the item */
+    LPCWSTR FileSystemName; /* Not owned by the item */
     FORMATEX FormatFunc;
     CHKDSKEX ChkdskFunc;
     BOOLEAN QuickFormat;
@@ -48,7 +48,7 @@ typedef struct _FILE_SYSTEM_LIST
 VOID
 FS_AddProvider(
     IN OUT PFILE_SYSTEM_LIST List,
-    IN LPCWSTR FileSystem,
+    IN LPCWSTR FileSystemName,
     IN FORMATEX FormatFunc,
     IN CHKDSKEX ChkdskFunc);
 
@@ -74,5 +74,10 @@ ScrollDownFileSystemList(
 VOID
 ScrollUpFileSystemList(
     IN PFILE_SYSTEM_LIST List);
+
+PFILE_SYSTEM_ITEM
+GetFileSystemByName(
+    IN PFILE_SYSTEM_LIST List,
+    IN LPWSTR FileSystemName);
 
 /* EOF */

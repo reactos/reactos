@@ -31,7 +31,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define DUMP_PARTITION_TABLE
+//#define DUMP_PARTITION_TABLE
 
 /* FUNCTIONS ****************************************************************/
 
@@ -47,7 +47,7 @@ DumpPartitionTable(
     for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
     {
         PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
-        DPRINT("\n%lu: %12I64u  %12I64u  %10lu  %2lu  %2x  %c  %c\n",
+        DPRINT1("\n%lu: %12I64u  %12I64u  %10lu  %2lu  %2x  %c  %c\n",
                 i,
                 PartitionInfo->StartingOffset.QuadPart,
                 PartitionInfo->PartitionLength.QuadPart,
@@ -1273,6 +1273,13 @@ CreatePartitionList(
 
     List->CurrentDisk = NULL;
     List->CurrentPartition = NULL;
+
+    List->BootDisk = NULL;
+    List->BootPartition = NULL;
+
+    List->TempDisk = NULL;
+    List->TempPartition = NULL;
+    List->FormatState = Start;
 
     InitializeListHead(&List->DiskListHead);
     InitializeListHead(&List->BiosDiskListHead);
@@ -2739,14 +2746,14 @@ CheckActiveBootPartition(
     /* Check for empty disk list */
     if (IsListEmpty (&List->DiskListHead))
     {
-        List->ActiveBootDisk = NULL;
-        List->ActiveBootPartition = NULL;
+        List->BootDisk = NULL;
+        List->BootPartition = NULL;
         return;
     }
 
 #if 0
-    if (List->ActiveBootDisk != NULL &&
-        List->ActiveBootPartition != NULL)
+    if (List->BootDisk != NULL &&
+        List->BootPartition != NULL)
     {
         /* We already have an active boot partition */
         return;
@@ -2759,8 +2766,8 @@ CheckActiveBootPartition(
     /* Check for empty partition list */
     if (IsListEmpty (&DiskEntry->PrimaryPartListHead))
     {
-        List->ActiveBootDisk = NULL;
-        List->ActiveBootPartition = NULL;
+        List->BootDisk = NULL;
+        List->BootPartition = NULL;
         return;
     }
 
@@ -2778,15 +2785,15 @@ CheckActiveBootPartition(
         DiskEntry->Dirty = TRUE;
 
         /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
-        List->ActiveBootDisk = DiskEntry;
-        List->ActiveBootPartition = PartEntry;
+        List->BootDisk = DiskEntry;
+        List->BootPartition = PartEntry;
 
         return;
     }
 
     /* Disk is not new, scan all partitions to find a bootable one */
-    List->ActiveBootDisk = NULL;
-    List->ActiveBootPartition = NULL;
+    List->BootDisk = NULL;
+    List->BootPartition = NULL;
 
     ListEntry = DiskEntry->PrimaryPartListHead.Flink;
     while (ListEntry != &DiskEntry->PrimaryPartListHead)
@@ -2802,8 +2809,8 @@ CheckActiveBootPartition(
                 PartEntry->BootIndicator)
             {
                 /* Yes, we found it */
-                List->ActiveBootDisk = DiskEntry;
-                List->ActiveBootPartition = PartEntry;
+                List->BootDisk = DiskEntry;
+                List->BootPartition = PartEntry;
 
                 DPRINT("Found bootable partition disk %d, drive letter %c\n",
                        DiskEntry->DiskNumber, PartEntry->DriveLetter);
@@ -3102,6 +3109,116 @@ LogicalPartitionCreationChecks(
         return ERROR_NEW_PARTITION;
 
     return ERROR_SUCCESS;
+}
+
+
+BOOL
+GetNextUnformattedPartition(
+    IN PPARTLIST List,
+    OUT PDISKENTRY *pDiskEntry,
+    OUT PPARTENTRY *pPartEntry)
+{
+    PLIST_ENTRY Entry1, Entry2;
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+
+    Entry1 = List->DiskListHead.Flink;
+    while (Entry1 != &List->DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry1,
+                                      DISKENTRY,
+                                      ListEntry);
+
+        Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+        while (Entry2 != &DiskEntry->PrimaryPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            if (PartEntry->IsPartitioned && PartEntry->New)
+            {
+                 *pDiskEntry = DiskEntry;
+                 *pPartEntry = PartEntry;
+                 return TRUE;
+            }
+
+            Entry2 = Entry2->Flink;
+        }
+
+        Entry2 = DiskEntry->LogicalPartListHead.Flink;
+        while (Entry2 != &DiskEntry->LogicalPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            if (PartEntry->IsPartitioned && PartEntry->New)
+            {
+                 *pDiskEntry = DiskEntry;
+                 *pPartEntry = PartEntry;
+                 return TRUE;
+            }
+
+            Entry2 = Entry2->Flink;
+        }
+
+        Entry1 = Entry1->Flink;
+    }
+
+    *pDiskEntry = NULL;
+    *pPartEntry = NULL;
+
+    return FALSE;
+}
+
+
+BOOL
+GetNextUncheckedPartition(
+    IN PPARTLIST List,
+    OUT PDISKENTRY *pDiskEntry,
+    OUT PPARTENTRY *pPartEntry)
+{
+    PLIST_ENTRY Entry1, Entry2;
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+
+    Entry1 = List->DiskListHead.Flink;
+    while (Entry1 != &List->DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry1,
+                                      DISKENTRY,
+                                      ListEntry);
+
+        Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+        while (Entry2 != &DiskEntry->PrimaryPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            if (PartEntry->NeedsCheck == TRUE)
+            {
+                 *pDiskEntry = DiskEntry;
+                 *pPartEntry = PartEntry;
+                 return TRUE;
+            }
+
+            Entry2 = Entry2->Flink;
+        }
+
+        Entry2 = DiskEntry->LogicalPartListHead.Flink;
+        while (Entry2 != &DiskEntry->LogicalPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            if (PartEntry->NeedsCheck == TRUE)
+            {
+                 *pDiskEntry = DiskEntry;
+                 *pPartEntry = PartEntry;
+                 return TRUE;
+            }
+
+            Entry2 = Entry2->Flink;
+        }
+
+        Entry1 = Entry1->Flink;
+    }
+
+    *pDiskEntry = NULL;
+    *pPartEntry = NULL;
+
+    return FALSE;
 }
 
 /* EOF */

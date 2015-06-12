@@ -35,7 +35,7 @@
 VOID
 FS_AddProvider(
     IN OUT PFILE_SYSTEM_LIST List,
-    IN LPCWSTR FileSystem,
+    IN LPCWSTR FileSystemName,
     IN FORMATEX FormatFunc,
     IN CHKDSKEX ChkdskFunc)
 {
@@ -45,7 +45,7 @@ FS_AddProvider(
     if (!Item)
         return;
 
-    Item->FileSystem = FileSystem;
+    Item->FileSystemName = FileSystemName;
     Item->FormatFunc = FormatFunc;
     Item->ChkdskFunc = ChkdskFunc;
     Item->QuickFormat = TRUE;
@@ -58,7 +58,7 @@ FS_AddProvider(
     if (!Item)
         return;
 
-    Item->FileSystem = FileSystem;
+    Item->FileSystemName = FileSystemName;
     Item->FormatFunc = FormatFunc;
     Item->ChkdskFunc = ChkdskFunc;
     Item->QuickFormat = FALSE;
@@ -99,7 +99,7 @@ CreateFileSystemList(
     while (ListEntry != &List->ListHead)
     {
         Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
-        if (Item->FileSystem && wcscmp(ForceFileSystem, Item->FileSystem) == 0)
+        if (Item->FileSystemName && wcscmp(ForceFileSystem, Item->FileSystemName) == 0)
         {
             List->Selected = Item;
             break;
@@ -163,12 +163,12 @@ DrawFileSystemList(
                                     coPos,
                                     &Written);
 
-        if (Item->FileSystem)
+        if (Item->FileSystemName)
         {
             if (Item->QuickFormat)
-                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK1), Item->FileSystem);
+                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK1), Item->FileSystemName);
             else
-                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK2), Item->FileSystem);
+                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK2), Item->FileSystemName);
         }
         else
             snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_KEEPFORMAT));
@@ -208,6 +208,28 @@ ScrollUpFileSystemList(
         List->Selected = CONTAINING_RECORD(List->Selected->ListEntry.Blink, FILE_SYSTEM_ITEM, ListEntry);
         DrawFileSystemList(List);
     }
+}
+
+
+PFILE_SYSTEM_ITEM
+GetFileSystemByName(
+    IN PFILE_SYSTEM_LIST List,
+    IN LPWSTR FileSystemName)
+{
+    PLIST_ENTRY ListEntry;
+    PFILE_SYSTEM_ITEM Item;
+
+    ListEntry = List->ListHead.Flink;
+    while (ListEntry != &List->ListHead)
+    {
+        Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
+        if (Item->FileSystemName && wcsicmp(FileSystemName, Item->FileSystemName) == 0)
+            return Item;
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return NULL;
 }
 
 /* EOF */

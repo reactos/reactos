@@ -37,6 +37,18 @@ typedef enum _FORMATSTATE
     Formatted
 } FORMATSTATE, *PFORMATSTATE;
 
+typedef enum _FORMATMACHINESTATE
+{
+    Start,
+    FormatSystemPartition,
+    FormatInstallPartition,
+    FormatOtherPartition,
+    FormatDone,
+    CheckSystemPartition,
+    CheckInstallPartition,
+    CheckOtherPartition,
+    CheckDone
+} FORMATMACHINESTATE, *PFORMATMACHINESTATE;
 
 typedef struct _PARTENTRY
 {
@@ -70,6 +82,10 @@ typedef struct _PARTENTRY
 
     FORMATSTATE FormatState;
 
+    /* Partition must be checked */
+    BOOLEAN NeedsCheck;
+
+    struct _FILE_SYSTEM_ITEM *FileSystem;
 } PARTENTRY, *PPARTENTRY;
 
 
@@ -141,8 +157,12 @@ typedef struct _PARTLIST
     PDISKENTRY CurrentDisk;
     PPARTENTRY CurrentPartition;
 
-    PDISKENTRY ActiveBootDisk;
-    PPARTENTRY ActiveBootPartition;
+    PDISKENTRY BootDisk;
+    PPARTENTRY BootPartition;
+
+    PDISKENTRY TempDisk;
+    PPARTENTRY TempPartition;
+    FORMATMACHINESTATE FormatState;
 
     LIST_ENTRY DiskListHead;
     LIST_ENTRY BiosDiskListHead;
@@ -262,5 +282,17 @@ ExtendedPartitionCreationChecks(
 ULONG
 LogicalPartitionCreationChecks(
     IN PPARTLIST List);
+
+BOOL
+GetNextUnformattedPartition(
+    IN PPARTLIST List,
+    OUT PDISKENTRY *pDiskEntry,
+    OUT PPARTENTRY *pPartEntry);
+
+BOOL
+GetNextUncheckedPartition(
+    IN PPARTLIST List,
+    OUT PDISKENTRY *pDiskEntry,
+    OUT PPARTENTRY *pPartEntry);
 
 /* EOF */
