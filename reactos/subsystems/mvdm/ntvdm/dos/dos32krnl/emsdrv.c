@@ -402,7 +402,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
     }
 }
 
-static VOID NTAPI EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
+static VOID FASTCALL EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
     ULONG i;
     ULONG RelativeAddress = Address - TO_LINEAR(EMS_SEGMENT, 0);
@@ -422,7 +422,7 @@ static VOID NTAPI EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
     }
 }
 
-static BOOLEAN NTAPI EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
+static BOOLEAN FASTCALL EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
     ULONG i;
     ULONG RelativeAddress = Address - TO_LINEAR(EMS_SEGMENT, 0);

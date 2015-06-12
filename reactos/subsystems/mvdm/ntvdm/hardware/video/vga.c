@@ -21,8 +21,8 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static CONST DWORD MemoryBase[]  = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
-static CONST DWORD MemoryLimit[] = { 0xBFFFF, 0xAFFFF, 0xB7FFF, 0xBFFFF };
+static CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
+static CONST DWORD MemorySize[] = { 0x20000, 0x10000,  0x8000,  0x8000 };
 
 /*
  * Activate this line if you want to use the real
@@ -427,11 +427,6 @@ static VOID VgaUpdateTextCursor(VOID);
 static inline DWORD VgaGetVideoBaseAddress(VOID)
 {
     return MemoryBase[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
-}
-
-static inline DWORD VgaGetVideoLimitAddress(VOID)
-{
-    return MemoryLimit[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
 }
 
 static VOID VgaUpdateCursorPosition(VOID)
@@ -1535,6 +1530,20 @@ static inline VOID VgaWriteGc(BYTE Data)
     {
         case VGA_GC_MISC_REG:
         {
+            /* Remove any existing VGA memory hook */
+            MemRemoveFastMemoryHook((PVOID)0xA0000, 0x20000);
+
+            if (VgaMiscRegister & VGA_MISC_RAM_ENABLED)
+            {
+                UCHAR MemoryMap = (VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03;
+
+                /* Register a memory hook */
+                MemInstallFastMemoryHook((PVOID)MemoryBase[MemoryMap],
+                                         MemorySize[MemoryMap],
+                                         VgaReadMemory,
+                                         VgaWriteMemory);
+            }
+
             /* The GC misc register decides if it's text or graphics mode */
             ModeChanged = TRUE;
             break;
@@ -1687,7 +1696,20 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
                 UnregisterIoPort(0x3DA);    // VGA_INSTAT1_READ_COLOR, VGA_FEATURE_WRITE_COLOR
             }
 
-            // if (VgaMiscRegister & 0x02) { /* Enable RAM access */ } else { /* Disable RAM access */ }
+            /* Remove any existing VGA memory hook */
+            MemRemoveFastMemoryHook((PVOID)0xA0000, 0x20000);
+
+            if (VgaMiscRegister & VGA_MISC_RAM_ENABLED)
+            {
+                UCHAR MemoryMap = (VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03;
+
+                /* Register a memory hook */
+                MemInstallFastMemoryHook((PVOID)MemoryBase[MemoryMap],
+                                         MemorySize[MemoryMap],
+                                         VgaReadMemory,
+                                         VgaWriteMemory);
+            }
+
             break;
         }
 
@@ -1946,7 +1968,7 @@ VOID VgaRefreshDisplay(VOID)
     VgaVerticalRetrace(0);
 }
 
-VOID NTAPI VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
+VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
     DWORD i, j;
     DWORD VideoAddress;
@@ -2007,7 +2029,7 @@ VOID NTAPI VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
     VgaLatchRegisters[3] = VgaMemory[(3 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
 }
 
-BOOLEAN NTAPI VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
+BOOLEAN FASTCALL VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
     DWORD i, j;
     DWORD VideoAddress;
@@ -2177,9 +2199,6 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
 
     /* Clear the VGA memory */
     VgaClearMemory();
-    
-    /* Register the memory hook */
-    MemInstallFastMemoryHook((PVOID)0xA0000, 0x20000, VgaReadMemory, VgaWriteMemory);
 
     /* Register the I/O Ports */
     RegisterIoPort(0x3CC, VgaReadPort, NULL);           // VGA_MISC_READ

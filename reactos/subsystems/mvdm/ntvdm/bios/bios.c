@@ -42,7 +42,7 @@ PBIOS_CONFIG_TABLE Bct;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static BOOLEAN NTAPI BiosRomWrite(ULONG Address, PVOID Buffer, ULONG Size)
+static BOOLEAN FASTCALL BiosRomWrite(ULONG Address, PVOID Buffer, ULONG Size)
 {
     /* Prevent writing to ROM */
     return FALSE;
