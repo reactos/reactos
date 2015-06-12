@@ -13,6 +13,7 @@
 #include "ntvdm.h"
 #include "emulator.h"
 #include "cpu/bop.h"
+#include "../../memory.h"
 #include "io.h"
 #include "hardware/ps2.h"
 

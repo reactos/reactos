@@ -477,13 +477,13 @@ DWORD DmaRequest(IN WORD      iChannel,
 
             if (Increment)
             {
-                MemWrite(CurrAddress, dmabuf, length);
+                EmulatorWriteMemory(&EmulatorContext, CurrAddress, dmabuf, length);
             }
             else
             {
                 for (i = 0; i < length; i++)
                 {
-                    MemWrite(CurrAddress - i, dmabuf + i, sizeof(BYTE));
+                    EmulatorWriteMemory(&EmulatorContext, CurrAddress - i, dmabuf + i, sizeof(BYTE));
                 }
             }
 
@@ -498,13 +498,13 @@ DWORD DmaRequest(IN WORD      iChannel,
 
             if (Increment)
             {
-                MemRead(CurrAddress, dmabuf, length);
+                EmulatorReadMemory(&EmulatorContext, CurrAddress, dmabuf, length);
             }
             else
             {
                 for (i = 0; i < length; i++)
                 {
-                    MemRead(CurrAddress - i, dmabuf + i, sizeof(BYTE));
+                    EmulatorReadMemory(&EmulatorContext, CurrAddress - i, dmabuf + i, sizeof(BYTE));
                 }
             }
 

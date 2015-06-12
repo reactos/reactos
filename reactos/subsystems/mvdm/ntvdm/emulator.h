@@ -90,7 +90,7 @@ enum
     EMULATOR_EXCEPTION_PAGE_FAULT
 };
 
-// extern FAST486_STATE EmulatorContext;
+extern FAST486_STATE EmulatorContext;
 extern LPVOID  BaseAddress;
 extern BOOLEAN VdmRunning;
 
@@ -98,28 +98,12 @@ extern BOOLEAN VdmRunning;
 
 VOID DumpMemory(BOOLEAN TextFormat);
 
-VOID WINAPI EmulatorReadMemory
-(
-    PFAST486_STATE State,
-    ULONG Address,
-    PVOID Buffer,
-    ULONG Size
-);
-
-VOID WINAPI EmulatorWriteMemory
-(
-    PFAST486_STATE State,
-    ULONG Address,
-    PVOID Buffer,
-    ULONG Size
-);
-
-UCHAR WINAPI EmulatorIntAcknowledge
+UCHAR FASTCALL EmulatorIntAcknowledge
 (
     PFAST486_STATE State
 );
 
-VOID WINAPI EmulatorFpu
+VOID FASTCALL EmulatorFpu
 (
     PFAST486_STATE State
 );
@@ -129,8 +113,6 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack);
 VOID EmulatorTerminate(VOID);
 
 VOID EmulatorInterruptSignal(VOID);
-VOID EmulatorSetA20(BOOLEAN Enabled);
-BOOLEAN EmulatorGetA20(VOID);
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
 VOID EmulatorCleanup(VOID);

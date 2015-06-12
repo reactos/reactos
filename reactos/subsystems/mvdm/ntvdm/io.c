@@ -343,7 +343,7 @@ VOID UnregisterIoPort(USHORT Port)
     RtlZeroMemory(&IoPortProc[Port], sizeof(IoPortProc[Port]));
 }
 
-VOID WINAPI
+VOID FASTCALL
 EmulatorReadIo(PFAST486_STATE State,
                USHORT Port,
                PVOID Buffer,
@@ -418,7 +418,7 @@ EmulatorReadIo(PFAST486_STATE State,
     }
 }
 
-VOID WINAPI
+VOID FASTCALL
 EmulatorWriteIo(PFAST486_STATE State,
                 USHORT Port,
                 PVOID Buffer,

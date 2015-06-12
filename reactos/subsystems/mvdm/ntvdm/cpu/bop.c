@@ -29,7 +29,7 @@ VOID RegisterBop(BYTE BopCode, EMULATOR_BOP_PROC BopHandler)
     BopProc[BopCode] = BopHandler;
 }
 
-VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
+VOID FASTCALL EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
 {
     WORD StackSegment, StackPointer;
     LPWORD Stack;

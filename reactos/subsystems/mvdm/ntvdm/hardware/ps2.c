@@ -15,6 +15,7 @@
 #include "emulator.h"
 #include "ps2.h"
 
+#include "memory.h"
 #include "io.h"
 #include "pic.h"
 #include "clock.h"

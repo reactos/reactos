@@ -15,6 +15,7 @@
 #include "emulator.h"
 #include "cpu/cpu.h"
 #include "cpu/bop.h"
+#include "memory.h"
 
 #include "bios.h"
 // #include "vidbios.h"

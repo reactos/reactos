@@ -6,8 +6,8 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#ifndef _MEMORY_H_
-#define _MEMORY_H_
+#ifndef _DOS_MEMORY_H_
+#define _DOS_MEMORY_H_
 
 /* TYPEDEFS *******************************************************************/
 
@@ -45,6 +45,6 @@ BOOLEAN DosLinkUmb(VOID);
 BOOLEAN DosUnlinkUmb(VOID);
 VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner);
 
-#endif // _MEMORY_H_
+#endif // _DOS_MEMORY_H_
 
 /* EOF */

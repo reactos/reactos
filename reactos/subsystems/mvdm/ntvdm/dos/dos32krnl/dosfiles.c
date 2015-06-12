@@ -704,7 +704,10 @@ WORD DosReadFile(WORD FileHandle,
         if (ReadFile(Descriptor->Win32Handle, LocalBuffer, Count, &BytesRead32, NULL))
         {
             /* Write to the memory */
-            MemWrite(TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)), LocalBuffer, LOWORD(BytesRead32));
+            EmulatorWriteMemory(&EmulatorContext,
+                                TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)),
+                                LocalBuffer,
+                                LOWORD(BytesRead32));
 
             /* Update the position */
             Descriptor->Position += BytesRead32;
@@ -756,7 +759,11 @@ WORD DosWriteFile(WORD FileHandle,
         ASSERT(LocalBuffer != NULL);
 
         /* Read from the memory */
-        MemRead(TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)), LocalBuffer, Count);
+        EmulatorReadMemory(&EmulatorContext,
+                           TO_LINEAR(HIWORD(Buffer),
+                           LOWORD(Buffer)),
+                           LocalBuffer,
+                           Count);
 
         /* Write the file */
         if (WriteFile(Descriptor->Win32Handle, LocalBuffer, Count, &BytesWritten32, NULL))

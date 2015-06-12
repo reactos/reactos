@@ -24,6 +24,7 @@
 #include "bios/bios.h"
 #include "bios/bios32/bios32p.h"
 
+#include "memory.h"
 #include "io.h"
 #include "dos32krnl/dos.h"
 

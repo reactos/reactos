@@ -31,98 +31,10 @@
 #include "opcodes.h"
 #include "fpu.h"
 
-/* DEFINES ********************************************************************/
-
-typedef enum
-{
-    FAST486_STEP_INTO,
-    FAST486_STEP_OVER,
-    FAST486_STEP_OUT,
-    FAST486_CONTINUE
-} FAST486_EXEC_CMD;
-
-/* PRIVATE FUNCTIONS **********************************************************/
-
-VOID
-NTAPI
-Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
-{
-    UCHAR Opcode;
-    FAST486_OPCODE_HANDLER_PROC CurrentHandler;
-    INT ProcedureCallCount = 0;
-    BOOLEAN Trap;
-
-    /* Main execution loop */
-    do
-    {
-        Trap = State->Flags.Tf;
-
-        if (!State->Halted)
-        {
-NextInst:
-            /* Check if this is a new instruction */
-            if (State->PrefixFlags == 0)
-            {
-                State->SavedInstPtr = State->InstPtr;
-                State->SavedStackPtr = State->GeneralRegs[FAST486_REG_ESP];
-            }
-
-            /* Perform an instruction fetch */
-            if (!Fast486FetchByte(State, &Opcode))
-            {
-                /* Exception occurred */
-                State->PrefixFlags = 0;
-                continue;
-            }
-
-            // TODO: Check for CALL/RET to update ProcedureCallCount.
-
-            /* Call the opcode handler */
-            CurrentHandler = Fast486OpcodeHandlers[Opcode];
-            CurrentHandler(State, Opcode);
-
-            /* If this is a prefix, go to the next instruction immediately */
-            if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
-
-            /* A non-prefix opcode has been executed, reset the prefix flags */
-            State->PrefixFlags = 0;
-        }
-
-        /*
-         * Check if there is an interrupt to execute, or a hardware interrupt signal
-         * while interrupts are enabled.
-         */
-        if (State->DoNotInterrupt)
-        {
-            /* Clear the interrupt delay flag */
-            State->DoNotInterrupt = FALSE;
-        }
-        else if (Trap && !State->Halted)
-        {
-            /* Perform the interrupt */
-            Fast486PerformInterrupt(State, FAST486_EXCEPTION_DB);
-        }
-        else if (State->Flags.If && State->IntSignaled)
-        {
-            /* No longer halted */
-            State->Halted = FALSE;
-
-            /* Acknowledge the interrupt and perform it */
-            Fast486PerformInterrupt(State, State->IntAckCallback(State));
-
-            /* Clear the interrupt status */
-            State->IntSignaled = FALSE;
-        }
-    }
-    while ((Command == FAST486_CONTINUE) ||
-           (Command == FAST486_STEP_OVER && ProcedureCallCount > 0) ||
-           (Command == FAST486_STEP_OUT && ProcedureCallCount >= 0));
-}
-
 /* DEFAULT CALLBACKS **********************************************************/
 
 static VOID
-NTAPI
+FASTCALL
 Fast486MemReadCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
@@ -130,7 +42,7 @@ Fast486MemReadCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG 
 }
 
 static VOID
-NTAPI
+FASTCALL
 Fast486MemWriteCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
@@ -138,7 +50,7 @@ Fast486MemWriteCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG
 }
 
 static VOID
-NTAPI
+FASTCALL
 Fast486IoReadCallback(PFAST486_STATE State, USHORT Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
 {
     UNREFERENCED_PARAMETER(State);
@@ -149,7 +61,7 @@ Fast486IoReadCallback(PFAST486_STATE State, USHORT Port, PVOID Buffer, ULONG Dat
 }
 
 static VOID
-NTAPI
+FASTCALL
 Fast486IoWriteCallback(PFAST486_STATE State, USHORT Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
 {
     UNREFERENCED_PARAMETER(State);
@@ -160,7 +72,7 @@ Fast486IoWriteCallback(PFAST486_STATE State, USHORT Port, PVOID Buffer, ULONG Da
 }
 
 static VOID
-NTAPI
+FASTCALL
 Fast486BopCallback(PFAST486_STATE State, UCHAR BopCode)
 {
     UNREFERENCED_PARAMETER(State);
@@ -168,7 +80,7 @@ Fast486BopCallback(PFAST486_STATE State, UCHAR BopCode)
 }
 
 static UCHAR
-NTAPI
+FASTCALL
 Fast486IntAckCallback(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);
@@ -177,7 +89,8 @@ Fast486IntAckCallback(PFAST486_STATE State)
     return 0x01;
 }
 
-static VOID NTAPI
+static VOID
+FASTCALL
 Fast486FpuCallback(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);

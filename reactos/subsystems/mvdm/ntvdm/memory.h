@@ -36,20 +36,27 @@ VOID MemCleanup(VOID);
 VOID MemExceptionHandler(ULONG FaultAddress, BOOLEAN Writing);
 
 VOID
-MemRead
+FASTCALL
+EmulatorReadMemory
 (
+    PFAST486_STATE State,
     ULONG Address,
     PVOID Buffer,
     ULONG Size
 );
 
 VOID
-MemWrite
+FASTCALL
+EmulatorWriteMemory
 (
+    PFAST486_STATE State,
     ULONG Address,
     PVOID Buffer,
     ULONG Size
 );
+
+VOID EmulatorSetA20(BOOLEAN Enabled);
+BOOLEAN EmulatorGetA20(VOID);
 
 BOOL
 MemInstallFastMemoryHook

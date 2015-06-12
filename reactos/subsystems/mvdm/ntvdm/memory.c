@@ -36,6 +36,7 @@ typedef struct _MEM_HOOK
 
 static LIST_ENTRY HookList;
 static PMEM_HOOK PageTable[TOTAL_PAGES] = { NULL };
+static BOOLEAN A20Line = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -137,12 +138,32 @@ WritePage(PMEM_HOOK Hook, ULONG Address, PVOID Buffer, ULONG Size)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID
-MemRead(ULONG Address, PVOID Buffer, ULONG Size)
+VOID FASTCALL EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     ULONG i, Offset, Length;
-    ULONG FirstPage = Address >> 12;
-    ULONG LastPage = (Address + Size - 1) >> 12;
+    ULONG FirstPage, LastPage;
+
+    UNREFERENCED_PARAMETER(State);
+
+    /* Mirror 0x000FFFF0 at 0xFFFFFFF0 */
+    if (Address >= 0xFFFFFFF0) Address -= 0xFFF00000;
+
+    /* If the A20 line is disabled, mask bit 20 */
+    if (!A20Line) Address &= ~(1 << 20); 
+
+    if ((Address + Size - 1) >= MAX_ADDRESS)
+    {
+        ULONG ExtraStart = (Address < MAX_ADDRESS) ? MAX_ADDRESS - Address : 0;
+
+        /* Fill the memory that was above the limit with 0xFF */
+        RtlFillMemory((PVOID)((ULONG_PTR)Buffer + ExtraStart), Size - ExtraStart, 0xFF);
+
+        if (Address < MAX_ADDRESS) Size = MAX_ADDRESS - Address;
+        else return;
+    }
+
+    FirstPage = Address >> 12;
+    LastPage = (Address + Size - 1) >> 12;
 
     if (FirstPage == LastPage)
     {
@@ -161,12 +182,21 @@ MemRead(ULONG Address, PVOID Buffer, ULONG Size)
     }
 }
 
-VOID
-MemWrite(ULONG Address, PVOID Buffer, ULONG Size)
+VOID FASTCALL EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     ULONG i, Offset, Length;
-    ULONG FirstPage = Address >> 12;
-    ULONG LastPage = (Address + Size - 1) >> 12;
+    ULONG FirstPage, LastPage;
+
+    UNREFERENCED_PARAMETER(State);
+
+    /* If the A20 line is disabled, mask bit 20 */
+    if (!A20Line) Address &= ~(1 << 20); 
+
+    if (Address >= MAX_ADDRESS) return;
+    Size = min(Size, MAX_ADDRESS - Address);
+
+    FirstPage = Address >> 12;
+    LastPage = (Address + Size - 1) >> 12;
 
     if (FirstPage == LastPage)
     {
@@ -183,6 +213,16 @@ MemWrite(ULONG Address, PVOID Buffer, ULONG Size)
             Buffer = (PVOID)((ULONG_PTR)Buffer + Length);
         }
     }
+}
+
+VOID EmulatorSetA20(BOOLEAN Enabled)
+{
+    A20Line = Enabled;
+}
+
+BOOLEAN EmulatorGetA20(VOID)
+{
+    return A20Line;
 }
 
 VOID

@@ -42,8 +42,6 @@
 LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
 
-static BOOLEAN A20Line = FALSE;
-
 static HANDLE InputThread = NULL;
 
 LPCWSTR ExceptionName[] =
@@ -63,46 +61,7 @@ LPCWSTR ExceptionName[] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
-{
-    UNREFERENCED_PARAMETER(State);
-
-    /* Mirror 0x000FFFF0 at 0xFFFFFFF0 */
-    if (Address >= 0xFFFFFFF0) Address -= 0xFFF00000;
-
-    /* If the A20 line is disabled, mask bit 20 */
-    if (!A20Line) Address &= ~(1 << 20); 
-
-    if ((Address + Size - 1) >= MAX_ADDRESS)
-    {
-        ULONG ExtraStart = (Address < MAX_ADDRESS) ? MAX_ADDRESS - Address : 0;
-
-        /* Fill the memory that was above the limit with 0xFF */
-        RtlFillMemory((PVOID)((ULONG_PTR)Buffer + ExtraStart), Size - ExtraStart, 0xFF);
-
-        if (Address < MAX_ADDRESS) Size = MAX_ADDRESS - Address;
-        else return;
-    }
-
-    /* Read while calling fast memory hooks */
-    MemRead(Address, Buffer, Size);
-}
-
-VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
-{
-    UNREFERENCED_PARAMETER(State);
-
-    /* If the A20 line is disabled, mask bit 20 */
-    if (!A20Line) Address &= ~(1 << 20); 
-
-    if (Address >= MAX_ADDRESS) return;
-    Size = min(Size, MAX_ADDRESS - Address);
-
-    /* Write while calling fast memory hooks */
-    MemWrite(Address, Buffer, Size);
-}
-
-UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
+UCHAR FASTCALL EmulatorIntAcknowledge(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);
 
@@ -110,7 +69,7 @@ UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
     return PicGetInterrupt();
 }
 
-VOID WINAPI EmulatorFpu(PFAST486_STATE State)
+VOID FASTCALL EmulatorFpu(PFAST486_STATE State)
 {
     /* The FPU is wired to IRQ 13 */
     PicInterruptRequest(13);
@@ -162,16 +121,6 @@ VOID EmulatorInterruptSignal(VOID)
 {
     /* Call the Fast486 API */
     Fast486InterruptSignal(&EmulatorContext);
-}
-
-VOID EmulatorSetA20(BOOLEAN Enabled)
-{
-    A20Line = Enabled;
-}
-
-BOOLEAN EmulatorGetA20(VOID)
-{
-    return A20Line;
 }
 
 static VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)

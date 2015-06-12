@@ -85,7 +85,7 @@ VOID RegisterIoPort(USHORT Port,
 
 VOID UnregisterIoPort(USHORT Port);
 
-VOID WINAPI EmulatorReadIo
+VOID FASTCALL EmulatorReadIo
 (
     PFAST486_STATE State,
     USHORT Port,
@@ -94,7 +94,7 @@ VOID WINAPI EmulatorReadIo
     UCHAR DataSize
 );
 
-VOID WINAPI EmulatorWriteIo
+VOID FASTCALL EmulatorWriteIo
 (
     PFAST486_STATE State,
     USHORT Port,

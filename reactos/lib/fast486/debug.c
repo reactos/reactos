@@ -43,91 +43,82 @@ typedef enum
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-#if 0
-static inline VOID
-NTAPI
+FORCEINLINE
+VOID
+FASTCALL
 Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
 {
     UCHAR Opcode;
     FAST486_OPCODE_HANDLER_PROC CurrentHandler;
     INT ProcedureCallCount = 0;
+    BOOLEAN Trap;
 
     /* Main execution loop */
     do
     {
-NextInst:
-        /* Check if this is a new instruction */
-        if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
+        Trap = State->Flags.Tf;
 
-        /* Perform an instruction fetch */
-        if (!Fast486FetchByte(State, &Opcode))
+        if (!State->Halted)
         {
-            /* Exception occurred */
+NextInst:
+            /* Check if this is a new instruction */
+            if (State->PrefixFlags == 0)
+            {
+                State->SavedInstPtr = State->InstPtr;
+                State->SavedStackPtr = State->GeneralRegs[FAST486_REG_ESP];
+            }
+
+            /* Perform an instruction fetch */
+            if (!Fast486FetchByte(State, &Opcode))
+            {
+                /* Exception occurred */
+                State->PrefixFlags = 0;
+                continue;
+            }
+
+            // TODO: Check for CALL/RET to update ProcedureCallCount.
+
+            /* Call the opcode handler */
+            CurrentHandler = Fast486OpcodeHandlers[Opcode];
+            CurrentHandler(State, Opcode);
+
+            /* If this is a prefix, go to the next instruction immediately */
+            if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
+
+            /* A non-prefix opcode has been executed, reset the prefix flags */
             State->PrefixFlags = 0;
-            continue;
         }
-
-        // TODO: Check for CALL/RET to update ProcedureCallCount.
-
-        /* Call the opcode handler */
-        CurrentHandler = Fast486OpcodeHandlers[Opcode];
-        CurrentHandler(State, Opcode);
-
-        /* If this is a prefix, go to the next instruction immediately */
-        if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
-
-        /* A non-prefix opcode has been executed, reset the prefix flags */
-        State->PrefixFlags = 0;
 
         /*
          * Check if there is an interrupt to execute, or a hardware interrupt signal
          * while interrupts are enabled.
          */
-        if (State->Flags.Tf)
+        if (State->DoNotInterrupt)
         {
-            /* Perform the interrupt */
-            Fast486PerformInterrupt(State, 0x01);
-
-            /*
-             * Flags and TF are pushed on stack so we can reset TF now,
-             * to not break into the INT 0x01 handler.
-             * After the INT 0x01 handler returns, the flags and therefore
-             * TF are popped back off the stack and restored, so TF will be
-             * automatically reset to its previous state.
-             */
-            State->Flags.Tf = FALSE;
+            /* Clear the interrupt delay flag */
+            State->DoNotInterrupt = FALSE;
         }
-        else if (State->IntStatus == FAST486_INT_EXECUTE)
+        else if (Trap && !State->Halted)
         {
             /* Perform the interrupt */
-            Fast486PerformInterrupt(State, State->PendingIntNum);
+            Fast486PerformInterrupt(State, FAST486_EXCEPTION_DB);
+        }
+        else if (State->Flags.If && State->IntSignaled)
+        {
+            /* No longer halted */
+            State->Halted = FALSE;
+
+            /* Acknowledge the interrupt and perform it */
+            Fast486PerformInterrupt(State, State->IntAckCallback(State));
 
             /* Clear the interrupt status */
-            State->IntStatus = FAST486_INT_NONE;
-        }
-        else if (State->Flags.If && (State->IntStatus == FAST486_INT_SIGNAL))
-        {
-            /* Acknowledge the interrupt to get the number */
-            State->PendingIntNum = State->IntAckCallback(State);
-
-            /* Set the interrupt status to execute on the next instruction */
-            State->IntStatus = FAST486_INT_EXECUTE;
-        }
-        else if (State->IntStatus == FAST486_INT_DELAYED)
-        {
-            /* Restore the old state */
-            State->IntStatus = FAST486_INT_EXECUTE;
+            State->IntSignaled = FALSE;
         }
     }
     while ((Command == FAST486_CONTINUE) ||
            (Command == FAST486_STEP_OVER && ProcedureCallCount > 0) ||
            (Command == FAST486_STEP_OUT && ProcedureCallCount >= 0));
 }
-#else
-VOID
-NTAPI
-Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command);
-#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
