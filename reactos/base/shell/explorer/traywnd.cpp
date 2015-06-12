@@ -1838,6 +1838,7 @@ ChangePos:
     {
         RECT rect;
         int partId;
+        HRESULT res;
 
         GetClientRect(&rect);
 
@@ -1860,11 +1861,10 @@ ChangePos:
                 partId = TBP_BACKGROUNDBOTTOM;
                 break;
             }
-
-            DrawThemeBackground(m_Theme, hdc, partId, 0, &rect, 0);
+            res = DrawThemeBackground(m_Theme, hdc, partId, 0, &rect, 0);
         }
 
-        return TRUE;
+        return res;
     }
 
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1911,7 +1911,10 @@ ChangePos:
             rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZEFRAME);
             break;
         }
-
+        if (IsThemeBackgroundPartiallyTransparent(m_Theme, backoundPart, 0))
+        {
+            DrawThemeParentBackground(m_hWnd, hdc, &rect);
+        }
         DrawThemeBackground(m_Theme, hdc, backoundPart, 0, &rect, 0);
 
         ReleaseDC(m_hWnd, hdc);

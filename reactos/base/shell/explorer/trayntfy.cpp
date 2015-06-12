@@ -1447,6 +1447,7 @@ public:
 
     LRESULT DrawBackground(HDC hdc)
     {
+        HRESULT res;
         RECT rect;
 
         GetClientRect(&rect);
@@ -1458,10 +1459,10 @@ public:
                 DrawThemeParentBackground(m_hWnd, hdc, &rect);
             }
 
-            DrawThemeBackground(TrayTheme, hdc, TNP_BACKGROUND, 0, &rect, 0);
+            res = DrawThemeBackground(TrayTheme, hdc, TNP_BACKGROUND, 0, &rect, 0);
         }
 
-        return TRUE;
+        return res;
     }
 
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

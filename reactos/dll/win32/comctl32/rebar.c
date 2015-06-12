@@ -1831,6 +1831,17 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
     HRGN hrgn;
 
     GetClientRect (infoPtr->hwndSelf, &cr);
+
+#ifdef __REACTOS__
+    if (theme)
+    {
+        if (IsThemeBackgroundPartiallyTransparent(theme, RP_BACKGROUND, 0))
+        {
+            DrawThemeParentBackground (infoPtr->hwndSelf, hdc, &cr);
+        }
+        DrawThemeBackground (theme, hdc, 0, 0, &cr, NULL);
+    }
+#endif
     hrgn = CreateRectRgn(cr.left, cr.top, cr.right, cr.bottom);
 
     oldrow = -1;
@@ -1921,6 +1932,9 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 #endif
 	}
 
+#ifdef __REACTOS__
+        if (!theme)
+#else
         if (theme)
         {
             /* When themed, the background color is ignored (but not a
@@ -1928,6 +1942,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
             DrawThemeBackground (theme, hdc, 0, 0, &cr, &rcBand);
         }
         else
+#endif
         {
             old = SetBkColor (hdc, new);
             TRACE("%s background color=0x%06x, band %s\n",
@@ -1945,6 +1960,9 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
     }
 
 #if 1
+#ifdef __REACTOS__
+    if (!theme)
+#endif
     {
         //FIXME: Apparently painting the remaining area is a v6 feature
         HBRUSH hbrush = CreateSolidBrush(new);
@@ -3243,7 +3261,11 @@ REBAR_NCCalcSize (const REBAR_INFO *infoPtr, RECT *rect)
     else if ((theme = GetWindowTheme (infoPtr->hwndSelf)))
     {
         /* FIXME: should use GetThemeInt */
+#ifdef __REACTOS__
+        rect->top = (rect->top + 1 < rect->bottom) ? rect->top : rect->bottom;
+#else
         rect->top = min(rect->top + 1, rect->bottom);
+#endif
     }
     TRACE("new client=(%s)\n", wine_dbgstr_rect(rect));
     return 0;

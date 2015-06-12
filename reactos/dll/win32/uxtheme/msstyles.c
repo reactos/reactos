@@ -763,6 +763,9 @@ void MSSTYLES_ParseThemeIni(PTHEME_FILE tf)
 PTHEME_CLASS MSSTYLES_OpenThemeClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR pszClassList)
 {
     PTHEME_CLASS cls = NULL;
+#ifdef __REACTOS__
+    PTHEME_CLASS defaultCls = NULL;
+#endif
     WCHAR szClassName[MAX_THEME_CLASS_NAME];
     LPCWSTR start;
     LPCWSTR end;
@@ -779,10 +782,18 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR
         start = end+1;
         cls = MSSTYLES_FindClass(tf, pszAppName, szClassName);
         if(cls) break;
+#ifdef __REACTOS__
+        if (!defaultCls)
+            defaultCls = MSSTYLES_FindClass(tf, NULL, szClassName);
+#endif
     }
     if(!cls && *start) {
         lstrcpynW(szClassName, start, sizeof(szClassName)/sizeof(szClassName[0]));
         cls = MSSTYLES_FindClass(tf, pszAppName, szClassName);
+#ifdef __REACTOS__
+        if (!defaultCls)
+            defaultCls = MSSTYLES_FindClass(tf, NULL, szClassName);
+#endif
     }
     if(cls) {
         TRACE("Opened app %s, class %s from list %s\n", debugstr_w(cls->szAppName), debugstr_w(cls->szClassName), debugstr_w(pszClassList));
@@ -790,6 +801,16 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR
 	cls->tf->dwRefCount++;
     TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
     }
+#ifdef __REACTOS__
+    else if (defaultCls)
+    {
+        cls = defaultCls;
+        TRACE("Opened default class %s from list %s\n", debugstr_w(cls->szClassName), debugstr_w(pszClassList));
+        cls->tf = tf;
+        cls->tf->dwRefCount++;
+        TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
+    }
+#endif
     return cls;
 }
 
