@@ -2965,6 +2965,7 @@ WritePartitionsToDisk(
         if (DiskEntry->Dirty == TRUE)
         {
             WritePartitons(List, DiskEntry);
+            DiskEntry->Dirty = FALSE;
         }
 
         Entry = Entry->Flink;
