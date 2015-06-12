@@ -461,8 +461,8 @@ static VOID WINAPI DosStart(LPWORD Stack)
     {
         if (wcsncmp(NtVdmArgv[i], L"-i", 2) == 0)
         {
-            /* This is the session ID */
-            SessionId = wcstoul(NtVdmArgv[i] + 2, NULL, 10);
+            /* This is the session ID (hex format) */
+            SessionId = wcstoul(NtVdmArgv[i] + 2, NULL, 16);
 
             /* The VDM hasn't been started from a console, so quit when the task is done */
             AcceptCommands = FALSE;
