@@ -5,6 +5,7 @@ list(APPEND SOURCE
     ioctlsocket.c
     nostartup.c
     recv.c
+    send.c
     WSAStartup.c
     testlist.c)
 
