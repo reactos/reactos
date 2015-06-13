@@ -166,46 +166,37 @@ AssignDriveLetters(
     }
 
     /* Assign drive letters to logical drives */
-#if 0
     Entry1 = List->DiskListHead.Flink;
     while (Entry1 != &List->DiskListHead)
     {
         DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
 
-        Entry2 = DiskEntry->PartListHead.Flink;
-        if (Entry2 != &DiskEntry->PartListHead)
+        Entry2 = DiskEntry->LogicalPartListHead.Flink;
+        while (Entry2 != &DiskEntry->LogicalPartListHead)
         {
-            Entry2 = Entry2->Flink;
-            while (Entry2 != &DiskEntry->PartListHead)
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+
+            PartEntry->DriveLetter = 0;
+
+            if (PartEntry->IsPartitioned)
             {
-                PartEntry = CONTAINING_RECORD(Entry2,
-                                              PARTENTRY,
-                                              ListEntry);
-
-                PartEntry->DriveLetter = 0;
-
-                if (PartEntry->Unpartitioned == FALSE &&
-                    !IsContainerPartition(PartEntry->PartInfo[0].PartitionType))
+                if (IsRecognizedPartition(PartEntry->PartitionType) ||
+                    (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED &&
+                     PartEntry->SectorCount.QuadPart != 0LL))
                 {
-                    if (IsRecognizedPartition(PartEntry->PartInfo[0].PartitionType) ||
-                        (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED &&
-                         PartEntry->PartInfo[0].PartitionLength.QuadPart != 0LL))
+                    if (Letter <= 'Z')
                     {
-                        if (Letter <= 'Z')
-                        {
-                            PartEntry->DriveLetter = Letter;
-                            Letter++;
-                        }
+                        PartEntry->DriveLetter = Letter;
+                        Letter++;
                     }
                 }
-
-                Entry2 = Entry2->Flink;
             }
+
+            Entry2 = Entry2->Flink;
         }
 
         Entry1 = Entry1->Flink;
     }
-#endif
 }
 
 
@@ -1151,7 +1142,7 @@ AddDiskToList(
 
     InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
-    /* Allocate a layout buffer for 4 partition entries first */
+    /* Allocate a layout buffer with 4 partition entries first */
     LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
                        ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
     DiskEntry->LayoutBuffer = RtlAllocateHeap(ProcessHeap,
