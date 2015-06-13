@@ -3974,17 +3974,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
 FAST486_OPCODE_HANDLER(Fast486OpcodeWait)
 {
 #ifndef FAST486_NO_FPU
-
-    if ((!State->FpuControl.Pm && State->FpuStatus.Pe)
-        || (!State->FpuControl.Um && State->FpuStatus.Ue)
-        || (!State->FpuControl.Om && State->FpuStatus.Oe)
-        || (!State->FpuControl.Zm && State->FpuStatus.Ze)
-        || (!State->FpuControl.Dm && State->FpuStatus.De)
-        || (!State->FpuControl.Im && State->FpuStatus.Ie))
-    {
-        Fast486FpuException(State);
-    }
-
+    Fast486FpuExceptionCheck(State);
 #endif
 }
 

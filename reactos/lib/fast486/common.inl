@@ -1604,17 +1604,26 @@ Fast486WriteModrmDwordOperands(PFAST486_STATE State,
 FORCEINLINE
 VOID
 FASTCALL
-Fast486FpuException(PFAST486_STATE State)
+Fast486FpuExceptionCheck(PFAST486_STATE State)
 {
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_NE)
+    /* Check if an unmasked exception occurred */
+    if ((State->FpuStatus.Ie && !State->FpuControl.Im)
+        || (State->FpuStatus.De && !State->FpuControl.Dm)
+        || (State->FpuStatus.Ze && !State->FpuControl.Zm)
+        || (State->FpuStatus.Oe && !State->FpuControl.Om)
+        || (State->FpuStatus.Ue && !State->FpuControl.Um)
+        || (State->FpuStatus.Pe && !State->FpuControl.Pm))
     {
-        /* Call the #MF handler */
-        Fast486Exception(State, FAST486_EXCEPTION_MF);
-    }
-    else
-    {
-        /* Use the external interrupt */
-        State->FpuCallback(State);
+        if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_NE)
+        {
+            /* Call the #MF handler */
+            Fast486Exception(State, FAST486_EXCEPTION_MF);
+        }
+        else
+        {
+            /* Use the external interrupt */
+            State->FpuCallback(State);
+        }
     }
 }
 
@@ -1654,7 +1663,6 @@ Fast486FpuNormalize(PFAST486_STATE State,
         }
         else
         {
-            Fast486FpuException(State);
             return FALSE;
         }
     }
@@ -1695,7 +1703,6 @@ Fast486FpuPush(PFAST486_STATE State,
         /* Set the C1 condition code bit (stack overflow) */
         State->FpuStatus.Code1 = TRUE;
 
-        if (!State->FpuControl.Im) Fast486FpuException(State);
         return FALSE;
     }
 }
@@ -1720,7 +1727,6 @@ Fast486FpuPop(PFAST486_STATE State)
         /* Clear the C1 condition code bit (stack underflow) */
         State->FpuStatus.Code1 = FALSE;
 
-        if (!State->FpuControl.Im) Fast486FpuException(State);
         return FALSE;
     }
 }
