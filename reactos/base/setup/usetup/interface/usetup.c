@@ -80,8 +80,6 @@ static HINF SetupInf;
 
 static HSPFILEQ SetupFileQueue = NULL;
 
-static BOOLEAN WarnLinuxPartitions = TRUE;
-
 static PGENERIC_LIST ComputerList = NULL;
 static PGENERIC_LIST DisplayList = NULL;
 static PGENERIC_LIST KeyboardList = NULL;
@@ -1472,29 +1470,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
     }
 
     DrawPartitionList(PartitionList);
-
-    /* Warn about partitions created by Linux Fdisk */
-    if (WarnLinuxPartitions == TRUE &&
-        CheckForLinuxFdiskPartitions(PartitionList) == TRUE)
-    {
-        MUIDisplayError(ERROR_WARN_PARTITION, NULL, POPUP_WAIT_NONE);
-
-        while (TRUE)
-        {
-            CONSOLE_ConInKey(Ir);
-
-            if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-            {
-                return QUIT_PAGE;
-            }
-            else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
-            {
-                WarnLinuxPartitions = FALSE;
-                return SELECT_PARTITION_PAGE;
-            }
-        }
-    }
 
     if (IsUnattendedSetup)
     {

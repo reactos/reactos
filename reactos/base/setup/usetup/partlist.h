@@ -264,10 +264,6 @@ CheckActiveBootPartition(
     PPARTLIST List);
 
 BOOLEAN
-CheckForLinuxFdiskPartitions(
-    PPARTLIST List);
-
-BOOLEAN
 WritePartitionsToDisk(
     PPARTLIST List);
 

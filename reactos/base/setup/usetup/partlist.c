@@ -2824,65 +2824,9 @@ CheckActiveBootPartition(
 }
 
 
-BOOLEAN
-CheckForLinuxFdiskPartitions(
-    PPARTLIST List)
-{
-#if 0
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
-    PLIST_ENTRY Entry1;
-    PLIST_ENTRY Entry2;
-    ULONG PartitionCount;
-    ULONG i;
-
-    Entry1 = List->DiskListHead.Flink;
-    while (Entry1 != &List->DiskListHead)
-    {
-        DiskEntry = CONTAINING_RECORD(Entry1,
-                                      DISKENTRY,
-                                      ListEntry);
-
-        Entry2 = DiskEntry->PartListHead.Flink;
-        while (Entry2 != &DiskEntry->PartListHead)
-        {
-            PartEntry = CONTAINING_RECORD(Entry2,
-                                          PARTENTRY,
-                                          ListEntry);
-
-            if (PartEntry->Unpartitioned == FALSE)
-            {
-                PartitionCount = 0;
-
-                for (i = 0; i < 4; i++)
-                {
-                    if (!IsContainerPartition(PartEntry->PartInfo[i].PartitionType) &&
-                        PartEntry->PartInfo[i].PartitionLength.QuadPart != 0ULL)
-                    {
-                        PartitionCount++;
-                    }
-                }
-
-                if (PartitionCount > 1)
-                {
-                    return TRUE;
-                }
-            }
-
-            Entry2 = Entry2->Flink;
-        }
-
-        Entry1 = Entry1->Flink;
-    }
-#endif
-
-    return FALSE;
-}
-
-
 static
 NTSTATUS
-WritePartitons(
+WritePartitions(
     IN PPARTLIST List,
     IN PDISKENTRY DiskEntry)
 {
@@ -2964,7 +2908,7 @@ WritePartitionsToDisk(
 
         if (DiskEntry->Dirty == TRUE)
         {
-            WritePartitons(List, DiskEntry);
+            WritePartitions(List, DiskEntry);
             DiskEntry->Dirty = FALSE;
         }
 
