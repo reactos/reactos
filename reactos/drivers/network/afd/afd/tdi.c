@@ -935,7 +935,7 @@ NTSTATUS TdiSend(
     }
 
     _SEH2_TRY {
-        MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
+        MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoReadAccess);
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
         IoFreeMdl(Mdl);
@@ -1202,7 +1202,7 @@ NTSTATUS TdiSendDatagram(
     }
 
     _SEH2_TRY {
-        MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
+        MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoReadAccess);
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
         IoFreeMdl(Mdl);
