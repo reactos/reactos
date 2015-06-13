@@ -800,3 +800,7 @@ if(KDBG)
 else()
     set(ROSSYM_LIB "")
 endif()
+
+function(add_rc_deps _target_rc)
+    set_source_files_properties(${_target_rc} PROPERTIES OBJECT_DEPENDS "${ARGN}")
+endfunction()
