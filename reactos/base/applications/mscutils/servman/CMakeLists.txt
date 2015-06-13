@@ -21,20 +21,7 @@ list(APPEND SOURCE
     stop_dependencies.c
     precomp.h)
 
-list(APPEND servman_rc_deps
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/create.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/delete.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/driver.ico
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/export.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/nodepends.ico
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/pause.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/properties.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/refresh.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/restart.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/start.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/stop.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/system.ico)
-
+file(GLOB servman_rc_deps res/*.*)
 add_rc_deps(servman.rc ${servman_rc_deps})
 add_executable(servman ${SOURCE} servman.rc)
 set_module_type(servman win32gui UNICODE)
