@@ -3979,6 +3979,11 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
     MArea->Data.SectionData.Segment = Segment;
     MArea->Data.SectionData.Section = Section;
     MArea->Data.SectionData.ViewOffset.QuadPart = ViewOffset;
+    if (Section->AllocationAttributes & SEC_IMAGE)
+    {
+        MArea->VadNode.u.VadFlags.VadType = VadImageMap;
+    }
+
     MmInitializeRegion(&MArea->Data.SectionData.RegionListHead,
                        ViewSize, 0, Protect);
 

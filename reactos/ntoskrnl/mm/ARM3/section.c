@@ -1686,6 +1686,59 @@ MmGetFileObjectForSection(IN PVOID SectionObject)
     return ((PROS_SECTION_OBJECT)SectionObject)->FileObject;
 }
 
+static
+PFILE_OBJECT
+MiGetFileObjectForVad(
+    _In_ PMMVAD Vad)
+{
+    PCONTROL_AREA ControlArea;
+    PFILE_OBJECT FileObject;
+
+    /* Check if this is a RosMm memory area */
+    if (Vad->u.VadFlags.Spare != 0)
+    {
+        PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
+        PROS_SECTION_OBJECT Section;
+
+        /* Check if it's a section view (RosMm section) */
+        if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+        {
+            /* Get the section pointer to the SECTION_OBJECT */
+            Section = MemoryArea->Data.SectionData.Section;
+            FileObject = Section->FileObject;
+        }
+        else
+        {
+            ASSERT(MemoryArea->Type == MEMORY_AREA_CACHE);
+            DPRINT1("VAD is a cache section!\n");
+            return NULL;
+        }
+    }
+    else
+    {
+        /* Make sure it's not a VM VAD */
+        if (Vad->u.VadFlags.PrivateMemory == 1)
+        {
+            DPRINT1("VAD is not a section\n");
+            return NULL;
+        }
+
+        /* Get the control area */
+        ControlArea = Vad->ControlArea;
+        if ((ControlArea == NULL) || !ControlArea->u.Flags.Image)
+        {
+            DPRINT1("Address is not a section\n");
+            return NULL;
+        }
+
+        /* Get the file object */
+        FileObject = ControlArea->FilePointer;
+    }
+
+    /* Return the file object */
+    return FileObject;
+}
+
 VOID
 NTAPI
 MmGetImageInformation (OUT PSECTION_IMAGE_INFORMATION ImageInformation)
@@ -1771,19 +1824,30 @@ MmGetFileNameForAddress(IN PVOID Address,
     POBJECT_NAME_INFORMATION ModuleNameInformation;
     PVOID AddressSpace;
     NTSTATUS Status;
+    PMMVAD Vad;
     PFILE_OBJECT FileObject = NULL;
 
     /* Lock address space */
     AddressSpace = MmGetCurrentAddressSpace();
     MmLockAddressSpace(AddressSpace);
 
-    /* Get the file object pointer for the address */
-    Status = MiGetFileObjectForSectionAddress(Address, &FileObject);
-    if (!NT_SUCCESS(Status))
+    /* Get the VAD */
+    Vad = MiLocateAddress(Address);
+    if (Vad == NULL)
+    {
+        /* Fail, the address does not exist */
+        DPRINT1("No VAD at address %p\n", Address);
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_INVALID_ADDRESS;
+    }
+
+    /* Get the file object pointer for the VAD */
+    FileObject = MiGetFileObjectForVad(Vad);
+    if (FileObject == NULL)
     {
         DPRINT1("Failed to get file object for Address %p\n", Address);
         MmUnlockAddressSpace(AddressSpace);
-        return Status;
+        return STATUS_SECTION_NOT_IMAGE;
     }
 
     /* Reference the file object */
@@ -3099,6 +3163,7 @@ NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
                         IN PVOID File2MappedAsFile)
 {
     PVOID AddressSpace;
+    PMMVAD Vad1, Vad2;
     PFILE_OBJECT FileObject1, FileObject2;
     NTSTATUS Status;
 
@@ -3106,34 +3171,66 @@ NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
     AddressSpace = MmGetCurrentAddressSpace();
     MmLockAddressSpace(AddressSpace);
 
-    /* Get the file object pointer for address 1 */
-    Status = MiGetFileObjectForSectionAddress(File1MappedAsAnImage, &FileObject1);
-    if (!NT_SUCCESS(Status))
+    /* Get the VAD for Address 1 */
+    Vad1 = MiLocateAddress(File1MappedAsAnImage);
+    if (Vad1 == NULL)
     {
-        DPRINT1("Failed to get file object for Address %p\n", File1MappedAsAnImage);
-        MmUnlockAddressSpace(AddressSpace);
-        return Status;
+        /* Fail, the address does not exist */
+        DPRINT1("No VAD at address 1 %p\n", File1MappedAsAnImage);
+        Status = STATUS_INVALID_ADDRESS;
+        goto Exit;
     }
 
-    /* Get the file object pointer for address 2 */
-    Status = MiGetFileObjectForSectionAddress(File2MappedAsFile, &FileObject2);
-    if (!NT_SUCCESS(Status))
+    /* Get the VAD for Address 2 */
+    Vad2 = MiLocateAddress(File2MappedAsFile);
+    if (Vad2 == NULL)
     {
-        DPRINT1("Failed to get file object for Address %p\n", File1MappedAsAnImage);
-        MmUnlockAddressSpace(AddressSpace);
-        return Status;
+        /* Fail, the address does not exist */
+        DPRINT1("No VAD at address 2 %p\n", File2MappedAsFile);
+        Status = STATUS_INVALID_ADDRESS;
+        goto Exit;
+    }
+
+    /* Get the file object pointer for VAD 1 */
+    FileObject1 = MiGetFileObjectForVad(Vad1);
+    if (FileObject1 == NULL)
+    {
+        DPRINT1("Failed to get file object for Address 1 %p\n", File1MappedAsAnImage);
+        Status = STATUS_CONFLICTING_ADDRESSES;
+        goto Exit;
+    }
+
+    /* Get the file object pointer for VAD 2 */
+    FileObject2 = MiGetFileObjectForVad(Vad2);
+    if (FileObject2 == NULL)
+    {
+        DPRINT1("Failed to get file object for Address 2 %p\n", File2MappedAsFile);
+        Status = STATUS_CONFLICTING_ADDRESSES;
+        goto Exit;
+    }
+
+    /* Make sure Vad1 is an image mapping */
+    if (Vad1->u.VadFlags.VadType != VadImageMap)
+    {
+        DPRINT1("Address 1 (%p) is not an image mapping\n", File1MappedAsAnImage);
+        Status = STATUS_NOT_SAME_DEVICE;
+        goto Exit;
     }
 
     /* SectionObjectPointer is equal if the files are equal */
-    if (FileObject1->SectionObjectPointer != FileObject2->SectionObjectPointer)
+    if (FileObject1->SectionObjectPointer == FileObject2->SectionObjectPointer)
     {
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_NOT_SAME_DEVICE;
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = STATUS_NOT_SAME_DEVICE;
     }
 
+Exit:
     /* Unlock address space */
     MmUnlockAddressSpace(AddressSpace);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
