@@ -513,11 +513,7 @@ ThemeDrawMenuItem(PDRAW_CONTEXT pcontext, HMENU Menu, int imenu)
 
     GetMenuItemRect(pcontext->hWnd, Menu, imenu, &Rect);
 
-#ifdef __REACTOS__
-    OffsetRect(&Rect, -pcontext->wi.rcClient.left, -pcontext->wi.rcClient.top);
-#else
     OffsetRect(&Rect, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
-#endif
     
     SetBkColor(pcontext->hDC, GetSysColor(flat_menu ? COLOR_MENUBAR : COLOR_MENU));
     SetTextColor(pcontext->hDC, GetSysColor(Item.fState & MF_GRAYED ? COLOR_GRAYTEXT : COLOR_MENUTEXT));

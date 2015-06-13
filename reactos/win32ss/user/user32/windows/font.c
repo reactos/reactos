@@ -1212,14 +1212,41 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
             last_line = !(flags & DT_NOCLIP) && y + ((flags & DT_EDITCONTROL) ? 2*lh-1 : lh) > rect->bottom;
 	strPtr = TEXT_NextLineW(hdc, strPtr, &count, line, &len, width, flags, &size, last_line, &p_retstr, tabwidth, &prefix_offset, &ellip);
 
+#ifdef __REACTOS__
+    if (flags & DT_CENTER)
+    {
+        if (((rect->right - rect->left) < size.cx) && (flags & DT_CALCRECT))
+        {
+            x = rect->left + size.cx;
+        }
+        else
+        {
+            x = (rect->left + rect->right - size.cx) / 2;
+        }
+    }
+#else
 	if (flags & DT_CENTER) x = (rect->left + rect->right -
 				    size.cx) / 2;
+#endif
 	else if (flags & DT_RIGHT) x = rect->right - size.cx;
 
 	if (flags & DT_SINGLELINE)
 	{
             if (flags & DT_VCENTER)
-                y = rect->top + (rect->bottom - rect->top) / 2 + (invert_y ? (size.cy / 2) : (-size.cy / 2));
+#ifdef __REACTOS__
+            {
+                if (((rect->bottom - rect->top) < (invert_y ? -size.cy : size.cy)) && (flags & DT_CALCRECT))
+                {
+                    y = rect->top + (invert_y ? -size.cy : size.cy);
+                }
+                else
+                {
+#endif
+                    y = rect->top + (rect->bottom - rect->top) / 2 + (invert_y ? (size.cy / 2) : (-size.cy / 2));
+#ifdef __REACTOS__
+                }
+            }
+#endif
             else if (flags & DT_BOTTOM)
                 y = rect->bottom + (invert_y ? 0 : -size.cy);
         }
