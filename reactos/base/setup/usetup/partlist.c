@@ -1151,12 +1151,9 @@ AddDiskToList(
 
     InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
-    /*
-     * Allocate a buffer for 26 logical drives (2 entries each == 52)
-     * plus the main partiton table (4 entries). Total 56 entries.
-     */
+    /* Allocate a layout buffer for 4 partition entries first */
     LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
-                       ((56 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
+                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
     DiskEntry->LayoutBuffer = RtlAllocateHeap(ProcessHeap,
                                               HEAP_ZERO_MEMORY,
                                               LayoutBufferSize);
@@ -1175,6 +1172,36 @@ AddDiskToList(
                                    0,
                                    DiskEntry->LayoutBuffer,
                                    LayoutBufferSize);
+    DPRINT("Status: 0x%08lx\n", Status);
+    DPRINT("PartitionCount: %lu\n", DiskEntry->LayoutBuffer->PartitionCount);
+
+    /* If we need more than 4 partition entries, reallocte the buffer and
+       retrieve the disk layout again */
+    if (!NT_SUCCESS(Status) && DiskEntry->LayoutBuffer->PartitionCount > 4)
+    {
+        LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
+                           ((DiskEntry->LayoutBuffer->PartitionCount - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
+        DiskEntry->LayoutBuffer = RtlReAllocateHeap(ProcessHeap,
+                                                    HEAP_ZERO_MEMORY,
+                                                    DiskEntry->LayoutBuffer,
+                                                    LayoutBufferSize);
+        if (DiskEntry->LayoutBuffer == NULL)
+        {
+            return;
+        }
+
+        Status = NtDeviceIoControlFile(FileHandle,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &Iosb,
+                                       IOCTL_DISK_GET_DRIVE_LAYOUT,
+                                       NULL,
+                                       0,
+                                       DiskEntry->LayoutBuffer,
+                                       LayoutBufferSize);
+    }
+
     if (NT_SUCCESS(Status))
     {
 #ifdef DUMP_PARTITION_TABLE
