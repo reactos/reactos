@@ -1175,6 +1175,12 @@ NTSTATUS TdiSendDatagram(
         return STATUS_INVALID_PARAMETER;
     }
 
+    if (BufferLength == 0)
+    {
+        AFD_DbgPrint(MID_TRACE, ("Succeeding send with length 0.\n"));
+        return STATUS_SUCCESS;
+    }
+
     *Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND_DATAGRAM,       /* Sub function */
                                             DeviceObject,            /* Device object */
                                             TransportObject,         /* File object */
