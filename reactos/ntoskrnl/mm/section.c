@@ -241,12 +241,12 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     if(pidhDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
         DIE(("No MZ signature found, e_magic is %hX\n", pidhDosHeader->e_magic));
 
+    /* NT HEADER */
+    nStatus = STATUS_INVALID_IMAGE_PROTECT;
+
     /* not a Windows executable */
     if(pidhDosHeader->e_lfanew <= 0)
         DIE(("Not a Windows executable, e_lfanew is %d\n", pidhDosHeader->e_lfanew));
-
-    /* NT HEADER */
-    nStatus = STATUS_INVALID_IMAGE_FORMAT;
 
     if(!Intsafe_AddULong32(&cbFileHeaderOffsetSize, pidhDosHeader->e_lfanew, RTL_SIZEOF_THROUGH_FIELD(IMAGE_NT_HEADERS32, FileHeader)))
         DIE(("The DOS stub is too large, e_lfanew is %X\n", pidhDosHeader->e_lfanew));
@@ -336,10 +336,10 @@ l_ReadHeaderFromFile:
         if(pinhNtHeader->Signature != IMAGE_NT_SIGNATURE)
             DIE(("The file isn't a PE executable, Signature is %X\n", pinhNtHeader->Signature));
 
-        nStatus = STATUS_INVALID_IMAGE_FORMAT;
-
         if(!Intsafe_AddULong32(&cbOptHeaderOffsetSize, pidhDosHeader->e_lfanew, FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader)))
             DIE(("The DOS stub is too large, e_lfanew is %X\n", pidhDosHeader->e_lfanew));
+
+        nStatus = STATUS_INVALID_IMAGE_FORMAT;
 
         if(!Intsafe_AddULong32(&cbOptHeaderOffsetSize, cbOptHeaderOffsetSize, pinhNtHeader->FileHeader.SizeOfOptionalHeader))
             DIE(("The NT header is too large, SizeOfOptionalHeader is %X\n", pinhNtHeader->FileHeader.SizeOfOptionalHeader));
