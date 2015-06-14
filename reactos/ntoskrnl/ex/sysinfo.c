@@ -2156,6 +2156,24 @@ QSI_DEF(SystemSessionProcessesInformation)
 }
 
 
+/* Class 54 - Load & map in system space */
+SSI_DEF(SystemLoadGdiDriverInSystemSpaceInformation)
+{
+    /* FIXME */
+    DPRINT1("NtSetSystemInformation - SystemLoadGdiDriverInSystemSpaceInformation not implemented\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Class 55 - NUMA processor information  */
+QSI_DEF(SystemNumaProcessorMap)
+{
+    /* FIXME */
+    DPRINT1("NtQuerySystemInformation - SystemNumaProcessorMap not implemented\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
 /* Query/Set Calls Table */
 typedef
 struct _QSSI_CALLS
@@ -2232,7 +2250,9 @@ CallQS [] =
     SI_QX(SystemRangeStartInformation),
     SI_QS(SystemVerifierInformation),
     SI_XS(SystemAddVerifier),
-    SI_QX(SystemSessionProcessesInformation)
+    SI_QX(SystemSessionProcessesInformation),
+    SI_XS(SystemLoadGdiDriverInSystemSpaceInformation),
+    SI_QX(SystemNumaProcessorMap)
 };
 
 C_ASSERT(SystemBasicInformation == 0);
