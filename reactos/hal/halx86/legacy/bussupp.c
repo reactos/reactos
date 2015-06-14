@@ -715,7 +715,7 @@ HalpDebugPciDumpBus(IN ULONG i,
 
     /* Isolate the class name */
     sprintf(LookupString, "C %02x  ", PciData->BaseClass);
-    ClassName = strstr(ClassTable, LookupString);
+    ClassName = strstr((PCHAR)ClassTable, LookupString);
     if (ClassName)
     {
         /* Isolate the subclass name */
@@ -736,7 +736,7 @@ HalpDebugPciDumpBus(IN ULONG i,
 
     /* Isolate the vendor name */
     sprintf(LookupString, "\r\n%04x  ", PciData->VendorID);
-    VendorName = strstr(VendorTable, LookupString);
+    VendorName = strstr((PCHAR)VendorTable, LookupString);
     if (VendorName)
     {
         /* Copy the vendor name into our buffer */
