@@ -293,7 +293,7 @@ GetNumaProcessorNode(IN UCHAR Processor,
     ULONGLONG Proc;
 
     /* Can't handle processor number >= 32 */
-    if (Processor >= 0x20)
+    if (Processor >= MAXIMUM_PROCESSORS)
     {
         *NodeNumber = -1;
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -314,7 +314,7 @@ GetNumaProcessorNode(IN UCHAR Processor,
 
     /* Find ourselves */
     Node = 0;
-    Proc = (1ULL << Processor) >> 0x20;
+    Proc = (1ULL << Processor) >> MAXIMUM_PROCESSORS;
     while ((Proc & NumaInformation.ActiveProcessorsAffinityMask[Node]) == 0ULL)
     {
         ++Node;
