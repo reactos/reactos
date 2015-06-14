@@ -286,7 +286,7 @@ l_ReadHeaderFromFile:
             NTSTATUS ReturnedStatus = nStatus;
 
             /* If it attempted to read past the end of the file, it means e_lfanew is invalid */
-            if (ReturnedStatus == STATUS_END_OF_FILE) nStatus = STATUS_ROS_EXEFMT_UNKNOWN_FORMAT;
+            if (ReturnedStatus == STATUS_END_OF_FILE) nStatus = STATUS_INVALID_IMAGE_PROTECT;
 
             DIE(("ReadFile failed, status %08X\n", ReturnedStatus));
         }
