@@ -59,7 +59,7 @@ static BYTE Int16To32[] =
     0x44, 0x44,         // inc sp, inc sp
     0xCF,               // iret
 };
-const ULONG Int16To32StubSize = sizeof(Int16To32);
+C_ASSERT(sizeof(Int16To32) == Int16To32StubSize);
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

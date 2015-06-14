@@ -27,18 +27,27 @@
 #include "memory.h"
 #include "io.h"
 #include "dos32krnl/dos.h"
+#include "dos32krnl/memory.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
-// FIXME: Because I don't know a better place to store the string
-// I temporarily put it in BIOS space. This need to be moved to a
-// proper place when this driver is interfaced correctly with DOS.
-#define COPYRIGHT_POINTER MAKELONG(0xE100, 0xF000)
-static const CHAR MouseCopyright[] = "ROS PS/2 16/32-bit Mouse Driver Compatible MS-MOUSE 6.26 Copyright (C) ReactOS Team 1996-2015";
+static const CHAR MouseCopyright[] = "ROS PS/2 16/32-bit Mouse Driver Compatible MS-MOUSE 6.26 Copyright (C) ReactOS Team 1996-2015\0";
 
-// See FIXME from above.
-#define VERSION_POINTER MAKELONG(0xE160, 0xF000)
-static PWORD Version;
+#pragma pack(push, 1)
+
+typedef struct _MOUSE_DRIVER
+{
+    CHAR Copyright[sizeof(MouseCopyright)];
+    WORD Version;
+    BYTE MouseDosInt16Stub[Int16To32StubSize];
+    BYTE MouseIrqInt16Stub[Int16To32StubSize];
+} MOUSE_DRIVER, *PMOUSE_DRIVER;
+
+#pragma pack(pop)
+
+/* Global data contained in guest memory */
+WORD MouseDataSegment;
+PMOUSE_DRIVER MouseData;
 
 #define MICKEYS_PER_CELL_HORIZ  8
 #define MICKEYS_PER_CELL_VERT   16
@@ -876,8 +885,8 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         /* Return Pointer to Copyright String */
         case 0x4D:
         {
-            setES(HIWORD(COPYRIGHT_POINTER));
-            setDI(LOWORD(COPYRIGHT_POINTER));
+            setES(MouseDataSegment);
+            setDI(FIELD_OFFSET(MOUSE_DRIVER, Copyright));
             break;
         }
 
@@ -890,8 +899,8 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
              * 00h     BYTE    major version
              * 01h     BYTE    minor version (BCD)
              */
-            setES(HIWORD(VERSION_POINTER));
-            setDI(LOWORD(VERSION_POINTER));
+            setES(MouseDataSegment);
+            setDI(FIELD_OFFSET(MOUSE_DRIVER, Version));
             break;
         }
 
@@ -914,7 +923,8 @@ VOID DosMouseEnable(VOID)
         OldIrqHandler = ((PDWORD)BaseAddress)[MOUSE_IRQ_INT];
 
         /* Set the IRQ handler */
-        RegisterDosInt32(MOUSE_IRQ_INT, DosMouseIrq);
+        RegisterInt32(MAKELONG(FIELD_OFFSET(MOUSE_DRIVER, MouseIrqInt16Stub), MouseDataSegment),
+                      MOUSE_IRQ_INT, DosMouseIrq, NULL);
     }
 }
 
@@ -986,21 +996,26 @@ VOID DosMouseUpdateButtons(WORD ButtonState)
 
 BOOLEAN DosMouseInitialize(VOID)
 {
+    /* Initialize some memory for storing our data that should be available to DOS */
+    MouseDataSegment = DosAllocateMemory(sizeof(MOUSE_DRIVER), NULL);
+    if (MouseDataSegment == 0) return FALSE;
+    MouseData = (PMOUSE_DRIVER)SEG_OFF_TO_PTR(MouseDataSegment, 0x0000);
+
     /* Clear the state */
     RtlZeroMemory(&DriverState, sizeof(DriverState));
 
-    /* Setup the version variable in BCD format, compatible MS-MOUSE */
-    Version  = (PWORD)FAR_POINTER(VERSION_POINTER);
-    *Version = MAKEWORD(MOUSE_VERSION/0x0100, MOUSE_VERSION%0x0100);
-
     /* Mouse Driver Copyright */
-    RtlCopyMemory(FAR_POINTER(COPYRIGHT_POINTER), MouseCopyright, sizeof(MouseCopyright)-1);
+    RtlCopyMemory(MouseData->Copyright, MouseCopyright, sizeof(MouseCopyright)-1);
+
+    /* Mouse Driver Version in BCD format, compatible MS-MOUSE */
+    MouseData->Version = MAKEWORD(MOUSE_VERSION/0x0100, MOUSE_VERSION%0x0100);
 
     /* Get the old mouse service interrupt handler */
     OldIntHandler = ((PDWORD)BaseAddress)[DOS_MOUSE_INTERRUPT];
 
     /* Initialize the interrupt handler */
-    RegisterDosInt32(DOS_MOUSE_INTERRUPT, DosMouseService);
+    RegisterInt32(MAKELONG(FIELD_OFFSET(MOUSE_DRIVER, MouseDosInt16Stub), MouseDataSegment),
+                  DOS_MOUSE_INTERRUPT, DosMouseService, NULL);
 
     DosMouseEnable();
     return TRUE;
@@ -1014,3 +1029,5 @@ VOID DosMouseCleanup(VOID)
     if (DriverState.ShowCount > 0) EraseMouseCursor();
     DosMouseDisable();
 }
+
+/* EOF */

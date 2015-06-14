@@ -34,7 +34,8 @@
 #define STACK_CS        2
 #define STACK_FLAGS     3
 
-extern const ULONG Int16To32StubSize;
+// To be adjusted with the Int16To32 handler code in int32.c
+#define Int16To32StubSize   17
 
 /* FUNCTIONS ******************************************************************/
 
