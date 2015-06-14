@@ -211,50 +211,160 @@ GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GetNumaHighestNodeNumber(OUT PULONG HighestNodeNumber)
 {
-    STUB;
-    return 0;
+    NTSTATUS Status;
+    ULONG Length;
+    ULONG PartialInfo[2]; // First two members of SYSTEM_NUMA_INFORMATION
+
+    /* Query partial NUMA info */
+    Status = NtQuerySystemInformation(SystemNumaProcessorMap,
+                                      PartialInfo,
+                                      sizeof(PartialInfo),
+                                      &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    if (Length < sizeof(ULONG))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* First member of the struct is the highest node number */
+    *HighestNodeNumber = PartialInfo[0];
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GetNumaNodeProcessorMask(IN UCHAR Node,
                          OUT PULONGLONG ProcessorMask)
 {
-    STUB;
-    return 0;
+    NTSTATUS Status;
+    SYSTEM_NUMA_INFORMATION NumaInformation;
+    ULONG Length;
+
+    /* Query NUMA information */
+    Status = NtQuerySystemInformation(SystemNumaProcessorMap,
+                                      &NumaInformation,
+                                      sizeof(NumaInformation),
+                                      &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Validate input node number */
+    if (Node > NumaInformation.HighestNodeNumber)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Return mask for that node */
+    *ProcessorMask = NumaInformation.ActiveProcessorsAffinityMask[Node];
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GetNumaProcessorNode(IN UCHAR Processor,
                      OUT PUCHAR NodeNumber)
 {
-    STUB;
-    return 0;
+    NTSTATUS Status;
+    SYSTEM_NUMA_INFORMATION NumaInformation;
+    ULONG Length;
+    ULONG Node;
+    ULONGLONG Proc;
+
+    /* Can't handle processor number >= 32 */
+    if (Processor >= 0x20)
+    {
+        *NodeNumber = -1;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Query NUMA information */
+    Status = NtQuerySystemInformation(SystemNumaProcessorMap,
+                                      &NumaInformation,
+                                      sizeof(NumaInformation),
+                                      &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        *NodeNumber = -1;
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Find ourselves */
+    Node = 0;
+    Proc = (1ULL << Processor) >> 0x20;
+    while ((Proc & NumaInformation.ActiveProcessorsAffinityMask[Node]) == 0ULL)
+    {
+        ++Node;
+        /* Out of options */
+        if (Node > NumaInformation.HighestNodeNumber)
+        {
+            *NodeNumber = -1;
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+    }
+
+    /* Return found node */
+    *NodeNumber = Node;
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GetNumaAvailableMemoryNode(IN UCHAR Node,
                            OUT PULONGLONG AvailableBytes)
 {
-    STUB;
-    return FALSE;
+    NTSTATUS Status;
+    SYSTEM_NUMA_INFORMATION NumaInformation;
+    ULONG Length;
+
+    /* Query NUMA information */
+    Status = NtQuerySystemInformation(SystemNumaAvailableMemory,
+                                      &NumaInformation,
+                                      sizeof(NumaInformation),
+                                      &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Validate input node number */
+    if (Node > NumaInformation.HighestNodeNumber)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Return available memory for that node */
+    *AvailableBytes = NumaInformation.AvailableMemory[Node];
+    return TRUE;
 }
 
 /*
