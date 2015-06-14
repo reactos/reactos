@@ -442,15 +442,9 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Socket state %u\n", FCB->State));
 
     if( FCB->State != SOCKET_STATE_CONNECTED ) {
-        if (!(SendReq->AfdFlags & AFD_OVERLAPPED) && 
-            ((SendReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking))) {
-            AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
-            UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
-            return UnlockAndMaybeComplete( FCB, STATUS_CANT_WAIT, Irp, 0 );
-        } else {
-            AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
-            return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
-        }
+        AFD_DbgPrint(MID_TRACE,("Socket not connected\n"));
+        UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
+        return UnlockAndMaybeComplete( FCB, STATUS_INVALID_CONNECTION, Irp, 0 );
     }
 
     AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %u\n",
