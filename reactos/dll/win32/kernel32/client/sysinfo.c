@@ -314,7 +314,7 @@ GetNumaProcessorNode(IN UCHAR Processor,
 
     /* Find ourselves */
     Node = 0;
-    Proc = (1ULL << Processor) >> MAXIMUM_PROCESSORS;
+    Proc = 1ULL << Processor;
     while ((Proc & NumaInformation.ActiveProcessorsAffinityMask[Node]) == 0ULL)
     {
         ++Node;
