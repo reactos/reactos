@@ -1369,7 +1369,22 @@ typedef struct _SYSTEM_SESSION_PROCESS_INFORMATION
     PVOID Buffer; // Same format as in SystemProcessInformation
 } SYSTEM_SESSION_PROCESS_INFORMATION, *PSYSTEM_SESSION_PROCESS_INFORMATION;
 
-// FIXME: Class 54-97
+// FIXME: Class 54
+
+// Class 55
+#define MAXIMUM_NUMA_NODES 16
+typedef struct _SYSTEM_NUMA_INFORMATION
+{
+    ULONG HighestNodeNumber;
+    ULONG Reserved;
+    union
+    {
+        ULONGLONG ActiveProcessorsAffinityMask[MAXIMUM_NUMA_NODES];
+        ULONGLONG AvailableMemory[MAXIMUM_NUMA_NODES];
+    };
+} SYSTEM_NUMA_INFORMATION, *PSYSTEM_NUMA_INFORMATION;
+
+// FIXME: Class 56-97
 
 //
 // Hotpatch flags
