@@ -341,6 +341,9 @@ TranslateNtStatusError(NTSTATUS Status)
           return WSAENOBUFS;
 
        case STATUS_INVALID_CONNECTION:
+          return WSAENOTCONN;
+
+       case STATUS_PROTOCOL_NOT_SUPPORTED:
           return WSAEAFNOSUPPORT;
 
        case STATUS_INVALID_ADDRESS:
@@ -1375,7 +1378,7 @@ WSPAccept(SOCKET Handle,
     {
         NtClose(SockEvent);
         WSPCloseSocket( AcceptSocket, lpErrno );
-        MsafdReturnWithErrno( STATUS_INVALID_CONNECTION, lpErrno, 0, NULL );
+        MsafdReturnWithErrno( STATUS_PROTOCOL_NOT_SUPPORTED, lpErrno, 0, NULL );
         return INVALID_SOCKET;
     }
 
