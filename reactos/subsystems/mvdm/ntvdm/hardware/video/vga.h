@@ -258,7 +258,7 @@ COORD VgaGetDisplayResolution(VOID);
 VOID VgaRefreshDisplay(VOID);
 VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size);
 BOOLEAN FASTCALL VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size);
-VOID VgaWriteFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height);
+VOID VgaWriteTextModeFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height);
 VOID VgaClearMemory(VOID);
 BOOLEAN VgaGetDoubleVisionState(PBOOLEAN Horizontal, PBOOLEAN Vertical);
 

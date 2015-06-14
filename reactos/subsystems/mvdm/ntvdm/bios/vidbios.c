@@ -2491,25 +2491,30 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     switch (Bda->CharacterHeight)
     {
         /*
-         * Write the default font to the VGA font plane
-         * and update the BIOS INT 43h vector (far pointer
-         * to the character range 00h-...)
+         * Write the default font to the VGA font plane for text-modes only.
+         * Update the BIOS INT 43h vector (far pointer to the character range 00h-...).
          */
         case 8:
         {
-            VgaWriteFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
+            if (ModeNumber <= 3)
+                VgaWriteTextModeFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
+
             ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x8_OFFSET, VIDEO_BIOS_DATA_SEG);
             break;
         }
         case 14:
         {
-            VgaWriteFont(0, Font8x14, ARRAYSIZE(Font8x14) / VGA_FONT_CHARACTERS);
+            if (ModeNumber <= 3)
+                VgaWriteTextModeFont(0, Font8x14, ARRAYSIZE(Font8x14) / VGA_FONT_CHARACTERS);
+
             ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x14_OFFSET, VIDEO_BIOS_DATA_SEG);
             break;
         }
         case 16:
         {
-            VgaWriteFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
+            if (ModeNumber <= 3)
+                VgaWriteTextModeFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
+
             ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
             break;
         }
@@ -3371,6 +3376,58 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             {
                 // FIXME: At the moment we support only graphics-mode functions!
 
+                /* Load User-specified Patterns (Character Set) for Text Mode */
+                case 0x00:
+                case 0x10: // FIXME: 0x1x performs a full mode reset
+                {
+                    // FIXME: BL == ??
+
+                    /* Write the default font to the VGA font plane */
+                    // VgaWriteTextModeFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
+
+                    UNIMPLEMENTED;
+                    break;
+                }
+
+                /* Load ROM Monochrome 8x14 Patterns (Character Set) for Text Mode */
+                case 0x01:
+                case 0x11: // FIXME: 0x1x performs a full mode reset
+                {
+                    // FIXME: BL == ??
+
+                    /* Write the default font to the VGA font plane */
+                    VgaWriteTextModeFont(0, Font8x14, ARRAYSIZE(Font8x14) / VGA_FONT_CHARACTERS);
+
+                    UNIMPLEMENTED;
+                    break;
+                }
+
+                /* Load ROM 8x8 Double-dot Patterns (Character Set) for Text Mode */
+                case 0x02:
+                case 0x12: // FIXME: 0x1x performs a full mode reset
+                {
+                    // FIXME: BL == ??
+
+                    /* Write the default font to the VGA font plane */
+                    VgaWriteTextModeFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
+
+                    UNIMPLEMENTED;
+                    break;
+                }
+
+                /* Load ROM 8x16 Character Set for Text Mode */
+                case 0x04:
+                case 0x14: // FIXME: 0x1x performs a full mode reset
+                {
+                    // FIXME: BL == ??
+
+                    /* Write the default font to the VGA font plane */
+                    VgaWriteTextModeFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
+
+                    UNIMPLEMENTED;
+                    break;
+                }
+
                 /* Set User 8x8 Graphics Chars (Setup INT 1Fh Vector) */
                 case 0x20:
                 {
@@ -3383,10 +3440,10 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Set User Graphics Characters */
                 case 0x21:
                 {
-                    // /* Write the font to the VGA font plane */
-                    // VgaWriteFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
-
-                    /* Update the BIOS INT 43h vector */
+                    /*
+                     * Update the BIOS INT 43h vector (far pointer
+                     * to the character range 00h-...)
+                     */
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(getBP(), getES());
 
                     /* Update BDA */
@@ -3407,11 +3464,9 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 case 0x22:
                 {
                     /*
-                     * Write the default font to the VGA font plane
-                     * and update the BIOS INT 43h vector (far pointer
+                     * Update the BIOS INT 43h vector (far pointer
                      * to the character range 00h-...)
                      */
-                    VgaWriteFont(0, Font8x14, ARRAYSIZE(Font8x14) / VGA_FONT_CHARACTERS);
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x14_OFFSET, VIDEO_BIOS_DATA_SEG);
 
                     /* Update BDA */
@@ -3432,11 +3487,9 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 case 0x23:
                 {
                     /*
-                     * Write the default font to the VGA font plane
-                     * and update the BIOS INT 43h vector (far pointer
+                     * Update the BIOS INT 43h vector (far pointer
                      * to the character range 00h-...)
                      */
-                    VgaWriteFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x8_OFFSET, VIDEO_BIOS_DATA_SEG);
 
                     /* Update BDA */
@@ -3457,11 +3510,9 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 case 0x24:
                 {
                     /*
-                     * Write the default font to the VGA font plane
-                     * and update the BIOS INT 43h vector (far pointer
-                     * to the character range 00h-...)
+                     * Update the BIOS INT 43h vector (far pointer
+                     * to the character range 00h-...).
                      */
-                    VgaWriteFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
                     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
 
                     /* Update BDA */
@@ -3715,7 +3766,6 @@ static BOOL Attached = TRUE;
 
 VOID VidBiosAttachToConsole(VOID)
 {
-    // VgaRefreshDisplay();
     if (!Attached)
     {
         VgaAttachToConsole();

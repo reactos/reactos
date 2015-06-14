@@ -22,7 +22,7 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 static CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
-static CONST DWORD MemorySize[] = { 0x20000, 0x10000,  0x8000,  0x8000 };
+static CONST DWORD MemorySize[] = { 0x20000, 0x10000, 0x08000, 0x08000 };
 
 /*
  * Activate this line if you want to use the real
@@ -2086,7 +2086,7 @@ VOID VgaClearMemory(VOID)
     RtlZeroMemory(VgaMemory, sizeof(VgaMemory));
 }
 
-VOID VgaWriteFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
+VOID VgaWriteTextModeFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
 {
     UINT i, j;
     PUCHAR FontMemory = (PUCHAR)&VgaMemory[VGA_BANK_SIZE * VGA_FONT_BANK + (FontNumber * VGA_FONT_SIZE)];
