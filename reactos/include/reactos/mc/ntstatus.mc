@@ -4251,6 +4251,113 @@ The smartcard certificate used for authentication was not trusted.  Please
 contact your system administrator.
 
 .
+MessageId=0x38d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_SMARTCARD_CERT_EXPIRED 
+Language=English
+The smartcard certificate used for authentication has expired.  Please
+contact your system administrator.
+
+.
+MessageId=0x38e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DRIVER_FAILED_PRIOR_UNLOAD 
+Language=English
+The driver could not be installed because a previous version is still loaded.
+
+.
+MessageId=0x38f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_SMARTCARD_SILENT_CONTEXT 
+Language=English
+The smartcard operation requires user interaction but the context was acquired as silent.
+
+.
+MessageId=0x401
+Severity=Error
+Facility=System
+SymbolicName=STATUS_PER_USER_TRUST_QUOTA_EXCEEDED 
+Language=English
+The quota for delegated trust creation was exceeded for the current user.
+
+.
+MessageId=0x402
+Severity=Error
+Facility=System
+SymbolicName=STATUS_ALL_USER_TRUST_QUOTA_EXCEEDED 
+Language=English
+The overall quota for delegated trust creation was exceeded.
+
+.
+MessageId=0x403
+Severity=Error
+Facility=System
+SymbolicName=STATUS_USER_DELETE_TRUST_QUOTA_EXCEEDED 
+Language=English
+The quota for delegated trust deletion was exceeded for the current user.
+
+.
+MessageId=0x404
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DS_NAME_NOT_UNIQUE 
+Language=English
+The specified Directory Services name already exists.
+
+.
+MessageId=0x405
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DS_DUPLICATE_ID_FOUND 
+Language=English
+The requested object could not be retrieved because the specified identifier is not unique.
+
+.
+MessageId=0x406
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DS_GROUP_CONVERSION_ERROR 
+Language=English
+The Directory Services group cannot be converted.
+
+.
+MessageId=0x407
+Severity=Error
+Facility=System
+SymbolicName=STATUS_VOLSNAP_PREPARE_HIBERNATE 
+Language=English
+{Volume Shadow Copy Service}
+The volume %hs is busy because it is being prepared for hibernation.
+
+.
+MessageId=0x408
+Severity=Error
+Facility=System
+SymbolicName=STATUS_USER2USER_REQUIRED 
+Language=English
+The Kerberos User to User protocol is required.
+
+.
+MessageId=0x409
+Severity=Error
+Facility=System
+SymbolicName=STATUS_STACK_BUFFER_OVERRUN 
+Language=English
+An out-of-bounds access to a stack buffer was detected.  This indicates an
+error in the application that could be exploited by a malicious user.
+
+.
+MessageId=0x40a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_NO_S4U_PROT_SUPPORT 
+Language=English
+The domain controller does not support the Kerberos Service for User protocol.
+
+.
 MessageId=0x9898
 Severity=Error
 Facility=System
@@ -4259,7 +4366,7 @@ Language=English
 WOW Assertion Error.
 
 .
-MessageId=0xA000
+MessageId=0xa000
 Severity=Error
 Facility=System
 SymbolicName=STATUS_INVALID_SIGNATURE
@@ -4267,7 +4374,7 @@ Language=English
 The cryptographic signature is invalid.
 
 .
-MessageId=0xA001
+MessageId=0xa001
 Severity=Error
 Facility=System
 SymbolicName=STATUS_HMAC_NOT_SUPPORTED
@@ -4275,7 +4382,7 @@ Language=English
 Keyed-hash message authentication code (HMAC) is not supported.
 
 .
-MessageId=0xA010
+MessageId=0xa010
 Severity=Error
 Facility=System
 SymbolicName=STATUS_IPSEC_QUEUE_OVERFLOW
@@ -4283,7 +4390,7 @@ Language=English
 An overflow of the IPSec queue was encountered.
 
 .
-MessageId=0xA011
+MessageId=0xa011
 Severity=Error
 Facility=System
 SymbolicName=STATUS_ND_QUEUE_OVERFLOW
@@ -4291,7 +4398,7 @@ Language=English
 An overflow of the Neighbor Discovery (NDP) queue was encountered.
 
 .
-MessageId=0xA012
+MessageId=0xa012
 Severity=Error
 Facility=System
 SymbolicName=STATUS_HOPLIMIT_EXCEEDED
@@ -4299,7 +4406,7 @@ Language=English
 An ICMP "Time Exceeded" error message was received.
 
 .
-MessageId=0xA013
+MessageId=0xa013
 Severity=Error
 Facility=System
 SymbolicName=STATUS_PROTOCOL_NOT_SUPPORTED
