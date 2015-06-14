@@ -4259,6 +4259,54 @@ Language=English
 WOW Assertion Error.
 
 .
+MessageId=0xA000
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_SIGNATURE
+Language=English
+The cryptographic signature is invalid.
+
+.
+MessageId=0xA001
+Severity=Error
+Facility=System
+SymbolicName=STATUS_HMAC_NOT_SUPPORTED
+Language=English
+Keyed-hash message authentication code (HMAC) is not supported.
+
+.
+MessageId=0xA010
+Severity=Error
+Facility=System
+SymbolicName=STATUS_IPSEC_QUEUE_OVERFLOW
+Language=English
+An overflow of the IPSec queue was encountered.
+
+.
+MessageId=0xA011
+Severity=Error
+Facility=System
+SymbolicName=STATUS_ND_QUEUE_OVERFLOW
+Language=English
+An overflow of the Neighbor Discovery (NDP) queue was encountered.
+
+.
+MessageId=0xA012
+Severity=Error
+Facility=System
+SymbolicName=STATUS_HOPLIMIT_EXCEEDED
+Language=English
+An ICMP "Time Exceeded" error message was received.
+
+.
+MessageId=0xA013
+Severity=Error
+Facility=System
+SymbolicName=STATUS_PROTOCOL_NOT_SUPPORTED
+Language=English
+The protocol is not installed.
+
+.
 MessageId=0x1
 Severity=Error
 Facility=Debuger
