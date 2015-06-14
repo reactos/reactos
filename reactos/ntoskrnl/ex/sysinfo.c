@@ -2168,9 +2168,31 @@ SSI_DEF(SystemLoadGdiDriverInSystemSpaceInformation)
 /* Class 55 - NUMA processor information  */
 QSI_DEF(SystemNumaProcessorMap)
 {
+    PSYSTEM_NUMA_INFORMATION NumaInformation = (PSYSTEM_NUMA_INFORMATION)Buffer;
+
+    if (Size < sizeof(ULONG))
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+#if 1 // Partial & incomplete implementation just to let GetNumaHighestNodeNumber() work
+    /* In case of a partial query, just return number of nodes and stop here */
+    if (Size < sizeof(SYSTEM_NUMA_INFORMATION))
+    {
+        NumaInformation->HighestNodeNumber = KeNumberNodes - 1;
+        *ReqSize = sizeof(ULONG);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        DPRINT1("NtQuerySystemInformation - SystemNumaProcessorMap not implemented\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+#else
     /* FIXME */
     DPRINT1("NtQuerySystemInformation - SystemNumaProcessorMap not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 
