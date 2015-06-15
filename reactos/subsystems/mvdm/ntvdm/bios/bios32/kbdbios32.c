@@ -118,7 +118,7 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
         case 0x11:
         {
             WORD Character;
-            
+
             if (BiosKbdBufferTop(&Character))
             {
                 /* There is a character, clear ZF and return it */
@@ -315,7 +315,7 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
            Character, ScanCode, Bda->KeybdShiftFlags);
 
 Quit:
-    PicIRQComplete(Stack);
+    PicIRQComplete(LOBYTE(Stack[STACK_INT_NUM]));
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

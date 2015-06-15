@@ -624,7 +624,7 @@ WORD DosOpenFile(LPWORD Handle,
             return (WORD)GetLastError();
         }
     }
- 
+
     DescriptorId = DosFindFreeDescriptor();
     if (DescriptorId == 0xFF)
     {
@@ -1026,7 +1026,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
                 {
                     /* Not ready */
                     *Length = 0;
-                } 
+                }
             }
 
             return TRUE;

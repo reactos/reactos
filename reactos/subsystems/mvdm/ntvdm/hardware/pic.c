@@ -258,7 +258,7 @@ VOID PicInterruptRequest(BYTE Number)
 
 BYTE PicGetInterrupt(VOID)
 {
-    INT i;
+    UINT i;
 
     /* Search the master PIC interrupts by priority */
     for (i = 0; i < 8; i++)
@@ -299,7 +299,7 @@ BYTE PicGetInterrupt(VOID)
             }
         }
     }
-    
+
     /* Spurious interrupt */
     if (MasterPic.InServiceRegister & (1 << 2)) return SlavePic.IntOffset + 7;
     else return MasterPic.IntOffset + 7;
@@ -330,7 +330,7 @@ call_ica_hw_interrupt(INT  ms,
     /*
      * Adjust the interrupt request number according to the parameters,
      * by adding an offset == 8 to the interrupt number.
-     * 
+     *
      * Indeed VDDs calling this function usually subtracts 8 so that they give:
      *
      *      ms     |  line  | corresponding interrupt number

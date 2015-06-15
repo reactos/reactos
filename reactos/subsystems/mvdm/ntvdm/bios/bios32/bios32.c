@@ -224,7 +224,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
                     Return = (Value & getBH()) != 0;
                     break;
                 }
-                
+
                 /* Test and return if zero */
                 case 4:
                 {
@@ -554,15 +554,11 @@ VOID EnableHwIRQ(UCHAR hwirq, EMULATOR_INT32_PROC func)
 }
 
 
-VOID PicIRQComplete(LPWORD Stack)
+VOID PicIRQComplete(BYTE IntNum)
 {
-    /* Get the interrupt number */
-    BYTE IntNum = LOBYTE(Stack[STACK_INT_NUM]);
-
     /*
      * If this was a PIC IRQ, send an End-of-Interrupt to the PIC.
      */
-
     if (IntNum >= BIOS_PIC_MASTER_INT && IntNum < BIOS_PIC_MASTER_INT + 8)
     {
         /* It was an IRQ from the master PIC */
@@ -585,7 +581,7 @@ static VOID WINAPI BiosHandleMasterPicIRQ(LPWORD Stack)
 
     DPRINT("Master - IrqNumber = 0x%02X\n", IrqNumber);
 
-    PicIRQComplete(Stack);
+    PicIRQComplete(LOBYTE(Stack[STACK_INT_NUM]));
 }
 
 static VOID WINAPI BiosHandleSlavePicIRQ(LPWORD Stack)
@@ -597,7 +593,7 @@ static VOID WINAPI BiosHandleSlavePicIRQ(LPWORD Stack)
 
     DPRINT("Slave - IrqNumber = 0x%02X\n", IrqNumber);
 
-    PicIRQComplete(Stack);
+    PicIRQComplete(LOBYTE(Stack[STACK_INT_NUM]));
 }
 
 // Timer IRQ 0
@@ -612,7 +608,7 @@ static VOID WINAPI BiosTimerIrq(LPWORD Stack)
      */
     Int32Call(&BiosContext, BIOS_SYS_TIMER_INTERRUPT);
     // BiosSystemTimerInterrupt(Stack);
-    PicIRQComplete(Stack);
+    PicIRQComplete(LOBYTE(Stack[STACK_INT_NUM]));
 }
 
 
@@ -795,15 +791,17 @@ Bios32Post(LPWORD Stack)
     /* Disable interrupts */
     setIF(0);
 
+    /* Set the data segment */
+    setDS(BDA_SEGMENT);
+
     /* Initialize the stack */
-    // That's what says IBM... (stack at 30:00FF going downwards)
+    // Temporary stack for POST (to be used only before initializing the INT vectors)
     // setSS(0x0000);
     // setSP(0x0400);
-    setSS(0x0050);  // Stack at 50:0400, going downwards
-    setSP(0x0400);
-
-    /* Set data segment */
-    setDS(BDA_SEGMENT);
+    //
+    // Stack to be used after the initialization of the INT vectors
+    setSS(0x0000);  // Stack at 00:8000, going downwards
+    setSP(0x8000);
 
     /*
      * Perform early CMOS shutdown status checks
@@ -911,6 +909,9 @@ Bios32Post(LPWORD Stack)
     /* Initialize the BDA and the BIOS ROM Information */
     InitializeBiosData();
     InitializeBiosInfo();
+
+    /* Initialize the User Data Area at 0050:XXXX */
+    RtlZeroMemory(SEG_OFF_TO_PTR(0x50, 0x0000), sizeof(USER_DATA_AREA));
 
     /*
      * Initialize IVT and hardware

@@ -339,7 +339,7 @@ static VOID WINAPI DosMouseIrq(LPWORD Stack)
     DosUpdateButtons(ButtonState);
 
     /* Complete the IRQ */
-    PicIRQComplete(Stack);
+    PicIRQComplete(LOBYTE(Stack[STACK_INT_NUM]));
 }
 
 static VOID WINAPI DosMouseService(LPWORD Stack)

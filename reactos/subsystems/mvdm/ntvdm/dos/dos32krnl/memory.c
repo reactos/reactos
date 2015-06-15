@@ -274,7 +274,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
 
             /* It is, split it into two blocks */
             NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
-    
+
             /* Initialize the new MCB structure */
             NextMcb->BlockType = Mcb->BlockType;
             NextMcb->Size = Mcb->Size - NewSize - 1;
@@ -312,7 +312,7 @@ Done:
         /* Return the maximum possible size */
         if (MaxAvailable) *MaxAvailable = ReturnSize;
     }
-    
+
     return Success;
 }
 
@@ -402,3 +402,26 @@ VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
     Mcb->OwnerPsp = NewOwner;
 }
 
+VOID DosInitializeMemory(VOID)
+{
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT);
+
+    /* Initialize the MCB */
+    Mcb->BlockType = 'Z';
+    Mcb->Size = USER_MEMORY_SIZE;
+    Mcb->OwnerPsp = 0;
+
+    /* Initialize the link MCB to the UMB area */
+    Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT + USER_MEMORY_SIZE + 1);
+    Mcb->BlockType = 'M';
+    Mcb->Size = UMB_START_SEGMENT - FIRST_MCB_SEGMENT - USER_MEMORY_SIZE - 2;
+    Mcb->OwnerPsp = SYSTEM_PSP;
+
+    /* Initialize the UMB area */
+    Mcb = SEGMENT_TO_MCB(UMB_START_SEGMENT);
+    Mcb->BlockType = 'Z';
+    Mcb->Size = UMB_END_SEGMENT - UMB_START_SEGMENT;
+    Mcb->OwnerPsp = 0;
+}
+
+/* EOF */

@@ -30,8 +30,6 @@
 #undef FreeEnvironmentStrings
 #define FreeEnvironmentStrings FreeEnvironmentStringsA
 
-#define CHARACTER_ADDRESS 0x007000FF /* 0070:00FF */
-
 /* PRIVATE VARIABLES **********************************************************/
 
 // static BYTE CurrentDrive;
@@ -102,39 +100,10 @@ VOID DosPrintCharacter(WORD FileHandle, CHAR Character)
                  &BytesWritten);
 }
 
-BOOLEAN DosBIOSInitialize(VOID)
+BOOLEAN DosBuildSysEnvBlock(VOID)
 {
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT);
-
     LPSTR SourcePtr, Environment;
     LPSTR DestPtr = (LPSTR)SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0);
-
-#if 0
-    UCHAR i;
-    CHAR CurrentDirectory[MAX_PATH];
-    CHAR DosDirectory[DOS_DIR_LENGTH];
-    LPSTR Path;
-
-    FILE *Stream;
-    WCHAR Buffer[256];
-#endif
-
-    /* Initialize the MCB */
-    Mcb->BlockType = 'Z';
-    Mcb->Size = USER_MEMORY_SIZE;
-    Mcb->OwnerPsp = 0;
-
-    /* Initialize the link MCB to the UMB area */
-    Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT + USER_MEMORY_SIZE + 1);
-    Mcb->BlockType = 'M';
-    Mcb->Size = UMB_START_SEGMENT - FIRST_MCB_SEGMENT - USER_MEMORY_SIZE - 2;
-    Mcb->OwnerPsp = SYSTEM_PSP;
-
-    /* Initialize the UMB area */
-    Mcb = SEGMENT_TO_MCB(UMB_START_SEGMENT);
-    Mcb->BlockType = 'Z';
-    Mcb->Size = UMB_END_SEGMENT - UMB_START_SEGMENT;
-    Mcb->OwnerPsp = 0;
 
     /* Get the environment strings */
     SourcePtr = Environment = GetEnvironmentStrings();
@@ -177,6 +146,40 @@ BOOLEAN DosBIOSInitialize(VOID)
 
     /* Free the memory allocated for environment strings */
     FreeEnvironmentStrings(Environment);
+
+    return TRUE;
+}
+
+BOOLEAN DosBIOSInitialize(VOID)
+{
+#if 0
+    UCHAR i;
+    CHAR CurrentDirectory[MAX_PATH];
+    CHAR DosDirectory[DOS_DIR_LENGTH];
+    LPSTR Path;
+
+    FILE *Stream;
+    WCHAR Buffer[256];
+#endif
+
+    /* Set the data segment */
+    setDS(DOS_DATA_SEGMENT);
+
+    /* Initialize the DOS stack */
+    // Stack just before FIRST_MCB_SEGMENT and after SYSTEM_ENV_BLOCK
+    // FIXME: Add a block of fixed size for the stack in DOS_DATA instead!
+    setSS(0x0F00);
+    setSP(0x0FF0);
+    setBP(0x091E); // DOS base stack pointer relic value
+
+    /* Initialize memory management */
+    DosInitializeMemory();
+
+    /* Build the system master environment block (inherited by the shell) */
+    if (!DosBuildSysEnvBlock())
+    {
+        DPRINT1("An error occurred when setting up the system environment block.\n");
+    }
 
 
 #if 0

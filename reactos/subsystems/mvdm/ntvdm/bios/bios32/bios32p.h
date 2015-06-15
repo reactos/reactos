@@ -40,7 +40,7 @@ do { \
 } while(0);
 
 VOID EnableHwIRQ(UCHAR hwirq, EMULATOR_INT32_PROC func);
-VOID PicIRQComplete(LPWORD Stack);
+VOID PicIRQComplete(BYTE IntNum);
 
 #endif // _BIOS32P_H_
 

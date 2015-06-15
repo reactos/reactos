@@ -8,16 +8,16 @@
 
 /* DEFINITIONS ****************************************************************/
 
-#define DOS_CMDLINE_LENGTH 127
+#define DOS_CMDLINE_LENGTH   127
 #define DOS_PROGRAM_NAME_TAG 0x0001
 
-#define SEGMENT_TO_PSP(seg) ((PDOS_PSP)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
+#define SEGMENT_TO_PSP(seg) ((PDOS_PSP)SEG_OFF_TO_PTR((seg), 0))
 
 typedef enum
 {
     DOS_LOAD_AND_EXECUTE = 0x00,
-    DOS_LOAD_ONLY = 0x01,
-    DOS_LOAD_OVERLAY = 0x03
+    DOS_LOAD_ONLY        = 0x01,
+    DOS_LOAD_OVERLAY     = 0x03
 } DOS_EXEC_TYPE;
 
 #pragma pack(push, 1)
@@ -75,13 +75,11 @@ typedef struct _DOS_EXEC_PARAM_BLOCK
 typedef struct _DOS_REGISTER_STATE
 {
     WORD AX, BX, CX, DX, SI, DI, BP, DS, ES;
+//  WORD IP, CS, Flags; // They are supposed to be already
+                        // pushed on stack by the DOS caller.
 } DOS_REGISTER_STATE, *PDOS_REGISTER_STATE;
 
 #pragma pack(pop)
-
-/* VARIABLES ******************************************************************/
-
-extern WORD CurrentPsp;
 
 /* FUNCTIONS ******************************************************************/
 

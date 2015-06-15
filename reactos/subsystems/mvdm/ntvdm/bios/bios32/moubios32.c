@@ -26,7 +26,7 @@
 // Mouse IRQ 12
 static VOID WINAPI BiosMouseIrq(LPWORD Stack)
 {
-    PicIRQComplete(Stack);
+    PicIRQComplete(LOBYTE(Stack[STACK_INT_NUM]));
 }
 
 VOID BiosMousePs2Interface(LPWORD Stack)

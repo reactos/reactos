@@ -777,7 +777,7 @@ static BOOLEAN VgaInitializePalette(VOID)
                                   VGA_MAX_COLORS * sizeof(PALETTEENTRY));
     TextPalette = RtlAllocateHeap(RtlGetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
-                                  sizeof(LOGPALETTE) + 
+                                  sizeof(LOGPALETTE) +
                                       (VGA_AC_PAL_F_REG + 1) * sizeof(PALETTEENTRY));
     if ((Palette == NULL) || (TextPalette == NULL)) goto Cleanup;
 
@@ -1461,7 +1461,7 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
 
         case VGA_SEQ_INDEX:
             return VgaSeqIndex;
-        
+
         case VGA_SEQ_DATA:
             return VgaSeqRegisters[VgaSeqIndex];
 
@@ -1985,7 +1985,7 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
         for (i = 0; i < Size; i++)
         {
             VideoAddress = VgaTranslateReadAddress(Address + i);
-    
+
             /* Copy the value to the buffer */
             BufPtr[i] = VgaMemory[VideoAddress];
         }

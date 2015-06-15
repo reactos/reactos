@@ -27,7 +27,7 @@ typedef BOOLEAN
     ULONG Address,
     PVOID Buffer,
     ULONG Size
-); 
+);
 
 /* FUNCTIONS ******************************************************************/
 

@@ -111,14 +111,32 @@ typedef struct
     DWORD EGAPtr;                               // 0xa8
     BYTE Reserved12[68];                        // 0xac
     BYTE Reserved13[16];                        // 0xf0
-
-    DWORD Reserved14;                           // 0x100
-    BYTE Reserved15[12];                        // 0x104
-    BYTE Reserved16[17];                        // 0x110
-    BYTE Reserved17[15];                        // 0x121
-    BYTE Reserved18[3];                         // 0x130
 } BIOS_DATA_AREA, *PBIOS_DATA_AREA;
-C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x133);
+C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x100);
+
+/*
+ * User Data Area at 0050:XXXX
+ *
+ * See: http://helppc.netcore2k.net/table/memory-map
+ * for more information.
+ */
+typedef struct
+{
+    BYTE PrintScreen;                           // 0x00
+    BYTE Basic0[3];                             // 0x01
+    BYTE SingleDisketteFlag;                    // 0x04
+    BYTE PostArea[10];                          // 0x05
+    BYTE Basic1;                                // 0x0f
+    WORD Basic2;                                // 0x10
+    DWORD Basic3;                               // 0x12
+    DWORD Basic4;                               // 0x16
+    DWORD Basic5;                               // 0x1a
+    WORD Reserved0;                             // 0x1e
+    WORD DynStorage;                            // 0x20
+    BYTE DisketteInitStorage[14];               // 0x22
+    DWORD Reserved1;                            // 0x30
+} USER_DATA_AREA, *PUSER_DATA_AREA;
+C_ASSERT(sizeof(USER_DATA_AREA) == 0x34);
 
 /*
  * BIOS Configuration Table at F000:E6F5 for 100% compatible BIOSes.

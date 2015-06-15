@@ -11,7 +11,7 @@
 
 /* TYPEDEFS *******************************************************************/
 
-#define SEGMENT_TO_MCB(seg) ((PDOS_MCB)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
+#define SEGMENT_TO_MCB(seg) ((PDOS_MCB)SEG_OFF_TO_PTR((seg), 0))
 
 enum DOS_ALLOC_STRATEGY
 {
@@ -44,6 +44,8 @@ BOOLEAN DosFreeMemory(WORD BlockData);
 BOOLEAN DosLinkUmb(VOID);
 BOOLEAN DosUnlinkUmb(VOID);
 VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner);
+
+VOID DosInitializeMemory(VOID);
 
 #endif // _DOS_MEMORY_H_
 

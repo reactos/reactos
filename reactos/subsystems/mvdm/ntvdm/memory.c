@@ -149,7 +149,7 @@ VOID FASTCALL EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buff
     if (Address >= 0xFFFFFFF0) Address -= 0xFFF00000;
 
     /* If the A20 line is disabled, mask bit 20 */
-    if (!A20Line) Address &= ~(1 << 20); 
+    if (!A20Line) Address &= ~(1 << 20);
 
     if ((Address + Size - 1) >= MAX_ADDRESS)
     {
@@ -171,7 +171,7 @@ VOID FASTCALL EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buff
     }
     else
     {
-        for (i = FirstPage; i <= LastPage; i++) 
+        for (i = FirstPage; i <= LastPage; i++)
         {
             Offset = (i == FirstPage) ? (Address & (PAGE_SIZE - 1)) : 0;
             Length = ((i == LastPage) ? (Address + Size - (LastPage << 12)) : PAGE_SIZE) - Offset;
@@ -190,7 +190,7 @@ VOID FASTCALL EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buf
     UNREFERENCED_PARAMETER(State);
 
     /* If the A20 line is disabled, mask bit 20 */
-    if (!A20Line) Address &= ~(1 << 20); 
+    if (!A20Line) Address &= ~(1 << 20);
 
     if (Address >= MAX_ADDRESS) return;
     Size = min(Size, MAX_ADDRESS - Address);
@@ -204,7 +204,7 @@ VOID FASTCALL EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buf
     }
     else
     {
-        for (i = FirstPage; i <= LastPage; i++) 
+        for (i = FirstPage; i <= LastPage; i++)
         {
             Offset = (i == FirstPage) ? (Address & (PAGE_SIZE - 1)) : 0;
             Length = ((i == LastPage) ? (Address + Size - (LastPage << 12)) : PAGE_SIZE) - Offset;

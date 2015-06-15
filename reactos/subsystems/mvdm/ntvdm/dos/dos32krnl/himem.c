@@ -485,7 +485,7 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
 
             if (Entry && Entry->Handle != 0)
             {
-                INT i;
+                UINT i;
                 UCHAR Handles = 0;
 
                 for (i = 0; i < XMS_MAX_HANDLES; i++)
@@ -557,7 +557,7 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         {
             WORD Segment;
             WORD MaxAvailable;
-            
+
             Segment = DosResizeMemory(getDX(), getBX(), &MaxAvailable);
 
             if (Segment)

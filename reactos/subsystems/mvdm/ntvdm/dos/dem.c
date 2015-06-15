@@ -16,6 +16,8 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
+#include <isvbop.h>
+
 #include "utils.h"
 
 #include "dem.h"
@@ -40,18 +42,18 @@ static VOID WINAPI DosSystemBop(LPWORD Stack)
 
     switch (FuncNum)
     {
-        case 0x11:  // Load the DOS kernel
+        /* Load the DOS kernel */
+        case 0x11:
         {
             BOOLEAN Success = FALSE;
+            LPCSTR  DosKernelFileName = "ntdos.sys";
             HANDLE  hDosKernel;
             ULONG   ulDosKernelSize = 0;
 
             DPRINT1("You are loading Windows NT DOS!\n");
 
             /* Open the DOS kernel file */
-            hDosKernel = FileOpen("ntdos.sys", &ulDosKernelSize);
-
-            /* If we failed, bail out */
+            hDosKernel = FileOpen(DosKernelFileName, &ulDosKernelSize);
             if (hDosKernel == NULL) goto Quit;
 
             /*
@@ -64,7 +66,8 @@ static VOID WINAPI DosSystemBop(LPWORD Stack)
                                        ulDosKernelSize,
                                        &ulDosKernelSize);
 
-            DPRINT1("Windows NT DOS loading %s at %04X:%04X, size 0x%X ; GetLastError() = %u\n",
+            DPRINT1("Windows NT DOS file '%s' loading %s at %04X:%04X, size 0x%X ; GetLastError() = %u\n",
+                    DosKernelFileName,
                     (Success ? "succeeded" : "failed"),
                     getDI(), 0x0000,
                     ulDosKernelSize,
@@ -77,6 +80,8 @@ Quit:
             if (!Success)
             {
                 /* We failed everything, stop the VDM */
+                DisplayMessage(L"Windows NT DOS kernel file '%S' loading failed (Error: %u). The VDM will shut down.",
+                               DosKernelFileName, GetLastError());
                 EmulatorTerminate();
                 return;
             }
@@ -301,16 +306,16 @@ ULONG SessionId = 0;
 //
 
 /* 16-bit bootstrap code at 0000:7C00 */
-/* Of course, this is not in real bootsector format, because we don't care */
+/* Of course, this is not in real bootsector format, because we don't care about it for now */
 static BYTE Bootsector1[] =
 {
-    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_LOAD_DOS,  // Call DOS Loading
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_LOAD_DOS
 };
 /* This portion of code is run if we failed to load the DOS */
+// NOTE: This may also be done by the BIOS32.
 static BYTE Bootsector2[] =
 {
-    0xEA,                   // jmp far ptr
-    0x5B, 0xE0, 0x00, 0xF0, // F000:E05B /** HACK! What to do instead?? **/
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_UNSIMULATE
 };
 
 static VOID WINAPI DosInitialize(LPWORD Stack);
@@ -319,7 +324,7 @@ VOID DosBootsectorInitialize(VOID)
 {
     /* We write the bootsector at 0000:7C00 */
     ULONG_PTR Address = (ULONG_PTR)SEG_OFF_TO_PTR(0x0000, 0x7C00);
-    CHAR DosKernelFileName[] = ""; // No DOS file name, therefore we'll load DOS32
+    CHAR DosKernelFileName[] = ""; // No DOS BIOS file name, therefore we will load DOS32
 
     DPRINT("DosBootsectorInitialize\n");
 
@@ -336,43 +341,47 @@ VOID DosBootsectorInitialize(VOID)
 
 
 //
-// This function is called by the DOS bootsector. We finish to load
-// the DOS, then we jump to 0070:0000.
+// This function is called by the DOS bootsector in case we load DOS32.
+// It sets up the DOS32 start code then jumps to 0070:0000.
 //
 
-/* 16-bit startup code at 0070:0000 */
+/* 16-bit startup code for DOS32 at 0070:0000 */
 static BYTE Startup[] =
 {
-    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_START_DOS,  // Call DOS Start
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_START_DOS,
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_UNSIMULATE
 };
 
 static VOID WINAPI DosStart(LPWORD Stack);
 
 static VOID WINAPI DosInitialize(LPWORD Stack)
 {
-    BOOLEAN Success = FALSE;
-
-    /* Get the DOS kernel file name (NULL-terminated) */
+    /* Get the DOS BIOS file name (NULL-terminated) */
     // FIXME: Isn't it possible to use some DS:SI instead??
-    LPCSTR DosKernelFileName = (LPCSTR)SEG_OFF_TO_PTR(getCS(), getIP());
-    setIP(getIP() + strlen(DosKernelFileName) + 1); // Skip it
+    LPCSTR DosBiosFileName = (LPCSTR)SEG_OFF_TO_PTR(getCS(), getIP());
+    setIP(getIP() + strlen(DosBiosFileName) + 1); // Skip it
 
-    DPRINT("DosInitialize('%s')\n", DosKernelFileName);
+    DPRINT("DosInitialize('%s')\n", DosBiosFileName);
+
+    /*
+     * We succeeded, deregister the DOS Loading BOP
+     * so that no app will be able to call us back.
+     */
+    RegisterBop(BOP_LOAD_DOS, NULL);
 
     /* Register the DOS BOPs */
     RegisterBop(BOP_DOS, DosSystemBop        );
     RegisterBop(BOP_CMD, DosCmdInterpreterBop);
 
-    if (DosKernelFileName && DosKernelFileName[0] != '\0')
+    if (DosBiosFileName && DosBiosFileName[0] != '\0')
     {
+        BOOLEAN Success = FALSE;
         HANDLE  hDosBios;
         ULONG   ulDosBiosSize = 0;
 
         /* Open the DOS BIOS file */
-        hDosBios = FileOpen(DosKernelFileName, &ulDosBiosSize);
-
-        /* If we failed, bail out */
-        if (hDosBios == NULL) goto QuitCustom;
+        hDosBios = FileOpen(DosBiosFileName, &ulDosBiosSize);
+        if (hDosBios == NULL) goto Quit;
 
         /* Attempt to load the DOS BIOS into memory */
         Success = FileLoadByHandle(hDosBios,
@@ -380,7 +389,8 @@ static VOID WINAPI DosInitialize(LPWORD Stack)
                                    ulDosBiosSize,
                                    &ulDosBiosSize);
 
-        DPRINT1("DOS BIOS loading %s at %04X:%04X, size 0x%X ; GetLastError() = %u\n",
+        DPRINT1("DOS BIOS file '%s' loading %s at %04X:%04X, size 0x%X ; GetLastError() = %u\n",
+                DosBiosFileName,
                 (Success ? "succeeded" : "failed"),
                 0x0070, 0x0000,
                 ulDosBiosSize,
@@ -389,52 +399,32 @@ static VOID WINAPI DosInitialize(LPWORD Stack)
         /* Close the DOS BIOS file */
         FileClose(hDosBios);
 
-        if (!Success) goto QuitCustom;
-
-        /* Position execution pointers and return */
-        setCS(0x0070);
-        setIP(0x0000);
-
-        /* Return control */
-QuitCustom:
+Quit:
         if (!Success)
-            DisplayMessage(L"Custom DOS '%S' loading failed, what to do??", DosKernelFileName);
+        {
+            DisplayMessage(L"DOS BIOS file '%S' loading failed (Error: %u). The VDM will shut down.",
+                           DosBiosFileName, GetLastError());
+            return;
+        }
     }
     else
     {
-        Success = DosBIOSInitialize();
-        // Success &= DosKRNLInitialize();
-
-        if (!Success) goto Quit32;
-
-        /* Write the "bootsector" */
+        /* Load the 16-bit startup code for DOS32 and register its Starting BOP */
         RtlCopyMemory(SEG_OFF_TO_PTR(0x0070, 0x0000), Startup, sizeof(Startup));
 
-        /* Register the DOS Starting BOP */
+        // This is the equivalent of BOP_LOAD_DOS, function 0x11 "Load the DOS kernel"
+        // for the Windows NT DOS.
         RegisterBop(BOP_START_DOS, DosStart);
-
-        /* Position execution pointers and return */
-        setCS(0x0070);
-        setIP(0x0000);
-
-        /* Return control */
-Quit32:
-        if (!Success)
-            DisplayMessage(L"DOS32 loading failed, what to do??");
     }
 
-    if (Success)
-    {
-        /*
-         * We succeeded, deregister the DOS Loading BOP
-         * so that no app will be able to call us back.
-         */
-        RegisterBop(BOP_LOAD_DOS, NULL);
-    }
+    /* Position execution pointers for DOS startup and return */
+    setCS(0x0070);
+    setIP(0x0000);
 }
 
 static VOID WINAPI DosStart(LPWORD Stack)
 {
+    BOOLEAN Success;
 #ifdef STANDALONE
     DWORD Result;
     CHAR ApplicationName[MAX_PATH];
@@ -450,6 +440,15 @@ static VOID WINAPI DosStart(LPWORD Stack)
      * so that no app will be able to call us back.
      */
     RegisterBop(BOP_START_DOS, NULL);
+
+    Success  = DosBIOSInitialize();
+//  Success &= DosKRNLInitialize();
+    if (!Success)
+    {
+        DisplayMessage(L"DOS32 loading failed (Error: %u). The VDM will shut down.", GetLastError());
+        EmulatorTerminate();
+        return;
+    }
 
     /* Load the mouse driver */
     DosMouseInitialize();

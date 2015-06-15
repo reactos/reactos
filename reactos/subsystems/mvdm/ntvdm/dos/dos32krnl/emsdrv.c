@@ -153,7 +153,7 @@ static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
     }
 
     PageEntry = GetLogicalPage(HandleEntry, LogicalPage);
-    if (!PageEntry) return EMS_STATUS_INV_LOGICAL_PAGE; 
+    if (!PageEntry) return EMS_STATUS_INV_LOGICAL_PAGE;
 
     Mapping[PhysicalPage] = (PVOID)((ULONG_PTR)EmsMemory
                             + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE);
@@ -500,7 +500,6 @@ BOOLEAN EmsDrvInitialize(ULONG TotalPages)
                              EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE,
                              EmsReadMemory,
                              EmsWriteMemory);
-
 
     /* Create the device */
     Node = DosCreateDeviceEx(DOS_DEVATTR_IOCTL | DOS_DEVATTR_CHARACTER,

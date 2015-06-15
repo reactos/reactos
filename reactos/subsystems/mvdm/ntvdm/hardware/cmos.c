@@ -105,7 +105,7 @@ static VOID CmosWriteAddress(BYTE Value)
 {
     /* Update the NMI enabled flag */
     NmiEnabled = !(Value & CMOS_DISABLE_NMI);
-    
+
     /* Get the register number */
     Value &= ~CMOS_DISABLE_NMI;
 

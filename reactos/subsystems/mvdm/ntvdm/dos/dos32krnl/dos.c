@@ -1502,7 +1502,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             /* Return the DOS "list of lists" in ES:BX */
             setES(DOS_DATA_SEGMENT);
             setBX(DOS_DATA_OFFSET(SysVars.FirstDpb));
-
             break;
         }
 
@@ -1877,6 +1876,7 @@ VOID WINAPI DosAbsoluteRead(LPWORD Stack)
     /*
      * This call should leave the flags on the stack for some reason,
      * so move the stack by one word.
+     * See: http://www.techhelpmanual.com/565-int_25h_26h__absolute_disk_read_write.html
      */
     Stack[STACK_INT_NUM] = Stack[STACK_IP];
     Stack[STACK_IP] = Stack[STACK_CS];
@@ -1896,6 +1896,7 @@ VOID WINAPI DosAbsoluteWrite(LPWORD Stack)
     /*
      * This call should leave the flags on the stack for some reason,
      * so move the stack by one word.
+     * See: http://www.techhelpmanual.com/565-int_25h_26h__absolute_disk_read_write.html
      */
     Stack[STACK_INT_NUM] = Stack[STACK_IP];
     Stack[STACK_IP] = Stack[STACK_CS];
@@ -1966,19 +1967,27 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
             DWORD DriverEntry;
             if (!XmsGetDriverEntry(&DriverEntry)) break;
 
-            if (getAL() == 0x00)
+            switch (getAL())
             {
-                /* The driver is loaded */
-                setAL(0x80);
-            }
-            else if (getAL() == 0x10)
-            {
-                setES(HIWORD(DriverEntry));
-                setBX(LOWORD(DriverEntry));
-            }
-            else
-            {
-                DPRINT1("Unknown DOS XMS Function: INT 0x2F, AH = 43h, AL = %xh\n", getAL());
+                /* Installation Check */
+                case 0x00:
+                {
+                    /* The driver is loaded */
+                    setAL(0x80);
+                    break;
+                }
+
+                /* Get Driver Address */
+                case 0x10:
+                {
+                    setES(HIWORD(DriverEntry));
+                    setBX(LOWORD(DriverEntry));
+                    break;
+                }
+
+                default:
+                    DPRINT1("Unknown DOS XMS Function: INT 0x2F, AH = 43h, AL = %xh\n", getAL());
+                    break;
             }
 
             break;
@@ -2125,7 +2134,7 @@ BOOLEAN DosKRNLInitialize(VOID)
     RegisterDosInt32(0x27, DosInt27h        ); // Terminate and Stay Resident
     RegisterDosInt32(0x28, DosIdle          ); // DOS Idle Interrupt
     RegisterDosInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
-    RegisterDosInt32(0x2F, DosInt2Fh        );
+    RegisterDosInt32(0x2F, DosInt2Fh        ); // Multiplex Interrupt
 
     /* Unimplemented DOS interrupts */
     RegisterDosInt32(0x2A, NULL); // Network - Installation Check
