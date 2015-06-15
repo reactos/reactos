@@ -2938,19 +2938,16 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
     CurrentFileSystem = PartEntry->FileSystem;
-    if (CurrentFileSystem->FileSystemName == NULL)
+    if (CurrentFileSystem == NULL || CurrentFileSystem->FileSystemName == NULL)
     {
         if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
             (PartEntry->PartitionType == PARTITION_FAT_16) ||
             (PartEntry->PartitionType == PARTITION_HUGE) ||
-            (PartEntry->PartitionType == PARTITION_XINT13))
+            (PartEntry->PartitionType == PARTITION_XINT13) ||
+            (PartEntry->PartitionType == PARTITION_FAT32) ||
+            (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
         {
             FileSystemName = L"FAT";
-        }
-        else if ((PartEntry->PartitionType == PARTITION_FAT32) ||
-                 (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-        {
-            FileSystemName = L"FAT32";
         }
         else if (PartEntry->PartitionType == PARTITION_EXT2)
         {
@@ -2961,12 +2958,21 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
             FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
         }
 
+        DPRINT("FileSystemName: %S\n", FileSystemName);
+
         if (FileSystemName != NULL)
             CurrentFileSystem = GetFileSystemByName(FileSystemList,
                                                     FileSystemName);
     }
 
-    if (CurrentFileSystem == NULL || CurrentFileSystem->ChkdskFunc == NULL)
+    /* HACK: Do not try to check a partition with an unknown filesytem */
+    if (CurrentFileSystem == NULL)
+    {
+        PartEntry->NeedsCheck = FALSE;
+        return CHECK_FILE_SYSTEM_PAGE;
+    }
+
+    if (CurrentFileSystem->ChkdskFunc == NULL)
     {
         sprintf(Buffer,
                 "Setup is currently unable to check a partition formatted in %S.\n"
