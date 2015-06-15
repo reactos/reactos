@@ -29,6 +29,9 @@ Environment:
 #include "cdrw_hw.h"
 //#include "ntdddisk.h"
 
+#include <ntddcdrm.h>
+#include <ntddcdvd.h>
+
 #ifndef CTL_CODE
 #pragma pack(push, 8)
 #include "winioctl.h"
@@ -53,62 +56,9 @@ Environment:
 #define FILE_DEVICE_CDRW        0x00000999
 #endif
 
-#ifndef FILE_DEVICE_CD_ROM
-#define FILE_DEVICE_CD_ROM      0x00000002
-#endif  //FILE_DEVICE_CD_ROM
-
-#ifndef IOCTL_CDROM_BASE
-#define IOCTL_CDROM_BASE        FILE_DEVICE_CD_ROM
-#endif  //IOCTL_CDROM_BASE
-
-#ifndef FILE_DEVICE_DVD
-#define FILE_DEVICE_DVD         0x00000033
-#endif  //FILE_DEVICE_DVD
-
-#ifndef IOCTL_DVD_BASE
-#define IOCTL_DVD_BASE          FILE_DEVICE_DVD
-#endif  //IOCTL_DVD_BASE
-
-#ifndef FILE_DEVICE_DISK
-#define FILE_DEVICE_DISK        0x00000007
-#endif  //FILE_DEVICE_DISK
-
-#ifndef IOCTL_DISK_BASE
-#define IOCTL_DISK_BASE         FILE_DEVICE_DISK
-#endif  //IOCTL_DISK_BASE
-
-#ifndef IOCTL_CDROM_UNLOAD_DRIVER
-#define IOCTL_CDROM_UNLOAD_DRIVER    CTL_CODE(IOCTL_CDROM_BASE, 0x0402, METHOD_BUFFERED, FILE_READ_ACCESS)
-
-#define IOCTL_CDROM_READ_TOC         CTL_CODE(IOCTL_CDROM_BASE, 0x0000, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_GET_CONTROL      CTL_CODE(IOCTL_CDROM_BASE, 0x000D, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_PLAY_AUDIO_MSF   CTL_CODE(IOCTL_CDROM_BASE, 0x0006, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_SEEK_AUDIO_MSF   CTL_CODE(IOCTL_CDROM_BASE, 0x0001, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_STOP_AUDIO       CTL_CODE(IOCTL_CDROM_BASE, 0x0002, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_PAUSE_AUDIO      CTL_CODE(IOCTL_CDROM_BASE, 0x0003, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_RESUME_AUDIO     CTL_CODE(IOCTL_CDROM_BASE, 0x0004, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_GET_VOLUME       CTL_CODE(IOCTL_CDROM_BASE, 0x0005, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_SET_VOLUME       CTL_CODE(IOCTL_CDROM_BASE, 0x000A, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_READ_Q_CHANNEL   CTL_CODE(IOCTL_CDROM_BASE, 0x000B, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_GET_LAST_SESSION CTL_CODE(IOCTL_CDROM_BASE, 0x000E, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_RAW_READ         CTL_CODE(IOCTL_CDROM_BASE, 0x000F, METHOD_OUT_DIRECT,  FILE_READ_ACCESS)
-#define IOCTL_CDROM_DISK_TYPE        CTL_CODE(IOCTL_CDROM_BASE, 0x0010, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_CDROM_CHECK_VERIFY     CTL_CODE(IOCTL_CDROM_BASE, 0x0200, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_CDROM_MEDIA_REMOVAL    CTL_CODE(IOCTL_CDROM_BASE, 0x0201, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_CDROM_EJECT_MEDIA      CTL_CODE(IOCTL_CDROM_BASE, 0x0202, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_CDROM_LOAD_MEDIA       CTL_CODE(IOCTL_CDROM_BASE, 0x0203, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_RESERVE          CTL_CODE(IOCTL_CDROM_BASE, 0x0204, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_RELEASE          CTL_CODE(IOCTL_CDROM_BASE, 0x0205, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_FIND_NEW_DEVICES CTL_CODE(IOCTL_CDROM_BASE, 0x0206, METHOD_BUFFERED, FILE_READ_ACCESS)
-
-#define IOCTL_CDROM_GET_DRIVE_GEOMETRY    CTL_CODE(IOCTL_CDROM_BASE, 0x0013, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_GET_DRIVE_GEOMETRY_EX CTL_CODE(IOCTL_CDROM_BASE, 0x0014, METHOD_BUFFERED, FILE_READ_ACCESS)
-
-#define IOCTL_CDROM_READ_TOC_EX           CTL_CODE(IOCTL_CDROM_BASE, 0x0015, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_GET_CONFIGURATION     CTL_CODE(IOCTL_CDROM_BASE, 0x0016, METHOD_BUFFERED, FILE_READ_ACCESS)
-
-#endif  //IOCTL_CDROM_UNLOAD_DRIVER
 
 #ifdef CDRW_RESTRICT_ACCESS
 
@@ -1378,12 +1328,6 @@ typedef struct _GET_LAST_ERROR_USER_OUT {
 
 //**********************************************************************************************
 
-typedef enum _TRACK_MODE_TYPE {
-    YellowMode2,
-    XAForm2,
-    CDDA
-} TRACK_MODE_TYPE, *PTRACK_MODE_TYPE;
-
 typedef struct _RAW_READ_USER_IN {
     LARGE_INTEGER DiskOffset;
     ULONG    SectorCount;
@@ -1405,49 +1349,6 @@ typedef struct _PLAY_AUDIO_MSF_USER_IN {
 #define AudioStatus_PlayComplete    0x13
 #define AudioStatus_PlayError       0x14
 #define AudioStatus_NoStatus        0x15
-
-typedef struct _SUB_Q_HEADER {
-    UCHAR Reserved;
-    UCHAR AudioStatus;
-    UCHAR DataLength[2];
-} SUB_Q_HEADER, *PSUB_Q_HEADER;
-
-typedef struct _SUB_Q_CURRENT_POSITION {
-    SUB_Q_HEADER Header;
-    UCHAR FormatCode;
-    UCHAR Control : 4;
-    UCHAR ADR : 4;
-    UCHAR TrackNumber;
-    UCHAR IndexNumber;
-    UCHAR AbsoluteAddress[4];
-    UCHAR TrackRelativeAddress[4];
-} SUB_Q_CURRENT_POSITION, *PSUB_Q_CURRENT_POSITION;
-
-typedef struct _SUB_Q_MEDIA_CATALOG_NUMBER {
-    SUB_Q_HEADER Header;
-    UCHAR FormatCode;
-    UCHAR Reserved[3];
-    UCHAR Reserved1 : 7;
-    UCHAR Mcval : 1;
-    UCHAR MediaCatalog[15];
-} SUB_Q_MEDIA_CATALOG_NUMBER, *PSUB_Q_MEDIA_CATALOG_NUMBER;
-
-typedef struct _SUB_Q_TRACK_ISRC {
-    SUB_Q_HEADER Header;
-    UCHAR FormatCode;
-    UCHAR Reserved0;
-    UCHAR Track;
-    UCHAR Reserved1;
-    UCHAR Reserved2 : 7;
-    UCHAR Tcval : 1;
-    UCHAR TrackIsrc[15];
-} SUB_Q_TRACK_ISRC, *PSUB_Q_TRACK_ISRC;
-
-typedef union _SUB_Q_CHANNEL_DATA_USER_OUT {
-    SUB_Q_CURRENT_POSITION CurrentPosition;
-    SUB_Q_MEDIA_CATALOG_NUMBER MediaCatalog;
-    SUB_Q_TRACK_ISRC TrackIsrc;
-} SUB_Q_CHANNEL_DATA_USER_OUT, *PSUB_Q_CHANNEL_DATA_USER_OUT;
 
 #define IOCTL_CDROM_SUB_Q_CHANNEL    0x00
 #define IOCTL_CDROM_CURRENT_POSITION 0x01
@@ -1491,18 +1392,6 @@ typedef PREAD_TOC_ATIP  PREAD_ATIP_USER_OUT;
 
 typedef READ_TOC_CD_TEXT   READ_CD_TEXT_USER_OUT;
 typedef PREAD_TOC_CD_TEXT  PREAD_CD_TEXT_USER_OUT;
-
-//**********************************************************************************************
-
-typedef struct _VOLUME_CONTROL {
-    UCHAR PortVolume[4];
-} VOLUME_CONTROL, *PVOLUME_CONTROL;
-
-typedef VOLUME_CONTROL  VOLUME_CONTROL_USER_IN;
-typedef PVOLUME_CONTROL PVOLUME_CONTROL_USER_IN;
-
-typedef VOLUME_CONTROL  VOLUME_CONTROL_USER_OUT;
-typedef PVOLUME_CONTROL PVOLUME_CONTROL_USER_OUT;
 
 //**********************************************************************************************
 
@@ -1652,18 +1541,6 @@ typedef union _GET_EVENT_USER_OUT {
 
 //**********************************************************************************************
 
-
-//**********************************************************************************************
-
-typedef enum DVD_STRUCTURE_FORMAT {
-    DvdPhysicalDescriptor,
-    DvdCopyrightDescriptor,
-    DvdDiskKeyDescriptor,
-    DvdBCADescriptor,
-    DvdManufacturerDescriptor,
-    DvdMaxDescriptor
-} DVD_STRUCTURE_FORMAT, *PDVD_STRUCTURE_FORMAT;
-
 typedef ULONG DVD_SESSION_ID, *PDVD_SESSION_ID;
 
 typedef struct _DVD_READ_STRUCTURE_USER_IN {
@@ -1687,18 +1564,6 @@ typedef struct _DVD_START_SESSION_USER_OUT {
 
 //**********************************************************************************************
 
-typedef enum {
-    DvdChallengeKey = 0x01,
-    DvdBusKey1,
-    DvdBusKey2,
-    DvdTitleKey,
-    DvdAsf,
-    DvdSetRpcKey = 0x6,
-    DvdGetRpcKey = 0x8,
-    DvdDiskKey = 0x80,
-    DvdInvalidateAGID = 0x3f
-} DVD_KEY_TYPE;
-
 typedef struct _DVD_READ_KEY_USER_IN {
     ULONG KeyLength;
     DVD_SESSION_ID SessionId;
@@ -1711,9 +1576,6 @@ typedef struct _DVD_READ_KEY_USER_IN {
 //    UCHAR KeyData[0];
 } DVD_READ_KEY_USER_IN, *PDVD_READ_KEY_USER_IN;
 
-typedef DVD_READ_KEY_USER_IN  DVD_COPY_PROTECT_KEY;
-typedef PDVD_READ_KEY_USER_IN PDVD_COPY_PROTECT_KEY;
-
 typedef DVD_READ_KEY_USER_IN  DVD_READ_KEY_USER_OUT;
 typedef PDVD_READ_KEY_USER_IN PDVD_READ_KEY_USER_OUT;
 
@@ -1721,16 +1583,6 @@ typedef PDVD_READ_KEY_USER_IN PDVD_READ_KEY_USER_OUT;
 
 typedef DVD_START_SESSION_USER_OUT  DVD_END_SESSION_USER_IN;
 typedef PDVD_START_SESSION_USER_OUT PDVD_END_SESSION_USER_IN;
-
-//**********************************************************************************************
-
-typedef DVD_READ_KEY_USER_IN  DVD_SEND_KEY_USER_IN;
-typedef PDVD_READ_KEY_USER_IN PDVD_SEND_KEY_USER_IN;
-
-typedef struct _DVD_SET_RPC_KEY {
-    UCHAR PreferredDriveRegionCode;
-    UCHAR Reserved[3];
-} DVD_SET_RPC_KEY, * PDVD_SET_RPC_KEY;
 
 //**********************************************************************************************
 
@@ -1760,9 +1612,6 @@ typedef struct _CDROM_DISK_DATA_USER_OUT {
     ULONG DiskData;
 
 } CDROM_DISK_DATA_USER_OUT, *PCDROM_DISK_DATA_USER_OUT;
-
-#define CDROM_DISK_AUDIO_TRACK      (0x00000001)
-#define CDROM_DISK_DATA_TRACK       (0x00000002)
 
 //**********************************************************************************************
 

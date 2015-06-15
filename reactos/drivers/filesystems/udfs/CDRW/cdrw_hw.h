@@ -3540,36 +3540,6 @@ typedef struct _BD_WRITE_DESCRIPTOR {
 
 // DVD structure blocks
 
-typedef struct _DVD_DESCRIPTOR_HEADER {
-    UCHAR Length[2];
-    UCHAR Reserved[2];
-} DVD_DESCRIPTOR_HEADER, *PDVD_DESCRIPTOR_HEADER;
-
-typedef struct _DVD_LAYER_DESCRIPTOR {
-    DVD_DESCRIPTOR_HEADER Header;
-//    UCHAR Length[2];
-    UCHAR BookVersion : 4;     // Part Version
-    UCHAR BookType : 4;        // Disk Category
-
-    UCHAR MinimumRate : 4;
-    UCHAR DiskSize : 4;
-
-    UCHAR LayerType : 4;
-    UCHAR TrackPath : 1;
-    UCHAR NumberOfLayers : 2;
-    UCHAR Reserved1 : 1;
-
-    UCHAR TrackDensity : 4;
-    UCHAR LinearDensity : 4;
-
-    UCHAR StartingDataSector[4];
-    UCHAR EndDataSector[4];
-    UCHAR EndLayerZeroSector[4];
-    UCHAR Reserved5 : 7;
-    UCHAR BCAFlag : 1;
-    UCHAR Reserved6;
-} DVD_LAYER_DESCRIPTOR, *PDVD_LAYER_DESCRIPTOR;
-
 #define DvdBookType_ROM    0
 #define DvdBookType_RAM    1
 #define DvdBookType_R      2
@@ -3648,21 +3618,6 @@ typedef struct _CDVD_TITLE_KEY_HEADER {
     UCHAR Zero : 1;
     CDVD_KEY_DATA TitleKey;
 } CDVD_TITLE_KEY_HEADER, *PCDVD_TITLE_KEY_HEADER;
-
-typedef struct _DVD_COPYRIGHT_DESCRIPTOR {
-    UCHAR CopyrightProtectionType;
-    UCHAR RegionManagementInformation;
-    UCHAR Reserved[2];
-} DVD_COPYRIGHT_DESCRIPTOR, *PDVD_COPYRIGHT_DESCRIPTOR;
-
-typedef struct _DVD_RPC_KEY {
-    UCHAR UserResetsAvailable:3;
-    UCHAR ManufacturerResetsAvailable:3;
-    UCHAR TypeCode:2;
-    UCHAR RegionMask;
-    UCHAR RpcScheme;
-    UCHAR Reserved2[1];
-} DVD_RPC_KEY, * PDVD_RPC_KEY;
 
 #pragma pack(pop)
 
