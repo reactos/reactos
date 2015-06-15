@@ -27,8 +27,13 @@ typedef struct tagCOMMAND
     LPSTR name;
     INT flags;
     INT (*func)(PCONSOLE_STATE, LPSTR);
+    VOID (*help)(VOID);
 } COMMAND, *LPCOMMAND;
 
+
+static
+VOID
+HelpCls(VOID);
 
 static
 INT
@@ -37,10 +42,18 @@ CommandCls(
     LPSTR param);
 
 static
+VOID
+HelpDumpSector(VOID);
+
+static
 INT
 CommandDumpSector(
     PCONSOLE_STATE State,
     LPSTR param);
+
+static
+VOID
+HelpExit(VOID);
 
 static
 INT
@@ -49,18 +62,33 @@ CommandExit(
     LPSTR param);
 
 static
+VOID
+HelpHelp(VOID);
+
+static
 INT
 CommandHelp(
+    PCONSOLE_STATE State,
+    LPSTR param);
+
+static
+VOID
+HelpPartInfo(VOID);
+
+static
+INT
+CommandPartInfo(
     PCONSOLE_STATE State,
     LPSTR param);
 
 COMMAND
 Commands[] =
 {
-    {"cls", 0, CommandCls},
-    {"dumpsector", 0, CommandDumpSector},
-    {"exit", 0, CommandExit},
-    {"help", 0, CommandHelp},
+    {"cls", 0, CommandCls, HelpCls},
+    {"dumpsector", 0, CommandDumpSector, HelpDumpSector},
+    {"exit", 0, CommandExit, HelpExit},
+    {"help", 0, CommandHelp, HelpHelp},
+    {"partinfo", 0, CommandPartInfo, HelpPartInfo},
     {NULL, 0, NULL}
 };
 
@@ -220,36 +248,24 @@ split(
 
 
 static
+VOID
+HelpCls(VOID)
+{
+    CONSOLE_ConOutPrintf("CLS\n\nClears the screen.\n\n");
+}
+
+
+static
 INT
 CommandCls(
     PCONSOLE_STATE State,
     LPSTR param)
 {
-#if 0
-    HANDLE hOutput;
-    COORD coPos;
-    DWORD dwWritten;
-
-#if 0
-    if (!strncmp(param, "/?", 2))
+    if (!strcmp(param, "/?"))
     {
-        ConOutResPaging(TRUE,STRING_CLS_HELP);
+        HelpCls();
         return 0;
     }
-#endif
-
-    coPos.X = 0;
-    coPos.Y = 0;
-
-    hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    FillConsoleOutputAttribute(hOutput, csbi.wAttributes,
-                               State->maxx * State->maxy,
-                               coPos, &dwWritten);
-    FillConsoleOutputCharacter(hOutput, ' ',
-                               State->maxx * State->maxy,
-                               coPos, &dwWritten);
-    SetConsoleCursorPosition(hOutput, coPos);
-#endif
 
     CONSOLE_ClearScreen();
     CONSOLE_SetCursorXY(0, 0);
@@ -304,6 +320,15 @@ void HexDump(PUCHAR buffer, ULONG size)
     CONSOLE_ConOutPrintf("\n");
 }
 
+
+static
+VOID
+HelpDumpSector(VOID)
+{
+    CONSOLE_ConOutPrintf("DUMPSECT DiskNumber Sector\n\nDumps a disk sector to the screen.\n\n");
+}
+
+
 static
 INT
 CommandDumpSector(
@@ -327,9 +352,9 @@ CommandDumpSector(
 
     DPRINT1("param: %s\n", param);
 
-    if (!strncmp(param, "/?", 2))
+    if (!strcmp(param, "/?"))
     {
-        CONSOLE_ConOutPrintf("DUMPSECT DiskNumber Sector\n\nDumps a disk sector to the screen.\n\n");
+        HelpDumpSector();
         return 0;
     }
 
@@ -453,25 +478,36 @@ done:
 
 
 static
+VOID
+HelpExit(VOID)
+{
+    CONSOLE_ConOutPrintf("EXIT\n\nExits the repair console.\n\n");
+}
+
+
+static
 INT
 CommandExit(
     PCONSOLE_STATE State,
     LPSTR param)
 {
-#if 0
-    if (!strncmp(param, "/?", 2))
+    if (!strcmp(param, "/?"))
     {
-        ConOutResPaging(TRUE,STRING_EXIT_HELP);
-        /* Just make sure */
-        bExit = FALSE;
-        /* Dont exit */
+        HelpExit();
         return 0;
     }
-#endif
 
     State->bExit = TRUE;
 
     return 0;
+}
+
+
+static
+VOID
+HelpHelp(VOID)
+{
+    CONSOLE_ConOutPrintf("HELP [Command]\n\nShows help on repair console commands.\n\n");
 }
 
 
@@ -481,11 +517,196 @@ CommandHelp(
     PCONSOLE_STATE State,
     LPSTR param)
 {
+    LPCOMMAND cmdptr;
+
+    DPRINT1("param: %p %u '%s'\n", param, strlen(param), param);
+
+    if (!strcmp(param, "/?"))
+    {
+        HelpHelp();
+        return 0;
+    }
+
+    if (param != NULL && strlen(param) > 0)
+    {
+        for (cmdptr = Commands; cmdptr->name != NULL; cmdptr++)
+        {
+            if (!stricmp(param, cmdptr->name))
+            {
+                if (cmdptr->help != NULL)
+                {
+                    cmdptr->help();
+                    return 0;
+                }
+            }
+        }
+    }
+
     CONSOLE_ConOutPrintf("CLS\n");
     CONSOLE_ConOutPrintf("DUMPSECTOR\n");
     CONSOLE_ConOutPrintf("EXIT\n");
     CONSOLE_ConOutPrintf("HELP\n");
     CONSOLE_ConOutPrintf("\n");
+
+    return 0;
+}
+
+
+static
+VOID
+HelpPartInfo(VOID)
+{
+    CONSOLE_ConOutPrintf("PARTINFO DiskNumber\n\nDumps a partiton table to the screen.\n\n");
+}
+
+
+static
+INT
+CommandPartInfo(
+    PCONSOLE_STATE State,
+    LPSTR param)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING PathName;
+    HANDLE hDisk = NULL;
+    DISK_GEOMETRY DiskGeometry;
+    NTSTATUS Status;
+
+    LPTSTR *argv = NULL;
+    INT argc = 0;
+    WCHAR DriveName[40];
+    ULONG ulDrive, i;
+    PDRIVE_LAYOUT_INFORMATION LayoutBuffer = NULL;
+    PPARTITION_INFORMATION PartitionInfo;
+
+    DPRINT1("param: %s\n", param);
+
+    if (!strcmp(param, "/?"))
+    {
+        HelpPartInfo();
+        return 0;
+    }
+
+    argv = split(param, &argc);
+
+    DPRINT1("argc: %d\n", argc);
+    DPRINT1("argv: %p\n", argv);
+
+    if (argc != 1)
+    {
+        goto done;
+    }
+
+    DPRINT1("Device: %s\n", argv[0]);
+
+    ulDrive = strtoul(argv[0], NULL, 0);
+
+    /* Build full drive name */
+    swprintf(DriveName, L"\\Device\\Harddisk%lu\\Partition0", ulDrive);
+
+    RtlInitUnicodeString(&PathName,
+                         DriveName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PathName,
+                               OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&hDisk,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE | FILE_RANDOM_ACCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateFile failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = NtDeviceIoControlFile(hDisk,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                                   NULL,
+                                   0,
+                                   &DiskGeometry,
+                                   sizeof(DISK_GEOMETRY));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDeviceIoControlFile failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    CONSOLE_ConOutPrintf("Drive number: %lu\n", ulDrive);
+    CONSOLE_ConOutPrintf("Cylinders: %I64u\nMediaType: %x\nTracksPerCylinder: %lu\n"
+            "SectorsPerTrack: %lu\nBytesPerSector: %lu\n\n",
+            DiskGeometry.Cylinders.QuadPart,
+            DiskGeometry.MediaType,
+            DiskGeometry.TracksPerCylinder,
+            DiskGeometry.SectorsPerTrack,
+            DiskGeometry.BytesPerSector);
+
+    LayoutBuffer = RtlAllocateHeap(ProcessHeap,
+                                   HEAP_ZERO_MEMORY,
+                                   8192);
+    if (LayoutBuffer == NULL)
+    {
+        DPRINT1("LayoutBuffer allocation failed\n");
+        goto done;
+    }
+
+    Status = NtDeviceIoControlFile(hDisk,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_DISK_GET_DRIVE_LAYOUT,
+                                   NULL,
+                                   0,
+                                   LayoutBuffer,
+                                   8192);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDeviceIoControlFile(IOCTL_DISK_GET_DRIVE_LAYOUT) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    CONSOLE_ConOutPrintf("Partitions: %lu  Signature: %lx\n\n",
+                         LayoutBuffer->PartitionCount,
+                         LayoutBuffer->Signature);
+
+    CONSOLE_ConOutPrintf(" #            Start             Size        Hidden  Nr  Type  Boot\n");
+    CONSOLE_ConOutPrintf("--  ---------------  ---------------  ------------  --  ----  ----\n");
+
+    for (i = 0; i < LayoutBuffer->PartitionCount; i++)
+    {
+        PartitionInfo = &LayoutBuffer->PartitionEntry[i];
+
+        CONSOLE_ConOutPrintf("%2lu  %15I64u  %15I64u  %12lu  %2lu    %2x    %c\n",
+              i,
+              PartitionInfo->StartingOffset.QuadPart / DiskGeometry.BytesPerSector,
+              PartitionInfo->PartitionLength.QuadPart / DiskGeometry.BytesPerSector,
+              PartitionInfo->HiddenSectors,
+              PartitionInfo->PartitionNumber,
+              PartitionInfo->PartitionType,
+              PartitionInfo->BootIndicator ? '*': ' ');
+    }
+
+    CONSOLE_ConOutPrintf("\n");
+
+done:
+    if (LayoutBuffer != NULL)
+        RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
+
+    if (hDisk != NULL)
+        NtClose(hDisk);
+
+    freep(argv);
 
     return 0;
 }
@@ -696,7 +917,6 @@ ReadCommand(
                 if (str[0])
                     History (0, str);
 #endif
-                str[charcount++] = '\n';
                 str[charcount] = '\0';
                 CONSOLE_ConOutChar('\n');
                 bReturn = TRUE;
@@ -902,7 +1122,7 @@ DoCommand(
                 break;
             }
 
-            if (strcmp(com, cmdptr->name) == 0)
+            if (stricmp(com, cmdptr->name) == 0)
             {
                 cmdptr->func(State, rest);
                 break;
