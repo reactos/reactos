@@ -95,7 +95,7 @@ typedef unsigned int    BOOL;
 typedef unsigned long   DWORD;
 typedef unsigned char   BYTE;
 
-
+#ifndef __REACTOS__
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
     WORD   e_magic;                     // Magic number
     WORD   e_cblp;                      // Bytes on last page of file
@@ -184,9 +184,7 @@ typedef struct _IMAGE_NT_HEADERS {
     IMAGE_OPTIONAL_HEADER32 OptionalHeader;
 } IMAGE_NT_HEADERS32, *PIMAGE_NT_HEADERS32;
 typedef IMAGE_NT_HEADERS32                  IMAGE_NT_HEADERS;
-#ifdef _X86_
 typedef PIMAGE_NT_HEADERS32                 PIMAGE_NT_HEADERS;
-#endif
 
 #define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
 
@@ -203,6 +201,7 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
     DWORD   AddressOfNames;         // RVA from base of image
     DWORD   AddressOfNameOrdinals;  // RVA from base of image
 } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
+#endif
 
 #define IOCTL_DISK_GET_PARTITION_INFO_EX    CTL_CODE(IOCTL_DISK_BASE, 0x0012, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_DISK_GET_DRIVE_LAYOUT_EX      CTL_CODE(IOCTL_DISK_BASE, 0x0014, METHOD_BUFFERED, FILE_ANY_ACCESS)
