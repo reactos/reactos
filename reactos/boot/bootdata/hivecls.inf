@@ -285,6 +285,18 @@ HKCR,"sysfile","NoOpen",0x00000000,""
 HKCR,"sysfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-171"
 HKCR,"sysfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
+; MS Styles (Themes)
+HKCR,".msstyles","",0x00000000,"msstylesfile"
+HKCR,"msstylesfile","",0x00000000,"Visual Style File"
+HKCR,"msstylesfile\DefaultIcon","","0x00020000","%SystemRoot%\system32\themeui.dll,-1"
+HKCR,"msstylesfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenMSTheme file:""%1"""
+
+; Theme File
+HKCR,".theme","",0x00000000,"themefile"
+HKCR,"themefile","",0x00000000,"Theme File"
+HKCR,"themefile\DefaultIcon","","0x00020000","%SystemRoot%\system32\themeui.dll,-1"
+HKCR,"themefile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenTheme /file:""%1"""
+
 ; URL shortcuts (e.g. used in favorites folder of IExplorer)
 HKCR,".url","",0x00000000,"InternetShortcut"
 
