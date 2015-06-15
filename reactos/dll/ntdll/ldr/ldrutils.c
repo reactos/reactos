@@ -1273,7 +1273,7 @@ SkipCheck:
         {
             /* Remove the DLL from the lists */
             RemoveEntryList(&LdrEntry->InLoadOrderLinks);
-            RemoveEntryList(&LdrEntry->InMemoryOrderModuleList);
+            RemoveEntryList(&LdrEntry->InMemoryOrderLinks);
             RemoveEntryList(&LdrEntry->HashLinks);
 
             /* Remove the LDR Entry */
@@ -1341,7 +1341,7 @@ SkipCheck:
             CandidateEnd = CandidateBase + CandidateEntry->SizeOfImage;
 
             /* Make sure this entry isn't unloading */
-            if (!CandidateEntry->InMemoryOrderModuleList.Flink) continue;
+            if (!CandidateEntry->InMemoryOrderLinks.Flink) continue;
 
             /* Check if our regions are colliding */
             if ((ImageBase >= CandidateBase && ImageBase <= CandidateEnd) ||
@@ -1465,7 +1465,7 @@ SkipCheck:
             {
                 /* Remove it from the lists */
                 RemoveEntryList(&LdrEntry->InLoadOrderLinks);
-                RemoveEntryList(&LdrEntry->InMemoryOrderModuleList);
+                RemoveEntryList(&LdrEntry->InMemoryOrderLinks);
                 RemoveEntryList(&LdrEntry->HashLinks);
 
                 /* Unmap it, clear the entry */
@@ -1576,7 +1576,7 @@ LdrpInsertMemoryTableEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 
     /* Insert into other lists */
     InsertTailList(&PebData->InLoadOrderModuleList, &LdrEntry->InLoadOrderLinks);
-    InsertTailList(&PebData->InMemoryOrderModuleList, &LdrEntry->InMemoryOrderModuleList);
+    InsertTailList(&PebData->InMemoryOrderModuleList, &LdrEntry->InMemoryOrderLinks);
 }
 
 VOID
@@ -1630,7 +1630,7 @@ LdrpCheckForLoadedDllHandle(IN PVOID Base,
                                     InLoadOrderLinks);
 
         /* Make sure it's not unloading and check for a match */
-        if ((Current->InMemoryOrderModuleList.Flink) && (Base == Current->DllBase))
+        if ((Current->InMemoryOrderLinks.Flink) && (Base == Current->DllBase))
         {
             /* Save in cache */
             LdrpLoadedDllHandleCache = Current;
@@ -2097,7 +2097,7 @@ lookinhash:
         ListEntry = ListEntry->Flink;
 
         /* Check if it's being unloaded */
-        if (!CurEntry->InMemoryOrderModuleList.Flink) continue;
+        if (!CurEntry->InMemoryOrderLinks.Flink) continue;
 
         /* Check if name matches */
         if (RtlEqualUnicodeString(&FullDllName,
@@ -2195,7 +2195,7 @@ lookinhash:
         ListEntry = ListEntry->Flink;
 
         /* Check if it's in the process of being unloaded */
-        if (!CurEntry->InMemoryOrderModuleList.Flink) continue;
+        if (!CurEntry->InMemoryOrderLinks.Flink) continue;
 
         /* The header is untrusted, use SEH */
         _SEH2_TRY
@@ -2362,7 +2362,7 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
             Entry = NtCurrentPeb()->Ldr->InInitializationOrderModuleList.Blink;
             LdrEntry = CONTAINING_RECORD(Entry,
                                          LDR_DATA_TABLE_ENTRY,
-                                         InInitializationOrderModuleList);
+                                         InInitializationOrderLinks);
 
             /* Make sure we didn't process it yet*/
             if (!(LdrEntry->Flags & LDRP_ENTRY_PROCESSED))
@@ -2536,7 +2536,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                 /* Clear entrypoint, and insert into list */
                 LdrEntry->EntryPoint = NULL;
                 InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                               &LdrEntry->InInitializationOrderModuleList);
+                               &LdrEntry->InInitializationOrderLinks);
 
                 /* Cancel the load */
                 LdrpClearLoadInProgress();
@@ -2563,7 +2563,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 
         /* Insert it into the list */
         InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                       &LdrEntry->InInitializationOrderModuleList);
+                       &LdrEntry->InInitializationOrderLinks);
 
         /* If we have to run the entrypoint, make sure the DB is ready */
         if (CallInit && LdrpLdrDatabaseIsSetup)
@@ -2653,7 +2653,7 @@ LdrpClearLoadInProgress(VOID)
         /* Get the loader entry */
         LdrEntry = CONTAINING_RECORD(Entry,
                                      LDR_DATA_TABLE_ENTRY,
-                                     InInitializationOrderModuleList);
+                                     InInitializationOrderLinks);
 
         /* Clear load in progress flag */
         LdrEntry->Flags &= ~LDRP_LOAD_IN_PROGRESS;

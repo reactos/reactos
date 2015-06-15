@@ -318,7 +318,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     {
         /* Add it to our list */
         InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                       &DllLdrEntry->InInitializationOrderModuleList);
+                       &DllLdrEntry->InInitializationOrderLinks);
     }
 
     /* Check if the Bound Entry is now invalid */
@@ -381,7 +381,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
             {
                 /* Add it to our list */
                 InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                               &ForwarderLdrEntry->InInitializationOrderModuleList);
+                               &ForwarderLdrEntry->InInitializationOrderLinks);
             }
         }
 
@@ -590,7 +590,7 @@ LdrpHandleOneOldFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     {
         /* Add the DLL to our list */
         InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                       &DllLdrEntry->InInitializationOrderModuleList);
+                       &DllLdrEntry->InInitializationOrderLinks);
     }
 
     /* Now snap the IAT Entry */
@@ -850,7 +850,7 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
     {
         /* Add it to the in-init-order list in case of failure */
         InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                       &(*DataTableEntry)->InInitializationOrderModuleList);
+                       &(*DataTableEntry)->InInitializationOrderLinks);
     }
 
     return Status;

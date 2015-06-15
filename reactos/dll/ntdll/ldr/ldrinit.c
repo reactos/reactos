@@ -526,7 +526,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
     while (NextEntry != ListHead)
     {
         /* Get the current entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderModuleList);
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
 
         /* Make sure it's not ourselves */
         if (Peb->ImageBaseAddress != LdrEntry->DllBase)
@@ -674,7 +674,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     while (NextEntry != ListHead)
     {
         /* Get the Data Entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
 
         /* Check if we have a Root Entry */
         if (LdrRootEntry)
@@ -840,7 +840,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     while (NextEntry != ListHead)
     {
         /* Get the Data Entrry */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
 
         /* FIXME: Verify NX Compat */
         // LdrpCheckNXCompatibility()
@@ -932,7 +932,7 @@ LdrShutdownProcess(VOID)
     while (NextEntry != ListHead)
     {
         /* Get the current entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
         NextEntry = NextEntry->Blink;
 
         /* Make sure it's not ourselves */
@@ -1037,7 +1037,7 @@ LdrShutdownThread(VOID)
     while (NextEntry != ListHead)
     {
         /* Get the current entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
         NextEntry = NextEntry->Blink;
 
         /* Make sure it's not ourselves */
@@ -1927,7 +1927,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Link the Init Order List */
     InsertHeadList(&Peb->Ldr->InInitializationOrderModuleList,
-                   &LdrpNtDllDataTableEntry->InInitializationOrderModuleList);
+                   &LdrpNtDllDataTableEntry->InInitializationOrderLinks);
 
     /* Initialize Wine's active context implementation for the current process */
     actctx_init();

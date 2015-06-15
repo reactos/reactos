@@ -476,7 +476,7 @@ LdrFindEntryForAddress(PVOID Address,
     while (NextEntry != ListHead)
     {
         /* Get the entry and NT Headers */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderModuleList);
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
         NtHeader = RtlImageNtHeader(LdrEntry->DllBase);
         if (NtHeader)
         {
@@ -1036,7 +1036,7 @@ LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
 
                 while (InitEntry != InitListHead)
                 {
-                    InitModule = CONTAINING_RECORD(InitEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+                    InitModule = CONTAINING_RECORD(InitEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
 
                     /* Increase the index */
                     ModulePtr->InitOrderIndex++;
@@ -1384,7 +1384,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
         /* Get the entry */
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
-                                     InInitializationOrderModuleList);
+                                     InInitializationOrderLinks);
         NextEntry = NextEntry->Blink;
 
         /* Remove flag */
@@ -1408,8 +1408,8 @@ LdrUnloadDll(IN PVOID BaseAddress)
 
             /* Unlink it */
             CurrentEntry = LdrEntry;
-            RemoveEntryList(&CurrentEntry->InInitializationOrderModuleList);
-            RemoveEntryList(&CurrentEntry->InMemoryOrderModuleList);
+            RemoveEntryList(&CurrentEntry->InInitializationOrderLinks);
+            RemoveEntryList(&CurrentEntry->InMemoryOrderLinks);
             RemoveEntryList(&CurrentEntry->HashLinks);
 
             /* If there's more then one active unload */
@@ -1417,7 +1417,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
             {
                 /* Flush the cached DLL handle and clear the list */
                 LdrpLoadedDllHandleCache = NULL;
-                CurrentEntry->InMemoryOrderModuleList.Flink = NULL;
+                CurrentEntry->InMemoryOrderLinks.Flink = NULL;
             }
 
             /* Add the entry on the unload list */
@@ -1443,7 +1443,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
         /* Set the entry and clear it from the list */
         CurrentEntry = LdrEntry;
         LdrpLoadedDllHandleCache = NULL;
-        CurrentEntry->InMemoryOrderModuleList.Flink = NULL;
+        CurrentEntry->InMemoryOrderLinks.Flink = NULL;
 
         /* Move it from the global to the local list */
         RemoveEntryList(&CurrentEntry->HashLinks);
