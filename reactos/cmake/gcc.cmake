@@ -240,7 +240,7 @@ endif()
 set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if((NOT CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT CMAKE_BUILD_TYPE STREQUAL "Release"))
     set(_compress_debug_sections_flag "-Wa,--compress-debug-sections")
 endif()
 
