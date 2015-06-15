@@ -256,7 +256,108 @@ typedef struct _CONTEXT {
   DWORD SegSs;
   BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT, *PCONTEXT;
+
+#else /* ARM? */
+
+/* The following flags control the contents of the CONTEXT structure. */
+
+#define CONTEXT_ARM    0x0200000
+#define CONTEXT_CONTROL         (CONTEXT_ARM | 0x00000001)
+#define CONTEXT_INTEGER         (CONTEXT_ARM | 0x00000002)
+#define CONTEXT_FLOATING_POINT  (CONTEXT_ARM | 0x00000004)
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_ARM | 0x00000008)
+
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER)
+
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
+typedef struct _RUNTIME_FUNCTION
+{
+    DWORD BeginAddress;
+    union {
+        DWORD UnwindData;
+        struct {
+            DWORD Flag : 2;
+            DWORD FunctionLength : 11;
+            DWORD Ret : 2;
+            DWORD H : 1;
+            DWORD Reg : 3;
+            DWORD R : 1;
+            DWORD L : 1;
+            DWORD C : 1;
+            DWORD StackAdjust : 10;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+} RUNTIME_FUNCTION, *PRUNTIME_FUNCTION;
+
+#define UNWIND_HISTORY_TABLE_SIZE 12
+typedef struct _UNWIND_HISTORY_TABLE_ENTRY
+{
+    DWORD ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+} UNWIND_HISTORY_TABLE_ENTRY, *PUNWIND_HISTORY_TABLE_ENTRY;
+
+typedef struct _UNWIND_HISTORY_TABLE
+{
+    DWORD Count;
+    BYTE  LocalHint;
+    BYTE  GlobalHint;
+    BYTE  Search;
+    BYTE  Once;
+    DWORD LowAddress;
+    DWORD HighAddress;
+    UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
+} UNWIND_HISTORY_TABLE, *PUNWIND_HISTORY_TABLE;
+
+typedef struct _CONTEXT {
+        /* The flags values within this flag control the contents of
+           a CONTEXT record.
+
+           If the context record is used as an input parameter, then
+           for each portion of the context record controlled by a flag
+           whose value is set, it is assumed that that portion of the
+           context record contains valid context. If the context record
+           is being used to modify a thread's context, then only that
+           portion of the threads context will be modified.
+
+           If the context record is used as an IN OUT parameter to capture
+           the context of a thread, then only those portions of the thread's
+           context corresponding to set flags will be returned.
+
+           The context record is never used as an OUT only parameter. */
+
+        ULONG ContextFlags;
+
+        /* This section is specified/returned if the ContextFlags word contains
+           the flag CONTEXT_INTEGER. */
+        ULONG R0;
+        ULONG R1;
+        ULONG R2;
+        ULONG R3;
+        ULONG R4;
+        ULONG R5;
+        ULONG R6;
+        ULONG R7;
+        ULONG R8;
+        ULONG R9;
+        ULONG R10;
+        ULONG Fp;
+        ULONG Ip;
+
+        /* These are selected by CONTEXT_CONTROL */
+        ULONG Sp;
+        ULONG Lr;
+        ULONG Pc;
+        ULONG Cpsr;
+} CONTEXT;
+
+BOOLEAN CDECL            RtlAddFunctionTable(RUNTIME_FUNCTION*,DWORD,DWORD);
+BOOLEAN CDECL            RtlDeleteFunctionTable(RUNTIME_FUNCTION*);
+PRUNTIME_FUNCTION WINAPI RtlLookupFunctionEntry(ULONG_PTR,DWORD*,UNWIND_HISTORY_TABLE*);
 #endif
+
 typedef
 EXCEPTION_DISPOSITION
 NTAPI

@@ -505,7 +505,6 @@ elseif(ARCH STREQUAL "arm")
         math/arm/log.s
         math/arm/log10.s
         math/arm/pow.s
-        math/arm/sqrt.s
         math/arm/tan.s
         math/arm/_logb.s
         math/arm/__dtoi64.s
@@ -546,6 +545,7 @@ if(NOT ARCH STREQUAL "i386")
         math/modff.c
         math/sin.c
         math/sinhf.c
+        math/sqrt.c
         math/sqrtf.c
         math/tanf.c
         math/tanhf.c

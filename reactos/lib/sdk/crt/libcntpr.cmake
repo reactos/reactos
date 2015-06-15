@@ -210,6 +210,7 @@ else()
     list(APPEND LIBCNTPR_SOURCE
         math/cos.c
         math/sin.c
+        math/sqrt.c
         mem/memchr.c
         mem/memcpy.c
         mem/memmove.c

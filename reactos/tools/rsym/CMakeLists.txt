@@ -7,6 +7,8 @@ if(ARCH STREQUAL "i386")
     add_executable(rsym rsym.c)
 elseif(ARCH STREQUAL "amd64")
     add_executable(rsym rsym64.c)
+elseif(ARCH STREQUAL "arm")
+    add_executable(rsym rsym64.c)
 endif()
 
 target_link_libraries(rsym rsym_common dbghelphost zlibhost unicode)

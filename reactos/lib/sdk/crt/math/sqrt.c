@@ -58,13 +58,13 @@ sqrt(
        64 bit value, our GCC ignores this and uses an 80 bit FPU register
        in an intermediate value, so we need to make sure it is stored in
        a memory location before comparison */
-#if DBG
-    {
-        volatile double y1 = y, y2;
-        y2 = (y + (x / y)) * 0.5;
-        assert(y1 == y2);
-    }
-#endif
+//#if DBG
+//    {
+//        volatile double y1 = y, y2;
+//        y2 = (y + (x / y)) * 0.5;
+//        assert(y1 == y2);
+//    }
+//#endif
 
     return y;
 }
