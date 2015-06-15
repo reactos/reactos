@@ -12,7 +12,9 @@ if(NOT DEFINED SEPARATE_DBG)
 endif()
 
 # Dwarf based builds (no rsym)
-if(NOT DEFINED NO_ROSSYM)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(NO_ROSSYM TRUE)
+elseif(NOT DEFINED NO_ROSSYM)
     set(NO_ROSSYM FALSE)
 endif()
 
