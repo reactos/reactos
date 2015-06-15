@@ -342,8 +342,8 @@ CcCanIWrite (
 {
     CCTRACE(CC_API_DEBUG, "FileObject=%p BytesToWrite=%lu Wait=%d Retrying=%d\n",
         FileObject, BytesToWrite, Wait, Retrying);
-    UNIMPLEMENTED;
-    return FALSE;
+
+    return TRUE;
 }
 
 /*
@@ -422,7 +422,7 @@ CcDeferWrite (
     CCTRACE(CC_API_DEBUG, "FileObject=%p PostRoutine=%p Context1=%p Context2=%p BytesToWrite=%lu Retrying=%d\n",
         FileObject, PostRoutine, Context1, Context2, BytesToWrite, Retrying);
 
-    UNIMPLEMENTED;
+    PostRoutine(Context1, Context2);
 }
 
 /*
@@ -438,11 +438,24 @@ CcFastCopyRead (
     OUT PVOID Buffer,
     OUT PIO_STATUS_BLOCK IoStatus)
 {
+    LARGE_INTEGER LargeFileOffset;
+    BOOLEAN Success;
+
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%lu Length=%lu PageCount=%lu Buffer=%p\n",
         FileObject, FileOffset, Length, PageCount, Buffer);
 
-    UNIMPLEMENTED;
+    DBG_UNREFERENCED_PARAMETER(PageCount);
+
+    LargeFileOffset.QuadPart = FileOffset;
+    Success = CcCopyRead(FileObject,
+                         &LargeFileOffset,
+                         Length,
+                         TRUE,
+                         Buffer,
+                         IoStatus);
+    NT_ASSERT(Success == TRUE);
 }
+
 /*
  * @unimplemented
  */
@@ -454,10 +467,19 @@ CcFastCopyWrite (
     IN ULONG Length,
     IN PVOID Buffer)
 {
+    LARGE_INTEGER LargeFileOffset;
+    BOOLEAN Success;
+
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%lu Length=%lu Buffer=%p\n",
         FileObject, FileOffset, Length, Buffer);
 
-    UNIMPLEMENTED;
+    LargeFileOffset.QuadPart = FileOffset;
+    Success = CcCopyWrite(FileObject,
+                          &LargeFileOffset,
+                          Length,
+                          TRUE,
+                          Buffer);
+    NT_ASSERT(Success == TRUE);
 }
 
 /*
