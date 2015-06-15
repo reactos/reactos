@@ -234,8 +234,7 @@ DbgCompareMemory(PVOID d, PVOID s, ULONG l) {
 #define ValidateFileInfo(fi)  {}
 #endif
 
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 
 __inline VOID UDFTouch(IN PVOID addr)
 {

@@ -280,6 +280,7 @@ UDFExceptionFilter(
     for(i=0;i<PtrExceptionPointers->ExceptionRecord->NumberParameters;i++) {
         KdPrint(("       %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionInformation[i]));
     }
+#ifdef _X86_
     KdPrint(("Exception context:\n"));
     if(PtrExceptionPointers->ContextRecord->ContextFlags & CONTEXT_INTEGER) {
         KdPrint(("EAX=%8.8x   ",PtrExceptionPointers->ContextRecord->Eax));
@@ -297,6 +298,7 @@ UDFExceptionFilter(
         KdPrint(("EIP=%8.8x\n",PtrExceptionPointers->ContextRecord->Eip));
     }
 //    KdPrint(("Flags: %s %s    ",PtrExceptionPointers->ContextRecord->Eip));
+#endif //_X86_
 
 #endif // UDF_DBG
 

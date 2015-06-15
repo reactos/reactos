@@ -184,7 +184,9 @@ typedef struct _IMAGE_NT_HEADERS {
     IMAGE_OPTIONAL_HEADER32 OptionalHeader;
 } IMAGE_NT_HEADERS32, *PIMAGE_NT_HEADERS32;
 typedef IMAGE_NT_HEADERS32                  IMAGE_NT_HEADERS;
+#ifdef _X86_
 typedef PIMAGE_NT_HEADERS32                 PIMAGE_NT_HEADERS;
+#endif
 
 #define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
 

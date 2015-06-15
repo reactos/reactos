@@ -324,8 +324,7 @@ UDFReadFileEntry(
     return STATUS_SUCCESS;
 } // UDFReadFileEntry()
 
-//#ifndef _X86_
-#ifndef _MSC_VER
+#if !defined (_X86_) || !defined (_MSC_VER)
 /*
     Decides if a Unicode character matches one of a list
     of ASCII characters.
@@ -373,8 +372,7 @@ UDFIsIllegalChar(
     )
 {
     // Genuine illegal char's for DOS.
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
   _asm {
     push ebx
 
@@ -4280,8 +4278,7 @@ UDFCompareFileInfo(
 #pragma warning(disable:4035)               // re-enable below
 #endif
 
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 __declspec (naked)
 #endif // _X86_
 uint32 
@@ -4291,8 +4288,7 @@ crc32(
     IN uint32 len // EDX
     )
 {
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 //    uint32 _Size = len;
 
     __asm {
@@ -4348,8 +4344,7 @@ EO_CRC:
     The polynomial used is: x^16 + x^12 + x^15 + 1
 */
 
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 __declspec (naked)
 #endif // _X86_
 uint16 
@@ -4359,8 +4354,7 @@ UDFUnicodeCksum(
     uint32 n  // EDX
     )
 {
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 //    uint32 _Size = n;
 
     __asm {
@@ -4416,8 +4410,7 @@ EO_uCRC:
 #endif // _X86_
 } // end UDFUnicodeCksum()
 
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 __declspec (naked)
 #endif // _X86_
 uint16 
@@ -4427,8 +4420,7 @@ UDFUnicodeCksum150(
     uint32 n  // EDX
     )
 {
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 //    uint32 _Size = n;
 
     __asm {
@@ -4523,8 +4515,7 @@ use16_2:
     The OSTA-UDF(tm) 1.50 standard states that using CRCs is mandatory.
     The polynomial used is: x^16 + x^12 + x^15 + 1
 */
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 __declspec (naked)
 #endif // _X86_
 uint16 
@@ -4534,8 +4525,7 @@ UDFCrc(
     IN uint32 Size  // EDX
     )
 {
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 //    uint32 _Size = Size;
 
     __asm {

@@ -146,8 +146,7 @@ UDFGetExtentLength(
     if(!Extent) return 0;
     int64 i=0;
 
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 
     __asm push  ebx
     __asm push  ecx
@@ -228,8 +227,7 @@ UDFGetMappingLength(
     if(!Extent) return 0;
     uint32 i=0;
 
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
     __asm push  ebx
 
     __asm mov   ebx,Extent

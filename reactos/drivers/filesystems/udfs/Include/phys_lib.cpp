@@ -224,7 +224,7 @@ UDFTIOVerify(
 
         // check if block valid
         if(Vcb->BSBM_Bitmap) {
-            if(UDFGetBit__((uint32*)(Vcb->BSBM_Bitmap), UDFRelocateSector(Vcb, lba0+i))) {
+            if(UDFGetBit((uint32*)(Vcb->BSBM_Bitmap), UDFRelocateSector(Vcb, lba0+i))) {
                 KdPrint(("  remap: known BB @ %x, mapped to %x\n", lba0+i, UDFRelocateSector(Vcb, lba0+i)));
                 need_remap = TRUE;
             }
@@ -907,7 +907,7 @@ UDFPrepareForWriteOperation(
     if(Vcb->BSBM_Bitmap) {
         ULONG i;
         for(i=0; i<BCount; i++) {
-            if(UDFGetBit__((uint32*)(Vcb->BSBM_Bitmap), Lba+i)) {
+            if(UDFGetBit((uint32*)(Vcb->BSBM_Bitmap), Lba+i)) {
                 KdPrint(("W: Known BB @ %#x\n", Lba));
                 //return STATUS_FT_WRITE_RECOVERY; // this shall not be treated as error and
                                                    // we shall get IO request to BAD block
@@ -1611,7 +1611,7 @@ try_exit: NOTHING;
                 }
             }
             if(bm) {
-                UDFSetBit__(bm, Lba);
+                UDFSetBit(bm, Lba);
                 KdPrint(("Set BB @ %#x\n", Lba));
             }
 #ifdef _BROWSE_UDF_
@@ -3689,7 +3689,7 @@ UDFPrepareForReadOperation(
     if(Vcb->BSBM_Bitmap) {
         ULONG i;
         for(i=0; i<BCount; i++) {
-            if(UDFGetBit__((uint32*)(Vcb->BSBM_Bitmap), Lba+i)) {
+            if(UDFGetBit((uint32*)(Vcb->BSBM_Bitmap), Lba+i)) {
                 KdPrint(("R: Known BB @ %#x\n", Lba));
                 //return STATUS_FT_WRITE_RECOVERY; // this shall not be treated as error and
                                                    // we shall get IO request to BAD block

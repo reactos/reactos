@@ -435,7 +435,7 @@ UDFVRead(
                         }
                     }
                     if(bm) {
-                        UDFSetBit__(bm, vItem->lba);
+                        UDFSetBit(bm, vItem->lba);
                         KdPrint(("Set BB @ %#x\n", vItem->lba));
                     }
 #ifdef _BROWSE_UDF_

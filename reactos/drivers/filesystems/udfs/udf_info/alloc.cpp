@@ -50,8 +50,7 @@ UDFPhysLbaToPart(
     )
 {
     PUDFPartMap pm = Vcb->Partitions;
-//#ifdef _X86_
-#ifdef _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
     uint32 retval;
     __asm {
         push ebx
@@ -322,8 +321,7 @@ EO_gpl:
     array Bitmap. Bitmap scan is limited with Lim.
  */
 
-//#if defined _X86_
-#if defined _MSC_VER
+#if defined (_X86_) && defined (_MSC_VER)
 
 __declspec (naked)
 uint32
