@@ -136,7 +136,7 @@ TestFileFsVolumeInformation(HANDLE handle)
     ok(IoStatusBlock.Information >= FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel),
            "IoStatusBlock.Information = %Iu, expected >=%lu\n", IoStatusBlock.Information, (ULONG)sizeof(FILE_FS_VOLUME_INFORMATION));
     ok(VolumeInfo->VolumeCreationTime.QuadPart != 0x5555555555555555, "VolumeInfo->VolumeCreationTime = %I64d\n", VolumeInfo->VolumeCreationTime.QuadPart);
-    ok(VolumeInfo->VolumeSerialNumber != 0x55555555, "VolumeInfo->VolumeSerialNumber = %u\n", VolumeInfo->VolumeSerialNumber);
+    ok(VolumeInfo->VolumeSerialNumber != 0x55555555, "VolumeInfo->VolumeSerialNumber = %lu\n", VolumeInfo->VolumeSerialNumber);
     ok(VolumeInfo->SupportsObjects == FALSE || VolumeInfo->SupportsObjects == TRUE, "VolumeInfo->SupportsObjects = %u\n", VolumeInfo->SupportsObjects);
     ok(VolumeInfo->VolumeLabelLength % sizeof(WCHAR) == 0, "VolumeInfo->VolumeLabelLength = %Iu\n", VolumeInfo->VolumeLabelLength);
     if (VolumeInfo->VolumeLabelLength >= sizeof(WCHAR))
