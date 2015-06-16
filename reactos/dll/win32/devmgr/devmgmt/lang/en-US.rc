@@ -1,0 +1,72 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&File"
+  BEGIN
+    MENUITEM "E&xit",                       IDC_EXIT
+  END
+  POPUP "Action"
+  BEGIN
+    MENUITEM "Update driver software..."    IDC_UPDATE_DRV
+    MENUITEM "Disable"                      IDC_DISABLE_DRV
+    MENUITEM "Uninstall"                    IDC_UNINSTALL_DRV
+    MENUITEM SEPARATOR
+    MENUITEM "Scan for hardware changes"    IDC_SCAN_HARDWARE
+    MENUITEM "Add hardware"                 IDC_ADD_HARDWARE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Properties",                  IDC_PROPERTIES
+  END
+  POPUP "View"
+  BEGIN
+    MENUITEM "Devices by type",             IDC_DEVBYTYPE
+    MENUITEM "Devices by connection",       IDC_DEVBYCONN
+    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+  END
+  POPUP "Help"
+  BEGIN
+    MENUITEM "About",                       IDC_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "Properties",                  IDC_PROPERTIES, GRAYED
+  END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROP      "Properties"
+  IDS_TOOLTIP_REFRESH   "Scan for hardware changes"
+  IDS_TOOLTIP_HELP      "Help"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME           "ReactOS Device Manager"
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_REFRESH      " Scan for changed or new Plug and Play devices."
+  IDS_HINT_PROP         " Open property dialog for the current selection."
+  IDS_HINT_HELP         " Display help window."
+  IDS_HINT_ABOUT        " About ReactOS Device Manager."
+
+  IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
+  IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
+  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
+
+  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_MOVE     " Moves this window."
+  IDS_HINT_SYS_SIZE     " Resizes this window."
+  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
+  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_CLOSE    " Closes this window."
+END
