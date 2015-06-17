@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/cdfs/cleanup.c
+ * FILE:             drivers/filesystems/cdfs/cleanup.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:
  * UPDATE HISTORY:
