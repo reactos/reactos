@@ -3,9 +3,9 @@ IDI_SHELL_RICH_TEXT ICON "res/icons/2.ico"
 IDI_SHELL_EXE ICON "res/icons/3.ico"
 IDI_SHELL_FOLDER ICON "res/icons/4.ico"
 IDI_SHELL_FOLDER_OPEN ICON "res/icons/5.ico"
-IDI_SHELL_5_12_FLOPPY ICON "res/icons/floppy.ico"
-IDI_SHELL_3_14_FLOPPY ICON "res/icons/floppy.ico"
-IDI_SHELL_FLOPPY ICON "res/icons/floppy.ico"
+IDI_SHELL_5_12_FLOPPY ICON "res/icons/6.ico"
+IDI_SHELL_3_14_FLOPPY ICON "res/icons/7.ico"
+IDI_SHELL_FLOPPY ICON "res/icons/7.ico"
 IDI_SHELL_DRIVE ICON "res/icons/9.ico"
 IDI_SHELL_NETDRIVE ICON "res/icons/10.ico"
 IDI_SHELL_NETDRIVE2 ICON "res/icons/11.ico" /* THIS SHOULD BE IDI_SHELL_NETDRIVE_OFF */
@@ -65,7 +65,8 @@ IDI_SHELL_TOOLS_DEFRAG ICON "res/icons/167.ico"
 /* TODO:  168.ico, 169.ico, 170.ico, 171.ico */
 IDI_SHELL_NETWORK_FOLDER ICON "res/icons/172.ico"
 IDI_SHELL_FAVORITES2 ICON "res/icons/173.ico"
-/* TODO: 174.ico, 175.ico, 176.ico, 177.ico, 178.ico, 179.ico, 180.ico, 181.ico */
+IDI_SHELL_EXTENDED_PROPERTIES ICON "res/icons/174.ico"
+/* TODO: 175.ico, 176.ico, 177.ico, 178.ico, 179.ico, 180.ico, 181.ico */
 
 /* Folder Options, General dialog */
 IDI_SHELL_SHOW_COMMON_TASKS ICON "res/icons/182.ico"
@@ -123,8 +124,7 @@ IDI_SHELL_ADD_REM_PROGRAMS ICON "res/icons/271.ico"
 IDI_SHELL_TUNES ICON "res/icons/277.ico"
 /* TODO: 278.ico */
 IDI_SHELL_USER_ACCOUNTS ICON "res/icons/279.ico"
-IDI_SHELL_EXTENDED_PROPERTIES ICON "res/icons/280.ico"
-/* TODO: 281.ico, 282.ico, 283.ico, 284.ico */
+/* TODO: 280.ico, 281.ico, 282.ico, 283.ico, 284.ico */
 IDI_SHELL_HELP_FILE ICON "res/icons/289.ico"
 IDI_SHELL_GO ICON "res/icons/290.ico"
 IDI_SHELL_DVD_DRIVE ICON "res/icons/291.ico"

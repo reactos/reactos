@@ -381,7 +381,8 @@
 /* TODO: 168.ico, 169.ico, 170.ico, 171.ico */
 #define IDI_SHELL_NETWORK_FOLDER   172
 #define IDI_SHELL_FAVORITES2       173
-/* TODO: 174.ico, 175.ico, 176.ico, 177.ico, 178.ico, 179.ico, 180.ico, 181.ico */
+#define IDI_SHELL_EXTENDED_PROPERTIES 174
+/* TODO: 175.ico, 176.ico, 177.ico, 178.ico, 179.ico, 180.ico, 181.ico */
 #define IDI_SHELL_EMPTY_RECYCLE_BIN1 191
 #define IDI_SHELL_FULL_RECYCLE_BIN1  192
 /* TODO: 193.ico, 194.ico, 196.ico, 197.ico, 198.ico, 199.ico, 200.ico */
@@ -429,7 +430,6 @@
 #define IDI_SHELL_TUNES            277
 /* TODO: 278.ico */
 #define IDI_SHELL_USER_ACCOUNTS    279
-#define IDI_SHELL_EXTENDED_PROPERTIES 280
 /* TODO: 281.ico, 282.ico, 283.ico, 284.ico */
 #define IDI_SHELL_HELP_FILE        289
 #define IDI_SHELL_GO               290
