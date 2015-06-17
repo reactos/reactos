@@ -69,7 +69,7 @@ BEGIN
 
   IDS_HINT_DEV_BY_TYPE  "Displays devices by hardware type"
   IDS_HINT_DEV_BY_CONN  "Displays devices by connection"
-  IDS_HINT_RES_BY_TYPE  "Diaplays resources by type"
+  IDS_HINT_RES_BY_TYPE  "Displays resources by type"
   IDS_HINT_RES_BY_CONN  "Displays resources by connection type"
 
   IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
