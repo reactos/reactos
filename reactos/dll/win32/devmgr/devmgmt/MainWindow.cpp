@@ -456,6 +456,13 @@ CMainWindow::OnNotify(LPARAM lParam)
             break;
         }
 
+        case NM_DBLCLK:
+        {
+            LPNMTREEVIEW NmTreeView = (LPNMTREEVIEW)lParam;
+            m_DeviceView->DisplayPropertySheet();
+            break;
+        }
+
         case NM_RCLICK:
         {
             Ret = m_DeviceView->OnRightClick(NmHdr);

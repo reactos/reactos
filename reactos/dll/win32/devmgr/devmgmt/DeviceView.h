@@ -1,5 +1,6 @@
 #pragma once
-#include "Node.h"
+#include "DeviceNode.h"
+#include "ClassNode.h"
 
 enum ViewType
 {
@@ -12,8 +13,8 @@ enum ViewType
 
 class CDeviceView
 {
-    CAtlList<CNode *> m_ClassNodeList;
-    CAtlList<CNode *> m_DeviceNodeList;
+    CAtlList<CClassNode *> m_ClassNodeList;
+    CAtlList<CDeviceNode *> m_DeviceNodeList;
 
     SP_CLASSIMAGELIST_DATA m_ImageListData;
 
@@ -128,8 +129,8 @@ private:
     CNode* GetNode(_In_ LPTV_ITEMW TvItem);
     CNode* GetSelectedNode();
 
-    CNode* GetClassNode(_In_ LPGUID ClassGuid);
-    CNode* GetDeviceNode(_In_ DEVINST Device);
+    CClassNode* GetClassNode(_In_ LPGUID ClassGuid);
+    CDeviceNode* GetDeviceNode(_In_ DEVINST Device);
     void EmptyLists();
 };
 

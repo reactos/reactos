@@ -1,11 +1,11 @@
 /*
-* PROJECT:     ReactOS Device Manager
-* LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll/win32/devmgr/devmgr/DeviceView.cpp
-* PURPOSE:     Implements the tree view which contains the devices
-* COPYRIGHT:   Copyright 2015 Ged Murphy <gedmurphy@reactos.org>
-*
-*/
+ * PROJECT:     ReactOS Device Manager
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/devmgr/devmgr/DeviceView.cpp
+ * PURPOSE:     Implements the tree view which contains the devices
+ * COPYRIGHT:   Copyright 2015 Ged Murphy <gedmurphy@reactos.org>
+ */
+
 
 
 #include "stdafx.h"
@@ -13,10 +13,11 @@
 #include "DeviceView.h"
 
 
-/* DATA *********************************************/
+// DATA ********************************************/
 
 #define CLASS_NAME_LEN      256
 #define CLASS_DESC_LEN      256
+#define ROOT_NAME_SIZE      MAX_COMPUTERNAME_LENGTH + 1
 
 INT_PTR
 WINAPI
@@ -38,7 +39,7 @@ struct RefreshThreadData
 };
 
 
-/* PUBLIC METHODS *************************************/
+// PUBLIC METHODS ************************************/
 
 CDeviceView::CDeviceView(
     HWND hMainWnd
@@ -269,7 +270,7 @@ CDeviceView::IsDisabled(
     _In_ LPTV_ITEMW TvItem
     )
 {
-    CNode *Node = GetNode(TvItem);
+    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetNode(TvItem));
     if (Node)
     {
         return Node->IsDisabled();
@@ -282,16 +283,16 @@ CDeviceView::CanDisable(
     _In_ LPTV_ITEMW TvItem
     )
 {
-    CNode *Node = GetNode(TvItem);
+    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetNode(TvItem));
     if (Node)
     {
-        return Node->CanDisable();
+        Node->CanDisable();
     }
     return false;
 }
 
 
-/* PRIVATE METHODS ********************************************/
+// PRIVATE METHODS *******************************************/
 
 bool
 CDeviceView::AddRootDevice()
@@ -312,7 +313,7 @@ CDeviceView::AddRootDevice()
         DeleteObject(hRootImage);
     }
 
-    /* Get the root instance */
+    // Get the root instance 
     CONFIGRET cr;
     cr = CM_Locate_DevNodeW(&m_RootDevInst,
                             NULL,
@@ -322,7 +323,7 @@ CDeviceView::AddRootDevice()
         return false;
     }
 
-    /* The root name is the computer name */
+    // The root name is the computer name 
     WCHAR RootDeviceName[ROOT_NAME_SIZE];
     DWORD Size = ROOT_NAME_SIZE;
     if (GetComputerNameW(RootDeviceName, &Size))
@@ -425,7 +426,8 @@ unsigned int __stdcall CDeviceView::RefreshThread(void *Param)
 bool
 CDeviceView::ListDevicesByType()
 {
-    CNode *ClassNode, *DeviceNode;
+    CClassNode *ClassNode;
+    CDeviceNode *DeviceNode;
     HDEVINFO hDevInfo;
     HTREEITEM hTreeItem = NULL;
     GUID ClassGuid;
@@ -574,10 +576,10 @@ CDeviceView::ListDevicesByConnection()
     bSuccess = AddRootDevice();
     if (bSuccess == false) return false;
 
-    /* Walk the device tree and add all the devices */
+    // Walk the device tree and add all the devices 
     RecurseChildDevices(m_RootDevInst, m_hTreeRoot);
 
-    /* Expand the root item */
+    // Expand the root item 
     (VOID)TreeView_Expand(m_hTreeView,
                           m_hTreeRoot,
                           TVE_EXPAND);
@@ -596,13 +598,13 @@ CDeviceView::RecurseChildDevices(
     DEVINST Device;
     BOOL bSuccess;
 
-    /* Check if the parent has any child devices */
+    // Check if the parent has any child devices 
     if (GetChildDevice(ParentDevice, &Device) == FALSE)
         return;
 
     // Get the cached device node
-    CNode *DeviceNode;
-    DeviceNode = GetDeviceNode(Device);
+    CDeviceNode *DeviceNode;
+    DeviceNode = dynamic_cast<CDeviceNode *>(GetDeviceNode(Device));
     if (DeviceNode == NULL)
     {
         ATLASSERT(FALSE);
@@ -610,17 +612,17 @@ CDeviceView::RecurseChildDevices(
     }
 
 
-    /* Check if this is a hidden device */
+    // Check if this is a hidden device 
     if ((m_ShowHidden == TRUE) || (!(DeviceNode->IsHidden())))
     {
-        /* Add this device to the tree under its parent */
+        // Add this device to the tree under its parent 
         hDevItem = InsertIntoTreeView(hParentTreeItem,
                                       DeviceNode);
 
 
         if (hDevItem)
         {
-            /* Check if this child has any children itself */
+            // Check if this child has any children itself 
             RecurseChildDevices(Device, hDevItem);
         }
     }
@@ -628,29 +630,29 @@ CDeviceView::RecurseChildDevices(
 
     for (;;)
     {
-        /* Check if the parent device has anything at the same level */
+        // Check if the parent device has anything at the same level 
         bSuccess = GetSiblingDevice(Device, &Device);
         if (bSuccess == FALSE) break;
 
-        DeviceNode = GetDeviceNode(Device);
+        DeviceNode = dynamic_cast<CDeviceNode *>(GetDeviceNode(Device));
         if (DeviceNode == NULL)
         {
             ATLASSERT(FALSE);
         }
 
-        /* Check if this is a hidden device */
+        // Check if this is a hidden device 
         if (DeviceNode->IsHidden())
         {
             if (m_ShowHidden == FALSE)
                 continue;
         }
 
-        /* Add this device to the tree under its parent */
+        // Add this device to the tree under its parent 
         hDevItem = InsertIntoTreeView(hParentTreeItem,
                                       DeviceNode);
         if (hDevItem)
         {
-            /* Check if this child has any children itself */
+            // Check if this child has any children itself 
             RecurseChildDevices(Device, hDevItem);
         }
     }
@@ -709,11 +711,13 @@ CDeviceView::InsertIntoTreeView(
     tvi.iImage = Node->GetClassImage();
     tvi.iSelectedImage = Node->GetClassImage();
 
-    if (Node->GetOverlayImage())
+    // try to cast it to a device node. This will only suceed if it's the correct type
+    CDeviceNode *DeviceNode = dynamic_cast<CDeviceNode *>(Node);
+    if (DeviceNode && DeviceNode->GetOverlayImage())
     {
         tvi.mask |= TVIF_STATE;
         tvi.stateMask = TVIS_OVERLAYMASK;
-        tvi.state = INDEXTOOVERLAYMASK(Node->GetOverlayImage());
+        tvi.state = INDEXTOOVERLAYMASK(DeviceNode->GetOverlayImage());
     }
 
     tvins.item = tvi;
@@ -763,7 +767,7 @@ CDeviceView::RecurseDeviceView(
             //    delete reinterpret_cast<CNode *>(tvItem.lParam);
         }
 
-        /* This node may have its own children */
+        // This node may have its own children 
         RecurseDeviceView(hItem);
     }
 }
@@ -788,11 +792,11 @@ CDeviceView::EmptyDeviceView()
 
 
 
-CNode*
+CClassNode*
 CDeviceView::GetClassNode(_In_ LPGUID ClassGuid)
 {
     POSITION Pos;
-    CNode *Node;
+    CClassNode *Node;
 
     Pos = m_ClassNodeList.GetHeadPosition();
 
@@ -812,11 +816,11 @@ CDeviceView::GetClassNode(_In_ LPGUID ClassGuid)
     return Node;
 }
 
-CNode*
+CDeviceNode*
 CDeviceView::GetDeviceNode(_In_ DEVINST Device)
 {
     POSITION Pos;
-    CNode *Node;
+    CDeviceNode *Node;
 
     Pos = m_DeviceNodeList.GetHeadPosition();
 
@@ -843,6 +847,7 @@ CNode* CDeviceView::GetNode(LPTV_ITEMW TvItem)
     {
         return (CNode *)TvItem->lParam;
     }
+    return NULL;
 }
 
 CNode* CDeviceView::GetSelectedNode()
@@ -885,7 +890,8 @@ bool
 CDeviceView::RefreshDeviceList()
 {
     GUID ClassGuid;
-    CNode *Node;
+    CClassNode *ClassNode;
+    CDeviceNode *DeviceNode;
     HDEVINFO hDevInfo;
     SP_DEVINFO_DATA DeviceInfoData;
     DWORD i;
@@ -895,22 +901,24 @@ CDeviceView::RefreshDeviceList()
 
     EmptyLists();
 
+    // Loop through all the classes
     do
     {
         Success = GetNextClass(ClassIndex, &ClassGuid, &hDevInfo);
         if (Success)
         {
-            /* Create a new class node */
-            Node = new CNode(&ClassGuid, &m_ImageListData);
-            if (Node->Setup())
+            // Create a new class node and add it to the list
+            ClassNode = new CClassNode(&ClassGuid, &m_ImageListData);
+            if (ClassNode->SetupNode())
             {
-                m_ClassNodeList.AddTail(Node);
+                m_ClassNodeList.AddTail(ClassNode);
             }
         }
         ClassIndex++;
     } while (Success);
 
 
+    // Get all the devices on the local machine
     hDevInfo = SetupDiGetClassDevsW(NULL,
                                     0,
                                     0,
@@ -920,17 +928,20 @@ CDeviceView::RefreshDeviceList()
         return false;
     }
 
-
+    // loop though all the devices
     DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
     for (i = 0;; i++)
     {
+        // Get the devinst for this device
         Success = SetupDiEnumDeviceInfo(hDevInfo, i, &DeviceInfoData);
         if (Success == FALSE) break;
 
-
-        Node = new CNode(DeviceInfoData.DevInst, &m_ImageListData);
-        Node->Setup();
-        m_DeviceNodeList.AddTail(Node);
+        // create a new device node and add it to the list
+        DeviceNode = new CDeviceNode(DeviceInfoData.DevInst, &m_ImageListData);
+        if (DeviceNode->SetupNode())
+        {
+            m_DeviceNodeList.AddTail(DeviceNode);
+        }
     }
 
     SetupDiDestroyDeviceInfoList(hDevInfo);
