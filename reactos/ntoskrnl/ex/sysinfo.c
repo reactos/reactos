@@ -2168,31 +2168,47 @@ SSI_DEF(SystemLoadGdiDriverInSystemSpaceInformation)
 /* Class 55 - NUMA processor information  */
 QSI_DEF(SystemNumaProcessorMap)
 {
+    ULONG MaxEntries, Node;
     PSYSTEM_NUMA_INFORMATION NumaInformation = (PSYSTEM_NUMA_INFORMATION)Buffer;
 
+    /* Validate input size */
     if (Size < sizeof(ULONG))
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-#if 1 // Partial & incomplete implementation just to let GetNumaHighestNodeNumber() work
-    /* In case of a partial query, just return number of nodes and stop here */
-    if (Size < sizeof(SYSTEM_NUMA_INFORMATION))
+    /* Return highest node */
+    NumaInformation->HighestNodeNumber = KeNumberNodes - 1;
+
+    /* Compute how much entries we will be able to put in output structure */
+    MaxEntries = (Size - FIELD_OFFSET(SYSTEM_NUMA_INFORMATION, ActiveProcessorsAffinityMask)) / sizeof(ULONGLONG);
+    /* Make sure we don't overflow KeNodeBlock */
+    if (MaxEntries > KeNumberNodes)
     {
-        NumaInformation->HighestNodeNumber = KeNumberNodes - 1;
-        *ReqSize = sizeof(ULONG);
-        return STATUS_SUCCESS;
+        MaxEntries = KeNumberNodes;
+    }
+
+    /* If we have entries to write, and room for it */
+    if (Size >= FIELD_OFFSET(SYSTEM_NUMA_INFORMATION, ActiveProcessorsAffinityMask) &&
+        MaxEntries != 0)
+    {
+        /* Already set size we return */
+        *ReqSize = FIELD_OFFSET(SYSTEM_NUMA_INFORMATION, ActiveProcessorsAffinityMask) +
+                   MaxEntries * sizeof(ULONGLONG);
+
+        /* For each node, return processor mask */
+        for (Node = 0; Node < MaxEntries; ++Node)
+        {
+            NumaInformation->ActiveProcessorsAffinityMask[Node] = KeNodeBlock[Node]->ProcessorMask;
+        }
     }
     else
     {
-        DPRINT1("NtQuerySystemInformation - SystemNumaProcessorMap not implemented\n");
-        return STATUS_NOT_IMPLEMENTED;
+        /* We only returned highest node number */
+        *ReqSize = sizeof(ULONG);
     }
-#else
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemNumaProcessorMap not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
-#endif
+
+    return STATUS_SUCCESS;
 }
 
 
