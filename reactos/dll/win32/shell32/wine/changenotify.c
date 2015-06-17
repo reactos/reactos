@@ -20,16 +20,20 @@
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+#define BUFFER_SIZE 1024
 
 #include <windef.h>
 #include <winbase.h>
 #include <shlobj.h>
+#include <strsafe.h>
 #include <undocshell.h>
 #include <shlwapi.h>
 #include <wine/debug.h>
 #include <wine/list.h>
+#include <process.h>
 
 #include "pidl.h"
 
@@ -44,7 +48,20 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 };
 static CRITICAL_SECTION SHELL32_ChangenotifyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
 
+#ifdef __REACTOS__
+typedef struct {
+    PCIDLIST_ABSOLUTE pidl;
+    BOOL fRecursive;
+    /* File system notification items */
+    HANDLE hDirectory; /* Directory handle */
+    WCHAR wstrDirectory[MAX_PATH]; /* Directory name */
+    OVERLAPPED overlapped; /* Overlapped structure */
+    BYTE *buffer; /* Async buffer to fill */
+    BYTE *backBuffer; /* Back buffer to swap buffer into */
+} SHChangeNotifyEntryInternal, *LPNOTIFYREGISTER;
+#else
 typedef SHChangeNotifyEntry *LPNOTIFYREGISTER;
+#endif
 
 /* internal list of notification clients (internal) */
 typedef struct _NOTIFICATIONLIST
@@ -59,8 +76,24 @@ typedef struct _NOTIFICATIONLIST
 	ULONG id;
 } NOTIFICATIONLIST, *LPNOTIFICATIONLIST;
 
+#ifdef __REACTOS__
+VOID _ProcessNotification(LPNOTIFYREGISTER item);
+BOOL _OpenDirectory(LPNOTIFYREGISTER item);
+static void CALLBACK _RequestTermination(ULONG_PTR arg);
+static void CALLBACK _RequestAllTermination(ULONG_PTR arg);
+static void CALLBACK _AddDirectoryProc(ULONG_PTR arg);
+static VOID _BeginRead(LPNOTIFYREGISTER item);
+static unsigned int WINAPI _RunAsyncThreadProc(LPVOID arg);
+#endif
+
 static struct list notifications = LIST_INIT( notifications );
 static LONG next_id;
+
+#ifdef __REACTOS__
+HANDLE m_hThread;
+UINT m_dwThreadId;
+BOOL m_bTerminate;
+#endif
 
 #define SHCNE_NOITEMEVENTS ( \
    SHCNE_ASSOCCHANGED )
@@ -131,13 +164,26 @@ static void DeleteNode(LPNOTIFICATIONLIST item)
 
     /* free the item */
     for (i=0; i<item->cidl; i++)
+#ifdef __REACTOS__
+    {
+        QueueUserAPC(_RequestTermination, m_hThread, (ULONG_PTR) &item->apidl[i] );
+        WaitForSingleObjectEx(m_hThread, 100, FALSE);
+#endif
         SHFree((LPITEMIDLIST)item->apidl[i].pidl);
+#ifdef __REACTOS__
+        SHFree(item->apidl[i].buffer);
+        SHFree(item->apidl[i].backBuffer);
+    }
+#endif
     SHFree(item->apidl);
     SHFree(item);
 }
 
 void InitChangeNotifications(void)
 {
+#ifdef __REACTOS__
+    m_hThread = NULL;
+#endif
 }
 
 void FreeChangeNotifications(void)
@@ -152,6 +198,10 @@ void FreeChangeNotifications(void)
         DeleteNode( ptr );
 
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
+
+#ifdef __REACTOS__
+    QueueUserAPC(_RequestAllTermination, m_hThread, (ULONG_PTR) NULL );
+#endif
 
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
@@ -177,12 +227,33 @@ SHChangeNotifyRegister(
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p) item=%p\n",
 	hwnd, fSources, wEventMask, uMsg, cItems, lpItems, item);
 
+#ifdef __REACTOS__
+    if (!m_hThread)
+        m_hThread = (HANDLE) _beginthreadex(NULL, 0, _RunAsyncThreadProc, NULL, 0, &m_dwThreadId);
+#endif
+
     item->cidl = cItems;
+#ifdef __REACTOS__
+    item->apidl = SHAlloc(sizeof(SHChangeNotifyEntryInternal) * cItems);
+#else
     item->apidl = SHAlloc(sizeof(SHChangeNotifyEntry) * cItems);
+#endif
     for(i=0;i<cItems;i++)
     {
+#ifdef __REACTOS__
+        ZeroMemory(&item->apidl[i], sizeof(SHChangeNotifyEntryInternal));
+#endif
         item->apidl[i].pidl = ILClone(lpItems[i].pidl);
         item->apidl[i].fRecursive = lpItems[i].fRecursive;
+#ifdef __REACTOS__
+        item->apidl[i].buffer = SHAlloc(BUFFER_SIZE);
+        item->apidl[i].backBuffer = SHAlloc(BUFFER_SIZE);
+        item->apidl[i].overlapped.hEvent = &item->apidl[i];
+
+        if (fSources & SHCNRF_InterruptLevel && _OpenDirectory( &item->apidl[i] ))
+            QueueUserAPC(_AddDirectoryProc, m_hThread, (ULONG_PTR) &item->apidl[i] );
+        else ERR("_OpenDirectory Failed\n");
+#endif
     }
     item->hwnd = hwnd;
     item->uMsg = uMsg;
@@ -536,3 +607,210 @@ DWORD WINAPI NTSHChangeNotifyDeregister(ULONG x1)
 
     return SHChangeNotifyDeregister( x1 );
 }
+
+#ifdef __REACTOS__
+
+static
+void
+CALLBACK
+_AddDirectoryProc(ULONG_PTR arg)
+{
+    LPNOTIFYREGISTER item = (LPNOTIFYREGISTER)arg;
+    _BeginRead(item);
+}
+
+BOOL _OpenDirectory(LPNOTIFYREGISTER item)
+{
+    STRRET strFile;
+    IShellFolder *psfDesktop;
+    HRESULT hr;
+
+    // Makes function idempotent
+    if (item->hDirectory && !(item->hDirectory == INVALID_HANDLE_VALUE))
+        return TRUE;
+
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (!SUCCEEDED(hr))
+        return FALSE;
+
+    hr = IShellFolder_GetDisplayNameOf(psfDesktop, item->pidl, SHGDN_FORPARSING, &strFile);
+    if (!SUCCEEDED(hr))
+        return FALSE;
+
+    hr = StrRetToBufW(&strFile, NULL, item->wstrDirectory, _countof(item->wstrDirectory));
+    if (!SUCCEEDED(hr))
+        return FALSE;
+
+    TRACE("_OpenDirectory %s\n", debugstr_w(item->wstrDirectory));
+
+    item->hDirectory = CreateFileW(item->wstrDirectory, // pointer to the file name
+                                   GENERIC_READ | FILE_LIST_DIRECTORY, // access (read/write) mode
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // share mode
+                                   NULL, // security descriptor
+                                   OPEN_EXISTING, // how to create
+                                   FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, // file attributes
+                                   NULL); // file with attributes to copy
+
+    if (item->hDirectory == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static void CALLBACK _RequestTermination(ULONG_PTR arg)
+{
+    LPNOTIFYREGISTER item = (LPNOTIFYREGISTER) arg;
+    TRACE("_RequestTermination %p \n", item->hDirectory);
+    if (!item->hDirectory || item->hDirectory == INVALID_HANDLE_VALUE) return;
+
+    CancelIo(item->hDirectory);
+    CloseHandle(item->hDirectory);
+    item->hDirectory = NULL;
+}
+
+static
+void
+CALLBACK
+_NotificationCompletion(DWORD dwErrorCode, // completion code
+                        DWORD dwNumberOfBytesTransfered, // number of bytes transferred
+                        LPOVERLAPPED lpOverlapped) // I/O information buffer
+{
+    /* MSDN: The hEvent member of the OVERLAPPED structure is not used by the
+       system, so you can use it yourself. We do just this, storing a pointer
+       to the working struct in the overlapped structure. */
+    LPNOTIFYREGISTER item = (LPNOTIFYREGISTER) lpOverlapped->hEvent;
+    TRACE("_NotificationCompletion\n");
+
+    if (dwErrorCode == ERROR_OPERATION_ABORTED)
+    {
+        /* Command was induced by CancelIo in the shutdown procedure. */
+        TRACE("_NotificationCompletion ended.\n");
+        return;
+    }
+
+    /* This likely means overflow, so force whole directory refresh. */
+    if (!dwNumberOfBytesTransfered)
+    {
+        ERR("_NotificationCompletion overflow\n");
+
+        ZeroMemory(item->buffer, BUFFER_SIZE);
+        _BeginRead(item);
+
+        SHChangeNotify(SHCNE_UPDATEITEM | SHCNE_INTERRUPT,
+                       SHCNF_IDLIST,
+                       item->pidl,
+                       NULL);
+
+        return;
+    }
+
+    /*
+     * Get the new read issued as fast as possible (before we do the
+     * processing and message posting). All of the file notification
+     * occur on one thread so the buffers should not collide with one another.
+     * The extra zero mems are because the FNI size isn't written correctly.
+     */
+
+    ZeroMemory(item->backBuffer, BUFFER_SIZE);
+    memcpy(item->backBuffer, item->buffer, dwNumberOfBytesTransfered);
+    ZeroMemory(item->buffer, BUFFER_SIZE);
+
+    _BeginRead(item);
+
+    _ProcessNotification(item);
+}
+
+static VOID _BeginRead(LPNOTIFYREGISTER item )
+{
+    TRACE("_BeginRead %p \n", item->hDirectory);
+
+    /* This call needs to be reissued after every APC. */
+    if (!ReadDirectoryChangesW(item->hDirectory, // handle to directory
+                               item->buffer, // read results buffer
+                               BUFFER_SIZE, // length of buffer
+                               FALSE, // monitoring option (recursion)
+                               FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_FILE_NAME, // filter conditions
+                               NULL, // bytes returned
+                               &item->overlapped, // overlapped buffer
+                               _NotificationCompletion)) // completion routine
+        ERR("ReadDirectoryChangesW failed. (%p, %p, %p, %p) Code: %u \n",
+            item->hDirectory,
+            item->buffer,
+            &item->overlapped,
+            _NotificationCompletion,
+            GetLastError());
+}
+
+DWORD _MapAction(DWORD dwAction, BOOL isDir)
+{
+    switch (dwAction)
+    {
+       case FILE_ACTION_ADDED : return isDir ? SHCNE_MKDIR : SHCNE_CREATE;
+       case FILE_ACTION_REMOVED : return isDir ? SHCNE_RMDIR : SHCNE_DELETE;
+       case FILE_ACTION_MODIFIED : return isDir ? SHCNE_UPDATEDIR : SHCNE_UPDATEITEM;
+       case FILE_ACTION_RENAMED_OLD_NAME : return isDir ? SHCNE_UPDATEDIR : SHCNE_UPDATEITEM;
+       case FILE_ACTION_RENAMED_NEW_NAME : return isDir ? SHCNE_UPDATEDIR : SHCNE_UPDATEITEM;
+       default: return SHCNE_UPDATEITEM;
+    }
+}
+
+VOID _ProcessNotification(LPNOTIFYREGISTER item)
+{
+    BYTE* pBase = item->backBuffer;
+    TRACE("_ProcessNotification\n");
+
+    for (;;)
+    {
+        FILE_NOTIFY_INFORMATION* fni = (FILE_NOTIFY_INFORMATION*)pBase;
+        LPWSTR wszFilename;
+        INT len = 0;
+        WCHAR wstrFilename[MAX_PATH];
+        WCHAR tmp[MAX_PATH];
+        StringCchCopy(tmp, fni->FileNameLength, fni->FileName);
+
+        PathCombine(wstrFilename, item->wstrDirectory, tmp);
+
+        /* If it could be a short filename, expand it. */
+        wszFilename = PathFindFileNameW(wstrFilename);
+
+        len = lstrlenW(wszFilename);
+        /* The maximum length of an 8.3 filename is twelve, including the dot. */
+        if (len <= 12 && wcschr(wszFilename, L'~'))
+        {
+            /* Convert to the long filename form. Unfortunately, this
+               does not work for deletions, so it's an imperfect fix. */
+            wchar_t wbuf[MAX_PATH];
+            if (GetLongPathName(wstrFilename, wbuf, _countof (wbuf)) > 0)
+                StringCchCopyW(wstrFilename, MAX_PATH, wbuf);
+        }
+
+        /* On deletion of a folder PathIsDirectory will return false even if
+           it *was* a directory, so, again, imperfect. */
+        SHChangeNotify(_MapAction(fni->Action, PathIsDirectory(wstrFilename)) | SHCNE_INTERRUPT,
+                       SHCNF_PATHW,
+                       wstrFilename,
+                       NULL);
+
+        if (!fni->NextEntryOffset)
+            break;
+        pBase += fni->NextEntryOffset;
+    }
+}
+
+static void CALLBACK _RequestAllTermination(ULONG_PTR arg)
+{
+    m_bTerminate = TRUE;
+}
+
+static unsigned int WINAPI _RunAsyncThreadProc(LPVOID arg)
+{
+    m_bTerminate = FALSE;
+    while (!m_bTerminate)
+    {
+        SleepEx(INFINITE, TRUE);
+    }
+    return 0;
+}
+
+#endif /* __REACTOS__ */

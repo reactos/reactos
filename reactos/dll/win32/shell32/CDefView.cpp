@@ -138,6 +138,7 @@ class CDefView :
         BOOLEAN LV_AddItem(PCUITEMID_CHILD pidl);
         BOOLEAN LV_DeleteItem(PCUITEMID_CHILD pidl);
         BOOLEAN LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew);
+        BOOLEAN LV_ProdItem(PCUITEMID_CHILD pidl);
         static INT CALLBACK fill_list(LPVOID ptr, LPVOID arg);
         HRESULT FillList();
         HMENU BuildFileMenu();
@@ -835,6 +836,31 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
         m_ListView.SetItem(&lvItem);
         m_ListView.Update(nItem);
         return TRUE;                    /* FIXME: better handling */
+    }
+
+    return FALSE;
+}
+
+/**********************************************************
+* LV_ProdItem()
+*/
+BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
+{
+    int nItem;
+    LVITEMW lvItem;
+
+    TRACE("(%p)(pidl=%p)\n", this, pidl);
+
+    nItem = LV_FindItemByPidl(pidl);
+
+    if ( -1 != nItem )
+    {
+        lvItem.mask = LVIF_IMAGE;
+        lvItem.iItem = nItem;
+        lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
+        m_ListView.SetItem(&lvItem);
+        m_ListView.Update(nItem);
+        return TRUE;
     }
 
     return FALSE;
@@ -1925,7 +1951,16 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         case SHCNE_MKDIR:
         case SHCNE_CREATE:
             if (bParent0)
-                LV_AddItem(ILFindLastID(Pidls[0]));
+            {
+                if (LV_FindItemByPidl(ILFindLastID(Pidls[0])) == -1)
+                {
+                    LV_AddItem(ILFindLastID(Pidls[0]));
+                }
+                else
+                {
+                    LV_ProdItem(ILFindLastID(Pidls[0]));
+                }
+            }
             break;
 
         case SHCNE_RMDIR:
@@ -1941,7 +1976,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             else if (bParent0)
                 LV_DeleteItem(ILFindLastID(Pidls[0]));
             else if (bParent1)
-                LV_AddItem(ILFindLastID(Pidls[0]));
+                LV_AddItem(ILFindLastID(Pidls[1]));
             break;
 
         case SHCNE_UPDATEITEM:
