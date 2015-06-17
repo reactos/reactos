@@ -34,7 +34,7 @@ struct RefreshThreadData
 {
     CDeviceView *This;
     BOOL ScanForChanges;
-BOOL UpdateView;
+    BOOL UpdateView;
 };
 
 

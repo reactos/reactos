@@ -75,32 +75,87 @@ CNode::HasProperties()
 bool
 CNode::IsHidden()
 {
-    return ((m_Status & DN_NO_SHOW_IN_DM) != 0);
+    CONFIGRET cr;
+    cr = CM_Get_DevNode_Status_Ex(&m_Status,
+                                  &m_ProblemNumber,
+                                  m_DevInst,
+                                  0,
+                                  NULL);
+    if (cr == CR_SUCCESS)
+    {
+        return ((m_Status & DN_NO_SHOW_IN_DM) != 0);
+    }
+
+    return false;
 }
 
 bool
 CNode::CanDisable()
 {
-    return (m_NodeType == NodeDevice && ((m_Status & DN_DISABLEABLE) != 0));
+    CONFIGRET cr;
+    cr = CM_Get_DevNode_Status_Ex(&m_Status,
+                                  &m_ProblemNumber,
+                                  m_DevInst,
+                                  0,
+                                  NULL);
+    if (cr == CR_SUCCESS)
+    {
+        return (m_NodeType == NodeDevice && ((m_Status & DN_DISABLEABLE) != 0));
+    }
+
+    return false;
 }
 
 bool
 CNode::IsDisabled()
 {
-    return ((m_ProblemNumber & (CM_PROB_DISABLED | CM_PROB_HARDWARE_DISABLED)) != 0);
+    CONFIGRET cr;
+    cr = CM_Get_DevNode_Status_Ex(&m_Status,
+                                  &m_ProblemNumber,
+                                  m_DevInst,
+                                  0,
+                                  NULL);
+    if (cr == CR_SUCCESS)
+    {
+        return ((m_ProblemNumber & (CM_PROB_DISABLED | CM_PROB_HARDWARE_DISABLED)) != 0);
+    }
+
+    return false;
 }
 
 bool
 CNode::IsStarted()
 {
-    return ((m_Status & DN_STARTED) != 0);
+    CONFIGRET cr;
+    cr = CM_Get_DevNode_Status_Ex(&m_Status,
+                                  &m_ProblemNumber,
+                                  m_DevInst,
+                                  0,
+                                  NULL);
+    if (cr == CR_SUCCESS)
+    {
+        return ((m_Status & DN_STARTED) != 0);
+    }
+
+    return false;
 }
 
 bool
 CNode::IsInstalled()
 {
-    return ((m_Status & DN_HAS_PROBLEM) != 0 ||
-            (m_Status & (DN_DRIVER_LOADED | DN_STARTED)) != 0);
+    CONFIGRET cr;
+    cr = CM_Get_DevNode_Status_Ex(&m_Status,
+                                  &m_ProblemNumber,
+                                  m_DevInst,
+                                  0,
+                                  NULL);
+    if (cr == CR_SUCCESS)
+    {
+        return ((m_Status & DN_HAS_PROBLEM) != 0 ||
+                (m_Status & (DN_DRIVER_LOADED | DN_STARTED)) != 0);
+    }
+
+    return false;
 }
 
 
