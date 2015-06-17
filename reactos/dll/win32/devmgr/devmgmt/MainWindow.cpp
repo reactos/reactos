@@ -16,7 +16,6 @@
 
 #define BTN_PROPERTIES      0
 #define BTN_SCAN_HARDWARE   1
-#define BTN_SEPERATOR       -1
 #define BTN_ENABLE_DRV      2
 #define BTN_DISABLE_DRV     3
 #define BTN_UPDATE_DRV      4
@@ -124,7 +123,7 @@ CMainWindow::Initialize(LPCTSTR lpCaption,
                                      WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                                      CW_USEDEFAULT,
                                      CW_USEDEFAULT,
-                                     500,
+                                     550,
                                      500,
                                      NULL,
                                      NULL,
@@ -230,9 +229,6 @@ CMainWindow::ScanForHardwareChanges()
     return true;
 }
 
-
-
-
 bool
 CMainWindow::CreateToolBar()
 {
@@ -311,7 +307,7 @@ CMainWindow::CreateStatusBar()
     return bRet;
 }
 
-void CMainWindow::UpdateContext(_In_ LPTV_ITEMW TvItem)
+void CMainWindow::UpdateUiContext(_In_ LPTV_ITEMW TvItem)
 {
     WORD State;
 
@@ -437,10 +433,10 @@ CMainWindow::OnSize()
     lvHeight = rcClient.bottom - iToolHeight - iStatusHeight;
 
     // Resize the device view
-    m_DeviceView->Size(0,
-                       iToolHeight,
-                       rcClient.right,
-                       lvHeight);
+    m_DeviceView->OnSize(0,
+                         iToolHeight,
+                         rcClient.right,
+                         lvHeight);
 
     return 0;
 }
@@ -449,27 +445,20 @@ LRESULT
 CMainWindow::OnNotify(LPARAM lParam)
 {
     LPNMHDR NmHdr = (LPNMHDR)lParam;
+    LRESULT Ret;
 
     switch (NmHdr->code)
     {
         case TVN_SELCHANGED:
         {
             LPNMTREEVIEW NmTreeView = (LPNMTREEVIEW)lParam;
-            UpdateContext(&NmTreeView->itemNew);
+            UpdateUiContext(&NmTreeView->itemNew);
             break;
         }
 
-        case TVN_DELETEITEMW:
+        case NM_RCLICK:
         {
-            LPNMTREEVIEW NmTreeView = (LPNMTREEVIEW)lParam;
-            NmTreeView->action = NmTreeView->action;
-
-            break;
-        }
-
-        case NM_DBLCLK:
-        {
-            m_DeviceView->DisplayPropertySheet();
+            Ret = m_DeviceView->OnRightClick(NmHdr);
             break;
         }
 
@@ -486,7 +475,7 @@ CMainWindow::OnNotify(LPARAM lParam)
 LRESULT
 CMainWindow::OnContext(LPARAM lParam)
 {
-    return 0;
+    return m_DeviceView->OnContextMenu(lParam);
 }
 
 LRESULT
@@ -535,12 +524,12 @@ CMainWindow::OnCommand(WPARAM wParam,
             if (CurCheckState == MF_CHECKED)
             {
                 // Inform the device view of the change
-                m_DeviceView->ShowHiddenDevices(false);
+                m_DeviceView->SetHiddenDevices(false);
                 NewCheckState = MF_UNCHECKED;
             }
             else if (CurCheckState == MF_UNCHECKED)
             {
-                m_DeviceView->ShowHiddenDevices(true);
+                m_DeviceView->SetHiddenDevices(true);
                 NewCheckState = MF_CHECKED;
             }
             else

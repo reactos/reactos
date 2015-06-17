@@ -20,7 +20,8 @@ class CDeviceView
     HWND m_hMainWnd;
     HWND m_hTreeView;
     HWND m_hPropertyDialog;
-    HWND m_hShortcutMenu;
+    HMENU m_hMenu;
+    HMENU m_hContextMenu;
     ViewType m_ViewType;
 
     HTREEITEM m_hTreeRoot;
@@ -39,11 +40,19 @@ public:
     bool Initialize();
     bool Uninitialize();
 
-    VOID Size(
+    LRESULT OnSize(
         _In_ int x,
         _In_ int y,
         _In_ int cx,
         _In_ int cy
+        );
+
+    LRESULT OnRightClick(
+        _In_ LPNMHDR NmHdr
+        );
+
+    LRESULT OnContextMenu(
+        _In_ LPARAM lParam
         );
 
     VOID Refresh(
@@ -55,12 +64,7 @@ public:
     VOID DisplayPropertySheet();
     VOID SetFocus();
 
-    //VOID SetDeviceListType(ListDevices List)
-    //{
-    //    m_ListDevices = List;
-    //}
-
-    VOID ShowHiddenDevices(_In_ bool ShowHidden)
+    VOID SetHiddenDevices(_In_ bool ShowHidden)
     {
         m_ShowHidden = ShowHidden;
     }

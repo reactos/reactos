@@ -44,7 +44,7 @@ private:
     bool CreateToolBar();
     bool CreateStatusBar();
 
-    void UpdateContext(_In_ LPTV_ITEMW TvItem);
+    void UpdateUiContext(_In_ LPTV_ITEMW TvItem);
 
     bool StatusBarLoadString(
         HWND hStatusBar,

@@ -34,7 +34,7 @@ struct RefreshThreadData
 {
     CDeviceView *This;
     BOOL ScanForChanges;
-    BOOL UpdateView;
+BOOL UpdateView;
 };
 
 
@@ -46,7 +46,8 @@ CDeviceView::CDeviceView(
     m_hMainWnd(hMainWnd),
     m_hTreeView(NULL),
     m_hPropertyDialog(NULL),
-    m_hShortcutMenu(NULL),
+    m_hMenu(NULL),
+    m_hContextMenu(NULL),
     m_ViewType(DevicesByType),
     m_ShowHidden(FALSE),
     m_RootClassImage(-1),
@@ -72,7 +73,7 @@ CDeviceView::Initialize()
                                   WC_TREEVIEW,
                                   NULL,
                                   WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES |
-                                   TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_LINESATROOT,
+                                  TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_LINESATROOT,
                                   0, 0, 0, 0,
                                   m_hMainWnd,
                                   (HMENU)IDC_TREEVIEW,
@@ -89,6 +90,11 @@ CDeviceView::Initialize()
         SetWindowTheme(m_hTreeView, L"explorer", NULL);
     }
 
+    // Create the context menu and make properties the default item
+    m_hMenu = LoadMenuW(g_hInstance, MAKEINTRESOURCEW(IDR_POPUP));
+    m_hContextMenu = GetSubMenu(m_hMenu, 0);
+    SetMenuDefaultItem(m_hContextMenu, IDC_PROPERTIES, FALSE);
+
     return !!(m_hTreeView);
 }
 
@@ -103,11 +109,13 @@ CDeviceView::Uninitialize()
         ZeroMemory(&m_ImageListData, sizeof(SP_CLASSIMAGELIST_DATA));
     }
 
+    DestroyMenu(m_hMenu);
+
     return true;
 }
 
-void
-CDeviceView::Size(
+LRESULT
+CDeviceView::OnSize(
     _In_ int x,
     _In_ int y,
     _In_ int cx,
@@ -122,12 +130,64 @@ CDeviceView::Size(
                  cx,
                  cy,
                  SWP_NOZORDER);
+
+    return 0;
 }
 
+LRESULT
+CDeviceView::OnRightClick(
+    _In_ LPNMHDR NmHdr
+    )
+{
+    HTREEITEM hItem = TreeView_GetNextItem(NmHdr->hwndFrom, 0, TVGN_DROPHILITE);
+    if (hItem)
+    {
+        TreeView_SelectItem(NmHdr->hwndFrom, hItem);
+    }
+
+    return 0;
+}
+
+LRESULT
+CDeviceView::OnContextMenu(
+    _In_ LPARAM lParam
+    )
+{
+    HTREEITEM hSelected = TreeView_GetSelection(m_hTreeView);
+
+    RECT rc;
+    if (TreeView_GetItemRect(m_hTreeView,
+                             hSelected,
+                             &rc,
+                             TRUE))
+    {
+        POINT pt;
+        if (GetCursorPos(&pt) &&
+            ScreenToClient(m_hTreeView, &pt) &&
+            PtInRect(&rc, pt))
+        {
+            INT xPos = GET_X_LPARAM(lParam);
+            INT yPos = GET_Y_LPARAM(lParam);
+
+            TrackPopupMenuEx(m_hContextMenu,
+                             TPM_RIGHTBUTTON,
+                             xPos,
+                             yPos,
+                             m_hMainWnd,
+                             NULL);
+        }
+    }
+
+    return 0;
+}
+
+
 void
-CDeviceView::Refresh(_In_ ViewType Type,
-                     _In_ bool ScanForChanges,
-                     _In_ bool UpdateView)
+CDeviceView::Refresh(
+    _In_ ViewType Type,
+    _In_ bool ScanForChanges,
+    _In_ bool UpdateView
+    )
 {
     // Enum devices on a seperate thread to keep the gui responsive
 
@@ -192,7 +252,9 @@ CDeviceView::SetFocus()
 }
 
 bool
-CDeviceView::HasProperties(_In_ LPTV_ITEMW TvItem)
+CDeviceView::HasProperties(
+    _In_ LPTV_ITEMW TvItem
+    )
 {
     CNode *Node = GetNode(TvItem);
     if (Node)
@@ -203,7 +265,9 @@ CDeviceView::HasProperties(_In_ LPTV_ITEMW TvItem)
 }
 
 bool
-CDeviceView::IsDisabled(_In_ LPTV_ITEMW TvItem)
+CDeviceView::IsDisabled(
+    _In_ LPTV_ITEMW TvItem
+    )
 {
     CNode *Node = GetNode(TvItem);
     if (Node)
@@ -214,7 +278,9 @@ CDeviceView::IsDisabled(_In_ LPTV_ITEMW TvItem)
 }
 
 bool
-CDeviceView::CanDisable(_In_ LPTV_ITEMW TvItem)
+CDeviceView::CanDisable(
+    _In_ LPTV_ITEMW TvItem
+    )
 {
     CNode *Node = GetNode(TvItem);
     if (Node)
