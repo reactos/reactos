@@ -3358,6 +3358,20 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     break;
                 }
 
+                /* Set PEL Mask */
+                case 0x18:
+                {
+                    IOWriteB(VGA_DAC_MASK, getBL());
+                    break;
+                }
+
+                /* Get PEL Mask */
+                case 0x19:
+                {
+                    setBL(IOReadB(VGA_DAC_MASK));
+                    break;
+                }
+
                 default:
                 {
                     DPRINT1("BIOS Palette Control Sub-command AL = 0x%02X NOT IMPLEMENTED\n",
