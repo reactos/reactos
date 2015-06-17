@@ -774,10 +774,13 @@ typedef struct _KNODE
     SLIST_HEADER DeadStackList;
     SLIST_HEADER PfnDereferenceSListHead;
     KAFFINITY ProcessorMask;
-    ULONG Color;
+    UCHAR Color;
     UCHAR Seed;
     UCHAR NodeNumber;
-    ULONG Flags;
+    struct _flags {
+        UCHAR Removable : 1;
+        UCHAR Fill : 7;
+    } Flags;
     ULONG MmShiftedColor;
     ULONG FreeCount[2];
     struct _SINGLE_LIST_ENTRY *PfnDeferredList;
