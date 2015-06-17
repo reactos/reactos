@@ -2212,6 +2212,88 @@ QSI_DEF(SystemNumaProcessorMap)
 }
 
 
+/* Class 56 - Prefetcher information  */
+QSI_DEF(SystemPrefetcherInformation)
+{
+    /* FIXME */
+    DPRINT1("NtQuerySystemInformation - SystemPrefetcherInformation not implemented\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Class 57 - Extended process information  */
+QSI_DEF(SystemExtendedProcessInformation)
+{
+    /* FIXME */
+    DPRINT1("NtQuerySystemInformation - SystemExtendedProcessInformation not implemented\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Class 58 - Recommended shared ata alignment  */
+QSI_DEF(SystemRecommendedSharedDataAlignment)
+{
+    /* FIXME */
+    DPRINT1("NtQuerySystemInformation - SystemRecommendedSharedDataAlignment not implemented\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Class 60 - NUMA memory information  */
+QSI_DEF(SystemNumaAvailableMemory)
+{
+    ULONG MaxEntries, Node;
+    PSYSTEM_NUMA_INFORMATION NumaInformation = (PSYSTEM_NUMA_INFORMATION)Buffer;
+
+    /* Validate input size */
+    if (Size < sizeof(ULONG))
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Return highest node */
+    NumaInformation->HighestNodeNumber = KeNumberNodes - 1;
+
+    /* Compute how much entries we will be able to put in output structure */
+    MaxEntries = (Size - FIELD_OFFSET(SYSTEM_NUMA_INFORMATION, AvailableMemory)) / sizeof(ULONGLONG);
+    /* Make sure we don't overflow KeNodeBlock */
+    if (MaxEntries > KeNumberNodes)
+    {
+        MaxEntries = KeNumberNodes;
+    }
+
+    /* If we have entries to write, and room for it */
+    if (Size >= FIELD_OFFSET(SYSTEM_NUMA_INFORMATION, AvailableMemory) &&
+        MaxEntries != 0)
+    {
+        /* Already set size we return */
+        *ReqSize = FIELD_OFFSET(SYSTEM_NUMA_INFORMATION, AvailableMemory) +
+                   MaxEntries * sizeof(ULONGLONG);
+
+        /* If we have a single entry (us), directly return MM information */
+        if (MaxEntries == 1)
+        {
+            NumaInformation->AvailableMemory[0] = MmAvailablePages << PAGE_SHIFT;
+        }
+        else
+        {
+            /* Otherwise, for each node, return available bytes */
+            for (Node = 0; Node < MaxEntries; ++Node)
+            {
+                NumaInformation->AvailableMemory[Node] = (KeNodeBlock[Node]->FreeCount[0] + KeNodeBlock[Node]->FreeCount[1]) << PAGE_SHIFT;
+            }
+        }
+    }
+    else
+    {
+        /* We only returned highest node number */
+        *ReqSize = sizeof(ULONG);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 /* Query/Set Calls Table */
 typedef
 struct _QSSI_CALLS
@@ -2290,7 +2372,12 @@ CallQS [] =
     SI_XS(SystemAddVerifier),
     SI_QX(SystemSessionProcessesInformation),
     SI_XS(SystemLoadGdiDriverInSystemSpaceInformation),
-    SI_QX(SystemNumaProcessorMap)
+    SI_QX(SystemNumaProcessorMap),
+    SI_QX(SystemPrefetcherInformation),
+    SI_QX(SystemExtendedProcessInformation),
+    SI_QX(SystemRecommendedSharedDataAlignment),
+    SI_XX(SystemComPlusPackage),
+    SI_QX(SystemNumaAvailableMemory)
 };
 
 C_ASSERT(SystemBasicInformation == 0);
