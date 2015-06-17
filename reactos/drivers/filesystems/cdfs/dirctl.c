@@ -751,7 +751,8 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 
 static NTSTATUS
 CdfsNotifyChangeDirectory(PDEVICE_OBJECT DeviceObject,
-                          PIRP Irp)
+                          PIRP Irp,
+                          PCDFS_IRP_CONTEXT IrpContext)
 {
     PDEVICE_EXTENSION DeviceExtension;
     PFCB Fcb;
@@ -778,6 +779,9 @@ CdfsNotifyChangeDirectory(PDEVICE_OBJECT DeviceObject,
                                    Irp,
                                    NULL,
                                    NULL);
+
+    /* We won't handle IRP completion */
+    IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
 
     return STATUS_PENDING;
 }
@@ -809,7 +813,7 @@ CdfsDirectoryControl(
 
     case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
         Status = CdfsNotifyChangeDirectory(DeviceObject,
-            Irp);
+            Irp, IrpContext);
         break;
 
     default:
