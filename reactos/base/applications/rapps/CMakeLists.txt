@@ -16,6 +16,8 @@ list(APPEND SOURCE
     winmain.c
     rapps.h)
 
+file(GLOB_RECURSE rapps_rc_deps res/*.*)
+add_rc_deps(rapps.rc ${rapps_rc_deps})
 add_executable(rapps ${SOURCE} rapps.rc)
 set_module_type(rapps win32gui UNICODE)
 target_link_libraries(rapps uuid)

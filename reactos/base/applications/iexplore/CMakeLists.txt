@@ -1,4 +1,5 @@
 
+add_rc_deps(iexplore.rc ${CMAKE_CURRENT_SOURCE_DIR}/iexplore.ico)
 add_executable(iexplore main.c iexplore.rc)
 target_link_libraries(iexplore wine)
 set_module_type(iexplore win32gui UNICODE)

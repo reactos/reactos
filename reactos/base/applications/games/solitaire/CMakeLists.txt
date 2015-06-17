@@ -8,6 +8,7 @@ list(APPEND SOURCE
     solitaire.cpp
     solitaire.h)
 
+add_rc_deps(rsrc.rc ${CMAKE_CURRENT_SOURCE_DIR}/solitaire.ico)
 add_executable(sol ${SOURCE} rsrc.rc)
 target_link_libraries(sol cardlib)
 set_module_type(sol win32gui UNICODE)

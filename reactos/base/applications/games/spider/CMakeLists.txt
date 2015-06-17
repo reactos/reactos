@@ -10,6 +10,7 @@ list(APPEND SOURCE
     spigame.cpp
     spider.h)
 
+add_rc_deps(rsrc.rc ${CMAKE_CURRENT_SOURCE_DIR}/spider.ico)
 add_executable(spider ${SOURCE} rsrc.rc)
 target_link_libraries(spider cardlib)
 add_pch(spider spider.h SOURCE)

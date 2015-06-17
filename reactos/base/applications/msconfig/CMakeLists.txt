@@ -9,6 +9,7 @@ list(APPEND SOURCE
     msconfig.c
     precomp.h)
 
+add_rc_deps(msconfig.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/msconfig.ico)
 add_executable(msconfig ${SOURCE} msconfig.rc)
 set_module_type(msconfig win32gui UNICODE)
 add_importlibs(msconfig user32 advapi32 version comctl32 shell32 shlwapi msvcrt kernel32)

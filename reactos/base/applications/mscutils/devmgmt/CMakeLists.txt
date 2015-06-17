@@ -7,6 +7,8 @@ list(APPEND SOURCE
     misc.c
     precomp.h)
 
+file(GLOB devmgmt_rc_deps res/*.*)
+add_rc_deps(devmgmt.rc ${devmgmt_rc_deps})
 add_executable(devmgmt ${SOURCE} devmgmt.rc)
 set_module_type(devmgmt win32gui UNICODE)
 add_importlibs(devmgmt setupapi gdi32 user32 comctl32 advapi32 devmgr msvcrt kernel32)

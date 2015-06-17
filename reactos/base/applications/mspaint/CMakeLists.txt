@@ -16,6 +16,8 @@ list(APPEND SOURCE
     winproc.c
     precomp.h)
 
+file(GLOB mspaint_rc_deps icons/*.*)
+add_rc_deps(rsrc.rc ${mspaint_rc_deps})
 add_executable(mspaint ${SOURCE} rsrc.rc)
 set_module_type(mspaint win32gui UNICODE)
 add_importlibs(mspaint hhctrl comdlg32 shell32 user32 gdi32 advapi32 comctl32 msvcrt kernel32)

@@ -15,6 +15,7 @@ list(APPEND SOURCE
     d3dtest9.c
     precomp.h)
 
+add_rc_deps(dxdiag.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/dxdiag.ico)
 add_executable(dxdiag ${SOURCE} dxdiag.rc)
 set_module_type(dxdiag win32gui UNICODE)
 target_link_libraries(dxdiag dxguid)

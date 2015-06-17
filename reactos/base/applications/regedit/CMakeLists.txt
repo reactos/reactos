@@ -18,6 +18,8 @@ list(APPEND SOURCE
     treeview.c
     regedit.h)
 
+file(GLOB regedit_rc_deps res/*.*)
+add_rc_deps(regedit.rc ${regedit_rc_deps})
 add_executable(regedit ${SOURCE} regedit.rc)
 set_module_type(regedit win32gui UNICODE)
 target_link_libraries(regedit uuid)

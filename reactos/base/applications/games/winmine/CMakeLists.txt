@@ -6,6 +6,8 @@ list(APPEND SOURCE
     dialog.c
     main.h)
 
+file(GLOB winmine_rc_deps rc/*.*)
+add_rc_deps(rsrc.rc ${winmine_rc_deps})
 add_executable(winmine ${SOURCE} rsrc.rc)
 set_module_type(winmine win32gui UNICODE)
 target_link_libraries(winmine wine)

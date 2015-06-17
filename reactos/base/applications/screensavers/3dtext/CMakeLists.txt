@@ -4,6 +4,7 @@ list(APPEND SOURCE
     settings.c
     3dtext.h)
 
+add_rc_deps(rsrc.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/icon_3dtext.ico)
 add_executable(3dtext ${SOURCE} rsrc.rc)
 set_module_type(3dtext win32gui UNICODE)
 set_target_properties(3dtext PROPERTIES SUFFIX ".scr")
