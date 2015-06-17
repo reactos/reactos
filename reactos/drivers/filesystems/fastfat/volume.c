@@ -23,28 +23,41 @@ FsdGetFsVolumeInformation(
     PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
     PULONG BufferLength)
 {
+    NTSTATUS Status;
     PDEVICE_EXTENSION DeviceExt;
 
     DPRINT("FsdGetFsVolumeInformation()\n");
     DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
     DPRINT("BufferLength %lu\n", *BufferLength);
 
-    DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength));
+    DPRINT("Required length %lu\n", FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + DeviceObject->Vpb->VolumeLabelLength);
     DPRINT("LabelLength %hu\n", DeviceObject->Vpb->VolumeLabelLength);
     DPRINT("Label %*.S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
 
-    if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))
-        return STATUS_INFO_LENGTH_MISMATCH;
-
-    if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength))
-        return STATUS_BUFFER_OVERFLOW;
+    ASSERT(*BufferLength >= sizeof(FILE_FS_VOLUME_INFORMATION));
+    *BufferLength -= FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel);
 
     DeviceExt = DeviceObject->DeviceExtension;
 
     /* valid entries */
     FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
     FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
-    RtlCopyMemory(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel, FsVolumeInfo->VolumeLabelLength);
+    if (*BufferLength < DeviceObject->Vpb->VolumeLabelLength)
+    {
+        Status =  STATUS_BUFFER_OVERFLOW;
+        RtlCopyMemory(FsVolumeInfo->VolumeLabel,
+                      DeviceObject->Vpb->VolumeLabel,
+                      *BufferLength);
+        *BufferLength = 0;
+    }
+    else
+    {
+        Status =  STATUS_SUCCESS;
+        RtlCopyMemory(FsVolumeInfo->VolumeLabel,
+                      DeviceObject->Vpb->VolumeLabel,
+                      FsVolumeInfo->VolumeLabelLength);
+        *BufferLength -= DeviceObject->Vpb->VolumeLabelLength;
+    }
 
     if (DeviceExt->VolumeFcb->Flags & FCB_IS_FATX_ENTRY)
     {
@@ -64,12 +77,9 @@ FsdGetFsVolumeInformation(
     FsVolumeInfo->SupportsObjects = FALSE;
 
     DPRINT("Finished FsdGetFsVolumeInformation()\n");
-
-    *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength);
-
     DPRINT("BufferLength %lu\n", *BufferLength);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -80,29 +90,38 @@ FsdGetFsAttributeInformation(
     PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
     PULONG BufferLength)
 {
-    PCWSTR pName; ULONG Length;
+    NTSTATUS Status;
+    PCWSTR pName;
+    ULONG Length;
+
     DPRINT("FsdGetFsAttributeInformation()\n");
     DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
     DPRINT("BufferLength %lu\n", *BufferLength);
 
-    if (*BufferLength < sizeof (FILE_FS_ATTRIBUTE_INFORMATION))
-        return STATUS_INFO_LENGTH_MISMATCH;
+    ASSERT(*BufferLength >= sizeof(FILE_FS_ATTRIBUTE_INFORMATION));
+    *BufferLength -= FIELD_OFFSET(FILE_FS_ATTRIBUTE_INFORMATION, FileSystemName);
 
     if (DeviceExt->FatInfo.FatType == FAT32)
     {
-        Length = 10;
         pName = L"FAT32";
     }
     else
     {
-        Length = 6;
         pName = L"FAT";
     }
 
-    DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length));
+    Length = wcslen(pName) * sizeof(WCHAR);
+    DPRINT("Required length %lu\n", (FIELD_OFFSET(FILE_FS_ATTRIBUTE_INFORMATION, FileSystemName) + Length));
 
-    if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length))
-        return STATUS_BUFFER_OVERFLOW;
+    if (*BufferLength < Length)
+    {
+        Status = STATUS_BUFFER_OVERFLOW;
+        Length = *BufferLength;
+    }
+    else
+    {
+        Status = STATUS_SUCCESS;
+    }
 
     FsAttributeInfo->FileSystemAttributes =
         FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK;
@@ -115,10 +134,10 @@ FsdGetFsAttributeInformation(
 
     DPRINT("Finished FsdGetFsAttributeInformation()\n");
 
-    *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length);
+    *BufferLength -= Length;
     DPRINT("BufferLength %lu\n", *BufferLength);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -135,8 +154,7 @@ FsdGetFsSizeInformation(
     DPRINT("FsdGetFsSizeInformation()\n");
     DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
 
-    if (*BufferLength < sizeof(FILE_FS_SIZE_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
+    ASSERT(*BufferLength >= sizeof(FILE_FS_SIZE_INFORMATION));
 
     DeviceExt = DeviceObject->DeviceExtension;
     Status = CountAvailableClusters(DeviceExt, &FsSizeInfo->AvailableAllocationUnits);
@@ -165,8 +183,7 @@ FsdGetFsDeviceInformation(
     DPRINT("BufferLength %lu\n", *BufferLength);
     DPRINT("Required length %lu\n", sizeof(FILE_FS_DEVICE_INFORMATION));
 
-    if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
+    ASSERT(*BufferLength >= sizeof(FILE_FS_DEVICE_INFORMATION));
 
     FsDeviceInfo->DeviceType = FILE_DEVICE_DISK;
     FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
@@ -193,8 +210,7 @@ FsdGetFsFullSizeInformation(
     DPRINT("FsdGetFsFullSizeInformation()\n");
     DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
 
-    if (*BufferLength < sizeof(FILE_FS_FULL_SIZE_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
+    ASSERT(*BufferLength >= sizeof(FILE_FS_FULL_SIZE_INFORMATION));
 
     DeviceExt = DeviceObject->DeviceExtension;
     Status = CountAvailableClusters(DeviceExt, &FsSizeInfo->CallerAvailableAllocationUnits);
@@ -445,11 +461,8 @@ VfatQueryVolumeInformation(
 
     ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
 
-    if (NT_SUCCESS(RC))
-        IrpContext->Irp->IoStatus.Information =
-            IrpContext->Stack->Parameters.QueryVolume.Length - BufferLength;
-    else
-        IrpContext->Irp->IoStatus.Information = 0;
+    IrpContext->Irp->IoStatus.Information =
+        IrpContext->Stack->Parameters.QueryVolume.Length - BufferLength;
 
     return RC;
 }
