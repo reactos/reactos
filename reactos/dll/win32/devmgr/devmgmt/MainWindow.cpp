@@ -509,6 +509,36 @@ CMainWindow::OnCommand(WPARAM wParam,
             break;
         }
 
+        case IDC_ENABLE_DRV:
+        {
+            MessageBox(m_hMainWnd, L"Not yet implemented", L"Enable Driver", MB_OK);
+            break;
+        }
+
+        case IDC_DISABLE_DRV:
+        {
+            MessageBox(m_hMainWnd, L"Not yet implemented", L"Disable Driver", MB_OK);
+            break;
+        }
+
+        case IDC_UPDATE_DRV:
+        {
+            MessageBox(m_hMainWnd, L"Not yet implemented", L"Update Driver", MB_OK);
+            break;
+        }
+
+        case IDC_UNINSTALL_DRV:
+        {
+            MessageBox(m_hMainWnd, L"Not yet implemented", L"Uninstall Driver", MB_OK);
+            break;
+        }
+
+        case IDC_ADD_HARDWARE:
+        {
+            MessageBox(m_hMainWnd, L"Not yet implemented", L"Add Hardware", MB_OK);
+            break;
+        }
+
         case IDC_DEVBYTYPE:
         {
             RefreshView(DevicesByType);
@@ -523,31 +553,18 @@ CMainWindow::OnCommand(WPARAM wParam,
 
         case IDC_SHOWHIDDEN:
         {
-            UINT CurCheckState, NewCheckState;
-            
             // Get the current state
-            CurCheckState = GetMenuState(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND);
-
+            UINT CurCheckState = GetMenuState(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND);
             if (CurCheckState == MF_CHECKED)
             {
-                // Inform the device view of the change
                 m_DeviceView->SetHiddenDevices(false);
-                NewCheckState = MF_UNCHECKED;
+                CheckMenuItem(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND | MF_UNCHECKED);
             }
             else if (CurCheckState == MF_UNCHECKED)
             {
                 m_DeviceView->SetHiddenDevices(true);
-                NewCheckState = MF_CHECKED;
+                CheckMenuItem(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND | MF_CHECKED);
             }
-            else
-            {
-                ATLASSERT(FALSE);
-                break;
-            }
-
-            // Set the new check state
-            CheckMenuItem(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND | NewCheckState);
-
             // Refresh the device view
             m_DeviceView->Refresh(m_DeviceView->GetCurrentView(),
                                   false,
@@ -688,14 +705,16 @@ CMainWindow::MainWndProc(HWND hwnd,
                 // Hand it off to the default message handler
                 goto HandleDefaultMessage;
             }
+            break;
         }
 
         case WM_CLOSE:
         {
             // Destroy the main window
             DestroyWindow(hwnd);
+            break;
         }
-        break;
+        
 
         case WM_DESTROY:
         {

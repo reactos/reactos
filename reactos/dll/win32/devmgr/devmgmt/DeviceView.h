@@ -99,7 +99,7 @@ private:
         _Out_ HDEVINFO *hDevInfo
         );
 
-    VOID RecurseChildDevices(
+    bool RecurseChildDevices(
         _In_ DEVINST ParentDevice,
         _In_ HTREEITEM hParentTreeItem
         );

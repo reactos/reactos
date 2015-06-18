@@ -570,37 +570,37 @@ CDeviceView::ListDevicesByType()
 bool
 CDeviceView::ListDevicesByConnection()
 {
-    BOOL bSuccess;
+    bool bSuccess;
 
     // Start by adding the root node to the tree
     bSuccess = AddRootDevice();
     if (bSuccess == false) return false;
 
     // Walk the device tree and add all the devices 
-    RecurseChildDevices(m_RootDevInst, m_hTreeRoot);
+    (void)RecurseChildDevices(m_RootDevInst, m_hTreeRoot);
 
     // Expand the root item 
-    (VOID)TreeView_Expand(m_hTreeView,
+    (void)TreeView_Expand(m_hTreeView,
                           m_hTreeRoot,
                           TVE_EXPAND);
 
     return true;
 }
 
-VOID
+bool
 CDeviceView::RecurseChildDevices(
     _In_ DEVINST ParentDevice,
     _In_ HTREEITEM hParentTreeItem
     )
 {
-
     HTREEITEM hDevItem = NULL;
     DEVINST Device;
-    BOOL bSuccess;
+    bool HasProblem = false;
+    bool bSuccess;
 
     // Check if the parent has any child devices 
     if (GetChildDevice(ParentDevice, &Device) == FALSE)
-        return;
+        return true;
 
     // Get the cached device node
     CDeviceNode *DeviceNode;
@@ -608,26 +608,30 @@ CDeviceView::RecurseChildDevices(
     if (DeviceNode == NULL)
     {
         ATLASSERT(FALSE);
-        return;
+        return false;
     }
 
-
-    // Check if this is a hidden device 
+    // Don't show hidden devices if not requested
     if ((m_ShowHidden == TRUE) || (!(DeviceNode->IsHidden())))
     {
         // Add this device to the tree under its parent 
         hDevItem = InsertIntoTreeView(hParentTreeItem,
                                       DeviceNode);
-
-
         if (hDevItem)
         {
             // Check if this child has any children itself 
-            RecurseChildDevices(Device, hDevItem);
+            if (!RecurseChildDevices(Device, hDevItem))
+                HasProblem = true;
+        }
+
+        if (DeviceNode->HasProblem())
+        {
+            HasProblem = true;
         }
     }
 
 
+    // Check for siblings
     for (;;)
     {
         // Check if the parent device has anything at the same level 
@@ -647,20 +651,39 @@ CDeviceView::RecurseChildDevices(
                 continue;
         }
 
+        if (DeviceNode->HasProblem())
+        {
+            HasProblem = true;
+        }
+
         // Add this device to the tree under its parent 
         hDevItem = InsertIntoTreeView(hParentTreeItem,
                                       DeviceNode);
         if (hDevItem)
         {
             // Check if this child has any children itself 
-            RecurseChildDevices(Device, hDevItem);
+            if (!RecurseChildDevices(Device, hDevItem))
+                HasProblem = true;
         }
+        
     }
 
     (void)TreeView_SortChildren(m_hTreeView,
                                 hParentTreeItem,
                                 0);
 
+    // Expand the class if it has a problem device
+    if (HasProblem == true)
+    {
+        (void)TreeView_Expand(m_hTreeView,
+                              hParentTreeItem,
+                              TVE_EXPAND);
+    }
+
+    // If there was a problem, expand the ancestors
+    if (HasProblem) return false;
+
+    return true;
 }
 
 bool
@@ -860,29 +883,19 @@ CNode* CDeviceView::GetSelectedNode()
 void
 CDeviceView::EmptyLists()
 {
-    POSITION Pos;
-    CNode *Node;
+    CClassNode *ClassNode;
+    CDeviceNode *DeviceNode;
 
-    if (!m_ClassNodeList.IsEmpty())
+    while (!m_ClassNodeList.IsEmpty())
     {
-        Pos = m_ClassNodeList.GetHeadPosition();
-        do
-        {
-            Node = m_ClassNodeList.GetNext(Pos);
-            delete Node;
-
-        } while (Pos != NULL);
+        ClassNode = m_ClassNodeList.RemoveTail();
+        delete ClassNode;
     }
 
-    if (!m_DeviceNodeList.IsEmpty())
+    while (!m_DeviceNodeList.IsEmpty())
     {
-        Pos = m_DeviceNodeList.GetHeadPosition();
-        do
-        {
-            Node = m_DeviceNodeList.GetNext(Pos);
-            delete Node;
-
-        } while (Pos != NULL);
+        DeviceNode = m_DeviceNodeList.RemoveTail();
+        delete DeviceNode;
     }
 }
 
