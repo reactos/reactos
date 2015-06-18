@@ -605,7 +605,7 @@ static inline void DbgDumpMenuInternal(HMENU hmenu, char* padding, int padlevel)
         mii.dwTypeData = label;
         mii.cch = _countof(label);
 
-        GetMenuItemInfo(hmenu, i, TRUE, &mii);
+        GetMenuItemInfoW(hmenu, i, TRUE, &mii);
 
         if (mii.fType & MFT_BITMAP)
             DbgPrint("%s%2d - %08x: BITMAP %08p (state=%d, has submenu=%s)\n", padding, i, mii.wID, mii.hbmpItem, mii.fState, mii.hSubMenu ? "TRUE" : "FALSE");
