@@ -23,14 +23,14 @@
 #define expect_hotkey(id, mod, vk) do                                                               \
     {                                                                                               \
         MSG msg;                                                                                    \
-        BOOL got_hotkey = FALSE;                                                                    \
+        int hotkey_count = 0;                                                                       \
         while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))                                               \
         {                                                                                           \
             msg_hotkey(&msg, id, mod, vk);                                                          \
-            if (msg.message == WM_HOTKEY) got_hotkey = TRUE;                                        \
+            if (msg.message == WM_HOTKEY) hotkey_count++;                                           \
             DispatchMessageW(&msg);                                                                 \
         }                                                                                           \
-        ok(got_hotkey, "Did not receive expected WM_HOTKEY message\n");                             \
+        ok(hotkey_count == 1, "Received %d WM_HOTKEY messages, expected 1\n");                      \
     } while (0)
 #define msg_no_hotkey(msg) do                                                                       \
     {                                                                                               \
