@@ -363,7 +363,9 @@
 #define IDI_SHELL_OPEN_WITH        135
 #define IDI_SHELL_CONTROL_PANEL3   137
 #define IDI_SHELL_PRINTER2         138
-/* TODO: 139.ico, 140.ico, 141.ico */
+#define IDI_SHELL_PRINTER_ADD      139
+#define IDI_SHELL_NET_PRINTER      140
+#define IDI_SHELL_FILE_PRINTER     141
 #define IDI_SHELL_TRASH_FILE       142
 /* TODO: 143.ico, 144,ico, 145.ico, 146.ico, 147.ico, 148.ico */
 #define IDI_SHELL_INF_FILE         151
@@ -378,7 +380,10 @@
 #define IDI_SHELL_TOOLS_BACKUP     165
 #define IDI_SHELL_TOOLS_CHKDSK     166
 #define IDI_SHELL_TOOLS_DEFRAG     167
-/* TODO: 168.ico, 169.ico, 170.ico, 171.ico */
+#define IDI_SHELL_PRINTER_OK       168
+#define IDI_SHELL_NET_PRINTER_OK   169
+#define IDI_SHELL_FILE_PRINTER_OK  170
+/* TODO: 171.ico */
 #define IDI_SHELL_NETWORK_FOLDER   172
 #define IDI_SHELL_FAVORITES2       173
 #define IDI_SHELL_EXTENDED_PROPERTIES 174

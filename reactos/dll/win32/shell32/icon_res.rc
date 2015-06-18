@@ -47,7 +47,9 @@ IDI_SHELL_FIND_IN_FILE ICON "res/icons/134.ico"
 IDI_SHELL_OPEN_WITH ICON "res/icons/135.ico"
 IDI_SHELL_CONTROL_PANEL3 ICON "res/icons/137.ico"
 IDI_SHELL_PRINTER2 ICON "res/icons/138.ico"
-/* TODO: 139.ico, 140.ico, 141.ico */
+IDI_SHELL_PRINTER_ADD ICON "res/icons/139.ico"
+IDI_SHELL_NET_PRINTER ICON "res/icons/140.ico"
+IDI_SHELL_FILE_PRINTER ICON "res/icons/141.ico"
 IDI_SHELL_TRASH_FILE ICON "res/icons/33.ico" //142
 /* TODO 143.ico, 144,ico, 145.ico, 146.ico, 147.ico, 148.ico */
 IDI_SHELL_INF_FILE ICON "res/icons/151.ico"
@@ -62,7 +64,10 @@ IDI_SHELL_CONFIRM_DELETE ICON "res/icons/161.ico"
 IDI_SHELL_TOOLS_BACKUP ICON "res/icons/165.ico"
 IDI_SHELL_TOOLS_CHKDSK ICON "res/icons/166.ico"
 IDI_SHELL_TOOLS_DEFRAG ICON "res/icons/167.ico"
-/* TODO:  168.ico, 169.ico, 170.ico, 171.ico */
+IDI_SHELL_PRINTER_OK ICON "res/icons/168.ico"
+IDI_SHELL_NET_PRINTER_OK ICON "res/icons/169.ico"
+IDI_SHELL_FILE_PRINTER_OK ICON "res/icons/170.ico"
+/* TODO:  171.ico */
 IDI_SHELL_NETWORK_FOLDER ICON "res/icons/172.ico"
 IDI_SHELL_FAVORITES2 ICON "res/icons/173.ico"
 IDI_SHELL_EXTENDED_PROPERTIES ICON "res/icons/174.ico"
