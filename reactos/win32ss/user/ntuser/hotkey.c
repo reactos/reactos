@@ -36,7 +36,7 @@ DBG_DEFAULT_CHANNEL(UserHotkey);
 // HOT_KEY hkWinKey =   {NULL, 1,    MOD_WIN,   0,      IDHK_WINKEY,   &hkShiftF12};
 
 PHOT_KEY gphkFirst = NULL;
-BOOL bWinHotkeyActive = FALSE;
+UINT gfsModOnlyCandidate;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -180,18 +180,47 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
     PHOT_KEY pHotKey;
     PWND pWnd;
     BOOL DoNotPostMsg = FALSE;
+    BOOL IsModifier = FALSE;
 
     if (wVk == VK_SHIFT || wVk == VK_CONTROL || wVk == VK_MENU ||
         wVk == VK_LWIN || wVk == VK_RWIN)
     {
-        /* Those keys are specified by modifiers */
-        wVk = 0;
+        /* Remember that this was a modifier */
+        IsModifier = TRUE;
     }
 
     fModifiers = IntGetModifiers(gafAsyncKeyState);
 
-    /* Check if it is a hotkey */
-    pHotKey = IsHotKey(fModifiers, wVk);
+    if (bIsDown)
+    {
+        if (IsModifier)
+        {
+            /* Modifier key down -- no hotkey trigger, but remember this */
+            gfsModOnlyCandidate = fModifiers;
+            return FALSE;
+        }
+        else
+        {
+            /* Regular key down -- check for hotkey, and reset mod candidates */
+            pHotKey = IsHotKey(fModifiers, wVk);
+            gfsModOnlyCandidate = 0;
+        }
+    }
+    else
+    {
+        if (IsModifier)
+        {
+            /* Modifier key up -- modifier-only keys are triggered here */
+            pHotKey = IsHotKey(gfsModOnlyCandidate, 0);
+            gfsModOnlyCandidate = 0;
+        }
+        else
+        {
+            /* Regular key up -- no hotkey, but reset mod-only candidates */
+            gfsModOnlyCandidate = 0;
+            return FALSE;
+        }
+    }
 
     if (pHotKey)
     {
@@ -208,71 +237,53 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
             return DoNotPostMsg;
         }
 
-        /* Process hotkey if it is key up event */
-        if (!bIsDown)
+        /* WIN and F12 keys are not hardcoded here. See comments on top of this file. */
+        if (pHotKey->id == IDHK_WINKEY)
         {
-            /* WIN and F12 keys are not hardcoded here. See comments on top of this file. */
-            if (pHotKey->id == IDHK_WINKEY && bWinHotkeyActive)
+            ASSERT(!bIsDown);
+            pWnd = ValidateHwndNoErr(InputWindowStation->ShellWindow);
+            if (pWnd)
             {
-                pWnd = ValidateHwndNoErr(InputWindowStation->ShellWindow);
-                if (pWnd)
-                {
-                   TRACE("System Hot key Id %d Key %u\n", pHotKey->id, wVk );
-                   UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
-                   co_IntShellHookNotify(HSHELL_TASKMAN, 0, 0);
-                   bWinHotkeyActive = FALSE;
-                   return FALSE;
-                }
-            }
-        }
-        else
-        {    /* The user pressed the win key */
-            if (pHotKey->id == IDHK_WINKEY)
-            {
-               bWinHotkeyActive = TRUE;
+               TRACE("System Hot key Id %d Key %u\n", pHotKey->id, wVk );
+               UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
+               co_IntShellHookNotify(HSHELL_TASKMAN, 0, 0);
                return FALSE;
             }
         }
 
-        if (bIsDown)
+        if (!pHotKey->pWnd)
         {
-            if (!pHotKey->pWnd)
+            TRACE("UPTM Hot key Id %d Key %u\n", pHotKey->id, wVk );
+            UserPostThreadMessage(pHotKey->pti, WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
+            //ptiLastInput = pHotKey->pti;
+            return TRUE; /* Don't send any message */
+        }
+        else
+        {
+            pWnd = pHotKey->pWnd;
+            if (pWnd == PWND_BOTTOM)
             {
-                TRACE("UPTM Hot key Id %d Key %u\n", pHotKey->id, wVk );
-                UserPostThreadMessage(pHotKey->pti, WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
-                //ptiLastInput = pHotKey->pti;
-                return TRUE; /* Don't send any message */
+                if (gpqForeground == NULL)
+                    return FALSE;
+
+                pWnd = gpqForeground->spwndFocus;
             }
-            else
+
+            if (pWnd)
             {
-               if (pHotKey->pWnd == PWND_BOTTOM)
-               {
-                   if (gpqForeground != NULL)
-                   {
-                      pWnd = gpqForeground->spwndFocus;
-                   }
-                   else
-                      return FALSE;
+                //  pWnd->head.rpdesk->pDeskInfo->spwndShell needs testing.
+                if (pWnd == ValidateHwndNoErr(InputWindowStation->ShellWindow) && pHotKey->id == SC_TASKLIST)
+                {
+                    UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
+                    co_IntShellHookNotify(HSHELL_TASKMAN, 0, 0);
                 }
                 else
                 {
-                   pWnd = pHotKey->pWnd;
+                    TRACE("UPM Hot key Id %d Key %u\n", pHotKey->id, wVk );
+                    UserPostMessage(UserHMGetHandle(pWnd), WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
                 }
-                if (pWnd)
-                {          //  pWnd->head.rpdesk->pDeskInfo->spwndShell needs testing.
-                   if (pWnd == ValidateHwndNoErr(InputWindowStation->ShellWindow) && pHotKey->id == SC_TASKLIST)
-                   {
-                      ERR("Sending to shell window w/o IDHK_WINKEY..\n");
-                      UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
-                   }
-                   else
-                   {
-                      TRACE("UPM Hot key Id %d Key %u\n", pHotKey->id, wVk );
-                      UserPostMessage(UserHMGetHandle(pWnd), WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
-                   }
-                   //ptiLastInput = pWnd->head.pti;
-                   return TRUE; /* Don't send any message */
-                }
+                //ptiLastInput = pWnd->head.pti;
+                return TRUE; /* Don't send any message */
             }
         }
     }
