@@ -22,6 +22,7 @@ extern void func_InitializeLpkHooks(void);
 extern void func_LoadImage(void);
 extern void func_LookupIconIdFromDirectoryEx(void);
 extern void func_RealGetWindowClass(void);
+extern void func_RegisterHotKey(void);
 extern void func_ScrollDC(void);
 extern void func_ScrollWindowEx(void);
 extern void func_SendMessageTimeout(void);
@@ -55,6 +56,7 @@ const struct test winetest_testlist[] =
     { "LoadImage", func_LoadImage },
     { "LookupIconIdFromDirectoryEx", func_LookupIconIdFromDirectoryEx },
     { "RealGetWindowClass", func_RealGetWindowClass },
+    { "RegisterHotKey", func_RegisterHotKey },
     { "ScrollDC", func_ScrollDC },
     { "ScrollWindowEx", func_ScrollWindowEx },
     { "SendMessageTimeout", func_SendMessageTimeout },

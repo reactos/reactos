@@ -20,6 +20,7 @@ list(APPEND SOURCE
     LoadImage.c
     LookupIconIdFromDirectoryEx.c
     RealGetWindowClass.c
+    RegisterHotKey.c
     ScrollDC.c
     ScrollWindowEx.c
     SendMessageTimeout.c
