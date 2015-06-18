@@ -30,7 +30,7 @@
             if (msg.message == WM_HOTKEY) hotkey_count++;                                           \
             DispatchMessageW(&msg);                                                                 \
         }                                                                                           \
-        ok(hotkey_count == 1, "Received %d WM_HOTKEY messages, expected 1\n");                      \
+        ok(hotkey_count == 1, "Received %d WM_HOTKEY messages, expected 1\n", hotkey_count);        \
     } while (0)
 #define msg_no_hotkey(msg) do                                                                       \
     {                                                                                               \
