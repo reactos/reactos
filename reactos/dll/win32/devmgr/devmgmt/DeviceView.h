@@ -15,19 +15,15 @@ class CDeviceView
 {
     CAtlList<CClassNode *> m_ClassNodeList;
     CAtlList<CDeviceNode *> m_DeviceNodeList;
-
     SP_CLASSIMAGELIST_DATA m_ImageListData;
-
     HWND m_hMainWnd;
     HWND m_hTreeView;
     HWND m_hPropertyDialog;
     HMENU m_hMenu;
     HMENU m_hContextMenu;
     ViewType m_ViewType;
-
     HTREEITEM m_hTreeRoot;
     DEVINST m_RootDevInst;
-
     bool m_ShowHidden;
     int m_RootClassImage;
 
@@ -72,10 +68,16 @@ public:
 
     ViewType GetCurrentView() { return m_ViewType; }
 
-    bool HasProperties(_In_ LPTV_ITEMW TvItem);
+    bool HasProperties(
+        _In_ LPTV_ITEMW TvItem
+        );
     //bool SelDeviceIsHidden();
-    bool CanDisable(_In_ LPTV_ITEMW TvItem);
-    bool IsDisabled(_In_ LPTV_ITEMW TvItem);
+    bool CanDisable(
+        _In_ LPTV_ITEMW TvItem
+        );
+    bool IsDisabled(
+        _In_ LPTV_ITEMW TvItem
+        );
     bool SelDeviceIsStarted();
     bool SelDeviceIsInstalled();
 
@@ -126,11 +128,17 @@ private:
     VOID EmptyDeviceView(
         );
 
-    CNode* GetNode(_In_ LPTV_ITEMW TvItem);
+    CNode* GetNode(
+        _In_ LPTV_ITEMW TvItem
+        );
     CNode* GetSelectedNode();
 
-    CClassNode* GetClassNode(_In_ LPGUID ClassGuid);
-    CDeviceNode* GetDeviceNode(_In_ DEVINST Device);
+    CClassNode* GetClassNode(
+        _In_ LPGUID ClassGuid
+        );
+    CDeviceNode* GetDeviceNode(
+        _In_ DEVINST Device
+        );
     void EmptyLists();
 };
 

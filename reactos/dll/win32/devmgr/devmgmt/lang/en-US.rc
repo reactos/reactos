@@ -49,11 +49,21 @@ BEGIN
   END
 END
 
+#define IDS_HINT_PROPERTIES     20001
+#define IDS_HINT_SCAN           20002
+#define IDS_HINT_ENABLE         20003
+#define IDS_HINT_DISABLE        20004
+#define IDS_HINT_UPDATE         20005
+#define IDS_HINT_UNINSTALL      20006
+
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "Properties"
-  IDS_TOOLTIP_REFRESH   "Scan for hardware changes"
-  IDS_TOOLTIP_HELP      "Help"
+  IDS_TOOLTIP_PROPERTIES    "Properties"
+  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
+  IDS_TOOLTIP_ENABLE        "Enable"
+  IDS_TOOLTIP_DIABLE        "Disable"
+  IDS_TOOLTIP_UPDATE        "Update Driver Software"
+  IDS_TOOLTIP_UNINSTALL     "Uninstall"
 END
 
 /* Hints */

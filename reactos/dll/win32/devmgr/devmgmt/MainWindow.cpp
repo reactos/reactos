@@ -502,6 +502,35 @@ CMainWindow::OnNotify(LPARAM lParam)
             m_DeviceView->DisplayPropertySheet();
             break;
         }
+
+        case TTN_GETDISPINFO:
+        {
+             LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lParam;
+
+            UINT_PTR idButton = (UINT)lpttt->hdr.idFrom;
+            switch (idButton)
+            {
+                case IDC_PROPERTIES:
+                    lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_PROPERTIES);
+                    break;
+                case IDC_SCAN_HARDWARE:
+                    lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_SCAN);
+                    break;
+                case IDC_ENABLE_DRV:
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_ENABLE);
+                    break;
+                case IDC_DISABLE_DRV:
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_DIABLE);
+                    break;
+                case IDC_UPDATE_DRV:
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_UPDATE);
+                    break;
+                case IDC_UNINSTALL_DRV:
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_UNINSTALL);
+                    break;
+            }
+            break;
+        }
     }
 
     return 0;
@@ -657,12 +686,12 @@ CMainWindow::MainWndProc(HWND hwnd,
                          WPARAM wParam,
                          LPARAM lParam)
 {
-    CMainWindow *pThis;
+    CMainWindow *This;
     LRESULT RetCode = 0;
 
     // Get the object pointer from window context
-    pThis = (CMainWindow *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    if (pThis == NULL)
+    This = (CMainWindow *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    if (This == NULL)
     {
         // Check that this isn't a create message
         if (msg != WM_CREATE)
@@ -677,47 +706,47 @@ CMainWindow::MainWndProc(HWND hwnd,
         case WM_CREATE:
         {
             // Get the object pointer from the create param
-            pThis = (CMainWindow *)((LPCREATESTRUCT)lParam)->lpCreateParams;
+            This = (CMainWindow *)((LPCREATESTRUCT)lParam)->lpCreateParams;
 
             // Store the pointer in the window's global user data
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)This);
 
             // Call the create handler
-            RetCode = pThis->OnCreate(hwnd);
+            RetCode = This->OnCreate(hwnd);
             break;
         }
 
         case WM_SIZE:
         {
-            RetCode = pThis->OnSize();
+            RetCode = This->OnSize();
             break;
         }
 
         case WM_NOTIFY:
         {
-            RetCode = pThis->OnNotify(lParam);
+            RetCode = This->OnNotify(lParam);
             break;
         }
 
         case WM_CONTEXTMENU:
         {
-            RetCode = pThis->OnContext(lParam);
+            RetCode = This->OnContext(lParam);
             break;
         }
 
         case WM_MENUSELECT:
         {
-            if (pThis->m_hStatusBar != NULL)
+            if (This->m_hStatusBar != NULL)
             {
-                if (!pThis->MainWndMenuHint(LOWORD(wParam),
-                                            MainMenuHintTable,
-                                            sizeof(MainMenuHintTable) / sizeof(MainMenuHintTable[0]),
-                                            IDS_HINT_BLANK))
+                if (!This->MainWndMenuHint(LOWORD(wParam),
+                                           MainMenuHintTable,
+                                           sizeof(MainMenuHintTable) / sizeof(MainMenuHintTable[0]),
+                                           IDS_HINT_BLANK))
                 {
-                    pThis->MainWndMenuHint(LOWORD(wParam),
-                                           SystemMenuHintTable,
-                                           sizeof(SystemMenuHintTable) / sizeof(SystemMenuHintTable[0]),
-                                           IDS_HINT_BLANK);
+                    This->MainWndMenuHint(LOWORD(wParam),
+                                          SystemMenuHintTable,
+                                          sizeof(SystemMenuHintTable) / sizeof(SystemMenuHintTable[0]),
+                                          IDS_HINT_BLANK);
                 }
             }
 
@@ -727,7 +756,7 @@ CMainWindow::MainWndProc(HWND hwnd,
         case WM_COMMAND:
         {
             // Handle the command message
-            RetCode = pThis->OnCommand(wParam, lParam);
+            RetCode = This->OnCommand(wParam, lParam);
             if (RetCode == -1)
             {
                 // Hand it off to the default message handler
@@ -738,13 +767,13 @@ CMainWindow::MainWndProc(HWND hwnd,
 
         case WM_ENTERMENULOOP:
         {
-            pThis->UpdateStatusBar(true);
+            This->UpdateStatusBar(true);
             break;
         }
 
         case WM_EXITMENULOOP:
         {
-            pThis->UpdateStatusBar(false);
+            This->UpdateStatusBar(false);
             break;
         }
 
@@ -759,7 +788,7 @@ CMainWindow::MainWndProc(HWND hwnd,
         case WM_DESTROY:
         {
             // Call the destroy handler
-            RetCode = pThis->OnDestroy();
+            RetCode = This->OnDestroy();
             break;
         }
 

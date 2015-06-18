@@ -286,7 +286,7 @@ CDeviceView::CanDisable(
     CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetNode(TvItem));
     if (Node)
     {
-        Node->CanDisable();
+        return Node->CanDisable();
     }
     return false;
 }
@@ -348,9 +348,11 @@ CDeviceView::AddRootDevice()
 }
 
 bool
-CDeviceView::GetNextClass(_In_ ULONG ClassIndex,
-                          _Out_ LPGUID ClassGuid,
-                          _Out_ HDEVINFO *hDevInfo)
+CDeviceView::GetNextClass(
+    _In_ ULONG ClassIndex,
+    _Out_ LPGUID ClassGuid,
+    _Out_ HDEVINFO *hDevInfo
+    )
 {
     CONFIGRET cr;
 
@@ -644,28 +646,24 @@ CDeviceView::RecurseChildDevices(
             ATLASSERT(FALSE);
         }
 
-        // Check if this is a hidden device 
-        if (DeviceNode->IsHidden())
+        // Don't show hidden devices if not requested
+        if ((m_ShowHidden == TRUE) || (!(DeviceNode->IsHidden())))
         {
-            if (m_ShowHidden == FALSE)
-                continue;
-        }
-
-        if (DeviceNode->HasProblem())
-        {
-            HasProblem = true;
-        }
-
-        // Add this device to the tree under its parent 
-        hDevItem = InsertIntoTreeView(hParentTreeItem,
-                                      DeviceNode);
-        if (hDevItem)
-        {
-            // Check if this child has any children itself 
-            if (!RecurseChildDevices(Device, hDevItem))
+            if (DeviceNode->HasProblem())
+            {
                 HasProblem = true;
+            }
+
+            // Add this device to the tree under its parent 
+            hDevItem = InsertIntoTreeView(hParentTreeItem,
+                                          DeviceNode);
+            if (hDevItem)
+            {
+                // Check if this child has any children itself 
+                if (!RecurseChildDevices(Device, hDevItem))
+                    HasProblem = true;
+            }
         }
-        
     }
 
     (void)TreeView_SortChildren(m_hTreeView,
@@ -816,7 +814,9 @@ CDeviceView::EmptyDeviceView()
 
 
 CClassNode*
-CDeviceView::GetClassNode(_In_ LPGUID ClassGuid)
+CDeviceView::GetClassNode(
+    _In_ LPGUID ClassGuid
+    )
 {
     POSITION Pos;
     CClassNode *Node;
@@ -840,7 +840,9 @@ CDeviceView::GetClassNode(_In_ LPGUID ClassGuid)
 }
 
 CDeviceNode*
-CDeviceView::GetDeviceNode(_In_ DEVINST Device)
+CDeviceView::GetDeviceNode(
+    _In_ DEVINST Device
+    )
 {
     POSITION Pos;
     CDeviceNode *Node;
@@ -863,7 +865,9 @@ CDeviceView::GetDeviceNode(_In_ DEVINST Device)
     return Node;
 }
 
-CNode* CDeviceView::GetNode(LPTV_ITEMW TvItem)
+CNode* CDeviceView::GetNode(
+    _In_ LPTV_ITEMW TvItem
+    )
 {
     TvItem->mask = TVIF_PARAM;
     if (TreeView_GetItem(m_hTreeView, TvItem))
@@ -883,19 +887,18 @@ CNode* CDeviceView::GetSelectedNode()
 void
 CDeviceView::EmptyLists()
 {
-    CClassNode *ClassNode;
-    CDeviceNode *DeviceNode;
+    CNode *Node;
 
     while (!m_ClassNodeList.IsEmpty())
     {
-        ClassNode = m_ClassNodeList.RemoveTail();
-        delete ClassNode;
+        Node = m_ClassNodeList.RemoveTail();
+        delete Node;
     }
 
     while (!m_DeviceNodeList.IsEmpty())
     {
-        DeviceNode = m_DeviceNodeList.RemoveTail();
-        delete DeviceNode;
+        Node = m_DeviceNodeList.RemoveTail();
+        delete Node;
     }
 }
 

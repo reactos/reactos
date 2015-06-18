@@ -36,9 +36,14 @@
 #define IDS_LICENSE         303
 
 /* tooltips */
-#define IDS_TOOLTIP_PROP    6000
-#define IDS_TOOLTIP_REFRESH 6001
-#define IDS_TOOLTIP_HELP    6002
+#define IDS_TOOLTIP_PROPERTIES  6000
+#define IDS_TOOLTIP_SCAN        6001
+#define IDS_TOOLTIP_ENABLE      6002
+#define IDS_TOOLTIP_DIABLE      6003
+#define IDS_TOOLTIP_UPDATE      6004
+#define IDS_TOOLTIP_UNINSTALL   6005
+
+
 
 /* menu hints */
 #define IDS_HINT_BLANK          20000
