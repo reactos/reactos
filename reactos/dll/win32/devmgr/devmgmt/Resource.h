@@ -42,16 +42,21 @@
 
 /* menu hints */
 #define IDS_HINT_BLANK          20000
-#define IDS_HINT_REFRESH        20002
-#define IDS_HINT_PROP           20003
-#define IDS_HINT_HELP           20004
-#define IDS_HINT_ABOUT          20005
-#define IDS_HINT_EXIT           20006
+#define IDS_HINT_PROPERTIES     20001
+#define IDS_HINT_SCAN           20002
+#define IDS_HINT_ENABLE         20003
+#define IDS_HINT_DISABLE        20004
+#define IDS_HINT_UPDATE         20005
+#define IDS_HINT_UNINSTALL      20006
+#define IDS_HINT_ADD            20007
+#define IDS_HINT_ABOUT          20008
+#define IDS_HINT_EXIT           20009
 
 #define IDS_HINT_DEV_BY_TYPE    20020
 #define IDS_HINT_DEV_BY_CONN    20021
 #define IDS_HINT_RES_BY_TYPE    20022
 #define IDS_HINT_RES_BY_CONN    20023
+#define IDS_HINT_SHOW_HIDDEN    20024
 
 /* system menu hints */
 #define IDS_HINT_SYS_RESTORE    21001
@@ -60,4 +65,3 @@
 #define IDS_HINT_SYS_MINIMIZE   21004
 #define IDS_HINT_SYS_MAXIMIZE   21005
 #define IDS_HINT_SYS_CLOSE      21006
-

@@ -29,22 +29,39 @@ static const MENU_HINT MainMenuHintTable[] =
     { IDC_EXIT, IDS_HINT_EXIT },
 
     // Action Menu
-    { IDC_UPDATE_DRV, NULL },
-    { IDC_DISABLE_DRV, NULL },
-    { IDC_UNINSTALL_DRV, NULL },
-    { IDC_SCAN_HARDWARE, IDS_HINT_REFRESH },
-    { IDC_ADD_HARDWARE, NULL },
-    { IDC_PROPERTIES, IDS_HINT_PROP},
+    { IDC_PROPERTIES, IDS_HINT_PROPERTIES },
+    { IDC_SCAN_HARDWARE, IDS_HINT_SCAN },
+    { IDC_ENABLE_DRV, IDS_HINT_ENABLE },
+    { IDC_DISABLE_DRV, IDS_HINT_DISABLE },
+    { IDC_UPDATE_DRV, IDS_HINT_UPDATE },  
+    { IDC_UNINSTALL_DRV, IDS_HINT_UNINSTALL },
+    { IDC_ADD_HARDWARE, IDS_HINT_ADD },
+    
 
     // View Menu
     { IDC_DEVBYTYPE, IDS_HINT_DEV_BY_TYPE},
     { IDC_DEVBYCONN, IDS_HINT_DEV_BY_CONN},
     { IDC_RESBYTYPE, IDS_HINT_RES_BY_TYPE},
     { IDC_RESBYCONN, IDS_HINT_RES_BY_TYPE},
+    { IDC_SHOWHIDDEN, IDS_HINT_SHOW_HIDDEN },
 
     { IDC_ABOUT, IDS_HINT_ABOUT }
 
 };
+
+
+
+
+#define IDS_HINT_BLANK          20000
+#define IDS_HINT_PROPERTIES     20001
+#define IDS_HINT_SCAN           20002
+#define IDS_HINT_ENABLE         20003
+#define IDS_HINT_DISABLE        20004
+#define IDS_HINT_UPDATE         20005
+#define IDS_HINT_UNINSTALL      20006
+#define IDS_HINT_ADD            20007
+#define IDS_HINT_ABOUT          20008
+#define IDS_HINT_EXIT           20009
 
 // system menu hints
 static const MENU_HINT SystemMenuHintTable[] =
@@ -188,6 +205,17 @@ CMainWindow::MainWndMenuHint(WORD CmdId,
                         HintId);
 
     return Found;
+}
+
+void
+CMainWindow::UpdateStatusBar(
+    _In_ bool InMenuLoop
+    )
+{
+    SendMessageW(m_hStatusBar,
+                 SB_SIMPLE,
+                 (WPARAM)InMenuLoop,
+                 0);
 }
 
 bool
@@ -705,6 +733,18 @@ CMainWindow::MainWndProc(HWND hwnd,
                 // Hand it off to the default message handler
                 goto HandleDefaultMessage;
             }
+            break;
+        }
+
+        case WM_ENTERMENULOOP:
+        {
+            pThis->UpdateStatusBar(true);
+            break;
+        }
+
+        case WM_EXITMENULOOP:
+        {
+            pThis->UpdateStatusBar(false);
             break;
         }
 

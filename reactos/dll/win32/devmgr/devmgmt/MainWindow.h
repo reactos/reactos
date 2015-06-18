@@ -53,6 +53,10 @@ private:
         UINT uID
         );
 
+    void UpdateStatusBar(
+        _In_ bool InMenuLoop
+        );
+
     bool MainWndMenuHint(
         WORD CmdId,
         const MENU_HINT *HintArray,
