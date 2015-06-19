@@ -27,6 +27,7 @@ endif()
 
 add_subdirectory(rtl)
 add_subdirectory(sdk)
+add_subdirectory(skiplist)
 add_subdirectory(smlib)
 add_subdirectory(tdilib)
 
