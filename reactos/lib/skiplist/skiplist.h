@@ -15,6 +15,9 @@
 #error Please define SKIPLIST_LEVELS to a value between 1 and 32.
 #endif
 
+C_ASSERT(SKIPLIST_LEVELS >= 1);
+C_ASSERT(SKIPLIST_LEVELS <= 32);
+
 // Function pointer definitions
 typedef PVOID (WINAPI *PSKIPLIST_ALLOCATE_ROUTINE)(DWORD);
 typedef int (WINAPI *PSKIPLIST_COMPARE_ROUTINE)(PVOID, PVOID);
