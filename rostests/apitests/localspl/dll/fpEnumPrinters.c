@@ -18,40 +18,20 @@
 #include "../localspl_apitest.h"
 #include <spoolss.h>
 
+extern BOOL GetLocalsplFuncs(LPPRINTPROVIDOR pp);
+
 START_TEST(fpEnumPrinters)
 {
     DWORD cbNeeded;
     DWORD cbTemp;
     DWORD dwReturned;
     DWORD i;
-    HMODULE hLocalspl;
-    PInitializePrintProvidor pfnInitializePrintProvidor;
     PRINTPROVIDOR pp;
     PPRINTER_INFO_1W pPrinterInfo1;
     PVOID pMem;
 
-    // Get us a handle to the loaded localspl.dll.
-    hLocalspl = GetModuleHandleW(L"localspl");
-    if (!hLocalspl)
-    {
-        skip("GetModuleHandleW failed with error %lu!\n", GetLastError());
+    if (!GetLocalsplFuncs(&pp))
         return;
-    }
-
-    // Get a pointer to its InitializePrintProvidor function.
-    pfnInitializePrintProvidor = (PInitializePrintProvidor)GetProcAddress(hLocalspl, "InitializePrintProvidor");
-    if (!pfnInitializePrintProvidor)
-    {
-        skip("GetProcAddress failed with error %lu!\n", GetLastError());
-        return;
-    }
-
-    // Get localspl's function pointers.
-    if (!pfnInitializePrintProvidor(&pp, sizeof(pp), NULL))
-    {
-        skip("pfnInitializePrintProvidor failed with error %lu!\n", GetLastError());
-        return;
-    }
 
     // Verify that localspl only returns information about a single print provider (namely itself).
     cbNeeded = 0xDEADBEEF;

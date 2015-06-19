@@ -34,6 +34,38 @@ const struct test winetest_testlist[] =
     { 0, 0 }
 };
 
+BOOL
+GetLocalsplFuncs(LPPRINTPROVIDOR pp)
+{
+    HMODULE hLocalspl;
+    PInitializePrintProvidor pfnInitializePrintProvidor;
+
+    // Get us a handle to the loaded localspl.dll.
+    hLocalspl = GetModuleHandleW(L"localspl");
+    if (!hLocalspl)
+    {
+        skip("GetModuleHandleW failed with error %u!\n", GetLastError());
+        return FALSE;
+    }
+
+    // Get a pointer to its InitializePrintProvidor function.
+    pfnInitializePrintProvidor = (PInitializePrintProvidor)GetProcAddress(hLocalspl, "InitializePrintProvidor");
+    if (!pfnInitializePrintProvidor)
+    {
+        skip("GetProcAddress failed with error %u!\n", GetLastError());
+        return FALSE;
+    }
+
+    // Get localspl's function pointers.
+    if (!pfnInitializePrintProvidor(pp, sizeof(PRINTPROVIDOR), NULL))
+    {
+        skip("pfnInitializePrintProvidor failed with error %u!\n", GetLastError());
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 // Running the tests from the injected DLL and redirecting their output to the pipe.
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
