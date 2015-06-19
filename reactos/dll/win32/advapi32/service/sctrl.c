@@ -40,9 +40,9 @@ typedef struct _ACTIVE_SERVICE
     UNICODE_STRING ServiceName;
     union
     {
-        SERVICE_THREAD_PARAMSA A;
-        SERVICE_THREAD_PARAMSW W;
-    } ThreadParams;
+        LPSERVICE_MAIN_FUNCTIONA A;
+        LPSERVICE_MAIN_FUNCTIONW W;
+    } ServiceMain;
     LPHANDLER_FUNCTION HandlerFunction;
     LPHANDLER_FUNCTION_EX HandlerFunctionEx;
     LPVOID HandlerContext;
@@ -165,43 +165,41 @@ ScLookupServiceByServiceName(LPCWSTR lpServiceName)
 
 
 static DWORD WINAPI
-ScServiceMainStub(LPVOID Context)
+ScServiceMainStubA(LPVOID Context)
 {
-    PACTIVE_SERVICE lpService = (PACTIVE_SERVICE)Context;
+    PSERVICE_THREAD_PARAMSA ThreadParams = Context;
 
-    TRACE("ScServiceMainStub() called\n");
+    TRACE("ScServiceMainStubA() called\n");
 
     /* Call the main service routine and free the arguments vector */
-    if (lpService->bUnicode)
+    (ThreadParams->lpServiceMain)(ThreadParams->dwArgCount,
+                                  ThreadParams->lpArgVector);
+
+    if (ThreadParams->lpArgVector != NULL)
     {
-        (lpService->ThreadParams.W.lpServiceMain)(lpService->ThreadParams.W.dwArgCount,
-                                                  lpService->ThreadParams.W.lpArgVector);
-
-        if (lpService->ThreadParams.W.lpArgVector != NULL)
-        {
-            HeapFree(GetProcessHeap(),
-                     0,
-                     lpService->ThreadParams.W.lpArgVector);
-
-            lpService->ThreadParams.W.lpArgVector = NULL;
-            lpService->ThreadParams.W.dwArgCount = 0;
-        }
+        HeapFree(GetProcessHeap(), 0, ThreadParams->lpArgVector);
     }
-    else
+    HeapFree(GetProcessHeap(), 0, ThreadParams);
+
+    return ERROR_SUCCESS;
+}
+
+static DWORD WINAPI
+ScServiceMainStubW(LPVOID Context)
+{
+    PSERVICE_THREAD_PARAMSW ThreadParams = Context;
+
+    TRACE("ScServiceMainStubW() called\n");
+
+    /* Call the main service routine and free the arguments vector */
+    (ThreadParams->lpServiceMain)(ThreadParams->dwArgCount,
+                                  ThreadParams->lpArgVector);
+
+    if (ThreadParams->lpArgVector != NULL)
     {
-        (lpService->ThreadParams.A.lpServiceMain)(lpService->ThreadParams.A.dwArgCount,
-                                                  lpService->ThreadParams.A.lpArgVector);
-
-        if (lpService->ThreadParams.A.lpArgVector != NULL)
-        {
-            HeapFree(GetProcessHeap(),
-                     0,
-                     lpService->ThreadParams.A.lpArgVector);
-
-            lpService->ThreadParams.A.lpArgVector = NULL;
-            lpService->ThreadParams.A.dwArgCount = 0;
-        }
+        HeapFree(GetProcessHeap(), 0, ThreadParams->lpArgVector);
     }
+    HeapFree(GetProcessHeap(), 0, ThreadParams);
 
     return ERROR_SUCCESS;
 }
@@ -451,6 +449,8 @@ ScStartService(PACTIVE_SERVICE lpService,
     HANDLE ThreadHandle;
     DWORD ThreadId;
     DWORD dwError;
+    PSERVICE_THREAD_PARAMSA ThreadParamsA;
+    PSERVICE_THREAD_PARAMSW ThreadParamsW;
 
     if (lpService == NULL || ControlPacket == NULL)
         return ERROR_INVALID_PARAMETER;
@@ -465,54 +465,59 @@ ScStartService(PACTIVE_SERVICE lpService,
     /* Build the arguments vector */
     if (lpService->bUnicode == TRUE)
     {
+        ThreadParamsW = HeapAlloc(GetProcessHeap(), 0, sizeof(*ThreadParamsW));
+        if (ThreadParamsW == NULL)
+            return ERROR_NOT_ENOUGH_MEMORY;
         dwError = ScBuildUnicodeArgsVector(ControlPacket,
-                                           &lpService->ThreadParams.W.dwArgCount,
-                                           &lpService->ThreadParams.W.lpArgVector);
+                                           &ThreadParamsW->dwArgCount,
+                                           &ThreadParamsW->lpArgVector);
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+        ThreadParamsW->lpServiceMain = lpService->ServiceMain.W;
+        ThreadHandle = CreateThread(NULL,
+                                    0,
+                                    ScServiceMainStubW,
+                                    ThreadParamsW,
+                                    CREATE_SUSPENDED,
+                                    &ThreadId);
+        if (ThreadHandle == NULL)
+        {
+            if (ThreadParamsW->lpArgVector != NULL)
+            {
+                HeapFree(GetProcessHeap(),
+                         0,
+                         ThreadParamsW->lpArgVector);
+            }
+            HeapFree(GetProcessHeap(), 0, ThreadParamsW);
+        }
     }
     else
     {
+        ThreadParamsA = HeapAlloc(GetProcessHeap(), 0, sizeof(*ThreadParamsA));
+        if (ThreadParamsA == NULL)
+            return ERROR_NOT_ENOUGH_MEMORY;
         dwError = ScBuildAnsiArgsVector(ControlPacket,
-                                        &lpService->ThreadParams.A.dwArgCount,
-                                        &lpService->ThreadParams.A.lpArgVector);
-    }
-
-    if (dwError != ERROR_SUCCESS)
-        return dwError;
-
-    /* Invoke the services entry point and implement the command loop */
-    ThreadHandle = CreateThread(NULL,
-                                0,
-                                ScServiceMainStub,
-                                lpService,
-                                CREATE_SUSPENDED,
-                                &ThreadId);
-    if (ThreadHandle == NULL)
-    {
-        /* Free the arguments vector */
-        if (lpService->bUnicode)
+                                        &ThreadParamsA->dwArgCount,
+                                        &ThreadParamsA->lpArgVector);
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+        ThreadParamsA->lpServiceMain = lpService->ServiceMain.A;
+        ThreadHandle = CreateThread(NULL,
+                                    0,
+                                    ScServiceMainStubA,
+                                    ThreadParamsA,
+                                    CREATE_SUSPENDED,
+                                    &ThreadId);
+        if (ThreadHandle == NULL)
         {
-            if (lpService->ThreadParams.W.lpArgVector != NULL)
+            if (ThreadParamsA->lpArgVector != NULL)
             {
                 HeapFree(GetProcessHeap(),
                          0,
-                         lpService->ThreadParams.W.lpArgVector);
-                lpService->ThreadParams.W.lpArgVector = NULL;
-                lpService->ThreadParams.W.dwArgCount = 0;
+                         ThreadParamsA->lpArgVector);
             }
+            HeapFree(GetProcessHeap(), 0, ThreadParamsA);
         }
-        else
-        {
-            if (lpService->ThreadParams.A.lpArgVector != NULL)
-            {
-                HeapFree(GetProcessHeap(),
-                         0,
-                         lpService->ThreadParams.A.lpArgVector);
-                lpService->ThreadParams.A.lpArgVector = NULL;
-                lpService->ThreadParams.A.dwArgCount = 0;
-            }
-        }
-
-        return ERROR_SERVICE_NO_THREAD;
     }
 
     ResumeThread(ThreadHandle);
@@ -922,7 +927,7 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
     {
         RtlCreateUnicodeStringFromAsciiz(&lpActiveServices[i].ServiceName,
                                          lpServiceStartTable[i].lpServiceName);
-        lpActiveServices[i].ThreadParams.A.lpServiceMain = lpServiceStartTable[i].lpServiceProc;
+        lpActiveServices[i].ServiceMain.A = lpServiceStartTable[i].lpServiceProc;
         lpActiveServices[i].hServiceStatus = 0;
         lpActiveServices[i].bUnicode = FALSE;
         lpActiveServices[i].bOwnProcess = FALSE;
@@ -1009,7 +1014,7 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
     {
         RtlCreateUnicodeString(&lpActiveServices[i].ServiceName,
                                lpServiceStartTable[i].lpServiceName);
-        lpActiveServices[i].ThreadParams.W.lpServiceMain = lpServiceStartTable[i].lpServiceProc;
+        lpActiveServices[i].ServiceMain.W = lpServiceStartTable[i].lpServiceProc;
         lpActiveServices[i].hServiceStatus = 0;
         lpActiveServices[i].bUnicode = TRUE;
         lpActiveServices[i].bOwnProcess = FALSE;
