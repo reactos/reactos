@@ -802,6 +802,16 @@ RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectU
   return RPC_S_OK;
 }
 
+
+/***********************************************************************
+ *             RpcBindingServerFromClient (RPCRT4.@)
+ */
+RPC_STATUS WINAPI RpcBindingServerFromClient(RPC_BINDING_HANDLE ClientBinding, RPC_BINDING_HANDLE* ServerBinding)
+{
+    /* This is a stub, just fail for now. */
+    return RPC_S_INVALID_ARG;
+}
+
 /***********************************************************************
  *             RpcBindingSetObject (RPCRT4.@)
  */
