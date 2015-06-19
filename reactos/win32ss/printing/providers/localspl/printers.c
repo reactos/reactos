@@ -8,40 +8,33 @@
 #include "precomp.h"
 
 // Global Variables
-RTL_GENERIC_TABLE PrinterTable;
+SKIPLIST PrinterList;
 
 
 /**
- * @name _PrinterTableCompareRoutine
+ * @name _PrinterListCompareRoutine
  *
- * RTL_GENERIC_COMPARE_ROUTINE for the Printer Table.
+ * SKIPLIST_COMPARE_ROUTINE for the Printer List.
  * Does a case-insensitive comparison, because e.g. LocalOpenPrinter doesn't match the case when looking for Printers.
  */
-static RTL_GENERIC_COMPARE_RESULTS NTAPI
-_PrinterTableCompareRoutine(PRTL_GENERIC_TABLE Table, PVOID FirstStruct, PVOID SecondStruct)
+static int WINAPI
+_PrinterListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
 {
     PLOCAL_PRINTER A = (PLOCAL_PRINTER)FirstStruct;
     PLOCAL_PRINTER B = (PLOCAL_PRINTER)SecondStruct;
 
-    int iResult = wcsicmp(A->pwszPrinterName, B->pwszPrinterName);
-
-    if (iResult < 0)
-        return GenericLessThan;
-    else if (iResult > 0)
-        return GenericGreaterThan;
-    else
-        return GenericEqual;
+    return wcsicmp(A->pwszPrinterName, B->pwszPrinterName);
 }
 
 /**
- * @name InitializePrinterTable
+ * @name InitializePrinterList
  *
- * Initializes a RTL_GENERIC_TABLE of locally available Printers.
- * The table is searchable by name and returns information about the printers, including their job queues.
+ * Initializes a list of locally available Printers.
+ * The list is searchable by name and returns information about the printers, including their job queues.
  * During this process, the job queues are also initialized.
  */
 void
-InitializePrinterTable()
+InitializePrinterList()
 {
     const WCHAR wszPrintersKey[] = L"SYSTEM\\CurrentControlSet\\Control\\Print\\Printers";
 
@@ -52,14 +45,13 @@ InitializePrinterTable()
     HKEY hKey = NULL;
     HKEY hSubKey = NULL;
     LONG lStatus;
-    PLOCAL_PRINT_PROCESSOR pPrintProcessor;
     PLOCAL_PRINTER pPrinter = NULL;
+    PLOCAL_PRINT_PROCESSOR pPrintProcessor;
     PWSTR pwszPrintProcessor = NULL;
     WCHAR wszPrinterName[MAX_PRINTER_NAME + 1];
 
-    // Initialize an empty table for our printers.
-    // We will search it by printer name.
-    RtlInitializeGenericTable(&PrinterTable, _PrinterTableCompareRoutine, GenericTableAllocateRoutine, GenericTableFreeRoutine, NULL);
+    // Initialize an empty list for our printers.
+    InitializeSkiplist(&PrinterList, DllAllocSplMem, _PrinterListCompareRoutine, (PSKIPLIST_FREE_ROUTINE)DllFreeSplMem);
 
     // Open our printers registry key. Each subkey is a local printer there.
     lStatus = RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszPrintersKey, 0, KEY_READ, &hKey);
@@ -91,6 +83,15 @@ InitializePrinterTable()
         {
             if (pPrinter->pwszDefaultDatatype)
                 DllFreeSplStr(pPrinter->pwszDefaultDatatype);
+
+            if (pPrinter->pwszDescription)
+                DllFreeSplStr(pPrinter->pwszDescription);
+
+            if (pPrinter->pwszPrinterDriver)
+                DllFreeSplStr(pPrinter->pwszPrinterDriver);
+
+            if (pPrinter->pwszPrinterName)
+                DllFreeSplStr(pPrinter->pwszPrinterName);
 
             DllFreeSplMem(pPrinter);
             pPrinter = NULL;
@@ -129,8 +130,8 @@ InitializePrinterTable()
         if (!pwszPrintProcessor)
             continue;
 
-        // Try to find it in the Print Processor Table.
-        pPrintProcessor = RtlLookupElementGenericTable(&PrintProcessorTable, pwszPrintProcessor);
+        // Try to find it in the Print Processor List.
+        pPrintProcessor = FindPrintProcessor(pwszPrintProcessor);
         if (!pPrintProcessor)
         {
             ERR("Invalid Print Processor \"%S\" for Printer \"%S\"!\n", pwszPrintProcessor, wszPrinterName);
@@ -147,7 +148,7 @@ InitializePrinterTable()
 
         pPrinter->pwszPrinterName = AllocSplStr(wszPrinterName);
         pPrinter->pPrintProcessor = pPrintProcessor;
-        InitializeListHead(&pPrinter->JobQueue);
+        InitializePrinterJobList(pPrinter);
 
         // Get the printer driver.
         pPrinter->pwszPrinterDriver = AllocAndRegQueryWSZ(hSubKey, L"Printer Driver");
@@ -165,7 +166,7 @@ InitializePrinterTable()
             continue;
 
         // Verify that it's valid.
-        if (!RtlLookupElementGenericTable(&pPrintProcessor->DatatypeTable, pPrinter->pwszDefaultDatatype))
+        if (!FindDatatype(pPrintProcessor, pPrinter->pwszDefaultDatatype))
         {
             ERR("Invalid default datatype \"%S\" for Printer \"%S\"!\n", pPrinter->pwszDefaultDatatype, wszPrinterName);
             continue;
@@ -176,14 +177,14 @@ InitializePrinterTable()
         lStatus = RegQueryValueExW(hSubKey, L"Default DevMode", NULL, NULL, (PBYTE)&pPrinter->DefaultDevMode, &cbDevMode);
         if (lStatus != ERROR_SUCCESS || cbDevMode != sizeof(DEVMODEW))
         {
-            ERR("Couldn't query DevMode for Printer \"%S\", status is %ld, cbDevMode is %lu!\n", wszPrinterName, lStatus, cbDevMode);
+            ERR("Couldn't query a valid DevMode for Printer \"%S\", status is %ld, cbDevMode is %lu!\n", wszPrinterName, lStatus, cbDevMode);
             continue;
         }
 
-        // Add this printer to the printer table.
-        if (!RtlInsertElementGenericTable(&PrinterTable, pPrinter, sizeof(LOCAL_PRINTER), NULL))
+        // Add this printer to the printer list.
+        if (!InsertElementSkiplist(&PrinterList, pPrinter))
         {
-            ERR("RtlInsertElementGenericTable failed with error %lu!\n", GetLastError());
+            ERR("InsertElementSkiplist failed for Printer \"%S\"!\n", pPrinter->pwszPrinterName);
             goto Cleanup;
         }
 
@@ -192,20 +193,31 @@ InitializePrinterTable()
     }
 
 Cleanup:
-    if (pwszPrintProcessor)
-        DllFreeSplStr(pwszPrintProcessor);
+    // Inside the loop
+    if (hSubKey)
+        RegCloseKey(hSubKey);
 
     if (pPrinter)
     {
         if (pPrinter->pwszDefaultDatatype)
             DllFreeSplStr(pPrinter->pwszDefaultDatatype);
 
+        if (pPrinter->pwszDescription)
+            DllFreeSplStr(pPrinter->pwszDescription);
+
+        if (pPrinter->pwszPrinterDriver)
+            DllFreeSplStr(pPrinter->pwszPrinterDriver);
+
+        if (pPrinter->pwszPrinterName)
+            DllFreeSplStr(pPrinter->pwszPrinterName);
+
         DllFreeSplMem(pPrinter);
     }
 
-    if (hSubKey)
-        RegCloseKey(hSubKey);
+    if (pwszPrintProcessor)
+        DllFreeSplStr(pwszPrintProcessor);
 
+    // Outside the loop
     if (hKey)
         RegCloseKey(hKey);
 }
@@ -223,9 +235,9 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
     DWORD i;
     PBYTE pPrinterInfo;
     PBYTE pPrinterString;
+    PSKIPLIST_NODE pNode;
     PLOCAL_PRINTER pPrinter;
     PRINTER_INFO_1W PrinterInfo1;
-    PVOID pRestartKey = NULL;
     WCHAR wszComputerName[2 + MAX_COMPUTERNAME_LENGTH + 1 + 1];
 
     DWORD dwOffsets[] = {
@@ -302,8 +314,10 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
     }
 
     // Count the required buffer size and the number of printers.
-    for (pPrinter = RtlEnumerateGenericTableWithoutSplaying(&PrinterTable, &pRestartKey); pPrinter; pPrinter = RtlEnumerateGenericTableWithoutSplaying(&PrinterTable, &pRestartKey))
+    for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
     {
+        pPrinter = (PLOCAL_PRINTER)pNode->Element;
+
         // This looks wrong, but is totally right. PRINTER_INFO_1W has three members pName, pComment and pDescription.
         // But pComment equals the "Description" registry value while pDescription is concatenated out of pName and pComment.
         // On top of this, the computer name is prepended to the printer name if the user supplied the local computer name during the query.
@@ -328,8 +342,10 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
     pPrinterString = pPrinterEnum + *pcReturned * sizeof(PRINTER_INFO_1W);
 
     // Copy over the printer information.
-    for (pPrinter = RtlEnumerateGenericTableWithoutSplaying(&PrinterTable, &pRestartKey); pPrinter; pPrinter = RtlEnumerateGenericTableWithoutSplaying(&PrinterTable, &pRestartKey))
+    for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
     {
+        pPrinter = (PLOCAL_PRINTER)pNode->Element;
+
         // FIXME: As for now, the Flags member returns no information.
         PrinterInfo1.Flags = 0;
 
@@ -409,7 +425,6 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     PLOCAL_HANDLE pHandle;
     PLOCAL_PRINTER pPrinter;
     PLOCAL_PRINTER_HANDLE pPrinterHandle = NULL;
-    PLIST_ENTRY pEntry;
     WCHAR wszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
 
     // Sanity checks
@@ -478,8 +493,8 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         CopyMemory(pwszPrinterName, lpPrinterName, cchPrinterName * sizeof(WCHAR));
         pwszPrinterName[cchPrinterName] = 0;
 
-        // Retrieve the associated printer from the table.
-        pPrinter = RtlLookupElementGenericTable(&PrinterTable, pwszPrinterName);
+        // Retrieve the associated printer from the list.
+        pPrinter = LookupElementSkiplist(&PrinterList, &pwszPrinterName, NULL);
         if (!pPrinter)
         {
             // The printer does not exist.
@@ -495,7 +510,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         if (pDefault && pDefault->pDatatype)
         {
             // Use the datatype if it's valid.
-            if (!RtlLookupElementGenericTable(&pPrinter->pPrintProcessor->DatatypeTable, pDefault->pDatatype))
+            if (!FindDatatype(pPrinter->pPrintProcessor, pDefault->pDatatype))
             {
                 SetLastError(ERROR_INVALID_DATATYPE);
                 goto Cleanup;
@@ -550,30 +565,16 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
                 goto Cleanup;
             }
 
-            // Look for this job in the job queue of the printer.
-            pEntry = pPrinter->JobQueue.Flink;
-
-            for (;;)
+            // Look for this job in the Global Job List.
+            pJob = LookupElementSkiplist(&GlobalJobList, &dwJobID, NULL);
+            if (!pJob || pJob->Printer != pPrinter)
             {
-                if (pEntry == &pPrinter->JobQueue)
-                {
-                    // We have reached the end of the list without finding the desired Job ID.
-                    SetLastError(ERROR_INVALID_PRINTER_NAME);
-                    goto Cleanup;
-                }
-
-                // Get our job structure.
-                pJob = CONTAINING_RECORD(pEntry, LOCAL_JOB, Entry);
-
-                if (pJob->dwJobID == dwJobID)
-                {
-                    // We have found the desired job. Give the caller a printer handle referencing it.
-                    pPrinterHandle->StartedJob = pJob;
-                    break;
-                }
-
-                pEntry = pEntry->Flink;
+                // The user supplied a non-existing Job ID or the Job ID does not belong to the supplied printer name.
+                SetLastError(ERROR_INVALID_PRINTER_NAME);
+                goto Cleanup;
             }
+
+            pPrinterHandle->StartedJob = pJob;
         }
 
         // Create a new handle that references a printer.
@@ -647,11 +648,10 @@ Cleanup:
 DWORD WINAPI
 LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
 {
-    DWORD dwReturnValue = 0;
     PDOC_INFO_1W pDocumentInfo1;
     PLOCAL_HANDLE pHandle;
-    PLOCAL_PRINTER_HANDLE pPrinterHandle;
     PLOCAL_JOB pJob;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
     // Sanity checks
     if (!pDocInfo)
@@ -688,15 +688,16 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
     // Create a new job.
     pJob = DllAllocSplMem(sizeof(LOCAL_JOB));
     pJob->Printer = pPrinterHandle->Printer;
+    pJob->dwPriority = DEF_PRIORITY;
 
     // Check if a datatype was given.
     if (pDocumentInfo1->pDatatype)
     {
         // Use the datatype if it's valid.
-        if (!RtlLookupElementGenericTable(&pJob->Printer->pPrintProcessor->DatatypeTable, pDocumentInfo1->pDatatype))
+        if (!FindDatatype(pJob->Printer->pPrintProcessor, pDocumentInfo1->pDatatype))
         {
             SetLastError(ERROR_INVALID_DATATYPE);
-            goto Cleanup;
+            return 0;
         }
 
         pJob->pwszDatatype = AllocSplStr(pDocumentInfo1->pDatatype);
@@ -717,14 +718,27 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
     if (pDocumentInfo1->pOutputFile)
         pJob->pwszOutputFile = AllocSplStr(pDocumentInfo1->pOutputFile);
 
-    // Enqueue the job.
-    ///////////// TODO /////////////////////
+    // Get an ID for the new job.
+    if (!GetNextJobID(&pJob->dwJobID))
+        return 0;
 
-Cleanup:
-    if (pJob)
-        DllFreeSplMem(pJob);
+    // Add the job to the Global Job List.
+    if (!InsertElementSkiplist(&GlobalJobList, pJob))
+    {
+        ERR("InsertElementSkiplist failed for job %lu for the GlobalJobList!\n", pJob->dwJobID);
+        return 0;
+    }
 
-    return dwReturnValue;
+    // Add the job at the end of the Printer's Job List.
+    // As all new jobs are created with default priority, we can be sure that it would always be inserted at the end.
+    if (!InsertTailElementSkiplist(&pJob->Printer->JobList, pJob))
+    {
+        ERR("InsertTailElementSkiplist failed for job %lu for the Printer's Job List!\n", pJob->dwJobID);
+        return 0;
+    }
+
+    pPrinterHandle->StartedJob = pJob;
+    return pJob->dwJobID;
 }
 
 BOOL WINAPI

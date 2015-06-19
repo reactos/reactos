@@ -8,8 +8,8 @@
 #include "precomp.h"
 
 
-// Global Variables
-RTL_GENERIC_TABLE PrintProcessorTable;
+// Local Variables
+static LIST_ENTRY _PrintProcessorList;
 
 /**
  * @name _OpenEnvironment
@@ -76,83 +76,67 @@ Cleanup:
     return bReturnValue;
 }
 
-/**
- * @name _PrinterTableCompareRoutine
- *
- * RTL_GENERIC_COMPARE_ROUTINE for the Print Processor Table.
- * Does a case-insensitive comparison, because e.g. LocalEnumPrintProcessorDatatypes doesn't match the case when looking for Print Processors.
- */
-static RTL_GENERIC_COMPARE_RESULTS NTAPI
-_PrintProcessorTableCompareRoutine(PRTL_GENERIC_TABLE Table, PVOID FirstStruct, PVOID SecondStruct)
+BOOL
+FindDatatype(PLOCAL_PRINT_PROCESSOR pPrintProcessor, PWSTR pwszDatatype)
 {
-    PLOCAL_PRINT_PROCESSOR A = (PLOCAL_PRINT_PROCESSOR)FirstStruct;
-    PLOCAL_PRINT_PROCESSOR B = (PLOCAL_PRINT_PROCESSOR)SecondStruct;
+    DWORD i;
+    PDATATYPES_INFO_1W pCurrentDatatype = pPrintProcessor->pDatatypesInfo1;
 
-    int iResult = wcsicmp(A->pwszName, B->pwszName);
+    for (i = 0; i < pPrintProcessor->dwDatatypeCount; i++)
+    {
+        if (wcsicmp(pCurrentDatatype->pName, pwszDatatype) == 0)
+            return TRUE;
 
-    if (iResult < 0)
-        return GenericLessThan;
-    else if (iResult > 0)
-        return GenericGreaterThan;
-    else
-        return GenericEqual;
+        ++pCurrentDatatype;
+    }
+
+    return FALSE;
+}
+
+PLOCAL_PRINT_PROCESSOR
+FindPrintProcessor(PWSTR pwszName)
+{
+    PLIST_ENTRY pEntry;
+    PLOCAL_PRINT_PROCESSOR pPrintProcessor;
+
+    for (pEntry = _PrintProcessorList.Flink; pEntry; pEntry = pEntry->Flink)
+    {
+        pPrintProcessor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_PROCESSOR, Entry);
+
+        if (wcsicmp(pPrintProcessor->pwszName, pwszName) == 0)
+            return pPrintProcessor;
+    }
+
+    return NULL;
 }
 
 /**
- * @name _DatatypeTableCompareRoutine
+ * @name InitializePrintProcessorList
  *
- * RTL_GENERIC_COMPARE_ROUTINE for the Datatype Table.
- * Does a case-insensitive comparison, because e.g. LocalOpenPrinter doesn't match the case when looking for Datatypes.
- */
-static RTL_GENERIC_COMPARE_RESULTS NTAPI
-_DatatypeTableCompareRoutine(PRTL_GENERIC_TABLE Table, PVOID FirstStruct, PVOID SecondStruct)
-{
-    PWSTR A = (PWSTR)FirstStruct;
-    PWSTR B = (PWSTR)SecondStruct;
-
-    int iResult = wcsicmp(A, B);
-
-    if (iResult < 0)
-        return GenericLessThan;
-    else if (iResult > 0)
-        return GenericGreaterThan;
-    else
-        return GenericEqual;
-}
-
-/**
- * @name InitializePrintProcessorTable
- *
- * Initializes a RTL_GENERIC_TABLE of locally available Print Processors.
- * The table is searchable by name and returns pointers to the functions of the loaded Print Processor DLL.
+ * Initializes a singly linked list of locally available Print Processors.
  */
 void
-InitializePrintProcessorTable()
+InitializePrintProcessorList()
 {
     DWORD cbDatatypes;
     DWORD cbFileName;
     DWORD cchPrintProcessorPath;
     DWORD cchMaxSubKey;
     DWORD cchPrintProcessorName;
-    DWORD dwDatatypes;
     DWORD dwSubKeys;
     DWORD i;
-    DWORD j;
     HINSTANCE hinstPrintProcessor;
     HKEY hKey = NULL;
     HKEY hSubKey = NULL;
     HKEY hSubSubKey = NULL;
     LONG lStatus;
-    PDATATYPES_INFO_1W pDatatypesInfo1 = NULL;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor = NULL;
-    PWSTR pwszDatatype = NULL;
     PWSTR pwszPrintProcessorName = NULL;
     WCHAR wszFileName[MAX_PATH];
     WCHAR wszPrintProcessorPath[MAX_PATH];
 
-    // Initialize an empty table for our Print Processors.
-    // We will search it by Print Processor name.
-    RtlInitializeGenericTable(&PrintProcessorTable, _PrintProcessorTableCompareRoutine, GenericTableAllocateRoutine, GenericTableFreeRoutine, NULL);
+    // Initialize an empty list for our Print Processors.
+    InitializeListHead(&_PrintProcessorList);
     
     // Prepare the path to the Print Processor directory.
     if (!LocalGetPrintProcessorDirectory(NULL, NULL, 1, (PBYTE)wszPrintProcessorPath, sizeof(wszPrintProcessorPath), &cchPrintProcessorPath))
@@ -204,14 +188,11 @@ InitializePrintProcessorTable()
             if (pPrintProcessor->pwszName)
                 DllFreeSplStr(pPrintProcessor->pwszName);
 
+            if (pPrintProcessor->pDatatypesInfo1)
+                DllFreeSplMem(pPrintProcessor->pDatatypesInfo1);
+
             DllFreeSplMem(pPrintProcessor);
             pPrintProcessor = NULL;
-        }
-
-        if (pDatatypesInfo1)
-        {
-            DllFreeSplMem(pDatatypesInfo1);
-            pDatatypesInfo1 = NULL;
         }
 
         // Get the name of this Print Processor.
@@ -306,68 +287,46 @@ InitializePrintProcessorTable()
         }
 
         // Get all supported datatypes.
-        pPrintProcessor->pfnEnumPrintProcessorDatatypesW(NULL, NULL, 1, NULL, 0, &cbDatatypes, &dwDatatypes);
-        pDatatypesInfo1 = DllAllocSplMem(cbDatatypes);
-        if (!pDatatypesInfo1)
+        pPrintProcessor->pfnEnumPrintProcessorDatatypesW(NULL, NULL, 1, NULL, 0, &cbDatatypes, &pPrintProcessor->dwDatatypeCount);
+        pPrintProcessor->pDatatypesInfo1 = DllAllocSplMem(cbDatatypes);
+        if (!pPrintProcessor->pDatatypesInfo1)
         {
             ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
             goto Cleanup;
         }
 
-        if (!pPrintProcessor->pfnEnumPrintProcessorDatatypesW(NULL, NULL, 1, (PBYTE)pDatatypesInfo1, cbDatatypes, &cbDatatypes, &dwDatatypes))
+        if (!pPrintProcessor->pfnEnumPrintProcessorDatatypesW(NULL, NULL, 1, (PBYTE)pPrintProcessor->pDatatypesInfo1, cbDatatypes, &cbDatatypes, &pPrintProcessor->dwDatatypeCount))
         {
             ERR("EnumPrintProcessorDatatypesW failed for Print Processor \"%S\" with error %lu!\n", wszPrintProcessorPath, GetLastError());
             continue;
         }
 
-        // Add the supported datatypes to the datatype table.
-        RtlInitializeGenericTable(&pPrintProcessor->DatatypeTable, _DatatypeTableCompareRoutine, GenericTableAllocateRoutine, GenericTableFreeRoutine, NULL);
-
-        for (j = 0; j < dwDatatypes; j++)
-        {
-            pwszDatatype = AllocSplStr(pDatatypesInfo1->pName);
-
-            if (!RtlInsertElementGenericTable(&pPrintProcessor->DatatypeTable, pDatatypesInfo1->pName, sizeof(PWSTR), NULL))
-            {
-                ERR("RtlInsertElementGenericTable failed for iteration %lu with error %lu!\n", j, GetLastError());
-                goto Cleanup;
-            }
-
-            ++pDatatypesInfo1;
-        }
-
-        // Add the Print Processor to the table.
-        if (!RtlInsertElementGenericTable(&PrintProcessorTable, pPrintProcessor, sizeof(LOCAL_PRINT_PROCESSOR), NULL))
-        {
-            ERR("RtlInsertElementGenericTable failed for iteration %lu with error %lu!\n", i, GetLastError());
-            goto Cleanup;
-        }
+        // Add the Print Processor to the list.
+        InsertTailList(&_PrintProcessorList, &pPrintProcessor->Entry);
 
         // Don't let the cleanup routines free this.
-        pwszDatatype = NULL;
         pPrintProcessor = NULL;
     }
 
 Cleanup:
-    if (pwszDatatype)
-        DllFreeSplStr(pwszDatatype);
-
-    if (pDatatypesInfo1)
-        DllFreeSplMem(pDatatypesInfo1);
+    // Inside the loop
+    if (hSubSubKey)
+        RegCloseKey(hSubSubKey);
 
     if (pPrintProcessor)
     {
         if (pPrintProcessor->pwszName)
             DllFreeSplStr(pPrintProcessor->pwszName);
 
+        if (pPrintProcessor->pDatatypesInfo1)
+            DllFreeSplMem(pPrintProcessor->pDatatypesInfo1);
+
         DllFreeSplMem(pPrintProcessor);
     }
 
+    // Outside the loop
     if (pwszPrintProcessorName)
         DllFreeSplStr(pwszPrintProcessorName);
-
-    if (hSubSubKey)
-        RegCloseKey(hSubSubKey);
 
     if (hSubKey)
         RegCloseKey(hSubKey);
@@ -423,7 +382,7 @@ LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD
     }
 
     // Try to find the Print Processor.
-    pPrintProcessor = RtlLookupElementGenericTable(&PrintProcessorTable, pPrintProcessorName);
+    pPrintProcessor = FindPrintProcessor(pPrintProcessorName);
     if (!pPrintProcessor)
     {
         SetLastError(ERROR_UNKNOWN_PRINTPROCESSOR);
@@ -499,6 +458,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     }
 
     // Verify pEnvironment and open its registry key.
+    // We use the registry and not the PrintProcessorList here, because the caller may request information about a different environment.
     if (!_OpenEnvironment(pEnvironment, &hKey))
         goto Cleanup;
 

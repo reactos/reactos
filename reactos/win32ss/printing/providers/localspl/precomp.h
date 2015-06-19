@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <wchar.h>
 
+#include <lmcons.h>
+#include <rpc.h>
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
@@ -21,6 +23,8 @@
 #include <winsplp.h>
 #include <ndk/rtlfuncs.h>
 
+#define SKIPLIST_LEVELS 16
+#include <skiplist.h>
 #include <spoolss.h>
 
 #include <wine/debug.h>
@@ -47,8 +51,10 @@ typedef BOOL (WINAPI *PPrintDocumentOnPrintProcessor)(HANDLE, LPWSTR);
 */
 typedef struct _LOCAL_PRINT_PROCESSOR
 {
+    LIST_ENTRY Entry;
     PWSTR pwszName;
-    RTL_GENERIC_TABLE DatatypeTable;
+    PDATATYPES_INFO_1W pDatatypesInfo1;
+    DWORD dwDatatypeCount;
     PClosePrintProcessor pfnClosePrintProcessor;
     PControlPrintProcessor pfnControlPrintProcessor;
     PEnumPrintProcessorDatatypesW pfnEnumPrintProcessorDatatypesW;
@@ -64,13 +70,15 @@ LOCAL_PRINT_PROCESSOR, *PLOCAL_PRINT_PROCESSOR;
  */
 typedef struct _LOCAL_PRINTER
 {
+    // This sort key must be the first element for LookupElementSkiplist to work!
     PWSTR pwszPrinterName;
+
     PWSTR pwszPrinterDriver;
     PWSTR pwszDescription;
     PWSTR pwszDefaultDatatype;
     DEVMODEW DefaultDevMode;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
-    LIST_ENTRY JobQueue;
+    SKIPLIST JobList;
 }
 LOCAL_PRINTER, *PLOCAL_PRINTER;
 
@@ -80,13 +88,24 @@ LOCAL_PRINTER, *PLOCAL_PRINTER;
  */
 typedef struct _LOCAL_JOB
 {
-    LIST_ENTRY Entry;
-    PLOCAL_PRINTER Printer;
-    DWORD dwJobID;
-    PWSTR pwszDocumentName;
-    PWSTR pwszDatatype;
-    PWSTR pwszOutputFile;
-    DEVMODEW DevMode;
+    // This sort key must be the first element for LookupElementSkiplist to work!
+    DWORD dwJobID;                      // Internal and external ID of this Job
+
+    PLOCAL_PRINTER Printer;             // Associated Printer to this Job
+    DWORD dwPriority;                   // Priority of this Job from MIN_PRIORITY to MAX_PRIORITY, default being DEF_PRIORITY
+    SYSTEMTIME stSubmitted;             // Time of the submission of this Job
+    PWSTR pwszUserName;                 // User that submitted the Job
+    PWSTR pwszNotifyName;               // User that shall be notified about the status of the Job
+    PWSTR pwszDocumentName;             // Name of the Document that is printed
+    PWSTR pwszDatatype;                 // Datatype of the Document
+    PWSTR pwszOutputFile;               // Output File to spool the Job to
+    DWORD dwTotalPages;                 // Total pages of the Document
+    DWORD dwPagesPrinted;               // Number of pages that have already been printed
+    DWORD dwStartTime;                  // Earliest time in minutes since 12:00 AM UTC when this document can be printed
+    DWORD dwUntilTime;                  // Latest time in minutes since 12:00 AM UTC when this document can be printed
+    DWORD dwStatus;                     // JOB_STATUS_* flags of the Job
+    PWSTR pwszMachineName;              // Name of the machine that submitted the Job (prepended with two backslashes)
+    DEVMODEW DevMode;                   // Associated Device Mode to this Job
 }
 LOCAL_JOB, *PLOCAL_JOB;
 
@@ -140,35 +159,42 @@ typedef struct _SHD_HEADER
     DWORD offPrintProcessor;
     DWORD offDatatype;
     DWORD dwUnknown2;
-    SYSTEMTIME stSubmitTime;
+    SYSTEMTIME stSubmitted;
     DWORD dwStartTime;
     DWORD dwUntilTime;
     DWORD dwUnknown6;
-    DWORD dwPageCount;
+    DWORD dwTotalPages;
     DWORD cbSecurityDescriptor;
     DWORD offSecurityDescriptor;
     DWORD dwUnknown3;
     DWORD dwUnknown4;
     DWORD dwUnknown5;
-    DWORD offComputerName;
+    DWORD offMachineName;
     DWORD dwSPLSize;
 }
 SHD_HEADER, *PSHD_HEADER;
 
 
 // jobs.c
+extern SKIPLIST GlobalJobList;
+BOOL GetNextJobID(PDWORD dwJobID);
+void InitializeGlobalJobList();
+void InitializePrinterJobList(PLOCAL_PRINTER pPrinter);
+BOOL WINAPI LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcbNeeded);
+BOOL WINAPI LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pOutput, DWORD cbBuf, LPDWORD pcbNeeded);
 PLOCAL_JOB ReadJobShadowFile(PCWSTR pwszFilePath);
 BOOL WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob);
 
 // main.c
 extern const WCHAR wszCurrentEnvironment[];
+extern const WCHAR wszDefaultDocumentName[];
 extern const WCHAR* wszPrintProviderInfo[3];
 extern WCHAR wszSpoolDirectory[MAX_PATH];
 extern DWORD cchSpoolDirectory;
 
 // printers.c
-extern RTL_GENERIC_TABLE PrinterTable;
-void InitializePrinterTable();
+extern SKIPLIST PrinterList;
+void InitializePrinterList();
 BOOL WINAPI LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDefault);
 DWORD WINAPI LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo);
@@ -179,15 +205,14 @@ BOOL WINAPI LocalEndDocPrinter(HANDLE hPrinter);
 BOOL WINAPI LocalClosePrinter(HANDLE hPrinter);
 
 // printprocessors.c
-extern RTL_GENERIC_TABLE PrintProcessorTable;
-void InitializePrintProcessorTable();
+BOOL FindDatatype(PLOCAL_PRINT_PROCESSOR pPrintProcessor, PWSTR pwszDatatype);
+PLOCAL_PRINT_PROCESSOR FindPrintProcessor(PWSTR pwszName);
+void InitializePrintProcessorList();
 BOOL WINAPI LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded);
 
 // tools.c
 PWSTR AllocAndRegQueryWSZ(HKEY hKey, PCWSTR pwszValueName);
-PVOID NTAPI GenericTableAllocateRoutine(PRTL_GENERIC_TABLE Table, CLONG ByteSize);
-VOID NTAPI GenericTableFreeRoutine(PRTL_GENERIC_TABLE Table, PVOID Buffer);
 
 #endif

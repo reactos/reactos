@@ -56,25 +56,3 @@ AllocAndRegQueryWSZ(HKEY hKey, PCWSTR pwszValueName)
 
     return pwszValue;
 }
-
-/**
- * @name GenericTableAllocateRoutine
- *
- * RTL_GENERIC_ALLOCATE_ROUTINE for all our RTL_GENERIC_TABLEs, using DllAllocSplMem.
- */
-PVOID NTAPI
-GenericTableAllocateRoutine(PRTL_GENERIC_TABLE Table, CLONG ByteSize)
-{
-    return DllAllocSplMem(ByteSize);
-}
-
-/**
- * @name GenericTableFreeRoutine
- *
- * RTL_GENERIC_FREE_ROUTINE for all our RTL_GENERIC_TABLEs, using DllFreeSplMem.
- */
-VOID NTAPI
-GenericTableFreeRoutine(PRTL_GENERIC_TABLE Table, PVOID Buffer)
-{
-    DllFreeSplMem(Buffer);
-}

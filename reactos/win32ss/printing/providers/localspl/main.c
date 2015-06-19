@@ -11,7 +11,7 @@
 WCHAR wszSpoolDirectory[MAX_PATH];
 DWORD cchSpoolDirectory;
 
-// Constants
+// Global Constants
 const WCHAR wszCurrentEnvironment[] =
 #if defined(_X86_)
     L"Windows NT x86";
@@ -23,16 +23,19 @@ const WCHAR wszCurrentEnvironment[] =
     #error Unsupported architecture
 #endif
 
+const WCHAR wszDefaultDocumentName[] = L"Local Downlevel Document";
+
 const WCHAR* wszPrintProviderInfo[3] = {
     L"Windows NT Local Print Providor",     // Name
     L"Windows NT Local Printers",           // Description
     L"Locally connected Printers"           // Comment
 };
 
-static const PRINTPROVIDOR PrintProviderFunctions = {
+// Local Constants
+static const PRINTPROVIDOR _PrintProviderFunctions = {
     LocalOpenPrinter,                           // fpOpenPrinter
     NULL,                                       // fpSetJob
-    NULL,                                       // fpGetJob
+    LocalGetJob,                                // fpGetJob
     NULL,                                       // fpEnumJobs
     NULL,                                       // fpAddPrinter
     NULL,                                       // fpDeletePrinter
@@ -56,7 +59,7 @@ static const PRINTPROVIDOR PrintProviderFunctions = {
     NULL,                                       // fpAbortPrinter
     NULL,                                       // fpReadPrinter
     LocalEndDocPrinter,                         // fpEndDocPrinter
-    NULL,                                       // fpAddJob
+    LocalAddJob,                                // fpAddJob
     NULL,                                       // fpScheduleJob
     NULL,                                       // fpGetPrinterData
     NULL,                                       // fpSetPrinterData
@@ -139,8 +142,9 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
             _GetSpoolDirectory();
-            InitializePrintProcessorTable();
-            InitializePrinterTable();
+            InitializePrintProcessorList();
+            InitializePrinterList();
+            InitializeGlobalJobList();
             break;
     }
 
@@ -150,7 +154,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 BOOL WINAPI
 InitializePrintProvidor(LPPRINTPROVIDOR pPrintProvidor, DWORD cbPrintProvidor, LPWSTR pFullRegistryPath)
 {
-    CopyMemory(pPrintProvidor, &PrintProviderFunctions, min(cbPrintProvidor, sizeof(PRINTPROVIDOR)));
+    CopyMemory(pPrintProvidor, &_PrintProviderFunctions, min(cbPrintProvidor, sizeof(PRINTPROVIDOR)));
 
     return TRUE;
 }
