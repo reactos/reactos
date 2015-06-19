@@ -1,4 +1,5 @@
 add_subdirectory(appwiz)
+add_subdirectory(cat)
 add_subdirectory(tee)
 add_subdirectory(touch)
 add_subdirectory(uptime)
