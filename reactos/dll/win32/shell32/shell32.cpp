@@ -151,6 +151,7 @@ class CShell32Module : public CComModule
 public:
     void Term()
     {
+        CComCreatorSingleton< ATL::CComObject< CDrivesFolder > >::Term();
         CComCreatorSingleton< ATL::CComObject< CDesktopFolder > >::Term();
         CComModule::Term();
     }

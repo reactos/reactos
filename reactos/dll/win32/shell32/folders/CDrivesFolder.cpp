@@ -161,6 +161,7 @@ CDrivesFolder::CDrivesFolder()
 CDrivesFolder::~CDrivesFolder()
 {
     TRACE ("-- destroying IShellFolder(%p)\n", this);
+    ASSERT(_CreatorClass::IsTerminated());
     SHFree(pidlRoot);
 }
 
