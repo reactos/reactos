@@ -974,6 +974,7 @@ AddDiskToList(
     PLIST_ENTRY ListEntry;
     PBIOSDISKENTRY BiosDiskEntry;
     ULONG LayoutBufferSize;
+    PDRIVE_LAYOUT_INFORMATION NewLayoutBuffer;
 
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
@@ -1150,37 +1151,13 @@ AddDiskToList(
                                               LayoutBufferSize);
     if (DiskEntry->LayoutBuffer == NULL)
     {
+        DPRINT1("Failed to allocate the disk layout buffer!\n");
         return;
     }
 
-    Status = NtDeviceIoControlFile(FileHandle,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &Iosb,
-                                   IOCTL_DISK_GET_DRIVE_LAYOUT,
-                                   NULL,
-                                   0,
-                                   DiskEntry->LayoutBuffer,
-                                   LayoutBufferSize);
-    DPRINT("Status: 0x%08lx\n", Status);
-    DPRINT("PartitionCount: %lu\n", DiskEntry->LayoutBuffer->PartitionCount);
-
-    /* If we need more than 4 partition entries, reallocte the buffer and
-       retrieve the disk layout again */
-    if (!NT_SUCCESS(Status) && DiskEntry->LayoutBuffer->PartitionCount > 4)
+    for (;;)
     {
-        LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
-                           ((DiskEntry->LayoutBuffer->PartitionCount - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
-        DiskEntry->LayoutBuffer = RtlReAllocateHeap(ProcessHeap,
-                                                    HEAP_ZERO_MEMORY,
-                                                    DiskEntry->LayoutBuffer,
-                                                    LayoutBufferSize);
-        if (DiskEntry->LayoutBuffer == NULL)
-        {
-            return;
-        }
-
+        DPRINT1("Buffer size: %lu\n", LayoutBufferSize);
         Status = NtDeviceIoControlFile(FileHandle,
                                        NULL,
                                        NULL,
@@ -1191,62 +1168,82 @@ AddDiskToList(
                                        0,
                                        DiskEntry->LayoutBuffer,
                                        LayoutBufferSize);
+        if (NT_SUCCESS(Status))
+            break;
+
+        if (Status != STATUS_BUFFER_TOO_SMALL)
+        {
+            DPRINT1("NtDeviceIoControlFile() failed (Status: 0x%08lx)\n", Status);
+            return;
+        }
+
+        LayoutBufferSize += 4 * sizeof(PARTITION_INFORMATION);
+        NewLayoutBuffer = RtlReAllocateHeap(ProcessHeap,
+                                            HEAP_ZERO_MEMORY,
+                                            DiskEntry->LayoutBuffer,
+                                            LayoutBufferSize);
+        if (NewLayoutBuffer == NULL)
+        {
+            DPRINT1("Failed to reallocate the disk layout buffer!\n");
+            return;
+        }
+
+        DiskEntry->LayoutBuffer = NewLayoutBuffer;
     }
 
-    if (NT_SUCCESS(Status))
-    {
+    DPRINT1("PartitionCount: %lu\n", DiskEntry->LayoutBuffer->PartitionCount);
+
 #ifdef DUMP_PARTITION_TABLE
-        DumpPartitionTable(DiskEntry);
+    DumpPartitionTable(DiskEntry);
 #endif
 
-        if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart != 0 &&
-            DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionLength.QuadPart != 0 &&
-            DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionType != 0)
+    if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart != 0 &&
+        DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionLength.QuadPart != 0 &&
+        DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionType != 0)
+    {
+        if ((DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector) % DiskEntry->SectorsPerTrack == 0)
         {
-            if ((DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector) % DiskEntry->SectorsPerTrack == 0)
-            {
-                DPRINT("Use %lu Sector alignment!\n", DiskEntry->SectorsPerTrack);
-            }
-            else if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart % (1024 * 1024) == 0)
-            {
-                DPRINT1("Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
-            }
-            else
-            {
-                DPRINT1("No matching aligment found! Partiton 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
-            }
+            DPRINT("Use %lu Sector alignment!\n", DiskEntry->SectorsPerTrack);
+        }
+        else if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart % (1024 * 1024) == 0)
+        {
+            DPRINT1("Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
         }
         else
         {
-            DPRINT1("No valid partiton table found! Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
+            DPRINT1("No matching aligment found! Partiton 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
+        }
+    }
+    else
+    {
+        DPRINT1("No valid partiton table found! Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
+    }
+
+
+    if (DiskEntry->LayoutBuffer->PartitionCount == 0)
+    {
+        DiskEntry->NewDisk = TRUE;
+        DiskEntry->LayoutBuffer->PartitionCount = 4;
+
+        for (i = 0; i < 4; i++)
+            DiskEntry->LayoutBuffer->PartitionEntry[i].RewritePartition = TRUE;
+    }
+    else
+    {
+        for (i = 0; i < 4; i++)
+        {
+            AddPartitionToDisk(DiskNumber,
+                               DiskEntry,
+                               i,
+                               FALSE);
         }
 
-
-        if (DiskEntry->LayoutBuffer->PartitionCount == 0)
+        for (i = 4; i < DiskEntry->LayoutBuffer->PartitionCount; i += 4)
         {
-            DiskEntry->NewDisk = TRUE;
-            DiskEntry->LayoutBuffer->PartitionCount = 4;
-
-            for (i = 0; i < 4; i++)
-                DiskEntry->LayoutBuffer->PartitionEntry[i].RewritePartition = TRUE;
-        }
-        else
-        {
-            for (i = 0; i < 4; i++)
-            {
-                AddPartitionToDisk(DiskNumber,
-                                   DiskEntry,
-                                   i,
-                                   FALSE);
-            }
-
-            for (i = 4; i < DiskEntry->LayoutBuffer->PartitionCount; i += 4)
-            {
-                AddPartitionToDisk(DiskNumber,
-                                   DiskEntry,
-                                   i,
-                                   TRUE);
-            }
+            AddPartitionToDisk(DiskNumber,
+                               DiskEntry,
+                               i,
+                               TRUE);
         }
     }
 
