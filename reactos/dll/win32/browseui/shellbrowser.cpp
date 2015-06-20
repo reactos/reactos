@@ -1520,6 +1520,7 @@ HRESULT CShellBrowser::UpdateUpState()
 void CShellBrowser::UpdateGotoMenu(HMENU theMenu)
 {
     CComPtr<ITravelLog>                     travelLog;
+    CComPtr<ITravelEntry>                   unusedEntry;
     int                                     position;
     MENUITEMINFO                            menuItemInfo;
     HRESULT                                 hResult;
@@ -1530,6 +1531,35 @@ void CShellBrowser::UpdateGotoMenu(HMENU theMenu)
     hResult = GetTravelLog(&travelLog);
     if (FAILED_UNEXPECTEDLY(hResult))
         return;
+
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget *>(this),
+                                        TLOG_BACK,
+                                        &unusedEntry);
+
+    if (SUCCEEDED(hResult))
+    {
+        SHEnableMenuItem(theMenu, IDM_GOTO_BACK, TRUE);
+        unusedEntry.Release();
+    }
+    else
+        SHEnableMenuItem(theMenu, IDM_GOTO_BACK, FALSE);
+
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget *>(this),
+                                        TLOG_FORE,
+                                        &unusedEntry);
+
+    if (SUCCEEDED(hResult))
+    {
+        SHEnableMenuItem(theMenu, IDM_GOTO_FORWARD, TRUE);
+        unusedEntry.Release();
+    }
+    else
+        SHEnableMenuItem(theMenu, IDM_GOTO_FORWARD, FALSE);
+
+    SHEnableMenuItem(theMenu,
+                     IDM_GOTO_UPONELEVEL,
+                     !_ILIsDesktop(fCurrentDirectoryPIDL));
+
     hResult = travelLog->InsertMenuEntries(static_cast<IDropTarget *>(this), theMenu, position,
         IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, TLMENUF_BACKANDFORTH | TLMENUF_CHECKCURRENT);
     if (SUCCEEDED(hResult))
