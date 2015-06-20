@@ -2349,8 +2349,14 @@ GetPrevUnpartitionedEntry(
     PPARTENTRY PartEntry)
 {
     PPARTENTRY PrevPartEntry;
+    PLIST_ENTRY ListHead;
 
-    if (PartEntry->ListEntry.Blink != &DiskEntry->PrimaryPartListHead)
+    if (PartEntry->LogicalPartition)
+        ListHead = &DiskEntry->LogicalPartListHead;
+    else
+        ListHead = &DiskEntry->PrimaryPartListHead;
+
+    if (PartEntry->ListEntry.Blink != ListHead)
     {
         PrevPartEntry = CONTAINING_RECORD(PartEntry->ListEntry.Blink,
                                           PARTENTRY,
@@ -2370,8 +2376,14 @@ GetNextUnpartitionedEntry(
     PPARTENTRY PartEntry)
 {
     PPARTENTRY NextPartEntry;
+    PLIST_ENTRY ListHead;
 
-    if (PartEntry->ListEntry.Flink != &DiskEntry->PrimaryPartListHead)
+    if (PartEntry->LogicalPartition)
+        ListHead = &DiskEntry->LogicalPartListHead;
+    else
+        ListHead = &DiskEntry->PrimaryPartListHead;
+
+    if (PartEntry->ListEntry.Flink != ListHead)
     {
         NextPartEntry = CONTAINING_RECORD(PartEntry->ListEntry.Flink,
                                           PARTENTRY,
