@@ -44,19 +44,25 @@ DumpPartitionTable(
     PPARTITION_INFORMATION PartitionInfo;
     ULONG i;
 
+    DbgPrint("\n");
+    DbgPrint("Index  Start         Length        Hidden      Nr  Type  Boot  RW\n");
+    DbgPrint("-----  ------------  ------------  ----------  --  ----  ----  --\n");
+
     for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
     {
         PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
-        DPRINT1("\n%lu: %12I64u  %12I64u  %10lu  %2lu  %2x  %c  %c\n",
-                i,
-                PartitionInfo->StartingOffset.QuadPart,
-                PartitionInfo->PartitionLength.QuadPart,
-                PartitionInfo->HiddenSectors,
-                PartitionInfo->PartitionNumber,
-                PartitionInfo->PartitionType,
-                PartitionInfo->BootIndicator ? '*': ' ',
-                PartitionInfo->RewritePartition ? 'Y': 'N');
+        DbgPrint("  %3lu  %12I64u  %12I64u  %10lu  %2lu    %2x     %c   %c\n",
+                 i,
+                 PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector,
+                 PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector,
+                 PartitionInfo->HiddenSectors,
+                 PartitionInfo->PartitionNumber,
+                 PartitionInfo->PartitionType,
+                 PartitionInfo->BootIndicator ? '*': ' ',
+                 PartitionInfo->RewritePartition ? 'Y': 'N');
     }
+
+    DbgPrint("\n");
 }
 #endif
 
