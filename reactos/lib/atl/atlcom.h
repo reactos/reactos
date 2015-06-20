@@ -29,6 +29,7 @@ class CComEnum;
 
 #define DECLARE_CLASSFACTORY_EX(cf) typedef ATL::CComCreator<ATL::CComObjectCached<cf> > _ClassFactoryCreatorClass;
 #define DECLARE_CLASSFACTORY() DECLARE_CLASSFACTORY_EX(ATL::CComClassFactory)
+#define DECLARE_CLASSFACTORY_SINGLETON(obj) DECLARE_CLASSFACTORY_EX(ATL::CComClassFactorySingleton<obj>)
 
 class CComObjectRootBase
 {
@@ -470,6 +471,11 @@ public:
     {
     }
 
+    virtual ~CComObjectCached()
+    {
+        this->FinalRelease();
+    }
+
     STDMETHOD_(ULONG, AddRef)()
     {
         ULONG newRefCount;
@@ -495,6 +501,38 @@ public:
     STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
     {
         return this->_InternalQueryInterface(iid, ppvObject);
+    }
+
+    static HRESULT WINAPI CreateInstance(CComObjectCached<Base> **pp)
+    {
+        CComObjectCached<Base> *newInstance;
+        HRESULT hResult;
+
+        ATLASSERT(pp != NULL);
+        if (pp == NULL)
+            return E_POINTER;
+
+        hResult = E_OUTOFMEMORY;
+        newInstance = NULL;
+        ATLTRY(newInstance = new CComObjectCached<Base>())
+        if (newInstance != NULL)
+        {
+            newInstance->SetVoid(NULL);
+            newInstance->InternalFinalConstructAddRef();
+            hResult = newInstance->_AtlInitialConstruct();
+            if (SUCCEEDED(hResult))
+                hResult = newInstance->FinalConstruct();
+            if (SUCCEEDED(hResult))
+                hResult = newInstance->_AtlFinalConstruct();
+            newInstance->InternalFinalConstructRelease();
+            if (hResult != S_OK)
+            {
+                delete newInstance;
+                newInstance = NULL;
+            }
+        }
+        *pp = newInstance;
+        return hResult;
     }
 };
 
@@ -668,6 +706,62 @@ public:
     BEGIN_COM_MAP(CComClassFactory)
         COM_INTERFACE_ENTRY_IID(IID_IClassFactory, IClassFactory)
     END_COM_MAP()
+};
+
+template <class T>
+class CComClassFactorySingleton :
+    public CComClassFactory
+{
+public:
+    HRESULT m_hrCreate;
+    IUnknown *m_spObj;
+
+public:
+    CComClassFactorySingleton() :
+        m_hrCreate(S_OK),
+        m_spObj(NULL)
+    {
+    }
+
+    STDMETHOD(CreateInstance)(LPUNKNOWN pUnkOuter, REFIID riid, void **ppvObj)
+    {
+        HRESULT hResult;
+
+        if (ppvObj == NULL)
+            return E_POINTER;
+        *ppvObj = NULL;
+
+        if (pUnkOuter != NULL)
+            hResult = CLASS_E_NOAGGREGATION;
+        else if (m_hrCreate == S_OK && m_spObj == NULL)
+        {
+            _SEH2_TRY
+            {
+                Lock();
+                if (m_hrCreate == S_OK && m_spObj == NULL)
+                {
+                    CComObjectCached<T> *pObj;
+                    m_hrCreate = CComObjectCached<T>::CreateInstance(&pObj);
+                    if (SUCCEEDED(m_hrCreate))
+                    {
+                        m_hrCreate = pObj->QueryInterface(IID_IUnknown, reinterpret_cast<PVOID *>(&m_spObj));
+                        if (FAILED(m_hrCreate))
+                            delete pObj;
+                    }
+                }
+            }
+            _SEH2_FINALLY
+            {
+                Unlock();
+            }
+            _SEH2_END;
+        }
+        if (m_hrCreate == S_OK)
+            hResult = m_spObj->QueryInterface(riid, ppvObj);
+        else
+            hResult = m_hrCreate;
+        return hResult;
+    }
 };
 
 template <class T, const CLSID *pclsid = &CLSID_NULL>
