@@ -43,7 +43,7 @@ extern "C" {
 
 #ifdef __cplusplus
 template <typename T>
-class CComCreatorSingleton
+class CComCreatorCentralInstance
 {
 private:
     static IUnknown *s_pInstance;
@@ -59,11 +59,18 @@ public:
         {
             PVOID pObj;
             HRESULT hr;
+            s_IsTerminated = true;
             hr = ATL::CComCreator< T >::CreateInstance(NULL, IID_IUnknown, &pObj);
             if (FAILED(hr))
+            {
+                s_IsTerminated = false;
                 return hr;
+            }
             if (InterlockedCompareExchangePointer((PVOID *)&s_pInstance, pObj, NULL))
+            {
                 static_cast<IUnknown *>(pObj)->Release();
+                s_IsTerminated = false;
+            }
         }
         return s_pInstance->QueryInterface(riid, ppv);
     }
@@ -87,14 +94,14 @@ public:
 };
 
 template <typename T>
-IUnknown *CComCreatorSingleton<T>::s_pInstance = NULL;
+IUnknown *CComCreatorCentralInstance<T>::s_pInstance = NULL;
 
 template <typename T>
-bool CComCreatorSingleton<T>::s_IsTerminated = false;
+bool CComCreatorCentralInstance<T>::s_IsTerminated = false;
 
-#define DECLARE_SINGLETON_NOT_AGGREGATABLE(x)                                   \
+#define DECLARE_CENTRAL_INSTANCE_NOT_AGGREGATABLE(x)                                \
 public:                                                                         \
-    typedef CComCreatorSingleton< ATL::CComObject<x> > _CreatorClass;
+    typedef CComCreatorCentralInstance< ATL::CComObject<x> > _CreatorClass;
 #endif
 
 #ifdef __cplusplus
