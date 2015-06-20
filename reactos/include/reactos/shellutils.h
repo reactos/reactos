@@ -70,12 +70,16 @@ public:
     static void Term()
     {
         ULONG ref;
+#ifdef ASSERT
         ASSERT(!s_IsTerminated);
+#endif
         s_IsTerminated = true;
         if (s_pInstance)
         {
             ref = s_pInstance->Release();
+#ifdef ASSERT
             ASSERT(ref == 0);
+#endif
             s_pInstance = NULL;
         }
     }
