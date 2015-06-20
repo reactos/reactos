@@ -28,7 +28,6 @@ class CDesktopFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
     public IPersistFolder2,
-    public IDropTarget,
     public ISFHelper
 {
     private:
@@ -36,10 +35,6 @@ class CDesktopFolder :
         LPWSTR sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
         
-        UINT cfShellIDList;    /* clipboardformat for IDropTarget */
-        BOOL fAcceptFmt;       /* flag for pending Drop */
-        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
-        void SF_RegisterClipFmt();
         virtual HRESULT WINAPI _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
 
     public:
@@ -77,13 +72,6 @@ class CDesktopFolder :
         // *** IPersistFolder2 methods ***
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
 
-        // IDropTarget
-        virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragLeave();
-        virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-
-
         // *** ISFHelper methods ***
         virtual HRESULT WINAPI GetUniqueName(LPWSTR pwszName, UINT uLen);
         virtual HRESULT WINAPI AddFolder(HWND hwnd, LPCWSTR pwszName, LPITEMIDLIST *ppidlOut);
@@ -101,7 +89,6 @@ class CDesktopFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         COM_INTERFACE_ENTRY_IID(IID_ISFHelper, ISFHelper)
         END_COM_MAP()
 };

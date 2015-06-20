@@ -48,7 +48,32 @@ extern "C" HRESULT WINAPI IEParseDisplayNameWithBCW(DWORD codepage, LPCWSTR lpsz
 *     Desktopfolder implementation
 */
 
-class CDesktopFolder;
+class CDesktopFolderDropTarget :
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IDropTarget
+{
+    private:
+        CComPtr<IShellFolder> m_psf;
+        BOOL m_fAcceptFmt;       /* flag for pending Drop */
+        UINT m_cfShellIDList;    /* clipboardformat for IDropTarget */
+        
+        void SF_RegisterClipFmt();
+        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
+    public:
+        CDesktopFolderDropTarget();
+        
+        HRESULT WINAPI Initialize(IShellFolder *psf);
+
+        // IDropTarget
+        virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        virtual HRESULT WINAPI DragLeave();
+        virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+
+        BEGIN_COM_MAP(CDesktopFolderDropTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
+        END_COM_MAP()
+};
 
 class CDesktopFolderEnum :
     public CEnumIDListBase
@@ -254,21 +279,10 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
     return ret ? S_OK : E_FAIL;
 }
 
-void CDesktopFolder::SF_RegisterClipFmt()
+CDesktopFolder::CDesktopFolder() :
+    sPathTarget(NULL),
+    pidlRoot(NULL)
 {
-    TRACE ("(%p)\n", this);
-
-    if (!cfShellIDList)
-        cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-}
-
-CDesktopFolder::CDesktopFolder()
-{
-    pidlRoot = NULL;
-    sPathTarget = NULL;
-    cfShellIDList = 0;
-    SF_RegisterClipFmt();
-    fAcceptFmt = FALSE;
 }
 
 CDesktopFolder::~CDesktopFolder()
@@ -491,7 +505,7 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
 
     if (IsEqualIID (riid, IID_IDropTarget))
     {
-        hr = this->QueryInterface (IID_IDropTarget, ppvOut);
+        hr = ShellObjectCreatorInit<CDesktopFolderDropTarget>(this, IID_IDropTarget, ppvOut);
     }
     else if (IsEqualIID (riid, IID_IContextMenu))
     {
@@ -1326,7 +1340,29 @@ HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCIT
  * set sensible places for the icons to live.
  *
  */
-BOOL CDesktopFolder::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
+void CDesktopFolderDropTarget::SF_RegisterClipFmt()
+{
+    TRACE ("(%p)\n", this);
+
+    if (!m_cfShellIDList)
+        m_cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+}
+
+CDesktopFolderDropTarget::CDesktopFolderDropTarget() :
+    m_psf(NULL),
+    m_fAcceptFmt(FALSE),
+    m_cfShellIDList(0)
+{
+}
+
+HRESULT WINAPI CDesktopFolderDropTarget::Initialize(IShellFolder *psf)
+{
+    m_psf = psf;
+    SF_RegisterClipFmt();
+    return S_OK;
+}
+
+BOOL CDesktopFolderDropTarget::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
 {
     /* TODO Windows does different drop effects if dragging across drives.
     i.e., it will copy instead of move if the directories are on different disks. */
@@ -1335,7 +1371,7 @@ BOOL CDesktopFolder::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
 
     *pdwEffect = DROPEFFECT_NONE;
 
-    if (fAcceptFmt) { /* Does our interpretation of the keystate ... */
+    if (m_fAcceptFmt) { /* Does our interpretation of the keystate ... */
         *pdwEffect = KeyStateToDropEffect (dwKeyState);
 
         if (*pdwEffect == DROPEFFECT_NONE)
@@ -1349,27 +1385,27 @@ BOOL CDesktopFolder::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
     return FALSE;
 }
 
-HRESULT WINAPI CDesktopFolder::DragEnter(IDataObject *pDataObject,
+HRESULT WINAPI CDesktopFolderDropTarget::DragEnter(IDataObject *pDataObject,
                                     DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
     FORMATETC fmt;
     FORMATETC fmt2;
-    fAcceptFmt = FALSE;
+    m_fAcceptFmt = FALSE;
 
-    InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
+    InitFormatEtc (fmt, m_cfShellIDList, TYMED_HGLOBAL);
     InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);
 
     if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
-        fAcceptFmt = TRUE;
+        m_fAcceptFmt = TRUE;
     else if (SUCCEEDED(pDataObject->QueryGetData(&fmt2)))
-        fAcceptFmt = TRUE;
+        m_fAcceptFmt = TRUE;
 
     QueryDrop(dwKeyState, pdwEffect);
     return S_OK;
 }
 
-HRESULT WINAPI CDesktopFolder::DragOver(DWORD dwKeyState, POINTL pt,
+HRESULT WINAPI CDesktopFolderDropTarget::DragOver(DWORD dwKeyState, POINTL pt,
                                    DWORD *pdwEffect)
 {
     TRACE("(%p)\n", this);
@@ -1382,14 +1418,14 @@ HRESULT WINAPI CDesktopFolder::DragOver(DWORD dwKeyState, POINTL pt,
     return S_OK;
 }
 
-HRESULT WINAPI CDesktopFolder::DragLeave()
+HRESULT WINAPI CDesktopFolderDropTarget::DragLeave()
 {
     TRACE("(%p)\n", this);
-    fAcceptFmt = FALSE;
+    m_fAcceptFmt = FALSE;
     return S_OK;
 }
 
-HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
+HRESULT WINAPI CDesktopFolderDropTarget::Drop(IDataObject *pDataObject,
                                DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p) object dropped desktop\n", this);
@@ -1438,18 +1474,24 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
         LPITEMIDLIST pidl = NULL;
 
         WCHAR szPath[MAX_PATH];
+        STRRET strRet;
         //LPWSTR pathPtr;
 
         /* build a complete path to create a simple pidl */
-        lstrcpynW(szPath, sPathTarget, MAX_PATH);
-        /*pathPtr = */PathAddBackslashW(szPath);
-        //hr = _ILCreateFromPathW(szPath, &pidl);
-        hr = this->ParseDisplayName(NULL, NULL, szPath, NULL, &pidl, NULL);
+        hr = m_psf->GetDisplayNameOf(NULL, SHGDN_NORMAL | SHGDN_FORPARSING, &strRet);
+        if (SUCCEEDED(hr))
+        {
+            hr = StrRetToBufW(&strRet, NULL, szPath, MAX_PATH);
+            ASSERT(SUCCEEDED(hr));
+            /*pathPtr = */PathAddBackslashW(szPath);
+            //hr = _ILCreateFromPathW(szPath, &pidl);
+            hr = m_psf->ParseDisplayName(NULL, NULL, szPath, NULL, &pidl, NULL);
+        }
 
         if (SUCCEEDED(hr))
         {
             CComPtr<IDropTarget> pDT;
-            hr = this->BindToObject(pidl, NULL, IID_PPV_ARG(IDropTarget, &pDT));
+            hr = m_psf->BindToObject(pidl, NULL, IID_PPV_ARG(IDropTarget, &pDT));
             CoTaskMemFree(pidl);
             if (SUCCEEDED(hr))
                 SHSimulateDrop(pDT, pDataObject, dwKeyState, NULL, pdwEffect);
