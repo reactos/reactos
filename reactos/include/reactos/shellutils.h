@@ -42,6 +42,58 @@ extern "C" {
 #endif /* defined(__cplusplus) */
 
 #ifdef __cplusplus
+template <typename T>
+class CComCreatorSingleton
+{
+private:
+    static IUnknown *s_pInstance;
+    static bool s_IsTerminated;
+
+public:
+    static HRESULT WINAPI CreateInstance(void *pv, REFIID riid, LPVOID *ppv)
+    {
+        *ppv = NULL;
+        if (pv != NULL)
+            return CLASS_E_NOAGGREGATION;
+        if (!s_pInstance)
+        {
+            PVOID pObj;
+            HRESULT hr;
+            hr = ATL::CComCreator< T >::CreateInstance(NULL, IID_IUnknown, &pObj);
+            if (FAILED(hr))
+                return hr;
+            if (InterlockedCompareExchangePointer((PVOID *)&s_pInstance, pObj, NULL))
+                static_cast<IUnknown *>(pObj)->Release();
+        }
+        return s_pInstance->QueryInterface(riid, ppv);
+    }
+    static void Term()
+    {
+        ULONG ref;
+        ASSERT(!s_IsTerminated);
+        s_IsTerminated = true;
+        if (s_pInstance)
+        {
+            ref = s_pInstance->Release();
+            ASSERT(ref == 0);
+            s_pInstance = NULL;
+        }
+    }
+    static bool IsTerminated() { return s_IsTerminated; }
+};
+
+template <typename T>
+IUnknown *CComCreatorSingleton<T>::s_pInstance = NULL;
+
+template <typename T>
+bool CComCreatorSingleton<T>::s_IsTerminated = false;
+
+#define DECLARE_SINGLETON_NOT_AGGREGATABLE(x)                                   \
+public:                                                                         \
+    typedef CComCreatorSingleton< ATL::CComObject<x> > _CreatorClass;
+#endif
+
+#ifdef __cplusplus
 template <class Base>
 class CComDebugObject : public Base
 {

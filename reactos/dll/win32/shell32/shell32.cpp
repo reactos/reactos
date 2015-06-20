@@ -149,6 +149,11 @@ HRESULT WINAPI SHCreateDefClassObject(
 class CShell32Module : public CComModule
 {
 public:
+    void Term()
+    {
+        CComCreatorSingleton< ATL::CComObject< CDesktopFolder > >::Term();
+        CComModule::Term();
+    }
 };
 
 

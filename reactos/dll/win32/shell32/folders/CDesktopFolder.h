@@ -34,7 +34,7 @@ class CDesktopFolder :
         /* both paths are parsible from the desktop */
         LPWSTR sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
-        
+
         virtual HRESULT WINAPI _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
 
     public:
@@ -79,7 +79,7 @@ class CDesktopFolder :
         virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLDESKTOP)
-        DECLARE_NOT_AGGREGATABLE(CDesktopFolder)
+        DECLARE_SINGLETON_NOT_AGGREGATABLE(CDesktopFolder)
 
         DECLARE_PROTECT_FINAL_CONSTRUCT()
 
