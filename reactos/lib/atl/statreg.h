@@ -194,7 +194,7 @@ protected:
     }
 
 private:
-    inline LONG RegDeleteTreeX(HKEY parentKey, LPCTSTR subKeyName)
+    inline LONG RegDeleteTreeX(HKEY parentKey, LPCWSTR subKeyName)
     {
         wchar_t szBuffer[256];
         DWORD dwSize;
@@ -203,7 +203,7 @@ private:
         LONG lRes;
 
         ATLASSERT(parentKey != NULL);
-        lRes = RegOpenKeyEx(parentKey, subKeyName, 0, KEY_READ | KEY_WRITE, &childKey);
+        lRes = RegOpenKeyExW(parentKey, subKeyName, 0, KEY_READ | KEY_WRITE, &childKey);
         if (lRes != ERROR_SUCCESS)
             return lRes;
 
@@ -216,7 +216,7 @@ private:
             dwSize = sizeof(szBuffer) / sizeof(szBuffer[0]);
         }
         RegCloseKey(childKey);
-        return RegDeleteKey(parentKey, subKeyName);
+        return RegDeleteKeyW(parentKey, subKeyName);
     }
 
     HRESULT strbuf_init(strbuf *buf)
@@ -387,7 +387,7 @@ private:
 
             if (iter == iter2)
             {
-                hResult = strbuf_write(_T("%"), buf, 1);
+                hResult = strbuf_write(L"%", buf, 1);
                 if (FAILED(hResult))
                     return hResult;
             }
@@ -499,10 +499,10 @@ private:
             DO_DELETE
         } key_type = NORMAL;
 
-        static const wchar_t *wstrNoRemove = _T("NoRemove");
-        static const wchar_t *wstrForceRemove = _T("ForceRemove");
-        static const wchar_t *wstrDelete = _T("Delete");
-        static const wchar_t *wstrval = _T("val");
+        static const wchar_t *wstrNoRemove = L"NoRemove";
+        static const wchar_t *wstrForceRemove = L"ForceRemove";
+        static const wchar_t *wstrDelete = L"Delete";
+        static const wchar_t *wstrval = L"val";
 
         iter = *pstr;
         hkey = NULL;
@@ -549,7 +549,7 @@ private:
                 {
                     if (key_type == FORCE_REMOVE)
                         RegDeleteTreeX(parent_key, buf->str);
-                    lres = RegCreateKey(parent_key, buf->str, &hkey);
+                    lres = RegCreateKeyW(parent_key, buf->str, &hkey);
                     if (lres != ERROR_SUCCESS)
                     {
                         hres = HRESULT_FROM_WIN32(lres);
@@ -562,7 +562,7 @@ private:
                 hres = strbuf_write(buf->str, &name, -1);
                 if (FAILED(hres))
                     return hres;
-                lres = RegOpenKey(parent_key, buf->str, &hkey);
+                lres = RegOpenKeyW(parent_key, buf->str, &hkey);
                 if (lres != ERROR_SUCCESS)
                 {
                 }
@@ -587,7 +587,7 @@ private:
                             hres = get_word(&iter, buf);
                             if (FAILED(hres))
                                 break;
-                            lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_SZ, (PBYTE)buf->str,
+                            lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_SZ, (PBYTE)buf->str,
                                     (lstrlenW(buf->str) + 1) * sizeof(WCHAR));
                             if (lres != ERROR_SUCCESS)
                                 hres = HRESULT_FROM_WIN32(lres);
@@ -596,7 +596,7 @@ private:
                             hres = get_word(&iter, buf);
                             if (FAILED(hres))
                                 break;
-                            lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_EXPAND_SZ, (PBYTE)buf->str,
+                            lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_EXPAND_SZ, (PBYTE)buf->str,
                                     (lstrlenW(buf->str) + 1) * sizeof(WCHAR));
                             if (lres != ERROR_SUCCESS)
                                 hres = HRESULT_FROM_WIN32(lres);
@@ -612,7 +612,7 @@ private:
                                     dw = wcstoul(&buf->str[2], &end, 16);
                                 else
                                     dw = wcstol(&buf->str[0], &end, 10);
-                                lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_DWORD, (PBYTE)&dw, sizeof(dw));
+                                lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_DWORD, (PBYTE)&dw, sizeof(dw));
                                 if (lres != ERROR_SUCCESS)
                                     hres = HRESULT_FROM_WIN32(lres);
                                 break;
@@ -631,7 +631,7 @@ private:
                                 count = count / 2;
                                 for (curIndex = 0; curIndex < count; curIndex++)
                                     ((BYTE*)buf->str)[curIndex] = (HexToBin(buf->str[curIndex * 2]) << 4) | HexToBin(buf->str[curIndex * 2 + 1]);
-                                lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_BINARY, (PBYTE)buf->str, count);
+                                lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_BINARY, (PBYTE)buf->str, count);
                                 if (lres != ERROR_SUCCESS)
                                     hres = HRESULT_FROM_WIN32(lres);
                                 break;
@@ -669,7 +669,7 @@ private:
 
             if (!do_register && (key_type == NORMAL || key_type == FORCE_REMOVE))
             {
-                RegDeleteKey(parent_key, name.str);
+                RegDeleteKeyW(parent_key, name.str);
             }
 
             if (hkey && key_type != IS_VAL)
@@ -699,20 +699,20 @@ private:
             const wchar_t *name;
             HKEY key;
         } root_keys[] = {
-            {_T("HKEY_CLASSES_ROOT"), HKEY_CLASSES_ROOT},
-            {_T("HKEY_CURRENT_USER"), HKEY_CURRENT_USER},
-            {_T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE},
-            {_T("HKEY_USERS"), HKEY_USERS},
-            {_T("HKEY_PERFORMANCE_DATA"), HKEY_PERFORMANCE_DATA},
-            {_T("HKEY_DYN_DATA"), HKEY_DYN_DATA},
-            {_T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG},
-            {_T("HKCR"), HKEY_CLASSES_ROOT},
-            {_T("HKCU"), HKEY_CURRENT_USER},
-            {_T("HKLM"), HKEY_LOCAL_MACHINE},
-            {_T("HKU"), HKEY_USERS},
-            {_T("HKPD"), HKEY_PERFORMANCE_DATA},
-            {_T("HKDD"), HKEY_DYN_DATA},
-            {_T("HKCC"), HKEY_CURRENT_CONFIG},
+            {L"HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT},
+            {L"HKEY_CURRENT_USER", HKEY_CURRENT_USER},
+            {L"HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE},
+            {L"HKEY_USERS", HKEY_USERS},
+            {L"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA},
+            {L"HKEY_DYN_DATA", HKEY_DYN_DATA},
+            {L"HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG},
+            {L"HKCR", HKEY_CLASSES_ROOT},
+            {L"HKCU", HKEY_CURRENT_USER},
+            {L"HKLM", HKEY_LOCAL_MACHINE},
+            {L"HKU", HKEY_USERS},
+            {L"HKPD", HKEY_PERFORMANCE_DATA},
+            {L"HKDD", HKEY_DYN_DATA},
+            {L"HKCC", HKEY_CURRENT_CONFIG},
         };
 
         iter = data;

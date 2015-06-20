@@ -350,17 +350,25 @@ public:
     HRESULT WINAPI UpdateRegistryFromResource(LPCTSTR lpszRes, BOOL bRegister, struct _ATL_REGMAP_ENTRY *pMapEntries = NULL)
     {
         CRegObject registrar;
-        TCHAR modulePath[MAX_PATH];
+        WCHAR modulePath[MAX_PATH];
         HRESULT hResult;
+        PCWSTR lpwszRes;
 
         hResult = CommonInitRegistrar(registrar, modulePath, sizeof(modulePath) / sizeof(modulePath[0]), pMapEntries);
         if (FAILED(hResult))
             return hResult;
-
+#ifdef UNICODE
+        lpwszRes = lpszRes;
+#else
+        /* FIXME: this is a bit of a hack, need to re-evaluate */
+        WCHAR resid[MAX_PATH];
+        MultiByteToWideChar(CP_ACP, 0, lpszRes, -1, resid, MAX_PATH);
+        lpwszRes = resid;
+#endif
         if (bRegister != FALSE)
-            hResult = registrar.ResourceRegisterSz(modulePath, lpszRes, _T("REGISTRY"));
+            hResult = registrar.ResourceRegisterSz(modulePath, lpwszRes, L"REGISTRY");
         else
-            hResult = registrar.ResourceUnregisterSz(modulePath, lpszRes, _T("REGISTRY"));
+            hResult = registrar.ResourceUnregisterSz(modulePath, lpwszRes, L"REGISTRY");
 
         return hResult;
     }
@@ -368,7 +376,7 @@ public:
     HRESULT WINAPI UpdateRegistryFromResource(UINT nResID, BOOL bRegister, struct _ATL_REGMAP_ENTRY *pMapEntries = NULL)
     {
         CRegObject registrar;
-        TCHAR modulePath[MAX_PATH];
+        WCHAR modulePath[MAX_PATH];
         HRESULT hResult;
 
         hResult = CommonInitRegistrar(registrar, modulePath, sizeof(modulePath) / sizeof(modulePath[0]), pMapEntries);
@@ -376,22 +384,22 @@ public:
             return hResult;
 
         if (bRegister != FALSE)
-            hResult = registrar.ResourceRegister(modulePath, nResID, _T("REGISTRY"));
+            hResult = registrar.ResourceRegister(modulePath, nResID, L"REGISTRY");
         else
-            hResult = registrar.ResourceUnregister(modulePath, nResID, _T("REGISTRY"));
+            hResult = registrar.ResourceUnregister(modulePath, nResID, L"REGISTRY");
 
         return hResult;
     }
 
 private:
-    HRESULT CommonInitRegistrar(CRegObject &registrar, TCHAR *modulePath, DWORD modulePathCount, struct _ATL_REGMAP_ENTRY *pMapEntries)
+    HRESULT CommonInitRegistrar(CRegObject &registrar, WCHAR *modulePath, DWORD modulePathCount, struct _ATL_REGMAP_ENTRY *pMapEntries)
     {
         HINSTANCE hInstance;
         DWORD dwFLen;
         HRESULT hResult;
 
         hInstance = _AtlBaseModule.GetModuleInstance();
-        dwFLen = GetModuleFileName(hInstance, modulePath, modulePathCount);
+        dwFLen = GetModuleFileNameW(hInstance, modulePath, modulePathCount);
         if (dwFLen == modulePathCount)
             return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
         else if (dwFLen == 0)
@@ -413,11 +421,11 @@ private:
         if (FAILED(hResult))
             return hResult;
 
-        hResult = registrar.AddReplacement(_T("Module"), modulePath);
+        hResult = registrar.AddReplacement(L"Module", modulePath);
         if (FAILED(hResult))
             return hResult;
 
-        hResult = registrar.AddReplacement(_T("Module_Raw"), modulePath);
+        hResult = registrar.AddReplacement(L"Module_Raw", modulePath);
         if (FAILED(hResult))
             return hResult;
 
