@@ -4,6 +4,7 @@ set_cpp(WITH_RUNTIME)
 include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 
 add_executable(shell32_apitest
+    CMyComputer.cpp
     CShellDesktop.cpp
     menu.cpp
     testlist.c)
