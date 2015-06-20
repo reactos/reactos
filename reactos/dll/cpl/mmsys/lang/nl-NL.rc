@@ -16,7 +16,7 @@ BEGIN
     CHECKBOX "P&ictogram voor het volume in het systeemvak plaatsen", IDC_ICON_IN_TASKBAR, 25, 92, 190, 10
     PUSHBUTTON "Ge&avanceerd...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Luidsprekerinstellingen", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Met de onderstaande knoppen kunt u het\nvolume en andere instellingen van de\nluidsprekers wijzigen.", -1, 70, 155, 150, 36
     PUSHBUTTON "&Luidsprekervolume..", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "&Geavanceerd...", IDC_ADVANCED2_BTN, 150, 195, 75, 15

@@ -16,7 +16,7 @@ BEGIN
     CHECKBOX "Поставяне на &значе за звука в задачната лента", IDC_ICON_IN_TASKBAR, 50, 92, 180, 10
     PUSHBUTTON "Разш&ирени...", IDC_ADVANCED_BTN, 154, 105, 80, 15
     GROUPBOX "Настройки на говорителя", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Чрез долните настройки можете да укажете силата и други свойства на всеки говорител поотделно.", -1, 70, 155, 150, 36
     PUSHBUTTON "Сила на &говорителя...", IDC_SPEAKER_VOL_BTN, 72, 195, 80, 15
     PUSHBUTTON "Раз&ширени...", IDC_ADVANCED2_BTN, 154, 195, 80, 15

@@ -16,7 +16,7 @@ BEGIN
     CHECKBOX "Lautstärkeregelungs-&Icon in der Taskleiste zeigen", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
     PUSHBUTTON "Er&weitert", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Lautsprechereinstellungen", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Verwenden Sie die unteren Einstellungen um die Lautstärke einzelner Geräte und andere Einstellungen zu verändern.", -1, 70, 155, 150, 36
     PUSHBUTTON "&Lautstärke...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "E&rweitert...", IDC_ADVANCED2_BTN, 150, 195, 75, 15

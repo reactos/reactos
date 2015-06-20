@@ -24,7 +24,7 @@ BEGIN
     CHECKBOX "Пока&зувати значок гучності на панелі завдань", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "&Додатково...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Налаштування динаміків", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "За допомогою розташованих нижче кнопок можна виконати індивідуальну настройку гучності динаміків та інших параметрів.", -1, 70, 155, 150, 36
     PUSHBUTTON "&Гучність динаміків...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "Дод&атково...", IDC_ADVANCED2_BTN, 150, 195, 75, 15

@@ -29,7 +29,7 @@ BEGIN
     CHECKBOX "Umieść &ikonę głośności w zasobniku systemowym", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "&Zaawansowane...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Ustawienia głośników", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Użyj ustawień poniżej aby zmienić indywidualny poziom głośności i dostosować ustawienia zaawansowane.", -1, 70, 155, 150, 36
     PUSHBUTTON "&Głośniki...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "Z&aawansowane...", IDC_ADVANCED2_BTN, 150, 195, 75, 15

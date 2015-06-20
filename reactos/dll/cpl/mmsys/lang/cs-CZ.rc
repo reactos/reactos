@@ -21,7 +21,7 @@ BEGIN
     CHECKBOX "Umístit &ikonu hlasitosti na panel úloh", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "&Upřesnit...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Nastavení reproduktorů", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Nastavení níže lze použít ke změnění hlasitosti jednotlivých reproduktorů a dalších nastavení.", -1, 70, 155, 150, 36
     PUSHBUTTON "&Hlasitost reproduktorů...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "U&přesnit...", IDC_ADVANCED2_BTN, 150, 195, 75, 15

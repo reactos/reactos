@@ -16,7 +16,7 @@ BEGIN
     CHECKBOX "Colocar un icono de volumen en la &barra de tareas", IDC_ICON_IN_TASKBAR, 30, 92, 180, 10
     PUSHBUTTON "Propiedades avan&zadas...", IDC_ADVANCED_BTN, 140, 105, 88, 15
     GROUPBOX "Configuración del altavoz ", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Utilice esta configuración para cambiar el volumen del altavoz y otras configuraciones.", -1, 70, 155, 150, 36
     PUSHBUTTON "Vol&umen de altavoz...", IDC_SPEAKER_VOL_BTN, 60, 195, 75, 15
     PUSHBUTTON "Propiedades &avanzadas...", IDC_ADVANCED2_BTN, 140, 195, 88, 15

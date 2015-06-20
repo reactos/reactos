@@ -21,7 +21,7 @@ BEGIN
     CHECKBOX "Afișează pictogramă în &zona de notificare", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
     PUSHBUTTON "A&vansate…", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Opțiuni difuzoare", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Folosiți opțiunile de mai jos pentru a ajusta volumul fiecărui difuzor în parte sau pentru alte modificări în configurația difuzoarelor.", -1, 70, 155, 150, 36
     PUSHBUTTON "V&olum difuzoare…", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "Avansat&e…", IDC_ADVANCED2_BTN, 150, 195, 75, 15

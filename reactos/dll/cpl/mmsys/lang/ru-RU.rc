@@ -16,7 +16,7 @@ BEGIN
     CHECKBOX "Отображать &значок на панели задач", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "&Дополнительно...", IDC_ADVANCED_BTN, 155, 110, 75, 15
     GROUPBOX "Настройки динамиков", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Расположенные ниже кнопки позволяют выполнить индивидуальную настройку громкости динамиков и других параметров.", -1, 70, 155, 150, 36
     PUSHBUTTON "Гром&кость...", IDC_SPEAKER_VOL_BTN, 70, 200, 80, 15
     PUSHBUTTON "Д&ополнительно...", IDC_ADVANCED2_BTN, 155, 200, 75, 15

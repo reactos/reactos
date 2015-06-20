@@ -18,7 +18,7 @@ BEGIN
     CHECKBOX "שים סמל עוצמה בשורת המשימות", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "מתקדם...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "הגדרות רמקולים", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Use the settings below to change individual speaker volume and other settings.", -1, 70, 155, 150, 36
     PUSHBUTTON "עוצמת רמקולים...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "מתקדם...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
