@@ -10,7 +10,7 @@ protected:
     virtual const QITAB* GetQITab() = 0;
 public:
 
-    CUnknownBase(bool autoDelete, LONG initialRef)
+    CUnknownBase(bool autoDelete = true, LONG initialRef = 0)
         : m_lRef(initialRef),
         m_AutoDelete(autoDelete)
     {
