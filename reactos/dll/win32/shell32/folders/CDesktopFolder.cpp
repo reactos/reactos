@@ -640,7 +640,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
         if (cidl != 1 || FAILED(hr = this->_GetDropTarget(apidl[0], (LPVOID*) &pObj)))
         {
             IDropTarget * pDt = NULL;
-            hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
+            hr = ShellObjectCreatorInit<CDesktopFolderDropTarget>(this, IID_IDropTarget, &pDt);
             pObj = pDt;
         }
     }
