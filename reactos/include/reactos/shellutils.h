@@ -67,10 +67,8 @@ public:
                 return hr;
             }
             if (InterlockedCompareExchangePointer((PVOID *)&s_pInstance, pObj, NULL))
-            {
                 static_cast<IUnknown *>(pObj)->Release();
-                s_IsTerminated = false;
-            }
+            s_IsTerminated = false;
         }
         return s_pInstance->QueryInterface(riid, ppv);
     }
