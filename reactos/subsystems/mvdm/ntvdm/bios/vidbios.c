@@ -21,7 +21,7 @@
 // #include "vidbios.h"
 
 #include "io.h"
-#include "hardware/video/vga.h"
+#include "hardware/video/svga.h"
 
 /* DEFINES ********************************************************************/
 

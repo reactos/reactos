@@ -28,7 +28,7 @@
 #include "hardware/ps2.h"
 #include "hardware/sound/speaker.h"
 #include "hardware/pit.h"
-#include "hardware/video/vga.h"
+#include "hardware/video/svga.h"
 
 #include "io.h"
 

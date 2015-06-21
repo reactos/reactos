@@ -19,7 +19,7 @@
 #include "hardware/cmos.h"
 #include "hardware/ps2.h"
 #include "hardware/pit.h"
-#include "hardware/video/vga.h"
+#include "hardware/video/svga.h"
 #include "hardware/mouse.h"
 
 /* DEFINES ********************************************************************/

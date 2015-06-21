@@ -15,7 +15,7 @@
 #include "ps2.h"
 
 #include "clock.h"
-#include "video/vga.h"
+#include "video/svga.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

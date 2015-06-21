@@ -27,7 +27,7 @@ list(APPEND SOURCE
     hardware/ppi.c
     hardware/ps2.c
     hardware/sound/speaker.c
-    hardware/video/vga.c
+    hardware/video/svga.c
     dos/dos32krnl/bios.c
     dos/dos32krnl/condrv.c
     dos/dos32krnl/device.c

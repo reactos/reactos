@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            vga.c
- * PURPOSE:         VGA hardware emulation
+ * FILE:            svga.c
+ * PURPOSE:         SuperVGA hardware emulation (Cirrus Logic CL-GD5434 compatible)
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -12,7 +12,7 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
-#include "vga.h"
+#include "svga.h"
 #include <bios/vidbios.h>
 
 #include "memory.h"
@@ -253,7 +253,7 @@ static PHARDWARE_TIMER HSyncTimer;
 /*
  * VGA Hardware
  */
-static BYTE VgaMemory[VGA_NUM_BANKS * VGA_BANK_SIZE];
+static BYTE VgaMemory[VGA_NUM_BANKS * SVGA_BANK_SIZE];
 
 static BYTE VgaLatchRegisters[VGA_NUM_BANKS] = {0, 0, 0, 0};
 
@@ -261,13 +261,13 @@ static BYTE VgaMiscRegister;
 static BYTE VgaFeatureRegister;
 
 static BYTE VgaSeqIndex = VGA_SEQ_RESET_REG;
-static BYTE VgaSeqRegisters[VGA_SEQ_MAX_REG];
+static BYTE VgaSeqRegisters[SVGA_SEQ_MAX_REG];
 
 static BYTE VgaCrtcIndex = VGA_CRTC_HORZ_TOTAL_REG;
-static BYTE VgaCrtcRegisters[VGA_CRTC_MAX_REG];
+static BYTE VgaCrtcRegisters[SVGA_CRTC_MAX_REG];
 
 static BYTE VgaGcIndex = VGA_GC_RESET_REG;
-static BYTE VgaGcRegisters[VGA_GC_MAX_REG];
+static BYTE VgaGcRegisters[SVGA_GC_MAX_REG];
 
 static BOOLEAN VgaAcLatch = FALSE;
 static BOOLEAN VgaAcPalDisable = TRUE;
@@ -289,6 +289,9 @@ static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = FALSE;
 static BOOLEAN CursorChanged  = FALSE;
 static BOOLEAN PaletteChanged = FALSE;
+
+static UINT SvgaHdrCounter = 0;
+static BYTE SvgaHiddenRegister = 0;
 
 typedef enum _SCREEN_MODE
 {
@@ -742,6 +745,88 @@ static inline VOID VgaMarkForUpdate(SHORT Row, SHORT Column)
 
     /* Set the update request flag */
     NeedsUpdate = TRUE;
+}
+
+static inline ULONG VgaGetClockFrequency(VOID)
+{
+    BYTE Numerator, Denominator;
+
+    if (VgaSeqRegisters[SVGA_SEQ_MCLK_REG] & SVGA_SEQ_MCLK_VCLK)
+    {
+        /* The VCLK is being generated using the MCLK */
+        ULONG Clock = (VGA_CLOCK_BASE * (VgaSeqRegisters[SVGA_SEQ_MCLK_REG] & 0x3F)) >> 3;
+
+        if (VgaSeqRegisters[SVGA_SEQ_VCLK3_DENOMINATOR_REG] & 1)
+        {
+            /* Use only half of the MCLK as the VCLK */
+            Clock >>= 1;
+        }
+
+        return Clock;
+    }
+
+    switch ((VgaMiscRegister >> 2) & 3)
+    {
+        case 0:
+        {
+            Numerator = VgaSeqRegisters[SVGA_SEQ_VCLK0_NUMERATOR_REG];
+            Denominator = VgaSeqRegisters[SVGA_SEQ_VCLK0_DENOMINATOR_REG];
+            break;
+        }
+
+        case 1:
+        {
+            Numerator = VgaSeqRegisters[SVGA_SEQ_VCLK1_NUMERATOR_REG];
+            Denominator = VgaSeqRegisters[SVGA_SEQ_VCLK1_DENOMINATOR_REG];
+            break;
+        }
+
+        case 2:
+        {
+            Numerator = VgaSeqRegisters[SVGA_SEQ_VCLK2_NUMERATOR_REG];
+            Denominator = VgaSeqRegisters[SVGA_SEQ_VCLK2_DENOMINATOR_REG];
+            break;
+        }
+
+        case 3:
+        {
+            Numerator = VgaSeqRegisters[SVGA_SEQ_VCLK3_NUMERATOR_REG];
+            Denominator = VgaSeqRegisters[SVGA_SEQ_VCLK3_DENOMINATOR_REG];
+            break;
+        }
+    }
+
+    /* The numerator is 7-bit */
+    Numerator &= ~(1 << 7);
+
+    /* If bit 7 is clear, the denominator is 5-bit */
+    if (!(Denominator & (1 << 7))) Denominator &= ~(1 << 6);
+
+    /* Bit 0 of the denominator is the post-scalar bit */
+    if (Denominator & 1) Denominator &= ~1;
+    else Denominator >>= 1;
+
+    /* Return the clock frequency in Hz */
+    return (VGA_CLOCK_BASE * Numerator) / Denominator;
+}
+
+static VOID VgaResetSequencer(VOID)
+{
+    /* Lock extended SVGA registers */
+    VgaSeqRegisters[SVGA_SEQ_UNLOCK_REG] = SVGA_SEQ_LOCKED;
+
+    /* Initialize the VCLKs */
+    VgaSeqRegisters[SVGA_SEQ_VCLK0_NUMERATOR_REG]   = 0x66;
+    VgaSeqRegisters[SVGA_SEQ_VCLK0_DENOMINATOR_REG] = 0x3B;
+    VgaSeqRegisters[SVGA_SEQ_VCLK1_NUMERATOR_REG]   = 0x5B;
+    VgaSeqRegisters[SVGA_SEQ_VCLK1_DENOMINATOR_REG] = 0x2F;
+    VgaSeqRegisters[SVGA_SEQ_VCLK2_NUMERATOR_REG]   = 0x45;
+    VgaSeqRegisters[SVGA_SEQ_VCLK2_DENOMINATOR_REG] = 0x30;
+    VgaSeqRegisters[SVGA_SEQ_VCLK3_NUMERATOR_REG]   = 0x7E;
+    VgaSeqRegisters[SVGA_SEQ_VCLK3_DENOMINATOR_REG] = 0x33;
+
+    /* 50 MHz MCLK, not being used as the VCLK */
+    VgaSeqRegisters[SVGA_SEQ_MCLK_REG] = 0x1C;
 }
 
 static VOID VgaRestoreDefaultPalette(PPALETTEENTRY Entries, USHORT NumOfEntries)
@@ -1395,6 +1480,8 @@ static VOID VgaUpdateTextCursor(VOID)
 static BYTE WINAPI VgaReadPort(USHORT Port)
 {
     DPRINT("VgaReadPort: Port 0x%X\n", Port);
+    
+    if (Port != VGA_DAC_MASK) SvgaHdrCounter = 0;
 
     switch (Port)
     {
@@ -1412,7 +1499,7 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
             ULONGLONG Cycles = GetCycleCount();
             ULONG CyclesPerMicrosecond = (ULONG)((GetCycleSpeed() + 500000ULL) / 1000000ULL);
             ULONG Dots = (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & 1) ? 9 : 8;
-            ULONG Clock = ((VgaMiscRegister >> 2) & 1) ? 28 : 25;
+            ULONG Clock = VgaGetClockFrequency() / 1000000;
             ULONG HorizTotalDots = ((ULONG)VgaCrtcRegisters[VGA_CRTC_HORZ_TOTAL_REG] + 5) * Dots;
             ULONG VblankStart, VblankEnd, HblankStart, HblankEnd;
             ULONG HblankDuration, VblankDuration;
@@ -1466,7 +1553,18 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
             return VgaSeqRegisters[VgaSeqIndex];
 
         case VGA_DAC_MASK:
-            return VgaDacMask;
+        {
+            if (SvgaHdrCounter == 4)
+            {
+                SvgaHdrCounter = 0;
+                return SvgaHiddenRegister;
+            }
+            else
+            {
+                SvgaHdrCounter++;
+                return VgaDacMask;
+            }
+        }
 
         case VGA_DAC_READ_INDEX:
             /* This returns the read/write state */
@@ -1512,21 +1610,37 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
 
 static inline VOID VgaWriteSequencer(BYTE Data)
 {
-    ASSERT(VgaSeqIndex < VGA_SEQ_MAX_REG);
-
     /* Save the value */
-    VgaSeqRegisters[VgaSeqIndex] = Data;
+    VgaSeqRegisters[VgaSeqIndex & VGA_SEQ_INDEX_MASK] = Data;
+
+    /* Check the index */
+    switch (VgaSeqIndex & VGA_SEQ_INDEX_MASK)
+    {
+        case SVGA_SEQ_UNLOCK_REG:
+        {
+            if ((Data & SVGA_SEQ_UNLOCK_MASK) == SVGA_SEQ_UNLOCKED)
+            {
+                /* Unlock SVGA extensions */
+                VgaSeqRegisters[SVGA_SEQ_UNLOCK_REG] = SVGA_SEQ_UNLOCKED;
+            }
+            else
+            {
+                /* Lock SVGA extensions */
+                VgaSeqRegisters[SVGA_SEQ_UNLOCK_REG] = SVGA_SEQ_LOCKED;
+            }
+
+            break;
+        }
+    }
 }
 
 static inline VOID VgaWriteGc(BYTE Data)
 {
-    ASSERT(VgaGcIndex < VGA_GC_MAX_REG);
-
     /* Save the value */
-    VgaGcRegisters[VgaGcIndex] = Data;
+    VgaGcRegisters[VgaGcIndex & VGA_GC_INDEX_MASK] = Data;
 
     /* Check the index */
-    switch (VgaGcIndex)
+    switch (VgaGcIndex & VGA_GC_INDEX_MASK)
     {
         case VGA_GC_MISC_REG:
         {
@@ -1553,13 +1667,11 @@ static inline VOID VgaWriteGc(BYTE Data)
 
 static inline VOID VgaWriteCrtc(BYTE Data)
 {
-    ASSERT(VgaGcIndex < VGA_CRTC_MAX_REG);
-
     /* Save the value */
-    VgaCrtcRegisters[VgaCrtcIndex] = Data;
+    VgaCrtcRegisters[VgaCrtcIndex & VGA_CRTC_INDEX_MASK] = Data;
 
     /* Check the index */
-    switch (VgaCrtcIndex)
+    switch (VgaCrtcIndex & VGA_CRTC_INDEX_MASK)
     {
         case VGA_CRTC_END_HORZ_DISP_REG:
         case VGA_CRTC_VERT_DISP_END_REG:
@@ -1749,7 +1861,12 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
         case VGA_SEQ_INDEX:
         {
             /* Set the sequencer index register */
-            if (Data < VGA_SEQ_MAX_REG) VgaSeqIndex = Data;
+            if ((Data & 0x1F) < SVGA_SEQ_MAX_UNLOCKED_REG
+                && (Data & 0x1F) != VGA_SEQ_MAX_REG)
+            {
+                VgaSeqIndex = Data;
+            }
+
             break;
         }
 
@@ -1762,7 +1879,9 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
 
         case VGA_DAC_MASK:
         {
-            VgaDacMask = Data;
+            if (SvgaHdrCounter == 4) SvgaHiddenRegister = Data;
+            else VgaDacMask = Data;
+
             break;
         }
 
@@ -1791,7 +1910,14 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
         case VGA_CRTC_INDEX_COLOR:
         {
             /* Set the CRTC index register */
-            if (Data < VGA_CRTC_MAX_REG) VgaCrtcIndex = Data;
+            if (((Data & VGA_CRTC_INDEX_MASK) < SVGA_CRTC_MAX_UNLOCKED_REG)
+                && ((Data & VGA_CRTC_INDEX_MASK) < SVGA_CRTC_UNUSED0_REG
+                || (Data & VGA_CRTC_INDEX_MASK) > SVGA_CRTC_UNUSED6_REG)
+                && (Data & VGA_CRTC_INDEX_MASK) != SVGA_CRTC_UNUSED7_REG)
+            {
+                VgaCrtcIndex = Data;
+            }
+
             break;
         }
 
@@ -1806,7 +1932,14 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
         case VGA_GC_INDEX:
         {
             /* Set the GC index register */
-            if (Data < VGA_GC_MAX_REG) VgaGcIndex = Data;
+            if ((Data & VGA_GC_INDEX_MASK) < SVGA_GC_MAX_UNLOCKED_REG
+                && (Data & VGA_GC_INDEX_MASK) != SVGA_GC_UNUSED0_REG
+                && ((Data & VGA_GC_INDEX_MASK) < SVGA_GC_UNUSED1_REG
+                || (Data & VGA_GC_INDEX_MASK) > SVGA_GC_UNUSED10_REG))
+            {
+                VgaGcIndex = Data;
+            }
+
             break;
         }
 
@@ -1821,6 +1954,8 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
             DPRINT1("VgaWritePort: Unknown port 0x%X, Data 0x%02X\n", Port, Data);
             break;
     }
+
+    SvgaHdrCounter = 0;
 }
 
 static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
@@ -2178,6 +2313,12 @@ VOID VgaDetachFromConsole(BOOL ChangingMode)
 
 BOOLEAN VgaInitialize(HANDLE TextHandle)
 {
+    /* Clear the SEQ, GC, CRTC and AC registers */
+    RtlZeroMemory(VgaSeqRegisters, sizeof(VgaSeqRegisters));
+    RtlZeroMemory(VgaGcRegisters, sizeof(VgaGcRegisters));
+    RtlZeroMemory(VgaCrtcRegisters, sizeof(VgaCrtcRegisters));
+    RtlZeroMemory(VgaAcRegisters, sizeof(VgaAcRegisters));
+
     /* Save the default text-mode console output handle */
     if (!IsConsoleHandle(TextHandle)) return FALSE;
     TextConsoleBuffer = TextHandle;
@@ -2196,6 +2337,9 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
 
     /* Switch to the text buffer */
     VgaSetActiveScreenBuffer(TextConsoleBuffer);
+
+    /* Reset the sequencer */
+    VgaResetSequencer();
 
     /* Clear the VGA memory */
     VgaClearMemory();

@@ -32,7 +32,7 @@
 #include "hardware/ppi.h"
 #include "hardware/ps2.h"
 #include "hardware/sound/speaker.h"
-#include "hardware/video/vga.h"
+#include "hardware/video/svga.h"
 
 #include "vddsup.h"
 #include "io.h"

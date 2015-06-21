@@ -18,7 +18,7 @@
 #include "hardware/mouse.h"
 #include "hardware/ps2.h"
 #include "hardware/pic.h"
-#include "hardware/video/vga.h"
+#include "hardware/video/svga.h"
 
 #include "mouse32.h"
 #include "bios/bios.h"
