@@ -2068,6 +2068,8 @@ SSI_DEF(SystemSessionCreate)
         {
             return STATUS_PRIVILEGE_NOT_HELD;
         }
+
+        ProbeForWriteUlong(Buffer);
     }
 
     Status = MmSessionCreate(&SessionId);
@@ -2452,43 +2454,47 @@ NtSetSystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
                         IN PVOID SystemInformation,
                         IN ULONG SystemInformationLength)
 {
+    NTSTATUS Status = STATUS_INVALID_INFO_CLASS;
+    KPROCESSOR_MODE PreviousMode;
+
     PAGED_CODE();
 
-    /*
-     * If called from user mode, check
-     * possible unsafe arguments.
-     */
-#if 0
-    if (KernelMode != KeGetPreviousMode())
+    PreviousMode = ExGetPreviousMode();
+
+    _SEH2_TRY
     {
-        // Check arguments
-        //ProbeForWrite(
-        //    SystemInformation,
-        //    Length
-        //    );
-        //ProbeForWrite(
-        //    ResultLength,
-        //    sizeof (ULONG)
-        //    );
-    }
-#endif
-    /*
-     * Check the request is valid.
-     */
-    if ((SystemInformationClass >= MIN_SYSTEM_INFO_CLASS) &&
-        (SystemInformationClass < MAX_SYSTEM_INFO_CLASS))
-    {
-        if (NULL != CallQS [SystemInformationClass].Set)
+        /*
+         * If called from user mode, check
+         * possible unsafe arguments.
+         */
+        if (PreviousMode != KernelMode)
         {
-            /*
-             * Hand the request to a subhandler.
-             */
-            return CallQS [SystemInformationClass].Set(SystemInformation,
-                                                       SystemInformationLength);
+            ProbeForRead(SystemInformation, SystemInformationLength, sizeof(ULONG));
+        }
+
+        /*
+         * Check the request is valid.
+         */
+        if ((SystemInformationClass >= MIN_SYSTEM_INFO_CLASS) &&
+            (SystemInformationClass < MAX_SYSTEM_INFO_CLASS))
+        {
+            if (NULL != CallQS [SystemInformationClass].Set)
+            {
+                /*
+                 * Hand the request to a subhandler.
+                 */
+                Status = CallQS [SystemInformationClass].Set(SystemInformation,
+                                                             SystemInformationLength);
+            }
         }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
-    return STATUS_INVALID_INFO_CLASS;
+    return Status;
 }
 
 NTSTATUS
