@@ -287,7 +287,6 @@ CDesktopFolder::CDesktopFolder() :
 
 CDesktopFolder::~CDesktopFolder()
 {
-    ASSERT(_CreatorClass::IsTerminated());
 }
 
 HRESULT WINAPI CDesktopFolder::FinalConstruct()

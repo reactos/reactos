@@ -47,7 +47,6 @@ class CComCreatorCentralInstance
 {
 private:
     static IUnknown *s_pInstance;
-    static bool s_IsTerminated;
 
 public:
     static HRESULT WINAPI CreateInstance(void *pv, REFIID riid, LPVOID *ppv)
@@ -59,26 +58,17 @@ public:
         {
             PVOID pObj;
             HRESULT hr;
-            s_IsTerminated = true;
             hr = ATL::CComCreator< T >::CreateInstance(NULL, IID_IUnknown, &pObj);
             if (FAILED(hr))
-            {
-                s_IsTerminated = false;
                 return hr;
-            }
             if (InterlockedCompareExchangePointer((PVOID *)&s_pInstance, pObj, NULL))
                 static_cast<IUnknown *>(pObj)->Release();
-            s_IsTerminated = false;
         }
         return s_pInstance->QueryInterface(riid, ppv);
     }
     static void Term()
     {
         ULONG ref;
-#ifdef ASSERT
-        ASSERT(!s_IsTerminated);
-#endif
-        s_IsTerminated = true;
         if (s_pInstance)
         {
             ref = s_pInstance->Release();
@@ -88,16 +78,12 @@ public:
             s_pInstance = NULL;
         }
     }
-    static bool IsTerminated() { return s_IsTerminated; }
 };
 
 template <typename T>
 IUnknown *CComCreatorCentralInstance<T>::s_pInstance = NULL;
 
-template <typename T>
-bool CComCreatorCentralInstance<T>::s_IsTerminated = false;
-
-#define DECLARE_CENTRAL_INSTANCE_NOT_AGGREGATABLE(x)                                \
+#define DECLARE_CENTRAL_INSTANCE_NOT_AGGREGATABLE(x)                            \
 public:                                                                         \
     typedef CComCreatorCentralInstance< ATL::CComObject<x> > _CreatorClass;
 #endif
