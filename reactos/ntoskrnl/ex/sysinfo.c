@@ -1559,11 +1559,11 @@ QSI_DEF(SystemNextEventIdInformation)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* Class 31 - Event Ids Information */
-QSI_DEF(SystemEventIdsInformation)
+/* Class 31 */
+QSI_DEF(SystemPerformanceTraceInformation)
 {
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemEventIdsInformation not implemented\n");
+    DPRINT1("NtQuerySystemInformation - SystemPerformanceTraceInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1820,24 +1820,24 @@ SSI_DEF(SystemPrioritySeperation)
     return STATUS_SUCCESS;
 }
 
-/* Class 40 - Plug Play Bus Information */
-QSI_DEF(SystemPlugPlayBusInformation)
+/* Class 40 */
+QSI_DEF(SystemVerifierAddDriverInformation)
 {
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemPlugPlayBusInformation not implemented\n");
+    DPRINT1("NtQuerySystemInformation - SystemVerifierAddDriverInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* Class 41 - Dock Information */
-QSI_DEF(SystemDockInformation)
+/* Class 41 */
+QSI_DEF(SystemVerifierRemoveDriverInformation)
 {
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemDockInformation not implemented\n");
+    DPRINT1("NtQuerySystemInformation - SystemVerifierRemoveDriverInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
 /* Class 42 - Power Information */
-QSI_DEF(SystemPowerInformation)
+QSI_DEF(SystemProcessorIdleInformation)
 {
     *ReqSize = sizeof(PROCESSOR_POWER_INFORMATION) * KeNumberProcessors;
 
@@ -1851,11 +1851,11 @@ QSI_DEF(SystemPowerInformation)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* Class 43 - Processor Speed Information */
-QSI_DEF(SystemProcessorSpeedInformation)
+/* Class 43 */
+QSI_DEF(SystemLegacyDriverInformation)
 {
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemProcessorSpeedInformation not implemented\n");
+    DPRINT1("NtQuerySystemInformation - SystemLegacyDriverInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -2038,10 +2038,10 @@ Leave:
 
 
 /* Class 46 - Set time slip event */
-SSI_DEF(SystemSetTimeSlipEvent)
+SSI_DEF(SystemTimeSlipNotification)
 {
     /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemSetTimSlipEvent not implemented\n");
+    DPRINT1("NtSetSystemInformation - SystemTimeSlipNotification not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -2054,7 +2054,7 @@ NTAPI
 MmSessionDelete(IN ULONG SessionId);
 
 /* Class 47 - Create a new session (TSE) */
-SSI_DEF(SystemCreateSession)
+SSI_DEF(SystemSessionCreate)
 {
     ULONG SessionId;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
@@ -2078,7 +2078,7 @@ SSI_DEF(SystemCreateSession)
 
 
 /* Class 48 - Delete an existing session (TSE) */
-SSI_DEF(SystemDeleteSession)
+SSI_DEF(SystemSessionDetach)
 {
     ULONG SessionId;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
@@ -2100,10 +2100,10 @@ SSI_DEF(SystemDeleteSession)
 
 
 /* Class 49 - UNKNOWN */
-QSI_DEF(SystemInvalidInfoClass4)
+QSI_DEF(SystemSessionInformation)
 {
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemInvalidInfoClass4 not implemented\n");
+    DPRINT1("NtQuerySystemInformation - SystemSessionInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -2138,11 +2138,11 @@ SSI_DEF(SystemVerifierInformation)
 }
 
 
-/* Class 52 - Add a driver verifier */
-SSI_DEF(SystemAddVerifier)
+/* Class 52 */
+SSI_DEF(SystemVerifierThunkExtend)
 {
     /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemAddVerifier not implemented\n");
+    DPRINT1("NtSetSystemInformation - SystemVerifierThunkExtend not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -2322,54 +2322,54 @@ CallQS [] =
     SI_QX(SystemPerformanceInformation),
     SI_QX(SystemTimeOfDayInformation),
     SI_QX(SystemPathInformation), /* should be SI_XX */
-    SI_QX(SystemProcessInformation),  // aka SystemProcessesAndThreadsInformation
-    SI_QX(SystemCallCountInformation), // aka SystemCallCounts
-    SI_QX(SystemDeviceInformation), // aka SystemConfigurationInformation
-    SI_QX(SystemProcessorPerformanceInformation), // aka SystemProcessorTimes
-    SI_QS(SystemFlagsInformation), // aka SystemGlobalFlag
+    SI_QX(SystemProcessInformation),
+    SI_QX(SystemCallCountInformation),
+    SI_QX(SystemDeviceInformation),
+    SI_QX(SystemProcessorPerformanceInformation),
+    SI_QS(SystemFlagsInformation),
     SI_QX(SystemCallTimeInformation), /* should be SI_XX */
     SI_QX(SystemModuleInformation),
-    SI_QX(SystemLocksInformation), // aka SystemLockInformation
+    SI_QX(SystemLocksInformation),
     SI_QX(SystemStackTraceInformation), /* should be SI_XX */
     SI_QX(SystemPagedPoolInformation), /* should be SI_XX */
     SI_QX(SystemNonPagedPoolInformation), /* should be SI_XX */
     SI_QX(SystemHandleInformation),
     SI_QX(SystemObjectInformation),
-    SI_QX(SystemPageFileInformation), // aka SystemPagefileInformation
-    SI_QX(SystemVdmInstemulInformation), // aka SystemInstructionEmulationCounts
+    SI_QX(SystemPageFileInformation),
+    SI_QX(SystemVdmInstemulInformation),
     SI_QX(SystemVdmBopInformation), /* it should be SI_XX */
-    SI_QS(SystemFileCacheInformation), // aka SystemCacheInformation
+    SI_QS(SystemFileCacheInformation),
     SI_QX(SystemPoolTagInformation),
-    SI_QX(SystemInterruptInformation), // aka SystemProcessorStatistics
-    SI_QS(SystemDpcBehaviourInformation), // aka SystemDpcInformation
+    SI_QX(SystemInterruptInformation),
+    SI_QS(SystemDpcBehaviourInformation),
     SI_QX(SystemFullMemoryInformation), /* it should be SI_XX */
-    SI_XS(SystemLoadGdiDriverInformation), // correct: SystemLoadImage
-    SI_XS(SystemUnloadGdiDriverInformation), // correct: SystemUnloadImage
-    SI_QS(SystemTimeAdjustmentInformation), // aka SystemTimeAdjustment
+    SI_XS(SystemLoadGdiDriverInformation),
+    SI_XS(SystemUnloadGdiDriverInformation),
+    SI_QS(SystemTimeAdjustmentInformation),
     SI_QX(SystemSummaryMemoryInformation), /* it should be SI_XX */
     SI_QX(SystemNextEventIdInformation), /* it should be SI_XX */
-    SI_QX(SystemEventIdsInformation), /* it should be SI_XX */ // SystemPerformanceTraceInformation
+    SI_QX(SystemPerformanceTraceInformation), /* it should be SI_XX */
     SI_QX(SystemCrashDumpInformation),
     SI_QX(SystemExceptionInformation),
     SI_QX(SystemCrashDumpStateInformation),
     SI_QX(SystemKernelDebuggerInformation),
     SI_QX(SystemContextSwitchInformation),
     SI_QS(SystemRegistryQuotaInformation),
-    SI_XS(SystemExtendServiceTableInformation), // correct: SystemLoadAndCallImage
+    SI_XS(SystemExtendServiceTableInformation),
     SI_XS(SystemPrioritySeperation),
-    SI_QX(SystemPlugPlayBusInformation), /* it should be SI_XX */
-    SI_QX(SystemDockInformation), /* it should be SI_XX */
-    SI_QX(SystemPowerInformation), /* it should be SI_XX */ // SystemPowerInformationNative? SystemInvalidInfoClass2
-    SI_QX(SystemProcessorSpeedInformation), /* it should be SI_XX */
-    SI_QS(SystemCurrentTimeZoneInformation), /* it should be SI_QX */ // aka SystemTimeZoneInformation
+    SI_QX(SystemVerifierAddDriverInformation), /* it should be SI_XX */
+    SI_QX(SystemVerifierRemoveDriverInformation), /* it should be SI_XX */
+    SI_QX(SystemProcessorIdleInformation), /* it should be SI_XX */
+    SI_QX(SystemLegacyDriverInformation), /* it should be SI_XX */
+    SI_QS(SystemCurrentTimeZoneInformation), /* it should be SI_QX */
     SI_QX(SystemLookasideInformation),
-    SI_XS(SystemSetTimeSlipEvent),
-    SI_XS(SystemCreateSession),
-    SI_XS(SystemDeleteSession),
-    SI_QX(SystemInvalidInfoClass4), /* it should be SI_XX */ // SystemSessionInformation?
+    SI_XS(SystemTimeSlipNotification),
+    SI_XS(SystemSessionCreate),
+    SI_XS(SystemSessionDetach),
+    SI_QX(SystemSessionInformation), /* it should be SI_XX */
     SI_QX(SystemRangeStartInformation),
     SI_QS(SystemVerifierInformation),
-    SI_XS(SystemAddVerifier),
+    SI_XS(SystemVerifierThunkExtend),
     SI_QX(SystemSessionProcessesInformation),
     SI_XS(SystemLoadGdiDriverInSystemSpaceInformation),
     SI_QX(SystemNumaProcessorMap),
