@@ -9,6 +9,7 @@ list(APPEND SOURCE
     access.c
     acl.c
     actctx.c
+    appverifier.c
     assert.c
     atom.c
     avltable.c
