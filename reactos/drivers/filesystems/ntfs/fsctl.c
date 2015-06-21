@@ -495,11 +495,20 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
 //    Fcb->Entry.ExtentLocationL = 0;
 //    Fcb->Entry.DataLengthL = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
 
-    CcInitializeCacheMap(Vcb->StreamFileObject,
-                         (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                         FALSE,
-                         &(NtfsGlobalData->CacheMgrCallbacks),
-                         Fcb);
+    _SEH2_TRY
+    {
+        CcInitializeCacheMap(Vcb->StreamFileObject,
+                             (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                             TRUE,
+                             &(NtfsGlobalData->CacheMgrCallbacks),
+                             Fcb);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        goto ByeBye;
+    }
+    _SEH2_END;
 
     ExInitializeResourceLite(&Vcb->DirResource);
 

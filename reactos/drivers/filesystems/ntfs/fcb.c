@@ -263,11 +263,23 @@ NtfsFCBInitializeCache(PNTFS_VCB Vcb,
     Fcb->Vcb = Vcb;
 
     Status = STATUS_SUCCESS;
-    CcInitializeCacheMap(FileObject,
-                         (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                         FALSE,
-                         &(NtfsGlobalData->CacheMgrCallbacks),
-                         Fcb);
+    _SEH2_TRY
+    {
+        CcInitializeCacheMap(FileObject,
+                             (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                             FALSE,
+                             &(NtfsGlobalData->CacheMgrCallbacks),
+                             Fcb);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        FileObject->FsContext2 = NULL;
+        ExFreePoolWithTag(newCCB, TAG_CCB);
+        ObDereferenceObject(FileObject);
+        Fcb->FileObject = NULL;
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     ObDereferenceObject(FileObject);
     Fcb->Flags |= FCB_CACHE_INITIALIZED;
@@ -483,11 +495,21 @@ NtfsAttachFCBToFileObject(PNTFS_VCB Vcb,
 
     if (!(Fcb->Flags & FCB_CACHE_INITIALIZED))
     {
-        CcInitializeCacheMap(FileObject,
-                             (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                             FALSE,
-                             &(NtfsGlobalData->CacheMgrCallbacks),
-                             Fcb);
+        _SEH2_TRY
+        {
+            CcInitializeCacheMap(FileObject,
+                                 (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                                 FALSE,
+                                 &(NtfsGlobalData->CacheMgrCallbacks),
+                                 Fcb);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            FileObject->FsContext2 = NULL;
+            ExFreePoolWithTag(newCCB, TAG_CCB);
+            return _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
 
         Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
