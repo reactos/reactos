@@ -206,52 +206,6 @@ AssignDriveLetters(
 }
 
 
-static
-VOID
-UpdatePartitionNumbers(
-    PDISKENTRY DiskEntry)
-{
-    PPARTENTRY PartEntry;
-    PLIST_ENTRY Entry;
-//    ULONG PartitionNumber = 1;
-    ULONG PartitionIndex = 0;
-
-    Entry = DiskEntry->PrimaryPartListHead.Flink;
-    while (Entry != &DiskEntry->PrimaryPartListHead)
-    {
-        PartEntry = CONTAINING_RECORD(Entry,
-                                      PARTENTRY,
-                                      ListEntry);
-
-        if (PartEntry->IsPartitioned == FALSE)
-        {
-//            PartEntry->PartitionNumber = 0;
-            PartEntry->PartitionIndex = (ULONG)-1;
-        }
-        else
-        {
-            if (IsContainerPartition(PartEntry->PartitionType))
-            {
-//                PartEntry->PartitionNumber = 0;
-            }
-            else if (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED &&
-                     PartEntry->SectorCount.QuadPart == 0ULL)
-            {
-//                PartEntry->PartitionNumber = 0;
-            }
-            else
-            {
-//                PartEntry->PartitionNumber = PartitionNumber++;
-            }
-
-            PartEntry->PartitionIndex = PartitionIndex++;
-        }
-
-        Entry = Entry->Flink;
-    }
-}
-
-
 NTSTATUS
 NTAPI
 DiskIdentifierQueryRoutine(
@@ -2297,7 +2251,7 @@ UpdateDiskLayout(
 
                 PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
                 PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-                PartitionInfo->HiddenSectors = 0;
+                PartitionInfo->HiddenSectors = PartEntry->StartSector.LowPart;
                 PartitionInfo->PartitionNumber = (!IsContainerPartition(PartEntry->PartitionType)) ? PartitionNumber : 0;
                 PartitionInfo->PartitionType = PartEntry->PartitionType;
                 PartitionInfo->BootIndicator = PartEntry->BootIndicator;
@@ -2306,13 +2260,10 @@ UpdateDiskLayout(
 
                 PartEntry->PartitionNumber = PartitionNumber;
                 PartEntry->PartitionIndex = Index;
+            }
 
+            if (!IsContainerPartition(PartEntry->PartitionType))
                 PartitionNumber++;
-            }
-            else if (!IsEmptyLayoutEntry(PartitionInfo))
-            {
-                PartitionNumber++;
-            }
 
             Index++;
         }
@@ -2480,8 +2431,6 @@ CreatePrimaryPartition(
 
     DiskEntry->Dirty = TRUE;
 
-    UpdatePartitionNumbers(DiskEntry);
-
     AssignDriveLetters(List);
 }
 
@@ -2625,8 +2574,6 @@ CreateExtendedPartition(
 
     DiskEntry->Dirty = TRUE;
 
-    UpdatePartitionNumbers(DiskEntry);
-
     AssignDriveLetters(List);
 }
 
@@ -2711,8 +2658,6 @@ CreateLogicalPartition(
     UpdateDiskLayout(DiskEntry);
 
     DiskEntry->Dirty = TRUE;
-
-    UpdatePartitionNumbers(DiskEntry);
 
     AssignDriveLetters(List);
 }
@@ -2822,8 +2767,6 @@ DeleteCurrentPartition(
     UpdateDiskLayout(DiskEntry);
 
     DiskEntry->Dirty = TRUE;
-
-    UpdatePartitionNumbers(DiskEntry);
 
     AssignDriveLetters(List);
 }
