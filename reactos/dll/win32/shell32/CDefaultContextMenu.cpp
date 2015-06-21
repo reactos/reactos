@@ -1086,7 +1086,7 @@ CDefaultContextMenu::DoPaste(
     }
 
     CComPtr<IDropTarget> pdrop;
-    hr = psfTarget->QueryInterface(IID_PPV_ARG(IDropTarget, &pdrop));
+    hr = psfTarget->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdrop));
     if (FAILED(hr))
     {
         ERR("Error getting IDropTarget interface\n");
@@ -1154,7 +1154,7 @@ CDefaultContextMenu::DoCreateLink(
         return hr;
     }
 
-    hr = psfTarget->QueryInterface(IID_PPV_ARG(IDropTarget, &pDT));
+    hr = psfTarget->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pDT));
     if (FAILED(hr))
     {
         ERR("no IDropTarget Interface\n");

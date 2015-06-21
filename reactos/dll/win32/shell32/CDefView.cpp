@@ -2906,7 +2906,7 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
     {
         /* We are not above one of the listview's subitems. Bind to the parent folder's
          * DropTarget interface. */
-        hr = m_pSFParent->QueryInterface(IID_PPV_ARG(IDropTarget,&m_pCurDropTarget));
+        hr = m_pSFParent->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget,&m_pCurDropTarget));
     }
     else
     {
