@@ -92,6 +92,8 @@ CcInitializeCacheMap (
     IN PCACHE_MANAGER_CALLBACKS CallBacks,
     IN PVOID LazyWriterContext)
 {
+    NTSTATUS Status;
+
     ASSERT(FileObject);
     ASSERT(FileSizes);
 
@@ -99,10 +101,12 @@ CcInitializeCacheMap (
         FileObject, FileSizes, PinAccess, CallBacks, LazyWriterContext);
 
     /* Call old ROS cache init function */
-    CcRosInitializeFileCache(FileObject,
-                             FileSizes,
-                             CallBacks,
-                             LazyWriterContext);
+    Status = CcRosInitializeFileCache(FileObject,
+                                      FileSizes,
+                                      CallBacks,
+                                      LazyWriterContext);
+    if (!NT_SUCCESS(Status))
+        ExRaiseStatus(Status);
 }
 
 /*

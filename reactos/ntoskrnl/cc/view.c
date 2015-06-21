@@ -1176,7 +1176,7 @@ CcRosInitializeFileCache (
         if (SharedCacheMap == NULL)
         {
             KeReleaseGuardedMutex(&ViewLock);
-            return STATUS_UNSUCCESSFUL;
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
         RtlZeroMemory(SharedCacheMap, sizeof(*SharedCacheMap));
         ObReferenceObjectByPointer(FileObject,
