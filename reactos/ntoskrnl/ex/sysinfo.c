@@ -2068,31 +2068,10 @@ SSI_DEF(SystemSessionCreate)
         {
             return STATUS_PRIVILEGE_NOT_HELD;
         }
-
-        _SEH2_TRY
-        {
-            ProbeForWriteUlong(Buffer);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
-        }
-        _SEH2_END;
     }
 
     Status = MmSessionCreate(&SessionId);
-    if (NT_SUCCESS(Status))
-    {
-        _SEH2_TRY
-        {
-            *(PULONG)Buffer = SessionId;
-        }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
-        {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-    }
+    if (NT_SUCCESS(Status)) *(PULONG)Buffer = SessionId;
 
     return Status;
 }
@@ -2112,21 +2091,9 @@ SSI_DEF(SystemSessionDetach)
         {
             return STATUS_PRIVILEGE_NOT_HELD;
         }
+    }
 
-        _SEH2_TRY
-        {
-            SessionId = ProbeForReadUlong(Buffer);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
-        }
-        _SEH2_END;
-    }
-    else
-    {
-        SessionId = *(PULONG)Buffer;
-    }
+    SessionId = *(PULONG)Buffer;
 
     return MmSessionDelete(SessionId);
 }
