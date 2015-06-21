@@ -102,12 +102,6 @@ VfatxFormat(IN PUNICODE_STRING DriveRoot,
             NtClose(FileHandle);
             return Status;
         }
-
-        /*
-         * FIXME: This is a hack!
-         *        Partitioning software MUST set the correct number of hidden sectors!
-         */
-        PartitionInfo.HiddenSectors = DiskGeometry.SectorsPerTrack;
     }
     else
     {
