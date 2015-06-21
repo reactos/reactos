@@ -2046,6 +2046,14 @@ RtlFillMemoryUlonglong(
     _In_ ULONGLONG Pattern
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCopyMappedMemory(
+    _Out_writes_bytes_all_(Size) PVOID Destination,
+    _In_reads_bytes_(Size) const VOID *Source,
+    _In_ SIZE_T Size
+);
 
 NTSYSAPI
 SIZE_T

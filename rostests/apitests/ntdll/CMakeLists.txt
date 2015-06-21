@@ -15,6 +15,7 @@ list(APPEND SOURCE
     NtQueryVolumeInformationFile.c
     NtSaveKey.c
     RtlBitmap.c
+    RtlCopyMappedMemory.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
     RtlDosPathNameToNtPathName_U.c

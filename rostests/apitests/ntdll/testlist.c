@@ -19,6 +19,7 @@ extern void func_NtQueryVolumeInformationFile(void);
 extern void func_NtSaveKey(void);
 extern void func_NtSystemInformation(void);
 extern void func_RtlBitmap(void);
+extern void func_RtlCopyMappedMemory(void);
 extern void func_RtlDetermineDosPathNameType(void);
 extern void func_RtlDoesFileExists(void);
 extern void func_RtlDosPathNameToNtPathName_U(void);
@@ -53,6 +54,7 @@ const struct test winetest_testlist[] =
     { "NtSaveKey",                      func_NtSaveKey},
     { "NtSystemInformation",            func_NtSystemInformation },
     { "RtlBitmapApi",                   func_RtlBitmap },
+    { "RtlCopyMappedMemory",            func_RtlCopyMappedMemory },
     { "RtlDetermineDosPathNameType",    func_RtlDetermineDosPathNameType },
     { "RtlDoesFileExists",              func_RtlDoesFileExists },
     { "RtlDosPathNameToNtPathName_U",   func_RtlDosPathNameToNtPathName_U },

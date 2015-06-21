@@ -469,13 +469,24 @@ RtlCloneMemoryStream(
 /*
  * @implemented
  */
-VOID
+NTSTATUS
 NTAPI
 RtlCopyMappedMemory(
-    _Out_ PVOID Destination,
-    _In_ const VOID *Source,
+    _Out_writes_bytes_all_(Size) PVOID Destination,
+    _In_reads_bytes_(Size) const VOID *Source,
     _In_ SIZE_T Size)
 {
-    /* FIXME: This is supposed to handle STATUS_IN_PAGE_ERROR exceptions */
-    RtlCopyMemory(Destination, Source, Size);
+    NTSTATUS Status = STATUS_SUCCESS;
+    _SEH2_TRY
+    {
+        RtlCopyMemory(Destination, Source, Size);
+    }
+    _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_IN_PAGE_ERROR
+                    ? EXCEPTION_EXECUTE_HANDLER
+                    : EXCEPTION_CONTINUE_SEARCH)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    return Status;
 }
