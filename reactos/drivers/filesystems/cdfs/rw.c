@@ -233,15 +233,11 @@ NTSTATUS NTAPI
 CdfsWrite(
     PCDFS_IRP_CONTEXT IrpContext)
 {
-    PIRP Irp;
-
     DPRINT("CdfsWrite(%p)\n", IrpContext);
 
     ASSERT(IrpContext);
 
-    Irp = IrpContext->Irp;
-    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-    Irp->IoStatus.Information = 0;
+    IrpContext->Irp->IoStatus.Information = 0;
     return(STATUS_NOT_SUPPORTED);
 }
 

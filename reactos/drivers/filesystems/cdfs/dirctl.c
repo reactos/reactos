@@ -802,8 +802,6 @@ CdfsDirectoryControl(
     Irp = IrpContext->Irp;
     DeviceObject = IrpContext->DeviceObject;
 
-    FsRtlEnterFileSystem();
-
     switch (IrpContext->MinorFunction)
     {
     case IRP_MN_QUERY_DIRECTORY:
@@ -824,10 +822,8 @@ CdfsDirectoryControl(
 
     if (Status != STATUS_PENDING)
     {
-        Irp->IoStatus.Status = Status;
         Irp->IoStatus.Information = 0;
     }
-    FsRtlExitFileSystem();
 
     return(Status);
 }

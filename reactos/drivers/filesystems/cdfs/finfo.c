@@ -420,7 +420,6 @@ CdfsQueryInformation(
         break;
     }
 
-    Irp->IoStatus.Status = Status;
     if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW)
         Irp->IoStatus.Information =
         Stack->Parameters.QueryFile.Length - BufferLength;
@@ -491,7 +490,6 @@ CdfsSetInformation(
         break;
     }
 
-    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
 
     return Status;

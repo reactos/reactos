@@ -39,14 +39,12 @@ CdfsDeviceControl(
     if (!FileObject)
     {
         DPRINT1("FIXME: CdfsDeviceControl called without FileObject!\n");
-        Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
     /* Only support such operations on volume */
     if (!(FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
     {
-        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -54,7 +52,6 @@ CdfsDeviceControl(
     {
         /* We should handle this one, but we don't! */
         Status = STATUS_NOT_IMPLEMENTED;
-        Irp->IoStatus.Status = Status;
     }
     else
     {

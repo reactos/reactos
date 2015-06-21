@@ -266,7 +266,6 @@ CdfsQueryVolumeInformation(
             Status = STATUS_NOT_SUPPORTED;
     }
 
-    Irp->IoStatus.Status = Status;
     if (NT_SUCCESS(Status))
         Irp->IoStatus.Information =
         Stack->Parameters.QueryVolume.Length - BufferLength;
@@ -282,15 +281,11 @@ NTAPI
 CdfsSetVolumeInformation(
     PCDFS_IRP_CONTEXT IrpContext)
 {
-    PIRP Irp;
-
     DPRINT("CdfsSetVolumeInformation() called\n");
 
     ASSERT(IrpContext);
 
-    Irp = IrpContext->Irp;
-    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-    Irp->IoStatus.Information = 0;
+    IrpContext->Irp->IoStatus.Information = 0;
 
     return STATUS_NOT_SUPPORTED;
 }
