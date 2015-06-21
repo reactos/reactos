@@ -2192,6 +2192,7 @@ ScrollUpPartitionList(
 }
 
 
+#if 0
 static
 BOOLEAN
 IsEmptyLayoutEntry(
@@ -2204,6 +2205,7 @@ IsEmptyLayoutEntry(
 
     return FALSE;
 }
+#endif
 
 
 static
@@ -2224,6 +2226,94 @@ IsSamePrimaryLayoutEntry(
 
 
 static
+ULONG
+GetPrimaryPartitionCount(
+    IN PDISKENTRY DiskEntry)
+{
+    PLIST_ENTRY Entry;
+    PPARTENTRY PartEntry;
+    ULONG Count = 0;
+
+    Entry = DiskEntry->PrimaryPartListHead.Flink;
+    while (Entry != &DiskEntry->PrimaryPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+        if (PartEntry->IsPartitioned == TRUE)
+            Count++;
+
+        Entry = Entry->Flink;
+    }
+
+    return Count;
+}
+
+
+static
+ULONG
+GetLogicalPartitionCount(
+    PDISKENTRY DiskEntry)
+{
+    PLIST_ENTRY ListEntry;
+    PPARTENTRY PartEntry;
+    ULONG Count = 0;
+
+    ListEntry = DiskEntry->LogicalPartListHead.Flink;
+    while (ListEntry != &DiskEntry->LogicalPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+        if (PartEntry->IsPartitioned)
+            Count++;
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return Count;
+}
+
+
+static
+BOOL
+ReAllocateLayoutBuffer(
+    PDISKENTRY DiskEntry)
+{
+    PDRIVE_LAYOUT_INFORMATION NewLayoutBuffer;
+    ULONG NewPartitionCount;
+    ULONG CurrentPartitionCount = 0;
+    ULONG LayoutBufferSize;
+
+    DPRINT1("ReAllocateLayoutBuffer()\n");
+
+    NewPartitionCount = 4 + GetLogicalPartitionCount(DiskEntry) * 4;
+
+    if (DiskEntry->LayoutBuffer)
+        CurrentPartitionCount = DiskEntry->LayoutBuffer->PartitionCount;
+
+    DPRINT1("CurrentPartitionCount: %lu    NewPartitionCount: %lu\n",
+            CurrentPartitionCount, NewPartitionCount);
+
+    if (CurrentPartitionCount == NewPartitionCount)
+        return TRUE;
+
+    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
+                       ((NewPartitionCount - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
+    NewLayoutBuffer = RtlReAllocateHeap(ProcessHeap,
+                                        HEAP_ZERO_MEMORY,
+                                        DiskEntry->LayoutBuffer,
+                                        LayoutBufferSize);
+    if (NewLayoutBuffer == NULL)
+    {
+        DPRINT1("Failed to allocate the new layout buffer (size: %lu)\n", LayoutBufferSize);
+        return FALSE;
+    }
+
+    DiskEntry->LayoutBuffer = NewLayoutBuffer;
+    DiskEntry->LayoutBuffer->PartitionCount = NewPartitionCount;
+
+    return TRUE;
+}
+
+
+static
 VOID
 UpdateDiskLayout(
     IN PDISKENTRY DiskEntry)
@@ -2231,11 +2321,20 @@ UpdateDiskLayout(
     PPARTITION_INFORMATION PartitionInfo;
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
-    ULONG Index = 0;
+    ULONG Index;
     ULONG PartitionNumber = 1;
 
     DPRINT1("UpdateDiskLayout()\n");
 
+    /* Resize the layout buffer if necessary */
+    if (ReAllocateLayoutBuffer(DiskEntry) == FALSE)
+    {
+        DPRINT("ReAllocateLayoutBuffer() failed.\n");
+        return;
+    }
+
+    /* Update the primary partition table */
+    Index = 0;
     ListEntry = DiskEntry->PrimaryPartListHead.Flink;
     while (ListEntry != &DiskEntry->PrimaryPartListHead)
     {
@@ -2247,7 +2346,7 @@ UpdateDiskLayout(
 
             if (!IsSamePrimaryLayoutEntry(PartitionInfo, DiskEntry, PartEntry))
             {
-                DPRINT1("Updating partition entry %lu\n", Index);
+                DPRINT1("Updating primary partition entry %lu\n", Index);
 
                 PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
                 PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
@@ -2257,10 +2356,10 @@ UpdateDiskLayout(
                 PartitionInfo->BootIndicator = PartEntry->BootIndicator;
                 PartitionInfo->RecognizedPartition = FALSE;
                 PartitionInfo->RewritePartition = TRUE;
-
-                PartEntry->PartitionNumber = PartitionNumber;
-                PartEntry->PartitionIndex = Index;
             }
+
+            PartEntry->PartitionNumber = (!IsContainerPartition(PartEntry->PartitionType)) ? PartitionNumber : 0;
+            PartEntry->PartitionIndex = Index;
 
             if (!IsContainerPartition(PartEntry->PartitionType))
                 PartitionNumber++;
@@ -2271,6 +2370,39 @@ UpdateDiskLayout(
         ListEntry = ListEntry->Flink;
     }
 
+    /* Update the logical partition tables */
+    Index = 4;
+    ListEntry = DiskEntry->LogicalPartListHead.Flink;
+    while (ListEntry != &DiskEntry->LogicalPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+
+        if (PartEntry->IsPartitioned)
+        {
+            PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
+
+            DPRINT1("Updating logical partition entry %lu\n", Index);
+
+            PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
+            PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+            PartitionInfo->HiddenSectors = DiskEntry->SectorAlignment;
+            PartitionInfo->PartitionNumber = PartitionNumber;
+            PartitionInfo->PartitionType = PartEntry->PartitionType;
+            PartitionInfo->BootIndicator = FALSE;
+            PartitionInfo->RecognizedPartition = FALSE;
+            PartitionInfo->RewritePartition = TRUE;
+
+            PartEntry->PartitionNumber = PartitionNumber;
+            PartEntry->PartitionIndex = Index;
+
+            PartitionNumber++;
+            Index += 4;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+#if 0
     for (;Index < 4; Index++)
     {
         PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
@@ -2289,6 +2421,7 @@ UpdateDiskLayout(
             PartitionInfo->RewritePartition = TRUE;
         }
     }
+#endif
 
 #ifdef DUMP_PARTITION_TABLE
     DumpPartitionTable(DiskEntry);
@@ -3002,29 +3135,6 @@ SetMountedDeviceValues(
     }
 
     return TRUE;
-}
-
-
-static
-ULONG
-GetPrimaryPartitionCount(
-    IN PDISKENTRY DiskEntry)
-{
-    PLIST_ENTRY Entry;
-    PPARTENTRY PartEntry;
-    UINT nCount = 0;
-
-    Entry = DiskEntry->PrimaryPartListHead.Flink;
-    while (Entry != &DiskEntry->PrimaryPartListHead)
-    {
-        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
-        if (PartEntry->IsPartitioned == TRUE)
-            nCount++;
-
-        Entry = Entry->Flink;
-    }
-
-    return nCount;
 }
 
 
