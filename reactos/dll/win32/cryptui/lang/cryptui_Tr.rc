@@ -107,7 +107,7 @@ STRINGTABLE
     IDS_WARN_REMOVE_MY "Artık bu onay belgesiyle, iletileri çözemeyeceksiniz veyâ iletileri imzâlayamayacaksınız.\nBu onay belgesini silmek istediğinizden emin misiniz?"
     IDS_WARN_REMOVE_PLURAL_MY "Artık bu onay belgeleriyle, iletileri çözemeyeceksiniz veyâ iletileri imzâlayamayacaksınız.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
     IDS_WARN_REMOVE_ADDRESSBOOK "Artık bu onay belgesiyle, iletileri şifreleyemeyeceksiniz veyâ imzâlı iletileri doğrulayamayacaksınız.\nBu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Artık bu onay belgeleriyle, iletileri şifreleyemeyeceksiniz veyâ imzâlı iletileri doğrulayamayacaksınız.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Artık, bu onay belgeleriyle iletileri şifreleyemeyeceksiniz veyâ onlarla imzâlı iletileri doğrulayamayacaksınız.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
     IDS_WARN_REMOVE_CA "Artık bu onay belgesi yetkilisiyle yayımlanan onay belgeleri güvenilen olmayacaktır.\nBu onay belgesini silmek istediğinizden emin misiniz?"
     IDS_WARN_REMOVE_PLURAL_CA "Artık bu onay belgesi yetkilileriyle yayımlanan onay belgeleri güvenilen olmayacaktır.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
     IDS_WARN_REMOVE_ROOT "Artık, bu kök onay belgesi yetkilisiyle yayımlanan onay belgeleri ve onay belgesi yetkilileri güvenilir olmayacaktır.\nBu güvenilen kök onay belgesini silmek istediğinizden emin misiniz?"
