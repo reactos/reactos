@@ -1080,6 +1080,12 @@ SSI_DEF(SystemFlagsInformation)
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
+
+    if (!SeSinglePrivilegeCheck(SeDebugPrivilege, ExGetPreviousMode()))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
     NtGlobalFlag = ((PSYSTEM_FLAGS_INFORMATION) Buffer)->Flags;
     return STATUS_SUCCESS;
 }
