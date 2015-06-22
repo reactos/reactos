@@ -484,6 +484,11 @@ BOOLEAN
 CdfsIsRecordValid(IN PDEVICE_EXTENSION DeviceExt,
                   IN PDIR_RECORD Record);
 
+VOID
+CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
+                    PDIR_RECORD Record,
+                    PWSTR Name);
+
 /* rw.c */
 
 NTSTATUS
