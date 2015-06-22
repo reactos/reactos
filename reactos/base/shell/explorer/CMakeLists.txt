@@ -23,6 +23,8 @@ list(APPEND SOURCE
     util.cpp
     precomp.h)
 
+file(GLOB explorer_rc_deps res/*.*)
+add_rc_deps(explorer.rc ${explorer_rc_deps})
 add_executable(explorer ${SOURCE} explorer.rc)
 target_link_libraries(explorer uuid atlnew wine)
 set_module_type(explorer win32gui UNICODE)
