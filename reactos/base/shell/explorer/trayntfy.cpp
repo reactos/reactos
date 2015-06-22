@@ -434,6 +434,13 @@ public:
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         Toolbar.Initialize(m_hWnd);
+
+        // Explicitly request running applications to re-register their systray icons
+        SendNotifyMessage(HWND_BROADCAST,
+                          RegisterWindowMessage(TEXT("TaskbarCreated")),
+                          0,
+                          0);
+
         return TRUE;
     }
 
