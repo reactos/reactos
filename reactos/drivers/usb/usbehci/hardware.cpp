@@ -183,7 +183,7 @@ CUSBHardwareDevice::Initialize(
     KeInitializeSpinLock(&m_Lock);
 
     //
-    // intialize status change work item
+    // initialize status change work item
     //
     ExInitializeWorkItem(&m_StatusChangeWorkItem, StatusChangeWorkItemRoutine, PVOID(this));
 
@@ -250,7 +250,7 @@ CUSBHardwareDevice::PrintCapabilities()
 {
     if (m_Capabilities.HCSParams.PortPowerControl)
     {
-        DPRINT1("Controler EHCI has Port Power Control\n");
+        DPRINT1("Controller EHCI has Port Power Control\n");
     }
 
     DPRINT1("Controller Port Routing Rules %lu\n", m_Capabilities.HCSParams.PortRouteRules);
@@ -578,7 +578,7 @@ CUSBHardwareDevice::StartController(void)
             //
             if ((Caps & EHCI_LEGSUP_BIOSOWNED))
             {
-                DPRINT1("[EHCI] Controller is BIOS owned, acquring control\n");
+                DPRINT1("[EHCI] Controller is BIOS owned, acquiring control\n");
 
                 //
                 // acquire ownership
@@ -614,7 +614,7 @@ CUSBHardwareDevice::StartController(void)
                 if ((Caps & EHCI_LEGSUP_BIOSOWNED))
                 {
                     //
-                    // failed to aquire ownership
+                    // failed to acquire ownership
                     //
                     DPRINT1("[EHCI] failed to acquire ownership\n");
                 }
@@ -627,7 +627,7 @@ CUSBHardwareDevice::StartController(void)
                 }
 #if 0
                 //
-                // explictly clear the bios owned flag 2.1.7
+                // explicitly clear the bios owned flag 2.1.7
                 //
                 Value = 0;
                 m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, ExtendedCapsSupport+2, sizeof(UCHAR));
@@ -1397,7 +1397,7 @@ EhciDefferedRoutine(
                     {
                         if (PortStatus & EHCI_PRT_ENABLED)
                         {
-                            DPRINT1("Misbeaving controller. Port should be disabled at this point\n");
+                            DPRINT1("Misbehaving controller. Port should be disabled at this point\n");
                         }
 
                         if (EHCI_IS_LOW_SPEED(PortStatus))
