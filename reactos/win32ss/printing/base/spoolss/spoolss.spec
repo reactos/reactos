@@ -1,7 +1,7 @@
 @ stub AbortPrinter
 @ stub AddDriverCatalog
 @ stub AddFormW
-@ stub AddJobW
+@ stdcall AddJobW(long long ptr long ptr)
 @ stub AddMonitorW
 @ stub AddPerMachineConnectionW
 @ stub AddPortExW
@@ -68,8 +68,8 @@
 @ stub EnumPrinterDriversW
 @ stub EnumPrinterKeyW
 @ stdcall EnumPrintersW(long ptr long ptr long ptr ptr)
-@ stub EnumPrintProcessorDatatypesW
-@ stub EnumPrintProcessorsW
+@ stdcall EnumPrintProcessorDatatypesW(ptr ptr long ptr long ptr ptr)
+@ stdcall EnumPrintProcessorsW(ptr ptr long ptr long ptr ptr)
 @ stub FindClosePrinterChangeNotification
 @ stub FlushPrinter
 @ stub FormatPrinterForRegistryKey
@@ -78,7 +78,7 @@
 @ stub GetClientUserHandle
 @ stub GetFormW
 @ stub GetJobAttributes
-@ stub GetJobW
+@ stdcall GetJobW(long long long ptr long ptr)
 @ stub GetNetworkId
 @ stub GetPrinterDataExW
 @ stub GetPrinterDataW

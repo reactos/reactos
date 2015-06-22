@@ -8,34 +8,6 @@
 #include "precomp.h"
 
 DWORD
-_RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterEnum, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcOpenPrinter(WINSPOOL_HANDLE pPrinterName, WINSPOOL_PRINTER_HANDLE* phPrinter, WCHAR* pDatatype, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, DWORD AccessRequired)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcSetJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId, WINSPOOL_JOB_CONTAINER *pJobContainer, DWORD Command)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcGetJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId, DWORD Level, BYTE *pJob, DWORD cbBuf, DWORD *pcbNeeded)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
 _RpcEnumJobs(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, BYTE *pJob, DWORD cbBuf, DWORD *pcbNeeded, DWORD *pcReturned)
 {
     UNIMPLEMENTED;
@@ -106,27 +78,6 @@ _RpcDeletePrinterDriver(WINSPOOL_HANDLE pName, WCHAR *pEnvironment, WCHAR *pDriv
 }
 
 DWORD
-_RpcAddPrintProcessor(WINSPOOL_HANDLE pName, WCHAR *pEnvironment, WCHAR *pPathName, WCHAR *pPrintProcessorName)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR *pEnvironment, DWORD Level, BYTE *pPrintProcessorInfo, DWORD cbBuf, DWORD *pcbNeeded, DWORD *pcReturned)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcGetPrintProcessorDirectory(WINSPOOL_HANDLE pName, WCHAR *pEnvironment, DWORD Level, BYTE *pPrintProcessorDirectory, DWORD cbBuf, DWORD *pcbNeeded)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
 _RpcStartDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_DOC_INFO_CONTAINER *pDocInfoContainer, DWORD *pJobId)
 {
     UNIMPLEMENTED;
@@ -170,20 +121,6 @@ _RpcReadPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE *pBuf, DWORD cbBuf, DWORD
 
 DWORD
 _RpcEndDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcAddJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE *pAddJob, DWORD cbBuf, DWORD *pcbNeeded)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcScheduleJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
@@ -359,13 +296,6 @@ _RpcAddPrintProvidor(WINSPOOL_HANDLE pName, WINSPOOL_PROVIDOR_CONTAINER *pProvid
 
 DWORD
 _RpcDeletePrintProvidor(WINSPOOL_HANDLE pName, WCHAR *pEnvironment, WCHAR *pPrintProviderName)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcEnumPrintProcessorDatatypes(WINSPOOL_HANDLE pName, WCHAR *pPrintProcessorName, DWORD Level, BYTE *pDatatypes, DWORD cbBuf, DWORD *pcbNeeded, DWORD *pcReturned)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;

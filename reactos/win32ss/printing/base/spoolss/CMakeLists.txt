@@ -3,9 +3,12 @@ spec2def(spoolss.dll spoolss.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     context.c
+    jobs.c
     main.c
     memory.c
     precomp.h
+    printers.c
+    printprocessors.c
     tools.c)
 
 add_library(spoolss SHARED

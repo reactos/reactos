@@ -10,7 +10,7 @@
 109 stub AddFormA
 110 stub AddFormW
 111 stub AddJobA
-112 stub AddJobW
+112 stdcall AddJobW(long long ptr long ptr)
 113 stub AddMonitorA
 114 stub AddMonitorW
 115 stub AddPortA
@@ -92,7 +92,7 @@
 191 stdcall EnumPrintProcessorDatatypesA(ptr ptr long ptr long ptr ptr)
 192 stdcall EnumPrintProcessorDatatypesW(ptr ptr long ptr long ptr ptr)
 193 stub EnumPrintProcessorsA
-194 stub EnumPrintProcessorsW
+194 stdcall EnumPrintProcessorsW(ptr ptr long ptr long ptr ptr)
 195 stub EnumPrinterDataA
 196 stub EnumPrinterDataExA
 197 stub EnumPrinterDataExW
@@ -143,7 +143,7 @@
 242 stub GetFormA
 243 stub GetFormW
 244 stub GetJobA
-245 stub GetJobW
+245 stdcall GetJobW(long long long ptr long ptr)
 246 stub GetPrintProcessorDirectoryA
 247 stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
 248 stdcall GetPrinterA(long long ptr long ptr)

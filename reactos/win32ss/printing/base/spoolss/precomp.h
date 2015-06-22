@@ -26,5 +26,6 @@ typedef BOOL (WINAPI *PInitializePrintProvidor)(LPPRINTPROVIDOR, DWORD, LPWSTR);
 
 // main.c
 extern HANDLE hProcessHeap;
+extern PRINTPROVIDOR LocalSplFuncs;
 
 #endif
