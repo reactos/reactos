@@ -4232,14 +4232,24 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
                                      ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
 
                 Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
-                NT_ASSERT(NT_SUCCESS(Status));
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
+                            SBaseAddress, Process, Status);
+                    NT_ASSERT(NT_SUCCESS(Status));
+                }
             }
         }
     }
     else
     {
         Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
-        NT_ASSERT(NT_SUCCESS(Status));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
+                    BaseAddress, Process, Status);
+            NT_ASSERT(NT_SUCCESS(Status));
+        }
     }
 
     MmUnlockAddressSpace(AddressSpace);
