@@ -480,6 +480,10 @@ CdfsShortNameCacheGet
  PUNICODE_STRING LongName,
  PUNICODE_STRING ShortName);
 
+BOOLEAN
+CdfsIsRecordValid(IN PDEVICE_EXTENSION DeviceExt,
+                  IN PDIR_RECORD Record);
+
 /* rw.c */
 
 NTSTATUS

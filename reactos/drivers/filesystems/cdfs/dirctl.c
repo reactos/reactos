@@ -290,9 +290,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             return Status;
         }
 
-        if (Record->RecordLength < Record->FileIdLength + FIELD_OFFSET(DIR_RECORD, FileId))
+        if (!CdfsIsRecordValid(DeviceExt, Record))
         {
-            DPRINT1("Found corrupted entry! %u - %u\n", Record->RecordLength, Record->FileIdLength + FIELD_OFFSET(DIR_RECORD, FileId));
             RtlFreeUnicodeString(&FileToFindUpcase);
             CcUnpinData(Context);
             return STATUS_DISK_CORRUPT_ERROR;
@@ -301,14 +300,6 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         DPRINT("Name '%S'\n", name);
 
         RtlInitUnicodeString(&LongName, name);
-        /* Was the entry degenerated? */
-        if (LongName.Length < sizeof(WCHAR))
-        {
-            DPRINT1("Found entry with invalid name!\n");
-            RtlFreeUnicodeString(&FileToFindUpcase);
-            CcUnpinData(Context);
-            return STATUS_DISK_CORRUPT_ERROR;
-        }
 
         ShortName.Length = 0;
         ShortName.MaximumLength = 26;

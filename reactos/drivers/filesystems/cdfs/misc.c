@@ -206,6 +206,55 @@ CdfsIsNameLegalDOS8Dot3(IN UNICODE_STRING FileName
     return FsRtlIsFatDbcsLegal(DbcsName, FALSE, FALSE, FALSE);
 }
 
+BOOLEAN
+CdfsIsRecordValid(IN PDEVICE_EXTENSION DeviceExt,
+                  IN PDIR_RECORD Record)
+{
+    if (Record->RecordLength < Record->FileIdLength + FIELD_OFFSET(DIR_RECORD, FileId))
+    {
+        DPRINT1("Found corrupted entry! %u - %u\n", Record->RecordLength, Record->FileIdLength + FIELD_OFFSET(DIR_RECORD, FileId));
+        return FALSE;
+    }
+
+    if (Record->FileIdLength == 0)
+    {
+        DPRINT1("Found corrupted entry (null size)!\n");
+        return FALSE;
+    }
+
+    if (DeviceExt->CdInfo.JolietLevel == 0)
+    {
+        if (Record->FileId[0] == ANSI_NULL && Record->FileIdLength != 1)
+        {
+            DPRINT1("Found corrupted entry!\n");
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (Record->FileIdLength & 1 && Record->FileIdLength != 1)
+        {
+            DPRINT1("Found corrupted entry! %u\n", Record->FileIdLength);
+            return FALSE;
+        }
+
+        if (Record->FileIdLength == 1 && Record->FileId[0] != 0 &&  Record->FileId[0] != 1)
+        {
+            DPRINT1("Found corrupted entry! %c\n", Record->FileId[0]);
+            DPRINT1("%wc\n", ((PWSTR)Record->FileId)[0]);
+            return FALSE;
+        }
+
+        if (((PWSTR)Record->FileId)[0] == UNICODE_NULL)
+        {
+            DPRINT1("Found corrupted entry!\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 VOID
 CdfsShortNameCacheGet
 (PFCB DirectoryFcb, 

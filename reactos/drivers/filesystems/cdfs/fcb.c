@@ -558,9 +558,8 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
         DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
             Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
-        if (Record->RecordLength < Record->FileIdLength + FIELD_OFFSET(DIR_RECORD, FileId))
+        if (!CdfsIsRecordValid(DeviceExt, Record))
         {
-            DPRINT1("Found corrupted entry! %u - %u\n", Record->RecordLength, Record->FileIdLength + FIELD_OFFSET(DIR_RECORD, FileId));
             RtlFreeUnicodeString(&FileToFindUpcase);
             CcUnpinData(Context);
             return STATUS_DISK_CORRUPT_ERROR;
@@ -572,15 +571,6 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
         DPRINT ("Offset %lu\n", Offset);
 
         RtlInitUnicodeString(&LongName, Name);
-        /* Was the entry degenerated? */
-        if (LongName.Length < sizeof(WCHAR))
-        {
-            DPRINT1("Found entry with invalid name!\n");
-            RtlFreeUnicodeString(&FileToFindUpcase);
-            CcUnpinData(Context);
-            return STATUS_DISK_CORRUPT_ERROR;
-        }
-
         RtlInitEmptyUnicodeString(&ShortName, ShortNameBuffer, sizeof(ShortNameBuffer));
         RtlZeroMemory(ShortNameBuffer, sizeof(ShortNameBuffer));
 
