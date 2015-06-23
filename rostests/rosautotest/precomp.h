@@ -69,7 +69,7 @@ string EscapeString(const char* Input);
 string EscapeString(const string& Input);
 string GetINIValue(PCWCH AppName, PCWCH KeyName, PCWCH FileName);
 bool IsNumber(const char* Input);
-void StringOut(const string& InputString);
+string StringOut(const string& String, bool forcePrint = true);
 string UnicodeToAscii(PCWSTR UnicodeString);
 string UnicodeToAscii(const wstring& UnicodeString);
 

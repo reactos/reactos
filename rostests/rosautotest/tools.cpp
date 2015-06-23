@@ -2,11 +2,12 @@
  * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Various helper functions
- * COPYRIGHT:   Copyright 2008-2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2008-2009 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
 
+#define DBGPRINT_BUFSIZE   511
 static const char HexCharacters[] = "0123456789ABCDEF";
 
 /**
@@ -86,43 +87,85 @@ IsNumber(const char* Input)
 
 /**
  * Outputs a string through the standard output and the debug output.
- * The input string may have LF or CRLF line endings.
+ * The string may have LF or CRLF line endings.
  *
- * @param InputString
+ * @param String
  * The std::string to output
  */
-void
-StringOut(const string& InputString)
+string
+StringOut(const string& String, bool forcePrint)
 {
-    const char* pInput = InputString.c_str();
-    char* OutputString = new char[InputString.size() + 1];
-    char* pOutput = OutputString;
+    char DbgString[DBGPRINT_BUFSIZE + 1];
+    size_t i, start = 0, last_newline = 0, size = 0, curr_pos = 0;
+    string NewString;
 
     /* Unify the line endings (the piped output of the tests may use CRLF) */
-    while (*pInput)
+    for(i = 0; i < String.size(); i++)
     {
         /* If this is a CRLF line-ending, only copy a \n to the new string and skip the next character */
-        if (*pInput == '\r' && *(pInput + 1) == '\n')
+        if(String[i] == '\r' && String[i + 1] == '\n')
         {
-            *pOutput = '\n';
-            ++pInput;
+            NewString += '\n';
+            ++i;
         }
         else
         {
-            *pOutput = *pInput;
+            /* Otherwise copy the string */
+            NewString += String[i];
         }
 
-        ++pInput;
-        ++pOutput;
+        curr_pos = NewString.size();
+
+        /* Try to print whole lines but obey the 512 bytes chunk size limit*/
+        if(NewString[curr_pos - 1] == '\n' || (curr_pos - start) == DBGPRINT_BUFSIZE)
+        {
+            if((curr_pos - start) >= DBGPRINT_BUFSIZE)
+            {
+                /* No newlines so far, or the string just fits */
+                if(last_newline <= start || ((curr_pos - start == DBGPRINT_BUFSIZE) && NewString[curr_pos - 1] == '\n'))
+                {
+                    size = curr_pos - start;
+                    memcpy(DbgString, NewString.c_str() + start, size);
+                    start = curr_pos;
+                }
+                else
+                {
+                    size = last_newline - start;
+                    memcpy(DbgString, NewString.c_str() + start, size);
+                    start = last_newline;
+                }
+
+                DbgString[size] = 0;
+                OutputDebugStringA(DbgString);
+            }
+
+            last_newline = curr_pos;
+        }
     }
 
-    *pOutput = 0;
-    OutputDebugStringA(OutputString);
+    size = curr_pos - start;
 
-    if (Configuration.DoPrint())
-        cout << OutputString << flush;
+    /* Only print if forced to or if the rest is a whole line */
+    if(forcePrint == true || NewString[curr_pos - 1] == '\n')
+    {
+        /* Output the whole string */
+        if(Configuration.DoPrint())
+            cout << NewString;
 
-    delete[] OutputString;
+        memcpy(DbgString, NewString.c_str() + start, size);
+        DbgString[size] = 0;
+        OutputDebugStringA(DbgString);
+
+        NewString.clear();
+        return NewString;
+    }
+
+    /* Output full lines only */
+    if(Configuration.DoPrint())
+        cout << NewString.substr(0, start);
+
+    /* Return the remaining chunk */
+    return NewString.substr(start, size);
 }
 
 /**

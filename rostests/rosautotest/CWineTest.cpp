@@ -276,6 +276,7 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     stringstream ss, ssFinish;
     DWORD StartTime;
     float TotalTime;
+    string tailString;
     CPipe Pipe;
     char Buffer[1024];
 
@@ -294,7 +295,7 @@ CWineTest::RunTest(CTestInfo* TestInfo)
         {
             /* Output text through StringOut, even while the test is still running */
             Buffer[BytesAvailable] = 0;
-            StringOut(string(Buffer));
+            tailString = StringOut(tailString.append(string(Buffer)), false);
 
             if(Configuration.DoSubmit())
                 TestInfo->Log += Buffer;
@@ -304,9 +305,16 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     }
     catch(CTestException& e)
     {
+        if(!tailString.empty())
+            StringOut(tailString);
+        tailString.clear();
         StringOut(e.GetMessage());
         TestInfo->Log += e.GetMessage();
     }
+
+    /* Print what's left */
+    if(!tailString.empty())
+        StringOut(tailString);
 
     TotalTime = ((float)GetTickCount() - StartTime)/1000;
     ssFinish << "Test " << TestInfo->Test << " completed in ";
