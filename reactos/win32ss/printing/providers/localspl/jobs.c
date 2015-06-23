@@ -196,36 +196,54 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     const DWORD cchSpl = _countof("?????.SPL") - 1;
 
     ADDJOB_INFO_1W AddJobInfo1;
-    BOOL bReturnValue = FALSE;
     DWORD cchMachineName;
     DWORD cchUserName;
+    DWORD dwErrorCode;
     PBYTE p;
     PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
     RPC_BINDING_HANDLE hServerBinding = NULL;
-    RPC_STATUS Status;
     RPC_WSTR pwszBinding = NULL;
     RPC_WSTR pwszMachineName = NULL;
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
     if (pHandle->HandleType != Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
+    }
 
     pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->SpecificHandle;
 
+    // This handle must not have started a job yet!
+    if (pPrinterHandle->StartedJob)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
     // Check if this is the right structure level.
     if (Level != 1)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
         goto Cleanup;
+    }
 
-    // FIXME: This needs to fail if the printer is set to do direct printing.
+    // Check if the printer is set to do direct printing.
+    // The Job List isn't used in this case.
+    if (pPrinterHandle->Printer->dwAttributes & PRINTER_ATTRIBUTE_DIRECT)
+    {
+        dwErrorCode = ERROR_INVALID_ACCESS;
+        goto Cleanup;
+    }
 
     // Check if the supplied buffer is large enough.
     *pcbNeeded = sizeof(ADDJOB_INFO_1W) + (cchSpoolDirectory + cchPrintersPath + cchSpl + 1) * sizeof(WCHAR);
     if (cbBuf < *pcbNeeded)
     {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
         goto Cleanup;
     }
 
@@ -233,13 +251,17 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     pJob = DllAllocSplMem(sizeof(LOCAL_JOB));
     if (!pJob)
     {
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        dwErrorCode = GetLastError();
+        ERR("DllAllocSplMem failed with error %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
     // Reserve an ID for this job.
     if (!GetNextJobID(&pJob->dwJobID))
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         goto Cleanup;
+    }
 
     // Copy over defaults to the LOCAL_JOB structure.
     pJob->Printer = pPrinterHandle->Printer;
@@ -254,7 +276,8 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     pJob->pwszUserName = DllAllocSplMem(cchUserName * sizeof(WCHAR));
     if (!GetUserNameW(pJob->pwszUserName, &cchUserName))
     {
-        ERR("GetUserNameW failed with error %lu!\n", GetLastError());
+        dwErrorCode = GetLastError();
+        ERR("GetUserNameW failed with error %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
@@ -262,24 +285,24 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     pJob->pwszNotifyName = AllocSplStr(pJob->pwszUserName);
 
     // Get the name of the machine that submitted the Job over RPC.
-    Status = RpcBindingServerFromClient(NULL, &hServerBinding);
-    if (Status != RPC_S_OK)
+    dwErrorCode = RpcBindingServerFromClient(NULL, &hServerBinding);
+    if (dwErrorCode != RPC_S_OK)
     {
-        ERR("RpcBindingServerFromClient failed with status %lu!\n", Status);
+        ERR("RpcBindingServerFromClient failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
-    Status = RpcBindingToStringBindingW(hServerBinding, &pwszBinding);
-    if (Status != RPC_S_OK)
+    dwErrorCode = RpcBindingToStringBindingW(hServerBinding, &pwszBinding);
+    if (dwErrorCode != RPC_S_OK)
     {
-        ERR("RpcBindingToStringBindingW failed with status %lu!\n", Status);
+        ERR("RpcBindingToStringBindingW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
-    Status = RpcStringBindingParseW(pwszBinding, NULL, NULL, &pwszMachineName, NULL, NULL);
-    if (Status != RPC_S_OK)
+    dwErrorCode = RpcStringBindingParseW(pwszBinding, NULL, NULL, &pwszMachineName, NULL, NULL);
+    if (dwErrorCode != RPC_S_OK)
     {
-        ERR("RpcStringBindingParseW failed with status %lu!\n", Status);
+        ERR("RpcStringBindingParseW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
@@ -291,6 +314,7 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     // Add the job to the Global Job List.
     if (!InsertElementSkiplist(&GlobalJobList, pJob))
     {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("InsertElementSkiplist failed for job %lu for the GlobalJobList!\n", pJob->dwJobID);
         goto Cleanup;
     }
@@ -299,6 +323,7 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     // As all new jobs are created with default priority, we can be sure that it would always be inserted at the end.
     if (!InsertTailElementSkiplist(&pJob->Printer->JobList, pJob))
     {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("InsertTailElementSkiplist failed for job %lu for the Printer's Job List!\n", pJob->dwJobID);
         goto Cleanup;
     }
@@ -315,7 +340,7 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     p += cchPrintersPath;
     swprintf((PWSTR)p, L"%05lu.SPL", pJob->dwJobID);
 
-    bReturnValue = TRUE;
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     if (pwszMachineName)
@@ -327,11 +352,12 @@ Cleanup:
     if (hServerBinding)
         RpcBindingFree(&hServerBinding);
 
-    return bReturnValue;
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 
-static BOOL
+static DWORD
 _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE pOutput, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
@@ -339,6 +365,7 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     DWORD cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
     DWORD cbPrinterName = (wcslen(pJob->Printer->pwszPrinterName) + 1) * sizeof(WCHAR);
     DWORD cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
+    DWORD dwErrorCode;
     JOB_INFO_1W JobInfo1 = { 0 };
     PBYTE pString;
 
@@ -346,8 +373,8 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     *pcbNeeded = sizeof(JOB_INFO_1W) + cbDatatype + cbDocumentName + cbMachineName + cbPrinterName + cbUserName;
     if (cbBuf < *pcbNeeded)
     {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return FALSE;
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
     }
 
     // Put the strings right after the JOB_INFO_1W structure.
@@ -381,10 +408,13 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     CopyMemory(&JobInfo1.Submitted, &pJob->stSubmitted, sizeof(SYSTEMTIME));
     CopyMemory(pOutput, &JobInfo1, sizeof(JOB_INFO_1W));
 
-    return TRUE;
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    return dwErrorCode;
 }
 
-static BOOL
+static DWORD
 _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE pOutput, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
@@ -395,6 +425,7 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     DWORD cbPrinterName = (wcslen(pJob->Printer->pwszPrinterName) + 1) * sizeof(WCHAR);
     DWORD cbPrintProcessor = (wcslen(pJob->Printer->pPrintProcessor->pwszName) + 1) * sizeof(WCHAR);
     DWORD cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
+    DWORD dwErrorCode;
     FILETIME ftNow;
     FILETIME ftSubmitted;
     JOB_INFO_2W JobInfo2 = { 0 };
@@ -406,8 +437,8 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     *pcbNeeded = sizeof(JOB_INFO_2W) + cbDatatype + sizeof(DEVMODEW) + cbDocumentName + cbDriverName + cbMachineName + cbNotifyName + cbPrinterName + cbPrintProcessor + cbUserName;
     if (cbBuf < *pcbNeeded)
     {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return FALSE;
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
     }
 
     // Put the strings right after the JOB_INFO_2W structure.
@@ -467,8 +498,9 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     // Retrieve this through the element index of the job in the Printer's Job List.
     if (!LookupElementSkiplist(&pJob->Printer->JobList, pJob, &JobInfo2.Position))
     {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("pJob could not be located in the Printer's Job List!\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     // Make the index 1-based.
@@ -486,12 +518,16 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
 
     // Finally copy the structure to the output pointer.
     CopyMemory(pOutput, &JobInfo2, sizeof(JOB_INFO_2W));
-    return TRUE;
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    return dwErrorCode;
 }
 
 BOOL WINAPI
 LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pOutput, DWORD cbBuf, LPDWORD pcbNeeded)
 {
+    DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
@@ -499,7 +535,10 @@ LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pOutput, DWORD cbB
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
     if (pHandle->HandleType != Printer)
-        return FALSE;
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
 
     pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->SpecificHandle;
 
@@ -507,17 +546,21 @@ LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pOutput, DWORD cbB
     pJob = LookupElementSkiplist(&GlobalJobList, &JobId, NULL);
     if (!pJob || pJob->Printer != pPrinterHandle->Printer)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
     }
 
     // The function behaves differently for each level.
     if (Level == 1)
-        return _LocalGetJobLevel1(pPrinterHandle, pJob, pOutput, cbBuf, pcbNeeded);
+        dwErrorCode = _LocalGetJobLevel1(pPrinterHandle, pJob, pOutput, cbBuf, pcbNeeded);
     else if (Level == 2)
-        return _LocalGetJobLevel2(pPrinterHandle, pJob, pOutput, cbBuf, pcbNeeded);
+        dwErrorCode = _LocalGetJobLevel2(pPrinterHandle, pJob, pOutput, cbBuf, pcbNeeded);
+    else
+        dwErrorCode = ERROR_INVALID_LEVEL;
 
-    return FALSE;
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 PLOCAL_JOB

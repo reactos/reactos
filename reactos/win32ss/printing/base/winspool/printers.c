@@ -23,11 +23,7 @@ EnumPrintersW(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD 
     RpcTryExcept
     {
         dwErrorCode = _RpcEnumPrinters(Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-        if (dwErrorCode)
-        {
-            ERR("_RpcEnumPrinters failed with error %lu!\n", dwErrorCode);
-        }
-
+        SetLastError(dwErrorCode);
         bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -204,11 +200,7 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
     RpcTryExcept
     {
         dwErrorCode = _RpcOpenPrinter(pPrinterName, phPrinter, pDatatype, pDevModeContainer, AccessRequired);
-        if (dwErrorCode)
-        {
-            ERR("_RpcOpenPrinter failed with error %lu!\n", dwErrorCode);
-        }
-
+        SetLastError(dwErrorCode);
         bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)

@@ -38,7 +38,7 @@ InitializePrinterList()
 {
     const WCHAR wszPrintersKey[] = L"SYSTEM\\CurrentControlSet\\Control\\Print\\Printers";
 
-    DWORD cbDevMode;
+    DWORD cbData;
     DWORD cchPrinterName;
     DWORD dwSubKeys;
     DWORD i;
@@ -173,11 +173,29 @@ InitializePrinterList()
         }
 
         // Get the default DevMode.
-        cbDevMode = sizeof(DEVMODEW);
-        lStatus = RegQueryValueExW(hSubKey, L"Default DevMode", NULL, NULL, (PBYTE)&pPrinter->DefaultDevMode, &cbDevMode);
-        if (lStatus != ERROR_SUCCESS || cbDevMode != sizeof(DEVMODEW))
+        cbData = sizeof(DEVMODEW);
+        lStatus = RegQueryValueExW(hSubKey, L"Default DevMode", NULL, NULL, (PBYTE)&pPrinter->DefaultDevMode, &cbData);
+        if (lStatus != ERROR_SUCCESS || cbData != sizeof(DEVMODEW))
         {
-            ERR("Couldn't query a valid DevMode for Printer \"%S\", status is %ld, cbDevMode is %lu!\n", wszPrinterName, lStatus, cbDevMode);
+            ERR("Couldn't query a valid DevMode for Printer \"%S\", status is %ld, cbData is %lu!\n", wszPrinterName, lStatus, cbData);
+            continue;
+        }
+
+        // Get the Attributes.
+        cbData = sizeof(DWORD);
+        lStatus = RegQueryValueExW(hSubKey, L"Attributes", NULL, NULL, (PBYTE)&pPrinter->dwAttributes, &cbData);
+        if (lStatus != ERROR_SUCCESS)
+        {
+            ERR("Couldn't query Attributes for Printer \"%S\", status is %ld!\n", wszPrinterName, lStatus);
+            continue;
+        }
+
+        // Get the Status.
+        cbData = sizeof(DWORD);
+        lStatus = RegQueryValueExW(hSubKey, L"Status", NULL, NULL, (PBYTE)&pPrinter->dwStatus, &cbData);
+        if (lStatus != ERROR_SUCCESS)
+        {
+            ERR("Couldn't query Status for Printer \"%S\", status is %ld!\n", wszPrinterName, lStatus);
             continue;
         }
 
@@ -223,7 +241,7 @@ Cleanup:
 }
 
 
-BOOL
+DWORD
 _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
     const WCHAR wszComma[] = L",";
@@ -232,6 +250,7 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
     DWORD cbComment;
     DWORD cbDescription;
     DWORD cchComputerName = 0;
+    DWORD dwErrorCode;
     DWORD i;
     PBYTE pPrinterInfo;
     PBYTE pPrinterString;
@@ -263,8 +282,9 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
                 cchComputerName = MAX_COMPUTERNAME_LENGTH + 1;
                 if (!GetComputerNameW(&wszComputerName[2], &cchComputerName))
                 {
-                    ERR("GetComputerNameW failed with error %lu!\n", GetLastError());
-                    return FALSE;
+                    dwErrorCode = GetLastError();
+                    ERR("GetComputerNameW failed with error %lu!\n", dwErrorCode);
+                    goto Cleanup;
                 }
 
                 // Add the leading slashes to the total length.
@@ -273,8 +293,8 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
                 // Now compare this with the local computer name and reject if it doesn't match.
                 if (wcsicmp(&Name[2], &wszComputerName[2]) != 0)
                 {
-                    SetLastError(ERROR_INVALID_NAME);
-                    return FALSE;
+                    dwErrorCode = ERROR_INVALID_NAME;
+                    goto Cleanup;
                 }
 
                 // Add a trailing backslash to wszComputerName, which will later be prepended in front of the printer names.
@@ -284,8 +304,8 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
             else if (wcsicmp(Name, wszPrintProviderInfo[0]) != 0)
             {
                 // The user supplied a name that cannot be processed by the local print provider.
-                SetLastError(ERROR_INVALID_NAME);
-                return FALSE;
+                dwErrorCode = ERROR_INVALID_NAME;
+                goto Cleanup;
             }
         }
         else
@@ -302,14 +322,15 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
             // Check if the supplied buffer is large enough.
             if (cbBuf < *pcbNeeded)
             {
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                return FALSE;
+                dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+                goto Cleanup;
             }
 
             // Copy over the print processor information.
             ((PPRINTER_INFO_1W)pPrinterEnum)->Flags = 0;
             PackStrings(wszPrintProviderInfo, pPrinterEnum, dwOffsets, &pPrinterEnum[*pcbNeeded]);
-            return TRUE;
+            dwErrorCode = ERROR_SUCCESS;
+            goto Cleanup;
         }
     }
 
@@ -332,8 +353,8 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
     // Check if the supplied buffer is large enough.
     if (cbBuf < *pcbNeeded)
     {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return FALSE;
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
     }
 
     // Put the strings right after the last PRINTER_INFO_1W structure.
@@ -381,12 +402,17 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
         pPrinterInfo += sizeof(PRINTER_INFO_1W);
     }
 
-    return TRUE;
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    return dwErrorCode;
 }
 
 BOOL WINAPI
 LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
+    DWORD dwErrorCode;
+
     // Do no sanity checks here. This is verified by localspl_apitest!
 
     // Begin counting.
@@ -394,30 +420,36 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
     *pcReturned = 0;
 
     // Think positive :)
-    SetLastError(ERROR_SUCCESS);
+    // Treat it as success if the caller queried no information and we don't need to return any.
+    dwErrorCode = ERROR_SUCCESS;
 
     if (Flags & PRINTER_ENUM_LOCAL)
     {
         // The function behaves quite differently for each level.
         if (Level == 1)
-            return _LocalEnumPrintersLevel1(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-
-        // TODO: Handle other levels.
-
-        // The caller supplied an invalid level.
-        return FALSE;
+        {
+            dwErrorCode = _LocalEnumPrintersLevel1(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+        }
+        else
+        {
+            // TODO: Handle other levels.
+            // The caller supplied an invalid level.
+            dwErrorCode = ERROR_INVALID_LEVEL;
+            goto Cleanup;
+        }
     }
 
-    // Treat it as success if the caller queried no information and we don't need to return any.
-    return TRUE;
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
 LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDefault)
 {
-    BOOL bReturnValue = ROUTER_UNKNOWN;
     DWORD cchComputerName;
     DWORD cchPrinterName;
+    DWORD dwErrorCode;
     DWORD dwJobID;
     PWSTR p = lpPrinterName;
     PWSTR pwszPrinterName = NULL;
@@ -430,7 +462,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     // Sanity checks
     if (!lpPrinterName || !phPrinter)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
     }
 
@@ -445,7 +477,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         if (!p)
         {
             // We didn't get a proper server name.
-            SetLastError(ERROR_INVALID_PRINTER_NAME);
+            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
             goto Cleanup;
         }
 
@@ -456,14 +488,15 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         cchComputerName = _countof(wszComputerName);
         if (!GetComputerNameW(wszComputerName, &cchComputerName))
         {
-            ERR("GetComputerNameW failed with error %lu!\n", GetLastError());
+            dwErrorCode = GetLastError();
+            ERR("GetComputerNameW failed with error %lu!\n", dwErrorCode);
             goto Cleanup;
         }
 
         // Now compare this with the local computer name and reject if it doesn't match, because this print provider only supports local printers.
         if (wcsicmp(lpPrinterName, wszComputerName) != 0)
         {
-            SetLastError(ERROR_INVALID_PRINTER_NAME);
+            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
             goto Cleanup;
         }
 
@@ -481,7 +514,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     // No printer name and no comma? This is invalid!
     if (!cchPrinterName && !p)
     {
-        SetLastError(ERROR_INVALID_PRINTER_NAME);
+        dwErrorCode = ERROR_INVALID_PRINTER_NAME;
         goto Cleanup;
     }
 
@@ -498,7 +531,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         if (!pPrinter)
         {
             // The printer does not exist.
-            SetLastError(ERROR_INVALID_PRINTER_NAME);
+            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
             goto Cleanup;
         }
 
@@ -512,7 +545,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             // Use the datatype if it's valid.
             if (!FindDatatype(pPrinter->pPrintProcessor, pDefault->pDatatype))
             {
-                SetLastError(ERROR_INVALID_DATATYPE);
+                dwErrorCode = ERROR_INVALID_DATATYPE;
                 goto Cleanup;
             }
 
@@ -545,7 +578,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             // The "Job " string has to follow now.
             if (wcscmp(p, L"Job ") != 0)
             {
-                SetLastError(ERROR_INVALID_PRINTER_NAME);
+                dwErrorCode = ERROR_INVALID_PRINTER_NAME;
                 goto Cleanup;
             }
 
@@ -561,7 +594,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             if (!IS_VALID_JOB_ID(dwJobID))
             {
                 // The user supplied an invalid Job ID.
-                SetLastError(ERROR_INVALID_PRINTER_NAME);
+                dwErrorCode = ERROR_INVALID_PRINTER_NAME;
                 goto Cleanup;
             }
 
@@ -570,7 +603,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             if (!pJob || pJob->Printer != pPrinter)
             {
                 // The user supplied a non-existing Job ID or the Job ID does not belong to the supplied printer name.
-                SetLastError(ERROR_INVALID_PRINTER_NAME);
+                dwErrorCode = ERROR_INVALID_PRINTER_NAME;
                 goto Cleanup;
             }
 
@@ -618,13 +651,13 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         }
         else
         {
-            SetLastError(ERROR_INVALID_PRINTER_NAME);
+            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
             goto Cleanup;
         }
     }
 
     *phPrinter = (HANDLE)pHandle;
-    bReturnValue = ROUTER_SUCCESS;
+    dwErrorCode = ERROR_SUCCESS;
 
     // Don't let the cleanup routines free this.
     pPrinterHandle = NULL;
@@ -642,12 +675,15 @@ Cleanup:
     if (pwszPrinterName)
         DllFreeSplMem(pwszPrinterName);
 
-    return bReturnValue;
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 DWORD WINAPI
 LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
 {
+    DWORD dwErrorCode;
+    DWORD dwReturnValue = 0;
     PDOC_INFO_1W pDocumentInfo1;
     PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
@@ -656,22 +692,22 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
     // Sanity checks
     if (!pDocInfo)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
     }
 
     if (!hPrinter)
     {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return 0;
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
     }
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
     if (pHandle->HandleType != Printer)
     {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return 0;
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
     }
 
     pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->SpecificHandle;
@@ -679,8 +715,8 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
     // Check if this is the right document information level.
     if (Level != 1)
     {
-        SetLastError(ERROR_INVALID_LEVEL);
-        return 0;
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
     }
 
     pDocumentInfo1 = (PDOC_INFO_1W)pDocInfo;
@@ -696,8 +732,8 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
         // Use the datatype if it's valid.
         if (!FindDatatype(pJob->Printer->pPrintProcessor, pDocumentInfo1->pDatatype))
         {
-            SetLastError(ERROR_INVALID_DATATYPE);
-            return 0;
+            dwErrorCode = ERROR_INVALID_DATATYPE;
+            goto Cleanup;
         }
 
         pJob->pwszDatatype = AllocSplStr(pDocumentInfo1->pDatatype);
@@ -720,25 +756,35 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
 
     // Get an ID for the new job.
     if (!GetNextJobID(&pJob->dwJobID))
-        return 0;
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        goto Cleanup;
+    }
 
     // Add the job to the Global Job List.
     if (!InsertElementSkiplist(&GlobalJobList, pJob))
     {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("InsertElementSkiplist failed for job %lu for the GlobalJobList!\n", pJob->dwJobID);
-        return 0;
+        goto Cleanup;
     }
 
     // Add the job at the end of the Printer's Job List.
     // As all new jobs are created with default priority, we can be sure that it would always be inserted at the end.
     if (!InsertTailElementSkiplist(&pJob->Printer->JobList, pJob))
     {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("InsertTailElementSkiplist failed for job %lu for the Printer's Job List!\n", pJob->dwJobID);
-        return 0;
+        goto Cleanup;
     }
 
     pPrinterHandle->StartedJob = pJob;
-    return pJob->dwJobID;
+    dwErrorCode = ERROR_SUCCESS;
+    dwReturnValue = pJob->dwJobID;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return dwReturnValue;
 }
 
 BOOL WINAPI

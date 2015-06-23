@@ -23,11 +23,7 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
     RpcTryExcept
     {
         dwErrorCode = _RpcEnumPrintProcessorDatatypes(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
-        if (dwErrorCode)
-        {
-            ERR("_RpcEnumPrintProcessorDatatypes failed with error %lu!\n", dwErrorCode);
-        }
-
+        SetLastError(dwErrorCode);
         bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -49,11 +45,7 @@ EnumPrintProcessorsW(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPri
     RpcTryExcept
     {
         dwErrorCode = _RpcEnumPrintProcessors(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
-        if (dwErrorCode)
-        {
-            ERR("_RpcEnumPrintProcessors failed with error %lu!\n", dwErrorCode);
-        }
-
+        SetLastError(dwErrorCode);
         bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -75,11 +67,7 @@ GetPrintProcessorDirectoryW(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBY
     RpcTryExcept
     {
         dwErrorCode = _RpcGetPrintProcessorDirectory(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
-        if (dwErrorCode)
-        {
-            ERR("_RpcGetPrintProcessorDirectory failed with error %lu!\n", dwErrorCode);
-        }
-
+        SetLastError(dwErrorCode);
         bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)

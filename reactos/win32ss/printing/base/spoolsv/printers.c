@@ -19,15 +19,11 @@ _RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterE
         return dwErrorCode;
     }
 
-    dwErrorCode = EnumPrintersW(Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("EnumPrintersW failed with error %lu!\n", dwErrorCode);
-        RpcRevertToSelf();
-        return dwErrorCode;
-    }
+    EnumPrintersW(Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+    dwErrorCode = GetLastError();
 
-    return RpcRevertToSelf();
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
@@ -47,13 +43,9 @@ _RpcOpenPrinter(WINSPOOL_HANDLE pPrinterName, WINSPOOL_PRINTER_HANDLE* phPrinter
     Default.pDatatype = pDatatype;
     Default.pDevMode = (PDEVMODEW)pDevModeContainer->pDevMode;
 
-    dwErrorCode = OpenPrinterW(pPrinterName, phPrinter, &Default);
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("OpenPrinterW failed with error %lu!\n", dwErrorCode);
-        RpcRevertToSelf();
-        return dwErrorCode;
-    }
+    OpenPrinterW(pPrinterName, phPrinter, &Default);
+    dwErrorCode = GetLastError();
 
-    return RpcRevertToSelf();
+    RpcRevertToSelf();
+    return dwErrorCode;
 }

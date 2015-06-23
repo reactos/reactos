@@ -49,13 +49,17 @@ BOOL WINAPI
 EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
     DWORD cbDatatype;
+    DWORD dwErrorCode;
     DWORD dwOffsets[_countof(pwszDatatypes)];
     PCWSTR* pCurrentDatatype;
     PDWORD pCurrentOffset = dwOffsets;
 
     // Sanity checks
     if (Level != 1 || !pcbNeeded || !pcReturned)
-        return FALSE;
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
 
     // Count the required buffer size and the number of datatypes.
     *pcbNeeded = 0;
@@ -76,20 +80,24 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
     // Check if the supplied buffer is large enough.
     if (cbBuf < *pcbNeeded)
     {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return FALSE;
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
     }
 
     // Check if a buffer was supplied at all.
     if (!pDatatypes)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
     }
 
     // Copy over all datatypes.
     *pCurrentOffset = MAXDWORD;
     PackStrings(pwszDatatypes, pDatatypes, dwOffsets, &pDatatypes[*pcbNeeded]);
 
-    return TRUE;
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }

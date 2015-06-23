@@ -17,11 +17,7 @@ AddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcbNeede
     RpcTryExcept
     {
         dwErrorCode = _RpcAddJob(hPrinter, Level, pData, cbBuf, pcbNeeded);
-        if (dwErrorCode)
-        {
-            ERR("_RpcAddJob failed with error %lu!\n", dwErrorCode);
-        }
-
+        SetLastError(dwErrorCode);
         bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -43,11 +39,7 @@ GetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pJob, DWORD cbBuf, LPDW
     RpcTryExcept
     {
         dwErrorCode = _RpcGetJob(hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
-        if (dwErrorCode)
-        {
-            ERR("_RpcGetJob failed with error %lu!\n", dwErrorCode);
-        }
-
+        SetLastError(dwErrorCode);
         bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)

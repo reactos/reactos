@@ -24,18 +24,16 @@ static LIST_ENTRY _PrintProcessorList;
  * You can use it for further tasks and have to close it with RegCloseKey.
  *
  * @return
- * TRUE if the environment is valid and a registry key was opened, FALSE otherwise.
- * In case of failure, Last Error will be set to ERROR_INVALID_ENVIRONMENT.
+ * A Windows Error Code indicating success or failure.
  */
-static BOOL
+static DWORD
 _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
 {
     const WCHAR wszEnvironmentsKey[] = L"SYSTEM\\CurrentControlSet\\Control\\Print\\Environments\\";
     const DWORD cchEnvironmentsKey = _countof(wszEnvironmentsKey) - 1;
 
-    BOOL bReturnValue = FALSE;
     DWORD cchEnvironment;
-    LONG lStatus;
+    DWORD dwErrorCode;
     PWSTR pwszEnvironmentKey = NULL;
 
     // Use the current environment if none was supplied.
@@ -55,25 +53,23 @@ _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
     CopyMemory(&pwszEnvironmentKey[cchEnvironmentsKey], pEnvironment, (cchEnvironment + 1) * sizeof(WCHAR));
 
     // Open the registry key.
-    lStatus = RegOpenKeyExW(HKEY_LOCAL_MACHINE, pwszEnvironmentKey, 0, KEY_READ, hKey);
-    if (lStatus == ERROR_FILE_NOT_FOUND)
+    dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_LOCAL_MACHINE, pwszEnvironmentKey, 0, KEY_READ, hKey);
+    if (dwErrorCode == ERROR_FILE_NOT_FOUND)
     {
-        SetLastError(ERROR_INVALID_ENVIRONMENT);
+        dwErrorCode = ERROR_INVALID_ENVIRONMENT;
         goto Cleanup;
     }
-    else if (lStatus != ERROR_SUCCESS)
+    else if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegOpenKeyExW failed with status %ld!\n", lStatus);
+        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
-
-    bReturnValue = TRUE;
 
 Cleanup:
     if (pwszEnvironmentKey)
         DllFreeSplMem(pwszEnvironmentKey);
 
-    return bReturnValue;
+    return dwErrorCode;
 }
 
 BOOL
@@ -146,7 +142,7 @@ InitializePrintProcessorList()
     wszPrintProcessorPath[cchPrintProcessorPath++] = L'\\';
 
     // Open the environment registry key.
-    if (!_OpenEnvironment(NULL, &hKey))
+    if (_OpenEnvironment(NULL, &hKey) != ERROR_SUCCESS)
         goto Cleanup;
 
     // Open the "Print Processors" subkey.
@@ -372,25 +368,33 @@ Cleanup:
 BOOL WINAPI
 LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
+    DWORD dwErrorCode;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
 
     // Sanity checks
     if (Level != 1)
     {
-        SetLastError(ERROR_INVALID_LEVEL);
-        return FALSE;
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
     }
 
     // Try to find the Print Processor.
     pPrintProcessor = FindPrintProcessor(pPrintProcessorName);
     if (!pPrintProcessor)
     {
-        SetLastError(ERROR_UNKNOWN_PRINTPROCESSOR);
-        return FALSE;
+        dwErrorCode = ERROR_UNKNOWN_PRINTPROCESSOR;
+        goto Cleanup;
     }
 
     // Call its EnumPrintProcessorDatatypesW function.
-    return pPrintProcessor->pfnEnumPrintProcessorDatatypesW(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
+    if (pPrintProcessor->pfnEnumPrintProcessorDatatypesW(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned))
+        dwErrorCode = ERROR_SUCCESS;
+    else
+        dwErrorCode = GetLastError();
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 /**
@@ -431,13 +435,12 @@ LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD
 BOOL WINAPI
 LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
-    BOOL bReturnValue = FALSE;
     DWORD cchMaxSubKey;
     DWORD cchPrintProcessor;
+    DWORD dwErrorCode;
     DWORD i;
     HKEY hKey = NULL;
     HKEY hSubKey = NULL;
-    LONG lStatus;
     PBYTE pCurrentOutputPrintProcessor;
     PBYTE pCurrentOutputPrintProcessorInfo;
     PRINTPROCESSOR_INFO_1W PrintProcessorInfo1;
@@ -446,35 +449,36 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     // Sanity checks
     if (Level != 1)
     {
-        SetLastError(ERROR_INVALID_LEVEL);
+        dwErrorCode = ERROR_INVALID_LEVEL;
         goto Cleanup;
     }
 
     if (!pcbNeeded || !pcReturned)
     {
-        // This error must be caught by RPC and returned as RPC_X_NULL_REF_POINTER.
-        ERR("pcbNeeded or pcReturned is NULL!\n");
+        // This error is also caught by RPC and returned as RPC_X_NULL_REF_POINTER.
+        dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
     }
 
     // Verify pEnvironment and open its registry key.
     // We use the registry and not the PrintProcessorList here, because the caller may request information about a different environment.
-    if (!_OpenEnvironment(pEnvironment, &hKey))
+    dwErrorCode = _OpenEnvironment(pEnvironment, &hKey);
+    if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
 
     // Open the "Print Processors" subkey.
-    lStatus = RegOpenKeyExW(hKey, L"Print Processors", 0, KEY_READ, &hSubKey);
-    if (lStatus != ERROR_SUCCESS)
+    dwErrorCode = (DWORD)RegOpenKeyExW(hKey, L"Print Processors", 0, KEY_READ, &hSubKey);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegOpenKeyExW failed with status %ld!\n", lStatus);
+        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
     // Get the number of Print Processors and maximum sub key length.
-    lStatus = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, pcReturned, &cchMaxSubKey, NULL, NULL, NULL, NULL, NULL, NULL);
-    if (lStatus != ERROR_SUCCESS)
+    dwErrorCode = (DWORD)RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, pcReturned, &cchMaxSubKey, NULL, NULL, NULL, NULL, NULL, NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegQueryInfoKeyW failed with status %ld!\n", lStatus);
+        ERR("RegQueryInfoKeyW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
@@ -482,6 +486,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     pwszTemp = DllAllocSplMem((cchMaxSubKey + 1) * sizeof(WCHAR));
     if (!pwszTemp)
     {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         goto Cleanup;
     }
@@ -494,10 +499,10 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
         // RegEnumKeyExW sucks! Unlike similar API functions, it only returns the actual numbers of characters copied when you supply a buffer large enough.
         // So use pwszTemp with its size cchMaxSubKey for this.
         cchPrintProcessor = cchMaxSubKey;
-        lStatus = RegEnumKeyExW(hSubKey, i, pwszTemp, &cchPrintProcessor, NULL, NULL, NULL, NULL);
-        if (lStatus != ERROR_SUCCESS)
+        dwErrorCode = (DWORD)RegEnumKeyExW(hSubKey, i, pwszTemp, &cchPrintProcessor, NULL, NULL, NULL, NULL);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("RegEnumKeyExW failed with status %ld!\n", lStatus);
+            ERR("RegEnumKeyExW failed with status %lu!\n", dwErrorCode);
             goto Cleanup;
         }
 
@@ -507,7 +512,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     // Check if the supplied buffer is large enough.
     if (cbBuf < *pcbNeeded)
     {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
         goto Cleanup;
     }
 
@@ -522,10 +527,10 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
         cchPrintProcessor = cchMaxSubKey;
 
         // Copy the Print Processor name.
-        lStatus = RegEnumKeyExW(hSubKey, i, (PWSTR)pCurrentOutputPrintProcessor, &cchPrintProcessor, NULL, NULL, NULL, NULL);
-        if (lStatus != ERROR_SUCCESS)
+        dwErrorCode = (DWORD)RegEnumKeyExW(hSubKey, i, (PWSTR)pCurrentOutputPrintProcessor, &cchPrintProcessor, NULL, NULL, NULL, NULL);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("RegEnumKeyExW failed with status %ld!\n", lStatus);
+            ERR("RegEnumKeyExW failed with status %lu!\n", dwErrorCode);
             goto Cleanup;
         }
 
@@ -539,8 +544,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     }
 
     // We've finished successfully!
-    SetLastError(ERROR_SUCCESS);
-    bReturnValue = TRUE;
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     if (pwszTemp)
@@ -552,7 +556,8 @@ Cleanup:
     if (hKey)
         RegCloseKey(hKey);
 
-    return bReturnValue;
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 /**
@@ -592,34 +597,34 @@ LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, 
     const WCHAR wszPath[] = L"\\PRTPROCS\\";
     const DWORD cchPath = _countof(wszPath) - 1;
 
-    BOOL bReturnValue = FALSE;
     DWORD cbDataWritten;
+    DWORD dwErrorCode;
     HKEY hKey = NULL;
-    LONG lStatus;
 
     // Sanity checks
     if (Level != 1)
     {
-        SetLastError(ERROR_INVALID_LEVEL);
+        dwErrorCode = ERROR_INVALID_LEVEL;
         goto Cleanup;
     }
 
     if (!pcbNeeded)
     {
-        // This error must be caught by RPC and returned as RPC_X_NULL_REF_POINTER.
-        ERR("pcbNeeded is NULL!\n");
+        // This error is also caught by RPC and returned as RPC_X_NULL_REF_POINTER.
+        dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
     }
 
     // Verify pEnvironment and open its registry key.
-    if (!_OpenEnvironment(pEnvironment, &hKey))
+    dwErrorCode = _OpenEnvironment(pEnvironment, &hKey);
+    if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
 
     // Determine the size of the required buffer.
-    lStatus = RegQueryValueExW(hKey, L"Directory", NULL, NULL, NULL, pcbNeeded);
-    if (lStatus != ERROR_SUCCESS)
+    dwErrorCode = (DWORD)RegQueryValueExW(hKey, L"Directory", NULL, NULL, NULL, pcbNeeded);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegQueryValueExW failed with status %ld!\n", lStatus);
+        ERR("RegQueryValueExW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
@@ -629,7 +634,7 @@ LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, 
     // Is the supplied buffer large enough?
     if (cbBuf < *pcbNeeded)
     {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
         goto Cleanup;
     }
 
@@ -638,20 +643,20 @@ LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, 
     CopyMemory(&pPrintProcessorInfo[cchSpoolDirectory], wszPath, cchPath * sizeof(WCHAR));
 
     // Get the directory name from the registry.
-    lStatus = RegQueryValueExW(hKey, L"Directory", NULL, NULL, &pPrintProcessorInfo[cchSpoolDirectory + cchPath], &cbDataWritten);
-    if (lStatus != ERROR_SUCCESS)
+    dwErrorCode = (DWORD)RegQueryValueExW(hKey, L"Directory", NULL, NULL, &pPrintProcessorInfo[cchSpoolDirectory + cchPath], &cbDataWritten);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegQueryValueExW failed with status %ld!\n", lStatus);
+        ERR("RegQueryValueExW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
     // We've finished successfully!
-    SetLastError(ERROR_SUCCESS);
-    bReturnValue = TRUE;
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     if (hKey)
         RegCloseKey(hKey);
 
-    return bReturnValue;
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }

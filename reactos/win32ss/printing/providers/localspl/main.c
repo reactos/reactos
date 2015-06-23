@@ -156,5 +156,6 @@ InitializePrintProvidor(LPPRINTPROVIDOR pPrintProvidor, DWORD cbPrintProvidor, L
 {
     CopyMemory(pPrintProvidor, &_PrintProviderFunctions, min(cbPrintProvidor, sizeof(PRINTPROVIDOR)));
 
+    SetLastError(ERROR_SUCCESS);
     return TRUE;
 }

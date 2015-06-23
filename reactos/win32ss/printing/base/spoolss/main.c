@@ -94,9 +94,10 @@ SplIsUpgrade()
 	return FALSE;
 }
 
-DWORD WINAPI
+BOOL WINAPI
 SpoolerInit()
 {
     // Nothing to do here yet
-    return ERROR_SUCCESS;
+    SetLastError(ERROR_SUCCESS);
+    return TRUE;
 }

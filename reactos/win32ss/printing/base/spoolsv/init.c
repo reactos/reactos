@@ -21,13 +21,9 @@ _RpcSpoolerInit()
         return dwErrorCode;
     }
 
-    dwErrorCode = SpoolerInit();
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("SpoolerInit failed with error %lu!\n", dwErrorCode);
-        RpcRevertToSelf();
-        return dwErrorCode;
-    }
+    SpoolerInit();
+    dwErrorCode = GetLastError();
 
-    return RpcRevertToSelf();
+    RpcRevertToSelf();
+    return dwErrorCode;
 }

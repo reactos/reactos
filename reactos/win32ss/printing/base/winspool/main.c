@@ -68,19 +68,15 @@ midl_user_free(void __RPC_FAR* ptr)
 BOOL WINAPI
 SpoolerInit()
 {
-    BOOL ReturnValue = FALSE;
-    DWORD ErrorCode;
+    BOOL bReturnValue = FALSE;
+    DWORD dwErrorCode;
 
     // Nothing to initialize here yet, but pass this call to the Spool Service as well.
     RpcTryExcept
     {
-        ErrorCode = _RpcSpoolerInit();
-        if (ErrorCode)
-        {
-            ERR("_RpcSpoolerInit failed with error %lu!\n", ErrorCode);
-        }
-
-        ReturnValue = (ErrorCode == ERROR_SUCCESS);
+        dwErrorCode = _RpcSpoolerInit();
+        SetLastError(dwErrorCode);
+        bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -88,5 +84,5 @@ SpoolerInit()
     }
     RpcEndExcept;
 
-    return ReturnValue;
+    return bReturnValue;
 }

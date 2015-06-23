@@ -73,6 +73,8 @@ typedef struct _LOCAL_PRINTER
     // This sort key must be the first element for LookupElementSkiplist to work!
     PWSTR pwszPrinterName;
 
+    DWORD dwAttributes;
+    DWORD dwStatus;
     PWSTR pwszPrinterDriver;
     PWSTR pwszDescription;
     PWSTR pwszDefaultDatatype;

@@ -19,15 +19,11 @@ _RpcAddJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pAddJob, DWORD c
         return dwErrorCode;
     }
 
-    dwErrorCode = AddJobW(hPrinter, Level, pAddJob, cbBuf, pcbNeeded);
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("AddJobW failed with error %lu!\n", dwErrorCode);
-        RpcRevertToSelf();
-        return dwErrorCode;
-    }
+    AddJobW(hPrinter, Level, pAddJob, cbBuf, pcbNeeded);
+    dwErrorCode = GetLastError();
 
-    return RpcRevertToSelf();
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
@@ -42,15 +38,11 @@ _RpcGetJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId, DWORD Level, BYTE* pJo
         return dwErrorCode;
     }
 
-    dwErrorCode = GetJobW(hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("GetJobW failed with error %lu!\n", dwErrorCode);
-        RpcRevertToSelf();
-        return dwErrorCode;
-    }
+    GetJobW(hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
+    dwErrorCode = GetLastError();
 
-    return RpcRevertToSelf();
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD

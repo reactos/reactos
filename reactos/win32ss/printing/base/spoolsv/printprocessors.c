@@ -26,15 +26,11 @@ _RpcEnumPrintProcessorDatatypes(WINSPOOL_HANDLE pName, WCHAR *pPrintProcessorNam
         return dwErrorCode;
     }
 
-    dwErrorCode = EnumPrintProcessorDatatypesW(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("EnumPrintProcessorDatatypesW failed with error %lu!\n", dwErrorCode);
-        RpcRevertToSelf();
-        return dwErrorCode;
-    }
+    EnumPrintProcessorDatatypesW(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
+    dwErrorCode = GetLastError();
 
-    return RpcRevertToSelf();
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
@@ -49,15 +45,11 @@ _RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR *pEnvironment, DWORD Level,
         return dwErrorCode;
     }
 
-    dwErrorCode = EnumPrintProcessorsW(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("EnumPrintProcessorsW failed with error %lu!\n", dwErrorCode);
-        RpcRevertToSelf();
-        return dwErrorCode;
-    }
+    EnumPrintProcessorsW(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
+    dwErrorCode = GetLastError();
 
-    return RpcRevertToSelf();
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
@@ -72,13 +64,9 @@ _RpcGetPrintProcessorDirectory(WINSPOOL_HANDLE pName, WCHAR *pEnvironment, DWORD
         return dwErrorCode;
     }
 
-    dwErrorCode = GetPrintProcessorDirectoryW(pName, pEnvironment, Level, pPrintProcessorDirectory, cbBuf, pcbNeeded);
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("EnumPrintProcessorsW failed with error %lu!\n", dwErrorCode);
-        RpcRevertToSelf();
-        return dwErrorCode;
-    }
+    GetPrintProcessorDirectoryW(pName, pEnvironment, Level, pPrintProcessorDirectory, cbBuf, pcbNeeded);
+    dwErrorCode = GetLastError();
 
-    return RpcRevertToSelf();
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
