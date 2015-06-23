@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Various helper functions
- * COPYRIGHT:   Copyright 2008-2009 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2008-2015 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -136,7 +136,7 @@ StringOut(const string& String, bool forcePrint)
                 }
 
                 DbgString[size] = 0;
-                OutputDebugStringA(DbgString);
+                DbgPrint("%s", DbgString);
             }
 
             last_newline = curr_pos;
@@ -150,11 +150,11 @@ StringOut(const string& String, bool forcePrint)
     {
         /* Output the whole string */
         if(Configuration.DoPrint())
-            cout << NewString;
+            cout << NewString << flush;
 
         memcpy(DbgString, NewString.c_str() + start, size);
         DbgString[size] = 0;
-        OutputDebugStringA(DbgString);
+        DbgPrint("%s", DbgString);
 
         NewString.clear();
         return NewString;
@@ -162,7 +162,7 @@ StringOut(const string& String, bool forcePrint)
 
     /* Output full lines only */
     if(Configuration.DoPrint())
-        cout << NewString.substr(0, start);
+        cout << NewString.substr(0, start) << flush;
 
     /* Return the remaining chunk */
     return NewString.substr(start, size);
