@@ -117,6 +117,12 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
     DPRINT("Index %lu  RecordLength %lu  Offset %lu\n",
         *pIndex, Record->RecordLength, *CurrentOffset);
 
+    if (!CdfsIsRecordValid(DeviceExt, Record))
+    {
+        CcUnpinData(*Context);
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
+
     CdfsGetDirEntryName(DeviceExt, Record, Name);
 
     *Ptr = Record;
@@ -259,18 +265,11 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         {
             break;
         }
-        else if (Status == STATUS_UNSUCCESSFUL)
+        else if (Status == STATUS_UNSUCCESSFUL || Status == STATUS_DISK_CORRUPT_ERROR)
         {
             /* Note: the directory cache has already been unpinned */
             RtlFreeUnicodeString(&FileToFindUpcase);
             return Status;
-        }
-
-        if (!CdfsIsRecordValid(DeviceExt, Record))
-        {
-            RtlFreeUnicodeString(&FileToFindUpcase);
-            CcUnpinData(Context);
-            return STATUS_DISK_CORRUPT_ERROR;
         }
 
         DPRINT("Name '%S'\n", name);
