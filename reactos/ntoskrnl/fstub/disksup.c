@@ -1655,9 +1655,8 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                     UInt32x32To64(GET_PARTITION_LENGTH(PartitionDescriptor),
                                   SectorSize);
 
-                // BUGBUGBUG: The correct partition numbers seem to cause boot failures!!!
-//                PartitionInfo->PartitionNumber = (!IsContainerPartition(PartitionType)) ? i : 0;
-                PartitionInfo->PartitionNumber = i + 1;
+                /* Get the partition number */
+                PartitionInfo->PartitionNumber = (!IsContainerPartition(PartitionType)) ? i + 1 : 0;
             }
             else
             {
