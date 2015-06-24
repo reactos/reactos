@@ -4,12 +4,12 @@
 #
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/fat.c ${CMAKE_CURRENT_BINARY_DIR}/fat.h
-    COMMAND native-bin2c ${CMAKE_CURRENT_BINARY_DIR}/../bootsect/fat.bin ${CMAKE_CURRENT_BINARY_DIR}/fat.c ${CMAKE_CURRENT_BINARY_DIR}/fat.h fat_data
+    COMMAND native-bin2c ${CMAKE_CURRENT_BINARY_DIR}/../bootsect/fat.bin ${CMAKE_CURRENT_BINARY_DIR}/fat.c ${CMAKE_CURRENT_BINARY_DIR}/fat.h BIN fat_data
     DEPENDS native-bin2c fat)
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/fat32.c ${CMAKE_CURRENT_BINARY_DIR}/fat32.h
-    COMMAND native-bin2c ${CMAKE_CURRENT_BINARY_DIR}/../bootsect/fat32.bin ${CMAKE_CURRENT_BINARY_DIR}/fat32.c ${CMAKE_CURRENT_BINARY_DIR}/fat32.h fat32_data
+    COMMAND native-bin2c ${CMAKE_CURRENT_BINARY_DIR}/../bootsect/fat32.bin ${CMAKE_CURRENT_BINARY_DIR}/fat32.c ${CMAKE_CURRENT_BINARY_DIR}/fat32.h BIN fat32_data
     DEPENDS native-bin2c fat32)
 #####################################
 

@@ -36,7 +36,6 @@ BOOL    InstallBootSector(LPCTSTR lpszVolumeType);
 
 int main(int argc, char *argv[])
 {
-
     if (argc < 3)
     {
         _tprintf(_T("syntax: install x: [fs_type]\nwhere fs_type is fat or fat32\n"));
