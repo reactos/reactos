@@ -636,7 +636,7 @@ HidClassPDO_CreatePDO(
     OUT PDEVICE_RELATIONS *OutDeviceRelations)
 {
     PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT PDODeviceObject;
     PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
     ULONG Index;
@@ -671,9 +671,9 @@ HidClassPDO_CreatePDO(
     // let's create a PDO for top level collection
     //
     Index = 0;
-    do
+	while (Index < FDODeviceExtension->Common.DeviceDescription.CollectionDescLength)
     {
-        //
+	    //
         // let's create the device object
         //
         Status = IoCreateDevice(FDODeviceExtension->Common.DriverExtension->DriverObject,
@@ -742,7 +742,7 @@ HidClassPDO_CreatePDO(
         //
         Index++;
 
-    } while(Index < FDODeviceExtension->Common.DeviceDescription.CollectionDescLength);
+    }
 
 
     //
