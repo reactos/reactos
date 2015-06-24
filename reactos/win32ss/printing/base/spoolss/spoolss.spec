@@ -96,7 +96,7 @@
 @ stub LoadDriverFiletoConvertDevmode
 @ stub LoadDriverWithVersion
 @ stub LogWmiTraceEvent
-@ stub MarshallDownStructure
+@ stdcall MarshallDownStructure(ptr ptr long long)
 @ stub MarshallDownStructuresArray
 @ stub MarshallUpStructure
 @ stub MarshallUpStructuresArray
