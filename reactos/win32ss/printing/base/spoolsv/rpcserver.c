@@ -8,11 +8,11 @@
 #include "precomp.h"
 
 DWORD WINAPI
-RpcThreadProc(LPVOID lpParameter)
+LrpcThreadProc(LPVOID lpParameter)
 {
     RPC_STATUS Status;
 
-    Status = RpcServerUseProtseqEpW(L"ncacn_np", 20, L"\\pipe\\spoolss", NULL);
+    Status = RpcServerUseProtseqEpW(L"ncalrpc", 20, L"spoolss", NULL);
     if (Status != RPC_S_OK)
     {
         ERR("RpcServerUseProtseqEpW failed with status %ld!\n", Status);

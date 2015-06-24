@@ -841,7 +841,7 @@ WINSPOOL_V2_UREPLY_PRINTER;
 [
     uuid(12345678-1234-ABCD-EF00-0123456789AB),
     version(1.0),
-    endpoint("ncacn_np:[\\pipe\\spoolss]"),
+    endpoint("ncalrpc:[spoolss]", "ncacn_np:[\\pipe\\spoolss]"),
     pointer_default(unique)
 ]
 
