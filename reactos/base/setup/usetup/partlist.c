@@ -2192,7 +2192,6 @@ ScrollUpPartitionList(
 }
 
 
-#if 0
 static
 BOOLEAN
 IsEmptyLayoutEntry(
@@ -2200,12 +2199,10 @@ IsEmptyLayoutEntry(
 {
     if (PartitionInfo->StartingOffset.QuadPart == 0 &&
         PartitionInfo->PartitionLength.QuadPart == 0)
-//        PartitionInfo->PartitionType == 0)
         return TRUE;
 
     return FALSE;
 }
-#endif
 
 
 static
@@ -2280,6 +2277,7 @@ ReAllocateLayoutBuffer(
     ULONG NewPartitionCount;
     ULONG CurrentPartitionCount = 0;
     ULONG LayoutBufferSize;
+    ULONG i;
 
     DPRINT1("ReAllocateLayoutBuffer()\n");
 
@@ -2306,6 +2304,13 @@ ReAllocateLayoutBuffer(
         return FALSE;
     }
 
+    /* If the layout buffer grows, make sure the new (empty) entries are written to the disk */
+    if (NewPartitionCount > CurrentPartitionCount)
+    {
+         for (i = CurrentPartitionCount; i < NewPartitionCount; i++)
+             NewLayoutBuffer->PartitionEntry[i].RewritePartition = TRUE;
+    }
+
     DiskEntry->LayoutBuffer = NewLayoutBuffer;
     DiskEntry->LayoutBuffer->PartitionCount = NewPartitionCount;
 
@@ -2319,6 +2324,7 @@ UpdateDiskLayout(
     IN PDISKENTRY DiskEntry)
 {
     PPARTITION_INFORMATION PartitionInfo;
+    PPARTITION_INFORMATION LinkInfo = NULL;
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
     ULONG Index;
@@ -2350,7 +2356,7 @@ UpdateDiskLayout(
 
                 PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
                 PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-                PartitionInfo->HiddenSectors = PartEntry->StartSector.LowPart;
+                PartitionInfo->HiddenSectors = (ULONG)PartEntry->StartSector.QuadPart;
                 PartitionInfo->PartitionNumber = (!IsContainerPartition(PartEntry->PartitionType)) ? PartitionNumber : 0;
                 PartitionInfo->PartitionType = PartEntry->PartitionType;
                 PartitionInfo->BootIndicator = PartEntry->BootIndicator;
@@ -2395,6 +2401,22 @@ UpdateDiskLayout(
             PartEntry->PartitionNumber = PartitionNumber;
             PartEntry->PartitionIndex = Index;
 
+            /* Fill the link entry of the previous partition table */
+            if (LinkInfo != NULL)
+            {
+                LinkInfo->StartingOffset.QuadPart = (PartEntry->StartSector.QuadPart - DiskEntry->SectorAlignment) * DiskEntry->BytesPerSector;
+                LinkInfo->PartitionLength.QuadPart = (PartEntry->StartSector.QuadPart + DiskEntry->SectorAlignment) * DiskEntry->BytesPerSector;
+                LinkInfo->HiddenSectors = (ULONG)(PartEntry->StartSector.QuadPart - DiskEntry->SectorAlignment - DiskEntry->ExtendedPartition->StartSector.QuadPart);
+                LinkInfo->PartitionNumber = 0;
+                LinkInfo->PartitionType = PARTITION_EXTENDED;
+                LinkInfo->BootIndicator = FALSE;
+                LinkInfo->RecognizedPartition = FALSE;
+                LinkInfo->RewritePartition = TRUE;
+            }
+
+            /* Save a pointer to the link entry of the current partition table */
+            LinkInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index + 1];
+
             PartitionNumber++;
             Index += 4;
         }
@@ -2402,26 +2424,52 @@ UpdateDiskLayout(
         ListEntry = ListEntry->Flink;
     }
 
-#if 0
-    for (;Index < 4; Index++)
+    /* Wipe unused primary partition table entries */
+    for (Index = GetPrimaryPartitionCount(DiskEntry); Index < 4; Index++)
     {
+        DPRINT1("Primary partition entry %lu\n", Index);
+
         PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
 
         if (!IsEmptyLayoutEntry(PartitionInfo))
         {
-            DPRINT1("Wiping partition entry %lu\n", Index);
+            DPRINT1("Wiping primary partition entry %lu\n", Index);
 
             PartitionInfo->StartingOffset.QuadPart = 0;
             PartitionInfo->PartitionLength.QuadPart = 0;
             PartitionInfo->HiddenSectors = 0;
             PartitionInfo->PartitionNumber = 0;
-            PartitionInfo->PartitionType = 0;
+            PartitionInfo->PartitionType = PARTITION_ENTRY_UNUSED;
             PartitionInfo->BootIndicator = FALSE;
             PartitionInfo->RecognizedPartition = FALSE;
             PartitionInfo->RewritePartition = TRUE;
         }
     }
-#endif
+
+    /* Wipe unused logical partition table entries */
+    for (Index = 4; Index < DiskEntry->LayoutBuffer->PartitionCount; Index++)
+    {
+        if (Index % 4 >= 2)
+        {
+            DPRINT1("Logical partition entry %lu\n", Index);
+
+            PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
+
+            if (!IsEmptyLayoutEntry(PartitionInfo))
+            {
+                DPRINT1("Wiping partition entry %lu\n", Index);
+
+                PartitionInfo->StartingOffset.QuadPart = 0;
+                PartitionInfo->PartitionLength.QuadPart = 0;
+                PartitionInfo->HiddenSectors = 0;
+                PartitionInfo->PartitionNumber = 0;
+                PartitionInfo->PartitionType = PARTITION_ENTRY_UNUSED;
+                PartitionInfo->BootIndicator = FALSE;
+                PartitionInfo->RecognizedPartition = FALSE;
+                PartitionInfo->RewritePartition = TRUE;
+            }
+        }
+    }
 
 #ifdef DUMP_PARTITION_TABLE
     DumpPartitionTable(DiskEntry);
