@@ -8,6 +8,13 @@
 
 #include <stdio.h>
 
+#ifdef _WIN32
+#include <string.h>         // Required for _stricmp()
+#else
+#include <strings.h>        // Required for strcasecmp()
+#define _stricmp strcasecmp
+#endif
+
 static size_t dumpHex(FILE* inFile, FILE* outCFile, char nullTerminate)
 {
     size_t bufLen = 0;
