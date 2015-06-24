@@ -535,9 +535,12 @@ BrowseIndexEntries(PINDEX_ENTRY_ATTRIBUTE FirstEntry,
         IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
     }
 
-    if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
-        DPRINT1("Sub-node available\n");
+    if (!(IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE))
+    {
+        return STATUS_OBJECT_PATH_NOT_FOUND; 
+    }
 
+    UNIMPLEMENTED;
     return STATUS_OBJECT_PATH_NOT_FOUND;    
 }
 
