@@ -671,9 +671,9 @@ HidClassPDO_CreatePDO(
     // let's create a PDO for top level collection
     //
     Index = 0;
-	while (Index < FDODeviceExtension->Common.DeviceDescription.CollectionDescLength)
+    while (Index < FDODeviceExtension->Common.DeviceDescription.CollectionDescLength)
     {
-	    //
+        //
         // let's create the device object
         //
         Status = IoCreateDevice(FDODeviceExtension->Common.DriverExtension->DriverObject,
