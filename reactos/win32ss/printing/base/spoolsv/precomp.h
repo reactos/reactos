@@ -22,7 +22,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);
 
 // rpcserver.c
-DWORD WINAPI RpcThreadProc(LPVOID lpParameter);
+DWORD WINAPI LrpcThreadProc(LPVOID lpParameter);
 
 // Undocumented spoolss
 BOOL WINAPI InitializeRouter(HANDLE SpoolerStatusHandle);

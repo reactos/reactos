@@ -59,7 +59,7 @@ _ServiceMain(DWORD dwArgc, LPWSTR* lpszArgv)
     _UpdateServiceStatus(SERVICE_START_PENDING, 0);
 
     // Create a thread for serving RPC requests
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)RpcThreadProc, NULL, 0, NULL);
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)LrpcThreadProc, NULL, 0, NULL);
     if (!hThread)
     {
         ERR("CreateThread failed with error %u!\n", GetLastError());
