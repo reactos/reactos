@@ -359,7 +359,7 @@ Cleanup:
 
 
 static DWORD
-_LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE pOutput, DWORD cbBuf, PDWORD pcbNeeded)
+_LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE* ppStart, PBYTE* ppEnd, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
     DWORD cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
@@ -369,58 +369,57 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     DWORD cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
     DWORD dwErrorCode;
     JOB_INFO_1W JobInfo1 = { 0 };
-    PBYTE pString;
 
     // A Status Message is optional.
     if (pJob->pwszStatus)
         cbStatus = (wcslen(pJob->pwszStatus) + 1) * sizeof(WCHAR);
 
     // Check if the supplied buffer is large enough.
-    *pcbNeeded = sizeof(JOB_INFO_1W) + cbDatatype + cbDocumentName + cbMachineName + cbPrinterName + cbStatus + cbUserName;
+    *pcbNeeded += sizeof(JOB_INFO_1W) + cbDatatype + cbDocumentName + cbMachineName + cbPrinterName + cbStatus + cbUserName;
     if (cbBuf < *pcbNeeded)
     {
         dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
         goto Cleanup;
     }
 
-    // Put the strings right after the JOB_INFO_1W structure.
-    pString = pOutput + sizeof(JOB_INFO_1W);
+    // Put the strings at the end of the buffer.
+    *ppEnd -= cbDatatype;
+    JobInfo1.pDatatype = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszDatatype, cbDatatype);
 
-    JobInfo1.pDatatype = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszDatatype, cbDatatype);
-    pString += cbDatatype;
+    *ppEnd -= cbDocumentName;
+    JobInfo1.pDocument = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszDocumentName, cbDocumentName);
 
-    JobInfo1.pDocument = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszDocumentName, cbDocumentName);
-    pString += cbDocumentName;
+    *ppEnd -= cbMachineName;
+    JobInfo1.pMachineName = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszMachineName, cbMachineName);
 
-    JobInfo1.pMachineName = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszMachineName, cbMachineName);
-    pString += cbMachineName;
-
-    JobInfo1.pPrinterName = (PWSTR)pString;
-    CopyMemory(pString, pJob->pPrinter->pwszPrinterName, cbPrinterName);
-    pString += cbPrinterName;
+    *ppEnd -= cbPrinterName;
+    JobInfo1.pPrinterName = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pPrinter->pwszPrinterName, cbPrinterName);
 
     if (cbStatus)
     {
-        JobInfo1.pStatus = (PWSTR)pString;
-        CopyMemory(pString, pJob->pwszStatus, cbStatus);
-        pString += cbStatus;
+        *ppEnd -= cbStatus;
+        JobInfo1.pStatus = (PWSTR)*ppEnd;
+        CopyMemory(*ppEnd, pJob->pwszStatus, cbStatus);
     }
 
-    JobInfo1.pUserName = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszUserName, cbUserName);
-    pString += cbUserName;
+    *ppEnd -= cbUserName;
+    JobInfo1.pUserName = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszUserName, cbUserName);
 
-    // Fill the structure and copy it as well.
+    // Fill the rest of the structure.
     JobInfo1.JobId = pJob->dwJobID;
     JobInfo1.Priority = pJob->dwPriority;
     JobInfo1.Status = pJob->dwStatus;
     JobInfo1.TotalPages = pJob->dwTotalPages;
     CopyMemory(&JobInfo1.Submitted, &pJob->stSubmitted, sizeof(SYSTEMTIME));
-    CopyMemory(pOutput, &JobInfo1, sizeof(JOB_INFO_1W));
 
+    // Finally copy the structure to the output pointer.
+    CopyMemory(*ppStart, &JobInfo1, sizeof(JOB_INFO_1W));
+    *ppStart += sizeof(JOB_INFO_1W);
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
@@ -428,7 +427,7 @@ Cleanup:
 }
 
 static DWORD
-_LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE pOutput, DWORD cbBuf, PDWORD pcbNeeded)
+_LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE* ppStart, PBYTE* ppEnd, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
     DWORD cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
@@ -444,7 +443,6 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     FILETIME ftNow;
     FILETIME ftSubmitted;
     JOB_INFO_2W JobInfo2 = { 0 };
-    PBYTE pString;
     ULARGE_INTEGER uliNow;
     ULARGE_INTEGER uliSubmitted;
 
@@ -456,65 +454,63 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
         cbStatus = (wcslen(pJob->pwszStatus) + 1) * sizeof(WCHAR);
 
     // Check if the supplied buffer is large enough.
-    *pcbNeeded = sizeof(JOB_INFO_2W) + cbDatatype + sizeof(DEVMODEW) + cbDocumentName + cbDriverName + cbMachineName + cbNotifyName + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbStatus + cbUserName;
+    *pcbNeeded += sizeof(JOB_INFO_2W) + cbDatatype + sizeof(DEVMODEW) + cbDocumentName + cbDriverName + cbMachineName + cbNotifyName + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbStatus + cbUserName;
     if (cbBuf < *pcbNeeded)
     {
         dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
         goto Cleanup;
     }
 
-    // Put the strings right after the JOB_INFO_2W structure.
-    pString = pOutput + sizeof(JOB_INFO_2W);
+    // Put the strings at the end of the buffer.
+    *ppEnd -= cbDatatype;
+    JobInfo2.pDatatype = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszDatatype, cbDatatype);
 
-    JobInfo2.pDatatype = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszDatatype, cbDatatype);
-    pString += cbDatatype;
+    *ppEnd -= sizeof(DEVMODEW);
+    JobInfo2.pDevMode = (PDEVMODEW)*ppEnd;
+    CopyMemory(*ppEnd, &pJob->DevMode, sizeof(DEVMODEW));
 
-    JobInfo2.pDevMode = (PDEVMODEW)pString;
-    CopyMemory(pString, &pJob->DevMode, sizeof(DEVMODEW));
-    pString += sizeof(DEVMODEW);
+    *ppEnd -= cbDocumentName;
+    JobInfo2.pDocument = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszDocumentName, cbDocumentName);
 
-    JobInfo2.pDocument = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszDocumentName, cbDocumentName);
-    pString += cbDocumentName;
+    *ppEnd -= cbDriverName;
+    JobInfo2.pDriverName = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pPrinter->pwszPrinterDriver, cbDriverName);
 
-    JobInfo2.pDriverName = (PWSTR)pString;
-    CopyMemory(pString, pJob->pPrinter->pwszPrinterDriver, cbDriverName);
-    pString += cbDriverName;
+    *ppEnd -= cbMachineName;
+    JobInfo2.pMachineName = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszMachineName, cbMachineName);
 
-    JobInfo2.pMachineName = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszMachineName, cbMachineName);
-    pString += cbMachineName;
+    *ppEnd -= cbNotifyName;
+    JobInfo2.pNotifyName = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszNotifyName, cbNotifyName);
 
-    JobInfo2.pNotifyName = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszNotifyName, cbNotifyName);
-    pString += cbNotifyName;
+    *ppEnd -= cbPrinterName;
+    JobInfo2.pPrinterName = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pPrinter->pwszPrinterName, cbPrinterName);
 
-    JobInfo2.pPrinterName = (PWSTR)pString;
-    CopyMemory(pString, pJob->pPrinter->pwszPrinterName, cbPrinterName);
-    pString += cbPrinterName;
-
-    JobInfo2.pPrintProcessor = (PWSTR)pString;
-    CopyMemory(pString, pJob->pPrintProcessor->pwszName, cbPrintProcessor);
-    pString += cbPrintProcessor;
+    *ppEnd -= cbPrintProcessor;
+    JobInfo2.pPrintProcessor = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pPrintProcessor->pwszName, cbPrintProcessor);
 
     if (cbPrintProcessorParameters)
     {
-        JobInfo2.pParameters = (PWSTR)pString;
-        CopyMemory(pString, pJob->pwszPrintProcessorParameters, cbPrintProcessorParameters);
-        pString += cbPrintProcessorParameters;
+        *ppEnd -= cbPrintProcessorParameters;
+        JobInfo2.pParameters = (PWSTR)*ppEnd;
+        CopyMemory(*ppEnd, pJob->pwszPrintProcessorParameters, cbPrintProcessorParameters);
     }
 
     if (cbStatus)
     {
-        JobInfo2.pStatus = (PWSTR)pString;
-        CopyMemory(pString, pJob->pwszStatus, cbStatus);
-        pString += cbStatus;
+        *ppEnd -= cbStatus;
+        JobInfo2.pStatus = (PWSTR)*ppEnd;
+        CopyMemory(*ppEnd, pJob->pwszStatus, cbStatus);
     }
 
-    JobInfo2.pUserName = (PWSTR)pString;
-    CopyMemory(pString, pJob->pwszUserName, cbUserName);
-    pString += cbUserName;
+    *ppEnd -= cbUserName;
+    JobInfo2.pUserName = (PWSTR)*ppEnd;
+    CopyMemory(*ppEnd, pJob->pwszUserName, cbUserName);
 
     // Time in JOB_INFO_2W is the number of milliseconds elapsed since the job was submitted. Calculate this time.
     if (!SystemTimeToFileTime(&pJob->stSubmitted, &ftSubmitted))
@@ -553,7 +549,8 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     CopyMemory(&JobInfo2.Submitted, &pJob->stSubmitted, sizeof(SYSTEMTIME));
 
     // Finally copy the structure to the output pointer.
-    CopyMemory(pOutput, &JobInfo2, sizeof(JOB_INFO_2W));
+    CopyMemory(*ppStart, &JobInfo2, sizeof(JOB_INFO_2W));
+    *ppStart += sizeof(JOB_INFO_2W);
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
@@ -561,9 +558,10 @@ Cleanup:
 }
 
 BOOL WINAPI
-LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pOutput, DWORD cbBuf, LPDWORD pcbNeeded)
+LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pStart, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
+    PBYTE pEnd = &pStart[cbBuf];
     PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
@@ -586,11 +584,14 @@ LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pOutput, DWORD cbBu
         goto Cleanup;
     }
 
+    // Begin counting.
+    *pcbNeeded = 0;
+
     // The function behaves differently for each level.
     if (Level == 1)
-        dwErrorCode = _LocalGetJobLevel1(pPrinterHandle, pJob, pOutput, cbBuf, pcbNeeded);
+        dwErrorCode = _LocalGetJobLevel1(pPrinterHandle, pJob, &pStart, &pEnd, cbBuf, pcbNeeded);
     else if (Level == 2)
-        dwErrorCode = _LocalGetJobLevel2(pPrinterHandle, pJob, pOutput, cbBuf, pcbNeeded);
+        dwErrorCode = _LocalGetJobLevel2(pPrinterHandle, pJob, &pStart, &pEnd, cbBuf, pcbNeeded);
     else
         dwErrorCode = ERROR_INVALID_LEVEL;
 
@@ -871,6 +872,99 @@ LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Com
     if (Command)
     {
         // TODO
+    }
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pStart, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+{
+    DWORD dwErrorCode;
+    PBYTE pEnd = &pStart[cbBuf];
+    PLOCAL_HANDLE pHandle;
+    PLOCAL_JOB pJob;
+    PSKIPLIST_NODE pFirstJobNode;
+    PSKIPLIST_NODE pNode;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    // Check if this is a printer handle.
+    pHandle = (PLOCAL_HANDLE)hPrinter;
+    if (pHandle->HandleType != Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // Check the level.
+    if (Level > 2)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
+    // Begin counting.
+    *pcbNeeded = 0;
+    *pcReturned = 0;
+
+    // Lookup the node of the first job requested by the caller in the Printer's Job List.
+    pFirstJobNode = LookupNodeByIndexSkiplist(&pPrinterHandle->pPrinter->JobList, FirstJob);
+
+    // Count the required buffer size and the number of jobs.
+    pNode = pFirstJobNode;
+
+    while (*pcReturned < NoJobs && pNode)
+    {
+        pJob = (PLOCAL_JOB)pNode->Element;
+
+        // The function behaves differently for each level.
+        if (Level == 1)
+            _LocalGetJobLevel1(pPrinterHandle, pJob, NULL, NULL, 0, pcbNeeded);
+        else if (Level == 2)
+            _LocalGetJobLevel2(pPrinterHandle, pJob, NULL, NULL, 0, pcbNeeded);
+
+        // We stop either when there are no more jobs in the list or when the caller didn't request more, whatever comes first.
+        *pcReturned++;
+        pNode = pNode->Next[0];
+    }
+
+    // Check if the supplied buffer is large enough.
+    if (cbBuf < *pcbNeeded)
+    {
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
+    }
+
+    // Begin counting again and also empty the given buffer.
+    *pcbNeeded = 0;
+    *pcReturned = 0;
+    ZeroMemory(pStart, cbBuf);
+
+    // Now call the same functions again to copy the actual data for each job into the buffer.
+    pNode = pFirstJobNode;
+
+    while (*pcReturned < NoJobs && pNode)
+    {
+        pJob = (PLOCAL_JOB)pNode->Element;
+
+        // The function behaves differently for each level.
+        if (Level == 1)
+            dwErrorCode = _LocalGetJobLevel1(pPrinterHandle, pJob, &pStart, &pEnd, cbBuf, pcbNeeded);
+        else if (Level == 2)
+            dwErrorCode = _LocalGetJobLevel2(pPrinterHandle, pJob, &pStart, &pEnd, cbBuf, pcbNeeded);
+
+        if (dwErrorCode != ERROR_SUCCESS)
+            goto Cleanup;
+
+        // We stop either when there are no more jobs in the list or when the caller didn't request more, whatever comes first.
+        *pcReturned++;
+        pNode = pNode->Next[0];
     }
 
     dwErrorCode = ERROR_SUCCESS;
