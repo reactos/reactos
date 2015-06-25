@@ -796,13 +796,12 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING SearchPattern,
                PULONG FirstEntry,
                PFILE_RECORD_HEADER *FileRecord,
-               PNTFS_ATTR_CONTEXT *DataContext,
                PULONGLONG MFTIndex,
                ULONGLONG CurrentMFTIndex)
 {
     NTSTATUS Status;
 
-    DPRINT("NtfsFindFileAt(%p, %wZ, %p, %p, %p, %p, %I64x)\n", Vcb, SearchPattern, FirstEntry, FileRecord, DataContext, MFTIndex, CurrentMFTIndex);
+    DPRINT("NtfsFindFileAt(%p, %wZ, %p, %p, %p, %I64x)\n", Vcb, SearchPattern, FirstEntry, FileRecord, MFTIndex, CurrentMFTIndex);
 
     Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, &CurrentMFTIndex);
     if (!NT_SUCCESS(Status))
@@ -824,21 +823,6 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
         DPRINT("NtfsFindFileAt: Can't read MFT record\n");
         ExFreePoolWithTag(*FileRecord, TAG_NTFS);
         return Status;
-    }
-
-    if (!((*FileRecord)->Flags & FRH_DIRECTORY))
-    {
-        Status = FindAttribute(Vcb, *FileRecord, AttributeData, L"", 0, DataContext);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("NtfsFindFileAt: Can't find data attribute\n");
-            ExFreePoolWithTag(*FileRecord, TAG_NTFS);
-            return Status;
-        }
-    }
-    else
-    {
-        *DataContext = NULL;
     }
 
     *MFTIndex = CurrentMFTIndex;

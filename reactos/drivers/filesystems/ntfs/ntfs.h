@@ -739,7 +739,6 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING SearchPattern,
                PULONG FirstEntry,
                PFILE_RECORD_HEADER *FileRecord,
-               PNTFS_ATTR_CONTEXT *DataContext,
                PULONGLONG MFTIndex,
                ULONGLONG CurrentMFTIndex);
 
