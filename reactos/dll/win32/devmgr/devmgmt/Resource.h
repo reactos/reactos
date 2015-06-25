@@ -1,5 +1,7 @@
 #define IDC_STATIC          -1
 
+#define IDS_APPNAME         10
+
 #define IDI_MAIN_ICON       20
 #define IDB_ROOT_IMAGE      21
 #define IDB_TOOLBAR         22
@@ -29,31 +31,27 @@
 #define IDC_RESBYCONN       203
 #define IDC_SHOWHIDDEN      204
 
-/* about box info */
-#define IDD_ABOUTBOX        300
-#define IDC_LICENSE_EDIT    301
-#define IDS_APPNAME         302
-#define IDS_LICENSE         303
 
 /* tooltips */
-#define IDS_TOOLTIP_PROPERTIES  6000
-#define IDS_TOOLTIP_SCAN        6001
-#define IDS_TOOLTIP_ENABLE      6002
-#define IDS_TOOLTIP_DIABLE      6003
-#define IDS_TOOLTIP_UPDATE      6004
-#define IDS_TOOLTIP_UNINSTALL   6005
+#define IDS_TOOLTIP_PROPERTIES  300
+#define IDS_TOOLTIP_SCAN        301
+#define IDS_TOOLTIP_ENABLE      302
+#define IDS_TOOLTIP_DIABLE      303
+#define IDS_TOOLTIP_UPDATE      304
+#define IDS_TOOLTIP_UNINSTALL   305
 
-
+/* General strings */
+#define IDS_CONFIRM_DISABLE     400
 
 /* menu hints */
-#define IDS_HINT_BLANK          20000
-#define IDS_HINT_PROPERTIES     20001
-#define IDS_HINT_SCAN           20002
-#define IDS_HINT_ENABLE         20003
-#define IDS_HINT_DISABLE        20004
-#define IDS_HINT_UPDATE         20005
-#define IDS_HINT_UNINSTALL      20006
-#define IDS_HINT_ADD            20007
+#define IDS_HINT_BLANK          1000
+#define IDS_HINT_PROPERTIES     1001
+#define IDS_HINT_SCAN           1002
+#define IDS_HINT_ENABLE         1003
+#define IDS_HINT_DISABLE        1004
+#define IDS_HINT_UPDATE         1005
+#define IDS_HINT_UNINSTALL      1006
+#define IDS_HINT_ADD            1007
 #define IDS_HINT_ABOUT          20008
 #define IDS_HINT_EXIT           20009
 

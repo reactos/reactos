@@ -49,12 +49,12 @@ BEGIN
   END
 END
 
-#define IDS_HINT_PROPERTIES     20001
-#define IDS_HINT_SCAN           20002
-#define IDS_HINT_ENABLE         20003
-#define IDS_HINT_DISABLE        20004
-#define IDS_HINT_UPDATE         20005
-#define IDS_HINT_UNINSTALL      20006
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
+END
 
 STRINGTABLE DISCARDABLE
 BEGIN

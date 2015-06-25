@@ -50,19 +50,6 @@ static const MENU_HINT MainMenuHintTable[] =
 };
 
 
-
-
-#define IDS_HINT_BLANK          20000
-#define IDS_HINT_PROPERTIES     20001
-#define IDS_HINT_SCAN           20002
-#define IDS_HINT_ENABLE         20003
-#define IDS_HINT_DISABLE        20004
-#define IDS_HINT_UPDATE         20005
-#define IDS_HINT_UNINSTALL      20006
-#define IDS_HINT_ADD            20007
-#define IDS_HINT_ABOUT          20008
-#define IDS_HINT_EXIT           20009
-
 // system menu hints
 static const MENU_HINT SystemMenuHintTable[] =
 {

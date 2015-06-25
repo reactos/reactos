@@ -340,6 +340,8 @@ CDeviceNode::EnableDevice(
 
         if (Enable)
         {
+            // config specific enablling first, then global enabling.
+            // The global appears to be the one that starts the device
             pcp.Scope = DICS_FLAG_GLOBAL;
             if (SetupDiSetClassInstallParamsW(m_hDevInfo,
                                               &m_DevinfoData,

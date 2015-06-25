@@ -311,6 +311,21 @@ CDeviceView::EnableSelectedDevice(
     CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
     if (Node)
     {
+        if (Enable == false)
+        {
+            CAtlStringW str;
+            if (str.LoadStringW(g_hInstance, IDS_CONFIRM_DISABLE))
+            {
+                if (MessageBoxW(m_hMainWnd,
+                                str,
+                                Node->GetDisplayName(),
+                                MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
+                {
+                    return false;
+                }
+            }
+        }
+
         if (Node->EnableDevice(Enable, NeedsReboot))
         {
             Refresh(m_ViewType, true, true);
