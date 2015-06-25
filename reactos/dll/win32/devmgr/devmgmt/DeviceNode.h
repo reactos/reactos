@@ -4,6 +4,8 @@
 class CDeviceNode : public CNode
 {
 private:
+    SP_DEVINFO_DATA m_DevinfoData;
+    HDEVINFO m_hDevInfo;
     DEVINST m_DevInst;
     ULONG m_Status;
     ULONG m_ProblemNumber;
@@ -22,13 +24,31 @@ public:
     DEVINST GetDeviceInst() { return m_DevInst; }
     int GetOverlayImage() { return m_OverlayImage; }
 
-    bool HasProblem() { return !!(m_ProblemNumber); }
+    bool HasProblem();
     bool IsHidden();
     bool CanDisable();
     bool IsDisabled();
     bool IsStarted();
     bool IsInstalled();
-    bool CanInstall() { return TRUE; } // unimplemented
-    bool CanUninstall() { return TRUE; } // unimplemented
+    bool CanUninstall();
+
+    bool EnableDevice(
+        _In_ bool Enable,
+        _Out_ bool &NeedsReboot
+        );
+
+private:
+    bool SetFlags(
+        _In_ DWORD Flags,
+        _In_ DWORD FlagsEx
+        );
+
+    bool RemoveFlags(
+        _In_ DWORD Flags,
+        _In_ DWORD FlagsEx
+        );
+
+    DWORD GetFlags(
+        );
 };
 

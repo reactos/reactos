@@ -507,7 +507,7 @@ CMainWindow::OnNotify(LPARAM lParam)
         {
              LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lParam;
 
-            UINT_PTR idButton = (UINT)lpttt->hdr.idFrom;
+            UINT_PTR idButton = lpttt->hdr.idFrom;
             switch (idButton)
             {
                 case IDC_PROPERTIES:
@@ -568,13 +568,19 @@ CMainWindow::OnCommand(WPARAM wParam,
 
         case IDC_ENABLE_DRV:
         {
-            MessageBox(m_hMainWnd, L"Not yet implemented", L"Enable Driver", MB_OK);
+            bool NeedsReboot;
+            if (m_DeviceView->EnableSelectedDevice(true, NeedsReboot) &&
+                NeedsReboot)
+            {
+                MessageBox(m_hMainWnd, L"Rebooting", L"Enable", MB_OK);
+            }
             break;
         }
 
         case IDC_DISABLE_DRV:
         {
-            MessageBox(m_hMainWnd, L"Not yet implemented", L"Disable Driver", MB_OK);
+            bool NeedsReboot;
+            m_DeviceView->EnableSelectedDevice(false, NeedsReboot);
             break;
         }
 

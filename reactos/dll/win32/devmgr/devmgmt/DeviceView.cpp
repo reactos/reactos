@@ -92,8 +92,7 @@ CDeviceView::Initialize()
     }
 
     // Create the context menu and make properties the default item
-    m_hMenu = LoadMenuW(g_hInstance, MAKEINTRESOURCEW(IDR_POPUP));
-    m_hContextMenu = GetSubMenu(m_hMenu, 0);
+    m_hContextMenu = CreatePopupMenu();
     SetMenuDefaultItem(m_hContextMenu, IDC_PROPERTIES, FALSE);
 
     return !!(m_hTreeView);
@@ -110,7 +109,7 @@ CDeviceView::Uninitialize()
         ZeroMemory(&m_ImageListData, sizeof(SP_CLASSIMAGELIST_DATA));
     }
 
-    DestroyMenu(m_hMenu);
+    DestroyMenu(m_hContextMenu);
 
     return true;
 }
@@ -167,6 +166,18 @@ CDeviceView::OnContextMenu(
             ScreenToClient(m_hTreeView, &pt) &&
             PtInRect(&rc, pt))
         {
+
+            CNode *Node = GetSelectedNode();
+            if (Node && Node->HasProperties())
+            {
+
+            }
+
+
+
+
+
+
             INT xPos = GET_X_LPARAM(lParam);
             INT yPos = GET_Y_LPARAM(lParam);
 
@@ -291,6 +302,24 @@ CDeviceView::CanDisable(
     return false;
 }
 
+bool
+CDeviceView::EnableSelectedDevice(
+    _In_ bool Enable,
+    _Out_ bool &NeedsReboot
+    )
+{
+    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
+    if (Node)
+    {
+        if (Node->EnableDevice(Enable, NeedsReboot))
+        {
+            Refresh(m_ViewType, true, true);
+            return true;
+        }
+    }
+    return false;
+}
+
 
 // PRIVATE METHODS *******************************************/
 
@@ -362,10 +391,10 @@ CDeviceView::GetNextClass(
                               0);
     if (cr != CR_SUCCESS) return false;
 
-    // Check for devices without a class
+    // Check if this is the unknown class
     if (IsEqualGUID(*ClassGuid, GUID_DEVCLASS_UNKNOWN))
     {
-        // Get device info for all devices for all classes
+        // Get device info for all devices
         *hDevInfo = SetupDiGetClassDevsW(NULL,
                                          NULL,
                                          NULL,
@@ -378,7 +407,6 @@ CDeviceView::GetNextClass(
                                          NULL,
                                          NULL,
                                          DIGCF_PRESENT);
-        
     }
 
     return (hDevInfo != INVALID_HANDLE_VALUE);

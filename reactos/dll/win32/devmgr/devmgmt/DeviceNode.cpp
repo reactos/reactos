@@ -22,10 +22,12 @@ CDeviceNode::CDeviceNode(
     m_ProblemNumber(0),
     m_OverlayImage(0)
 {
+    ZeroMemory(&m_DevinfoData, sizeof(SP_DEVINFO_DATA));
 }
 
 CDeviceNode::~CDeviceNode()
 {
+    SetupDiDestroyDeviceInfoList(m_hDevInfo);
 }
 
 bool
@@ -36,6 +38,7 @@ CDeviceNode::SetupNode()
     CONFIGRET cr;
 
     //    ATLASSERT(m_DeviceId == NULL);
+
 
     // Get the length of the device id string
     cr = CM_Get_Device_ID_Size(&ulLength, m_DevInst, 0);
@@ -63,6 +66,23 @@ CDeviceNode::SetupNode()
     // Make sure we got the string
     if (m_DeviceId == NULL)
         return false;
+
+    //SP_DEVINFO_DATA DevinfoData;
+    m_hDevInfo = SetupDiCreateDeviceInfoListExW(NULL,
+                                                NULL,
+                                                NULL,
+                                                NULL);
+    if (m_hDevInfo != INVALID_HANDLE_VALUE)
+    {
+        m_DevinfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+        SetupDiOpenDeviceInfoW(m_hDevInfo,
+                               m_DeviceId,
+                               NULL,
+                               0,
+                               &m_DevinfoData);
+    }
+
+
 
     // Get the current status of the device
     cr = CM_Get_DevNode_Status_Ex(&m_Status,
@@ -145,6 +165,22 @@ CDeviceNode::SetupNode()
     return (cr == CR_SUCCESS ? true : false);
 }
 
+bool
+CDeviceNode::HasProblem()
+{
+    CONFIGRET cr;
+    cr = CM_Get_DevNode_Status_Ex(&m_Status,
+                                  &m_ProblemNumber,
+                                  m_DevInst,
+                                  0,
+                                  NULL);
+    if (cr == CR_SUCCESS)
+    {
+        return ((m_Status & (DN_HAS_PROBLEM | DN_PRIVATE_PROBLEM)) != 0);
+    }
+
+    return false;
+}
 
 bool
 CDeviceNode::IsHidden()
@@ -231,3 +267,154 @@ CDeviceNode::IsInstalled()
 
     return false;
 }
+
+bool
+CDeviceNode::CanUninstall()
+{
+    CONFIGRET cr;
+    cr = CM_Get_DevNode_Status_Ex(&m_Status,
+                                  &m_ProblemNumber,
+                                  m_DevInst,
+                                  0,
+                                  NULL);
+    if (cr == CR_SUCCESS)
+    {
+        return ((m_Status & DN_DISABLEABLE) != 0 &&
+                (m_Status & DN_ROOT_ENUMERATED) == 0);
+    }
+
+    return false;
+}
+
+bool
+CDeviceNode::EnableDevice(
+    _In_ bool Enable,
+    _Out_ bool &NeedsReboot
+    )
+{
+    bool Ret = false;
+    bool Canceled = false;
+
+    SetFlags(DI_NODI_DEFAULTACTION, 0);
+
+    SP_PROPCHANGE_PARAMS pcp;
+    pcp.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+    pcp.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+    pcp.StateChange = (Enable ? DICS_ENABLE : DICS_DISABLE);
+    pcp.HwProfile = 0;
+
+
+    // check both scopes to make sure we can make the change
+    for (int i = 0; i < 2; i++)
+    {
+        // Check globally first, then check config specific
+        pcp.Scope = (i == 0) ? DICS_FLAG_GLOBAL : DICS_FLAG_CONFIGSPECIFIC;
+
+        if (SetupDiSetClassInstallParamsW(m_hDevInfo,
+                                          &m_DevinfoData,
+                                          &pcp.ClassInstallHeader,
+                                          sizeof(SP_PROPCHANGE_PARAMS)))
+        {
+            SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,
+                                      m_hDevInfo,
+                                      &m_DevinfoData);
+        }
+
+        if (GetLastError() == ERROR_CANCELLED)
+        {
+            Canceled = true;
+            break;
+        }
+    }
+
+    if (Canceled == false)
+    {
+        pcp.Scope = DICS_FLAG_CONFIGSPECIFIC;
+        if (SetupDiSetClassInstallParamsW(m_hDevInfo,
+                                          &m_DevinfoData,
+                                          &pcp.ClassInstallHeader,
+                                          sizeof(SP_PROPCHANGE_PARAMS)))
+        {
+            SetupDiChangeState(m_hDevInfo, &m_DevinfoData);
+        }
+
+        if (Enable)
+        {
+            pcp.Scope = DICS_FLAG_GLOBAL;
+            if (SetupDiSetClassInstallParamsW(m_hDevInfo,
+                                              &m_DevinfoData,
+                                              &pcp.ClassInstallHeader,
+                                              sizeof(SP_PROPCHANGE_PARAMS)))
+            {
+                SetupDiChangeState(m_hDevInfo, &m_DevinfoData);
+            }
+        }
+
+        SetFlags(DI_PROPERTIES_CHANGE, 0);
+
+        NeedsReboot = ((GetFlags() & (DI_NEEDRESTART | DI_NEEDREBOOT)) != 0);
+    }
+
+    RemoveFlags(DI_NODI_DEFAULTACTION, 0);
+
+    return true;
+}
+
+DWORD
+CDeviceNode::GetFlags(
+    )
+{
+    SP_DEVINSTALL_PARAMS DevInstallParams;
+    DevInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+    if (SetupDiGetDeviceInstallParamsW(m_hDevInfo,
+                                       &m_DevinfoData,
+                                       &DevInstallParams))
+    {
+        return DevInstallParams.Flags;
+    }
+    return 0;
+}
+
+bool
+CDeviceNode::SetFlags(
+    _In_ DWORD Flags,
+    _In_ DWORD FlagsEx
+    )
+{
+    SP_DEVINSTALL_PARAMS DevInstallParams;
+    DevInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+    if (SetupDiGetDeviceInstallParamsW(m_hDevInfo,
+                                       &m_DevinfoData,
+                                       &DevInstallParams))
+    {
+        DevInstallParams.Flags |= Flags;
+        DevInstallParams.FlagsEx |= FlagsEx;
+        return SetupDiSetDeviceInstallParamsW(m_hDevInfo,
+                                              &m_DevinfoData,
+                                              &DevInstallParams);
+    }
+    return false;
+}
+
+bool
+CDeviceNode::RemoveFlags(
+    _In_ DWORD Flags,
+    _In_ DWORD FlagsEx
+    )
+{
+    SP_DEVINSTALL_PARAMS DevInstallParams;
+    DevInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+    if (SetupDiGetDeviceInstallParamsW(m_hDevInfo,
+                                       &m_DevinfoData,
+                                       &DevInstallParams))
+    {
+        DevInstallParams.Flags &= ~Flags;
+        DevInstallParams.FlagsEx &= ~FlagsEx;
+        return SetupDiSetDeviceInstallParamsW(m_hDevInfo,
+                                              &m_DevinfoData,
+                                              &DevInstallParams);
+    }
+    return false;
+}
+
+

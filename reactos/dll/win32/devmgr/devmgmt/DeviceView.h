@@ -78,6 +78,12 @@ public:
     bool IsDisabled(
         _In_ LPTV_ITEMW TvItem
         );
+
+    bool EnableSelectedDevice(
+        _In_ bool Enable,
+        _Out_ bool &NeedsReboot
+        );
+
     bool SelDeviceIsStarted();
     bool SelDeviceIsInstalled();
 
