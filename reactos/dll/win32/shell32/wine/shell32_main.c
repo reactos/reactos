@@ -1033,8 +1033,12 @@ HRESULT WINAPI SHLoadInProc (REFCLSID rclsid)
     TRACE("%s\n", debugstr_guid(rclsid));
 
     CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown,&ptr);
-    if (ptr)
+    if(ptr)
+    {
+        IUnknown * pUnk = ptr;
+        IUnknown_Release(pUnk);
         return S_OK;
+    }
     return DISP_E_MEMBERNOTFOUND;
 }
 
