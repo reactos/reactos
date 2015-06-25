@@ -801,7 +801,7 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
 {
     NTSTATUS Status;
 
-    DPRINT("NtfsFindFileAt(%p, %wZ, %p, %p, %p, %I64x)\n", Vcb, SearchPattern, FirstEntry, FileRecord, MFTIndex, CurrentMFTIndex);
+    DPRINT("NtfsFindFileAt(%p, %wZ, %u, %p, %p, %I64x)\n", Vcb, SearchPattern, *FirstEntry, FileRecord, MFTIndex, CurrentMFTIndex);
 
     Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, &CurrentMFTIndex);
     if (!NT_SUCCESS(Status))
