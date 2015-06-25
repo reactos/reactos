@@ -164,7 +164,7 @@ InitializeGlobalJobList()
         }
 
         // Add it to the Printer's Job List.
-        if (!InsertElementSkiplist(&pJob->Printer->JobList, pJob))
+        if (!InsertElementSkiplist(&pJob->pPrinter->JobList, pJob))
         {
             ERR("InsertElementSkiplist failed for job %lu for the Printer's Job List!\n", pJob->dwJobID);
             goto Cleanup;
@@ -215,10 +215,10 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
         goto Cleanup;
     }
 
-    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->SpecificHandle;
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
 
     // This handle must not have started a job yet!
-    if (pPrinterHandle->StartedJob)
+    if (pPrinterHandle->pStartedJob)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -233,7 +233,7 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
 
     // Check if the printer is set to do direct printing.
     // The Job List isn't used in this case.
-    if (pPrinterHandle->Printer->dwAttributes & PRINTER_ATTRIBUTE_DIRECT)
+    if (pPrinterHandle->pPrinter->dwAttributes & PRINTER_ATTRIBUTE_DIRECT)
     {
         dwErrorCode = ERROR_INVALID_ACCESS;
         goto Cleanup;
@@ -264,7 +264,8 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     }
 
     // Copy over defaults to the LOCAL_JOB structure.
-    pJob->Printer = pPrinterHandle->Printer;
+    pJob->pPrinter = pPrinterHandle->pPrinter;
+    pJob->pPrintProcessor = pPrinterHandle->pPrinter->pPrintProcessor;
     pJob->dwPriority = DEF_PRIORITY;
     pJob->pwszDatatype = AllocSplStr(pPrinterHandle->pwszDatatype);
     pJob->pwszDocumentName = AllocSplStr(wszDefaultDocumentName);
@@ -321,7 +322,7 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
 
     // Add the job at the end of the Printer's Job List.
     // As all new jobs are created with default priority, we can be sure that it would always be inserted at the end.
-    if (!InsertTailElementSkiplist(&pJob->Printer->JobList, pJob))
+    if (!InsertTailElementSkiplist(&pJob->pPrinter->JobList, pJob))
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("InsertTailElementSkiplist failed for job %lu for the Printer's Job List!\n", pJob->dwJobID);
@@ -363,14 +364,19 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
     DWORD cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
     DWORD cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
-    DWORD cbPrinterName = (wcslen(pJob->Printer->pwszPrinterName) + 1) * sizeof(WCHAR);
+    DWORD cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+    DWORD cbStatus = 0;
     DWORD cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
     DWORD dwErrorCode;
     JOB_INFO_1W JobInfo1 = { 0 };
     PBYTE pString;
 
+    // A Status Message is optional.
+    if (pJob->pwszStatus)
+        cbStatus = (wcslen(pJob->pwszStatus) + 1) * sizeof(WCHAR);
+
     // Check if the supplied buffer is large enough.
-    *pcbNeeded = sizeof(JOB_INFO_1W) + cbDatatype + cbDocumentName + cbMachineName + cbPrinterName + cbUserName;
+    *pcbNeeded = sizeof(JOB_INFO_1W) + cbDatatype + cbDocumentName + cbMachineName + cbPrinterName + cbStatus + cbUserName;
     if (cbBuf < *pcbNeeded)
     {
         dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
@@ -393,8 +399,15 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     pString += cbMachineName;
 
     JobInfo1.pPrinterName = (PWSTR)pString;
-    CopyMemory(pString, pJob->Printer->pwszPrinterName, cbPrinterName);
+    CopyMemory(pString, pJob->pPrinter->pwszPrinterName, cbPrinterName);
     pString += cbPrinterName;
+
+    if (cbStatus)
+    {
+        JobInfo1.pStatus = (PWSTR)pString;
+        CopyMemory(pString, pJob->pwszStatus, cbStatus);
+        pString += cbStatus;
+    }
 
     JobInfo1.pUserName = (PWSTR)pString;
     CopyMemory(pString, pJob->pwszUserName, cbUserName);
@@ -419,11 +432,13 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
 {
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
     DWORD cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
-    DWORD cbDriverName = (wcslen(pJob->Printer->pwszPrinterDriver) + 1) * sizeof(WCHAR);
+    DWORD cbDriverName = (wcslen(pJob->pPrinter->pwszPrinterDriver) + 1) * sizeof(WCHAR);
     DWORD cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
     DWORD cbNotifyName = (wcslen(pJob->pwszNotifyName) + 1) * sizeof(WCHAR);
-    DWORD cbPrinterName = (wcslen(pJob->Printer->pwszPrinterName) + 1) * sizeof(WCHAR);
-    DWORD cbPrintProcessor = (wcslen(pJob->Printer->pPrintProcessor->pwszName) + 1) * sizeof(WCHAR);
+    DWORD cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+    DWORD cbPrintProcessor = (wcslen(pJob->pPrintProcessor->pwszName) + 1) * sizeof(WCHAR);
+    DWORD cbPrintProcessorParameters = 0;
+    DWORD cbStatus = 0;
     DWORD cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
     DWORD dwErrorCode;
     FILETIME ftNow;
@@ -433,8 +448,15 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     ULARGE_INTEGER uliNow;
     ULARGE_INTEGER uliSubmitted;
 
+    // Print Processor Parameters and Status Message are optional.
+    if (pJob->pwszPrintProcessorParameters)
+        cbPrintProcessorParameters = (wcslen(pJob->pwszPrintProcessorParameters) + 1) * sizeof(WCHAR);
+
+    if (pJob->pwszStatus)
+        cbStatus = (wcslen(pJob->pwszStatus) + 1) * sizeof(WCHAR);
+
     // Check if the supplied buffer is large enough.
-    *pcbNeeded = sizeof(JOB_INFO_2W) + cbDatatype + sizeof(DEVMODEW) + cbDocumentName + cbDriverName + cbMachineName + cbNotifyName + cbPrinterName + cbPrintProcessor + cbUserName;
+    *pcbNeeded = sizeof(JOB_INFO_2W) + cbDatatype + sizeof(DEVMODEW) + cbDocumentName + cbDriverName + cbMachineName + cbNotifyName + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbStatus + cbUserName;
     if (cbBuf < *pcbNeeded)
     {
         dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
@@ -457,7 +479,7 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     pString += cbDocumentName;
 
     JobInfo2.pDriverName = (PWSTR)pString;
-    CopyMemory(pString, pJob->Printer->pwszPrinterDriver, cbDriverName);
+    CopyMemory(pString, pJob->pPrinter->pwszPrinterDriver, cbDriverName);
     pString += cbDriverName;
 
     JobInfo2.pMachineName = (PWSTR)pString;
@@ -469,12 +491,26 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
     pString += cbNotifyName;
 
     JobInfo2.pPrinterName = (PWSTR)pString;
-    CopyMemory(pString, pJob->Printer->pwszPrinterName, cbPrinterName);
+    CopyMemory(pString, pJob->pPrinter->pwszPrinterName, cbPrinterName);
     pString += cbPrinterName;
 
     JobInfo2.pPrintProcessor = (PWSTR)pString;
-    CopyMemory(pString, pJob->Printer->pPrintProcessor->pwszName, cbPrintProcessor);
+    CopyMemory(pString, pJob->pPrintProcessor->pwszName, cbPrintProcessor);
     pString += cbPrintProcessor;
+
+    if (cbPrintProcessorParameters)
+    {
+        JobInfo2.pParameters = (PWSTR)pString;
+        CopyMemory(pString, pJob->pwszPrintProcessorParameters, cbPrintProcessorParameters);
+        pString += cbPrintProcessorParameters;
+    }
+
+    if (cbStatus)
+    {
+        JobInfo2.pStatus = (PWSTR)pString;
+        CopyMemory(pString, pJob->pwszStatus, cbStatus);
+        pString += cbStatus;
+    }
 
     JobInfo2.pUserName = (PWSTR)pString;
     CopyMemory(pString, pJob->pwszUserName, cbUserName);
@@ -496,7 +532,7 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE 
 
     // Position in JOB_INFO_2W is the 1-based index of the job in the processing queue.
     // Retrieve this through the element index of the job in the Printer's Job List.
-    if (!LookupElementSkiplist(&pJob->Printer->JobList, pJob, &JobInfo2.Position))
+    if (!LookupElementSkiplist(&pJob->pPrinter->JobList, pJob, &JobInfo2.Position))
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("pJob could not be located in the Printer's Job List!\n");
@@ -525,7 +561,7 @@ Cleanup:
 }
 
 BOOL WINAPI
-LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pOutput, DWORD cbBuf, LPDWORD pcbNeeded)
+LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pOutput, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle;
@@ -540,11 +576,11 @@ LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pOutput, DWORD cbB
         goto Cleanup;
     }
 
-    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->SpecificHandle;
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
 
     // Get the desired job.
     pJob = LookupElementSkiplist(&GlobalJobList, &JobId, NULL);
-    if (!pJob || pJob->Printer != pPrinterHandle->Printer)
+    if (!pJob || pJob->pPrinter != pPrinterHandle->pPrinter)
     {
         dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
@@ -557,6 +593,287 @@ LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pOutput, DWORD cbB
         dwErrorCode = _LocalGetJobLevel2(pPrinterHandle, pJob, pOutput, cbBuf, pcbNeeded);
     else
         dwErrorCode = ERROR_INVALID_LEVEL;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+static DWORD
+_LocalSetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_INFO_1W pJobInfo)
+{
+    DWORD dwErrorCode;
+
+    // First check the validity of the input before changing anything.
+    if (!FindDatatype(pJob->pPrintProcessor, pJobInfo->pDatatype))
+    {
+        dwErrorCode = ERROR_INVALID_DATATYPE;
+        goto Cleanup;
+    }
+
+    // Check if the datatype has changed.
+    if (wcscmp(pJob->pwszDatatype, pJobInfo->pDatatype) != 0)
+    {
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszDatatype, pJobInfo->pDatatype))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the document name has changed.
+    if (wcscmp(pJob->pwszDocumentName, pJobInfo->pDocument) != 0)
+    {
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszDocumentName, pJobInfo->pDocument))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the status message has changed.
+    if ((!pJob->pwszStatus && pJobInfo->pStatus) || wcscmp(pJob->pwszStatus, pJobInfo->pStatus) != 0)
+    {
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszStatus, pJobInfo->pStatus))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the user name has changed.
+    if (wcscmp(pJob->pwszUserName, pJobInfo->pUserName) != 0)
+    {
+        // The new user name doesn't need to exist, so no additional verification is required.
+
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszUserName, pJobInfo->pUserName))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the priority has changed.
+    if (pJob->dwPriority != pJobInfo->Priority && IS_VALID_PRIORITY(pJobInfo->Priority))
+    {
+        // Set the new priority.
+        pJob->dwPriority = pJobInfo->Priority;
+
+        // Remove and reinsert the job in the Printer's Job List.
+        // The Compare function will be used to find the right position now considering the new priority.
+        DeleteElementSkiplist(&pJob->pPrinter->JobList, pJob);
+        InsertElementSkiplist(&pJob->pPrinter->JobList, pJob);
+    }
+
+    // Check if the status flags have changed.
+    if (pJob->dwStatus != pJobInfo->Status)
+    {
+        // Only add status flags that make sense.
+        if (pJobInfo->Status & JOB_STATUS_PAUSED)
+            pJob->dwStatus |= JOB_STATUS_PAUSED;
+
+        if (pJobInfo->Status & JOB_STATUS_ERROR)
+            pJob->dwStatus |= JOB_STATUS_ERROR;
+
+        if (pJobInfo->Status & JOB_STATUS_OFFLINE)
+            pJob->dwStatus |= JOB_STATUS_OFFLINE;
+
+        if (pJobInfo->Status & JOB_STATUS_PAPEROUT)
+            pJob->dwStatus |= JOB_STATUS_PAPEROUT;
+    }
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    return dwErrorCode;
+}
+
+static DWORD
+_LocalSetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_INFO_2W pJobInfo)
+{
+    DWORD dwErrorCode;
+    PLOCAL_PRINT_PROCESSOR pPrintProcessor;
+
+    // First check the validity of the input before changing anything.
+    pPrintProcessor = FindPrintProcessor(pJobInfo->pPrintProcessor);
+    if (!pPrintProcessor)
+    {
+        dwErrorCode = ERROR_UNKNOWN_PRINTPROCESSOR;
+        goto Cleanup;
+    }
+
+    if (!FindDatatype(pPrintProcessor, pJobInfo->pDatatype))
+    {
+        dwErrorCode = ERROR_INVALID_DATATYPE;
+        goto Cleanup;
+    }
+
+    // Check if the datatype has changed.
+    if (wcscmp(pJob->pwszDatatype, pJobInfo->pDatatype) != 0)
+    {
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszDatatype, pJobInfo->pDatatype))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the document name has changed.
+    if (wcscmp(pJob->pwszDocumentName, pJobInfo->pDocument) != 0)
+    {
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszDocumentName, pJobInfo->pDocument))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the notify name has changed.
+    if (wcscmp(pJob->pwszNotifyName, pJobInfo->pNotifyName) != 0)
+    {
+        // The new notify name doesn't need to exist, so no additional verification is required.
+
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszNotifyName, pJobInfo->pNotifyName))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the (optional) Print Processor Parameters have changed.
+    if ((!pJob->pwszPrintProcessorParameters && pJobInfo->pParameters) || wcscmp(pJob->pwszPrintProcessorParameters, pJobInfo->pParameters) != 0)
+    {
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszPrintProcessorParameters, pJobInfo->pParameters))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the (optional) Status Message has changed.
+    if ((!pJob->pwszStatus && pJobInfo->pStatus) || wcscmp(pJob->pwszStatus, pJobInfo->pStatus) != 0)
+    {
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszStatus, pJobInfo->pStatus))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the user name has changed.
+    if (wcscmp(pJob->pwszUserName, pJobInfo->pUserName) != 0)
+    {
+        // The new user name doesn't need to exist, so no additional verification is required.
+
+        // Use the new value.
+        if (!ReallocSplStr(&pJob->pwszUserName, pJobInfo->pUserName))
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+    }
+
+    // Check if the priority has changed.
+    if (pJob->dwPriority != pJobInfo->Priority && IS_VALID_PRIORITY(pJobInfo->Priority))
+    {
+        // Set the new priority.
+        pJob->dwPriority = pJobInfo->Priority;
+
+        // Remove and reinsert the job in the Printer's Job List.
+        // The Compare function will be used to find the right position now considering the new priority.
+        DeleteElementSkiplist(&pJob->pPrinter->JobList, pJob);
+        InsertElementSkiplist(&pJob->pPrinter->JobList, pJob);
+    }
+
+    // Check if the status flags have changed.
+    if (pJob->dwStatus != pJobInfo->Status)
+    {
+        // Only add status flags that make sense.
+        if (pJobInfo->Status & JOB_STATUS_PAUSED)
+            pJob->dwStatus |= JOB_STATUS_PAUSED;
+
+        if (pJobInfo->Status & JOB_STATUS_ERROR)
+            pJob->dwStatus |= JOB_STATUS_ERROR;
+
+        if (pJobInfo->Status & JOB_STATUS_OFFLINE)
+            pJob->dwStatus |= JOB_STATUS_OFFLINE;
+
+        if (pJobInfo->Status & JOB_STATUS_PAPEROUT)
+            pJob->dwStatus |= JOB_STATUS_PAPEROUT;
+    }
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    return dwErrorCode;
+}
+
+BOOL WINAPI
+LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
+{
+    DWORD dwErrorCode;
+    PLOCAL_HANDLE pHandle;
+    PLOCAL_JOB pJob;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    // Check if this is a printer handle.
+    pHandle = (PLOCAL_HANDLE)hPrinter;
+    if (pHandle->HandleType != Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // Get the desired job.
+    pJob = LookupElementSkiplist(&GlobalJobList, &JobId, NULL);
+    if (!pJob || pJob->pPrinter != pPrinterHandle->pPrinter)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    // Setting job information is handled differently for each level.
+    if (Level)
+    {
+        if (Level == 1)
+            dwErrorCode = _LocalSetJobLevel1(pPrinterHandle, pJob, (PJOB_INFO_1W)pJobInfo);
+        else if (Level == 2)
+            dwErrorCode = _LocalSetJobLevel2(pPrinterHandle, pJob, (PJOB_INFO_2W)pJobInfo);
+        else
+            dwErrorCode = ERROR_INVALID_LEVEL;
+    }
+
+    if (dwErrorCode != ERROR_SUCCESS)
+        goto Cleanup;
+
+    // Perform an additional command if desired.
+    if (Command)
+    {
+        // TODO
+    }
+
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     SetLastError(dwErrorCode);
@@ -626,7 +943,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     pJob->dwJobID = pShadowFile->dwJobID;
     pJob->dwTotalPages = pShadowFile->dwTotalPages;
     pJob->dwPriority = pShadowFile->dwPriority;
-    pJob->Printer = pPrinter;
+    pJob->pPrinter = pPrinter;
     pJob->pwszDatatype = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDatatype));
     pJob->pwszDocumentName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDocumentName));
     pJob->pwszOutputFile = NULL;
@@ -667,7 +984,7 @@ WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob)
     }
 
     // Compute the total size of the shadow file.
-    cbPrinterName = (wcslen(pJob->Printer->pwszPrinterName) + 1) * sizeof(WCHAR);
+    cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
     cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
     cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
     cbFileSize = sizeof(SHD_HEADER) + cbPrinterName + cbDatatype + cbDocumentName + sizeof(DEVMODEW);
@@ -694,7 +1011,7 @@ WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob)
     // The first value begins right after the shadow file header.
     dwCurrentOffset = sizeof(SHD_HEADER);
 
-    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->Printer->pwszPrinterName, cbPrinterName);
+    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pPrinter->pwszPrinterName, cbPrinterName);
     pShadowFile->offPrinterName = dwCurrentOffset;
     dwCurrentOffset += cbPrinterName;
 

@@ -34,7 +34,7 @@ const WCHAR* wszPrintProviderInfo[3] = {
 // Local Constants
 static const PRINTPROVIDOR _PrintProviderFunctions = {
     LocalOpenPrinter,                           // fpOpenPrinter
-    NULL,                                       // fpSetJob
+    LocalSetJob,                                // fpSetJob
     LocalGetJob,                                // fpGetJob
     NULL,                                       // fpEnumJobs
     NULL,                                       // fpAddPrinter

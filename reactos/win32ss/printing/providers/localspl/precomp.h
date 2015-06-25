@@ -32,6 +32,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(localspl);
 
 // Macros
 #define IS_VALID_JOB_ID(ID)     (ID >= 1 && ID <= 99999)
+#define IS_VALID_PRIORITY(P)    (P >= MIN_PRIORITY && P <= MAX_PRIORITY)
 
 // Constants
 #define MAX_PRINTER_NAME        220
@@ -91,23 +92,26 @@ LOCAL_PRINTER, *PLOCAL_PRINTER;
 typedef struct _LOCAL_JOB
 {
     // This sort key must be the first element for LookupElementSkiplist to work!
-    DWORD dwJobID;                      // Internal and external ID of this Job
+    DWORD dwJobID;                              // Internal and external ID of this Job
 
-    PLOCAL_PRINTER Printer;             // Associated Printer to this Job
-    DWORD dwPriority;                   // Priority of this Job from MIN_PRIORITY to MAX_PRIORITY, default being DEF_PRIORITY
-    SYSTEMTIME stSubmitted;             // Time of the submission of this Job
-    PWSTR pwszUserName;                 // User that submitted the Job
-    PWSTR pwszNotifyName;               // User that shall be notified about the status of the Job
-    PWSTR pwszDocumentName;             // Name of the Document that is printed
-    PWSTR pwszDatatype;                 // Datatype of the Document
-    PWSTR pwszOutputFile;               // Output File to spool the Job to
-    DWORD dwTotalPages;                 // Total pages of the Document
-    DWORD dwPagesPrinted;               // Number of pages that have already been printed
-    DWORD dwStartTime;                  // Earliest time in minutes since 12:00 AM UTC when this document can be printed
-    DWORD dwUntilTime;                  // Latest time in minutes since 12:00 AM UTC when this document can be printed
-    DWORD dwStatus;                     // JOB_STATUS_* flags of the Job
-    PWSTR pwszMachineName;              // Name of the machine that submitted the Job (prepended with two backslashes)
-    DEVMODEW DevMode;                   // Associated Device Mode to this Job
+    PLOCAL_PRINTER pPrinter;                    // Associated Printer to this Job
+    PLOCAL_PRINT_PROCESSOR pPrintProcessor;     // Associated Print Processor to this Job
+    DWORD dwPriority;                           // Priority of this Job from MIN_PRIORITY to MAX_PRIORITY, default being DEF_PRIORITY
+    SYSTEMTIME stSubmitted;                     // Time of the submission of this Job
+    PWSTR pwszUserName;                         // User that submitted the Job
+    PWSTR pwszNotifyName;                       // User that shall be notified about the status of the Job
+    PWSTR pwszDocumentName;                     // Name of the Document that is printed
+    PWSTR pwszDatatype;                         // Datatype of the Document
+    PWSTR pwszOutputFile;                       // Output File to spool the Job to
+    PWSTR pwszPrintProcessorParameters;         // Optional; Parameters for the chosen Print Processor
+    PWSTR pwszStatus;                           // Optional; a Status Message for the Job
+    DWORD dwTotalPages;                         // Total pages of the Document
+    DWORD dwPagesPrinted;                       // Number of pages that have already been printed
+    DWORD dwStartTime;                          // Earliest time in minutes since 12:00 AM UTC when this document can be printed
+    DWORD dwUntilTime;                          // Latest time in minutes since 12:00 AM UTC when this document can be printed
+    DWORD dwStatus;                             // JOB_STATUS_* flags of the Job
+    PWSTR pwszMachineName;                      // Name of the machine that submitted the Job (prepended with two backslashes)
+    DEVMODEW DevMode;                           // Associated Device Mode to this Job
 }
 LOCAL_JOB, *PLOCAL_JOB;
 
@@ -120,8 +124,8 @@ LOCAL_JOB, *PLOCAL_JOB;
  */
 typedef struct _LOCAL_PRINTER_HANDLE
 {
-    PLOCAL_PRINTER Printer;
-    PLOCAL_JOB StartedJob;
+    PLOCAL_PRINTER pPrinter;
+    PLOCAL_JOB pStartedJob;
     PWSTR pwszDatatype;
     DEVMODEW DevMode;
 }
@@ -134,7 +138,7 @@ LOCAL_PRINTER_HANDLE, *PLOCAL_PRINTER_HANDLE;
 typedef struct _LOCAL_HANDLE
 {
     enum { Printer, Monitor, Port } HandleType;
-    PVOID SpecificHandle;
+    PVOID pSpecificHandle;
 }
 LOCAL_HANDLE, *PLOCAL_HANDLE;
 
@@ -184,6 +188,7 @@ void InitializeGlobalJobList();
 void InitializePrinterJobList(PLOCAL_PRINTER pPrinter);
 BOOL WINAPI LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcbNeeded);
 BOOL WINAPI LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pOutput, DWORD cbBuf, LPDWORD pcbNeeded);
+BOOL WINAPI LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command);
 PLOCAL_JOB ReadJobShadowFile(PCWSTR pwszFilePath);
 BOOL WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob);
 

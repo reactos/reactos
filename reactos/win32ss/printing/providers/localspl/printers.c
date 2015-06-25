@@ -537,7 +537,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
 
         // Create a new printer handle.
         pPrinterHandle = DllAllocSplMem(sizeof(LOCAL_PRINTER_HANDLE));
-        pPrinterHandle->Printer = pPrinter;
+        pPrinterHandle->pPrinter = pPrinter;
 
         // Check if a datatype was given.
         if (pDefault && pDefault->pDatatype)
@@ -600,20 +600,20 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
 
             // Look for this job in the Global Job List.
             pJob = LookupElementSkiplist(&GlobalJobList, &dwJobID, NULL);
-            if (!pJob || pJob->Printer != pPrinter)
+            if (!pJob || pJob->pPrinter != pPrinter)
             {
                 // The user supplied a non-existing Job ID or the Job ID does not belong to the supplied printer name.
                 dwErrorCode = ERROR_INVALID_PRINTER_NAME;
                 goto Cleanup;
             }
 
-            pPrinterHandle->StartedJob = pJob;
+            pPrinterHandle->pStartedJob = pJob;
         }
 
         // Create a new handle that references a printer.
         pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
         pHandle->HandleType = Printer;
-        pHandle->SpecificHandle = pPrinterHandle;
+        pHandle->pSpecificHandle = pPrinterHandle;
     }
     else
     {
@@ -637,7 +637,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             ///////////// TODO /////////////////////
             pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
             pHandle->HandleType = Monitor;
-            //pHandle->SpecificHandle = pMonitorHandle;
+            //pHandle->pSpecificHandle = pMonitorHandle;
         }
         else if (wcscmp(p, L"XcvPort ") == 0)
         {
@@ -647,7 +647,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             //////////// TODO //////////////////////
             pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
             pHandle->HandleType = Port;
-            //pHandle->SpecificHandle = pPortHandle;
+            //pHandle->pSpecificHandle = pPortHandle;
         }
         else
         {
@@ -710,7 +710,7 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
         goto Cleanup;
     }
 
-    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->SpecificHandle;
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
 
     // Check if this is the right document information level.
     if (Level != 1)
@@ -723,14 +723,14 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
 
     // Create a new job.
     pJob = DllAllocSplMem(sizeof(LOCAL_JOB));
-    pJob->Printer = pPrinterHandle->Printer;
+    pJob->pPrinter = pPrinterHandle->pPrinter;
     pJob->dwPriority = DEF_PRIORITY;
 
     // Check if a datatype was given.
     if (pDocumentInfo1->pDatatype)
     {
         // Use the datatype if it's valid.
-        if (!FindDatatype(pJob->Printer->pPrintProcessor, pDocumentInfo1->pDatatype))
+        if (!FindDatatype(pJob->pPrintProcessor, pDocumentInfo1->pDatatype))
         {
             dwErrorCode = ERROR_INVALID_DATATYPE;
             goto Cleanup;
@@ -771,14 +771,14 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
 
     // Add the job at the end of the Printer's Job List.
     // As all new jobs are created with default priority, we can be sure that it would always be inserted at the end.
-    if (!InsertTailElementSkiplist(&pJob->Printer->JobList, pJob))
+    if (!InsertTailElementSkiplist(&pJob->pPrinter->JobList, pJob))
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         ERR("InsertTailElementSkiplist failed for job %lu for the Printer's Job List!\n", pJob->dwJobID);
         goto Cleanup;
     }
 
-    pPrinterHandle->StartedJob = pJob;
+    pPrinterHandle->pStartedJob = pJob;
     dwErrorCode = ERROR_SUCCESS;
     dwReturnValue = pJob->dwJobID;
 
