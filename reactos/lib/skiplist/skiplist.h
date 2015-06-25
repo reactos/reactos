@@ -49,5 +49,6 @@ BOOL InsertElementSkiplist(PSKIPLIST Skiplist, PVOID Element);
 BOOL InsertTailElementSkiplist(PSKIPLIST Skiplist, PVOID Element);
 PVOID DeleteElementSkiplist(PSKIPLIST Skiplist, PVOID Element);
 PVOID LookupElementSkiplist(PSKIPLIST Skiplist, PVOID Element, PDWORD ElementIndex);
+PSKIPLIST_NODE LookupNodeByIndexSkiplist(PSKIPLIST Skiplist, DWORD ElementIndex);
 
 #endif

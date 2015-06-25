@@ -366,8 +366,6 @@ LookupElementSkiplist(PSKIPLIST Skiplist, PVOID Element, PDWORD ElementIndex)
     //    * Walk through all nodes on this level that come before the node we're looking for.
     //    * When we have reached such a node, go down a level and continue there.
     //    * Repeat these steps till we're in level 0, right in front of the node we're looking for.
-    pNode = &Skiplist->Head;
-
     for (i = Skiplist->MaximumLevel + 1; --i >= 0;)
     {
         while (pNode->Next[i] && pNode->Next[i] != pLastComparedNode && Skiplist->CompareRoutine(pNode->Next[i]->Element, Element) < 0)
@@ -394,4 +392,49 @@ LookupElementSkiplist(PSKIPLIST Skiplist, PVOID Element, PDWORD ElementIndex)
 
     // Return the stored element of the found node.
     return pNode->Element;
+}
+
+/**
+ * @name LookupNodeByIndexSkiplist
+ *
+ * Looks up a node in the Skiplist at the given position. The efficiency of this operation is O(log N) on average.
+ *
+ * @param Skiplist
+ * Pointer to the SKIPLIST structure to operate on.
+ *
+ * @param ElementIndex
+ * Zero-based position of the node in the Skiplist.
+ *
+ * @return
+ * Returns the found node or NULL if the position is invalid.
+ */
+PSKIPLIST_NODE
+LookupNodeByIndexSkiplist(PSKIPLIST Skiplist, DWORD ElementIndex)
+{
+    CHAR i;
+    DWORD dwIndex = 0;
+    PSKIPLIST_NODE pNode = &Skiplist->Head;
+
+    // The only way the node can't be found is when the index is out of range.
+    if (ElementIndex >= Skiplist->NodeCount)
+        return NULL;
+
+    // Do the efficient lookup in Skiplists:
+    //    * Start from the maximum level.
+    //    * Walk through all nodes on this level that come before the node we're looking for.
+    //    * When we have reached such a node, go down a level and continue there.
+    //    * Repeat these steps till we're in level 0, right in front of the node we're looking for.
+    for (i = Skiplist->MaximumLevel + 1; --i >= 0;)
+    {
+        // We compare with <= instead of < here, because the added distances make up a 1-based index while ElementIndex is zero-based,
+        // so we have to jump one node further.
+        while (pNode->Next[i] && dwIndex + pNode->Distance[i] <= ElementIndex)
+        {
+            dwIndex += pNode->Distance[i];
+            pNode = pNode->Next[i];
+        }
+    }
+
+    // We are right in front of the node we're looking for now.
+    return pNode->Next[0];
 }

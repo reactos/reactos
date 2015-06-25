@@ -67,6 +67,7 @@ main()
     DWORD ElementIndex;
     DWORD i;
     SKIPLIST Skiplist;
+    PSKIPLIST_NODE pNode;
 
     system("mode con cols=300");
     InitializeSkiplist(&Skiplist, MyAlloc, MyCompare, MyFree);
@@ -82,6 +83,10 @@ main()
     // Insert some more random elements.
     for (i = 0; i < 40; i++)
         InsertElementSkiplist(&Skiplist, (PVOID)(rand() % 100));
+
+    // Output the third element (with zero-based index 2).
+    pNode = LookupNodeByIndexSkiplist(&Skiplist, 2);
+    printf("Element = %lu for index 2\n", (DWORD)pNode->Element);
 
     // Check if an element with number 44 is in the list and output its index.
     Element = (DWORD)LookupElementSkiplist(&Skiplist, (PVOID)44, &ElementIndex);
