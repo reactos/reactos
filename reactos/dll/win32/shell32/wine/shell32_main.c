@@ -723,6 +723,9 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     if (flags & ~SHGFI_KNOWN_FLAGS)
         FIXME("unknown flags %08x\n", flags & ~SHGFI_KNOWN_FLAGS);
 
+    if (psfParent)
+        IShellFolder_Release(psfParent);
+
     if (hr != S_OK)
         ret = FALSE;
 
