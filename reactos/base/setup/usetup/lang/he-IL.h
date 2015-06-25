@@ -158,42 +158,12 @@ static MUI_ENTRY heILIntroPageEntries[] =
     {
         8,
         13,
-        ".—‘‰ƒŒ š‡€ š‰™€˜ „–‰‡ ˜š…‰ ’ —…‘’Œ „Œ…‹‰ €Œ „—š„„ -",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "—‘‰ƒ š‰™€˜ „–‰‡ —…‡Œ „Œ…‹‰ €Œ „—š„„ -",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        ".—‘‰ƒ„ Œ’ š…‡˜… š…–‰‡ š…€– ƒ…’ Œ‹ ",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Setup can not delete the first extended partition from a disk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  as long as other extended partitions exist on this disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Setup supports FAT file systems only.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- File system checks are not implemented yet.",
         TEXT_STYLE_NORMAL
     },

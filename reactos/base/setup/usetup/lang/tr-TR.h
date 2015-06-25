@@ -161,42 +161,12 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         8,
         13,
-        "- Kur, bir diskte birden áok ana bîlÅmÅ yînetemez.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Kur, bir diskte geniületilmiü bîlÅmler oldußu sÅrece",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  o diskten bir ana bîlÅm silemez.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Kur, bir diskte baüka geniületilmiü bîlÅmlerin oldußu sÅrece",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  o diskten ilk geniületilmiü bîlÅmÅ silemez.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Kur, yalnçzca FAT kÅtÅk dizgelerini destekler.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- KÅtÅk dizgesi denetimi daha bitirilmemiütir.",
         TEXT_STYLE_NORMAL
     },

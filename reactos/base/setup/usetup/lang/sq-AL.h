@@ -161,42 +161,12 @@ static MUI_ENTRY sqALIntroPageEntries[] =
     {
         8,
         13,
-        "- Instalimi nuk p‰rballoje m‰ shum‰ se nj‰ particion primare p‰r disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Instalimi nuk mund t‰ fshij‰ nj‰ particion primare nga hard disku",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  p‰r aq koh‰ sa nj‰ particion i zgjatur ekziston n‰ k‰t‰ hard disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Instalimi nuk mund t‰ fshij particionin e pare nga nj‰ hard disk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  p‰r aq koh‰ sa particione t‰ tjera t‰ zgjatura ekzistojne n‰ hard disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Instalimi suporton vet‰m dokumentat FAT t‰ sistemit.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Kontrollet e dokumentave t‰ sistemit nuk jan‰ implementuar ende.",
         TEXT_STYLE_NORMAL
     },

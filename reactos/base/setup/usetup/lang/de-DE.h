@@ -158,42 +158,12 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         8,
         13,
-        "- Nur primÑre Festplattenpartitionen kînnen verwaltet werden.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Eine primÑre Partition kann nicht gelîscht werden,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  solange erweiterte Partitionen auf der Festplatte existieren.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Die jeweils erste erweiterte Partition kann nicht gelîscht werden,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  solange weitere erweiterte Partitionen auf der Festplatte existieren.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Es werden nur FAT-Dateisysteme unterstÅtzt.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Die DateisystemÅberprÅfung ist noch nicht implementiert.",
         TEXT_STYLE_NORMAL
     },

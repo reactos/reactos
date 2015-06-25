@@ -177,60 +177,24 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         8,
         14,
-        "- Programul curent de instalare nu e capabil de mai mult",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  de o partiîie per disc.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Programul curent de instalare nu poate ­terge o partiîie",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  primarÇ cƒt timp existÇ partiîii extinse.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
-        "- Programul curent de instalare nu poate ­terge prima partiîie",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        19,
-        "  extinsÇ, cƒt timp existÇ alte partiîii extinse.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        20,
         "- Programul curent de instalare poate opera doar cu sisteme",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        21,
+        15,
         "  de fi­iere FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        22,
+        16,
         "- VerificÇrile de integritate pentru fi­iere nu sunt",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
+        17,
         "  ŒncÇ implementate.",
         TEXT_STYLE_NORMAL
     },

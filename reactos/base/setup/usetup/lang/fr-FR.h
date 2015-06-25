@@ -164,42 +164,12 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         13,
-        "- L'installation ne peut g‚rer plus d'une partition primaire par disque.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- L'installation ne peut effacer une partition primaire d'un disque",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  tant que des partitions secondaires existent sur ce disque.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- L'installation ne peut effacer la premiŠre partition secondaire",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  tant que des autres partitions secondaires existent sur ce disque.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- L'installation supporte uniquement le systŠme de fichiers FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Les v‚rifications de systŠme de fichers ne sont pas impl‚ment‚es.",
         TEXT_STYLE_NORMAL
     },

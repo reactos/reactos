@@ -157,49 +157,19 @@ static MUI_ENTRY ptBRIntroPageEntries[] =
     },
     {
         8,
-        13,
-        "- O instalador n∆o suporta mais de uma partiá∆o prim†ria por disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- O instalador n∆o pode excluir uma partiá∆o prim†ria de um disco",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  se houverem partiá‰es estendidas no mesmo disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- O instalador n∆o pode remover a primeira partiá∆o estendida de um",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  disco se existirem outras partiá‰es estendidas no mesmo disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
+        12,
         "- O instalador suporta somente o sistema de arquivos FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        13,
         "- O verificador de integridade de sistema de arquivos ainda n∆o est†",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        20,
+        14,
         "  implementado.",
         TEXT_STYLE_NORMAL
     },

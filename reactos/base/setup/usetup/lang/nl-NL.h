@@ -179,48 +179,12 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         8,
         13,
-        "\x07  Setup kan niet meer dan 1 primaire partitie per vaste schijf aan.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "\x07  Setup kan geen primaire partitie van een schijf verwijderen",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  zo lang er nog uitgebreide partities bestaan op deze schijf.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "\x07  Setup kan de eerste uitgebreide partitie van een schijf niet",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  verwijderen zolang er nog andere uitgebreide partities",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
-        "  op deze schijf bestaan.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        19,
         "\x07  Setup ondersteunt alleen FAT bestandssystemen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        20,
+        14,
         "\x07  Bestandssysteemcontrole is nog niet ge\x8Bmplementeerd.",
         TEXT_STYLE_NORMAL
     },

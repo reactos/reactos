@@ -164,42 +164,12 @@ static MUI_ENTRY svSEIntroPageEntries[] =
     {
         8,
         13,
-        "- Setup kan ej hantera mer „n 1 prim„r partition per h†rddisk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Setup kan ej radera en prim„r partition fr†n en h†rddisk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  om ut”kade partitioner existerar p† h†rddisken.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Setup kan ej radera den f”rsta ut”kade partitionen fr†n en h†rddisk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  om andra ut”kade partitioner existerar p† h†rddisken.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Setup st”der endast filsystem av typen FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Kontrollering av h†rddiskens filsystem st”ds („nnu) ej.",
         TEXT_STYLE_NORMAL
     },

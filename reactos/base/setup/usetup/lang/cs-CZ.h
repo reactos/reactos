@@ -165,42 +165,12 @@ static MUI_ENTRY csCZIntroPageEntries[] =
     {
         8,
         13,
-        "- Instalace nedok §e zpracovat v¡ce ne§ jeden prim rn¡ odd¡l na disku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Instalace nedok §e vymazat prim rn¡ odd¡l z disku,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  pokud na tomto disku existuj¡ rozç¡ýen‚ odd¡ly.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Instalace nedok §e vymazat prvn¡ rozç¡ýenì odd¡l z disku,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  pokud na tomto disku existuj¡ dalç¡ rozç¡ýen‚ odd¡ly.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Instalace podporuje pouze souborovì syst‚m FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Kontroly souborovìch syst‚m… zat¡m nejsou implementov ny.",
         TEXT_STYLE_NORMAL
     },

@@ -163,38 +163,14 @@ static MUI_ENTRY itITIntroPageEntries[] =
     },
     {
         8, 
-        13,
-        "- Il setup non gestisce pi— di una partizione primaria per disco.",
+        13, 
+        "- Il setup supporta solamente il sistema FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "- Il setup non pu• eliminare una partizione primaria",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  se ci sono partizioni estese nel disco fisso.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Il setup non pu• eliminare la prima partizione estesa",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  se ci sono altre partizioni estese nel disco fisso.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8, 
-        18, 
-        "- Il setup supporta solamente il sistema FAT.",
+        "- File system checks are not implemented yet.",
         TEXT_STYLE_NORMAL
     },
     {

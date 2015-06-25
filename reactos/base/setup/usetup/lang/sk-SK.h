@@ -165,42 +165,12 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         8,
         13,
-        "- Inçtal tor nepracuje s viac ako 1 prim rnou oblasœou na 1 disku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Inçtal tor nevie odstr niœ prim rnu oblasœ z disku,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  pokia– existuj£ rozç¡ren‚ oblasti na disku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Inçtal tor nevie odstr niœ prv£ rozç¡ren£ oblasœ z disku,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  pokia– existuj£ in‚ rozç¡ren‚ oblasti na disku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Inçtal tor podporuje iba s£borovì syst‚m FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Kontrola s£borov‚ho syst‚mu zatia– nie je implementovan .",
         TEXT_STYLE_NORMAL
     },

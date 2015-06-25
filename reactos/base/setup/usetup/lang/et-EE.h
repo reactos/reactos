@@ -157,42 +157,12 @@ static MUI_ENTRY etEEIntroPageEntries[] =
     {
         8,
         13,
-        "- Sihtkettal v‰ib olla ainult Åks peamine partitsioon.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Peamist partitsiooni ei saa kettalt kustutada",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  kui kettal on ka laiendatud partitsioone.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Esimest laiendatud partitsiooni ei saa kettalt kustutada",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  kui kettal on ka teisi laiendatud partitsioone.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Toetatud on ainult FAT failisÅsteem.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- FailisÅsteemi kontrollimist veel ei tehta.",
         TEXT_STYLE_NORMAL
     },

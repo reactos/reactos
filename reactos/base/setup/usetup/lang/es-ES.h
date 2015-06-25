@@ -158,48 +158,18 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         8,
         13,
-        "- El instalador no soporta m s de una partici¢n primaria por disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- El instalador no puede eliminar una partici¢n primaria de un disco",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  si hay particiones extendidas en el mismo.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- El instalador no puede eliminar la primer partici¢n extendida",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  si existen otras particiones extendidas en el disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- El instalador soporta solamente el sistema de archivos FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- El comprobador de integridad del sistema de archivos no est  a£n",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        20,
+        15,
         "  implementado.",
         TEXT_STYLE_NORMAL
     },

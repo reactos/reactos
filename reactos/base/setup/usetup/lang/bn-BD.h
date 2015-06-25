@@ -157,42 +157,12 @@ static MUI_ENTRY bnBDIntroPageEntries[] =
     {
         8,
         13,
-        "- Setup can not handle more than one primary partition per disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Setup can not delete a primary partition from a disk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  as long as extended partitions exist on this disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Setup can not delete the first extended partition from a disk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  as long as other extended partitions exist on this disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Setup supports FAT file systems only.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- File system checks are not implemented yet.",
         TEXT_STYLE_NORMAL
     },

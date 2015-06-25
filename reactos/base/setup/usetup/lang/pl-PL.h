@@ -167,42 +167,12 @@ static MUI_ENTRY plPLIntroPageEntries[] =
     {
         8,
         13,
-        "- Instalator obsˆuguje jedn¥ partycj© Podstawow¥ na dysku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Instalator nie mo¾e skasowa† partycji podstawowej z dysku",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  o ile nadal znajduje si© na nim tak¾e partycja Rozszerzona.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Instalator nie mo¾e skasowa† pierwszej partycji Rozszerzonej z dysku",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  o ile nadal znajduj¥ si© na nim kolejne partycje Rozszerzone.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Instalator obsˆuguje jedynie system plik¢w FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Brakuje sprawdzenia poprawno˜ci systemu plik¢w.",
         TEXT_STYLE_NORMAL
     },
