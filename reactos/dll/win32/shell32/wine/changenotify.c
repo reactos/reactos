@@ -634,6 +634,7 @@ BOOL _OpenDirectory(LPNOTIFYREGISTER item)
         return FALSE;
 
     hr = IShellFolder_GetDisplayNameOf(psfDesktop, item->pidl, SHGDN_FORPARSING, &strFile);
+    IShellFolder_Release(psfDesktop);
     if (!SUCCEEDED(hr))
         return FALSE;
 
