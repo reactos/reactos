@@ -26,49 +26,59 @@
 
 typedef struct _VIDEO_PORT_FUNCTION_TABLE {
     PVOID Address;
-    PUCHAR Name;
+    PCSZ Name;
 } *PVIDEO_PORT_FUNCTION_TABLE, VIDEO_PORT_FUNCTION_TABLE;
 
 /* GLOBAL VARIABLES ***********************************************************/
 
-#define VP_EXPORTED_FUNCS 6
+#define VP_EXPORTED_FUNCS (sizeof(VideoPortExports) / sizeof(*VideoPortExports))
 
-UCHAR FN_VideoPortClearEvent[] = "VideoPortClearEvent";
-UCHAR FN_VideoPortCreateEvent[] = "VideoPortCreateEvent";
-UCHAR FN_VideoPortCreateSecondaryDisplay[] = "VideoPortCreateSecondaryDisplay";
-UCHAR FN_VideoPortDeleteEvent[] = "VideoPortDeleteEvent";
-UCHAR FN_VideoPortQueueDpc[] = "VideoPortQueueDpc";
-UCHAR FN_VideoPortSetEvent[] = "VideoPortSetEvent";
-
-VIDEO_PORT_FUNCTION_TABLE VideoPortExports[] = {
-    {VideoPortClearEvent, FN_VideoPortClearEvent},
-    {VideoPortCreateEvent, FN_VideoPortCreateEvent},
-    {VideoPortCreateSecondaryDisplay, FN_VideoPortCreateSecondaryDisplay},
-    {VideoPortDeleteEvent, FN_VideoPortDeleteEvent},
-    {VideoPortQueueDpc, FN_VideoPortQueueDpc},
-    {VideoPortSetEvent, FN_VideoPortSetEvent}
+/* Create an array of entries with pfn, psz, for IntVideoPortGetProcAddress */
+#define MAKE_ENTRY(FUNCTIONNAME) { FUNCTIONNAME, #FUNCTIONNAME }
+const VIDEO_PORT_FUNCTION_TABLE VideoPortExports[] = {
+    MAKE_ENTRY(VideoPortQueueDpc),
+    MAKE_ENTRY(VideoPortAllocatePool),
+    MAKE_ENTRY(VideoPortFreePool),
+    MAKE_ENTRY(VideoPortReleaseCommonBuffer),
+    MAKE_ENTRY(VideoPortAllocateCommonBuffer),
+    MAKE_ENTRY(VideoPortCreateSecondaryDisplay),
+    MAKE_ENTRY(VideoPortGetDmaAdapter),
+    MAKE_ENTRY(VideoPortGetVersion),
+    MAKE_ENTRY(VideoPortLockBuffer),
+    MAKE_ENTRY(VideoPortUnlockBuffer),
+    MAKE_ENTRY(VideoPortSetEvent),
+    MAKE_ENTRY(VideoPortClearEvent),
+    MAKE_ENTRY(VideoPortReadStateEvent),
+    MAKE_ENTRY(VideoPortRegisterBugcheckCallback),
+    MAKE_ENTRY(VideoPortCreateEvent),
+    MAKE_ENTRY(VideoPortDeleteEvent),
+    MAKE_ENTRY(VideoPortWaitForSingleObject),
+    MAKE_ENTRY(VideoPortCheckForDeviceExistence),
+    MAKE_ENTRY(VideoPortFlushRegistry),
+    MAKE_ENTRY(VideoPortQueryPerformanceCounter),
 };
+#undef MAKE_ENTRY
 
 PVOID NTAPI
 IntVideoPortGetProcAddress(
    IN PVOID HwDeviceExtension,
    IN PUCHAR FunctionName)
 {
-   ULONG i = 0;
+    ULONG i = 0;
 
-   TRACE_(VIDEOPRT, "VideoPortGetProcAddress(%s)\n", FunctionName);
+    TRACE_(VIDEOPRT, "VideoPortGetProcAddress(%s)\n", FunctionName);
 
    /* Search by name */
-   for (i = 0; i < VP_EXPORTED_FUNCS; i++)
-   {
-      if (!_strnicmp((PCHAR)FunctionName, (PCHAR)VideoPortExports[i].Name,
-                     strlen((PCHAR)FunctionName)))
-      {
-         return (PVOID)VideoPortExports[i].Address;
-      }
-   }
 
-   WARN_(VIDEOPRT, "VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
+    for (i = 0; i < VP_EXPORTED_FUNCS; i++)
+    {
+        if (!strcmp((PCHAR)FunctionName, VideoPortExports[i].Name))
+        {
+            return (PVOID)VideoPortExports[i].Address;
+        }
+    }
+
+   ERR_(VIDEOPRT, "VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
 
    return NULL;
 }
