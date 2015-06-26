@@ -510,10 +510,30 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                  Buffer,
                                  &Length))
     {
+        DWORD MinLen = 2;
+
         SetUserEnvironmentVariable(lpEnvironment,
                                    L"USERPROFILE",
                                    Buffer,
                                    FALSE);
+
+        /* At least <drive letter>:<path> */
+        if (Length > MinLen)
+        {
+            /* Set 'HOMEDRIVE' variable */
+            StringCchCopyNW(szValue, MAX_PATH, Buffer, MinLen);
+            SetUserEnvironmentVariable(lpEnvironment,
+                                       L"HOMEDRIVE",
+                                       szValue,
+                                       FALSE);
+
+            /* Set 'HOMEPATH' variable */
+            StringCchCopyNW(szValue, MAX_PATH, Buffer + MinLen, Length - MinLen);
+            SetUserEnvironmentVariable(lpEnvironment,
+                                       L"HOMEPATH",
+                                       szValue,
+                                       FALSE);
+        }
     }
 
     if (GetUserAndDomainName(hToken,
