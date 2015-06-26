@@ -67,14 +67,14 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include <wine/wine_common_ver.rc>
 
 /* @makedep: ietoolbar.bmp */
-IDB_IETOOLBAR BITMAP resources/ietoolbar.bmp
+IDB_IETOOLBAR BITMAP "resources/ietoolbar.bmp"
 
 #ifdef __REACTOS__
 IDC_PAGEICO ICON "resources/pages.ico"
 #endif
 
 /* @makedep: ieframe.rgs */
-1 WINE_REGISTRY ieframe.rgs
+1 WINE_REGISTRY "ieframe.rgs"
 
 2 WINE_REGISTRY "ieframe_v1.rgs"
 3 WINE_REGISTRY "ieframe_v1.tlb.rgs"
