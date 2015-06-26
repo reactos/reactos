@@ -232,7 +232,12 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             /* Grab a page */
             MI_SET_USAGE(MI_USAGE_MDL);
             MI_SET_PROCESS2("Kernel");
-            Page = MiRemoveAnyPage(0);
+
+            /* FIXME: This check should be smarter */
+            Page = 0;
+            if (MmAvailablePages != 0)
+                Page = MiRemoveAnyPage(0);
+
             if (Page == 0)
             {
                 /* This is not good... hopefully we have at least SOME pages */
