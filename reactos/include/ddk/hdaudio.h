@@ -110,97 +110,121 @@ typedef struct _HDAUDIO_BUFFER_DESCRIPTOR {
   ULONG InterruptOnCompletion;
 } HDAUDIO_BUFFER_DESCRIPTOR, *PHDAUDIO_BUFFER_DESCRIPTOR;
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PTRANSFER_CODEC_VERBS)(
-  IN PVOID _context,
-  IN ULONG Count,
-  IN OUT PHDAUDIO_CODEC_TRANSFER CodecTransfer,
-  IN PHDAUDIO_TRANSFER_COMPLETE_CALLBACK Callback,
-  IN PVOID Context);
+  _In_ PVOID _context,
+  _In_ ULONG Count,
+  _Inout_updates_(Count) PHDAUDIO_CODEC_TRANSFER CodecTransfer,
+  _In_opt_ PHDAUDIO_TRANSFER_COMPLETE_CALLBACK Callback,
+  _In_opt_ PVOID Context);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PALLOCATE_CAPTURE_DMA_ENGINE)(
-  IN PVOID _context,
-  IN UCHAR CodecAddress,
-  IN PHDAUDIO_STREAM_FORMAT StreamFormat,
-  OUT PHANDLE Handle,
-  OUT PHDAUDIO_CONVERTER_FORMAT ConverterFormat);
+  _In_ PVOID _context,
+  _In_ UCHAR CodecAddress,
+  _In_ PHDAUDIO_STREAM_FORMAT StreamFormat,
+  _Out_ PHANDLE Handle,
+  _Out_ PHDAUDIO_CONVERTER_FORMAT ConverterFormat);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PALLOCATE_RENDER_DMA_ENGINE)(
-  IN PVOID _context,
-  IN PHDAUDIO_STREAM_FORMAT StreamFormat,
-  IN BOOLEAN Stripe,
-  OUT PHANDLE Handle,
-  OUT PHDAUDIO_CONVERTER_FORMAT ConverterFormat);
+  _In_ PVOID _context,
+  _In_ PHDAUDIO_STREAM_FORMAT StreamFormat,
+  _In_ BOOLEAN Stripe,
+  _Out_ PHANDLE Handle,
+  _Out_ PHDAUDIO_CONVERTER_FORMAT ConverterFormat);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PCHANGE_BANDWIDTH_ALLOCATION)(
-  IN PVOID _context,
-  IN HANDLE Handle,
-  IN PHDAUDIO_STREAM_FORMAT StreamFormat,
-  OUT PHDAUDIO_CONVERTER_FORMAT ConverterFormat);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle,
+  _In_ PHDAUDIO_STREAM_FORMAT StreamFormat,
+  _Out_ PHDAUDIO_CONVERTER_FORMAT ConverterFormat);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PALLOCATE_DMA_BUFFER)(
-  IN PVOID _context,
-  IN HANDLE Handle,
-  IN SIZE_T RequestedBufferSize,
-  OUT PMDL *BufferMdl,
-  OUT PSIZE_T AllocatedBufferSize,
-  OUT PUCHAR StreamId,
-  OUT PULONG FifoSize);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle,
+  _In_ SIZE_T RequestedBufferSize,
+  _Out_ PMDL *BufferMdl,
+  _Out_ PSIZE_T AllocatedBufferSize,
+  _Out_ PUCHAR StreamId,
+  _Out_ PULONG FifoSize);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PFREE_DMA_BUFFER)(
-  IN PVOID _context,
-  IN HANDLE Handle);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PFREE_DMA_ENGINE)(
-  IN PVOID _context,
-  IN HANDLE Handle);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PSET_DMA_ENGINE_STATE)(
-  IN PVOID _context,
-  IN HDAUDIO_STREAM_STATE StreamState,
-  IN ULONG NumberOfHandles,
-  IN PHANDLE Handles);
+  _In_ PVOID _context,
+  _In_ HDAUDIO_STREAM_STATE StreamState,
+  _In_ ULONG NumberOfHandles,
+  _In_reads_(NumberOfHandles) PHANDLE Handles);
 
 typedef VOID
 (NTAPI *PGET_WALL_CLOCK_REGISTER)(
-  IN PVOID _context,
-  OUT PULONG *Wallclock);
+  _In_ PVOID _context,
+  _Out_ PULONG *Wallclock);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PGET_LINK_POSITION_REGISTER)(
-  IN PVOID _context,
-  IN HANDLE Handle,
-  OUT PULONG *Position);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle,
+  _Out_ PULONG *Position);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PREGISTER_EVENT_CALLBACK)(
-  IN PVOID _context,
-  IN PHDAUDIO_UNSOLICITED_RESPONSE_CALLBACK Routine,
-  IN PVOID Context,
-  OUT PUCHAR Tag);
+  _In_ PVOID _context,
+  _In_ PHDAUDIO_UNSOLICITED_RESPONSE_CALLBACK Routine,
+  _In_opt_ PVOID Context,
+  _Out_ PUCHAR Tag);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PUNREGISTER_EVENT_CALLBACK)(
-  IN PVOID _context,
-  IN UCHAR Tag);
+  _In_ PVOID _context,
+  _In_ UCHAR Tag);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PGET_DEVICE_INFORMATION)(
-  IN PVOID _context,
-  IN OUT PHDAUDIO_DEVICE_INFORMATION DeviceInformation);
+  _In_ PVOID _context,
+  _Out_ PHDAUDIO_DEVICE_INFORMATION DeviceInformation);
 
 typedef VOID
 (NTAPI *PGET_RESOURCE_INFORMATION)(
-  IN PVOID _context,
-  OUT PUCHAR CodecAddress,
-  OUT PUCHAR FunctionGroupStartNode);
+  _In_ PVOID _context,
+  _Out_ PUCHAR CodecAddress,
+  _Out_ PUCHAR FunctionGroupStartNode);
 
 typedef struct _HDAUDIO_BUS_INTERFACE {
   USHORT Size;
@@ -226,32 +250,38 @@ typedef struct _HDAUDIO_BUS_INTERFACE {
 
 typedef void
 (NTAPI *PHDAUDIO_BDL_ISR)(
-  IN VOID *Context,
-  IN ULONG InterruptBitMask);
+  _In_ VOID *Context,
+  _In_ ULONG InterruptBitMask);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PALLOCATE_CONTIGUOUS_DMA_BUFFER)(
-  IN PVOID _context,
-  IN HANDLE Handle,
+  _In_ PVOID _context,
+  _In_ HANDLE Handle,
   ULONG RequestedBufferSize,
-  OUT PVOID *DataBuffer,
-  OUT PHDAUDIO_BUFFER_DESCRIPTOR *BdlBuffer);
+  _Out_ PVOID *DataBuffer,
+  _Out_ PHDAUDIO_BUFFER_DESCRIPTOR *BdlBuffer);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PFREE_CONTIGUOUS_DMA_BUFFER)(
-  IN PVOID _context,
-  IN HANDLE Handle);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PSETUP_DMA_ENGINE_WITH_BDL)(
-  IN PVOID _context,
-  IN HANDLE Handle,
-  IN ULONG BufferLength,
-  IN ULONG Lvi,
-  IN PHDAUDIO_BDL_ISR Isr,
-  IN PVOID Context,
-  OUT PUCHAR StreamId,
-  OUT PULONG FifoSize);
+  _In_reads_bytes_(BufferLength) PVOID _context,
+  _In_ HANDLE Handle,
+  _In_ ULONG BufferLength,
+  _In_ ULONG Lvi,
+  _In_ PHDAUDIO_BDL_ISR Isr,
+  _In_ PVOID Context,
+  _Out_ PUCHAR StreamId,
+  _Out_ PULONG FifoSize);
 
 typedef struct _HDAUDIO_BUS_INTERFACE_BDL {
   USHORT Size;
@@ -276,36 +306,44 @@ typedef struct _HDAUDIO_BUS_INTERFACE_BDL {
   PGET_RESOURCE_INFORMATION GetResourceInformation;
 } HDAUDIO_BUS_INTERFACE_BDL, *PHDAUDIO_BUS_INTERFACE_BDL;
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PALLOCATE_DMA_BUFFER_WITH_NOTIFICATION)(
-  IN PVOID _context,
-  IN HANDLE Handle, 
-  IN ULONG NotificationCount,
-  IN SIZE_T RequestedBufferSize,
-  OUT PMDL *BufferMdl,
-  OUT PSIZE_T AllocatedBufferSize,
-  OUT PSIZE_T OffsetFromFirstPage,
-  OUT PUCHAR StreamId,
-  OUT PULONG FifoSize);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle, 
+  _In_ ULONG NotificationCount,
+  _In_ SIZE_T RequestedBufferSize,
+  _Out_ PMDL *BufferMdl,
+  _Out_ PSIZE_T AllocatedBufferSize,
+  _Out_ PSIZE_T OffsetFromFirstPage,
+  _Out_ PUCHAR StreamId,
+  _Out_ PULONG FifoSize);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PFREE_DMA_BUFFER_WITH_NOTIFICATION)(
-  IN PVOID _context,
-  IN HANDLE Handle,
-  IN PMDL BufferMdl,
-  IN SIZE_T BufferSize);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle,
+  _In_ PMDL BufferMdl,
+  _In_ SIZE_T BufferSize);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PREGISTER_NOTIFICATION_EVENT)(
-  IN PVOID _context,
-  IN HANDLE Handle,
-  IN PKEVENT NotificationEvent);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle,
+  _In_ PKEVENT NotificationEvent);
 
-typedef NTSTATUS
+typedef
+_Must_inspect_result_
+NTSTATUS
 (NTAPI *PUNREGISTER_NOTIFICATION_EVENT)(
-  IN PVOID _context,
-  IN HANDLE Handle,
-  IN PKEVENT NotificationEvent);
+  _In_ PVOID _context,
+  _In_ HANDLE Handle,
+  _In_ PKEVENT NotificationEvent);
 
 typedef struct _HDAUDIO_BUS_INTERFACE_V2 {
   USHORT Size;
