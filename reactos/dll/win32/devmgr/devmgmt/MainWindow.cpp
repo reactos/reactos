@@ -212,7 +212,7 @@ CMainWindow::RefreshView(ViewType Type)
     BOOL bSuccess;
 
     // Refreshed the cached view
-    m_DeviceView->Refresh(Type, FALSE, TRUE);
+    m_DeviceView->Refresh(Type, FALSE, TRUE, NULL);
 
     // Get the menu item id
     switch (Type)
@@ -240,7 +240,8 @@ CMainWindow::ScanForHardwareChanges()
     // Refresh the cache and and display
     m_DeviceView->Refresh(m_DeviceView->GetCurrentView(),
                           true,
-                          true);
+                          true,
+                          NULL);
     return true;
 }
 
@@ -618,7 +619,8 @@ CMainWindow::OnCommand(WPARAM wParam,
             // Refresh the device view
             m_DeviceView->Refresh(m_DeviceView->GetCurrentView(),
                                   false,
-                                  true);
+                                  true,
+                                  NULL);
             break;
         }
 

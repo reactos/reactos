@@ -36,6 +36,7 @@ struct RefreshThreadData
     CDeviceView *This;
     BOOL ScanForChanges;
     BOOL UpdateView;
+    LPWSTR DeviceId;
 };
 
 
@@ -198,7 +199,8 @@ void
 CDeviceView::Refresh(
     _In_ ViewType Type,
     _In_ bool ScanForChanges,
-    _In_ bool UpdateView
+    _In_ bool UpdateView,
+    _In_opt_ LPWSTR DeviceId
     )
 {
     // Enum devices on a seperate thread to keep the gui responsive
@@ -210,6 +212,16 @@ CDeviceView::Refresh(
     ThreadData->This = this;
     ThreadData->ScanForChanges = ScanForChanges;
     ThreadData->UpdateView = UpdateView;
+    ThreadData->DeviceId = NULL;
+
+    if (DeviceId)
+    {
+        // Node gets deleted on refresh so we copy it to another block
+        size_t Length = wcslen(DeviceId) + 1;
+        ThreadData->DeviceId = new WCHAR[Length];
+        wcscpy_s(ThreadData->DeviceId, Length, DeviceId);
+    }
+
 
     HANDLE hThread;
     hThread = (HANDLE)_beginthreadex(NULL,
@@ -309,29 +321,29 @@ CDeviceView::EnableSelectedDevice(
     )
 {
     CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
-    if (Node)
+    if (Node == nullptr) return false;
+
+    if (Enable == false)
     {
-        if (Enable == false)
+        CAtlStringW str;
+        if (str.LoadStringW(g_hInstance, IDS_CONFIRM_DISABLE))
         {
-            CAtlStringW str;
-            if (str.LoadStringW(g_hInstance, IDS_CONFIRM_DISABLE))
+            if (MessageBoxW(m_hMainWnd,
+                            str,
+                            Node->GetDisplayName(),
+                            MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
             {
-                if (MessageBoxW(m_hMainWnd,
-                                str,
-                                Node->GetDisplayName(),
-                                MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
-                {
-                    return false;
-                }
+                return false;
             }
         }
-
-        if (Node->EnableDevice(Enable, NeedsReboot))
-        {
-            Refresh(m_ViewType, true, true);
-            return true;
-        }
     }
+
+    if (Node->EnableDevice(Enable, NeedsReboot))
+    {
+        Refresh(m_ViewType, true, true, Node->GetDeviceId());
+        return true;
+    }
+
     return false;
 }
 
@@ -462,6 +474,11 @@ unsigned int __stdcall CDeviceView::RefreshThread(void *Param)
             break;
     }
 
+
+    This->SelectNode(ThreadData->DeviceId);
+
+    if (ThreadData->DeviceId)
+        delete[] ThreadData->DeviceId;
     delete ThreadData;
 
     return 0;
@@ -650,7 +667,7 @@ CDeviceView::RecurseChildDevices(
     // Get the cached device node
     CDeviceNode *DeviceNode;
     DeviceNode = dynamic_cast<CDeviceNode *>(GetDeviceNode(Device));
-    if (DeviceNode == NULL)
+    if (DeviceNode == nullptr)
     {
         ATLASSERT(FALSE);
         return false;
@@ -684,7 +701,7 @@ CDeviceView::RecurseChildDevices(
         if (bSuccess == FALSE) break;
 
         DeviceNode = dynamic_cast<CDeviceNode *>(GetDeviceNode(Device));
-        if (DeviceNode == NULL)
+        if (DeviceNode == nullptr)
         {
             ATLASSERT(FALSE);
         }
@@ -790,17 +807,20 @@ CDeviceView::InsertIntoTreeView(
     return TreeView_InsertItem(m_hTreeView, &tvins);
 }
 
-void
-CDeviceView::RecurseDeviceView(
-    _In_ HTREEITEM hParentItem
+HTREEITEM
+CDeviceView::RecurseFindDevice(
+    _In_ HTREEITEM hParentItem,
+    _In_ LPWSTR DeviceId
     )
 {
+    HTREEITEM FoundItem;
     HTREEITEM hItem;
     TVITEMW tvItem;
+    CNode *Node;
 
     // Check if this node has any children
     hItem = TreeView_GetChild(m_hTreeView, hParentItem);
-    if (hItem == NULL) return;
+    if (hItem == NULL) return NULL;
 
     // The lParam contains the node pointer data
     tvItem.hItem = hItem;
@@ -808,12 +828,17 @@ CDeviceView::RecurseDeviceView(
     if (TreeView_GetItem(m_hTreeView, &tvItem) &&
         tvItem.lParam != NULL)
     {
-        // Delete the node class
-        //delete reinterpret_cast<CNode *>(tvItem.lParam);
+        Node = reinterpret_cast<CNode *>(tvItem.lParam);
+        if (Node->GetDeviceId() &&
+            (wcscmp(Node->GetDeviceId(), DeviceId) == 0))
+        {
+            return hItem;
+        }
     }
 
     // This node may have its own children
-    RecurseDeviceView(hItem);
+    FoundItem = RecurseFindDevice(hItem, DeviceId);
+    if (FoundItem) return FoundItem;
 
     // Delete all the siblings
     for (;;)
@@ -827,12 +852,45 @@ CDeviceView::RecurseDeviceView(
         tvItem.mask = TVIF_PARAM;
         if (TreeView_GetItem(m_hTreeView, &tvItem))
         {
-            //if (tvItem.lParam != NULL)
-            //    delete reinterpret_cast<CNode *>(tvItem.lParam);
+            Node = reinterpret_cast<CNode *>(tvItem.lParam);
+            if (Node->GetDeviceId() && 
+                wcscmp(Node->GetDeviceId(), DeviceId) == 0)
+            {
+                return hItem;
+            }
         }
 
         // This node may have its own children 
-        RecurseDeviceView(hItem);
+        FoundItem = RecurseFindDevice(hItem, DeviceId);
+        if (FoundItem) return FoundItem;
+    }
+
+    return hItem;
+}
+
+void
+CDeviceView::SelectNode(
+    _In_ LPWSTR DeviceId
+    )
+{
+    HTREEITEM hRoot, hItem;
+
+    // Check if there are any items in the tree
+    hRoot = TreeView_GetRoot(m_hTreeView);
+    if (hRoot == NULL) return;
+
+    if (DeviceId)
+    {
+        hItem = RecurseFindDevice(hRoot, DeviceId);
+        if (hItem)
+        {
+            TreeView_SelectItem(m_hTreeView, hItem);
+            TreeView_Expand(m_hTreeView, hItem, TVM_EXPAND);
+        }
+    }
+    else
+    {
+        TreeView_SelectItem(m_hTreeView, hRoot);
     }
 }
 
@@ -840,20 +898,8 @@ CDeviceView::RecurseDeviceView(
 void
 CDeviceView::EmptyDeviceView()
 {
-    HTREEITEM hItem;
-
-    // Check if there are any items in the tree
-    hItem = TreeView_GetRoot(m_hTreeView);
-    if (hItem == NULL) return;
-
-    // Free all the class nodes
-    //RecurseDeviceView(hItem);
-
-    // Delete all the items
     (VOID)TreeView_DeleteAllItems(m_hTreeView);
 }
-
-
 
 
 CClassNode*
@@ -972,6 +1018,8 @@ CDeviceView::RefreshDeviceList()
             {
                 m_ClassNodeList.AddTail(ClassNode);
             }
+
+            SetupDiDestroyDeviceInfoList(hDevInfo);
         }
         ClassIndex++;
     } while (Success);

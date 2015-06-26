@@ -18,6 +18,7 @@ CDeviceNode::CDeviceNode(
     ) :
     CNode(ImageListData),
     m_DevInst(Device),
+    m_hDevInfo(NULL),
     m_Status(0),
     m_ProblemNumber(0),
     m_OverlayImage(0)
@@ -27,7 +28,7 @@ CDeviceNode::CDeviceNode(
 
 CDeviceNode::~CDeviceNode()
 {
-    SetupDiDestroyDeviceInfoList(m_hDevInfo);
+    Cleanup();
 }
 
 bool
@@ -37,37 +38,31 @@ CDeviceNode::SetupNode()
     ULONG ulLength;
     CONFIGRET cr;
 
-    //    ATLASSERT(m_DeviceId == NULL);
-
-
     // Get the length of the device id string
     cr = CM_Get_Device_ID_Size(&ulLength, m_DevInst, 0);
     if (cr == CR_SUCCESS)
     {
         // We alloc heap here because this will be stored in the lParam of the TV
-        m_DeviceId = (LPWSTR)HeapAlloc(GetProcessHeap(),
-                                       0,
-                                       (ulLength + 1) * sizeof(WCHAR));
-        if (m_DeviceId)
+        m_DeviceId = new WCHAR[ulLength + 1];
+
+        // Now get the actual device id
+        cr = CM_Get_Device_IDW(m_DevInst,
+                                m_DeviceId,
+                                ulLength + 1,
+                                0);
+        if (cr != CR_SUCCESS)
         {
-            // Now get the actual device id
-            cr = CM_Get_Device_IDW(m_DevInst,
-                                   m_DeviceId,
-                                   ulLength + 1,
-                                   0);
-            if (cr != CR_SUCCESS)
-            {
-                HeapFree(GetProcessHeap(), 0, m_DeviceId);
-                m_DeviceId = NULL;
-            }
+            delete[] m_DeviceId;
+            m_DeviceId = NULL;
         }
+
     }
 
     // Make sure we got the string
     if (m_DeviceId == NULL)
         return false;
 
-    //SP_DEVINFO_DATA DevinfoData;
+    // Build up a handle a and devinfodata struct
     m_hDevInfo = SetupDiCreateDeviceInfoListExW(NULL,
                                                 NULL,
                                                 NULL,
@@ -83,28 +78,14 @@ CDeviceNode::SetupNode()
     }
 
 
-
-    // Get the current status of the device
-    cr = CM_Get_DevNode_Status_Ex(&m_Status,
-                                  &m_ProblemNumber,
-                                  m_DevInst,
-                                  0,
-                                  NULL);
-    if (cr != CR_SUCCESS)
-    {
-        HeapFree(GetProcessHeap(), 0, m_DeviceId);
-        m_DeviceId = NULL;
-        return false;
-    }
-
-    // Check if the device has a problem
-    if (m_Status & DN_HAS_PROBLEM)
+    // Set the overlay if the device has a problem
+    if (HasProblem())
     {
         m_OverlayImage = 1;
     }
 
     // The disabled overlay takes precidence over the problem overlay
-    if (m_ProblemNumber & (CM_PROB_DISABLED | CM_PROB_HARDWARE_DISABLED))
+    if (IsDisabled())
     {
         m_OverlayImage = 2;
     }
@@ -158,11 +139,11 @@ CDeviceNode::SetupNode()
     // Cleanup if something failed
     if (cr != CR_SUCCESS)
     {
-        HeapFree(GetProcessHeap(), 0, m_DeviceId);
-        m_DeviceId = NULL;
+        Cleanup();
+        return false;
     }
 
-    return (cr == CR_SUCCESS ? true : false);
+    return true;
 }
 
 bool
@@ -340,7 +321,7 @@ CDeviceNode::EnableDevice(
 
         if (Enable)
         {
-            // config specific enablling first, then global enabling.
+            // config specific enabling first, then global enabling.
             // The global appears to be the one that starts the device
             pcp.Scope = DICS_FLAG_GLOBAL;
             if (SetupDiSetClassInstallParamsW(m_hDevInfo,
@@ -360,6 +341,23 @@ CDeviceNode::EnableDevice(
     RemoveFlags(DI_NODI_DEFAULTACTION, 0);
 
     return true;
+}
+
+/* PRIVATE METHODS ******************************************************/
+
+void
+CDeviceNode::Cleanup()
+{
+    if (m_DeviceId)
+    {
+        delete[] m_DeviceId;
+        m_DeviceId = NULL;
+    }
+    if (m_hDevInfo)
+    {
+        SetupDiDestroyDeviceInfoList(m_hDevInfo);
+        m_hDevInfo = NULL;
+    }
 }
 
 DWORD

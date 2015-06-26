@@ -55,7 +55,8 @@ public:
     VOID Refresh(
         _In_ ViewType Type,
         _In_ bool ScanForChanges,
-        _In_ bool UpdateView
+        _In_ bool UpdateView,
+        _In_opt_ LPWSTR DeviceId
         );
 
     VOID DisplayPropertySheet();
@@ -127,11 +128,16 @@ private:
         _In_ CNode *Node
         );
 
-    VOID RecurseDeviceView(
-        _In_ HTREEITEM hParentItem
+    HTREEITEM RecurseFindDevice(
+        _In_ HTREEITEM hParentItem,
+        _In_ LPWSTR DeviceId
         );
 
-    VOID EmptyDeviceView(
+    void SelectNode(
+        _In_ LPWSTR DeviceId
+        );
+
+    void EmptyDeviceView(
         );
 
     CNode* GetNode(
@@ -145,6 +151,7 @@ private:
     CDeviceNode* GetDeviceNode(
         _In_ DEVINST Device
         );
-    void EmptyLists();
+    void EmptyLists(
+        );
 };
 

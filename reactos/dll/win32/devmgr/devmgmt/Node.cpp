@@ -24,19 +24,4 @@ CNode::CNode(_In_ PSP_CLASSIMAGELIST_DATA ImageListData) :
 
 CNode::~CNode()
 {
-    Cleanup();
-}
-
-
-/* PRIVATE METHODS ******************************************/
-
-
-void
-CNode::Cleanup()
-{
-    if (m_DeviceId)
-    {
-        HeapFree(GetProcessHeap(), 0, m_DeviceId);
-        m_DeviceId = NULL;
-    }
 }

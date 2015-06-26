@@ -38,6 +38,9 @@ public:
         );
 
 private:
+    void Cleanup(
+        );
+
     bool SetFlags(
         _In_ DWORD Flags,
         _In_ DWORD FlagsEx
