@@ -390,6 +390,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     static HMENU hRightPopupMenu;
     static TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
+    static UINT s_uTaskbarRestart;
 
     switch (Message)
     {
@@ -400,6 +401,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             hRightPopupMenu = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
 
             ActivateLayout(hwnd, ulCurrentLayoutNum);
+            s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
 
             return 0;
         }
@@ -506,6 +508,11 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             return 0;
         }
+
+        default:
+            if(Message == s_uTaskbarRestart)
+                AddTrayIcon(hwnd);
+            break;
     }
 
     return DefWindowProc(hwnd, Message, wParam, lParam);
