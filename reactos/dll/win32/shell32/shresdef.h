@@ -232,7 +232,6 @@
 #define IDD_RUN                1
 #define IDC_RUNDLG_DESCRIPTION 12289
 #define IDC_RUNDLG_BROWSE      12288
-#define IDC_RUNDLG_ICON        12297
 #define IDC_RUNDLG_EDITPATH    12298
 #define IDC_RUNDLG_LABEL       12305
 
