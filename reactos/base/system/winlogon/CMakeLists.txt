@@ -16,6 +16,7 @@ list(APPEND SOURCE
     winlogon.h
     ${CMAKE_CURRENT_BINARY_DIR}/winreg_s.c)
 
+add_rc_deps(winlogon.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/winlogon.ico)
 add_executable(winlogon ${SOURCE} winlogon.rc)
 target_link_libraries(winlogon wine)
 set_module_type(winlogon win32gui)

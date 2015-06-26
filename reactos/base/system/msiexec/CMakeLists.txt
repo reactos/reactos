@@ -7,6 +7,7 @@ list(APPEND SOURCE
     service.c
     precomp.h)
 
+add_rc_deps(rsrc.rc ${CMAKE_CURRENT_SOURCE_DIR}/msiexec.ico)
 add_executable(msiexec ${SOURCE} rsrc.rc)
 set_module_type(msiexec win32gui)
 target_link_libraries(msiexec uuid wine)
