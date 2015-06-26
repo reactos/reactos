@@ -581,6 +581,20 @@ interface IActiveIMMApp : IUnknown
 }
 
 [
+    object,
+    uuid(b5cf2cfa-8aeb-11d1-9364-0060b067b86e),
+    pointer_default(unique)
+]
+interface IActiveIMMMessagePumpOwner : IUnknown
+{
+    HRESULT Start();
+    HRESULT End();
+    HRESULT OnTranslateMessage([in] const MSG *msg);
+    HRESULT Pause([out] DWORD *cookie);
+    HRESULT Resume([in] DWORD cookie);
+}
+
+[
     uuid(4955dd33-b159-11d0-8fcf-00aa006bcc59)
 ]
 coclass CActiveIMM
@@ -588,6 +602,5 @@ coclass CActiveIMM
     [default] interface IActiveIMMApp;
     /* interface IActiveIMMIME; */
     /* interface IActiveIMMRegistrar; */
-    /* interface IActiveIMMMessagePumpOwner; */
+    interface IActiveIMMMessagePumpOwner;
 }
-

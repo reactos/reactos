@@ -1,13 +1,14 @@
 Index: activeimmapp.c
 ===================================================================
---- activeimmapp.c	(revision 48273)
+--- activeimmapp.c	(Wine c4be28ed)
 +++ activeimmapp.c	(working copy)
-@@ -655,7 +655,7 @@
+@@ -664,7 +644,9 @@
  static HRESULT WINAPI ActiveIMMApp_OnDefWindowProc(IActiveIMMApp* This,
          HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
  {
--    FIXME("Stub (%p %x %lx %lx)\n",hWnd,Msg,wParam,lParam);
-+    //FIXME("Stub (%p %x %lx %lx)\n",hWnd,Msg,wParam,lParam);
++#ifndef __REACTOS__
+     FIXME("Stub (%p %x %lx %lx)\n",hWnd,Msg,wParam,lParam);
++#endif
      return E_FAIL;
  }
  

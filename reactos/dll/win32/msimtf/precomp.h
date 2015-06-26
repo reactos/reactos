@@ -14,6 +14,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
+#include <winuser.h>
 #include <objbase.h>
 #include <dimm.h>
 
