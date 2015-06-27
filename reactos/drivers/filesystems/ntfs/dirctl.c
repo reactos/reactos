@@ -38,6 +38,7 @@
 static NTSTATUS
 NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
                        PFILE_RECORD_HEADER FileRecord,
+                       ULONGLONG MFTIndex,
                        PFILE_NAMES_INFORMATION Info,
                        ULONG BufferLength)
 {
@@ -47,7 +48,12 @@ NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
     DPRINT("NtfsGetNameInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(FileRecord);
-    ASSERT(FileName != NULL);
+    if (FileName == NULL)
+    {
+        DPRINT1("No name information for file ID: %#I64x\n", MFTIndex);
+        NtfsDumpFileAttributes(FileRecord);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
 
     Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_NAMES_INFORMATION) + Length) > BufferLength)
@@ -76,7 +82,12 @@ NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     DPRINT("NtfsGetDirectoryInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(FileRecord);
-    ASSERT(FileName != NULL);
+    if (FileName == NULL)
+    {
+        DPRINT1("No name information for file ID: %#I64x\n", MFTIndex);
+        NtfsDumpFileAttributes(FileRecord);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
 
     StdInfo = GetStandardInformationFromRecord(FileRecord);
     ASSERT(StdInfo != NULL);
@@ -121,7 +132,12 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     DPRINT("NtfsGetFullDirectoryInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(FileRecord);
-    ASSERT(FileName != NULL);
+    if (FileName == NULL)
+    {
+        DPRINT1("No name information for file ID: %#I64x\n", MFTIndex);
+        NtfsDumpFileAttributes(FileRecord);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
 
     StdInfo = GetStandardInformationFromRecord(FileRecord);
     ASSERT(StdInfo != NULL);
@@ -167,7 +183,12 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     DPRINT("NtfsGetBothDirectoryInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(FileRecord);
-    ASSERT(FileName != NULL);
+    if (FileName == NULL)
+    {
+        DPRINT1("No name information for file ID: %#I64x\n", MFTIndex);
+        NtfsDumpFileAttributes(FileRecord);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
     ShortFileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
 
     StdInfo = GetStandardInformationFromRecord(FileRecord);
@@ -332,6 +353,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                 case FileNameInformation:
                     Status = NtfsGetNameInformation(DeviceExtension,
                                                     FileRecord,
+                                                    MFTRecord,
                                                     (PFILE_NAMES_INFORMATION)Buffer,
                                                     BufferLength);
                     break;
