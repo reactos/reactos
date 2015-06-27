@@ -123,7 +123,28 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     Status = FindAttribute(DeviceExt, FileRecord, AttributeData, L"", 0, &DataContext);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("No data associated with file!\n");
+        PNTFS_ATTR_RECORD Attribute;
+
+        DPRINT1("No unnamed data stream associated with file!\n");
+
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+        while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+               Attribute->Type != AttributeEnd)
+        {
+            if (Attribute->Type == AttributeData)
+            {
+                UNICODE_STRING Name;
+
+                ASSERT(Attribute->NameLength != 0);
+                Name.Length = Attribute->NameLength * sizeof(WCHAR);
+                Name.MaximumLength = Name.Length;
+                Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
+                DPRINT1("Data stream: '%wZ' available\n", &Name);
+            }
+
+            Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+        }
+
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
         if (AllocatedBuffer)
         {
