@@ -2188,7 +2188,7 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     Cell = Kcb->KeyCell;
     CmHive = (PCMHIVE)Hive;
 
-    /* Fail if the key is no a hive root key */
+    /* Fail if the key is not a hive root key */
     if (Cell != Hive->BaseBlock->RootCell)
     {
         DPRINT1("Key is not a hive root key!\n");
