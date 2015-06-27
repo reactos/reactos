@@ -679,7 +679,7 @@ KiGetCacheInformation(VOID)
 
             /* Check if we support CPUID 0x80000005 */
             KiCpuId(&CpuInfo, 0x80000000);
-            if (CpuInfo.Eax >= 0x80000006)
+            if (CpuInfo.Eax >= 0x80000005)
             {
                 /* Get L1 size first */
                 KiCpuId(&CpuInfo, 0x80000005);
