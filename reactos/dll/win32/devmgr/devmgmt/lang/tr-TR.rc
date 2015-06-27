@@ -63,7 +63,7 @@ BEGIN
   IDS_TOOLTIP_PROPERTIES    "Husûsiyetler"
   IDS_TOOLTIP_SCAN          "Donanım Değişiklikleri İçin Tara"
   IDS_TOOLTIP_ENABLE        "Etkinleştir"
-  IDS_TOOLTIP_DIABLE        "Edilginleştir"
+  IDS_TOOLTIP_DISABLE       "Edilginleştir"
   IDS_TOOLTIP_UPDATE        "Sürücü Yazılmını Şimdikileştir"
   IDS_TOOLTIP_UNINSTALL     "Kaldır"
 END

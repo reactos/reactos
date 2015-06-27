@@ -61,7 +61,7 @@ BEGIN
   IDS_TOOLTIP_PROPERTIES    "Properties"
   IDS_TOOLTIP_SCAN          "Scan for hardware changes"
   IDS_TOOLTIP_ENABLE        "Enable"
-  IDS_TOOLTIP_DIABLE        "Disable"
+  IDS_TOOLTIP_DISABLE       "Disable"
   IDS_TOOLTIP_UPDATE        "Update Driver Software"
   IDS_TOOLTIP_UNINSTALL     "Uninstall"
 END

@@ -508,7 +508,7 @@ CMainWindow::OnNotify(LPARAM lParam)
                     lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_ENABLE);
                     break;
                 case IDC_DISABLE_DRV:
-                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_DIABLE);
+                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_DISABLE);
                     break;
                 case IDC_UPDATE_DRV:
                     lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_UPDATE);
