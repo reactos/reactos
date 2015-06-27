@@ -434,18 +434,17 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_NOTIFYICONMSG:
             switch (lParam)
             {
-                case WM_RBUTTONDOWN:
-                case WM_LBUTTONDOWN:
+                case WM_RBUTTONUP:
+                case WM_LBUTTONUP:
                 {
                     POINT pt;
 
                     GetCursorPos(&pt);
                     SetForegroundWindow(hwnd);
 
-                    if (lParam == WM_LBUTTONDOWN)
+                    if (lParam == WM_LBUTTONUP)
                     {
                         HMENU hLeftPopupMenu;
-
                         /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
                         hLeftPopupMenu = BuildLeftPopupMenu();
                         TrackPopupMenu(hLeftPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
