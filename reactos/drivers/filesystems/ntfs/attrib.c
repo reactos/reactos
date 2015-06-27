@@ -184,7 +184,53 @@ NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
 
 static
 VOID
-NtfsDumpAttribute(PNTFS_ATTR_RECORD Attribute)
+NtfsDumpAttribute(PDEVICE_EXTENSION Vcb, PNTFS_ATTR_RECORD Attribute);
+
+
+static
+VOID
+NtfsDumpAttributeListAttribute(PDEVICE_EXTENSION Vcb,
+                               PNTFS_ATTR_RECORD Attribute)
+{
+    PNTFS_ATTR_CONTEXT ListContext;
+    PVOID ListBuffer;
+    ULONGLONG ListSize;
+
+    ListContext = PrepareAttributeContext(Attribute);
+
+    ListSize = AttributeDataLength(&ListContext->Record);
+    if (ListSize <= 0xFFFFFFFF)
+        ListBuffer = ExAllocatePoolWithTag(NonPagedPool, (ULONG)ListSize, TAG_NTFS);
+    else
+        ListBuffer = NULL;
+
+    if (!ListBuffer)
+    {
+        DPRINT("Failed to allocate memory: %x\n", (ULONG)ListSize);
+        return;
+    }
+
+    if (ReadAttribute(Vcb, ListContext, 0, ListBuffer, (ULONG)ListSize) == ListSize)
+    {
+        Attribute = (PNTFS_ATTR_RECORD)ListBuffer;
+        while (Attribute < (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize) &&
+               Attribute->Type != AttributeEnd)
+        {
+            NtfsDumpAttribute(Vcb, Attribute);
+
+            Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+        }
+
+        ReleaseAttributeContext(ListContext);
+        ExFreePoolWithTag(ListBuffer, TAG_NTFS);
+    }
+}
+
+
+static
+VOID
+NtfsDumpAttribute(PDEVICE_EXTENSION Vcb,
+                  PNTFS_ATTR_RECORD Attribute)
 {
     UNICODE_STRING Name;
 
@@ -202,7 +248,7 @@ NtfsDumpAttribute(PNTFS_ATTR_RECORD Attribute)
             break;
 
         case AttributeAttributeList:
-            DbgPrint("  $ATTRIBUTE_LIST ");
+            NtfsDumpAttributeListAttribute(Vcb, Attribute);
             break;
 
         case AttributeObjectId:
@@ -264,32 +310,36 @@ NtfsDumpAttribute(PNTFS_ATTR_RECORD Attribute)
             break;
     }
 
-    if (Attribute->NameLength != 0)
+    if (Attribute->Type != AttributeAttributeList)
     {
-        Name.Length = Attribute->NameLength * sizeof(WCHAR);
-        Name.MaximumLength = Name.Length;
-        Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
+        if (Attribute->NameLength != 0)
+        {
+            Name.Length = Attribute->NameLength * sizeof(WCHAR);
+            Name.MaximumLength = Name.Length;
+            Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
 
-        DbgPrint("'%wZ' ", &Name);
-    }
+            DbgPrint("'%wZ' ", &Name);
+        }
 
-    DbgPrint("(%s)\n",
-             Attribute->IsNonResident ? "non-resident" : "resident");
+        DbgPrint("(%s)\n",
+                 Attribute->IsNonResident ? "non-resident" : "resident");
 
-    if (Attribute->IsNonResident)
-    {
-        FindRun(Attribute,0,&lcn, &runcount);
+        if (Attribute->IsNonResident)
+        {
+            FindRun(Attribute,0,&lcn, &runcount);
 
-        DbgPrint("  AllocatedSize %I64u  DataSize %I64u\n",
-                 Attribute->NonResident.AllocatedSize, Attribute->NonResident.DataSize);
-        DbgPrint("  logical clusters: %I64u - %I64u\n",
-                 lcn, lcn + runcount - 1);
+            DbgPrint("  AllocatedSize %I64u  DataSize %I64u\n",
+                     Attribute->NonResident.AllocatedSize, Attribute->NonResident.DataSize);
+            DbgPrint("  logical clusters: %I64u - %I64u\n",
+                     lcn, lcn + runcount - 1);
+        }
     }
 }
 
 
 VOID
-NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord)
+NtfsDumpFileAttributes(PDEVICE_EXTENSION Vcb,
+                       PFILE_RECORD_HEADER FileRecord)
 {
     PNTFS_ATTR_RECORD Attribute;
 
@@ -297,7 +347,7 @@ NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord)
     while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
            Attribute->Type != AttributeEnd)
     {
-        NtfsDumpAttribute(Attribute);
+        NtfsDumpAttribute(Vcb, Attribute);
 
         Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
     }

@@ -327,10 +327,10 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     }
 
     /* Enumerate attributes */
-    NtfsDumpFileAttributes(DeviceExt->MasterFileTable);
+    NtfsDumpFileAttributes(DeviceExt, DeviceExt->MasterFileTable);
 
     /* Enumerate attributes */
-    NtfsDumpFileAttributes(VolumeRecord);
+    NtfsDumpFileAttributes(DeviceExt, VolumeRecord);
 
     /* Get volume name */
     Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, L"", 0, &AttrCtxt);

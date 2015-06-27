@@ -486,7 +486,7 @@ DecodeRun(PUCHAR DataRun,
           ULONGLONG *DataRunLength);
 
 VOID
-NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
+NtfsDumpFileAttributes(PDEVICE_EXTENSION Vcb, PFILE_RECORD_HEADER FileRecord);
 
 PSTANDARD_INFORMATION
 GetStandardInformationFromRecord(PFILE_RECORD_HEADER FileRecord);
@@ -667,6 +667,9 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* mft.c */
+PNTFS_ATTR_CONTEXT
+PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord);
+
 VOID
 ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context);
 
