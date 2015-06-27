@@ -1372,7 +1372,6 @@ NTAPI
 NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
              IN ULONG Flags)
 {
-#if 0
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING ObjectName;
@@ -1381,6 +1380,7 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     PCM_KEY_BODY KeyBody = NULL;
     ULONG ParentConv = 0, ChildConv = 0;
     HANDLE Handle;
+
     PAGED_CODE();
 
     /* Validate privilege */
@@ -1515,11 +1515,11 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     {
         if (Flags != REG_FORCE_UNLOAD)
         {
-            /* Release the hive loading lock */
-            ExReleasePushLockExclusive(&CmpLoadHiveLock);
-
             /* Release two KCBs lock */
             CmpReleaseTwoKcbLockByKey(ChildConv, ParentConv);
+
+            /* Release the hive loading lock */
+            ExReleasePushLockExclusive(&CmpLoadHiveLock);
         }
 
         /* Unlock the registry */
@@ -1532,10 +1532,6 @@ Quickie:
 
     /* Return status */
     return Status;
-#else
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 NTSTATUS

@@ -2127,13 +2127,123 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
     return Status;
 }
 
+static
+BOOLEAN
+NTAPI
+CmpUnlinkHiveFromMaster(IN PHHIVE Hive,
+                        IN HCELL_INDEX Cell)
+{
+    PCELL_DATA CellData;
+    HCELL_INDEX LinkCell;
+    NTSTATUS Status;
+
+    DPRINT("CmpUnlinkHiveFromMaster()\n");
+
+    /* Get the cell data */
+    CellData = HvGetCell(Hive, Cell);
+    if (CellData == NULL)
+        return FALSE;
+
+    /* Get the link cell and release the current cell */
+    LinkCell = CellData->u.KeyNode.Parent;
+    HvReleaseCell(Hive, Cell);
+
+    /* Remove the link cell from the master hive */
+    CmpLockHiveFlusherExclusive(CmiVolatileHive);
+    Status = CmpFreeKeyByCell((PHHIVE)CmiVolatileHive,
+                              LinkCell,
+                              TRUE);
+    CmpUnlockHiveFlusher(CmiVolatileHive);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CmpFreeKeyByCell() failed (Status 0x%08lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Lock the hive list */
+    ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
+
+    /* Remove this hive */
+    RemoveEntryList(&((PCMHIVE)Hive)->HiveList);
+
+    /* Release the lock */
+    ExReleasePushLock(&CmpHiveListHeadLock);
+
+    return TRUE;
+}
+
 NTSTATUS
 NTAPI
 CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
             IN ULONG Flags)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PHHIVE Hive;
+    PCMHIVE CmHive;
+    HCELL_INDEX Cell;
+
+    DPRINT("CmUnloadKey(%p, %lx)\n", Kcb, Flags);
+
+    /* Get the hive */
+    Hive = Kcb->KeyHive;
+    Cell = Kcb->KeyCell;
+    CmHive = (PCMHIVE)Hive;
+
+    /* Fail if the key is no a hive root key */
+    if (Cell != Hive->BaseBlock->RootCell)
+    {
+        DPRINT1("Key is not a hive root key!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Fail if we try to unload the master hive */
+    if (CmHive == CmiVolatileHive)
+    {
+        DPRINT1("Do not try to unload the master hive!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Flush the hive */
+    CmFlushKey(Kcb, TRUE);
+
+    /* Unlink the hive from the master hive */
+    if (!CmpUnlinkHiveFromMaster(Hive, Cell))
+    {
+        DPRINT("CmpUnlinkHiveFromMaster() failed!\n");
+
+        /* Remove the unloading flag */
+        Hive->HiveFlags &= ~HIVE_IS_UNLOADING;
+
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Clean up information we have on the subkey */
+    CmpCleanUpSubKeyInfo(Kcb->ParentKcb);
+
+    /* Set the KCB in delete mode and remove it */
+    Kcb->Delete = TRUE;
+    CmpRemoveKeyControlBlock(Kcb);
+
+    if (Flags != REG_FORCE_UNLOAD)
+    {
+        /* Release the KCB locks */
+        CmpReleaseTwoKcbLockByKey(Kcb->ConvKey, Kcb->ParentKcb->ConvKey);
+
+        /* Release the hive loading lock */
+        ExReleasePushLockExclusive(&CmpLoadHiveLock);
+    }
+
+    /* Release hive lock */
+    CmpUnlockRegistry();
+
+    /* Close file handles */
+    CmpCloseHiveFiles(CmHive);
+
+    /* Remove the hive from the hive file list */
+    CmpRemoveFromHiveFileList(CmHive);
+
+    /* FIXME: Destroy the hive */
+
+    return STATUS_SUCCESS;
 }
 
 ULONG

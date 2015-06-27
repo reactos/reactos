@@ -2138,7 +2138,6 @@ CmShutdownSystem(VOID)
 {
     PLIST_ENTRY ListEntry;
     PCMHIVE Hive;
-    ULONG i;
 
     /* Kill the workers */
     if (!CmFirstTime) CmpShutdownWorkers();
@@ -2153,14 +2152,7 @@ CmShutdownSystem(VOID)
     {
         Hive = CONTAINING_RECORD(ListEntry, CMHIVE, HiveList);
 
-        for (i = 0; i < HFILE_TYPE_MAX; i++)
-        {
-            if (Hive->FileHandles[i] != NULL)
-            {
-                ZwClose(Hive->FileHandles[i]);
-                Hive->FileHandles[i] = NULL;
-            }
-        }
+        CmpCloseHiveFiles(Hive);
 
         ListEntry = ListEntry->Flink;
     }

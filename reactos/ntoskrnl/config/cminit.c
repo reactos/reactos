@@ -626,3 +626,19 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     ZwClose(EventHandle);
     return STATUS_SUCCESS;
 }
+
+VOID
+NTAPI
+CmpCloseHiveFiles(IN PCMHIVE Hive)
+{
+    ULONG i;
+
+    for (i = 0; i < HFILE_TYPE_MAX; i++)
+    {
+        if (Hive->FileHandles[i] != NULL)
+        {
+            ZwClose(Hive->FileHandles[i]);
+            Hive->FileHandles[i] = NULL;
+        }
+    }
+}

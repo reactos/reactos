@@ -828,6 +828,12 @@ CmpOpenHiveFiles(
     OUT PULONG ClusterSize OPTIONAL
 );
 
+VOID
+NTAPI
+CmpCloseHiveFiles(
+    IN PCMHIVE Hive
+);
+
 NTSTATUS
 NTAPI
 CmpInitHiveFromFile(
