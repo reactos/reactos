@@ -164,7 +164,7 @@ typedef struct _SHD_HEADER
     DWORD offDevMode;
     DWORD offPrintProcessor;
     DWORD offDatatype;
-    DWORD dwUnknown2;
+    DWORD offPrintProcessorParameters;
     SYSTEMTIME stSubmitted;
     DWORD dwStartTime;
     DWORD dwUntilTime;
@@ -191,7 +191,7 @@ BOOL WINAPI LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD L
 BOOL WINAPI LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pStart, DWORD cbBuf, LPDWORD pcbNeeded);
 BOOL WINAPI LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command);
 PLOCAL_JOB ReadJobShadowFile(PCWSTR pwszFilePath);
-BOOL WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob);
+BOOL WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob);
 
 // main.c
 extern const WCHAR wszCurrentEnvironment[];

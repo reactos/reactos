@@ -831,10 +831,14 @@ Cleanup:
 BOOL WINAPI
 LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
 {
+    const WCHAR wszFolder[] = L"\\PRINTERS\\";
+    const DWORD cchFolder = _countof(wszFolder) - 1;
+
     DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
+    WCHAR wszFullPath[MAX_PATH];
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
@@ -867,6 +871,14 @@ LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Com
 
     if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
+
+    // Construct the full path to the shadow file.
+    CopyMemory(wszFullPath, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
+    CopyMemory(&wszFullPath[cchSpoolDirectory], wszFolder, cchFolder * sizeof(WCHAR));
+    swprintf(&wszFullPath[cchSpoolDirectory + cchFolder], L"%05lu.SHD", JobId);
+
+    // Write the job data into the shadow file.
+    WriteJobShadowFile(wszFullPath, pJob);
 
     // Perform an additional command if desired.
     if (Command)
@@ -983,8 +995,10 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     PLOCAL_JOB pJob;
     PLOCAL_JOB pReturnValue = NULL;
     PLOCAL_PRINTER pPrinter;
+    PLOCAL_PRINT_PROCESSOR pPrintProcessor;
     PSHD_HEADER pShadowFile = NULL;
     PWSTR pwszPrinterName;
+    PWSTR pwszPrintProcessor;
 
     // Try to open the file.
     hFile = CreateFileW(pwszFilePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -1022,7 +1036,16 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     pPrinter = LookupElementSkiplist(&PrinterList, &pwszPrinterName, NULL);
     if (!pPrinter)
     {
-        ERR("Shadow file \"%S\" references a non-existing printer!\n", pwszFilePath);
+        ERR("Shadow file \"%S\" references a non-existing printer \"%S\"!\n", pwszFilePath, pwszPrinterName);
+        goto Cleanup;
+    }
+
+    // Retrieve the associated Print Processor from the list.
+    pwszPrintProcessor = (PWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offPrintProcessor);
+    pPrintProcessor = FindPrintProcessor(pwszPrintProcessor);
+    if (!pPrintProcessor)
+    {
+        ERR("Shadow file \"%S\" references a non-existing Print Processor \"%S\"!\n", pwszFilePath, pwszPrintProcessor);
         goto Cleanup;
     }
 
@@ -1035,12 +1058,22 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     }
 
     pJob->dwJobID = pShadowFile->dwJobID;
-    pJob->dwTotalPages = pShadowFile->dwTotalPages;
     pJob->dwPriority = pShadowFile->dwPriority;
+    pJob->dwStartTime = pShadowFile->dwStartTime;
+    pJob->dwTotalPages = pShadowFile->dwTotalPages;
+    pJob->dwUntilTime = pShadowFile->dwUntilTime;    
     pJob->pPrinter = pPrinter;
+    pJob->pPrintProcessor = pPrintProcessor;
     pJob->pwszDatatype = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDatatype));
     pJob->pwszDocumentName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDocumentName));
-    pJob->pwszOutputFile = NULL;
+    pJob->pwszMachineName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offMachineName));
+    pJob->pwszNotifyName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offNotifyName));
+
+    if (pShadowFile->offPrintProcessorParameters)
+        pJob->pwszPrintProcessorParameters = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offPrintProcessorParameters));
+
+    pJob->pwszUserName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offUserName));
+
     CopyMemory(&pJob->stSubmitted, &pShadowFile->stSubmitted, sizeof(SYSTEMTIME));
     CopyMemory(&pJob->DevMode, (PDEVMODEW)((ULONG_PTR)pShadowFile + pShadowFile->offDevMode), sizeof(DEVMODEW));
 
@@ -1057,31 +1090,48 @@ Cleanup:
 }
 
 BOOL
-WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob)
+WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
 {
     BOOL bReturnValue = FALSE;
     DWORD cbDatatype;
     DWORD cbDocumentName;
     DWORD cbFileSize;
+    DWORD cbMachineName;
+    DWORD cbNotifyName;
+    DWORD cbPrinterDriver;
     DWORD cbPrinterName;
+    DWORD cbPrintProcessor;
+    DWORD cbPrintProcessorParameters = 0;
+    DWORD cbUserName;
     DWORD cbWritten;
     DWORD dwCurrentOffset;
-    HANDLE hFile = INVALID_HANDLE_VALUE;
+    HANDLE hSHDFile = INVALID_HANDLE_VALUE;
+    HANDLE hSPLFile = INVALID_HANDLE_VALUE;
     PSHD_HEADER pShadowFile = NULL;
 
-    // Try to open the file.
-    hFile = CreateFileW(pwszFilePath, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
+    // Try to open the SHD file.
+    hSHDFile = CreateFileW(pwszFilePath, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
+    if (hSHDFile == INVALID_HANDLE_VALUE)
     {
         ERR("CreateFileW failed with error %lu for file \"%S\"!\n", GetLastError(), pwszFilePath);
         goto Cleanup;
     }
 
     // Compute the total size of the shadow file.
-    cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
     cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
     cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
-    cbFileSize = sizeof(SHD_HEADER) + cbPrinterName + cbDatatype + cbDocumentName + sizeof(DEVMODEW);
+    cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
+    cbNotifyName = (wcslen(pJob->pwszNotifyName) + 1) * sizeof(WCHAR);
+    cbPrinterDriver = (wcslen(pJob->pPrinter->pwszPrinterDriver) + 1) * sizeof(WCHAR);
+    cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+    cbPrintProcessor = (wcslen(pJob->pPrintProcessor->pwszName) + 1) * sizeof(WCHAR);
+    cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
+
+    // Print Processor Parameters are optional.
+    if (pJob->pwszPrintProcessorParameters)
+        cbPrintProcessorParameters = (wcslen(pJob->pwszPrintProcessorParameters) + 1) * sizeof(WCHAR);
+
+    cbFileSize = sizeof(SHD_HEADER) + cbDatatype + cbDocumentName + sizeof(DEVMODEW) + cbMachineName + cbNotifyName + cbPrinterDriver + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbUserName;
 
     // Allocate memory for it.
     pShadowFile = DllAllocSplMem(cbFileSize);
@@ -1097,17 +1147,21 @@ WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob)
 
     // Copy the values.
     pShadowFile->dwJobID = pJob->dwJobID;
-    pShadowFile->dwTotalPages = pJob->dwTotalPages;
     pShadowFile->dwPriority = pJob->dwPriority;
+    pShadowFile->dwStartTime = pJob->dwStartTime;
+    pShadowFile->dwTotalPages = pJob->dwTotalPages;
+    pShadowFile->dwUntilTime = pJob->dwUntilTime;
     CopyMemory(&pShadowFile->stSubmitted, &pJob->stSubmitted, sizeof(SYSTEMTIME));
+
+    // Determine the file size of the .SPL file
+    wcscpy(wcsrchr(pwszFilePath, L'.'), L".SPL");
+    hSPLFile = CreateFileW(pwszFilePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    if (hSPLFile != INVALID_HANDLE_VALUE)
+        pShadowFile->dwSPLSize = GetFileSize(hSPLFile, NULL);
 
     // Add the extra values that are stored as offsets in the shadow file.
     // The first value begins right after the shadow file header.
     dwCurrentOffset = sizeof(SHD_HEADER);
-
-    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pPrinter->pwszPrinterName, cbPrinterName);
-    pShadowFile->offPrinterName = dwCurrentOffset;
-    dwCurrentOffset += cbPrinterName;
 
     CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszDatatype, cbDatatype);
     pShadowFile->offDatatype = dwCurrentOffset;
@@ -1121,8 +1175,40 @@ WriteJobShadowFile(PCWSTR pwszFilePath, const PLOCAL_JOB pJob)
     pShadowFile->offDevMode = dwCurrentOffset;
     dwCurrentOffset += sizeof(DEVMODEW);
 
+    // offDriverName is only written, but automatically determined through offPrinterName when reading.
+    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pPrinter->pwszPrinterDriver, cbPrinterDriver);
+    pShadowFile->offDriverName = dwCurrentOffset;
+    dwCurrentOffset += cbPrinterDriver;
+
+    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszMachineName, cbMachineName);
+    pShadowFile->offMachineName = dwCurrentOffset;
+    dwCurrentOffset += cbMachineName;
+
+    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszNotifyName, cbNotifyName);
+    pShadowFile->offNotifyName = dwCurrentOffset;
+    dwCurrentOffset += cbNotifyName;
+
+    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pPrinter->pwszPrinterName, cbPrinterName);
+    pShadowFile->offPrinterName = dwCurrentOffset;
+    dwCurrentOffset += cbPrinterName;
+
+    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pPrintProcessor->pwszName, cbPrintProcessor);
+    pShadowFile->offPrintProcessor = dwCurrentOffset;
+    dwCurrentOffset += cbPrintProcessor;
+
+    if (cbPrintProcessorParameters)
+    {
+        CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszPrintProcessorParameters, cbPrintProcessorParameters);
+        pShadowFile->offPrintProcessorParameters = dwCurrentOffset;
+        dwCurrentOffset += cbPrintProcessorParameters;
+    }
+
+    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszUserName, cbUserName);
+    pShadowFile->offUserName = dwCurrentOffset;
+    dwCurrentOffset += cbUserName;
+
     // Write the file.
-    if (!WriteFile(hFile, pShadowFile, cbFileSize, &cbWritten, NULL))
+    if (!WriteFile(hSHDFile, pShadowFile, cbFileSize, &cbWritten, NULL))
     {
         ERR("WriteFile failed with error %lu for file \"%S\"!\n", GetLastError(), pwszFilePath);
         goto Cleanup;
@@ -1134,8 +1220,11 @@ Cleanup:
     if (pShadowFile)
         DllFreeSplMem(pShadowFile);
 
-    if (hFile != INVALID_HANDLE_VALUE)
-        CloseHandle(hFile);
+    if (hSHDFile != INVALID_HANDLE_VALUE)
+        CloseHandle(hSHDFile);
+
+    if (hSPLFile != INVALID_HANDLE_VALUE)
+        CloseHandle(hSPLFile);
 
     return bReturnValue;
 }
