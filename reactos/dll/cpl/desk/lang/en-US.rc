@@ -205,7 +205,7 @@ BEGIN
     IDS_COLOR_16BIT "High Color (16 Bit)"
     IDS_COLOR_24BIT "True Color (24 Bit)"
     IDS_COLOR_32BIT "True Color (32 Bit)"
-    IDS_PIXEL "%lux%lu Pixel"
+    IDS_PIXEL "%lux%lu pixels"
 END
 
 STRINGTABLE

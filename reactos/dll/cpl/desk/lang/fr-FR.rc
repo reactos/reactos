@@ -207,7 +207,7 @@ BEGIN
     IDS_COLOR_16BIT "Moyenne (16 Bits)"
     IDS_COLOR_24BIT "Vraies couleurs (24 Bits)"
     IDS_COLOR_32BIT "Optimale (32 Bits)"
-    IDS_PIXEL "%lux%lu Pixel"
+    IDS_PIXEL "%lux%lu pixels"
 END
 
 STRINGTABLE

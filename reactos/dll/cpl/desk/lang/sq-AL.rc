@@ -209,7 +209,7 @@ BEGIN
     IDS_COLOR_16BIT "Ngjyra Larta (16 Bit)"
     IDS_COLOR_24BIT "Ngjyra Verteta (24 Bit)"
     IDS_COLOR_32BIT "Ngjyra Verteta (32 Bit)"
-    IDS_PIXEL "%lux%lu Pixel"
+    IDS_PIXEL "%lux%lu pixels"
 END
 
 STRINGTABLE

@@ -205,7 +205,7 @@ BEGIN
     IDS_COLOR_16BIT "Warna Tinggi (16 Bit)"
     IDS_COLOR_24BIT "Warna Asli (24 Bit)"
     IDS_COLOR_32BIT "Warna Asli (32 Bit)"
-    IDS_PIXEL "%lux%lu Pixel"
+    IDS_PIXEL "%lux%lu pixels"
 END
 
 STRINGTABLE
