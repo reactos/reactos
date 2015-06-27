@@ -718,7 +718,6 @@ NTSTATUS
 NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
                  PFILE_RECORD_HEADER *FileRecord,
-                 PNTFS_ATTR_CONTEXT *DataContext,
                  PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex)
 {
@@ -726,7 +725,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     ULONG FirstEntry = 0;
 
-    DPRINT("NtfsLookupFileAt(%p, %wZ, %p, %p, %I64x)\n", Vcb, PathName, FileRecord, DataContext, CurrentMFTIndex);
+    DPRINT("NtfsLookupFileAt(%p, %wZ, %p, %I64x)\n", Vcb, PathName, FileRecord, CurrentMFTIndex);
 
     FsRtlDissectName(*PathName, &Current, &Remaining);
 
@@ -761,21 +760,6 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
         return Status;
     }
 
-    if (!((*FileRecord)->Flags & FRH_DIRECTORY))
-    {
-        Status = FindAttribute(Vcb, *FileRecord, AttributeData, L"", 0, DataContext);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("NtfsLookupFileAt: Can't find data attribute\n");
-            ExFreePoolWithTag(*FileRecord, TAG_NTFS);
-            return Status;
-        }
-    }
-    else
-    {
-        *DataContext = NULL;
-    }
-
     *MFTIndex = CurrentMFTIndex;
 
     return STATUS_SUCCESS;
@@ -785,10 +769,9 @@ NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
                PFILE_RECORD_HEADER *FileRecord,
-               PNTFS_ATTR_CONTEXT *DataContext,
                PULONGLONG MFTIndex)
 {
-    return NtfsLookupFileAt(Vcb, PathName, FileRecord, DataContext, MFTIndex, NTFS_FILE_ROOT);
+    return NtfsLookupFileAt(Vcb, PathName, FileRecord, MFTIndex, NTFS_FILE_ROOT);
 }
 
 NTSTATUS

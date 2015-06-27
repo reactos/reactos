@@ -530,7 +530,6 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     ULONGLONG CurrentDir;
     UNICODE_STRING File;
     PFILE_RECORD_HEADER FileRecord;
-    PNTFS_ATTR_CONTEXT DataContext;
     ULONGLONG MFTIndex;
 
     DPRINT1("NtfsDirFindFile(%p, %p, %S, %p)\n", Vcb, DirectoryFcb, FileToFind, FoundFCB);
@@ -539,7 +538,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     RtlInitUnicodeString(&File, FileToFind);
     CurrentDir = DirectoryFcb->MFTIndex;
 
-    Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &DataContext, &MFTIndex, CurrentDir);
+    Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &MFTIndex, CurrentDir);
     if (!NT_SUCCESS(Status))
     {
         return Status;
