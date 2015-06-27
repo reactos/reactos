@@ -8,13 +8,6 @@
 #include "precomp.h"
 
 DWORD
-_RpcEnumJobs(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, BYTE *pJob, DWORD cbBuf, DWORD *pcbNeeded, DWORD *pcReturned)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
 _RpcAddPrinter(WINSPOOL_HANDLE pName, WINSPOOL_PRINTER_CONTAINER *pPrinterContainer, WINSPOOL_DEVMODE_CONTAINER *pDevModeContainer, WINSPOOL_SECURITY_CONTAINER *pSecurityContainer, WINSPOOL_PRINTER_HANDLE *pHandle)
 {
     UNIMPLEMENTED;

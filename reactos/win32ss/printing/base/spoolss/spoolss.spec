@@ -59,7 +59,7 @@
 @ stdcall EndDocPrinter(long)
 @ stdcall EndPagePrinter(long)
 @ stub EnumFormsW
-@ stub EnumJobsW
+@ stdcall EnumJobsW(long long long long ptr long ptr ptr)
 @ stub EnumMonitorsW
 @ stub EnumPerMachineConnectionsW
 @ stub EnumPortsW
@@ -137,7 +137,7 @@
 @ stub SendRecvBidiData
 @ stub SetAllocFailCount
 @ stub SetFormW
-@ stub SetJobW
+@ stdcall SetJobW(long long long ptr long)
 @ stub SetPortW
 @ stub SetPrinterDataExW
 @ stub SetPrinterDataW

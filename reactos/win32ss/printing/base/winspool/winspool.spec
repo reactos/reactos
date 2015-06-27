@@ -9,7 +9,7 @@
 108 stub AbortPrinter
 109 stub AddFormA
 110 stub AddFormW
-111 stub AddJobA
+111 stdcall AddJobA(long long ptr long ptr)
 112 stdcall AddJobW(long long ptr long ptr)
 113 stub AddMonitorA
 114 stub AddMonitorW
@@ -83,8 +83,8 @@
 182 stdcall EndPagePrinter(long)
 183 stub EnumFormsA
 184 stub EnumFormsW
-185 stub EnumJobsA
-186 stub EnumJobsW
+185 stdcall EnumJobsA(long long long long ptr long ptr ptr)
+186 stdcall EnumJobsW(long long long long ptr long ptr ptr)
 187 stub EnumMonitorsA
 188 stub EnumMonitorsW
 189 stub EnumPortsA
@@ -142,7 +142,7 @@
 241 stub FreePrinterNotifyInfo
 242 stub GetFormA
 243 stub GetFormW
-244 stub GetJobA
+244 stdcall GetJobA(long long long ptr long ptr)
 245 stdcall GetJobW(long long long ptr long ptr)
 246 stub GetPrintProcessorDirectoryA
 247 stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
@@ -176,8 +176,8 @@
 275 stub SetAllocFailCount
 276 stub SetFormA
 277 stub SetFormW
-278 stub SetJobA
-279 stub SetJobW
+278 stdcall SetJobA(long long long ptr long)
+279 stdcall SetJobW(long long long ptr long)
 280 stub SetPortA
 281 stub SetPortW
 282 stub SetPrinterA
