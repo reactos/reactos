@@ -543,6 +543,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     PFILE_RECORD_HEADER FileRecord;
     ULONGLONG MFTIndex;
     PWSTR Colon;
+    PNTFS_ATTR_CONTEXT DataContext;
     USHORT Length = 0;
 
     DPRINT1("NtfsDirFindFile(%p, %p, %S, %p)\n", Vcb, DirectoryFcb, FileToFind, FoundFCB);
@@ -571,6 +572,20 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     if (Length != 0)
     {
         File.Length = Length;
+    }
+
+    if ((FileRecord->Flags & FRH_DIRECTORY) && Colon != 0)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+    else if (Colon != 0)
+    {
+        Status = FindAttribute(Vcb, FileRecord, AttributeData, Colon, wcslen(Colon), &DataContext);
+        if (!NT_SUCCESS(Status))
+        {
+            return STATUS_OBJECT_NAME_NOT_FOUND;
+        }
+        ReleaseAttributeContext(DataContext);
     }
 
     Status = NtfsMakeFCBFromDirEntry(Vcb, DirectoryFcb, &File, Colon, FileRecord, MFTIndex, FoundFCB);
