@@ -57,6 +57,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     ULONG ToRead;
     BOOLEAN AllocatedBuffer = FALSE;
     PCHAR ReadBuffer = (PCHAR)Buffer;
+    ULONGLONG StreamSize;
 
     DPRINT1("NtfsReadFile(%p, %p, %p, %u, %u, %x, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
 
@@ -69,33 +70,6 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     Fcb = (PNTFS_FCB)FileObject->FsContext;
-
-    if (ReadOffset >= Fcb->Entry.AllocatedSize)
-    {
-        DPRINT1("Reading beyond file end!\n");
-        return STATUS_END_OF_FILE;
-    }
-
-    ToRead = Length;
-    if (ReadOffset + Length > Fcb->Entry.AllocatedSize)
-        ToRead = Fcb->Entry.AllocatedSize - ReadOffset;
-
-    RealReadOffset = ReadOffset;
-    RealLength = ToRead;
-
-    if ((ReadOffset % DeviceExt->NtfsInfo.BytesPerSector) != 0 || (ToRead % DeviceExt->NtfsInfo.BytesPerSector) != 0)
-    {
-        RealReadOffset = ROUND_DOWN(ReadOffset, DeviceExt->NtfsInfo.BytesPerSector);
-        RealLength = ROUND_UP(ToRead, DeviceExt->NtfsInfo.BytesPerSector);
-
-        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength + DeviceExt->NtfsInfo.BytesPerSector, TAG_NTFS);
-        if (ReadBuffer == NULL)
-        {
-            DPRINT1("Not enough memory!\n");
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        AllocatedBuffer = TRUE;
-    }
 
     FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
     if (FileRecord == NULL)
@@ -120,12 +94,13 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, L"", 0, &DataContext);
+
+    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext);
     if (!NT_SUCCESS(Status))
     {
         PNTFS_ATTR_RECORD Attribute;
 
-        DPRINT1("No unnamed data stream associated with file!\n");
+        DPRINT1("No '%S' data stream associated with file!\n", Fcb->Stream);
 
         Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
         while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
@@ -135,7 +110,6 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
             {
                 UNICODE_STRING Name;
 
-                ASSERT(Attribute->NameLength != 0);
                 Name.Length = Attribute->NameLength * sizeof(WCHAR);
                 Name.MaximumLength = Name.Length;
                 Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
@@ -145,17 +119,46 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
             Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
         }
 
+        ReleaseAttributeContext(DataContext);
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
-        if (AllocatedBuffer)
-        {
-            ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
-        }
         return Status;
     }
 
-    DPRINT1("Effective read: %lu at %lu\n", RealLength, RealReadOffset);
+    StreamSize = AttributeDataLength(&DataContext->Record);
+    if (ReadOffset >= StreamSize)
+    {
+        DPRINT1("Reading beyond stream end!\n");
+        ReleaseAttributeContext(DataContext);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return STATUS_END_OF_FILE;
+    }
+
+    ToRead = Length;
+    if (ReadOffset + Length > StreamSize)
+        ToRead = StreamSize - ReadOffset;
+
+    RealReadOffset = ReadOffset;
+    RealLength = ToRead;
+
+    if ((ReadOffset % DeviceExt->NtfsInfo.BytesPerSector) != 0 || (ToRead % DeviceExt->NtfsInfo.BytesPerSector) != 0)
+    {
+        RealReadOffset = ROUND_DOWN(ReadOffset, DeviceExt->NtfsInfo.BytesPerSector);
+        RealLength = ROUND_UP(ToRead, DeviceExt->NtfsInfo.BytesPerSector);
+
+        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength + DeviceExt->NtfsInfo.BytesPerSector, TAG_NTFS);
+        if (ReadBuffer == NULL)
+        {
+            DPRINT1("Not enough memory!\n");
+            ReleaseAttributeContext(DataContext);
+            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        AllocatedBuffer = TRUE;
+    }
+
+    DPRINT1("Effective read: %lu at %lu for stream '%S'\n", RealLength, RealReadOffset, Fcb->Stream);
     RealLengthRead = ReadAttribute(DeviceExt, DataContext, RealReadOffset, (PCHAR)ReadBuffer, RealLength);
-    if (RealLengthRead != RealLength)
+    if (RealLengthRead == 0)
     {
         DPRINT1("Read failure!\n");
         ReleaseAttributeContext(DataContext);

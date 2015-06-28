@@ -65,6 +65,7 @@ NtfsWSubString(PWCHAR pTarget,
 
 PNTFS_FCB
 NtfsCreateFCB(PCWSTR FileName,
+              PCWSTR Stream,
               PNTFS_VCB Vcb)
 {
     PNTFS_FCB Fcb;
@@ -91,6 +92,15 @@ NtfsCreateFCB(PCWSTR FileName,
         {
             Fcb->ObjectName = Fcb->PathName;
         }
+    }
+
+    if (Stream)
+    {
+        wcscpy(Fcb->Stream, Stream);
+    }
+    else
+    {
+        Fcb->Stream[0] = UNICODE_NULL;
     }
 
     ExInitializeResourceLite(&Fcb->MainResource);
@@ -316,7 +326,7 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
         return NULL;
     }
 
-    Fcb = NtfsCreateFCB(L"\\", Vcb);
+    Fcb = NtfsCreateFCB(L"\\", NULL, Vcb);
     if (!Fcb)
     {
         ExFreePoolWithTag(MftRecord, TAG_NTFS);
@@ -400,18 +410,19 @@ NtfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS
 NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
-			PNTFS_FCB DirectoryFCB,
-			PUNICODE_STRING Name,
-			PFILE_RECORD_HEADER Record,
+                        PNTFS_FCB DirectoryFCB,
+                        PUNICODE_STRING Name,
+                        PCWSTR Stream,
+                        PFILE_RECORD_HEADER Record,
                         ULONGLONG MFTIndex,
-			PNTFS_FCB * fileFCB)
+                        PNTFS_FCB * fileFCB)
 {
     WCHAR pathName[MAX_PATH];
     PFILENAME_ATTRIBUTE FileName;
     PSTANDARD_INFORMATION StdInfo;
     PNTFS_FCB rcFCB;
 
-    DPRINT1("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p)\n", Vcb, DirectoryFCB, Name, Record, fileFCB);
+    DPRINT1("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p, %p)\n", Vcb, DirectoryFCB, Name, Stream, Record, fileFCB);
 
     FileName = GetBestFileNameFromRecord(Record);
     if (!FileName)
@@ -440,7 +451,7 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
         pathName[FileName->NameLength] = UNICODE_NULL;
     }
 
-    rcFCB = NtfsCreateFCB(pathName, Vcb);
+    rcFCB = NtfsCreateFCB(pathName, Stream, Vcb);
     if (!rcFCB)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -531,6 +542,8 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     UNICODE_STRING File;
     PFILE_RECORD_HEADER FileRecord;
     ULONGLONG MFTIndex;
+    PWSTR Colon;
+    USHORT Length = 0;
 
     DPRINT1("NtfsDirFindFile(%p, %p, %S, %p)\n", Vcb, DirectoryFcb, FileToFind, FoundFCB);
 
@@ -538,13 +551,29 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     RtlInitUnicodeString(&File, FileToFind);
     CurrentDir = DirectoryFcb->MFTIndex;
 
+    Colon = wcsrchr(FileToFind, L':');
+    if (Colon != NULL)
+    {
+        Length = File.Length;
+        File.Length = (Colon - FileToFind) * sizeof(WCHAR);
+
+        /* Skip colon */
+        ++Colon;
+        DPRINT1("Will now look for file '%wZ' with stream '%S'\n", &File, Colon);
+    }
+
     Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &MFTIndex, CurrentDir);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    Status = NtfsMakeFCBFromDirEntry(Vcb, DirectoryFcb, &File, FileRecord, MFTIndex, FoundFCB);
+    if (Length != 0)
+    {
+        File.Length = Length;
+    }
+
+    Status = NtfsMakeFCBFromDirEntry(Vcb, DirectoryFcb, &File, Colon, FileRecord, MFTIndex, FoundFCB);
     ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
     return Status;

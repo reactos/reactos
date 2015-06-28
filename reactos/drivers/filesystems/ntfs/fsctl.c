@@ -352,7 +352,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         VolumeNameU = L"\0";
     }
 
-    VolumeFcb = NtfsCreateFCB(VolumeNameU, DeviceExt);
+    VolumeFcb = NtfsCreateFCB(VolumeNameU, NULL, DeviceExt);
     if (VolumeFcb == NULL)
     {
         DPRINT1("Failed allocating volume FCB\n");
@@ -456,7 +456,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
     InitializeListHead(&Vcb->FcbListHead);
 
-    Fcb = NtfsCreateFCB(NULL, Vcb);
+    Fcb = NtfsCreateFCB(NULL, NULL, Vcb);
     if (Fcb == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;

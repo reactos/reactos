@@ -440,6 +440,7 @@ typedef struct _FCB
     PFILE_OBJECT FileObject;
     PNTFS_VCB Vcb;
 
+    WCHAR Stream[MAX_PATH];
     WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
     WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
 
@@ -586,6 +587,7 @@ FAST_IO_WRITE NtfsFastIoWrite;
 
 PNTFS_FCB
 NtfsCreateFCB(PCWSTR FileName,
+              PCWSTR Stream,
               PNTFS_VCB Vcb);
 
 VOID
@@ -649,6 +651,7 @@ NTSTATUS
 NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
                         PNTFS_FCB DirectoryFCB,
                         PUNICODE_STRING Name,
+                        PCWSTR Stream,
                         PFILE_RECORD_HEADER Record,
                         ULONGLONG MFTIndex,
                         PNTFS_FCB * fileFCB);

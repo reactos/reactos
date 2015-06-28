@@ -218,7 +218,7 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
         UNICODE_STRING Name;
 
         RtlInitUnicodeString(&Name, MftIdToName[MftId]);
-        Status = NtfsMakeFCBFromDirEntry(DeviceExt, NULL, &Name, MftRecord, MftId, &FCB);
+        Status = NtfsMakeFCBFromDirEntry(DeviceExt, NULL, &Name, NULL, MftRecord, MftId, &FCB);
         if (!NT_SUCCESS(Status))
         {
             ExFreePoolWithTag(MftRecord, TAG_NTFS);
