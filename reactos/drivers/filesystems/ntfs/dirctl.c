@@ -35,6 +35,31 @@
 /* FUNCTIONS ****************************************************************/
 
 
+static ULONGLONG
+NtfsGetFileSize(PFILE_RECORD_HEADER FileRecord,
+                PFILENAME_ATTRIBUTE FileName)
+{
+    ULONGLONG Size;
+    PNTFS_ATTR_RECORD Attribute;
+
+    Size = FileName->AllocatedSize;
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+           Attribute->Type != AttributeEnd)
+    {
+        if (Attribute->Type == AttributeData && Attribute->NameLength == 0)
+        {
+            Size = AttributeDataLength(Attribute);
+            break;
+        }
+
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+    }
+
+    return Size;
+}
+
+
 static NTSTATUS
 NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
                        PFILE_RECORD_HEADER FileRecord,
@@ -109,8 +134,8 @@ NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     /* Convert file flags */
     NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
 
-    Info->EndOfFile.QuadPart = FileName->AllocatedSize;
-    Info->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
+    Info->EndOfFile.QuadPart = NtfsGetFileSize(FileRecord, FileName);
+    Info->AllocationSize.QuadPart = ROUND_UP(Info->EndOfFile.QuadPart, DeviceExt->NtfsInfo.BytesPerCluster);
 
     Info->FileIndex = MFTIndex;
 
@@ -159,8 +184,8 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     /* Convert file flags */
     NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
 
-    Info->EndOfFile.QuadPart = FileName->AllocatedSize;
-    Info->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
+    Info->EndOfFile.QuadPart = NtfsGetFileSize(FileRecord, FileName);
+    Info->AllocationSize.QuadPart = ROUND_UP(Info->EndOfFile.QuadPart, DeviceExt->NtfsInfo.BytesPerCluster);
 
     Info->FileIndex = MFTIndex;
     Info->EaSize = 0;
@@ -224,8 +249,8 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     /* Convert file flags */
     NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
 
-    Info->EndOfFile.QuadPart = FileName->AllocatedSize;
-    Info->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
+    Info->EndOfFile.QuadPart = NtfsGetFileSize(FileRecord, FileName);
+    Info->AllocationSize.QuadPart = ROUND_UP(Info->EndOfFile.QuadPart, DeviceExt->NtfsInfo.BytesPerCluster);
 
     Info->FileIndex = MFTIndex;
     Info->EaSize = 0;
