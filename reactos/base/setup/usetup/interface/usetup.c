@@ -3080,6 +3080,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     WCHAR InstallDir[51];
+    WCHAR c;
     ULONG Length;
 
     /* We do not need the filsystem list any more */
@@ -3157,10 +3158,14 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         {
             if (Length < 50)
             {
-                InstallDir[Length] = (WCHAR)Ir->Event.KeyEvent.uChar.AsciiChar;
-                Length++;
-                InstallDir[Length] = 0;
-                CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
+                c = (WCHAR)Ir->Event.KeyEvent.uChar.AsciiChar;
+                if (iswalpha(c) || iswdigit(c) || c == '.' || c == '\\' || c == '-' || c == '_')
+                {
+                    InstallDir[Length] = c;
+                    Length++;
+                    InstallDir[Length] = 0;
+                    CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
+                }
             }
         }
     }
