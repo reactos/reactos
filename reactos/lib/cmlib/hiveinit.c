@@ -529,6 +529,7 @@ HvInitialize(
  * @name HvFree
  *
  * Free all stroage and handles associated with hive descriptor.
+ * But do not free the hive descriptor itself.
  */
 
 VOID CMAPI
@@ -544,9 +545,14 @@ HvFree(
       }
 
       HvpFreeHiveBins(RegistryHive);
-   }
 
-   RegistryHive->Free(RegistryHive, 0);
+      /* Free the BaseBlock */
+      if (RegistryHive->BaseBlock)
+      {
+         RegistryHive->Free(RegistryHive->BaseBlock, 0);
+         RegistryHive->BaseBlock = NULL;
+      }
+   }
 }
 
 /* EOF */

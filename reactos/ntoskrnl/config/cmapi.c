@@ -2241,7 +2241,20 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Remove the hive from the hive file list */
     CmpRemoveFromHiveFileList(CmHive);
 
-    /* FIXME: Destroy the hive */
+    /* FIXME: More cleanup */
+
+    /* Free the hive storage */
+    HvFree(Hive);
+
+    /* Delete the flusher lock */
+    ExDeleteResourceLite(CmHive->FlusherLock);
+    ExFreePoolWithTag(CmHive->FlusherLock, TAG_CM);
+
+    /* Delete the view lock */
+    ExFreePoolWithTag(CmHive->ViewLock, TAG_CM);
+
+    /* Free the hive */
+    CmpFree(CmHive, TAG_CM);
 
     return STATUS_SUCCESS;
 }

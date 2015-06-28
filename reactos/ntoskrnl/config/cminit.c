@@ -257,8 +257,11 @@ CmpDestroyHive(IN PCMHIVE CmHive)
     /* Delete the view lock */
     ExFreePoolWithTag(CmHive->ViewLock, TAG_CM);
 
-    /* Free the hive */
+    /* Free the hive storage */
     HvFree(&CmHive->Hive);
+
+    /* Free the hive */
+    CmpFree(CmHive, TAG_CM);
 
     return STATUS_SUCCESS;
 }
