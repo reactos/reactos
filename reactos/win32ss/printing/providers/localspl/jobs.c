@@ -267,6 +267,7 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     pJob->pPrinter = pPrinterHandle->pPrinter;
     pJob->pPrintProcessor = pPrinterHandle->pPrinter->pPrintProcessor;
     pJob->dwPriority = DEF_PRIORITY;
+    pJob->dwStatus = JOB_STATUS_SPOOLING;
     pJob->pwszDatatype = AllocSplStr(pPrinterHandle->pwszDatatype);
     pJob->pwszDocumentName = AllocSplStr(wszDefaultDocumentName);
     CopyMemory(&pJob->DevMode, &pPrinterHandle->DevMode, sizeof(DEVMODEW));
@@ -986,6 +987,65 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
+BOOL WINAPI
+LocalScheduleJob(HANDLE hPrinter, DWORD dwJobID)
+{
+    const WCHAR wszFolder[] = L"\\PRINTERS\\";
+    const DWORD cchFolder = _countof(wszFolder) - 1;
+
+    DWORD dwAttributes;
+    DWORD dwErrorCode;
+    PLOCAL_HANDLE pHandle;
+    PLOCAL_JOB pJob;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+    WCHAR wszFullPath[MAX_PATH];
+
+    // Check if this is a printer handle.
+    pHandle = (PLOCAL_HANDLE)hPrinter;
+    if (pHandle->HandleType != Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // Check if the Job ID is valid.
+    pJob = LookupElementSkiplist(&GlobalJobList, &dwJobID, NULL);
+    if (!pJob || pJob->pPrinter != pPrinterHandle->pPrinter)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    // Construct the full path to the spool file.
+    CopyMemory(wszFullPath, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
+    CopyMemory(&wszFullPath[cchSpoolDirectory], wszFolder, cchFolder * sizeof(WCHAR));
+    swprintf(&wszFullPath[cchSpoolDirectory + cchFolder], L"%05lu.SPL", dwJobID);
+
+    // Check if it exists.
+    dwAttributes = GetFileAttributesW(wszFullPath);
+    if (dwAttributes == INVALID_FILE_ATTRIBUTES || dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    {
+        dwErrorCode = ERROR_SPOOL_FILE_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    // Switch from spooling to printing.
+    pJob->dwStatus &= ~JOB_STATUS_SPOOLING;
+    pJob->dwStatus |= JOB_STATUS_PRINTING;
+
+    // Write the job data into the shadow file.
+    wcscpy(wcsrchr(wszFullPath, L'.'), L".SHD");
+    WriteJobShadowFile(wszFullPath, pJob);
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
 PLOCAL_JOB
 ReadJobShadowFile(PCWSTR pwszFilePath)
 {
@@ -1001,7 +1061,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     PWSTR pwszPrintProcessor;
 
     // Try to open the file.
-    hFile = CreateFileW(pwszFilePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    hFile = CreateFileW(pwszFilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         ERR("CreateFileW failed with error %lu for file \"%S\"!\n", GetLastError(), pwszFilePath);
@@ -1013,7 +1073,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     pShadowFile = DllAllocSplMem(cbFileSize);
     if (!pShadowFile)
     {
-        ERR("DllAllocSplMem failed with error %lufor file \"%S\"!\n", GetLastError(), pwszFilePath);
+        ERR("DllAllocSplMem failed with error %lu for file \"%S\"!\n", GetLastError(), pwszFilePath);
         goto Cleanup;
     }
 
@@ -1110,7 +1170,7 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
     PSHD_HEADER pShadowFile = NULL;
 
     // Try to open the SHD file.
-    hSHDFile = CreateFileW(pwszFilePath, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
+    hSHDFile = CreateFileW(pwszFilePath, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL);
     if (hSHDFile == INVALID_HANDLE_VALUE)
     {
         ERR("CreateFileW failed with error %lu for file \"%S\"!\n", GetLastError(), pwszFilePath);

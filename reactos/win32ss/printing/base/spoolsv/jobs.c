@@ -139,8 +139,20 @@ _RpcGetJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId, DWORD Level, BYTE* pJo
 DWORD
 _RpcScheduleJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    ScheduleJob(hPrinter, JobId);
+    dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD

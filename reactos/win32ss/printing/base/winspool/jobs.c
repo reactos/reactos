@@ -164,6 +164,27 @@ GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWO
 }
 
 BOOL WINAPI
+ScheduleJob(HANDLE hPrinter, DWORD dwJobID)
+{
+    DWORD dwErrorCode;
+
+    // Do the RPC call
+    RpcTryExcept
+    {
+        dwErrorCode = _RpcScheduleJob(hPrinter, dwJobID);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcSetJob failed with exception code %lu!\n", dwErrorCode);
+    }
+    RpcEndExcept;
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
 SetJobA(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
 {
     UNIMPLEMENTED;

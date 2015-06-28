@@ -60,7 +60,7 @@ static const PRINTPROVIDOR _PrintProviderFunctions = {
     NULL,                                       // fpReadPrinter
     LocalEndDocPrinter,                         // fpEndDocPrinter
     LocalAddJob,                                // fpAddJob
-    NULL,                                       // fpScheduleJob
+    LocalScheduleJob,                           // fpScheduleJob
     NULL,                                       // fpGetPrinterData
     NULL,                                       // fpSetPrinterData
     NULL,                                       // fpWaitForPrinterChange

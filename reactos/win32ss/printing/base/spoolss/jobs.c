@@ -26,6 +26,12 @@ GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pJob, DWORD cbBuf, LPD
 }
 
 BOOL WINAPI
+ScheduleJob(HANDLE hPrinter, DWORD dwJobID)
+{
+    return LocalSplFuncs.fpScheduleJob(hPrinter, dwJobID);
+}
+
+BOOL WINAPI
 SetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
 {
     return LocalSplFuncs.fpSetJob(hPrinter, JobId, Level, pJobInfo, Command);

@@ -212,6 +212,12 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
     return bReturnValue;
 }
 
+BOOL WINAPI
+ReadPrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pNoBytesRead)
+{
+    return FALSE;
+}
+
 DWORD WINAPI
 StartDocPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
 {

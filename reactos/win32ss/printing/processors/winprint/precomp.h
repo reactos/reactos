@@ -22,4 +22,19 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(winprint);
 
+// Structures
+typedef struct _WINPRINT_HANDLE
+{
+    enum { RAW } Datatype;
+    DWORD dwJobID;
+    PWSTR pwszDatatype;
+    PWSTR pwszDocumentName;
+    PWSTR pwszOutputFile;
+    PWSTR pwszPrinterPort;
+}
+WINPRINT_HANDLE, *PWINPRINT_HANDLE;
+
+// raw.c
+DWORD PrintRawJob(PWINPRINT_HANDLE pHandle, PWSTR pwszPrinterAndJob);
+
 #endif

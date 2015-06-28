@@ -168,10 +168,10 @@
 267 stub QueryColorProfile
 268 stub QueryRemoteFonts
 269 stub QuerySpoolMode
-270 stub ReadPrinter
+270 stdcall ReadPrinter(long ptr long ptr)
 271 stub ResetPrinterA
 272 stub ResetPrinterW
-273 stub ScheduleJob
+273 stdcall ScheduleJob(long long)
 274 stub SeekPrinter
 275 stub SetAllocFailCount
 276 stub SetFormA

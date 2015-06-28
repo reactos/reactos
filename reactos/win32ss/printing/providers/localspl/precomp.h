@@ -48,8 +48,8 @@ typedef BOOL (WINAPI *PPrintDocumentOnPrintProcessor)(HANDLE, LPWSTR);
 
 // Structures
 /**
-* Describes a Print Processor.
-*/
+ * Describes a Print Processor.
+ */
 typedef struct _LOCAL_PRINT_PROCESSOR
 {
     LIST_ENTRY Entry;
@@ -189,6 +189,7 @@ void InitializePrinterJobList(PLOCAL_PRINTER pPrinter);
 BOOL WINAPI LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcbNeeded);
 BOOL WINAPI LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pStart, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pStart, DWORD cbBuf, LPDWORD pcbNeeded);
+BOOL WINAPI LocalScheduleJob(HANDLE hPrinter, DWORD dwJobID);
 BOOL WINAPI LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command);
 PLOCAL_JOB ReadJobShadowFile(PCWSTR pwszFilePath);
 BOOL WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob);

@@ -114,7 +114,7 @@
 @ stub ProvidorFindClosePrinterChangeNotification
 @ stub ProvidorFindFirstPrinterChangeNotification
 @ stub pszDbgAllocMsgA
-@ stub ReadPrinter
+@ stdcall ReadPrinter(long ptr long ptr)
 @ stdcall ReallocSplMem(ptr long long)
 @ stdcall ReallocSplStr(ptr ptr)
 @ stub RemoteFindFirstPrinterChangeNotification
@@ -132,7 +132,7 @@
 @ stub RouterFreePrinterNotifyInfo
 @ stub RouterRefreshPrinterChangeNotification
 @ stub RouterReplyPrinter
-@ stub ScheduleJob
+@ stdcall ScheduleJob(long long)
 @ stub SeekPrinter
 @ stub SendRecvBidiData
 @ stub SetAllocFailCount

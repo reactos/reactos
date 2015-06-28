@@ -3,12 +3,12 @@ spec2def(winprint.dll winprint.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     main.c
+    raw.c
     precomp.h)
 
 add_library(winprint SHARED
     ${SOURCE}
     winprint.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/winprint_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/winprint.def)
 
 set_module_type(winprint win32dll UNICODE)

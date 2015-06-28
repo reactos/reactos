@@ -7,10 +7,68 @@
 
 #include "precomp.h"
 
-PCWSTR pwszDatatypes[] = {
+// Local Constants
+static PCWSTR _pwszDatatypes[] = {
     L"RAW",
     0
 };
+
+
+/**
+ * @name ClosePrintProcessor
+ *
+ * Closes a Print Processor Handle that has previously been opened through OpenPrintProcessor.
+ *
+ * @param hPrintProcessor
+ * The return value of a previous successful OpenPrintProcessor call.
+ *
+ * @return
+ * TRUE if the Print Processor Handle was successfully closed, FALSE otherwise.
+ * A more specific error code can be obtained through GetLastError.
+ */
+BOOL WINAPI
+ClosePrintProcessor(HANDLE hPrintProcessor)
+{
+    DWORD dwErrorCode;
+    PWINPRINT_HANDLE pHandle;
+
+    // Sanity checks
+    if (!hPrintProcessor)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pHandle = (PWINPRINT_HANDLE)hPrintProcessor;
+
+    // Free all structure fields for which memory has been allocated.
+    if (pHandle->pwszDatatype)
+        DllFreeSplStr(pHandle->pwszDatatype);
+
+    if (pHandle->pwszDocumentName)
+        DllFreeSplStr(pHandle->pwszDocumentName);
+
+    if (pHandle->pwszOutputFile)
+        DllFreeSplStr(pHandle->pwszOutputFile);
+
+    if (pHandle->pwszPrinterPort)
+        DllFreeSplStr(pHandle->pwszPrinterPort);
+
+    // Finally free the WINSPOOL_HANDLE structure itself.
+    DllFreeSplMem(pHandle);
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+ControlPrintProcessor(HANDLE hPrintProcessor, DWORD Command)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
 /**
  * @name EnumPrintProcessorDatatypesW
@@ -50,7 +108,7 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
 {
     DWORD cbDatatype;
     DWORD dwErrorCode;
-    DWORD dwOffsets[_countof(pwszDatatypes)];
+    DWORD dwOffsets[_countof(_pwszDatatypes)];
     PCWSTR* pCurrentDatatype;
     PDWORD pCurrentOffset = dwOffsets;
 
@@ -65,7 +123,7 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
     *pcbNeeded = 0;
     *pcReturned = 0;
 
-    for (pCurrentDatatype = pwszDatatypes; *pCurrentDatatype; pCurrentDatatype++)
+    for (pCurrentDatatype = _pwszDatatypes; *pCurrentDatatype; pCurrentDatatype++)
     {
         cbDatatype = (wcslen(*pCurrentDatatype) + 1) * sizeof(WCHAR);
         *pcbNeeded += sizeof(DATATYPES_INFO_1W) + cbDatatype;
@@ -93,9 +151,120 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
 
     // Copy over all datatypes.
     *pCurrentOffset = MAXDWORD;
-    PackStrings(pwszDatatypes, pDatatypes, dwOffsets, &pDatatypes[*pcbNeeded]);
+    PackStrings(_pwszDatatypes, pDatatypes, dwOffsets, &pDatatypes[*pcbNeeded]);
 
     dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+
+DWORD WINAPI
+GetPrintProcessorCapabilities(PWSTR pValueName, DWORD dwAttributes, PBYTE pData, DWORD nSize, PDWORD pcbNeeded)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/**
+ * @name OpenPrintProcessor
+ *
+ * Prepares this Print Processor for processing a document.
+ *
+ * @param pPrinterName
+ * String in the format "\\COMPUTERNAME\Port:, Port" that is passed to OpenPrinterW for writing to the Print Monitor on the specified port.
+ *
+ * @param pPrintProcessorOpenData
+ * Pointer to a PRINTPROCESSOROPENDATA structure containing details about the print job to be processed.
+ *
+ * @return
+ * A Print Processor handle on success or NULL in case of a failure. This handle has to be passed to PrintDocumentOnPrintProcessor to do the actual processing.
+ * A more specific error code can be obtained through GetLastError.
+ */
+HANDLE WINAPI
+OpenPrintProcessor(PWSTR pPrinterName, PPRINTPROCESSOROPENDATA pPrintProcessorOpenData)
+{
+    DWORD dwErrorCode;
+    HANDLE hReturnValue = NULL;
+    PWINPRINT_HANDLE pHandle = NULL;
+
+    // Sanity checks
+    // This time a datatype needs to be given. We can't fall back to a default here.
+    if (!pPrintProcessorOpenData || !pPrintProcessorOpenData->pDatatype || !*pPrintProcessorOpenData->pDatatype)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    // Create a new WINPRINT_HANDLE structure. and fill the relevant fields.
+    pHandle = DllAllocSplMem(sizeof(WINPRINT_HANDLE));
+
+    // Check what datatype was given.
+    if (wcsicmp(pPrintProcessorOpenData->pDatatype, L"RAW") == 0)
+    {
+        pHandle->Datatype = RAW;
+    }
+    else
+    {
+        dwErrorCode = ERROR_INVALID_DATATYPE;
+        goto Cleanup;
+    }
+
+    // Fill the relevant fields.
+    pHandle->dwJobID = pPrintProcessorOpenData->JobId;
+    pHandle->pwszDatatype = AllocSplStr(pPrintProcessorOpenData->pDatatype);
+    pHandle->pwszDocumentName = AllocSplStr(pPrintProcessorOpenData->pDocumentName);
+    pHandle->pwszOutputFile = AllocSplStr(pPrintProcessorOpenData->pOutputFile);
+    pHandle->pwszPrinterPort = AllocSplStr(pPrintProcessorOpenData->pPrinterName);
+
+    // We were successful! Return the handle and don't let the cleanup routine free it.
+    dwErrorCode = ERROR_SUCCESS;
+    hReturnValue = pHandle;
+    pHandle = NULL;
+
+Cleanup:
+    if (pHandle)
+        DllFreeSplMem(pHandle);
+
+    SetLastError(dwErrorCode);
+    return hReturnValue;
+}
+
+/**
+ * @name PrintDocumentOnPrintProcessor
+ *
+ * Prints a document on this Print Processor after a handle for the document has been opened through OpenPrintProcessor.
+ *
+ * @param hPrintProcessor
+ * The return value of a previous successful OpenPrintProcessor call.
+ *
+ * @param pDocumentName
+ * String in the format "Printer, Job N" describing the spooled job that is to be processed.
+ *
+ * @return
+ * TRUE if the document was successfully processed by this Print Processor, FALSE otherwise.
+ * A more specific error code can be obtained through GetLastError.
+ */
+BOOL WINAPI
+PrintDocumentOnPrintProcessor(HANDLE hPrintProcessor, PWSTR pDocumentName)
+{
+    DWORD dwErrorCode;
+    PWINPRINT_HANDLE pHandle;
+
+    // Sanity checks
+    if (!hPrintProcessor)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pHandle = (PWINPRINT_HANDLE)hPrintProcessor;
+
+    // Call the corresponding Print function for the datatype.
+    if (pHandle->Datatype == RAW)
+        dwErrorCode = PrintRawJob(pHandle, pDocumentName);
 
 Cleanup:
     SetLastError(dwErrorCode);
