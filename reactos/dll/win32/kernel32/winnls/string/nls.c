@@ -218,6 +218,8 @@ IntGetCodePageEntry(UINT CodePage)
             /* Last error is set by GetLocaleInfoW. */
             return NULL;
         }
+        if (CodePage == 0)
+            return &AnsiCodePage;
     }
     else if (CodePage == CP_MACCP)
     {
