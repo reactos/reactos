@@ -1269,168 +1269,121 @@ IsValidCodePage(UINT CodePage)
     return GetCPFileNameFromRegistry(CodePage, NULL, 0);
 }
 
-static const signed char
-base64inv[] =
+static inline BOOL utf7_write_w(WCHAR *dst, int dstlen, int *index, WCHAR character)
 {
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
-    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1,
-    -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
-    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
-    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1
-};
-
-static VOID Utf7Base64Decode(BYTE *pbDest, LPCSTR pszSrc, INT cchSrc)
-{
-    INT i, j, n;
-    BYTE b;
-
-    for(i = 0; i < cchSrc / 4 * 4; i += 4)
+    if (dstlen > 0)
     {
-        for(j = n = 0; j < 4; )
-        {
-            b = (BYTE) base64inv[(BYTE) *pszSrc++];
-            n |= (((INT) b) << ((3 - j) * 6));
-            j++;
-        }
-        for(j = 0; j < 3; j++)
-            *pbDest++ = (BYTE) ((n >> (8 * (2 - j))) & 0xFF);
+        if (*index >= dstlen)
+            return FALSE;
+
+        dst[*index] = character;
     }
-    for(j = n = 0; j < cchSrc % 4; )
-    {
-        b = (BYTE) base64inv[(BYTE) *pszSrc++];
-        n |= (((INT) b) << ((3 - j) * 6));
-        j++;
-    }
-    for(j = 0; j < ((cchSrc % 4) * 6 / 8); j++)
-        *pbDest++ = (BYTE) ((n >> (8 * (2 - j))) & 0xFF);
+
+    (*index)++;
+
+    return TRUE;
 }
 
-static VOID myswab(LPVOID pv, INT cw)
+static INT Utf7ToWideChar(const char *src, int srclen, WCHAR *dst, int dstlen)
 {
-    LPBYTE pb = (LPBYTE) pv;
-    BYTE b;
-    while(cw > 0)
+    static const signed char base64_decoding_table[] =
     {
-        b = *pb;
-        *pb = pb[1];
-        pb[1] = b;
-        pb += 2;
-        cw--;
-    }
-}
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x00-0x0F */
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x10-0x1F */
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, /* 0x20-0x2F */
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, /* 0x30-0x3F */
+        -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, /* 0x40-0x4F */
+        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, /* 0x50-0x5F */
+        -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, /* 0x60-0x6F */
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1  /* 0x70-0x7F */
+    };
 
-static INT Utf7ToWideCharSize(LPCSTR pszUtf7, INT cchUtf7)
-{
-    INT n, c, cch;
-    CHAR ch;
-    LPCSTR pch;
+    const char *source_end = src + srclen;
+    int dest_index = 0;
 
-    c = 0;
-    while(cchUtf7 > 0)
+    DWORD byte_pair = 0;
+    short offset = 0;
+
+    while (src < source_end)
     {
-        ch = *pszUtf7++;
-        if (ch == '+')
+        if (*src == '+')
         {
-            ch = *pszUtf7;
-            if (ch == '-')
+            src++;
+            if (src >= source_end)
+                break;
+
+            if (*src == '-')
             {
-                c++;
-                pszUtf7++;
-                cchUtf7 -= 2;
+                /* just a plus sign escaped as +- */
+                if (!utf7_write_w(dst, dstlen, &dest_index, '+'))
+                {
+                    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                    return 0;
+                }
+                src++;
                 continue;
             }
-            cchUtf7--;
-            pch = pszUtf7;
-            while(cchUtf7 > 0 && (BYTE) *pszUtf7 < 0x80 &&
-                  base64inv[*pszUtf7] >= 0)
+
+            do
             {
-                cchUtf7--;
-                pszUtf7++;
+                signed char sextet = *src;
+                if (sextet == '-')
+                {
+                    /* skip over the dash and end base64 decoding
+                     * the current, unfinished byte pair is discarded */
+                    src++;
+                    offset = 0;
+                    break;
+                }
+                if (sextet < 0)
+                {
+                    /* the next character of src is < 0 and therefore not part of a base64 sequence
+                     * the current, unfinished byte pair is NOT discarded in this case
+                     * this is probably a bug in Windows */
+                    break;
+                }
+
+                sextet = base64_decoding_table[sextet];
+                if (sextet == -1)
+                {
+                    /* -1 means that the next character of src is not part of a base64 sequence
+                     * in other words, all sextets in this base64 sequence have been processed
+                     * the current, unfinished byte pair is discarded */
+                    offset = 0;
+                    break;
+                }
+
+                byte_pair = (byte_pair << 6) | sextet;
+                offset += 6;
+
+                if (offset >= 16)
+                {
+                    /* this byte pair is done */
+                    if (!utf7_write_w(dst, dstlen, &dest_index, (byte_pair >> (offset - 16)) & 0xFFFF))
+                    {
+                        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                        return 0;
+                    }
+                    offset -= 16;
+                }
+
+                src++;
             }
-            cch = pszUtf7 - pch;
-            n = (cch * 3) / 8;
-            c += n;
-            if (cchUtf7 > 0 && *pszUtf7 == '-')
-            {
-                pszUtf7++;
-                cchUtf7--;
-            }
+            while (src < source_end);
         }
         else
         {
-            c++;
-            cchUtf7--;
-        }
-    }
-
-    return c;
-}
-
-static INT Utf7ToWideChar(LPCSTR pszUtf7, INT cchUtf7, LPWSTR pszWide, INT cchWide)
-{
-    INT n, c, cch;
-    CHAR ch;
-    LPCSTR pch;
-    WORD *pwsz;
-
-    c = Utf7ToWideCharSize(pszUtf7, cchUtf7);
-    if (cchWide == 0)
-        return c;
-
-    if (cchWide < c)
-    {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return 0;
-    }
-
-    while(cchUtf7 > 0)
-    {
-        ch = *pszUtf7++;
-        if (ch == '+')
-        {
-            if (*pszUtf7 == '-')
+            /* we have to convert to unsigned char in case *src < 0 */
+            if (!utf7_write_w(dst, dstlen, &dest_index, (unsigned char)*src))
             {
-                *pszWide++ = L'+';
-                pszUtf7++;
-                cchUtf7 -= 2;
-                continue;
-            }
-            cchUtf7--;
-            pch = pszUtf7;
-            while(cchUtf7 > 0 && (BYTE) *pszUtf7 < 0x80 &&
-                  base64inv[*pszUtf7] >= 0)
-            {
-                cchUtf7--;
-                pszUtf7++;
-            }
-            cch = pszUtf7 - pch;
-            n = (cch * 3) / 8;
-            pwsz = (WORD *) HeapAlloc(GetProcessHeap(), 0, (n + 1) * sizeof(WORD));
-            if (pwsz == NULL)
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return 0;
-            ZeroMemory(pwsz, n * sizeof(WORD));
-            Utf7Base64Decode((BYTE *) pwsz, pch, cch);
-            myswab(pwsz, n);
-            CopyMemory(pszWide, pwsz, n * sizeof(WORD));
-            HeapFree(GetProcessHeap(), 0, pwsz);
-            pszWide += n;
-            if (cchUtf7 > 0 && *pszUtf7 == '-')
-            {
-                pszUtf7++;
-                cchUtf7--;
             }
-        }
-        else
-        {
-            *pszWide++ = (WCHAR) ch;
-            cchUtf7--;
+            src++;
         }
     }
 
-    return c;
+    return dest_index;
 }
 
 /**
