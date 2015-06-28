@@ -451,7 +451,8 @@
 /* TODO: 303.ico */
 #define IDI_SHELL_DVD_ROM1         304
 #define IDI_SHELL_FDD2             305
-/* TODO: 306.ico, 307.ico, 308.ico */
+/* TODO: 306.ico, 307.ico */
+#define IDI_SHELL_SMART_MEDIA      308
 #define IDI_SHELL_CAMERA1          309
 /* TODO: 310.ico, 311.ico, 312.ico, 313.ico, 314.ico */
 #define IDI_SHELL_SCANNER          315

@@ -146,7 +146,8 @@ IDI_SHELL_CD_ROM1 ICON "res/icons/302.ico"
 /* TODO: 303.ico */
 IDI_SHELL_DVD_ROM1 ICON "res/icons/304.ico"
 IDI_SHELL_FDD2 ICON "res/icons/305.ico"
-/* TODO: 306.ico, 307.ico, 308.ico */
+/* TODO: 306.ico, 307.ico */
+IDI_SHELL_SMART_MEDIA ICON "res/icons/308.ico"
 IDI_SHELL_CAMERA1 ICON "res/icons/309.ico"
 /* TODO: 310.ico, 311.ico, 312.ico, 313.ico, 314.ico */
 IDI_SHELL_SCANNER ICON "res/icons/315.ico"
