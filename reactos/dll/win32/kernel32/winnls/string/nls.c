@@ -451,13 +451,17 @@ IntMultiByteToWideCharCP(UINT CodePage,
     /* Different handling for DBCS code pages. */
     if (CodePageTable->MaximumCharacterSize > 1)
     {
-        /* FIXME */
-
         UCHAR Char;
         USHORT DBCSOffset;
         LPCSTR MbsEnd = MultiByteString + MultiByteCount;
         INT Count;
 
+        if (Flags & MB_ERR_INVALID_CHARS)
+        {
+            /* FIXME */
+            DPRINT1("IntMultiByteToWideCharCP: MB_ERR_INVALID_CHARS case not implemented!\n");
+        }
+        
         /* Does caller query for output buffer size? */
         if (WideCharCount == 0)
         {
