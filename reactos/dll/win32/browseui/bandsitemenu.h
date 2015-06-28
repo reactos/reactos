@@ -55,6 +55,7 @@ public:
     BEGIN_COM_MAP(CBandSiteMenu)
         COM_INTERFACE_ENTRY_IID(IID_IShellService, IShellService)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()
 };

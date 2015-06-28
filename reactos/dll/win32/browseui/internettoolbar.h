@@ -228,7 +228,6 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
         COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
         COM_INTERFACE_ENTRY_IID(IID_IDockingWindow, IDockingWindow)
-        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
 //        COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
         COM_INTERFACE_ENTRY_IID(IID_IPersistStreamInit, IPersistStreamInit)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
@@ -237,7 +236,5 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellChangeNotify, IShellChangeNotify)
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
         COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
-        COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
-        COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)
     END_COM_MAP()
 };
