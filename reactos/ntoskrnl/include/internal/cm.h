@@ -552,12 +552,24 @@ CmpInitHiveViewList(
     IN PCMHIVE Hive
 );
 
+VOID
+NTAPI
+CmpDestroyHiveViewList(
+    IN PCMHIVE Hive
+);
+
 //
 // Security Cache Functions
 //
 VOID
 NTAPI
 CmpInitSecurityCache(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpDestroySecurityCache(
     IN PCMHIVE Hive
 );
 

@@ -257,6 +257,12 @@ CmpDestroyHive(IN PCMHIVE CmHive)
     /* Delete the view lock */
     ExFreePoolWithTag(CmHive->ViewLock, TAG_CM);
 
+    /* Destroy the security descriptor cache */
+    CmpDestroySecurityCache(CmHive);
+
+    /* Destroy the view list */
+    CmpDestroyHiveViewList(CmHive);
+
     /* Free the hive storage */
     HvFree(&CmHive->Hive);
 

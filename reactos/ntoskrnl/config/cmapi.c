@@ -2241,7 +2241,11 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Remove the hive from the hive file list */
     CmpRemoveFromHiveFileList(CmHive);
 
-    /* FIXME: More cleanup */
+    /* Destroy the security descriptor cache */
+    CmpDestroySecurityCache(CmHive);
+
+    /* Destroy the view list */
+    CmpDestroyHiveViewList(CmHive);
 
     /* Free the hive storage */
     HvFree(Hive);
