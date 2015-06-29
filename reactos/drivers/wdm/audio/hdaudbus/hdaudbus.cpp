@@ -877,10 +877,10 @@ HDA_Pnp(
     PIO_STACK_LOCATION IoStack;
     PDEVICE_RELATIONS DeviceRelation;
     PHDA_FDO_DEVICE_EXTENSION FDODeviceExtension;
-    PHDA_PDO_DEVICE_EXTENSION ChildDeviceExtension;
+    //PHDA_PDO_DEVICE_EXTENSION ChildDeviceExtension;
 
     FDODeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    ChildDeviceExtension = (PHDA_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    //ChildDeviceExtension = (PHDA_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     DPRINT1("HDA_Pnp Minor: %u IsFDO%d\n", IoStack->MinorFunction, FDODeviceExtension->IsFDO);

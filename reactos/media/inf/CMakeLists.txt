@@ -13,6 +13,7 @@ list(APPEND INF_FILES
     fdc.inf
     flpydisk.inf
     hal.inf
+    hdaudbus.inf
     hdc.inf
     input.inf
     keyboard.inf
