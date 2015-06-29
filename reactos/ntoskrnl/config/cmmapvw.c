@@ -34,7 +34,6 @@ VOID
 NTAPI
 CmpDestroyHiveViewList(IN PCMHIVE Hive)
 {
-#if 0
     PCM_VIEW_OF_FILE CmView;
     PLIST_ENTRY EntryList;
 
@@ -42,9 +41,10 @@ CmpDestroyHiveViewList(IN PCMHIVE Hive)
     ASSERT(Hive->Hive.ReadOnly == FALSE);
 
     /* Free all the views inside the Pinned View List */
-    EntryList = RemoveHeadList(&Hive->PinViewListHead);
-    while (EntryList != &Hive->PinViewListHead)
+    while (!IsListEmpty(&Hive->PinViewListHead))
     {
+        EntryList = RemoveHeadList(&Hive->PinViewListHead);
+
         CmView = CONTAINING_RECORD(EntryList, CM_VIEW_OF_FILE, PinViewList);
 
         /* FIXME: Unmap the view if it is mapped */
@@ -52,8 +52,6 @@ CmpDestroyHiveViewList(IN PCMHIVE Hive)
         ExFreePool(CmView);
 
         Hive->PinnedViews--;
-
-        EntryList = RemoveHeadList(&Hive->PinViewListHead);
     }
 
     /* The Pinned View List should be empty */
@@ -61,9 +59,10 @@ CmpDestroyHiveViewList(IN PCMHIVE Hive)
     ASSERT(Hive->PinnedViews == 0);
 
     /* Now, free all the views inside the LRU View List */
-    EntryList = RemoveHeadList(&Hive->LRUViewListHead);
-    while (EntryList != &Hive->LRUViewListHead)
+    while (!IsListEmpty(&Hive->LRUViewListHead))
     {
+        EntryList = RemoveHeadList(&Hive->LRUViewListHead);
+
         CmView = CONTAINING_RECORD(EntryList, CM_VIEW_OF_FILE, LRUViewList);
 
         /* FIXME: Unmap the view if it is mapped */
@@ -71,14 +70,11 @@ CmpDestroyHiveViewList(IN PCMHIVE Hive)
         ExFreePool(CmView);
 
         Hive->MappedViews--;
-
-        EntryList = RemoveHeadList(&Hive->LRUViewListHead);
     }
 
     /* The LRU View List should be empty */
     ASSERT(IsListEmpty(&Hive->LRUViewListHead) == TRUE);
     ASSERT(Hive->MappedViews == 0);
-#endif
 }
 
 /* EOF */
