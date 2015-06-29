@@ -34,6 +34,7 @@ VOID
 NTAPI
 CmpDestroyHiveViewList(IN PCMHIVE Hive)
 {
+#if 0
     PCM_VIEW_OF_FILE CmView;
     PLIST_ENTRY EntryList;
 
@@ -77,6 +78,7 @@ CmpDestroyHiveViewList(IN PCMHIVE Hive)
     /* The LRU View List should be empty */
     ASSERT(IsListEmpty(&Hive->LRUViewListHead) == TRUE);
     ASSERT(Hive->MappedViews == 0);
+#endif
 }
 
 /* EOF */
