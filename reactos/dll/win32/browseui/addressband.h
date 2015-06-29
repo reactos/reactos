@@ -136,5 +136,6 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IInputObjectSite, IInputObjectSite)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
+        COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
     END_COM_MAP()
 };

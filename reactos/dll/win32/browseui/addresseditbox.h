@@ -97,6 +97,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
         COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
+        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
     END_COM_MAP()
 };
