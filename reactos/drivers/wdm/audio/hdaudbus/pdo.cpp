@@ -100,7 +100,7 @@ HDA_PDOQueryId(
         Length = swprintf(DeviceName, L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X&REV_%04X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId, DeviceExtension->Codec->ProductId, DeviceExtension->Codec->Major << 12 | DeviceExtension->Codec->Minor << 8 | DeviceExtension->Codec->Revision) + 1;
         Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId, DeviceExtension->Codec->ProductId) + 1;
         Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X&VEN_%04X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId) + 1;
-        Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X&VEN_%04X", DeviceExtension->AudioGroup->FunctionGroup) + 2;
+        Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X", DeviceExtension->AudioGroup->FunctionGroup) + 2;
 
         /* allocate result buffer*/
         Device = (LPWSTR)AllocateItem(PagedPool, Length * sizeof(WCHAR));
