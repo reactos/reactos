@@ -943,7 +943,7 @@ LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE 
             _LocalGetJobLevel2(pPrinterHandle, pJob, NULL, NULL, 0, pcbNeeded);
 
         // We stop either when there are no more jobs in the list or when the caller didn't request more, whatever comes first.
-        *pcReturned++;
+        (*pcReturned)++;
         pNode = pNode->Next[0];
     }
 
@@ -976,7 +976,7 @@ LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE 
             goto Cleanup;
 
         // We stop either when there are no more jobs in the list or when the caller didn't request more, whatever comes first.
-        *pcReturned++;
+        (*pcReturned)++;
         pNode = pNode->Next[0];
     }
 

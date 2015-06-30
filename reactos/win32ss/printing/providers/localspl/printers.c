@@ -347,7 +347,7 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
         cbDescription = cchComputerName * sizeof(WCHAR) + cbName + cbComment + sizeof(WCHAR);
 
         *pcbNeeded += sizeof(PRINTER_INFO_1W) + cchComputerName * sizeof(WCHAR) + cbName + cbComment + cbDescription;
-        *pcReturned++;
+        (*pcReturned)++;
     }
 
     // Check if the supplied buffer is large enough.

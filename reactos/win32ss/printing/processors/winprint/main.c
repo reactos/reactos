@@ -131,7 +131,7 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
         // Also calculate the offset in the output buffer of the pointer to this datatype string.
         *pCurrentOffset = *pcReturned * sizeof(DATATYPES_INFO_1W) + FIELD_OFFSET(DATATYPES_INFO_1W, pName);
 
-        *pcReturned++;
+        (*pcReturned)++;
         pCurrentOffset++;
     }
 
@@ -198,7 +198,7 @@ OpenPrintProcessor(PWSTR pPrinterName, PPRINTPROCESSOROPENDATA pPrintProcessorOp
         goto Cleanup;
     }
 
-    // Create a new WINPRINT_HANDLE structure. and fill the relevant fields.
+    // Create a new WINPRINT_HANDLE structure and fill the relevant fields.
     pHandle = DllAllocSplMem(sizeof(WINPRINT_HANDLE));
 
     // Check what datatype was given.
