@@ -14367,6 +14367,15 @@ START_TEST(msi)
     DWORD len;
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
 
+#ifdef __REACTOS__
+    if (!winetest_interactive &&
+        !strcmp(winetest_platform, "windows"))
+    {
+        skip("ROSTESTS-180: Skipping msi_winetest:msi because it hangs on WHS-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     init_functionpointers();
 
     if (pIsWow64Process)
