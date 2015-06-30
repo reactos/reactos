@@ -30,6 +30,61 @@ FreeItem(
     ExFreePool(Item);
 }
 
+NTSTATUS
+NTAPI
+HDA_SyncForwardIrpCompletionRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    if (Irp->PendingReturned)
+    {
+        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
+    }
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+NTAPI
+HDA_SyncForwardIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    KEVENT Event;
+    NTSTATUS Status;
+
+    /* Initialize event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* Copy irp stack location */
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+
+    /* Set completion routine */
+    IoSetCompletionRoutine(Irp,
+        HDA_SyncForwardIrpCompletionRoutine,
+        &Event,
+        TRUE,
+        TRUE,
+        TRUE);
+
+    /* Call driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+
+    /* Check if pending */
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for the request to finish */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+        /* Copy status code */
+        Status = Irp->IoStatus.Status;
+    }
+
+    /* Done */
+    return Status;
+}
+
+
 BOOLEAN
 NTAPI
 HDA_InterruptService(
@@ -60,6 +115,12 @@ IN PVOID  ServiceContext)
         // Check for incoming responses
         if (RirbStatus) {
             WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_STATUS, RirbStatus);
+
+            if (DeviceExtension->RirbLength == 0)
+            {
+                /* HACK: spurious interrupt */
+                return FALSE;
+            }
 
             if ((RirbStatus & RIRB_STATUS_RESPONSE) != 0) {
                 WritePos = (READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS)) + 1) % DeviceExtension->RirbLength;
@@ -337,12 +398,14 @@ HDA_InitCorbRirbPos(
     /* init corb */
     HighestPhysicalAddress.QuadPart = 0x00000000FFFFFFFF;
     DeviceExtension->CorbBase = (PULONG)MmAllocateContiguousMemory(PAGE_SIZE * 3, HighestPhysicalAddress);
+    ASSERT(DeviceExtension->CorbBase != NULL);
 
     // FIXME align rirb 128bytes
     ASSERT(DeviceExtension->CorbLength == 256);
     ASSERT(DeviceExtension->RirbLength == 256);
 
     CorbPhysicalAddress = MmGetPhysicalAddress(DeviceExtension->CorbBase);
+    ASSERT(CorbPhysicalAddress.QuadPart != 0LL);
 
     // Program CORB/RIRB for these locations
     WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_CORB_BASE_LOWER), CorbPhysicalAddress.LowPart);
@@ -585,7 +648,27 @@ HDA_QueryId(
         if (!Device)
             return STATUS_INSUFFICIENT_RESOURCES;
 
-        swprintf(Device, L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X&SUBSYS_%08X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId, DeviceExtension->Codec->ProductId, DeviceExtension->Codec->VendorId << 16 | DeviceExtension->Codec->ProductId);
+        wcscpy(Device, DeviceName);
+
+        DPRINT1("ID: %S\n", Device);
+        /* store result */
+        Irp->IoStatus.Information = (ULONG_PTR)Device;
+        return STATUS_SUCCESS;
+    }
+    else if (IoStack->Parameters.QueryId.IdType == BusQueryCompatibleIDs)
+    {
+        RtlZeroMemory(DeviceName, sizeof(DeviceName));
+        Length = swprintf(DeviceName, L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X&REV_%04X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId, DeviceExtension->Codec->ProductId, DeviceExtension->Codec->Major << 12 | DeviceExtension->Codec->Minor << 8 | DeviceExtension->Codec->Revision) + 1;
+        Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId, DeviceExtension->Codec->ProductId) + 1;
+        Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X&VEN_%04X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId) + 1;
+        Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X&VEN_%04X", DeviceExtension->AudioGroup->FunctionGroup) + 2;
+        
+        /* allocate result buffer*/
+        Device = (LPWSTR)AllocateItem(PagedPool, Length * sizeof(WCHAR));
+        if (!Device)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(Device, DeviceName, Length * sizeof(WCHAR));
 
         DPRINT1("ID: %S\n", Device);
         /* store result */
@@ -613,12 +696,21 @@ HDA_StartDevice(
     ULONG Index;
     USHORT Value;
 
-    /* get current irp stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
     /* get device extension */
     DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(DeviceExtension->IsFDO == TRUE);
+
+    /* forward irp to lower device */
+    Status = HDA_SyncForwardIrp(DeviceExtension->LowerDevice, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to start
+        DPRINT1("HDA_StartDevice Lower device failed to start %x\n", Status);
+        return Status;
+    }
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     Resources = IoStack->Parameters.StartDevice.AllocatedResourcesTranslated;
     for (Index = 0; Index < Resources->List[0].PartialResourceList.Count; Index++)
