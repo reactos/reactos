@@ -35,6 +35,7 @@ TestMmAllocatePagesForMdl(VOID)
     ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
     ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
     MmFreePagesFromMdl(Mdl);
+    ExFreePoolWithTag(Mdl, 0);
 
     /* Now map/unmap it */
     Mdl = MmAllocatePagesForMdl(LowAddress,
@@ -66,6 +67,7 @@ TestMmAllocatePagesForMdl(VOID)
     ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
     ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
     MmFreePagesFromMdl(Mdl);
+    ExFreePoolWithTag(Mdl, 0);
 
     /* Now map it, and free without unmapping */
     Mdl = MmAllocatePagesForMdl(LowAddress,
@@ -90,6 +92,7 @@ TestMmAllocatePagesForMdl(VOID)
     ok(Mdl->MappedSystemVa == SystemVa, "MappedSystemVa: %p, System VA: %p\n", Mdl->MappedSystemVa, SystemVa);
     ok((Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
     MmFreePagesFromMdl(Mdl);
+    ExFreePoolWithTag(Mdl, 0);
 
     /* try to allocate 2 GB -- should succeed but not map */
     Mdl = MmAllocatePagesForMdl(LowAddress,
@@ -115,6 +118,7 @@ TestMmAllocatePagesForMdl(VOID)
         ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
         ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
         MmFreePagesFromMdl(Mdl);
+        ExFreePoolWithTag(Mdl, 0);
     }
 
     /* now allocate and map 32 MB Mdls until we fail */
@@ -157,6 +161,7 @@ TestMmAllocatePagesForMdl(VOID)
         if (SystemVas[i] != NULL)
             MmUnmapLockedPages(SystemVas[i], Mdls[i]);
         MmFreePagesFromMdl(Mdls[i]);
+        ExFreePoolWithTag(Mdls[i], 0);
         if (SystemVas[i] == NULL)
             break;
     }
