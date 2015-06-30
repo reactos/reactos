@@ -569,7 +569,7 @@ GetNfsVolumeData(PDEVICE_EXTENSION DeviceExt,
     PNTFS_VOLUME_DATA_BUFFER DataBuffer;
     PNTFS_ATTR_RECORD Attribute;
 
-    DataBuffer = (PNTFS_VOLUME_DATA_BUFFER)Irp->UserBuffer;
+    DataBuffer = (PNTFS_VOLUME_DATA_BUFFER)Irp->AssociatedIrp.SystemBuffer;
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
     if (Stack->Parameters.FileSystemControl.OutputBufferLength < sizeof(NTFS_VOLUME_DATA_BUFFER) ||
@@ -608,6 +608,8 @@ GetNfsVolumeData(PDEVICE_EXTENSION DeviceExt,
         Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
     }
 
+    Irp->IoStatus.Information = sizeof(NTFS_VOLUME_DATA_BUFFER);
+
     if (Stack->Parameters.FileSystemControl.OutputBufferLength >= sizeof(NTFS_EXTENDED_VOLUME_DATA) + sizeof(NTFS_VOLUME_DATA_BUFFER))
     {
         PNTFS_EXTENDED_VOLUME_DATA ExtendedData = (PNTFS_EXTENDED_VOLUME_DATA)((ULONG_PTR)Irp->UserBuffer + sizeof(NTFS_VOLUME_DATA_BUFFER));
@@ -615,6 +617,7 @@ GetNfsVolumeData(PDEVICE_EXTENSION DeviceExt,
         ExtendedData->ByteCount = sizeof(NTFS_EXTENDED_VOLUME_DATA);
         ExtendedData->MajorVersion = DeviceExt->NtfsInfo.MajorVersion;
         ExtendedData->MinorVersion = DeviceExt->NtfsInfo.MinorVersion;
+        Irp->IoStatus.Information += sizeof(NTFS_EXTENDED_VOLUME_DATA);
     }
 
     return STATUS_SUCCESS;
