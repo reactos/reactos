@@ -95,7 +95,7 @@ FindPrintProcessor(PWSTR pwszName)
     PLIST_ENTRY pEntry;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
 
-    for (pEntry = _PrintProcessorList.Flink; pEntry; pEntry = pEntry->Flink)
+    for (pEntry = _PrintProcessorList.Flink; pEntry != &_PrintProcessorList; pEntry = pEntry->Flink)
     {
         pPrintProcessor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_PROCESSOR, Entry);
 
