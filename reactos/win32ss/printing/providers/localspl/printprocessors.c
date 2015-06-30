@@ -192,7 +192,7 @@ InitializePrintProcessorList()
         }
 
         // Get the name of this Print Processor.
-        cchPrintProcessorName = cchMaxSubKey;
+        cchPrintProcessorName = cchMaxSubKey + 1;
         lStatus = RegEnumKeyExW(hSubKey, i, pwszPrintProcessorName, &cchPrintProcessorName, NULL, NULL, NULL, NULL);
         if (lStatus != ERROR_SUCCESS)
         {
@@ -498,7 +498,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     {
         // RegEnumKeyExW sucks! Unlike similar API functions, it only returns the actual numbers of characters copied when you supply a buffer large enough.
         // So use pwszTemp with its size cchMaxSubKey for this.
-        cchPrintProcessor = cchMaxSubKey;
+        cchPrintProcessor = cchMaxSubKey + 1;
         dwErrorCode = (DWORD)RegEnumKeyExW(hSubKey, i, pwszTemp, &cchPrintProcessor, NULL, NULL, NULL, NULL);
         if (dwErrorCode != ERROR_SUCCESS)
         {
@@ -524,7 +524,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     for (i = 0; i < *pcReturned; i++)
     {
         // This isn't really correct, but doesn't cause any harm, because we've extensively checked the size of the supplied buffer above.
-        cchPrintProcessor = cchMaxSubKey;
+        cchPrintProcessor = cchMaxSubKey + 1;
 
         // Copy the Print Processor name.
         dwErrorCode = (DWORD)RegEnumKeyExW(hSubKey, i, (PWSTR)pCurrentOutputPrintProcessor, &cchPrintProcessor, NULL, NULL, NULL, NULL);
