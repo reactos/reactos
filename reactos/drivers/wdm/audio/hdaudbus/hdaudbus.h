@@ -101,3 +101,72 @@ typedef struct {
 	ULONG start : 8;
 	ULONG _reserved2 : 8;
 }CODEC_RESPONSE, *PCODEC_RESPONSE;
+
+
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes);
+
+VOID
+FreeItem(
+    IN PVOID Item);
+
+/* fdo.cpp */
+BOOLEAN
+NTAPI
+HDA_InterruptService(
+    IN PKINTERRUPT  Interrupt,
+    IN PVOID  ServiceContext);
+
+NTSTATUS
+NTAPI
+HDA_FDOStartDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+HDA_FDOQueryBusRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+/* pdo.cpp*/
+
+NTSTATUS
+HDA_PDOQueryBusInformation(
+    IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+HDA_PDOQueryId(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+NTSTATUS
+HDA_PDOHandleQueryDeviceText(
+    IN PIRP Irp);
+
+NTSTATUS
+HDA_PDOQueryBusDeviceCapabilities(
+    IN PIRP Irp);
+
+NTSTATUS
+HDA_PDOQueryBusDevicePnpState(
+    IN PIRP Irp);
+
+/* businterface.cpp */
+
+NTSTATUS
+HDA_PDOHandleQueryInterface(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+/* hdaudbus.cpp*/
+
+NTSTATUS
+NTAPI
+HDA_SyncForwardIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
