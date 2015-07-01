@@ -548,7 +548,11 @@ PcForwardIrpSynchronous(
     // initialize the notification event
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    IoCopyCurrentIrpStackLocationToNext(Irp);
+    // are there enough irp stack locations
+    if (Irp->CurrentLocation < Irp->StackCount + 1)
+    {
+        IoCopyCurrentIrpStackLocationToNext(Irp);
+    }
 
     IoSetCompletionRoutine(Irp, CompletionRoutine, (PVOID)&Event, TRUE, TRUE, TRUE);
 
