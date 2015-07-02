@@ -681,7 +681,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
 
                 IndexBuffer = (PINDEX_BUFFER)IndexRecord;
                 ASSERT(IndexBuffer->Ntfs.Type == NRH_INDX_TYPE);
-                ASSERT(IndexBuffer->Header.AllocatedSize + 0x18 == IndexBlockSize);
+                ASSERT(IndexBuffer->Header.AllocatedSize + FIELD_OFFSET(INDEX_BUFFER, Header) == IndexBlockSize);
                 IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
                 IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
                 ASSERT(IndexEntryEnd <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
