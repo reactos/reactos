@@ -85,6 +85,7 @@ typedef struct
 	BOOLEAN IsFDO;
 	PHDA_CODEC_ENTRY Codec;
 	PHDA_CODEC_AUDIO_GROUP AudioGroup;
+	PDEVICE_OBJECT FDO;
 }HDA_PDO_DEVICE_EXTENSION, *PHDA_PDO_DEVICE_EXTENSION;
 
 
@@ -130,6 +131,14 @@ NTAPI
 HDA_FDOQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+VOID
+HDA_SendVerbs(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PHDA_CODEC_ENTRY Codec,
+    IN PULONG Verbs,
+    OUT PULONG Responses,
+    IN ULONG Count);
 
 /* pdo.cpp*/
 

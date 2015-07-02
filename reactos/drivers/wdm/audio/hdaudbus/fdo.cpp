@@ -127,6 +127,7 @@ HDA_SendVerbs(
 
     /* get device extension */
     DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension->IsFDO);
 
     /* reset response count */
     Codec->ResponseCount = 0;
@@ -249,6 +250,7 @@ HDA_InitCodec(
             ChildDeviceExtension->IsFDO = FALSE;
             ChildDeviceExtension->Codec = Entry;
             ChildDeviceExtension->AudioGroup = AudioGroup;
+            ChildDeviceExtension->FDO = DeviceObject;
 
             /* setup flags */
             AudioGroup->ChildPDO->Flags |= DO_POWER_PAGABLE;

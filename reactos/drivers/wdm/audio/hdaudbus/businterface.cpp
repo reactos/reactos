@@ -27,15 +27,37 @@ PVOID BusContext)
 NTSTATUS
 NTAPI
 HDA_TransferCodecVerbs(
-IN PVOID _context,
-IN ULONG Count,
-IN OUT PHDAUDIO_CODEC_TRANSFER CodecTransfer,
-IN PHDAUDIO_TRANSFER_COMPLETE_CALLBACK Callback,
-IN PVOID Context)
+    IN PVOID _context,
+    IN ULONG Count,
+    IN OUT PHDAUDIO_CODEC_TRANSFER CodecTransfer,
+    IN PHDAUDIO_TRANSFER_COMPLETE_CALLBACK Callback,
+    IN PVOID Context)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Verbs[MAX_CODEC_RESPONSES], Responses[MAX_CODEC_RESPONSES];
+    ULONG Index;
+    PHDA_PDO_DEVICE_EXTENSION DeviceExtension;
+
+    DPRINT1("HDA_TransferCodecVerbs Coun %lu CodecTransfer %p Callback %p Context %p\n", Count, CodecTransfer, Callback, Context);
+
+    /* get device extension */
+    DeviceExtension = (PHDA_PDO_DEVICE_EXTENSION)_context;
+    ASSERT(DeviceExtension->IsFDO == FALSE);
+
+    /* FIXME handle callback*/
+    ASSERT(Callback == NULL);
+
+    for (Index = 0; Index < Count; Index++)
+    {
+        Verbs[Index] = CodecTransfer[Index].Output.Command;
+    }
+
+    HDA_SendVerbs(DeviceExtension->FDO, DeviceExtension->Codec, Verbs, Responses, Count);
+
+    for (Index = 0; Index < DeviceExtension->Codec->ResponseCount; Index++)
+    {
+        CodecTransfer[Index].Input.Response = DeviceExtension->Codec->Responses[Index];
+    }
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -216,12 +238,70 @@ HDA_GetResourceInformation(
 }
 
 NTSTATUS
+NTAPI
+HDA_AllocateDmaBufferWithNotification(
+    IN PVOID _context,
+	IN HANDLE Handle,
+	IN ULONG NotificationCount,
+	IN SIZE_T RequestedBufferSize,
+	OUT PMDL *BufferMdl,
+	OUT PSIZE_T AllocatedBufferSize,
+	OUT PSIZE_T OffsetFromFirstPage,
+	OUT PUCHAR StreamId,
+	OUT PULONG FifoSize)
+{
+	UNIMPLEMENTED;
+	ASSERT(FALSE);
+	return STATUS_NOT_IMPLEMENTED;
+
+}
+NTSTATUS
+NTAPI
+HDA_FreeDmaBufferWithNotification(
+    IN PVOID _context,
+	IN HANDLE Handle,
+	IN PMDL BufferMdl,
+	IN SIZE_T BufferSize)
+{
+	UNIMPLEMENTED;
+	ASSERT(FALSE);
+	return STATUS_NOT_IMPLEMENTED;
+
+}
+
+NTSTATUS
+NTAPI
+HDA_RegisterNotificationEvent(
+    PVOID _context,
+    HANDLE Handle,
+    IN PKEVENT NotificationEvent)
+{
+	UNIMPLEMENTED;
+	ASSERT(FALSE);
+	return STATUS_NOT_IMPLEMENTED;
+
+}
+
+NTSTATUS
+NTAPI
+HDA_UnregisterNotificationEvent(
+    IN PVOID _context,
+    IN HANDLE Handle,
+    IN PKEVENT NotificationEvent)
+{
+	UNIMPLEMENTED;
+	ASSERT(FALSE);
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
 HDA_PDOHandleQueryInterface(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PHDAUDIO_BUS_INTERFACE InterfaceHDA;
+    PHDAUDIO_BUS_INTERFACE_V2 InterfaceHDA;
     PHDA_PDO_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
@@ -232,10 +312,37 @@ HDA_PDOHandleQueryInterface(
 
     if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, GUID_HDAUDIO_BUS_INTERFACE))
     {
-        InterfaceHDA = (PHDAUDIO_BUS_INTERFACE)IoStack->Parameters.QueryInterface.Interface;
+        InterfaceHDA = (PHDAUDIO_BUS_INTERFACE_V2)IoStack->Parameters.QueryInterface.Interface;
         InterfaceHDA->Version = IoStack->Parameters.QueryInterface.Version;
-        InterfaceHDA->Size = IoStack->Parameters.QueryInterface.Size;
+        InterfaceHDA->Size = sizeof(HDAUDIO_BUS_INTERFACE);
         InterfaceHDA->Context = DeviceExtension;
+        InterfaceHDA->InterfaceReference = HDA_InterfaceReference;
+        InterfaceHDA->InterfaceDereference = HDA_InterfaceDereference;
+
+        InterfaceHDA->TransferCodecVerbs = HDA_TransferCodecVerbs;
+        InterfaceHDA->AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine;
+        InterfaceHDA->AllocateRenderDmaEngine = HDA_AllocateRenderDmaEngine;
+        InterfaceHDA->ChangeBandwidthAllocation = HDA_ChangeBandwidthAllocation;
+        InterfaceHDA->AllocateDmaBuffer = HDA_AllocateDmaBuffer;
+        InterfaceHDA->FreeDmaBuffer = HDA_FreeDmaBuffer;
+        InterfaceHDA->FreeDmaEngine = HDA_FreeDmaEngine;
+        InterfaceHDA->SetDmaEngineState = HDA_SetDmaEngineState;
+        InterfaceHDA->GetWallClockRegister = HDA_GetWallClockRegister;
+        InterfaceHDA->GetLinkPositionRegister = HDA_GetLinkPositionRegister;
+        InterfaceHDA->RegisterEventCallback = HDA_RegisterEventCallback;
+        InterfaceHDA->UnregisterEventCallback = HDA_UnregisterEventCallback;
+        InterfaceHDA->GetDeviceInformation = HDA_GetDeviceInformation;
+        InterfaceHDA->GetResourceInformation = HDA_GetResourceInformation;
+        return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, GUID_HDAUDIO_BUS_INTERFACE_V2))
+    {
+        InterfaceHDA = (PHDAUDIO_BUS_INTERFACE_V2)IoStack->Parameters.QueryInterface.Interface;
+        InterfaceHDA->Version = IoStack->Parameters.QueryInterface.Version;
+        InterfaceHDA->Size = sizeof(HDAUDIO_BUS_INTERFACE_V2);
+        InterfaceHDA->Context = DeviceExtension;
+        InterfaceHDA->InterfaceReference = HDA_InterfaceReference;
+        InterfaceHDA->InterfaceDereference = HDA_InterfaceDereference;
 
         InterfaceHDA->TransferCodecVerbs = HDA_TransferCodecVerbs;
         InterfaceHDA->AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine;
@@ -252,10 +359,14 @@ HDA_PDOHandleQueryInterface(
         InterfaceHDA->GetDeviceInformation = HDA_GetDeviceInformation;
         InterfaceHDA->GetResourceInformation = HDA_GetResourceInformation;
 
-        return STATUS_SUCCESS;
+        InterfaceHDA->AllocateDmaBufferWithNotification = HDA_AllocateDmaBufferWithNotification;
+        InterfaceHDA->FreeDmaBufferWithNotification = HDA_FreeDmaBufferWithNotification;
+        InterfaceHDA->RegisterNotificationEvent = HDA_RegisterNotificationEvent;
+        InterfaceHDA->UnregisterNotificationEvent = HDA_UnregisterNotificationEvent;
     }
 
     // FIXME
-    // implement support for GUID_HDAUDIO_BUS_INTERFACE_BDL, GUID_HDAUDIO_BUS_INTERFACE_V2
+    // implement support for GUID_HDAUDIO_BUS_INTERFACE_BDL
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }

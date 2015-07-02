@@ -98,18 +98,14 @@ HDA_Pnp(
     //ChildDeviceExtension = (PHDA_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("HDA_Pnp Minor: %u IsFDO%d\n", IoStack->MinorFunction, FDODeviceExtension->IsFDO);
-
     if (FDODeviceExtension->IsFDO)
     {
         if (IoStack->MinorFunction == IRP_MN_START_DEVICE)
         {
-            DPRINT1("IRP_MN_START_DEVICE\n");
             Status = HDA_FDOStartDevice(DeviceObject, Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_DEVICE_RELATIONS)
         {
-            DPRINT1("IRP_MN_QUERY_DEVICE_RELATIONS\n");
             /* handle bus device relations */
             if (IoStack->Parameters.QueryDeviceRelations.Type == BusRelations)
             {
@@ -130,25 +126,21 @@ HDA_Pnp(
     {
         if (IoStack->MinorFunction == IRP_MN_START_DEVICE)
         {
-            DPRINT1("IRP_MN_START_DEVICE\n");
             /* no op for pdo */
             Status = STATUS_SUCCESS;
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_BUS_INFORMATION)
         {
-            DPRINT1("IRP_MN_QUERY_BUS_INFORMATION\n");
             /* query bus information */
             Status = HDA_PDOQueryBusInformation(Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_PNP_DEVICE_STATE)
         {
-            DPRINT1("IRP_MN_QUERY_PNP_DEVICE_STATE\n");
             /* query pnp state */
             Status = HDA_PDOQueryBusDevicePnpState(Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_DEVICE_RELATIONS)
         {
-            DPRINT1("IRP_MN_QUERY_DEVICE_RELATIONS\n");
             if (IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
             {
                 /* handle target device relations */
@@ -180,35 +172,29 @@ HDA_Pnp(
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_CAPABILITIES)
         {
-            DPRINT1("IRP_MN_QUERY_CAPABILITIES\n");
             /* query capabilities */
             Status = HDA_PDOQueryBusDeviceCapabilities(Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_RESOURCE_REQUIREMENTS)
         {
-            DPRINT1("IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
             /* no op */
             Status = STATUS_SUCCESS;
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_RESOURCES)
         {
-            DPRINT1("IRP_MN_QUERY_RESOURCES\n");
             /* no op */
             Status = STATUS_SUCCESS;
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_ID)
         {
-            DPRINT1("IRP_MN_QUERY_ID\n");
             Status = HDA_PDOQueryId(DeviceObject, Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_DEVICE_TEXT)
         {
-            DPRINT1("IRP_MN_QUERY_DEVICE_TEXT\n");
             Status = HDA_PDOHandleQueryDeviceText(Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_INTERFACE)
         {
-            DPRINT1("IRP_MN_QUERY_INTERFACE\n");
             Status = HDA_PDOHandleQueryInterface(DeviceObject, Irp);
         }
         else
