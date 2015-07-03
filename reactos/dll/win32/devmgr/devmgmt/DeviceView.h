@@ -20,7 +20,6 @@ class CDeviceView
     HWND m_hTreeView;
     HWND m_hPropertyDialog;
     HMENU m_hMenu;
-    HMENU m_hContextMenu;
     ViewType m_ViewType;
     HTREEITEM m_hTreeRoot;
     DEVINST m_RootDevInst;
@@ -126,6 +125,12 @@ private:
     HTREEITEM InsertIntoTreeView(
         _In_ HTREEITEM hParent,
         _In_ CNode *Node
+        );
+
+    void BuildContextMenuForNode(
+        _In_ CNode *Node,
+        _In_ INT xPos,
+        _In_ INT yPos
         );
 
     HTREEITEM RecurseFindDevice(

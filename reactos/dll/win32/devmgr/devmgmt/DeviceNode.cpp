@@ -16,7 +16,7 @@ CDeviceNode::CDeviceNode(
     _In_opt_ DEVINST Device,
     _In_ PSP_CLASSIMAGELIST_DATA ImageListData
     ) :
-    CNode(ImageListData),
+    CNode(DeviceNode, ImageListData),
     m_DevInst(Device),
     m_hDevInfo(NULL),
     m_Status(0),
@@ -260,11 +260,12 @@ CDeviceNode::CanUninstall()
                                   NULL);
     if (cr == CR_SUCCESS)
     {
-        return ((m_Status & DN_DISABLEABLE) != 0 &&
-                (m_Status & DN_ROOT_ENUMERATED) == 0);
+        if ((m_Status & DN_ROOT_ENUMERATED) != 0 &&
+            (m_Status & DN_DISABLEABLE) == 0)
+                return false;
     }
 
-    return false;
+    return true;
 }
 
 bool

@@ -27,10 +27,11 @@ public:
     bool HasProblem();
     bool IsHidden();
     bool CanDisable();
-    bool IsDisabled();
+    virtual bool IsDisabled();
     bool IsStarted();
     bool IsInstalled();
     bool CanUninstall();
+    virtual bool CanUpdate() { return true; } // unimplemented
 
     bool EnableDevice(
         _In_ bool Enable,

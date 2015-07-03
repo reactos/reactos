@@ -14,7 +14,9 @@
 
 /* PUBLIC METHODS *******************************************/
 
-CNode::CNode(_In_ PSP_CLASSIMAGELIST_DATA ImageListData) :
+CNode::CNode(_In_ NodeType Type,
+             _In_ PSP_CLASSIMAGELIST_DATA ImageListData) :
+    m_NodeType(Type),
     m_ImageListData(ImageListData),
     m_DeviceId(NULL),
     m_ClassImage(0)

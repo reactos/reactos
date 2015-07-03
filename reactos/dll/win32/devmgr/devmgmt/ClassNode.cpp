@@ -16,7 +16,7 @@ CClassNode::CClassNode(
     _In_ LPGUID ClassGuid,
     _In_ PSP_CLASSIMAGELIST_DATA ImageListData
     ) :
-    CNode(ImageListData)
+    CNode(ClassNode, ImageListData)
 {
     CopyMemory(&m_ClassGuid, ClassGuid, sizeof(GUID));
 }

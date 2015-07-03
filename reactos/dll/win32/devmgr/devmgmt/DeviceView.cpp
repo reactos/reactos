@@ -49,7 +49,6 @@ CDeviceView::CDeviceView(
     m_hTreeView(NULL),
     m_hPropertyDialog(NULL),
     m_hMenu(NULL),
-    m_hContextMenu(NULL),
     m_ViewType(DevicesByType),
     m_ShowHidden(FALSE),
     m_RootClassImage(-1),
@@ -92,9 +91,7 @@ CDeviceView::Initialize()
         SetWindowTheme(m_hTreeView, L"explorer", NULL);
     }
 
-    // Create the context menu and make properties the default item
-    m_hContextMenu = CreatePopupMenu();
-    SetMenuDefaultItem(m_hContextMenu, IDC_PROPERTIES, FALSE);
+
 
     return !!(m_hTreeView);
 }
@@ -109,8 +106,6 @@ CDeviceView::Uninitialize()
         SetupDiDestroyClassImageList(&m_ImageListData);
         ZeroMemory(&m_ImageListData, sizeof(SP_CLASSIMAGELIST_DATA));
     }
-
-    DestroyMenu(m_hContextMenu);
 
     return true;
 }
@@ -168,26 +163,14 @@ CDeviceView::OnContextMenu(
             PtInRect(&rc, pt))
         {
 
-            CNode *Node = GetSelectedNode();
-            if (Node && Node->HasProperties())
-            {
-
-            }
-
-
-
-
-
-
             INT xPos = GET_X_LPARAM(lParam);
             INT yPos = GET_Y_LPARAM(lParam);
 
-            TrackPopupMenuEx(m_hContextMenu,
-                             TPM_RIGHTBUTTON,
-                             xPos,
-                             yPos,
-                             m_hMainWnd,
-                             NULL);
+            CNode *Node = GetSelectedNode();
+            if (Node)
+            {
+                BuildContextMenuForNode(Node, xPos, yPos);
+            }
         }
     }
 
@@ -807,6 +790,100 @@ CDeviceView::InsertIntoTreeView(
     return TreeView_InsertItem(m_hTreeView, &tvins);
 }
 
+void
+CDeviceView::BuildContextMenuForNode(
+    _In_ CNode *Node,
+    _In_ INT xPos,
+    _In_ INT yPos
+    )
+{
+    // Create the context menu
+    HMENU hContextMenu = CreatePopupMenu();
+
+    // Create a seperator structure 
+    MENUITEMINFOW MenuSeperator = { 0 };
+    MenuSeperator.cbSize = sizeof(MENUITEMINFOW);
+    MenuSeperator.fType = MFT_SEPARATOR;
+
+    // Setup the 
+    MENUITEMINFOW MenuItemInfo = { 0 };
+    MenuItemInfo.cbSize = sizeof(MENUITEMINFOW);
+    MenuItemInfo.fMask = MIIM_ID | MIIM_STRING | MIIM_DATA | MIIM_SUBMENU;
+    MenuItemInfo.fType = MFT_STRING;
+
+    int i = 0;
+
+    // Device nodes have extra data
+    if (Node->GetNodeType() == DeviceNode)
+    {
+        CDeviceNode *DeviceNode = dynamic_cast<CDeviceNode *>(Node);
+
+        if (DeviceNode->CanUpdate())
+        {
+            MenuItemInfo.wID = IDC_UPDATE_DRV;
+            MenuItemInfo.dwTypeData = L"Update driver software...";
+            InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+            i++;
+        }
+
+        if (DeviceNode->IsDisabled())
+        {
+            MenuItemInfo.wID = IDC_ENABLE_DRV;
+            MenuItemInfo.dwTypeData = L"Enable";
+            InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+            i++;
+        }
+
+        if (DeviceNode->CanDisable() && !DeviceNode->IsDisabled())
+        {
+            MenuItemInfo.wID = IDC_DISABLE_DRV;
+            MenuItemInfo.dwTypeData = L"Disable";
+            InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+            i++;
+        }
+
+        if (DeviceNode->CanUninstall())
+        {
+            MenuItemInfo.wID = IDC_UNINSTALL_DRV;
+            MenuItemInfo.dwTypeData = L"Uninstall";
+            InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+            i++;
+        }
+
+        InsertMenuItemW(hContextMenu, i, TRUE, &MenuSeperator);
+        i++;
+    }
+
+    // All nodes have the scan option
+    MenuItemInfo.wID = IDC_SCAN_HARDWARE;
+    MenuItemInfo.dwTypeData = L"Scan for hardware changes";
+    InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+    i++;
+
+    if (Node->HasProperties())
+    {
+        InsertMenuItemW(hContextMenu, i, TRUE, &MenuSeperator);
+        i++;
+
+        MenuItemInfo.wID = IDC_PROPERTIES;
+        MenuItemInfo.dwTypeData = L"Properties";
+        InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+        i++;
+
+        SetMenuDefaultItem(hContextMenu, IDC_PROPERTIES, FALSE);
+    }
+
+    // Display the menu
+    TrackPopupMenuEx(hContextMenu,
+                     TPM_RIGHTBUTTON,
+                     xPos,
+                     yPos,
+                     m_hMainWnd,
+                     NULL);
+
+    DestroyMenu(hContextMenu);
+}
+
 HTREEITEM
 CDeviceView::RecurseFindDevice(
     _In_ HTREEITEM hParentItem,
@@ -828,6 +905,7 @@ CDeviceView::RecurseFindDevice(
     if (TreeView_GetItem(m_hTreeView, &tvItem) &&
         tvItem.lParam != NULL)
     {
+        // check for a matching deviceid
         Node = reinterpret_cast<CNode *>(tvItem.lParam);
         if (Node->GetDeviceId() &&
             (wcscmp(Node->GetDeviceId(), DeviceId) == 0))
@@ -840,7 +918,7 @@ CDeviceView::RecurseFindDevice(
     FoundItem = RecurseFindDevice(hItem, DeviceId);
     if (FoundItem) return FoundItem;
 
-    // Delete all the siblings
+    // Loop all the siblings
     for (;;)
     {
         // Get the next item at this level
@@ -852,6 +930,7 @@ CDeviceView::RecurseFindDevice(
         tvItem.mask = TVIF_PARAM;
         if (TreeView_GetItem(m_hTreeView, &tvItem))
         {
+            // check for a matching deviceid
             Node = reinterpret_cast<CNode *>(tvItem.lParam);
             if (Node->GetDeviceId() && 
                 wcscmp(Node->GetDeviceId(), DeviceId) == 0)
@@ -879,14 +958,19 @@ CDeviceView::SelectNode(
     hRoot = TreeView_GetRoot(m_hTreeView);
     if (hRoot == NULL) return;
 
-    if (DeviceId)
+    // If we don't want to set select a node, just select root
+    if (DeviceId == NULL)
     {
-        hItem = RecurseFindDevice(hRoot, DeviceId);
-        if (hItem)
-        {
-            TreeView_SelectItem(m_hTreeView, hItem);
-            TreeView_Expand(m_hTreeView, hItem, TVM_EXPAND);
-        }
+        TreeView_SelectItem(m_hTreeView, hRoot);
+        return;
+    }
+
+    // Scan the tree looking for the node we want
+    hItem = RecurseFindDevice(hRoot, DeviceId);
+    if (hItem)
+    {
+        TreeView_SelectItem(m_hTreeView, hItem);
+        TreeView_Expand(m_hTreeView, hItem, TVM_EXPAND);
     }
     else
     {
