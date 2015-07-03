@@ -317,8 +317,6 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
             for (i = 0; i < 3; i++)
                 *pcbNeeded += (wcslen(wszPrintProviderInfo[i]) + 1) * sizeof(WCHAR);
 
-            *pcReturned = 1;
-
             // Check if the supplied buffer is large enough.
             if (cbBuf < *pcbNeeded)
             {
@@ -329,12 +327,15 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
             // Copy over the print processor information.
             ((PPRINTER_INFO_1W)pPrinterEnum)->Flags = 0;
             PackStrings(wszPrintProviderInfo, pPrinterEnum, dwOffsets, &pPrinterEnum[*pcbNeeded]);
+            *pcReturned = 1;
             dwErrorCode = ERROR_SUCCESS;
             goto Cleanup;
         }
     }
 
     // Count the required buffer size and the number of printers.
+    i = 0;
+
     for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
     {
         pPrinter = (PLOCAL_PRINTER)pNode->Element;
@@ -347,7 +348,7 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
         cbDescription = cchComputerName * sizeof(WCHAR) + cbName + cbComment + sizeof(WCHAR);
 
         *pcbNeeded += sizeof(PRINTER_INFO_1W) + cchComputerName * sizeof(WCHAR) + cbName + cbComment + cbDescription;
-        (*pcReturned)++;
+        i++;
     }
 
     // Check if the supplied buffer is large enough.
@@ -360,7 +361,7 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
     // Put the strings right after the last PRINTER_INFO_1W structure.
     // Due to all the required string processing, we can't just use PackStrings here :(
     pPrinterInfo = pPrinterEnum;
-    pPrinterString = pPrinterEnum + *pcReturned * sizeof(PRINTER_INFO_1W);
+    pPrinterString = pPrinterEnum + i * sizeof(PRINTER_INFO_1W);
 
     // Copy over the printer information.
     for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
@@ -402,6 +403,7 @@ _LocalEnumPrintersLevel1(DWORD Flags, LPWSTR Name, LPBYTE pPrinterEnum, DWORD cb
         pPrinterInfo += sizeof(PRINTER_INFO_1W);
     }
 
+    *pcReturned = i;
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:

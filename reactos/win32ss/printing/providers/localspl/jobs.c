@@ -898,6 +898,7 @@ BOOL WINAPI
 LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pStart, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
     DWORD dwErrorCode;
+    DWORD i;
     PBYTE pEnd = &pStart[cbBuf];
     PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
@@ -930,9 +931,10 @@ LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE 
     pFirstJobNode = LookupNodeByIndexSkiplist(&pPrinterHandle->pPrinter->JobList, FirstJob);
 
     // Count the required buffer size and the number of jobs.
+    i = 0;
     pNode = pFirstJobNode;
 
-    while (*pcReturned < NoJobs && pNode)
+    while (i < NoJobs && pNode)
     {
         pJob = (PLOCAL_JOB)pNode->Element;
 
@@ -943,7 +945,7 @@ LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE 
             _LocalGetJobLevel2(pPrinterHandle, pJob, NULL, NULL, 0, pcbNeeded);
 
         // We stop either when there are no more jobs in the list or when the caller didn't request more, whatever comes first.
-        (*pcReturned)++;
+        i++;
         pNode = pNode->Next[0];
     }
 
@@ -956,13 +958,13 @@ LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE 
 
     // Begin counting again and also empty the given buffer.
     *pcbNeeded = 0;
-    *pcReturned = 0;
     ZeroMemory(pStart, cbBuf);
 
     // Now call the same functions again to copy the actual data for each job into the buffer.
+    i = 0;
     pNode = pFirstJobNode;
 
-    while (*pcReturned < NoJobs && pNode)
+    while (i < NoJobs && pNode)
     {
         pJob = (PLOCAL_JOB)pNode->Element;
 
@@ -976,10 +978,11 @@ LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE 
             goto Cleanup;
 
         // We stop either when there are no more jobs in the list or when the caller didn't request more, whatever comes first.
-        (*pcReturned)++;
+        i++;
         pNode = pNode->Next[0];
     }
 
+    *pcReturned = i;
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:

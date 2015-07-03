@@ -107,6 +107,7 @@ BOOL WINAPI
 EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
     DWORD cbDatatype;
+    DWORD dwDatatypeCount = 0;
     DWORD dwErrorCode;
     DWORD dwOffsets[_countof(_pwszDatatypes)];
     PCWSTR* pCurrentDatatype;
@@ -129,9 +130,9 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
         *pcbNeeded += sizeof(DATATYPES_INFO_1W) + cbDatatype;
 
         // Also calculate the offset in the output buffer of the pointer to this datatype string.
-        *pCurrentOffset = *pcReturned * sizeof(DATATYPES_INFO_1W) + FIELD_OFFSET(DATATYPES_INFO_1W, pName);
+        *pCurrentOffset = dwDatatypeCount * sizeof(DATATYPES_INFO_1W) + FIELD_OFFSET(DATATYPES_INFO_1W, pName);
 
-        (*pcReturned)++;
+        dwDatatypeCount++;
         pCurrentOffset++;
     }
 
@@ -153,6 +154,7 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
     *pCurrentOffset = MAXDWORD;
     PackStrings(_pwszDatatypes, pDatatypes, dwOffsets, &pDatatypes[*pcbNeeded]);
 
+    *pcReturned = dwDatatypeCount;
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:

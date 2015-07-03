@@ -438,6 +438,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     DWORD cchMaxSubKey;
     DWORD cchPrintProcessor;
     DWORD dwErrorCode;
+    DWORD dwPrintProcessorCount;
     DWORD i;
     HKEY hKey = NULL;
     HKEY hSubKey = NULL;
@@ -475,7 +476,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     }
 
     // Get the number of Print Processors and maximum sub key length.
-    dwErrorCode = (DWORD)RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, pcReturned, &cchMaxSubKey, NULL, NULL, NULL, NULL, NULL, NULL);
+    dwErrorCode = (DWORD)RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, &dwPrintProcessorCount, &cchMaxSubKey, NULL, NULL, NULL, NULL, NULL, NULL);
     if (dwErrorCode != ERROR_SUCCESS)
     {
         ERR("RegQueryInfoKeyW failed with status %lu!\n", dwErrorCode);
@@ -494,7 +495,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     // Determine the required size of the output buffer.
     *pcbNeeded = 0;
 
-    for (i = 0; i < *pcReturned; i++)
+    for (i = 0; i < dwPrintProcessorCount; i++)
     {
         // RegEnumKeyExW sucks! Unlike similar API functions, it only returns the actual numbers of characters copied when you supply a buffer large enough.
         // So use pwszTemp with its size cchMaxSubKey for this.
@@ -518,10 +519,10 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
 
     // Put the Print Processor strings right after the last PRINTPROCESSOR_INFO_1W structure.
     pCurrentOutputPrintProcessorInfo = pPrintProcessorInfo;
-    pCurrentOutputPrintProcessor = pPrintProcessorInfo + *pcReturned * sizeof(PRINTPROCESSOR_INFO_1W);
+    pCurrentOutputPrintProcessor = pPrintProcessorInfo + dwPrintProcessorCount * sizeof(PRINTPROCESSOR_INFO_1W);
 
     // Copy over all Print Processors.
-    for (i = 0; i < *pcReturned; i++)
+    for (i = 0; i < dwPrintProcessorCount; i++)
     {
         // This isn't really correct, but doesn't cause any harm, because we've extensively checked the size of the supplied buffer above.
         cchPrintProcessor = cchMaxSubKey + 1;
@@ -544,6 +545,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     }
 
     // We've finished successfully!
+    *pcReturned = dwPrintProcessorCount;
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
