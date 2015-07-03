@@ -419,13 +419,7 @@ void RefreshProcessPage(void)
 
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
 {
-    ULONG    OldProcessorUsage = 0;
-    ULONG    OldProcessCount = 0;
-    WCHAR    szCpuUsage[256], szProcesses[256];
     MSG      msg;
-
-    LoadStringW(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
-    LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     while (1) {
         /*  Wait for an the event or application close */
@@ -433,23 +427,11 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
             return 0;
 
         if (msg.message == WM_TIMER) {
-            WCHAR    text[260];
 
             UpdateProcesses();
 
             if (IsWindowVisible(hProcessPage))
                 InvalidateRect(hProcessPageListCtrl, NULL, FALSE);
-
-            if (OldProcessorUsage != PerfDataGetProcessorUsage()) {
-                OldProcessorUsage = PerfDataGetProcessorUsage();
-                wsprintfW(text, szCpuUsage, OldProcessorUsage);
-                SendMessageW(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
-            }
-            if (OldProcessCount != PerfDataGetProcessCount()) {
-                OldProcessCount = PerfDataGetProcessCount();
-                wsprintfW(text, szProcesses, OldProcessCount);
-                SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
-            }
 
             ProcessPageUpdate();
         }

@@ -952,24 +952,18 @@ void TaskManager_OnExitMenuLoop(HWND hWnd)
 {
     RECT   rc;
     int    nParts[3];
-    WCHAR  text[260];
-    WCHAR  szCpuUsage[256], szProcesses[256];
-
-    LoadStringW(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
-    LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     bInMenuLoop = FALSE;
+
     /* Update the status bar pane sizes */
     GetClientRect(hWnd, &rc);
     nParts[0] = STATUS_SIZE1;
     nParts[1] = STATUS_SIZE2;
     nParts[2] = rc.right;
     SendMessageW(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
-    SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)L"");
-    wsprintfW(text, szCpuUsage, PerfDataGetProcessorUsage());
-    SendMessageW(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
-    wsprintfW(text, szProcesses, PerfDataGetProcessCount());
-    SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
+
+    /* trigger update of status bar columns and performance page asynchronously */
+    RefreshPerformancePage();
 }
 
 void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)

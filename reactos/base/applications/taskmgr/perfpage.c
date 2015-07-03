@@ -23,6 +23,8 @@
 #include "precomp.h"
 #include <shlwapi.h>
 
+extern BOOL bInMenuLoop;        /* Tells us if we are in the menu loop - from taskmgr.c */
+
 TGraphCtrl PerformancePageCpuUsageHistoryGraph;
 TGraphCtrl PerformancePageMemUsageHistoryGraph;
 
@@ -331,12 +333,14 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
     ULONG  TotalThreads;
     ULONG  TotalProcesses;
 
-    WCHAR  Text[260];
-    WCHAR  szMemUsage[256];
-
     MSG    msg;
 
+    WCHAR  Text[260];
+    WCHAR  szMemUsage[256], szCpuUsage[256], szProcesses[256];
+
+    LoadStringW(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
     LoadStringW(hInst, IDS_STATUS_MEMUSAGE, szMemUsage, 256);
+    LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     while (1)
     {
@@ -373,10 +377,12 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
                                szChargeLimitFormat,
                                sizeof(szChargeLimitFormat));
 
-            wsprintfW(Text, szMemUsage, szChargeTotalFormat, szChargeLimitFormat,
-                      (CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0));
-
-            SendMessageW(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
+            if (!bInMenuLoop)
+            {
+                wsprintfW(Text, szMemUsage, szChargeTotalFormat, szChargeLimitFormat,
+                    (CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0));
+                SendMessageW(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
+            }
 
             /*
              *  Update the kernel memory info
@@ -416,6 +422,11 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             SetWindowTextW(hPerformancePageTotalsThreadCountEdit, Text);
             _ultow(TotalProcesses, Text, 10);
             SetWindowTextW(hPerformancePageTotalsProcessCountEdit, Text);
+            if (!bInMenuLoop)
+            {
+                wsprintfW(Text, szProcesses, TotalProcesses);
+                SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)Text);
+            }
 
             /*
              *  Redraw the graphs
@@ -429,6 +440,12 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             CpuUsage = PerfDataGetProcessorUsage();
             if (CpuUsage <= 0 )       CpuUsage = 0;
             if (CpuUsage > 100)       CpuUsage = 100;
+
+            if (!bInMenuLoop)
+            {
+                wsprintfW(Text, szCpuUsage, CpuUsage);
+                SendMessageW(hStatusWnd, SB_SETTEXT, 1, (LPARAM)Text);
+            }
 
             if (TaskManagerSettings.ShowKernelTimes)
             {
