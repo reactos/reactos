@@ -809,6 +809,12 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Presione D para borrar una partici¢n existente.",
         TEXT_STYLE_NORMAL
     },

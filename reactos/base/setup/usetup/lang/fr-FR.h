@@ -814,6 +814,12 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Appuyer sur D pour effacer une partition.",
         TEXT_STYLE_NORMAL
     },

@@ -253,7 +253,8 @@ CreateExtendedPartition(
 VOID
 CreateLogicalPartition(
     PPARTLIST List,
-    ULONGLONG SectorCount);
+    ULONGLONG SectorCount,
+    BOOLEAN AutoCreate);
 
 VOID
 DeleteCurrentPartition(

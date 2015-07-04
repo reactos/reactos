@@ -810,6 +810,12 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Stlaüte D pre vymazanie existuj£cej oblasti.",
         TEXT_STYLE_NORMAL
     },

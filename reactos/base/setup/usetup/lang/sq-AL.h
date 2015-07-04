@@ -806,6 +806,12 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Kliko D p‰r t‰ fshir‰ nj‰ particion ekzistues.",
         TEXT_STYLE_NORMAL
     },

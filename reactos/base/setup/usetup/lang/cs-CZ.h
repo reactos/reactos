@@ -809,6 +809,12 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Stisknut¡m D umo§n¡te smaz n¡ existuj¡c¡ho odd¡lu.",
         TEXT_STYLE_NORMAL
     },

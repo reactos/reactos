@@ -821,6 +821,12 @@ static MUI_ENTRY ptBRSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Para excluir a parti‡Æo selecionada, pressione D.",
         TEXT_STYLE_NORMAL
     },

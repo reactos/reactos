@@ -814,6 +814,12 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  ПШлуйлЬ D ЪаШ дШ ЫаШЪиспЬлЬ тдШ мзсиожд ЫаШгтиайгШ.",
         TEXT_STYLE_NORMAL
     },

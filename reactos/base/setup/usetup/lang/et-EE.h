@@ -802,6 +802,12 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Vajuta D, et kustutada olemasolev partitsioon.",
         TEXT_STYLE_NORMAL
     },

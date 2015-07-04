@@ -811,6 +811,12 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Naci˜nij D, by skasowa† istniej¥c¥ partycj©.",
         TEXT_STYLE_NORMAL
     },

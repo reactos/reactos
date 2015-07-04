@@ -809,6 +809,12 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Tryck D f”r att ta bort en befintlig partititon.",
         TEXT_STYLE_NORMAL
     },

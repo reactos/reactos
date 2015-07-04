@@ -857,6 +857,12 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Tastaîi D pentru a ­terge o partiîie existentÇ.",
         TEXT_STYLE_NORMAL
     },

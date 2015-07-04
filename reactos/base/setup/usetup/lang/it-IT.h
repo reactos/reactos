@@ -809,6 +809,12 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Premere D per cancellare una partizione esistente.",
         TEXT_STYLE_NORMAL
     },

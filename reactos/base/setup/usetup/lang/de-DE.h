@@ -796,6 +796,12 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  L erstellt eine logische Partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  D l”scht eine vorhandene Partition.",
         TEXT_STYLE_NORMAL
     },

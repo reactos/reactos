@@ -2762,7 +2762,8 @@ CreateExtendedPartition(
 VOID
 CreateLogicalPartition(
     PPARTLIST List,
-    ULONGLONG SectorCount)
+    ULONGLONG SectorCount,
+    BOOLEAN AutoCreate)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
@@ -2783,7 +2784,8 @@ CreateLogicalPartition(
 
     DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
 
-    if (Align(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) - PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart)
+    if (AutoCreate == TRUE ||
+        Align(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) - PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart)
     {
         DPRINT1("Convert existing partition entry\n");
 

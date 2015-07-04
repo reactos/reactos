@@ -803,6 +803,12 @@ static MUI_ENTRY jaJPSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  ·¿ÝÉ Êß°Ã¨¼®Ý¦ »¸¼Þ® ½ÙÆÊ D ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },

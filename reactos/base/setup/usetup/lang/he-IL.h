@@ -802,6 +802,12 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Press D to delete an existing partition.",
         TEXT_STYLE_NORMAL
     },

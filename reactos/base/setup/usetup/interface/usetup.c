@@ -1454,7 +1454,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
     if (PartitionList == NULL)
     {
         PartitionList = CreatePartitionList(2,
-                                            21,
+                                            23,
                                             xScreen - 3,
                                             yScreen - 3);
         if (PartitionList == NULL)
@@ -1477,9 +1477,18 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             if (AutoPartition)
             {
-                CreatePrimaryPartition(PartitionList,
-                                       PartitionList->CurrentPartition->SectorCount.QuadPart,
-                                       TRUE);
+                if (PartitionList->CurrentPartition->LogicalPartition)
+                {
+                    CreateLogicalPartition(PartitionList,
+                                           PartitionList->CurrentPartition->SectorCount.QuadPart,
+                                           TRUE);
+                }
+                else
+                {
+                    CreatePrimaryPartition(PartitionList,
+                                           PartitionList->CurrentPartition->SectorCount.QuadPart,
+                                           TRUE);
+                }
 
                 if (!IsDiskSizeValid(PartitionList->CurrentPartition))
                 {
@@ -1579,9 +1588,18 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             if (PartitionList->CurrentPartition == NULL ||
                 PartitionList->CurrentPartition->IsPartitioned == FALSE)
             {
-                CreatePrimaryPartition(PartitionList,
-                                       0ULL,
-                                       TRUE);
+                if (PartitionList->CurrentPartition->LogicalPartition)
+                {
+                    CreateLogicalPartition(PartitionList,
+                                           0ULL,
+                                           TRUE);
+                }
+                else
+                {
+                    CreatePrimaryPartition(PartitionList,
+                                           0ULL,
+                                           TRUE);
+                }
             }
 
             if (!IsDiskSizeValid(PartitionList->CurrentPartition))
@@ -2203,7 +2221,8 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
             DPRINT("Partition size: %I64u bytes\n", PartSize);
 
             CreateLogicalPartition(PartitionList,
-                                   SectorCount);
+                                   SectorCount,
+                                   FALSE);
 
             return SELECT_PARTITION_PAGE;
         }
