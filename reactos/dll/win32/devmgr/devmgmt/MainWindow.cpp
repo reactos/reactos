@@ -590,6 +590,29 @@ CMainWindow::OnCommand(WPARAM wParam,
             break;
         }
 
+        case IDC_ACTIONMENU:
+        {
+            // Create a popup menu with all the actions for the selected node
+            HMENU hMenu = CreatePopupMenu();
+            m_DeviceView->CreateActionMenu(hMenu, true);
+
+            RECT rc;
+            GetMenuItemRect(m_hMainWnd, m_hMenu, 1, &rc);
+
+            LONG Height = rc.bottom - rc.top;
+
+            // Display the menu
+            TrackPopupMenuEx(hMenu,
+                             TPM_RIGHTBUTTON,
+                             rc.left,
+                             rc.top + Height,
+                             m_hMainWnd,
+                             NULL);
+
+            DestroyMenu(hMenu);
+            break;
+        }
+
         case IDC_DEVBYTYPE:
         {
             RefreshView(DevicesByType);

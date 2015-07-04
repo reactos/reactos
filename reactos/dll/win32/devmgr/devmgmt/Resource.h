@@ -21,8 +21,12 @@
 #define IDC_UPDATE_DRV      104
 #define IDC_UNINSTALL_DRV   105
 #define IDC_ADD_HARDWARE    106
-#define IDC_ABOUT           107
-#define IDC_EXIT            108
+
+/* Menu items */
+#define IDC_ACTIONMENU      150
+#define IDC_ABOUT           151
+#define IDC_EXIT            152
+
 
 /* view menu */
 #define IDC_DEVBYTYPE       200

@@ -51,8 +51,7 @@ CDeviceView::CDeviceView(
     m_hMenu(NULL),
     m_ViewType(DevicesByType),
     m_ShowHidden(FALSE),
-    m_RootClassImage(-1),
-    m_RootDevInst(0)
+    m_RootNode(NULL)
 {
     ZeroMemory(&m_ImageListData, sizeof(SP_CLASSIMAGELIST_DATA));
 }
@@ -162,14 +161,27 @@ CDeviceView::OnContextMenu(
             ScreenToClient(m_hTreeView, &pt) &&
             PtInRect(&rc, pt))
         {
-
-            INT xPos = GET_X_LPARAM(lParam);
-            INT yPos = GET_Y_LPARAM(lParam);
-
             CNode *Node = GetSelectedNode();
             if (Node)
             {
-                BuildContextMenuForNode(Node, xPos, yPos);
+                // Create the context menu
+                HMENU hContextMenu = CreatePopupMenu();
+
+                // Add the actions for this node
+                BuildActionMenuForNode(hContextMenu, Node);
+
+                INT xPos = GET_X_LPARAM(lParam);
+                INT yPos = GET_Y_LPARAM(lParam);
+
+                // Display the menu
+                TrackPopupMenuEx(hContextMenu,
+                                 TPM_RIGHTBUTTON,
+                                 xPos,
+                                 yPos,
+                                 m_hMainWnd,
+                                 NULL);
+
+                DestroyMenu(hContextMenu);
             }
         }
     }
@@ -259,6 +271,22 @@ CDeviceView::SetFocus()
 }
 
 bool
+CDeviceView::CreateActionMenu(
+    _In_ HMENU OwnerMenu,
+    _In_ bool MainMenu
+    )
+{
+    CNode *Node = GetSelectedNode();
+    if (Node)
+    {
+        BuildActionMenuForNode(OwnerMenu, Node);
+        return true;
+    }
+
+    return false;
+}
+
+bool
 CDeviceView::HasProperties(
     _In_ LPTV_ITEMW TvItem
     )
@@ -336,54 +364,8 @@ CDeviceView::EnableSelectedDevice(
 bool
 CDeviceView::AddRootDevice()
 {
-    // Check whether we've loaded the root bitmap into the imagelist (done on first run)
-    if (m_RootClassImage == -1)
-    {
-        // Load the bitmap we'll be using as the root image
-        HBITMAP hRootImage;
-        hRootImage = LoadBitmapW(g_hInstance,
-                                 MAKEINTRESOURCEW(IDB_ROOT_IMAGE));
-        if (hRootImage == NULL) return FALSE;
-
-        // Add this bitmap to the device image list. This is a bit hacky, but it's safe
-        m_RootClassImage = ImageList_Add(m_ImageListData.ImageList,
-                                   hRootImage,
-                                   NULL);
-        DeleteObject(hRootImage);
-    }
-
-    // Get the root instance 
-    CONFIGRET cr;
-    cr = CM_Locate_DevNodeW(&m_RootDevInst,
-                            NULL,
-                            CM_LOCATE_DEVNODE_NORMAL);
-    if (cr != CR_SUCCESS)
-    {
-        return false;
-    }
-
-    // The root name is the computer name 
-    WCHAR RootDeviceName[ROOT_NAME_SIZE];
-    DWORD Size = ROOT_NAME_SIZE;
-    if (GetComputerNameW(RootDeviceName, &Size))
-        _wcslwr_s(RootDeviceName);
-
-    TV_ITEMW tvi;
-    TV_INSERTSTRUCT tvins;
-    ZeroMemory(&tvi, sizeof(tvi));
-    ZeroMemory(&tvins, sizeof(tvins));
-
-    // Insert the root / parent item into our treeview
-    tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
-    tvi.pszText = RootDeviceName;
-    tvi.cchTextMax = wcslen(RootDeviceName);
-    tvi.iImage = m_RootClassImage;
-    tvi.iSelectedImage = m_RootClassImage;
-    tvins.item = tvi;
-    m_hTreeRoot = TreeView_InsertItem(m_hTreeView, &tvins);
-
+    m_hTreeRoot = InsertIntoTreeView(NULL, m_RootNode);
     return (m_hTreeRoot != NULL);
-
 }
 
 bool
@@ -622,7 +604,7 @@ CDeviceView::ListDevicesByConnection()
     if (bSuccess == false) return false;
 
     // Walk the device tree and add all the devices 
-    (void)RecurseChildDevices(m_RootDevInst, m_hTreeRoot);
+    (void)RecurseChildDevices(m_RootNode->GetDeviceInst(), m_hTreeRoot);
 
     // Expand the root item 
     (void)TreeView_Expand(m_hTreeView,
@@ -755,11 +737,10 @@ CDeviceView::GetSiblingDevice(
 
 HTREEITEM
 CDeviceView::InsertIntoTreeView(
-    _In_ HTREEITEM hParent,
+    _In_opt_ HTREEITEM hParent,
     _In_ CNode *Node
     )
 {
-    
     LPWSTR lpLabel;
     lpLabel = Node->GetDisplayName();
 
@@ -791,15 +772,11 @@ CDeviceView::InsertIntoTreeView(
 }
 
 void
-CDeviceView::BuildContextMenuForNode(
-    _In_ CNode *Node,
-    _In_ INT xPos,
-    _In_ INT yPos
+CDeviceView::BuildActionMenuForNode(
+    _In_ HMENU OwnerMenu,
+    _In_ CNode *Node
     )
 {
-    // Create the context menu
-    HMENU hContextMenu = CreatePopupMenu();
-
     // Create a seperator structure 
     MENUITEMINFOW MenuSeperator = { 0 };
     MenuSeperator.cbSize = sizeof(MENUITEMINFOW);
@@ -824,7 +801,7 @@ CDeviceView::BuildContextMenuForNode(
             String.LoadStringW(g_hInstance, IDS_MENU_UPDATE);
             MenuItemInfo.wID = IDC_UPDATE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
-            InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+            InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
             i++;
         }
 
@@ -833,7 +810,7 @@ CDeviceView::BuildContextMenuForNode(
             String.LoadStringW(g_hInstance, IDS_MENU_ENABLE);
             MenuItemInfo.wID = IDC_ENABLE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
-            InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+            InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
             i++;
         }
 
@@ -842,7 +819,7 @@ CDeviceView::BuildContextMenuForNode(
             String.LoadStringW(g_hInstance, IDS_MENU_DISABLE);
             MenuItemInfo.wID = IDC_DISABLE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
-            InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+            InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
             i++;
         }
 
@@ -851,11 +828,11 @@ CDeviceView::BuildContextMenuForNode(
             String.LoadStringW(g_hInstance, IDS_MENU_UNINSTALL);
             MenuItemInfo.wID = IDC_UNINSTALL_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
-            InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+            InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
             i++;
         }
 
-        InsertMenuItemW(hContextMenu, i, TRUE, &MenuSeperator);
+        InsertMenuItemW(OwnerMenu, i, TRUE, &MenuSeperator);
         i++;
     }
 
@@ -863,32 +840,22 @@ CDeviceView::BuildContextMenuForNode(
     String.LoadStringW(g_hInstance, IDS_MENU_SCAN);
     MenuItemInfo.wID = IDC_SCAN_HARDWARE;
     MenuItemInfo.dwTypeData = String.GetBuffer();
-    InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+    InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
     i++;
 
     if (Node->HasProperties())
     {
-        InsertMenuItemW(hContextMenu, i, TRUE, &MenuSeperator);
+        InsertMenuItemW(OwnerMenu, i, TRUE, &MenuSeperator);
         i++;
 
         String.LoadStringW(g_hInstance, IDS_MENU_PROPERTIES);
         MenuItemInfo.wID = IDC_PROPERTIES;
         MenuItemInfo.dwTypeData = String.GetBuffer();
-        InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
+        InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
         i++;
 
-        SetMenuDefaultItem(hContextMenu, IDC_PROPERTIES, FALSE);
+        SetMenuDefaultItem(OwnerMenu, IDC_PROPERTIES, FALSE);
     }
-
-    // Display the menu
-    TrackPopupMenuEx(hContextMenu,
-                     TPM_RIGHTBUTTON,
-                     xPos,
-                     yPos,
-                     m_hMainWnd,
-                     NULL);
-
-    DestroyMenu(hContextMenu);
 }
 
 HTREEITEM
@@ -1097,6 +1064,9 @@ CDeviceView::RefreshDeviceList()
 
     EmptyLists();
 
+    if (m_RootNode) delete m_RootNode;
+    m_RootNode = new CRootNode(&m_ImageListData);
+    m_RootNode->SetupNode();
     // Loop through all the classes
     do
     {

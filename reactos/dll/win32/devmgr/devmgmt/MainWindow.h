@@ -16,6 +16,7 @@ class CMainWindow
     HWND m_hToolBar;
     HIMAGELIST m_ToolbarhImageList;
     HMENU m_hMenu;
+    HMENU m_hActionMenu;
     int m_CmdShow;
 
 public:

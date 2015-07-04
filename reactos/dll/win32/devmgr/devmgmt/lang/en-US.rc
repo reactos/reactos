@@ -6,18 +6,7 @@ BEGIN
   BEGIN
     MENUITEM "E&xit",                       IDC_EXIT
   END
-  POPUP "Action"
-  BEGIN
-    MENUITEM "Update driver software..."    IDC_UPDATE_DRV
-    MENUITEM "Enable"                       IDC_ENABLE_DRV
-    MENUITEM "Disable"                      IDC_DISABLE_DRV
-    MENUITEM "Uninstall"                    IDC_UNINSTALL_DRV
-    MENUITEM SEPARATOR
-    MENUITEM "Scan for hardware changes"    IDC_SCAN_HARDWARE
-    MENUITEM "Add hardware"                 IDC_ADD_HARDWARE, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Properties",                  IDC_PROPERTIES
-  END
+  MENUITEM "Action"                         IDC_ACTIONMENU
   POPUP "View"
   BEGIN
     MENUITEM "Devices by type",             IDC_DEVBYTYPE

@@ -1,6 +1,7 @@
 #pragma once
 #include "DeviceNode.h"
 #include "ClassNode.h"
+#include "RootNode.h"
 
 enum ViewType
 {
@@ -13,6 +14,7 @@ enum ViewType
 
 class CDeviceView
 {
+    CRootNode *m_RootNode;
     CAtlList<CClassNode *> m_ClassNodeList;
     CAtlList<CDeviceNode *> m_DeviceNodeList;
     SP_CLASSIMAGELIST_DATA m_ImageListData;
@@ -22,9 +24,7 @@ class CDeviceView
     HMENU m_hMenu;
     ViewType m_ViewType;
     HTREEITEM m_hTreeRoot;
-    DEVINST m_RootDevInst;
     bool m_ShowHidden;
-    int m_RootClassImage;
 
 public:
     CDeviceView(
@@ -67,6 +67,11 @@ public:
     }
 
     ViewType GetCurrentView() { return m_ViewType; }
+
+    bool CreateActionMenu(
+        _In_ HMENU OwnerMenu,
+        _In_ bool MainMenu
+        );
 
     bool HasProperties(
         _In_ LPTV_ITEMW TvItem
@@ -123,14 +128,13 @@ private:
         );
 
     HTREEITEM InsertIntoTreeView(
-        _In_ HTREEITEM hParent,
+        _In_opt_ HTREEITEM hParent,
         _In_ CNode *Node
         );
 
-    void BuildContextMenuForNode(
-        _In_ CNode *Node,
-        _In_ INT xPos,
-        _In_ INT yPos
+    void BuildActionMenuForNode(
+        _In_ HMENU OwnerMenu,
+        _In_ CNode *Node
         );
 
     HTREEITEM RecurseFindDevice(

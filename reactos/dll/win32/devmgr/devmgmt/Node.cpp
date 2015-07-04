@@ -22,6 +22,7 @@ CNode::CNode(_In_ NodeType Type,
     m_ClassImage(0)
 {
     m_DisplayName[0] = UNICODE_NULL;
+    m_ClassGuid = GUID_NULL;
 }
 
 CNode::~CNode()
