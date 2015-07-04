@@ -502,7 +502,11 @@ CompareFileName(PUNICODE_STRING FileName,
 }
 
 NTSTATUS
-BrowseIndexEntries(PINDEX_ENTRY_ATTRIBUTE FirstEntry,
+BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
+                   PFILE_RECORD_HEADER MftRecord,
+                   PCHAR IndexRecord,
+                   ULONG IndexBlockSize,
+                   PINDEX_ENTRY_ATTRIBUTE FirstEntry,
                    PINDEX_ENTRY_ATTRIBUTE LastEntry,
                    PUNICODE_STRING FileName,
                    PULONG StartEntry,
@@ -510,17 +514,19 @@ BrowseIndexEntries(PINDEX_ENTRY_ATTRIBUTE FirstEntry,
                    BOOLEAN DirSearch,
                    ULONGLONG *OutMFTIndex)
 {
+    NTSTATUS Status;
+    ULONG RecordOffset;
     PINDEX_ENTRY_ATTRIBUTE IndexEntry;
+    PNTFS_ATTR_CONTEXT IndexAllocationCtx;
+    ULONGLONG IndexAllocationSize;
+    PINDEX_BUFFER IndexBuffer;
+
+    DPRINT("BrowseIndexEntries(%p, %p, %p, %u, %p, %p, %wZ, %u, %u, %u, %p)\n", Vcb, MftRecord, IndexRecord, IndexBlockSize, FirstEntry, LastEntry, FileName, *StartEntry, *CurrentEntry, DirSearch, OutMFTIndex);
 
     IndexEntry = FirstEntry;
     while (IndexEntry < LastEntry &&
            !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
     {
-        UNICODE_STRING EntryName;
-        EntryName.Buffer = IndexEntry->FileName.Name;
-        EntryName.Length = 
-        EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
-
         if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
             *CurrentEntry >= *StartEntry &&
             CompareFileName(FileName, IndexEntry, DirSearch))
@@ -535,13 +541,52 @@ BrowseIndexEntries(PINDEX_ENTRY_ATTRIBUTE FirstEntry,
         IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
     }
 
+    /* If we're already browsing a subnode */
+    if (IndexRecord == NULL)
+    {
+        return STATUS_OBJECT_PATH_NOT_FOUND;
+    }
+
+    /* If there's no subnode */
     if (!(IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE))
     {
         return STATUS_OBJECT_PATH_NOT_FOUND; 
     }
 
-    UNIMPLEMENTED;
-    return STATUS_OBJECT_PATH_NOT_FOUND;    
+    Status = FindAttribute(Vcb, MftRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationCtx);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Corrupted filesystem!\n");
+        return Status;
+    }
+
+    IndexAllocationSize = AttributeDataLength(&IndexAllocationCtx->Record);
+    Status = STATUS_OBJECT_PATH_NOT_FOUND;
+    for (RecordOffset = 0; RecordOffset < IndexAllocationSize; RecordOffset += IndexBlockSize)
+    {
+        ReadAttribute(Vcb, IndexAllocationCtx, RecordOffset, IndexRecord, IndexBlockSize);
+        Status = FixupUpdateSequenceArray(Vcb, &((PFILE_RECORD_HEADER)IndexRecord)->Ntfs);
+        if (!NT_SUCCESS(Status))
+        {
+            break;
+        }
+
+        IndexBuffer = (PINDEX_BUFFER)IndexRecord;
+        ASSERT(IndexBuffer->Ntfs.Type == NRH_INDX_TYPE);
+        ASSERT(IndexBuffer->Header.AllocatedSize + FIELD_OFFSET(INDEX_BUFFER, Header) == IndexBlockSize);
+        FirstEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
+        LastEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
+        ASSERT(LastEntry <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
+
+        Status = BrowseIndexEntries(NULL, NULL, NULL, 0, FirstEntry, LastEntry, FileName, StartEntry, CurrentEntry, DirSearch, OutMFTIndex);
+        if (NT_SUCCESS(Status))
+        {
+            break;
+        }
+    }
+
+    ReleaseAttributeContext(IndexAllocationCtx);
+    return Status;    
 }
 
 NTSTATUS
@@ -554,21 +599,13 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
 {
     PFILE_RECORD_HEADER MftRecord;
     PNTFS_ATTR_CONTEXT IndexRootCtx;
-    PNTFS_ATTR_CONTEXT IndexBitmapCtx;
-    PNTFS_ATTR_CONTEXT IndexAllocationCtx;
     PINDEX_ROOT_ATTRIBUTE IndexRoot;
-    PINDEX_BUFFER IndexBuffer;
-    ULONGLONG BitmapDataSize;
-    ULONGLONG IndexAllocationSize;
-    PCHAR BitmapData;
     PCHAR IndexRecord;
     PINDEX_ENTRY_ATTRIBUTE IndexEntry, IndexEntryEnd;
-    ULONG RecordOffset;
-    ULONG IndexBlockSize;
     NTSTATUS Status;
     ULONG CurrentEntry = 0;
 
-    DPRINT("NtfsFindMftRecord(%p, %I64d, %wZ, %p, %u, %p)\n", Vcb, MFTIndex, FileName, FirstEntry, DirSearch, OutMFTIndex);
+    DPRINT("NtfsFindMftRecord(%p, %I64d, %wZ, %u, %u, %p)\n", Vcb, MFTIndex, FileName, *FirstEntry, DirSearch, OutMFTIndex);
 
     MftRecord = ExAllocatePoolWithTag(NonPagedPool,
                                       Vcb->NtfsInfo.BytesPerFileRecord,
@@ -578,140 +615,44 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (NT_SUCCESS(ReadFileRecord(Vcb, MFTIndex, MftRecord)))
+    Status = ReadFileRecord(Vcb, MFTIndex, MftRecord);
+    if (!NT_SUCCESS(Status))
     {
-        ASSERT(MftRecord->Ntfs.Type == NRH_FILE_TYPE);
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        return Status;
+    }
 
-        Status = FindAttribute(Vcb, MftRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootCtx);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePoolWithTag(MftRecord, TAG_NTFS);
-            return Status;
-        }
+    ASSERT(MftRecord->Ntfs.Type == NRH_FILE_TYPE);
+    Status = FindAttribute(Vcb, MftRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootCtx);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        return Status;
+    }
 
-        IndexRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerIndexRecord, TAG_NTFS);
-        if (IndexRecord == NULL)
-        {
-            ExFreePoolWithTag(MftRecord, TAG_NTFS);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        ReadAttribute(Vcb, IndexRootCtx, 0, IndexRecord, Vcb->NtfsInfo.BytesPerIndexRecord);
-        IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
-        IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)&IndexRoot->Header + IndexRoot->Header.FirstEntryOffset);
-        /* Index root is always resident. */
-        IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexRoot->Header.TotalSizeOfEntries);
+    IndexRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerIndexRecord, TAG_NTFS);
+    if (IndexRecord == NULL)
+    {
         ReleaseAttributeContext(IndexRootCtx);
-
-        DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
-
-        Status = BrowseIndexEntries(IndexEntry, IndexEntryEnd, FileName, FirstEntry, &CurrentEntry, DirSearch, OutMFTIndex);
-        if (NT_SUCCESS(Status))
-        {
-            ExFreePoolWithTag(IndexRecord, TAG_NTFS);
-            ExFreePoolWithTag(MftRecord, TAG_NTFS);
-            return Status;
-        }
-
-        if (IndexRoot->Header.Flags & INDEX_ROOT_LARGE)
-        {
-            DPRINT("Large Index!\n");
-
-            IndexBlockSize = IndexRoot->SizeOfEntry;
-
-            Status = FindAttribute(Vcb, MftRecord, AttributeBitmap, L"$I30", 4, &IndexBitmapCtx);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Corrupted filesystem!\n");
-                ExFreePoolWithTag(MftRecord, TAG_NTFS);
-                return Status;
-            }
-            BitmapDataSize = AttributeDataLength(&IndexBitmapCtx->Record);
-            DPRINT("BitmapDataSize: %x\n", (ULONG)BitmapDataSize);
-            if(BitmapDataSize <= 0xFFFFFFFF)
-                BitmapData = ExAllocatePoolWithTag(NonPagedPool, (ULONG)BitmapDataSize, TAG_NTFS);
-            else
-                BitmapData = NULL;
-
-            if (BitmapData == NULL)
-            {
-                ExFreePoolWithTag(IndexRecord, TAG_NTFS);
-                ExFreePoolWithTag(MftRecord, TAG_NTFS);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-            ReadAttribute(Vcb, IndexBitmapCtx, 0, BitmapData, (ULONG)BitmapDataSize);
-            ReleaseAttributeContext(IndexBitmapCtx);
-
-            Status = FindAttribute(Vcb, MftRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationCtx);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("Corrupted filesystem!\n");
-                ExFreePoolWithTag(BitmapData, TAG_NTFS);
-                ExFreePoolWithTag(IndexRecord, TAG_NTFS);
-                ExFreePoolWithTag(MftRecord, TAG_NTFS);
-                return Status;
-            }
-            IndexAllocationSize = AttributeDataLength(&IndexAllocationCtx->Record);
-
-            RecordOffset = 0;
-
-            for (;;)
-            {
-                DPRINT("RecordOffset: %x IndexAllocationSize: %x\n", RecordOffset, IndexAllocationSize);
-                for (; RecordOffset < IndexAllocationSize;)
-                {
-                    UCHAR Bit = 1 << ((RecordOffset / IndexBlockSize) & 7);
-                    ULONG Byte = (RecordOffset / IndexBlockSize) >> 3;
-                    if ((BitmapData[Byte] & Bit))
-                        break;
-                    RecordOffset += IndexBlockSize;
-                }
-
-                if (RecordOffset >= IndexAllocationSize)
-                {
-                    break;
-                }
-
-                ReadAttribute(Vcb, IndexAllocationCtx, RecordOffset, IndexRecord, IndexBlockSize);
-
-                if (!NT_SUCCESS(FixupUpdateSequenceArray(Vcb, &((PFILE_RECORD_HEADER)IndexRecord)->Ntfs)))
-                {
-                    break;
-                }
-
-                IndexBuffer = (PINDEX_BUFFER)IndexRecord;
-                ASSERT(IndexBuffer->Ntfs.Type == NRH_INDX_TYPE);
-                ASSERT(IndexBuffer->Header.AllocatedSize + FIELD_OFFSET(INDEX_BUFFER, Header) == IndexBlockSize);
-                IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
-                IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
-                ASSERT(IndexEntryEnd <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
-
-                Status = BrowseIndexEntries(IndexEntry, IndexEntryEnd, FileName, FirstEntry, &CurrentEntry, DirSearch, OutMFTIndex);
-                if (NT_SUCCESS(Status))
-                {
-                    ExFreePoolWithTag(BitmapData, TAG_NTFS);
-                    ExFreePoolWithTag(IndexRecord, TAG_NTFS);
-                    ExFreePoolWithTag(MftRecord, TAG_NTFS);
-                    ReleaseAttributeContext(IndexAllocationCtx);
-                    return Status;
-                }
-
-                RecordOffset += IndexBlockSize;
-            }
-
-            ReleaseAttributeContext(IndexAllocationCtx);
-            ExFreePoolWithTag(BitmapData, TAG_NTFS);
-        }
-
-        ExFreePoolWithTag(IndexRecord, TAG_NTFS);
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-    else
-    {
-        DPRINT("Can't read MFT record\n");
-    }
+
+    ReadAttribute(Vcb, IndexRootCtx, 0, IndexRecord, Vcb->NtfsInfo.BytesPerIndexRecord);
+    IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
+    IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)&IndexRoot->Header + IndexRoot->Header.FirstEntryOffset);
+    /* Index root is always resident. */
+    IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexRoot->Header.TotalSizeOfEntries);
+    ReleaseAttributeContext(IndexRootCtx);
+
+    DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
+
+    Status = BrowseIndexEntries(Vcb, MftRecord, IndexRecord, IndexRoot->SizeOfEntry, IndexEntry, IndexEntryEnd, FileName, FirstEntry, &CurrentEntry, DirSearch, OutMFTIndex);
+
+    ExFreePoolWithTag(IndexRecord, TAG_NTFS);
     ExFreePoolWithTag(MftRecord, TAG_NTFS);
 
-    return STATUS_OBJECT_PATH_NOT_FOUND;
+    return Status;
 }
 
 NTSTATUS
