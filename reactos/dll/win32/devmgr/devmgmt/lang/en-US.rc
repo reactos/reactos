@@ -33,27 +33,20 @@ BEGIN
   END
 END
 
-IDR_POPUP MENU
-BEGIN
-  POPUP "popup"
-  BEGIN
-    MENUITEM "Update driver software..."    IDC_UPDATE_DRV
-    MENUITEM "Enable"                       IDC_ENABLE_DRV
-    MENUITEM "Disable"                      IDC_DISABLE_DRV
-    MENUITEM "Uninstall"                    IDC_UNINSTALL_DRV
-    MENUITEM SEPARATOR
-    MENUITEM "Scan for hardware changes"    IDC_SCAN_HARDWARE
-    MENUITEM "Add hardware"                 IDC_ADD_HARDWARE, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Properties", IDC_PROPERTIES
-  END
-END
-
-
 
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
+END
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_MENU_UPDATE           "Update driver software..."
+  IDS_MENU_ENABLE           "Enable"
+  IDS_MENU_DISABLE          "Disable"
+  IDS_MENU_UNINSTALL        "Uninstall"
+  IDS_MENU_SCAN             "Scan for hardware changes"
+  IDS_MENU_ADD              "Add hardware"
+  IDS_MENU_PROPERTIES       "Properties"
 END
 
 STRINGTABLE DISCARDABLE

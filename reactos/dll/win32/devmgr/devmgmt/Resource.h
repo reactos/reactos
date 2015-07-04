@@ -43,6 +43,16 @@
 /* General strings */
 #define IDS_CONFIRM_DISABLE     400
 
+/* Menu strings */
+#define IDS_MENU_UPDATE         500
+#define IDS_MENU_ENABLE         501
+#define IDS_MENU_DISABLE        502
+#define IDS_MENU_UNINSTALL      503
+#define IDS_MENU_SCAN           504
+#define IDS_MENU_ADD            505
+#define IDS_MENU_PROPERTIES     506
+
+
 /* menu hints */
 #define IDS_HINT_BLANK          1000
 #define IDS_HINT_PROPERTIES     1001

@@ -811,6 +811,7 @@ CDeviceView::BuildContextMenuForNode(
     MenuItemInfo.fMask = MIIM_ID | MIIM_STRING | MIIM_DATA | MIIM_SUBMENU;
     MenuItemInfo.fType = MFT_STRING;
 
+    CAtlStringW String;
     int i = 0;
 
     // Device nodes have extra data
@@ -820,32 +821,36 @@ CDeviceView::BuildContextMenuForNode(
 
         if (DeviceNode->CanUpdate())
         {
+            String.LoadStringW(g_hInstance, IDS_MENU_UPDATE);
             MenuItemInfo.wID = IDC_UPDATE_DRV;
-            MenuItemInfo.dwTypeData = L"Update driver software...";
+            MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
             i++;
         }
 
         if (DeviceNode->IsDisabled())
         {
+            String.LoadStringW(g_hInstance, IDS_MENU_ENABLE);
             MenuItemInfo.wID = IDC_ENABLE_DRV;
-            MenuItemInfo.dwTypeData = L"Enable";
+            MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
             i++;
         }
 
         if (DeviceNode->CanDisable() && !DeviceNode->IsDisabled())
         {
+            String.LoadStringW(g_hInstance, IDS_MENU_DISABLE);
             MenuItemInfo.wID = IDC_DISABLE_DRV;
-            MenuItemInfo.dwTypeData = L"Disable";
+            MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
             i++;
         }
 
         if (DeviceNode->CanUninstall())
         {
+            String.LoadStringW(g_hInstance, IDS_MENU_UNINSTALL);
             MenuItemInfo.wID = IDC_UNINSTALL_DRV;
-            MenuItemInfo.dwTypeData = L"Uninstall";
+            MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
             i++;
         }
@@ -855,8 +860,9 @@ CDeviceView::BuildContextMenuForNode(
     }
 
     // All nodes have the scan option
+    String.LoadStringW(g_hInstance, IDS_MENU_SCAN);
     MenuItemInfo.wID = IDC_SCAN_HARDWARE;
-    MenuItemInfo.dwTypeData = L"Scan for hardware changes";
+    MenuItemInfo.dwTypeData = String.GetBuffer();
     InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
     i++;
 
@@ -865,8 +871,9 @@ CDeviceView::BuildContextMenuForNode(
         InsertMenuItemW(hContextMenu, i, TRUE, &MenuSeperator);
         i++;
 
+        String.LoadStringW(g_hInstance, IDS_MENU_PROPERTIES);
         MenuItemInfo.wID = IDC_PROPERTIES;
-        MenuItemInfo.dwTypeData = L"Properties";
+        MenuItemInfo.dwTypeData = String.GetBuffer();
         InsertMenuItemW(hContextMenu, i, TRUE, &MenuItemInfo);
         i++;
 
