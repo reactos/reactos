@@ -134,7 +134,8 @@ private:
 
     void BuildActionMenuForNode(
         _In_ HMENU OwnerMenu,
-        _In_ CNode *Node
+        _In_ CNode *Node,
+        _In_ bool MainMenu
         );
 
     HTREEITEM RecurseFindDevice(

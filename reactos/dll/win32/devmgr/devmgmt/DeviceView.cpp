@@ -168,7 +168,7 @@ CDeviceView::OnContextMenu(
                 HMENU hContextMenu = CreatePopupMenu();
 
                 // Add the actions for this node
-                BuildActionMenuForNode(hContextMenu, Node);
+                BuildActionMenuForNode(hContextMenu, Node, false);
 
                 INT xPos = GET_X_LPARAM(lParam);
                 INT yPos = GET_Y_LPARAM(lParam);
@@ -279,7 +279,7 @@ CDeviceView::CreateActionMenu(
     CNode *Node = GetSelectedNode();
     if (Node)
     {
-        BuildActionMenuForNode(OwnerMenu, Node);
+        BuildActionMenuForNode(OwnerMenu, Node, MainMenu);
         return true;
     }
 
@@ -774,7 +774,8 @@ CDeviceView::InsertIntoTreeView(
 void
 CDeviceView::BuildActionMenuForNode(
     _In_ HMENU OwnerMenu,
-    _In_ CNode *Node
+    _In_ CNode *Node,
+    _In_ bool MainMenu
     )
 {
     // Create a seperator structure 
@@ -842,6 +843,15 @@ CDeviceView::BuildActionMenuForNode(
     MenuItemInfo.dwTypeData = String.GetBuffer();
     InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
     i++;
+
+    if ((Node->GetNodeType() == RootNode) || (MainMenu == true))
+    {
+        String.LoadStringW(g_hInstance, IDS_MENU_ADD);
+        MenuItemInfo.wID = IDC_ADD_HARDWARE;
+        MenuItemInfo.dwTypeData = String.GetBuffer();
+        InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
+        i++;
+    }
 
     if (Node->HasProperties())
     {

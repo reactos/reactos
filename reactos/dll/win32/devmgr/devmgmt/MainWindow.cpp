@@ -596,9 +596,9 @@ CMainWindow::OnCommand(WPARAM wParam,
             HMENU hMenu = CreatePopupMenu();
             m_DeviceView->CreateActionMenu(hMenu, true);
 
+            // Calculate where to put the menu
             RECT rc;
             GetMenuItemRect(m_hMainWnd, m_hMenu, 1, &rc);
-
             LONG Height = rc.bottom - rc.top;
 
             // Display the menu
