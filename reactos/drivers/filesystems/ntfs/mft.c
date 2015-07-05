@@ -501,6 +501,31 @@ CompareFileName(PUNICODE_STRING FileName,
     }
 }
 
+#if 0
+static
+VOID
+DumpIndexEntry(PINDEX_ENTRY_ATTRIBUTE IndexEntry)
+{
+    DPRINT1("Entry: %p\n", IndexEntry);
+    DPRINT1("\tData.Directory.IndexedFile: %I64x\n", IndexEntry->Data.Directory.IndexedFile);
+    DPRINT1("\tLength: %u\n", IndexEntry->Length);
+    DPRINT1("\tKeyLength: %u\n", IndexEntry->KeyLength);
+    DPRINT1("\tFlags: %x\n", IndexEntry->Flags);
+    DPRINT1("\tReserved: %x\n", IndexEntry->Reserved);
+    DPRINT1("\t\tDirectoryFileReferenceNumber: %I64x\n", IndexEntry->FileName.DirectoryFileReferenceNumber);
+    DPRINT1("\t\tCreationTime: %I64u\n", IndexEntry->FileName.CreationTime);
+    DPRINT1("\t\tChangeTime: %I64u\n", IndexEntry->FileName.ChangeTime);
+    DPRINT1("\t\tLastWriteTime: %I64u\n", IndexEntry->FileName.LastWriteTime);
+    DPRINT1("\t\tLastAccessTime: %I64u\n", IndexEntry->FileName.LastAccessTime);
+    DPRINT1("\t\tAllocatedSize: %I64u\n", IndexEntry->FileName.AllocatedSize);
+    DPRINT1("\t\tDataSize: %I64u\n", IndexEntry->FileName.DataSize);
+    DPRINT1("\t\tFileAttributes: %x\n", IndexEntry->FileName.FileAttributes);
+    DPRINT1("\t\tNameLength: %u\n", IndexEntry->FileName.NameLength);
+    DPRINT1("\t\tNameType: %x\n", IndexEntry->FileName.NameType);
+    DPRINT1("\t\tName: %.*S\n", IndexEntry->FileName.NameLength, IndexEntry->FileName.Name);
+}
+#endif
+
 NTSTATUS
 BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
                    PFILE_RECORD_HEADER MftRecord,
@@ -529,6 +554,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
     {
         if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
             *CurrentEntry >= *StartEntry &&
+            IndexEntry->FileName.NameType != NTFS_FILE_NAME_DOS &&
             CompareFileName(FileName, IndexEntry, DirSearch))
         {
             *StartEntry = *CurrentEntry;
