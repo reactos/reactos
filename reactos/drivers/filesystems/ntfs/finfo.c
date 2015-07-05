@@ -209,8 +209,8 @@ NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
     NetworkInfo->LastWriteTime.QuadPart = FileName->LastWriteTime;
     NetworkInfo->ChangeTime.QuadPart = FileName->ChangeTime;
 
-    NetworkInfo->EndOfFile.QuadPart = Fcb->RFCB.FileSize;
-    NetworkInfo->AllocationSize.QuadPart = Fcb->RFCB.AllocationSize;
+    NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
+    NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
 
     NtfsFileFlagsToAttributes(FileName->FileAttributes, &NetworkInfo->FileAttributes);
 
