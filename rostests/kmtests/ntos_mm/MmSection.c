@@ -381,6 +381,209 @@ TestCreateSection(
     }
 }
 
+static
+VOID
+TestPhysicalMemorySection(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING SectionName = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE SectionHandle;
+    PVOID SectionObject;
+    PUCHAR MyPage;
+    PHYSICAL_ADDRESS MyPagePhysical;
+    PUCHAR ZeroPageContents;
+    PHYSICAL_ADDRESS ZeroPagePhysical;
+    PVOID Mapping;
+    PUCHAR MappingBytes;
+    SIZE_T ViewSize;
+    SIZE_T EqualBytes;
+
+    MyPage = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, 'MPmK');
+    if (skip(MyPage != NULL, "Out of memory\n"))
+        return;
+    MyPagePhysical = MmGetPhysicalAddress(MyPage);
+    RtlFillMemory(MyPage + 0 * PAGE_SIZE / 4, PAGE_SIZE / 4, 0x23);
+    RtlFillMemory(MyPage + 1 * PAGE_SIZE / 4, PAGE_SIZE / 4, 0x67);
+    RtlFillMemory(MyPage + 2 * PAGE_SIZE / 4, PAGE_SIZE / 4, 0xab);
+    RtlFillMemory(MyPage + 3 * PAGE_SIZE / 4, PAGE_SIZE / 4, 0xef);
+
+    ZeroPageContents = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, 'ZPmK');
+    if (skip(ZeroPageContents != NULL, "Out of memory\n"))
+    {
+        ExFreePoolWithTag(MyPage, 'MPmK');
+        return;
+    }
+    ZeroPagePhysical.QuadPart = 0;
+
+    Mapping = MmMapIoSpace(ZeroPagePhysical, PAGE_SIZE, MmCached);
+    if (skip(Mapping != NULL, "Failed to map zero page\n"))
+    {
+        ExFreePoolWithTag(ZeroPageContents, 'ZPmK');
+        ExFreePoolWithTag(MyPage, 'MPmK');
+        return;
+    }
+
+    RtlCopyMemory(ZeroPageContents, Mapping, PAGE_SIZE);
+    MmUnmapIoSpace(Mapping, PAGE_SIZE);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SectionName,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSection(&SectionHandle, SECTION_ALL_ACCESS, &ObjectAttributes);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (!skip(NT_SUCCESS(Status), "No section\n"))
+    {
+        /* Map zero page and compare */
+        Mapping = NULL;
+        ViewSize = PAGE_SIZE;
+        Status = ZwMapViewOfSection(SectionHandle,
+                                    ZwCurrentProcess(),
+                                    &Mapping,
+                                    0,
+                                    0,
+                                    &ZeroPagePhysical,
+                                    &ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (!skip(NT_SUCCESS(Status), "No view\n"))
+        {
+            EqualBytes = RtlCompareMemory(Mapping,
+                                          ZeroPageContents,
+                                          PAGE_SIZE);
+            ok_eq_size(EqualBytes, PAGE_SIZE);
+            Status = ZwUnmapViewOfSection(ZwCurrentProcess(), Mapping);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        }
+
+        /* Map the zero page non-cached */
+        Mapping = NULL;
+        ViewSize = PAGE_SIZE;
+        Status = ZwMapViewOfSection(SectionHandle,
+                                    ZwCurrentProcess(),
+                                    &Mapping,
+                                    0,
+                                    0,
+                                    &ZeroPagePhysical,
+                                    &ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE | PAGE_NOCACHE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (!skip(NT_SUCCESS(Status), "No view\n"))
+        {
+            EqualBytes = RtlCompareMemory(Mapping,
+                                          ZeroPageContents,
+                                          PAGE_SIZE);
+            ok_eq_size(EqualBytes, PAGE_SIZE);
+            Status = ZwUnmapViewOfSection(ZwCurrentProcess(), Mapping);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        }
+
+        /* Map our NP page, compare, and check that modifications are reflected */
+        Mapping = NULL;
+        ViewSize = PAGE_SIZE;
+        Status = ZwMapViewOfSection(SectionHandle,
+                                    ZwCurrentProcess(),
+                                    &Mapping,
+                                    0,
+                                    0,
+                                    &MyPagePhysical,
+                                    &ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (!skip(NT_SUCCESS(Status), "No view\n"))
+        {
+            EqualBytes = RtlCompareMemory(Mapping,
+                                          MyPage,
+                                          PAGE_SIZE);
+            ok_eq_size(EqualBytes, PAGE_SIZE);
+
+            MappingBytes = Mapping;
+            ok(MappingBytes[5] == 0x23, "Mapping[5] = 0x%x\n", MappingBytes[5]);
+            ok(MyPage[5] == 0x23, "MyPage[5] = 0x%x\n", MyPage[5]);
+
+            MyPage[5] = 0x44;
+            ok(MappingBytes[5] == 0x44, "Mapping[5] = 0x%x\n", MappingBytes[5]);
+            ok(MyPage[5] == 0x44, "MyPage[5] = 0x%x\n", MyPage[5]);
+
+            MappingBytes[5] = 0x88;
+            ok(MappingBytes[5] == 0x88, "Mapping[5] = 0x%x\n", MappingBytes[5]);
+            ok(MyPage[5] == 0x88, "MyPage[5] = 0x%x\n", MyPage[5]);
+
+            Status = ZwUnmapViewOfSection(ZwCurrentProcess(), Mapping);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        }
+
+        Status = ZwClose(SectionHandle);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
+
+    /* Try flag 0x80000000, which ROS calls SEC_PHYSICALMEMORY */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateSection(&SectionHandle,
+                             SECTION_ALL_ACCESS,
+                             &ObjectAttributes,
+                             NULL,
+                             PAGE_READWRITE,
+                             0x80000000,
+                             NULL);
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER_6);
+    if (NT_SUCCESS(Status))
+        ZwClose(SectionHandle);
+
+    /* Assertion failure: AllocationAttributes & SEC_IMAGE | SEC_RESERVE | SEC_COMMIT */
+    if (!KmtIsCheckedBuild)
+    {
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = MmCreateSection(&SectionObject,
+                             SECTION_ALL_ACCESS,
+                             &ObjectAttributes,
+                             NULL,
+                             PAGE_READWRITE,
+                             0x80000000,
+                             NULL,
+                             NULL);
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER_6);
+    if (NT_SUCCESS(Status))
+        ObDereferenceObject(SectionObject);
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = MmCreateSection(&SectionObject,
+                             SECTION_ALL_ACCESS,
+                             &ObjectAttributes,
+                             NULL,
+                             PAGE_READWRITE,
+                             SEC_RESERVE | 0x80000000,
+                             NULL,
+                             NULL);
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER_6);
+    if (NT_SUCCESS(Status))
+        ObDereferenceObject(SectionObject);
+
+    ExFreePoolWithTag(ZeroPageContents, 'ZPmK');
+    ExFreePoolWithTag(MyPage, 'MPmK');
+}
+
 START_TEST(MmSection)
 {
     NTSTATUS Status;
@@ -453,4 +656,6 @@ START_TEST(MmSection)
         ZwClose(FileHandle2);
     if (FileHandle1)
         ZwClose(FileHandle1);
+
+    TestPhysicalMemorySection();
 }
