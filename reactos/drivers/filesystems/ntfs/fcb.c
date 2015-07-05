@@ -421,6 +421,7 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
     PFILENAME_ATTRIBUTE FileName;
     PSTANDARD_INFORMATION StdInfo;
     PNTFS_FCB rcFCB;
+    ULONGLONG Size, AllocatedSize;
 
     DPRINT1("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p, %p)\n", Vcb, DirectoryFCB, Name, Stream, Record, fileFCB);
 
@@ -451,6 +452,8 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
         pathName[FileName->NameLength] = UNICODE_NULL;
     }
 
+    Size = NtfsGetFileSize(Vcb, Record, Stream, wcslen(Stream), &AllocatedSize);
+
     rcFCB = NtfsCreateFCB(pathName, Stream, Vcb);
     if (!rcFCB)
     {
@@ -459,9 +462,9 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
 
     memcpy(&rcFCB->Entry, FileName, FIELD_OFFSET(FILENAME_ATTRIBUTE, NameLength));
     rcFCB->Entry.NameType = FileName->NameType;
-    rcFCB->RFCB.FileSize.QuadPart = FileName->DataSize;
-    rcFCB->RFCB.ValidDataLength.QuadPart = FileName->DataSize;
-    rcFCB->RFCB.AllocationSize.QuadPart = FileName->AllocatedSize;
+    rcFCB->RFCB.FileSize.QuadPart = Size;
+    rcFCB->RFCB.ValidDataLength.QuadPart = Size;
+    rcFCB->RFCB.AllocationSize.QuadPart = AllocatedSize;
 
     StdInfo = GetStandardInformationFromRecord(Record);
     if (StdInfo != NULL)

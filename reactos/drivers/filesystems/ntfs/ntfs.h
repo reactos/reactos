@@ -550,6 +550,13 @@ NtfsDeviceControl(PNTFS_IRP_CONTEXT IrpContext);
 
 /* dirctl.c */
 
+ULONGLONG
+NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
+                PFILE_RECORD_HEADER FileRecord,
+                PCWSTR Stream,
+                ULONG StreamLength,
+                PULONGLONG AllocatedSize);
+
 NTSTATUS
 NtfsDirectoryControl(PNTFS_IRP_CONTEXT IrpContext);
 
