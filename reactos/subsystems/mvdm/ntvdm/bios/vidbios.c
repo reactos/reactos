@@ -1949,6 +1949,8 @@ static CONST VGA_MODE VideoModes[BIOS_MAX_VIDEO_MODE + 1] =
     {&VideoMode_320x200_256color,   0x2000,  8},    /* Mode 13h - VGA                                   */
 };
 
+#define IS_TEXT_MODE(ModeNumber)    \
+    (((ModeNumber) >= 0x00 && (ModeNumber) <= 0x03) || ((ModeNumber) == 0x07))
 
 static PVGA_STATIC_FUNC_TABLE VgaStaticFuncTable;
 
@@ -2282,21 +2284,14 @@ static VOID VgaChangePalette(BYTE ModeNumber)
     VgaSetPalette(Palette, Size);
 }
 
-static VOID VidBiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page)
+static __inline VOID VidBiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page)
 {
-    /* Make sure the selected video page is valid */
-    if (Page >= BIOS_MAX_PAGES) return;
-
-    /* Get the cursor location */
     *Row    = HIBYTE(Bda->CursorPosition[Page]);
     *Column = LOBYTE(Bda->CursorPosition[Page]);
 }
 
 static VOID VidBiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
 {
-    /* Make sure the selected video page is valid */
-    if (Page >= BIOS_MAX_PAGES) return;
-
     /* Update the position in the BDA */
     Bda->CursorPosition[Page] = MAKEWORD(Column, Row);
 
@@ -2316,7 +2311,7 @@ static VOID VidBiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
 static VOID VidBiosSetCursorShape(WORD CursorStartEnd)
 {
     /* Only valid in text-mode */
-    if ((Bda->VideoMode > 0x03) && (Bda->VideoMode != 0x07)) return;
+    if (!IS_TEXT_MODE(Bda->VideoMode)) return;
 
     /* Update the BDA */
     Bda->CursorStartLine = HIBYTE(CursorStartEnd) & 0x1F;
@@ -2367,7 +2362,7 @@ VOID VidBiosSyncCursorPosition(VOID)
     SHORT ScreenColumns = VgaGetDisplayResolution().X;
     WORD Offset;
 
-    /* Get the cursor location */
+    /* Get the cursor position */
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
     Low  = IOReadB(VGA_CRTC_DATA);
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
@@ -2406,6 +2401,7 @@ static inline VOID VidBiosClearScreen(VOID)
     VideoAddress = MemoryMaps[(Misc >> 2) & 3];
     BufferSize  = MemorySizes[(Misc >> 2) & 3];
 
+    // !IS_TEXT_MODE(Bda->VideoMode)
     if (Misc & 1)
     {
         /* Graphics mode */
@@ -2484,7 +2480,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     Bda->ScreenRows    = Resolution.Y - 1;
 
     /* Adjust the number of columns for graphics modes */
-    if (ModeNumber > 3) Bda->ScreenColumns >>= 3;
+    if (!IS_TEXT_MODE(ModeNumber)) Bda->ScreenColumns >>= 3;
 
     /* Update the current font */
     Bda->CharacterHeight = VideoModes[ModeNumber].CharacterHeight;
@@ -2496,7 +2492,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
          */
         case 8:
         {
-            if (ModeNumber <= 3)
+            if (IS_TEXT_MODE(ModeNumber))
                 VgaWriteTextModeFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
 
             ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x8_OFFSET, VIDEO_BIOS_DATA_SEG);
@@ -2504,7 +2500,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
         }
         case 14:
         {
-            if (ModeNumber <= 3)
+            if (IS_TEXT_MODE(ModeNumber))
                 VgaWriteTextModeFont(0, Font8x14, ARRAYSIZE(Font8x14) / VGA_FONT_CHARACTERS);
 
             ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x14_OFFSET, VIDEO_BIOS_DATA_SEG);
@@ -2512,7 +2508,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
         }
         case 16:
         {
-            if (ModeNumber <= 3)
+            if (IS_TEXT_MODE(ModeNumber))
                 VgaWriteTextModeFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
 
             ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
@@ -2538,7 +2534,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
      * Use the default CGA cursor scanline values,
      * see: http://vitaly_filatov.tripod.com/ng/asm/asm_023.2.html
      */
-    if ((ModeNumber >= 0x00 && ModeNumber <= 0x03) || (ModeNumber == 0x07))
+    if (IS_TEXT_MODE(ModeNumber))
         // FIXME: we might read the CRT registers and do the adjustment?
         VidBiosSetCursorShape(MAKEWORD(0x07, 0x06));
 
@@ -2575,8 +2571,8 @@ static BOOLEAN VidBiosSetVideoPage(BYTE PageNumber)
     IOWriteB(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
 
     /*
-     * Get the cursor location (we don't update anything on the BIOS side
-     * but we update the cursor location on the VGA side).
+     * Get the cursor position (we don't update anything on the BIOS side
+     * but we update the cursor position on the VGA side).
      */
     VidBiosGetCursorPosition(&Row, &Column, PageNumber);
     VidBiosSetCursorPosition(Row, Column, PageNumber);
@@ -2593,6 +2589,7 @@ static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row
         case 0x01:
         case 0x02:
         case 0x03:
+        case 0x07:
         {
             EmulatorWriteMemory(&EmulatorContext,
                                 TO_LINEAR(TEXT_VIDEO_SEG,
@@ -2827,15 +2824,12 @@ static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row
     }
 }
 
-static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
- {
+static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BOOLEAN UseAttr, BYTE Page)
+{
     WORD CharData = MAKEWORD(Character, Attribute);
     BYTE Row, Column;
 
-    /* Make sure the page exists */
-    if (Page >= BIOS_MAX_PAGES) return;
-
-    /* Get the cursor location */
+    /* Get the cursor position */
     VidBiosGetCursorPosition(&Row, &Column, Page);
 
     if (Character == '\a')
@@ -2860,7 +2854,7 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
 
         /* Erase the existing character */
         CharData = MAKEWORD(' ', Attribute);
-        VidBiosDrawGlyph(CharData, TRUE, Page, Row, Column);
+        VidBiosDrawGlyph(CharData, UseAttr, Page, Row, Column);
     }
     else if (Character == '\t')
     {
@@ -2868,7 +2862,7 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
         do
         {
             // Taken from DOSBox
-            VidBiosPrintCharacter(' ', Attribute, Page);
+            VidBiosPrintCharacter(' ', Attribute, UseAttr, Page);
             VidBiosGetCursorPosition(&Row, &Column, Page);
         } while (Column % 8);
     }
@@ -2887,7 +2881,7 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
         /* Default character */
 
         /* Write the character and advance the cursor */
-        VidBiosDrawGlyph(CharData, TRUE, Page, Row, Column);
+        VidBiosDrawGlyph(CharData, UseAttr, Page, Row, Column);
         Column++;
     }
 
@@ -2935,19 +2929,29 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Set Cursor Position */
         case 0x02:
         {
-            VidBiosSetCursorPosition(getDH(), getDL(), getBH());
+            BYTE Page = getBH();
+
+            /* Validate the selected video page */
+            if (Page >= BIOS_MAX_PAGES) break;
+
+            VidBiosSetCursorPosition(getDH(), getDL(), Page);
             break;
         }
 
         /* Get Cursor Position and Shape */
         case 0x03:
         {
-            /* Make sure the selected video page exists */
-            if (getBH() >= BIOS_MAX_PAGES) break;
+            BYTE Page = getBH();
+
+            /* Validate the selected video page */
+            if (Page == 0xFF) // Special case: use the current video page
+                Page = Bda->VideoPage;
+            else if (Page >= BIOS_MAX_PAGES)
+                break;
 
             /* Return the result */
             setCX(MAKEWORD(Bda->CursorEndLine, Bda->CursorStartLine));
-            setDX(Bda->CursorPosition[getBH()]);
+            setDX(Bda->CursorPosition[Page]);
             break;
         }
 
@@ -2988,8 +2992,11 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             BYTE  Page = getBH();
             DWORD Offset;
 
-            /* Check if the page exists */
-            if (Page >= BIOS_MAX_PAGES) break;
+            /* Validate the selected video page */
+            if (Page == 0xFF) // Special case: use the current video page
+                Page = Bda->VideoPage;
+            else if (Page >= BIOS_MAX_PAGES)
+                break;
 
             /* Find the offset of the character */
             Offset = Page * Bda->VideoPageSize +
@@ -3019,13 +3026,14 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             BYTE Page = getBH();
             BYTE Row, Column;
 
-            /* Check if the page exists */
-            if (Page >= BIOS_MAX_PAGES) break;
+            /* Validate the selected video page */
+            if (Page == 0xFF) // Special case: use the current video page
+                Page = Bda->VideoPage;
+            else if (Page >= BIOS_MAX_PAGES)
+                break;
 
-            /* Get the cursor location */
-            // VidBiosGetCursorPosition(&Row, &Column, Page);
-            Row    = HIBYTE(Bda->CursorPosition[Page]);
-            Column = LOBYTE(Bda->CursorPosition[Page]);
+            /* Get the cursor position */
+            VidBiosGetCursorPosition(&Row, &Column, Page);
 
             /* Write to video memory a certain number of times */
             while (Counter-- > 0)
@@ -3137,7 +3145,15 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Teletype Output */
         case 0x0E:
         {
-            VidBiosPrintCharacter(getAL(), getBL(), getBH());
+            BYTE Page = getBH();
+
+            /* Validate the selected video page */
+            if (Page == 0xFF) // Special case: use the current video page
+                Page = Bda->VideoPage;
+            else if (Page >= BIOS_MAX_PAGES)
+                break;
+
+            VidBiosPrintCharacter(getAL(), getBL(), !IS_TEXT_MODE(Bda->VideoMode), Page);
             break;
         }
 
@@ -3686,7 +3702,44 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Write String */
         case 0x13:
         {
-            DPRINT1("BIOS Function INT 13h (Write String) is UNIMPLEMENTED\n");
+            PCHAR String = (PCHAR)SEG_OFF_TO_PTR(getES(), getBP());
+            WORD Counter = getCX();
+            BYTE Row, Column;
+            BYTE OldRow, OldColumn;
+            CHAR Character;
+            BYTE Attribute = getBL(); // Default attribute in case the string contains only characters.
+            BYTE Page = getBH();
+            BYTE Flags = getAL();
+
+            /* Validate the selected video page */
+            if (Page == 0xFF) // Special case: use the current video page
+                Page = Bda->VideoPage;
+            else if (Page >= BIOS_MAX_PAGES)
+                break;
+
+            /* Get the original cursor position */
+            VidBiosGetCursorPosition(&OldRow, &OldColumn, Page);
+
+            /* Set the new cursor position */
+            Row    = getDH();
+            Column = getDL();
+            if (Row == 0xFF) // Special case: use the current cursor position
+            {
+                Row    = OldRow;
+                Column = OldColumn;
+            }
+            VidBiosSetCursorPosition(Row, Column, Page);
+
+            while (Counter-- > 0)
+            {
+                Character = *String++;
+                if (Flags & 0x02) Attribute = *String++;
+                VidBiosPrintCharacter(Character, Attribute, TRUE, Page);
+            }
+
+            /* Reset the cursor position to its original value if we don't want to update it */
+            if (!(Flags & 0x01)) VidBiosSetCursorPosition(OldRow, OldColumn, Page);
+
             break;
         }
 
