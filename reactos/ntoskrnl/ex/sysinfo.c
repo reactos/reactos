@@ -2440,7 +2440,7 @@ NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
                                                             &ResultLength);
 
             /* Save the result length to the caller */
-            if (UnsafeResultLength)
+            if (NT_SUCCESS(FStatus) && UnsafeResultLength)
                 *UnsafeResultLength = ResultLength;
         }
     }
