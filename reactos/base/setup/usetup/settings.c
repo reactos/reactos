@@ -1052,7 +1052,6 @@ CreateKeyboardLayoutList(
                 return NULL;
             }
 
-            if (_wcsicmp(LayoutsList[uIndex].LayoutID, KeyName) == 0)
             {
                 UserData = (WCHAR*)RtlAllocateHeap(ProcessHeap,
                                                    0,
