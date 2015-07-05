@@ -235,17 +235,6 @@ CMainWindow::RefreshView(ViewType Type)
 }
 
 bool
-CMainWindow::ScanForHardwareChanges()
-{
-    // Refresh the cache and and display
-    m_DeviceView->Refresh(m_DeviceView->GetCurrentView(),
-                          true,
-                          true,
-                          NULL);
-    return true;
-}
-
-bool
 CMainWindow::CreateToolBar()
 {
     TBADDBITMAP TbAddBitmap;
@@ -323,12 +312,14 @@ CMainWindow::CreateStatusBar()
     return bRet;
 }
 
-void CMainWindow::UpdateUiContext(_In_ LPTV_ITEMW TvItem)
+void CMainWindow::UpdateToolbar(_In_ LPTV_ITEMW TvItem)
 {
     WORD State;
 
+    CNode *Node = m_DeviceView->GetSelectedNode();
+
     // properties button
-    if (m_DeviceView->HasProperties(TvItem))
+    if (Node->HasProperties())
     {
         State = TBSTATE_ENABLED;
     }
@@ -340,8 +331,11 @@ void CMainWindow::UpdateUiContext(_In_ LPTV_ITEMW TvItem)
     SendMessageW(m_hToolBar, TB_SETSTATE, IDC_UPDATE_DRV, MAKELPARAM(State, 0)); //hack
     SendMessageW(m_hToolBar, TB_SETSTATE, IDC_UNINSTALL_DRV, MAKELPARAM(State, 0)); // hack
 
+
+
     // enable driver button
-    if (m_DeviceView->IsDisabled(TvItem))
+    if (Node->GetNodeType() == DeviceNode &&
+        dynamic_cast<CDeviceNode *>(Node)->IsDisabled())
     {
         State = TBSTATE_ENABLED;
     }
@@ -352,7 +346,9 @@ void CMainWindow::UpdateUiContext(_In_ LPTV_ITEMW TvItem)
     SendMessageW(m_hToolBar, TB_SETSTATE, IDC_ENABLE_DRV, MAKELPARAM(State, 0));
 
     // disable driver button
-    if (m_DeviceView->CanDisable(TvItem) && !m_DeviceView->IsDisabled(TvItem))
+    if (Node->GetNodeType() == DeviceNode &&
+        dynamic_cast<CDeviceNode *>(Node)->CanDisable() &&
+        !dynamic_cast<CDeviceNode *>(Node)->IsDisabled())
     {
         State = TBSTATE_ENABLED;
     }
@@ -411,7 +407,10 @@ CMainWindow::OnCreate(HWND hwnd)
         if (m_DeviceView->Initialize())
         {
             // Do the initial scan
-            ScanForHardwareChanges();
+            m_DeviceView->Refresh(m_DeviceView->GetCurrentView(),
+                                  true,
+                                  true,
+                                  NULL);
 
             // Display the window according to the user request
             ShowWindow(hwnd, m_CmdShow);
@@ -468,7 +467,7 @@ CMainWindow::OnNotify(LPARAM lParam)
         case TVN_SELCHANGED:
         {
             LPNMTREEVIEW NmTreeView = (LPNMTREEVIEW)lParam;
-            UpdateUiContext(&NmTreeView->itemNew);
+            UpdateToolbar(&NmTreeView->itemNew);
             break;
         }
 
@@ -543,50 +542,14 @@ CMainWindow::OnCommand(WPARAM wParam,
     switch (Msg)
     {
         case IDC_PROPERTIES:
-        {
-            m_DeviceView->DisplayPropertySheet();
-            break;
-        }
-
         case IDC_SCAN_HARDWARE:
-        {
-            ScanForHardwareChanges();
-            break;
-        }
-
         case IDC_ENABLE_DRV:
-        {
-            bool NeedsReboot;
-            if (m_DeviceView->EnableSelectedDevice(true, NeedsReboot) &&
-                NeedsReboot)
-            {
-                MessageBox(m_hMainWnd, L"Rebooting", L"Enable", MB_OK);
-            }
-            break;
-        }
-
         case IDC_DISABLE_DRV:
-        {
-            bool NeedsReboot;
-            m_DeviceView->EnableSelectedDevice(false, NeedsReboot);
-            break;
-        }
-
         case IDC_UPDATE_DRV:
-        {
-            MessageBox(m_hMainWnd, L"Not yet implemented", L"Update Driver", MB_OK);
-            break;
-        }
-
         case IDC_UNINSTALL_DRV:
-        {
-            MessageBox(m_hMainWnd, L"Not yet implemented", L"Uninstall Driver", MB_OK);
-            break;
-        }
-
         case IDC_ADD_HARDWARE:
         {
-            MessageBox(m_hMainWnd, L"Not yet implemented", L"Add Hardware", MB_OK);
+            m_DeviceView->OnAction(Msg);
             break;
         }
 

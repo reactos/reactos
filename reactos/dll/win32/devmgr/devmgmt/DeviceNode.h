@@ -38,6 +38,9 @@ public:
         _Out_ bool &NeedsReboot
         );
 
+    bool UninstallDevice(
+        );
+
 private:
     void Cleanup(
         );

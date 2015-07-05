@@ -229,6 +229,68 @@ CDeviceView::Refresh(
     if (hThread) CloseHandle(hThread);
 }
 
+LRESULT
+CDeviceView::OnAction(
+    _In_ UINT Action
+)
+{
+    switch (Action)
+    {
+        case IDC_PROPERTIES:
+        {
+            DisplayPropertySheet();
+            break;
+        }
+
+        case IDC_SCAN_HARDWARE:
+        {
+            Refresh(GetCurrentView(),
+                    true,
+                    true,
+                    NULL);
+            break;
+        }
+
+        case IDC_ENABLE_DRV:
+        {
+            bool NeedsReboot;
+            if (EnableSelectedDevice(true, NeedsReboot) &&
+                NeedsReboot)
+            {
+                MessageBox(m_hMainWnd, L"Rebooting", L"Enable", MB_OK);
+            }
+            break;
+        }
+
+        case IDC_DISABLE_DRV:
+        {
+            bool NeedsReboot;
+            EnableSelectedDevice(false, NeedsReboot);
+            break;
+        }
+
+        case IDC_UPDATE_DRV:
+        {
+            MessageBox(m_hMainWnd, L"Not yet implemented", L"Update Driver", MB_OK);
+            break;
+        }
+
+        case IDC_UNINSTALL_DRV:
+        {
+            UninstallSelectedDevice();
+            break;
+        }
+
+        case IDC_ADD_HARDWARE:
+        {
+            MessageBox(m_hMainWnd, L"Not yet implemented", L"Add Hardware", MB_OK);
+            break;
+        }
+    }
+
+    return 0;
+}
+
 void
 CDeviceView::DisplayPropertySheet()
 {
@@ -286,77 +348,14 @@ CDeviceView::CreateActionMenu(
     return false;
 }
 
-bool
-CDeviceView::HasProperties(
-    _In_ LPTV_ITEMW TvItem
-    )
+CNode*
+CDeviceView::GetSelectedNode()
 {
-    CNode *Node = GetNode(TvItem);
-    if (Node)
-    {
-        return Node->HasProperties();
-    }
-    return false;
+    TV_ITEM TvItem;
+    TvItem.hItem = TreeView_GetSelection(m_hTreeView);
+    return GetNode(&TvItem);
 }
 
-bool
-CDeviceView::IsDisabled(
-    _In_ LPTV_ITEMW TvItem
-    )
-{
-    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetNode(TvItem));
-    if (Node)
-    {
-        return Node->IsDisabled();
-    }
-    return false;
-}
-
-bool
-CDeviceView::CanDisable(
-    _In_ LPTV_ITEMW TvItem
-    )
-{
-    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetNode(TvItem));
-    if (Node)
-    {
-        return Node->CanDisable();
-    }
-    return false;
-}
-
-bool
-CDeviceView::EnableSelectedDevice(
-    _In_ bool Enable,
-    _Out_ bool &NeedsReboot
-    )
-{
-    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
-    if (Node == nullptr) return false;
-
-    if (Enable == false)
-    {
-        CAtlStringW str;
-        if (str.LoadStringW(g_hInstance, IDS_CONFIRM_DISABLE))
-        {
-            if (MessageBoxW(m_hMainWnd,
-                            str,
-                            Node->GetDisplayName(),
-                            MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
-            {
-                return false;
-            }
-        }
-    }
-
-    if (Node->EnableDevice(Enable, NeedsReboot))
-    {
-        Refresh(m_ViewType, true, true, Node->GetDeviceId());
-        return true;
-    }
-
-    return false;
-}
 
 
 // PRIVATE METHODS *******************************************/
@@ -710,6 +709,49 @@ CDeviceView::RecurseChildDevices(
 }
 
 bool
+CDeviceView::EnableSelectedDevice(
+    _In_ bool Enable,
+    _Out_ bool &NeedsReboot
+    )
+{
+    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
+    if (Node == nullptr) return false;
+
+    if (Enable == false)
+    {
+        CAtlStringW str;
+        if (str.LoadStringW(g_hInstance, IDS_CONFIRM_DISABLE))
+        {
+            if (MessageBoxW(m_hMainWnd,
+                str,
+                Node->GetDisplayName(),
+                MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
+            {
+                return false;
+            }
+        }
+    }
+
+    if (Node->EnableDevice(Enable, NeedsReboot))
+    {
+        Refresh(m_ViewType, true, true, Node->GetDeviceId());
+        return true;
+    }
+
+    return false;
+}
+
+bool
+CDeviceView::UninstallSelectedDevice(
+    )
+{
+    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
+    if (Node == nullptr) return false;
+
+    return Node->UninstallDevice();
+}
+
+bool
 CDeviceView::GetChildDevice(
     _In_ DEVINST ParentDevInst,
     _Out_ PDEVINST DevInst
@@ -1032,13 +1074,6 @@ CNode* CDeviceView::GetNode(
         return (CNode *)TvItem->lParam;
     }
     return NULL;
-}
-
-CNode* CDeviceView::GetSelectedNode()
-{
-    TV_ITEM TvItem;
-    TvItem.hItem = TreeView_GetSelection(m_hTreeView);
-    return GetNode(&TvItem);
 }
 
 void

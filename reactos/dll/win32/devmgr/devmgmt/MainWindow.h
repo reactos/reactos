@@ -45,7 +45,9 @@ private:
     bool CreateToolBar();
     bool CreateStatusBar();
 
-    void UpdateUiContext(_In_ LPTV_ITEMW TvItem);
+    void UpdateToolbar(
+        _In_ LPTV_ITEMW TvItem
+        );
 
     bool StatusBarLoadString(
         HWND hStatusBar,
@@ -67,9 +69,6 @@ private:
 
     bool RefreshView(
         ViewType Type
-        );
-
-    bool ScanForHardwareChanges(
         );
 };
 

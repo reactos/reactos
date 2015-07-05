@@ -51,6 +51,10 @@ public:
         _In_ LPARAM lParam
         );
 
+    LRESULT OnAction(
+        UINT Action
+        );
+
     VOID Refresh(
         _In_ ViewType Type,
         _In_ bool ScanForChanges,
@@ -73,20 +77,7 @@ public:
         _In_ bool MainMenu
         );
 
-    bool HasProperties(
-        _In_ LPTV_ITEMW TvItem
-        );
-    //bool SelDeviceIsHidden();
-    bool CanDisable(
-        _In_ LPTV_ITEMW TvItem
-        );
-    bool IsDisabled(
-        _In_ LPTV_ITEMW TvItem
-        );
-
-    bool EnableSelectedDevice(
-        _In_ bool Enable,
-        _Out_ bool &NeedsReboot
+    CNode* GetSelectedNode(
         );
 
     bool SelDeviceIsStarted();
@@ -115,6 +106,14 @@ private:
     bool RecurseChildDevices(
         _In_ DEVINST ParentDevice,
         _In_ HTREEITEM hParentTreeItem
+        );
+
+    bool EnableSelectedDevice(
+        _In_ bool Enable,
+        _Out_ bool &NeedsReboot
+        );
+
+    bool UninstallSelectedDevice(
         );
 
     bool GetChildDevice(
@@ -153,7 +152,6 @@ private:
     CNode* GetNode(
         _In_ LPTV_ITEMW TvItem
         );
-    CNode* GetSelectedNode();
 
     CClassNode* GetClassNode(
         _In_ LPGUID ClassGuid

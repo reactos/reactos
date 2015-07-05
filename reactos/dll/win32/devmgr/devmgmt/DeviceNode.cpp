@@ -344,6 +344,40 @@ CDeviceNode::EnableDevice(
     return true;
 }
 
+bool
+CDeviceNode::UninstallDevice()
+{
+
+    if (CanUninstall() == false)
+        return false;
+
+    SP_REMOVEDEVICE_PARAMS RemoveDevParams;
+    RemoveDevParams.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+    RemoveDevParams.ClassInstallHeader.InstallFunction = DIF_REMOVE;
+    RemoveDevParams.Scope = DI_REMOVEDEVICE_GLOBAL;
+    RemoveDevParams.HwProfile = 0;
+
+    //
+    // We probably need to walk all the siblings of this 
+    // device and ask if they're happy with the uninstall
+    //
+
+
+    // Remove it
+    SetupDiSetClassInstallParamsW(m_hDevInfo,
+                                  &m_DevinfoData,
+                                  &RemoveDevParams.ClassInstallHeader,
+                                  sizeof(SP_REMOVEDEVICE_PARAMS));
+    SetupDiCallClassInstaller(DIF_REMOVE, m_hDevInfo, &m_DevinfoData);
+
+    // Clear the install params
+    SetupDiSetClassInstallParamsW(m_hDevInfo,
+                                  &m_DevinfoData,
+                                  NULL,
+                                  0);
+
+}
+
 /* PRIVATE METHODS ******************************************************/
 
 void
