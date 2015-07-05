@@ -62,6 +62,21 @@
     ok_eq_hex(Status, ExpectAtBase ? STATUS_SUCCESS : STATUS_IMAGE_NOT_AT_BASE);\
     if (!skip(NT_SUCCESS(Status), "Section not mapped\n"))                      \
     {                                                                           \
+        ok((LONG_PTR)BaseAddress > 0, "BaseAddress = %p\n", BaseAddress);       \
+        ok_eq_uint(*(PUCHAR)BaseAddress, ExpectM ? 'M' : 0);                    \
+        Status = MmUnmapViewOfSection(PsGetCurrentProcess(), BaseAddress);      \
+        ok_eq_hex(Status, STATUS_SUCCESS);                                      \
+    }                                                                           \
+    BaseAddress = NULL;                                                         \
+    ViewSize = 0;                                                               \
+    Status = MmMapViewOfSection(SectionObject, PsGetCurrentProcess(),           \
+                                &BaseAddress, 0, 1, &SectionOffset,             \
+                                &ViewSize, ViewUnmap, 0,                        \
+                                PAGE_READONLY | PAGE_NOCACHE);                  \
+    ok_eq_hex(Status, ExpectAtBase ? STATUS_SUCCESS : STATUS_IMAGE_NOT_AT_BASE);\
+    if (!skip(NT_SUCCESS(Status), "Section not mapped\n"))                      \
+    {                                                                           \
+        ok((LONG_PTR)BaseAddress > 0, "BaseAddress = %p\n", BaseAddress);       \
         ok_eq_uint(*(PUCHAR)BaseAddress, ExpectM ? 'M' : 0);                    \
         Status = MmUnmapViewOfSection(PsGetCurrentProcess(), BaseAddress);      \
         ok_eq_hex(Status, STATUS_SUCCESS);                                      \
@@ -452,6 +467,7 @@ TestPhysicalMemorySection(VOID)
         ok_eq_hex(Status, STATUS_SUCCESS);
         if (!skip(NT_SUCCESS(Status), "No view\n"))
         {
+            ok((LONG_PTR)Mapping > 0, "Mapping = %p\n", Mapping);
             EqualBytes = RtlCompareMemory(Mapping,
                                           ZeroPageContents,
                                           PAGE_SIZE);
@@ -476,6 +492,7 @@ TestPhysicalMemorySection(VOID)
         ok_eq_hex(Status, STATUS_SUCCESS);
         if (!skip(NT_SUCCESS(Status), "No view\n"))
         {
+            ok((LONG_PTR)Mapping > 0, "Mapping = %p\n", Mapping);
             EqualBytes = RtlCompareMemory(Mapping,
                                           ZeroPageContents,
                                           PAGE_SIZE);
@@ -500,6 +517,7 @@ TestPhysicalMemorySection(VOID)
         ok_eq_hex(Status, STATUS_SUCCESS);
         if (!skip(NT_SUCCESS(Status), "No view\n"))
         {
+            ok((LONG_PTR)Mapping > 0, "Mapping = %p\n", Mapping);
             EqualBytes = RtlCompareMemory(Mapping,
                                           MyPage,
                                           PAGE_SIZE);
