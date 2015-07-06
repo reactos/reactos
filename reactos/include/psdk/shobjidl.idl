@@ -847,6 +847,126 @@ interface IFolderView : IUnknown
     );
 }
 
+[v1_enum] enum tagSORTDIRECTION
+{
+    SORT_DESCENDING = -1,
+    SORT_ASCENDING = 1
+};
+typedef int SORTDIRECTION;
+
+typedef struct SORTCOLUMN
+{
+    PROPERTYKEY propkey;
+    SORTDIRECTION direction;
+} SORTCOLUMN;
+
+typedef [v1_enum] enum FVTEXTTYPE
+{
+    FVST_EMPTYTEXT = 0
+} FVTEXTTYPE;
+
+[
+    uuid(1af3a467-214f-4298-908e-06b03e0b39f9),
+    object,
+    pointer_default(unique)
+]
+interface IFolderView2 : IFolderView
+{
+    HRESULT SetGroupBy(
+        [in] REFPROPERTYKEY key,
+        [in] BOOL ascending);
+
+    [local]
+    HRESULT GetGroupBy(
+        [out] PROPERTYKEY *pkey,
+        [out] BOOL *ascending);
+
+    [call_as(GetGroupBy)]
+    HRESULT RemoteGetGroupBy(
+        [out] PROPERTYKEY *pkey,
+        [out] BOOL *ascending);
+
+    HRESULT SetViewProperty(
+        [in] PCUITEMID_CHILD pidl,
+        [in] REFPROPERTYKEY propkey,
+        [in] REFPROPVARIANT propvar);
+
+    HRESULT GetViewProperty(
+        [in] PCUITEMID_CHILD pidl,
+        [in] REFPROPERTYKEY propkey,
+        [out] PROPVARIANT *propvar);
+
+    HRESULT SetTileViewProperties(
+        [in] PCUITEMID_CHILD pidl,
+        [in, string] LPCWSTR prop_list);
+
+    HRESULT SetExtendedTileViewProperties(
+        [in] PCUITEMID_CHILD pidl,
+        [in, string] LPCWSTR prop_list);
+
+    HRESULT SetText(
+        [in] FVTEXTTYPE type,
+        [in] LPCWSTR text);
+
+    HRESULT SetCurrentFolderFlags(
+        [in] DWORD mask,
+        [in] DWORD flags);
+
+    HRESULT GetCurrentFolderFlags([out] DWORD *flags);
+
+    HRESULT GetSortColumnCount([out] int *columns);
+
+    HRESULT SetSortColumns(
+        [in, size_is(count)] const SORTCOLUMN *columns,
+        [in] int count);
+
+    HRESULT GetSortColumns(
+        [out, size_is(count)] SORTCOLUMN *columns,
+        [in] int count);
+
+    HRESULT GetItem(
+        [in] int ittem,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+
+    HRESULT GetVisibleItem(
+        [in] int start,
+        [in] BOOL previous,
+        [out] int *item);
+
+    HRESULT GetSelectedItem(
+        [in] int start,
+        [out] int *item);
+
+    HRESULT GetSelection(
+        [in] BOOL none_implies_folder,
+        [out] IShellItemArray **array);
+
+    HRESULT GetSelectionState(
+        [in] PCUITEMID_CHILD pidl,
+        [out] DWORD *flags);
+
+    HRESULT InvokeVerbOnSelection([in, unique, string] LPCSTR verb);
+
+    HRESULT SetViewModeAndIconSize(
+        [in] FOLDERVIEWMODE mode,
+        [in] int size);
+
+    HRESULT GetViewModeAndIconSize(
+        [out] FOLDERVIEWMODE *mode,
+        [out] int *size);
+
+    HRESULT SetGroupSubsetCount([in] UINT visible_rows);
+
+    HRESULT GetGroupSubsetCount([out] UINT *visible_rows);
+
+    HRESULT SetRedraw([in] BOOL redraw);
+
+    HRESULT IsMoveInSameFolder();
+
+    HRESULT DoRename();
+}
+
 /*****************************************************************************
  * IShellBrowser interface
  */
