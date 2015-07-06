@@ -371,7 +371,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     }
 
     RECT rcWorkArea;
-    GetWindowRect(GetDesktopWindow(), &rcWorkArea);
+    ::GetWindowRect(GetDesktopWindow(), &rcWorkArea);
     int cxWorkArea = rcWorkArea.right - rcWorkArea.left;
     int cyWorkArea = rcWorkArea.bottom - rcWorkArea.top;
 

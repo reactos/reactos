@@ -108,10 +108,10 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         return hr;
 
     LPWSTR input;
-    int inputLength = GetWindowTextLength(fCombobox.m_hWnd) + 2;
+    int inputLength = ::GetWindowTextLength(fCombobox.m_hWnd) + 2;
 
     input = new WCHAR[inputLength];
-    GetWindowText(fCombobox.m_hWnd, input, inputLength);
+    ::GetWindowText(fCombobox.m_hWnd, input, inputLength);
 
     LPWSTR address;
     int addressLength = ExpandEnvironmentStrings(input, NULL, 0);

@@ -974,7 +974,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,
 
     // RBSTR_CHANGERECT does not seem to set the proper size in the rect.
     // Let's make sure we fetch the actual size properly.
-    GetWindowRect(fMainReBar, &availableBorderSpace);
+    ::GetWindowRect(fMainReBar, &availableBorderSpace);
     neededBorderSpace.left = 0;
     neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
     if (!fLocked)
@@ -1841,7 +1841,7 @@ LRESULT CInternetToolbar::OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     fStartPosition.y = GET_Y_LPARAM(msgp);
     
     RECT rc;
-    GetWindowRect(m_hWnd, &rc);
+    ::GetWindowRect(m_hWnd, &rc);
 
     fStartHeight = rc.bottom - rc.top;
 

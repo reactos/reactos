@@ -1235,9 +1235,9 @@ public:
         if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) &&
             !m_Tray->IsSpecialHWND(hWnd))
         {
-            DWORD exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+            DWORD exStyle = ::GetWindowLong(hWnd, GWL_EXSTYLE);
             /* Don't list popup windows and also no tool windows */
-            if ((GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
+            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
                 !(exStyle & WS_EX_TOOLWINDOW))
             {
                 TRACE("Adding task for %p...\n", hWnd);
@@ -1404,7 +1404,7 @@ public:
             break;
 
         case HSHELL_TASKMAN:
-            PostMessage(m_Tray->GetHWND(), TWM_OPENSTARTMENU, 0, 0);
+            ::PostMessage(m_Tray->GetHWND(), TWM_OPENSTARTMENU, 0, 0);
             break;
 
         case HSHELL_ACTIVATESHELLWINDOW:
@@ -1455,7 +1455,7 @@ public:
 
         if (::IsWindow(TaskItem->hWnd))
         {
-            bIsMinimized = IsIconic(TaskItem->hWnd);
+            bIsMinimized = ::IsIconic(TaskItem->hWnd);
             bIsActive = (TaskItem == m_ActiveTaskItem);
 
             TRACE("Active TaskItem %p, selected TaskItem %p\n", m_ActiveTaskItem, TaskItem);
@@ -1467,7 +1467,7 @@ public:
 
             if (!bIsMinimized && bIsActive)
             {
-                PostMessage(TaskItem->hWnd,
+                ::PostMessage(TaskItem->hWnd,
                     WM_SYSCOMMAND,
                     SC_MINIMIZE,
                     0);
@@ -1477,7 +1477,7 @@ public:
             {
                 if (bIsMinimized)
                 {
-                    PostMessage(TaskItem->hWnd,
+                    ::PostMessage(TaskItem->hWnd,
                         WM_SYSCOMMAND,
                         SC_RESTORE,
                         0);
@@ -1524,7 +1524,7 @@ public:
     VOID HandleTaskItemRightClick(IN OUT PTASK_ITEM TaskItem)
     {
 
-        HMENU hmenu = GetSystemMenu(TaskItem->hWnd, FALSE);
+        HMENU hmenu = ::GetSystemMenu(TaskItem->hWnd, FALSE);
 
         if (hmenu)
         {
@@ -1535,7 +1535,7 @@ public:
             if (cmd)
             {
                 SetForegroundWindow(TaskItem->hWnd);    // reactivate window after the context menu has closed
-                PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
+                ::PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
             }
         }
     }
@@ -1790,7 +1790,7 @@ public:
             RECT* prcMinRect = (RECT*) lParam;
             RECT rcItem, rcToolbar;
             m_TaskBar.GetItemRect(TaskItem->Index, &rcItem);
-            GetWindowRect(m_TaskBar.m_hWnd, &rcToolbar);
+            ::GetWindowRect(m_TaskBar.m_hWnd, &rcToolbar);
 
             OffsetRect(&rcItem, rcToolbar.left, rcToolbar.top);
 

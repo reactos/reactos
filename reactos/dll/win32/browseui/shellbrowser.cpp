@@ -1306,10 +1306,10 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     {
         if (uMsg == WM_NCDESTROY)
         {
-            saveWindowProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWL_WNDPROC));
+            saveWindowProc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hWnd, GWL_WNDPROC));
             lResult = pThis->DefWindowProc(uMsg, wParam, lParam);
-            if (saveWindowProc == reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWL_WNDPROC)))
-                SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG_PTR)pThis->m_pfnSuperWindowProc);
+            if (saveWindowProc == reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hWnd, GWL_WNDPROC)))
+                ::SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG_PTR)pThis->m_pfnSuperWindowProc);
             pThis->m_dwState |= WINSTATE_DESTROYED;
         }
         else

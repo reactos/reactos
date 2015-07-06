@@ -457,7 +457,7 @@ public:
     virtual void ComputeContentBounds(RECT* rect)
     {
         RECT r;
-        GetWindowRect(T::m_hWnd, &r);
+        ::GetWindowRect(T::m_hWnd, &r);
         rect->left = min(rect->left, r.left);
         rect->top = min(rect->top, r.top);
         rect->right = max(rect->right, r.right);
@@ -479,7 +479,7 @@ public:
 
         if (hDwp)
         {
-            return DeferWindowPos(hDwp, T::m_hWnd, NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
+            return ::DeferWindowPos(hDwp, T::m_hWnd, NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
         }
         else
         {
@@ -668,7 +668,7 @@ public:
 
         if (hDwp)
         {
-            return DeferWindowPos(hDwp, m_hWnd, NULL,
+            return ::DeferWindowPos(hDwp, m_hWnd, NULL,
                 splitter.left, splitter.top,
                 splitter.right - splitter.left,
                 splitter.bottom - splitter.top,

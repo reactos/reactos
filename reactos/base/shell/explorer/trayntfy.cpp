@@ -291,10 +291,10 @@ private:
         if (pid == GetCurrentProcessId() ||
             (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST))
         {
-            PostMessage(notifyItem->hWnd,
-                        notifyItem->uCallbackMessage,
-                        notifyItem->uID,
-                        uMsg);
+            ::PostMessage(notifyItem->hWnd,
+                          notifyItem->uCallbackMessage,
+                          notifyItem->uID,
+                          uMsg);
         }
         else
         {
@@ -323,7 +323,7 @@ private:
     LRESULT OnTooltipShow(INT uCode, LPNMHDR hdr, BOOL& bHandled)
     {
         RECT rcTip, rcItem;
-        GetWindowRect(hdr->hwndFrom, &rcTip);
+        ::GetWindowRect(hdr->hwndFrom, &rcTip);
 
         SIZE szTip = { rcTip.right - rcTip.left, rcTip.bottom - rcTip.top };
 
@@ -339,13 +339,13 @@ private:
             if (hMon)
                 GetMonitorInfo(hMon, &monInfo);
             else
-                GetWindowRect(GetDesktopWindow(), &monInfo.rcMonitor);
+                ::GetWindowRect(GetDesktopWindow(), &monInfo.rcMonitor);
 
             GetItemRect(iBtn, &rcItem);
 
             POINT ptItem = { rcItem.left, rcItem.top };
             SIZE szItem = { rcItem.right - rcItem.left, rcItem.bottom - rcItem.top };
-            ClientToScreen(m_hWnd, &ptItem);
+            ::ClientToScreen(m_hWnd, &ptItem);
 
             ptItem.x += szItem.cx / 2;
             ptItem.y -= szTip.cy;
@@ -436,10 +436,10 @@ public:
         Toolbar.Initialize(m_hWnd);
 
         // Explicitly request running applications to re-register their systray icons
-        SendNotifyMessage(HWND_BROADCAST,
-                          RegisterWindowMessage(TEXT("TaskbarCreated")),
-                          0,
-                          0);
+        ::SendNotifyMessage(HWND_BROADCAST,
+                            RegisterWindowMessage(TEXT("TaskbarCreated")),
+                            0,
+                            0);
 
         return TRUE;
     }
@@ -732,7 +732,7 @@ public:
         INT c, i;
         BOOL bRet = TRUE;
 
-        hDC = GetDC(m_hWnd);
+        hDC = ::GetDC(m_hWnd);
         if (hDC != NULL)
         {
             if (hFont)
@@ -752,7 +752,7 @@ public:
             if (hFont)
                 SelectObject(hDC, hPrevFont);
 
-            ReleaseDC(m_hWnd, hDC);
+            ::ReleaseDC(m_hWnd, hDC);
 
             if (bRet)
             {
@@ -895,7 +895,7 @@ public:
             CurrentSize = szWnd;
         }
 
-        if (IsWindowVisible(m_hWnd))
+        if (::IsWindowVisible(m_hWnd))
         {
             InvalidateRect(NULL, TRUE);
 
@@ -906,7 +906,7 @@ public:
                 NMHDR nmh;
 
                 nmh.hwndFrom = m_hWnd;
-                nmh.idFrom = GetWindowLongPtr(m_hWnd, GWLP_ID);
+                nmh.idFrom = ::GetWindowLongPtr(m_hWnd, GWLP_ID);
                 nmh.code = NTNWM_REALIGN;
 
                 SendMessage(hWndNotify,
@@ -1497,10 +1497,10 @@ public:
 
     BOOL GetClockRect(OUT PRECT rcClock)
     {
-        if (!IsWindowVisible(m_clock->m_hWnd))
+        if (!::IsWindowVisible(m_clock->m_hWnd))
             return FALSE;
 
-        return GetWindowRect(m_clock->m_hWnd, rcClock);
+        return ::GetWindowRect(m_clock->m_hWnd, rcClock);
     }
 
     LRESULT OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

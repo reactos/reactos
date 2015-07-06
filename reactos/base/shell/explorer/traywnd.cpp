@@ -218,7 +218,7 @@ DefSize:
                                        SmallIcon.cy,
                                        LR_SHARED | LR_DEFAULTCOLOR);
 
-        hDCScreen = GetDC(NULL);
+        hDCScreen = ::GetDC(NULL);
         if (hDCScreen == NULL)
             goto Cleanup;
 
@@ -282,7 +282,7 @@ DefSize:
 Cleanup:
         if (hDCScreen != NULL)
         {
-            ReleaseDC(NULL, hDCScreen);
+            ::ReleaseDC(NULL, hDCScreen);
         }
 
         if (hbmp != NULL)
@@ -882,7 +882,7 @@ GetPrimaryScreenRect:
             m_TrayRects[m_Position] = rcTray;
             goto ChangePos;
         }
-        else if (GetWindowRect(m_hWnd, &rcTray))
+        else if (::GetWindowRect(m_hWnd, &rcTray))
         {
             if (InSizeMove)
             {
@@ -952,7 +952,7 @@ ChangePos:
         RECT rcClip, rcWindow;
         HRGN hClipRgn;
 
-        if (GetWindowRect(m_hWnd, &rcWindow))
+        if (::GetWindowRect(m_hWnd, &rcWindow))
         {
             /* Disable clipping on systems with only one monitor */
             if (GetSystemMetrics(SM_CMONITORS) <= 1)
@@ -980,7 +980,7 @@ ChangePos:
 
             /* Set the clipping region or make sure the window isn't clipped
                by disabling it explicitly. */
-            SetWindowRgn(m_hWnd, hClipRgn, TRUE);
+            ::SetWindowRgn(m_hWnd, hClipRgn, TRUE);
         }
     }
 
@@ -1202,7 +1202,7 @@ ChangePos:
             /* Get the client rectangle and map it to screen coordinates */
             if (::GetClientRect(hwndExclude,
                 &tmp.rcExclude) &&
-                MapWindowPoints(hwndExclude,
+                ::MapWindowPoints(hwndExclude,
                 NULL,
                 (LPPOINT) &tmp.rcExclude,
                 2) != 0)
@@ -1215,7 +1215,7 @@ ChangePos:
         {
             if (ptmp == NULL &&
                 GetClientRect(&tmp.rcExclude) &&
-                MapWindowPoints(m_hWnd,
+                ::MapWindowPoints(m_hWnd,
                 NULL,
                 (LPPOINT) &tmp.rcExclude,
                 2) != 0)
@@ -1344,14 +1344,14 @@ ChangePos:
         if (m_StartButton.m_hWnd != NULL)
         {
             /* Resize and reposition the button */
-            dwp = DeferWindowPos(dwp,
-                                 m_StartButton.m_hWnd,
-                                 NULL,
-                                 0,
-                                 0,
-                                 StartSize.cx,
-                                 StartSize.cy,
-                                 SWP_NOZORDER | SWP_NOACTIVATE);
+            dwp = ::DeferWindowPos(dwp,
+                                   m_StartButton.m_hWnd,
+                                   NULL,
+                                   0,
+                                   0,
+                                   StartSize.cx,
+                                   StartSize.cy,
+                                   SWP_NOZORDER | SWP_NOACTIVATE);
             if (dwp == NULL)
             {
                 ERR("DeferWindowPos for start button failed. lastErr=%d\n", GetLastError());
@@ -1383,14 +1383,14 @@ ChangePos:
             else
                 ptTrayNotify.y = rcClient.bottom - TraySize.cy;
 
-            dwp = DeferWindowPos(dwp,
-                                 m_TrayNotify,
-                                 NULL,
-                                 ptTrayNotify.x,
-                                 ptTrayNotify.y,
-                                 TraySize.cx,
-                                 TraySize.cy,
-                                 SWP_NOZORDER | SWP_NOACTIVATE);
+            dwp = ::DeferWindowPos(dwp,
+                                   m_TrayNotify,
+                                   NULL,
+                                   ptTrayNotify.x,
+                                   ptTrayNotify.y,
+                                   TraySize.cx,
+                                   TraySize.cy,
+                                   SWP_NOZORDER | SWP_NOACTIVATE);
             if (dwp == NULL)
             {
                 ERR("DeferWindowPos for notification area failed. lastErr=%d\n", GetLastError());
@@ -1419,14 +1419,14 @@ ChangePos:
                 szRebar.cy = ptTrayNotify.y - ptRebar.y;
             }
 
-            dwp = DeferWindowPos(dwp,
-                                 m_Rebar,
-                                 NULL,
-                                 ptRebar.x,
-                                 ptRebar.y,
-                                 szRebar.cx,
-                                 szRebar.cy,
-                                 SWP_NOZORDER | SWP_NOACTIVATE);
+            dwp = ::DeferWindowPos(dwp,
+                                   m_Rebar,
+                                   NULL,
+                                   ptRebar.x,
+                                   ptRebar.y,
+                                   szRebar.cx,
+                                   szRebar.cy,
+                                   SWP_NOZORDER | SWP_NOACTIVATE);
         }
 
         if (dwp != NULL)
@@ -1586,7 +1586,7 @@ ChangePos:
            If it was somehow destroyed just create a new tray window. */
         if (m_hWnd != NULL && IsWindow())
         {
-            if (!IsWindowVisible(m_hWnd))
+            if (!::IsWindowVisible(m_hWnd))
             {
                 CheckTrayWndPosition();
 
@@ -1656,7 +1656,7 @@ ChangePos:
         HWND hwnd;
         RECT posRect;
 
-        GetWindowRect(m_StartButton.m_hWnd, &posRect);
+        ::GetWindowRect(m_StartButton.m_hWnd, &posRect);
         hwnd = CreateWindowEx(0,
                               WC_STATIC,
                               NULL,
@@ -1693,7 +1693,7 @@ ChangePos:
 
         if (m_TrayPropertiesOwner)
         {
-            hTrayProp = GetLastActivePopup(m_TrayPropertiesOwner);
+            hTrayProp = ::GetLastActivePopup(m_TrayPropertiesOwner);
             if (hTrayProp != NULL &&
                 hTrayProp != m_TrayPropertiesOwner)
             {
@@ -1886,10 +1886,10 @@ ChangePos:
         RECT rect;
         int backoundPart;
 
-        GetWindowRect(m_hWnd, &rect);
+        ::GetWindowRect(m_hWnd, &rect);
         OffsetRect(&rect, -rect.left, -rect.top);
 
-        hdc = GetDCEx(m_hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_PARENTCLIP);
+        hdc = ::GetDCEx(m_hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_PARENTCLIP);
 
         switch (m_Position)
         {
@@ -1917,7 +1917,7 @@ ChangePos:
         }
         DrawThemeBackground(m_Theme, hdc, backoundPart, 0, &rect, 0);
 
-        ReleaseDC(m_hWnd, hdc);
+        ::ReleaseDC(m_hWnd, hdc);
         return 0;
     }
 
@@ -1926,7 +1926,7 @@ ChangePos:
         HWND hwnd;
         RECT posRect;
 
-        GetWindowRect(m_StartButton.m_hWnd, &posRect);
+        ::GetWindowRect(m_StartButton.m_hWnd, &posRect);
 
         hwnd = CreateWindowEx(0,
                               WC_STATIC,
@@ -1962,7 +1962,7 @@ ChangePos:
         HWND hRunDlg;
         if (m_RunFileDlgOwner)
         {
-            hRunDlg = GetLastActivePopup(m_RunFileDlgOwner);
+            hRunDlg = ::GetLastActivePopup(m_RunFileDlgOwner);
             if (hRunDlg != NULL &&
                 hRunDlg != m_RunFileDlgOwner)
             {
@@ -1982,7 +1982,7 @@ ChangePos:
             RECTL rcExclude;
             DWORD dwFlags = 0;
 
-            if (GetWindowRect(m_StartButton.m_hWnd, (RECT*) &rcExclude))
+            if (::GetWindowRect(m_StartButton.m_hWnd, (RECT*) &rcExclude))
             {
                 switch (m_Position)
                 {
@@ -2023,7 +2023,7 @@ ChangePos:
         UINT state = m_AutoHideState;
 
         GetCursorPos(&pt);
-        GetWindowRect(m_hWnd, &rcCurrent);
+        ::GetWindowRect(m_hWnd, &rcCurrent);
         over = PtInRect(&rcCurrent, pt);
 
         if (m_StartButton.SendMessage( BM_GETSTATE, 0, 0) != BST_UNCHECKED)
@@ -2243,7 +2243,7 @@ ChangePos:
 
         SetLastError(ERROR_SUCCESS);
         if (GetClientRect(&rcClient) &&
-            (MapWindowPoints(m_hWnd, NULL, (LPPOINT) &rcClient, 2) != 0 || GetLastError() == ERROR_SUCCESS))
+            (::MapWindowPoints(m_hWnd, NULL, (LPPOINT) &rcClient, 2) != 0 || GetLastError() == ERROR_SUCCESS))
         {
             pt.x = (SHORT) LOWORD(lParam);
             pt.y = (SHORT) HIWORD(lParam);
@@ -2386,7 +2386,7 @@ ChangePos:
         if (!Locked)
         {
             /* Apply clipping */
-            PostMessage(m_hWnd, WM_SIZE, SIZE_RESTORED, 0);
+            ::PostMessage(m_hWnd, WM_SIZE, SIZE_RESTORED, 0);
         }
         return TRUE;
     }
@@ -2415,7 +2415,7 @@ ChangePos:
             /* temporarily enable the system menu */
             SetWindowStyle(m_hWnd, WS_SYSMENU, WS_SYSMENU);
 
-            hSysMenu = GetSystemMenu(m_hWnd, FALSE);
+            hSysMenu = ::GetSystemMenu(m_hWnd, FALSE);
             if (hSysMenu != NULL)
             {
                 /* Disable all items that are not relevant */
@@ -2503,17 +2503,17 @@ ChangePos:
                 POINT ptClient = *ppt;
 
                 /* Convert the coordinates to client-coordinates */
-                MapWindowPoints(NULL, m_hWnd, &ptClient, 1);
+                ::MapWindowPoints(NULL, m_hWnd, &ptClient, 1);
 
-                hWndAtPt = ChildWindowFromPoint(m_hWnd, ptClient);
+                hWndAtPt = ::ChildWindowFromPoint(m_hWnd, ptClient);
                 if (hWndAtPt != NULL &&
-                    (hWndAtPt == m_Rebar || IsChild(m_Rebar, hWndAtPt)))
+                    (hWndAtPt == m_Rebar || ::IsChild(m_Rebar, hWndAtPt)))
                 {
                     /* Check if the user clicked on the task switch window */
                     ptClient = *ppt;
-                    MapWindowPoints(NULL, m_Rebar, &ptClient, 1);
+                    ::MapWindowPoints(NULL, m_Rebar, &ptClient, 1);
 
-                    hWndAtPt = ChildWindowFromPointEx(m_Rebar, ptClient, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
+                    hWndAtPt = ::ChildWindowFromPointEx(m_Rebar, ptClient, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
                     if (hWndAtPt == m_TaskSwitch)
                         goto HandleTrayContextMenu;
 
@@ -2561,7 +2561,7 @@ HandleTrayContextMenu:
                 {
                 case NTNWM_REALIGN:
                     /* Cause all controls to be aligned */
-                    PostMessage(m_hWnd, WM_SIZE, SIZE_RESTORED, 0);
+                    ::PostMessage(m_hWnd, WM_SIZE, SIZE_RESTORED, 0);
                     break;
                 }
             }
@@ -2604,7 +2604,7 @@ HandleTrayContextMenu:
         if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
 
-        if (IsWindowVisible(hwndStartMenu))
+        if (::IsWindowVisible(hwndStartMenu))
         {
             m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
         }
