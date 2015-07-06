@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Local Spooler Port Monitor
+ * PROJECT:     ReactOS Local Port Monitor
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Precompiled Header for all source files
  * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
@@ -9,14 +9,96 @@
 #define _PRECOMP_H
 
 #define WIN32_NO_STATUS
+#include <stdlib.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winreg.h>
 #include <winspool.h>
 #include <winsplp.h>
+#include <winuser.h>
+#include <ndk/rtlfuncs.h>
+
+#include <spoolss.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(localmon);
+
+#include "resource.h"
+
+// Structures
+/**
+ * Describes the port handle returned by LocalmonOpenPort.
+ * Manages a legacy port (COM/LPT) or virtual FILE: port for printing as well as its associated printer and job.
+ */
+typedef struct _LOCALMON_PORT
+{
+    LIST_ENTRY Entry;
+    enum {
+        PortType_FILE,              /** A virtual port for redirecting the document into a file. */
+        PortType_PhysicalCOM,       /** A physical serial port (COM) */
+        PortType_PhysicalLPT,       /** A physical parallel port (LPT) */
+        PortType_OtherLPT           /** A non-physical parallel port (e.g. a redirected one over network using "net use LPT1 ...") */
+    }
+    PortType;
+    BOOL bStartedDoc;               /** Whether a document has been started with StartDocPort. */
+    DWORD dwJobID;                  /** ID of the printing job we are processing (for later reporting progress using SetJobW). */
+    HANDLE hFile;                   /** Handle to the opened port or INVALID_HANDLE_VALUE if it isn't currently opened. */
+    HANDLE hPrinter;                /** Handle to the printer for the job on this port (for using SetJobW). */
+    PWSTR pwszMapping;              /** The current mapping of the DOS Device corresponding to this port at the time _CreateNonspooledPort has been called. */
+    PWSTR pwszPortName;             /** The name of this port including the trailing colon. Empty for virtual file ports. */
+}
+LOCALMON_PORT, *PLOCALMON_PORT;
+
+/**
+ * Describes the monitor handle returned by InitializePrintMonitor2.
+ * Manages all available ports in this instance.
+ */
+typedef struct _LOCALMON_HANDLE
+{
+    LIST_ENTRY FilePorts;           /** Virtual ports created for every document that's redirected to an output file. */
+    LIST_ENTRY Ports;               /** Ports found on the system (except for FILE:) */
+}
+LOCALMON_HANDLE, *PLOCALMON_HANDLE;
+
+/**
+ * Describes the Xcv handle returned by LocalmonXcvOpenPort.
+ * Manages the required data for the Xcv* calls.
+ */
+typedef struct _LOCALMON_XCV
+{
+    ACCESS_MASK GrantedAccess;
+    PWSTR pwszObject;
+}
+LOCALMON_XCV, *PLOCALMON_XCV;
+
+// main.c
+extern DWORD cbLocalMonitor;
+extern DWORD cbLocalPort;
+extern PCWSTR pwszLocalMonitor;
+extern PCWSTR pwszLocalPort;
+void WINAPI LocalmonShutdown(HANDLE hMonitor);
+
+// ports.c
+BOOL WINAPI LocalmonClosePort(HANDLE hPort);
+BOOL WINAPI LocalmonEndDocPort(HANDLE hPort);
+BOOL WINAPI LocalmonEnumPorts(HANDLE hMonitor, PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
+BOOL WINAPI LocalmonGetPrinterDataFromPort(HANDLE hPort, DWORD ControlID, PWSTR pValueName, PWSTR lpInBuffer, DWORD cbInBuffer, PWSTR lpOutBuffer, DWORD cbOutBuffer, PDWORD lpcbReturned);
+BOOL WINAPI LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle);
+BOOL WINAPI LocalmonReadPort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuffer, PDWORD pcbRead);
+BOOL WINAPI LocalmonSetPortTimeOuts(HANDLE hPort, LPCOMMTIMEOUTS lpCTO, DWORD Reserved);
+BOOL WINAPI LocalmonStartDocPort(HANDLE hPort, PWSTR pPrinterName, DWORD JobId, DWORD Level, PBYTE pDocInfo);
+BOOL WINAPI LocalmonWritePort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuf, PDWORD pcbWritten);
+
+// tools.c
+BOOL DoesPortExist(PCWSTR pwszPortName);
+DWORD GetLPTTransmissionRetryTimeout();
+PWSTR GetPortNameWithoutColon(PCWSTR pwszPortName);
+
+// xcv.c
+BOOL WINAPI LocalmonXcvClosePort(HANDLE hXcv);
+DWORD WINAPI LocalmonXcvDataPort(HANDLE hXcv, PCWSTR pszDataName, PBYTE pInputData, DWORD cbInputData, PBYTE pOutputData, DWORD cbOutputData, PDWORD pcbOutputNeeded);
+BOOL WINAPI LocalmonXcvOpenPort(HANDLE hMonitor, PCWSTR pszObject, ACCESS_MASK GrantedAccess, PHANDLE phXcv);
 
 #endif

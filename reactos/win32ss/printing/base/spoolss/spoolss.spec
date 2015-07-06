@@ -62,7 +62,7 @@
 @ stdcall EnumJobsW(long long long long ptr long ptr ptr)
 @ stub EnumMonitorsW
 @ stub EnumPerMachineConnectionsW
-@ stub EnumPortsW
+@ stdcall EnumPortsW(ptr long ptr long ptr ptr)
 @ stub EnumPrinterDataExW
 @ stub EnumPrinterDataW
 @ stub EnumPrinterDriversW
