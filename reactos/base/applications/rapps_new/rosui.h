@@ -668,7 +668,7 @@ public:
 
         if (hDwp)
         {
-            return ::DeferWindowPos(hDwp, m_hWnd, NULL,
+            return DeferWindowPos(hDwp, NULL,
                 splitter.left, splitter.top,
                 splitter.right - splitter.left,
                 splitter.bottom - splitter.top,

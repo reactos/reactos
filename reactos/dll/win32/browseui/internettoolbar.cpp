@@ -1841,7 +1841,7 @@ LRESULT CInternetToolbar::OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     fStartPosition.y = GET_Y_LPARAM(msgp);
     
     RECT rc;
-    ::GetWindowRect(m_hWnd, &rc);
+    GetWindowRect(&rc);
 
     fStartHeight = rc.bottom - rc.top;
 

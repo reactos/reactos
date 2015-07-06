@@ -1790,7 +1790,7 @@ public:
             RECT* prcMinRect = (RECT*) lParam;
             RECT rcItem, rcToolbar;
             m_TaskBar.GetItemRect(TaskItem->Index, &rcItem);
-            ::GetWindowRect(m_TaskBar.m_hWnd, &rcToolbar);
+            m_TaskBar.GetWindowRect(&rcToolbar);
 
             OffsetRect(&rcItem, rcToolbar.left, rcToolbar.top);
 

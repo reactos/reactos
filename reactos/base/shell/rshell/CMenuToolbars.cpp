@@ -700,8 +700,8 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* child
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
 
-    ::ClientToScreen(m_hWnd, &a);
-    ::ClientToScreen(m_hWnd, &b);
+    ClientToScreen(&a);
+    ClientToScreen(&b);
 
     POINTL pt = { a.x, b.y };
     RECTL rcl = { a.x, a.y, b.x, b.y };
@@ -741,8 +741,8 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, HMENU menu)
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
 
-    ::ClientToScreen(m_hWnd, &a);
-    ::ClientToScreen(m_hWnd, &b);
+    ClientToScreen(&a);
+    ClientToScreen(&b);
 
     POINT pt = { a.x, b.y };
     RECT rcl = { a.x, a.y, b.x, b.y };
@@ -937,7 +937,7 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
                         HWND tlw;
                         m_menuBand->_GetTopLevelWindow(&tlw);
                         SendMessageW(tlw, WM_CANCELMODE, 0, 0);
-                        ::PostMessageW(m_hWnd, WM_USER_CHANGETRACKEDITEM, index, MAKELPARAM(m_isTrackingPopup, FALSE));
+                        PostMessageW(WM_USER_CHANGETRACKEDITEM, index, MAKELPARAM(m_isTrackingPopup, FALSE));
                     }
                     else
                         m_menuBand->_ChangeHotItem(this, btn.idCommand, 0);

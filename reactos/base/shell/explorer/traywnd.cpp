@@ -882,7 +882,7 @@ GetPrimaryScreenRect:
             m_TrayRects[m_Position] = rcTray;
             goto ChangePos;
         }
-        else if (::GetWindowRect(m_hWnd, &rcTray))
+        else if (GetWindowRect(&rcTray))
         {
             if (InSizeMove)
             {
@@ -952,7 +952,7 @@ ChangePos:
         RECT rcClip, rcWindow;
         HRGN hClipRgn;
 
-        if (::GetWindowRect(m_hWnd, &rcWindow))
+        if (GetWindowRect(&rcWindow))
         {
             /* Disable clipping on systems with only one monitor */
             if (GetSystemMetrics(SM_CMONITORS) <= 1)
@@ -980,7 +980,7 @@ ChangePos:
 
             /* Set the clipping region or make sure the window isn't clipped
                by disabling it explicitly. */
-            ::SetWindowRgn(m_hWnd, hClipRgn, TRUE);
+            SetWindowRgn(hClipRgn, TRUE);
         }
     }
 
@@ -1215,7 +1215,7 @@ ChangePos:
         {
             if (ptmp == NULL &&
                 GetClientRect(&tmp.rcExclude) &&
-                ::MapWindowPoints(m_hWnd,
+                MapWindowPoints(
                 NULL,
                 (LPPOINT) &tmp.rcExclude,
                 2) != 0)
@@ -1344,14 +1344,13 @@ ChangePos:
         if (m_StartButton.m_hWnd != NULL)
         {
             /* Resize and reposition the button */
-            dwp = ::DeferWindowPos(dwp,
-                                   m_StartButton.m_hWnd,
-                                   NULL,
-                                   0,
-                                   0,
-                                   StartSize.cx,
-                                   StartSize.cy,
-                                   SWP_NOZORDER | SWP_NOACTIVATE);
+            dwp = m_StartButton.DeferWindowPos(dwp,
+                                               NULL,
+                                               0,
+                                               0,
+                                               StartSize.cx,
+                                               StartSize.cy,
+                                               SWP_NOZORDER | SWP_NOACTIVATE);
             if (dwp == NULL)
             {
                 ERR("DeferWindowPos for start button failed. lastErr=%d\n", GetLastError());
@@ -1586,7 +1585,7 @@ ChangePos:
            If it was somehow destroyed just create a new tray window. */
         if (m_hWnd != NULL && IsWindow())
         {
-            if (!::IsWindowVisible(m_hWnd))
+            if (!IsWindowVisible())
             {
                 CheckTrayWndPosition();
 
@@ -1656,7 +1655,7 @@ ChangePos:
         HWND hwnd;
         RECT posRect;
 
-        ::GetWindowRect(m_StartButton.m_hWnd, &posRect);
+        m_StartButton.GetWindowRect(&posRect);
         hwnd = CreateWindowEx(0,
                               WC_STATIC,
                               NULL,
@@ -1886,10 +1885,10 @@ ChangePos:
         RECT rect;
         int backoundPart;
 
-        ::GetWindowRect(m_hWnd, &rect);
+        GetWindowRect(&rect);
         OffsetRect(&rect, -rect.left, -rect.top);
 
-        hdc = ::GetDCEx(m_hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_PARENTCLIP);
+        hdc = GetDCEx(hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_PARENTCLIP);
 
         switch (m_Position)
         {
@@ -1917,7 +1916,7 @@ ChangePos:
         }
         DrawThemeBackground(m_Theme, hdc, backoundPart, 0, &rect, 0);
 
-        ::ReleaseDC(m_hWnd, hdc);
+        ReleaseDC(hdc);
         return 0;
     }
 
@@ -1926,7 +1925,7 @@ ChangePos:
         HWND hwnd;
         RECT posRect;
 
-        ::GetWindowRect(m_StartButton.m_hWnd, &posRect);
+        m_StartButton.GetWindowRect(&posRect);
 
         hwnd = CreateWindowEx(0,
                               WC_STATIC,
@@ -1982,7 +1981,7 @@ ChangePos:
             RECTL rcExclude;
             DWORD dwFlags = 0;
 
-            if (::GetWindowRect(m_StartButton.m_hWnd, (RECT*) &rcExclude))
+            if (m_StartButton.GetWindowRect((RECT*) &rcExclude))
             {
                 switch (m_Position)
                 {
@@ -2023,7 +2022,7 @@ ChangePos:
         UINT state = m_AutoHideState;
 
         GetCursorPos(&pt);
-        ::GetWindowRect(m_hWnd, &rcCurrent);
+        GetWindowRect(&rcCurrent);
         over = PtInRect(&rcCurrent, pt);
 
         if (m_StartButton.SendMessage( BM_GETSTATE, 0, 0) != BST_UNCHECKED)
@@ -2243,7 +2242,7 @@ ChangePos:
 
         SetLastError(ERROR_SUCCESS);
         if (GetClientRect(&rcClient) &&
-            (::MapWindowPoints(m_hWnd, NULL, (LPPOINT) &rcClient, 2) != 0 || GetLastError() == ERROR_SUCCESS))
+            (MapWindowPoints(NULL, (LPPOINT) &rcClient, 2) != 0 || GetLastError() == ERROR_SUCCESS))
         {
             pt.x = (SHORT) LOWORD(lParam);
             pt.y = (SHORT) HIWORD(lParam);
@@ -2386,7 +2385,7 @@ ChangePos:
         if (!Locked)
         {
             /* Apply clipping */
-            ::PostMessage(m_hWnd, WM_SIZE, SIZE_RESTORED, 0);
+            PostMessage(WM_SIZE, SIZE_RESTORED, 0);
         }
         return TRUE;
     }
@@ -2415,7 +2414,7 @@ ChangePos:
             /* temporarily enable the system menu */
             SetWindowStyle(m_hWnd, WS_SYSMENU, WS_SYSMENU);
 
-            hSysMenu = ::GetSystemMenu(m_hWnd, FALSE);
+            hSysMenu = GetSystemMenu(FALSE);
             if (hSysMenu != NULL)
             {
                 /* Disable all items that are not relevant */
@@ -2505,7 +2504,7 @@ ChangePos:
                 /* Convert the coordinates to client-coordinates */
                 ::MapWindowPoints(NULL, m_hWnd, &ptClient, 1);
 
-                hWndAtPt = ::ChildWindowFromPoint(m_hWnd, ptClient);
+                hWndAtPt = ChildWindowFromPoint(ptClient);
                 if (hWndAtPt != NULL &&
                     (hWndAtPt == m_Rebar || ::IsChild(m_Rebar, hWndAtPt)))
                 {
@@ -2561,7 +2560,7 @@ HandleTrayContextMenu:
                 {
                 case NTNWM_REALIGN:
                     /* Cause all controls to be aligned */
-                    ::PostMessage(m_hWnd, WM_SIZE, SIZE_RESTORED, 0);
+                    PostMessage(WM_SIZE, SIZE_RESTORED, 0);
                     break;
                 }
             }

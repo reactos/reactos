@@ -345,7 +345,7 @@ private:
 
             POINT ptItem = { rcItem.left, rcItem.top };
             SIZE szItem = { rcItem.right - rcItem.left, rcItem.bottom - rcItem.top };
-            ::ClientToScreen(m_hWnd, &ptItem);
+            ClientToScreen(&ptItem);
 
             ptItem.x += szItem.cx / 2;
             ptItem.y -= szTip.cy;
@@ -732,7 +732,7 @@ public:
         INT c, i;
         BOOL bRet = TRUE;
 
-        hDC = ::GetDC(m_hWnd);
+        hDC = GetDC();
         if (hDC != NULL)
         {
             if (hFont)
@@ -752,7 +752,7 @@ public:
             if (hFont)
                 SelectObject(hDC, hPrevFont);
 
-            ::ReleaseDC(m_hWnd, hDC);
+            ReleaseDC(hDC);
 
             if (bRet)
             {
@@ -895,7 +895,7 @@ public:
             CurrentSize = szWnd;
         }
 
-        if (::IsWindowVisible(m_hWnd))
+        if (IsWindowVisible())
         {
             InvalidateRect(NULL, TRUE);
 
@@ -906,7 +906,7 @@ public:
                 NMHDR nmh;
 
                 nmh.hwndFrom = m_hWnd;
-                nmh.idFrom = ::GetWindowLongPtr(m_hWnd, GWLP_ID);
+                nmh.idFrom = GetWindowLongPtr(GWLP_ID);
                 nmh.code = NTNWM_REALIGN;
 
                 SendMessage(hWndNotify,
@@ -1497,10 +1497,10 @@ public:
 
     BOOL GetClockRect(OUT PRECT rcClock)
     {
-        if (!::IsWindowVisible(m_clock->m_hWnd))
+        if (!m_clock->IsWindowVisible())
             return FALSE;
 
-        return ::GetWindowRect(m_clock->m_hWnd, rcClock);
+        return m_clock->GetWindowRect(rcClock);
     }
 
     LRESULT OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

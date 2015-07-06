@@ -949,7 +949,7 @@ private:
                 WCHAR szWndText[MAX_STR_LEN];
 
                 LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, _countof(szBuf));
-                ::GetWindowTextW(m_SearchBar->m_hWnd, szWndText, MAX_STR_LEN);
+                m_SearchBar->GetWindowTextW(szWndText, MAX_STR_LEN);
                 if (wcscmp(szBuf, szWndText) == 0)
                 {
                     SearchEnabled = FALSE;
@@ -960,7 +960,7 @@ private:
 
             case EN_KILLFOCUS:
             {
-                ::GetWindowTextW(m_SearchBar->m_hWnd, szBuf, MAX_STR_LEN);
+                m_SearchBar->GetWindowTextW(szBuf, MAX_STR_LEN);
                 if (wcslen(szBuf) < 1)
                 {
                     LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, _countof(szBuf));
@@ -981,7 +981,7 @@ private:
                 }
 
                 LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, _countof(szBuf));
-                ::GetWindowTextW(m_SearchBar->m_hWnd, szWndText, MAX_STR_LEN);
+                m_SearchBar->GetWindowTextW(szWndText, MAX_STR_LEN);
                 if (wcscmp(szBuf, szWndText) != 0)
                 {
                     StringCbCopy(szSearchPattern, sizeof(szSearchPattern),
@@ -1019,7 +1019,7 @@ private:
             break;
 
         case ID_EXIT:
-            ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
+            PostMessageW(WM_CLOSE, 0, 0);
             break;
 
         case ID_INSTALL:
@@ -1054,7 +1054,7 @@ private:
             break;
 
         case ID_HELP:
-            ::MessageBoxW(m_hWnd, L"Help not implemented yet", NULL, MB_OK);
+            MessageBoxW(L"Help not implemented yet", NULL, MB_OK);
             break;
 
         case ID_ABOUT:
