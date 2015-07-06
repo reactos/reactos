@@ -266,10 +266,146 @@ public:
         return NULL;
     }
 
+    UINT ArrangeIconicWindows()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ArrangeIconicWindows(m_hWnd);
+    }
+
+    void Attach(HWND hWndNew)
+    {
+        m_hWnd = hWndNew;
+    }
+
     HDC BeginPaint(LPPAINTSTRUCT lpPaint)
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::BeginPaint(m_hWnd, lpPaint);
+    }
+
+    BOOL BringWindowToTop()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::BringWindowToTop(m_hWnd);
+    }
+
+    BOOL CenterWindow(HWND hWndCenter = NULL)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        if (hWndCenter == NULL)
+            hWndCenter = ::GetParent(m_hWnd);
+        if (hWndCenter == NULL)
+            return FALSE;
+        RECT wndCenterRect, wndRect;
+        if (!::GetWindowRect(hWndCenter, &wndCenterRect) || !::GetWindowRect(m_hWnd, &wndRect))
+            return FALSE;
+        int wndCenterWidth = wndCenterRect.right - wndCenterRect.left;
+        int wndCenterHeight = wndCenterRect.bottom - wndCenterRect.top;
+        int wndWidth = wndRect.right - wndRect.left;
+        int wndHeight = wndRect.bottom - wndRect.top;
+        return ::MoveWindow(m_hWnd,
+                            wndCenterRect.left + ((wndCenterWidth - wndWidth + 1) >> 1),
+                            wndCenterRect.top + ((wndCenterHeight - wndHeight + 1) >> 1),
+                            wndWidth, wndHeight, TRUE);
+    }
+
+    BOOL ChangeClipboardChain(HWND hWndNewNext)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ChangeClipboardChain(m_hWnd, hWndNewNext);
+    }
+
+    BOOL CheckDlgButton(int nIDButton, UINT nCheck)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::CheckDlgButton(m_hWnd, nIDButton, nCheck);
+    }
+
+    BOOL CheckRadioButton(int nIDFirstButton, int nIDLastButton, int nIDCheckButton)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::CheckRadioButton(m_hWnd, nIDFirstButton, nIDLastButton, nIDCheckButton);
+    }
+
+    HWND ChildWindowFromPoint(POINT point) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ChildWindowFromPoint(m_hWnd, point);
+    }
+
+    HWND ChildWindowFromPointEx(POINT point, UINT uFlags) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ChildWindowFromPointEx(m_hWnd, point, uFlags);
+    }
+
+    BOOL ClientToScreen(LPPOINT lpPoint) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ClientToScreen(m_hWnd, lpPoint);
+    }
+
+    BOOL ClientToScreen(LPRECT lpRect) const
+    {
+        if (lpRect == NULL)
+            return FALSE;
+        ATLASSERT(::IsWindow(m_hWnd));
+        POINT leftTop = {lpRect->left, lpRect->top};
+        POINT rightBottom = {lpRect->right, lpRect->bottom};
+        BOOL success = ::ClientToScreen(m_hWnd, &leftTop) && ::ClientToScreen(m_hWnd, &rightBottom);
+        if (success)
+        {
+            lpRect->left = leftTop.x;
+            lpRect->top = leftTop.y;
+            lpRect->right = rightBottom.x;
+            lpRect->bottom = rightBottom.y;
+        }
+        return success;
+    }
+
+    HWND Create(LPCTSTR lpstrWndClass, HWND hWndParent, _U_RECT rect = NULL, LPCTSTR szWindowName = NULL, DWORD dwStyle = 0, DWORD dwExStyle = 0, _U_MENUorID MenuOrID = 0U, LPVOID lpCreateParam = NULL)
+    {
+        HWND hWnd;
+        ATLASSERT(m_hWnd == NULL);
+        hWnd = ::CreateWindowEx(dwExStyle,
+                                lpstrWndClass,
+                                szWindowName,
+                                dwStyle,
+                                rect.m_lpRect->left,
+                                rect.m_lpRect->top,
+                                rect.m_lpRect->right - rect.m_lpRect->left,
+                                rect.m_lpRect->bottom - rect.m_lpRect->top,
+                                hWndParent,
+                                MenuOrID.m_hMenu,
+                                _AtlBaseModule.GetModuleInstance(),
+                                lpCreateParam);
+        if (hWnd != NULL)
+            m_hWnd = hWnd;
+        return hWnd;
+    }
+
+    BOOL CreateCaret(HBITMAP pBitmap)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::CreateCaret(m_hWnd, pBitmap, 0, 0);
+    }
+
+    BOOL CreateGrayCaret(int nWidth, int nHeight)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::CreateCaret(m_hWnd, (HBITMAP)1, nWidth, nHeight);
+    }
+
+    BOOL CreateSolidCaret(int nWidth, int nHeight)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::CreateCaret(m_hWnd, (HBITMAP)0, nWidth, nHeight);
+    }
+
+    HDWP DeferWindowPos(HDWP hWinPosInfo, HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT uFlags)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::DeferWindowPos(hWinPosInfo, m_hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
     }
 
     BOOL DestroyWindow()
@@ -283,10 +419,72 @@ public:
         return TRUE;
     }
 
+    HWND Detach()
+    {
+        HWND hWnd = m_hWnd;
+        m_hWnd = NULL;
+        return hWnd;
+    }
+
+    int DlgDirList(LPTSTR lpPathSpec, int nIDListBox, int nIDStaticPath, UINT nFileType)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::DlgDirList(m_hWnd, lpPathSpec, nIDListBox, nIDStaticPath, nFileType);
+    }
+
+    int DlgDirListComboBox(LPTSTR lpPathSpec, int nIDComboBox, int nIDStaticPath, UINT nFileType)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::DlgDirListComboBox(m_hWnd, lpPathSpec, nIDComboBox, nIDStaticPath, nFileType);
+    }
+
+    BOOL DlgDirSelect(LPTSTR lpString, int nCount, int nIDListBox)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::DlgDirSelectEx(m_hWnd, lpString, nCount, nIDListBox);
+    }
+
+    BOOL DlgDirSelectComboBox(LPTSTR lpString, int nCount, int nIDComboBox)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::DlgDirSelectComboBoxEx(m_hWnd, lpString, nCount, nIDComboBox);
+    }
+
+    void DragAcceptFiles(BOOL bAccept = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+// FIXME following line requires shellapi.h
+//         ::DragAcceptFiles(m_hWnd, bAccept);
+    }
+
+    BOOL DrawMenuBar()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::DrawMenuBar(m_hWnd);
+    }
+
+    BOOL EnableScrollBar(UINT uSBFlags, UINT uArrowFlags = ESB_ENABLE_BOTH)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::EnableScrollBar(m_hWnd, uSBFlags, uArrowFlags);
+    }
+
+    BOOL EnableWindow(BOOL bEnable = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::EnableWindow(m_hWnd, bEnable);
+    }
+
     void EndPaint(LPPAINTSTRUCT lpPaint)
     {
         ATLASSERT(::IsWindow(m_hWnd));
         ::EndPaint(m_hWnd, lpPaint);
+    }
+
+    BOOL FlashWindow(BOOL bInvert)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::FlashWindow(m_hWnd, bInvert);
     }
 
     BOOL GetClientRect(LPRECT lpRect) const
@@ -295,10 +493,308 @@ public:
         return ::GetClientRect(m_hWnd, lpRect);
     }
 
+    HDC GetDC()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetDC(m_hWnd);
+    }
+
+    HDC GetDCEx(HRGN hRgnClip, DWORD flags)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetDCEx(m_hWnd, hRgnClip, flags);
+    }
+
+private:
+    typedef struct _IDHWNDPAIR {
+        int nID;
+        HWND hWnd;
+    } IDHWNDPAIR, *PIDHWNDPAIR;
+
+    static BOOL CALLBACK GetDescendantWindowCallback(HWND hWnd, LPARAM lParam)
+    {
+        if (::GetWindowLong(hWnd, GWL_ID) == ((PIDHWNDPAIR)lParam)->nID)
+        {
+            ((PIDHWNDPAIR)lParam)->hWnd = hWnd;
+            return FALSE;
+        }
+        ::EnumChildWindows(hWnd, &GetDescendantWindowCallback, lParam);
+        return (((PIDHWNDPAIR)lParam)->hWnd == NULL);
+    }
+
+public:
+    HWND GetDescendantWindow(int nID) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        IDHWNDPAIR idHWndPair;
+        idHWndPair.nID = nID;
+        idHWndPair.hWnd = NULL;
+        ::EnumChildWindows(m_hWnd, &GetDescendantWindowCallback, (LPARAM)&idHWndPair);
+        return idHWndPair.hWnd;
+    }
+
+    HRESULT GetDlgControl(int nID, REFIID iid, void** ppCtrl)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return E_FAIL;//FIXME stub
+    }
+
+    int GetDlgCtrlID() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetDlgCtrlID(m_hWnd);
+    }
+
+    HRESULT GetDlgHost(int nID, REFIID iid, void** ppHost)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return E_FAIL;//FIXME stub
+    }
+
+    HWND GetDlgItem(int nID)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetDlgItem(m_hWnd, nID);
+    }
+
+    UINT GetDlgItemInt(int nID, BOOL* lpTrans = NULL, BOOL bSigned = TRUE) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetDlgItemInt(m_hWnd, nID, lpTrans, bSigned);
+    }
+
+    UINT GetDlgItemText(int nID, LPTSTR lpStr, int nMaxCount) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetDlgItemText(m_hWnd, nID, lpStr, nMaxCount);
+    }
+
+    BOOL GetDlgItemText(int nID, BSTR& bstrText) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return FALSE;//FIXME stub
+    }
+
+    DWORD GetExStyle() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
+    }
+
+    HFONT GetFont() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return (HFONT)::SendMessage(m_hWnd, WM_GETFONT, 0, 0);
+    }
+
+    DWORD GetHotKey() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return (DWORD)::SendMessage(m_hWnd, WM_GETHOTKEY, 0, 0);
+    }
+
+    HICON GetIcon(BOOL bBigIcon = TRUE) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return (HICON)::SendMessage(m_hWnd, WM_GETICON, (WPARAM)bBigIcon, 0);
+    }
+
+    HWND GetLastActivePopup() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetLastActivePopup(m_hWnd);
+    }
+
+    HMENU GetMenu() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetMenu(m_hWnd);
+    }
+
+    HWND GetNextDlgGroupItem(HWND hWndCtl, BOOL bPrevious = FALSE) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetNextDlgGroupItem(m_hWnd, hWndCtl, bPrevious);
+    }
+
+    HWND GetNextDlgTabItem(HWND hWndCtl, BOOL bPrevious = FALSE) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetNextDlgTabItem(m_hWnd, hWndCtl, bPrevious);
+    }
+
     CWindow GetParent() const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return CWindow(::GetParent(m_hWnd));
+    }
+
+    BOOL GetScrollInfo(int nBar, LPSCROLLINFO lpScrollInfo)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetScrollInfo(m_hWnd, nBar, lpScrollInfo);
+    }
+
+    BOOL GetScrollPos(int nBar)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetScrollPos(m_hWnd, nBar);
+    }
+
+    BOOL GetScrollRange(int nBar, LPINT lpMinPos, LPINT lpMaxPos) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetScrollRange(m_hWnd, nBar, lpMinPos, lpMaxPos);
+    }
+
+    DWORD GetStyle() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowLong(m_hWnd, GWL_STYLE);
+    }
+
+    HMENU GetSystemMenu(BOOL bRevert)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetSystemMenu(m_hWnd, bRevert);
+    }
+
+    HWND GetTopLevelParent() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return NULL;//FIXME stub
+    }
+
+    HWND GetTopLevelWindow() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return NULL;//FIXME stub
+    }
+
+    HWND GetTopWindow() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetTopWindow(m_hWnd);
+    }
+
+    BOOL GetUpdateRect(LPRECT lpRect, BOOL bErase = FALSE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetUpdateRect(m_hWnd, lpRect, bErase);
+    }
+
+    int GetUpdateRgn(HRGN hRgn, BOOL bErase = FALSE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return :: GetUpdateRgn(m_hWnd, hRgn, bErase);
+    }
+
+    HWND GetWindow(UINT nCmd) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindow(m_hWnd, nCmd);
+    }
+
+    DWORD GetWindowContextHelpId() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowContextHelpId(m_hWnd);
+    }
+
+    HDC GetWindowDC()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowDC(m_hWnd);
+    }
+
+    LONG GetWindowLong(int nIndex) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowLong(m_hWnd, nIndex);
+    }
+
+    LONG_PTR GetWindowLongPtr(int nIndex) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowLongPtr(m_hWnd, nIndex);
+    }
+
+    BOOL GetWindowPlacement(WINDOWPLACEMENT* lpwndpl) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowPlacement(m_hWnd, lpwndpl);
+    }
+
+    DWORD GetWindowProcessID()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        DWORD processID;
+        ::GetWindowThreadProcessId(m_hWnd, &processID);
+        return processID;
+    }
+
+    BOOL GetWindowRect(LPRECT lpRect) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowRect(m_hWnd, lpRect);
+    }
+
+    int GetWindowRgn(HRGN hRgn)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowRgn(m_hWnd, hRgn);
+    }
+
+    int GetWindowText(LPTSTR lpszStringBuf, int nMaxCount) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowText(m_hWnd, lpszStringBuf, nMaxCount);
+    }
+
+    BOOL GetWindowText(BSTR& bstrText)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        int length = ::GetWindowTextLength(m_hWnd);
+        if (!SysReAllocStringLen(&bstrText, NULL, length))
+            return FALSE;
+        ::GetWindowText(m_hWnd, (LPTSTR)&bstrText[2], length);
+        return TRUE;
+    }
+
+    int GetWindowTextLength() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowTextLength(m_hWnd);
+    }
+
+    DWORD GetWindowThreadID()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::GetWindowThreadProcessId(m_hWnd, NULL);
+    }
+
+    WORD GetWindowWord(int nIndex) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return (WORD)::GetWindowLong(m_hWnd, nIndex);
+    }
+
+    void GotoDlgCtrl(HWND hWndCtrl) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SendMessage(m_hWnd, WM_NEXTDLGCTL, 0, 0);
+    }
+
+    BOOL HideCaret()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::HideCaret(m_hWnd);
+    }
+
+    BOOL HiliteMenuItem(HMENU hMenu, UINT uHiliteItem, UINT uHilite)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::HiliteMenuItem(m_hWnd, hMenu, uHiliteItem, uHilite);
     }
 
     BOOL Invalidate(BOOL bErase = TRUE)
@@ -313,9 +809,72 @@ public:
         return ::InvalidateRect(m_hWnd, lpRect, bErase);
     }
 
+    void InvalidateRgn(HRGN hRgn, BOOL bErase = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::InvalidateRgn(m_hWnd, hRgn, bErase);
+    }
+
+    BOOL IsChild(const HWND hWnd) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::IsChild(m_hWnd, hWnd);
+    }
+
+    BOOL IsDialogMessage(LPMSG lpMsg)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::IsDialogMessage(m_hWnd, lpMsg);
+    }
+
+    UINT IsDlgButtonChecked(int nIDButton) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::IsDlgButtonChecked(m_hWnd, nIDButton);
+    }
+
+    BOOL IsIconic() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::IsIconic(m_hWnd);
+    }
+
+    BOOL IsParentDialog()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        TCHAR pszType[10];
+        if (!RealGetWindowClass(::GetParent(m_hWnd), pszType, sizeof(pszType) / sizeof(pszType[0])))
+            return FALSE;
+        return !_tcscmp(pszType, _T("#32770"));
+    }
+
     BOOL IsWindow() const
     {
         return ::IsWindow(m_hWnd);
+    }
+
+    BOOL IsWindowEnabled() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::IsWindowEnabled(m_hWnd);
+    }
+
+    BOOL IsWindowVisible() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::IsWindowVisible(m_hWnd);
+    }
+
+    BOOL IsWindowUnicode()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::IsWindowUnicode(m_hWnd);
+    }
+
+    BOOL IsZoomed() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::IsZoomed(m_hWnd);
     }
 
     BOOL KillTimer(UINT_PTR nIDEvent)
@@ -332,10 +891,130 @@ public:
         return ::LockWindowUpdate(NULL);
     }
 
+    int MapWindowPoints(HWND hWndTo, LPPOINT lpPoint, UINT nCount) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::MapWindowPoints(m_hWnd, hWndTo, lpPoint, nCount);
+    }
+
+    int MapWindowPoints(HWND hWndTo, LPRECT lpRect) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::MapWindowPoints(m_hWnd, hWndTo, (LPPOINT)lpRect, sizeof(RECT) / sizeof(POINT));
+    }
+
+    int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = NULL, UINT nType = MB_OK)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::MessageBox(m_hWnd, lpszText, lpszCaption, nType);
+    }
+
+    BOOL ModifyStyle(DWORD dwRemove, DWORD dwAdd, UINT nFlags = 0)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SetWindowLong(m_hWnd, GWL_STYLE, (::GetWindowLong(m_hWnd, GWL_STYLE) & ~dwRemove) | dwAdd);
+        if (nFlags != 0)
+            return ::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, nFlags | SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+        return TRUE;
+    }
+
+    BOOL ModifyStyleEx(DWORD dwRemove, DWORD dwAdd, UINT nFlags = 0)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SetWindowLong(m_hWnd, GWL_EXSTYLE, (::GetWindowLong(m_hWnd, GWL_EXSTYLE) & ~dwRemove) | dwAdd);
+        if (nFlags != 0)
+            return ::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, nFlags | SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+        return TRUE;
+    }
+
+    BOOL MoveWindow(int x, int y, int nWidth, int nHeight, BOOL bRepaint = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::MoveWindow(m_hWnd, x, y, nWidth, nHeight, bRepaint);
+    }
+
+    void NextDlgCtrl() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SendMessage(m_hWnd, WM_NEXTDLGCTL, 0, 0);
+    }
+
+    BOOL OpenClipboard()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::OpenClipboard(m_hWnd);
+    }
+
+    BOOL PostMessage(UINT message, WPARAM wParam = 0, LPARAM lParam = 0)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::PostMessage(m_hWnd, message, wParam, lParam);
+    }
+
+    void PrevDlgCtrl() const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SendMessage(m_hWnd, WM_NEXTDLGCTL, 1, 0);
+    }
+
+    void Print(HDC hDC, DWORD dwFlags) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SendMessage(m_hWnd, WM_PRINT, (WPARAM)hDC, (LPARAM)dwFlags);
+    }
+
+    void PrintClient(HDC hDC, DWORD dwFlags) const
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SendMessage(m_hWnd, WM_PRINTCLIENT, (WPARAM)hDC, (LPARAM)dwFlags);
+    }
+
+    BOOL RedrawWindow(LPCRECT lpRectUpdate = NULL, HRGN hRgnUpdate = NULL, UINT flags = RDW_INVALIDATE | RDW_UPDATENOW | RDW_ERASE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::RedrawWindow(m_hWnd, lpRectUpdate, hRgnUpdate, flags);
+    }
+
+    int ReleaseDC(HDC hDC)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ReleaseDC(m_hWnd, hDC);
+    }
+
+    BOOL ResizeClient(int nWidth, int nHeight, BOOL bRedraw = FALSE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        RECT clientRect, wndRect;
+        ::GetClientRect(m_hWnd, &clientRect);
+        ::GetWindowRect(m_hWnd, &wndRect);
+        return ::MoveWindow(m_hWnd, wndRect.left, wndRect.top,
+                            nWidth + (wndRect.right - wndRect.left) - (clientRect.right - clientRect.left),
+                            nHeight + (wndRect.bottom - wndRect.top) - (clientRect.bottom - clientRect.top),
+                            bRedraw);
+    }
+
     BOOL ScreenToClient(LPPOINT lpPoint) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::ScreenToClient(m_hWnd, lpPoint);
+    }
+
+    BOOL ScrollWindow(int xAmount, int yAmount, LPCRECT lpRect = NULL, LPCRECT lpClipRect = NULL)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ScrollWindow(m_hWnd, xAmount, yAmount, lpRect, lpClipRect);
+    }
+
+    int ScrollWindowEx(int dx, int dy, LPCRECT lpRectScroll, LPCRECT lpRectClip, HRGN hRgnUpdate, LPRECT lpRectUpdate, UINT flags)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ScrollWindowEx(m_hWnd, dx, dy, lpRectScroll, lpRectClip, hRgnUpdate, lpRectUpdate, flags);
+    }
+
+    LRESULT SendDlgItemMessage(int nID, UINT message, WPARAM wParam = 0, LPARAM lParam = 0)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SendDlgItemMessage(m_hWnd, nID, message, wParam, lParam);
     }
 
     LRESULT SendMessage(UINT message, WPARAM wParam = 0, LPARAM lParam = 0)
@@ -350,10 +1029,74 @@ public:
         return ::SendMessage(hWnd, message, wParam, lParam);
     }
 
+private:
+    static BOOL CALLBACK SendMessageToDescendantsCallback(HWND hWnd, LPARAM lParam)
+    {
+        ::SendMessage(hWnd, ((LPMSG)lParam)->message, ((LPMSG)lParam)->wParam, ((LPMSG)lParam)->lParam);
+        return TRUE;
+    }
+
+    static BOOL CALLBACK SendMessageToDescendantsCallbackDeep(HWND hWnd, LPARAM lParam)
+    {
+        ::SendMessage(hWnd, ((LPMSG)lParam)->message, ((LPMSG)lParam)->wParam, ((LPMSG)lParam)->lParam);
+        ::EnumChildWindows(hWnd, &SendMessageToDescendantsCallbackDeep, lParam);
+        return TRUE;
+    }
+
+public:
+    void SendMessageToDescendants(UINT message, WPARAM wParam = 0, LPARAM lParam = 0, BOOL bDeep = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        MSG msg;
+        msg.message = message;
+        msg.wParam = wParam;
+        msg.lParam = lParam;
+        if (bDeep)
+            ::EnumChildWindows(m_hWnd, &SendMessageToDescendantsCallback, (LPARAM)&msg);
+        else
+            ::EnumChildWindows(m_hWnd, &SendMessageToDescendantsCallbackDeep, (LPARAM)&msg);
+    }
+
+    BOOL SendNotifyMessage(UINT message, WPARAM wParam = 0, LPARAM lParam = 0)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SendNotifyMessage(m_hWnd, message, wParam, lParam);
+    }
+
+    HWND SetActiveWindow()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetActiveWindow(m_hWnd);
+    }
+
     HWND SetCapture()
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::SetCapture(m_hWnd);
+    }
+
+    HWND SetClipboardViewer()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetClipboardViewer(m_hWnd);
+    }
+
+    int SetDlgCtrlID(int nID)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetWindowLong(m_hWnd, GWL_ID, nID);
+    }
+
+    BOOL SetDlgItemInt(int nID, UINT nValue, BOOL bSigned = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetDlgItemInt(m_hWnd, nID, nValue, bSigned);
+    }
+
+    BOOL SetDlgItemText(int nID, LPCTSTR lpszString)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetDlgItemText(m_hWnd, nID, lpszString);
     }
 
     HWND SetFocus()
@@ -362,10 +1105,88 @@ public:
         return ::SetFocus(m_hWnd);
     }
 
+    void SetFont(HFONT hFont, BOOL bRedraw = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SendMessage(m_hWnd, WM_SETFONT, (WPARAM)hFont, (LPARAM)bRedraw);
+    }
+
+    int SetHotKey(WORD wVirtualKeyCode, WORD wModifiers)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SendMessage(m_hWnd, WM_SETHOTKEY, MAKEWPARAM(wVirtualKeyCode, wModifiers), 0);
+    }
+
+    HICON SetIcon(HICON hIcon, BOOL bBigIcon = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return (HICON)::SendMessage(m_hWnd, WM_SETICON, (WPARAM)bBigIcon, (LPARAM)hIcon);
+    }
+
+    BOOL SetMenu(HMENU hMenu)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetMenu(m_hWnd, hMenu);
+    }
+
+    HWND SetParent(HWND hWndNewParent)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetParent(m_hWnd, hWndNewParent);
+    }
+
+    void SetRedraw(BOOL bRedraw = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        ::SendMessage(m_hWnd, WM_SETREDRAW, (WPARAM)bRedraw, 0);
+    }
+
+    int SetScrollInfo(int nBar, LPSCROLLINFO lpScrollInfo, BOOL bRedraw = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetScrollInfo(m_hWnd, nBar, lpScrollInfo, bRedraw);
+    }
+
+    int SetScrollPos(int nBar, int nPos, BOOL bRedraw = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetScrollPos(m_hWnd, nBar, nPos, bRedraw);
+    }
+
+    BOOL SetScrollRange(int nBar, int nMinPos, int nMaxPos, BOOL bRedraw = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetScrollRange(m_hWnd, nBar, nMinPos, nMaxPos, bRedraw);
+    }
+
     UINT_PTR SetTimer(UINT_PTR nIDEvent, UINT nElapse, void (CALLBACK *lpfnTimer)(HWND, UINT, UINT_PTR, DWORD) = NULL)
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::SetTimer(m_hWnd, nIDEvent, nElapse, reinterpret_cast<TIMERPROC>(lpfnTimer));
+    }
+
+    BOOL SetWindowContextHelpId(DWORD dwContextHelpId)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetWindowContextHelpId(m_hWnd, dwContextHelpId);
+    }
+
+    LONG SetWindowLong(int nIndex, LONG dwNewLong)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetWindowLong(m_hWnd, nIndex, dwNewLong);
+    }
+
+    LONG_PTR SetWindowLongPtr(int nIndex, LONG_PTR dwNewLong)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetWindowLongPtr(m_hWnd, nIndex, dwNewLong);
+    }
+
+    BOOL SetWindowPlacement(const WINDOWPLACEMENT* lpwndpl)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetWindowPlacement(m_hWnd, lpwndpl);
     }
 
     BOOL SetWindowPos(HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT nFlags)
@@ -374,10 +1195,43 @@ public:
         return ::SetWindowPos(m_hWnd, hWndInsertAfter, x, y, cx, cy, nFlags);
     }
 
+    int SetWindowRgn(HRGN hRgn, BOOL bRedraw = FALSE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::SetWindowRgn(m_hWnd, hRgn, bRedraw);
+    }
+
     BOOL SetWindowText(LPCTSTR lpszString)
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::SetWindowText(m_hWnd, lpszString);
+    }
+
+    WORD SetWindowWord(int nIndex, WORD wNewWord)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        if (nIndex >= -4)
+            return ::SetWindowLong(m_hWnd, nIndex - 2, MAKELONG(LOWORD(::GetWindowLong(m_hWnd, nIndex - 2)), wNewWord));
+        else
+            return ::SetWindowLong(m_hWnd, nIndex, MAKELONG(wNewWord, HIWORD(::GetWindowLong(m_hWnd, nIndex))));
+    }
+
+    BOOL ShowCaret()
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ShowCaret(m_hWnd);
+    }
+
+    BOOL ShowOwnedPopups(BOOL bShow = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ShowOwnedPopups(m_hWnd, bShow);
+    }
+
+    BOOL ShowScrollBar(UINT nBar, BOOL bShow = TRUE)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ShowScrollBar(m_hWnd, nBar, bShow);
     }
 
     BOOL ShowWindow(int nCmdShow)
@@ -386,10 +1240,34 @@ public:
         return ::ShowWindow(m_hWnd, nCmdShow);
     }
 
+    BOOL ShowWindowAsync(int nCmdShow)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ShowWindowAsync(m_hWnd, nCmdShow);
+    }
+
     BOOL UpdateWindow()
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::UpdateWindow(m_hWnd);
+    }
+
+    BOOL ValidateRect(LPCRECT lpRect)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ValidateRect(m_hWnd, lpRect);
+    }
+
+    BOOL ValidateRgn(HRGN hRgn)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::ValidateRgn(m_hWnd, hRgn);
+    }
+
+    BOOL WinHelp(LPCTSTR lpszHelp, UINT nCmd = HELP_CONTEXT, DWORD dwData = 0)
+    {
+        ATLASSERT(::IsWindow(m_hWnd));
+        return ::WinHelp(m_hWnd, lpszHelp, nCmd, dwData);
     }
 };
 
