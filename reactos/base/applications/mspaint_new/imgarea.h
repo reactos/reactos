@@ -22,6 +22,8 @@ public:
         MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
+        MESSAGE_HANDLER(WM_IMAGEMODELDIMENSIONSCHANGED, OnImageModelDimensionsChanged)
+        MESSAGE_HANDLER(WM_IMAGEMODELIMAGECHANGED, OnImageModelImageChanged)
     END_MSG_MAP()
 
     BOOL drawing;
@@ -36,6 +38,8 @@ private:
     LRESULT OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseLeave(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnImageModelDimensionsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnImageModelImageChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void drawZoomFrame(int mouseX, int mouseY);
 };

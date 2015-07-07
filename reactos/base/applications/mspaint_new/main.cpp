@@ -24,11 +24,7 @@ int heightSetInDlg;
 
 STRETCHSKEW stretchSkew;
 
-HBITMAP hBms[HISTORYSIZE];
-int currInd = 0;
-int undoSteps = 0;
-int redoSteps = 0;
-BOOL imageSaved = TRUE;
+ImageModel imageModel;
 
 POINT start;
 POINT last;
@@ -214,8 +210,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, paletteModel.GetFgColor()));
     SelectObject(hDrawingDC, CreateSolidBrush(paletteModel.GetBgColor()));
 
-    hBms[0] = CreateDIBWithProperties(imgXRes, imgYRes);
-    SelectObject(hDrawingDC, hBms[0]);
+    //TODO: move to ImageModel
+    imageModel.hBms[0] = CreateDIBWithProperties(imgXRes, imgYRes);
+    SelectObject(hDrawingDC, imageModel.hBms[0]);
     Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
 
     if (lpszArgument[0] != 0)
@@ -227,13 +224,13 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
             TCHAR tempstr[1000];
             TCHAR resstr[100];
             TCHAR *temp;
-            insertReversible(bmNew);
+            imageModel.Insert(bmNew);
             GetFullPathName(lpszArgument, SIZEOF(filepathname), filepathname, &temp);
             _tcscpy(filename, temp);
             LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
             _stprintf(tempstr, resstr, filename);
             mainWindow.SetWindowText(tempstr);
-            clearHistory();
+            imageModel.ClearHistory();
             isAFile = TRUE;
         }
         else

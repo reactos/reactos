@@ -79,8 +79,8 @@ ATTDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             TCHAR strrc[100];
             TCHAR res[100];
 
-            widthSetInDlg = imgXRes;
-            heightSetInDlg = imgYRes;
+            widthSetInDlg = imageModel.GetWidth();
+            heightSetInDlg = imageModel.GetHeight();
 
             CheckDlgButton(hwnd, IDD_ATTRIBUTESRB3, BST_CHECKED);
             CheckDlgButton(hwnd, IDD_ATTRIBUTESRB5, BST_CHECKED);
@@ -119,8 +119,8 @@ ATTDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     EndDialog(hwnd, 0);
                     break;
                 case IDD_ATTRIBUTESSTANDARD:
-                    widthSetInDlg = imgXRes;
-                    heightSetInDlg = imgYRes;
+                    widthSetInDlg = imageModel.GetWidth();
+                    heightSetInDlg = imageModel.GetHeight();
                     CheckDlgButton(hwnd, IDD_ATTRIBUTESRB3, BST_CHECKED);
                     CheckDlgButton(hwnd, IDD_ATTRIBUTESRB5, BST_CHECKED);
                     SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, widthSetInDlg, FALSE);

@@ -27,7 +27,7 @@ LRESULT CMiniatureWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     HDC hdc;
     miniature.GetClientRect(&mclient);
     hdc = miniature.GetDC();
-    StretchBlt(hdc, 0, 0, mclient.right, mclient.bottom, hDrawingDC, 0, 0, imgXRes, imgYRes, SRCCOPY);
+    StretchBlt(hdc, 0, 0, mclient.right, mclient.bottom, hDrawingDC, 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), SRCCOPY);
     miniature.ReleaseDC(hdc);
     return 0;
 }

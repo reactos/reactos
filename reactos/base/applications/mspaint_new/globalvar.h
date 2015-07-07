@@ -24,19 +24,14 @@ extern HDC hDrawingDC;
 extern HDC hSelDC;
 extern int *bmAddress;
 extern BITMAPINFO bitmapinfo;
-extern int imgXRes;
-extern int imgYRes;
 
 extern int widthSetInDlg;
 extern int heightSetInDlg;
 
 extern STRETCHSKEW stretchSkew;
 
-extern HBITMAP hBms[HISTORYSIZE];
-extern int currInd;
-extern int undoSteps;
-extern int redoSteps;
-extern BOOL imageSaved;
+class ImageModel;
+extern ImageModel imageModel;
 
 extern POINT start;
 extern POINT last;

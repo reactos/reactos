@@ -19,6 +19,18 @@
 extern void
 zoomTo(int newZoom, int mouseX, int mouseY);
 
+void
+updateCanvasAndScrollbars()
+{
+    selectionWindow.ShowWindow(SW_HIDE);
+    imageArea.MoveWindow(3, 3, imageModel.GetWidth() * toolsModel.GetZoom() / 1000, imageModel.GetHeight() * toolsModel.GetZoom() / 1000, FALSE);
+    scrollboxWindow.Invalidate(TRUE);
+    imageArea.Invalidate(FALSE);
+
+    scrollboxWindow.SetScrollPos(SB_HORZ, 0, TRUE);
+    scrollboxWindow.SetScrollPos(SB_VERT, 0, TRUE);
+}
+
 void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
 {
     HDC hdc;
@@ -51,6 +63,8 @@ void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
 
 LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    int imgXRes = imageModel.GetWidth();
+    int imgYRes = imageModel.GetHeight();
     sizeboxLeftTop.MoveWindow(
                0,
                0, 3, 3, TRUE);
@@ -82,7 +96,9 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     DefWindowProc(WM_PAINT, wParam, lParam);
-    HDC hdc = imageArea.GetDC();
+    HDC hdc = GetDC();
+    int imgXRes = imageModel.GetWidth();
+    int imgYRes = imageModel.GetHeight();
     StretchBlt(hdc, 0, 0, imgXRes * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000, hDrawingDC, 0, 0, imgXRes,
                imgYRes, SRCCOPY);
     if (showGrid && (toolsModel.GetZoom() >= 4000))
@@ -101,7 +117,7 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         }
         DeleteObject(SelectObject(hdc, oldPen));
     }
-    imageArea.ReleaseDC(hdc);
+    ReleaseDC(hdc);
     selectionWindow.Invalidate(FALSE);
     miniature.Invalidate(FALSE);
     return 0;
@@ -144,7 +160,7 @@ LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     else
     {
         SendMessage(WM_LBUTTONUP, wParam, lParam);
-        undo();
+        imageModel.Undo();
     }
     Invalidate(FALSE);
     if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() < 8000))
@@ -164,7 +180,7 @@ LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     else
     {
         SendMessage(WM_RBUTTONUP, wParam, lParam);
-        undo();
+        imageModel.Undo();
     }
     Invalidate(FALSE);
     if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() > 125))
@@ -231,7 +247,7 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
         tme.cbSize = sizeof(TRACKMOUSEEVENT);
         tme.dwFlags = TME_LEAVE;
-        tme.hwndTrack = imageArea.m_hWnd;
+        tme.hwndTrack = m_hWnd;
         tme.dwHoverTime = 0;
         TrackMouseEvent(&tme);
 
@@ -252,12 +268,12 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         {
             if (xRel < 0)
                 xRel = (xNow < 0) ? -start.x : xRel;
-            else if (xNow > imgXRes)
-                xRel = imgXRes-start.x;
+            else if (xNow > imageModel.GetWidth())
+                xRel = imageModel.GetWidth() - start.x;
             if (yRel < 0)
                 yRel = (yNow < 0) ? -start.y : yRel;
-            else if (yNow > imgYRes)
-                 yRel = imgYRes-start.y;
+            else if (yNow > imageModel.GetHeight())
+                 yRel = imageModel.GetHeight() - start.y;
         }
         /* rectsel and shape tools always show non-negative numbers when drawing */
         if ((toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_SHAPE))
@@ -316,6 +332,18 @@ LRESULT CImgAreaWindow::OnMouseLeave(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 {
     SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) _T(""));
     if (toolsModel.GetActiveTool() == TOOL_ZOOM)
-        imageArea.Invalidate(FALSE);
+        Invalidate(FALSE);
+    return 0;
+}
+
+LRESULT CImgAreaWindow::OnImageModelDimensionsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    updateCanvasAndScrollbars();
+    return 0;
+}
+
+LRESULT CImgAreaWindow::OnImageModelImageChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    Invalidate(FALSE);
     return 0;
 }

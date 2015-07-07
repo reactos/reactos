@@ -17,18 +17,6 @@
 /* FUNCTIONS ********************************************************/
 
 void
-updateCanvasAndScrollbars()
-{
-    selectionWindow.ShowWindow(SW_HIDE);
-    imageArea.MoveWindow(3, 3, imgXRes * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000, FALSE);
-    scrollboxWindow.Invalidate(TRUE);
-    imageArea.Invalidate(FALSE);
-
-    scrollboxWindow.SetScrollPos(SB_HORZ, 0, TRUE);
-    scrollboxWindow.SetScrollPos(SB_VERT, 0, TRUE);
-}
-
-void
 zoomTo(int newZoom, int mouseX, int mouseY)
 {
     RECT clientRectScrollbox;
@@ -44,7 +32,7 @@ zoomTo(int newZoom, int mouseX, int mouseY)
     toolsModel.SetZoom(newZoom);
 
     selectionWindow.ShowWindow(SW_HIDE);
-    imageArea.MoveWindow(3, 3, imgXRes * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000, FALSE);
+    imageArea.MoveWindow(3, 3, imageModel.GetWidth() * toolsModel.GetZoom() / 1000, imageModel.GetHeight() * toolsModel.GetZoom() / 1000, FALSE);
     scrollboxWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
 
@@ -87,23 +75,19 @@ void CMainWindow::saveImage(BOOL overwrite)
 {
     if (isAFile && overwrite)
     {
-        SaveDIBToFile(hBms[currInd], filepathname, hDrawingDC, &fileTime, &fileSize, fileHPPM,
-                      fileVPPM);
-        imageSaved = TRUE;
+        imageModel.SaveImage(filepathname);
     }
     else if (GetSaveFileName(&sfn) != 0)
     {
         TCHAR tempstr[1000];
         TCHAR resstr[100];
-        SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC, &fileTime, &fileSize,
-                      fileHPPM, fileVPPM);
+        imageModel.SaveImage(sfn.lpstrFile);
         CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
         CopyMemory(filepathname, sfn.lpstrFile, sizeof(filepathname));
         LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
         _stprintf(tempstr, resstr, filename);
         SetWindowText(tempstr);
         isAFile = TRUE;
-        imageSaved = TRUE;
     }
 }
 
@@ -111,14 +95,13 @@ void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename
 {
     TCHAR tempstr[1000];
     TCHAR resstr[100];
-    insertReversible(bitmap);
-    updateCanvasAndScrollbars();
+    imageModel.Insert(bitmap);
     CopyMemory(filename, newfilename, sizeof(filename));
     CopyMemory(filepathname, newfilepathname, sizeof(filepathname));
     LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
     _stprintf(tempstr, resstr, filename);
     SetWindowText(tempstr);
-    clearHistory();
+    imageModel.ClearHistory();
     isAFile = TRUE;
 }
 
@@ -134,7 +117,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     DeleteObject(SelectObject(hSelDC, hSelBm = (HBITMAP) CopyImage(bitmap,
                                                                    IMAGE_BITMAP, 0, 0,
                                                                    LR_COPYRETURNORG)));
-    newReversible();
+    imageModel.CopyPrevious();
     SetRectEmpty(&rectSel_src);
     rectSel_dest.left = rectSel_dest.top = 0;
     rectSel_dest.right = rectSel_dest.left + GetDIBWidth(hSelBm);
@@ -189,7 +172,7 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (!imageSaved)
+    if (!imageModel.IsImageSaved())
     {
         TCHAR programname[20];
         TCHAR saveprompttext[100];
@@ -204,7 +187,7 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
                 break;
             case IDYES:
                 saveImage(FALSE);
-                if (imageSaved)
+                if (imageModel.IsImageSaved())
                     DestroyWindow();
                 break;
         }
@@ -228,8 +211,8 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             EnableMenuItem(menu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile));
             break;
         case 1: /* Edit menu */
-            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(undoSteps > 0));
-            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(redoSteps > 0));
+            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.HasUndoSteps()));
+            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.HasRedoSteps()));
             EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
@@ -344,7 +327,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILENEW:
         {
             BOOL reset = TRUE;
-            if (!imageSaved)
+            if (!imageModel.IsImageSaved())
             {
                 TCHAR programname[20];
                 TCHAR saveprompttext[100];
@@ -355,7 +338,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 switch (MessageBox(temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
                 {
                     case IDNO:
-                        imageSaved = TRUE;
+                        imageModel.imageSaved = TRUE; //TODO: move to ImageModel
                         break;
                     case IDYES:
                         saveImage(FALSE);
@@ -365,12 +348,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                         break;
                 }
             }
-            if (reset && imageSaved)
+            if (reset && imageModel.IsImageSaved()) //TODO: move to ImageModel
             {
-                Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
-                imageArea.Invalidate(FALSE);
-                updateCanvasAndScrollbars();
-                clearHistory();
+                imageModel.Clear();
+                imageModel.ClearHistory();
             }
             break;
         }
@@ -401,11 +382,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             SetWallpaper(filepathname, 2, 0);
             break;
         case IDM_EDITUNDO:
-            undo();
+            imageModel.Undo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
-            redo();
+            imageModel.Redo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITCOPY:
@@ -432,16 +413,16 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             /* remove selection window and already painted content using undo(),
             paint Rect for rectangular selections and Poly for freeform selections */
-            undo();
+            imageModel.Undo();
             if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
             {
-                newReversible();
+                imageModel.CopyPrevious();
                 Rect(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right,
                      rectSel_dest.bottom, paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
             }
             if (toolsModel.GetActiveTool() == TOOL_FREESEL)
             {
-                newReversible();
+                imageModel.CopyPrevious();
                 Poly(hDrawingDC, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE, TRUE);
             }
             break;
@@ -451,9 +432,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
             toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
+            //TODO: do this properly
             startPaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-            whilePaintingL(hDrawingDC, imgXRes, imgYRes, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-            endPaintingL(hDrawingDC, imgXRes, imgYRes, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            whilePaintingL(hDrawingDC, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            endPaintingL(hDrawingDC, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
             break;
         }
         case IDM_EDITCOPYTO:
@@ -474,31 +456,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_COLORSEDITPALETTE:
             if (ChooseColor(&choosecolor))
-            {
                 paletteModel.SetFgColor(choosecolor.rgbResult);
-                paletteWindow.Invalidate(FALSE);
-            }
             break;
         case IDM_COLORSMODERNPALETTE:
             paletteModel.SelectPalette(1);
-            paletteWindow.Invalidate(FALSE);
             break;
         case IDM_COLORSOLDPALETTE:
             paletteModel.SelectPalette(2);
-            paletteWindow.Invalidate(FALSE);
             break;
         case IDM_IMAGEINVERTCOLORS:
         {
-            RECT tempRect;
-            newReversible();
-            SetRect(&tempRect, 0, 0, imgXRes, imgYRes);
-            InvertRect(hDrawingDC, &tempRect);
-            imageArea.Invalidate(FALSE);
+            imageModel.InvertColors();
             break;
         }
         case IDM_IMAGEDELETEIMAGE:
-            newReversible();
-            Rect(hDrawingDC, 0, 0, imgXRes, imgYRes, paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
+            imageModel.CopyPrevious();
+            Rect(hDrawingDC, 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
             imageArea.Invalidate(FALSE);
             break;
         case IDM_IMAGEROTATEMIRROR:
@@ -517,9 +490,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     }
                     else
                     {
-                        newReversible();
-                        StretchBlt(hDrawingDC, imgXRes - 1, 0, -imgXRes, imgYRes, hDrawingDC, 0, 0,
-                                   imgXRes, imgYRes, SRCCOPY);
+                        imageModel.CopyPrevious();
+                        StretchBlt(hDrawingDC, imageModel.GetWidth() - 1, 0, -imageModel.GetWidth(), imageModel.GetHeight(), hDrawingDC, 0, 0,
+                                   imageModel.GetWidth(), imageModel.GetHeight(), SRCCOPY);
                         imageArea.Invalidate(FALSE);
                     }
                     break;
@@ -536,9 +509,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     }
                     else
                     {
-                        newReversible();
-                        StretchBlt(hDrawingDC, 0, imgYRes - 1, imgXRes, -imgYRes, hDrawingDC, 0, 0,
-                                   imgXRes, imgYRes, SRCCOPY);
+                        imageModel.CopyPrevious();
+                        StretchBlt(hDrawingDC, 0, imageModel.GetHeight() - 1, imageModel.GetWidth(), -imageModel.GetHeight(), hDrawingDC, 0, 0,
+                                   imageModel.GetWidth(), imageModel.GetHeight(), SRCCOPY);
                         imageArea.Invalidate(FALSE);
                     }
                     break;
@@ -557,9 +530,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     }
                     else
                     {
-                        newReversible();
-                        StretchBlt(hDrawingDC, imgXRes - 1, imgYRes - 1, -imgXRes, -imgYRes, hDrawingDC,
-                                   0, 0, imgXRes, imgYRes, SRCCOPY);
+                        imageModel.CopyPrevious();
+                        StretchBlt(hDrawingDC, imageModel.GetWidth() - 1, imageModel.GetHeight() - 1, -imageModel.GetWidth(), -imageModel.GetHeight(), hDrawingDC,
+                                   0, 0, imageModel.GetWidth(), imageModel.GetHeight(), SRCCOPY);
                         imageArea.Invalidate(FALSE);
                     }
                     break;
@@ -571,8 +544,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (attributesDlg())
             {
-                cropReversible(widthSetInDlg, heightSetInDlg, 0, 0);
-                updateCanvasAndScrollbars();
+                imageModel.Crop(widthSetInDlg, heightSetInDlg, 0, 0);
             }
             break;
         }
@@ -580,10 +552,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (changeSizeDlg())
             {
-                insertReversible((HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP,
-                                                     imgXRes * stretchSkew.percentage.x / 100,
-                                                     imgYRes * stretchSkew.percentage.y / 100, 0));
-                updateCanvasAndScrollbars();
+                imageModel.StretchSkew(stretchSkew.percentage.x, stretchSkew.percentage.y,
+                                       stretchSkew.angle.x, stretchSkew.angle.y);
             }
             break;
         }
@@ -591,8 +561,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            insertReversible((HBITMAP) CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
-            updateCanvasAndScrollbars();
+            imageModel.Insert((HBITMAP) CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
             break;
 
         case IDM_VIEWTOOLBOX:

@@ -76,33 +76,33 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_RECT:
         case TOOL_ELLIPSE:
         case TOOL_RRECT:
-            newReversible();
+            imageModel.CopyPrevious();
             break;
         case TOOL_RECTSEL:
         case TOOL_TEXT:
-            newReversible();
+            imageModel.CopyPrevious();
             selectionWindow.ShowWindow(SW_HIDE);
             rectSel_src.right = rectSel_src.left;
             rectSel_src.bottom = rectSel_src.top;
             break;
         case TOOL_RUBBER:
-            newReversible();
+            imageModel.CopyPrevious();
             Erase(hdc, x, y, x, y, bg, toolsModel.GetRubberRadius());
             break;
         case TOOL_FILL:
-            newReversible();
+            imageModel.CopyPrevious();
             Fill(hdc, x, y, fg);
             break;
         case TOOL_PEN:
-            newReversible();
+            imageModel.CopyPrevious();
             SetPixel(hdc, x, y, fg);
             break;
         case TOOL_BRUSH:
-            newReversible();
+            imageModel.CopyPrevious();
             Brush(hdc, x, y, x, y, fg, toolsModel.GetBrushStyle());
             break;
         case TOOL_AIRBRUSH:
-            newReversible();
+            imageModel.CopyPrevious();
             Airbrush(hdc, x, y, fg, toolsModel.GetAirBrushWidth());
             break;
         case TOOL_BEZIER:
@@ -110,7 +110,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].y = y;
             if (pointSP == 0)
             {
-                newReversible();
+                imageModel.CopyPrevious();
                 pointSP++;
             }
             break;
@@ -121,7 +121,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 Poly(hdc, pointStack, pointSP + 1, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             if (pointSP == 0)
             {
-                newReversible();
+                imageModel.CopyPrevious();
                 pointSP++;
             }
             break;
@@ -135,22 +135,22 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
     {
         case TOOL_FREESEL:
             if (ptSP == 0)
-                newReversible();
+                imageModel.CopyPrevious();
             ptSP++;
             if (ptSP % 1024 == 0)
                 ptStack = (POINT*) HeapReAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, ptStack, sizeof(POINT) * (ptSP + 1024));
-            ptStack[ptSP].x = max(0, min(x, imgXRes));
-            ptStack[ptSP].y = max(0, min(y, imgYRes));
-            resetToU1();
+            ptStack[ptSP].x = max(0, min(x, imageModel.GetWidth()));
+            ptStack[ptSP].y = max(0, min(y, imageModel.GetHeight()));
+            imageModel.ResetToPrevious();
             Poly(hdc, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE, TRUE); /* draw the freehand selection inverted/xored */
             break;
         case TOOL_RECTSEL:
         case TOOL_TEXT:
         {
             POINT temp;
-            resetToU1();
-            temp.x = max(0, min(x, imgXRes));
-            temp.y = max(0, min(y, imgYRes));
+            imageModel.ResetToPrevious();
+            temp.x = max(0, min(x, imageModel.GetWidth()));
+            temp.y = max(0, min(y, imageModel.GetHeight()));
             rectSel_dest.left = rectSel_src.left = min(start.x, temp.x);
             rectSel_dest.top = rectSel_src.top = min(start.y, temp.y);
             rectSel_dest.right = rectSel_src.right = max(start.x, temp.x);
@@ -171,13 +171,13 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             Airbrush(hdc, x, y, fg, toolsModel.GetAirBrushWidth());
             break;
         case TOOL_LINE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(start.x, start.y, &x, &y);
             Line(hdc, start.x, start.y, x, y, fg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
-            resetToU1();
+            imageModel.ResetToPrevious();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             switch (pointSP)
@@ -195,13 +195,13 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             }
             break;
         case TOOL_RECT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             Rect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
@@ -211,13 +211,13 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 Poly(hdc, pointStack, pointSP + 1, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             break;
         case TOOL_ELLIPSE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             Ellp(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
@@ -270,11 +270,11 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 Poly(hSelDC, ptStackCopy, ptSP + 1, 0x00ffffff, 0x00ffffff, 1, 2, TRUE, FALSE);
                 HeapFree(GetProcessHeap(), 0, ptStackCopy);
                 SelectObject(hSelDC, hSelBm = CreateDIBWithProperties(RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src)));
-                resetToU1();
+                imageModel.ResetToPrevious();
                 MaskBlt(hSelDC, 0, 0, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hDrawingDC, rectSel_src.left,
                         rectSel_src.top, hSelMask, 0, 0, MAKEROP4(SRCCOPY, WHITENESS));
                 Poly(hdc, ptStack, ptSP + 1, bg, bg, 1, 2, TRUE, FALSE);
-                newReversible();
+                imageModel.CopyPrevious();
 
                 MaskBlt(hDrawingDC, rectSel_src.left, rectSel_src.top, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hSelDC, 0,
                         0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
@@ -291,7 +291,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             break;
         }
         case TOOL_RECTSEL:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if ((RECT_WIDTH(rectSel_src) != 0) && (RECT_HEIGHT(rectSel_src) != 0))
             {
                 DeleteObject(hSelMask);
@@ -299,12 +299,12 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 DeleteObject(SelectObject(hSelDC, hSelMask));
                 Rect(hSelDC, 0, 0, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), 0x00ffffff, 0x00ffffff, 1, 2);
                 SelectObject(hSelDC, hSelBm = CreateDIBWithProperties(RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src)));
-                resetToU1();
+                imageModel.ResetToPrevious();
                 BitBlt(hSelDC, 0, 0, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hDrawingDC, rectSel_src.left,
                        rectSel_src.top, SRCCOPY);
                 Rect(hdc, rectSel_src.left, rectSel_src.top, rectSel_src.right,
                      rectSel_src.bottom, bg, bg, 0, TRUE);
-                newReversible();
+                imageModel.CopyPrevious();
 
                 BitBlt(hDrawingDC, rectSel_src.left, rectSel_src.top, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hSelDC, 0,
                        0, SRCCOPY);
@@ -315,10 +315,10 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             }
             break;
         case TOOL_TEXT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if ((RECT_WIDTH(rectSel_src) != 0) && (RECT_HEIGHT(rectSel_src) != 0))
             {
-                newReversible();
+                imageModel.CopyPrevious();
 
                 placeSelWin();
                 selectionWindow.ShowWindow(SW_SHOW);
@@ -333,7 +333,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             SetPixel(hdc, x, y, fg);
             break;
         case TOOL_LINE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(start.x, start.y, &x, &y);
             Line(hdc, start.x, start.y, x, y, fg, toolsModel.GetLineWidth());
@@ -344,13 +344,13 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 pointSP = 0;
             break;
         case TOOL_RECT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             Rect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
@@ -374,13 +374,13 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 pointSP--;
             break;
         case TOOL_ELLIPSE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             Ellp(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
@@ -403,26 +403,26 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_RECT:
         case TOOL_ELLIPSE:
         case TOOL_RRECT:
-            newReversible();
+            imageModel.CopyPrevious();
             break;
         case TOOL_RUBBER:
-            newReversible();
+            imageModel.CopyPrevious();
             Replace(hdc, x, y, x, y, fg, bg, toolsModel.GetRubberRadius());
             break;
         case TOOL_FILL:
-            newReversible();
+            imageModel.CopyPrevious();
             Fill(hdc, x, y, bg);
             break;
         case TOOL_PEN:
-            newReversible();
+            imageModel.CopyPrevious();
             SetPixel(hdc, x, y, bg);
             break;
         case TOOL_BRUSH:
-            newReversible();
+            imageModel.CopyPrevious();
             Brush(hdc, x, y, x, y, bg, toolsModel.GetBrushStyle());
             break;
         case TOOL_AIRBRUSH:
-            newReversible();
+            imageModel.CopyPrevious();
             Airbrush(hdc, x, y, bg, toolsModel.GetAirBrushWidth());
             break;
         case TOOL_BEZIER:
@@ -430,7 +430,7 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].y = y;
             if (pointSP == 0)
             {
-                newReversible();
+                imageModel.CopyPrevious();
                 pointSP++;
             }
             break;
@@ -441,7 +441,7 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 Poly(hdc, pointStack, pointSP + 1, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             if (pointSP == 0)
             {
-                newReversible();
+                imageModel.CopyPrevious();
                 pointSP++;
             }
             break;
@@ -466,13 +466,13 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             Airbrush(hdc, x, y, bg, toolsModel.GetAirBrushWidth());
             break;
         case TOOL_LINE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(start.x, start.y, &x, &y);
             Line(hdc, start.x, start.y, x, y, bg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
-            resetToU1();
+            imageModel.ResetToPrevious();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             switch (pointSP)
@@ -490,13 +490,13 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             }
             break;
         case TOOL_RECT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             Rect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
@@ -506,13 +506,13 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 Poly(hdc, pointStack, pointSP + 1, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             break;
         case TOOL_ELLIPSE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             Ellp(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
@@ -536,7 +536,7 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             SetPixel(hdc, x, y, bg);
             break;
         case TOOL_LINE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(start.x, start.y, &x, &y);
             Line(hdc, start.x, start.y, x, y, bg, toolsModel.GetLineWidth());
@@ -547,13 +547,13 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 pointSP = 0;
             break;
         case TOOL_RECT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             Rect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
@@ -577,13 +577,13 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 pointSP--;
             break;
         case TOOL_ELLIPSE:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             Ellp(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
-            resetToU1();
+            imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
             RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());

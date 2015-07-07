@@ -175,7 +175,7 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     {
         TCHAR sizeStr[100];
         POINT deltaUsed;
-        resetToU1();
+        imageModel.ResetToPrevious();
         frac.x += GET_X_LPARAM(lParam) - pos.x;
         frac.y += GET_Y_LPARAM(lParam) - pos.y;
         delta.x += frac.x * 1000 / toolsModel.GetZoom();

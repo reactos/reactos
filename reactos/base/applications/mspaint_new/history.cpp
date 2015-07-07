@@ -12,21 +12,17 @@
 
 /* FUNCTIONS ********************************************************/
 
-extern void updateCanvasAndScrollbars(void);
-
-void
-setImgXYRes(int x, int y)
+void ImageModel::NotifyDimensionsChanged()
 {
-    if ((imgXRes != x) || (imgYRes != y))
-    {
-        imgXRes = x;
-        imgYRes = y;
-        updateCanvasAndScrollbars();
-    }
+    imageArea.SendMessage(WM_IMAGEMODELDIMENSIONSCHANGED);
 }
 
-void
-newReversible()
+void ImageModel::NotifyImageChanged()
+{
+    imageArea.SendMessage(WM_IMAGEMODELIMAGECHANGED);
+}
+
+void ImageModel::CopyPrevious()
 {
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
     hBms[(currInd + 1) % HISTORYSIZE] = (HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
@@ -35,62 +31,64 @@ newReversible()
         undoSteps++;
     redoSteps = 0;
     SelectObject(hDrawingDC, hBms[currInd]);
-    imgXRes = GetDIBWidth(hBms[currInd]);
-    imgYRes = GetDIBHeight(hBms[currInd]);
     imageSaved = FALSE;
 }
 
-void
-undo()
+void ImageModel::Undo()
 {
     if (undoSteps > 0)
     {
+        int oldWidth = GetWidth();
+        int oldHeight = GetHeight();
         selectionWindow.ShowWindow(SW_HIDE);
         currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         undoSteps--;
         if (redoSteps < HISTORYSIZE - 1)
             redoSteps++;
-        setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
+        if (GetWidth() != oldWidth || GetHeight() != oldHeight)
+            NotifyDimensionsChanged();
+        NotifyImageChanged();
     }
 }
 
-void
-redo()
+void ImageModel::Redo()
 {
     if (redoSteps > 0)
     {
+        int oldWidth = GetWidth();
+        int oldHeight = GetHeight();
         selectionWindow.ShowWindow(SW_HIDE);
         currInd = (currInd + 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         redoSteps--;
         if (undoSteps < HISTORYSIZE - 1)
             undoSteps++;
-        setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
+        if (GetWidth() != oldWidth || GetHeight() != oldHeight)
+            NotifyDimensionsChanged();
+        NotifyImageChanged();
     }
 }
 
-void
-resetToU1()
+void ImageModel::ResetToPrevious()
 {
     DeleteObject(hBms[currInd]);
     hBms[currInd] =
         (HBITMAP) CopyImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
     SelectObject(hDrawingDC, hBms[currInd]);
-    imgXRes = GetDIBWidth(hBms[currInd]);
-    imgYRes = GetDIBHeight(hBms[currInd]);
+    NotifyImageChanged();
 }
 
-void
-clearHistory()
+void ImageModel::ClearHistory()
 {
     undoSteps = 0;
     redoSteps = 0;
 }
 
-void
-insertReversible(HBITMAP hbm)
+void ImageModel::Insert(HBITMAP hbm)
 {
+    int oldWidth = GetWidth();
+    int oldHeight = GetHeight();
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
     hBms[(currInd + 1) % HISTORYSIZE] = hbm;
     currInd = (currInd + 1) % HISTORYSIZE;
@@ -98,19 +96,22 @@ insertReversible(HBITMAP hbm)
         undoSteps++;
     redoSteps = 0;
     SelectObject(hDrawingDC, hBms[currInd]);
-    setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
+    if (GetWidth() != oldWidth || GetHeight() != oldHeight)
+        NotifyDimensionsChanged();
+    NotifyImageChanged();
 }
 
-void
-cropReversible(int width, int height, int xOffset, int yOffset)
+void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 {
     HDC hdc;
     HPEN oldPen;
     HBRUSH oldBrush;
+    int oldWidth = GetWidth();
+    int oldHeight = GetHeight();
 
     SelectObject(hDrawingDC, hBms[currInd]);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-    hBms[(currInd + 1) % HISTORYSIZE] = CreateDIBWithProperties(width, height);
+    hBms[(currInd + 1) % HISTORYSIZE] = CreateDIBWithProperties(nWidth, nHeight);
     currInd = (currInd + 1) % HISTORYSIZE;
     if (undoSteps < HISTORYSIZE - 1)
         undoSteps++;
@@ -121,12 +122,71 @@ cropReversible(int width, int height, int xOffset, int yOffset)
 
     oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, paletteModel.GetBgColor()));
     oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(paletteModel.GetBgColor()));
-    Rectangle(hdc, 0, 0, width, height);
-    BitBlt(hdc, -xOffset, -yOffset, imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
+    Rectangle(hdc, 0, 0, nWidth, nHeight);
+    BitBlt(hdc, -nOffsetX, -nOffsetY, GetWidth(), GetHeight(), hDrawingDC, 0, 0, SRCCOPY);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
     DeleteDC(hdc);
     SelectObject(hDrawingDC, hBms[currInd]);
 
-    setImgXYRes(width, height);
+    if (GetWidth() != oldWidth || GetHeight() != oldHeight)
+        NotifyDimensionsChanged();
+    NotifyImageChanged();
+}
+
+void ImageModel::SaveImage(LPTSTR lpFileName)
+{
+    SaveDIBToFile(hBms[currInd], lpFileName, hDrawingDC, &fileTime, &fileSize, fileHPPM, fileVPPM);
+    imageSaved = TRUE;
+}
+
+BOOL ImageModel::IsImageSaved()
+{
+    return imageSaved;
+}
+
+BOOL ImageModel::HasUndoSteps()
+{
+    return undoSteps > 0;
+}
+
+BOOL ImageModel::HasRedoSteps()
+{
+    return redoSteps > 0;
+}
+
+void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
+{
+    int oldWidth = GetWidth();
+    int oldHeight = GetHeight();
+    Insert((HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP,
+           GetWidth() * nStretchPercentX / 100,
+           GetHeight() * nStretchPercentY / 100, 0));
+    if (GetWidth() != oldWidth || GetHeight() != oldHeight)
+        NotifyDimensionsChanged();
+    NotifyImageChanged();
+}
+
+int ImageModel::GetWidth()
+{
+    return GetDIBWidth(hBms[currInd]);
+}
+
+int ImageModel::GetHeight()
+{
+    return GetDIBHeight(hBms[currInd]);
+}
+
+void ImageModel::InvertColors()
+{
+    RECT rect = {0, 0, GetWidth(), GetHeight()};
+    CopyPrevious();
+    InvertRect(hDrawingDC, &rect);
+    NotifyImageChanged();
+}
+
+void ImageModel::Clear(COLORREF color)
+{
+    Rectangle(hDrawingDC, 0 - 1, 0 - 1, GetWidth() + 1, GetHeight() + 1);
+    NotifyImageChanged();
 }
