@@ -12,9 +12,15 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME "devmgr.dll"
 #include <reactos/version.rc>
 
-IDI_DEVMGR ICON "resources/devmgr.ico"
+IDI_MAIN_ICON   ICON    "resources/computer.ico"
+IDB_ROOT_IMAGE  BITMAP  "resources/root.bmp"
+
+/* main toolbar icons */
+IDB_TOOLBAR    BITMAP DISCARDABLE "resources/toolbar.bmp"
 
 #include <reactos/manifest_dll.rc>
+
+#define LANGUAGE_EN_US
 
 /* UTF-8 */
 #pragma code_page(65001)

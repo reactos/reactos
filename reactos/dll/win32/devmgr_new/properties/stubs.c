@@ -81,16 +81,16 @@ DeviceManager_ExecuteA(HWND hWndParent,
  *
  * @unimplemented
  */
-BOOL
-WINAPI
-DeviceManager_ExecuteW(HWND hWndParent,
-                       HINSTANCE hInst,
-                       LPCWSTR lpMachineName,
-                       int nCmdShow)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
+//BOOL
+//WINAPI
+//DeviceManager_ExecuteW(HWND hWndParent,
+//                       HINSTANCE hInst,
+//                       LPCWSTR lpMachineName,
+//                       int nCmdShow)
+//{
+//    UNIMPLEMENTED;
+//    return FALSE;
+//}
 
 
 /***************************************************************************

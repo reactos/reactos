@@ -1,18 +1,18 @@
 
 spec2def(devmgr.dll devmgr.spec ADD_IMPORTLIB)
 
-set_cpp(WITH_RTTI WITH_STL)
+set_cpp(WITH_RTTI WITH_RUNTIME)
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 
 list(APPEND SOURCE
     precomp.h
-    Properties/advprop.c
-    Properties/devprblm.c
-    Properties/hwpage.c
-    Properties/hwresource.c
-    Properties/misc.c
-    Properties/stubs.c 
+    properties/advprop.c
+    properties/devprblm.c
+    properties/hwpage.c
+    properties/hwresource.c
+    properties/misc.c
+    properties/stubs.c 
     devmgmt/ClassNode.cpp
     devmgmt/DeviceNode.cpp
     devmgmt/DeviceView.cpp
