@@ -18,6 +18,7 @@
 
 #include "dos.h"
 #include "dos/dem.h"
+#include "country.h"
 #include "device.h"
 #include "handle.h"
 #include "dosfiles.h"
@@ -895,59 +896,21 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get/Set Country-dependent Information */
         case 0x38:
         {
-            INT Return;
-            PDOS_COUNTRY_CODE_BUFFER CountryCodeBuffer =
-                (PDOS_COUNTRY_CODE_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
+            WORD CountryId = getAL() < 0xFF ? getAL() : getBX();
+            WORD ErrorCode;
+            
+            ErrorCode = DosGetCountryInfo(&CountryId,
+                                          (PDOS_COUNTRY_INFO)SEG_OFF_TO_PTR(getDS(), getDX()));
 
-            if (getAL() == 0x00)
+            if (ErrorCode == ERROR_SUCCESS)
             {
-                /* Get */
-                Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_IDATE,
-                                        (LPSTR)&CountryCodeBuffer->TimeFormat,
-                                        sizeof(CountryCodeBuffer->TimeFormat));
-                if (Return == 0)
-                {
-                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    setAX(LOWORD(GetLastError()));
-                    break;
-                }
-
-                Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SCURRENCY,
-                                        (LPSTR)&CountryCodeBuffer->CurrencySymbol,
-                                        sizeof(CountryCodeBuffer->CurrencySymbol));
-                if (Return == 0)
-                {
-                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    setAX(LOWORD(GetLastError()));
-                    break;
-                }
-
-                Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND,
-                                        (LPSTR)&CountryCodeBuffer->ThousandSep,
-                                        sizeof(CountryCodeBuffer->ThousandSep));
-                if (Return == 0)
-                {
-                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    setAX(LOWORD(GetLastError()));
-                    break;
-                }
-
-                Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL,
-                                        (LPSTR)&CountryCodeBuffer->DecimalSep,
-                                        sizeof(CountryCodeBuffer->DecimalSep));
-                if (Return == 0)
-                {
-                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    setAX(LOWORD(GetLastError()));
-                    break;
-                }
-
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setBX(CountryId);
             }
             else
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ErrorCode);
             }
 
             break;
@@ -1616,7 +1579,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
              */
 
             // FIXME: Check for buffer validity?
-            // It should be a ASCIZ path ending with a '\' + 13 zero bytes
+            // It should be a ASCIIZ path ending with a '\' + 13 zero bytes
             // to receive the generated filename.
 
             /* First create the temporary file */
@@ -1762,6 +1725,91 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 default:
                 {
                     DPRINT1("INT 21h, AH = 5Dh, subfunction AL = %Xh NOT IMPLEMENTED\n",
+                            getAL());
+                }
+            }
+
+            break;
+        }
+
+        /* Extended Country Information */
+        case 0x65:
+        {
+            switch (getAL())
+            {
+                case 0x01: case 0x02: case 0x03:
+                case 0x04: case 0x05: case 0x06:
+                case 0x07:
+                {
+                    WORD BufferSize = getCX();
+                    WORD ErrorCode;
+                    ErrorCode = DosGetCountryInfoEx(getAL(),
+                                                    getBX(),
+                                                    getDX(),
+                                                    (PDOS_COUNTRY_INFO_2)SEG_OFF_TO_PTR(getES(), getDI()),
+                                                    &BufferSize);
+                    if (ErrorCode == ERROR_SUCCESS)
+                    {
+                        Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                        setCX(BufferSize);
+                    }
+                    else
+                    {
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        setAX(ErrorCode);
+                    }
+
+                    break;
+                }
+
+                /* Country-dependent Character Capitalization -- Character */
+                case 0x20:
+                /* Country-dependent Filename Capitalization -- Character */
+                case 0xA0:
+                {
+                    setDL(DosToUpper(getDL()));
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    // setAX(ERROR_SUCCESS);
+                    break;
+                }
+
+                /* Country-dependent Character Capitalization -- Counted ASCII String */
+                case 0x21:
+                /* Country-dependent Filename Capitalization -- Counted ASCII String */
+                case 0xA1:
+                {
+                    PCHAR Str = (PCHAR)SEG_OFF_TO_PTR(getDS(), getDX());
+                    // FIXME: Check for NULL ptr!!
+                    DosToUpperStrN(Str, Str, getCX());
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    // setAX(ERROR_SUCCESS);
+                    break;
+                }
+
+                /* Country-dependent Character Capitalization -- ASCIIZ String */
+                case 0x22:
+                /* Country-dependent Filename Capitalization -- ASCIIZ String */
+                case 0xA2:
+                {
+                    PSTR Str = (PSTR)SEG_OFF_TO_PTR(getDS(), getDX());
+                    // FIXME: Check for NULL ptr!!
+                    DosToUpperStrZ(Str, Str);
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    // setAX(ERROR_SUCCESS);
+                    break;
+                }
+
+                /* Determine if Character represents YES/NO Response */
+                case 0x23:
+                {
+                    setAX(DosIfCharYesNo(MAKEWORD(getDL(), getDH())));
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT1("INT 21h, AH = 65h, subfunction AL = %Xh NOT IMPLEMENTED\n",
                             getAL());
                 }
             }
@@ -2138,6 +2186,9 @@ BOOLEAN DosKRNLInitialize(VOID)
 
     /* Unimplemented DOS interrupts */
     RegisterDosInt32(0x2A, NULL); // Network - Installation Check
+
+    /* Initialize country data */
+    DosCountryInitialize();
 
     /* Load the CON driver */
     ConDrvInitialize();

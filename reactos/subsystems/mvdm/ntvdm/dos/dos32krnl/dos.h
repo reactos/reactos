@@ -125,14 +125,6 @@ typedef struct _DOS_FIND_FILE_BLOCK
     CHAR FileName[13];
 } DOS_FIND_FILE_BLOCK, *PDOS_FIND_FILE_BLOCK;
 
-typedef struct _DOS_COUNTRY_CODE_BUFFER
-{
-    WORD TimeFormat;
-    WORD CurrencySymbol;
-    WORD ThousandSep;
-    WORD DecimalSep;
-} DOS_COUNTRY_CODE_BUFFER, *PDOS_COUNTRY_CODE_BUFFER;
-
 typedef struct _DOS_SDA
 {
     BYTE PrinterEchoFlag;

@@ -30,6 +30,7 @@ list(APPEND SOURCE
     hardware/video/svga.c
     dos/dos32krnl/bios.c
     dos/dos32krnl/condrv.c
+    dos/dos32krnl/country.c
     dos/dos32krnl/device.c
     dos/dos32krnl/dos.c
     dos/dos32krnl/dosfiles.c
