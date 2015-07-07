@@ -204,7 +204,7 @@ CDeviceView::Refresh(
     m_ViewType = Type;
 
     RefreshThreadData *ThreadData;
-    ThreadData = new RefreshThreadData();
+    ThreadData = new RefreshThreadData;
     ThreadData->This = this;
     ThreadData->ScanForChanges = ScanForChanges;
     ThreadData->UpdateView = UpdateView;
@@ -222,11 +222,10 @@ CDeviceView::Refresh(
     HANDLE hThread;
     hThread = (HANDLE)_beginthreadex(NULL,
                                      0,
-                                     &RefreshThread,
+                                     RefreshThread,
                                      ThreadData,
                                      0,
                                      NULL);
-
     if (hThread) CloseHandle(hThread);
 }
 
@@ -479,7 +478,7 @@ CDeviceView::ListDevicesByType()
 
             // Get the cached class node
             ClassNode = GetClassNode(&ClassGuid);
-            if (ClassNode == NULL)
+            if (ClassNode == nullptr)
             {
                 ATLASSERT(FALSE);
                 ClassIndex++;
@@ -520,7 +519,7 @@ CDeviceView::ListDevicesByType()
 
                     // Get the cached device node
                     DeviceNode = GetDeviceNode(DeviceInfoData.DevInst);
-                    if (DeviceNode == NULL)
+                    if (DeviceNode == nullptr)
                     {
                         ATLASSERT(bClassUnknown == true);
                         DeviceIndex++;
@@ -1021,13 +1020,14 @@ CDeviceView::GetClassNode(
     CClassNode *Node;
 
     Pos = m_ClassNodeList.GetHeadPosition();
+    if (Pos == NULL) return nullptr;
 
     do
     {
         Node = m_ClassNodeList.GetNext(Pos);
         if (IsEqualGUID(*Node->GetClassGuid(), *ClassGuid))
         {
-            //ATLASSERT(Node->GetType() == NodeClass);
+            ATLASSERT(Node->GetNodeType() == ClassNode);
             break;
         }
 
@@ -1047,13 +1047,14 @@ CDeviceView::GetDeviceNode(
     CDeviceNode *Node;
 
     Pos = m_DeviceNodeList.GetHeadPosition();
+    if (Pos == NULL) return nullptr;
 
     do
     {
         Node = m_DeviceNodeList.GetNext(Pos);
         if (Node->GetDeviceInst() == Device)
         {
-            //ATLASSERT(Node->GetType() == NodeDevice);
+            ATLASSERT(Node->GetNodeType() == DeviceNode);
             break;
         }
 
@@ -1112,6 +1113,7 @@ CDeviceView::RefreshDeviceList()
     if (m_RootNode) delete m_RootNode;
     m_RootNode = new CRootNode(&m_ImageListData);
     m_RootNode->SetupNode();
+
     // Loop through all the classes
     do
     {
@@ -1155,6 +1157,11 @@ CDeviceView::RefreshDeviceList()
         {
             m_DeviceNodeList.AddTail(DeviceNode);
         }
+        else
+        {
+            ATLASSERT(FALSE);
+        }
+
     }
 
     SetupDiDestroyDeviceInfoList(hDevInfo);

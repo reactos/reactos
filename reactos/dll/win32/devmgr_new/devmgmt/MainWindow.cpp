@@ -788,6 +788,7 @@ HandleDefaultMessage:
 HINSTANCE g_hInstance = NULL;
 HANDLE ProcessHeap = NULL;
 
+
 BOOL
 WINAPI
 DeviceManager_ExecuteW(HWND /*hWndParent*/,
@@ -808,6 +809,9 @@ DeviceManager_ExecuteW(HWND /*hWndParent*/,
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     icex.dwICC = ICC_BAR_CLASSES | ICC_COOL_CLASSES;
     InitCommonControlsEx(&icex);
+
+    //__debugbreak();
+    g_hInstance = GetModuleHandle(L"devmgr.dll");
 
     // Load the application name
     if (szAppName.LoadStringW(g_hInstance, IDS_APPNAME))

@@ -266,6 +266,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
+  IDS_APPNAME               "ReactOS Device Manager"
   IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
 END
 STRINGTABLE DISCARDABLE
@@ -292,7 +293,6 @@ END
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME           "ReactOS Device Manager"
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
   IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
