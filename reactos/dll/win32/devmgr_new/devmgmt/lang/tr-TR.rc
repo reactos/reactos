@@ -1,0 +1,98 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&Kütük"
+  BEGIN
+    MENUITEM "&Çıkış",                       IDC_EXIT
+  END
+  POPUP "&Eylem"
+  BEGIN
+    MENUITEM "&Sürücü Yazılmını Şimdikileştir..." IDC_UPDATE_DRV
+    MENUITEM "&Etkinleştir"                  IDC_ENABLE_DRV
+    MENUITEM "E&dilginleştir"                IDC_DISABLE_DRV
+    MENUITEM "&Kaldır"                       IDC_UNINSTALL_DRV
+    MENUITEM SEPARATOR
+    MENUITEM "D&onanım Değişiklikleri İçin Tara" IDC_SCAN_HARDWARE
+    MENUITEM "Do&nanım Ekle"                 IDC_ADD_HARDWARE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Husûsiyetler",                IDC_PROPERTIES
+  END
+  POPUP "&Görünüm"
+  BEGIN
+    MENUITEM "&Türe Göre Aygıtlar",          IDC_DEVBYTYPE
+    MENUITEM "&Bağlantıya Göre Aygıtlar",    IDC_DEVBYCONN
+    MENUITEM "T&üre Göre Kaynaklar",         IDC_RESBYTYPE, GRAYED
+    MENUITEM "B&ağlantıya Göre Kaynaklar",   IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Gizli Aygıtları Göster",      IDC_SHOWHIDDEN
+  END
+  POPUP "&Yardım"
+  BEGIN
+    MENUITEM "&Üzerine",                     IDC_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "&Sürücü Yazılmını Şimdikileştir..." IDC_UPDATE_DRV
+    MENUITEM "&Etkinleştir"                  IDC_ENABLE_DRV
+    MENUITEM "E&dilginleştir"                IDC_DISABLE_DRV
+    MENUITEM "&Kaldır"                       IDC_UNINSTALL_DRV
+    MENUITEM SEPARATOR
+    MENUITEM "D&onanım Değişiklikleri İçin Tara" IDC_SCAN_HARDWARE
+    MENUITEM "Do&nanım Ekle"                 IDC_ADD_HARDWARE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Husûsiyetler",                IDC_PROPERTIES
+  END
+END
+
+#define IDS_HINT_PROPERTIES     20001
+#define IDS_HINT_SCAN           20002
+#define IDS_HINT_ENABLE         20003
+#define IDS_HINT_DISABLE        20004
+#define IDS_HINT_UPDATE         20005
+#define IDS_HINT_UNINSTALL      20006
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROPERTIES    "Husûsiyetler"
+  IDS_TOOLTIP_SCAN          "Donanım Değişiklikleri İçin Tara"
+  IDS_TOOLTIP_ENABLE        "Etkinleştir"
+  IDS_TOOLTIP_DISABLE       "Edilginleştir"
+  IDS_TOOLTIP_UPDATE        "Sürücü Yazılmını Şimdikileştir"
+  IDS_TOOLTIP_UNINSTALL     "Kaldır"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME           "Aygıt Yöneticisi"
+  IDS_HINT_BLANK        " "
+  IDS_HINT_PROPERTIES   " Şimdiki seçilen için husûsiyet penceresini açar."
+  IDS_HINT_SCAN         " Yeni ya da değiştirilmiş tak ve çalıştır aygıtları için tarar."
+  IDS_HINT_ENABLE       " Seçili aygıtı etkinleştirir."
+  IDS_HINT_DISABLE      " Seçili aygıtı edilginleştirir."
+  IDS_HINT_UPDATE       " Seçili aygıt için Sürücü Yazılımını Şimdikileştir yardımcısını başlatır."
+  IDS_HINT_UNINSTALL    " Seçili aygıt için sürücüyü kaldırır."
+  IDS_HINT_ADD          " Bilgisayara eski (Tak ve Çalıştır olmayan) bir aygıt ekler." 
+  IDS_HINT_ABOUT        " Aygıt Yöneticisi üzerine."
+  IDS_HINT_EXIT         " İzlenceden çıkar."
+
+  IDS_HINT_DEV_BY_TYPE  " Donanım türüne göre aygıtları görüntüler."
+  IDS_HINT_DEV_BY_CONN  " Bağlantıya göre aygıtları görüntüler."
+  IDS_HINT_RES_BY_TYPE  " Türe göre kaynakları görüntüler."
+  IDS_HINT_RES_BY_CONN  " Bağlantı türüne göre kaynakları görüntüler."
+  IDS_HINT_SHOW_HIDDEN  " Eski aygıtları ve artık kurulu olmayacak aygıtları görüntüler."
+
+  IDS_HINT_SYS_RESTORE  " Bu pencereyi düzgülük boyutlarına döndürür."
+  IDS_HINT_SYS_MOVE     " Bu pencereyi devindirir."
+  IDS_HINT_SYS_SIZE     " Bu pencereyi yeniden boyutlandırır."
+  IDS_HINT_SYS_MINIMIZE " Bu pencereyi bir simgeye küçültür."
+  IDS_HINT_SYS_MAXIMIZE " Bu pencereyi, bu görüntülüğü kaplatana dek genişletir."
+  IDS_HINT_SYS_CLOSE    " Bu pencereyi kapatır."
+END

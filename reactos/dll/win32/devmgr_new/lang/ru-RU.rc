@@ -1,0 +1,239 @@
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NAME "Имя"
+    IDS_TYPE "Тип"
+    IDS_MANUFACTURER "Изготовитель: %1"
+    IDS_LOCATION "Размещение: %1"
+    IDS_STATUS "Состояние устройства: %1"
+    IDS_UNKNOWN "Неизвестно"
+    IDS_LOCATIONSTR "Размещение %1!u! (%2)"
+    IDS_DEVCODE " (код %1!u!)"
+    IDS_DEVCODE2 " (код %2!u!)"
+    IDS_ENABLEDEVICE "Это устройство используется (включено)"
+    IDS_DISABLEDEVICE "Это устройство не используется (выключено)"
+    IDS_UNKNOWNDEVICE "Неизвестное устройство"
+    IDS_NODRIVERLOADED "Не установлены драйверы для этого устройства."
+    IDS_DEVONPARENT "на %1"
+    IDS_TROUBLESHOOTDEV "&Диагностика..."
+    IDS_ENABLEDEV "В&ключить устройство"
+    IDS_REINSTALLDRV "&Переустановить драйвер"
+    IDS_PROPERTIES "С&войства"
+    IDS_UPDATEDRV "О&бновить драйвер..."
+    IDS_REBOOT "Пер&езагрузить компьютер..."
+    IDS_NOTAVAILABLE "Недоступно"
+    IDS_NOTDIGITALLYSIGNED "Нет цифровой подписи"
+    IDS_NODRIVERS "Файлы драйверов для этого устройства не установлены или не были загружены."
+    IDS_RESOURCE_COLUMN "Тип ресурса"
+    IDS_SETTING_COLUMN "Настройки"
+    IDS_RESOURCE_MEMORY_RANGE "Память"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "I/O range"
+END
+
+/* error messages, source: http://www.z123.org/techsupport/medm.htm */
+STRINGTABLE
+BEGIN
+    IDS_DEV_NO_PROBLEM "Устройство работает нормально."
+    IDS_DEV_NOT_CONFIGURED "Это устройство еще не настроено."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS  could not load the driver for this device because the computer is reporting two %1 bus types."
+    IDS_DEV_DEVLOADER_FAILED2 "The %1 device loader(s) for this device could not load the device driver."
+    IDS_DEV_OUT_OF_MEMORY "Драйвер для данного устройства может быть поврежден, или в системе недостаточно памяти или иных ресурсов."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Это устройство работает неправильно. Один из драйверов или реестр системы поврежден."
+    IDS_DEV_LACKED_ARBITRATOR "Драйвер данного устройства требует ресурсов, которые не могут поддерживаться ReactOS."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Конфигурация загрузки для этого устройства конфликтует с другими устройствами."
+    IDS_DEV_FAILED_FILTER "Драйверы для этого устройства должны быть переустановлены."
+    IDS_DEV_DEVLOADER_NOT_FOUND "This device is not working properly because ReactOS cannot load the file %1 that loads the drivers for the device."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "This device is not working properly because the file %1 that loads the drivers for this device is bad."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Device failure: Try changing the driver for this device. If that doesn't work, see your hardware documentation."
+    IDS_DEV_INVALID_DATA "This device is not working properly because the BIOS in your computer is reporting the resources for the device incorrectly."
+    IDS_DEV_INVALID_DATA2 "This device is not working properly because the BIOS in the device is reporting the resources for the device incorrectly. "
+    IDS_DEV_FAILED_START "This device is either not present, not working properly, or does not have all the drivers installed."
+    IDS_DEV_LIAR "ReactOS stopped responding while attempting to start this device, and therefore will never attempt to start this device again."
+    IDS_DEV_NORMAL_CONFLICT "This device cannot find any free %1 resources to use."
+    IDS_DEV_NOT_VERIFIED "Данное устройство является неизвестным, работает некорректно или не имеет установленных драйверов."
+    IDS_DEV_NEED_RESTART "Данное устройство не сможет корректно работать до выполнения перезагрузки."
+    IDS_DEV_REENUMERATION "Данное устройство вызвало конфликт ресурсов."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS не может идентифицировать ресурсы, используемые устройством."
+    IDS_DEV_UNKNOWN_RESOURCE "The driver information file %1 is telling this child device to use a resource that the parent device does not have or recognize."
+    IDS_DEV_REINSTALL "Драйверы этого устройства должны быть переустановлены."
+    IDS_DEV_REGISTRY "Ваш системный реестр поврежден."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS удалит это устройство."
+    IDS_DEV_DISABLED "Это устройство не запущено."
+    IDS_DEV_DISABLED2 "Это устройство отключено."
+    IDS_DEV_DEVLOADER_NOT_READY "Загрузчик этого устройства не может загрузить необходимые драйверы."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Этот адаптер экрана функционирует корректно."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Загрузчик этого устройства не может загрузить необходимые драйверы."
+    IDS_DEV_DEVICE_NOT_THERE "Устройство отсутствует, работает неправильно или для него установлены не все драйверы."
+    IDS_DEV_MOVED "ReactOS настраивает это устройство."
+    IDS_DEV_TOO_EARLY "ReactOS настраивает это устройство."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS не может указать ресурсы для этого устройства."
+    IDS_DEV_FAILED_INSTALL "Драйверы для этого устройства не установлены."
+    IDS_DEV_HARDWARE_DISABLED "This device is disabled because the BIOS for the device did not give it any resources."
+    IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared.\nYou must change the conflicting setting or remove the real-mode driver causing the conflict."
+    IDS_DEV_FAILED_ADD "This device is not working properly because %1 is not working properly."
+    IDS_DEV_DISABLED_SERVICE "ReactOS cannot install the drivers for this device because it cannot access the drive or network location that has the setup files on it."
+    IDS_DEV_TRANSLATION_FAILED "This device isn't responding to its driver."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS cannot determine the settings for this device. Consult the documentation that came with this device and use the Resource tab to set the configuration."
+    IDS_DEV_BIOS_TABLE "Your computer's system firmware does not include enough information to properly configure and use this device. \nTo use this device, contact your computer manufacturer to obtain a firmware or BIOS update."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "This device is requesting a PCI interrupt but is configured for an ISA interrupt (or vice versa). \nPlease use the computer's system setup program to reconfigure the interrupt for this device."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS не может инициализировать драйвер устройства для данного оборудования."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS cannot load the device driver for this hardware because a previous instance of the device driver is still in memory."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS cannot load the device driver for this hardware. The driver may be corrupted or missing."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS cannot access this hardware because its service key information in the registry is missing or recorded incorrectly."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS successfully loaded the device driver for this hardware but cannot find the hardware device."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS cannot load the device driver for this hardware because there is a duplicate device already running in the system."
+    IDS_DEV_FAILED_POST_START "ReactOS остановил данное устройство, так как в его работе обнаружились проблемы."
+    IDS_DEV_HALTED "Приложение или служба отключили данное устройство."
+    IDS_DEV_PHANTOM "В настоящее время данное устройство не подключено к компьютеру."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS cannot gain access to this hardware device because the operating system is in the process of shutting down."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS cannot use this hardware device because it has been prepared for safe removal, but it has not been removed from the computer"
+    IDS_DEV_DRIVER_BLOCKED "The software for this device has been blocked from starting because it is known to have problems with ReactOS. Contact the hardware vendor for a new driver."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS cannot start new hardware devices because the system hive is too large (exceeds the Registry Size Limit)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS wasn't able to change the settings of this device."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROP_DEVICEID "Код экземпляра устройства"
+    IDS_PROP_HARDWAREIDS "Коды (ID) оборудования"
+    IDS_PROP_COMPATIBLEIDS "Совместимые коды (ID)"
+    IDS_PROP_MATCHINGDEVICEID "Соответствующий код (ID) устройства"
+    IDS_PROP_SERVICE "Служба"
+    IDS_PROP_ENUMERATOR "Перечислитель"
+    IDS_PROP_CAPABILITIES "Характеристики"
+    IDS_PROP_DEVNODEFLAGS "Флаги Devnode"
+    IDS_PROP_CONFIGFLAGS "Флаги Config"
+    IDS_PROP_CSCONFIGFLAGS "Флаги CSConfig"
+    IDS_PROP_EJECTIONRELATIONS "Зависимости извлечения"
+    IDS_PROP_REMOVALRELATIONS "Зависимости удаления"
+    IDS_PROP_BUSRELATIONS "Зависимости шины"
+    IDS_PROP_DEVUPPERFILTERS "Верхние фильтры устройства"
+    IDS_PROP_DEVLOWERFILTERS "Нижние фильтры устройства"
+    IDS_PROP_CLASSUPPERFILTERS "Верхние фильтры класса"
+    IDS_PROP_CLASSLOWERFILTERS "Нижние фильтры класса"
+    IDS_PROP_CLASSINSTALLER "Установщик классов"
+    IDS_PROP_CLASSCOINSTALLER "Соустановщики классов"
+    IDS_PROP_DEVICECOINSTALLER "Соустановщики устройств"
+    IDS_PROP_FIRMWAREREVISION "Микропрограмма"
+    IDS_PROP_CURRENTPOWERSTATE "Текущее состояние электропитания"
+    IDS_PROP_POWERCAPABILITIES "Возможности электропитания"
+    IDS_PROP_POWERSTATEMAPPINGS "Сопоставления энергосбережения"
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 300, 400
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Устройства:", IDC_DEVICES, 7, 6, 196, 10
+    CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
+    GROUPBOX "Свойства устройства", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_STATUS, 14, 112, 183, 30
+    PUSHBUTTON "&Диагностика...", IDC_TROUBLESHOOT, 80, 140, 59, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "С&войства", IDC_PROPERTIES, 146, 140, 50, 14
+END
+
+IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Общие"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Тип устройства:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Изготовитель:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Размещение:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX "Состояние устройства", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON "&Диагностика...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "&Применение устройства:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+END
+
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Драйвер"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Поставщик драйвера:", -1, 17, 39, 80, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Дата разработки:", -1, 17, 53, 80, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Версия драйвера:", -1, 17, 67, 80, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Цифровая подпись:", -1, 17, 81, 80, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "&Сведения...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "Просмотр сведений о файлах драйверов.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Обновить...", IDC_UPDATEDRIVER, 7, 126, 75, 15
+    LTEXT "Обновление драйверов для устройства.", -1, 91, 130, 154, 17, SS_NOPREFIX
+END
+
+IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Сведения о файлах драйверов"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "&Файлы драйверов:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "Поставщик:", -1, 7, 134, 70, 8
+    EDITTEXT IDC_FILEPROVIDER, 81, 134, 140, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Версия файла:", -1, 7, 150, 70, 8
+    EDITTEXT IDC_FILEVERSION, 81, 150, 140, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Авторские права:", -1, 7, 166, 70, 8
+    EDITTEXT IDC_FILECOPYRIGHT, 81, 166, 140, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Цифровая подпись:", -1, 7, 182, 70, 8
+    EDITTEXT IDC_DIGITALSIGNER, 81, 182, 140, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
+END
+
+IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Сведения"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    COMBOBOX IDC_DETAILSPROPNAME, 7, 36, 238, 165, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_DETAILSPROPVALUE, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
+END
+
+IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ресурсы"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Настройки ресурсов:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
+END
+
+IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Питание"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END

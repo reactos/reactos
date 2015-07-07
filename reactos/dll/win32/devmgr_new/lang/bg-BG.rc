@@ -1,0 +1,238 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NAME "Име"
+    IDS_TYPE "Вид"
+    IDS_MANUFACTURER "Производител: %1"
+    IDS_LOCATION "Местоположение: %1"
+    IDS_STATUS "Състояние на устройството: %1"
+    IDS_UNKNOWN "Неизвестно"
+    IDS_LOCATIONSTR "Местоположение %1!u! (%2)"
+    IDS_DEVCODE " (Код %1!u!)"
+    IDS_DEVCODE2 " (Код %2!u!)"
+    IDS_ENABLEDEVICE "Устройството да се използва (включване)"
+    IDS_DISABLEDEVICE "Устройството да не се използва (изключване)"
+    IDS_UNKNOWNDEVICE "НЕИЗВЕСТНО УСТРОЙСТВО"
+    IDS_NODRIVERLOADED "Не са сложени водачи (драйвери) за устройството."
+    IDS_DEVONPARENT "на %1"
+    IDS_TROUBLESHOOTDEV "&Поправка..."
+    IDS_ENABLEDEV "&Включване на устройството"
+    IDS_REINSTALLDRV "По&вторно слагане на драйвера..."
+    IDS_PROPERTIES "&Свойства"
+    IDS_UPDATEDRV "Об&новаване на водача..."
+    IDS_REBOOT "&Презапуск на компютъра..."
+    IDS_NOTAVAILABLE "Неналично"
+    IDS_NOTDIGITALLYSIGNED "Без цифров подпис"
+    IDS_NODRIVERS "Не са нужни или не са заредени водачи за това устройство."
+    IDS_RESOURCE_COLUMN "Resource type"
+    IDS_SETTING_COLUMN "Setting"
+    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "I/O range"
+END
+
+/* error messages, source: http://www.z123.org/techsupport/medm.htm */
+STRINGTABLE
+BEGIN
+    IDS_DEV_NO_PROBLEM "Устройството работи правилно."
+    IDS_DEV_NOT_CONFIGURED "Устройството не е правилно настроено."
+    IDS_DEV_DEVLOADER_FAILED "РеактОС не успя да зареди водача за това устройство, понеже компютърът докладва два вида %1 шини."
+    IDS_DEV_DEVLOADER_FAILED2 "Зареждачът/ите за устройство %1 не успя да зареди водача."
+    IDS_DEV_OUT_OF_MEMORY "Или водачът на това устройство е повреден, или уредбата ви има недостиг на памет или други средства."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Устройството не работи правилно, понеже някой от водачите му е повреден или има грешка в регистъра."
+    IDS_DEV_LACKED_ARBITRATOR "Водачът на това устройство е заявил ресурс, който РеактОС не знае как да ползва."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Друго устройство използва ресурсите, нужни на това устройство."
+    IDS_DEV_FAILED_FILTER "Водачът за това устройство трябва да бъде сложен наново."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Това устройство не работи правилно, понеже РеактОС не може да зареди файл %1, който зарежда водачите за устройството."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Това устройство не работи правилно, понеже файл %1, който зарежда водачите за устройството е повреден."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Неуспех с устройство: Опитайте да смените водача за това устройство. Ако не работи се запознайте с документацията му."
+    IDS_DEV_INVALID_DATA "Това устройство не работи правилно, понеже БИОСът на компютърът ви не дава правилни данни за него."
+    IDS_DEV_INVALID_DATA2 "Това устройство не работи правилно, понеже БИОСът в в устройството не докладва данните на му правилно."
+    IDS_DEV_FAILED_START "Това устройство липсва, не работи правилно или не всичките му водачи са сложени."
+    IDS_DEV_LIAR "РеактОС спря да отговаря, докато се опитваше да пусне устройството и следователно повече няма да се опита да го включи."
+    IDS_DEV_NORMAL_CONFLICT "Устройството не може да намери свободни %1 ресурси, които да използва."
+    IDS_DEV_NOT_VERIFIED "Това устройство липсва, не работи правилно или не всичките му водачи са сложени."
+    IDS_DEV_NEED_RESTART "Устройството няма да работи правилно, докато не презапуснете компютъра."
+    IDS_DEV_REENUMERATION "Устройството причинява сблъсък на ресурси."
+    IDS_DEV_PARTIAL_LOG_CONF "РеактОС не успя да разпознае всички използвани от устройството ресурси."
+    IDS_DEV_UNKNOWN_RESOURCE "Информационният файл %1 указва на дъщерното му устройство да ползва ресурс, който родителското устройство няма или не разпознава."
+    IDS_DEV_REINSTALL "Водачът за това устройство трябва да бъде сложен наново."
+    IDS_DEV_REGISTRY "Възможно е регистърът ви да е повреден."
+    IDS_DEV_WILL_BE_REMOVED "РеактОС премахва устройството."
+    IDS_DEV_DISABLED "Устройството не е включено."
+    IDS_DEV_DISABLED2 "Устройството е забранено."
+    IDS_DEV_DEVLOADER_NOT_READY "Зареждачите за устройството не могат да заредят водачите."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Видеокартата работи правилно."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Зареждачите за устройството не могат да заредят водачите."
+    IDS_DEV_DEVICE_NOT_THERE "Това устройство липсва, не работи правилно или не всичките му водачи са сложени."
+    IDS_DEV_MOVED "РеактОС все още настройва устройството."
+    IDS_DEV_TOO_EARLY "РеактОС все още настройва устройството."
+    IDS_DEV_NO_VALID_LOG_CONF "РеактОС не може да уточни ресурсите за това устройство."
+    IDS_DEV_FAILED_INSTALL "Водачите за това устройство не са сложени."
+    IDS_DEV_HARDWARE_DISABLED "Устройството е изключено, понеже БИОСът му не му е дал никакви ресурси."
+    IDS_DEV_CANT_SHARE_IRQ "Това устройство ползва заявка за прекъсване (IRQ), която се ползва от друго устройство и не може да бъде споделена.\nТрябва да смените спорната настройка или да махнете водача за реално време, причиняващ неразбирателството."
+    IDS_DEV_FAILED_ADD "Това устройство не работи правилно, понеже %1 не работи правилно."
+    IDS_DEV_DISABLED_SERVICE "РеактОС не може да сложи водачите за устройството, понеже няма достъп до устройството или мрежовото местоположение, което съдържа нужните файлове."
+    IDS_DEV_TRANSLATION_FAILED "Устройството не отговаря на своя водач (драйвер)."
+    IDS_DEV_NO_SOFTCONFIG "РеактОС не може да определи настройките на устройството. Вижте документацията на устройството и използвайте подпрозореца ""Ресурси"" за да го настроите."
+    IDS_DEV_BIOS_TABLE "Системният фърмуер на компютъра ви не съдържа достатъчно сведения за правилната настройка и употреба на това устройство.\nЗа да го използвате, свтржете се с производителя на компютъра си, за да се получите обновление на фърмуера или БИОСа."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Това устройство подава заявка за прекъсване на PCI, но е настроено за прекъсване на ISA (или наопаки).\nИзползвате програмата за системна настройка на компютъра, за да пренастроите прекъсването за това устройство."
+    IDS_DEV_FAILED_DRIVER_ENTRY "РеактОС не може да подготви водача за това оборудване."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "РеактОС не може да зареди водача за това оборудване, понеже предишно изпълнение на водача на устройството е все още в паметта."
+    IDS_DEV_DRIVER_FAILED_LOAD "РеактОС не може да зареди водача за това оборудване. Водачът може да е повреден или да липсва."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "РеактОС не получава достъп до устройството, понеже сведенията за облужващият му ключ в регистъра липсват или са записани грешно."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "РеактОС е заредил успешно водача за устройството но не може да намери самото устройство."
+    IDS_DEV_DUPLICATE_DEVICE "РеактОС не може да зареди водача за това оборудване, понеже вече има такъв водач, изпълняван от уредбата."
+    IDS_DEV_FAILED_POST_START "РеактОС е изключил това устройство, понеже е докладвало за нередности."
+    IDS_DEV_HALTED "Приложение или услуга е изключила това устройство."
+    IDS_DEV_PHANTOM "Понастоящем, устройството не е закачено за компютъра."
+    IDS_DEV_SYSTEM_SHUTDOWN "РеактОС не може да получи достъп до това устройство, понеже работната уредба се изключва."
+    IDS_DEV_HELD_FOR_EJECT "РеактОС не може да използва това устройство, защото е било приготвено за безопасно откачане, но не е било откачено."
+    IDS_DEV_DRIVER_BLOCKED "Софтуерът за това устройство не е бил пуснат, понеже е известно, че има ядове с РеактОС. Свържете се с производителя на оборудването за нов водач."
+    IDS_DEV_REGISTRY_TOO_LARGE "РеактОС не успя да пусне новите устройства, понеже системният рой е твърде голям (надхвърля ограничението по размер на регистъра)."
+    IDS_DEV_SETPROPERTIES_FAILED "РеактОС не успя да смени настройките на устройството."
+END
+
+/*Непреведен раздел*/
+STRINGTABLE
+BEGIN
+    IDS_PROP_DEVICEID "Device Instance ID"
+    IDS_PROP_HARDWAREIDS "Hardware IDs"
+    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
+    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
+    IDS_PROP_SERVICE "Услуга"
+    IDS_PROP_ENUMERATOR "Изброител"
+    IDS_PROP_CAPABILITIES "Способности"
+    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
+    IDS_PROP_CONFIGFLAGS "Config Flags"
+    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
+    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
+    IDS_PROP_REMOVALRELATIONS "Removal Relations"
+    IDS_PROP_BUSRELATIONS "Bus Relations"
+    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
+    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
+    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
+    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
+    IDS_PROP_CLASSINSTALLER "Class Installers"
+    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
+    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
+    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
+    IDS_PROP_CURRENTPOWERSTATE "Текущо състояние на захранването"
+    IDS_PROP_POWERCAPABILITIES "Възможности на захранването"
+    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 300, 400
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Устройства:", IDC_DEVICES, 7, 6, 196, 10
+    CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
+    GROUPBOX "Свойства на устройството:", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_STATUS, 14, 112, 183, 30
+    PUSHBUTTON "&Поправка...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Свойства", IDC_PROPERTIES, 146, 140, 50, 14
+END
+
+IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Общи"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Вид устройство:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Производител:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Местоположение", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX "Състояние на устройството", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON "&Поправка...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "Употреба на устройството:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+END
+
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Водач (драйвер)"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Доставчик на водача:", -1, 37, 39, 65, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 105, 39, 140, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Дата на водача:", -1, 37, 53, 65, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 105, 53, 140, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Версия на водача:", -1, 37, 67, 65, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 105, 67, 140, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Подписал цифрово:", -1, 37, 81, 70, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 105, 81, 140, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "Подробности за водача...", IDC_DRIVERDETAILS, 7, 106, 95, 15
+    LTEXT "Показване на подробности за файловете на водача.", -1, 105, 110, 141, 17, SS_NOPREFIX
+    PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 126, 95, 15
+    LTEXT "Update the device driver.", -1, 105, 130, 141, 17, SS_NOPREFIX
+END
+
+IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Подробностите за файловете на водача"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Файлове на &водача:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "Доставчик:", -1, 14, 134, 66, 8
+    EDITTEXT IDC_FILEPROVIDER, 82, 134, 140, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Файлова версия:", -1, 14, 150, 66, 16
+    EDITTEXT IDC_FILEVERSION, 82, 150, 140, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Възпроизводствени права:", -1, 14, 166, 66, 16
+    EDITTEXT IDC_FILECOPYRIGHT, 82, 166, 140, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Подписал цифрово:", -1, 14, 182, 66, 16
+    EDITTEXT IDC_DIGITALSIGNER, 82, 182, 140, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON "Добре", IDOK, 167, 208, 50, 14
+END
+
+IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Подробности"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    COMBOBOX IDC_DETAILSPROPNAME, 7, 36, 238, 165, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_DETAILSPROPVALUE, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
+END
+
+IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Resources"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
+END
+
+IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Захранване"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END

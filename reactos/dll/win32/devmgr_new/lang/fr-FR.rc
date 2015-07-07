@@ -1,0 +1,238 @@
+/* French translation by Sylvain Petreolle */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NAME "Nom"
+    IDS_TYPE "Type"
+    IDS_MANUFACTURER "Fabricant: %1"
+    IDS_LOCATION "Emplacement: %1"
+    IDS_STATUS "État : %1"
+    IDS_UNKNOWN "Inconnu"
+    IDS_LOCATIONSTR "Emplacement %1!u! (%2)"
+    IDS_DEVCODE " (Code %1!u!)"
+    IDS_DEVCODE2 " (Code %2!u!)"
+    IDS_ENABLEDEVICE "Utiliser ce périphérique (activé)"
+    IDS_DISABLEDEVICE "Ne pas utiliser ce matériel (désactivé)"
+    IDS_UNKNOWNDEVICE "Matériel inconnu"
+    IDS_NODRIVERLOADED "Aucun driver n'est installé pour ce matériel."
+    IDS_DEVONPARENT "sur %1"
+    IDS_TROUBLESHOOTDEV "&Dépannage..."
+    IDS_ENABLEDEV "A&ctiver le matériel"
+    IDS_REINSTALLDRV "Ré&installer le Driver"
+    IDS_PROPERTIES "&Propriétés"
+    IDS_UPDATEDRV "Mettre à jour le Driver..."
+    IDS_REBOOT "&Redémarrer l'ordinateur..."
+    IDS_NOTAVAILABLE "Non disponible"
+    IDS_NOTDIGITALLYSIGNED "Non signé numériquement"
+    IDS_NODRIVERS "Aucun fichier n'est requis ou n'a été chargé pour ce matériel."
+    IDS_RESOURCE_COLUMN "Resource type"
+    IDS_SETTING_COLUMN "Setting"
+    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "I/O range"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEV_NO_PROBLEM "Ce périphérique fonctionne correctement."
+    IDS_DEV_NOT_CONFIGURED "Ce périphérique n'est pas configuré correctement."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS n'a pas pu charger le pilote de ce périphérique car l'ordinateur signale deux types de bus %1."
+    IDS_DEV_DEVLOADER_FAILED2 "Le(s) chargeur(s) de périphérique %1 pour ce périphérique n'ont pas pu charger le driver."
+    IDS_DEV_OUT_OF_MEMORY "Le pilote de ce périphérique peut être mauvais, ou votre système peut être à court de mémoire ou d'autres ressources."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Ce périphérique ne fonctionne pas correctement parce qu'un des pilotes de ce périphérique peut être mauvais, ou votre base de registres peut être mauvaise."
+    IDS_DEV_LACKED_ARBITRATOR "Le pilote de ce périphérique a demandé une ressource que ReactOS ne sait pas prendre en compte."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Un autre périphérique utilise les ressources nécessaires à ce périphérique."
+    IDS_DEV_FAILED_FILTER "Les pilotes de ce périphérique doivent être réinstallés."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Ce périphérique ne fonctionne pas correctement parce que ReactOS ne peut charger le fichier %1 qui charge les pilotes de ce périphérique."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Ce périphérique ne fonctionne pas correctement parce que le fichier %1 qui charge les pilotes de ce périphérique est mauvais."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Erreur du périphérique: Essayez de changer le pilote du périphérique. Si cela ne fonctionne pas, consultez la documentation du matériel."
+    IDS_DEV_INVALID_DATA "Ce périphérique ne fonctionne pas correctement parce que le BIOS de votre ordinateur rapporte incorrectement les ressources de ce périphérique."
+    IDS_DEV_INVALID_DATA2 "Ce périphérique ne fonctionne pas correctement parce que le BIOS de votre ordinateur rapporte incorrectement les ressources de ce périphérique. "
+    IDS_DEV_FAILED_START "Ce périphérique est soit non présent, ne fonctionne pas correctement, ou n'a pas tous les pilotes installés."
+    IDS_DEV_LIAR "ReactOS a arrêté de fonctionner en essayant de démarrer ce périphérique, et n'essayera donc plus de le démarrer de nouveau."
+    IDS_DEV_NORMAL_CONFLICT "Ce périphérique ne peut pas trouver de ressources %1 à utiliser."
+    IDS_DEV_NOT_VERIFIED "Ce périphérique est soit non présent, ne fonctionne pas correctement, ou n'a pas tous les pilotes installés."
+    IDS_DEV_NEED_RESTART "Ce périphérique ne peut fonctionner correctement tant que vous n'aurez pas redémarré votre ordinateur."
+    IDS_DEV_REENUMERATION "Ce périphérique cause un conflit de ressources."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS n'a pas pu identifier toutes les ressources utilisées par ce périphérique."
+    IDS_DEV_UNKNOWN_RESOURCE "Le fichier d'information du pilote %1 indique à ce périphérique enfant d'utiliser une ressource que le périphérique parent n'a ou ne reconnait pas."
+    IDS_DEV_REINSTALL "Les pilotes de ce périphérique doivent être réinstallés."
+    IDS_DEV_REGISTRY "Votre base de registre peut être mauvaise."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS est en train de supprimer ce périphérique."
+    IDS_DEV_DISABLED "Ce périphérique n'est pas démarré."
+    IDS_DEV_DISABLED2 "Ce périphérique est désactivé."
+    IDS_DEV_DEVLOADER_NOT_READY "Les chargeurs de ce périphérique ne peuvent pas charger les drivers requis."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Cet écran fonctionne correctement."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Les chargeurs de ce périphérique ne peuvent pas charger les drivers requis."
+    IDS_DEV_DEVICE_NOT_THERE "Ce périphérique est soit non présent, soit ne fonctionne pas correctement, ou n'a pas tous les pilotes installés."
+    IDS_DEV_MOVED "ReactOS est en train de mettre en place ce périphérique."
+    IDS_DEV_TOO_EARLY "ReactOS est en train de mettre en place ce périphérique."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS ne peut pas spécifier des ressources pour ce périphérique."
+    IDS_DEV_FAILED_INSTALL "Les pilotes de ce périphérique ne sont pas installés."
+    IDS_DEV_HARDWARE_DISABLED "Ce périphérique est désactivé car le BIOS ne lui a pas donné de ressources."
+    IDS_DEV_CANT_SHARE_IRQ "Ce périphérique utilise une Interruption Matérielle (IRQ) qui est utilisée par un autre périphérique et ne peut être partagée.\nVous devez changer les réglages en conflit ou enlever le pilote en mode-réel causant le conflit."
+    IDS_DEV_FAILED_ADD "Ce périphérique ne fonctionne pas correctement parce que %1 ne fonctionne pas correctement."
+    IDS_DEV_DISABLED_SERVICE "ReactOS ne peut pas installer les pilotes pour ce périphérique car il ne peut pas accéder au lecteur ou à l'emplacement réseau contenant les fichiers d'installation."
+    IDS_DEV_TRANSLATION_FAILED "Ce périphérique ne répond pas à son pilote."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS ne peut pas déterminer les réglages de ce périphérique. Consultez la documentation accompagnant ce périphérique et utilisez la page des Ressources pour modifier la configuration."
+    IDS_DEV_BIOS_TABLE "Le firmware de votre ordinateur n'inclut pas assez d'informations pour configurer et utiliser correctement ce périphérique. \nPour utiliser ce périphérique, contactez le fabricant de votre ordinateur afin d'obtenir une mise à jour du firmware ou du BIOS."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Ce périphérique demande une Interruption PCI mais il est configuré pour une Interruption ISA (ou vice versa). \nVeuillez utiliser le programme système d'installation de l'ordinateur pour reconfigurer les interruptions de ce périphérique."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS ne peut pas initialiser le pilote de ce matériel."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS ne peut pas charger le pilote de ce matériel parce qu'une instance précédente de ce pilote est toujours en mémoire."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS ne peut pas charger le pilote de ce matériel. Le pilote peut être corrompu ou manquant."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS ne peut pas accéder à ce matériel parce que la clé de registre de son service est manquante ou incorrectement inscrite."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS a chargé avec succès le pilote pour ce matériel mais n'a pas pu trouver le périphérique matériel."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS ne peut pas charger le pilote pour ce périphérique matériel parce qu'un matériel en double tourne déjà dans le système."
+    IDS_DEV_FAILED_POST_START "ReactOS a arrêté ce périphérique car il a signalé des problèmes."
+    IDS_DEV_HALTED "Une application ou un service a arrêté ce périphérique matériel."
+    IDS_DEV_PHANTOM "Ce périphérique matériel n'est pas connecté à l'ordinateur actuellement."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS ne peut pas accéder à ce matériel parce que le système est en train de s'arrêter."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS ne peut pas utiliser ce matériel parce qu'il a été préparé pour être enlevé, mais n'a pas encore été enlevé de l'ordinateur."
+    IDS_DEV_DRIVER_BLOCKED "Le logiciel de ce périphérique a été empéché de démarrer car il est connu pour avoir des problèmes avec ReactOS. Contactez votre vendeur pour obtenir un pilote adéquat."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS ne peut pas démarrer de nouveaux matériels parce que la base de registre est trop grande (dépasse la taille limite de la base)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS n'a pas pu changer les réglages de ce périphérique."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROP_DEVICEID "Device Instance ID"
+    IDS_PROP_HARDWAREIDS "Hardware IDs"
+    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
+    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
+    IDS_PROP_SERVICE "Service"
+    IDS_PROP_ENUMERATOR "Enumerator"
+    IDS_PROP_CAPABILITIES "Capabilities"
+    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
+    IDS_PROP_CONFIGFLAGS "Config Flags"
+    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
+    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
+    IDS_PROP_REMOVALRELATIONS "Removal Relations"
+    IDS_PROP_BUSRELATIONS "Bus Relations"
+    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
+    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
+    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
+    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
+    IDS_PROP_CLASSINSTALLER "Class Installers"
+    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
+    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
+    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
+    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
+    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
+    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 300, 400
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Périphériques:", IDC_DEVICES, 7, 6, 196, 10
+    CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
+    GROUPBOX "Propriétés des périphériques", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_STATUS, 14, 112, 183, 30
+    PUSHBUTTON "&Dépannage...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "P&ropriétés", IDC_PROPERTIES, 146, 140, 50, 14
+END
+
+IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Général"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Type de matériel :", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Fabricant :", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Emplacement :", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX "État du matériel", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON "&Dépannage...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "&Utilisation du matériel:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+END
+
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Pilote"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Fournisseur :", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 120, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Date du Pilote :", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 120, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Version du Pilote :", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 120, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Signature numérique :", -1, 37, 81, 80, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 120, 81, 126, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "&Détails...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "Voir les détails à propos des fichiers du Pilote.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 126, 75, 15
+    LTEXT "Update the device driver.", -1, 91, 130, 154, 17, SS_NOPREFIX
+END
+
+IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Fichiers du Pilote"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "&Fichiers :", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "Fournisseur :", -1, 14, 134, 50, 8
+    EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Version :", -1, 14, 150, 50, 8
+    EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Copyright:", -1, 14, 166, 50, 8
+    EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Signature numérique :", -1, 14, 182, 80, 8
+    EDITTEXT IDC_DIGITALSIGNER, 96, 182, 125, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
+END
+
+IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Details"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    COMBOBOX IDC_DETAILSPROPNAME, 7, 36, 238, 165, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_DETAILSPROPVALUE, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
+END
+
+IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Resources"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
+END
+
+IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Power"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END
