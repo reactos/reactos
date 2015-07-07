@@ -12,7 +12,7 @@ class CImgAreaWindow : public CWindowImpl<CMainWindow>
 public:
     DECLARE_WND_CLASS_EX(_T("ImgAreaWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
-    BEGIN_MSG_MAP(CPaletteWindow)
+    BEGIN_MSG_MAP(CImgAreaWindow)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)

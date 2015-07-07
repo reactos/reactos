@@ -12,7 +12,7 @@ class CMainWindow : public CWindowImpl<CMainWindow>
 public:
     DECLARE_WND_CLASS_EX(_T("MainWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
-    BEGIN_MSG_MAP(CPaletteWindow)
+    BEGIN_MSG_MAP(CMainWindow)
         MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -38,7 +38,6 @@ public:
     LRESULT OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-    void selectTool(int tool);
     void alignChildrenToMainWindow();
     void saveImage(BOOL overwrite);
     void UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename, LPTSTR newfilepathname);

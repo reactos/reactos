@@ -16,16 +16,6 @@
 
 /* FUNCTIONS ********************************************************/
 
-void CMainWindow::selectTool(int tool)
-{
-    selectionWindow.ShowWindow(SW_HIDE);
-    toolsModel.SetActiveTool(tool);
-    pointSP = 0;                // resets the point-buffer of the polygon and bezier functions
-    toolSettingsWindow.Invalidate(TRUE);
-    ::ShowWindow(hTrackbarZoom, (tool == TOOL_ZOOM) ? SW_SHOW : SW_HIDE);
-    textEditWindow.ShowWindow((tool == TOOL_TEXT) ? SW_SHOW : SW_HIDE);
-}
-
 void
 updateCanvasAndScrollbars()
 {
@@ -41,9 +31,6 @@ updateCanvasAndScrollbars()
 void
 zoomTo(int newZoom, int mouseX, int mouseY)
 {
-    int tbPos = 0;
-    int tempZoom = newZoom;
-
     RECT clientRectScrollbox;
     RECT clientRectImageArea;
     int x, y, w, h;
@@ -61,22 +48,15 @@ zoomTo(int newZoom, int mouseX, int mouseY)
     scrollboxWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
 
-    scrollboxWindow.SendMessage(WM_HSCROLL, SB_THUMBPOSITION | (x << 16), 0);
-    scrollboxWindow.SendMessage(WM_VSCROLL, SB_THUMBPOSITION | (y << 16), 0);
-
-    while (tempZoom > 125)
-    {
-        tbPos++;
-        tempZoom = tempZoom >> 1;
-    }
-    SendMessage(hTrackbarZoom, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) tbPos);
+    scrollboxWindow.SendMessage(WM_HSCROLL, MAKEWPARAM(SB_THUMBPOSITION, x), 0);
+    scrollboxWindow.SendMessage(WM_VSCROLL, MAKEWPARAM(SB_THUMBPOSITION, y), 0);
 }
 
 void CMainWindow::alignChildrenToMainWindow()
 {
     int x, y, w, h;
     RECT clientRect;
-    mainWindow.GetClientRect(&clientRect);
+    GetClientRect(&clientRect);
 
     if (toolBoxContainer.IsWindowVisible())
     {
@@ -121,7 +101,7 @@ void CMainWindow::saveImage(BOOL overwrite)
         CopyMemory(filepathname, sfn.lpstrFile, sizeof(filepathname));
         LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
         _stprintf(tempstr, resstr, filename);
-        mainWindow.SetWindowText(tempstr);
+        SetWindowText(tempstr);
         isAFile = TRUE;
         imageSaved = TRUE;
     }
@@ -148,8 +128,8 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     HBITMAP hTempMask;
 
     HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
-    SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
-    SendMessage(window, WM_COMMAND, ID_RECTSEL, 0);
+    SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
+    toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
 
     DeleteObject(SelectObject(hSelDC, hSelBm = (HBITMAP) CopyImage(bitmap,
                                                                    IMAGE_BITMAP, 0, 0,
@@ -290,25 +270,19 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CMainWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (m_hWnd == mainWindow.m_hWnd)
-    {
-        int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
-        SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
-        SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
-        alignChildrenToMainWindow();
-        Invalidate(TRUE);
-    }
+    int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
+    SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
+    SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+    alignChildrenToMainWindow();
+    Invalidate(TRUE);
     return 0;
 }
 
 LRESULT CMainWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (m_hWnd == mainWindow.m_hWnd)
-    {
-        MINMAXINFO *mm = (LPMINMAXINFO) lParam;
-        mm->ptMinTrackSize.x = 330;
-        mm->ptMinTrackSize.y = 430;
-    }
+    MINMAXINFO *mm = (LPMINMAXINFO) lParam;
+    mm->ptMinTrackSize.x = 330;
+    mm->ptMinTrackSize.y = 430;
     return 0;
 }
 
@@ -357,12 +331,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             TCHAR infotext[200];
             LoadString(hProgInstance, IDS_INFOTITLE, infotitle, SIZEOF(infotitle));
             LoadString(hProgInstance, IDS_INFOTEXT, infotext, SIZEOF(infotext));
-            ShellAbout(mainWindow.m_hWnd, infotitle, infotext, paintIcon);
+            ShellAbout(m_hWnd, infotitle, infotext, paintIcon);
             DeleteObject(paintIcon);
             break;
         }
         case IDM_HELPHELPTOPICS:
-            HtmlHelp(mainWindow.m_hWnd, _T("help\\Paint.chm"), 0, 0);
+            HtmlHelp(m_hWnd, _T("help\\Paint.chm"), 0, 0);
             break;
         case IDM_FILEEXIT:
             SendMessage(WM_CLOSE, wParam, lParam);
@@ -475,8 +449,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITSELECTALL:
         {
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
-            SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
-            SendMessage(WM_COMMAND, ID_RECTSEL, 0);
+            SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
+            toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
             startPaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
             whilePaintingL(hDrawingDC, imgXRes, imgYRes, paletteModel.GetFgColor(), paletteModel.GetBgColor());
             endPaintingL(hDrawingDC, imgXRes, imgYRes, paletteModel.GetFgColor(), paletteModel.GetBgColor());
@@ -615,7 +589,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_IMAGEDRAWOPAQUE:
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
-            toolSettingsWindow.Invalidate(TRUE);
             break;
         case IDM_IMAGECROP:
             insertReversible((HBITMAP) CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
@@ -666,54 +639,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_VIEWZOOM800:
             zoomTo(8000, 0, 0);
-            break;
-        case ID_FREESEL:
-            selectTool(1);
-            break;
-        case ID_RECTSEL:
-            selectTool(2);
-            break;
-        case ID_RUBBER:
-            selectTool(3);
-            break;
-        case ID_FILL:
-            selectTool(4);
-            break;
-        case ID_COLOR:
-            selectTool(5);
-            break;
-        case ID_ZOOM:
-            selectTool(6);
-            break;
-        case ID_PEN:
-            selectTool(7);
-            break;
-        case ID_BRUSH:
-            selectTool(8);
-            break;
-        case ID_AIRBRUSH:
-            selectTool(9);
-            break;
-        case ID_TEXT:
-            selectTool(10);
-            break;
-        case ID_LINE:
-            selectTool(11);
-            break;
-        case ID_BEZIER:
-            selectTool(12);
-            break;
-        case ID_RECT:
-            selectTool(13);
-            break;
-        case ID_SHAPE:
-            selectTool(14);
-            break;
-        case ID_ELLIPSE:
-            selectTool(15);
-            break;
-        case ID_RRECT:
-            selectTool(16);
             break;
     }
     return 0;

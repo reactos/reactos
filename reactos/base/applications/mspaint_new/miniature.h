@@ -12,7 +12,7 @@ class CMiniatureWindow : public CWindowImpl<CMiniatureWindow>
 public:
     DECLARE_WND_CLASS_EX(_T("MiniatureWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
-    BEGIN_MSG_MAP(CPaletteWindow)
+    BEGIN_MSG_MAP(CMiniatureWindow)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)

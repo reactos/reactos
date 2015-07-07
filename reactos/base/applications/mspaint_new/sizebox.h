@@ -11,7 +11,7 @@ class CSizeboxWindow : public CWindowImpl<CSizeboxWindow>
 public:
     DECLARE_WND_CLASS_EX(_T("Sizebox"), CS_DBLCLKS, COLOR_HIGHLIGHT)
 
-    BEGIN_MSG_MAP(CPaletteWindow)
+    BEGIN_MSG_MAP(CSizeboxWindow)
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)

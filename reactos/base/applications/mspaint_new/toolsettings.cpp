@@ -14,9 +14,18 @@
 
 extern void zoomTo(int, int, int);
 
+LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, WINBOOL& bHandled)
+{
+    RECT trackbarZoomPos = {1, 1, 1 + 40, 1 + 64};
+    trackbarZoom.Create(TRACKBAR_CLASS, m_hWnd, trackbarZoomPos, NULL, WS_CHILD | TBS_VERT | TBS_AUTOTICKS);
+    trackbarZoom.SendMessage(TBM_SETRANGE, (WPARAM) TRUE, MAKELPARAM(0, 6));
+    trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 3);
+    return 0;
+}
+
 LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    zoomTo(125 << SendMessage(hTrackbarZoom, TBM_GETPOS, 0, 0), 0, 0);
+    zoomTo(125 << trackbarZoom.SendMessage(TBM_GETPOS, 0, 0), 0, 0);
     return 0;
 }
 
@@ -181,25 +190,17 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
             if ((y > 1) && (y < 64))
             {
                 toolsModel.SetBackgroundTransparent((y - 2) / 31);
-                InvalidateRect(NULL, TRUE);
 
                 ForceRefreshSelectionContents();
             }
             break;
         case TOOL_RUBBER:
             if ((y > 1) && (y < 62))
-            {
                 toolsModel.SetRubberRadius((y - 2) / 15 + 2);
-                InvalidateRect(NULL, TRUE);
-            }
             break;
         case TOOL_BRUSH:
-            if ((x > 1) && (x < 40) && (y > 1)
-                && (y < 62))
-            {
+            if ((x > 1) && (x < 40) && (y > 1) && (y < 62))
                 toolsModel.SetBrushStyle((y - 2) / 15 * 3 + (x - 2) / 13);
-                InvalidateRect(NULL, TRUE);
-            }
             break;
         case TOOL_AIRBRUSH:
             if (y < 62)
@@ -218,32 +219,49 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
                     else
                         toolsModel.SetAirBrushWidth(12);
                 }
-                InvalidateRect(NULL, TRUE);
             }
             break;
         case TOOL_LINE:
         case TOOL_BEZIER:
             if (y <= 62)
-            {
                 toolsModel.SetLineWidth((y - 2) / 12 + 1);
-                InvalidateRect(NULL, TRUE);
-            }
             break;
         case TOOL_RECT:
         case TOOL_SHAPE:
         case TOOL_ELLIPSE:
         case TOOL_RRECT:
             if (y <= 60)
-            {
                 toolsModel.SetShapeStyle((y - 2) / 20);
-                InvalidateRect(NULL, TRUE);
-            }
             if ((y >= 70) && (y <= 132))
-            {
                 toolsModel.SetLineWidth((y - 72) / 12 + 1);
-                InvalidateRect(NULL, TRUE);
-            }
             break;
     }
+    return 0;
+}
+
+LRESULT CToolSettingsWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    Invalidate();
+    trackbarZoom.ShowWindow((wParam == TOOL_ZOOM) ? SW_SHOW : SW_HIDE);
+    return 0;
+}
+
+LRESULT CToolSettingsWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    Invalidate();
+    return 0;
+}
+
+LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    int tbPos = 0;
+    int tempZoom = toolsModel.GetZoom();
+
+    while (tempZoom > 125)
+    {
+        tbPos++;
+        tempZoom = tempZoom >> 1;
+    }
+    trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) tbPos);
     return 0;
 }

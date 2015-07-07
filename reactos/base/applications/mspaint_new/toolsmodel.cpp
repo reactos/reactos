@@ -32,6 +32,7 @@ int ToolsModel::GetLineWidth()
 void ToolsModel::SetLineWidth(int nLineWidth)
 {
     m_lineWidth = nLineWidth;
+    NotifyToolSettingsChanged();
 }
 
 int ToolsModel::GetShapeStyle()
@@ -42,6 +43,7 @@ int ToolsModel::GetShapeStyle()
 void ToolsModel::SetShapeStyle(int nShapeStyle)
 {
     m_shapeStyle = nShapeStyle;
+    NotifyToolSettingsChanged();
 }
 
 int ToolsModel::GetBrushStyle()
@@ -52,6 +54,7 @@ int ToolsModel::GetBrushStyle()
 void ToolsModel::SetBrushStyle(int nBrushStyle)
 {
     m_brushStyle = nBrushStyle;
+    NotifyToolSettingsChanged();
 }
 
 int ToolsModel::GetActiveTool()
@@ -62,6 +65,7 @@ int ToolsModel::GetActiveTool()
 void ToolsModel::SetActiveTool(int nActiveTool)
 {
     m_activeTool = nActiveTool;
+    NotifyToolChanged();
 }
 
 int ToolsModel::GetAirBrushWidth()
@@ -72,6 +76,7 @@ int ToolsModel::GetAirBrushWidth()
 void ToolsModel::SetAirBrushWidth(int nAirBrushWidth)
 {
     m_airBrushWidth = nAirBrushWidth;
+    NotifyToolSettingsChanged();
 }
 
 int ToolsModel::GetRubberRadius()
@@ -82,6 +87,7 @@ int ToolsModel::GetRubberRadius()
 void ToolsModel::SetRubberRadius(int nRubberRadius)
 {
     m_rubberRadius = nRubberRadius;
+    NotifyToolSettingsChanged();
 }
 
 BOOL ToolsModel::IsBackgroundTransparent()
@@ -92,6 +98,7 @@ BOOL ToolsModel::IsBackgroundTransparent()
 void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
 {
     m_transpBg = bTransparent;
+    NotifyToolSettingsChanged();
 }
 
 int ToolsModel::GetZoom()
@@ -102,4 +109,22 @@ int ToolsModel::GetZoom()
 void ToolsModel::SetZoom(int nZoom)
 {
     m_zoom = nZoom;
+    NotifyZoomChanged();
+}
+
+void ToolsModel::NotifyToolChanged()
+{
+    toolBoxContainer.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+    toolSettingsWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+    textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+}
+
+void ToolsModel::NotifyToolSettingsChanged()
+{
+    toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
+}
+
+void ToolsModel::NotifyZoomChanged()
+{
+    toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }

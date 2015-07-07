@@ -20,6 +20,7 @@ list(APPEND SOURCE
     selection.cpp
     sizebox.cpp
     textedit.cpp
+    toolbox.cpp
     toolsettings.cpp
     toolsmodel.cpp
     winproc.cpp

@@ -32,6 +32,7 @@
 #include "selection.h"
 #include "sizebox.h"
 #include "textedit.h"
+#include "toolbox.h"
 #include "toolsettings.h"
 #include "toolsmodel.h"
 #include "winproc.h"

@@ -11,7 +11,7 @@ class CScrollboxWindow : public CWindowImpl<CScrollboxWindow>
 public:
     DECLARE_WND_CLASS_EX(_T("Scrollbox"), 0, COLOR_APPWORKSPACE)
 
-    BEGIN_MSG_MAP(CPaletteWindow)
+    BEGIN_MSG_MAP(CScrollboxWindow)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
         MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)

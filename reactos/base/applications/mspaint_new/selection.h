@@ -11,7 +11,7 @@ class CSelectionWindow : public CWindowImpl<CSelectionWindow>
 public:
     DECLARE_WND_CLASS_EX(_T("Selection"), CS_DBLCLKS, COLOR_BTNFACE)
 
-    BEGIN_MSG_MAP(CPaletteWindow)
+    BEGIN_MSG_MAP(CSelectionWindow)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

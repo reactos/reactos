@@ -187,7 +187,6 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
                 GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom());
             if (tempColor != CLR_INVALID)
                 paletteModel.SetFgColor(tempColor);
-            paletteWindow.Invalidate(FALSE);
         }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
@@ -209,7 +208,6 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
                 GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom());
             if (tempColor != CLR_INVALID)
                 paletteModel.SetBgColor(tempColor);
-            paletteWindow.Invalidate(FALSE);
         }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }

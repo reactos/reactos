@@ -15,6 +15,10 @@ private:
     int m_nSelectedPalette;
     int m_fgColor;
     int m_bgColor;
+
+    void NotifyColorChanged();
+    void NotifyPaletteChanged();
+
 public:
     PaletteModel();
     int SelectedPalette();

@@ -58,7 +58,6 @@ class PaletteModel;
 extern PaletteModel paletteModel;
 
 extern HWND hStatusBar;
-extern HWND hTrackbarZoom;
 extern CHOOSECOLOR choosecolor;
 extern OPENFILENAME ofn;
 extern OPENFILENAME sfn;
@@ -88,6 +87,7 @@ extern BOOL showMiniature;
 
 class CMainWindow;
 class CMiniatureWindow;
+class CToolBox;
 class CToolSettingsWindow;
 class CPaletteWindow;
 class CScrollboxWindow;
@@ -98,7 +98,7 @@ class CTextEditWindow;
 
 extern CMainWindow mainWindow;
 extern CMiniatureWindow miniature;
-extern CMainWindow toolBoxContainer;
+extern CToolBox toolBoxContainer;
 extern CToolSettingsWindow toolSettingsWindow;
 extern CPaletteWindow paletteWindow;
 extern CScrollboxWindow scrollboxWindow;

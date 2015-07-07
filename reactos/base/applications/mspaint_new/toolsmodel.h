@@ -19,6 +19,11 @@ private:
     int m_rubberRadius;
     BOOL m_transpBg;
     int m_zoom;
+
+    void NotifyToolChanged();
+    void NotifyToolSettingsChanged();
+    void NotifyZoomChanged();
+
 public:
     ToolsModel();
     int GetLineWidth();

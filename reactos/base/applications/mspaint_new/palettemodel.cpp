@@ -45,6 +45,7 @@ void PaletteModel::SelectPalette(int nPalette)
     else
         return;
     m_nSelectedPalette = nPalette;
+    NotifyPaletteChanged();
 }
 
 int PaletteModel::GetColor(int nIndex)
@@ -58,7 +59,10 @@ int PaletteModel::GetColor(int nIndex)
 void PaletteModel::SetColor(int nIndex, int newColor)
 {
     if (nIndex < 28)
+    {
         m_colors[nIndex] = newColor;
+        NotifyPaletteChanged();
+    }
 }
 
 int PaletteModel::GetFgColor()
@@ -69,6 +73,7 @@ int PaletteModel::GetFgColor()
 void PaletteModel::SetFgColor(int newColor)
 {
     m_fgColor = newColor;
+    NotifyColorChanged();
 }
 
 int PaletteModel::GetBgColor()
@@ -79,4 +84,15 @@ int PaletteModel::GetBgColor()
 void PaletteModel::SetBgColor(int newColor)
 {
     m_bgColor = newColor;
+    NotifyColorChanged();
+}
+
+void PaletteModel::NotifyColorChanged()
+{
+    paletteWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
+}
+
+void PaletteModel::NotifyPaletteChanged()
+{
+    paletteWindow.SendMessage(WM_PALETTEMODELPALETTECHANGED);
 }

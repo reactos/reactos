@@ -63,7 +63,6 @@ LRESULT CPaletteWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     if (GET_X_LPARAM(lParam) >= 31)
     {
         paletteModel.SetFgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
-        InvalidateRect(NULL, FALSE);
         if (toolsModel.GetActiveTool() == 10)
             ForceRefreshSelectionContents();
     }
@@ -75,7 +74,6 @@ LRESULT CPaletteWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     if (GET_X_LPARAM(lParam) >= 31)
     {
         paletteModel.SetBgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
-        InvalidateRect(NULL, FALSE);
         if (toolsModel.GetActiveTool() == 10)
             ForceRefreshSelectionContents();
     }
@@ -90,7 +88,6 @@ LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
             paletteModel.SetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14,
                 choosecolor.rgbResult);
             paletteModel.SetFgColor(choosecolor.rgbResult);
-            InvalidateRect(NULL, FALSE);
             if (toolsModel.GetActiveTool() == 10)
                 ForceRefreshSelectionContents();
         }
@@ -105,9 +102,20 @@ LRESULT CPaletteWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
             paletteModel.SetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14,
                 choosecolor.rgbResult);
             paletteModel.SetBgColor(choosecolor.rgbResult);
-            InvalidateRect(NULL, FALSE);
             if (toolsModel.GetActiveTool() == 10)
                 ForceRefreshSelectionContents();
         }
+    return 0;
+}
+
+LRESULT CPaletteWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    InvalidateRect(NULL, FALSE);
+    return 0;
+}
+
+LRESULT CPaletteWindow::OnPaletteModelPaletteChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    InvalidateRect(NULL, FALSE);
     return 0;
 }
