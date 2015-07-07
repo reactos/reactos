@@ -19,6 +19,7 @@
 #define CLASS_DESC_LEN      256
 #define ROOT_NAME_SIZE      MAX_COMPUTERNAME_LENGTH + 1
 
+extern "C" {
 INT_PTR
 WINAPI
 DevicePropertiesExW(
@@ -28,7 +29,7 @@ DevicePropertiesExW(
     IN DWORD dwFlags OPTIONAL,
     IN BOOL bShowDevMgr
 );
-
+}
 typedef INT_PTR(WINAPI *pDevicePropertiesExW)(HWND,LPCWSTR,LPCWSTR,DWORD,BOOL);
 
 struct RefreshThreadData
@@ -214,7 +215,7 @@ CDeviceView::Refresh(
         // Node gets deleted on refresh so we copy it to another block
         size_t Length = wcslen(DeviceId) + 1;
         ThreadData->DeviceId = new WCHAR[Length];
-        wcscpy_s(ThreadData->DeviceId, Length, DeviceId);
+        StringCbCopyW(ThreadData->DeviceId, Length, DeviceId);
     }
 
 
@@ -458,7 +459,6 @@ CDeviceView::ListDevicesByType()
     HTREEITEM hTreeItem = NULL;
     GUID ClassGuid;
     INT ClassIndex;
-    LPTSTR DeviceId = NULL;
     BOOL bClassSuccess, bSuccess;
 
     // Start by adding the root node to the tree
@@ -475,7 +475,7 @@ CDeviceView::ListDevicesByType()
             bool bClassUnknown = false;
             bool AddedParent = false;
             INT DeviceIndex = 0;
-            BOOL MoreItems;
+            bool MoreItems = false;
 
             // Get the cached class node
             ClassNode = GetClassNode(&ClassGuid);
@@ -500,11 +500,11 @@ CDeviceView::ListDevicesByType()
                                                  DeviceIndex,
                                                  &DeviceInfoData);
                 if (bSuccess == FALSE && GetLastError() == ERROR_NO_MORE_ITEMS)
-                    MoreItems = FALSE;
+                    MoreItems = false;
 
                 if (bSuccess)
                 {
-                    MoreItems = TRUE;
+                    MoreItems = true;
 
                     // The unknown class handle contains all devices on the system,
                     // and we're just looking for the ones with a null GUID

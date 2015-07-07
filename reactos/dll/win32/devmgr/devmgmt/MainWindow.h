@@ -46,7 +46,6 @@ private:
     bool CreateStatusBar();
 
     void UpdateToolbar(
-        _In_ LPTV_ITEMW TvItem
         );
 
     bool StatusBarLoadString(

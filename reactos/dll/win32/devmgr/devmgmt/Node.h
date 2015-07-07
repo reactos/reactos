@@ -34,11 +34,6 @@ public:
     LPWSTR GetDisplayName() { return m_DisplayName; }
     INT GetClassImage() { return m_ClassImage; }
     LPWSTR GetDeviceId() { return m_DeviceId; }
-
     bool HasProperties() { return (m_DeviceId != NULL); }
-
-private:
-    void Cleanup();
-
 };
 

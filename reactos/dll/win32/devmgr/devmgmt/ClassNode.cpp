@@ -120,7 +120,7 @@ CClassNode::ConvertResourceDescriptorToString(
     if (ptr)
     {
         // This must be an inf based descriptor, the desc is after the semi colon
-        wcscpy_s(ResourceDescriptor, ResourceDescriptorSize, ++ptr);
+        StringCbCopyW(ResourceDescriptor, ResourceDescriptorSize, ++ptr);
         dwError = ERROR_SUCCESS;
     }
     else
@@ -154,7 +154,7 @@ CClassNode::ConvertResourceDescriptorToString(
         // Load the string from the dll
         if (LoadStringW(hModule, ResourceId, ResString, 256))
         {
-            wcscpy_s(ResourceDescriptor, ResourceDescriptorSize, ResString);
+            StringCbCopyW(ResourceDescriptor, ResourceDescriptorSize, ResString);
             dwError = ERROR_SUCCESS;
         }
         else

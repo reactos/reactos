@@ -274,7 +274,6 @@ CDeviceNode::EnableDevice(
     _Out_ bool &NeedsReboot
     )
 {
-    bool Ret = false;
     bool Canceled = false;
 
     SetFlags(DI_NODI_DEFAULTACTION, 0);
@@ -376,6 +375,8 @@ CDeviceNode::UninstallDevice()
                                   NULL,
                                   0);
 
+    return true;
+
 }
 
 /* PRIVATE METHODS ******************************************************/
@@ -424,9 +425,9 @@ CDeviceNode::SetFlags(
     {
         DevInstallParams.Flags |= Flags;
         DevInstallParams.FlagsEx |= FlagsEx;
-        return SetupDiSetDeviceInstallParamsW(m_hDevInfo,
-                                              &m_DevinfoData,
-                                              &DevInstallParams);
+        return (SetupDiSetDeviceInstallParamsW(m_hDevInfo,
+                                               &m_DevinfoData,
+                                               &DevInstallParams) != 0);
     }
     return false;
 }
@@ -445,9 +446,9 @@ CDeviceNode::RemoveFlags(
     {
         DevInstallParams.Flags &= ~Flags;
         DevInstallParams.FlagsEx &= ~FlagsEx;
-        return SetupDiSetDeviceInstallParamsW(m_hDevInfo,
-                                              &m_DevinfoData,
-                                              &DevInstallParams);
+        return (SetupDiSetDeviceInstallParamsW(m_hDevInfo,
+                                               &m_DevinfoData,
+                                               &DevInstallParams) != 0);
     }
     return false;
 }

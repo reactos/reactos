@@ -208,7 +208,7 @@ CMainWindow::UpdateStatusBar(
 bool
 CMainWindow::RefreshView(ViewType Type)
 {
-    UINT CheckId;
+    UINT CheckId = 0;
     BOOL bSuccess;
 
     // Refreshed the cached view
@@ -312,7 +312,7 @@ CMainWindow::CreateStatusBar()
     return bRet;
 }
 
-void CMainWindow::UpdateToolbar(_In_ LPTV_ITEMW TvItem)
+void CMainWindow::UpdateToolbar()
 {
     WORD State;
 
@@ -466,14 +466,12 @@ CMainWindow::OnNotify(LPARAM lParam)
     {
         case TVN_SELCHANGED:
         {
-            LPNMTREEVIEW NmTreeView = (LPNMTREEVIEW)lParam;
-            UpdateToolbar(&NmTreeView->itemNew);
+            UpdateToolbar();
             break;
         }
 
         case NM_DBLCLK:
         {
-            LPNMTREEVIEW NmTreeView = (LPNMTREEVIEW)lParam;
             m_DeviceView->DisplayPropertySheet();
             break;
         }
@@ -531,7 +529,7 @@ CMainWindow::OnContext(LPARAM lParam)
 
 LRESULT
 CMainWindow::OnCommand(WPARAM wParam,
-                       LPARAM lParam)
+                       LPARAM /*lParam*/)
 {
     LRESULT RetCode = 0;
     WORD Msg;
@@ -792,9 +790,9 @@ HANDLE ProcessHeap = NULL;
 
 BOOL
 WINAPI
-DeviceManager_ExecuteW(HWND hWndParent,
+DeviceManager_ExecuteW(HWND /*hWndParent*/,
                        HINSTANCE hInst,
-                       LPCWSTR lpMachineName,
+                       LPCWSTR /*lpMachineName*/,
                        int nCmdShow)
 {
     CMainWindow MainWindow;
