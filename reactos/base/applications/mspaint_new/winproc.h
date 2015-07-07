@@ -20,15 +20,8 @@ public:
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
-        MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
-        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-        MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
-        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
-        MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
-        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-        MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     END_MSG_MAP()
@@ -40,15 +33,14 @@ public:
     LRESULT OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnMouseLeave(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+    void selectTool(int tool);
+    void alignChildrenToMainWindow();
+    void saveImage(BOOL overwrite);
+    void UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename, LPTSTR newfilepathname);
+    void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
 };

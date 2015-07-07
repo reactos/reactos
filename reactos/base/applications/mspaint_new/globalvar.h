@@ -96,22 +96,24 @@ extern BOOL showGrid;
 extern BOOL showMiniature;
 
 class CMainWindow;
+class CMiniatureWindow;
 class CToolSettingsWindow;
 class CPaletteWindow;
 class CScrollboxWindow;
 class CSelectionWindow;
+class CImgAreaWindow;
 class CSizeboxWindow;
 class CTextEditWindow;
 
 extern CMainWindow mainWindow;
-extern CMainWindow miniature;
+extern CMiniatureWindow miniature;
 extern CMainWindow toolBoxContainer;
 extern CToolSettingsWindow toolSettingsWindow;
 extern CPaletteWindow paletteWindow;
 extern CScrollboxWindow scrollboxWindow;
 extern CScrollboxWindow scrlClientWindow;
 extern CSelectionWindow selectionWindow;
-extern CMainWindow imageArea;
+extern CImgAreaWindow imageArea;
 extern CSizeboxWindow sizeboxLeftTop;
 extern CSizeboxWindow sizeboxCenterTop;
 extern CSizeboxWindow sizeboxRightTop;

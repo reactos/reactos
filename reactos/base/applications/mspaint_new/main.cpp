@@ -104,14 +104,14 @@ BOOL showGrid = FALSE;
 BOOL showMiniature = FALSE;
 
 CMainWindow mainWindow;
-CMainWindow miniature;
+CMiniatureWindow miniature;
 CMainWindow toolBoxContainer;
 CToolSettingsWindow toolSettingsWindow;
 CPaletteWindow paletteWindow;
 CScrollboxWindow scrollboxWindow;
 CScrollboxWindow scrlClientWindow;
 CSelectionWindow selectionWindow;
-CMainWindow imageArea;
+CImgAreaWindow imageArea;
 CSizeboxWindow sizeboxLeftTop;
 CSizeboxWindow sizeboxCenterTop;
 CSizeboxWindow sizeboxRightTop;

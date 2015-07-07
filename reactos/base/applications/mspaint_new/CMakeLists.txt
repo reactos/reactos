@@ -9,7 +9,9 @@ list(APPEND SOURCE
     dib.cpp
     drawing.cpp
     history.cpp
+    imgarea.cpp
     main.cpp
+    miniature.cpp
     mouse.cpp
     palette.cpp
     registry.cpp
