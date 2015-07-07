@@ -26,7 +26,6 @@
 
 #include "memory.h"
 #include "io.h"
-#include "dos32krnl/dos.h"
 #include "dos32krnl/memory.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -39,6 +38,7 @@ typedef struct _MOUSE_DRIVER
 {
     CHAR Copyright[sizeof(MouseCopyright)];
     WORD Version;
+    BYTE MouseContextScratch[TRAMPOLINE_SIZE];
     BYTE MouseDosInt16Stub[Int16To32StubSize];
     BYTE MouseIrqInt16Stub[Int16To32StubSize];
 } MOUSE_DRIVER, *PMOUSE_DRIVER;
@@ -46,8 +46,9 @@ typedef struct _MOUSE_DRIVER
 #pragma pack(pop)
 
 /* Global data contained in guest memory */
-WORD MouseDataSegment;
-PMOUSE_DRIVER MouseData;
+static WORD MouseDataSegment;
+static PMOUSE_DRIVER MouseData;
+static CALLBACK16 MouseContext;
 
 #define MICKEYS_PER_CELL_HORIZ  8
 #define MICKEYS_PER_CELL_VERT   16
@@ -198,7 +199,7 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
                CallMask);
 
         /* Call the callback */
-        RunCallback16(&DosContext, DriverState.Handler0.Callback);
+        RunCallback16(&MouseContext, DriverState.Handler0.Callback);
 
         setAX(AX);
         setBX(BX);
@@ -241,7 +242,7 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
                     CallMask);
 
             /* Call the callback */
-            RunCallback16(&DosContext, DriverState.Handlers[i].Callback);
+            RunCallback16(&MouseContext, DriverState.Handlers[i].Callback);
 
             setAX(AX);
             setBX(BX);
@@ -915,28 +916,26 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
 
 VOID DosMouseEnable(VOID)
 {
-    if (!DriverEnabled)
-    {
-        DriverEnabled = TRUE;
+    if (DriverEnabled) return;
 
-        /* Get the old IRQ handler */
-        OldIrqHandler = ((PDWORD)BaseAddress)[MOUSE_IRQ_INT];
+    DriverEnabled = TRUE;
 
-        /* Set the IRQ handler */
-        RegisterInt32(MAKELONG(FIELD_OFFSET(MOUSE_DRIVER, MouseIrqInt16Stub), MouseDataSegment),
-                      MOUSE_IRQ_INT, DosMouseIrq, NULL);
-    }
+    /* Get the old IRQ handler */
+    OldIrqHandler = ((PDWORD)BaseAddress)[MOUSE_IRQ_INT];
+
+    /* Set the IRQ handler */
+    RegisterInt32(MAKELONG(FIELD_OFFSET(MOUSE_DRIVER, MouseIrqInt16Stub), MouseDataSegment),
+                  MOUSE_IRQ_INT, DosMouseIrq, NULL);
 }
 
 VOID DosMouseDisable(VOID)
 {
-    if (DriverEnabled)
-    {
-        /* Restore the old IRQ handler */
-        ((PDWORD)BaseAddress)[MOUSE_IRQ_INT] = OldIrqHandler;
+    if (!DriverEnabled) return;
 
-        DriverEnabled = FALSE;
-    }
+    /* Restore the old IRQ handler */
+    ((PDWORD)BaseAddress)[MOUSE_IRQ_INT] = OldIrqHandler;
+
+    DriverEnabled = FALSE;
 }
 
 VOID DosMouseUpdatePosition(PCOORD NewPosition)
@@ -1000,6 +999,9 @@ BOOLEAN DosMouseInitialize(VOID)
     MouseDataSegment = DosAllocateMemory(sizeof(MOUSE_DRIVER), NULL);
     if (MouseDataSegment == 0) return FALSE;
     MouseData = (PMOUSE_DRIVER)SEG_OFF_TO_PTR(MouseDataSegment, 0x0000);
+
+    /* Initialize the callback context */
+    InitializeContext(&MouseContext, MouseDataSegment, FIELD_OFFSET(MOUSE_DRIVER, MouseContextScratch));
 
     /* Clear the state */
     RtlZeroMemory(&DriverState, sizeof(DriverState));

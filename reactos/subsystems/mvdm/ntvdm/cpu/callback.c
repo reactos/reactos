@@ -29,8 +29,6 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-#define TRAMPOLINE_SIZE sizeof(ULONGLONG)
-
 static BYTE Yield[] =
 {
     0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,

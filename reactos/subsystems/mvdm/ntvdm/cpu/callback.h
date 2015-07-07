@@ -21,6 +21,8 @@ do {                                 \
 } while(0)
 // #define UnSimulate16        MAKELONG(EMULATOR_BOP, BOP_UNSIMULATE) // BOP(BOP_UNSIMULATE)
 
+#define TRAMPOLINE_SIZE     sizeof(ULONGLONG)
+
 typedef struct _CALLBACK16
 {
     ULONG  TrampolineFarPtr; // Where the trampoline zone is placed
