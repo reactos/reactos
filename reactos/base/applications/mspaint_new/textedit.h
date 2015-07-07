@@ -6,6 +6,18 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-void RegisterWclTextEdit();
+class CTextEditWindow : public CWindowImpl<CTextEditWindow>
+{
+public:
+    DECLARE_WND_CLASS_EX(_T("TextEdit"), CS_DBLCLKS, COLOR_BTNFACE)
 
-LRESULT CALLBACK TextEditWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+    BEGIN_MSG_MAP(CPaletteWindow)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_CLOSE, OnClose)
+        MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+    END_MSG_MAP()
+
+    LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+};

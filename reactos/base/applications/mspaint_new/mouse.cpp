@@ -15,10 +15,10 @@
 void
 placeSelWin()
 {
-    MoveWindow(hSelection, rectSel_dest.left * zoom / 1000, rectSel_dest.top * zoom / 1000,
-               RECT_WIDTH(rectSel_dest) * zoom / 1000 + 6, RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 6, TRUE);
-    BringWindowToTop(hSelection);
-    InvalidateRect(hImageArea, NULL, FALSE);
+    selectionWindow.MoveWindow(rectSel_dest.left * zoom / 1000, rectSel_dest.top * zoom / 1000,
+        RECT_WIDTH(rectSel_dest) * zoom / 1000 + 6, RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 6, TRUE);
+    selectionWindow.BringWindowToTop();
+    imageArea.InvalidateRect(NULL, FALSE);
 }
 
 void
@@ -64,7 +64,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
     switch (activeTool)
     {
         case TOOL_FREESEL:
-            ShowWindow(hSelection, SW_HIDE);
+            selectionWindow.ShowWindow(SW_HIDE);
             if (ptStack != NULL)
                 HeapFree(GetProcessHeap(), 0, ptStack);
             ptStack = (POINT*) HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * 1024);
@@ -81,7 +81,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_RECTSEL:
         case TOOL_TEXT:
             newReversible();
-            ShowWindow(hSelection, SW_HIDE);
+            selectionWindow.ShowWindow(SW_HIDE);
             rectSel_src.right = rectSel_src.left;
             rectSel_src.bottom = rectSel_src.top;
             break;
@@ -280,11 +280,11 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                         0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
 
                 placeSelWin();
-                ShowWindow(hSelection, SW_SHOW);
+                selectionWindow.ShowWindow(SW_SHOW);
                 /* force refresh of selection contents */
-                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
-                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
-                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
+                selectionWindow.SendMessage(WM_LBUTTONDOWN, 0, 0);
+                selectionWindow.SendMessage(WM_MOUSEMOVE, 0, 0);
+                selectionWindow.SendMessage(WM_LBUTTONUP, 0, 0);
             }
             HeapFree(GetProcessHeap(), 0, ptStack);
             ptStack = NULL;
@@ -310,7 +310,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                        0, SRCCOPY);
 
                 placeSelWin();
-                ShowWindow(hSelection, SW_SHOW);
+                selectionWindow.ShowWindow(SW_SHOW);
                 ForceRefreshSelectionContents();
             }
             break;
@@ -321,7 +321,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 newReversible();
 
                 placeSelWin();
-                ShowWindow(hSelection, SW_SHOW);
+                selectionWindow.ShowWindow(SW_SHOW);
                 ForceRefreshSelectionContents();
             }
             break;

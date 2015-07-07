@@ -6,6 +6,18 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-void RegisterWclSettings();
+class CToolSettingsWindow : public CWindowImpl<CToolSettingsWindow>
+{
+public:
+    DECLARE_WND_CLASS_EX(_T("ToolSettings"), CS_DBLCLKS, COLOR_BTNFACE)
 
-LRESULT CALLBACK SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+    BEGIN_MSG_MAP(CPaletteWindow)
+        MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
+        MESSAGE_HANDLER(WM_PAINT, OnPaint)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+    END_MSG_MAP()
+
+    LRESULT OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+};

@@ -7,10 +7,13 @@
 #include <winbase.h>
 #include <winuser.h>
 #include <wingdi.h>
+#include <tchar.h>
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlwin.h>
 #include <windowsx.h>
 #include <commdlg.h>
 #include <commctrl.h>
-#include <tchar.h>
 #include <stdlib.h>
 #include <shellapi.h>
 #include <htmlhelp.h>
@@ -21,6 +24,12 @@
 #include "globalvar.h"
 #include "history.h"
 #include "mouse.h"
+#include "palette.h"
+#include "scrollbox.h"
 #include "selection.h"
+#include "sizebox.h"
+#include "textedit.h"
+#include "toolsettings.h"
+#include "winproc.h"
 
 #endif /* _MSPAINT_H */

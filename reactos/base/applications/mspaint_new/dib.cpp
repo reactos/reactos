@@ -109,7 +109,7 @@ void ShowFileLoadError(LPTSTR name)
     LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
     LoadString(hProgInstance, IDS_LOADERRORTEXT, loaderrortext, SIZEOF(loaderrortext));
     _stprintf(temptext, loaderrortext, name);
-    MessageBox(hMainWnd, temptext, programname, MB_OK | MB_ICONEXCLAMATION);
+    mainWindow.MessageBox(temptext, programname, MB_OK | MB_ICONEXCLAMATION);
 }
 
 void

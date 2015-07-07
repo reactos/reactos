@@ -50,11 +50,8 @@ extern int transpBg;
 extern int zoom;
 extern RECT rectSel_src;
 extern RECT rectSel_dest;
-extern HWND hSelection;
-extern HWND hImageArea;
 extern HBITMAP hSelBm;
 extern HBITMAP hSelMask;
-extern HWND hwndTextEdit;
 extern HWND hwndEditCtl;
 extern LOGFONT lfTextFont;
 extern HFONT hfontTextFont;
@@ -70,11 +67,6 @@ extern int fgColor;
 extern int bgColor;
 
 extern HWND hStatusBar;
-extern HWND hScrollbox;
-extern HWND hMainWnd;
-extern HWND hPalWin;
-extern HWND hToolBoxContainer;
-extern HWND hToolSettings;
 extern HWND hTrackbarZoom;
 extern CHOOSECOLOR choosecolor;
 extern OPENFILENAME ofn;
@@ -87,8 +79,6 @@ extern HCURSOR hCurColor;
 extern HCURSOR hCurZoom;
 extern HCURSOR hCurPen;
 extern HCURSOR hCurAirbrush;
-
-extern HWND hScrlClient;
 
 extern HWND hToolBtn[16];
 
@@ -105,16 +95,32 @@ extern SYSTEMTIME fileTime;
 extern BOOL showGrid;
 extern BOOL showMiniature;
 
-extern HWND hwndMiniature;
+class CMainWindow;
+class CToolSettingsWindow;
+class CPaletteWindow;
+class CScrollboxWindow;
+class CSelectionWindow;
+class CSizeboxWindow;
+class CTextEditWindow;
 
-extern HWND hSizeboxLeftTop;
-extern HWND hSizeboxCenterTop;
-extern HWND hSizeboxRightTop;
-extern HWND hSizeboxLeftCenter;
-extern HWND hSizeboxRightCenter;
-extern HWND hSizeboxLeftBottom;
-extern HWND hSizeboxCenterBottom;
-extern HWND hSizeboxRightBottom;
+extern CMainWindow mainWindow;
+extern CMainWindow miniature;
+extern CMainWindow toolBoxContainer;
+extern CToolSettingsWindow toolSettingsWindow;
+extern CPaletteWindow paletteWindow;
+extern CScrollboxWindow scrollboxWindow;
+extern CScrollboxWindow scrlClientWindow;
+extern CSelectionWindow selectionWindow;
+extern CMainWindow imageArea;
+extern CSizeboxWindow sizeboxLeftTop;
+extern CSizeboxWindow sizeboxCenterTop;
+extern CSizeboxWindow sizeboxRightTop;
+extern CSizeboxWindow sizeboxLeftCenter;
+extern CSizeboxWindow sizeboxRightCenter;
+extern CSizeboxWindow sizeboxLeftBottom;
+extern CSizeboxWindow sizeboxCenterBottom;
+extern CSizeboxWindow sizeboxRightBottom;
+extern CTextEditWindow textEditWindow;
 
 /* VARIABLES declared in mouse.c ************************************/
 

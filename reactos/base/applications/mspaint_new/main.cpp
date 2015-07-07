@@ -10,14 +10,6 @@
 
 #include "precomp.h"
 
-#include "winproc.h"
-#include "scrollbox.h"
-#include "palette.h"
-#include "toolsettings.h"
-#include "selection.h"
-#include "sizebox.h"
-#include "textedit.h"
-
 /* FUNCTIONS ********************************************************/
 
 HDC hDrawingDC;
@@ -50,13 +42,10 @@ int transpBg = 0;
 int zoom = 1000;
 RECT rectSel_src;
 RECT rectSel_dest;
-HWND hSelection;
-HWND hImageArea;
 HBITMAP hSelBm;
 HBITMAP hSelMask;
 LOGFONT lfTextFont;
 HFONT hfontTextFont;
-HWND hwndTextEdit;
 HWND hwndEditCtl;
 LPTSTR textToolText = NULL;
 int textToolTextMaxLen = 0;
@@ -86,11 +75,6 @@ int fgColor = 0x00000000;
 int bgColor = 0x00ffffff;
 
 HWND hStatusBar;
-HWND hScrollbox;
-HWND hMainWnd;
-HWND hPalWin;
-HWND hToolBoxContainer;
-HWND hToolSettings;
 HWND hTrackbarZoom;
 CHOOSECOLOR choosecolor;
 OPENFILENAME ofn;
@@ -103,8 +87,6 @@ HCURSOR hCurColor;
 HCURSOR hCurZoom;
 HCURSOR hCurPen;
 HCURSOR hCurAirbrush;
-
-HWND hScrlClient;
 
 HWND hToolBtn[16];
 
@@ -121,16 +103,24 @@ SYSTEMTIME fileTime;
 BOOL showGrid = FALSE;
 BOOL showMiniature = FALSE;
 
-HWND hwndMiniature;
-
-HWND hSizeboxLeftTop;
-HWND hSizeboxCenterTop;
-HWND hSizeboxRightTop;
-HWND hSizeboxLeftCenter;
-HWND hSizeboxRightCenter;
-HWND hSizeboxLeftBottom;
-HWND hSizeboxCenterBottom;
-HWND hSizeboxRightBottom;
+CMainWindow mainWindow;
+CMainWindow miniature;
+CMainWindow toolBoxContainer;
+CToolSettingsWindow toolSettingsWindow;
+CPaletteWindow paletteWindow;
+CScrollboxWindow scrollboxWindow;
+CScrollboxWindow scrlClientWindow;
+CSelectionWindow selectionWindow;
+CMainWindow imageArea;
+CSizeboxWindow sizeboxLeftTop;
+CSizeboxWindow sizeboxCenterTop;
+CSizeboxWindow sizeboxRightTop;
+CSizeboxWindow sizeboxLeftCenter;
+CSizeboxWindow sizeboxRightCenter;
+CSizeboxWindow sizeboxLeftBottom;
+CSizeboxWindow sizeboxCenterBottom;
+CSizeboxWindow sizeboxRightBottom;
+CTextEditWindow textEditWindow;
 
 /* entry point */
 
@@ -189,30 +179,18 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* initialize common controls library */
     InitCommonControls();
 
-    /* register application defined window classes */
-    RegisterWclMain();
-    RegisterWclScrollbox();
-    RegisterWclPal();
-    RegisterWclSettings();
-    RegisterWclSelection();
-    RegisterWclSizebox();
-    RegisterWclTextEdit();
-
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filename, SIZEOF(filename));
     LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
     _stprintf(progtitle, resstr, filename);
     LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, SIZEOF(miniaturetitle));
 
     /* create main window */
-    hwnd =
-        CreateWindowEx(0, _T("MainWindow"), progtitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 544,
-                       375, HWND_DESKTOP, NULL, hThisInstance, NULL);
-    hMainWnd = hwnd;
+    RECT mainWindowPos = {0, 0, 544, 375};	// FIXME: use equivalent of CW_USEDEFAULT for position
+    hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, progtitle, WS_OVERLAPPEDWINDOW, 0, 0U, NULL);
 
-    hwndMiniature =
-        CreateWindowEx(WS_EX_PALETTEWINDOW, _T("MainWindow"), miniaturetitle,
-                       WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 180, 200, 120, 100, hwnd,
-                       NULL, hThisInstance, NULL);
+    RECT miniaturePos = {180, 200, 180 + 120, 200 + 100};
+    miniature.Create(hwnd, miniaturePos, miniaturetitle,
+                     WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, WS_EX_PALETTEWINDOW, 0U, NULL);
 
     /* loading and setting the window menu from resource */
     menu = LoadMenu(hThisInstance, MAKEINTRESOURCE(ID_MENU));
@@ -234,9 +212,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     CreateWindowEx(0, _T("STATIC"), _T(""), WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 0, 0, 5000, 2, hwnd, NULL,
                    hThisInstance, NULL);
 
-    hToolBoxContainer =
-        CreateWindowEx(0, _T("MainWindow"), _T(""), WS_CHILD | WS_VISIBLE, 2, 2, 52, 350, hwnd, NULL,
-                       hThisInstance, NULL);
+    RECT toolBoxContainerPos = {2, 2, 2 + 52, 2 + 350};
+    toolBoxContainer.Create(hwnd, toolBoxContainerPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
     /* creating the 16 bitmap radio buttons and setting the bitmap */
 
 
@@ -247,7 +224,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     hToolbar =
         CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
                        WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE | TBSTYLE_TOOLTIPS,
-                       1, -2, 50, 205, hToolBoxContainer, NULL, hThisInstance, NULL);
+                       1, -2, 50, 205, toolBoxContainer.m_hWnd, NULL, hThisInstance, NULL);
     hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     SendMessage(hToolbar, TB_SETIMAGELIST, 0, (LPARAM) hImageList);
     tempBm = (HBITMAP) LoadImage(hThisInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
@@ -278,25 +255,22 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     SendMessage(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(25, 25));
 
     /* creating the tool settings child window */
-    hToolSettings =
-        CreateWindowEx(0, _T("ToolSettings"), _T(""), WS_CHILD | WS_VISIBLE, 5, 208, 42, 140,
-                       hToolBoxContainer, NULL, hThisInstance, NULL);
+    RECT toolSettingsWindowPos = {5, 208, 5 + 42, 208 + 140};
+    toolSettingsWindow.Create(toolBoxContainer.m_hWnd, toolSettingsWindowPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
     hTrackbarZoom =
         CreateWindowEx(0, TRACKBAR_CLASS, _T(""), WS_CHILD | TBS_VERT | TBS_AUTOTICKS, 1, 1, 40, 64,
-                       hToolSettings, NULL, hThisInstance, NULL);
+                       toolSettingsWindow.m_hWnd, NULL, hThisInstance, NULL);
     SendMessage(hTrackbarZoom, TBM_SETRANGE, (WPARAM) TRUE, (LPARAM) MAKELONG(0, 6));
     SendMessage(hTrackbarZoom, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 3);
 
     /* creating the palette child window */
-    hPalWin =
-        CreateWindowEx(0, _T("Palette"), _T(""), WS_CHILD | WS_VISIBLE, 56, 9, 255, 32, hwnd, NULL,
-                       hThisInstance, NULL);
+    RECT paletteWindowPos = {56, 9, 56 + 255, 9 + 32};
+    paletteWindow.Create(hwnd, paletteWindowPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
 
     /* creating the scroll box */
-    hScrollbox =
-        CreateWindowEx(WS_EX_CLIENTEDGE, _T("Scrollbox"), _T(""),
-                       WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE, 56, 49, 472, 248, hwnd,
-                       NULL, hThisInstance, NULL);
+    RECT scrollboxWindowPos = {56, 49, 56 + 472, 49 + 248};
+    scrollboxWindow.Create(hwnd, scrollboxWindowPos, _T(""),
+                           WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE, WS_EX_CLIENTEDGE, 0U, NULL);
 
     /* creating the status bar */
     hStatusBar =
@@ -304,24 +278,21 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
                        NULL, hThisInstance, NULL);
     SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
 
-    hScrlClient =
-        CreateWindowEx(0, _T("Scrollbox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 500, 500, hScrollbox, NULL,
-                       hThisInstance, NULL);
+    RECT scrlClientWindowPos = {0, 0, 0 + 500, 0 + 500};
+    scrlClientWindow.Create(scrollboxWindow.m_hWnd, scrlClientWindowPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
 
     /* create selection window (initially hidden) */
-    hSelection =
-        CreateWindowEx(WS_EX_TRANSPARENT, _T("Selection"), _T(""), WS_CHILD | BS_OWNERDRAW, 350, 0, 100, 100,
-                       hScrlClient, NULL, hThisInstance, NULL);
+    RECT selectionWindowPos = {350, 0, 350 + 100, 0 + 100};
+    selectionWindow.Create(scrlClientWindow.m_hWnd, selectionWindowPos, _T(""), WS_CHILD | BS_OWNERDRAW, 0, 0U, NULL);
 
     /* creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn */
-    hImageArea =
-        CreateWindowEx(0, _T("MainWindow"), _T(""), WS_CHILD | WS_VISIBLE, 3, 3, imgXRes, imgYRes, hScrlClient,
-                       NULL, hThisInstance, NULL);
+    RECT imageAreaPos = {3, 3, 3 + imgXRes, 3 + imgYRes};
+    imageArea.Create(scrlClientWindow.m_hWnd, imageAreaPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
 
-    hDC = GetDC(hImageArea);
+    hDC = imageArea.GetDC();
     hDrawingDC = CreateCompatibleDC(hDC);
     hSelDC     = CreateCompatibleDC(hDC);
-    ReleaseDC(hImageArea, hDC);
+    imageArea.ReleaseDC(hDC);
     SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, fgColor));
     SelectObject(hDrawingDC, CreateSolidBrush(bgColor));
 
@@ -343,7 +314,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
             _tcscpy(filename, temp);
             LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
             _stprintf(tempstr, resstr, filename);
-            SetWindowText(hMainWnd, tempstr);
+            mainWindow.SetWindowText(tempstr);
             clearHistory();
             isAFile = TRUE;
         }
@@ -398,45 +369,29 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     sfn.Flags          = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
     /* creating the size boxes */
-    hSizeboxLeftTop =
-        CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL,
-                       hThisInstance, NULL);
-    hSizeboxCenterTop =
-        CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL,
-                       hThisInstance, NULL);
-    hSizeboxRightTop =
-        CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL,
-                       hThisInstance, NULL);
-    hSizeboxLeftCenter =
-        CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL,
-                       hThisInstance, NULL);
-    hSizeboxRightCenter =
-        CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL,
-                       hThisInstance, NULL);
-    hSizeboxLeftBottom =
-        CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL,
-                       hThisInstance, NULL);
-    hSizeboxCenterBottom =
-        CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL,
-                       hThisInstance, NULL);
-    hSizeboxRightBottom =
-        CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL,
-                       hThisInstance, NULL);
+    RECT sizeboxPos = {0, 0, 0 + 3, 0 + 3};
+    sizeboxLeftTop.Create(scrlClientWindow.m_hWnd, sizeboxPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
+    sizeboxCenterTop.Create(scrlClientWindow.m_hWnd, sizeboxPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
+    sizeboxRightTop.Create(scrlClientWindow.m_hWnd, sizeboxPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
+    sizeboxLeftCenter.Create(scrlClientWindow.m_hWnd, sizeboxPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
+    sizeboxRightCenter.Create(scrlClientWindow.m_hWnd, sizeboxPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
+    sizeboxLeftBottom.Create(scrlClientWindow.m_hWnd, sizeboxPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
+    sizeboxCenterBottom.Create(scrlClientWindow.m_hWnd, sizeboxPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
+    sizeboxRightBottom.Create(scrlClientWindow.m_hWnd, sizeboxPos, _T(""), WS_CHILD | WS_VISIBLE, 0, 0U, NULL);
     /* placing the size boxes around the image */
-    SendMessage(hImageArea, WM_SIZE, 0, 0);
+    imageArea.SendMessage(WM_SIZE, 0, 0);
 
     /* by moving the window, the things in WM_SIZE are done */
     MoveWindow(hwnd, 100, 100, 600, 450, TRUE);
 
     /* creating the text editor window for the text tool */
-    hwndTextEdit =
-        CreateWindowEx(0, _T("TextEdit"), _T(""), WS_OVERLAPPEDWINDOW, 300, 0, 300,
-                       200, hwnd, NULL, hThisInstance, NULL);
+    RECT textEditWindowPos = {300, 0, 300 + 300, 0 + 200};
+    textEditWindow.Create(hwnd, textEditWindowPos, _T(""), WS_OVERLAPPEDWINDOW, 0, 0U, NULL);
     /* creating the edit control within the editor window */
     hwndEditCtl =
         CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""),
                        WS_CHILD | WS_VISIBLE | WS_BORDER | WS_HSCROLL | WS_VSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
-                       0, 0, 100, 100, hwndTextEdit, NULL, hThisInstance, NULL);
+                       0, 0, 100, 100, textEditWindow.m_hWnd, NULL, hThisInstance, NULL);
 
     /* Make the window visible on the screen */
     ShowWindow (hwnd, nFunsterStil);

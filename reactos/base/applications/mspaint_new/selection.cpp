@@ -39,26 +39,6 @@ POINTS frac;
 POINT delta;
 DWORD system_selection_color;
 
-void
-RegisterWclSelection()
-{
-    WNDCLASSEX wclSelection;
-    /* initializing and registering the window class for the selection frame */
-    wclSelection.hInstance      = hProgInstance;
-    wclSelection.lpszClassName  = _T("Selection");
-    wclSelection.lpfnWndProc    = SelectionWinProc;
-    wclSelection.style          = CS_DBLCLKS;
-    wclSelection.cbSize         = sizeof(WNDCLASSEX);
-    wclSelection.hIcon          = NULL;
-    wclSelection.hIconSm        = NULL;
-    wclSelection.hCursor        = LoadCursor(NULL, IDC_SIZEALL);
-    wclSelection.lpszMenuName   = NULL;
-    wclSelection.cbClsExtra     = 0;
-    wclSelection.cbWndExtra     = 0;
-    wclSelection.hbrBackground  = NULL;
-    RegisterClassEx (&wclSelection);
-}
-
 BOOL
 ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask, DWORD dwRop, COLORREF keyColor)
 {
@@ -93,11 +73,11 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, 
 void
 ForceRefreshSelectionContents()
 {
-    if (IsWindowVisible(hSelection))
+    if (selectionWindow.IsWindowVisible())
     {
-        SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-        SendMessage(hSelection, WM_MOUSEMOVE,   0, MAKELPARAM(0, 0));
-        SendMessage(hSelection, WM_LBUTTONUP,   0, MAKELPARAM(0, 0));
+        selectionWindow.SendMessage(WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
+        selectionWindow.SendMessage(WM_MOUSEMOVE,   0, MAKELPARAM(0, 0));
+        selectionWindow.SendMessage(WM_LBUTTONUP,   0, MAKELPARAM(0, 0));
     }
 }
 
@@ -132,199 +112,217 @@ identifyCorner(short x, short y, short w, short h)
     return 0;
 }
 
-LRESULT CALLBACK
-SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    switch (message)
+    if (!moving)
     {
-        case WM_PAINT:
+        HDC hDC = GetDC();
+        DefWindowProc(WM_PAINT, wParam, lParam);
+        SelectionFrame(hDC, 1, 1, RECT_WIDTH(rectSel_dest) * zoom / 1000 + 5,
+                       RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 5,
+                       system_selection_color);
+        ReleaseDC(hDC);
+    }
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnEraseBkgnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    // do nothing => transparent background
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    /* update the system selection color */
+    system_selection_color = GetSysColor(COLOR_HIGHLIGHT);
+    SendMessage(WM_PAINT, 0, MAKELPARAM(0, 0));
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    /* update the system selection color */
+    system_selection_color = GetSysColor(COLOR_HIGHLIGHT);
+    SendMessage(WM_PAINT, 0, MAKELPARAM(0, 0));
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    pos.x = GET_X_LPARAM(lParam);
+    pos.y = GET_Y_LPARAM(lParam);
+    delta.x = 0;
+    delta.y = 0;
+    SetCapture();
+    if (action != ACTION_MOVE)
+        SetCursor(LoadCursor(NULL, cursors[action]));
+    moving = TRUE;
+    scrlClientWindow.InvalidateRect(NULL, TRUE);
+    imageArea.SendMessage(WM_PAINT, 0, 0);
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (moving)
+    {
+        TCHAR sizeStr[100];
+        POINT deltaUsed;
+        resetToU1();
+        frac.x += GET_X_LPARAM(lParam) - pos.x;
+        frac.y += GET_Y_LPARAM(lParam) - pos.y;
+        delta.x += frac.x * 1000 / zoom;
+        delta.y += frac.y * 1000 / zoom;
+        if (zoom < 1000)
         {
-            if (!moving)
-            {
-                HDC hDC = GetDC(hwnd);
-                DefWindowProc(hwnd, message, wParam, lParam);
-                SelectionFrame(hDC, 1, 1, RECT_WIDTH(rectSel_dest) * zoom / 1000 + 5,
-                               RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 5,
-                               system_selection_color);
-                ReleaseDC(hwnd, hDC);
-            }
-            break;
+            frac.x = 0;
+            frac.y = 0;
         }
-        case WM_CREATE:
-        case WM_SYSCOLORCHANGE:
+        else
         {
-            /* update the system selection color */
-            system_selection_color = GetSysColor(COLOR_HIGHLIGHT);
-            SendMessage(hwnd, WM_PAINT, 0, MAKELPARAM(0, 0));
-            break;
+            frac.x -= (frac.x * 1000 / zoom) * zoom / 1000;
+            frac.y -= (frac.y * 1000 / zoom) * zoom / 1000;
         }
-        case WM_LBUTTONDOWN:
+        switch (action)
         {
-            pos.x = GET_X_LPARAM(lParam);
-            pos.y = GET_Y_LPARAM(lParam);
-            delta.x = 0;
-            delta.y = 0;
-            SetCapture(hwnd);
+            case ACTION_MOVE:                /* move selection */
+                deltaUsed.x = delta.x;
+                deltaUsed.y = delta.y;
+                OffsetRect(&rectSel_dest, deltaUsed.x, deltaUsed.y);
+                break;
+            case ACTION_RESIZE_TOP_LEFT:     /* resize at upper left corner */
+                deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
+                deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
+                rectSel_dest.left += deltaUsed.x;
+                rectSel_dest.top  += deltaUsed.y;
+                break;
+            case ACTION_RESIZE_TOP:          /* resize at top edge */
+                deltaUsed.x = delta.x;
+                deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
+                rectSel_dest.top += deltaUsed.y;
+                break;
+            case ACTION_RESIZE_TOP_RIGHT:    /* resize at upper right corner */
+                deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
+                deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
+                rectSel_dest.top   += deltaUsed.y;
+                rectSel_dest.right += deltaUsed.x;
+                break;
+            case ACTION_RESIZE_LEFT:         /* resize at left edge */
+                deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
+                deltaUsed.y = delta.y;
+                rectSel_dest.left += deltaUsed.x;
+                break;
+            case ACTION_RESIZE_RIGHT:        /* resize at right edge */
+                deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
+                deltaUsed.y = delta.y;
+                rectSel_dest.right += deltaUsed.x;
+                break;
+            case ACTION_RESIZE_BOTTOM_LEFT:  /* resize at lower left corner */
+                deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
+                deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
+                rectSel_dest.left   += deltaUsed.x;
+                rectSel_dest.bottom += deltaUsed.y;
+                break;
+            case ACTION_RESIZE_BOTTOM:       /* resize at bottom edge */
+                deltaUsed.x = delta.x;
+                deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
+                rectSel_dest.bottom += deltaUsed.y;
+                break;
+            case ACTION_RESIZE_BOTTOM_RIGHT: /* resize at lower right corner */
+                deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
+                deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
+                rectSel_dest.right  += deltaUsed.x;
+                rectSel_dest.bottom += deltaUsed.y;
+                break;
+        }
+        delta.x -= deltaUsed.x;
+        delta.y -= deltaUsed.y;
+
+        _stprintf(sizeStr, _T("%d x %d"), RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
+        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
+
+        if (activeTool == TOOL_TEXT)
+        {
+            Text(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right, rectSel_dest.bottom, fgColor, bgColor, textToolText, hfontTextFont, transpBg);
+        }
+        else
+        {
             if (action != ACTION_MOVE)
-                SetCursor(LoadCursor(NULL, cursors[action]));
-            moving = TRUE;
-            InvalidateRect(hScrlClient, NULL, TRUE);
-            break;
-        }
-        case WM_MOUSEMOVE:
-            if (moving)
+                StretchBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0, GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
+            else
+            if (transpBg == 0)
+                MaskBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest),
+                        hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
+            else
             {
-                TCHAR sizeStr[100];
-                POINT deltaUsed;
-                resetToU1();
-                frac.x += GET_X_LPARAM(lParam) - pos.x;
-                frac.y += GET_Y_LPARAM(lParam) - pos.y;
-                delta.x += frac.x * 1000 / zoom;
-                delta.y += frac.y * 1000 / zoom;
-                if (zoom < 1000)
-                {
-                    frac.x = 0;
-                    frac.y = 0;
-                }
-                else
-                {
-                    frac.x -= (frac.x * 1000 / zoom) * zoom / 1000;
-                    frac.y -= (frac.y * 1000 / zoom) * zoom / 1000;
-                }
-                switch (action)
-                {
-                    case ACTION_MOVE:                /* move selection */
-                        deltaUsed.x = delta.x;
-                        deltaUsed.y = delta.y;
-                        OffsetRect(&rectSel_dest, deltaUsed.x, deltaUsed.y);
-                        break;
-                    case ACTION_RESIZE_TOP_LEFT:     /* resize at upper left corner */
-                        deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
-                        deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
-                        rectSel_dest.left += deltaUsed.x;
-                        rectSel_dest.top  += deltaUsed.y;
-                        break;
-                    case ACTION_RESIZE_TOP:          /* resize at top edge */
-                        deltaUsed.x = delta.x;
-                        deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
-                        rectSel_dest.top += deltaUsed.y;
-                        break;
-                    case ACTION_RESIZE_TOP_RIGHT:    /* resize at upper right corner */
-                        deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
-                        deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
-                        rectSel_dest.top   += deltaUsed.y;
-                        rectSel_dest.right += deltaUsed.x;
-                        break;
-                    case ACTION_RESIZE_LEFT:         /* resize at left edge */
-                        deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
-                        deltaUsed.y = delta.y;
-                        rectSel_dest.left += deltaUsed.x;
-                        break;
-                    case ACTION_RESIZE_RIGHT:        /* resize at right edge */
-                        deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
-                        deltaUsed.y = delta.y;
-                        rectSel_dest.right += deltaUsed.x;
-                        break;
-                    case ACTION_RESIZE_BOTTOM_LEFT:  /* resize at lower left corner */
-                        deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
-                        deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
-                        rectSel_dest.left   += deltaUsed.x;
-                        rectSel_dest.bottom += deltaUsed.y;
-                        break;
-                    case ACTION_RESIZE_BOTTOM:       /* resize at bottom edge */
-                        deltaUsed.x = delta.x;
-                        deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
-                        rectSel_dest.bottom += deltaUsed.y;
-                        break;
-                    case ACTION_RESIZE_BOTTOM_RIGHT: /* resize at lower right corner */
-                        deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
-                        deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
-                        rectSel_dest.right  += deltaUsed.x;
-                        rectSel_dest.bottom += deltaUsed.y;
-                        break;
-                }
-                delta.x -= deltaUsed.x;
-                delta.y -= deltaUsed.y;
+                ColorKeyedMaskBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest),
+                                  hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND), bgColor);
+            }
+        }
+        imageArea.InvalidateRect(NULL, FALSE);
+        imageArea.SendMessage(WM_PAINT, 0, 0);
+        pos.x = GET_X_LPARAM(lParam);
+        pos.y = GET_Y_LPARAM(lParam);
+    }
+    else
+    {
+        int w = RECT_WIDTH(rectSel_dest) * zoom / 1000 + 6;
+        int h = RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 6;
+        pos.x = GET_X_LPARAM(lParam);
+        pos.y = GET_Y_LPARAM(lParam);
+        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
+        action = identifyCorner(pos.x, pos.y, w, h);
+        if (action != ACTION_MOVE)
+            SetCursor(LoadCursor(NULL, cursors[action]));
+    }
+    return 0;
+}
 
-                _stprintf(sizeStr, _T("%d x %d"), RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
-                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
-
-                if (activeTool == TOOL_TEXT)
-                {
-                    Text(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right, rectSel_dest.bottom, fgColor, bgColor, textToolText, hfontTextFont, transpBg);
-                }
-                else
-                {
-                    if (action != ACTION_MOVE)
-                        StretchBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0, GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
-                    else
-                    if (transpBg == 0)
-                        MaskBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest),
-                                hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
-                    else
-                    {
-                        ColorKeyedMaskBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest),
-                                          hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND), bgColor);
-                    }
-                }
-                InvalidateRect(hImageArea, NULL, FALSE);
-                pos.x = GET_X_LPARAM(lParam);
-                pos.y = GET_Y_LPARAM(lParam);
+LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (moving)
+    {
+        moving = FALSE;
+        ReleaseCapture();
+        if (action != ACTION_MOVE)
+        {
+            if (activeTool == TOOL_TEXT)
+            {
+                // FIXME: What to do?
             }
             else
             {
-                int w = RECT_WIDTH(rectSel_dest) * zoom / 1000 + 6;
-                int h = RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 6;
-                pos.x = GET_X_LPARAM(lParam);
-                pos.y = GET_Y_LPARAM(lParam);
-                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
-                action = identifyCorner(pos.x, pos.y, w, h);
-                if (action != ACTION_MOVE)
-                    SetCursor(LoadCursor(NULL, cursors[action]));
+                HDC hTempDC;
+                HBITMAP hTempBm;
+                hTempDC = CreateCompatibleDC(hSelDC);
+                hTempBm = CreateDIBWithProperties(RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
+                SelectObject(hTempDC, hTempBm);
+                SelectObject(hSelDC, hSelBm);
+                StretchBlt(hTempDC, 0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0,
+                           GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
+                DeleteObject(hSelBm);
+                hSelBm = hTempBm;
+                hTempBm = CreateBitmap(RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), 1, 1, NULL);
+                SelectObject(hTempDC, hTempBm);
+                SelectObject(hSelDC, hSelMask);
+                StretchBlt(hTempDC, 0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0,
+                           GetDIBWidth(hSelMask), GetDIBHeight(hSelMask), SRCCOPY);
+                DeleteObject(hSelMask);
+                hSelMask = hTempBm;
+                SelectObject(hSelDC, hSelBm);
+                DeleteDC(hTempDC);
             }
-            break;
-        case WM_LBUTTONUP:
-            if (moving)
-            {
-                moving = FALSE;
-                ReleaseCapture();
-                if (action != ACTION_MOVE)
-                {
-                    if (activeTool == TOOL_TEXT)
-                    {
-                        // FIXME: What to do?
-                    }
-                    else
-                    {
-                        HDC hTempDC;
-                        HBITMAP hTempBm;
-                        hTempDC = CreateCompatibleDC(hSelDC);
-                        hTempBm = CreateDIBWithProperties(RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
-                        SelectObject(hTempDC, hTempBm);
-                        SelectObject(hSelDC, hSelBm);
-                        StretchBlt(hTempDC, 0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0,
-                                   GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
-                        DeleteObject(hSelBm);
-                        hSelBm = hTempBm;
-                        hTempBm = CreateBitmap(RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), 1, 1, NULL);
-                        SelectObject(hTempDC, hTempBm);
-                        SelectObject(hSelDC, hSelMask);
-                        StretchBlt(hTempDC, 0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0,
-                                   GetDIBWidth(hSelMask), GetDIBHeight(hSelMask), SRCCOPY);
-                        DeleteObject(hSelMask);
-                        hSelMask = hTempBm;
-                        SelectObject(hSelDC, hSelBm);
-                        DeleteDC(hTempDC);
-                    }
-                }
-                placeSelWin();
-                ShowWindow(hSelection, SW_HIDE);
-                ShowWindow(hSelection, SW_SHOW);
-            }
-            break;
-        default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+        }
+        placeSelWin();
+        ShowWindow(SW_HIDE);
+        ShowWindow(SW_SHOW);
     }
-
     return 0;
 }

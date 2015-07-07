@@ -45,7 +45,7 @@ undo()
 {
     if (undoSteps > 0)
     {
-        ShowWindow(hSelection, SW_HIDE);
+        selectionWindow.ShowWindow(SW_HIDE);
         currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         undoSteps--;
@@ -60,7 +60,7 @@ redo()
 {
     if (redoSteps > 0)
     {
-        ShowWindow(hSelection, SW_HIDE);
+        selectionWindow.ShowWindow(SW_HIDE);
         currInd = (currInd + 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         redoSteps--;
