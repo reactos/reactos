@@ -32,12 +32,12 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     SetRect(&rc, 11, 12, 26, 27);
     DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT | BF_MIDDLE);
     oldPen = (HPEN) SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
-    oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(bgColor));
+    oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(paletteModel.GetBgColor()));
     Rectangle(hDC, rc.left, rc.top + 2, rc.right - 1, rc.bottom - 1);
     DeleteObject(SelectObject(hDC, oldBrush));
     SetRect(&rc, 4, 5, 19, 20);
     DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT | BF_MIDDLE);
-    oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(fgColor));
+    oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(paletteModel.GetFgColor()));
     Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
     DeleteObject(SelectObject(hDC, oldBrush));
     DeleteObject(SelectObject(hDC, oldPen));
@@ -49,7 +49,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
         DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
         oldPen = (HPEN) SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
-        oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(palColors[i]));
+        oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(paletteModel.GetColor(i)));
         Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
         DeleteObject(SelectObject(hDC, oldBrush));
         DeleteObject(SelectObject(hDC, oldPen));
@@ -62,9 +62,9 @@ LRESULT CPaletteWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     if (GET_X_LPARAM(lParam) >= 31)
     {
-        fgColor = palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14];
+        paletteModel.SetFgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
         InvalidateRect(NULL, FALSE);
-        if (activeTool == 10)
+        if (toolsModel.GetActiveTool() == 10)
             ForceRefreshSelectionContents();
     }
     return 0;
@@ -74,9 +74,9 @@ LRESULT CPaletteWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     if (GET_X_LPARAM(lParam) >= 31)
     {
-        bgColor = palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14];
+        paletteModel.SetBgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
         InvalidateRect(NULL, FALSE);
-        if (activeTool == 10)
+        if (toolsModel.GetActiveTool() == 10)
             ForceRefreshSelectionContents();
     }
     return 0;
@@ -87,11 +87,11 @@ LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
     if (GET_X_LPARAM(lParam) >= 31)
         if (ChooseColor(&choosecolor))
         {
-            palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14] =
-                choosecolor.rgbResult;
-            fgColor = choosecolor.rgbResult;
+            paletteModel.SetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14,
+                choosecolor.rgbResult);
+            paletteModel.SetFgColor(choosecolor.rgbResult);
             InvalidateRect(NULL, FALSE);
-            if (activeTool == 10)
+            if (toolsModel.GetActiveTool() == 10)
                 ForceRefreshSelectionContents();
         }
     return 0;
@@ -102,11 +102,11 @@ LRESULT CPaletteWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
     if (GET_X_LPARAM(lParam) >= 31)
         if (ChooseColor(&choosecolor))
         {
-            palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14] =
-                choosecolor.rgbResult;
-            bgColor = choosecolor.rgbResult;
+            paletteModel.SetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14,
+                choosecolor.rgbResult);
+            paletteModel.SetBgColor(choosecolor.rgbResult);
             InvalidateRect(NULL, FALSE);
-            if (activeTool == 10)
+            if (toolsModel.GetActiveTool() == 10)
                 ForceRefreshSelectionContents();
         }
     return 0;

@@ -19,7 +19,7 @@
 void CMainWindow::selectTool(int tool)
 {
     selectionWindow.ShowWindow(SW_HIDE);
-    activeTool = tool;
+    toolsModel.SetActiveTool(tool);
     pointSP = 0;                // resets the point-buffer of the polygon and bezier functions
     toolSettingsWindow.Invalidate(TRUE);
     ::ShowWindow(hTrackbarZoom, (tool == TOOL_ZOOM) ? SW_SHOW : SW_HIDE);
@@ -30,7 +30,7 @@ void
 updateCanvasAndScrollbars()
 {
     selectionWindow.ShowWindow(SW_HIDE);
-    imageArea.MoveWindow(3, 3, imgXRes * zoom / 1000, imgYRes * zoom / 1000, FALSE);
+    imageArea.MoveWindow(3, 3, imgXRes * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000, FALSE);
     scrollboxWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
 
@@ -49,15 +49,15 @@ zoomTo(int newZoom, int mouseX, int mouseY)
     int x, y, w, h;
     scrollboxWindow.GetClientRect(&clientRectScrollbox);
     imageArea.GetClientRect(&clientRectImageArea);
-    w = clientRectImageArea.right * clientRectScrollbox.right / (clientRectImageArea.right * newZoom / zoom);
-    h = clientRectImageArea.bottom * clientRectScrollbox.bottom / (clientRectImageArea.bottom * newZoom / zoom);
-    x = max(0, min(clientRectImageArea.right - w, mouseX - w / 2)) * newZoom / zoom;
-    y = max(0, min(clientRectImageArea.bottom - h, mouseY - h / 2)) * newZoom / zoom;
+    w = clientRectImageArea.right * clientRectScrollbox.right / (clientRectImageArea.right * newZoom / toolsModel.GetZoom());
+    h = clientRectImageArea.bottom * clientRectScrollbox.bottom / (clientRectImageArea.bottom * newZoom / toolsModel.GetZoom());
+    x = max(0, min(clientRectImageArea.right - w, mouseX - w / 2)) * newZoom / toolsModel.GetZoom();
+    y = max(0, min(clientRectImageArea.bottom - h, mouseY - h / 2)) * newZoom / toolsModel.GetZoom();
 
-    zoom = newZoom;
+    toolsModel.SetZoom(newZoom);
 
     selectionWindow.ShowWindow(SW_HIDE);
-    imageArea.MoveWindow(3, 3, imgXRes * zoom / 1000, imgYRes * zoom / 1000, FALSE);
+    imageArea.MoveWindow(3, 3, imgXRes * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000, FALSE);
     scrollboxWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
 
@@ -239,7 +239,7 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HMENU menu = GetMenu();
-    BOOL trueSelection = (selectionWindow.IsWindowVisible() && ((activeTool == TOOL_FREESEL) || (activeTool == TOOL_RECTSEL)));
+    BOOL trueSelection = (selectionWindow.IsWindowVisible() && ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
     switch (lParam)
     {
         case 0: /* File menu */
@@ -264,27 +264,27 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
                 CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(paletteWindow.IsWindowVisible()));
                 CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(hStatusBar)));
                 CheckMenuItem(menu, IDM_FORMATICONBAR,    CHECKED_IF(textEditWindow.IsWindowVisible()));
-                EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(activeTool == TOOL_TEXT));
+                EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
 
                 CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
                 CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
             break;
         case 3: /* Image menu */
             EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(selectionWindow.IsWindowVisible()));
-            CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(transpBg == 0));
+            CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(!toolsModel.IsBackgroundTransparent()));
             break;
     }
 
-    CheckMenuItem(menu, IDM_VIEWZOOM125, CHECKED_IF(zoom == 125));
-    CheckMenuItem(menu, IDM_VIEWZOOM25,  CHECKED_IF(zoom == 250));
-    CheckMenuItem(menu, IDM_VIEWZOOM50,  CHECKED_IF(zoom == 500));
-    CheckMenuItem(menu, IDM_VIEWZOOM100, CHECKED_IF(zoom == 1000));
-    CheckMenuItem(menu, IDM_VIEWZOOM200, CHECKED_IF(zoom == 2000));
-    CheckMenuItem(menu, IDM_VIEWZOOM400, CHECKED_IF(zoom == 4000));
-    CheckMenuItem(menu, IDM_VIEWZOOM800, CHECKED_IF(zoom == 8000));
+    CheckMenuItem(menu, IDM_VIEWZOOM125, CHECKED_IF(toolsModel.GetZoom() == 125));
+    CheckMenuItem(menu, IDM_VIEWZOOM25,  CHECKED_IF(toolsModel.GetZoom() == 250));
+    CheckMenuItem(menu, IDM_VIEWZOOM50,  CHECKED_IF(toolsModel.GetZoom() == 500));
+    CheckMenuItem(menu, IDM_VIEWZOOM100, CHECKED_IF(toolsModel.GetZoom() == 1000));
+    CheckMenuItem(menu, IDM_VIEWZOOM200, CHECKED_IF(toolsModel.GetZoom() == 2000));
+    CheckMenuItem(menu, IDM_VIEWZOOM400, CHECKED_IF(toolsModel.GetZoom() == 4000));
+    CheckMenuItem(menu, IDM_VIEWZOOM800, CHECKED_IF(toolsModel.GetZoom() == 8000));
 
-    CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(selectedPalette == 1));
-    CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(selectedPalette == 2));
+    CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(paletteModel.SelectedPalette() == 1));
+    CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == 2));
     return 0;
 }
 
@@ -325,11 +325,11 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         if (!imageArea.drawing)
         {
             /* Deselect */
-            if ((activeTool == TOOL_RECTSEL) || (activeTool == TOOL_FREESEL))
+            if ((toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
             {
-                startPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
-                whilePaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
-                endPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
+                startPaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+                whilePaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+                endPaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
                 selectionWindow.ShowWindow(SW_HIDE);
             }
         }
@@ -459,13 +459,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             /* remove selection window and already painted content using undo(),
             paint Rect for rectangular selections and Poly for freeform selections */
             undo();
-            if (activeTool == TOOL_RECTSEL)
+            if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
             {
                 newReversible();
                 Rect(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right,
-                     rectSel_dest.bottom, bgColor, bgColor, 0, TRUE);
+                     rectSel_dest.bottom, paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
             }
-            if (activeTool == TOOL_FREESEL)
+            if (toolsModel.GetActiveTool() == TOOL_FREESEL)
             {
                 newReversible();
                 Poly(hDrawingDC, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE, TRUE);
@@ -477,9 +477,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
             SendMessage(WM_COMMAND, ID_RECTSEL, 0);
-            startPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
-            whilePaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
-            endPaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
+            startPaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            whilePaintingL(hDrawingDC, imgXRes, imgYRes, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            endPaintingL(hDrawingDC, imgXRes, imgYRes, paletteModel.GetFgColor(), paletteModel.GetBgColor());
             break;
         }
         case IDM_EDITCOPYTO:
@@ -501,18 +501,16 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_COLORSEDITPALETTE:
             if (ChooseColor(&choosecolor))
             {
-                fgColor = choosecolor.rgbResult;
+                paletteModel.SetFgColor(choosecolor.rgbResult);
                 paletteWindow.Invalidate(FALSE);
             }
             break;
         case IDM_COLORSMODERNPALETTE:
-            selectedPalette = 1;
-            CopyMemory(palColors, modernPalColors, sizeof(palColors));
+            paletteModel.SelectPalette(1);
             paletteWindow.Invalidate(FALSE);
             break;
         case IDM_COLORSOLDPALETTE:
-            selectedPalette = 2;
-            CopyMemory(palColors, oldPalColors, sizeof(palColors));
+            paletteModel.SelectPalette(2);
             paletteWindow.Invalidate(FALSE);
             break;
         case IDM_IMAGEINVERTCOLORS:
@@ -526,7 +524,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_IMAGEDELETEIMAGE:
             newReversible();
-            Rect(hDrawingDC, 0, 0, imgXRes, imgYRes, bgColor, bgColor, 0, TRUE);
+            Rect(hDrawingDC, 0, 0, imgXRes, imgYRes, paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
             imageArea.Invalidate(FALSE);
             break;
         case IDM_IMAGEROTATEMIRROR:
@@ -616,7 +614,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_IMAGEDRAWOPAQUE:
-            transpBg = 1 - transpBg;
+            toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             toolSettingsWindow.Invalidate(TRUE);
             break;
         case IDM_IMAGECROP:

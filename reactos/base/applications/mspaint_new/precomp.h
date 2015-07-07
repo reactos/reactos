@@ -27,11 +27,13 @@
 #include "miniature.h"
 #include "mouse.h"
 #include "palette.h"
+#include "palettemodel.h"
 #include "scrollbox.h"
 #include "selection.h"
 #include "sizebox.h"
 #include "textedit.h"
 #include "toolsettings.h"
+#include "toolsmodel.h"
 #include "winproc.h"
 
 #endif /* _MSPAINT_H */

@@ -45,8 +45,8 @@ LRESULT CSizeboxWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         TCHAR sizeStr[100];
         short xRel;
         short yRel;
-        xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / zoom;
-        yRel = (GET_Y_LPARAM(lParam) - yOrig) * 1000 / zoom;
+        xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
+        yRel = (GET_Y_LPARAM(lParam) - yOrig) * 1000 / toolsModel.GetZoom();
         if (m_hWnd == sizeboxLeftTop.m_hWnd)
             _stprintf(sizeStr, _T("%d x %d"), imgXRes - xRel, imgYRes - yRel);
         if (m_hWnd == sizeboxCenterTop.m_hWnd)
@@ -76,8 +76,8 @@ LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         short yRel;
         ReleaseCapture();
         resizing = FALSE;
-        xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / zoom;
-        yRel = (GET_Y_LPARAM(lParam) - yOrig) * 1000 / zoom;
+        xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
+        yRel = (GET_Y_LPARAM(lParam) - yOrig) * 1000 / toolsModel.GetZoom();
         if (m_hWnd == sizeboxLeftTop)
             cropReversible(imgXRes - xRel, imgYRes - yRel, xRel, yRel);
         if (m_hWnd == sizeboxCenterTop.m_hWnd)

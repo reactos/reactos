@@ -14,12 +14,14 @@ list(APPEND SOURCE
     miniature.cpp
     mouse.cpp
     palette.cpp
+    palettemodel.cpp
     registry.cpp
     scrollbox.cpp
     selection.cpp
     sizebox.cpp
     textedit.cpp
     toolsettings.cpp
+    toolsmodel.cpp
     winproc.cpp
     precomp.h)
 

@@ -74,8 +74,8 @@ LRESULT CScrollboxWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         scrollboxWindow.SetScrollInfo(SB_HORZ, &si);
         scrlClientWindow.MoveWindow(-scrollboxWindow.GetScrollPos(SB_HORZ),
-                   -scrollboxWindow.GetScrollPos(SB_VERT), imgXRes * zoom / 1000 + 6,
-                   imgYRes * zoom / 1000 + 6, TRUE);
+                   -scrollboxWindow.GetScrollPos(SB_VERT), imgXRes * toolsModel.GetZoom() / 1000 + 6,
+                   imgYRes * toolsModel.GetZoom() / 1000 + 6, TRUE);
     }
     return 0;
 }
@@ -109,8 +109,8 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         scrollboxWindow.SetScrollInfo(SB_VERT, &si);
         scrlClientWindow.MoveWindow(-scrollboxWindow.GetScrollPos(SB_HORZ),
-                   -scrollboxWindow.GetScrollPos(SB_VERT), imgXRes * zoom / 1000 + 6,
-                   imgYRes * zoom / 1000 + 6, TRUE);
+                   -scrollboxWindow.GetScrollPos(SB_VERT), imgXRes * toolsModel.GetZoom() / 1000 + 6,
+                   imgYRes * toolsModel.GetZoom() / 1000 + 6, TRUE);
     }
     return 0;
 }

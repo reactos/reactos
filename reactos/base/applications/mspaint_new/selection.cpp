@@ -118,8 +118,8 @@ LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     {
         HDC hDC = GetDC();
         DefWindowProc(WM_PAINT, wParam, lParam);
-        SelectionFrame(hDC, 1, 1, RECT_WIDTH(rectSel_dest) * zoom / 1000 + 5,
-                       RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 5,
+        SelectionFrame(hDC, 1, 1, RECT_WIDTH(rectSel_dest) * toolsModel.GetZoom() / 1000 + 5,
+                       RECT_HEIGHT(rectSel_dest) * toolsModel.GetZoom() / 1000 + 5,
                        system_selection_color);
         ReleaseDC(hDC);
     }
@@ -178,17 +178,17 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         resetToU1();
         frac.x += GET_X_LPARAM(lParam) - pos.x;
         frac.y += GET_Y_LPARAM(lParam) - pos.y;
-        delta.x += frac.x * 1000 / zoom;
-        delta.y += frac.y * 1000 / zoom;
-        if (zoom < 1000)
+        delta.x += frac.x * 1000 / toolsModel.GetZoom();
+        delta.y += frac.y * 1000 / toolsModel.GetZoom();
+        if (toolsModel.GetZoom() < 1000)
         {
             frac.x = 0;
             frac.y = 0;
         }
         else
         {
-            frac.x -= (frac.x * 1000 / zoom) * zoom / 1000;
-            frac.y -= (frac.y * 1000 / zoom) * zoom / 1000;
+            frac.x -= (frac.x * 1000 / toolsModel.GetZoom()) * toolsModel.GetZoom() / 1000;
+            frac.y -= (frac.y * 1000 / toolsModel.GetZoom()) * toolsModel.GetZoom() / 1000;
         }
         switch (action)
         {
@@ -248,22 +248,22 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         _stprintf(sizeStr, _T("%d x %d"), RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
 
-        if (activeTool == TOOL_TEXT)
+        if (toolsModel.GetActiveTool() == TOOL_TEXT)
         {
-            Text(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right, rectSel_dest.bottom, fgColor, bgColor, textToolText, hfontTextFont, transpBg);
+            Text(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right, rectSel_dest.bottom, paletteModel.GetFgColor(), paletteModel.GetBgColor(), textToolText, hfontTextFont, toolsModel.IsBackgroundTransparent());
         }
         else
         {
             if (action != ACTION_MOVE)
                 StretchBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0, GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
             else
-            if (transpBg == 0)
+            if (toolsModel.IsBackgroundTransparent() == 0)
                 MaskBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest),
                         hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
             else
             {
                 ColorKeyedMaskBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest),
-                                  hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND), bgColor);
+                                  hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND), paletteModel.GetBgColor());
             }
         }
         imageArea.InvalidateRect(NULL, FALSE);
@@ -273,8 +273,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     }
     else
     {
-        int w = RECT_WIDTH(rectSel_dest) * zoom / 1000 + 6;
-        int h = RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 6;
+        int w = RECT_WIDTH(rectSel_dest) * toolsModel.GetZoom() / 1000 + 6;
+        int h = RECT_HEIGHT(rectSel_dest) * toolsModel.GetZoom() / 1000 + 6;
         pos.x = GET_X_LPARAM(lParam);
         pos.y = GET_Y_LPARAM(lParam);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
@@ -293,7 +293,7 @@ LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         ReleaseCapture();
         if (action != ACTION_MOVE)
         {
-            if (activeTool == TOOL_TEXT)
+            if (toolsModel.GetActiveTool() == TOOL_TEXT)
             {
                 // FIXME: What to do?
             }

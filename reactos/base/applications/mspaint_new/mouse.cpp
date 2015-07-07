@@ -15,8 +15,8 @@
 void
 placeSelWin()
 {
-    selectionWindow.MoveWindow(rectSel_dest.left * zoom / 1000, rectSel_dest.top * zoom / 1000,
-        RECT_WIDTH(rectSel_dest) * zoom / 1000 + 6, RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 6, TRUE);
+    selectionWindow.MoveWindow(rectSel_dest.left * toolsModel.GetZoom() / 1000, rectSel_dest.top * toolsModel.GetZoom() / 1000,
+        RECT_WIDTH(rectSel_dest) * toolsModel.GetZoom() / 1000 + 6, RECT_HEIGHT(rectSel_dest) * toolsModel.GetZoom() / 1000 + 6, TRUE);
     selectionWindow.BringWindowToTop();
     imageArea.InvalidateRect(NULL, FALSE);
 }
@@ -61,7 +61,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
     start.y = y;
     last.x = x;
     last.y = y;
-    switch (activeTool)
+    switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
             selectionWindow.ShowWindow(SW_HIDE);
@@ -87,7 +87,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             break;
         case TOOL_RUBBER:
             newReversible();
-            Erase(hdc, x, y, x, y, bg, rubberRadius);
+            Erase(hdc, x, y, x, y, bg, toolsModel.GetRubberRadius());
             break;
         case TOOL_FILL:
             newReversible();
@@ -99,11 +99,11 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             break;
         case TOOL_BRUSH:
             newReversible();
-            Brush(hdc, x, y, x, y, fg, brushStyle);
+            Brush(hdc, x, y, x, y, fg, toolsModel.GetBrushStyle());
             break;
         case TOOL_AIRBRUSH:
             newReversible();
-            Airbrush(hdc, x, y, fg, airBrushWidth);
+            Airbrush(hdc, x, y, fg, toolsModel.GetAirBrushWidth());
             break;
         case TOOL_BEZIER:
             pointStack[pointSP].x = x;
@@ -118,7 +118,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE, FALSE);
+                Poly(hdc, pointStack, pointSP + 1, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             if (pointSP == 0)
             {
                 newReversible();
@@ -131,7 +131,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 void
 whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
-    switch (activeTool)
+    switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
             if (ptSP == 0)
@@ -159,22 +159,22 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             break;
         }
         case TOOL_RUBBER:
-            Erase(hdc, last.x, last.y, x, y, bg, rubberRadius);
+            Erase(hdc, last.x, last.y, x, y, bg, toolsModel.GetRubberRadius());
             break;
         case TOOL_PEN:
             Line(hdc, last.x, last.y, x, y, fg, 1);
             break;
         case TOOL_BRUSH:
-            Brush(hdc, last.x, last.y, x, y, fg, brushStyle);
+            Brush(hdc, last.x, last.y, x, y, fg, toolsModel.GetBrushStyle());
             break;
         case TOOL_AIRBRUSH:
-            Airbrush(hdc, x, y, fg, airBrushWidth);
+            Airbrush(hdc, x, y, fg, toolsModel.GetAirBrushWidth());
             break;
         case TOOL_LINE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(start.x, start.y, &x, &y);
-            Line(hdc, start.x, start.y, x, y, fg, lineWidth);
+            Line(hdc, start.x, start.y, x, y, fg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
             resetToU1();
@@ -184,13 +184,13 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             {
                 case 1:
                     Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, fg,
-                         lineWidth);
+                         toolsModel.GetLineWidth());
                     break;
                 case 2:
-                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], fg, lineWidth);
+                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], fg, toolsModel.GetLineWidth());
                     break;
                 case 3:
-                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], fg, lineWidth);
+                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], fg, toolsModel.GetLineWidth());
                     break;
             }
             break;
@@ -198,7 +198,7 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            Rect(hdc, start.x, start.y, x, y, fg, bg, lineWidth, shapeStyle);
+            Rect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
             resetToU1();
@@ -208,19 +208,19 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
                                    &pointStack[pointSP].x, &pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE, FALSE);
+                Poly(hdc, pointStack, pointSP + 1, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             break;
         case TOOL_ELLIPSE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            Ellp(hdc, start.x, start.y, x, y, fg, bg, lineWidth, shapeStyle);
+            Ellp(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            RRect(hdc, start.x, start.y, x, y, fg, bg, lineWidth, shapeStyle);
+            RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
     }
 
@@ -231,7 +231,7 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 void
 endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
-    switch (activeTool)
+    switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
         {
@@ -303,7 +303,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 BitBlt(hSelDC, 0, 0, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hDrawingDC, rectSel_src.left,
                        rectSel_src.top, SRCCOPY);
                 Rect(hdc, rectSel_src.left, rectSel_src.top, rectSel_src.right,
-                     rectSel_src.bottom, bgColor, bgColor, 0, TRUE);
+                     rectSel_src.bottom, bg, bg, 0, TRUE);
                 newReversible();
 
                 BitBlt(hDrawingDC, rectSel_src.left, rectSel_src.top, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hSelDC, 0,
@@ -326,7 +326,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             }
             break;
         case TOOL_RUBBER:
-            Erase(hdc, last.x, last.y, x, y, bg, rubberRadius);
+            Erase(hdc, last.x, last.y, x, y, bg, toolsModel.GetRubberRadius());
             break;
         case TOOL_PEN:
             Line(hdc, last.x, last.y, x, y, fg, 1);
@@ -336,7 +336,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(start.x, start.y, &x, &y);
-            Line(hdc, start.x, start.y, x, y, fg, lineWidth);
+            Line(hdc, start.x, start.y, x, y, fg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
             pointSP++;
@@ -347,7 +347,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            Rect(hdc, start.x, start.y, x, y, fg, bg, lineWidth, shapeStyle);
+            Rect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
             resetToU1();
@@ -360,14 +360,14 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             if (pointSP >= 2)
             {
                 if ((pointStack[0].x - x) * (pointStack[0].x - x) +
-                    (pointStack[0].y - y) * (pointStack[0].y - y) <= lineWidth * lineWidth + 1)
+                    (pointStack[0].y - y) * (pointStack[0].y - y) <= toolsModel.GetLineWidth() * toolsModel.GetLineWidth() + 1)
                 {
-                    Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, TRUE, FALSE);
+                    Poly(hdc, pointStack, pointSP, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), TRUE, FALSE);
                     pointSP = 0;
                 }
                 else
                 {
-                    Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, FALSE, FALSE);
+                    Poly(hdc, pointStack, pointSP, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
                 }
             }
             if (pointSP == 255)
@@ -377,13 +377,13 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            Ellp(hdc, start.x, start.y, x, y, fg, bg, lineWidth, shapeStyle);
+            Ellp(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            RRect(hdc, start.x, start.y, x, y, fg, bg, lineWidth, shapeStyle);
+            RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
     }
 }
@@ -395,7 +395,7 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
     start.y = y;
     last.x = x;
     last.y = y;
-    switch (activeTool)
+    switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
         case TOOL_TEXT:
@@ -407,7 +407,7 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             break;
         case TOOL_RUBBER:
             newReversible();
-            Replace(hdc, x, y, x, y, fg, bg, rubberRadius);
+            Replace(hdc, x, y, x, y, fg, bg, toolsModel.GetRubberRadius());
             break;
         case TOOL_FILL:
             newReversible();
@@ -419,11 +419,11 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             break;
         case TOOL_BRUSH:
             newReversible();
-            Brush(hdc, x, y, x, y, bg, brushStyle);
+            Brush(hdc, x, y, x, y, bg, toolsModel.GetBrushStyle());
             break;
         case TOOL_AIRBRUSH:
             newReversible();
-            Airbrush(hdc, x, y, bg, airBrushWidth);
+            Airbrush(hdc, x, y, bg, toolsModel.GetAirBrushWidth());
             break;
         case TOOL_BEZIER:
             pointStack[pointSP].x = x;
@@ -438,7 +438,7 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE, FALSE);
+                Poly(hdc, pointStack, pointSP + 1, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             if (pointSP == 0)
             {
                 newReversible();
@@ -451,25 +451,25 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 void
 whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
-    switch (activeTool)
+    switch (toolsModel.GetActiveTool())
     {
         case TOOL_RUBBER:
-            Replace(hdc, last.x, last.y, x, y, fg, bg, rubberRadius);
+            Replace(hdc, last.x, last.y, x, y, fg, bg, toolsModel.GetRubberRadius());
             break;
         case TOOL_PEN:
             Line(hdc, last.x, last.y, x, y, bg, 1);
             break;
         case TOOL_BRUSH:
-            Brush(hdc, last.x, last.y, x, y, bg, brushStyle);
+            Brush(hdc, last.x, last.y, x, y, bg, toolsModel.GetBrushStyle());
             break;
         case TOOL_AIRBRUSH:
-            Airbrush(hdc, x, y, bg, airBrushWidth);
+            Airbrush(hdc, x, y, bg, toolsModel.GetAirBrushWidth());
             break;
         case TOOL_LINE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(start.x, start.y, &x, &y);
-            Line(hdc, start.x, start.y, x, y, bg, lineWidth);
+            Line(hdc, start.x, start.y, x, y, bg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
             resetToU1();
@@ -479,13 +479,13 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             {
                 case 1:
                     Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, bg,
-                         lineWidth);
+                         toolsModel.GetLineWidth());
                     break;
                 case 2:
-                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], bg, lineWidth);
+                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], bg, toolsModel.GetLineWidth());
                     break;
                 case 3:
-                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], bg, lineWidth);
+                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], bg, toolsModel.GetLineWidth());
                     break;
             }
             break;
@@ -493,7 +493,7 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            Rect(hdc, start.x, start.y, x, y, bg, fg, lineWidth, shapeStyle);
+            Rect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
             resetToU1();
@@ -503,19 +503,19 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
                                    &pointStack[pointSP].x, &pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE, FALSE);
+                Poly(hdc, pointStack, pointSP + 1, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             break;
         case TOOL_ELLIPSE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            Ellp(hdc, start.x, start.y, x, y, bg, fg, lineWidth, shapeStyle);
+            Ellp(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            RRect(hdc, start.x, start.y, x, y, bg, fg, lineWidth, shapeStyle);
+            RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
     }
 
@@ -526,10 +526,10 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 void
 endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
-    switch (activeTool)
+    switch (toolsModel.GetActiveTool())
     {
         case TOOL_RUBBER:
-            Replace(hdc, last.x, last.y, x, y, fg, bg, rubberRadius);
+            Replace(hdc, last.x, last.y, x, y, fg, bg, toolsModel.GetRubberRadius());
             break;
         case TOOL_PEN:
             Line(hdc, last.x, last.y, x, y, bg, 1);
@@ -539,7 +539,7 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(start.x, start.y, &x, &y);
-            Line(hdc, start.x, start.y, x, y, bg, lineWidth);
+            Line(hdc, start.x, start.y, x, y, bg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
             pointSP++;
@@ -550,7 +550,7 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            Rect(hdc, start.x, start.y, x, y, bg, fg, lineWidth, shapeStyle);
+            Rect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
             resetToU1();
@@ -563,14 +563,14 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             if (pointSP >= 2)
             {
                 if ((pointStack[0].x - x) * (pointStack[0].x - x) +
-                    (pointStack[0].y - y) * (pointStack[0].y - y) <= lineWidth * lineWidth + 1)
+                    (pointStack[0].y - y) * (pointStack[0].y - y) <= toolsModel.GetLineWidth() * toolsModel.GetLineWidth() + 1)
                 {
-                    Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, TRUE, FALSE);
+                    Poly(hdc, pointStack, pointSP, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), TRUE, FALSE);
                     pointSP = 0;
                 }
                 else
                 {
-                    Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, FALSE, FALSE);
+                    Poly(hdc, pointStack, pointSP, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
                 }
             }
             if (pointSP == 255)
@@ -580,13 +580,13 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            Ellp(hdc, start.x, start.y, x, y, bg, fg, lineWidth, shapeStyle);
+            Ellp(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, &x, &y);
-            RRect(hdc, start.x, start.y, x, y, bg, fg, lineWidth, shapeStyle);
+            RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
     }
 }

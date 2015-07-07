@@ -119,8 +119,8 @@ cropReversible(int width, int height, int xOffset, int yOffset)
     hdc = CreateCompatibleDC(hDrawingDC);
     SelectObject(hdc, hBms[currInd]);
 
-    oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, bgColor));
-    oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(bgColor));
+    oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, paletteModel.GetBgColor()));
+    oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(paletteModel.GetBgColor()));
     Rectangle(hdc, 0, 0, width, height);
     BitBlt(hdc, -xOffset, -yOffset, imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
     DeleteObject(SelectObject(hdc, oldBrush));

@@ -32,14 +32,9 @@ BOOL imageSaved = TRUE;
 
 POINT start;
 POINT last;
-int lineWidth = 1;
-int shapeStyle = 0;
-int brushStyle = 0;
-int activeTool = TOOL_PEN;
-int airBrushWidth = 5;
-int rubberRadius = 4;
-int transpBg = 0;
-int zoom = 1000;
+
+ToolsModel toolsModel;
+
 RECT rectSel_src;
 RECT rectSel_dest;
 HBITMAP hSelBm;
@@ -50,29 +45,7 @@ HWND hwndEditCtl;
 LPTSTR textToolText = NULL;
 int textToolTextMaxLen = 0;
 
-/* array holding palette colors; may be changed by the user during execution */
-int palColors[28];
-
-/* modern palette */
-int modernPalColors[28] = { 0x000000, 0x464646, 0x787878, 0x300099, 0x241ced, 0x0078ff, 0x0ec2ff,
-    0x00f2ff, 0x1de6a8, 0x4cb122, 0xefb700, 0xf36d4d, 0x99362f, 0x98316f,
-    0xffffff, 0xdcdcdc, 0xb4b4b4, 0x3c5a9c, 0xb1a3ff, 0x7aaae5, 0x9ce4f5,
-    0xbdf9ff, 0xbcf9d3, 0x61bb9d, 0xead999, 0xd19a70, 0x8e6d54, 0xd5a5b5
-};
-
-/* older palette containing VGA colors */
-int oldPalColors[28] = { 0x000000, 0x808080, 0x000080, 0x008080, 0x008000, 0x808000, 0x800000,
-    0x800080, 0x408080, 0x404000, 0xff8000, 0x804000, 0xff0040, 0x004080,
-    0xffffff, 0xc0c0c0, 0x0000ff, 0x00ffff, 0x00ff00, 0xffff00, 0xff0000,
-    0xff00ff, 0x80ffff, 0x80ff00, 0xffff80, 0xff8080, 0x8000ff, 0x4080ff
-};
-
-/* palette currently in use (1: modern, 2: old) */
-int selectedPalette;
-
-/* foreground and background colors with initial value */
-int fgColor = 0x00000000;
-int bgColor = 0x00ffffff;
+PaletteModel paletteModel;
 
 HWND hStatusBar;
 HWND hTrackbarZoom;
@@ -169,10 +142,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     lfTextFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     lstrcpy(lfTextFont.lfFaceName, _T(""));
     hfontTextFont = CreateFontIndirect(&lfTextFont);
-
-    /* init palette */
-    selectedPalette = 1;
-    CopyMemory(palColors, modernPalColors, sizeof(palColors));
 
     hProgInstance = hThisInstance;
 
@@ -293,8 +262,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     hDrawingDC = CreateCompatibleDC(hDC);
     hSelDC     = CreateCompatibleDC(hDC);
     imageArea.ReleaseDC(hDC);
-    SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, fgColor));
-    SelectObject(hDrawingDC, CreateSolidBrush(bgColor));
+    SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, paletteModel.GetFgColor()));
+    SelectObject(hDrawingDC, CreateSolidBrush(paletteModel.GetBgColor()));
 
     hBms[0] = CreateDIBWithProperties(imgXRes, imgYRes);
     SelectObject(hDrawingDC, hBms[0]);

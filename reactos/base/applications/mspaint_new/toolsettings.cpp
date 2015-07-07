@@ -28,9 +28,9 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
     DefWindowProc(WM_PAINT, wParam, lParam);
 
-    DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, (activeTool == TOOL_ZOOM) ? BF_RECT : BF_RECT | BF_MIDDLE);
-    DrawEdge(hdc, &rect2, (activeTool >= TOOL_RECT) ? BDR_SUNKENOUTER : 0, BF_RECT | BF_MIDDLE);
-    switch (activeTool)
+    DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, (toolsModel.GetActiveTool() == TOOL_ZOOM) ? BF_RECT : BF_RECT | BF_MIDDLE);
+    DrawEdge(hdc, &rect2, (toolsModel.GetActiveTool() >= TOOL_RECT) ? BDR_SUNKENOUTER : 0, BF_RECT | BF_MIDDLE);
+    switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
         case TOOL_RECTSEL:
@@ -38,7 +38,7 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
         {
             HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
             SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-            Rectangle(hdc, 2, transpBg * 31 + 2, 41, transpBg * 31 + 33);
+            Rectangle(hdc, 2, toolsModel.IsBackgroundTransparent() * 31 + 2, 41, toolsModel.IsBackgroundTransparent() * 31 + 33);
             DeleteObject(SelectObject(hdc, oldPen));
             DrawIconEx(hdc, 1, 2, hNontranspIcon, 40, 30, 0, NULL, DI_NORMAL);
             DrawIconEx(hdc, 1, 33, hTranspIcon, 40, 30, 0, NULL, DI_NORMAL);
@@ -50,7 +50,7 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
             for(i = 0; i < 4; i++)
             {
-                if (rubberRadius == i + 2)
+                if (toolsModel.GetRubberRadius() == i + 2)
                 {
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
                     Rectangle(hdc, 14, i * 15 + 2, 29, i * 15 + 17);
@@ -68,19 +68,19 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             int i;
             HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
             SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-            Rectangle(hdc, brushStyle % 3 * 13 + 2, brushStyle / 3 * 15 + 2, brushStyle % 3 * 13 + 15,
-                      brushStyle / 3 * 15 + 17);
+            Rectangle(hdc, toolsModel.GetBrushStyle() % 3 * 13 + 2, toolsModel.GetBrushStyle() / 3 * 15 + 2, toolsModel.GetBrushStyle() % 3 * 13 + 15,
+                      toolsModel.GetBrushStyle() / 3 * 15 + 17);
             DeleteObject(SelectObject(hdc, oldPen));
             for(i = 0; i < 12; i++)
                 Brush(hdc, i % 3 * 13 + 7, i / 3 * 15 + 8, i % 3 * 13 + 7, i / 3 * 15 + 8,
-                      GetSysColor((i == brushStyle) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), i);
+                      GetSysColor((i == toolsModel.GetBrushStyle()) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), i);
             break;
         }
         case TOOL_AIRBRUSH:
         {
             HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
             SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-            switch (airBrushWidth)
+            switch (toolsModel.GetAirBrushWidth())
             {
                 case 5:
                     Rectangle(hdc, 2, 2, 21, 31);
@@ -96,13 +96,13 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
                     break;
             }
             Airbrush(hdc, 10, 15,
-                     GetSysColor((airBrushWidth == 5) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 5);
+                     GetSysColor((toolsModel.GetAirBrushWidth() == 5) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 5);
             Airbrush(hdc, 30, 15,
-                     GetSysColor((airBrushWidth == 8) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 8);
+                     GetSysColor((toolsModel.GetAirBrushWidth() == 8) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 8);
             Airbrush(hdc, 8, 45,
-                     GetSysColor((airBrushWidth == 3) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 3);
+                     GetSysColor((toolsModel.GetAirBrushWidth() == 3) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 3);
             Airbrush(hdc, 27, 45,
-                     GetSysColor((airBrushWidth == 12) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 12);
+                     GetSysColor((toolsModel.GetAirBrushWidth() == 12) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 12);
             DeleteObject(SelectObject(hdc, oldPen));
             break;
         }
@@ -113,7 +113,7 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
             for(i = 0; i < 5; i++)
             {
-                if (lineWidth == i + 1)
+                if (toolsModel.GetLineWidth() == i + 1)
                 {
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
                     Rectangle(hdc, 2, i * 12 + 2, 41, i * 12 + 14);
@@ -135,23 +135,23 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
             for(i = 0; i < 3; i++)
             {
-                if (shapeStyle == i)
+                if (toolsModel.GetShapeStyle() == i)
                 {
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
                     Rectangle(hdc, 2, i * 20 + 2, 41, i * 20 + 22);
                 }
             }
             Rect(hdc, 5, 6, 37, 16,
-                 GetSysColor((shapeStyle == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT),
+                 GetSysColor((toolsModel.GetShapeStyle() == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT),
                  GetSysColor(COLOR_APPWORKSPACE), 1, 0);
             Rect(hdc, 5, 26, 37, 36,
-                 GetSysColor((shapeStyle == 1) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT),
+                 GetSysColor((toolsModel.GetShapeStyle() == 1) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT),
                  GetSysColor(COLOR_APPWORKSPACE), 1, 1);
             Rect(hdc, 5, 46, 37, 56, GetSysColor(COLOR_APPWORKSPACE), GetSysColor(COLOR_APPWORKSPACE),
                  1, 1);
             for(i = 0; i < 5; i++)
             {
-                if (lineWidth == i + 1)
+                if (toolsModel.GetLineWidth() == i + 1)
                 {
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
                     Rectangle(hdc, 2, i * 12 + 72, 41, i * 12 + 84);
@@ -173,14 +173,14 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
 {
     int x = GET_X_LPARAM(lParam);
     int y = GET_Y_LPARAM(lParam);
-    switch (activeTool)
+    switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
         case TOOL_RECTSEL:
         case TOOL_TEXT:
             if ((y > 1) && (y < 64))
             {
-                transpBg = (y - 2) / 31;
+                toolsModel.SetBackgroundTransparent((y - 2) / 31);
                 InvalidateRect(NULL, TRUE);
 
                 ForceRefreshSelectionContents();
@@ -189,7 +189,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_RUBBER:
             if ((y > 1) && (y < 62))
             {
-                rubberRadius = (y - 2) / 15 + 2;
+                toolsModel.SetRubberRadius((y - 2) / 15 + 2);
                 InvalidateRect(NULL, TRUE);
             }
             break;
@@ -197,7 +197,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
             if ((x > 1) && (x < 40) && (y > 1)
                 && (y < 62))
             {
-                brushStyle = (y - 2) / 15 * 3 + (x - 2) / 13;
+                toolsModel.SetBrushStyle((y - 2) / 15 * 3 + (x - 2) / 13);
                 InvalidateRect(NULL, TRUE);
             }
             break;
@@ -207,16 +207,16 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
                 if (y < 30)
                 {
                     if (x < 20)
-                        airBrushWidth = 5;
+                        toolsModel.SetAirBrushWidth(5);
                     else
-                        airBrushWidth = 8;
+                        toolsModel.SetAirBrushWidth(8);
                 }
                 else
                 {
                     if (x < 15)
-                        airBrushWidth = 3;
+                        toolsModel.SetAirBrushWidth(3);
                     else
-                        airBrushWidth = 12;
+                        toolsModel.SetAirBrushWidth(12);
                 }
                 InvalidateRect(NULL, TRUE);
             }
@@ -225,7 +225,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_BEZIER:
             if (y <= 62)
             {
-                lineWidth = (y - 2) / 12 + 1;
+                toolsModel.SetLineWidth((y - 2) / 12 + 1);
                 InvalidateRect(NULL, TRUE);
             }
             break;
@@ -235,12 +235,12 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_RRECT:
             if (y <= 60)
             {
-                shapeStyle = (y - 2) / 20;
+                toolsModel.SetShapeStyle((y - 2) / 20);
                 InvalidateRect(NULL, TRUE);
             }
             if ((y >= 70) && (y <= 132))
             {
-                lineWidth = (y - 72) / 12 + 1;
+                toolsModel.SetLineWidth((y - 72) / 12 + 1);
                 InvalidateRect(NULL, TRUE);
             }
             break;

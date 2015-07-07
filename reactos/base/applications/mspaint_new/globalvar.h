@@ -40,14 +40,10 @@ extern BOOL imageSaved;
 
 extern POINT start;
 extern POINT last;
-extern int lineWidth;
-extern int shapeStyle;
-extern int brushStyle;
-extern int activeTool;
-extern int airBrushWidth;
-extern int rubberRadius;
-extern int transpBg;
-extern int zoom;
+
+class ToolsModel;
+extern ToolsModel toolsModel;
+
 extern RECT rectSel_src;
 extern RECT rectSel_dest;
 extern HBITMAP hSelBm;
@@ -58,13 +54,8 @@ extern HFONT hfontTextFont;
 extern LPTSTR textToolText;
 extern int textToolTextMaxLen;
 
-extern int palColors[28];
-extern int modernPalColors[28];
-extern int oldPalColors[28];
-extern int selectedPalette;
-
-extern int fgColor;
-extern int bgColor;
+class PaletteModel;
+extern PaletteModel paletteModel;
 
 extern HWND hStatusBar;
 extern HWND hTrackbarZoom;
