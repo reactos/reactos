@@ -8,19 +8,25 @@
 #include "precomp.h"
 
 BOOL WINAPI
-EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    return LocalSplFuncs.fpEnumPrintProcessorDatatypes(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
+    // Always call this function on the Local Spooler.
+    PSPOOLSS_PRINT_PROVIDER pPrintProvider = CONTAINING_RECORD(&PrintProviderList.Flink, SPOOLSS_PRINT_PROVIDER, Entry);
+    return pPrintProvider->PrintProvider.fpEnumPrintProcessorDatatypes(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
 }
 
 BOOL WINAPI
-EnumPrintProcessorsW(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    return LocalSplFuncs.fpEnumPrintProcessors(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
+    // Always call this function on the Local Spooler.
+    PSPOOLSS_PRINT_PROVIDER pPrintProvider = CONTAINING_RECORD(&PrintProviderList.Flink, SPOOLSS_PRINT_PROVIDER, Entry);
+    return pPrintProvider->PrintProvider.fpEnumPrintProcessors(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
 }
 
 BOOL WINAPI
-GetPrintProcessorDirectoryW(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded)
+GetPrintProcessorDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded)
 {
-    return LocalSplFuncs.fpGetPrintProcessorDirectory(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
+    // Always call this function on the Local Spooler.
+    PSPOOLSS_PRINT_PROVIDER pPrintProvider = CONTAINING_RECORD(&PrintProviderList.Flink, SPOOLSS_PRINT_PROVIDER, Entry);
+    return pPrintProvider->PrintProvider.fpGetPrintProcessorDirectory(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
 }

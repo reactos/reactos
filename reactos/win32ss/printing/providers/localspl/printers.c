@@ -33,18 +33,18 @@ _PrinterListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
  * The list is searchable by name and returns information about the printers, including their job queues.
  * During this process, the job queues are also initialized.
  */
-void
+BOOL
 InitializePrinterList()
 {
     const WCHAR wszPrintersKey[] = L"SYSTEM\\CurrentControlSet\\Control\\Print\\Printers";
 
     DWORD cbData;
     DWORD cchPrinterName;
+    DWORD dwErrorCode;
     DWORD dwSubKeys;
     DWORD i;
     HKEY hKey = NULL;
     HKEY hSubKey = NULL;
-    LONG lStatus;
     PLOCAL_PRINTER pPrinter = NULL;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
     PWSTR pwszPrintProcessor = NULL;
@@ -54,18 +54,18 @@ InitializePrinterList()
     InitializeSkiplist(&PrinterList, DllAllocSplMem, _PrinterListCompareRoutine, (PSKIPLIST_FREE_ROUTINE)DllFreeSplMem);
 
     // Open our printers registry key. Each subkey is a local printer there.
-    lStatus = RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszPrintersKey, 0, KEY_READ, &hKey);
-    if (lStatus != ERROR_SUCCESS)
+    dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszPrintersKey, 0, KEY_READ, &hKey);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegOpenKeyExW failed with status %ld!\n", lStatus);
+        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
     // Get the number of subkeys.
-    lStatus = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, &dwSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    if (lStatus != ERROR_SUCCESS)
+    dwErrorCode = (DWORD)RegQueryInfoKeyW(hKey, NULL, NULL, NULL, &dwSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegQueryInfoKeyW failed with status %ld!\n", lStatus);
+        ERR("RegQueryInfoKeyW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
@@ -105,23 +105,23 @@ InitializePrinterList()
 
         // Get the name of this printer.
         cchPrinterName = _countof(wszPrinterName);
-        lStatus = RegEnumKeyExW(hKey, i, wszPrinterName, &cchPrinterName, NULL, NULL, NULL, NULL);
-        if (lStatus == ERROR_MORE_DATA)
+        dwErrorCode = (DWORD)RegEnumKeyExW(hKey, i, wszPrinterName, &cchPrinterName, NULL, NULL, NULL, NULL);
+        if (dwErrorCode == ERROR_MORE_DATA)
         {
             // This printer name exceeds the maximum length and is invalid.
             continue;
         }
-        else if (lStatus != ERROR_SUCCESS)
+        else if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("RegEnumKeyExW failed for iteration %lu with status %ld!\n", i, lStatus);
+            ERR("RegEnumKeyExW failed for iteration %lu with status %lu!\n", i, dwErrorCode);
             continue;
         }
 
         // Open this Printer's registry key.
-        lStatus = RegOpenKeyExW(hKey, wszPrinterName, 0, KEY_READ, &hSubKey);
-        if (lStatus != ERROR_SUCCESS)
+        dwErrorCode = (DWORD)RegOpenKeyExW(hKey, wszPrinterName, 0, KEY_READ, &hSubKey);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("RegOpenKeyExW failed for Printer \"%S\" with status %ld!\n", wszPrinterName, lStatus);
+            ERR("RegOpenKeyExW failed for Printer \"%S\" with status %lu!\n", wszPrinterName, dwErrorCode);
             continue;
         }
 
@@ -142,6 +142,7 @@ InitializePrinterList()
         pPrinter = DllAllocSplMem(sizeof(LOCAL_PRINTER));
         if (!pPrinter)
         {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
             goto Cleanup;
         }
@@ -174,28 +175,28 @@ InitializePrinterList()
 
         // Get the default DevMode.
         cbData = sizeof(DEVMODEW);
-        lStatus = RegQueryValueExW(hSubKey, L"Default DevMode", NULL, NULL, (PBYTE)&pPrinter->DefaultDevMode, &cbData);
-        if (lStatus != ERROR_SUCCESS || cbData != sizeof(DEVMODEW))
+        dwErrorCode = (DWORD)RegQueryValueExW(hSubKey, L"Default DevMode", NULL, NULL, (PBYTE)&pPrinter->DefaultDevMode, &cbData);
+        if (dwErrorCode != ERROR_SUCCESS || cbData != sizeof(DEVMODEW))
         {
-            ERR("Couldn't query a valid DevMode for Printer \"%S\", status is %ld, cbData is %lu!\n", wszPrinterName, lStatus, cbData);
+            ERR("Couldn't query a valid DevMode for Printer \"%S\", status is %lu, cbData is %lu!\n", wszPrinterName, dwErrorCode, cbData);
             continue;
         }
 
         // Get the Attributes.
         cbData = sizeof(DWORD);
-        lStatus = RegQueryValueExW(hSubKey, L"Attributes", NULL, NULL, (PBYTE)&pPrinter->dwAttributes, &cbData);
-        if (lStatus != ERROR_SUCCESS)
+        dwErrorCode = (DWORD)RegQueryValueExW(hSubKey, L"Attributes", NULL, NULL, (PBYTE)&pPrinter->dwAttributes, &cbData);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("Couldn't query Attributes for Printer \"%S\", status is %ld!\n", wszPrinterName, lStatus);
+            ERR("Couldn't query Attributes for Printer \"%S\", status is %lu!\n", wszPrinterName, dwErrorCode);
             continue;
         }
 
         // Get the Status.
         cbData = sizeof(DWORD);
-        lStatus = RegQueryValueExW(hSubKey, L"Status", NULL, NULL, (PBYTE)&pPrinter->dwStatus, &cbData);
-        if (lStatus != ERROR_SUCCESS)
+        dwErrorCode = (DWORD)RegQueryValueExW(hSubKey, L"Status", NULL, NULL, (PBYTE)&pPrinter->dwStatus, &cbData);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("Couldn't query Status for Printer \"%S\", status is %ld!\n", wszPrinterName, lStatus);
+            ERR("Couldn't query Status for Printer \"%S\", status is %lu!\n", wszPrinterName, dwErrorCode);
             continue;
         }
 
@@ -209,6 +210,8 @@ InitializePrinterList()
         // Don't let the cleanup routines free this.
         pPrinter = NULL;
     }
+
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     // Inside the loop
@@ -238,6 +241,9 @@ Cleanup:
     // Outside the loop
     if (hKey)
         RegCloseKey(hKey);
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 

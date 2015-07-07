@@ -102,7 +102,7 @@ GetNextJobID(PDWORD dwJobID)
     return TRUE;
 }
 
-void
+BOOL
 InitializeGlobalJobList()
 {
     const WCHAR wszPath[] = L"\\PRINTERS\\?????.SHD";
@@ -110,6 +110,7 @@ InitializeGlobalJobList()
     const DWORD cchFolders = sizeof("\\PRINTERS\\") - 1;
     const DWORD cchPattern = sizeof("?????") - 1;
 
+    DWORD dwErrorCode;
     DWORD dwJobID;
     HANDLE hFind;
     PLOCAL_JOB pJob = NULL;
@@ -133,6 +134,7 @@ InitializeGlobalJobList()
     if (hFind == INVALID_HANDLE_VALUE)
     {
         // No unfinished jobs found.
+        dwErrorCode = ERROR_SUCCESS;
         goto Cleanup;
     }
 
@@ -159,6 +161,7 @@ InitializeGlobalJobList()
         // Add it to the Global Job List.
         if (!InsertElementSkiplist(&GlobalJobList, pJob))
         {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             ERR("InsertElementSkiplist failed for job %lu for the GlobalJobList!\n", pJob->dwJobID);
             goto Cleanup;
         }
@@ -166,16 +169,22 @@ InitializeGlobalJobList()
         // Add it to the Printer's Job List.
         if (!InsertElementSkiplist(&pJob->pPrinter->JobList, pJob))
         {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             ERR("InsertElementSkiplist failed for job %lu for the Printer's Job List!\n", pJob->dwJobID);
             goto Cleanup;
         }
     }
     while (FindNextFileW(hFind, &FindData));
 
+    dwErrorCode = ERROR_SUCCESS;
+
 Cleanup:
     // Outside the loop
     if (hFind)
         FindClose(hFind);
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 void

@@ -45,6 +45,8 @@ typedef BOOL (WINAPI *PEnumPrintProcessorDatatypesW)(LPWSTR, LPWSTR, DWORD, LPBY
 typedef DWORD (WINAPI *PGetPrintProcessorCapabilities)(LPWSTR, DWORD, LPBYTE, DWORD, LPDWORD);
 typedef HANDLE (WINAPI *POpenPrintProcessor)(LPWSTR, PPRINTPROCESSOROPENDATA);
 typedef BOOL (WINAPI *PPrintDocumentOnPrintProcessor)(HANDLE, LPWSTR);
+typedef LPMONITOREX(WINAPI *PInitializePrintMonitor)(PWSTR);
+typedef LPMONITOR2(WINAPI *PInitializePrintMonitor2)(PMONITORINIT, PHANDLE);
 
 // Structures
 /**
@@ -143,6 +145,21 @@ typedef struct _LOCAL_HANDLE
 LOCAL_HANDLE, *PLOCAL_HANDLE;
 
 /**
+ * Describes a Print Monitor.
+ */
+typedef struct _LOCAL_PRINT_MONITOR
+{
+    LIST_ENTRY Entry;
+    PWSTR pwszName;                     /** Name of the Print Monitor as read from the registry. */
+    PWSTR pwszFileName;                 /** DLL File Name of the Print Monitor. */
+    BOOL bIsLevel2;                     /** Whether this Print Monitor supplies an InitializePrintMonitor2 API (preferred) instead of InitializePrintMonitor. */
+    PVOID pMonitor;                     /** For bIsLevel2 == TRUE:  LPMONITOR2 pointer returned by InitializePrintMonitor2.
+                                            For bIsLevel2 == FALSE: LPMONITOREX pointer returned by InitializePrintMonitor. */
+    HANDLE hMonitor;                    /** Only used when bIsLevel2 == TRUE: Handle returned by InitializePrintMonitor2. */
+}
+LOCAL_PRINT_MONITOR, *PLOCAL_PRINT_MONITOR;
+
+/**
  * Describes the header of a print job serialized into a shadow file (.SHD)
  * Documented in http://www.undocprint.org/formats/winspool/shd
  * Compatible with Windows Server 2003
@@ -184,7 +201,7 @@ SHD_HEADER, *PSHD_HEADER;
 // jobs.c
 extern SKIPLIST GlobalJobList;
 BOOL GetNextJobID(PDWORD dwJobID);
-void InitializeGlobalJobList();
+BOOL InitializeGlobalJobList();
 void InitializePrinterJobList(PLOCAL_PRINTER pPrinter);
 BOOL WINAPI LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcbNeeded);
 BOOL WINAPI LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pStart, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
@@ -196,14 +213,23 @@ BOOL WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob);
 
 // main.c
 extern const WCHAR wszCurrentEnvironment[];
+extern const DWORD cbCurrentEnvironment;
 extern const WCHAR wszDefaultDocumentName[];
 extern const WCHAR* wszPrintProviderInfo[3];
 extern WCHAR wszSpoolDirectory[MAX_PATH];
 extern DWORD cchSpoolDirectory;
 
+// monitors.c
+extern LIST_ENTRY PrintMonitorList;
+BOOL InitializePrintMonitorList();
+BOOL WINAPI LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
+
+// ports.c
+BOOL WINAPI LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
+
 // printers.c
 extern SKIPLIST PrinterList;
-void InitializePrinterList();
+BOOL InitializePrinterList();
 BOOL WINAPI LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDefault);
 DWORD WINAPI LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo);
@@ -216,7 +242,7 @@ BOOL WINAPI LocalClosePrinter(HANDLE hPrinter);
 // printprocessors.c
 BOOL FindDatatype(PLOCAL_PRINT_PROCESSOR pPrintProcessor, PWSTR pwszDatatype);
 PLOCAL_PRINT_PROCESSOR FindPrintProcessor(PWSTR pwszName);
-void InitializePrintProcessorList();
+BOOL InitializePrintProcessorList();
 BOOL WINAPI LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded);

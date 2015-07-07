@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Spooler Router
+ * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Ports of the Print Monitors
  * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
@@ -7,15 +7,16 @@
 
 #include "precomp.h"
 
+
 BOOL WINAPI
-EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     BOOL bReturnValue;
     DWORD cbCallBuffer;
     DWORD cbNeeded;
     DWORD dwReturned;
     PBYTE pCallBuffer;
-    PSPOOLSS_PRINT_PROVIDER pPrintProvider;
+    PLOCAL_PRINT_MONITOR pPrintMonitor;
     PLIST_ENTRY pEntry;
 
     // Sanity checks.
@@ -33,13 +34,16 @@ EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded
     cbCallBuffer = cbBuf;
     pCallBuffer = pPorts;
 
-    // Loop through all Print Provider.
-    for (pEntry = PrintProviderList.Flink; pEntry != &PrintProviderList; pEntry = pEntry->Flink)
+    // Loop through all Print Monitors.
+    for (pEntry = PrintMonitorList.Flink; pEntry != &PrintMonitorList; pEntry = pEntry->Flink)
     {
-        pPrintProvider = CONTAINING_RECORD(pEntry, SPOOLSS_PRINT_PROVIDER, Entry);
+        pPrintMonitor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_MONITOR, Entry);
 
-        // Call the EnumPorts function of this Print Provider.
-        bReturnValue = pPrintProvider->PrintProvider.fpEnumPorts(pName, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
+        // Call the EnumPorts function of this Print Monitor.
+        if (pPrintMonitor->bIsLevel2)
+            bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnEnumPorts(pPrintMonitor->hMonitor, pName, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
+        else
+            bReturnValue = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnEnumPorts(pName, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
 
         // Add the returned counts to the total values.
         *pcbNeeded += cbNeeded;
@@ -54,10 +58,6 @@ EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded
         // Advance the buffer if the caller provided it.
         if (pCallBuffer)
             pCallBuffer += cbNeeded;
-
-        // Check if we shall not ask other Print Providers.
-        if (bReturnValue == ROUTER_STOP_ROUTING)
-            break;
     }
 
     return bReturnValue;

@@ -7,9 +7,179 @@
 
 #include "precomp.h"
 
+// Global Variables
 HANDLE hProcessHeap;
-PRINTPROVIDOR LocalSplFuncs;
+LIST_ENTRY PrintProviderList;
 
+
+static DWORD
+_AddPrintProviderToList(PCWSTR pwszFileName)
+{
+    DWORD dwErrorCode;
+    HINSTANCE hinstPrintProvider;
+    PInitializePrintProvidor pfnInitializePrintProvidor;
+    PSPOOLSS_PRINT_PROVIDER pPrintProvider = NULL;
+
+    // Try to load it.
+    hinstPrintProvider = LoadLibraryW(pwszFileName);
+    if (!hinstPrintProvider)
+    {
+        dwErrorCode = GetLastError();
+        ERR("LoadLibraryW failed for \"%S\" with error %lu!\n", pwszFileName, dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Get the initialization routine.
+    pfnInitializePrintProvidor = (PInitializePrintProvidor)GetProcAddress(hinstPrintProvider, "InitializePrintProvidor");
+    if (!pfnInitializePrintProvidor)
+    {
+        dwErrorCode = GetLastError();
+        ERR("GetProcAddress failed for \"%S\" with error %lu!\n", pwszFileName, dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Create a new SPOOLSS_PRINT_PROVIDER structure for it.
+    pPrintProvider = DllAllocSplMem(sizeof(SPOOLSS_PRINT_PROVIDER));
+    if (!pPrintProvider)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        goto Cleanup;
+    }
+
+    // Call the Print Provider initialization function.
+    if (!pfnInitializePrintProvidor(&pPrintProvider->PrintProvider, sizeof(PRINTPROVIDOR), NULL))
+    {
+        dwErrorCode = GetLastError();
+        ERR("InitializePrintProvidor failed for \"%S\" with error %lu!\n", pwszFileName, dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Add this Print Provider to the list.
+    InsertTailList(&PrintProviderList, &pPrintProvider->Entry);
+
+    // Don't let the cleanup routine free this.
+    pPrintProvider = NULL;
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    if (pPrintProvider)
+        DllFreeSplMem(pPrintProvider);
+
+    return dwErrorCode;
+}
+
+static BOOL
+_InitializePrintProviderList()
+{
+    DWORD cbFileName;
+    DWORD cchMaxSubKey;
+    DWORD cchPrintProviderName;
+    DWORD dwErrorCode;
+    DWORD dwSubKeys;
+    DWORD i;
+    HKEY hKey = NULL;
+    HKEY hSubKey = NULL;
+    PWSTR pwszPrintProviderName = NULL;
+    WCHAR wszFileName[MAX_PATH];
+
+    // Initialize an empty list for our Print Providers.
+    InitializeListHead(&PrintProviderList);
+
+    // First add the Local Spooler.
+    // This one must exist and must be the first one in the list.
+    dwErrorCode = _AddPrintProviderToList(L"localspl");
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("The Local Spooler could not be loaded!\n");
+        goto Cleanup;
+    }
+
+    // Now add additional Print Providers from the registry.
+    // First of all, open the key containing print providers.
+    dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Print\\Providers", 0, KEY_READ, &hKey);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Get the number of Print Providers and maximum sub key length.
+    dwErrorCode = (DWORD)RegQueryInfoKeyW(hKey, NULL, NULL, NULL, &dwSubKeys, &cchMaxSubKey, NULL, NULL, NULL, NULL, NULL, NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RegQueryInfoKeyW failed with status %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Allocate a temporary buffer for the Print Provider names.
+    pwszPrintProviderName = DllAllocSplMem((cchMaxSubKey + 1) * sizeof(WCHAR));
+    if (!pwszPrintProviderName)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        goto Cleanup;
+    }
+
+    // Loop through all available Print Providers.
+    for (i = 0; i < dwSubKeys; i++)
+    {
+        // Cleanup tasks from the previous run
+        if (hSubKey)
+        {
+            RegCloseKey(hSubKey);
+            hSubKey = NULL;
+        }
+
+        // Get the name of this Print Provider.
+        cchPrintProviderName = cchMaxSubKey + 1;
+        dwErrorCode = (DWORD)RegEnumKeyExW(hKey, i, pwszPrintProviderName, &cchPrintProviderName, NULL, NULL, NULL, NULL);
+        if (dwErrorCode != ERROR_SUCCESS)
+        {
+            ERR("RegEnumKeyExW failed for iteration %lu with status %lu!\n", i, dwErrorCode);
+            continue;
+        }
+
+        // Open this Print Provider's registry key.
+        dwErrorCode = (DWORD)RegOpenKeyExW(hKey, pwszPrintProviderName, 0, KEY_READ, &hSubKey);
+        if (dwErrorCode != ERROR_SUCCESS)
+        {
+            ERR("RegOpenKeyExW failed for Print Provider \"%S\" with status %lu!\n", pwszPrintProviderName, dwErrorCode);
+            continue;
+        }
+
+        // Get the file name of the Print Provider.
+        cbFileName = MAX_PATH * sizeof(WCHAR);
+        dwErrorCode = (DWORD)RegQueryValueExW(hKey, L"Driver", NULL, NULL, (PBYTE)wszFileName, &cbFileName);
+        if (dwErrorCode != ERROR_SUCCESS)
+        {
+            ERR("RegQueryValueExW failed with status %lu!\n", dwErrorCode);
+            continue;
+        }
+
+        // Load and add it to the list.
+        dwErrorCode = _AddPrintProviderToList(wszFileName);
+        if (dwErrorCode != ERROR_SUCCESS)
+            continue;
+    }
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    // Inside the loop
+    if (hSubKey)
+        RegCloseKey(hSubKey);
+
+    // Outside the loop
+    if (pwszPrintProviderName)
+        DllFreeSplMem(pwszPrintProviderName);
+
+    if (hKey)
+        RegCloseKey(hKey);
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
 
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -18,7 +188,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
-            hProcessHeap = GetProcessHeap();
+			hProcessHeap = GetProcessHeap();
             break;
     }
 
@@ -28,32 +198,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 BOOL WINAPI
 InitializeRouter(HANDLE SpoolerStatusHandle)
 {
-    HINSTANCE hinstLocalSpl;
-    PInitializePrintProvidor pfnInitializePrintProvidor;
-
-    // Only initialize localspl.dll for now.
-    // This function should later look for all available print providers in the registry and initialize all of them.
-    hinstLocalSpl = LoadLibraryW(L"localspl");
-    if (!hinstLocalSpl)
-    {
-        ERR("LoadLibraryW for localspl failed with error %lu!\n", GetLastError());
-        return FALSE;
-    }
-
-    pfnInitializePrintProvidor = (PInitializePrintProvidor)GetProcAddress(hinstLocalSpl, "InitializePrintProvidor");
-    if (!pfnInitializePrintProvidor)
-    {
-        ERR("GetProcAddress failed with error %lu!\n", GetLastError());
-        return FALSE;
-    }
-
-    if (!pfnInitializePrintProvidor(&LocalSplFuncs, sizeof(PRINTPROVIDOR), NULL))
-    {
-        ERR("InitializePrintProvidor failed for localspl with error %lu!\n", GetLastError());
-        return FALSE;
-    }
-
-    return TRUE;
+    return _InitializePrintProviderList();
 }
 
 BOOL WINAPI

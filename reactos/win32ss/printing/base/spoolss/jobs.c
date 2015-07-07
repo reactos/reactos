@@ -8,31 +8,76 @@
 #include "precomp.h"
 
 BOOL WINAPI
-AddJobW(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcbNeeded)
+AddJobW(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded)
 {
-    return LocalSplFuncs.fpAddJob(hPrinter, Level, pData, cbBuf, pcbNeeded);
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpAddJob(pHandle->hPrinter, Level, pData, cbBuf, pcbNeeded);
 }
 
 BOOL WINAPI
 EnumJobsW(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    return LocalSplFuncs.fpEnumJobs(hPrinter, FirstJob, NoJobs, Level, pJob, cbBuf, pcbNeeded, pcReturned);
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpEnumJobs(pHandle->hPrinter, FirstJob, NoJobs, Level, pJob, cbBuf, pcbNeeded, pcReturned);
 }
 
 BOOL WINAPI
-GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, LPBYTE pJob, DWORD cbBuf, LPDWORD pcbNeeded)
+GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWORD pcbNeeded)
 {
-    return LocalSplFuncs.fpGetJob(hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpGetJob(pHandle->hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
 }
 
 BOOL WINAPI
 ScheduleJob(HANDLE hPrinter, DWORD dwJobID)
 {
-    return LocalSplFuncs.fpScheduleJob(hPrinter, dwJobID);
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpScheduleJob(pHandle->hPrinter, dwJobID);
 }
 
 BOOL WINAPI
 SetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
 {
-    return LocalSplFuncs.fpSetJob(hPrinter, JobId, Level, pJobInfo, Command);
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpSetJob(pHandle->hPrinter, JobId, Level, pJobInfo, Command);
 }

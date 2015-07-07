@@ -111,7 +111,7 @@ FindPrintProcessor(PWSTR pwszName)
  *
  * Initializes a singly linked list of locally available Print Processors.
  */
-void
+BOOL
 InitializePrintProcessorList()
 {
     DWORD cbDatatypes;
@@ -119,15 +119,14 @@ InitializePrintProcessorList()
     DWORD cchPrintProcessorPath;
     DWORD cchMaxSubKey;
     DWORD cchPrintProcessorName;
+    DWORD dwErrorCode;
     DWORD dwSubKeys;
     DWORD i;
     HINSTANCE hinstPrintProcessor;
     HKEY hKey = NULL;
     HKEY hSubKey = NULL;
     HKEY hSubSubKey = NULL;
-    LONG lStatus;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor = NULL;
-    PWSTR pwszPrintProcessorName = NULL;
     WCHAR wszFileName[MAX_PATH];
     WCHAR wszPrintProcessorPath[MAX_PATH];
 
@@ -136,36 +135,32 @@ InitializePrintProcessorList()
     
     // Prepare the path to the Print Processor directory.
     if (!LocalGetPrintProcessorDirectory(NULL, NULL, 1, (PBYTE)wszPrintProcessorPath, sizeof(wszPrintProcessorPath), &cchPrintProcessorPath))
+    {
+        dwErrorCode = GetLastError();
         goto Cleanup;
+    }
 
     cchPrintProcessorPath /= sizeof(WCHAR);
     wszPrintProcessorPath[cchPrintProcessorPath++] = L'\\';
 
     // Open the environment registry key.
-    if (_OpenEnvironment(NULL, &hKey) != ERROR_SUCCESS)
+    dwErrorCode = _OpenEnvironment(NULL, &hKey);
+    if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
 
     // Open the "Print Processors" subkey.
-    lStatus = RegOpenKeyExW(hKey, L"Print Processors", 0, KEY_READ, &hSubKey);
-    if (lStatus != ERROR_SUCCESS)
+    dwErrorCode = (DWORD)RegOpenKeyExW(hKey, L"Print Processors", 0, KEY_READ, &hSubKey);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegOpenKeyExW failed with status %ld!\n", lStatus);
+        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
     // Get the number of Print Processors and maximum sub key length.
-    lStatus = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, &dwSubKeys, &cchMaxSubKey, NULL, NULL, NULL, NULL, NULL, NULL);
-    if (lStatus != ERROR_SUCCESS)
+    dwErrorCode = (DWORD)RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, &dwSubKeys, &cchMaxSubKey, NULL, NULL, NULL, NULL, NULL, NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
     {
-        ERR("RegQueryInfoKeyW failed with status %ld!\n", lStatus);
-        goto Cleanup;
-    }
-
-    // Allocate a temporary buffer for the Print Processor names.
-    pwszPrintProcessorName = DllAllocSplMem((cchMaxSubKey + 1) * sizeof(WCHAR));
-    if (!pwszPrintProcessorName)
-    {
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("RegQueryInfoKeyW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
@@ -191,36 +186,54 @@ InitializePrintProcessorList()
             pPrintProcessor = NULL;
         }
 
+        // Create a new LOCAL_PRINT_PROCESSOR structure for it.
+        pPrintProcessor = DllAllocSplMem(sizeof(LOCAL_PRINT_PROCESSOR));
+        if (!pPrintProcessor)
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
+        // Allocate memory for the Print Monitor Name.
+        pPrintProcessor->pwszName = DllAllocSplMem((cchMaxSubKey + 1) * sizeof(WCHAR));
+        if (!pPrintProcessor->pwszName)
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
         // Get the name of this Print Processor.
         cchPrintProcessorName = cchMaxSubKey + 1;
-        lStatus = RegEnumKeyExW(hSubKey, i, pwszPrintProcessorName, &cchPrintProcessorName, NULL, NULL, NULL, NULL);
-        if (lStatus != ERROR_SUCCESS)
+        dwErrorCode = (DWORD)RegEnumKeyExW(hSubKey, i, pPrintProcessor->pwszName, &cchPrintProcessorName, NULL, NULL, NULL, NULL);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("RegEnumKeyExW failed with status %ld!\n", lStatus);
+            ERR("RegEnumKeyExW failed with status %ld!\n", dwErrorCode);
             continue;
         }
 
         // Open this Print Processor's registry key.
-        lStatus = RegOpenKeyExW(hSubKey, pwszPrintProcessorName, 0, KEY_READ, &hSubSubKey);
-        if (lStatus != ERROR_SUCCESS)
+        dwErrorCode = (DWORD)RegOpenKeyExW(hSubKey, pPrintProcessor->pwszName, 0, KEY_READ, &hSubSubKey);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("RegOpenKeyExW failed for Print Processor \"%S\" with status %ld!\n", pwszPrintProcessorName, lStatus);
+            ERR("RegOpenKeyExW failed for Print Processor \"%S\" with status %lu!\n", pPrintProcessor->pwszName, dwErrorCode);
             continue;
         }
 
         // Get the file name of the Print Processor.
         cbFileName = sizeof(wszFileName);
-        lStatus = RegQueryValueExW(hSubSubKey, L"Driver", NULL, NULL, (PBYTE)wszFileName, &cbFileName);
-        if (lStatus != ERROR_SUCCESS)
+        dwErrorCode = (DWORD)RegQueryValueExW(hSubSubKey, L"Driver", NULL, NULL, (PBYTE)wszFileName, &cbFileName);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("RegQueryValueExW failed for Print Processor \"%S\" with status %ld!\n", pwszPrintProcessorName, lStatus);
+            ERR("RegQueryValueExW failed for Print Processor \"%S\" with status %lu!\n", pPrintProcessor->pwszName, dwErrorCode);
             continue;
         }
 
         // Verify that our buffer is large enough.
         if (cchPrintProcessorPath + cbFileName / sizeof(WCHAR) > MAX_PATH)
         {
-            ERR("Print Processor directory \"%S\" for Print Processor \"%S\" is too long!\n", wszFileName, pwszPrintProcessorName);
+            ERR("Print Processor directory \"%S\" for Print Processor \"%S\" is too long!\n", wszFileName, pPrintProcessor->pwszName);
             continue;
         }
 
@@ -229,15 +242,11 @@ InitializePrintProcessorList()
 
         // Try to load it.
         hinstPrintProcessor = LoadLibraryW(wszPrintProcessorPath);
-        if (lStatus != ERROR_SUCCESS)
+        if (!hinstPrintProcessor)
         {
             ERR("LoadLibraryW failed for \"%S\" with error %lu!\n", wszPrintProcessorPath, GetLastError());
             continue;
         }
-
-        // Create a new LOCAL_PRINT_PROCESSOR structure for it.
-        pPrintProcessor = DllAllocSplMem(sizeof(LOCAL_PRINT_PROCESSOR));
-        pPrintProcessor->pwszName = AllocSplStr(pwszPrintProcessorName);
 
         // Get and verify all its function pointers.
         pPrintProcessor->pfnClosePrintProcessor = (PClosePrintProcessor)GetProcAddress(hinstPrintProcessor, "ClosePrintProcessor");
@@ -287,6 +296,7 @@ InitializePrintProcessorList()
         pPrintProcessor->pDatatypesInfo1 = DllAllocSplMem(cbDatatypes);
         if (!pPrintProcessor->pDatatypesInfo1)
         {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
             goto Cleanup;
         }
@@ -303,6 +313,8 @@ InitializePrintProcessorList()
         // Don't let the cleanup routines free this.
         pPrintProcessor = NULL;
     }
+
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     // Inside the loop
@@ -321,14 +333,14 @@ Cleanup:
     }
 
     // Outside the loop
-    if (pwszPrintProcessorName)
-        DllFreeSplStr(pwszPrintProcessorName);
-
     if (hSubKey)
         RegCloseKey(hSubKey);
 
     if (hKey)
         RegCloseKey(hKey);
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 /**

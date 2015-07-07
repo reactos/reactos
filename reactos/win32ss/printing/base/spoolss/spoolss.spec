@@ -60,16 +60,16 @@
 @ stdcall EndPagePrinter(long)
 @ stub EnumFormsW
 @ stdcall EnumJobsW(long long long long ptr long ptr ptr)
-@ stub EnumMonitorsW
+@ stdcall EnumMonitorsW(wstr long ptr long ptr ptr)
 @ stub EnumPerMachineConnectionsW
-@ stdcall EnumPortsW(ptr long ptr long ptr ptr)
+@ stdcall EnumPortsW(wstr long ptr long ptr ptr)
 @ stub EnumPrinterDataExW
 @ stub EnumPrinterDataW
 @ stub EnumPrinterDriversW
 @ stub EnumPrinterKeyW
-@ stdcall EnumPrintersW(long ptr long ptr long ptr ptr)
-@ stdcall EnumPrintProcessorDatatypesW(ptr ptr long ptr long ptr ptr)
-@ stdcall EnumPrintProcessorsW(ptr ptr long ptr long ptr ptr)
+@ stdcall EnumPrintersW(long wstr long ptr long ptr ptr)
+@ stdcall EnumPrintProcessorDatatypesW(wstr wstr long ptr long ptr ptr)
+@ stdcall EnumPrintProcessorsW(wstr wstr long ptr long ptr ptr)
 @ stub FindClosePrinterChangeNotification
 @ stub FlushPrinter
 @ stub FormatPrinterForRegistryKey

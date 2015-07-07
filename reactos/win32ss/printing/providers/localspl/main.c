@@ -23,6 +23,8 @@ const WCHAR wszCurrentEnvironment[] =
     #error Unsupported architecture
 #endif
 
+const DWORD cbCurrentEnvironment = sizeof(wszCurrentEnvironment);
+
 const WCHAR wszDefaultDocumentName[] = L"Local Downlevel Document";
 
 const WCHAR* wszPrintProviderInfo[3] = {
@@ -70,8 +72,8 @@ static const PRINTPROVIDOR _PrintProviderFunctions = {
     NULL,                                       // fpGetForm
     NULL,                                       // fpSetForm
     NULL,                                       // fpEnumForms
-    NULL,                                       // fpEnumMonitors
-    NULL,                                       // fpEnumPorts
+    LocalEnumMonitors,                          // fpEnumMonitors
+    LocalEnumPorts,                             // fpEnumPorts
     NULL,                                       // fpAddPort
     NULL,                                       // fpConfigurePort
     NULL,                                       // fpDeletePort
@@ -142,13 +144,15 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
             _GetSpoolDirectory();
-            InitializePrintProcessorList();
-            InitializePrinterList();
-            InitializeGlobalJobList();
-            break;
-    }
 
-    return TRUE;
+            return InitializePrintMonitorList() &&
+                   InitializePrintProcessorList() &&
+                   InitializePrinterList() &&
+                   InitializeGlobalJobList();
+
+        default:
+            return TRUE;
+    }
 }
 
 BOOL WINAPI

@@ -9,17 +9,17 @@
 
 
 /**
-* @name AllocSplStr
-*
-* Allocates memory for a Unicode string and copies the input string into it.
-* Equivalent of wcsdup, but the returned buffer is allocated from the spooler heap and must be freed with DllFreeSplStr.
-*
-* @param pwszInput
-* The input string to copy
-*
-* @return
-* Pointer to the copied string or NULL if no memory could be allocated.
-*/
+ * @name AllocSplStr
+ *
+ * Allocates memory for a Unicode string and copies the input string into it.
+ * Equivalent of wcsdup, but the returned buffer is allocated from the spooler heap and must be freed with DllFreeSplStr.
+ *
+ * @param pwszInput
+ * The input string to copy
+ *
+ * @return
+ * Pointer to the copied string or NULL if no memory could be allocated.
+ */
 PWSTR WINAPI
 AllocSplStr(PCWSTR pwszInput)
 {

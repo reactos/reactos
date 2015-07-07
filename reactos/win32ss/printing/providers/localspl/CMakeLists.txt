@@ -6,6 +6,8 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/skiplist)
 list(APPEND SOURCE
     jobs.c
     main.c
+    monitors.c
+    ports.c
     precomp.h
     printers.c
     printprocessors.c
