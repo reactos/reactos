@@ -91,6 +91,10 @@ typedef struct _DOS_SYSVARS
     BYTE NumLocalDrives; // Set by LASTDRIVE
     DOS_DRIVER NullDevice;
     BYTE NullDriverRoutine[7];
+    BYTE Reserved2[8];
+    BYTE BootDrive;
+    BYTE UseDwordMoves;
+    WORD ExtMemSize;
 } DOS_SYSVARS, *PDOS_SYSVARS;
 
 typedef struct _DOS_CLOCK_TRANSFER_RECORD

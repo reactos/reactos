@@ -333,7 +333,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Write string to STDOUT */
+        /* Write String to STDOUT */
         case 0x09:
         {
             String = (PCHAR)SEG_OFF_TO_PTR(getDS(), getDX());
@@ -756,8 +756,17 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Extended functionalities */
         case 0x33:
         {
-            if (getAL() == 0x06)
+            switch (getAL())
             {
+                /*
+                 * DOS 4+ - GET BOOT DRIVE
+                 */
+                case 0x05:
+                {
+                    setDL(SysVars->BootDrive);
+                    break;
+                }
+
                 /*
                  * DOS 5+ - GET TRUE VERSION NUMBER
                  * This function always returns the true version number, unlike
@@ -765,24 +774,29 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                  * See Ralf Brown: http://www.ctyme.com/intr/rb-2730.htm
                  * for more information.
                  */
+                case 0x06:
+                {
+                    /*
+                     * Return the true DOS version: Minor:Major in BH:BL
+                     * The Windows NT DOS box returns BX=3205h (version 5.50).
+                     */
+                    setBX(NTDOS_VERSION);
 
-                /*
-                 * Return the true DOS version: Minor:Major in BH:BL
-                 * The Windows NT DOS box returns BX=3205h (version 5.50).
-                 */
-                setBX(NTDOS_VERSION);
+                    /* DOS revision 0 */
+                    setDL(0x00);
 
-                /* DOS revision 0 */
-                setDL(0x00);
+                    /* Unpatched DOS */
+                    setDH(0x00);
 
-                /* Unpatched DOS */
-                setDH(0x00);
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT1("INT 21h, AH = 33h, subfunction AL = %Xh NOT IMPLEMENTED\n",
+                            getAL());
+                }
             }
-            // else
-            // {
-                // /* Invalid subfunction */
-                // setAL(0xFF);
-            // }
 
             break;
         }
@@ -841,7 +855,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* SWITCH character - AVAILDEV */
         case 0x37:
         {
-            if (getAL() == 0x00)
+            switch (getAL())
             {
                 /*
                  * DOS 2+ - "SWITCHAR" - GET SWITCH CHARACTER
@@ -850,44 +864,46 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                  * See Ralf Brown: http://www.ctyme.com/intr/rb-2752.htm
                  * for more information.
                  */
-                setDL('/');
-                setAL(0x00);
-            }
-            else if (getAL() == 0x01)
-            {
+                case 0x00:
+                    setDL('/');
+                    setAL(0x00);
+                    break;
+
                 /*
                  * DOS 2+ - "SWITCHAR" - SET SWITCH CHARACTER
                  * This setting is ignored by MS-DOS 5+.
                  * See Ralf Brown: http://www.ctyme.com/intr/rb-2753.htm
                  * for more information.
                  */
-                // getDL();
-                setAL(0xFF);
-            }
-            else if (getAL() == 0x02)
-            {
+                case 0x01:
+                    // getDL();
+                    setAL(0xFF);
+                    break;
+
                 /*
                  * DOS 2.x and 3.3+ only - "AVAILDEV" - SPECIFY \DEV\ PREFIX USE
                  * See Ralf Brown: http://www.ctyme.com/intr/rb-2754.htm
                  * for more information.
                  */
-                // setDL();
-                setAL(0xFF);
-            }
-            else if (getAL() == 0x03)
-            {
+                case 0x02:
+                    // setDL();
+                    setAL(0xFF);
+                    break;
+
                 /*
                  * DOS 2.x and 3.3+ only - "AVAILDEV" - SPECIFY \DEV\ PREFIX USE
                  * See Ralf Brown: http://www.ctyme.com/intr/rb-2754.htm
                  * for more information.
                  */
-                // getDL();
-                setAL(0xFF);
-            }
-            else
-            {
+                case 0x03:
+                    // getDL();
+                    setAL(0xFF);
+                    break;
+
                 /* Invalid subfunction */
-                setAL(0xFF);
+                default:
+                    setAL(0xFF);
+                    break;
             }
 
             break;
@@ -1379,7 +1395,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Terminate With Return Code */
+        /* Terminate with Return Code */
         case 0x4C:
         {
             DosTerminateProcess(Sda->CurrentPsp, getAL(), 0);
@@ -2089,6 +2105,10 @@ BOOLEAN DosKRNLInitialize(VOID)
                                     DOS_DATA_SEGMENT);
     /* The last drive can be redefined with the LASTDRIVE command. At the moment, set the real maximum possible, 'Z'. */
     SysVars->NumLocalDrives = 'Z' - 'A' + 1;
+
+    /* The boot drive is initialized to the %SYSTEMDRIVE% value */
+    // NOTE: Using the NtSystemRoot system variable might be OS-specific...
+    SysVars->BootDrive = SharedUserData->NtSystemRoot[0] - 'A' + 1;
 
     /* Initialize the NUL device driver */
     SysVars->NullDevice.Link = 0xFFFFFFFF;
