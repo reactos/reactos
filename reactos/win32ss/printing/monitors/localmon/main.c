@@ -67,6 +67,9 @@ LocalmonShutdown(HANDLE hMonitor)
 {
     PLOCALMON_HANDLE pLocalmon;
     PLOCALMON_PORT pPort;
+    PLOCALMON_XCV pXcv;
+
+    TRACE("LocalmonShutdown(%p)\n", hMonitor);
 
     pLocalmon = (PLOCALMON_HANDLE)hMonitor;
 
@@ -77,15 +80,24 @@ LocalmonShutdown(HANDLE hMonitor)
         LocalmonClosePort((HANDLE)pPort);
     }
 
-    // Now close all regular ports and remove them from the list.
-    while (!IsListEmpty(&pLocalmon->Ports))
+    // Do the same for the open Xcv ports.
+    while (!IsListEmpty(&pLocalmon->XcvHandles))
     {
-        pPort = CONTAINING_RECORD(&pLocalmon->Ports.Flink, LOCALMON_PORT, Entry);
-        RemoveEntryList(&pPort->Entry);
-        LocalmonClosePort((HANDLE)pPort);
+        pXcv = CONTAINING_RECORD(&pLocalmon->XcvHandles.Flink, LOCALMON_XCV, Entry);
+        LocalmonXcvClosePort((HANDLE)pXcv);
     }
 
-    // Finally free the memory for the LOCALMON_HANDLE structure itself.
+    // Now close all registry ports, remove them from the list and free their memory.
+    while (!IsListEmpty(&pLocalmon->RegistryPorts))
+    {
+        pPort = CONTAINING_RECORD(&pLocalmon->RegistryPorts.Flink, LOCALMON_PORT, Entry);
+        LocalmonClosePort((HANDLE)pPort);
+        RemoveEntryList(&pPort->Entry);
+        DllFreeSplMem(pPort);
+    }
+
+    // Finally clean the LOCALMON_HANDLE structure itself.
+    DeleteCriticalSection(&pLocalmon->Section);
     DllFreeSplMem(pLocalmon);
 }
 
@@ -102,10 +114,14 @@ InitializePrintMonitor2(PMONITORINIT pMonitorInit, PHANDLE phMonitor)
     PLOCALMON_HANDLE pLocalmon;
     PLOCALMON_PORT pPort = NULL;
 
+    TRACE("InitializePrintMonitor2(%p, %p)\n", pMonitorInit, phMonitor);
+
     // Create a new LOCALMON_HANDLE structure.
     pLocalmon = DllAllocSplMem(sizeof(LOCALMON_HANDLE));
+    InitializeCriticalSection(&pLocalmon->Section);
     InitializeListHead(&pLocalmon->FilePorts);
-    InitializeListHead(&pLocalmon->Ports);
+    InitializeListHead(&pLocalmon->RegistryPorts);
+    InitializeListHead(&pLocalmon->XcvHandles);
 
     // The Local Spooler Port Monitor doesn't need to care about the given registry key and functions.
     // Instead it uses a well-known registry key for getting its information about local ports. Open this one.
@@ -136,6 +152,7 @@ InitializePrintMonitor2(PMONITORINIT pMonitorInit, PHANDLE phMonitor)
             goto Cleanup;
         }
 
+        pPort->pLocalmon = pLocalmon;
         pPort->hFile = INVALID_HANDLE_VALUE;
         pPort->pwszPortName = (PWSTR)((PBYTE)pPort + sizeof(LOCALMON_PORT));
 
@@ -156,7 +173,7 @@ InitializePrintMonitor2(PMONITORINIT pMonitorInit, PHANDLE phMonitor)
         }
 
         // Add it to the list.
-        InsertTailList(&pLocalmon->Ports, &pPort->Entry);
+        InsertTailList(&pLocalmon->RegistryPorts, &pPort->Entry);
 
         // Don't let the cleanup routine free this.
         pPort = NULL;

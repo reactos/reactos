@@ -345,15 +345,21 @@ Cleanup:
 BOOL WINAPI
 LocalmonXcvClosePort(HANDLE hXcv)
 {
+    PLOCALMON_XCV pXcv = (PLOCALMON_XCV)hXcv;
+
+    TRACE("LocalmonXcvClosePort(%p)\n", hXcv);
+
     // Sanity checks
-    if (!hXcv)
+    if (!pXcv)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    // Free the memory.
-    DllFreeSplMem(hXcv);
+    // Remove it from the list and free the memory.
+    RemoveEntryList(&pXcv->Entry);
+    DllFreeSplMem(pXcv);
+
     SetLastError(ERROR_SUCCESS);
     return TRUE;
 }
@@ -361,6 +367,8 @@ LocalmonXcvClosePort(HANDLE hXcv)
 DWORD WINAPI
 LocalmonXcvDataPort(HANDLE hXcv, PCWSTR pszDataName, PBYTE pInputData, DWORD cbInputData, PBYTE pOutputData, DWORD cbOutputData, PDWORD pcbOutputNeeded)
 {
+    TRACE("LocalmonXcvDataPort(%p, %S, %p, %lu, %p, %lu, %p)\n", hXcv, pszDataName, pInputData, cbInputData, pOutputData, cbOutputData, pcbOutputNeeded);
+
     // Sanity checks
     if (!pszDataName)
         return ERROR_INVALID_PARAMETER;
@@ -401,10 +409,13 @@ LocalmonXcvOpenPort(HANDLE hMonitor, PCWSTR pwszObject, ACCESS_MASK GrantedAcces
 {
     DWORD cbObject = 0;
     DWORD dwErrorCode;
+    PLOCALMON_HANDLE pLocalmon = (PLOCALMON_HANDLE)hMonitor;
     PLOCALMON_XCV pXcv;
 
+    TRACE("LocalmonXcvOpenPort(%p, %S, %lu, %p)\n", hMonitor, pwszObject, GrantedAccess, phXcv);
+
     // Sanity checks
-    if (!hMonitor || !phXcv)
+    if (!pLocalmon || !phXcv)
     {
         dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
@@ -422,6 +433,7 @@ LocalmonXcvOpenPort(HANDLE hMonitor, PCWSTR pwszObject, ACCESS_MASK GrantedAcces
         goto Cleanup;
     }
 
+    pXcv->pLocalmon = pLocalmon;
     pXcv->GrantedAccess = GrantedAccess;
 
     if (cbObject)
@@ -429,6 +441,8 @@ LocalmonXcvOpenPort(HANDLE hMonitor, PCWSTR pwszObject, ACCESS_MASK GrantedAcces
         pXcv->pwszObject = (PWSTR)((PBYTE)pXcv + sizeof(LOCALMON_XCV));
         CopyMemory(pXcv->pwszObject, pwszObject, cbObject);
     }
+
+    InsertTailList(&pLocalmon->XcvHandles, &pXcv->Entry);
 
     // Return it as the Xcv handle.
     *phXcv = (HANDLE)pXcv;

@@ -29,6 +29,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(localmon);
 
 // Structures
 /**
+ * Describes the monitor handle returned by InitializePrintMonitor2.
+ * Manages all available ports in this instance.
+ */
+typedef struct _LOCALMON_HANDLE
+{
+    CRITICAL_SECTION Section;       /** Critical Section for modifying or reading the ports. */
+    LIST_ENTRY FilePorts;           /** Virtual ports created for every document that's redirected to an output file. */
+    LIST_ENTRY RegistryPorts;       /** COM, FILE: and LPT ports loaded from the local registry. */
+    LIST_ENTRY XcvHandles;          /** Xcv handles created with LocalmonXcvOpenPort. */
+}
+LOCALMON_HANDLE, *PLOCALMON_HANDLE;
+
+/**
  * Describes the port handle returned by LocalmonOpenPort.
  * Manages a legacy port (COM/LPT) or virtual FILE: port for printing as well as its associated printer and job.
  */
@@ -46,21 +59,11 @@ typedef struct _LOCALMON_PORT
     DWORD dwJobID;                  /** ID of the printing job we are processing (for later reporting progress using SetJobW). */
     HANDLE hFile;                   /** Handle to the opened port or INVALID_HANDLE_VALUE if it isn't currently opened. */
     HANDLE hPrinter;                /** Handle to the printer for the job on this port (for using SetJobW). */
+    PLOCALMON_HANDLE pLocalmon;     /** Pointer to the parent LOCALMON_HANDLE structure. */
     PWSTR pwszMapping;              /** The current mapping of the DOS Device corresponding to this port at the time _CreateNonspooledPort has been called. */
     PWSTR pwszPortName;             /** The name of this port including the trailing colon. Empty for virtual file ports. */
 }
 LOCALMON_PORT, *PLOCALMON_PORT;
-
-/**
- * Describes the monitor handle returned by InitializePrintMonitor2.
- * Manages all available ports in this instance.
- */
-typedef struct _LOCALMON_HANDLE
-{
-    LIST_ENTRY FilePorts;           /** Virtual ports created for every document that's redirected to an output file. */
-    LIST_ENTRY Ports;               /** Ports found on the system (except for FILE:) */
-}
-LOCALMON_HANDLE, *PLOCALMON_HANDLE;
 
 /**
  * Describes the Xcv handle returned by LocalmonXcvOpenPort.
@@ -68,7 +71,9 @@ LOCALMON_HANDLE, *PLOCALMON_HANDLE;
  */
 typedef struct _LOCALMON_XCV
 {
+    LIST_ENTRY Entry;
     ACCESS_MASK GrantedAccess;
+    PLOCALMON_HANDLE pLocalmon;
     PWSTR pwszObject;
 }
 LOCALMON_XCV, *PLOCALMON_XCV;

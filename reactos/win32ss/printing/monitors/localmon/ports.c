@@ -49,7 +49,7 @@ _GetNonspooledPortName(PCWSTR pwszPortNameWithoutColon)
 /**
  * @name _ClosePortHandles
  *
- * Closes a port of any type if its opened.
+ * Closes a port of any type if it's open.
  * Removes any saved mapping or existing definition of a NONSPOOLED device mapping.
  *
  * @param pPort
@@ -305,7 +305,7 @@ _FindPort(PLOCALMON_HANDLE pLocalmon, PCWSTR pwszPortName)
     PLIST_ENTRY pEntry;
     PLOCALMON_PORT pPort;
 
-    for (pEntry = pLocalmon->Ports.Flink; pEntry != &pLocalmon->Ports; pEntry = pEntry->Flink)
+    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
     {
         pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
 
@@ -329,7 +329,7 @@ _LocalmonEnumPortsLevel1(PLOCALMON_HANDLE pLocalmon, PBYTE pPorts, DWORD cbBuf, 
     PORT_INFO_1W PortInfo1;
 
     // Count the required buffer size and the number of datatypes.
-    for (pEntry = pLocalmon->Ports.Flink; pEntry != &pLocalmon->Ports; pEntry = pEntry->Flink)
+    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
     {
         pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
 
@@ -350,7 +350,7 @@ _LocalmonEnumPortsLevel1(PLOCALMON_HANDLE pLocalmon, PBYTE pPorts, DWORD cbBuf, 
     pPortString = pPorts + dwPortCount * sizeof(PORT_INFO_1W);
 
     // Copy over all ports.
-    for (pEntry = pLocalmon->Ports.Flink; pEntry != &pLocalmon->Ports; pEntry = pEntry->Flink)
+    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
     {
         pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
 
@@ -385,7 +385,7 @@ _LocalmonEnumPortsLevel2(PLOCALMON_HANDLE pLocalmon, PBYTE pPorts, DWORD cbBuf, 
     PORT_INFO_2W PortInfo2;
 
     // Count the required buffer size and the number of datatypes.
-    for (pEntry = pLocalmon->Ports.Flink; pEntry != &pLocalmon->Ports; pEntry = pEntry->Flink)
+    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
     {
         pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
 
@@ -406,7 +406,7 @@ _LocalmonEnumPortsLevel2(PLOCALMON_HANDLE pLocalmon, PBYTE pPorts, DWORD cbBuf, 
     pPortString = pPorts + dwPortCount * sizeof(PORT_INFO_2W);
 
     // Copy over all ports.
-    for (pEntry = pLocalmon->Ports.Flink; pEntry != &pLocalmon->Ports; pEntry = pEntry->Flink)
+    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
     {
         pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
 
@@ -472,21 +472,15 @@ _SetTransmissionRetryTimeout(PLOCALMON_PORT pPort)
 BOOL WINAPI
 LocalmonClosePort(HANDLE hPort)
 {
-    PLOCALMON_PORT pPort;
+    PLOCALMON_PORT pPort = (PLOCALMON_PORT)hPort;
+
+    TRACE("LocalmonClosePort(%p)\n", hPort);
 
     // Sanity checks
-    if (!hPort)
+    if (!pPort)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
-    }
-
-    pPort = (PLOCALMON_PORT)hPort;
-
-    if (pPort->PortType == PortType_FILE)
-    {
-        // Remove it from the list of virtual file ports.
-        RemoveEntryList(&pPort->Entry);
     }
 
     // Close the file handle, free memory for pwszMapping and delete any NONSPOOLED port.
@@ -494,10 +488,19 @@ LocalmonClosePort(HANDLE hPort)
 
     // Close any open printer handle.
     if (pPort->hPrinter)
+    {
         ClosePrinter(pPort->hPrinter);
+        pPort->hPrinter = NULL;
+    }
 
-    // Finally free the memory for the port itself.
-    DllFreeSplMem(pPort);
+    // Free virtual FILE ports which were created in LocalmonOpenPort.
+    if (pPort->PortType == PortType_FILE)
+    {
+        EnterCriticalSection(&pPort->pLocalmon->Section);
+        RemoveEntryList(&pPort->Entry);
+        DllFreeSplMem(pPort);
+        LeaveCriticalSection(&pPort->pLocalmon->Section);
+    }
 
     SetLastError(ERROR_SUCCESS);
     return TRUE;
@@ -507,6 +510,8 @@ BOOL WINAPI
 LocalmonEndDocPort(HANDLE hPort)
 {
     PLOCALMON_PORT pPort = (PLOCALMON_PORT)hPort;
+
+    TRACE("LocalmonEndDocPort(%p)\n", hPort);
 
     // Sanity checks
     if (!pPort)
@@ -539,9 +544,12 @@ BOOL WINAPI
 LocalmonEnumPorts(HANDLE hMonitor, PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
+    PLOCALMON_HANDLE pLocalmon = (PLOCALMON_HANDLE)hMonitor;
+
+    TRACE("LocalmonEnumPorts(%p, %S, %lu, %p, %lu, %p, %p)\n", hMonitor, pName, Level, pPorts, cbBuf, pcbNeeded, pcReturned);
 
     // Sanity checks
-    if (!hMonitor || (cbBuf && !pPorts) || !pcbNeeded || !pcReturned)
+    if (!pLocalmon || (cbBuf && !pPorts) || !pcbNeeded || !pcReturned)
     {
         dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
@@ -557,11 +565,15 @@ LocalmonEnumPorts(HANDLE hMonitor, PWSTR pName, DWORD Level, PBYTE pPorts, DWORD
     *pcbNeeded = 0;
     *pcReturned = 0;
 
+    EnterCriticalSection(&pLocalmon->Section);
+
     // The function behaves differently for each level.
     if (Level == 1)
-        dwErrorCode = _LocalmonEnumPortsLevel1((PLOCALMON_HANDLE)hMonitor, pPorts, cbBuf, pcbNeeded, pcReturned);
+        dwErrorCode = _LocalmonEnumPortsLevel1(pLocalmon, pPorts, cbBuf, pcbNeeded, pcReturned);
     else if (Level == 2)
-        dwErrorCode = _LocalmonEnumPortsLevel2((PLOCALMON_HANDLE)hMonitor, pPorts, cbBuf, pcbNeeded, pcReturned);
+        dwErrorCode = _LocalmonEnumPortsLevel2(pLocalmon, pPorts, cbBuf, pcbNeeded, pcReturned);
+
+    LeaveCriticalSection(&pLocalmon->Section);
 
 Cleanup:
     SetLastError(dwErrorCode);
@@ -569,7 +581,7 @@ Cleanup:
 }
 
 /*
- * @name LocalmonSetPortTimeOuts
+ * @name LocalmonGetPrinterDataFromPort
  *
  * Performs a DeviceIoControl call for the given port.
  *
@@ -607,6 +619,8 @@ LocalmonGetPrinterDataFromPort(HANDLE hPort, DWORD ControlID, PWSTR pValueName, 
     BOOL bOpenedPort = FALSE;
     DWORD dwErrorCode;
     PLOCALMON_PORT pPort = (PLOCALMON_PORT)hPort;
+
+    TRACE("LocalmonGetPrinterDataFromPort(%p, %lu, %p, %p, %lu, %p, %lu, %p)\n", hPort, ControlID, pValueName, lpInBuffer, cbInBuffer, lpOutBuffer, cbOutBuffer, lpcbReturned);
 
     // Sanity checks
     if (!pPort || !ControlID || !lpcbReturned)
@@ -660,6 +674,8 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
     PLOCALMON_HANDLE pLocalmon = (PLOCALMON_HANDLE)hMonitor;
     PLOCALMON_PORT pPort;
 
+    TRACE("LocalmonOpenPort(%p, %S, %p)\n", hMonitor, pName, pHandle);
+
     // Sanity checks
     if (!pLocalmon || !pName || !pHandle)
     {
@@ -672,18 +688,23 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
     {
         // For FILE:, we create a virtual port for each request.
         pPort = DllAllocSplMem(sizeof(LOCALMON_PORT));
+        pPort->pLocalmon = pLocalmon;
         pPort->PortType = PortType_FILE;
         pPort->hFile = INVALID_HANDLE_VALUE;
 
         // Add it to the list of file ports.
+        EnterCriticalSection(&pLocalmon->Section);
         InsertTailList(&pLocalmon->FilePorts, &pPort->Entry);
     }
     else
     {
+        EnterCriticalSection(&pLocalmon->Section);
+
         // Check if the port name is valid.
         pPort = _FindPort(pLocalmon, pName);
         if (!pPort)
         {
+            LeaveCriticalSection(&pLocalmon->Section);
             dwErrorCode = ERROR_UNKNOWN_PORT;
             goto Cleanup;
         }
@@ -693,6 +714,9 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
         // The others are only opened per job in StartDocPort.
         if (_wcsnicmp(pName, L"LPT", 3) == 0)
         {
+            // Treat all ports as other LPT ports until we can definitely say that it's a physical one.
+            pPort->PortType = PortType_OtherLPT;
+
             // Try to create a NONSPOOLED port and open it.
             if (_CreateNonspooledPort(pPort))
             {
@@ -705,13 +729,13 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
                 }
                 else
                 {
-                    // This is no physical port, so don't keep its handle open all the time.
+                    // This is no physical port, so don't keep its handle open.
                     _ClosePortHandles(pPort);
-                    pPort->PortType = PortType_OtherLPT;
                 }
             }
             else if (GetLastError() != ERROR_SUCCESS)
             {
+                LeaveCriticalSection(&pLocalmon->Section);
                 dwErrorCode = GetLastError();
                 goto Cleanup;
             }
@@ -722,6 +746,8 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
             pPort->PortType = PortType_PhysicalCOM;
         }
     }
+
+    LeaveCriticalSection(&pLocalmon->Section);
 
     // Return our fetched LOCALMON_PORT structure in the handle.
     *pHandle = (PHANDLE)pPort;
@@ -756,6 +782,8 @@ LocalmonSetPortTimeOuts(HANDLE hPort, LPCOMMTIMEOUTS lpCTO, DWORD Reserved)
     BOOL bOpenedPort = FALSE;
     DWORD dwErrorCode;
     PLOCALMON_PORT pPort = (PLOCALMON_PORT)hPort;
+
+    TRACE("LocalmonSetPortTimeOuts(%p, %p, %lu)\n", hPort, lpCTO, Reserved);
 
     // Sanity checks
     if (!pPort || !lpCTO)
@@ -809,6 +837,8 @@ LocalmonReadPort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuffer, PDWORD pcbRead)
     DWORD dwErrorCode;
     PLOCALMON_PORT pPort = (PLOCALMON_PORT)hPort;
 
+    TRACE("LocalmonReadPort(%p, %p, %lu, %p)\n", hPort, pBuffer, cbBuffer, pcbRead);
+
     // Sanity checks
     if (!pPort || (cbBuffer && !pBuffer) || !pcbRead)
     {
@@ -859,6 +889,8 @@ LocalmonStartDocPort(HANDLE hPort, PWSTR pPrinterName, DWORD JobId, DWORD Level,
     DWORD dwErrorCode;
     PDOC_INFO_1W pDocInfo1 = (PDOC_INFO_1W)pDocInfo;        // DOC_INFO_1W is the least common denominator for both DOC_INFO levels.
     PLOCALMON_PORT pPort = (PLOCALMON_PORT)hPort;
+
+    TRACE("LocalmonStartDocPort(%p, %S, %lu, %lu, %p)\n", hPort, pPrinterName, JobId, Level, pDocInfo);
 
     // Sanity checks
     if (!pPort || !pPrinterName || (pPort->PortType == PortType_FILE && (!pDocInfo1 || !pDocInfo1->pOutputFile || !*pDocInfo1->pOutputFile)))
@@ -953,6 +985,8 @@ LocalmonWritePort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuf, PDWORD pcbWritten)
     BOOL bOpenedPort = FALSE;
     DWORD dwErrorCode;
     PLOCALMON_PORT pPort = (PLOCALMON_PORT)hPort;
+
+    TRACE("LocalmonWritePort(%p, %p, %lu, %p)\n", hPort, pBuffer, cbBuf, pcbWritten);
 
     // Sanity checks
     if (!pPort || (cbBuf && !pBuffer) || !pcbWritten)
