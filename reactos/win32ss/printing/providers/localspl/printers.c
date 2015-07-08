@@ -81,6 +81,9 @@ InitializePrinterList()
 
         if (pPrinter)
         {
+            if (pPrinter->pDefaultDevMode)
+                DllFreeSplMem(pPrinter->pDefaultDevMode);
+
             if (pPrinter->pwszDefaultDatatype)
                 DllFreeSplStr(pPrinter->pwszDefaultDatatype);
 
@@ -173,12 +176,28 @@ InitializePrinterList()
             continue;
         }
 
-        // Get the default DevMode.
-        cbData = sizeof(DEVMODEW);
-        dwErrorCode = (DWORD)RegQueryValueExW(hSubKey, L"Default DevMode", NULL, NULL, (PBYTE)&pPrinter->DefaultDevMode, &cbData);
-        if (dwErrorCode != ERROR_SUCCESS || cbData != sizeof(DEVMODEW))
+        // Determine the size of the DevMode.
+        dwErrorCode = (DWORD)RegQueryValueExW(hSubKey, L"Default DevMode", NULL, NULL, NULL, &cbData);
+        if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("Couldn't query a valid DevMode for Printer \"%S\", status is %lu, cbData is %lu!\n", wszPrinterName, dwErrorCode, cbData);
+            ERR("Couldn't query the size of the DevMode for Printer \"%S\", status is %lu, cbData is %lu!\n", wszPrinterName, dwErrorCode, cbData);
+            continue;
+        }
+
+        // Allocate enough memory for the DevMode.
+        pPrinter->pDefaultDevMode = DllAllocSplMem(cbData);
+        if (!pPrinter->pDefaultDevMode)
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
+        // Get the default DevMode.
+        dwErrorCode = (DWORD)RegQueryValueExW(hSubKey, L"Default DevMode", NULL, NULL, (PBYTE)pPrinter->pDefaultDevMode, &cbData);
+        if (dwErrorCode != ERROR_SUCCESS)
+        {
+            ERR("Couldn't query a DevMode for Printer \"%S\", status is %lu, cbData is %lu!\n", wszPrinterName, dwErrorCode, cbData);
             continue;
         }
 
@@ -220,6 +239,9 @@ Cleanup:
 
     if (pPrinter)
     {
+        if (pPrinter->pDefaultDevMode)
+            DllFreeSplMem(pPrinter->pDefaultDevMode);
+
         if (pPrinter->pwszDefaultDatatype)
             DllFreeSplStr(pPrinter->pwszDefaultDatatype);
 
@@ -567,9 +589,9 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
 
         // Check if a DevMode was given, otherwise use the default.
         if (pDefault && pDefault->pDevMode)
-            CopyMemory(&pPrinterHandle->DevMode, pDefault->pDevMode, sizeof(DEVMODEW));
+            pPrinterHandle->pDevMode = DuplicateDevMode(pDefault->pDevMode);
         else
-            CopyMemory(&pPrinterHandle->DevMode, &pPrinter->DefaultDevMode, sizeof(DEVMODEW));
+            pPrinterHandle->pDevMode = DuplicateDevMode(pPrinter->pDefaultDevMode);
 
         // Did we have a comma? Then the user may want a handle to an existing job instead of creating a new job.
         if (p)
@@ -753,7 +775,7 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
     }
 
     // Copy over printer defaults.
-    CopyMemory(&pJob->DevMode, &pPrinterHandle->DevMode, sizeof(DEVMODEW));
+    pJob->pDevMode = DuplicateDevMode(pPrinterHandle->pDevMode);
 
     // Copy over supplied information.
     if (pDocumentInfo1->pDocName)

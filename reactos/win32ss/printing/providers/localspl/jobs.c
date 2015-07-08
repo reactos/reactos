@@ -279,7 +279,7 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
     pJob->dwStatus = JOB_STATUS_SPOOLING;
     pJob->pwszDatatype = AllocSplStr(pPrinterHandle->pwszDatatype);
     pJob->pwszDocumentName = AllocSplStr(wszDefaultDocumentName);
-    CopyMemory(&pJob->DevMode, &pPrinterHandle->DevMode, sizeof(DEVMODEW));
+    pJob->pDevMode = DuplicateDevMode(pPrinterHandle->pDevMode);
     GetSystemTime(&pJob->stSubmitted);
 
     // Get the user name for the Job.
@@ -440,6 +440,7 @@ static DWORD
 _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE* ppStart, PBYTE* ppEnd, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
+    DWORD cbDevMode = pJob->pDevMode->dmSize + pJob->pDevMode->dmDriverExtra;
     DWORD cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
     DWORD cbDriverName = (wcslen(pJob->pPrinter->pwszPrinterDriver) + 1) * sizeof(WCHAR);
     DWORD cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
@@ -464,7 +465,7 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
         cbStatus = (wcslen(pJob->pwszStatus) + 1) * sizeof(WCHAR);
 
     // Check if the supplied buffer is large enough.
-    *pcbNeeded += sizeof(JOB_INFO_2W) + cbDatatype + sizeof(DEVMODEW) + cbDocumentName + cbDriverName + cbMachineName + cbNotifyName + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbStatus + cbUserName;
+    *pcbNeeded += sizeof(JOB_INFO_2W) + cbDatatype + cbDevMode + cbDocumentName + cbDriverName + cbMachineName + cbNotifyName + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbStatus + cbUserName;
     if (cbBuf < *pcbNeeded)
     {
         dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
@@ -476,9 +477,9 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
     JobInfo2.pDatatype = (PWSTR)*ppEnd;
     CopyMemory(*ppEnd, pJob->pwszDatatype, cbDatatype);
 
-    *ppEnd -= sizeof(DEVMODEW);
+    *ppEnd -= cbDevMode;
     JobInfo2.pDevMode = (PDEVMODEW)*ppEnd;
-    CopyMemory(*ppEnd, &pJob->DevMode, sizeof(DEVMODEW));
+    CopyMemory(*ppEnd, pJob->pDevMode, cbDevMode);
 
     *ppEnd -= cbDocumentName;
     JobInfo2.pDocument = (PWSTR)*ppEnd;
@@ -1136,6 +1137,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     pJob->dwUntilTime = pShadowFile->dwUntilTime;    
     pJob->pPrinter = pPrinter;
     pJob->pPrintProcessor = pPrintProcessor;
+    pJob->pDevMode = DuplicateDevMode((PDEVMODEW)((ULONG_PTR)pShadowFile + pShadowFile->offDevMode));
     pJob->pwszDatatype = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDatatype));
     pJob->pwszDocumentName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDocumentName));
     pJob->pwszMachineName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offMachineName));
@@ -1145,9 +1147,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
         pJob->pwszPrintProcessorParameters = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offPrintProcessorParameters));
 
     pJob->pwszUserName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offUserName));
-
     CopyMemory(&pJob->stSubmitted, &pShadowFile->stSubmitted, sizeof(SYSTEMTIME));
-    CopyMemory(&pJob->DevMode, (PDEVMODEW)((ULONG_PTR)pShadowFile + pShadowFile->offDevMode), sizeof(DEVMODEW));
 
     pReturnValue = pJob;
 
@@ -1166,6 +1166,7 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
 {
     BOOL bReturnValue = FALSE;
     DWORD cbDatatype;
+    DWORD cbDevMode;
     DWORD cbDocumentName;
     DWORD cbFileSize;
     DWORD cbMachineName;
@@ -1191,6 +1192,7 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
 
     // Compute the total size of the shadow file.
     cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
+    cbDevMode = pJob->pDevMode->dmSize + pJob->pDevMode->dmDriverExtra;
     cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
     cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
     cbNotifyName = (wcslen(pJob->pwszNotifyName) + 1) * sizeof(WCHAR);
@@ -1203,7 +1205,7 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
     if (pJob->pwszPrintProcessorParameters)
         cbPrintProcessorParameters = (wcslen(pJob->pwszPrintProcessorParameters) + 1) * sizeof(WCHAR);
 
-    cbFileSize = sizeof(SHD_HEADER) + cbDatatype + cbDocumentName + sizeof(DEVMODEW) + cbMachineName + cbNotifyName + cbPrinterDriver + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbUserName;
+    cbFileSize = sizeof(SHD_HEADER) + cbDatatype + cbDocumentName + cbDevMode + cbMachineName + cbNotifyName + cbPrinterDriver + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbUserName;
 
     // Allocate memory for it.
     pShadowFile = DllAllocSplMem(cbFileSize);
@@ -1243,9 +1245,9 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
     pShadowFile->offDocumentName = dwCurrentOffset;
     dwCurrentOffset += cbDocumentName;
 
-    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, &pJob->DevMode, sizeof(DEVMODEW));
+    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pDevMode, cbDevMode);
     pShadowFile->offDevMode = dwCurrentOffset;
-    dwCurrentOffset += sizeof(DEVMODEW);
+    dwCurrentOffset += cbDevMode;
 
     // offDriverName is only written, but automatically determined through offPrinterName when reading.
     CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pPrinter->pwszPrinterDriver, cbPrinterDriver);

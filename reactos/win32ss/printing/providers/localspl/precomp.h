@@ -81,7 +81,7 @@ typedef struct _LOCAL_PRINTER
     PWSTR pwszPrinterDriver;
     PWSTR pwszDescription;
     PWSTR pwszDefaultDatatype;
-    DEVMODEW DefaultDevMode;
+    PDEVMODEW pDefaultDevMode;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
     SKIPLIST JobList;
 }
@@ -113,7 +113,7 @@ typedef struct _LOCAL_JOB
     DWORD dwUntilTime;                          // Latest time in minutes since 12:00 AM UTC when this document can be printed
     DWORD dwStatus;                             // JOB_STATUS_* flags of the Job
     PWSTR pwszMachineName;                      // Name of the machine that submitted the Job (prepended with two backslashes)
-    DEVMODEW DevMode;                           // Associated Device Mode to this Job
+    PDEVMODEW pDevMode;                         // Associated Device Mode to this Job
 }
 LOCAL_JOB, *PLOCAL_JOB;
 
@@ -129,7 +129,7 @@ typedef struct _LOCAL_PRINTER_HANDLE
     PLOCAL_PRINTER pPrinter;
     PLOCAL_JOB pStartedJob;
     PWSTR pwszDatatype;
-    DEVMODEW DevMode;
+    PDEVMODEW pDevMode;
 }
 LOCAL_PRINTER_HANDLE, *PLOCAL_PRINTER_HANDLE;
 
@@ -249,5 +249,6 @@ BOOL WINAPI LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, D
 
 // tools.c
 PWSTR AllocAndRegQueryWSZ(HKEY hKey, PCWSTR pwszValueName);
+PDEVMODEW DuplicateDevMode(PDEVMODEW pInput);
 
 #endif

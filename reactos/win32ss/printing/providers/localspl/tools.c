@@ -56,3 +56,22 @@ AllocAndRegQueryWSZ(HKEY hKey, PCWSTR pwszValueName)
 
     return pwszValue;
 }
+
+PDEVMODEW
+DuplicateDevMode(PDEVMODEW pInput)
+{
+    PDEVMODEW pOutput;
+
+    // Allocate a buffer for this DevMode.
+    pOutput = DllAllocSplMem(pInput->dmSize + pInput->dmDriverExtra);
+    if (!pOutput)
+    {
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        return NULL;
+    }
+
+    // Copy it.
+    CopyMemory(pOutput, pInput, pInput->dmSize + pInput->dmDriverExtra);
+
+    return pOutput;
+}
