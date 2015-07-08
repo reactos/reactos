@@ -4,6 +4,6 @@
 #pragma once
 #include "..\resource.h"
 
-extern HINSTANCE g_hInstance;
-extern HANDLE ProcessHeap;
+extern HINSTANCE g_hThisInstance;
+extern HINSTANCE g_hParentInstance;
 
