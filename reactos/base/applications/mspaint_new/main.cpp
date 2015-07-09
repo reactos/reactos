@@ -13,7 +13,6 @@
 /* FUNCTIONS ********************************************************/
 
 HDC hDrawingDC;
-HDC hSelDC;
 int *bmAddress;
 BITMAPINFO bitmapinfo;
 int imgXRes = 400;
@@ -31,10 +30,8 @@ POINT last;
 
 ToolsModel toolsModel;
 
-RECT rectSel_src;
-RECT rectSel_dest;
-HBITMAP hSelBm;
-HBITMAP hSelMask;
+SelectionModel selectionModel;
+
 LOGFONT lfTextFont;
 HFONT hfontTextFont;
 HWND hwndEditCtl;
@@ -205,7 +202,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     hDC = imageArea.GetDC();
     hDrawingDC = CreateCompatibleDC(hDC);
-    hSelDC     = CreateCompatibleDC(hDC);
+    selectionModel.SetDC(CreateCompatibleDC(hDC));
     imageArea.ReleaseDC(hDC);
     SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, paletteModel.GetFgColor()));
     SelectObject(hDrawingDC, CreateSolidBrush(paletteModel.GetBgColor()));

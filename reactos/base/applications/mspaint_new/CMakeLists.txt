@@ -18,6 +18,7 @@ list(APPEND SOURCE
     registry.cpp
     scrollbox.cpp
     selection.cpp
+    selectionmodel.cpp
     sizebox.cpp
     textedit.cpp
     toolbox.cpp

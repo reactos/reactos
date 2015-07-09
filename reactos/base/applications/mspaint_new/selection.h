@@ -30,6 +30,17 @@ public:
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+private:
+    static const LPCTSTR m_lpszCursorLUT[9];
+    BOOL m_bMoving;
+    int m_iAction;
+    POINT m_ptPos;
+    POINT m_ptFrac;
+    POINT m_ptDelta;
+    DWORD m_dwSystemSelectionColor;
+
+    int IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight);
 };
 
 void ForceRefreshSelectionContents();

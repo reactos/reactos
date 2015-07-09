@@ -30,6 +30,7 @@
 #include "palettemodel.h"
 #include "scrollbox.h"
 #include "selection.h"
+#include "selectionmodel.h"
 #include "sizebox.h"
 #include "textedit.h"
 #include "toolbox.h"

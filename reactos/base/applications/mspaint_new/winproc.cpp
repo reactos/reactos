@@ -107,29 +107,12 @@ void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename
 
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 {
-    HDC hTempDC;
-    HBITMAP hTempMask;
-
     HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
     toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
 
-    DeleteObject(SelectObject(hSelDC, hSelBm = (HBITMAP) CopyImage(bitmap,
-                                                                   IMAGE_BITMAP, 0, 0,
-                                                                   LR_COPYRETURNORG)));
     imageModel.CopyPrevious();
-    SetRectEmpty(&rectSel_src);
-    rectSel_dest.left = rectSel_dest.top = 0;
-    rectSel_dest.right = rectSel_dest.left + GetDIBWidth(hSelBm);
-    rectSel_dest.bottom = rectSel_dest.top + GetDIBHeight(hSelBm);
-
-    hTempDC = CreateCompatibleDC(hSelDC);
-    hTempMask = CreateBitmap(RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), 1, 1, NULL);
-    SelectObject(hTempDC, hTempMask);
-    Rect(hTempDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right, rectSel_dest.bottom, 0x00ffffff, 0x00ffffff, 1, 1);
-    DeleteObject(hSelMask);
-    hSelMask = hTempMask;
-    DeleteDC(hTempDC);
+    selectionModel.InsertFromHBITMAP(bitmap);
 
     placeSelWin();
     selectionWindow.ShowWindow(SW_SHOW);
@@ -159,8 +142,6 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 {
     SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
     SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
-    ptStack = NULL;
-    ptSP = 0;
     return 0;
 }
 
@@ -392,7 +373,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITCOPY:
             OpenClipboard();
             EmptyClipboard();
-            SetClipboardData(CF_BITMAP, CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
+            SetClipboardData(CF_BITMAP, CopyImage(selectionModel.GetBitmap(), IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
             CloseClipboard();
             break;
         case IDM_EDITCUT:
@@ -411,20 +392,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_EDITDELETESELECTION:
         {
-            /* remove selection window and already painted content using undo(),
-            paint Rect for rectangular selections and Poly for freeform selections */
+            /* remove selection window and already painted content using undo */
             imageModel.Undo();
-            if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
-            {
-                imageModel.CopyPrevious();
-                Rect(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right,
-                     rectSel_dest.bottom, paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
-            }
-            if (toolsModel.GetActiveTool() == TOOL_FREESEL)
-            {
-                imageModel.CopyPrevious();
-                Poly(hDrawingDC, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE, TRUE);
-            }
             break;
         }
         case IDM_EDITSELECTALL:
@@ -440,7 +409,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITCOPYTO:
             if (GetSaveFileName(&ofn) != 0)
-                SaveDIBToFile(hSelBm, ofn.lpstrFile, hDrawingDC, NULL, NULL, fileHPPM, fileVPPM);
+                SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, hDrawingDC, NULL, NULL, fileHPPM, fileVPPM);
             break;
         case IDM_EDITPASTEFROM:
             if (GetOpenFileName(&ofn) != 0)
@@ -480,12 +449,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 case 1: /* flip horizontally */
                     if (selectionWindow.IsWindowVisible())
                     {
-                        SelectObject(hSelDC, hSelMask);
-                        StretchBlt(hSelDC, RECT_WIDTH(rectSel_dest) - 1, 0, -RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC,
-                                   0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
-                        SelectObject(hSelDC, hSelBm);
-                        StretchBlt(hSelDC, RECT_WIDTH(rectSel_dest) - 1, 0, -RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC,
-                                   0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
+                        selectionModel.FlipHorizontally();
                         ForceRefreshSelectionContents();
                     }
                     else
@@ -499,12 +463,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 case 2: /* flip vertically */
                     if (selectionWindow.IsWindowVisible())
                     {
-                        SelectObject(hSelDC, hSelMask);
-                        StretchBlt(hSelDC, 0, RECT_HEIGHT(rectSel_dest) - 1, RECT_WIDTH(rectSel_dest), -RECT_HEIGHT(rectSel_dest), hSelDC,
-                                   0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
-                        SelectObject(hSelDC, hSelBm);
-                        StretchBlt(hSelDC, 0, RECT_HEIGHT(rectSel_dest) - 1, RECT_WIDTH(rectSel_dest), -RECT_HEIGHT(rectSel_dest), hSelDC,
-                                   0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
+                        selectionModel.FlipVertically();
                         ForceRefreshSelectionContents();
                     }
                     else
@@ -520,12 +479,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 case 4: /* rotate 180 degrees */
                     if (selectionWindow.IsWindowVisible())
                     {
-                        SelectObject(hSelDC, hSelMask);
-                        StretchBlt(hSelDC, RECT_WIDTH(rectSel_dest) - 1, RECT_HEIGHT(rectSel_dest) - 1, -RECT_WIDTH(rectSel_dest), -RECT_HEIGHT(rectSel_dest), hSelDC,
-                                   0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
-                        SelectObject(hSelDC, hSelBm);
-                        StretchBlt(hSelDC, RECT_WIDTH(rectSel_dest) - 1, RECT_HEIGHT(rectSel_dest) - 1, -RECT_WIDTH(rectSel_dest), -RECT_HEIGHT(rectSel_dest), hSelDC,
-                                   0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
+                        selectionModel.RotateNTimes90Degrees(2);
                         ForceRefreshSelectionContents();
                     }
                     else
@@ -561,7 +515,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            imageModel.Insert((HBITMAP) CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
+            imageModel.Insert((HBITMAP) CopyImage(selectionModel.GetBitmap(), IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
             break;
 
         case IDM_VIEWTOOLBOX:

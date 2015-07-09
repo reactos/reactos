@@ -15,44 +15,42 @@
 void
 placeSelWin()
 {
-    selectionWindow.MoveWindow(rectSel_dest.left * toolsModel.GetZoom() / 1000, rectSel_dest.top * toolsModel.GetZoom() / 1000,
-        RECT_WIDTH(rectSel_dest) * toolsModel.GetZoom() / 1000 + 6, RECT_HEIGHT(rectSel_dest) * toolsModel.GetZoom() / 1000 + 6, TRUE);
+    selectionWindow.MoveWindow(selectionModel.GetDestRectLeft() * toolsModel.GetZoom() / 1000, selectionModel.GetDestRectTop() * toolsModel.GetZoom() / 1000,
+        selectionModel.GetDestRectWidth() * toolsModel.GetZoom() / 1000 + 6, selectionModel.GetDestRectHeight() * toolsModel.GetZoom() / 1000 + 6, TRUE);
     selectionWindow.BringWindowToTop();
     imageArea.InvalidateRect(NULL, FALSE);
 }
 
 void
-regularize(LONG x0, LONG y0, LONG *x1, LONG *y1)
+regularize(LONG x0, LONG y0, LONG& x1, LONG& y1)
 {
-    if (abs(*x1 - x0) >= abs(*y1 - y0))
-        *y1 = y0 + (*y1 > y0 ? abs(*x1 - x0) : -abs(*x1 - x0));
+    if (abs(x1 - x0) >= abs(y1 - y0))
+        y1 = y0 + (y1 > y0 ? abs(x1 - x0) : -abs(x1 - x0));
     else
-        *x1 = x0 + (*x1 > x0 ? abs(*y1 - y0) : -abs(*y1 - y0));
+        x1 = x0 + (x1 > x0 ? abs(y1 - y0) : -abs(y1 - y0));
 }
 
 void
-roundTo8Directions(LONG x0, LONG y0, LONG *x1, LONG *y1)
+roundTo8Directions(LONG x0, LONG y0, LONG& x1, LONG& y1)
 {
-    if (abs(*x1 - x0) >= abs(*y1 - y0))
+    if (abs(x1 - x0) >= abs(y1 - y0))
     {
-        if (abs(*y1 - y0) * 5 < abs(*x1 - x0) * 2)
-            *y1 = y0;
+        if (abs(y1 - y0) * 5 < abs(x1 - x0) * 2)
+            y1 = y0;
         else
-            *y1 = y0 + (*y1 > y0 ? abs(*x1 - x0) : -abs(*x1 - x0));
+            y1 = y0 + (y1 > y0 ? abs(x1 - x0) : -abs(x1 - x0));
     }
     else
     {
-        if (abs(*x1 - x0) * 5 < abs(*y1 - y0) * 2)
-            *x1 = x0;
+        if (abs(x1 - x0) * 5 < abs(y1 - y0) * 2)
+            x1 = x0;
         else
-            *x1 = x0 + (*x1 > x0 ? abs(*y1 - y0) : -abs(*y1 - y0));
+            x1 = x0 + (x1 > x0 ? abs(y1 - y0) : -abs(y1 - y0));
     }
 }
 
 POINT pointStack[256];
 short pointSP;
-POINT *ptStack = NULL;
-int ptSP = 0;
 
 void
 startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
@@ -65,12 +63,8 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
     {
         case TOOL_FREESEL:
             selectionWindow.ShowWindow(SW_HIDE);
-            if (ptStack != NULL)
-                HeapFree(GetProcessHeap(), 0, ptStack);
-            ptStack = (POINT*) HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * 1024);
-            ptSP = 0;
-            ptStack[0].x = x;
-            ptStack[0].y = y;
+            selectionModel.ResetPtStack();
+            selectionModel.PushToPtStack(x, y);
             break;
         case TOOL_LINE:
         case TOOL_RECT:
@@ -82,8 +76,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_TEXT:
             imageModel.CopyPrevious();
             selectionWindow.ShowWindow(SW_HIDE);
-            rectSel_src.right = rectSel_src.left;
-            rectSel_src.bottom = rectSel_src.top;
+            selectionModel.SetSrcRectSizeToZero();
             break;
         case TOOL_RUBBER:
             imageModel.CopyPrevious();
@@ -134,15 +127,11 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
-            if (ptSP == 0)
+            if (selectionModel.PtStackSize() == 1)
                 imageModel.CopyPrevious();
-            ptSP++;
-            if (ptSP % 1024 == 0)
-                ptStack = (POINT*) HeapReAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, ptStack, sizeof(POINT) * (ptSP + 1024));
-            ptStack[ptSP].x = max(0, min(x, imageModel.GetWidth()));
-            ptStack[ptSP].y = max(0, min(y, imageModel.GetHeight()));
+            selectionModel.PushToPtStack(max(0, min(x, imageModel.GetWidth())), max(0, min(y, imageModel.GetHeight())));
             imageModel.ResetToPrevious();
-            Poly(hdc, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE, TRUE); /* draw the freehand selection inverted/xored */
+            selectionModel.DrawFramePoly(hdc);
             break;
         case TOOL_RECTSEL:
         case TOOL_TEXT:
@@ -151,10 +140,7 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             imageModel.ResetToPrevious();
             temp.x = max(0, min(x, imageModel.GetWidth()));
             temp.y = max(0, min(y, imageModel.GetHeight()));
-            rectSel_dest.left = rectSel_src.left = min(start.x, temp.x);
-            rectSel_dest.top = rectSel_src.top = min(start.y, temp.y);
-            rectSel_dest.right = rectSel_src.right = max(start.x, temp.x);
-            rectSel_dest.bottom = rectSel_src.bottom = max(start.y, temp.y);
+            selectionModel.SetSrcAndDestRectFromPoints(start, temp);
             RectSel(hdc, start.x, start.y, temp.x, temp.y);
             break;
         }
@@ -173,7 +159,7 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_LINE:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(start.x, start.y, &x, &y);
+                roundTo8Directions(start.x, start.y, x, y);
             Line(hdc, start.x, start.y, x, y, fg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
@@ -197,7 +183,7 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_RECT:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             Rect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
@@ -206,20 +192,20 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   &pointStack[pointSP].x, &pointStack[pointSP].y);
+                                   pointStack[pointSP].x, pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
                 Poly(hdc, pointStack, pointSP + 1, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             break;
         case TOOL_ELLIPSE:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             Ellp(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
     }
@@ -235,79 +221,30 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
     {
         case TOOL_FREESEL:
         {
-            POINT *ptStackCopy;
-            int i;
-            rectSel_src.left = rectSel_src.top = MAXLONG;
-            rectSel_src.right = rectSel_src.bottom = 0;
-            for (i = 0; i <= ptSP; i++)
+            selectionModel.CalculateBoundingBoxAndContents(hdc);
+            if (selectionModel.PtStackSize() > 1)
             {
-                if (ptStack[i].x < rectSel_src.left)
-                    rectSel_src.left = ptStack[i].x;
-                if (ptStack[i].y < rectSel_src.top)
-                    rectSel_src.top = ptStack[i].y;
-                if (ptStack[i].x > rectSel_src.right)
-                    rectSel_src.right = ptStack[i].x;
-                if (ptStack[i].y > rectSel_src.bottom)
-                    rectSel_src.bottom = ptStack[i].y;
-            }
-            rectSel_src.right  += 1;
-            rectSel_src.bottom += 1;
-            rectSel_dest.left   = rectSel_src.left;
-            rectSel_dest.top    = rectSel_src.top;
-            rectSel_dest.right  = rectSel_src.right;
-            rectSel_dest.bottom = rectSel_src.bottom;
-            if (ptSP != 0)
-            {
-                DeleteObject(hSelMask);
-                hSelMask = CreateBitmap(RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), 1, 1, NULL);
-                DeleteObject(SelectObject(hSelDC, hSelMask));
-                ptStackCopy = (POINT*) HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * (ptSP + 1));
-                for (i = 0; i <= ptSP; i++)
-                {
-                    ptStackCopy[i].x = ptStack[i].x - rectSel_src.left;
-                    ptStackCopy[i].y = ptStack[i].y - rectSel_src.top;
-                }
-                Poly(hSelDC, ptStackCopy, ptSP + 1, 0x00ffffff, 0x00ffffff, 1, 2, TRUE, FALSE);
-                HeapFree(GetProcessHeap(), 0, ptStackCopy);
-                SelectObject(hSelDC, hSelBm = CreateDIBWithProperties(RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src)));
-                imageModel.ResetToPrevious();
-                MaskBlt(hSelDC, 0, 0, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hDrawingDC, rectSel_src.left,
-                        rectSel_src.top, hSelMask, 0, 0, MAKEROP4(SRCCOPY, WHITENESS));
-                Poly(hdc, ptStack, ptSP + 1, bg, bg, 1, 2, TRUE, FALSE);
+                selectionModel.DrawBackgroundPoly(hdc, bg);
                 imageModel.CopyPrevious();
 
-                MaskBlt(hDrawingDC, rectSel_src.left, rectSel_src.top, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hSelDC, 0,
-                        0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
+                selectionModel.DrawSelection(hdc);
 
                 placeSelWin();
                 selectionWindow.ShowWindow(SW_SHOW);
-                /* force refresh of selection contents */
-                selectionWindow.SendMessage(WM_LBUTTONDOWN, 0, 0);
-                selectionWindow.SendMessage(WM_MOUSEMOVE, 0, 0);
-                selectionWindow.SendMessage(WM_LBUTTONUP, 0, 0);
+                ForceRefreshSelectionContents();
             }
-            HeapFree(GetProcessHeap(), 0, ptStack);
-            ptStack = NULL;
+            selectionModel.ResetPtStack();
             break;
         }
         case TOOL_RECTSEL:
             imageModel.ResetToPrevious();
-            if ((RECT_WIDTH(rectSel_src) != 0) && (RECT_HEIGHT(rectSel_src) != 0))
+            if (selectionModel.IsSrcRectSizeNonzero())
             {
-                DeleteObject(hSelMask);
-                hSelMask = CreateBitmap(RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), 1, 1, NULL);
-                DeleteObject(SelectObject(hSelDC, hSelMask));
-                Rect(hSelDC, 0, 0, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), 0x00ffffff, 0x00ffffff, 1, 2);
-                SelectObject(hSelDC, hSelBm = CreateDIBWithProperties(RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src)));
-                imageModel.ResetToPrevious();
-                BitBlt(hSelDC, 0, 0, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hDrawingDC, rectSel_src.left,
-                       rectSel_src.top, SRCCOPY);
-                Rect(hdc, rectSel_src.left, rectSel_src.top, rectSel_src.right,
-                     rectSel_src.bottom, bg, bg, 0, TRUE);
+                selectionModel.CalculateContents(hdc);
+                selectionModel.DrawBackgroundRect(hdc, bg);
                 imageModel.CopyPrevious();
 
-                BitBlt(hDrawingDC, rectSel_src.left, rectSel_src.top, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hSelDC, 0,
-                       0, SRCCOPY);
+                selectionModel.DrawSelection(hdc);
 
                 placeSelWin();
                 selectionWindow.ShowWindow(SW_SHOW);
@@ -316,7 +253,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             break;
         case TOOL_TEXT:
             imageModel.ResetToPrevious();
-            if ((RECT_WIDTH(rectSel_src) != 0) && (RECT_HEIGHT(rectSel_src) != 0))
+            if (selectionModel.IsSrcRectSizeNonzero())
             {
                 imageModel.CopyPrevious();
 
@@ -335,7 +272,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_LINE:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(start.x, start.y, &x, &y);
+                roundTo8Directions(start.x, start.y, x, y);
             Line(hdc, start.x, start.y, x, y, fg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
@@ -346,7 +283,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_RECT:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             Rect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
@@ -355,7 +292,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   &pointStack[pointSP].x, &pointStack[pointSP].y);
+                                   pointStack[pointSP].x, pointStack[pointSP].y);
             pointSP++;
             if (pointSP >= 2)
             {
@@ -376,13 +313,13 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_ELLIPSE:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             Ellp(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
     }
@@ -468,7 +405,7 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_LINE:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(start.x, start.y, &x, &y);
+                roundTo8Directions(start.x, start.y, x, y);
             Line(hdc, start.x, start.y, x, y, bg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
@@ -492,7 +429,7 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_RECT:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             Rect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
@@ -501,20 +438,20 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   &pointStack[pointSP].x, &pointStack[pointSP].y);
+                                   pointStack[pointSP].x, pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
                 Poly(hdc, pointStack, pointSP + 1, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
             break;
         case TOOL_ELLIPSE:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             Ellp(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
     }
@@ -538,7 +475,7 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_LINE:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(start.x, start.y, &x, &y);
+                roundTo8Directions(start.x, start.y, x, y);
             Line(hdc, start.x, start.y, x, y, bg, toolsModel.GetLineWidth());
             break;
         case TOOL_BEZIER:
@@ -549,7 +486,7 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_RECT:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             Rect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_SHAPE:
@@ -558,7 +495,7 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   &pointStack[pointSP].x, &pointStack[pointSP].y);
+                                   pointStack[pointSP].x, pointStack[pointSP].y);
             pointSP++;
             if (pointSP >= 2)
             {
@@ -579,13 +516,13 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
         case TOOL_ELLIPSE:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             Ellp(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
         case TOOL_RRECT:
             imageModel.ResetToPrevious();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, &x, &y);
+                regularize(start.x, start.y, x, y);
             RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
     }

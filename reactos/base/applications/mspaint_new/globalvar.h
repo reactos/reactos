@@ -21,7 +21,6 @@ typedef struct tagSTRETCHSKEW {
 /* VARIABLES declared in main.c *************************************/
 
 extern HDC hDrawingDC;
-extern HDC hSelDC;
 extern int *bmAddress;
 extern BITMAPINFO bitmapinfo;
 
@@ -39,10 +38,9 @@ extern POINT last;
 class ToolsModel;
 extern ToolsModel toolsModel;
 
-extern RECT rectSel_src;
-extern RECT rectSel_dest;
-extern HBITMAP hSelBm;
-extern HBITMAP hSelMask;
+class SelectionModel;
+extern SelectionModel selectionModel;
+
 extern HWND hwndEditCtl;
 extern LOGFONT lfTextFont;
 extern HFONT hfontTextFont;
@@ -114,5 +112,3 @@ extern CTextEditWindow textEditWindow;
 
 extern POINT pointStack[256];
 extern short pointSP;
-extern POINT *ptStack;
-extern int ptSP;
