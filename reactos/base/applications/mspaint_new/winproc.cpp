@@ -448,10 +448,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 case 1: /* flip horizontally */
                     if (selectionWindow.IsWindowVisible())
-                    {
                         selectionModel.FlipHorizontally();
-                        ForceRefreshSelectionContents();
-                    }
                     else
                     {
                         imageModel.CopyPrevious();
@@ -462,10 +459,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     break;
                 case 2: /* flip vertically */
                     if (selectionWindow.IsWindowVisible())
-                    {
                         selectionModel.FlipVertically();
-                        ForceRefreshSelectionContents();
-                    }
                     else
                     {
                         imageModel.CopyPrevious();
@@ -478,10 +472,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     break;
                 case 4: /* rotate 180 degrees */
                     if (selectionWindow.IsWindowVisible())
-                    {
                         selectionModel.RotateNTimes90Degrees(2);
-                        ForceRefreshSelectionContents();
-                    }
                     else
                     {
                         imageModel.CopyPrevious();

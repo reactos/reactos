@@ -183,6 +183,7 @@ void SelectionModel::FlipHorizontally()
     SelectObject(m_hDC, m_hBm);
     StretchBlt(m_hDC, RECT_WIDTH(m_rcDest) - 1, 0, -RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), m_hDC,
                0, 0, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), SRCCOPY);
+    NotifyRefreshNeeded();
 }
 
 void SelectionModel::FlipVertically()
@@ -193,6 +194,7 @@ void SelectionModel::FlipVertically()
     SelectObject(m_hDC, m_hBm);
     StretchBlt(m_hDC, 0, RECT_HEIGHT(m_rcDest) - 1, RECT_WIDTH(m_rcDest), -RECT_HEIGHT(m_rcDest), m_hDC,
                0, 0, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), SRCCOPY);
+    NotifyRefreshNeeded();
 }
 
 void SelectionModel::RotateNTimes90Degrees(int iN)
@@ -206,6 +208,7 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
         StretchBlt(m_hDC, RECT_WIDTH(m_rcDest) - 1, RECT_HEIGHT(m_rcDest) - 1, -RECT_WIDTH(m_rcDest), -RECT_HEIGHT(m_rcDest), m_hDC,
                    0, 0, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), SRCCOPY);
     }
+    NotifyRefreshNeeded();
 }
 
 HBITMAP SelectionModel::GetBitmap()
@@ -325,4 +328,9 @@ LONG SelectionModel::GetDestRectTop()
 void SelectionModel::DrawTextToolText(HDC hDCImage, COLORREF crFg, COLORREF crBg, BOOL bBgTransparent)
 {
     Text(hDCImage, m_rcDest.left, m_rcDest.top, m_rcDest.right, m_rcDest.bottom, crFg, crBg, textToolText, hfontTextFont, bBgTransparent);
+}
+
+void SelectionModel::NotifyRefreshNeeded()
+{
+    selectionWindow.SendMessage(WM_SELECTIONMODELREFRESHNEEDED);
 }

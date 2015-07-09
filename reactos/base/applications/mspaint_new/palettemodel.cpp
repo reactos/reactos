@@ -90,6 +90,7 @@ void PaletteModel::SetBgColor(int newColor)
 void PaletteModel::NotifyColorChanged()
 {
     paletteWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
+    selectionWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
 }
 
 void PaletteModel::NotifyPaletteChanged()

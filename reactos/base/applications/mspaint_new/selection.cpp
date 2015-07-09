@@ -229,3 +229,25 @@ LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     }
     return 0;
 }
+
+LRESULT CSelectionWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (toolsModel.GetActiveTool() == TOOL_TEXT)
+        ForceRefreshSelectionContents();
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (toolsModel.GetActiveTool() == TOOL_FREESEL ||
+        toolsModel.GetActiveTool() == TOOL_RECTSEL ||
+        toolsModel.GetActiveTool() == TOOL_TEXT)
+        ForceRefreshSelectionContents();
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnSelectionModelRefreshNeeded(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    ForceRefreshSelectionContents();
+    return 0;
+}

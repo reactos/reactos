@@ -188,11 +188,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_RECTSEL:
         case TOOL_TEXT:
             if ((y > 1) && (y < 64))
-            {
                 toolsModel.SetBackgroundTransparent((y - 2) / 31);
-
-                ForceRefreshSelectionContents();
-            }
             break;
         case TOOL_RUBBER:
             if ((y > 1) && (y < 62))

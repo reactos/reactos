@@ -122,6 +122,7 @@ void ToolsModel::NotifyToolChanged()
 void ToolsModel::NotifyToolSettingsChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
+    selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
 }
 
 void ToolsModel::NotifyZoomChanged()

@@ -33,6 +33,7 @@ private:
 
 //     void NotifySelectionChanging();
 //     void NotifySelectionChanged();
+    void NotifyRefreshNeeded();
 
 public:
     SelectionModel();

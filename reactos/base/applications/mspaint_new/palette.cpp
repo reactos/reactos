@@ -61,22 +61,14 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 LRESULT CPaletteWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (GET_X_LPARAM(lParam) >= 31)
-    {
         paletteModel.SetFgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
-        if (toolsModel.GetActiveTool() == 10)
-            ForceRefreshSelectionContents();
-    }
     return 0;
 }
 
 LRESULT CPaletteWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (GET_X_LPARAM(lParam) >= 31)
-    {
         paletteModel.SetBgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
-        if (toolsModel.GetActiveTool() == 10)
-            ForceRefreshSelectionContents();
-    }
     return 0;
 }
 
@@ -88,8 +80,6 @@ LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
             paletteModel.SetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14,
                 choosecolor.rgbResult);
             paletteModel.SetFgColor(choosecolor.rgbResult);
-            if (toolsModel.GetActiveTool() == 10)
-                ForceRefreshSelectionContents();
         }
     return 0;
 }
@@ -102,8 +92,6 @@ LRESULT CPaletteWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
             paletteModel.SetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14,
                 choosecolor.rgbResult);
             paletteModel.SetBgColor(choosecolor.rgbResult);
-            if (toolsModel.GetActiveTool() == 10)
-                ForceRefreshSelectionContents();
         }
     return 0;
 }
