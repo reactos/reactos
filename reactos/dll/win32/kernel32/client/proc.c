@@ -499,7 +499,6 @@ WINAPI
 BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                        IN PCLIENT_ID ClientId)
 {
-    NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
     PBASE_CREATE_THREAD CreateThreadRequest = &ApiMessage.Data.CreateThreadRequest;
 
@@ -511,14 +510,14 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
     CreateThreadRequest->ThreadHandle = ThreadHandle;
 
     /* Call CSR */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
-                                 sizeof(BASE_CREATE_THREAD));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
+                        sizeof(*CreateThreadRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        DPRINT1("Failed to tell CSRSS about new thread: %lx\n", Status);
-        return Status;
+        DPRINT1("Failed to tell CSRSS about new thread: %lx\n", ApiMessage.Status);
+        return ApiMessage.Status;
     }
 
     /* Return Success */
@@ -966,19 +965,18 @@ WINAPI
 GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
                              OUT LPDWORD lpdwFlags)
 {
-    NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
     PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &ApiMessage.Data.ShutdownParametersRequest;
 
     /* Ask CSRSS for shutdown information */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
-                                 sizeof(BASE_GETSET_PROCESS_SHUTDOWN_PARAMS));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
+                        sizeof(*ShutdownParametersRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -996,21 +994,20 @@ WINAPI
 SetProcessShutdownParameters(IN DWORD dwLevel,
                              IN DWORD dwFlags)
 {
-    NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
     PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &ApiMessage.Data.ShutdownParametersRequest;
 
     /* Write the data into the CSRSS request and send it */
     ShutdownParametersRequest->ShutdownLevel = dwLevel;
     ShutdownParametersRequest->ShutdownFlags = dwFlags;
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
-                                 sizeof(BASE_GETSET_PROCESS_SHUTDOWN_PARAMS));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
+                        sizeof(*ShutdownParametersRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -1555,7 +1552,7 @@ ExitProcess(IN UINT uExitCode)
         CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                             NULL,
                             CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepExitProcess),
-                            sizeof(BASE_EXIT_PROCESS));
+                            sizeof(*ExitProcessRequest));
 
         /* Now do it again */
         NtTerminateProcess(NtCurrentProcess(), uExitCode);

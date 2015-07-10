@@ -36,7 +36,7 @@ NotifySoundSentry(VOID)
         CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                             NULL,
                             CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSoundSentryNotification),
-                            sizeof(BASE_SOUND_SENTRY));
+                            sizeof(*SoundSentryRequest));
     }
 }
 

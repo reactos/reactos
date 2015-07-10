@@ -161,7 +161,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
             CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                 NULL,
                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetTempFile),
-                                sizeof(BASE_GET_TEMP_FILE));
+                                sizeof(*GetTempFile));
             if (GetTempFile->UniqueID == 0)
             {
                 Num++;
