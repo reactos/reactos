@@ -28,15 +28,6 @@
 /* BOP Identifiers */
 #define BOP_XMS 0x52
 
-ULONG
-NTAPI
-RtlFindLastBackwardRunClear
-(
-    IN PRTL_BITMAP BitMapHeader,
-    IN ULONG FromIndex,
-    OUT PULONG StartingRunIndex
-);
-
 /* PRIVATE VARIABLES **********************************************************/
 
 static const BYTE EntryProcedure[] = {

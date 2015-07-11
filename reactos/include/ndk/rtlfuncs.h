@@ -1927,12 +1927,12 @@ RtlOemToUnicodeN(
 //
 // Ansi->Unicode String Functions
 //
+_IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
-ULONG
+WCHAR
 NTAPI
-RtlxAnsiStringToUnicodeSize(
-    PCANSI_STRING AnsiString
-);
+RtlAnsiCharToUnicodeChar(
+  _Inout_ PUCHAR *SourceCharacter);
 
 NTSYSAPI
 NTSTATUS
@@ -1941,6 +1941,13 @@ RtlAnsiStringToUnicodeString(
     PUNICODE_STRING DestinationString,
     PCANSI_STRING SourceString,
     BOOLEAN AllocateDestinationString
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlxAnsiStringToUnicodeSize(
+    PCANSI_STRING AnsiString
 );
 
 #ifdef NTOS_MODE_USER
@@ -3077,6 +3084,33 @@ RtlFindClearBitsAndSet(
     _In_ PRTL_BITMAP BitMapHeader,
     _In_ ULONG NumberToFind,
     _In_ ULONG HintIndex
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindFirstRunClear(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _Out_ PULONG StartingIndex
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindClearRuns(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _Out_writes_to_(SizeOfRunArray, return) PRTL_BITMAP_RUN RunArray,
+    _In_range_(>, 0) ULONG SizeOfRunArray,
+    _In_ BOOLEAN LocateLongestRuns
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindLastBackwardRunClear(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _In_ ULONG FromIndex,
+    _Out_ PULONG StartingRunIndex
 );
 
 NTSYSAPI

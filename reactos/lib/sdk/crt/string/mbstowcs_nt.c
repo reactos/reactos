@@ -2,7 +2,6 @@
 #include <ndk/rtlfuncs.h>
 #include <string.h>
 
-WCHAR NTAPI RtlAnsiCharToUnicodeChar(IN OUT PUCHAR *AnsiChar);
 #undef MB_CUR_MAX
 #define MB_CUR_MAX 2
 

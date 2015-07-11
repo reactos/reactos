@@ -357,9 +357,6 @@ DWORD
 WINAPI
 BaseSetLastNTError(IN NTSTATUS Status);
 
-/* FIXME */
-WCHAR WINAPI RtlAnsiCharToUnicodeChar(LPSTR *);
-
 VOID
 NTAPI
 BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
