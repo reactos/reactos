@@ -86,10 +86,10 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
                  IN UINT uUnique,
                  OUT LPWSTR lpTempFileName)
 {
-    CHAR * Let;
+    PUCHAR Let;
     HANDLE TempFile;
     UINT ID, Num = 0;
-    CHAR IDString[5];
+    UCHAR IDString[5];
     WCHAR * TempFileName;
     BASE_API_MESSAGE ApiMessage;
     PBASE_GET_TEMP_FILE GetTempFile = &ApiMessage.Data.GetTempFileRequest;
@@ -176,7 +176,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         }
  
         /* Convert that ID to wchar */
-        RtlIntegerToChar(ID, 0x10, sizeof(IDString), IDString);
+        RtlIntegerToChar(ID, 0x10, sizeof(IDString), (PCHAR)IDString);
         Let = IDString;
         do
         {
