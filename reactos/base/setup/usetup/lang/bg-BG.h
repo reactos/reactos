@@ -1509,6 +1509,13 @@ MUI_ERROR bgBGErrorEntries[] =
         "  * Press any key to continue."
     },
     {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

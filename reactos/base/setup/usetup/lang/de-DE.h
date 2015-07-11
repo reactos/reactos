@@ -1500,6 +1500,13 @@ MUI_ERROR deDEErrorEntries[] =
         "  * Eine beliebige Taste zum Fortsetzen drÅcken."
     },
     {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

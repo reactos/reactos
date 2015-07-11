@@ -1506,6 +1506,13 @@ MUI_ERROR plPLErrorEntries[] =
         "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

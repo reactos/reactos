@@ -2899,7 +2899,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("FormatPartition() failed with status 0x%08lx\n", Status);
-                    /* FIXME: show an error dialog */
+                    MUIDisplayError(ERROR_FORMATTING_PARTITION, Ir, POPUP_WAIT_ANY_KEY, PathBuffer);
                     return QUIT_PAGE;
                 }
 

@@ -1504,6 +1504,13 @@ MUI_ERROR esESErrorEntries[] =
         "  * Presione una tecla para continuar."
     },
     {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

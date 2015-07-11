@@ -1484,6 +1484,13 @@ MUI_ERROR trTRErrorEntries[] =
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }
