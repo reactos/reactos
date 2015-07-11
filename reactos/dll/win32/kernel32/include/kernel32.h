@@ -37,33 +37,29 @@
 #include "wine/unicode.h"
 #include "baseheap.h"
 
-#define BINARY_UNKNOWN	(0)
-#define BINARY_PE_EXE32	(1)
-#define BINARY_PE_DLL32	(2)
-#define BINARY_PE_EXE64	(3)
-#define BINARY_PE_DLL64	(4)
-#define BINARY_WIN16	(5)
-#define BINARY_OS216	(6)
-#define BINARY_DOS	(7)
-#define BINARY_UNIX_EXE	(8)
-#define BINARY_UNIX_LIB	(9)
+#define BINARY_UNKNOWN  (0)
+#define BINARY_PE_EXE32 (1)
+#define BINARY_PE_DLL32 (2)
+#define BINARY_PE_EXE64 (3)
+#define BINARY_PE_DLL64 (4)
+#define BINARY_WIN16    (5)
+#define BINARY_OS216    (6)
+#define BINARY_DOS      (7)
+#define BINARY_UNIX_EXE (8)
+#define BINARY_UNIX_LIB (9)
 
-#define  MAGIC(c1,c2,c3,c4)  ((c1) + ((c2)<<8) + ((c3)<<16) + ((c4)<<24))
+#define MAGIC(c1,c2,c3,c4)  ((c1) + ((c2)<<8) + ((c3)<<16) + ((c4)<<24))
 
-#define  MAGIC_HEAP        MAGIC( 'H','E','A','P' )
+#define MAGIC_HEAP      MAGIC( 'H','E','A','P' )
 
-#define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
-#define ROUNDDOWN(a,b)	(((a)/(b))*(b))
+#define ROUNDUP(a,b)    ((((a)+(b)-1)/(b))*(b))
+#define ROUNDDOWN(a,b)  (((a)/(b))*(b))
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
 
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
-
-#ifndef FIELD_OFFSET
-#define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
-#endif
 
 #define __TRY _SEH2_TRY
 #define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
