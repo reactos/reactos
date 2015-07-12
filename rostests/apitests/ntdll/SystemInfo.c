@@ -271,6 +271,42 @@ Test_TimeAdjustment(void)
 
 START_TEST(NtSystemInformation)
 {
+    NTSTATUS Status;
+    ULONG ReturnLength;
+
+    Status = NtQuerySystemInformation(9999, NULL, 0, NULL);
+    ok(Status == STATUS_INVALID_INFO_CLASS, "NtQuerySystemInformation returned %lx\n", Status);
+
+    Status = NtQuerySystemInformation(9999, NULL, 0, (PVOID)1);
+    ok(Status == STATUS_ACCESS_VIOLATION ||
+       ntv6(Status == STATUS_INVALID_INFO_CLASS), "NtQuerySystemInformation returned %lx\n", Status);
+
+    ReturnLength = 0x55555555;
+    Status = NtQuerySystemInformation(9999, NULL, 0, &ReturnLength);
+    ok(Status == STATUS_INVALID_INFO_CLASS, "NtQuerySystemInformation returned %lx\n", Status);
+    ok(ReturnLength == 0 ||
+       ntv6(ReturnLength == 0x55555555), "ReturnLength = %lu\n", ReturnLength);
+
+    ReturnLength = 0x55555555;
+    Status = NtQuerySystemInformation(9999, NULL, 1, &ReturnLength);
+    ok(Status == STATUS_ACCESS_VIOLATION ||
+       ntv6(Status == STATUS_INVALID_INFO_CLASS), "NtQuerySystemInformation returned %lx\n", Status);
+    ok(ReturnLength == 0x55555555, "ReturnLength = %lu\n", ReturnLength);
+
+    ReturnLength = 0x55555555;
+    Status = NtQuerySystemInformation(9999, (PVOID)1, 1, &ReturnLength);
+    ok(Status == STATUS_DATATYPE_MISALIGNMENT ||
+       ntv6(Status == STATUS_INVALID_INFO_CLASS), "NtQuerySystemInformation returned %lx\n", Status);
+    ok(ReturnLength == 0x55555555, "ReturnLength = %lu\n", ReturnLength);
+
+    Status = NtQuerySystemInformation(9999, NULL, 1, (PVOID)1);
+    ok(Status == STATUS_ACCESS_VIOLATION ||
+       ntv6(Status == STATUS_INVALID_INFO_CLASS), "NtQuerySystemInformation returned %lx\n", Status);
+
+    Status = NtQuerySystemInformation(9999, (PVOID)1, 1, (PVOID)1);
+    ok(Status == STATUS_DATATYPE_MISALIGNMENT ||
+       ntv6(Status == STATUS_INVALID_INFO_CLASS), "NtQuerySystemInformation returned %lx\n", Status);
+
     Test_Flags();
     Test_TimeAdjustment();
 }
