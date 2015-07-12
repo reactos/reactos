@@ -46,6 +46,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         case DLL_PROCESS_ATTACH:
             netcfgx_hInstance = hinstDLL;
             DisableThreadLibraryCalls(netcfgx_hInstance);
+            InitCommonControls();
             break;
     default:
         break;

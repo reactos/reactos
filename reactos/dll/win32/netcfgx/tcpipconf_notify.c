@@ -665,6 +665,31 @@ InsertIpAddressToListView(
     }
 }
 
+static
+VOID
+EnableIpButtons(
+    HWND hwndDlg)
+{
+    BOOL bEnable;
+
+    bEnable = (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_IPLIST)) != 0);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_IPMOD), bEnable);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_IPDEL), bEnable);
+}
+
+static
+VOID
+EnableGwButtons(
+    HWND hwndDlg)
+{
+    BOOL bEnable;
+
+    bEnable = (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_GWLIST)) != 0);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMOD), bEnable);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_GWDEL), bEnable);
+}
 
 VOID
 InitializeTcpipAdvancedIpDlg(
@@ -696,6 +721,7 @@ InitializeTcpipAdvancedIpDlg(
     else
     {
         InsertIpAddressToListView(GetDlgItem(hwndDlg, IDC_IPLIST), This->pCurrentConfig->Ip, TRUE);
+        EnableIpButtons(hwndDlg);
     }
 
     InsertColumnToListView(GetDlgItem(hwndDlg, IDC_GWLIST), IDS_GATEWAY, 0, 100);
@@ -703,6 +729,8 @@ InitializeTcpipAdvancedIpDlg(
     InsertColumnToListView(GetDlgItem(hwndDlg, IDC_GWLIST), IDS_METRIC, 1, (rect.right - rect.left - 100));
 
     InsertIpAddressToListView(GetDlgItem(hwndDlg, IDC_GWLIST), This->pCurrentConfig->Gw, FALSE);
+    EnableGwButtons(hwndDlg);
+
     SendDlgItemMessageW(hwndDlg, IDC_METRIC, EM_LIMITTEXT, 4, 0);
 
 }
@@ -1329,6 +1357,8 @@ TcpipAdvancedIpDlg(
                         li.pszText = Ip.szMask;
                         SendDlgItemMessageW(hwndDlg, IDC_IPLIST, LVM_SETITEMW, 0, (LPARAM)&li);
                     }
+
+                    EnableIpButtons(hwndDlg);
                 }
             }
             else if (LOWORD(wParam) == IDC_IPMOD)
@@ -1361,6 +1391,7 @@ TcpipAdvancedIpDlg(
             else if (LOWORD(wParam) == IDC_IPDEL)
             {
                 DeleteItemFromList(GetDlgItem(hwndDlg, IDC_IPLIST));
+                EnableIpButtons(hwndDlg);
                 break;
             }
             else if (LOWORD(wParam) == IDC_GWADD)
@@ -1395,6 +1426,8 @@ TcpipAdvancedIpDlg(
                             }
                         }
                     }
+
+                    EnableGwButtons(hwndDlg);
                 }
                 break;
             }
@@ -1443,6 +1476,7 @@ TcpipAdvancedIpDlg(
             else if (LOWORD(wParam) == IDC_GWDEL)
             {
                 DeleteItemFromList(GetDlgItem(hwndDlg, IDC_GWLIST));
+                EnableGwButtons(hwndDlg);
                 break;
             }
     }
