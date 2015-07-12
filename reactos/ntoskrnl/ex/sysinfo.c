@@ -2308,7 +2308,7 @@ struct _QSSI_CALLS
 {
     NTSTATUS (* Query) (PVOID,ULONG,PULONG);
     NTSTATUS (* Set) (PVOID,ULONG);
-
+    ULONG Alignment;
 } QSSI_CALLS;
 
 // QS    Query & Set
@@ -2316,9 +2316,12 @@ struct _QSSI_CALLS
 // XS    Set
 // XX    unknown behaviour
 //
-#define SI_QS(n) {QSI_USE(n),SSI_USE(n)}
-#define SI_QX(n) {QSI_USE(n),NULL}
-#define SI_XS(n) {NULL,SSI_USE(n)}
+#define SI_QS(n) {QSI_USE(n),SSI_USE(n),TYPE_ALIGNMENT(ULONG)}
+#define SI_QX(n) {QSI_USE(n),NULL,TYPE_ALIGNMENT(ULONG)}
+#define SI_XS(n) {NULL,SSI_USE(n),TYPE_ALIGNMENT(ULONG)}
+#define SI_QS_ALIGN(n,a) {QSI_USE(n),SSI_USE(n),a}
+#define SI_QX_ALIGN(n,a) {QSI_USE(n),NULL,a}
+#define SI_XS_ALIGN(n,a) {NULL,SSI_USE(n),a}
 #define SI_XX(n) {NULL,NULL}
 
 static
@@ -2360,7 +2363,7 @@ CallQS [] =
     SI_QX(SystemCrashDumpInformation),
     SI_QX(SystemExceptionInformation),
     SI_QX(SystemCrashDumpStateInformation),
-    SI_QX(SystemKernelDebuggerInformation),
+    SI_QX_ALIGN(SystemKernelDebuggerInformation, TYPE_ALIGNMENT(BOOLEAN)),
     SI_QX(SystemContextSwitchInformation),
     SI_QS(SystemRegistryQuotaInformation),
     SI_XS(SystemExtendServiceTableInformation),
@@ -2411,17 +2414,6 @@ NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 
     _SEH2_TRY
     {
-        if (PreviousMode != KernelMode)
-        {
-            /* SystemKernelDebuggerInformation needs only BOOLEAN alignment */
-            ProbeForWrite(SystemInformation, Length, 1);
-            if (UnsafeResultLength != NULL)
-                ProbeForWriteUlong(UnsafeResultLength);
-        }
-
-        if (UnsafeResultLength)
-            *UnsafeResultLength = 0;
-
         /*
          * Check if the request is valid.
          */
@@ -2429,6 +2421,17 @@ NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
         {
             _SEH2_YIELD(return STATUS_INVALID_INFO_CLASS);
         }
+
+        if (PreviousMode != KernelMode)
+        {
+            /* SystemKernelDebuggerInformation needs only BOOLEAN alignment */
+            ProbeForWrite(SystemInformation, Length, CallQS[SystemInformationClass].Alignment);
+            if (UnsafeResultLength != NULL)
+                ProbeForWriteUlong(UnsafeResultLength);
+        }
+
+        if (UnsafeResultLength)
+            *UnsafeResultLength = 0;
 
         if (NULL != CallQS [SystemInformationClass].Query)
         {
