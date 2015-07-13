@@ -66,7 +66,7 @@ static VOID WINAPI DosSystemBop(LPWORD Stack)
                                        ulDosKernelSize,
                                        &ulDosKernelSize);
 
-            DPRINT1("Windows NT DOS file '%s' loading %s at %04X:%04X, size 0x%X ; GetLastError() = %u\n",
+            DPRINT1("Windows NT DOS file '%s' loading %s at %04X:%04X, size 0x%X (Error: %u).\n",
                     DosKernelFileName,
                     (Success ? "succeeded" : "failed"),
                     getDI(), 0x0000,
@@ -271,7 +271,7 @@ Command:
         }
 
         /* Start the process from the command line */
-        Result = DosStartProcess(AppName, CmdLine, Env, 0);
+        Result = DosStartProcess(AppName, CmdLine, Env, MAKELONG(getIP(), getCS()));
         if (Result != ERROR_SUCCESS)
         {
             DisplayMessage(L"Could not start '%S'. Error: %u", AppName, Result);
@@ -389,7 +389,7 @@ static VOID WINAPI DosInitialize(LPWORD Stack)
                                    ulDosBiosSize,
                                    &ulDosBiosSize);
 
-        DPRINT1("DOS BIOS file '%s' loading %s at %04X:%04X, size 0x%X ; GetLastError() = %u\n",
+        DPRINT1("DOS BIOS file '%s' loading %s at %04X:%04X, size 0x%X (Error: %u).\n",
                 DosBiosFileName,
                 (Success ? "succeeded" : "failed"),
                 0x0070, 0x0000,
@@ -501,7 +501,8 @@ static VOID WINAPI DosStart(LPWORD Stack)
 
     /* Start the process from the command line */
     Result = DosStartProcess(ApplicationName, CommandLine,
-                             SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0));
+                             SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0),
+                             MAKELONG(getIP(), getCS()));
     if (Result != ERROR_SUCCESS)
     {
         DisplayMessage(L"Could not start '%S'. Error: %u", ApplicationName, Result);
