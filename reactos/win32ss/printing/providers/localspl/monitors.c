@@ -7,8 +7,26 @@
 
 #include "precomp.h"
 
-// Local Variables
+// Global Variables
 LIST_ENTRY PrintMonitorList;
+
+
+PLOCAL_PRINT_MONITOR
+FindPrintMonitor(PCWSTR pwszName)
+{
+    PLIST_ENTRY pEntry;
+    PLOCAL_PRINT_MONITOR pPrintMonitor;
+
+    for (pEntry = PrintMonitorList.Flink; pEntry != &PrintMonitorList; pEntry = pEntry->Flink)
+    {
+        pPrintMonitor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_MONITOR, Entry);
+
+        if (_wcsicmp(pPrintMonitor->pwszName, pwszName) == 0)
+            return pPrintMonitor;
+    }
+
+    return NULL;
+}
 
 BOOL
 InitializePrintMonitorList()

@@ -146,6 +146,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             _GetSpoolDirectory();
 
             return InitializePrintMonitorList() &&
+                   InitializePortList() &&
                    InitializePrintProcessorList() &&
                    InitializePrinterList() &&
                    InitializeGlobalJobList();

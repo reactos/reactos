@@ -218,7 +218,7 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
-    if (pHandle->HandleType != Printer)
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -579,7 +579,7 @@ LocalGetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pStart, DWORD cbBuf
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
-    if (pHandle->HandleType != Printer)
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -853,7 +853,7 @@ LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Com
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
-    if (pHandle->HandleType != Printer)
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -918,7 +918,7 @@ LocalEnumJobs(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE 
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
-    if (pHandle->HandleType != Printer)
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -1015,7 +1015,7 @@ LocalScheduleJob(HANDLE hPrinter, DWORD dwJobID)
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
-    if (pHandle->HandleType != Printer)
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;

@@ -139,7 +139,12 @@ LOCAL_PRINTER_HANDLE, *PLOCAL_PRINTER_HANDLE;
  */
 typedef struct _LOCAL_HANDLE
 {
-    enum { Printer, Monitor, Port } HandleType;
+    enum {
+        HandleType_Port,
+        HandleType_Printer,
+        HandleType_Xcv
+    }
+    HandleType;
     PVOID pSpecificHandle;
 }
 LOCAL_HANDLE, *PLOCAL_HANDLE;
@@ -158,6 +163,17 @@ typedef struct _LOCAL_PRINT_MONITOR
     HANDLE hMonitor;                    /** Only used when bIsLevel2 == TRUE: Handle returned by InitializePrintMonitor2. */
 }
 LOCAL_PRINT_MONITOR, *PLOCAL_PRINT_MONITOR;
+
+/**
+ * Describes a Port handled by a Print Monitor.
+ */
+typedef struct _LOCAL_PORT
+{
+    LIST_ENTRY Entry;
+    PWSTR pwszName;                         /** The name of the port (including the trailing colon). */
+    PLOCAL_PRINT_MONITOR pPrintMonitor;     /** The Print Monitor handling this port. */
+}
+LOCAL_PORT, *PLOCAL_PORT;
 
 /**
  * Describes the header of a print job serialized into a shadow file (.SHD)
@@ -221,10 +237,13 @@ extern DWORD cchSpoolDirectory;
 
 // monitors.c
 extern LIST_ENTRY PrintMonitorList;
+PLOCAL_PRINT_MONITOR FindPrintMonitor(PCWSTR pwszName);
 BOOL InitializePrintMonitorList();
 BOOL WINAPI LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
 
 // ports.c
+PLOCAL_PRINT_MONITOR FindPrintMonitorByPort(PCWSTR pwszName);
+BOOL InitializePortList();
 BOOL WINAPI LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
 
 // printers.c
@@ -240,8 +259,8 @@ BOOL WINAPI LocalEndDocPrinter(HANDLE hPrinter);
 BOOL WINAPI LocalClosePrinter(HANDLE hPrinter);
 
 // printprocessors.c
-BOOL FindDatatype(PLOCAL_PRINT_PROCESSOR pPrintProcessor, PWSTR pwszDatatype);
-PLOCAL_PRINT_PROCESSOR FindPrintProcessor(PWSTR pwszName);
+BOOL FindDatatype(const PLOCAL_PRINT_PROCESSOR pPrintProcessor, PCWSTR pwszDatatype);
+PLOCAL_PRINT_PROCESSOR FindPrintProcessor(PCWSTR pwszName);
 BOOL InitializePrintProcessorList();
 BOOL WINAPI LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);

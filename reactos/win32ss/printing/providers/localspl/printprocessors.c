@@ -73,7 +73,7 @@ Cleanup:
 }
 
 BOOL
-FindDatatype(PLOCAL_PRINT_PROCESSOR pPrintProcessor, PWSTR pwszDatatype)
+FindDatatype(const PLOCAL_PRINT_PROCESSOR pPrintProcessor, PCWSTR pwszDatatype)
 {
     DWORD i;
     PDATATYPES_INFO_1W pCurrentDatatype = pPrintProcessor->pDatatypesInfo1;
@@ -90,7 +90,7 @@ FindDatatype(PLOCAL_PRINT_PROCESSOR pPrintProcessor, PWSTR pwszDatatype)
 }
 
 PLOCAL_PRINT_PROCESSOR
-FindPrintProcessor(PWSTR pwszName)
+FindPrintProcessor(PCWSTR pwszName)
 {
     PLIST_ENTRY pEntry;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
