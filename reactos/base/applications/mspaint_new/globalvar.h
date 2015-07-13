@@ -31,6 +31,7 @@ extern STRETCHSKEW stretchSkew;
 
 class ImageModel;
 extern ImageModel imageModel;
+extern BOOL askBeforeEnlarging;
 
 extern POINT start;
 extern POINT last;

@@ -107,6 +107,47 @@ void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename
 
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 {
+    int width = GetDIBWidth(bitmap); 
+    int height = GetDIBHeight(bitmap); 
+    int curWidth = imageModel.GetWidth();
+    int curHeight = imageModel.GetHeight();
+
+    if (width > curWidth || height > curHeight)
+    {
+        BOOL shouldEnlarge = TRUE;
+
+        if (askBeforeEnlarging)
+        {
+            TCHAR programname[20];
+            TCHAR shouldEnlargePromptText[100];
+
+            LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
+            LoadString(hProgInstance, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, SIZEOF(shouldEnlargePromptText));
+
+            switch (MessageBox(shouldEnlargePromptText, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
+            {
+                case IDYES:
+                    break;
+                case IDNO:
+                    shouldEnlarge = FALSE;
+                    break;
+                case IDCANCEL:
+                    return; 
+            }
+        }
+
+        if (shouldEnlarge)
+        {
+            if (width > curWidth)
+                curWidth = width;
+
+            if (height > curHeight)
+                curHeight = height;
+
+            imageModel.Crop(curWidth, curHeight, 0, 0);
+        }
+    }
+
     HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
     toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);

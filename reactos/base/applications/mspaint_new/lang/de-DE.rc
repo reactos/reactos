@@ -214,4 +214,5 @@ BEGIN
     IDS_PERCENTAGE "Der Prozentsatz muss zwischen 1 und 500 liegen."
     IDS_ANGLE "Der Winkel muss zwischen -89 und 89 liegen."
     IDS_LOADERRORTEXT "Die Datei %s konnte nicht geladen werden."
+    IDS_ENLARGEPROMPTTEXT "Das Bild in der Zwischenablage ist größer als die Bitmap.\nSoll die Bitmap vergrößert werden?"
 END

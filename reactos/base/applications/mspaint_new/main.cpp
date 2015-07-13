@@ -24,6 +24,7 @@ int heightSetInDlg;
 STRETCHSKEW stretchSkew;
 
 ImageModel imageModel;
+BOOL askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 
 POINT start;
 POINT last;
