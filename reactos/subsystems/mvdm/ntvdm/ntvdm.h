@@ -75,7 +75,7 @@ extern WCHAR** NtVdmArgv;
 /*
  * Interface functions
  */
-VOID DisplayMessage(LPCWSTR Format, ...);
+VOID DisplayMessage(IN LPCWSTR Format, ...);
 
 /*static*/ VOID
 CreateVdmMenu(HANDLE ConOutHandle);

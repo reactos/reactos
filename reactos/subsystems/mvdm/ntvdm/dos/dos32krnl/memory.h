@@ -29,6 +29,7 @@ typedef struct _DOS_MCB
     BYTE Unused[3];
     CHAR Name[8];
 } DOS_MCB, *PDOS_MCB;
+C_ASSERT(sizeof(DOS_MCB) == 0x10);
 #pragma pack(pop)
 
 /* VARIABLES ******************************************************************/

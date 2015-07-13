@@ -127,7 +127,7 @@ VdmMenuExists(HMENU hConsoleMenu)
     {
         if (GetMenuItemID(hConsoleMenu, i) == ID_SHOWHIDE_MOUSE)
         {
-            /* set VdmMenuPos to the position of the existing menu */
+            /* Set VdmMenuPos to the position of the existing menu */
             VdmMenuPos = i - 1;
             return TRUE;
         }
@@ -225,7 +225,7 @@ static VOID EnableExtraHardware(HANDLE ConsoleInput)
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
-DisplayMessage(LPCWSTR Format, ...)
+DisplayMessage(IN LPCWSTR Format, ...)
 {
 #ifndef WIN2K_COMPLIANT
     WCHAR  StaticBuffer[256];
@@ -242,11 +242,12 @@ DisplayMessage(LPCWSTR Format, ...)
     /*
      * Retrieve the message length and if it is too long, allocate
      * an auxiliary buffer; otherwise use the static buffer.
+     * The string is built to be NULL-terminated.
      */
-    MsgLen = _vscwprintf(Format, Parameters) + 1; // NULL-terminated
-    if (MsgLen > ARRAYSIZE(StaticBuffer))
+    MsgLen = _vscwprintf(Format, Parameters);
+    if (MsgLen >= ARRAYSIZE(StaticBuffer))
     {
-        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, MsgLen * sizeof(WCHAR));
+        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, (MsgLen + 1) * sizeof(WCHAR));
         if (Buffer == NULL)
         {
             /* Allocation failed, use the static buffer and display a suitable error message */
@@ -256,11 +257,15 @@ DisplayMessage(LPCWSTR Format, ...)
         }
     }
 #else
-    MsgLen = ARRAYSIZE(Buffer);
+    MsgLen = ARRAYSIZE(Buffer) - 1;
 #endif
 
-    /* Display the message */
+    RtlZeroMemory(Buffer, (MsgLen + 1) * sizeof(WCHAR));
     _vsnwprintf(Buffer, MsgLen, Format, Parameters);
+
+    va_end(Parameters);
+
+    /* Display the message */
     DPRINT1("\n\nNTVDM Subsystem\n%S\n\n", Buffer);
     MessageBoxW(NULL, Buffer, L"NTVDM Subsystem", MB_OK);
 
@@ -268,8 +273,6 @@ DisplayMessage(LPCWSTR Format, ...)
     /* Free the buffer if needed */
     if (Buffer != StaticBuffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 #endif
-
-    va_end(Parameters);
 }
 
 static BOOL

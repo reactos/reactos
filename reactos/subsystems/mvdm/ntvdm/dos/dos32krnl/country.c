@@ -98,30 +98,30 @@ DosGetCountryInfo(IN OUT PWORD CountryId,
                             (LPSTR)&CountryInfo->DecimalSep,
                             sizeof(CountryInfo->DecimalSep));
     if (Return == 0) return LOWORD(GetLastError());
-    
+
     Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDATE,
                             (LPSTR)&CountryInfo->DateSep,
                             sizeof(CountryInfo->DateSep));
     if (Return == 0) return LOWORD(GetLastError());
-    
+
     Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_STIME,
                             (LPSTR)&CountryInfo->TimeSep,
                             sizeof(CountryInfo->TimeSep));
     if (Return == 0) return LOWORD(GetLastError());
-    
+
     // NOTE: '4: Symbol replace decimal separator' is unsupported.
     Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_ICURRENCY | LOCALE_RETURN_NUMBER,
                             (LPSTR)&NumVal,
                             sizeof(NumVal));
     if (Return == 0) return LOWORD(GetLastError());
     CountryInfo->CurrencyFormat = (BYTE)NumVal;
-    
+
     Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_ICURRDIGITS | LOCALE_RETURN_NUMBER, // LOCALE_IDIGITS | LOCALE_RETURN_NUMBER
                             (LPSTR)&NumVal,
                             sizeof(NumVal));
     if (Return == 0) return LOWORD(GetLastError());
     CountryInfo->CurrencyDigitsNum = (BYTE)NumVal;
-    
+
     Return = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_ITIME | LOCALE_RETURN_NUMBER,
                             (LPSTR)&NumVal,
                             sizeof(NumVal));
@@ -129,7 +129,7 @@ DosGetCountryInfo(IN OUT PWORD CountryId,
     CountryInfo->TimeFormat = (BYTE)NumVal;
 
     CountryInfo->CaseMapPtr = MAKELONG(FIELD_OFFSET(COUNTRY_DATA, CaseMapRoutine), CountryDataSegment);
-    
+
     // CountryInfo->DataListSep;
 
     return ERROR_SUCCESS;
@@ -240,7 +240,7 @@ BOOLEAN DosCountryInitialize(VOID)
     CountryDataSegment = DosAllocateMemory(sizeof(COUNTRY_DATA), NULL);
     if (CountryDataSegment == 0) return FALSE;
     CountryData = (PCOUNTRY_DATA)SEG_OFF_TO_PTR(CountryDataSegment, 0x0000);
-    
+
     RtlMoveMemory(CountryData->CaseMapRoutine,
                   CaseMapRoutine,
                   sizeof(CaseMapRoutine));

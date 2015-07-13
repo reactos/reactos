@@ -61,8 +61,10 @@ WORD NTAPI ConDrvReadInput(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length)
         /* Check if this is a special character */
         if (Character == 0) ExtendedCode = getAH();
 
-        if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
         Pointer[BytesRead++] = Character;
+
+        if (Character != 0 && DoEcho)
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
 
         /* Stop on first carriage return */
         if (Character == '\r')

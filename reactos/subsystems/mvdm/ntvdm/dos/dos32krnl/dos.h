@@ -80,21 +80,25 @@ typedef struct _DOS_SYSVARS
     WORD FirstMcb;
 
     /* This is where the SYSVARS really start */
-    DWORD FirstDpb;
-    DWORD FirstSft;
-    DWORD ActiveClock;
-    DWORD ActiveCon;
-    BYTE Reserved0[6];
-    DWORD CurrentDirs;
-    BYTE Reserved1[6];
-    BYTE NumBlockDevices;
-    BYTE NumLocalDrives; // Set by LASTDRIVE
-    DOS_DRIVER NullDevice;
-    BYTE NullDriverRoutine[7];
-    BYTE Reserved2[8];
-    BYTE BootDrive;
-    BYTE UseDwordMoves;
-    WORD ExtMemSize;
+    DWORD FirstDpb;                             // 0x00
+    DWORD FirstSft;                             // 0x04
+    DWORD ActiveClock;                          // 0x08
+    DWORD ActiveCon;                            // 0x0c
+    BYTE Reserved0[6];                          // 0x10
+    DWORD CurrentDirs;                          // 0x16
+    BYTE Reserved1[6];                          // 0x1a
+    BYTE NumBlockDevices;                       // 0x20
+    BYTE NumLocalDrives;                        // 0x21 - Set by LASTDRIVE
+    DOS_DRIVER NullDevice;                      // 0x22
+    BYTE Reserved2;                             // 0x34
+    WORD ProgramVersionTable;                   // 0x35
+    DWORD SetVerTable;                          // 0x37
+    WORD Reserved3[2];                          // 0x3b
+    WORD BuffersNumber;                         // 0x3f - 'x' parameter in "BUFFERS=x,y" command
+    WORD BuffersLookaheadNumber;                // 0x41 - 'y' parameter in "BUFFERS=x,y" command
+    BYTE BootDrive;                             // 0x43
+    BYTE UseDwordMoves;                         // 0x44
+    WORD ExtMemSize;                            // 0x45
 } DOS_SYSVARS, *PDOS_SYSVARS;
 
 typedef struct _DOS_CLOCK_TRANSFER_RECORD
@@ -232,6 +236,8 @@ typedef struct _DOS_SDA
 typedef struct _DOS_DATA
 {
     DOS_SYSVARS SysVars;
+    BYTE NullDriverRoutine[7];
+    WORD DosVersion; // DOS version to report to programs (can be different from the true one)
     DOS_SDA Sda;
     CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
     BYTE Sft[ANYSIZE_ARRAY];
@@ -242,8 +248,7 @@ typedef struct _DOS_DATA
 /* VARIABLES ******************************************************************/
 
 extern BOOLEAN DoEcho;
-extern WORD DosErrorLevel;
-extern WORD DosLastError;
+extern PDOS_DATA DosData;
 extern PDOS_SYSVARS SysVars;
 extern PDOS_SDA Sda;
 

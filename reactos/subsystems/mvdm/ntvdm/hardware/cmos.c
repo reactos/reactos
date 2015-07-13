@@ -454,7 +454,7 @@ VOID CmosInitialize(VOID)
                            OPEN_ALWAYS,
                            FILE_ATTRIBUTE_NORMAL,
                            NULL);
-    DPRINT1("CMOS opening %s ; GetLastError() = %u\n", hCmosRam != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
+    DPRINT1("CMOS opening %s (Error: %u)\n", hCmosRam != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
 
     if (hCmosRam != INVALID_HANDLE_VALUE)
     {
@@ -469,7 +469,7 @@ VOID CmosInitialize(VOID)
             DPRINT1("Invalid CMOS file, read bytes %u, expected bytes %u\n", CmosSize, sizeof(CmosMemory));
             RtlZeroMemory(&CmosMemory, sizeof(CmosMemory));
         }
-        DPRINT1("CMOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+        DPRINT1("CMOS loading %s (Error: %u)\n", Success ? "succeeded" : "failed", GetLastError());
         SetFilePointer(hCmosRam, 0, NULL, FILE_BEGIN);
     }
 

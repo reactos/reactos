@@ -32,9 +32,6 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-// static BYTE CurrentDrive;
-// static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -105,7 +102,13 @@ BOOLEAN DosBuildSysEnvBlock(VOID)
     LPSTR SourcePtr, Environment;
     LPSTR DestPtr = (LPSTR)SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0);
 
-    /* Get the environment strings */
+    /*
+     * Get the environment strings
+     *
+     * NOTE: On non-STANDALONE builds, this corresponds to the VDM environment
+     * as created by BaseVDM for NTVDM. On STANDALONE builds this is the Win32
+     * environment. In this last case we need to convert it to a proper VDM env.
+     */
     SourcePtr = Environment = GetEnvironmentStrings();
     if (Environment == NULL) return FALSE;
 
@@ -230,10 +233,6 @@ BOOLEAN DosBIOSInitialize(VOID)
     }
 
 #endif
-
-
-    /* Register the DOS 32-bit Interrupts */
-    // RegisterDosInt32(0x20, DosInt20h);
 
     /* Initialize the DOS kernel */
     return DosKRNLInitialize();

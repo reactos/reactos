@@ -77,7 +77,7 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
         /* Make sure it's valid */
         if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z')
         {
-            DPRINT("The DOS memory arena is corrupted!\n");
+            DPRINT1("The DOS memory arena is corrupted!\n");
             Sda->LastErrorCode = ERROR_ARENA_TRASHED;
             return 0;
         }
@@ -94,7 +94,7 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
         /* Check if this block is big enough */
         if (CurrentMcb->Size < Size) goto Next;
 
-        switch (Sda->AllocStrategy & 0x3F)
+        switch (Sda->AllocStrategy & ~(DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
         {
             case DOS_ALLOC_FIRST_FIT:
             {
@@ -159,7 +159,7 @@ Done:
     if (CurrentMcb->Size > Size)
     {
         /* It is, split it into two blocks */
-        if ((Sda->AllocStrategy & 0x3F) != DOS_ALLOC_LAST_FIT)
+        if ((Sda->AllocStrategy & ~(DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)) != DOS_ALLOC_LAST_FIT)
         {
             PDOS_MCB NextMcb = SEGMENT_TO_MCB(Result + Size + 1);
 

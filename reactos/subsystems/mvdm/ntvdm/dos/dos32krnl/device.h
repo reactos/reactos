@@ -123,6 +123,7 @@ typedef struct _DOS_DRIVER
         };
     };
 } DOS_DRIVER, *PDOS_DRIVER;
+C_ASSERT(sizeof(DOS_DRIVER) == 0x12);
 
 typedef struct _DOS_REQUEST_HEADER
 {

@@ -166,7 +166,7 @@ VOID DosClonePsp(WORD DestSegment, WORD SourceSegment)
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
     /* Literally copy the PSP first */
-    RtlCopyMemory(DestPsp, SourcePsp, sizeof(DOS_PSP));
+    RtlCopyMemory(DestPsp, SourcePsp, sizeof(*DestPsp));
 
     /* Save the interrupt vectors */
     DestPsp->TerminateAddress = IntVecTable[0x22];
@@ -222,7 +222,8 @@ VOID DosCreatePsp(WORD Segment, WORD ProgramSize)
     PspBlock->HandleTablePtr  = MAKELONG(0x18, Segment);
 
     /* Set the DOS version */
-    PspBlock->DosVersion = DOS_VERSION;
+    // FIXME: This is here that SETVER stuff enters into action!
+    PspBlock->DosVersion = DosData->DosVersion;
 
     /* Set the far call opcodes */
     PspBlock->FarCall[0] = 0xCD; // int 0x21
@@ -377,16 +378,20 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         /* If no optional environment is given... */
         if (Environment == NULL)
         {
-            /* ... get the one from the parameter block */
             ASSERT(Parameters);
-            Environment = (LPCSTR)SEG_OFF_TO_PTR(Parameters->Environment, 0);
+            /* ... get the one from the parameter block (if not NULL)... */
+            if (Parameters->Environment)
+                Environment = (LPCSTR)SEG_OFF_TO_PTR(Parameters->Environment, 0);
+            /* ... or the one from the parent (otherwise) */
+            else
+                Environment = (LPCSTR)SEG_OFF_TO_PTR(SEGMENT_TO_PSP(Sda->CurrentPsp)->EnvBlock, 0);
         }
 
         /* Copy the environment block to DOS memory */
         EnvBlock = DosCopyEnvironmentBlock(Environment, ExecutablePath);
         if (EnvBlock == 0)
         {
-            Result = ERROR_NOT_ENOUGH_MEMORY;
+            Result = Sda->LastErrorCode;
             goto Cleanup;
         }
     }
@@ -431,7 +436,6 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
 
             /* Try to allocate that much memory */
             Segment = DosAllocateMemory((WORD)TotalSize, &MaxAllocSize);
-
             if (Segment == 0)
             {
                 /* Check if there's at least enough memory for the minimum size */
@@ -460,8 +464,10 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             SEGMENT_TO_PSP(Segment)->EnvBlock = EnvBlock;
 
             /* Calculate the segment where the program should be loaded */
-            if (!LoadHigh) LoadSegment = Segment + (sizeof(DOS_PSP) >> 4);
-            else LoadSegment = Segment + TotalSize - BaseSize;
+            if (!LoadHigh)
+                LoadSegment = Segment + (sizeof(DOS_PSP) >> 4);
+            else
+                LoadSegment = Segment + TotalSize - BaseSize;
 
             RelocFactor = LoadSegment;
         }

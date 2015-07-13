@@ -91,7 +91,7 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
         return FALSE;
     }
 
-    /* Check whether the directory string is of format "?:..." */
+    /* Check whether the directory string is of format "X:..." */
     if (strlen(Directory) >= 2 && Directory[1] == ':')
     {
         /* Get the drive number */
@@ -114,8 +114,8 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     Attributes = GetFileAttributesA(Directory);
 
     /* Make sure the path exists and is a directory */
-    if ((Attributes == INVALID_FILE_ATTRIBUTES)
-        || !(Attributes & FILE_ATTRIBUTE_DIRECTORY))
+    if ((Attributes == INVALID_FILE_ATTRIBUTES) ||
+       !(Attributes & FILE_ATTRIBUTE_DIRECTORY))
     {
         Sda->LastErrorCode = ERROR_PATH_NOT_FOUND;
         return FALSE;
@@ -146,17 +146,11 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
         return FALSE;
     }
 
-    /* Get the directory part of the path */
+    /* Get the directory part of the path and set the current directory for the drive */
     Path = strchr(DosDirectory, '\\');
     if (Path != NULL)
     {
-        /* Skip the backslash */
-        Path++;
-    }
-
-    /* Set the directory for the drive */
-    if (Path != NULL)
-    {
+        Path++; // Skip the backslash
         strncpy(DosData->CurrentDirectories[DriveNumber], Path, DOS_DIR_LENGTH);
     }
     else
@@ -829,8 +823,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             DWORD NumberOfFreeClusters;
             DWORD TotalNumberOfClusters;
 
-            if (getDL() == 0x00) RootPath[0] = 'A' + Sda->CurrentDrive;
-            else RootPath[0] = 'A' + getDL() - 1;
+            if (getDL() == 0x00)
+                RootPath[0] = 'A' + Sda->CurrentDrive;
+            else
+                RootPath[0] = 'A' + getDL() - 1;
 
             if (GetDiskFreeSpaceA(RootPath,
                                   &SectorsPerCluster,
@@ -914,7 +910,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             WORD CountryId = getAL() < 0xFF ? getAL() : getBX();
             WORD ErrorCode;
-            
+
             ErrorCode = DosGetCountryInfo(&CountryId,
                                           (PDOS_COUNTRY_INFO)SEG_OFF_TO_PTR(getDS(), getDX()));
 
@@ -1110,7 +1106,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                  * See Ralf Brown: http://www.ctyme.com/intr/rb-2797.htm
                  * "AX destroyed (DOS 3.3) AL seems to be drive of deleted file."
                  */
-                setAL(FileName[0] - 'A');
+                setAL(RtlUpperChar(FileName[0]) - 'A');
             }
             else
             {
@@ -1519,54 +1515,68 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Get/Set Memory Management Options */
         case 0x58:
         {
-            if (getAL() == 0x00)
+            switch (getAL())
             {
                 /* Get allocation strategy */
-                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-                setAX(Sda->AllocStrategy);
-            }
-            else if (getAL() == 0x01)
-            {
+                case 0x00:
+                {
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    setAX(Sda->AllocStrategy);
+                    break;
+                }
+
                 /* Set allocation strategy */
-
-                if ((getBL() & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
-                    == (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
+                case 0x01:
                 {
-                    /* Can't set both */
-                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    setAX(ERROR_INVALID_PARAMETER);
+                    if ((getBL() & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
+                        == (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
+                    {
+                        /* Can't set both */
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        setAX(ERROR_INVALID_PARAMETER);
+                        break;
+                    }
+
+                    if ((getBL() & ~(DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
+                        > DOS_ALLOC_LAST_FIT)
+                    {
+                        /* Invalid allocation strategy */
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        setAX(ERROR_INVALID_PARAMETER);
+                        break;
+                    }
+
+                    Sda->AllocStrategy = getBL();
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                     break;
                 }
 
-                if ((getBL() & 0x3F) > DOS_ALLOC_LAST_FIT)
-                {
-                    /* Invalid allocation strategy */
-                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    setAX(ERROR_INVALID_PARAMETER);
-                    break;
-                }
-
-                Sda->AllocStrategy = getBL();
-                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-            }
-            else if (getAL() == 0x02)
-            {
                 /* Get UMB link state */
-                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-                setAL(DosUmbLinked ? 0x01 : 0x00);
-            }
-            else if (getAL() == 0x03)
-            {
+                case 0x02:
+                {
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    setAL(DosUmbLinked ? 0x01 : 0x00);
+                    break;
+                }
+
                 /* Set UMB link state */
-                if (getBX()) DosLinkUmb();
-                else DosUnlinkUmb();
-                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-            }
-            else
-            {
+                case 0x03:
+                {
+                    if (getBX())
+                        DosLinkUmb();
+                    else
+                        DosUnlinkUmb();
+
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    break;
+                }
+
                 /* Invalid or unsupported function */
-                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                setAX(ERROR_INVALID_FUNCTION);
+                default:
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(ERROR_INVALID_FUNCTION);
+                }
             }
 
             break;
@@ -2021,10 +2031,77 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
     setAX(AX);
 }
 
+VOID WINAPI DosInt2Ah(LPWORD Stack)
+{
+    DPRINT1("INT 2Ah, AX=%4xh called\n", getAX());
+}
+
 VOID WINAPI DosInt2Fh(LPWORD Stack)
 {
     switch (getAH())
     {
+        /* DOS 3+ Internal Utility Functions */
+        case 0x12:
+        {
+            DPRINT1("INT 2Fh, AX=%4xh DOS Internal Utility Function called\n", getAX());
+
+            switch (getAL())
+            {
+                /* Installation Check */
+                case 0x00:
+                {
+                    setAL(0xFF);
+                    break;
+                }
+
+                /* Get DOS Data Segment */
+                case 0x03:
+                {
+                    setDS(DOS_DATA_SEGMENT);
+                    break;
+                }
+
+                /* Compare FAR Pointers */
+                case 0x14:
+                {
+                    PVOID PointerFromFarPointer1 = SEG_OFF_TO_PTR(getDS(), getSI());
+                    PVOID PointerFromFarPointer2 = SEG_OFF_TO_PTR(getES(), getDI());
+                    BOOLEAN AreEqual = (PointerFromFarPointer1 == PointerFromFarPointer2);
+
+                    setZF(AreEqual);
+                    setCF(!AreEqual);
+                    break;
+                }
+
+                /* Set DOS Version Number to return */
+                case 0x2F:
+                {
+                    WORD DosVersion = getDX();
+
+                    // Special case: return the true DOS version when DX=00h
+                    if (DosVersion == 0x0000)
+                        DosData->DosVersion = DOS_VERSION;
+                    else
+                        DosData->DosVersion = DosVersion;
+
+                    break;
+                }
+            }
+
+            break;
+        }
+
+        /* Mostly Windows 2.x/3.x/9x support */
+        case 0x16:
+        {
+            /*
+             * AL=80h is DOS/Windows/DPMI "Release Current Virtual Machine Time-slice"
+             * Just do nothing in this case.
+             */
+            if (getAL() != 0x80) goto Default;
+            break;
+        }
+
         /* Extended Memory Specification */
         case 0x43:
         {
@@ -2057,7 +2134,7 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
             break;
         }
 
-        default:
+        default: Default:
         {
             DPRINT1("DOS Internal System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
                     getAH(), getAL());
@@ -2073,6 +2150,8 @@ BOOLEAN DosKRNLInitialize(VOID)
     UCHAR i;
     PDOS_SFT Sft;
     LPSTR Path;
+    BOOLEAN Success = TRUE;
+    DWORD dwRet;
     CHAR CurrentDirectory[MAX_PATH];
     CHAR DosDirectory[DOS_DIR_LENGTH];
 
@@ -2103,59 +2182,88 @@ BOOLEAN DosKRNLInitialize(VOID)
     SysVars->FirstSft = MAKELONG(DOS_DATA_OFFSET(Sft), DOS_DATA_SEGMENT);
     SysVars->CurrentDirs = MAKELONG(DOS_DATA_OFFSET(CurrentDirectories),
                                     DOS_DATA_SEGMENT);
-    /* The last drive can be redefined with the LASTDRIVE command. At the moment, set the real maximum possible, 'Z'. */
-    SysVars->NumLocalDrives = 'Z' - 'A' + 1;
+    /*
+     * The last drive can be redefined with the LASTDRIVE command.
+     * At the moment, set the real maximum possible, 'Z'.
+     */
+    SysVars->NumLocalDrives = 'Z' - 'A' + 1; // See #define NUM_DRIVES in dos.h
 
     /* The boot drive is initialized to the %SYSTEMDRIVE% value */
     // NOTE: Using the NtSystemRoot system variable might be OS-specific...
-    SysVars->BootDrive = SharedUserData->NtSystemRoot[0] - 'A' + 1;
+    SysVars->BootDrive = RtlUpcaseUnicodeChar(SharedUserData->NtSystemRoot[0]) - 'A' + 1;
 
     /* Initialize the NUL device driver */
     SysVars->NullDevice.Link = 0xFFFFFFFF;
     SysVars->NullDevice.DeviceAttributes = DOS_DEVATTR_NUL | DOS_DEVATTR_CHARACTER;
-    SysVars->NullDevice.StrategyRoutine = FIELD_OFFSET(DOS_SYSVARS, NullDriverRoutine);
+    // Offset from within the DOS data segment
+    SysVars->NullDevice.StrategyRoutine  = DOS_DATA_OFFSET(NullDriverRoutine);
+    // Hardcoded to the RETF inside StrategyRoutine
     SysVars->NullDevice.InterruptRoutine = SysVars->NullDevice.StrategyRoutine + 6;
     RtlFillMemory(SysVars->NullDevice.DeviceName,
                   sizeof(SysVars->NullDevice.DeviceName),
                   ' ');
     RtlCopyMemory(SysVars->NullDevice.DeviceName, "NUL", strlen("NUL"));
-    RtlCopyMemory(SysVars->NullDriverRoutine,
+    RtlCopyMemory(DosData->NullDriverRoutine,
                   NullDriverRoutine,
                   sizeof(NullDriverRoutine));
+
+    /* Default DOS version to report */
+    DosData->DosVersion = DOS_VERSION;
 
     /* Initialize the swappable data area */
     Sda = &DosData->Sda;
     RtlZeroMemory(Sda, sizeof(*Sda));
 
-    /* Get the current directory */
-    if (!GetCurrentDirectoryA(sizeof(CurrentDirectory), CurrentDirectory))
+    /* Get the current directory and convert it to a DOS path */
+    dwRet = GetCurrentDirectoryA(sizeof(CurrentDirectory), CurrentDirectory);
+    if (dwRet == 0)
     {
-        // TODO: Use some kind of default path?
-        return FALSE;
+        Success = FALSE;
+        DPRINT1("GetCurrentDirectoryA failed (Error: %u)\n", GetLastError());
+    }
+    else if (dwRet > sizeof(CurrentDirectory))
+    {
+        Success = FALSE;
+        DPRINT1("Current directory too long (%d > MAX_PATH) for GetCurrentDirectoryA\n", dwRet);
     }
 
-    /* Convert it to a DOS path */
-    if (!GetShortPathNameA(CurrentDirectory, DosDirectory, sizeof(DosDirectory)))
+    if (Success)
     {
-        // TODO: Use some kind of default path?
-        return FALSE;
+        dwRet = GetShortPathNameA(CurrentDirectory, DosDirectory, sizeof(DosDirectory));
+        if (dwRet == 0)
+        {
+            Success = FALSE;
+            DPRINT1("GetShortPathNameA failed (Error: %u)\n", GetLastError());
+        }
+        else if (dwRet > sizeof(DosDirectory))
+        {
+            Success = FALSE;
+            DPRINT1("Short path too long (%d > DOS_DIR_LENGTH) for GetShortPathNameA\n", dwRet);
+        }
     }
 
-    /* Set the drive */
+    if (!Success)
+    {
+        /* We failed, use the boot drive instead */
+        DosDirectory[0] = SysVars->BootDrive + 'A' - 1;
+        DosDirectory[1] = ':';
+        DosDirectory[2] = '\\';
+        DosDirectory[3] = '\0';
+    }
+
+    /* Set the current drive */
     Sda->CurrentDrive = RtlUpperChar(DosDirectory[0]) - 'A';
 
-    /* Get the directory part of the path */
+    /* Get the directory part of the path and set the current directory */
     Path = strchr(DosDirectory, '\\');
     if (Path != NULL)
     {
-        /* Skip the backslash */
-        Path++;
-    }
-
-    /* Set the directory */
-    if (Path != NULL)
-    {
+        Path++; // Skip the backslash
         strncpy(DosData->CurrentDirectories[Sda->CurrentDrive], Path, DOS_DIR_LENGTH);
+    }
+    else
+    {
+        DosData->CurrentDirectories[Sda->CurrentDrive][0] = '\0';
     }
 
     /* Set the current PSP to the system PSP */
@@ -2205,7 +2313,13 @@ BOOLEAN DosKRNLInitialize(VOID)
     RegisterDosInt32(0x2F, DosInt2Fh        ); // Multiplex Interrupt
 
     /* Unimplemented DOS interrupts */
-    RegisterDosInt32(0x2A, NULL); // Network - Installation Check
+    RegisterDosInt32(0x2A, DosInt2Ah); // DOS Critical Sections / Network
+//  RegisterDosInt32(0x2E, NULL); // COMMAND.COM "Reload Transient"
+
+    /* Reserved DOS interrupts */
+    RegisterDosInt32(0x2B, NULL);
+    RegisterDosInt32(0x2C, NULL);
+    RegisterDosInt32(0x2D, NULL);
 
     /* Initialize country data */
     DosCountryInitialize();

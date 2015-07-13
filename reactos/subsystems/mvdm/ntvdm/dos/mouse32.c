@@ -1025,11 +1025,15 @@ BOOLEAN DosMouseInitialize(VOID)
 
 VOID DosMouseCleanup(VOID)
 {
+    if (DriverState.ShowCount > 0) EraseMouseCursor();
+    DosMouseDisable();
+
     /* Restore the old mouse service interrupt handler */
     ((PDWORD)BaseAddress)[DOS_MOUSE_INTERRUPT] = OldIntHandler;
 
-    if (DriverState.ShowCount > 0) EraseMouseCursor();
-    DosMouseDisable();
+    DosFreeMemory(MouseDataSegment);
+    MouseDataSegment = 0;
+    MouseData = 0;
 }
 
 /* EOF */
