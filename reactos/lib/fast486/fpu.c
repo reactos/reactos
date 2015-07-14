@@ -2419,6 +2419,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FPREM1 */
             case 0x35:
             {
+                LONGLONG Quotient;
+
                 Fast486FpuExceptionCheck(State);
                 FPU_SAVE_LAST_INST();
 
@@ -2428,8 +2430,15 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                     break;
                 }
 
-                Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), TRUE, &FPU_ST(0), NULL);
-                FPU_UPDATE_TAG(0);
+                if (Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), TRUE, &FPU_ST(0), &Quotient))
+                {
+                    FPU_UPDATE_TAG(0);
+
+                    /* Return the lowest 3 bits of the quotient in C1, C3, C0 */
+                    State->FpuStatus.Code1 = Quotient & 1;
+                    State->FpuStatus.Code3 = (Quotient >> 1) & 1;
+                    State->FpuStatus.Code0 = (Quotient >> 2) & 1;
+                }
 
                 break;
             }
@@ -2451,6 +2460,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FPREM */
             case 0x38:
             {
+                LONGLONG Quotient;
+
                 Fast486FpuExceptionCheck(State);
                 FPU_SAVE_LAST_INST();
 
@@ -2460,8 +2471,15 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                     break;
                 }
 
-                Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), FALSE, &FPU_ST(0), NULL);
-                FPU_UPDATE_TAG(0);
+                if (Fast486FpuRemainder(State, &FPU_ST(0), &FPU_ST(1), FALSE, &FPU_ST(0), &Quotient))
+                {
+                    FPU_UPDATE_TAG(0);
+
+                    /* Return the lowest 3 bits of the quotient in C1, C3, C0 */
+                    State->FpuStatus.Code1 = Quotient & 1;
+                    State->FpuStatus.Code3 = (Quotient >> 1) & 1;
+                    State->FpuStatus.Code0 = (Quotient >> 2) & 1;
+                }
 
                 break;
             }
