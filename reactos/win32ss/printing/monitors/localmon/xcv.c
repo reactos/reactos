@@ -305,12 +305,9 @@ _HandleSetDefaultCommConfig(PLOCALMON_XCV pXcv, PBYTE pInputData, PDWORD pcbOutp
     }
 
     // SetDefaultCommConfigW needs the port name without colon.
-    pwszPortNameWithoutColon = GetPortNameWithoutColon(pXcv->pwszObject);
-    if (!pwszPortNameWithoutColon)
-    {
-        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+    dwErrorCode = GetPortNameWithoutColon(pXcv->pwszObject, &pwszPortNameWithoutColon);
+    if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
-    }
 
     // Switch to the SYSTEM context for setting the port configuration.
     hToken = RevertToPrinterSelf();

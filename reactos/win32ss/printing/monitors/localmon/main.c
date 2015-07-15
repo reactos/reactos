@@ -38,6 +38,52 @@ static MONITOR2 _MonitorFunctions = {
 };
 
 
+/**
+ * @name _IsNEPort
+ *
+ * Checks if the given port name is a virtual Ne port.
+ * A virtual Ne port may appear in HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports and can have the formats
+ * Ne00:, Ne01:, Ne-02:, Ne456:
+ * This check is extra picky to not cause false positives (like file name ports starting with "Ne").
+ *
+ * @param pwszPortName
+ * The port name to check.
+ *
+ * @return
+ * TRUE if this is definitely a virtual Ne port, FALSE if not.
+ */
+static __inline BOOL
+_IsNEPort(PCWSTR pwszPortName)
+{
+    PCWSTR p = pwszPortName;
+
+    // First character needs to be 'N' (uppercase or lowercase)
+    if (*p != L'N' && *p != L'n')
+        return FALSE;
+
+    // Next character needs to be 'E' (uppercase or lowercase)
+    p++;
+    if (*p != L'E' && *p != L'e')
+        return FALSE;
+
+    // An optional hyphen may follow now.
+    p++;
+    if (*p == L'-')
+        p++;
+
+    // Now an arbitrary number of digits may follow.
+    while (*p >= L'0' && *p <= L'9')
+        p++;
+
+    // Finally, the virtual Ne port must be terminated by a colon.
+    if (*p != ':')
+        return FALSE;
+
+    // If this is the end of the string, we have a virtual Ne port.
+    p++;
+    return (*p == L'\0');
+}
+
 static void
 _LoadResources(HINSTANCE hinstDLL)
 {
@@ -165,8 +211,16 @@ InitializePrintMonitor2(PMONITORINIT pMonitorInit, PHANDLE phMonitor)
             goto Cleanup;
         }
 
-        // This Port Monitor supports COM, FILE and LPT ports. Skip all others.
-        if (_wcsnicmp(pPort->pwszPortName, L"COM", 3) != 0 && _wcsicmp(pPort->pwszPortName, L"FILE:") != 0 && _wcsnicmp(pPort->pwszPortName, L"LPT", 3) != 0)
+        // pwszPortName can be one of the following to be valid for this Port Monitor:
+        //    COMx:                        - Physical COM port
+        //    LPTx:                        - Physical LPT port (or redirected one using "net use LPT1 ...")
+        //    FILE:                        - Opens a prompt that asks for an output filename
+        //    C:\bla.txt                   - Redirection into the file "C:\bla.txt"
+        //    \\COMPUTERNAME\PrinterName   - Redirection to a shared network printer installed as a local port
+        //
+        // We can't detect valid and invalid ones by the name, so we can only exclude empty ports and the virtual "Ne00:", "Ne01:", ... ports.
+        // Skip the invalid ones here.
+        if (!cchPortName || _IsNEPort(pPort->pwszPortName))
         {
             DllFreeSplMem(pPort);
             continue;

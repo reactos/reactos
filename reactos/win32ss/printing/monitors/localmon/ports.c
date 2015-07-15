@@ -17,33 +17,76 @@ static const DWORD cchNonspooledPrefix = _countof(wszNonspooledPrefix) - 1;
  * @name _GetNonspooledPortName
  *
  * Prepends "NONSPOOLED_" to a port name without colon.
- * You have to free the returned buffer using DllFreeSplMem.
  *
  * @param pwszPortNameWithoutColon
  * Result of a previous GetPortNameWithoutColon call.
  *
+ * @param ppwszNonspooledPortName
+ * Pointer to a buffer that will contain the NONSPOOLED port name.
+ * You have to free this buffer using DllFreeSplMem.
+ *
  * @return
- * Buffer containing the NONSPOOLED port name or NULL in case of failure.
+ * ERROR_SUCCESS if the NONSPOOLED port name was successfully copied into the buffer.
+ * ERROR_NOT_ENOUGH_MEMORY if memory allocation failed.
  */
-static __inline PWSTR
-_GetNonspooledPortName(PCWSTR pwszPortNameWithoutColon)
+static __inline DWORD
+_GetNonspooledPortName(PCWSTR pwszPortNameWithoutColon, PWSTR* ppwszNonspooledPortName)
 {
     DWORD cchPortNameWithoutColon;
-    PWSTR pwszNonspooledPortName;
 
     cchPortNameWithoutColon = wcslen(pwszPortNameWithoutColon);
 
-    pwszNonspooledPortName = DllAllocSplMem((cchNonspooledPrefix + cchPortNameWithoutColon + 1) * sizeof(WCHAR));
-    if (!pwszNonspooledPortName)
+    *ppwszNonspooledPortName = DllAllocSplMem((cchNonspooledPrefix + cchPortNameWithoutColon + 1) * sizeof(WCHAR));
+    if (!*ppwszNonspooledPortName)
     {
         ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
-        return NULL;
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    CopyMemory(pwszNonspooledPortName, wszNonspooledPrefix, cchNonspooledPrefix * sizeof(WCHAR));
-    CopyMemory(&pwszNonspooledPortName[cchNonspooledPrefix], pwszPortNameWithoutColon, (cchPortNameWithoutColon + 1) * sizeof(WCHAR));
+    CopyMemory(*ppwszNonspooledPortName, wszNonspooledPrefix, cchNonspooledPrefix * sizeof(WCHAR));
+    CopyMemory(&(*ppwszNonspooledPortName)[cchNonspooledPrefix], pwszPortNameWithoutColon, (cchPortNameWithoutColon + 1) * sizeof(WCHAR));
 
-    return pwszNonspooledPortName;
+    return ERROR_SUCCESS;
+}
+
+/**
+ * @name _IsLegacyPort
+ *
+ * Checks if the given port name is a legacy port (COM or LPT).
+ * This check is extra picky to not cause false positives (like file name ports starting with "COM" or "LPT").
+ *
+ * @param pwszPortName
+ * The port name to check.
+ *
+ * @param pwszPortType
+ * L"COM" or L"LPT"
+ *
+ * @return
+ * TRUE if this is definitely the asked legacy port, FALSE if not.
+ */
+static __inline BOOL
+_IsLegacyPort(PCWSTR pwszPortName, PCWSTR pwszPortType)
+{
+    const DWORD cchPortType = 3;
+    PCWSTR p = pwszPortName;
+
+    // The port name must begin with pwszPortType.
+    if (_wcsnicmp(p, pwszPortType, cchPortType) != 0)
+        return FALSE;
+
+    p += cchPortType;
+
+    // Now an arbitrary number of digits may follow.
+    while (*p >= L'0' && *p <= L'9')
+        p++;
+
+    // Finally, the legacy port must be terminated by a colon.
+    if (*p != ':')
+        return FALSE;
+
+    // If this is the end of the string, we have a legacy port.
+    p++;
+    return (*p == L'\0');
 }
 
 /**
@@ -78,11 +121,9 @@ _ClosePortHandles(PLOCALMON_PORT pPort)
     pPort->pwszMapping = NULL;
 
     // Finally get the required strings and remove the DOS device definition for the NONSPOOLED port.
-    pwszPortNameWithoutColon = GetPortNameWithoutColon(pPort->pwszPortName);
-    if (pwszPortNameWithoutColon)
+    if (GetPortNameWithoutColon(pPort->pwszPortName, &pwszPortNameWithoutColon) == ERROR_SUCCESS)
     {
-        pwszNonspooledPortName = _GetNonspooledPortName(pwszPortNameWithoutColon);
-        if (pwszNonspooledPortName)
+        if (_GetNonspooledPortName(pwszPortNameWithoutColon, &pwszNonspooledPortName) == ERROR_SUCCESS)
         {
             DefineDosDeviceW(DDD_REMOVE_DEFINITION, pwszNonspooledPortName, NULL);
             DllFreeSplMem(pwszNonspooledPortName);
@@ -105,8 +146,7 @@ _ClosePortHandles(PLOCALMON_PORT pPort)
  * @return
  * TRUE if a NONSPOOLED port was successfully created, FALSE otherwise.
  * A more specific error code can be obtained through GetLastError.
- * In particular, if the return value is FALSE and GetLastError returns ERROR_SUCCESS, no NONSPOOLED port is needed,
- * because no system-wide device definition is available.
+ * In particular, if the return value is FALSE and GetLastError returns ERROR_SUCCESS, no NONSPOOLED port is needed for this port.
  */
 static BOOL
 _CreateNonspooledPort(PLOCALMON_PORT pPort)
@@ -129,10 +169,16 @@ _CreateNonspooledPort(PLOCALMON_PORT pPort)
     PWSTR pwszPortNameWithoutColon = NULL;
 
     // We need the port name without the trailing colon.
-    pwszPortNameWithoutColon = GetPortNameWithoutColon(pPort->pwszPortName);
-    if (!pwszPortNameWithoutColon)
+    dwErrorCode = GetPortNameWithoutColon(pPort->pwszPortName, &pwszPortNameWithoutColon);
+    if (dwErrorCode == ERROR_INVALID_PARAMETER)
     {
-        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        // This port has no trailing colon, so we also need no NONSPOOLED mapping for it.
+        dwErrorCode = ERROR_SUCCESS;
+        goto Cleanup;
+    }
+    else if (dwErrorCode != ERROR_SUCCESS)
+    {
+        // Another unexpected failure.
         goto Cleanup;
     }
 
@@ -222,12 +268,9 @@ _CreateNonspooledPort(PLOCALMON_PORT pPort)
     }
 
     // We now want to create a DOS device "NONSPOOLED_<PortName>" to this mapping, so that we're able to open it through CreateFileW.
-    pwszNonspooledPortName = _GetNonspooledPortName(pwszPortNameWithoutColon);
-    if (!pwszNonspooledPortName)
-    {
-        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+    dwErrorCode = _GetNonspooledPortName(pwszPortNameWithoutColon, &pwszNonspooledPortName);
+    if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
-    }
 
     // Delete a possibly existing NONSPOOLED device before creating the new one, so we don't stack up device definitions.
     DefineDosDeviceW(DDD_REMOVE_DEFINITION, pwszNonspooledPortName, NULL);
@@ -493,7 +536,7 @@ LocalmonClosePort(HANDLE hPort)
         pPort->hPrinter = NULL;
     }
 
-    // Free virtual FILE ports which were created in LocalmonOpenPort.
+    // Free virtual FILE: ports which were created in LocalmonOpenPort.
     if (pPort->PortType == PortType_FILE)
     {
         EnterCriticalSection(&pPort->pLocalmon->Section);
@@ -712,11 +755,8 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
         // Even if this API is called OpenPort, port file handles aren't always opened here :-P
         // Windows only does this for physical LPT ports here to enable bidirectional communication with the printer outside of jobs (using ReadPort and WritePort).
         // The others are only opened per job in StartDocPort.
-        if (_wcsnicmp(pName, L"LPT", 3) == 0)
+        if (_IsLegacyPort(pName, L"LPT"))
         {
-            // Treat all ports as other LPT ports until we can definitely say that it's a physical one.
-            pPort->PortType = PortType_OtherLPT;
-
             // Try to create a NONSPOOLED port and open it.
             if (_CreateNonspooledPort(pPort))
             {
@@ -740,9 +780,9 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
                 goto Cleanup;
             }
         }
-        else
+        else if (_IsLegacyPort(pName, L"COM"))
         {
-            // This can only be a COM port.
+            // COM ports can't be redirected over the network, so this is a physical one.
             pPort->PortType = PortType_PhysicalCOM;
         }
     }
@@ -948,13 +988,17 @@ LocalmonStartDocPort(HANDLE hPort, PWSTR pPrinterName, DWORD JobId, DWORD Level,
     }
     else
     {
-        // This is a COM port or a non-physical LPT port. We open NONSPOOLED ports for these per job.
+        // This can be:
+        //    - a physical COM port
+        //    - a non-physical LPT port (e.g. with "net use LPT1 ...")
+        //    - any other port (e.g. a file or a shared printer installed as a local port)
+        //
+        // For all these cases, we try to create a NONSPOOLED port per job.
+        // If _CreateNonspooledPort reports that no NONSPOOLED port is necessary, we can just open the port name.
         if (!_CreateNonspooledPort(pPort))
         {
             if (GetLastError() == ERROR_SUCCESS)
             {
-                // This is a user-local instead of a system-wide port.
-                // Such local ports haven't been remapped by the spooler, so we can just open them.
                 pPort->hFile = CreateFileW(pPort->pwszPortName, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, 0, NULL);
                 if (pPort->hFile == INVALID_HANDLE_VALUE)
                 {

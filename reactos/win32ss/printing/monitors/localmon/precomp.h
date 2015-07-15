@@ -35,8 +35,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(localmon);
 typedef struct _LOCALMON_HANDLE
 {
     CRITICAL_SECTION Section;       /** Critical Section for modifying or reading the ports. */
-    LIST_ENTRY FilePorts;           /** Virtual ports created for every document that's redirected to an output file. */
-    LIST_ENTRY RegistryPorts;       /** COM, FILE: and LPT ports loaded from the local registry. */
+    LIST_ENTRY FilePorts;           /** Ports created when a document is printed on FILE: and the user entered a file name. */
+    LIST_ENTRY RegistryPorts;       /** Valid ports loaded from the local registry. */
     LIST_ENTRY XcvHandles;          /** Xcv handles created with LocalmonXcvOpenPort. */
 }
 LOCALMON_HANDLE, *PLOCALMON_HANDLE;
@@ -49,10 +49,10 @@ typedef struct _LOCALMON_PORT
 {
     LIST_ENTRY Entry;
     enum {
-        PortType_FILE,              /** A virtual port for redirecting the document into a file. */
+        PortType_Other = 0,         /** Any port that doesn't belong into the other categories (default). */
+        PortType_FILE,              /** A port created when a document is printed on FILE: and the user entered a file name. */
         PortType_PhysicalCOM,       /** A physical serial port (COM) */
-        PortType_PhysicalLPT,       /** A physical parallel port (LPT) */
-        PortType_OtherLPT           /** A non-physical parallel port (e.g. a redirected one over network using "net use LPT1 ...") */
+        PortType_PhysicalLPT        /** A physical parallel port (LPT) */
     }
     PortType;
     BOOL bStartedDoc;               /** Whether a document has been started with StartDocPort. */
@@ -99,7 +99,7 @@ BOOL WINAPI LocalmonWritePort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuf, PDWORD p
 // tools.c
 BOOL DoesPortExist(PCWSTR pwszPortName);
 DWORD GetLPTTransmissionRetryTimeout();
-PWSTR GetPortNameWithoutColon(PCWSTR pwszPortName);
+DWORD GetPortNameWithoutColon(PCWSTR pwszPortName, PWSTR* ppwszPortNameWithoutColon);
 
 // xcv.c
 BOOL WINAPI LocalmonXcvClosePort(HANDLE hXcv);

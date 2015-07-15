@@ -124,32 +124,42 @@ Cleanup:
  * @name GetPortNameWithoutColon
  *
  * Most of the time, we operate on port names with a trailing colon. But some functions require the name without the trailing colon.
- * This function returns the port name without the colon. You have to free the returned buffer using DllFreeSplMem.
+ * This function checks if the port has a trailing colon and if so, it returns the port name without the colon.
  *
  * @param pwszPortName
  * The port name with colon
  *
+ * @param ppwszPortNameWithoutColon
+ * Pointer to a PWSTR that will contain the port name without colon.
+ * You have to free this buffer using DllFreeSplMem.
+ *
  * @return
- * Buffer containing the port name without a colon or NULL in case of failure.
+ * ERROR_SUCCESS if the port name without colon was successfully copied into the buffer.
+ * ERROR_INVALID_PARAMETER if this port name has no trailing colon.
+ * ERROR_NOT_ENOUGH_MEMORY if memory allocation failed.
  */
-PWSTR
-GetPortNameWithoutColon(PCWSTR pwszPortName)
+DWORD
+GetPortNameWithoutColon(PCWSTR pwszPortName, PWSTR* ppwszPortNameWithoutColon)
 {
     DWORD cchPortName;
-    PWSTR pwszPortNameWithoutColon;
 
-    // Every port in our port list has a trailing colon, so we just need to remove the last character of the string.
+    // Compute the string length of pwszPortNameWithoutColon.
     cchPortName = wcslen(pwszPortName) - 1;
 
-    pwszPortNameWithoutColon = DllAllocSplMem((cchPortName + 1) * sizeof(WCHAR));
-    if (!pwszPortNameWithoutColon)
+    // Check if pwszPortName really has a colon as the last character.
+    if (pwszPortName[cchPortName] != L':')
+        return ERROR_INVALID_PARAMETER;
+
+    // It has, so allocate a buffer and copy the port name without colon into it.
+    *ppwszPortNameWithoutColon = DllAllocSplMem((cchPortName + 1) * sizeof(WCHAR));
+    if (!*ppwszPortNameWithoutColon)
     {
         ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
-        return NULL;
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    CopyMemory(pwszPortNameWithoutColon, pwszPortName, cchPortName * sizeof(WCHAR));
-    pwszPortNameWithoutColon[cchPortName] = 0;
+    CopyMemory(*ppwszPortNameWithoutColon, pwszPortName, cchPortName * sizeof(WCHAR));
+    *ppwszPortNameWithoutColon[cchPortName] = 0;
 
-    return pwszPortNameWithoutColon;
+    return ERROR_SUCCESS;
 }
