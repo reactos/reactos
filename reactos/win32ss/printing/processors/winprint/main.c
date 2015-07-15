@@ -219,7 +219,7 @@ OpenPrintProcessor(PWSTR pPrinterName, PPRINTPROCESSOROPENDATA pPrintProcessorOp
     pHandle->pwszDatatype = AllocSplStr(pPrintProcessorOpenData->pDatatype);
     pHandle->pwszDocumentName = AllocSplStr(pPrintProcessorOpenData->pDocumentName);
     pHandle->pwszOutputFile = AllocSplStr(pPrintProcessorOpenData->pOutputFile);
-    pHandle->pwszPrinterPort = AllocSplStr(pPrintProcessorOpenData->pPrinterName);
+    pHandle->pwszPrinterPort = AllocSplStr(pPrinterName);
 
     // We were successful! Return the handle and don't let the cleanup routine free it.
     dwErrorCode = ERROR_SUCCESS;
