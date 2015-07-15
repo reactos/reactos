@@ -300,7 +300,7 @@ _CreateNonspooledPort(PLOCALMON_PORT pPort)
     CopyMemory(&pwszNonspooledFileName[cchLocalSlashes + cchNonspooledPrefix], pwszPortNameWithoutColon, (cchPortNameWithoutColon + 1) * sizeof(WCHAR));
 
     // Finally open it for reading and writing.
-    pPort->hFile = CreateFileW(pwszNonspooledFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, 0, NULL);
+    pPort->hFile = CreateFileW(pwszNonspooledFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL);
     if (pPort->hFile == INVALID_HANDLE_VALUE)
     {
         dwErrorCode = GetLastError();
@@ -577,6 +577,9 @@ LocalmonEndDocPort(HANDLE hPort)
         // We're done with the printer.
         ClosePrinter(pPort->hPrinter);
         pPort->hPrinter = NULL;
+
+        // A new document can now be started again.
+        pPort->bStartedDoc = FALSE;
     }
 
     SetLastError(ERROR_SUCCESS);
@@ -979,7 +982,7 @@ LocalmonStartDocPort(HANDLE hPort, PWSTR pPrinterName, DWORD JobId, DWORD Level,
     else if(pPort->PortType == PortType_FILE)
     {
         // This is a FILE: port. Open the output file given in the Document Info.
-        pPort->hFile = CreateFileW(pDocInfo1->pOutputFile, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, 0, NULL);
+        pPort->hFile = CreateFileW(pDocInfo1->pOutputFile, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
         if (pPort->hFile == INVALID_HANDLE_VALUE)
         {
             dwErrorCode = GetLastError();
@@ -999,7 +1002,7 @@ LocalmonStartDocPort(HANDLE hPort, PWSTR pPrinterName, DWORD JobId, DWORD Level,
         {
             if (GetLastError() == ERROR_SUCCESS)
             {
-                pPort->hFile = CreateFileW(pPort->pwszPortName, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, 0, NULL);
+                pPort->hFile = CreateFileW(pPort->pwszPortName, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL);
                 if (pPort->hFile == INVALID_HANDLE_VALUE)
                 {
                     dwErrorCode = GetLastError();
