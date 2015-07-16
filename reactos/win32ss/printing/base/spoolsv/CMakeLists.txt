@@ -6,6 +6,8 @@ list(APPEND SOURCE
     init.c
     jobs.c
     main.c
+    monitors.c
+    ports.c
     printers.c
     printprocessors.c
     precomp.h

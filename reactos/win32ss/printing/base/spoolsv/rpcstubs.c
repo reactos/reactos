@@ -71,49 +71,7 @@ _RpcDeletePrinterDriver(WINSPOOL_HANDLE pName, WCHAR *pEnvironment, WCHAR *pDriv
 }
 
 DWORD
-_RpcStartDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_DOC_INFO_CONTAINER *pDocInfoContainer, DWORD *pJobId)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcStartPagePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcWritePrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE *pBuf, DWORD cbBuf, DWORD *pcWritten)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcEndPagePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
 _RpcAbortPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcReadPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE *pBuf, DWORD cbBuf, DWORD *pcNoBytesRead)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcEndDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
@@ -135,13 +93,6 @@ _RpcSetPrinterData(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR *pValueName, DWORD Ty
 
 DWORD
 _RpcWaitForPrinterChange(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Flags, DWORD *pFlags)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcClosePrinter(WINSPOOL_PRINTER_HANDLE *phPrinter)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
@@ -177,20 +128,6 @@ _RpcSetForm(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR *pFormName, WINSPOOL_FORM_CO
 
 DWORD
 _RpcEnumForms(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE *pForm, DWORD cbBuf, DWORD *pcbNeeded, DWORD *pcReturned)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcEnumPorts(WINSPOOL_HANDLE pName, DWORD Level, BYTE *pPort, DWORD cbBuf, DWORD *pcbNeeded, DWORD *pcReturned)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcEnumMonitors(WINSPOOL_HANDLE pName, DWORD Level, BYTE *pMonitor, DWORD cbBuf, DWORD *pcbNeeded, DWORD *pcReturned)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
