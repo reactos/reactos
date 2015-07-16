@@ -76,7 +76,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
-			hProcessHeap = GetProcessHeap();
+            hProcessHeap = GetProcessHeap();
             break;
     }
 
