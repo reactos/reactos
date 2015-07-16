@@ -19,4 +19,20 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(winspool);
 
+// Structures
+/*
+ * Describes a handle returned by OpenPrinterW.
+ */
+typedef struct _SPOOLER_HANDLE
+{
+    BOOL bStartedDoc : 1;
+    DWORD dwJobID;
+    HANDLE hPrinter;
+    HANDLE hSPLFile;
+}
+SPOOLER_HANDLE, *PSPOOLER_HANDLE;
+
+// main.c
+extern HANDLE hProcessHeap;
+
 #endif

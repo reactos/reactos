@@ -11,8 +11,8 @@
 static LIST_ENTRY _PortList;
 
 
-PLOCAL_PRINT_MONITOR
-FindPrintMonitorByPort(PCWSTR pwszName)
+PLOCAL_PORT
+FindPort(PCWSTR pwszName)
 {
     PLIST_ENTRY pEntry;
     PLOCAL_PORT pPort;
@@ -22,7 +22,7 @@ FindPrintMonitorByPort(PCWSTR pwszName)
         pPort = CONTAINING_RECORD(pEntry, LOCAL_PORT, Entry);
 
         if (_wcsicmp(pPort->pwszName, pwszName) == 0)
-            return pPort->pPrintMonitor;
+            return pPort;
     }
 
     return NULL;

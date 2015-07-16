@@ -45,8 +45,10 @@ InitializePrinterList()
     DWORD i;
     HKEY hKey = NULL;
     HKEY hSubKey = NULL;
+    PLOCAL_PORT pPort;
     PLOCAL_PRINTER pPrinter = NULL;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
+    PWSTR pwszPort = NULL;
     PWSTR pwszPrintProcessor = NULL;
     WCHAR wszPrinterName[MAX_PRINTER_NAME + 1];
 
@@ -138,6 +140,19 @@ InitializePrinterList()
         if (!pPrintProcessor)
         {
             ERR("Invalid Print Processor \"%S\" for Printer \"%S\"!\n", pwszPrintProcessor, wszPrinterName);
+            continue;
+        }
+
+        // Get the Port.
+        pwszPort = AllocAndRegQueryWSZ(hSubKey, L"Port");
+        if (!pwszPort)
+            continue;
+
+        // Try to find it in the Port List.
+        pPort = FindPort(pwszPort);
+        if (!pPort)
+        {
+            ERR("Invalid Port \"%S\" for Printer \"%S\"!\n", pwszPort, wszPrinterName);
             continue;
         }
 
@@ -488,10 +503,12 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     PWSTR pwszSecondParameter = NULL;
     PLOCAL_JOB pJob;
     PLOCAL_HANDLE pHandle = NULL;
+    PLOCAL_PORT pPort;
     PLOCAL_PRINT_MONITOR pPrintMonitor;
     PLOCAL_PRINTER pPrinter;
     PLOCAL_PRINTER_HANDLE pPrinterHandle = NULL;
     WCHAR wszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    WCHAR wszFullPath[MAX_PATH];
 
     // TODO: lpPrinterName == NULL is supported and means access to the local printer server.
     // Not sure yet if that is passed down to localspl.dll or processed in advance.
@@ -502,6 +519,8 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
     }
+
+    *phPrinter = NULL;
 
     // Skip any server name in the first parameter.
     // Does lpPrinterName begin with two backslashes to indicate a server name?
@@ -592,13 +611,15 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         //    "\\COMPUTERNAME\LPT1:, Port"
         
         // Look for this port in our Print Monitor Port list.
-        pPrintMonitor = FindPrintMonitorByPort(pwszFirstParameter);
-        if (!pPrintMonitor)
+        pPort = FindPort(pwszFirstParameter);
+        if (!pPort)
         {
             // The supplied port is unknown to all our Print Monitors.
             dwErrorCode = ERROR_INVALID_PRINTER_NAME;
             goto Cleanup;
         }
+
+        pPrintMonitor = pPort->pPrintMonitor;
 
         // Call the monitor's OpenPort function.
         if (pPrintMonitor->bIsLevel2)
@@ -649,13 +670,15 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             pwszSecondParameter += 5;
 
             // Look for this port in our Print Monitor Port list.
-            pPrintMonitor = FindPrintMonitorByPort(pwszSecondParameter);
-            if (!pPrintMonitor)
+            pPort = FindPort(pwszFirstParameter);
+            if (!pPort)
             {
                 // The supplied port is unknown to all our Print Monitors.
                 dwErrorCode = ERROR_INVALID_PRINTER_NAME;
                 goto Cleanup;
             }
+
+            pPrintMonitor = pPort->pPrintMonitor;
         }
         else
         {
@@ -706,6 +729,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             goto Cleanup;
         }
 
+        pPrinterHandle->hSPLFile = INVALID_HANDLE_VALUE;
         pPrinterHandle->pPrinter = pPrinter;
 
         // Check if a datatype was given.
@@ -732,7 +756,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         else
             pPrinterHandle->pDevMode = DuplicateDevMode(pPrinter->pDefaultDevMode);
 
-        // Check if the caller wants a handle to an existing job.
+        // Check if the caller wants a handle to an existing Print Job.
         if (pwszSecondParameter)
         {
             // The "Job " string has to follow now.
@@ -767,7 +791,19 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
                 goto Cleanup;
             }
 
-            pPrinterHandle->pStartedJob = pJob;
+            // Try to open its SPL file.
+            GetJobFilePath(L"SPL", dwJobID, wszFullPath);
+            pPrinterHandle->hSPLFile = CreateFileW(wszFullPath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+            if (pPrinterHandle->hSPLFile == INVALID_HANDLE_VALUE)
+            {
+                dwErrorCode = GetLastError();
+                ERR("CreateFileW failed with error %lu for \"%S\"!", dwErrorCode, wszFullPath);
+                goto Cleanup;
+            }
+
+            // Associate the job to our Printer Handle, but don't set bStartedDoc.
+            // This prevents the caller from doing further StartDocPrinter, WritePrinter, etc. calls on it.
+            pPrinterHandle->pJob = pJob;
         }
 
         // Return the Printer handle through our general handle.
@@ -805,38 +841,82 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
-DWORD WINAPI
-LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
+BOOL WINAPI
+LocalReadPrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pNoBytesRead)
 {
     DWORD dwErrorCode;
-    DWORD dwReturnValue = 0;
-    PDOC_INFO_1W pDocumentInfo1;
-    PLOCAL_HANDLE pHandle;
-    PLOCAL_JOB pJob;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
-    // Sanity checks
-    if (!pDocInfo)
-    {
-        dwErrorCode = ERROR_INVALID_PARAMETER;
-        goto Cleanup;
-    }
-
-    if (!hPrinter)
-    {
-        dwErrorCode = ERROR_INVALID_HANDLE;
-        goto Cleanup;
-    }
-
-    // Check if this is a printer handle.
-    pHandle = (PLOCAL_HANDLE)hPrinter;
-    if (pHandle->HandleType != HandleType_Printer)
+    // Sanity checks.
+    if (!pHandle || pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
     }
 
     pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // ReadPrinter needs an opened SPL file to work.
+    // This only works if a Printer Job Handle was requested in OpenPrinter.
+    if (pPrinterHandle->hSPLFile == INVALID_HANDLE_VALUE)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Pass the parameters to ReadFile.
+    if (!ReadFile(pPrinterHandle->hSPLFile, pBuf, cbBuf, pNoBytesRead, NULL))
+    {
+        dwErrorCode = GetLastError();
+        ERR("ReadFile failed with error %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+DWORD WINAPI
+LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
+{
+    DWORD dwErrorCode;
+    DWORD dwReturnValue = 0;
+    PDOC_INFO_1W pDocInfo1 = (PDOC_INFO_1W)pDocInfo;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    // Sanity checks.
+    if (!pDocInfo1)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // pJob may already be occupied if this is a Print Job handle. In this case, StartDocPrinter has to fail.
+    if (pPrinterHandle->pJob)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    // Check the validity of the datatype if we got one.
+    if (pDocInfo1->pDatatype && !FindDatatype(pPrinterHandle->pJob->pPrintProcessor, pDocInfo1->pDatatype))
+    {
+        dwErrorCode = ERROR_INVALID_DATATYPE;
+        goto Cleanup;
+    }
 
     // Check if this is the right document information level.
     if (Level != 1)
@@ -845,68 +925,30 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo)
         goto Cleanup;
     }
 
-    pDocumentInfo1 = (PDOC_INFO_1W)pDocInfo;
+    // All requirements are met - create a new job.
+    dwErrorCode = CreateJob(pPrinterHandle);
+    if (dwErrorCode != ERROR_SUCCESS)
+        goto Cleanup;
 
-    // Create a new job.
-    pJob = DllAllocSplMem(sizeof(LOCAL_JOB));
-    pJob->pPrinter = pPrinterHandle->pPrinter;
-    pJob->dwPriority = DEF_PRIORITY;
-
-    // Check if a datatype was given.
-    if (pDocumentInfo1->pDatatype)
-    {
-        // Use the datatype if it's valid.
-        if (!FindDatatype(pJob->pPrintProcessor, pDocumentInfo1->pDatatype))
-        {
-            dwErrorCode = ERROR_INVALID_DATATYPE;
-            goto Cleanup;
-        }
-
-        pJob->pwszDatatype = AllocSplStr(pDocumentInfo1->pDatatype);
-    }
-    else
-    {
-        // Use the printer handle datatype.
-        pJob->pwszDatatype = AllocSplStr(pPrinterHandle->pwszDatatype);
-    }
-
-    // Copy over printer defaults.
-    pJob->pDevMode = DuplicateDevMode(pPrinterHandle->pDevMode);
-
-    // Copy over supplied information.
-    if (pDocumentInfo1->pDocName)
-        pJob->pwszDocumentName = AllocSplStr(pDocumentInfo1->pDocName);
-
-    if (pDocumentInfo1->pOutputFile)
-        pJob->pwszOutputFile = AllocSplStr(pDocumentInfo1->pOutputFile);
-
-    // Get an ID for the new job.
-    if (!GetNextJobID(&pJob->dwJobID))
+    // Use any given datatype.
+    if (pDocInfo1->pDatatype && !ReallocSplStr(&pPrinterHandle->pJob->pwszDatatype, pDocInfo1->pDatatype))
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
-    // Add the job to the Global Job List.
-    if (!InsertElementSkiplist(&GlobalJobList, pJob))
+    // Use any given document name.
+    if (pDocInfo1->pDocName && !ReallocSplStr(&pPrinterHandle->pJob->pwszDocumentName, pDocInfo1->pDocName))
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("InsertElementSkiplist failed for job %lu for the GlobalJobList!\n", pJob->dwJobID);
+        ERR("ReallocSplStr failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
-    // Add the job at the end of the Printer's Job List.
-    // As all new jobs are created with default priority, we can be sure that it would always be inserted at the end.
-    if (!InsertTailElementSkiplist(&pJob->pPrinter->JobList, pJob))
-    {
-        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("InsertTailElementSkiplist failed for job %lu for the Printer's Job List!\n", pJob->dwJobID);
-        goto Cleanup;
-    }
-
-    pPrinterHandle->pStartedJob = pJob;
+    // We were successful!
     dwErrorCode = ERROR_SUCCESS;
-    dwReturnValue = pJob->dwJobID;
+    dwReturnValue = pPrinterHandle->pJob->dwJobID;
 
 Cleanup:
     SetLastError(dwErrorCode);
@@ -916,48 +958,170 @@ Cleanup:
 BOOL WINAPI
 LocalStartPagePrinter(HANDLE hPrinter)
 {
-    ///////////// TODO /////////////////////
-    return FALSE;
+    DWORD dwErrorCode;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    // Sanity checks.
+    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // We require StartDocPrinter or AddJob to be called first.
+    if (!pPrinterHandle->bStartedDoc)
+    {
+        dwErrorCode = ERROR_SPL_NO_STARTDOC;
+        goto Cleanup;
+    }
+
+    // Increase the page count.
+    ++pPrinterHandle->pJob->dwTotalPages;
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
 LocalWritePrinter(HANDLE hPrinter, LPVOID pBuf, DWORD cbBuf, LPDWORD pcWritten)
 {
-    ///////////// TODO /////////////////////
-    return FALSE;
+    DWORD dwErrorCode;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    // Sanity checks.
+    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // We require StartDocPrinter or AddJob to be called first.
+    if (!pPrinterHandle->bStartedDoc)
+    {
+        dwErrorCode = ERROR_SPL_NO_STARTDOC;
+        goto Cleanup;
+    }
+
+    // TODO: This function is only called when doing non-spooled printing.
+    // This needs to be investigated further. We can't just use pPrinterHandle->hSPLFile here, because that's currently reserved for Printer Job handles (see LocalReadPrinter).
+#if 0
+    // Pass the parameters to WriteFile.
+    if (!WriteFile(SOME_SPOOL_FILE_HANDLE, pBuf, cbBuf, pcWritten, NULL))
+    {
+        dwErrorCode = GetLastError();
+        ERR("WriteFile failed with error %lu!\n", GetLastError());
+        goto Cleanup;
+    }
+#endif
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
 LocalEndPagePrinter(HANDLE hPrinter)
 {
-    ///////////// TODO /////////////////////
-    return FALSE;
+    DWORD dwErrorCode;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // This function doesn't do anything else for now.
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
 LocalEndDocPrinter(HANDLE hPrinter)
 {
-    ///////////// TODO /////////////////////
-    return FALSE;
+    DWORD dwErrorCode;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    // Sanity checks.
+    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // We require StartDocPrinter or AddJob to be called first.
+    if (!pPrinterHandle->bStartedDoc)
+    {
+        dwErrorCode = ERROR_SPL_NO_STARTDOC;
+        goto Cleanup;
+    }
+
+    // TODO: Something like ScheduleJob
+
+    // Finish the job.
+    pPrinterHandle->bStartedDoc = FALSE;
+    pPrinterHandle->pJob = NULL;
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
 LocalClosePrinter(HANDLE hPrinter)
 {
-    PLOCAL_HANDLE pHandle;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
-    if (!hPrinter)
+    if (!pHandle)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
-    pHandle = (PLOCAL_HANDLE)hPrinter;
+    if (pHandle->HandleType == HandleType_Port)
+    {
+        // TODO
+    }
+    else if (pHandle->HandleType == HandleType_Printer)
+    {
+        pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
 
-    ///////////// TODO /////////////////////
-    /// Check the handle type, do thoroughful checks on all data fields and clean them.
-    ////////////////////////////////////////
+        // Terminate any started job.
+        if (pPrinterHandle->pJob)
+            FreeJob(pPrinterHandle->pJob);
 
+        // Free memory for the fields.
+        DllFreeSplMem(pPrinterHandle->pDevMode);
+        DllFreeSplStr(pPrinterHandle->pwszDatatype);
+
+        // Free memory for the printer handle itself.
+        DllFreeSplMem(pPrinterHandle);
+    }
+    else if (pHandle->HandleType == HandleType_Xcv)
+    {
+        // TODO
+    }
+
+    // Free memory for the handle itself.
     DllFreeSplMem(pHandle);
 
     return TRUE;

@@ -7,6 +7,10 @@
 
 #include "precomp.h"
 
+// Global Variables
+HANDLE hProcessHeap;
+
+
 handle_t __RPC_USER
 WINSPOOL_HANDLE_bind(WINSPOOL_HANDLE wszName)
 {
@@ -56,13 +60,27 @@ WINSPOOL_HANDLE_unbind(WINSPOOL_HANDLE wszName, handle_t hBinding)
 void __RPC_FAR* __RPC_USER
 midl_user_allocate(SIZE_T len)
 {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+    return HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, len);
 }
 
 void __RPC_USER
 midl_user_free(void __RPC_FAR* ptr)
 {
-    HeapFree(GetProcessHeap(), 0, ptr);
+    HeapFree(hProcessHeap, 0, ptr);
+}
+
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+			hProcessHeap = GetProcessHeap();
+            break;
+    }
+
+    return TRUE;
 }
 
 BOOL WINAPI

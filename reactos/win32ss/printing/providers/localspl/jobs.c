@@ -14,6 +14,27 @@ SKIPLIST GlobalJobList;
 static DWORD _dwLastJobID;
 
 
+static BOOL
+_GetNextJobID(PDWORD dwJobID)
+{
+    ++_dwLastJobID;
+
+    while (LookupElementSkiplist(&GlobalJobList, &_dwLastJobID, NULL))
+    {
+        // This ID is already taken. Try the next one.
+        ++_dwLastJobID;
+    }
+
+    if (!IS_VALID_JOB_ID(_dwLastJobID))
+    {
+        ERR("Job ID %lu isn't valid!\n", _dwLastJobID);
+        return FALSE;
+    }
+
+    *dwJobID = _dwLastJobID;
+    return TRUE;
+}
+
 /**
  * @name _GlobalJobListCompareRoutine
  *
@@ -81,25 +102,23 @@ _PrinterJobListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
     return 0;
 }
 
-BOOL
-GetNextJobID(PDWORD dwJobID)
+DWORD
+GetJobFilePath(PCWSTR pwszExtension, DWORD dwJobID, PWSTR pwszOutput)
 {
-    ++_dwLastJobID;
+    const WCHAR wszPrintersPath[] = L"\\PRINTERS\\";
+    const DWORD cchPrintersPath = _countof(wszPrintersPath) - 1;
+    const DWORD cchSpoolerFile = sizeof("?????.") - 1;
+    const DWORD cchExtension = sizeof("SPL") - 1;                   // pwszExtension may be L"SPL" or L"SHD", same length for both!
 
-    while (LookupElementSkiplist(&GlobalJobList, &_dwLastJobID, NULL))
+    if (pwszOutput)
     {
-        // This ID is already taken. Try the next one.
-        ++_dwLastJobID;
+        CopyMemory(pwszOutput, wszSpoolDirectory, cchSpoolDirectory);
+        CopyMemory(&pwszOutput[cchSpoolDirectory], wszPrintersPath, cchPrintersPath);
+        swprintf(&pwszOutput[cchSpoolDirectory + cchPrintersPath], L"%05lu.", dwJobID);
+        CopyMemory(&pwszOutput[cchSpoolDirectory + cchPrintersPath + cchSpoolerFile], pwszExtension, (cchExtension + 1) * sizeof(WCHAR));
     }
 
-    if (!IS_VALID_JOB_ID(_dwLastJobID))
-    {
-        ERR("Job ID %lu isn't valid!\n", _dwLastJobID);
-        return FALSE;
-    }
-
-    *dwJobID = _dwLastJobID;
-    return TRUE;
+    return (cchSpoolDirectory + cchPrintersPath + cchSpoolerFile + cchExtension + 1) * sizeof(WCHAR);
 }
 
 BOOL
@@ -107,8 +126,6 @@ InitializeGlobalJobList()
 {
     const WCHAR wszPath[] = L"\\PRINTERS\\?????.SHD";
     const DWORD cchPath = _countof(wszPath) - 1;
-    const DWORD cchFolders = sizeof("\\PRINTERS\\") - 1;
-    const DWORD cchPattern = sizeof("?????") - 1;
 
     DWORD dwErrorCode;
     DWORD dwJobID;
@@ -118,7 +135,7 @@ InitializeGlobalJobList()
     WCHAR wszFullPath[MAX_PATH];
     WIN32_FIND_DATAW FindData;
 
-    // This one is incremented in GetNextJobID.
+    // This one is incremented in _GetNextJobID.
     _dwLastJobID = 0;
 
     // Initialize an empty list for all jobs of all local printers.
@@ -145,6 +162,7 @@ InitializeGlobalJobList()
             continue;
 
         // Extract the Job ID and verify the file name format at the same time.
+        // This includes all valid names (like "00005.SHD") and excludes invalid ones (like "10ABC.SHD").
         dwJobID = wcstoul(FindData.cFileName, &p, 10);
         if (!IS_VALID_JOB_ID(dwJobID))
             continue;
@@ -153,7 +171,7 @@ InitializeGlobalJobList()
             continue;
 
         // This shadow file has a valid name. Construct the full path and try to load it.
-        CopyMemory(&wszFullPath[cchSpoolDirectory + cchFolders], FindData.cFileName, cchPattern);
+        GetJobFilePath(L"SHD", dwJobID, wszFullPath);
         pJob = ReadJobShadowFile(wszFullPath);
         if (!pJob)
             continue;
@@ -195,78 +213,31 @@ InitializePrinterJobList(PLOCAL_PRINTER pPrinter)
     InitializeSkiplist(&pPrinter->JobList, DllAllocSplMem, _PrinterJobListCompareRoutine, (PSKIPLIST_FREE_ROUTINE)DllFreeSplMem);
 }
 
-BOOL WINAPI
-LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcbNeeded)
+DWORD WINAPI
+CreateJob(PLOCAL_PRINTER_HANDLE pPrinterHandle)
 {
     const WCHAR wszDoubleBackslash[] = L"\\";
     const DWORD cchDoubleBackslash = _countof(wszDoubleBackslash) - 1;
-    const WCHAR wszPrintersPath[] = L"\\PRINTERS\\";
-    const DWORD cchPrintersPath = _countof(wszPrintersPath) - 1;
-    const DWORD cchSpl = _countof("?????.SPL") - 1;
 
-    ADDJOB_INFO_1W AddJobInfo1;
     DWORD cchMachineName;
     DWORD cchUserName;
     DWORD dwErrorCode;
-    PBYTE p;
-    PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
-    PLOCAL_PRINTER_HANDLE pPrinterHandle;
     RPC_BINDING_HANDLE hServerBinding = NULL;
     RPC_WSTR pwszBinding = NULL;
     RPC_WSTR pwszMachineName = NULL;
-
-    // Check if this is a printer handle.
-    pHandle = (PLOCAL_HANDLE)hPrinter;
-    if (pHandle->HandleType != HandleType_Printer)
-    {
-        dwErrorCode = ERROR_INVALID_HANDLE;
-        goto Cleanup;
-    }
-
-    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
-
-    // This handle must not have started a job yet!
-    if (pPrinterHandle->pStartedJob)
-    {
-        dwErrorCode = ERROR_INVALID_HANDLE;
-        goto Cleanup;
-    }
-
-    // Check if this is the right structure level.
-    if (Level != 1)
-    {
-        dwErrorCode = ERROR_INVALID_LEVEL;
-        goto Cleanup;
-    }
-
-    // Check if the printer is set to do direct printing.
-    // The Job List isn't used in this case.
-    if (pPrinterHandle->pPrinter->dwAttributes & PRINTER_ATTRIBUTE_DIRECT)
-    {
-        dwErrorCode = ERROR_INVALID_ACCESS;
-        goto Cleanup;
-    }
-
-    // Check if the supplied buffer is large enough.
-    *pcbNeeded = sizeof(ADDJOB_INFO_1W) + (cchSpoolDirectory + cchPrintersPath + cchSpl + 1) * sizeof(WCHAR);
-    if (cbBuf < *pcbNeeded)
-    {
-        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
-        goto Cleanup;
-    }
 
     // Create a new job.
     pJob = DllAllocSplMem(sizeof(LOCAL_JOB));
     if (!pJob)
     {
-        dwErrorCode = GetLastError();
-        ERR("DllAllocSplMem failed with error %lu!\n", dwErrorCode);
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         goto Cleanup;
     }
 
     // Reserve an ID for this job.
-    if (!GetNextJobID(&pJob->dwJobID))
+    if (!_GetNextJobID(&pJob->dwJobID))
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         goto Cleanup;
@@ -339,21 +310,18 @@ LocalAddJob(HANDLE hPrinter, DWORD Level, LPBYTE pData, DWORD cbBuf, LPDWORD pcb
         goto Cleanup;
     }
 
-    // Return a proper ADDJOB_INFO_1W structure.
-    AddJobInfo1.JobId = pJob->dwJobID;
-    AddJobInfo1.Path = (PWSTR)(pData + sizeof(ADDJOB_INFO_1W));
-    p = pData;
-    CopyMemory(p, &AddJobInfo1, sizeof(ADDJOB_INFO_1W));
-    p += sizeof(ADDJOB_INFO_1W);
-    CopyMemory(p, wszSpoolDirectory, cchSpoolDirectory);
-    p += cchSpoolDirectory;
-    CopyMemory(p, wszPrintersPath, cchPrintersPath);
-    p += cchPrintersPath;
-    swprintf((PWSTR)p, L"%05lu.SPL", pJob->dwJobID);
-
+    // We were successful!
+    pPrinterHandle->bStartedDoc = TRUE;
+    pPrinterHandle->pJob = pJob;
     dwErrorCode = ERROR_SUCCESS;
 
+    // Don't let the cleanup routine free this.
+    pJob = NULL;
+
 Cleanup:
+    if (pJob)
+        DllFreeSplMem(pJob);
+
     if (pwszMachineName)
         RpcStringFreeW(&pwszMachineName);
 
@@ -363,6 +331,72 @@ Cleanup:
     if (hServerBinding)
         RpcBindingFree(&hServerBinding);
 
+    return dwErrorCode;
+}
+
+BOOL WINAPI
+LocalAddJob(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded)
+{
+    ADDJOB_INFO_1W AddJobInfo1;
+    DWORD dwErrorCode;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    // Check if this is a printer handle.
+    if (pHandle->HandleType != HandleType_Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    // This handle must not have started a job yet!
+    if (pPrinterHandle->pJob)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Check if this is the right structure level.
+    if (Level != 1)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
+    // Check if the printer is set to do direct printing.
+    // The Job List isn't used in this case.
+    if (pPrinterHandle->pPrinter->dwAttributes & PRINTER_ATTRIBUTE_DIRECT)
+    {
+        dwErrorCode = ERROR_INVALID_ACCESS;
+        goto Cleanup;
+    }
+
+    // Check if the supplied buffer is large enough.
+    *pcbNeeded = sizeof(ADDJOB_INFO_1W) + GetJobFilePath(L"SPL", 0, NULL);
+    if (cbBuf < *pcbNeeded)
+    {
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
+    }
+
+    // All requirements are met - create a new job.
+    dwErrorCode = CreateJob(pPrinterHandle);
+    if (dwErrorCode != ERROR_SUCCESS)
+        goto Cleanup;
+
+    // Mark that this job was started with AddJob (so that it can be scheduled for printing with ScheduleJob).
+    pPrinterHandle->pJob->bAddedJob = TRUE;
+
+    // Return a proper ADDJOB_INFO_1W structure.
+    AddJobInfo1.JobId = pPrinterHandle->pJob->dwJobID;
+    AddJobInfo1.Path = (PWSTR)(pData + sizeof(ADDJOB_INFO_1W));
+
+    CopyMemory(pData, &AddJobInfo1, sizeof(ADDJOB_INFO_1W));
+    GetJobFilePath(L"SPL", AddJobInfo1.JobId, AddJobInfo1.Path);
+
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }
@@ -842,9 +876,6 @@ Cleanup:
 BOOL WINAPI
 LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
 {
-    const WCHAR wszFolder[] = L"\\PRINTERS\\";
-    const DWORD cchFolder = _countof(wszFolder) - 1;
-
     DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
@@ -883,18 +914,34 @@ LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Com
     if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
 
-    // Construct the full path to the shadow file.
-    CopyMemory(wszFullPath, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
-    CopyMemory(&wszFullPath[cchSpoolDirectory], wszFolder, cchFolder * sizeof(WCHAR));
-    swprintf(&wszFullPath[cchSpoolDirectory + cchFolder], L"%05lu.SHD", JobId);
-
-    // Write the job data into the shadow file.
-    WriteJobShadowFile(wszFullPath, pJob);
+    // If we do spooled printing, the job information is written down into a shadow file.
+    if (!(pPrinterHandle->pPrinter->dwAttributes & PRINTER_ATTRIBUTE_DIRECT))
+    {
+        // Write the job data into the shadow file.
+        GetJobFilePath(L"SHD", JobId, wszFullPath);
+        WriteJobShadowFile(wszFullPath, pJob);
+    }
 
     // Perform an additional command if desired.
     if (Command)
     {
-        // TODO
+        if (Command == JOB_CONTROL_SENT_TO_PRINTER)
+        {
+            // This indicates the end of the Print Job.
+
+            // Cancel the Job at the Print Processor.
+            if (pJob->hPrintProcessor)
+                pJob->pPrintProcessor->pfnControlPrintProcessor(pJob->hPrintProcessor, JOB_CONTROL_CANCEL);
+
+            FreeJob(pJob);
+
+            // TODO: All open handles associated with the job need to be invalidated.
+            // This certainly needs handle tracking...
+        }
+        else
+        {
+            ERR("Unimplemented SetJob Command: %lu!\n", Command);
+        }
     }
 
     dwErrorCode = ERROR_SUCCESS;
@@ -1003,18 +1050,15 @@ Cleanup:
 BOOL WINAPI
 LocalScheduleJob(HANDLE hPrinter, DWORD dwJobID)
 {
-    const WCHAR wszFolder[] = L"\\PRINTERS\\";
-    const DWORD cchFolder = _countof(wszFolder) - 1;
-
     DWORD dwAttributes;
     DWORD dwErrorCode;
-    PLOCAL_HANDLE pHandle;
+    HANDLE hThread;
     PLOCAL_JOB pJob;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
     WCHAR wszFullPath[MAX_PATH];
 
     // Check if this is a printer handle.
-    pHandle = (PLOCAL_HANDLE)hPrinter;
     if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
@@ -1031,10 +1075,15 @@ LocalScheduleJob(HANDLE hPrinter, DWORD dwJobID)
         goto Cleanup;
     }
 
+    // Check if this Job was started with AddJob.
+    if (!pJob->bAddedJob)
+    {
+        dwErrorCode = ERROR_SPL_NO_ADDJOB;
+        goto Cleanup;
+    }
+
     // Construct the full path to the spool file.
-    CopyMemory(wszFullPath, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
-    CopyMemory(&wszFullPath[cchSpoolDirectory], wszFolder, cchFolder * sizeof(WCHAR));
-    swprintf(&wszFullPath[cchSpoolDirectory + cchFolder], L"%05lu.SPL", dwJobID);
+    GetJobFilePath(L"SPL", dwJobID, wszFullPath);
 
     // Check if it exists.
     dwAttributes = GetFileAttributesW(wszFullPath);
@@ -1052,6 +1101,19 @@ LocalScheduleJob(HANDLE hPrinter, DWORD dwJobID)
     wcscpy(wcsrchr(wszFullPath, L'.'), L".SHD");
     WriteJobShadowFile(wszFullPath, pJob);
 
+    // Create the thread for performing the printing process.
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PrintingThreadProc, pJob, 0, NULL);
+    if (!hThread)
+    {
+        dwErrorCode = GetLastError();
+        ERR("CreateThread failed with error %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // We don't need the thread handle. Keeping it open blocks the thread from terminating.
+    CloseHandle(hThread);
+
+    // ScheduleJob has done its job. The rest happens inside the thread.
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
@@ -1134,7 +1196,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     pJob->dwPriority = pShadowFile->dwPriority;
     pJob->dwStartTime = pShadowFile->dwStartTime;
     pJob->dwTotalPages = pShadowFile->dwTotalPages;
-    pJob->dwUntilTime = pShadowFile->dwUntilTime;    
+    pJob->dwUntilTime = pShadowFile->dwUntilTime;
     pJob->pPrinter = pPrinter;
     pJob->pPrintProcessor = pPrintProcessor;
     pJob->pDevMode = DuplicateDevMode((PDEVMODEW)((ULONG_PTR)pShadowFile + pShadowFile->offDevMode));
@@ -1148,6 +1210,9 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
 
     pJob->pwszUserName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offUserName));
     CopyMemory(&pJob->stSubmitted, &pShadowFile->stSubmitted, sizeof(SYSTEMTIME));
+
+    // Jobs read from shadow files were always added using AddJob.
+    pJob->bAddedJob = TRUE;
 
     pReturnValue = pJob;
 
@@ -1303,15 +1368,38 @@ Cleanup:
     return bReturnValue;
 }
 
-BOOL
+void
 FreeJob(PLOCAL_JOB pJob)
 {
-    ////////// TODO /////////
-    /// Add some checks
+    PWSTR pwszSHDFile;
+    
+    // Remove the Job from both Job Lists.
+    DeleteElementSkiplist(&pJob->pPrinter->JobList, pJob);
+    DeleteElementSkiplist(&GlobalJobList, pJob);
+
+    // Try to delete the corresponding .SHD file.
+    pwszSHDFile = DllAllocSplMem(GetJobFilePath(L"SHD", 0, NULL));
+    if (pwszSHDFile && GetJobFilePath(L"SHD", pJob->dwJobID, pwszSHDFile))
+        DeleteFileW(pwszSHDFile);
+
+    // Free memory for the mandatory fields.
+    DllFreeSplMem(pJob->pDevMode);
     DllFreeSplStr(pJob->pwszDatatype);
     DllFreeSplStr(pJob->pwszDocumentName);
-    DllFreeSplStr(pJob->pwszOutputFile);
-    DllFreeSplMem(pJob);
+    DllFreeSplStr(pJob->pwszMachineName);
+    DllFreeSplStr(pJob->pwszNotifyName);
+    DllFreeSplStr(pJob->pwszUserName);
 
-    return TRUE;
+    // Free memory for the optional fields if they are present.
+    if (pJob->pwszOutputFile)
+        DllFreeSplStr(pJob->pwszOutputFile);
+    
+    if (pJob->pwszPrintProcessorParameters)
+        DllFreeSplStr(pJob->pwszPrintProcessorParameters);
+
+    if (pJob->pwszStatus)
+        DllFreeSplStr(pJob->pwszStatus);
+
+    // Finally free the job structure itself.
+    DllFreeSplMem(pJob);
 }

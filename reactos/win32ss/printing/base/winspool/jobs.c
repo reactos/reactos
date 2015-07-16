@@ -61,11 +61,18 @@ AddJobW(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded
 {
     DWORD dwErrorCode;
     PADDJOB_INFO_1W pAddJobInfo1;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
 
     // Do the RPC call
     RpcTryExcept
     {
-        dwErrorCode = _RpcAddJob(hPrinter, Level, pData, cbBuf, pcbNeeded);
+        dwErrorCode = _RpcAddJob(pHandle->hPrinter, Level, pData, cbBuf, pcbNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -81,6 +88,7 @@ AddJobW(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded
         pAddJobInfo1->Path = (PWSTR)((ULONG_PTR)pAddJobInfo1->Path + (ULONG_PTR)pAddJobInfo1);
     }
 
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }
@@ -98,11 +106,18 @@ EnumJobsW(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob
     DWORD dwErrorCode;
     DWORD i;
     PBYTE p = pJob;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
 
     // Do the RPC call
     RpcTryExcept
     {
-        dwErrorCode = _RpcEnumJobs(hPrinter, FirstJob, NoJobs, Level, pJob, cbBuf, pcbNeeded, pcReturned);
+        dwErrorCode = _RpcEnumJobs(pHandle->hPrinter, FirstJob, NoJobs, Level, pJob, cbBuf, pcbNeeded, pcReturned);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -125,6 +140,7 @@ EnumJobsW(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob
         }
     }
 
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }
@@ -140,11 +156,18 @@ BOOL WINAPI
 GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
 
     // Do the RPC call
     RpcTryExcept
     {
-        dwErrorCode = _RpcGetJob(hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
+        dwErrorCode = _RpcGetJob(pHandle->hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -159,6 +182,7 @@ GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWO
         _MarshallUpJobInfo(pJob, Level);
     }
 
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }
@@ -167,19 +191,27 @@ BOOL WINAPI
 ScheduleJob(HANDLE hPrinter, DWORD dwJobID)
 {
     DWORD dwErrorCode;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
 
     // Do the RPC call
     RpcTryExcept
     {
-        dwErrorCode = _RpcScheduleJob(hPrinter, dwJobID);
+        dwErrorCode = _RpcScheduleJob(pHandle->hPrinter, dwJobID);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwErrorCode = RpcExceptionCode();
-        ERR("_RpcSetJob failed with exception code %lu!\n", dwErrorCode);
+        ERR("_RpcScheduleJob failed with exception code %lu!\n", dwErrorCode);
     }
     RpcEndExcept;
 
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }
@@ -195,7 +227,14 @@ BOOL WINAPI
 SetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
 {
     DWORD dwErrorCode;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
     WINSPOOL_JOB_CONTAINER JobContainer;
+
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
 
     // pJobContainer->JobInfo is a union of pointers, so we can just set any element to our BYTE pointer.
     JobContainer.Level = Level;
@@ -204,7 +243,7 @@ SetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command
     // Do the RPC call
     RpcTryExcept
     {
-        dwErrorCode = _RpcSetJob(hPrinter, JobId, &JobContainer, Command);
+        dwErrorCode = _RpcSetJob(pHandle->hPrinter, JobId, &JobContainer, Command);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -213,6 +252,7 @@ SetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command
     }
     RpcEndExcept;
 
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }

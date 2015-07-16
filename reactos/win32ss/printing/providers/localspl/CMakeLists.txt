@@ -10,6 +10,7 @@ list(APPEND SOURCE
     ports.c
     precomp.h
     printers.c
+    printingthread.c
     printprocessors.c
     tools.c)
 
