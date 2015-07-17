@@ -7,6 +7,45 @@
 
 #include "precomp.h"
 
+static void
+_MarshallUpPrinterInfo(PBYTE pPrinterInfo, DWORD Level)
+{
+    PPRINTER_INFO_1W pPrinterInfo1;
+    PPRINTER_INFO_2W pPrinterInfo2;
+
+    // Replace relative offset addresses in the output by absolute pointers.
+    if (Level == 1)
+    {
+        pPrinterInfo1 = (PPRINTER_INFO_1W)pPrinterInfo;
+
+        pPrinterInfo1->pName = (PWSTR)((ULONG_PTR)pPrinterInfo1->pName + (ULONG_PTR)pPrinterInfo1);
+        pPrinterInfo1->pDescription = (PWSTR)((ULONG_PTR)pPrinterInfo1->pDescription + (ULONG_PTR)pPrinterInfo1);
+        pPrinterInfo1->pComment = (PWSTR)((ULONG_PTR)pPrinterInfo1->pComment + (ULONG_PTR)pPrinterInfo1);
+    }
+    else if (Level == 2)
+    {
+        pPrinterInfo2 = (PPRINTER_INFO_2W)pPrinterInfo;
+
+        pPrinterInfo2->pPrinterName = (PWSTR)((ULONG_PTR)pPrinterInfo2->pPrinterName + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pShareName = (PWSTR)((ULONG_PTR)pPrinterInfo2->pShareName + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pPortName = (PWSTR)((ULONG_PTR)pPrinterInfo2->pPortName + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pDriverName = (PWSTR)((ULONG_PTR)pPrinterInfo2->pDriverName + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pComment = (PWSTR)((ULONG_PTR)pPrinterInfo2->pComment + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pLocation = (PWSTR)((ULONG_PTR)pPrinterInfo2->pLocation + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pDevMode = (PDEVMODEW)((ULONG_PTR)pPrinterInfo2->pDevMode + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pSepFile = (PWSTR)((ULONG_PTR)pPrinterInfo2->pSepFile + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pPrintProcessor = (PWSTR)((ULONG_PTR)pPrinterInfo2->pPrintProcessor + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pDatatype = (PWSTR)((ULONG_PTR)pPrinterInfo2->pDatatype + (ULONG_PTR)pPrinterInfo2);
+        pPrinterInfo2->pParameters = (PWSTR)((ULONG_PTR)pPrinterInfo2->pParameters + (ULONG_PTR)pPrinterInfo2);
+
+        if (pPrinterInfo2->pServerName)
+            pPrinterInfo2->pServerName = (PWSTR)((ULONG_PTR)pPrinterInfo2->pServerName + (ULONG_PTR)pPrinterInfo2);
+
+        if (pPrinterInfo2->pSecurityDescriptor)
+            pPrinterInfo2->pSecurityDescriptor = (PWSTR)((ULONG_PTR)pPrinterInfo2->pSecurityDescriptor + (ULONG_PTR)pPrinterInfo2);
+    }
+}
+
 static DWORD
 _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB_INFO_1W pAddJobInfo1)
 {
@@ -93,33 +132,6 @@ _StartDocPrinterWithRPC(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1)
     RpcEndExcept;
 
     return dwErrorCode;
-}
-
-BOOL WINAPI
-EnumPrintersA(DWORD Flags, LPSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
-{
-    return FALSE;
-}
-
-BOOL WINAPI
-EnumPrintersW(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
-{
-    DWORD dwErrorCode;
-
-    // Do the RPC call
-    RpcTryExcept
-    {
-        dwErrorCode = _RpcEnumPrinters(Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        dwErrorCode = RpcExceptionCode();
-        ERR("_RpcEnumPrinters failed with exception code %lu!\n", dwErrorCode);
-    }
-    RpcEndExcept;
-
-    SetLastError(dwErrorCode);
-    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
@@ -271,6 +283,49 @@ EndPagePrinter(HANDLE hPrinter)
     }
 
 Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+{
+    return FALSE;
+}
+
+BOOL WINAPI
+EnumPrintersW(DWORD Flags, PWSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+{
+    DWORD dwErrorCode;
+    DWORD i;
+    PBYTE p = pPrinterEnum;
+
+    // Do the RPC call
+    RpcTryExcept
+    {
+        dwErrorCode = _RpcEnumPrinters(Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcEnumPrinters failed with exception code %lu!\n", dwErrorCode);
+    }
+    RpcEndExcept;
+
+    if (dwErrorCode == ERROR_SUCCESS)
+    {
+        // Replace relative offset addresses in the output by absolute pointers.
+        for (i = 0; i < *pcReturned; i++)
+        {
+            _MarshallUpPrinterInfo(p, Level);
+
+            if (Level == 1)
+                p += sizeof(PRINTER_INFO_1W);
+            else if (Level == 2)
+                p += sizeof(PRINTER_INFO_2W);
+        }
+    }
+
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }

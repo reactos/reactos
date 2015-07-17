@@ -7,58 +7,94 @@
 
 #include "precomp.h"
 
+static void
+_MarshallUpDatatypesInfo(PDATATYPES_INFO_1W pDatatypesInfo1)
+{
+    // Replace relative offset addresses in the output by absolute pointers.
+    pDatatypesInfo1->pName = (PWSTR)((ULONG_PTR)pDatatypesInfo1->pName + (ULONG_PTR)pDatatypesInfo1);
+}
+
+static void
+_MarshallUpPrintProcessorInfo(PPRINTPROCESSOR_INFO_1W pPrintProcessorInfo1)
+{
+    // Replace relative offset addresses in the output by absolute pointers.
+    pPrintProcessorInfo1->pName = (PWSTR)((ULONG_PTR)pPrintProcessorInfo1->pName + (ULONG_PTR)pPrintProcessorInfo1);
+}
+
 BOOL WINAPI
-EnumPrintProcessorDatatypesA(LPSTR pName, LPSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+EnumPrintProcessorDatatypesA(PSTR pName, LPSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     return FALSE;
 }
 
 BOOL WINAPI
-EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+EnumPrintProcessorDatatypesW(PWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue = FALSE;
     DWORD dwErrorCode;
+    DWORD i;
+    PBYTE p = pDatatypes;
 
     // Do the RPC call
     RpcTryExcept
     {
         dwErrorCode = _RpcEnumPrintProcessorDatatypes(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
-        SetLastError(dwErrorCode);
-        bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("_RpcEnumPrintProcessorDatatypes failed with exception code %lu!\n", RpcExceptionCode());
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcEnumPrintProcessorDatatypes failed with exception code %lu!\n", dwErrorCode);
     }
     RpcEndExcept;
 
-    return bReturnValue;
+    if (dwErrorCode == ERROR_SUCCESS)
+    {
+        // Replace relative offset addresses in the output by absolute pointers.
+        for (i = 0; i < *pcReturned; i++)
+        {
+            _MarshallUpDatatypesInfo((PDATATYPES_INFO_1W)p);
+            p += sizeof(DATATYPES_INFO_1W);
+        }
+    }
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
-EnumPrintProcessorsW(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue = FALSE;
     DWORD dwErrorCode;
+    DWORD i;
+    PBYTE p = pPrintProcessorInfo;
 
     // Do the RPC call
     RpcTryExcept
     {
         dwErrorCode = _RpcEnumPrintProcessors(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
-        SetLastError(dwErrorCode);
-        bReturnValue = (dwErrorCode == ERROR_SUCCESS);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("_RpcEnumPrintProcessors failed with exception code %lu!\n", RpcExceptionCode());
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcEnumPrintProcessors failed with exception code %lu!\n", dwErrorCode);
     }
     RpcEndExcept;
 
-    return bReturnValue;
+    if (dwErrorCode == ERROR_SUCCESS)
+    {
+        // Replace relative offset addresses in the output by absolute pointers.
+        for (i = 0; i < *pcReturned; i++)
+        {
+            _MarshallUpPrintProcessorInfo((PPRINTPROCESSOR_INFO_1W)p);
+            p += sizeof(PRINTPROCESSOR_INFO_1W);
+        }
+    }
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
-GetPrintProcessorDirectoryW(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded)
+GetPrintProcessorDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded)
 {
     BOOL bReturnValue = FALSE;
     DWORD dwErrorCode;

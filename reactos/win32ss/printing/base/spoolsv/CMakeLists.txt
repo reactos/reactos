@@ -3,16 +3,22 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/idl)
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/winspool.idl)
 
 list(APPEND SOURCE
+    forms.c
     init.c
     jobs.c
     main.c
     monitors.c
+    notifications.c
     ports.c
+    precomp.h
+    printerdata.c
+    printerdrivers.c
     printers.c
     printprocessors.c
-    precomp.h
+    printproviders.c
     rpcserver.c
     rpcstubs.c
+    xcv.c
     ${CMAKE_CURRENT_BINARY_DIR}/winspool_s.c)
 
 add_executable(spoolsv ${SOURCE} spoolsv.rc)

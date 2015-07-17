@@ -86,9 +86,9 @@
 185 stdcall EnumJobsA(long long long long ptr long ptr ptr)
 186 stdcall EnumJobsW(long long long long ptr long ptr ptr)
 187 stub EnumMonitorsA
-188 stub EnumMonitorsW
+188 stdcall EnumMonitorsW(wstr long ptr long ptr ptr)
 189 stub EnumPortsA
-190 stub EnumPortsW
+190 stdcall EnumPortsW(wstr long ptr long ptr ptr)
 191 stdcall EnumPrintProcessorDatatypesA(ptr ptr long ptr long ptr ptr)
 192 stdcall EnumPrintProcessorDatatypesW(ptr ptr long ptr long ptr ptr)
 193 stub EnumPrintProcessorsA

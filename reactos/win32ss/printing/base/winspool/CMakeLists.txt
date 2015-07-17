@@ -6,6 +6,8 @@ spec2def(winspool.drv winspool.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     jobs.c
     main.c
+    monitors.c
+    ports.c
     precomp.h
     printers.c
     printprocessors.c

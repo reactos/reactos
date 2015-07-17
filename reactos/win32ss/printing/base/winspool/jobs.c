@@ -13,7 +13,7 @@ _MarshallUpJobInfo(PBYTE pJobInfo, DWORD Level)
     PJOB_INFO_1W pJobInfo1;
     PJOB_INFO_2W pJobInfo2;
 
-    // Replace absolute pointer addresses in the output by relative offsets.
+    // Replace relative offset addresses in the output by absolute pointers.
     if (Level == 1)
     {
         pJobInfo1 = (PJOB_INFO_1W)pJobInfo;
