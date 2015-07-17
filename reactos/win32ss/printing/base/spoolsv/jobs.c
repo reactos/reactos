@@ -8,6 +8,13 @@
 #include "precomp.h"
 
 static void
+_MarshallDownAddJobInfo(PADDJOB_INFO_1W pAddJobInfo1)
+{
+    // Replace absolute pointer addresses in the output by relative offsets.
+    pAddJobInfo1->Path = (PWSTR)((ULONG_PTR)pAddJobInfo1->Path - (ULONG_PTR)pAddJobInfo1);
+}
+
+static void
 _MarshallDownJobInfo(PBYTE pJobInfo, DWORD Level)
 {
     PJOB_INFO_1W pJobInfo1;
@@ -53,7 +60,6 @@ DWORD
 _RpcAddJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pAddJob, DWORD cbBuf, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;
-    PADDJOB_INFO_1W pAddJobInfo1;
 
     dwErrorCode = RpcImpersonateClient(NULL);
     if (dwErrorCode != ERROR_SUCCESS)
@@ -66,11 +72,7 @@ _RpcAddJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pAddJob, DWORD c
     dwErrorCode = GetLastError();
 
     if (dwErrorCode == ERROR_SUCCESS)
-    {
-        // Replace absolute pointer addresses in the output by relative offsets.
-        pAddJobInfo1 = (PADDJOB_INFO_1W)pAddJob;
-        pAddJobInfo1->Path = (PWSTR)((ULONG_PTR)pAddJobInfo1->Path - (ULONG_PTR)pAddJobInfo1);
-    }
+        _MarshallDownAddJobInfo((PADDJOB_INFO_1W)pAddJob);
 
     RpcRevertToSelf();
     return dwErrorCode;

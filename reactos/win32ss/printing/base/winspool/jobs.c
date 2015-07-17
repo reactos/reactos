@@ -8,6 +8,13 @@
 #include "precomp.h"
 
 static void
+_MarshallUpAddJobInfo(PADDJOB_INFO_1W pAddJobInfo1)
+{
+    // Replace relative offset addresses in the output by absolute pointers.
+    pAddJobInfo1->Path = (PWSTR)((ULONG_PTR)pAddJobInfo1->Path + (ULONG_PTR)pAddJobInfo1);
+}
+
+static void
 _MarshallUpJobInfo(PBYTE pJobInfo, DWORD Level)
 {
     PJOB_INFO_1W pJobInfo1;
@@ -60,7 +67,6 @@ BOOL WINAPI
 AddJobW(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
-    PADDJOB_INFO_1W pAddJobInfo1;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
     if (!pHandle)
@@ -82,11 +88,7 @@ AddJobW(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded
     RpcEndExcept;
 
     if (dwErrorCode == ERROR_SUCCESS)
-    {
-        // Replace relative offset addresses in the output by absolute pointers.
-        pAddJobInfo1 = (PADDJOB_INFO_1W)pData;
-        pAddJobInfo1->Path = (PWSTR)((ULONG_PTR)pAddJobInfo1->Path + (ULONG_PTR)pAddJobInfo1);
-    }
+        _MarshallUpAddJobInfo((PADDJOB_INFO_1W)pData);
 
 Cleanup:
     SetLastError(dwErrorCode);
