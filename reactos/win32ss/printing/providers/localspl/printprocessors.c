@@ -140,8 +140,13 @@ InitializePrintProcessorList()
         goto Cleanup;
     }
 
+    // LocalGetPrintProcessorDirectory returns the number of copied bytes. Convert this into a number of characters without the terminating null-character.
     cchPrintProcessorPath /= sizeof(WCHAR);
-    wszPrintProcessorPath[cchPrintProcessorPath++] = L'\\';
+    --cchPrintProcessorPath;
+
+    // Append a trailing backslash.
+    wszPrintProcessorPath[cchPrintProcessorPath] = L'\\';
+    ++cchPrintProcessorPath;
 
     // Open the environment registry key.
     dwErrorCode = _OpenEnvironment(NULL, &hKey);
@@ -612,14 +617,15 @@ Cleanup:
  * A more specific error code can be obtained through GetLastError.
  */
 BOOL WINAPI
-LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded)
+LocalGetPrintProcessorDirectory(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded)
 {
     const WCHAR wszPath[] = L"\\PRTPROCS\\";
     const DWORD cchPath = _countof(wszPath) - 1;
 
-    DWORD cbDataWritten;
+    DWORD cbDirectoryName;
     DWORD dwErrorCode;
     HKEY hKey = NULL;
+    PWSTR pwszDirectory = (PWSTR)pPrintProcessorInfo;
 
     // Sanity checks
     if (Level != 1)
@@ -644,15 +650,14 @@ LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, 
     }
 
     // Determine the size of the required buffer.
-    dwErrorCode = (DWORD)RegQueryValueExW(hKey, L"Directory", NULL, NULL, NULL, pcbNeeded);
+    dwErrorCode = (DWORD)RegQueryValueExW(hKey, L"Directory", NULL, NULL, NULL, &cbDirectoryName);
     if (dwErrorCode != ERROR_SUCCESS)
     {
         ERR("RegQueryValueExW failed with status %lu!\n", dwErrorCode);
         goto Cleanup;
     }
 
-    *pcbNeeded += cchSpoolDirectory;
-    *pcbNeeded += cchPath;
+    *pcbNeeded = (cchSpoolDirectory + cchPath) * sizeof(WCHAR) + cbDirectoryName;
 
     // Is the supplied buffer large enough?
     if (cbBuf < *pcbNeeded)
@@ -662,11 +667,11 @@ LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, 
     }
 
     // Copy the path to the "prtprocs" directory into pPrintProcessorInfo
-    CopyMemory(pPrintProcessorInfo, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
-    CopyMemory(&pPrintProcessorInfo[cchSpoolDirectory], wszPath, cchPath * sizeof(WCHAR));
+    CopyMemory(pwszDirectory, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
+    CopyMemory(&pwszDirectory[cchSpoolDirectory], wszPath, cchPath * sizeof(WCHAR));
 
     // Get the directory name from the registry.
-    dwErrorCode = (DWORD)RegQueryValueExW(hKey, L"Directory", NULL, NULL, &pPrintProcessorInfo[cchSpoolDirectory + cchPath], &cbDataWritten);
+    dwErrorCode = (DWORD)RegQueryValueExW(hKey, L"Directory", NULL, NULL, (PBYTE)&pwszDirectory[cchSpoolDirectory + cchPath], &cbDirectoryName);
     if (dwErrorCode != ERROR_SUCCESS)
     {
         ERR("RegQueryValueExW failed with status %lu!\n", dwErrorCode);
