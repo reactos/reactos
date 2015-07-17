@@ -436,8 +436,7 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
     HANDLE hPrinter;
     PSPOOLER_HANDLE pHandle;
     PWSTR pDatatype = NULL;
-    WINSPOOL_DEVMODE_CONTAINER DevModeContainer;
-    WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer = NULL;
+    WINSPOOL_DEVMODE_CONTAINER DevModeContainer = { 0 };
     ACCESS_MASK AccessRequired = 0;
 
     // Prepare the additional parameters in the format required by _RpcOpenPrinter
@@ -446,14 +445,13 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
         pDatatype = pDefault->pDatatype;
         DevModeContainer.cbBuf = sizeof(DEVMODEW);
         DevModeContainer.pDevMode = (BYTE*)pDefault->pDevMode;
-        pDevModeContainer = &DevModeContainer;
         AccessRequired = pDefault->DesiredAccess;
     }
 
     // Do the RPC call
     RpcTryExcept
     {
-        dwErrorCode = _RpcOpenPrinter(pPrinterName, &hPrinter, pDatatype, pDevModeContainer, AccessRequired);
+        dwErrorCode = _RpcOpenPrinter(pPrinterName, &hPrinter, pDatatype, &DevModeContainer, AccessRequired);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
