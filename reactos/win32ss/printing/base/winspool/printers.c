@@ -63,7 +63,7 @@ _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB
     }
 
     // Get the size of the job information.
-    GetJobW(pHandle->hPrinter, pAddJobInfo1->JobId, 1, NULL, 0, &cbNeeded);
+    GetJobW((HANDLE)pHandle, pAddJobInfo1->JobId, 1, NULL, 0, &cbNeeded);
     if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
         dwErrorCode = GetLastError();
@@ -81,7 +81,7 @@ _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB
     }
 
     // Get the job information.
-    if (!GetJobW(pHandle->hPrinter, pAddJobInfo1->JobId, 1, (PBYTE)pJobInfo1, cbNeeded, &cbNeeded))
+    if (!GetJobW((HANDLE)pHandle, pAddJobInfo1->JobId, 1, (PBYTE)pJobInfo1, cbNeeded, &cbNeeded))
     {
         dwErrorCode = GetLastError();
         ERR("GetJobW failed with error %lu!\n", dwErrorCode);
@@ -93,7 +93,7 @@ _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB
     pJobInfo1->pDocument = pDocInfo1->pDocName;
 
     // Set the new job information.
-    if (!SetJobW(pHandle->hPrinter, pAddJobInfo1->JobId, 1, (PBYTE)pJobInfo1, 0))
+    if (!SetJobW((HANDLE)pHandle, pAddJobInfo1->JobId, 1, (PBYTE)pJobInfo1, 0))
     {
         dwErrorCode = GetLastError();
         ERR("SetJobW failed with error %lu!\n", dwErrorCode);
@@ -568,7 +568,7 @@ StartDocPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
 
         // Try to add a new job.
         // This only succeeds if the printer is set to do spooled printing.
-        if (AddJobW(pHandle->hPrinter, 1, (PBYTE)pAddJobInfo1, cbAddJobInfo1, &cbNeeded))
+        if (AddJobW((HANDLE)pHandle, 1, (PBYTE)pAddJobInfo1, cbAddJobInfo1, &cbNeeded))
         {
             // Do spooled printing.
             dwErrorCode = _StartDocPrinterSpooled(pHandle, pDocInfo1, pAddJobInfo1);
