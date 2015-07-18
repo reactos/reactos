@@ -19,7 +19,7 @@ WINSPOOL_HANDLE_bind(WINSPOOL_HANDLE wszName)
     RPC_STATUS Status;
 
     // Get us a string binding handle from the supplied connection information
-    Status = RpcStringBindingComposeW(NULL, L"ncalrpc", wszName, L"spoolss", NULL, &wszStringBinding);
+    Status = RpcStringBindingComposeW(NULL, L"ncalrpc", NULL, L"spoolss", NULL, &wszStringBinding);
     if (Status != RPC_S_OK)
     {
         ERR("RpcStringBindingComposeW failed with status %ld!\n", Status);
