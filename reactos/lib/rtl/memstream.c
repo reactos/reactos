@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/rtl/mem.c
+ * FILE:            lib/rtl/memstream.c
  * PURPOSE:         MemoryStream functions
  * PROGRAMMER:      David Quintana (gigaherz@gmail.com)
  */
@@ -464,4 +464,18 @@ RtlCloneMemoryStream(
     UNREFERENCED_PARAMETER(ResultStream);
 
     return E_NOTIMPL;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RtlCopyMappedMemory(
+    _Out_ PVOID Destination,
+    _In_ const VOID *Source,
+    _In_ SIZE_T Size)
+{
+    /* FIXME: This is supposed to handle STATUS_IN_PAGE_ERROR exceptions */
+    RtlCopyMemory(Destination, Source, Size);
 }

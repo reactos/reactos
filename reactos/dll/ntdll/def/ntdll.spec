@@ -467,7 +467,7 @@
 @ stdcall RtlAppendStringToString(ptr ptr)
 @ stdcall RtlAppendUnicodeStringToString(ptr ptr)
 @ stdcall RtlAppendUnicodeToString(ptr wstr)
-;@ stdcall RtlApplicationVerifierStop
+@ stdcall RtlApplicationVerifierStop(ptr str ptr str ptr str ptr str ptr str)
 @ stdcall RtlApplyRXact(ptr)
 @ stdcall RtlApplyRXactNoFlush(ptr)
 @ stdcall RtlAreAllAccessesGranted(long long)
@@ -506,7 +506,7 @@
 @ stdcall -arch=win32 -ret64 RtlConvertUlongToLargeInteger(long)
 @ stdcall RtlCopyLuid(ptr ptr)
 @ stdcall RtlCopyLuidAndAttributesArray(long ptr ptr)
-;@ stdcall RtlCopyMappedMemory
+@ stdcall RtlCopyMappedMemory(ptr ptr long)
 @ stdcall RtlCopyMemoryStreamTo(ptr ptr int64 ptr ptr)
 @ stdcall RtlCopyOutOfProcessMemoryStreamTo(ptr ptr int64 ptr ptr) RtlCopyMemoryStreamTo
 @ stdcall RtlCopySecurityDescriptor(ptr ptr)
