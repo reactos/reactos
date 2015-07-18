@@ -22,7 +22,13 @@ static BYTE PS2Port = 0;
 
 static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
 {
-    UNIMPLEMENTED;
+    // FIXME: UNIMPLEMENTED; just return ACKnowledge.
+    // This unblocks some programs that want to initialize
+    // the keyboard by sending keyboard commands and then
+    // performing polling on the port until "valid" data
+    // comes out.
+    DPRINT1("KeyboardCommand(0x%02X) NOT IMPLEMENTED\n", Command);
+    PS2QueuePush(PS2Port, 0xFA);
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
