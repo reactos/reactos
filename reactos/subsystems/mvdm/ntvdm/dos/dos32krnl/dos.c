@@ -785,10 +785,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                default:
+                default: // goto Default;
                 {
-                    DPRINT1("INT 21h, AH = 33h, subfunction AL = %Xh NOT IMPLEMENTED\n",
-                            getAL());
+                    DPRINT1("INT 21h, AH = %02Xh, subfunction AL = %02Xh NOT IMPLEMENTED\n",
+                            getAH(), getAL());
                 }
             }
 
@@ -1512,6 +1512,110 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* File Attributes */
+        case 0x57:
+        {
+            switch (getAL())
+            {
+                /* Get File's last-written Date and Time */
+                case 0x00:
+                {
+                    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(getBX());
+                    FILETIME LastWriteTime;
+                    WORD FileDate, FileTime;
+
+                    if (Descriptor == NULL)
+                    {
+                        /* Invalid handle */
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        // Sda->LastErrorCode = ERROR_INVALID_HANDLE;
+                        setAX(ERROR_INVALID_HANDLE);
+                        break;
+                    }
+
+                    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
+                    {
+                        /* Invalid for devices */
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        // setAX(ERROR_INVALID_FUNCTION);
+                        setAX(ERROR_INVALID_HANDLE);
+                        break;
+                    }
+
+                    /*
+                     * Retrieve the last-written Win32 date and time,
+                     * and convert it to DOS format.
+                     */
+                    if (!GetFileTime(Descriptor->Win32Handle,
+                                     NULL, NULL, &LastWriteTime) ||
+                        !FileTimeToDosDateTime(&LastWriteTime,
+                                               &FileDate, &FileTime))
+                    {
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        setAX(GetLastError());
+                        break;
+                    }
+
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    setCX(FileTime);
+                    setDX(FileDate);
+                    break;
+                }
+
+                /* Set File's last-written Date and Time */
+                case 0x01:
+                {
+                    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(getBX());
+                    FILETIME LastWriteTime;
+                    WORD FileDate = getDX();
+                    WORD FileTime = getCX();
+
+                    if (Descriptor == NULL)
+                    {
+                        /* Invalid handle */
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        // Sda->LastErrorCode = ERROR_INVALID_HANDLE;
+                        setAX(ERROR_INVALID_HANDLE);
+                        break;
+                    }
+
+                    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
+                    {
+                        /* Invalid for devices */
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        // setAX(ERROR_INVALID_FUNCTION);
+                        setAX(ERROR_INVALID_HANDLE);
+                        break;
+                    }
+
+                    /*
+                     * Convert the new last-written DOS date and time
+                     * to Win32 format and set it.
+                     */
+                    if (!DosDateTimeToFileTime(FileDate, FileTime,
+                                               &LastWriteTime) ||
+                        !SetFileTime(Descriptor->Win32Handle,
+                                     NULL, NULL, &LastWriteTime))
+                    {
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        setAX(GetLastError());
+                        break;
+                    }
+
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    break;
+                }
+
+                default: // goto Default;
+                {
+                    DPRINT1("INT 21h, AH = %02Xh, subfunction AL = %02Xh NOT IMPLEMENTED\n",
+                            getAH(), getAL());
+                }
+            }
+
+            break;
+        }
+
         /* Get/Set Memory Management Options */
         case 0x58:
         {
@@ -1748,10 +1852,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                default:
+                default: // goto Default;
                 {
-                    DPRINT1("INT 21h, AH = 5Dh, subfunction AL = %Xh NOT IMPLEMENTED\n",
-                            getAL());
+                    DPRINT1("INT 21h, AH = %02Xh, subfunction AL = %02Xh NOT IMPLEMENTED\n",
+                            getAH(), getAL());
                 }
             }
 
@@ -1833,10 +1937,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                default:
+                default: // goto Default;
                 {
-                    DPRINT1("INT 21h, AH = 65h, subfunction AL = %Xh NOT IMPLEMENTED\n",
-                            getAL());
+                    DPRINT1("INT 21h, AH = %02Xh, subfunction AL = %02Xh NOT IMPLEMENTED\n",
+                            getAH(), getAL());
                 }
             }
 
@@ -1926,9 +2030,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         }
 
         /* Unsupported */
-        default:
+        default: // Default:
         {
-            DPRINT1("DOS Function INT 0x21, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
+            DPRINT1("DOS Function INT 21h, AH = %02Xh, AL = %02Xh NOT IMPLEMENTED!\n",
                     getAH(), getAL());
 
             setAL(0); // Some functions expect AL to be 0 when it's not supported.
@@ -2091,6 +2195,28 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
             break;
         }
 
+        /* Set Disk Interrupt Handler */
+        case 0x13:
+        {
+            /* Save the old values of PrevInt13 and RomBiosInt13 */
+            ULONG OldInt13     = DosData->PrevInt13;
+            ULONG OldBiosInt13 = DosData->RomBiosInt13;
+
+            /* Set PrevInt13 and RomBiosInt13 to their new values */
+            DosData->PrevInt13    = MAKELONG(getDX(), getDS());
+            DosData->RomBiosInt13 = MAKELONG(getBX(), getES());
+
+            /* Return in DS:DX the old value of PrevInt13 */
+            setDS(HIWORD(OldInt13));
+            setDX(LOWORD(OldInt13));
+
+            /* Return in DS:DX the old value of RomBiosInt13 */
+            setES(HIWORD(OldBiosInt13));
+            setBX(LOWORD(OldBiosInt13));
+
+            break;
+        }
+
         /* Mostly Windows 2.x/3.x/9x support */
         case 0x16:
         {
@@ -2127,7 +2253,7 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
                 }
 
                 default:
-                    DPRINT1("Unknown DOS XMS Function: INT 0x2F, AH = 43h, AL = %xh\n", getAL());
+                    DPRINT1("Unknown DOS XMS Function: INT 2Fh, AH = 43h, AL = %02Xh\n", getAL());
                     break;
             }
 
@@ -2136,7 +2262,7 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
 
         default: Default:
         {
-            DPRINT1("DOS Internal System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
+            DPRINT1("DOS Internal System Function INT 2Fh, AH = %02Xh, AL = %02Xh NOT IMPLEMENTED!\n",
                     getAH(), getAL());
             Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
         }
@@ -2315,11 +2441,36 @@ BOOLEAN DosKRNLInitialize(VOID)
     /* Unimplemented DOS interrupts */
     RegisterDosInt32(0x2A, DosInt2Ah); // DOS Critical Sections / Network
 //  RegisterDosInt32(0x2E, NULL); // COMMAND.COM "Reload Transient"
+//  COMMAND.COM adds support for INT 2Fh, AX=AE00h and AE01h "Installable Command - Installation Check & Execute"
+//  COMMAND.COM adds support for INT 2Fh, AX=5500h "COMMAND.COM Interface"
 
     /* Reserved DOS interrupts */
     RegisterDosInt32(0x2B, NULL);
     RegisterDosInt32(0x2C, NULL);
     RegisterDosInt32(0x2D, NULL);
+
+    /*
+     * Initialize the INT 13h (BIOS Disk Services) handler chain support.
+     *
+     * The INT 13h handler chain is some functionality that allows DOS
+     * to insert disk filter drivers in between the (hooked) INT 13h handler
+     * and its original handler.
+     * Typically, those are:
+     * - filter for detecting disk changes (for floppy disks),
+     * - filter for tracking formatting calls and correcting DMA boundary errors,
+     * - a possible filter to work around a bug in a particular version of PC-AT's
+     *   IBM's ROM BIOS (on systems with model byte FCh and BIOS date "01/10/84" only)
+     * (see http://www.ctyme.com/intr/rb-4453.htm for more details).
+     *
+     * This functionality is known to be used by some legitimate programs,
+     * by Windows 3.x, as well as some illegitimate ones (aka. virii).
+     *
+     * See extra information about this support in dos.h
+     */
+    // FIXME: Should be done by the DOS BIOS
+    DosData->RomBiosInt13 = ((PULONG)BaseAddress)[0x13];
+    DosData->PrevInt13    = DosData->RomBiosInt13;
+//  RegisterDosInt32(0x13, DosInt13h); // Unused at the moment!
 
     /* Initialize country data */
     DosCountryInitialize();

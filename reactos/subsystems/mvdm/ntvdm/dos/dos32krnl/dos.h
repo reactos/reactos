@@ -26,8 +26,7 @@
 
 #define DOS_CONFIG_PATH L"%SystemRoot%\\system32\\CONFIG.NT"
 #define DOS_COMMAND_INTERPRETER L"%SystemRoot%\\system32\\COMMAND.COM /k %SystemRoot%\\system32\\AUTOEXEC.NT"
-#define FIRST_MCB_SEGMENT 0x1000
-#define USER_MEMORY_SIZE (0x9FFE - FIRST_MCB_SEGMENT)
+
 #define SYSTEM_PSP 0x08
 #define SYSTEM_ENV_BLOCK 0x800
 #define DOS_CODE_SEGMENT 0x70
@@ -41,16 +40,9 @@
 #define DOS_ERROR_HANDLE    2
 
 #define DOS_SFT_SIZE 255
-#define UMB_START_SEGMENT 0xC000
-#define UMB_END_SEGMENT 0xDFFF
-#define DOS_ALLOC_HIGH 0x40
-#define DOS_ALLOC_HIGH_LOW 0x80
 #define DOS_DIR_LENGTH 64
 #define NUM_DRIVES ('Z' - 'A' + 1)
 #define DOS_CHAR_ATTRIBUTE 0x07
-
-/* 16 MB of EMS memory */
-#define EMS_TOTAL_PAGES 1024
 
 #pragma pack(push, 1)
 
@@ -99,6 +91,11 @@ typedef struct _DOS_SYSVARS
     BYTE BootDrive;                             // 0x43
     BYTE UseDwordMoves;                         // 0x44
     WORD ExtMemSize;                            // 0x45
+    BYTE Reserved4[0x1C];                       // 0x47
+    BYTE ChainUMB;                              // 0x63 - 0/1: UMB chain (un)linked to MCB chain
+    WORD Reserved5;                             // 0x64
+    WORD UMBChainStart;                         // 0x66 - Segment of the first UMB MCB
+    WORD MemAllocScanStart;                     // 0x68 - Segment where allocation scan starts
 } DOS_SYSVARS, *PDOS_SYSVARS;
 
 typedef struct _DOS_CLOCK_TRANSFER_RECORD
@@ -235,6 +232,33 @@ typedef struct _DOS_SDA
 
 typedef struct _DOS_DATA
 {
+/*
+ * INT 13h (BIOS Disk Services) handler chain support.
+ *
+ * RomBiosInt13: The original INT 13h vector (normally from ROM BIOS).
+ * PrevInt13   : The previous INT 13h vector in the handler chain (initially
+ *               initialized with the RomBiosInt13 value; each time some
+ *               program calls INT 2Fh, AH=13h, PrevInt13 is updated).
+ *
+ * DOS hooks INT 13h with its own code, then (in normal circumstances) calls
+ * PrevInt13, so that when a program calls INT 13h, the DOS hook is first called,
+ * followed by the previous INT 13h (be it the original or some other hooked one).
+ * DOS may call PrevInt13 directly in some internal operations too.
+ * RomBiosInt13 is intended to be the original INT 13h vector that existed
+ * before DOS was loaded. A particular version of PC-AT's IBM's ROM BIOS
+ * (on systems with model byte FCh and BIOS date "01/10/84" only, see
+ * http://www.ctyme.com/intr/rb-4453.htm for more details) had a bug on disk
+ * reads so that it was patched by DOS, and therefore PrevInt13 was the fixed
+ * INT 13 interrupt (for the other cases, a direct call to RomBiosInt13 is done).
+ *
+ * NOTE: For compatibility with some programs (including virii), PrevInt13 should
+ * be at 0070:00B4, see for more details:
+ * http://repo.hackerzvoice.net/depot_madchat/vxdevl/vdat/tuvd0001.htm
+ * http://vxheaven.org/lib/vsm01.html
+ */
+    DWORD RomBiosInt13;
+    DWORD PrevInt13; // FIXME: Put it at 0070:00B4
+
     DOS_SYSVARS SysVars;
     BYTE NullDriverRoutine[7];
     WORD DosVersion; // DOS version to report to programs (can be different from the true one)

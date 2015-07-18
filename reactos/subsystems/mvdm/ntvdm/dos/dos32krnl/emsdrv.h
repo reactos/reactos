@@ -19,6 +19,9 @@
 #define EMS_PAGE_SIZE       (1 << EMS_PAGE_BITS)
 #define EMS_PHYSICAL_PAGES  4
 
+/* 16 MB of EMS memory */
+#define EMS_TOTAL_PAGES     1024
+
 #define EMS_STATUS_OK                   0x00
 #define EMS_STATUS_INTERNAL_ERROR       0x80
 #define EMS_STATUS_INVALID_HANDLE       0x83
