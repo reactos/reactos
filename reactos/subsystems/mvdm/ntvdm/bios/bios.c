@@ -12,7 +12,6 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
-#include "memory.h"
 #include "cpu/callback.h"
 #include "cpu/bop.h"
 
@@ -41,12 +40,6 @@ PBIOS_DATA_AREA Bda;
 PBIOS_CONFIG_TABLE Bct;
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-static BOOLEAN FASTCALL BiosRomWrite(ULONG Address, PVOID Buffer, ULONG Size)
-{
-    /* Prevent writing to ROM */
-    return FALSE;
-}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -81,11 +74,6 @@ BiosInitialize(IN LPCSTR BiosFileName)
     // /* Register the BIOS support BOPs */
     // RegisterBop(BOP_EQUIPLIST , BiosEquipmentService);
     // RegisterBop(BOP_GETMEMSIZE, BiosGetMemorySize);
-
-    MemInstallFastMemoryHook((PVOID)ROM_AREA_START,
-                             ROM_AREA_END - ROM_AREA_START + 1,
-                             NULL,
-                             BiosRomWrite);
 
     if (BiosFileName && BiosFileName[0] != '\0')
     {
@@ -138,6 +126,9 @@ BiosInitialize(IN LPCSTR BiosFileName)
     }
     else
     {
+        WriteProtectRom((PVOID)ROM_AREA_START,
+                        ROM_AREA_END - ROM_AREA_START + 1);
+
         Success = Bios32Loaded = Bios32Initialize();
     }
 

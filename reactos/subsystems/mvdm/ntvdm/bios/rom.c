@@ -12,12 +12,19 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
+#include "memory.h"
 #include "cpu/callback.h"
 #include "rom.h"
 
 #include "utils.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static BOOLEAN FASTCALL ShadowRomWrite(ULONG Address, PVOID Buffer, ULONG Size)
+{
+    /* Prevent writing to ROM */
+    return FALSE;
+}
 
 static HANDLE
 OpenRomFile(IN  PCSTR  RomFileName,
@@ -96,7 +103,7 @@ InitRomRange(IN PCALLBACK16 Context,
              IN ULONG End,
              IN ULONG Increment)
 {
-    ULONG Address, AddressBoot;
+    ULONG Address, EntryPoint;
     ULONG RomSize;
     UCHAR Checksum;
 
@@ -120,26 +127,34 @@ InitRomRange(IN PCALLBACK16 Context,
             Checksum = ComputeChecksum(Address, RomSize);
             if (Checksum == 0x00)
             {
-                AddressBoot = Address + 3;
-                DPRINT1("Going to run @ address 0x%p\n", AddressBoot);
+                EntryPoint = Address + 3;
+                DPRINT1("Going to run @ address 0x%p\n", EntryPoint);
 
-                AddressBoot = MAKELONG((AddressBoot & 0xFFFF), (AddressBoot & 0xF0000) >> 4);
+                EntryPoint = MAKELONG((EntryPoint & 0xFFFF), (EntryPoint & 0xF0000) >> 4);
                 // setDS((Address & 0xF0000) >> 4);
                 setDS((Address & 0xFF000) >> 4);
-                RunCallback16(Context, AddressBoot);
-                // Call16((AddressBoot & 0xF0000) >> 4, (AddressBoot & 0xFFFF));
+                RunCallback16(Context, EntryPoint);
+                // Call16((EntryPoint & 0xF0000) >> 4, (EntryPoint & 0xFFFF));
 
-                DPRINT1("Rom @ address 0x%p initialized\n", Address);
+                DPRINT1("ROM @ address 0x%p initialized\n", Address);
             }
             else
             {
-                DPRINT1("Rom @ address 0x%p has invalid checksum of 0x%02x\n", Address, Checksum);
+                DPRINT1("ROM @ address 0x%p has invalid checksum of 0x%02x\n", Address, Checksum);
             }
         }
     }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+BOOLEAN
+WriteProtectRom(IN PVOID RomLocation,
+                IN ULONG RomSize)
+{
+    return MemInstallFastMemoryHook(RomLocation, RomSize,
+                                    NULL, ShadowRomWrite);
+}
 
 BOOLEAN
 LoadBios(IN  PCSTR  BiosFileName,
@@ -171,9 +186,14 @@ LoadBios(IN  PCSTR  BiosFileName,
     /* Close the BIOS image file */
     FileClose(hBiosFile);
 
-    /* In case of success, return BIOS location and size if needed */
+    /*
+     * In case of success, write-protect the BIOS location
+     * and return the BIOS location and its size if needed.
+     */
     if (Success)
     {
+        WriteProtectRom(pBiosLocation, ulBiosSize);
+
         if (BiosLocation) *BiosLocation = pBiosLocation;
         if (BiosSize)     *BiosSize     = ulBiosSize;
     }
@@ -206,9 +226,13 @@ LoadRom(IN  PCSTR  RomFileName,
     /* Close the ROM image file and return */
     FileClose(hRomFile);
 
-    /* In case of success, return ROM size if needed */
+    /*
+     * In case of success, write-protect the ROM location
+     * and return the ROM size if needed.
+     */
     if (Success)
     {
+        WriteProtectRom(RomLocation, ulRomSize);
         if (RomSize) *RomSize = ulRomSize;
     }
 
