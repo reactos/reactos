@@ -421,6 +421,7 @@ GpStatus WINGDIPAPI GdipImageGetFrameDimensionsCount(GpImage*,UINT*);
 GpStatus WINGDIPAPI GdipImageGetFrameDimensionsList(GpImage*,GUID*,UINT);
 GpStatus WINGDIPAPI GdipImageRotateFlip(GpImage*,RotateFlipType);
 GpStatus WINGDIPAPI GdipImageSelectActiveFrame(GpImage*,GDIPCONST GUID*,UINT);
+GpStatus WINGDIPAPI GdipImageSetAbort(GpImage*,GdiplusAbort*);
 GpStatus WINGDIPAPI GdipLoadImageFromFile(GDIPCONST WCHAR*,GpImage**);
 GpStatus WINGDIPAPI GdipLoadImageFromFileICM(GDIPCONST WCHAR*,GpImage**);
 GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream*,GpImage**);
