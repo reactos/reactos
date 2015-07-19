@@ -38,198 +38,83 @@ extern NTSTATUS MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+//
+// Helper function to create initial memory areas.
+// The created area is always read/write.
+//
+VOID
+INIT_FUNCTION
+NTAPI
+MiCreateArm3StaticMemoryArea(PVOID BaseAddress, ULONG Size, BOOLEAN Executable)
+{
+    const ULONG Protection = Executable ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE;
+    PVOID pBaseAddress = BaseAddress;
+    PMEMORY_AREA MArea;
+    NTSTATUS Status;
+
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &pBaseAddress,
+                                Size,
+                                Protection,
+                                &MArea,
+                                0,
+                                PAGE_SIZE);
+    ASSERT(Status == STATUS_SUCCESS);
+    // TODO: Perhaps it would be  prudent to bugcheck here, not only assert?
+}
+
 VOID
 INIT_FUNCTION
 NTAPI
 MiInitSystemMemoryAreas()
 {
-    PVOID BaseAddress;
-    PMEMORY_AREA MArea;
-    NTSTATUS Status;
+    //
+    // Create all the static memory areas.
+    //
 
-    //
-    // Create the memory area to define the loader mappings
-    //
-    BaseAddress = (PVOID)KSEG0_BASE;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmBootImageSize,
-                                PAGE_EXECUTE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // The loader mappings. The only Executable area.
+    MiCreateArm3StaticMemoryArea((PVOID)KSEG0_BASE, MmBootImageSize, TRUE);
 
-    //
-    // Create the memory area to define the PTE base
-    //
-    BaseAddress = (PVOID)PTE_BASE;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PTE_TOP - PTE_BASE + 1,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // The PTE base
+    MiCreateArm3StaticMemoryArea((PVOID)PTE_BASE, PTE_TOP - PTE_BASE + 1, FALSE);
 
-    //
-    // Create the memory area to define Hyperspace
-    //
-    BaseAddress = (PVOID)HYPER_SPACE;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                HYPER_SPACE_END - HYPER_SPACE + 1,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // Hyperspace
+    MiCreateArm3StaticMemoryArea((PVOID)HYPER_SPACE, HYPER_SPACE_END - HYPER_SPACE + 1, FALSE);
 
-    //
     // Protect the PFN database
-    //
-    BaseAddress = MmPfnDatabase;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                (MxPfnAllocation << PAGE_SHIFT),
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    MiCreateArm3StaticMemoryArea(MmPfnDatabase, (MxPfnAllocation << PAGE_SHIFT), FALSE);
 
-    //
     // ReactOS requires a memory area to keep the initial NP area off-bounds
-    //
-    BaseAddress = MmNonPagedPoolStart;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmSizeOfNonPagedPoolInBytes,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    MiCreateArm3StaticMemoryArea(MmNonPagedPoolStart, MmSizeOfNonPagedPoolInBytes, FALSE);
 
-    //
-    // And we need one more for the system NP
-    //
-    BaseAddress = MmNonPagedSystemStart;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MiNonPagedSystemSize,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // System NP
+    MiCreateArm3StaticMemoryArea(MmNonPagedSystemStart, MiNonPagedSystemSize, FALSE);
 
-    //
-    // We also need one for system view space
-    //
-    BaseAddress = MiSystemViewStart;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmSystemViewSize,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // System view space
+    MiCreateArm3StaticMemoryArea(MiSystemViewStart, MmSystemViewSize, FALSE);
 
-    //
-    // And another for session space
-    //
-    BaseAddress = MmSessionBase;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                (ULONG_PTR)MiSessionSpaceEnd -
-                                (ULONG_PTR)MmSessionBase,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // Session space
+    MiCreateArm3StaticMemoryArea(MmSessionBase, (ULONG_PTR)MiSessionSpaceEnd - (ULONG_PTR)MmSessionBase, FALSE);
 
-    //
-    // One more for ARM paged pool
-    //
-    BaseAddress = MmPagedPoolStart;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmSizeOfPagedPoolInBytes,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // Paged pool
+    MiCreateArm3StaticMemoryArea(MmPagedPoolStart, MmSizeOfPagedPoolInBytes, FALSE);
+
 #ifndef _M_AMD64
-    //
-    // Next, the KPCR
-    //
-    BaseAddress = (PVOID)PCR;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PAGE_SIZE * KeNumberProcessors,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // KPCR, one page per CPU. Only for 32-bit kernel.
+    MiCreateArm3StaticMemoryArea(PCR, PAGE_SIZE * KeNumberProcessors, FALSE);
 #endif
-    //
-    // Now the KUSER_SHARED_DATA
-    //
-    BaseAddress = (PVOID)KI_USER_SHARED_DATA;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PAGE_SIZE,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
 
-    //
-    // And the debugger mapping
-    //
-    BaseAddress = MI_DEBUG_MAPPING;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PAGE_SIZE,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // KUSER_SHARED_DATA
+    MiCreateArm3StaticMemoryArea((PVOID)KI_USER_SHARED_DATA, PAGE_SIZE, FALSE);
+
+    // Debugger mapping
+    MiCreateArm3StaticMemoryArea(MI_DEBUG_MAPPING, PAGE_SIZE, FALSE);
 
 #if defined(_X86_)
-    //
-    // Finally, reserve the 2 pages we currently make use of for HAL mappings
-    //
-    BaseAddress = (PVOID)0xFFC00000;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PAGE_SIZE * 2,
-                                PAGE_READWRITE,
-                                &MArea,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // Reserve the 2 pages we currently make use of for HAL mappings.
+    // TODO: Remove hard-coded constant and replace with a define.
+    MiCreateArm3StaticMemoryArea((PVOID)0xFFC00000, PAGE_SIZE * 2, FALSE);
 #endif
 }
 
