@@ -951,6 +951,84 @@ static void test_pagetransform(void)
     expect(Ok, stat);
 }
 
+static void test_converttoemfplus(void)
+{
+    GpStatus (WINAPI *pGdipConvertToEmfPlus)( const GpGraphics *graphics, GpMetafile *metafile, BOOL *succ,
+              EmfType emfType, const WCHAR *description, GpMetafile **outmetafile);
+    static const GpRectF frame = {0.0, 0.0, 100.0, 100.0};
+    static const WCHAR description[] = {'w','i','n','e','t','e','s','t',0};
+    GpStatus stat;
+    GpMetafile *metafile, *metafile2 = NULL, *emhmeta;
+    GpGraphics *graphics;
+    HDC hdc;
+    BOOL succ;
+    HMODULE mod = GetModuleHandleA("gdiplus.dll");
+
+    pGdipConvertToEmfPlus = (void*)GetProcAddress( mod, "GdipConvertToEmfPlus");
+    if(!pGdipConvertToEmfPlus)
+    {
+        /* GdipConvertToEmfPlus was introduced in Windows Vista. */
+        win_skip("GDIPlus version 1.1 not available\n");
+        return;
+    }
+
+    hdc = CreateCompatibleDC(0);
+
+    stat = GdipRecordMetafile(hdc, MetafileTypeEmf, &frame, MetafileFrameUnitPixel, description, &metafile);
+    expect(Ok, stat);
+
+    stat = GdipRecordMetafile(hdc, EmfTypeEmfPlusOnly, &frame, MetafileFrameUnitPixel, description, &emhmeta);
+    expect(Ok, stat);
+
+    DeleteDC(hdc);
+
+    if (stat != Ok)
+        return;
+
+    stat = GdipGetImageGraphicsContext((GpImage*)metafile, &graphics);
+    expect(Ok, stat);
+
+    /* Invalid Parameters */
+    stat = pGdipConvertToEmfPlus(NULL, metafile, &succ, EmfTypeEmfPlusOnly, description, &metafile2);
+    expect(InvalidParameter, stat);
+
+    stat = pGdipConvertToEmfPlus(graphics, NULL, &succ, EmfTypeEmfPlusOnly, description, &metafile2);
+    expect(InvalidParameter, stat);
+
+    stat = pGdipConvertToEmfPlus(graphics, metafile, &succ, EmfTypeEmfPlusOnly, description, NULL);
+    expect(InvalidParameter, stat);
+
+    stat = pGdipConvertToEmfPlus(graphics, metafile, NULL, MetafileTypeInvalid, NULL, &metafile2);
+    expect(InvalidParameter, stat);
+
+    stat = pGdipConvertToEmfPlus(graphics, metafile, NULL, MetafileTypeEmfPlusDual+1, NULL, &metafile2);
+    expect(InvalidParameter, stat);
+
+    /* If we are already an Enhanced Metafile then the conversion fails. */
+    stat = pGdipConvertToEmfPlus(graphics, emhmeta, NULL, EmfTypeEmfPlusOnly, NULL, &metafile2);
+    todo_wine expect(InvalidParameter, stat);
+
+    stat = pGdipConvertToEmfPlus(graphics, metafile, NULL, EmfTypeEmfPlusOnly, NULL, &metafile2);
+    todo_wine expect(Ok, stat);
+    if(metafile2)
+        GdipDisposeImage((GpImage*)metafile2);
+
+    succ = FALSE;
+    stat = pGdipConvertToEmfPlus(graphics, metafile, &succ, EmfTypeEmfPlusOnly, NULL, &metafile2);
+    todo_wine expect(Ok, stat);
+    if(metafile2)
+        GdipDisposeImage((GpImage*)metafile2);
+
+    stat = GdipDeleteGraphics(graphics);
+    expect(Ok, stat);
+
+    stat = GdipDisposeImage((GpImage*)metafile);
+    expect(Ok, stat);
+
+    stat = GdipDisposeImage((GpImage*)emhmeta);
+    expect(Ok, stat);
+}
+
 START_TEST(metafile)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -975,6 +1053,7 @@ START_TEST(metafile)
     test_emfonly();
     test_fillrect();
     test_pagetransform();
+    test_converttoemfplus();
 
     GdiplusShutdown(gdiplusToken);
 }

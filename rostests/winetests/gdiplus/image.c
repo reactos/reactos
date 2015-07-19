@@ -1342,6 +1342,12 @@ static const unsigned char gifimage[35] = {
 0xff,0xff,0xff,0x2c,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,0x02,0x02,0x44,
 0x01,0x00,0x3b
 };
+/* 1x1 pixel transparent gif */
+static const unsigned char transparentgif[] = {
+0x47,0x49,0x46,0x38,0x39,0x61,0x01,0x00,0x01,0x00,0xf0,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x21,0xf9,0x04,0x01,0x00,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,
+0x01,0x00,0x01,0x00,0x00,0x02,0x02,0x44,0x01,0x00,0x3b
+};
 /* 1x1 pixel bmp */
 static const unsigned char bmpimage[66] = {
 0x42,0x4d,0x42,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x3e,0x00,0x00,0x00,0x28,0x00,
@@ -2430,6 +2436,51 @@ static const unsigned char gifanimation[72] = {
 0x00,0x00,0x02,0x02,0x44,0x01,0x00,0x3b
 };
 
+/* Generated with ImageMagick:
+ * convert -transparent black -delay 100 -size 8x2 xc:black \
+ *     -dispose none -page +0+0 -size 2x2 xc:red \
+ *     -dispose background -page +2+0 -size 2x2 xc:blue \
+ *     -dispose previous -page +4+0 -size 2x2 xc:green \
+ *     -dispose undefined -page +6+0 -size 2x2 xc:gray \
+ *     test.gif
+ */
+static const unsigned char gifanimation2[] = {
+    0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x08, 0x00,
+    0x02, 0x00, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x21, 0xf9, 0x04, 0x01, 0x64,
+    0x00, 0x00, 0x00, 0x21, 0xff, 0x0b, 0x4e, 0x45,
+    0x54, 0x53, 0x43, 0x41, 0x50, 0x45, 0x32, 0x2e,
+    0x30, 0x03, 0x01, 0x00, 0x00, 0x00, 0x2c, 0x00,
+    0x00, 0x00, 0x00, 0x08, 0x00, 0x02, 0x00, 0x00,
+    0x02, 0x04, 0x84, 0x8f, 0x09, 0x05, 0x00, 0x21,
+    0xf9, 0x04, 0x04, 0x64, 0x00, 0x00, 0x00, 0x2c,
+    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x00,
+    0x81, 0xff, 0x00, 0x00, 0xff, 0x00, 0x00, 0xff,
+    0x00, 0x00, 0xff, 0x00, 0x00, 0x02, 0x03, 0x44,
+    0x34, 0x05, 0x00, 0x21, 0xf9, 0x04, 0x08, 0x64,
+    0x00, 0x00, 0x00, 0x2c, 0x02, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x02, 0x00, 0x81, 0x00, 0x00, 0xff,
+    0x00, 0x00, 0xff, 0x00, 0x00, 0xff, 0x00, 0x00,
+    0xff, 0x02, 0x03, 0x44, 0x34, 0x05, 0x00, 0x21,
+    0xf9, 0x04, 0x0c, 0x64, 0x00, 0x00, 0x00, 0x2c,
+    0x04, 0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x00,
+    0x81, 0x00, 0x80, 0x00, 0x00, 0x80, 0x00, 0x00,
+    0x80, 0x00, 0x00, 0x80, 0x00, 0x02, 0x03, 0x44,
+    0x34, 0x05, 0x00, 0x21, 0xf9, 0x04, 0x00, 0x64,
+    0x00, 0x00, 0x00, 0x2c, 0x06, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x02, 0x00, 0x80, 0x7e, 0x7e, 0x7e,
+    0x00, 0x00, 0x00, 0x02, 0x02, 0x84, 0x51, 0x00,
+    0x3b
+};
+
+static ARGB gifanimation2_pixels[5][4] = {
+    {0, 0, 0, 0},
+    {0xffff0000, 0, 0, 0},
+    {0xffff0000, 0xff0000ff, 0, 0},
+    {0xffff0000, 0, 0xff008000, 0},
+    {0xffff0000, 0, 0, 0xff7e7e7e}
+};
+
 static void test_multiframegif(void)
 {
     LPSTREAM stream;
@@ -2441,6 +2492,11 @@ static void test_multiframegif(void)
     ARGB color;
     UINT count;
     GUID dimension;
+    PixelFormat pixel_format;
+    INT palette_size, i, j;
+    char palette_buf[256];
+    ColorPalette *palette;
+    ARGB *palette_entries;
 
     /* Test frame functions with an animated GIF */
     hglob = GlobalAlloc (0, sizeof(gifanimation));
@@ -2458,6 +2514,16 @@ static void test_multiframegif(void)
         IStream_Release(stream);
         return;
     }
+
+    stat = GdipGetImagePixelFormat((GpImage*)bmp, &pixel_format);
+    expect(Ok, stat);
+    expect(PixelFormat32bppARGB, pixel_format);
+
+    stat = GdipGetImagePaletteSize((GpImage*)bmp, &palette_size);
+    expect(Ok, stat);
+    ok(palette_size == sizeof(ColorPalette) ||
+            broken(palette_size == sizeof(ColorPalette)+sizeof(ARGB[3])),
+            "palette_size = %d\n", palette_size);
 
     /* Bitmap starts at frame 0 */
     color = 0xdeadbeef;
@@ -2550,6 +2616,10 @@ static void test_multiframegif(void)
         return;
     }
 
+    stat = GdipGetImagePixelFormat((GpImage*)bmp, &pixel_format);
+    expect(Ok, stat);
+    expect(PixelFormat8bppIndexed, pixel_format);
+
     /* Check metadata */
     stat = GdipImageGetFrameDimensionsCount((GpImage*)bmp,&count);
     expect(Ok, stat);
@@ -2566,6 +2636,98 @@ static void test_multiframegif(void)
 
     GdipDisposeImage((GpImage*)bmp);
     IStream_Release(stream);
+
+    /* Test with a non-animated transparent gif */
+    hglob = GlobalAlloc (0, sizeof(transparentgif));
+    data = GlobalLock (hglob);
+    memcpy(data, transparentgif, sizeof(transparentgif));
+    GlobalUnlock(hglob);
+
+    hres = CreateStreamOnHGlobal(hglob, TRUE, &stream);
+    ok(hres == S_OK, "Failed to create a stream\n");
+
+    stat = GdipCreateBitmapFromStream(stream, &bmp);
+    IStream_Release(stream);
+    ok(stat == Ok, "Failed to create a Bitmap\n");
+
+    stat = GdipGetImagePixelFormat((GpImage*)bmp, &pixel_format);
+    expect(Ok, stat);
+    expect(PixelFormat8bppIndexed, pixel_format);
+
+    stat = GdipBitmapGetPixel(bmp, 0, 0, &color);
+    expect(Ok, stat);
+    expect(0, color);
+
+    stat = GdipGetImagePaletteSize((GpImage*)bmp, &palette_size);
+    expect(Ok, stat);
+    ok(palette_size == sizeof(ColorPalette)+sizeof(ARGB),
+            "palette_size = %d\n", palette_size);
+
+    memset(palette_buf, 0xfe, sizeof(palette_buf));
+    palette = (ColorPalette*)palette_buf;
+    stat = GdipGetImagePalette((GpImage*)bmp, palette,
+            sizeof(ColorPalette)+sizeof(ARGB));
+    palette_entries = palette->Entries;
+    expect(Ok, stat);
+    expect(PaletteFlagsHasAlpha, palette->Flags);
+    expect(2, palette->Count);
+    expect(0, palette_entries[0]);
+    expect(0xff000000, palette_entries[1]);
+
+    count = 12345;
+    stat = GdipImageGetFrameCount((GpImage*)bmp, &dimension, &count);
+    expect(Ok, stat);
+    expect(1, count);
+
+    GdipDisposeImage((GpImage*)bmp);
+
+    /* Test frame dispose methods */
+    hglob = GlobalAlloc (0, sizeof(gifanimation2));
+    data = GlobalLock (hglob);
+    memcpy(data, gifanimation2, sizeof(gifanimation2));
+    GlobalUnlock(hglob);
+
+    hres = CreateStreamOnHGlobal(hglob, TRUE, &stream);
+    ok(hres == S_OK, "Failed to create a stream\n");
+
+    stat = GdipCreateBitmapFromStream(stream, &bmp);
+    ok(stat == Ok, "Failed to create a Bitmap\n");
+    IStream_Release(stream);
+
+    stat = GdipImageGetFrameDimensionsList((GpImage*)bmp, &dimension, 1);
+    expect(Ok, stat);
+    expect_guid(&FrameDimensionTime, &dimension, __LINE__, FALSE);
+
+    stat = GdipImageGetFrameCount((GpImage*)bmp, &dimension, &count);
+    expect(Ok, stat);
+    expect(5, count);
+
+    stat = GdipBitmapGetPixel(bmp, 0, 0, &color);
+    expect(Ok, stat);
+    expect(0, color);
+
+    stat = GdipImageSelectActiveFrame((GpImage*)bmp, &dimension, 3);
+    stat = GdipBitmapGetPixel(bmp, 2, 0, &color);
+    expect(Ok, stat);
+    ok(color==0 || broken(color==0xff0000ff), "color = %x\n", color);
+    if(color != 0) {
+        win_skip("broken animated gif support\n");
+        GdipDisposeImage((GpImage*)bmp);
+        return;
+    }
+
+    for(i=0; i<6; i++) {
+        stat = GdipImageSelectActiveFrame((GpImage*)bmp, &dimension, i%5);
+        expect(Ok, stat);
+
+        for(j=0; j<4; j++) {
+            stat = GdipBitmapGetPixel(bmp, j*2, 0, &color);
+            expect(Ok, stat);
+            ok(gifanimation2_pixels[i%5][j] == color, "at %d,%d got %x, expected %x\n", i, j, color, gifanimation2_pixels[i%5][j]);
+        }
+    }
+
+    GdipDisposeImage((GpImage*)bmp);
 }
 
 static void test_rotateflip(void)
@@ -3948,8 +4110,9 @@ static void test_image_format(void)
             ok(status == OutOfMemory || broken(status == InvalidParameter) /* before win7 */,
                "expected OutOfMemory, got %d\n", status);
         else
-        {
             expect(Ok, status);
+        if (status == Ok)
+        {
             status = GdipGetImagePixelFormat(thumb, &format);
             expect(Ok, status);
             ok(format == PixelFormat32bppPARGB || broken(format != PixelFormat32bppPARGB) /* before win7 */,
@@ -4388,6 +4551,91 @@ static void test_CloneBitmapArea(void)
     GdipDisposeImage((GpImage *)bitmap);
 }
 
+static BOOL get_encoder_clsid(LPCWSTR mime, GUID *format, CLSID *clsid)
+{
+    GpStatus status;
+    UINT n_codecs, info_size, i;
+    ImageCodecInfo *info;
+    BOOL ret = FALSE;
+
+    status = GdipGetImageEncodersSize(&n_codecs, &info_size);
+    expect(Ok, status);
+
+    info = GdipAlloc(info_size);
+
+    status = GdipGetImageEncoders(n_codecs, info_size, info);
+    expect(Ok, status);
+
+    for (i = 0; i < n_codecs; i++)
+    {
+        if (!lstrcmpW(info[i].MimeType, mime))
+        {
+            *format = info[i].FormatID;
+            *clsid = info[i].Clsid;
+            ret = TRUE;
+            break;
+        }
+    }
+
+    GdipFree(info);
+    return ret;
+}
+
+static void test_supported_encoders(void)
+{
+    static const WCHAR bmp_mimetype[] = {'i', 'm', 'a','g', 'e', '/', 'b', 'm', 'p', 0};
+    static const WCHAR jpeg_mimetype[] = {'i','m','a','g','e','/','j','p','e','g', 0};
+    static const WCHAR gif_mimetype[] = {'i','m','a','g','e','/','g','i','f', 0};
+    static const WCHAR tiff_mimetype[] = {'i','m','a','g','e','/','t','i','f','f', 0};
+    static const WCHAR png_mimetype[] = {'i','m','a','g','e','/','p','n','g', 0};
+    static const struct test_data
+    {
+        LPCWSTR mime;
+        const GUID *format;
+        BOOL todo;
+    } td[] =
+    {
+        { bmp_mimetype, &ImageFormatBMP, FALSE },
+        { jpeg_mimetype, &ImageFormatJPEG, FALSE },
+        { gif_mimetype, &ImageFormatGIF, TRUE },
+        { tiff_mimetype, &ImageFormatTIFF, FALSE },
+        { png_mimetype, &ImageFormatPNG, FALSE }
+    };
+    GUID format, clsid;
+    BOOL ret;
+    HRESULT hr;
+    GpStatus status;
+    GpBitmap *bm;
+    IStream *stream;
+    HGLOBAL hmem;
+    int i;
+
+    status = GdipCreateBitmapFromScan0(1, 1, 0, PixelFormat24bppRGB, NULL, &bm);
+    ok(status == Ok, "GdipCreateBitmapFromScan0 error %d\n", status);
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        ret = get_encoder_clsid(td[i].mime, &format, &clsid);
+        ok(ret, "%s encoder is not in the list\n", wine_dbgstr_w(td[i].mime));
+        expect_guid(td[i].format, &format, __LINE__, FALSE);
+
+        hmem = GlobalAlloc(GMEM_MOVEABLE | GMEM_NODISCARD, 16);
+
+        hr = CreateStreamOnHGlobal(hmem, TRUE, &stream);
+        ok(hr == S_OK, "CreateStreamOnHGlobal error %#x\n", hr);
+
+        status = GdipSaveImageToStream((GpImage *)bm, stream, &clsid, NULL);
+        if (td[i].todo)
+            todo_wine ok(status == Ok, "GdipSaveImageToStream error %d\n", status);
+        else
+            ok(status == Ok, "GdipSaveImageToStream error %d\n", status);
+
+        IStream_Release(stream);
+    }
+
+    GdipDisposeImage((GpImage *)bm);
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -4400,6 +4648,7 @@ START_TEST(image)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    test_supported_encoders();
     test_CloneBitmapArea();
     test_ARGB_conversion();
     test_DrawImage_scale();

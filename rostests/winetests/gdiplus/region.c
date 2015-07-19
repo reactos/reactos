@@ -118,13 +118,13 @@ static void test_region_data(DWORD *data, UINT size, INT line)
     /* Windows always fails to create an empty path in a region */
     if (data[4] == RGNDATA_PATH)
     {
-        struct _path_header
+        struct path_header
         {
             DWORD size;
             DWORD magic;
             DWORD count;
             DWORD flags;
-        } *path_header = (struct _path_header *)(data + 5);
+        } *path_header = (struct path_header *)(data + 5);
         if (!path_header->count)
         {
             ok_(__FILE__, line)(status == GenericError, "expected GenericError, got %d\n", status);
@@ -2202,6 +2202,68 @@ static void test_excludeinfinite(void)
     GdipDeleteMatrix(identity);
 }
 
+static void test_GdipCreateRegionRgnData(void)
+{
+    GpGraphics *graphics = NULL;
+    GpRegion *region, *region2;
+    HDC hdc = GetDC(0);
+    GpStatus status;
+    BYTE buf[512];
+    UINT needed;
+    BOOL ret;
+
+    status = GdipCreateRegionRgnData(NULL, 0, NULL);
+    ok(status == InvalidParameter, "status %d\n", status);
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    ok(status == Ok, "status %d\n", status);
+
+    status = GdipCreateRegion(&region);
+    ok(status == Ok, "status %d\n", status);
+
+    /* infinite region */
+    memset(buf, 0xee, sizeof(buf));
+    needed = 0;
+    status = GdipGetRegionData(region, (BYTE*)buf, sizeof(buf), &needed);
+    ok(status == Ok, "status %d\n", status);
+    expect(20, needed);
+
+    status = GdipCreateRegionRgnData(buf, needed, NULL);
+    ok(status == InvalidParameter, "status %d\n", status);
+
+    status = GdipCreateRegionRgnData(buf, needed, &region2);
+    ok(status == Ok, "status %d\n", status);
+
+    ret = FALSE;
+    status = GdipIsInfiniteRegion(region2, graphics, &ret);
+    ok(status == Ok, "status %d\n", status);
+    ok(ret, "got %d\n", ret);
+    GdipDeleteRegion(region2);
+
+    /* empty region */
+    status = GdipSetEmpty(region);
+    ok(status == Ok, "status %d\n", status);
+
+    memset(buf, 0xee, sizeof(buf));
+    needed = 0;
+    status = GdipGetRegionData(region, (BYTE*)buf, sizeof(buf), &needed);
+    ok(status == Ok, "status %d\n", status);
+    expect(20, needed);
+
+    status = GdipCreateRegionRgnData(buf, needed, &region2);
+    ok(status == Ok, "status %d\n", status);
+
+    ret = FALSE;
+    status = GdipIsEmptyRegion(region2, graphics, &ret);
+    ok(status == Ok, "status %d\n", status);
+    ok(ret, "got %d\n", ret);
+    GdipDeleteRegion(region2);
+
+    GdipDeleteGraphics(graphics);
+    GdipDeleteRegion(region);
+    ReleaseDC(0, hdc);
+}
+
 START_TEST(region)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -2228,6 +2290,7 @@ START_TEST(region)
     test_isvisiblepoint();
     test_isvisiblerect();
     test_excludeinfinite();
+    test_GdipCreateRegionRgnData();
 
     GdiplusShutdown(gdiplusToken);
 }
