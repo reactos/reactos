@@ -948,15 +948,15 @@ static void test_volume_dependence(void)
 
     hr = IAudioStreamVolume_GetChannelVolume(asv, 0, &vol);
     ok(hr == S_OK, "ASV_GetChannelVolume failed: %08x\n", hr);
-    ok(fabsf(vol - 0.2) < 0.05f, "ASV_GetChannelVolume gave wrong volume: %f\n", vol);
+    ok(fabsf(vol - 0.2f) < 0.05f, "ASV_GetChannelVolume gave wrong volume: %f\n", vol);
 
     hr = IChannelAudioVolume_GetChannelVolume(cav, 0, &vol);
     ok(hr == S_OK, "CAV_GetChannelVolume failed: %08x\n", hr);
-    ok(fabsf(vol - 0.4) < 0.05f, "CAV_GetChannelVolume gave wrong volume: %f\n", vol);
+    ok(fabsf(vol - 0.4f) < 0.05f, "CAV_GetChannelVolume gave wrong volume: %f\n", vol);
 
     hr = ISimpleAudioVolume_GetMasterVolume(sav, &vol);
     ok(hr == S_OK, "SAV_GetMasterVolume failed: %08x\n", hr);
-    ok(fabsf(vol - 0.6) < 0.05f, "SAV_GetMasterVolume gave wrong volume: %f\n", vol);
+    ok(fabsf(vol - 0.6f) < 0.05f, "SAV_GetMasterVolume gave wrong volume: %f\n", vol);
 
     hr = IMMDevice_Activate(dev, &IID_IAudioClient, CLSCTX_INPROC_SERVER,
             NULL, (void**)&ac2);
@@ -976,7 +976,7 @@ static void test_volume_dependence(void)
 
         hr = IChannelAudioVolume_GetChannelVolume(cav2, 0, &vol);
         ok(hr == S_OK, "CAV_GetChannelVolume failed: %08x\n", hr);
-        ok(fabsf(vol - 0.4) < 0.05f, "CAV_GetChannelVolume gave wrong volume: %f\n", vol);
+        ok(fabsf(vol - 0.4f) < 0.05f, "CAV_GetChannelVolume gave wrong volume: %f\n", vol);
 
         hr = IAudioStreamVolume_GetChannelVolume(asv2, 0, &vol);
         ok(hr == S_OK, "ASV_GetChannelVolume failed: %08x\n", hr);
