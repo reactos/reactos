@@ -459,7 +459,7 @@ void ContextPropertyList_Copy(CONTEXT_PROPERTY_LIST *to,
 
 void ContextPropertyList_Free(CONTEXT_PROPERTY_LIST *list) DECLSPEC_HIDDEN;
 
-extern WINECRYPT_CERTSTORE empty_store;
+extern WINECRYPT_CERTSTORE empty_store DECLSPEC_HIDDEN;
 void init_empty_store(void) DECLSPEC_HIDDEN;
 
 /**
