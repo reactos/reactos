@@ -22,31 +22,14 @@
 
 #include <mshtmhst.h>
 
-typedef struct IOleClientSiteImpl
+static inline WebBrowserContainer *impl_from_IOleClientSite(IOleClientSite *iface)
 {
-    IOleClientSite IOleClientSite_iface;
-    IOleInPlaceSite IOleInPlaceSite_iface;
-    IOleInPlaceFrame IOleInPlaceFrame_iface;
-    IDocHostUIHandler IDocHostUIHandler_iface;
-
-    /* IOleClientSiteImpl data */
-    IOleObject *pBrowserObject;
-    LONG ref;
-
-    /* IOleInPlaceFrame data */
-    HWND hwndWindow;
-} IOleClientSiteImpl;
-
-static inline IOleClientSiteImpl *impl_from_IOleClientSite(IOleClientSite *iface)
-{
-    return CONTAINING_RECORD(iface, IOleClientSiteImpl, IOleClientSite_iface);
+    return CONTAINING_RECORD(iface, WebBrowserContainer, IOleClientSite_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE Site_QueryInterface(IOleClientSite *iface, REFIID riid, void **ppvObj)
 {
-    IOleClientSiteImpl *This = impl_from_IOleClientSite(iface);
-
-    *ppvObj = NULL;
+    WebBrowserContainer *This = impl_from_IOleClientSite(iface);
 
     if (IsEqualIID(riid, &IID_IUnknown)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppvObj);
@@ -65,6 +48,7 @@ static HRESULT STDMETHODCALLTYPE Site_QueryInterface(IOleClientSite *iface, REFI
         *ppvObj = &This->IDocHostUIHandler_iface;
     }else {
         TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObj);
+        *ppvObj = NULL;
         return E_NOINTERFACE;
     }
 
@@ -74,7 +58,7 @@ static HRESULT STDMETHODCALLTYPE Site_QueryInterface(IOleClientSite *iface, REFI
 
 static ULONG STDMETHODCALLTYPE Site_AddRef(IOleClientSite *iface)
 {
-    IOleClientSiteImpl *This = impl_from_IOleClientSite(iface);
+    WebBrowserContainer *This = impl_from_IOleClientSite(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -84,13 +68,18 @@ static ULONG STDMETHODCALLTYPE Site_AddRef(IOleClientSite *iface)
 
 static ULONG STDMETHODCALLTYPE Site_Release(IOleClientSite *iface)
 {
-    IOleClientSiteImpl *This = impl_from_IOleClientSite(iface);
+    WebBrowserContainer *This = impl_from_IOleClientSite(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
 
-    if(!ref)
+    if(!ref) {
+        if(This->ole_obj)
+            IOleObject_Release(This->ole_obj);
+        if(This->web_browser)
+            IWebBrowser2_Release(This->web_browser);
         heap_free(This);
+    }
 
     return ref;
 }
@@ -127,7 +116,7 @@ static HRESULT STDMETHODCALLTYPE Site_RequestNewObjectLayout(IOleClientSite *ifa
     return E_NOTIMPL;
 }
 
-static const IOleClientSiteVtbl MyIOleClientSiteTable =
+static const IOleClientSiteVtbl OleClientSiteVtbl =
 {
     Site_QueryInterface,
     Site_AddRef,
@@ -140,34 +129,87 @@ static const IOleClientSiteVtbl MyIOleClientSiteTable =
     Site_RequestNewObjectLayout
 };
 
-static inline IOleClientSiteImpl *impl_from_IDocHostUIHandler(IDocHostUIHandler *iface)
+static inline WebBrowserContainer *impl_from_IDocHostUIHandler(IDocHostUIHandler *iface)
 {
-    return CONTAINING_RECORD(iface, IOleClientSiteImpl, IDocHostUIHandler_iface);
+    return CONTAINING_RECORD(iface, WebBrowserContainer, IDocHostUIHandler_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE UI_QueryInterface(IDocHostUIHandler *iface, REFIID riid, LPVOID *ppvObj)
 {
-    IOleClientSiteImpl *This = impl_from_IDocHostUIHandler(iface);
+    WebBrowserContainer *This = impl_from_IDocHostUIHandler(iface);
 
     return IOleClientSite_QueryInterface(&This->IOleClientSite_iface, riid, ppvObj);
 }
 
 static ULONG STDMETHODCALLTYPE UI_AddRef(IDocHostUIHandler *iface)
 {
-    IOleClientSiteImpl *This = impl_from_IDocHostUIHandler(iface);
+    WebBrowserContainer *This = impl_from_IDocHostUIHandler(iface);
 
     return IOleClientSite_AddRef(&This->IOleClientSite_iface);
 }
 
 static ULONG STDMETHODCALLTYPE UI_Release(IDocHostUIHandler * iface)
 {
-    IOleClientSiteImpl *This = impl_from_IDocHostUIHandler(iface);
+    WebBrowserContainer *This = impl_from_IDocHostUIHandler(iface);
 
     return IOleClientSite_Release(&This->IOleClientSite_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE UI_ShowContextMenu(IDocHostUIHandler *iface, DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved)
 {
+    WebBrowserContainer *This = impl_from_IDocHostUIHandler(iface);
+    DWORD cmdid, menu_id = 0;
+    HMENU menu, submenu;
+
+    TRACE("(%p)->(%d %s)\n", This, dwID, wine_dbgstr_point(ppt));
+
+    menu = LoadMenuW(hhctrl_hinstance, MAKEINTRESOURCEW(MENU_WEBBROWSER));
+    if (!menu)
+        return S_OK;
+
+    /* FIXME: Support more menu types. */
+    if(dwID == CONTEXT_MENU_TEXTSELECT)
+        menu_id = 1;
+
+    submenu = GetSubMenu(menu, menu_id);
+
+    cmdid = TrackPopupMenu(submenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
+            ppt->x, ppt->y, 0, This->hwndWindow, NULL);
+    DestroyMenu(menu);
+
+    switch(cmdid) {
+    case IDTB_BACK:
+        DoPageAction(This, WB_GOBACK);
+        break;
+    case IDTB_FORWARD:
+        DoPageAction(This, WB_GOFORWARD);
+        break;
+    case MIID_SELECTALL:
+        IWebBrowser2_ExecWB(This->web_browser, OLECMDID_SELECTALL, 0, NULL, NULL);
+        break;
+    case MIID_VIEWSOURCE:
+        FIXME("View source\n");
+        break;
+    case IDTB_PRINT:
+        DoPageAction(This, WB_PRINT);
+        break;
+    case IDTB_REFRESH:
+        DoPageAction(This, WB_REFRESH);
+        break;
+    case MIID_PROPERTIES:
+        FIXME("Properties\n");
+        break;
+    case MIID_COPY:
+        IWebBrowser2_ExecWB(This->web_browser, OLECMDID_COPY, 0, NULL, NULL);
+        break;
+    case MIID_PASTE:
+        IWebBrowser2_ExecWB(This->web_browser, OLECMDID_PASTE, 0, NULL, NULL);
+        break;
+    case MIID_CUT:
+        IWebBrowser2_ExecWB(This->web_browser, OLECMDID_CUT, 0, NULL, NULL);
+        break;
+    }
+
     return S_OK;
 }
 
@@ -248,7 +290,7 @@ static HRESULT STDMETHODCALLTYPE UI_FilterDataObject(IDocHostUIHandler *iface, I
     return S_FALSE;
 }
 
-static const IDocHostUIHandlerVtbl MyIDocHostUIHandlerTable =
+static const IDocHostUIHandlerVtbl DocHostUIHandlerVtbl =
 {
     UI_QueryInterface,
     UI_AddRef,
@@ -270,37 +312,37 @@ static const IDocHostUIHandlerVtbl MyIDocHostUIHandlerTable =
     UI_FilterDataObject
 };
 
-static inline IOleClientSiteImpl *impl_from_IOleInPlaceSite(IOleInPlaceSite *iface)
+static inline WebBrowserContainer *impl_from_IOleInPlaceSite(IOleInPlaceSite *iface)
 {
-    return CONTAINING_RECORD(iface, IOleClientSiteImpl, IOleInPlaceSite_iface);
+    return CONTAINING_RECORD(iface, WebBrowserContainer, IOleInPlaceSite_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE InPlace_QueryInterface(IOleInPlaceSite *iface, REFIID riid, LPVOID *ppvObj)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceSite(iface);
+    WebBrowserContainer *This = impl_from_IOleInPlaceSite(iface);
 
     return IOleClientSite_QueryInterface(&This->IOleClientSite_iface, riid, ppvObj);
 }
 
 static ULONG STDMETHODCALLTYPE InPlace_AddRef(IOleInPlaceSite *iface)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceSite(iface);
+    WebBrowserContainer *This = impl_from_IOleInPlaceSite(iface);
 
     return IOleClientSite_AddRef(&This->IOleClientSite_iface);
 }
 
 static ULONG STDMETHODCALLTYPE InPlace_Release(IOleInPlaceSite *iface)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceSite(iface);
+    WebBrowserContainer *This = impl_from_IOleInPlaceSite(iface);
 
     return IOleClientSite_Release(&This->IOleClientSite_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE InPlace_GetWindow(IOleInPlaceSite *iface, HWND *lphwnd)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceSite(iface);
-    *lphwnd = This->hwndWindow;
+    WebBrowserContainer *This = impl_from_IOleInPlaceSite(iface);
 
+    *lphwnd = This->hwndWindow;
     return S_OK;
 }
 
@@ -326,7 +368,7 @@ static HRESULT STDMETHODCALLTYPE InPlace_OnUIActivate(IOleInPlaceSite *iface)
 
 static HRESULT STDMETHODCALLTYPE InPlace_GetWindowContext(IOleInPlaceSite *iface, LPOLEINPLACEFRAME *lplpFrame, LPOLEINPLACEUIWINDOW *lplpDoc, LPRECT lprcPosRect, LPRECT lprcClipRect, LPOLEINPLACEFRAMEINFO lpFrameInfo)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceSite(iface);
+    WebBrowserContainer *This = impl_from_IOleInPlaceSite(iface);
 
     *lplpFrame = &This->IOleInPlaceFrame_iface;
     IOleInPlaceFrame_AddRef(&This->IOleInPlaceFrame_iface);
@@ -368,10 +410,10 @@ static HRESULT STDMETHODCALLTYPE InPlace_DeactivateAndUndo(IOleInPlaceSite *ifac
 
 static HRESULT STDMETHODCALLTYPE InPlace_OnPosRectChange(IOleInPlaceSite *iface, LPCRECT lprcPosRect)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceSite(iface);
+    WebBrowserContainer *This = impl_from_IOleInPlaceSite(iface);
     IOleInPlaceObject *inplace;
 
-    if (IOleObject_QueryInterface(This->pBrowserObject, &IID_IOleInPlaceObject,
+    if (IOleObject_QueryInterface(This->ole_obj, &IID_IOleInPlaceObject,
                                   (void **)&inplace) == S_OK)
     {
         IOleInPlaceObject_SetObjectRects(inplace, lprcPosRect, lprcPosRect);
@@ -381,7 +423,7 @@ static HRESULT STDMETHODCALLTYPE InPlace_OnPosRectChange(IOleInPlaceSite *iface,
     return S_OK;
 }
 
-static const IOleInPlaceSiteVtbl MyIOleInPlaceSiteTable =
+static const IOleInPlaceSiteVtbl OleInPlaceSiteVtbl =
 {
     InPlace_QueryInterface,
     InPlace_AddRef,
@@ -400,37 +442,37 @@ static const IOleInPlaceSiteVtbl MyIOleInPlaceSiteTable =
     InPlace_OnPosRectChange
 };
 
-static inline IOleClientSiteImpl *impl_from_IOleInPlaceFrame(IOleInPlaceFrame *iface)
+static inline WebBrowserContainer *impl_from_IOleInPlaceFrame(IOleInPlaceFrame *iface)
 {
-    return CONTAINING_RECORD(iface, IOleClientSiteImpl, IOleInPlaceFrame_iface);
+    return CONTAINING_RECORD(iface, WebBrowserContainer, IOleInPlaceFrame_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE Frame_QueryInterface(IOleInPlaceFrame *iface, REFIID riid, LPVOID *ppvObj)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceFrame(iface);
+    WebBrowserContainer *This = impl_from_IOleInPlaceFrame(iface);
 
     return IOleClientSite_QueryInterface(&This->IOleClientSite_iface, riid, ppvObj);
 }
 
 static ULONG STDMETHODCALLTYPE Frame_AddRef(IOleInPlaceFrame *iface)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceFrame(iface);
+    WebBrowserContainer *This = impl_from_IOleInPlaceFrame(iface);
 
     return IOleClientSite_AddRef(&This->IOleClientSite_iface);
 }
 
 static ULONG STDMETHODCALLTYPE Frame_Release(IOleInPlaceFrame *iface)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceFrame(iface);
+    WebBrowserContainer *This = impl_from_IOleInPlaceFrame(iface);
 
     return IOleClientSite_Release(&This->IOleClientSite_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE Frame_GetWindow(IOleInPlaceFrame *iface, HWND *lphwnd)
 {
-    IOleClientSiteImpl *This = impl_from_IOleInPlaceFrame(iface);
-    *lphwnd = This->hwndWindow;
+    WebBrowserContainer *This = impl_from_IOleInPlaceFrame(iface);
 
+    *lphwnd = This->hwndWindow;
     return S_OK;
 }
 
@@ -489,7 +531,7 @@ static HRESULT STDMETHODCALLTYPE Frame_TranslateAccelerator(IOleInPlaceFrame *if
     return E_NOTIMPL;
 }
 
-static const IOleInPlaceFrameVtbl MyIOleInPlaceFrameTable =
+static const IOleInPlaceFrameVtbl OleInPlaceFrameVtbl =
 {
     Frame_QueryInterface,
     Frame_AddRef,
@@ -624,97 +666,76 @@ static IStorage MyIStorage = { &MyIStorageTable };
 
 BOOL InitWebBrowser(HHInfo *info, HWND hwndParent)
 {
-    IOleClientSiteImpl *iOleClientSiteImpl;
+    WebBrowserContainer *container;
     IOleInPlaceObject *inplace;
-    IOleObject *browserObject;
-    IWebBrowser2 *webBrowser2;
     HRESULT hr;
     RECT rc;
 
-    iOleClientSiteImpl = heap_alloc_zero(sizeof(IOleClientSiteImpl));
-    if (!iOleClientSiteImpl)
+    container = heap_alloc_zero(sizeof(*container));
+    if (!container)
         return FALSE;
 
-    iOleClientSiteImpl->ref = 1;
-    iOleClientSiteImpl->IOleClientSite_iface.lpVtbl = &MyIOleClientSiteTable;
-    iOleClientSiteImpl->IOleInPlaceSite_iface.lpVtbl = &MyIOleInPlaceSiteTable;
-    iOleClientSiteImpl->IOleInPlaceFrame_iface.lpVtbl = &MyIOleInPlaceFrameTable;
-    iOleClientSiteImpl->hwndWindow = hwndParent;
-    iOleClientSiteImpl->IDocHostUIHandler_iface.lpVtbl = &MyIDocHostUIHandlerTable;
+    container->IOleClientSite_iface.lpVtbl = &OleClientSiteVtbl;
+    container->IOleInPlaceSite_iface.lpVtbl = &OleInPlaceSiteVtbl;
+    container->IOleInPlaceFrame_iface.lpVtbl = &OleInPlaceFrameVtbl;
+    container->IDocHostUIHandler_iface.lpVtbl = &DocHostUIHandlerVtbl;
+    container->ref = 1;
+    container->hwndWindow = hwndParent;
+
+    info->web_browser = container;
 
     hr = OleCreate(&CLSID_WebBrowser, &IID_IOleObject, OLERENDER_DRAW, 0,
-                   &iOleClientSiteImpl->IOleClientSite_iface, &MyIStorage,
-                   (void **)&browserObject);
-
-    info->client_site = &iOleClientSiteImpl->IOleClientSite_iface;
-    info->wb_object = browserObject;
+                   &container->IOleClientSite_iface, &MyIStorage,
+                   (void **)&container->ole_obj);
 
     if (FAILED(hr)) goto error;
-
-    /* make the browser object accessible to the IOleClientSite implementation */
-    iOleClientSiteImpl->pBrowserObject = browserObject;
 
     GetClientRect(hwndParent, &rc);
 
-    hr = OleSetContainedObject((struct IUnknown *)browserObject, TRUE);
+    hr = OleSetContainedObject((struct IUnknown *)container->ole_obj, TRUE);
     if (FAILED(hr)) goto error;
 
-    hr = IOleObject_DoVerb(browserObject, OLEIVERB_SHOW, NULL,
-                           &iOleClientSiteImpl->IOleClientSite_iface,
-                           -1, hwndParent, &rc);
+    hr = IOleObject_DoVerb(container->ole_obj, OLEIVERB_SHOW, NULL,
+                           &container->IOleClientSite_iface, -1, hwndParent, &rc);
     if (FAILED(hr)) goto error;
 
-    hr = IOleObject_QueryInterface(browserObject, &IID_IOleInPlaceObject, (void**)&inplace);
+    hr = IOleObject_QueryInterface(container->ole_obj, &IID_IOleInPlaceObject, (void**)&inplace);
     if (FAILED(hr)) goto error;
 
     IOleInPlaceObject_SetObjectRects(inplace, &rc, &rc);
     IOleInPlaceObject_Release(inplace);
 
-    hr = IOleObject_QueryInterface(browserObject, &IID_IWebBrowser2,
-                                   (void **)&webBrowser2);
+    hr = IOleObject_QueryInterface(container->ole_obj, &IID_IWebBrowser2, (void **)&container->web_browser);
     if (SUCCEEDED(hr))
-    {
-        info->web_browser = webBrowser2;
         return TRUE;
-    }
 
 error:
     ReleaseWebBrowser(info);
-    heap_free(iOleClientSiteImpl);
-
     return FALSE;
 }
 
 void ReleaseWebBrowser(HHInfo *info)
 {
+    WebBrowserContainer *container = info->web_browser;
     HRESULT hres;
 
-    if (info->web_browser)
-    {
-        IWebBrowser2_Release(info->web_browser);
-        info->web_browser = NULL;
-    }
+    if(!container)
+        return;
 
-    if (info->client_site)
-    {
-        IOleClientSite_Release(info->client_site);
-        info->client_site = NULL;
-    }
-
-    if(info->wb_object) {
+    if(container->ole_obj) {
         IOleInPlaceSite *inplace;
 
-        hres = IOleObject_QueryInterface(info->wb_object, &IID_IOleInPlaceSite, (void**)&inplace);
+        hres = IOleObject_QueryInterface(container->ole_obj, &IID_IOleInPlaceSite, (void**)&inplace);
         if(SUCCEEDED(hres)) {
             IOleInPlaceSite_OnInPlaceDeactivate(inplace);
             IOleInPlaceSite_Release(inplace);
         }
 
-        IOleObject_SetClientSite(info->wb_object, NULL);
-
-        IOleObject_Release(info->wb_object);
-        info->wb_object = NULL;
+        IOleObject_SetClientSite(container->ole_obj, NULL);
     }
+
+    info->web_browser = NULL;
+    IOleClientSite_Release(&container->IOleClientSite_iface);
 }
 
 void ResizeWebBrowser(HHInfo *info, DWORD dwWidth, DWORD dwHeight)
@@ -722,39 +743,37 @@ void ResizeWebBrowser(HHInfo *info, DWORD dwWidth, DWORD dwHeight)
     if (!info->web_browser)
         return;
 
-    IWebBrowser2_put_Width(info->web_browser, dwWidth);
-    IWebBrowser2_put_Height(info->web_browser, dwHeight);
+    IWebBrowser2_put_Width(info->web_browser->web_browser, dwWidth);
+    IWebBrowser2_put_Height(info->web_browser->web_browser, dwHeight);
 }
 
-void DoPageAction(HHInfo *info, DWORD dwAction)
+void DoPageAction(WebBrowserContainer *container, DWORD dwAction)
 {
-    IWebBrowser2 *pWebBrowser2 = info->web_browser;
-
-    if (!pWebBrowser2)
+    if (!container || !container->web_browser)
         return;
 
     switch (dwAction)
     {
         case WB_GOBACK:
-            IWebBrowser2_GoBack(pWebBrowser2);
+            IWebBrowser2_GoBack(container->web_browser);
             break;
         case WB_GOFORWARD:
-            IWebBrowser2_GoForward(pWebBrowser2);
+            IWebBrowser2_GoForward(container->web_browser);
             break;
         case WB_GOHOME:
-            IWebBrowser2_GoHome(pWebBrowser2);
+            IWebBrowser2_GoHome(container->web_browser);
             break;
         case WB_SEARCH:
-            IWebBrowser2_GoSearch(pWebBrowser2);
+            IWebBrowser2_GoSearch(container->web_browser);
             break;
         case WB_REFRESH:
-            IWebBrowser2_Refresh(pWebBrowser2);
+            IWebBrowser2_Refresh(container->web_browser);
             break;
         case WB_STOP:
-            IWebBrowser2_Stop(pWebBrowser2);
+            IWebBrowser2_Stop(container->web_browser);
             break;
         case WB_PRINT:
-            IWebBrowser2_ExecWB(pWebBrowser2, OLECMDID_PRINT, OLECMDEXECOPT_DONTPROMPTUSER, 0, 0);
+            IWebBrowser2_ExecWB(container->web_browser, OLECMDID_PRINT, OLECMDEXECOPT_DONTPROMPTUSER, 0, 0);
             break;
     }
 }

@@ -36,6 +36,7 @@
 #include <htmlhelp.h>
 #include <ole2.h>
 #include <exdisp.h>
+#include <mshtmhst.h>
 #include <commctrl.h>
 
 #include <wine/itss.h>
@@ -175,9 +176,20 @@ struct wintype_stringsA {
 };
 
 typedef struct {
-    IOleClientSite *client_site;
+    IOleClientSite IOleClientSite_iface;
+    IOleInPlaceSite IOleInPlaceSite_iface;
+    IOleInPlaceFrame IOleInPlaceFrame_iface;
+    IDocHostUIHandler IDocHostUIHandler_iface;
+
+    LONG ref;
+
+    IOleObject *ole_obj;
     IWebBrowser2 *web_browser;
-    IOleObject *wb_object;
+    HWND hwndWindow;
+} WebBrowserContainer;
+
+typedef struct {
+    WebBrowserContainer *web_browser;
 
     HH_WINTYPEW WinType;
 
@@ -203,7 +215,7 @@ typedef struct {
 BOOL InitWebBrowser(HHInfo*,HWND) DECLSPEC_HIDDEN;
 void ReleaseWebBrowser(HHInfo*) DECLSPEC_HIDDEN;
 void ResizeWebBrowser(HHInfo*,DWORD,DWORD) DECLSPEC_HIDDEN;
-void DoPageAction(HHInfo*,DWORD) DECLSPEC_HIDDEN;
+void DoPageAction(WebBrowserContainer*,DWORD) DECLSPEC_HIDDEN;
 
 void InitContent(HHInfo*) DECLSPEC_HIDDEN;
 void ReleaseContent(HHInfo*) DECLSPEC_HIDDEN;
@@ -220,6 +232,7 @@ IStream *GetChmStream(CHMInfo*,LPCWSTR,ChmPath*) DECLSPEC_HIDDEN;
 LPWSTR FindContextAlias(CHMInfo*,DWORD) DECLSPEC_HIDDEN;
 WCHAR *GetDocumentTitle(CHMInfo*,LPCWSTR) DECLSPEC_HIDDEN;
 
+extern struct list window_list DECLSPEC_HIDDEN;
 HHInfo *CreateHelpViewer(HHInfo*,LPCWSTR,HWND) DECLSPEC_HIDDEN;
 void ReleaseHelpViewer(HHInfo*) DECLSPEC_HIDDEN;
 BOOL NavigateToUrl(HHInfo*,LPCWSTR) DECLSPEC_HIDDEN;
