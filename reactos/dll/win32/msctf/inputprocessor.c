@@ -527,10 +527,9 @@ static HRESULT WINAPI InputProcessorProfiles_ActivateLanguageProfile(
     LanguageProfile.clsid = *rclsid;
     LanguageProfile.langid = langid;
     LanguageProfile.guidProfile = *guidProfiles;
+    LanguageProfile.fActive = TRUE;
 
-    hr = add_active_textservice(&LanguageProfile);
-
-    return hr;
+    return add_active_textservice(&LanguageProfile);
 }
 
 static HRESULT WINAPI InputProcessorProfiles_GetActiveLanguageProfile(

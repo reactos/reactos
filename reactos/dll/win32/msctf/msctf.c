@@ -23,8 +23,6 @@
 #include <rpcproxy.h>
 #include <inputscope.h>
 
-static LONG MSCTF_refCount;
-
 static HINSTANCE MSCTF_hinstance;
 
 typedef struct
@@ -92,7 +90,6 @@ static void ClassFactory_Destructor(ClassFactory *This)
 {
     TRACE("Destroying class factory %p\n", This);
     HeapFree(GetProcessHeap(),0,This);
-    MSCTF_refCount--;
 }
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, LPVOID *ppvOut)
@@ -145,11 +142,6 @@ static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
 
     TRACE("(%p)->(%x)\n", This, fLock);
 
-    if(fLock)
-        InterlockedIncrement(&MSCTF_refCount);
-    else
-        InterlockedDecrement(&MSCTF_refCount);
-
     return S_OK;
 }
 
@@ -172,7 +164,6 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
     This->ctor = ctor;
     *ppvOut = This;
     TRACE("Created class factory %p\n", This);
-    MSCTF_refCount++;
     return S_OK;
 }
 
@@ -362,7 +353,6 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
 
     actsvr->pITfTextInputProcessor = NULL;
     actsvr->LanguageProfile = *lp;
-    actsvr->LanguageProfile.fActive = TRUE;
     actsvr->pITfKeyEventSink = NULL;
 
     /* get TIP category */
@@ -521,7 +511,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    return MSCTF_refCount ? S_FALSE : S_OK;
+    return S_FALSE;
 }
 
 /***********************************************************************
@@ -641,4 +631,13 @@ HRESULT WINAPI TF_CreateLangBarItemMgr(ITfLangBarItemMgr **pplbim)
     *pplbim = NULL;
 
     return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *              TF_InitMlngInfo (MSCTF.@)
+ */
+HRESULT WINAPI TF_InitMlngInfo(void)
+{
+    FIXME("stub\n");
+    return S_OK;
 }

@@ -24,7 +24,7 @@
 @ stub TF_GetThreadFlags
 @ stdcall TF_GetThreadMgr(ptr)
 @ stub TF_InatExtractIcon
-@ stub TF_InitMlngInfo
+@ stdcall TF_InitMlngInfo()
 @ stub TF_InitSystem
 @ stub TF_InvalidAssemblyListCache
 @ stdcall TF_InvalidAssemblyListCacheIfExist()

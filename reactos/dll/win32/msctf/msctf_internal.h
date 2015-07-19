@@ -89,7 +89,7 @@ extern CLSID get_textservice_clsid(TfClientId tid) DECLSPEC_HIDDEN;
 extern HRESULT get_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown** sink) DECLSPEC_HIDDEN;
 extern HRESULT set_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown* sink) DECLSPEC_HIDDEN;
 
-extern const WCHAR szwSystemTIPKey[];
-extern const WCHAR szwSystemCTFKey[];
+extern const WCHAR szwSystemTIPKey[] DECLSPEC_HIDDEN;
+extern const WCHAR szwSystemCTFKey[] DECLSPEC_HIDDEN;
 
 #endif /* __WINE_MSCTF_I_H */
