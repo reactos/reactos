@@ -95,7 +95,7 @@ PointerMonikerImpl_Release(IMoniker* iface)
 
     ref = InterlockedDecrement(&This->ref);
 
-    /* destroy the object if there's no more reference on it */
+    /* destroy the object if there are no more references on it */
     if (ref == 0)
     {
         if (This->pObject) IUnknown_Release(This->pObject);

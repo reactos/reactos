@@ -707,6 +707,8 @@ CompositeMonikerImpl_GetTimeOfLastChange(IMoniker* iface, IBindCtx* pbc,
         IRunningObjectTable* rot;
 
         res = IMoniker_ComposeWith(pmkToLeft, iface, FALSE, &leftMk);
+        if (FAILED(res))
+            return res;
 
         res = IBindCtx_GetRunningObjectTable(pbc,&rot);
         if (FAILED(res))
@@ -761,9 +763,16 @@ CompositeMonikerImpl_Inverse(IMoniker* iface,IMoniker** ppmk)
     /* This method returns a composite moniker that consists of the inverses of each of the components */
     /* of the original composite, stored in reverse order */
 
+    *ppmk = NULL;
+
     res=CreateAntiMoniker(&antiMk);
-    res=IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
+    if (FAILED(res))
+        return res;
+
+    res=IMoniker_ComposeWith(iface,antiMk,FALSE,&tempMk);
     IMoniker_Release(antiMk);
+    if (FAILED(res))
+        return res;
 
     if (tempMk==NULL)
 

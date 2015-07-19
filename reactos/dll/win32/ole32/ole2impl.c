@@ -22,8 +22,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-#define MAX_CLIPFORMAT_NAME   80
-
 /******************************************************************************
  *		OleQueryCreateFromData [OLE32.@]
  *

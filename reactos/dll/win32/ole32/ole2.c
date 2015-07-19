@@ -1253,6 +1253,8 @@ HRESULT WINAPI OleLoad(
    * Get the class ID for the object.
    */
   hres = IStorage_Stat(pStg, &storageInfo, STATFLAG_NONAME);
+  if (FAILED(hres))
+    return hres;
 
   /*
    * Now, try and create the handler for the object
@@ -2425,6 +2427,9 @@ static DWORD OLEDD_GetButtonState(void)
 
   if ( (keyboardState[VK_CONTROL] & 0x80) !=0)
     keyMask |= MK_CONTROL;
+
+  if ( (keyboardState[VK_MENU] & 0x80) !=0)
+    keyMask |= MK_ALT;
 
   if ( (keyboardState[VK_LBUTTON] & 0x80) !=0)
     keyMask |= MK_LBUTTON;

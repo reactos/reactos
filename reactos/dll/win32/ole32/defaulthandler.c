@@ -2171,7 +2171,7 @@ HRESULT HandlerCF_Create(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     This->refs = 0;
     This->clsid = *rclsid;
 
-    hr = IUnknown_QueryInterface((IUnknown *)&This->IClassFactory_iface, riid, ppv);
+    hr = IClassFactory_QueryInterface(&This->IClassFactory_iface, riid, ppv);
     if (FAILED(hr))
         HeapFree(GetProcessHeap(), 0, This);
 

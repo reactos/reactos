@@ -586,8 +586,14 @@ static HRESULT WINAPI ItemMonikerImpl_GetTimeOfLastChange(IMoniker* iface,
         /* IMoniker::GetTimeOfLastChange on the pmkToLeft parameter.                                            */
 
         res=CreateGenericComposite(pmkToLeft,iface,&compositeMk);
+        if (FAILED(res))
+            return res;
 
         res=IBindCtx_GetRunningObjectTable(pbc,&rot);
+        if (FAILED(res)) {
+            IMoniker_Release(compositeMk);
+            return res;
+        }
 
         if (IRunningObjectTable_GetTimeOfLastChange(rot,compositeMk,pItemTime)!=S_OK)
 

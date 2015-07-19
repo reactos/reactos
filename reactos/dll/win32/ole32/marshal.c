@@ -789,11 +789,12 @@ static HRESULT proxy_manager_construct(
 
 static inline void proxy_manager_set_context(struct proxy_manager *This, MSHCTX dest_context, void *dest_context_data)
 {
-    MSHCTX old_dest_context = This->dest_context;
+    MSHCTX old_dest_context;
     MSHCTX new_dest_context;
 
     do
     {
+        old_dest_context = This->dest_context;
         new_dest_context = old_dest_context;
         /* "stronger" values overwrite "weaker" values. stronger values are
          * ones that disable more optimisations */
@@ -837,7 +838,7 @@ static inline void proxy_manager_set_context(struct proxy_manager *This, MSHCTX 
 
         if (old_dest_context == new_dest_context) break;
 
-        old_dest_context = InterlockedCompareExchange((PLONG)&This->dest_context, new_dest_context, old_dest_context);
+        new_dest_context = InterlockedCompareExchange((PLONG)&This->dest_context, new_dest_context, old_dest_context);
     } while (new_dest_context != old_dest_context);
 
     if (dest_context_data)
@@ -1028,8 +1029,11 @@ static HRESULT proxy_manager_get_remunknown(struct proxy_manager * This, IRemUnk
         IRemUnknown_AddRef(*remunk);
     }
     else if (!This->parent)
+    {
         /* disconnected - we can't create IRemUnknown */
+        *remunk = NULL;
         hr = S_FALSE;
+    }
     else
     {
         STDOBJREF stdobjref;

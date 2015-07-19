@@ -298,7 +298,7 @@ RunningObjectTableImpl_QueryInterface(IRunningObjectTable* iface,
 
     if (IsEqualIID(&IID_IUnknown, riid) ||
         IsEqualIID(&IID_IRunningObjectTable, riid))
-        *ppvObject = This;
+        *ppvObject = &This->IRunningObjectTable_iface;
 
     if ((*ppvObject)==0)
         return E_NOINTERFACE;
@@ -1180,7 +1180,7 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
     IStorage *pstg=0;
     HRESULT res;
     int nbElm, length, i;
-    LONG sizeProgId;
+    LONG sizeProgId, ret;
     LPOLESTR *pathDec=0,absFile=0,progId=0;
     LPWSTR extension;
     static const WCHAR bkslashW[] = {'\\',0};
@@ -1193,10 +1193,10 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
 
         res=StgOpenStorage(filePathName,NULL,STGM_READ | STGM_SHARE_DENY_WRITE,NULL,0,&pstg);
 
-        if (SUCCEEDED(res))
+        if (SUCCEEDED(res)) {
             res=ReadClassStg(pstg,pclsid);
-
-        IStorage_Release(pstg);
+            IStorage_Release(pstg);
+        }
 
         return res;
     }
@@ -1246,26 +1246,23 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
         return MK_E_INVALIDEXTENSION;
     }
 
-    res=RegQueryValueW(HKEY_CLASSES_ROOT, extension, NULL, &sizeProgId);
+    ret = RegQueryValueW(HKEY_CLASSES_ROOT, extension, NULL, &sizeProgId);
 
     /* get the progId associated to the extension */
     progId = CoTaskMemAlloc(sizeProgId);
-    res = RegQueryValueW(HKEY_CLASSES_ROOT, extension, progId, &sizeProgId);
-
-    if (res==ERROR_SUCCESS)
+    ret = RegQueryValueW(HKEY_CLASSES_ROOT, extension, progId, &sizeProgId);
+    if (!ret)
         /* return the clsid associated to the progId */
-        res= CLSIDFromProgID(progId,pclsid);
+        res = CLSIDFromProgID(progId,pclsid);
+    else
+        res = HRESULT_FROM_WIN32(ret);
 
     for(i=0; pathDec[i]!=NULL;i++)
         CoTaskMemFree(pathDec[i]);
     CoTaskMemFree(pathDec);
 
     CoTaskMemFree(progId);
-
-    if (res==ERROR_SUCCESS)
-        return res;
-
-    return MK_E_INVALIDEXTENSION;
+    return res != S_OK ? MK_E_INVALIDEXTENSION : res;
 }
 
 /***********************************************************************
@@ -1283,17 +1280,12 @@ static HRESULT WINAPI EnumMonikerImpl_QueryInterface(IEnumMoniker* iface,REFIID 
 
     *ppvObject = NULL;
 
-    if (IsEqualIID(&IID_IUnknown, riid))
-        *ppvObject = This;
+    if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IEnumMoniker, riid))
+        *ppvObject = &This->IEnumMoniker_iface;
     else
-        if (IsEqualIID(&IID_IEnumMoniker, riid))
-            *ppvObject = This;
-
-    if ((*ppvObject)==NULL)
         return E_NOINTERFACE;
 
     IEnumMoniker_AddRef(iface);
-
     return S_OK;
 }
 

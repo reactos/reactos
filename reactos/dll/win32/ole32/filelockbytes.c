@@ -45,10 +45,6 @@ static inline FileLockBytesImpl *impl_from_ILockBytes(ILockBytes *iface)
  * Prototypes for private methods
  */
 
-/* Note that this evaluates a and b multiple times, so don't
- * pass expressions with side effects. */
-#define ROUND_UP(a, b) ((((a) + (b) - 1)/(b))*(b))
-
 /****************************************************************************
  *      GetProtectMode
  *
@@ -330,24 +326,6 @@ static HRESULT WINAPI FileLockBytesImpl_LockRegion(ILockBytes* iface,
     return get_lock_error();
 }
 
-HRESULT FileLockBytesImpl_LockRegionSync(ILockBytes* iface,
-    ULARGE_INTEGER libOffset, ULARGE_INTEGER cb)
-{
-    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
-    OVERLAPPED ol;
-
-    if (iface->lpVtbl != &FileLockBytesImpl_Vtbl)
-        return E_NOTIMPL;
-
-    ol.hEvent = 0;
-    ol.u.s.Offset = libOffset.u.LowPart;
-    ol.u.s.OffsetHigh = libOffset.u.HighPart;
-
-    if (LockFileEx(This->hfile, LOCKFILE_EXCLUSIVE_LOCK, 0, cb.u.LowPart, cb.u.HighPart, &ol))
-        return S_OK;
-    return get_lock_error();
-}
-
 static HRESULT WINAPI FileLockBytesImpl_UnlockRegion(ILockBytes* iface,
     ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType)
 {
@@ -387,6 +365,8 @@ static HRESULT WINAPI FileLockBytesImpl_Stat(ILockBytes* iface,
 
     pstatstg->cbSize.u.LowPart = GetFileSize(This->hfile, &pstatstg->cbSize.u.HighPart);
     /* FIXME: If the implementation is exported, we'll need to set other fields. */
+
+    pstatstg->grfLocksSupported = LOCK_EXCLUSIVE|LOCK_ONLYONCE|WINE_LOCK_READ;
 
     return S_OK;
 }

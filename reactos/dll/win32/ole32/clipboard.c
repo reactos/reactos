@@ -63,8 +63,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-#define HANDLE_ERROR(err) do { hr = err; TRACE("(HRESULT=%x)\n", (HRESULT)err); goto CLEANUP; } while (0)
-
 /* Structure of 'Ole Private Data' clipboard format */
 typedef struct
 {
@@ -559,6 +557,12 @@ static HRESULT render_embed_source_hack(IDataObject *data, LPFORMATETC fmt)
     hStorage = GlobalAlloc(GMEM_SHARE|GMEM_MOVEABLE, 0);
     if (hStorage == NULL) return E_OUTOFMEMORY;
     hr = CreateILockBytesOnHGlobal(hStorage, FALSE, &ptrILockBytes);
+    if (FAILED(hr))
+    {
+        GlobalFree(hStorage);
+        return hr;
+    }
+
     hr = StgCreateDocfileOnILockBytes(ptrILockBytes, STGM_SHARE_EXCLUSIVE|STGM_READWRITE, 0, &std.u.pstg);
     ILockBytes_Release(ptrILockBytes);
 

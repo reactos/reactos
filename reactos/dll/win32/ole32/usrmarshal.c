@@ -290,7 +290,7 @@ static unsigned char * handle_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffe
     return pBuffer + sizeof(RemotableHandle);
 }
 
-static void handle_UserFree(ULONG *pFlags, HANDLE *phMenu)
+static void handle_UserFree(ULONG *pFlags, HANDLE *handle)
 {
     /* nothing to do */
 }
@@ -323,6 +323,9 @@ static void handle_UserFree(ULONG *pFlags, HANDLE *phMenu)
 IMPL_WIREM_HANDLE(HACCEL)
 IMPL_WIREM_HANDLE(HMENU)
 IMPL_WIREM_HANDLE(HWND)
+IMPL_WIREM_HANDLE(HDC)
+IMPL_WIREM_HANDLE(HICON)
+IMPL_WIREM_HANDLE(HBRUSH)
 
 /******************************************************************************
  *           HGLOBAL_UserSize [OLE32.@]
@@ -638,204 +641,6 @@ unsigned char * __RPC_USER HBITMAP_UserUnmarshal(ULONG *pFlags, unsigned char *p
  *  This function is only intended to be called by the RPC runtime.
  */
 void __RPC_USER HBITMAP_UserFree(ULONG *pFlags, HBITMAP *phBmp)
-{
-    FIXME(":stub\n");
-}
-
-/******************************************************************************
- *           HICON_UserSize [OLE32.@]
- *
- * Calculates the buffer size required to marshal an icon.
- *
- * PARAMS
- *  pFlags       [I] Flags. See notes.
- *  StartingSize [I] Starting size of the buffer. This value is added on to
- *                   the buffer size required for the icon.
- *  phIcon       [I] Icon to size.
- *
- * RETURNS
- *  The buffer size required to marshal an icon plus the starting size.
- *
- * NOTES
- *  Even though the function is documented to take a pointer to a ULONG in
- *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
- *  the first parameter is a ULONG.
- *  This function is only intended to be called by the RPC runtime.
- */
-ULONG __RPC_USER HICON_UserSize(ULONG *pFlags, ULONG StartingSize, HICON *phIcon)
-{
-    FIXME(":stub\n");
-    return StartingSize;
-}
-
-/******************************************************************************
-*           HICON_UserMarshal [OLE32.@]
-*
-* Marshals an icon into a buffer.
-*
-* PARAMS
-*  pFlags  [I] Flags. See notes.
-*  pBuffer [I] Buffer to marshal the icon into.
-*  phIcon  [I] Icon to marshal.
-*
-* RETURNS
-*  The end of the marshaled data in the buffer.
-*
-* NOTES
-*  Even though the function is documented to take a pointer to a ULONG in
-*  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
-*  the first parameter is a ULONG.
-*  This function is only intended to be called by the RPC runtime.
-*/
-unsigned char * __RPC_USER HICON_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, HICON *phIcon)
-{
-    FIXME(":stub\n");
-    return pBuffer;
-}
-
-/******************************************************************************
- *           HICON_UserUnmarshal [OLE32.@]
- *
- * Unmarshals an icon from a buffer.
- *
- * PARAMS
- *  pFlags   [I] Flags. See notes.
- *  pBuffer  [I] Buffer to marshal the icon from.
- *  phIcon   [O] Address that receive the unmarshaled icon.
- *
- * RETURNS
- *  The end of the marshaled data in the buffer.
- *
- * NOTES
- *  Even though the function is documented to take a pointer to an ULONG in
- *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
- *  the first parameter is an ULONG.
- *  This function is only intended to be called by the RPC runtime.
- */
-unsigned char * __RPC_USER HICON_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, HICON *phIcon)
-{
-    FIXME(":stub\n");
-    return pBuffer;
-}
-
-/******************************************************************************
- *           HICON_UserFree [OLE32.@]
- *
- * Frees an unmarshaled icon.
- *
- * PARAMS
- *  pFlags   [I] Flags. See notes.
- *  phIcon   [I] Icon to free.
- *
- * RETURNS
- *  The end of the marshaled data in the buffer.
- *
- * NOTES
- *  Even though the function is documented to take a pointer to a ULONG in
- *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of
- *  which the first parameter is a ULONG.
- *  This function is only intended to be called by the RPC runtime.
- */
-void __RPC_USER HICON_UserFree(ULONG *pFlags, HICON *phIcon)
-{
-    FIXME(":stub\n");
-}
-
-/******************************************************************************
- *           HDC_UserSize [OLE32.@]
- *
- * Calculates the buffer size required to marshal an HDC.
- *
- * PARAMS
- *  pFlags       [I] Flags. See notes.
- *  StartingSize [I] Starting size of the buffer. This value is added on to
- *                   the buffer size required for the clip format.
- *  phGlobal     [I] HDC to size.
- *
- * RETURNS
- *  The buffer size required to marshal an HDC plus the starting size.
- *
- * NOTES
- *  Even though the function is documented to take a pointer to a ULONG in
- *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
- *  the first parameter is a ULONG.
- *  This function is only intended to be called by the RPC runtime.
- */
-ULONG __RPC_USER HDC_UserSize(ULONG *pFlags, ULONG StartingSize, HDC *phdc)
-{
-    FIXME(":stub\n");
-    return StartingSize;
-}
-
-/******************************************************************************
- *           HDC_UserMarshal [OLE32.@]
- *
- * Marshals an HDC into a buffer.
- *
- * PARAMS
- *  pFlags  [I] Flags. See notes.
- *  pBuffer [I] Buffer to marshal the clip format into.
- *  phdc    [I] HDC to marshal.
- *
- * RETURNS
- *  The end of the marshaled data in the buffer.
- *
- * NOTES
- *  Even though the function is documented to take a pointer to a ULONG in
- *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
- *  the first parameter is a ULONG.
- *  This function is only intended to be called by the RPC runtime.
- */
-unsigned char * __RPC_USER HDC_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, HDC *phdc)
-{
-    FIXME(":stub\n");
-    return pBuffer;
-}
-
-/******************************************************************************
- *           HDC_UserUnmarshal [OLE32.@]
- *
- * Unmarshals an HDC from a buffer.
- *
- * PARAMS
- *  pFlags   [I] Flags. See notes.
- *  pBuffer  [I] Buffer to marshal the clip format from.
- *  phdc     [O] Address that receive the unmarshaled HDC.
- *
- * RETURNS
- *  The end of the marshaled data in the buffer.
- *
- * NOTES
- *  Even though the function is documented to take a pointer to an ULONG in
- *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
- *  the first parameter is an ULONG.
- *  This function is only intended to be called by the RPC runtime.
- */
-unsigned char * __RPC_USER HDC_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, HDC *phdc)
-{
-    FIXME(":stub\n");
-    return pBuffer;
-}
-
-/******************************************************************************
- *           HDC_UserFree [OLE32.@]
- *
- * Frees an unmarshaled HDC.
- *
- * PARAMS
- *  pFlags   [I] Flags. See notes.
- *  phdc     [I] HDC to free.
- *
- * RETURNS
- *  The end of the marshaled data in the buffer.
- *
- * NOTES
- *  Even though the function is documented to take a pointer to a ULONG in
- *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of
- *  which the first parameter is a ULONG.
- *  This function is only intended to be called by the RPC runtime.
- */
-void __RPC_USER HDC_UserFree(ULONG *pFlags, HDC *phdc)
 {
     FIXME(":stub\n");
 }
@@ -2142,25 +1947,117 @@ void __RPC_USER FLAG_STGMEDIUM_UserFree(ULONG *pFlags, FLAG_STGMEDIUM *pStgMediu
 
 ULONG __RPC_USER SNB_UserSize(ULONG *pFlags, ULONG StartingSize, SNB *pSnb)
 {
-    FIXME(":stub\n");
-    return StartingSize;
+    ULONG size = StartingSize;
+
+    TRACE("(%s, %d, %p\n", debugstr_user_flags(pFlags), StartingSize, pSnb);
+
+    ALIGN_LENGTH(size, 3);
+
+    /* two counters from RemSNB header, plus one more ULONG */
+    size += 3*sizeof(ULONG);
+
+    /* now actual data length */
+    if (*pSnb)
+    {
+        WCHAR **ptrW = *pSnb;
+
+        while (*ptrW)
+        {
+            size += (strlenW(*ptrW) + 1)*sizeof(WCHAR);
+            ptrW++;
+        }
+    }
+
+    return size;
 }
 
-unsigned char * __RPC_USER SNB_UserMarshal(  ULONG *pFlags, unsigned char *pBuffer, SNB *pSnb)
+struct SNB_wire {
+    ULONG charcnt;
+    ULONG strcnt;
+    ULONG datalen;
+    WCHAR data[1];
+};
+
+unsigned char * __RPC_USER SNB_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, SNB *pSnb)
 {
-    FIXME(":stub\n");
-    return pBuffer;
+    struct SNB_wire *wire;
+    ULONG size;
+
+    TRACE("(%s, %p, %p)\n", debugstr_user_flags(pFlags), pBuffer, pSnb);
+
+    ALIGN_POINTER(pBuffer, 3);
+
+    wire = (struct SNB_wire*)pBuffer;
+    wire->charcnt = wire->strcnt = 0;
+    size = 3*sizeof(ULONG);
+
+    if (*pSnb)
+    {
+        WCHAR **ptrW = *pSnb;
+        WCHAR *dataW = wire->data;
+
+        while (*ptrW)
+        {
+            ULONG len = strlenW(*ptrW) + 1;
+
+            wire->strcnt++;
+            wire->charcnt += len;
+            memcpy(dataW, *ptrW, len*sizeof(WCHAR));
+            dataW += len;
+
+            size += len*sizeof(WCHAR);
+            ptrW++;
+        }
+    }
+
+    wire->datalen = wire->charcnt;
+    return pBuffer + size;
 }
 
 unsigned char * __RPC_USER SNB_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, SNB *pSnb)
 {
-    FIXME(":stub\n");
-    return pBuffer;
+    USER_MARSHAL_CB *umcb = (USER_MARSHAL_CB*)pFlags;
+    struct SNB_wire *wire;
+
+    TRACE("(%s, %p, %p)\n", debugstr_user_flags(pFlags), pBuffer, pSnb);
+
+    wire = (struct SNB_wire*)pBuffer;
+
+    if (*pSnb)
+        umcb->pStubMsg->pfnFree(*pSnb);
+
+    if (wire->datalen == 0)
+        *pSnb = NULL;
+    else
+    {
+        WCHAR *src = wire->data, *dest;
+        WCHAR **ptrW;
+        ULONG i;
+
+        ptrW = *pSnb = umcb->pStubMsg->pfnAllocate((wire->strcnt+1)*sizeof(WCHAR*) + wire->datalen*sizeof(WCHAR));
+        dest = (WCHAR*)(*pSnb + wire->strcnt + 1);
+
+        for (i = 0; i < wire->strcnt; i++)
+        {
+            ULONG len = strlenW(src);
+            memcpy(dest, src, (len + 1)*sizeof(WCHAR));
+            *ptrW = dest;
+            src += len + 1;
+            dest += len + 1;
+            ptrW++;
+        }
+        *ptrW = NULL;
+    }
+
+    return pBuffer + 3*sizeof(ULONG) + wire->datalen*sizeof(WCHAR);
 }
 
 void __RPC_USER SNB_UserFree(ULONG *pFlags, SNB *pSnb)
 {
-    FIXME(":stub\n");
+    USER_MARSHAL_CB *umcb = (USER_MARSHAL_CB*)pFlags;
+    TRACE("(%p)\n", pSnb);
+    if (*pSnb)
+        umcb->pStubMsg->pfnFree(*pSnb);
 }
 
 /* call_as/local stubs for unknwn.idl */
@@ -2901,15 +2798,15 @@ HRESULT CALLBACK IOleInPlaceActiveObject_TranslateAccelerator_Proxy(
     IOleInPlaceActiveObject* This,
     LPMSG lpmsg)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p %p)\n", This, lpmsg);
+    return IOleInPlaceActiveObject_RemoteTranslateAccelerator_Proxy(This);
 }
 
 HRESULT __RPC_STUB IOleInPlaceActiveObject_TranslateAccelerator_Stub(
     IOleInPlaceActiveObject* This)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)\n", This);
+    return S_FALSE;
 }
 
 HRESULT CALLBACK IOleInPlaceActiveObject_ResizeBorder_Proxy(
@@ -2939,8 +2836,8 @@ HRESULT CALLBACK IOleCache2_UpdateCache_Proxy(
     DWORD grfUpdf,
     LPVOID pReserved)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p, %p, 0x%08x, %p)\n", This, pDataObject, grfUpdf, pReserved);
+    return IOleCache2_RemoteUpdateCache_Proxy(This, pDataObject, grfUpdf, (LONG_PTR)pReserved);
 }
 
 HRESULT __RPC_STUB IOleCache2_UpdateCache_Stub(
@@ -2949,8 +2846,8 @@ HRESULT __RPC_STUB IOleCache2_UpdateCache_Stub(
     DWORD grfUpdf,
     LONG_PTR pReserved)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p, %p, 0x%08x, %li)\n", This, pDataObject, grfUpdf, pReserved);
+    return IOleCache2_UpdateCache(This, pDataObject, grfUpdf, (void*)pReserved);
 }
 
 HRESULT CALLBACK IEnumOLEVERB_Next_Proxy(

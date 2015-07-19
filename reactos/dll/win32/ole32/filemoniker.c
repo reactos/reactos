@@ -907,7 +907,8 @@ static HRESULT WINAPI
 FileMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
 {
 
-    LPOLESTR pathThis = NULL, pathOther = NULL,*stringTable1,*stringTable2,commonPath = NULL;
+    LPOLESTR pathThis = NULL, pathOther = NULL, *stringTable1 = NULL;
+    LPOLESTR *stringTable2 = NULL, commonPath = NULL;
     IBindCtx *bindctx;
     DWORD mkSys;
     ULONG nb1,nb2,i,sameIdx;
@@ -995,8 +996,8 @@ failed:
     CoTaskMemFree(pathThis);
     CoTaskMemFree(pathOther);
     CoTaskMemFree(commonPath);
-    free_stringtable(stringTable1);
-    free_stringtable(stringTable2);
+    if (stringTable1) free_stringtable(stringTable1);
+    if (stringTable2) free_stringtable(stringTable2);
 
     return ret;
 }
