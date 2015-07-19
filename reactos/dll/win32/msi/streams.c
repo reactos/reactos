@@ -411,23 +411,22 @@ static MSISTREAM *find_stream( MSIDATABASE *db, const WCHAR *name )
 
 static UINT append_stream( MSIDATABASE *db, const WCHAR *name, IStream *stream )
 {
-    WCHAR decoded[MAX_STREAM_NAME_LEN + 1];
     UINT i = db->num_streams;
 
     if (!streams_resize_table( db, db->num_streams + 1 ))
         return ERROR_OUTOFMEMORY;
 
-    decode_streamname( name, decoded );
-    db->streams[i].str_index = msi_add_string( db->strings, decoded, -1, StringNonPersistent );
+    db->streams[i].str_index = msi_add_string( db->strings, name, -1, StringNonPersistent );
     db->streams[i].stream = stream;
     db->num_streams++;
 
-    TRACE("added %s\n", debugstr_w( decoded ));
+    TRACE("added %s\n", debugstr_w( name ));
     return ERROR_SUCCESS;
 }
 
 static UINT load_streams( MSIDATABASE *db )
 {
+    WCHAR decoded[MAX_STREAM_NAME_LEN + 1];
     IEnumSTATSTG *stgenum;
     STATSTG stat;
     HRESULT hr;
@@ -446,25 +445,29 @@ static UINT load_streams( MSIDATABASE *db )
             break;
 
         /* table streams are not in the _Streams table */
-        if (stat.type != STGTY_STREAM || *stat.pwcsName == 0x4840 ||
-            find_stream( db, stat.pwcsName ))
+        if (stat.type != STGTY_STREAM || *stat.pwcsName == 0x4840)
         {
             CoTaskMemFree( stat.pwcsName );
             continue;
         }
-        TRACE("found new stream %s\n", debugstr_w( stat.pwcsName ));
+        decode_streamname( stat.pwcsName, decoded );
+        if (find_stream( db, decoded ))
+        {
+            CoTaskMemFree( stat.pwcsName );
+            continue;
+        }
+        TRACE("found new stream %s\n", debugstr_w( decoded ));
 
         hr = open_stream( db, stat.pwcsName, &stream );
+        CoTaskMemFree( stat.pwcsName );
         if (FAILED( hr ))
         {
             ERR("unable to open stream %08x\n", hr);
-            CoTaskMemFree( stat.pwcsName );
             r = ERROR_FUNCTION_FAILED;
             break;
         }
 
-        r = append_stream( db, stat.pwcsName, stream );
-        CoTaskMemFree( stat.pwcsName );
+        r = append_stream( db, decoded, stream );
         if (r != ERROR_SUCCESS)
             break;
     }
@@ -596,16 +599,9 @@ UINT msi_commit_streams( MSIDATABASE *db )
         name = msi_string_lookup( db->strings, db->streams[i].str_index, NULL );
         if (!(encname = encode_streamname( FALSE, name ))) return ERROR_OUTOFMEMORY;
 
-        hr = open_stream( db, encname, &stream );
-        if (FAILED( hr )) /* new stream */
+        hr = IStorage_CreateStream( db->storage, encname, STGM_WRITE|STGM_SHARE_EXCLUSIVE, 0, 0, &stream );
+        if (SUCCEEDED( hr ))
         {
-            hr = IStorage_CreateStream( db->storage, encname, STGM_WRITE|STGM_SHARE_EXCLUSIVE, 0, 0, &stream );
-            if (FAILED( hr ))
-            {
-                ERR("failed to create stream %s (hr = %08x)\n", debugstr_w(encname), hr);
-                msi_free( encname );
-                return ERROR_FUNCTION_FAILED;
-            }
             hr = write_stream( stream, db->streams[i].stream );
             if (FAILED( hr ))
             {
@@ -614,12 +610,18 @@ UINT msi_commit_streams( MSIDATABASE *db )
                 IStream_Release( stream );
                 return ERROR_FUNCTION_FAILED;
             }
+            hr = IStream_Commit( stream, 0 );
+            IStream_Release( stream );
+            if (FAILED( hr ))
+            {
+                ERR("failed to commit stream %s (hr = %08x)\n", debugstr_w(encname), hr);
+                msi_free( encname );
+                return ERROR_FUNCTION_FAILED;
+            }
         }
-        hr = IStream_Commit( stream, 0 );
-        IStream_Release( stream );
-        if (FAILED( hr ))
+        else if (hr != STG_E_FILEALREADYEXISTS)
         {
-            WARN("failed to commit stream %s (hr = %08x)\n", debugstr_w(encname), hr);
+            ERR("failed to create stream %s (hr = %08x)\n", debugstr_w(encname), hr);
             msi_free( encname );
             return ERROR_FUNCTION_FAILED;
         }

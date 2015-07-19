@@ -241,13 +241,6 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
         return ERROR_NO_MORE_ITEMS;
     }
 
-    if (!pcchVolumeLabel && !pcchDiskPrompt)
-    {
-        r = RegEnumValueW(media, dwIndex, NULL, NULL, NULL,
-                          &type, NULL, NULL);
-        goto done;
-    }
-
     res = RegQueryInfoKeyW(media, NULL, NULL, NULL, NULL, NULL,
                            NULL, &numvals, &valuesz, &datasz, NULL, NULL);
     if (res != ERROR_SUCCESS)

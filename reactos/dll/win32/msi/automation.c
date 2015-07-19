@@ -1350,7 +1350,7 @@ static HRESULT session_invoke(
 {
     SessionObject *session = (SessionObject*)This;
     WCHAR *szString;
-    DWORD dwLen;
+    DWORD dwLen = 0;
     MSIHANDLE msiHandle;
     LANGID langId;
     UINT ret;

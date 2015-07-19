@@ -43,8 +43,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
 {
-    WCHAR volume_name[MAX_PATH + 1];
-    WCHAR root[MAX_PATH + 1];
+    WCHAR volume_name[MAX_PATH + 1], root[MAX_PATH + 1];
+    const WCHAR *p;
+    int len, len2;
 
     strcpyW(root, source_root);
     PathStripToRootW(root);
@@ -55,7 +56,13 @@ static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
         WARN("failed to get volume information for %s (%u)\n", debugstr_w(root), GetLastError());
         return FALSE;
     }
-    return !strcmpiW( mi->volume_label, volume_name );
+
+    len = strlenW( volume_name );
+    len2 = strlenW( mi->volume_label );
+    if (len2 > len) return FALSE;
+    p = volume_name + len - len2;
+
+    return !strcmpiW( mi->volume_label, p );
 }
 
 static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
@@ -202,28 +209,39 @@ static INT_PTR CDECL cabinet_open_stream( char *pszFile, int oflag, int pmode )
 {
     MSICABINETSTREAM *cab;
     IStream *stream;
-    WCHAR *encoded;
-    HRESULT hr;
 
-    cab = msi_get_cabinet_stream( package_disk.package, package_disk.id );
-    if (!cab)
+    if (!(cab = msi_get_cabinet_stream( package_disk.package, package_disk.id )))
     {
         WARN("failed to get cabinet stream\n");
         return -1;
     }
-    if (!cab->stream[0] || !(encoded = encode_streamname( FALSE, cab->stream + 1 )))
+    if (cab->storage == package_disk.package->db->storage)
     {
-        WARN("failed to encode stream name\n");
-        return -1;
+        UINT r = msi_get_stream( package_disk.package->db, cab->stream + 1, &stream );
+        if (r != ERROR_SUCCESS)
+        {
+            WARN("failed to get stream %u\n", r);
+            return -1;
+        }
     }
-    hr = IStorage_OpenStream( cab->storage, encoded, NULL, STGM_READ|STGM_SHARE_EXCLUSIVE, 0, &stream );
-    if (FAILED(hr))
+    else /* patch storage */
     {
-        WARN("failed to open stream 0x%08x\n", hr);
+        HRESULT hr;
+        WCHAR *encoded;
+
+        if (!(encoded = encode_streamname( FALSE, cab->stream + 1 )))
+        {
+            WARN("failed to encode stream name\n");
+            return -1;
+        }
+        hr = IStorage_OpenStream( cab->storage, encoded, NULL, STGM_READ|STGM_SHARE_EXCLUSIVE, 0, &stream );
         msi_free( encoded );
-        return -1;
+        if (FAILED(hr))
+        {
+            WARN("failed to open stream 0x%08x\n", hr);
+            return -1;
+        }
     }
-    msi_free( encoded );
     return (INT_PTR)stream;
 }
 

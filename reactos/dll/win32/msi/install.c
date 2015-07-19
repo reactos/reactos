@@ -573,7 +573,7 @@ UINT MSI_SetTargetPathW( MSIPACKAGE *package, LPCWSTR szFolder, LPCWSTR szFolder
         const WCHAR *dir;
         MSICOMPONENT *comp = file->Component;
 
-        if (!comp->Enabled || (comp->assembly && !comp->assembly->application)) continue;
+        if (!comp->Enabled || msi_is_global_assembly( comp )) continue;
 
         dir = msi_get_target_folder( package, comp->Directory );
         msi_free( file->TargetPath );

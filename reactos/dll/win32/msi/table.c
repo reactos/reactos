@@ -1035,7 +1035,7 @@ static UINT TABLE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *
     return ERROR_SUCCESS;
 }
 
-static UINT msi_stream_name( const MSITABLEVIEW *tv, UINT row, LPWSTR *pstname )
+static UINT get_stream_name( const MSITABLEVIEW *tv, UINT row, WCHAR **pstname )
 {
     LPWSTR p, stname = NULL;
     UINT i, r, type, ival;
@@ -1135,7 +1135,7 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     if( !view->ops->fetch_int )
         return ERROR_INVALID_PARAMETER;
 
-    r = msi_stream_name( tv, row, &name );
+    r = get_stream_name( tv, row, &name );
     if (r != ERROR_SUCCESS)
     {
         ERR("fetching stream, error = %u\n", r);
@@ -1197,39 +1197,63 @@ static UINT TABLE_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
     return msi_view_get_row(tv->db, view, row, rec);
 }
 
-static UINT msi_addstreamW( MSIDATABASE *db, LPCWSTR name, IStream *data )
+static UINT add_stream( MSIDATABASE *db, const WCHAR *name, IStream *data )
 {
     static const WCHAR insert[] = {
         'I','N','S','E','R','T',' ','I','N','T','O',' ',
         '`','_','S','t','r','e','a','m','s','`',' ',
         '(','`','N','a','m','e','`',',','`','D','a','t','a','`',')',' ',
         'V','A','L','U','E','S',' ','(','?',',','?',')',0};
-    MSIQUERY *query = NULL;
+    static const WCHAR update[] = {
+        'U','P','D','A','T','E',' ','`','_','S','t','r','e','a','m','s','`',' ',
+        'S','E','T',' ','`','D','a','t','a','`',' ','=',' ','?',' ',
+        'W','H','E','R','E',' ','`','N','a','m','e','`',' ','=',' ','?',0};
+    MSIQUERY *query;
     MSIRECORD *rec;
     UINT r;
 
     TRACE("%p %s %p\n", db, debugstr_w(name), data);
 
-    rec = MSI_CreateRecord( 2 );
-    if ( !rec )
+    if (!(rec = MSI_CreateRecord( 2 )))
         return ERROR_OUTOFMEMORY;
 
     r = MSI_RecordSetStringW( rec, 1, name );
-    if ( r != ERROR_SUCCESS )
-       goto err;
+    if (r != ERROR_SUCCESS)
+       goto done;
 
     r = MSI_RecordSetIStream( rec, 2, data );
-    if ( r != ERROR_SUCCESS )
-       goto err;
+    if (r != ERROR_SUCCESS)
+       goto done;
 
     r = MSI_DatabaseOpenViewW( db, insert, &query );
-    if ( r != ERROR_SUCCESS )
-       goto err;
+    if (r != ERROR_SUCCESS)
+       goto done;
 
     r = MSI_ViewExecute( query, rec );
-
-err:
     msiobj_release( &query->hdr );
+    if (r == ERROR_SUCCESS)
+        goto done;
+
+    msiobj_release( &rec->hdr );
+    if (!(rec = MSI_CreateRecord( 2 )))
+        return ERROR_OUTOFMEMORY;
+
+    r = MSI_RecordSetIStream( rec, 1, data );
+    if (r != ERROR_SUCCESS)
+       goto done;
+
+    r = MSI_RecordSetStringW( rec, 2, name );
+    if (r != ERROR_SUCCESS)
+       goto done;
+
+    r = MSI_DatabaseOpenViewW( db, update, &query );
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    r = MSI_ViewExecute( query, rec );
+    msiobj_release( &query->hdr );
+
+done:
     msiobj_release( &rec->hdr );
     return r;
 }
@@ -1326,14 +1350,14 @@ static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UI
                 if ( r != ERROR_SUCCESS )
                     return r;
 
-                r = msi_stream_name( tv, row, &stname );
+                r = get_stream_name( tv, row, &stname );
                 if ( r != ERROR_SUCCESS )
                 {
                     IStream_Release( stm );
                     return r;
                 }
 
-                r = msi_addstreamW( tv->db, stname, stm );
+                r = add_stream( tv->db, stname, stm );
                 IStream_Release( stm );
                 msi_free ( stname );
 

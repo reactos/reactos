@@ -463,7 +463,7 @@ UINT WINAPI MsiApplyMultiplePatchesW(LPCWSTR szPatchPackages,
         r = MSI_ApplyPatchW(patch, szProductCode, szPropertiesList);
         msi_free(patch);
 
-        if (r != ERROR_SUCCESS)
+        if (r != ERROR_SUCCESS || !*end)
             break;
 
         beg = ++end;
@@ -533,7 +533,7 @@ static UINT MSI_ApplicablePatchW( MSIPACKAGE *package, LPCWSTR patch )
 {
     MSISUMMARYINFO *si;
     MSIDATABASE *patch_db;
-    UINT r = ERROR_SUCCESS;
+    UINT r;
 
     r = MSI_OpenDatabaseW( patch, MSIDBOPEN_READONLY, &patch_db );
     if (r != ERROR_SUCCESS)
@@ -542,8 +542,8 @@ static UINT MSI_ApplicablePatchW( MSIPACKAGE *package, LPCWSTR patch )
         return r;
     }
 
-    si = MSI_GetSummaryInformationW( patch_db->storage, 0 );
-    if (!si)
+    r = msi_get_suminfo( patch_db->storage, 0, &si );
+    if (r != ERROR_SUCCESS)
     {
         msiobj_release( &patch_db->hdr );
         return ERROR_FUNCTION_FAILED;
@@ -2024,7 +2024,7 @@ UINT WINAPI MsiEnumComponentCostsW( MSIHANDLE handle, LPCWSTR component, DWORD i
     GetWindowsDirectoryW( path, MAX_PATH );
     if (component && component[0])
     {
-        if (comp->assembly && !comp->assembly->application) *temp = comp->Cost;
+        if (msi_is_global_assembly( comp )) *temp = comp->Cost;
         if (!comp->Enabled || !comp->KeyPath)
         {
             *cost = 0;
@@ -3989,17 +3989,55 @@ extern VOID WINAPI MD5Init( MD5_CTX *);
 extern VOID WINAPI MD5Update( MD5_CTX *, const unsigned char *, unsigned int );
 extern VOID WINAPI MD5Final( MD5_CTX *);
 
-/***********************************************************************
- * MsiGetFileHashW            [MSI.@]
- */
-UINT WINAPI MsiGetFileHashW( LPCWSTR szFilePath, DWORD dwOptions,
-                             PMSIFILEHASHINFO pHash )
+UINT msi_get_filehash( const WCHAR *path, MSIFILEHASHINFO *hash )
 {
     HANDLE handle, mapping;
     void *p;
     DWORD length;
     UINT r = ERROR_FUNCTION_FAILED;
 
+    handle = CreateFileW( path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        WARN("can't open file %u\n", GetLastError());
+        return ERROR_FILE_NOT_FOUND;
+    }
+    if ((length = GetFileSize( handle, NULL )))
+    {
+        if ((mapping = CreateFileMappingW( handle, NULL, PAGE_READONLY, 0, 0, NULL )))
+        {
+            if ((p = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, length )))
+            {
+                MD5_CTX ctx;
+
+                MD5Init( &ctx );
+                MD5Update( &ctx, p, length );
+                MD5Final( &ctx );
+                UnmapViewOfFile( p );
+
+                memcpy( hash->dwData, ctx.digest, sizeof(hash->dwData) );
+                r = ERROR_SUCCESS;
+            }
+            CloseHandle( mapping );
+        }
+    }
+    else
+    {
+        /* Empty file -> set hash to 0 */
+        memset( hash->dwData, 0, sizeof(hash->dwData) );
+        r = ERROR_SUCCESS;
+    }
+
+    CloseHandle( handle );
+    return r;
+}
+
+/***********************************************************************
+ * MsiGetFileHashW            [MSI.@]
+ */
+UINT WINAPI MsiGetFileHashW( LPCWSTR szFilePath, DWORD dwOptions,
+                             PMSIFILEHASHINFO pHash )
+{
     TRACE("%s %08x %p\n", debugstr_w(szFilePath), dwOptions, pHash );
 
     if (!szFilePath)
@@ -4015,46 +4053,7 @@ UINT WINAPI MsiGetFileHashW( LPCWSTR szFilePath, DWORD dwOptions,
     if (pHash->dwFileHashInfoSize < sizeof *pHash)
         return ERROR_INVALID_PARAMETER;
 
-    handle = CreateFileW( szFilePath, GENERIC_READ,
-                          FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
-    if (handle == INVALID_HANDLE_VALUE)
-    {
-        WARN("can't open file %u\n", GetLastError());
-        return ERROR_FILE_NOT_FOUND;
-    }
-    length = GetFileSize( handle, NULL );
-
-    if (length)
-    {
-        mapping = CreateFileMappingW( handle, NULL, PAGE_READONLY, 0, 0, NULL );
-        if (mapping)
-        {
-            p = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, length );
-            if (p)
-            {
-                MD5_CTX ctx;
-
-                MD5Init( &ctx );
-                MD5Update( &ctx, p, length );
-                MD5Final( &ctx );
-                UnmapViewOfFile( p );
-
-                memcpy( pHash->dwData, ctx.digest, sizeof pHash->dwData );
-                r = ERROR_SUCCESS;
-            }
-            CloseHandle( mapping );
-        }
-    }
-    else
-    {
-        /* Empty file -> set hash to 0 */
-        memset( pHash->dwData, 0, sizeof pHash->dwData );
-        r = ERROR_SUCCESS;
-    }
-
-    CloseHandle( handle );
-
-    return r;
+    return msi_get_filehash( szFilePath, pHash );
 }
 
 /***********************************************************************
@@ -4178,7 +4177,7 @@ UINT WINAPI MsiProvideComponentA( LPCSTR product, LPCSTR feature, LPCSTR compone
 {
     WCHAR *productW = NULL, *componentW = NULL, *featureW = NULL, *bufW = NULL;
     UINT r = ERROR_OUTOFMEMORY;
-    DWORD lenW;
+    DWORD lenW = 0;
     int len;
 
     TRACE("%s, %s, %s, %x, %p, %p\n", debugstr_a(product), debugstr_a(component), debugstr_a(feature), mode, buf, buflen);

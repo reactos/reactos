@@ -29,6 +29,8 @@ static HRESULT (WINAPI *pCreateAssemblyCacheNet40)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pCreateAssemblyCacheSxs)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pLoadLibraryShim)( LPCWSTR, LPCWSTR, LPVOID, HMODULE * );
 static HRESULT (WINAPI *pGetFileVersion)( LPCWSTR, LPWSTR, DWORD, DWORD * );
+static HRESULT (WINAPI *pCreateAssemblyNameObject)( IAssemblyName **, LPCWSTR, DWORD, LPVOID );
+static HRESULT (WINAPI *pCreateAssemblyEnum)( IAssemblyEnum **, IUnknown *, IAssemblyName *, DWORD, LPVOID );
 
 static HMODULE hfusion10, hfusion11, hfusion20, hfusion40, hmscoree, hsxs;
 
@@ -70,8 +72,11 @@ static BOOL init_function_pointers( void )
         pCreateAssemblyCacheNet20 = (void *)GetProcAddress( hfusion20, "CreateAssemblyCache" );
 
     if (!pLoadLibraryShim( szFusion, szVersion40, NULL, &hfusion40 ))
+    {
         pCreateAssemblyCacheNet40 = (void *)GetProcAddress( hfusion40, "CreateAssemblyCache" );
-
+        pCreateAssemblyNameObject = (void *)GetProcAddress( hfusion40, "CreateAssemblyNameObject" );
+        pCreateAssemblyEnum = (void *)GetProcAddress( hfusion40, "CreateAssemblyEnum" );
+    }
     return TRUE;
 }
 
@@ -248,6 +253,70 @@ static BOOL is_assembly_installed( IAssemblyCache *cache, const WCHAR *display_n
     }
     TRACE("QueryAssemblyInfo returned 0x%08x\n", hr);
     return FALSE;
+}
+
+WCHAR *msi_get_assembly_path( MSIPACKAGE *package, const WCHAR *displayname )
+{
+    HRESULT hr;
+    ASSEMBLY_INFO info;
+    IAssemblyCache *cache = package->cache_net[CLR_VERSION_V40];
+
+    if (!cache) return NULL;
+
+    memset( &info, 0, sizeof(info) );
+    info.cbAssemblyInfo = sizeof(info);
+    hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, displayname, &info );
+    if (hr != E_NOT_SUFFICIENT_BUFFER) return NULL;
+
+    if (!(info.pszCurrentAssemblyPathBuf = msi_alloc( info.cchBuf * sizeof(WCHAR) ))) return NULL;
+
+    hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, displayname, &info );
+    if (FAILED( hr ))
+    {
+        msi_free( info.pszCurrentAssemblyPathBuf );
+        return NULL;
+    }
+    TRACE("returning %s\n", debugstr_w(info.pszCurrentAssemblyPathBuf));
+    return info.pszCurrentAssemblyPathBuf;
+}
+
+IAssemblyEnum *msi_create_assembly_enum( MSIPACKAGE *package, const WCHAR *displayname )
+{
+    HRESULT hr;
+    IAssemblyName *name;
+    IAssemblyEnum *ret;
+    WCHAR *str;
+    UINT len = 0;
+
+    if (!pCreateAssemblyNameObject || !pCreateAssemblyEnum) return NULL;
+
+    hr = pCreateAssemblyNameObject( &name, displayname, CANOF_PARSE_DISPLAY_NAME, NULL );
+    if (FAILED( hr )) return NULL;
+
+    hr = IAssemblyName_GetName( name, &len, NULL );
+    if (hr != E_NOT_SUFFICIENT_BUFFER || !(str = msi_alloc( len * sizeof(WCHAR) )))
+    {
+        IAssemblyName_Release( name );
+        return NULL;
+    }
+
+    hr = IAssemblyName_GetName( name, &len, str );
+    IAssemblyName_Release( name );
+    if (FAILED( hr ))
+    {
+        msi_free( str );
+        return NULL;
+    }
+
+    hr = pCreateAssemblyNameObject( &name, str, 0, NULL );
+    msi_free( str );
+    if (FAILED( hr )) return NULL;
+
+    hr = pCreateAssemblyEnum( &ret, NULL, name, ASM_CACHE_GAC, NULL );
+    IAssemblyName_Release( name );
+    if (FAILED( hr )) return NULL;
+
+    return ret;
 }
 
 static const WCHAR clr_version_v10[] = {'v','1','.','0','.','3','7','0','5',0};
