@@ -574,5 +574,13 @@ START_TEST(dragdrop)
     register_dummy_class();
 
     test_Register_Revoke();
+#ifdef __REACTOS__
+    if (!winetest_interactive &&
+        !strcmp(winetest_platform, "windows"))
+    {
+        skip("ROSTESTS-182: Skipping ole32_winetest:dragdrop test_DoDragDrop because it hangs on WHS-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
     test_DoDragDrop();
 }
