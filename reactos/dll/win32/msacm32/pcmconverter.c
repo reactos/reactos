@@ -704,15 +704,15 @@ static	LRESULT PCM_DriverDetails(PACMDRIVERDETAILSW add)
 
     add->fccType = ACMDRIVERDETAILS_FCCTYPE_AUDIOCODEC;
     add->fccComp = ACMDRIVERDETAILS_FCCCOMP_UNDEFINED;
-    add->wMid = 0xFF;
-    add->wPid = 0x00;
+    add->wMid = MM_MICROSOFT;
+    add->wPid = MM_MSFT_ACM_PCM;
     add->vdwACM = 0x01000000;
     add->vdwDriver = 0x01000000;
     add->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CONVERTER;
     add->cFormatTags = 1;
     add->cFilterTags = 0;
     add->hicon = NULL;
-    MultiByteToWideChar( CP_ACP, 0, "WINE-PCM", -1,
+    MultiByteToWideChar( CP_ACP, 0, "MS-PCM", -1,
                          add->szShortName, sizeof(add->szShortName)/sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, "Wine PCM converter", -1,
                          add->szLongName, sizeof(add->szLongName)/sizeof(WCHAR) );

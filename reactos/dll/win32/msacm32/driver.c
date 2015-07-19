@@ -149,7 +149,7 @@ MMRESULT WINAPI acmDriverAddW(PHACMDRIVERID phadid, HINSTANCE hinstModule,
         }
         break;
     default:
-        ERR("invalid flag value 0x%08x for fdwAdd\n", fdwAdd & ACM_DRIVERADDF_TYPEMASK);
+        ERR("invalid flag value 0x%08x for fdwAdd\n", fdwAdd);
         return MMSYSERR_INVALFLAG;
     }
 
