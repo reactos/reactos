@@ -2243,10 +2243,9 @@ static void test_domnode( void )
         ok( tag != NULL, "tag was null\n");
         ok( !lstrcmpW( tag, szSSearch ), "incorrect tag name\n");
         SysFreeString( tag );
-    }
 
-    if (element)
         IXMLDOMElement_Release( element );
+    }
     ok(IXMLDOMDocument_Release( doc ) == 0, "document is not destroyed\n");
 
     free_bstrs();
