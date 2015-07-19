@@ -452,13 +452,16 @@ static void test_Register_Revoke(void)
 
     ok(droptarget_refs >= 1, "DropTarget refs should be at least one\n");
     OleUninitialize();
-    ok(droptarget_refs >= 1, "DropTarget refs should be at least one\n");
 
-    hr = RevokeDragDrop(hwnd);
-    ok_ole_success(hr, "RevokeDragDrop");
-    ok(droptarget_refs == 0 ||
-       broken(droptarget_refs == 1), /* NT4 */
-       "DropTarget refs should be zero not %d\n", droptarget_refs);
+    /* Win 8 releases the ref in OleUninitialize() */
+    if (droptarget_refs >= 1)
+    {
+        hr = RevokeDragDrop(hwnd);
+        ok_ole_success(hr, "RevokeDragDrop");
+        ok(droptarget_refs == 0 ||
+           broken(droptarget_refs == 1), /* NT4 */
+           "DropTarget refs should be zero not %d\n", droptarget_refs);
+    }
 
     hr = RevokeDragDrop(NULL);
     ok(hr == DRAGDROP_E_INVALIDHWND, "RevokeDragDrop with NULL hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08x\n", hr);

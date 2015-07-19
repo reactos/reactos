@@ -1563,7 +1563,7 @@ static void test_registered_object_thread_affinity(void)
     ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     GetExitCodeThread(thread, &exitcode);
     hr = exitcode;
-    ok(hr == RPC_E_WRONG_THREAD, "CoRevokeClassObject called from different "
+    ok(hr == RPC_E_WRONG_THREAD || broken(hr == S_OK) /* win8 */, "CoRevokeClassObject called from different "
        "thread to where registered should return RPC_E_WRONG_THREAD instead of 0x%08x\n", hr);
 
     thread = CreateThread(NULL, 0, register_class_object_thread, NULL, 0, &tid);
@@ -1973,7 +1973,12 @@ static void test_TreatAsClass(void)
     ok(lr == ERROR_SUCCESS, "Couldn't open CLSID key\n");
 
     lr = RegCreateKeyExA(clsidkey, deadbeefA, 0, NULL, 0, KEY_WRITE, NULL, &deadbeefkey, NULL);
-    ok(lr == ERROR_SUCCESS, "Couldn't create class key\n");
+    if (lr) {
+        win_skip("CoGetTreatAsClass() tests will be skipped (failed to create a test key, error %d)\n",
+            GetLastError());
+        RegCloseKey(clsidkey);
+        return;
+    }
 
     hr = pCoTreatAsClass(&deadbeef, &deadbeef);
     ok(hr == REGDB_E_WRITEREGDB, "CoTreatAsClass gave wrong error: %08x\n", hr);
