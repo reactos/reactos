@@ -134,7 +134,7 @@ reactos/dll/win32/msvfw32             # Synced to WineStaging-1.7.37
 reactos/dll/win32/msvidc32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/msxml               # Synced to WineStaging-1.7.37
 reactos/dll/win32/msxml2              # Synced to WineStaging-1.7.37
-reactos/dll/win32/msxml3              # Synced to WineStaging-1.7.37
+reactos/dll/win32/msxml3              # Synced to WineStaging-1.7.47
 reactos/dll/win32/msxml4              # Synced to WineStaging-1.7.37
 reactos/dll/win32/msxml6              # Synced to WineStaging-1.7.37
 reactos/dll/win32/nddeapi             # Synced to WineStaging-1.7.37

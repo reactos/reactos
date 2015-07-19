@@ -2211,6 +2211,7 @@ void xslpattern_free (void * ptr , yyscan_t yyscanner)
 
 
 
+xmlChar* XSLPattern_to_XPath(xmlXPathContextPtr, xmlChar const*) DECLSPEC_HIDDEN;
 xmlChar* XSLPattern_to_XPath(xmlXPathContextPtr ctxt, xmlChar const* xslpat_str)
 {
     parser_param p;

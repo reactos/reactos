@@ -2120,7 +2120,13 @@ static HRESULT WINAPI domdoc_load(
             case 1:
                 /* Only takes UTF-8 strings.
                  * NOT NULL-terminated. */
-                SafeArrayAccessData(psa, (void**)&str);
+                hr = SafeArrayAccessData(psa, (void**)&str);
+                if (FAILED(hr))
+                {
+                    This->error = hr;
+                    WARN("failed to access array data, 0x%08x\n", hr);
+                    break;
+                }
                 SafeArrayGetUBound(psa, 1, &len);
 
                 if ((xmldoc = doparse(This, str, ++len, XML_CHAR_ENCODING_UTF8)))

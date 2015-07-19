@@ -1598,7 +1598,29 @@ static HRESULT WINAPI unknode_get_nodeType(
 
     FIXME("(%p)->(%p)\n", This, domNodeType);
 
-    *domNodeType = This->node.node->type;
+    switch (This->node.node->type)
+    {
+    case XML_ELEMENT_NODE:
+    case XML_ATTRIBUTE_NODE:
+    case XML_TEXT_NODE:
+    case XML_CDATA_SECTION_NODE:
+    case XML_ENTITY_REF_NODE:
+    case XML_ENTITY_NODE:
+    case XML_PI_NODE:
+    case XML_COMMENT_NODE:
+    case XML_DOCUMENT_NODE:
+    case XML_DOCUMENT_TYPE_NODE:
+    case XML_DOCUMENT_FRAG_NODE:
+    case XML_NOTATION_NODE:
+        /* we only care about this set of types, libxml2 type values are
+           exactly what we need */
+        *domNodeType = (DOMNodeType)This->node.node->type;
+        break;
+    default:
+        *domNodeType = NODE_INVALID;
+        break;
+    }
+
     return S_OK;
 }
 
@@ -1997,9 +2019,11 @@ IXMLDOMNode *create_node( xmlNodePtr node )
         pUnk = create_doc_fragment( node );
         break;
     case XML_DTD_NODE:
+    case XML_DOCUMENT_TYPE_NODE:
         pUnk = create_doc_type( node );
         break;
-    default: {
+    case XML_ENTITY_NODE:
+    case XML_NOTATION_NODE: {
         unknode *new_node;
 
         FIXME("only creating basic node for type %d\n", node->type);
@@ -2012,7 +2036,11 @@ IXMLDOMNode *create_node( xmlNodePtr node )
         new_node->ref = 1;
         init_xmlnode(&new_node->node, node, &new_node->IXMLDOMNode_iface, NULL);
         pUnk = (IUnknown*)&new_node->IXMLDOMNode_iface;
+        break;
     }
+    default:
+        ERR("Called for unsupported node type %d\n", node->type);
+        return NULL;
     }
 
     hr = IUnknown_QueryInterface(pUnk, &IID_IXMLDOMNode, (LPVOID*)&ret);
