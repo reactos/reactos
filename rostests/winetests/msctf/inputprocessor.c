@@ -2174,7 +2174,6 @@ static void test_AssociateFocus(void)
     test_PrevFocus = FOCUS_IGNORE;
     DestroyWindow(wnd1);
     DestroyWindow(wnd2);
-    test_OnSetFocus = SINK_UNEXPECTED;
     test_OnPopContext = SINK_OPTIONAL; /* Vista and greater */
     test_OnSetFocus = SINK_OPTIONAL; /* Vista and greater */
     ITfThreadMgr_GetFocus(g_tm, &test_PrevFocus);
