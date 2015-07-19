@@ -1595,13 +1595,13 @@ static HRESULT create_body_offset_list(IStream *stm, const char *boundary, struc
 
         if(overlap == buf) /* 1st iteration */
         {
-            memcpy(buf, buf + PARSER_BUF_SIZE - overlap_no, overlap_no);
+            memmove(buf, buf + PARSER_BUF_SIZE - overlap_no, overlap_no);
             overlap = buf + overlap_no;
             start += read - overlap_no;
         }
         else
         {
-            memcpy(buf, buf + PARSER_BUF_SIZE, overlap_no);
+            memmove(buf, buf + PARSER_BUF_SIZE, overlap_no);
             start += read;
         }
     } while(1);
