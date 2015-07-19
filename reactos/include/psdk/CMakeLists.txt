@@ -56,6 +56,7 @@ list(APPEND SOURCE
     imnxport.idl
     indexsrv.idl
     inputscope.idl
+    inseng.idl
     metahost.idl
     mimeinfo.idl
     mimeole.idl
