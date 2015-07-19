@@ -203,7 +203,6 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
     HANDLE hFile;
     BOOL  found_dot = FALSE;
     INT   curplace = 0;
-    INT   start;
     INT   count;
     TCHAR path[MAX_PATH];
     TCHAR fname[MAX_PATH];
@@ -232,10 +231,8 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
     if (str[count] == _T(' '))
         count++;
 
-    start = count;
-
     if (str[count] == _T('"'))
-        count++;    /* don't increment start */
+        count++;
 
     /* extract directory from word */
     _tcscpy (directory, &str[count]);
