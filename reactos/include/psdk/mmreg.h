@@ -137,6 +137,18 @@ typedef const struct _WAVEFORMATEX *LPCWAVEFORMATEX;
 #define   MM_UNMAPPED                   0xffff
 #define   MM_PID_UNMAPPED               MM_UNMAPPED
 
+#ifndef MM_MICROSOFT
+#define MM_MICROSOFT 0x01
+#endif
+#define MM_MSFT_ACM_MSADPCM 0x21
+#define MM_MSFT_ACM_IMAADPCM 0x22
+#define MM_MSFT_ACM_GSM610 0x24
+#define MM_MSFT_ACM_G711 0x25
+#define MM_MSFT_ACM_PCM 0x26
+
+#define MM_FRAUNHOFER_IIS 0xAC
+#define MM_FHGIIS_MPEGLAYER3_DECODE 0x09
+
 #if !defined(WAVE_FORMAT_EXTENSIBLE)
 #define  WAVE_FORMAT_EXTENSIBLE			0xFFFE  /* Microsoft */
 #endif
