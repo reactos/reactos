@@ -78,7 +78,7 @@ reactos/dll/win32/httpapi             # Synced to WineStaging-1.7.37
 reactos/dll/win32/iccvid              # Synced to WineStaging-1.7.37
 reactos/dll/win32/icmp                # Out of sync
 reactos/dll/win32/ieframe             # Synced to WineStaging-1.7.47
-reactos/dll/win32/imaadp32.acm        # Synced to WineStaging-1.7.37
+reactos/dll/win32/imaadp32.acm        # Synced to WineStaging-1.7.47
 reactos/dll/win32/imagehlp            # Synced to WineStaging-1.7.37
 reactos/dll/win32/imm32               # Synced to Wine-1.7.27
 reactos/dll/win32/inetcomm            # Synced to WineStaging-1.7.47
