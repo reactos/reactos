@@ -151,7 +151,7 @@ static HRESULT WINAPI IAssemblyCacheImpl_QueryInterface(IAssemblyCache *iface,
         IsEqualIID(riid, &IID_IAssemblyCache))
     {
         IAssemblyCache_AddRef(iface);
-        *ppobj = This;
+        *ppobj = &This->IAssemblyCache_iface;
         return S_OK;
     }
 
@@ -580,7 +580,7 @@ static HRESULT WINAPI IAssemblyCacheItemImpl_QueryInterface(IAssemblyCacheItem *
         IsEqualIID(riid, &IID_IAssemblyCacheItem))
     {
         IAssemblyCacheItem_AddRef(iface);
-        *ppobj = This;
+        *ppobj = &This->IAssemblyCacheItem_iface;
         return S_OK;
     }
 
