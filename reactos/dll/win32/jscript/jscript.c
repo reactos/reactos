@@ -787,7 +787,11 @@ static HRESULT WINAPI JScriptParse_ParseScriptText(IActiveScriptParse *iface,
         return hres;
     }
 
-    if(!is_started(This->ctx)) {
+    /*
+     * Although pvarResult is not really used without SCRIPTTEXT_ISEXPRESSION flag, if it's not NULL,
+     * script is executed immediately, even if it's not in started state yet.
+     */
+    if(!pvarResult && !is_started(This->ctx)) {
         if(This->queue_tail)
             This->queue_tail = This->queue_tail->next = code;
         else
@@ -796,9 +800,13 @@ static HRESULT WINAPI JScriptParse_ParseScriptText(IActiveScriptParse *iface,
     }
 
     hres = exec_global_code(This, code);
-
     release_bytecode(code);
-    return hres;
+    if(FAILED(hres))
+        return hres;
+
+    if(pvarResult)
+        V_VT(pvarResult) = VT_EMPTY;
+    return S_OK;
 }
 
 static const IActiveScriptParseVtbl JScriptParseVtbl = {

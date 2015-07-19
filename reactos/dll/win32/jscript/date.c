@@ -2121,7 +2121,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 }
             }
             else if(parse[i]=='-' || parse[i]=='/') {
-                /* Short date */
+                /* Short or long date */
                 if(set_day || set_month || set_year) break;
                 set_day = TRUE;
                 set_month = TRUE;
@@ -2141,6 +2141,13 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 if(parse[i]<'0' || parse[i]>'9') break;
                 year = atoiW(&parse[i]);
                 while(parse[i]>='0' && parse[i]<='9') i++;
+
+                if(tmp >= 70){
+                        /* long date */
+                        month = day - 1;
+                        day = year;
+                        year = tmp;
+		}
             }
             else if(tmp<0) break;
             else if(tmp<70) {

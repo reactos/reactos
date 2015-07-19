@@ -114,7 +114,7 @@ static parameter_list_t *parameter_list_add(parser_ctx_t*,parameter_list_t*,cons
 
 static void *new_expression(parser_ctx_t *ctx,expression_type_t,size_t);
 static expression_t *new_function_expression(parser_ctx_t*,const WCHAR*,parameter_list_t*,
-        source_elements_t*,const WCHAR*,DWORD);
+        source_elements_t*,const WCHAR*,const WCHAR*,DWORD);
 static expression_t *new_binary_expression(parser_ctx_t*,expression_type_t,expression_t*,expression_t*);
 static expression_t *new_unary_expression(parser_ctx_t*,expression_type_t,expression_t*);
 static expression_t *new_conditional_expression(parser_ctx_t*,expression_t*,expression_t*,expression_t*);
@@ -160,7 +160,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 /* keywords */
 %token kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kIF kFINALLY kFOR kIN
 %token kINSTANCEOF kNEW kNULL kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
-%token tANDAND tOROR tINC tDEC tHTMLCOMMENT kDIVEQ
+%token tANDAND tOROR tINC tDEC tHTMLCOMMENT kDIVEQ kDCOL
 
 %token <srcptr> kFUNCTION '}'
 
@@ -258,8 +258,12 @@ SourceElements
 
 /* ECMA-262 3rd Edition    13 */
 FunctionExpression
-        : KFunction Identifier_opt left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
-                                { $$ = new_function_expression(ctx, $2, $4, $7, $1, $8-$1+1); }
+        : KFunction left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
+                                { $$ = new_function_expression(ctx, NULL, $3, $6, NULL, $1, $7-$1+1); }
+        | KFunction tIdentifier left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
+                                { $$ = new_function_expression(ctx, $2, $4, $7, NULL, $1, $8-$1+1); }
+        | KFunction tIdentifier kDCOL tIdentifier left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
+                                { $$ = new_function_expression(ctx, $4, $6, $9, $2, $1, $10-$1+1); }
 
 KFunction
         : kFUNCTION             { $$ = $1; }
@@ -1294,14 +1298,15 @@ static parameter_list_t *parameter_list_add(parser_ctx_t *ctx, parameter_list_t 
     return list;
 }
 
-static expression_t *new_function_expression(parser_ctx_t *ctx, const WCHAR *identifier,
-       parameter_list_t *parameter_list, source_elements_t *source_elements, const WCHAR *src_str, DWORD src_len)
+static expression_t *new_function_expression(parser_ctx_t *ctx, const WCHAR *identifier, parameter_list_t *parameter_list,
+    source_elements_t *source_elements, const WCHAR *event_target, const WCHAR *src_str, DWORD src_len)
 {
     function_expression_t *ret = new_expression(ctx, EXPR_FUNC, sizeof(*ret));
 
     ret->identifier = identifier;
     ret->parameter_list = parameter_list ? parameter_list->head : NULL;
     ret->source_elements = source_elements;
+    ret->event_target = event_target;
     ret->src_str = src_str;
     ret->src_len = src_len;
     ret->next = NULL;

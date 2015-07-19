@@ -129,6 +129,7 @@ typedef struct {
 
 typedef struct _function_code_t {
     BSTR name;
+    BSTR event_target;
     unsigned instr_off;
 
     const WCHAR *source;

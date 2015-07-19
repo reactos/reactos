@@ -78,17 +78,18 @@ extern int parser_debug;
     tDEC = 288,
     tHTMLCOMMENT = 289,
     kDIVEQ = 290,
-    kFUNCTION = 291,
-    tIdentifier = 292,
-    tAssignOper = 293,
-    tEqOper = 294,
-    tShiftOper = 295,
-    tRelOper = 296,
-    tNumericLiteral = 297,
-    tBooleanLiteral = 298,
-    tStringLiteral = 299,
-    tEOF = 300,
-    LOWER_THAN_ELSE = 301
+    kDCOL = 291,
+    kFUNCTION = 292,
+    tIdentifier = 293,
+    tAssignOper = 294,
+    tEqOper = 295,
+    tShiftOper = 296,
+    tRelOper = 297,
+    tNumericLiteral = 298,
+    tBooleanLiteral = 299,
+    tStringLiteral = 300,
+    tEOF = 301,
+    LOWER_THAN_ELSE = 302
   };
 #endif
 
@@ -118,7 +119,7 @@ union YYSTYPE
     struct _variable_list_t *variable_list;
     variable_declaration_t  *variable_declaration;
 
-#line 122 "parser.tab.h" /* yacc.c:1909  */
+#line 123 "parser.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

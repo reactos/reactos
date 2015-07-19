@@ -88,7 +88,7 @@ reactos/dll/win32/inseng              # Synced to WineStaging-1.7.47
 reactos/dll/win32/iphlpapi            # Out of sync
 reactos/dll/win32/itircl              # Synced to WineStaging-1.7.37
 reactos/dll/win32/itss                # Synced to WineStaging-1.7.37
-reactos/dll/win32/jscript             # Synced to WineStaging-1.7.37
+reactos/dll/win32/jscript             # Synced to WineStaging-1.7.47
 reactos/dll/win32/jsproxy             # Synced to WineStaging-1.7.37
 reactos/dll/win32/loadperf            # Synced to WineStaging-1.7.37
 reactos/dll/win32/localspl            # Synced to WineStaging-1.7.37

@@ -500,14 +500,16 @@ static HRESULT identifier_eval(script_ctx_t *ctx, BSTR identifier, exprval_t *re
 
     TRACE("%s\n", debugstr_w(identifier));
 
-    for(scope = ctx->exec_ctx->scope_chain; scope; scope = scope->next) {
-        if(scope->jsobj)
-            hres = jsdisp_get_id(scope->jsobj, identifier, fdexNameImplicit, &id);
-        else
-            hres = disp_get_id(ctx, scope->obj, identifier, identifier, fdexNameImplicit, &id);
-        if(SUCCEEDED(hres)) {
-            exprval_set_idref(ret, scope->obj, id);
-            return S_OK;
+    if(ctx->exec_ctx) {
+        for(scope = ctx->exec_ctx->scope_chain; scope; scope = scope->next) {
+            if(scope->jsobj)
+                hres = jsdisp_get_id(scope->jsobj, identifier, fdexNameImplicit, &id);
+            else
+                hres = disp_get_id(ctx, scope->obj, identifier, identifier, fdexNameImplicit, &id);
+            if(SUCCEEDED(hres)) {
+                exprval_set_idref(ret, scope->obj, id);
+                return S_OK;
+            }
         }
     }
 
@@ -2493,6 +2495,43 @@ static HRESULT enter_bytecode(script_ctx_t *ctx, bytecode_t *code, function_code
     return S_OK;
 }
 
+static HRESULT bind_event_target(script_ctx_t *ctx, function_code_t *func, jsdisp_t *func_obj)
+{
+    IBindEventHandler *target;
+    exprval_t exprval;
+    IDispatch *disp;
+    jsval_t v;
+    HRESULT hres;
+
+    hres = identifier_eval(ctx, func->event_target, &exprval);
+    if(FAILED(hres))
+        return hres;
+
+    hres = exprval_to_value(ctx, &exprval, &v);
+    exprval_release(&exprval);
+    if(FAILED(hres))
+        return hres;
+
+    if(!is_object_instance(v)) {
+        FIXME("Can't bind to %s\n", debugstr_jsval(v));
+        jsval_release(v);
+    }
+
+    disp = get_object(v);
+    hres = IDispatch_QueryInterface(disp, &IID_IBindEventHandler, (void**)&target);
+    if(SUCCEEDED(hres)) {
+        hres = IBindEventHandler_BindHandler(target, func->name, (IDispatch*)&func_obj->IDispatchEx_iface);
+        IBindEventHandler_Release(target);
+        if(FAILED(hres))
+            WARN("BindEvent failed: %08x\n", hres);
+    }else {
+        FIXME("No IBindEventHandler, not yet supported binding\n");
+    }
+
+    IDispatch_Release(disp);
+    return hres;
+}
+
 HRESULT exec_source(exec_ctx_t *ctx, bytecode_t *code, function_code_t *func, BOOL from_eval, jsval_t *ret)
 {
     exec_ctx_t *prev_ctx;
@@ -2510,7 +2549,10 @@ HRESULT exec_source(exec_ctx_t *ctx, bytecode_t *code, function_code_t *func, BO
         if(FAILED(hres))
             return hres;
 
-        hres = jsdisp_propput_name(ctx->var_disp, func->funcs[i].name, jsval_obj(func_obj));
+        if(func->funcs[i].event_target)
+            hres = bind_event_target(ctx->script, func->funcs+i, func_obj);
+        else
+            hres = jsdisp_propput_name(ctx->var_disp, func->funcs[i].name, jsval_obj(func_obj));
         jsdisp_release(func_obj);
         if(FAILED(hres))
             return hres;

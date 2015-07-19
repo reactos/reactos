@@ -287,6 +287,7 @@ struct _source_elements_t {
 typedef struct _function_expression_t {
     expression_t expr;
     const WCHAR *identifier;
+    const WCHAR *event_target;
     parameter_t *parameter_list;
     source_elements_t *source_elements;
     const WCHAR *src_str;

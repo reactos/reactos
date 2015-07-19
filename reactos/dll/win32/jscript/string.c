@@ -1128,7 +1128,7 @@ static HRESULT String_split(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
     match_state_t match_result, *match_ptr = &match_result;
     DWORD length, i, match_len = 0;
     const WCHAR *ptr, *ptr2, *str, *match_str = NULL;
-    unsigned limit = UINT32_MAX;
+    unsigned limit = ~0u;
     jsdisp_t *array, *regexp = NULL;
     jsstr_t *jsstr, *match_jsstr, *tmp_str;
     HRESULT hres;
