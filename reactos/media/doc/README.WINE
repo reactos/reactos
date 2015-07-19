@@ -127,7 +127,7 @@ reactos/dll/win32/mspatcha            # Synced to WineStaging-1.7.37
 reactos/dll/win32/msrle32             # Synced to WineStaging-1.7.37
 reactos/dll/win32/mssign32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/mssip32             # Synced to WineStaging-1.7.37
-reactos/dll/win32/mstask              # Synced to WineStaging-1.7.37
+reactos/dll/win32/mstask              # Synced to WineStaging-1.7.47
 reactos/dll/win32/msvcrt20            # Out of sync
 reactos/dll/win32/msvcrt40            # Out of sync
 reactos/dll/win32/msvfw32             # Synced to WineStaging-1.7.37
