@@ -39,9 +39,21 @@ END
 /* Detail header titles */
 STRINGTABLE
 BEGIN
-    IDS_LIST_DISK_HEAD "Диск ###  Состояние\tРазмер\tСвободно\tДин\tGPT\n"
-    IDS_LIST_DISK_LINE "--------  ---------\t------\t--------\t---\t---\n"
+    IDS_LIST_DISK_HEAD "\n  Диск ###  Состояние   Размер   Свободно  Дин  GPT\n"
+    IDS_LIST_DISK_LINE "  --------  ----------  -------  --------  ---  ---\n"
+    IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
     IDS_LIST_VOLUME_HEAD "Том ###\tИмя\tМетка\n"
+END
+
+/* Select command strings */
+STRINGTABLE
+BEGIN
+    IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
+    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
+    IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
 END
 
 /* Disk Status */
@@ -60,8 +72,6 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_CURRENT_DSK_STATUS "выбран текущим диском."
-    IDS_MSG_NO_DISK "Диск для преобразования не выбран.\nВыберите диск и повторите попытку."
     IDS_MSG_ARG_SYNTAX_ERROR "Указаны неверные параметры команды.\nЧтобы получить дополнительные сведения о данной команде, введите:"
 END
 
@@ -113,6 +123,8 @@ STRINGTABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Ошибка открытия скрипта: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Ошибка обработки параметров: %s\n"
+    IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
+    IDS_ERROR_INVALID_DISK "Invalid disk\n"
 END
 
 /* Active help descriptions */

@@ -42,7 +42,7 @@ list(APPEND SOURCE
 
 add_executable(diskpart ${SOURCE} diskpart.rc)
 set_module_type(diskpart win32cui UNICODE)
-add_importlibs(diskpart user32 advapi32 msvcrt kernel32)
+add_importlibs(diskpart user32 advapi32 msvcrt kernel32 ntdll)
 
 if(MSVC)
     add_importlibs(diskpart ntdll)

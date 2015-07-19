@@ -2,8 +2,7 @@
  * PROJECT:     ReactOS DiskPart
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/diskpart/lang/resource.h
- * PURPOSE:     Manages all the partitions of the OS in
- *              an interactive way
+ * PURPOSE:     Manages all the partitions of the OS in an interactive way
  * PROGRAMMERS: Lee Schroeder
  */
 
@@ -33,9 +32,17 @@
 #define IDS_DETAIL_INFO_CRASH_DSK      19
 #define IDS_DETAIL_INFO_CLST_DSK       20
 
-#define IDS_LIST_DISK_HEAD   21
-#define IDS_LIST_DISK_LINE   22
-#define IDS_LIST_VOLUME_HEAD 23
+#define IDS_LIST_DISK_HEAD             3300
+#define IDS_LIST_DISK_LINE             3301
+#define IDS_LIST_DISK_FORMAT           3302
+#define IDS_LIST_VOLUME_HEAD           3303
+
+#define IDS_SELECT_NO_DISK             4400
+#define IDS_SELECT_DISK                4401
+#define IDS_SELECT_NO_VOLUME           4402
+#define IDS_SELECT_VOLUME              4403
+#define IDS_SELECT_NO_PARTITION        4404
+#define IDS_SELECT_PARTITION           4405
 
 #define IDS_STATUS_YES          31
 #define IDS_STATUS_NO           32
@@ -46,8 +53,6 @@
 #define IDS_STATUS_OFFLINE      37
 #define IDS_STATUS_NO_MEDIA     38
 
-#define IDS_MSG_CURRENT_DSK_STATUS 39
-#define IDS_MSG_NO_DISK            40
 #define IDS_MSG_ARG_SYNTAX_ERROR   41
 
 #define IDS_HELP_CMD_DESC_ACTIVE     58
@@ -128,3 +133,7 @@
 #define IDS_HELP_CMD_SETID       138
 #define IDS_HELP_CMD_SHRINK      139
 #define IDS_HELP_CMD_UNIQUEID    140
+
+
+#define IDS_ERROR_INVALID_ARGS   211
+#define IDS_ERROR_INVALID_DISK   212

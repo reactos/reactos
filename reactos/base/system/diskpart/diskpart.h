@@ -2,8 +2,7 @@
  * PROJECT:         ReactOS DiskPart
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/diskpart.c
- * PURPOSE:         Manages all the partitions of the OS in
- *                  an interactive way
+ * PURPOSE:         Manages all the partitions of the OS in an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
 
@@ -13,9 +12,18 @@
 /* INCLUDES ******************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
+#include <winbase.h>
+#define NTOS_MODE_USER
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/umfuncs.h>
 
 #include "resource.h"
 
@@ -32,15 +40,20 @@ typedef struct _COMMAND
 extern COMMAND cmds[];
 
 /* NOERR codes for the program */
-#define ERROR_NONE      0
-#define ERROR_FATAL     1
-#define ERROR_CMD_ARG   2
-#define ERROR_FILE      3
-#define ERROR_SERVICE   4
-#define ERROR_SYNTAX    5
+//#define ERROR_NONE      0
+//#define ERROR_FATAL     1
+//#define ERROR_CMD_ARG   2
+//#define ERROR_FILE      3
+//#define ERROR_SERVICE   4
+//#define ERROR_SYNTAX    5
 
 #define MAX_STRING_SIZE 1024
 #define MAX_ARGS_COUNT 256
+
+/* GLOBAL VARIABLES ***********************************************************/
+
+ULONG CurrentDisk;
+ULONG CurrentPartition;
 
 /* PROTOTYPES *****************************************************************/
 
