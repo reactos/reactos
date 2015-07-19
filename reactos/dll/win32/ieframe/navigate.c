@@ -931,6 +931,7 @@ static void navigate_bsc_proc(DocHost *This, task_header_t *t)
 HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
                      const VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
+    SAFEARRAY *post_array = NULL;
     PBYTE post_data = NULL;
     ULONG post_data_len = 0;
     LPWSTR headers = NULL;
@@ -942,9 +943,18 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
        || (TargetFrameName && V_VT(TargetFrameName) != VT_EMPTY && V_VT(TargetFrameName) != VT_ERROR))
         FIXME("Unsupported args (Flags %s; TargetFrameName %s)\n", debugstr_variant(Flags), debugstr_variant(TargetFrameName));
 
-    if(PostData && V_VT(PostData) == (VT_ARRAY | VT_UI1) && V_ARRAY(PostData)) {
-        SafeArrayAccessData(V_ARRAY(PostData), (void**)&post_data);
-        post_data_len = V_ARRAY(PostData)->rgsabound[0].cElements;
+    if(PostData) {
+        if(V_VT(PostData) & VT_ARRAY)
+            post_array = V_ISBYREF(PostData) ? *V_ARRAYREF(PostData) : V_ARRAY(PostData);
+        else
+            WARN("Invalid post data %s\n", debugstr_variant(PostData));
+    }
+
+    if(post_array) {
+        LONG elem_max;
+        SafeArrayAccessData(post_array, (void**)&post_data);
+        SafeArrayGetUBound(post_array, 1, &elem_max);
+        post_data_len = (elem_max+1) * SafeArrayGetElemsize(post_array);
     }
 
     if(Headers && V_VT(Headers) == VT_BSTR) {
@@ -983,7 +993,7 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
     }
 
     if(post_data)
-        SafeArrayUnaccessData(V_ARRAY(PostData));
+        SafeArrayUnaccessData(post_array);
 
     return hres;
 }

@@ -1089,8 +1089,8 @@ static HRESULT WINAPI WBOleCommandTarget_Exec(IOleCommandTarget *iface,
         VARIANT *pvaOut)
 {
     WebBrowser *This = impl_from_IOleCommandTarget(iface);
-    FIXME("(%p)->(%s %d %d %p %p)\n", This, debugstr_guid(pguidCmdGroup), nCmdID,
-          nCmdexecopt, pvaIn, pvaOut);
+    FIXME("(%p)->(%s %d %d %s %p)\n", This, debugstr_guid(pguidCmdGroup), nCmdID,
+          nCmdexecopt, debugstr_variant(pvaIn), pvaOut);
     return E_NOTIMPL;
 }
 
