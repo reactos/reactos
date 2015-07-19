@@ -127,8 +127,30 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
        TODO: should it be *exactly* sizeof(dd), as tested here?
      */
     if (rc == MMSYSERR_NOERROR) {
+        struct {
+            const char *shortname;
+            const WORD mid;
+            const WORD pid;
+        } *iter, expected_ids[] = {
+            { "Microsoft IMA ADPCM", MM_MICROSOFT, MM_MSFT_ACM_IMAADPCM },
+            { "MS-ADPCM", MM_MICROSOFT, MM_MSFT_ACM_MSADPCM },
+            { "Microsoft CCITT G.711", MM_MICROSOFT, MM_MSFT_ACM_G711},
+            { "MPEG Layer-3 Codec", MM_FRAUNHOFER_IIS, MM_FHGIIS_MPEGLAYER3_DECODE },
+            { "MS-PCM", MM_MICROSOFT, MM_MSFT_ACM_PCM },
+            { 0 }
+        };
+
         ok(dd.cbStruct == sizeof(dd),
             "acmDriverDetailsA(): cbStruct = %08x\n", dd.cbStruct);
+
+        for (iter = expected_ids; iter->shortname; ++iter) {
+            if (dd.szShortName && !strcmp(iter->shortname, dd.szShortName)) {
+                ok(iter->mid == dd.wMid && iter->pid == dd.wPid,
+                        "Got wrong manufacturer (0x%x vs 0x%x) or product (0x%x vs 0x%x)\n",
+                        dd.wMid, iter->mid,
+                        dd.wPid, iter->pid);
+            }
+        }
     }
 
     if (rc == MMSYSERR_NOERROR && winetest_interactive) {
@@ -139,6 +161,8 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
         trace("  Features: %s\n", dd.szFeatures);
         trace("  Supports %u formats\n", dd.cFormatTags);
         trace("  Supports %u filter formats\n", dd.cFilterTags);
+        trace("  Mid: 0x%x\n", dd.wMid);
+        trace("  Pid: 0x%x\n", dd.wPid);
     }
 
     /* try bad pointer */
