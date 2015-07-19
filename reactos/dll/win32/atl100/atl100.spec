@@ -36,7 +36,7 @@
 50 stdcall AtlIPersistStreamInit_Load(ptr ptr ptr ptr)
 51 stdcall AtlIPersistStreamInit_Save(ptr long ptr ptr ptr)
 52 stdcall AtlIPersistPropertyBag_Load(ptr ptr ptr ptr ptr)
-53 stub AtlIPersistPropertyBag_Save
+53 stdcall AtlIPersistPropertyBag_Save(ptr long long ptr ptr ptr)
 54 stdcall AtlGetObjectSourceInterface(ptr ptr ptr ptr ptr)
 56 stdcall AtlLoadTypeLib(long wstr ptr ptr)
 58 stdcall AtlModuleAddTermFunc(ptr ptr long)

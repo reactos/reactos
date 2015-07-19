@@ -576,8 +576,12 @@ HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID riid, LPVOID *ppvObject)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
+#ifdef __REACTOS__
     /* Note: we can't use __wine_register_server here because it uses CLSID_Registrar which isn't registred yet */
     return do_register_server(TRUE);
+#else
+    return __wine_register_resources( atl_instance );
+#endif
 }
 
 /***********************************************************************
@@ -585,7 +589,11 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
+#ifdef __REACTOS__
     return do_register_server(FALSE);
+#else
+    return __wine_unregister_resources( atl_instance );
+#endif
 }
 
 /***********************************************************************
