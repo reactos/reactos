@@ -18,8 +18,6 @@
 
 #include "mmdevapi.h"
 
-static const IAudioEndpointVolumeExVtbl AEVImpl_Vtbl;
-
 typedef struct AEVImpl {
     IAudioEndpointVolumeEx IAudioEndpointVolumeEx_iface;
     LONG ref;
@@ -30,20 +28,6 @@ typedef struct AEVImpl {
 static inline AEVImpl *impl_from_IAudioEndpointVolumeEx(IAudioEndpointVolumeEx *iface)
 {
     return CONTAINING_RECORD(iface, AEVImpl, IAudioEndpointVolumeEx_iface);
-}
-
-HRESULT AudioEndpointVolume_Create(MMDevice *parent, IAudioEndpointVolume **ppv)
-{
-    AEVImpl *This;
-    This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*This));
-    *ppv = (IAudioEndpointVolume*)This;
-    if (!This)
-        return E_OUTOFMEMORY;
-    This->IAudioEndpointVolumeEx_iface.lpVtbl = &AEVImpl_Vtbl;
-    This->ref = 1;
-    This->level = 1.0f;
-    This->mute = FALSE;
-    return S_OK;
 }
 
 static void AudioEndpointVolume_Destroy(AEVImpl *This)
@@ -61,7 +45,7 @@ static HRESULT WINAPI AEV_QueryInterface(IAudioEndpointVolumeEx *iface, REFIID r
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IAudioEndpointVolume) ||
         IsEqualIID(riid, &IID_IAudioEndpointVolumeEx)) {
-        *ppv = This;
+        *ppv = &This->IAudioEndpointVolumeEx_iface;
     }
     else
         return E_NOINTERFACE;
@@ -291,3 +275,20 @@ static const IAudioEndpointVolumeExVtbl AEVImpl_Vtbl = {
     AEV_GetVolumeRange,
     AEV_GetVolumeRangeChannel
 };
+
+HRESULT AudioEndpointVolume_Create(MMDevice *parent, IAudioEndpointVolume **ppv)
+{
+    AEVImpl *This;
+
+    *ppv = NULL;
+    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    if (!This)
+        return E_OUTOFMEMORY;
+    This->IAudioEndpointVolumeEx_iface.lpVtbl = &AEVImpl_Vtbl;
+    This->ref = 1;
+    This->level = 1.0f;
+    This->mute = FALSE;
+
+    *ppv = (IAudioEndpointVolume*)&This->IAudioEndpointVolumeEx_iface;
+    return S_OK;
+}

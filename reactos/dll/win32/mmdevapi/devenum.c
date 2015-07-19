@@ -125,12 +125,12 @@ static HRESULT MMDevPropStore_OpenPropKey(const GUID *guid, DWORD flow, HKEY *pr
     LONG ret;
     HKEY key;
     StringFromGUID2(guid, buffer, 39);
-    if ((ret = RegOpenKeyExW(flow == eRender ? key_render : key_capture, buffer, 0, KEY_READ|KEY_WRITE, &key)) != ERROR_SUCCESS)
+    if ((ret = RegOpenKeyExW(flow == eRender ? key_render : key_capture, buffer, 0, KEY_READ|KEY_WRITE|KEY_WOW64_64KEY, &key)) != ERROR_SUCCESS)
     {
         WARN("Opening key %s failed with %u\n", debugstr_w(buffer), ret);
         return E_FAIL;
     }
-    ret = RegOpenKeyExW(key, reg_properties, 0, KEY_READ|KEY_WRITE, propkey);
+    ret = RegOpenKeyExW(key, reg_properties, 0, KEY_READ|KEY_WRITE|KEY_WOW64_64KEY, propkey);
     RegCloseKey(key);
     if (ret != ERROR_SUCCESS)
     {
@@ -327,11 +327,11 @@ static MMDevice *MMDevice_Create(WCHAR *name, GUID *id, EDataFlow flow, DWORD st
     else
         root = key_capture;
 
-    if (RegCreateKeyExW(root, guidstr, 0, NULL, 0, KEY_WRITE|KEY_READ, NULL, &key, NULL) == ERROR_SUCCESS)
+    if (RegCreateKeyExW(root, guidstr, 0, NULL, 0, KEY_WRITE|KEY_READ|KEY_WOW64_64KEY, NULL, &key, NULL) == ERROR_SUCCESS)
     {
         HKEY keyprop;
         RegSetValueExW(key, reg_devicestate, 0, REG_DWORD, (const BYTE*)&state, sizeof(DWORD));
-        if (!RegCreateKeyExW(key, reg_properties, 0, NULL, 0, KEY_WRITE|KEY_READ, NULL, &keyprop, NULL))
+        if (!RegCreateKeyExW(key, reg_properties, 0, NULL, 0, KEY_WRITE|KEY_READ|KEY_WOW64_64KEY, NULL, &keyprop, NULL))
         {
             PROPVARIANT pv;
 
@@ -388,11 +388,11 @@ static HRESULT load_devices_from_reg(void)
     LONG ret;
     DWORD curflow;
 
-    ret = RegCreateKeyExW(HKEY_LOCAL_MACHINE, software_mmdevapi, 0, NULL, 0, KEY_WRITE|KEY_READ, NULL, &root, NULL);
+    ret = RegCreateKeyExW(HKEY_LOCAL_MACHINE, software_mmdevapi, 0, NULL, 0, KEY_WRITE|KEY_READ|KEY_WOW64_64KEY, NULL, &root, NULL);
     if (ret == ERROR_SUCCESS)
-        ret = RegCreateKeyExW(root, reg_capture, 0, NULL, 0, KEY_READ|KEY_WRITE, NULL, &key_capture, NULL);
+        ret = RegCreateKeyExW(root, reg_capture, 0, NULL, 0, KEY_READ|KEY_WRITE|KEY_WOW64_64KEY, NULL, &key_capture, NULL);
     if (ret == ERROR_SUCCESS)
-        ret = RegCreateKeyExW(root, reg_render, 0, NULL, 0, KEY_READ|KEY_WRITE, NULL, &key_render, NULL);
+        ret = RegCreateKeyExW(root, reg_render, 0, NULL, 0, KEY_READ|KEY_WRITE|KEY_WOW64_64KEY, NULL, &key_render, NULL);
     RegCloseKey(root);
     cur = key_capture;
     curflow = eCapture;
@@ -467,6 +467,7 @@ static HRESULT set_format(MMDevice *dev)
             &PKEY_AudioEngine_DeviceFormat, &pv);
     MMDevice_SetPropValue(&dev->devguid, dev->flow,
             &PKEY_AudioEngine_OEMFormat, &pv);
+    CoTaskMemFree(fmt);
 
     return S_OK;
 }
@@ -532,7 +533,7 @@ static HRESULT WINAPI MMDevice_QueryInterface(IMMDevice *iface, REFIID riid, voi
     *ppv = NULL;
     if (IsEqualIID(riid, &IID_IUnknown)
         || IsEqualIID(riid, &IID_IMMDevice))
-        *ppv = This;
+        *ppv = &This->IMMDevice_iface;
     else if (IsEqualIID(riid, &IID_IMMEndpoint))
         *ppv = &This->IMMEndpoint_iface;
     if (*ppv)
@@ -627,8 +628,7 @@ static HRESULT WINAPI MMDevice_Activate(IMMDevice *iface, REFIID riid, DWORD cls
                 IDirectSound_Release((IDirectSound*)*ppv);
         }
     }
-    else if (IsEqualIID(riid, &IID_IDirectSoundCapture)
-             || IsEqualIID(riid, &IID_IDirectSoundCapture8))
+    else if (IsEqualIID(riid, &IID_IDirectSoundCapture))
     {
         if (This->flow == eCapture)
             hr = CoCreateInstance(&CLSID_DirectSoundCapture8, NULL, clsctx, riid, ppv);
@@ -779,7 +779,7 @@ static HRESULT WINAPI MMDevCol_QueryInterface(IMMDeviceCollection *iface, REFIID
         return E_POINTER;
     if (IsEqualIID(riid, &IID_IUnknown)
         || IsEqualIID(riid, &IID_IMMDeviceCollection))
-        *ppv = This;
+        *ppv = &This->IMMDeviceCollection_iface;
     else
         *ppv = NULL;
     if (!*ppv)
@@ -879,7 +879,7 @@ HRESULT MMDevEnum_Create(REFIID riid, void **ppv)
         load_driver_devices(eRender);
         load_driver_devices(eCapture);
     }
-    return IUnknown_QueryInterface((IUnknown*)This, riid, ppv);
+    return IMMDeviceEnumerator_QueryInterface(&This->IMMDeviceEnumerator_iface, riid, ppv);
 }
 
 void MMDevEnum_Free(void)
@@ -902,7 +902,7 @@ static HRESULT WINAPI MMDevEnum_QueryInterface(IMMDeviceEnumerator *iface, REFII
         return E_POINTER;
     if (IsEqualIID(riid, &IID_IUnknown)
         || IsEqualIID(riid, &IID_IMMDeviceEnumerator))
-        *ppv = This;
+        *ppv = &This->IMMDeviceEnumerator_iface;
     else
         *ppv = NULL;
     if (!*ppv)
@@ -1327,7 +1327,7 @@ static HRESULT WINAPI MMDevPropStore_QueryInterface(IPropertyStore *iface, REFII
         return E_POINTER;
     if (IsEqualIID(riid, &IID_IUnknown)
         || IsEqualIID(riid, &IID_IPropertyStore))
-        *ppv = This;
+        *ppv = &This->IPropertyStore_iface;
     else
         *ppv = NULL;
     if (!*ppv)
