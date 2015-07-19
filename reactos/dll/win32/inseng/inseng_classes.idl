@@ -20,16 +20,4 @@
 
 #pragma makedep register
 
-[
-    helpstring("Microsoft Active Setup Engine"),
-    threading(apartment),
-    uuid(6e449686-c509-11cf-aafa-00aa00b6015c)
-]
-coclass ActiveSetupEng { }
-
-[
-    helpstring("Download Site Manager"),
-    threading(apartment),
-    uuid(bfc880f1-7484-11d0-8309-00aa00b6015c)
-]
-coclass DLManager { }
+#include "inseng.idl"

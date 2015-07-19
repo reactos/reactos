@@ -10,6 +10,6 @@ list(APPEND SOURCE
 
 add_library(inseng SHARED ${SOURCE} inseng.rc)
 set_module_type(inseng win32dll)
-target_link_libraries(inseng wine)
+target_link_libraries(inseng uuid wine)
 add_importlibs(inseng msvcrt kernel32 ntdll)
 add_cd_file(TARGET inseng DESTINATION reactos/system32 FOR all)
