@@ -1,7 +1,7 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-spec2def(mspatcha.dll mspatcha.spec)
+spec2def(mspatcha.dll mspatcha.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     mspatcha_main.c
