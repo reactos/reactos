@@ -4508,6 +4508,8 @@ static void check_base_policy(void)
      ignoredInvalidDateBasePolicyCheck, &oct2007, &policyPara);
     policyPara.dwFlags = CERT_CHAIN_POLICY_ALLOW_UNKNOWN_CA_FLAG |
      CERT_CHAIN_POLICY_IGNORE_WRONG_USAGE_FLAG;
+    CHECK_CHAIN_POLICY_STATUS(CERT_CHAIN_POLICY_BASE, NULL,
+     ignoredInvalidUsageBasePolicyCheck, &oct2007, &policyPara);
     policyPara.dwFlags = CERT_CHAIN_POLICY_ALLOW_UNKNOWN_CA_FLAG |
      CERT_CHAIN_POLICY_IGNORE_NOT_TIME_VALID_FLAG |
      CERT_CHAIN_POLICY_IGNORE_WRONG_USAGE_FLAG;

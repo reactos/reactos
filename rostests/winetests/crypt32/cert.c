@@ -2874,7 +2874,7 @@ static void testGetValidUsages(void)
              oids[i]);
         HeapFree(GetProcessHeap(), 0, oids);
     }
-    numOIDs = size = 0xdeadbeef;
+    numOIDs = 0xdeadbeef;
     /* Oddly enough, this crashes when the number of contexts is not 1:
     ret = pCertGetValidUsages(2, contexts, &numOIDs, NULL, &size);
      * but setting size to 0 allows it to succeed:
