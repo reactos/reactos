@@ -450,7 +450,7 @@ GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics, LOGFONTW
 
     matrix = graphics->worldtrans;
 
-    if (font->unit == UnitPixel)
+    if (font->unit == UnitPixel || font->unit == UnitWorld)
     {
         height = units_to_pixels(font->emSize, graphics->unit, graphics->yres);
         if (graphics->unit != UnitDisplay)

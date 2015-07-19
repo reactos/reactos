@@ -20,3 +20,6 @@
 
 /* @makedep: gdiplus.manifest */
 WINE_MANIFEST 24 gdiplus.manifest
+
+/* @makedep: gdiplus11.manifest */
+WINE_MANIFEST11 24 gdiplus11.manifest

@@ -1105,10 +1105,11 @@ GpStatus WINGDIPAPI GdipConvertToEmfPlus(const GpGraphics* ref,
     TRACE("(%p,%p,%p,%u,%s,%p)\n", ref, metafile, succ, emfType,
         debugstr_w(description), out_metafile);
 
-    if(!ref || !metafile || !out_metafile)
+    if(!ref || !metafile || !out_metafile || emfType < EmfTypeEmfOnly || emfType > EmfTypeEmfPlusDual)
         return InvalidParameter;
 
-    *succ = FALSE;
+    if(succ)
+        *succ = FALSE;
     *out_metafile = NULL;
 
     if(!(calls++))

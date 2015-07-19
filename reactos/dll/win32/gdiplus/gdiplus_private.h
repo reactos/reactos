@@ -47,8 +47,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 #define MAX_DASHLEN (16) /* this is a limitation of gdi */
 #define INCH_HIMETRIC (2540)
 
-#define VERSION_MAGIC 0xdbc01001
+#define VERSION_MAGIC  0xdbc01001
+#define VERSION_MAGIC2 0xdbc01002
 #define TENSION_CONST (0.3)
+
+#define GIF_DISPOSE_UNSPECIFIED 0
+#define GIF_DISPOSE_DO_NOT_DISPOSE 1
+#define GIF_DISPOSE_RESTORE_TO_BKGND 2
+#define GIF_DISPOSE_RESTORE_TO_PREV 3
 
 COLORREF ARGB2COLORREF(ARGB color) DECLSPEC_HIDDEN;
 HBITMAP ARGB2BMP(ARGB color) DECLSPEC_HIDDEN;
@@ -120,6 +126,26 @@ static inline ARGB color_over(ARGB bg, ARGB fg)
     b = ((bg&0xff)*bg_alpha + (fg&0xff)*fg_alpha)/a;
     g = (((bg>>8)&0xff)*bg_alpha + ((fg>>8)&0xff)*fg_alpha)/a;
     r = (((bg>>16)&0xff)*bg_alpha + ((fg>>16)&0xff)*fg_alpha)/a;
+
+    return (a<<24)|(r<<16)|(g<<8)|b;
+}
+
+/* fg is premult, bg and return value are not */
+static inline ARGB color_over_fgpremult(ARGB bg, ARGB fg)
+{
+    BYTE b, g, r, a;
+    BYTE bg_alpha, fg_alpha;
+
+    fg_alpha = (fg>>24)&0xff;
+
+    if (fg_alpha == 0) return bg;
+
+    bg_alpha = (((bg>>24)&0xff) * (0xff-fg_alpha)) / 0xff;
+
+    a = bg_alpha + fg_alpha;
+    b = ((bg&0xff)*bg_alpha + (fg&0xff)*0xff)/a;
+    g = (((bg>>8)&0xff)*bg_alpha + ((fg>>8)&0xff)*0xff)/a;
+    r = (((bg>>16)&0xff)*bg_alpha + ((fg>>16)&0xff)*0xff)/a;
 
     return (a<<24)|(r<<16)|(g<<8)|b;
 }
@@ -278,7 +304,7 @@ struct GpAdustableArrowCap{
 
 struct GpImage{
     IPicture *picture;
-    IStream *stream; /* source stream */
+    IWICBitmapDecoder *decoder;
     ImageType type;
     GUID format;
     UINT flags;

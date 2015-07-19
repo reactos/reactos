@@ -247,6 +247,7 @@ static INT prepare_dc(GpGraphics *graphics, GpPen *pen)
                      (pt[1].Y - pt[0].Y) * (pt[1].Y - pt[0].Y)) / sqrt(2.0);
 
         width *= units_to_pixels(pen->width, pen->unit == UnitWorld ? graphics->unit : pen->unit, graphics->xres);
+        width *= graphics->scale;
     }
 
     if(pen->dash == DashStyleCustom){
@@ -349,21 +350,28 @@ static GpStatus get_clip_hrgn(GpGraphics *graphics, HRGN *hrgn)
     return GdipGetRegionHRgn(graphics->clip, NULL, hrgn);
 }
 
-/* Draw non-premultiplied ARGB data to the given graphics object */
+/* Draw ARGB data to the given graphics object */
 static GpStatus alpha_blend_bmp_pixels(GpGraphics *graphics, INT dst_x, INT dst_y,
-    const BYTE *src, INT src_width, INT src_height, INT src_stride)
+    const BYTE *src, INT src_width, INT src_height, INT src_stride, const PixelFormat fmt)
 {
     GpBitmap *dst_bitmap = (GpBitmap*)graphics->image;
     INT x, y;
 
-    for (x=0; x<src_width; x++)
+    for (y=0; y<src_height; y++)
     {
-        for (y=0; y<src_height; y++)
+        for (x=0; x<src_width; x++)
         {
             ARGB dst_color, src_color;
-            GdipBitmapGetPixel(dst_bitmap, x+dst_x, y+dst_y, &dst_color);
             src_color = ((ARGB*)(src + src_stride * y))[x];
-            GdipBitmapSetPixel(dst_bitmap, x+dst_x, y+dst_y, color_over(dst_color, src_color));
+
+            if (!(src_color & 0xff000000))
+                continue;
+
+            GdipBitmapGetPixel(dst_bitmap, x+dst_x, y+dst_y, &dst_color);
+            if (fmt & PixelFormatPAlpha)
+                GdipBitmapSetPixel(dst_bitmap, x+dst_x, y+dst_y, color_over_fgpremult(dst_color, src_color));
+            else
+                GdipBitmapSetPixel(dst_bitmap, x+dst_x, y+dst_y, color_over(dst_color, src_color));
         }
     }
 
@@ -371,7 +379,7 @@ static GpStatus alpha_blend_bmp_pixels(GpGraphics *graphics, INT dst_x, INT dst_
 }
 
 static GpStatus alpha_blend_hdc_pixels(GpGraphics *graphics, INT dst_x, INT dst_y,
-    const BYTE *src, INT src_width, INT src_height, INT src_stride)
+    const BYTE *src, INT src_width, INT src_height, INT src_stride, PixelFormat fmt)
 {
     HDC hdc;
     HBITMAP hbitmap;
@@ -395,7 +403,8 @@ static GpStatus alpha_blend_hdc_pixels(GpGraphics *graphics, INT dst_x, INT dst_
     hbitmap = CreateDIBSection(hdc, (BITMAPINFO*)&bih, DIB_RGB_COLORS,
         (void**)&temp_bits, NULL, 0);
 
-    if (GetDeviceCaps(graphics->hdc, SHADEBLENDCAPS) == SB_NONE)
+    if (GetDeviceCaps(graphics->hdc, SHADEBLENDCAPS) == SB_NONE ||
+            fmt & PixelFormatPAlpha)
         memcpy(temp_bits, src, src_width * src_height * 4);
     else
         convert_32bppARGB_to_32bppPARGB(src_width, src_height, temp_bits,
@@ -411,7 +420,7 @@ static GpStatus alpha_blend_hdc_pixels(GpGraphics *graphics, INT dst_x, INT dst_
 }
 
 static GpStatus alpha_blend_pixels_hrgn(GpGraphics *graphics, INT dst_x, INT dst_y,
-    const BYTE *src, INT src_width, INT src_height, INT src_stride, HRGN hregion)
+    const BYTE *src, INT src_width, INT src_height, INT src_stride, HRGN hregion, PixelFormat fmt)
 {
     GpStatus stat=Ok;
 
@@ -461,7 +470,7 @@ static GpStatus alpha_blend_pixels_hrgn(GpGraphics *graphics, INT dst_x, INT dst
             stat = alpha_blend_bmp_pixels(graphics, rects[i].left, rects[i].top,
                 &src[(rects[i].left - dst_x) * 4 + (rects[i].top - dst_y) * src_stride],
                 rects[i].right - rects[i].left, rects[i].bottom - rects[i].top,
-                src_stride);
+                src_stride, fmt);
         }
 
         GdipFree(rgndata);
@@ -494,7 +503,7 @@ static GpStatus alpha_blend_pixels_hrgn(GpGraphics *graphics, INT dst_x, INT dst
             ExtSelectClipRgn(graphics->hdc, hregion, RGN_AND);
 
         stat = alpha_blend_hdc_pixels(graphics, dst_x, dst_y, src, src_width,
-            src_height, src_stride);
+            src_height, src_stride, fmt);
 
         RestoreDC(graphics->hdc, save);
 
@@ -505,27 +514,29 @@ static GpStatus alpha_blend_pixels_hrgn(GpGraphics *graphics, INT dst_x, INT dst
 }
 
 static GpStatus alpha_blend_pixels(GpGraphics *graphics, INT dst_x, INT dst_y,
-    const BYTE *src, INT src_width, INT src_height, INT src_stride)
+    const BYTE *src, INT src_width, INT src_height, INT src_stride, PixelFormat fmt)
 {
-    return alpha_blend_pixels_hrgn(graphics, dst_x, dst_y, src, src_width, src_height, src_stride, NULL);
+    return alpha_blend_pixels_hrgn(graphics, dst_x, dst_y, src, src_width, src_height, src_stride, NULL, fmt);
 }
 
 static ARGB blend_colors(ARGB start, ARGB end, REAL position)
 {
-    ARGB result=0;
-    ARGB i;
-    INT a1, a2, a3;
+    INT start_a, end_a, final_a;
+    INT pos;
 
-    a1 = (start >> 24) & 0xff;
-    a2 = (end >> 24) & 0xff;
+    pos = gdip_round(position * 0xff);
 
-    a3 = (int)(a1*(1.0f - position)+a2*(position));
+    start_a = ((start >> 24) & 0xff) * (pos ^ 0xff);
+    end_a = ((end >> 24) & 0xff) * pos;
 
-    result |= a3 << 24;
+    final_a = start_a + end_a;
 
-    for (i=0xff; i<=0xff0000; i = i << 8)
-        result |= (int)((start&i)*(1.0f - position)+(end&i)*(position))&i;
-    return result;
+    if (final_a < 0xff) return 0;
+
+    return (final_a / 0xff) << 24 |
+        ((((start >> 16) & 0xff) * start_a + (((end >> 16) & 0xff) * end_a)) / final_a) << 16 |
+        ((((start >> 8) & 0xff) * start_a + (((end >> 8) & 0xff) * end_a)) / final_a) << 8 |
+        (((start & 0xff) * start_a + ((end & 0xff) * end_a)) / final_a);
 }
 
 static ARGB blend_line_gradient(GpLineGradient* brush, REAL position)
@@ -645,8 +656,9 @@ static BOOL color_is_gray(ARGB color)
     return (r == g) && (g == b);
 }
 
-static void apply_image_attributes(const GpImageAttributes *attributes, LPBYTE data,
-    UINT width, UINT height, INT stride, ColorAdjustType type)
+/* returns preferred pixel format for the applied attributes */
+static PixelFormat apply_image_attributes(const GpImageAttributes *attributes, LPBYTE data,
+    UINT width, UINT height, INT stride, ColorAdjustType type, PixelFormat fmt)
 {
     UINT x, y;
     INT i;
@@ -657,6 +669,9 @@ static void apply_image_attributes(const GpImageAttributes *attributes, LPBYTE d
         const struct color_key *key;
         BYTE min_blue, min_green, min_red;
         BYTE max_blue, max_green, max_red;
+
+        if (!data || fmt != PixelFormat32bppARGB)
+            return PixelFormat32bppARGB;
 
         if (attributes->colorkeys[type].enabled)
             key = &attributes->colorkeys[type];
@@ -691,6 +706,9 @@ static void apply_image_attributes(const GpImageAttributes *attributes, LPBYTE d
     {
         const struct color_remap_table *table;
 
+        if (!data || fmt != PixelFormat32bppARGB)
+            return PixelFormat32bppARGB;
+
         if (attributes->colorremaptables[type].enabled)
             table = &attributes->colorremaptables[type];
         else
@@ -719,6 +737,9 @@ static void apply_image_attributes(const GpImageAttributes *attributes, LPBYTE d
         int color_matrix[5][5];
         int gray_matrix[5][5];
         BOOL identity;
+
+        if (!data || fmt != PixelFormat32bppARGB)
+            return PixelFormat32bppARGB;
 
         if (attributes->colormatrices[type].enabled)
             colormatrices = &attributes->colormatrices[type];
@@ -758,6 +779,9 @@ static void apply_image_attributes(const GpImageAttributes *attributes, LPBYTE d
     {
         REAL gamma;
 
+        if (!data || fmt != PixelFormat32bppARGB)
+            return PixelFormat32bppARGB;
+
         if (attributes->gamma_enabled[type])
             gamma = attributes->gamma[type];
         else
@@ -782,6 +806,8 @@ static void apply_image_attributes(const GpImageAttributes *attributes, LPBYTE d
                 *src_color = (*src_color & 0xff000000) | (red << 16) | (green << 8) | blue;
             }
     }
+
+    return fmt;
 }
 
 /* Given a bitmap and its source rectangle, find the smallest rectangle in the
@@ -1226,7 +1252,7 @@ static GpStatus brush_fill_pixels(GpGraphics *graphics, GpBrush *brush,
             if (stat == Ok)
                 apply_image_attributes(fill->imageattributes, fill->bitmap_bits,
                     bitmap->width, bitmap->height,
-                    src_stride, ColorAdjustTypeBitmap);
+                    src_stride, ColorAdjustTypeBitmap, lockeddata.PixelFormat);
 
             if (stat != Ok)
             {
@@ -2115,7 +2141,7 @@ static void get_font_hfont(GpGraphics *graphics, GDIPCONST GpFont *font,
     HFONT unscaled_font;
     TEXTMETRICW textmet;
 
-    if (font->unit == UnitPixel)
+    if (font->unit == UnitPixel || font->unit == UnitWorld)
         font_height = font->emSize;
     else
     {
@@ -2138,8 +2164,8 @@ static void get_font_hfont(GpGraphics *graphics, GDIPCONST GpFont *font,
         GpMatrix xform = *matrix;
         GdipTransformMatrixPoints(&xform, pt, 3);
     }
-    if (graphics)
-        GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, pt, 3);
+
+    GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, pt, 3);
     angle = -gdiplus_atan2((pt[1].Y - pt[0].Y), (pt[1].X - pt[0].X));
     rel_width = sqrt((pt[1].Y-pt[0].Y)*(pt[1].Y-pt[0].Y)+
                      (pt[1].X-pt[0].X)*(pt[1].X-pt[0].X));
@@ -2979,15 +3005,18 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
                 return OutOfMemory;
             src_stride = sizeof(ARGB) * src_area.Width;
 
-            /* Read the bits we need from the source bitmap into an ARGB buffer. */
+            /* Read the bits we need from the source bitmap into a compatible buffer. */
             lockeddata.Width = src_area.Width;
             lockeddata.Height = src_area.Height;
             lockeddata.Stride = src_stride;
-            lockeddata.PixelFormat = PixelFormat32bppARGB;
             lockeddata.Scan0 = src_data;
+            if (!do_resampling && bitmap->format == PixelFormat32bppPARGB)
+                lockeddata.PixelFormat = apply_image_attributes(imageAttributes, NULL, 0, 0, 0, ColorAdjustTypeBitmap, bitmap->format);
+            else
+                lockeddata.PixelFormat = PixelFormat32bppARGB;
 
             stat = GdipBitmapLockBits(bitmap, &src_area, ImageLockModeRead|ImageLockModeUserInputBuf,
-                PixelFormat32bppARGB, &lockeddata);
+                lockeddata.PixelFormat, &lockeddata);
 
             if (stat == Ok)
                 stat = GdipBitmapUnlockBits(bitmap, &lockeddata);
@@ -3000,7 +3029,7 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
 
             apply_image_attributes(imageAttributes, src_data,
                 src_area.Width, src_area.Height,
-                src_stride, ColorAdjustTypeBitmap);
+                src_stride, ColorAdjustTypeBitmap, lockeddata.PixelFormat);
 
             if (do_resampling)
             {
@@ -3048,7 +3077,8 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
             }
 
             stat = alpha_blend_pixels(graphics, dst_area.left, dst_area.top,
-                dst_data, dst_area.right - dst_area.left, dst_area.bottom - dst_area.top, dst_stride);
+                dst_data, dst_area.right - dst_area.left, dst_area.bottom - dst_area.top, dst_stride,
+                lockeddata.PixelFormat);
 
             GdipFree(src_data);
 
@@ -3998,7 +4028,8 @@ static GpStatus SOFTWARE_GdipFillRegion(GpGraphics *graphics, GpBrush *brush,
             if (stat == Ok)
                 stat = alpha_blend_pixels_hrgn(graphics, gp_bound_rect.X,
                     gp_bound_rect.Y, (BYTE*)pixel_data, gp_bound_rect.Width,
-                    gp_bound_rect.Height, gp_bound_rect.Width * 4, hregion);
+                    gp_bound_rect.Height, gp_bound_rect.Width * 4, hregion,
+                    PixelFormat32bppARGB);
 
             GdipFree(pixel_data);
         }
@@ -4729,6 +4760,9 @@ GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
     scaled_rect.Y = layoutRect->Y * args.rel_height;
     scaled_rect.Width = layoutRect->Width * args.rel_width;
     scaled_rect.Height = layoutRect->Height * args.rel_height;
+
+    if (scaled_rect.Width >= 1 << 23) scaled_rect.Width = 1 << 23;
+    if (scaled_rect.Height >= 1 << 23) scaled_rect.Height = 1 << 23;
 
     get_font_hfont(graphics, font, stringFormat, &gdifont, NULL);
     oldfont = SelectObject(hdc, gdifont);
@@ -5705,7 +5739,7 @@ GpStatus WINGDIPAPI GdipGetDC(GpGraphics *graphics, HDC *hdc)
     {
         stat = METAFILE_GetDC((GpMetafile*)graphics->image, hdc);
     }
-    else if (!graphics->hdc || graphics->alpha_hdc ||
+    else if (!graphics->hdc ||
         (graphics->image && graphics->image->type == ImageTypeBitmap && ((GpBitmap*)graphics->image)->format & PixelFormatAlpha))
     {
         /* Create a fake HDC and fill it with a constant color. */
@@ -5797,7 +5831,7 @@ GpStatus WINGDIPAPI GdipReleaseDC(GpGraphics *graphics, HDC hdc)
         /* Write the changed pixels to the real target. */
         alpha_blend_pixels(graphics, 0, 0, graphics->temp_bits,
             graphics->temp_hbitmap_width, graphics->temp_hbitmap_height,
-            graphics->temp_hbitmap_width * 4);
+            graphics->temp_hbitmap_width * 4, PixelFormat32bppARGB);
 
         /* Clean up. */
         DeleteDC(graphics->temp_hdc);
@@ -6352,7 +6386,7 @@ static GpStatus SOFTWARE_GdipDrawDriverString(GpGraphics *graphics, GDIPCONST UI
 
     /* draw the result */
     stat = alpha_blend_pixels(graphics, min_x, min_y, pixel_data, pixel_area.Width,
-        pixel_area.Height, pixel_data_stride);
+        pixel_area.Height, pixel_data_stride, PixelFormat32bppARGB);
 
     GdipFree(pixel_data);
 
