@@ -160,8 +160,106 @@ static void test_WNetGetRemoteName(void)
     }
 }
 
+static DWORD (WINAPI *pWNetCachePassword)( LPSTR, WORD, LPSTR, WORD, BYTE, WORD );
+static DWORD (WINAPI *pWNetGetCachedPassword)( LPSTR, WORD, LPSTR, LPWORD, BYTE );
+static UINT (WINAPI *pWNetEnumCachedPasswords)( LPSTR, WORD, BYTE, ENUMPASSWORDPROC, DWORD);
+static UINT (WINAPI *pWNetRemoveCachedPassword)( LPSTR, WORD, BYTE );
+
+#define MPR_GET_PROC(func) \
+    p ## func = (void*)GetProcAddress(hmpr, #func)
+
+static void InitFunctionPtrs(void)
+{
+    HMODULE hmpr = GetModuleHandleA("mpr.dll");
+
+    MPR_GET_PROC(WNetCachePassword);
+    MPR_GET_PROC(WNetGetCachedPassword);
+    MPR_GET_PROC(WNetEnumCachedPasswords);
+    MPR_GET_PROC(WNetRemoveCachedPassword);
+}
+
+static const char* m_resource = "wine-test-resource";
+static const char* m_password = "wine-test-password";
+static const BYTE m_type = 1;
+static const DWORD m_param = 8;
+static BOOL m_callback_reached;
+
+static BOOL CALLBACK enum_password_proc(PASSWORD_CACHE_ENTRY* pce, DWORD param)
+{
+    WORD size = 0;
+    char* buf;
+
+    ok(param == m_param, "param, got %d, got %d\n", param, m_param);
+
+    size = offsetof( PASSWORD_CACHE_ENTRY, abResource[pce->cbResource + pce->cbPassword] );
+    ok(pce->cbEntry == size, "cbEntry, got %d, expected %d\n", pce->cbEntry, size);
+    ok(pce->cbResource == strlen(m_resource), "cbResource, got %d\n", pce->cbResource);
+    ok(pce->cbPassword == strlen(m_password), "cbPassword, got %d\n", pce->cbPassword);
+    ok(pce->iEntry == 0, "iEntry, got %d, got %d\n", pce->iEntry, 0);
+    ok(pce->nType == m_type, "nType, got %d, got %d\n", pce->nType, m_type);
+
+    buf = (char*)pce->abResource;
+    ok(strncmp(buf, m_resource, pce->cbResource)==0, "enumerated ressource differs, got %.*s, expected %s\n", pce->cbResource, buf, m_resource);
+
+    buf += pce->cbResource;
+    ok(strncmp(buf, m_password, pce->cbPassword)==0, "enumerated ressource differs, got %.*s, expected %s\n", pce->cbPassword, buf, m_password);
+
+    m_callback_reached = 1;
+    return TRUE;
+}
+
+static void test_WNetCachePassword(void)
+{
+    char resource_buf[32];
+    char password_buf[32];
+    char prefix_buf[32];
+    WORD resource_len;
+    WORD password_len;
+    WORD prefix_len;
+    DWORD ret;
+
+    InitFunctionPtrs();
+
+    if (pWNetCachePassword &&
+        pWNetGetCachedPassword &&
+        pWNetEnumCachedPasswords &&
+        pWNetRemoveCachedPassword)
+    {
+        strcpy(resource_buf, m_resource);
+        resource_len = strlen(m_resource);
+        strcpy(password_buf, m_password);
+        password_len = strlen(m_password);
+        ret = pWNetCachePassword(resource_buf, resource_len, password_buf, password_len, m_type, 0);
+        ok(ret == WN_SUCCESS, "WNetCachePassword failed: got %d, expected %d\n", ret, WN_SUCCESS);
+
+        strcpy(resource_buf, m_resource);
+        resource_len = strlen(m_resource);
+        strcpy(password_buf, "------");
+        password_len = sizeof(password_buf);
+        ret = pWNetGetCachedPassword(resource_buf, resource_len, password_buf, &password_len, m_type);
+        ok(ret == WN_SUCCESS, "WNetGetCachedPassword failed: got %d, expected %d\n", ret, WN_SUCCESS);
+        ok(password_len == strlen(m_password), "password length different, got %d\n", password_len);
+        ok(strncmp(password_buf, m_password, password_len)==0, "passwords different, got %.*s, expected %s\n", password_len, password_buf, m_password);
+
+        prefix_len = 9;
+        strcpy(prefix_buf, m_resource);
+        prefix_buf[prefix_len] = '0';
+        ret = pWNetEnumCachedPasswords(prefix_buf, prefix_len, m_type, enum_password_proc, m_param);
+        ok(ret == WN_SUCCESS, "WNetEnumCachedPasswords failed: got %d, expected %d\n", ret, WN_SUCCESS);
+        ok(m_callback_reached == 1, "callback was not reached\n");
+
+        strcpy(resource_buf, m_resource);
+        resource_len = strlen(m_resource);
+        ret = pWNetRemoveCachedPassword(resource_buf, resource_len, m_type);
+        ok(ret == WN_SUCCESS, "WNetRemoveCachedPassword failed: got %d, expected %d\n", ret, WN_SUCCESS);
+    } else {
+        win_skip("WNetCachePassword() is not supported.\n");
+    }
+}
+
 START_TEST(mpr)
 {
     test_WNetGetUniversalName();
     test_WNetGetRemoteName();
+    test_WNetCachePassword();
 }
