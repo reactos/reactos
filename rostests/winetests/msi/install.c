@@ -2930,6 +2930,7 @@ static void test_continuouscabs(void)
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
     {
         skip("Not enough rights to perform tests\n");
+        goto error;
     }
     else
     {
@@ -3012,6 +3013,7 @@ static void test_continuouscabs(void)
         ok(delete_pf("msitest", FALSE), "Directory not created\n");
     }
 
+error:
     delete_cab_files();
     DeleteFileA(msifile);
 }
@@ -3155,7 +3157,7 @@ static void test_samesequence(void)
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
     r = MsiInstallProductA(msifile, NULL);
-    ok(r == ERROR_SUCCESS || broken(r == ERROR_INSTALL_FAILURE), "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
     if (r == ERROR_SUCCESS)
     {
         ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
@@ -3177,7 +3179,7 @@ static void test_uiLevelFlags(void)
     MsiSetInternalUI(INSTALLUILEVEL_NONE | INSTALLUILEVEL_SOURCERESONLY, NULL);
 
     r = MsiInstallProductA(msifile, NULL);
-    ok(r == ERROR_SUCCESS || broken(r == ERROR_INSTALL_FAILURE), "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
     if (r == ERROR_SUCCESS)
     {
         ok(!delete_pf("msitest\\maximus", TRUE), "UI install occurred, but execute-only was requested.\n");
@@ -4510,6 +4512,11 @@ static void test_missingcomponent(void)
         skip("Not enough rights to perform tests\n");
         goto error;
     }
+    else if (r == ERROR_INSTALL_FAILURE)
+    {
+        win_skip("broken result\n");
+        goto error;
+    }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
     ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
     ok(pf_exists("msitest\\helium"), "File not installed\n");
@@ -5078,7 +5085,7 @@ static void process_pending_renames(HKEY hkey)
         else
         {
             fileret = DeleteFileA(src);
-            ok(fileret, "Failed to delete file %s (%u)\n", src, GetLastError());
+            ok(fileret || broken(!fileret) /* win2k3 */, "Failed to delete file %s (%u)\n", src, GetLastError());
         }
     }
 
@@ -5888,7 +5895,8 @@ START_TEST(install)
     lstrcatA(log_file, "\\msitest.log");
     MsiEnableLogA(INSTALLLOGMODE_FATALEXIT, log_file, 0);
 
-    test_MsiInstallProduct();
+    if (pSRSetRestorePointA) /* test has side-effects on win2k3 that cause failures in following tests */
+        test_MsiInstallProduct();
     test_MsiSetComponentState();
     test_packagecoltypes();
     test_continuouscabs();
