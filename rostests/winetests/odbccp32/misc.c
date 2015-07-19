@@ -21,6 +21,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winreg.h"
 #include "odbcinst.h"
 
 static void test_SQLConfigMode(void)
@@ -129,9 +130,68 @@ static void test_SQLInstallDriverManager(void)
     ok(path_out != 0xcafe, "Expected path_out to show the correct amount of bytes\n");
 }
 
+static void test_SQLWritePrivateProfileString(void)
+{
+   static const WCHAR odbc_key[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C','\\','O','D','B','C','.','I','N','I','\\','w','i','n','e','o','d','b','c',0};
+   static const WCHAR abcd_key[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C','\\','a','b','c','d','.','I','N','I','\\','w','i','n','e','o','d','b','c',0};
+   static const WCHAR abcdini_key[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C','\\','a','b','c','d','.','I','N','I',0 };
+   BOOL ret;
+   LONG reg_ret;
+   DWORD error_code;
+
+   ret = SQLWritePrivateProfileString("wineodbc", "testing" , "value", "");
+   ok(!ret, "SQLWritePrivateProfileString passed\n");
+   SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+   ok(error_code == ODBC_ERROR_INVALID_STR, "SQLInstallerErrorW ret: %d\n", error_code);
+
+   ret = SQLWritePrivateProfileString("wineodbc", "testing" , "value", NULL);
+   ok(!ret, "SQLWritePrivateProfileString passed\n");
+   SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+   ok(error_code == ODBC_ERROR_INVALID_STR, "SQLInstallerErrorW ret: %d\n", error_code);
+
+   ret = SQLWritePrivateProfileString("wineodbc", "testing" , "value", "odbc.ini");
+   ok(ret, "SQLWritePrivateProfileString failed\n");
+   if(ret)
+   {
+        HKEY hkey;
+
+        reg_ret = RegOpenKeyExW(HKEY_CURRENT_USER, odbc_key, 0, KEY_READ, &hkey);
+        ok(reg_ret == ERROR_SUCCESS, "RegOpenKeyExW failed\n");
+        if(reg_ret == ERROR_SUCCESS)
+        {
+            reg_ret = RegDeleteKeyW(HKEY_CURRENT_USER, odbc_key);
+            ok(reg_ret == ERROR_SUCCESS, "RegDeleteKeyW failed\n");
+
+            RegCloseKey(hkey);
+        }
+   }
+
+   ret = SQLWritePrivateProfileString("wineodbc", "testing" , "value", "abcd.ini");
+   ok(ret, "SQLWritePrivateProfileString failed\n");
+   if(ret)
+   {
+        HKEY hkey;
+
+        reg_ret = RegOpenKeyExW(HKEY_CURRENT_USER, abcd_key, 0, KEY_READ, &hkey);
+        ok(reg_ret == ERROR_SUCCESS, "RegOpenKeyExW failed\n");
+        if(reg_ret == ERROR_SUCCESS)
+        {
+            reg_ret = RegDeleteKeyW(HKEY_CURRENT_USER, abcd_key);
+            ok(reg_ret == ERROR_SUCCESS, "RegDeleteKeyW failed\n");
+
+            RegCloseKey(hkey);
+        }
+
+        /* Cleanup key */
+        reg_ret = RegDeleteKeyW(HKEY_CURRENT_USER, abcdini_key);
+        ok(reg_ret == ERROR_SUCCESS, "RegDeleteKeyW failed\n");
+   }
+}
+
 START_TEST(misc)
 {
     test_SQLConfigMode();
     test_SQLInstallerError();
     test_SQLInstallDriverManager();
+    test_SQLWritePrivateProfileString();
 }
