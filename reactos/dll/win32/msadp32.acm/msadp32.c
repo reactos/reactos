@@ -374,8 +374,8 @@ static	LRESULT ADPCM_DriverDetails(PACMDRIVERDETAILSW add)
 {
     add->fccType = ACMDRIVERDETAILS_FCCTYPE_AUDIOCODEC;
     add->fccComp = ACMDRIVERDETAILS_FCCCOMP_UNDEFINED;
-    add->wMid = 0xFF;
-    add->wPid = 0x00;
+    add->wMid = MM_MICROSOFT;
+    add->wPid = MM_MSFT_ACM_MSADPCM;
     add->vdwACM = 0x01000000;
     add->vdwDriver = 0x01000000;
     add->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CODEC;
