@@ -3336,13 +3336,8 @@ rpRangeProperties = &ShapingData[psa->eScript].defaultTextRange;
 
 void SHAPE_ApplyOpenTypePositions(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, const WORD* pwGlyphs, INT cGlyphs, int *piAdvance, GOFFSET *pGoffset )
 {
-    const TEXTRANGE_PROPERTIES *rpRangeProperties;
+    const TEXTRANGE_PROPERTIES *rpRangeProperties = &ShapingData[psa->eScript].defaultGPOSTextRange;
     int i;
-
-    rpRangeProperties = &ShapingData[psa->eScript].defaultGPOSTextRange;
-
-    if (!rpRangeProperties)
-        return;
 
     load_ot_tables(hdc, psc);
 
