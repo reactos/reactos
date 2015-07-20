@@ -11,10 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-
-ULONG CurrentDisk = (ULONG)-1;
-ULONG CurrentPartition = (ULONG)-1;
-
+/* FUNCTIONS ******************************************************************/
 
 static
 VOID
@@ -22,10 +19,9 @@ SelectDisk(
     INT argc,
     LPWSTR *argv)
 {
-    SYSTEM_DEVICE_INFORMATION Sdi;
-    ULONG ReturnSize;
-    NTSTATUS Status;
-    LONG value;
+    PLIST_ENTRY Entry;
+    PDISKENTRY DiskEntry;
+    LONG lValue;
     LPWSTR endptr = NULL;
 
     DPRINT("Select Disk()\n");
@@ -38,40 +34,40 @@ SelectDisk(
 
     if (argc == 2)
     {
-        if (CurrentDisk == (ULONG)-1)
+        if (CurrentDisk == NULL)
             PrintResourceString(IDS_SELECT_NO_DISK);
         else
-            PrintResourceString(IDS_SELECT_DISK, CurrentDisk);
+            PrintResourceString(IDS_SELECT_DISK, CurrentDisk->DiskNumber);
         return;
     }
 
-    value = wcstol(argv[2], &endptr, 10);
-    if (((value == 0) && (endptr == argv[2])) ||
-        (value < 0))
+    lValue = wcstol(argv[2], &endptr, 10);
+    if (((lValue == 0) && (endptr == argv[2])) ||
+        (lValue < 0))
     {
         PrintResourceString(IDS_ERROR_INVALID_ARGS);
         return;
     }
 
-    Status = NtQuerySystemInformation(SystemDeviceInformation,
-                                      &Sdi,
-                                      sizeof(SYSTEM_DEVICE_INFORMATION),
-                                      &ReturnSize);
-    if (!NT_SUCCESS(Status))
+    CurrentDisk = NULL;
+
+    Entry = DiskListHead.Flink;
+    while (Entry != &DiskListHead)
     {
-        return;
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        if (DiskEntry->DiskNumber == (ULONG)lValue)
+        {
+            CurrentDisk = DiskEntry;
+            CurrentPartition = NULL;
+            PrintResourceString(IDS_SELECT_DISK, CurrentDisk->DiskNumber);
+            return;
+        }
+
+        Entry = Entry->Flink;
     }
 
-    if ((ULONG)value >= Sdi.NumberOfDisks)
-    {
-        PrintResourceString(IDS_ERROR_INVALID_DISK);
-        return;
-    }
-
-    CurrentDisk = (ULONG)value;
-    CurrentPartition = (ULONG)-1;
-
-    PrintResourceString(IDS_SELECT_DISK, CurrentDisk);
+    PrintResourceString(IDS_SELECT_DISK_INVALID);
 }
 
 
@@ -81,8 +77,11 @@ SelectPartition(
     INT argc,
     LPWSTR *argv)
 {
-    LONG value;
+    PLIST_ENTRY Entry;
+    PPARTENTRY PartEntry;
+    LONG lValue;
     LPWSTR endptr = NULL;
+    ULONG PartNumber = 1;
 
     DPRINT("Select Partition()\n");
 
@@ -92,28 +91,69 @@ SelectPartition(
         return;
     }
 
+    if (CurrentDisk == NULL)
+    {
+        PrintResourceString(IDS_SELECT_PARTITION_NO_DISK);
+        return;
+    }
+
     if (argc == 2)
     {
-        if (CurrentPartition == (ULONG)-1)
+        if (CurrentPartition == NULL)
             PrintResourceString(IDS_SELECT_NO_PARTITION);
         else
             PrintResourceString(IDS_SELECT_PARTITION, CurrentPartition);
         return;
     }
 
-    value = wcstol(argv[2], &endptr, 10);
-    if (((value == 0) && (endptr == argv[2])) ||
-        (value < 0))
+    lValue = wcstol(argv[2], &endptr, 10);
+    if (((lValue == 0) && (endptr == argv[2])) ||
+        (lValue < 0))
     {
         PrintResourceString(IDS_ERROR_INVALID_ARGS);
         return;
     }
 
-    /* FIXME: Check the new partition number */
+    Entry = CurrentDisk->PrimaryPartListHead.Flink;
+    while (Entry != &CurrentDisk->PrimaryPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
-    CurrentPartition = (ULONG)value;
+        if (PartEntry->PartitionType != 0)
+        {
+            if (PartNumber == (ULONG)lValue)
+            {
+                CurrentPartition = PartEntry;
+                PrintResourceString(IDS_SELECT_PARTITION, PartNumber);
+                return;
+            }
 
-    PrintResourceString(IDS_SELECT_PARTITION, CurrentPartition);
+            PartNumber++;
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    Entry = CurrentDisk->LogicalPartListHead.Flink;
+    while (Entry != &CurrentDisk->LogicalPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+        if (PartEntry->PartitionType != 0)
+        {
+            if (PartNumber == (ULONG)lValue)
+            {
+                CurrentPartition = PartEntry;
+                PrintResourceString(IDS_SELECT_PARTITION, PartNumber);
+                return;
+            }
+
+            PartNumber++;
+        }
+        Entry = Entry->Flink;
+    }
+
+    PrintResourceString(IDS_SELECT_PARTITION_INVALID);
 }
 
 

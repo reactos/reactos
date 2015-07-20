@@ -42,6 +42,10 @@ BEGIN
     IDS_LIST_DISK_HEAD "\n  Диск ###  Состояние   Размер   Свободно  Дин  GPT\n"
     IDS_LIST_DISK_LINE "  --------  ----------  -------  --------  ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
+    IDS_LIST_PARTITION_HEAD "\n  Partition      Type              Size     Offset\n"
+    IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
+    IDS_LIST_PARTITION_FORMAT "%c Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk for listing partitions.\nPlease select a disk and try again.\n\n"
     IDS_LIST_VOLUME_HEAD "Том ###\tИмя\tМетка\n"
 END
 
@@ -50,10 +54,13 @@ STRINGTABLE
 BEGIN
     IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
     IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
-    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
+    IDS_SELECT_DISK_INVALID "\nInvalid disk.\n\n"
     IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
     IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nThere is no disk for selecting a partition.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
+    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
 END
 
 /* Disk Status */
@@ -124,7 +131,6 @@ BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Ошибка открытия скрипта: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Ошибка обработки параметров: %s\n"
     IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
-    IDS_ERROR_INVALID_DISK "Invalid disk\n"
 END
 
 /* Active help descriptions */

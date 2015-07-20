@@ -28,6 +28,7 @@ list(APPEND SOURCE
     merge.c
     offline.c
     online.c
+    partlist.c
     recover.c
     remove.c
     repair.c

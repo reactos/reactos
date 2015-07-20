@@ -11,6 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FUNCTIONS ******************************************************************/
+
 static
 ULONGLONG
 RoundingDivide(
@@ -25,115 +27,54 @@ static
 VOID
 ListDisk(VOID)
 {
-    WCHAR Buffer[MAX_PATH];
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    SYSTEM_DEVICE_INFORMATION Sdi;
-    IO_STATUS_BLOCK Iosb;
-    DISK_GEOMETRY DiskGeometry;
-    ULONG ReturnSize;
-    ULONG DiskNumber;
-    UNICODE_STRING Name;
-    HANDLE FileHandle;
-    NTSTATUS Status;
-
-    ULARGE_INTEGER DiskSize;
-    ULARGE_INTEGER FreeSize;
+    PLIST_ENTRY Entry;
+    PDISKENTRY DiskEntry;
+    ULONGLONG DiskSize;
+    ULONGLONG FreeSize;
     LPWSTR lpSizeUnit;
     LPWSTR lpFreeUnit;
-
-
-    Status = NtQuerySystemInformation(SystemDeviceInformation,
-                                      &Sdi,
-                                      sizeof(SYSTEM_DEVICE_INFORMATION),
-                                      &ReturnSize);
-    if (!NT_SUCCESS(Status))
-    {
-        return;
-    }
 
     /* Header labels */
     PrintResourceString(IDS_LIST_DISK_HEAD);
     PrintResourceString(IDS_LIST_DISK_LINE);
 
-    for (DiskNumber = 0; DiskNumber < Sdi.NumberOfDisks; DiskNumber++)
+    Entry = DiskListHead.Flink;
+    while (Entry != &DiskListHead)
     {
-        swprintf(Buffer,
-                 L"\\Device\\Harddisk%d\\Partition0",
-                 DiskNumber);
-        RtlInitUnicodeString(&Name,
-                             Buffer);
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &Name,
-                                   0,
-                                   NULL,
-                                   NULL);
+        DiskSize = DiskEntry->SectorCount.QuadPart * 
+                   (ULONGLONG)DiskEntry->BytesPerSector;
 
-        Status = NtOpenFile(&FileHandle,
-                            FILE_READ_DATA | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
-                            &ObjectAttributes,
-                            &Iosb,
-                            FILE_SHARE_READ,
-                            FILE_SYNCHRONOUS_IO_NONALERT);
-        if (NT_SUCCESS(Status))
+        if (DiskSize >= 10737418240) /* 10 GB */
         {
-            Status = NtDeviceIoControlFile(FileHandle,
-                                           NULL,
-                                           NULL,
-                                           NULL,
-                                           &Iosb,
-                                           IOCTL_DISK_GET_DRIVE_GEOMETRY,
-                                           NULL,
-                                           0,
-                                           &DiskGeometry,
-                                           sizeof(DISK_GEOMETRY));
-            if (NT_SUCCESS(Status))
-            {
-                DiskSize.QuadPart = DiskGeometry.Cylinders.QuadPart *
-                                    (ULONGLONG)DiskGeometry.TracksPerCylinder *
-                                    (ULONGLONG)DiskGeometry.SectorsPerTrack *
-                                    (ULONGLONG)DiskGeometry.BytesPerSector;
-                if (DiskSize.QuadPart >= 10737418240) /* 10 GB */
-                {
-                     DiskSize.QuadPart = RoundingDivide(DiskSize.QuadPart, 1073741824);
-                     lpSizeUnit = L"GB";
-                }
-                else
-                {
-                    DiskSize.QuadPart = RoundingDivide(DiskSize.QuadPart, 1048576);
-                    if (DiskSize.QuadPart == 0)
-                        DiskSize.QuadPart = 1;
-                    lpSizeUnit = L"MB";
-                }
-
-                /* FIXME */
-                FreeSize.QuadPart = 0;
-                lpFreeUnit = L"B";
-
-                PrintResourceString(IDS_LIST_DISK_FORMAT,
-                                    (CurrentDisk == DiskNumber) ? L'*': ' ',
-                                    DiskNumber,
-                                    L"Online",
-                                    DiskSize.QuadPart,
-                                    lpSizeUnit,
-                                    FreeSize.QuadPart,
-                                    lpFreeUnit,
-                                    L" ",
-                                    L" ");
-            }
-            else
-            {
-                printf("Status 0x%lx\n", Status);
-
-            }
-
-            NtClose(FileHandle);
+             DiskSize = RoundingDivide(DiskSize, 1073741824);
+             lpSizeUnit = L"GB";
         }
         else
         {
-            printf("Status 0x%lx\n", Status);
-
+             DiskSize = RoundingDivide(DiskSize, 1048576);
+             if (DiskSize == 0)
+                 DiskSize = 1;
+             lpSizeUnit = L"MB";
         }
+
+        /* FIXME */
+        FreeSize = 0;
+        lpFreeUnit = L"B";
+
+        PrintResourceString(IDS_LIST_DISK_FORMAT,
+                            (CurrentDisk == DiskEntry) ? L'*': ' ',
+                            DiskEntry->DiskNumber,
+                            L"Online",
+                            DiskSize,
+                            lpSizeUnit,
+                            FreeSize,
+                            lpFreeUnit,
+                            L" ",
+                            L" ");
+
+        Entry = Entry->Flink;
     }
 
     wprintf(L"\n\n");
@@ -143,7 +84,137 @@ static
 VOID
 ListPartition(VOID)
 {
-    printf("List Partition!!\n");
+    PLIST_ENTRY Entry;
+    PPARTENTRY PartEntry;
+    ULONGLONG PartSize;
+    ULONGLONG PartOffset;
+    LPWSTR lpSizeUnit;
+    LPWSTR lpOffsetUnit;
+    ULONG PartNumber = 1;
+
+    if (CurrentDisk == NULL)
+    {
+        PrintResourceString(IDS_LIST_PARTITION_NO_DISK);
+        return;
+    }
+
+    /* Header labels */
+    PrintResourceString(IDS_LIST_PARTITION_HEAD);
+    PrintResourceString(IDS_LIST_PARTITION_LINE);
+
+    Entry = CurrentDisk->PrimaryPartListHead.Flink;
+    while (Entry != &CurrentDisk->PrimaryPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+        if (PartEntry->PartitionType != 0)
+        {
+            PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
+
+            if (PartSize >= 10737418240) /* 10 GB */
+            {
+                PartSize = RoundingDivide(PartSize, 1073741824);
+                lpSizeUnit = L"GB";
+            }
+            else if (PartSize >= 10485760) /* 10 MB */
+            {
+                PartSize = RoundingDivide(PartSize, 1048576);
+                lpSizeUnit = L"MB";
+            }
+            else
+            {
+                PartSize = RoundingDivide(PartSize, 1024);
+                lpSizeUnit = L"KB";
+            }
+
+            PartOffset = PartEntry->StartSector.QuadPart * CurrentDisk->BytesPerSector;
+
+            if (PartOffset >= 10737418240) /* 10 GB */
+            {
+                PartOffset = RoundingDivide(PartOffset, 1073741824);
+                lpOffsetUnit = L"GB";
+            }
+            else if (PartOffset >= 10485760) /* 10 MB */
+            {
+                PartOffset = RoundingDivide(PartOffset, 1048576);
+                lpOffsetUnit = L"MB";
+            }
+            else
+            {
+                PartOffset = RoundingDivide(PartOffset, 1024);
+                lpOffsetUnit = L"KB";
+            }
+
+            PrintResourceString(IDS_LIST_PARTITION_FORMAT,
+                                (CurrentPartition == PartEntry) ? L'*': ' ',
+                                PartNumber++,
+                                IsContainerPartition(PartEntry->PartitionType) ? L"Extended" : L"Primary",
+                                PartSize,
+                                lpSizeUnit,
+                                PartOffset,
+                                lpOffsetUnit);
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    Entry = CurrentDisk->LogicalPartListHead.Flink;
+    while (Entry != &CurrentDisk->LogicalPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+        if (PartEntry->PartitionType != 0)
+        {
+            PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
+
+            if (PartSize >= 10737418240) /* 10 GB */
+            {
+                PartSize = RoundingDivide(PartSize, 1073741824);
+                lpSizeUnit = L"GB";
+            }
+            else if (PartSize >= 10485760) /* 10 MB */
+            {
+                PartSize = RoundingDivide(PartSize, 1048576);
+                lpSizeUnit = L"MB";
+            }
+            else
+            {
+                PartSize = RoundingDivide(PartSize, 1024);
+                lpSizeUnit = L"KB";
+            }
+
+            PartOffset = PartEntry->StartSector.QuadPart * CurrentDisk->BytesPerSector;
+
+            if (PartOffset >= 10737418240) /* 10 GB */
+            {
+                PartOffset = RoundingDivide(PartOffset, 1073741824);
+                lpOffsetUnit = L"GB";
+            }
+            else if (PartOffset >= 10485760) /* 10 MB */
+            {
+                PartOffset = RoundingDivide(PartOffset, 1048576);
+                lpOffsetUnit = L"MB";
+            }
+            else
+            {
+                PartOffset = RoundingDivide(PartOffset, 1024);
+                lpOffsetUnit = L"KB";
+            }
+
+            PrintResourceString(IDS_LIST_PARTITION_FORMAT,
+                                (CurrentPartition == PartEntry) ? L'*': ' ',
+                                PartNumber++,
+                                L"Logical",
+                                PartSize,
+                                lpSizeUnit,
+                                PartOffset,
+                                lpOffsetUnit);
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    wprintf(L"\n");
 }
 
 static

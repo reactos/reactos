@@ -35,14 +35,21 @@
 #define IDS_LIST_DISK_HEAD             3300
 #define IDS_LIST_DISK_LINE             3301
 #define IDS_LIST_DISK_FORMAT           3302
-#define IDS_LIST_VOLUME_HEAD           3303
+#define IDS_LIST_PARTITION_HEAD        3303
+#define IDS_LIST_PARTITION_LINE        3304
+#define IDS_LIST_PARTITION_FORMAT      3305
+#define IDS_LIST_PARTITION_NO_DISK     3306
+#define IDS_LIST_VOLUME_HEAD           3307
 
 #define IDS_SELECT_NO_DISK             4400
 #define IDS_SELECT_DISK                4401
-#define IDS_SELECT_NO_VOLUME           4402
-#define IDS_SELECT_VOLUME              4403
-#define IDS_SELECT_NO_PARTITION        4404
-#define IDS_SELECT_PARTITION           4405
+#define IDS_SELECT_DISK_INVALID        4402
+#define IDS_SELECT_NO_PARTITION        4403
+#define IDS_SELECT_PARTITION           4404
+#define IDS_SELECT_PARTITION_NO_DISK   4405
+#define IDS_SELECT_PARTITION_INVALID   4406
+#define IDS_SELECT_NO_VOLUME           4407
+#define IDS_SELECT_VOLUME              4408
 
 #define IDS_STATUS_YES          31
 #define IDS_STATUS_NO           32
@@ -135,4 +142,3 @@
 #define IDS_HELP_CMD_UNIQUEID    140
 
 #define IDS_ERROR_INVALID_ARGS   211
-#define IDS_ERROR_INVALID_DISK   212
