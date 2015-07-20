@@ -7,6 +7,10 @@ list(APPEND SOURCE
     testlist.c
     txtsrv.c)
 
+if(MSVC)
+    set_property(SOURCE editor.c APPEND_STRING PROPERTY COMPILE_FLAGS " /w14189")
+endif()
+
 add_executable(riched20_winetest ${SOURCE})
 set_module_type(riched20_winetest win32cui)
 add_importlibs(riched20_winetest ole32 oleaut32 user32 gdi32 msvcrt kernel32)

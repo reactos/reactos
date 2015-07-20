@@ -32,6 +32,7 @@
 #include <tom.h>
 #include <richole.h>
 #include <initguid.h>
+#include <imm.h>
 #include <textserv.h>
 #include <wine/test.h>
 #include <oleauto.h>
@@ -505,8 +506,6 @@ static ITextHostVtbl itextHostVtbl = {
     ITextHostImpl_TxGetSelectionBarWidth
 };
 
-static ITextServices *txtserv = NULL;
-static ITextHostTestImpl *dummyTextHost;
 static void *wrapperCodeMem = NULL;
 
 #include "pshpack1.h"
@@ -605,14 +604,15 @@ static void setup_thiscall_wrappers(void)
 /* Conformance test functions. */
 
 /* Initialize the test texthost structure */
-static BOOL init_texthost(void)
+static BOOL init_texthost(ITextServices **txtserv, ITextHost **ret)
 {
+    ITextHostTestImpl *dummyTextHost;
     IUnknown *init;
     HRESULT result;
 
     dummyTextHost = CoTaskMemAlloc(sizeof(*dummyTextHost));
     if (dummyTextHost == NULL) {
-        skip("Insufficient memory to create ITextHost interface\n");
+        win_skip("Insufficient memory to create ITextHost interface\n");
         return FALSE;
     }
     dummyTextHost->ITextHost_iface.lpVtbl = &itextHostVtbl;
@@ -621,54 +621,53 @@ static BOOL init_texthost(void)
     /* MSDN states that an IUnknown object is returned by
        CreateTextServices which is then queried to obtain a
        ITextServices object. */
-    result = (*pCreateTextServices)(NULL, &dummyTextHost->ITextHost_iface, &init);
+    result = pCreateTextServices(NULL, &dummyTextHost->ITextHost_iface, &init);
     ok(result == S_OK, "Did not return S_OK when created (result =  %x)\n", result);
     if (result != S_OK) {
         CoTaskMemFree(dummyTextHost);
-        skip("CreateTextServices failed.\n");
+        win_skip("CreateTextServices failed.\n");
         return FALSE;
     }
 
-    result = IUnknown_QueryInterface(init, pIID_ITextServices,
-                                     (void **)&txtserv);
-    ok((result == S_OK) && (txtserv != NULL), "Querying interface failed (result = %x, txtserv = %p)\n", result, txtserv);
+    result = IUnknown_QueryInterface(init, pIID_ITextServices, (void**)txtserv);
+    ok((result == S_OK) && (*txtserv != NULL), "Querying interface failed (result = %x, txtserv = %p)\n", result, *txtserv);
     IUnknown_Release(init);
-    if (!((result == S_OK) && (txtserv != NULL))) {
+    if (!((result == S_OK) && (*txtserv != NULL))) {
         CoTaskMemFree(dummyTextHost);
-        skip("Could not retrieve ITextServices interface\n");
+        win_skip("Could not retrieve ITextServices interface\n");
         return FALSE;
     }
 
+    *ret = &dummyTextHost->ITextHost_iface;
     return TRUE;
-}
-
-static void free_texthost(void)
-{
-    ITextServices_Release(txtserv);
-    CoTaskMemFree(dummyTextHost);
 }
 
 static void test_TxGetText(void)
 {
+    ITextServices *txtserv;
+    ITextHost *host;
     HRESULT hres;
     BSTR rettext;
 
-    if (!init_texthost())
+    if (!init_texthost(&txtserv, &host))
         return;
 
     hres = ITextServices_TxGetText(txtserv, &rettext);
     ok(hres == S_OK, "ITextServices_TxGetText failed (result = %x)\n", hres);
 
-    free_texthost();
+    ITextServices_Release(txtserv);
+    ITextHost_Release(host);
 }
 
 static void test_TxSetText(void)
 {
+    ITextServices *txtserv;
+    ITextHost *host;
     HRESULT hres;
     BSTR rettext;
     WCHAR settext[] = {'T','e','s','t',0};
 
-    if (!init_texthost())
+    if (!init_texthost(&txtserv, &host))
         return;
 
     hres = ITextServices_TxSetText(txtserv, settext);
@@ -683,10 +682,14 @@ static void test_TxSetText(void)
                  "String returned differs\n");
 
     SysFreeString(rettext);
-    free_texthost();
+    ITextServices_Release(txtserv);
+    ITextHost_Release(host);
 }
 
-static void test_TxGetNaturalSize(void) {
+static void test_TxGetNaturalSize(void)
+{
+    ITextServices *txtserv;
+    ITextHost *host;
     HRESULT result;
     BOOL ret;
 
@@ -709,7 +712,7 @@ static void test_TxGetNaturalSize(void) {
     INT charwidth_caps_text[26];
     TEXTMETRICA tmInfo_text;
 
-    if (!init_texthost())
+    if (!init_texthost(&txtserv, &host))
         return;
 
     hdcDraw = GetDC(NULL);
@@ -758,11 +761,14 @@ static void test_TxGetNaturalSize(void) {
 cleanup:
     RestoreDC(hdcDraw,1);
     ReleaseDC(NULL,hdcDraw);
-    free_texthost();
+    ITextServices_Release(txtserv);
+    ITextHost_Release(host);
 }
 
 static void test_TxDraw(void)
 {
+    ITextServices *txtserv;
+    ITextHost *host;
     HDC tmphdc = GetDC(NULL);
     DWORD dwAspect = DVASPECT_CONTENT;
     HDC hicTargetDev = NULL; /* Means "default" device */
@@ -771,7 +777,8 @@ static void test_TxDraw(void)
     HRESULT result;
     RECTL client = {0,0,100,100};
 
-    if (!init_texthost())
+
+    if (!init_texthost(&txtserv, &host))
         return;
 
     todo_wine {
@@ -781,8 +788,8 @@ static void test_TxDraw(void)
         ok(result == S_OK, "TxDraw failed (result = %x)\n", result);
     }
 
-    free_texthost();
-
+    ITextServices_Release(txtserv);
+    ITextHost_Release(host);
 }
 
 DEFINE_GUID(expected_iid_itextservices, 0x8d33f740, 0xcf58, 0x11ce, 0xa8, 0x9d, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5);
@@ -871,12 +878,14 @@ static ULONG get_refcount(IUnknown *iface)
 
 static void test_QueryInterface(void)
 {
+    ITextServices *txtserv;
+    ITextHost *host;
     HRESULT hres;
     IRichEditOle *reole, *txtsrv_reole;
     ITextDocument *txtdoc, *txtsrv_txtdoc;
     ULONG refcount;
 
-    if(!init_texthost())
+    if(!init_texthost(&txtserv, &host))
         return;
 
     refcount = get_refcount((IUnknown *)txtserv);
@@ -926,11 +935,15 @@ static void test_QueryInterface(void)
     refcount = get_refcount((IUnknown *)txtserv);
     ok(refcount == 1, "got wrong ref count: %d\n", refcount);
 
-    free_texthost();
+    ITextServices_Release(txtserv);
+    ITextHost_Release(host);
 }
 
 START_TEST( txtsrv )
 {
+    ITextServices *txtserv;
+    ITextHost *host;
+
     setup_thiscall_wrappers();
 
     /* Must explicitly LoadLibrary(). The test has no references to functions in
@@ -946,9 +959,10 @@ START_TEST( txtsrv )
     test_IIDs();
     test_COM();
 
-    if (init_texthost())
+    if (init_texthost(&txtserv, &host))
     {
-        free_texthost();
+        ITextServices_Release(txtserv);
+        ITextHost_Release(host);
 
         test_TxGetText();
         test_TxSetText();
