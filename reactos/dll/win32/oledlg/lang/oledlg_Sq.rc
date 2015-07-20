@@ -28,6 +28,8 @@ STRINGTABLE
   IDS_BROWSE            "Shfleto"
   IDS_NOTOLEMOD         "Dokument nuk duket të ketë një modul të vlefshme OLE. Në pamundësi për të regjistruar kontrollin OLE."
   IDS_NOTOLEMODCAPTION  "Shto Kontroll"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
 }
 
 STRINGTABLE

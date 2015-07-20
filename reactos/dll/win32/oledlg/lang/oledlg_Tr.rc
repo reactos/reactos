@@ -27,6 +27,8 @@ STRINGTABLE
   IDS_BROWSE            "Göz At"
   IDS_NOTOLEMOD         "Kütük, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi saklanamıyor."
   IDS_NOTOLEMODCAPTION  "Denetim Ekle"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
 }
 
 STRINGTABLE

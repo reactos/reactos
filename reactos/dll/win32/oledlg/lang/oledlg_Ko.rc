@@ -26,6 +26,8 @@ STRINGTABLE
   IDS_BROWSE            "찾기"
   IDS_NOTOLEMOD         "이 파일은 올바른 OLE모듈이 아닌거로 보입니다. OLE컨트롤을 등록할수 없습니다."
   IDS_NOTOLEMODCAPTION  "컨트롤 더하기"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
 }
 
 STRINGTABLE

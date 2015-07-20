@@ -28,6 +28,8 @@ STRINGTABLE
   IDS_BROWSE            "Огляд"
   IDS_NOTOLEMOD         "Файл не є модулем управління OLE.  Не вдається зареєструвати елемент управління OLE."
   IDS_NOTOLEMODCAPTION  "Додати елемент управління"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
 }
 
 STRINGTABLE

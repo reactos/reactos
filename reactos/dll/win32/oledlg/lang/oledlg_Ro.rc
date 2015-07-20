@@ -30,6 +30,8 @@ STRINGTABLE
   IDS_BROWSE            "Navigare"
   IDS_NOTOLEMOD         "Fișierul nu pare a fi un modul OLE valid. Nu se poate înregistra controlul OLE."
   IDS_NOTOLEMODCAPTION  "Adaugă un control"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
 }
 
 STRINGTABLE

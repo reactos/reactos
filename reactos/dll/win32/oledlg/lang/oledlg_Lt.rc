@@ -28,6 +28,8 @@ STRINGTABLE
   IDS_BROWSE            "Parinkti"
   IDS_NOTOLEMOD         "Panašu, kad failas nėra galiojantis OLE modulis. Nepavyko užregistruoti OLE valdiklio."
   IDS_NOTOLEMODCAPTION  "Pridėti valdiklį"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
 }
 
 STRINGTABLE

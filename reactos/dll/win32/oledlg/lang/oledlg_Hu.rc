@@ -28,6 +28,8 @@ STRINGTABLE
   IDS_BROWSE            "Tallózás"
   IDS_NOTOLEMOD         "A fájl úgy tűnik nem egy érvényes OLE modul. Nem tudom regisztrálni az OLE vezérlőt."
   IDS_NOTOLEMODCAPTION  "Vezérlő hozzáadása"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
 }
 
 STRINGTABLE
