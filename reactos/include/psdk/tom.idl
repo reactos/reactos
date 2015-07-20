@@ -33,10 +33,18 @@ typedef enum tagTomConstants
     tomDefault     = -9999996,
     tomSuspend     = -9999995,
     tomResume      = -9999994,
-    tomApplyNow    = 0,
-    tomApplyLater  = 1,
-    tomTrackParms  = 2,
-    tomCacheParms  = 3,
+
+    /* ITextFont::Reset() modes */
+    tomApplyNow         = 0,
+    tomApplyLater       = 1,
+    tomTrackParms       = 2,
+    tomCacheParms       = 3,
+    tomApplyTmp         = 4,
+    tomDisableSmartFont = 8,
+    tomEnableSmartFont  = 9,
+    tomUsePoints        = 10,
+    tomUseTwips         = 11,
+
     tomBackward    = 0xc0000001,
     tomForward     = 0x3fffffff,
     tomMove        = 0,
@@ -126,6 +134,8 @@ typedef enum tagTomConstants
     tomMatchWord    = 2,
     tomMatchCase    = 4,
     tomMatchPattern = 8,
+
+    /* ITextRange story type values */
     tomUnknownStory         = 0,
     tomMainTextStory        = 1,
     tomFootnotesStory       = 2,
@@ -138,6 +148,8 @@ typedef enum tagTomConstants
     tomPrimaryFooterStory   = 9,
     tomFirstPageHeaderStory = 10,
     tomFirstPageFooterStory = 11,
+
+    /* ITextFont animation property */
     tomNoAnimation        = 0,
     tomLasVegasLights     = 1,
     tomBlinkingBackground = 2,
@@ -148,6 +160,7 @@ typedef enum tagTomConstants
     tomWipeDown           = 7,
     tomWipeRight          = 8,
     tomAnimationMax       = 8,
+
     tomLowerCase     = 0,
     tomUpperCase     = 1,
     tomTitleCase     = 2,
@@ -254,7 +267,7 @@ interface ITextRange : IDispatch
     HRESULT Expand([in]LONG Unit, [retval, out]LONG *pDelta);
     HRESULT GetIndex([in]LONG Unit, [retval, out]LONG *pIndex);
     HRESULT SetIndex([in]LONG Unit, [in]LONG Index, [in]LONG Extend);
-    HRESULT SetRange([in]LONG cpActive, [in]LONG cpOther);
+    HRESULT SetRange([in]LONG anchor, [in]LONG active);
     HRESULT InRange([in]ITextRange *pRange, [retval, out]LONG *pb);
     HRESULT InStory([in]ITextRange *pRange, [retval, out]LONG *pb);
     HRESULT IsEqual([in]ITextRange *pRange, [retval, out]LONG *pb);
