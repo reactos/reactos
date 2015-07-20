@@ -21,7 +21,29 @@
 
 #include "precomp.h"
 
+#ifdef __REACTOS__
 int WINAPI IsNetDrive(int drive);
+#else
+
+/* Get a function pointer from a DLL handle */
+#define GET_FUNC(func, module, name, fail) \
+  do { \
+    if (!func) { \
+      if (!SHLWAPI_h##module && !(SHLWAPI_h##module = LoadLibraryA(#module ".dll"))) return fail; \
+      func = (fn##func)GetProcAddress(SHLWAPI_h##module, name); \
+      if (!func) return fail; \
+    } \
+  } while (0)
+
+/* DLL handles for late bound calls */
+static HMODULE SHLWAPI_hshell32;
+
+/* Function pointers for GET_FUNC macro; these need to be global because of gcc bug */
+typedef BOOL (WINAPI *fnpIsNetDrive)(int);
+static  fnpIsNetDrive pIsNetDrive;
+
+#endif /* __REACTOS__ */
+
 
 HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR,LPWSTR,DWORD);
 
@@ -2175,7 +2197,11 @@ BOOL WINAPI PathIsUNCA(LPCSTR lpszPath)
 {
   TRACE("(%s)\n",debugstr_a(lpszPath));
 
+#ifdef __REACTOS__
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
+#else
+  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
+#endif
     return TRUE;
   return FALSE;
 }
@@ -2189,7 +2215,11 @@ BOOL WINAPI PathIsUNCW(LPCWSTR lpszPath)
 {
   TRACE("(%s)\n",debugstr_w(lpszPath));
 
+#ifdef __REACTOS__
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
+#else
+  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
+#endif
     return TRUE;
   return FALSE;
 }
@@ -3686,7 +3716,12 @@ BOOL WINAPI PathIsNetworkPathA(LPCSTR lpszPath)
   dwDriveNum = PathGetDriveNumberA(lpszPath);
   if (dwDriveNum == -1)
     return FALSE;
+#ifdef __REACTOS__
   return IsNetDrive(dwDriveNum);
+#else
+  GET_FUNC(pIsNetDrive, shell32, (LPCSTR)66, FALSE); /* ord 66 = shell32.IsNetDrive */
+  return pIsNetDrive(dwDriveNum);
+#endif
 }
 
 /*************************************************************************
@@ -3707,7 +3742,12 @@ BOOL WINAPI PathIsNetworkPathW(LPCWSTR lpszPath)
   dwDriveNum = PathGetDriveNumberW(lpszPath);
   if (dwDriveNum == -1)
     return FALSE;
+#ifdef __REACTOS__
   return IsNetDrive(dwDriveNum);
+#else
+  GET_FUNC(pIsNetDrive, shell32, (LPCSTR)66, FALSE); /* ord 66 = shell32.IsNetDrive */
+  return pIsNetDrive(dwDriveNum);
+#endif
 }
 
 /*************************************************************************

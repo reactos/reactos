@@ -180,7 +180,7 @@ reactos/dll/win32/shdoclc             # Synced to WineStaging-1.7.37
 reactos/dll/win32/shdocvw             # Synced to WineStaging-1.7.47
 reactos/dll/win32/shell32             # Forked at Wine-20071011
 reactos/dll/win32/shfolder            # Synced to WineStaging-1.7.37
-reactos/dll/win32/shlwapi             # Synced to WineStaging-1.7.37
+reactos/dll/win32/shlwapi             # Synced to WineStaging-1.7.47
 reactos/dll/win32/slbcsp              # Synced to WineStaging-1.7.37
 reactos/dll/win32/snmpapi             # Synced to WineStaging-1.7.37
 reactos/dll/win32/softpub             # Synced to WineStaging-1.7.37

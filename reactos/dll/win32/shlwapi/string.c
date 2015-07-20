@@ -2684,8 +2684,7 @@ DWORD WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr, 
       mem = HeapAlloc(GetProcessHeap(), 0, reqLen);
       if (mem)
       {
-        reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, mem,
-                                     reqLen, NULL, NULL);
+        WideCharToMultiByte(CodePage, 0, lpSrcStr, len, mem, reqLen, NULL, NULL);
 
         reqLen = SHTruncateString(mem, dstlen -1);
         reqLen++;

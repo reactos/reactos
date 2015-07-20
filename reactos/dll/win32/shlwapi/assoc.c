@@ -89,6 +89,7 @@ HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
   return SHCoCreateInstance( NULL, &clsid, NULL, refiid, lpInterface );
 }
 
+
 struct AssocPerceivedInfo
 {
     PCWSTR Type;
@@ -254,6 +255,7 @@ static const struct AssocPerceivedInfo* AssocFindByType(LPCWSTR pszType)
     }
     return NULL;
 }
+
 
 /*************************************************************************
  * AssocGetPerceivedType  [SHLWAPI.@]

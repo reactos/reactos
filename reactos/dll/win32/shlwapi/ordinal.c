@@ -1364,7 +1364,7 @@ HRESULT WINAPI IUnknown_SetSite(
  *
  * PARAMS
  *  lpUnknown [I] Object supporting the IPersist interface
- *  lpClassId [O] Destination for Class Id
+ *  clsid     [O] Destination for Class Id
  *
  * RETURNS
  *  Success: S_OK. lpClassId contains the Class Id requested.
@@ -1372,23 +1372,30 @@ HRESULT WINAPI IUnknown_SetSite(
  *           E_NOINTERFACE If lpUnknown does not support IPersist,
  *           Or an HRESULT error code.
  */
-HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID* lpClassId)
+HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID *clsid)
 {
-  IPersist* lpPersist;
-  HRESULT hRet = E_FAIL;
+    IPersist *persist;
+    HRESULT hr;
 
-  TRACE("(%p,%s)\n", lpUnknown, debugstr_guid(lpClassId));
+    TRACE("(%p, %p)\n", lpUnknown, clsid);
 
-  if (lpUnknown)
-  {
-    hRet = IUnknown_QueryInterface(lpUnknown,&IID_IPersist,(void**)&lpPersist);
-    if (SUCCEEDED(hRet))
+    if (!lpUnknown)
     {
-      IPersist_GetClassID(lpPersist, lpClassId);
-      IPersist_Release(lpPersist);
+        memset(clsid, 0, sizeof(*clsid));
+        return E_FAIL;
     }
-  }
-  return hRet;
+
+    hr = IUnknown_QueryInterface(lpUnknown, &IID_IPersist, (void**)&persist);
+    if (hr != S_OK)
+    {
+        hr = IUnknown_QueryInterface(lpUnknown, &IID_IPersistFolder, (void**)&persist);
+        if (hr != S_OK)
+            return hr;
+    }
+
+    hr = IPersist_GetClassID(persist, clsid);
+    IPersist_Release(persist);
+    return hr;
 }
 
 /*************************************************************************

@@ -319,7 +319,7 @@ INT WINAPI wvnsprintfA( LPSTR buffer, INT maxlen, LPCSTR spec, __ms_va_list args
     WPRINTF_FORMAT format;
     LPSTR p = buffer;
     UINT i, len, sign;
-    CHAR number[20];
+    CHAR number[21]; /* 64bit number can be 18446744073709551616 which is 20 chars. and a \0 */
     WPRINTF_DATA argData;
 
     TRACE("%p %u %s\n", buffer, maxlen, debugstr_a(spec));
@@ -426,7 +426,7 @@ INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, __ms_va_list ar
     WPRINTF_FORMAT format;
     LPWSTR p = buffer;
     UINT i, len, sign;
-    CHAR number[20];
+    CHAR number[21]; /* 64bit number can be 18446744073709551616 which is 20 chars. and a \0 */
     WPRINTF_DATA argData;
 
     TRACE("%p %u %s\n", buffer, maxlen, debugstr_w(spec));
