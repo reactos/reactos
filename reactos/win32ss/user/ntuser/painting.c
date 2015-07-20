@@ -2461,8 +2461,11 @@ CLEANUP:
    END_CLEANUP;
 }
 
+static const WCHAR ELLIPSISW[] = {'.','.','.', 0};
+
 BOOL
 UserDrawCaptionText(
+   PWND pWnd,
    HDC hDc,
    const PUNICODE_STRING Text,
    const RECTL *lpRc,
@@ -2475,12 +2478,14 @@ UserDrawCaptionText(
    NTSTATUS Status;
    BOOLEAN bDeleteFont = FALSE;
    SIZE Size;
+   ULONG fit = 0, Length;
+   WCHAR szText[128];
+   RECTL r = *lpRc;
 
    TRACE("UserDrawCaptionText: %wZ\n", Text);
 
    nclm.cbSize = sizeof(nclm);
-   if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS,
-      sizeof(NONCLIENTMETRICS), &nclm, 0))
+   if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &nclm, 0))
    {
       ERR("UserSystemParametersInfo() failed!\n");
       return FALSE;
@@ -2505,27 +2510,51 @@ UserDrawCaptionText(
    IntGdiSetBkMode(hDc, TRANSPARENT);
 
    hOldFont = NtGdiSelectFont(hDc, hFont);
-   if(!hOldFont)
-   {
-      ERR("SelectFont() failed!\n");
-      /* Don't fail */
-   }
 
    if(uFlags & DC_INBUTTON)
       OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(COLOR_BTNTEXT));
    else
-      OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
-         ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
+      OldTextColor = IntGdiSetTextColor(hDc,
+                                        IntGetSysColor(uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
 
-   // FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
-   GreGetTextExtentW(hDc, Text->Buffer, Text->Length/sizeof(WCHAR), &Size, 0);
-   GreExtTextOutW(hDc,
-                  lpRc->left, (lpRc->top + lpRc->bottom)/2 - Size.cy/2,
-                  0, NULL, Text->Buffer, Text->Length/sizeof(WCHAR), NULL, 0);
+   // Adjust for system menu.
+   if (pWnd && pWnd->style & WS_SYSMENU)
+   {
+      r.right -= UserGetSystemMetrics(SM_CYCAPTION) - 1;
+      if ((pWnd->style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX)) && !(pWnd->ExStyle & WS_EX_TOOLWINDOW))
+      {
+         r.right -= UserGetSystemMetrics(SM_CXSIZE) + 1;
+         r.right -= UserGetSystemMetrics(SM_CXSIZE) + 1;
+      }
+   }
+
+   GreGetTextExtentExW(hDc, Text->Buffer, Text->Length/sizeof(WCHAR), r.right - r.left, &fit, 0, &Size, 0);
+
+   Length = (Text->Length/sizeof(WCHAR) == fit ? fit : fit+1);
+   
+   RtlZeroMemory(&szText, sizeof(szText));
+   RtlCopyMemory(&szText, Text->Buffer, Text->Length);
+
+   if (Text->Length/sizeof(WCHAR) > Length && Length > 3)
+   {
+      RtlCopyMemory(&szText[Length-3], ELLIPSISW, sizeof(ELLIPSISW));
+   }
+
+   GreExtTextOutW( hDc,
+                   lpRc->left,
+                   lpRc->top + (lpRc->bottom - lpRc->top) / 2 - Size.cy / 2, // DT_SINGLELINE && DT_VCENTER
+                   ETO_CLIPPED,
+                  (RECTL *)lpRc,
+                  (LPWSTR)&szText,
+                   Length,
+                   NULL,
+                   0 );
 
    IntGdiSetTextColor(hDc, OldTextColor);
+
    if (hOldFont)
       NtGdiSelectFont(hDc, hOldFont);
+
    if (bDeleteFont)
       GreDeleteObject(hFont);
 
@@ -2657,14 +2686,14 @@ BOOL UserDrawCaption(
       Rect.left += 2;
 
       if (Str)
-         UserDrawCaptionText(hDc, Str, &Rect, uFlags, hFont);
+         UserDrawCaptionText(pWnd, hDc, Str, &Rect, uFlags, hFont);
       else if (pWnd != NULL) // FIXME: Windows does not do that
       {
          UNICODE_STRING ustr;
          ustr.Buffer = pWnd->strName.Buffer; // FIXME: LARGE_STRING truncated!
          ustr.Length = (USHORT)min(pWnd->strName.Length, MAXUSHORT);
          ustr.MaximumLength = (USHORT)min(pWnd->strName.MaximumLength, MAXUSHORT);
-         UserDrawCaptionText(hDc, &ustr, &Rect, uFlags, hFont);
+         UserDrawCaptionText(pWnd, hDc, &ustr, &Rect, uFlags, hFont);
       }
    }
 
