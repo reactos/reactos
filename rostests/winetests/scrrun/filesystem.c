@@ -20,6 +20,7 @@
 
 #define COBJMACROS
 #include <stdio.h>
+#include <limits.h>
 
 #include "windows.h"
 #include "ole2.h"
@@ -33,6 +34,9 @@
 #include "scrrun.h"
 
 static IFileSystem3 *fs3;
+
+/* w2k and 2k3 error code. */
+#define E_VAR_NOT_SET 0x800a005b
 
 static inline ULONG get_refcount(IUnknown *iface)
 {
@@ -537,11 +541,11 @@ static void test_GetAbsolutePathName(void)
 static void test_GetFile(void)
 {
     static const WCHAR slW[] = {'\\',0};
-    BSTR path;
+    BSTR path, str;
     WCHAR pathW[MAX_PATH];
     FileAttribute fa;
     VARIANT size;
-    DWORD gfa;
+    DWORD gfa, new_gfa;
     IFile *file;
     HRESULT hr;
     HANDLE hf;
@@ -571,10 +575,38 @@ static void test_GetFile(void)
     hr = IFileSystem3_GetFile(fs3, path, &file);
     ok(hr == S_OK, "GetFile returned %x, expected S_OK\n", hr);
 
+    hr = IFile_get_Path(file, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = IFile_get_Path(file, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(str, pathW), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+#define FILE_ATTR_MASK (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | \
+        FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_ARCHIVE | \
+        FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_COMPRESSED)
+
     hr = IFile_get_Attributes(file, &fa);
-    gfa = GetFileAttributesW(pathW) & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN |
-            FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_ARCHIVE |
-            FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_COMPRESSED);
+    gfa = GetFileAttributesW(pathW) & FILE_ATTR_MASK;
+    ok(hr == S_OK, "get_Attributes returned %x, expected S_OK\n", hr);
+    ok(fa == gfa, "fa = %x, expected %x\n", fa, gfa);
+
+    hr = IFile_put_Attributes(file, gfa | FILE_ATTRIBUTE_READONLY);
+    ok(hr == S_OK, "put_Attributes failed: %08x\n", hr);
+    new_gfa = GetFileAttributesW(pathW) & FILE_ATTR_MASK;
+    ok(new_gfa == (gfa|FILE_ATTRIBUTE_READONLY), "new_gfa = %x, expected %x\n", new_gfa, gfa|FILE_ATTRIBUTE_READONLY);
+
+    hr = IFile_get_Attributes(file, &fa);
+    ok(hr == S_OK, "get_Attributes returned %x, expected S_OK\n", hr);
+    ok(fa == new_gfa, "fa = %x, expected %x\n", fa, new_gfa);
+
+    hr = IFile_put_Attributes(file, gfa);
+    ok(hr == S_OK, "put_Attributes failed: %08x\n", hr);
+    new_gfa = GetFileAttributesW(pathW) & FILE_ATTR_MASK;
+    ok(new_gfa == gfa, "new_gfa = %x, expected %x\n", new_gfa, gfa);
+
+    hr = IFile_get_Attributes(file, &fa);
     ok(hr == S_OK, "get_Attributes returned %x, expected S_OK\n", hr);
     ok(fa == gfa, "fa = %x, expected %x\n", fa, gfa);
 
@@ -1349,6 +1381,15 @@ static void test_CreateTextFile(void)
     hr = ITextStream_Read(stream, 1, &str);
     ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
 
+    hr = ITextStream_Close(stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITextStream_Read(stream, 1, &str);
+    ok(hr == CTL_E_BADFILEMODE || hr == E_VAR_NOT_SET, "got 0x%08x\n", hr);
+
+    hr = ITextStream_Close(stream);
+    ok(hr == S_FALSE || hr == E_VAR_NOT_SET, "got 0x%08x\n", hr);
+
     ITextStream_Release(stream);
 
     /* check it's created */
@@ -1864,6 +1905,88 @@ static void test_SerialNumber(void)
     IEnumVARIANT_Release(iter);
 }
 
+static const struct extension_test {
+    WCHAR path[20];
+    WCHAR ext[10];
+} extension_tests[] = {
+    { {'n','o','e','x','t',0}, {0} },
+    { {'n','.','o','.','e','x','t',0}, {'e','x','t',0} },
+    { {'n','.','o','.','e','X','t',0}, {'e','X','t',0} },
+    { { 0 } }
+};
+
+static void test_GetExtensionName(void)
+{
+    BSTR path, ext;
+    HRESULT hr;
+    int i;
+
+    for (i = 0; i < sizeof(extension_tests)/sizeof(extension_tests[0]); i++) {
+
+       path = SysAllocString(extension_tests[i].path);
+       ext = NULL;
+       hr = IFileSystem3_GetExtensionName(fs3, path, &ext);
+       ok(hr == S_OK, "got 0x%08x\n", hr);
+       if (*extension_tests[i].ext)
+           ok(!lstrcmpW(ext, extension_tests[i].ext), "%d: path %s, got %s, expected %s\n", i,
+               wine_dbgstr_w(path), wine_dbgstr_w(ext), wine_dbgstr_w(extension_tests[i].ext));
+       else
+           ok(ext == NULL, "%d: path %s, got %s, expected %s\n", i,
+               wine_dbgstr_w(path), wine_dbgstr_w(ext), wine_dbgstr_w(extension_tests[i].ext));
+
+       SysFreeString(path);
+       SysFreeString(ext);
+    }
+}
+
+static void test_GetSpecialFolder(void)
+{
+    WCHAR pathW[MAX_PATH];
+    IFolder *folder;
+    HRESULT hr;
+    DWORD ret;
+    BSTR path;
+
+    hr = IFileSystem3_GetSpecialFolder(fs3, WindowsFolder, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = IFileSystem3_GetSpecialFolder(fs3, TemporaryFolder+1, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = IFileSystem3_GetSpecialFolder(fs3, TemporaryFolder+1, &folder);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    hr = IFileSystem3_GetSpecialFolder(fs3, WindowsFolder, &folder);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IFolder_get_Path(folder, &path);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    GetWindowsDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+    ok(!lstrcmpiW(pathW, path), "got %s, expected %s\n", wine_dbgstr_w(path), wine_dbgstr_w(pathW));
+    SysFreeString(path);
+    IFolder_Release(folder);
+
+    hr = IFileSystem3_GetSpecialFolder(fs3, SystemFolder, &folder);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IFolder_get_Path(folder, &path);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    GetSystemDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+    ok(!lstrcmpiW(pathW, path), "got %s, expected %s\n", wine_dbgstr_w(path), wine_dbgstr_w(pathW));
+    SysFreeString(path);
+    IFolder_Release(folder);
+
+    hr = IFileSystem3_GetSpecialFolder(fs3, TemporaryFolder, &folder);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IFolder_get_Path(folder, &path);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ret = GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    if (ret && pathW[ret-1] == '\\')
+        pathW[ret-1] = 0;
+
+    ok(!lstrcmpiW(pathW, path), "got %s, expected %s\n", wine_dbgstr_w(path), wine_dbgstr_w(pathW));
+    SysFreeString(path);
+    IFolder_Release(folder);
+}
+
 START_TEST(filesystem)
 {
     HRESULT hr;
@@ -1898,6 +2021,8 @@ START_TEST(filesystem)
     test_Read();
     test_GetDriveName();
     test_SerialNumber();
+    test_GetExtensionName();
+    test_GetSpecialFolder();
 
     IFileSystem3_Release(fs3);
 
