@@ -65,6 +65,15 @@ BOOL WINAPI WTSDisconnectSession(HANDLE hServer, DWORD SessionId, BOOL bWait)
 }
 
 /************************************************************
+ *                WTSEnableChildSessions  (WTSAPI32.@)
+ */
+BOOL WINAPI WTSEnableChildSessions(BOOL enable)
+{
+    FIXME("Stub %d\n", enable);
+    return TRUE;
+}
+
+/************************************************************
  *                WTSEnumerateProcessesA  (WTSAPI32.@)
  */
 BOOL WINAPI WTSEnumerateProcessesA(HANDLE hServer, DWORD Reserved, DWORD Version,
