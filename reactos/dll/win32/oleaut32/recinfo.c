@@ -503,12 +503,7 @@ static BOOL WINAPI IRecordInfoImpl_IsMatchingType(IRecordInfo *iface, IRecordInf
     TRACE( "(%p)->(%p)\n", This, info2 );
 
     IRecordInfo_GetGuid( info2, &guid2 );
-    if (IsEqualGUID( &This->guid, &guid2 )) return TRUE;
-
-    FIXME( "records have different guids (%s %s) but could still match\n",
-           debugstr_guid( &This->guid ), debugstr_guid( &guid2 ) );
-
-    return FALSE;
+    return IsEqualGUID( &This->guid, &guid2 );
 }
 
 static PVOID WINAPI IRecordInfoImpl_RecordCreate(IRecordInfo *iface)
@@ -642,7 +637,12 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
             WARN("GetRefTypeInfo failed: %08x\n", hres);
             return hres;
         }
-        ITypeInfo_GetTypeAttr(pTypeInfo, &typeattr);
+        hres = ITypeInfo_GetTypeAttr(pTypeInfo, &typeattr);
+        if(FAILED(hres)) {
+            ITypeInfo_Release(pTypeInfo);
+            WARN("GetTypeAttr failed for referenced type: %08x\n", hres);
+            return hres;
+        }
     }else  {
         pTypeInfo = pTI;
         ITypeInfo_AddRef(pTypeInfo);

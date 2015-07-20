@@ -28,6 +28,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 #define ALIGN_LENGTH(_Len, _Align) _Len = ALIGNED_LENGTH(_Len, _Align)
 #define ALIGN_POINTER(_Ptr, _Align) _Ptr = ALIGNED_POINTER(_Ptr, _Align)
 
+/* ole32 exports those, not defined in public headers */
+ULONG __RPC_USER WdtpInterfacePointer_UserSize(ULONG*, ULONG, ULONG, IUnknown*, REFIID);
+unsigned char * __RPC_USER WdtpInterfacePointer_UserMarshal(ULONG*, ULONG, unsigned char*, IUnknown*, REFIID);
+unsigned char * __RPC_USER WdtpInterfacePointer_UserUnmarshal(ULONG*, unsigned char*, IUnknown**, REFIID);
+
 static void dump_user_flags(const ULONG *pFlags)
 {
     if (HIWORD(*pFlags) == NDR_LOCAL_DATA_REPRESENTATION)
@@ -239,21 +244,21 @@ static unsigned int get_type_alignment(ULONG *pFlags, VARTYPE vt)
     return 7;
 }
 
-static unsigned interface_variant_size(const ULONG *pFlags, REFIID riid, IUnknown *punk)
+/* WdtpInterfacePointer_UserSize takes care of 2 additional DWORDs to store marshalling buffer size */
+static unsigned interface_variant_size(ULONG *pFlags, REFIID riid, IUnknown *punk)
 {
     ULONG size = 0;
-    HRESULT hr;
 
     if (punk)
     {
-        hr = CoGetMarshalSizeMax(&size, riid, punk, LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
-        if (FAILED(hr))
+        size = WdtpInterfacePointer_UserSize(pFlags, LOWORD(*pFlags), 0, punk, riid);
+        if (!size)
         {
-            ERR("interface variant buffer size calculation failed, HRESULT=0x%x\n", hr);
+            ERR("interface variant buffer size calculation failed\n");
             return 0;
         }
     }
-    size += sizeof(ULONG); /* we have to store the buffersize in the stream */
+    size += sizeof(ULONG);
     TRACE("wire-size extra of interface variant is %d\n", size);
     return size;
 }
@@ -295,115 +300,47 @@ static ULONG wire_extra_user_size(ULONG *pFlags, ULONG Start, VARIANT *pvar)
   }
 }
 
-/* helper: called for VT_DISPATCH variants to marshal the IDispatch* into the buffer. returns Buffer on failure, new position otherwise */
-static unsigned char* interface_variant_marshal(const ULONG *pFlags, unsigned char *Buffer,
+/* helper: called for VT_DISPATCH variants to marshal the IDispatch* into the buffer */
+static unsigned char* interface_variant_marshal(ULONG *pFlags, unsigned char *Buffer,
                                                 REFIID riid, IUnknown *punk)
 {
-  IStream *working; 
-  HGLOBAL working_mem;
-  void *working_memlocked;
-  unsigned char *oldpos;
-  ULONG size;
-  HRESULT hr;
-  
   TRACE("pFlags=%d, Buffer=%p, pUnk=%p\n", *pFlags, Buffer, punk);
 
+  /* first DWORD is used to store pointer itself, truncated on win64 */
   if(!punk)
   {
       memset(Buffer, 0, sizeof(ULONG));
       return Buffer + sizeof(ULONG);
   }
-
-  oldpos = Buffer;
-  
-  /* CoMarshalInterface needs a stream, whereas at this level we are operating in terms of buffers.
-   * We create a stream on an HGLOBAL, so we can simply do a memcpy to move it to the buffer.
-   * in rpcrt4/ndr_ole.c, a simple IStream implementation is wrapped around the buffer object,
-   * but that would be overkill here, hence this implementation. We save the size because the unmarshal
-   * code has no way to know how long the marshalled buffer is. */
-
-  size = interface_variant_size(pFlags, riid, punk);
-  
-  working_mem = GlobalAlloc(0, size);
-  if (!working_mem) return oldpos;
-
-  hr = CreateStreamOnHGlobal(working_mem, TRUE, &working);
-  if (hr != S_OK) {
-    GlobalFree(working_mem);
-    return oldpos;
-  }
-  
-  hr = CoMarshalInterface(working, riid, punk, LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
-  if (hr != S_OK) {
-    IStream_Release(working); /* this also releases the hglobal */
-    return oldpos;
+  else
+  {
+      *(DWORD*)Buffer = (DWORD_PTR)punk;
+      Buffer += sizeof(DWORD);
   }
 
-  working_memlocked = GlobalLock(working_mem);
-  memcpy(Buffer, &size, sizeof(ULONG)); /* copy the buffersize */
-  memcpy(Buffer + sizeof(ULONG), working_memlocked, size - sizeof(ULONG));
-  GlobalUnlock(working_mem);
-
-  IStream_Release(working);
-
-  /* size includes the ULONG for the size written above */
-  TRACE("done, size=%d\n", size);
-  return Buffer + size;
+  return WdtpInterfacePointer_UserMarshal(pFlags, LOWORD(*pFlags), Buffer, punk, riid);
 }
 
-/* helper: called for VT_DISPATCH / VT_UNKNOWN variants to unmarshal the buffer. returns Buffer on failure, new position otherwise */
-static unsigned char *interface_variant_unmarshal(const ULONG *pFlags, unsigned char *Buffer,
+/* helper: called for VT_DISPATCH / VT_UNKNOWN variants to unmarshal the buffer */
+static unsigned char *interface_variant_unmarshal(ULONG *pFlags, unsigned char *Buffer,
                                                   REFIID riid, IUnknown **ppunk)
 {
-  IStream *working;
-  HGLOBAL working_mem;
-  void *working_memlocked;
-  unsigned char *oldpos;
-  ULONG size;
-  HRESULT hr;
+  DWORD ptr;
   
   TRACE("pFlags=%d, Buffer=%p, ppUnk=%p\n", *pFlags, Buffer, ppunk);
 
-  oldpos = Buffer;
+  /* skip pointer part itself */
+  ptr = *(DWORD*)Buffer;
+  Buffer += sizeof(DWORD);
 
-  /* get the buffersize */
-  memcpy(&size, Buffer, sizeof(ULONG));
-  TRACE("buffersize=%d\n", size);
-
-  if(!size)
+  if(!ptr)
   {
       *ppunk = NULL;
-      return Buffer + sizeof(ULONG);
+      return Buffer;
   }
 
-  working_mem = GlobalAlloc(0, size);
-  if (!working_mem) return oldpos;
-
-  hr = CreateStreamOnHGlobal(working_mem, TRUE, &working);
-  if (hr != S_OK) {
-    GlobalFree(working_mem);
-    return oldpos;
-  }
-
-  working_memlocked = GlobalLock(working_mem);
-  
-  /* now we copy the contents of the marshalling buffer to working_memlocked, unlock it, and demarshal the stream */
-  memcpy(working_memlocked, Buffer + sizeof(ULONG), size);
-  GlobalUnlock(working_mem);
-
-  hr = CoUnmarshalInterface(working, riid, (void**)ppunk);
-  if (hr != S_OK) {
-    IStream_Release(working);
-    return oldpos;
-  }
-
-  IStream_Release(working); /* this also frees the underlying hglobal */
-
-  /* size includes the ULONG for the size written above */
-  TRACE("done, processed=%d bytes\n", size);
-  return Buffer + size;
+  return WdtpInterfacePointer_UserUnmarshal(pFlags, Buffer, ppunk, riid);
 }
-
 
 ULONG WINAPI VARIANT_UserSize(ULONG *pFlags, ULONG Start, VARIANT *pvar)
 {
@@ -502,19 +439,15 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
             Pos = VARIANT_UserMarshal(pFlags, Pos, V_VARIANTREF(pvar));
             break;
         case VT_UNKNOWN:
-            /* this should probably call WdtpInterfacePointer_UserMarshal in ole32.dll */
             Pos = interface_variant_marshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWN(pvar));
             break;
         case VT_UNKNOWN | VT_BYREF:
-            /* this should probably call WdtpInterfacePointer_UserMarshal in ole32.dll */
             Pos = interface_variant_marshal(pFlags, Pos, &IID_IUnknown, *V_UNKNOWNREF(pvar));
             break;
         case VT_DISPATCH:
-            /* this should probably call WdtpInterfacePointer_UserMarshal in ole32.dll */
             Pos = interface_variant_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
             break;
         case VT_DISPATCH | VT_BYREF:
-            /* this should probably call WdtpInterfacePointer_UserMarshal in ole32.dll */
             Pos = interface_variant_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
             break;
         case VT_RECORD:
@@ -617,19 +550,15 @@ unsigned char * WINAPI VARIANT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffe
             Pos = VARIANT_UserUnmarshal(pFlags, Pos, V_VARIANTREF(pvar));
             break;
         case VT_UNKNOWN:
-            /* this should probably call WdtpInterfacePointer_UserUnmarshal in ole32.dll */
             Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IUnknown, &V_UNKNOWN(pvar));
             break;
         case VT_UNKNOWN | VT_BYREF:
-            /* this should probably call WdtpInterfacePointer_UserUnmarshal in ole32.dll */
             Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWNREF(pvar));
             break;
         case VT_DISPATCH:
-            /* this should probably call WdtpInterfacePointer_UserUnmarshal in ole32.dll */
             Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)&V_DISPATCH(pvar));
             break;
         case VT_DISPATCH | VT_BYREF:
-            /* this should probably call WdtpInterfacePointer_UserUnmarshal in ole32.dll */
             Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)V_DISPATCHREF(pvar));
             break;
         case VT_RECORD:
@@ -2256,8 +2185,14 @@ HRESULT CALLBACK IEnumConnections_Next_Proxy(
     LPCONNECTDATA rgcd,
     ULONG *pcFetched)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+
+    TRACE("(%u, %p %p)\n", cConnections, rgcd, pcFetched);
+
+    if (!pcFetched)
+        pcFetched = &fetched;
+
+    return IEnumConnections_RemoteNext_Proxy(This, cConnections, rgcd, pcFetched);
 }
 
 HRESULT __RPC_STUB IEnumConnections_Next_Stub(
@@ -2266,28 +2201,50 @@ HRESULT __RPC_STUB IEnumConnections_Next_Stub(
     LPCONNECTDATA rgcd,
     ULONG *pcFetched)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+
+    TRACE("(%u, %p, %p)\n", cConnections, rgcd, pcFetched);
+
+    *pcFetched = 0;
+    hr = IEnumConnections_Next(This, cConnections, rgcd, pcFetched);
+    if (hr == S_OK)
+        *pcFetched = cConnections;
+
+    return hr;
 }
 
 HRESULT CALLBACK IEnumConnectionPoints_Next_Proxy(
     IEnumConnectionPoints* This,
     ULONG cConnections,
-    LPCONNECTIONPOINT *ppCP,
+    IConnectionPoint **ppCP,
     ULONG *pcFetched)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+
+    TRACE("(%u, %p %p)\n", cConnections, ppCP, pcFetched);
+
+    if (!pcFetched)
+        pcFetched = &fetched;
+
+    return IEnumConnectionPoints_RemoteNext_Proxy(This, cConnections, ppCP, pcFetched);
 }
 
 HRESULT __RPC_STUB IEnumConnectionPoints_Next_Stub(
     IEnumConnectionPoints* This,
     ULONG cConnections,
-    LPCONNECTIONPOINT *ppCP,
+    IConnectionPoint **ppCP,
     ULONG *pcFetched)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+
+    TRACE("(%u, %p, %p)\n", cConnections, ppCP, pcFetched);
+
+    *pcFetched = 0;
+    hr = IEnumConnectionPoints_Next(This, cConnections, ppCP, pcFetched);
+    if (hr == S_OK)
+        *pcFetched = cConnections;
+
+    return hr;
 }
 
 HRESULT CALLBACK IPersistMemory_Load_Proxy(
@@ -2295,8 +2252,12 @@ HRESULT CALLBACK IPersistMemory_Load_Proxy(
     LPVOID pMem,
     ULONG cbSize)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("(%p, %u)\n", pMem, cbSize);
+
+    if (!pMem)
+        return E_POINTER;
+
+    return IPersistMemory_RemoteLoad_Proxy(This, pMem, cbSize);
 }
 
 HRESULT __RPC_STUB IPersistMemory_Load_Stub(
@@ -2304,8 +2265,8 @@ HRESULT __RPC_STUB IPersistMemory_Load_Stub(
     BYTE *pMem,
     ULONG cbSize)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("(%p, %u)\n", pMem, cbSize);
+    return IPersistMemory_Load(This, pMem, cbSize);
 }
 
 HRESULT CALLBACK IPersistMemory_Save_Proxy(
@@ -2314,8 +2275,12 @@ HRESULT CALLBACK IPersistMemory_Save_Proxy(
     BOOL fClearDirty,
     ULONG cbSize)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("(%p, %d, %u)\n", pMem, fClearDirty, cbSize);
+
+    if (!pMem)
+        return E_POINTER;
+
+    return IPersistMemory_RemoteSave_Proxy(This, pMem, fClearDirty, cbSize);
 }
 
 HRESULT __RPC_STUB IPersistMemory_Save_Stub(
@@ -2324,23 +2289,25 @@ HRESULT __RPC_STUB IPersistMemory_Save_Stub(
     BOOL fClearDirty,
     ULONG cbSize)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("(%p, %d, %u)\n", pMem, fClearDirty, cbSize);
+    return IPersistMemory_Save(This, pMem, fClearDirty, cbSize);
 }
 
 void CALLBACK IAdviseSinkEx_OnViewStatusChange_Proxy(
     IAdviseSinkEx* This,
     DWORD dwViewStatus)
 {
-    FIXME("not implemented\n");
+    TRACE("(%p, 0x%08x)\n", This, dwViewStatus);
+    IAdviseSinkEx_RemoteOnViewStatusChange_Proxy(This, dwViewStatus);
 }
 
 HRESULT __RPC_STUB IAdviseSinkEx_OnViewStatusChange_Stub(
     IAdviseSinkEx* This,
     DWORD dwViewStatus)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("(%p, 0x%08x)\n", This, dwViewStatus);
+    IAdviseSinkEx_OnViewStatusChange(This, dwViewStatus);
+    return S_OK;
 }
 
 HRESULT CALLBACK IEnumOleUndoUnits_Next_Proxy(
@@ -2349,8 +2316,14 @@ HRESULT CALLBACK IEnumOleUndoUnits_Next_Proxy(
     IOleUndoUnit **rgElt,
     ULONG *pcEltFetched)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+
+    TRACE("(%u, %p %p)\n", cElt, rgElt, pcEltFetched);
+
+    if (!pcEltFetched)
+        pcEltFetched = &fetched;
+
+    return IEnumOleUndoUnits_RemoteNext_Proxy(This, cElt, rgElt, pcEltFetched);
 }
 
 HRESULT __RPC_STUB IEnumOleUndoUnits_Next_Stub(
@@ -2359,8 +2332,16 @@ HRESULT __RPC_STUB IEnumOleUndoUnits_Next_Stub(
     IOleUndoUnit **rgElt,
     ULONG *pcEltFetched)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+
+    TRACE("(%u, %p, %p)\n", cElt, rgElt, pcEltFetched);
+
+    *pcEltFetched = 0;
+    hr = IEnumOleUndoUnits_Next(This, cElt, rgElt, pcEltFetched);
+    if (hr == S_OK)
+        *pcEltFetched = cElt;
+
+    return hr;
 }
 
 HRESULT CALLBACK IQuickActivate_QuickActivate_Proxy(

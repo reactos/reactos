@@ -4138,8 +4138,6 @@ HRESULT WINAPI VarDecFromI4(LONG lIn, DECIMAL* pDecOut)
   return S_OK;
 }
 
-#define LOCALE_EN_US		(MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT))
-
 /* internal representation of the value stored in a DECIMAL. The bytes are
    stored from LSB at index 0 to MSB at index 11
  */

@@ -3393,18 +3393,27 @@ static HRESULT TLB_ReadTypeLib(LPCWSTR pszFileName, LPWSTR pszPath, UINT cchPath
 
     h = CreateFileW(pszPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if(h != INVALID_HANDLE_VALUE){
-        FILE_NAME_INFORMATION *info;
-        char data[MAX_PATH * sizeof(WCHAR) + sizeof(info->FileNameLength)];
+        FILE_NAME_INFORMATION size_info;
         BOOL br;
 
-        info = (FILE_NAME_INFORMATION*)data;
         /* GetFileInformationByHandleEx returns the path of the file without
          * WOW64 redirection */
-        br = GetFileInformationByHandleEx(h, FileNameInfo, data, sizeof(data));
-        if(br){
-            info->FileName[info->FileNameLength / sizeof(WCHAR)] = 0;
-            lstrcpynW(pszPath + 2, info->FileName, cchPath - 2);
+        br = GetFileInformationByHandleEx(h, FileNameInfo, &size_info, sizeof(size_info));
+        if(br || GetLastError() == ERROR_MORE_DATA){
+            FILE_NAME_INFORMATION *info;
+            DWORD size = sizeof(*info) + size_info.FileNameLength + sizeof(WCHAR);
+
+            info = HeapAlloc(GetProcessHeap(), 0, size);
+
+            br = GetFileInformationByHandleEx(h, FileNameInfo, info, size);
+            if(br){
+                info->FileName[info->FileNameLength / sizeof(WCHAR)] = 0;
+                lstrcpynW(pszPath + 2, info->FileName, cchPath - 2);
+            }
+
+            HeapFree(GetProcessHeap(), 0, info);
         }
+
         CloseHandle(h);
     }
 
@@ -6487,10 +6496,10 @@ __ASM_GLOBAL_FUNC( call_method,
                    "movq 8(%rsp),%rdx\n\t"
                    "movq 16(%rsp),%r8\n\t"
                    "movq 24(%rsp),%r9\n\t"
-                   "movq %rcx,%xmm0\n\t"
-                   "movq %rdx,%xmm1\n\t"
-                   "movq %r8,%xmm2\n\t"
-                   "movq %r9,%xmm3\n\t"
+                   "movq 0(%rsp),%xmm0\n\t"
+                   "movq 8(%rsp),%xmm1\n\t"
+                   "movq 16(%rsp),%xmm2\n\t"
+                   "movq 24(%rsp),%xmm3\n\t"
                    "callq *%rax\n\t"
                    "leaq -16(%rbp),%rsp\n\t"
                    "popq %rdi\n\t"

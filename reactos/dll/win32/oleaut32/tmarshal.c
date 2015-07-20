@@ -242,18 +242,71 @@ PSFacBuf_QueryInterface(LPPSFACTORYBUFFER iface, REFIID iid, LPVOID *ppv) {
 static ULONG WINAPI PSFacBuf_AddRef(LPPSFACTORYBUFFER iface) { return 2; }
 static ULONG WINAPI PSFacBuf_Release(LPPSFACTORYBUFFER iface) { return 1; }
 
-static HRESULT
-_get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
-    HRESULT	hres;
+struct ifacepsredirect_data
+{
+    ULONG size;
+    DWORD mask;
+    GUID  iid;
+    ULONG nummethods;
+    GUID  tlbid;
+    GUID  base;
+    ULONG name_len;
+    ULONG name_offset;
+};
+
+struct tlibredirect_data
+{
+    ULONG  size;
+    DWORD  res;
+    ULONG  name_len;
+    ULONG  name_offset;
+    LANGID langid;
+    WORD   flags;
+    ULONG  help_len;
+    ULONG  help_offset;
+    WORD   major_version;
+    WORD   minor_version;
+};
+
+static BOOL actctx_get_typelib_module(REFIID riid, WCHAR *module, DWORD len)
+{
+    struct ifacepsredirect_data *iface;
+    struct tlibredirect_data *tlib;
+    ACTCTX_SECTION_KEYED_DATA data;
+    WCHAR *ptrW;
+
+    data.cbSize = sizeof(data);
+    if (!FindActCtxSectionGuid(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_INTERFACE_REDIRECTION,
+            riid, &data))
+        return FALSE;
+
+    iface = (struct ifacepsredirect_data*)data.lpData;
+    if (!FindActCtxSectionGuid(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_TYPE_LIBRARY_REDIRECTION,
+            &iface->tlbid, &data))
+        return FALSE;
+
+    tlib = (struct tlibredirect_data*)data.lpData;
+    ptrW = (WCHAR*)((BYTE*)data.lpSectionBase + tlib->name_offset);
+
+    if (tlib->name_len/sizeof(WCHAR) >= len) {
+        ERR("need larger module buffer, %u\n", tlib->name_len);
+        return FALSE;
+    }
+
+    memcpy(module, ptrW, tlib->name_len);
+    module[tlib->name_len/sizeof(WCHAR)] = 0;
+    return TRUE;
+}
+
+static HRESULT reg_get_typelib_module(REFIID riid, WCHAR *module, DWORD len)
+{
     HKEY	ikey;
     REGSAM	opposite = (sizeof(void*) == 8) ? KEY_WOW64_32KEY : KEY_WOW64_64KEY;
     BOOL	is_wow64;
     char	tlguid[200],typelibkey[300],interfacekey[300],ver[100];
     char	tlfn[260];
-    OLECHAR	tlfnW[260];
     DWORD	tlguidlen, verlen, type;
     LONG	tlfnlen, err;
-    ITypeLib	*tl;
 
     sprintf( interfacekey, "Interface\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\Typelib",
 	riid->Data1, riid->Data2, riid->Data3,
@@ -297,19 +350,37 @@ _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
         }
 #endif
     }
-    MultiByteToWideChar(CP_ACP, 0, tlfn, -1, tlfnW, sizeof(tlfnW) / sizeof(tlfnW[0]));
-    hres = LoadTypeLib(tlfnW,&tl);
-    if (hres) {
+    MultiByteToWideChar(CP_ACP, 0, tlfn, -1, module, len);
+    return S_OK;
+}
+
+static HRESULT
+_get_typeinfo_for_iid(REFIID riid, ITypeInfo **typeinfo)
+{
+    OLECHAR   moduleW[260];
+    ITypeLib *typelib;
+    HRESULT   hres;
+
+    *typeinfo = NULL;
+
+    moduleW[0] = 0;
+    if (!actctx_get_typelib_module(riid, moduleW, sizeof(moduleW)/sizeof(moduleW[0]))) {
+        hres = reg_get_typelib_module(riid, moduleW, sizeof(moduleW)/sizeof(moduleW[0]));
+        if (FAILED(hres))
+            return hres;
+    }
+
+    hres = LoadTypeLib(moduleW, &typelib);
+    if (hres != S_OK) {
 	ERR("Failed to load typelib for %s, but it should be there.\n",debugstr_guid(riid));
 	return hres;
     }
-    hres = ITypeLib_GetTypeInfoOfGuid(tl,riid,ti);
-    if (hres) {
-	ERR("typelib does not contain info for %s?\n",debugstr_guid(riid));
-	ITypeLib_Release(tl);
-	return hres;
-    }
-    ITypeLib_Release(tl);
+
+    hres = ITypeLib_GetTypeInfoOfGuid(typelib, riid, typeinfo);
+    ITypeLib_Release(typelib);
+    if (hres != S_OK)
+	ERR("typelib does not contain info for %s\n", debugstr_guid(riid));
+
     return hres;
 }
 
@@ -1714,9 +1785,7 @@ static HRESULT init_proxy_entry_point(TMProxyImpl *proxy, unsigned int num)
     /* nrofargs including This */
     int nrofargs = 1;
     ITypeInfo *tinfo2;
-#ifdef __i386__
     TMAsmProxy	*xasm = proxy->asmstubs + num;
-#endif
     HRESULT hres;
     const FUNCDESC *fdesc;
 
