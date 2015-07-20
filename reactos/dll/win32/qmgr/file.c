@@ -21,56 +21,62 @@
 #include "qmgr.h"
 
 #include <urlmon.h>
-#include <wininet.h>
+#include <winhttp.h>
 
-static inline BackgroundCopyFileImpl *impl_from_IBackgroundCopyFile(IBackgroundCopyFile *iface)
+static inline BackgroundCopyFileImpl *impl_from_IBackgroundCopyFile2(
+    IBackgroundCopyFile2 *iface)
 {
-    return CONTAINING_RECORD(iface, BackgroundCopyFileImpl, IBackgroundCopyFile_iface);
+    return CONTAINING_RECORD(iface, BackgroundCopyFileImpl, IBackgroundCopyFile2_iface);
 }
 
 static HRESULT WINAPI BackgroundCopyFile_QueryInterface(
-    IBackgroundCopyFile* iface,
+    IBackgroundCopyFile2 *iface,
     REFIID riid,
     void **obj)
 {
-    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
+    BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
 
-    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), obj);
+    TRACE("(%p)->(%s %p)\n", file, debugstr_guid(riid), obj);
 
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IBackgroundCopyFile))
+    if (IsEqualGUID(riid, &IID_IUnknown) ||
+        IsEqualGUID(riid, &IID_IBackgroundCopyFile) ||
+        IsEqualGUID(riid, &IID_IBackgroundCopyFile2))
     {
         *obj = iface;
-        IBackgroundCopyFile_AddRef(iface);
-        return S_OK;
+    }
+    else
+    {
+        *obj = NULL;
+        return E_NOINTERFACE;
     }
 
-    *obj = NULL;
-    return E_NOINTERFACE;
+    IBackgroundCopyFile2_AddRef(iface);
+    return S_OK;
 }
 
-static ULONG WINAPI BackgroundCopyFile_AddRef(IBackgroundCopyFile* iface)
+static ULONG WINAPI BackgroundCopyFile_AddRef(
+    IBackgroundCopyFile2 *iface)
 {
-    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p)->(%d)\n", This, ref);
+    BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
+    ULONG ref = InterlockedIncrement(&file->ref);
+    TRACE("(%p)->(%d)\n", file, ref);
     return ref;
 }
 
 static ULONG WINAPI BackgroundCopyFile_Release(
-    IBackgroundCopyFile* iface)
+    IBackgroundCopyFile2 *iface)
 {
-    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
+    ULONG ref = InterlockedDecrement(&file->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("(%p)->(%d)\n", file, ref);
 
     if (ref == 0)
     {
-        IBackgroundCopyJob2_Release(&This->owner->IBackgroundCopyJob2_iface);
-        HeapFree(GetProcessHeap(), 0, This->info.LocalName);
-        HeapFree(GetProcessHeap(), 0, This->info.RemoteName);
-        HeapFree(GetProcessHeap(), 0, This);
+        IBackgroundCopyJob3_Release(&file->owner->IBackgroundCopyJob3_iface);
+        HeapFree(GetProcessHeap(), 0, file->info.LocalName);
+        HeapFree(GetProcessHeap(), 0, file->info.RemoteName);
+        HeapFree(GetProcessHeap(), 0, file);
     }
 
     return ref;
@@ -78,52 +84,71 @@ static ULONG WINAPI BackgroundCopyFile_Release(
 
 /* Get the remote name of a background copy file */
 static HRESULT WINAPI BackgroundCopyFile_GetRemoteName(
-    IBackgroundCopyFile* iface,
+    IBackgroundCopyFile2 *iface,
     LPWSTR *pVal)
 {
-    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
+    BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("(%p)->(%p)\n", file, pVal);
 
-    return return_strval(This->info.RemoteName, pVal);
+    return return_strval(file->info.RemoteName, pVal);
 }
 
 static HRESULT WINAPI BackgroundCopyFile_GetLocalName(
-    IBackgroundCopyFile* iface,
+    IBackgroundCopyFile2 *iface,
     LPWSTR *pVal)
 {
-    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
+    BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("(%p)->(%p)\n", file, pVal);
 
-    return return_strval(This->info.LocalName, pVal);
+    return return_strval(file->info.LocalName, pVal);
 }
 
 static HRESULT WINAPI BackgroundCopyFile_GetProgress(
-    IBackgroundCopyFile* iface,
+    IBackgroundCopyFile2 *iface,
     BG_FILE_PROGRESS *pVal)
 {
-    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
+    BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("(%p)->(%p)\n", file, pVal);
 
-    EnterCriticalSection(&This->owner->cs);
-    pVal->BytesTotal = This->fileProgress.BytesTotal;
-    pVal->BytesTransferred = This->fileProgress.BytesTransferred;
-    pVal->Completed = This->fileProgress.Completed;
-    LeaveCriticalSection(&This->owner->cs);
+    EnterCriticalSection(&file->owner->cs);
+    *pVal = file->fileProgress;
+    LeaveCriticalSection(&file->owner->cs);
 
     return S_OK;
 }
 
-static const IBackgroundCopyFileVtbl BackgroundCopyFileVtbl =
+static HRESULT WINAPI BackgroundCopyFile_GetFileRanges(
+    IBackgroundCopyFile2 *iface,
+    DWORD *RangeCount,
+    BG_FILE_RANGE **Ranges)
+{
+    BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
+    FIXME("(%p)->(%p %p)\n", file, RangeCount, Ranges);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI BackgroundCopyFile_SetRemoteName(
+    IBackgroundCopyFile2 *iface,
+    LPCWSTR Val)
+{
+    BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
+    FIXME("(%p)->(%s)\n", file, debugstr_w(Val));
+    return E_NOTIMPL;
+}
+
+static const IBackgroundCopyFile2Vtbl BackgroundCopyFile2Vtbl =
 {
     BackgroundCopyFile_QueryInterface,
     BackgroundCopyFile_AddRef,
     BackgroundCopyFile_Release,
     BackgroundCopyFile_GetRemoteName,
     BackgroundCopyFile_GetLocalName,
-    BackgroundCopyFile_GetProgress
+    BackgroundCopyFile_GetProgress,
+    BackgroundCopyFile_GetFileRanges,
+    BackgroundCopyFile_SetRemoteName
 };
 
 HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
@@ -131,7 +156,6 @@ HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
                                       BackgroundCopyFileImpl **file)
 {
     BackgroundCopyFileImpl *This;
-    int n;
 
     TRACE("(%s, %s, %p)\n", debugstr_w(remoteName), debugstr_w(localName), file);
 
@@ -139,47 +163,264 @@ HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
     if (!This)
         return E_OUTOFMEMORY;
 
-    n = (lstrlenW(remoteName) + 1) * sizeof(WCHAR);
-    This->info.RemoteName = HeapAlloc(GetProcessHeap(), 0, n);
+    This->info.RemoteName = strdupW(remoteName);
     if (!This->info.RemoteName)
     {
         HeapFree(GetProcessHeap(), 0, This);
         return E_OUTOFMEMORY;
     }
-    memcpy(This->info.RemoteName, remoteName, n);
 
-    n = (lstrlenW(localName) + 1) * sizeof(WCHAR);
-    This->info.LocalName = HeapAlloc(GetProcessHeap(), 0, n);
+    This->info.LocalName = strdupW(localName);
     if (!This->info.LocalName)
     {
         HeapFree(GetProcessHeap(), 0, This->info.RemoteName);
         HeapFree(GetProcessHeap(), 0, This);
         return E_OUTOFMEMORY;
     }
-    memcpy(This->info.LocalName, localName, n);
 
-    This->IBackgroundCopyFile_iface.lpVtbl = &BackgroundCopyFileVtbl;
+    This->IBackgroundCopyFile2_iface.lpVtbl = &BackgroundCopyFile2Vtbl;
     This->ref = 1;
 
     This->fileProgress.BytesTotal = BG_SIZE_UNKNOWN;
     This->fileProgress.BytesTransferred = 0;
     This->fileProgress.Completed = FALSE;
     This->owner = owner;
-    IBackgroundCopyJob2_AddRef(&owner->IBackgroundCopyJob2_iface);
+    This->read_size = 0;
+    This->tempFileName[0] = 0;
+    IBackgroundCopyJob3_AddRef(&owner->IBackgroundCopyJob3_iface);
 
     *file = This;
     return S_OK;
 }
 
-static DWORD CALLBACK copyProgressCallback(LARGE_INTEGER totalSize,
-                                           LARGE_INTEGER totalTransferred,
-                                           LARGE_INTEGER streamSize,
-                                           LARGE_INTEGER streamTransferred,
-                                           DWORD streamNum,
-                                           DWORD reason,
-                                           HANDLE srcFile,
-                                           HANDLE dstFile,
-                                           LPVOID obj)
+static HRESULT error_from_http_response(DWORD code)
+{
+    switch (code)
+    {
+    case 200: return S_OK;
+    case 400: return BG_E_HTTP_ERROR_400;
+    case 401: return BG_E_HTTP_ERROR_401;
+    case 404: return BG_E_HTTP_ERROR_404;
+    case 407: return BG_E_HTTP_ERROR_407;
+    case 414: return BG_E_HTTP_ERROR_414;
+    case 501: return BG_E_HTTP_ERROR_501;
+    case 503: return BG_E_HTTP_ERROR_503;
+    case 504: return BG_E_HTTP_ERROR_504;
+    case 505: return BG_E_HTTP_ERROR_505;
+    default:
+        FIXME("unhandled response code %u\n", code);
+        return S_OK;
+    }
+}
+
+static void CALLBACK progress_callback_http(HINTERNET handle, DWORD_PTR context, DWORD status,
+                                            LPVOID buf, DWORD buflen)
+{
+    BackgroundCopyFileImpl *file = (BackgroundCopyFileImpl *)context;
+    BackgroundCopyJobImpl *job = file->owner;
+
+    TRACE("%p, %p, %x, %p, %u\n", handle, file, status, buf, buflen);
+
+    switch (status)
+    {
+    case WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
+    {
+        DWORD code, len, size;
+
+        size = sizeof(code);
+        if (WinHttpQueryHeaders(handle, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER,
+                                NULL, &code, &size, NULL))
+        {
+            if ((job->error.code = error_from_http_response(code)))
+            {
+                EnterCriticalSection(&job->cs);
+
+                job->error.context = BG_ERROR_CONTEXT_REMOTE_FILE;
+                if (job->error.file) IBackgroundCopyFile2_Release(job->error.file);
+                job->error.file = &file->IBackgroundCopyFile2_iface;
+                IBackgroundCopyFile2_AddRef(job->error.file);
+
+                LeaveCriticalSection(&job->cs);
+                transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
+            }
+            else
+            {
+                EnterCriticalSection(&job->cs);
+
+                job->error.context = 0;
+                if (job->error.file)
+                {
+                    IBackgroundCopyFile2_Release(job->error.file);
+                    job->error.file = NULL;
+                }
+
+                LeaveCriticalSection(&job->cs);
+            }
+        }
+        size = sizeof(len);
+        if (WinHttpQueryHeaders(handle, WINHTTP_QUERY_CONTENT_LENGTH|WINHTTP_QUERY_FLAG_NUMBER,
+                                NULL, &len, &size, NULL))
+        {
+            file->fileProgress.BytesTotal = len;
+        }
+        break;
+    }
+    case WINHTTP_CALLBACK_STATUS_READ_COMPLETE:
+    {
+        file->read_size = buflen;
+        break;
+    }
+    case WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
+    {
+        WINHTTP_ASYNC_RESULT *result = (WINHTTP_ASYNC_RESULT *)buf;
+        job->error.code = result->dwError;
+        transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
+        break;
+    }
+    default: break;
+    }
+
+    SetEvent(job->wait);
+}
+
+static DWORD wait_for_completion(BackgroundCopyJobImpl *job)
+{
+    HANDLE handles[2] = {job->wait, job->cancel};
+    DWORD error = ERROR_SUCCESS;
+
+    switch (WaitForMultipleObjects(2, handles, FALSE, INFINITE))
+    {
+    case WAIT_OBJECT_0:
+        break;
+
+    case WAIT_OBJECT_0 + 1:
+        error = ERROR_CANCELLED;
+        transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_CANCELLED);
+        break;
+
+    default:
+        error = GetLastError();
+        transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
+        break;
+    }
+
+    return error;
+}
+
+static UINT target_from_index(UINT index)
+{
+    switch (index)
+    {
+    case 0: return WINHTTP_AUTH_TARGET_SERVER;
+    case 1: return WINHTTP_AUTH_TARGET_PROXY;
+    default:
+        ERR("unhandled index %u\n", index);
+        break;
+    }
+    return 0;
+}
+
+static UINT scheme_from_index(UINT index)
+{
+    switch (index)
+    {
+    case 0: return WINHTTP_AUTH_SCHEME_BASIC;
+    case 1: return WINHTTP_AUTH_SCHEME_NTLM;
+    case 2: return WINHTTP_AUTH_SCHEME_PASSPORT;
+    case 3: return WINHTTP_AUTH_SCHEME_DIGEST;
+    case 4: return WINHTTP_AUTH_SCHEME_NEGOTIATE;
+    default:
+        ERR("unhandled index %u\n", index);
+        break;
+    }
+    return 0;
+}
+
+static BOOL set_request_credentials(HINTERNET req, BackgroundCopyJobImpl *job)
+{
+    UINT i, j;
+
+    for (i = 0; i < BG_AUTH_TARGET_PROXY; i++)
+    {
+        UINT target = target_from_index(i);
+        for (j = 0; j < BG_AUTH_SCHEME_PASSPORT; j++)
+        {
+            UINT scheme = scheme_from_index(j);
+            const WCHAR *username = job->http_options.creds[i][j].Credentials.Basic.UserName;
+            const WCHAR *password = job->http_options.creds[i][j].Credentials.Basic.Password;
+
+            if (!username) continue;
+            if (!WinHttpSetCredentials(req, target, scheme, username, password, NULL)) return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+static BOOL transfer_file_http(BackgroundCopyFileImpl *file, URL_COMPONENTSW *uc,
+                               const WCHAR *tmpfile)
+{
+    BackgroundCopyJobImpl *job = file->owner;
+    HANDLE handle;
+    HINTERNET ses, con = NULL, req = NULL;
+    DWORD flags = (uc->nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
+    char buf[4096];
+    BOOL ret = FALSE;
+
+    transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_CONNECTING);
+
+    if (!(ses = WinHttpOpen(NULL, 0, NULL, NULL, WINHTTP_FLAG_ASYNC))) return FALSE;
+    WinHttpSetStatusCallback(ses, progress_callback_http, WINHTTP_CALLBACK_FLAG_ALL_COMPLETIONS, 0);
+    if (!WinHttpSetOption(ses, WINHTTP_OPTION_CONTEXT_VALUE, &file, sizeof(file))) goto done;
+
+    if (!(con = WinHttpConnect(ses, uc->lpszHostName, uc->nPort, 0))) goto done;
+    if (!(req = WinHttpOpenRequest(con, NULL, uc->lpszUrlPath, NULL, NULL, NULL, flags))) goto done;
+    if (!set_request_credentials(req, job)) goto done;
+
+    if (!(WinHttpSendRequest(req, job->http_options.headers, ~0u, NULL, 0, 0, (DWORD_PTR)file))) goto done;
+    if (wait_for_completion(job) || job->error.code) goto done;
+
+    if (!(WinHttpReceiveResponse(req, NULL))) goto done;
+    if (wait_for_completion(job) || job->error.code) goto done;
+
+    transitionJobState(job, BG_JOB_STATE_CONNECTING, BG_JOB_STATE_TRANSFERRING);
+
+    handle = CreateFileW(tmpfile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (handle == INVALID_HANDLE_VALUE) goto done;
+
+    for (;;)
+    {
+        file->read_size = 0;
+        if (!(ret = WinHttpReadData(req, buf, sizeof(buf), NULL))) break;
+        if (wait_for_completion(job) || job->error.code)
+        {
+            ret = FALSE;
+            break;
+        }
+        if (!file->read_size) break;
+        if (!(ret = WriteFile(handle, buf, file->read_size, NULL, NULL))) break;
+
+        EnterCriticalSection(&job->cs);
+        file->fileProgress.BytesTransferred += file->read_size;
+        job->jobProgress.BytesTransferred += file->read_size;
+        LeaveCriticalSection(&job->cs);
+    }
+
+    CloseHandle(handle);
+
+done:
+    WinHttpCloseHandle(req);
+    WinHttpCloseHandle(con);
+    WinHttpCloseHandle(ses);
+    if (!ret) DeleteFileW(tmpfile);
+
+    SetEvent(job->done);
+    return ret;
+}
+
+static DWORD CALLBACK progress_callback_local(LARGE_INTEGER totalSize, LARGE_INTEGER totalTransferred,
+                                              LARGE_INTEGER streamSize, LARGE_INTEGER streamTransferred,
+                                              DWORD streamNum, DWORD reason, HANDLE srcFile,
+                                              HANDLE dstFile, LPVOID obj)
 {
     BackgroundCopyFileImpl *file = obj;
     BackgroundCopyJobImpl *job = file->owner;
@@ -199,173 +440,37 @@ static DWORD CALLBACK copyProgressCallback(LARGE_INTEGER totalSize,
             : PROGRESS_CANCEL);
 }
 
-typedef struct
+static BOOL transfer_file_local(BackgroundCopyFileImpl *file, const WCHAR *tmpname)
 {
-    IBindStatusCallback IBindStatusCallback_iface;
-    BackgroundCopyFileImpl *file;
-    LONG ref;
-} DLBindStatusCallback;
-
-static inline DLBindStatusCallback *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
-{
-    return CONTAINING_RECORD(iface, DLBindStatusCallback, IBindStatusCallback_iface);
-}
-
-static HRESULT WINAPI DLBindStatusCallback_QueryInterface(
-    IBindStatusCallback *iface,
-    REFIID riid,
-    void **ppvObject)
-{
-    DLBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
-
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IBindStatusCallback))
-    {
-        *ppvObject = &This->IBindStatusCallback_iface;
-        IBindStatusCallback_AddRef(iface);
-        return S_OK;
-    }
-
-    *ppvObject = NULL;
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI DLBindStatusCallback_AddRef(IBindStatusCallback *iface)
-{
-    DLBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
-    return InterlockedIncrement(&This->ref);
-}
-
-static ULONG WINAPI DLBindStatusCallback_Release(IBindStatusCallback *iface)
-{
-    DLBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
-
-    if (ref == 0)
-    {
-        IBackgroundCopyFile_Release(&This->file->IBackgroundCopyFile_iface);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
-
-    return ref;
-}
-
-static HRESULT WINAPI DLBindStatusCallback_GetBindInfo(
-    IBindStatusCallback *iface,
-    DWORD *grfBINDF,
-    BINDINFO *pbindinfo)
-{
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI DLBindStatusCallback_GetPriority(
-    IBindStatusCallback *iface,
-    LONG *pnPriority)
-{
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI DLBindStatusCallback_OnDataAvailable(
-    IBindStatusCallback *iface,
-    DWORD grfBSCF,
-    DWORD dwSize,
-    FORMATETC *pformatetc,
-    STGMEDIUM *pstgmed)
-{
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI DLBindStatusCallback_OnLowResource(
-    IBindStatusCallback *iface,
-    DWORD reserved)
-{
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI DLBindStatusCallback_OnObjectAvailable(
-    IBindStatusCallback *iface,
-    REFIID riid,
-    IUnknown *punk)
-{
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI DLBindStatusCallback_OnProgress(
-    IBindStatusCallback *iface,
-    ULONG progress,
-    ULONG progressMax,
-    ULONG statusCode,
-    LPCWSTR statusText)
-{
-    DLBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
-    BackgroundCopyFileImpl *file = This->file;
+    static const WCHAR fileW[] = {'f','i','l','e',':','/','/',0};
     BackgroundCopyJobImpl *job = file->owner;
-    ULONG64 diff;
+    const WCHAR *ptr;
+    BOOL ret;
 
-    EnterCriticalSection(&job->cs);
-    diff = (file->fileProgress.BytesTotal == BG_SIZE_UNKNOWN
-            ? progress
-            : progress - file->fileProgress.BytesTransferred);
-    file->fileProgress.BytesTotal = progressMax ? progressMax : BG_SIZE_UNKNOWN;
-    file->fileProgress.BytesTransferred = progress;
-    job->jobProgress.BytesTransferred += diff;
-    LeaveCriticalSection(&job->cs);
+    transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSFERRING);
 
-    return S_OK;
-}
+    if (strlenW(file->info.RemoteName) > 7 && !memicmpW(file->info.RemoteName, fileW, 7))
+        ptr = file->info.RemoteName + 7;
+    else
+        ptr = file->info.RemoteName;
 
-static HRESULT WINAPI DLBindStatusCallback_OnStartBinding(
-    IBindStatusCallback *iface,
-    DWORD dwReserved,
-    IBinding *pib)
-{
-    return E_NOTIMPL;
-}
+    if (!(ret = CopyFileExW(ptr, tmpname, progress_callback_local, file, NULL, 0)))
+    {
+        WARN("Local file copy failed: error %u\n", GetLastError());
+        transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
+    }
 
-static HRESULT WINAPI DLBindStatusCallback_OnStopBinding(
-    IBindStatusCallback *iface,
-    HRESULT hresult,
-    LPCWSTR szError)
-{
-    return E_NOTIMPL;
-}
-
-static const IBindStatusCallbackVtbl DLBindStatusCallback_Vtbl =
-{
-    DLBindStatusCallback_QueryInterface,
-    DLBindStatusCallback_AddRef,
-    DLBindStatusCallback_Release,
-    DLBindStatusCallback_OnStartBinding,
-    DLBindStatusCallback_GetPriority,
-    DLBindStatusCallback_OnLowResource,
-    DLBindStatusCallback_OnProgress,
-    DLBindStatusCallback_OnStopBinding,
-    DLBindStatusCallback_GetBindInfo,
-    DLBindStatusCallback_OnDataAvailable,
-    DLBindStatusCallback_OnObjectAvailable
-};
-
-static DLBindStatusCallback *DLBindStatusCallbackConstructor(
-    BackgroundCopyFileImpl *file)
-{
-    DLBindStatusCallback *This = HeapAlloc(GetProcessHeap(), 0, sizeof *This);
-    if (!This)
-        return NULL;
-
-    This->IBindStatusCallback_iface.lpVtbl = &DLBindStatusCallback_Vtbl;
-    IBackgroundCopyFile_AddRef(&file->IBackgroundCopyFile_iface);
-    This->file = file;
-    This->ref = 1;
-    return This;
+    SetEvent(job->done);
+    return ret;
 }
 
 BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
 {
     static const WCHAR prefix[] = {'B','I','T', 0};
-    DLBindStatusCallback *callbackObj;
-    WCHAR tmpDir[MAX_PATH];
-    WCHAR tmpName[MAX_PATH];
-    HRESULT hr;
+    WCHAR tmpDir[MAX_PATH], tmpName[MAX_PATH];
+    WCHAR host[MAX_PATH], path[MAX_PATH];
+    URL_COMPONENTSW uc;
+    BOOL ret;
 
     if (!GetTempPathW(MAX_PATH, tmpDir))
     {
@@ -383,14 +488,6 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
         return FALSE;
     }
 
-    callbackObj = DLBindStatusCallbackConstructor(file);
-    if (!callbackObj)
-    {
-        ERR("Out of memory\n");
-        transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSIENT_ERROR);
-        return FALSE;
-    }
-
     EnterCriticalSection(&job->cs);
     file->fileProgress.BytesTotal = BG_SIZE_UNKNOWN;
     file->fileProgress.BytesTransferred = 0;
@@ -402,31 +499,35 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
           debugstr_w(tmpName),
           debugstr_w(file->info.LocalName));
 
-    transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSFERRING);
-
-    DeleteUrlCacheEntryW(file->info.RemoteName);
-    hr = URLDownloadToFileW(NULL, file->info.RemoteName, tmpName, 0,
-                            &callbackObj->IBindStatusCallback_iface);
-    IBindStatusCallback_Release(&callbackObj->IBindStatusCallback_iface);
-    if (hr == INET_E_DOWNLOAD_FAILURE)
+    uc.dwStructSize      = sizeof(uc);
+    uc.nScheme           = 0;
+    uc.lpszScheme        = NULL;
+    uc.dwSchemeLength    = 0;
+    uc.lpszUserName      = NULL;
+    uc.dwUserNameLength  = 0;
+    uc.lpszPassword      = NULL;
+    uc.dwPasswordLength  = 0;
+    uc.lpszHostName      = host;
+    uc.dwHostNameLength  = sizeof(host)/sizeof(host[0]);
+    uc.nPort             = 0;
+    uc.lpszUrlPath       = path;
+    uc.dwUrlPathLength   = sizeof(path)/sizeof(path[0]);
+    uc.lpszExtraInfo     = NULL;
+    uc.dwExtraInfoLength = 0;
+    ret = WinHttpCrackUrl(file->info.RemoteName, 0, 0, &uc);
+    if (!ret)
     {
-        TRACE("URLDownload failed, trying local file copy\n");
-        if (!CopyFileExW(file->info.RemoteName, tmpName, copyProgressCallback,
-                         file, NULL, 0))
-        {
-            ERR("Local file copy failed: error %d\n", GetLastError());
-            transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
-            return FALSE;
-        }
+        TRACE("WinHttpCrackUrl failed, trying local file copy\n");
+        if (!transfer_file_local(file, tmpName)) return FALSE;
     }
-    else if (FAILED(hr))
+    else if (!transfer_file_http(file, &uc, tmpName))
     {
-        ERR("URLDownload failed: eh 0x%08x\n", hr);
-        transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
+        WARN("HTTP transfer failed\n");
         return FALSE;
     }
 
-    if (transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_QUEUED))
+    if (transitionJobState(job, BG_JOB_STATE_CONNECTING, BG_JOB_STATE_QUEUED) ||
+        transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_QUEUED))
     {
         lstrcpyW(file->tempFileName, tmpName);
 
