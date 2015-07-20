@@ -236,13 +236,7 @@ static const IClassFactoryVtbl CAccPropServicesFactoryVtbl = {
 
 static IClassFactory CAccPropServicesFactory = { &CAccPropServicesFactoryVtbl };
 
-HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, void **ppv)
+HRESULT get_accpropservices_factory(REFIID riid, void **ppv)
 {
-    if(IsEqualGUID(&CLSID_CAccPropServices, rclsid)) {
-        TRACE("(CLSID_CAccPropServices %s %p)\n", debugstr_guid(iid), ppv);
-        return IClassFactory_QueryInterface(&CAccPropServicesFactory, iid, ppv);
-    }
-
-    FIXME("%s %s %p: stub\n", debugstr_guid(rclsid), debugstr_guid(iid), ppv);
-    return E_NOTIMPL;
+    return IClassFactory_QueryInterface(&CAccPropServicesFactory, riid, ppv);
 }

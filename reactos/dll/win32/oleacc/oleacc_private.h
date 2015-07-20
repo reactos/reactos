@@ -28,13 +28,14 @@
 #include <windef.h>
 #include <winbase.h>
 #include <ole2.h>
-#include <oleacc.h>
+#include <oleacc_classes.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(oleacc);
 
 HRESULT create_client_object(HWND, const IID*, void**) DECLSPEC_HIDDEN;
 HRESULT create_window_object(HWND, const IID*, void**) DECLSPEC_HIDDEN;
+HRESULT get_accpropservices_factory(REFIID, void**) DECLSPEC_HIDDEN;
 
 int convert_child_id(VARIANT *v) DECLSPEC_HIDDEN;
 

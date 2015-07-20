@@ -16,5 +16,11 @@ HKCR
     }
     NoRemove CLSID
     {
+        '{B5F8350B-0548-48B1-A6EE-88BD00B4A5E7}' = s 'CAccPropServices'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            TypeLib = s '{1EA4DBF0-3C3B-11CF-810C-00AA00389B71}'
+            Version = s '1.1'
+        }
     }
 }
