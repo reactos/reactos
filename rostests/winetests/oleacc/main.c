@@ -20,10 +20,39 @@
 
 #define COBJMACROS
 
+#include <wine/test.h>
 #include <stdio.h>
+
+//#include "initguid.h"
 #include <oleacc.h>
 
-#include <wine/test.h>
+#define DEFINE_EXPECT(func) \
+    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
+
+#define SET_EXPECT(func) \
+    do { called_ ## func = FALSE; expect_ ## func = TRUE; } while(0)
+
+#define CHECK_EXPECT2(func) \
+    do { \
+        ok(expect_ ##func, "unexpected call " #func "\n"); \
+        called_ ## func = TRUE; \
+    }while(0)
+
+#define CHECK_EXPECT(func) \
+    do { \
+        CHECK_EXPECT2(func); \
+        expect_ ## func = FALSE; \
+    }while(0)
+
+#define CHECK_CALLED(func) \
+    do { \
+        ok(called_ ## func, "expected " #func "\n"); \
+        expect_ ## func = called_ ## func = FALSE; \
+    }while(0)
+
+DEFINE_EXPECT(Accessible_QI_IEnumVARIANT);
+DEFINE_EXPECT(Accessible_get_accChildCount);
+DEFINE_EXPECT(Accessible_get_accChild);
 
 static HANDLE (WINAPI *pGetProcessHandleFromHwnd)(HWND);
 
@@ -39,6 +68,241 @@ static BOOL init(void)
 
     return TRUE;
 }
+
+static HRESULT WINAPI Accessible_QueryInterface(
+        IAccessible *iface, REFIID riid, void **ppvObject)
+{
+    if(IsEqualIID(riid, &IID_IEnumVARIANT)) {
+        CHECK_EXPECT(Accessible_QI_IEnumVARIANT);
+        return E_NOINTERFACE;
+    }
+
+    ok(0, "unexpected QI call: %s\n", wine_dbgstr_guid(riid));
+    return E_NOTIMPL;
+}
+
+static ULONG WINAPI Accessible_AddRef(IAccessible *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI Accessible_Release(IAccessible *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI Accessible_GetTypeInfoCount(
+        IAccessible *iface, UINT *pctinfo)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_GetTypeInfo(IAccessible *iface,
+        UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_GetIDsOfNames(IAccessible *iface, REFIID riid,
+        LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_Invoke(IAccessible *iface, DISPID dispIdMember,
+        REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
+        VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accParent(
+        IAccessible *iface, IDispatch **ppdispParent)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accChildCount(
+        IAccessible *iface, LONG *pcountChildren)
+{
+    CHECK_EXPECT(Accessible_get_accChildCount);
+    *pcountChildren = 1;
+    return S_OK;
+}
+
+static HRESULT WINAPI Accessible_get_accChild(IAccessible *iface,
+        VARIANT varChildID, IDispatch **ppdispChild)
+{
+    CHECK_EXPECT(Accessible_get_accChild);
+    ok(V_VT(&varChildID) == VT_I4, "V_VT(&varChildID) = %d\n", V_VT(&varChildID));
+    ok(V_I4(&varChildID) == 1, "V_I4(&varChildID) = %d\n", V_I4(&varChildID));
+
+    *ppdispChild = NULL;
+    return S_OK;
+}
+
+static HRESULT WINAPI Accessible_get_accName(IAccessible *iface,
+        VARIANT varID, BSTR *pszName)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accValue(IAccessible *iface,
+        VARIANT varID, BSTR *pszValue)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accDescription(IAccessible *iface,
+        VARIANT varID, BSTR *pszDescription)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accRole(IAccessible *iface,
+        VARIANT varID, VARIANT *pvarRole)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accState(IAccessible *iface,
+        VARIANT varID, VARIANT *pvarState)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accHelp(IAccessible *iface,
+        VARIANT varID, BSTR *pszHelp)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accHelpTopic(IAccessible *iface,
+        BSTR *pszHelpFile, VARIANT varID, LONG *pidTopic)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accKeyboardShortcut(IAccessible *iface,
+        VARIANT varID, BSTR *pszKeyboardShortcut)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accFocus(IAccessible *iface, VARIANT *pvarID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accSelection(
+        IAccessible *iface, VARIANT *pvarID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_get_accDefaultAction(IAccessible *iface,
+        VARIANT varID, BSTR *pszDefaultAction)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_accSelect(IAccessible *iface,
+        LONG flagsSelect, VARIANT varID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_accLocation(IAccessible *iface, LONG *pxLeft,
+        LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_accNavigate(IAccessible *iface,
+        LONG navDir, VARIANT varStart, VARIANT *pvarEnd)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_accHitTest(IAccessible *iface,
+        LONG xLeft, LONG yTop, VARIANT *pvarID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_accDoDefaultAction(
+        IAccessible *iface, VARIANT varID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_put_accName(IAccessible *iface,
+        VARIANT varID, BSTR pszName)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Accessible_put_accValue(IAccessible *iface,
+        VARIANT varID, BSTR pszValue)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static IAccessibleVtbl AccessibleVtbl = {
+    Accessible_QueryInterface,
+    Accessible_AddRef,
+    Accessible_Release,
+    Accessible_GetTypeInfoCount,
+    Accessible_GetTypeInfo,
+    Accessible_GetIDsOfNames,
+    Accessible_Invoke,
+    Accessible_get_accParent,
+    Accessible_get_accChildCount,
+    Accessible_get_accChild,
+    Accessible_get_accName,
+    Accessible_get_accValue,
+    Accessible_get_accDescription,
+    Accessible_get_accRole,
+    Accessible_get_accState,
+    Accessible_get_accHelp,
+    Accessible_get_accHelpTopic,
+    Accessible_get_accKeyboardShortcut,
+    Accessible_get_accFocus,
+    Accessible_get_accSelection,
+    Accessible_get_accDefaultAction,
+    Accessible_accSelect,
+    Accessible_accLocation,
+    Accessible_accNavigate,
+    Accessible_accHitTest,
+    Accessible_accDoDefaultAction,
+    Accessible_put_accName,
+    Accessible_put_accValue
+};
+
+static IAccessible Accessible = {&AccessibleVtbl};
 
 static void test_getroletext(void)
 {
@@ -375,6 +639,91 @@ static void test_GetProcessHandleFromHwnd(void)
     DestroyWindow(hwnd);
 }
 
+static void test_AccessibleChildren(IAccessible *acc)
+{
+    VARIANT children[3];
+    LONG count;
+    HRESULT hr;
+
+    count = -1;
+    hr = AccessibleChildren(NULL, 0, 0, children, &count);
+    ok(hr == E_INVALIDARG, "AccessibleChildren returned %x\n", hr);
+    ok(count == -1, "count = %d\n", count);
+    hr = AccessibleChildren(acc, 0, 0, NULL, &count);
+    ok(hr == E_INVALIDARG, "AccessibleChildren returned %x\n", hr);
+    ok(count == -1, "count = %d\n", count);
+    hr = AccessibleChildren(acc, 0, 0, children, NULL);
+    ok(hr == E_INVALIDARG, "AccessibleChildren returned %x\n", hr);
+
+    if(acc == &Accessible) {
+        SET_EXPECT(Accessible_QI_IEnumVARIANT);
+        SET_EXPECT(Accessible_get_accChildCount);
+    }
+    hr = AccessibleChildren(acc, 0, 0, children, &count);
+    ok(hr == S_OK, "AccessibleChildren returned %x\n", hr);
+    if(acc == &Accessible) {
+        CHECK_CALLED(Accessible_QI_IEnumVARIANT);
+        CHECK_CALLED(Accessible_get_accChildCount);
+    }
+    ok(!count, "count = %d\n", count);
+    count = -1;
+    if(acc == &Accessible) {
+        SET_EXPECT(Accessible_QI_IEnumVARIANT);
+        SET_EXPECT(Accessible_get_accChildCount);
+    }
+    hr = AccessibleChildren(acc, 5, 0, children, &count);
+    ok(hr == S_OK, "AccessibleChildren returned %x\n", hr);
+    if(acc == &Accessible) {
+        CHECK_CALLED(Accessible_QI_IEnumVARIANT);
+        CHECK_CALLED(Accessible_get_accChildCount);
+    }
+    ok(!count, "count = %d\n", count);
+
+    memset(children, 0xfe, sizeof(children));
+    V_VT(children) = VT_DISPATCH;
+    if(acc == &Accessible) {
+        SET_EXPECT(Accessible_QI_IEnumVARIANT);
+        SET_EXPECT(Accessible_get_accChildCount);
+        SET_EXPECT(Accessible_get_accChild);
+    }
+    hr = AccessibleChildren(acc, 0, 1, children, &count);
+    ok(hr == S_OK, "AccessibleChildren returned %x\n", hr);
+    if(acc == &Accessible) {
+        CHECK_CALLED(Accessible_QI_IEnumVARIANT);
+        CHECK_CALLED(Accessible_get_accChildCount);
+        CHECK_CALLED(Accessible_get_accChild);
+
+        ok(V_VT(children) == VT_I4, "V_VT(children) = %d\n", V_VT(children));
+        ok(V_I4(children) == 1, "V_I4(children) = %d\n", V_I4(children));
+    }else {
+        ok(V_VT(children) == VT_DISPATCH, "V_VT(children) = %d\n", V_VT(children));
+        IDispatch_Release(V_DISPATCH(children));
+    }
+    ok(count == 1, "count = %d\n", count);
+
+    if(acc == &Accessible) {
+        SET_EXPECT(Accessible_QI_IEnumVARIANT);
+        SET_EXPECT(Accessible_get_accChildCount);
+        SET_EXPECT(Accessible_get_accChild);
+    }
+    hr = AccessibleChildren(acc, 0, 3, children, &count);
+    ok(hr == S_FALSE, "AccessibleChildren returned %x\n", hr);
+    if(acc == &Accessible) {
+        CHECK_CALLED(Accessible_QI_IEnumVARIANT);
+        CHECK_CALLED(Accessible_get_accChildCount);
+        CHECK_CALLED(Accessible_get_accChild);
+
+        ok(V_VT(children) == VT_I4, "V_VT(children) = %d\n", V_VT(children));
+        ok(V_I4(children) == 1, "V_I4(children) = %d\n", V_I4(children));
+    }else {
+        ok(V_VT(children) == VT_DISPATCH, "V_VT(children) = %d\n", V_VT(children));
+        IDispatch_Release(V_DISPATCH(children));
+    }
+    ok(count == 1, "count = %d\n", count);
+    ok(V_VT(children+1) == VT_EMPTY, "V_VT(children+1) = %d\n", V_VT(children+1));
+    ok(V_VT(children+2) == VT_EMPTY, "V_VT(children+2) = %d\n", V_VT(children+2));
+}
+
 static void test_default_client_accessible_object(void)
 {
     static const WCHAR testW[] = {'t','e','s','t',' ','t',' ','&','j','u','n','k',0};
@@ -383,6 +732,7 @@ static void test_default_client_accessible_object(void)
     IAccessible *acc;
     IDispatch *disp;
     IOleWindow *ow;
+    IEnumVARIANT *ev;
     HWND chld, hwnd, hwnd2;
     HRESULT hr;
     VARIANT vid, v;
@@ -390,6 +740,7 @@ static void test_default_client_accessible_object(void)
     POINT pt;
     RECT rect;
     LONG l, left, top, width, height;
+    ULONG fetched;
 
     hwnd = CreateWindowA("oleacc_test", "test &t &junk", WS_OVERLAPPEDWINDOW,
             0, 0, 100, 100, NULL, NULL, NULL, NULL);
@@ -417,6 +768,46 @@ static void test_default_client_accessible_object(void)
     hr = IAccessible_get_accChildCount(acc, &l);
     ok(hr == S_OK, "got %x\n", hr);
     ok(l == 1, "l = %d\n", l);
+
+    V_VT(&vid) = VT_I4;
+    V_I4(&vid) = CHILDID_SELF;
+    disp = (void*)0xdeadbeef;
+    hr = IAccessible_get_accChild(acc, vid, &disp);
+    ok(hr == E_INVALIDARG, "get_accChild returned %x\n", hr);
+    ok(disp == NULL, "disp = %p\n", disp);
+
+    V_I4(&vid) = 1;
+    disp = (void*)0xdeadbeef;
+    hr = IAccessible_get_accChild(acc, vid, &disp);
+    ok(hr == E_INVALIDARG, "get_accChild returned %x\n", hr);
+    ok(disp == NULL, "disp = %p\n", disp);
+
+    hr = IAccessible_QueryInterface(acc, &IID_IEnumVARIANT, (void**)&ev);
+    ok(hr == S_OK, "got %x\n", hr);
+
+    hr = IEnumVARIANT_Skip(ev, 100);
+    ok(hr == S_FALSE, "Skip returned %x\n", hr);
+
+    V_VT(&v) = VT_I4;
+    fetched = 1;
+    hr = IEnumVARIANT_Next(ev, 1, &v, &fetched);
+    ok(hr == S_FALSE, "got %x\n", hr);
+    ok(V_VT(&v) == VT_I4, "V_VT(&v) = %d\n", V_VT(&v));
+    ok(fetched == 0, "fetched = %d\n", fetched);
+
+    hr = IEnumVARIANT_Reset(ev);
+    ok(hr == S_OK, "got %x\n", hr);
+
+    V_VT(&v) = VT_I4;
+    fetched = 2;
+    hr = IEnumVARIANT_Next(ev, 1, &v, &fetched);
+    ok(hr == S_OK, "got %x\n", hr);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(&v) = %d\n", V_VT(&v));
+    IDispatch_Release(V_DISPATCH(&v));
+    ok(fetched == 1, "fetched = %d\n", fetched);
+    IEnumVARIANT_Release(ev);
+
+    test_AccessibleChildren(acc);
 
     V_VT(&vid) = VT_I4;
     V_I4(&vid) = CHILDID_SELF;
@@ -621,6 +1012,7 @@ START_TEST(main)
     test_AccessibleObjectFromWindow();
     test_GetProcessHandleFromHwnd();
     test_default_client_accessible_object();
+    test_AccessibleChildren(&Accessible);
 
     unregister_window_class();
     CoUninitialize();
