@@ -69,17 +69,17 @@ InterpretCmd(int argc, LPWSTR *argv)
 {
     PCOMMAND cmdptr;
 
+    /* First, determine if the user wants to exit
+       or to use a comment */
+    if(wcsicmp(argv[0], L"exit") == 0)
+        return FALSE;
+
+    if(wcsicmp(argv[0], L"rem") == 0)
+        return TRUE;
+
     /* Scan internal command table */
     for (cmdptr = cmds; cmdptr->name; cmdptr++)
     {
-        /* First, determine if the user wants to exit
-        or to use a comment */
-        if(wcsicmp(argv[0], L"exit") == 0)
-            return FALSE;
-
-        if(wcsicmp(argv[0], L"rem") == 0)
-            return TRUE;
-
         if (wcsicmp(argv[0], cmdptr->name) == 0)
             return cmdptr->func(argc, argv);
     }
