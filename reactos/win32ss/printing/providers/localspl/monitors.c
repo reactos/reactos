@@ -17,6 +17,9 @@ FindPrintMonitor(PCWSTR pwszName)
     PLIST_ENTRY pEntry;
     PLOCAL_PRINT_MONITOR pPrintMonitor;
 
+    if (!pwszName)
+        return NULL;
+
     for (pEntry = PrintMonitorList.Flink; pEntry != &PrintMonitorList; pEntry = pEntry->Flink)
     {
         pPrintMonitor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_MONITOR, Entry);

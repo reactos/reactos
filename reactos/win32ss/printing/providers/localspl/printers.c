@@ -167,6 +167,7 @@ InitializePrinterList()
 
         pPrinter->pwszPrinterName = AllocSplStr(wszPrinterName);
         pPrinter->pPrintProcessor = pPrintProcessor;
+        pPrinter->pPort = pPort;
         InitializePrinterJobList(pPrinter);
 
         // Get the printer driver.

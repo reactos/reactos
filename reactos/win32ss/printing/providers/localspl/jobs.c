@@ -14,6 +14,36 @@ SKIPLIST GlobalJobList;
 static DWORD _dwLastJobID;
 
 
+/**
+ * @name _EqualStrings
+ *
+ * Returns whether two strings are equal.
+ * Unlike wcscmp, this function also works with NULL strings.
+ *
+ * @param pwszA
+ * First string to compare.
+ *
+ * @param pwszB
+ * Second string to compare.
+ *
+ * @return
+ * TRUE if the strings are equal, FALSE if they differ.
+ */
+static __inline BOOL
+_EqualStrings(PCWSTR pwszA, PCWSTR pwszB)
+{
+    if (!pwszA && !pwszB)
+        return TRUE;
+
+    if (pwszA && !pwszB)
+        return FALSE;
+
+    if (!pwszA && pwszB)
+        return FALSE;
+
+    return (wcscmp(pwszA, pwszB) == 0);
+}
+
 static BOOL
 _GetNextJobID(PDWORD dwJobID)
 {
@@ -112,8 +142,8 @@ GetJobFilePath(PCWSTR pwszExtension, DWORD dwJobID, PWSTR pwszOutput)
 
     if (pwszOutput)
     {
-        CopyMemory(pwszOutput, wszSpoolDirectory, cchSpoolDirectory);
-        CopyMemory(&pwszOutput[cchSpoolDirectory], wszPrintersPath, cchPrintersPath);
+        CopyMemory(pwszOutput, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
+        CopyMemory(&pwszOutput[cchSpoolDirectory], wszPrintersPath, cchPrintersPath * sizeof(WCHAR));
         swprintf(&pwszOutput[cchSpoolDirectory + cchPrintersPath], L"%05lu.", dwJobID);
         CopyMemory(&pwszOutput[cchSpoolDirectory + cchPrintersPath + cchSpoolerFile], pwszExtension, (cchExtension + 1) * sizeof(WCHAR));
     }
@@ -291,7 +321,7 @@ CreateJob(PLOCAL_PRINTER_HANDLE pPrinterHandle)
     cchMachineName = wcslen(pwszMachineName);
     pJob->pwszMachineName = DllAllocSplMem((cchMachineName + cchDoubleBackslash + 1) * sizeof(WCHAR));
     CopyMemory(pJob->pwszMachineName, wszDoubleBackslash, cchDoubleBackslash * sizeof(WCHAR));
-    CopyMemory(pJob->pwszMachineName + cchDoubleBackslash, pwszMachineName, (cchMachineName + 1) * sizeof(WCHAR));
+    CopyMemory(&pJob->pwszMachineName[cchDoubleBackslash], pwszMachineName, (cchMachineName + 1) * sizeof(WCHAR));
 
     // Add the job to the Global Job List.
     if (!InsertElementSkiplist(&GlobalJobList, pJob))
@@ -406,17 +436,23 @@ static DWORD
 _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE* ppStart, PBYTE* ppEnd, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
-    DWORD cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
+    DWORD cbDocumentName = 0;  
     DWORD cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
     DWORD cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
     DWORD cbStatus = 0;
-    DWORD cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
+    DWORD cbUserName = 0;
     DWORD dwErrorCode;
     JOB_INFO_1W JobInfo1 = { 0 };
 
-    // A Status Message is optional.
+    // Calculate the lengths of the optional values.
+    if (pJob->pwszDocumentName)
+        cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
+
     if (pJob->pwszStatus)
         cbStatus = (wcslen(pJob->pwszStatus) + 1) * sizeof(WCHAR);
+
+    if (pJob->pwszUserName)
+        cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
 
     // Check if the supplied buffer is large enough.
     *pcbNeeded += sizeof(JOB_INFO_1W) + cbDatatype + cbDocumentName + cbMachineName + cbPrinterName + cbStatus + cbUserName;
@@ -431,10 +467,6 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
     JobInfo1.pDatatype = (PWSTR)*ppEnd;
     CopyMemory(*ppEnd, pJob->pwszDatatype, cbDatatype);
 
-    *ppEnd -= cbDocumentName;
-    JobInfo1.pDocument = (PWSTR)*ppEnd;
-    CopyMemory(*ppEnd, pJob->pwszDocumentName, cbDocumentName);
-
     *ppEnd -= cbMachineName;
     JobInfo1.pMachineName = (PWSTR)*ppEnd;
     CopyMemory(*ppEnd, pJob->pwszMachineName, cbMachineName);
@@ -443,6 +475,14 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
     JobInfo1.pPrinterName = (PWSTR)*ppEnd;
     CopyMemory(*ppEnd, pJob->pPrinter->pwszPrinterName, cbPrinterName);
 
+    // Copy the optional values.
+    if (cbDocumentName)
+    {
+        *ppEnd -= cbDocumentName;
+        JobInfo1.pDocument = (PWSTR)*ppEnd;
+        CopyMemory(*ppEnd, pJob->pwszDocumentName, cbDocumentName);
+    }
+
     if (cbStatus)
     {
         *ppEnd -= cbStatus;
@@ -450,9 +490,12 @@ _LocalGetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
         CopyMemory(*ppEnd, pJob->pwszStatus, cbStatus);
     }
 
-    *ppEnd -= cbUserName;
-    JobInfo1.pUserName = (PWSTR)*ppEnd;
-    CopyMemory(*ppEnd, pJob->pwszUserName, cbUserName);
+    if (cbUserName)
+    {
+        *ppEnd -= cbUserName;
+        JobInfo1.pUserName = (PWSTR)*ppEnd;
+        CopyMemory(*ppEnd, pJob->pwszUserName, cbUserName);
+    }
 
     // Fill the rest of the structure.
     JobInfo1.JobId = pJob->dwJobID;
@@ -475,15 +518,15 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
 {
     DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
     DWORD cbDevMode = pJob->pDevMode->dmSize + pJob->pDevMode->dmDriverExtra;
-    DWORD cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
+    DWORD cbDocumentName = 0;
     DWORD cbDriverName = (wcslen(pJob->pPrinter->pwszPrinterDriver) + 1) * sizeof(WCHAR);
     DWORD cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
-    DWORD cbNotifyName = (wcslen(pJob->pwszNotifyName) + 1) * sizeof(WCHAR);
+    DWORD cbNotifyName = 0;
     DWORD cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
     DWORD cbPrintProcessor = (wcslen(pJob->pPrintProcessor->pwszName) + 1) * sizeof(WCHAR);
     DWORD cbPrintProcessorParameters = 0;
     DWORD cbStatus = 0;
-    DWORD cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
+    DWORD cbUserName = 0;
     DWORD dwErrorCode;
     FILETIME ftNow;
     FILETIME ftSubmitted;
@@ -491,12 +534,21 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
     ULARGE_INTEGER uliNow;
     ULARGE_INTEGER uliSubmitted;
 
-    // Print Processor Parameters and Status Message are optional.
+    // Calculate the lengths of the optional values.
+    if (pJob->pwszDocumentName)
+        cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
+
+    if (pJob->pwszNotifyName)
+        cbNotifyName = (wcslen(pJob->pwszNotifyName) + 1) * sizeof(WCHAR);
+
     if (pJob->pwszPrintProcessorParameters)
         cbPrintProcessorParameters = (wcslen(pJob->pwszPrintProcessorParameters) + 1) * sizeof(WCHAR);
 
     if (pJob->pwszStatus)
         cbStatus = (wcslen(pJob->pwszStatus) + 1) * sizeof(WCHAR);
+
+    if (pJob->pwszUserName)
+        cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
 
     // Check if the supplied buffer is large enough.
     *pcbNeeded += sizeof(JOB_INFO_2W) + cbDatatype + cbDevMode + cbDocumentName + cbDriverName + cbMachineName + cbNotifyName + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbStatus + cbUserName;
@@ -515,10 +567,6 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
     JobInfo2.pDevMode = (PDEVMODEW)*ppEnd;
     CopyMemory(*ppEnd, pJob->pDevMode, cbDevMode);
 
-    *ppEnd -= cbDocumentName;
-    JobInfo2.pDocument = (PWSTR)*ppEnd;
-    CopyMemory(*ppEnd, pJob->pwszDocumentName, cbDocumentName);
-
     *ppEnd -= cbDriverName;
     JobInfo2.pDriverName = (PWSTR)*ppEnd;
     CopyMemory(*ppEnd, pJob->pPrinter->pwszPrinterDriver, cbDriverName);
@@ -527,10 +575,6 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
     JobInfo2.pMachineName = (PWSTR)*ppEnd;
     CopyMemory(*ppEnd, pJob->pwszMachineName, cbMachineName);
 
-    *ppEnd -= cbNotifyName;
-    JobInfo2.pNotifyName = (PWSTR)*ppEnd;
-    CopyMemory(*ppEnd, pJob->pwszNotifyName, cbNotifyName);
-
     *ppEnd -= cbPrinterName;
     JobInfo2.pPrinterName = (PWSTR)*ppEnd;
     CopyMemory(*ppEnd, pJob->pPrinter->pwszPrinterName, cbPrinterName);
@@ -538,6 +582,21 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
     *ppEnd -= cbPrintProcessor;
     JobInfo2.pPrintProcessor = (PWSTR)*ppEnd;
     CopyMemory(*ppEnd, pJob->pPrintProcessor->pwszName, cbPrintProcessor);
+
+    // Copy the optional values.
+    if (cbDocumentName)
+    {
+        *ppEnd -= cbDocumentName;
+        JobInfo2.pDocument = (PWSTR)*ppEnd;
+        CopyMemory(*ppEnd, pJob->pwszDocumentName, cbDocumentName);
+    }
+
+    if (cbNotifyName)
+    {
+        *ppEnd -= cbNotifyName;
+        JobInfo2.pNotifyName = (PWSTR)*ppEnd;
+        CopyMemory(*ppEnd, pJob->pwszNotifyName, cbNotifyName);
+    }
 
     if (cbPrintProcessorParameters)
     {
@@ -553,9 +612,12 @@ _LocalGetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PBYTE*
         CopyMemory(*ppEnd, pJob->pwszStatus, cbStatus);
     }
 
-    *ppEnd -= cbUserName;
-    JobInfo2.pUserName = (PWSTR)*ppEnd;
-    CopyMemory(*ppEnd, pJob->pwszUserName, cbUserName);
+    if (cbUserName)
+    {
+        *ppEnd -= cbUserName;
+        JobInfo2.pUserName = (PWSTR)*ppEnd;
+        CopyMemory(*ppEnd, pJob->pwszUserName, cbUserName);
+    }
 
     // Time in JOB_INFO_2W is the number of milliseconds elapsed since the job was submitted. Calculate this time.
     if (!SystemTimeToFileTime(&pJob->stSubmitted, &ftSubmitted))
@@ -658,7 +720,7 @@ _LocalSetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
     }
 
     // Check if the datatype has changed.
-    if (wcscmp(pJob->pwszDatatype, pJobInfo->pDatatype) != 0)
+    if (!_EqualStrings(pJob->pwszDatatype, pJobInfo->pDatatype))
     {
         // Use the new value.
         if (!ReallocSplStr(&pJob->pwszDatatype, pJobInfo->pDatatype))
@@ -669,8 +731,8 @@ _LocalSetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
         }
     }
 
-    // Check if the document name has changed.
-    if (wcscmp(pJob->pwszDocumentName, pJobInfo->pDocument) != 0)
+    // Check if the document name has changed. An empty string is permitted here!
+    if (!_EqualStrings(pJob->pwszDocumentName, pJobInfo->pDocument))
     {
         // Use the new value.
         if (!ReallocSplStr(&pJob->pwszDocumentName, pJobInfo->pDocument))
@@ -681,8 +743,8 @@ _LocalSetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
         }
     }
 
-    // Check if the status message has changed.
-    if ((!pJob->pwszStatus && pJobInfo->pStatus) || wcscmp(pJob->pwszStatus, pJobInfo->pStatus) != 0)
+    // Check if the status message has changed. An empty string is permitted here!
+    if (!_EqualStrings(pJob->pwszStatus, pJobInfo->pStatus))
     {
         // Use the new value.
         if (!ReallocSplStr(&pJob->pwszStatus, pJobInfo->pStatus))
@@ -693,8 +755,8 @@ _LocalSetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
         }
     }
 
-    // Check if the user name has changed.
-    if (wcscmp(pJob->pwszUserName, pJobInfo->pUserName) != 0)
+    // Check if the user name has changed. An empty string is permitted here!
+    if (!_EqualStrings(pJob->pwszUserName, pJobInfo->pUserName) != 0)
     {
         // The new user name doesn't need to exist, so no additional verification is required.
 
@@ -763,7 +825,7 @@ _LocalSetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
     }
 
     // Check if the datatype has changed.
-    if (wcscmp(pJob->pwszDatatype, pJobInfo->pDatatype) != 0)
+    if (!_EqualStrings(pJob->pwszDatatype, pJobInfo->pDatatype))
     {
         // Use the new value.
         if (!ReallocSplStr(&pJob->pwszDatatype, pJobInfo->pDatatype))
@@ -774,8 +836,8 @@ _LocalSetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
         }
     }
 
-    // Check if the document name has changed.
-    if (wcscmp(pJob->pwszDocumentName, pJobInfo->pDocument) != 0)
+    // Check if the document name has changed. An empty string is permitted here!
+    if (!_EqualStrings(pJob->pwszDocumentName, pJobInfo->pDocument))
     {
         // Use the new value.
         if (!ReallocSplStr(&pJob->pwszDocumentName, pJobInfo->pDocument))
@@ -786,8 +848,8 @@ _LocalSetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
         }
     }
 
-    // Check if the notify name has changed.
-    if (wcscmp(pJob->pwszNotifyName, pJobInfo->pNotifyName) != 0)
+    // Check if the notify name has changed. An empty string is permitted here!
+    if (!_EqualStrings(pJob->pwszNotifyName, pJobInfo->pNotifyName))
     {
         // The new notify name doesn't need to exist, so no additional verification is required.
 
@@ -800,8 +862,8 @@ _LocalSetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
         }
     }
 
-    // Check if the (optional) Print Processor Parameters have changed.
-    if ((!pJob->pwszPrintProcessorParameters && pJobInfo->pParameters) || wcscmp(pJob->pwszPrintProcessorParameters, pJobInfo->pParameters) != 0)
+    // Check if the Print Processor Parameters have changed. An empty string is permitted here!
+    if (!_EqualStrings(pJob->pwszPrintProcessorParameters, pJobInfo->pParameters))
     {
         // Use the new value.
         if (!ReallocSplStr(&pJob->pwszPrintProcessorParameters, pJobInfo->pParameters))
@@ -812,8 +874,8 @@ _LocalSetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
         }
     }
 
-    // Check if the (optional) Status Message has changed.
-    if ((!pJob->pwszStatus && pJobInfo->pStatus) || wcscmp(pJob->pwszStatus, pJobInfo->pStatus) != 0)
+    // Check if the Status Message has changed. An empty string is permitted here!
+    if (!_EqualStrings(pJob->pwszStatus, pJobInfo->pStatus))
     {
         // Use the new value.
         if (!ReallocSplStr(&pJob->pwszStatus, pJobInfo->pStatus))
@@ -824,8 +886,8 @@ _LocalSetJobLevel2(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
         }
     }
 
-    // Check if the user name has changed.
-    if (wcscmp(pJob->pwszUserName, pJobInfo->pUserName) != 0)
+    // Check if the user name has changed. An empty string is permitted here!
+    if (!_EqualStrings(pJob->pwszUserName, pJobInfo->pUserName))
     {
         // The new user name doesn't need to exist, so no additional verification is required.
 
@@ -1201,15 +1263,21 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     pJob->pPrintProcessor = pPrintProcessor;
     pJob->pDevMode = DuplicateDevMode((PDEVMODEW)((ULONG_PTR)pShadowFile + pShadowFile->offDevMode));
     pJob->pwszDatatype = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDatatype));
-    pJob->pwszDocumentName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDocumentName));
     pJob->pwszMachineName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offMachineName));
-    pJob->pwszNotifyName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offNotifyName));
+    CopyMemory(&pJob->stSubmitted, &pShadowFile->stSubmitted, sizeof(SYSTEMTIME));
+
+    // Copy the optional values.
+    if (pShadowFile->offDocumentName)
+        pJob->pwszDocumentName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offDocumentName));
+
+    if (pShadowFile->offNotifyName)
+        pJob->pwszNotifyName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offNotifyName));
 
     if (pShadowFile->offPrintProcessorParameters)
         pJob->pwszPrintProcessorParameters = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offPrintProcessorParameters));
 
-    pJob->pwszUserName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offUserName));
-    CopyMemory(&pJob->stSubmitted, &pShadowFile->stSubmitted, sizeof(SYSTEMTIME));
+    if (pShadowFile->offUserName)
+        pJob->pwszUserName = AllocSplStr((PCWSTR)((ULONG_PTR)pShadowFile + pShadowFile->offUserName));
 
     // Jobs read from shadow files were always added using AddJob.
     pJob->bAddedJob = TRUE;
@@ -1230,17 +1298,17 @@ BOOL
 WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
 {
     BOOL bReturnValue = FALSE;
-    DWORD cbDatatype;
-    DWORD cbDevMode;
-    DWORD cbDocumentName;
+    DWORD cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
+    DWORD cbDevMode = pJob->pDevMode->dmSize + pJob->pDevMode->dmDriverExtra;
+    DWORD cbDocumentName = 0;
     DWORD cbFileSize;
-    DWORD cbMachineName;
-    DWORD cbNotifyName;
-    DWORD cbPrinterDriver;
-    DWORD cbPrinterName;
-    DWORD cbPrintProcessor;
+    DWORD cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
+    DWORD cbNotifyName = 0;
+    DWORD cbPrinterDriver = (wcslen(pJob->pPrinter->pwszPrinterDriver) + 1) * sizeof(WCHAR);
+    DWORD cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+    DWORD cbPrintProcessor = (wcslen(pJob->pPrintProcessor->pwszName) + 1) * sizeof(WCHAR);
     DWORD cbPrintProcessorParameters = 0;
-    DWORD cbUserName;
+    DWORD cbUserName = 0;
     DWORD cbWritten;
     DWORD dwCurrentOffset;
     HANDLE hSHDFile = INVALID_HANDLE_VALUE;
@@ -1255,20 +1323,18 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
         goto Cleanup;
     }
 
-    // Compute the total size of the shadow file.
-    cbDatatype = (wcslen(pJob->pwszDatatype) + 1) * sizeof(WCHAR);
-    cbDevMode = pJob->pDevMode->dmSize + pJob->pDevMode->dmDriverExtra;
-    cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
-    cbMachineName = (wcslen(pJob->pwszMachineName) + 1) * sizeof(WCHAR);
-    cbNotifyName = (wcslen(pJob->pwszNotifyName) + 1) * sizeof(WCHAR);
-    cbPrinterDriver = (wcslen(pJob->pPrinter->pwszPrinterDriver) + 1) * sizeof(WCHAR);
-    cbPrinterName = (wcslen(pJob->pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
-    cbPrintProcessor = (wcslen(pJob->pPrintProcessor->pwszName) + 1) * sizeof(WCHAR);
-    cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
+    // Calculate the lengths of the optional values and the total size of the shadow file.
+    if (pJob->pwszDocumentName)
+        cbDocumentName = (wcslen(pJob->pwszDocumentName) + 1) * sizeof(WCHAR);
 
-    // Print Processor Parameters are optional.
+    if (pJob->pwszNotifyName)
+        cbNotifyName = (wcslen(pJob->pwszNotifyName) + 1) * sizeof(WCHAR);
+
     if (pJob->pwszPrintProcessorParameters)
         cbPrintProcessorParameters = (wcslen(pJob->pwszPrintProcessorParameters) + 1) * sizeof(WCHAR);
+
+    if (pJob->pwszUserName)
+        cbUserName = (wcslen(pJob->pwszUserName) + 1) * sizeof(WCHAR);
 
     cbFileSize = sizeof(SHD_HEADER) + cbDatatype + cbDocumentName + cbDevMode + cbMachineName + cbNotifyName + cbPrinterDriver + cbPrinterName + cbPrintProcessor + cbPrintProcessorParameters + cbUserName;
 
@@ -1306,10 +1372,6 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
     pShadowFile->offDatatype = dwCurrentOffset;
     dwCurrentOffset += cbDatatype;
 
-    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszDocumentName, cbDocumentName);
-    pShadowFile->offDocumentName = dwCurrentOffset;
-    dwCurrentOffset += cbDocumentName;
-
     CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pDevMode, cbDevMode);
     pShadowFile->offDevMode = dwCurrentOffset;
     dwCurrentOffset += cbDevMode;
@@ -1323,10 +1385,6 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
     pShadowFile->offMachineName = dwCurrentOffset;
     dwCurrentOffset += cbMachineName;
 
-    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszNotifyName, cbNotifyName);
-    pShadowFile->offNotifyName = dwCurrentOffset;
-    dwCurrentOffset += cbNotifyName;
-
     CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pPrinter->pwszPrinterName, cbPrinterName);
     pShadowFile->offPrinterName = dwCurrentOffset;
     dwCurrentOffset += cbPrinterName;
@@ -1335,6 +1393,21 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
     pShadowFile->offPrintProcessor = dwCurrentOffset;
     dwCurrentOffset += cbPrintProcessor;
 
+    // Copy the optional values.
+    if (cbDocumentName)
+    {
+        CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszDocumentName, cbDocumentName);
+        pShadowFile->offDocumentName = dwCurrentOffset;
+        dwCurrentOffset += cbDocumentName;
+    }
+
+    if (cbNotifyName)
+    {
+        CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszNotifyName, cbNotifyName);
+        pShadowFile->offNotifyName = dwCurrentOffset;
+        dwCurrentOffset += cbNotifyName;
+    }
+
     if (cbPrintProcessorParameters)
     {
         CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszPrintProcessorParameters, cbPrintProcessorParameters);
@@ -1342,9 +1415,12 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
         dwCurrentOffset += cbPrintProcessorParameters;
     }
 
-    CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszUserName, cbUserName);
-    pShadowFile->offUserName = dwCurrentOffset;
-    dwCurrentOffset += cbUserName;
+    if (cbUserName)
+    {
+        CopyMemory((PBYTE)pShadowFile + dwCurrentOffset, pJob->pwszUserName, cbUserName);
+        pShadowFile->offUserName = dwCurrentOffset;
+        dwCurrentOffset += cbUserName;
+    }
 
     // Write the file.
     if (!WriteFile(hSHDFile, pShadowFile, cbFileSize, &cbWritten, NULL))

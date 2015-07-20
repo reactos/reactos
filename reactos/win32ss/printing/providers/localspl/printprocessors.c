@@ -78,6 +78,9 @@ FindDatatype(const PLOCAL_PRINT_PROCESSOR pPrintProcessor, PCWSTR pwszDatatype)
     DWORD i;
     PDATATYPES_INFO_1W pCurrentDatatype = pPrintProcessor->pDatatypesInfo1;
 
+    if (!pwszDatatype)
+        return FALSE;
+
     for (i = 0; i < pPrintProcessor->dwDatatypeCount; i++)
     {
         if (wcsicmp(pCurrentDatatype->pName, pwszDatatype) == 0)
@@ -94,6 +97,9 @@ FindPrintProcessor(PCWSTR pwszName)
 {
     PLIST_ENTRY pEntry;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
+
+    if (!pwszName)
+        return NULL;
 
     for (pEntry = _PrintProcessorList.Flink; pEntry != &_PrintProcessorList; pEntry = pEntry->Flink)
     {

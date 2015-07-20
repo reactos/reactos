@@ -129,9 +129,9 @@ typedef struct _LOCAL_JOB
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;     /** Associated Print Processor to this Job */
     DWORD dwPriority;                           /** Priority of this Job from MIN_PRIORITY to MAX_PRIORITY, default being DEF_PRIORITY */
     SYSTEMTIME stSubmitted;                     /** Time of the submission of this Job */
-    PWSTR pwszUserName;                         /** User that submitted the Job */
-    PWSTR pwszNotifyName;                       /** User that shall be notified about the status of the Job */
-    PWSTR pwszDocumentName;                     /** Name of the Document that is printed */
+    PWSTR pwszUserName;                         /** Optional; User that submitted the Job */
+    PWSTR pwszNotifyName;                       /** Optional; User that shall be notified about the status of the Job */
+    PWSTR pwszDocumentName;                     /** Optional; Name of the Document that is printed */
     PWSTR pwszDatatype;                         /** Datatype of the Document */
     PWSTR pwszOutputFile;                       /** Output File to spool the Job to */
     PWSTR pwszPrintProcessorParameters;         /** Optional; Parameters for the chosen Print Processor */

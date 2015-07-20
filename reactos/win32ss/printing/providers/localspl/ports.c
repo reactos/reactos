@@ -17,6 +17,9 @@ FindPort(PCWSTR pwszName)
     PLIST_ENTRY pEntry;
     PLOCAL_PORT pPort;
 
+    if (!pwszName)
+        return NULL;
+
     for (pEntry = _PortList.Flink; pEntry != &_PortList; pEntry = pEntry->Flink)
     {
         pPort = CONTAINING_RECORD(pEntry, LOCAL_PORT, Entry);

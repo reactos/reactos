@@ -89,7 +89,9 @@ _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB
     }
 
     // Add our document information.
-    pJobInfo1->pDatatype = pDocInfo1->pDatatype;
+    if (pDocInfo1->pDatatype)
+        pJobInfo1->pDatatype = pDocInfo1->pDatatype;
+
     pJobInfo1->pDocument = pDocInfo1->pDocName;
 
     // Set the new job information.
