@@ -13,21 +13,43 @@
 BOOL WINAPI
 ImpersonatePrinterClient(HANDLE hToken)
 {
+    DWORD cbReturned;
+    DWORD dwErrorCode;
+    TOKEN_TYPE Type;
+
+    // Sanity check
     if (!hToken)
     {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
     }
 
-    if (!SetThreadToken(NULL, hToken))
+    // Get the type of the supplied token.
+    if (!GetTokenInformation(hToken, TokenType, &Type, sizeof(TOKEN_TYPE), &cbReturned))
     {
-        ERR("SetThreadToken failed with error %lu!\n", GetLastError());
-        CloseHandle(hToken);
-        return FALSE;
+        dwErrorCode = GetLastError();
+        ERR("GetTokenInformation failed with error %lu!\n", dwErrorCode);
+        goto Cleanup;
     }
 
-    CloseHandle(hToken);
-    return TRUE;
+    // Check if this is an impersonation token and only set it as the thread token in this case.
+    // This is not always an impersonation token, see RevertToPrinterSelf.
+    if (Type == TokenImpersonation)
+    {
+        if (!SetThreadToken(NULL, hToken))
+        {
+            dwErrorCode = GetLastError();
+            ERR("SetThreadToken failed with error %lu!\n", dwErrorCode);
+            goto Cleanup;
+        }
+    }
+
+Cleanup:
+    if (hToken)
+        CloseHandle(hToken);
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 /**
@@ -41,22 +63,42 @@ ImpersonatePrinterClient(HANDLE hToken)
 HANDLE WINAPI
 RevertToPrinterSelf()
 {
-    HANDLE hToken;
+    DWORD dwErrorCode;
+    HANDLE hReturnValue = NULL;
+    HANDLE hToken = NULL;
 
-    // Retrieve our current impersonation token
-    if (!OpenThreadToken(GetCurrentThread(), TOKEN_IMPERSONATE, TRUE, &hToken))
+    // All spoolss code is usually called after impersonating the client. In this case, we can retrieve our current thread impersonation token using OpenThreadToken.
+    // But in rare occasions, spoolss code is also called from a higher-privileged thread that doesn't impersonate the client. Then we don't get an impersonation token.
+    // Anyway, we can't just return nothing in this case, because this is being treated as failure by the caller. So we return the token of the current process.
+    // This behaviour is verified with Windows!
+    if (OpenThreadToken(GetCurrentThread(), TOKEN_IMPERSONATE, TRUE, &hToken))
     {
-        ERR("OpenThreadToken failed with error %lu!\n", GetLastError());
-        return NULL;
+        // Tell the thread to stop impersonating.
+        if (!SetThreadToken(NULL, NULL))
+        {
+            dwErrorCode = GetLastError();
+            ERR("SetThreadToken failed with error %lu!\n", dwErrorCode);
+            goto Cleanup;
+        }
+    }
+    else if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    {
+        dwErrorCode = GetLastError();
+        ERR("OpenProcessToken failed with error %lu!\n", dwErrorCode);
+        goto Cleanup;
     }
 
-    // Tell the thread to stop impersonating
-    if (!SetThreadToken(NULL, NULL))
-    {
-        ERR("SetThreadToken failed with error %lu!\n", GetLastError());
-        return NULL;
-    }
+    // We were successful, return a token!
+    dwErrorCode = ERROR_SUCCESS;
+    hReturnValue = hToken;
 
-    // Return the token required for reverting back to impersonation in ImpersonatePrinterClient
-    return hToken;
+    // Don't let the cleanup routine close this.
+    hToken = NULL;
+
+Cleanup:
+    if (hToken)
+        CloseHandle(hToken);
+
+    SetLastError(dwErrorCode);
+    return hReturnValue;
 }
