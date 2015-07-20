@@ -781,6 +781,7 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod)
   style = ME_ApplyStyle(editor->pBuffer->pDefaultStyle, mod);
   editor->pBuffer->pDefaultStyle->fmt = style->fmt;
   editor->pBuffer->pDefaultStyle->tm = style->tm;
+  ScriptFreeCache( &editor->pBuffer->pDefaultStyle->script_cache );
   ME_ReleaseStyle(style);
   ME_MarkAllForWrapping(editor);
   /*  pcf = editor->pBuffer->pDefaultStyle->fmt; */

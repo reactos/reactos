@@ -387,7 +387,7 @@ static const ITextServicesVtbl textservices_vtbl =
 HRESULT WINAPI CreateTextServices(IUnknown  *pUnkOuter, ITextHost *pITextHost, IUnknown  **ppUnk)
 {
    ITextServicesImpl *ITextImpl;
-   HRESULT hres;
+
    TRACE("%p %p --> %p\n", pUnkOuter, pITextHost, ppUnk);
    if (pITextHost == NULL)
       return E_POINTER;
@@ -408,8 +408,6 @@ HRESULT WINAPI CreateTextServices(IUnknown  *pUnkOuter, ITextHost *pITextHost, I
    ITextImpl->editor->rcFormat.top = 0;
    ITextImpl->editor->rcFormat.right = 0;
    ITextImpl->editor->rcFormat.bottom = 0;
-
-   ME_HandleMessage(ITextImpl->editor, WM_CREATE, 0, 0, TRUE, &hres);
 
    if (pUnkOuter)
       ITextImpl->outer_unk = pUnkOuter;

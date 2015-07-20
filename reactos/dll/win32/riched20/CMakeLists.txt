@@ -42,7 +42,15 @@ list(APPEND ADDITIONAL_SOURCE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
 
+list(APPEND riched20_rc_deps
+    ${CMAKE_CURRENT_SOURCE_DIR}/riched_tom.rgs
+    ${CMAKE_CURRENT_BINARY_DIR}/riched_tom.tlb)
+
+set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${riched20_rc_deps}")
+
 add_library(riched20 SHARED ${SOURCE} ${ADDITIONAL_SOURCE})
+add_typelib(riched_tom.idl)
+add_dependencies(riched20 stdole2)
 set_module_type(riched20 win32dll)
 target_link_libraries(riched20 wine uuid)
 add_importlibs(riched20 ole32 oleaut32 usp10 imm32 user32 gdi32 msvcrt kernel32 ntdll)

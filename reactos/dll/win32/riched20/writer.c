@@ -46,29 +46,18 @@ ME_StreamOutInit(ME_TextEditor *editor, EDITSTREAM *stream)
 static BOOL
 ME_StreamOutFlush(ME_OutStream *pStream)
 {
-  LONG nStart = 0;
   LONG nWritten = 0;
-  LONG nRemaining = 0;
   EDITSTREAM *stream = pStream->stream;
 
-  while (nStart < pStream->pos) {
-    TRACE("sending %u bytes\n", pStream->pos - nStart);
-    /* Some apps seem not to set *pcb unless a problem arises, relying
-      on initial random nWritten value, which is usually >STREAMOUT_BUFFER_SIZE */
-    nRemaining = pStream->pos - nStart;
-    nWritten = 0xDEADBEEF;
-    stream->dwError = stream->pfnCallback(stream->dwCookie, (LPBYTE)pStream->buffer + nStart,
-                                          pStream->pos - nStart, &nWritten);
+  if (pStream->pos) {
+    TRACE("sending %u bytes\n", pStream->pos);
+    nWritten = pStream->pos;
+    stream->dwError = stream->pfnCallback(stream->dwCookie, (LPBYTE)pStream->buffer,
+                                          pStream->pos, &nWritten);
     TRACE("error=%u written=%u\n", stream->dwError, nWritten);
-    if (nWritten > (pStream->pos - nStart) || nWritten<0) {
-      FIXME("Invalid returned written size *pcb: 0x%x (%d) instead of %d\n", 
-            (unsigned)nWritten, nWritten, nRemaining);
-      nWritten = nRemaining;
-    }
     if (nWritten == 0 || stream->dwError)
       return FALSE;
-    pStream->written += nWritten;
-    nStart += nWritten;
+    /* Don't resend partial chunks if nWritten < pStream->pos */
   }
   pStream->pos = 0;
   return TRUE;
@@ -796,8 +785,11 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
   ME_Cursor cursor = *start;
   ME_DisplayItem *prev_para = cursor.pPara;
   ME_Cursor endCur = cursor;
+  int actual_chars;
 
-  ME_MoveCursorChars(editor, &endCur, nChars);
+  actual_chars = ME_MoveCursorChars(editor, &endCur, nChars);
+  /* Include the final \r which MoveCursorChars will ignore. */
+  if (actual_chars != nChars) endCur.nOffset++;
 
   if (!ME_StreamOutRTFHeader(pStream, dwFormat))
     return FALSE;

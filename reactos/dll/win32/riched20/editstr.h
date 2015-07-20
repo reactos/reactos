@@ -22,7 +22,7 @@
 #define __EDITSTR_H
 
 #ifdef __i386__
-extern const struct ITextHostVtbl itextHostStdcallVtbl;
+extern const struct ITextHostVtbl itextHostStdcallVtbl DECLSPEC_HIDDEN;
 #endif /* __i386__ */
 
 typedef struct tagME_String

@@ -227,6 +227,7 @@
 #include "editor.h"
 
 #include <commdlg.h>
+#include <undocuser.h>
 
 #include "rtf.h"
 #include "res.h"
@@ -1704,7 +1705,7 @@ ME_StreamInRTFString(ME_TextEditor *editor, BOOL selection, char *string)
   data.pos = 0;
   es.dwCookie = (DWORD_PTR)&data;
   es.pfnCallback = ME_ReadFromRTFString;
-  ME_StreamIn(editor, SF_RTF | (selection ? SFF_SELECTION : 0), &es, FALSE);
+  ME_StreamIn(editor, SF_RTF | (selection ? SFF_SELECTION : 0), &es, TRUE);
 }
 
 
@@ -1868,7 +1869,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
       if (nCurEnd == 0)
       {
         ME_PrevRun(&pCurPara, &pCurItem);
-        nCurEnd = pCurItem->member.run.len + nMatched;
+        nCurEnd = pCurItem->member.run.len;
       }
 
       while (pCurItem && ME_CharCompare( *get_text( &pCurItem->member.run, nCurEnd - nMatched - 1 ),
@@ -2923,6 +2924,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
           UnregisterClassW(REComboBox20W, 0);
       LookupCleanup();
       HeapDestroy (me_heap);
+      release_typelib();
       break;
     }
     return TRUE;
@@ -3129,13 +3131,108 @@ static void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM
   }
 }
 
+void ME_ReplaceSel(ME_TextEditor *editor, BOOL can_undo, const WCHAR *str, int len)
+{
+  int from, to, nStartCursor;
+  ME_Style *style;
+
+  nStartCursor = ME_GetSelectionOfs(editor, &from, &to);
+  style = ME_GetSelectionInsertStyle(editor);
+  ME_InternalDeleteText(editor, &editor->pCursors[nStartCursor], to-from, FALSE);
+  ME_InsertTextFromCursor(editor, 0, str, len, style);
+  ME_ReleaseStyle(style);
+  /* drop temporary style if line end */
+  /*
+   * FIXME question: does abc\n mean: put abc,
+   * clear temp style, put \n? (would require a change)
+   */
+  if (len>0 && str[len-1] == '\n')
+    ME_ClearTempStyle(editor);
+  ME_CommitUndo(editor);
+  ME_UpdateSelectionLinkAttribute(editor);
+  if (!can_undo)
+    ME_EmptyUndoStack(editor);
+  ME_UpdateRepaint(editor, FALSE);
+}
+
+static void ME_SetText(ME_TextEditor *editor, void *text, BOOL unicode)
+{
+  LONG codepage = unicode ? CP_UNICODE : CP_ACP;
+  int textLen;
+
+  LPWSTR wszText = ME_ToUnicode(codepage, text, &textLen);
+
+  if (textLen > 0)
+  {
+    int len = -1;
+
+    /* uses default style! */
+    if (!(editor->styleFlags & ES_MULTILINE))
+    {
+      WCHAR *p = wszText;
+
+      while (*p != '\0' && *p != '\r' && *p != '\n') p++;
+      len = p - wszText;
+    }
+    ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
+  }
+  ME_EndToUnicode(codepage, wszText);
+}
+
+static LRESULT ME_WmCreate(ME_TextEditor *editor, LPARAM lParam, BOOL unicode)
+{
+  CREATESTRUCTW *createW = (CREATESTRUCTW*)lParam;
+  CREATESTRUCTA *createA = (CREATESTRUCTA*)lParam;
+  void *text = NULL;
+  INT max;
+
+  if (lParam)
+    text = unicode ? (void*)createW->lpszName : (void*)createA->lpszName;
+
+  ME_SetDefaultFormatRect(editor);
+
+  max = (editor->styleFlags & ES_DISABLENOSCROLL) ? 1 : 0;
+  if (~editor->styleFlags & ES_DISABLENOSCROLL || editor->styleFlags & WS_VSCROLL)
+    ITextHost_TxSetScrollRange(editor->texthost, SB_VERT, 0, max, TRUE);
+
+  if (~editor->styleFlags & ES_DISABLENOSCROLL || editor->styleFlags & WS_HSCROLL)
+    ITextHost_TxSetScrollRange(editor->texthost, SB_HORZ, 0, max, TRUE);
+
+  if (editor->styleFlags & ES_DISABLENOSCROLL)
+  {
+    if (editor->styleFlags & WS_VSCROLL)
+    {
+      ITextHost_TxEnableScrollBar(editor->texthost, SB_VERT, ESB_DISABLE_BOTH);
+      ITextHost_TxShowScrollBar(editor->texthost, SB_VERT, TRUE);
+    }
+    if (editor->styleFlags & WS_HSCROLL)
+    {
+      ITextHost_TxEnableScrollBar(editor->texthost, SB_HORZ, ESB_DISABLE_BOTH);
+      ITextHost_TxShowScrollBar(editor->texthost, SB_HORZ, TRUE);
+    }
+  }
+
+  if (text)
+  {
+    ME_SetText(editor, text, unicode);
+    ME_SetCursorToStart(editor, &editor->pCursors[0]);
+    ME_SetCursorToStart(editor, &editor->pCursors[1]);
+  }
+
+  ME_CommitUndo(editor);
+  ME_WrapMarkedParagraphs(editor);
+  ME_MoveCaret(editor);
+  return 0;
+}
+
+
 #define UNSUPPORTED_MSG(e) \
   case e:                  \
     FIXME(#e ": stub\n");  \
     *phresult = S_FALSE;   \
     return 0;
 
-/* Handle messages for windowless and windoweded richedit controls.
+/* Handle messages for windowless and windowed richedit controls.
  *
  * The LRESULT that is returned is a return value for window procs,
  * and the phresult parameter is the COM return code needed by the
@@ -3604,31 +3701,14 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
   }
   case EM_REPLACESEL:
   {
-    int from, to, nStartCursor;
-    ME_Style *style;
     int len = 0;
     LONG codepage = unicode ? CP_UNICODE : CP_ACP;
     LPWSTR wszText = ME_ToUnicode(codepage, (void *)lParam, &len);
+
     TRACE("EM_REPLACESEL - %s\n", debugstr_w(wszText));
 
-    nStartCursor = ME_GetSelectionOfs(editor, &from, &to);
-    style = ME_GetSelectionInsertStyle(editor);
-    ME_InternalDeleteText(editor, &editor->pCursors[nStartCursor], to-from, FALSE);
-    ME_InsertTextFromCursor(editor, 0, wszText, len, style);
-    ME_ReleaseStyle(style);
-    /* drop temporary style if line end */
-    /*
-     * FIXME question: does abc\n mean: put abc,
-     * clear temp style, put \n? (would require a change)
-     */
-    if (len>0 && wszText[len-1] == '\n')
-      ME_ClearTempStyle(editor);
+    ME_ReplaceSel(editor, !!wParam, wszText, len);
     ME_EndToUnicode(codepage, wszText);
-    ME_CommitUndo(editor);
-    ME_UpdateSelectionLinkAttribute(editor);
-    if (!wParam)
-      ME_EmptyUndoStack(editor);
-    ME_UpdateRepaint(editor, FALSE);
     return len;
   }
   case EM_SCROLLCARET:
@@ -3677,28 +3757,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
         ME_StreamInRTFString(editor, 0, (char *)lParam);
       }
       else
-      {
-        int textLen;
-        LONG codepage = unicode ? CP_UNICODE : CP_ACP;
-        LPWSTR wszText = ME_ToUnicode(codepage, (void *)lParam, &textLen);
-        TRACE("WM_SETTEXT - %s\n", debugstr_w(wszText)); /* debugstr_w() */
-        if (textLen > 0)
-        {
-          int len = -1;
-
-          /* uses default style! */
-          if (!(editor->styleFlags & ES_MULTILINE))
-          {
-            WCHAR * p;
-
-            p = wszText;
-            while (*p != '\0' && *p != '\r' && *p != '\n') p++;
-            len = p - wszText;
-          }
-          ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
-        }
-        ME_EndToUnicode(codepage, wszText);
-      }
+        ME_SetText(editor, (void*)lParam, unicode);
     }
     else
       TRACE("WM_SETTEXT - NULL\n");
@@ -4053,66 +4112,16 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     return (wParam >= 0x40000) ? 0 : MAKELONG( pt.x, pt.y );
   }
   case WM_CREATE:
-  {
-    void *text = NULL;
-    INT max;
-
-    ME_SetDefaultFormatRect(editor);
-
-    max = (editor->styleFlags & ES_DISABLENOSCROLL) ? 1 : 0;
-    if (~editor->styleFlags & ES_DISABLENOSCROLL || editor->styleFlags & WS_VSCROLL)
-      ITextHost_TxSetScrollRange(editor->texthost, SB_VERT, 0, max, TRUE);
-
-    if (~editor->styleFlags & ES_DISABLENOSCROLL || editor->styleFlags & WS_HSCROLL)
-      ITextHost_TxSetScrollRange(editor->texthost, SB_HORZ, 0, max, TRUE);
-
-    if (editor->styleFlags & ES_DISABLENOSCROLL)
-    {
-      if (editor->styleFlags & WS_VSCROLL)
-      {
-        ITextHost_TxEnableScrollBar(editor->texthost, SB_VERT, ESB_DISABLE_BOTH);
-        ITextHost_TxShowScrollBar(editor->texthost, SB_VERT, TRUE);
-      }
-      if (editor->styleFlags & WS_HSCROLL)
-      {
-        ITextHost_TxEnableScrollBar(editor->texthost, SB_HORZ, ESB_DISABLE_BOTH);
-        ITextHost_TxShowScrollBar(editor->texthost, SB_HORZ, TRUE);
-      }
-    }
-
-    if (lParam)
-    {
-        text = (unicode ? (void*)((CREATESTRUCTW*)lParam)->lpszName
-                : (void*)((CREATESTRUCTA*)lParam)->lpszName);
-    }
-    if (text)
-    {
-      WCHAR *textW;
-      int len;
-      LONG codepage = unicode ? CP_UNICODE : CP_ACP;
-      textW = ME_ToUnicode(codepage, text, &len);
-      if (!(editor->styleFlags & ES_MULTILINE))
-      {
-        len = 0;
-        while(textW[len] != '\0' && textW[len] != '\r' && textW[len] != '\n')
-          len++;
-      }
-      ME_InsertTextFromCursor(editor, 0, textW, len, editor->pBuffer->pDefaultStyle);
-      ME_EndToUnicode(codepage, textW);
-      ME_SetCursorToStart(editor, &editor->pCursors[0]);
-      ME_SetCursorToStart(editor, &editor->pCursors[1]);
-    }
-
-    ME_CommitUndo(editor);
-    ME_WrapMarkedParagraphs(editor);
-    ME_MoveCaret(editor);
-    return 0;
-  }
+    return ME_WmCreate(editor, lParam, unicode);
   case WM_DESTROY:
     ME_DestroyEditor(editor);
     return 0;
   case WM_SETCURSOR:
   {
+    POINT cursor_pos;
+    if (wParam == (WPARAM)editor->hWnd && GetCursorPos(&cursor_pos) &&
+        ScreenToClient(editor->hWnd, &cursor_pos))
+      ME_LinkNotify(editor, msg, 0, MAKELPARAM(cursor_pos.x, cursor_pos.y));
     return ME_SetCursor(editor);
   }
   case WM_LBUTTONDBLCLK:
@@ -4127,7 +4136,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
                    ME_CalculateClickCount(editor, msg, wParam, lParam));
     ITextHost_TxSetCapture(editor->texthost, TRUE);
     editor->bMouseCaptured = TRUE;
-    ME_LinkNotify(editor,msg,wParam,lParam);
+    ME_LinkNotify(editor, msg, wParam, lParam);
     if (!ME_SetCursor(editor)) goto do_default;
     break;
   }
@@ -4137,7 +4146,8 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
       return 0;
     if (editor->bMouseCaptured)
       ME_MouseMove(editor, (short)LOWORD(lParam), (short)HIWORD(lParam));
-    ME_LinkNotify(editor,msg,wParam,lParam);
+    else
+      ME_LinkNotify(editor, msg, wParam, lParam);
     /* Set cursor if mouse is captured, since WM_SETCURSOR won't be received. */
     if (editor->bMouseCaptured)
         ME_SetCursor(editor);
@@ -4155,15 +4165,17 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     else
     {
       ME_SetCursor(editor);
-      ME_LinkNotify(editor,msg,wParam,lParam);
+      ME_LinkNotify(editor, msg, wParam, lParam);
     }
     break;
   case WM_RBUTTONUP:
   case WM_RBUTTONDOWN:
+  case WM_RBUTTONDBLCLK:
     ME_CommitUndo(editor); /* End coalesced undos for typed characters */
     if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
         !ME_FilterEvent(editor, msg, &wParam, &lParam))
       return 0;
+    ME_LinkNotify(editor, msg, wParam, lParam);
     goto do_default;
   case WM_CONTEXTMENU:
     if (!ME_ShowContextMenu(editor, (short)LOWORD(lParam), (short)HIWORD(lParam)))
@@ -4405,10 +4417,12 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     return 0;
   case WM_SETREDRAW:
     goto do_default;
-  case WM_SIZE:
+  case WM_WINDOWPOSCHANGED:
   {
     RECT clientRect;
+    WINDOWPOS *winpos = (WINDOWPOS *)lParam;
 
+    if (winpos->flags & SWP_NOCLIENTSIZE) goto do_default;
     ITextHost_TxGetClientRect(editor->texthost, &clientRect);
     if (editor->bDefaultFormatRect) {
       ME_SetDefaultFormatRect(editor);
