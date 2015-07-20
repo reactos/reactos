@@ -763,14 +763,14 @@ IntDispatchMessage(PMSG pMsg)
                                    pMsg->lParam,
                                    -1);
 
-    if (pMsg->message == WM_PAINT)
+    if ( pMsg->message == WM_PAINT &&
+         VerifyWnd(Window) &&
+         Window->state & WNDS_PAINTNOTPROCESSED ) // <--- Cleared, paint was already processed!
     {
-        PREGION Rgn;
         Window->state2 &= ~WNDS2_WMPAINTSENT;
-        /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
-        Rgn = IntSysCreateRectpRgn( 0, 0, 0, 0 );
-        co_UserGetUpdateRgn( Window, Rgn, TRUE );
-        REGION_Delete(Rgn);
+        /* send a WM_ERASEBKGND if the non-client area is still invalid */
+        ERR("Message WM_PAINT\n");
+        co_IntPaintWindows( Window, RDW_NOCHILDREN, FALSE );
     }
 
     return retval;
@@ -1076,7 +1076,7 @@ co_IntGetPeekMessage( PMSG pMsg,
 
            co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)pMsg);
 
-           if ( bGMSG ) break;
+           if ( bGMSG || pMsg->message == WM_PAINT) break;
         }
 
         if ( bGMSG )

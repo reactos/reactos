@@ -44,6 +44,16 @@ FORCEINLINE BOOL IntPtInWindow(PWND pwnd, INT x, INT y)
                            y - pwnd->rcWindow.top);
 }
 
+FORCEINLINE BOOL
+IntEqualRect(RECTL *lprc1, RECTL *lprc2)
+{
+   if (lprc1 == NULL || lprc2 == NULL)
+       return FALSE;
+
+   return (lprc1->left  == lprc2->left)  && (lprc1->top    == lprc2->top) &&
+          (lprc1->right == lprc2->right) && (lprc1->bottom == lprc2->bottom);
+}
+
 BOOL FASTCALL ActivateOtherWindowMin(PWND);
 UINT FASTCALL co_WinPosArrangeIconicWindows(PWND parent);
 BOOL FASTCALL IntGetClientOrigin(PWND Window, LPPOINT Point);
@@ -58,3 +68,4 @@ VOID FASTCALL co_WinPosActivateOtherWindow(PWND);
 PWND FASTCALL IntRealChildWindowFromPoint(PWND,LONG,LONG);
 BOOL FASTCALL IntScreenToClient(PWND,LPPOINT);
 BOOL FASTCALL IntClientToScreen(PWND,LPPOINT);
+BOOL FASTCALL IntGetWindowRect(PWND,RECTL*);

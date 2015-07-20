@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Windows
- * FILE:             subsystems/win32/win32k/ntuser/window.c
+ * FILE:             win32ss/user/ntuser/window.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -570,6 +570,23 @@ LRESULT co_UserFreeWindow(PWND Window,
    if (ThreadData->MessageQueue->spwndCapture == Window)
    {
       IntReleaseCapture();
+   }
+
+   //// Now kill those remaining "PAINTING BUG: Thread marked as containing dirty windows" spam!!!
+   if ( Window->hrgnUpdate != NULL || Window->state & WNDS_INTERNALPAINT )
+   {
+      MsqDecPaintCountQueue(Window->head.pti);
+      if (Window->hrgnUpdate > HRGN_WINDOW && GreIsHandleValid(Window->hrgnUpdate))
+      {
+         GreDeleteObject(Window->hrgnUpdate);
+      }
+      Window->hrgnUpdate = NULL;
+      Window->state &= ~WNDS_INTERNALPAINT;
+   }
+
+   if (Window->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT))
+   {
+      Window->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT);
    }
 
    if ( ((Window->style & (WS_CHILD|WS_POPUP)) != WS_CHILD) &&

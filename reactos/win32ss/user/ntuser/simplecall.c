@@ -544,7 +544,8 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
-         Ret = co_UserRedrawWindow( Window, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
+         co_IntUpdateWindows(Window, RDW_ALLCHILDREN, FALSE);
+         Ret = TRUE;
          break;
    }
 

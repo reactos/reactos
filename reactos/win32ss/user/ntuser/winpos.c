@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Windows
- * FILE:             subsystems/win32/win32k/ntuser/window.c
+ * FILE:             win32ss/user/ntuser/window.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -81,6 +81,29 @@ IntGetClientRect(PWND Wnd, RECTL *Rect)
    */
    }
 }
+
+BOOL FASTCALL
+IntGetWindowRect(PWND Wnd, RECTL *Rect)
+{
+   ASSERT( Wnd );
+   ASSERT( Rect );
+   if (!Wnd) return FALSE;
+   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
+   {
+       *Rect = Wnd->rcWindow;
+   }
+   else
+   {
+       Rect->left = Rect->top = 0;
+       Rect->right = Wnd->rcWindow.right;
+       Rect->bottom = Wnd->rcWindow.bottom;
+/* Do this until Init bug is fixed. This sets 640x480, see InitMetrics.
+       Rect->right = GetSystemMetrics(SM_CXSCREEN);
+       Rect->bottom = GetSystemMetrics(SM_CYSCREEN);
+*/   }
+   return TRUE;
+}
+
 
 INT FASTCALL
 IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints)
@@ -1099,6 +1122,38 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
 }
 
 static
+BOOL
+IntValidateParent(PWND Child, PREGION ValidateRgn)
+{
+   PWND ParentWnd = Child;
+
+   if (ParentWnd->style & WS_CHILD)
+   {
+      do
+         ParentWnd = ParentWnd->spwndParent;
+      while (ParentWnd->style & WS_CHILD);
+   }
+
+   ParentWnd = Child->spwndParent;
+   while (ParentWnd)
+   {
+      if (ParentWnd->style & WS_CLIPCHILDREN)
+         break;
+
+      if (ParentWnd->hrgnUpdate != 0)
+      {
+         IntInvalidateWindows( ParentWnd,
+                               ValidateRgn,
+                               RDW_VALIDATE | RDW_NOCHILDREN);
+      }
+
+      ParentWnd = ParentWnd->spwndParent;
+   }
+
+   return TRUE;
+}
+
+static
 VOID FASTCALL
 FixClientRect(PRECTL ClientRect, PRECTL WindowRect)
 {
@@ -1320,8 +1375,6 @@ co_WinPosDoWinPosChanging(PWND Window,
       }
    }
 
-   WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
-
    if (!(WinPos->flags & SWP_NOMOVE))
    {
       INT X, Y;
@@ -1330,9 +1383,6 @@ co_WinPosDoWinPosChanging(PWND Window,
       Y = WinPos->y;
 
       Parent = Window->spwndParent;
-
-      // Fix wine msg test_SetParent:WmSetParentSeq_2:19 wParam bits.
-      WinPos->flags &= ~SWP_NOCLIENTMOVE;
 
       // Parent child position issue is in here. SetParent_W7 test CORE-6651.
       if (//((Window->style & WS_CHILD) != 0) && <- Fixes wine msg test_SetParent: "rects do not match", the last test.
@@ -1353,6 +1403,7 @@ co_WinPosDoWinPosChanging(PWND Window,
       RECTL_vOffsetRect(ClientRect, X - Window->rcWindow.left,
                                     Y - Window->rcWindow.top);
    }
+   WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
 
    TRACE( "hwnd %p, after %p, swp %d,%d %dx%d flags %08x\n",
            WinPos->hwnd, WinPos->hwndInsertAfter, WinPos->x, WinPos->y,
@@ -1387,7 +1438,6 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
 
    TRACE("(%p) hInsertAfter = %p\n", Window, hWndInsertAfter );
 
-   Owner = Window->spwndOwner ? Window->spwndOwner->head.h : NULL;
    Style = Window->style;
 
    if (Style & WS_CHILD)
@@ -1395,6 +1445,8 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
       TRACE("Window is child\n");
       return hWndInsertAfter;
    }
+
+   Owner = Window->spwndOwner ? Window->spwndOwner->head.h : NULL;
 
    if (Owner)
    {
@@ -1438,7 +1490,7 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
 
    if (hWndInsertAfter == HWND_BOTTOM)
    {
-      ERR("Window is HWND_BOTTOM\n");
+      ERR("Window is HWND_BOTTOM hwnd %p\n",hWndInsertAfter);
       if (List) ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
       goto done;
    }
@@ -1981,7 +2033,7 @@ co_WinPosSetWindowPos(
                          0);
 
             UserReleaseDC(Window, Dc, FALSE);
-            IntValidateParent(Window, CopyRgn, FALSE);
+            IntValidateParent(Window, CopyRgn);
             GreDeleteObject(DcRgn);
          }
       }
@@ -2004,6 +2056,7 @@ co_WinPosSetWindowPos(
              {
                 RgnType = IntGdiCombineRgn(DirtyRgn, VisAfter, 0, RGN_COPY);
              }
+
              if (RgnType != ERROR && RgnType != NULLREGION)
              {
             /* old code
@@ -2017,23 +2070,16 @@ co_WinPosSetWindowPos(
 
                 PWND Parent = Window->spwndParent;
 
-                REGION_bOffsetRgn( DirtyRgn,
-                                Window->rcWindow.left,
-                                Window->rcWindow.top);
-                if ( (Window->style & WS_CHILD) &&
-                     (Parent) &&
-                    !(Parent->style & WS_CLIPCHILDREN))
+                REGION_bOffsetRgn( DirtyRgn, Window->rcWindow.left, Window->rcWindow.top);
+
+                if ( (Window->style & WS_CHILD) && (Parent) && !(Parent->style & WS_CLIPCHILDREN))
                 {
-                   IntInvalidateWindows( Parent,
-                                         DirtyRgn,
-                                         RDW_ERASE | RDW_INVALIDATE);
-                   co_IntPaintWindows(Parent, RDW_ERASENOW, FALSE);
+                   IntInvalidateWindows( Parent, DirtyRgn, RDW_ERASE | RDW_INVALIDATE);
+                   co_IntPaintWindows(Parent, RDW_NOCHILDREN, FALSE);
                 }
                 else
                 {
-                    IntInvalidateWindows( Window,
-                                          DirtyRgn,
-                        RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+                   IntInvalidateWindows( Window, DirtyRgn, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
                 }
              }
              REGION_Delete(DirtyRgn);

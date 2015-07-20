@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Miscellaneous User functions
- * FILE:             subsystems/win32/win32k/ntuser/defwnd.c
+ * FILE:             win32ss/user/ntuser/defwnd.c
  * PROGRAMER:
  */
 
@@ -638,6 +638,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
 
    if ( IntIsWindow(UserHMGetHandle(pwnd)) )
+   {
      if ( iconic )
      {
 	/* Single click brings up the system menu when iconized */
@@ -647,6 +648,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 	      co_IntSendMessage( UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
         }
      }
+   }
 }
 
 //
@@ -773,7 +775,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
    {
       case HTERROR:
       {
-         //// This is the real fix for CORE-6129! This was a "Code Whole".
+         //// This is the real fix for CORE-6129! This was a "Code hole".
          USER_REFERENCE_ENTRY Ref;
 
          if (Msg == WM_LBUTTONDOWN)
@@ -1107,19 +1109,21 @@ IntDefWindowProc(
 
       case WM_SYNCPAINT:
       {
-         PREGION Rgn;
+         HRGN hRgn;
          Wnd->state &= ~WNDS_SYNCPAINTPENDING;
-         ERR("WM_SYNCPAINT\n");
-         Rgn = IntSysCreateRectpRgn(0, 0, 0, 0);
-         if (Rgn)
+         TRACE("WM_SYNCPAINT\n");
+         hRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         if (hRgn)
          {
-             if (co_UserGetUpdateRgn(Wnd, Rgn, FALSE) != NULLREGION)
+             if (co_UserGetUpdateRgn(Wnd, hRgn, FALSE) != NULLREGION)
              {
+                PREGION pRgn = REGION_LockRgn(hRgn);
+                if (pRgn) REGION_UnlockRgn(pRgn);
                 if (!wParam)
                     wParam = (RDW_ERASENOW | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
-                co_UserRedrawWindow(Wnd, NULL, Rgn, wParam);
+                co_UserRedrawWindow(Wnd, NULL, pRgn, wParam);
              }
-             REGION_Delete(Rgn);
+             GreDeleteObject(hRgn);
          }
          return 0;
       }
