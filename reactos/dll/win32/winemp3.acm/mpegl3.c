@@ -658,15 +658,15 @@ static	LRESULT MPEG3_DriverDetails(PACMDRIVERDETAILSW add)
 {
     add->fccType = ACMDRIVERDETAILS_FCCTYPE_AUDIOCODEC;
     add->fccComp = ACMDRIVERDETAILS_FCCCOMP_UNDEFINED;
-    add->wMid = 0xFF;
-    add->wPid = 0x00;
+    add->wMid = MM_FRAUNHOFER_IIS;
+    add->wPid = MM_FHGIIS_MPEGLAYER3_DECODE;
     add->vdwACM = 0x01000000;
     add->vdwDriver = 0x01000000;
     add->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CODEC;
     add->cFormatTags = 3; /* PCM, MPEG3 */
     add->cFilterTags = 0;
     add->hicon = NULL;
-    MultiByteToWideChar( CP_ACP, 0, "WINE-MPEG3", -1,
+    MultiByteToWideChar( CP_ACP, 0, "MPEG Layer-3 Codec", -1,
                          add->szShortName, sizeof(add->szShortName)/sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, "Wine MPEG3 decoder", -1,
                          add->szLongName, sizeof(add->szLongName)/sizeof(WCHAR) );
