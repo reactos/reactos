@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #define VS_FILE_INFO RT_VERSION
 #define VS_VERSION_INFO 1
 #define VS_USER_DEFINED 100
@@ -79,7 +80,9 @@ extern "C" {
 #define VIF_CANNOTREADSRC  65536
 #define VIF_CANNOTREADDST 0x20000
 #define VIF_BUFFTOOSMALL 0x40000
+
 #ifndef RC_INVOKED
+
 typedef struct tagVS_FIXEDFILEINFO {
 	DWORD dwSignature;
 	DWORD dwStrucVersion;
@@ -107,6 +110,21 @@ DWORD WINAPI VerLanguageNameA(DWORD,LPSTR,DWORD);
 DWORD WINAPI VerLanguageNameW(DWORD,LPWSTR,DWORD);
 BOOL WINAPI VerQueryValueA(LPCVOID,LPCSTR,LPVOID*,PUINT);
 BOOL WINAPI VerQueryValueW(LPCVOID,LPCWSTR,LPVOID*,PUINT);
+
+DWORD
+WINAPI
+GetFileVersionInfoSizeExA(
+  _In_ DWORD dwFlags,
+  _In_ LPCSTR lpwstrFilename,
+  _Out_ LPDWORD lpdwHandle);
+
+DWORD
+WINAPI
+GetFileVersionInfoSizeExW(
+  _In_ DWORD dwFlags,
+  _In_ LPCWSTR lpwstrFilename,
+  _Out_ LPDWORD lpdwHandle);
+
 #ifdef UNICODE
 #define VerFindFile VerFindFileW
 #define VerQueryValue VerQueryValueW
@@ -115,6 +133,7 @@ BOOL WINAPI VerQueryValueW(LPCVOID,LPCWSTR,LPVOID*,PUINT);
 #define GetFileVersionInfo GetFileVersionInfoW
 #define VerLanguageName VerLanguageNameW
 #define VerQueryValue VerQueryValueW
+#define GetFileVersionInfoSizeEx GetFileVersionInfoSizeExW
 #else
 #define VerQueryValue VerQueryValueA
 #define VerFindFile VerFindFileA
@@ -123,9 +142,13 @@ BOOL WINAPI VerQueryValueW(LPCVOID,LPCWSTR,LPVOID*,PUINT);
 #define GetFileVersionInfo GetFileVersionInfoA
 #define VerLanguageName VerLanguageNameA
 #define VerQueryValue VerQueryValueA
-#endif
-#endif
+#define GetFileVersionInfoSizeEx GetFileVersionInfoSizeExA
+#endif /* UNICODE */
+
+#endif /* !RC_INVOKED */
+
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+#endif /* VER_H */
