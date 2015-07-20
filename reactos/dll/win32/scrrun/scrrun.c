@@ -202,11 +202,11 @@ HRESULT WINAPI DllUnregisterServer(void)
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
     if(IsEqualGUID(&CLSID_FileSystemObject, rclsid)) {
-        TRACE("(CLSID_WshShell %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_FileSystemObject %s %p)\n", debugstr_guid(riid), ppv);
         return IClassFactory_QueryInterface(&FileSystemFactory, riid, ppv);
     }
     else if(IsEqualGUID(&CLSID_Dictionary, rclsid)) {
-        TRACE("(CLSID_WshShell %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_Dictionary %s %p)\n", debugstr_guid(riid), ppv);
         return IClassFactory_QueryInterface(&DictionaryFactory, riid, ppv);
     }
 

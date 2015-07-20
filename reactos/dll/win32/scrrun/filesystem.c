@@ -620,8 +620,16 @@ static HRESULT WINAPI textstream_SkipLine(ITextStream *iface)
 static HRESULT WINAPI textstream_Close(ITextStream *iface)
 {
     struct textstream *This = impl_from_ITextStream(iface);
-    FIXME("(%p): stub\n", This);
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+
+    TRACE("(%p)\n", This);
+
+    if(!CloseHandle(This->file))
+        hr = S_FALSE;
+
+    This->file = NULL;
+
+    return hr;
 }
 
 static const ITextStreamVtbl textstreamvtbl = {
@@ -2533,11 +2541,20 @@ static HRESULT WINAPI file_Invoke(IFile *iface, DISPID dispIdMember, REFIID riid
     return hr;
 }
 
-static HRESULT WINAPI file_get_Path(IFile *iface, BSTR *pbstrPath)
+static HRESULT WINAPI file_get_Path(IFile *iface, BSTR *path)
 {
     struct file *This = impl_from_IFile(iface);
-    FIXME("(%p)->(%p)\n", This, pbstrPath);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, path);
+
+    if (!path)
+        return E_POINTER;
+
+    *path = SysAllocString(This->path);
+    if (!*path)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI file_get_Name(IFile *iface, BSTR *name)
@@ -2623,8 +2640,10 @@ static HRESULT WINAPI file_get_Attributes(IFile *iface, FileAttribute *pfa)
 static HRESULT WINAPI file_put_Attributes(IFile *iface, FileAttribute pfa)
 {
     struct file *This = impl_from_IFile(iface);
-    FIXME("(%p)->(%x)\n", This, pfa);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%x)\n", This, pfa);
+
+    return SetFileAttributesW(This->path, pfa) ? S_OK : create_error(GetLastError());
 }
 
 static HRESULT WINAPI file_get_DateCreated(IFile *iface, DATE *pdate)
@@ -3090,12 +3109,26 @@ static HRESULT WINAPI filesys_GetBaseName(IFileSystem3 *iface, BSTR Path,
     return S_OK;
 }
 
-static HRESULT WINAPI filesys_GetExtensionName(IFileSystem3 *iface, BSTR Path,
-                                            BSTR *pbstrResult)
+static HRESULT WINAPI filesys_GetExtensionName(IFileSystem3 *iface, BSTR path,
+                                            BSTR *ext)
 {
-    FIXME("%p %s %p\n", iface, debugstr_w(Path), pbstrResult);
+    INT len;
 
-    return E_NOTIMPL;
+    TRACE("%p %s %p\n", iface, debugstr_w(path), ext);
+
+    *ext = NULL;
+    len = SysStringLen(path);
+    while (len) {
+        if (path[len-1] == '.') {
+            *ext = SysAllocString(&path[len]);
+            if (!*ext)
+                return E_OUTOFMEMORY;
+            break;
+        }
+        len--;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI filesys_GetAbsolutePathName(IFileSystem3 *iface, BSTR Path,
@@ -3249,11 +3282,41 @@ static HRESULT WINAPI filesys_GetFolder(IFileSystem3 *iface, BSTR FolderPath,
 
 static HRESULT WINAPI filesys_GetSpecialFolder(IFileSystem3 *iface,
                                             SpecialFolderConst SpecialFolder,
-                                            IFolder **ppfolder)
+                                            IFolder **folder)
 {
-    FIXME("%p %d %p\n", iface, SpecialFolder, ppfolder);
+    WCHAR pathW[MAX_PATH];
+    DWORD ret;
 
-    return E_NOTIMPL;
+    TRACE("%p %d %p\n", iface, SpecialFolder, folder);
+
+    if (!folder)
+        return E_POINTER;
+
+    *folder = NULL;
+
+    switch (SpecialFolder)
+    {
+    case WindowsFolder:
+        ret = GetWindowsDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+        break;
+    case SystemFolder:
+        ret = GetSystemDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+        break;
+    case TemporaryFolder:
+        ret = GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+        /* we don't want trailing backslash */
+        if (ret && pathW[ret-1] == '\\')
+            pathW[ret-1] = 0;
+        break;
+    default:
+        FIXME("unknown special folder type, %d\n", SpecialFolder);
+        return E_INVALIDARG;
+    }
+
+    if (!ret)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    return create_folder(pathW, folder);
 }
 
 static inline HRESULT delete_file(const WCHAR *file, DWORD file_len, VARIANT_BOOL force)
