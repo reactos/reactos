@@ -71,6 +71,8 @@ static BOOL get_onevalue(TW_HANDLE hcontainer, TW_UINT32 *ret, TW_UINT16 *type)
         GlobalUnlock(hcontainer);
         return TRUE;
     }
+    else
+        *ret = 0;
     return FALSE;
 }
 
