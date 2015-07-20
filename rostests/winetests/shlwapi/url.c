@@ -1150,7 +1150,7 @@ static void test_url_combine(const char *szUrl1, const char *szUrl2, DWORD dwFla
 
     if (todo)
     {
-        todo_wine ok(dwSize == dwExpectLen && (!SUCCEEDED(hr) || strcmp(szReturnUrl, szExpectUrl)==0),
+        todo_wine ok(dwSize == dwExpectLen && (FAILED(hr) || strcmp(szReturnUrl, szExpectUrl)==0),
                 "Expected %s (len=%d), but got %s (len=%d)\n", szExpectUrl, dwExpectLen, SUCCEEDED(hr) ? szReturnUrl : "(null)", dwSize);
     }
     else

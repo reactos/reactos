@@ -489,7 +489,8 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
     static const CHAR testEx_txt[] = "\\testEx.txt";
     BOOL delret;
 
-    trace("SHCreateStreamOnFileEx: testing mode %d, STGM flags %08x\n", mode, stgm);
+    if (winetest_debug > 1)
+        trace("SHCreateStreamOnFileEx: testing mode %d, STGM flags %08x\n", mode, stgm);
 
     /* Don't used a fixed path for the testEx.txt file */
     GetTempPathA(MAX_PATH, test_fileA);
