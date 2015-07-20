@@ -168,7 +168,7 @@ reactos/dll/win32/riched20            # Synced to WineStaging-1.7.47
 reactos/dll/win32/riched32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/rpcrt4              # Synced to Wine-1.7.17
 reactos/dll/win32/rsabase             # Synced to WineStaging-1.7.37
-reactos/dll/win32/rsaenh              # Synced to WineStaging-1.7.37
+reactos/dll/win32/rsaenh              # Synced to WineStaging-1.7.47
 reactos/dll/win32/sccbase             # Synced to WineStaging-1.7.37
 reactos/dll/win32/schannel            # Synced to WineStaging-1.7.37
 reactos/dll/win32/scrrun              # Synced to WineStaging-1.7.37
