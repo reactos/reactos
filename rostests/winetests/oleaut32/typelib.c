@@ -4008,6 +4008,11 @@ static const type_info info[] = {
   "test_struct",
   "{4029f190-ca4a-4611-aeb9-673983cb96dd}",
   /* kind */ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct test_struct)
+},
+{
+  "test_struct2",
+  "{4029f190-ca4a-4611-aeb9-673983cb96de}",
+  /* kind */ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct test_struct)
 }
 };
 
@@ -4216,7 +4221,7 @@ static void test_register_typelib(BOOL system_registration)
     {
         TYPEKIND kind;
         WORD flags;
-    } attrs[12] =
+    } attrs[13] =
     {
         { TKIND_INTERFACE, 0 },
         { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE },
@@ -4229,7 +4234,8 @@ static void test_register_typelib(BOOL system_registration)
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
-        { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE }
+        { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE },
+        { TKIND_RECORD, 0 }
     };
 
     trace("Starting %s typelib registration tests\n",
@@ -4264,7 +4270,7 @@ static void test_register_typelib(BOOL system_registration)
     ok(hr == S_OK, "got %08x\n", hr);
 
     count = ITypeLib_GetTypeInfoCount(typelib);
-    ok(count == 12, "got %d\n", count);
+    ok(count == 13, "got %d\n", count);
 
     for(i = 0; i < count; i++)
     {
@@ -5500,6 +5506,7 @@ static void test_stub(void)
 
         hr = IPSFactoryBuffer_CreateStub(factory, &interfaceguid, &uk, &base_stub);
         ok(hr == S_OK, "got: %x, side: %04x\n", hr, side);
+        IRpcStubBuffer_Release(base_stub);
 
         IPSFactoryBuffer_Release(factory);
     next:

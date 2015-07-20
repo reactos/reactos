@@ -460,11 +460,15 @@ static void test_safearray(void)
         bound.lLbound = 0;
         SafeArrayRedim(a, &bound);
         SafeArrayPtrOfIndex(a, indices, (void **)&ptr1);
-        ok(*(WORD *)ptr1 == 0, "Expanded area not zero-initialized\n");
+        ok(*(WORD *)ptr1 == 0 ||
+           broken(*(WORD *)ptr1 != 0), /* Win 2003 */
+           "Expanded area not zero-initialized\n");
 
         indices[1] = 1;
         SafeArrayPtrOfIndex(a, indices, (void **)&ptr1);
-        ok(*(WORD *)ptr1 == 0x55aa, "Data not preserved when resizing array\n");
+        ok(*(WORD *)ptr1 == 0x55aa ||
+           broken(*(WORD *)ptr1 != 0x55aa), /* Win 2003 */
+           "Data not preserved when resizing array\n");
 
         hres = SafeArrayDestroy(a);
         ok(hres == S_OK,"SAD failed with hres %x\n", hres);
@@ -709,7 +713,7 @@ static void test_safearray(void)
         return;
 
 	for (i=0;i<sizeof(vttypes)/sizeof(vttypes[0]);i++) {
-        a = NULL;
+		a = NULL;
 		hres = pSafeArrayAllocDescriptorEx(vttypes[i].vt,1,&a);
 		ok(hres == S_OK, "SafeArrayAllocDescriptorEx gave hres 0x%x\n", hres);
 		ok(a->fFeatures == vttypes[i].expflags,"SAADE(%d) resulted with flags %x, expected %x\n", vttypes[i].vt, a->fFeatures, vttypes[i].expflags);

@@ -142,4 +142,12 @@ library register_test
         [propputref, id(2)]
         LONG testprop2([in] IUnknown *i);
     }
+
+    /* uuid is same as for test_struct2 in test_tlb.idl, fields are different */
+    [uuid(4029f190-ca4a-4611-aeb9-673983cb96de)]
+    struct test_struct3
+    {
+        UINT32 field;
+        HRESULT hr;
+    };
 }

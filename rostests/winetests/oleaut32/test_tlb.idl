@@ -48,4 +48,14 @@ library Test
 		IDispatch *disp;
 		BSTR bstr;
 	};
+
+        /* identical to 'test_struct', only guid is different */
+	[uuid(4029f190-ca4a-4611-aeb9-673983cb96de)]
+	struct test_struct2
+	{
+		HRESULT hr;
+		VARIANT_BOOL b;
+		IDispatch *disp;
+		BSTR bstr;
+	};
 }

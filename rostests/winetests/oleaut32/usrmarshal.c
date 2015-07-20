@@ -195,11 +195,13 @@ static void check_safearray(void *buffer, LPSAFEARRAY lpsa)
 
 static void * WINAPI user_allocate(SIZE_T size)
 {
+    ok(0, "unexpected user_allocate call\n");
     return CoTaskMemAlloc(size);
 }
 
 static void WINAPI user_free(void *p)
 {
+    ok(0, "unexpected user_free call\n");
     CoTaskMemFree(p);
 }
 
@@ -716,29 +718,35 @@ static const IUnknownVtbl HeapUnknown_Vtbl =
     HeapUnknown_Release
 };
 
-static void check_variant_header(DWORD *wirev, VARIANT *v, ULONG size)
+typedef struct
 {
-    WORD *wp;
+    DWORD clSize;
+    DWORD rpcReserved;
+    USHORT vt;
+    USHORT wReserved1;
+    USHORT wReserved2;
+    USHORT wReserved3;
+    DWORD switch_is;
+} variant_wire_t;
+
+static DWORD *check_variant_header(DWORD *wirev, VARIANT *v, ULONG size)
+{
+    const variant_wire_t *header = (const variant_wire_t*)wirev;
     DWORD switch_is;
 
-    ok(*wirev == (size + 7) >> 3, "wv[0] %08x, expected %08x\n", *wirev, (size + 7) >> 3);
-    wirev++;
-    ok(*wirev == 0, "wv[1] %08x\n", *wirev);
-    wirev++;
-    wp = (WORD*)wirev;
-    ok(*wp == V_VT(v), "vt %04x expected %04x\n", *wp, V_VT(v));
-    wp++;
-    ok(*wp == V_U2(v).wReserved1, "res1 %04x expected %04x\n", *wp, V_U2(v).wReserved1);
-    wp++;
-    ok(*wp == V_U2(v).wReserved2, "res2 %04x expected %04x\n", *wp, V_U2(v).wReserved2);
-    wp++;
-    ok(*wp == V_U2(v).wReserved3, "res3 %04x expected %04x\n", *wp, V_U2(v).wReserved3);
-    wp++;
-    wirev = (DWORD*)wp;
+    ok(header->clSize == (size + 7) >> 3, "wv[0] %08x, expected %08x\n", header->clSize, (size + 7) >> 3);
+    ok(header->rpcReserved == 0, "wv[1] %08x\n", header->rpcReserved);
+    ok(header->vt == V_VT(v), "vt %04x expected %04x\n", header->vt, V_VT(v));
+    ok(header->wReserved1 == V_U2(v).wReserved1, "res1 %04x expected %04x\n", header->wReserved1, V_U2(v).wReserved1);
+    ok(header->wReserved2 == V_U2(v).wReserved2, "res2 %04x expected %04x\n", header->wReserved2, V_U2(v).wReserved2);
+    ok(header->wReserved3 == V_U2(v).wReserved3, "res3 %04x expected %04x\n", header->wReserved3, V_U2(v).wReserved3);
+
     switch_is = V_VT(v);
     if(switch_is & VT_ARRAY)
         switch_is &= ~VT_TYPEMASK;
-    ok(*wirev == switch_is, "switch_is %08x expected %08x\n", *wirev, switch_is);
+    ok(header->switch_is == switch_is, "switch_is %08x expected %08x\n", header->switch_is, switch_is);
+
+    return (DWORD*)((unsigned char*)wirev + sizeof(variant_wire_t));
 }
 
 /* Win9x and WinME don't always align as needed. Variants have
@@ -807,8 +815,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*(char*)wirev == V_I1(&v), "wv[5] %08x\n", *wirev);
     VariantInit(&v2);
     stubMsg.Buffer = buffer;
@@ -834,8 +841,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
 
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*(short*)wirev == V_I2(&v), "wv[5] %08x\n", *wirev);
     VariantInit(&v2);
     stubMsg.Buffer = buffer;
@@ -862,8 +868,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
 
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == 0x4, "wv[5] %08x\n", *wirev);
     wirev++;
     ok(*(short*)wirev == s, "wv[6] %08x\n", *wirev);
@@ -894,8 +899,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == V_I4(&v), "wv[5] %08x\n", *wirev);
 
     VariantInit(&v2);
@@ -922,8 +926,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == 0x1234, "wv[5] %08x\n", *wirev);
     VariantInit(&v2);
     stubMsg.Buffer = buffer;
@@ -950,8 +953,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == 0x4, "wv[5] %08x\n", *wirev);
     wirev++;
     ok(*wirev == ul, "wv[6] %08x\n", *wirev);
@@ -980,8 +982,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
      
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*(float*)wirev == V_R4(&v), "wv[5] %08x\n", *wirev);
     VariantInit(&v2);
     stubMsg.Buffer = buffer;
@@ -1008,8 +1009,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == 0xcccccccc, "wv[5] %08x\n", *wirev); /* pad */
     wirev++;
     ok(*(double*)wirev == V_R8(&v), "wv[6] %08x, wv[7] %08x\n", *wirev, *(wirev+1));
@@ -1038,8 +1038,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == 8, "wv[5] %08x\n", *wirev);
     wirev++;
     ok(*(double*)wirev == d, "wv[6] %08x wv[7] %08x\n", *wirev, *(wirev+1));
@@ -1067,8 +1066,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*(short*)wirev == V_BOOL(&v), "wv[5] %04x\n", *(WORD*)wirev);
     VariantInit(&v2);
     stubMsg.Buffer = buffer;
@@ -1097,8 +1095,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
 
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == 0xcccccccc, "wirev[5] %08x\n", *wirev); /* pad */
     wirev++;
     dec2 = dec;
@@ -1129,8 +1126,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == 16, "wv[5] %08x\n", *wirev);
     wirev++;
     ok(!memcmp(wirev, &dec, sizeof(dec)), "wirev[6] %08x wirev[7] %08x wirev[8] %08x wirev[9] %08x\n", *wirev, *(wirev + 1), *(wirev + 2), *(wirev + 3));
@@ -1211,8 +1207,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev, "wv[5] %08x\n", *wirev); /* win2k: this is b. winxp: this is (char*)b + 1 */
     wirev++;
     check_bstr(wirev, V_BSTR(&v));
@@ -1240,8 +1235,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
     ok(*wirev == 0x4, "wv[5] %08x\n", *wirev);
     wirev++;
     ok(*wirev, "wv[6] %08x\n", *wirev); /* win2k: this is b. winxp: this is (char*)b + 1 */
@@ -1281,8 +1275,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + expected, "got %p expect %p\n", next, buffer + expected);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, expected);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, expected);
     ok(*wirev, "wv[5] %08x\n", *wirev); /* win2k: this is lpsa. winxp: this is (char*)lpsa + 1 */
     wirev++;
     check_safearray(wirev, lpsa);
@@ -1322,8 +1315,7 @@ static void test_marshal_VARIANT(void)
     ok(next == buffer + expected, "got %p expect %p\n", next, buffer + expected);
     wirev = (DWORD*)buffer;
 
-    check_variant_header(wirev, &v, expected);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, expected);
     ok(*wirev == 4, "wv[5] %08x\n", *wirev);
     wirev++;
     ok(*wirev, "wv[6] %08x\n", *wirev); /* win2k: this is lpsa. winxp: this is (char*)lpsa + 1 */
@@ -1368,8 +1360,7 @@ static void test_marshal_VARIANT(void)
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
     wirev = (DWORD*)buffer;
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, stubMsg.BufferLength);
 
     ok(*wirev == sizeof(VARIANT), "wv[5] %08x\n", *wirev);
     wirev++;
@@ -1377,8 +1368,7 @@ static void test_marshal_VARIANT(void)
     wirev++;
     ok(*wirev == 0xcccccccc, "wv[7] %08x\n", *wirev); /* pad */
     wirev++;
-    check_variant_header(wirev, &v2, stubMsg.BufferLength - 32);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v2, stubMsg.BufferLength - 32);
     ok(*wirev == 0xcccccccc, "wv[13] %08x\n", *wirev); /* pad for VT_R8 */
     wirev++;
     ok(*(double*)wirev == V_R8(&v2), "wv[6] %08x wv[7] %08x\n", *wirev, *(wirev+1));
@@ -1403,32 +1393,31 @@ static void test_marshal_VARIANT(void)
     V_UNKNOWN(&v) = &heap_unknown->IUnknown_iface;
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
-    ok(stubMsg.BufferLength > 32, "size %d\n", stubMsg.BufferLength);
+    ok(stubMsg.BufferLength > 40, "size %d\n", stubMsg.BufferLength);
     buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     memset(buffer, 0xcc, stubMsg.BufferLength);
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
+todo_wine
+    ok(heap_unknown->refs == 2, "got refcount %d\n", heap_unknown->refs);
     wirev = (DWORD*)buffer;
-    check_variant_header(wirev, &v, next - buffer);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, next - buffer);
 
-    todo_wine
     ok(*wirev == (DWORD_PTR)V_UNKNOWN(&v) /* Win9x */ ||
        *wirev == (DWORD_PTR)V_UNKNOWN(&v) + 1 /* NT */, "wv[5] %08x\n", *wirev);
     wirev++;
-    todo_wine
     ok(*wirev == next - buffer - 0x20, "wv[6] %08x\n", *wirev);
     wirev++;
-    todo_wine
     ok(*wirev == next - buffer - 0x20, "wv[7] %08x\n", *wirev);
     wirev++;
-    todo_wine
     ok(*wirev == 0x574f454d, "wv[8] %08x\n", *wirev);
     VariantInit(&v3);
     V_VT(&v3) = VT_UNKNOWN;
     V_UNKNOWN(&v3) = &heap_unknown->IUnknown_iface;
     IUnknown_AddRef(V_UNKNOWN(&v3));
     stubMsg.Buffer = buffer;
+todo_wine
+    ok(heap_unknown->refs == 3, "got refcount %d\n", heap_unknown->refs);
     next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v3);
     ok(V_VT(&v) == V_VT(&v3), "got vt %d expect %d\n", V_VT(&v), V_VT(&v3));
     ok(V_UNKNOWN(&v) == V_UNKNOWN(&v3), "got %p expect %p\n", V_UNKNOWN(&v), V_UNKNOWN(&v3));
@@ -1449,8 +1438,7 @@ static void test_marshal_VARIANT(void)
     memset(buffer, 0xcc, stubMsg.BufferLength);
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     wirev = (DWORD*)buffer;
-    check_variant_header(wirev, &v, next - buffer);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, next - buffer);
     ok(*wirev == 0, "wv[5] %08x\n", *wirev);
 
     VariantInit(&v2);
@@ -1471,28 +1459,26 @@ static void test_marshal_VARIANT(void)
     V_UNKNOWNREF(&v) = (IUnknown **)&heap_unknown;
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
-    ok(stubMsg.BufferLength > 36, "size %d\n", stubMsg.BufferLength);
+    ok(stubMsg.BufferLength >= 44, "size %d\n", stubMsg.BufferLength);
     buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     memset(buffer, 0xcc, stubMsg.BufferLength);
+    ok(heap_unknown->refs == 1, "got refcount %d\n", heap_unknown->refs);
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
+todo_wine
+    ok(heap_unknown->refs == 2, "got refcount %d\n", heap_unknown->refs);
     wirev = (DWORD*)buffer;
-    check_variant_header(wirev, &v, next - buffer);
-    wirev += 5;
+    wirev = check_variant_header(wirev, &v, next - buffer);
 
     ok(*wirev == 4, "wv[5] %08x\n", *wirev);
     wirev++;
-    todo_wine
     ok(*wirev == (DWORD_PTR)heap_unknown /* Win9x, Win2000 */ ||
        *wirev == (DWORD_PTR)heap_unknown + 1 /* XP */, "wv[6] %08x\n", *wirev);
     wirev++;
-    todo_wine
     ok(*wirev == next - buffer - 0x24, "wv[7] %08x\n", *wirev);
     wirev++;
-    todo_wine
     ok(*wirev == next - buffer - 0x24, "wv[8] %08x\n", *wirev);
     wirev++;
-    todo_wine
     ok(*wirev == 0x574f454d, "wv[9] %08x\n", *wirev);
 
     VariantInit(&v3);
@@ -1501,6 +1487,7 @@ static void test_marshal_VARIANT(void)
     IUnknown_AddRef(V_UNKNOWN(&v3));
     stubMsg.Buffer = buffer;
     next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v3);
+    ok(heap_unknown->refs == 2, "got refcount %d\n", heap_unknown->refs);
     ok(V_VT(&v) == V_VT(&v3), "got vt %d expect %d\n", V_VT(&v), V_VT(&v3));
     ok(*V_UNKNOWNREF(&v) == *V_UNKNOWNREF(&v3), "got %p expect %p\n", *V_UNKNOWNREF(&v), *V_UNKNOWNREF(&v3));
     VARIANT_UserFree(&umcb.Flags, &v3);

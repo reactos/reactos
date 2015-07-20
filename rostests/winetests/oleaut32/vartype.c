@@ -6323,6 +6323,11 @@ static void test_bstr_cache(void)
 
     static const WCHAR testW[] = {'t','e','s','t',0};
 
+    if (GetEnvironmentVariableA("OANOCACHE", NULL, 0)) {
+        skip("BSTR cache is disabled, some tests will be skipped.\n");
+        return;
+    }
+
     str = SysAllocString(testW);
     /* This should put the string into cache */
     SysFreeString(str);
@@ -6387,22 +6392,30 @@ static void test_recinfo(void)
 {
     static const WCHAR testW[] = {'t','e','s','t',0};
     static WCHAR teststructW[] = {'t','e','s','t','_','s','t','r','u','c','t',0};
+    static WCHAR teststruct2W[] = {'t','e','s','t','_','s','t','r','u','c','t','2',0};
+    static WCHAR teststruct3W[] = {'t','e','s','t','_','s','t','r','u','c','t','3',0};
+    WCHAR filenameW[MAX_PATH], filename2W[MAX_PATH];
+    ITypeInfo *typeinfo, *typeinfo2, *typeinfo3;
+    IRecordInfo *recinfo, *recinfo2, *recinfo3;
     struct test_struct teststruct, testcopy;
-    WCHAR filenameW[MAX_PATH];
+    ITypeLib *typelib, *typelib2;
     const char *filename;
-    IRecordInfo *recinfo;
-    ITypeInfo *typeinfo;
     DummyDispatch dispatch;
-    ITypeLib *typelib;
     TYPEATTR *attr;
     MEMBERID memid;
     UINT16 found;
     HRESULT hr;
     ULONG size;
+    BOOL ret;
 
     filename = create_test_typelib(2);
     MultiByteToWideChar(CP_ACP, 0, filename, -1, filenameW, MAX_PATH);
     hr = LoadTypeLibEx(filenameW, REGKIND_NONE, &typelib);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    filename = create_test_typelib(3);
+    MultiByteToWideChar(CP_ACP, 0, filename, -1, filename2W, MAX_PATH);
+    hr = LoadTypeLibEx(filename2W, REGKIND_NONE, &typelib2);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
     typeinfo = NULL;
@@ -6415,8 +6428,39 @@ static void test_recinfo(void)
     ok(IsEqualGUID(&attr->guid, &UUID_test_struct), "got %s\n", wine_dbgstr_guid(&attr->guid));
     ok(attr->typekind == TKIND_RECORD, "got %d\n", attr->typekind);
 
+    typeinfo2 = NULL;
+    found = 1;
+    hr = ITypeLib_FindName(typelib, teststruct2W, 0, &typeinfo2, &memid, &found);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(typeinfo2 != NULL, "got %p\n", typeinfo2);
+
+    typeinfo3 = NULL;
+    found = 1;
+    hr = ITypeLib_FindName(typelib2, teststruct3W, 0, &typeinfo3, &memid, &found);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(typeinfo3 != NULL, "got %p\n", typeinfo3);
+
     hr = GetRecordInfoFromTypeInfo(typeinfo, &recinfo);
     ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = GetRecordInfoFromTypeInfo(typeinfo2, &recinfo2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = GetRecordInfoFromTypeInfo(typeinfo3, &recinfo3);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    /* IsMatchingType, these two records only differ in GUIDs */
+    ret = IRecordInfo_IsMatchingType(recinfo, recinfo2);
+    ok(!ret, "got %d\n", ret);
+
+    /* these two have same GUIDs, but different set of fields */
+    ret = IRecordInfo_IsMatchingType(recinfo2, recinfo3);
+    ok(ret, "got %d\n", ret);
+
+    IRecordInfo_Release(recinfo3);
+    ITypeInfo_Release(typeinfo3);
+    IRecordInfo_Release(recinfo2);
+    ITypeInfo_Release(typeinfo2);
 
     size = 0;
     hr = IRecordInfo_GetSize(recinfo, &size);
@@ -6476,7 +6520,8 @@ static void test_recinfo(void)
 
     ITypeInfo_Release(typeinfo);
     ITypeLib_Release(typelib);
-    DeleteFileA(filename);
+    DeleteFileW(filenameW);
+    DeleteFileW(filename2W);
 }
 
 START_TEST(vartype)
