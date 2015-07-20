@@ -448,34 +448,6 @@ SCardListReaderGroupsW(SCARDCONTEXT hContext,
  */
 LONG
 WINAPI
-SCardListReadersA(SCARDCONTEXT Context,
-                  LPCSTR mszGroups,
-                  LPSTR mszReaders,
-                  LPDWORD pcchReaders)
-{
-  UNIMPLEMENTED;
-  return SCARD_F_UNKNOWN_ERROR;
-}
-
-/*
- * @unimplemented
- */
-LONG
-WINAPI
-SCardListReadersW(SCARDCONTEXT Context,
-                  LPCWSTR mszGroups,
-                  LPWSTR mszReaders,
-                  LPDWORD pcchReaders)
-{
-  UNIMPLEMENTED;
-  return SCARD_F_UNKNOWN_ERROR;
-}
-
-/*
- * @unimplemented
- */
-LONG
-WINAPI
 SCardLocateCardsA(SCARDCONTEXT hContext,
                   LPCSTR mszCards,
                   LPSCARD_READERSTATEA rgReaderStates,
