@@ -226,6 +226,7 @@ static HRESULT STDMETHODCALLTYPE dxgi_factory_CreateSwapChain(IDXGIFactory1 *ifa
     wined3d_desc.flags = 0; /* WINED3DPRESENTFLAG_DISCARD_DEPTHSTENCIL? */
     wined3d_desc.refresh_rate = dxgi_rational_to_uint(&desc->BufferDesc.RefreshRate);
     wined3d_desc.swap_interval = WINED3DPRESENT_INTERVAL_DEFAULT;
+    wined3d_desc.auto_restore_display_mode = TRUE;
 
     hr = IWineDXGIDevice_create_swapchain(dxgi_device, &wined3d_desc, &wined3d_swapchain);
     IWineDXGIDevice_Release(dxgi_device);
