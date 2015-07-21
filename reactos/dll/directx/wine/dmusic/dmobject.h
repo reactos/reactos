@@ -1,5 +1,6 @@
 /*
  * Base IDirectMusicObject Implementation
+ * Keep in sync with the master in dlls/dmusic/dmobject.h
  *
  * Copyright (C) 2014 Michael Stefaniuc
  *
@@ -44,6 +45,7 @@ HRESULT WINAPI dmobj_IPersistStream_QueryInterface(IPersistStream *iface, REFIID
         void **ret_iface) DECLSPEC_HIDDEN;
 ULONG WINAPI dmobj_IPersistStream_AddRef(IPersistStream *iface) DECLSPEC_HIDDEN;
 ULONG WINAPI dmobj_IPersistStream_Release(IPersistStream *iface) DECLSPEC_HIDDEN;
+HRESULT WINAPI dmobj_IPersistStream_GetClassID(IPersistStream *iface, CLSID *class) DECLSPEC_HIDDEN;
 
 /* IPersistStream methods not implemented in native */
 HRESULT WINAPI unimpl_IPersistStream_GetClassID(IPersistStream *iface,

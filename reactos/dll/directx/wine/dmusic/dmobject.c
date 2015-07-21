@@ -1,5 +1,6 @@
 /*
  * Base IDirectMusicObject Implementation
+ * Keep in sync with the master in dlls/dmusic/dmobject.c
  *
  * Copyright (C) 2003-2004 Rok Mandeljc
  * Copyright (C) 2014 Michael Stefaniuc
@@ -126,6 +127,20 @@ ULONG WINAPI dmobj_IPersistStream_Release(IPersistStream *iface)
 {
     struct dmobject *This = impl_from_IPersistStream(iface);
     return IUnknown_Release(This->outer_unk);
+}
+
+HRESULT WINAPI dmobj_IPersistStream_GetClassID(IPersistStream *iface, CLSID *class)
+{
+    struct dmobject *This = impl_from_IPersistStream(iface);
+
+    TRACE("(%p, %p)\n", This, class);
+
+    if (!class)
+        return E_POINTER;
+
+    *class = This->desc.guidClass;
+
+    return S_OK;
 }
 
 /* IPersistStream methods not implemented in native */

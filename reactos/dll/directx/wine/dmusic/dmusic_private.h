@@ -252,10 +252,6 @@ static inline void DMUSIC_UnlockModule(void) { InterlockedDecrement( &DMUSIC_ref
 /*****************************************************************************
  * Misc.
  */
-/* my custom ICOM stuff */
-#define ICOM_NAME_MULTI(impl,field,iface,name)  impl* const name=(impl*)((char*)(iface) - offsetof(impl,field))
-#define ICOM_THIS_MULTI(impl,field,iface) ICOM_NAME_MULTI(impl,field,iface,This)
- 
 /* for simpler reading */
 typedef struct _DMUS_PRIVATE_CHUNK {
 	FOURCC fccID; /* FOURCC ID of the chunk */
