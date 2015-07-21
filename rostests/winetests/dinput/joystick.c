@@ -540,7 +540,6 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
             dip_gain_set.diph.dwHeaderSize = sizeof(DIPROPHEADER);
             dip_gain_set.diph.dwObj        = 0;
             dip_gain_set.diph.dwHow        = DIPH_DEVICE;
-            dip_gain_set.dwData            = 10000;
             dip_gain_get.diph.dwSize       = sizeof(DIPROPDWORD);
             dip_gain_get.diph.dwHeaderSize = sizeof(DIPROPHEADER);
             dip_gain_get.diph.dwObj        = 0;
