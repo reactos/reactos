@@ -425,6 +425,8 @@ HRESULT WINAPI D3DXCreateEffectCompilerFromResourceW(HMODULE srcmodule, const WC
         ID3DXEffectCompiler **effectcompiler, ID3DXBuffer **parseerrors);
 #define D3DXCreateEffectCompilerFromResource WINELIB_NAME_AW(D3DXCreateEffectCompilerFromResource)
 
+HRESULT WINAPI D3DXDisassembleEffect(ID3DXEffect *effect, BOOL enable_color_code, ID3DXBuffer **disassembly);
+
 #ifdef __cplusplus
 }
 #endif
