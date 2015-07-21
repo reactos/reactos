@@ -237,6 +237,8 @@ static ULONG WINAPI MediaStreamFilterImpl_Release(IMediaStreamFilter *iface)
             IMediaStream_Release(This->streams[i]);
             IPin_Release(This->pins[i]);
         }
+        CoTaskMemFree(This->streams);
+        CoTaskMemFree(This->pins);
         BaseFilter_Destroy(&This->filter);
         HeapFree(GetProcessHeap(), 0, This);
     }

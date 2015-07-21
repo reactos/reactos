@@ -23,7 +23,6 @@
 #include <rpcproxy.h>
 
 static HINSTANCE instance;
-static DWORD dll_ref = 0;
 
 /* For the moment, do nothing here. */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
@@ -189,7 +188,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    return dll_ref != 0 ? S_FALSE : S_OK;
+    return S_FALSE;
 }
 
 /***********************************************************************

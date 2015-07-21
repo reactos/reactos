@@ -27,10 +27,10 @@ typedef struct {
     IGraphBuilder* pFilterGraph;
     IMediaSeeking* media_seeking;
     IMediaControl* media_control;
-    IBaseFilter* media_stream_filter;
+    IMediaStreamFilter *media_stream_filter;
     IPin* ipin;
     ULONG nbStreams;
-    IMediaStream** pStreams;
+    IAMMediaStream **pStreams;
     STREAM_TYPE StreamType;
     OAEVENT event;
 } IAMMultiMediaStreamImpl;
@@ -104,11 +104,12 @@ static ULONG WINAPI IAMMultiMediaStreamImpl_Release(IAMMultiMediaStream* iface)
     if (!ref)
     {
         for(i = 0; i < This->nbStreams; i++)
-            IMediaStream_Release(This->pStreams[i]);
+            IAMMediaStream_Release(This->pStreams[i]);
+        CoTaskMemFree(This->pStreams);
         if (This->ipin)
             IPin_Release(This->ipin);
         if (This->media_stream_filter)
-            IBaseFilter_Release(This->media_stream_filter);
+            IMediaStreamFilter_Release(This->media_stream_filter);
         if (This->media_seeking)
             IMediaSeeking_Release(This->media_seeking);
         if (This->media_control)
@@ -141,10 +142,10 @@ static HRESULT WINAPI IAMMultiMediaStreamImpl_GetMediaStream(IAMMultiMediaStream
 
     for (i = 0; i < This->nbStreams; i++)
     {
-        IMediaStream_GetInformation(This->pStreams[i], &PurposeId, NULL);
+        IAMMediaStream_GetInformation(This->pStreams[i], &PurposeId, NULL);
         if (IsEqualIID(&PurposeId, idPurpose))
         {
-            *ppMediaStream = This->pStreams[i];
+            *ppMediaStream = (IMediaStream*)This->pStreams[i];
             IMediaStream_AddRef(*ppMediaStream);
             return S_OK;
         }
@@ -246,11 +247,11 @@ static HRESULT WINAPI IAMMultiMediaStreamImpl_Initialize(IAMMultiMediaStream* if
         This->StreamType = StreamType;
         hr = IGraphBuilder_QueryInterface(This->pFilterGraph, &IID_IMediaSeeking, (void**)&This->media_seeking);
         if (SUCCEEDED(hr))
-            IGraphBuilder_QueryInterface(This->pFilterGraph, &IID_IMediaControl, (void**)&This->media_control);
+            hr = IGraphBuilder_QueryInterface(This->pFilterGraph, &IID_IMediaControl, (void**)&This->media_control);
         if (SUCCEEDED(hr))
-            hr = CoCreateInstance(&CLSID_MediaStreamFilter, NULL, CLSCTX_INPROC_SERVER, &IID_IBaseFilter, (LPVOID*)&This->media_stream_filter);
+            hr = CoCreateInstance(&CLSID_MediaStreamFilter, NULL, CLSCTX_INPROC_SERVER, &IID_IMediaStreamFilter, (void**)&This->media_stream_filter);
         if (SUCCEEDED(hr))
-            IGraphBuilder_AddFilter(This->pFilterGraph, This->media_stream_filter, filternameW);
+            hr = IGraphBuilder_AddFilter(This->pFilterGraph, (IBaseFilter*)This->media_stream_filter, filternameW);
         if (SUCCEEDED(hr))
         {
             IMediaEventEx* media_event = NULL;
@@ -267,7 +268,7 @@ static HRESULT WINAPI IAMMultiMediaStreamImpl_Initialize(IAMMultiMediaStream* if
     if (FAILED(hr))
     {
         if (This->media_stream_filter)
-            IBaseFilter_Release(This->media_stream_filter);
+            IMediaStreamFilter_Release(This->media_stream_filter);
         This->media_stream_filter = NULL;
         if (This->media_seeking)
             IMediaSeeking_Release(This->media_seeking);
@@ -303,19 +304,17 @@ static HRESULT WINAPI IAMMultiMediaStreamImpl_GetFilterGraph(IAMMultiMediaStream
 static HRESULT WINAPI IAMMultiMediaStreamImpl_GetFilter(IAMMultiMediaStream* iface, IMediaStreamFilter** ppFilter)
 {
     IAMMultiMediaStreamImpl *This = impl_from_IAMMultiMediaStream(iface);
-    HRESULT hr = S_OK;
 
     TRACE("(%p/%p)->(%p)\n", This, iface, ppFilter);
 
     if (!ppFilter)
         return E_POINTER;
 
-    *ppFilter = NULL;
+    *ppFilter = This->media_stream_filter;
+    if (*ppFilter)
+        IMediaStreamFilter_AddRef(*ppFilter);
 
-    if (This->media_stream_filter)
-        hr = IBaseFilter_QueryInterface(This->media_stream_filter, &IID_IMediaStreamFilter, (LPVOID*)ppFilter);
-
-    return hr;
+    return S_OK;
 }
 
 static HRESULT WINAPI IAMMultiMediaStreamImpl_AddMediaStream(IAMMultiMediaStream* iface, IUnknown* stream_object, const MSPID* PurposeId,
@@ -323,8 +322,8 @@ static HRESULT WINAPI IAMMultiMediaStreamImpl_AddMediaStream(IAMMultiMediaStream
 {
     IAMMultiMediaStreamImpl *This = impl_from_IAMMultiMediaStream(iface);
     HRESULT hr;
-    IMediaStream* pStream;
-    IMediaStream** pNewStreams;
+    IAMMediaStream* pStream;
+    IAMMediaStream** pNewStreams;
 
     TRACE("(%p/%p)->(%p,%s,%x,%p)\n", This, iface, stream_object, debugstr_guid(PurposeId), dwFlags, ppNewStream);
 
@@ -364,10 +363,10 @@ static HRESULT WINAPI IAMMultiMediaStreamImpl_AddMediaStream(IAMMultiMediaStream
         hr = audiomediastream_create((IMultiMediaStream*)iface, PurposeId, This->StreamType, &pStream);
     if (SUCCEEDED(hr))
     {
-        pNewStreams = CoTaskMemRealloc(This->pStreams, (This->nbStreams+1) * sizeof(IMediaStream*));
+        pNewStreams = CoTaskMemRealloc(This->pStreams, (This->nbStreams+1) * sizeof(IAMMediaStream*));
         if (!pNewStreams)
         {
-            IMediaStream_Release(pStream);
+            IAMMediaStream_Release(pStream);
             return E_OUTOFMEMORY;
         }
         This->pStreams = pNewStreams;
@@ -375,13 +374,13 @@ static HRESULT WINAPI IAMMultiMediaStreamImpl_AddMediaStream(IAMMultiMediaStream
         This->nbStreams++;
 
         if (ppNewStream)
-            *ppNewStream = pStream;
+            *ppNewStream = (IMediaStream*)pStream;
     }
 
     if (SUCCEEDED(hr))
     {
         /* Add stream to the media stream filter */
-        IMediaStreamFilter_AddMediaStream((IMediaStreamFilter*)This->media_stream_filter, (IAMMediaStream*)pStream);
+        IMediaStreamFilter_AddMediaStream(This->media_stream_filter, pStream);
     }
 
     return hr;
