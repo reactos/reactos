@@ -141,25 +141,26 @@ Cleanup:
 DWORD
 GetPortNameWithoutColon(PCWSTR pwszPortName, PWSTR* ppwszPortNameWithoutColon)
 {
-    DWORD cchPortName;
+    DWORD cchPortNameWithoutColon;
 
     // Compute the string length of pwszPortNameWithoutColon.
-    cchPortName = wcslen(pwszPortName) - 1;
+    cchPortNameWithoutColon = wcslen(pwszPortName) - 1;
 
     // Check if pwszPortName really has a colon as the last character.
-    if (pwszPortName[cchPortName] != L':')
+    if (pwszPortName[cchPortNameWithoutColon] != L':')
         return ERROR_INVALID_PARAMETER;
 
-    // It has, so allocate a buffer and copy the port name without colon into it.
-    *ppwszPortNameWithoutColon = DllAllocSplMem((cchPortName + 1) * sizeof(WCHAR));
+    // Allocate the output buffer.
+    *ppwszPortNameWithoutColon = DllAllocSplMem((cchPortNameWithoutColon + 1) * sizeof(WCHAR));
     if (!*ppwszPortNameWithoutColon)
     {
         ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    CopyMemory(*ppwszPortNameWithoutColon, pwszPortName, cchPortName * sizeof(WCHAR));
-    *ppwszPortNameWithoutColon[cchPortName] = 0;
+    // Copy the port name without colon into the buffer.
+    // The buffer is already zero-initialized, so no additional null-termination is necessary.
+    CopyMemory(*ppwszPortNameWithoutColon, pwszPortName, cchPortNameWithoutColon * sizeof(WCHAR));
 
     return ERROR_SUCCESS;
 }

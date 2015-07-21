@@ -579,9 +579,9 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     if (cchFirstParameter)
     {
         // Yes, extract it.
+        // No null-termination is necessary here, because DllAllocSplMem returns a zero-initialized buffer.
         pwszFirstParameter = DllAllocSplMem((cchFirstParameter + 1) * sizeof(WCHAR));
         CopyMemory(pwszFirstParameter, lpPrinterName, cchFirstParameter * sizeof(WCHAR));
-        pwszFirstParameter[cchFirstParameter] = 0;
     }
 
     // Do we have a second parameter?
