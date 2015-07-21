@@ -18,6 +18,7 @@
 #include "memory.h"
 
 #include "bios.h"
+#include "bios32/vbe.h"
 // #include "vidbios.h"
 
 #include "io.h"
@@ -1953,6 +1954,7 @@ static CONST VGA_MODE VideoModes[BIOS_MAX_VIDEO_MODE + 1] =
     (((ModeNumber) >= 0x00 && (ModeNumber) <= 0x03) || ((ModeNumber) == 0x07))
 
 static PVGA_STATIC_FUNC_TABLE VgaStaticFuncTable;
+static BOOLEAN VbeInitialized = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -3816,6 +3818,13 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             break;
         }
 
+        /* VESA BIOS Extensions */
+        case 0x4F:
+        {
+            if (VbeInitialized) VbeService(Stack);
+            break;
+        }
+
         default:
         {
             DPRINT1("BIOS Function INT 10h, AH = 0x%02X, AL = 0x%02X, BH = 0x%02X NOT IMPLEMENTED\n",
@@ -3908,6 +3917,10 @@ BOOLEAN VidBiosInitialize(VOID)
 
     /* Register the BIOS support BOPs */
     RegisterBop(BOP_VIDEO_INT, VidBiosVideoService);
+
+    /* Initialize VBE */
+    VbeInitialized = VbeInitialize();
+    if (!VbeInitialized) DPRINT1("Couldn't initialize VBE!\n");
 
     return TRUE;
 }
