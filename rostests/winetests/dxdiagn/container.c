@@ -701,6 +701,7 @@ static void test_GetProp(void)
     IDxDiagContainer_AddRef(child);
     ref = IDxDiagContainer_Release(child);
     ok(ref == 2, "Expected reference count to be 2, got %u\n", ref);
+    IDxDiagContainer_Release(child);
 
     IDxDiagContainer_Release(child);
 cleanup:
@@ -1010,6 +1011,7 @@ static void test_DxDiag_DisplayDevices(void)
             trace("Testing container %s\n", wine_dbgstr_w(child_container));
             test_container_properties(child, property_tests, sizeof(property_tests)/sizeof(property_tests[0]));
         }
+        IDxDiagContainer_Release(child);
     }
 
 cleanup:
