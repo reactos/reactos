@@ -25,7 +25,11 @@
 #include <shlobj.h>
 
 static const WCHAR about_blank[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
+#ifdef __REACTOS__
+static const WCHAR default_home[] = {'h','t','t','p',':','/','/','w','w','w','.','r','e','a','c','t','o','s','.','o','r','g',0};
+#else
 static const WCHAR default_home[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g',0};
+#endif
 static const WCHAR start_page[] = {'S','t','a','r','t',' ','P','a','g','e',0};
 static const WCHAR reg_ie_main[] = {'S','o','f','t','w','a','r','e','\\',
                                     'M','i','c','r','o','s','o','f','t','\\',
