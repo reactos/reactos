@@ -43,6 +43,7 @@
 @ cdecl wined3d_device_draw_indexed_primitive(ptr long long)
 @ cdecl wined3d_device_draw_indexed_primitive_instanced(ptr long long long long)
 @ cdecl wined3d_device_draw_primitive(ptr long long)
+@ cdecl wined3d_device_draw_primitive_instanced(ptr long long long long)
 @ cdecl wined3d_device_end_scene(ptr)
 @ cdecl wined3d_device_end_stateblock(ptr ptr)
 @ cdecl wined3d_device_evict_managed_resources(ptr)
@@ -181,6 +182,7 @@
 
 @ cdecl wined3d_resource_get_desc(ptr ptr)
 @ cdecl wined3d_resource_get_parent(ptr)
+@ cdecl wined3d_resource_get_pitch(ptr ptr ptr)
 @ cdecl wined3d_resource_get_priority(ptr)
 @ cdecl wined3d_resource_set_parent(ptr ptr)
 @ cdecl wined3d_resource_set_priority(ptr long)
@@ -228,7 +230,6 @@
 @ cdecl wined3d_surface_get_flip_status(ptr long)
 @ cdecl wined3d_surface_get_overlay_position(ptr ptr ptr)
 @ cdecl wined3d_surface_get_parent(ptr)
-@ cdecl wined3d_surface_get_pitch(ptr)
 @ cdecl wined3d_surface_get_render_target_data(ptr ptr)
 @ cdecl wined3d_surface_get_resource(ptr)
 @ cdecl wined3d_surface_getdc(ptr ptr)

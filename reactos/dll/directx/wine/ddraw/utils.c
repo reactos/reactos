@@ -294,18 +294,8 @@ void ddrawformat_from_wined3dformat(DDPIXELFORMAT *DDPixelFormat, enum wined3d_f
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
             break;
 
-        case WINED3DFMT_R16G16_SNORM:
-            DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
-            DDPixelFormat->dwFourCC = 0;
-            DDPixelFormat->u1.dwBumpBitCount = 32;
-            DDPixelFormat->u2.dwBumpDuBitMask =         0x0000ffff;
-            DDPixelFormat->u3.dwBumpDvBitMask =         0xffff0000;
-            DDPixelFormat->u4.dwBumpLuminanceBitMask =  0x00000000;
-            DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
-            break;
-
         case WINED3DFMT_R5G5_SNORM_L6_UNORM:
-            DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
+            DDPixelFormat->dwFlags = DDPF_BUMPDUDV | DDPF_BUMPLUMINANCE;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwBumpBitCount = 16;
             DDPixelFormat->u2.dwBumpDuBitMask =         0x0000001f;
@@ -315,7 +305,7 @@ void ddrawformat_from_wined3dformat(DDPIXELFORMAT *DDPixelFormat, enum wined3d_f
             break;
 
         case WINED3DFMT_R8G8_SNORM_L8X8_UNORM:
-            DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
+            DDPixelFormat->dwFlags = DDPF_BUMPDUDV | DDPF_BUMPLUMINANCE;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwBumpBitCount = 32;
             DDPixelFormat->u2.dwBumpDuBitMask =         0x000000ff;
@@ -545,13 +535,6 @@ enum wined3d_format_id wined3dformat_from_ddrawformat(const DDPIXELFORMAT *DDPix
             (DDPixelFormat->u4.dwBumpLuminanceBitMask == 0x00000000) )
         {
             return WINED3DFMT_R8G8_SNORM;
-        }
-        else if ( (DDPixelFormat->u1.dwBumpBitCount         == 32        ) &&
-                  (DDPixelFormat->u2.dwBumpDuBitMask        == 0x0000ffff) &&
-                  (DDPixelFormat->u3.dwBumpDvBitMask        == 0xffff0000) &&
-                  (DDPixelFormat->u4.dwBumpLuminanceBitMask == 0x00000000) )
-        {
-            return WINED3DFMT_R16G16_SNORM;
         }
         else if ( (DDPixelFormat->u1.dwBumpBitCount         == 16        ) &&
                   (DDPixelFormat->u2.dwBumpDuBitMask        == 0x0000001f) &&

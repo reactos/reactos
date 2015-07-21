@@ -2,8 +2,6 @@
  * Copyright (c) 1998 Lionel ULMER
  * Copyright (c) 2006-2007 Stefan DÖSINGER
  *
- * This file contains the implementation of Direct3DViewport2.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -669,8 +667,8 @@ static HRESULT WINAPI d3d_viewport_Clear(IDirect3DViewport3 *iface,
                     This->background->mat.u.diffuse.u4.a);
     }
 
-    /* Need to temporarily activate viewport to clear it. Previously active one will be restored
-        afterwards. */
+    /* Need to temporarily activate the viewport to clear it. The previously
+     * active one will be restored afterwards. */
     viewport_activate(This, TRUE);
 
     hr = IDirect3DDevice7_Clear(&This->active_device->IDirect3DDevice7_iface, rect_count, rects,
@@ -737,8 +735,12 @@ static HRESULT WINAPI d3d_viewport_AddLight(IDirect3DViewport3 *iface, IDirect3D
     light_impl->active_viewport = This;
 
     /* If active, activate the light */
-    if (This->active_device)
+    if (This->active_device && light_impl->light.dwFlags & D3DLIGHT_ACTIVE)
+    {
+        /* Disable the flag so that light_activate actually does its job. */
+        light_impl->light.dwFlags &= ~D3DLIGHT_ACTIVE;
         light_activate(light_impl);
+    }
 
     wined3d_mutex_unlock();
 

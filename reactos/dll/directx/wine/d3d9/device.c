@@ -623,19 +623,26 @@ static HRESULT CDECL reset_enum_callback(struct wined3d_resource *resource)
     return D3D_OK;
 }
 
-static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Reset(IDirect3DDevice9Ex *iface,
-        D3DPRESENT_PARAMETERS *present_parameters)
+static HRESULT d3d9_device_reset(struct d3d9_device *device,
+        D3DPRESENT_PARAMETERS *present_parameters, D3DDISPLAYMODEEX *mode)
 {
-    struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
     struct wined3d_swapchain_desc swapchain_desc;
+    struct wined3d_display_mode wined3d_mode;
     HRESULT hr;
-
-    TRACE("iface %p, present_parameters %p.\n", iface, present_parameters);
 
     if (!device->d3d_parent->extended && device->device_state == D3D9_DEVICE_STATE_LOST)
     {
         WARN("App not active, returning D3DERR_DEVICELOST.\n");
         return D3DERR_DEVICELOST;
+    }
+
+    if (mode)
+    {
+        wined3d_mode.width = mode->Width;
+        wined3d_mode.height = mode->Height;
+        wined3d_mode.refresh_rate = mode->RefreshRate;
+        wined3d_mode.format_id = wined3dformat_from_d3dformat(mode->Format);
+        wined3d_mode.scanline_ordering = mode->ScanLineOrdering;
     }
 
     wined3d_mutex_lock();
@@ -646,6 +653,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Reset(IDirect3DDevice9Ex *if
         device->vertex_buffer = NULL;
         device->vertex_buffer_size = 0;
     }
+
     if (device->index_buffer)
     {
         wined3d_buffer_decref(device->index_buffer);
@@ -654,15 +662,38 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Reset(IDirect3DDevice9Ex *if
     }
 
     wined3d_swapchain_desc_from_present_parameters(&swapchain_desc, present_parameters);
-    hr = wined3d_device_reset(device->wined3d_device, &swapchain_desc,
-            NULL, reset_enum_callback, !device->d3d_parent->extended);
-    if (FAILED(hr) && !device->d3d_parent->extended)
-        device->device_state = D3D9_DEVICE_STATE_NOT_RESET;
-    else
+    if (SUCCEEDED(hr = wined3d_device_reset(device->wined3d_device, &swapchain_desc,
+            mode ? &wined3d_mode : NULL, reset_enum_callback, !device->d3d_parent->extended)))
+    {
+        struct wined3d_swapchain *wined3d_swapchain;
+
+        wined3d_swapchain = wined3d_device_get_swapchain(device->wined3d_device, 0);
+        wined3d_swapchain_get_desc(wined3d_swapchain, &swapchain_desc);
+        present_parameters->BackBufferWidth = swapchain_desc.backbuffer_width;
+        present_parameters->BackBufferHeight = swapchain_desc.backbuffer_height;
+        present_parameters->BackBufferFormat = d3dformat_from_wined3dformat(swapchain_desc.backbuffer_format);
+        present_parameters->BackBufferCount = swapchain_desc.backbuffer_count;
+
         device->device_state = D3D9_DEVICE_STATE_OK;
+    }
+    else if (!device->d3d_parent->extended)
+    {
+        device->device_state = D3D9_DEVICE_STATE_NOT_RESET;
+    }
+
     wined3d_mutex_unlock();
 
     return hr;
+}
+
+static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Reset(IDirect3DDevice9Ex *iface,
+        D3DPRESENT_PARAMETERS *present_parameters)
+{
+    struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
+
+    TRACE("iface %p, present_parameters %p.\n", iface, present_parameters);
+
+    return d3d9_device_reset(device, present_parameters, NULL);
 }
 
 static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Present(IDirect3DDevice9Ex *iface,
@@ -1284,18 +1315,22 @@ static HRESULT WINAPI d3d9_device_ColorFill(IDirect3DDevice9Ex *iface,
     wined3d_resource = wined3d_surface_get_resource(surface_impl->wined3d_surface);
     wined3d_resource_get_desc(wined3d_resource, &desc);
 
-    /* This method is only allowed with surfaces that are render targets, or
-     * offscreen plain surfaces in D3DPOOL_DEFAULT. */
-    if (!(desc.usage & WINED3DUSAGE_RENDERTARGET) && desc.pool != WINED3D_POOL_DEFAULT)
+    if (desc.pool != WINED3D_POOL_DEFAULT)
     {
         wined3d_mutex_unlock();
-        WARN("Surface is not a render target, or not a stand-alone D3DPOOL_DEFAULT surface\n");
+        WARN("Colorfill is not allowed on surfaces in pool %#x, returning D3DERR_INVALIDCALL.\n", desc.pool);
         return D3DERR_INVALIDCALL;
     }
-
-    if (desc.pool != WINED3D_POOL_DEFAULT && desc.pool != WINED3D_POOL_SYSTEM_MEM)
+    if ((desc.usage & (WINED3DUSAGE_RENDERTARGET | WINED3DUSAGE_TEXTURE)) == WINED3DUSAGE_TEXTURE)
     {
-        WARN("Color-fill not allowed on surfaces in pool %#x.\n", desc.pool);
+        wined3d_mutex_unlock();
+        WARN("Colorfill is not allowed on non-RT textures, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+    if (desc.usage & WINED3DUSAGE_DEPTHSTENCIL)
+    {
+        wined3d_mutex_unlock();
+        WARN("Colorfill is not allowed on depth stencil surfaces, returning D3DERR_INVALIDCALL.\n");
         return D3DERR_INVALIDCALL;
     }
 
@@ -3246,42 +3281,10 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_ResetEx(IDirect3DDevice9Ex *
         D3DPRESENT_PARAMETERS *present_parameters, D3DDISPLAYMODEEX *mode)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
-    struct wined3d_swapchain_desc swapchain_desc;
-    struct wined3d_display_mode wined3d_mode;
-    HRESULT hr;
 
     TRACE("iface %p, present_parameters %p, mode %p.\n", iface, present_parameters, mode);
 
-    if (mode)
-    {
-        wined3d_mode.width = mode->Width;
-        wined3d_mode.height = mode->Height;
-        wined3d_mode.refresh_rate = mode->RefreshRate;
-        wined3d_mode.format_id = wined3dformat_from_d3dformat(mode->Format);
-        wined3d_mode.scanline_ordering = mode->ScanLineOrdering;
-    }
-
-    wined3d_mutex_lock();
-
-    if (device->vertex_buffer)
-    {
-        wined3d_buffer_decref(device->vertex_buffer);
-        device->vertex_buffer = NULL;
-        device->vertex_buffer_size = 0;
-    }
-    if (device->index_buffer)
-    {
-        wined3d_buffer_decref(device->index_buffer);
-        device->index_buffer = NULL;
-        device->index_buffer_size = 0;
-    }
-
-    wined3d_swapchain_desc_from_present_parameters(&swapchain_desc, present_parameters);
-    hr = wined3d_device_reset(device->wined3d_device, &swapchain_desc,
-            mode ? &wined3d_mode : NULL, reset_enum_callback, FALSE);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d9_device_reset(device, present_parameters, mode);
 }
 
 static HRESULT WINAPI d3d9_device_GetDisplayModeEx(IDirect3DDevice9Ex *iface,

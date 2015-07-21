@@ -657,6 +657,7 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
     if (SUCCEEDED(hr = wined3d_device_reset(device->wined3d_device, &swapchain_desc,
             NULL, reset_enum_callback, TRUE)))
     {
+        present_parameters->BackBufferCount = swapchain_desc.backbuffer_count;
         wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_POINTSIZE_MIN, 0);
         device->device_state = D3D8_DEVICE_STATE_OK;
     }
@@ -1170,6 +1171,14 @@ static HRESULT WINAPI d3d8_device_SetRenderTarget(IDirect3DDevice8 *iface,
             WARN("Depth stencil is smaller than the render target, returning D3DERR_INVALIDCALL\n");
             wined3d_mutex_unlock();
             return D3DERR_INVALIDCALL;
+        }
+        if (ds_desc.multisample_type != rt_desc.multisample_type
+                || ds_desc.multisample_quality != rt_desc.multisample_quality)
+        {
+            WARN("Multisample settings do not match, returing D3DERR_INVALIDCALL\n");
+            wined3d_mutex_unlock();
+            return D3DERR_INVALIDCALL;
+
         }
     }
 

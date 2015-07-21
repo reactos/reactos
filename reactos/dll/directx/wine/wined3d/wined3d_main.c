@@ -70,10 +70,12 @@ static CRITICAL_SECTION wined3d_wndproc_cs = {&wined3d_wndproc_cs_debug, -1, 0, 
  * where appropriate. */
 struct wined3d_settings wined3d_settings =
 {
+    MAKEDWORD_VERSION(1, 0), /* Default to legacy OpenGL */
     TRUE,           /* Use of GLSL enabled by default */
     ORM_FBO,        /* Use FBOs to do offscreen rendering */
     PCI_VENDOR_NONE,/* PCI Vendor ID */
     PCI_DEVICE_NONE,/* PCI Device ID */
+    0,              /* Multisampling AA Quality Levels */
     0,              /* The default of memory is set in init_driver_info */
     NULL,           /* No wine logo by default */
     TRUE,           /* Multisampling enabled by default. */
@@ -83,6 +85,10 @@ struct wined3d_settings wined3d_settings =
     ~0U,            /* No GS shader model limit by default. */
     ~0U,            /* No PS shader model limit by default. */
     FALSE,          /* 3D support enabled by default. */
+#if defined(STAGING_CSMT)
+    TRUE,           /* Multithreaded CS by default. */
+    FALSE,          /* Do not ignore render target maps. */
+#endif /* STAGING_CSMT */
 };
 
 struct wined3d * CDECL wined3d_create(DWORD flags)
@@ -197,6 +203,15 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 
     if (hkey || appkey)
     {
+        if (!get_config_key_dword(hkey, appkey, "MaxVersionGL", &tmpvalue))
+        {
+            if (tmpvalue != wined3d_settings.max_gl_version)
+            {
+                ERR_(winediag)("Setting maximum allowed wined3d GL version to %u.%u.\n",
+                        tmpvalue >> 16, tmpvalue & 0xffff);
+                wined3d_settings.max_gl_version = tmpvalue;
+            }
+        }
         if ( !get_config_key( hkey, appkey, "UseGLSL", buffer, size) )
         {
             if (!strcmp(buffer,"disabled"))
@@ -248,6 +263,17 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
                 TRACE("Using PCI Vendor ID %04x\n", pci_vendor_id);
                 wined3d_settings.pci_vendor_id = pci_vendor_id;
             }
+        }
+        if (!get_config_key( hkey, appkey, "MultisamplingAAQualityLevels", buffer, size ))
+        {
+            int quality_levels = atoi(buffer);
+            if(quality_levels > 0)
+            {
+                wined3d_settings.msaa_quality_levels = quality_levels;
+                TRACE("Setting MultisamplingAAQualityLevels to %i\n", quality_levels);
+            }
+            else
+                ERR("MultisamplingAAQualityLevels is %i but must be >0\n", quality_levels);
         }
         if ( !get_config_key( hkey, appkey, "VideoMemorySize", buffer, size) )
         {
@@ -302,7 +328,26 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             TRACE("Disabling 3D support.\n");
             wined3d_settings.no_3d = TRUE;
         }
+#if defined(STAGING_CSMT)
+        if (!get_config_key(hkey, appkey, "CSMT", buffer, size)
+                && !strcmp(buffer,"disabled"))
+        {
+            TRACE("Disabling multithreaded command stream.\n");
+            wined3d_settings.cs_multithreaded = FALSE;
+        }
+        if (!get_config_key(hkey, appkey, "ignore_rt_map", buffer, size)
+                && !strcmp(buffer,"enabled"))
+        {
+            TRACE("Ignoring render target maps.\n");
+            wined3d_settings.ignore_rt_map = TRUE;
+        }
     }
+
+    FIXME_(winediag)("Experimental wined3d CSMT feature is currently %s.\n",
+        wined3d_settings.cs_multithreaded ? "enabled" : "disabled");
+#else  /* STAGING_CSMT */
+    }
+#endif /* STAGING_CSMT */
 
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );

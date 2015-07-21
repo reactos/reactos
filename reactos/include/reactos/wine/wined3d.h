@@ -76,8 +76,8 @@ enum wined3d_light_type
     WINED3D_LIGHT_POINT                     = 1,
     WINED3D_LIGHT_SPOT                      = 2,
     WINED3D_LIGHT_DIRECTIONAL               = 3,
-    WINED3D_LIGHT_PARALLELPOINT             = 4, /* D3D7 */
-    WINED3D_LIGHT_GLSPOT                    = 5, /* D3D7 */
+    WINED3D_LIGHT_PARALLELPOINT             = 4, /* < D3D7 */
+    WINED3D_LIGHT_GLSPOT                    = 5, /* < D3D5, not actually usable */
 };
 
 enum wined3d_primitive_type
@@ -767,6 +767,9 @@ enum wined3d_decl_usage
 
 enum wined3d_sysval_semantic
 {
+    WINED3D_SV_POSITION = 1,
+    WINED3D_SV_INSTANCEID = 8,
+
     WINED3D_SV_DEPTH = 0xffffffff,
     WINED3D_SV_TARGET0 = 0,
     WINED3D_SV_TARGET1 = 1,
@@ -1244,6 +1247,8 @@ enum wined3d_display_rotation
 #define WINED3D_RESTORE_MODE_ON_ACTIVATE                        0x00000010
 #define WINED3D_FOCUS_MESSAGES                                  0x00000020
 #define WINED3D_HANDLE_RESTORE                                  0x00000040
+#define WINED3D_PIXEL_CENTER_INTEGER                            0x00000080
+#define WINED3D_LEGACY_FFP_LIGHTING                             0x00000100
 
 #define WINED3D_RESZ_CODE                                       0x7fa05000
 
@@ -1496,6 +1501,9 @@ enum wined3d_display_rotation
 
 #define WINED3D_APPEND_ALIGNED_ELEMENT                          0xffffffff
 
+#define WINED3D_OUTPUT_SLOT_SEMANTIC                            0xffffffff
+#define WINED3D_OUTPUT_SLOT_UNUSED                              0xfffffffe
+
 struct wined3d_display_mode
 {
     UINT width;
@@ -1530,17 +1538,10 @@ struct wined3d_vec4
 
 struct wined3d_matrix
 {
-    union
-    {
-        struct
-        {
-            float _11, _12, _13, _14;
-            float _21, _22, _23, _24;
-            float _31, _32, _33, _34;
-            float _41, _42, _43, _44;
-        } DUMMYSTRUCTNAME;
-        float m[4][4];
-    } DUMMYUNIONNAME;
+    float _11, _12, _13, _14;
+    float _21, _22, _23, _24;
+    float _31, _32, _33, _34;
+    float _41, _42, _43, _44;
 };
 
 struct wined3d_light
@@ -1669,12 +1670,20 @@ struct wined3d_clip_status
    DWORD clip_intersection;
 };
 
+enum wined3d_input_classification
+{
+    WINED3D_INPUT_PER_VERTEX_DATA,
+    WINED3D_INPUT_PER_INSTANCE_DATA,
+};
+
 struct wined3d_vertex_element
 {
     enum wined3d_format_id format;
     unsigned int input_slot;
     unsigned int offset;
-    UINT output_slot; /* D3D 8 & 10 */
+    unsigned int output_slot; /* D3D 8 & 10 */
+    enum wined3d_input_classification input_slot_class;
+    unsigned int instance_data_step_rate;
     BYTE method;
     BYTE usage;
     BYTE usage_idx;
@@ -2136,6 +2145,8 @@ HRESULT __cdecl wined3d_device_draw_indexed_primitive(struct wined3d_device *dev
 void __cdecl wined3d_device_draw_indexed_primitive_instanced(struct wined3d_device *device,
         UINT start_idx, UINT index_count, UINT start_instance, UINT instance_count);
 HRESULT __cdecl wined3d_device_draw_primitive(struct wined3d_device *device, UINT start_vertex, UINT vertex_count);
+void __cdecl wined3d_device_draw_primitive_instanced(struct wined3d_device *device,
+        UINT start_vertex, UINT vertex_count, UINT start_instance, UINT instance_count);
 HRESULT __cdecl wined3d_device_end_scene(struct wined3d_device *device);
 HRESULT __cdecl wined3d_device_end_stateblock(struct wined3d_device *device, struct wined3d_stateblock **stateblock);
 void __cdecl wined3d_device_evict_managed_resources(struct wined3d_device *device);
@@ -2416,6 +2427,8 @@ static inline HRESULT wined3d_private_store_set_private_data(struct wined3d_priv
 void __cdecl wined3d_resource_get_desc(const struct wined3d_resource *resource,
         struct wined3d_resource_desc *desc);
 void * __cdecl wined3d_resource_get_parent(const struct wined3d_resource *resource);
+void __cdecl wined3d_resource_get_pitch(const struct wined3d_resource *resource, UINT *row_pitch,
+        UINT *slice_pitch);
 DWORD __cdecl wined3d_resource_get_priority(const struct wined3d_resource *resource);
 void __cdecl wined3d_resource_set_parent(struct wined3d_resource *resource, void *parent);
 DWORD __cdecl wined3d_resource_set_priority(struct wined3d_resource *resource, DWORD priority);
@@ -2474,7 +2487,6 @@ HRESULT __cdecl wined3d_surface_get_blt_status(const struct wined3d_surface *sur
 HRESULT __cdecl wined3d_surface_get_flip_status(const struct wined3d_surface *surface, DWORD flags);
 HRESULT __cdecl wined3d_surface_get_overlay_position(const struct wined3d_surface *surface, LONG *x, LONG *y);
 void * __cdecl wined3d_surface_get_parent(const struct wined3d_surface *surface);
-DWORD __cdecl wined3d_surface_get_pitch(const struct wined3d_surface *surface);
 HRESULT __cdecl wined3d_surface_get_render_target_data(struct wined3d_surface *surface,
         struct wined3d_surface *render_target);
 struct wined3d_resource * __cdecl wined3d_surface_get_resource(struct wined3d_surface *surface);

@@ -633,7 +633,7 @@ static const struct IDirect3D9ExVtbl d3d9_vtbl =
 
 BOOL d3d9_init(struct d3d9 *d3d9, BOOL extended)
 {
-    DWORD flags = WINED3D_PRESENT_CONVERSION | WINED3D_HANDLE_RESTORE;
+    DWORD flags = WINED3D_PRESENT_CONVERSION | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER;
 
     if (!extended)
         flags |= WINED3D_VIDMEM_ACCOUNTING;

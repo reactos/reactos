@@ -430,6 +430,9 @@ static void ddraw_destroy(struct ddraw *This)
     wined3d_device_decref(This->wined3d_device);
     wined3d_decref(This->wined3d);
 
+    if (This->d3ddevice)
+        This->d3ddevice->ddraw = NULL;
+
     /* Now free the object */
     HeapFree(GetProcessHeap(), 0, This);
 }
@@ -3114,46 +3117,97 @@ static HRESULT WINAPI ddraw7_EnumSurfaces(IDirectDraw7 *iface, DWORD Flags,
 {
     struct ddraw *ddraw = impl_from_IDirectDraw7(iface);
     struct ddraw_surface *surf;
-    BOOL all, nomatch;
-    DDSURFACEDESC2 desc;
-    struct list *entry, *entry2;
+    DWORD match_flags = Flags & (DDENUMSURFACES_ALL | DDENUMSURFACES_NOMATCH | DDENUMSURFACES_MATCH);
 
     TRACE("iface %p, flags %#x, surface_desc %p, context %p, callback %p.\n",
             iface, Flags, DDSD, Context, Callback);
 
-    all = Flags & DDENUMSURFACES_ALL;
-    nomatch = Flags & DDENUMSURFACES_NOMATCH;
-
     if (!Callback)
         return DDERR_INVALIDPARAMS;
 
-    wined3d_mutex_lock();
-
-    /* Use the _SAFE enumeration, the app may destroy enumerated surfaces */
-    LIST_FOR_EACH_SAFE(entry, entry2, &ddraw->surface_list)
+    if (Flags & DDENUMSURFACES_CANBECREATED)
     {
-        surf = LIST_ENTRY(entry, struct ddraw_surface, surface_list_entry);
+         IDirectDrawSurface7 *surface;
+         DDSURFACEDESC2 testdesc;
 
-        if (!surf->iface_count)
+        if (match_flags != DDENUMSURFACES_MATCH)
+            return DDERR_INVALIDPARAMS;
+
+        if (!DDSD)
+            return DDERR_INVALIDPARAMS;
+
+        memcpy(&testdesc, DDSD, sizeof(testdesc));
+
+        if (!(testdesc.dwFlags & DDSD_WIDTH))
         {
-            WARN("Not enumerating surface %p because it doesn't have any references.\n", surf);
-            continue;
+            testdesc.dwFlags |= DDSD_WIDTH;
+            testdesc.dwWidth = 512;
         }
 
-        if (all || (nomatch != ddraw_match_surface_desc(DDSD, &surf->surface_desc)))
+        if (!(testdesc.dwFlags & DDSD_HEIGHT))
         {
-            TRACE("Enumerating surface %p.\n", surf);
-            desc = surf->surface_desc;
-            IDirectDrawSurface7_AddRef(&surf->IDirectDrawSurface7_iface);
-            if (Callback(&surf->IDirectDrawSurface7_iface, &desc, Context) != DDENUMRET_OK)
+            testdesc.dwFlags |= DDSD_HEIGHT;
+            testdesc.dwHeight = 512;
+        }
+
+        if (IDirectDraw7_CreateSurface(iface, &testdesc, &surface, NULL) == DD_OK)
+        {
+            surf = unsafe_impl_from_IDirectDrawSurface7(surface);
+            Callback(NULL, &surf->surface_desc, Context);
+            IDirectDrawSurface7_Release(surface);
+        }
+        else
+            FIXME("Failed to create surface!\n");
+    }
+    else if (Flags & DDENUMSURFACES_DOESEXIST)
+    {
+        DDSURFACEDESC2 desc;
+        struct list *entry, *entry2;
+        BOOL nomatch, all;
+
+        /* a combination of match flags is not allowed */
+        if (match_flags != 0 &&
+                match_flags != DDENUMSURFACES_ALL &&
+                match_flags != DDENUMSURFACES_MATCH &&
+                match_flags != DDENUMSURFACES_NOMATCH)
+            return DDERR_INVALIDPARAMS;
+
+        all = (Flags & DDENUMSURFACES_ALL) != 0;
+        nomatch = (Flags & DDENUMSURFACES_NOMATCH) != 0;
+
+        if (!all && !DDSD)
+            return DDERR_INVALIDPARAMS;
+
+        wined3d_mutex_lock();
+
+        /* Use the _SAFE enumeration, the app may destroy enumerated surfaces */
+        LIST_FOR_EACH_SAFE(entry, entry2, &ddraw->surface_list)
+        {
+            surf = LIST_ENTRY(entry, struct ddraw_surface, surface_list_entry);
+
+            if (!surf->iface_count)
             {
-                wined3d_mutex_unlock();
-                return DD_OK;
+                WARN("Not enumerating surface %p because it doesn't have any references.\n", surf);
+                continue;
+            }
+
+            if (all || (nomatch != ddraw_match_surface_desc(DDSD, &surf->surface_desc)))
+            {
+                TRACE("Enumerating surface %p.\n", surf);
+                desc = surf->surface_desc;
+                IDirectDrawSurface7_AddRef(&surf->IDirectDrawSurface7_iface);
+                if (Callback(&surf->IDirectDrawSurface7_iface, &desc, Context) != DDENUMRET_OK)
+                {
+                    wined3d_mutex_unlock();
+                    return DD_OK;
+                }
             }
         }
-    }
 
-    wined3d_mutex_unlock();
+        wined3d_mutex_unlock();
+    }
+    else
+        return DDERR_INVALIDPARAMS;
 
     return DD_OK;
 }
@@ -4827,10 +4881,9 @@ static const struct wined3d_device_parent_ops ddraw_wined3d_device_parent_ops =
     device_parent_create_swapchain,
 };
 
-HRESULT ddraw_init(struct ddraw *ddraw, enum wined3d_device_type device_type)
+HRESULT ddraw_init(struct ddraw *ddraw, DWORD flags, enum wined3d_device_type device_type)
 {
     WINED3DCAPS caps;
-    DWORD flags;
     HRESULT hr;
 
     ddraw->IDirectDraw7_iface.lpVtbl = &ddraw7_vtbl;
@@ -4845,11 +4898,11 @@ HRESULT ddraw_init(struct ddraw *ddraw, enum wined3d_device_type device_type)
     ddraw->numIfaces = 1;
     ddraw->ref7 = 1;
 
-    flags = WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING
-            | WINED3D_RESTORE_MODE_ON_ACTIVATE | WINED3D_FOCUS_MESSAGES;
+    flags |= DDRAW_WINED3D_FLAGS;
     if (!(ddraw->wined3d = wined3d_create(flags)))
     {
-        if (!(ddraw->wined3d = wined3d_create(flags | WINED3D_NO3D)))
+        flags |= WINED3D_NO3D;
+        if (!(ddraw->wined3d = wined3d_create(flags)))
         {
             WARN("Failed to create a wined3d object.\n");
             return E_FAIL;

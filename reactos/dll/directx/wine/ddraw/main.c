@@ -6,9 +6,6 @@
  * Copyright 2006 Stefan Dösinger
  * Copyright 2008 Denver Gingerich
  *
- * This file contains the (internal) driver registration functions,
- * driver enumeration APIs and DirectDraw creation functions.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -227,15 +224,13 @@ DDRAW_Create(const GUID *guid,
     enum wined3d_device_type device_type;
     struct ddraw *ddraw;
     HRESULT hr;
+    DWORD flags = 0;
 
     TRACE("driver_guid %s, ddraw %p, outer_unknown %p, interface_iid %s.\n",
             debugstr_guid(guid), DD, UnkOuter, debugstr_guid(iid));
 
     *DD = NULL;
 
-    /* We don't care about this guids. Well, there's no special guid anyway
-     * OK, we could
-     */
     if (guid == (GUID *) DDCREATE_EMULATIONONLY)
     {
         /* Use the reference device id. This doesn't actually change anything,
@@ -257,6 +252,9 @@ DDRAW_Create(const GUID *guid,
     if (UnkOuter != NULL)
         return CLASS_E_NOAGGREGATION;
 
+    if (!IsEqualGUID(iid, &IID_IDirectDraw7))
+        flags = WINED3D_LEGACY_FFP_LIGHTING;
+
     /* DirectDraw creation comes here */
     ddraw = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ddraw));
     if (!ddraw)
@@ -265,7 +263,7 @@ DDRAW_Create(const GUID *guid,
         return E_OUTOFMEMORY;
     }
 
-    hr = ddraw_init(ddraw, device_type);
+    hr = ddraw_init(ddraw, flags, device_type);
     if (FAILED(hr))
     {
         WARN("Failed to initialize ddraw object, hr %#x.\n", hr);
@@ -402,9 +400,9 @@ HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA callback, void *contex
         FIXME("flags 0x%08x not handled\n", flags & ~DDENUM_ATTACHEDSECONDARYDEVICES);
 
     TRACE("Enumerating ddraw interfaces\n");
-    if (!(wined3d = wined3d_create(WINED3D_LEGACY_DEPTH_BIAS)))
+    if (!(wined3d = wined3d_create(DDRAW_WINED3D_FLAGS)))
     {
-        if (!(wined3d = wined3d_create(WINED3D_LEGACY_DEPTH_BIAS | WINED3D_NO3D)))
+        if (!(wined3d = wined3d_create(DDRAW_WINED3D_FLAGS | WINED3D_NO3D)))
         {
             WARN("Failed to create a wined3d object.\n");
             return E_FAIL;
@@ -935,8 +933,8 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
                 desc.dwSize = sizeof(desc);
                 for(i = 0; i <= 1; i++)
                 {
-                    hr = IDirectDraw7_EnumSurfaces(&ddraw->IDirectDraw7_iface, DDENUMSURFACES_ALL,
-                            &desc, ddraw, DestroyCallback);
+                    hr = IDirectDraw7_EnumSurfaces(&ddraw->IDirectDraw7_iface,
+                            DDENUMSURFACES_DOESEXIST | DDENUMSURFACES_ALL, &desc, ddraw, DestroyCallback);
                     if(hr != D3D_OK)
                         ERR("(%p) EnumSurfaces failed, prepare for trouble\n", ddraw);
                 }

@@ -83,7 +83,7 @@ static ULONG WINAPI d3d8_swapchain_Release(IDirect3DSwapChain8 *iface)
     return ref;
 }
 
-static HRESULT WINAPI d3d8_swapchain_Present(IDirect3DSwapChain8 *iface,
+static HRESULT WINAPI DECLSPEC_HOTPATCH d3d8_swapchain_Present(IDirect3DSwapChain8 *iface,
         const RECT *src_rect, const RECT *dst_rect, HWND dst_window_override,
         const RGNDATA *dirty_region)
 {

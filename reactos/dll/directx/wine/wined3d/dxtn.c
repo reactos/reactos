@@ -464,6 +464,10 @@ BOOL wined3d_dxtn_init(void)
 #ifdef SONAME_LIBTXC_DXTN
         SONAME_LIBTXC_DXTN,
 #endif
+#ifdef __APPLE__
+        "libtxc_dxtn.dylib",
+        "libtxc_dxtn_s2tc.dylib",
+#endif
         "libtxc_dxtn.so",
         "libtxc_dxtn_s2tc.so.0"
     };

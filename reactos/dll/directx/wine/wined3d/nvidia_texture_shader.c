@@ -875,6 +875,11 @@ static const struct StateEntryTemplate nvrc_fragmentstate_template[] =
     { STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL),            { STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL),            apply_pixelshader   }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_SRGBWRITEENABLE),           { STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL),            NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_TEXTUREFACTOR),             { STATE_RENDER(WINED3D_RS_TEXTUREFACTOR),             nvrc_texfactor      }, WINED3D_GL_EXT_NONE             },
+    { STATE_RENDER(WINED3D_RS_ALPHAFUNC),                 { STATE_RENDER(WINED3D_RS_ALPHATESTENABLE),           NULL                }, WINED3D_GL_EXT_NONE             },
+    { STATE_RENDER(WINED3D_RS_ALPHAREF),                  { STATE_RENDER(WINED3D_RS_ALPHATESTENABLE),           NULL                }, WINED3D_GL_EXT_NONE             },
+    { STATE_RENDER(WINED3D_RS_ALPHATESTENABLE),           { STATE_RENDER(WINED3D_RS_ALPHATESTENABLE),           state_alpha_test    }, WINED3D_GL_EXT_NONE             },
+    { STATE_RENDER(WINED3D_RS_COLORKEYENABLE),            { STATE_RENDER(WINED3D_RS_ALPHATESTENABLE),           NULL                }, WINED3D_GL_EXT_NONE             },
+    { STATE_COLOR_KEY,                                    { STATE_COLOR_KEY,                                    state_nop           }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_FOGCOLOR),                  { STATE_RENDER(WINED3D_RS_FOGCOLOR),                  state_fogcolor      }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_FOGDENSITY),                { STATE_RENDER(WINED3D_RS_FOGDENSITY),                state_fogdensity    }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_FOGENABLE),                 { STATE_RENDER(WINED3D_RS_FOGENABLE),                 state_fog_fragpart  }, WINED3D_GL_EXT_NONE             },
@@ -901,11 +906,23 @@ static const struct StateEntryTemplate nvrc_fragmentstate_template[] =
     {0 /* Terminate */,                                   { 0,                                                  0                   }, WINED3D_GL_EXT_NONE             },
 };
 
+static BOOL nvrc_context_alloc(struct wined3d_context *context)
+{
+    return TRUE;
+}
+
+static void nvrc_context_free(struct wined3d_context *context)
+{
+}
+
+
 const struct fragment_pipeline nvts_fragment_pipeline = {
     nvts_enable,
     nvrc_fragment_get_caps,
     nvrc_fragment_alloc,
     nvrc_fragment_free,
+    nvrc_context_alloc,
+    nvrc_context_free,
     nvts_color_fixup_supported,
     nvrc_fragmentstate_template,
 };
@@ -915,6 +932,8 @@ const struct fragment_pipeline nvrc_fragment_pipeline = {
     nvrc_fragment_get_caps,
     nvrc_fragment_alloc,
     nvrc_fragment_free,
+    nvrc_context_alloc,
+    nvrc_context_free,
     nvts_color_fixup_supported,
     nvrc_fragmentstate_template,
 };
