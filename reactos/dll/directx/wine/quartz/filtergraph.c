@@ -2432,8 +2432,16 @@ static HRESULT WINAPI MediaSeeking_ConvertTimeFormat(IMediaSeeking *iface, LONGL
 {
     IFilterGraphImpl *This = impl_from_IMediaSeeking(iface);
 
-    FIXME("(%p/%p)->(%p, %p, 0x%s, %p): stub !!!\n", This, iface, pTarget,
-        pTargetFormat, wine_dbgstr_longlong(Source), pSourceFormat);
+    TRACE("(%p/%p)->(%p, %s, 0x%s, %s)\n", This, iface, pTarget,
+        debugstr_guid(pTargetFormat), wine_dbgstr_longlong(Source), debugstr_guid(pSourceFormat));
+
+    if (!pSourceFormat)
+        pSourceFormat = &This->timeformatseek;
+
+    if (IsEqualGUID(pTargetFormat, pSourceFormat))
+        *pTarget = Source;
+    else
+        FIXME("conversion %s->%s not supported\n", debugstr_guid(pSourceFormat), debugstr_guid(pTargetFormat));
 
     return S_OK;
 }

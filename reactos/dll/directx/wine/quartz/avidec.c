@@ -396,7 +396,7 @@ HRESULT AVIDec_create(IUnknown * pUnkOuter, LPVOID * ppv)
     This->pBihIn = NULL;
     This->pBihOut = NULL;
 
-    *ppv = This;
+    *ppv = &This->tf.filter.IBaseFilter_iface;
 
     return hr;
 }

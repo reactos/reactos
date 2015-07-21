@@ -107,9 +107,9 @@ static HRESULT WINAPI BaseMemAllocator_QueryInterface(IMemAllocator * iface, REF
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = This;
+        *ppv = &This->IMemAllocator_iface;
     else if (IsEqualIID(riid, &IID_IMemAllocator))
-        *ppv = This;
+        *ppv = &This->IMemAllocator_iface;
 
     if (*ppv)
     {

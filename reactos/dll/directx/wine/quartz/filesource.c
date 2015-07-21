@@ -437,13 +437,13 @@ static HRESULT WINAPI AsyncReader_QueryInterface(IBaseFilter * iface, REFIID rii
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
     else if (IsEqualIID(riid, &IID_IPersist))
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
     else if (IsEqualIID(riid, &IID_IMediaFilter))
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
     else if (IsEqualIID(riid, &IID_IBaseFilter))
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
     else if (IsEqualIID(riid, &IID_IFileSourceFilter))
         *ppv = &This->IFileSourceFilter_iface;
     else if (IsEqualIID(riid, &IID_IAMFilterMiscFlags))
