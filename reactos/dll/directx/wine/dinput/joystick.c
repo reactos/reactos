@@ -28,6 +28,8 @@
 
 #include "dinput_private.h"
 
+#include <stdio.h>
+
 #include "joystick_private.h"
 
 static inline JoystickGenericImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
@@ -407,13 +409,13 @@ void _dump_DIDEVCAPS(const DIDEVCAPS *lpDIDevCaps)
     TRACE("dwFlags: %08x\n", lpDIDevCaps->dwFlags);
     switch(type)
     {
-        /* Directx <= 7 definitions */
+        /* Direct X <= 7 definitions */
         DEBUG_TYPE(DIDEVTYPE_DEVICE);
         DEBUG_TYPE(DIDEVTYPE_MOUSE);
         DEBUG_TYPE(DIDEVTYPE_KEYBOARD);
         DEBUG_TYPE(DIDEVTYPE_JOYSTICK);
         DEBUG_TYPE(DIDEVTYPE_HID);
-        /* Directx >= 8 definitions */
+        /* Direct X >= 8 definitions */
         DEBUG_TYPE(DI8DEVTYPE_DEVICE);
         DEBUG_TYPE(DI8DEVTYPE_MOUSE);
         DEBUG_TYPE(DI8DEVTYPE_KEYBOARD);
@@ -606,6 +608,8 @@ HRESULT WINAPI JoystickAGenericImpl_GetDeviceInfo(
     LPDIDEVICEINSTANCEA pdidi)
 {
     JoystickGenericImpl *This = impl_from_IDirectInputDevice8A(iface);
+    DIPROPDWORD pd;
+    DWORD index = 0;
 
     TRACE("(%p,%p)\n", iface, pdidi);
 
@@ -620,12 +624,20 @@ HRESULT WINAPI JoystickAGenericImpl_GetDeviceInfo(
         return DIERR_INVALIDPARAM;
     }
 
+    /* Try to get joystick index */
+    pd.diph.dwSize = sizeof(pd);
+    pd.diph.dwHeaderSize = sizeof(pd.diph);
+    pd.diph.dwObj = 0;
+    pd.diph.dwHow = DIPH_DEVICE;
+    if (SUCCEEDED(IDirectInputDevice2_GetProperty(iface, DIPROP_JOYSTICKID, &pd.diph)))
+        index = pd.dwData;
+
     /* Return joystick */
     pdidi->guidInstance = This->guidInstance;
     pdidi->guidProduct = This->guidProduct;
     /* we only support traditional joysticks for now */
     pdidi->dwDevType = This->devcaps.dwDevType;
-    strcpy(pdidi->tszInstanceName, "Joystick");
+    snprintf(pdidi->tszInstanceName, MAX_PATH, "Joystick %d", index);
     strcpy(pdidi->tszProductName, This->name);
     if (pdidi->dwSize > sizeof(DIDEVICEINSTANCE_DX3A)) {
         pdidi->guidFFDriver = GUID_NULL;
@@ -644,6 +656,9 @@ HRESULT WINAPI JoystickWGenericImpl_GetDeviceInfo(
     LPDIDEVICEINSTANCEW pdidi)
 {
     JoystickGenericImpl *This = impl_from_IDirectInputDevice8W(iface);
+    CHAR buffer[MAX_PATH];
+    DIPROPDWORD pd;
+    DWORD index = 0;
 
     TRACE("(%p,%p)\n", iface, pdidi);
 
@@ -653,12 +668,21 @@ HRESULT WINAPI JoystickWGenericImpl_GetDeviceInfo(
         return DIERR_INVALIDPARAM;
     }
 
+    /* Try to get joystick index */
+    pd.diph.dwSize = sizeof(pd);
+    pd.diph.dwHeaderSize = sizeof(pd.diph);
+    pd.diph.dwObj = 0;
+    pd.diph.dwHow = DIPH_DEVICE;
+    if (SUCCEEDED(IDirectInputDevice2_GetProperty(iface, DIPROP_JOYSTICKID, &pd.diph)))
+        index = pd.dwData;
+
     /* Return joystick */
     pdidi->guidInstance = This->guidInstance;
     pdidi->guidProduct = This->guidProduct;
     /* we only support traditional joysticks for now */
     pdidi->dwDevType = This->devcaps.dwDevType;
-    MultiByteToWideChar(CP_ACP, 0, "Joystick", -1, pdidi->tszInstanceName, MAX_PATH);
+    snprintf(buffer, sizeof(buffer), "Joystick %d", index);
+    MultiByteToWideChar(CP_ACP, 0, buffer, -1, pdidi->tszInstanceName, MAX_PATH);
     MultiByteToWideChar(CP_ACP, 0, This->name, -1, pdidi->tszProductName, MAX_PATH);
     if (pdidi->dwSize > sizeof(DIDEVICEINSTANCE_DX3W)) {
         pdidi->guidFFDriver = GUID_NULL;
@@ -740,7 +764,7 @@ HRESULT WINAPI JoystickWGenericImpl_BuildActionMap(LPDIRECTINPUTDEVICE8W iface,
         DWORD type = 0x000000ff & (lpdiaf->rgoAction[i].dwSemantic >> 8);
         DWORD genre = 0xff000000 & lpdiaf->rgoAction[i].dwSemantic;
 
-        /* Don't touch an user configured action */
+        /* Don't touch a user configured action */
         if (lpdiaf->rgoAction[i].dwHow == DIAH_USERCONFIG) continue;
 
         /* Only consider actions of the right genre */
@@ -750,7 +774,7 @@ HRESULT WINAPI JoystickWGenericImpl_BuildActionMap(LPDIRECTINPUTDEVICE8W iface,
         {
             if (type & object_types[j])
             {
-                /* Assure that the object exists */
+                /* Ensure that the object exists */
                 LPDIOBJECTDATAFORMAT odf = dataformat_to_odf_by_type(This->base.data_format.wine_df, inst, object_types[j]);
 
                 if (odf != NULL)

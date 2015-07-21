@@ -852,7 +852,7 @@ HRESULT _set_action_map(LPDIRECTINPUTDEVICE8W iface, LPDIACTIONFORMATW lpdiaf, L
     /* Save the settings to disk */
     save_mapping_settings(iface, lpdiaf, username);
 
-    return IDirectInputDevice8WImpl_SetActionMap(iface, lpdiaf, lpszUserName, dwFlags);
+    return DI_OK;
 }
 
 /******************************************************************************
@@ -1617,8 +1617,14 @@ HRESULT WINAPI IDirectInputDevice2WImpl_Poll(LPDIRECTINPUTDEVICE8W iface)
     IDirectInputDeviceImpl *This = impl_from_IDirectInputDevice8W(iface);
 
     if (!This->acquired) return DIERR_NOTACQUIRED;
-    /* Because wine devices do not need to be polled, just return DI_NOEFFECT */
+
+#ifndef __REACTOS__
+    __wine_check_for_events( QS_ALLINPUT );
+    return DI_OK;
+#else
+    /* Devices do not need to be polled on ReactOS. */
     return DI_NOEFFECT;
+#endif
 }
 
 HRESULT WINAPI IDirectInputDevice2AImpl_Poll(LPDIRECTINPUTDEVICE8A iface)
@@ -1702,16 +1708,6 @@ HRESULT WINAPI IDirectInputDevice8WImpl_BuildActionMap(LPDIRECTINPUTDEVICE8W ifa
 	X(DIDBAM_HWDEFAULTS)
 #undef X
   
-    return DI_OK;
-}
-
-HRESULT WINAPI IDirectInputDevice8WImpl_SetActionMap(LPDIRECTINPUTDEVICE8W iface,
-                                                     LPDIACTIONFORMATW lpdiaf,
-                                                     LPCWSTR lpszUserName,
-                                                     DWORD dwFlags)
-{
-    FIXME("(%p)->(%p,%s,%08x): semi-stub !\n", iface, lpdiaf, debugstr_w(lpszUserName), dwFlags);
-
     return DI_OK;
 }
 

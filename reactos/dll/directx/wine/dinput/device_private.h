@@ -235,10 +235,6 @@ extern HRESULT WINAPI IDirectInputDevice8WImpl_BuildActionMap(LPDIRECTINPUTDEVIC
 							      LPDIACTIONFORMATW lpdiaf,
 							      LPCWSTR lpszUserName,
 							      DWORD dwFlags) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirectInputDevice8WImpl_SetActionMap(LPDIRECTINPUTDEVICE8W iface,
-							    LPDIACTIONFORMATW lpdiaf,
-							    LPCWSTR lpszUserName,
-							    DWORD dwFlags) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI IDirectInputDevice8AImpl_GetImageInfo(LPDIRECTINPUTDEVICE8A iface,
 							    LPDIDEVICEIMAGEINFOHEADERA lpdiDevImageInfoHeader) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI IDirectInputDevice8WImpl_GetImageInfo(LPDIRECTINPUTDEVICE8W iface,
