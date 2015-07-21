@@ -904,6 +904,7 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
         static const WCHAR b3DAccelerationExists[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','x','i','s','t','s',0};
         static const WCHAR b3DAccelerationEnabled[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
         static const WCHAR bDDAccelerationEnabled[] = {'b','D','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
+        static const WCHAR bNoHardware[] = {'b','N','o','H','a','r','d','w','a','r','e',0};
 
         D3DADAPTER_IDENTIFIER9 adapter_info;
         D3DDISPLAYMODE adapter_mode;
@@ -1047,6 +1048,10 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
             goto cleanup;
 
         hr = add_bool_property(display_adapter, bDDAccelerationEnabled, hardware_accel);
+        if (FAILED(hr))
+            goto cleanup;
+
+        hr = add_bool_property(display_adapter, bNoHardware, FALSE);
         if (FAILED(hr))
             goto cleanup;
     }
