@@ -8,6 +8,7 @@ spec2def(ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     bios/bios32/bios32.c
     bios/bios32/kbdbios32.c
+    bios/bios32/vbe.c
     bios/bios32/vidbios32.c
     bios/bios32/moubios32.c
     bios/bios.c
