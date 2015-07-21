@@ -28,21 +28,21 @@
 static void test_IReferenceClock_query_interface(const char * clockdesc, IReferenceClock * pClock)
 {
     HRESULT hr;
-    void *pF;
+    IUnknown *pF;
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IUnknown, &pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IUnknown, (void**)&pF);
     ok(hr == S_OK, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF != NULL, "pF is NULL\n");
-    if (SUCCEEDED(hr)) IUnknown_Release((IUnknown *)pF);
+    if (SUCCEEDED(hr)) IUnknown_Release(pF);
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IDirectDraw, &pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IDirectDraw, (void**)&pF);
     ok(hr == E_NOINTERFACE, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF == NULL, "pF is not NULL\n");
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IReferenceClock, &pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IReferenceClock, (void**)&pF);
     ok(hr == S_OK, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF != NULL, "pF is NULL\n");
-    if (SUCCEEDED(hr)) IReferenceClock_Release((IReferenceClock *)pF);
+    if (SUCCEEDED(hr)) IUnknown_Release(pF);
 }
 
 /* The following method expects a reference clock that will keep ticking for
