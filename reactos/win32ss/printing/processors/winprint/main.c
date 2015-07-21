@@ -32,6 +32,8 @@ ClosePrintProcessor(HANDLE hPrintProcessor)
     DWORD dwErrorCode;
     PWINPRINT_HANDLE pHandle;
 
+    TRACE("ClosePrintProcessor(%p)\n", hPrintProcessor);
+
     // Sanity checks
     if (!hPrintProcessor)
     {
@@ -66,6 +68,8 @@ Cleanup:
 BOOL WINAPI
 ControlPrintProcessor(HANDLE hPrintProcessor, DWORD Command)
 {
+    TRACE("ControlPrintProcessor(%p, %lu)\n", hPrintProcessor, Command);
+
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -104,7 +108,7 @@ ControlPrintProcessor(HANDLE hPrintProcessor, DWORD Command)
  * A more specific error code can be obtained through GetLastError.
  */
 BOOL WINAPI
-EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
+EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD cbDatatype;
     DWORD dwDatatypeCount = 0;
@@ -112,6 +116,8 @@ EnumPrintProcessorDatatypesW(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Lev
     DWORD dwOffsets[_countof(_pwszDatatypes)];
     PCWSTR* pCurrentDatatype;
     PDWORD pCurrentOffset = dwOffsets;
+
+    TRACE("EnumPrintProcessorDatatypesW(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
 
     // Sanity checks
     if (Level != 1 || !pcbNeeded || !pcReturned)
@@ -166,6 +172,8 @@ Cleanup:
 DWORD WINAPI
 GetPrintProcessorCapabilities(PWSTR pValueName, DWORD dwAttributes, PBYTE pData, DWORD nSize, PDWORD pcbNeeded)
 {
+    TRACE("GetPrintProcessorCapabilities(%S, %lu, %p, %lu, %p)\n", pValueName, dwAttributes, pData, nSize, pcbNeeded);
+
     UNIMPLEMENTED;
     return 0;
 }
@@ -191,6 +199,8 @@ OpenPrintProcessor(PWSTR pPrinterName, PPRINTPROCESSOROPENDATA pPrintProcessorOp
     DWORD dwErrorCode;
     HANDLE hReturnValue = NULL;
     PWINPRINT_HANDLE pHandle = NULL;
+
+    TRACE("OpenPrintProcessor(%S, %p)\n", pPrinterName, pPrintProcessorOpenData);
 
     // Sanity checks
     // This time a datatype needs to be given. We can't fall back to a default here.
@@ -254,6 +264,8 @@ PrintDocumentOnPrintProcessor(HANDLE hPrintProcessor, PWSTR pDocumentName)
 {
     DWORD dwErrorCode;
     PWINPRINT_HANDLE pHandle;
+
+    TRACE("PrintDocumentOnPrintProcessor(%p, %S)\n", hPrintProcessor, pDocumentName);
 
     // Sanity checks
     if (!hPrintProcessor)
