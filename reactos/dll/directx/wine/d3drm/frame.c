@@ -462,66 +462,25 @@ static HRESULT WINAPI d3drm_frame2_QueryInterface(IDirect3DRMFrame2 *iface, REFI
 
     TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-    if (IsEqualGUID(riid, &IID_IDirect3DRMFrame2)
-            || IsEqualGUID(riid, &IID_IDirect3DRMFrame)
-            || IsEqualGUID(riid, &IID_IUnknown))
-    {
-        *out = &frame->IDirect3DRMFrame2_iface;
-    }
-    else if (IsEqualGUID(riid, &IID_IDirect3DRMFrame3))
-    {
-        *out = &frame->IDirect3DRMFrame3_iface;
-    }
-    else
-    {
-        *out = NULL;
-        WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
-        return E_NOINTERFACE;
-    }
-
-    IUnknown_AddRef((IUnknown *)*out);
-    return S_OK;
+    return IDirect3DRMFrame3_QueryInterface(&frame->IDirect3DRMFrame3_iface, riid, out);
 }
 
 static ULONG WINAPI d3drm_frame2_AddRef(IDirect3DRMFrame2 *iface)
 {
     struct d3drm_frame *frame = impl_from_IDirect3DRMFrame2(iface);
-    ULONG refcount = InterlockedIncrement(&frame->ref);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("iface %p.\n", iface);
 
-    return refcount;
+    return IDirect3DRMFrame3_AddRef(&frame->IDirect3DRMFrame3_iface);
 }
 
 static ULONG WINAPI d3drm_frame2_Release(IDirect3DRMFrame2 *iface)
 {
     struct d3drm_frame *frame = impl_from_IDirect3DRMFrame2(iface);
-    ULONG refcount = InterlockedDecrement(&frame->ref);
-    ULONG i;
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("iface %p.\n", iface);
 
-    if (!refcount)
-    {
-        for (i = 0; i < frame->nb_children; ++i)
-        {
-            IDirect3DRMFrame3_Release(frame->children[i]);
-        }
-        HeapFree(GetProcessHeap(), 0, frame->children);
-        for (i = 0; i < frame->nb_visuals; ++i)
-        {
-            IDirect3DRMVisual_Release(frame->visuals[i]);
-        }
-        HeapFree(GetProcessHeap(), 0, frame->visuals);
-        for (i = 0; i < frame->nb_lights; ++i)
-        {
-            IDirect3DRMLight_Release(frame->lights[i]);
-        }
-        HeapFree(GetProcessHeap(), 0, frame->lights);
-        HeapFree(GetProcessHeap(), 0, frame);
-    }
-
-    return refcount;
+    return IDirect3DRMFrame3_Release(&frame->IDirect3DRMFrame3_iface);
 }
 
 static HRESULT WINAPI d3drm_frame2_Clone(IDirect3DRMFrame2 *iface,
@@ -1223,25 +1182,68 @@ static HRESULT WINAPI d3drm_frame3_QueryInterface(IDirect3DRMFrame3 *iface, REFI
 
     TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-    return d3drm_frame2_QueryInterface(&frame->IDirect3DRMFrame2_iface, riid, out);
+    if (IsEqualGUID(riid, &IID_IDirect3DRMFrame2)
+            || IsEqualGUID(riid, &IID_IDirect3DRMFrame)
+            || IsEqualGUID(riid, &IID_IDirect3DRMObject)
+            || IsEqualGUID(riid, &IID_IDirect3DRMVisual)
+            || IsEqualGUID(riid, &IID_IUnknown))
+    {
+        *out = &frame->IDirect3DRMFrame2_iface;
+    }
+    else if (IsEqualGUID(riid, &IID_IDirect3DRMFrame3))
+    {
+        *out = &frame->IDirect3DRMFrame3_iface;
+    }
+    else
+    {
+        *out = NULL;
+        WARN("%s not implemented, returning CLASS_E_CLASSNOTAVAILABLE.\n", debugstr_guid(riid));
+        return CLASS_E_CLASSNOTAVAILABLE;
+    }
+
+    IUnknown_AddRef((IUnknown *)*out);
+    return S_OK;
 }
 
 static ULONG WINAPI d3drm_frame3_AddRef(IDirect3DRMFrame3 *iface)
 {
     struct d3drm_frame *frame = impl_from_IDirect3DRMFrame3(iface);
+    ULONG refcount = InterlockedIncrement(&frame->ref);
 
-    TRACE("iface %p.\n", iface);
+    TRACE("%p increasing refcount to %u.\n", iface, refcount);
 
-    return d3drm_frame2_AddRef(&frame->IDirect3DRMFrame2_iface);
+    return refcount;
 }
 
 static ULONG WINAPI d3drm_frame3_Release(IDirect3DRMFrame3 *iface)
 {
     struct d3drm_frame *frame = impl_from_IDirect3DRMFrame3(iface);
+    ULONG refcount = InterlockedDecrement(&frame->ref);
+    ULONG i;
 
-    TRACE("iface %p.\n", iface);
+    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
 
-    return d3drm_frame2_Release(&frame->IDirect3DRMFrame2_iface);
+    if (!refcount)
+    {
+        for (i = 0; i < frame->nb_children; ++i)
+        {
+            IDirect3DRMFrame3_Release(frame->children[i]);
+        }
+        HeapFree(GetProcessHeap(), 0, frame->children);
+        for (i = 0; i < frame->nb_visuals; ++i)
+        {
+            IDirect3DRMVisual_Release(frame->visuals[i]);
+        }
+        HeapFree(GetProcessHeap(), 0, frame->visuals);
+        for (i = 0; i < frame->nb_lights; ++i)
+        {
+            IDirect3DRMLight_Release(frame->lights[i]);
+        }
+        HeapFree(GetProcessHeap(), 0, frame->lights);
+        HeapFree(GetProcessHeap(), 0, frame);
+    }
+
+    return refcount;
 }
 
 static HRESULT WINAPI d3drm_frame3_Clone(IDirect3DRMFrame3 *iface,
@@ -2293,5 +2295,5 @@ HRESULT Direct3DRMFrame_create(REFIID riid, IUnknown *parent, IUnknown **out)
 
     hr = IDirect3DRMFrame3_QueryInterface(&object->IDirect3DRMFrame3_iface, riid, (void **)out);
     IDirect3DRMFrame3_Release(&object->IDirect3DRMFrame3_iface);
-    return S_OK;
+    return hr;
 }

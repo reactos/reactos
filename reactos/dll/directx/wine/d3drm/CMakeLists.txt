@@ -1,7 +1,7 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-spec2def(d3drm.dll d3drm.spec)
+spec2def(d3drm.dll d3drm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     d3drm.c

@@ -44,7 +44,7 @@ struct d3drm
     IDirect3DRM IDirect3DRM_iface;
     IDirect3DRM2 IDirect3DRM2_iface;
     IDirect3DRM3 IDirect3DRM3_iface;
-    LONG ref;
+    LONG ref1, ref2, ref3, iface_count;
 };
 
 static inline struct d3drm *impl_from_IDirect3DRM(IDirect3DRM *iface)
@@ -60,6 +60,12 @@ static inline struct d3drm *impl_from_IDirect3DRM2(IDirect3DRM2 *iface)
 static inline struct d3drm *impl_from_IDirect3DRM3(IDirect3DRM3 *iface)
 {
     return CONTAINING_RECORD(iface, struct d3drm, IDirect3DRM3_iface);
+}
+
+static void d3drm_destroy(struct d3drm *d3drm)
+{
+    HeapFree(GetProcessHeap(), 0, d3drm);
+    TRACE("d3drm object %p is being destroyed.\n", d3drm);
 }
 
 static HRESULT WINAPI d3drm1_QueryInterface(IDirect3DRM *iface, REFIID riid, void **out)
@@ -84,8 +90,8 @@ static HRESULT WINAPI d3drm1_QueryInterface(IDirect3DRM *iface, REFIID riid, voi
     else
     {
         *out = NULL;
-        WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
-        return E_NOINTERFACE;
+        WARN("%s not implemented, returning CLASS_E_CLASSNOTAVAILABLE.\n", debugstr_guid(riid));
+        return CLASS_E_CLASSNOTAVAILABLE;
     }
 
     IUnknown_AddRef((IUnknown *)*out);
@@ -95,9 +101,12 @@ static HRESULT WINAPI d3drm1_QueryInterface(IDirect3DRM *iface, REFIID riid, voi
 static ULONG WINAPI d3drm1_AddRef(IDirect3DRM *iface)
 {
     struct d3drm *d3drm = impl_from_IDirect3DRM(iface);
-    ULONG refcount = InterlockedIncrement(&d3drm->ref);
+    ULONG refcount = InterlockedIncrement(&d3drm->ref1);
 
     TRACE("%p increasing refcount to %u.\n", iface, refcount);
+
+    if (refcount == 1)
+        InterlockedIncrement(&d3drm->iface_count);
 
     return refcount;
 }
@@ -105,12 +114,12 @@ static ULONG WINAPI d3drm1_AddRef(IDirect3DRM *iface)
 static ULONG WINAPI d3drm1_Release(IDirect3DRM *iface)
 {
     struct d3drm *d3drm = impl_from_IDirect3DRM(iface);
-    ULONG refcount = InterlockedDecrement(&d3drm->ref);
+    ULONG refcount = InterlockedDecrement(&d3drm->ref1);
 
     TRACE("%p decreasing refcount to %u.\n", iface, refcount);
 
-    if (!refcount)
-        HeapFree(GetProcessHeap(), 0, d3drm);
+    if (!refcount && !InterlockedDecrement(&d3drm->iface_count))
+        d3drm_destroy(d3drm);
 
     return refcount;
 }
@@ -444,15 +453,27 @@ static HRESULT WINAPI d3drm2_QueryInterface(IDirect3DRM2 *iface, REFIID riid, vo
 static ULONG WINAPI d3drm2_AddRef(IDirect3DRM2 *iface)
 {
     struct d3drm *d3drm = impl_from_IDirect3DRM2(iface);
+    ULONG refcount = InterlockedIncrement(&d3drm->ref2);
 
-    return d3drm1_AddRef(&d3drm->IDirect3DRM_iface);
+    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+
+    if (refcount == 1)
+        InterlockedIncrement(&d3drm->iface_count);
+
+    return refcount;
 }
 
 static ULONG WINAPI d3drm2_Release(IDirect3DRM2 *iface)
 {
     struct d3drm *d3drm = impl_from_IDirect3DRM2(iface);
+    ULONG refcount = InterlockedDecrement(&d3drm->ref2);
 
-    return d3drm1_Release(&d3drm->IDirect3DRM_iface);
+    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+
+    if (!refcount && !InterlockedDecrement(&d3drm->iface_count))
+        d3drm_destroy(d3drm);
+
+    return refcount;
 }
 
 static HRESULT WINAPI d3drm2_CreateObject(IDirect3DRM2 *iface,
@@ -793,15 +814,27 @@ static HRESULT WINAPI d3drm3_QueryInterface(IDirect3DRM3 *iface, REFIID riid, vo
 static ULONG WINAPI d3drm3_AddRef(IDirect3DRM3 *iface)
 {
     struct d3drm *d3drm = impl_from_IDirect3DRM3(iface);
+    ULONG refcount = InterlockedIncrement(&d3drm->ref3);
 
-    return d3drm1_AddRef(&d3drm->IDirect3DRM_iface);
+    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+
+    if (refcount == 1)
+        InterlockedIncrement(&d3drm->iface_count);
+
+    return refcount;
 }
 
 static ULONG WINAPI d3drm3_Release(IDirect3DRM3 *iface)
 {
     struct d3drm *d3drm = impl_from_IDirect3DRM3(iface);
+    ULONG refcount = InterlockedDecrement(&d3drm->ref3);
 
-    return d3drm1_Release(&d3drm->IDirect3DRM_iface);
+    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+
+    if (!refcount && !InterlockedDecrement(&d3drm->iface_count))
+        d3drm_destroy(d3drm);
+
+    return refcount;
 }
 
 static HRESULT WINAPI d3drm3_CreateObject(IDirect3DRM3 *iface,
@@ -919,10 +952,10 @@ static HRESULT WINAPI d3drm3_CreateDevice(IDirect3DRM3 *iface,
 }
 
 static HRESULT WINAPI d3drm3_CreateDeviceFromSurface(IDirect3DRM3 *iface, GUID *guid,
-        IDirectDraw *ddraw, IDirectDrawSurface *backbuffer, IDirect3DRMDevice3 **device)
+        IDirectDraw *ddraw, IDirectDrawSurface *backbuffer, DWORD flags, IDirect3DRMDevice3 **device)
 {
-    FIXME("iface %p, guid %s, ddraw %p, backbuffer %p, device %p partial stub.\n",
-            iface, debugstr_guid(guid), ddraw, backbuffer, device);
+    FIXME("iface %p, guid %s, ddraw %p, backbuffer %p, flags %#x, device %p partial stub.\n",
+            iface, debugstr_guid(guid), ddraw, backbuffer, flags, device);
 
     return Direct3DRMDevice_create(&IID_IDirect3DRMDevice3, (IUnknown **)device);
 }
@@ -1162,32 +1195,29 @@ static HRESULT load_data(IDirect3DRM3 *iface, IDirectXFileData *data_object, IID
                     IDirectXFileDataReference *reference;
                     IDirectXFileBinary *binary;
 
-                    hr = IDirectXFileObject_QueryInterface(child, &IID_IDirectXFileBinary, (void **)&binary);
-                    if (SUCCEEDED(hr))
+                    if (SUCCEEDED(IDirectXFileObject_QueryInterface(child,
+                            &IID_IDirectXFileBinary, (void **)&binary)))
                     {
                         FIXME("Binary Object not supported yet\n");
                         IDirectXFileBinary_Release(binary);
-                        continue;
                     }
-
-                    hr = IDirectXFileObject_QueryInterface(child, &IID_IDirectXFileData, (void **)&data);
-                    if (SUCCEEDED(hr))
+                    else if (SUCCEEDED(IDirectXFileObject_QueryInterface(child,
+                            &IID_IDirectXFileData, (void **)&data)))
                     {
                         TRACE("Found Data Object\n");
                         hr = load_data(iface, data, GUIDs, nb_GUIDs, LoadProc, ArgLP, LoadTextureProc, ArgLTP, frame);
                         IDirectXFileData_Release(data);
-                        continue;
                     }
-                    hr = IDirectXFileObject_QueryInterface(child, &IID_IDirectXFileDataReference, (void **)&reference);
-                    if (SUCCEEDED(hr))
+                    else if (SUCCEEDED(IDirectXFileObject_QueryInterface(child,
+                            &IID_IDirectXFileDataReference, (void **)&reference)))
                     {
                         TRACE("Found Data Object Reference\n");
                         IDirectXFileDataReference_Resolve(reference, &data);
                         hr = load_data(iface, data, GUIDs, nb_GUIDs, LoadProc, ArgLP, LoadTextureProc, ArgLTP, frame);
                         IDirectXFileData_Release(data);
                         IDirectXFileDataReference_Release(reference);
-                        continue;
                     }
+                    IDirectXFileObject_Release(child);
                 }
 
                 if (hr != DXFILEERR_NOMOREOBJECTS)
@@ -1480,9 +1510,25 @@ HRESULT WINAPI Direct3DRMCreate(IDirect3DRM **d3drm)
     object->IDirect3DRM_iface.lpVtbl = &d3drm1_vtbl;
     object->IDirect3DRM2_iface.lpVtbl = &d3drm2_vtbl;
     object->IDirect3DRM3_iface.lpVtbl = &d3drm3_vtbl;
-    object->ref = 1;
+    object->ref1 = 1;
+    object->iface_count = 1;
 
     *d3drm = &object->IDirect3DRM_iface;
 
     return S_OK;
+}
+
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+    return S_FALSE;
+}
+
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
+{
+    TRACE("(%s, %s, %p): stub\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+
+    if(!ppv)
+        return E_INVALIDARG;
+
+    return CLASS_E_CLASSNOTAVAILABLE;
 }

@@ -353,7 +353,7 @@ DECLARE_INTERFACE_(IDirect3DRM3,IUnknown)
     STDMETHOD(CreateMaterial)(THIS_ D3DVALUE, IDirect3DRMMaterial2 **material) PURE;
     STDMETHOD(CreateDevice)(THIS_ DWORD width, DWORD height, IDirect3DRMDevice3 **device) PURE;
     STDMETHOD(CreateDeviceFromSurface)(THIS_ GUID *guid, IDirectDraw *ddraw,
-            IDirectDrawSurface *surface, IDirect3DRMDevice3 **device) PURE;
+            IDirectDrawSurface *surface, DWORD flags, IDirect3DRMDevice3 **device) PURE;
     STDMETHOD(CreateDeviceFromD3D)(THIS_ IDirect3D2 *d3d, IDirect3DDevice2 *d3d_device,
             IDirect3DRMDevice3 **device) PURE;
     STDMETHOD(CreateDeviceFromClipper)(THIS_ IDirectDrawClipper *clipper, GUID *guid,
@@ -411,7 +411,7 @@ DECLARE_INTERFACE_(IDirect3DRM3,IUnknown)
 #define IDirect3DRM3_CreateLightRGB(p,a,b,c,d,e)                   (p)->lpVtbl->CreateLightRGB(p,a,b,c,d,e)
 #define IDirect3DRM3_CreateMaterial(p,a,b)                         (p)->lpVtbl->CreateMaterial(p,a,b)
 #define IDirect3DRM3_CreateDevice(p,a,b,c)                         (p)->lpVtbl->CreateDevice(p,a,b,c)
-#define IDirect3DRM3_CreateDeviceFromSurface(p,a,b,c,d)            (p)->lpVtbl->CreateDeviceFromSurface(p,a,b,c,d)
+#define IDirect3DRM3_CreateDeviceFromSurface(p,a,b,c,d,e)          (p)->lpVtbl->CreateDeviceFromSurface(p,a,b,c,d,e)
 #define IDirect3DRM3_CreateDeviceFromD3D(p,a,b,c)                  (p)->lpVtbl->CreateDeviceFromD3D(p,a,b,c)
 #define IDirect3DRM3_CreateDeviceFromClipper(p,a,b,c,d,e)          (p)->lpVtbl->CreateDeviceFromClipper(p,a,b,c,d,e)
 #define IDirect3DRM3_CreateTextureFromSurface(p,a,b)               (p)->lpVtbl->CreateTextureFromSurface(p,a,b)
@@ -455,7 +455,7 @@ DECLARE_INTERFACE_(IDirect3DRM3,IUnknown)
 #define IDirect3DRM3_CreateLightRGB(p,a,b,c,d,e)                   (p)->CreateLightRGB(a,b,c,d,e)
 #define IDirect3DRM3_CreateMaterial(p,a,b)                         (p)->CreateMaterial(a,b)
 #define IDirect3DRM3_CreateDevice(p,a,b,c)                         (p)->CreateDevice(a,b,c)
-#define IDirect3DRM3_CreateDeviceFromSurface(p,a,b,c,d)            (p)->CreateDeviceFromSurface(a,b,c,d)
+#define IDirect3DRM3_CreateDeviceFromSurface(p,a,b,c,d,e)          (p)->CreateDeviceFromSurface(a,b,c,d,e)
 #define IDirect3DRM3_CreateDeviceFromD3D(p,a,b,c)                  (p)->CreateDeviceFromD3D(a,b,c)
 #define IDirect3DRM3_CreateDeviceFromClipper(p,a,b,c,d,e)          (p)->CreateDeviceFromClipper(a,b,c,d,e)
 #define IDirect3DRM3_CreateTextureFromSurface(p,a,b)               (p)->CreateTextureFromSurface(a,b)

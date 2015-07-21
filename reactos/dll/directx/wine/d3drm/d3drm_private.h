@@ -58,6 +58,6 @@ struct d3drm_file_header
     DWORD flags;
 };
 
-extern char templates[];
+extern char templates[] DECLSPEC_HIDDEN;
 
 #endif /* __D3DRM_PRIVATE_INCLUDED__ */

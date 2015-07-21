@@ -343,7 +343,9 @@ static void clean_mesh_builder_data(struct d3drm_mesh_builder *mesh_builder)
     }
     mesh_builder->nb_materials = 0;
     HeapFree(GetProcessHeap(), 0, mesh_builder->materials);
+    mesh_builder->materials = NULL;
     HeapFree(GetProcessHeap(), 0, mesh_builder->material_indices);
+    mesh_builder->material_indices = NULL;
 }
 
 static HRESULT WINAPI d3drm_mesh_builder2_QueryInterface(IDirect3DRMMeshBuilder2 *iface, REFIID riid, void **out)
@@ -1235,20 +1237,21 @@ HRESULT load_mesh_data(IDirect3DRMMeshBuilder3 *iface, IDirectXFileData *pData,
                     IDirectXFileData *data;
                     char **filename;
 
-                    hr = IDirectXFileObject_QueryInterface(material_child, &IID_IDirectXFileData, (void **)&data);
-                    if (FAILED(hr))
+                    if (FAILED(hr = IDirectXFileObject_QueryInterface(material_child,
+                            &IID_IDirectXFileData, (void **)&data)))
                     {
                         IDirectXFileDataReference *reference;
 
-                        hr = IDirectXFileObject_QueryInterface(material_child, &IID_IDirectXFileDataReference, (void **)&reference);
-                        if (FAILED(hr))
-                            goto end;
-
-                        hr = IDirectXFileDataReference_Resolve(reference, &data);
-                        IDirectXFileDataReference_Release(reference);
-                        if (FAILED(hr))
-                            goto end;
+                        if (SUCCEEDED(IDirectXFileObject_QueryInterface(material_child,
+                                &IID_IDirectXFileDataReference, (void **)&reference)))
+                        {
+                            hr = IDirectXFileDataReference_Resolve(reference, &data);
+                            IDirectXFileDataReference_Release(reference);
+                        }
                     }
+                    IDirectXFileObject_Release(material_child);
+                    if (FAILED(hr))
+                        goto end;
 
                     hr = IDirectXFileData_GetType(data, &guid);
                     if (hr != DXFILE_OK)
@@ -1293,6 +1296,7 @@ HRESULT load_mesh_data(IDirect3DRMMeshBuilder3 *iface, IDirectXFileData *pData,
                             }
                         }
                     }
+                    IDirectXFileData_Release(data);
                 }
                 else if (hr != DXFILEERR_NOMOREOBJECTS)
                 {
@@ -1351,7 +1355,10 @@ HRESULT load_mesh_data(IDirect3DRMMeshBuilder3 *iface, IDirectXFileData *pData,
         if (!This->nb_normals)
         {
             /* Compute face normal */
-            if (nb_face_indexes > 2)
+            if (nb_face_indexes > 2
+                    && faces_vertex_idx_ptr[0] < This->nb_vertices
+                    && faces_vertex_idx_ptr[1] < This->nb_vertices
+                    && faces_vertex_idx_ptr[2] < This->nb_vertices)
             {
                 D3DVECTOR a, b;
 
