@@ -25,6 +25,7 @@
 #include <shlobj.h>
 
 static const WCHAR about_blank[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
+static const WCHAR default_home[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g',0};
 static const WCHAR start_page[] = {'S','t','a','r','t',' ','P','a','g','e',0};
 static const WCHAR reg_ie_main[] = {'S','o','f','t','w','a','r','e','\\',
                                     'M','i','c','r','o','s','o','f','t','\\',
@@ -33,7 +34,6 @@ static const WCHAR reg_ie_main[] = {'S','o','f','t','w','a','r','e','\\',
 
 /* list of unimplemented buttons */
 static DWORD disabled_general_buttons[] = {IDC_HOME_CURRENT,
-                                           IDC_HOME_DEFAULT,
                                            IDC_HISTORY_SETTINGS,
                                            0};
 static DWORD disabled_delhist_buttons[] = {IDC_DELETE_FORM_DATA,
@@ -175,6 +175,10 @@ static INT_PTR general_on_command(HWND hwnd, WPARAM wparam)
 
         case MAKEWPARAM(IDC_HOME_BLANK, BN_CLICKED):
             SetDlgItemTextW(hwnd, IDC_HOME_EDIT, about_blank);
+            break;
+
+        case MAKEWPARAM(IDC_HOME_DEFAULT, BN_CLICKED):
+            SetDlgItemTextW(hwnd, IDC_HOME_EDIT, default_home);
             break;
 
         case MAKEWPARAM(IDC_HISTORY_DELETE, BN_CLICKED):
