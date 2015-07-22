@@ -1199,7 +1199,7 @@ static DWORD FTPFILE_WriteFile(object_header_t *hdr, const void *buffer, DWORD s
     res = sock_send(lpwh->nDataSocket, buffer, size, 0);
 
     *written = res>0 ? res : 0;
-    return res >= 0 ? ERROR_SUCCESS : sock_get_error();
+    return res >= 0 ? ERROR_SUCCESS : WSAGetLastError();
 }
 
 static void FTP_ReceiveRequestData(ftp_file_t *file, BOOL first_notif)
@@ -2541,7 +2541,7 @@ HINTERNET FTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
 
     if (connect(nsocket, (struct sockaddr *)&socketAddr, sock_namelen) < 0)
     {
-	ERR("Unable to connect (%d)\n", sock_get_error());
+	ERR("Unable to connect (%d)\n", WSAGetLastError());
 	INTERNET_SetLastError(ERROR_INTERNET_CANNOT_CONNECT);
 	closesocket(nsocket);
     }

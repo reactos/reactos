@@ -557,6 +557,15 @@ BOOL WINAPI InternetShowSecurityInfoByURLW(LPCWSTR url, HWND window)
 }
 
 /***********************************************************************
+ *           ParseX509EncodedCertificateForListBoxEntry (@)
+ */
+DWORD WINAPI ParseX509EncodedCertificateForListBoxEntry(LPBYTE cert, DWORD len, LPSTR szlistbox, LPDWORD listbox)
+{
+   FIXME("stub: %p %d %s %p\n", cert, len, debugstr_a(szlistbox), listbox);
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
  *           ShowX509EncodedCertificate (@)
  */
 DWORD WINAPI ShowX509EncodedCertificate(HWND parent, LPBYTE cert, DWORD len)

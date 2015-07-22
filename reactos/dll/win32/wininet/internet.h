@@ -129,6 +129,7 @@ typedef struct
 {
     int socket;
     BOOL secure;
+    BOOL is_blocking;
     CtxtHandle ssl_ctx;
     SecPkgContext_StreamSizes ssl_sizes;
     server_t *server;
@@ -416,7 +417,6 @@ typedef struct
 
     CRITICAL_SECTION read_section;  /* section to protect the following fields */
     DWORD contentLength;  /* total number of bytes to be read */
-    BOOL  read_chunked;   /* are we reading in chunked mode? */
     BOOL  read_gzip;      /* are we reading in gzip mode? */
     DWORD read_pos;       /* current read position in read_buf */
     DWORD read_size;      /* valid data size in read_buf */
@@ -477,29 +477,22 @@ VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
 BOOL INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto, WCHAR *foundProxy, DWORD *foundProxyLen) DECLSPEC_HIDDEN;
 
-typedef enum {
-    BLOCKING_ALLOW,
-    BLOCKING_DISALLOW,
-    BLOCKING_WAITALL
-} blocking_mode_t;
-
 DWORD create_netconn(BOOL,server_t*,DWORD,BOOL,DWORD,netconn_t**) DECLSPEC_HIDDEN;
 void free_netconn(netconn_t*) DECLSPEC_HIDDEN;
 void NETCON_unload(void) DECLSPEC_HIDDEN;
 DWORD NETCON_secure_connect(netconn_t*,server_t*) DECLSPEC_HIDDEN;
 DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
 		int *sent /* out */) DECLSPEC_HIDDEN;
-DWORD NETCON_recv(netconn_t*,void*,size_t,blocking_mode_t,int*) DECLSPEC_HIDDEN;
+DWORD NETCON_recv(netconn_t*,void*,size_t,BOOL,int*) DECLSPEC_HIDDEN;
 BOOL NETCON_query_data_available(netconn_t *connection, DWORD *available) DECLSPEC_HIDDEN;
 BOOL NETCON_is_alive(netconn_t*) DECLSPEC_HIDDEN;
 LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
 int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;
 DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, DWORD value) DECLSPEC_HIDDEN;
-int sock_get_error(void) DECLSPEC_HIDDEN;
 int sock_send(int fd, const void *msg, size_t len, int flags) DECLSPEC_HIDDEN;
 int sock_recv(int fd, void *msg, size_t len, int flags) DECLSPEC_HIDDEN;
 
-server_t *get_server(const WCHAR*,INTERNET_PORT,BOOL,BOOL);
+server_t *get_server(const WCHAR*,INTERNET_PORT,BOOL,BOOL) DECLSPEC_HIDDEN;
 
 DWORD create_req_file(const WCHAR*,req_file_t**) DECLSPEC_HIDDEN;
 void req_file_release(req_file_t*) DECLSPEC_HIDDEN;

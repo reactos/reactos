@@ -711,7 +711,7 @@ static BOOL INTERNET_ConfigureProxy( appinfo_t *lpwai )
 
     if (wpi.proxyEnabled)
     {
-        TRACE("http proxy = %s bypass = %s\n", debugstr_w(lpwai->proxy), debugstr_w(lpwai->proxyBypass));
+        TRACE("http proxy = %s bypass = %s\n", debugstr_w(wpi.proxy), debugstr_w(wpi.proxyBypass));
 
         lpwai->accessType    = INTERNET_OPEN_TYPE_PROXY;
         lpwai->proxy         = wpi.proxy;

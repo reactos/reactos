@@ -324,8 +324,10 @@ static BOOL load_persistent_cookie(LPCWSTR domain, LPCWSTR path)
     UnlockUrlCacheEntryStream(cookie, 0);
 
     cookie_container = get_cookie_container(domain, path, TRUE);
-    if(!cookie_container)
+    if(!cookie_container) {
+        heap_free(str);
         return FALSE;
+    }
 
     GetSystemTimeAsFileTime(&time);
     for(pbeg=str; pbeg && *pbeg; name=data=NULL) {
@@ -926,6 +928,7 @@ DWORD set_cookie(const WCHAR *domain, const WCHAR *path, const WCHAR *cookie_nam
         static const WCHAR szExpires[] = {'e','x','p','i','r','e','s','=',0};
         static const WCHAR szSecure[] = {'s','e','c','u','r','e',0};
         static const WCHAR szHttpOnly[] = {'h','t','t','p','o','n','l','y',0};
+        static const WCHAR szVersion[] = {'v','e','r','s','i','o','n','=',0};
 
         if (!(ptr = strchrW(ptr,';'))) break;
         *ptr++ = 0;
@@ -1005,6 +1008,11 @@ DWORD set_cookie(const WCHAR *domain, const WCHAR *path, const WCHAR *cookie_nam
 
             cookie_flags |= INTERNET_COOKIE_HTTPONLY;
             ptr += strlenW(szHttpOnly);
+        }
+        else if (strncmpiW(ptr, szVersion, 8) == 0)
+        {
+            FIXME("version not handled (%s)\n",debugstr_w(ptr));
+            ptr += strlenW(szVersion);
         }
         else if (*ptr)
         {

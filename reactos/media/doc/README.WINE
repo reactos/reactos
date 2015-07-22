@@ -207,7 +207,7 @@ reactos/dll/win32/windowscodecsext    # Synced to WineStaging-1.7.37
 reactos/dll/win32/winemp3.acm         # Synced to WineStaging-1.7.47
 reactos/dll/win32/wing32              # Out of sync
 reactos/dll/win32/winhttp             # Synced to WineStaging-1.7.47
-reactos/dll/win32/wininet             # Synced to WineStaging-1.7.37
+reactos/dll/win32/wininet             # Synced to WineStaging-1.7.47
 reactos/dll/win32/winmm               # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap       # Forked at Wine-20050628
 reactos/dll/win32/winmm/wavemap       # Forked at Wine-20050628

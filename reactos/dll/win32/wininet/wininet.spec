@@ -216,7 +216,7 @@
 @ stdcall IsUrlCacheEntryExpiredA(str long ptr)
 @ stdcall IsUrlCacheEntryExpiredW(wstr long ptr)
 @ stdcall LoadUrlCacheContent()
-@ stub ParseX509EncodedCertificateForListBoxEntry
+@ stdcall ParseX509EncodedCertificateForListBoxEntry(ptr long str ptr)
 @ stdcall PrivacyGetZonePreferenceW(long long ptr ptr ptr)
 @ stdcall PrivacySetZonePreferenceW(long long long wstr)
 @ stdcall ReadUrlCacheEntryStream(ptr long ptr ptr long)
