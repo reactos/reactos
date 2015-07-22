@@ -597,6 +597,7 @@ static struct list *declare_vars(struct hlsl_type *basic_type, DWORD modifiers, 
         var->name = v->name;
         var->modifiers = modifiers;
         var->semantic = v->semantic;
+        var->reg_reservation = v->reg_reservation;
         debug_dump_decl(type, modifiers, v->name, v->loc.line);
 
         if (hlsl_ctx.cur_scope == hlsl_ctx.globals)
@@ -822,6 +823,7 @@ static BOOL add_func_parameter(struct list *list, struct parse_parameter *param,
     decl->node.loc = *loc;
     decl->name = param->name;
     decl->semantic = param->semantic;
+    decl->reg_reservation = param->reg_reservation;
     decl->modifiers = param->modifiers;
 
     if (!add_declaration(hlsl_ctx.cur_scope, decl, FALSE))
@@ -831,6 +833,48 @@ static BOOL add_func_parameter(struct list *list, struct parse_parameter *param,
     }
     list_add_tail(list, &decl->node.entry);
     return TRUE;
+}
+
+static struct reg_reservation *parse_reg_reservation(const char *reg_string)
+{
+    struct reg_reservation *reg_res;
+    enum bwritershader_param_register_type type;
+    DWORD regnum = 0;
+
+    switch (reg_string[0])
+    {
+        case 'c':
+            type = BWRITERSPR_CONST;
+            break;
+        case 'i':
+            type = BWRITERSPR_CONSTINT;
+            break;
+        case 'b':
+            type = BWRITERSPR_CONSTBOOL;
+            break;
+        case 's':
+            type = BWRITERSPR_SAMPLER;
+            break;
+        default:
+            FIXME("Unsupported register type.\n");
+            return NULL;
+     }
+
+    if (!sscanf(reg_string + 1, "%u", &regnum))
+    {
+        FIXME("Unsupported register reservation syntax.\n");
+        return NULL;
+    }
+
+    reg_res = d3dcompiler_alloc(sizeof(*reg_res));
+    if (!reg_res)
+    {
+        ERR("Out of memory.\n");
+        return NULL;
+    }
+    reg_res->type = type;
+    reg_res->regnum = regnum;
+    return reg_res;
 }
 
 static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tree *funcs, char *name,
@@ -879,6 +923,8 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
     struct parse_if_body if_body;
     enum parse_unary_op unary_op;
     enum parse_assign_op assign_op;
+    struct reg_reservation *reg_reservation;
+    struct parse_colon_attribute colon_attribute;
 }
 
 %token KW_BLENDSTATE
@@ -1016,7 +1062,9 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
 %type <function> func_prototype
 %type <list> fields_list
 %type <parameter> parameter
+%type <colon_attribute> colon_attribute
 %type <name> semantic
+%type <reg_reservation> register_opt
 %type <variable_def> variable_def
 %type <list> variables_def
 %type <list> variables_def_optional
@@ -1097,20 +1145,23 @@ hlsl_prog:                /* empty */
 
 preproc_directive:        PRE_LINE STRING
                             {
+                                const char **new_array = NULL;
+
                                 TRACE("Updating line information to file %s, line %u\n", debugstr_a($2), $1);
                                 hlsl_ctx.line_no = $1;
                                 if (strcmp($2, hlsl_ctx.source_file))
-                                {
-                                    const char **new_array;
-
-                                    hlsl_ctx.source_file = $2;
                                     new_array = d3dcompiler_realloc(hlsl_ctx.source_files,
                                             sizeof(*hlsl_ctx.source_files) * hlsl_ctx.source_files_count + 1);
-                                    if (new_array)
-                                    {
-                                        hlsl_ctx.source_files = new_array;
-                                        hlsl_ctx.source_files[hlsl_ctx.source_files_count++] = $2;
-                                    }
+
+                                if (new_array)
+                                {
+                                    hlsl_ctx.source_files = new_array;
+                                    hlsl_ctx.source_files[hlsl_ctx.source_files_count++] = $2;
+                                    hlsl_ctx.source_file = $2;
+                                }
+                                else
+                                {
+                                    d3dcompiler_free($2);
                                 }
                             }
 
@@ -1221,7 +1272,7 @@ func_declaration:         func_prototype compound_statement
                                 pop_scope(&hlsl_ctx);
                             }
 
-func_prototype:           var_modifiers type var_identifier '(' parameters ')' semantic
+func_prototype:           var_modifiers type var_identifier '(' parameters ')' colon_attribute
                             {
                                 if (get_variable(hlsl_ctx.globals, $3))
                                 {
@@ -1229,12 +1280,17 @@ func_prototype:           var_modifiers type var_identifier '(' parameters ')' s
                                             HLSL_LEVEL_ERROR, "redefinition of '%s'\n", $3);
                                     return 1;
                                 }
-                                if ($2->base_type == HLSL_TYPE_VOID && $7)
+                                if ($2->base_type == HLSL_TYPE_VOID && $7.semantic)
                                 {
                                     hlsl_report_message(hlsl_ctx.source_file, @7.first_line, @7.first_column,
                                             HLSL_LEVEL_ERROR, "void function with a semantic");
                                 }
 
+                                if ($7.reg_reservation)
+                                {
+                                    FIXME("Unexpected register reservation for a function.\n");
+                                    d3dcompiler_free($7.reg_reservation);
+                                }
                                 $$.decl = new_func_decl($2, $5);
                                 if (!$$.decl)
                                 {
@@ -1242,7 +1298,7 @@ func_prototype:           var_modifiers type var_identifier '(' parameters ')' s
                                     return -1;
                                 }
                                 $$.name = $3;
-                                $$.decl->semantic = $7;
+                                $$.decl->semantic = $7.semantic;
                                 set_location(&$$.decl->node.loc, &@3);
                             }
 
@@ -1265,13 +1321,40 @@ scope_start:              /* Empty */
 var_identifier:           VAR_IDENTIFIER
                         | NEW_IDENTIFIER
 
-semantic:                 /* Empty */
+colon_attribute:          /* Empty */
                             {
-                                $$ = NULL;
+                                $$.semantic = NULL;
+                                $$.reg_reservation = NULL;
                             }
-                        | ':' any_identifier
+                        | semantic
+                            {
+                                $$.semantic = $1;
+                                $$.reg_reservation = NULL;
+                            }
+                        | register_opt
+                            {
+                                $$.semantic = NULL;
+                                $$.reg_reservation = $1;
+                            }
+
+semantic:                 ':' any_identifier
                             {
                                 $$ = $2;
+                            }
+
+                          /* FIXME: Writemasks */
+register_opt:             ':' KW_REGISTER '(' any_identifier ')'
+                            {
+                                $$ = parse_reg_reservation($4);
+                                d3dcompiler_free($4);
+                            }
+                        | ':' KW_REGISTER '(' any_identifier ',' any_identifier ')'
+                            {
+                                FIXME("Ignoring shader target %s in a register reservation.\n", debugstr_a($4));
+                                d3dcompiler_free($4);
+
+                                $$ = parse_reg_reservation($6);
+                                d3dcompiler_free($6);
                             }
 
 parameters:               scope_start
@@ -1312,13 +1395,14 @@ param_list:               parameter
                                 }
                             }
 
-parameter:                input_mods var_modifiers type any_identifier semantic
+parameter:                input_mods var_modifiers type any_identifier colon_attribute
                             {
                                 $$.modifiers = $1 ? $1 : HLSL_MODIFIER_IN;
                                 $$.modifiers |= $2;
                                 $$.type = $3;
                                 $$.name = $4;
-                                $$.semantic = $5;
+                                $$.semantic = $5.semantic;
+                                $$.reg_reservation = $5.reg_reservation;
                             }
 
 input_mods:               /* Empty */
@@ -1523,22 +1607,24 @@ variables_def:            variable_def
                                 list_add_tail($$, &$3->entry);
                             }
 
-variable_def:             any_identifier array semantic
+variable_def:             any_identifier array colon_attribute
                             {
                                 $$ = d3dcompiler_alloc(sizeof(*$$));
                                 set_location(&$$->loc, &@1);
                                 $$->name = $1;
                                 $$->array_size = $2;
-                                $$->semantic = $3;
+                                $$->semantic = $3.semantic;
+                                $$->reg_reservation = $3.reg_reservation;
                             }
-                        | any_identifier array semantic '=' complex_initializer
+                        | any_identifier array colon_attribute '=' complex_initializer
                             {
                                 TRACE("Declaration with initializer.\n");
                                 $$ = d3dcompiler_alloc(sizeof(*$$));
                                 set_location(&$$->loc, &@1);
                                 $$->name = $1;
                                 $$->array_size = $2;
-                                $$->semantic = $3;
+                                $$->semantic = $3.semantic;
+                                $$->reg_reservation = $3.reg_reservation;
                                 $$->initializer = $5;
                             }
 

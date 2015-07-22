@@ -567,6 +567,13 @@ static DWORD d3d9_opcode(DWORD bwriter_opcode)
     }
 }
 
+static DWORD d3dsp_register( D3DSHADER_PARAM_REGISTER_TYPE type, DWORD num )
+{
+    return ((type << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK) |
+           ((type << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2) |
+           (num & D3DSP_REGNUM_MASK); /* No shift */
+}
+
 /******************************************************
  * Implementation of the writer functions starts here *
  ******************************************************/
@@ -607,10 +614,7 @@ static void write_declarations(struct bc_writer *This,
 static void write_const(struct constant **consts, int num, DWORD opcode, DWORD reg_type, struct bytecode_buffer *buffer, BOOL len) {
     int i;
     DWORD instr_def = opcode;
-    const DWORD reg = (1<<31) |
-                      ((reg_type << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK) |
-                      ((reg_type << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2) |
-                      D3DSP_WRITEMASK_ALL;
+    const DWORD reg = (1<<31) | d3dsp_register( reg_type, 0 ) | D3DSP_WRITEMASK_ALL;
 
     if(len) {
         if(opcode == D3DSIO_DEFB)
@@ -845,41 +849,28 @@ static void end(struct bc_writer *This, const struct bwriter_shader *shader, str
 }
 
 static DWORD map_vs_output(struct bc_writer *This, DWORD regnum, DWORD mask, DWORD *has_components) {
-    DWORD token = 0;
     DWORD i;
 
     *has_components = TRUE;
     if(regnum == This->oPos_regnum) {
-        token |= (D3DSPR_RASTOUT << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-        token |= D3DSRO_POSITION & D3DSP_REGNUM_MASK; /* No shift */
-        return token;
+        return d3dsp_register( D3DSPR_RASTOUT, D3DSRO_POSITION );
     }
     if(regnum == This->oFog_regnum && mask == This->oFog_mask) {
-        token |= (D3DSPR_RASTOUT << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-        token |= D3DSRO_FOG & D3DSP_REGNUM_MASK; /* No shift */
-        token |= D3DSP_WRITEMASK_ALL;
         *has_components = FALSE;
-        return token;
+        return d3dsp_register( D3DSPR_RASTOUT, D3DSRO_FOG ) | D3DSP_WRITEMASK_ALL;
     }
     if(regnum == This->oPts_regnum && mask == This->oPts_mask) {
-        token |= (D3DSPR_RASTOUT << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-        token |= D3DSRO_POINT_SIZE & D3DSP_REGNUM_MASK; /* No shift */
-        token |= D3DSP_WRITEMASK_ALL;
         *has_components = FALSE;
-        return token;
+        return d3dsp_register( D3DSPR_RASTOUT, D3DSRO_POINT_SIZE ) | D3DSP_WRITEMASK_ALL;
     }
     for(i = 0; i < 2; i++) {
         if(regnum == This->oD_regnum[i]) {
-            token |= (D3DSPR_ATTROUT << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= i & D3DSP_REGNUM_MASK; /* No shift */
-            return token;
+            return d3dsp_register( D3DSPR_ATTROUT, i );
         }
     }
     for(i = 0; i < 8; i++) {
         if(regnum == This->oT_regnum[i]) {
-            token |= (D3DSPR_TEXCRDOUT << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= i & D3DSP_REGNUM_MASK; /* No shift */
-            return token;
+            return d3dsp_register( D3DSPR_TEXCRDOUT, i );
         }
     }
 
@@ -918,8 +909,7 @@ static void vs_12_dstreg(struct bc_writer *This, const struct shader_reg *reg,
         case BWRITERSPR_INPUT:
         case BWRITERSPR_TEMP:
         case BWRITERSPR_CONST:
-            token |= (reg->type << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( reg->type, reg->regnum );
             has_wmask = TRUE;
             break;
 
@@ -929,8 +919,7 @@ static void vs_12_dstreg(struct bc_writer *This, const struct shader_reg *reg,
                 This->state = E_INVALIDARG;
                 return;
             }
-            token |= (D3DSPR_ADDR << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= 0 & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( D3DSPR_ADDR, 0 );
             has_wmask = TRUE;
             break;
 
@@ -945,9 +934,7 @@ static void vs_12_dstreg(struct bc_writer *This, const struct shader_reg *reg,
                 This->state = E_INVALIDARG;
                 return;
             }
-            token |= (D3DSPR_PREDICATE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= (D3DSPR_PREDICATE << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-            token |= 0 & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( D3DSPR_PREDICATE, 0 );
             has_wmask = TRUE;
             break;
 
@@ -1011,8 +998,7 @@ static void vs_1_x_srcreg(struct bc_writer *This, const struct shader_reg *reg,
         case BWRITERSPR_TEMP:
         case BWRITERSPR_CONST:
         case BWRITERSPR_ADDR:
-            token |= (reg->type << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( reg->type, reg->regnum );
             if(reg->rel_reg) {
                 if(reg->rel_reg->type != BWRITERSPR_ADDR ||
                    reg->rel_reg->regnum != 0 ||
@@ -1049,48 +1035,37 @@ static void write_srcregs(struct bc_writer *This, const struct instruction *inst
 }
 
 static DWORD map_ps13_temp(struct bc_writer *This, const struct shader_reg *reg) {
-    DWORD token = 0;
     if(reg->regnum == T0_REG) {
-        token |= (D3DSPR_TEXTURE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-        token |= 0 & D3DSP_REGNUM_MASK; /* No shift */
+        return d3dsp_register( D3DSPR_TEXTURE, 0 );
     } else if(reg->regnum == T1_REG) {
-        token |= (D3DSPR_TEXTURE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-        token |= 1 & D3DSP_REGNUM_MASK; /* No shift */
+        return d3dsp_register( D3DSPR_TEXTURE, 1 );
     } else if(reg->regnum == T2_REG) {
-        token |= (D3DSPR_TEXTURE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-        token |= 2 & D3DSP_REGNUM_MASK; /* No shift */
+        return d3dsp_register( D3DSPR_TEXTURE, 2 );
     } else if(reg->regnum == T3_REG) {
-        token |= (D3DSPR_TEXTURE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-        token |= 3 & D3DSP_REGNUM_MASK; /* No shift */
+        return d3dsp_register( D3DSPR_TEXTURE, 3 );
     } else {
-        token |= (D3DSPR_TEMP << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-        token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+        return d3dsp_register( D3DSPR_TEMP, reg->regnum );
     }
-    return token;
 }
 
 static DWORD map_ps_input(struct bc_writer *This,
                           const struct shader_reg *reg) {
-    DWORD i, token = 0;
+    DWORD i;
     /* Map color interpolators */
     for(i = 0; i < 2; i++) {
         if(reg->regnum == This->v_regnum[i]) {
-            token |= (D3DSPR_INPUT << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= i & D3DSP_REGNUM_MASK; /* No shift */
-            return token;
+            return d3dsp_register( D3DSPR_INPUT, i );
         }
     }
     for(i = 0; i < 8; i++) {
         if(reg->regnum == This->t_regnum[i]) {
-            token |= (D3DSPR_TEXTURE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= i & D3DSP_REGNUM_MASK; /* No shift */
-            return token;
+            return d3dsp_register( D3DSPR_TEXTURE, i );
         }
     }
 
     WARN("Invalid ps 1/2 varying\n");
     This->state = E_INVALIDARG;
-    return token;
+    return 0;
 }
 
 static void ps_1_0123_srcreg(struct bc_writer *This, const struct shader_reg *reg,
@@ -1116,8 +1091,7 @@ static void ps_1_0123_srcreg(struct bc_writer *This, const struct shader_reg *re
             break;
 
         case BWRITERSPR_CONST: /* Can be mapped 1:1 */
-            token |= (reg->type << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( reg->type, reg->regnum );
             break;
 
         default:
@@ -1419,8 +1393,7 @@ static void ps_1_4_srcreg(struct bc_writer *This, const struct shader_reg *reg,
         /* Can be mapped 1:1 */
         case BWRITERSPR_TEMP:
         case BWRITERSPR_CONST:
-            token |= (reg->type << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( reg->type, reg->regnum );
             break;
 
         default:
@@ -1454,8 +1427,7 @@ static void ps_1_4_dstreg(struct bc_writer *This, const struct shader_reg *reg,
 
     switch(reg->type) {
         case BWRITERSPR_TEMP: /* 1:1 mapping */
-            token |= (reg->type << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( reg->type, reg->regnum );
             break;
 
 	/* For texkill */
@@ -1636,9 +1608,7 @@ static void vs_2_srcreg(struct bc_writer *This,
         case BWRITERSPR_CONSTBOOL:
         case BWRITERSPR_LABEL:
             d3d9reg = d3d9_register(reg->type);
-            token |= (d3d9reg << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= (d3d9reg << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( d3d9reg, reg->regnum );
             break;
 
         case BWRITERSPR_LOOP:
@@ -1647,9 +1617,7 @@ static void vs_2_srcreg(struct bc_writer *This,
                 This->state = E_INVALIDARG;
                 return;
             }
-            token |= (D3DSPR_LOOP << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= (D3DSPR_LOOP << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-            token |= 0 & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( D3DSPR_LOOP, 0 );
             break;
 
         case BWRITERSPR_PREDICATE:
@@ -1663,10 +1631,7 @@ static void vs_2_srcreg(struct bc_writer *This,
                 This->state = E_INVALIDARG;
                 return;
             }
-            token |= (D3DSPR_PREDICATE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= (D3DSPR_PREDICATE << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-            token |= 0 & D3DSP_REGNUM_MASK; /* No shift */
-
+            token |= d3dsp_register( D3DSPR_PREDICATE, 0 );
             break;
 
         default:
@@ -1834,10 +1799,7 @@ static void write_samplers(const struct bwriter_shader *shader, struct bytecode_
     DWORD i;
     DWORD instr_dcl = D3DSIO_DCL | (2 << D3DSI_INSTLENGTH_SHIFT);
     DWORD token;
-    const DWORD reg = (1<<31) |
-        ((D3DSPR_SAMPLER << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK) |
-        ((D3DSPR_SAMPLER << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2) |
-        D3DSP_WRITEMASK_ALL;
+    const DWORD reg = (1<<31) | d3dsp_register( D3DSPR_SAMPLER, 0 ) | D3DSP_WRITEMASK_ALL;
 
     for(i = 0; i < shader->num_samplers; i++) {
         /* Write the DCL instruction */
@@ -1892,9 +1854,7 @@ static void ps_2_srcreg(struct bc_writer *This,
         case BWRITERSPR_LABEL:
         case BWRITERSPR_DEPTHOUT:
             d3d9reg = d3d9_register(reg->type);
-            token |= (d3d9reg << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= (d3d9reg << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( d3d9reg, reg->regnum );
             break;
 
         case BWRITERSPR_PREDICATE:
@@ -1907,9 +1867,7 @@ static void ps_2_srcreg(struct bc_writer *This,
                      reg->regnum);
                 This->state = E_INVALIDARG;
             }
-            token |= (D3DSPR_PREDICATE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= (D3DSPR_PREDICATE << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-            token |= 0 & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( D3DSPR_PREDICATE, 0 );
             break;
 
         default:
@@ -1942,9 +1900,7 @@ static void ps_2_0_dstreg(struct bc_writer *This,
         case BWRITERSPR_COLOROUT:
         case BWRITERSPR_DEPTHOUT:
             d3d9reg = d3d9_register(reg->type);
-            token |= (d3d9reg << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= (d3d9reg << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( d3d9reg, reg->regnum );
             break;
 
         case BWRITERSPR_PREDICATE:
@@ -1952,9 +1908,7 @@ static void ps_2_0_dstreg(struct bc_writer *This,
                 WARN("Predicate register not supported in ps_2_0\n");
                 This->state = E_INVALIDARG;
             }
-            token |= (D3DSPR_PREDICATE << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-            token |= (D3DSPR_PREDICATE << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-            token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
+            token |= d3dsp_register( D3DSPR_PREDICATE, reg->regnum );
             break;
 
 	/* texkill uses the input register as a destination parameter */
@@ -2109,10 +2063,7 @@ static void sm_3_srcreg(struct bc_writer *This,
     DWORD d3d9reg;
 
     d3d9reg = d3d9_register(reg->type);
-    token |= (d3d9reg << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-    token |= (d3d9reg << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-    token |= reg->regnum & D3DSP_REGNUM_MASK;
-
+    token |= d3dsp_register( d3d9reg, reg->regnum );
     token |= d3d9_swizzle(reg->u.swizzle) & D3DVS_SWIZZLE_MASK;
     token |= d3d9_srcmod(reg->srcmod);
 
@@ -2162,12 +2113,8 @@ static void sm_3_dstreg(struct bc_writer *This,
     }
 
     d3d9reg = d3d9_register(reg->type);
-    token |= (d3d9reg << D3DSP_REGTYPE_SHIFT) & D3DSP_REGTYPE_MASK;
-    token |= (d3d9reg << D3DSP_REGTYPE_SHIFT2) & D3DSP_REGTYPE_MASK2;
-    token |= reg->regnum & D3DSP_REGNUM_MASK; /* No shift */
-
+    token |= d3dsp_register( d3d9reg, reg->regnum );
     token |= d3d9_dstmod(mod);
-
     token |= d3d9_writemask(reg->u.writemask);
     put_dword(buffer, token);
 

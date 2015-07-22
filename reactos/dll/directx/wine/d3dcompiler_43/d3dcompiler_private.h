@@ -750,12 +750,19 @@ struct hlsl_ir_node
 
 #define HLSL_MODIFIERS_COMPARISON_MASK (HLSL_MODIFIER_ROW_MAJOR | HLSL_MODIFIER_COLUMN_MAJOR)
 
+struct reg_reservation
+{
+    enum bwritershader_param_register_type type;
+    DWORD regnum;
+};
+
 struct hlsl_ir_var
 {
     struct hlsl_ir_node node;
     const char *name;
     const char *semantic;
     unsigned int modifiers;
+    const struct reg_reservation *reg_reservation;
     struct list scope_entry;
 
     struct hlsl_var_allocation *allocation;
@@ -964,7 +971,14 @@ struct parse_parameter
     struct hlsl_type *type;
     const char *name;
     const char *semantic;
+    const struct reg_reservation *reg_reservation;
     unsigned int modifiers;
+};
+
+struct parse_colon_attribute
+{
+    const char *semantic;
+    struct reg_reservation *reg_reservation;
 };
 
 struct parse_variable_def
@@ -974,7 +988,8 @@ struct parse_variable_def
 
     char *name;
     unsigned int array_size;
-    char *semantic;
+    const char *semantic;
+    struct reg_reservation *reg_reservation;
     struct list *initializer;
 };
 

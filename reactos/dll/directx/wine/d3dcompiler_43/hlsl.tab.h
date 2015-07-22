@@ -155,7 +155,7 @@ extern int hlsl_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 866 "hlsl.y" /* yacc.c:1909  */
+#line 910 "hlsl.y" /* yacc.c:1909  */
 
     struct hlsl_type *type;
     INT intval;
@@ -172,8 +172,10 @@ union YYSTYPE
     struct parse_if_body if_body;
     enum parse_unary_op unary_op;
     enum parse_assign_op assign_op;
+    struct reg_reservation *reg_reservation;
+    struct parse_colon_attribute colon_attribute;
 
-#line 177 "hlsl.tab.h" /* yacc.c:1909  */
+#line 179 "hlsl.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
