@@ -111,6 +111,8 @@ static void test_IWbemLocator(void)
     static const WCHAR path22W[] = {'r','o','o','t','\\','d','e','f','a','u','l','t',0};
     static const WCHAR path23W[] = {'r','o','o','t','\\','c','i','m','v','0',0};
     static const WCHAR path24W[] = {'r','o','o','t','\\','c','i','m','v','1',0};
+    static const WCHAR path25W[] = {'\\','\\','l','o','c','a','l','h','o','s','t','\\','R','O','O','T',0};
+    static const WCHAR path26W[] = {'\\','\\','L','O','C','A','L','H','O','S','T','\\','R','O','O','T',0};
     static const struct
     {
         const WCHAR *path;
@@ -144,7 +146,9 @@ static void test_IWbemLocator(void)
         { path21W, S_OK },
         { path22W, S_OK },
         { path23W, WBEM_E_INVALID_NAMESPACE },
-        { path24W, WBEM_E_INVALID_NAMESPACE }
+        { path24W, WBEM_E_INVALID_NAMESPACE },
+        { path25W, S_OK },
+        { path26W, S_OK }
     };
     IWbemLocator *locator;
     IWbemServices *services;
