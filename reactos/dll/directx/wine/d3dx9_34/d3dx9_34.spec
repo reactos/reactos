@@ -22,7 +22,7 @@
 @ stdcall D3DXComputeIMTFromPerTexelSignal(ptr long ptr long long long long long ptr ptr ptr) d3dx9_36.D3DXComputeIMTFromPerTexelSignal
 @ stdcall D3DXComputeIMTFromSignal(ptr long long long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXComputeIMTFromSignal
 @ stdcall D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr) d3dx9_36.D3DXComputeIMTFromTexture
-@ stdcall D3DXComputeNormalMap(ptr ptr ptr long long long) d3dx9_36.D3DXComputeNormalMap
+@ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float) d3dx9_36.D3DXComputeNormalMap
 @ stdcall D3DXComputeNormals(ptr ptr) d3dx9_36.D3DXComputeNormals
 @ stdcall D3DXComputeTangent(ptr long long long long ptr) d3dx9_36.D3DXComputeTangent
 @ stdcall D3DXComputeTangentFrame(ptr long) d3dx9_36.D3DXComputeTangentFrame
@@ -134,7 +134,7 @@
 @ stdcall D3DXFrameAppendChild(ptr ptr) d3dx9_36.D3DXFrameAppendChild
 @ stdcall D3DXFrameCalculateBoundingSphere(ptr ptr ptr) d3dx9_36.D3DXFrameCalculateBoundingSphere
 @ stdcall D3DXFrameDestroy(ptr ptr) d3dx9_36.D3DXFrameDestroy
-@ stdcall D3DXFrameFind(ptr ptr) d3dx9_36.D3DXFrameFind
+@ stdcall D3DXFrameFind(ptr str) d3dx9_36.D3DXFrameFind
 @ stdcall D3DXFrameNumNamedMatrices(ptr) d3dx9_36.D3DXFrameNumNamedMatrices
 @ stdcall D3DXFrameRegisterNamedMatrices(ptr ptr) d3dx9_36.D3DXFrameRegisterNamedMatrices
 @ stdcall D3DXFresnelTerm(float float) d3dx9_36.D3DXFresnelTerm

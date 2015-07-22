@@ -1848,7 +1848,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
     struct volume src_size, dst_size;
     HRESULT ret = D3D_OK;
 
-    TRACE("(%p, %p, %s, %p, %#x, %u, %p, %s %#x, 0x%08x)\n",
+    TRACE("(%p, %p, %s, %p, %#x, %u, %p, %s, %#x, 0x%08x)\n",
             dst_surface, dst_palette, wine_dbgstr_rect(dst_rect), src_memory, src_format,
             src_pitch, src_palette, wine_dbgstr_rect(src_rect), filter, color_key);
 
@@ -2161,7 +2161,7 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
 
     if (src_palette)
     {
-        FIXME("Saving surfaces with palettized pixel formats not implemented yet\n");
+        FIXME("Saving surfaces with palettized pixel formats is not implemented yet\n");
         return D3DERR_INVALIDCALL;
     }
 

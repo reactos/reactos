@@ -265,7 +265,7 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
         unsigned int channels;
         const struct pixel_format_desc *curfmt, *bestfmt = NULL;
 
-        TRACE("Requested format not supported, looking for a fallback.\n");
+        TRACE("Requested format is not supported, looking for a fallback.\n");
 
         if (!fmt)
         {
@@ -657,7 +657,7 @@ HRESULT WINAPI D3DXCreateTextureFromFileInMemoryEx(struct IDirect3DDevice9 *devi
 
     if (imginfo.MipLevels < miplevels && (D3DFMT_DXT1 <= imginfo.Format && imginfo.Format <= D3DFMT_DXT5))
     {
-        FIXME("Generation of mipmaps for compressed pixel formats is not implemented yet\n");
+        FIXME("Generation of mipmaps for compressed pixel formats is not implemented yet.\n");
         miplevels = imginfo.MipLevels;
     }
     if (imginfo.ResourceType == D3DRTYPE_VOLUMETEXTURE
@@ -1215,7 +1215,7 @@ HRESULT WINAPI D3DXCreateVolumeTextureFromFileInMemoryEx(IDirect3DDevice9 *devic
 
     if (mip_levels > image_info.MipLevels)
     {
-        FIXME("Generation of mipmaps for volume textures is not implemented yet\n");
+        FIXME("Generation of mipmaps for volume textures is not implemented yet.\n");
         mip_levels = image_info.MipLevels;
     }
 
@@ -1456,7 +1456,7 @@ HRESULT WINAPI D3DXCreateCubeTextureFromFileInMemoryEx(IDirect3DDevice9 *device,
 
     if (mip_levels > img_info.MipLevels && (D3DFMT_DXT1 <= img_info.Format && img_info.Format <= D3DFMT_DXT5))
     {
-        FIXME("Generation of mipmaps for compressed pixel formats not supported yet\n");
+        FIXME("Generation of mipmaps for compressed pixel formats is not supported yet.\n");
         mip_levels = img_info.MipLevels;
     }
 

@@ -327,7 +327,7 @@ static HRESULT d3dx9_file_data_create(IDirectXFileObject *dxfile_object, ID3DXFi
         }
         else
         {
-            FIXME("Don't known what to do with binary object\n");
+            FIXME("Don't know what to do with binary object\n");
             HeapFree(GetProcessHeap(), 0, object);
             return E_FAIL;
         }

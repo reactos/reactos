@@ -5,6 +5,7 @@ spec2def(d3dx9_25.dll d3dx9_25.spec)
 
 list(APPEND SOURCE
     d3dx9_25_main.c
+    effect.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_25_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_25.def)
 

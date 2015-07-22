@@ -20,6 +20,11 @@
 #include "d3dx9_36_private.h"
 
 #include <d3dcompiler.h>
+#include <initguid.h>
+
+/* d3dx9_26 provides an ID3DXEffect interface where the last function SetRawValue
+ * is missing. Since its otherwise identical, we just use the same vtable. */
+DEFINE_GUID(IID_ID3DXEffect26, 0xc7b17651, 0x5420, 0x490e, 0x8a, 0x7f, 0x92, 0x36, 0x75, 0xa2, 0xd6, 0x87);
 
 /* Constants for special INT/FLOAT conversation */
 #define INT_FLOAT_MULTI 255.0f
@@ -2492,7 +2497,8 @@ static HRESULT WINAPI ID3DXEffectImpl_QueryInterface(ID3DXEffect *iface, REFIID 
     TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), object);
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
-        IsEqualGUID(riid, &IID_ID3DXEffect))
+        IsEqualGUID(riid, &IID_ID3DXEffect) ||
+        IsEqualGUID(riid, &IID_ID3DXEffect26))
     {
         iface->lpVtbl->AddRef(iface);
         *object = iface;
@@ -3382,7 +3388,12 @@ static HRESULT WINAPI ID3DXEffectImpl_CloneEffect(ID3DXEffect *iface,
 
     FIXME("(%p)->(%p, %p): stub\n", This, device, effect);
 
-    return E_NOTIMPL;
+    if (!effect)
+        return D3DXERR_INVALIDDATA;
+
+    iface->lpVtbl->AddRef(iface);
+    *effect = iface;
+    return S_OK;
 }
 
 static HRESULT WINAPI ID3DXEffectImpl_SetRawValue(ID3DXEffect *iface,
