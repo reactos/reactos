@@ -158,7 +158,7 @@ static PROTOCOLDATA protocoldata, *pdata, continue_protdata;
 static DWORD prot_read, filter_state, http_post_test, thread_id;
 static BOOL security_problem, test_async_req, impl_protex;
 static BOOL async_read_pending, mimefilter_test, direct_read, wait_for_switch, emulate_prot, short_read, test_abort;
-static BOOL empty_file, no_mime, bind_from_cache;
+static BOOL empty_file, no_mime, bind_from_cache, file_with_hash;
 
 enum {
     STATE_CONNECTING,
@@ -585,7 +585,8 @@ static void call_continue(PROTOCOLDATA *protocol_data)
 {
     HRESULT hres;
 
-    trace("continue in state %d\n", state);
+    if (winetest_debug > 1)
+        trace("continue in state %d\n", state);
 
     if(state == STATE_CONNECTING) {
         if(tested_protocol == HTTP_TEST || tested_protocol == HTTPS_TEST || tested_protocol == FTP_TEST) {
@@ -766,10 +767,13 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
         '0','0','0','0','-','0','0','0','0','-','0','0','0','0','0','0','0','0','0','0','0','0','}',0};
     static const WCHAR text_plain[] = {'t','e','x','t','/','p','l','a','i','n',0};
 
-    if (ulStatusCode < sizeof(status_names)/sizeof(status_names[0]))
-        trace( "progress: %s %s\n", status_names[ulStatusCode], wine_dbgstr_w(szStatusText) );
-    else
-        trace( "progress: %u %s\n", ulStatusCode, wine_dbgstr_w(szStatusText) );
+    if (winetest_debug > 1)
+    {
+        if (ulStatusCode < sizeof(status_names)/sizeof(status_names[0]))
+            trace( "progress: %s %s\n", status_names[ulStatusCode], wine_dbgstr_w(szStatusText) );
+        else
+            trace( "progress: %u %s\n", ulStatusCode, wine_dbgstr_w(szStatusText) );
+    }
 
     switch(ulStatusCode) {
     case BINDSTATUS_MIMETYPEAVAILABLE:
@@ -908,7 +912,8 @@ static HRESULT WINAPI ProtocolSink_ReportData(IInternetProtocolSink *iface, DWOR
 
         ok(ulProgress == ulProgressMax, "ulProgress (%d) != ulProgressMax (%d)\n",
            ulProgress, ulProgressMax);
-        ok(ulProgressMax == 13, "ulProgressMax=%d, expected 13\n", ulProgressMax);
+        if(!file_with_hash)
+            ok(ulProgressMax == 13, "ulProgressMax=%d, expected 13\n", ulProgressMax);
         /* BSCF_SKIPDRAINDATAFORFILEURLS added in IE8 */
         if(tested_protocol == FILE_TEST)
             ok((grfBSCF == (BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION)) ||
@@ -2397,6 +2402,7 @@ static void init_test(int prot, DWORD flags)
     impl_protex = (flags & TEST_IMPLPROTEX) != 0;
     empty_file = (flags & TEST_EMPTY) != 0;
     bind_from_cache = (flags & TEST_FROMCACHE) != 0;
+    file_with_hash = FALSE;
 
     register_filter(mimefilter_test);
 }
@@ -2531,6 +2537,8 @@ static void test_file_protocol_url(LPCWSTR url)
             hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
             ok(hres == S_OK, "Read failed: %08x\n", hres);
             ok(cb == 2, "cb=%u expected 2\n", cb);
+            buf[2] = 0;
+            ok(!memcmp(buf, file_with_hash ? "XX" : "<H", 2), "Unexpected data %s\n", buf);
             hres = IInternetProtocol_Read(protocol, buf, sizeof(buf), &cb);
             ok(hres == S_FALSE, "Read failed: %08x\n", hres);
             hres = IInternetProtocol_Read(protocol, buf, sizeof(buf), &cb);
@@ -2565,7 +2573,10 @@ static void test_file_protocol_url(LPCWSTR url)
             hres = IInternetProtocol_UnlockRequest(protocol);
             ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
             hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
-            ok(hres == S_OK, "Read failed: %08x\n", hres);
+            if(file_with_hash) /* FIXME: An effect of UnlockRequest call? */
+                todo_wine ok(hres == S_OK, "Read failed: %08x\n", hres);
+            else
+                ok(hres == S_OK, "Read failed: %08x\n", hres);
             hres = IInternetProtocol_Terminate(protocol, 0);
             ok(hres == S_OK, "Terminate failed: %08x\n", hres);
         }
@@ -2718,6 +2729,7 @@ static void test_file_protocol(void) {
     static const WCHAR wszFile3[] = {'f','i','l','e',':','/','/','/',0};
     static const WCHAR wszFile4[] = {'f','i','l','e',':','\\','\\',0};
     static const char html_doc[] = "<HTML></HTML>";
+    static const WCHAR fragmentW[] = {'#','f','r','a','g',0};
 
     trace("Testing file protocol...\n");
     init_test(FILE_TEST, 0);
@@ -2791,7 +2803,25 @@ static void test_file_protocol(void) {
     buf[sizeof(wszFile4)/sizeof(WCHAR)] = '|';
     test_file_protocol_url(buf);
 
+    /* Fragment part of URL is skipped if the file doesn't exist. */
+    lstrcatW(buf, fragmentW);
+    test_file_protocol_url(buf);
+
+    /* Fragment part is considered a part of the file name, if the file exsists. */
+    len = lstrlenW(file_name_buf);
+    lstrcpyW(file_name_buf+len, fragmentW);
+    file = CreateFileW(wszIndexHtml, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed\n");
+    WriteFile(file, "XXX", 3, &size, NULL);
+    CloseHandle(file);
+    file_name_buf[len] = 0;
+
+    file_with_hash = TRUE;
+    test_file_protocol_url(buf);
+
     DeleteFileW(wszIndexHtml);
+    DeleteFileW(file_name_buf);
 
     bindf = 0;
     test_file_protocol_fail();

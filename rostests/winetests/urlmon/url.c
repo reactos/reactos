@@ -2572,6 +2572,7 @@ static BOOL test_bscholder(IBindStatusCallback *holder)
     IHttpNegotiate *http_negotiate, *http_negotiate_serv;
     IHttpNegotiate2 *http_negotiate2, *http_negotiate2_serv;
     IAuthenticate *authenticate, *authenticate_serv;
+    IInternetBindInfo *bind_info;
     IInternetProtocol *protocol;
     BINDINFO bindinfo = {sizeof(bindinfo)};
     BOOL ret = TRUE;
@@ -2685,6 +2686,16 @@ static BOOL test_bscholder(IBindStatusCallback *holder)
 
     IAuthenticate_Release(authenticate);
     IAuthenticate_Release(authenticate_serv);
+
+    hres = IBindStatusCallback_QueryInterface(holder, &IID_IInternetBindInfo, (void**)&bind_info);
+    ok(hres == S_OK || broken(hres == E_NOINTERFACE /* win2k */), "Could not get IInternetBindInfo interface: %08x\n", hres);
+
+    if(SUCCEEDED(hres)) {
+        hres = IInternetBindInfo_GetBindString(bind_info, BINDSTRING_USER_AGENT, &wstr, 1, &dw);
+        ok(hres == E_NOINTERFACE, "GetBindString(BINDSTRING_USER_AGENT) failed: %08x\n", hres);
+
+        IInternetBindInfo_Release(bind_info);
+    }
 
     SET_EXPECT(OnStopBinding);
     hres = IBindStatusCallback_OnStopBinding(holder, S_OK, NULL);
@@ -3848,6 +3859,32 @@ static void register_protocols(void)
     IInternetSession_Release(session);
 }
 
+static BOOL can_do_https(void)
+{
+    HINTERNET ses, con, req;
+    BOOL ret;
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpen failed\n");
+
+    con = InternetConnectA(ses, "test.winehq.org", INTERNET_DEFAULT_HTTPS_PORT,
+            NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnect failed\n");
+
+    req = HttpOpenRequestA(con, "GET", "/tests/hello.html", NULL, NULL, NULL,
+            INTERNET_FLAG_SECURE, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret || broken(GetLastError() == ERROR_INTERNET_CANNOT_CONNECT),
+        "request failed: %u\n", GetLastError());
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+    return ret;
+}
+
 START_TEST(url)
 {
     HMODULE hurlmon;
@@ -3927,25 +3964,34 @@ START_TEST(url)
         trace("file test (no callback)...\n");
         test_BindToStorage(FILE_TEST, BINDTEST_NO_CALLBACK, TYMED_ISTREAM);
 
-        trace("synchronous https test (invalid CN, dialog)\n");
-        onsecurityproblem_hres = S_FALSE;
-        http_is_first = TRUE;
-        test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+        if(can_do_https()) {
+            trace("synchronous https test (invalid CN, dialog)\n");
+            onsecurityproblem_hres = S_FALSE;
+            http_is_first = TRUE;
+            test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+
+            bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA;
+
+            trace("asynchronous https test (invalid CN, fail)\n");
+            onsecurityproblem_hres = E_FAIL;
+            test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+
+            trace("asynchronous https test (invalid CN, accept)\n");
+            onsecurityproblem_hres = S_OK;
+            test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+
+            trace("asynchronous https test (invalid CN, dialog 2)\n");
+            onsecurityproblem_hres = S_FALSE;
+            test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+            invalid_cn_accepted = FALSE;
+
+            trace("asynchronous https test...\n");
+            test_BindToStorage(HTTPS_TEST, 0, TYMED_ISTREAM);
+        }else {
+            win_skip("Skipping https testt\n");
+        }
 
         bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA;
-
-        trace("asynchronous https test (invalid CN, fail)\n");
-        onsecurityproblem_hres = E_FAIL;
-        test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
-
-        trace("asynchronous https test (invalid CN, accept)\n");
-        onsecurityproblem_hres = S_OK;
-        test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
-
-        trace("asynchronous https test (invalid CN, dialog 2)\n");
-        onsecurityproblem_hres = S_FALSE;
-        test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
-        invalid_cn_accepted = FALSE;
 
         trace("winetest test (async switch)...\n");
         test_BindToStorage(WINETEST_TEST, BINDTEST_EMULATE|BINDTEST_ASYNC_SWITCH, TYMED_ISTREAM);
@@ -3999,9 +4045,6 @@ START_TEST(url)
 
         trace("winetest test (no callback)...\n");
         test_BindToStorage(WINETEST_TEST, BINDTEST_EMULATE|BINDTEST_NO_CALLBACK|BINDTEST_USE_CACHE, TYMED_ISTREAM);
-
-        trace("asynchronous https test...\n");
-        test_BindToStorage(HTTPS_TEST, 0, TYMED_ISTREAM);
 
         trace("emulated https test...\n");
         test_BindToStorage(HTTPS_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
