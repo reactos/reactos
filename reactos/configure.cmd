@@ -129,6 +129,15 @@ if not defined ARCH (
                 ) else (
                     set CMAKE_GENERATOR="Visual Studio 12"
                 )
+            ) else if "!VS_VERSION!" == "14" (
+                if "!ARCH!" == "amd64" (
+                    set CMAKE_GENERATOR="Visual Studio 14 Win64"
+                ) else if "!ARCH!" == "arm" (
+                    set CMAKE_GENERATOR="Visual Studio 14 ARM"
+                    set CMAKE_GENERATOR_HOST="Visual Studio 14"
+                ) else (
+                    set CMAKE_GENERATOR="Visual Studio 14"
+                )
             )
         ) else if /I "%1" == "RTC" (
             echo Runtime checks enabled
