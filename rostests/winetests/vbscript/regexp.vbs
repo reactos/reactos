@@ -174,4 +174,21 @@ Call ok(x.IgnoreCase = false, "RegExp.IgnoreCase = " & x.IgnoreCase)
 Call ok(x.Global = false, "RegExp.Global = " & x.Global)
 Call ok(x.Multiline = false, "RegExp.Multiline = " & x.Multiline)
 
+set matches = x.execute("test")
+Call ok(matches.Count = 1, "matches.Count = " & matches.Count)
+x.pattern = ""
+set matches = x.execute("test")
+Call ok(matches.Count = 1, "matches.Count = " & matches.Count)
+set match = matches.item(0)
+Call ok(match.Value = "", "match.Value = " & match.Value)
+x.global = true
+set matches = x.execute("test")
+Call ok(matches.Count = 5, "matches.Count = " & matches.Count)
+set match = matches.item(0)
+Call ok(match.Value = "", "match.Value = " & match.Value)
+set match = matches.item(4)
+Call ok(match.Value = "", "match.Value = " & match.Value)
+matches = x.test("test")
+Call ok(matches = true, "matches = " & matches)
+
 Call reportSuccess()

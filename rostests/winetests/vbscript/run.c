@@ -90,6 +90,8 @@ DEFINE_EXPECT(global_success_d);
 DEFINE_EXPECT(global_success_i);
 DEFINE_EXPECT(global_vbvar_d);
 DEFINE_EXPECT(global_vbvar_i);
+DEFINE_EXPECT(global_letobj_i);
+DEFINE_EXPECT(global_setobj_i);
 DEFINE_EXPECT(testobj_propget_d);
 DEFINE_EXPECT(testobj_propget_i);
 DEFINE_EXPECT(testobj_propput_d);
@@ -124,6 +126,8 @@ DEFINE_EXPECT(EnableModeless);
 #define DISPID_GLOBAL_TESTARRAY     1015
 #define DISPID_GLOBAL_THROWINT      1016
 #define DISPID_GLOBAL_TESTOPTIONALARG 1017
+#define DISPID_GLOBAL_LETOBJ        1018
+#define DISPID_GLOBAL_SETOBJ        1019
 
 #define DISPID_TESTOBJ_PROPGET      2000
 #define DISPID_TESTOBJ_PROPPUT      2001
@@ -140,6 +144,7 @@ static BOOL strict_dispid_check, is_english, allow_ui;
 static const char *test_name = "(null)";
 static int test_counter;
 static SCRIPTUICHANDLING uic_handling = SCRIPTUICHANDLING_NOUIERROR;
+static IDispatchEx testObj;
 
 static BSTR a2bstr(const char *str)
 {
@@ -340,9 +345,60 @@ static void test_disp(IDispatch *disp)
     ok(hres == DISP_E_MEMBERNOTFOUND, "InvokeEx failed: %08x, expected DISP_E_MEMBERNOTFOUND\n", hres);
     ok(V_VT(&v) == VT_EMPTY, "V_VT(v) = %d\n", V_VT(&v));
 
+    SET_EXPECT(testobj_value_i);
+    V_VT(args) = VT_DISPATCH;
+    V_DISPATCH(args) = (IDispatch*)&testObj;
+    dp.cArgs = dp.cNamedArgs = 1;
+    hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYPUT, &dp, NULL, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    CHECK_CALLED(testobj_value_i);
+
+    dp.cArgs = dp.cNamedArgs = 0;
+    hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_I2, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I2(&v) == 0, "V_I2(v) = %d\n", V_I2(&v));
+
+    V_VT(args) = VT_DISPATCH;
+    V_DISPATCH(args) = (IDispatch*)&testObj;
+    dp.cArgs = dp.cNamedArgs = 1;
+    hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF, &dp, NULL, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+
+    V_VT(args) = VT_DISPATCH;
+    V_DISPATCH(args) = (IDispatch*)&testObj;
+    dp.cArgs = dp.cNamedArgs = 1;
+    hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYPUTREF, &dp, NULL, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+
+    dp.cArgs = dp.cNamedArgs = 0;
+    hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) == (IDispatch*)&testObj, "V_DISPATCH(v) != testObj\n");
+
+    V_VT(args) = VT_BOOL;
+    V_BOOL(args) = VARIANT_TRUE;
+    dp.cArgs = dp.cNamedArgs = 1;
+    hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF, &dp, NULL, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+
+    dp.cArgs = dp.cNamedArgs = 0;
+    hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_BOOL(&v) == VARIANT_TRUE, "V_BOOL(v) = %x\n", V_BOOL(&v));
+
+    V_VT(args) = VT_BOOL;
+    V_BOOL(args) = VARIANT_FALSE;
+    dp.cArgs = dp.cNamedArgs = 1;
+    hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYPUTREF, &dp, NULL, &ei, NULL);
+    ok(hres == DISP_E_EXCEPTION, "InvokeEx failed: %08x, expected DISP_E_EXCEPTION\n", hres);
+
     V_VT(args) = VT_BOOL;
     V_BOOL(args) = VARIANT_FALSE;
     dp.cArgs = 1;
+    dp.cNamedArgs = 0;
     V_VT(&v) = VT_BOOL;
     hres = IDispatchEx_InvokeEx(dispex, public_prop_id, 0, DISPATCH_PROPERTYPUT, &dp, NULL, &ei, NULL);
     ok(hres == DISP_E_PARAMNOTOPTIONAL, "InvokeEx failed: %08x, expected DISP_E_PARAMNOTOPTIONAL\n", hres);
@@ -969,6 +1025,16 @@ static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD 
         *pid = DISPID_GLOBAL_VBVAR;
         return S_OK;
     }
+    if(!strcmp_wa(bstrName, "letobj")) {
+        test_grfdex(grfdex, fdexNameCaseInsensitive);
+        *pid = DISPID_GLOBAL_LETOBJ;
+        return S_OK;
+    }
+    if(!strcmp_wa(bstrName, "setobj")) {
+        test_grfdex(grfdex, fdexNameCaseInsensitive);
+        *pid = DISPID_GLOBAL_SETOBJ;
+        return S_OK;
+    }
     if(!strcmp_wa(bstrName, "isNullDisp")) {
         test_grfdex(grfdex, fdexNameCaseInsensitive);
         *pid = DISPID_GLOBAL_ISNULLDISP;
@@ -1129,6 +1195,40 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 
         ok(V_VT(pdp->rgvarg) == VT_I2, "V_VT(psp->rgvargs) = %d\n", V_VT(pdp->rgvarg));
         ok(V_I2(pdp->rgvarg) == 3, "V_I2(psp->rgvargs) = %d\n", V_I2(pdp->rgvarg));
+        return S_OK;
+
+    case DISPID_GLOBAL_LETOBJ:
+        CHECK_EXPECT(global_letobj_i);
+
+        ok(wFlags == DISPATCH_PROPERTYPUT, "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
+        ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+        ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %d\n", pdp->rgdispidNamedArgs[0]);
+        ok(!pvarRes, "pvarRes != NULL\n");
+        ok(pei != NULL, "pei == NULL\n");
+
+        ok(V_VT(pdp->rgvarg) == VT_DISPATCH, "V_VT(psp->rgvargs) = %d\n", V_VT(pdp->rgvarg));
+        ok(V_DISPATCH(pdp->rgvarg) == (IDispatch*)&testObj, "V_DISPATCH(psp->rgvargs) != testObj\n");
+        return S_OK;
+
+    case DISPID_GLOBAL_SETOBJ:
+        CHECK_EXPECT(global_setobj_i);
+
+        ok(wFlags == DISPATCH_PROPERTYPUTREF, "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
+        ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+        ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %d\n", pdp->rgdispidNamedArgs[0]);
+        ok(!pvarRes, "pvarRes != NULL\n");
+        ok(pei != NULL, "pei == NULL\n");
+
+        ok(V_VT(pdp->rgvarg) == VT_DISPATCH, "V_VT(psp->rgvargs) = %d\n", V_VT(pdp->rgvarg));
+        ok(V_DISPATCH(pdp->rgvarg) == (IDispatch*)&testObj, "V_DISPATCH(psp->rgvargs) != testObj\n");
         return S_OK;
 
     case DISPID_GLOBAL_TESTOBJ:
@@ -2033,6 +2133,22 @@ static void run_tests(void)
     parse_script_a("Option Explicit\nvbvar() = 3");
     CHECK_CALLED(global_vbvar_d);
     CHECK_CALLED(global_vbvar_i);
+
+    SET_EXPECT(global_letobj_i);
+    parse_script_a("Option Explicit\nletobj = testObj");
+    CHECK_CALLED(global_letobj_i);
+
+    SET_EXPECT(global_letobj_i);
+    parse_script_a("Option Explicit\ntest.letobj = testObj");
+    CHECK_CALLED(global_letobj_i);
+
+    SET_EXPECT(global_setobj_i);
+    parse_script_a("Option Explicit\nset setobj = testObj");
+    CHECK_CALLED(global_setobj_i);
+
+    SET_EXPECT(global_setobj_i);
+    parse_script_a("Option Explicit\nset test.setobj = testObj");
+    CHECK_CALLED(global_setobj_i);
 
     SET_EXPECT(testobj_propget_d);
     SET_EXPECT(testobj_propget_i);

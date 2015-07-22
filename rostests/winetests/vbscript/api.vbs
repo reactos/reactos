@@ -233,9 +233,60 @@ TestHex -1, "FFFF"
 TestHex -16, "FFF0"
 TestHex -934859845, "C8472BBB"
 TestHex empty, "0"
+TestHex "17", "11"
+TestHex 228.5, "E4"
+TestHex -32767, "8001"
+TestHex -32768, "FFFF8000"
+TestHex 2147483647.49, "7FFFFFFF"
+TestHex -2147483647.5, "80000000"
+newObject.myval = 30.5
+TestHex newObject, "1E"
+newObject.myval = "27"
+TestHex newObject, "1B"
+
 
 Call ok(getVT(hex(null)) = "VT_NULL", "getVT(hex(null)) = " & getVT(hex(null)))
 Call ok(getVT(hex(empty)) = "VT_BSTR", "getVT(hex(empty)) = " & getVT(hex(empty)))
+
+Sub TestHexError(num, err_num)
+    On Error Resume Next
+    Call Hex(num)
+    Call ok(Err.number = err_num, "Hex(" & num & ") returns error number " & Err.number & " expected " & err_num)
+End Sub
+
+TestHexError 2147483647.5, 6
+TestHexError 2147483648.51, 6
+TestHexError "test", 13
+
+Sub TestOct(x, ex, res_type)
+    Call ok(Oct(x) = ex, "Oct(" & x & ") = " & Oct(x) & " expected " & ex)
+    Call ok(getVT(Oct(x)) = res_type, "getVT(Oct(" &x & ")) = " & getVT(Oct(x)) & "expected " & res_type)
+End Sub
+
+Sub TestOctError(num, err_num)
+    On error resume next
+    Call Oct(num)
+    Call ok(Err.number = err_num, "Oct(" & num & ") error number is " & Err.number & " expected " & err_num)
+End Sub
+
+TestOct empty, "0", "VT_BSTR"
+TestOct 0, "0", "VT_BSTR"
+TestOct 9, "11", "VT_BSTR"
+TestOct "9", "11", "VT_BSTR"
+TestOct 8.5, "10", "VT_BSTR"
+TestOct 9.5, "12", "VT_BSTR"
+TestOct -1, "177777", "VT_BSTR"
+TestOct -32767, "100001", "VT_BSTR"
+TestOct -32768, "37777700000", "VT_BSTR"
+TestOct 2147483647.49, "17777777777", "VT_BSTR"
+TestOct -2147483648.5, "20000000000", "VT_BSTR"
+Call ok(getVT(Oct(null)) = "VT_NULL", "getVT(Oct(null)) = " & getVT(Oct(null)))
+newObject.myval = 5
+TestOct newObject, "5", "VT_BSTR"
+
+TestOctError 2147483647.5, 6
+TestOctError -2147483648.51, 6
+TestOctError "test", 13
 
 x = InStr(1, "abcd", "bc")
 Call ok(x = 2, "InStr returned " & x)
