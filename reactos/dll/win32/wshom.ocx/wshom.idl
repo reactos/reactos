@@ -436,10 +436,10 @@ library IWshRuntimeLibrary
         HRESULT StdErr([out, retval] ITextStream** stream);
 
         [id(0x0006), propget]
-        HRESULT ProcessID([out, retval] long* pid);
+        HRESULT ProcessID([out, retval] DWORD *pid);
 
         [id(0x0007), propget]
-        HRESULT ExitCode([out, retval] long* ExitCode);
+        HRESULT ExitCode([out, retval] DWORD *code);
 
         [id(0x0008)]
         HRESULT Terminate();

@@ -35,6 +35,7 @@ typedef enum tid_t {
     NULL_tid,
     IWshCollection_tid,
     IWshEnvironment_tid,
+    IWshExec_tid,
     IWshShell3_tid,
     IWshShortcut_tid,
     LAST_tid
