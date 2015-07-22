@@ -42,7 +42,10 @@ static void test_wshshell(void)
     static const WCHAR pathW[] = {'%','P','A','T','H','%',0};
     static const WCHAR sysW[] = {'S','Y','S','T','E','M',0};
     static const WCHAR path2W[] = {'P','A','T','H',0};
+    static const WCHAR dummydirW[] = {'d','e','a','d','p','a','r','r','o','t',0};
+    static const WCHAR emptyW[] = {'e','m','p','t','y',0};
     IWshEnvironment *env;
+    IWshExec *shexec;
     IWshShell3 *sh3;
     IDispatchEx *dispex;
     IWshCollection *coll;
@@ -212,6 +215,42 @@ static void test_wshshell(void)
 
     SysFreeString(str);
 
+    /* current directory */
+if (0) /* crashes on native */
+    hr = IWshShell3_get_CurrentDirectory(sh3, NULL);
+
+    str = NULL;
+    hr = IWshShell3_get_CurrentDirectory(sh3, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(str && str[0] != 0, "got empty string\n");
+    SysFreeString(str);
+
+    hr = IWshShell3_put_CurrentDirectory(sh3, NULL);
+    ok(hr == E_INVALIDARG ||
+       broken(hr == HRESULT_FROM_WIN32(ERROR_NOACCESS)), "got 0x%08x\n", hr);
+
+    str = SysAllocString(emptyW);
+    hr = IWshShell3_put_CurrentDirectory(sh3, str);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got 0x%08x\n", hr);
+    SysFreeString(str);
+
+    str = SysAllocString(dummydirW);
+    hr = IWshShell3_put_CurrentDirectory(sh3, str);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got 0x%08x\n", hr);
+    SysFreeString(str);
+
+    /* Exec */
+    hr = IWshShell3_Exec(sh3, NULL, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = IWshShell3_Exec(sh3, NULL, &shexec);
+    ok(hr == DISP_E_EXCEPTION, "got 0x%08x\n", hr);
+
+    str = SysAllocString(emptyW);
+    hr = IWshShell3_Exec(sh3, str, &shexec);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got 0x%08x\n", hr);
+    SysFreeString(str);
+
     IWshCollection_Release(coll);
     IDispatch_Release(disp);
     IWshShell3_Release(sh3);
@@ -241,7 +280,7 @@ static void test_registry(void)
 {
     static const WCHAR keypathW[] = {'H','K','E','Y','_','C','U','R','R','E','N','T','_','U','S','E','R','\\',
         'S','o','f','t','w','a','r','e','\\','W','i','n','e','\\','T','e','s','t','\\',0};
-
+    static const WCHAR regsz2W[] = {'r','e','g','s','z','2',0};
     static const WCHAR regszW[] = {'r','e','g','s','z',0};
     static const WCHAR regdwordW[] = {'r','e','g','d','w','o','r','d',0};
     static const WCHAR regbinaryW[] = {'r','e','g','b','i','n','a','r','y',0};
@@ -297,6 +336,9 @@ static void test_registry(void)
     ret = RegSetValueExA(root, "regsz", 0, REG_SZ, (const BYTE*)"foobar", 7);
     ok(ret == 0, "got %d\n", ret);
 
+    ret = RegSetValueExA(root, "regsz2", 0, REG_SZ, (const BYTE*)"foobar\0f", 9);
+    ok(ret == 0, "got %d\n", ret);
+
     ret = RegSetValueExA(root, "regmultisz", 0, REG_MULTI_SZ, (const BYTE*)"foo\0bar\0", 9);
     ok(ret == 0, "got %d\n", ret);
 
@@ -317,6 +359,18 @@ static void test_registry(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(V_VT(&value) == VT_BSTR, "got %d\n", V_VT(&value));
     ok(!lstrcmpW(V_BSTR(&value), foobarW), "got %s\n", wine_dbgstr_w(V_BSTR(&value)));
+    VariantClear(&value);
+    SysFreeString(name);
+
+    /* REG_SZ with embedded NULL */
+    lstrcpyW(pathW, keypathW);
+    lstrcatW(pathW, regsz2W);
+    name = SysAllocString(pathW);
+    VariantInit(&value);
+    hr = IWshShell3_RegRead(sh3, name, &value);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&value) == VT_BSTR, "got %d\n", V_VT(&value));
+    ok(SysStringLen(V_BSTR(&value)) == 6, "len %d\n", SysStringLen(V_BSTR(&value)));
     VariantClear(&value);
     SysFreeString(name);
 
@@ -371,6 +425,7 @@ static void test_registry(void)
     hr = IWshShell3_RegRead(sh3, name, &value);
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(V_VT(&value) == (VT_ARRAY|VT_VARIANT), "got 0x%x\n", V_VT(&value));
+    SysFreeString(name);
 
     dim = SafeArrayGetDim(V_ARRAY(&value));
     ok(dim == 1, "got %u\n", dim);
@@ -439,7 +494,7 @@ static void test_registry(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
     type = REG_NONE;
-    ret = RegGetValueA(root, NULL, "regsz", RRF_RT_ANY, &type, NULL, NULL);
+    ret = RegQueryValueExA(root, "regsz", 0, &type, NULL, NULL);
     ok(ret == ERROR_SUCCESS, "got %d\n", ret);
     ok(type == REG_SZ, "got %d\n", type);
 
@@ -452,7 +507,7 @@ static void test_registry(void)
     VariantClear(&value);
 
     type = REG_NONE;
-    ret = RegGetValueA(root, NULL, "regsz", RRF_RT_ANY, &type, NULL, NULL);
+    ret = RegQueryValueExA(root, "regsz", 0, &type, NULL, NULL);
     ok(ret == ERROR_SUCCESS, "got %d\n", ret);
     ok(type == REG_SZ, "got %d\n", type);
 
@@ -465,7 +520,7 @@ static void test_registry(void)
     VariantClear(&value);
 
     type = REG_NONE;
-    ret = RegGetValueA(root, NULL, "regsz", RRF_RT_ANY, &type, NULL, NULL);
+    ret = RegQueryValueExA(root, "regsz", 0, &type, NULL, NULL);
     ok(ret == ERROR_SUCCESS, "got %d\n", ret);
     ok(type == REG_SZ, "got %d\n", type);
 
