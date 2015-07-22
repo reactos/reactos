@@ -107,7 +107,11 @@ static HRESULT WINAPI enum_class_object_Next(
 
     if (!uCount) return WBEM_S_FALSE;
     if (!apObjects || !puReturned) return WBEM_E_INVALID_PARAMETER;
-    if (lTimeout != WBEM_INFINITE) FIXME("timeout not supported\n");
+    if (lTimeout != WBEM_INFINITE)
+    {
+        static int once;
+        if (!once++) FIXME("timeout not supported\n");
+    }
 
     *puReturned = 0;
     if (ec->index >= view->count) return WBEM_S_FALSE;

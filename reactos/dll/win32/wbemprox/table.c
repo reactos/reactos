@@ -278,9 +278,14 @@ void free_row_values( const struct table *table, UINT row )
         if (!(table->columns[i].type & COL_FLAG_DYNAMIC)) continue;
 
         type = table->columns[i].type & COL_TYPE_MASK;
-        if (type == CIM_STRING || type == CIM_DATETIME || (type & CIM_FLAG_ARRAY))
+        if (type == CIM_STRING || type == CIM_DATETIME)
         {
             if (get_value( table, row, i, &val ) == S_OK) heap_free( (void *)(INT_PTR)val );
+        }
+        else if (type & CIM_FLAG_ARRAY)
+        {
+            if (get_value( table, row, i, &val ) == S_OK)
+                destroy_array( (void *)(INT_PTR)val, type & CIM_TYPE_MASK );
         }
     }
 }

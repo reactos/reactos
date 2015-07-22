@@ -201,7 +201,7 @@ reactos/dll/win32/uxtheme             # Forked
 reactos/dll/win32/vbscript            # Synced to WineStaging-1.7.47
 reactos/dll/win32/version             # Synced to WineStaging-1.7.47
 reactos/dll/win32/wbemdisp            # Synced to WineStaging-1.7.47
-reactos/dll/win32/wbemprox            # Synced to WineStaging-1.7.37
+reactos/dll/win32/wbemprox            # Synced to WineStaging-1.7.47
 reactos/dll/win32/windowscodecs       # Synced to WineStaging-1.7.37
 reactos/dll/win32/windowscodecsext    # Synced to WineStaging-1.7.37
 reactos/dll/win32/winemp3.acm         # Synced to WineStaging-1.7.47

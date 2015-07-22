@@ -31,7 +31,7 @@ add_library(wbemprox SHARED
 set_source_files_properties(wbemprox.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/wbemprox.rgs)
 set_module_type(wbemprox win32dll)
 target_link_libraries(wbemprox uuid wine)
-add_importlibs(wbemprox iphlpapi dxgi oleaut32 advapi32 user32 gdi32 version ws2_32 msvcrt kernel32 ntdll)
+add_importlibs(wbemprox iphlpapi dxgi oleaut32 advapi32 user32 gdi32 version winspool ws2_32 msvcrt kernel32 ntdll)
 add_dependencies(wbemprox d3d_idl_headers)
 add_pch(wbemprox wbemprox_private.h SOURCE)
 add_cd_file(TARGET wbemprox DESTINATION reactos/system32/wbem FOR all)

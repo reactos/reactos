@@ -45,8 +45,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
-IClientSecurity client_security;
-struct list *table_list;
+IClientSecurity client_security DECLSPEC_HIDDEN;
+struct list *table_list DECLSPEC_HIDDEN;
 
 #define SIZEOF(array) (sizeof(array)/sizeof((array)[0]))
 

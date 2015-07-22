@@ -688,6 +688,7 @@ SAFEARRAY *to_safearray( const struct array *array, CIMTYPE type )
                 SafeArrayDestroy( ret );
                 return NULL;
             }
+            SysFreeString( str );
         }
         else if (SafeArrayPutElement( ret, &i, ptr ) != S_OK)
         {
@@ -990,6 +991,7 @@ HRESULT get_properties( const struct view *view, LONG flags, SAFEARRAY **props )
             SafeArrayDestroy( sa );
             return E_OUTOFMEMORY;
         }
+        SysFreeString( str );
         j++;
     }
     *props = sa;
