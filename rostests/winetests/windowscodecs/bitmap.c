@@ -661,7 +661,7 @@ static void test_CreateBitmapFromHICON(void)
     ok(IsEqualGUID(&format, &GUID_WICPixelFormat32bppBGRA),
        "unexpected pixel format %s\n", wine_dbgstr_guid(&format));
 
-    IWICBitmap_GetSize(bitmap, &width, &height);
+    hr = IWICBitmap_GetSize(bitmap, &width, &height);
     ok(hr == S_OK, "IWICBitmap_GetSize error %#x\n", hr);
     ok(width == 16, "expected 16, got %u\n", width);
     ok(height == 16, "expected 16, got %u\n", height);
@@ -689,7 +689,7 @@ static void test_CreateBitmapFromHICON(void)
     ok(IsEqualGUID(&format, &GUID_WICPixelFormat32bppBGRA),
        "unexpected pixel format %s\n", wine_dbgstr_guid(&format));
 
-    IWICBitmap_GetSize(bitmap, &width, &height);
+    hr = IWICBitmap_GetSize(bitmap, &width, &height);
     ok(hr == S_OK, "IWICBitmap_GetSize error %#x\n", hr);
     ok(width == 16, "expected 16, got %u\n", width);
     ok(height == 16, "expected 16, got %u\n", height);

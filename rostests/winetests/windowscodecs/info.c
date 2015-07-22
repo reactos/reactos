@@ -85,6 +85,7 @@ static void test_decoder_info(void)
     int i;
 
     hr = get_component_info(&CLSID_WICBmpDecoder, &info);
+    ok(hr == S_OK, "CreateComponentInfo failed, hr=%x\n", hr);
 
     hr = IWICComponentInfo_QueryInterface(info, &IID_IWICBitmapDecoderInfo, (void**)&decoder_info);
     ok(hr == S_OK, "QueryInterface failed, hr=%x\n", hr);
@@ -227,7 +228,7 @@ static void test_pixelformat_info(void)
     memset(value, 0xaa, 256 * sizeof(WCHAR));
     hr = IWICComponentInfo_GetAuthor(info, len-1, value, NULL);
     ok(hr == E_INVALIDARG, "GetAuthor failed, hr=%x\n", hr);
-    ok(value[0] = 0xaaaa, "string modified\n");
+    ok(value[0] == 0xaaaa, "string modified\n");
 
     len = 0xdeadbeef;
     memset(value, 0xaa, 256 * sizeof(WCHAR));

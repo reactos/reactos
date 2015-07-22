@@ -289,6 +289,7 @@ static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size
     IWICBitmapDecoder *decoder = NULL;
     IStream *stream;
     GUID format;
+    LONG refcount;
 
     hmem = GlobalAlloc(0, image_size);
     data = GlobalLock(hmem);
@@ -306,7 +307,8 @@ static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size
     ok(IsEqualGUID(&format, &GUID_ContainerFormatPng),
        "wrong container format %s\n", wine_dbgstr_guid(&format));
 
-    IStream_Release(stream);
+    refcount = IStream_Release(stream);
+    ok(refcount > 0, "expected stream refcount > 0\n");
 
     return decoder;
 }
