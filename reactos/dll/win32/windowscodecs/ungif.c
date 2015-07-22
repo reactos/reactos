@@ -491,7 +491,7 @@ DGifGetLine(GifFileType * GifFile,
              * image until empty block (size 0) detected. We use GetCodeNext. */
             do
                 if (DGifGetCodeNext(GifFile, &Dummy) == GIF_ERROR)
-                    return GIF_ERROR;
+                    break;
             while (Dummy != NULL) ;
         }
         return GIF_OK;

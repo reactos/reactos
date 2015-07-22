@@ -694,7 +694,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromHBITMAP(IWICComponentFact
         return E_INVALIDARG;
     }
 
-    hr = BitmapImpl_Create(bm.bmWidth, bm.bmHeight, bm.bmWidthBytes, 0, NULL, &format, option, bitmap);
+    hr = BitmapImpl_Create(bm.bmWidth, bm.bmHeight, bm.bmWidthBytes, 0, NULL, &format, WICBitmapCacheOnLoad, bitmap);
     if (hr != S_OK) return hr;
 
     hr = IWICBitmap_Lock(*bitmap, NULL, WICBitmapLockWrite, &lock);

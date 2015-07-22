@@ -213,7 +213,7 @@ static HRESULT WINAPI BitmapDecoderInfo_QueryInterface(IWICBitmapDecoderInfo *if
         IsEqualIID(&IID_IWICBitmapCodecInfo, iid) ||
         IsEqualIID(&IID_IWICBitmapDecoderInfo ,iid))
     {
-        *ppv = This;
+        *ppv = &This->IWICBitmapDecoderInfo_iface;
     }
     else
     {
@@ -606,8 +606,7 @@ static HRESULT WINAPI BitmapDecoderInfo_CreateInstance(IWICBitmapDecoderInfo *if
 
     TRACE("(%p,%p)\n", iface, ppIBitmapDecoder);
 
-    return CoCreateInstance(&This->clsid, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IWICBitmapDecoder, (void**)ppIBitmapDecoder);
+    return create_instance(&This->clsid, &IID_IWICBitmapDecoder, (void**)ppIBitmapDecoder);
 }
 
 static const IWICBitmapDecoderInfoVtbl BitmapDecoderInfo_Vtbl = {
@@ -655,7 +654,7 @@ static HRESULT BitmapDecoderInfo_Constructor(HKEY classkey, REFCLSID clsid, IWIC
     This->classkey = classkey;
     memcpy(&This->clsid, clsid, sizeof(CLSID));
 
-    *ppIInfo = (IWICComponentInfo*)This;
+    *ppIInfo = (IWICComponentInfo *)&This->IWICBitmapDecoderInfo_iface;
     return S_OK;
 }
 
@@ -684,7 +683,7 @@ static HRESULT WINAPI BitmapEncoderInfo_QueryInterface(IWICBitmapEncoderInfo *if
         IsEqualIID(&IID_IWICBitmapCodecInfo, iid) ||
         IsEqualIID(&IID_IWICBitmapEncoderInfo ,iid))
     {
-        *ppv = This;
+        *ppv = &This->IWICBitmapEncoderInfo_iface;
     }
     else
     {
@@ -900,8 +899,7 @@ static HRESULT WINAPI BitmapEncoderInfo_CreateInstance(IWICBitmapEncoderInfo *if
 
     TRACE("(%p,%p)\n", iface, ppIBitmapEncoder);
 
-    return CoCreateInstance(&This->clsid, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IWICBitmapEncoder, (void**)ppIBitmapEncoder);
+    return create_instance(&This->clsid, &IID_IWICBitmapEncoder, (void**)ppIBitmapEncoder);
 }
 
 static const IWICBitmapEncoderInfoVtbl BitmapEncoderInfo_Vtbl = {
@@ -947,7 +945,7 @@ static HRESULT BitmapEncoderInfo_Constructor(HKEY classkey, REFCLSID clsid, IWIC
     This->classkey = classkey;
     memcpy(&This->clsid, clsid, sizeof(CLSID));
 
-    *ppIInfo = (IWICComponentInfo*)This;
+    *ppIInfo = (IWICComponentInfo *)&This->IWICBitmapEncoderInfo_iface;
     return S_OK;
 }
 
@@ -975,7 +973,7 @@ static HRESULT WINAPI FormatConverterInfo_QueryInterface(IWICFormatConverterInfo
         IsEqualIID(&IID_IWICComponentInfo, iid) ||
         IsEqualIID(&IID_IWICFormatConverterInfo ,iid))
     {
-        *ppv = This;
+        *ppv = &This->IWICFormatConverterInfo_iface;
     }
     else
     {
@@ -1108,8 +1106,8 @@ static HRESULT WINAPI FormatConverterInfo_CreateInstance(IWICFormatConverterInfo
 
     TRACE("(%p,%p)\n", iface, ppIFormatConverter);
 
-    return CoCreateInstance(&This->clsid, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IWICFormatConverter, (void**)ppIFormatConverter);
+    return create_instance(&This->clsid, &IID_IWICFormatConverter,
+            (void**)ppIFormatConverter);
 }
 
 static BOOL ConverterSupportsFormat(IWICFormatConverterInfo *iface, const WCHAR *formatguid)
@@ -1164,7 +1162,7 @@ static HRESULT FormatConverterInfo_Constructor(HKEY classkey, REFCLSID clsid, IW
     This->classkey = classkey;
     memcpy(&This->clsid, clsid, sizeof(CLSID));
 
-    *ppIInfo = (IWICComponentInfo*)This;
+    *ppIInfo = (IWICComponentInfo *)&This->IWICFormatConverterInfo_iface;
     return S_OK;
 }
 
@@ -1193,7 +1191,7 @@ static HRESULT WINAPI PixelFormatInfo_QueryInterface(IWICPixelFormatInfo2 *iface
         IsEqualIID(&IID_IWICPixelFormatInfo, iid) ||
         IsEqualIID(&IID_IWICPixelFormatInfo2 ,iid))
     {
-        *ppv = This;
+        *ppv = &This->IWICPixelFormatInfo2_iface;
     }
     else
     {
@@ -1458,7 +1456,7 @@ static HRESULT PixelFormatInfo_Constructor(HKEY classkey, REFCLSID clsid, IWICCo
     This->classkey = classkey;
     memcpy(&This->clsid, clsid, sizeof(CLSID));
 
-    *ppIInfo = (IWICComponentInfo*)This;
+    *ppIInfo = (IWICComponentInfo *)&This->IWICPixelFormatInfo2_iface;
     return S_OK;
 }
 
@@ -1489,7 +1487,7 @@ static HRESULT WINAPI MetadataReaderInfo_QueryInterface(IWICMetadataReaderInfo *
         IsEqualIID(&IID_IWICMetadataHandlerInfo, riid) ||
         IsEqualIID(&IID_IWICMetadataReaderInfo, riid))
     {
-        *ppv = This;
+        *ppv = &This->IWICMetadataReaderInfo_iface;
     }
     else
     {
@@ -1854,8 +1852,7 @@ static HRESULT WINAPI MetadataReaderInfo_CreateInstance(IWICMetadataReaderInfo *
 
     TRACE("(%p,%p)\n", iface, reader);
 
-    return CoCreateInstance(&This->clsid, NULL, CLSCTX_INPROC_SERVER,
-                            &IID_IWICMetadataReader, (void **)reader);
+    return create_instance(&This->clsid, &IID_IWICMetadataReader, (void **)reader);
 }
 
 static const IWICMetadataReaderInfoVtbl MetadataReaderInfo_Vtbl = {
@@ -1898,7 +1895,7 @@ static HRESULT MetadataReaderInfo_Constructor(HKEY classkey, REFCLSID clsid, IWI
     This->classkey = classkey;
     This->clsid = *clsid;
 
-    *info = (IWICComponentInfo *)This;
+    *info = (IWICComponentInfo *)&This->IWICMetadataReaderInfo_iface;
     return S_OK;
 }
 
