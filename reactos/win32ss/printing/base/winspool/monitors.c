@@ -23,6 +23,20 @@ _MarshallUpMonitorInfo(PBYTE pMonitorInfo, DWORD Level)
 }
 
 BOOL WINAPI
+AddMonitorW(PWSTR pName, DWORD Level, PBYTE pMonitors)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
+DeleteMonitorW(PWSTR pName, PWSTR pEnvironment, PWSTR pMonitorName)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;

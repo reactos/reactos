@@ -23,6 +23,27 @@ _MarshallUpPortInfo(PBYTE pPortInfo, DWORD Level)
 }
 
 BOOL WINAPI
+AddPortW(PWSTR pName, HWND hWnd, PWSTR pMonitorName)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
+ConfigurePortW(PWSTR pName, HWND hWnd, PWSTR pPortName)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
+DeletePortW(PWSTR pName, HWND hWnd, PWSTR pPortName)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;

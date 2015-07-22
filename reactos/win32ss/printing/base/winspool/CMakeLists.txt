@@ -9,8 +9,11 @@ list(APPEND SOURCE
     monitors.c
     ports.c
     precomp.h
+    printerdata.c
+    printerdrivers.c
     printers.c
     printprocessors.c
+    printproviders.c
     ${CMAKE_CURRENT_BINARY_DIR}/winspool_c.c)
 
 add_library(winspool SHARED

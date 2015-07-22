@@ -136,6 +136,13 @@ _StartDocPrinterWithRPC(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1)
     return dwErrorCode;
 }
 
+HANDLE WINAPI
+AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
 BOOL WINAPI
 ClosePrinter(HANDLE hPrinter)
 {
@@ -513,6 +520,20 @@ ReadPrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pNoBytesRead)
 Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+ResetPrinterW(HANDLE hPrinter, PPRINTER_DEFAULTSW pDefault)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
+SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 DWORD WINAPI

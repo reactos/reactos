@@ -22,8 +22,23 @@ _MarshallUpPrintProcessorInfo(PPRINTPROCESSOR_INFO_1W pPrintProcessorInfo1)
 }
 
 BOOL WINAPI
+AddPrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPathName, PWSTR pPrintProcessorName)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
+DeletePrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPrintProcessorName)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 EnumPrintProcessorDatatypesA(PSTR pName, LPSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
+    UNIMPLEMENTED;
     return FALSE;
 }
 

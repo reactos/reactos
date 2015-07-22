@@ -12,31 +12,31 @@
 111 stdcall AddJobA(long long ptr long ptr)
 112 stdcall AddJobW(long long ptr long ptr)
 113 stub AddMonitorA
-114 stub AddMonitorW
+114 stdcall AddMonitorW(wstr long ptr)
 115 stub AddPortA
 116 stub AddPortExA
 117 stub AddPortExW
-118 stub AddPortW
+118 stdcall AddPortW(wstr long wstr)
 119 stub AddPrintProcessorA
-120 stub AddPrintProcessorW
+120 stdcall AddPrintProcessorW(wstr wstr wstr wstr)
 121 stub AddPrintProvidorA
-122 stub AddPrintProvidorW
+122 stdcall AddPrintProvidorW(wstr long ptr)
 123 stub AddPrinterA
 124 stub AddPrinterConnectionA
 125 stub AddPrinterConnectionW
 126 stub AddPrinterDriverA
 127 stub AddPrinterDriverExA
 128 stub AddPrinterDriverExW
-129 stub AddPrinterDriverW
-130 stub AddPrinterW
+129 stdcall AddPrinterDriverW(wstr long ptr)
+130 stdcall AddPrinterW(wstr long ptr)
 131 stub AdvancedDocumentPropertiesA
-132 stub AdvancedDocumentPropertiesW
+132 stdcall AdvancedDocumentPropertiesW(long long wstr ptr ptr)
 133 stub AdvancedSetupDialog
 134 stdcall ClosePrinter(long)
 135 stub CloseSpoolFileHandle
 136 stub CommitSpoolData
 137 stub ConfigurePortA
-138 stub ConfigurePortW
+138 stdcall ConfigurePortW(wstr long wstr)
 139 stub ConnectToPrinterDlg
 140 stub ConvertAnsiDevModeToUnicodeDevmode
 141 stub ConvertUnicodeDevModeToAnsiDevmode
@@ -46,13 +46,13 @@
 145 stub DeleteFormA
 146 stub DeleteFormW
 147 stub DeleteMonitorA
-148 stub DeleteMonitorW
+148 stdcall DeleteMonitorW(wstr wstr wstr)
 149 stub DeletePortA
-150 stub DeletePortW
+150 stdcall DeletePortW(wstr long wstr)
 151 stub DeletePrintProcessorA
-152 stub DeletePrintProcessorW
+152 stdcall DeletePrintProcessorW(wstr wstr wstr)
 153 stub DeletePrintProvidorA
-154 stub DeletePrintProvidorW
+154 stdcall DeletePrintProvidorW(wstr wstr wstr)
 155 stub DeletePrinter
 156 stub DeletePrinterConnectionA
 157 stub DeletePrinterConnectionW
@@ -63,7 +63,7 @@
 162 stub DeletePrinterDriverA
 163 stub DeletePrinterDriverExA
 164 stub DeletePrinterDriverExW
-165 stub DeletePrinterDriverW
+165 stdcall DeletePrinterDriverW(wstr wstr wstr)
 166 stub DeletePrinterIC
 167 stub DeletePrinterKeyA
 168 stub DeletePrinterKeyW
@@ -98,7 +98,7 @@
 197 stub EnumPrinterDataExW
 198 stub EnumPrinterDataW
 199 stub EnumPrinterDriversA
-200 stub EnumPrinterDriversW
+200 stdcall EnumPrinterDriversW(wstr wstr long ptr long ptr ptr)
 201 stdcall GetDefaultPrinterA(ptr ptr)
 202 stub SetDefaultPrinterA
 203 stdcall GetDefaultPrinterW(ptr ptr)
@@ -150,10 +150,10 @@
 249 stub GetPrinterDataA
 250 stub GetPrinterDataExA
 251 stub GetPrinterDataExW
-252 stub GetPrinterDataW
+252 stdcall GetPrinterDataW(long wstr ptr ptr long ptr)
 253 stdcall GetPrinterDriverA(long str long ptr long ptr)
 254 stub GetPrinterDriverDirectoryA
-255 stub GetPrinterDriverDirectoryW
+255 stdcall GetPrinterDriverDirectoryW(wstr wstr long ptr long ptr)
 256 stdcall GetPrinterDriverW(long wstr long ptr long ptr)
 257 stdcall GetPrinterW(long long ptr long ptr)
 258 stub GetSpoolFileHandle
@@ -170,7 +170,7 @@
 269 stub QuerySpoolMode
 270 stdcall ReadPrinter(long ptr long ptr)
 271 stub ResetPrinterA
-272 stub ResetPrinterW
+272 stdcall ResetPrinterW(long ptr)
 273 stdcall ScheduleJob(long long)
 274 stub SeekPrinter
 275 stub SetAllocFailCount
@@ -184,8 +184,8 @@
 283 stub SetPrinterDataA
 284 stub SetPrinterDataExA
 285 stub SetPrinterDataExW
-286 stub SetPrinterDataW
-287 stub SetPrinterW
+286 stdcall SetPrinterDataW(long wstr long ptr long)
+287 stdcall SetPrinterW(long long ptr long)
 288 stub SplDriverUnloadComplete
 289 stub SpoolerDevQueryPrintW
 290 stdcall SpoolerInit()
