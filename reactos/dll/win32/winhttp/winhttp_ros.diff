@@ -1,6 +1,6 @@
-diff -pudN e:\wine\dlls\winhttp/net.c dll\win32\winhttp/net.c
+diff -pudN e:\wine\dlls\winhttp/net.c e:\reactos\dll\win32\winhttp/net.c
 --- e:\wine\dlls\winhttp/net.c	2015-02-21 17:13:15.365542100 +0100
-+++ dll\win32\winhttp/net.c	2015-04-09 13:48:12.485050200 +0100
++++ e:\reactos\dll\win32\winhttp/net.c	2015-07-20 14:25:14.321893000 +0100
 @@ -73,6 +50,7 @@ static CRITICAL_SECTION cs_gethostbyname
  #endif
  
@@ -25,18 +25,15 @@ diff -pudN e:\wine\dlls\winhttp/net.c dll\win32\winhttp/net.c
  
  static int sock_send(int fd, const void *msg, size_t len, int flags)
  {
-@@ -366,11 +353,17 @@ BOOL netconn_connect( netconn_t *conn, c
+@@ -366,11 +353,25 @@ BOOL netconn_connect( netconn_t *conn, c
          res = sock_get_error( errno );
          if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
          {
--            struct pollfd pfd;
++#ifdef __REACTOS__
 +            /* ReactOS: use select instead of poll */
 +            fd_set outfd;
 +            struct timeval tv;
- 
--            pfd.fd = conn->socket;
--            pfd.events = POLLOUT;
--            if (poll( &pfd, 1, timeout ) > 0)
++
 +            FD_ZERO(&outfd);
 +            FD_SET(conn->socket, &outfd);
 +
@@ -44,13 +41,20 @@ diff -pudN e:\wine\dlls\winhttp/net.c dll\win32\winhttp/net.c
 +            tv.tv_usec = timeout * 1000;
 +
 +            if (select( 0, NULL, &outfd, NULL, &tv ) > 0)
++#else
+             struct pollfd pfd;
+ 
+             pfd.fd = conn->socket;
+             pfd.events = POLLOUT;
+             if (poll( &pfd, 1, timeout ) > 0)
++#endif
                  ret = TRUE;
              else
                  res = sock_get_error( errno );
-diff -pudN e:\wine\dlls\winhttp/request.c dll\win32\winhttp/request.c
---- e:\wine\dlls\winhttp/request.c	2015-02-22 13:25:32.479716600 +0100
-+++ dll\win32\winhttp/request.c	2015-04-09 13:49:32.753638400 +0100
-@@ -1275,6 +1264,7 @@ BOOL WINAPI WinHttpSendRequest( HINTERNE
+diff -pudN e:\wine\dlls\winhttp/request.c e:\reactos\dll\win32\winhttp/request.c
+--- e:\wine\dlls\winhttp/request.c	2015-07-14 15:44:36.027191600 +0100
++++ e:\reactos\dll\win32\winhttp/request.c	2015-07-20 14:28:31.803188200 +0100
+@@ -1263,6 +1252,7 @@ BOOL WINAPI WinHttpSendRequest( HINTERNE
      return ret;
  }
  
@@ -58,7 +62,7 @@ diff -pudN e:\wine\dlls\winhttp/request.c dll\win32\winhttp/request.c
  #define ARRAYSIZE(array) (sizeof(array) / sizeof((array)[0]))
  
  static const WCHAR basicW[]     = {'B','a','s','i','c',0};
-@@ -2722,8 +2712,8 @@ static void free_request( struct winhttp
+@@ -2754,8 +2744,8 @@ static void free_request( struct winhttp
      CloseHandle( request->thread );
      CloseHandle( request->wait );
      CloseHandle( request->cancel );
@@ -69,7 +73,7 @@ diff -pudN e:\wine\dlls\winhttp/request.c dll\win32\winhttp/request.c
      heap_free( request->buffer );
      heap_free( request->verb );
      VariantClear( &request->data );
-@@ -2927,16 +2917,16 @@ static HRESULT WINAPI winhttp_request_Se
+@@ -2959,16 +2949,16 @@ static HRESULT WINAPI winhttp_request_Se
      {
      case HTTPREQUEST_PROXYSETTING_DEFAULT:
          request->proxy.dwAccessType = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
@@ -90,7 +94,7 @@ diff -pudN e:\wine\dlls\winhttp/request.c dll\win32\winhttp/request.c
          request->proxy.lpszProxy = NULL;
          request->proxy.lpszProxyBypass = NULL;
          break;
-@@ -2945,12 +2935,12 @@ static HRESULT WINAPI winhttp_request_Se
+@@ -2977,12 +2967,12 @@ static HRESULT WINAPI winhttp_request_Se
          request->proxy.dwAccessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
          if (V_VT( &proxy_server ) == VT_BSTR)
          {
@@ -105,9 +109,9 @@ diff -pudN e:\wine\dlls\winhttp/request.c dll\win32\winhttp/request.c
              request->proxy.lpszProxyBypass = strdupW( V_BSTR( &bypass_list ) );
          }
          break;
-diff -pudN e:\wine\dlls\winhttp/session.c dll\win32\winhttp/session.c
---- e:\wine\dlls\winhttp/session.c	2015-02-22 13:25:32.480717300 +0100
-+++ dll\win32\winhttp/session.c	2015-04-09 13:50:02.955100200 +0100
+diff -pudN e:\wine\dlls\winhttp/session.c e:\reactos\dll\win32\winhttp/session.c
+--- e:\wine\dlls\winhttp/session.c	2015-07-14 15:44:36.029191700 +0100
++++ e:\reactos\dll\win32\winhttp/session.c	2015-07-20 14:29:15.686698200 +0100
 @@ -109,6 +81,9 @@ static void session_destroy( object_head
      heap_free( session->proxy_username );
      heap_free( session->proxy_password );
@@ -149,7 +153,7 @@ diff -pudN e:\wine\dlls\winhttp/session.c dll\win32\winhttp/session.c
              goto end;
          }
      }
-@@ -615,7 +595,7 @@ static WCHAR *blob_to_str( DWORD encodin
+@@ -624,7 +604,7 @@ static WCHAR *blob_to_str( DWORD encodin
  
  static BOOL convert_sockaddr( const struct sockaddr *addr, SOCKADDR_STORAGE *addr_storage )
  {

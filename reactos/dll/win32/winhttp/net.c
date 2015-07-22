@@ -353,6 +353,7 @@ BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned
         res = sock_get_error( errno );
         if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
         {
+#ifdef __REACTOS__
             /* ReactOS: use select instead of poll */
             fd_set outfd;
             struct timeval tv;
@@ -364,6 +365,13 @@ BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned
             tv.tv_usec = timeout * 1000;
 
             if (select( 0, NULL, &outfd, NULL, &tv ) > 0)
+#else
+            struct pollfd pfd;
+
+            pfd.fd = conn->socket;
+            pfd.events = POLLOUT;
+            if (poll( &pfd, 1, timeout ) > 0)
+#endif
                 ret = TRUE;
             else
                 res = sock_get_error( errno );
