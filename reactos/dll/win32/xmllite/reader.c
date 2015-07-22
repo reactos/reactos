@@ -890,8 +890,20 @@ static inline WCHAR *reader_get_ptr(xmlreader *reader)
 
 static int reader_cmp(xmlreader *reader, const WCHAR *str)
 {
+    int i=0;
     const WCHAR *ptr = reader_get_ptr(reader);
-    return strncmpW(str, ptr, strlenW(str));
+    while (str[i])
+    {
+        if (!ptr[i])
+        {
+            reader_more(reader);
+            ptr = reader_get_ptr(reader);
+        }
+        if (str[i] != ptr[i])
+            return ptr[i] - str[i];
+        i++;
+    }
+    return 0;
 }
 
 /* moves cursor n WCHARs forward */

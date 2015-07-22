@@ -223,7 +223,7 @@ reactos/dll/win32/xinput1_1           # Synced to WineStaging-1.7.37
 reactos/dll/win32/xinput1_2           # Synced to WineStaging-1.7.37
 reactos/dll/win32/xinput1_3           # Synced to WineStaging-1.7.37
 reactos/dll/win32/xinput9_1_0         # Synced to WineStaging-1.7.37
-reactos/dll/win32/xmllite             # Synced to WineStaging-1.7.37
+reactos/dll/win32/xmllite             # Synced to WineStaging-1.7.47
 
 reactos/dll/cpl/inetcpl               # Synced to WineStaging-1.7.47
 
