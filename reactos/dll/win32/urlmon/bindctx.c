@@ -24,6 +24,7 @@ extern IID IID_IBindStatusCallbackHolder;
 
 typedef struct {
     IBindStatusCallbackEx IBindStatusCallbackEx_iface;
+    IInternetBindInfo     IInternetBindInfo_iface;
     IServiceProvider      IServiceProvider_iface;
     IHttpNegotiate2       IHttpNegotiate2_iface;
     IAuthenticate         IAuthenticate_iface;
@@ -121,6 +122,9 @@ static HRESULT WINAPI BindStatusCallback_QueryInterface(IBindStatusCallbackEx *i
     }else if(IsEqualGUID(&IID_IAuthenticate, riid)) {
         TRACE("(%p)->(IID_IAuthenticate, %p)\n", This, ppv);
         *ppv = &This->IAuthenticate_iface;
+    }else if(IsEqualGUID(&IID_IInternetBindInfo, riid)) {
+        TRACE("(%p)->(IID_IInternetBindInfo, %p)\n", This, ppv);
+        *ppv = &This->IInternetBindInfo_iface;
     }
 
     if(*ppv) {
@@ -492,6 +496,63 @@ static const IAuthenticateVtbl BSCAuthenticateVtbl = {
     BSCAuthenticate_Authenticate
 };
 
+static inline BindStatusCallback *impl_from_IInternetBindInfo(IInternetBindInfo *iface)
+{
+    return CONTAINING_RECORD(iface, BindStatusCallback, IInternetBindInfo_iface);
+}
+
+static HRESULT WINAPI BSCInternetBindInfo_QueryInterface(IInternetBindInfo *iface, REFIID riid, void **ppv)
+{
+    BindStatusCallback *This = impl_from_IInternetBindInfo(iface);
+    return IBindStatusCallbackEx_QueryInterface(&This->IBindStatusCallbackEx_iface, riid, ppv);
+}
+
+static ULONG WINAPI BSCInternetBindInfo_AddRef(IInternetBindInfo *iface)
+{
+    BindStatusCallback *This = impl_from_IInternetBindInfo(iface);
+    return IBindStatusCallbackEx_AddRef(&This->IBindStatusCallbackEx_iface);
+}
+
+static ULONG WINAPI BSCInternetBindInfo_Release(IInternetBindInfo *iface)
+{
+    BindStatusCallback *This = impl_from_IInternetBindInfo(iface);
+    return IBindStatusCallbackEx_Release(&This->IBindStatusCallbackEx_iface);
+}
+
+static HRESULT WINAPI BSCInternetBindInfo_GetBindInfo(IInternetBindInfo *iface, DWORD *bindf, BINDINFO *bindinfo)
+{
+    BindStatusCallback *This = impl_from_IInternetBindInfo(iface);
+    FIXME("(%p)->(%p %p)\n", This, bindf, bindinfo);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI BSCInternetBindInfo_GetBindString(IInternetBindInfo *iface, ULONG string_type,
+        WCHAR **strs, ULONG cnt, ULONG *fetched)
+{
+    BindStatusCallback *This = impl_from_IInternetBindInfo(iface);
+    IInternetBindInfo *bind_info;
+    HRESULT hres;
+
+    TRACE("(%p)->(%d %p %d %p)\n", This, string_type, strs, cnt, fetched);
+
+    hres = IBindStatusCallback_QueryInterface(This->callback, &IID_IInternetBindInfo, (void**)&bind_info);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IInternetBindInfo_GetBindString(bind_info, string_type, strs, cnt, fetched);
+
+    IInternetBindInfo_Release(bind_info);
+    return hres;
+}
+
+static IInternetBindInfoVtbl BSCInternetBindInfoVtbl = {
+    BSCInternetBindInfo_QueryInterface,
+    BSCInternetBindInfo_AddRef,
+    BSCInternetBindInfo_Release,
+    BSCInternetBindInfo_GetBindInfo,
+    BSCInternetBindInfo_GetBindString
+};
+
 static void set_callback(BindStatusCallback *This, IBindStatusCallback *bsc)
 {
     IServiceProvider *serv_prov;
@@ -518,6 +579,7 @@ HRESULT wrap_callback(IBindStatusCallback *bsc, IBindStatusCallback **ret_iface)
         return E_OUTOFMEMORY;
 
     ret->IBindStatusCallbackEx_iface.lpVtbl = &BindStatusCallbackExVtbl;
+    ret->IInternetBindInfo_iface.lpVtbl = &BSCInternetBindInfoVtbl;
     ret->IServiceProvider_iface.lpVtbl = &BSCServiceProviderVtbl;
     ret->IHttpNegotiate2_iface.lpVtbl = &BSCHttpNegotiateVtbl;
     ret->IAuthenticate_iface.lpVtbl = &BSCAuthenticateVtbl;

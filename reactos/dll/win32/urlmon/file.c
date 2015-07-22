@@ -211,35 +211,14 @@ static inline HRESULT report_result(IInternetProtocolSink *protocol_sink, HRESUL
     return hres;
 }
 
-static HRESULT open_file(FileProtocol *This, const WCHAR *path, IInternetProtocolSink *protocol_sink)
-{
-    LARGE_INTEGER size;
-    HANDLE file;
-
-    file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
-            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(file == INVALID_HANDLE_VALUE)
-        return report_result(protocol_sink, INET_E_RESOURCE_NOT_FOUND, GetLastError());
-
-    if(!GetFileSizeEx(file, &size)) {
-        CloseHandle(file);
-        return report_result(protocol_sink, INET_E_RESOURCE_NOT_FOUND, GetLastError());
-    }
-
-    This->file = file;
-    This->size = size.u.LowPart;
-
-    IInternetProtocolSink_ReportProgress(protocol_sink,
-            BINDSTATUS_CACHEFILENAMEAVAILABLE, path);
-    return S_OK;
-}
-
 static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUri,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
         DWORD grfPI, HANDLE *dwReserved)
 {
     FileProtocol *This = impl_from_IInternetProtocolEx(iface);
-    WCHAR path[MAX_PATH];
+    WCHAR path[MAX_PATH], *ptr;
+    LARGE_INTEGER file_size;
+    HANDLE file_handle;
     BINDINFO bindinfo;
     DWORD grfBINDF = 0;
     DWORD scheme, size;
@@ -290,13 +269,31 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
         return report_result(pOIProtSink, hres, 0);
     }
 
-    hres = open_file(This, path, pOIProtSink);
-    if(FAILED(hres))
-        return hres;
+    file_handle = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
+            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(file_handle == INVALID_HANDLE_VALUE && (ptr = strrchrW(path, '#'))) {
+        /* If path contains fragment part, try without it. */
+        *ptr = 0;
+        file_handle = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
+                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    if(file_handle == INVALID_HANDLE_VALUE)
+        return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, GetLastError());
+
+    if(!GetFileSizeEx(file_handle, &file_size)) {
+        CloseHandle(file_handle);
+        return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, GetLastError());
+    }
+
+    This->file = file_handle;
+    This->size = file_size.u.LowPart;
+    IInternetProtocolSink_ReportProgress(pOIProtSink,  BINDSTATUS_CACHEFILENAMEAVAILABLE, path);
 
     hres = IUri_GetExtension(pUri, &ext);
     if(SUCCEEDED(hres)) {
         if(hres == S_OK && *ext) {
+            if((ptr = strchrW(ext, '#')))
+                *ptr = 0;
             hres = find_mime_from_ext(ext, &mime);
             if(SUCCEEDED(hres)) {
                 IInternetProtocolSink_ReportProgress(pOIProtSink,

@@ -694,8 +694,5 @@ HRESULT WINAPI FindMimeFromData(LPBC pBC, LPCWSTR pwzUrl, LPVOID pBuffer,
     if(pwzMimeProposed || pBuffer)
         return find_mime_from_buffer(pBuffer, cbSize, pwzMimeProposed, pwzUrl, ppwzMimeOut);
 
-    if(pwzUrl)
-        return find_mime_from_url(pwzUrl, ppwzMimeOut);
-
-    return E_FAIL;
+    return find_mime_from_url(pwzUrl, ppwzMimeOut);
 }

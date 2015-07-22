@@ -195,7 +195,7 @@ reactos/dll/win32/twain_32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/unicows             # Synced to Wine-1.3.32 (Win9x only, why do we need this?!)
 reactos/dll/win32/updspapi            # Synced to WineStaging-1.7.37
 reactos/dll/win32/url                 # Synced to WineStaging-1.7.37
-reactos/dll/win32/urlmon              # Synced to WineStaging-1.7.37
+reactos/dll/win32/urlmon              # Synced to WineStaging-1.7.47
 reactos/dll/win32/usp10               # Synced to WineStaging-1.7.47
 reactos/dll/win32/uxtheme             # Forked
 reactos/dll/win32/vbscript            # Synced to WineStaging-1.7.37

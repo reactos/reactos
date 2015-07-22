@@ -884,7 +884,7 @@ static ULONG WINAPI SecManagerImpl_Release(IInternetSecurityManagerEx2* iface)
 
     TRACE("(%p) ref=%u\n", This, refCount);
 
-    /* destroy the object if there's no more reference on it */
+    /* destroy the object if there are no more references on it */
     if (!refCount){
         if(This->mgrsite)
             IInternetSecurityMgrSite_Release(This->mgrsite);

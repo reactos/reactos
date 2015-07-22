@@ -6834,8 +6834,7 @@ static HRESULT parse_canonicalize(const Uri *uri, DWORD flags, LPWSTR output,
         ptr = uri->canon_uri+uri->scheme_start+uri->scheme_len+1;
         pptr = &ptr;
     }
-    reduce_path = !(flags & URL_NO_META) &&
-                  !(flags & URL_DONT_SIMPLIFY) &&
+    reduce_path = !(flags & URL_DONT_SIMPLIFY) &&
                   ptr && check_hierarchical(pptr);
 
     for(ptr = uri->canon_uri; ptr < uri->canon_uri+uri->canon_len; ++ptr) {
