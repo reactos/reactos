@@ -426,3 +426,59 @@ void WINAPI DSA_DestroyCallback (HDSA hdsa, PFNDSAENUMCALLBACK enumProc,
     DSA_EnumCallback (hdsa, enumProc, lParam);
     DSA_Destroy (hdsa);
 }
+
+/**************************************************************************
+ * DSA_Clone [COMCTL32.@]
+ *
+ * Creates a copy of a dsa
+ *
+ * PARAMS
+ *     hdsa [I] handle to the dynamic storage array
+ *
+ * RETURNS
+ *     Cloned dsa
+ */
+HDSA WINAPI DSA_Clone(HDSA hdsa)
+{
+    HDSA dest;
+    INT i;
+
+    TRACE("(%p)\n", hdsa);
+
+    if (!hdsa)
+        return NULL;
+
+    dest = DSA_Create (hdsa->nItemSize, hdsa->nGrow);
+    if (!dest)
+        return NULL;
+
+    for (i = 0; i < hdsa->nItemCount; i++) {
+        void *ptr = DSA_GetItemPtr (hdsa, i);
+        if (DSA_InsertItem (dest, DA_LAST, ptr) == -1) {
+            DSA_Destroy (dest);
+            return NULL;
+        }
+    }
+
+    return dest;
+}
+
+/**************************************************************************
+ * DSA_GetSize [COMCTL32.@]
+ *
+ * Returns allocated memory size for this array
+ *
+ * PARAMS
+ *     hdsa [I] handle to the dynamic storage array
+ *
+ * RETURNS
+ *     Size
+ */
+ULONGLONG WINAPI DSA_GetSize(HDSA hdsa)
+{
+    TRACE("(%p)\n", hdsa);
+
+    if (!hdsa) return 0;
+
+    return sizeof(*hdsa) + (ULONGLONG)hdsa->nMaxCount*hdsa->nItemSize;
+}

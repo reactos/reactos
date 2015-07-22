@@ -98,6 +98,7 @@ static HICON hTooltipIcons[TTI_ERROR+1];
 typedef struct
 {
     UINT      uFlags;
+    UINT      uInternalFlags;
     HWND      hwnd;
     BOOL      bNotifyUnicode;
     UINT_PTR  uId;
@@ -471,13 +472,12 @@ TOOLTIPS_GetTipText (const TOOLTIPS_INFO *infoPtr, INT nTool, WCHAR *buffer)
 {
     TTTOOL_INFO *toolPtr = &infoPtr->tools[nTool];
 
-    /* always NULL-terminate the buffer, just in case we fail to load the string */
-    buffer[0] = '\0';
     if (IS_INTRESOURCE(toolPtr->lpszText)) {
-        HINSTANCE hinst = toolPtr->hinst ? toolPtr->hinst : GetModuleHandleW(NULL);
-        /* load a resource */
-        TRACE("load res string %p %x\n", hinst, LOWORD(toolPtr->lpszText));
-        LoadStringW (hinst, LOWORD(toolPtr->lpszText), buffer, INFOTIPSIZE);
+	/* load a resource */
+	TRACE("load res string %p %x\n",
+	       toolPtr->hinst, LOWORD(toolPtr->lpszText));
+	if (!LoadStringW (toolPtr->hinst, LOWORD(toolPtr->lpszText), buffer, INFOTIPSIZE))
+	    buffer[0] = '\0';
     }
     else if (toolPtr->lpszText) {
 	if (toolPtr->lpszText == LPSTR_TEXTCALLBACKW) {
@@ -493,6 +493,7 @@ TOOLTIPS_GetTipText (const TOOLTIPS_INFO *infoPtr, INT nTool, WCHAR *buffer)
     }
     else {
 	/* no text available */
+        buffer[0] = '\0';
     }
 
     TRACE("%s\n", debugstr_w(buffer));
@@ -1044,11 +1045,12 @@ TOOLTIPS_AddToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
     infoPtr->uNumTools++;
 
     /* copy tool data */
-    toolPtr->uFlags = ti->uFlags;
-    toolPtr->hwnd   = ti->hwnd;
-    toolPtr->uId    = ti->uId;
-    toolPtr->rect   = ti->rect;
-    toolPtr->hinst  = ti->hinst;
+    toolPtr->uFlags         = ti->uFlags;
+    toolPtr->uInternalFlags = (ti->uFlags & (TTF_SUBCLASS | TTF_IDISHWND));
+    toolPtr->hwnd           = ti->hwnd;
+    toolPtr->uId            = ti->uId;
+    toolPtr->rect           = ti->rect;
+    toolPtr->hinst          = ti->hinst;
 
     if (ti->cbSize >= TTTOOLINFOW_V1_SIZE) {
         if (IS_INTRESOURCE(ti->lpszText)) {
@@ -1079,8 +1081,8 @@ TOOLTIPS_AddToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
 	toolPtr->lParam = ti->lParam;
 
     /* install subclassing hook */
-    if (toolPtr->uFlags & TTF_SUBCLASS) {
-	if (toolPtr->uFlags & TTF_IDISHWND) {
+    if (toolPtr->uInternalFlags & TTF_SUBCLASS) {
+	if (toolPtr->uInternalFlags & TTF_IDISHWND) {
 	    SetWindowSubclass((HWND)toolPtr->uId, TOOLTIPS_SubclassProc, 1,
 			      (DWORD_PTR)infoPtr->hwndSelf);
 	}
@@ -1139,8 +1141,8 @@ TOOLTIPS_DelToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
     }
 
     /* remove subclassing */
-    if (toolPtr->uFlags & TTF_SUBCLASS) {
-	if (toolPtr->uFlags & TTF_IDISHWND) {
+    if (toolPtr->uInternalFlags & TTF_SUBCLASS) {
+	if (toolPtr->uInternalFlags & TTF_IDISHWND) {
 	    RemoveWindowSubclass((HWND)toolPtr->uId, TOOLTIPS_SubclassProc, 1);
 	}
 	else {
@@ -1905,8 +1907,8 @@ TOOLTIPS_Destroy (TOOLTIPS_INFO *infoPtr)
 	    }
 
 	    /* remove subclassing */
-        if (toolPtr->uFlags & TTF_SUBCLASS) {
-            if (toolPtr->uFlags & TTF_IDISHWND) {
+        if (toolPtr->uInternalFlags & TTF_SUBCLASS) {
+            if (toolPtr->uInternalFlags & TTF_IDISHWND) {
                 RemoveWindowSubclass((HWND)toolPtr->uId, TOOLTIPS_SubclassProc, 1);
             }
             else {
@@ -1994,6 +1996,7 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
+#ifdef __REACTOS__
     TTTOOL_INFO *toolPtr = infoPtr->tools;
     LRESULT nResult;
 
@@ -2020,6 +2023,9 @@ TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         }
         return nResult;
     }
+#else
+    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", infoPtr->hwndSelf, wParam, lParam);
+#endif
 
     return 0;
 }

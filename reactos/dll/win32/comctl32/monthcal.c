@@ -850,10 +850,16 @@ static void MONTHCAL_PaintButton(MONTHCAL_INFO *infoPtr, HDC hdc, enum nav_direc
 /* paint a title with buttons and month/year string */
 static void MONTHCAL_PaintTitle(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps, INT calIdx)
 {
-  static const WCHAR fmt_monthW[] = { '%','s',' ','%','l','d',0 };
+  static const WCHAR mmmmW[] = {'M','M','M','M',0};
+  static const WCHAR mmmW[] = {'M','M','M',0};
+  static const WCHAR mmW[] = {'M','M',0};
+  static const WCHAR fmtyearW[] = {'%','l','d',0};
+  static const WCHAR fmtmmW[] = {'%','0','2','d',0};
+  static const WCHAR fmtmW[] = {'%','d',0};
   RECT *title = &infoPtr->calendars[calIdx].title;
   const SYSTEMTIME *st = &infoPtr->calendars[calIdx].month;
-  WCHAR buf_month[80], buf_fmt[80];
+  WCHAR monthW[80], strW[80], fmtW[80], yearW[6] /* valid year range is 1601-30827 */;
+  int yearoffset, monthoffset, shiftX;
   SIZE sz;
 
   /* fill header box */
@@ -864,21 +870,65 @@ static void MONTHCAL_PaintTitle(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRU
   SetTextColor(hdc, infoPtr->colors[MCSC_TITLETEXT]);
   SelectObject(hdc, infoPtr->hBoldFont);
 
-  GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1 + st->wMonth - 1,
-                 buf_month, countof(buf_month));
+  /* draw formatted date string */
+  GetDateFormatW(LOCALE_USER_DEFAULT, DATE_YEARMONTH, st, NULL, strW, countof(strW));
+  DrawTextW(hdc, strW, strlenW(strW), title, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-  wsprintfW(buf_fmt, fmt_monthW, buf_month, st->wYear);
-  DrawTextW(hdc, buf_fmt, strlenW(buf_fmt), title,
-                      DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+  GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SYEARMONTH, fmtW, countof(fmtW));
+  wsprintfW(yearW, fmtyearW, st->wYear);
 
-  /* update title rectangles with current month - used while testing hits */
-  GetTextExtentPoint32W(hdc, buf_fmt, strlenW(buf_fmt), &sz);
-  infoPtr->calendars[calIdx].titlemonth.left = title->right / 2 + title->left / 2 - sz.cx / 2;
-  infoPtr->calendars[calIdx].titleyear.right = title->right / 2 + title->left / 2 + sz.cx / 2;
+  /* month is trickier as it's possible to have different format pictures, we'll
+     test for M, MM, MMM, and MMMM */
+  if (strstrW(fmtW, mmmmW))
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+st->wMonth-1, monthW, countof(monthW));
+  else if (strstrW(fmtW, mmmW))
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SABBREVMONTHNAME1+st->wMonth-1, monthW, countof(monthW));
+  else if (strstrW(fmtW, mmW))
+    wsprintfW(monthW, fmtmmW, st->wMonth);
+  else
+    wsprintfW(monthW, fmtmW, st->wMonth);
 
-  GetTextExtentPoint32W(hdc, buf_month, strlenW(buf_month), &sz);
+  /* update hit boxes */
+  yearoffset = 0;
+  while (strW[yearoffset])
+  {
+    if (!strncmpW(&strW[yearoffset], yearW, strlenW(yearW)))
+        break;
+    yearoffset++;
+  }
+
+  monthoffset = 0;
+  while (strW[monthoffset])
+  {
+    if (!strncmpW(&strW[monthoffset], monthW, strlenW(monthW)))
+        break;
+    monthoffset++;
+  }
+
+  /* for left limits use offsets */
+  sz.cx = 0;
+  if (yearoffset)
+    GetTextExtentPoint32W(hdc, strW, yearoffset, &sz);
+  infoPtr->calendars[calIdx].titleyear.left = sz.cx;
+
+  sz.cx = 0;
+  if (monthoffset)
+    GetTextExtentPoint32W(hdc, strW, monthoffset, &sz);
+  infoPtr->calendars[calIdx].titlemonth.left = sz.cx;
+
+  /* for right limits use actual string parts lengths */
+  GetTextExtentPoint32W(hdc, &strW[yearoffset], strlenW(yearW), &sz);
+  infoPtr->calendars[calIdx].titleyear.right = infoPtr->calendars[calIdx].titleyear.left + sz.cx;
+
+  GetTextExtentPoint32W(hdc, monthW, strlenW(monthW), &sz);
   infoPtr->calendars[calIdx].titlemonth.right = infoPtr->calendars[calIdx].titlemonth.left + sz.cx;
-  infoPtr->calendars[calIdx].titleyear.left   = infoPtr->calendars[calIdx].titlemonth.right;
+
+  /* Finally translate rectangles to match center aligned string,
+     hit rectangles are relative to title rectangle before translation. */
+  GetTextExtentPoint32W(hdc, strW, strlenW(strW), &sz);
+  shiftX = (title->right - title->left - sz.cx) / 2 + title->left;
+  OffsetRect(&infoPtr->calendars[calIdx].titleyear, shiftX, 0);
+  OffsetRect(&infoPtr->calendars[calIdx].titlemonth, shiftX, 0);
 }
 
 static void MONTHCAL_PaintWeeknumbers(const MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps, INT calIdx)
@@ -1002,13 +1052,7 @@ static void MONTHCAL_PaintTodayTitle(const MONTHCAL_INFO *infoPtr, HDC hdc, cons
 
   if(infoPtr->dwStyle & MCS_NOTODAY) return;
 
-  if (!LoadStringW(COMCTL32_hModule, IDM_TODAY, buf_todayW, countof(buf_todayW)))
-  {
-    static const WCHAR todayW[] = { 'T','o','d','a','y',':',0 };
-    WARN("Can't load resource\n");
-    strcpyW(buf_todayW, todayW);
-  }
-
+  LoadStringW(COMCTL32_hModule, IDM_TODAY, buf_todayW, countof(buf_todayW));
   col = infoPtr->dwStyle & MCS_NOTODAYCIRCLE ? 0 : 1;
   if (infoPtr->dwStyle & MCS_WEEKNUMBERS) col--;
   /* label is located below first calendar last row */
@@ -1968,17 +2012,12 @@ static void MONTHCAL_GoToMonth(MONTHCAL_INFO *infoPtr, enum nav_direction direct
 static LRESULT
 MONTHCAL_RButtonUp(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 {
-  static const WCHAR todayW[] = { 'G','o',' ','t','o',' ','T','o','d','a','y',':',0 };
   HMENU hMenu;
   POINT menupoint;
   WCHAR buf[32];
 
   hMenu = CreatePopupMenu();
-  if (!LoadStringW(COMCTL32_hModule, IDM_GOTODAY, buf, countof(buf)))
-  {
-      WARN("Can't load resource\n");
-      strcpyW(buf, todayW);
-  }
+  LoadStringW(COMCTL32_hModule, IDM_GOTODAY, buf, countof(buf));
   AppendMenuW(hMenu, MF_STRING|MF_ENABLED, 1, buf);
   menupoint.x = (short)LOWORD(lParam);
   menupoint.y = (short)HIWORD(lParam);

@@ -29,7 +29,7 @@
  *
  * TODO:
  *   missing notifications: TVN_GETINFOTIP, TVN_KEYDOWN,
- *      TVN_SETDISPINFO, TVN_SINGLEEXPAND
+ *      TVN_SETDISPINFO
  *
  *   missing styles: TVS_FULLROWSELECT, TVS_INFOTIP, TVS_RTLREADING,
  *
@@ -2869,11 +2869,13 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, const RECT *rc)
     }
 
     //
-    // This is correct, but is causes and infinite loop of WM_PAINT messages, resulting
-    // in continuous painting of the scroll bar in reactos. Comment out until the real
-    // bug is found
-    // 
-    //TREEVIEW_UpdateScrollBars(infoPtr);
+    // FIXME: This is correct, but is causes and infinite loop of WM_PAINT
+    // messages, resulting in continuous painting of the scroll bar in reactos.
+    // Comment out until the real bug is found
+    //
+#ifndef __REACTOS__
+    TREEVIEW_UpdateScrollBars(infoPtr);
+#endif
 
     if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
 	infoPtr->cdmode =
@@ -3491,47 +3493,31 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
 static void TREEVIEW_SingleExpand(TREEVIEW_INFO *infoPtr,
     HTREEITEM selection, HTREEITEM item)
 {
-    TREEVIEW_ITEM *SelItem;
+    TREEVIEW_ITEM *prev, *curr;
 
     if ((infoPtr->dwStyle & TVS_SINGLEEXPAND) == 0 || infoPtr->hwndEdit || !item) return;
 
     TREEVIEW_SendTreeviewNotify(infoPtr, TVN_SINGLEEXPAND, TVC_UNKNOWN, TVIF_HANDLE | TVIF_PARAM, item, 0);
 
     /*
-     * Close the previous selection all the way to the root
-     * as long as the new selection is not a child
+     * Close the previous item and its ancestors as long as they are not
+     * ancestors of the current item
      */
-    if(selection && (selection != item))
+    for (prev = selection; prev && TREEVIEW_ValidItem(infoPtr, prev); prev = prev->parent)
     {
-        BOOL closeit = TRUE;
-        SelItem = item;
-
-        /* determine if the hitItem is a child of the currently selected item */
-        while(closeit && SelItem && TREEVIEW_ValidItem(infoPtr, SelItem) &&
-              (SelItem->parent != infoPtr->root))
+        for (curr = item; curr && TREEVIEW_ValidItem(infoPtr, curr); curr = curr->parent)
         {
-            closeit = (SelItem != selection);
-            SelItem = SelItem->parent;
+            if (curr == prev)
+                goto finish;
         }
-
-        if(closeit)
-        {
-            if(TREEVIEW_ValidItem(infoPtr, selection))
-                SelItem = selection;
-
-            while(SelItem && (SelItem != item) && TREEVIEW_ValidItem(infoPtr, SelItem) &&
-                  SelItem->parent != infoPtr->root)
-            {
-                TREEVIEW_Collapse(infoPtr, SelItem, FALSE, FALSE);
-                SelItem = SelItem->parent;
-            }
-        }
+        TREEVIEW_Collapse(infoPtr, prev, FALSE, TRUE);
     }
 
+finish:
     /*
      * Expand the current item
      */
-    TREEVIEW_Expand(infoPtr, item, FALSE, FALSE);
+    TREEVIEW_Expand(infoPtr, item, FALSE, TRUE);
 }
 
 static BOOL
@@ -4474,6 +4460,9 @@ TREEVIEW_SelectItem(TREEVIEW_INFO *infoPtr, INT wParam, HTREEITEM item)
     if (item && !TREEVIEW_ValidItem(infoPtr, item))
 	return FALSE;
 
+    if (item == infoPtr->selectedItem)
+	return TRUE;
+
     TRACE("%p (%s) %d\n", item, TREEVIEW_ItemName(item), wParam);
 
     if (!TREEVIEW_DoSelectItem(infoPtr, wParam, item, TVC_UNKNOWN))
@@ -4659,7 +4648,7 @@ TREEVIEW_EnsureVisible(TREEVIEW_INFO *infoPtr, HTREEITEM item, BOOL bHScroll)
 	while (parent != infoPtr->root)
 	{
 	    if (!(parent->state & TVIS_EXPANDED))
-		TREEVIEW_Expand(infoPtr, parent, FALSE, FALSE);
+		TREEVIEW_Expand(infoPtr, parent, FALSE, TRUE);
 
 	    parent = parent->parent;
 	}

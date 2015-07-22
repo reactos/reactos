@@ -103,7 +103,6 @@ typedef struct
 typedef struct
 {
     DWORD    dwStructSize;    /* size of TBBUTTON struct */
-    INT      nWidth;          /* width of the toolbar */
     RECT     client_rect;
     RECT     rcBound;         /* bounding rectangle */
     INT      nButtonHeight;
@@ -124,8 +123,10 @@ typedef struct
     INT      nOldHit;
     INT      nHotItem;        /* index of the "hot" item */
     SIZE     szPadding;       /* padding values around button */
+#ifdef __REACTOS__
     SIZE     szBarPadding;       /* padding values around the toolbar (NOT USED BUT STORED) */
     SIZE     szSpacing;       /* spacing values between buttons */
+#endif
     INT      iTopMargin;      /* the top margin */
     INT      iListGap;        /* default gap between text and image for toolbar with list style */
     HFONT    hDefaultFont;
@@ -195,14 +196,20 @@ typedef enum
 #define DEFPAD_CX 7
 #define DEFPAD_CY 6
 
+#ifdef __REACTOS__
 /* default space between buttons and between rows */
 #define DEFSPACE_CX 7
 #define DEFSPACE_CY 6
+#endif
 
 #define DEFLISTGAP 4
 
 /* vertical padding used in list mode when image is present */
+#ifdef __REACTOS__
 #define LISTPAD_CY 2
+#else
+#define LISTPAD_CY 9
+#endif
 
 /* how wide to treat the bitmap if it isn't present */
 #define NONLIST_NOTEXT_OFFSET 2
@@ -240,6 +247,8 @@ static LRESULT TOOLBAR_AutoSize(TOOLBAR_INFO *infoPtr);
 static void TOOLBAR_CheckImageListIconSize(TOOLBAR_INFO *infoPtr);
 static void TOOLBAR_TooltipAddTool(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *button);
 static void TOOLBAR_TooltipSetRect(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *button);
+static LRESULT TOOLBAR_SetButtonInfo(TOOLBAR_INFO *infoPtr, INT Id,
+                                     const TBBUTTONINFOW *lptbbi, BOOL isW);
 
 
 static inline int default_top_margin(const TOOLBAR_INFO *infoPtr)
@@ -255,6 +264,12 @@ static inline int default_top_margin(const TOOLBAR_INFO *infoPtr)
 static inline BOOL TOOLBAR_HasDropDownArrows(DWORD exStyle)
 {
     return (exStyle & TBSTYLE_EX_DRAWDDARROWS) != 0;
+}
+
+static inline BOOL button_has_ddarrow(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *btnPtr)
+{
+    return (TOOLBAR_HasDropDownArrows( infoPtr->dwExStyle ) && (btnPtr->fsStyle & BTNS_DROPDOWN)) ||
+        (btnPtr->fsStyle & BTNS_WHOLEDROPDOWN);
 }
 
 static LPWSTR
@@ -318,6 +333,37 @@ static inline BOOL
 TOOLBAR_ButtonHasString(const TBUTTON_INFO *btnPtr)
 {
     return HIWORD(btnPtr->iString) && btnPtr->iString != -1;
+}
+
+static void set_string_index( TBUTTON_INFO *btn, INT_PTR str, BOOL unicode )
+{
+    if (!IS_INTRESOURCE( str ) && str != -1)
+    {
+        if (!TOOLBAR_ButtonHasString( btn )) btn->iString = 0;
+
+        if (unicode)
+            Str_SetPtrW( (WCHAR **)&btn->iString, (WCHAR *)str );
+        else
+            Str_SetPtrAtoW( (WCHAR **)&btn->iString, (char *)str );
+    }
+    else
+    {
+        if (TOOLBAR_ButtonHasString( btn )) Free( (WCHAR *)btn->iString );
+
+        btn->iString  = str;
+    }
+}
+
+static void set_stringT( TBUTTON_INFO *btn, const WCHAR *str, BOOL unicode )
+{
+    if (IS_INTRESOURCE( (DWORD_PTR)str ) || (DWORD_PTR)str == -1) return;
+    set_string_index( btn, (DWORD_PTR)str, unicode );
+}
+
+static void free_string( TBUTTON_INFO *btn )
+{
+    set_string_index( btn, 0, TRUE );
+
 }
 
 /***********************************************************************
@@ -700,8 +746,10 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, I
     INT index;
     INT offset = 0;
     UINT draw_flags = ILD_TRANSPARENT;
+#ifdef __REACTOS__
     IMAGEINFO info = {0};
     BITMAP bm = {0};
+#endif
 
     if (tbcd->nmcd.uItemState & (CDIS_DISABLED | CDIS_INDETERMINATE))
     {
@@ -710,6 +758,7 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, I
         {
             himl = TOOLBAR_GetImageListForDrawing(infoPtr, btnPtr, IMAGE_LIST_DEFAULT, &index);
 
+#ifdef __REACTOS__
             ImageList_GetImageInfo(himl, index, &info);
             GetObjectW(info.hbmImage, sizeof(bm), &bm);
 
@@ -721,6 +770,9 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, I
             {
                 draw_masked = TRUE;
             }
+#else
+            draw_masked = TRUE;
+#endif
         }
     }
     else if (tbcd->nmcd.uItemState & CDIS_CHECKED ||
@@ -859,9 +911,7 @@ static void
 TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, DWORD dwBaseCustDraw)
 {
     DWORD dwStyle = infoPtr->dwStyle;
-    BOOL hasDropDownArrow = (TOOLBAR_HasDropDownArrows(infoPtr->dwExStyle) &&
-                            (btnPtr->fsStyle & BTNS_DROPDOWN)) ||
-                            (btnPtr->fsStyle & BTNS_WHOLEDROPDOWN);
+    BOOL hasDropDownArrow = button_has_ddarrow( infoPtr, btnPtr );
     BOOL drawSepDropDownArrow = hasDropDownArrow && 
                                 (~btnPtr->fsStyle & BTNS_WHOLEDROPDOWN);
     RECT rc, rcArrow, rcBitmap, rcText;
@@ -1327,164 +1377,150 @@ static void
 TOOLBAR_WrapToolbar(TOOLBAR_INFO *infoPtr)
 {
     TBUTTON_INFO *btnPtr;
-    INT x, cx, i, j;
-    RECT rc;
+    INT x, cx, i, j, width;
     BOOL bButtonWrap;
 
     /* 	When the toolbar window style is not TBSTYLE_WRAPABLE,	*/
     /*	no layout is necessary. Applications may use this style */
     /*	to perform their own layout on the toolbar. 		*/
-    if (!(infoPtr->dwStyle & TBSTYLE_WRAPABLE) &&
-        !(infoPtr->dwExStyle & TBSTYLE_EX_VERTICAL))  return;
+    if( !(infoPtr->dwStyle & TBSTYLE_WRAPABLE) &&
+	!(infoPtr->dwExStyle & TBSTYLE_EX_VERTICAL) )  return;
 
     btnPtr = infoPtr->buttons;
-    x = infoPtr->nIndent;
-
-    if (GetParent(infoPtr->hwndSelf))
-    {
-        /* this can get the parents width, to know how far we can extend
-         * this toolbar.  We cannot use its height, as there may be multiple
-         * toolbars in a rebar control
-         */
-        GetClientRect(GetParent(infoPtr->hwndSelf), &rc);
-        infoPtr->nWidth = rc.right - rc.left;
-    }
-    else
-    {
-        GetWindowRect(infoPtr->hwndSelf, &rc);
-        infoPtr->nWidth = rc.right - rc.left;
-    }
+    x  = infoPtr->nIndent;
+    width = infoPtr->client_rect.right - infoPtr->client_rect.left;
 
     bButtonWrap = FALSE;
 
-    TRACE("start ButtonWidth=%d, BitmapWidth=%d, nWidth=%d, nIndent=%d\n",
-          infoPtr->nButtonWidth, infoPtr->nBitmapWidth, infoPtr->nWidth,
-          infoPtr->nIndent);
+    TRACE("start ButtonWidth=%d, BitmapWidth=%d, width=%d, nIndent=%d\n",
+	  infoPtr->nButtonWidth, infoPtr->nBitmapWidth, width,
+	  infoPtr->nIndent);
 
-    for (i = 0; i < infoPtr->nNumButtons; i++)
+    for (i = 0; i < infoPtr->nNumButtons; i++ )
     {
-        btnPtr[i].fsState &= ~TBSTATE_WRAP;
+	btnPtr[i].fsState &= ~TBSTATE_WRAP;
 
-        if (btnPtr[i].fsState & TBSTATE_HIDDEN)
-            continue;
+	if (btnPtr[i].fsState & TBSTATE_HIDDEN)
+	    continue;
 
         if (btnPtr[i].cx > 0)
             cx = btnPtr[i].cx;
         /* horizontal separators are treated as buttons for width    */
-        else if ((btnPtr[i].fsStyle & BTNS_SEP) &&
-                 !(infoPtr->dwStyle & CCS_VERT))
+	else if ((btnPtr[i].fsStyle & BTNS_SEP) &&
+            !(infoPtr->dwStyle & CCS_VERT))
             cx = (btnPtr[i].iBitmap > 0) ? btnPtr[i].iBitmap : SEPARATOR_WIDTH;
-        else
-            cx = infoPtr->nButtonWidth;
+	else
+	    cx = infoPtr->nButtonWidth;
 
-        /* Two or more adjacent separators form a separator group.   */
-        /* The first separator in a group should be wrapped to the   */
-        /* next row if the previous wrapping is on a button.	     */
-        if (bButtonWrap &&
-            (btnPtr[i].fsStyle & BTNS_SEP) &&
-            (i + 1 < infoPtr->nNumButtons) &&
-            (btnPtr[i + 1].fsStyle & BTNS_SEP))
-        {
-            TRACE("wrap point 1 btn %d style %02x\n", i, btnPtr[i].fsStyle);
-            btnPtr[i].fsState |= TBSTATE_WRAP;
-            x = infoPtr->nIndent;
-            i++;
-            bButtonWrap = FALSE;
-            continue;
-        }
+        if (!btnPtr[i].cx && button_has_ddarrow( infoPtr, btnPtr + i ))
+            cx += DDARROW_WIDTH;
 
-        /* The layout makes sure the bitmap is visible, but not the button. */
-        /* Test added to also wrap after a button that starts a row but     */
-        /* is bigger than the area.  - GA  8/01                             */
-        if ((x + cx - (infoPtr->nButtonWidth - infoPtr->nBitmapWidth) / 2
-            > infoPtr->nWidth) ||
-            ((x == infoPtr->nIndent) && (cx > infoPtr->nWidth)))
-        {
-            BOOL bFound = FALSE;
+	/* Two or more adjacent separators form a separator group.   */
+	/* The first separator in a group should be wrapped to the   */
+	/* next row if the previous wrapping is on a button.	     */
+	if( bButtonWrap &&
+		(btnPtr[i].fsStyle & BTNS_SEP) &&
+		(i + 1 < infoPtr->nNumButtons ) &&
+		(btnPtr[i + 1].fsStyle & BTNS_SEP) )
+	{
+	    TRACE("wrap point 1 btn %d style %02x\n", i, btnPtr[i].fsStyle);
+	    btnPtr[i].fsState |= TBSTATE_WRAP;
+	    x = infoPtr->nIndent;
+	    i++;
+	    bButtonWrap = FALSE;
+	    continue;
+	}
 
-            /* 	If the current button is a separator and not hidden,  */
-            /*	go to the next until it reaches a non separator.      */
-            /*	Wrap the last separator if it is before a button.     */
-            while ((((btnPtr[i].fsStyle & BTNS_SEP) &&
-                !(btnPtr[i].fsStyle & BTNS_DROPDOWN)) ||
-                (btnPtr[i].fsState & TBSTATE_HIDDEN)) &&
-                i < infoPtr->nNumButtons)
-            {
-                i++;
-                bFound = TRUE;
-            }
+	/* The layout makes sure the bitmap is visible, but not the button. */
+	/* Test added to also wrap after a button that starts a row but     */
+	/* is bigger than the area.  - GA  8/01                             */
+        if ((x + cx - (infoPtr->nButtonWidth - infoPtr->nBitmapWidth) / 2 > width) ||
+            ((x == infoPtr->nIndent) && (cx > width)))
+	{
+	    BOOL bFound = FALSE;
 
-            if (bFound && i < infoPtr->nNumButtons)
-            {
-                i--;
-                TRACE("wrap point 2 btn %d style %02x, x=%d, cx=%d\n",
-                      i, btnPtr[i].fsStyle, x, cx);
-                btnPtr[i].fsState |= TBSTATE_WRAP;
-                x = infoPtr->nIndent;
-                bButtonWrap = FALSE;
-                continue;
-            }
-            else if (i >= infoPtr->nNumButtons)
-                break;
+	    /* 	If the current button is a separator and not hidden,  */
+	    /*	go to the next until it reaches a non separator.      */
+	    /*	Wrap the last separator if it is before a button.     */
+	    while( ( ((btnPtr[i].fsStyle & BTNS_SEP) &&
+		      !(btnPtr[i].fsStyle & BTNS_DROPDOWN)) ||
+		     (btnPtr[i].fsState & TBSTATE_HIDDEN) ) &&
+			i < infoPtr->nNumButtons )
+	    {
+		i++;
+		bFound = TRUE;
+	    }
 
-            /* 	If the current button is not a separator, find the last  */
-            /*	separator and wrap it.   				 */
-            for (j = i - 1; j >= 0 && !(btnPtr[j].fsState & TBSTATE_WRAP); j--)
-            {
-                if ((btnPtr[j].fsStyle & BTNS_SEP) &&
-                    !(btnPtr[j].fsState & TBSTATE_HIDDEN))
-                {
-                    bFound = TRUE;
-                    i = j;
-                    TRACE("wrap point 3 btn %d style %02x, x=%d, cx=%d\n",
-                          i, btnPtr[i].fsStyle, x, cx);
-                    x = infoPtr->nIndent;
-                    btnPtr[j].fsState |= TBSTATE_WRAP;
-                    bButtonWrap = FALSE;
-                    break;
-                }
-            }
+	    if( bFound && i < infoPtr->nNumButtons )
+	    {
+		i--;
+		TRACE("wrap point 2 btn %d style %02x, x=%d, cx=%d\n",
+		      i, btnPtr[i].fsStyle, x, cx);
+		btnPtr[i].fsState |= TBSTATE_WRAP;
+		x = infoPtr->nIndent;
+		bButtonWrap = FALSE;
+		continue;
+	    }
+	    else if ( i >= infoPtr->nNumButtons)
+		break;
 
-            /* 	If no separator available for wrapping, wrap one of 	*/
-            /*  non-hidden previous button.  			     	*/
-            if (!bFound)
-            {
-                for (j = i - 1;
-                     j >= 0 && !(btnPtr[j].fsState & TBSTATE_WRAP); j--)
-                {
-                    if (btnPtr[j].fsState & TBSTATE_HIDDEN)
-                        continue;
+	    /* 	If the current button is not a separator, find the last  */
+	    /*	separator and wrap it.   				 */
+	    for ( j = i - 1; j >= 0  &&  !(btnPtr[j].fsState & TBSTATE_WRAP); j--)
+	    {
+		if ((btnPtr[j].fsStyle & BTNS_SEP) &&
+			!(btnPtr[j].fsState & TBSTATE_HIDDEN))
+		{
+		    bFound = TRUE;
+		    i = j;
+		    TRACE("wrap point 3 btn %d style %02x, x=%d, cx=%d\n",
+			  i, btnPtr[i].fsStyle, x, cx);
+		    x = infoPtr->nIndent;
+		    btnPtr[j].fsState |= TBSTATE_WRAP;
+		    bButtonWrap = FALSE;
+		    break;
+		}
+	    }
 
-                    bFound = TRUE;
-                    i = j;
-                    TRACE("wrap point 4 btn %d style %02x, x=%d, cx=%d\n",
-                          i, btnPtr[i].fsStyle, x, cx);
-                    x = infoPtr->nIndent;
-                    btnPtr[j].fsState |= TBSTATE_WRAP;
-                    bButtonWrap = TRUE;
-                    break;
-                }
-            }
+	    /* 	If no separator available for wrapping, wrap one of 	*/
+	    /*  non-hidden previous button.  			     	*/
+	    if (!bFound)
+	    {
+		for ( j = i - 1;
+			j >= 0 && !(btnPtr[j].fsState & TBSTATE_WRAP); j--)
+		{
+		    if (btnPtr[j].fsState & TBSTATE_HIDDEN)
+			continue;
 
-            /* If all above failed, wrap the current button. */
-            if (!bFound)
-            {
-                TRACE("wrap point 5 btn %d style %02x, x=%d, cx=%d\n",
-                      i, btnPtr[i].fsStyle, x, cx);
-                btnPtr[i].fsState |= TBSTATE_WRAP;
-                x = infoPtr->nIndent;
-                if (btnPtr[i].fsStyle & BTNS_SEP)
-                    bButtonWrap = FALSE;
-                else
-                    bButtonWrap = TRUE;
-            }
-        }
-        else
-        {
-            TRACE("wrap point 6 btn %d style %02x, x=%d, cx=%d\n",
-                  i, btnPtr[i].fsStyle, x, cx);
-            x += cx;
-        }
+		    bFound = TRUE;
+		    i = j;
+		    TRACE("wrap point 4 btn %d style %02x, x=%d, cx=%d\n",
+			  i, btnPtr[i].fsStyle, x, cx);
+		    x = infoPtr->nIndent;
+		    btnPtr[j].fsState |= TBSTATE_WRAP;
+		    bButtonWrap = TRUE;
+		    break;
+		}
+	    }
+
+	    /* If all above failed, wrap the current button. */
+	    if (!bFound)
+	    {
+		TRACE("wrap point 5 btn %d style %02x, x=%d, cx=%d\n",
+		      i, btnPtr[i].fsStyle, x, cx);
+		btnPtr[i].fsState |= TBSTATE_WRAP;
+		x = infoPtr->nIndent;
+		if (btnPtr[i].fsStyle & BTNS_SEP )
+		    bButtonWrap = FALSE;
+		else
+		    bButtonWrap = TRUE;
+	    }
+	}
+	else {
+	    TRACE("wrap point 6 btn %d style %02x, x=%d, cx=%d\n",
+		  i, btnPtr[i].fsStyle, x, cx);
+	    x += cx;
+	}
     }
 }
 
@@ -1610,8 +1646,14 @@ static inline SIZE TOOLBAR_MeasureButton(const TOOLBAR_INFO *infoPtr, SIZE sizeS
         /* ... add on the necessary padding */
         if (bValidImageList)
         {
+#ifdef __REACTOS__
             sizeButton.cy += infoPtr->szPadding.cy;
             if (!bHasBitmap)
+#else
+            if (bHasBitmap)
+                sizeButton.cy += DEFPAD_CY;
+            else
+#endif
                 sizeButton.cy += LISTPAD_CY;
         }
         else
@@ -1628,7 +1670,11 @@ static inline SIZE TOOLBAR_MeasureButton(const TOOLBAR_INFO *infoPtr, SIZE sizeS
     {
         if (bHasBitmap)
         {
+#ifdef __REACTOS__
             sizeButton.cy = infoPtr->nBitmapHeight + infoPtr->szPadding.cy;
+#else
+            sizeButton.cy = infoPtr->nBitmapHeight + DEFPAD_CY;
+#endif
             if (sizeString.cy > 0)
                 sizeButton.cy += 1 + sizeString.cy;
             sizeButton.cx = infoPtr->szPadding.cx +
@@ -1685,17 +1731,16 @@ static void
 TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 {
     TBUTTON_INFO *btnPtr;
-    SIZE          sizeButton;
-    INT           i, nRows, nSepRows;
-    INT           x, y, cx, cy;
-    BOOL          bWrap;
-    BOOL          validImageList    = TOOLBAR_IsValidImageList(infoPtr, 0);
-    BOOL          hasDropDownArrows = TOOLBAR_HasDropDownArrows(infoPtr->dwExStyle);
+    SIZE sizeButton;
+    INT i, nRows, nSepRows;
+    INT x, y, cx, cy;
+    BOOL bWrap;
+    BOOL validImageList = TOOLBAR_IsValidImageList(infoPtr, 0);
 
     TOOLBAR_WrapToolbar(infoPtr);
 
-    x = infoPtr->nIndent;
-    y = infoPtr->iTopMargin;
+    x  = infoPtr->nIndent;
+    y  = infoPtr->iTopMargin;
     cx = infoPtr->nButtonWidth;
     cy = infoPtr->nButtonHeight;
 
@@ -1710,112 +1755,104 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 
     TRACE("cy=%d\n", cy);
 
-    for (i = 0; i < infoPtr->nNumButtons; i++, btnPtr++)
+    for (i = 0; i < infoPtr->nNumButtons; i++, btnPtr++ )
     {
-        bWrap = FALSE;
-        if (btnPtr->fsState & TBSTATE_HIDDEN)
-        {
-            SetRectEmpty(&btnPtr->rect);
-            continue;
-        }
+	bWrap = FALSE;
+	if (btnPtr->fsState & TBSTATE_HIDDEN)
+	{
+	    SetRectEmpty (&btnPtr->rect);
+	    continue;
+	}
 
-        cy = infoPtr->nButtonHeight;
+	cy = infoPtr->nButtonHeight;
 
-        if (btnPtr->fsStyle & BTNS_SEP)
-        {
-            if (infoPtr->dwStyle & CCS_VERT)
-            {
+	if (btnPtr->fsStyle & BTNS_SEP) {
+	    if (infoPtr->dwStyle & CCS_VERT) {
                 cy = (btnPtr->iBitmap > 0) ? btnPtr->iBitmap : SEPARATOR_WIDTH;
                 cx = (btnPtr->cx > 0) ? btnPtr->cx : infoPtr->nButtonWidth;
-            }
-            else
-            {
+	    }
+	    else
                 cx = (btnPtr->cx > 0) ? btnPtr->cx :
                     (btnPtr->iBitmap > 0) ? btnPtr->iBitmap : SEPARATOR_WIDTH;
-            }
-        }
-        else
-        {
+	}
+	else
+	{
             if (btnPtr->cx)
+              cx = btnPtr->cx;
+            else if (btnPtr->fsStyle & BTNS_AUTOSIZE)
             {
-                cx = btnPtr->cx;
-            }
-            else if ((infoPtr->dwExStyle & TBSTYLE_EX_MIXEDBUTTONS) ||
-                     (btnPtr->fsStyle & BTNS_AUTOSIZE))
-            {
-                SIZE sz;
-                HDC hdc;
-                HFONT hOldFont;
+              SIZE sz;
+	      HDC hdc;
+	      HFONT hOldFont;
 
-                hdc = GetDC(infoPtr->hwndSelf);
-                hOldFont = SelectObject(hdc, infoPtr->hFont);
+	      hdc = GetDC (infoPtr->hwndSelf);
+	      hOldFont = SelectObject (hdc, infoPtr->hFont);
 
-                TOOLBAR_MeasureString(infoPtr, btnPtr, hdc, &sz);
+              TOOLBAR_MeasureString(infoPtr, btnPtr, hdc, &sz);
 
-                SelectObject(hdc, hOldFont);
-                ReleaseDC(infoPtr->hwndSelf, hdc);
+	      SelectObject (hdc, hOldFont);
+	      ReleaseDC (infoPtr->hwndSelf, hdc);
 
-                sizeButton = TOOLBAR_MeasureButton(infoPtr, sz,
-                                                   TOOLBAR_IsValidBitmapIndex(infoPtr, infoPtr->buttons[i].iBitmap),
-                                                   validImageList);
-                cx = sizeButton.cx;
+              sizeButton = TOOLBAR_MeasureButton(infoPtr, sz,
+                  TOOLBAR_IsValidBitmapIndex(infoPtr, infoPtr->buttons[i].iBitmap),
+                  validImageList);
+              cx = sizeButton.cx;
             }
             else
-                cx = infoPtr->nButtonWidth;
+	      cx = infoPtr->nButtonWidth;
 
             /* if size has been set manually then don't add on extra space
              * for the drop down arrow */
-            if (!btnPtr->cx && hasDropDownArrows &&
-                ((btnPtr->fsStyle & BTNS_DROPDOWN) || (btnPtr->fsStyle & BTNS_WHOLEDROPDOWN)))
-                cx += DDARROW_WIDTH;
-        }
-        if (btnPtr->fsState & TBSTATE_WRAP)
-            bWrap = TRUE;
+            if (!btnPtr->cx && button_has_ddarrow( infoPtr, btnPtr ))
+              cx += DDARROW_WIDTH;
+	}
+	if (btnPtr->fsState & TBSTATE_WRAP)
+		    bWrap = TRUE;
 
-        SetRect(&btnPtr->rect, x, y, x + cx, y + cy);
+	SetRect (&btnPtr->rect, x, y, x + cx, y + cy);
 
-        if (infoPtr->rcBound.left > x)
-            infoPtr->rcBound.left = x;
-        if (infoPtr->rcBound.right < x + cx)
-            infoPtr->rcBound.right = x + cx;
-        if (infoPtr->rcBound.bottom < y + cy)
-            infoPtr->rcBound.bottom = y + cy;
+	if (infoPtr->rcBound.left > x)
+	    infoPtr->rcBound.left = x;
+	if (infoPtr->rcBound.right < x + cx)
+	    infoPtr->rcBound.right = x + cx;
+	if (infoPtr->rcBound.bottom < y + cy)
+	    infoPtr->rcBound.bottom = y + cy;
 
         TOOLBAR_TooltipSetRect(infoPtr, btnPtr);
 
-        /* btnPtr->nRow is zero based. The space between the rows is 	*/
-        /* also considered as a row. 					*/
-        btnPtr->nRow = nRows + nSepRows;
+	/* btnPtr->nRow is zero based. The space between the rows is 	*/
+	/* also considered as a row. 					*/
+	btnPtr->nRow = nRows + nSepRows;
 
-        TRACE("button %d style=%x, bWrap=%d, nRows=%d, nSepRows=%d, btnrow=%d, (%d,%d)-(%d,%d)\n",
-              i, btnPtr->fsStyle, bWrap, nRows, nSepRows, btnPtr->nRow,
-              x, y, x + cx, y + cy);
+	TRACE("button %d style=%x, bWrap=%d, nRows=%d, nSepRows=%d, btnrow=%d, (%d,%d)-(%d,%d)\n",
+	      i, btnPtr->fsStyle, bWrap, nRows, nSepRows, btnPtr->nRow,
+	      x, y, x+cx, y+cy);
 
-        if (bWrap)
-        {
-            if (!(btnPtr->fsStyle & BTNS_SEP))
-                y += cy;
-            else
-            {
-                if (!(infoPtr->dwStyle & CCS_VERT))
-                    y += cy + ((btnPtr->cx > 0) ?
-                    btnPtr->cx : SEPARATOR_WIDTH) * 2 / 3;
-                else
-                    y += cy;
+	if( bWrap )
+	{
+	    if ( !(btnPtr->fsStyle & BTNS_SEP) )
+	        y += cy;
+	    else
+	    {
+               if ( !(infoPtr->dwStyle & CCS_VERT))
+                    y += cy + ( (btnPtr->cx > 0 ) ?
+                                btnPtr->cx : SEPARATOR_WIDTH) * 2 /3;
+		else
+		    y += cy;
 
-                /* nSepRows is used to calculate the extra height following  */
-                /* the last row.					     */
-                nSepRows++;
-            }
-            x = infoPtr->nIndent;
+		/* nSepRows is used to calculate the extra height following  */
+		/* the last row.					     */
+		nSepRows++;
+	    }
+	    x = infoPtr->nIndent;
 
-            /* Increment row number unless this is the last button    */
-            /* and it has Wrap set.                                   */
-            if (i != infoPtr->nNumButtons - 1)
-                nRows++;
-        }
-        else
-            x += cx;
+	    /* Increment row number unless this is the last button    */
+	    /* and it has Wrap set.                                   */
+	    if (i != infoPtr->nNumButtons-1)
+		nRows++;
+	}
+	else
+	    x += cx;
     }
 
     /* infoPtr->nRows is the number of rows on the toolbar */
@@ -1881,6 +1918,7 @@ TOOLBAR_InternalInsertButtonsT(TOOLBAR_INFO *infoPtr, INT iIndex, UINT nAddButto
     /* insert new buttons data */
     for (iButton = 0; iButton < nAddButtons; iButton++) {
         TBUTTON_INFO *btnPtr = &infoPtr->buttons[iIndex + iButton];
+        INT_PTR str;
 
         TOOLBAR_DumpTBButton(lpTbb + iButton, fUnicode);
 
@@ -1891,18 +1929,13 @@ TOOLBAR_InternalInsertButtonsT(TOOLBAR_INFO *infoPtr, INT iIndex, UINT nAddButto
         btnPtr->fsState   = lpTbb[iButton].fsState;
         btnPtr->fsStyle   = lpTbb[iButton].fsStyle;
         btnPtr->dwData    = lpTbb[iButton].dwData;
+
         if (btnPtr->fsStyle & BTNS_SEP)
-            btnPtr->iString = -1;
-        else if(!IS_INTRESOURCE(lpTbb[iButton].iString) && lpTbb[iButton].iString != -1)
-        {
-            if (fUnicode)
-                Str_SetPtrW((LPWSTR*)&btnPtr->iString, (LPWSTR)lpTbb[iButton].iString );
-            else
-                Str_SetPtrAtoW((LPWSTR*)&btnPtr->iString, (LPSTR)lpTbb[iButton].iString);
-            fHasString = TRUE;
-        }
+            str = -1;
         else
-            btnPtr->iString   = lpTbb[iButton].iString;
+            str = lpTbb[iButton].iString;
+        set_string_index( btnPtr, str, fUnicode );
+        fHasString |= TOOLBAR_ButtonHasString( btnPtr );
 
         TOOLBAR_TooltipAddTool(infoPtr, btnPtr);
     }
@@ -2005,8 +2038,8 @@ TOOLBAR_RelayEvent (HWND hwndTip, HWND hwndMsg, UINT uMsg,
     SendMessageW (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
 }
 
-
-static LRESULT 
+#ifdef __REACTOS__
+static LRESULT
 TOOLBAR_ThemeChanged(HWND hwnd)
 {
     HTHEME theme = GetWindowTheme(hwnd);
@@ -2014,6 +2047,7 @@ TOOLBAR_ThemeChanged(HWND hwnd)
     OpenThemeData(hwnd, themeClass);
     return 0;
 }
+#endif
 
 static void
 TOOLBAR_TooltipAddTool(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *button)
@@ -3079,38 +3113,28 @@ TOOLBAR_AddStringA (TOOLBAR_INFO *infoPtr, HINSTANCE hInstance, LPARAM lParam)
 static LRESULT
 TOOLBAR_AutoSize (TOOLBAR_INFO *infoPtr)
 {
-    RECT parent_rect;
-    HWND parent;
-    INT  x, y;
-    INT  cx, cy;
-
     TRACE("auto sizing, style=%x!\n", infoPtr->dwStyle);
-
-    parent = GetParent (infoPtr->hwndSelf);
-
-    if (!parent || !infoPtr->bDoRedraw)
-        return 0;
-
-    GetClientRect(parent, &parent_rect);
-
-    x = parent_rect.left;
-    y = parent_rect.top;
-
     TRACE("nRows: %d, infoPtr->nButtonHeight: %d\n", infoPtr->nRows, infoPtr->nButtonHeight);
-
-    cy = TOP_BORDER + infoPtr->nRows * infoPtr->nButtonHeight + BOTTOM_BORDER;
-    cx = parent_rect.right - parent_rect.left;
-
-    if ((infoPtr->dwStyle & TBSTYLE_WRAPABLE) || (infoPtr->dwExStyle & TBSTYLE_EX_VERTICAL))
-    {
-        TOOLBAR_LayoutToolbar(infoPtr);
-        InvalidateRect( infoPtr->hwndSelf, NULL, TRUE );
-    }
 
     if (!(infoPtr->dwStyle & CCS_NORESIZE))
     {
-        RECT window_rect;
+        RECT window_rect, parent_rect;
         UINT uPosFlags = SWP_NOZORDER | SWP_NOACTIVATE;
+        HWND parent;
+        INT  x, y, cx, cy;
+
+        parent = GetParent (infoPtr->hwndSelf);
+
+        if (!parent || !infoPtr->bDoRedraw)
+            return 0;
+
+        GetClientRect(parent, &parent_rect);
+
+        x = parent_rect.left;
+        y = parent_rect.top;
+
+        cy = TOP_BORDER + infoPtr->nRows * infoPtr->nButtonHeight + BOTTOM_BORDER;
+        cx = parent_rect.right - parent_rect.left;
 
         if ((infoPtr->dwStyle & CCS_BOTTOM) == CCS_NOMOVEY)
         {
@@ -3137,6 +3161,12 @@ TOOLBAR_AutoSize (TOOLBAR_INFO *infoPtr)
         }
 
         SetWindowPos(infoPtr->hwndSelf, NULL, x, y, cx, cy, uPosFlags);
+    }
+
+    if ((infoPtr->dwStyle & TBSTYLE_WRAPABLE) || (infoPtr->dwExStyle & TBSTYLE_EX_VERTICAL))
+    {
+        TOOLBAR_LayoutToolbar(infoPtr);
+        InvalidateRect( infoPtr->hwndSelf, NULL, TRUE );
     }
 
     return 0;
@@ -3281,8 +3311,7 @@ TOOLBAR_DeleteButton (TOOLBAR_INFO *infoPtr, INT nIndex)
 
     if (infoPtr->nNumButtons == 1) {
 	TRACE(" simple delete!\n");
-	if (TOOLBAR_ButtonHasString(infoPtr->buttons))
-	    Free((LPWSTR)infoPtr->buttons[0].iString);
+        free_string( infoPtr->buttons );
 	Free (infoPtr->buttons);
 	infoPtr->buttons = NULL;
 	infoPtr->nNumButtons = 0;
@@ -3303,8 +3332,7 @@ TOOLBAR_DeleteButton (TOOLBAR_INFO *infoPtr, INT nIndex)
                     (infoPtr->nNumButtons - nIndex) * sizeof(TBUTTON_INFO));
         }
 
-        if (TOOLBAR_ButtonHasString(&oldButtons[nIndex]))
-            Free((LPWSTR)oldButtons[nIndex].iString);
+        free_string( oldButtons + nIndex );
 	Free (oldButtons);
     }
 
@@ -3425,8 +3453,7 @@ TOOLBAR_GetButtonInfoT(const TOOLBAR_INFO *infoPtr, INT Id, LPTBBUTTONINFOW lpTb
     if (nIndex == -1)
 	return -1;
 
-    if (!(btnPtr = &infoPtr->buttons[nIndex])) return -1;
-
+    btnPtr = &infoPtr->buttons[nIndex];
     if (lpTbInfo->dwMask & TBIF_COMMAND)
 	lpTbInfo->idCommand = btnPtr->idCommand;
     if (lpTbInfo->dwMask & TBIF_IMAGE)
@@ -3603,9 +3630,9 @@ TOOLBAR_GetMaxSize (const TOOLBAR_INFO *infoPtr, LPSIZE lpSize)
     return TRUE;
 }
 
-
+#ifdef __REACTOS__
 static LRESULT
-TOOLBAR_GetMetrics (const TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
+TOOLBAR_GetMetrics(const TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 {
     if (pMetrics == NULL)
         return FALSE;
@@ -3632,7 +3659,7 @@ TOOLBAR_GetMetrics (const TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 
     return TRUE;
 }
-
+#endif
 
 /* << TOOLBAR_GetObject >> */
 
@@ -4155,12 +4182,55 @@ TOOLBAR_ReplaceBitmap (TOOLBAR_INFO *infoPtr, const TBREPLACEBITMAP *lpReplace)
 
 /* helper for TOOLBAR_SaveRestoreW */
 static BOOL
-TOOLBAR_Save(const TBSAVEPARAMSW *lpSave)
+TOOLBAR_Save(TOOLBAR_INFO *infoPtr, const TBSAVEPARAMSW *params)
 {
-    FIXME("save to %s %s\n", debugstr_w(lpSave->pszSubKey),
-        debugstr_w(lpSave->pszValueName));
+    NMTBSAVE save;
+    INT ret, i;
+    BOOL alloced = FALSE;
+    HKEY key;
 
-    return FALSE;
+    TRACE( "save to %s %s\n", debugstr_w(params->pszSubKey), debugstr_w(params->pszValueName) );
+
+    memset( &save, 0, sizeof(save) );
+    save.cbData = infoPtr->nNumButtons * sizeof(DWORD);
+    save.iItem = -1;
+    save.cButtons = infoPtr->nNumButtons;
+    save.tbButton.idCommand = -1;
+    TOOLBAR_SendNotify( &save.hdr, infoPtr, TBN_SAVE );
+
+    if (!save.pData)
+    {
+        save.pData = Alloc( save.cbData );
+        if (!save.pData) return FALSE;
+        alloced = TRUE;
+    }
+    if (!save.pCurrent) save.pCurrent = save.pData;
+
+    for (i = 0; i < infoPtr->nNumButtons; i++)
+    {
+        save.iItem = i;
+        save.tbButton.iBitmap = infoPtr->buttons[i].iBitmap;
+        save.tbButton.idCommand = infoPtr->buttons[i].idCommand;
+        save.tbButton.fsState = infoPtr->buttons[i].fsState;
+        save.tbButton.fsStyle = infoPtr->buttons[i].fsStyle;
+        memset( save.tbButton.bReserved, 0, sizeof(save.tbButton.bReserved) );
+        save.tbButton.dwData = infoPtr->buttons[i].dwData;
+        save.tbButton.iString = infoPtr->buttons[i].iString;
+
+        *save.pCurrent++ = save.tbButton.idCommand;
+
+        TOOLBAR_SendNotify( &save.hdr, infoPtr, TBN_SAVE );
+    }
+
+    ret = RegCreateKeyW( params->hkr, params->pszSubKey, &key );
+    if (ret == ERROR_SUCCESS)
+    {
+        ret = RegSetValueExW( key, params->pszValueName, 0, REG_BINARY, (BYTE *)save.pData, save.cbData );
+        RegCloseKey( key );
+    }
+
+    if (alloced) Free( save.pData );
+    return !ret;
 }
 
 
@@ -4172,6 +4242,7 @@ TOOLBAR_DeleteAllButtons(TOOLBAR_INFO *infoPtr)
 
     for (i = 0; i < infoPtr->nNumButtons; i++)
     {
+        free_string( infoPtr->buttons + i );
         TOOLBAR_TooltipDelTool(infoPtr, &infoPtr->buttons[i]);
     }
 
@@ -4191,6 +4262,7 @@ TOOLBAR_Restore(TOOLBAR_INFO *infoPtr, const TBSAVEPARAMSW *lpSave)
     DWORD dwType;
     DWORD dwSize = 0;
     NMTBRESTORE nmtbr;
+    NMHDR hdr;
 
     /* restore toolbar information */
     TRACE("restore from %s %s\n", debugstr_w(lpSave->pszSubKey),
@@ -4223,30 +4295,30 @@ TOOLBAR_Restore(TOOLBAR_INFO *infoPtr, const TBSAVEPARAMSW *lpSave)
 
         if (!TOOLBAR_SendNotify(&nmtbr.hdr, infoPtr, TBN_RESTORE))
         {
-            INT i;
+            INT i, count = nmtbr.cButtons;
 
             /* remove all existing buttons as this function is designed to
              * restore the toolbar to a previously saved state */
             TOOLBAR_DeleteAllButtons(infoPtr);
 
-            for (i = 0; i < nmtbr.cButtons; i++)
+            for (i = 0; i < count; i++)
             {
                 nmtbr.iItem = i;
                 nmtbr.tbButton.iBitmap = -1;
                 nmtbr.tbButton.fsState = 0;
                 nmtbr.tbButton.fsStyle = 0;
-                nmtbr.tbButton.idCommand = 0;
-                if (*nmtbr.pCurrent == (DWORD)-1)
+                nmtbr.tbButton.dwData = 0;
+                nmtbr.tbButton.iString = 0;
+
+                if (*nmtbr.pCurrent & 0x80000000)
                 {
                     /* separator */
-                    nmtbr.tbButton.fsStyle = TBSTYLE_SEP;
-                    /* when inserting separators, iBitmap controls its size.
-                       0 sets default size (width) */
-                    nmtbr.tbButton.iBitmap = 0;
+                    nmtbr.tbButton.iBitmap = SEPARATOR_WIDTH;
+                    nmtbr.tbButton.idCommand = 0;
+                    nmtbr.tbButton.fsStyle = BTNS_SEP;
+                    if (*nmtbr.pCurrent != (DWORD)-1)
+                        nmtbr.tbButton.fsState = TBSTATE_HIDDEN;
                 }
-                else if (*nmtbr.pCurrent == (DWORD)-2)
-                    /* hidden button */
-                    nmtbr.tbButton.fsState = TBSTATE_HIDDEN;
                 else
                     nmtbr.tbButton.idCommand = (int)*nmtbr.pCurrent;
 
@@ -4254,21 +4326,51 @@ TOOLBAR_Restore(TOOLBAR_INFO *infoPtr, const TBSAVEPARAMSW *lpSave)
                 
                 TOOLBAR_SendNotify(&nmtbr.hdr, infoPtr, TBN_RESTORE);
 
-                /* can't contain real string as we don't know whether
-                 * the client put an ANSI or Unicode string in there */
+                /* All returned ptrs and -1 are ignored */
                 if (!IS_INTRESOURCE(nmtbr.tbButton.iString))
                     nmtbr.tbButton.iString = 0;
 
                 TOOLBAR_InsertButtonT(infoPtr, -1, &nmtbr.tbButton, TRUE);
             }
 
-            /* do legacy notifications */
-            if (infoPtr->iVersion < 5)
+            TOOLBAR_SendNotify( &hdr, infoPtr, TBN_BEGINADJUST );
+            for (i = 0; ; i++)
             {
-                /* FIXME: send TBN_BEGINADJUST */
-                FIXME("send TBN_GETBUTTONINFO for each button\n");
-                /* FIXME: send TBN_ENDADJUST */
+                NMTOOLBARW tb;
+                TBBUTTONINFOW bi;
+                WCHAR buf[128];
+                UINT code = infoPtr->bUnicode ? TBN_GETBUTTONINFOW : TBN_GETBUTTONINFOA;
+                INT idx;
+
+                memset( &tb, 0, sizeof(tb) );
+                tb.iItem = i;
+                tb.cchText = sizeof(buf) / sizeof(buf[0]);
+                tb.pszText = buf;
+
+                /* Use the same struct for both A and W versions since the layout is the same. */
+                if (!TOOLBAR_SendNotify( &tb.hdr, infoPtr, code ))
+                    break;
+
+                idx = TOOLBAR_GetButtonIndex( infoPtr, tb.tbButton.idCommand, FALSE );
+                if (idx == -1) continue;
+
+                /* tb.pszText is ignored - the string comes from tb.tbButton.iString, which may
+                   be an index or a ptr.  Either way it is simply copied.  There is no api to change
+                   the string index, so we set it manually.  The other properties can be set with SetButtonInfo. */
+                free_string( infoPtr->buttons + idx );
+                infoPtr->buttons[idx].iString = tb.tbButton.iString;
+
+                memset( &bi, 0, sizeof(bi) );
+                bi.cbSize = sizeof(bi);
+                bi.dwMask = TBIF_IMAGE | TBIF_STATE | TBIF_STYLE | TBIF_LPARAM;
+                bi.iImage = tb.tbButton.iBitmap;
+                bi.fsState = tb.tbButton.fsState;
+                bi.fsStyle = tb.tbButton.fsStyle;
+                bi.lParam = tb.tbButton.dwData;
+
+                TOOLBAR_SetButtonInfo( infoPtr, tb.tbButton.idCommand, &bi, TRUE );
             }
+            TOOLBAR_SendNotify( &hdr, infoPtr, TBN_ENDADJUST );
 
             /* remove all uninitialised buttons
              * note: loop backwards to avoid having to fixup i on a
@@ -4294,7 +4396,7 @@ TOOLBAR_SaveRestoreW (TOOLBAR_INFO *infoPtr, WPARAM wParam, const TBSAVEPARAMSW 
     if (lpSave == NULL) return 0;
 
     if (wParam)
-        return TOOLBAR_Save(lpSave);
+        return TOOLBAR_Save(infoPtr, lpSave);
     else
         return TOOLBAR_Restore(infoPtr, lpSave);
 }
@@ -4312,7 +4414,7 @@ TOOLBAR_SaveRestoreA (TOOLBAR_INFO *infoPtr, WPARAM wParam, const TBSAVEPARAMSA 
 
     len = MultiByteToWideChar(CP_ACP, 0, lpSave->pszSubKey, -1, NULL, 0);
     pszSubKey = Alloc(len * sizeof(WCHAR));
-    if (pszSubKey) goto exit;
+    if (!pszSubKey) goto exit;
     MultiByteToWideChar(CP_ACP, 0, lpSave->pszSubKey, -1, pszSubKey, len);
 
     len = MultiByteToWideChar(CP_ACP, 0, lpSave->pszValueName, -1, NULL, 0);
@@ -4429,15 +4531,8 @@ TOOLBAR_SetButtonInfo (TOOLBAR_INFO *infoPtr, INT Id,
     if (lptbbi->dwMask & TBIF_STYLE)
 	btnPtr->fsStyle = lptbbi->fsStyle;
 
-    if ((lptbbi->dwMask & TBIF_TEXT) && ((INT_PTR)lptbbi->pszText != -1)) {
-        /* iString is index, zero it to make Str_SetPtr succeed */
-        if (!TOOLBAR_ButtonHasString(btnPtr)) btnPtr->iString = 0;
-
-        if (isW)
-            Str_SetPtrW ((LPWSTR *)&btnPtr->iString, lptbbi->pszText);
-        else
-            Str_SetPtrAtoW ((LPWSTR *)&btnPtr->iString, (LPSTR)lptbbi->pszText);
-    }
+    if (lptbbi->dwMask & TBIF_TEXT)
+        set_stringT( btnPtr, lptbbi->pszText, isW );
 
     /* save the button rect to see if we need to redraw the whole toolbar */
     oldBtnRect = btnPtr->rect;
@@ -4456,6 +4551,7 @@ static LRESULT
 TOOLBAR_SetButtonSize (TOOLBAR_INFO *infoPtr, LPARAM lParam)
 {
     INT cx = (short)LOWORD(lParam), cy = (short)HIWORD(lParam);
+    int top = default_top_margin(infoPtr);
 
     if ((cx < 0) || (cy < 0))
     {
@@ -4478,15 +4574,20 @@ TOOLBAR_SetButtonSize (TOOLBAR_INFO *infoPtr, LPARAM lParam)
      */
     if (cx == 0) cx = 24;
     if (cy == 0) cy = 22;
-    
+
     cx = max(cx, infoPtr->szPadding.cx + infoPtr->nBitmapWidth);
     cy = max(cy, infoPtr->szPadding.cy + infoPtr->nBitmapHeight);
 
-    infoPtr->nButtonWidth = cx;
-    infoPtr->nButtonHeight = cy;
-    
-    infoPtr->iTopMargin = default_top_margin(infoPtr);
-    TOOLBAR_LayoutToolbar(infoPtr);
+    if (cx != infoPtr->nButtonWidth || cy != infoPtr->nButtonHeight ||
+        top != infoPtr->iTopMargin)
+    {
+        infoPtr->nButtonWidth = cx;
+        infoPtr->nButtonHeight = cy;
+        infoPtr->iTopMargin = top;
+
+        TOOLBAR_LayoutToolbar( infoPtr );
+        InvalidateRect( infoPtr->hwndSelf, NULL, TRUE );
+    }
     return TRUE;
 }
 
@@ -4814,9 +4915,9 @@ TOOLBAR_SetMaxTextRows (TOOLBAR_INFO *infoPtr, INT nMaxRows)
     return TRUE;
 }
 
-
+#ifdef __REACTOS__
 static LRESULT
-TOOLBAR_SetMetrics (TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
+TOOLBAR_SetMetrics(TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 {
     BOOL changed = FALSE;
 
@@ -4851,6 +4952,7 @@ TOOLBAR_SetMetrics (TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 
     return TRUE;
 }
+#endif
 
 /* MSDN gives slightly wrong info on padding.
  * 1. It is not only used on buttons with the BTNS_AUTOSIZE style
@@ -5041,11 +5143,45 @@ TOOLBAR_SetState (TOOLBAR_INFO *infoPtr, INT Id, LPARAM lParam)
     return TRUE;
 }
 
+static inline void unwrap(TOOLBAR_INFO *info)
+{
+    int i;
+
+    for (i = 0; i < info->nNumButtons; i++)
+	info->buttons[i].fsState &= ~TBSTATE_WRAP;
+}
 
 static LRESULT
 TOOLBAR_SetStyle (TOOLBAR_INFO *infoPtr, DWORD style)
 {
+    DWORD dwOldStyle = infoPtr->dwStyle;
+
+    TRACE("new style 0x%08x\n", style);
+
+    if (style & TBSTYLE_LIST)
+        infoPtr->dwDTFlags = DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS;
+    else
+        infoPtr->dwDTFlags = DT_CENTER | DT_END_ELLIPSIS;
+
     infoPtr->dwStyle = style;
+    TOOLBAR_CheckStyle(infoPtr);
+
+    if ((dwOldStyle ^ style) & TBSTYLE_WRAPABLE)
+    {
+        if (dwOldStyle & TBSTYLE_WRAPABLE)
+            unwrap(infoPtr);
+        TOOLBAR_CalcToolbar(infoPtr);
+    }
+    else if ((dwOldStyle ^ style) & CCS_VERT)
+        TOOLBAR_LayoutToolbar(infoPtr);
+
+    /* only resize if one of the CCS_* styles was changed */
+    if ((dwOldStyle ^ style) & COMMON_STYLES)
+    {
+        TOOLBAR_AutoSize(infoPtr);
+        InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
+    }
+
     return 0;
 }
 
@@ -5319,8 +5455,7 @@ TOOLBAR_Destroy (TOOLBAR_INFO *infoPtr)
 
     /* delete button data */
     for (i = 0; i < infoPtr->nNumButtons; i++)
-        if (TOOLBAR_ButtonHasString(&infoPtr->buttons[i]))
-            Free ((LPWSTR)infoPtr->buttons[i].iString);
+        free_string( infoPtr->buttons + i );
     Free (infoPtr->buttons);
 
     /* delete strings */
@@ -6035,7 +6170,6 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
     /* paranoid!! */
     infoPtr->dwStructSize = sizeof(TBBUTTON);
     infoPtr->nRows = 1;
-    infoPtr->nWidth = 0;
 
     /* initialize info structure */
     infoPtr->nButtonWidth = 23;
@@ -6462,30 +6596,7 @@ static LRESULT
 TOOLBAR_StyleChanged (TOOLBAR_INFO *infoPtr, INT nType, const STYLESTRUCT *lpStyle)
 {
     if (nType == GWL_STYLE)
-    {
-        DWORD dwOldStyle = infoPtr->dwStyle;
-
-        if (lpStyle->styleNew & TBSTYLE_LIST)
-            infoPtr->dwDTFlags = DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS;
-        else
-            infoPtr->dwDTFlags = DT_CENTER | DT_END_ELLIPSIS;
-
-        TRACE("new style 0x%08x\n", lpStyle->styleNew);
-
-        infoPtr->dwStyle = lpStyle->styleNew;
-        TOOLBAR_CheckStyle (infoPtr);
-
-        if ((dwOldStyle ^ lpStyle->styleNew) & (TBSTYLE_WRAPABLE | CCS_VERT))
-            TOOLBAR_LayoutToolbar(infoPtr);
-
-        /* only resize if one of the CCS_* styles was changed */
-        if ((dwOldStyle ^ lpStyle->styleNew) & COMMON_STYLES)
-        {
-            TOOLBAR_AutoSize (infoPtr);
-    
-            InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
-        }
-    }
+        return TOOLBAR_SetStyle(infoPtr, lpStyle->styleNew);
 
     return 0;
 }
@@ -6499,6 +6610,16 @@ TOOLBAR_SysColorChange (void)
     return 0;
 }
 
+#ifndef __REACTOS__
+/* update theme after a WM_THEMECHANGED message */
+static LRESULT theme_changed (HWND hwnd)
+{
+    HTHEME theme = GetWindowTheme (hwnd);
+    CloseThemeData (theme);
+    OpenThemeData (hwnd, themeClass);
+    return 0;
+}
+#endif
 
 static LRESULT WINAPI
 ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -6603,9 +6724,10 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case TB_GETMAXSIZE:
 	    return TOOLBAR_GetMaxSize (infoPtr, (LPSIZE)lParam);
-        
+#ifdef __REACTOS__
 	case TB_GETMETRICS:
 	    return TOOLBAR_GetMetrics (infoPtr, (TBMETRICS*)lParam);
+#endif
 
 /*	case TB_GETOBJECT:			*/ /* 4.71 */
 
@@ -6622,7 +6744,7 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLBAR_GetState (infoPtr, wParam);
 
 	case TB_GETSTRINGA:
-        return TOOLBAR_GetStringA (infoPtr, wParam, (LPSTR)lParam);
+            return TOOLBAR_GetStringA (infoPtr, wParam, (LPSTR)lParam);
 
 	case TB_GETSTRINGW:
 	    return TOOLBAR_GetStringW (infoPtr, wParam, (LPWSTR)lParam);
@@ -6747,8 +6869,10 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case TB_SETMAXTEXTROWS:
 	    return TOOLBAR_SetMaxTextRows (infoPtr, wParam);
 
+#ifdef __REACTOS__
 	case TB_SETMETRICS:
 	    return TOOLBAR_SetMetrics (infoPtr, (TBMETRICS*)lParam);
+#endif
 
 	case TB_SETPADDING:
 	    return TOOLBAR_SetPadding (infoPtr, lParam);
@@ -6875,7 +6999,7 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLBAR_SetFocus (infoPtr);
 
 	case WM_SETFONT:
-        return TOOLBAR_SetFont(infoPtr, (HFONT)wParam, (WORD)lParam);
+            return TOOLBAR_SetFont(infoPtr, (HFONT)wParam, (WORD)lParam);
 
 	case WM_SETREDRAW:
 	    return TOOLBAR_SetRedraw (infoPtr, wParam);
@@ -6890,7 +7014,11 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLBAR_SysColorChange ();
             
     case WM_THEMECHANGED:
+#ifdef __REACTOS__
         return TOOLBAR_ThemeChanged(hwnd);
+#else
+            return theme_changed (hwnd);
+#endif
 
 /*	case WM_WININICHANGE: */
 

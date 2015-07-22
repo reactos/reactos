@@ -351,12 +351,18 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
  */
 static BOOL UPDOWN_DrawBuddyBackground (const UPDOWN_INFO *infoPtr, HDC hdc)
 {
-    RECT br;
+    RECT br, r;
     HTHEME buddyTheme = GetWindowTheme (infoPtr->Buddy);
     if (!buddyTheme) return FALSE;
 
-    GetClientRect (infoPtr->Buddy, &br);
-    MapWindowPoints (infoPtr->Buddy, infoPtr->Self, (POINT*)&br, 2);
+    GetWindowRect (infoPtr->Buddy, &br);
+    MapWindowPoints (NULL, infoPtr->Self, (POINT*)&br, 2);
+    GetClientRect (infoPtr->Self, &r);
+
+    if (infoPtr->dwStyle & UDS_ALIGNLEFT)
+        br.left = r.left;
+    else if (infoPtr->dwStyle & UDS_ALIGNRIGHT)
+        br.right = r.right;
     /* FIXME: take disabled etc. into account */
     DrawThemeBackground (buddyTheme, hdc, 0, 0, &br, NULL);
     return TRUE;
