@@ -74,6 +74,9 @@ PrintingThreadProc(PLOCAL_JOB pJob)
     CopyMemory(&pwszPrinterAndJob[cchPrinterName], wszJobAppendix, cchJobAppendix * sizeof(WCHAR));
     _ultow(OpenData.JobId, &pwszPrinterAndJob[cchPrinterName + cchJobAppendix], 10);
 
+    // Printing starts here.
+    pJob->dwStatus |= JOB_STATUS_PRINTING;
+
     // Print the document.
     // Note that pJob is freed after this function, so we may not access it anymore.
     if (!pPrintProcessor->pfnPrintDocumentOnPrintProcessor(hPrintProcessor, pwszPrinterAndJob))

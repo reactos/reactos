@@ -1155,9 +1155,8 @@ LocalScheduleJob(HANDLE hPrinter, DWORD dwJobID)
         goto Cleanup;
     }
 
-    // Switch from spooling to printing.
+    // Spooling is finished at this point.
     pJob->dwStatus &= ~JOB_STATUS_SPOOLING;
-    pJob->dwStatus |= JOB_STATUS_PRINTING;
 
     // Write the job data into the shadow file.
     wcscpy(wcsrchr(wszFullPath, L'.'), L".SHD");
