@@ -1,6 +1,6 @@
-diff -prudN e:\Wine\dlls\comdlg32/cdlg32.c e:\reactos\dll\win32\comdlg32/cdlg32.c
---- e:\Wine\dlls\comdlg32/cdlg32.c	2013-10-26 22:24:27.508648000 +0100
-+++ e:\reactos\dll\win32\comdlg32/cdlg32.c	2014-03-05 11:46:06.260510700 +0100
+diff -pudN e:\wine\dlls\comdlg32/cdlg32.c e:\reactos\dll\win32\comdlg32/cdlg32.c
+--- e:\wine\dlls\comdlg32/cdlg32.c	2015-02-21 17:13:08.621542200 +0100
++++ e:\reactos\dll\win32\comdlg32/cdlg32.c	2015-07-21 09:48:05.584922500 +0100
 @@ -174,6 +157,8 @@ DWORD WINAPI CommDlgExtendedError(void)
  	  return 0; /* we never set an error, so there isn't one */
  }
@@ -10,27 +10,33 @@ diff -prudN e:\Wine\dlls\comdlg32/cdlg32.c e:\reactos\dll\win32\comdlg32/cdlg32.
  /*************************************************************************
   * Implement the CommDlg32 class factory
   *
-@@ -283,7 +268,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSI
+@@ -283,7 +268,11 @@ HRESULT WINAPI DllGetClassObject(REFCLSI
   */
  HRESULT WINAPI DllRegisterServer(void)
  {
--    return __wine_register_resources(COMDLG32_hInstance);
++#ifdef __REACTOS__
 +    return E_FAIL; // FIXME: __wine_register_resources(COMDLG32_hInstance);
++#else
+     return __wine_register_resources(COMDLG32_hInstance);
++#endif
  }
  
  /***********************************************************************
-@@ -291,5 +276,7 @@ HRESULT WINAPI DllRegisterServer(void)
+@@ -291,5 +280,11 @@ HRESULT WINAPI DllRegisterServer(void)
   */
  HRESULT WINAPI DllUnregisterServer(void)
  {
--    return __wine_unregister_resources(COMDLG32_hInstance);
++#ifdef __REACTOS__
 +    return E_FAIL; // FIXME: __wine_unregister_resources(COMDLG32_hInstance);
++#else
+     return __wine_unregister_resources(COMDLG32_hInstance);
++#endif
  }
 +
 +#endif /* Win 7 */
 
-diff -prudN e:\Wine\dlls\comdlg32/comdlg32.spec e:\reactos\dll\win32\comdlg32/comdlg32.spec
---- e:\Wine\dlls\comdlg32/comdlg32.spec	2011-09-16 23:22:36.026770600 +0100
+diff -pudN e:\wine\dlls\comdlg32/comdlg32.spec e:\reactos\dll\win32\comdlg32/comdlg32.spec
+--- e:\wine\dlls\comdlg32/comdlg32.spec	2015-02-21 17:13:08.621542200 +0100
 +++ e:\reactos\dll\win32\comdlg32/comdlg32.spec	2012-02-15 22:32:22.456422900 +0100
 @@ -3,9 +3,9 @@
  @ stdcall ChooseFontA(ptr)
@@ -45,11 +51,10 @@ diff -prudN e:\Wine\dlls\comdlg32/comdlg32.spec e:\reactos\dll\win32\comdlg32/co
  @ stdcall FindTextA(ptr)
  @ stdcall FindTextW(ptr)
  @ stdcall GetFileTitleA(str ptr long)
-
-diff -prudN e:\Wine\dlls\comdlg32/itemdlg.c e:\reactos\dll\win32\comdlg32/itemdlg.c
---- e:\Wine\dlls\comdlg32/itemdlg.c	2013-10-26 22:24:27.515652700 +0100
-+++ e:\reactos\dll\win32\comdlg32/itemdlg.c	2013-10-15 19:32:27.803008200 +0100
-@@ -18,6 +18,8 @@
+diff -pudN e:\wine\dlls\comdlg32/itemdlg.c e:\reactos\dll\win32\comdlg32/itemdlg.c
+--- e:\wine\dlls\comdlg32/itemdlg.c	2015-04-05 20:44:56.807083800 +0100
++++ e:\reactos\dll\win32\comdlg32/itemdlg.c	2015-07-21 09:56:34.329021000 +0100
+@@ -18,10 +18,13 @@
   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
   */
  
@@ -58,7 +63,12 @@ diff -prudN e:\Wine\dlls\comdlg32/itemdlg.c e:\reactos\dll\win32\comdlg32/itemdl
  #include <stdarg.h>
  
  #define COBJMACROS
-@@ -3660,3 +3662,5 @@ HRESULT FileSaveDialog_Constructor(IUnkn
+ #define NONAMELESSUNION
++#define NONAMELESSSTRUCT
+ 
+ #include "windef.h"
+ #include "winbase.h"
+@@ -3847,3 +3850,5 @@ HRESULT FileSaveDialog_Constructor(IUnkn
  {
      return FileDialog_constructor(pUnkOuter, riid, ppv, ITEMDLG_TYPE_SAVE);
  }

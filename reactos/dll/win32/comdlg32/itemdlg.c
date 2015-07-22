@@ -1228,7 +1228,7 @@ static HRESULT init_custom_controls(FileDialogImpl *This)
 /**************************************************************************
  * Window related functions.
  */
-static SIZE update_layout(FileDialogImpl *This)
+static void update_layout(FileDialogImpl *This)
 {
     HDWP hdwp;
     HWND hwnd;
@@ -1236,21 +1236,19 @@ static SIZE update_layout(FileDialogImpl *This)
     RECT cancel_rc, open_rc;
     RECT filetype_rc, filename_rc, filenamelabel_rc;
     RECT toolbar_rc, ebrowser_rc, customctrls_rc;
-    int missing_width, missing_height;
     static const UINT vspacing = 4, hspacing = 4;
-    SIZE ret;
+    static const UINT min_width = 320, min_height = 200;
 
-    GetClientRect(This->dlg_hwnd, &dialog_rc);
-
-    missing_width = max(0, 320 - dialog_rc.right);
-    missing_height = max(0, 200 - dialog_rc.bottom);
-
-    if(missing_width || missing_height)
+    if (!GetClientRect(This->dlg_hwnd, &dialog_rc))
     {
-        TRACE("Missing (%d, %d)\n", missing_width, missing_height);
-        ret.cx = missing_width;
-        ret.cy = missing_height;
-        return ret;
+        TRACE("Invalid dialog window, not updating layout\n");
+        return;
+    }
+
+    if(dialog_rc.right < min_width || dialog_rc.bottom < min_height)
+    {
+        TRACE("Dialog size (%d, %d) too small, not updating layout\n", dialog_rc.right, dialog_rc.bottom);
+        return;
     }
 
     /****
@@ -1402,8 +1400,7 @@ static SIZE update_layout(FileDialogImpl *This)
     else
         ERR("Failed to position dialog controls.\n");
 
-    ret.cx = 0; ret.cy = 0;
-    return ret;
+    return;
 }
 
 static HRESULT init_explorerbrowser(FileDialogImpl *This)

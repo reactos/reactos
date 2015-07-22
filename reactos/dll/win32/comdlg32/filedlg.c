@@ -2567,10 +2567,11 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
                     filterSearchIndex[0] = '\0';
                 }
 
+                /* find the file extension by searching for the first dot in filterExt */
                 /* strip the * or anything else from the extension, "*.abc" becomes "abc" */
                 /* if the extension is invalid or contains a glob, ignore it */
-                filterSearchIndex = PathFindExtensionW(filterExt);
-                if (*filterSearchIndex++ && !strchrW(filterSearchIndex, '*') && !strchrW(filterSearchIndex, '?'))
+                filterSearchIndex = strchrW(filterExt, '.');
+                if (filterSearchIndex++ && !strchrW(filterSearchIndex, '*') && !strchrW(filterSearchIndex, '?'))
                 {
                     strcpyW(filterExt, filterSearchIndex);
                 }
