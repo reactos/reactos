@@ -677,6 +677,72 @@ static void test_writeendelement(void)
     IStream_Release(stream);
 }
 
+static void test_writeenddocument(void)
+{
+    static const WCHAR aW[] = {'a',0};
+    static const WCHAR bW[] = {'b',0};
+    IXmlWriter *writer;
+    IStream *stream;
+    HGLOBAL hglobal;
+    HRESULT hr;
+    char *ptr;
+
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = pCreateXmlWriter(&IID_IXmlWriter, (void**)&writer, NULL);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    hr = IXmlWriter_WriteEndDocument(writer);
+    ok(hr == E_UNEXPECTED, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_SetOutput(writer, (IUnknown*)stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    /* WriteEndDocument resets it to initial state */
+    hr = IXmlWriter_WriteEndDocument(writer);
+    ok(hr == WR_E_INVALIDACTION, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteEndDocument(writer);
+    ok(hr == WR_E_INVALIDACTION, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteStartDocument(writer, XmlStandalone_Omit);
+    ok(hr == WR_E_INVALIDACTION, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteStartElement(writer, NULL, aW, NULL);
+    ok(hr == WR_E_INVALIDACTION, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_SetOutput(writer, (IUnknown*)stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteStartElement(writer, NULL, aW, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteStartElement(writer, NULL, bW, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteEndDocument(writer);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = GetHGlobalFromStream(stream, &hglobal);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    ptr = GlobalLock(hglobal);
+    ok(ptr == NULL, "got %p\n", ptr);
+
+    /* we still need to flush manually, WriteEndDocument doesn't do that */
+    hr = IXmlWriter_Flush(writer);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    ptr = GlobalLock(hglobal);
+    ok(ptr != NULL, "got %p\n", ptr);
+    ok(!strncmp(ptr, "<a><b /></a>", 12), "got %s\n", ptr);
+    GlobalUnlock(hglobal);
+
+    IXmlWriter_Release(writer);
+    IStream_Release(stream);
+}
+
 START_TEST(writer)
 {
     if (!init_pointers())
@@ -690,4 +756,5 @@ START_TEST(writer)
     test_flush();
     test_omitxmldeclaration();
     test_bom();
+    test_writeenddocument();
 }
