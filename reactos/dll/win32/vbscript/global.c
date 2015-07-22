@@ -539,6 +539,8 @@ static HRESULT Global_Hex(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
 {
     WCHAR buf[17], *ptr;
     DWORD n;
+    HRESULT hres;
+    int ret;
 
     TRACE("%s\n", debugstr_variant(arg));
 
@@ -546,19 +548,16 @@ static HRESULT Global_Hex(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
     case VT_I2:
         n = (WORD)V_I2(arg);
         break;
-    case VT_I4:
-        n = V_I4(arg);
-        break;
-    case VT_EMPTY:
-        n = 0;
-        break;
     case VT_NULL:
         if(res)
             V_VT(res) = VT_NULL;
         return S_OK;
     default:
-        FIXME("unsupported type %s\n", debugstr_variant(arg));
-        return E_NOTIMPL;
+        hres = to_int(arg, &ret);
+        if(FAILED(hres))
+            return hres;
+        else
+            n = ret;
     }
 
     buf[16] = 0;
@@ -579,8 +578,43 @@ static HRESULT Global_Hex(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
 
 static HRESULT Global_Oct(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    WCHAR buf[23], *ptr;
+    DWORD n;
+    int ret;
+
+    TRACE("%s\n", debugstr_variant(arg));
+
+    switch(V_VT(arg)) {
+    case VT_I2:
+        n = (WORD)V_I2(arg);
+        break;
+    case VT_NULL:
+        if(res)
+            V_VT(res) = VT_NULL;
+        return S_OK;
+    default:
+        hres = to_int(arg, &ret);
+        if(FAILED(hres))
+            return hres;
+        else
+            n = ret;
+    }
+
+    buf[22] = 0;
+    ptr = buf + 21;
+
+    if(n) {
+        do {
+            *ptr-- = '0' + (n & 0x7);
+            n >>= 3;
+        }while(n);
+        ptr++;
+    }else {
+        *ptr = '0';
+    }
+
+    return return_string(res, ptr);
 }
 
 static HRESULT Global_VarType(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -1298,7 +1332,7 @@ static HRESULT Global_Chr(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
         buf[len++] = c>>8;
     if(!len || IsDBCSLeadByteEx(cp, buf[0]))
         buf[len++] = c;
-    if(!MultiByteToWideChar(0, 0, buf, len, &ch, 1)) {
+    if(!MultiByteToWideChar(CP_ACP, 0, buf, len, &ch, 1)) {
         WARN("invalid arg %d, cp %d\n", c, cp);
         return E_FAIL;
     }
@@ -1788,7 +1822,7 @@ static HRESULT Global_InStrRev(vbdisp_t *This, VARIANT *args, unsigned args_cnt,
 
     assert(2 <= args_cnt && args_cnt <= 4);
 
-    if(V_VT(args) == VT_NULL || V_VT(args+1) == VT_NULL || V_VT(args+2) == VT_NULL)
+    if(V_VT(args) == VT_NULL || V_VT(args+1) == VT_NULL || (args_cnt > 2 && V_VT(args+2) == VT_NULL))
         return MAKE_VBSERROR(VBSE_ILLEGAL_NULL_USE);
 
     hres = to_string(args, &str1);

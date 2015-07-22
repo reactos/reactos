@@ -1186,29 +1186,23 @@ static HRESULT WINAPI RegExp2_get_Pattern(IRegExp2 *iface, BSTR *pPattern)
 static HRESULT WINAPI RegExp2_put_Pattern(IRegExp2 *iface, BSTR pattern)
 {
     RegExp2 *This = impl_from_IRegExp2(iface);
-    WCHAR *p;
-    DWORD size;
+    WCHAR *new_pattern;
 
     TRACE("(%p)->(%s)\n", This, wine_dbgstr_w(pattern));
 
-    if(!pattern) {
-        heap_free(This->pattern);
-        if(This->regexp) {
-            regexp_destroy(This->regexp);
-            This->regexp = NULL;
-        }
-        This->pattern = NULL;
-        return S_OK;
+    if(pattern && *pattern) {
+        SIZE_T size = (SysStringLen(pattern)+1) * sizeof(WCHAR);
+        new_pattern = heap_alloc(size);
+        if(!new_pattern)
+            return E_OUTOFMEMORY;
+        memcpy(new_pattern, pattern, size);
+    }else {
+        new_pattern = NULL;
     }
 
-    size = (SysStringLen(pattern)+1) * sizeof(WCHAR);
-    p = heap_alloc(size);
-    if(!p)
-        return E_OUTOFMEMORY;
-
     heap_free(This->pattern);
-    This->pattern = p;
-    memcpy(p, pattern, size);
+    This->pattern = new_pattern;
+
     if(This->regexp) {
         regexp_destroy(This->regexp);
         This->regexp = NULL;

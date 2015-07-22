@@ -79,19 +79,43 @@ HRESULT vbdisp_get_id(vbdisp_t *This, BSTR name, vbdisp_invoke_type_t invoke_typ
     return DISP_E_UNKNOWNNAME;
 }
 
-static VARIANT *get_propput_arg(const DISPPARAMS *dp)
+static HRESULT get_propput_arg(script_ctx_t *ctx, const DISPPARAMS *dp, WORD flags, VARIANT *v, BOOL *is_owned)
 {
     unsigned i;
 
     for(i=0; i < dp->cNamedArgs; i++) {
         if(dp->rgdispidNamedArgs[i] == DISPID_PROPERTYPUT)
-            return dp->rgvarg+i;
+            break;
+    }
+    if(i == dp->cNamedArgs) {
+        WARN("no value to set\n");
+        return DISP_E_PARAMNOTOPTIONAL;
     }
 
-    return NULL;
+    *v = dp->rgvarg[i];
+    if(V_VT(v) == (VT_VARIANT|VT_BYREF))
+        *v = *V_VARIANTREF(v);
+    *is_owned = FALSE;
+
+    if(V_VT(v) == VT_DISPATCH) {
+        if(!(flags & DISPATCH_PROPERTYPUTREF)) {
+            HRESULT hres;
+
+            hres = get_disp_value(ctx, V_DISPATCH(v), v);
+            if(FAILED(hres))
+                return hres;
+
+            *is_owned = TRUE;
+        }
+    }else if(!(flags & DISPATCH_PROPERTYPUT)) {
+        WARN("%s can't be assigned without DISPATCH_PROPERTYPUT flag\n", debugstr_variant(v));
+        return DISP_E_EXCEPTION;
+    }
+
+    return S_OK;
 }
 
-static HRESULT invoke_variant_prop(VARIANT *v, WORD flags, DISPPARAMS *dp, VARIANT *res)
+static HRESULT invoke_variant_prop(script_ctx_t *ctx, VARIANT *v, WORD flags, DISPPARAMS *dp, VARIANT *res)
 {
     HRESULT hres;
 
@@ -106,14 +130,15 @@ static HRESULT invoke_variant_prop(VARIANT *v, WORD flags, DISPPARAMS *dp, VARIA
         hres = VariantCopyInd(res, v);
         break;
 
-    case DISPATCH_PROPERTYPUT: {
-        VARIANT *put_val;
+    case DISPATCH_PROPERTYPUT:
+    case DISPATCH_PROPERTYPUTREF:
+    case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF: {
+        VARIANT put_val;
+        BOOL own_val;
 
-        put_val = get_propput_arg(dp);
-        if(!put_val) {
-            WARN("no value to set\n");
-            return DISP_E_PARAMNOTOPTIONAL;
-        }
+        hres = get_propput_arg(ctx, dp, flags, &put_val, &own_val);
+        if(FAILED(hres))
+            return hres;
 
         if(arg_cnt(dp)) {
             FIXME("Arguments not supported\n");
@@ -123,7 +148,10 @@ static HRESULT invoke_variant_prop(VARIANT *v, WORD flags, DISPPARAMS *dp, VARIA
         if(res)
             V_VT(res) = VT_EMPTY;
 
-        hres = VariantCopyInd(v, put_val);
+        if(own_val)
+            *v = put_val;
+        else
+            hres = VariantCopyInd(v, &put_val);
         break;
     }
 
@@ -403,29 +431,34 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
             }
 
             return exec_script(This->desc->ctx, func, This, pdp, pvarRes);
-        case DISPATCH_PROPERTYPUT: {
-            VARIANT *put_val;
+        case DISPATCH_PROPERTYPUT:
+        case DISPATCH_PROPERTYPUTREF:
+        case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF: {
             DISPPARAMS dp = {NULL, NULL, 1, 0};
+            BOOL needs_release;
+            VARIANT put_val;
+            HRESULT hres;
 
             if(arg_cnt(pdp)) {
                 FIXME("arguments not implemented\n");
                 return E_NOTIMPL;
             }
 
-            put_val = get_propput_arg(pdp);
-            if(!put_val) {
-                WARN("no value to set\n");
-                return DISP_E_PARAMNOTOPTIONAL;
-            }
+            hres = get_propput_arg(This->desc->ctx, pdp, wFlags, &put_val, &needs_release);
+            if(FAILED(hres))
+                return hres;
 
-            dp.rgvarg = put_val;
-            func = This->desc->funcs[id].entries[V_VT(put_val) == VT_DISPATCH ? VBDISP_SET : VBDISP_LET];
+            dp.rgvarg = &put_val;
+            func = This->desc->funcs[id].entries[V_VT(&put_val) == VT_DISPATCH ? VBDISP_SET : VBDISP_LET];
             if(!func) {
                 FIXME("no letter/setter\n");
                 return DISP_E_MEMBERNOTFOUND;
             }
 
-            return exec_script(This->desc->ctx, func, This, &dp, NULL);
+            hres = exec_script(This->desc->ctx, func, This, &dp, NULL);
+            if(needs_release)
+                VariantClear(&put_val);
+            return hres;
         }
         default:
             FIXME("flags %x\n", wFlags);
@@ -434,7 +467,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
     }
 
     if(id < This->desc->prop_cnt + This->desc->func_cnt)
-        return invoke_variant_prop(This->props+(id-This->desc->func_cnt), wFlags, pdp, pvarRes);
+        return invoke_variant_prop(This->desc->ctx, This->props+(id-This->desc->func_cnt), wFlags, pdp, pvarRes);
 
     if(This->desc->builtin_prop_cnt) {
         unsigned min = 0, max = This->desc->builtin_prop_cnt-1, i;
@@ -839,7 +872,7 @@ static HRESULT WINAPI ScriptDisp_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
             return E_NOTIMPL;
         }
 
-        return invoke_variant_prop(&ident->u.var->v, wFlags, pdp, pvarRes);
+        return invoke_variant_prop(This->ctx, &ident->u.var->v, wFlags, pdp, pvarRes);
     }
 
     switch(wFlags) {
@@ -1060,7 +1093,13 @@ HRESULT disp_call(script_ctx_t *ctx, IDispatch *disp, DISPID id, DISPPARAMS *dp,
     return hres;
 }
 
-HRESULT disp_propput(script_ctx_t *ctx, IDispatch *disp, DISPID id, DISPPARAMS *dp)
+HRESULT get_disp_value(script_ctx_t *ctx, IDispatch *disp, VARIANT *v)
+{
+    DISPPARAMS dp = {NULL};
+    return disp_call(ctx, disp, DISPID_VALUE, &dp, v);
+}
+
+HRESULT disp_propput(script_ctx_t *ctx, IDispatch *disp, DISPID id, WORD flags, DISPPARAMS *dp)
 {
     IDispatchEx *dispex;
     EXCEPINFO ei = {0};
@@ -1068,13 +1107,13 @@ HRESULT disp_propput(script_ctx_t *ctx, IDispatch *disp, DISPID id, DISPPARAMS *
 
     hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
     if(SUCCEEDED(hres)) {
-        hres = IDispatchEx_InvokeEx(dispex, id, ctx->lcid, DISPATCH_PROPERTYPUT, dp, NULL, &ei, NULL /* FIXME! */);
+        hres = IDispatchEx_InvokeEx(dispex, id, ctx->lcid, flags, dp, NULL, &ei, NULL /* FIXME! */);
         IDispatchEx_Release(dispex);
     }else {
         ULONG err = 0;
 
         TRACE("using IDispatch\n");
-        hres = IDispatch_Invoke(disp, id, &IID_NULL, ctx->lcid, DISPATCH_PROPERTYPUT, dp, NULL, &ei, &err);
+        hres = IDispatch_Invoke(disp, id, &IID_NULL, ctx->lcid, flags, dp, NULL, &ei, &err);
     }
 
     return hres;
