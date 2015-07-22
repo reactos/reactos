@@ -1161,7 +1161,8 @@ LoggedOutWindowProc(
                     return TRUE;
 
                 case IDC_SHUTDOWN:
-                    EndDialog(hwndDlg, WLX_SAS_ACTION_SHUTDOWN);
+                    if (OnShutDown(hwndDlg, pgContext) == IDOK)
+                        EndDialog(hwndDlg, pgContext->nShutdownAction);
                     return TRUE;
             }
             break;
