@@ -222,16 +222,16 @@ static void test_IsUrlCacheEntryExpiredA(void)
      * is NULL.
      */
     ret = IsUrlCacheEntryExpiredA(NULL, 0, NULL);
-    ok(!ret == ie10_cache, "IsUrlCacheEntryExpiredA returned %x\n", ret);
+    ok(ret != ie10_cache, "IsUrlCacheEntryExpiredA returned %x\n", ret);
     ft.dwLowDateTime = 0xdeadbeef;
     ft.dwHighDateTime = 0xbaadf00d;
     ret = IsUrlCacheEntryExpiredA(NULL, 0, &ft);
-    ok(!ret == ie10_cache, "IsUrlCacheEntryExpiredA returned %x\n", ret);
+    ok(ret != ie10_cache, "IsUrlCacheEntryExpiredA returned %x\n", ret);
     ok(ft.dwLowDateTime == 0xdeadbeef && ft.dwHighDateTime == 0xbaadf00d,
        "expected time to be unchanged, got (%u,%u)\n",
        ft.dwLowDateTime, ft.dwHighDateTime);
     ret = IsUrlCacheEntryExpiredA(test_url, 0, NULL);
-    ok(!ret == ie10_cache, "IsUrlCacheEntryExpiredA returned %x\n", ret);
+    ok(ret != ie10_cache, "IsUrlCacheEntryExpiredA returned %x\n", ret);
 
     /* The return value should indicate whether the URL is expired,
      * and the filetime indicates the last modified time, but a cache entry
@@ -314,7 +314,7 @@ static void test_IsUrlCacheEntryExpiredA(void)
     ft.dwLowDateTime = 0xdeadbeef;
     ft.dwHighDateTime = 0xbaadf00d;
     ret = IsUrlCacheEntryExpiredA(uncached_url, 0, &ft);
-    ok(!ret == ie10_cache, "IsUrlCacheEntryExpiredA returned %x\n", ret);
+    ok(ret != ie10_cache, "IsUrlCacheEntryExpiredA returned %x\n", ret);
     ok(!ft.dwLowDateTime && !ft.dwHighDateTime,
        "expected time (0,0), got (%u,%u)\n",
        ft.dwLowDateTime, ft.dwHighDateTime);
@@ -367,6 +367,7 @@ static void create_and_write_file(LPCSTR filename, void *data, DWORD len)
 
 static void test_urlcacheA(void)
 {
+    static char long_url[300] = "http://www.winehq.org/";
     static char ok_header[] = "HTTP/1.0 200 OK\r\n\r\n";
     BOOL ret;
     HANDLE hFile;
@@ -376,6 +377,7 @@ static void test_urlcacheA(void)
     DWORD cbCacheEntryInfo;
     static const FILETIME filetime_zero;
     FILETIME now;
+    int len;
 
     ret = CreateUrlCacheEntryA(test_url, 0, "html", filenameA, 0);
     ok(ret, "CreateUrlCacheEntry failed with error %d\n", GetLastError());
@@ -811,6 +813,30 @@ static void test_urlcacheA(void)
         ret = pDeleteUrlCacheEntryA(test_hash_collisions2);
         ok(ret, "DeleteUrlCacheEntry failed: %d\n", GetLastError());
     }
+
+    len = strlen(long_url);
+    memset(long_url+len, 'a', sizeof(long_url)-len);
+    long_url[sizeof(long_url)-1] = 0;
+    ret = CreateUrlCacheEntryA(long_url, 0, NULL, filenameA, 0);
+    ok(ret, "CreateUrlCacheEntry failed with error %d\n", GetLastError());
+    check_file_exists(filenameA);
+    DeleteFileA(filenameA);
+
+    ret = CreateUrlCacheEntryA(long_url, 0, "extension", filenameA, 0);
+    ok(ret, "CreateUrlCacheEntry failed with error %d\n", GetLastError());
+    check_file_exists(filenameA);
+    DeleteFileA(filenameA);
+
+    long_url[250] = 0;
+    ret = CreateUrlCacheEntryA(long_url, 0, NULL, filenameA, 0);
+    ok(ret, "CreateUrlCacheEntry failed with error %d\n", GetLastError());
+    check_file_exists(filenameA);
+    DeleteFileA(filenameA);
+
+    ret = CreateUrlCacheEntryA(long_url, 0, "extension", filenameA, 0);
+    ok(ret, "CreateUrlCacheEntry failed with error %d\n", GetLastError());
+    check_file_exists(filenameA);
+    DeleteFileA(filenameA);
 }
 
 static void test_urlcacheW(void)
