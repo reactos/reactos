@@ -21,6 +21,7 @@
 #include <wbemcli.h>
 
 static HRESULT EnumVARIANT_create( IEnumWbemClassObject *, IEnumVARIANT ** );
+static HRESULT ISWbemSecurity_create( ISWbemSecurity ** );
 
 enum type_id
 {
@@ -28,6 +29,7 @@ enum type_id
     ISWbemObject_tid,
     ISWbemObjectSet_tid,
     ISWbemServices_tid,
+    ISWbemSecurity_tid,
     last_tid
 };
 
@@ -39,7 +41,8 @@ static REFIID wbemdisp_tid_id[] =
     &IID_ISWbemLocator,
     &IID_ISWbemObject,
     &IID_ISWbemObjectSet,
-    &IID_ISWbemServices
+    &IID_ISWbemServices,
+    &IID_ISWbemSecurity
 };
 
 static HRESULT get_typeinfo( enum type_id tid, ITypeInfo **ret )
@@ -1130,8 +1133,12 @@ static HRESULT WINAPI services_get_Security_(
         ISWbemServices *iface,
         ISWbemSecurity **objWbemSecurity )
 {
-    FIXME( "\n" );
-    return E_NOTIMPL;
+    TRACE( "%p, %p\n", iface, objWbemSecurity );
+
+    if (!objWbemSecurity)
+        return E_INVALIDARG;
+
+    return ISWbemSecurity_create( objWbemSecurity );
 }
 
 static const ISWbemServicesVtbl services_vtbl =
@@ -1384,8 +1391,12 @@ static HRESULT WINAPI locator_get_Security_(
     ISWbemLocator *iface,
     ISWbemSecurity **objWbemSecurity )
 {
-    FIXME( "%p, %p\n", iface, objWbemSecurity );
-    return E_NOTIMPL;
+    TRACE( "%p, %p\n", iface, objWbemSecurity );
+
+    if (!objWbemSecurity)
+        return E_INVALIDARG;
+
+    return ISWbemSecurity_create( objWbemSecurity );
 }
 
 static const ISWbemLocatorVtbl locator_vtbl =
@@ -1413,6 +1424,234 @@ HRESULT SWbemLocator_create( void **obj )
     locator->locator = NULL;
 
     *obj = &locator->ISWbemLocator_iface;
+    TRACE( "returning iface %p\n", *obj );
+    return S_OK;
+}
+
+struct security
+{
+    ISWbemSecurity ISWbemSecurity_iface;
+    LONG refs;
+    WbemImpersonationLevelEnum  implevel;
+    WbemAuthenticationLevelEnum authlevel;
+};
+
+static inline struct security *impl_from_ISWbemSecurity( ISWbemSecurity *iface )
+{
+    return CONTAINING_RECORD( iface, struct security, ISWbemSecurity_iface );
+}
+
+static ULONG WINAPI security_AddRef(
+    ISWbemSecurity *iface )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    return InterlockedIncrement( &security->refs );
+}
+
+static ULONG WINAPI security_Release(
+    ISWbemSecurity *iface )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    LONG refs = InterlockedDecrement( &security->refs );
+    if (!refs)
+    {
+        TRACE( "destroying %p\n", security );
+        heap_free( security );
+    }
+    return refs;
+}
+
+static HRESULT WINAPI security_QueryInterface(
+    ISWbemSecurity *iface,
+    REFIID riid,
+    void **ppvObject )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    TRACE( "%p, %s, %p\n", security, debugstr_guid( riid ), ppvObject );
+
+    if (IsEqualGUID( riid, &IID_ISWbemSecurity ) ||
+        IsEqualGUID( riid, &IID_IDispatch ) ||
+        IsEqualGUID( riid, &IID_IUnknown ))
+    {
+        *ppvObject = iface;
+    }
+    else
+    {
+        FIXME( "interface %s not implemented\n", debugstr_guid(riid) );
+        return E_NOINTERFACE;
+    }
+    ISWbemSecurity_AddRef( iface );
+    return S_OK;
+}
+
+static HRESULT WINAPI security_GetTypeInfoCount(
+    ISWbemSecurity *iface,
+    UINT *count )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    TRACE( "%p, %p\n", security, count );
+
+    *count = 1;
+    return S_OK;
+}
+
+static HRESULT WINAPI security_GetTypeInfo(
+    ISWbemSecurity *iface,
+    UINT index,
+    LCID lcid,
+    ITypeInfo **info )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    TRACE( "%p, %u, %u, %p\n", security, index, lcid, info );
+
+    return get_typeinfo( ISWbemSecurity_tid, info );
+}
+
+static HRESULT WINAPI security_GetIDsOfNames(
+    ISWbemSecurity *iface,
+    REFIID riid,
+    LPOLESTR *names,
+    UINT count,
+    LCID lcid,
+    DISPID *dispid )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE( "%p, %s, %p, %u, %u, %p\n", security, debugstr_guid(riid), names, count, lcid, dispid );
+
+    if (!names || !count || !dispid) return E_INVALIDARG;
+
+    hr = get_typeinfo( ISWbemSecurity_tid, &typeinfo );
+    if (SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames( typeinfo, names, count, dispid );
+        ITypeInfo_Release( typeinfo );
+    }
+    return hr;
+}
+
+static HRESULT WINAPI security_Invoke(
+    ISWbemSecurity *iface,
+    DISPID member,
+    REFIID riid,
+    LCID lcid,
+    WORD flags,
+    DISPPARAMS *params,
+    VARIANT *result,
+    EXCEPINFO *excep_info,
+    UINT *arg_err )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE( "%p, %d, %s, %d, %d, %p, %p, %p, %p\n", security, member, debugstr_guid(riid),
+           lcid, flags, params, result, excep_info, arg_err );
+
+    hr = get_typeinfo( ISWbemSecurity_tid, &typeinfo );
+    if (SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke( typeinfo, &security->ISWbemSecurity_iface, member, flags,
+                               params, result, excep_info, arg_err );
+        ITypeInfo_Release( typeinfo );
+    }
+    return hr;
+}
+
+static HRESULT WINAPI security_get_ImpersonationLevel_(
+    ISWbemSecurity *iface,
+    WbemImpersonationLevelEnum *impersonation_level )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    FIXME( "%p, %p: stub\n", security, impersonation_level );
+
+    if (!impersonation_level)
+        return E_INVALIDARG;
+
+    *impersonation_level = security->implevel;
+    return S_OK;
+}
+
+static HRESULT WINAPI security_put_ImpersonationLevel_(
+    ISWbemSecurity *iface,
+    WbemImpersonationLevelEnum impersonation_level )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    FIXME( "%p, %d: stub\n", security, impersonation_level );
+
+    security->implevel = impersonation_level;
+    return S_OK;
+}
+
+static HRESULT WINAPI security_get_AuthenticationLevel_(
+    ISWbemSecurity *iface,
+    WbemAuthenticationLevelEnum *authentication_level )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    FIXME( "%p, %p: stub\n", security, authentication_level );
+
+    if (!authentication_level)
+        return E_INVALIDARG;
+
+    *authentication_level = security->authlevel;
+    return S_OK;
+}
+
+static HRESULT WINAPI security_put_AuthenticationLevel_(
+    ISWbemSecurity *iface,
+    WbemAuthenticationLevelEnum authentication_level )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    FIXME( "%p, %d: stub\n", security, authentication_level );
+
+    security->authlevel = authentication_level;
+    return S_OK;
+}
+
+static HRESULT WINAPI security_get_Privileges_(
+    ISWbemSecurity *iface,
+    ISWbemPrivilegeSet **privilege_set )
+{
+    struct security *security = impl_from_ISWbemSecurity( iface );
+    FIXME( "%p, %p: stub\n", security, privilege_set );
+
+    if (!privilege_set)
+        return E_INVALIDARG;
+
+    return E_NOTIMPL;
+}
+
+static const ISWbemSecurityVtbl security_vtbl =
+{
+    security_QueryInterface,
+    security_AddRef,
+    security_Release,
+    security_GetTypeInfoCount,
+    security_GetTypeInfo,
+    security_GetIDsOfNames,
+    security_Invoke,
+    security_get_ImpersonationLevel_,
+    security_put_ImpersonationLevel_,
+    security_get_AuthenticationLevel_,
+    security_put_AuthenticationLevel_,
+    security_get_Privileges_
+};
+
+static HRESULT ISWbemSecurity_create( ISWbemSecurity **obj )
+{
+    struct security *security;
+
+    TRACE( "%p\n", obj );
+
+    if (!(security = heap_alloc( sizeof(*security) ))) return E_OUTOFMEMORY;
+    security->ISWbemSecurity_iface.lpVtbl = &security_vtbl;
+    security->refs = 1;
+    security->implevel = wbemImpersonationLevelAnonymous;
+    security->authlevel = wbemAuthenticationLevelDefault;
+
+    *obj = &security->ISWbemSecurity_iface;
     TRACE( "returning iface %p\n", *obj );
     return S_OK;
 }
