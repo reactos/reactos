@@ -311,16 +311,6 @@ const char* pe_map_directory(struct module* module, int dirno, DWORD* size)
                            nth->OptionalHeader.DataDirectory[dirno].VirtualAddress, NULL);
 }
 
-/******************************************************************
- *		pe_unmap_directory
- *
- * Unmaps a directory content
- */
-void pe_unmap_directory(struct image_file_map* fmap, int dirno)
-{
-    pe_unmap_full(fmap);
-}
-
 static void pe_module_remove(struct process* pcs, struct module_format* modfmt)
 {
     pe_unmap_file(&modfmt->u.pe_info->fmap);

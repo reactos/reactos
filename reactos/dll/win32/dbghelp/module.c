@@ -365,7 +365,7 @@ BOOL module_get_debug(struct module_pair* pair)
             break;
 #ifndef DBGHELP_STATIC_LIB
         case DMT_MACHO:
-            ret = macho_load_debug_info(pair->effective, NULL);
+            ret = macho_load_debug_info(pair->effective);
             break;
 #endif
         default:

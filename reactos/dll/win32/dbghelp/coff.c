@@ -277,7 +277,6 @@ DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
                                                msc_dbg->module->module.BaseOfImage + base + coff_sym->Value,
                                                0 /* FIXME */,
                                                NULL /* FIXME */)->symt);
-            i += naux;
             continue;
 	}
 
@@ -358,7 +357,6 @@ DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
              * Ignore these.  They don't have anything to do with
              * reality.
              */
-            i += naux;
             continue;
 	}
 

@@ -33,7 +33,7 @@ static BOOL arm_get_addr(HANDLE hThread, const CONTEXT* ctx,
 #ifdef __arm__
     case cpu_addr_pc:    addr->Offset = ctx->Pc; return TRUE;
     case cpu_addr_stack: addr->Offset = ctx->Sp; return TRUE;
-    case cpu_addr_frame: addr->Offset = ctx->Fpscr; return TRUE;
+    case cpu_addr_frame: addr->Offset = ctx->Fp; return TRUE;
 #endif
     default: addr->Mode = -1;
         return FALSE;
@@ -116,7 +116,7 @@ static BOOL arm_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CON
     /* set frame information */
     frame->AddrStack.Offset = context->Sp;
     frame->AddrReturn.Offset = context->Lr;
-    frame->AddrFrame.Offset = context->Fpscr;
+    frame->AddrFrame.Offset = context->Fp;
     frame->AddrPC.Offset = context->Pc;
 
     frame->Far = TRUE;
@@ -144,7 +144,7 @@ static BOOL arm_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CON
 }
 #endif
 
-static unsigned arm_map_dwarf_register(unsigned regno)
+static unsigned arm_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
     if (regno <= 15) return CV_ARM_R0 + regno;
     if (regno == 128) return CV_ARM_CPSR;
@@ -169,8 +169,8 @@ static void* arm_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size)
     case CV_ARM_R0 +  8: *size = sizeof(ctx->R8); return &ctx->R8;
     case CV_ARM_R0 +  9: *size = sizeof(ctx->R9); return &ctx->R9;
     case CV_ARM_R0 + 10: *size = sizeof(ctx->R10); return &ctx->R10;
-    case CV_ARM_R0 + 11: *size = sizeof(ctx->Fpscr); return &ctx->Fpscr;
-    //case CV_ARM_R0 + 12: *size = sizeof(ctx->Ip); return &ctx->Ip;
+    case CV_ARM_R0 + 11: *size = sizeof(ctx->Fp); return &ctx->Fp;
+    case CV_ARM_R0 + 12: *size = sizeof(ctx->Ip); return &ctx->Ip;
 
     case CV_ARM_SP: *size = sizeof(ctx->Sp); return &ctx->Sp;
     case CV_ARM_LR: *size = sizeof(ctx->Lr); return &ctx->Lr;

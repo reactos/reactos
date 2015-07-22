@@ -581,7 +581,7 @@ struct cpu
     void*       (*find_runtime_function)(struct module*, DWORD64 addr);
 
     /* dwarf dedicated information */
-    unsigned    (*map_dwarf_register)(unsigned regno);
+    unsigned    (*map_dwarf_register)(unsigned regno, BOOL eh_frame);
 
     /* context related manipulation */
     void*       (*fetch_context_reg)(CONTEXT* context, unsigned regno, unsigned* size);
@@ -620,18 +620,16 @@ struct elf_thunk_area;
 extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_thunk_area* thunks) DECLSPEC_HIDDEN;
 
 /* macho_module.c */
-#define MACHO_NO_MAP    ((const void*)-1)
 extern BOOL         macho_enum_modules(HANDLE hProc, enum_modules_cb, void*) DECLSPEC_HIDDEN;
 extern BOOL         macho_fetch_file_info(const WCHAR* name, DWORD_PTR* base, DWORD* size, DWORD* checksum) DECLSPEC_HIDDEN;
-struct macho_file_map;
-extern BOOL         macho_load_debug_info(struct module* module, struct macho_file_map* fmap) DECLSPEC_HIDDEN;
+extern BOOL         macho_load_debug_info(struct module* module) DECLSPEC_HIDDEN;
 extern struct module*
                     macho_load_module(struct process* pcs, const WCHAR* name, unsigned long) DECLSPEC_HIDDEN;
 extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
 extern BOOL         macho_synchronize_module_list(struct process* pcs) DECLSPEC_HIDDEN;
 
 /* minidump.c */
-void minidump_add_memory_block(struct dump_context* dc, ULONG64 base, ULONG size, ULONG rva);
+void minidump_add_memory_block(struct dump_context* dc, ULONG64 base, ULONG size, ULONG rva) DECLSPEC_HIDDEN;
 
 /* module.c */
 extern const WCHAR      S_ElfW[] DECLSPEC_HIDDEN;
@@ -697,7 +695,6 @@ extern struct module*
 extern BOOL         pe_load_debug_info(const struct process* pcs,
                                        struct module* module) DECLSPEC_HIDDEN;
 extern const char*  pe_map_directory(struct module* module, int dirno, DWORD* size) DECLSPEC_HIDDEN;
-extern void         pe_unmap_directoy(struct module* module, int dirno) DECLSPEC_HIDDEN;
 
 /* source.c */
 extern unsigned     source_new(struct module* module, const char* basedir, const char* source) DECLSPEC_HIDDEN;

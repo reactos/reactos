@@ -88,7 +88,11 @@ struct stab_nlist
     unsigned char       n_type;
     char                n_other;
     short               n_desc;
+#if defined(__APPLE__) && defined(_WIN64)
+    unsigned long       n_value;
+#else
     unsigned            n_value;
+#endif
 };
 
 static void stab_strcpy(char* dest, int sz, const char* source)
@@ -1442,7 +1446,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 case 35:
                 case 36: loc.reg = CV_REG_MM0 + stab_ptr->n_value - 29; break;
                 default:
-                    FIXME("Unknown register value (%u)\n", stab_ptr->n_value);
+                    FIXME("Unknown register value (%lu)\n", (unsigned long)stab_ptr->n_value);
                     loc.reg = CV_REG_NONE;
                     break;
                 }
@@ -1592,7 +1596,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
 	case N_EXCL:
             if (stabs_add_include(stabs_find_include(ptr, stab_ptr->n_value)) < 0)
             {
-                ERR("Excluded header not found (%s,%d)\n", ptr, stab_ptr->n_value);
+                ERR("Excluded header not found (%s,%ld)\n", ptr, (unsigned long)stab_ptr->n_value);
                 module_reset_debug_info(module);
                 ret = FALSE;
                 goto done;
@@ -1638,8 +1642,8 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             break;
         }
         stabbuff[0] = '\0';
-        TRACE("0x%02x %x %s\n",
-              stab_ptr->n_type, stab_ptr->n_value, debugstr_a(strs + stab_ptr->n_strx));
+        TRACE("0x%02x %lx %s\n",
+              stab_ptr->n_type, (unsigned long)stab_ptr->n_value, debugstr_a(strs + stab_ptr->n_strx));
     }
     module->module.SymType = SymDia;
     module->module.CVSig = 'S' | ('T' << 8) | ('A' << 16) | ('B' << 24);

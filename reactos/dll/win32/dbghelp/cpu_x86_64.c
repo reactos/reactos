@@ -45,7 +45,7 @@ typedef union _UNWIND_CODE
         BYTE CodeOffset;
         BYTE UnwindOp : 4;
         BYTE OpInfo   : 4;
-    };
+    } u;
     USHORT FrameOffset;
 } UNWIND_CODE, *PUNWIND_CODE;
 
@@ -84,6 +84,8 @@ static BOOL x86_64_get_addr(HANDLE hThread, const CONTEXT* ctx,
     }
 }
 
+#ifdef __x86_64__
+
 enum st_mode {stm_start, stm_64bit, stm_done};
 
 /* indexes in Reserved array */
@@ -95,7 +97,6 @@ enum st_mode {stm_start, stm_64bit, stm_done};
 #define curr_count  (frame->Reserved[__CurrentCount])
 /* #define ??? (frame->Reserved[__]) (unused) */
 
-#ifdef __x86_64__
 union handler_data
 {
     RUNTIME_FUNCTION chain;
@@ -149,14 +150,14 @@ static void dump_unwind_info(struct cpu_stack_walk* csw, ULONG64 base, RUNTIME_F
 
         for (i = 0; i < info->CountOfCodes; i++)
         {
-            TRACE("    0x%x: ", info->UnwindCode[i].CodeOffset);
-            switch (info->UnwindCode[i].UnwindOp)
+            TRACE("    0x%x: ", info->UnwindCode[i].u.CodeOffset);
+            switch (info->UnwindCode[i].u.UnwindOp)
             {
             case UWOP_PUSH_NONVOL:
-                TRACE("pushq %%%s\n", reg_names[info->UnwindCode[i].OpInfo]);
+                TRACE("pushq %%%s\n", reg_names[info->UnwindCode[i].u.OpInfo]);
                 break;
             case UWOP_ALLOC_LARGE:
-                if (info->UnwindCode[i].OpInfo)
+                if (info->UnwindCode[i].u.OpInfo)
                 {
                     count = *(DWORD*)&info->UnwindCode[i+1];
                     i += 2;
@@ -169,7 +170,7 @@ static void dump_unwind_info(struct cpu_stack_walk* csw, ULONG64 base, RUNTIME_F
                 TRACE("subq $0x%x,%%rsp\n", count);
                 break;
             case UWOP_ALLOC_SMALL:
-                count = (info->UnwindCode[i].OpInfo + 1) * 8;
+                count = (info->UnwindCode[i].u.OpInfo + 1) * 8;
                 TRACE("subq $0x%x,%%rsp\n", count);
                 break;
             case UWOP_SET_FPREG:
@@ -178,29 +179,29 @@ static void dump_unwind_info(struct cpu_stack_walk* csw, ULONG64 base, RUNTIME_F
                 break;
             case UWOP_SAVE_NONVOL:
                 count = *(USHORT*)&info->UnwindCode[i+1] * 8;
-                TRACE("movq %%%s,0x%x(%%rsp)\n", reg_names[info->UnwindCode[i].OpInfo], count);
+                TRACE("movq %%%s,0x%x(%%rsp)\n", reg_names[info->UnwindCode[i].u.OpInfo], count);
                 i++;
                 break;
             case UWOP_SAVE_NONVOL_FAR:
                 count = *(DWORD*)&info->UnwindCode[i+1];
-                TRACE("movq %%%s,0x%x(%%rsp)\n", reg_names[info->UnwindCode[i].OpInfo], count);
+                TRACE("movq %%%s,0x%x(%%rsp)\n", reg_names[info->UnwindCode[i].u.OpInfo], count);
                 i += 2;
                 break;
             case UWOP_SAVE_XMM128:
                 count = *(USHORT*)&info->UnwindCode[i+1] * 16;
-                TRACE("movaps %%xmm%u,0x%x(%%rsp)\n", info->UnwindCode[i].OpInfo, count);
+                TRACE("movaps %%xmm%u,0x%x(%%rsp)\n", info->UnwindCode[i].u.OpInfo, count);
                 i++;
                 break;
             case UWOP_SAVE_XMM128_FAR:
                 count = *(DWORD*)&info->UnwindCode[i+1];
-                TRACE("movaps %%xmm%u,0x%x(%%rsp)\n", info->UnwindCode[i].OpInfo, count);
+                TRACE("movaps %%xmm%u,0x%x(%%rsp)\n", info->UnwindCode[i].u.OpInfo, count);
                 i += 2;
                 break;
             case UWOP_PUSH_MACHFRAME:
-                TRACE("PUSH_MACHFRAME %u\n", info->UnwindCode[i].OpInfo);
+                TRACE("PUSH_MACHFRAME %u\n", info->UnwindCode[i].u.OpInfo);
                 break;
             default:
-                FIXME("unknown code %u\n", info->UnwindCode[i].UnwindOp);
+                FIXME("unknown code %u\n", info->UnwindCode[i].u.UnwindOp);
                 break;
             }
         }
@@ -252,10 +253,10 @@ static void set_float_reg(CONTEXT *context, int reg, M128A val)
 
 static int get_opcode_size(UNWIND_CODE op)
 {
-    switch (op.UnwindOp)
+    switch (op.u.UnwindOp)
     {
     case UWOP_ALLOC_LARGE:
-        return 2 + (op.OpInfo != 0);
+        return 2 + (op.u.OpInfo != 0);
     case UWOP_SAVE_NONVOL:
     case UWOP_SAVE_XMM128:
         return 2;
@@ -504,21 +505,21 @@ static BOOL interpret_function_table_entry(struct cpu_stack_walk* csw,
 
         for (i = 0; i < info->CountOfCodes; i += get_opcode_size(info->UnwindCode[i]))
         {
-            if (prolog_offset < info->UnwindCode[i].CodeOffset) continue; /* skip it */
+            if (prolog_offset < info->UnwindCode[i].u.CodeOffset) continue; /* skip it */
 
-            switch (info->UnwindCode[i].UnwindOp)
+            switch (info->UnwindCode[i].u.UnwindOp)
             {
             case UWOP_PUSH_NONVOL:  /* pushq %reg */
                 if (!sw_read_mem(csw, context->Rsp, &value, sizeof(DWORD64))) return FALSE;
-                set_int_reg(context, info->UnwindCode[i].OpInfo, value);
+                set_int_reg(context, info->UnwindCode[i].u.OpInfo, value);
                 context->Rsp += sizeof(ULONG64);
                 break;
             case UWOP_ALLOC_LARGE:  /* subq $nn,%rsp */
-                if (info->UnwindCode[i].OpInfo) context->Rsp += *(DWORD*)&info->UnwindCode[i+1];
+                if (info->UnwindCode[i].u.OpInfo) context->Rsp += *(DWORD*)&info->UnwindCode[i+1];
                 else context->Rsp += *(USHORT*)&info->UnwindCode[i+1] * 8;
                 break;
             case UWOP_ALLOC_SMALL:  /* subq $n,%rsp */
-                context->Rsp += (info->UnwindCode[i].OpInfo + 1) * 8;
+                context->Rsp += (info->UnwindCode[i].u.OpInfo + 1) * 8;
                 break;
             case UWOP_SET_FPREG:  /* leaq nn(%rsp),%framereg */
                 context->Rsp = newframe;
@@ -526,28 +527,28 @@ static BOOL interpret_function_table_entry(struct cpu_stack_walk* csw,
             case UWOP_SAVE_NONVOL:  /* movq %reg,n(%rsp) */
                 off = newframe + *(USHORT*)&info->UnwindCode[i+1] * 8;
                 if (!sw_read_mem(csw, off, &value, sizeof(DWORD64))) return FALSE;
-                set_int_reg(context, info->UnwindCode[i].OpInfo, value);
+                set_int_reg(context, info->UnwindCode[i].u.OpInfo, value);
                 break;
             case UWOP_SAVE_NONVOL_FAR:  /* movq %reg,nn(%rsp) */
                 off = newframe + *(DWORD*)&info->UnwindCode[i+1];
                 if (!sw_read_mem(csw, off, &value, sizeof(DWORD64))) return FALSE;
-                set_int_reg(context, info->UnwindCode[i].OpInfo, value);
+                set_int_reg(context, info->UnwindCode[i].u.OpInfo, value);
                 break;
             case UWOP_SAVE_XMM128:  /* movaps %xmmreg,n(%rsp) */
                 off = newframe + *(USHORT*)&info->UnwindCode[i+1] * 16;
                 if (!sw_read_mem(csw, off, &floatvalue, sizeof(M128A))) return FALSE;
-                set_float_reg(context, info->UnwindCode[i].OpInfo, floatvalue);
+                set_float_reg(context, info->UnwindCode[i].u.OpInfo, floatvalue);
                 break;
             case UWOP_SAVE_XMM128_FAR:  /* movaps %xmmreg,nn(%rsp) */
                 off = newframe + *(DWORD*)&info->UnwindCode[i+1];
                 if (!sw_read_mem(csw, off, &floatvalue, sizeof(M128A))) return FALSE;
-                set_float_reg(context, info->UnwindCode[i].OpInfo, floatvalue);
+                set_float_reg(context, info->UnwindCode[i].u.OpInfo, floatvalue);
                 break;
             case UWOP_PUSH_MACHFRAME:
-                FIXME("PUSH_MACHFRAME %u\n", info->UnwindCode[i].OpInfo);
+                FIXME("PUSH_MACHFRAME %u\n", info->UnwindCode[i].u.OpInfo);
                 break;
             default:
-                FIXME("unknown code %u\n", info->UnwindCode[i].UnwindOp);
+                FIXME("unknown code %u\n", info->UnwindCode[i].u.UnwindOp);
                 break;
             }
         }
@@ -711,7 +712,7 @@ static void*    x86_64_find_runtime_function(struct module* module, DWORD64 addr
     return NULL;
 }
 
-static unsigned x86_64_map_dwarf_register(unsigned regno)
+static unsigned x86_64_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
     unsigned    reg;
 
