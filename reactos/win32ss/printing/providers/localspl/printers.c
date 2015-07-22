@@ -505,9 +505,11 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     PLOCAL_JOB pJob;
     PLOCAL_HANDLE pHandle = NULL;
     PLOCAL_PORT pPort;
+    PLOCAL_PORT_HANDLE pPortHandle = NULL;
     PLOCAL_PRINT_MONITOR pPrintMonitor;
     PLOCAL_PRINTER pPrinter;
     PLOCAL_PRINTER_HANDLE pPrinterHandle = NULL;
+    PLOCAL_XCV_HANDLE pXcvHandle = NULL;
     WCHAR wszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     WCHAR wszFullPath[MAX_PATH];
 
@@ -635,9 +637,21 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             goto Cleanup;
         }
 
+        // Create a new LOCAL_PORT_HANDLE.
+        pPortHandle = DllAllocSplMem(sizeof(LOCAL_PORT_HANDLE));
+        if (!pPortHandle)
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
+        pPortHandle->hPort = hExternalHandle;
+        pPortHandle->pPort = pPort;
+
         // Return the Port handle through our general handle.
         pHandle->HandleType = HandleType_Port;
-        pHandle->pSpecificHandle = hExternalHandle;
+        pHandle->pSpecificHandle = pPortHandle;
     }
     else if (!pwszFirstParameter && pwszSecondParameter && wcsncmp(pwszSecondParameter, L"Xcv", 3) == 0)
     {
@@ -700,9 +714,21 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             goto Cleanup;
         }
 
+        // Create a new LOCAL_XCV_HANDLE.
+        pXcvHandle = DllAllocSplMem(sizeof(LOCAL_XCV_HANDLE));
+        if (!pXcvHandle)
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
+        pXcvHandle->hXcv = hExternalHandle;
+        pXcvHandle->pPrintMonitor = pPrintMonitor;
+
         // Return the Xcv handle through our general handle.
         pHandle->HandleType = HandleType_Xcv;
-        pHandle->pSpecificHandle = hExternalHandle;
+        pHandle->pSpecificHandle = pXcvHandle;
     }
     else
     {
@@ -721,7 +747,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             goto Cleanup;
         }
 
-        // Create a new printer handle.
+        // Create a new LOCAL_PRINTER_HANDLE.
         pPrinterHandle = DllAllocSplMem(sizeof(LOCAL_PRINTER_HANDLE));
         if (!pPrinterHandle)
         {
@@ -845,12 +871,44 @@ Cleanup:
 BOOL WINAPI
 LocalReadPrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pNoBytesRead)
 {
+    BOOL bReturnValue;
     DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
     // Sanity checks.
-    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Port handles are an entirely different thing.
+    if (pHandle->HandleType == HandleType_Port)
+    {
+        pPortHandle = (PLOCAL_PORT_HANDLE)pHandle->pSpecificHandle;
+
+        // Call the monitor's ReadPort function.
+        if (pPortHandle->pPort->pPrintMonitor->bIsLevel2)
+            bReturnValue = ((PMONITOR2)pPortHandle->pPort->pPrintMonitor->pMonitor)->pfnReadPort(pPortHandle->hPort, pBuf, cbBuf, pNoBytesRead);
+        else
+            bReturnValue = ((LPMONITOREX)pPortHandle->pPort->pPrintMonitor->pMonitor)->Monitor.pfnReadPort(pPortHandle->hPort, pBuf, cbBuf, pNoBytesRead);
+
+        if (!bReturnValue)
+        {
+            // The ReadPort function failed. Return its last error.
+            dwErrorCode = GetLastError();
+            goto Cleanup;
+        }
+
+        // We were successful!
+        dwErrorCode = ERROR_SUCCESS;
+        goto Cleanup;
+    }
+
+    // The remaining function deals with Printer handles only.
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -884,22 +942,62 @@ Cleanup:
 DWORD WINAPI
 LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
 {
+    BOOL bReturnValue;
     DWORD dwErrorCode;
     DWORD dwReturnValue = 0;
     PDOC_INFO_1W pDocInfo1 = (PDOC_INFO_1W)pDocInfo;
+    PLOCAL_JOB pJob;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
     // Sanity checks.
-    if (!pDocInfo1)
+    if (!pHandle)
     {
-        dwErrorCode = ERROR_INVALID_PARAMETER;
+        dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
     }
 
-    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    // Port handles are an entirely different thing.
+    if (pHandle->HandleType == HandleType_Port)
+    {
+        pPortHandle = (PLOCAL_PORT_HANDLE)pHandle->pSpecificHandle;
+
+        // This call should come from a Print Processor and the job this port is going to print was assigned to us before opening the Print Processor.
+        // Claim it exclusively for this port handle.
+        pJob = pPortHandle->pPort->pNextJobToProcess;
+        pPortHandle->pPort->pNextJobToProcess = NULL;
+        ASSERT(pJob);
+
+        // Call the monitor's StartDocPort function.
+        if (pPortHandle->pPort->pPrintMonitor->bIsLevel2)
+            bReturnValue = ((PMONITOR2)pPortHandle->pPort->pPrintMonitor->pMonitor)->pfnStartDocPort(pPortHandle->hPort, pJob->pPrinter->pwszPrinterName, pJob->dwJobID, Level, pDocInfo);
+        else
+            bReturnValue = ((LPMONITOREX)pPortHandle->pPort->pPrintMonitor->pMonitor)->Monitor.pfnStartDocPort(pPortHandle->hPort, pJob->pPrinter->pwszPrinterName, pJob->dwJobID, Level, pDocInfo);
+
+        if (!bReturnValue)
+        {
+            // The StartDocPort function failed. Return its last error.
+            dwErrorCode = GetLastError();
+            goto Cleanup;
+        }
+
+        // We were successful!
+        dwErrorCode = ERROR_SUCCESS;
+        dwReturnValue = pJob->dwJobID;
+        goto Cleanup;
+    }
+
+    // The remaining function deals with Printer handles only.
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    if (!pDocInfo1)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
     }
 
@@ -989,14 +1087,46 @@ Cleanup:
 }
 
 BOOL WINAPI
-LocalWritePrinter(HANDLE hPrinter, LPVOID pBuf, DWORD cbBuf, LPDWORD pcWritten)
+LocalWritePrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pcWritten)
 {
+    BOOL bReturnValue;
     DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
     // Sanity checks.
-    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Port handles are an entirely different thing.
+    if (pHandle->HandleType == HandleType_Port)
+    {
+        pPortHandle = (PLOCAL_PORT_HANDLE)pHandle->pSpecificHandle;
+
+        // Call the monitor's WritePort function.
+        if (pPortHandle->pPort->pPrintMonitor->bIsLevel2)
+            bReturnValue = ((PMONITOR2)pPortHandle->pPort->pPrintMonitor->pMonitor)->pfnWritePort(pPortHandle->hPort, pBuf, cbBuf, pcWritten);
+        else
+            bReturnValue = ((LPMONITOREX)pPortHandle->pPort->pPrintMonitor->pMonitor)->Monitor.pfnWritePort(pPortHandle->hPort, pBuf, cbBuf, pcWritten);
+
+        if (!bReturnValue)
+        {
+            // The WritePort function failed. Return its last error.
+            dwErrorCode = GetLastError();
+            goto Cleanup;
+        }
+
+        // We were successful!
+        dwErrorCode = ERROR_SUCCESS;
+        goto Cleanup;
+    }
+
+    // The remaining function deals with Printer handles only.
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -1054,12 +1184,44 @@ Cleanup:
 BOOL WINAPI
 LocalEndDocPrinter(HANDLE hPrinter)
 {
+    BOOL bReturnValue;
     DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
     // Sanity checks.
-    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Port handles are an entirely different thing.
+    if (pHandle->HandleType == HandleType_Port)
+    {
+        pPortHandle = (PLOCAL_PORT_HANDLE)pHandle->pSpecificHandle;
+
+        // Call the monitor's EndDocPort function.
+        if (pPortHandle->pPort->pPrintMonitor->bIsLevel2)
+            bReturnValue = ((PMONITOR2)pPortHandle->pPort->pPrintMonitor->pMonitor)->pfnEndDocPort(pPortHandle->hPort);
+        else
+            bReturnValue = ((LPMONITOREX)pPortHandle->pPort->pPrintMonitor->pMonitor)->Monitor.pfnEndDocPort(pPortHandle->hPort);
+
+        if (!bReturnValue)
+        {
+            // The EndDocPort function failed. Return its last error.
+            dwErrorCode = GetLastError();
+            goto Cleanup;
+        }
+
+        // We were successful!
+        dwErrorCode = ERROR_SUCCESS;
+        goto Cleanup;
+    }
+
+    // The remaining function deals with Printer handles only.
+    if (pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -1090,7 +1252,9 @@ BOOL WINAPI
 LocalClosePrinter(HANDLE hPrinter)
 {
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
+    PLOCAL_XCV_HANDLE pXcvHandle;
 
     if (!pHandle)
     {
@@ -1100,7 +1264,13 @@ LocalClosePrinter(HANDLE hPrinter)
 
     if (pHandle->HandleType == HandleType_Port)
     {
-        // TODO
+        pPortHandle = (PLOCAL_PORT_HANDLE)pHandle->pSpecificHandle;
+
+        // Call the monitor's ClosePort function.
+        if (pPortHandle->pPort->pPrintMonitor->bIsLevel2)
+            ((PMONITOR2)pPortHandle->pPort->pPrintMonitor->pMonitor)->pfnClosePort(pPortHandle->hPort);
+        else
+            ((LPMONITOREX)pPortHandle->pPort->pPrintMonitor->pMonitor)->Monitor.pfnClosePort(pPortHandle->hPort);
     }
     else if (pHandle->HandleType == HandleType_Printer)
     {
@@ -1113,16 +1283,20 @@ LocalClosePrinter(HANDLE hPrinter)
         // Free memory for the fields.
         DllFreeSplMem(pPrinterHandle->pDevMode);
         DllFreeSplStr(pPrinterHandle->pwszDatatype);
-
-        // Free memory for the printer handle itself.
-        DllFreeSplMem(pPrinterHandle);
     }
     else if (pHandle->HandleType == HandleType_Xcv)
     {
-        // TODO
+        pXcvHandle = (PLOCAL_XCV_HANDLE)pHandle->pSpecificHandle;
+
+        // Call the monitor's XcvClosePort function.
+        if (pXcvHandle->pPrintMonitor->bIsLevel2)
+            ((PMONITOR2)pXcvHandle->pPrintMonitor->pMonitor)->pfnXcvClosePort(pXcvHandle->hXcv);
+        else
+            ((LPMONITOREX)pXcvHandle->pPrintMonitor->pMonitor)->Monitor.pfnXcvClosePort(pXcvHandle->hXcv);
     }
 
-    // Free memory for the handle itself.
+    // Free memory for the handle and the specific handle.
+    DllFreeSplMem(pHandle->pSpecificHandle);
     DllFreeSplMem(pHandle);
 
     return TRUE;

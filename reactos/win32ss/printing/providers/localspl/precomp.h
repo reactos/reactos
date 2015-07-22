@@ -48,37 +48,48 @@ typedef BOOL (WINAPI *PPrintDocumentOnPrintProcessor)(HANDLE, LPWSTR);
 typedef LPMONITOREX(WINAPI *PInitializePrintMonitor)(PWSTR);
 typedef LPMONITOR2(WINAPI *PInitializePrintMonitor2)(PMONITORINIT, PHANDLE);
 
+// Forward declarations
+typedef struct _LOCAL_HANDLE            LOCAL_HANDLE, *PLOCAL_HANDLE;
+typedef struct _LOCAL_JOB               LOCAL_JOB, *PLOCAL_JOB;
+typedef struct _LOCAL_PORT              LOCAL_PORT, *PLOCAL_PORT;
+typedef struct _LOCAL_PORT_HANDLE       LOCAL_PORT_HANDLE, *PLOCAL_PORT_HANDLE;
+typedef struct _LOCAL_PRINT_MONITOR     LOCAL_PRINT_MONITOR, *PLOCAL_PRINT_MONITOR;
+typedef struct _LOCAL_PRINT_PROCESSOR   LOCAL_PRINT_PROCESSOR, *PLOCAL_PRINT_PROCESSOR;
+typedef struct _LOCAL_PRINTER           LOCAL_PRINTER, *PLOCAL_PRINTER;
+typedef struct _LOCAL_PRINTER_HANDLE    LOCAL_PRINTER_HANDLE, *PLOCAL_PRINTER_HANDLE;
+typedef struct _LOCAL_XCV_HANDLE        LOCAL_XCV_HANDLE, *PLOCAL_XCV_HANDLE;
+typedef struct _SHD_HEADER              SHD_HEADER, *PSHD_HEADER;
+
 // Structures
 /**
  * Describes a Print Monitor.
  */
-typedef struct _LOCAL_PRINT_MONITOR
+struct _LOCAL_PRINT_MONITOR
 {
     LIST_ENTRY Entry;
-    PWSTR pwszName;                     /** Name of the Print Monitor as read from the registry. */
-    PWSTR pwszFileName;                 /** DLL File Name of the Print Monitor. */
-    BOOL bIsLevel2;                     /** Whether this Print Monitor supplies an InitializePrintMonitor2 API (preferred) instead of InitializePrintMonitor. */
-    PVOID pMonitor;                     /** For bIsLevel2 == TRUE:  LPMONITOR2 pointer returned by InitializePrintMonitor2.
-                                            For bIsLevel2 == FALSE: LPMONITOREX pointer returned by InitializePrintMonitor. */
-    HANDLE hMonitor;                    /** Only used when bIsLevel2 == TRUE: Handle returned by InitializePrintMonitor2. */
-}
-LOCAL_PRINT_MONITOR, *PLOCAL_PRINT_MONITOR;
+    PWSTR pwszName;                             /** Name of the Print Monitor as read from the registry. */
+    PWSTR pwszFileName;                         /** DLL File Name of the Print Monitor. */
+    BOOL bIsLevel2;                             /** Whether this Print Monitor supplies an InitializePrintMonitor2 API (preferred) instead of InitializePrintMonitor. */
+    PVOID pMonitor;                             /** For bIsLevel2 == TRUE:  LPMONITOR2 pointer returned by InitializePrintMonitor2.
+                                                    For bIsLevel2 == FALSE: LPMONITOREX pointer returned by InitializePrintMonitor. */
+    HANDLE hMonitor;                            /** Only used when bIsLevel2 == TRUE: Handle returned by InitializePrintMonitor2. */
+};
 
 /**
  * Describes a Port handled by a Print Monitor.
  */
-typedef struct _LOCAL_PORT
+struct _LOCAL_PORT
 {
     LIST_ENTRY Entry;
-    PWSTR pwszName;                         /** The name of the port (including the trailing colon). */
-    PLOCAL_PRINT_MONITOR pPrintMonitor;     /** The Print Monitor handling this port. */
-}
-LOCAL_PORT, *PLOCAL_PORT;
+    PWSTR pwszName;                             /** The name of the port (including the trailing colon). */
+    PLOCAL_PRINT_MONITOR pPrintMonitor;         /** The Print Monitor handling this port. */
+    PLOCAL_JOB pNextJobToProcess;               /** The Print Job that will be processed by the next created Port handle. */
+};
 
 /**
  * Describes a Print Processor.
  */
-typedef struct _LOCAL_PRINT_PROCESSOR
+struct _LOCAL_PRINT_PROCESSOR
 {
     LIST_ENTRY Entry;
     PWSTR pwszName;
@@ -90,14 +101,13 @@ typedef struct _LOCAL_PRINT_PROCESSOR
     PGetPrintProcessorCapabilities pfnGetPrintProcessorCapabilities;
     POpenPrintProcessor pfnOpenPrintProcessor;
     PPrintDocumentOnPrintProcessor pfnPrintDocumentOnPrintProcessor;
-}
-LOCAL_PRINT_PROCESSOR, *PLOCAL_PRINT_PROCESSOR;
+};
 
 /**
  * Describes a printer and manages its print jobs.
  * Created once for every printer at startup.
  */
-typedef struct _LOCAL_PRINTER
+struct _LOCAL_PRINTER
 {
     // This sort key must be the first element for LookupElementSkiplist to work!
     PWSTR pwszPrinterName;
@@ -111,14 +121,13 @@ typedef struct _LOCAL_PRINTER
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
     PLOCAL_PORT pPort;
     SKIPLIST JobList;
-}
-LOCAL_PRINTER, *PLOCAL_PRINTER;
+};
 
 /**
  * Describes an entire print job associated to a specific printer through the Printer member.
  * Created with every valid call to LocalStartDocPrinter.
  */
-typedef struct _LOCAL_JOB
+struct _LOCAL_JOB
 {
     // This sort key must be the first element for LookupElementSkiplist to work!
     DWORD dwJobID;                              /** Internal and external ID of this Job */
@@ -143,49 +152,60 @@ typedef struct _LOCAL_JOB
     DWORD dwStatus;                             /** JOB_STATUS_* flags of the Job */
     PWSTR pwszMachineName;                      /** Name of the machine that submitted the Job (prepended with two backslashes) */
     PDEVMODEW pDevMode;                         /** Associated Device Mode to this Job */
-}
-LOCAL_JOB, *PLOCAL_JOB;
+};
 
 /**
- * Describes a template for new print jobs for a specific printer.
- * Created with every valid call to LocalOpenPrinter.
- *
- * This is needed, because you can supply defaults in a LocalOpenPrinter call, which affect all subsequent print jobs
- * started with the same handle and a call to LocalStartDocPrinter.
+ * Specific handle returned by LocalOpenPrinter for every valid call that opens a Printer or Print Job.
  */
-typedef struct _LOCAL_PRINTER_HANDLE
+struct _LOCAL_PRINTER_HANDLE
 {
     BOOL bStartedDoc : 1;                       /** Whether StartDocPrinter has already been called. */
     HANDLE hSPLFile;                            /** Handle to an opened SPL file for Printer Job handles. */
-    PLOCAL_PRINTER pPrinter;
-    PLOCAL_JOB pJob;
-    PWSTR pwszDatatype;
-    PDEVMODEW pDevMode;
-}
-LOCAL_PRINTER_HANDLE, *PLOCAL_PRINTER_HANDLE;
+    PLOCAL_PRINTER pPrinter;                    /** Printer associated with this handle. */
+    PLOCAL_JOB pJob;                            /** Print Job associated with this handle. This can be the specified Job if this is a Print Job handle or the started job through LocalStartDocPrinter. */
+    PWSTR pwszDatatype;                         /** Datatype used for newly started jobs. */
+    PDEVMODEW pDevMode;                         /** DevMode used for newly started jobs. */
+};
+
+/**
+ * Specific handle returned by LocalOpenPrinter for every valid call that opens a Port.
+ */
+struct _LOCAL_PORT_HANDLE
+{
+    HANDLE hPort;                               /** Handle returned by pfnOpenPort. */
+    PLOCAL_PORT pPort;                          /** Port associated with this handle. */
+};
+
+/**
+ * Specific handle returned by LocalOpenPrinter for every valid call that opens an XcvMonitor or XcvPort.
+ */
+struct _LOCAL_XCV_HANDLE
+{
+    HANDLE hXcv;                                /** Handle returned by pfnXcvOpenPort. */
+    PLOCAL_PRINT_MONITOR pPrintMonitor;         /** Print Monitor associated with this handle. */
+};
 
 /**
  * Describes a handle returned by LocalOpenPrinter.
  * Suitable for all things that can be opened through LocalOpenPrinter.
  */
-typedef struct _LOCAL_HANDLE
+struct _LOCAL_HANDLE
 {
     enum {
-        HandleType_Port,
-        HandleType_Printer,
-        HandleType_Xcv
+        HandleType_Port,                        /** pSpecificHandle is a PLOCAL_PORT_HANDLE. */
+        HandleType_Printer,                     /** pSpecificHandle is a PLOCAL_PRINTER_HANDLE. */
+        HandleType_Xcv                          /** pSpecificHandle is a PLOCAL_XCV_HANDLE. */
     }
     HandleType;
     PVOID pSpecificHandle;
-}
-LOCAL_HANDLE, *PLOCAL_HANDLE;
+};
 
 /**
  * Describes the header of a print job serialized into a shadow file (.SHD)
  * Documented in http://www.undocprint.org/formats/winspool/shd
  * Compatible with Windows Server 2003
  */
-typedef struct _SHD_HEADER
+struct _SHD_HEADER
 {
     DWORD dwSignature;
     DWORD cbHeader;
@@ -215,8 +235,7 @@ typedef struct _SHD_HEADER
     DWORD dwUnknown5;
     DWORD offMachineName;
     DWORD dwSPLSize;
-}
-SHD_HEADER, *PSHD_HEADER;
+};
 
 // jobs.c
 extern SKIPLIST GlobalJobList;

@@ -48,6 +48,11 @@ PrintingThreadProc(PLOCAL_JOB pJob)
     OpenData.pParameters = pJob->pwszPrintProcessorParameters;
     OpenData.pPrinterName = pJob->pPrinter->pwszPrinterName;
 
+    // Associate our job to the port. The next port handle created through LocalOpenPrinter will pick this up.
+    // LocalStartDocPrinter needs this information to call StartDocPort of the Print Monitor, but as the parameters
+    // for LocalOpenPrinter and LocalStartDocPrinter are fixed, we can only pass over the information this way.
+    pJob->pPrinter->pPort->pNextJobToProcess = pJob;
+
     // Open a handle to the Print Processor.
     hPrintProcessor = pPrintProcessor->pfnOpenPrintProcessor(pwszPrinterPort, &OpenData);
     if (!hPrintProcessor)
