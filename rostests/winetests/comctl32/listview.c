@@ -179,6 +179,16 @@ static const struct message listview_ownerdata_switchto_seq[] = {
 static const struct message listview_getorderarray_seq[] = {
     { LVM_GETCOLUMNORDERARRAY, sent|id|wparam, 2, 0, LISTVIEW_ID },
     { HDM_GETORDERARRAY,       sent|id|wparam, 2, 0, HEADER_ID },
+    { LVM_GETCOLUMNORDERARRAY, sent|id|wparam, 0, 0, LISTVIEW_ID },
+    { HDM_GETORDERARRAY,       sent|id|wparam, 0, 0, HEADER_ID },
+    { 0 }
+};
+
+static const struct message listview_setorderarray_seq[] = {
+    { LVM_SETCOLUMNORDERARRAY, sent|id|wparam, 2, 0, LISTVIEW_ID },
+    { HDM_SETORDERARRAY,       sent|id|wparam, 2, 0, HEADER_ID },
+    { LVM_SETCOLUMNORDERARRAY, sent|id|wparam, 0, 0, LISTVIEW_ID },
+    { HDM_SETORDERARRAY,       sent|id|wparam, 0, 0, HEADER_ID },
     { 0 }
 };
 
@@ -1416,12 +1426,27 @@ static void test_items(void)
 
 static void test_columns(void)
 {
-    HWND hwnd;
+    HWND hwnd, header;
     LVCOLUMNA column;
     LVITEMA item;
     INT order[2];
     CHAR buff[5];
     DWORD rc;
+
+    hwnd = CreateWindowExA(0, "SysListView32", "foo", LVS_LIST,
+                10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
+    ok(hwnd != NULL, "failed to create listview window\n");
+
+    header = (HWND)SendMessageA(hwnd, LVM_GETHEADER, 0, 0);
+    ok(header == NULL, "got %p\n", header);
+
+    rc = SendMessageA(hwnd, LVM_GETCOLUMNORDERARRAY, 2, (LPARAM)&order);
+    ok(rc == 0, "got %d\n", rc);
+
+    header = (HWND)SendMessageA(hwnd, LVM_GETHEADER, 0, 0);
+    ok(header == NULL, "got %p\n", header);
+
+    DestroyWindow(hwnd);
 
     hwnd = CreateWindowExA(0, "SysListView32", "foo", LVS_REPORT,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
@@ -1460,7 +1485,23 @@ static void test_columns(void)
     ok(order[0] == 0, "Expected order 0, got %d\n", order[0]);
     ok(order[1] == 1, "Expected order 1, got %d\n", order[1]);
 
+    rc = SendMessageA(hwnd, LVM_GETCOLUMNORDERARRAY, 0, 0);
+    expect(0, rc);
+
     ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_getorderarray_seq, "get order array", FALSE);
+
+    /* LVM_SETCOLUMNORDERARRAY */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    order[0] = 0;
+    order[1] = 1;
+    rc = SendMessageA(hwnd, LVM_SETCOLUMNORDERARRAY, 2, (LPARAM)&order);
+    expect(1, rc);
+
+    rc = SendMessageA(hwnd, LVM_SETCOLUMNORDERARRAY, 0, 0);
+    expect(0, rc);
+
+    ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_setorderarray_seq, "set order array", FALSE);
 
     /* after column added subitem is considered as present */
     insert_item(hwnd, 0);
@@ -3877,7 +3918,6 @@ static void test_getitemrect(void)
     LVCOLUMNA col;
     INT order[2];
     POINT pt;
-    HDC hdc;
 
     /* rectangle isn't empty for empty text items */
     hwnd = create_listview_control(LVS_LIST);
@@ -3891,9 +3931,9 @@ static void test_getitemrect(void)
     expect(TRUE, r);
     expect(0, rect.left);
     expect(0, rect.top);
-    hdc = GetDC(hwnd);
-    todo_wine expect(((GetDeviceCaps(hdc, LOGPIXELSX) + 15) / 16) * 16, rect.right);
-    ReleaseDC(hwnd, hdc);
+    /* estimate it as width / height ratio */
+todo_wine
+    ok((rect.right / rect.bottom) >= 5, "got right %d, bottom %d\n", rect.right, rect.bottom);
     DestroyWindow(hwnd);
 
     hwnd = create_listview_control(LVS_REPORT);
@@ -4557,6 +4597,12 @@ static void test_get_set_view(void)
     style = GetWindowLongPtrA(hwnd, GWL_STYLE);
     ok(style & LVS_LIST, "Expected style to be preserved\n");
 
+    /* now change window style to see if view is remapped */
+    style = GetWindowLongPtrA(hwnd, GWL_STYLE);
+    SetWindowLongPtrA(hwnd, GWL_STYLE, style | LVS_SHOWSELALWAYS);
+    ret = SendMessageA(hwnd, LVM_GETVIEW, 0, 0);
+    expect(LV_VIEW_SMALLICON, ret);
+
     DestroyWindow(hwnd);
 }
 
@@ -4789,6 +4835,36 @@ static void test_getitemspacing(void)
     DestroyWindow(hwnd);
 }
 
+static INT get_current_font_height(HWND listview)
+{
+    TEXTMETRICA tm;
+    HFONT hfont;
+    HWND hwnd;
+    HDC hdc;
+
+    hwnd = (HWND)SendMessageA(listview, LVM_GETHEADER, 0, 0);
+    if (!hwnd)
+        hwnd = listview;
+
+    hfont = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
+    if (!hfont) {
+        hdc = GetDC(hwnd);
+        GetTextMetricsA(hdc, &tm);
+        ReleaseDC(hwnd, hdc);
+    }
+    else {
+        HFONT oldfont;
+
+        hdc = GetDC(0);
+        oldfont = SelectObject(hdc, hfont);
+        GetTextMetricsA(hdc, &tm);
+        SelectObject(hdc, oldfont);
+        ReleaseDC(0, hdc);
+    }
+
+    return tm.tmHeight;
+}
+
 static void test_getcolumnwidth(void)
 {
     HWND hwnd;
@@ -4796,7 +4872,7 @@ static void test_getcolumnwidth(void)
     DWORD_PTR style;
     LVCOLUMNA col;
     LVITEMA itema;
-    HDC hdc;
+    INT height;
 
     /* default column width */
     hwnd = create_listview_control(LVS_ICON);
@@ -4820,9 +4896,8 @@ static void test_getcolumnwidth(void)
     memset(&itema, 0, sizeof(itema));
     SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&itema);
     ret = SendMessageA(hwnd, LVM_GETCOLUMNWIDTH, 0, 0);
-    hdc = GetDC(hwnd);
-    todo_wine expect(((GetDeviceCaps(hdc, LOGPIXELSX) + 15) / 16) * 16, ret);
-    ReleaseDC(hwnd, hdc);
+    height = get_current_font_height(hwnd);
+    ok((ret / height) >= 6, "got width %d, height %d\n", ret, height);
     DestroyWindow(hwnd);
 }
 
@@ -5106,10 +5181,18 @@ static void test_LVS_EX_HEADERINALLVIEWS(void)
 
 static void test_hover(void)
 {
-    HWND hwnd;
+    HWND hwnd, fg;
     DWORD r;
 
     hwnd = create_listview_control(LVS_ICON);
+    SetForegroundWindow(hwndparent);
+    fg = GetForegroundWindow();
+    if (fg != hwndparent)
+    {
+        skip("Window is not in the foreground. Skipping hover tests.\n");
+        DestroyWindow(hwnd);
+        return;
+    }
 
     /* test WM_MOUSEHOVER forwarding */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -5641,6 +5724,30 @@ static void test_insertitem(void)
     DestroyWindow(hwnd);
 }
 
+static void test_header_proc(void)
+{
+    HWND hwnd, header, hdr;
+    WNDPROC proc1, proc2;
+
+    hwnd = create_listview_control(LVS_REPORT);
+
+    header = (HWND)SendMessageA(hwnd, LVM_GETHEADER, 0, 0);
+    ok(header != NULL, "got %p\n", header);
+
+    hdr = CreateWindowExA(0, WC_HEADERA, NULL,
+			     WS_BORDER|WS_VISIBLE|HDS_BUTTONS|HDS_HORZ,
+			     0, 0, 0, 0,
+			     NULL, NULL, NULL, NULL);
+    ok(hdr != NULL, "got %p\n", hdr);
+
+    proc1 = (WNDPROC)GetWindowLongPtrW(header, GWLP_WNDPROC);
+    proc2 = (WNDPROC)GetWindowLongPtrW(hdr, GWLP_WNDPROC);
+    ok(proc1 == proc2, "got %p, expected %p\n", proc1, proc2);
+
+    DestroyWindow(hdr);
+    DestroyWindow(hwnd);
+}
+
 START_TEST(listview)
 {
     HMODULE hComctl32;
@@ -5709,6 +5816,7 @@ START_TEST(listview)
     test_imagelists();
     test_deleteitem();
     test_insertitem();
+    test_header_proc();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
@@ -5726,6 +5834,7 @@ START_TEST(listview)
     test_deleteitem();
     test_multiselect();
     test_insertitem();
+    test_header_proc();
 
     unload_v6_module(ctx_cookie, hCtx);
 

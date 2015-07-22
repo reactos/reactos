@@ -54,6 +54,40 @@ static const struct message ttgetdispinfo_parent_seq[] = {
     { 0 }
 };
 
+static const struct message save_parent_seq[] = {
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_SAVE, -1 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_SAVE, 0 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_SAVE, 1 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_SAVE, 2 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_SAVE, 3 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_SAVE, 4 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_SAVE, 5 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_SAVE, 6 },
+    { 0 }
+};
+
+static const struct message restore_parent_seq[] = {
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, -1 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 0 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 1 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 2 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 3 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 4 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 5 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 6 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 7 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 8 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 9 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_RESTORE, 0xa },
+    { WM_NOTIFY, sent|id, 0, 0, TBN_BEGINADJUST },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_GETBUTTONINFOA, 0 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_GETBUTTONINFOA, 1 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_GETBUTTONINFOA, 2 },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, TBN_GETBUTTONINFOA, 3 },
+    { WM_NOTIFY, sent|id, 0, 0, TBN_ENDADJUST },
+    { 0 }
+};
+
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
 
@@ -92,6 +126,8 @@ static void MakeButton(TBBUTTON *p, int idCommand, int fsStyle, int nString) {
   p->fsStyle = fsStyle;
   p->iString = nString;
 }
+
+static void *alloced_str;
 
 static LRESULT parent_wnd_notify(LPARAM lParam)
 {
@@ -133,6 +169,135 @@ static LRESULT parent_wnd_notify(LPARAM lParam)
             compare(nmdisp->dwMask, g_dwExpectedDispInfoMask, "%x");
             ok(nmdisp->pszText == NULL, "pszText is not NULL\n");
         break;
+        case TBN_SAVE:
+        {
+            NMTBSAVE *save = (NMTBSAVE *)lParam;
+            if (save->iItem == -1)
+            {
+                save->cbData = save->cbData * 2 + 11 * sizeof(DWORD);
+                save->pData = HeapAlloc( GetProcessHeap(), 0, save->cbData );
+                save->pData[0] = 0xcafe;
+                save->pCurrent = save->pData + 1;
+            }
+            else
+            {
+                save->pCurrent[0] = 0xcafe0000 + save->iItem;
+                save->pCurrent++;
+            }
+
+            /* Add on 5 more pseudo buttons. */
+            if (save->iItem == save->cButtons - 1)
+            {
+                save->pCurrent[0] = 0xffffffff;
+                save->pCurrent[1] = 0xcafe0007;
+                save->pCurrent[2] = 0xfffffffe;
+                save->pCurrent[3] = 0xcafe0008;
+                save->pCurrent[4] = 0x80000000;
+                save->pCurrent[5] = 0xcafe0009;
+                save->pCurrent[6] = 0x7fffffff;
+                save->pCurrent[7] = 0xcafe000a;
+                save->pCurrent[8] = 0x100;
+                save->pCurrent[9] = 0xcafe000b;
+            }
+
+            /* Return value is ignored */
+            return 1;
+        }
+        case TBN_RESTORE:
+        {
+            NMTBRESTORE *restore = (NMTBRESTORE *)lParam;
+
+            if (restore->iItem == -1)
+            {
+                ok( restore->cButtons == 25, "got %d\n", restore->cButtons );
+                ok( *restore->pCurrent == 0xcafe, "got %08x\n", *restore->pCurrent );
+                /* Skip the last one */
+                restore->cButtons = 11;
+                restore->pCurrent++;
+                /* BytesPerRecord is ignored */
+                restore->cbBytesPerRecord = 10;
+            }
+            else
+            {
+                ok( *restore->pCurrent == 0xcafe0000 + restore->iItem, "got %08x\n", *restore->pCurrent );
+                if (restore->iItem < 7 || restore->iItem == 10)
+                {
+                    ok( restore->tbButton.iBitmap == -1, "got %08x\n", restore->tbButton.iBitmap );
+                    if (restore->iItem < 7)
+                        ok( restore->tbButton.idCommand == restore->iItem * 2 + 1, "%d: got %08x\n", restore->iItem, restore->tbButton.idCommand );
+                    else
+                        ok( restore->tbButton.idCommand == 0x7fffffff, "%d: got %08x\n", restore->iItem, restore->tbButton.idCommand );
+                    ok( restore->tbButton.fsState == 0, "%d: got %02x\n", restore->iItem, restore->tbButton.fsState );
+                    ok( restore->tbButton.fsStyle == 0, "%d: got %02x\n", restore->iItem, restore->tbButton.fsStyle );
+                }
+                else
+                {
+                    ok( restore->tbButton.iBitmap == 8, "got %08x\n", restore->tbButton.iBitmap );
+                    ok( restore->tbButton.idCommand == 0, "%d: got %08x\n", restore->iItem, restore->tbButton.idCommand );
+                    if (restore->iItem == 7)
+                        ok( restore->tbButton.fsState == 0, "%d: got %02x\n", restore->iItem, restore->tbButton.fsState );
+                    else
+                        ok( restore->tbButton.fsState == TBSTATE_HIDDEN, "%d: got %02x\n", restore->iItem, restore->tbButton.fsState );
+                    ok( restore->tbButton.fsStyle == BTNS_SEP, "%d: got %02x\n", restore->iItem, restore->tbButton.fsStyle );
+                }
+
+                ok( restore->tbButton.dwData == 0, "got %08lx\n", restore->tbButton.dwData );
+                ok( restore->tbButton.iString == 0, "got %08lx\n", restore->tbButton.iString );
+
+                restore->tbButton.iBitmap = 0;
+                restore->tbButton.fsState = TBSTATE_ENABLED;
+                restore->tbButton.fsStyle = 0;
+                restore->tbButton.dwData = restore->iItem;
+
+                if (restore->iItem == 0)
+                {
+                    restore->tbButton.iString = (INT_PTR)HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 8 );
+                    strcpy( (char *)restore->tbButton.iString, "foo" );
+                }
+                else if (restore->iItem == 1)
+                    restore->tbButton.iString = 2;
+                else
+                    restore->tbButton.iString = -1;
+
+                restore->pCurrent++;
+                /* Altering cButtons after the 1st call makes no difference. */
+                restore->cButtons--;
+            }
+
+            /* Returning non-zero from the 1st call aborts the restore,
+               otherwise the return value is ignored. */
+            if (restore->iItem == -1) return 0;
+            return 1;
+        }
+        case TBN_GETBUTTONINFOA:
+        {
+            NMTOOLBARA *tb = (NMTOOLBARA *)lParam;
+            tb->tbButton.iBitmap = 0;
+            tb->tbButton.fsState = 0;
+            tb->tbButton.fsStyle = 0;
+            tb->tbButton.dwData = 0;
+            ok( tb->cchText == 128, "got %d\n", tb->cchText );
+            switch (tb->iItem)
+            {
+            case 0:
+                tb->tbButton.idCommand = 7;
+                alloced_str = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 8 );
+                strcpy( alloced_str, "foo" );
+                tb->tbButton.iString = (INT_PTR)alloced_str;
+                return 1;
+            case 1:
+                tb->tbButton.idCommand = 9;
+                tb->tbButton.iString = 0;
+                /* tb->pszText is ignored */
+                strcpy( tb->pszText, "foo" );
+                return 1;
+           case 2:
+                tb->tbButton.idCommand = 11;
+                tb->tbButton.iString = 3;
+                return 1;
+            }
+            return 0;
+        }
     }
     return 0;
 }
@@ -148,7 +313,31 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
-    if (message == WM_NOTIFY && lParam) msg.id = ((NMHDR*)lParam)->code;
+    if (message == WM_NOTIFY && lParam)
+    {
+        msg.id = ((NMHDR*)lParam)->code;
+        switch (msg.id)
+        {
+        case TBN_SAVE:
+        {
+            NMTBSAVE *save = (NMTBSAVE *)lParam;
+            msg.stage = save->iItem;
+        }
+        break;
+        case TBN_RESTORE:
+        {
+            NMTBRESTORE *restore = (NMTBRESTORE *)lParam;
+            msg.stage = restore->iItem;
+        }
+        break;
+        case TBN_GETBUTTONINFOA:
+        {
+            NMTOOLBARA *tb = (NMTOOLBARA *)lParam;
+            msg.stage = tb->iItem;
+        }
+        break;
+        }
+    }
 
     /* log system messages, except for painting */
     if (message < WM_USER &&
@@ -748,7 +937,7 @@ static void tbsize_addbutton(tbsize_result_t *tbsr, int left, int top, int right
 
 static tbsize_result_t *tbsize_results;
 
-#define tbsize_results_num 24
+#define tbsize_results_num 28
 
 static void init_tbsize_results(void) {
     int fontheight = system_font_height();
@@ -991,6 +1180,18 @@ static void init_tbsize_results(void) {
     tbsize_results[23] = init_tbsize_result(2, 0, 0, 672, 42, 67, 41);
     tbsize_addbutton(&tbsize_results[23],   0,   2, 672,  25 + fontheight);
     tbsize_addbutton(&tbsize_results[23],   0,  25 + fontheight, 672,  48 + 2*fontheight);
+
+    tbsize_results[24] = init_tbsize_result(1, 0, 0, 672, 42, 67, 40);
+    tbsize_addbutton(&tbsize_results[24],   0,   2,  11 + string_width(STRING2),  24);
+
+    tbsize_results[25] = init_tbsize_result(1, 0, 0, 672, 42, 67, 40);
+    tbsize_addbutton(&tbsize_results[25],   0,   2,  40,  24);
+
+    tbsize_results[26] = init_tbsize_result(1, 0, 0, 672, 42, 67, 40);
+    tbsize_addbutton(&tbsize_results[26],   0,   2,  40,  24);
+
+    tbsize_results[27] = init_tbsize_result(1, 0, 0, 672, 42, 67, 40);
+    tbsize_addbutton(&tbsize_results[27],   0,   2,  40,  24);
 }
 
 static void free_tbsize_results(void) {
@@ -1062,12 +1263,18 @@ static TBBUTTON buttons3[] = {
     {0, 32, TBSTATE_ENABLED, BTNS_AUTOSIZE, {0, }, 0, 1},
     {0, 33, TBSTATE_ENABLED, BTNS_AUTOSIZE, {0, }, 0, (UINT_PTR)STRING2}
 };
+static TBBUTTON buttons4[] = {
+    {0, 40, TBSTATE_ENABLED, BTNS_AUTOSIZE, {0, }, 0, (UINT_PTR)STRING2},
+    {0, 41, TBSTATE_ENABLED, 0, {0, }, 0, (UINT_PTR)STRING2},
+    {0, 41, TBSTATE_ENABLED, BTNS_SHOWTEXT, {0, }, 0, (UINT_PTR)STRING2}
+};
 
 static void test_sizes(void)
 {
     HWND hToolbar = NULL;
     HIMAGELIST himl, himl2;
     TBBUTTONINFOA tbinfo;
+    TBBUTTON button;
     int style;
     int i;
     int fontheight = system_font_height();
@@ -1083,9 +1290,13 @@ static void test_sizes(void)
     check_sizes();
     SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0);
     check_sizes();
+    SendMessageA(hToolbar, TB_GETBUTTON, 5, (LPARAM)&button);
+    ok(button.fsState == (TBSTATE_WRAP|TBSTATE_ENABLED), "got %08x\n", button.fsState);
     /* after setting the TBSTYLE_WRAPABLE the TBSTATE_WRAP is ignored */
     SetWindowLongA(hToolbar, GWL_STYLE, style|TBSTYLE_WRAPABLE);
     check_sizes();
+    SendMessageA(hToolbar, TB_GETBUTTON, 5, (LPARAM)&button);
+    ok(button.fsState == TBSTATE_ENABLED, "got %08x\n", button.fsState);
     /* adding new buttons with TBSTYLE_WRAPABLE doesn't add a new row */
     SendMessageA(hToolbar, TB_ADDBUTTONSA, 2, (LPARAM)buttons1);
     check_sizes();
@@ -1094,6 +1305,11 @@ static void test_sizes(void)
     for (i=0; i<15; i++)
         SendMessageA(hToolbar, TB_ADDBUTTONSA, 2, (LPARAM)buttons1);
     check_sizes_todo(0x4);
+    SendMessageA(hToolbar, TB_GETBUTTON, 31, (LPARAM)&button);
+    ok(button.fsState == (TBSTATE_WRAP|TBSTATE_ENABLED), "got %08x\n", button.fsState);
+    SetWindowLongA(hToolbar, GWL_STYLE, style);
+    SendMessageA(hToolbar, TB_GETBUTTON, 31, (LPARAM)&button);
+    ok(button.fsState == TBSTATE_ENABLED, "got %08x\n", button.fsState);
 
     rebuild_toolbar_with_buttons(&hToolbar);
     SendMessageA(hToolbar, TB_ADDBUTTONSA, 2, (LPARAM)buttons1);
@@ -1300,7 +1516,40 @@ static void test_sizes(void)
     {
         tbinfo.dwMask = TBIF_SIZE;
         ok(SendMessageA(hToolbar, TB_SETBUTTONINFOA, 33, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFOA failed\n");
+        tbsize_numtests++;
     }
+
+    /* Single BTNS_AUTOSIZE button with string. */
+    rebuild_toolbar(&hToolbar);
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONSA, 1, (LPARAM)&buttons4[0]) == 1, "TB_ADDBUTTONSA failed\n");
+    ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(40, 20)) == 1, "TB_SETBUTTONSIZE failed\n");
+    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );
+    check_sizes();
+
+    /* Single non-BTNS_AUTOSIZE button with string. */
+    rebuild_toolbar(&hToolbar);
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONSA, 1, (LPARAM)&buttons4[1]) == 1, "TB_ADDBUTTONSA failed\n");
+    ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(40, 20)) == 1, "TB_SETBUTTONSIZE failed\n");
+    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );
+    check_sizes();
+
+    /* Single non-BTNS_AUTOSIZE button with string with TBSTYLE_EX_MIXEDBUTTONS set. */
+    rebuild_toolbar(&hToolbar);
+    SendMessageA(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+    style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONSA, 1, (LPARAM)&buttons4[1]) == 1, "TB_ADDBUTTONSA failed\n");
+    ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(40, 20)) == 1, "TB_SETBUTTONSIZE failed\n");
+    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );
+    check_sizes();
+
+    /* Single non-BTNS_AUTOSIZE, BTNS_SHOWTEXT button with string with TBSTYLE_EX_MIXEDBUTTONS set. */
+    rebuild_toolbar(&hToolbar);
+    SendMessageA(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+    style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONSA, 1, (LPARAM)&buttons4[2]) == 1, "TB_ADDBUTTONSA failed\n");
+    ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(40, 20)) == 1, "TB_SETBUTTONSIZE failed\n");
+    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );
+    check_sizes();
 
     free_tbsize_results();
     DestroyWindow(hToolbar);
@@ -1338,12 +1587,12 @@ static void restore_recalc_state(HWND hToolbar)
     RECT rect;
     /* return to style with a 2px top margin */
     SetWindowLongA(hToolbar, GWL_STYLE,
-        GetWindowLongA(hToolbar, GWL_STYLE) & ~TBSTYLE_FLAT);
+                   SendMessageA(hToolbar, TB_GETSTYLE, 0, 0) & ~TBSTYLE_FLAT);
     /* recalc */
     SendMessageA(hToolbar, TB_ADDBUTTONSA, 1, (LPARAM)&buttons3[3]);
     /* top margin will be 0px if a recalc occurs */
     SetWindowLongA(hToolbar, GWL_STYLE,
-        GetWindowLongA(hToolbar, GWL_STYLE) | TBSTYLE_FLAT);
+                   SendMessageA(hToolbar, TB_GETSTYLE, 0, 0) | TBSTYLE_FLAT);
     /* safety check */
     SendMessageA(hToolbar, TB_GETITEMRECT, 1, (LPARAM)&rect);
     ok(rect.top == 2, "Test will make no sense because initial top is %d instead of 2\n",
@@ -1358,6 +1607,7 @@ static void test_recalc(void)
     const int EX_STYLES_COUNT = 5;
     int i;
     BOOL recalc;
+    DWORD style;
 
     /* Like TB_ADDBUTTONSA tested in test_sized, inserting a button without text
      * results in a relayout, while adding one with text forces a recalc */
@@ -1417,6 +1667,47 @@ static void test_recalc(void)
 
     /* undocumented exstyle 0x2 seems to change the top margin, which
      * interferes with these tests */
+
+    /* Show that a change in TBSTYLE_WRAPABLE causes a recalc */
+    prepare_recalc_test(&hToolbar);
+    style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
+    SendMessageA(hToolbar, TB_SETSTYLE, 0, style);
+    recalc = did_recalc(hToolbar);
+    ok(!recalc, "recalc %d\n", recalc);
+
+    SendMessageA(hToolbar, TB_SETSTYLE, 0, style | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | CCS_BOTTOM);
+    recalc = did_recalc(hToolbar);
+    ok(!recalc, "recalc %d\n", recalc);
+
+    SendMessageA(hToolbar, TB_SETSTYLE, 0, style | TBSTYLE_WRAPABLE);
+    recalc = did_recalc(hToolbar);
+    ok(recalc, "recalc %d\n", recalc);
+    restore_recalc_state(hToolbar);
+
+    SendMessageA(hToolbar, TB_SETSTYLE, 0, style | TBSTYLE_WRAPABLE);
+    recalc = did_recalc(hToolbar);
+    ok(!recalc, "recalc %d\n", recalc);
+
+    SendMessageA(hToolbar, TB_SETSTYLE, 0, style);
+    recalc = did_recalc(hToolbar);
+    ok(recalc, "recalc %d\n", recalc);
+    restore_recalc_state(hToolbar);
+
+    /* Changing CCS_VERT does not recalc */
+    SendMessageA(hToolbar, TB_SETSTYLE, 0, style | CCS_VERT);
+    recalc = did_recalc(hToolbar);
+    ok(!recalc, "recalc %d\n", recalc);
+    restore_recalc_state(hToolbar);
+
+    SendMessageA(hToolbar, TB_SETSTYLE, 0, style);
+    recalc = did_recalc(hToolbar);
+    ok(!recalc, "recalc %d\n", recalc);
+    restore_recalc_state(hToolbar);
+
+    /* Setting the window's style directly also causes recalc */
+    SetWindowLongA(hToolbar, GWL_STYLE, style | TBSTYLE_WRAPABLE);
+    recalc = did_recalc(hToolbar);
+    ok(recalc, "recalc %d\n", recalc);
 
     DestroyWindow(hToolbar);
 }
@@ -1917,9 +2208,159 @@ static void test_TB_GET_SET_EXTENDEDSTYLE(void)
     ok(style == TBSTYLE_EX_VERTICAL, "got style 0x%08x, expected 0x%08x\n", style, TBSTYLE_EX_VERTICAL);
     style = SendMessageA(hwnd, TB_GETSTYLE, 0, 0);
  todo_wine
-    ok(style == CCS_VERT, "got style 0x%08x, expected 0x%08x\n", style, CCS_VERT);
+    ok(style == CCS_VERT, "got style 0x%08x, expected CCS_VERT\n", style);
 
     DestroyWindow(hwnd);
+}
+
+static void test_noresize(void)
+{
+    HWND wnd;
+    int i;
+    TBBUTTON button = {0, 10, TBSTATE_ENABLED, 0, {0, }, 0, -1};
+
+    wnd = CreateWindowExA(0, TOOLBARCLASSNAMEA, NULL, WS_CHILD | WS_VISIBLE | CCS_NORESIZE | TBSTYLE_WRAPABLE, 0, 0, 100, 20,
+                          hMainWnd, (HMENU)5, GetModuleHandleA(NULL), NULL);
+    SendMessageA(wnd, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+
+    for (i=0; i<30; i++)
+    {
+        button.idCommand = 10 + i;
+        SendMessageA(wnd, TB_ADDBUTTONSA, 1, (LPARAM)&button);
+    }
+
+    SendMessageA(wnd, TB_SETSTATE, 10, TBSTATE_WRAP|TBSTATE_ENABLED);
+
+    /* autosize clears the wrap on button 0 */
+    SendMessageA(wnd, TB_AUTOSIZE, 0, 0);
+    for (i=0; i<30; i++)
+    {
+        SendMessageA(wnd, TB_GETBUTTON, i, (LPARAM)&button);
+        if (i % 4 == 3)
+            ok(button.fsState == (TBSTATE_WRAP|TBSTATE_ENABLED), "%d: got %08x\n", i, button.fsState);
+        else
+            ok(button.fsState == TBSTATE_ENABLED, "%d: got %08x\n", i, button.fsState);
+    }
+
+    /* changing the parent doesn't do anything */
+    MoveWindow(hMainWnd, 0,0, 400, 200, FALSE);
+    for (i=0; i<30; i++)
+    {
+        SendMessageA(wnd, TB_GETBUTTON, i, (LPARAM)&button);
+        if (i % 4 == 3)
+            ok(button.fsState == (TBSTATE_WRAP|TBSTATE_ENABLED), "%d: got %08x\n", i, button.fsState);
+        else
+            ok(button.fsState == TBSTATE_ENABLED, "%d: got %08x\n", i, button.fsState);
+    }
+
+    /* again nothing here */
+    SendMessageA(wnd, TB_AUTOSIZE, 0, 0);
+    for (i=0; i<30; i++)
+    {
+        SendMessageA(wnd, TB_GETBUTTON, i, (LPARAM)&button);
+        if (i % 4 == 3)
+            ok(button.fsState == (TBSTATE_WRAP|TBSTATE_ENABLED), "%d: got %08x\n", i, button.fsState);
+        else
+            ok(button.fsState == TBSTATE_ENABLED, "%d: got %08x\n", i, button.fsState);
+    }
+
+    DestroyWindow(wnd);
+
+}
+
+static void test_save(void)
+{
+    HWND wnd = NULL;
+    TBSAVEPARAMSW params;
+    static const WCHAR subkey[] = {'S','o','f','t','w','a','r','e','\\','W','i','n','e','T','e','s','t',0};
+    static const WCHAR value[] = {'t','o','o','l','b','a','r','t','e','s','t',0};
+    LONG res;
+    HKEY key;
+    BYTE data[100];
+    DWORD size = sizeof(data), type, i, count;
+    TBBUTTON tb;
+    static const TBBUTTON more_btns[2] =
+        {
+            {0, 11, TBSTATE_HIDDEN, BTNS_BUTTON, {0}, 0, -1},
+            {0, 13, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, -1}
+        };
+    static const DWORD expect[] = {0xcafe, 1, 0xcafe0000, 3, 0xcafe0001, 5, 0xcafe0002, 7, 0xcafe0003,
+                                   9, 0xcafe0004, 11, 0xcafe0005, 13, 0xcafe0006, 0xffffffff, 0xcafe0007,
+                                   0xfffffffe, 0xcafe0008, 0x80000000, 0xcafe0009, 0x7fffffff, 0xcafe000a,
+                                   0x100, 0xcafe000b};
+    static const TBBUTTON expect_btns[] =
+    {
+        {0, 1, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
+        {0, 3, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 1, 2},
+        {0, 5, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 2, 0},
+        {0, 7, 0, BTNS_BUTTON, {0}, 0, (INT_PTR)"foo"},
+        {0, 9, 0, BTNS_BUTTON, {0}, 0, 0},
+        {0, 11, 0, BTNS_BUTTON, {0}, 0, 3},
+        {0, 13, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 6, 0},
+        {0, 0, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 7, 0},
+        {0, 0, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 8, 0},
+        {0, 0, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 9, 0},
+        {0, 0x7fffffff, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0xa, 0},
+    };
+
+    params.hkr = HKEY_CURRENT_USER;
+    params.pszSubKey = subkey;
+    params.pszValueName = value;
+
+    rebuild_toolbar_with_buttons( &wnd );
+    SendMessageW( wnd, TB_ADDBUTTONSW, sizeof(more_btns) / sizeof(more_btns[0]), (LPARAM)more_btns );
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    res = SendMessageW( wnd, TB_SAVERESTOREW, TRUE, (LPARAM)&params );
+    ok( res, "saving failed\n" );
+    ok_sequence(sequences, PARENT_SEQ_INDEX, save_parent_seq, "save", FALSE);
+    DestroyWindow( wnd );
+
+    res = RegOpenKeyW( HKEY_CURRENT_USER, subkey, &key );
+    ok( !res, "got %08x\n", res );
+    res = RegQueryValueExW( key, value, NULL, &type, data, &size );
+    ok( !res, "got %08x\n", res );
+    ok( type == REG_BINARY, "got %08x\n", type );
+    ok( size == sizeof(expect), "got %08x\n", size );
+    ok( !memcmp( data, expect, size ), "mismatch\n" );
+
+    RegCloseKey( key );
+
+    wnd = NULL;
+    rebuild_toolbar( &wnd );
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    res = SendMessageW( wnd, TB_SAVERESTOREW, FALSE, (LPARAM)&params );
+    ok( res, "restoring failed\n" );
+    ok_sequence(sequences, PARENT_SEQ_INDEX, restore_parent_seq, "restore", FALSE);
+    count = SendMessageW( wnd, TB_BUTTONCOUNT, 0, 0 );
+    ok( count == sizeof(expect_btns) / sizeof(expect_btns[0]), "got %d\n", count );
+
+    for (i = 0; i < count; i++)
+    {
+        res = SendMessageW( wnd, TB_GETBUTTON, i, (LPARAM)&tb );
+        ok( res, "got %d\n", res );
+
+        ok( tb.iBitmap == expect_btns[i].iBitmap, "%d: got %d\n", i, tb.iBitmap );
+        ok( tb.idCommand == expect_btns[i].idCommand, "%d: got %d\n", i, tb.idCommand );
+        ok( tb.fsState == expect_btns[i].fsState, "%d: got %02x\n", i, tb.fsState );
+        ok( tb.fsStyle == expect_btns[i].fsStyle, "%d: got %02x\n", i, tb.fsStyle );
+        ok( tb.dwData == expect_btns[i].dwData, "%d: got %lx\n", i, tb.dwData );
+        if (IS_INTRESOURCE(expect_btns[i].iString))
+            ok( tb.iString == expect_btns[i].iString, "%d: got %lx\n", i, tb.iString );
+        else
+            ok( !strcmp( (char *)tb.iString, (char *)expect_btns[i].iString ),
+                "%d: got %s\n", i, (char *)tb.iString );
+
+        /* In fact the ptr value set in TBN_GETBUTTONINFOA is simply copied */
+        if (tb.idCommand == 7)
+            ok( tb.iString == (INT_PTR)alloced_str, "string not set\n");
+    }
+
+    DestroyWindow( wnd );
+    RegOpenKeyW( HKEY_CURRENT_USER, subkey, &key );
+    RegDeleteValueW( key, value );
+    RegCloseKey( key );
 }
 
 START_TEST(toolbar)
@@ -1964,6 +2405,8 @@ START_TEST(toolbar)
     test_get_set_style();
     test_create();
     test_TB_GET_SET_EXTENDEDSTYLE();
+    test_noresize();
+    test_save();
 
     PostQuitMessage(0);
     while(GetMessageA(&msg,0,0,0)) {

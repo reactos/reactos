@@ -19,6 +19,7 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -226,12 +227,91 @@ static const struct message parent_expand_empty_kb_seq[] = {
     { 0 }
 };
 
-static const struct message parent_singleexpand_seq[] = {
+static const struct message parent_singleexpand_seq0[] = {
+    /* alpha expands */
     { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
     { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
     { WM_NOTIFY, sent|id, 0, 0, TVN_SINGLEEXPAND },
     { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
     { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { 0 }
+};
+
+static const struct message parent_singleexpand_seq1[] = {
+    /* bravo expands */
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SINGLEEXPAND },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { 0 }
+};
+
+static const struct message parent_singleexpand_seq2[] = {
+    /* delta expands, bravo collapses */
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SINGLEEXPAND },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { 0 }
+};
+
+static const struct message parent_singleexpand_seq3[] = {
+    /* foxtrot expands, alpha and delta collapse */
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SINGLEEXPAND },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { 0 }
+};
+
+static const struct message parent_singleexpand_seq4[] = {
+    /* alpha expands, foxtrot collapses */
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SINGLEEXPAND },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { 0 }
+};
+
+static const struct message parent_singleexpand_seq5[] = {
+    /* foxtrot expands while golf is selected, then golf expands and alpha collapses */
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SINGLEEXPAND },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { 0 }
+};
+
+static const struct message parent_singleexpand_seq6[] = {
+    /* hotel does not expand and india does not collapse because they have no children */
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SINGLEEXPAND },
+    { 0 }
+};
+
+static const struct message parent_singleexpand_seq7[] = {
+    /* india does not expand and hotel does not collapse because they have no children */
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SINGLEEXPAND },
     { 0 }
 };
 
@@ -1637,21 +1717,95 @@ static void test_expandedimage(void)
 static void test_TVS_SINGLEEXPAND(void)
 {
     HWND hTree;
+    HTREEITEM alpha, bravo, charlie, delta, echo, foxtrot, golf, hotel, india, juliet;
+    TVINSERTSTRUCTA ins;
+    char foo[] = "foo";
+    char context[32];
+    int i;
     BOOL ret;
+
+    /* build a fairly complex tree
+     * - TVI_ROOT
+     *   - alpha
+     *     - bravo
+     *       - charlie
+     *     - delta
+     *       - echo
+     *   - foxtrot
+     *     - golf
+     *       - hotel
+     *       - india
+     *     - juliet
+     */
+    struct
+    {
+        HTREEITEM *handle;
+        HTREEITEM *parent;
+        UINT final_state;
+    }
+    items[] =
+    {
+        { &alpha,    NULL,      TVIS_EXPANDEDONCE               },
+        { &bravo,    &alpha,    TVIS_EXPANDEDONCE               },
+        { &charlie,  &bravo,    0                               },
+        { &delta,    &alpha,    TVIS_EXPANDEDONCE               },
+        { &echo,     &delta,    0                               },
+        { &foxtrot,  NULL,      TVIS_EXPANDEDONCE|TVIS_EXPANDED },
+        { &golf,     &foxtrot,  TVIS_EXPANDEDONCE|TVIS_EXPANDED },
+        { &hotel,    &golf,     0                               },
+        { &india,    &golf,     TVIS_SELECTED                   },
+        { &juliet,   &foxtrot,  0                               }
+    };
+
+    struct
+    {
+        HTREEITEM *select;
+        const struct message *sequence;
+    }
+    sequence_tests[] =
+    {
+        { &alpha,    parent_singleexpand_seq0 },
+        { &bravo,    parent_singleexpand_seq1 },
+        { &delta,    parent_singleexpand_seq2 },
+        { &foxtrot,  parent_singleexpand_seq3 },
+        { &alpha,    parent_singleexpand_seq4 },
+        { &golf,     parent_singleexpand_seq5 },
+        { &hotel,    parent_singleexpand_seq6 },
+        { &india,    parent_singleexpand_seq7 },
+        { &india,    empty_seq }
+    };
 
     hTree = create_treeview_control(0);
     SetWindowLongA(hTree, GWL_STYLE, GetWindowLongA(hTree, GWL_STYLE) | TVS_SINGLEEXPAND);
     /* to avoid painting related notifications */
     ShowWindow(hTree, SW_HIDE);
-    fill_tree(hTree);
+    for (i = 0; i < sizeof(items)/sizeof(items[0]); i++)
+    {
+        ins.hParent = items[i].parent ? *items[i].parent : TVI_ROOT;
+        ins.hInsertAfter = TVI_FIRST;
+        U(ins).item.mask = TVIF_TEXT;
+        U(ins).item.pszText = foo;
+        *items[i].handle = TreeView_InsertItemA(hTree, &ins);
+    }
 
-    flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    ret = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
-    ok(ret, "got %d\n", ret);
-    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_singleexpand_seq, "singleexpand notifications", FALSE);
+    for (i = 0; i < sizeof(sequence_tests)/sizeof(sequence_tests[0]); i++)
+    {
+        flush_sequences(sequences, NUM_MSG_SEQUENCES);
+        ret = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)(*sequence_tests[i].select));
+        ok(ret, "got %d\n", ret);
+        sprintf(context, "singleexpand notifications %d", i);
+        ok_sequence(sequences, PARENT_SEQ_INDEX, sequence_tests[i].sequence, context, FALSE);
+    }
+
+    for (i = 0; i < sizeof(items)/sizeof(items[0]); i++)
+    {
+        ret = SendMessageA(hTree, TVM_GETITEMSTATE, (WPARAM)(*items[i].handle), 0xFFFF);
+        ok(ret == items[i].final_state, "singleexpand items[%d]: expected state 0x%x got 0x%x\n",
+           i, items[i].final_state, ret);
+    }
 
     /* a workaround for NT4 that sends expand notifications when nothing is about to expand */
-    ret = SendMessageA(hTree, TVM_DELETEITEM, 0, (LPARAM)hRoot);
+    ret = SendMessageA(hTree, TVM_DELETEITEM, 0, (LPARAM)TVI_ROOT);
     ok(ret, "got %d\n", ret);
     fill_tree(hTree);
     ret = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, 0);

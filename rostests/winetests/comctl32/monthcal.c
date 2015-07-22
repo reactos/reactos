@@ -615,7 +615,9 @@ static LRESULT WINAPI monthcal_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
 static HWND create_monthcal_control(DWORD style)
 {
     WNDPROC oldproc;
+    RECT rect;
     HWND hwnd;
+    BOOL ret;
 
     hwnd = CreateWindowExA(0, MONTHCAL_CLASSA, "", WS_CHILD | WS_BORDER | WS_VISIBLE | style,
                     0, 0, 300, 400, parent_wnd, NULL, GetModuleHandleA(NULL), NULL);
@@ -627,6 +629,13 @@ static HWND create_monthcal_control(DWORD style)
     SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)oldproc);
 
     SendMessageA(hwnd, WM_SETFONT, (WPARAM)GetStockObject(SYSTEM_FONT), 0);
+
+    /* make sure calendar grid is 2x1 */
+    ret = SendMessageA(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&rect);
+    ok(ret, "got %d\n", ret);
+
+    ret = SetWindowPos(hwnd, NULL, 0, 0, rect.right * 5 / 2, rect.bottom * 3 / 2, SWP_NOMOVE);
+    ok(ret, "got %d\n", ret);
 
     return hwnd;
 }

@@ -26,6 +26,8 @@
 #include <winnls.h>
 #include <commctrl.h>
 
+#include "resources.h"
+
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 
 static void test_create_tooltip(void)
@@ -330,6 +332,30 @@ static void test_gettext(void)
         SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
         ok(toolinfoA.lpszText == NULL,
            "expected NULL, got %p\n", toolinfoA.lpszText);
+
+        /* NULL hinst, valid resource id for text */
+        toolinfoA.cbSize = sizeof(TTTOOLINFOA);
+        toolinfoA.hwnd = NULL;
+        toolinfoA.hinst = NULL;
+        toolinfoA.uFlags = 0;
+        toolinfoA.uId = 0x1233ABCD;
+        toolinfoA.lpszText = MAKEINTRESOURCEA(IDS_TBADD1);
+        toolinfoA.lParam = 0xdeadbeef;
+        GetClientRect(hwnd, &toolinfoA.rect);
+        r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
+        ok(r, "failed to add a tool\n");
+
+        toolinfoA.hwnd = NULL;
+        toolinfoA.uId = 0x1233ABCD;
+        toolinfoA.lpszText = bufA;
+        SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+        ok(strcmp(toolinfoA.lpszText, "abc") == 0, "lpszText should be an empty string\n");
+
+        toolinfoA.hinst = (HINSTANCE)0xdeadbee;
+        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+        ok(toolinfoA.hinst == NULL, "expected NULL, got %p\n", toolinfoA.hinst);
+
+        SendMessageA(hwnd, TTM_DELTOOLA, 0, (LPARAM)&toolinfoA);
     }
     else
     {
@@ -817,6 +843,154 @@ static void test_track(void)
     DestroyWindow(parent);
 }
 
+static LRESULT CALLBACK info_wnd_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch(msg) {
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+
+    default:
+        return DefWindowProcA(hWnd, msg, wParam, lParam);
+    }
+    return 0;
+}
+
+static void test_setinfo(void)
+{
+   WNDCLASSA wc;
+   LRESULT   lResult;
+   HWND parent, parent2, hwndTip, hwndTip2;
+   TTTOOLINFOA toolInfo = { 0 };
+   TTTOOLINFOA toolInfo2 = { 0 };
+   WNDPROC wndProc;
+
+   /* Create a class to use the custom draw wndproc */
+   wc.style = CS_HREDRAW | CS_VREDRAW;
+   wc.cbClsExtra = 0;
+   wc.cbWndExtra = 0;
+   wc.hInstance = GetModuleHandleA(NULL);
+   wc.hIcon = NULL;
+   wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
+   wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
+   wc.lpszMenuName = NULL;
+   wc.lpszClassName = "SetInfoClass";
+   wc.lpfnWndProc = info_wnd_proc;
+   RegisterClassA(&wc);
+
+   /* Create a main window */
+   parent = CreateWindowExA(0, "SetInfoClass", NULL,
+                           WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX |
+                           WS_MAXIMIZEBOX | WS_VISIBLE,
+                           50, 50,
+                           300, 300,
+                           NULL, NULL, NULL, 0);
+   ok(parent != NULL, "Creation of main window failed\n");
+
+   parent2 = CreateWindowExA(0, "SetInfoClass", NULL,
+                           WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX |
+                           WS_MAXIMIZEBOX | WS_VISIBLE,
+                           50, 50,
+                           300, 300,
+                           NULL, NULL, NULL, 0);
+   ok(parent2 != NULL, "Creation of main window failed\n");
+
+   /* Make it show */
+   ShowWindow(parent2, SW_SHOWNORMAL);
+   flush_events(100);
+
+   /* Create Tooltip */
+   hwndTip = CreateWindowExA(WS_EX_TOPMOST, TOOLTIPS_CLASSA,
+                            NULL, TTS_NOPREFIX | TTS_ALWAYSTIP,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            parent, NULL, GetModuleHandleA(NULL), 0);
+   ok(hwndTip != NULL, "Creation of tooltip window failed\n");
+
+   hwndTip2 = CreateWindowExA(WS_EX_TOPMOST, TOOLTIPS_CLASSA,
+                            NULL, TTS_NOPREFIX | TTS_ALWAYSTIP,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            parent, NULL, GetModuleHandleA(NULL), 0);
+   ok(hwndTip2 != NULL, "Creation of tooltip window failed\n");
+
+
+   /* Make it topmost, as per the MSDN */
+   SetWindowPos(hwndTip, HWND_TOPMOST, 0, 0, 0, 0,
+         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+   /* Create a tool */
+   toolInfo.cbSize = TTTOOLINFOA_V1_SIZE;
+   toolInfo.hwnd = parent;
+   toolInfo.hinst = GetModuleHandleA(NULL);
+   toolInfo.uFlags = TTF_SUBCLASS;
+   toolInfo.uId = 0x1234ABCD;
+   toolInfo.lpszText = (LPSTR)"This is a test tooltip";
+   toolInfo.lParam = 0xdeadbeef;
+   GetClientRect (parent, &toolInfo.rect);
+   lResult = SendMessageA(hwndTip, TTM_ADDTOOLA, 0, (LPARAM)&toolInfo);
+   ok(lResult, "Adding the tool to the tooltip failed\n");
+
+   toolInfo.cbSize = TTTOOLINFOA_V1_SIZE;
+   toolInfo.hwnd = parent2;
+   toolInfo.hinst = GetModuleHandleA(NULL);
+   toolInfo.uFlags = 0;
+   toolInfo.uId = 0x1234ABCE;
+   toolInfo.lpszText = (LPSTR)"This is a test tooltip";
+   toolInfo.lParam = 0xdeadbeef;
+   GetClientRect (parent, &toolInfo.rect);
+   lResult = SendMessageA(hwndTip, TTM_ADDTOOLA, 0, (LPARAM)&toolInfo);
+   ok(lResult, "Adding the tool to the tooltip failed\n");
+
+   /* Try to Remove Subclass */
+   toolInfo2.cbSize = TTTOOLINFOA_V1_SIZE;
+   toolInfo2.hwnd = parent;
+   toolInfo2.uId = 0x1234ABCD;
+   lResult = SendMessageA(hwndTip, TTM_GETTOOLINFOA, 0, (LPARAM)&toolInfo2);
+   ok(lResult, "GetToolInfo failed\n");
+   ok(toolInfo2.uFlags & TTF_SUBCLASS, "uFlags does not have subclass\n");
+   wndProc = (WNDPROC)GetWindowLongPtrA(parent, GWLP_WNDPROC);
+   ok (wndProc != info_wnd_proc, "Window Proc is wrong\n");
+
+   toolInfo2.uFlags &= ~TTF_SUBCLASS;
+   SendMessageA(hwndTip, TTM_SETTOOLINFOA, 0, (LPARAM)&toolInfo2);
+   lResult = SendMessageA(hwndTip, TTM_GETTOOLINFOA, 0, (LPARAM)&toolInfo2);
+   ok(lResult, "GetToolInfo failed\n");
+   ok(!(toolInfo2.uFlags & TTF_SUBCLASS), "uFlags has subclass\n");
+   wndProc = (WNDPROC)GetWindowLongPtrA(parent, GWLP_WNDPROC);
+   ok (wndProc != info_wnd_proc, "Window Proc is wrong\n");
+
+   /* Try to Add Subclass */
+
+   /* Make it topmost, as per the MSDN */
+   SetWindowPos(hwndTip2, HWND_TOPMOST, 0, 0, 0, 0,
+         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+   toolInfo2.cbSize = TTTOOLINFOA_V1_SIZE;
+   toolInfo2.hwnd = parent2;
+   toolInfo2.uId = 0x1234ABCE;
+   lResult = SendMessageA(hwndTip, TTM_GETTOOLINFOA, 0, (LPARAM)&toolInfo2);
+   ok(lResult, "GetToolInfo failed\n");
+   ok(!(toolInfo2.uFlags & TTF_SUBCLASS), "uFlags has subclass\n");
+   wndProc = (WNDPROC)GetWindowLongPtrA(parent2, GWLP_WNDPROC);
+   ok (wndProc == info_wnd_proc, "Window Proc is wrong\n");
+
+   toolInfo2.uFlags |= TTF_SUBCLASS;
+   SendMessageA(hwndTip, TTM_SETTOOLINFOA, 0, (LPARAM)&toolInfo2);
+   lResult = SendMessageA(hwndTip, TTM_GETTOOLINFOA, 0, (LPARAM)&toolInfo2);
+   ok(lResult, "GetToolInfo failed\n");
+   ok(toolInfo2.uFlags & TTF_SUBCLASS, "uFlags does not have subclass\n");
+   wndProc = (WNDPROC)GetWindowLongPtrA(parent2, GWLP_WNDPROC);
+   ok (wndProc == info_wnd_proc, "Window Proc is wrong\n");
+
+   /* Clean up */
+   DestroyWindow(hwndTip);
+   DestroyWindow(hwndTip2);
+   DestroyWindow(parent);
+   DestroyWindow(parent2);
+}
+
 START_TEST(tooltips)
 {
     InitCommonControls();
@@ -828,4 +1002,5 @@ START_TEST(tooltips)
     test_longtextA();
     test_longtextW();
     test_track();
+    test_setinfo();
 }

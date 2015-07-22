@@ -877,6 +877,7 @@ if (0)
     r = SendMessageA(tab, TCM_GETITEMCOUNT, 0, 0);
     ok(r == 3, "got %d\n", r);
 
+    DestroyPropertySheetPage(hpsp[4]);
     DestroyWindow(hdlg);
 }
 
