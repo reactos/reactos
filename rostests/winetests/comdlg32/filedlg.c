@@ -1138,6 +1138,11 @@ static void test_extension(void)
     for (i = 0; i < ARRAY_SIZE(defext_wildcard_filters); i++) {
         test_extension_helper(&ofn, defext_wildcard_filters[i], "deadbeef.xyz");
     }
+
+    /* Append valid extensions consisting of multiple parts */
+    test_extension_helper(&ofn, "TestFilter (*.abc.def)\0*.abc.def\0", "deadbeef.abc.def");
+    test_extension_helper(&ofn, "TestFilter (.abc.def)\0.abc.def\0", "deadbeef.abc.def");
+    test_extension_helper(&ofn, "TestFilter (*.*.def)\0*.*.def\0", "deadbeef.xyz");
 }
 
 #undef ARRAY_SIZE
