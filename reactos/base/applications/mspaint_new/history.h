@@ -18,6 +18,7 @@ public:
     int redoSteps;
     BOOL imageSaved;
 
+    ImageModel();
     void CopyPrevious(void);
     void Undo(void);
     void Redo(void);

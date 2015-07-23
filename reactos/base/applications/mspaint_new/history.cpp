@@ -22,6 +22,14 @@ void ImageModel::NotifyImageChanged()
     imageArea.SendMessage(WM_IMAGEMODELIMAGECHANGED);
 }
 
+ImageModel::ImageModel()
+{
+    currInd = 0;
+    undoSteps = 0;
+    redoSteps = 0;
+    imageSaved = TRUE;
+}
+
 void ImageModel::CopyPrevious()
 {
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
