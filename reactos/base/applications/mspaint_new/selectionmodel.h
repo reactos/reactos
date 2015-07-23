@@ -37,7 +37,6 @@ private:
 
 public:
     SelectionModel();
-    void SetDC(HDC hDC);
     void ResetPtStack();
     void PushToPtStack(LONG x, LONG y);
     void CalculateBoundingBoxAndContents(HDC hDCImage);

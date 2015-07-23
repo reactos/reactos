@@ -13,9 +13,11 @@ private:
     void NotifyImageChanged();
 public:
     HBITMAP hBms[HISTORYSIZE];
+private:
     int currInd;
     int undoSteps;
     int redoSteps;
+public:
     BOOL imageSaved;
 
     ImageModel();

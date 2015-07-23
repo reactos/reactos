@@ -15,9 +15,9 @@ LRESULT CTextEditWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 {
     /* creating the edit control within the editor window */
     RECT editControlPos = {0, 0, 0 + 100, 0 + 100};
-    hwndEditCtl = editControl.Create(_T("EDIT"), m_hWnd, editControlPos, NULL,
-                                     WS_CHILD | WS_VISIBLE | WS_BORDER | WS_HSCROLL | WS_VSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
-                                     WS_EX_CLIENTEDGE);
+    editControl.Create(_T("EDIT"), m_hWnd, editControlPos, NULL,
+                       WS_CHILD | WS_VISIBLE | WS_BORDER | WS_HSCROLL | WS_VSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
+                       WS_EX_CLIENTEDGE);
     return 0;
 }
 

@@ -13,18 +13,11 @@
 /* FUNCTIONS ********************************************************/
 
 HDC hDrawingDC;
-int *bmAddress;
-BITMAPINFO bitmapinfo;
-int imgXRes = 400;
-int imgYRes = 300;
 
 int widthSetInDlg;
 int heightSetInDlg;
 
 STRETCHSKEW stretchSkew;
-
-ImageModel imageModel;
-BOOL askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 
 POINT start;
 POINT last;
@@ -40,6 +33,9 @@ LPTSTR textToolText = NULL;
 int textToolTextMaxLen = 0;
 
 PaletteModel paletteModel;
+
+ImageModel imageModel;
+BOOL askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 
 HWND hStatusBar;
 CHOOSECOLOR choosecolor;
@@ -100,7 +96,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     TCHAR resstr[100];
     HMENU menu;
     HANDLE haccel;
-    HDC hDC;
 
     TCHAR *c;
     TCHAR sfnFilename[1000];
@@ -198,20 +193,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     selectionWindow.Create(scrlClientWindow.m_hWnd, selectionWindowPos, NULL, WS_CHILD | BS_OWNERDRAW);
 
     /* creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn */
-    RECT imageAreaPos = {3, 3, 3 + imgXRes, 3 + imgYRes};
+    RECT imageAreaPos = {3, 3, 3 + imageModel.GetWidth(), 3 + imageModel.GetHeight()};
     imageArea.Create(scrlClientWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
-
-    hDC = imageArea.GetDC();
-    hDrawingDC = CreateCompatibleDC(hDC);
-    selectionModel.SetDC(CreateCompatibleDC(hDC));
-    imageArea.ReleaseDC(hDC);
-    SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, paletteModel.GetFgColor()));
-    SelectObject(hDrawingDC, CreateSolidBrush(paletteModel.GetBgColor()));
-
-    //TODO: move to ImageModel
-    imageModel.hBms[0] = CreateDIBWithProperties(imgXRes, imgYRes);
-    SelectObject(hDrawingDC, imageModel.hBms[0]);
-    Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
 
     if (lpszArgument[0] != 0)
     {

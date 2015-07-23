@@ -16,11 +16,8 @@ SelectionModel::SelectionModel()
 {
     m_ptStack = NULL;
     m_iPtSP = 0;
-}
 
-void SelectionModel::SetDC(HDC hDC)
-{
-    m_hDC = hDC;
+    m_hDC = CreateCompatibleDC(NULL);
 }
 
 void SelectionModel::ResetPtStack()
@@ -106,7 +103,7 @@ void SelectionModel::DrawBackgroundPoly(HDC hDCImage, COLORREF crBg)
 
 void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
 {
-    Rect(hDCImage, m_rcSrc.left, m_rcSrc.top, m_rcSrc.right, m_rcSrc.bottom, crBg, crBg, 0, TRUE);
+    Rect(hDCImage, m_rcSrc.left, m_rcSrc.top, m_rcSrc.right, m_rcSrc.bottom, crBg, crBg, 0, 1);
 }
 
 extern BOOL
@@ -114,8 +111,6 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, 
 
 void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent)
 {
-    MaskBlt(hDCImage, m_rcSrc.left, m_rcSrc.top, RECT_WIDTH(m_rcSrc), RECT_HEIGHT(m_rcSrc), m_hDC, 0,
-            0, m_hMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
     if (!bBgTransparent)
         MaskBlt(hDCImage, m_rcDest.left, m_rcDest.top, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest),
                 m_hDC, 0, 0, m_hMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));

@@ -6,11 +6,6 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
-//#include <windows.h>
-//#include "definitions.h"
-
 /* TYPES ************************************************************/
 
 typedef struct tagSTRETCHSKEW {
@@ -21,8 +16,6 @@ typedef struct tagSTRETCHSKEW {
 /* VARIABLES declared in main.c *************************************/
 
 extern HDC hDrawingDC;
-extern int *bmAddress;
-extern BITMAPINFO bitmapinfo;
 
 extern int widthSetInDlg;
 extern int heightSetInDlg;
@@ -42,7 +35,6 @@ extern ToolsModel toolsModel;
 class SelectionModel;
 extern SelectionModel selectionModel;
 
-extern HWND hwndEditCtl;
 extern LOGFONT lfTextFont;
 extern HFONT hfontTextFont;
 extern LPTSTR textToolText;

@@ -28,6 +28,18 @@ ImageModel::ImageModel()
     undoSteps = 0;
     redoSteps = 0;
     imageSaved = TRUE;
+
+    // TODO: load dimensions from registry
+    int imgXRes = 400;
+    int imgYRes = 300;
+
+    hDrawingDC = CreateCompatibleDC(NULL);
+    SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, paletteModel.GetFgColor()));
+    SelectObject(hDrawingDC, CreateSolidBrush(paletteModel.GetBgColor()));
+
+    hBms[0] = CreateDIBWithProperties(imgXRes, imgYRes);
+    SelectObject(hDrawingDC, hBms[0]);
+    Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
 }
 
 void ImageModel::CopyPrevious()
