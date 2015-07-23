@@ -306,9 +306,9 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             /* Deselect */
             if ((toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
             {
-                startPaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-                whilePaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-                endPaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+                startPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+                whilePaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+                endPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
                 selectionWindow.ShowWindow(SW_HIDE);
             }
         }
@@ -443,14 +443,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
             toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
             //TODO: do this properly
-            startPaintingL(hDrawingDC, 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-            whilePaintingL(hDrawingDC, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
-            endPaintingL(hDrawingDC, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            startPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            whilePaintingL(imageModel.GetDC(), imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            endPaintingL(imageModel.GetDC(), imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
             break;
         }
         case IDM_EDITCOPYTO:
             if (GetSaveFileName(&ofn) != 0)
-                SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, hDrawingDC, NULL, NULL, fileHPPM, fileVPPM);
+                SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, imageModel.GetDC(), NULL, NULL, fileHPPM, fileVPPM);
             break;
         case IDM_EDITPASTEFROM:
             if (GetOpenFileName(&ofn) != 0)
@@ -481,7 +481,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_IMAGEDELETEIMAGE:
             imageModel.CopyPrevious();
-            Rect(hDrawingDC, 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
+            Rect(imageModel.GetDC(), 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
             imageArea.Invalidate(FALSE);
             break;
         case IDM_IMAGEROTATEMIRROR:
@@ -491,23 +491,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     if (selectionWindow.IsWindowVisible())
                         selectionModel.FlipHorizontally();
                     else
-                    {
-                        imageModel.CopyPrevious();
-                        StretchBlt(hDrawingDC, imageModel.GetWidth() - 1, 0, -imageModel.GetWidth(), imageModel.GetHeight(), hDrawingDC, 0, 0,
-                                   imageModel.GetWidth(), imageModel.GetHeight(), SRCCOPY);
-                        imageArea.Invalidate(FALSE);
-                    }
+                        imageModel.FlipHorizontally();
                     break;
                 case 2: /* flip vertically */
                     if (selectionWindow.IsWindowVisible())
                         selectionModel.FlipVertically();
                     else
-                    {
-                        imageModel.CopyPrevious();
-                        StretchBlt(hDrawingDC, 0, imageModel.GetHeight() - 1, imageModel.GetWidth(), -imageModel.GetHeight(), hDrawingDC, 0, 0,
-                                   imageModel.GetWidth(), imageModel.GetHeight(), SRCCOPY);
-                        imageArea.Invalidate(FALSE);
-                    }
+                        imageModel.FlipVertically();
                     break;
                 case 3: /* rotate 90 degrees */
                     break;
@@ -515,12 +505,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     if (selectionWindow.IsWindowVisible())
                         selectionModel.RotateNTimes90Degrees(2);
                     else
-                    {
-                        imageModel.CopyPrevious();
-                        StretchBlt(hDrawingDC, imageModel.GetWidth() - 1, imageModel.GetHeight() - 1, -imageModel.GetWidth(), -imageModel.GetHeight(), hDrawingDC,
-                                   0, 0, imageModel.GetWidth(), imageModel.GetHeight(), SRCCOPY);
-                        imageArea.Invalidate(FALSE);
-                    }
+                        imageModel.RotateNTimes90Degrees(2);
                     break;
                 case 5: /* rotate 270 degrees */
                     break;

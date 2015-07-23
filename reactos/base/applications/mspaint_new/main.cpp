@@ -12,8 +12,6 @@
 
 /* FUNCTIONS ********************************************************/
 
-HDC hDrawingDC;
-
 int widthSetInDlg;
 int heightSetInDlg;
 

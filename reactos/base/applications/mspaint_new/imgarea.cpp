@@ -99,7 +99,7 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     HDC hdc = GetDC();
     int imgXRes = imageModel.GetWidth();
     int imgYRes = imageModel.GetHeight();
-    StretchBlt(hdc, 0, 0, imgXRes * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000, hDrawingDC, 0, 0, imgXRes,
+    StretchBlt(hdc, 0, 0, imgXRes * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000, imageModel.GetDC(), 0, 0, imgXRes,
                imgYRes, SRCCOPY);
     if (showGrid && (toolsModel.GetZoom() >= 4000))
     {
@@ -154,7 +154,7 @@ LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     {
         SetCapture();
         drawing = TRUE;
-        startPaintingL(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(),
+        startPaintingL(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(),
                        paletteModel.GetFgColor(), paletteModel.GetBgColor());
     }
     else
@@ -174,7 +174,7 @@ LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     {
         SetCapture();
         drawing = TRUE;
-        startPaintingR(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(),
+        startPaintingR(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(),
                        paletteModel.GetFgColor(), paletteModel.GetBgColor());
     }
     else
@@ -194,13 +194,13 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     {
         ReleaseCapture();
         drawing = FALSE;
-        endPaintingL(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
+        endPaintingL(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
                      paletteModel.GetBgColor());
         Invalidate(FALSE);
         if (toolsModel.GetActiveTool() == TOOL_COLOR)
         {
             COLORREF tempColor =
-                GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom());
+                GetPixel(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom());
             if (tempColor != CLR_INVALID)
                 paletteModel.SetFgColor(tempColor);
         }
@@ -215,13 +215,13 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     {
         ReleaseCapture();
         drawing = FALSE;
-        endPaintingR(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
+        endPaintingR(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
                      paletteModel.GetBgColor());
         Invalidate(FALSE);
         if (toolsModel.GetActiveTool() == TOOL_COLOR)
         {
             COLORREF tempColor =
-                GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom());
+                GetPixel(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom());
             if (tempColor != CLR_INVALID)
                 paletteModel.SetBgColor(tempColor);
         }
@@ -300,7 +300,7 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         if ((wParam & MK_LBUTTON) != 0)
         {
-            whilePaintingL(hDrawingDC, xNow, yNow, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            whilePaintingL(imageModel.GetDC(), xNow, yNow, paletteModel.GetFgColor(), paletteModel.GetBgColor());
             Invalidate(FALSE);
             if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || (toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
             {
@@ -313,7 +313,7 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         if ((wParam & MK_RBUTTON) != 0)
         {
-            whilePaintingR(hDrawingDC, xNow, yNow, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            whilePaintingR(imageModel.GetDC(), xNow, yNow, paletteModel.GetFgColor(), paletteModel.GetBgColor());
             Invalidate(FALSE);
             if (toolsModel.GetActiveTool() >= TOOL_TEXT)
             {

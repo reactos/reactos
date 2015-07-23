@@ -15,8 +15,6 @@ typedef struct tagSTRETCHSKEW {
 
 /* VARIABLES declared in main.c *************************************/
 
-extern HDC hDrawingDC;
-
 extern int widthSetInDlg;
 extern int heightSetInDlg;
 

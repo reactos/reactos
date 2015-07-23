@@ -11,6 +11,7 @@ class ImageModel
 private:
     void NotifyDimensionsChanged();
     void NotifyImageChanged();
+    HDC hDrawingDC;
 public:
     HBITMAP hBms[HISTORYSIZE];
 private:
@@ -37,4 +38,8 @@ public:
     int GetHeight();
     void InvertColors();
     void Clear(COLORREF color = 0x00ffffff);
+    HDC GetDC();
+    void FlipHorizontally();
+    void FlipVertically();
+    void RotateNTimes90Degrees(int iN);
 };

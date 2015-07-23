@@ -178,14 +178,14 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
         if (toolsModel.GetActiveTool() == TOOL_TEXT)
         {
-            selectionModel.DrawTextToolText(hDrawingDC, paletteModel.GetFgColor(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
+            selectionModel.DrawTextToolText(imageModel.GetDC(), paletteModel.GetFgColor(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
         }
         else
         {
             if (m_iAction != ACTION_MOVE)
-                selectionModel.DrawSelectionStretched(hDrawingDC);
+                selectionModel.DrawSelectionStretched(imageModel.GetDC());
             else
-                selectionModel.DrawSelection(hDrawingDC, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
+                selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
         }
         imageArea.InvalidateRect(NULL, FALSE);
         imageArea.SendMessage(WM_PAINT, 0, 0);

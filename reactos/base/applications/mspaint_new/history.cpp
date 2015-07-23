@@ -210,3 +210,35 @@ void ImageModel::Clear(COLORREF color)
     Rectangle(hDrawingDC, 0 - 1, 0 - 1, GetWidth() + 1, GetHeight() + 1);
     NotifyImageChanged();
 }
+
+HDC ImageModel::GetDC()
+{
+    return hDrawingDC;
+}
+
+void ImageModel::FlipHorizontally()
+{
+    CopyPrevious();
+    StretchBlt(hDrawingDC, GetWidth() - 1, 0, -GetWidth(), GetHeight(), GetDC(), 0, 0,
+               GetWidth(), GetHeight(), SRCCOPY);
+    NotifyImageChanged();
+}
+
+void ImageModel::FlipVertically()
+{
+    CopyPrevious();
+    StretchBlt(hDrawingDC, 0, GetHeight() - 1, GetWidth(), -GetHeight(), GetDC(), 0, 0,
+               GetWidth(), GetHeight(), SRCCOPY);
+    NotifyImageChanged();
+}
+
+void ImageModel::RotateNTimes90Degrees(int iN)
+{
+    if (iN == 2)
+    {
+        CopyPrevious();
+        StretchBlt(hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(), GetDC(),
+                   0, 0, GetWidth(), GetHeight(), SRCCOPY);
+    }
+    NotifyImageChanged();
+}
