@@ -4,14 +4,29 @@
 int main()
 {
     int ReturnValue = 1;
+    DWORD dwRead;
     DWORD dwWritten;
+    HANDLE hFile = INVALID_HANDLE_VALUE;
     HANDLE hPrinter = NULL;
     DOC_INFO_1W docInfo;
-    char szString[] = "winspool_print Test\f";
+    BYTE Buffer[20000];
 
-    if (!OpenPrinterW(L"Generic / Text Only", &hPrinter, NULL))
+    hFile = CreateFileW(L"testfile", GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
     {
-        printf("OpenPrinterW failed\n");
+        printf("CreateFileW failed, last error is %lu!\n", GetLastError());
+        goto Cleanup;
+    }
+
+    if (!ReadFile(hFile, Buffer, sizeof(Buffer), &dwRead, NULL))
+    {
+        printf("ReadFile failed, last error is %lu!\n", GetLastError());
+        goto Cleanup;
+    }
+
+    if (!OpenPrinterW(L"Dummy Printer On LPT1", &hPrinter, NULL))
+    {
+        printf("OpenPrinterW failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
@@ -20,37 +35,40 @@ int main()
 
     if (!StartDocPrinterW(hPrinter, 1, (LPBYTE)&docInfo))
     {
-        printf("StartDocPrinterW failed, last error is %u!\n", GetLastError());
+        printf("StartDocPrinterW failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
     if (!StartPagePrinter(hPrinter))
     {
-        printf("StartPagePrinter failed, last error is %u!\n", GetLastError());
+        printf("StartPagePrinter failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
-    if (!WritePrinter(hPrinter, szString, strlen(szString), &dwWritten))
+    if (!WritePrinter(hPrinter, Buffer, dwRead, &dwWritten))
     {
-        printf("WritePrinter failed, last error is %u!\n", GetLastError());
+        printf("WritePrinter failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
     if (!EndPagePrinter(hPrinter))
     {
-        printf("EndPagePrinter failed, last error is %u!\n", GetLastError());
+        printf("EndPagePrinter failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
     if (!EndDocPrinter(hPrinter))
     {
-        printf("EndDocPrinter failed, last error is %u!\n", GetLastError());
+        printf("EndDocPrinter failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
     ReturnValue = 0;
 
 Cleanup:
+    if (hFile != INVALID_HANDLE_VALUE)
+        CloseHandle(hFile);
+
     if (hPrinter)
         ClosePrinter(hPrinter);
 
