@@ -41,6 +41,9 @@
 #define IDS_LIST_PARTITION_NO_DISK     3306
 #define IDS_LIST_VOLUME_HEAD           3307
 
+#define IDS_RESCAN_START               4100
+#define IDS_RESCAN_END                 4101
+
 #define IDS_SELECT_NO_DISK             4400
 #define IDS_SELECT_DISK                4401
 #define IDS_SELECT_DISK_INVALID        4402

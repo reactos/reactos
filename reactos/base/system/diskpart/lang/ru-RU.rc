@@ -45,11 +45,18 @@ BEGIN
     IDS_LIST_PARTITION_HEAD "\n  Partition      Type              Size     Offset\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
-    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk for listing partitions.\nPlease select a disk and try again.\n\n"
+    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
     IDS_LIST_VOLUME_HEAD "Том ###\tИмя\tМетка\n"
 END
 
-/* Select command strings */
+/* RESCAN command string */
+STRINGTABLE
+BEGIN
+    IDS_RESCAN_START "\nPlease wait while DiskPart scans your configuration...\n"
+    IDS_RESCAN_END "\nDiskPart has finished scanning your configuration.\n\n"
+END
+
+/* SELECT command strings */
 STRINGTABLE
 BEGIN
     IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"

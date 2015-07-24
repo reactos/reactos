@@ -1137,6 +1137,9 @@ DestroyPartitionList(VOID)
     PPARTENTRY PartEntry;
     PLIST_ENTRY Entry;
 
+    CurrentDisk = NULL;
+    CurrentPartition = NULL;
+
     /* Release disk and partition info */
     while (!IsListEmpty(&DiskListHead))
     {
