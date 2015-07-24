@@ -4600,11 +4600,12 @@ CheckMenuItem(HMENU hmenu,
 {
   PITEM item;
   DWORD Ret;
+  UINT uID = uIDCheckItem;
 
   if (!ValidateHandle(hmenu, TYPE_MENU))
      return -1;
 
-  if (!(item = MENU_FindItem( &hmenu, &uIDCheckItem, uCheck ))) return -1;
+  if (!(item = MENU_FindItem( &hmenu, &uID, uCheck ))) return -1;
 
   Ret = item->fState & MFS_CHECKED;
   if ( Ret == (uCheck & MFS_CHECKED)) return Ret; // Already Checked...
