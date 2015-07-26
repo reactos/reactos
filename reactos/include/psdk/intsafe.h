@@ -433,6 +433,7 @@ DEFINE_SAFE_CONVERT_STOS(LongPtrToShort, LONG_PTR, SHORT)
 DEFINE_SAFE_CONVERT_STOS(LongPtrToInt, LONG_PTR, INT)
 DEFINE_SAFE_CONVERT_STOS(LongPtrToLong, LONG_PTR, LONG)
 DEFINE_SAFE_CONVERT_STOS(LongPtrToIntPtr, LONG_PTR, INT_PTR)
+DEFINE_SAFE_CONVERT_STOS(LongLongToInt, LONGLONG, INT)
 DEFINE_SAFE_CONVERT_STOS(LongLongToLong, LONGLONG, LONG)
 DEFINE_SAFE_CONVERT_STOS(LongLongToIntPtr, LONGLONG, INT_PTR)
 DEFINE_SAFE_CONVERT_STOS(LongLongToLongPtr, LONGLONG, LONG_PTR)
@@ -582,6 +583,55 @@ DEFINE_SAFE_SUB(SizeTSub, size_t)
 DEFINE_SAFE_SUB(SIZETSub, SIZE_T)
 DEFINE_SAFE_SUB(ULongLongSub, ULONGLONG)
 
+#ifdef ENABLE_INTSAFE_SIGNED_FUNCTIONS
+_Must_inspect_result_
+__forceinline
+INTSAFE_RESULT
+INTSAFE_NAME(LongLongAdd)(
+    _In_ LONGLONG Augend,
+    _In_ LONGLONG Addend,
+    _Out_ _Deref_out_range_(==, Augend + Addend) LONGLONG* pResult)
+{
+    LONGLONG Result = Augend + Addend;
+
+    /* The only way the result can overflow, is when the sign of the augend
+       and the addend are the same. In that case the result is expected to
+       have the same sign as the two, otherwise it overflowed.
+       Sign equality is checked with a binary xor operation. */
+    if ( ((Augend ^ Addend) >= 0) && ((Augend ^ Result) < 0) )
+    {
+        *pResult = LONGLONG_ERROR;
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    }
+    else
+    {
+        *pResult = Result;
+        return INTSAFE_SUCCESS;
+    }
+}
+
+
+#define DEFINE_SAFE_ADD_S(_Name, _Type1, _Type2, _Convert) \
+C_ASSERT(sizeof(_Type2) > sizeof(_Type1)); \
+_Must_inspect_result_ \
+__forceinline \
+INTSAFE_RESULT \
+INTSAFE_NAME(_Name)( \
+    _In_ _Type1 Augend, \
+    _In_ _Type1 Addend, \
+    _Out_ _Deref_out_range_(==, Augend + Addend) _Type1* pOutput) \
+{ \
+    return INTSAFE_NAME(_Convert)(((_Type2)Augend) + ((_Type2)Addend), pOutput); \
+}
+
+DEFINE_SAFE_ADD_S(Int8Add, INT8, SHORT, ShortToInt8)
+DEFINE_SAFE_ADD_S(ShortAdd, SHORT, INT, IntToShort)
+DEFINE_SAFE_ADD_S(IntAdd, INT, LONGLONG, LongLongToInt)
+DEFINE_SAFE_ADD_S(LongAdd, LONG, LONGLONG, LongLongToLong)
+#ifndef _WIN64
+DEFINE_SAFE_ADD_S(IntPtrAdd, INT_PTR, LONGLONG, LongLongToIntPtr)
+DEFINE_SAFE_ADD_S(LongPtrAdd, LONG_PTR, LONGLONG, LongLongToLongPtr)
+#endif
 
 _Must_inspect_result_
 __forceinline
@@ -611,6 +661,7 @@ INTSAFE_NAME(LongLongSub)(
 
 
 #define DEFINE_SAFE_SUB_S(_Name, _Type1, _Type2, _Convert) \
+C_ASSERT(sizeof(_Type2) > sizeof(_Type1)); \
 _Must_inspect_result_ \
 __forceinline \
 INTSAFE_RESULT \
@@ -628,6 +679,7 @@ DEFINE_SAFE_SUB_S(IntPtrSub, INT_PTR, LONGLONG, LongLongToIntPtr)
 DEFINE_SAFE_SUB_S(LongPtrSub, LONG_PTR, LONGLONG, LongLongToLongPtr)
 #endif
 
+#endif /* ENABLE_INTSAFE_SIGNED_FUNCTIONS */
 
 _Must_inspect_result_
 __forceinline
@@ -741,6 +793,8 @@ DEFINE_SAFE_MULT_U16(UShortMult, USHORT, ULongToUShort)
 #define RtlUInt16Mult RtlUShortMult
 #define RtlWordMult RtlUShortMult
 #ifdef _WIN64
+#define RtlIntPtrAdd RtlLongLongAdd
+#define RtlLongPtrAdd RtlLongLongAdd
 #define RtlIntPtrSub RtlLongLongSub
 #define RtlLongPtrSub RtlLongLongSub
 #define RtlSizeTMult RtlULongLongMult
@@ -769,6 +823,8 @@ DEFINE_SAFE_MULT_U16(UShortMult, USHORT, ULongToUShort)
 #define UInt16Mult UShortMult
 #define WordMult UShortMult
 #ifdef _WIN64
+#define IntPtrAdd LongLongAdd
+#define LongPtrAdd LongLongAdd
 #define IntPtrSub LongLongSub
 #define LongPtrSub LongLongSub
 #define SizeTMult ULongLongMult

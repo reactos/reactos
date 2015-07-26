@@ -111,4 +111,36 @@ START_TEST(RtlIntSafe)
     TEST_ADD(UInt8,     UINT8,      uint,       UINT8_MAX - 1,      1,              UINT8_MAX,      STATUS_SUCCESS);
     TEST_ADD(UInt8,     UINT8,      uint,       UINT8_MAX,          1,              (UINT8)-1,      STATUS_INTEGER_OVERFLOW);
     TEST_ADD(UInt8,     UINT8,      uint,       UINT8_MAX,          UINT8_MAX,      (UINT8)-1,      STATUS_INTEGER_OVERFLOW);
+
+    TEST_ADD(Int8,      INT8,       int,        0,                  0,              0,              STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        5,                  5,              10,             STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        0,                  INT8_MAX,       INT8_MAX,       STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        INT8_MAX,           0,              INT8_MAX,       STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        INT8_MAX - 1,       1,              INT8_MAX,       STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        INT8_MAX,           1,              (INT8)-1,       STATUS_INTEGER_OVERFLOW);
+    TEST_ADD(Int8,      INT8,       int,        INT8_MAX,           INT8_MAX,       (INT8)-1,       STATUS_INTEGER_OVERFLOW);
+    TEST_ADD(Int8,      INT8,       int,        0,                  -1,             -1,             STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        -1,                 0,              -1,             STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        0,                  INT8_MIN,       INT8_MIN,       STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        INT8_MIN,           0,              INT8_MIN,       STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        INT8_MAX,           INT8_MIN,       (INT8)-1,       STATUS_SUCCESS);
+    TEST_ADD(Int8,      INT8,       int,        INT8_MIN,           -1,             (INT8)-1,       STATUS_INTEGER_OVERFLOW);
+    TEST_ADD(Int8,      INT8,       int,        INT8_MIN,           INT8_MIN,       (INT8)-1,       STATUS_INTEGER_OVERFLOW);
+
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  0,              0,              STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   5,                  5,              10,             STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  LONGLONG_MAX,   LONGLONG_MAX,   STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX,       0,              LONGLONG_MAX,   STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX - 1,   1,              LONGLONG_MAX,   STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX,       1,              (LONGLONG)-1,   STATUS_INTEGER_OVERFLOW);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX,       INT8_MAX,       (LONGLONG)-1,   STATUS_INTEGER_OVERFLOW);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  -1,             -1,             STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   -1,                 0,              -1,             STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  LONGLONG_MIN,   LONGLONG_MIN,   STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MIN,       0,              LONGLONG_MIN,   STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX,       LONGLONG_MIN,   (LONGLONG)-1,   STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MIN,       -1,             (LONGLONG)-1,   STATUS_INTEGER_OVERFLOW);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MIN,       LONGLONG_MIN,   (LONGLONG)-1,   STATUS_INTEGER_OVERFLOW);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   ULONG_MAX,          1,              0x100000000LL,  STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   ULONG_MAX,          ULONG_MAX,      0x1fffffffeLL,  STATUS_SUCCESS);
 }
