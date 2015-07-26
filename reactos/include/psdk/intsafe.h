@@ -526,7 +526,7 @@ INTSAFE_NAME(_Name)( \
     _In_ _Type Addend, \
     _Out_ _Deref_out_range_(==, Augend + Addend) _Type *pOutput) \
 { \
-    if ((Augend + Addend) >= Augend) \
+    if ((_Type)(Augend + Addend) >= Augend) \
     { \
         *pOutput = Augend + Addend; \
         return INTSAFE_SUCCESS; \

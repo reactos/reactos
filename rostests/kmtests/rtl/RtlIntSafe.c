@@ -95,4 +95,20 @@ START_TEST(RtlIntSafe)
     TEST_CONVERSION(Int,   INT,   Short,  SHORT,  int,  SHORT_MIN,          SHORT_MIN,      STATUS_SUCCESS);
     TEST_CONVERSION(Int,   INT,   Short,  SHORT,  int,  SHORT_MIN - 1,      (SHORT)-1,      STATUS_INTEGER_OVERFLOW);
     TEST_CONVERSION(Int,   INT,   Short,  SHORT,  int,  INT_MIN,            (SHORT)-1,      STATUS_INTEGER_OVERFLOW);
+
+#define TEST_ADD(_Name, _Type, _Print, _Value1, _Value2, _Expected, _Status)  do \
+    {                                                                       \
+        _Name ## Result = (_Type)0xfedcba9876543210;                        \
+        Status = Rtl ## _Name ## Add(_Value1, _Value2, & _Name ## Result);  \
+        ok_eq_hex(Status, _Status);                                         \
+        ok_eq_ ## _Print(_Name ## Result, _Expected);                       \
+    } while (0)
+
+    TEST_ADD(UInt8,     UINT8,      uint,       0,                  0,              0,              STATUS_SUCCESS);
+    TEST_ADD(UInt8,     UINT8,      uint,       5,                  5,              10,             STATUS_SUCCESS);
+    TEST_ADD(UInt8,     UINT8,      uint,       0,                  UINT8_MAX,      UINT8_MAX,      STATUS_SUCCESS);
+    TEST_ADD(UInt8,     UINT8,      uint,       UINT8_MAX,          0,              UINT8_MAX,      STATUS_SUCCESS);
+    TEST_ADD(UInt8,     UINT8,      uint,       UINT8_MAX - 1,      1,              UINT8_MAX,      STATUS_SUCCESS);
+    TEST_ADD(UInt8,     UINT8,      uint,       UINT8_MAX,          1,              (UINT8)-1,      STATUS_INTEGER_OVERFLOW);
+    TEST_ADD(UInt8,     UINT8,      uint,       UINT8_MAX,          UINT8_MAX,      (UINT8)-1,      STATUS_INTEGER_OVERFLOW);
 }
