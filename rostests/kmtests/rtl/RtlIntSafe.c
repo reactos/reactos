@@ -7,6 +7,7 @@
 
 #define KMT_EMULATE_KERNEL
 #include <kmt_test.h>
+#define ENABLE_INTSAFE_SIGNED_FUNCTIONS
 #include <ntintsafe.h>
 
 START_TEST(RtlIntSafe)
@@ -18,6 +19,7 @@ START_TEST(RtlIntSafe)
     UINT UIntResult;
     USHORT UShortResult;
     SHORT ShortResult;
+    LONGLONG LongLongResult;
 
 #define TEST_CONVERSION(FromName, FromType, ToName, ToType, Print, Value, Expected, ExpectedStatus) \
     do                                                                                              \
