@@ -234,7 +234,7 @@ CWebService::Submit(const char* TestType, CTestInfo* TestInfo)
     Data += "&suiteid=";
     Data += SuiteID;
     Data += "&log=";
-    Data += TestInfo->Log;
+    Data += EscapeString(TestInfo->Log);
 
     Response.reset(DoRequest(Data));
 
