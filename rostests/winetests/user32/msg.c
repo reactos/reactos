@@ -15035,15 +15035,15 @@ START_TEST(msg_paint)
 {
     init_tests();
     test_scrollwindowex();
+    test_paint_messages();
 #ifdef __REACTOS__
     if (!winetest_interactive &&
         !strcmp(winetest_platform, "windows"))
     {
-        skip("ROSTESTS-184: Skipping user3232_winetest:msg_paint test_paint_messages because it hangs on WHS-Testbot. Set winetest_interactive to run it anyway.\n");
+        skip("ROSTESTS-185: Skipping user32_winetest:msg_paint test_paintingloop because it hangs on WHS-Testbot. Set winetest_interactive to run it anyway.\n");
     }
     else
 #endif
-    test_paint_messages();
     test_paintingloop();
     cleanup_tests();
 }
