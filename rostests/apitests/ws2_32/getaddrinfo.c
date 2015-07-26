@@ -54,7 +54,7 @@ TestNodeName(VOID)
     {
         { "",                               LocalAddress },
         { " ",                              NULL },
-        { "doesntexist.reactos.org",        NULL },
+        { "doesntexist.example.com",        NULL },
         { "localhost",                      "127.0.0.1" },
         { "localhost:80",                   NULL },
         { "7.8.9.10",                       "7.8.9.10",         AI_NUMERICHOST },
