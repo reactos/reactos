@@ -986,7 +986,7 @@ ChangePos:
 
     VOID ResizeWorkArea()
     {
-#if !WIN7_COMPAT_MODE
+#if !WIN7_DEBUG_MODE
         RECT rcTray, rcWorkArea;
 
         /* If monitor has changed then fix the previous monitors work area */
@@ -1098,7 +1098,7 @@ ChangePos:
 
             /* FIXME: Are there more flags? */
 
-#if WIN7_COMPAT_MODE
+#if WIN7_DEBUG_MODE
             m_Position = ABE_LEFT;
 #else
             if (sr.Position > ABE_BOTTOM)

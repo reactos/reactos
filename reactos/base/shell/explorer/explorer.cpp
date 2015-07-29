@@ -59,7 +59,7 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
     }
 }
 
-#if !WIN7_COMPAT_MODE
+#if !WIN7_DEBUG_MODE
 static BOOL
 SetShellReadyEvent(IN LPCTSTR lpEventName)
 {
@@ -95,7 +95,9 @@ HideMinimizedWindows(IN BOOL bHide)
     if (!SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
         ERR("SystemParametersInfo failed with %lu\n", GetLastError());
 }
+#endif
 
+#if !WIN7_COMPAT_MODE
 static INT 
 StartWithCommandLine(IN HINSTANCE hInstance)
 {
@@ -140,9 +142,11 @@ StartWithDesktop(IN HINSTANCE hInstance)
     InitCommonControls();
     OleInitialize(NULL);
 
-#if !WIN7_COMPAT_MODE
+#if !WIN7_DEBUG_MODE
     ProcessStartupItems();
+#endif
 
+#if !WIN7_COMPAT_MODE
     /* Initialize shell dde support */
     _ShellDDEInit(TRUE);
 #endif
@@ -156,7 +160,7 @@ StartWithDesktop(IN HINSTANCE hInstance)
     CComPtr<ITrayWindow> Tray;
     CreateTrayWindow(&Tray);
 
-#if !WIN7_COMPAT_MODE
+#if !WIN7_DEBUG_MODE
     /* This not only hides the minimized window captions in the bottom
     left screen corner, but is also needed in order to receive
     HSHELL_* notification messages (which are required for taskbar
@@ -175,12 +179,12 @@ StartWithDesktop(IN HINSTANCE hInstance)
     if (Tray != NULL)
     {
         TrayMessageLoop(Tray);
-#if !WIN7_COMPAT_MODE
+#if !WIN7_DEBUG_MODE
         HideMinimizedWindows(FALSE);
 #endif
     }
 
-#if !WIN7_COMPAT_MODE
+#if !WIN7_DEBUG_MODE
     if (hShellDesktop != NULL)
         DesktopDestroyShellWindow(hShellDesktop);
 #endif
@@ -201,16 +205,16 @@ _tWinMain(IN HINSTANCE hInstance,
           IN LPTSTR lpCmdLine,
           IN INT nCmdShow)
 {
-#if !WIN7_COMPAT_MODE
-    BOOL CreateShellDesktop = FALSE;
-
-    TRACE("Explorer starting... Commandline: %S\n", lpCmdLine);
-
     /*
     * Set our shutdown parameters: we want to shutdown the very last,
     * but before any TaskMgr instance (which has a shutdown level of 1).
     */
     SetProcessShutdownParameters(2, 0);
+
+#if !WIN7_COMPAT_MODE
+    BOOL CreateShellDesktop = FALSE;
+
+    TRACE("Explorer starting... Commandline: %S\n", lpCmdLine);
 
     if (GetShellWindow() == NULL)
         CreateShellDesktop = TRUE;

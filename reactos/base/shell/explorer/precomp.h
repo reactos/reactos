@@ -2,6 +2,12 @@
 #define _EXPLORER_PRECOMP__H_
 
 #define WIN7_COMPAT_MODE 0
+#define WIN7_DEBUG_MODE 0
+
+#if WIN7_DEBUG_MODE && !WIN7_COMPAT_MODE
+#undef WIN7_COMPAT_MODE
+#define WIN7_COMPAT_MODE 1
+#endif
 
 #include <stdio.h>
 #include <tchar.h>
