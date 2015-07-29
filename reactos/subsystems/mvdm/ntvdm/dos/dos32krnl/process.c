@@ -198,7 +198,7 @@ VOID DosCreatePsp(WORD Segment, WORD ProgramSize)
     PspBlock->Exit[1] = 0x20;
 
     /* Set the number of the last paragraph */
-    PspBlock->LastParagraph = Segment + ProgramSize - 1;
+    PspBlock->LastParagraph = Segment + ProgramSize;
 
     /* Save the interrupt vectors */
     PspBlock->TerminateAddress = IntVecTable[0x22];

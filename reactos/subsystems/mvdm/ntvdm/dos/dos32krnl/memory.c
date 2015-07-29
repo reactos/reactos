@@ -292,7 +292,8 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
                 NewSize);
 
         /* Just split the block */
-        NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
+        NextSegment = Segment + NewSize + 1;
+        NextMcb = SEGMENT_TO_MCB(NextSegment);
         NextMcb->BlockType = Mcb->BlockType;
         NextMcb->Size = Mcb->Size - NewSize - 1;
         NextMcb->OwnerPsp = 0;
@@ -300,6 +301,9 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         /* Update the MCB */
         Mcb->BlockType = 'M';
         Mcb->Size = NewSize;
+
+        /* Combine this free block with adjoining free blocks */
+        DosCombineFreeBlocks(NextSegment);
     }
 
 Done:
