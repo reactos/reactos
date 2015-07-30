@@ -129,11 +129,13 @@ list(APPEND SOURCE
     user/ntuser/monitor.c
     user/ntuser/mouse.c
     user/ntuser/msgqueue.c
+    user/ntuser/nonclient.c
     user/ntuser/ntstubs.c
     user/ntuser/ntuser.c
     user/ntuser/painting.c
     user/ntuser/prop.c
     user/ntuser/scrollbar.c
+    user/ntuser/scrollex.c
     user/ntuser/session.c
     user/ntuser/shutdown.c
     user/ntuser/simplecall.c

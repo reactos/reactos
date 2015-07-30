@@ -123,7 +123,10 @@ BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 
 /*************** SCROLLBAR.C ***************/
 
-DWORD FASTCALL
-co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV);
+DWORD FASTCALL co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV);
+
+/************** NONCLIENT **************/
+
+VOID FASTCALL DefWndDoSizeMove(PWND pwnd, WORD wParam);
 
 /* EOF */
