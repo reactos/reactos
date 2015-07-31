@@ -18,6 +18,10 @@ BEGIN
         MENUITEM "Guardar\tCtrl+S", IDM_FILESAVE
         MENUITEM "Guardar como...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Fondo de pantalla (normal)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Fondo de pantalla (centrado)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Fondo de pantalla (extendido)", IDM_FILEASWALLPAPERSTRETCHED
@@ -215,4 +219,5 @@ BEGIN
     IDS_PERCENTAGE "El porcentaje debe de estar entre 1 y 500."
     IDS_ANGLE "El ángulo debe de estar entre -89 y 89."
     IDS_LOADERRORTEXT "No se pudo cargar el archivo %s."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

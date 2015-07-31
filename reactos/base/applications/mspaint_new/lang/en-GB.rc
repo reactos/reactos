@@ -17,6 +17,10 @@ BEGIN
         MENUITEM "&Save\tCtrl+S", IDM_FILESAVE
         MENUITEM "Save &as...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Set as wallpaper (tiled)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Set as wallpaper (centered)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Set as wallpaper (stretched)", IDM_FILEASWALLPAPERSTRETCHED

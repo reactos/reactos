@@ -17,6 +17,10 @@ BEGIN
         MENUITEM "&Запис\tCtrl+S", IDM_FILESAVE
         MENUITEM "Запис &като...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Поставяне като тапет (настелено)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Поставяне като тапет (в средата)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Поставяне като тапет (разпънато)", IDM_FILEASWALLPAPERSTRETCHED
@@ -214,4 +218,5 @@ BEGIN
     IDS_PERCENTAGE "The percentage must be between 1 and 500."
     IDS_ANGLE "The angle must be between -89 and 89."
     IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

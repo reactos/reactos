@@ -17,6 +17,10 @@ BEGIN
         MENUITEM "Salva\tMaiusc+F12", IDM_FILESAVE
         MENUITEM "Salva con nome...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Imposta come sfondo (normale)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Imposta come sfondo (centrata)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Imposta come sfondo (estesa)", IDM_FILEASWALLPAPERSTRETCHED
@@ -214,4 +218,5 @@ BEGIN
     IDS_PERCENTAGE "La percentuale deve essere compresa tra 1 e 500."
     IDS_ANGLE "L'angolo deve essere compreso tra -89 e 89."
     IDS_LOADERRORTEXT "l file %s non può essere caricato."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

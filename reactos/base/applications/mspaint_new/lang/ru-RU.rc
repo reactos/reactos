@@ -9,6 +9,10 @@ BEGIN
         MENUITEM "&Сохранить\tCtrl+S", IDM_FILESAVE
         MENUITEM "Сохранить &как...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Сделать фоновым рисунком (&замостить)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Сделать фоновым рисунком (по ц&ентру)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Сделать фоновым рисунком (раст&януть)", IDM_FILEASWALLPAPERSTRETCHED
@@ -206,4 +210,5 @@ BEGIN
     IDS_PERCENTAGE, "Процент должен быть в интервале от 1 до 500."
     IDS_ANGLE, "Угол должен быть в интервале от -89 до 89."
     IDS_LOADERRORTEXT, "Невозможно загрузить файл %s."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

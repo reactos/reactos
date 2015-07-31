@@ -196,11 +196,14 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 {
     if (!imageModel.IsImageSaved())
     {
-        TCHAR programname[20];
-        TCHAR saveprompttext[100];
-        TCHAR temptext[500];
-        LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-        LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, saveprompttext, SIZEOF(saveprompttext));
+        TCHAR* tempptr;
+        TCHAR programname[LoadString(hProgInstance, IDS_PROGRAMNAME, (LPTSTR)&tempptr, 0) + 1];
+        CopyMemory(programname, tempptr, sizeof(programname) - sizeof(TCHAR));
+        programname[SIZEOF(programname) - 1] = (TCHAR)'\0';
+        TCHAR saveprompttext[LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, (LPTSTR)&tempptr, 0) + 1];
+        CopyMemory(saveprompttext, tempptr, sizeof(saveprompttext) - sizeof(TCHAR));
+        saveprompttext[SIZEOF(saveprompttext) - 1] = (TCHAR)'\0';
+        TCHAR temptext[SIZEOF(saveprompttext) + _tcslen(filename)];
         _stprintf(temptext, saveprompttext, filename);
         switch (MessageBox(temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
         {
@@ -393,6 +396,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILESAVEAS:
             saveImage(FALSE);
+            break;
+        case IDM_FILEPAGESETUP:
+            // DUMMY: Shows the dialog only, no functionality
+            PAGESETUPDLG psd;
+            ZeroMemory(&psd, sizeof(psd));
+            psd.lStructSize = sizeof(psd);
+            psd.hwndOwner = m_hWnd;
+            PageSetupDlg(&psd);
+            break;
+        case IDM_FILEPRINT:
+            // DUMMY: Shows the dialog only, no functionality
+            PRINTDLG pd;
+            ZeroMemory(&pd, sizeof(pd));
+            pd.lStructSize = sizeof(pd);
+            pd.hwndOwner = m_hWnd;
+            PrintDlg(&pd);
             break;
         case IDM_FILEASWALLPAPERPLANE:
             SetWallpaper(filepathname, 1, 1);

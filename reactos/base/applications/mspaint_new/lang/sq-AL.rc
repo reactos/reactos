@@ -17,6 +17,10 @@ BEGIN
         MENUITEM "&Ruaj\tCtrl+S", IDM_FILESAVE
         MENUITEM "Ruaj &si...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Vere si wallpaper (tiled)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Vere si wallpaper (centered)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Vere si wallpaper (stretched)", IDM_FILEASWALLPAPERSTRETCHED
@@ -214,4 +218,5 @@ BEGIN
     IDS_PERCENTAGE "Përqindja duhet të jetë në mes 1 dhe 500."
     IDS_ANGLE "Këndi duhet të jetë në mes -89 dhe 89."
     IDS_LOADERRORTEXT "Dokumenti %s nuk mund te ngarkohej."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

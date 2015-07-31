@@ -17,6 +17,10 @@ BEGIN
         MENUITEM "上書き保存(&S)\tCtrl+S", IDM_FILESAVE
         MENUITEM "名前を付けて保存(&A)...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "背景に設定 (並べて表示)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "背景に設定 (中央に表示)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "背景に設定 (拡大)", IDM_FILEASWALLPAPERSTRETCHED
@@ -214,4 +218,5 @@ BEGIN
     IDS_PERCENTAGE "The percentage must be between 1 and 500."
     IDS_ANGLE "The angle must be between -89 and 89."
     IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

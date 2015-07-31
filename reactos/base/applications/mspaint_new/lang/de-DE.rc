@@ -17,6 +17,10 @@ BEGIN
         MENUITEM "Speichern\tStrg+S", IDM_FILESAVE
         MENUITEM "Speichern unter...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Seitenansicht", IDM_FILEPAGEVIEW
+        MENUITEM "Seite einrichten...", IDM_FILEPAGESETUP
+        MENUITEM "Drucken...\tStrg+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Als Hintergrund (Fläche)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Als Hintergrund (Zentriert)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Als Hintergrund (Gestreckt)", IDM_FILEASWALLPAPERSTRETCHED
