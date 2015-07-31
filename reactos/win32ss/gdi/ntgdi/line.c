@@ -60,13 +60,16 @@ GreMoveTo( HDC hdc,
            INT y,
            LPPOINT pptOut)
 {
+   BOOL Ret;
    PDC dc;
    if (!(dc = DC_LockDc(hdc)))
    {
       EngSetLastError(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   return IntGdiMoveToEx(dc, x, y, pptOut, TRUE);
+   Ret = IntGdiMoveToEx(dc, x, y, pptOut, TRUE);
+   DC_UnlockDc(dc);
+   return Ret;
 }
 
 // Should use Fx in pt
