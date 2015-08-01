@@ -90,7 +90,7 @@ static inline BOOLEAN ValidateHandle(PEMS_HANDLE HandleEntry)
     return (HandleEntry != NULL && HandleEntry->Allocated);
 }
 
-static USHORT EmsFree(USHORT Handle)
+static UCHAR EmsFree(USHORT Handle)
 {
     PLIST_ENTRY Entry;
     PEMS_HANDLE HandleEntry = GetHandleRecord(Handle);
@@ -171,7 +171,7 @@ static PEMS_PAGE GetLogicalPage(PEMS_HANDLE HandleEntry, USHORT LogicalPage)
     return (PEMS_PAGE)CONTAINING_RECORD(Entry, EMS_PAGE, Entry);
 }
 
-static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
+static UCHAR EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
 {
     PEMS_PAGE PageEntry;
     PEMS_HANDLE HandleEntry = GetHandleRecord(Handle);
