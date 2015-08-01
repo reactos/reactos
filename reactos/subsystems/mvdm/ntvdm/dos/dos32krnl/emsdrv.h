@@ -13,7 +13,7 @@
 
 #define EMS_VERSION_NUM     0x40
 #define EMS_INTERRUPT_NUM   0x67
-#define EMS_SEGMENT         0xD000
+#define EMS_SEGMENT         0xD000  // Default segment
 #define EMS_MAX_HANDLES     16
 #define EMS_PAGE_BITS       14
 #define EMS_PAGE_SIZE       (1 << EMS_PAGE_BITS)
@@ -72,9 +72,11 @@ typedef struct _EMS_HARDWARE_INFO
 
 #pragma pack(pop)
 
-#endif
-
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN EmsDrvInitialize(ULONG TotalPages);
+BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages);
 VOID EmsDrvCleanup(VOID);
+
+#endif // _EMSDRV_H_
+
+/* EOF */

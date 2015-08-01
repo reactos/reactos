@@ -2,8 +2,46 @@
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            himem.c
- * PURPOSE:         DOS XMS Driver
+ * PURPOSE:         DOS XMS Driver and UMB Provider
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *
+ * DOCUMENTATION:   Official specifications:
+ *                  XMS v2.0: http://www.phatcode.net/res/219/files/xms20.txt
+ *                  XMS v3.0: http://www.phatcode.net/res/219/files/xms30.txt
+ *
+ * About the implementation of UMBs in DOS:
+ * ----------------------------------------
+ * DOS needs a UMB provider to be able to use chunks of RAM in the C000-EFF0
+ * memory region. A UMB provider detects regions of memory that do not contain
+ * any ROMs or other system mapped area such as video RAM.
+ *
+ * Where can UMB providers be found?
+ *
+ * The XMS specification (see himem.c) provides three APIs to create, free, and
+ * resize UMB blocks. As such, DOS performs calls into the XMS driver chain to
+ * request UMB blocks and include them into the DOS memory arena.
+ * However, is it only the HIMEM driver (implementing the XMS specification)
+ * which can provide UMBs? It appears that this is not necessarily the case:
+ * for example the MS HIMEM versions do not implement the UMB APIs; instead
+ * it is the EMS driver (EMM386) which provides them, by hooking into the XMS
+ * driver chain (see https://support.microsoft.com/en-us/kb/95555 : "MS-DOS 5.0
+ * and later EMM386.EXE can also be configured to provide UMBs according to the
+ * XMS. This causes EMM386.EXE to be a provider of the UMB portion of the XMS.").
+ *
+ * Some alternative replacements of HIMEM/EMM386 (for example in FreeDOS)
+ * implement everything inside only one driver (XMS+EMS+UMB provider).
+ * Finally there are some UMB providers that exist separately of XMS and EMS
+ * drivers (for example, UMBPCI): they use hardware-specific tricks to discover
+ * and provide UMBs.
+ *
+ * For more details, see:
+ * http://www.freedos.org/technotes/technote/txt/169.txt
+ * http://www.freedos.org/technotes/technote/txt/202.txt
+ * http://www.uncreativelabs.net/textfiles/system/UMB.TXT
+ *
+ * This DOS XMS Driver provides the UMB APIs that are implemented on top
+ * of the internal Upper Memory Area Manager, in umamgr.c
  */
 
 /* INCLUDES *******************************************************************/
@@ -14,14 +52,10 @@
 #include "emulator.h"
 #include "cpu/bop.h"
 #include "../../memory.h"
-#include "io.h"
-#include "hardware/ps2.h"
+#include "bios/umamgr.h"
 
-#include "dos.h"
-#include "dos/dem.h"
 #include "device.h"
 #include "himem.h"
-#include "memory.h"
 
 #define XMS_DEVICE_NAME "XMSXXXX0"
 
@@ -30,7 +64,8 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static const BYTE EntryProcedure[] = {
+static const BYTE EntryProcedure[] =
+{
     0xEB, // jmp short +0x03
     0x03,
     0x90, // nop
@@ -49,7 +84,24 @@ static RTL_BITMAP AllocBitmap;
 static ULONG BitmapBuffer[(XMS_BLOCKS + 31) / 32];
 
 /*
- * Flag used by Global Enable/Disable A20 functions, so that they don't
+ * This value is associated to HIMEM's "/HMAMIN=" switch. It indicates the
+ * minimum account of space in the HMA a program can use, and is used in
+ * conjunction with the "Request HMA" function.
+ *
+ * NOTE: The "/HMAMIN=" value is in kilo-bytes, whereas HmaMinSize is in bytes.
+ *
+ * Default value: 0. This causes the HMA to be allocated on a first come,
+ * first served basis.
+ */
+static WORD HmaMinSize = 0;
+/*
+ * Flag used by "Request/Release HMA" functions, which indicates
+ * whether the HMA was reserved or not.
+ */
+static BOOLEAN IsHmaReserved = FALSE;
+
+/*
+ * Flag used by "Global Enable/Disable A20" functions, so that they don't
  * need to re-change the state of A20 if it was already enabled/disabled.
  */
 static BOOLEAN IsA20Enabled = FALSE;
@@ -66,7 +118,7 @@ static BOOLEAN CanChangeA20 = TRUE;
  */
 static LONG A20EnableCount = 0;
 
-/* HELPERS FOR A20 LINE *******************************************************/
+/* A20 LINE HELPERS ***********************************************************/
 
 static VOID XmsLocalEnableA20(VOID)
 {
@@ -86,6 +138,8 @@ Quit:
 
 static VOID XmsLocalDisableA20(VOID)
 {
+    UCHAR Result = XMS_STATUS_SUCCESS;
+
     /* Disable A20 only if we can do so, otherwise make the caller believe we disabled it */
     if (!CanChangeA20) goto Quit;
 
@@ -95,15 +149,18 @@ static VOID XmsLocalDisableA20(VOID)
     --A20EnableCount;
 
     /* The count is zero so disable A20 */
-    if (A20EnableCount == 0) EmulatorSetA20(FALSE);
+    if (A20EnableCount == 0)
+        EmulatorSetA20(FALSE); // Result = XMS_STATUS_SUCCESS;
+    else
+        Result = XMS_STATUS_A20_STILL_ENABLED;
 
 Quit:
     setAX(0x0001); /* Line successfully disabled */
-    setBL(XMS_STATUS_SUCCESS);
+    setBL(Result);
     return;
 
 Fail:
-    setAX(0x0000); /* Line failed to be enabled */
+    setAX(0x0000); /* Line failed to be disabled */
     setBL(XMS_STATUS_A20_ERROR);
     return;
 }
@@ -117,6 +174,11 @@ static inline PXMS_HANDLE GetHandleRecord(WORD Handle)
 
     Entry = &HandleTable[Handle - 1];
     return Entry->Size ? Entry : NULL;
+}
+
+static inline BOOLEAN ValidateHandle(PXMS_HANDLE HandleEntry)
+{
+    return (HandleEntry != NULL && HandleEntry->Handle != 0);
 }
 
 static WORD XmsGetLargestFreeBlock(VOID)
@@ -141,7 +203,7 @@ static WORD XmsGetLargestFreeBlock(VOID)
     return Result;
 }
 
-static CHAR XmsAlloc(WORD Size, PWORD Handle)
+static UCHAR XmsAlloc(WORD Size, PWORD Handle)
 {
     BYTE i;
     PXMS_HANDLE HandleEntry;
@@ -210,13 +272,16 @@ static CHAR XmsAlloc(WORD Size, PWORD Handle)
     return XMS_STATUS_OUT_OF_MEMORY;
 }
 
-static CHAR XmsFree(WORD Handle)
+static UCHAR XmsFree(WORD Handle)
 {
     DWORD BlockNumber;
     PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
-    if (HandleEntry == NULL || HandleEntry->Handle == 0) return XMS_STATUS_INVALID_HANDLE;
-    if (HandleEntry->LockCount) return XMS_STATUS_LOCKED;
+    if (!ValidateHandle(HandleEntry))
+        return XMS_STATUS_INVALID_HANDLE;
+
+    if (HandleEntry->LockCount)
+        return XMS_STATUS_LOCKED;
 
     BlockNumber = (HandleEntry->Address - XMS_ADDRESS) / XMS_BLOCK_SIZE;
     RtlClearBits(&AllocBitmap, BlockNumber, HandleEntry->Size);
@@ -227,12 +292,15 @@ static CHAR XmsFree(WORD Handle)
     return XMS_STATUS_SUCCESS;
 }
 
-static CHAR XmsLock(WORD Handle, PDWORD Address)
+static UCHAR XmsLock(WORD Handle, PDWORD Address)
 {
     PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
-    if (HandleEntry == NULL) return XMS_STATUS_INVALID_HANDLE;
-    if (HandleEntry->LockCount == 0xFF) return XMS_STATUS_LOCK_OVERFLOW;
+    if (!ValidateHandle(HandleEntry))
+        return XMS_STATUS_INVALID_HANDLE;
+
+    if (HandleEntry->LockCount == 0xFF)
+        return XMS_STATUS_LOCK_OVERFLOW;
 
     /* Increment the lock count */
     HandleEntry->LockCount++;
@@ -241,12 +309,15 @@ static CHAR XmsLock(WORD Handle, PDWORD Address)
     return XMS_STATUS_SUCCESS;
 }
 
-static CHAR XmsUnlock(WORD Handle)
+static UCHAR XmsUnlock(WORD Handle)
 {
     PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
-    if (HandleEntry == NULL) return XMS_STATUS_INVALID_HANDLE;
-    if (!HandleEntry->LockCount) return XMS_STATUS_NOT_LOCKED;
+    if (!ValidateHandle(HandleEntry))
+        return XMS_STATUS_INVALID_HANDLE;
+
+    if (!HandleEntry->LockCount)
+        return XMS_STATUS_NOT_LOCKED;
 
     /* Decrement the lock count */
     HandleEntry->LockCount--;
@@ -267,6 +338,57 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
             break;
         }
 
+        /* Request HMA */
+        case 0x01:
+        {
+            /* Check whether HMA is already reserved */
+            if (IsHmaReserved)
+            {
+                /* It is, bail out */
+                setAX(0x0000);
+                setBL(XMS_STATUS_HMA_IN_USE);
+                break;
+            }
+
+            // NOTE: We implicitely suppose that we always have HMA.
+            // If not, we should fail there with the XMS_STATUS_HMA_DOES_NOT_EXIST
+            // error code.
+
+            /* Check whether the requested size is above the minimal allowed one */
+            if (getDX() < HmaMinSize)
+            {
+                /* It is not, bail out */
+                setAX(0x0000);
+                setBL(XMS_STATUS_HMA_MIN_SIZE);
+                break;
+            }
+
+            /* Reserve it */
+            IsHmaReserved = TRUE;
+            setAX(0x0001);
+            setBL(XMS_STATUS_SUCCESS);
+            break;
+        }
+
+        /* Release HMA */
+        case 0x02:
+        {
+            /* Check whether HMA was reserved */
+            if (!IsHmaReserved)
+            {
+                /* It was not, bail out */
+                setAX(0x0000);
+                setBL(XMS_STATUS_HMA_NOT_ALLOCATED);
+                break;
+            }
+
+            /* Release it */
+            IsHmaReserved = FALSE;
+            setAX(0x0001);
+            setBL(XMS_STATUS_SUCCESS);
+            break;
+        }
+
         /* Global Enable A20 */
         case 0x03:
         {
@@ -274,7 +396,7 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
             if (!IsA20Enabled)
             {
                 XmsLocalEnableA20();
-                if (getAX() != 1)
+                if (getAX() != 0x0001)
                 {
                     /* XmsLocalEnableA20 failed and already set AX and BL to their correct values */
                     break;
@@ -291,21 +413,24 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         /* Global Disable A20 */
         case 0x04:
         {
+            UCHAR Result = XMS_STATUS_SUCCESS;
+
             /* Disable A20 if needed */
             if (IsA20Enabled)
             {
                 XmsLocalDisableA20();
-                if (getAX() != 1)
+                if (getAX() != 0x0001)
                 {
                     /* XmsLocalDisableA20 failed and already set AX and BL to their correct values */
                     break;
                 }
 
                 IsA20Enabled = FALSE;
+                Result = getBL();
             }
 
             setAX(0x0001); /* Line successfully disabled */
-            setBL(XMS_STATUS_SUCCESS);
+            setBL(Result);
             break;
         }
 
@@ -338,7 +463,12 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         {
             setAX(XmsGetLargestFreeBlock());
             setDX(FreeBlocks);
-            setBL(XMS_STATUS_SUCCESS);
+
+            if (FreeBlocks > 0)
+                setBL(XMS_STATUS_SUCCESS);
+            else
+                setBL(XMS_STATUS_OUT_OF_MEMORY);
+
             break;
         }
 
@@ -346,7 +476,7 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         case 0x09:
         {
             WORD Handle;
-            CHAR Result = XmsAlloc(getDX(), &Handle);
+            UCHAR Result = XmsAlloc(getDX(), &Handle);
 
             if (Result >= 0)
             {
@@ -365,11 +495,10 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         /* Free Extended Memory Block */
         case 0x0A:
         {
-            CHAR Result = XmsFree(getDX());
+            UCHAR Result = XmsFree(getDX());
 
             setAX(Result >= 0);
             setBL(Result);
-
             break;
         }
 
@@ -378,60 +507,61 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         {
             PVOID SourceAddress, DestAddress;
             PXMS_COPY_DATA CopyData = (PXMS_COPY_DATA)SEG_OFF_TO_PTR(getDS(), getSI());
+            PXMS_HANDLE HandleEntry;
 
             if (CopyData->SourceHandle)
             {
-                PXMS_HANDLE Entry = GetHandleRecord(CopyData->SourceHandle);
-                if (!Entry)
+                HandleEntry = GetHandleRecord(CopyData->SourceHandle);
+                if (!ValidateHandle(HandleEntry))
                 {
                     setAX(0);
                     setBL(XMS_STATUS_BAD_SRC_HANDLE);
                     break;
                 }
 
-                if (CopyData->SourceOffset >= Entry->Size * XMS_BLOCK_SIZE)
+                if (CopyData->SourceOffset >= HandleEntry->Size * XMS_BLOCK_SIZE)
                 {
                     setAX(0);
                     setBL(XMS_STATUS_BAD_SRC_OFFSET);
                 }
 
-                SourceAddress = (PVOID)REAL_TO_PHYS(Entry->Address + CopyData->SourceOffset);
+                SourceAddress = (PVOID)REAL_TO_PHYS(HandleEntry->Address + CopyData->SourceOffset);
             }
             else
             {
                 /* The offset is actually a 16-bit segment:offset pointer */
-                SourceAddress = SEG_OFF_TO_PTR(HIWORD(CopyData->SourceOffset),
-                                               LOWORD(CopyData->SourceOffset));
+                SourceAddress = FAR_POINTER(CopyData->SourceOffset);
             }
 
             if (CopyData->DestHandle)
             {
-                PXMS_HANDLE Entry = GetHandleRecord(CopyData->DestHandle);
-                if (!Entry)
+                HandleEntry = GetHandleRecord(CopyData->DestHandle);
+                if (!ValidateHandle(HandleEntry))
                 {
                     setAX(0);
                     setBL(XMS_STATUS_BAD_DEST_HANDLE);
                     break;
                 }
 
-                if (CopyData->DestOffset >= Entry->Size * XMS_BLOCK_SIZE)
+                if (CopyData->DestOffset >= HandleEntry->Size * XMS_BLOCK_SIZE)
                 {
                     setAX(0);
                     setBL(XMS_STATUS_BAD_DEST_OFFSET);
                 }
 
-                DestAddress = (PVOID)REAL_TO_PHYS(Entry->Address + CopyData->DestOffset);
+                DestAddress = (PVOID)REAL_TO_PHYS(HandleEntry->Address + CopyData->DestOffset);
             }
             else
             {
                 /* The offset is actually a 16-bit segment:offset pointer */
-                DestAddress = SEG_OFF_TO_PTR(HIWORD(CopyData->DestOffset),
-                                             LOWORD(CopyData->DestOffset));
+                DestAddress = FAR_POINTER(CopyData->DestOffset);
             }
+
+            /* Perform the move */
+            RtlMoveMemory(DestAddress, SourceAddress, CopyData->Count);
 
             setAX(1);
             setBL(XMS_STATUS_SUCCESS);
-            RtlMoveMemory(DestAddress, SourceAddress, CopyData->Count);
             break;
         }
 
@@ -439,7 +569,7 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         case 0x0C:
         {
             DWORD Address;
-            CHAR Result = XmsLock(getDX(), &Address);
+            UCHAR Result = XmsLock(getDX(), &Address);
 
             if (Result >= 0)
             {
@@ -461,108 +591,133 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         /* Unlock Extended Memory Block */
         case 0x0D:
         {
-            CHAR Result = XmsUnlock(getDX());
+            UCHAR Result = XmsUnlock(getDX());
 
             setAX(Result >= 0);
             setBL(Result);
-
             break;
         }
 
         /* Get Handle Information */
         case 0x0E:
         {
-            PXMS_HANDLE Entry = GetHandleRecord(getDX());
+            PXMS_HANDLE HandleEntry = GetHandleRecord(getDX());
+            UINT i;
+            UCHAR Handles = 0;
 
-            if (Entry && Entry->Handle != 0)
-            {
-                UINT i;
-                UCHAR Handles = 0;
-
-                for (i = 0; i < XMS_MAX_HANDLES; i++)
-                {
-                    if (HandleTable[i].Handle == 0) Handles++;
-                }
-
-                setAX(1);
-                setBH(Entry->LockCount);
-                setBL(Handles);
-                setDX(Entry->Size);
-            }
-            else
+            if (!ValidateHandle(HandleEntry))
             {
                 setAX(0);
                 setBL(XMS_STATUS_INVALID_HANDLE);
+                break;
             }
 
+            for (i = 0; i < XMS_MAX_HANDLES; i++)
+            {
+                if (HandleTable[i].Handle == 0) Handles++;
+            }
+
+            setAX(1);
+            setBH(HandleEntry->LockCount);
+            setBL(Handles);
+            setDX(HandleEntry->Size);
             break;
         }
 
-        /* Allocate UMB */
+        /* Reallocate Extended Memory Block */
+        case 0x0F:
+        {
+            PXMS_HANDLE HandleEntry = GetHandleRecord(getDX());
+            WORD NewSize = getBX();
+
+            if (!ValidateHandle(HandleEntry))
+            {
+                setAX(0);
+                setBL(XMS_STATUS_INVALID_HANDLE);
+                break;
+            }
+
+            if (HandleEntry->LockCount)
+            {
+                setAX(0);
+                setBL(XMS_STATUS_LOCKED);
+                break;
+            }
+
+            /* Check for reduction or enlargement */
+            if (NewSize < HandleEntry->Size)
+            {
+                /* Reduction, the easy case: just update the size */
+                HandleEntry->Size = NewSize;
+            }
+            else
+            {
+                /* Enlargement: we need to reallocate elsewhere */
+                UNIMPLEMENTED;
+                setAX(0);
+                setBL(XMS_STATUS_NOT_IMPLEMENTED);
+                break;
+            }
+
+            setAX(1);
+            setBL(XMS_STATUS_SUCCESS);
+            break;
+        }
+
+        /* Request UMB */
         case 0x10:
         {
-            WORD Segment;
-            WORD MaxAvailable;
-            BYTE OldAllocStrategy = Sda->AllocStrategy;
-            BOOLEAN OldLinkState = DosUmbLinked;
+            BOOLEAN Result;
+            USHORT Segment = 0x0000; /* No preferred segment  */
+            USHORT Size = getDX();   /* Size is in paragraphs */
 
-            DosLinkUmb();
-            Sda->AllocStrategy = DOS_ALLOC_HIGH  | DOS_ALLOC_BEST_FIT;
-            Segment = DosAllocateMemory(getDX(), &MaxAvailable);
-
-            if (Segment)
-            {
-                setAX(1);
+            Result = UmaDescReserve(&Segment, &Size);
+            if (Result)
                 setBX(Segment);
-            }
             else
-            {
-                setAX(0);
-                setBL(MaxAvailable ? XMS_STATUS_SMALLER_UMB : XMS_STATUS_OUT_OF_UMBS);
-                setDX(MaxAvailable);
-            }
+                setBL(Size > 0 ? XMS_STATUS_SMALLER_UMB : XMS_STATUS_OUT_OF_UMBS);
 
-            Sda->AllocStrategy = OldAllocStrategy;
-            if (!OldLinkState) DosUnlinkUmb();
+            setDX(Size);
+            setAX(Result);
             break;
         }
 
-        /* Free UMB */
+        /* Release UMB */
         case 0x11:
         {
-            if (DosFreeMemory(getDX()))
-            {
-                setAX(1);
-            }
-            else
-            {
-                setAX(0);
-                setBL(XMS_STATUS_INVALID_UMB);
-            }
+            BOOLEAN Result;
+            USHORT Segment = getDX();
 
+            Result = UmaDescRelease(Segment);
+            if (!Result)
+                setBL(XMS_STATUS_INVALID_UMB);
+
+            setAX(Result);
             break;
         }
 
         /* Reallocate UMB */
         case 0x12:
         {
-            WORD Segment;
-            WORD MaxAvailable;
+            BOOLEAN Result;
+            USHORT Segment = getDX();
+            USHORT Size = getBX(); /* Size is in paragraphs */
 
-            Segment = DosResizeMemory(getDX(), getBX(), &MaxAvailable);
-
-            if (Segment)
+            Result = UmaDescReallocate(Segment, &Size);
+            if (!Result)
             {
-                setAX(1);
-            }
-            else
-            {
-                setAX(0);
-                setBL(Sda->LastErrorCode == ERROR_INVALID_HANDLE
-                      ? XMS_STATUS_INVALID_UMB : XMS_STATUS_SMALLER_UMB);
-                setDX(MaxAvailable);
+                if (Size > 0)
+                {
+                    setBL(XMS_STATUS_SMALLER_UMB);
+                    setDX(Size);
+                }
+                else
+                {
+                    setBL(XMS_STATUS_INVALID_UMB);
+                }
             }
 
+            setAX(Result);
             break;
         }
 

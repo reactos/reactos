@@ -17,8 +17,8 @@
 
 #include "bios.h"
 #include "bios32/bios32.h"
-
 #include "rom.h"
+#include "umamgr.h"
 
 #include "io.h"
 #include "hardware/cmos.h"
@@ -87,22 +87,22 @@ BiosInitialize(IN LPCSTR BiosFileName)
 
         DisplayMessage(L"First bytes at 0x%p: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n"
                        L"3 last bytes at 0x%p: 0x%02x 0x%02x 0x%02x",
-            BiosLocation,
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 0),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 1),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 2),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 3),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 4),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 5),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 6),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 7),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 8),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 9),
+                       BiosLocation,
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 0),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 1),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 2),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 3),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 4),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 5),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 6),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 7),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 8),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 9),
 
-             (PVOID)((ULONG_PTR)BiosLocation + BiosSize - 2),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 2),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 1),
-            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 0));
+                        (PVOID)((ULONG_PTR)BiosLocation + BiosSize - 2),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 2),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 1),
+                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 0));
 
         DisplayMessage(L"POST at 0x%p: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
                        TO_LINEAR(getCS(), getIP()),
@@ -135,12 +135,21 @@ BiosInitialize(IN LPCSTR BiosFileName)
     // /* Enable interrupts */
     // setIF(1);
 
+    /* Initialize the Upper Memory Area Manager */
+    if (!UmaMgrInitialize())
+    {
+        wprintf(L"FATAL: Failed to initialize the UMA manager.\n");
+        return FALSE;
+    }
+
     return Success;
 }
 
 VOID
 BiosCleanup(VOID)
 {
+    UmaMgrCleanup();
+
     if (Bios32Loaded) Bios32Cleanup();
 }
 

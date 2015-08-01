@@ -4,6 +4,7 @@
  * FILE:            dos/dos32krnl/memory.c
  * PURPOSE:         DOS32 Memory Manager
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
@@ -13,16 +14,60 @@
 #include "ntvdm.h"
 #include "emulator.h"
 
+#include "bios/umamgr.h" // HACK until we correctly call XMS services for UMBs.
+
 #include "dos.h"
 #include "dos/dem.h"
 #include "memory.h"
 #include "process.h"
+#include "himem.h"
+
+// FIXME: Should be dynamically initialized!
+#define FIRST_MCB_SEGMENT   (SYSTEM_ENV_BLOCK + 0x200)  // old value: 0x1000
+#define USER_MEMORY_SIZE    (0x9FFE - FIRST_MCB_SEGMENT)
+
+/* PRIVATE VARIABLES **********************************************************/
 
 /* PUBLIC VARIABLES ***********************************************************/
 
-BOOLEAN DosUmbLinked = FALSE;
-
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static inline BOOLEAN ValidateMcb(PDOS_MCB Mcb)
+{
+    return (Mcb->BlockType == 'M' || Mcb->BlockType == 'Z');
+}
+
+/*
+ * This is a helper function to help us detecting
+ * when the DOS arena starts to become corrupted.
+ */
+static VOID DosMemValidate(VOID)
+{
+    WORD PrevSegment, Segment = SysVars->FirstMcb;
+    PDOS_MCB CurrentMcb;
+
+    PrevSegment = Segment;
+    while (TRUE)
+    {
+        /* Get a pointer to the MCB */
+        CurrentMcb = SEGMENT_TO_MCB(Segment);
+
+        /* Make sure it's valid */
+        if (!ValidateMcb(CurrentMcb))
+        {
+            DPRINT1("The DOS memory arena is corrupted! (CurrentMcb = %04x; PreviousMcb = %04X)\n", Segment, PrevSegment);
+            return;
+        }
+
+        PrevSegment = Segment;
+
+        /* If this was the last MCB in the chain, quit */
+        if (CurrentMcb->BlockType == 'Z') return;
+
+        /* Otherwise, update the segment and continue */
+        Segment += CurrentMcb->Size + 1;
+    }
+}
 
 static VOID DosCombineFreeBlocks(WORD StartBlock)
 {
@@ -35,6 +80,14 @@ static VOID DosCombineFreeBlocks(WORD StartBlock)
     {
         /* Get a pointer to the next MCB */
         NextMcb = SEGMENT_TO_MCB(StartBlock + CurrentMcb->Size + 1);
+
+        /* Make sure it's valid */
+        if (!ValidateMcb(NextMcb))
+        {
+            DPRINT1("The DOS memory arena is corrupted!\n");
+            // Sda->LastErrorCode = ERROR_ARENA_TRASHED;
+            return;
+        }
 
         /* Check if the next MCB is free */
         if (NextMcb->OwnerPsp == 0)
@@ -56,16 +109,19 @@ static VOID DosCombineFreeBlocks(WORD StartBlock)
 
 WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
 {
-    WORD Result = 0, Segment = FIRST_MCB_SEGMENT, MaxSize = 0;
+    WORD Result = 0, Segment = SysVars->FirstMcb, MaxSize = 0;
     PDOS_MCB CurrentMcb;
     BOOLEAN SearchUmb = FALSE;
 
     DPRINT("DosAllocateMemory: Size 0x%04X\n", Size);
 
-    if (DosUmbLinked && (Sda->AllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
+    DosMemValidate();
+
+    if (SysVars->UmbLinked && SysVars->UmbChainStart != 0xFFFF &&
+        (Sda->AllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
     {
         /* Search UMB first */
-        Segment = UMB_START_SEGMENT;
+        Segment = SysVars->UmbChainStart;
         SearchUmb = TRUE;
     }
 
@@ -75,7 +131,7 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
         CurrentMcb = SEGMENT_TO_MCB(Segment);
 
         /* Make sure it's valid */
-        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z')
+        if (!ValidateMcb(CurrentMcb))
         {
             DPRINT1("The DOS memory arena is corrupted!\n");
             Sda->LastErrorCode = ERROR_ARENA_TRASHED;
@@ -130,7 +186,7 @@ Next:
             if ((Result == 0) && SearchUmb && (Sda->AllocStrategy & DOS_ALLOC_HIGH_LOW))
             {
                 /* Search low memory */
-                Segment = FIRST_MCB_SEGMENT;
+                Segment = SysVars->FirstMcb;
                 SearchUmb = FALSE;
                 continue;
             }
@@ -144,7 +200,9 @@ Next:
 
 Done:
 
-    /* If we didn't find a free block, return 0 */
+    DosMemValidate();
+
+    /* If we didn't find a free block, bail out */
     if (Result == 0)
     {
         Sda->LastErrorCode = ERROR_NOT_ENOUGH_MEMORY;
@@ -194,6 +252,9 @@ Done:
 
     /* Take ownership of the block */
     CurrentMcb->OwnerPsp = Sda->CurrentPsp;
+    RtlCopyMemory(CurrentMcb->Name, SEGMENT_TO_MCB(Sda->CurrentPsp - 1)->Name, sizeof(CurrentMcb->Name));
+
+    DosMemValidate();
 
     /* Return the segment of the data portion of the block */
     return Result + 1;
@@ -209,15 +270,17 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
            BlockData,
            NewSize);
 
+    DosMemValidate();
+
     /* Make sure this is a valid, allocated block */
-    if (BlockData == 0
-        || (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z')
-        || Mcb->OwnerPsp == 0)
+    if (BlockData == 0 || !ValidateMcb(Mcb) || Mcb->OwnerPsp == 0)
     {
         Success = FALSE;
         Sda->LastErrorCode = ERROR_INVALID_HANDLE;
         goto Done;
     }
+
+    DosCombineFreeBlocks(SysVars->FirstMcb);
 
     ReturnSize = Mcb->Size;
 
@@ -235,10 +298,18 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         NextSegment = Segment + Mcb->Size + 1;
         NextMcb = SEGMENT_TO_MCB(NextSegment);
 
+        /* Make sure it's valid */
+        if (!ValidateMcb(NextMcb))
+        {
+            DPRINT1("The DOS memory arena is corrupted!\n");
+            Sda->LastErrorCode = ERROR_ARENA_TRASHED;
+            return FALSE;
+        }
+
         /* Make sure the next segment is free */
         if (NextMcb->OwnerPsp != 0)
         {
-            DPRINT("Cannot expand memory block: next segment is not free!\n");
+            DPRINT("Cannot expand memory block 0x%04X: next segment is not free!\n", Segment);
             Sda->LastErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             Success = FALSE;
             goto Done;
@@ -252,7 +323,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
 
         if (ReturnSize < NewSize)
         {
-            DPRINT("Cannot expand memory block: insufficient free segments available!\n");
+            DPRINT("Cannot expand memory block 0x%04X: insufficient free segments available!\n", Segment);
             Sda->LastErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             Success = FALSE;
             goto Done;
@@ -269,8 +340,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         if (Mcb->Size > NewSize)
         {
             DPRINT("Block too large, reducing size from 0x%04X to 0x%04X\n",
-                   Mcb->Size,
-                   NewSize);
+                   Mcb->Size, NewSize);
 
             /* It is, split it into two blocks */
             NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
@@ -288,8 +358,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
     else if (NewSize < Mcb->Size)
     {
         DPRINT("Shrinking block from 0x%04X to 0x%04X\n",
-                Mcb->Size,
-                NewSize);
+                Mcb->Size, NewSize);
 
         /* Just split the block */
         NextSegment = Segment + NewSize + 1;
@@ -317,6 +386,8 @@ Done:
         if (MaxAvailable) *MaxAvailable = ReturnSize;
     }
 
+    DosMemValidate();
+
     return Success;
 }
 
@@ -327,8 +398,10 @@ BOOLEAN DosFreeMemory(WORD BlockData)
     DPRINT("DosFreeMemory: BlockData 0x%04X\n", BlockData);
     if (BlockData == 0) return FALSE;
 
+    DosMemValidate();
+
     /* Make sure the MCB is valid */
-    if (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z')
+    if (!ValidateMcb(Mcb))
     {
         DPRINT("MCB block type '%c' not valid!\n", Mcb->BlockType);
         return FALSE;
@@ -342,20 +415,26 @@ BOOLEAN DosFreeMemory(WORD BlockData)
 
 BOOLEAN DosLinkUmb(VOID)
 {
-    DWORD Segment = FIRST_MCB_SEGMENT;
+    DWORD Segment = SysVars->FirstMcb;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
 
     DPRINT("Linking UMB\n");
 
     /* Check if UMBs are already linked */
-    if (DosUmbLinked) return FALSE;
+    if (SysVars->UmbChainStart == 0xFFFF) return FALSE;
+    if (SysVars->UmbLinked) return TRUE;
+
+    DosMemValidate();
 
     /* Find the last block */
+    // FIXME: Use SysVars->UmbChainStart
     while ((Mcb->BlockType == 'M') && (Segment <= 0xFFFF))
     {
         Segment += Mcb->Size + 1;
         Mcb = SEGMENT_TO_MCB(Segment);
     }
+
+    DosMemValidate();
 
     /* Make sure it's valid */
     if (Mcb->BlockType != 'Z') return FALSE;
@@ -363,24 +442,28 @@ BOOLEAN DosLinkUmb(VOID)
     /* Connect the MCB with the UMB chain */
     Mcb->BlockType = 'M';
 
-    DosUmbLinked = TRUE;
+    SysVars->UmbLinked = TRUE;
     return TRUE;
 }
 
 BOOLEAN DosUnlinkUmb(VOID)
 {
-    DWORD Segment = FIRST_MCB_SEGMENT;
+    DWORD Segment = SysVars->FirstMcb;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
 
     DPRINT("Unlinking UMB\n");
 
     /* Check if UMBs are already unlinked */
-    if (!DosUmbLinked) return FALSE;
+    if (SysVars->UmbChainStart == 0xFFFF) return FALSE;
+    if (!SysVars->UmbLinked) return TRUE;
+
+    DosMemValidate();
 
     /* Find the block preceding the MCB that links it with the UMB chain */
     while (Segment <= 0xFFFF)
     {
-        if ((Segment + Mcb->Size) == (FIRST_MCB_SEGMENT + USER_MEMORY_SIZE))
+        // FIXME: Use SysVars->UmbChainStart
+        if ((Segment + Mcb->Size) == (SysVars->FirstMcb + USER_MEMORY_SIZE))
         {
             /* This is the last non-UMB segment */
             break;
@@ -394,37 +477,163 @@ BOOLEAN DosUnlinkUmb(VOID)
     /* Mark the MCB as the last MCB */
     Mcb->BlockType = 'Z';
 
-    DosUmbLinked = FALSE;
+    DosMemValidate();
+
+    SysVars->UmbLinked = FALSE;
     return TRUE;
 }
 
 VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
 {
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment - 1);
-
-    /* Just set the owner */
     Mcb->OwnerPsp = NewOwner;
+}
+
+/*
+ * Some information about DOS UMBs:
+ * http://textfiles.com/virus/datut010.txt
+ * http://www.asmcommunity.net/forums/topic/?id=30884
+ */
+
+WORD DosGetPreviousUmb(WORD UmbSegment)
+{
+    PDOS_MCB CurrentMcb;
+    WORD Segment, PrevSegment = 0;
+
+    if (SysVars->UmbChainStart == 0xFFFF)
+        return 0;
+
+    /* Start scanning the UMB chain */
+    Segment = SysVars->UmbChainStart;
+    while (TRUE)
+    {
+        /* Get a pointer to the MCB */
+        CurrentMcb = SEGMENT_TO_MCB(Segment);
+
+        /* Make sure it's valid */
+        if (!ValidateMcb(CurrentMcb))
+        {
+            DPRINT1("The UMB DOS memory arena is corrupted!\n");
+            Sda->LastErrorCode = ERROR_ARENA_TRASHED;
+            return 0;
+        }
+
+        if (Segment >= UmbSegment)
+            break;
+
+        PrevSegment = Segment;
+
+        /* If this was the last MCB in the chain, quit */
+        if (CurrentMcb->BlockType == 'Z')
+            break;
+
+        /* Otherwise, update the segment and continue */
+        Segment += CurrentMcb->Size + 1;
+    }
+
+    return PrevSegment;
+}
+
+VOID DosInitializeUmb(VOID)
+{
+    BOOLEAN Result;
+    USHORT UmbSegment = 0x0000, PrevSegment;
+    USHORT Size;
+    PDOS_MCB Mcb, PrevMcb;
+
+    ASSERT(SysVars->UmbChainStart == 0xFFFF);
+
+    // SysVars->UmbLinked = FALSE;
+
+    /* Try to allocate all the UMBs */
+    while (TRUE)
+    {
+        /* Find the maximum amount of memory that can be allocated */
+        Size = 0xFFFF;
+        Result = UmaDescReserve(&UmbSegment, &Size);
+
+        /* If we are out of UMBs, bail out */
+        if (!Result && Size == 0) // XMS_STATUS_OUT_OF_UMBS
+            break;
+
+        /* We should not have succeeded! */
+        ASSERT(!Result);
+
+        /* 'Size' now contains the size of the biggest UMB block. Request it. */
+        Result = UmaDescReserve(&UmbSegment, &Size);
+        ASSERT(Result); // XMS_STATUS_SUCCESS
+
+        /* If this is our first UMB block, initialize the UMB chain */
+        if (SysVars->UmbChainStart == 0xFFFF)
+        {
+            /* Initialize the link MCB to the UMB area */
+            // NOTE: We use the fact that UmbChainStart is still == 0xFFFF
+            // so that we initialize this block from 9FFF:0000 up to FFFF:000F.
+            // It will be splitted as needed just below.
+            Mcb = SEGMENT_TO_MCB(SysVars->FirstMcb + USER_MEMORY_SIZE + 1); // '+1': Readjust the fact that USER_MEMORY_SIZE is based using 0x9FFE instead of 0x9FFF
+            Mcb->BlockType = 'Z'; // At the moment it is really the last block
+            Mcb->Size = SysVars->UmbChainStart /* UmbSegment */ - SysVars->FirstMcb - USER_MEMORY_SIZE - 2;
+            Mcb->OwnerPsp = SYSTEM_PSP;
+            RtlCopyMemory(Mcb->Name, "SC      ", sizeof("SC      ")-1);
+
+#if 0 // Keep here for reference; this will be deleted as soon as it becomes unneeded.
+            /* Initialize the UMB area */
+            Mcb = SEGMENT_TO_MCB(SysVars->UmbChainStart);
+            Mcb->Size = UMB_END_SEGMENT - SysVars->UmbChainStart;
+#endif
+
+            // FIXME: We should adjust the size of the previous block!!
+
+            /* Initialize the start of the UMB chain */
+            SysVars->UmbChainStart = SysVars->FirstMcb + USER_MEMORY_SIZE + 1;
+        }
+
+        /* Split the block */
+
+        /* Get the previous block */
+        PrevSegment = DosGetPreviousUmb(UmbSegment);
+        PrevMcb = SEGMENT_TO_MCB(PrevSegment);
+
+        /* Initialize the next block */
+        Mcb = SEGMENT_TO_MCB(UmbSegment + /*Mcb->Size*/(Size - 1) + 0);
+        // Mcb->BlockType = 'Z'; // FIXME: What if this block happens to be the last one??
+        Mcb->BlockType = PrevMcb->BlockType;
+        Mcb->Size = PrevMcb->Size - (UmbSegment + Size - PrevSegment);
+        Mcb->OwnerPsp = PrevMcb->OwnerPsp;
+        RtlCopyMemory(Mcb->Name, PrevMcb->Name, sizeof(PrevMcb->Name));
+
+        /* The previous block is not the latest one anymore */
+        PrevMcb->BlockType = 'M';
+        PrevMcb->Size = UmbSegment - PrevSegment - 1;
+
+        /* Initialize the new UMB block */
+        Mcb = SEGMENT_TO_MCB(UmbSegment);
+        Mcb->BlockType = 'M'; // 'Z' // FIXME: What if this block happens to be the last one??
+        Mcb->Size = Size - 1 - 1; // minus 2 because we need to have one arena at the beginning and one at the end.
+        Mcb->OwnerPsp = 0;
+        // FIXME: Which MCB name should we use? I need to explore more the docs!
+        RtlCopyMemory(Mcb->Name, "UMB     ", sizeof("UMB     ")-1);
+        // RtlCopyMemory(Mcb->Name, "SM      ", sizeof("SM      ")-1);
+    }
 }
 
 VOID DosInitializeMemory(VOID)
 {
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT);
+    PDOS_MCB Mcb;
+
+    /* Set the initial allocation strategy to "best fit" */
+    Sda->AllocStrategy = DOS_ALLOC_BEST_FIT;
+
+    /* Initialize conventional memory; we don't have UMBs yet */
+    SysVars->FirstMcb = FIRST_MCB_SEGMENT; // The Arena Head
+    SysVars->UmbLinked = FALSE;
+    SysVars->UmbChainStart = 0xFFFF;
+
+    Mcb = SEGMENT_TO_MCB(SysVars->FirstMcb);
 
     /* Initialize the MCB */
     Mcb->BlockType = 'Z';
     Mcb->Size = USER_MEMORY_SIZE;
-    Mcb->OwnerPsp = 0;
-
-    /* Initialize the link MCB to the UMB area */
-    Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT + USER_MEMORY_SIZE + 1);
-    Mcb->BlockType = 'M';
-    Mcb->Size = UMB_START_SEGMENT - FIRST_MCB_SEGMENT - USER_MEMORY_SIZE - 2;
-    Mcb->OwnerPsp = SYSTEM_PSP;
-
-    /* Initialize the UMB area */
-    Mcb = SEGMENT_TO_MCB(UMB_START_SEGMENT);
-    Mcb->BlockType = 'Z';
-    Mcb->Size = UMB_END_SEGMENT - UMB_START_SEGMENT;
     Mcb->OwnerPsp = 0;
 }
 

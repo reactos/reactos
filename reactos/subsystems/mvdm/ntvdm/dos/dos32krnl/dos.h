@@ -34,7 +34,7 @@
 
 #define DOS_DATA_OFFSET(x) FIELD_OFFSET(DOS_DATA, x)
 
-#define SYSTEM_ENV_BLOCK    0x600   // FIXME: Should be dynamic
+#define SYSTEM_ENV_BLOCK    0x600   // FIXME: Should be dynamically initialized!
 
 #define SYSTEM_PSP          0x0008
 
@@ -96,9 +96,9 @@ typedef struct _DOS_SYSVARS
     BYTE UseDwordMoves;                         // 0x44
     WORD ExtMemSize;                            // 0x45
     BYTE Reserved4[0x1C];                       // 0x47
-    BYTE ChainUMB;                              // 0x63 - 0/1: UMB chain (un)linked to MCB chain
+    BYTE UmbLinked;                             // 0x63 - 0/1: UMB chain (un)linked to MCB chain
     WORD Reserved5;                             // 0x64
-    WORD UMBChainStart;                         // 0x66 - Segment of the first UMB MCB
+    WORD UmbChainStart;                         // 0x66 - Segment of the first UMB MCB
     WORD MemAllocScanStart;                     // 0x68 - Segment where allocation scan starts
 } DOS_SYSVARS, *PDOS_SYSVARS;
 

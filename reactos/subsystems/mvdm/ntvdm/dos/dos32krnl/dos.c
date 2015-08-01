@@ -1658,19 +1658,25 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 case 0x02:
                 {
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-                    setAL(DosUmbLinked ? 0x01 : 0x00);
+                    setAL(SysVars->UmbLinked ? 0x01 : 0x00);
                     break;
                 }
 
                 /* Set UMB link state */
                 case 0x03:
                 {
-                    if (getBX())
-                        DosLinkUmb();
-                    else
-                        DosUnlinkUmb();
+                    BOOLEAN Success;
 
-                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    if (getBX())
+                        Success = DosLinkUmb();
+                    else
+                        Success = DosUnlinkUmb();
+
+                    if (Success)
+                        Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    else
+                        Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
                     break;
                 }
 
@@ -2306,7 +2312,6 @@ BOOLEAN DosKRNLInitialize(VOID)
     /* Initialize the list of lists */
     SysVars = &DosData->SysVars;
     RtlZeroMemory(SysVars, sizeof(*SysVars));
-    SysVars->FirstMcb = FIRST_MCB_SEGMENT;
     SysVars->FirstSft = MAKELONG(DOS_DATA_OFFSET(Sft), DOS_DATA_SEGMENT);
     SysVars->CurrentDirs = MAKELONG(DOS_DATA_OFFSET(CurrentDirectories),
                                     DOS_DATA_SEGMENT);
@@ -2397,9 +2402,6 @@ BOOLEAN DosKRNLInitialize(VOID)
     /* Set the current PSP to the system PSP */
     Sda->CurrentPsp = SYSTEM_PSP;
 
-    /* Set the initial allocation strategy to "best fit" */
-    Sda->AllocStrategy = DOS_ALLOC_BEST_FIT;
-
     /* Initialize the SFT */
     Sft = (PDOS_SFT)FAR_POINTER(SysVars->FirstSft);
     Sft->Link = 0xFFFFFFFF;
@@ -2451,11 +2453,14 @@ BOOLEAN DosKRNLInitialize(VOID)
     XmsInitialize();
 
     /* Load the EMS driver */
-    if (!EmsDrvInitialize(EMS_TOTAL_PAGES))
+    if (!EmsDrvInitialize(EMS_SEGMENT, EMS_TOTAL_PAGES))
     {
         DPRINT1("Could not initialize EMS. EMS will not be available.\n"
-                "Try reducing the number of EMS pages.\n");
+                "Page frame segment or number of EMS pages invalid.\n");
     }
+
+    /* Finally initialize the UMBs */
+    DosInitializeUmb();
 
     return TRUE;
 }

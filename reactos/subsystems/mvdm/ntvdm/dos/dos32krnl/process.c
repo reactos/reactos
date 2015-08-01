@@ -852,7 +852,7 @@ Command:
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
 {
     WORD i;
-    WORD McbSegment = FIRST_MCB_SEGMENT;
+    WORD McbSegment = SysVars->FirstMcb;
     PDOS_MCB CurrentMcb;
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);

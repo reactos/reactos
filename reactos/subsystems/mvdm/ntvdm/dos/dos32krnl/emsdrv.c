@@ -12,15 +12,18 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
+#include "../../memory.h"
+#include "bios/umamgr.h"
 
 #include "dos.h"
 #include "dos/dem.h"
 #include "device.h"
 
-#include "../../memory.h"
 #include "emsdrv.h"
 
-#define EMS_DEVICE_NAME "EMMXXXX0"
+#define EMS_DEVICE_NAME     "EMMXXXX0"
+
+#define EMS_SEGMENT_SIZE    ((EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE) >> 4)
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -30,10 +33,51 @@ static PULONG BitmapBuffer = NULL;
 static PEMS_PAGE PageTable = NULL;
 static EMS_HANDLE HandleTable[EMS_MAX_HANDLES];
 static PVOID Mapping[EMS_PHYSICAL_PAGES] = { NULL };
+static PVOID MappingBackup[EMS_PHYSICAL_PAGES] = { NULL };
 static ULONG EmsTotalPages = 0;
 static PVOID EmsMemory = NULL;
+static USHORT EmsSegment = EMS_SEGMENT;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static VOID InitHandlesTable(VOID)
+{
+    ULONG i;
+
+    for (i = 0; i < EMS_MAX_HANDLES; i++)
+    {
+        HandleTable[i].Allocated = FALSE;
+        HandleTable[i].PageCount = 0;
+        InitializeListHead(&HandleTable[i].PageList);
+    }
+}
+
+static PEMS_HANDLE CreateHandle(PUSHORT Handle)
+{
+    PEMS_HANDLE HandleEntry;
+    ULONG i;
+
+    for (i = 0; i < EMS_MAX_HANDLES; i++)
+    {
+        HandleEntry = &HandleTable[i];
+        if (!HandleEntry->Allocated)
+        {
+            *Handle = i;
+            break;
+        }
+    }
+
+    if (i == EMS_MAX_HANDLES) return NULL;
+    HandleEntry->Allocated = TRUE;
+
+    return HandleEntry;
+}
+
+static VOID FreeHandle(PEMS_HANDLE HandleEntry)
+{
+    HandleEntry->Allocated = FALSE;
+    HandleEntry->PageCount = 0;
+}
 
 static inline PEMS_HANDLE GetHandleRecord(USHORT Handle)
 {
@@ -41,15 +85,18 @@ static inline PEMS_HANDLE GetHandleRecord(USHORT Handle)
     return &HandleTable[Handle];
 }
 
+static inline BOOLEAN ValidateHandle(PEMS_HANDLE HandleEntry)
+{
+    return (HandleEntry != NULL && HandleEntry->Allocated);
+}
+
 static USHORT EmsFree(USHORT Handle)
 {
     PLIST_ENTRY Entry;
     PEMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
-    if (HandleEntry == NULL || !HandleEntry->Allocated)
-    {
+    if (!ValidateHandle(HandleEntry))
         return EMS_STATUS_INVALID_HANDLE;
-    }
 
     for (Entry = HandleEntry->PageList.Flink;
          Entry != &HandleEntry->PageList;
@@ -62,9 +109,9 @@ static USHORT EmsFree(USHORT Handle)
         RtlClearBits(&AllocBitmap, PageNumber, 1);
     }
 
-    HandleEntry->Allocated = FALSE;
-    HandleEntry->PageCount = 0;
     InitializeListHead(&HandleEntry->PageList);
+
+    FreeHandle(HandleEntry);
 
     return EMS_STATUS_OK;
 }
@@ -76,18 +123,8 @@ static UCHAR EmsAlloc(USHORT NumPages, PUSHORT Handle)
 
     if (NumPages == 0) return EMS_STATUS_ZERO_PAGES;
 
-    for (i = 0; i < EMS_MAX_HANDLES; i++)
-    {
-        HandleEntry = &HandleTable[i];
-        if (!HandleEntry->Allocated)
-        {
-            *Handle = i;
-            break;
-        }
-    }
-
-    if (i == EMS_MAX_HANDLES) return EMS_STATUS_NO_MORE_HANDLES;
-    HandleEntry->Allocated = TRUE;
+    HandleEntry = CreateHandle(Handle);
+    if (!HandleEntry)  return EMS_STATUS_NO_MORE_HANDLES;
 
     while (HandleEntry->PageCount < NumPages)
     {
@@ -120,13 +157,13 @@ static UCHAR EmsAlloc(USHORT NumPages, PUSHORT Handle)
     return EMS_STATUS_OK;
 }
 
-static PEMS_PAGE GetLogicalPage(PEMS_HANDLE Handle, USHORT LogicalPage)
+static PEMS_PAGE GetLogicalPage(PEMS_HANDLE HandleEntry, USHORT LogicalPage)
 {
-    PLIST_ENTRY Entry = Handle->PageList.Flink;
+    PLIST_ENTRY Entry = HandleEntry->PageList.Flink;
 
     while (LogicalPage)
     {
-        if (Entry == &Handle->PageList) return NULL;
+        if (Entry == &HandleEntry->PageList) return NULL;
         LogicalPage--;
         Entry = Entry->Flink;
     }
@@ -139,17 +176,17 @@ static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
     PEMS_PAGE PageEntry;
     PEMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
-    if (PhysicalPage >= EMS_PHYSICAL_PAGES) return EMS_STATUS_INV_PHYSICAL_PAGE;
+    if (!ValidateHandle(HandleEntry))
+        return EMS_STATUS_INVALID_HANDLE;
+
+    if (PhysicalPage >= EMS_PHYSICAL_PAGES)
+        return EMS_STATUS_INV_PHYSICAL_PAGE;
+
     if (LogicalPage == 0xFFFF)
     {
         /* Unmap */
         Mapping[PhysicalPage] = NULL;
         return EMS_STATUS_OK;
-    }
-
-    if (HandleEntry == NULL || !HandleEntry->Allocated)
-    {
-        return EMS_STATUS_INVALID_HANDLE;
     }
 
     PageEntry = GetLogicalPage(HandleEntry, LogicalPage);
@@ -162,8 +199,6 @@ static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
 
 static VOID WINAPI EmsIntHandler(LPWORD Stack)
 {
-    static PVOID MappingBackup[EMS_PHYSICAL_PAGES] = { NULL };
-
     switch (getAH())
     {
         /* Get Manager Status */
@@ -177,11 +212,11 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         case 0x41:
         {
             setAH(EMS_STATUS_OK);
-            setBX(EMS_SEGMENT);
+            setBX(EmsSegment);
             break;
         }
 
-        /* Get Number Of Pages */
+        /* Get Number of Pages */
         case 0x42:
         {
             setAH(EMS_STATUS_OK);
@@ -190,7 +225,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             break;
         }
 
-        /* Get Handle And Allocate Memory */
+        /* Get Handle and Allocate Memory */
         case 0x43:
         {
             USHORT Handle;
@@ -208,7 +243,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             break;
         }
 
-        /* Release Handle And Memory */
+        /* Release Handle and Memory */
         case 0x45:
         {
             setAH(EmsFree(getDX()));
@@ -226,14 +261,14 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         /* Save Page Map */
         case 0x47:
         {
-            RtlCopyMemory(MappingBackup, Mapping, sizeof(PVOID) * EMS_PHYSICAL_PAGES);
+            RtlCopyMemory(MappingBackup, Mapping, sizeof(Mapping));
             break;
         }
 
         /* Restore Page Map */
         case 0x48:
         {
-            RtlCopyMemory(Mapping, MappingBackup, sizeof(PVOID) * EMS_PHYSICAL_PAGES);
+            RtlCopyMemory(Mapping, MappingBackup, sizeof(Mapping));
             break;
         }
 
@@ -241,7 +276,8 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         case 0x53:
         {
             PEMS_HANDLE HandleEntry = GetHandleRecord(getDX());
-            if (HandleEntry == NULL || !HandleEntry->Allocated)
+
+            if (!ValidateHandle(HandleEntry))
             {
                 setAL(EMS_STATUS_INVALID_HANDLE);
                 break;
@@ -286,7 +322,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 /* Expanded memory */
                 HandleEntry = GetHandleRecord(Data->SourceHandle);
 
-                if (HandleEntry == NULL || !HandleEntry->Allocated)
+                if (!ValidateHandle(HandleEntry))
                 {
                     setAL(EMS_STATUS_INVALID_HANDLE);
                     break;
@@ -315,7 +351,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 /* Expanded memory */
                 HandleEntry = GetHandleRecord(Data->DestHandle);
 
-                if (HandleEntry == NULL || !HandleEntry->Allocated)
+                if (!ValidateHandle(HandleEntry))
                 {
                     setAL(EMS_STATUS_INVALID_HANDLE);
                     break;
@@ -405,7 +441,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
 static VOID FASTCALL EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
     ULONG i;
-    ULONG RelativeAddress = Address - TO_LINEAR(EMS_SEGMENT, 0);
+    ULONG RelativeAddress = Address - TO_LINEAR(EmsSegment, 0);
     ULONG FirstPage = RelativeAddress / EMS_PAGE_SIZE;
     ULONG LastPage = (RelativeAddress + Size - 1) / EMS_PAGE_SIZE;
     ULONG Offset, Length;
@@ -425,7 +461,7 @@ static VOID FASTCALL EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 static BOOLEAN FASTCALL EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
     ULONG i;
-    ULONG RelativeAddress = Address - TO_LINEAR(EMS_SEGMENT, 0);
+    ULONG RelativeAddress = Address - TO_LINEAR(EmsSegment, 0);
     ULONG FirstPage = RelativeAddress / EMS_PAGE_SIZE;
     ULONG LastPage = (RelativeAddress + Size - 1) / EMS_PAGE_SIZE;
     ULONG Offset, Length;
@@ -444,8 +480,7 @@ static BOOLEAN FASTCALL EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
     return TRUE;
 }
 
-
-WORD NTAPI EmsDrvDispatchIoctlRead(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length)
+static WORD NTAPI EmsDrvDispatchIoctlRead(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length)
 {
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
@@ -455,22 +490,26 @@ WORD NTAPI EmsDrvDispatchIoctlRead(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD 
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN EmsDrvInitialize(ULONG TotalPages)
+BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages)
 {
-    ULONG i;
+    USHORT Size;
 
-    for (i = 0; i < EMS_MAX_HANDLES; i++)
-    {
-        HandleTable[i].Allocated = FALSE;
-        HandleTable[i].PageCount = 0;
-        InitializeListHead(&HandleTable[i].PageList);
-    }
+    /* Try to allocate our page table in UMA at the given segment */
+    EmsSegment = (Segment != 0 ? Segment : EMS_SEGMENT);
+    Size = EMS_SEGMENT_SIZE; // Size in paragraphs
+    if (!UmaDescReserve(&EmsSegment, &Size)) return FALSE;
+
+    InitHandlesTable();
 
     EmsTotalPages = TotalPages;
     BitmapBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                    HEAP_ZERO_MEMORY,
                                    ((TotalPages + 31) / 32) * sizeof(ULONG));
-    if (BitmapBuffer == NULL) return FALSE;
+    if (BitmapBuffer == NULL)
+    {
+        UmaDescRelease(EmsSegment);
+        return FALSE;
+    }
 
     RtlInitializeBitMap(&AllocBitmap, BitmapBuffer, TotalPages);
 
@@ -482,6 +521,7 @@ BOOLEAN EmsDrvInitialize(ULONG TotalPages)
         RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
         BitmapBuffer = NULL;
 
+        UmaDescRelease(EmsSegment);
         return FALSE;
     }
 
@@ -493,10 +533,11 @@ BOOLEAN EmsDrvInitialize(ULONG TotalPages)
         RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
         BitmapBuffer = NULL;
 
+        UmaDescRelease(EmsSegment);
         return FALSE;
     }
 
-    MemInstallFastMemoryHook((PVOID)TO_LINEAR(EMS_SEGMENT, 0),
+    MemInstallFastMemoryHook((PVOID)TO_LINEAR(EmsSegment, 0),
                              EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE,
                              EmsReadMemory,
                              EmsWriteMemory);
@@ -520,7 +561,7 @@ VOID EmsDrvCleanup(VOID)
     /* Delete the device */
     DosDeleteDevice(Node);
 
-    MemRemoveFastMemoryHook((PVOID)TO_LINEAR(EMS_SEGMENT, 0),
+    MemRemoveFastMemoryHook((PVOID)TO_LINEAR(EmsSegment, 0),
                             EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE);
 
     if (EmsMemory)
@@ -540,4 +581,6 @@ VOID EmsDrvCleanup(VOID)
         RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
         BitmapBuffer = NULL;
     }
+
+    UmaDescRelease(EmsSegment);
 }

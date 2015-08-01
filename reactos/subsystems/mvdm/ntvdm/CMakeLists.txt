@@ -14,6 +14,7 @@ list(APPEND SOURCE
     bios/bios.c
     bios/kbdbios.c
     bios/rom.c
+    bios/umamgr.c
     bios/vidbios.c
     cpu/bop.c
     cpu/callback.c
@@ -40,8 +41,8 @@ list(APPEND SOURCE
     dos/dos32krnl/himem.c
     dos/dos32krnl/memory.c
     dos/dos32krnl/process.c
-    dos/mouse32.c
     dos/dem.c
+    dos/mouse32.c
     clock.c
     emulator.c
     int32.c

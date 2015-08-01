@@ -4,6 +4,7 @@
  * FILE:            dos/dos32krnl/memory.h
  * PURPOSE:         DOS32 Memory Manager
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #ifndef _DOS_MEMORY_H_
@@ -12,12 +13,6 @@
 /* TYPEDEFS *******************************************************************/
 
 #define SEGMENT_TO_MCB(seg) ((PDOS_MCB)SEG_OFF_TO_PTR((seg), 0))
-
-#define FIRST_MCB_SEGMENT   0x1000
-#define USER_MEMORY_SIZE   (0x9FFE - FIRST_MCB_SEGMENT)
-
-#define UMB_START_SEGMENT   0xC000
-#define UMB_END_SEGMENT     0xDFFF
 
 #define DOS_ALLOC_HIGH      0x40
 #define DOS_ALLOC_HIGH_LOW  0x80
@@ -43,9 +38,6 @@ C_ASSERT(sizeof(DOS_MCB) == 0x10);
 
 /* VARIABLES ******************************************************************/
 
-extern BYTE DosAllocStrategy;
-extern BOOLEAN DosUmbLinked;
-
 /* FUNCTIONS ******************************************************************/
 
 WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable);
@@ -55,6 +47,7 @@ BOOLEAN DosLinkUmb(VOID);
 BOOLEAN DosUnlinkUmb(VOID);
 VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner);
 
+VOID DosInitializeUmb(VOID);
 VOID DosInitializeMemory(VOID);
 
 #endif // _DOS_MEMORY_H_
