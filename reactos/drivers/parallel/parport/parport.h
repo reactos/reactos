@@ -88,6 +88,11 @@ FdoCleanup(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
+FdoRead(IN PDEVICE_OBJECT DeviceObject,
+        IN PIRP Irp);
+
+NTSTATUS
+NTAPI
 FdoWrite(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp);
 
@@ -132,6 +137,11 @@ NTSTATUS
 NTAPI
 PdoCleanup(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+PdoRead(IN PDEVICE_OBJECT DeviceObject,
+        IN PIRP Irp);
 
 NTSTATUS
 NTAPI

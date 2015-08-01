@@ -78,6 +78,20 @@ PdoCleanup(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
+PdoRead(IN PDEVICE_OBJECT DeviceObject,
+        IN PIRP Irp)
+{
+    DPRINT("PdoRead()\n");
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
 PdoWrite(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {

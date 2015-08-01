@@ -68,6 +68,19 @@ DispatchCleanup(IN PDEVICE_OBJECT DeviceObject,
 static
 NTSTATUS
 NTAPI
+DispatchRead(IN PDEVICE_OBJECT DeviceObject,
+              IN PIRP Irp)
+{
+    if (((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
+        return FdoRead(DeviceObject, Irp);
+    else
+        return PdoRead(DeviceObject, Irp);
+}
+
+
+static
+NTSTATUS
+NTAPI
 DispatchWrite(IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
@@ -122,7 +135,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_CREATE] = DispatchCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = DispatchClose;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = DispatchCleanup;
-//    DriverObject->MajorFunction[IRP_MJ_READ] = DispatchRead;
+    DriverObject->MajorFunction[IRP_MJ_READ] = DispatchRead;
     DriverObject->MajorFunction[IRP_MJ_WRITE] = DispatchWrite;
 //    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchDeviceControl;
 //    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = DispatchQueryInformation;

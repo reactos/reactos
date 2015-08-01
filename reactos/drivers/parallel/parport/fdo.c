@@ -473,15 +473,29 @@ FdoCleanup(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
+FdoRead(IN PDEVICE_OBJECT DeviceObject,
+        IN PIRP Irp)
+{
+    DPRINT("FdoRead()\n");
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_NOT_SUPPORTED;
+}
+
+
+NTSTATUS
+NTAPI
 FdoWrite(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
     DPRINT("FdoWrite()\n");
 
     Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 
 
