@@ -114,15 +114,8 @@ PdoWrite(IN PDEVICE_OBJECT DeviceObject,
     DPRINT("Length: %lu\n", IoStack->Parameters.Write.Length);
     DPRINT("Buffer: %p\n", Buffer);
 
-    if (Buffer != NULL)
-    {
-        DPRINT("%s\n", Buffer);
-    }
-
     for (i = 0; i < IoStack->Parameters.Write.Length; i++)
     {
-        DPRINT("%lu: %c\n", i, Buffer[i]);
-
         ulCount = 0;
 
         do
