@@ -27,22 +27,26 @@
 #define DOS_CONFIG_PATH L"%SystemRoot%\\system32\\CONFIG.NT"
 #define DOS_COMMAND_INTERPRETER L"%SystemRoot%\\system32\\COMMAND.COM /k %SystemRoot%\\system32\\AUTOEXEC.NT"
 
-#define SYSTEM_PSP 0x08
-#define SYSTEM_ENV_BLOCK 0x800
-#define DOS_CODE_SEGMENT 0x70
-#define DOS_DATA_SEGMENT 0xA0
+#define BIOS_CODE_SEGMENT   0x70
+#define BIOS_DATA_SEGMENT   0x70
+#define DOS_CODE_SEGMENT    0x80
+#define DOS_DATA_SEGMENT    0xA5
 
 #define DOS_DATA_OFFSET(x) FIELD_OFFSET(DOS_DATA, x)
+
+#define SYSTEM_ENV_BLOCK    0x600   // FIXME: Should be dynamic
+
+#define SYSTEM_PSP          0x0008
 
 #define INVALID_DOS_HANDLE  0xFFFF
 #define DOS_INPUT_HANDLE    0
 #define DOS_OUTPUT_HANDLE   1
 #define DOS_ERROR_HANDLE    2
 
-#define DOS_SFT_SIZE 255
-#define DOS_DIR_LENGTH 64
-#define NUM_DRIVES ('Z' - 'A' + 1)
-#define DOS_CHAR_ATTRIBUTE 0x07
+#define DOS_SFT_SIZE        255    // Value of the 'FILES=' command; maximum 255
+#define DOS_DIR_LENGTH      64
+#define NUM_DRIVES          ('Z' - 'A' + 1)
+#define DOS_CHAR_ATTRIBUTE  0x07
 
 #pragma pack(push, 1)
 
@@ -230,8 +234,27 @@ typedef struct _DOS_SDA
     DWORD PrevCallFrame;
 } DOS_SDA, *PDOS_SDA;
 
+/*
+ * DOS kernel data structure
+ */
 typedef struct _DOS_DATA
 {
+    DOS_SYSVARS SysVars;
+    BYTE NullDriverRoutine[7];
+    WORD DosVersion; // DOS version to report to programs (can be different from the true one)
+    DOS_SDA Sda;
+    CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
+    BYTE DosStack[384];
+    BYTE Sft[ANYSIZE_ARRAY];
+} DOS_DATA, *PDOS_DATA;
+
+/*
+ * DOS BIOS data structure at segment 70h
+ */
+typedef struct _BIOS_DATA
+{
+    BYTE StartupCode[20];                       // 0x00 - 20 bytes: large enough for now!
+
 /*
  * INT 13h (BIOS Disk Services) handler chain support.
  *
@@ -256,22 +279,20 @@ typedef struct _DOS_DATA
  * http://repo.hackerzvoice.net/depot_madchat/vxdevl/vdat/tuvd0001.htm
  * http://vxheaven.org/lib/vsm01.html
  */
-    DWORD RomBiosInt13;
-    DWORD PrevInt13; // FIXME: Put it at 0070:00B4
+    BYTE Padding0[0xB0 - /*FIELD_OFFSET(BIOS_DATA, StartupCode)*/ 20];
+    DWORD RomBiosInt13;                         // 0xb0
+    DWORD PrevInt13;                            // 0xb4
+    BYTE Padding1[0x100 - 0xB8];                // 0xb8
+} BIOS_DATA, *PBIOS_DATA;
 
-    DOS_SYSVARS SysVars;
-    BYTE NullDriverRoutine[7];
-    WORD DosVersion; // DOS version to report to programs (can be different from the true one)
-    DOS_SDA Sda;
-    CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
-    BYTE Sft[ANYSIZE_ARRAY];
-} DOS_DATA, *PDOS_DATA;
+C_ASSERT(sizeof(BIOS_DATA) == 0x100);
 
 #pragma pack(pop)
 
 /* VARIABLES ******************************************************************/
 
-extern BOOLEAN DoEcho;
+extern BOOLEAN DoEcho;  // FIXME: Maybe move inside BiosData? (it's set by BIOS but used by CON driver in DOS BIOS)
+extern PBIOS_DATA BiosData;
 extern PDOS_DATA DosData;
 extern PDOS_SYSVARS SysVars;
 extern PDOS_SDA Sda;
@@ -279,11 +300,13 @@ extern PDOS_SDA Sda;
 /* FUNCTIONS ******************************************************************/
 
 extern CALLBACK16 DosContext;
-#define RegisterDosInt32(IntNumber, IntHandler) \
+#define RegisterDosInt32(IntNumber, IntHandler)             \
 do { \
-    DosContext.NextOffset += RegisterInt32(MAKELONG(DosContext.NextOffset,   \
-                                                    DosContext.Segment),     \
-                                           (IntNumber), (IntHandler), NULL); \
+    ASSERT((0x20 <= IntNumber) && (IntNumber <= 0x2F));     \
+    RegisterInt32(DosContext.TrampolineFarPtr +             \
+                  DosContext.TrampolineSize   +             \
+                  (IntNumber - 0x20) * Int16To32StubSize,   \
+                  (IntNumber), (IntHandler), NULL);         \
 } while(0);
 
 /*

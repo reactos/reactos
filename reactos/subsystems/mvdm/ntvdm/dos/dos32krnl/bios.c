@@ -32,6 +32,13 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+// CALLBACK16 BiosContext;
+
+/* PUBLIC VARIABLES ***********************************************************/
+
+/* Global DOS BIOS data area */
+PBIOS_DATA BiosData;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -63,7 +70,7 @@ BOOLEAN DosCheckInput(VOID)
         return FALSE;
     }
 
-    if (Descriptor->DeviceInfo & (1 << 7))
+    if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
     {
         WORD Result;
         PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
@@ -155,28 +162,61 @@ BOOLEAN DosBuildSysEnvBlock(VOID)
 
 BOOLEAN DosBIOSInitialize(VOID)
 {
-#if 0
-    UCHAR i;
-    CHAR CurrentDirectory[MAX_PATH];
-    CHAR DosDirectory[DOS_DIR_LENGTH];
-    LPSTR Path;
-
     FILE *Stream;
     WCHAR Buffer[256];
-#endif
 
     /* Set the data segment */
-    setDS(DOS_DATA_SEGMENT);
+    setDS(BIOS_DATA_SEGMENT);
 
-    /* Initialize the DOS stack */
-    // Stack just before FIRST_MCB_SEGMENT and after SYSTEM_ENV_BLOCK
-    // FIXME: Add a block of fixed size for the stack in DOS_DATA instead!
+    /* Initialize the global DOS BIOS data area */
+    BiosData = (PBIOS_DATA)SEG_OFF_TO_PTR(BIOS_DATA_SEGMENT, 0x0000);
+
+    /* Initialize the DOS BIOS stack */
+    // FIXME: Add a block of fixed size for the stack in BIOS/DOS_DATA instead!
     setSS(0x0F00);
     setSP(0x0FF0);
-    setBP(0x091E); // DOS base stack pointer relic value
 
-    /* Initialize memory management */
-    DosInitializeMemory();
+    /*
+     * Initialize the INT 13h (BIOS Disk Services) handler chain support.
+     *
+     * The INT 13h handler chain is some functionality that allows DOS
+     * to insert disk filter drivers in between the (hooked) INT 13h handler
+     * and its original handler.
+     * Typically, those are:
+     * - filter for detecting disk changes (for floppy disks),
+     * - filter for tracking formatting calls and correcting DMA boundary errors,
+     * - a possible filter to work around a bug in a particular version of PC-AT's
+     *   IBM's ROM BIOS (on systems with model byte FCh and BIOS date "01/10/84" only)
+     * (see http://www.ctyme.com/intr/rb-4453.htm for more details).
+     *
+     * This functionality is known to be used by some legitimate programs,
+     * by Windows 3.x, as well as some illegitimate ones (aka. virii).
+     *
+     * See extra information about this support in dos.h
+     */
+    // FIXME: Should be done by the DOS BIOS
+    BiosData->RomBiosInt13 = ((PULONG)BaseAddress)[0x13];
+    BiosData->PrevInt13    = BiosData->RomBiosInt13;
+//  RegisterDosInt32(0x13, DosInt13h); // Unused at the moment!
+
+    //
+    // HERE: Do all hardware initialization needed for DOS
+    //
+
+    /*
+     * SysInit part...
+     */
+
+    // InitializeContext(&DosContext, BIOS_CODE_SEGMENT, 0x0010);
+
+    /* Initialize the DOS kernel (DosInit) */
+    if (!DosKRNLInitialize())
+    {
+        DisplayMessage(L"Failed to load the DOS kernel! Exiting...");
+        return FALSE;
+    }
+
+    /* DOS kernel loading succeeded, we can finish the initialization */
 
     /* Build the system master environment block (inherited by the shell) */
     if (!DosBuildSysEnvBlock())
@@ -184,44 +224,7 @@ BOOLEAN DosBIOSInitialize(VOID)
         DPRINT1("An error occurred when setting up the system environment block.\n");
     }
 
-
-#if 0
-
-    /* Clear the current directory buffer */
-    RtlZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
-
-    /* Get the current directory */
-    if (!GetCurrentDirectoryA(MAX_PATH, CurrentDirectory))
-    {
-        // TODO: Use some kind of default path?
-        return FALSE;
-    }
-
-    /* Convert that to a DOS path */
-    if (!GetShortPathNameA(CurrentDirectory, DosDirectory, DOS_DIR_LENGTH))
-    {
-        // TODO: Use some kind of default path?
-        return FALSE;
-    }
-
-    /* Set the drive */
-    Sda->CurrentDrive = DosDirectory[0] - 'A';
-
-    /* Get the directory part of the path */
-    Path = strchr(DosDirectory, '\\');
-    if (Path != NULL)
-    {
-        /* Skip the backslash */
-        Path++;
-    }
-
-    /* Set the directory */
-    if (Path != NULL)
-    {
-        strncpy(CurrentDirectories[Sda->CurrentDrive], Path, DOS_DIR_LENGTH);
-    }
-
-    /* Read CONFIG.SYS */
+    /* TODO: Read CONFIG.NT/SYS */
     Stream = _wfopen(DOS_CONFIG_PATH, L"r");
     if (Stream != NULL)
     {
@@ -232,10 +235,7 @@ BOOLEAN DosBIOSInitialize(VOID)
         fclose(Stream);
     }
 
-#endif
-
-    /* Initialize the DOS kernel */
-    return DosKRNLInitialize();
+    return TRUE;
 }
 
 /* EOF */

@@ -191,7 +191,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
     BYTE Character;
     SYSTEMTIME SystemTime;
     PCHAR String;
-    PDOS_INPUT_BUFFER InputBuffer;
 
     Sda->InDos++;
 
@@ -351,7 +350,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x0A:
         {
             WORD Count = 0;
-            InputBuffer = (PDOS_INPUT_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
+            PDOS_INPUT_BUFFER InputBuffer = (PDOS_INPUT_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
 
             DPRINT("Read Buffered Input\n");
 
@@ -2199,12 +2198,12 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
         case 0x13:
         {
             /* Save the old values of PrevInt13 and RomBiosInt13 */
-            ULONG OldInt13     = DosData->PrevInt13;
-            ULONG OldBiosInt13 = DosData->RomBiosInt13;
+            ULONG OldInt13     = BiosData->PrevInt13;
+            ULONG OldBiosInt13 = BiosData->RomBiosInt13;
 
             /* Set PrevInt13 and RomBiosInt13 to their new values */
-            DosData->PrevInt13    = MAKELONG(getDX(), getDS());
-            DosData->RomBiosInt13 = MAKELONG(getBX(), getES());
+            BiosData->PrevInt13    = MAKELONG(getDX(), getDS());
+            BiosData->RomBiosInt13 = MAKELONG(getBX(), getES());
 
             /* Return in DS:DX the old value of PrevInt13 */
             setDS(HIWORD(OldInt13));
@@ -2271,8 +2270,6 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
 
 BOOLEAN DosKRNLInitialize(VOID)
 {
-#if 1
-
     UCHAR i;
     PDOS_SFT Sft;
     LPSTR Path;
@@ -2281,7 +2278,8 @@ BOOLEAN DosKRNLInitialize(VOID)
     CHAR CurrentDirectory[MAX_PATH];
     CHAR DosDirectory[DOS_DIR_LENGTH];
 
-    const BYTE NullDriverRoutine[] = {
+    static const BYTE NullDriverRoutine[] =
+    {
         /* Strategy routine entry */
         0x26, // mov [Request.Status], DOS_DEVSTAT_DONE
         0xC7,
@@ -2294,12 +2292,16 @@ BOOLEAN DosKRNLInitialize(VOID)
         0xCB, // retf
     };
 
-    FILE *Stream;
-    WCHAR Buffer[256];
+    /* Set the data segment */
+    setDS(DOS_DATA_SEGMENT);
 
     /* Initialize the global DOS data area */
     DosData = (PDOS_DATA)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, 0x0000);
     RtlZeroMemory(DosData, sizeof(*DosData));
+
+    /* Initialize the DOS stack */
+    setSS(DOS_DATA_SEGMENT);
+    setSP(DOS_DATA_OFFSET(DosStack) + sizeof(DosData->DosStack) - sizeof(WORD));
 
     /* Initialize the list of lists */
     SysVars = &DosData->SysVars;
@@ -2409,18 +2411,8 @@ BOOLEAN DosKRNLInitialize(VOID)
         RtlZeroMemory(&Sft->FileDescriptors[i], sizeof(DOS_FILE_DESCRIPTOR));
     }
 
-    /* Read CONFIG.SYS */
-    Stream = _wfopen(DOS_CONFIG_PATH, L"r");
-    if (Stream != NULL)
-    {
-        while (fgetws(Buffer, 256, Stream))
-        {
-            // TODO: Parse the line
-        }
-        fclose(Stream);
-    }
-
-#endif
+    /* Initialize memory management */
+    DosInitializeMemory();
 
     /* Initialize the callback context */
     InitializeContext(&DosContext, DOS_CODE_SEGMENT, 0x0000);
@@ -2448,29 +2440,6 @@ BOOLEAN DosKRNLInitialize(VOID)
     RegisterDosInt32(0x2B, NULL);
     RegisterDosInt32(0x2C, NULL);
     RegisterDosInt32(0x2D, NULL);
-
-    /*
-     * Initialize the INT 13h (BIOS Disk Services) handler chain support.
-     *
-     * The INT 13h handler chain is some functionality that allows DOS
-     * to insert disk filter drivers in between the (hooked) INT 13h handler
-     * and its original handler.
-     * Typically, those are:
-     * - filter for detecting disk changes (for floppy disks),
-     * - filter for tracking formatting calls and correcting DMA boundary errors,
-     * - a possible filter to work around a bug in a particular version of PC-AT's
-     *   IBM's ROM BIOS (on systems with model byte FCh and BIOS date "01/10/84" only)
-     * (see http://www.ctyme.com/intr/rb-4453.htm for more details).
-     *
-     * This functionality is known to be used by some legitimate programs,
-     * by Windows 3.x, as well as some illegitimate ones (aka. virii).
-     *
-     * See extra information about this support in dos.h
-     */
-    // FIXME: Should be done by the DOS BIOS
-    DosData->RomBiosInt13 = ((PULONG)BaseAddress)[0x13];
-    DosData->PrevInt13    = DosData->RomBiosInt13;
-//  RegisterDosInt32(0x13, DosInt13h); // Unused at the moment!
 
     /* Initialize country data */
     DosCountryInitialize();

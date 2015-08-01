@@ -360,7 +360,7 @@ BOOLEAN DosCloseHandle(WORD DosHandle)
     /* Check if the reference count fell to zero */
     if (!Descriptor->RefCount)
     {
-        if (Descriptor->DeviceInfo & (1 << 7))
+        if (Descriptor->DeviceInfo & FILE_INFO_DEVICE)
         {
             PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
 
@@ -369,7 +369,7 @@ BOOLEAN DosCloseHandle(WORD DosHandle)
         }
         else
         {
-            /* Close the win32 handle */
+            /* Close the Win32 handle */
             CloseHandle(Descriptor->Win32Handle);
         }
     }

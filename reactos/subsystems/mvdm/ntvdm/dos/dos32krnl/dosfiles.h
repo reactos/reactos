@@ -12,6 +12,30 @@
 
 #pragma pack(push, 1)
 
+#if 0 // Real DOS-5 SFT entry, for reference only
+typedef struct _DOS_FILE_DESCRIPTOR_DOS5
+{
+    WORD RefCount;                              // 0x00
+    WORD OpenMode;                              // 0x02
+    BYTE Attributes;                            // 0x04
+    WORD DeviceInfo;                            // 0x05
+    DWORD DevicePointer;                        // 0x07
+    WORD StartCluster;                          // 0x0b
+    WORD Time;                                  // 0x0d
+    WORD Date;                                  // 0x0f
+    DWORD Size;                                 // 0x11
+    DWORD Position;                             // 0x15
+    BYTE Reserved0[7];                          // 0x19
+    CHAR FileName[11];                          // 0x20
+    BYTE Reserved1[6];                          // 0x2b
+    WORD OwnerPsp;                              // 0x31
+    BYTE Reserved2[8];                          // 0x33
+} DOS_FILE_DESCRIPTOR_DOS5, *PDOS_FILE_DESCRIPTOR_DOS5;
+
+C_ASSERT(sizeof(DOS_FILE_DESCRIPTOR_DOS5) == 0x3B);
+#endif
+
+// Modified DOS SFT entry, compatible for NTVDM only
 typedef struct _DOS_FILE_DESCRIPTOR
 {
     WORD RefCount;
