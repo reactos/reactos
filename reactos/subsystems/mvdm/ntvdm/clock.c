@@ -65,6 +65,7 @@ VOID ClockUpdate(VOID)
     extern BOOLEAN CpuRunning;
     UINT i;
     PLIST_ENTRY Entry;
+    PHARDWARE_TIMER Timer;
 
     while (VdmRunning && CpuRunning)
     {
@@ -81,10 +82,13 @@ VOID ClockUpdate(VOID)
             ++Cycles;
         }
 
-        for (Entry = Timers.Flink; Entry != &Timers; Entry = Entry->Flink)
+        Entry = Timers.Flink;
+        while (Entry != &Timers)
         {
             ULONGLONG Ticks = (ULONGLONG)-1;
-            PHARDWARE_TIMER Timer = CONTAINING_RECORD(Entry, HARDWARE_TIMER, Link);
+
+            Timer = CONTAINING_RECORD(Entry, HARDWARE_TIMER, Link);
+            Entry = Entry->Flink;
 
             ASSERT((Timer->EnableCount > 0) && (Timer->Flags & HARDWARE_TIMER_ENABLED));
 
@@ -128,12 +132,13 @@ PHARDWARE_TIMER CreateHardwareTimer(ULONG Flags, ULONGLONG Delay, PHARDWARE_TIME
 {
     PHARDWARE_TIMER Timer;
 
-    Timer = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Timer));
+    Timer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*Timer));
     if (Timer == NULL) return NULL;
 
     Timer->Flags = Flags & ~HARDWARE_TIMER_ENABLED;
     Timer->EnableCount = 0;
     Timer->Callback = Callback;
+    Timer->LastTick.QuadPart = 0;
     SetHardwareTimerDelay(Timer, Delay);
 
     if (Flags & HARDWARE_TIMER_ENABLED) EnableHardwareTimer(Timer);

@@ -27,8 +27,8 @@ typedef struct _HARDWARE_TIMER
     ULONG Flags;
     LONG EnableCount;
     ULONGLONG Delay;
-    PHARDWARE_TIMER_PROC Callback;
     LARGE_INTEGER LastTick;
+    PHARDWARE_TIMER_PROC Callback;
 } HARDWARE_TIMER, *PHARDWARE_TIMER;
 
 /* FUNCTIONS ******************************************************************/

@@ -91,11 +91,11 @@ BOOLEAN UmaDescReserve(IN OUT PUSHORT Segment, IN OUT PUSHORT Size)
     // FIXME: Check! What to do?
     if (RequestSize == 0) DPRINT1("Requesting UMA descriptor with null size?!\n");
 
-    for (Entry = UmaDescriptorList.Flink;
-         Entry != &UmaDescriptorList;
-         Entry = Entry->Flink)
+    Entry = UmaDescriptorList.Flink;
+    while (Entry != &UmaDescriptorList)
     {
         UmaDesc = (PUMA_DESCRIPTOR)CONTAINING_RECORD(Entry, UMA_DESCRIPTOR, Entry);
+        Entry = Entry->Flink;
 
         /* Only check free descriptors */
         if (UmaDesc->Type != UMA_FREE) continue;
@@ -209,11 +209,11 @@ BOOLEAN UmaDescRelease(IN USHORT Segment)
     PUMA_DESCRIPTOR UmaDesc, PrevDesc = NULL, NextDesc = NULL;
     PUMA_DESCRIPTOR FoundUmaDesc = NULL;
 
-    for (Entry = UmaDescriptorList.Flink;
-         Entry != &UmaDescriptorList;
-         Entry = Entry->Flink)
+    Entry = UmaDescriptorList.Flink;
+    while (Entry != &UmaDescriptorList)
     {
         UmaDesc = (PUMA_DESCRIPTOR)CONTAINING_RECORD(Entry, UMA_DESCRIPTOR, Entry);
+        Entry = Entry->Flink;
 
         /* Search for the descriptor in the list */
         if (UmaDesc->Start == Address && UmaDesc->Type == UMA_UMB)
@@ -267,11 +267,11 @@ BOOLEAN UmaDescReallocate(IN USHORT Segment, IN OUT PUSHORT Size)
     // FIXME: Check! What to do?
     if (RequestSize == 0) DPRINT1("Resizing UMA descriptor %04X to null size?!\n", Segment);
 
-    for (Entry = UmaDescriptorList.Flink;
-         Entry != &UmaDescriptorList;
-         Entry = Entry->Flink)
+    Entry = UmaDescriptorList.Flink;
+    while (Entry != &UmaDescriptorList)
     {
         UmaDesc = (PUMA_DESCRIPTOR)CONTAINING_RECORD(Entry, UMA_DESCRIPTOR, Entry);
+        Entry = Entry->Flink;
 
         /* Only get the maximum size of free descriptors */
         if (UmaDesc->Type == UMA_FREE)
