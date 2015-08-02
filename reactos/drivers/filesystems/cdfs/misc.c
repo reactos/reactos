@@ -244,12 +244,6 @@ CdfsIsRecordValid(IN PDEVICE_EXTENSION DeviceExt,
             DPRINT1("%wc\n", ((PWSTR)Record->FileId)[0]);
             return FALSE;
         }
-
-        if (((PWSTR)Record->FileId)[0] == UNICODE_NULL)
-        {
-            DPRINT1("Found corrupted entry!\n");
-            return FALSE;
-        }
     }
 
     return TRUE;
