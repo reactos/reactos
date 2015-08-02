@@ -363,7 +363,9 @@ l_ReadHeaderFromFile:
     switch(piohOptHeader->Magic)
     {
     case IMAGE_NT_OPTIONAL_HDR32_MAGIC:
+#ifdef _WIN64
     case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
+#endif // _WIN64
         break;
 
     default:
@@ -4609,13 +4611,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
         {
             MmUnlockAddressSpace(AddressSpace);
             return STATUS_SECTION_PROTECTION;
-        }
-
-        if (ViewSize == NULL)
-        {
-            /* Following this pointer would lead to us to the dark side */
-            /* What to do? Bugcheck? Return status? Do the mambo? */
-            KeBugCheck(MEMORY_MANAGEMENT);
         }
 
         if (SectionOffset == NULL)
