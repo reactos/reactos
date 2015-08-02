@@ -417,7 +417,7 @@ SepShouldPropagateAce(
 
 NTSTATUS
 SepPropagateAcl(
-    _Out_writes_bytes_opt_(DaclLength) PACL AclDest,
+    _Out_writes_bytes_opt_(AclLength) PACL AclDest,
     _Inout_ PULONG AclLength,
     _In_reads_bytes_(AclSource->AclSize) PACL AclSource,
     _In_ PSID Owner,
@@ -439,12 +439,7 @@ SepPropagateAcl(
     PSID Sid;
     BOOLEAN WriteTwoAces;
 
-    if (AclSource->AclRevision != ACL_REVISION)
-    {
-        NT_ASSERT(AclSource->AclRevision == ACL_REVISION);
-        return STATUS_UNKNOWN_REVISION;
-    }
-
+    NT_ASSERT(RtlValidAcl(AclSource));
     NT_ASSERT(AclSource->AclSize % sizeof(ULONG) == 0);
     NT_ASSERT(AclSource->Sbz1 == 0);
     NT_ASSERT(AclSource->Sbz2 == 0);
