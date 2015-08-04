@@ -11,6 +11,10 @@
 
 #define NDEBUG
 
+/* BIOS Version number and Copyright */
+#include <reactos/buildno.h>
+#include <reactos/version.h>
+
 #include "ntvdm.h"
 #include "emulator.h"
 #include "cpu/cpu.h"
@@ -18,16 +22,14 @@
 #include "memory.h"
 
 #include "bios.h"
+#include "bios32/bios32p.h"
+#include "rom.h"
 #include "bios32/vbe.h"
 // #include "vidbios.h"
+#include "bios32/vidbios32.h"
 
 #include "io.h"
 #include "hardware/video/svga.h"
-
-/* DEFINES ********************************************************************/
-
-/* BOP Identifiers */
-#define BOP_VIDEO_INT   0x10
 
 /* MACROS *********************************************************************/
 
@@ -40,6 +42,19 @@
 #define VGA_CRTC_DATA       Bda->CrtBasePort + 1    // VGA_CRTC_DATA_MONO    or VGA_CRTC_DATA_COLOR
 
 /* PRIVATE VARIABLES **********************************************************/
+
+/*
+ * WARNING! For compatibility purposes the string "IBM" should be at C000:001E.
+ */
+static const CHAR BiosInfo[] =
+    "00000000000 Emulation of IBM VGA Compatible ROM\0"
+    "CL-GD5434 VGA BIOS Version 1.41  \r\n"
+    "Copyright (C) ReactOS Team 1996-"COPYRIGHT_YEAR"\r\n"
+    "The original CL-GD5434 card was created by Cirrus Logic, Inc.\r\n\0"
+    "BIOS Date: 06/17/13\0";
+
+C_ASSERT(sizeof(BiosInfo)-1 <= 0xFF-0x05); // Ensures that we won't overflow on the Video Code
+
 
 /*
  * VGA Register Configurations for BIOS Video Modes.
@@ -3862,8 +3877,12 @@ VOID VidBiosDetachFromConsole(VOID)
     Attached = FALSE;
 }
 
-BOOLEAN VidBiosInitialize(VOID)
+VOID VidBiosPost(VOID)
 {
+    /*
+     * Initialize VGA BIOS32 RAM dynamic data
+     */
+
     /* Some vectors are in fact addresses to tables */
     ((PULONG)BaseAddress)[0x1D] = (ULONG)NULL; // Video Parameter Tables
     // Far pointer to the 8x8 graphics font for the 8x8 characters 80h-FFh
@@ -3875,6 +3894,56 @@ BOOLEAN VidBiosInitialize(VOID)
     /* Relocated services by the BIOS (when needed) */
     ((PULONG)BaseAddress)[0x42] = (ULONG)NULL; // Relocated Default INT 10h Video Services
     ((PULONG)BaseAddress)[0x6D] = (ULONG)NULL; // Video BIOS Entry Point
+
+    //
+    // FIXME: At the moment we always set a VGA mode. In the future,
+    // we should set this mode **only** when:
+    // - an app starts to use directly the video memory
+    //   (that should be done in emulator.c)
+    // - or starts to use non-stream I/O interrupts
+    //   (that should be done here, or maybe in VGA ??)
+    //
+
+    Bda->CrtModeControl      = 0x00;
+    Bda->CrtColorPaletteMask = 0x00;
+    Bda->VGADccIDActive      = 0x08; // VGA w/ color analog active display
+
+    /* Set the default video mode */
+    VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
+
+    /* Synchronize our cursor position with VGA */
+    VidBiosSyncCursorPosition();
+
+    /* Register the BIOS 32-bit Interrupts */
+    RegisterBiosInt32(BIOS_VIDEO_INTERRUPT, VidBiosVideoService);
+
+    /* Vectors that should be implemented */
+    RegisterBiosInt32(0x42, NULL); // Relocated Default INT 10h Video Services
+    RegisterBiosInt32(0x6D, NULL); // Video BIOS Entry Point
+
+    /* Initialize VBE */
+    VbeInitialized = VbeInitialize();
+    if (!VbeInitialized) DPRINT1("Couldn't initialize VBE!\n");
+}
+
+BOOLEAN VidBiosInitialize(VOID)
+{
+    UCHAR Checksum;
+
+    /*
+     * Initialize VGA BIOS32 static data
+     */
+
+    /* This is a ROM of size 'VIDEO_BIOS_ROM_SIZE' */
+    *(PWORD)(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, 0x0000)) = 0xAA55;
+    *(PBYTE)(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, 0x0002)) = VIDEO_BIOS_ROM_SIZE / 512; // Size in blocks of 512 bytes
+
+    /* Bootstrap code */
+    *(PWORD)(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, 0x0003)) = 0x90CB; // retf, nop
+    // RtlCopyMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, 0xFFF0), Bootstrap, sizeof(Bootstrap));
+
+    /* Video BIOS Information */
+    RtlCopyMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, 0x0005), BiosInfo, sizeof(BiosInfo)-1);
 
     /* Initialize the VGA static function table */
     VgaStaticFuncTable = SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, VIDEO_STATE_INFO_OFFSET);
@@ -3896,31 +3965,15 @@ BOOLEAN VidBiosInitialize(VOID)
     RtlMoveMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, FONT_8x14_OFFSET),
                   Font8x14, sizeof(Font8x14));
 
-    //
-    // FIXME: At the moment we always set a VGA mode. In the future,
-    // we should set this mode **only** when:
-    // - an app starts to use directly the video memory
-    //   (that should be done in emulator.c)
-    // - or starts to use non-stream I/O interrupts
-    //   (that should be done here, or maybe in VGA ??)
-    //
+    VidBios32Initialize();
 
-    Bda->CrtModeControl      = 0x00;
-    Bda->CrtColorPaletteMask = 0x00;
-    Bda->VGADccIDActive      = 0x08; // VGA w/ color analog active display
+    /* Compute the ROM checksum and store it */
+    *(PBYTE)(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, VIDEO_BIOS_ROM_SIZE - 1)) = 0x00;
+    Checksum = CalcRomChecksum(TO_LINEAR(VIDEO_BIOS_DATA_SEG, 0x0000), VIDEO_BIOS_ROM_SIZE);
+    *(PBYTE)(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, VIDEO_BIOS_ROM_SIZE - 1)) = (0xFF - Checksum + 1) & 0xFF;
 
-    /* Set the default video mode */
-    VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
-
-    /* Synchronize our cursor position with VGA */
-    VidBiosSyncCursorPosition();
-
-    /* Register the BIOS support BOPs */
-    RegisterBop(BOP_VIDEO_INT, VidBiosVideoService);
-
-    /* Initialize VBE */
-    VbeInitialized = VbeInitialize();
-    if (!VbeInitialized) DPRINT1("Couldn't initialize VBE!\n");
+    WriteProtectRom((PVOID)TO_LINEAR(VIDEO_BIOS_DATA_SEG, 0x0000),
+                    VIDEO_BIOS_ROM_SIZE);
 
     return TRUE;
 }

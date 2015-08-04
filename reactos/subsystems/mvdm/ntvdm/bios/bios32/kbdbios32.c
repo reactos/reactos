@@ -80,7 +80,8 @@ static BOOLEAN BiosKbdBufferPop(VOID)
     return TRUE;
 }
 
-static VOID WINAPI BiosKeyboardService(LPWORD Stack)
+/* static */
+VOID WINAPI BiosKeyboardService(LPWORD Stack)
 {
     switch (getAH())
     {
@@ -168,11 +169,16 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
         case 0x12:
         {
             /*
-             * Be careful! The returned word is similar to Bda->KeybdShiftFlags
+             * Be careful! The returned word is similar to 'Bda->KeybdShiftFlags'
              * but the high byte is organized differently:
-             * the bytes 2 and 3 of the high byte are not the same...
+             * the bits 2 and 3 of the high byte are not the same:
+             * instead they correspond to the right CTRL and ALT keys as specified
+             * in bits 2 and 3 of LOBYTE(Bda->KeybdStatusFlags).
              */
-            WORD KeybdShiftFlags = (Bda->KeybdShiftFlags & 0xF3FF);
+            // Bda->KeybdShiftFlags & 0xF3FF;
+            WORD KeybdShiftFlags = MAKEWORD(LOBYTE(Bda->KeybdShiftFlags),
+                                               (HIBYTE(Bda->KeybdShiftFlags ) & 0xF3) |
+                                               (LOBYTE(Bda->KeybdStatusFlags) & 0x0C));
 
             /* Return the extended keyboard shift status word */
             setAX(KeybdShiftFlags);
@@ -188,7 +194,8 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
 }
 
 // Keyboard IRQ 1
-static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
+/* static */
+VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 {
     static BOOLEAN Extended = FALSE;
     BOOLEAN SkipScanCode;
@@ -222,8 +229,13 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
     if (ScanCode == 0xE0)
     {
         Extended = TRUE;
+        Bda->KeybdStatusFlags |= 0x02;
         goto Quit;
     }
+
+    // FIXME: For diagnostic purposes. We should decide what to do then!!
+    if (ScanCode == 0xE1)
+        DPRINT1("BiosKeyboardIrq, ScanCode == 0xE1\n");
 
     /* Check whether CF is clear. If so, skip the scan code. */
     if (SkipScanCode) goto Quit;
@@ -249,10 +261,12 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
                 break;
             }
 
-            case VK_CONTROL:
             case VK_SHIFT:
             case VK_LSHIFT:
             case VK_RSHIFT:
+            case VK_CONTROL:
+            case VK_RCONTROL:
+            case VK_LCONTROL:
             case VK_MENU:
             case VK_LMENU:
             case VK_RMENU:
@@ -288,19 +302,27 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 
     /* Clear the keyboard flags */
     Bda->KeybdShiftFlags = 0;
+    // Release right CTRL and ALT keys
+    Bda->KeybdStatusFlags &= ~(BDA_KBDFLAG_RCTRL | BDA_KBDFLAG_RALT);
 
     /* Set the appropriate flags based on the state */
-    if (BiosKeyboardMap[VK_SHIFT]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LSHIFT;
+    // SHIFT
     if (BiosKeyboardMap[VK_RSHIFT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_RSHIFT;
     if (BiosKeyboardMap[VK_LSHIFT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LSHIFT;
+    if (BiosKeyboardMap[VK_SHIFT]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LSHIFT;
+    // CTRL
+    if (BiosKeyboardMap[VK_RCONTROL] & (1 << 7)) Bda->KeybdStatusFlags |= BDA_KBDFLAG_RCTRL;
+    if (BiosKeyboardMap[VK_LCONTROL] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LCTRL;
     if (BiosKeyboardMap[VK_CONTROL]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CTRL;
+    // ALT
+    if (BiosKeyboardMap[VK_RMENU]    & (1 << 7)) Bda->KeybdStatusFlags |= BDA_KBDFLAG_RALT;
+    if (BiosKeyboardMap[VK_LMENU]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LALT;
     if (BiosKeyboardMap[VK_MENU]     & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_ALT;
+    // Others
     if (BiosKeyboardMap[VK_SCROLL]   & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_SCROLL_ON;
     if (BiosKeyboardMap[VK_NUMLOCK]  & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_NUMLOCK_ON;
     if (BiosKeyboardMap[VK_CAPITAL]  & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CAPSLOCK_ON;
     if (BiosKeyboardMap[VK_INSERT]   & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_INSERT_ON;
-    if (BiosKeyboardMap[VK_RMENU]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_RALT;
-    if (BiosKeyboardMap[VK_LMENU]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LALT;
     if (BiosKeyboardMap[VK_SNAPSHOT] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_SYSRQ;
     if (BiosKeyboardMap[VK_PAUSE]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_PAUSE;
     if (BiosKeyboardMap[VK_SCROLL]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_SCROLL;
@@ -310,6 +332,8 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 
     /* Clear the extended key flag */
     Extended = FALSE;
+    Bda->KeybdStatusFlags &= ~0x02; // Remove the 0xE0 code flag
+    // Bda->KeybdStatusFlags &= ~0x01; // Remove the 0xE1 code flag
 
     DPRINT("BiosKeyboardIrq - Character = 0x%X, ScanCode = 0x%X, KeybdShiftFlags = 0x%X\n",
            Character, ScanCode, Bda->KeybdShiftFlags);
@@ -320,11 +344,8 @@ Quit:
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN KbdBios32Initialize(VOID)
+VOID KbdBios32Post(VOID)
 {
-    /* Initialize the common Keyboard BIOS Support Library */
-    if (!KbdBiosInitialize()) return FALSE;
-
     /* Initialize the BDA */
     Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
     Bda->KeybdBufferEnd   = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
@@ -334,6 +355,10 @@ BOOLEAN KbdBios32Initialize(VOID)
     RtlFillMemory(((LPVOID)((ULONG_PTR)Bda + Bda->KeybdBufferStart)),
                   BIOS_KBD_BUFFER_SIZE * sizeof(WORD), 'A');
 
+    Bda->KeybdShiftFlags  = 0;
+    Bda->KeybdStatusFlags = (1 << 4); // 101/102 enhanced keyboard installed
+    Bda->KeybdLedFlags    = 0;
+
     /*
      * Register the BIOS 32-bit Interrupts:
      * - Software vector handler
@@ -341,14 +366,6 @@ BOOLEAN KbdBios32Initialize(VOID)
      */
     RegisterBiosInt32(BIOS_KBD_INTERRUPT, BiosKeyboardService);
     EnableHwIRQ(1, BiosKeyboardIrq);
-
-    return TRUE;
-}
-
-VOID KbdBios32Cleanup(VOID)
-{
-    /* Cleanup the common Keyboard BIOS Support Library */
-    KbdBiosCleanup();
 }
 
 /* EOF */

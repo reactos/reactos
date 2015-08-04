@@ -18,22 +18,24 @@
 #define CMOS_BATTERY_OK     0x80
 
 /* Status Register B flags */
+#define CMOS_STB_DST            (1 << 0)
 #define CMOS_STB_24HOUR         (1 << 1)
 #define CMOS_STB_BINARY         (1 << 2)
 #define CMOS_STB_SQUARE_WAVE    (1 << 3)
 #define CMOS_STB_INT_ON_UPDATE  (1 << 4)
 #define CMOS_STB_INT_ON_ALARM   (1 << 5)
 #define CMOS_STB_INT_PERIODIC   (1 << 6)
+#define CMOS_STB_UPDATE_CYCLE   (1 << 7)
 
 /* Status Register C flags */
-#define CMOS_STC_UF     CMOS_STB_INT_ON_UPDATE
-#define CMOS_STC_AF     CMOS_STB_INT_ON_ALARM
-#define CMOS_STC_PF     CMOS_STB_INT_PERIODIC
+#define CMOS_STC_UF     (1 << 4)
+#define CMOS_STC_AF     (1 << 5)
+#define CMOS_STC_PF     (1 << 6)
 #define CMOS_STC_IRQF   (1 << 7)
 
 /* Default register values */
-#define CMOS_DEFAULT_STA 0x26
-#define CMOS_DEFAULT_STB CMOS_STB_24HOUR
+#define CMOS_DEFAULT_STA    0x26
+#define CMOS_DEFAULT_STB    CMOS_STB_24HOUR
 
 #define WRITE_CMOS_DATA(Cmos, Value)    \
     ((Cmos).StatusRegB & CMOS_STB_BINARY) ? (Value) : BCD_TO_BINARY(Value)
@@ -65,6 +67,7 @@ typedef enum _CMOS_REGISTERS
     CMOS_REG_EXT_MEMORY_HIGH        = 0x18,
     CMOS_REG_ACTUAL_EXT_MEMORY_LOW  = 0x30,
     CMOS_REG_ACTUAL_EXT_MEMORY_HIGH = 0x31,
+    CMOS_REG_CENTURY                = 0x32,
     CMOS_REG_MAX                    = 0x40
 } CMOS_REGISTERS, *PCMOS_REGISTERS;
 
@@ -107,6 +110,8 @@ typedef struct
             BYTE StatusRegD;        // 0x0d
             BYTE Diagnostics;       // 0x0e
             BYTE ShutdownStatus;    // 0x0f
+            BYTE Padding[0x22];     // 0x10
+            BYTE Century;           // 0x32
         };
         BYTE Regs1[0x10];           // 0x00 - 0x0f
         BYTE Regs [0x40];           // 0x00 - 0x3f

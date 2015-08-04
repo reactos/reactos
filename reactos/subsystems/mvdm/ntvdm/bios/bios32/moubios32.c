@@ -105,7 +105,7 @@ VOID BiosMousePs2Interface(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN MouseBios32Initialize(VOID)
+VOID MouseBios32Post(VOID)
 {
     BYTE ControllerConfig;
 
@@ -127,7 +127,10 @@ BOOLEAN MouseBios32Initialize(VOID)
 
     /* Set up the HW vector interrupts */
     EnableHwIRQ(12, BiosMouseIrq);
+}
 
+BOOLEAN MouseBiosInitialize(VOID)
+{
     return TRUE;
 }
 

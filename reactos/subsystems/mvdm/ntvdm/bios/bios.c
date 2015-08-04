@@ -23,12 +23,13 @@
 #include "io.h"
 #include "hardware/cmos.h"
 
+#include <stdlib.h>
+
 /* DEFINES ********************************************************************/
 
 /* BOP Identifiers */
 #define BOP_RESET       0x00    // Windows NTVDM (SoftPC) BIOS calls BOP 0x00
-                                // to let the virtual machine initialize itself
-                                // the IVT and its hardware.
+                                // to let the virtual machine perform the POST.
 #define BOP_EQUIPLIST   0x11
 #define BOP_GETMEMSIZE  0x12
 
@@ -43,94 +44,95 @@ PBIOS_CONFIG_TABLE Bct;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID WINAPI BiosEquipmentService(LPWORD Stack)
+VOID WINAPI
+WinNtVdmBiosReset(LPWORD Stack)
 {
-    /* Return the equipment list */
-    setAX(Bda->EquipmentList);
-}
+    DisplayMessage(L"You are loading Windows NTVDM BIOS!\n");
+    // Bios32Post(Stack);
 
-VOID WINAPI BiosGetMemorySize(LPWORD Stack)
-{
-    /* Return the conventional memory size in kB, typically 640 kB */
-    setAX(Bda->MemorySize);
+    DisplayMessage(L"ReactOS NTVDM doesn't support Windows NTVDM BIOS at the moment. The VDM will shut down.");
+    EmulatorTerminate();
 }
 
 BOOLEAN
-BiosInitialize(IN LPCSTR BiosFileName)
+BiosInitialize(IN LPCSTR BiosFileName,
+               IN LPCSTR RomFiles OPTIONAL)
 {
     BOOLEAN Success = FALSE;
+    BOOLEAN Success2 = FALSE;
+    LPCSTR RomFile;
+    LPSTR ptr;
+    ULONG RomAddress;
+    CHAR RomFileName[MAX_PATH + 10 + 1];
 
     /* Disable interrupts */
     setIF(0);
 
     /* Initialize the BDA and the BCT pointers */
-    Bda =    (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0x0000);
+    Bda =    (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT , 0x0000);
     // The BCT is found at F000:E6F5 for 100% compatible BIOSes.
     Bct = (PBIOS_CONFIG_TABLE)SEG_OFF_TO_PTR(BIOS_SEGMENT, 0xE6F5);
 
-    /**** HACK! HACK! for Windows NTVDM BIOS ****/
-    // WinNtVdmBiosSupportInitialize();
+    /* Register the BIOS support BOPs */
+    RegisterBop(BOP_RESET, WinNtVdmBiosReset);          // Needed for Windows NTVDM (SoftPC) BIOS.
+    RegisterBop(BOP_EQUIPLIST , BiosEquipmentService);  // Needed by Windows NTVDM (SoftPC) BIOS
+    RegisterBop(BOP_GETMEMSIZE, BiosGetMemorySize);     // and also NTDOS!!
 
-    // /* Register the BIOS support BOPs */
-    // RegisterBop(BOP_EQUIPLIST , BiosEquipmentService);
-    // RegisterBop(BOP_GETMEMSIZE, BiosGetMemorySize);
-
-    if (BiosFileName && BiosFileName[0] != '\0')
+    if (BiosFileName == NULL)
     {
-        PVOID BiosLocation = NULL;
-        DWORD BiosSize = 0;
-
-        Success = LoadBios(BiosFileName, &BiosLocation, &BiosSize);
-        DPRINT1("BIOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
-
-        if (!Success) return FALSE;
-
-        DisplayMessage(L"First bytes at 0x%p: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n"
-                       L"3 last bytes at 0x%p: 0x%02x 0x%02x 0x%02x",
-                       BiosLocation,
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 0),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 1),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 2),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 3),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 4),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 5),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 6),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 7),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 8),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 9),
-
-                        (PVOID)((ULONG_PTR)BiosLocation + BiosSize - 2),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 2),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 1),
-                       *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + BiosSize - 0));
-
-        DisplayMessage(L"POST at 0x%p: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
-                       TO_LINEAR(getCS(), getIP()),
-                       *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(getCS(), getIP()) + 0),
-                       *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(getCS(), getIP()) + 1),
-                       *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(getCS(), getIP()) + 2),
-                       *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(getCS(), getIP()) + 3),
-                       *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(getCS(), getIP()) + 4));
-
-        /* Boot it up */
-
-        /*
-         * The CPU is already in reset-mode so that
-         * CS:IP points to F000:FFF0 as required.
-         */
-        DisplayMessage(L"CS=0x%p ; IP=0x%p", getCS(), getIP());
-        // setCS(0xF000);
-        // setIP(0xFFF0);
-
-        Success = TRUE;
-    }
-    else
-    {
-        WriteProtectRom((PVOID)ROM_AREA_START,
-                        ROM_AREA_END - ROM_AREA_START + 1);
-
         Success = Bios32Loaded = Bios32Initialize();
     }
+    else if (BiosFileName[0] != '\0')
+    {
+        PVOID BiosLocation = NULL;
+
+        Success = LoadBios(BiosFileName, &BiosLocation, NULL);
+        DPRINT1("BIOS file '%s' loading %s at address 0x%08x; GetLastError() = %u\n",
+                BiosFileName, Success ? "succeeded" : "failed", BiosLocation, GetLastError());
+    }
+    else // if (BiosFileName[0] == '\0')
+    {
+        /* Do nothing */
+        Success = TRUE;
+    }
+
+    /* Bail out now if we failed to load any BIOS file */
+    if (!Success) return FALSE;
+
+    /* Load optional ROMs */
+    if (RomFiles)
+    {
+        RomFile = RomFiles;
+        while (*RomFile)
+        {
+            strncpy(RomFileName, RomFile, ARRAYSIZE(RomFileName));
+            RomFileName[ARRAYSIZE(RomFileName)-1] = '\0';
+
+            ptr = strchr(RomFileName, '|'); // Since '|' is forbidden as a valid file name, we use it as a separator for the ROM address.
+            if (!ptr) goto Skip;
+            *ptr++ = '\0';
+
+            RomAddress = strtoul(ptr, NULL, 0); // ROM segment
+            RomAddress <<= 4; // Convert to real address
+            if (RomAddress == 0) goto Skip;
+
+            Success2 = LoadRom(RomFileName, (PVOID)RomAddress, NULL);
+            DPRINT1("ROM file '%s' loading %s at address 0x%08x; GetLastError() = %u\n",
+                    RomFileName, Success2 ? "succeeded" : "failed", RomAddress, GetLastError());
+
+Skip:
+            RomFile += strlen(RomFile) + 1;
+        }
+    }
+
+    /*
+     * Boot it up.
+     * The CPU is already in reset-mode so that
+     * CS:IP points to F000:FFF0 as required.
+     */
+    // DisplayMessage(L"CS:IP=%04X:%04X", getCS(), getIP());
+    // setCS(0xF000);
+    // setIP(0xFFF0);
 
     // /* Enable interrupts */
     // setIF(1);

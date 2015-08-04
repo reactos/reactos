@@ -26,12 +26,14 @@
 #define CGA_ODD_VIDEO_SEG       0xBA00
 #define VIDEO_BIOS_DATA_SEG     0xC000
 
-#define FONT_8x8_OFFSET         0x0000
-#define FONT_8x8_HIGH_OFFSET    0x0400
-#define FONT_8x16_OFFSET        0x0800
-#define FONT_8x14_OFFSET        0x1800
+#define FONT_8x8_OFFSET         0x0100
+#define FONT_8x8_HIGH_OFFSET    0x0500
+#define FONT_8x16_OFFSET        0x0900
+#define FONT_8x14_OFFSET        0x1900
 
-#define VIDEO_STATE_INFO_OFFSET 0x3000 // == 0x1800 + (sizeof(Font8x14) == 0x0E00) + 0x0A00 for padding
+#define VIDEO_STATE_INFO_OFFSET 0x3000 // == 0x1900 + (sizeof(Font8x14) == 0x0E00) + 0x0900 for padding
+
+#define VIDEO_BIOS_ROM_SIZE     0x4000
 
 typedef enum
 {
@@ -109,6 +111,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack);
 VOID VidBiosDetachFromConsole(VOID);
 VOID VidBiosAttachToConsole(VOID);
 
+VOID VidBiosPost(VOID);
 BOOLEAN VidBiosInitialize(VOID);
 VOID VidBiosCleanup(VOID);
 

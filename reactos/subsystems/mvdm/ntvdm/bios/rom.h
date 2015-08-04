@@ -23,6 +23,14 @@ WriteProtectRom(IN PVOID RomLocation,
                 IN ULONG RomSize);
 
 BOOLEAN
+WriteUnProtectRom(IN PVOID RomLocation,
+                  IN ULONG RomSize);
+
+UCHAR
+CalcRomChecksum(IN ULONG RomLocation,
+                IN ULONG RomSize);
+
+BOOLEAN
 LoadBios(IN  PCSTR  BiosFileName,
          OUT PVOID* BiosLocation OPTIONAL,
          OUT PULONG BiosSize     OPTIONAL);

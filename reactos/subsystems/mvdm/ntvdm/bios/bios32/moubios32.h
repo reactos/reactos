@@ -15,7 +15,8 @@
 
 VOID BiosMousePs2Interface(LPWORD Stack);
 
-BOOLEAN MouseBios32Initialize(VOID);
+VOID MouseBios32Post(VOID);
+BOOLEAN MouseBiosInitialize(VOID);
 VOID MouseBios32Cleanup(VOID);
 
 #endif /* _MOUBIOS32_H_ */

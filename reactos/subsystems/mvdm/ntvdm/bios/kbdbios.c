@@ -13,6 +13,7 @@
 #include "ntvdm.h"
 #include "emulator.h"
 #include "cpu/bop.h"
+#include "int32.h"
 
 #include "bios.h"
 // #include "kbdbios.h"
@@ -25,27 +26,73 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+extern VOID WINAPI BiosKeyboardIrq(LPWORD Stack);
 static VOID WINAPI KbdBiosIRQ(LPWORD Stack)
 {
-    DPRINT1("KbdBiosIRQ is UNIMPLEMENTED\n");
+    /*
+     * Set up a false stack to hardwire the BOP function (that can directly
+     * manipulate CPU registers) to the 32-bit interrupt function (which uses
+     * the stack to be able to modify the original CS:IP and FLAGS).
+     *
+     * See int32.h stack codes.
+     */
+    WORD EmuStack[4];
+    DWORD Flags = getEFLAGS();
+
+    DPRINT1("Calling BOP KbdBiosIRQ\n");
+
+    EmuStack[STACK_FLAGS]   = LOWORD(Flags);
+    EmuStack[STACK_CS]      = getCS();
+    EmuStack[STACK_IP]      = getIP();
+    EmuStack[STACK_INT_NUM] = BOP_KBD_IRQ;
+
+    BiosKeyboardIrq(EmuStack);
+
+    setIP(EmuStack[STACK_IP]);
+    setCS(EmuStack[STACK_CS]);
+    setEFLAGS(MAKELONG(EmuStack[STACK_FLAGS], HIWORD(Flags)));
 }
 
+extern VOID WINAPI BiosKeyboardService(LPWORD Stack);
 static VOID WINAPI KbdBiosINT(LPWORD Stack)
 {
-    DPRINT1("KbdBiosINT is UNIMPLEMENTED\n");
+    /*
+     * Set up a false stack to hardwire the BOP function (that can directly
+     * manipulate CPU registers) to the 32-bit interrupt function (which uses
+     * the stack to be able to modify the original CS:IP and FLAGS).
+     *
+     * See int32.h stack codes.
+     */
+    WORD EmuStack[4];
+    DWORD Flags = getEFLAGS();
+
+    DPRINT1("Calling BOP KbdBiosINT\n");
+
+    EmuStack[STACK_FLAGS]   = LOWORD(Flags);
+    EmuStack[STACK_CS]      = getCS();
+    EmuStack[STACK_IP]      = getIP();
+    EmuStack[STACK_INT_NUM] = BOP_KBD_IRQ;
+
+    BiosKeyboardService(EmuStack);
+
+    setIP(EmuStack[STACK_IP]);
+    setCS(EmuStack[STACK_CS]);
+    setEFLAGS(MAKELONG(EmuStack[STACK_FLAGS], HIWORD(Flags)));
 }
 
 BOOLEAN KbdBiosInitialize(VOID)
 {
     /* Register the BIOS support BOPs */
-    RegisterBop(BOP_KBD_IRQ, KbdBiosIRQ);
-    RegisterBop(BOP_KBD_INT, KbdBiosINT);
-
+    RegisterBop(BOP_KBD_IRQ, KbdBiosIRQ);   // BiosKeyboardIrq in kbdbios32.c
+    RegisterBop(BOP_KBD_INT, KbdBiosINT);   // BiosKeyboardService in kbdbios32.c
     return TRUE;
 }
 
 VOID KbdBiosCleanup(VOID)
 {
+    /* Unregister the BIOS support BOPs */
+    RegisterBop(BOP_KBD_IRQ, NULL);
+    RegisterBop(BOP_KBD_INT, NULL);
 }
 
 /* EOF */

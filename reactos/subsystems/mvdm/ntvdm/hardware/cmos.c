@@ -222,6 +222,12 @@ static BYTE CmosReadData(VOID)
             break;
         }
 
+        case CMOS_REG_CENTURY:
+        {
+            Value = READ_CMOS_DATA(CmosMemory, CurrentTime.wYear / 100 + 19);
+            break;
+        }
+
         case CMOS_REG_STATUS_C:
         {
             /* Return the old value */
@@ -360,6 +366,12 @@ static VOID CmosWriteData(BYTE Value)
             CurrentTime.wYear = (CurrentTime.wYear / 100) * 100;
 
             CurrentTime.wYear += WRITE_CMOS_DATA(CmosMemory, Value);
+            break;
+        }
+
+        case CMOS_REG_CENTURY:
+        {
+            UNIMPLEMENTED;
             break;
         }
 

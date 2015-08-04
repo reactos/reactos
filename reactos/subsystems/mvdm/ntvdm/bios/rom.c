@@ -81,22 +81,6 @@ LoadRomFileByHandle(IN  HANDLE RomFileHandle,
                             BytesRead);
 }
 
-static UCHAR
-ComputeChecksum(IN ULONG RomLocation,
-                IN ULONG RomSize)
-{
-    ULONG RomLastAddress = RomLocation + RomSize;
-    UCHAR Sum = 0x00;   // Using a UCHAR guarantees that we wrap at 0xFF i.e. we do a sum modulo 0x100.
-
-    while (RomLocation < RomLastAddress)
-    {
-        Sum += *(PUCHAR)REAL_TO_PHYS(RomLocation);
-        ++RomLocation;
-    }
-
-    return Sum;
-}
-
 static VOID
 InitRomRange(IN PCALLBACK16 Context,
              IN ULONG Start,
@@ -115,16 +99,16 @@ InitRomRange(IN PCALLBACK16 Context,
             /* Check the control sum of the ROM */
 
             /*
-             * If this is an adapter ROM (Start: C8000, End: E0000), its
-             * reported size is stored in byte 2 of the ROM.
+             * If this is an adapter ROM (Start: C8000, End: E0000),
+             * its reported size is stored in byte 2 of the ROM.
              *
              * If this is an expansion ROM (Start: E0000, End: F0000),
              * its real length is 64kB.
              */
-            RomSize = *(PUCHAR)REAL_TO_PHYS(Address + 2) * 512;
+            RomSize = *(PUCHAR)REAL_TO_PHYS(Address + 2) * 512; // Size in blocks of 512 bytes
             if (Address >= 0xE0000) RomSize = 0x10000;
 
-            Checksum = ComputeChecksum(Address, RomSize);
+            Checksum = CalcRomChecksum(Address, RomSize);
             if (Checksum == 0x00)
             {
                 EntryPoint = Address + 3;
@@ -154,6 +138,29 @@ WriteProtectRom(IN PVOID RomLocation,
 {
     return MemInstallFastMemoryHook(RomLocation, RomSize,
                                     NULL, ShadowRomWrite);
+}
+
+BOOLEAN
+WriteUnProtectRom(IN PVOID RomLocation,
+                  IN ULONG RomSize)
+{
+    return MemRemoveFastMemoryHook(RomLocation, RomSize);
+}
+
+UCHAR
+CalcRomChecksum(IN ULONG RomLocation,
+                IN ULONG RomSize)
+{
+    ULONG RomLastAddress = RomLocation + RomSize;
+    UCHAR Sum = 0x00;   // Using a UCHAR guarantees that we wrap at 0xFF i.e. we do a sum modulo 0x100.
+
+    while (RomLocation < RomLastAddress)
+    {
+        Sum += *(PUCHAR)REAL_TO_PHYS(RomLocation);
+        ++RomLocation;
+    }
+
+    return Sum;
 }
 
 BOOLEAN
@@ -242,6 +249,9 @@ LoadRom(IN  PCSTR  RomFileName,
 VOID
 SearchAndInitRoms(IN PCALLBACK16 Context)
 {
+    /* Video ROMs -- Start: C0000, End: C8000, 2kB blocks */
+    InitRomRange(Context, 0xC0000, 0xC8000, 0x0800);
+
     /* Adapters ROMs -- Start: C8000, End: E0000, 2kB blocks */
     InitRomRange(Context, 0xC8000, 0xE0000, 0x0800);
 

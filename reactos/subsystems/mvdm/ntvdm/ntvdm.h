@@ -63,6 +63,10 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
  */
 // #define ADVANCED_DEBUGGING
 
+#ifdef ADVANCED_DEBUGGING
+#define ADVANCED_DEBUGGING_LEVEL    1
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 extern HANDLE VdmTaskEvent;

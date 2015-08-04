@@ -18,8 +18,7 @@
 
 /* BOP Identifiers */
 #define BOP_RESET       0x00    // Windows NTVDM (SoftPC) BIOS calls BOP 0x00
-                                // to let the virtual machine initialize itself
-                                // the IVT and its hardware.
+                                // to let the virtual machine perform the POST.
 #define BOP_EQUIPLIST   0x11
 #define BOP_GETMEMSIZE  0x12
 
@@ -29,10 +28,6 @@
 #define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
 
-// HACK: Disable FPU for now because it is not fully ready yet for being used
-// by all applications (e.g. QBasic runtime would use the native FPU if the bit
-// is set, but then subsequently fails, unless the FPU bit is unset in that case
-// QBasic uses its emulated FPU).
 #define BIOS_EQUIPMENT_LIST 0x2E    // Bit1: FPU, Bit 2: Mouse
 
 #pragma pack(push, 1)
@@ -104,7 +99,8 @@ typedef struct
     BYTE Reserved5[2];                          // 0x90
     BYTE Reserved6[2];                          // 0x92
     BYTE Reserved7[2];                          // 0x94
-    WORD KeybdStatusFlags;                      // 0x96
+    BYTE KeybdStatusFlags;                      // 0x96
+    BYTE KeybdLedFlags;                         // 0x97
     DWORD Reserved9;                            // 0x98
     DWORD Reserved10;                           // 0x9c
     DWORD Reserved11[2];                        // 0xa0
@@ -165,7 +161,8 @@ VOID WINAPI BiosEquipmentService(LPWORD Stack);
 VOID WINAPI BiosGetMemorySize(LPWORD Stack);
 
 BOOLEAN
-BiosInitialize(IN LPCSTR BiosFileName);
+BiosInitialize(IN LPCSTR BiosFileName,
+               IN LPCSTR RomFiles OPTIONAL);
 
 VOID
 BiosCleanup(VOID);

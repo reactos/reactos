@@ -526,6 +526,25 @@ wmain(INT argc, WCHAR *argv[])
 
 #endif
 
+#ifdef ADVANCED_DEBUGGING
+    {
+    INT i = 20;
+
+    printf("Waiting for debugger (10 secs)..");
+    while (i--)
+    {
+        printf(".");
+        if (IsDebuggerPresent())
+        {
+            DbgBreakPoint();
+            break;
+        }
+        Sleep(500);
+    }
+    printf("Continue\n");
+    }
+#endif
+
     /* Load global VDM settings */
     LoadGlobalSettings();
 
@@ -549,8 +568,8 @@ wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
-    /* Initialize the system BIOS */
-    if (!BiosInitialize(NULL))
+    /* Initialize the system BIOS and option ROMs */
+    if (!BiosInitialize(NULL, NULL))
     {
         wprintf(L"FATAL: Failed to initialize the VDM BIOS.\n");
         goto Cleanup;
