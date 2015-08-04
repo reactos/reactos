@@ -373,7 +373,7 @@ static VOID WINAPI DosInitialize(LPWORD Stack)
     RegisterBop(BOP_DOS, DosSystemBop        );
     RegisterBop(BOP_CMD, DosCmdInterpreterBop);
 
-    if (DosBiosFileName && DosBiosFileName[0] != '\0')
+    if (DosBiosFileName[0] != '\0')
     {
         BOOLEAN Success = FALSE;
         HANDLE  hDosBios;
