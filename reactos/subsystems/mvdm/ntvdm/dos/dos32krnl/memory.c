@@ -26,6 +26,13 @@
 #define FIRST_MCB_SEGMENT   (SYSTEM_ENV_BLOCK + 0x200)  // old value: 0x1000
 #define USER_MEMORY_SIZE    (0x9FFE - FIRST_MCB_SEGMENT)
 
+/*
+ * Activate this line if you want run-time DOS memory arena integrity validation
+ * (useful to know whether this is an application, or DOS kernel itself, which
+ * messes up the DOS memory arena).
+ */
+// #define DBG_MEMORY
+
 /* PRIVATE VARIABLES **********************************************************/
 
 /* PUBLIC VARIABLES ***********************************************************/
@@ -41,6 +48,7 @@ static inline BOOLEAN ValidateMcb(PDOS_MCB Mcb)
  * This is a helper function to help us detecting
  * when the DOS arena starts to become corrupted.
  */
+#ifdef DBG_MEMORY
 static VOID DosMemValidate(VOID)
 {
     WORD PrevSegment, Segment = SysVars->FirstMcb;
@@ -68,6 +76,9 @@ static VOID DosMemValidate(VOID)
         Segment += CurrentMcb->Size + 1;
     }
 }
+#else
+#define DosMemValidate()
+#endif
 
 static VOID DosCombineFreeBlocks(WORD StartBlock)
 {
