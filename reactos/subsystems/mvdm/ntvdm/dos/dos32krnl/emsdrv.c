@@ -397,6 +397,39 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             break;
         }
 
+        /* Get Mappable Physical Address Array */
+        case 0x58:
+        {
+            if (getAL() == 0x00)
+            {
+                ULONG i;
+                WORD Offset = getDI();
+
+                for (i = 0; i < EMS_PHYSICAL_PAGES; i++)
+                {
+                    *(PWORD)SEG_OFF_TO_PTR(getES(), Offset++) =
+                    EMS_SEGMENT + i * (EMS_PAGE_SIZE >> 4);
+
+                    *(PWORD)SEG_OFF_TO_PTR(getES(), Offset++) = i;
+                }
+
+                setAH(EMS_STATUS_OK);
+                setCX(EMS_PHYSICAL_PAGES);
+            }
+            else if (getAL() == 0x01)
+            {
+                setAH(EMS_STATUS_OK);
+                setCX(EMS_PHYSICAL_PAGES);
+            }
+            else
+            {
+                DPRINT1("Invalid subfunction %02X for EMS function AH = 58h\n", getAL());
+                setAH(EMS_STATUS_UNKNOWN_FUNCTION);
+            }
+
+            break;
+        }
+
         /* Get Expanded Memory Hardware Information */
         case 0x59:
         {
