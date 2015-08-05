@@ -275,6 +275,8 @@ static BYTE VgaAcIndex = VGA_AC_PAL_0_REG;
 static BYTE VgaAcRegisters[VGA_AC_MAX_REG];
 
 static BYTE VgaDacMask  = 0xFF;
+static BYTE VgaDacLatchCounter = 0;
+static BYTE VgaDacLatch[3];
 
 static BOOLEAN VgaDacReadWrite = FALSE;
 static WORD VgaDacIndex = 0;
@@ -1571,15 +1573,24 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
             return (VgaDacReadWrite ? 0 : 3);
 
         case VGA_DAC_WRITE_INDEX:
-            return (VgaDacIndex / 3);
+            return VgaDacIndex;
 
         case VGA_DAC_DATA:
         {
             /* Ignore reads in write mode */
             if (!VgaDacReadWrite)
             {
-                BYTE Data = VgaDacRegisters[VgaDacIndex++];
-                VgaDacIndex %= VGA_PALETTE_SIZE;
+                BYTE Data = VgaDacRegisters[VgaDacIndex * 3 + VgaDacLatchCounter];
+                VgaDacLatchCounter++;
+
+                if (VgaDacLatchCounter == 3)
+                {
+                    /* Reset the latch counter and increment the palette index */
+                    VgaDacLatchCounter = 0;
+                    VgaDacIndex++;
+                    VgaDacIndex %= VGA_MAX_COLORS;
+                }
+
                 return Data;
             }
 
@@ -1697,28 +1708,34 @@ static inline VOID VgaWriteCrtc(BYTE Data)
 
 static inline VOID VgaWriteDac(BYTE Data)
 {
-    UINT i, PaletteIndex;
+    UINT i;
     PALETTEENTRY Entry;
 
-    /* Set the value */
-    VgaDacRegisters[VgaDacIndex] = Data;
+    /* Store the value in the latch */
+    VgaDacLatch[VgaDacLatchCounter++] = Data;
+    if (VgaDacLatchCounter < 3) return;
 
-    /* Find the palette index */
-    PaletteIndex = VgaDacIndex / 3;
+    /* Reset the latch counter */
+    VgaDacLatchCounter = 0;
+
+    /* Set the DAC register values */
+    VgaDacRegisters[VgaDacIndex * 3]     = VgaDacLatch[0];
+    VgaDacRegisters[VgaDacIndex * 3 + 1] = VgaDacLatch[1];
+    VgaDacRegisters[VgaDacIndex * 3 + 2] = VgaDacLatch[2];
 
     /* Fill the entry structure */
-    Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3]);
-    Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 1]);
-    Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 2]);
+    Entry.peRed = VGA_DAC_TO_COLOR(VgaDacLatch[0]);
+    Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacLatch[1]);
+    Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacLatch[2]);
     Entry.peFlags = 0;
 
     /* Update the palette entry */
-    SetPaletteEntries(PaletteHandle, PaletteIndex, 1, &Entry);
+    SetPaletteEntries(PaletteHandle, VgaDacIndex, 1, &Entry);
 
     /* Check which text palette entries are affected */
     for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
     {
-        if (VgaAcRegisters[i] == PaletteIndex)
+        if (VgaAcRegisters[i] == VgaDacIndex)
         {
             /* Update the text palette entry */
             SetPaletteEntries(TextPaletteHandle, i, 1, &Entry);
@@ -1730,7 +1747,7 @@ static inline VOID VgaWriteDac(BYTE Data)
 
     /* Update the index */
     VgaDacIndex++;
-    VgaDacIndex %= VGA_PALETTE_SIZE;
+    VgaDacIndex %= VGA_MAX_COLORS;
 }
 
 static inline VOID VgaWriteAc(BYTE Data)
@@ -1888,14 +1905,16 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
         case VGA_DAC_READ_INDEX:
         {
             VgaDacReadWrite = FALSE;
-            VgaDacIndex = Data * 3;
+            VgaDacIndex = Data;
+            VgaDacLatchCounter = 0;
             break;
         }
 
         case VGA_DAC_WRITE_INDEX:
         {
             VgaDacReadWrite = TRUE;
-            VgaDacIndex = Data * 3;
+            VgaDacIndex = Data;
+            VgaDacLatchCounter = 0;
             break;
         }
 
