@@ -14,7 +14,8 @@
 #define EMS_VERSION_NUM     0x40
 #define EMS_INTERRUPT_NUM   0x67
 #define EMS_SEGMENT         0xD000  // Default segment
-#define EMS_MAX_HANDLES     16
+// Specification: Operating system handle 0x0000; user handles from 0x0001 to 0x00FE
+#define EMS_MAX_HANDLES     255
 #define EMS_PAGE_BITS       14
 #define EMS_PAGE_SIZE       (1 << EMS_PAGE_BITS)
 #define EMS_PHYSICAL_PAGES  4
@@ -22,7 +23,7 @@
 /* 16 MB of EMS memory */
 #define EMS_TOTAL_PAGES     1024
 
-#define EMS_STATUS_OK                   0x00
+#define EMS_STATUS_SUCCESS              0x00
 #define EMS_STATUS_INTERNAL_ERROR       0x80
 #define EMS_STATUS_INVALID_HANDLE       0x83
 #define EMS_STATUS_NO_MORE_HANDLES      0x85

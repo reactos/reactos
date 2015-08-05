@@ -4,6 +4,9 @@
  * FILE:            emsdrv.c
  * PURPOSE:         DOS EMS Driver
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *
+ * DOCUMENTATION:   Official specification:
+ *                  LIM EMS v4.0: http://www.phatcode.net/res/218/files/limems40.txt
  */
 
 /* INCLUDES *******************************************************************/
@@ -48,6 +51,7 @@ static VOID InitHandlesTable(VOID)
     {
         HandleTable[i].Allocated = FALSE;
         HandleTable[i].PageCount = 0;
+        RtlZeroMemory(HandleTable[i].Name, sizeof(HandleTable[i].Name));
         InitializeListHead(&HandleTable[i].PageList);
     }
 }
@@ -77,6 +81,8 @@ static VOID FreeHandle(PEMS_HANDLE HandleEntry)
 {
     HandleEntry->Allocated = FALSE;
     HandleEntry->PageCount = 0;
+    RtlZeroMemory(HandleEntry->Name, sizeof(HandleEntry->Name));
+    // InitializeListHead(HandleEntry->PageList);
 }
 
 static inline PEMS_HANDLE GetHandleRecord(USHORT Handle)
@@ -110,10 +116,9 @@ static UCHAR EmsFree(USHORT Handle)
     }
 
     InitializeListHead(&HandleEntry->PageList);
-
     FreeHandle(HandleEntry);
 
-    return EMS_STATUS_OK;
+    return EMS_STATUS_SUCCESS;
 }
 
 static UCHAR EmsAlloc(USHORT NumPages, PUSHORT Handle)
@@ -154,7 +159,7 @@ static UCHAR EmsAlloc(USHORT NumPages, PUSHORT Handle)
         }
     }
 
-    return EMS_STATUS_OK;
+    return EMS_STATUS_SUCCESS;
 }
 
 static PEMS_PAGE GetLogicalPage(PEMS_HANDLE HandleEntry, USHORT LogicalPage)
@@ -186,7 +191,7 @@ static UCHAR EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
     {
         /* Unmap */
         Mapping[PhysicalPage] = NULL;
-        return EMS_STATUS_OK;
+        return EMS_STATUS_SUCCESS;
     }
 
     PageEntry = GetLogicalPage(HandleEntry, LogicalPage);
@@ -194,7 +199,7 @@ static UCHAR EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
 
     Mapping[PhysicalPage] = (PVOID)((ULONG_PTR)EmsMemory
                             + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE);
-    return EMS_STATUS_OK;
+    return EMS_STATUS_SUCCESS;
 }
 
 static VOID WINAPI EmsIntHandler(LPWORD Stack)
@@ -204,22 +209,22 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         /* Get Manager Status */
         case 0x40:
         {
-            setAH(EMS_STATUS_OK);
+            setAH(EMS_STATUS_SUCCESS);
             break;
         }
 
         /* Get Page Frame Segment */
         case 0x41:
         {
-            setAH(EMS_STATUS_OK);
+            setAH(EMS_STATUS_SUCCESS);
             setBX(EmsSegment);
             break;
         }
 
-        /* Get Number of Pages */
+        /* Get Number of Unallocated Pages */
         case 0x42:
         {
-            setAH(EMS_STATUS_OK);
+            setAH(EMS_STATUS_SUCCESS);
             setBX(RtlNumberOfClearBits(&AllocBitmap));
             setDX(EmsTotalPages);
             break;
@@ -232,7 +237,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             UCHAR Status = EmsAlloc(getBX(), &Handle);
 
             setAH(Status);
-            if (Status == EMS_STATUS_OK) setDX(Handle);
+            if (Status == EMS_STATUS_SUCCESS) setDX(Handle);
             break;
         }
 
@@ -253,7 +258,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         /* Get EMM Version */
         case 0x46:
         {
-            setAH(EMS_STATUS_OK);
+            setAH(EMS_STATUS_SUCCESS);
             setAL(EMS_VERSION_NUM);
             break;
         }
@@ -272,6 +277,39 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             break;
         }
 
+        /* Get Number of Opened Handles */
+        case 0x4B:
+        {
+            USHORT NumOpenHandles = 0;
+            ULONG i;
+
+            for (i = 0; i < EMS_MAX_HANDLES; i++)
+            {
+                if (HandleTable[i].Allocated)
+                    ++NumOpenHandles;
+            }
+
+            setAH(EMS_STATUS_SUCCESS);
+            setBX(NumOpenHandles);
+            break;
+        }
+
+        /* Get Handle Number of Pages */
+        case 0x4C:
+        {
+            PEMS_HANDLE HandleEntry = GetHandleRecord(getDX());
+
+            if (!ValidateHandle(HandleEntry))
+            {
+                setAH(EMS_STATUS_INVALID_HANDLE);
+                break;
+            }
+
+            setAH(EMS_STATUS_SUCCESS);
+            setBX(HandleEntry->PageCount);
+            break;
+        }
+
         /* Get/Set Handle Name */
         case 0x53:
         {
@@ -279,7 +317,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
 
             if (!ValidateHandle(HandleEntry))
             {
-                setAL(EMS_STATUS_INVALID_HANDLE);
+                setAH(EMS_STATUS_INVALID_HANDLE);
                 break;
             }
 
@@ -289,7 +327,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 RtlCopyMemory(SEG_OFF_TO_PTR(getES(), getDI()),
                               HandleEntry->Name,
                               sizeof(HandleEntry->Name));
-                setAH(EMS_STATUS_OK);
+                setAH(EMS_STATUS_SUCCESS);
             }
             else if (getAL() == 0x01)
             {
@@ -297,7 +335,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 RtlCopyMemory(HandleEntry->Name,
                               SEG_OFF_TO_PTR(getDS(), getSI()),
                               sizeof(HandleEntry->Name));
-                setAH(EMS_STATUS_OK);
+                setAH(EMS_STATUS_SUCCESS);
             }
             else
             {
@@ -321,18 +359,16 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             {
                 /* Expanded memory */
                 HandleEntry = GetHandleRecord(Data->SourceHandle);
-
                 if (!ValidateHandle(HandleEntry))
                 {
-                    setAL(EMS_STATUS_INVALID_HANDLE);
+                    setAH(EMS_STATUS_INVALID_HANDLE);
                     break;
                 }
 
                 PageEntry = GetLogicalPage(HandleEntry, Data->SourceSegment);
-
                 if (!PageEntry)
                 {
-                    setAL(EMS_STATUS_INV_LOGICAL_PAGE);
+                    setAH(EMS_STATUS_INV_LOGICAL_PAGE);
                     break;
                 }
 
@@ -350,18 +386,16 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             {
                 /* Expanded memory */
                 HandleEntry = GetHandleRecord(Data->DestHandle);
-
                 if (!ValidateHandle(HandleEntry))
                 {
-                    setAL(EMS_STATUS_INVALID_HANDLE);
+                    setAH(EMS_STATUS_INVALID_HANDLE);
                     break;
                 }
 
                 PageEntry = GetLogicalPage(HandleEntry, Data->DestSegment);
-
                 if (!PageEntry)
                 {
-                    setAL(EMS_STATUS_INV_LOGICAL_PAGE);
+                    setAH(EMS_STATUS_INV_LOGICAL_PAGE);
                     break;
                 }
 
@@ -393,7 +427,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 RtlMoveMemory(DestPtr, SourcePtr, Data->RegionLength);
             }
 
-            setAL(EMS_STATUS_OK);
+            setAH(EMS_STATUS_SUCCESS);
             break;
         }
 
@@ -408,17 +442,17 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 for (i = 0; i < EMS_PHYSICAL_PAGES; i++)
                 {
                     *(PWORD)SEG_OFF_TO_PTR(getES(), Offset++) =
-                    EMS_SEGMENT + i * (EMS_PAGE_SIZE >> 4);
+                        EMS_SEGMENT + i * (EMS_PAGE_SIZE >> 4);
 
                     *(PWORD)SEG_OFF_TO_PTR(getES(), Offset++) = i;
                 }
 
-                setAH(EMS_STATUS_OK);
+                setAH(EMS_STATUS_SUCCESS);
                 setCX(EMS_PHYSICAL_PAGES);
             }
             else if (getAL() == 0x01)
             {
-                setAH(EMS_STATUS_OK);
+                setAH(EMS_STATUS_SUCCESS);
                 setCX(EMS_PHYSICAL_PAGES);
             }
             else
@@ -444,12 +478,12 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 HardwareInfo->DmaRegisterSets     = 0;
                 HardwareInfo->DmaChannelOperation = 0;
 
-                setAH(EMS_STATUS_OK);
+                setAH(EMS_STATUS_SUCCESS);
             }
             else if (getAL() == 0x01)
             {
                 /* Same as function AH = 42h */
-                setAH(EMS_STATUS_OK);
+                setAH(EMS_STATUS_SUCCESS);
                 setBX(RtlNumberOfClearBits(&AllocBitmap));
                 setDX(EmsTotalPages);
             }
@@ -517,7 +551,6 @@ static WORD NTAPI EmsDrvDispatchIoctlRead(PDOS_DEVICE_NODE Device, DWORD Buffer,
 {
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-
     return DOS_DEVSTAT_DONE;
 }
 
@@ -531,8 +564,6 @@ BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages)
     EmsSegment = (Segment != 0 ? Segment : EMS_SEGMENT);
     Size = EMS_SEGMENT_SIZE; // Size in paragraphs
     if (!UmaDescReserve(&EmsSegment, &Size)) return FALSE;
-
-    InitHandlesTable();
 
     EmsTotalPages = TotalPages;
     BitmapBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -575,16 +606,18 @@ BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages)
                              EmsReadMemory,
                              EmsWriteMemory);
 
+    // FIXME: The EMS driver MUST automatically initialize handle 0x0000
+    // (operating system handle) as per the specification says!
+    InitHandlesTable();
+
     /* Create the device */
     Node = DosCreateDeviceEx(DOS_DEVATTR_IOCTL | DOS_DEVATTR_CHARACTER,
                              EMS_DEVICE_NAME,
-                             32);
+                             Int16To32StubSize);
     Node->IoctlReadRoutine = EmsDrvDispatchIoctlRead;
 
-    RegisterInt32(MAKELONG(sizeof(DOS_DRIVER) + DEVICE_CODE_SIZE, HIWORD(Node->Driver)),
-                  EMS_INTERRUPT_NUM,
-                  EmsIntHandler,
-                  NULL);
+    RegisterInt32(DEVICE_PRIVATE_AREA(Node->Driver),
+                  EMS_INTERRUPT_NUM, EmsIntHandler, NULL);
 
     return TRUE;
 }
