@@ -27,6 +27,7 @@
 #define EMS_DEVICE_NAME     "EMMXXXX0"
 
 #define EMS_SEGMENT_SIZE    ((EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE) >> 4)
+#define EMS_SYSTEM_HANDLE   0
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -45,9 +46,9 @@ static USHORT EmsSegment = EMS_SEGMENT;
 
 static VOID InitHandlesTable(VOID)
 {
-    ULONG i;
+    USHORT i;
 
-    for (i = 0; i < EMS_MAX_HANDLES; i++)
+    for (i = 0; i < ARRAYSIZE(HandleTable); i++)
     {
         HandleTable[i].Allocated = FALSE;
         HandleTable[i].PageCount = 0;
@@ -59,22 +60,21 @@ static VOID InitHandlesTable(VOID)
 static PEMS_HANDLE CreateHandle(PUSHORT Handle)
 {
     PEMS_HANDLE HandleEntry;
-    ULONG i;
+    USHORT i;
 
-    for (i = 0; i < EMS_MAX_HANDLES; i++)
+    /* Handle 0 is reserved (system handle) */
+    for (i = 1; i < ARRAYSIZE(HandleTable); i++)
     {
         HandleEntry = &HandleTable[i];
         if (!HandleEntry->Allocated)
         {
             *Handle = i;
-            break;
+            HandleEntry->Allocated = TRUE;
+            return HandleEntry;
         }
     }
 
-    if (i == EMS_MAX_HANDLES) return NULL;
-    HandleEntry->Allocated = TRUE;
-
-    return HandleEntry;
+    return NULL;
 }
 
 static VOID FreeHandle(PEMS_HANDLE HandleEntry)
@@ -82,12 +82,12 @@ static VOID FreeHandle(PEMS_HANDLE HandleEntry)
     HandleEntry->Allocated = FALSE;
     HandleEntry->PageCount = 0;
     RtlZeroMemory(HandleEntry->Name, sizeof(HandleEntry->Name));
-    // InitializeListHead(HandleEntry->PageList);
+    // InitializeListHead(&HandleEntry->PageList);
 }
 
 static inline PEMS_HANDLE GetHandleRecord(USHORT Handle)
 {
-    if (Handle >= EMS_MAX_HANDLES) return NULL;
+    if (Handle >= ARRAYSIZE(HandleTable)) return NULL;
     return &HandleTable[Handle];
 }
 
@@ -116,7 +116,9 @@ static UCHAR EmsFree(USHORT Handle)
     }
 
     InitializeListHead(&HandleEntry->PageList);
-    FreeHandle(HandleEntry);
+
+    if (Handle != EMS_SYSTEM_HANDLE)
+        FreeHandle(HandleEntry);
 
     return EMS_STATUS_SUCCESS;
 }
@@ -155,6 +157,57 @@ static UCHAR EmsAlloc(USHORT NumPages, PUSHORT Handle)
         for (i = 0; i < RunSize; i++)
         {
             PageTable[RunStart + i].Handle = *Handle;
+            InsertTailList(&HandleEntry->PageList, &PageTable[RunStart + i].Entry);
+        }
+    }
+
+    return EMS_STATUS_SUCCESS;
+}
+
+static UCHAR InitSystemHandle(USHORT NumPages)
+{
+    //
+    // FIXME: This is an adapted copy of EmsAlloc!!
+    //
+
+    ULONG i, CurrentIndex = 0;
+    PEMS_HANDLE HandleEntry = &HandleTable[EMS_SYSTEM_HANDLE];
+
+    /* The system handle must never have been initialized before */
+    ASSERT(!HandleEntry->Allocated);
+
+    /* Now allocate it */
+    HandleEntry->Allocated = TRUE;
+
+    while (HandleEntry->PageCount < NumPages)
+    {
+        ULONG RunStart;
+        ULONG RunSize = RtlFindNextForwardRunClear(&AllocBitmap, CurrentIndex, &RunStart);
+
+        if (RunSize == 0)
+        {
+            /* Free what's been allocated already and report failure */
+            EmsFree(EMS_SYSTEM_HANDLE);
+            // FIXME: For this function (and EmsAlloc as well),
+            // use instead an internal function that just uses
+            // PEMS_HANDLE pointers instead. It's only in the
+            // EMS interrupt handler that we should do the
+            // unfolding.
+            return EMS_STATUS_INSUFFICIENT_PAGES;
+        }
+        else if ((HandleEntry->PageCount + RunSize) > NumPages)
+        {
+            /* We don't need the entire run */
+            RunSize = NumPages - HandleEntry->PageCount;
+        }
+
+        CurrentIndex = RunStart + RunSize;
+        HandleEntry->PageCount += RunSize;
+        RtlSetBits(&AllocBitmap, RunStart, RunSize);
+
+        for (i = 0; i < RunSize; i++)
+        {
+            PageTable[RunStart + i].Handle = EMS_SYSTEM_HANDLE;
             InsertTailList(&HandleEntry->PageList, &PageTable[RunStart + i].Entry);
         }
     }
@@ -236,8 +289,10 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             USHORT Handle;
             UCHAR Status = EmsAlloc(getBX(), &Handle);
 
+            if (Status == EMS_STATUS_SUCCESS)
+                setDX(Handle);
+
             setAH(Status);
-            if (Status == EMS_STATUS_SUCCESS) setDX(Handle);
             break;
         }
 
@@ -266,14 +321,18 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         /* Save Page Map */
         case 0x47:
         {
+            // FIXME: This depends on an EMS handle given in DX
             RtlCopyMemory(MappingBackup, Mapping, sizeof(Mapping));
+            setAH(EMS_STATUS_SUCCESS);
             break;
         }
 
         /* Restore Page Map */
         case 0x48:
         {
+            // FIXME: This depends on an EMS handle given in DX
             RtlCopyMemory(Mapping, MappingBackup, sizeof(Mapping));
+            setAH(EMS_STATUS_SUCCESS);
             break;
         }
 
@@ -281,9 +340,9 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         case 0x4B:
         {
             USHORT NumOpenHandles = 0;
-            ULONG i;
+            USHORT i;
 
-            for (i = 0; i < EMS_MAX_HANDLES; i++)
+            for (i = 0; i < ARRAYSIZE(HandleTable); i++)
             {
                 if (HandleTable[i].Allocated)
                     ++NumOpenHandles;
@@ -307,6 +366,29 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
 
             setAH(EMS_STATUS_SUCCESS);
             setBX(HandleEntry->PageCount);
+            break;
+        }
+
+        /* Get All Handles Number of Pages */
+        case 0x4D:
+        {
+            PEMS_HANDLE_PAGE_INFO HandlePageInfo = (PEMS_HANDLE_PAGE_INFO)SEG_OFF_TO_PTR(getES(), getDI());
+            USHORT NumOpenHandles = 0;
+            USHORT i;
+
+            for (i = 0; i < ARRAYSIZE(HandleTable); i++)
+            {
+                if (HandleTable[i].Allocated)
+                {
+                    HandlePageInfo->Handle = i;
+                    HandlePageInfo->PageCount = HandleTable[i].PageCount;
+                    ++HandlePageInfo;
+                    ++NumOpenHandles;
+                }
+            }
+
+            setAH(EMS_STATUS_SUCCESS);
+            setBX(NumOpenHandles);
             break;
         }
 
@@ -340,7 +422,99 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             else
             {
                 DPRINT1("Invalid subfunction %02X for EMS function AH = 53h\n", getAL());
-                setAH(EMS_STATUS_UNKNOWN_FUNCTION);
+                setAH(EMS_STATUS_INVALID_SUBFUNCTION);
+            }
+
+            break;
+        }
+
+        /* Handle Directory functions */
+        case 0x54:
+        {
+            if (getAL() == 0x00)
+            {
+                /* Get Handle Directory */
+
+                PEMS_HANDLE_DIR_ENTRY HandleDir = (PEMS_HANDLE_DIR_ENTRY)SEG_OFF_TO_PTR(getES(), getDI());
+                USHORT NumOpenHandles = 0;
+                USHORT i;
+
+                for (i = 0; i < ARRAYSIZE(HandleTable); i++)
+                {
+                    if (HandleTable[i].Allocated)
+                    {
+                        HandleDir->Handle = i;
+                        RtlCopyMemory(HandleDir->Name,
+                                      HandleTable[i].Name,
+                                      sizeof(HandleDir->Name));
+                        ++HandleDir;
+                        ++NumOpenHandles;
+                    }
+                }
+
+                setAH(EMS_STATUS_SUCCESS);
+                setAL((UCHAR)NumOpenHandles);
+            }
+            else if (getAL() == 0x01)
+            {
+                /* Search for Named Handle */
+
+                PUCHAR HandleName = (PUCHAR)SEG_OFF_TO_PTR(getDS(), getSI());
+                PEMS_HANDLE HandleFound = NULL;
+                USHORT i;
+
+                for (i = 0; i < ARRAYSIZE(HandleTable); i++)
+                {
+                    if (HandleTable[i].Allocated &&
+                        RtlCompareMemory(HandleName,
+                                         HandleTable[i].Name,
+                                         sizeof(HandleTable[i].Name)) != 0)
+                    {
+                        HandleFound = &HandleTable[i];
+                        break;
+                    }
+                }
+
+                /* Bail out if no handle was found */
+                if (i >= ARRAYSIZE(HandleTable)) // HandleFound == NULL
+                {
+                    setAH(EMS_STATUS_HANDLE_NOT_FOUND);
+                    break;
+                }
+
+                /* Return the handle number */
+                setDX(i);
+
+                /* Sanity check: Check whether the handle was unnamed */
+                i = 0;
+                while ((i < sizeof(HandleFound->Name)) && (HandleFound->Name[i] == '\0'))
+                    ++i;
+
+                if (i >= sizeof(HandleFound->Name))
+                {
+                    setAH(EMS_STATUS_UNNAMED_HANDLE);
+                }
+                else
+                {
+                    setAH(EMS_STATUS_SUCCESS);
+                }
+            }
+            else if (getAL() == 0x02)
+            {
+                /*
+                 * Get Total Number of Handles
+                 *
+                 * This function retrieves the maximum number of handles
+                 * (allocated or not) the memory manager supports, which
+                 * a program may request.
+                 */
+                setAH(EMS_STATUS_SUCCESS);
+                setBX(ARRAYSIZE(HandleTable));
+            }
+            else
+            {
+                DPRINT1("Invalid subfunction %02X for EMS function AH = 54h\n", getAL());
+                setAH(EMS_STATUS_INVALID_SUBFUNCTION);
             }
 
             break;
@@ -436,15 +610,14 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         {
             if (getAL() == 0x00)
             {
+                PEMS_MAPPABLE_PHYS_PAGE PageArray = (PEMS_MAPPABLE_PHYS_PAGE)SEG_OFF_TO_PTR(getES(), getDI());
                 ULONG i;
-                WORD Offset = getDI();
 
                 for (i = 0; i < EMS_PHYSICAL_PAGES; i++)
                 {
-                    *(PWORD)SEG_OFF_TO_PTR(getES(), Offset++) =
-                        EMS_SEGMENT + i * (EMS_PAGE_SIZE >> 4);
-
-                    *(PWORD)SEG_OFF_TO_PTR(getES(), Offset++) = i;
+                    PageArray->PageSegment = EMS_SEGMENT + i * (EMS_PAGE_SIZE >> 4);
+                    PageArray->PageNumber  = i;
+                    ++PageArray;
                 }
 
                 setAH(EMS_STATUS_SUCCESS);
@@ -458,7 +631,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             else
             {
                 DPRINT1("Invalid subfunction %02X for EMS function AH = 58h\n", getAL());
-                setAH(EMS_STATUS_UNKNOWN_FUNCTION);
+                setAH(EMS_STATUS_INVALID_SUBFUNCTION);
             }
 
             break;
@@ -490,7 +663,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             else
             {
                 DPRINT1("Invalid subfunction %02X for EMS function AH = 59h\n", getAL());
-                setAH(EMS_STATUS_UNKNOWN_FUNCTION);
+                setAH(EMS_STATUS_INVALID_SUBFUNCTION);
             }
 
             break;
@@ -601,14 +774,31 @@ BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages)
         return FALSE;
     }
 
+    InitHandlesTable();
+    /*
+     * FIXME: We should ensure that the system handle is associated
+     * with mapped pages from conventional memory. DosEmu seems to do
+     * it correctly. 384kB of memory mapped.
+     */
+    if (InitSystemHandle(384/16) != EMS_STATUS_SUCCESS)
+    {
+        DPRINT1("Impossible to allocate pages for the system handle!\n");
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsMemory);
+        EmsMemory = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PageTable);
+        PageTable = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
+        BitmapBuffer = NULL;
+
+        UmaDescRelease(EmsSegment);
+        return FALSE;
+    }
+
     MemInstallFastMemoryHook((PVOID)TO_LINEAR(EmsSegment, 0),
                              EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE,
                              EmsReadMemory,
                              EmsWriteMemory);
-
-    // FIXME: The EMS driver MUST automatically initialize handle 0x0000
-    // (operating system handle) as per the specification says!
-    InitHandlesTable();
 
     /* Create the device */
     Node = DosCreateDeviceEx(DOS_DEVATTR_IOCTL | DOS_DEVATTR_CHARACTER,
