@@ -676,6 +676,7 @@ WORD DosReadFile(WORD FileHandle,
 {
     WORD Result = ERROR_SUCCESS;
     PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
+    BYTE StaticBuffer[8192];
 
     DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
@@ -697,10 +698,19 @@ WORD DosReadFile(WORD FileHandle,
     else
     {
         DWORD BytesRead32 = 0;
-        LPVOID LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
-        ASSERT(LocalBuffer != NULL);
+        LPVOID LocalBuffer;
 
-        /* Read the file */
+        if (Count <= sizeof(StaticBuffer))
+        {
+            LocalBuffer = StaticBuffer;
+        }
+        else
+        {
+            LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
+            ASSERT(LocalBuffer != NULL);
+        }
+
+        /* Read from the file */
         if (ReadFile(Descriptor->Win32Handle, LocalBuffer, Count, &BytesRead32, NULL))
         {
             /* Write to the memory */
@@ -710,7 +720,7 @@ WORD DosReadFile(WORD FileHandle,
                                 LOWORD(BytesRead32));
 
             /* Update the position */
-            Descriptor->Position += BytesRead32;
+            Descriptor->Position += BytesRead32; // or LOWORD(BytesRead32); ?
         }
         else
         {
@@ -720,7 +730,9 @@ WORD DosReadFile(WORD FileHandle,
 
         /* The number of bytes read is always 16-bit */
         *BytesRead = LOWORD(BytesRead32);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
+
+        if (LocalBuffer != StaticBuffer)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
     }
 
     /* Return the error code */
@@ -734,6 +746,7 @@ WORD DosWriteFile(WORD FileHandle,
 {
     WORD Result = ERROR_SUCCESS;
     PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
+    BYTE StaticBuffer[8192];
 
     DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
@@ -755,21 +768,44 @@ WORD DosWriteFile(WORD FileHandle,
     else
     {
         DWORD BytesWritten32 = 0;
-        LPVOID LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
-        ASSERT(LocalBuffer != NULL);
+        LPVOID LocalBuffer;
+
+        /*
+         * Writing zero bytes truncates or extends the file
+         * to the current position of the file pointer.
+         */
+        if (Count == 0)
+        {
+            if (!SetEndOfFile(Descriptor->Win32Handle))
+            {
+                /* Store the error code */
+                Result = (WORD)GetLastError();
+            }
+            *BytesWritten = 0;
+            return Result;
+        }
+
+        if (Count <= sizeof(StaticBuffer))
+        {
+            LocalBuffer = StaticBuffer;
+        }
+        else
+        {
+            LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
+            ASSERT(LocalBuffer != NULL);
+        }
 
         /* Read from the memory */
         EmulatorReadMemory(&EmulatorContext,
-                           TO_LINEAR(HIWORD(Buffer),
-                           LOWORD(Buffer)),
+                           TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)),
                            LocalBuffer,
                            Count);
 
-        /* Write the file */
+        /* Write to the file */
         if (WriteFile(Descriptor->Win32Handle, LocalBuffer, Count, &BytesWritten32, NULL))
         {
             /* Update the position and size */
-            Descriptor->Position += BytesWritten32;
+            Descriptor->Position += BytesWritten32; // or LOWORD(BytesWritten32); ?
             if (Descriptor->Position > Descriptor->Size) Descriptor->Size = Descriptor->Position;
         }
         else
@@ -780,7 +816,9 @@ WORD DosWriteFile(WORD FileHandle,
 
         /* The number of bytes written is always 16-bit */
         *BytesWritten = LOWORD(BytesWritten32);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
+
+        if (LocalBuffer != StaticBuffer)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
     }
 
     /* Return the error code */
@@ -797,9 +835,7 @@ WORD DosSeekFile(WORD FileHandle,
     PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
 
     DPRINT("DosSeekFile: FileHandle 0x%04X, Offset 0x%08X, Origin 0x%02X\n",
-           FileHandle,
-           Offset,
-           Origin);
+           FileHandle, Offset, Origin);
 
     if (Descriptor == NULL)
     {
@@ -950,11 +986,10 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
         {
             // TODO: NOT IMPLEMENTED
             UNIMPLEMENTED;
-
             return FALSE;
         }
 
-        /* Read From Device I/O Control Channel */
+        /* Read from Device I/O Control Channel */
         case 0x02:
         {
             if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
@@ -974,7 +1009,7 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
             return TRUE;
         }
 
-        /* Write To Device I/O Control Channel */
+        /* Write to Device I/O Control Channel */
         case 0x03:
         {
             if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
@@ -1070,6 +1105,5 @@ BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWOR
         }
     }
 }
-
 
 /* EOF */
