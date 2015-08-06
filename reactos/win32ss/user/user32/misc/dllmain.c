@@ -205,6 +205,7 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32DeliverUserAPC,
     User32CallDDEPostFromKernel,
     User32CallDDEGetFromKernel,
+    User32CallOBMFromKernel,
 };
 
 
@@ -601,4 +602,38 @@ WINAPI
 User32DeliverUserAPC(PVOID Arguments, ULONG ArgumentLength)
 {
   return ZwCallbackReturn(0, 0, STATUS_SUCCESS);
+}
+
+NTSTATUS
+WINAPI
+User32CallOBMFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  BITMAP bmp;
+  PSETOBM_CALLBACK_ARGUMENTS Common = Arguments;
+
+  GetObjectW(LoadBitmapW(0, MAKEINTRESOURCEW(OBM_CLOSE)), sizeof(bmp), &bmp);
+  Common->oembmi[OBI_CLOSE].cx = bmp.bmWidth;
+  Common->oembmi[OBI_CLOSE].cy = bmp.bmHeight;
+
+  GetObjectW(LoadBitmapW(0, MAKEINTRESOURCEW(OBM_MNARROW)), sizeof(bmp), &bmp);
+  Common->oembmi[OBI_MNARROW].cx = bmp.bmWidth;
+  Common->oembmi[OBI_MNARROW].cy = bmp.bmHeight;
+
+  GetObjectW(LoadBitmapW(0, MAKEINTRESOURCEW(OBM_DNARROW)), sizeof(bmp), &bmp);
+  Common->oembmi[OBI_DNARROW].cx = bmp.bmWidth;
+  Common->oembmi[OBI_DNARROW].cy = bmp.bmHeight;
+
+  GetObjectW(LoadBitmapW(0, MAKEINTRESOURCEW(OBM_DNARROWI)), sizeof(bmp), &bmp);
+  Common->oembmi[OBI_DNARROWI].cx = bmp.bmWidth;
+  Common->oembmi[OBI_DNARROWI].cy = bmp.bmHeight;
+
+  GetObjectW(LoadBitmapW(0, MAKEINTRESOURCEW(OBM_UPARROW)), sizeof(bmp), &bmp);
+  Common->oembmi[OBI_UPARROW].cx = bmp.bmWidth;
+  Common->oembmi[OBI_UPARROW].cy = bmp.bmHeight;
+
+  GetObjectW(LoadBitmapW(0, MAKEINTRESOURCEW(OBM_UPARROWI)), sizeof(bmp), &bmp);
+  Common->oembmi[OBI_UPARROWI].cx = bmp.bmWidth;
+  Common->oembmi[OBI_UPARROWI].cy = bmp.bmHeight;
+
+  return ZwCallbackReturn(Arguments, ArgumentLength, STATUS_SUCCESS);
 }

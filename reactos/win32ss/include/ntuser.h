@@ -902,6 +902,17 @@ typedef struct tagOEMBITMAPINFO
     INT cy;
 } OEMBITMAPINFO, *POEMBITMAPINFO;
 
+typedef enum _OBI_TYPES
+{
+    OBI_CLOSE = 0,
+    OBI_UPARROW = 46,
+    OBI_UPARROWI = 49,
+    OBI_DNARROW = 50,
+    OBI_DNARROWI = 53,
+    OBI_MNARROW = 62,
+    OBI_CTYPES = 93
+} OBI_TYPES;
+
 typedef struct tagMBSTRING
 {
     WCHAR szName[16];
@@ -953,7 +964,7 @@ typedef struct _PERUSERSERVERINFO
     DWORD dwKeyCache;
     DWORD dwAsyncKeyCache;
     ULONG cCaptures;
-    OEMBITMAPINFO oembmi[93];
+    OEMBITMAPINFO oembmi[OBI_CTYPES];
     RECT rcScreenReal;
     USHORT BitCount;
     USHORT dmLogPixels;

@@ -1148,4 +1148,49 @@ co_IntDeliverUserAPC(VOID)
       ERR("Delivering User APC callback failed!\n");
    }
 }
+
+VOID FASTCALL
+co_IntSetupOBM(VOID)
+{
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PSETOBM_CALLBACK_ARGUMENTS Common;
+
+   ResultPointer = NULL;
+   ResultLength = ArgumentLength = sizeof(SETOBM_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      ERR("Set Window Icons callback failed: out of memory\n");
+      return;
+   }
+   Common = (PSETOBM_CALLBACK_ARGUMENTS) Argument;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_SETOBM,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+
+   UserEnterCo();
+
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("Set Window Icons callback failed!\n");
+      IntCbFreeMemory(Argument);
+      return;
+   }
+
+   RtlMoveMemory(Common, ResultPointer, ArgumentLength);
+   RtlCopyMemory(gpsi->oembmi, Common->oembmi, sizeof(gpsi->oembmi));
+
+   IntCbFreeMemory(Argument);
+}
+
+
 /* EOF */

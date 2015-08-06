@@ -16,7 +16,8 @@
 #define USER32_CALLBACK_DELIVERUSERAPC        (12)
 #define USER32_CALLBACK_DDEPOST               (13)
 #define USER32_CALLBACK_DDEGET                (14)
-#define USER32_CALLBACK_MAXIMUM               (14)
+#define USER32_CALLBACK_SETOBM                (15)
+#define USER32_CALLBACK_MAXIMUM               (15)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -133,6 +134,11 @@ typedef struct _DDEPOSTGET_CALLBACK_ARGUMENTS
     BYTE buffer[1];
 } DDEPOSTGET_CALLBACK_ARGUMENTS, *PDDEPOSTGET_CALLBACK_ARGUMENTS;
 
+typedef struct _SETOBM_CALLBACK_ARGUMENTS
+{
+    struct tagOEMBITMAPINFO oembmi[93];   
+} SETOBM_CALLBACK_ARGUMENTS, *PSETOBM_CALLBACK_ARGUMENTS;
+
 NTSTATUS WINAPI
 User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
@@ -163,4 +169,6 @@ NTSTATUS WINAPI
 User32CallDDEPostFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallDDEGetFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallOBMFromKernel(PVOID Arguments, ULONG ArgumentLength);
 #endif /* __INCLUDE_USER32_CALLBACK_H */
