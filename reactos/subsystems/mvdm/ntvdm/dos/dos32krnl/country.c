@@ -279,8 +279,8 @@ BOOLEAN DosCountryInitialize(VOID)
     CountryData->FNameTermTbl.Data[21] = ',';
 
     CountryData->CollateTbl.Size = ARRAYSIZE(CountryData->CollateTbl.Data);
-    for (i = 0; i < CountryData->LoCaseTbl.Size; ++i)
-        CountryData->LoCaseTbl.Data[i] = i;
+    for (i = 0; i < CountryData->CollateTbl.Size; ++i)
+        CountryData->CollateTbl.Data[i] = i;
 
     CountryData->DBCSLeadTbl.Size = 0; // Empty DBCS table
     CountryData->DBCSLeadTbl.Data[0] = 0x0000;

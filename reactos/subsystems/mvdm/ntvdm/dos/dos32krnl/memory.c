@@ -63,7 +63,7 @@ static VOID DosMemValidate(VOID)
         /* Make sure it's valid */
         if (!ValidateMcb(CurrentMcb))
         {
-            DPRINT1("The DOS memory arena is corrupted! (CurrentMcb = %04x; PreviousMcb = %04X)\n", Segment, PrevSegment);
+            DPRINT1("The DOS memory arena is corrupted! (CurrentMcb = 0x%04X; PreviousMcb = 0x%04X)\n", Segment, PrevSegment);
             return;
         }
 
@@ -82,12 +82,25 @@ static VOID DosMemValidate(VOID)
 
 static VOID DosCombineFreeBlocks(WORD StartBlock)
 {
+    /* NOTE: This function is always called with valid MCB blocks */
+
     PDOS_MCB CurrentMcb = SEGMENT_TO_MCB(StartBlock), NextMcb;
 
-    /* If this is the last block or it's not free, quit */
-    if (CurrentMcb->BlockType == 'Z' || CurrentMcb->OwnerPsp != 0) return;
+    /* If the block is not free, quit */
+    if (CurrentMcb->OwnerPsp != 0) return;
 
-    while (TRUE)
+    /*
+     * Loop while the current block is not the last one. It can happen
+     * that the block is not the last one at the beginning, but becomes
+     * the last one at the end of the process. This happens in the case
+     * where its next following blocks are free but not combined yet,
+     * and they are terminated by a free last block. During the process
+     * all the blocks are combined together and we end up in the situation
+     * where the current (free) block is followed by the last (free) block.
+     * At the last step of the algorithm the current block becomes the
+     * last one.
+     */
+    while (CurrentMcb->BlockType != 'Z')
     {
         /* Get a pointer to the next MCB */
         NextMcb = SEGMENT_TO_MCB(StartBlock + CurrentMcb->Size + 1);
@@ -210,7 +223,6 @@ Next:
     }
 
 Done:
-
     DosMemValidate();
 
     /* If we didn't find a free block, bail out */
@@ -278,12 +290,11 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), NextMcb;
 
     DPRINT("DosResizeMemory: BlockData 0x%04X, NewSize 0x%04X\n",
-           BlockData,
-           NewSize);
+           BlockData, NewSize);
 
     DosMemValidate();
 
-    /* Make sure this is a valid, allocated block */
+    /* Make sure this is a valid and allocated block */
     if (BlockData == 0 || !ValidateMcb(Mcb) || Mcb->OwnerPsp == 0)
     {
         Success = FALSE;
@@ -291,15 +302,13 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         goto Done;
     }
 
-    DosCombineFreeBlocks(SysVars->FirstMcb);
-
     ReturnSize = Mcb->Size;
 
     /* Check if we need to expand or contract the block */
     if (NewSize > Mcb->Size)
     {
         /* We can't expand the last block */
-        if (Mcb->BlockType != 'M')
+        if (Mcb->BlockType == 'Z')
         {
             Success = FALSE;
             goto Done;
@@ -431,27 +440,40 @@ BOOLEAN DosLinkUmb(VOID)
 
     DPRINT("Linking UMB\n");
 
-    /* Check if UMBs are already linked */
+    /* Check if UMBs are initialized and already linked */
     if (SysVars->UmbChainStart == 0xFFFF) return FALSE;
     if (SysVars->UmbLinked) return TRUE;
 
     DosMemValidate();
 
-    /* Find the last block */
-    // FIXME: Use SysVars->UmbChainStart
-    while ((Mcb->BlockType == 'M') && (Segment <= 0xFFFF))
+    /* Find the last block before the start of the UMB chain */
+    while (Segment < SysVars->UmbChainStart)
     {
-        Segment += Mcb->Size + 1;
+        /* Get a pointer to the MCB */
         Mcb = SEGMENT_TO_MCB(Segment);
-    }
 
-    DosMemValidate();
+        /* Make sure it's valid */
+        if (!ValidateMcb(Mcb))
+        {
+            DPRINT1("The DOS memory arena is corrupted!\n");
+            Sda->LastErrorCode = ERROR_ARENA_TRASHED;
+            return FALSE;
+        }
+
+        /* If this was the last MCB in the chain, quit */
+        if (Mcb->BlockType == 'Z') break;
+
+        /* Otherwise, update the segment and continue */
+        Segment += Mcb->Size + 1;
+    }
 
     /* Make sure it's valid */
     if (Mcb->BlockType != 'Z') return FALSE;
 
     /* Connect the MCB with the UMB chain */
     Mcb->BlockType = 'M';
+
+    DosMemValidate();
 
     SysVars->UmbLinked = TRUE;
     return TRUE;
@@ -464,25 +486,28 @@ BOOLEAN DosUnlinkUmb(VOID)
 
     DPRINT("Unlinking UMB\n");
 
-    /* Check if UMBs are already unlinked */
+    /* Check if UMBs are initialized and already unlinked */
     if (SysVars->UmbChainStart == 0xFFFF) return FALSE;
     if (!SysVars->UmbLinked) return TRUE;
 
     DosMemValidate();
 
-    /* Find the block preceding the MCB that links it with the UMB chain */
-    while (Segment <= 0xFFFF)
+    /* Find the last block before the start of the UMB chain */
+    while (Segment < SysVars->UmbChainStart)
     {
-        // FIXME: Use SysVars->UmbChainStart
-        if ((Segment + Mcb->Size) == (SysVars->FirstMcb + USER_MEMORY_SIZE))
+        /* Get a pointer to the MCB */
+        Mcb = SEGMENT_TO_MCB(Segment);
+
+        /* Make sure it's valid */
+        if (!ValidateMcb(Mcb))
         {
-            /* This is the last non-UMB segment */
-            break;
+            DPRINT1("The DOS memory arena is corrupted!\n");
+            Sda->LastErrorCode = ERROR_ARENA_TRASHED;
+            return FALSE;
         }
 
         /* Advance to the next MCB */
         Segment += Mcb->Size + 1;
-        Mcb = SEGMENT_TO_MCB(Segment);
     }
 
     /* Mark the MCB as the last MCB */
@@ -509,7 +534,7 @@ VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
 WORD DosGetPreviousUmb(WORD UmbSegment)
 {
     PDOS_MCB CurrentMcb;
-    WORD Segment, PrevSegment = 0;
+    WORD Segment, PrevSegment = 0; // FIXME: or use UmbChainStart ??
 
     if (SysVars->UmbChainStart == 0xFFFF)
         return 0;
@@ -529,14 +554,13 @@ WORD DosGetPreviousUmb(WORD UmbSegment)
             return 0;
         }
 
-        if (Segment >= UmbSegment)
-            break;
+        /* We went over the UMB segment, quit */
+        if (Segment >= UmbSegment) break;
 
         PrevSegment = Segment;
 
         /* If this was the last MCB in the chain, quit */
-        if (CurrentMcb->BlockType == 'Z')
-            break;
+        if (CurrentMcb->BlockType == 'Z') break;
 
         /* Otherwise, update the segment and continue */
         Segment += CurrentMcb->Size + 1;
@@ -583,7 +607,7 @@ VOID DosInitializeUmb(VOID)
             // It will be splitted as needed just below.
             Mcb = SEGMENT_TO_MCB(SysVars->FirstMcb + USER_MEMORY_SIZE + 1); // '+1': Readjust the fact that USER_MEMORY_SIZE is based using 0x9FFE instead of 0x9FFF
             Mcb->BlockType = 'Z'; // At the moment it is really the last block
-            Mcb->Size = SysVars->UmbChainStart /* UmbSegment */ - SysVars->FirstMcb - USER_MEMORY_SIZE - 2;
+            Mcb->Size = (SysVars->UmbChainStart /* UmbSegment */ - SysVars->FirstMcb - USER_MEMORY_SIZE - 2) + 1;
             Mcb->OwnerPsp = SYSTEM_PSP;
             RtlCopyMemory(Mcb->Name, "SC      ", sizeof("SC      ")-1);
 
@@ -609,7 +633,7 @@ VOID DosInitializeUmb(VOID)
         Mcb = SEGMENT_TO_MCB(UmbSegment + /*Mcb->Size*/(Size - 1) + 0);
         // Mcb->BlockType = 'Z'; // FIXME: What if this block happens to be the last one??
         Mcb->BlockType = PrevMcb->BlockType;
-        Mcb->Size = PrevMcb->Size - (UmbSegment + Size - PrevSegment);
+        Mcb->Size = PrevMcb->Size - (UmbSegment + Size - PrevSegment) + 1;
         Mcb->OwnerPsp = PrevMcb->OwnerPsp;
         RtlCopyMemory(Mcb->Name, PrevMcb->Name, sizeof(PrevMcb->Name));
 
