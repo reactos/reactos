@@ -1005,9 +1005,9 @@ static void FASTCALL MenuDrawBitmapItem(HDC hdc, PROSMENUITEMINFO lpitem, const 
       switch ((INT_PTR)hbmToDraw)
         {
         case (INT_PTR)HBMMENU_SYSTEM:
-            if (lpitem->dwTypeData)
+            if (lpitem->dwItemData)
             {
-                bmp = (HBITMAP)lpitem->dwTypeData;
+                bmp = (HBITMAP)lpitem->dwItemData;
                 if (!GetObjectW( bmp, sizeof(bm), &bm )) return;
             }
             else
