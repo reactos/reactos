@@ -563,7 +563,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Create New PSP */
         case 0x26:
         {
-            DosClonePsp(getDX(), getCS());
+            DosClonePsp(getDX(), Stack[STACK_CS]);
             break;
         }
 
@@ -2096,7 +2096,7 @@ VOID WINAPI DosAbsoluteWrite(LPWORD Stack)
 
 VOID WINAPI DosInt27h(LPWORD Stack)
 {
-    DosTerminateProcess(getCS(), 0, (getDX() + 0x0F) >> 4);
+    DosTerminateProcess(Stack[STACK_CS], 0, (getDX() + 0x0F) >> 4);
 }
 
 VOID WINAPI DosIdle(LPWORD Stack)
