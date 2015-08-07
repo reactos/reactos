@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            vidbios32.h
- * PURPOSE:         VDM Video 32-bit BIOS
+ * PURPOSE:         VDM 32-bit Video BIOS
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *
  * NOTE:            All of the real code is in bios/vidbios.c

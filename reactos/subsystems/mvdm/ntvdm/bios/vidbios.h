@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            vidbios.h
- * PURPOSE:         VDM Video BIOS Support Library
+ * PURPOSE:         VDM 32-bit Video BIOS Support Library
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

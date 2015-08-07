@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            kbdbios32.c
- * PURPOSE:         VDM Keyboard 32-bit BIOS
+ * PURPOSE:         VDM 32-bit PS/2 Keyboard BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -209,10 +209,8 @@ VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
      * In return, if CF is set we continue processing the scan code
      * stored in AL, and if not, we skip it.
      */
-    BYTE CF;
-    WORD AX;
-    CF = getCF();
-    AX = getAX();
+    BYTE CF = getCF();
+    WORD AX = getAX();
 
     setCF(1);
     setAL(IOReadB(PS2_DATA_PORT));

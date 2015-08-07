@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            moubios32.h
- * PURPOSE:         VDM Mouse 32-bit BIOS
+ * PURPOSE:         VDM 32-bit PS/2 Mouse BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
