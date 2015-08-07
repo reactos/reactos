@@ -146,6 +146,18 @@ GreGetTextExtentExW(
     return Result;
 }
 
+BOOL 
+WINAPI
+GreGetTextMetricsW(
+    _In_  HDC hdc,
+    _Out_ LPTEXTMETRICW lptm)
+{
+   TMW_INTERNAL tmwi;
+   if (!ftGdiGetTextMetricsW(hdc, &tmwi)) return FALSE;
+   *lptm = tmwi.TextMetric;
+   return TRUE;
+}
+
 DWORD
 APIENTRY
 NtGdiGetCharSet(HDC hDC)

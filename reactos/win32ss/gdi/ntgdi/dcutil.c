@@ -241,6 +241,21 @@ GreSetStretchBltMode(HDC hDC, int iStretchMode)
     return oSMode;
 }
 
+int FASTCALL
+GreGetGraphicsMode(HDC hdc)
+{
+   PDC dc;
+   int GraphicsMode;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   GraphicsMode = dc->pdcattr->iGraphicsMode;;
+   DC_UnlockDc(dc);
+   return GraphicsMode;
+}
+
 VOID
 FASTCALL
 DCU_SetDcUndeletable(HDC  hDC)

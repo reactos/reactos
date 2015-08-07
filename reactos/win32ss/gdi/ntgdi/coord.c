@@ -894,6 +894,38 @@ IntGdiSetMapMode(
     return iPrevMapMode;
 }
 
+BOOL
+FASTCALL
+GreSetViewportOrgEx(
+    HDC hDC,
+    int X,
+    int Y,
+    LPPOINT Point)
+{
+    PDC dc;
+    PDC_ATTR pdcattr;
+
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    pdcattr = dc->pdcattr;
+
+    if (Point)
+    {
+       Point->x = pdcattr->ptlViewportOrg.x;
+       Point->y = pdcattr->ptlViewportOrg.y;
+    }
+
+    pdcattr->ptlViewportOrg.x = X;
+    pdcattr->ptlViewportOrg.y = Y;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED;
+
+    DC_UnlockDc(dc);
+    return TRUE;
+}
 
 BOOL
 APIENTRY
@@ -1236,6 +1268,89 @@ DC_vGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
         AspectRatio->cx = 0;
         AspectRatio->cy = 0;
     }
+}
+
+BOOL APIENTRY
+GreGetDCPoint(
+    HDC hDC,
+    UINT iPoint,
+    PPOINTL Point)
+{
+    BOOL Ret = TRUE;
+    DC *pdc;
+    SIZE Size;
+    PSIZEL pszlViewportExt;
+
+    if (!Point)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    switch (iPoint)
+    {
+        case GdiGetViewPortExt:
+            pszlViewportExt = DC_pszlViewportExt(pdc);
+            Point->x = pszlViewportExt->cx;
+            Point->y = pszlViewportExt->cy;
+            break;
+
+        case GdiGetWindowExt:
+            Point->x = pdc->pdcattr->szlWindowExt.cx;
+            Point->y = pdc->pdcattr->szlWindowExt.cy;
+            break;
+
+        case GdiGetViewPortOrg:
+            *Point = pdc->pdcattr->ptlViewportOrg;
+            break;
+
+        case GdiGetWindowOrg:
+            *Point = pdc->pdcattr->ptlWindowOrg;
+            break;
+
+        case GdiGetDCOrg:
+            *Point = pdc->ptlDCOrig;
+            break;
+
+        case GdiGetAspectRatioFilter:
+            DC_vGetAspectRatioFilter(pdc, &Size);
+            Point->x = Size.cx;
+            Point->y = Size.cy;
+            break;
+
+        default:
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            Ret = FALSE;
+            break;
+    }
+
+    DC_UnlockDc(pdc);
+    return Ret;
+}
+
+BOOL
+WINAPI
+GreGetWindowExtEx(
+    _In_ HDC hdc,
+    _Out_ LPSIZE lpSize)
+{
+   return GreGetDCPoint(hdc, GdiGetWindowExt, (PPOINTL)lpSize);
+}
+
+BOOL
+WINAPI
+GreGetViewportExtEx(
+    _In_ HDC hdc,
+    _Out_ LPSIZE lpSize)
+{
+   return GreGetDCPoint(hdc, GdiGetViewPortExt, (PPOINTL)lpSize);
 }
 
 BOOL APIENTRY
