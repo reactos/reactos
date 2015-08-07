@@ -21,10 +21,10 @@ void Test_AddFontResourceA()
     GetCurrentDirectoryA(MAX_PATH,szFileNameA);
 
     memcpy(szFileNameFont1A,szFileNameA,MAX_PATH );
-    strcat(szFileNameFont1A, "\\testdata\\test.ttf");
+    strcat(szFileNameFont1A, "\\bin\\testdata\\test.ttf");
 
     memcpy(szFileNameFont2A,szFileNameA,MAX_PATH );
-    strcat(szFileNameFont2A, "\\testdata\\test.otf");
+    strcat(szFileNameFont2A, "\\bin\\testdata\\test.otf");
 
     RtlZeroMemory(szFileNameA,MAX_PATH);
 
@@ -91,10 +91,10 @@ void Test_AddFontResourceA()
 
     GetCurrentDirectoryA(MAX_PATH, szFileNameA);
     strcpy(szFileNameFont1A, szFileNameA);
-    strcat(szFileNameFont1A, "\\testdata\\test.pfm");
+    strcat(szFileNameFont1A, "\\bin\\testdata\\test.pfm");
 
     strcpy(szFileNameFont2A, szFileNameA);
-    strcat(szFileNameFont2A, "\\testdata\\test.pfb");
+    strcat(szFileNameFont2A, "\\bin\\testdata\\test.pfb");
 
     SetLastError(ERROR_SUCCESS);
 
