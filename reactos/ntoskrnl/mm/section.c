@@ -4485,7 +4485,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
     }
 
     /* FIXME: We should keep this, but it would break code checking equality */
-    Protect &= PAGE_NOCACHE;
+    Protect &= ~PAGE_NOCACHE;
 
     Section = (PROS_SECTION_OBJECT)SectionObject;
     AddressSpace = &Process->Vm;
