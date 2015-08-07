@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            mouse.c
- * PURPOSE:         Mouse emulation
+ * PURPOSE:         PS/2 Mouse emulation
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -39,11 +39,11 @@ static BOOLEAN EventsOccurred = FALSE;
 static BYTE DataByteWait = 0;
 static BYTE ScrollMagicCounter = 0, ExtraButtonMagicCounter = 0;
 
+static UINT MouseCycles = 10;
+
 static BYTE PS2Port = 1;
 
 /* PUBLIC VARIABLES ***********************************************************/
-
-UINT MouseCycles = 10;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -72,6 +72,8 @@ static VOID MouseReset(VOID)
     Mode = MOUSE_STREAMING_MODE;
     MouseId = 0;
     ScrollMagicCounter = ExtraButtonMagicCounter = 0;
+
+    PS2QueuePush(PS2Port, MOUSE_ACK);
 
     /* Send the Basic Assurance Test success code and the device ID */
     PS2QueuePush(PS2Port, MOUSE_BAT_SUCCESS);
@@ -118,7 +120,7 @@ static VOID MouseGetPacket(PMOUSE_PACKET Packet)
     /* Set the button flags */
     if (ButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) Packet->Flags |= MOUSE_LEFT_BUTTON;
     if (ButtonState & FROM_LEFT_2ND_BUTTON_PRESSED) Packet->Flags |= MOUSE_MIDDLE_BUTTON;
-    if (ButtonState & RIGHTMOST_BUTTON_PRESSED) Packet->Flags |= MOUSE_RIGHT_BUTTON;
+    if (ButtonState &     RIGHTMOST_BUTTON_PRESSED) Packet->Flags |= MOUSE_RIGHT_BUTTON;
 
     if (MouseId == 4)
     {
@@ -250,8 +252,8 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         /* Set Sample Rate */
         case 0xF3:
         {
-            PS2QueuePush(PS2Port, MOUSE_ACK);
             DataByteWait = Command;
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
@@ -259,12 +261,12 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         case 0xE9:
         {
             BYTE Status = ButtonState & 7;
-            PS2QueuePush(PS2Port, MOUSE_ACK);
 
             if (Scaling) Status |= 1 << 4;
             if (Reporting) Status |= 1 << 5;
             if (Mode == MOUSE_REMOTE_MODE) Status |= 1 << 6;
 
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             PS2QueuePush(PS2Port, Status);
             PS2QueuePush(PS2Port, Resolution);
             PS2QueuePush(PS2Port, (BYTE)(1000 / MouseCycles));
@@ -290,7 +292,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             break;
         }
 
-        /* Return From Wrap Mode */
+        /* Return from Wrap Mode */
         case 0xEC:
         {
             if (Mode == MOUSE_WRAP_MODE)
@@ -300,7 +302,10 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
                 Mode = PreviousMode;
                 PS2QueuePush(PS2Port, MOUSE_ACK);
             }
-            else PS2QueuePush(PS2Port, MOUSE_ERROR);
+            else
+            {
+                PS2QueuePush(PS2Port, MOUSE_ERROR);
+            }
 
             break;
         }

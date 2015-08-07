@@ -4,6 +4,7 @@
  * FILE:            bios32.c
  * PURPOSE:         VDM 32-bit BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
@@ -109,7 +110,7 @@ $fffe ; System Model ID
 
 static const BIOS_CONFIG_TABLE BiosConfigTable =
 {
-    sizeof(BIOS_CONFIG_TABLE),  // Length
+    sizeof(BIOS_CONFIG_TABLE) - sizeof(((BIOS_CONFIG_TABLE*)0)->Length),    // Length: Number of bytes following
 
     BIOS_MODEL,     // BIOS Model
     BIOS_SUBMODEL,  // BIOS Sub-Model
@@ -325,7 +326,6 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             {
                 setAX(0x80);
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-
                 break;
             }
 
@@ -394,8 +394,11 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
         /* Pointing Device BIOS Interface (PS) */
         case 0xC2:
         {
-            BiosMousePs2Interface(Stack);
-            UNIMPLEMENTED; // Remove it when BiosMousePs2Interface is implemented!
+            // FIXME: Reenable this call when we understand why
+            // our included mouse driver doesn't correctly reeanble
+            // mouse reporting!
+            // BiosMousePs2Interface(Stack);
+            // break;
             goto Default;
         }
 
@@ -429,7 +432,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
                 ULONG Above1M = (min(MAX_ADDRESS, 0x01000000) - 0x00100000) >> 10;
 
                 /* The amount of memory above 16M, in 64K blocks */
-                ULONG Above16M = (MAX_ADDRESS > 0x01000000) ? (MAX_ADDRESS - 0x01000000) >> 16: 0;
+                ULONG Above16M = (MAX_ADDRESS > 0x01000000) ? ((MAX_ADDRESS - 0x01000000) >> 16) : 0;
 
                 setAX(Above1M);
                 setBX(Above16M);
@@ -476,8 +479,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             else
             {
                 DPRINT1("BIOS Function INT 15h, AH = 0xE8 - unexpected AL = %02X, EDX = %08X\n",
-                        getAL(),
-                        getEDX());
+                        getAL(), getEDX());
             }
 
             break;
@@ -773,6 +775,16 @@ static VOID BiosHwSetup(VOID)
     IOWriteB(PIT_DATA_PORT(2), 0x97);
     IOWriteB(PIT_DATA_PORT(2), 0x0A);
 
+
+    /* Initialize PS/2 keyboard port */
+    // Enable the port
+    IOWriteB(PS2_CONTROL_PORT, 0xAE);
+    IOWriteB(PS2_CONTROL_PORT, 0x60);
+    // Port interrupts and clock enabled,
+    // enable keyboard scancode translation.
+    // POST passed, force keyboard unlocking.
+    IOWriteB(PS2_DATA_PORT   , 0x4D);
+
     EnableHwIRQ(0, BiosTimerIrq);
 }
 
@@ -785,7 +797,10 @@ static VOID InitializeBiosInt32(VOID)
 
     /* Register the default BIOS interrupt vectors */
 
-    /* Zero out all of the IVT (0x00 -- 0xFF) */
+    /*
+     * Zero out all of the IVT (0x00 -- 0xFF). Some applications
+     * indeed expect to have free vectors at the end of the IVT.
+     */
     RtlZeroMemory(BaseAddress, 0x0100 * sizeof(ULONG));
 
 #if defined(ADVANCED_DEBUGGING) && (ADVANCED_DEBUGGING_LEVEL >= 3)

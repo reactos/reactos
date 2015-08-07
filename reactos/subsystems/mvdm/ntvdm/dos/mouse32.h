@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            mouse32.h
- * PURPOSE:         VDM 32-bit compatible MOUSE.COM driver
+ * PURPOSE:         VDM 32-bit compatible PS/2 MOUSE.COM driver
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -12,7 +12,7 @@
 /* DEFINES ********************************************************************/
 
 //
-// We are ROS PS/2 Mouse Driver Version 6.26, compatible MS-MOUSE 6.26
+// We are ReactOS PS/2 Mouse Driver Version 6.26, compatible MS-MOUSE 6.26
 //
 #define MOUSE_VERSION   MAKEWORD(0x26, 0x06)
 
@@ -75,8 +75,6 @@ typedef struct _MOUSE_DRIVER_STATE
 
 /* FUNCTIONS ******************************************************************/
 
-VOID DosMouseEnable(VOID);
-VOID DosMouseDisable(VOID);
 BOOLEAN DosMouseInitialize(VOID);
 VOID DosMouseCleanup(VOID);
 

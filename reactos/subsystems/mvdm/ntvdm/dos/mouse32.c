@@ -2,13 +2,17 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            mouse32.c
- * PURPOSE:         VDM 32-bit compatible MOUSE.COM driver
+ * PURPOSE:         VDM 32-bit compatible PS/2 MOUSE.COM driver
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
 /* INCLUDES *******************************************************************/
 
 #define NDEBUG
+
+/* Driver Version number and Copyright */
+#include <reactos/buildno.h>
+#include <reactos/version.h>
 
 #include "ntvdm.h"
 #include "emulator.h"
@@ -30,7 +34,10 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static const CHAR MouseCopyright[] = "ROS PS/2 16/32-bit Mouse Driver Compatible MS-MOUSE 6.26 Copyright (C) ReactOS Team 1996-2015\0";
+static const CHAR MouseCopyright[] =
+    "ReactOS PS/2 16/32-bit Mouse Driver Compatible MS-MOUSE 6.26\r\n"
+    "Version "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\r\n"
+    "Copyright (C) ReactOS Team 1996-"COPYRIGHT_YEAR"\0";
 
 #pragma pack(push, 1)
 
@@ -58,7 +65,79 @@ static MOUSE_DRIVER_STATE DriverState;
 static DWORD OldIrqHandler;
 static DWORD OldIntHandler;
 
+static WORD DefaultGfxScreenMask[16] =
+{
+    0xC3FF,     // 1100001111111111
+    0xC0FF,     // 1100000011111111
+    0xC07F,     // 1100000001111111
+    0xC01F,     // 1100000000011111
+    0xC00F,     // 1100000000001111
+    0xC007,     // 1100000000000111
+    0xC003,     // 1100000000000011
+    0xC007,     // 1100000000000111
+    0xC01F,     // 1100000000011111
+    0xC01F,     // 1100000000011111
+    0xC00F,     // 1100000000001111
+    0xC60F,     // 1100011000001111
+    0xFF07,     // 1111111100000111
+    0xFF07,     // 1111111100000111
+    0xFF87,     // 1111111110000111
+    0xFFCF,     // 1111111111001111
+};
+
+static WORD DefaultGfxCursorMask[16] =
+{
+    0x0000,     // 0000000000000000
+    0x1C00,     // 0001110000000000
+    0x1F00,     // 0001111100000000
+    0x1F80,     // 0001111110000000
+    0x1FE0,     // 0001111111100000
+    0x1FF0,     // 0001111111110000
+    0x1FF8,     // 0001111111111000
+    0x1FE0,     // 0001111111100000
+    0x1FC0,     // 0001111111000000
+    0x1FC0,     // 0001111111000000
+    0x19E0,     // 0001100111100000
+    0x00E0,     // 0000000011100000
+    0x0070,     // 0000000001110000
+    0x0070,     // 0000000001110000
+    0x0030,     // 0000000000110000
+    0x0000,     // 0000000000000000
+};
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+/* static */
+VOID BiosPs2Service(UCHAR Function)
+{
+    /* Save AX and BX */
+    USHORT AX = getAX();
+    // USHORT BX = getBX();
+
+    /*
+     * Set the parameters:
+     * AL contains the character to print (already set),
+     * BL contains the character attribute,
+     * BH contains the video page to use.
+     */
+    // setBL(DOS_CHAR_ATTRIBUTE);
+    // setBH(Bda->VideoPage);
+    setAL(Function);
+
+    /* Call the BIOS INT 15h, AH=C2h "Pointing Device BIOS Interface (PS)" */
+    setAH(0xC2);
+    Int32Call(&MouseContext, BIOS_MISC_INTERRUPT);
+
+    /* Restore AX and BX */
+    // setBX(BX);
+    setAX(AX);
+}
+
+
+
+static VOID DosMouseEnable(VOID);
+static VOID DosMouseDisable(VOID);
+
 
 static VOID PaintMouseCursor(VOID)
 {
@@ -273,7 +352,7 @@ static inline VOID DosUpdatePosition(PCOORD NewPosition)
     CallMouseUserHandlers(0x0001); // We use MS MOUSE v1.0+ format
 }
 
-static inline VOID DosUpdateButtons(BYTE ButtonState)
+static inline VOID DosUpdateButtons(BYTE ButtonState) // WORD ButtonState
 {
     USHORT i;
     USHORT CallMask = 0x0000; // We use MS MOUSE v1.0+ format
@@ -316,9 +395,9 @@ static VOID WINAPI DosMouseIrq(LPWORD Stack)
 
     /* Read the whole packet at once */
     Flags = IOReadB(PS2_DATA_PORT);
-    PS2PortQueueRead(1);
+    PS2PortQueueRead(1); // NOTE: Should be a IOReadB! But see r67231
     DeltaX = IOReadB(PS2_DATA_PORT);
-    PS2PortQueueRead(1);
+    PS2PortQueueRead(1); // NOTE: Should be a IOReadB! But see r67231
     DeltaY = IOReadB(PS2_DATA_PORT);
 
     /* Adjust the sign */
@@ -369,39 +448,13 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             DriverState.GraphicsCursor.HotSpot.X = 3;
             DriverState.GraphicsCursor.HotSpot.Y = 1;
 
-            DriverState.GraphicsCursor.ScreenMask[0] = 0xC3FF;  // 1100001111111111
-            DriverState.GraphicsCursor.ScreenMask[1] = 0xC0FF;  // 1100000011111111
-            DriverState.GraphicsCursor.ScreenMask[2] = 0xC07F;  // 1100000001111111
-            DriverState.GraphicsCursor.ScreenMask[3] = 0xC01F;  // 1100000000011111
-            DriverState.GraphicsCursor.ScreenMask[4] = 0xC00F;  // 1100000000001111
-            DriverState.GraphicsCursor.ScreenMask[5] = 0xC007;  // 1100000000000111
-            DriverState.GraphicsCursor.ScreenMask[6] = 0xC003;  // 1100000000000011
-            DriverState.GraphicsCursor.ScreenMask[7] = 0xC007;  // 1100000000000111
-            DriverState.GraphicsCursor.ScreenMask[8] = 0xC01F;  // 1100000000011111
-            DriverState.GraphicsCursor.ScreenMask[9] = 0xC01F;  // 1100000000011111
-            DriverState.GraphicsCursor.ScreenMask[10] = 0xC00F; // 1100000000001111
-            DriverState.GraphicsCursor.ScreenMask[11] = 0xC60F; // 1100011000001111
-            DriverState.GraphicsCursor.ScreenMask[12] = 0xFF07; // 1111111100000111
-            DriverState.GraphicsCursor.ScreenMask[13] = 0xFF07; // 1111111100000111
-            DriverState.GraphicsCursor.ScreenMask[14] = 0xFF87; // 1111111110000111
-            DriverState.GraphicsCursor.ScreenMask[15] = 0xFFCF; // 1111111111001111
+            RtlCopyMemory(DriverState.GraphicsCursor.ScreenMask,
+                          DefaultGfxScreenMask,
+                          sizeof(DriverState.GraphicsCursor.ScreenMask));
 
-            DriverState.GraphicsCursor.CursorMask[0] = 0x0000;  // 0000000000000000
-            DriverState.GraphicsCursor.CursorMask[1] = 0x1C00;  // 0001110000000000
-            DriverState.GraphicsCursor.CursorMask[2] = 0x1F00;  // 0001111100000000
-            DriverState.GraphicsCursor.CursorMask[3] = 0x1F80;  // 0001111110000000
-            DriverState.GraphicsCursor.CursorMask[4] = 0x1FE0;  // 0001111111100000
-            DriverState.GraphicsCursor.CursorMask[5] = 0x1FF0;  // 0001111111110000
-            DriverState.GraphicsCursor.CursorMask[6] = 0x1FF8;  // 0001111111111000
-            DriverState.GraphicsCursor.CursorMask[7] = 0x1FE0;  // 0001111111100000
-            DriverState.GraphicsCursor.CursorMask[8] = 0x1FC0;  // 0001111111000000
-            DriverState.GraphicsCursor.CursorMask[9] = 0x1FC0;  // 0001111111000000
-            DriverState.GraphicsCursor.CursorMask[10] = 0x19E0; // 0001100111100000
-            DriverState.GraphicsCursor.CursorMask[11] = 0x00E0; // 0000000011100000
-            DriverState.GraphicsCursor.CursorMask[12] = 0x0070; // 0000000001110000
-            DriverState.GraphicsCursor.CursorMask[13] = 0x0070; // 0000000001110000
-            DriverState.GraphicsCursor.CursorMask[14] = 0x0030; // 0000000000110000
-            DriverState.GraphicsCursor.CursorMask[15] = 0x0000; // 0000000000000000
+            RtlCopyMemory(DriverState.GraphicsCursor.CursorMask,
+                          DefaultGfxCursorMask,
+                          sizeof(DriverState.GraphicsCursor.CursorMask));
 
             /* Initialize the counters */
             DriverState.HorizCount = DriverState.VertCount = 0;
@@ -436,7 +489,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             break;
         }
 
-        /* Return Position And Button Status */
+        /* Return Position and Button Status */
         case 0x03:
         {
             COORD Position = DriverState.Position;
@@ -610,6 +663,13 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             break;
         }
 
+        /* Set Exclusion Area */
+        // http://www.ctyme.com/intr/rb-5972.htm
+        // http://www.techhelpmanual.com/849-int_33h_0010h__set_exclusion_area.html
+        //case 0x10:
+        //{
+        //}
+
         /* Define Double-Speed Threshold */
         case 0x13:
         {
@@ -625,12 +685,18 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
 
             DriverState.Handler0.CallMask = getCX();
             DriverState.Handler0.Callback = MAKELONG(getDX(), getES()); // Far pointer to the callback
+            DPRINT1("Exchange old callback 0x%04X, %04X:%04X with new callback 0x%04X, %04X:%04X\n",
+                    OldCallMask,
+                    HIWORD(OldCallback),
+                    LOWORD(OldCallback),
+                    DriverState.Handler0.CallMask,
+                    HIWORD(DriverState.Handler0.Callback),
+                    LOWORD(DriverState.Handler0.Callback));
 
             /* Return old callmask in CX and callback vector in ES:DX */
             setCX(OldCallMask);
             setES(HIWORD(OldCallback));
             setDX(LOWORD(OldCallback));
-
             break;
         }
 
@@ -644,6 +710,9 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         /* Save Driver State */
         case 0x16:
         {
+            /* Check whether the user buffer has correct size and fail if not */
+            if (getBX() != sizeof(MOUSE_DRIVER_STATE)) break;
+
             *((PMOUSE_DRIVER_STATE)SEG_OFF_TO_PTR(getES(), getDX())) = DriverState;
             break;
         }
@@ -651,6 +720,9 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         /* Restore Driver State */
         case 0x17:
         {
+            /* Check whether the user buffer has correct size and fail if not */
+            if (getBX() != sizeof(MOUSE_DRIVER_STATE)) break;
+
             DriverState = *((PMOUSE_DRIVER_STATE)SEG_OFF_TO_PTR(getES(), getDX()));
             break;
         }
@@ -803,6 +875,15 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         case 0x1A:
         {
             DPRINT1("INT 33h, AH=1Ah: Mouse sensitivity is UNSUPPORTED\n");
+
+            // FIXME: Do that at runtime!
+
+            // UCHAR BH = getBH();
+            // setBH(0x00);
+            // BiosPs2Service(0x00);
+            // FIXME: Check for return status in AH and CF
+            // setBH(BH);
+
             break;
         }
 
@@ -815,6 +896,15 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             setBX(50); // Horizontal speed
             setCX(50); //   Vertical speed
             setDX(50); // Double speed threshold
+
+            // FIXME: Get that at runtime!
+
+            // UCHAR BH = getBH();
+            // setBH(0x00);
+            // BiosPs2Service(0x00);
+            // FIXME: Check for return status in AH and CF
+            // setBH(BH);
+
             break;
         }
 
@@ -826,6 +916,11 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             setBX(LOWORD(OldIntHandler));
 
             DosMouseDisable();
+            // UCHAR BH = getBH();
+            // setBH(0x00);
+            // BiosPs2Service(0x00);
+            // FIXME: Check for return status in AH and CF
+            // setBH(BH);
             break;
         }
 
@@ -833,6 +928,11 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         case 0x20:
         {
             DosMouseEnable();
+            // UCHAR BH = getBH();
+            // setBH(0x01);
+            // BiosPs2Service(0x00);
+            // FIXME: Check for return status in AH and CF
+            // setBH(BH);
             break;
         }
 
@@ -876,12 +976,70 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         {
             setBX(MOUSE_VERSION); // Version Number
 
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-5993.htm
+             * for the list of possible values.
+             */
             // FIXME: To be determined at runtime!
             setCH(0x04); // PS/2 Type
             setCL(0x00); // PS/2 Interrupt
 
             break;
         }
+
+        // BIOS Function INT 33h, AX = 0x0025 NOT IMPLEMENTED
+        case 0x25:
+        {
+            setAX(0);
+            setBX(0);
+            setCX(0);
+            setDX(0);
+            UNIMPLEMENTED;
+            break;
+        }
+
+        /* Get Maximum Virtual Coordinates */
+        case 0x26:
+        {
+            setBX(!DriverEnabled);
+            // FIXME: In fact the MaxX and MaxY here are
+            // theoretical values for the current video mode.
+            // They therefore can be different from the current
+            // min/max values.
+            // See http://www.ctyme.com/intr/rb-5995.htm
+            // for more details.
+            setCX(DriverState.MaxX);
+            setDX(DriverState.MaxY);
+            break;
+        }
+
+        /* Get Current Minimum/Maximum Virtual Coordinates */
+        case 0x31:
+        {
+            setAX(DriverState.MinX);
+            setBX(DriverState.MinY);
+            setCX(DriverState.MaxX);
+            setDX(DriverState.MaxY);
+            break;
+        }
+
+#if 0
+        case 0x33:
+        {
+              /*
+              * Related to http://www.ctyme.com/intr/rb-5985.htm
+              * INT 33h, AX=001Ch "SET INTERRUPT RATE":
+
+              * Values for mouse interrupt rate:
+              * BX = rate
+                00h    no interrupts allowed
+                01h    30 per second
+                02h    50 per second
+                03h    100 per second
+                04h    200 per second
+              */
+        }
+#endif
 
         /* Return Pointer to Copyright String */
         case 0x4D:
@@ -914,6 +1072,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+static
 VOID DosMouseEnable(VOID)
 {
     if (DriverEnabled) return;
@@ -928,6 +1087,7 @@ VOID DosMouseEnable(VOID)
                   MOUSE_IRQ_INT, DosMouseIrq, NULL);
 }
 
+static
 VOID DosMouseDisable(VOID)
 {
     if (!DriverEnabled) return;
@@ -936,61 +1096,6 @@ VOID DosMouseDisable(VOID)
     ((PDWORD)BaseAddress)[MOUSE_IRQ_INT] = OldIrqHandler;
 
     DriverEnabled = FALSE;
-}
-
-VOID DosMouseUpdatePosition(PCOORD NewPosition)
-{
-    SHORT DeltaX = NewPosition->X - DriverState.Position.X;
-    SHORT DeltaY = NewPosition->Y - DriverState.Position.Y;
-
-    if (!DriverEnabled) return;
-
-    DriverState.HorizCount += (DeltaX * MICKEYS_PER_CELL_HORIZ) / 8;
-    DriverState.VertCount  += (DeltaY * MICKEYS_PER_CELL_VERT) / 8;
-
-    if (DriverState.ShowCount > 0) EraseMouseCursor();
-    DriverState.Position = *NewPosition;
-    if (DriverState.ShowCount > 0) PaintMouseCursor();
-
-    /* Call the mouse handlers */
-    // if (DeltaX || DeltaY)
-    CallMouseUserHandlers(0x0001); // We use MS MOUSE v1.0+ format
-}
-
-VOID DosMouseUpdateButtons(WORD ButtonState)
-{
-    USHORT i;
-    USHORT CallMask = 0x0000; // We use MS MOUSE v1.0+ format
-
-    if (!DriverEnabled) return;
-
-    for (i = 0; i < NUM_MOUSE_BUTTONS; i++)
-    {
-        BOOLEAN OldState = (DriverState.ButtonState >> i) & 1;
-        BOOLEAN NewState = (ButtonState >> i) & 1;
-
-        if (NewState > OldState)
-        {
-            /* Mouse press */
-            DriverState.PressCount[i]++;
-            DriverState.LastPress[i] = DriverState.Position;
-
-            CallMask |= (1 << (2 * i + 1));
-        }
-        else if (NewState < OldState)
-        {
-            /* Mouse release */
-            DriverState.ReleaseCount[i]++;
-            DriverState.LastRelease[i] = DriverState.Position;
-
-            CallMask |= (1 << (2 * i + 2));
-        }
-    }
-
-    DriverState.ButtonState = ButtonState;
-
-    /* Call the mouse handlers */
-    CallMouseUserHandlers(CallMask);
 }
 
 BOOLEAN DosMouseInitialize(VOID)
@@ -1020,6 +1125,12 @@ BOOLEAN DosMouseInitialize(VOID)
                   DOS_MOUSE_INTERRUPT, DosMouseService, NULL);
 
     DosMouseEnable();
+    // UCHAR BH = getBH();
+    // setBH(0x01);
+    // BiosPs2Service(0x00);
+    // FIXME: Check for return status in AH and CF
+    // setBH(BH);
+
     return TRUE;
 }
 
@@ -1027,6 +1138,11 @@ VOID DosMouseCleanup(VOID)
 {
     if (DriverState.ShowCount > 0) EraseMouseCursor();
     DosMouseDisable();
+    // UCHAR BH = getBH();
+    // setBH(0x00);
+    // BiosPs2Service(0x00);
+    // FIXME: Check for return status in AH and CF
+    // setBH(BH);
 
     /* Restore the old mouse service interrupt handler */
     ((PDWORD)BaseAddress)[DOS_MOUSE_INTERRUPT] = OldIntHandler;

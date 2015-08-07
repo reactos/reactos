@@ -45,8 +45,7 @@ typedef struct _PS2_PORT
 #define PS2_PORTS  2
 static PS2_PORT Ports[PS2_PORTS];
 
-#define PS2_DEFAULT_CONFIG  0x45
-static BYTE ControllerConfig = PS2_DEFAULT_CONFIG;
+static BYTE ControllerConfig  = 0x00;
 static BYTE ControllerCommand = 0x00;
 
 static BYTE StatusRegister = 0x00;
@@ -69,8 +68,16 @@ static BYTE WINAPI PS2ReadPort(USHORT Port)
 {
     if (Port == PS2_CONTROL_PORT)
     {
-        /* Be sure bit 2 is always set */
-        StatusRegister |= 1 << 2;
+        /*
+         * Be sure bit 4 "Keyboard enable flag" is always set.
+         * Keyboard enable (or keyboard lock) flag values are:
+         * 0: Locked; 1: Not locked.
+         * On IBM PC-ATs this is the state of the hardware keyboard
+         * lock mechanism. It is not widely used, but some programs
+         * still use it: see for example:
+         * http://www.os2museum.com/wp/the-dos-4-0-shell-mouse-mystery/
+         */
+        StatusRegister |= (1 << 4);
 
         // FIXME: Should clear bits 6 and 7 because there are
         // no timeouts and no parity errors.
@@ -220,6 +227,31 @@ static VOID WINAPI PS2WritePort(USHORT Port, BYTE Data)
                 case 0x60:
                 {
                     ControllerConfig = Data;
+
+                    /*
+                     * Update bit 2 "System flag" of the status register
+                     * with bit 2 of the controller configuration byte.
+                     * See: http://www.win.tue.nl/~aeb/linux/kbd/scancodes-11.html#kccb2
+                     * for more details.
+                     */
+                    if (ControllerConfig & (1 << 2))
+                        StatusRegister |= (1 << 2);
+                    else
+                        StatusRegister &= ~(1 << 2);
+
+                    /*
+                     * Update bit 4 "Keyboard enable flag" of the status register
+                     * with bit 3 "Ignore keyboard lock" of the controller
+                     * configuration byte (if set), then reset the latter one.
+                     * See: http://www.win.tue.nl/~aeb/linux/kbd/scancodes-11.html#kccb3
+                     * for more details.
+                     */
+                    if (ControllerConfig & (1 << 3))
+                    {
+                        StatusRegister   |=  (1 << 4);
+                        ControllerConfig &= ~(1 << 3);
+                    }
+
                     break;
                 }
 
@@ -399,13 +431,13 @@ Done:
 BOOLEAN PS2Initialize(VOID)
 {
     /* Initialize the PS/2 ports */
-    Ports[0].IsEnabled  = TRUE;
+    Ports[0].IsEnabled  = FALSE;
     Ports[0].QueueEmpty = TRUE;
     Ports[0].QueueStart = 0;
     Ports[0].QueueEnd   = 0;
     Ports[0].QueueMutex = CreateMutex(NULL, FALSE, NULL);
 
-    Ports[1].IsEnabled  = TRUE;
+    Ports[1].IsEnabled  = FALSE;
     Ports[1].QueueEmpty = TRUE;
     Ports[1].QueueStart = 0;
     Ports[1].QueueEnd   = 0;

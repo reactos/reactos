@@ -142,7 +142,7 @@ C_ASSERT(sizeof(USER_DATA_AREA) == 0x34);
  */
 typedef struct _BIOS_CONFIG_TABLE
 {
-    WORD    Length;                             // 0x00
+    WORD    Length;                             // 0x00 - Number of bytes following
     BYTE    Model;                              // 0x02
     BYTE    SubModel;                           // 0x03
     BYTE    Revision;                           // 0x04
