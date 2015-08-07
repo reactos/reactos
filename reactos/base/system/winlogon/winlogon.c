@@ -457,6 +457,8 @@ WinMain(
     else
         PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
 
+    (void)LoadLibraryW(L"sfc_os.dll");
+
     /* Tell kernel that CurrentControlSet is good (needed
      * to support Last good known configuration boot) */
     NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED | 1);
