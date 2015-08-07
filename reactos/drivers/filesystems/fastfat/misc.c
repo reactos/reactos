@@ -364,7 +364,17 @@ VfatLockUserBuffer(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    MmProbeAndLockPages(Irp->MdlAddress, Irp->RequestorMode, Operation);
+    _SEH2_TRY
+    {
+        MmProbeAndLockPages(Irp->MdlAddress, Irp->RequestorMode, Operation);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        IoFreeMdl(Irp->MdlAddress);
+        Irp->MdlAddress = NULL;
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     return STATUS_SUCCESS;
 }

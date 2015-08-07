@@ -284,7 +284,7 @@ CcCopyData (
         CurrentOffset += PartialLength;
         BytesCopied += PartialLength;
 
-        if (Buffer)
+        if (Operation != CcOperationZero)
             Buffer = (PVOID)((ULONG_PTR)Buffer + PartialLength);
     }
 
@@ -321,7 +321,7 @@ CcCopyData (
         CurrentOffset += PartialLength;
         BytesCopied += PartialLength;
 
-        if (Buffer)
+        if (Operation != CcOperationZero)
             Buffer = (PVOID)((ULONG_PTR)Buffer + PartialLength);
     }
     IoStatus->Status = STATUS_SUCCESS;
