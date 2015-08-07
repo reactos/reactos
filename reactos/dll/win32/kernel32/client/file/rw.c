@@ -131,7 +131,6 @@ ReadFile(IN HANDLE hFile,
     TRACE("ReadFile(hFile %p)\n", hFile);
 
     if (lpNumberOfBytesRead != NULL) *lpNumberOfBytesRead = 0;
-    if (!nNumberOfBytesToRead) return TRUE;
 
     hFile = TranslateStdHandle(hFile);
 

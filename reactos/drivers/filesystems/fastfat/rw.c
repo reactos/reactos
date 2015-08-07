@@ -924,6 +924,7 @@ VfatWrite(
     Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoReadAccess);
     if (!NT_SUCCESS(Status))
     {
+        Status = STATUS_INVALID_USER_BUFFER;
         goto ByeBye;
     }
 
