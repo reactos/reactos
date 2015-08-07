@@ -1862,14 +1862,14 @@ CURSORICON_CopyImage(
         if (!IS_INTRESOURCE(ustrRsrc.Buffer))
             ustrRsrc.Buffer[ustrRsrc.Length/sizeof(WCHAR)] = UNICODE_NULL;
         
-        TRACE("Got module %S, resource %p (%S).\n", ustrModule.Buffer,
+        TRACE("Got module %wZ, resource %p (%S).\n", &ustrModule,
             ustrRsrc.Buffer, IS_INTRESOURCE(ustrRsrc.Buffer) ? L"" : ustrRsrc.Buffer);
 
         /* Get the module handle */
         if (!GetModuleHandleExW(0, ustrModule.Buffer, &hModule))
         {
             /* This should never happen */
-            ERR("Invalid handle?.\n");
+            ERR("Invalid handle? Module='%wZ', error %lu.\n", &ustrModule, GetLastError());
             SetLastError(ERROR_INVALID_PARAMETER);
             goto leave;
         }
