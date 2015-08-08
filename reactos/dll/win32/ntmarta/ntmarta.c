@@ -1068,7 +1068,9 @@ ParseRegErr:
                                              (DWORD)DesiredAccess);
             if (*Handle2 == NULL)
             {
-                goto FailOpenService;
+                Ret = GetLastError();
+                ASSERT(Ret != ERROR_SUCCESS);
+                goto Cleanup;
             }
 
             DesiredAccess &= ~SC_MANAGER_CONNECT;
@@ -1077,13 +1079,11 @@ ParseRegErr:
                                           (DWORD)DesiredAccess);
             if (*Handle == NULL)
             {
-                if (*Handle2 != NULL)
-                {
-                    CloseServiceHandle((SC_HANDLE)(*Handle2));
-                }
-
-FailOpenService:
                 Ret = GetLastError();
+                ASSERT(Ret != ERROR_SUCCESS);
+                ASSERT(*Handle2 != NULL);
+                CloseServiceHandle((SC_HANDLE)(*Handle2));
+
                 goto Cleanup;
             }
             break;
