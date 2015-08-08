@@ -535,6 +535,10 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                        FALSE);
         }
     }
+    else
+    {
+        DPRINT1("GetUserProfileDirectoryW failed with error %lu\n", GetLastError());
+    }
 
     if (GetUserAndDomainName(hToken,
                              &lpUserName,
