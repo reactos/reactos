@@ -2224,7 +2224,7 @@ SetupGetInfFileListW(
         }
 
         len = strlenW(wfdFileInfo.cFileName) + 1;
-        requiredSize += (DWORD)(len * sizeof(WCHAR));
+        requiredSize += (DWORD)len;
         if (requiredSize <= ReturnBufferSize)
         {
             strcpyW(pBuffer, wfdFileInfo.cFileName);
@@ -2234,7 +2234,7 @@ SetupGetInfFileListW(
     } while (FindNextFileW(hSearch, &wfdFileInfo));
     FindClose(hSearch);
 
-    requiredSize += sizeof(WCHAR); /* Final NULL char */
+    requiredSize += 1; /* Final NULL char */
     if (requiredSize <= ReturnBufferSize)
     {
         *pBuffer = '\0';
