@@ -18,7 +18,7 @@ void Test_AddFontResourceA()
     CHAR szFileNameFont2A[MAX_PATH];
     int result;
 
-    GetCurrentDirectoryA(MAX_PATH,szFileNameA);
+    GetWindowsDirectoryA(szFileNameA,MAX_PATH);
 
     memcpy(szFileNameFont1A,szFileNameA,MAX_PATH );
     strcat(szFileNameFont1A, "\\bin\\testdata\\test.ttf");
