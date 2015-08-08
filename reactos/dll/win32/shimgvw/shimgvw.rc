@@ -9,6 +9,8 @@
 #include <reactos/version.rc>
 
 IDI_APPICON ICON "res/main.ico"
+IDI_BMP_ICON ICON "res/bmp.ico"
+IDI_PNG_ICON ICON "res/png.ico"
 
 IDB_PREVICON BITMAP "res/prev.bmp"
 IDB_NEXTICON BITMAP "res/next.bmp"
