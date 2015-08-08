@@ -5,13 +5,13 @@
 
 [Section]
 Name = CCleaner
-Version = 5.06
+Version = 5.08
 License = Freeware
 Description = Very good tool for cleaning your PC.
 Size = 6.25 MB
 Category = 12
 URLSite = http://www.piriform.com/ccleaner
-URLDownload = http://download.piriform.com/ccsetup506.exe
+URLDownload = http://download.piriform.com/ccsetup508.exe
 CDPath = none
 
 [Section.0407]

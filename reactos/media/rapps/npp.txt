@@ -4,13 +4,13 @@
 
 [Section]
 Name = Notepad++
-Version = 6.7.8.2
+Version = 6.8.1
 License = GPL
 Description = A full featured, free text editor with many plug-ins.
-Size = 6.62 MB
+Size = 5.4 MB
 Category = 6
 URLSite = http://notepad-plus-plus.org/
-URLDownload = https://notepad-plus-plus.org/repository/6.x/6.7.8.2/npp.6.7.8.2.Installer.exe
+URLDownload = https://notepad-plus-plus.org/repository/6.x/6.8.1/npp.6.8.1.Installer.exe
 CDPath = none
 
 [Section.0407]
@@ -21,7 +21,7 @@ Description = Un editor de texto completo, libre y con gran cantidad de extensio
 
 [Section.040c]
 Description = Un éditeur de texte.
-Size = 6,62 Mo
+Size = 5,4 Mo
 URLSite = http://notepad-plus-plus.org/fr/
 
 [Section.0410]
@@ -35,7 +35,7 @@ Description = Edytor tekstu.
 
 [Section.0418]
 Description = Editor complet și gratuit de text, cu multe extensii.
-Size = 6,62 Mo
+Size = 5,4 Mo
 
 [Section.0419]
 Description = Текстовый редактор.
@@ -45,7 +45,7 @@ Description = Textový editor.
 
 [Section.041f]
 Description = Bir metin düzenleyicisi.
-Size = 6,62 MB
+Size = 5,4 MB
 
 [Section.0422]
 Description = Текстовый редактор.

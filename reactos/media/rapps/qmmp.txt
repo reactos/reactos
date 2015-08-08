@@ -5,13 +5,13 @@
 
 [Section]
 Name = Qmmp (Qt-based Multimedia Player)
-Version = 0.8.4
+Version = 0.8.5
 License = GPL
 Description = An audio-player based on the Qt libraries. The user interface is similar to WinAMP or XMMS. Alternative user interfaces are also available.
 Size = 12.76 MB
 Category = 1
 URLSite = http://qmmp.ylsoftware.com/
-URLDownload = http://qmmp.ylsoftware.com/files/windows/qmmp-0.8.4-win32.exe
+URLDownload = http://qmmp.ylsoftware.com/files/windows/qmmp-0.8.5-win32.exe
 CDPath = none
 
 [Section.0407]

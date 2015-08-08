@@ -5,13 +5,13 @@
 
 [Section]
 Name = Double Commander
-Version = 0.6.2 Beta
+Version = 0.6.4 Beta
 License = GPL
 Description = An open source file manager with two panels side by side. You will need a tool like 7-Zip to extract it.
 Size = 8.8 MB
 Category = 12
 URLSite = http://doublecmd.sourceforge.net/
-URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windows%2032%20bit/Double%20Commander%200.6.2%20beta/doublecmd-0.6.2.i386-win32.exe
+URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windows%2032%20bit/Double%20Commander%200.6.4%20beta/doublecmd-0.6.4.i386-win32.exe
 CDPath = none
 
 [Section.0407]

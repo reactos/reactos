@@ -3,13 +3,13 @@
 
 [Section]
 Name = OpenTTD
-Version = 1.5.0
+Version = 1.5.1
 License = GPL v2
 Description = Open Source clone of the "Transport Tycoon Deluxe" game engine. You may need a copy of Transport Tycoon.
 Size = 7.15 MB
 Category = 4
 URLSite = http://www.openttd.org/
-URLDownload = http://binaries.openttd.org/releases/1.5.0/openttd-1.5.0-windows-win32.exe
+URLDownload = http://binaries.openttd.org/releases/1.5.1/openttd-1.5.1-windows-win32.exe
 CDPath = none
 
 [Section.0407]

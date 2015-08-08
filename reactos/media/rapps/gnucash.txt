@@ -5,13 +5,13 @@
 
 [Section]
 Name = GnuCash
-Version = 2.6.6
+Version = 2.6.7
 License = GPL
 Description = A personal and small-business financial-accounting software, freely licensed under the GNU GPL and available for GNU/Linux, BSD, Solaris, Mac OS X and Microsoft Windows.
-Size = 92.6 MB
+Size = 92.8 MB
 Category = 10
 URLSite = http://gnucash.org/
-URLDownload = http://downloads.sourceforge.net/sourceforge/gnucash/gnucash%20%28stable%29/2.6.6/gnucash-2.6.6-setup.exe
+URLDownload = http://downloads.sourceforge.net/sourceforge/gnucash/gnucash%20%28stable%29/2.6.7/gnucash-2.6.7-setup.exe
 CDPath = none
 
 [Section.0407]
@@ -19,11 +19,11 @@ Description = Privat und Small-Business Finanzbuchhaltungssoftware, unter der GN
 
 [Section.0418]
 Description = Program de contabilitate financiară pentru uz personal și întreprinderi mici, oferit sub licența gratuită GNU GPL. Este disponibil pentru GNU/Linux, BSD, Solaris, Mac OS X și Windows.
-Size = 92,6 Mo
+Size = 92,8 Mo
 
 [Section.041f]
 Description = GNU GPL altında özgürce ruhsatlanmış, GNU/Linux, BSD, Solaris, Mac OS X ve Microsoft Windows için kullanılabilir, bir şahsî ve küçük iş mâlî muhâsebe yazılımı.
-Size = 92,6 MB
+Size = 92,8 MB
 
 [Section.0a]
 Description = Un programa de contabilidad personal y de PYMEs liberado bajo los términos de la GNU GPL. Está disponible para GNU/Linux, BSD, Solaris, Mac OS X y Microsoft Windows.

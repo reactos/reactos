@@ -4,13 +4,13 @@
 
 [Section]
 Name = Mono .NET Development Framework
-Version = 4.0.1
+Version = 4.0.2
 License = Unknown
 Description = Open-source .NET Framework.
 Size = 116.02 MB
 Category = 14
 URLSite = http://www.mono-project.com/
-URLDownload = http://download.mono-project.com/archive/4.0.1/windows-installer/mono-4.0.1-gtksharp-2.12.26-win32-0.msi
+URLDownload = http://download.mono-project.com/archive/4.0.2/windows-installer/mono-4.0.2-gtksharp-2.12.26-win32-0.msi
 CDPath = none
 
 [Section.0407]

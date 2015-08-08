@@ -3,84 +3,84 @@
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
-Name = Mozilla Thunderbird 31
-Version = 31.7.0
+Name = Mozilla Thunderbird 38
+Version = 38.1.0
 License = MPL/GPL/LGPL
 Description = Popular and open source e-mail client.
 Size = 27.57 MB
 Category = 5
 URLSite = https://www.mozilla.org/en-US/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/en-US/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/en-US/Thunderbird%20Setup%2038.1.0.exe
 CDPath = none
 
 [Section.0407]
 Description = Populärer und quelloffener E-Mail-Client.
 Size = 27.41 MB
 URLSite = https://www.mozilla.org/de/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/de/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/de/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0a]
 Description = Cliente de correo electrónico popular y de código abierto.
 Size = 27.36 MB
 URLSite = https://www.mozilla.org/es-ES/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/es-ES/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/es-ES/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.040c]
 Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
 Size = 27,72 Mo
 URLSite = https://www.mozilla.org/fr/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/fr/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/fr/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0410]
 Description = Il più popolare e il migliore Client mail gratuito.
 Size = 27.36 MB
 URLSite = https://www.mozilla.org/it/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/it/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/it/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
 Size = 28.06 MB
 URLSite = https://www.mozilla.org/nl/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/nl/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/nl/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
 Size = 28.27 MB
 URLSite = https://www.mozilla.org/pl/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/pl/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/pl/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0418]
 Description = Client popular de poștă electronică, cu surse deschise.
 Size = 27,93 Mo
 URLSite = https://www.mozilla.org/ro/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/ro/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/ro/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
 Size = 27.83 MB
 URLSite = https://www.mozilla.org/ru/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/ru/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/ru/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.041f]
 Description = Özgür posta istemcileri arasında en tutulanı ve en iyilerinden biri.
 Size = 27,44 MB
 URLSite = https://www.mozilla.org/tr/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/tr/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/tr/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
 Size = 27.86 MB
 URLSite = https://www.mozilla.org/uk/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/uk/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/uk/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0804]
 Description = 最受欢迎的开源电子邮件客户端。
 Size = 27.50 MB
 URLSite = https://www.mozilla.org/zh-CN/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/zh-CN/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/zh-CN/Thunderbird%20Setup%2038.1.0.exe
 
 [Section.0813]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
 Size = 28.06 MB
 URLSite = https://www.mozilla.org/nl/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.7.0/win32/nl/Thunderbird%20Setup%2031.7.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/nl/Thunderbird%20Setup%2038.1.0.exe

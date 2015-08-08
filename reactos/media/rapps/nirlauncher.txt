@@ -4,13 +4,13 @@
 
 [Section]
 Name = NirLauncher
-Version = 1.19.34
+Version = 1.19.45
 License = Freeware
 Description = A package of more than 180 utilities for Windows.
 Size = 20.75 MB
 Category = 12
 URLSite = http://launcher.nirsoft.net/
-URLDownload = http://download.nirsoft.net/nirsoft_package_1.19.34.zip
+URLDownload = http://download2.nirsoft.net/nirsoft_package_1.19.45.zip
 CDPath = none
 
 [Section.0407]

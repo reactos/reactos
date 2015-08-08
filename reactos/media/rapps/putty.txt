@@ -4,13 +4,13 @@
 
 [Section]
 Name = PuTTY
-Version = 0.64
+Version = 0.65
 License = MIT
 Description = A free SSH, Telnet, rlogin, and raw TCP client.
 Size = 1.84 MB
 Category = 5
 URLSite = http://www.chiark.greenend.org.uk/~sgtatham/putty/
-URLDownload = http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.64-installer.exe
+URLDownload = http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.65-installer.exe
 CDPath = none
 
 [Section.0407]
