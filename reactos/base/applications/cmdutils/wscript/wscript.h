@@ -29,6 +29,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <initguid.h>
+#include <ole2.h>
 #include <ihost.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
