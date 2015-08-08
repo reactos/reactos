@@ -182,7 +182,10 @@ static BOOLEAN DosControlBreak(VOID)
 
 VOID WINAPI DosInt20h(LPWORD Stack)
 {
-    /* This is the exit interrupt */
+    /*
+     * This is the exit interrupt (alias to INT 21h, AH=00h).
+     * CS must be the PSP segment.
+     */
     DosTerminateProcess(Stack[STACK_CS], 0, 0);
 }
 
@@ -204,6 +207,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Terminate Program */
         case 0x00:
         {
+            /* CS must be the PSP segment */
             DosTerminateProcess(Stack[STACK_CS], 0, 0);
             break;
         }
@@ -563,6 +567,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Create New PSP */
         case 0x26:
         {
+            /* DOS 2+ assumes that the caller's CS is the segment of the PSP to copy */
             DosClonePsp(getDX(), Stack[STACK_CS]);
             break;
         }
@@ -2096,7 +2101,11 @@ VOID WINAPI DosAbsoluteWrite(LPWORD Stack)
 
 VOID WINAPI DosInt27h(LPWORD Stack)
 {
-    DosTerminateProcess(Stack[STACK_CS], 0, (getDX() + 0x0F) >> 4);
+    WORD KeepResident = (getDX() + 0x0F) >> 4;
+
+    /* Terminate and Stay Resident. CS must be the PSP segment. */
+    DPRINT1("Process going resident: %u paragraphs kept\n", KeepResident);
+    DosTerminateProcess(Stack[STACK_CS], 0, KeepResident);
 }
 
 VOID WINAPI DosIdle(LPWORD Stack)
