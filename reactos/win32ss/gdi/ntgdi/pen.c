@@ -135,6 +135,9 @@ IntGdiExtCreatePen(
     // If dwPenStyle is PS_COSMETIC, the width must be set to 1.
     if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && ( dwWidth != 1) )
         goto ExitCleanup;
+    // If dwPenStyle is PS_COSMETIC, the brush style must be BS_SOLID.
+    if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && (ulBrushStyle != BS_SOLID) )
+        goto ExitCleanup;
 
     switch (dwPenStyle & PS_STYLE_MASK)
     {
@@ -205,6 +208,7 @@ IntGdiExtCreatePen(
 
     default:
         DPRINT1("IntGdiExtCreatePen unknown penstyle %x\n", dwPenStyle);
+        goto ExitCleanup;
     }
 
     PEN_UnlockPen(pbrushPen);
