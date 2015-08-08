@@ -685,7 +685,7 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
    }
    else
    {
-      RgnType == NULLREGION;
+      RgnType = NULLREGION;
    }
 
    /*
@@ -1882,6 +1882,7 @@ UserDrawCaptionText(
    NTSTATUS Status;
    BOOLEAN bDeleteFont = FALSE;
    SIZE Size;
+   BOOL Ret = TRUE;
    ULONG fit = 0, Length;
    WCHAR szText[128];
    RECTL r = *lpRc;
@@ -1942,6 +1943,7 @@ UserDrawCaptionText(
    if (Text->Length/sizeof(WCHAR) > Length && Length > 3)
    {
       RtlCopyMemory(&szText[Length-3], ELLIPSISW, sizeof(ELLIPSISW));
+      Ret = FALSE;
    }
 
    GreExtTextOutW( hDc,
@@ -1962,9 +1964,12 @@ UserDrawCaptionText(
    if (bDeleteFont)
       GreDeleteObject(hFont);
 
-   return TRUE;
+   return Ret;
 }
 
+//
+// This draws Buttons, Icons and Text...
+//
 BOOL UserDrawCaption(
    PWND pWnd,
    HDC hDc,
@@ -2087,17 +2092,25 @@ BOOL UserDrawCaption(
 
    if((uFlags & DC_TEXT))
    {
+      BOOL Set = FALSE;
       Rect.left += 2;
 
       if (Str)
-         UserDrawCaptionText(pWnd, hDc, Str, &Rect, uFlags, hFont);
+         Set = UserDrawCaptionText(pWnd, hDc, Str, &Rect, uFlags, hFont);
       else if (pWnd != NULL) // FIXME: Windows does not do that
       {
          UNICODE_STRING ustr;
          ustr.Buffer = pWnd->strName.Buffer; // FIXME: LARGE_STRING truncated!
          ustr.Length = (USHORT)min(pWnd->strName.Length, MAXUSHORT);
          ustr.MaximumLength = (USHORT)min(pWnd->strName.MaximumLength, MAXUSHORT);
-         UserDrawCaptionText(pWnd, hDc, &ustr, &Rect, uFlags, hFont);
+         Set = UserDrawCaptionText(pWnd, hDc, &ustr, &Rect, uFlags, hFont);
+      }
+      if (pWnd)
+      {
+         if (Set)
+            pWnd->state2 &= ~WNDS2_CAPTIONTEXTTRUNCATED;
+         else
+            pWnd->state2 |= WNDS2_CAPTIONTEXTTRUNCATED;
       }
    }
 
