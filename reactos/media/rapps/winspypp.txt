@@ -1,0 +1,13 @@
+[Section]
+Name = Winspy++
+Version = 1.7
+License = Freeware
+Description = A handy programmer's utility which can be used to select and view the properties of any window in the system. A tool like 7-Zip is needed to extract it.
+Size = 58.33 KB
+Category = 7
+URLSite = http://www.catch22.net/software/winspy-17
+URLDownload = http://www.catch22.net/sites/default/files/WinSpy17.zip
+CDPath = none
+
+[Section.0407]
+Description = Ein nützliches Werkzeug für Programmierer, das verwendet werden kann, um die Eigenschaften jedes Fensters im System sehen zu können. Ein Werkzeug wie 7-Zip ist zum extrahieren notwendig.
