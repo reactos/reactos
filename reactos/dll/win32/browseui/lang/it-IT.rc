@@ -6,14 +6,14 @@ IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "", 264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Bottoni standard", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Pulsanti standard", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Barra degli indirizzi", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "&Collegamenti", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Blocca la Tool&bar", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "Blocca b&arre degli strumenti", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Personalizza...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "&Etichette", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Bottone di 'Vai'", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+        MENUITEM "P&ulsante di 'Vai'", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -30,11 +30,11 @@ BEGIN
     END
     POPUP "&Visualizza", FCIDM_MENU_VIEW
     BEGIN
-        POPUP "&Toolbar", IDM_VIEW_TOOLBARS
+        POPUP "&Barre degli strumenti", IDM_VIEW_TOOLBARS
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "&Barra di stato", IDM_VIEW_STATUSBAR
+        MENUITEM "Barra di &stato", IDM_VIEW_STATUSBAR
         POPUP "Barra di &Explorer", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Cerca\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -49,28 +49,28 @@ BEGIN
         BEGIN
             MENUITEM "&Indietro\tAlt+Freccia sinistra", IDM_GOTO_BACK
             MENUITEM "&Avanti\tAlt+Freccia destra", IDM_GOTO_FORWARD
-            MENUITEM "&Su un livello", IDM_GOTO_UPONELEVEL
+            MENUITEM "&Livello superiore", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "Pagina &Home\tAlt+Home", IDM_GOTO_HOMEPAGE
+            MENUITEM "Pagina &iniziale\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
         MENUITEM "&Aggiorna", IDM_VIEW_REFRESH
     END
-    POPUP "Preferiti", FCIDM_MENU_FAVORITES
+    POPUP "&Preferiti", FCIDM_MENU_FAVORITES
     BEGIN
         MENUITEM "&Aggiungi ai Preferiti...", IDM_FAVORITES_ADDTOFAVORITES
         MENUITEM "&Organizza i Preferiti...", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "(Empty)", IDM_FAVORITES_EMPTY
+        MENUITEM "(Vuoto)", IDM_FAVORITES_EMPTY
     END
     POPUP "&Strumenti", FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "Mappa disco di &rete ...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "&Connetti disco di rete ...", IDM_TOOLS_MAPNETWORKDRIVE
         MENUITEM "&Disconnetti disco di rete...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
         MENUITEM "&Sincronizza...", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Opzioni della cartella...", IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&Help", FCIDM_MENU_HELP
+    POPUP "&Aiuto", FCIDM_MENU_HELP
     BEGIN
         MENUITEM "E' legale questa copia di &ReactOS?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Informazioni su ReactOS", IDM_HELP_ABOUT
@@ -79,12 +79,12 @@ END
 
 IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
-	POPUP "&Toolbars", -1, MFT_STRING, MFS_ENABLED, 0
+	POPUP "&Barre strumenti", -1, MFT_STRING, MFS_ENABLED, 0
 	BEGIN
 		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
-		MENUITEM "&Quick Launch", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Avvio veloce", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "&New Toolbar...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Nuova barra strumenti...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
 	END
 END
 
@@ -100,7 +100,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
     LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
-    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "Annulla", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
 }
 
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
@@ -136,8 +136,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CANCELLING "Canceling..."
-    IDS_REMAINING  "Remaining"
+    IDS_CANCELLING "Annullamento..."
+    IDS_REMAINING  "Rimanente"
 END
 
 STRINGTABLE
@@ -162,25 +162,25 @@ END
 
 STRINGTABLE
 BEGIN
-    1056 "Contiene i comandi per visualizzare l'Help."
+    1056 "Contiene i comandi per visualizzare la guida."
 END
 
 STRINGTABLE
 BEGIN
     9025 "Chiude la finestra."
-    9026 "Va su di un livello."
+    9026 "Sale al livello superiore."
 END
 
 STRINGTABLE
 BEGIN
-    9121 "Si collaga a un disco di rete."
+    9121 "Connette un disco di rete."
     9122 "Disconnette un disco di rete."
 END
 
 STRINGTABLE
 BEGIN
     9250 "Visualizza le informazioni del programma, versione e copyright."
-    9252 "Visualizza informazioni per il debug."
+    9252 "Visualizza le informazioni per il debug."
 END
 
 STRINGTABLE
@@ -188,7 +188,7 @@ BEGIN
     9281 "Va alla pagina precedente."
     9282 "Va alla pagina successiva."
     9283 "Abilita la modifica delle impostazioni."
-    9285 "Va alla pagina Home."
+    9285 "Va alla pagina iniziale."
 END
 
 STRINGTABLE
@@ -199,17 +199,17 @@ END
 
 STRINGTABLE
 BEGIN
-    9505 "Mostra o nasconde le toolbar."
+    9505 "Mostra o nasconde le barre degli strumenti."
     9506 "Mostra o nasconde la barra di stato."
-    9508 "Visualizza la toolbar dei bottoni standard."
+    9508 "Visualizza la barra dei pulsanti standard."
     9509 "Visualizza la barra degli indirizzi."
     9510 "Visualizza la barra dei collegamenti rapidi."
-    9516 "Blocca la posizione e la dimensione delle toolbar."
+    9516 "Blocca la posizione e la dimensione delle barre degli strumenti."
 END
 
 STRINGTABLE
 BEGIN
-    9533 "Personalizza la toolbar."
+    9533 "Personalizza la barra degli strumenti."
 END
 
 STRINGTABLE
@@ -225,13 +225,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_SMALLICONS "Icone piccole"
-    IDS_LARGEICONS "Icone larghe"
+    IDS_LARGEICONS "Icone grandi"
     IDS_SHOWTEXTLABELS "Mostra le etichette"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NOTEXTLABELS "Niente etichette"
+    IDS_NOTEXTLABELS "Nessuna etichetta"
     IDS_SELECTIVETEXTONRIGHT "Testo selettivo a destra"
 END
 
@@ -270,5 +270,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|Indietro|Avanti|Livello superiore|Cerca|Cartelle|Sposta in|Copia in|Elimina|Annulla|Visualizza|Ferma|Aggiorna|Pagina iniziale|Mappa disco|Disconnette|Preferiti|Cronologia|Schermo intero|Proprietà|Taglia|Copia|Incolla|Opzioni cartella||"
 END
