@@ -1,0 +1,19 @@
+; UTF-8
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = WinMerge
+Version = 2.14.0
+License = GPLv2
+Description = A tool for visual difference display and merging, for both files and directories.
+Size = 6.13 MB
+Category = 12
+URLSite = http://winmerge.org/
+URLDownload = http://downloads.sourceforge.net/project/winmerge/stable/2.14.0/WinMerge-2.14.0-Setup.exe
+CDPath = none
+
+[Section.0407]
+Description = Werkzeug zur grafischen Darstellung und Zusammenführen von Dateien und Ordnern.
+
+[Section.0804]
+Description = 视觉上的差异显示和合并、 文件和目录的工具。

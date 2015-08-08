@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; Translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
@@ -59,4 +59,3 @@ Description = 一个开放源码程序，以给 ReactOS 带来专业的页面布
 
 [Section.0813]
 Description = Een open-source programma dat professionele pagina-indeling aan ReactOS brengt.
-
