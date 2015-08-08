@@ -1,0 +1,9 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_NTOBJFLD_NAME "NT 对象名称空间"
+    IDS_REGISTRY_NAME "系统注册表"
+END

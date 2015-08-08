@@ -70,3 +70,6 @@ IDC_DESK_ADAPTER ICON "resources/adapter.ico"
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif

@@ -1,0 +1,52 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+#if 0
+IDD_POWER_METER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "电源表"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "电源状态", 1001, BUTTON, BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189 
+    CONTROL "总是在任务栏上显示图标。(&A)", 1002, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10 
+    CONTROL "显示每个电池的详细信息。(&B)", 1003, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8 
+    CONTROL "", 1000, STATIC, SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178 
+END
+#endif
+
+STRINGTABLE
+BEGIN
+    //Power related strings
+    IDS_PWR_PROPERTIES        "调整电源属性(&A)"
+    IDS_PWR_METER             "开放式电源表(&O)"
+    IDS_PWR_PERCENT_REMAINING "剩余 %1!u!%%"
+    IDS_PWR_CHARGING          " (充电中)"
+    IDS_PWR_UNKNOWN_REMAINING "未知剩余"
+    IDS_PWR_AC "交流电源"
+    IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! 小时 剩余 (%3!u!%%) "
+    IDS_PWR_MINUTES_REMAINING "%1!u! 分钟 剩余 (%2!u!%%) "
+
+    //Hotplug related strings
+    IDS_HOTPLUG_REMOVE_1 "安全地删除硬件"
+    IDS_HOTPLUG_REMOVE_2 "安全地删除硬件(&S)"
+    IDS_HOTPLUG_REMOVE_3 "安全地删除 %s"
+    IDS_HOTPLUG_COMMA ", "
+    IDS_HOTPLUG_DRIVE " - 磁盘(%s)"
+    IDS_HOTPLUG_DRIVES " - 磁盘(%s)"
+    IDS_HOTPLUG_A "A:"
+    IDS_HOTPLUG_REQUIERES "此硬件所需""安全删除"""
+    IDS_HOTPLUG_CLICK "删除这个硬件之前, 单击此图标并选择您想要删除的硬件。"
+
+    //Volume related strings
+    IDS_VOL_VOLUME "音量"
+    IDS_VOL_ADJUST "调整音频属性(&A)"
+    IDS_VOL_OPEN "打开音量控制(&O)"
+    IDS_VOL_MUTED "(静音)"
+
+    //Keyboard-Mouse related strings
+    IDS_KEYS_STICKY "粘滞键"
+    IDS_KEYS_MOUSE "鼠标键"
+    IDS_KEYS_FILTER "筛选键"
+END

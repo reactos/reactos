@@ -98,6 +98,6 @@ BEGIN
     IDS_REASON_APP_INSTALL "应用程序： 安装"
     IDS_REASON_APP_UNRESPONSIVE "应用程序: 没有反应"
     IDS_REASON_APP_UNSTABLE "应用程序: 不稳定"
-    IDS_REASON_SECURITY "Security Issue"
+    IDS_REASON_SECURITY "安全问题"
     IDS_REASON_NETWORK "网络连接丢失"
 END

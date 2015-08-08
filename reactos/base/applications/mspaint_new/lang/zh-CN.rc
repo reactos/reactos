@@ -17,9 +17,9 @@ BEGIN
         MENUITEM "保存(&S)\tCtrl+S", IDM_FILESAVE
         MENUITEM "另存为... (&A)", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "页面视图", IDM_FILEPAGEVIEW
+        MENUITEM "页面设置...", IDM_FILEPAGESETUP
+        MENUITEM "打印...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "保存为壁纸 (普通)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "保存为壁纸 (居中)", IDM_FILEASWALLPAPERCENTERED
@@ -218,5 +218,5 @@ BEGIN
     IDS_PERCENTAGE "百分比必须在1至500之间。"
     IDS_ANGLE "该角度必须在-89与89之间。"
     IDS_LOADERRORTEXT "该文件 %s 无法加载。"
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_ENLARGEPROMPTTEXT "剪贴板中的图像比位图大。\n你想扩大位图吗?"
 END
