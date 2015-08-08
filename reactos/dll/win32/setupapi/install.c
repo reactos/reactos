@@ -244,7 +244,7 @@ static void append_multi_sz_value( HKEY hkey, const WCHAR *value, const WCHAR *s
         {
             memcpy( p, strings, len * sizeof(WCHAR) );
             p[len] = 0;
-            total += len;
+            total += len * sizeof(WCHAR);
         }
         strings += len;
     }
@@ -1790,11 +1790,20 @@ static BOOL InstallOneService(
     BOOL useTag;
 
     if (!GetIntField(hInf, ServiceSection, ServiceTypeKey, &ServiceType))
+    {
+        SetLastError( ERROR_BAD_SERVICE_INSTALLSECT );
         goto cleanup;
+    }
     if (!GetIntField(hInf, ServiceSection, StartTypeKey, &StartType))
+    {
+        SetLastError( ERROR_BAD_SERVICE_INSTALLSECT );
         goto cleanup;
+    }
     if (!GetIntField(hInf, ServiceSection, ErrorControlKey, &ErrorControl))
+    {
+        SetLastError( ERROR_BAD_SERVICE_INSTALLSECT );
         goto cleanup;
+    }
     useTag = (ServiceType == SERVICE_BOOT_START || ServiceType == SERVICE_SYSTEM_START);
 
     hSCManager = OpenSCManagerW(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CREATE_SERVICE);
@@ -1802,7 +1811,10 @@ static BOOL InstallOneService(
         goto cleanup;
 
     if (!GetLineText(hInf, ServiceSection, ServiceBinaryKey, &ServiceBinary))
+    {
+        SetLastError( ERROR_BAD_SERVICE_INSTALLSECT );   
         goto cleanup;
+    }
 
     /* Adjust binary path according to the service type */
     FixupServiceBinaryPath(ServiceType, &ServiceBinary);
@@ -2096,21 +2108,27 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
             SERVICE_STATUS ServiceStatus;
             ret = ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus);
             if (!ret && GetLastError() != ERROR_SERVICE_NOT_ACTIVE)
-                goto cleanup;
+                goto done;
             if (ServiceStatus.dwCurrentState != SERVICE_STOP_PENDING && ServiceStatus.dwCurrentState != SERVICE_STOPPED)
             {
                 SetLastError(ERROR_INSTALL_SERVICE_FAILURE);
-                goto cleanup;
+                goto done;
             }
 #endif
             flags &= ~SPSVCINST_STOPSERVICE;
+        }
+
+        if (!(ret = SetupFindFirstLineW( hinf, sectionname, NULL, &ContextService )))
+        {
+            SetLastError( ERROR_SECTION_NOT_FOUND );
+            goto done;
         }
 
         ret = SetupFindFirstLineW(hinf, sectionname, AddService, &ContextService);
         while (ret)
         {
             if (!GetStringField(&ContextService, 1, &ServiceName))
-                goto nextservice;
+                goto done;
 
             ret = SetupGetIntField(
                 &ContextService,
@@ -2123,20 +2141,19 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
             }
 
             if (!GetStringField(&ContextService, 3, &ServiceSection))
-                goto nextservice;
+                goto done;
 
             ret = InstallOneService(list, hinf, ServiceSection, ServiceName, (ServiceFlags & ~SPSVCINST_ASSOCSERVICE) | flags);
             if (!ret)
-                goto nextservice;
+                goto done;
 
             if (ServiceFlags & SPSVCINST_ASSOCSERVICE)
             {
                 ret = SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet, DeviceInfoData, SPDRP_SERVICE, (LPBYTE)ServiceName, (strlenW(ServiceName) + 1) * sizeof(WCHAR));
                 if (!ret)
-                    goto nextservice;
+                    goto done;
             }
 
-nextservice:
             HeapFree(GetProcessHeap(), 0, ServiceName);
             HeapFree(GetProcessHeap(), 0, ServiceSection);
             ServiceName = ServiceSection = NULL;
@@ -2149,7 +2166,7 @@ nextservice:
             SetLastError(ERROR_SUCCESS);
         ret = TRUE;
     }
-
+done:
     TRACE("Returning %d\n", ret);
     return ret;
 }
