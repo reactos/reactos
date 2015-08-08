@@ -794,77 +794,6 @@ IntSetWindowProc(PWND pWnd,
    return Ret;
 }
 
-static BOOL FASTCALL
-IntSetMenu(
-   PWND Wnd,
-   HMENU Menu,
-   BOOL *Changed)
-{
-   PMENU OldMenu, NewMenu = NULL;
-
-   if ((Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
-   {
-      ERR("SetMenu: Invalid handle 0x%p!\n",UserHMGetHandle(Wnd));
-      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
-   }
-
-   *Changed = (Wnd->IDMenu != (UINT) Menu);
-   if (! *Changed)
-   {
-      return TRUE;
-   }
-
-   if (Wnd->IDMenu)
-   {
-      OldMenu = IntGetMenuObject((HMENU) Wnd->IDMenu);
-      ASSERT(NULL == OldMenu || OldMenu->hWnd == Wnd->head.h);
-   }
-   else
-   {
-      OldMenu = NULL;
-   }
-
-   if (NULL != Menu)
-   {
-      NewMenu = IntGetMenuObject(Menu);
-      if (NULL == NewMenu)
-      {
-         if (NULL != OldMenu)
-         {
-            IntReleaseMenuObject(OldMenu);
-         }
-         EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-         return FALSE;
-      }
-      if (NULL != NewMenu->hWnd)
-      {
-         /* Can't use the same menu for two windows */
-         if (NULL != OldMenu)
-         {
-            IntReleaseMenuObject(OldMenu);
-         }
-         EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-         return FALSE;
-      }
-
-   }
-
-   Wnd->IDMenu = (UINT) Menu;
-   if (NULL != NewMenu)
-   {
-      NewMenu->hWnd = Wnd->head.h;
-      IntReleaseMenuObject(NewMenu);
-   }
-   if (NULL != OldMenu)
-   {
-      OldMenu->hWnd = NULL;
-      IntReleaseMenuObject(OldMenu);
-   }
-
-   return TRUE;
-}
-
 
 /* INTERNAL ******************************************************************/
 
@@ -3935,51 +3864,6 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 
 CLEANUP:
    TRACE("Leave NtUserRegisterWindowMessage, ret=%u\n", _ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-/*
- * @implemented
- */
-BOOL APIENTRY
-NtUserSetMenu(
-   HWND hWnd,
-   HMENU Menu,
-   BOOL Repaint)
-{
-   PWND Window;
-   BOOL Changed;
-   DECLARE_RETURN(BOOL);
-
-   TRACE("Enter NtUserSetMenu\n");
-   UserEnterExclusive();
-
-   if (!(Window = UserGetWindowObject(hWnd)))
-   {
-      RETURN( FALSE);
-   }
-
-   if (! IntSetMenu(Window, Menu, &Changed))
-   {
-      RETURN( FALSE);
-   }
-
-   if (Changed && Repaint)
-   {
-      USER_REFERENCE_ENTRY Ref;
-
-      UserRefObjectCo(Window, &Ref);
-      co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                            SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-      UserDerefObjectCo(Window);
-   }
-
-   RETURN( TRUE);
-
-CLEANUP:
-   TRACE("Leave NtUserSetMenu, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

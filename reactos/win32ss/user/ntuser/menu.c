@@ -620,6 +620,7 @@ IntCloneMenu(PMENU Source)
 BOOL FASTCALL
 IntSetMenuFlagRtoL(PMENU Menu)
 {
+   ERR("SetMenuFlagRtoL\n");
    Menu->fFlags |= MNF_RTOL;
    return TRUE;
 }
@@ -704,6 +705,12 @@ IntSetMenuInfo(PMENU Menu, PROSMENUINFO lpmi)
 
       Menu->TimeToHide = lpmi->TimeToHide;
       Menu->hWnd = lpmi->Wnd;
+   }
+   if ( lpmi->fMask & MIM_STYLE)
+   {
+      if (lpmi->dwStyle & MNS_AUTODISMISS) FIXME("MNS_AUTODISMISS unimplemented wine\n");
+      if (lpmi->dwStyle & MNS_DRAGDROP)    FIXME("MNS_DRAGDROP unimplemented wine\n");
+      if (lpmi->dwStyle & MNS_MODELESS)    FIXME("MNS_MODELESS unimplemented wine\n");
    }
    return TRUE;
 }
@@ -971,8 +978,16 @@ IntEnableMenuItem(PMENU MenuObject, UINT uIDEnableItem, UINT uEnable)
    MenuItem->fState ^= (res ^ uEnable) & (MF_GRAYED | MF_DISABLED);
 
    /* If the close item in the system menu change update the close button */
-   if((MenuItem->wID == SC_CLOSE) && (res != uEnable))
+   if (res != uEnable)
    {
+      switch (MenuItem->wID) // More than just close.
+      {
+        case SC_CLOSE:
+        case SC_MAXIMIZE:
+        case SC_MINIMIZE:
+        case SC_MOVE:
+        case SC_RESTORE:
+        case SC_SIZE:
 	if (MenuObject->fFlags & MNF_SYSSUBMENU && MenuObject->spwndNotify != 0)
 	{
             RECTL rc = MenuObject->spwndNotify->rcWindow;
@@ -982,6 +997,9 @@ IntEnableMenuItem(PMENU MenuObject, UINT uIDEnableItem, UINT uEnable)
             rc.bottom = 0;
             co_UserRedrawWindow(MenuObject->spwndNotify, &rc, 0, RDW_FRAME | RDW_INVALIDATE | RDW_NOCHILDREN);
 	}
+	default:
+           break;
+      }
    }
    return res;
 }
@@ -1822,6 +1840,77 @@ IntSetSystemMenu(PWND Window, PMENU Menu)
    return TRUE;
 }
 
+BOOL FASTCALL
+IntSetMenu(
+   PWND Wnd,
+   HMENU Menu,
+   BOOL *Changed)
+{
+   PMENU OldMenu, NewMenu = NULL;
+
+   if ((Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+   {
+      ERR("SetMenu: Invalid handle 0x%p!\n",UserHMGetHandle(Wnd));
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+   }
+
+   *Changed = (Wnd->IDMenu != (UINT) Menu);
+   if (! *Changed)
+   {
+      return TRUE;
+   }
+
+   if (Wnd->IDMenu)
+   {
+      OldMenu = IntGetMenuObject((HMENU) Wnd->IDMenu);
+      ASSERT(NULL == OldMenu || OldMenu->hWnd == Wnd->head.h);
+   }
+   else
+   {
+      OldMenu = NULL;
+   }
+
+   if (NULL != Menu)
+   {
+      NewMenu = IntGetMenuObject(Menu);
+      if (NULL == NewMenu)
+      {
+         if (NULL != OldMenu)
+         {
+            IntReleaseMenuObject(OldMenu);
+         }
+         EngSetLastError(ERROR_INVALID_MENU_HANDLE);
+         return FALSE;
+      }
+      if (NULL != NewMenu->hWnd)
+      {
+         /* Can't use the same menu for two windows */
+         if (NULL != OldMenu)
+         {
+            IntReleaseMenuObject(OldMenu);
+         }
+         EngSetLastError(ERROR_INVALID_MENU_HANDLE);
+         return FALSE;
+      }
+
+   }
+
+   Wnd->IDMenu = (UINT) Menu;
+   if (NULL != NewMenu)
+   {
+      NewMenu->hWnd = Wnd->head.h;
+      IntReleaseMenuObject(NewMenu);
+   }
+   if (NULL != OldMenu)
+   {
+      OldMenu->hWnd = NULL;
+      IntReleaseMenuObject(OldMenu);
+   }
+
+   return TRUE;
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -2142,6 +2231,7 @@ NtUserGetMenuBarInfo(
    HMENU hMenu;
    MENUBARINFO kmbi;
    BOOL Ret;
+   PPOPUPMENU pPopupMenu;
    NTSTATUS Status = STATUS_SUCCESS;
    PMENU Menu = NULL;
    DECLARE_RETURN(BOOL);
@@ -2226,7 +2316,13 @@ NtUserGetMenuBarInfo(
    kmbi.hwndMenu = NULL;
    kmbi.fBarFocused = FALSE;
    kmbi.fFocused = FALSE;
-   //kmbi.fBarFocused = top_popup_hmenu == hMenu;
+
+   pPopupMenu = ((PMENUWND)pWnd)->ppopupmenu;
+   if (pPopupMenu)
+   {
+      //kmbi.fBarFocused = pPopupMenu->spmenu == Menu;
+   }
+
    if (idItem)
    {
        kmbi.fFocused = Menu->iItem == idItem-1;
@@ -2238,8 +2334,8 @@ NtUserGetMenuBarInfo(
 /*   else
    {
        kmbi.fFocused = kmbi.fBarFocused;
-   }
-*/
+   }*/
+
    _SEH2_TRY
    {
       RtlCopyMemory(pmbi, &kmbi, sizeof(MENUBARINFO));
@@ -2503,6 +2599,49 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 
+}
+
+/*
+ * @implemented
+ */
+BOOL APIENTRY
+NtUserSetMenu(
+   HWND hWnd,
+   HMENU Menu,
+   BOOL Repaint)
+{
+   PWND Window;
+   BOOL Changed;
+   DECLARE_RETURN(BOOL);
+
+   TRACE("Enter NtUserSetMenu\n");
+   UserEnterExclusive();
+
+   if (!(Window = UserGetWindowObject(hWnd)))
+   {
+      RETURN( FALSE);
+   }
+
+   if (! IntSetMenu(Window, Menu, &Changed))
+   {
+      RETURN( FALSE);
+   }
+
+   // Not minimized and please repaint!!!
+   if (!(Window->style & WS_MINIMIZE) && (Repaint || Changed))
+   {
+      USER_REFERENCE_ENTRY Ref;
+      UserRefObjectCo(Window, &Ref);
+      co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
+      UserDerefObjectCo(Window);
+   }
+
+   RETURN( TRUE);
+
+CLEANUP:
+   TRACE("Leave NtUserSetMenu, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /*

@@ -10,6 +10,55 @@
 #define MF_END             (0x0080)
 #endif
 
+typedef struct tagMENUSTATE
+{
+  PPOPUPMENU  pGlobalPopupMenu;
+  struct
+  {
+  ULONG       fMenuStarted:1;
+  ULONG       fIsSysMenu:1;
+  ULONG       fInsideMenuLoop:1;
+  ULONG       fButtonDown:1;
+  ULONG       fInEndMenu:1;
+  ULONG       fUnderline:1;
+  ULONG       fButtonAlwaysDown:1;
+  ULONG       fDragging:1;
+  ULONG       fModelessMenu:1;
+  ULONG       fInCallHandleMenuMessages:1;
+  ULONG       fDragAndDrop:1;
+  ULONG       fAutoDismiss:1;
+  ULONG       fAboutToAutoDismiss:1;
+  ULONG       fIgnoreButtonUp:1;
+  ULONG       fMouseOffMenu:1;
+  ULONG       fInDoDragDrop:1;
+  ULONG       fActiveNoForeground:1;
+  ULONG       fNotifyByPos:1;
+  ULONG       fSetCapture:1;
+  ULONG       iAniDropDir:5;
+  };
+  POINT       ptMouseLast; 
+  INT         mnFocus;
+  INT         cmdLast;
+  PTHREADINFO ptiMenuStateOwner;
+  DWORD       dwLockCount;
+  struct tagMENUSTATE* pmnsPrev;
+  POINT       ptButtonDown;
+  ULONG_PTR   uButtonDownHitArea;
+  UINT        uButtonDownIndex;
+  INT         vkButtonDown;
+  ULONG_PTR   uDraggingHitArea;
+  UINT        uDraggingIndex;
+  UINT        uDraggingFlags;
+  HDC         hdcWndAni;
+  DWORD       dwAniStartTime;
+  INT         ixAni;
+  INT         iyAni;
+  INT         cxAni;
+  INT         cyAni;
+  HBITMAP     hbmAni;
+  HDC         hdcAni;
+} MENUSTATE, *PMENUSTATE;
+
 typedef struct _SETMENUITEMRECT
 {
   UINT uItem;
@@ -51,3 +100,4 @@ UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
 BOOL FASTCALL IntRemoveMenuItem(PMENU Menu, UINT uPosition, UINT uFlags, BOOL bRecurse);
 PITEM FASTCALL MENU_FindItem( PMENU *pmenu, UINT *nPos, UINT wFlags );
 BOOL FASTCALL IntMenuItemInfo(PMENU Menu, UINT Item, BOOL ByPosition, PROSMENUITEMINFO UnsafeItemInfo, BOOL SetOrGet, PUNICODE_STRING lpstr);
+BOOL FASTCALL IntSetMenu(PWND Wnd,HMENU Menu,BOOL *Changed);
