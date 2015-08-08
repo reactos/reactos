@@ -1,0 +1,62 @@
+﻿; UTF-8
+; Translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = Scribus
+Version = 1.4.5
+License = GPLv2
+Description =  An open-source program that brings professional page layout to ReactOS. 
+Size = 76.52 MB
+Category = 3
+URLSite = http://www.scribus.net/
+URLDownload = http://downloads.sourceforge.net/project/scribus/scribus/1.4.5/scribus-1.4.5-windows.exe
+CDPath = none
+
+[Section.0405]
+Description = Open-source program, který přináší profesionální stránky rozložení ReactOS.
+
+[Section.0407]
+Description = Ein Open-Source-Programm, das professionelles Seitenlayout ReactOS bringt.
+
+[Section.0a]
+Description = Un programa de código abierto que brinda diseño de página profesional a ReactOS.
+
+[Section.040c]
+Description = Un programme open source qui apporte la mise en page professionnelle de ReactOS.
+Size = 76,52 Mo
+
+[Section.0410]
+Description = Un programma open-source che porta l'impaginazione professionale di ReactOS.
+
+[Section.0413]
+Description = Een open-source programma dat professionele pagina-indeling aan ReactOS brengt.
+
+[Section.0414]
+Description = En åpen kildekode-program som gir profesjonell sidelayout til ReactOS.
+
+[Section.0415]
+Description = Program open source, który przynosi profesjonalny ³ad strony ReactOS.
+
+[Section.0418]
+Description = Un program open-source care aduce aspectul paginii profesionale la ReactOS.
+Size = 76,52 Mo
+
+[Section.0419]
+Description = Открытым исходным кодом программы, которая приносит профессиональных макет страницы для ReactOS.
+
+[Section.041b] 
+Description = Open-source program, ktorý prináša profesionálnej stránke rozloženie na ReactOS.
+
+[Section.041f]
+Description = Profesyonel sayfa düzeni getiriyor ReactOS için açık kaynak programı.
+Size = 76,52 MB
+
+[Section.0422]
+Description = Відкритим вихідним кодом програми, що приносить професійний режим перегляду для ReactOS.
+
+[Section.0804]
+Description = 一个开放源码程序，以给 ReactOS 带来专业的页面布局。
+
+[Section.0813]
+Description = Een open-source programma dat professionele pagina-indeling aan ReactOS brengt.
+
