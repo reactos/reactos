@@ -667,7 +667,7 @@ BEGIN
     /* special folders */
     IDS_DESKTOP "Skrivebord"
     IDS_MYCOMPUTER "Min Computer"
-    IDS_RECYCLEBIN_FOLDER_NAME "Trash"
+    IDS_RECYCLEBIN_FOLDER_NAME "Recycle Bin"
     IDS_CONTROLPANEL "Control Panel"
     IDS_ADMINISTRATIVETOOLS "Administrative Tools"
 
@@ -695,10 +695,10 @@ BEGIN
     IDS_DELETEITEM_TEXT "Er du sikker på du vil slette '%1'?"
     IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
     IDS_DELETESELECTED_TEXT "Are you sure you want to delete the selected item(s)?"
-    IDS_TRASHITEM_TEXT "Are you sure that you want to send '%1' to the Trash?"
-    IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its content to the Trash?"
-    IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Trash?"
-    IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
+    IDS_TRASHITEM_TEXT "Are you sure that you want to send '%1' to the Recycle Bin?"
+    IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its content to the Recycle Bin?"
+    IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Recycle Bin?"
+    IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Recycle Bin. Do you want to delete it instead?"
     IDS_OVERWRITEFILE_TEXT "Overskriv fil %1?"
     IDS_OVERWRITEFILE_CAPTION "Bekræft overskrivelse af fil"
     IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
