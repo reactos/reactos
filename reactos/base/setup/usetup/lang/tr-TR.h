@@ -795,7 +795,7 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
+        "\x07  Mantçklçk bir bîlÅm oluüturmak iáin L'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1485,10 +1485,10 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         //ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        "Kur, bîlÅmÅ biáimlendiremez::\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         NULL,

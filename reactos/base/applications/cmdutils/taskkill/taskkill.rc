@@ -45,3 +45,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGAUGE_SQ_AL
     #include "lang/sq-AL.rc"
 #endif
+#ifdef LANGAUGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif

@@ -1,0 +1,19 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "Bu komutun yazımı:\n\nREG [ ADD | DELETE | QUERY ]\nREG komut /?\n"
+    STRING_ADD_USAGE, "REG ADD dizin adı [/v değer adı | /ve] [/t tür] [/s ayırıcı] [/d veri] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE dizin adı [/v değer adı | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY dizin adı [/v değer adı | /ve] [/s]\n"
+    STRING_SUCCESS, "İşlem başarıyla bitirildi\n"
+    STRING_INVALID_KEY, "Yanlışlık: Geçersiz dizin adı\n"
+    STRING_INVALID_CMDLINE, "Yanlışlık: Geçersiz komut yatacı değişkenleri\n"
+    STRING_NO_REMOTE, "Yanlışlık: Uzak makineye erişilemez\n"
+    STRING_CANNOT_FIND, "Yanlışlık: Dizge belirtilen değer defteri dizinini ya da değerini bulamadı\n"
+    STRING_ERROR, "Beklenmeyen yanlışlık: "
+    STRING_UNSUPPORTED_TYPE, "Yanlışlık: Desteklenmeyen tür\n"
+    STRING_INVALID_DWORD, "Yanlışlık: /d artı sayı olmalı\n"
+}

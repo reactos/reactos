@@ -1,0 +1,39 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nBir WLAN bağdaştırıcısı yapılandır.\n\n\
+WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
+\t-c SSID\t\tYüklü bir SSID'ye bağlar.\n\
+\t-w WEP\t\tKullanılacak bir WEP anahtarı belirtir.\n\
+\t-a\t\tPlansız varış ağını belirtir.\n\
+\t-d\t\tŞimdiki AP'den bağlantıyı keser.\n\
+\t-s\t\tTarar ve alandaki erişim noktalarının bir\n\
+\t\t\tdizelgesini görüntüler.\n\n\
+Değişkensiz geçme şimdiki WLAN bağlantısı üzerine bilgi yazdıracak.\n"
+    IDS_NO_NETWORK "Alanda bir ağ bulunmadı.\n"
+    IDS_NO_WLAN_ADAPTER "Dizgede bir WLAN bağdaştırıcısı arayamaz.\n"
+    IDS_SUCCESS "İşlem başarıyla bitirildi.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN bağlantısı kesildi.\n"
+    IDS_MSG_WEP_ENABLED "WEP etkin: %s\n"
+    IDS_MSG_NETWORK_MODE "Ağ kipi: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nŞimdiki kablosuz yapılandırma bilgisi:\n\n"
+    IDS_MSG_ENCRYPTED "Şifreli: %s\n"
+    IDS_MSG_NETWORK_TYPE "Ağ türü: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Desteklenen hızlar (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "İletim gücü: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Anten sayısı: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Verici anten: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Verici anten: Rastgele biri\n"
+    IDS_MSG_RECEIVE_ANTENNA "Alıcı anten: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Alıcı anten: Rastgele biri\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Parçalanma eşiği: %d çoklu\n"
+    IDS_MSG_RTS_THRESHOLD "RTS eşiği: %d çoklu\n"
+    IDS_YES "Evet"
+    IDS_NO "Hayır"
+    IDS_ADHOC "Plansız"
+    IDS_INFRASTRUCTURE "Altyapı"
+END

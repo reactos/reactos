@@ -39,35 +39,35 @@ END
 /* Detail header titles */
 STRINGTABLE
 BEGIN
-    IDS_LIST_DISK_HEAD "\n  Disk ###  Durum       Boyut    Boş      Dev  Gpt\n"
+    IDS_LIST_DISK_HEAD "\n  Disk ###    Durum      Boyut     Boş     Dev  Gpt\n"
     IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
-    IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
-    IDS_LIST_PARTITION_HEAD "\n  Partition      Type              Size     Offset\n"
+    IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s   %4I64u %-2s  %1s   %1s\n"
+    IDS_LIST_PARTITION_HEAD "\n      Bölüm              Tür        Boyut    Ofset\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
-    IDS_LIST_PARTITION_FORMAT "%c Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
-    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
+    IDS_LIST_PARTITION_FORMAT "%c Bölüm %2lu       %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_NO_DISK "\nBölümleri dizelgelemek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_LIST_VOLUME_HEAD "Birim ###\tHarf\tEtiket\n"
 END
 
 /* RESCAN command string */
 STRINGTABLE
 BEGIN
-    IDS_RESCAN_START "\nPlease wait while DiskPart scans your configuration...\n"
-    IDS_RESCAN_END "\nDiskPart has finished scanning your configuration.\n\n"
+    IDS_RESCAN_START "\nDiskPart yapılandırmanızı tararken lütfen bekleyiniz...\n"
+    IDS_RESCAN_END "\nDiskPart yapılandırmanızı taramayı bitirdi.\n\n"
 END
 
 /* SELECT command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
-    IDS_SELECT_DISK_INVALID "\nInvalid disk.\n\n"
-    IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
-    IDS_SELECT_PARTITION_NO_DISK "\nThere is no disk for selecting a partition.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
-    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
+    IDS_SELECT_NO_DISK "\nŞimdilik bir disk seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
+    IDS_SELECT_DISK "\nDisk %lu şimdi seçilen disktir.\n\n"
+    IDS_SELECT_DISK_INVALID "\nGeçersiz disk.\n\n"
+    IDS_SELECT_NO_PARTITION "\nŞimdilik bir bölüm seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
+    IDS_SELECT_PARTITION "\nBölüm %lu şimdi seçilen bölümdür.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nBir bölüm seçme için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nGeçersiz bölüm.\n\n"
+    IDS_SELECT_NO_VOLUME "\nŞimdilik bir birim seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
+    IDS_SELECT_VOLUME "\nBirim %lu şimdi seçilen birimdür.\n\n"
 END
 
 /* Disk Status */
@@ -114,7 +114,7 @@ BEGIN
     IDS_HELP_CMD_DESC_GPT "GPT\t\t- Seçili GPT bölümüne öz nitelikleri ata.\n"
     IDS_HELP_CMD_DESC_HELP "HELP\t\t- Komutların bir dizelgesini görüntüle.\n"
     IDS_HELP_CMD_DESC_IMPORT "IMPORT\t\t- Bir disk öbeği al.\n"
-    IDS_HELP_CMD_DESC_INACTIVE "INACTIVE\t-  Seçili bölümü edilgin olarak imle.\n"
+    IDS_HELP_CMD_DESC_INACTIVE "INACTIVE\t- Seçili bölümü edilgin olarak imle.\n"
     IDS_HELP_CMD_DESC_LIST "LIST\t\t- Nesnelerin bir dizelgesini görüntüle.\n"
     IDS_HELP_CMD_DESC_MERGE "MERGE\t\t- Bir alt diski üstleriyle birleştirir.\n"
     IDS_HELP_CMD_DESC_OFFLINE "OFFLINE\t\t- Çevrim içi olarak şimdilik imlenen bir nesneyi çevrim dışı yap.\n"
@@ -137,7 +137,7 @@ STRINGTABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Betik açmada yanlışlık: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Değiştirgen işlemede yanlışlık: %s\n"
-    IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
+    IDS_ERROR_INVALID_ARGS "Geçersiz değiştirgenler\n"
 END
 
 /* Active help descriptions */

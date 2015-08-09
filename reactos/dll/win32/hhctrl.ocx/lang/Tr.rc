@@ -2,7 +2,7 @@
  * HTML Help resources
  * Turkish Language Support
  *
- * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org); 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -65,24 +65,24 @@ MENU_WEBBROWSER MENU
 {
     POPUP ""
     {
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Geri", IDTB_BACK
+        MENUITEM "&İleri", IDTB_FORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Tümünü Seç", MIID_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM "&Kaynağı Görüntüle", MIID_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "&Print...", IDTB_PRINT
-        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Yazdır...", IDTB_PRINT
+        MENUITEM "Y&enile", IDTB_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Proper&ties", MIID_PROPERTIES
+        MENUITEM "&Husûsiyetler", MIID_PROPERTIES
     }
     POPUP ""
     {
-        MENUITEM "Cu&t", MIID_CUT
-        MENUITEM "&Copy", MIID_COPY
-        MENUITEM "Paste", MIID_PASTE
-        MENUITEM "Select &All", MIID_SELECTALL
-        MENUITEM "&Print", IDTB_PRINT
+        MENUITEM "&Kes", MIID_CUT
+        MENUITEM "&Çoğalt", MIID_COPY
+        MENUITEM "Yapıştır", MIID_PASTE
+        MENUITEM "&Tümünü Seç", MIID_SELECTALL
+        MENUITEM "&Yazdır", IDTB_PRINT
     }
 }

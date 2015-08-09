@@ -1,0 +1,14 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Bir sürücünün veyâ bir yolun dizin yapısını görmelik olarak görüntüler.\n\n\
+TREE [sürücü:][yol] [/F] [/A]\n\n\
+\t/F   Tüm dizinlerde kütüklerin adlarını görüntüle.\n\
+\t/A   Genişletilmiş damgaların yerine ASCII kullan.\n"
+    IDS_NO_SUBDIRECTORIES "Bir alt dizin yok"
+    IDS_FOLDER_PATH "Dizin YOL Dizelgesi\n"
+    IDS_VOL_SERIAL "Birim dizilik numarası %x:%x\n"
+END

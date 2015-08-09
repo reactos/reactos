@@ -17,9 +17,9 @@ BEGIN
         MENUITEM "&Sakla\tCtrl+S", IDM_FILESAVE
         MENUITEM "Ay&rı Sakla...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Sayfa Görünümü", IDM_FILEPAGEVIEW
+        MENUITEM "Sayfa Ayarla...", IDM_FILEPAGESETUP
+        MENUITEM "Yazdır...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "&Döşeyerek Duvar Kağıdı Yap", IDM_FILEASWALLPAPERPLANE
         MENUITEM "&Ortalayarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERCENTERED
@@ -218,5 +218,5 @@ BEGIN
     IDS_PERCENTAGE "Yüzde 1'den 500'e dek olmalıdır."
     IDS_ANGLE "Açı -89'dan 89'a dek olmalıdır."
     IDS_LOADERRORTEXT "%s kütüğü yüklenemedi."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+	IDS_ENLARGEPROMPTTEXT "Panodaki resim bit eşleminden daha büyük.\nBüyütülmüş bit eşlem ister misiniz?"
 END

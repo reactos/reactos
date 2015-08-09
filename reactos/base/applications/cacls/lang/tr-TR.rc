@@ -1,0 +1,76 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Kütüklerin erişim denetim dizelgelerini (ACL'lerini) görüntüler ya da değiştirir.\n\n\
+CACLS kütük adı [/T] [/E] [/C] [/G kullanıcı:izin [...]] [/R kullanıcı [...]]\n\
+               [/P kullanıcı:izin [...]] [/D kullanıcı [...]]\n\
+   kütük adı          ACL'leri görüntüler.\n\
+   /T                 Şimdiki dizin ve alt dizinlerin içinde\n\
+                      belirtilen kütülerin ACL'lerini değiştirir.\n\
+   /E                 ACL'yi yenisiyle değiştirme yerine onu düzenle.\n\
+   /C                 Erişim engellendi yanlışlıklarıyla sürdür.\n\
+   /G kullanıcı:izin  Belirtilen kullanıcı erişim yetkilerini ver.\n\
+                      İzin şu olabilir: R  Okuma\n\
+                                        W  Yazma\n\
+                                        C  Değiştirme (yazma)\n\
+                                        F  Tüm denetim\n\
+   /R kullanıcı       Belirtilen kullanıcının erişim yetkilerini geri al\n\
+                     (yalnızca /E ile geçerli).\n\
+   /P kullanıcı:izin  Belirtilen kullanıcının erişim yetkilerini yenileriyle\n\
+                      değiştir.\n\
+                      İzin şu olabilir: N  Yok\n\
+                                        R  Okuma\n\
+                                        W  Yazma\n\
+                                        C  Değiştirme (yazma)\n\
+                                        F  Tüm denetim\n\
+   /D kullanıcı       Belirtilen kullanıcı erişimini verme.\n\
+Umûmî arama damgaları, bir komutta birden çok kütük belirtmek için kullanılabilir.\n\
+Bir komutta birden çok kullanıcı belirtebilirsiniz.\n\n\
+Kısaltmalar:\n\
+   CI - Kapsayıcı Devral.\n\
+        ACE dizinlerle devralınacak.\n\
+   OI - Nesne Devral.\n\
+        ACE kütüklerle devralınacak.\n\
+   IO - Yalnızca Devral.\n\
+        ACE'yi şimdiki kütüğe ya da dizine uygulama.\n"
+    IDS_ABBR_CI "(CI)"
+    IDS_ABBR_OI "(OI)"
+    IDS_ABBR_IO "(IO)"
+    IDS_ABBR_FULL "F"
+    IDS_ABBR_READ "R"
+    IDS_ABBR_WRITE "W"
+    IDS_ABBR_CHANGE "C"
+    IDS_ABBR_NONE "N"
+    IDS_ALLOW ""
+    IDS_DENY "(VERME)"
+    IDS_SPECIAL_ACCESS "(husûsî erişim:)"
+    IDS_GENERIC_READ "GENERIC_READ"
+    IDS_GENERIC_WRITE "GENERIC_WRITE"
+    IDS_GENERIC_EXECUTE "GENERIC_EXECUTE"
+    IDS_GENERIC_ALL "GENERIC_ALL"
+    IDS_FILE_GENERIC_EXECUTE "FILE_GENERIC_EXECUTE"
+    IDS_FILE_GENERIC_READ "FILE_GENERIC_READ"
+    IDS_FILE_GENERIC_WRITE "FILE_GENERIC_WRITE"
+    IDS_FILE_READ_DATA "FILE_READ_DATA"
+    IDS_FILE_WRITE_DATA "FILE_WRITE_DATA"
+    IDS_FILE_APPEND_DATA "FILE_APPEND_DATA"
+    IDS_FILE_READ_EA "FILE_READ_EA"
+    IDS_FILE_WRITE_EA "FILE_WRITE_EA"
+    IDS_FILE_EXECUTE "FILE_EXECUTE"
+    IDS_FILE_DELETE_CHILD "FILE_DELETE_CHILD"
+    IDS_FILE_READ_ATTRIBUTES "FILE_READ_ATTRIBUTES"
+    IDS_FILE_WRITE_ATTRIBUTES "FILE_WRITE_ATTRIBUTES"
+    IDS_MAXIMUM_ALLOWED "MAXIMUM_ALLOWED"
+    IDS_ACCESS_SYSTEM_SECURITY "ACCESS_SYSTEM_SECURITY"
+    IDS_SPECIFIC_RIGHTS_ALL "SPECIFIC_RIGHTS_ALL"
+    IDS_STANDARD_RIGHTS_REQUIRED "STANDARD_RIGHTS_REQUIRED"
+    IDS_SYNCHRONIZE "SYNCHRONIZE"
+    IDS_WRITE_OWNER "WRITE_OWNER"
+    IDS_WRITE_DAC "WRITE_DAC"
+    IDS_READ_CONTROL "READ_CONTROL"
+    IDS_DELETE "DELETE"
+    IDS_STANDARD_RIGHTS_ALL "STANDARD_RIGHTS_ALL"
+END

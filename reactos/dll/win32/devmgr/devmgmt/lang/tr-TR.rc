@@ -8,18 +8,7 @@ BEGIN
   BEGIN
     MENUITEM "&Çıkış",                       IDC_EXIT
   END
-  POPUP "&Eylem"
-  BEGIN
-    MENUITEM "&Sürücü Yazılmını Şimdikileştir..." IDC_UPDATE_DRV
-    MENUITEM "&Etkinleştir"                  IDC_ENABLE_DRV
-    MENUITEM "E&dilginleştir"                IDC_DISABLE_DRV
-    MENUITEM "&Kaldır"                       IDC_UNINSTALL_DRV
-    MENUITEM SEPARATOR
-    MENUITEM "D&onanım Değişiklikleri İçin Tara" IDC_SCAN_HARDWARE
-    MENUITEM "Do&nanım Ekle"                 IDC_ADD_HARDWARE, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "&Husûsiyetler",                IDC_PROPERTIES
-  END
+  MENUITEM "&Eylem"
   POPUP "&Görünüm"
   BEGIN
     MENUITEM "&Türe Göre Aygıtlar",          IDC_DEVBYTYPE
@@ -35,28 +24,21 @@ BEGIN
   END
 END
 
-IDR_POPUP MENU
+STRINGTABLE DISCARDABLE
 BEGIN
-  POPUP "popup"
-  BEGIN
-    MENUITEM "&Sürücü Yazılmını Şimdikileştir..." IDC_UPDATE_DRV
-    MENUITEM "&Etkinleştir"                  IDC_ENABLE_DRV
-    MENUITEM "E&dilginleştir"                IDC_DISABLE_DRV
-    MENUITEM "&Kaldır"                       IDC_UNINSTALL_DRV
-    MENUITEM SEPARATOR
-    MENUITEM "D&onanım Değişiklikleri İçin Tara" IDC_SCAN_HARDWARE
-    MENUITEM "Do&nanım Ekle"                 IDC_ADD_HARDWARE, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "&Husûsiyetler",                IDC_PROPERTIES
-  END
+  IDS_CONFIRM_DISABLE       "Bu aygıtı edilginleştirme onun işleyişinin durmasına neden olacak.\r\nOnu edilginleştirmeyi gerçekten istiyor musunuz?"
 END
 
-#define IDS_HINT_PROPERTIES     20001
-#define IDS_HINT_SCAN           20002
-#define IDS_HINT_ENABLE         20003
-#define IDS_HINT_DISABLE        20004
-#define IDS_HINT_UPDATE         20005
-#define IDS_HINT_UNINSTALL      20006
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_MENU_UPDATE           "Sürücü Yazılımını Şimdikileştir..."
+  IDS_MENU_ENABLE           "Etkin"
+  IDS_MENU_DISABLE          "Edilgin"
+  IDS_MENU_UNINSTALL        "Kaldır"
+  IDS_MENU_SCAN             "Donanım Değişiklikleri İçin Tara"
+  IDS_MENU_ADD              "Donanım Ekle"
+  IDS_MENU_PROPERTIES       "Husûsiyetler"
+END
 
 STRINGTABLE DISCARDABLE
 BEGIN

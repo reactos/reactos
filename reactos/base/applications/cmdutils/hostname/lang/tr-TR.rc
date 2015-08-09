@@ -1,0 +1,10 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Şimdiki anabilgisayarın adını yazdır.\n\nhostname"
+    IDS_NOSET "hostname -s desteklenmiyor."
+    IDS_ERROR "Win32 yanlışlığı"
+END

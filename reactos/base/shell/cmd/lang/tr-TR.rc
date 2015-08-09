@@ -1,0 +1,548 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_ASSOC_HELP "Kütük uzantısı ilişkilendirmelerini değiştir.\n\n\
+assoc [.uzn[=[Kütük Türü]]]\n\
+\n\
+assoc (tüm ilişkilendirmeleri yazdır)\n\
+assoc .uzn (belirtilen ilişkilendirmeyi yazdır)\n\
+assoc .uzn= (belirtilen ilişkilendirmeyi sil)\n\
+assoc .uzn=Kütük Türü (yeni ilişkilendirme ekle)\n"
+    STRING_ATTRIB_HELP "Kütük öz niteliklerini görüntüler ya da değiştirir.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] kütük ...\n\
+       [/S [/D]]\n\n\
+  +   Bir öz nitelik ayarlar\n\
+  -   Bir öz nitelik siler\n\
+  R   Yalnızca okunur kütük öz niteliği\n\
+  A   Belgelik kütük öz niteliği\n\
+  S   Dizge kütük öz niteliği\n\
+  H   Gizli kütük öz niteliği\n\
+  /S  Şimdiki dizindeki ve tüm alt dizinlerdeki kütükleri eşlemeyi yapar\n\
+  /D  Dizinleri de yap\n\n\
+Tüm kütüklerin öz niteliklerini görüntülemek için bir değişken olmadan ATTRIB\n\
+yazınız.\n"
+    STRING_ALIAS_HELP "Başka adları ayarlar, siler ya da gösterir.\n\n\
+ALIAS [başka ad=[komut]]\n\n\
+  başka ad Bir başka ad için ad.\n\
+  komut    Bir başka ad için yerine kullanılacak metin.\n\n\
+Tüm başka adları dizelgelemek için:\n\
+  ALIAS\n\n\
+Bir yeni başka ad ayarlamak ya da var olan bir başka adın yerine koymak için:\n\
+  ALIAS da=dir a:\n\n\
+Başka ad dizelgesinden bir başka ad silmek için:\n\
+  ALIAS da="
+    STRING_BEEP_HELP "Hoparlörden ""biip"" sesi çıkart.\n\nBEEP\n"
+    STRING_CALL_HELP "Bir toplu iş izlencesini bir başkasından çağırır.\n\n\
+CALL [sürücü:][yol]kütük adı [toplu iş değişkeni]\n\n\
+  toplu iş değişkeni  Toplu iş izlencesinin gerektirdiği bir komut yatacı\n\
+                      bilgisi belirtir."
+    STRING_CD_HELP "Şimdiki dizini değiştirir ya da onun adını görüntüler\n\n\
+CHDIR [/D][sürücü:][yol]\n\
+CHDIR[..|.]\n\
+CD [/D][sürücü:][yol]\n\
+CD[..|.]\n\n\
+  ..   bir üst dizin\n\
+  .    şimdiki dizin\n\
+  /D   Şimdiki sürücüyü ve şimdiki dizini değiştirecek.\n\n\
+CD sürücü yaz: Belirtilen sürücü üzerinde şimdiki dizini görüntülemek için.\n\
+Şimdiki sürücüyü ve dizini görüntülemek için bir değişken olmadan CD yaz.\n"
+    STRING_CHCP_HELP "Etkin kod sayfası numarasını görüntüler ya da ayarlar.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Etkin kod sayfası numarasını belirtir.\n\n\
+Etkin kod sayfası numarasını görüntülemek için bir değişken olmadan CHCP yaz.\n"
+    STRING_CHOICE_HELP "Bir takım seçenekten birini seçmek için kullanıcıyı bekler.\n\n\
+CHOICE  [/C[:]seçenekler][/N][/S][/T[:]c,nn][metin]\n\n\
+  /C[:]seçenekler  İzin verilebilir düğmeleri belirtir. Ön tanımlı YN'dir.\n\
+  /N               İstem dizgisinin sonunda seçenekleri ve ?'ni görüntüleme.\n\
+  /S               Seçenek düğmeleri büyük-küçük harf duyarlı olarak davran.\n\
+  /T[:]c,nn        nn sâniye sonra c ön tanımlı seçenek.\n\
+  metin            Görüntülenecek istem dizgisi.\n\n\
+ERRORLEVEL, seçeneklerdeki düğme kullanıcısı basmalarının ofsetine ayarlı.\n"
+    STRING_CLS_HELP "Görüntülüğü siler.\n\nCLS\n"
+    STRING_CMD_HELP1 "\nKullanılabilir iç komutlar:\n"
+    STRING_CMD_HELP2 "\nKullanılabilir husûsiyetler:"
+    STRING_CMD_HELP3 "  [başka adlar]"
+    STRING_CMD_HELP4 "  [geçmiş]"
+    STRING_CMD_HELP5 "  [Unix kütük adı bütünlemesi]"
+    STRING_CMD_HELP6 "  [dizin yığını]"
+    STRING_CMD_HELP7 "  [yönlendirmeler ve borulama]"
+    STRING_CMD_HELP8 "ReactOS komut yatacı yorumlayıcısının yeni bir örneğini başlatır.\n\n\
+CMD [/[C|K] komut][/P][/Q][/T:aö]\n\n\
+  /C komut    Belirtilen komutu çalıştırır ve sonlandırır.\n\
+  /K komut    Belirtilen komutu çalıştırır ve sürdürür.\n\
+  /P          CMD sürekli olur ve autoexec.bat'ı çalıştırır.\n\
+              (sonlandırılamaz).\n\
+  /T:aö       Arka plan/ön plan rengini ayarlar (COLOR komutuna bakınız).\n"
+    STRING_COLOR_HELP1 "Ön tanımlı ön plan ve arka plan renklerini ayarlar.\n\n\
+COLOR [öznt [/-F]] \n\n\
+  öznt        Konsol çıktısının renk öz niteliğini belirtir.\n\
+  /-F         Konsol boş alanı renk öz niteliğiyle doldurma.\n\n\
+Renkleri belirtmek için üç yol var:\n\
+1) [parlak] adı üzerinde [parlak] adı  (Yalnızca ilk üç harf gerekli.)\n\
+2) onluk üzerinde onluk\n\
+3) iki onaltılık basamak\n\n\
+Renkler:\n\
+onluk  onaltılık  ad             onluk  onaltılık  ad\n\
+0      0          Kara           8      8          Kül Rengi (parlak kara)\n\
+1      1          Mâvi           9      9          Parlak Mâvi\n\
+2      2          Yeşil          10     A          Parlak Yeşil\n\
+3      3          Turkuaz        11     B          Parlak Turkuaz\n\
+4      4          Al             12     C          Parlak Al\n\
+5      5          Mora Çalan Al  13     D          Parlak Mora Çalan Al\n\
+6      6          Sarı           14     E          Parlak Sarı\n\
+7      7          Ak             15     F          Parlak Ak\n"
+    STRING_COPY_HELP1 "Üzerine yaz: %s (Evet/Hayır/Tümü)? "
+    STRING_COPY_HELP2 "Bir ya da daha çok kütüğü başka bir konuma çoğaltır.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] kaynak [/A|/B]\n\
+     [+ kaynak [/A|/B] [+ ...]] [varış [/A|/B]]\n\n\
+  kaynak       Çoğaltılacak kütüğü ya da kütükleri belirtir.\n\
+  /A           Bir ASCII metin kütüğü belirtir.\n\
+  /B           Bir ikili kütük belirtir.\n\
+  varış        Yeni kütük(ler) için dizini veyâ kütük adını belirtir.\n\
+  /V           Yeni kütüklerin doğru yazıldığını doğrular.\n\
+  /Y           Var olan bir varış kütüğünün üzerine yazılmasını istemeyi\n\
+               onaylamak için sormayı önler.\n\
+  /-Y          Var olan bir varış kütüğünün üzerine yazılmasını istemeyi\n\
+               onaylamak için sormaya neden olur.\n\n\
+/Y seçeneği COPYCMD ortam değişkeninin içinde olabilir.\n\
+...\n"
+    STRING_DATE_HELP1 "\nYeni târihi giriniz (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "\nYeni târihi giriniz (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "\nYeni târihi giriniz (yyyy%cmm%cdd): "
+    STRING_DATE_HELP4 "Târihi görüntüler ya da ayarlar.\n\n\
+DATE [/T][târih]\n\n\
+  /T    yalnızca görüntüle\n\n\
+Şimdiki târih ayârını görüntülemek ve yeni bir tâne için sormak için\n\
+değişkensiz DATE yazınız. Aynı târihi sürdürmek için Giriş'e basınız.\n"
+    STRING_DEL_HELP1 "Bir ya da daha çok kütük siler.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]öz nitelikler]] kütük ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]öz nitelikler]] kütük ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]öz nitelikler]] kütük ...\n\n\
+      kütük  Silinecek kütüğü ya da kütükleri belirtir.\n\n\
+  /N    Hiçbir şey.\n\
+  /P    Sor. Bir kütüğü silmeden önce sor.\n\
+  /T    Toplam. Silinen kütüklerin toplam sayısını ve boşaltılan\n\
+        disk alanını görüntüle.\n\
+  /Q    Sessiz.\n\
+  /W    Yok et. Silmeden önce rastgele sayılarla kütüğün üzerine yaz.\n\
+  /Y    Evet. Sormadan *.*'ı bile sil.\n\
+  /F    Gizli, yalnızca okunur ve dizge kütüklerini silmeye zorla.\n\
+  /S    Tüm alt dizinden kütük sil.\n\
+  /A    Öz niteliklere bağlı olarak silinecek kütükleri seç.\n\
+        öz nitelikler\n\
+        R     Yalnızca okunur kütükler\n\
+        S     Dizge kütükleri\n\
+        A     Belgeliklenebilir kütükler\n\
+        H     Gizli kütükler\n\
+        -     değil anlamına gelen ön ek\n"
+    STRING_DEL_HELP2 "Dizindeki tüm kütükler silinecek!\nEmin misiniz (Y/N)?"
+    STRING_DEL_HELP3 "    %lu kütük silindi\n"
+    STRING_DEL_HELP4 "    %lu kütük silindi\n"
+    STRING_DELAY_HELP "n sâniye ya da milisâniye duraklat\n\
+DELAY [/m]n\n\n\
+  /m          n milisâniye olarak belirtir\n\
+              yoksa n sâniyedir\n"
+    STRING_DIR_HELP1 "DIR [sürücü:][yol][kütük adı] [/A[[:]öz nitelikler]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]dizme düzeni]] [/P] [/Q] [/S] [/T[[:]zaman aralığı]] [/W] [/X] [/4]\n\n\
+  [sürücü:][yol][kütük adı]\n\
+                Dizelgelenecek sürücü, dizin veyâ kütükleri belirtir.\n\n\
+  /A            Belirtilen öz nitelikli kütükleri görüntüler.\n\
+  öz nitelikler D  Dizinler                   R  Yalnızca okunur kütükler\n\
+                H  Gizli kütükler             A  Belgelikleme için anık kütükler\n\
+                S  Dizge kütükleri            -  Değil anlamında ön ek\n\
+  /B            Bayağı biçimi kullanır (başlık bilgisi veyâ günlük yok).\n\
+  /C            Kütük boyutlarında binlik ayırıcısını görüntüle.\n\
+                Bu ön tanımlıdır. Ayırıcının görüntülenmesini\n\
+				edilginleştirmek için /-C kullanınız.\n\
+  /D            Geniş ile aynı ancak kütükler dikeçle dizelgeli dizilmiştir.\n\
+  /L            Küçük harf kullanır.\n\
+  /N            Kütük adlarının çok sağda olduğu yeni uzun dizelge biçimi.\n\
+  /O            Kütükleri dizme düzeniyle dizelgele.\n\
+  dizme düzeni   N  Ad ile (harfliklik)        S  Boyut ile (ilk önce en küçük)\n\
+                 E  Uzantı ile (harfliklik)    D  Zaman ile (ilk önce en eski)\n\
+                 G  Önce dizinleri öbekle      -  Ters dizme için ön ek\n\
+  /P            Bir bilgi görüntülüğünden sonra duraklatır.\n\
+  /Q            Kütüğün iyesini göster.\n\
+  /S            Belirtilen dizindeki ve tüm alt dizinlerdeki kütükleri\n\
+                görüntüler.\n\
+  /T            Dizme için hangi zaman aralığının görüntüleneceğini ya da\n\
+                kullanılacağını denetler.\n\
+  zaman aralığı C  Oluşturma\n\
+                A  Son Erişim\n\
+                W  Son Yazma\n\
+  /W            Geniş dizelge biçimini kullanır.\n\
+  /X            Bu, 8.3 olmayan kütük adları için oluşturulan kısa adları\n\
+                görüntüler. /N biçimi uzun addan önce eklenen kısa ad ile olur.\n\
+                Bir kısa ad yoksa onun yerine boşluklar görüntülenmiştir.\n\
+  /4            Dört basamaklı yıllar görüntüler.\n\n\
+Seçenekler DIRCMD ortam değişkenininde önceden ayarlanmış olabilir. - ile\n\
+bir seçenek ön ekleme önceden ayarlanmış seçenekleri geçersiz kılar\n\
+(örneğin /-W).\n"
+    STRING_DIR_HELP2 " %c sürücüsü içinde birim %s\n"
+    STRING_DIR_HELP3 " %c sürücüsü içinde birimin etiketi yok.\n"
+    STRING_DIR_HELP4 " Birim Dizilik Numarası %04X-%04X\n"
+    STRING_DIR_HELP5 "\n     Tüm Dizelgelenen Kütükler:\n%16i Kütük% 14s çoklu\n"
+    STRING_DIR_HELP6 "%16i Dizin% 15s çoklu boş\n"
+    STRING_DIR_HELP7 "\n %s dizini\n\n"
+    STRING_DIR_HELP8 "%16i Kütük% 14s çoklu\n"
+    STRING_DIRSTACK_HELP1 "POPD komutuyla kullanmak için şimdiki dizini saklar, sonra\n\
+belirtilen dizini değiştirir.\n\n\
+PUSHD [yol | ..]\n\n\
+  yol         Şimdiki dizin yapmak için dizini belirtir.\n"
+    STRING_DIRSTACK_HELP2 "PUSHD komutuyla saklanan dizini değiştirir.\n\nPOPD"
+    STRING_DIRSTACK_HELP3 "Dizin yığınının içeriğini yazdırır.\n\nDIRS"
+    STRING_DIRSTACK_HELP4 "Dizin yığını boş"
+    STRING_ECHO_HELP1 "Yataç başı ve yataç sonu izlemesi olmadan bir ileti görüntüler.\n\n\
+  ECHOS ileti"
+    STRING_ECHO_HELP2 "Ölçünlü yanışlık çıktısı için bir ileti görüntüler.\n\n\
+  ECHOERR ileti\n\
+  ECHOERR.          boş bir yataç yazdırır"
+    STRING_ECHO_HELP3 "Yataç başı ve yataç sonu izlemesi olmadan ölçünlü yanışlık çıktısı için bir ileti yazdırır.\n\n\
+  ECHOSERR ileti"
+    STRING_ECHO_HELP4 "Bir ileti görüntüler ya da komut yankılanmasını açar ya da kapatır.\n\n\
+  ECHO [ON | OFF]\n\
+  ECHO [ileti]\n\
+  ECHO.             boş bir yataç yazdırır\n\n\
+Şimdiki ECHO ayârını görüntülemek için bir değişken olmadan ECHO yazınız."
+    STRING_ECHO_HELP5 "ECHO %s\n"
+    STRING_EXIT_HELP "Komut yatacı yorumcusundan çıkar.\n\nEXIT [/b] [çıkış kodu]\n\n\
+  /B            Yalnızca bir toplu iş kütüğünden çıkar.  \n\
+                Bir toplu iş kütüğünün dışında çalışırsa cmd.exe'den çıkacaktır.\n\
+  çıkış kodu    Bu değer çıkışta ERRORLEVEL'e atanacaktır.\n"
+    STRING_FOR_HELP1 "Bir takım kütükte tüm kütükler için belirtilen bir komut çalıştırır.\n\n\
+FOR %%değişken IN (takım) DO komut [değişkenler]\n\n\
+  %%değişken  Yerine geçebilir bir değişken belirtir.\n\
+  (takım)     Bir ya da daha çok kütük takımını belirtir. Umûmî arama damgaları kullanılabilir.\n\
+  komut       Tüm kütükler için yürütülecek komutu belirtir.\n\
+  değişkenler Belirtilen komut için değişkenleri ya da seçenekleri belirtir.\n\n\
+FOR komutunu bir toplu iş kütüğünde kullanmak için %%değişken yerine %%%%değişken\n\
+belirtiniz.\n"
+    STRING_FREE_HELP1 "\n%s sürücüsünde birim %-11s\n\
+ Dizilik numarası %s\n\
+  %16s çoklu tüm disk alanı\n\
+  %16s çoklu kullanılan\n\
+  %16s çoklu boş\n"
+    STRING_FREE_HELP2 "Sürücü bilgisini görüntüler.\n\nFREE [sürücü: ...]\n"
+    STRING_GOTO_HELP1 "Bir toplu iş betiğinde CMD'yi etiketlenmiş bir yataca yönlendirir.\n\n\
+GOTO etiket\n\n\
+  etiket  Bir metin dizgisini, kullanılan bir toplu iş betiğinde bir etiket\n\
+  olarak belirtir.\n\n\
+Bir dikeçle başlayan tek başına bir yataç üzerinde bir etiket yazınız."
+    STRING_IF_HELP1 "Toplu iş izlencelerinde şartlı işlemeyi gerçekleştirir.\n\n\
+  IF [NOT] ERRORLEVEL sayı komut\n\
+  IF [NOT] dizgi1==dizgi2 komut\n\
+  IF [NOT] EXIST kütük adı komut\n\
+  IF [NOT] DEFINED değişken komut\n\n\
+NOT               Şart yalnışsa CMD yalnızca komutu yürütmeli olduğunu\n\
+                  belirtir.\n\
+ERRORLEVEL sayı   Son izlence çalışması belirtilen sayıdan daha büyük ya da\n\
+                  belirtilen sayıyla eşit bir çıkış kodu döndürdüyse bir doğru\n\
+				  şart belirtir.\n\
+komut             Şart sağlanmışsa yürütülecek komutu belirtir.\n\
+dizgi1==dizgi2    Belirtilen metin dizgileri birbiriyle uyuşuyorsa bir doğru\n\
+                  şart belirtir.\n\
+EXIST kütük adı   Belirtilen kütük adı varsa bir doğru şart belirtir.\n\
+DEFINED değişken  Belirtilen değişken tanımlanmışsa bir doğru şart belirtir.\n"
+    STRING_LABEL_HELP1 "Sürücü etiketini görüntüler ya da değiştirir.\n\nLABEL [sürücü:][etiket]\n"
+    STRING_LABEL_HELP2 "%c sürücüsünde birim %s\n"
+    STRING_LABEL_HELP3 "%c sürücüsünde birimin etiketi yok\n"
+    STRING_LABEL_HELP4 "Birim Dizilik Numarası %04X-%04X\n"
+    STRING_LABEL_HELP5 "Sürücü etiketi (11 damga, yok için Giriş)? "
+    STRING_LOCALE_HELP1 "Şimdiki zaman"
+    STRING_MKDIR_HELP "Bir dizin oluşturur.\n\n\
+MKDIR [sürücü:]yol\nMD [sürücü:]yol"
+    STRING_MKLINK_HELP "Bir kütük dizgesi bağlantı nesnesi oluşturur.\n\n\
+MKLINK [/D | /H | /J] bağlantı adı varış\n\n\
+  /D  Simgelik bağlantı varışının bir dizin olduğunu belirtir.\n\
+  /H  Bir değişmez bağlantı oluştur.\n\
+  /J  Bir dizin bağlantısı oluştur.\n\n\
+/H ve /J belirtilmemişse bir simgelik bağlantı oluşmuştur."
+    STRING_MEMMORY_HELP1 "Dizge belleğinin niceliğini görüntüler.\n\nMEMORY"
+    STRING_MEMMORY_HELP2 "\n  Bellek %%%12s yüklü.\n\n\
+  %13s çoklu tüm fizîkî RAM.\n\
+  %13s çoklu kullanılabilir fizîkî RAM.\n\n\
+  %13s çoklu tüm sayfalama kütüğü.\n\
+  %13s çoklu kullanılabilir sayfalama kütüğü.\n\n\
+  %13s çoklu tüm farazî bellek.\n\
+  %13s çoklu kullanılabilir farazî bellek.\n"
+    STRING_MISC_HELP1 "Sürdürmek için bir düğmeye basınız...\n"
+    STRING_MOVE_HELP1 "Üzerine yaz: %s (Evet/Hayır/Tümü)? "
+    STRING_MOVE_HELP2 "Kütükleri taşır ve kütükleri ve dizinleri yeniden adlandırır.\n\n\
+Bir ya da daha çok kütüğü taşımak için:\n\
+MOVE [/N][sürücü:][yol]kütük adı1[,...] varış\n\n\
+Bir dizini yeniden adlandırmak için:\n\
+MOVE [/N][sürücü:][yol]dizin adı1 dizin adı2\n\n\
+  [sürücü:][yol]kütük adı1  Taşımak istediğiniz kütüğün ya da kütüklerin\n\
+                            konumunu ve adını belirtir.\n\
+  /N                        Hiçbir şey. Tüm şeyleri yapar ama kütükleri ve dizinleri taşır.\n\n\
+Şimdiki kısıtlamalar:\n\
+  - Bir kütüğü ya da dizini bir sürücüden bir başkasına taşıyamazsınız.\n"
+    STRING_MSGBOX_HELP "Bir ileti kutusu görünütüler ve kullanıcı yanıtı döndürür.\n\n\
+MSGBOX tür ['başlık'] ileti\n\n\
+tür           görüntülenen düğme\n\
+              olası değerler: OK, OKCANCEL,\n\
+              YESNO, YESNOCANCEL\n\
+başlık        ileti kutusunun başlığı\n\
+ileti         ileti kutusuyla görüntülenen metin\n\n\n\
+ERRORLEVEL basılan düğmeye göre ayarlanmıştır:\n\n\
+YES  :  10    |  NO      :  11\n\
+OK   :  10    |  CANCEL  :  12\n"
+    STRING_PATH_HELP1 "Çalıştırılabilir kütükler için bir arama yolu görüntüler ya da ayarlar.\n\n\
+PATH [[sürücü:]yol[;...]]\nPATH ;\n\n\
+PATH yazınız, tüm arama yolu ayarlarını silmek ve komut kabuğunu yalnızca\n\
+şimdiki dizinde aramaya yönlendirmek için.\n\
+Şimdiki yolu görüntülemek için değişkensiz PATH yazınız.\n"
+    STRING_PROMPT_HELP1 "Komut istemini değiştirir.\n\n\
+PROMPT [metin]\n\n\
+  metin   Yeni bir komut istemi belirtir.\n\n\
+İstem, düzgülü damgalardan ve aşağıdaki husûsî kodlardan oluşabilir:\n\n\
+  $A   & (ve imi)\n\
+  $B   | (dikey çizgi)\n\
+  $C   ( (Sol ayraç)\n\
+  $D   Şimdiki zaman\n\
+  $E   Çıkış kodu (ASCII kodu 27)\n\
+  $F   ) (Sağ ayraç)\n\
+  $G   > (büyüktür imi)\n\
+  $H   Silme (önceki damgaları siler)\n\
+  $I   Bilgi çizgisi\n\
+  $L   < (küçüktür imi)\n\
+  $N   Şimdiki sürücü\n\
+  $P   Şimdiki sürücü ve yol\n\
+  $Q   = (eşittir imi)\n\
+  $S   (boşluk)\n\
+  $T   Şimdiki zaman\n\
+  $V   OS sürüm numarası\n\
+  $_   Yataç başı ve yataç sonu\n\
+  $$   $ (dolar imi)\n"
+    STRING_PAUSE_HELP1 "Bir toplu iş kütüğünün çalışmasını durdurur ve aşağıdaki iletiyi gösterir:\n\
+""Sürdürmek için bir düğmeye basınız..."" ya da kullanıcı tanımlı bir ileti.\n\n\
+PAUSE [ileti]"
+    STRING_PROMPT_HELP2 "  $+   Dizin yığınının şimdiki derinliğini görüntüler."
+    STRING_PROMPT_HELP3 "\nÖn tanımlı ayarlamaya istemi sıfırlamak için değişkensiz PROMPT yazınız."
+    STRING_REM_HELP "Bir toplu iş kütüğünde bir açıklama yatacı başlatır.\n\nREM [Açıklama]"
+    STRING_RMDIR_HELP "Bir dizin siler.\n\n\
+RMDIR [sürücü:]yol\nRD [sürücü:]yol\n\
+/S          Varış içinde tüm kütükleri ve dizinleri siler.\n\
+/Q          Kullanıcı için sorma.\n"
+    STRING_RMDIR_HELP2 "Dizin boş değil!\n"
+    STRING_REN_HELP1 "Bir kütüğü/dizini ya da kütükleri/dizinleri yeniden adlandırır.\n\n\
+RENAME [/E /N /P /Q /S /T] eski ad ... yeni ad\n\
+REN [/E /N /P /Q /S /T] eski ad ... yeni ad\n\n\
+  /E    Yanlışlık iletileri yok.\n\
+  /N    Hiçbir şey.\n\
+  /P    Bir kütüğü yeniden adlandırmadan önce onaylama için sor.\n\
+        (Daha bitirilmedi!)\n\
+  /Q    Sessiz.\n\
+  /S    Alt dizinleri yeniden adlandır.\n\
+  /T    Yeniden adlandırılan kütüklerin toplam sayısını görüntüler.\n\n\
+Varışınız için yeni bir sürücü ya da yol belirtemeyeceğinizi göz önünde bulundurunuz.\n\
+Bu amaç için MOVE komutunu kullanınız.\n"
+    STRING_REN_HELP2 "    %lu kütük yeniden adlandırıldı.\n"
+    STRING_REN_HELP3 "    %lu kütük yeniden adlandırıldı.\n"
+    STRING_REPLACE_HELP1 "Kütülerin yerlerini değiştirir.\n\n\
+REPLACE [sürücü1:][yol1]kütük adı [sürücü2:][yol2] [/A] [/P] [/R] [/W]\n\
+REPLACE [sürücü1:][yol1]kütük adı [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [sürücü1:][yol1]kütük adı Kaynak kütüğünü ya da kaynak kütüklerini belirtir.\n\
+  [sürücü2:][yol2]          Kütüklerin değiştirileceği dizini belirtir.\n\
+  /A                        Varış dizinine yeni kütükler ekler. /S ya da /U\n\
+                            seçenekleriyle kullanılamaz.\n\
+  /P                        Bir kütüğün yerini değiştirmeden ya da bir kaynak\n\
+                            kütüğü eklemeden önce onay için sorar.\n\
+  /R                        Yalnızca okunur kütükleri korumasız kütüklerle\n\
+                            değiştirir.\n\
+  /S                        Varış dizininin tüm alt kütüklerinde kütüklerin\n\
+                            yerlerini değiştirir. /A seçeneğiyle kullanılamaz.\n\
+  /W                        Başlamadan önce bir disk eklemenizi bekler.\n\
+  /U                        Yalnızca kaynak kütüklerden daha eski olan\n\
+                            kütüklerin yerlerini değiştirir (şimdikileştirir).\n\
+							/A seçeneğiyle kullanılamaz.\n"
+    STRING_REPLACE_HELP2 "Kaynak yolu gerekli\n"
+    STRING_REPLACE_HELP3 "Bir kütük değiştirilmedi\n"
+    STRING_REPLACE_HELP4 "%lu kütük değiştirildi\n"
+    STRING_REPLACE_HELP5 "%s değiştiriliyor\n"
+    STRING_REPLACE_HELP6 "%s değiştir\n"
+    STRING_REPLACE_HELP7 "Bir kütük eklenmedi\n"
+    STRING_REPLACE_HELP8 "%lu kütük eklendi\n"
+    STRING_REPLACE_HELP9 "Ekle %s (E/H) "
+    STRING_REPLACE_HELP10 "Değiştir %s (E/H) "
+    STRING_REPLACE_HELP11 "%s ekleniyor\n"
+    STRING_SHIFT_HELP "Bir toplu iş kütüğünde yerleri değiştirilebilir değişkenlerin konumunu değiştirir.\n\n\
+SHIFT [DOWN]"
+    STRING_SCREEN_HELP "İmleci devindirir ve seçimlik olarak metni yazdırır.\n\n\
+SCREEN yataç dikeç [metin]\n\n\
+  yataç       imlecin devindirileceği yataç\n\
+  dikeç       imlecin devindirileceği dikeç"
+    STRING_SET_HELP "Ortam değişkenlerini görüntüler, ayarlar ya da kaldırır.\n\n\
+SET [değişken[=][dizgi]]\n\n\
+  değişken  Ortam değişkeni adını belirtir.\n\
+  string    Değişkene atamak için bir dizi damgayı belirtir.\n\n\
+Şimdiki ortam değişkenlerini görüntülemek için değişkensiz SET yazınız.\n"
+    STRING_START_HELP1 "Bir komut başlatır.\n\n\
+START komut\n\n\
+  komut       Çalıştırılacak komutu belirtir.\n\n\
+Şu anda tüm komutlar eş zamanlı olmadan çalıştırılmıştır.\n"
+    STRING_TITLE_HELP "Komut istemi penceresi için pencere başlığını ayarlar.\n\n\
+TITLE [dizgi]\n\n\
+dizgi        Komut istemi penceresi için başlığı belirtir.\n"
+    STRING_TIME_HELP1 "Dizge saatini görüntüler ya da ayarlar.\n\n\
+TIME [/T][saat]\n\n\
+  /T    yalnızca görüntüle\n\n\
+Yeni bir saat için bir istemi ve şimdiki saat ayârını görüntülemek için\n\
+değişkensiz TIME yazınız. Aynı saati sürdürmek için Giriş'e basınız.\n"
+    STRING_TIME_HELP2 "Yeni saati giriniz: "
+    STRING_TIMER_HELP1 "%d mili sâniye oldu.\n"
+    STRING_TIMER_HELP2 "%02d%c%02d%c%02d%c%02d oldu.\n"
+    STRING_TIMER_HELP3 "On süreölçer kullanımına izin verir.\n\n\
+TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
+  ON          Süreölçeri AÇIK olarak ayarla.\n\
+  OFF         Süreölçeri KAPALI olarak ayarla.\n\
+  /S          Ayırma süresi. Değeri değişmeden\n\
+              süreölçer ayırma süresi döndür.\n\
+  /n          Süreölçer numarasını belirt.\n\
+              Süreölçerler 0'dan 9'a dek kullanılabilir.\n\
+              Belirtilmemişse ön tanımlı 1'dir.\n\
+  /Fn         Çıktı için biçim\n\
+              n olabilir:\n\
+                    0    mili sâniye\n\
+                    1    hh%cmm%css%cdd\n\n\
+ON, OFF ve /S belirtilmezse komut, süreölçer durumunu\n\
+değiştirecek.\n\n"
+    STRING_TYPE_HELP1 "Metin kütüklerinin içeriklerini görüntüler.\n\nTYPE [sürücü:][yol]kütük adı \n\
+  /P          Bir kezde bir görüntülük çıktı gösterir.\n"
+    STRING_VERIFY_HELP1 "Bu komut şimdi bir işlevsiz şeydir!!\n\
+Kütüklerinizin bir diske doğru yazıldığının doğrulanıp doğrulanmayacağını\n\
+ayarlar.\n\n\
+VERIFY [ON | OFF]\n\n\
+Şimdiki VERIFY ayârını görüntülemek için değişkensiz VERIFY yazınız.\n"
+    STRING_VERIFY_HELP2 "VERIFY %s.\n"
+    STRING_VERIFY_HELP3 "ON ya da OFF belirtmeelisiniz."
+    STRING_VERSION_HELP1 "Kabuk sürümü bilgisini görüntüler.\n\n\
+VER [/C][/R][/W]\n\n\
+  /C  Tanıtma yazısını görüntüler.\n\
+  /R  Yeniden dağıtma bilgisini görüntüler.\n\
+  /W  Güvence bilgisini görüntüler."
+    STRING_VERSION_HELP2 " KESİNLİKLE GÜVENCESİZ gelir, ayrıntılar için\n\
+""ver /w"" yazınız. Bu özgür yazılımdır, belirli şartlar altında onu\n\
+yeniden dağıtmakta özgürsünüz, ayrıntılar için ""ver /r"" yazınız. Tanıtma\n\
+yazısı dizelgesi için ""ver /c"" yazınız."
+    STRING_VERSION_HELP3 "\n Bu izlence kullanışlı olacağı umuduyla ama BİR GÜVENCE OLMADAN\n\
+ dağıtılmıştır, demek istenilen SATILABİLİRLİK veyâ BELİRLİ BİR\n\
+ AMACA UYGUNLUK güvencesiyle bile. Daha çok ayrıntı için GNU\n\
+ Umûmî Kamu Ruhsatı'na bakınız."
+    STRING_VERSION_HELP4 "\n Bu izlence özgür yazılımdır, Özgür Yazılım Vakfı eliyle yayımlanan GNU\n\
+ Umûmî Kamu Ruhsatı'nın 2. sürümü ya da (seçiminizde) sonraki bir sürümü\n\
+ şartları altında onu yeniden dağıtabilir veyâ değiştirebilirsiniz.\n"
+    STRING_VERSION_HELP5 "\nYanlışlık bildirimlerini ros-dev@reactos.org adresine gönderiniz.\n\
+Şimdikileştirmeler http://www.reactos.org adresinde vardır."
+    STRING_VERSION_HELP6 "\nFreeDOS sürümü şu kişilerle yazılmıştır:\n"
+    STRING_VERSION_HELP7 "\nReactOS sürümü şu kişilerle yazılmıştır:\n"
+    STRING_VOL_HELP1 " %c sürücüsünde birim %s\n"
+    STRING_VOL_HELP2 " %c sürücüsünde birimin etiketi yok.\n"
+    STRING_VOL_HELP3 " Birim Dizilik Numarası %04X-%04X\n"
+    STRING_VOL_HELP4 "Eğer varsa disk birim etiketini ve dizilik numarasını görüntüler.\n\nVOL [sürücü:]"
+    STRING_WINDOW_HELP1 "Konsol penceresi görünüşünü değiştir.\n\n\
+WINDOW [/POS[=]sol,üst,genişlik,yükseklik]\n\
+              [MIN|MAX|RESTORE] ['başlık']\n\n\
+/POS          Pencere yerleşimini ve boyutlarını belirle.\n\
+MIN           Pencereyi simge durumuna küçült.\n\
+MAX           Pencereyle görüntülüğü kaplat.\n\
+RESTORE       Pencereyi eski durumuna döndür."
+    STRING_WINDOW_HELP2 "Konsol penceresi görünüşünü değiştir.\n\n\
+ACTIVATE 'pencere' [/POS[=]sol,üst,genişlik,yükseklik]\n\
+              [MIN|MAX|RESTORE] ['başlık']\n\n\
+pencere       Üzerinde eylemler gerçekleştirilecek pencere döşemesi.\n\
+/POS          Pencere yerleşimini ve boyutlarını belirle.\n\
+MIN           Pencereyi simge durumuna küçült.\n\
+MAX           Pencereyle görüntülüğü kaplat.\n\
+RESTORE       Pencereyi eski durumuna döndür.\n\
+başlık        Yeni başlık\n"
+    STRING_CHOICE_OPTION "EH"
+    STRING_COPY_OPTION "EHT"
+    STRING_ALIAS_ERROR "Başka ad açılımından sonra komut yatacı çok uzun!\n"
+    STRING_ASSOC_ERROR "%s uzantısı için kütük ilişkilendirmesi bulunamadı.\n"
+    STRING_BATCH_ERROR "Toplu iş kütüğünü açma yanlışlığı\n"
+    STRING_CHCP_ERROR1 "Etkin kod sayfası: %u\n"
+    STRING_CHCP_ERROR4 "Geçersiz kod sayfası\n"
+    STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen biçim: /C[:]seçenekler"
+    STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen biçim: /T[:]c,nn"
+    STRING_CHOICE_ERROR_OPTION "Geçersiz seçenek: %s"
+    STRING_CMD_ERROR1 "%s kütüğünden girdi yönlendirilemiyor.\n"
+    STRING_CMD_ERROR2 "Boru verisi için geçici kütük oluşturma yanlışlığı\n"
+    STRING_CMD_ERROR3 "%s kütüğüne yönlendirilemiyor.\n"
+    STRING_CMD_ERROR4 "%s çalıştırılıyor...\n"
+    STRING_CMD_ERROR5 "cmdexit.bat çalıştırılıyor...\n"
+    STRING_COLOR_ERROR1 "Aynı renk yanlışlığı! (Arka plan ve ön plan aynı renk olamaz.)"
+    STRING_COLOR_ERROR2 "Renk belirtmede yanlışlık"
+    STRING_COLOR_ERROR3 "Renk %02x\n"
+    STRING_CONSOLE_ERROR "Bilinmeyen yanlışlık: %d\n"
+    STRING_COPY_ERROR1 "Yanlışlık: %s kaynağı açılamıyor!\n"
+    STRING_COPY_ERROR2 "Yanlışlık: Kendisinin üstüne çoğaltılamıyor!\n"
+    STRING_COPY_ERROR3 "Varışa yazmada yanlışlık!\n"
+    STRING_COPY_ERROR4 "Yanlışlık: Daha bitirilmedi!\n"
+    STRING_DATE_ERROR "Geçersiz târih."
+    STRING_DEL_ERROR5 "%s kütüğü silinecek! "
+    STRING_DEL_ERROR6 "Emin misiniz (E/H)?"
+    STRING_DEL_ERROR7 "Siliniyor: %s\n"
+    STRING_ERROR_ERROR1 "Bilinmeyen yanlışlık! Yanlışlık kodu: 0x%lx\n"
+    STRING_ERROR_ERROR2 "Yazım yanlışlığı"
+    STRING_FOR_ERROR1 "for deyişi içinde ""in"" eksik."
+    STRING_FOR_ERROR2 "Ayraç bulunamadı."
+    STRING_FOR_ERROR3 """do"" eksik."
+    STRING_FOR_ERROR4 """do"" deyişinden sonra komut yok."
+    STRING_FREE_ERROR1 "Geçersiz sürücü"
+    STRING_FREE_ERROR2 "etiketlenmemiş"
+    STRING_GOTO_ERROR1 "GOTO için bir etiket belirlenmemiş."
+    STRING_GOTO_ERROR2 """%s"" etiketi bulunamadı.\n"
+    STRING_MD_ERROR "Bir alt dizin ya da kütük önceden var.\n"
+    STRING_MD_ERROR2 "Yeni dizin için yol yok.\n"
+    STRING_MOVE_ERROR1 "[Tamam]\n"
+    STRING_MOVE_ERROR2 "[Yanlışlık]\n"
+    STRING_REN_ERROR1 "MoveFile() başarısız oldu. Yanlışlık: %lu\n"
+    STRING_TIME_ERROR1 "Geçersiz saat."
+    STRING_TYPE_ERROR1 "Geçersiz seçenek ""/%s""\n"
+    STRING_WINDOW_ERROR1 "Pencere bulunamadı."
+    STRING_ERROR_PARAMETERF_ERROR "Değişken biçimi doğru değil - %c\n"
+    STRING_ERROR_INVALID_SWITCH "Geçersiz seçenek - /%c\n"
+    STRING_ERROR_TOO_MANY_PARAMETERS "Çok değişken var - %s\n"
+    STRING_ERROR_PATH_NOT_FOUND "Yol bulunamadı.\n"
+    STRING_ERROR_FILE_NOT_FOUND "Kütük bulunamadı.\n"
+    STRING_ERROR_REQ_PARAM_MISSING "Gerekli değişken eksik.\n"
+    STRING_ERROR_INVALID_DRIVE "Geçersiz sürücü belirtmesi.\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Geçersiz değişken biçimi - %s\n"
+    STRING_ERROR_BADCOMMAND "Geçersiz komut ya da kütük adı - %s\n"
+    STRING_ERROR_OUT_OF_MEMORY "Yetersiz bellek yanlışlığı.\n"
+    STRING_ERROR_CANNOTPIPE "Yanlışlık! Borulanamıyor! Geçici kütük açılamıyor!\n"
+    STRING_ERROR_D_PAUSEMSG "Sürdürmek için bir düğmeye basınız . . ."
+    STRING_ERROR_DRIVER_NOT_READY "Sürücü anık değil."
+    STRING_PATH_ERROR "CMD: ""%s"" ortamda yok.\n"
+    STRING_REPLACE_ERROR1 "Geçersiz seçenek - %s\n"
+    STRING_REPLACE_ERROR2 "Yol bulunamadı - %s\n"
+    STRING_REPLACE_ERROR3 "Kütük adı, dizin adı ya da birim etiketi yazımı yanlış.\n"
+    STRING_REPLACE_ERROR4 "Geçersiz değişken birleşimi.\n"
+    STRING_REPLACE_ERROR5 "Erişim engellendi - %s\n"
+    STRING_REPLACE_ERROR6 "Bir kütük yok - %s\n"
+    STRING_REPLACE_ERROR7 "Ek Yanlışlık 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Komut İstemi                                    HELP yazmak = Yardım  "
+    STRING_REACTOS_VERSION "ReactOS İşletim Dizgesi [Sürüm %s-%s]\n"
+    STRING_CMD_SHELLINFO "\nReactOS Komut Yatacı Yorumlayıcısı\nSürüm %s %s"
+    STRING_VERSION_RUNNING_ON "Üzerinde çalışıyor: "
+    STRING_VERSION_RUNVER "%s [Sürüm %d.%d.%d] %s"
+    STRING_COPY_FILE "        %d kütük çoğaltıldı\n"
+    STRING_DELETE_WIPE "yok edildi"
+    STRING_FOR_ERROR "Geçersiz değişken belirtmesi."
+    STRING_SCREEN_COL "Dikeç için geçersiz değer."
+    STRING_SCREEN_ROW "Yataç için geçersiz değer."
+    STRING_TIMER_TIME "Zamanlayıcı %d %s idir: "
+    STRING_MKLINK_CREATED_SYMBOLIC "%s için simgelik bağlantı oluşturuldu <<===>> %s\n"
+    STRING_MKLINK_CREATED_HARD "%s için değşmez bağlantı oluşturuldu <<===>> %s\n"
+    STRING_MKLINK_CREATED_JUNCTION "%s için bağlantı oluşturuldu <<===>> %s\n"
+    STRING_MORE "Daha? "
+    STRING_CANCEL_BATCH_FILE "\r\nDenetim'e ve Duraklat'a birlikte basıldı. Toplu iş kütüğünü iptal et? (Evet/Hayır/Tümü) "
+    STRING_INVALID_OPERAND "Geçersiz işlenen."
+    STRING_EXPECTED_CLOSE_PAREN """)"" bekleniyordu."
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Sayı ya da değişken adı bekleniyordu."
+    STRING_SYNTAX_COMMAND_INCORRECT "Komutun yazımı yanlış."
+END

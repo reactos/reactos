@@ -1,0 +1,58 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "KULLANICI BİLGİSİ"
+    IDS_GROU_HEADER "TAKIM BİLGİSİ"
+    IDS_PRIV_HEADER "AYRICALIKLAR BİLGİSİ"
+    IDS_COL_USER_NAME "Kulanıcı Adı"
+    IDS_COL_GROUP_NAME "Takım Adı"
+    IDS_COL_TYPE "Tür"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "Öz Nitelikler"
+    IDS_COL_PRIV_NAME "Ayrıcalık Adı"
+    IDS_COL_DESCRIPTION "Tanım"
+    IDS_COL_STATE "Durum"
+    IDS_TP_WELL_KNOWN_GROUP "İyi Bilinen Takım"
+    IDS_TP_ALIAS "Başka Ad"
+    IDS_TP_LABEL "Etiket"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "Zorunlu takım, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Ön tanımlı olarak etkin, "
+    IDS_ATTR_GROUP_ENABLED "Etkin takım, "
+    IDS_ATTR_GROUP_OWNER "Takım iyesi, "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "Etkin"
+    IDS_STATE_DISABLED "Edilgin"
+    IDS_ERROR_UPN "YANLIŞLIK: Bir etki alanı kullanıcısı olmayan şimdiki oturumda olan kullanıcı\nolarak Kullanıcı Gerçek Adı (UPN) alınamaz.\n"
+    IDS_ERROR_FQDN "YANLIŞLIK: Bir etki alanı kullanıcısı olmayan şimdiki oturumda olan kullanıcı\nolarak Eksiksiz Ayırt Edici Adı (FQDN) alınamaz.\n"
+    IDS_ERROR_VALUEXPECTED "YANLIŞLIK: Geçersiz yazım. ""/fo"" için değer bekleniyordu.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_VALUENOTALLOWED "YANLIŞLIK: Geçersiz yazım. ""%s"" değerine ""/fo"" seçeneği için izin verilmiyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_1TIMES "YANLIŞLIK: Geçersiz yazım. ""%s"" seçeneğine ""1"" kezden çok izin verilmiyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_INVALIDSYNTAX "YANLIŞLIK: Geçersiz yazım.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_INVALIDARG "YANLIŞLIK: Geçersiz değiştirgen ya da seçenek: ""%s"".\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_NH_LIST "YANLIŞLIK: /NH seçeneği LIST biçimiyle kullanılamıyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_HELP "TANIM:\n\
+  Yerli oturumda olan kullanıcı için kullanıcı, takım ve ayrıcalıklar bilgilerini görüntüle.\n\
+  Bir değiştirgen sağlanmamışsa şimdiki etki alanını ve kullanıcı adını görüntüler.\n\
+\n\
+  ""/fo"" seçeneği için kullanılabilir çıkış biçimleri ""csv"", ""list"" ve ""table""dır.\n\
+  Başlıkları gizlemek için ""/nh"" kullanınız. Ön tanımlı olarak veri bir çizelge içinde görüntülenmiştir.\n\
+\n\
+YAZIM:\n\
+  whoami [/upn | /fqdn | /logonid] \n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Biçim>] [/nh] \n\
+  whoami /all [/fo <Biçim>] [/nh] \n\
+\n\
+ÖRNEKLER: \n\
+  whoami /groups /priv /nh /fo csv \n\
+  whoami /logonid \n\
+  whoami \n"
+END
