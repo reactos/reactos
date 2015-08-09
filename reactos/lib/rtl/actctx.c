@@ -772,6 +772,8 @@ static struct assembly *add_assembly(ACTIVATION_CONTEXT *actctx, enum assembly_t
 {
     struct assembly *assembly;
 
+    DPRINT("add_assembly() actctx %p, activeframe ??\n", actctx);
+
     if (actctx->num_assemblies == actctx->allocated_assemblies)
     {
         void *ptr;
@@ -799,6 +801,8 @@ static struct assembly *add_assembly(ACTIVATION_CONTEXT *actctx, enum assembly_t
 
 static struct dll_redirect* add_dll_redirect(struct assembly* assembly)
 {
+    DPRINT("add_dll_redirect() to assembly %p, num_dlls %d\n", assembly, assembly->allocated_dlls);
+
     if (assembly->num_dlls == assembly->allocated_dlls)
     {
         void *ptr;
@@ -3120,6 +3124,8 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
     struct string_index *index;
     ULONG name_offset;
 
+    DPRINT("actctx %p, num_assemblies %d\n", actctx, actctx->num_assemblies);
+
     /* compute section length */
     for (i = 0; i < actctx->num_assemblies; i++)
     {
@@ -3132,6 +3138,8 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
             total_len += sizeof(*index);
             total_len += sizeof(*data);
             total_len += aligned_string_len((strlenW(dll->name)+1)*sizeof(WCHAR));
+
+            DPRINT("assembly %d, dll %d: dll name %S\n", i, j, dll->name);
         }
 
         dll_count += assembly->num_dlls;
@@ -3153,12 +3161,16 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
     for (i = 0; i < actctx->num_assemblies; i++)
     {
         struct assembly *assembly = &actctx->assemblies[i];
+
+        DPRINT("assembly->num_dlls %d\n", assembly->num_dlls);
+
         for (j = 0; j < assembly->num_dlls; j++)
         {
             struct dll_redirect *dll = &assembly->dlls[j];
             UNICODE_STRING str;
             WCHAR *ptrW;
 
+            DPRINT("%d: dll name %S\n", j, dll->name);
             /* setup new index entry */
             str.Buffer = dll->name;
             str.Length = strlenW(dll->name)*sizeof(WCHAR);
@@ -3199,11 +3211,14 @@ static struct string_index *find_string_index(const struct strsection_header *se
     struct string_index *iter, *index = NULL;
     ULONG hash = 0, i;
 
+    DPRINT("section %p, name %wZ\n", section, name);
     RtlHashUnicodeString(name, TRUE, HASH_STRING_ALGORITHM_X65599, &hash);
     iter = (struct string_index*)((BYTE*)section + section->index_offset);
 
     for (i = 0; i < section->count; i++)
     {
+        DPRINT("iter->hash 0x%x ?= 0x%x\n", iter->hash, hash);
+        DPRINT("iter->name %S\n", (WCHAR*)((BYTE*)section + iter->name_offset));
         if (iter->hash == hash)
         {
             const WCHAR *nameW = (WCHAR*)((BYTE*)section + iter->name_offset);
@@ -3253,8 +3268,10 @@ static NTSTATUS find_dll_redirection(ACTIVATION_CONTEXT* actctx, const UNICODE_S
     struct dllredirect_data *dll;
     struct string_index *index;
 
+    DPRINT("sections: 0x%08X\n", actctx->sections);
     if (!(actctx->sections & DLLREDIRECT_SECTION)) return STATUS_SXS_KEY_NOT_FOUND;
 
+    DPRINT("actctx->dllredirect_section: %p\n", actctx->dllredirect_section);
     if (!actctx->dllredirect_section)
     {
         struct strsection_header *section;
@@ -3267,6 +3284,7 @@ static NTSTATUS find_dll_redirection(ACTIVATION_CONTEXT* actctx, const UNICODE_S
     }
 
     index = find_string_index(actctx->dllredirect_section, name);
+    DPRINT("index: %d\n", index);
     if (!index) return STATUS_SXS_KEY_NOT_FOUND;
 
     dll = get_dllredirect_data(actctx, index);
@@ -5276,27 +5294,39 @@ NTSTATUS NTAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *g
     PACTCTX_SECTION_KEYED_DATA data = ptr;
     NTSTATUS status;
 
+    DPRINT("RtlFindActivationContextSectionString(%x %p %x %wZ %p)\n", flags, guid, section_kind, section_name, ptr);
     status = RtlpFindActivationContextSection_CheckParameters(flags, guid, section_kind, section_name, data);
-    if (!NT_SUCCESS(status)) return status;
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT1("RtlFindActivationContextSectionString() failed with status %x\n", status);
+        return status;
+    }
 
     status = STATUS_SXS_KEY_NOT_FOUND;
 
     /* if there is no data, but params are valid,
        we return that sxs key is not found to be at least somehow compatible */
-    if (!data) return status;
+    if (!data)
+    {
+        DPRINT("RtlFindActivationContextSectionString() failed with status %x\n", status);
+        return status;
+    }
 
     ASSERT(NtCurrentTeb());
     ASSERT(NtCurrentTeb()->ActivationContextStackPointer);
 
+    DPRINT("ActiveFrame: %p\n",NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame);
     if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
     {
         ACTIVATION_CONTEXT *actctx = check_actctx(NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext);
         if (actctx) status = find_string( actctx, section_kind, section_name, flags, data );
     }
 
+    DPRINT("status %x\n", status);
     if (status != STATUS_SUCCESS)
         status = find_string( process_actctx, section_kind, section_name, flags, data );
 
+    DPRINT("RtlFindActivationContextSectionString() returns status %x\n", status);
     return status;
 }
 
@@ -5421,8 +5451,12 @@ RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTE
     frame->Flags = 0;
 
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
+    //RtlAddRefActivationContext( handle );
+
+    DPRINT("Activated actctx sp %p, active frame %p\n", NtCurrentTeb()->ActivationContextStackPointer, frame);
 
     return STATUS_SUCCESS;
+
 #endif
 }
 
@@ -5443,6 +5477,7 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
         RtlRaiseStatus( STATUS_SXS_INVALID_DEACTIVATION );
     }
 
+    DPRINT("Deactivated actctx %p, active frame %p, new active frame %p\n", NtCurrentTeb()->ActivationContextStackPointer, frame, frame->Previous);
     /* pop everything up to and including frame */
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
 
