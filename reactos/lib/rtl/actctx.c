@@ -5404,13 +5404,14 @@ FASTCALL
 RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame,
                                        IN PVOID Context)
 {
-#if NEW_NTDLL_LOADER
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
 
     /* Get the curren active frame */
     ActiveFrame = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
 
-    DPRINT1("ActiveFrame %p, &Frame->Frame %p, Context %p\n", ActiveFrame, &Frame->Frame, Context);
+    DPRINT("ActiveSP %p, ActiveFrame %p, &Frame->Frame %p, Context %p\n",
+        NtCurrentTeb()->ActivationContextStackPointer, ActiveFrame,
+        &Frame->Frame, Context);
 
     /* Actually activate it */
     Frame->Frame.Previous = ActiveFrame;
@@ -5427,7 +5428,7 @@ RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTE
     }
 
     /* We can get here only one way: it was already activated */
-    DPRINT1("Trying to activate improper activation context\n");
+    DPRINT("Trying to activate improper activation context\n");
 
     /* Activate only if we are allowing multiple activation */
     if (!RtlpNotAllowingMultipleActivation)
@@ -5442,22 +5443,6 @@ RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTE
 
     /* Return pointer to the activation frame */
     return &Frame->Frame;
-#else
-
-    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame = &Frame->Frame;
-
-    frame->Previous = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
-    frame->ActivationContext = Context;
-    frame->Flags = 0;
-
-    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
-    //RtlAddRefActivationContext( handle );
-
-    DPRINT("Activated actctx sp %p, active frame %p\n", NtCurrentTeb()->ActivationContextStackPointer, frame);
-
-    return STATUS_SUCCESS;
-
-#endif
 }
 
 PRTL_ACTIVATION_CONTEXT_STACK_FRAME
