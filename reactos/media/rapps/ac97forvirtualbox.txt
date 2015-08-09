@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
@@ -13,7 +13,7 @@ URLDownload = http://svn.reactos.org/packages/ac97_vbox.exe
 CDPath = none
 
 [Section.0405]
-Name = Ovladač AC97 pro VirtualBox
+Name = Ovladac AC97 pro VirtualBox
 License = Neznámá
 Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
 
@@ -51,32 +51,32 @@ Description = Pak uit in de "ReactOS" map en start tweemaal opnieuw op.
 [Section.0415]
 Name = Sterownik AC97 dla VirtualBox
 License = Nieznana
-Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
+Description = Rozpakuj zawartosc w folderze "ReactOS" i dwukrotnie zrestartuj system.
 
 [Section.0418]
 Name = Modúl-pilot AC97 pentru VirtualBox
-License = Nespecificată
-Description = Dezarhivați în dosarul ReactOS apoi reporniți ReactOS de două ori.
+License = Nespecificata
+Description = Dezarhiva?i în dosarul ReactOS apoi reporni?i ReactOS de doua ori.
 Size = 185,5 ko
 
 [Section.0419]
-Name = Драйвер AC97 для VirtualBox
-License = Не указано
-Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
+Name = ??????? AC97 ??? VirtualBox
+License = ?? ???????
+Description = P????????????? ?????????? ? ????? "ReactOS", ????? ?????? ????????????? ???????.
 
 [Section.041f]
 Name = VirtualBox için AC97 Sürücüsü
 License = Bilinmiyor
-Description = ReactOS'un dizinine çıkartınız, sonra bilgisayarı iki kez yeniden başlatınız.
+Description = ReactOS'un dizinine çikartiniz, sonra bilgisayari iki kez yeniden baslatiniz.
 Size = 185,5 KB
 
 [Section.0422]
-Name = Драйвер AC97 для VirtualBox
-License = Невідома
-Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
+Name = ??????? AC97 ??? VirtualBox
+License = ????????
+Description = P??????????? ????? ? ???? "ReactOS" ????? ???? ????? ?????????????? ???????.
 
 [Section.0804]
-Description = AC'97 兼容设备的音频驱动程序。在电脑文件夹中解压缩并重新启动两次。
+Description = AC'97 ??????????????????????????????
 
 [Section.0813]
 Name = AC97 Driver voor VirtualBox

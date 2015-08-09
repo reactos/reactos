@@ -1,0 +1,20 @@
+; UTF-8
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = Shed
+Version = 1.0
+License = Freeware
+Description = A single player card game for Windows. It is based on the popular student card-game of "Shit-head".
+Size = 65.79 KB
+Category = 4
+URLSite = http://www.catch22.net/software/shed
+URLDownload = http://www.catch22.net/sites/default/files/shedsetup1.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein Single-Player-Kartenspiel für Windows. Es basiert auf dem beliebten Kartenpiel "Arschloch".
+
+[Section.0804]
+Description = 单人卡游戏窗口。它基于"屎头"受欢迎的学生纸牌游戏。
+

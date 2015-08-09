@@ -1,0 +1,20 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Audacity
+Version = 2.1.1
+License = GPL
+Description = Free, open source, cross-platform software for recording and editing sounds.
+Size = 24.0 MB
+Category = 1
+URLSite = http://audacityteam.org/
+URLDownload = http://svn.reactos.org/packages/audacity-win-2.1.1.exe
+CDPath = none
+
+[Section.0407]
+Description = Freie, quelloffene Cross-Plattform Software zur Aufnahme und Bearbeitung von Sounds.
+
+[Section.041f]
+Description = Sesleri kaydetme ve düzenleme için özgür, açık kaynak ve çapraz platform yazılımdır.
+Size = 24,0 MB

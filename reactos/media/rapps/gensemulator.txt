@@ -1,0 +1,20 @@
+; UTF-8
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = Gens Emulator
+Version = 2.14
+License = GPLv2
+Description = A Win32 Sega Genesis / Sega CD / Sega 32X emulator.
+Size = 573 KB
+Category = 4
+URLSite = http://www.gens.me/
+URLDownload = http://www.gens.me/download/gens-win32-bin-2.14.zip
+CDPath = none
+
+[Section.0407]
+Description = Ein Win32 Sega Genesis / Sega CD / Sega 32X Emulator.
+
+[Section.0804]
+Description = Win32 ÊÀ¼Î Genesis / ÊÀ¼Î CD / ÊÀ¼Î 32X ·ÂÕæÆ÷¡£
+

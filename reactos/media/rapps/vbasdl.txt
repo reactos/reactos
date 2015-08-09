@@ -1,0 +1,21 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = VisualBoyAdvance (SDL version)
+Version = 1.7.2
+License = GPL
+Description = An emulator for Gameboy and GameboyAdvance systems. You will need a ZIP decompression program to run it.
+Size = 438 kB
+Category = 15
+URLSite = http://sourceforge.net/projects/vba/
+URLDownload = http://cznic.dl.sourceforge.net/project/vba/VisualBoyAdvance/1.7.2/VisualBoyAdvance-1.7.2-SDL-Win32.zip
+CDPath = none
+
+[Section.0407]
+Description = Ein Gameboy und Gameboy Advance System Emulator. Ein Werkzeug wie 7-Zip ist zum extrahieren notwendig.
+
+[Section.041f]
+Name = VisualBoyAdvance (SDL sürümü)
+Description = Gameboy ve GameboyAdvance dizgeleri için bir öykünücü. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.
+Size = 438 KB

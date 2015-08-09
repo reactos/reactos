@@ -1,0 +1,21 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = UltraISO
+Version = 9.6.5.3237
+License = Trial verison
+Description = An ISO CD/DVD image file creating/editing/converting tool and a bootable CD/DVD maker. It can directly edit the CD/DVD image file and extract files and folders from it, as well as directly make ISO files from your CD/DVD-ROM or hard disk.
+Size = 4.19 MB
+Category = 12
+URLSite = https://www.ezbsystems.com/ultraiso/
+URLDownload = http://dw.ezbsys.net/uiso9_pe.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein ISO-CD/DVD-Image-Datei Erstellungs/Bearbeitungs/Konvertierungs-Tool und ein Boot-CD/DVD-Ersteller. Es kann direkt die CD/DVD-Image-Datei bearbeiten und Dateien und Ordner extrahieren, als auch direkt ISO-Dateien von Ihrer CD/DVD-ROM oder Festplatte erstellen.
+
+[Section.041f]
+License = Deneme sürümü
+Description = CD/DVD kalıp kütüğünü doğrudan düzenleyebilmekle ve ondan kütükleri ve dizinleri çıkartabilmekle birlikte CD/DVD-ROM diskinizden ya da sâbit diskinizden doğrudan ISO kütükleri oluşturabilen bir ISO CD/DVD kalıp kütüğü oluşturma, düzenleme, dönüştürme uygulaması ve bir ön yüklenebilir CD/DVD oluşturucusudur.
+Size = 4,19 MB

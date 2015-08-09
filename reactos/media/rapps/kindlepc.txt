@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; Translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
