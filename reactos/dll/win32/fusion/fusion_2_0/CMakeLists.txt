@@ -8,6 +8,6 @@ add_library(fusion_2_0 SHARED
 
 set_module_type(fusion_2_0 win32dll)
 target_link_libraries(fusion_2_0 fusion_common uuid wine)
-set_target_properties(fusion_2_0 PROPERTIES OUTPUT_NAME "fusion")
+set_target_properties(fusion_2_0 PROPERTIES OUTPUT_NAME "fusion" PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 add_importlibs(fusion_2_0 advapi32 dbghelp shlwapi user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET fusion_2_0 DESTINATION reactos/Microsoft.NET/Framework/v2.0.50727 FOR all)
