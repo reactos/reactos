@@ -21,7 +21,7 @@ BEGIN
     GROUPBOX "Ustawienia monitora", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
     LTEXT "&Częstotliwośći odświeżania ekranu:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "&Ukryj tryby których monitor nie może wyświetlić", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "&Ukryj tryby, których ten monitor nie może wyświetlić", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE

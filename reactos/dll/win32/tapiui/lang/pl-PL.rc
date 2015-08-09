@@ -116,7 +116,7 @@ END
 
 106 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Long Distance"
+CAPTION "Długi dystans"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Numer dostępowy dla połączeń &międzymiastowych:", -1, 7, 7, 238, 8

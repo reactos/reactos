@@ -54,7 +54,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Data/Godzina"
+    IDS_CPLNAME "Data i godzina"
     IDS_CPLDESCRIPTION "Ustaw datę, godzinę i strefę czasową komputera."
     IDS_TIMEZONETEXT "Aktualna strefa czasowa: %s"
     IDS_TIMEZONEINVALID "Nieprawidłowa"

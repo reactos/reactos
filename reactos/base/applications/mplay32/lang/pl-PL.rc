@@ -17,9 +17,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ", IDM_EXIT
     END
-    POPUP "&Graj"
+    POPUP "&Odtwarzanie"
     BEGIN
-        MENUITEM "Play/&Pauza\tCtrl+P", IDC_PLAY
+        MENUITEM "Odtwarzanie/&Pauza\tCtrl+P", IDC_PLAY
         MENUITEM "St&op\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
         MENUITEM "Pow&tarzaj\tCtrl+T", IDM_REPEAT
@@ -52,14 +52,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
-    IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
-    IDS_MODE_NOT_READY "Not ready"
+    IDS_MODE_UNKNOWN "Nieznany"
+    IDS_MODE_OPEN "Otwierany"
+    IDS_MODE_STOP "Zatrzymany"
+    IDS_MODE_PLAY "Odtwarzanie"
+    IDS_MODE_PAUSE "Wstrzymany"
+    IDS_MODE_RECORD "Nagrywanie"
+    IDS_MODE_SEEK "Szukam"
+    IDS_MODE_NOT_READY "Nie gotowy"
     IDS_ALL_TYPES_FILTER "Wszystkie formaty"
     IDS_TOOLTIP_PLAY "Odtwarzaj"
     IDS_TOOLTIP_STOP "Zatrzymaj"
@@ -68,7 +68,7 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Przewiń do tyłu"
     IDS_TOOLTIP_SEEKFORW "Przewiń do przodu"
     IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
-    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_TOOLTIP_PAUSE "Pauza"
     IDS_APPTITLE "Odtwarzacz multimedialny ReactOS"
     IDS_PLAY "Odtwórz"
     IDS_DEFAULTMCIERRMSG "Brak dostępnego opisu dla tego błędu."

@@ -64,7 +64,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Dodaj/Usuń Programy"
+    IDS_CPLSYSTEMNAME "Dodaj lub usuń programy"
     IDS_CPLSYSTEMDESCRIPTION "Instaluje bądź usuwa programy oraz tworzy skróty."
     IDS_CREATE_SHORTCUT "Utwórz skrót"
     IDS_ERROR_NOT_FOUND "Plik %s nie został znaleziony."

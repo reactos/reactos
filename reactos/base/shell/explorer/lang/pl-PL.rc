@@ -25,7 +25,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Menedżer zadań", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Zablokuj Pasek zadań", ID_LOCKTASKBAR
+        MENUITEM "&Zablokuj pasek zadań", ID_LOCKTASKBAR
         MENUITEM "&Właściwości", ID_SHELL_CMD_PROPERTIES
     END
 END
@@ -54,7 +54,7 @@ BEGIN
             MENUITEM "Za&bezpieczenia...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "P&ołączenia sieciowe", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Drukarki i faksy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "P&asek zadań i Menu Start", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "P&asek zadań i menu Start", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         POPUP "&Szukaj", IDM_SEARCH
         BEGIN
@@ -78,10 +78,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Wygląd paska zadań", IDC_STATIC, 6, 6, 240, 104
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
-    AUTOCHECKBOX "&Zablokuj pasek zadań", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
-    AUTOCHECKBOX "A&utomatyczne ukrywanie paska zadań", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
-    AUTOCHECKBOX "Zawsze &na wierzchu", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
-    AUTOCHECKBOX "&Grupuj programy w pasku zadań", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "Za&blokuj pasek zadań", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "&Włącz autoukrywanie paska zadań", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "&Trzymaj pasek zadań na wierzchu", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&Grupuj podobne przyciski paska zadań", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Pokaż pasek &Szybkiego uruchamiania", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
 END
 
@@ -91,7 +91,7 @@ CAPTION "Menu Start"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     AUTORADIOBUTTON "&Menu Start", IDC_TASKBARPROP_STARTMENU, 7, 7, 105, 10
-    LTEXT "Ten styl menu pozwala na łatwy dostąp do Twoich folderów, ulubionych programów i wyszukiwania.", IDC_STATIC, 20, 17, 150, 24, WS_DISABLED
+    LTEXT "Ten styl menu pozwala na łatwy dostęp do twoich folderów, ulubionych programów i wyszukiwania.", IDC_STATIC, 20, 17, 150, 24, WS_DISABLED
     PUSHBUTTON "&Dostosuj...", IDC_TASKBARPROP_STARTMENUCUST, 192, 4, 53, 14, WS_DISABLED
     AUTORADIOBUTTON "&Klasyczne Menu Start", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
     LTEXT "Ten styl menu zawiera klasyczny wygląd i funkcjonalność", -1, 20, 57, 150, 24, WS_DISABLED
@@ -134,7 +134,7 @@ CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Opcje zaawansowane", IDC_STATIC, 6, 6, 240, 121
-    AUTOCHECKBOX "Show s&econds", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    AUTOCHECKBOX "Pokaż s&ekundy", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
     AUTOCHECKBOX "&Pokaż podgląd okien (miniaturki)", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
 
@@ -149,5 +149,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Właściwości paska zadań i Menu Start"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Właściwości paska zadań i menu Start"
 END

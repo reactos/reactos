@@ -16,41 +16,41 @@ BEGIN
         MENUITEM "&Nowy\tCtrl+N", IDM_FILENEW
         MENUITEM "&Otwórz...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "&Zapisz\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Zapisz &jako...", IDM_FILESAVEAS
+        MENUITEM "Z&apisz jako...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "&Podgląd wydruku", IDM_FILEPAGEVIEW
+        MENUITEM "&Ustawienia strony...", IDM_FILEPAGESETUP
+        MENUITEM "&Drukuj...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Ustaw jako tapetę (sąsiadujące)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Ustaw jako tapetę (wyśrodkowana)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Ustaw jako tapetę (rozciągnięta)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Ustaw jako &tło (sąsiadująco)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "U&staw jako tło (wyśrodkowane)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Ustaw jako tło (rozciągnięte)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "&Wyjdź\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Za&kończ\tAlt+F4", IDM_FILEEXIT
     END
-    POPUP "&Edytuj"
+    POPUP "&Edycja"
     BEGIN
-        MENUITEM "Cofnij\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Ponów\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Cofnij\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Powtórz\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Wytnij\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopiuj\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Wklej\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Usuń zaznaczenie\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Wytnij\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiuj\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Wkl&ej\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Wyczyść z&aznaczenie\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Odwróć zaznaczenie", IDM_EDITINVERTSELECTION
-        MENUITEM "Zaznacz wszystko\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Zaznacz wszystko\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopiuj do...", IDM_EDITCOPYTO
-        MENUITEM "Wklej z...", IDM_EDITPASTEFROM
+        MENUITEM "Kopiuj &do...", IDM_EDITCOPYTO
+        MENUITEM "Wk&lej z...", IDM_EDITPASTEFROM
     END
     POPUP "&Widok"
     BEGIN
-        MENUITEM "Pasek narzędzi\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Paleta kolorów\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "Pasek stanu", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Pasek tekstu", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "&Przybornik\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Pole &koloru\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Pasek &stanu", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Pasek &narzędzi tekstowych", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Powiększenie"
+        POPUP "Powięks&zenie"
         BEGIN
             POPUP "Zdefiniowane przez użytkownika"
             BEGIN
@@ -63,33 +63,33 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Pokaż siatkę\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "Pokaż miniaturkę", IDM_VIEWSHOWMINIATURE
+            MENUITEM "&Pokaż siatkę\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "Pokaż &miniaturę", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Pełny ekran\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "Pokaż &mapę bitową\tCtrl+F", IDM_VIEWFULLSCREEN
     END
     POPUP "&Obraz"
     BEGIN
-        MENUITEM "Obrót/Odbicie...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Przerzuć/Obróć...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Roz&ciągnij/Pochyl...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Kadrowanie", IDM_IMAGECROP
-        MENUITEM "Odwrócenie kolorów\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Atrybuty...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Wyczyść obraz\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Rysuj nieprzezroczyste", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Odwróć kolory\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Atrybuty...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "&Wyczyść obraz\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Rysuj nieprzezroczyste", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Kolory"
     BEGIN
         MENUITEM "Edytuj kolory...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
-        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+        MENUITEM "Nowoczesna paleta", IDM_COLORSMODERNPALETTE
+        MENUITEM "Stara paleta", IDM_COLORSOLDPALETTE
     END
-    POPUP "&Pomoc"
+    POPUP "Pomo&c"
     BEGIN
-        MENUITEM "Tematy pomocy", IDM_HELPHELPTOPICS
+        MENUITEM "&Tematy pomocy", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Informacje", IDM_HELPINFO
+        MENUITEM "I&nformacje", IDM_HELPINFO
     END
 END
 
@@ -119,12 +119,12 @@ END
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Obrót i odbicie lustrzane"
+CAPTION "Przerzucanie i obracanie"
 BEGIN
-    GROUPBOX "Obrót lub odbicie", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
-    AUTORADIOBUTTON "Odbicie poziome", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
-    AUTORADIOBUTTON "Odbicie pionowe", IDD_MIRRORROTATERB2, 12, 30, 100, 10
-    AUTORADIOBUTTON "Obrót o kąt:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    GROUPBOX "Przerzucanie lub obracanie", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "&Przerzuć w poziomie", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "Przerzuć w pio&nie", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "&Obróć o kąt:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
     AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
     AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
     AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
@@ -139,49 +139,49 @@ CAPTION "Atrybuty"
 BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "Szerokość:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "Wysokość:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    LTEXT "&Szerokość:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    LTEXT "&Wysokość:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
     LTEXT "Data:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Rozmiar:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Rozdzielczość:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Niedostępny", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "Niedostępny", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Niedostępny", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "Brak danych", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Brak danych", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Brak danych", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Jednostki", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "Cale", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
-    AUTORADIOBUTTON "Centymetry", IDD_ATTRIBUTESRB2, 52, 69, 55, 10
-    AUTORADIOBUTTON "Piksele", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    AUTORADIOBUTTON "&Cale", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
+    AUTORADIOBUTTON "Centy&metry", IDD_ATTRIBUTESRB2, 52, 69, 55, 10
+    AUTORADIOBUTTON "&Piksele", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Kolory", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
-    AUTORADIOBUTTON "Czarno-biały", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Kolory", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "Czarno-&biały", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "K&olory", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Domyślne", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "&Domyślne", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Rozciąganie i pochylanie"
 BEGIN
-    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Rozciąganie", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
-    LTEXT "W poziomie:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
+    LTEXT "W po&ziomie:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTHPERCENT, 125, 24, 15, 10
     ICON IDI_VERTSTRETCH, IDD_STRETCHSKEWICONVSTRETCH, 12, 43, 32, 32
-    LTEXT "W pionie:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
+    LTEXT "&W pionie:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
-    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    GROUPBOX "Pochylanie", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
-    LTEXT "W poziomie:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
+    LTEXT "W pozio&mie:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    LTEXT "stopni", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
     ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
-    LTEXT "W pionie:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
+    LTEXT "W pi&onie:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    LTEXT "stopni", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 170, 24, 48, 14
 END
@@ -210,14 +210,14 @@ BEGIN
     IDS_TOOLTIP13 "Prostokąt"
     IDS_TOOLTIP14 "Wielokąt"
     IDS_TOOLTIP15 "Elipsa"
-    IDS_TOOLTIP16 "Zaokrąglony Prostokąt"
+    IDS_TOOLTIP16 "Zaokrąglony prostokąt"
     IDS_OPENFILTER "Pliki Bitmapy (*.bmp;*.dib)\1*.bmp;*.dib\1Wszystkie pliki (*.*)\1*.*\1"
-    IDS_SAVEFILTER "Bitmapa 24 bit (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_SAVEFILTER "Bitmapa 24-bitowa (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE "%d bajtów"
     IDS_PRINTRES "%d x %d pikseli na metr"
-    IDS_INTNUMBERS "Please enter integral numbers only!"
-    IDS_PERCENTAGE "The percentage must be between 1 and 500."
-    IDS_ANGLE "The angle must be between -89 and 89."
-    IDS_LOADERRORTEXT "The file %s could not be loaded."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_INTNUMBERS "Wprowadź liczbę całkowitą."
+    IDS_PERCENTAGE "Wprowadź liczbę całkowitą z zakresu od 1 do 500."
+    IDS_ANGLE "Wprowadź liczbę całkowitą z zakresu od -89 do 89."
+    IDS_LOADERRORTEXT "Plik %s nie może być załadowany."
+    IDS_ENLARGEPROMPTTEXT "Obraz w schowku jest większy niż bitmapa.\nChciałbyś powiększyć bitmapę?"
 END

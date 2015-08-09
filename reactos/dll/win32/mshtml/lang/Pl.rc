@@ -22,8 +22,8 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_STATUS_DONE            "Done"
-    IDS_STATUS_DOWNLOADINGFROM "Downloading from %s..."
+    IDS_STATUS_DONE            "Gotowe"
+    IDS_STATUS_DOWNLOADINGFROM "Pobieranie z %s..."
 }
 
 STRINGTABLE

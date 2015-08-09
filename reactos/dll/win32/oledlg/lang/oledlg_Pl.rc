@@ -26,8 +26,8 @@ STRINGTABLE
   IDS_BROWSE            "Przeglądaj"
   IDS_NOTOLEMOD         "Plik nie wydaje się być poprawnym modułem OLE. Nie udało się zarejestrować kontrolki OLE."
   IDS_NOTOLEMODCAPTION  "Dodaj kontrolkę"
-  IDS_VERBMENU_OBJECT   "&Object"
-  IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_OBJECT   "&Obiekt"
+  IDS_VERBMENU_CONVERT  "&Konwertuj..."
 }
 
 STRINGTABLE

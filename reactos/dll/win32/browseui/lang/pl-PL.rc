@@ -14,9 +14,9 @@ IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "", 264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Przyciski standardowe", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
-        MENUITEM "Pasek &Adresu", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Odnośniki", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "Przyciski &standardowe", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "Pasek &adresu", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "Łą&cza", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Zablokuj paski narzędzi", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Dostosuj...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
@@ -38,12 +38,12 @@ BEGIN
     END
     POPUP "&Widok", FCIDM_MENU_VIEW
     BEGIN
-        POPUP "Paski &Narzędzi", IDM_VIEW_TOOLBARS
+        POPUP "&Paski narzędzi", IDM_VIEW_TOOLBARS
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Pasek &Stanu", IDM_VIEW_STATUSBAR
-        POPUP "Pasek &Exploratora", IDM_VIEW_EXPLORERBAR
+        MENUITEM "Pasek sta&nu", IDM_VIEW_STATUSBAR
+        POPUP "Pasek &exploratora", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "W&yszukaj\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Ulubione\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
@@ -53,46 +53,46 @@ BEGIN
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
-        POPUP "&Idź do", FCIDM_MENU_EXPLORE
+        POPUP "Prz&ejdź do", FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "&Wstecz\tAlt+Left Arrow", IDM_GOTO_BACK
-            MENUITEM "&Naprzód\tAlt+Right Arrow", IDM_GOTO_FORWARD
+            MENUITEM "&Wstecz\tAlt+Strzałka w lewo", IDM_GOTO_BACK
+            MENUITEM "&Dalej\tAlt+Strzałka w prawo", IDM_GOTO_FORWARD
             MENUITEM "W &górę", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Strona Domowa\tAlt+Home", IDM_GOTO_HOMEPAGE
+            MENUITEM "&Strona główna\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
         MENUITEM "&Odśwież", IDM_VIEW_REFRESH
     END
     POPUP "&Ulubione", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Dodaj do Ulubionych...", IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Organizuj Ulubione...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "&Dodaj do ulubionych...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Organizuj ulubione...", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "(Pusty)", IDM_FAVORITES_EMPTY
     END
     POPUP "&Narzędzia", FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "Mapuj &Dysk Sieciowy...", IDM_TOOLS_MAPNETWORKDRIVE
-        MENUITEM "&Odłącz Dysk Sieciowy...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Mapuj dysk sieciowy...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "&Odłącz dysk sieciowy...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
         MENUITEM "&Synchronizuj...", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Opcje Katalogów...", IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "Opcje &folderów...", IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&Pomoc", FCIDM_MENU_HELP
+    POPUP "Pomo&c", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Czy ta kopia ReactOS jest &legalna?", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "Czy ta &kopia ReactOS jest legalna?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&O ReactOS", IDM_HELP_ABOUT
     END
 END
 
 IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
-	POPUP "&Toolbars", -1, MFT_STRING, MFS_ENABLED, 0
+	POPUP "P&aski narzędzi", -1, MFT_STRING, MFS_ENABLED, 0
 	BEGIN
-		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
-		MENUITEM "&Quick Launch", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Pulpit", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Szybkie uruchamianie", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "&New Toolbar...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Nowy pasek narzędzi...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
 	END
 END
 
@@ -108,7 +108,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
     LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
-    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "Anuluj", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
 }
 
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
@@ -144,8 +144,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CANCELLING "Canceling..."
-    IDS_REMAINING  "Remaining"
+    IDS_CANCELLING "Anulowanie..."
+    IDS_REMAINING  "Pozostało"
 END
 
 STRINGTABLE
@@ -245,8 +245,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_GOBUTTONLABEL "|Idź||"
-    IDS_GOBUTTONTIPTEMPLATE "Idź do ""%s"""
+    IDS_GOBUTTONLABEL "|Przejdź||"
+    IDS_GOBUTTONTIPTEMPLATE "Przejdź do ""%s"""
 END
 
 STRINGTABLE
@@ -257,7 +257,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL "Katalogi"
+    IDS_FOLDERSLABEL "Foldery"
 END
 
 STRINGTABLE
@@ -273,10 +273,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_BACK "Wstecz"
-    IDS_FORWARD "Naprzód"
+    IDS_FORWARD "Dalej"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|Wstecz|Dalej|W górę|Wyszukaj|Foldery|Przemieść do|Kopiuj do|Usuń|Cofnij|Widoki|Stop|Odśwież|Strona główna|Mapa dysków|Rozłącz|Ulubione|Historia|Pełny ekran|Właściwości|Wytnij|Kopiuj|Wklej|Opcje folderów||"
 END

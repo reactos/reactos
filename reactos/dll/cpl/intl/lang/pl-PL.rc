@@ -10,7 +10,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ustawienia regionalne"
+CAPTION "Opcje regionalne i językowe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standardy i formaty", -1, 5, 5, 234, 162
@@ -39,13 +39,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Języki"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Języki i usługi tekstowe", -1, 5, 5, 234, 52
-    LTEXT "Aby przejrzeć bądź zmienić zainstalowane języki lub usługi tekstowe, naciśnij ""Szczegóły...""", -1, 12, 15, 220, 18
-    PUSHBUTTON "Szcze&góły...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Dodatkowe wsparcie języków", -1, 5, 62, 234, 82
-    LTEXT "Większość języków jest instalowana domyślnie. Aby zainstalować dodatkowe języki, zaznacz odpowiednią opcję poniżej.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstalacja języków o złożonej składni i języków pisanych od prawej do lewej", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "In&stalacja języków wschodnioazjatyckich", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    GROUPBOX "Usługi tekstowe i języki", -1, 5, 5, 234, 52
+    LTEXT "Aby wyświetlić lub zmienić języki i metody, których można używać do wprowadzania tekstu, kliknij przycisk ""Szczegóły...""", -1, 12, 15, 220, 18
+    PUSHBUTTON "&Szczegóły...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
+    GROUPBOX "Obsługa języków dodatkowych", -1, 5, 62, 234, 82
+    LTEXT "Większość języków jest instalowana domyślnie. Aby zainstalować języki dodatkowe, zaznacz poniżej odpowiednie pole wyboru.", -1, 12, 72, 220, 18
+    CHECKBOX "Instalacja języków &o złożonej pisowni i języków z pisownią od prawej do lewej", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    CHECKBOX "Instalacja języków &wschodnioazjatyckich", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -57,10 +57,10 @@ BEGIN
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Te ustawienia umożliwiają programom niewspierających Unicode wyświetlanie menu i dialogów w odpowiednich językach. Nie ma to wpływu na programy Unicode ale dotyczy profili domyślnych.", -1, 14, 18, 223, 33
     LTEXT "Wybierz taki język, który ma być używany przez programy bez Unicode:", -1, 14, 55, 223, 18
-    GROUPBOX "Tablice konwersji stron kodowych", -1, 5, 101, 234, 88
+    GROUPBOX "Tabele konwersji stron kodowych", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Ustawienia domyślne użytkownika", -1, 5, 193, 234, 30
-    CHECKBOX "Zastosuj ustawienia dla obecnego konta jak i dla profilu domyślnego.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Domyślne ustawienia konta użytkownika", -1, 5, 193, 234, 30
+    CHECKBOX "Zastosuj wszystkie ustawienia do bieżącego konta użytkownika i do domyślnego profilu użytkownika.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -73,23 +73,23 @@ BEGIN
     EDITTEXT IDC_NUMBERSPOSSAMPLE, 48, 19, 67, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Ujemne:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Symbol dziesiętny:", -1, 8, 67, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Symbol &dziesiętny:", -1, 8, 67, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Liczba cyfr &po symbolu dziesiętnym:", -1, 8, 83, 124, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Liczba cyfr po symbolu dziesiętnym:", -1, 8, 83, 124, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Symbol grupowania &cyfr:", -1, 8, 100, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Symbol grupowania cyfr:", -1, 8, 100, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDIGITGRSYM, 137, 97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Grupowanie cyfr:", -1, 8, 117, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDGROUPING, 137, 113, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Sy&mbol wartości ujemnych:", -1, 8, 134, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Sy&mbol znaku minus:", -1, 8, 134, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Format liczb ujemnych:", -1, 8, 149, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Wyświetlanie &zer wiodących:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Wyświetlanie zer wiodących:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Separator &listy:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Sep&arator listy:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "S&ystem miar:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Syst&em miar:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -103,15 +103,15 @@ BEGIN
     EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Ujemne:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Symbol waluty:", -1, 10, 51, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Symbol &waluty:", -1, 10, 51, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Format ilości dodatnich:", -1, 10, 68, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "F&ormat liczb dodatnich:", -1, 10, 68, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "F&ormat ilości ujemnych:", -1, 10, 85, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Format liczb ujemnych:", -1, 10, 85, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "S&ymbol dziesiętny:", -1, 10, 111, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Symbol &dziesiętny:", -1, 10, 111, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Liczba cyfr &po symbolu dziesiętnym:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Liczba cyfr po symbolu dziesiętnym:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Symbol grupowania &cyfr:", -1, 10, 156, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -127,13 +127,13 @@ BEGIN
     GROUPBOX "Przykład", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
     LTEXT "Przykład czasu:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Format czasu:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "F&ormat czasu:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Separator:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "S&eparator:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMESEPARATOR, 149, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "S&ymbol AM ""Przed Południem"":", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Symbol &AM ""Przed Południem"":", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEAMSYMBOL, 149, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Sy&mbol PM ""Po Południu"":", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Symbol &PM ""Po Południu"":", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
     LTEXT "Notacja formatu czasu\n\n\
@@ -148,7 +148,7 @@ CAPTION "Data"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Kalendarz", -1, 7, 7, 230, 74
-    LTEXT "Jeżeli rok zostanie zapisany w postaci dwóch cyfr, intepretuj go jako rok z przedziału:", -1, 13, 18, 215, 8
+    LTEXT "&Jeżeli wprowadzony zostanie rok w postaci dwóch cyfr, interpretuj go jako rok z zakresu od:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "do", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
@@ -188,7 +188,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "Dostosuj Ustawienia regionalne"
+    IDS_CUSTOMIZE_TITLE "Dostosuj opcje regionalne"
     IDS_SPAIN "Hiszpański (Hiszpania)"
     IDS_METRIC "Metryczne"
     IDS_IMPERIAL "Imperialne"
@@ -196,21 +196,21 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Ustawienia regionalne"
+    IDS_CPLNAME "Opcje regionalne i językowe"
     IDS_CPLDESCRIPTION "Ustawienia języków oraz formaty liczb, walut, daty i czasu."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR "Error"
-    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
-    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
-    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
-    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
-    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
-    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
-    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
-    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
-    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+    IDS_ERROR "Błąd"
+    IDS_ERROR_SYMBOL_SEPARATE "Separator krótkiej daty zawiera nieprawidłowy symbol"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Format daty krótkiej zawiera nieprawidłowe symbole"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Format daty długiej zawiera nieprawidłowe symbole"
+    IDS_ERROR_OEM_CODE_PAGE "Wystąpił problem podczas czytania strony kodowej OEM"
+    IDS_ERROR_ANSI_CODE_PAGE "Wystąpił problem podczas czytania strony kodowej ANSI"
+    IDS_ERROR_INT_KEY_REG "Problem z otwarciem klucza: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Problem z otwarciem klucza: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Problem z otwarciem klucza: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Problem z otwarciem klucza: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Nie można uruchomić input.dll"
 END

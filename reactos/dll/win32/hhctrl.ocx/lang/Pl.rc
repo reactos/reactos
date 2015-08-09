@@ -29,8 +29,8 @@ BEGIN
     IDS_SEARCH       "&Wyszukaj"
     IDS_FAVORITES    "&Ulubione"
 
-    IDS_HIDETABS     "Hide &Tabs"
-    IDS_SHOWTABS     "Show &Tabs"
+    IDS_HIDETABS     "Ukryj &zakładki"
+    IDS_SHOWTABS     "Pokaż z&akładki"
 END
 
 STRINGTABLE
@@ -52,13 +52,13 @@ MENU_POPUP MENU
     POPUP "" /* Options */
     {
         MENUITEM "", IDTB_EXPAND
-        MENUITEM "S&ync", IDTB_SYNC
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
-        MENUITEM "&Home", IDTB_HOME
-        MENUITEM "&Stop", IDTB_STOP
-        MENUITEM "&Refresh", IDTB_REFRESH
-        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "S&ynchronizuj", IDTB_SYNC
+        MENUITEM "&Wstecz", IDTB_BACK
+        MENUITEM "&Naprzód", IDTB_FORWARD
+        MENUITEM "&Strona domowa", IDTB_HOME
+        MENUITEM "&Zatrzymaj", IDTB_STOP
+        MENUITEM "&Odśwież", IDTB_REFRESH
+        MENUITEM "&Drukuj...", IDTB_PRINT
     }
 }
 
@@ -66,24 +66,24 @@ MENU_WEBBROWSER MENU
 {
     POPUP ""
     {
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Wstecz", IDTB_BACK
+        MENUITEM "&Naprzód", IDTB_FORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Zaznacz wszystko", MIID_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM "&Pokaż źródło", MIID_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "&Print...", IDTB_PRINT
-        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Drukuj...", IDTB_PRINT
+        MENUITEM "&Odśwież", IDTB_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Proper&ties", MIID_PROPERTIES
+        MENUITEM "Właś&ciwości", MIID_PROPERTIES
     }
     POPUP ""
     {
-        MENUITEM "Cu&t", MIID_CUT
-        MENUITEM "&Copy", MIID_COPY
-        MENUITEM "Paste", MIID_PASTE
-        MENUITEM "Select &All", MIID_SELECTALL
-        MENUITEM "&Print", IDTB_PRINT
+        MENUITEM "Wy&tnij", MIID_CUT
+        MENUITEM "&Kopiuj", MIID_COPY
+        MENUITEM "Wklej", MIID_PASTE
+        MENUITEM "&Zaznacz wszystko", MIID_SELECTALL
+        MENUITEM "&Drukuj", IDTB_PRINT
     }
 }

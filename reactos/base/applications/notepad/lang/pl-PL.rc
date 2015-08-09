@@ -23,12 +23,12 @@ BEGIN
     POPUP "&Plik"
     BEGIN
         MENUITEM "&Nowy\tCtrl+N", CMD_NEW
-        MENUITEM "&Otwórz\tCtrl+O", CMD_OPEN
-        MENUITEM "&Zapisz\tCtrl+S", CMD_SAVE
+        MENUITEM "&Otwórz...\tCtrl+O", CMD_OPEN
+        MENUITEM "Zapi&sz\tCtrl+S", CMD_SAVE
         MENUITEM "Z&apisz jako...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Ustawienia strony...", CMD_PAGE_SETUP
-        MENUITEM "&Drukuj\tCtrl+P", CMD_PRINT
+        MENUITEM "&Drukuj...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Zakoń&cz", CMD_EXIT
     END
@@ -43,20 +43,20 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Znajdź\tCtrl+F", CMD_SEARCH
         MENUITEM "Z&najdź następny\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Zamień\tCtrl+H", CMD_REPLACE
-        MENUITEM "Idź do...\tCtrl+G", CMD_GOTO
+        MENUITEM "Za&mień...\tCtrl+H", CMD_REPLACE
+        MENUITEM "Przejdź d&o...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Zaznacz w&szystko\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "Godzina/&Data\tF5", CMD_TIME_DATE
+        MENUITEM "Godzina/&data\tF5", CMD_TIME_DATE
     END
-    POPUP "F&ormat"
+    POPUP "For&mat"
     BEGIN
         MENUITEM "&Zawijanie wierszy", CMD_WRAP
-        MENUITEM "Czci&onka...", CMD_FONT
+        MENUITEM "&Czcionka...", CMD_FONT
     END
-    POPUP "P&odgląd"
+    POPUP "&Widok"
     BEGIN
-        MENUITEM "Pasek &stanu", CMD_STATUSBAR
+        MENUITEM "&Pasek stanu", CMD_STATUSBAR
     END
     POPUP "Pomo&c"
     BEGIN
@@ -73,16 +73,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
 CAPTION "Page Setup"
 BEGIN
-    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "Podgląd", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
-    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    GROUPBOX "Papier", grp2, 8, 6, 224, 56, BS_GROUPBOX
     LTEXT "&Size:", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Tray:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    GROUPBOX "Orientacja", grp1, 8, 66, 64, 56, BS_GROUPBOX
     AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
     AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
     GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
@@ -98,9 +98,9 @@ BEGIN
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Footer:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
+    PUSHBUTTON "Pomoc", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 254, 170, 50, 14
     PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
 END
 
@@ -175,5 +175,5 @@ BEGIN
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Linia %d, kolumna %d"
-    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+    STRING_PRINTERROR "Nie można wydrukować pliku '%s'.\n\nUpewnij się, że drukarka jest włączona i poprawnie skonfigurowana."
 END

@@ -11,11 +11,11 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "Pl&ik"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Nowa\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Pomoc"
+    POPUP "Pomo&c"
     BEGIN
         MENUITEM "Konsola Zarządzania ReactOS - i&nformacje...", IDM_HELP_ABOUT
     END
@@ -25,15 +25,15 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "Pl&ik"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Nowa\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Windows"
+    POPUP "&Okno"
     BEGIN
-        MENUITEM "List", IDM_WINDOWS_LIST
+        MENUITEM "Lista", IDM_WINDOWS_LIST
     END
-    POPUP "&Pomoc"
+    POPUP "Pomo&c"
     BEGIN
         MENUITEM "Konsola Zarządzania ReactOS - i&nformacje...", IDM_HELP_ABOUT
     END

@@ -1,3 +1,7 @@
+/*
+ *      Updated by Saibamen (July, 2015)
+ */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 MENU_001 MENU
@@ -44,18 +48,18 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Cofnij\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "Wy&tnij\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Kopiuj\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "Wkl&ej\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Wklej &skrót", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Kopiuj &do folderu...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "P&rzenieś do folderu...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "Z&aznacz wszystko\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Odwróć zaznaczenie", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -153,7 +157,7 @@ END
 
 IDD_RUN DIALOGEX 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Run"
+CAPTION "Uruchamianie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_RUN, IDC_STATIC, 7, 11, 18, 20, WS_VISIBLE
@@ -221,7 +225,7 @@ BEGIN
     EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Rozmiar:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "Rozmiar na dysku:", 140101, 8, 88, 60, 10
     EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Zawiera:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -255,14 +259,14 @@ BEGIN
     EDITTEXT 14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Rozmiar:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
+    LTEXT "Rozmiar na dysku:", 140112, 8, 107, 60, 10
     EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Utworzony:", 14014, 8, 131, 45, 10
     EDITTEXT 14015, 68, 131, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Zmodyfikowany:", 14016, 8, 147, 45, 10
+    LTEXT "Zmodyfikowany:", 14016, 8, 147, 60, 10
     EDITTEXT 14017, 68, 147, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Ostatnio użyty:", 14018, 8, 163, 45, 10
+    LTEXT "Ostatnio użyty:", 14018, 8, 163, 60, 10
     EDITTEXT 14019, 68, 163, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atrybuty:", 14020, 8, 189, 45, 10
@@ -537,7 +541,7 @@ BEGIN
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Zawsze wykonuj wybraną czynność.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 185, 60, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 160, 185, 60, 14
 END
 
 IDD_AUTOPLAY2 DIALOGEX 0, 0, 227, 181
@@ -619,16 +623,16 @@ END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "Uwaga"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    LTEXT "Plik ten może być używany przez system operacyjny lub przez\n\
+inną aplikację. Modyfikacja tego pliku może spowodować uszkodzenie twojego\n\
+systemu lub uczynić go mniej funkcjonalnym.\n\n\
+Czy na pewno chcesz otworzyć ten plik?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Tak", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "Nie", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -650,8 +654,8 @@ BEGIN
     IDS_SHV_COLUMN_DELFROM "Lokalizacja oryginalna"
     IDS_SHV_COLUMN_DELDATE "Data usunięcia"
     IDS_SHV_COLUMN_FONTTYPE "Czcionka"
-    IDS_SHV_COLUMN_WORKGROUP "Grupa Robocza"
-    IDS_SHV_NETWORKLOCATION "Lokalizacja Sieciowa"
+    IDS_SHV_COLUMN_WORKGROUP "Grupa robocza"
+    IDS_SHV_NETWORKLOCATION "Lokalizacja sieciowa"
     IDS_SHV_COLUMN_DOCUMENTS "Dokumenty"
     IDS_SHV_COLUMN_STATUS "Stan"
     IDS_SHV_COLUMN_COMMENTS "Komentarze"
@@ -662,8 +666,8 @@ BEGIN
     IDS_DESKTOP "Pulpit"
     IDS_MYCOMPUTER "Mój komputer"
     IDS_RECYCLEBIN_FOLDER_NAME "Kosz"
-    IDS_CONTROLPANEL "Panel Sterowania"
-    IDS_ADMINISTRATIVETOOLS "Narzędzia Administracyjne"
+    IDS_CONTROLPANEL "Panel sterowania"
+    IDS_ADMINISTRATIVETOOLS "Narzędzia administracyjne"
 
     /* context menus */
     IDS_VIEW_LARGE "&Duże Ikony"
@@ -697,11 +701,11 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Potwierdź zastąpienie pliku"
     IDS_OVERWRITEFOLDER_TEXT "Ten folder zawiera już katalog o nazwie '%1'.\n\nJeżeli w docelowym folderze wystąpią pliki o takich samych nazwach jak\nw wybranym folderze, to zostaną one zastąpione. Czy chcesz mimo to przenieść\nlub skopiować folder?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_COPYING "Kopiowanie..."
+    IDS_FILEOOP_MOVING "Przenoszenie..."
+    IDS_FILEOOP_DELETING "Usuwanie..."
+    IDS_FILEOOP_FROM_TO "Z %1 do %2"
+    IDS_FILEOOP_FROM "Z %1"
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
@@ -751,11 +755,11 @@ BEGIN
     IDS_NEWFOLDER "Nowy katalog"
 
     IDS_DRIVE_FIXED "Dysk lokalny"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "Stacja dysków CD"
     IDS_DRIVE_NETWORK "Dysk sieciowy"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_FLOPPY "Stacja dyskietek 3.5"
+    IDS_DRIVE_REMOVABLE "Dysk wymienny"
+    IDS_FS_UNKNOWN "Nieznany"
 
     /* Open With */
     IDS_OPEN_WITH "Otwórz za pomocą"
@@ -817,5 +821,5 @@ BEGIN
     IDS_UNKNOWN_APP "Nieznana aplikacja"
     IDS_EXE_DESCRIPTION "Opis:"
 
-    IDS_MENU_EMPTY "(Empty)"
+    IDS_MENU_EMPTY "(Puste)"
 END

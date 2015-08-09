@@ -41,7 +41,7 @@ MAIN_MENU MENU
  POPUP "&Zakładka" {
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
+ POPUP "&Opcje" {
   MENUITEM "Historia",		MNID_OPTS_HISTORY
   POPUP    "Czcionki"
   BEGIN

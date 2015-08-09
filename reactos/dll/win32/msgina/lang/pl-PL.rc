@@ -56,7 +56,7 @@ BEGIN
     LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
     LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
     CTEXT "Co chcesz teraz zrobić?", IDC_STATIC, 10, 119, 255, 8
-    PUSHBUTTON "Blokada komputera", IDC_LOCK, 10, 135, 70, 14
+    PUSHBUTTON "Zablokuj komputer", IDC_LOCK, 10, 135, 76, 14
     PUSHBUTTON "Wyloguj", IDC_LOGOFF, 90, 135, 70, 14
     PUSHBUTTON "Wyłącz", IDC_SHUTDOWN, 170, 135, 70, 14
     PUSHBUTTON "Zmień hasło", IDC_CHANGEPWD, 10, 154, 76, 14
@@ -71,7 +71,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "Ten komputer jest w użyciu i został zablokowany.", IDC_STATIC, 37, 61, 231, 8
+    LTEXT "Ten komputer jest używany i został zablokowany.", IDC_STATIC, 37, 61, 231, 8
     LTEXT "Wiadomość", IDC_LOCKMSG, 37, 75, 231, 26
     LTEXT "Naciśnij Ctrl-Alt-Del aby odblokować ten komputer.", IDC_STATIC, 37, 106, 231, 8
 END
@@ -83,7 +83,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "Ten komputer jest w użyciu i został zablokowany.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "Ten komputer jest używany i został zablokowany.", IDC_STATIC, 36, 61, 232, 8
     LTEXT "Wiadomość", IDC_LOCKMSG, 36, 75, 232, 26
     LTEXT "Nazwa użytkownika:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL

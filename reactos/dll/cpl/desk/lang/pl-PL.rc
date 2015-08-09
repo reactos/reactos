@@ -75,20 +75,20 @@ BEGIN
     LTEXT "&Element", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Rozmiar", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
+    LTEXT "&Rozmiar:", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "Ko&lor 1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT "Ko&lor 1:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Kolor &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT "Kolor &2:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
     LTEXT "&Czcionka", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Roz&miar", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "Roz&miar:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "Kol&or", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
+    LTEXT "K&olor:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
     AUTOCHECKBOX "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
@@ -102,21 +102,21 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efekty"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Użyj następującego efektu przejścia dla menu i etykiet narzędzi",
+    CONTROL "&Użyj następującego efektu przejścia dla menu i etykiet narzędzi:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Uż&yj następującej metody wygładzania krawędzi czcionek ekranowych", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "Użyj n&astępującej metody wygładzania krawędzi czcionek ekranowych:", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    CONTROL "Uży&j dużych ikon", IDC_EFFAPPEARANCE_LARGEICONS, "button",
+    CONTROL "Użyj &dużych ikon", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "Pok&aż cienie pod menu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
+    CONTROL "&Pokaż cienie pod menu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
-    CONTROL "Pokaż za&wartość okna podczas przeciągania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "Pokaż &zawartość okna podczas przeciągania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "U&kryj podkreślenie liter do nawigacji klawiaturą o ile klawisz Alt nie jest wciśnięty",
+    CONTROL "Ukryj podkreślenie liter do nawigacji &klawiaturą, dopóki nie nacisnę klawisza Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     PUSHBUTTON "Anuluj", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
@@ -156,7 +156,7 @@ BEGIN
     LTEXT "Niektóre programy mogą działać niepoprawnie, jeśli po zmianie ustawień ekranu nie zrestartujesz systemu.\r\n\nPo zmianie ustawień ekranu", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Zrestartuj system przed wprowadzeniem zmian.", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "Zastosuj nowe ustawienia ekranu bez restartu systemu.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Zapytaj mnie przed wprowadzeniem zmian w ustawieniach ekranu.", IDC_ASKME_RB, 14, 146, 228, 10
+    AUTORADIOBUTTON "Pytaj przed zastosowaniem nowych ustawień ekranu.", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDR_PREVIEW_MENU MENU

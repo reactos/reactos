@@ -129,7 +129,7 @@ BEGIN
     IDS_OWNERSUBTITLE "Program konfiguracyjny wykorzysta te informacje, aby spersonalizować system."
     IDS_COMPUTERTITLE "Nazwa komputera i hasło administratora"
     IDS_COMPUTERSUBTITLE "Musisz podać nazwę swojego komputera a także hasło administratora."
-    IDS_LOCALETITLE "Ustawienia regionalne"
+    IDS_LOCALETITLE "Opcje regionalne i językowe"
     IDS_LOCALESUBTITLE "Możesz ustawić ReactOS pod kątem języka i sposobu wyświetlania danych."
     IDS_DATETIMETITLE "Data i czas"
     IDS_DATETIMESUBTITLE "Ustaw prawidłową datę i czas."

@@ -124,7 +124,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 5100, -1, 9, 7, 20, 20
     LTEXT "Próba komunikacji z modemem. To może zająć wiele sekund.", -1, 42, 7, 146, 28
-    DEFPUSHBUTTON "Cancel", 2, 72, 52, 50, 14
+    DEFPUSHBUTTON "Anuluj", 2, 72, 52, 50, 14
 END
 
 IDD_GENERAL_2 DIALOGEX 0, 0, 238, 210
@@ -227,7 +227,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Proszę czekać..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Stop", 2, 74, 53, 50, 14
+    DEFPUSHBUTTON "&Zatrzymaj", 2, 74, 53, 50, 14
     ICON 5100, -1, 9, 7, 20, 20
     LTEXT "Usuwanie", -1, 40, 8, 151, 8
     LTEXT "Modemu", 1005, 40, 16, 151, 25
