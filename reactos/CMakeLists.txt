@@ -11,6 +11,11 @@ if(POLICY CMP0026)
     cmake_policy(SET CMP0026 OLD)
 endif()
 
+if(POLICY CMP0051)
+    # List TARGET_OBJECTS in SOURCES target property
+    cmake_policy(SET CMP0051 NEW)
+endif()
+
 project(REACTOS)
 
 # Versioning
