@@ -112,6 +112,7 @@ typedef struct _DISKENTRY
 
     ULARGE_INTEGER SectorCount;
     ULONG SectorAlignment;
+    ULONG CylinderAlignment;
 
     BOOLEAN BiosFound;
     ULONG BiosDiskNumber;

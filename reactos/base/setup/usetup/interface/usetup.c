@@ -1663,6 +1663,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 return SELECT_PARTITION_PAGE;
             }
 
+            if (PartitionList->CurrentPartition->BootIndicator)
+                return CONFIRM_DELETE_SYSTEM_PARTITION_PAGE;
+
             return DELETE_PARTITION_PAGE;
         }
     }
@@ -2229,6 +2232,39 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     }
 
     return CREATE_LOGICAL_PARTITION_PAGE;
+}
+
+
+static PAGE_NUMBER
+ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
+{
+    MUIDisplayPage(CONFIRM_DELETE_SYSTEM_PARTITION_PAGE);
+
+    while (TRUE)
+    {
+        CONSOLE_ConInKey(Ir);
+
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+        {
+            if (ConfirmQuit(Ir) == TRUE)
+            {
+                return QUIT_PAGE;
+            }
+
+            break;
+        }
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
+        {
+            return DELETE_PARTITION_PAGE;
+        }
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
+        {
+            return SELECT_PARTITION_PAGE;
+        }
+    }
+
+    return SELECT_PARTITION_PAGE;
 }
 
 
@@ -4415,6 +4451,10 @@ RunUSetup(VOID)
 
             case CREATE_LOGICAL_PARTITION_PAGE:
                 Page = CreateLogicalPartitionPage(&Ir);
+                break;
+
+            case CONFIRM_DELETE_SYSTEM_PARTITION_PAGE:
+                Page = ConfirmDeleteSystemPartitionPage(&Ir);
                 break;
 
             case DELETE_PARTITION_PAGE:
