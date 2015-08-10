@@ -93,7 +93,11 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
         pdbi->ptActual.y = 22;
     }
     if (pdbi->dwMask & DBIM_TITLE)
-        wcscpy(pdbi->wszTitle, L"Address");
+    {
+        if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL, pdbi->wszTitle, _countof(pdbi->wszTitle)))
+            return E_FAIL;
+    }
+
     if (pdbi->dwMask & DBIM_MODEFLAGS)
         pdbi->dwModeFlags = DBIMF_UNDELETEABLE;
     if (pdbi->dwMask & DBIM_BKCOLOR)
