@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Audacity
@@ -18,3 +19,6 @@ Description = Freie, quelloffene Cross-Plattform Software zur Aufnahme und Bearb
 [Section.041f]
 Description = Sesleri kaydetme ve düzenleme için özgür, açık kaynak ve çapraz platform yazılımdır.
 Size = 24,0 MB
+
+[Section.0804]
+Description = 免费、 开源的、 跨平台软件的录制和编辑声音。

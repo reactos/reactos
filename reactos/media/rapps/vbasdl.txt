@@ -1,5 +1,6 @@
 ; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = VisualBoyAdvance (SDL version)
@@ -19,3 +20,6 @@ Description = Ein Gameboy und Gameboy Advance System Emulator. Ein Werkzeug wie 
 Name = VisualBoyAdvance (SDL sürümü)
 Description = Gameboy ve GameboyAdvance dizgeleri için bir öykünücü. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 438 KB
+
+[Section.0804]
+Description = 一个 Gameboy 和 GameboyAdvance 系统的模拟器。你将需要一个 ZIP 减压程序来运行它。

@@ -1,0 +1,19 @@
+; UTF-8
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = Pidgin
+Version = 2.10.11
+License = GPLv2
+Description = An instant messaging program which lets you log in to accounts on multiple chat networks simultaneously.
+Size = 9.22 MB
+Category = 5
+URLSite = https://pidgin.im/
+URLDownload = http://downloads.sourceforge.net/project/pidgin/Pidgin/2.10.11/pidgin-2.10.11.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein instant messaging-Programm, welches läßt Sie zu Konten auf mehreren Chat-Netzwerken gleichzeitig anmelden.
+
+[Section.0804]
+Description = 该对话框允许您登录到帐户多个聊天网络上同时即时消息程序。

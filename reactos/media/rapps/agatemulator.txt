@@ -1,5 +1,6 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Agat Emulator
@@ -19,3 +20,6 @@ Description = Apple ][ und Agat 7/9 Emulator für Win32.
 Name = Agat Öykünücü
 Description = Win32 için Apple ][ ve Agat 7/9 yazılım benzetim izlencesi.
 Size = 6,06 MB
+
+[Section.0804]
+Description = 苹果][和 Win32 的 Agat 7/9 软件仿真程序。

@@ -1,4 +1,5 @@
 ; UTF-8
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Watercolor
@@ -13,3 +14,6 @@ CDPath = none
 
 [Section.0407]
 Description = Ein Windows Design basierend auf dem Aussehenvon Windows Codename Whistler.
+
+[Section.0804]
+Description = 基于 Windows 代号 Whistler 的外观的 Windows 主题。

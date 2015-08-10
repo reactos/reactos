@@ -1,21 +1,23 @@
 ; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = UltraISO
 Version = 9.6.5.3237
 License = Trial verison
-Description = An ISO CD/DVD image file creating/editing/converting tool and a bootable CD/DVD maker. It can directly edit the CD/DVD image file and extract files and folders from it, as well as directly make ISO files from your CD/DVD-ROM or hard disk.
+Description = An ISO CD/DVD image file creating/editing/converting tool and a bootable CD/DVD maker, it can directly edit the CD/DVD image file and extract files and folders from it, as well as directly make ISO files from your CD/DVD-ROM or hard disk.
 Size = 4.19 MB
 Category = 12
 URLSite = https://www.ezbsystems.com/ultraiso/
 URLDownload = http://dw.ezbsys.net/uiso9_pe.exe
 CDPath = none
 
-[Section.0407]
-Description = Ein ISO-CD/DVD-Image-Datei Erstellungs/Bearbeitungs/Konvertierungs-Tool und ein Boot-CD/DVD-Ersteller. Es kann direkt die CD/DVD-Image-Datei bearbeiten und Dateien und Ordner extrahieren, als auch direkt ISO-Dateien von Ihrer CD/DVD-ROM oder Festplatte erstellen.
-
 [Section.041f]
 License = Deneme sürümü
 Description = CD/DVD kalıp kütüğünü doğrudan düzenleyebilmekle ve ondan kütükleri ve dizinleri çıkartabilmekle birlikte CD/DVD-ROM diskinizden ya da sâbit diskinizden doğrudan ISO kütükleri oluşturabilen bir ISO CD/DVD kalıp kütüğü oluşturma, düzenleme, dönüştürme uygulaması ve bir ön yüklenebilir CD/DVD oluşturucusudur.
 Size = 4,19 MB
+
+[Section.0804]
+License = 试用版本
+Description = UltraISO 是一种 ISO CD/DVD 图像文件创建/编辑/转换工具和一个可启动的 CD/DVD 制造商，它可以直接编辑的 CD/DVD 图像文件和提取的文件和文件夹，以及直接从您的 CD 的 DVD-ROM 或硬盘使 ISO 文件。

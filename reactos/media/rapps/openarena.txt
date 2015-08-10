@@ -1,0 +1,23 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = OpenArena
+Version = 0.8.8
+License = GPL
+Description = A community-produced deathmatch FPS game based on GPL idTech3 technology. You will need a ZIP decompression program to run it.
+Size = 405 MB
+Category = 4
+URLSite = http://www.openarena.ws/
+URLDownload = http://download.tuxfamily.org/openarena/rel/088/openarena-0.8.8.zip
+CDPath = none
+
+[Section.0407]
+Description = Ein Community-produziertes Deathmatch-FPS-Spiel basierend auf GPL idTech3 Technologie. Ein Werkzeug wie 7-Zip ist zum extrahieren notwendig.
+
+[Section.041f]
+Description = GPL idTech3 uygulayım bilimi tabanlı, topluluk üretimi, ölüm karşılaşmalı bir FPS oyunudur. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.
+
+[Section.0804]
+Description = OpenArena是基于 GPL idTech3 技术社区产生死亡竞赛 FPS 游戏。你将需要一个 ZIP 减压程序来运行它。

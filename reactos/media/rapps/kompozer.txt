@@ -1,0 +1,24 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = KompoZer
+Version = 0.7.10
+License = MPL
+Description = A complete web authoring system that combines web file management and easy-to-use WYSIWYG web page editing. You will need a ZIP decompression program to run it.
+Size = 7.58 MB
+Category = 5
+URLSite = http://www.kompozer.net/
+URLDownload = http://downloads.sourceforge.net/project/kompozer/current/0.7.10/kompozer-0.7.10-win32.zip
+CDPath = none
+
+[Section.0407]
+Description = Ein vollständiges Web-Authoring-System, welches Web-Datei-Management und leicht zu bedienende WYSIWYG Web-Seite Bearbeitung verbindet. Ein Werkzeug wie 7-Zip ist zum extrahieren notwendig.
+
+[Section.041f]
+Description = Umûmî Ağ kütük yönetimiyle kullanımı kolay WYSIWYG Umûmî Ağ sayfası düzenlemesini birleştiren eksiksiz bir Umûmî Ağ yazarlık dizgesidir. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.
+Size = 7,58 MB
+
+[Section.0804]
+Description = KompoZer 是一个完整的网站创作结合网站文件管理和容易使用所见即所得的网站页面编辑的系统。你将需要一个 ZIP 减压程序来运行它。
