@@ -514,7 +514,7 @@ ImageView_InitControls(HWND hwnd)
 
     if (shiSettings.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
 
-    hDispWnd = CreateWindowEx(0, _T("STATIC"), _T(""),
+    hDispWnd = CreateWindowEx(0, WC_STATIC, _T(""),
                               WS_CHILD | WS_VISIBLE,
                               0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
@@ -534,6 +534,20 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             ImageView_InitControls(hwnd);
             return 0L;
         }
+
+        case WM_KEYDOWN:
+            switch (LOWORD(wParam))
+            {
+                case VK_LEFT:
+                    PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PREV, BN_CLICKED), (LPARAM)NULL);
+                    break;
+
+                case VK_RIGHT:
+                    PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_NEXT, BN_CLICKED), (LPARAM)NULL);
+                    break;
+            }
+            break;
+
         case WM_COMMAND:
         {
             switch (wParam)
