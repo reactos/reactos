@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
@@ -8,7 +8,7 @@ Version = 1.7.2
 License = GPL
 Description = An emulator for Gameboy and GameboyAdvance systems. You will need a ZIP decompression program to run it.
 Size = 438 kB
-Category = 15
+Category = 4
 URLSite = http://sourceforge.net/projects/vba/
 URLDownload = http://cznic.dl.sourceforge.net/project/vba/VisualBoyAdvance/1.7.2/VisualBoyAdvance-1.7.2-SDL-Win32.zip
 CDPath = none

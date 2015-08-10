@@ -1,16 +1,16 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Java SE Runtime Environment 7
-Version = 7u76
+Version = 7u80
 License = Oracle Binary Code License
 Description = Do you want to run Java programs? If so, download the Java Runtime Environment.
-Size = 28.1 MB
+Size = 28.14 MB
 Category = 14
 URLSite = http://www.oracle.com/technetwork/java/javase/downloads/jre7-downloads-1880261.html
-URLDownload = http://svn.reactos.org/packages/jre-7u76-windows-i586.exe
+URLDownload = http://svn.reactos.org/packages/jre-7u80-windows-i586.exe
 CDPath = none
 
 [Section.0407]
@@ -20,12 +20,12 @@ Description = Sie wollen Java Programme nutzen? Wenn ja, laden Sie die Java Runt
 Name = Java SE Yürütücü Ortamı 7
 License = Oracle İkili Kod Ruhsatı
 Description = Java izlencelerini çalıştırmak ister misiniz? Öyleyse Java Yürütücü Ortamı'nı indiriniz.
-Size = 28,1 MB
+Size = 28,14 MB
 
 [Section.0418]
 License = Licență Oracle pentru cod binar
 Description = Platformă necesară pentru aplicațiile Java.
-Size = 28,1 Mo
+Size = 28,14 Mo
 
 [Section.0804]
 License = Oracle 二进制代码许可
