@@ -984,8 +984,26 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 {
     BOOL rc = FALSE;
     BOOL docopy = TRUE;
+    WCHAR TempFile[MAX_PATH];
+    INT hSource, hTemp;
+    OFSTRUCT OfStruct;
+    WCHAR TempPath[MAX_PATH];
 
     TRACE("copy %s to %s style 0x%x\n",debugstr_w(source),debugstr_w(target),style);
+
+    hSource = LZOpenFileW((LPWSTR)source, &OfStruct, OF_READ);
+    if (hSource < 0)
+        return FALSE;
+
+    /* Get a temp file name */
+    GetTempPathW(sizeof(TempPath) / sizeof(WCHAR), TempPath);
+    GetTempFileNameW(TempPath, L"", 0, TempFile);
+
+    /* Extract the compressed file to a temp location */
+    hTemp = LZOpenFileW(TempFile, &OfStruct, OF_CREATE);
+    LZCopy(hSource, hTemp);
+    LZClose(hSource);
+    LZClose(hTemp);
 
     /* before copy processing */
     if (style & SP_COPY_REPLACEONLY)
@@ -1010,9 +1028,9 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
          * we just basically unconditionally replace the builtin versions.
          */
         if ((GetFileAttributesW(target) != INVALID_FILE_ATTRIBUTES) &&
-            (GetFileAttributesW(source) != INVALID_FILE_ATTRIBUTES))
+            (GetFileAttributesW(TempFile) != INVALID_FILE_ATTRIBUTES))
         {
-            VersionSizeSource = GetFileVersionInfoSizeW((LPWSTR)source,&zero);
+            VersionSizeSource = GetFileVersionInfoSizeW(TempFile,&zero);
             VersionSizeTarget = GetFileVersionInfoSizeW((LPWSTR)target,&zero);
         }
 
@@ -1032,7 +1050,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
             VersionSource = HeapAlloc(GetProcessHeap(),0,VersionSizeSource);
             VersionTarget = HeapAlloc(GetProcessHeap(),0,VersionSizeTarget);
 
-            ret = GetFileVersionInfoW((LPWSTR)source,0,VersionSizeSource,VersionSource);
+            ret = GetFileVersionInfoW(TempFile,0,VersionSizeSource,VersionSource);
             if (ret)
               ret = GetFileVersionInfoW((LPWSTR)target, 0, VersionSizeTarget,
                     VersionTarget);
@@ -1107,7 +1125,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 
     if (docopy)
     {
-        rc = CopyFileW(source,target,FALSE);
+        rc = MoveFileExW(TempFile,target,MOVEFILE_REPLACE_EXISTING);
         TRACE("Did copy... rc was %i\n",rc);
     }
 

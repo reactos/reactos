@@ -41,6 +41,7 @@
 #include <setupapi.h>
 #include <softpub.h>
 #include <mscat.h>
+#include <lzexpand.h>
 #include <shlobj.h>
 #include <wine/unicode.h>
 #define NTOS_MODE_USER
