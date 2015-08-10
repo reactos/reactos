@@ -40,8 +40,8 @@ SockGetTdiName(
     PLIST_ENTRY	        Helpers;
     INT                 Status;
 
-    TRACE("AddressFamily %p, SocketType %p, Protocol %p, Group %u, Flags %lx, TransportName %wZ, HelperDllContext %p, HeplperDllData %p, Events %p\n",
-        AddressFamily, SocketType, Protocol, Group, Flags, TransportName, HelperDllContext, HelperDllData, Events);
+    TRACE("AddressFamily %p, SocketType %p, Protocol %p, Group %u, Flags %lx, HelperDllContext %p, HeplperDllData %p, Events %p\n",
+        AddressFamily, SocketType, Protocol, Group, Flags, HelperDllContext, HelperDllData, Events);
 
     /* Check in our Current Loaded Helpers */
     for (Helpers = SockHelpersListHead.Flink;
