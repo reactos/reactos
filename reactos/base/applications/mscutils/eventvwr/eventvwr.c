@@ -1112,7 +1112,7 @@ InitInstance(HINSTANCE hInstance,
     // Create the ImageList
     hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
                               GetSystemMetrics(SM_CYSMICON),
-                              ILC_MASK,
+                              ILC_COLOR32,
                               1,
                               1);
 
