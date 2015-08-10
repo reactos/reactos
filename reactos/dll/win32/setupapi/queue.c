@@ -459,6 +459,7 @@ BOOL WINAPI SetupQueueCopyIndirectA( PSP_FILE_COPY_PARAMS_A params )
     op->src_tag    = strdupAtoW( params->SourceTagfile );
     op->dst_path   = strdupAtoW( params->TargetDirectory );
     op->dst_file   = strdupAtoW( params->TargetFilename );
+    op->dst_sd     = NULL;
 
     /* some defaults */
     if (!op->src_file) op->src_file = op->dst_file;
@@ -632,6 +633,7 @@ BOOL WINAPI SetupQueueDeleteA( HSPFILEQ handle, PCSTR part1, PCSTR part2 )
     op->src_tag    = NULL;
     op->dst_path   = strdupAtoW( part1 );
     op->dst_file   = strdupAtoW( part2 );
+    op->dst_sd     = NULL;
     queue_file_op( &queue->delete_queue, op );
     return TRUE;
 }
@@ -654,6 +656,7 @@ BOOL WINAPI SetupQueueDeleteW( HSPFILEQ handle, PCWSTR part1, PCWSTR part2 )
     op->src_tag    = NULL;
     op->dst_path   = strdupW( part1 );
     op->dst_file   = strdupW( part2 );
+    op->dst_sd     = NULL;
     queue_file_op( &queue->delete_queue, op );
     return TRUE;
 }
@@ -677,6 +680,7 @@ BOOL WINAPI SetupQueueRenameA( HSPFILEQ handle, PCSTR SourcePath, PCSTR SourceFi
     op->src_tag    = NULL;
     op->dst_path   = strdupAtoW( TargetPath );
     op->dst_file   = strdupAtoW( TargetFilename );
+    op->dst_sd     = NULL;
     queue_file_op( &queue->rename_queue, op );
     return TRUE;
 }
@@ -700,6 +704,7 @@ BOOL WINAPI SetupQueueRenameW( HSPFILEQ handle, PCWSTR SourcePath, PCWSTR Source
     op->src_tag    = NULL;
     op->dst_path   = strdupW( TargetPath );
     op->dst_file   = strdupW( TargetFilename );
+    op->dst_sd     = NULL;
     queue_file_op( &queue->rename_queue, op );
     return TRUE;
 }
