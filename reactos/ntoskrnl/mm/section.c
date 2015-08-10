@@ -3612,7 +3612,7 @@ MmspPageAlignSegments
 }
 
 NTSTATUS
-ExeFmtpCreateImageSection(HANDLE FileHandle,
+ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
                           PMM_IMAGE_SECTION_OBJECT ImageSectionObject)
 {
     LARGE_INTEGER Offset;
@@ -3630,8 +3630,7 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
      */
     Offset.QuadPart = 0;
 
-    /* FIXME: use FileObject instead of FileHandle */
-    Status = ExeFmtpReadFile (FileHandle,
+    Status = ExeFmtpReadFile (FileObject,
                               &Offset,
                               PAGE_SIZE * 2,
                               &FileHeader,
@@ -3655,10 +3654,9 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
         RtlZeroMemory(ImageSectionObject, sizeof(*ImageSectionObject));
         Flags = 0;
 
-        /* FIXME: use FileObject instead of FileHandle */
         Status = ExeFmtpLoaders[i](FileHeader,
                                    FileHeaderSize,
-                                   FileHandle,
+                                   FileObject,
                                    ImageSectionObject,
                                    &Flags,
                                    ExeFmtpReadFile,
