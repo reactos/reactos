@@ -1,0 +1,17 @@
+; UTF-8
+
+[Section]
+Name = MkvToolnix
+Version = 3.1.0
+Licence = GPL
+Description = Set of tools for working with files mkv format.
+Size = 5.3 MB
+Category = 2
+URLSite = https://www.bunkus.org/
+URLDownload = https://www.bunkus.org/videotools/mkvtoolnix/win32/mkvtoolnix-unicode-3.1.0-setup.exe
+
+[Section.0407]
+Description = Sammlung von Werkzeugen zum Bearbeiten von MKV Dateien.
+
+[Section.0419]
+Description = Набор инструментов для работы с файлами формата mkv.

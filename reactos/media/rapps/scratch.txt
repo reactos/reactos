@@ -1,0 +1,17 @@
+; UTF-8
+
+[Section]
+Name = Scratch
+Version = 1.4
+Licence = GPL
+Description = Visual object-oriented programming enviroment for children.
+Size = 33.0 MB
+Category = 8
+URLSite = http://scratch.mit.edu/
+URLDownload = http://download.scratch.mit.edu/ScratchInstaller1.4.exe
+
+[Section.0407]
+Description = Visuelle objektorientierte Programmierumgebug für Kinder.
+
+[Section.0419]
+Description = Визуальная объектно-ориентированная среда программирования для детей.
