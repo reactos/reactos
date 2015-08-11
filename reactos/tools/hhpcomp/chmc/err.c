@@ -30,8 +30,8 @@ struct chmcErr
 };
 
 static struct chmcErr chmc_err = {
-	.code = CHMC_NOERR,
-	.msg[0] = '\0',
+	CHMC_NOERR,
+	'\0',
 };
 
 void chmcerr_clean(void) {

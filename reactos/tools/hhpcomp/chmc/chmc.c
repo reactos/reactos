@@ -30,10 +30,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#if !defined(__GNUC__) || defined(__MINGW32__)
-typedef int (*__compar_fn_t)(const void *, const void *);
-#endif
-
 #else
 #include <unistd.h>
 #endif
@@ -70,10 +66,6 @@ void chmc_pmgi_destroy(struct chmcPmgiChunkNode *node);
 void chmc_entries_free(struct chmcFile *chm);
 void chmc_entry_destroy(struct chmcTreeNode *node);
 int chmc_add_tree(struct chmcFile *chm, const char *dir);
-static int _add_tree_file( struct dir_tree_global *dtg,
-                           struct dir_tree_local *dtl );
-static int _add_tree_dir(struct dir_tree_global *dtg,
-                         struct dir_tree_local *dtl);
 struct chmcTreeNode *chmc_add_file(struct chmcFile *chm, const char *filename,
                                    UInt16 prefixlen, int sect_id, UChar *buf,
                                    UInt64 len);
@@ -92,7 +84,7 @@ int chmc_reset_table_done(struct chmcFile *chm);
 void chmc_pmgl_done(struct chmcFile *chm);
 
 void chmc_entries_qsort(struct chmcFile *chm);
-static int _entry_cmp(struct chmcTreeNode **pa, struct chmcTreeNode **pb);
+static int _entry_cmp(const void *pva, const void *pvb);
 
 struct chmcSection *chmc_section_lookup(struct chmcFile *chm, int id);
 
@@ -1209,12 +1201,14 @@ void chmc_entries_qsort(struct chmcFile *chm)
 	}
 
 	qsort(chm->sort_entries, chm->entries_num, sizeof(struct chmcTreeNode *),
-	      (__compar_fn_t) _entry_cmp);
+	      _entry_cmp);
 }
 
-static int _entry_cmp(struct chmcTreeNode **pa, struct chmcTreeNode **pb)
+static int _entry_cmp(const void *pva, const void *pvb)
 {
-	struct chmcTreeNode *a = *pa, *b = *pb;
+	const struct chmcTreeNode * const *pa = pva;
+	const struct chmcTreeNode * const *pb = pvb;
+	const struct chmcTreeNode *a = *pa, *b = *pb;
 
 	return strcmp( &a->name[a->prefixlen], &b->name[b->prefixlen] );
 }
