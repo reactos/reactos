@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
@@ -11,7 +11,7 @@ Description = A freeware utility to view, modify, rename, add, delete and extrac
 Size = 2.7 MB
 Category = 7
 URLSite = http://www.angusj.com/resourcehacker/
-URLDownload = http://www.angusj.com/resourcehacker/reshack_setup.exe
+URLDownload = http://www.angusj.com/resourcehacker/reshacker_setup.exe
 CDPath = none
 
 [Section.0407]
