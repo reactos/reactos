@@ -21,7 +21,12 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <unistd.h>
+#if defined(_WIN32)
+    #include <windows.h>  // for GetFullPathNameA 
+#else
+    #include <unistd.h>
+#endif
+
 #include <stdlib.h>
 
 using namespace std;
@@ -33,13 +38,23 @@ string to_upper(string s)
     return temp;
 }
 
-string realpath(const char* path)
+string real_path(const char* path)
 {
-    char* temp = realpath(path, NULL);
+    char* temp = NULL;
+    #if defined(_WIN32)
+        char temp2[MAX_PATH];
+        if (GetFullPathNameA(path, MAX_PATH, temp2, NULL)) {
+            temp = temp2;
+        }
+    #else
+        temp = realpath(path, NULL);
+    #endif
     if (temp == NULL)
         throw runtime_error("realpath failed");
     string result(temp);
-    free(temp);
+    #if !defined(_WIN32)
+        free(temp);
+    #endif
     return result;
 }
 

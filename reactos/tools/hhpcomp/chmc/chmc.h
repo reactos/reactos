@@ -27,6 +27,10 @@
 #include "chm.h"
 #include "list.h"
 
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
+
 #define CHMC_DIR_UUID \
 	"\x10\xfd\x01\x7c\xaa\x7b\xd0\x11\x9e\x0c\x00\xa0\xc9\x22\xe6\xec"
 #define CHMC_STREAM_UUID \
@@ -256,6 +260,6 @@ void chmc_sections_done(struct chmcFile *chm);
 void chmc_term(struct chmcFile *chm);
 int chmc_tree_done(struct chmcFile *chm);
 
-#define chmc_dump(fmt, args...) fprintf(stderr, fmt , ##args)
+#define chmc_dump(fmt, ...) fprintf(stderr, fmt , ## __VA_ARGS__)
 
 #endif /* CHMC_CHMC_H */

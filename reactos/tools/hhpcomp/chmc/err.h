@@ -22,13 +22,13 @@
 #define CHMC_ERR_H
 
 #include <stdio.h>
-#define chmcerr_printf(fmt,args...) fprintf (stderr, fmt , ##args)
+#define chmcerr_printf(fmt, ...) fprintf (stderr, fmt , ## __VA_ARGS__)
 
 #include <stdlib.h>
-#define BUG_ON(fmt, args...)	  \
+#define BUG_ON(fmt, ...)	  \
 	do { \
 		fprintf (stderr, "%s:%d: ", __FILE__, __LINE__); \
-		fprintf (stderr, fmt , ##args); \
+		fprintf (stderr, fmt , ## __VA_ARGS__); \
 		abort (); \
 	} while (0)
 
@@ -45,28 +45,28 @@ void chmcerr_clean(void);
 int chmcerr_code(void);
 const char *chmcerr_message(void);
 
-#define chmc_error(fmt, args...) fprintf (stdout, fmt , ##args)
+#define chmc_error(fmt, ...) fprintf (stdout, fmt , ## __VA_ARGS__)
 
-#define chmcerr_return_msg(fmt,args...)	  \
+#define chmcerr_return_msg(fmt,...)	  \
 	do { \
 		chmcerr_printf ( "%s: %d: ", __FILE__, __LINE__ ); \
 		chmcerr_printf ( "error %d: ", chmcerr_code () ); \
-		chmcerr_printf ( fmt , ##args ); \
+		chmcerr_printf ( fmt , ## __VA_ARGS__ ); \
 		chmcerr_printf ( ": %s\n", chmcerr_message () ); \
 		return chmcerr_code (); \
 	} while (0)
 
-#define chmcerr_msg(fmt,args...)	  \
+#define chmcerr_msg(fmt,...)	  \
 	do { \
 		chmcerr_printf ("%s: %d: ", __FILE__, __LINE__); \
 		chmcerr_printf ("error %d: ", chmcerr_code ()); \
-		chmcerr_printf (fmt , ##args ); \
+		chmcerr_printf (fmt , ## __VA_ARGS__ ); \
 		chmcerr_printf (": %s\n", chmcerr_message ()); \
 	} while (0)
 
-#define chmcerr_set_return(code,fmt,args...)	  \
+#define chmcerr_set_return(code,fmt,...)	  \
 	do { \
-		chmcerr_set ( (code), (fmt), ##args ); \
+		chmcerr_set ( (code), (fmt), ## __VA_ARGS__ ); \
 		return (code); \
 	} while (0)
 

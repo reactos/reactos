@@ -217,7 +217,7 @@ void hhp_reader::compute_unique_file_pathes_set()
 {
     for (list<string>::iterator it = files->filenames.begin(); it != files->filenames.end(); ++it)
     {
-        unique_file_pathes.insert(replace_backslashes(realpath(it->c_str())));
+        unique_file_pathes.insert(replace_backslashes(real_path(it->c_str())));
     }
 }
 

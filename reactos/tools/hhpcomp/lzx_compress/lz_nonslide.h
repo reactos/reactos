@@ -15,6 +15,11 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+#if defined(_WIN32)
+typedef unsigned char           u_char;
+#endif
+
 typedef struct lz_info lz_info;
 typedef int (*get_chars_t)(lz_info *lzi, int n, u_char *buf);
 typedef int (*output_match_t)(lz_info *lzi, int match_pos, int match_len);

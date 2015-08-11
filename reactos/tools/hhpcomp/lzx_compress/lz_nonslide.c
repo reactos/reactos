@@ -22,10 +22,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <strings.h>
-#ifdef DEBUG_PERF
-#include <sys/time.h>
-#include <sys/resource.h>
+#if defined(_WIN32)
+  #define WIN32_LEAN_AND_MEAN
+  #include <string.h>
+  #include <windows.h>
+#else
+  #include <strings.h>
+  #ifdef DEBUG_PERF
+    #include <sys/time.h>
+    #include <sys/resource.h>
+  #endif
 #endif
 #include "lz_nonslide.h"
 
@@ -132,7 +138,7 @@ int main(int argc, char *argv[])
 }
 #endif
 
-__inline__ int lz_left_to_process(lz_info *lzi)
+__inline int lz_left_to_process(lz_info *lzi)
 {
   return lzi->chars_in_buf - lzi->block_loc;
 }

@@ -19,6 +19,6 @@
 
 string to_upper(string s);
 
-string realpath(const char* path);
+string real_path(const char* path);
 
 string replace_backslashes(string s);

@@ -25,7 +25,19 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
+
+#if defined(_WIN32)
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#ifndef __GNUC__
+typedef int (*__compar_fn_t)(const void *, const void *);
+#endif
+
+#else
 #include <unistd.h>
+#endif
+
 #include "err.h"
 
 
@@ -277,7 +289,7 @@ struct chmcSection *chmc_section_create(struct chmcFile *chm,
 		else
 			strcat(section->filename, "chmcUXXXXXX");
 
-		section->fd = mkstemp(section->filename);
+		section->fd = mkstemps(section->filename, 0);
 		fprintf(stderr, "temp file: %s\n", section->filename);
 		if (section->fd < 0) {
 			chmcerr_set(errno, strerror(errno));
@@ -608,7 +620,7 @@ static inline void *chmc_syscat_mem(void *d, void *s, unsigned long len)
 {
 	memcpy(d, s, len);
 
-	return d + len;
+	return (char *)d + len;
 }
 
 static void *chmc_syscat_entry(Int16 code, void *d, void *s, Int16 len)
@@ -691,7 +703,7 @@ int chmc_system_done(struct chmcFile *chm)
 		val = 0;
 		p = chmc_syscat_entry(SIEC_INFOCHKSUM, p, &val, sizeof(val));
 
-		system->_size = p - sysp;
+		system->_size = (char *)p - (char *)sysp;
 		chmc_add_meta(chm, "/#SYSTEM", 0, sysp, system->_size);
 		return CHMC_NOERR;
 	}
@@ -973,7 +985,7 @@ static int _lzx_put_bytes(void *arg, int n, void *buf)
 {
 	struct chmcLzxInfo *lzx_info = (struct chmcLzxInfo *)arg;
 	struct chmcSect0 *sect0 = &lzx_info->chm->sect0;
-	ssize_t wx;
+	int wx;
 
 	wx = write(lzx_info->section->fd, buf, n);
 	sect0->file_len += wx;
@@ -1062,12 +1074,12 @@ static int _lzx_get_bytes(void *arg, int n, void *buf)
 
 		// read input
 		if (node->buf) {
-			memcpy(buf + (n - todo), &node->buf[lzx_info->fd_offset], toread);
+			memcpy((char *)buf + (n - todo), &node->buf[lzx_info->fd_offset], toread);
 			rx = toread;
 		}
 		else
 			{
-				rx = read(lzx_info->fd, buf + (n - todo), toread);
+				rx = read(lzx_info->fd, (char *)buf + (n - todo), toread);
 				if (rx <= 0) {
 					chmc_error("read error\n");
 					lzx_info->error = 2;
@@ -1149,7 +1161,7 @@ int chmc_reset_table_done(struct chmcFile *chm)
 	if (reset_table) {
 		memcpy(reset_table, &section->reset_table_header,
 		       _CHMC_LZXC_RESETTABLE_V1_LEN);
-		at = (void *)reset_table + _CHMC_LZXC_RESETTABLE_V1_LEN;
+		at = (void *)((char *)reset_table + _CHMC_LZXC_RESETTABLE_V1_LEN);
 
 		i = 0;
 		list_for_each(pos, &section->mark_list) {
@@ -1212,7 +1224,7 @@ int chmc_uncompressed_done(struct chmcFile *chm)
 	struct chmcSect0 *sect0 = &chm->sect0;
 	struct chmcTreeNode *node;
 	struct list_head *pos;
-	ssize_t wx;
+	int wx;
 
 	list_for_each(pos, &chm->entries_list) {
 		node = list_entry( pos, struct chmcTreeNode, list );
@@ -1312,8 +1324,8 @@ int chmc_pmgl_add_entry(struct chmcFile *chm, struct chmcTreeNode *entry)
 		p = (void *)&chunk->data[pmgl->data_len];
 
 		if (should_idx) {
-			idx = (void *)&chunk->data[CHMC_PMGL_DATA_LEN] - pmgl->index_len;
-			*idx = (void *)p - (void *)&chunk->data;
+			idx = (void *)((char *)&chunk->data[CHMC_PMGL_DATA_LEN] - pmgl->index_len);
+			*idx = (char *)p - (char *)&chunk->data;
 		}
 
 		p += chmc_encint(name_len, p);
@@ -1558,8 +1570,8 @@ int chmc_pmgi_add_entry(struct chmcFile *chm, const char *name, int pmgl_id)
 		p = (void *)&chunk->data[pmgi->data_len];
 
 		if (should_idx) {
-			idx = (void *)&chunk->data[CHMC_PMGI_DATA_LEN] - pmgi->index_len;
-			*idx = (void *)p - (void *)&chunk->data;
+			idx = (void *)((char *)&chunk->data[CHMC_PMGI_DATA_LEN] - pmgi->index_len);
+			*idx = (char *)p - (char *)&chunk->data;
 		}
 
 		p += chmc_encint(name_len, p);
@@ -1629,7 +1641,7 @@ int chmc_appendfile(struct chmcFile *chm, const char *filename, void *buf,
 	struct stat statbuf;
 	int in;
 	off_t todo, toread;
-	ssize_t rx;
+	int rx;
 
 	if (stat(filename, &statbuf) < 0)
 		return errno;
