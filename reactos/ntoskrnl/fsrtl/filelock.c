@@ -1010,7 +1010,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         // we looked, but can't guarantee that it won't just be re-queued
         // because somebody else snatched part of the range in a new thread.
         DPRINT("Locking another IRP %p for %p %wZ\n", 
-               &FileObject->FileName, FileLock, NextMatchingLockIrp);
+               NextMatchingLockIrp, FileLock, &FileObject->FileName);
         FsRtlProcessFileLock(InternalInfo->BelongsTo, NextMatchingLockIrp, NULL);
     }
     
