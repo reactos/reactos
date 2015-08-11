@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifndef __GNUC__
+#if !defined(__GNUC__) || defined(__MINGW32__)
 typedef int (*__compar_fn_t)(const void *, const void *);
 #endif
 
