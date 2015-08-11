@@ -95,7 +95,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
     if (pdbi->dwMask & DBIM_TITLE)
     {
         if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL, pdbi->wszTitle, _countof(pdbi->wszTitle)))
-            return E_FAIL;
+            return HRESULT_FROM_WIN32(GetLastError());
     }
 
     if (pdbi->dwMask & DBIM_MODEFLAGS)
