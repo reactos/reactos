@@ -288,7 +288,7 @@ WmipOpenGuidObjectByName(
     Status = WmipGUIDFromString(&GuidString, &Guid);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WMI: Invalid uuid format for guid '%wZ'\n", GuidString);
+        DPRINT1("WMI: Invalid uuid format for guid '%wZ'\n", &GuidString);
         return Status;
     }
 

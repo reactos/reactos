@@ -211,7 +211,7 @@ IntCopyRegistryKey(
         if (!NT_SUCCESS(Status))
         {
             /* Just warn, but continue with the remaining sub-keys */
-            WARN_(VIDEOPRT, "failed to set value '%wZ'.\n", NameString);
+            WARN_(VIDEOPRT, "failed to set value '%wZ'.\n", &NameString);
         }
 
         /* Next subkey */
