@@ -27,6 +27,7 @@
   #include <string.h>
   #include <windows.h>
 #else
+  #include <string.h>
   #include <strings.h>
   #ifdef DEBUG_PERF
     #include <sys/time.h>
