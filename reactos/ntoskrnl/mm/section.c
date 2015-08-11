@@ -3236,6 +3236,12 @@ ExeFmtpReadFile(IN PVOID File,
     BufferSize = Length + OffsetAdjustment;
     BufferSize = PAGE_ROUND_UP(BufferSize);
 
+    /* Flush data since we're about to perform a non-cached read */
+    CcFlushCache(FileObject->SectionObjectPointer,
+                 &FileOffset,
+                 BufferSize,
+                 &Iosb);
+
     /*
      * It's ok to use paged pool, because this is a temporary buffer only used in
      * the loading of executables. The assumption is that MmCreateSection is
@@ -3247,7 +3253,7 @@ ExeFmtpReadFile(IN PVOID File,
                                    'rXmM');
     if (!Buffer)
     {
-        KeBugCheck(MEMORY_MANAGEMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     UsedSize = 0;
