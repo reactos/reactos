@@ -994,7 +994,7 @@ static void _lzx_mark_frame(void *arg, uint32_t uncomp, uint32_t comp)
 	UInt64 compressed;
 
 	chmc_dump( "Aligned data at %d(in compressed stream, %d) (%lu/%lu)\n",
-	           uncomp, comp, lzx_info->done, lzx_info->todo );
+	           uncomp, comp, (unsigned long)lzx_info->done, (unsigned long)lzx_info->todo );
 
 	compressed = comp;
 
@@ -1497,7 +1497,7 @@ int chmc_pmgi_done(struct chmcFile *chm)
 			chmc_pmgi_add_entry(chm, name, i);
 		}
 		else
-			BUG_ON("name_len >= 255(%lu) %.*s\n", name_len, 255,
+			BUG_ON("name_len >= 255(%lu) %.*s\n", (unsigned long)name_len, 255,
 			       &pmgl->chunk.data[j]);
 		i++;
 	}
