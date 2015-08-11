@@ -283,7 +283,7 @@ set(baseaddress_wmi                  0x707e0000)
 set(baseaddress_ws2_32_new           0x70790000)
 set(baseaddress_wshirda              0x70760000)
 set(baseaddress_wshtcpip             0x70730000)
-set(baseaddress_wsock32              0x78700000)  # FIXME: hackfix for VLC player
+set(baseaddress_wsock32              0x70700000)
 set(baseaddress_wtsapi32             0x706d0000)
 set(baseaddress_wuapi                0x70690000)
 set(baseaddress_xinput1_1            0x70660000)
