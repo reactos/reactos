@@ -284,10 +284,21 @@ EngMultiByteToWideChar(
 
 VOID
 APIENTRY
-EngQueryLocalTime(OUT PENG_TIME_FIELDS ptf)
+EngQueryLocalTime(
+    _Out_ PENG_TIME_FIELDS ptf)
 {
-    // www.osr.com/ddk/graphics/gdifncs_389z.htm
-    UNIMPLEMENTED;
+    LARGE_INTEGER liSystemTime, liLocalTime;
+    NT_ASSERT(ptf != NULL);
+
+    /* Query the system time */
+    KeQuerySystemTime(&liSystemTime);
+
+    /* Convert it to local time */
+    ExSystemTimeToLocalTime(&liSystemTime, &liLocalTime);
+
+    /* Convert the local time into time fields
+       (note that ENG_TIME_FIELDS is identical to TIME_FIELDS) */
+    RtlTimeToTimeFields(&liLocalTime, (PTIME_FIELDS)ptf);
 }
 
 ULONG
