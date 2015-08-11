@@ -3,6 +3,7 @@
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test for NtMapViewOfSection
  * PROGRAMMERS:     Timo Kreuzer
+ *                  Thomas Faber
  */
 
 #include <apitest.h>
@@ -1073,7 +1074,281 @@ Test_BasedSection(void)
     ok(((ULONG_PTR)BaseAddress1 - (ULONG_PTR)BaseAddress2) == 0x10000,
        "Invalid addresses: BaseAddress1=%p, BaseAddress2=%p\n", BaseAddress1, BaseAddress2);
 #endif
+}
 
+#define BYTES4(x) x, x, x, x
+#define BYTES8(x) BYTES4(x), BYTES4(x)
+#define BYTES16(x) BYTES8(x), BYTES8(x)
+#define BYTES32(x) BYTES16(x), BYTES16(x)
+#define BYTES64(x) BYTES32(x), BYTES32(x)
+#define BYTES128(x) BYTES64(x), BYTES64(x)
+#define BYTES256(x) BYTES128(x), BYTES128(x)
+#define BYTES512(x) BYTES256(x), BYTES256(x)
+#define BYTES1024(x) BYTES512(x), BYTES512(x)
+
+static struct _MY_IMAGE_FILE
+{
+    IMAGE_DOS_HEADER doshdr;
+    WORD stub[32];
+    IMAGE_NT_HEADERS32 nthdrs;
+    IMAGE_SECTION_HEADER text_header;
+    IMAGE_SECTION_HEADER rossym_header;
+    IMAGE_SECTION_HEADER rsrc_header;
+    BYTE pad[16];
+    BYTE text_data[0x400];
+    BYTE rossym_data[0x400];
+    BYTE rsrc_data[0x400];
+} ImageFile =
+{
+    /* IMAGE_DOS_HEADER */
+    {
+        IMAGE_DOS_SIGNATURE, 144, 3, 0, 4, 0, 0xFFFF, 0, 0xB8, 0, 0, 0, 0x40,
+        0, { 0 }, 0, 0, { 0 }, 0x80
+    },
+    /* binary to print "This program cannot be run in DOS mode." */
+    {
+        0x1F0E, 0x0EBA, 0xB400, 0xCD09, 0xB821, 0x4C01, 0x21CD, 0x6854, 0x7369,
+        0x7020, 0x6F72, 0x7267, 0x6D61, 0x6320, 0x6E61, 0x6F6E, 0x2074, 0x6562,
+        0x7220, 0x6E75, 0x6920, 0x206E, 0x4F44, 0x2053, 0x6F6D, 0x6564, 0x0D2E,
+        0x0A0D, 0x0024, 0x0000, 0x0000, 0x0000
+    },
+    /* IMAGE_NT_HEADERS32 */
+    {
+        IMAGE_NT_SIGNATURE, /* Signature */
+        /* IMAGE_FILE_HEADER */
+        {
+            IMAGE_FILE_MACHINE_I386, /* Machine */
+            3, /* NumberOfSections */
+            0x47EFDF09, /* TimeDateStamp */
+            0, /* PointerToSymbolTable */
+            0, /* NumberOfSymbols */
+            0xE0, /* SizeOfOptionalHeader */
+            IMAGE_FILE_32BIT_MACHINE | IMAGE_FILE_LOCAL_SYMS_STRIPPED |
+            IMAGE_FILE_LINE_NUMS_STRIPPED | IMAGE_FILE_EXECUTABLE_IMAGE |
+            IMAGE_FILE_DLL, /* Characteristics */
+        },
+        /* IMAGE_OPTIONAL_HEADER32 */
+        {
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC, /* Magic */
+            8, /* MajorLinkerVersion */
+            0, /* MinorLinkerVersion */
+            0x400, /* SizeOfCode */
+            0x000, /* SizeOfInitializedData */
+            0, /* SizeOfUninitializedData */
+            0x2000, /* AddressOfEntryPoint */
+            0x2000, /* BaseOfCode */
+            0x0000, /* BaseOfData */
+            0x400000, /* ImageBase */
+            0x2000, /* SectionAlignment */
+            0x200, /* FileAlignment */
+            4, /* MajorOperatingSystemVersion */
+            0, /* MinorOperatingSystemVersion */
+            0, /* MajorImageVersion */
+            0, /* MinorImageVersion */
+            4, /* MajorSubsystemVersion */
+            0, /* MinorSubsystemVersion */
+            0, /* Win32VersionValue */
+            0x8000, /* SizeOfImage */
+            0x200, /* SizeOfHeaders */
+            0x0, /* CheckSum */
+            IMAGE_SUBSYSTEM_WINDOWS_CUI, /* Subsystem */
+            IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE |
+            IMAGE_DLLCHARACTERISTICS_NO_SEH |
+            IMAGE_DLLCHARACTERISTICS_NX_COMPAT, /* DllCharacteristics */
+            0x100000, /* SizeOfStackReserve */
+            0x1000, /* SizeOfStackCommit */
+            0x100000, /* SizeOfHeapReserve */
+            0x1000, /* SizeOfHeapCommit */
+            0, /* LoaderFlags */
+            0x10, /* NumberOfRvaAndSizes */
+            /* IMAGE_DATA_DIRECTORY */
+            {
+                { 0 }, /* Export Table */
+                { 0 }, /* Import Table */
+                { 0 }, /* Resource Table */
+                { 0 }, /* Exception Table */
+                { 0 }, /* Certificate Table */
+                { 0 }, /* Base Relocation Table */
+                { 0 }, /* Debug */
+                { 0 }, /* Copyright */
+                { 0 }, /* Global Ptr */
+                { 0 }, /* TLS Table */
+                { 0 }, /* Load Config Table */
+                { 0 }, /* Bound Import */
+                { 0 }, /* IAT */
+                { 0 }, /* Delay Import Descriptor */
+                { 0 }, /* CLI Header */
+                { 0 } /* Reserved */
+            }
+        }
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        ".text", /* Name */
+        { 0x394 }, /* Misc.VirtualSize */
+        0x2000, /* VirtualAddress */
+        0x400, /* SizeOfRawData */
+        0x200, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE |
+        IMAGE_SCN_CNT_CODE, /* Characteristics */
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        ".rossym", /* Name */
+        { 0x100 }, /* Misc.VirtualSize */
+        0x4000, /* VirtualAddress */
+        0x400, /* SizeOfRawData */
+        0x600, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        IMAGE_SCN_MEM_READ | IMAGE_SCN_TYPE_NOLOAD, /* Characteristics */
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        ".rsrc", /* Name */
+        { 0x100 }, /* Misc.VirtualSize */
+        0x6000, /* VirtualAddress */
+        0x400, /* SizeOfRawData */
+        0xA00, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ, /* Characteristics */
+    },
+    /* fill */
+    { 0 },
+    /* text */
+    { 0xc3, 0 },
+    /* rossym */
+    { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+      BYTES8(0xaa),
+      BYTES16(0xbb),
+      BYTES32(0xcc),
+      BYTES64(0xdd),
+      BYTES64(0xee),
+      BYTES64(0xff),
+    },
+    /* rsrc */
+    { 0 },
+};
+
+C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, text_data) == 0x200);
+C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, rossym_data) == 0x600);
+C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, rsrc_data) == 0xa00);
+
+static
+void
+Test_NoLoadSection(BOOL Relocate)
+{
+    NTSTATUS Status;
+    WCHAR TempPath[MAX_PATH];
+    WCHAR FileName[MAX_PATH];
+    HANDLE Handle;
+    HANDLE SectionHandle;
+    LARGE_INTEGER SectionOffset;
+    PVOID BaseAddress;
+    SIZE_T ViewSize;
+    ULONG Written;
+    ULONG Length;
+    BOOL Success;
+
+    Length = GetTempPathW(MAX_PATH, TempPath);
+    ok(Length != 0, "GetTempPathW failed with %lu\n", GetLastError());
+    Length = GetTempFileNameW(TempPath, L"nta", 0, FileName);
+    ok(Length != 0, "GetTempFileNameW failed with %lu\n", GetLastError());
+    Handle = CreateFileW(FileName,
+                         FILE_ALL_ACCESS,
+                         0,
+                         NULL,
+                         CREATE_ALWAYS,
+                         0,
+                         NULL);
+    if (Handle == INVALID_HANDLE_VALUE)
+    {
+        skip("Failed to create temp file %ls, error %lu\n", FileName, GetLastError());
+        return;
+    }
+    if (Relocate)
+    {
+        ok((ULONG_PTR)GetModuleHandle(NULL) <= 0x80000000, "Module at %p\n", GetModuleHandle(NULL));
+        ImageFile.nthdrs.OptionalHeader.ImageBase = (ULONG)(ULONG_PTR)GetModuleHandle(NULL);
+    }
+    else
+    {
+        ImageFile.nthdrs.OptionalHeader.ImageBase = 0xe400000;
+    }
+
+    Success = WriteFile(Handle,
+                        &ImageFile,
+                        sizeof(ImageFile),
+                        &Written,
+                        NULL);
+    ok(Success == TRUE, "WriteFile failed with %lu\n", GetLastError());
+    ok(Written == sizeof(ImageFile), "WriteFile wrote %lu bytes\n", Written);
+    
+    Status = NtCreateSection(&SectionHandle,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             NULL,
+                             PAGE_EXECUTE_READWRITE,
+                             SEC_IMAGE,
+                             Handle);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Map the section with  */
+        BaseAddress = NULL;
+        SectionOffset.QuadPart = 0;
+        ViewSize = 0;
+        Status = NtMapViewOfSection(SectionHandle,
+                                    NtCurrentProcess(),
+                                    &BaseAddress,
+                                    0,
+                                    0,
+                                    &SectionOffset,
+                                    &ViewSize,
+                                    ViewShare,
+                                    0,
+                                    PAGE_READWRITE);
+        if (Relocate)
+            ok_ntstatus(Status, STATUS_IMAGE_NOT_AT_BASE);
+        else
+            ok_ntstatus(Status, STATUS_SUCCESS);
+        if (NT_SUCCESS(Status))
+        {
+            PUCHAR Bytes = BaseAddress;
+#define TEST_BYTE(n, v) StartSeh() ok_hex(Bytes[n], v); EndSeh(STATUS_SUCCESS);
+            TEST_BYTE(0x2000, 0xc3);
+            TEST_BYTE(0x2001, 0x00);
+            TEST_BYTE(0x4000, 0x01);
+            TEST_BYTE(0x4001, 0x23);
+            TEST_BYTE(0x4007, 0xef);
+            TEST_BYTE(0x4008, 0xaa);
+            TEST_BYTE(0x4010, 0xbb);
+            TEST_BYTE(0x4020, 0xcc);
+            TEST_BYTE(0x4040, 0xdd);
+            TEST_BYTE(0x4080, 0xee);
+            TEST_BYTE(0x40c0, 0xff);
+            TEST_BYTE(0x40ff, 0xff);
+            TEST_BYTE(0x4100, 0x00);
+            TEST_BYTE(0x41ff, 0x00);
+            Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+            ok_ntstatus(Status, STATUS_SUCCESS);
+        }
+        Status = NtClose(SectionHandle);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+
+    CloseHandle(Handle);
+    DeleteFileW(FileName);
 }
 
 START_TEST(NtMapViewOfSection)
@@ -1081,4 +1356,6 @@ START_TEST(NtMapViewOfSection)
     Test_PageFileSection();
     Test_ImageSection();
     Test_BasedSection();
+    Test_NoLoadSection(FALSE);
+    Test_NoLoadSection(TRUE);
 }
