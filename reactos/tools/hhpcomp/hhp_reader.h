@@ -66,7 +66,7 @@ public:
 
 class hhp_options_section : public hhp_key_value_section
 {
-    friend hhp_reader;
+    friend class hhp_reader;
 
 private:
     hhp_pair* binary_TOC;
@@ -96,7 +96,7 @@ public:
 
 class hhp_files_section : public hhp_section
 {
-    friend hhp_reader;
+    friend class hhp_reader;
 
 private:
     list<string> filenames;
