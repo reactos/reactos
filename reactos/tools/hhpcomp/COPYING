@@ -1,0 +1,11 @@
+LICENSING CLEARIFICATION
+
+1. files unique to hhpcomp: LGPL version 2.1 or later
+2. files borrowed from chmc: GPL version 3 or later
+3. files borrowed from lzxcomp: LGPL version 2.1 only
+
+whole project: GPL version 3 or later (via implicit relicensing of 1. and 3.)
+
+copies of the respective license texts can be found in the top level directory
+
+see http://sourceforge.net/projects/chmc for unmodified sources of 2. and 3.
