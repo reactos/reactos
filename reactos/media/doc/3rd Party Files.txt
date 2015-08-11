@@ -7,7 +7,7 @@ Used Version: 2.00.1
 Website: https://fedorahosted.org/liberation-fonts/
 
 Title: DejaVu Fonts
-Used Version: 2.34
+Used Version: 2.35
 Website: http://dejavu.sourceforge.net
 
 Title: Ubuntu Fonts
