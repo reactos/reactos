@@ -4216,13 +4216,10 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
          * and calculate the image base address */
         for (i = 0; i < NrSegments; i++)
         {
-            if (!(SectionSegments[i].Image.Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+            if (Segment == &SectionSegments[i])
             {
-                if (Segment == &SectionSegments[i])
-                {
-                    ImageBaseAddress = (char*)BaseAddress - (ULONG_PTR)SectionSegments[i].Image.VirtualAddress;
-                    break;
-                }
+                ImageBaseAddress = (char*)BaseAddress - (ULONG_PTR)SectionSegments[i].Image.VirtualAddress;
+                break;
             }
         }
         if (i >= NrSegments)
@@ -4232,18 +4229,15 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
         for (i = 0; i < NrSegments; i++)
         {
-            if (!(SectionSegments[i].Image.Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-            {
-                PVOID SBaseAddress = (PVOID)
-                                     ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
+            PVOID SBaseAddress = (PVOID)
+                                 ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
 
-                Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
-                            SBaseAddress, Process, Status);
-                    NT_ASSERT(NT_SUCCESS(Status));
-                }
+            Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
+                        SBaseAddress, Process, Status);
+                NT_ASSERT(NT_SUCCESS(Status));
             }
         }
     }
@@ -4520,13 +4514,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
         ImageSize = 0;
         for (i = 0; i < NrSegments; i++)
         {
-            if (!(SectionSegments[i].Image.Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-            {
-                ULONG_PTR MaxExtent;
-                MaxExtent = (ULONG_PTR)(SectionSegments[i].Image.VirtualAddress +
-                                        SectionSegments[i].Length.QuadPart);
-                ImageSize = max(ImageSize, MaxExtent);
-            }
+            ULONG_PTR MaxExtent;
+            MaxExtent = (ULONG_PTR)(SectionSegments[i].Image.VirtualAddress +
+                                    SectionSegments[i].Length.QuadPart);
+            ImageSize = max(ImageSize, MaxExtent);
         }
 
         ImageSectionObject->ImageInformation.ImageFileSize = (ULONG)ImageSize;
@@ -4570,25 +4561,22 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
         for (i = 0; i < NrSegments; i++)
         {
-            if (!(SectionSegments[i].Image.Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+            PVOID SBaseAddress = (PVOID)
+                                 ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
+            MmLockSectionSegment(&SectionSegments[i]);
+            Status = MmMapViewOfSegment(AddressSpace,
+                                        Section,
+                                        &SectionSegments[i],
+                                        &SBaseAddress,
+                                        SectionSegments[i].Length.LowPart,
+                                        SectionSegments[i].Protection,
+                                        0,
+                                        0);
+            MmUnlockSectionSegment(&SectionSegments[i]);
+            if (!NT_SUCCESS(Status))
             {
-                PVOID SBaseAddress = (PVOID)
-                                     ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
-                MmLockSectionSegment(&SectionSegments[i]);
-                Status = MmMapViewOfSegment(AddressSpace,
-                                            Section,
-                                            &SectionSegments[i],
-                                            &SBaseAddress,
-                                            SectionSegments[i].Length.LowPart,
-                                            SectionSegments[i].Protection,
-                                            0,
-                                            0);
-                MmUnlockSectionSegment(&SectionSegments[i]);
-                if (!NT_SUCCESS(Status))
-                {
-                    MmUnlockAddressSpace(AddressSpace);
-                    return(Status);
-                }
+                MmUnlockAddressSpace(AddressSpace);
+                return(Status);
             }
         }
 
