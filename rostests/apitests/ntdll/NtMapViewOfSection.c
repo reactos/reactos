@@ -1,23 +1,14 @@
+/*
+ * PROJECT:         ReactOS API Tests
+ * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
+ * PURPOSE:         Test for NtMapViewOfSection
+ * PROGRAMMERS:     Timo Kreuzer
+ */
 
 #include <apitest.h>
-
+#include <strsafe.h>
 #define WIN32_NO_STATUS
 #include <ndk/ntndk.h>
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-NtMapViewOfSection(
-    HANDLE SectionHandle,
-	HANDLE ProcessHandle,
-	PVOID *BaseAddress,
-	ULONG_PTR ZeroBits,
-	SIZE_T CommitSize,
-	PLARGE_INTEGER SectionOffset,
-	PSIZE_T ViewSize,
-	SECTION_INHERIT InheritDisposition,
-	ULONG AllocationType,
-	ULONG Protect);
 
 void
 Test_PageFileSection(void)
@@ -651,11 +642,15 @@ Test_ImageSection(void)
     NTSTATUS Status;
     OBJECT_ATTRIBUTES FileObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
+    WCHAR TestDllPath[MAX_PATH];
     HANDLE FileHandle, DataSectionHandle, ImageSectionHandle;
     PVOID DataBase, ImageBase;
     SIZE_T ViewSize;
 
-    if (!RtlDosPathNameToNtPathName_U(L"testdata\\test.dll",
+    GetModuleFileNameW(NULL, TestDllPath, RTL_NUMBER_OF(TestDllPath));
+    wcsrchr(TestDllPath, L'\\')[1] = UNICODE_NULL;
+    StringCbCatW(TestDllPath, sizeof(TestDllPath), L"testdata\\test.dll");
+    if (!RtlDosPathNameToNtPathName_U(TestDllPath,
                                       &FileName,
                                       NULL,
                                       NULL))
@@ -1077,4 +1072,3 @@ START_TEST(NtMapViewOfSection)
     Test_ImageSection();
     Test_BasedSection();
 }
-
