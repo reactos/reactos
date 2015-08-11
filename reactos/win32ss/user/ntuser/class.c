@@ -2657,7 +2657,7 @@ NtUserGetClassInfo(
     // If null instance use client.
     if (!hInstance) hInstance = hModClient;
 
-    TRACE("GetClassInfo(%wZ, %p)\n", SafeClassName, hInstance);
+    TRACE("GetClassInfo(%wZ, %p)\n", &SafeClassName, hInstance);
 
     /* NOTE: Need exclusive lock because getting the wndproc might require the
              creation of a call procedure handle */
