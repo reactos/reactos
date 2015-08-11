@@ -257,8 +257,13 @@ Test_PageFileSection(void)
     ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Close the mapping */
-    NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
-    NtClose(SectionHandle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    BaseAddress = (PVOID)0x30000000;
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Create a page file backed section, but only reserved */
     MaximumSize.QuadPart = 0x20000;
@@ -395,9 +400,12 @@ Test_PageFileSection(void)
     ok(*(PULONG)BaseAddress2 == 2, "Value in memory was wrong\n");
 
     /* Close the mapping */
-    NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
-    NtUnmapViewOfSection(NtCurrentProcess(), (PUCHAR)BaseAddress2 - PAGE_SIZE);
-    NtClose(SectionHandle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), (PUCHAR)BaseAddress2 - PAGE_SIZE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Try to create a 512 GB page file backed section with committed pages */
     MaximumSize.QuadPart = 0x8000000000;
@@ -633,6 +641,10 @@ Test_PageFileSection(void)
     Status = NtAllocateVirtualMemory(NtCurrentProcess(), &BaseAddress2, 0, &ViewSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_ntstatus(Status, STATUS_SUCCESS);
 }
 
 void
@@ -778,7 +790,7 @@ Test_ImageSection(void)
                                 0, // AllocationType
                                 PAGE_READONLY);
 #ifdef _M_IX86
-    ok_ntstatus(Status, STATUS_IMAGE_NOT_AT_BASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
 #else
     ok_ntstatus(Status, STATUS_IMAGE_MACHINE_TYPE_MISMATCH);
 #endif
@@ -864,7 +876,7 @@ Test_ImageSection(void)
                                 0,
                                 PAGE_READONLY);
 #ifdef _M_IX86
-    ok_ntstatus(Status, STATUS_IMAGE_NOT_AT_BASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
 #else
     ok_ntstatus(Status, STATUS_IMAGE_MACHINE_TYPE_MISMATCH);
 #endif
@@ -1056,13 +1068,11 @@ Test_BasedSection(void)
     ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
 #else
     ok_ntstatus(Status, STATUS_SUCCESS);
-#endif
-
-    ok_ntstatus(Status, STATUS_SUCCESS);
     ok((ULONG_PTR)BaseAddress2 < (ULONG_PTR)BaseAddress1,
        "Invalid addresses: BaseAddress1=%p, BaseAddress2=%p\n", BaseAddress1, BaseAddress2);
     ok(((ULONG_PTR)BaseAddress1 - (ULONG_PTR)BaseAddress2) == 0x10000,
        "Invalid addresses: BaseAddress1=%p, BaseAddress2=%p\n", BaseAddress1, BaseAddress2);
+#endif
 
 }
 
