@@ -2870,6 +2870,7 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
     NTSTATUS Status;
     HANDLE Handles[3];
     LARGE_INTEGER Timeout;
+    KAPC_STATE ApcState;
 
     UserEnterExclusive();
 
@@ -2915,12 +2916,16 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
     if (dwMilliseconds != INFINITE)
        Timeout.QuadPart = (LONGLONG) dwMilliseconds * (LONGLONG) -10000;
 
+    KeStackAttachProcess(&Process->Pcb, &ApcState);
+
     W32Process->W32PF_flags |= W32PF_WAITFORINPUTIDLE;
     for (pti = W32Process->ptiList; pti; pti = pti->ptiSibling)
     {
        pti->TIF_flags |= TIF_WAITFORINPUTIDLE;
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
+
+    KeUnstackDetachProcess(&ApcState);
 
     TRACE("WFII: ppi %p\n", W32Process);
     TRACE("WFII: waiting for %p\n", Handles[1] );
