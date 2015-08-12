@@ -523,6 +523,8 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                   Vcb->NtfsInfo.VolumeLabel,
                   Vcb->NtfsInfo.VolumeLabelLength);
 
+    FsRtlNotifyVolumeEvent(Vcb->StreamFileObject, FSRTL_VOLUME_MOUNT);
+
     Status = STATUS_SUCCESS;
 
 ByeBye:
