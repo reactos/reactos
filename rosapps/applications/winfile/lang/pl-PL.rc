@@ -1,0 +1,1000 @@
+/*
+ * WineFile
+ * Polish Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2004 Piotr Caban
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Plik"  {
+        MENUITEM "&Otwórz\tEnter",              ID_ACTIVATE
+        MENUITEM "&Przenieś...\tF7",            ID_FILE_MOVE
+        MENUITEM "&Kopiuj...\tF8",              ID_FILE_COPY
+        MENUITEM "W s&chowku...\tF9",           118
+        MENUITEM "&Usuń\tDel",                  ID_FILE_DELETE
+        MENUITEM "&Zmień nazwę...",             109
+        MENUITEM "Właśc&iwości...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Ko&mpresja...",               119
+        MENUITEM "D&ekompresja...",             120
+        MENUITEM SEPARATOR
+        MENUITEM "U&ruchom...",                 ID_RUN
+        MENUITEM "&Drukuj...",                  102
+        MENUITEM "Skojarz...",                  103
+        MENUITEM SEPARATOR
+        MENUITEM "U&twórz folder...",           111
+        MENUITEM "&Szukaj...",                  104
+        MENUITEM "Z&aznacz pliki...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Wyjście\tAlt+X",             ID_FILE_EXIT
+#else
+        MENUITEM "&Wyjście",                    ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Dysk"  {
+        MENUITEM "&Kopiuj dusk...",             201
+        MENUITEM "&Etykieta dysku...",          202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formatuj dysk...",           ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Stwórz dysk systemowy...", -1    /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Podłącz Dysk Sieciowy",      ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Odłącz Dysk Sieciowy",       ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Udostępnij jako...",          254
+        MENUITEM "&Nie udostępniaj...",         255
+        MENUITEM SEPARATOR
+        MENUITEM "Wybór &dysku...",             251
+    }
+
+    POPUP "&Katalogi"  {
+        MENUITEM "&Następny poziom\t+",         301
+        MENUITEM "&Rozwiń drzewo\t*",           302
+        MENUITEM "Rozwiń &wszystko\tStrg+*",    303
+        MENUITEM "&Zwiń drzewo\t-",             304
+        MENUITEM SEPARATOR
+        MENUITEM "Zaznacz &podkatalogi",        505
+    }
+
+    POPUP "&Widok"  {
+        MENUITEM "&Drzewo i katalogi",          413
+        MENUITEM "D&rzewo",                     411
+        MENUITEM "&Katalogi",                   412
+        MENUITEM SEPARATOR
+        MENUITEM "&Połącz",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Nazwa",                      ID_VIEW_NAME
+        MENUITEM "&Wszystkie atrybuty pliku",   ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "Wybrane &atrybuty pliku...",  ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "P&osortuj alfabetycznie",     404
+        MENUITEM "Posortuj po &typie",          405
+        MENUITEM "Posortuj po wie&lkości",      406
+        MENUITEM "Po&sortuj po dacie",            407
+        MENUITEM SEPARATOR
+        MENUITEM "Filtruj widok &...",              ID_VIEW_FILTER
+    }
+
+    POPUP "&Opcje"  {
+        MENUITEM "&Potwierdzenie...",           501
+        MENUITEM "&Czcionka...",                ID_SELECT_FONT
+        MENUITEM "&Ustawienia paska narzędzi...", 512
+        MENUITEM SEPARATOR
+        MENUITEM "Pasek &narzędzi",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Pasek &dysków",               ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Pasek &statusu",              ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Pełny &ekran\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Zminimalizuj przy starcie",  504
+        MENUITEM "Z&apisz ustawienia przed zakończeniem",511
+    }
+
+
+    POPUP "&Bezpieczeństwo"  {
+        MENUITEM "&Dostęp...",                  605
+        MENUITEM "&Logowanie...",               606
+        MENUITEM "&Właściciel...",              607
+    }
+
+    POPUP "&Okno"  {
+        MENUITEM "&Nowe okno",                  ID_WINDOW_NEW
+        MENUITEM "&Kaskadująco\tCtrl+F5",       ID_WINDOW_CASCADE
+        MENUITEM "&Tytuł pionowo",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Tytuł &poziomo\tCtrl+F4",     ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Rozmieść automatycznie",      ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Rozmieść &symbole",           ID_WINDOW_ARRANGE
+        MENUITEM "&Odśwież\tF5",               ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "&Tematu pomocy\tF1",          ID_HELP
+        MENUITEM "&Szukaj...",                  ID_HELP
+        MENUITEM "&Używanie pomocy",            ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Winefile...",                ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wybór celu"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Ścieżka:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Anuluj", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Przeglądaj", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Według typu pliku"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Nazwa:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Wyświetl pliki typu",-1,7,23,87,56
+    CONTROL         "&Katalogi",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programy",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Doku&menty",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "&Inne pliki",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Pokaż pliki ukryte i &systemowe",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,126,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Właściwości: %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,191,29,50,14
+    LTEXT           "&Nazwa pliku:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Pełna ścieżka:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Ostatnio modyfikowany:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Wersja:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Prawa a&utorskie:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Wie&lkość:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Atrybuty",-1,7,79,158,46
+    CONTROL         "Tylko do &odczytu",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Ukryty",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Archiwalny",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Systemowy",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "S&kompresowany",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "We&rsja",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Wprowadzanie ustawień czcionki"
+    IDS_FONT_SEL_ERROR      "Błąd przy wybieraniu czcionki"
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Błąd"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Pulpit"
+    IDS_SHELL               "Pulpit"       /* tłumaczenie nie dosłowne, ale chyba lepiej pasuje */
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Jeszcze nie zaimplementowane"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Nazwa"
+    IDS_COL_SIZE            "Wielkość"
+    IDS_COL_CDATE           "CDate"
+    IDS_COL_ADATE           "ADate"
+    IDS_COL_MDATE           "MDate"
+    IDS_COL_IDX             "Indeks/inode"
+    IDS_COL_LINKS           "Dowiązania"
+    IDS_COL_ATTR            "Atrybuty"
+    IDS_COL_SEC             "Prawa dostępu"
+
+    IDS_FREE_SPACE_FMT      "%1 z %2 wolne"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Polish Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2004 Piotr Caban
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Plik"  {
+        MENUITEM "&Otwórz\tEnter",              ID_ACTIVATE
+        MENUITEM "&Przenieś...\tF7",            ID_FILE_MOVE
+        MENUITEM "&Kopiuj...\tF8",              ID_FILE_COPY
+        MENUITEM "W s&chowku...\tF9",           118
+        MENUITEM "&Usuń\tDel",                  ID_FILE_DELETE
+        MENUITEM "&Zmień nazwę...",             109
+        MENUITEM "Właśc&iwości...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Ko&mpresja...",               119
+        MENUITEM "D&ekompresja...",             120
+        MENUITEM SEPARATOR
+        MENUITEM "U&ruchom...",                 ID_RUN
+        MENUITEM "&Drukuj...",                  102
+        MENUITEM "Skojarz...",                  103
+        MENUITEM SEPARATOR
+        MENUITEM "U&twórz folder...",           111
+        MENUITEM "&Szukaj...",                  104
+        MENUITEM "Z&aznacz pliki...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Wyjście\tAlt+X",             ID_FILE_EXIT
+#else
+        MENUITEM "&Wyjście",                    ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Dysk"  {
+        MENUITEM "&Kopiuj dusk...",             201
+        MENUITEM "&Etykieta dysku...",          202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formatuj dysk...",           ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Stwórz dysk systemowy...", -1    /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Podłącz Dysk Sieciowy",      ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Odłącz Dysk Sieciowy",       ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Udostępnij jako...",          254
+        MENUITEM "&Nie udostępniaj...",         255
+        MENUITEM SEPARATOR
+        MENUITEM "Wybór &dysku...",             251
+    }
+
+    POPUP "&Katalogi"  {
+        MENUITEM "&Następny poziom\t+",         301
+        MENUITEM "&Rozwiń drzewo\t*",           302
+        MENUITEM "Rozwiń &wszystko\tStrg+*",    303
+        MENUITEM "&Zwiń drzewo\t-",             304
+        MENUITEM SEPARATOR
+        MENUITEM "Zaznacz &podkatalogi",        505
+    }
+
+    POPUP "&Widok"  {
+        MENUITEM "&Drzewo i katalogi",          413
+        MENUITEM "D&rzewo",                     411
+        MENUITEM "&Katalogi",                   412
+        MENUITEM SEPARATOR
+        MENUITEM "&Połącz",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Nazwa",                      ID_VIEW_NAME
+        MENUITEM "&Wszystkie atrybuty pliku",   ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "Wybrane &atrybuty pliku...",  ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "P&osortuj alfabetycznie",     404
+        MENUITEM "Posortuj po &typie",          405
+        MENUITEM "Posortuj po wie&lkości",      406
+        MENUITEM "Po&sortuj po dacie",            407
+        MENUITEM SEPARATOR
+        MENUITEM "Filtruj widok &...",              ID_VIEW_FILTER
+    }
+
+    POPUP "&Opcje"  {
+        MENUITEM "&Potwierdzenie...",           501
+        MENUITEM "&Czcionka...",                ID_SELECT_FONT
+        MENUITEM "&Ustawienia paska narzędzi...", 512
+        MENUITEM SEPARATOR
+        MENUITEM "Pasek &narzędzi",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Pasek &dysków",               ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Pasek &statusu",              ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Pełny &ekran\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Zminimalizuj przy starcie",  504
+        MENUITEM "Z&apisz ustawienia przed zakończeniem",511
+    }
+
+
+    POPUP "&Bezpieczeństwo"  {
+        MENUITEM "&Dostęp...",                  605
+        MENUITEM "&Logowanie...",               606
+        MENUITEM "&Właściciel...",              607
+    }
+
+    POPUP "&Okno"  {
+        MENUITEM "&Nowe okno",                  ID_WINDOW_NEW
+        MENUITEM "&Kaskadująco\tCtrl+F5",       ID_WINDOW_CASCADE
+        MENUITEM "&Tytuł pionowo",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Tytuł &poziomo\tCtrl+F4",     ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Rozmieść automatycznie",      ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Rozmieść &symbole",           ID_WINDOW_ARRANGE
+        MENUITEM "&Odśwież\tF5",               ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "&Tematu pomocy\tF1",          ID_HELP
+        MENUITEM "&Szukaj...",                  ID_HELP
+        MENUITEM "&Używanie pomocy",            ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Winefile...",                ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wybór celu"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Ścieżka:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Anuluj", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Przeglądaj", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Według typu pliku"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Nazwa:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Wyświetl pliki typu",-1,7,23,87,56
+    CONTROL         "&Katalogi",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programy",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Doku&menty",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "&Inne pliki",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Pokaż pliki ukryte i &systemowe",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,126,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Właściwości: %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,191,29,50,14
+    LTEXT           "&Nazwa pliku:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Pełna ścieżka:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Ostatnio modyfikowany:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Wersja:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Prawa a&utorskie:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Wie&lkość:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Atrybuty",-1,7,79,158,46
+    CONTROL         "Tylko do &odczytu",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Ukryty",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Archiwalny",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Systemowy",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "S&kompresowany",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "We&rsja",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Wprowadzanie ustawień czcionki"
+    IDS_FONT_SEL_ERROR      "Błąd przy wybieraniu czcionki"
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Błąd"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Pulpit"
+    IDS_SHELL               "Pulpit"       /* tłumaczenie nie dosłowne, ale chyba lepiej pasuje */
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Jeszcze nie zaimplementowane"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Nazwa"
+    IDS_COL_SIZE            "Wielkość"
+    IDS_COL_CDATE           "CDate"
+    IDS_COL_ADATE           "ADate"
+    IDS_COL_MDATE           "MDate"
+    IDS_COL_IDX             "Indeks/inode"
+    IDS_COL_LINKS           "Dowiązania"
+    IDS_COL_ATTR            "Atrybuty"
+    IDS_COL_SEC             "Prawa dostępu"
+
+    IDS_FREE_SPACE_FMT      "%1 z %2 wolne"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Polish Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2004 Piotr Caban
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Plik"  {
+        MENUITEM "&Otwórz\tEnter",              ID_ACTIVATE
+        MENUITEM "&Przenieś...\tF7",            ID_FILE_MOVE
+        MENUITEM "&Kopiuj...\tF8",              ID_FILE_COPY
+        MENUITEM "W s&chowku...\tF9",           118
+        MENUITEM "&Usuń\tDel",                  ID_FILE_DELETE
+        MENUITEM "&Zmień nazwę...",             109
+        MENUITEM "Właśc&iwości...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Ko&mpresja...",               119
+        MENUITEM "D&ekompresja...",             120
+        MENUITEM SEPARATOR
+        MENUITEM "U&ruchom...",                 ID_RUN
+        MENUITEM "&Drukuj...",                  102
+        MENUITEM "Skojarz...",                  103
+        MENUITEM SEPARATOR
+        MENUITEM "U&twórz folder...",           111
+        MENUITEM "&Szukaj...",                  104
+        MENUITEM "Z&aznacz pliki...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Wyjście\tAlt+X",             ID_FILE_EXIT
+#else
+        MENUITEM "&Wyjście",                    ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Dysk"  {
+        MENUITEM "&Kopiuj dusk...",             201
+        MENUITEM "&Etykieta dysku...",          202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formatuj dysk...",           ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Stwórz dysk systemowy...", -1    /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Podłącz Dysk Sieciowy",      ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Odłącz Dysk Sieciowy",       ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Udostępnij jako...",          254
+        MENUITEM "&Nie udostępniaj...",         255
+        MENUITEM SEPARATOR
+        MENUITEM "Wybór &dysku...",             251
+    }
+
+    POPUP "&Katalogi"  {
+        MENUITEM "&Następny poziom\t+",         301
+        MENUITEM "&Rozwiń drzewo\t*",           302
+        MENUITEM "Rozwiń &wszystko\tStrg+*",    303
+        MENUITEM "&Zwiń drzewo\t-",             304
+        MENUITEM SEPARATOR
+        MENUITEM "Zaznacz &podkatalogi",        505
+    }
+
+    POPUP "&Widok"  {
+        MENUITEM "&Drzewo i katalogi",          413
+        MENUITEM "D&rzewo",                     411
+        MENUITEM "&Katalogi",                   412
+        MENUITEM SEPARATOR
+        MENUITEM "&Połącz",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Nazwa",                      ID_VIEW_NAME
+        MENUITEM "&Wszystkie atrybuty pliku",   ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "Wybrane &atrybuty pliku...",  ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "P&osortuj alfabetycznie",     404
+        MENUITEM "Posortuj po &typie",          405
+        MENUITEM "Posortuj po wie&lkości",      406
+        MENUITEM "Po&sortuj po dacie",            407
+        MENUITEM SEPARATOR
+        MENUITEM "Filtruj widok &...",              ID_VIEW_FILTER
+    }
+
+    POPUP "&Opcje"  {
+        MENUITEM "&Potwierdzenie...",           501
+        MENUITEM "&Czcionka...",                ID_SELECT_FONT
+        MENUITEM "&Ustawienia paska narzędzi...", 512
+        MENUITEM SEPARATOR
+        MENUITEM "Pasek &narzędzi",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Pasek &dysków",               ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Pasek &statusu",              ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Pełny &ekran\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Zminimalizuj przy starcie",  504
+        MENUITEM "Z&apisz ustawienia przed zakończeniem",511
+    }
+
+
+    POPUP "&Bezpieczeństwo"  {
+        MENUITEM "&Dostęp...",                  605
+        MENUITEM "&Logowanie...",               606
+        MENUITEM "&Właściciel...",              607
+    }
+
+    POPUP "&Okno"  {
+        MENUITEM "&Nowe okno",                  ID_WINDOW_NEW
+        MENUITEM "&Kaskadująco\tCtrl+F5",       ID_WINDOW_CASCADE
+        MENUITEM "&Tytuł pionowo",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Tytuł &poziomo\tCtrl+F4",     ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Rozmieść automatycznie",      ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Rozmieść &symbole",           ID_WINDOW_ARRANGE
+        MENUITEM "&Odśwież\tF5",               ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "&Tematu pomocy\tF1",          ID_HELP
+        MENUITEM "&Szukaj...",                  ID_HELP
+        MENUITEM "&Używanie pomocy",            ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Winefile...",                ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wybór celu"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Ścieżka:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Anuluj", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Przeglądaj", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Według typu pliku"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Nazwa:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Wyświetl pliki typu",-1,7,23,87,56
+    CONTROL         "&Katalogi",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programy",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Doku&menty",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "&Inne pliki",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Pokaż pliki ukryte i &systemowe",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,126,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Właściwości: %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,191,29,50,14
+    LTEXT           "&Nazwa pliku:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Pełna ścieżka:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Ostatnio modyfikowany:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Wersja:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Prawa a&utorskie:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Wie&lkość:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Atrybuty",-1,7,79,158,46
+    CONTROL         "Tylko do &odczytu",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Ukryty",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Archiwalny",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Systemowy",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "S&kompresowany",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "We&rsja",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Wprowadzanie ustawień czcionki"
+    IDS_FONT_SEL_ERROR      "Błąd przy wybieraniu czcionki"
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Błąd"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Pulpit"
+    IDS_SHELL               "Pulpit"       /* tłumaczenie nie dosłowne, ale chyba lepiej pasuje */
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Jeszcze nie zaimplementowane"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Nazwa"
+    IDS_COL_SIZE            "Wielkość"
+    IDS_COL_CDATE           "CDate"
+    IDS_COL_ADATE           "ADate"
+    IDS_COL_MDATE           "MDate"
+    IDS_COL_IDX             "Indeks/inode"
+    IDS_COL_LINKS           "Dowiązania"
+    IDS_COL_ATTR            "Atrybuty"
+    IDS_COL_SEC             "Prawa dostępu"
+
+    IDS_FREE_SPACE_FMT      "%1 z %2 wolne"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Polish Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2004 Piotr Caban
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Plik"  {
+        MENUITEM "&Otwórz\tEnter",              ID_ACTIVATE
+        MENUITEM "&Przenieś...\tF7",            ID_FILE_MOVE
+        MENUITEM "&Kopiuj...\tF8",              ID_FILE_COPY
+        MENUITEM "W s&chowku...\tF9",           118
+        MENUITEM "&Usuń\tDel",                  ID_FILE_DELETE
+        MENUITEM "&Zmień nazwę...",             109
+        MENUITEM "Właśc&iwości...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Ko&mpresja...",               119
+        MENUITEM "D&ekompresja...",             120
+        MENUITEM SEPARATOR
+        MENUITEM "U&ruchom...",                 ID_RUN
+        MENUITEM "&Drukuj...",                  102
+        MENUITEM "Skojarz...",                  103
+        MENUITEM SEPARATOR
+        MENUITEM "U&twórz folder...",           111
+        MENUITEM "&Szukaj...",                  104
+        MENUITEM "Z&aznacz pliki...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Wyjście\tAlt+X",             ID_FILE_EXIT
+#else
+        MENUITEM "&Wyjście",                    ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Dysk"  {
+        MENUITEM "&Kopiuj dusk...",             201
+        MENUITEM "&Etykieta dysku...",          202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formatuj dysk...",           ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Stwórz dysk systemowy...", -1    /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Podłącz Dysk Sieciowy",      ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Odłącz Dysk Sieciowy",       ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Udostępnij jako...",          254
+        MENUITEM "&Nie udostępniaj...",         255
+        MENUITEM SEPARATOR
+        MENUITEM "Wybór &dysku...",             251
+    }
+
+    POPUP "&Katalogi"  {
+        MENUITEM "&Następny poziom\t+",         301
+        MENUITEM "&Rozwiń drzewo\t*",           302
+        MENUITEM "Rozwiń &wszystko\tStrg+*",    303
+        MENUITEM "&Zwiń drzewo\t-",             304
+        MENUITEM SEPARATOR
+        MENUITEM "Zaznacz &podkatalogi",        505
+    }
+
+    POPUP "&Widok"  {
+        MENUITEM "&Drzewo i katalogi",          413
+        MENUITEM "D&rzewo",                     411
+        MENUITEM "&Katalogi",                   412
+        MENUITEM SEPARATOR
+        MENUITEM "&Połącz",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Nazwa",                      ID_VIEW_NAME
+        MENUITEM "&Wszystkie atrybuty pliku",   ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "Wybrane &atrybuty pliku...",  ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "P&osortuj alfabetycznie",     404
+        MENUITEM "Posortuj po &typie",          405
+        MENUITEM "Posortuj po wie&lkości",      406
+        MENUITEM "Po&sortuj po dacie",            407
+        MENUITEM SEPARATOR
+        MENUITEM "Filtruj widok &...",              ID_VIEW_FILTER
+    }
+
+    POPUP "&Opcje"  {
+        MENUITEM "&Potwierdzenie...",           501
+        MENUITEM "&Czcionka...",                ID_SELECT_FONT
+        MENUITEM "&Ustawienia paska narzędzi...", 512
+        MENUITEM SEPARATOR
+        MENUITEM "Pasek &narzędzi",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Pasek &dysków",               ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Pasek &statusu",              ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Pełny &ekran\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Zminimalizuj przy starcie",  504
+        MENUITEM "Z&apisz ustawienia przed zakończeniem",511
+    }
+
+
+    POPUP "&Bezpieczeństwo"  {
+        MENUITEM "&Dostęp...",                  605
+        MENUITEM "&Logowanie...",               606
+        MENUITEM "&Właściciel...",              607
+    }
+
+    POPUP "&Okno"  {
+        MENUITEM "&Nowe okno",                  ID_WINDOW_NEW
+        MENUITEM "&Kaskadująco\tCtrl+F5",       ID_WINDOW_CASCADE
+        MENUITEM "&Tytuł pionowo",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Tytuł &poziomo\tCtrl+F4",     ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Rozmieść automatycznie",      ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Rozmieść &symbole",           ID_WINDOW_ARRANGE
+        MENUITEM "&Odśwież\tF5",               ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "&Tematu pomocy\tF1",          ID_HELP
+        MENUITEM "&Szukaj...",                  ID_HELP
+        MENUITEM "&Używanie pomocy",            ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Winefile...",                ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wybór celu"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Ścieżka:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Anuluj", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Przeglądaj", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Według typu pliku"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Nazwa:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Wyświetl pliki typu",-1,7,23,87,56
+    CONTROL         "&Katalogi",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programy",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Doku&menty",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "&Inne pliki",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Pokaż pliki ukryte i &systemowe",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,126,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Właściwości: %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,191,29,50,14
+    LTEXT           "&Nazwa pliku:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Pełna ścieżka:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Ostatnio modyfikowany:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Wersja:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Prawa a&utorskie:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Wie&lkość:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Atrybuty",-1,7,79,158,46
+    CONTROL         "Tylko do &odczytu",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Ukryty",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Archiwalny",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Systemowy",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "S&kompresowany",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "We&rsja",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Wprowadzanie ustawień czcionki"
+    IDS_FONT_SEL_ERROR      "Błąd przy wybieraniu czcionki"
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Błąd"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Pulpit"
+    IDS_SHELL               "Pulpit"       /* tłumaczenie nie dosłowne, ale chyba lepiej pasuje */
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Jeszcze nie zaimplementowane"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Nazwa"
+    IDS_COL_SIZE            "Wielkość"
+    IDS_COL_CDATE           "CDate"
+    IDS_COL_ADATE           "ADate"
+    IDS_COL_MDATE           "MDate"
+    IDS_COL_IDX             "Indeks/inode"
+    IDS_COL_LINKS           "Dowiązania"
+    IDS_COL_ATTR            "Atrybuty"
+    IDS_COL_SEC             "Prawa dostępu"
+
+    IDS_FREE_SPACE_FMT      "%1 z %2 wolne"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}

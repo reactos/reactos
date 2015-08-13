@@ -1,0 +1,1016 @@
+/*
+ * WineFile
+ * Ukrainian Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Файл"  {
+        MENUITEM "&Відкрити\tEnter",             ID_ACTIVATE
+        MENUITEM "&Перемістити...\tF7",          ID_FILE_MOVE
+        MENUITEM "&Копіювати...\tF8",            ID_FILE_COPY
+        MENUITEM "В &буфер обміну...\tF9",       118
+        MENUITEM "Вида&лити\tDel",               ID_FILE_DELETE
+        MENUITEM "Пере&йменувати...",            109
+        MENUITEM "Властивос&ті...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Запак&увати...",               119
+        MENUITEM "Р&озпакувати...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Запустити...",                ID_RUN
+        MENUITEM "&Друк...",                     102
+        MENUITEM "Асоціювати...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "Створити директорі&ю...",      111
+        MENUITEM "По&шук...",                    104
+        MENUITEM "Виділити &файли...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Ви&хід\tAlt+X",                ID_FILE_EXIT
+#else
+        MENUITEM "Ви&хід",                       ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Диск"  {
+        MENUITEM "&Копіювати диск...",           201
+        MENUITEM "&Мітка тому...",               202
+        MENUITEM SEPARATOR
+        MENUITEM "&Форматувати диск...",         ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Створити системний диск...", -1 /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Підключити мережний диск",    ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Відключити мережний диск",    ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Зробити спільним як...",       254
+        MENUITEM "&Закрити спільний доступ...",  255
+        MENUITEM SEPARATOR
+        MENUITEM "Ви&брати диск...",             251
+    }
+
+    POPUP "Ди&ректорії"  {
+        MENUITEM "&Наступний рівень\t+",         301
+        MENUITEM "Розгорнути &дерево\t*",        302
+        MENUITEM "Розгорнути &все\tStrg+*",      303
+        MENUITEM "Згорнути д&ерево\t-",          304
+        MENUITEM SEPARATOR
+        MENUITEM "Відмітити &гілки",             505
+    }
+
+    POPUP "&Вигляд"  {
+        MENUITEM "&Дерево і директорія",         413
+        MENUITEM "Лише д&ерево",                 411
+        MENUITEM "Лише д&иректорія",             412
+        MENUITEM SEPARATOR
+        MENUITEM "Роз&бити",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Ім'я",                        ID_VIEW_NAME
+        MENUITEM "Всі дані про фай&л",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Часткові дані...",            ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Сортувати за ім'ям",          ID_VIEW_SORT_NAME
+        MENUITEM "Сортувати за &типом",          ID_VIEW_SORT_TYPE
+        MENUITEM "Сортувати за ро&зміром",       ID_VIEW_SORT_SIZE
+        MENUITEM "Сортувати за  д&атою",         ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Сортувати за &...",            ID_VIEW_FILTER
+    }
+
+    POPUP "&Налаштування"  {
+        MENUITEM "&Підтвердження...",                       501
+        MENUITEM "&Шрифт...",                               ID_SELECT_FONT
+        MENUITEM "Налаштувати &панель інструментів...",     512
+        MENUITEM SEPARATOR
+        MENUITEM "Панель &інструментів",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Панель &дисків",                          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Рядок стану",                            ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "В&есь екран\tCtrl+Shift+S",               ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Мінімізувати при запуску",               504
+        MENUITEM "&Зберегти налаштування перед виходом",    ID_VIEW_SAVESETTINGS
+    }
+
+
+    POPUP "&Безпека"  {
+        MENUITEM "&Доступ...",                    605
+        MENUITEM "&Протоколи...",                 606
+        MENUITEM "&Власник...",                   607
+    }
+
+    POPUP "Ві&кно"  {
+        MENUITEM "Нове &Вікно",                     ID_WINDOW_NEW
+        MENUITEM "Вікна каскадом\tCtrl+F5",         ID_WINDOW_CASCADE
+        MENUITEM "Вікна &зверху вниз",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Вікна зліва &направо\tCtrl+F4",   ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Впорядкувати автоматично",        ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Розмістити &Символи",             ID_WINDOW_ARRANGE
+        MENUITEM "&Оновити\tF5",                    ID_REFRESH
+    }
+
+    POPUP "Довідк&а"  {
+        MENUITEM "&Розділи довідки\tF1",            ID_HELP
+        MENUITEM "По&шук...\tF1",                   ID_HELP
+        MENUITEM "&Користування довідкою\tF1",      ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Про Winefile...",                ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Виберіть шлях призначення"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Шлях:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Скасувати", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Огляд", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "За типом файлів"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Ім'я:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Тип файлу",-1,7,23,87,56
+    CONTROL         "&Директорії",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Програми",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Доку&менти",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "Інші &файли",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Показати приховані/&Системні файли",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Властивості для %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,191,29,50,14
+    LTEXT           "Ім'я &файлу:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Повний &шлях:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Останні зміни:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Версія:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Cop&yright:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Розмір:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Атрибути",-1,7,79,158,46
+    CONTROL         "&Лише для читання",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "Пр&ихований",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Архів",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Сисемний",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "С&тиснутий",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "Дані про ве&рсію",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Застосування параметрів шрифта"
+    IDS_FONT_SEL_ERROR      "Помилка при виборі нового шрифта."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine File Manager"
+    IDS_ERROR               "Помилка"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Робочий стіл"
+    IDS_SHELL               "Shell"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Ще не реалізовано"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Ім'я"
+    IDS_COL_SIZE            "Розмір"
+    IDS_COL_CDATE           "Дата створення"
+    IDS_COL_ADATE           "Дата останнього доступу"
+    IDS_COL_MDATE           "Дата останньої зміни"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Посилання"
+    IDS_COL_ATTR            "Атрибути"
+    IDS_COL_SEC             "Безпека"
+
+    IDS_FREE_SPACE_FMT      "%1 з %2 вільно"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Ukrainian Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Файл"  {
+        MENUITEM "&Відкрити\tEnter",             ID_ACTIVATE
+        MENUITEM "&Перемістити...\tF7",          ID_FILE_MOVE
+        MENUITEM "&Копіювати...\tF8",            ID_FILE_COPY
+        MENUITEM "В &буфер обміну...\tF9",       118
+        MENUITEM "Вида&лити\tDel",               ID_FILE_DELETE
+        MENUITEM "Пере&йменувати...",            109
+        MENUITEM "Властивос&ті...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Запак&увати...",               119
+        MENUITEM "Р&озпакувати...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Запустити...",                ID_RUN
+        MENUITEM "&Друк...",                     102
+        MENUITEM "Асоціювати...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "Створити директорі&ю...",      111
+        MENUITEM "По&шук...",                    104
+        MENUITEM "Виділити &файли...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Ви&хід\tAlt+X",                ID_FILE_EXIT
+#else
+        MENUITEM "Ви&хід",                       ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Диск"  {
+        MENUITEM "&Копіювати диск...",           201
+        MENUITEM "&Мітка тому...",               202
+        MENUITEM SEPARATOR
+        MENUITEM "&Форматувати диск...",         ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Створити системний диск...", -1 /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Підключити мережний диск",    ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Відключити мережний диск",    ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Зробити спільним як...",       254
+        MENUITEM "&Закрити спільний доступ...",  255
+        MENUITEM SEPARATOR
+        MENUITEM "Ви&брати диск...",             251
+    }
+
+    POPUP "Ди&ректорії"  {
+        MENUITEM "&Наступний рівень\t+",         301
+        MENUITEM "Розгорнути &дерево\t*",        302
+        MENUITEM "Розгорнути &все\tStrg+*",      303
+        MENUITEM "Згорнути д&ерево\t-",          304
+        MENUITEM SEPARATOR
+        MENUITEM "Відмітити &гілки",             505
+    }
+
+    POPUP "&Вигляд"  {
+        MENUITEM "&Дерево і директорія",         413
+        MENUITEM "Лише д&ерево",                 411
+        MENUITEM "Лише д&иректорія",             412
+        MENUITEM SEPARATOR
+        MENUITEM "Роз&бити",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Ім'я",                        ID_VIEW_NAME
+        MENUITEM "Всі дані про фай&л",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Часткові дані...",            ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Сортувати за ім'ям",          ID_VIEW_SORT_NAME
+        MENUITEM "Сортувати за &типом",          ID_VIEW_SORT_TYPE
+        MENUITEM "Сортувати за ро&зміром",       ID_VIEW_SORT_SIZE
+        MENUITEM "Сортувати за  д&атою",         ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Сортувати за &...",            ID_VIEW_FILTER
+    }
+
+    POPUP "&Налаштування"  {
+        MENUITEM "&Підтвердження...",                       501
+        MENUITEM "&Шрифт...",                               ID_SELECT_FONT
+        MENUITEM "Налаштувати &панель інструментів...",     512
+        MENUITEM SEPARATOR
+        MENUITEM "Панель &інструментів",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Панель &дисків",                          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Рядок стану",                            ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "В&есь екран\tCtrl+Shift+S",               ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Мінімізувати при запуску",               504
+        MENUITEM "&Зберегти налаштування перед виходом",    ID_VIEW_SAVESETTINGS
+    }
+
+
+    POPUP "&Безпека"  {
+        MENUITEM "&Доступ...",                    605
+        MENUITEM "&Протоколи...",                 606
+        MENUITEM "&Власник...",                   607
+    }
+
+    POPUP "Ві&кно"  {
+        MENUITEM "Нове &Вікно",                     ID_WINDOW_NEW
+        MENUITEM "Вікна каскадом\tCtrl+F5",         ID_WINDOW_CASCADE
+        MENUITEM "Вікна &зверху вниз",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Вікна зліва &направо\tCtrl+F4",   ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Впорядкувати автоматично",        ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Розмістити &Символи",             ID_WINDOW_ARRANGE
+        MENUITEM "&Оновити\tF5",                    ID_REFRESH
+    }
+
+    POPUP "Довідк&а"  {
+        MENUITEM "&Розділи довідки\tF1",            ID_HELP
+        MENUITEM "По&шук...\tF1",                   ID_HELP
+        MENUITEM "&Користування довідкою\tF1",      ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Про Winefile...",                ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Виберіть шлях призначення"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Шлях:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Скасувати", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Огляд", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "За типом файлів"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Ім'я:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Тип файлу",-1,7,23,87,56
+    CONTROL         "&Директорії",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Програми",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Доку&менти",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "Інші &файли",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Показати приховані/&Системні файли",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Властивості для %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,191,29,50,14
+    LTEXT           "Ім'я &файлу:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Повний &шлях:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Останні зміни:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Версія:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Cop&yright:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Розмір:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Атрибути",-1,7,79,158,46
+    CONTROL         "&Лише для читання",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "Пр&ихований",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Архів",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Сисемний",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "С&тиснутий",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "Дані про ве&рсію",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Застосування параметрів шрифта"
+    IDS_FONT_SEL_ERROR      "Помилка при виборі нового шрифта."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine File Manager"
+    IDS_ERROR               "Помилка"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Робочий стіл"
+    IDS_SHELL               "Shell"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Ще не реалізовано"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Ім'я"
+    IDS_COL_SIZE            "Розмір"
+    IDS_COL_CDATE           "Дата створення"
+    IDS_COL_ADATE           "Дата останнього доступу"
+    IDS_COL_MDATE           "Дата останньої зміни"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Посилання"
+    IDS_COL_ATTR            "Атрибути"
+    IDS_COL_SEC             "Безпека"
+
+    IDS_FREE_SPACE_FMT      "%1 з %2 вільно"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Ukrainian Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Файл"  {
+        MENUITEM "&Відкрити\tEnter",             ID_ACTIVATE
+        MENUITEM "&Перемістити...\tF7",          ID_FILE_MOVE
+        MENUITEM "&Копіювати...\tF8",            ID_FILE_COPY
+        MENUITEM "В &буфер обміну...\tF9",       118
+        MENUITEM "Вида&лити\tDel",               ID_FILE_DELETE
+        MENUITEM "Пере&йменувати...",            109
+        MENUITEM "Властивос&ті...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Запак&увати...",               119
+        MENUITEM "Р&озпакувати...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Запустити...",                ID_RUN
+        MENUITEM "&Друк...",                     102
+        MENUITEM "Асоціювати...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "Створити директорі&ю...",      111
+        MENUITEM "По&шук...",                    104
+        MENUITEM "Виділити &файли...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Ви&хід\tAlt+X",                ID_FILE_EXIT
+#else
+        MENUITEM "Ви&хід",                       ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Диск"  {
+        MENUITEM "&Копіювати диск...",           201
+        MENUITEM "&Мітка тому...",               202
+        MENUITEM SEPARATOR
+        MENUITEM "&Форматувати диск...",         ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Створити системний диск...", -1 /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Підключити мережний диск",    ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Відключити мережний диск",    ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Зробити спільним як...",       254
+        MENUITEM "&Закрити спільний доступ...",  255
+        MENUITEM SEPARATOR
+        MENUITEM "Ви&брати диск...",             251
+    }
+
+    POPUP "Ди&ректорії"  {
+        MENUITEM "&Наступний рівень\t+",         301
+        MENUITEM "Розгорнути &дерево\t*",        302
+        MENUITEM "Розгорнути &все\tStrg+*",      303
+        MENUITEM "Згорнути д&ерево\t-",          304
+        MENUITEM SEPARATOR
+        MENUITEM "Відмітити &гілки",             505
+    }
+
+    POPUP "&Вигляд"  {
+        MENUITEM "&Дерево і директорія",         413
+        MENUITEM "Лише д&ерево",                 411
+        MENUITEM "Лише д&иректорія",             412
+        MENUITEM SEPARATOR
+        MENUITEM "Роз&бити",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Ім'я",                        ID_VIEW_NAME
+        MENUITEM "Всі дані про фай&л",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Часткові дані...",            ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Сортувати за ім'ям",          ID_VIEW_SORT_NAME
+        MENUITEM "Сортувати за &типом",          ID_VIEW_SORT_TYPE
+        MENUITEM "Сортувати за ро&зміром",       ID_VIEW_SORT_SIZE
+        MENUITEM "Сортувати за  д&атою",         ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Сортувати за &...",            ID_VIEW_FILTER
+    }
+
+    POPUP "&Налаштування"  {
+        MENUITEM "&Підтвердження...",                       501
+        MENUITEM "&Шрифт...",                               ID_SELECT_FONT
+        MENUITEM "Налаштувати &панель інструментів...",     512
+        MENUITEM SEPARATOR
+        MENUITEM "Панель &інструментів",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Панель &дисків",                          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Рядок стану",                            ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "В&есь екран\tCtrl+Shift+S",               ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Мінімізувати при запуску",               504
+        MENUITEM "&Зберегти налаштування перед виходом",    ID_VIEW_SAVESETTINGS
+    }
+
+
+    POPUP "&Безпека"  {
+        MENUITEM "&Доступ...",                    605
+        MENUITEM "&Протоколи...",                 606
+        MENUITEM "&Власник...",                   607
+    }
+
+    POPUP "Ві&кно"  {
+        MENUITEM "Нове &Вікно",                     ID_WINDOW_NEW
+        MENUITEM "Вікна каскадом\tCtrl+F5",         ID_WINDOW_CASCADE
+        MENUITEM "Вікна &зверху вниз",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Вікна зліва &направо\tCtrl+F4",   ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Впорядкувати автоматично",        ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Розмістити &Символи",             ID_WINDOW_ARRANGE
+        MENUITEM "&Оновити\tF5",                    ID_REFRESH
+    }
+
+    POPUP "Довідк&а"  {
+        MENUITEM "&Розділи довідки\tF1",            ID_HELP
+        MENUITEM "По&шук...\tF1",                   ID_HELP
+        MENUITEM "&Користування довідкою\tF1",      ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Про Winefile...",                ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Виберіть шлях призначення"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Шлях:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Скасувати", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Огляд", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "За типом файлів"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Ім'я:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Тип файлу",-1,7,23,87,56
+    CONTROL         "&Директорії",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Програми",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Доку&менти",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "Інші &файли",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Показати приховані/&Системні файли",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Властивості для %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,191,29,50,14
+    LTEXT           "Ім'я &файлу:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Повний &шлях:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Останні зміни:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Версія:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Cop&yright:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Розмір:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Атрибути",-1,7,79,158,46
+    CONTROL         "&Лише для читання",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "Пр&ихований",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Архів",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Сисемний",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "С&тиснутий",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "Дані про ве&рсію",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Застосування параметрів шрифта"
+    IDS_FONT_SEL_ERROR      "Помилка при виборі нового шрифта."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine File Manager"
+    IDS_ERROR               "Помилка"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Робочий стіл"
+    IDS_SHELL               "Shell"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Ще не реалізовано"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Ім'я"
+    IDS_COL_SIZE            "Розмір"
+    IDS_COL_CDATE           "Дата створення"
+    IDS_COL_ADATE           "Дата останнього доступу"
+    IDS_COL_MDATE           "Дата останньої зміни"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Посилання"
+    IDS_COL_ATTR            "Атрибути"
+    IDS_COL_SEC             "Безпека"
+
+    IDS_FREE_SPACE_FMT      "%1 з %2 вільно"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Ukrainian Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Файл"  {
+        MENUITEM "&Відкрити\tEnter",             ID_ACTIVATE
+        MENUITEM "&Перемістити...\tF7",          ID_FILE_MOVE
+        MENUITEM "&Копіювати...\tF8",            ID_FILE_COPY
+        MENUITEM "В &буфер обміну...\tF9",       118
+        MENUITEM "Вида&лити\tDel",               ID_FILE_DELETE
+        MENUITEM "Пере&йменувати...",            109
+        MENUITEM "Властивос&ті...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Запак&увати...",               119
+        MENUITEM "Р&озпакувати...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Запустити...",                ID_RUN
+        MENUITEM "&Друк...",                     102
+        MENUITEM "Асоціювати...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "Створити директорі&ю...",      111
+        MENUITEM "По&шук...",                    104
+        MENUITEM "Виділити &файли...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Ви&хід\tAlt+X",                ID_FILE_EXIT
+#else
+        MENUITEM "Ви&хід",                       ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Диск"  {
+        MENUITEM "&Копіювати диск...",           201
+        MENUITEM "&Мітка тому...",               202
+        MENUITEM SEPARATOR
+        MENUITEM "&Форматувати диск...",         ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Створити системний диск...", -1 /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Підключити мережний диск",    ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Відключити мережний диск",    ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Зробити спільним як...",       254
+        MENUITEM "&Закрити спільний доступ...",  255
+        MENUITEM SEPARATOR
+        MENUITEM "Ви&брати диск...",             251
+    }
+
+    POPUP "Ди&ректорії"  {
+        MENUITEM "&Наступний рівень\t+",         301
+        MENUITEM "Розгорнути &дерево\t*",        302
+        MENUITEM "Розгорнути &все\tStrg+*",      303
+        MENUITEM "Згорнути д&ерево\t-",          304
+        MENUITEM SEPARATOR
+        MENUITEM "Відмітити &гілки",             505
+    }
+
+    POPUP "&Вигляд"  {
+        MENUITEM "&Дерево і директорія",         413
+        MENUITEM "Лише д&ерево",                 411
+        MENUITEM "Лише д&иректорія",             412
+        MENUITEM SEPARATOR
+        MENUITEM "Роз&бити",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Ім'я",                        ID_VIEW_NAME
+        MENUITEM "Всі дані про фай&л",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Часткові дані...",            ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Сортувати за ім'ям",          ID_VIEW_SORT_NAME
+        MENUITEM "Сортувати за &типом",          ID_VIEW_SORT_TYPE
+        MENUITEM "Сортувати за ро&зміром",       ID_VIEW_SORT_SIZE
+        MENUITEM "Сортувати за  д&атою",         ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Сортувати за &...",            ID_VIEW_FILTER
+    }
+
+    POPUP "&Налаштування"  {
+        MENUITEM "&Підтвердження...",                       501
+        MENUITEM "&Шрифт...",                               ID_SELECT_FONT
+        MENUITEM "Налаштувати &панель інструментів...",     512
+        MENUITEM SEPARATOR
+        MENUITEM "Панель &інструментів",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Панель &дисків",                          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Рядок стану",                            ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "В&есь екран\tCtrl+Shift+S",               ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Мінімізувати при запуску",               504
+        MENUITEM "&Зберегти налаштування перед виходом",    ID_VIEW_SAVESETTINGS
+    }
+
+
+    POPUP "&Безпека"  {
+        MENUITEM "&Доступ...",                    605
+        MENUITEM "&Протоколи...",                 606
+        MENUITEM "&Власник...",                   607
+    }
+
+    POPUP "Ві&кно"  {
+        MENUITEM "Нове &Вікно",                     ID_WINDOW_NEW
+        MENUITEM "Вікна каскадом\tCtrl+F5",         ID_WINDOW_CASCADE
+        MENUITEM "Вікна &зверху вниз",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Вікна зліва &направо\tCtrl+F4",   ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Впорядкувати автоматично",        ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Розмістити &Символи",             ID_WINDOW_ARRANGE
+        MENUITEM "&Оновити\tF5",                    ID_REFRESH
+    }
+
+    POPUP "Довідк&а"  {
+        MENUITEM "&Розділи довідки\tF1",            ID_HELP
+        MENUITEM "По&шук...\tF1",                   ID_HELP
+        MENUITEM "&Користування довідкою\tF1",      ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Про Winefile...",                ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Виберіть шлях призначення"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Шлях:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Скасувати", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Огляд", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "За типом файлів"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Ім'я:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Тип файлу",-1,7,23,87,56
+    CONTROL         "&Директорії",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Програми",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Доку&менти",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "Інші &файли",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Показати приховані/&Системні файли",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Властивості для %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,191,29,50,14
+    LTEXT           "Ім'я &файлу:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Повний &шлях:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Останні зміни:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Версія:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Cop&yright:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Розмір:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Атрибути",-1,7,79,158,46
+    CONTROL         "&Лише для читання",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "Пр&ихований",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Архів",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Сисемний",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "С&тиснутий",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "Дані про ве&рсію",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Застосування параметрів шрифта"
+    IDS_FONT_SEL_ERROR      "Помилка при виборі нового шрифта."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine File Manager"
+    IDS_ERROR               "Помилка"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Робочий стіл"
+    IDS_SHELL               "Shell"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Ще не реалізовано"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Ім'я"
+    IDS_COL_SIZE            "Розмір"
+    IDS_COL_CDATE           "Дата створення"
+    IDS_COL_ADATE           "Дата останнього доступу"
+    IDS_COL_MDATE           "Дата останньої зміни"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Посилання"
+    IDS_COL_ATTR            "Атрибути"
+    IDS_COL_SEC             "Безпека"
+
+    IDS_FREE_SPACE_FMT      "%1 з %2 вільно"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}

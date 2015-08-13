@@ -1,0 +1,1004 @@
+/*
+ * WineFile
+ * Lithuanian Language Support
+ *
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Failas"  {
+        MENUITEM "&Atverti\tEnter",               ID_ACTIVATE
+        MENUITEM "Pe&rkelti...\tF7",              ID_FILE_MOVE
+        MENUITEM "&Kopijuoti...\tF8",             ID_FILE_COPY
+        MENUITEM "Iškarpin&ėje...\tF9",           118
+        MENUITEM "&Šalinti\tDel",                 ID_FILE_DELETE
+        MENUITEM "Per&vadinti...",                109
+        MENUITEM "Savy&bės...\tAlt+Enter",        ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Glaudinti...",                 119
+        MENUITEM "Išsk&leisti...",                120
+        MENUITEM SEPARATOR
+        MENUITEM "&Vykdyti...",                   ID_RUN
+        MENUITEM "&Spausdinti...",                102
+        MENUITEM "Susieti...",                    103
+        MENUITEM SEPARATOR
+        MENUITEM "Suk&urti katalogą...",          111
+        MENUITEM "&Ieškoti...",                   104
+        MENUITEM "&Pažymėti failus...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Iš&eiti\tAlt+X",                ID_FILE_EXIT
+#else
+        MENUITEM "Iš&eiti",                       ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Diskas"  {
+        MENUITEM "&Kopijuoti diską...",           201
+        MENUITEM "&Pavadinti diską...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Ženklinti diską...",           ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Sukurti sisteminį diską...",   -1 /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Pri&jungti tinklo diską",       ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Atjungti tinklo diską",        ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bendrinti kaip...",            254
+        MENUITEM "&Panaikinti bendrumą...",       255
+        MENUITEM SEPARATOR
+        MENUITEM "&Išrinkti diską...",            251
+    }
+
+    POPUP "&Katalogai"  {
+        MENUITEM "&Kitas lygis\t+",               301
+        MENUITEM "Išskleisti &medį\t*",           302
+        MENUITEM "Išskleisti &viską\tStrg+*",     303
+        MENUITEM "Suskleisti m&edį\t-",           304
+        MENUITEM SEPARATOR
+        MENUITEM "&Pažymėti vaikus",              505
+    }
+
+    POPUP "&Rodymas"  {
+        MENUITEM "&Medis ir katalogai",           413
+        MENUITEM "&Tik medis",                    411
+        MENUITEM "Tik &katalogai",                412
+        MENUITEM SEPARATOR
+        MENUITEM "&Skaidyti",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Vardas",                       ID_VIEW_NAME
+        MENUITEM "Visa failo &informacija",       ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Dalinė informacija...",        ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Rikiuoti pagal vardą",         ID_VIEW_SORT_NAME
+        MENUITEM "Rikiuoti &pagal tipą",          ID_VIEW_SORT_TYPE
+        MENUITEM "Rikiuoti pagal d&ydį",          ID_VIEW_SORT_SIZE
+        MENUITEM "Rikiuoti pagal d&atą",          ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "&Filtruoti pagal...",           ID_VIEW_FILTER
+    }
+
+    POPUP "&Parinktys"  {
+        MENUITEM "&Patvirtinimas...",             501
+        MENUITEM "&Šriftas...",                   ID_SELECT_FONT
+        MENUITEM "Adaptuoti įrankių &juostą...",  512
+        MENUITEM SEPARATOR
+        MENUITEM "&Įrankių juosta",               ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Diskų juosta",                 ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Būsenos juosta",               ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Visas ekranas\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Suskleisti vykdant",           504
+        MENUITEM "&Išeinant išsaugoti nuostatas", ID_VIEW_SAVESETTINGS
+    }
+
+
+    POPUP "&Saugumas"  {
+        MENUITEM "&Prieiga...",                   605
+        MENUITEM "&Registravimas...",             606
+        MENUITEM "&Savininkas...",                607
+    }
+
+    POPUP "&Langas"  {
+        MENUITEM "Naujas &langas",                ID_WINDOW_NEW
+        MENUITEM "Išdėstyti pa&kopomis\tCtrl+F5",  ID_WINDOW_CASCADE
+        MENUITEM "Iškloti &gulsčiai",             ID_WINDOW_TILE_HORZ
+        MENUITEM "Iškloti &stačiai\tCtrl+F4",     ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Išdėstyti &automatiškai",       ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Išdėstyti si&mbolius",          ID_WINDOW_ARRANGE
+        MENUITEM "At&naujinti\tF5",               ID_REFRESH
+    }
+
+    POPUP "&Žinynas"  {
+        MENUITEM "Žinyno &temos\tF1",             ID_HELP
+        MENUITEM "&Paieška žinyne...\tF1",        ID_HELP
+        MENUITEM "Žinyno &naudojimas\tF1",        ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Apie Winefile...",             ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Išrinkite paskirtį"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Kelias:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Gerai", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Atsisakyti", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Parinkti", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Pagal failo tipą"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Vardas:",-1,7,8,26,10
+    EDITTEXT        IDC_VIEW_PATTERN,35,7,59,12,ES_AUTOHSCROLL
+    GROUPBOX        "Failų tipai",-1,7,23,87,56
+    CONTROL         "&Katalogai",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programos",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "&Dokumentai",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "Kiti &failai",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Rodyti paslėptus/&sisteminius failus",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,9
+    DEFPUSHBUTTON   "Gerai",IDOK,104,7,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "%s savybės"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Gerai",IDOK,191,7,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,191,29,50,14
+    LTEXT           "&Failo vardas:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Visas &kelias:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Pask. keitimas:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Versija:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Autoriaus teisės:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Dydis:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Požymiai",-1,7,79,158,46
+    CONTROL         "&Tik skaitymui",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Paslėptas",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Archyvuotinas",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Sisteminis",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "Su&glaudintas",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "&Versijos informacija",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Pritaikomos šrifto nuostatos"
+    IDS_FONT_SEL_ERROR      "Klaida parenkant naują šriftą."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine failų tvarkytuvė"
+    IDS_ERROR               "Klaida"
+    IDS_ROOT_FS             "šakninė fs"
+    IDS_UNIXFS              "unix fs"
+    IDS_DESKTOP             "Darbalaukis"
+    IDS_SHELL               "Apvalkalas"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Dar nerealizuota"
+    IDS_WINE_FILE           "Wine failas"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Vardas"
+    IDS_COL_SIZE            "Dydis"
+    IDS_COL_CDATE           "KData"
+    IDS_COL_ADATE           "PData"
+    IDS_COL_MDATE           "MData"
+    IDS_COL_IDX             "Indeksas/Inode"
+    IDS_COL_LINKS           "Saitai"
+    IDS_COL_ATTR            "Požymiai"
+    IDS_COL_SEC             "Saugumas"
+
+    IDS_FREE_SPACE_FMT      "%1 iš %2 laisva"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Lithuanian Language Support
+ *
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Failas"  {
+        MENUITEM "&Atverti\tEnter",               ID_ACTIVATE
+        MENUITEM "Pe&rkelti...\tF7",              ID_FILE_MOVE
+        MENUITEM "&Kopijuoti...\tF8",             ID_FILE_COPY
+        MENUITEM "Iškarpin&ėje...\tF9",           118
+        MENUITEM "&Šalinti\tDel",                 ID_FILE_DELETE
+        MENUITEM "Per&vadinti...",                109
+        MENUITEM "Savy&bės...\tAlt+Enter",        ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Glaudinti...",                 119
+        MENUITEM "Išsk&leisti...",                120
+        MENUITEM SEPARATOR
+        MENUITEM "&Vykdyti...",                   ID_RUN
+        MENUITEM "&Spausdinti...",                102
+        MENUITEM "Susieti...",                    103
+        MENUITEM SEPARATOR
+        MENUITEM "Suk&urti katalogą...",          111
+        MENUITEM "&Ieškoti...",                   104
+        MENUITEM "&Pažymėti failus...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Iš&eiti\tAlt+X",                ID_FILE_EXIT
+#else
+        MENUITEM "Iš&eiti",                       ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Diskas"  {
+        MENUITEM "&Kopijuoti diską...",           201
+        MENUITEM "&Pavadinti diską...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Ženklinti diską...",           ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Sukurti sisteminį diską...",   -1 /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Pri&jungti tinklo diską",       ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Atjungti tinklo diską",        ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bendrinti kaip...",            254
+        MENUITEM "&Panaikinti bendrumą...",       255
+        MENUITEM SEPARATOR
+        MENUITEM "&Išrinkti diską...",            251
+    }
+
+    POPUP "&Katalogai"  {
+        MENUITEM "&Kitas lygis\t+",               301
+        MENUITEM "Išskleisti &medį\t*",           302
+        MENUITEM "Išskleisti &viską\tStrg+*",     303
+        MENUITEM "Suskleisti m&edį\t-",           304
+        MENUITEM SEPARATOR
+        MENUITEM "&Pažymėti vaikus",              505
+    }
+
+    POPUP "&Rodymas"  {
+        MENUITEM "&Medis ir katalogai",           413
+        MENUITEM "&Tik medis",                    411
+        MENUITEM "Tik &katalogai",                412
+        MENUITEM SEPARATOR
+        MENUITEM "&Skaidyti",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Vardas",                       ID_VIEW_NAME
+        MENUITEM "Visa failo &informacija",       ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Dalinė informacija...",        ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Rikiuoti pagal vardą",         ID_VIEW_SORT_NAME
+        MENUITEM "Rikiuoti &pagal tipą",          ID_VIEW_SORT_TYPE
+        MENUITEM "Rikiuoti pagal d&ydį",          ID_VIEW_SORT_SIZE
+        MENUITEM "Rikiuoti pagal d&atą",          ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "&Filtruoti pagal...",           ID_VIEW_FILTER
+    }
+
+    POPUP "&Parinktys"  {
+        MENUITEM "&Patvirtinimas...",             501
+        MENUITEM "&Šriftas...",                   ID_SELECT_FONT
+        MENUITEM "Adaptuoti įrankių &juostą...",  512
+        MENUITEM SEPARATOR
+        MENUITEM "&Įrankių juosta",               ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Diskų juosta",                 ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Būsenos juosta",               ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Visas ekranas\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Suskleisti vykdant",           504
+        MENUITEM "&Išeinant išsaugoti nuostatas", ID_VIEW_SAVESETTINGS
+    }
+
+
+    POPUP "&Saugumas"  {
+        MENUITEM "&Prieiga...",                   605
+        MENUITEM "&Registravimas...",             606
+        MENUITEM "&Savininkas...",                607
+    }
+
+    POPUP "&Langas"  {
+        MENUITEM "Naujas &langas",                ID_WINDOW_NEW
+        MENUITEM "Išdėstyti pa&kopomis\tCtrl+F5",  ID_WINDOW_CASCADE
+        MENUITEM "Iškloti &gulsčiai",             ID_WINDOW_TILE_HORZ
+        MENUITEM "Iškloti &stačiai\tCtrl+F4",     ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Išdėstyti &automatiškai",       ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Išdėstyti si&mbolius",          ID_WINDOW_ARRANGE
+        MENUITEM "At&naujinti\tF5",               ID_REFRESH
+    }
+
+    POPUP "&Žinynas"  {
+        MENUITEM "Žinyno &temos\tF1",             ID_HELP
+        MENUITEM "&Paieška žinyne...\tF1",        ID_HELP
+        MENUITEM "Žinyno &naudojimas\tF1",        ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Apie Winefile...",             ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Išrinkite paskirtį"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Kelias:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Gerai", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Atsisakyti", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Parinkti", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Pagal failo tipą"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Vardas:",-1,7,8,26,10
+    EDITTEXT        IDC_VIEW_PATTERN,35,7,59,12,ES_AUTOHSCROLL
+    GROUPBOX        "Failų tipai",-1,7,23,87,56
+    CONTROL         "&Katalogai",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programos",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "&Dokumentai",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "Kiti &failai",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Rodyti paslėptus/&sisteminius failus",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,9
+    DEFPUSHBUTTON   "Gerai",IDOK,104,7,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "%s savybės"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Gerai",IDOK,191,7,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,191,29,50,14
+    LTEXT           "&Failo vardas:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Visas &kelias:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Pask. keitimas:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Versija:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Autoriaus teisės:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Dydis:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Požymiai",-1,7,79,158,46
+    CONTROL         "&Tik skaitymui",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Paslėptas",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Archyvuotinas",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Sisteminis",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "Su&glaudintas",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "&Versijos informacija",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Pritaikomos šrifto nuostatos"
+    IDS_FONT_SEL_ERROR      "Klaida parenkant naują šriftą."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine failų tvarkytuvė"
+    IDS_ERROR               "Klaida"
+    IDS_ROOT_FS             "šakninė fs"
+    IDS_UNIXFS              "unix fs"
+    IDS_DESKTOP             "Darbalaukis"
+    IDS_SHELL               "Apvalkalas"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Dar nerealizuota"
+    IDS_WINE_FILE           "Wine failas"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Vardas"
+    IDS_COL_SIZE            "Dydis"
+    IDS_COL_CDATE           "KData"
+    IDS_COL_ADATE           "PData"
+    IDS_COL_MDATE           "MData"
+    IDS_COL_IDX             "Indeksas/Inode"
+    IDS_COL_LINKS           "Saitai"
+    IDS_COL_ATTR            "Požymiai"
+    IDS_COL_SEC             "Saugumas"
+
+    IDS_FREE_SPACE_FMT      "%1 iš %2 laisva"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Lithuanian Language Support
+ *
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Failas"  {
+        MENUITEM "&Atverti\tEnter",               ID_ACTIVATE
+        MENUITEM "Pe&rkelti...\tF7",              ID_FILE_MOVE
+        MENUITEM "&Kopijuoti...\tF8",             ID_FILE_COPY
+        MENUITEM "Iškarpin&ėje...\tF9",           118
+        MENUITEM "&Šalinti\tDel",                 ID_FILE_DELETE
+        MENUITEM "Per&vadinti...",                109
+        MENUITEM "Savy&bės...\tAlt+Enter",        ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Glaudinti...",                 119
+        MENUITEM "Išsk&leisti...",                120
+        MENUITEM SEPARATOR
+        MENUITEM "&Vykdyti...",                   ID_RUN
+        MENUITEM "&Spausdinti...",                102
+        MENUITEM "Susieti...",                    103
+        MENUITEM SEPARATOR
+        MENUITEM "Suk&urti katalogą...",          111
+        MENUITEM "&Ieškoti...",                   104
+        MENUITEM "&Pažymėti failus...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Iš&eiti\tAlt+X",                ID_FILE_EXIT
+#else
+        MENUITEM "Iš&eiti",                       ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Diskas"  {
+        MENUITEM "&Kopijuoti diską...",           201
+        MENUITEM "&Pavadinti diską...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Ženklinti diską...",           ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Sukurti sisteminį diską...",   -1 /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Pri&jungti tinklo diską",       ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Atjungti tinklo diską",        ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bendrinti kaip...",            254
+        MENUITEM "&Panaikinti bendrumą...",       255
+        MENUITEM SEPARATOR
+        MENUITEM "&Išrinkti diską...",            251
+    }
+
+    POPUP "&Katalogai"  {
+        MENUITEM "&Kitas lygis\t+",               301
+        MENUITEM "Išskleisti &medį\t*",           302
+        MENUITEM "Išskleisti &viską\tStrg+*",     303
+        MENUITEM "Suskleisti m&edį\t-",           304
+        MENUITEM SEPARATOR
+        MENUITEM "&Pažymėti vaikus",              505
+    }
+
+    POPUP "&Rodymas"  {
+        MENUITEM "&Medis ir katalogai",           413
+        MENUITEM "&Tik medis",                    411
+        MENUITEM "Tik &katalogai",                412
+        MENUITEM SEPARATOR
+        MENUITEM "&Skaidyti",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Vardas",                       ID_VIEW_NAME
+        MENUITEM "Visa failo &informacija",       ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Dalinė informacija...",        ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Rikiuoti pagal vardą",         ID_VIEW_SORT_NAME
+        MENUITEM "Rikiuoti &pagal tipą",          ID_VIEW_SORT_TYPE
+        MENUITEM "Rikiuoti pagal d&ydį",          ID_VIEW_SORT_SIZE
+        MENUITEM "Rikiuoti pagal d&atą",          ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "&Filtruoti pagal...",           ID_VIEW_FILTER
+    }
+
+    POPUP "&Parinktys"  {
+        MENUITEM "&Patvirtinimas...",             501
+        MENUITEM "&Šriftas...",                   ID_SELECT_FONT
+        MENUITEM "Adaptuoti įrankių &juostą...",  512
+        MENUITEM SEPARATOR
+        MENUITEM "&Įrankių juosta",               ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Diskų juosta",                 ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Būsenos juosta",               ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Visas ekranas\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Suskleisti vykdant",           504
+        MENUITEM "&Išeinant išsaugoti nuostatas", ID_VIEW_SAVESETTINGS
+    }
+
+
+    POPUP "&Saugumas"  {
+        MENUITEM "&Prieiga...",                   605
+        MENUITEM "&Registravimas...",             606
+        MENUITEM "&Savininkas...",                607
+    }
+
+    POPUP "&Langas"  {
+        MENUITEM "Naujas &langas",                ID_WINDOW_NEW
+        MENUITEM "Išdėstyti pa&kopomis\tCtrl+F5",  ID_WINDOW_CASCADE
+        MENUITEM "Iškloti &gulsčiai",             ID_WINDOW_TILE_HORZ
+        MENUITEM "Iškloti &stačiai\tCtrl+F4",     ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Išdėstyti &automatiškai",       ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Išdėstyti si&mbolius",          ID_WINDOW_ARRANGE
+        MENUITEM "At&naujinti\tF5",               ID_REFRESH
+    }
+
+    POPUP "&Žinynas"  {
+        MENUITEM "Žinyno &temos\tF1",             ID_HELP
+        MENUITEM "&Paieška žinyne...\tF1",        ID_HELP
+        MENUITEM "Žinyno &naudojimas\tF1",        ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Apie Winefile...",             ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Išrinkite paskirtį"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Kelias:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Gerai", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Atsisakyti", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Parinkti", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Pagal failo tipą"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Vardas:",-1,7,8,26,10
+    EDITTEXT        IDC_VIEW_PATTERN,35,7,59,12,ES_AUTOHSCROLL
+    GROUPBOX        "Failų tipai",-1,7,23,87,56
+    CONTROL         "&Katalogai",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programos",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "&Dokumentai",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "Kiti &failai",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Rodyti paslėptus/&sisteminius failus",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,9
+    DEFPUSHBUTTON   "Gerai",IDOK,104,7,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "%s savybės"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Gerai",IDOK,191,7,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,191,29,50,14
+    LTEXT           "&Failo vardas:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Visas &kelias:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Pask. keitimas:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Versija:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Autoriaus teisės:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Dydis:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Požymiai",-1,7,79,158,46
+    CONTROL         "&Tik skaitymui",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Paslėptas",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Archyvuotinas",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Sisteminis",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "Su&glaudintas",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "&Versijos informacija",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Pritaikomos šrifto nuostatos"
+    IDS_FONT_SEL_ERROR      "Klaida parenkant naują šriftą."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine failų tvarkytuvė"
+    IDS_ERROR               "Klaida"
+    IDS_ROOT_FS             "šakninė fs"
+    IDS_UNIXFS              "unix fs"
+    IDS_DESKTOP             "Darbalaukis"
+    IDS_SHELL               "Apvalkalas"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Dar nerealizuota"
+    IDS_WINE_FILE           "Wine failas"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Vardas"
+    IDS_COL_SIZE            "Dydis"
+    IDS_COL_CDATE           "KData"
+    IDS_COL_ADATE           "PData"
+    IDS_COL_MDATE           "MData"
+    IDS_COL_IDX             "Indeksas/Inode"
+    IDS_COL_LINKS           "Saitai"
+    IDS_COL_ATTR            "Požymiai"
+    IDS_COL_SEC             "Saugumas"
+
+    IDS_FREE_SPACE_FMT      "%1 iš %2 laisva"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/*
+ * WineFile
+ * Lithuanian Language Support
+ *
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Failas"  {
+        MENUITEM "&Atverti\tEnter",               ID_ACTIVATE
+        MENUITEM "Pe&rkelti...\tF7",              ID_FILE_MOVE
+        MENUITEM "&Kopijuoti...\tF8",             ID_FILE_COPY
+        MENUITEM "Iškarpin&ėje...\tF9",           118
+        MENUITEM "&Šalinti\tDel",                 ID_FILE_DELETE
+        MENUITEM "Per&vadinti...",                109
+        MENUITEM "Savy&bės...\tAlt+Enter",        ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Glaudinti...",                 119
+        MENUITEM "Išsk&leisti...",                120
+        MENUITEM SEPARATOR
+        MENUITEM "&Vykdyti...",                   ID_RUN
+        MENUITEM "&Spausdinti...",                102
+        MENUITEM "Susieti...",                    103
+        MENUITEM SEPARATOR
+        MENUITEM "Suk&urti katalogą...",          111
+        MENUITEM "&Ieškoti...",                   104
+        MENUITEM "&Pažymėti failus...",           116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Iš&eiti\tAlt+X",                ID_FILE_EXIT
+#else
+        MENUITEM "Iš&eiti",                       ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Diskas"  {
+        MENUITEM "&Kopijuoti diską...",           201
+        MENUITEM "&Pavadinti diską...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Ženklinti diską...",           ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Sukurti sisteminį diską...",   -1 /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Pri&jungti tinklo diską",       ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Atjungti tinklo diską",        ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bendrinti kaip...",            254
+        MENUITEM "&Panaikinti bendrumą...",       255
+        MENUITEM SEPARATOR
+        MENUITEM "&Išrinkti diską...",            251
+    }
+
+    POPUP "&Katalogai"  {
+        MENUITEM "&Kitas lygis\t+",               301
+        MENUITEM "Išskleisti &medį\t*",           302
+        MENUITEM "Išskleisti &viską\tStrg+*",     303
+        MENUITEM "Suskleisti m&edį\t-",           304
+        MENUITEM SEPARATOR
+        MENUITEM "&Pažymėti vaikus",              505
+    }
+
+    POPUP "&Rodymas"  {
+        MENUITEM "&Medis ir katalogai",           413
+        MENUITEM "&Tik medis",                    411
+        MENUITEM "Tik &katalogai",                412
+        MENUITEM SEPARATOR
+        MENUITEM "&Skaidyti",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Vardas",                       ID_VIEW_NAME
+        MENUITEM "Visa failo &informacija",       ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Dalinė informacija...",        ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Rikiuoti pagal vardą",         ID_VIEW_SORT_NAME
+        MENUITEM "Rikiuoti &pagal tipą",          ID_VIEW_SORT_TYPE
+        MENUITEM "Rikiuoti pagal d&ydį",          ID_VIEW_SORT_SIZE
+        MENUITEM "Rikiuoti pagal d&atą",          ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "&Filtruoti pagal...",           ID_VIEW_FILTER
+    }
+
+    POPUP "&Parinktys"  {
+        MENUITEM "&Patvirtinimas...",             501
+        MENUITEM "&Šriftas...",                   ID_SELECT_FONT
+        MENUITEM "Adaptuoti įrankių &juostą...",  512
+        MENUITEM SEPARATOR
+        MENUITEM "&Įrankių juosta",               ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Diskų juosta",                 ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Būsenos juosta",               ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Visas ekranas\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Suskleisti vykdant",           504
+        MENUITEM "&Išeinant išsaugoti nuostatas", ID_VIEW_SAVESETTINGS
+    }
+
+
+    POPUP "&Saugumas"  {
+        MENUITEM "&Prieiga...",                   605
+        MENUITEM "&Registravimas...",             606
+        MENUITEM "&Savininkas...",                607
+    }
+
+    POPUP "&Langas"  {
+        MENUITEM "Naujas &langas",                ID_WINDOW_NEW
+        MENUITEM "Išdėstyti pa&kopomis\tCtrl+F5",  ID_WINDOW_CASCADE
+        MENUITEM "Iškloti &gulsčiai",             ID_WINDOW_TILE_HORZ
+        MENUITEM "Iškloti &stačiai\tCtrl+F4",     ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Išdėstyti &automatiškai",       ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Išdėstyti si&mbolius",          ID_WINDOW_ARRANGE
+        MENUITEM "At&naujinti\tF5",               ID_REFRESH
+    }
+
+    POPUP "&Žinynas"  {
+        MENUITEM "Žinyno &temos\tF1",             ID_HELP
+        MENUITEM "&Paieška žinyne...\tF1",        ID_HELP
+        MENUITEM "Žinyno &naudojimas\tF1",        ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Apie Winefile...",             ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Išrinkite paskirtį"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Kelias:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Gerai", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Atsisakyti", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Parinkti", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Pagal failo tipą"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Vardas:",-1,7,8,26,10
+    EDITTEXT        IDC_VIEW_PATTERN,35,7,59,12,ES_AUTOHSCROLL
+    GROUPBOX        "Failų tipai",-1,7,23,87,56
+    CONTROL         "&Katalogai",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programos",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "&Dokumentai",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "Kiti &failai",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Rodyti paslėptus/&sisteminius failus",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,9
+    DEFPUSHBUTTON   "Gerai",IDOK,104,7,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "%s savybės"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Gerai",IDOK,191,7,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,191,29,50,14
+    LTEXT           "&Failo vardas:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Visas &kelias:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Pask. keitimas:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Versija:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Autoriaus teisės:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Dydis:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Požymiai",-1,7,79,158,46
+    CONTROL         "&Tik skaitymui",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Paslėptas",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Archyvuotinas",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Sisteminis",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "Su&glaudintas",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "&Versijos informacija",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Pritaikomos šrifto nuostatos"
+    IDS_FONT_SEL_ERROR      "Klaida parenkant naują šriftą."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine failų tvarkytuvė"
+    IDS_ERROR               "Klaida"
+    IDS_ROOT_FS             "šakninė fs"
+    IDS_UNIXFS              "unix fs"
+    IDS_DESKTOP             "Darbalaukis"
+    IDS_SHELL               "Apvalkalas"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Dar nerealizuota"
+    IDS_WINE_FILE           "Wine failas"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Vardas"
+    IDS_COL_SIZE            "Dydis"
+    IDS_COL_CDATE           "KData"
+    IDS_COL_ADATE           "PData"
+    IDS_COL_MDATE           "MData"
+    IDS_COL_IDX             "Indeksas/Inode"
+    IDS_COL_LINKS           "Saitai"
+    IDS_COL_ATTR            "Požymiai"
+    IDS_COL_SEC             "Saugumas"
+
+    IDS_FREE_SPACE_FMT      "%1 iš %2 laisva"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}

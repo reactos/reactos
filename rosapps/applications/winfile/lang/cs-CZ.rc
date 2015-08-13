@@ -1,0 +1,804 @@
+/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
+ *
+ * WineFile
+ * Czech Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2004 David Kredba
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* Czech strings in CP1250 */
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Soubor"  {
+        MENUITEM "&Otevřít\tEnter",             ID_ACTIVATE
+        MENUITEM "&Přesunout...\tF7",           ID_FILE_MOVE
+        MENUITEM "&Kopírovat...\tF8",           ID_FILE_COPY
+        MENUITEM "&Ve schránce...\tF9",         118
+        MENUITEM "&Smazat\tDel",                ID_FILE_DELETE
+        MENUITEM "Př&ejmenovat...",             109
+        MENUITEM "V&lastnosti...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Komprese...",                119
+        MENUITEM "&Dekomprese...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Spustit...",                 ID_RUN
+        MENUITEM "&Tisknout...",                102
+        MENUITEM "Asociovat...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "V&ytvořit adresář...",        111
+        MENUITEM "&Hledat...",                  104
+        MENUITEM "&Zvolit voubory...",          116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "K&onec\tAlt+X",               ID_FILE_EXIT
+#else
+        MENUITEM "K&onec",                      ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Disk"  {
+        MENUITEM "&Kopírovat disk...",          201
+        MENUITEM "&Jmenovka disk...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formátovat disk...",         ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Vytvořit systemový disk...", -1  /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Připojit &síťové zařízení",   ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Odpojit &síťové zařízení",   ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Sdílet jako...",              254
+        MENUITEM "&Odstranit sdílení...",       255
+        MENUITEM SEPARATOR
+        MENUITEM "&Zvolit zařízení...",         251
+    }
+
+    POPUP "&Adresáře"  {
+        MENUITEM "&Další úroveň\t+",            301
+        MENUITEM "Rozbalit &strom\t*",          302
+        MENUITEM "Rozbalit &vše\tStrg+*",       303
+        MENUITEM "Sbalit &strom\t-",            304
+        MENUITEM SEPARATOR
+        MENUITEM "&Označit potomky",            505
+    }
+
+    POPUP "&Zobrazení"  {
+        MENUITEM "&Strom a adresáře",           413
+        MENUITEM "&Jen strom",                  411
+        MENUITEM "Jen &adresáře",               412
+        MENUITEM SEPARATOR
+        MENUITEM "&Rozdělit",                   ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Jméno",                      ID_VIEW_NAME
+        MENUITEM "&Detaily všech souborů",      ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "Čá&stečné detaily...",        ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Třídit podle jména",         ID_VIEW_SORT_NAME
+        MENUITEM "Třídit &podle typu",          ID_VIEW_SORT_TYPE
+        MENUITEM "Třídit podle &velikosti",     ID_VIEW_SORT_SIZE
+        MENUITEM "Třídit podle &data",          ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Třídit podle &...",           ID_VIEW_FILTER
+    }
+
+    POPUP "&Nastavení"  {
+        MENUITEM "&Potvrzování...",             501
+        MENUITEM "&Písmo...",                   ID_SELECT_FONT
+        MENUITEM "Upravit panel &nástrojů...",  512
+        MENUITEM SEPARATOR
+        MENUITEM "&Panel nástrojů",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Panel zaříení",              ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Stavový řádek",              ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Celaá obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Minimalizovat při spuštění", 504
+        MENUITEM "&Uložit nastavení při vypnutí",511
+    }
+
+
+    POPUP "&Zabezpečení"  {
+        MENUITEM "&Přístup...",                 605
+        MENUITEM "&Logování...",                606
+        MENUITEM "&Vlastník...",                607
+    }
+
+    POPUP "&Okno"  {
+        MENUITEM "Nové &okno",                  ID_WINDOW_NEW
+        MENUITEM "Kaskádování\tCtrl+F5",        ID_WINDOW_CASCADE
+        MENUITEM "Uspořádat &horizontálně",     ID_WINDOW_TILE_HORZ
+        MENUITEM "Uspořádat &vertikálně\tCtrl+F4",ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Zarovnat automaticky",        ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Zarovnat &symboly",           ID_WINDOW_ARRANGE
+        MENUITEM "&Aktualizovat\tF5",           ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "&Témata nápovědy\tF1",        ID_HELP
+        MENUITEM "Hledání v &nápovědě...\tF1",  ID_HELP
+        MENUITEM "&Jak používat nápovědu\tF1",  ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Informace o Winefile...",    ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zvolte cíl"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Cesta:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Zrušit", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Procházet", 254, 158, 43, 47, 14
+}
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Aplikování nastavení písma"
+    IDS_FONT_SEL_ERROR      "Chyba při volbě nového písma."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Chyba"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Plocha"
+    IDS_SHELL               "Příkazový řádek"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Zatím neimplementováno"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Jméno"
+    IDS_COL_SIZE            "Velikost"
+    IDS_COL_CDATE           "Datum vytvoření"
+    IDS_COL_ADATE           "Datum posledního přístupu"
+    IDS_COL_MDATE           "Datum poslední modifikace"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Linky"
+    IDS_COL_ATTR            "Atributy"
+    IDS_COL_SEC             "Zabezpečení"
+
+    IDS_FREE_SPACE_FMT      "%1 z %2 volného"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
+ *
+ * WineFile
+ * Czech Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2004 David Kredba
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* Czech strings in CP1250 */
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Soubor"  {
+        MENUITEM "&Otevřít\tEnter",             ID_ACTIVATE
+        MENUITEM "&Přesunout...\tF7",           ID_FILE_MOVE
+        MENUITEM "&Kopírovat...\tF8",           ID_FILE_COPY
+        MENUITEM "&Ve schránce...\tF9",         118
+        MENUITEM "&Smazat\tDel",                ID_FILE_DELETE
+        MENUITEM "Př&ejmenovat...",             109
+        MENUITEM "V&lastnosti...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Komprese...",                119
+        MENUITEM "&Dekomprese...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Spustit...",                 ID_RUN
+        MENUITEM "&Tisknout...",                102
+        MENUITEM "Asociovat...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "V&ytvořit adresář...",        111
+        MENUITEM "&Hledat...",                  104
+        MENUITEM "&Zvolit voubory...",          116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "K&onec\tAlt+X",               ID_FILE_EXIT
+#else
+        MENUITEM "K&onec",                      ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Disk"  {
+        MENUITEM "&Kopírovat disk...",          201
+        MENUITEM "&Jmenovka disk...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formátovat disk...",         ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Vytvořit systemový disk...", -1  /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Připojit &síťové zařízení",   ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Odpojit &síťové zařízení",   ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Sdílet jako...",              254
+        MENUITEM "&Odstranit sdílení...",       255
+        MENUITEM SEPARATOR
+        MENUITEM "&Zvolit zařízení...",         251
+    }
+
+    POPUP "&Adresáře"  {
+        MENUITEM "&Další úroveň\t+",            301
+        MENUITEM "Rozbalit &strom\t*",          302
+        MENUITEM "Rozbalit &vše\tStrg+*",       303
+        MENUITEM "Sbalit &strom\t-",            304
+        MENUITEM SEPARATOR
+        MENUITEM "&Označit potomky",            505
+    }
+
+    POPUP "&Zobrazení"  {
+        MENUITEM "&Strom a adresáře",           413
+        MENUITEM "&Jen strom",                  411
+        MENUITEM "Jen &adresáře",               412
+        MENUITEM SEPARATOR
+        MENUITEM "&Rozdělit",                   ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Jméno",                      ID_VIEW_NAME
+        MENUITEM "&Detaily všech souborů",      ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "Čá&stečné detaily...",        ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Třídit podle jména",         ID_VIEW_SORT_NAME
+        MENUITEM "Třídit &podle typu",          ID_VIEW_SORT_TYPE
+        MENUITEM "Třídit podle &velikosti",     ID_VIEW_SORT_SIZE
+        MENUITEM "Třídit podle &data",          ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Třídit podle &...",           ID_VIEW_FILTER
+    }
+
+    POPUP "&Nastavení"  {
+        MENUITEM "&Potvrzování...",             501
+        MENUITEM "&Písmo...",                   ID_SELECT_FONT
+        MENUITEM "Upravit panel &nástrojů...",  512
+        MENUITEM SEPARATOR
+        MENUITEM "&Panel nástrojů",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Panel zaříení",              ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Stavový řádek",              ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Celaá obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Minimalizovat při spuštění", 504
+        MENUITEM "&Uložit nastavení při vypnutí",511
+    }
+
+
+    POPUP "&Zabezpečení"  {
+        MENUITEM "&Přístup...",                 605
+        MENUITEM "&Logování...",                606
+        MENUITEM "&Vlastník...",                607
+    }
+
+    POPUP "&Okno"  {
+        MENUITEM "Nové &okno",                  ID_WINDOW_NEW
+        MENUITEM "Kaskádování\tCtrl+F5",        ID_WINDOW_CASCADE
+        MENUITEM "Uspořádat &horizontálně",     ID_WINDOW_TILE_HORZ
+        MENUITEM "Uspořádat &vertikálně\tCtrl+F4",ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Zarovnat automaticky",        ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Zarovnat &symboly",           ID_WINDOW_ARRANGE
+        MENUITEM "&Aktualizovat\tF5",           ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "&Témata nápovědy\tF1",        ID_HELP
+        MENUITEM "Hledání v &nápovědě...\tF1",  ID_HELP
+        MENUITEM "&Jak používat nápovědu\tF1",  ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Informace o Winefile...",    ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zvolte cíl"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Cesta:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Zrušit", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Procházet", 254, 158, 43, 47, 14
+}
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Aplikování nastavení písma"
+    IDS_FONT_SEL_ERROR      "Chyba při volbě nového písma."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Chyba"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Plocha"
+    IDS_SHELL               "Příkazový řádek"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Zatím neimplementováno"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Jméno"
+    IDS_COL_SIZE            "Velikost"
+    IDS_COL_CDATE           "Datum vytvoření"
+    IDS_COL_ADATE           "Datum posledního přístupu"
+    IDS_COL_MDATE           "Datum poslední modifikace"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Linky"
+    IDS_COL_ATTR            "Atributy"
+    IDS_COL_SEC             "Zabezpečení"
+
+    IDS_FREE_SPACE_FMT      "%1 z %2 volného"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
+ *
+ * WineFile
+ * Czech Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2004 David Kredba
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* Czech strings in CP1250 */
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Soubor"  {
+        MENUITEM "&Otevřít\tEnter",             ID_ACTIVATE
+        MENUITEM "&Přesunout...\tF7",           ID_FILE_MOVE
+        MENUITEM "&Kopírovat...\tF8",           ID_FILE_COPY
+        MENUITEM "&Ve schránce...\tF9",         118
+        MENUITEM "&Smazat\tDel",                ID_FILE_DELETE
+        MENUITEM "Př&ejmenovat...",             109
+        MENUITEM "V&lastnosti...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Komprese...",                119
+        MENUITEM "&Dekomprese...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Spustit...",                 ID_RUN
+        MENUITEM "&Tisknout...",                102
+        MENUITEM "Asociovat...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "V&ytvořit adresář...",        111
+        MENUITEM "&Hledat...",                  104
+        MENUITEM "&Zvolit voubory...",          116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "K&onec\tAlt+X",               ID_FILE_EXIT
+#else
+        MENUITEM "K&onec",                      ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Disk"  {
+        MENUITEM "&Kopírovat disk...",          201
+        MENUITEM "&Jmenovka disk...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formátovat disk...",         ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Vytvořit systemový disk...", -1  /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Připojit &síťové zařízení",   ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Odpojit &síťové zařízení",   ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Sdílet jako...",              254
+        MENUITEM "&Odstranit sdílení...",       255
+        MENUITEM SEPARATOR
+        MENUITEM "&Zvolit zařízení...",         251
+    }
+
+    POPUP "&Adresáře"  {
+        MENUITEM "&Další úroveň\t+",            301
+        MENUITEM "Rozbalit &strom\t*",          302
+        MENUITEM "Rozbalit &vše\tStrg+*",       303
+        MENUITEM "Sbalit &strom\t-",            304
+        MENUITEM SEPARATOR
+        MENUITEM "&Označit potomky",            505
+    }
+
+    POPUP "&Zobrazení"  {
+        MENUITEM "&Strom a adresáře",           413
+        MENUITEM "&Jen strom",                  411
+        MENUITEM "Jen &adresáře",               412
+        MENUITEM SEPARATOR
+        MENUITEM "&Rozdělit",                   ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Jméno",                      ID_VIEW_NAME
+        MENUITEM "&Detaily všech souborů",      ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "Čá&stečné detaily...",        ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Třídit podle jména",         ID_VIEW_SORT_NAME
+        MENUITEM "Třídit &podle typu",          ID_VIEW_SORT_TYPE
+        MENUITEM "Třídit podle &velikosti",     ID_VIEW_SORT_SIZE
+        MENUITEM "Třídit podle &data",          ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Třídit podle &...",           ID_VIEW_FILTER
+    }
+
+    POPUP "&Nastavení"  {
+        MENUITEM "&Potvrzování...",             501
+        MENUITEM "&Písmo...",                   ID_SELECT_FONT
+        MENUITEM "Upravit panel &nástrojů...",  512
+        MENUITEM SEPARATOR
+        MENUITEM "&Panel nástrojů",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Panel zaříení",              ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Stavový řádek",              ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Celaá obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Minimalizovat při spuštění", 504
+        MENUITEM "&Uložit nastavení při vypnutí",511
+    }
+
+
+    POPUP "&Zabezpečení"  {
+        MENUITEM "&Přístup...",                 605
+        MENUITEM "&Logování...",                606
+        MENUITEM "&Vlastník...",                607
+    }
+
+    POPUP "&Okno"  {
+        MENUITEM "Nové &okno",                  ID_WINDOW_NEW
+        MENUITEM "Kaskádování\tCtrl+F5",        ID_WINDOW_CASCADE
+        MENUITEM "Uspořádat &horizontálně",     ID_WINDOW_TILE_HORZ
+        MENUITEM "Uspořádat &vertikálně\tCtrl+F4",ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Zarovnat automaticky",        ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Zarovnat &symboly",           ID_WINDOW_ARRANGE
+        MENUITEM "&Aktualizovat\tF5",           ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "&Témata nápovědy\tF1",        ID_HELP
+        MENUITEM "Hledání v &nápovědě...\tF1",  ID_HELP
+        MENUITEM "&Jak používat nápovědu\tF1",  ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Informace o Winefile...",    ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zvolte cíl"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Cesta:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Zrušit", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Procházet", 254, 158, 43, 47, 14
+}
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Aplikování nastavení písma"
+    IDS_FONT_SEL_ERROR      "Chyba při volbě nového písma."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Chyba"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Plocha"
+    IDS_SHELL               "Příkazový řádek"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Zatím neimplementováno"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Jméno"
+    IDS_COL_SIZE            "Velikost"
+    IDS_COL_CDATE           "Datum vytvoření"
+    IDS_COL_ADATE           "Datum posledního přístupu"
+    IDS_COL_MDATE           "Datum poslední modifikace"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Linky"
+    IDS_COL_ATTR            "Atributy"
+    IDS_COL_SEC             "Zabezpečení"
+
+    IDS_FREE_SPACE_FMT      "%1 z %2 volného"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
+/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
+ *
+ * WineFile
+ * Czech Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2004 David Kredba
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* Czech strings in CP1250 */
+
+/* Menu */
+
+IDM_WINEFILE MENU
+{
+    POPUP "&Soubor"  {
+        MENUITEM "&Otevřít\tEnter",             ID_ACTIVATE
+        MENUITEM "&Přesunout...\tF7",           ID_FILE_MOVE
+        MENUITEM "&Kopírovat...\tF8",           ID_FILE_COPY
+        MENUITEM "&Ve schránce...\tF9",         118
+        MENUITEM "&Smazat\tDel",                ID_FILE_DELETE
+        MENUITEM "Př&ejmenovat...",             109
+        MENUITEM "V&lastnosti...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Komprese...",                119
+        MENUITEM "&Dekomprese...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Spustit...",                 ID_RUN
+        MENUITEM "&Tisknout...",                102
+        MENUITEM "Asociovat...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "V&ytvořit adresář...",        111
+        MENUITEM "&Hledat...",                  104
+        MENUITEM "&Zvolit voubory...",          116
+        MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+        MENUITEM "K&onec\tAlt+X",               ID_FILE_EXIT
+#else
+        MENUITEM "K&onec",                      ID_FILE_EXIT
+#endif
+    }
+
+    POPUP "&Disk"  {
+        MENUITEM "&Kopírovat disk...",          201
+        MENUITEM "&Jmenovka disk...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formátovat disk...",         ID_FORMAT_DISK
+#ifdef _WIN95
+        MENUITEM "&Vytvořit systemový disk...", -1  /*TODO*/
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Připojit &síťové zařízení",   ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Odpojit &síťové zařízení",   ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Sdílet jako...",              254
+        MENUITEM "&Odstranit sdílení...",       255
+        MENUITEM SEPARATOR
+        MENUITEM "&Zvolit zařízení...",         251
+    }
+
+    POPUP "&Adresáře"  {
+        MENUITEM "&Další úroveň\t+",            301
+        MENUITEM "Rozbalit &strom\t*",          302
+        MENUITEM "Rozbalit &vše\tStrg+*",       303
+        MENUITEM "Sbalit &strom\t-",            304
+        MENUITEM SEPARATOR
+        MENUITEM "&Označit potomky",            505
+    }
+
+    POPUP "&Zobrazení"  {
+        MENUITEM "&Strom a adresáře",           413
+        MENUITEM "&Jen strom",                  411
+        MENUITEM "Jen &adresáře",               412
+        MENUITEM SEPARATOR
+        MENUITEM "&Rozdělit",                   ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Jméno",                      ID_VIEW_NAME
+        MENUITEM "&Detaily všech souborů",      ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "Čá&stečné detaily...",        ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Třídit podle jména",         ID_VIEW_SORT_NAME
+        MENUITEM "Třídit &podle typu",          ID_VIEW_SORT_TYPE
+        MENUITEM "Třídit podle &velikosti",     ID_VIEW_SORT_SIZE
+        MENUITEM "Třídit podle &data",          ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Třídit podle &...",           ID_VIEW_FILTER
+    }
+
+    POPUP "&Nastavení"  {
+        MENUITEM "&Potvrzování...",             501
+        MENUITEM "&Písmo...",                   ID_SELECT_FONT
+        MENUITEM "Upravit panel &nástrojů...",  512
+        MENUITEM SEPARATOR
+        MENUITEM "&Panel nástrojů",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Panel zaříení",              ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Stavový řádek",              ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+        MENUITEM "&Celaá obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Minimalizovat při spuštění", 504
+        MENUITEM "&Uložit nastavení při vypnutí",511
+    }
+
+
+    POPUP "&Zabezpečení"  {
+        MENUITEM "&Přístup...",                 605
+        MENUITEM "&Logování...",                606
+        MENUITEM "&Vlastník...",                607
+    }
+
+    POPUP "&Okno"  {
+        MENUITEM "Nové &okno",                  ID_WINDOW_NEW
+        MENUITEM "Kaskádování\tCtrl+F5",        ID_WINDOW_CASCADE
+        MENUITEM "Uspořádat &horizontálně",     ID_WINDOW_TILE_HORZ
+        MENUITEM "Uspořádat &vertikálně\tCtrl+F4",ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+        MENUITEM "Zarovnat automaticky",        ID_WINDOW_AUTOSORT
+#endif
+        MENUITEM "Zarovnat &symboly",           ID_WINDOW_ARRANGE
+        MENUITEM "&Aktualizovat\tF5",           ID_REFRESH
+    }
+
+    POPUP "&?"  {
+        MENUITEM "&Témata nápovědy\tF1",        ID_HELP
+        MENUITEM "Hledání v &nápovědě...\tF1",  ID_HELP
+        MENUITEM "&Jak používat nápovědu\tF1",  ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Informace o Winefile...",    ID_ABOUT
+    }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zvolte cíl"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Cesta:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Zrušit", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Procházet", 254, 158, 43, 47, 14
+}
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "Aplikování nastavení písma"
+    IDS_FONT_SEL_ERROR      "Chyba při volbě nového písma."
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Chyba"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Plocha"
+    IDS_SHELL               "Příkazový řádek"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Zatím neimplementováno"
+    IDS_WINE_FILE           "Wine File"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "Jméno"
+    IDS_COL_SIZE            "Velikost"
+    IDS_COL_CDATE           "Datum vytvoření"
+    IDS_COL_ADATE           "Datum posledního přístupu"
+    IDS_COL_MDATE           "Datum poslední modifikace"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Linky"
+    IDS_COL_ATTR            "Atributy"
+    IDS_COL_SEC             "Zabezpečení"
+
+    IDS_FREE_SPACE_FMT      "%1 z %2 volného"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
+}
