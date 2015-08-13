@@ -779,11 +779,13 @@ static VOID BiosHwSetup(VOID)
     /* Initialize PS/2 keyboard port */
     // Enable the port
     IOWriteB(PS2_CONTROL_PORT, 0xAE);
-    IOWriteB(PS2_CONTROL_PORT, 0x60);
     // Port interrupts and clock enabled,
     // enable keyboard scancode translation.
     // POST passed, force keyboard unlocking.
-    IOWriteB(PS2_DATA_PORT   , 0x4D);
+    IOWriteB(PS2_CONTROL_PORT, 0x60);
+    IOWriteB(PS2_DATA_PORT   , 0x6D);
+    // Enable data reporting
+    IOWriteB(PS2_DATA_PORT   , 0xF4);
 
     EnableHwIRQ(0, BiosTimerIrq);
 }

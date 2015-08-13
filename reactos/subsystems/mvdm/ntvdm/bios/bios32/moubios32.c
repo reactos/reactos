@@ -223,7 +223,7 @@ VOID BiosMousePs2Interface(LPWORD Stack)
 
             SendMouseCommand(0xFF);
             Answer = ReadMouseData();
-            /* A "Resend" (0xFE) signal is sent if no mouse is attached */
+            /* A "Resend" signal (0xFE) is sent if no mouse is attached */
             if (Answer == 0xFE)
             {
                 /* Resend */
@@ -376,6 +376,7 @@ VOID BiosMousePs2Interface(LPWORD Stack)
                         /* Failure */
                         setAH(0x03);
                         Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        break;
                     }
 
                     setBL(ReadMouseData()); // Status
@@ -399,6 +400,7 @@ VOID BiosMousePs2Interface(LPWORD Stack)
                         /* Failure */
                         setAH(0x03);
                         Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                        break;
                     }
 
                     /* Success */
@@ -490,7 +492,7 @@ VOID MouseBios32Post(VOID)
     /* Detect mouse presence by attempting a reset */
     SendMouseCommand(0xFF);
     Answer = ReadMouseData();
-    /* If no mouse attached, it will return RESEND (0xFE) */
+    /* A "Resend" signal (0xFE) is sent if no mouse is attached */
     if (Answer == 0xFE)
     {
         DPRINT1("No mouse present!\n");
