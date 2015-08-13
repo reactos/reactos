@@ -452,7 +452,7 @@
 @ stdcall SetupInstallServicesFromInfSectionW(long wstr long)
 @ stdcall SetupIterateCabinetA(str long ptr ptr)
 @ stdcall SetupIterateCabinetW(wstr long ptr ptr)
-@ stub SetupLogErrorA
+@ stdcall SetupLogErrorA(str long)
 @ stdcall SetupLogErrorW(wstr long)
 @ stub SetupLogFileA
 @ stub SetupLogFileW
