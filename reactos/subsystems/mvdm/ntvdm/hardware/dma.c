@@ -559,12 +559,12 @@ VOID DmaInitialize(VOID)
     RegisterIoPort(0x07, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 3 */
 
     RegisterIoPort(0x08, DmaReadPort, DmaWritePort);    /* Status (Read) / Command (Write) Registers */
-    RegisterIoPort(0x09, NULL, DmaWritePort);           /* Request Register */
-    RegisterIoPort(0x0A, NULL, DmaWritePort);           /* Single Channel Mask Register */
-    RegisterIoPort(0x0B, NULL, DmaWritePort);           /* Mode Register */
-    RegisterIoPort(0x0C, NULL, DmaWritePort);           /* Flip-Flop Reset Register */
+    RegisterIoPort(0x09,        NULL, DmaWritePort);    /* Request Register */
+    RegisterIoPort(0x0A,        NULL, DmaWritePort);    /* Single Channel Mask Register */
+    RegisterIoPort(0x0B,        NULL, DmaWritePort);    /* Mode Register */
+    RegisterIoPort(0x0C,        NULL, DmaWritePort);    /* Flip-Flop Reset Register */
     RegisterIoPort(0x0D, DmaReadPort, DmaWritePort);    /* Intermediate (Read) / Master Reset (Write) Registers */
-    RegisterIoPort(0x0E, NULL, DmaWritePort);           /* Mask Reset Register */
+    RegisterIoPort(0x0E,        NULL, DmaWritePort);    /* Mask Reset Register */
     RegisterIoPort(0x0F, DmaReadPort, DmaWritePort);    /* Multi-Channel Mask Register */
 
 
@@ -579,12 +579,12 @@ VOID DmaInitialize(VOID)
     RegisterIoPort(0xCE, DmaReadPort, DmaWritePort);    /* Current(R) / Base (W) Count Register 7 */
 
     RegisterIoPort(0xD0, DmaReadPort, DmaWritePort);    /* Status (Read) / Command (Write) Registers */
-    RegisterIoPort(0xD2, NULL, DmaWritePort);           /* Request Register */
-    RegisterIoPort(0xD4, NULL, DmaWritePort);           /* Single Channel Mask Register */
-    RegisterIoPort(0xD6, NULL, DmaWritePort);           /* Mode Register */
-    RegisterIoPort(0xD8, NULL, DmaWritePort);           /* Flip-Flop Reset Register */
+    RegisterIoPort(0xD2,        NULL, DmaWritePort);    /* Request Register */
+    RegisterIoPort(0xD4,        NULL, DmaWritePort);    /* Single Channel Mask Register */
+    RegisterIoPort(0xD6,        NULL, DmaWritePort);    /* Mode Register */
+    RegisterIoPort(0xD8,        NULL, DmaWritePort);    /* Flip-Flop Reset Register */
     RegisterIoPort(0xDA, DmaReadPort, DmaWritePort);    /* Intermediate (Read) / Master Reset (Write) Registers */
-    RegisterIoPort(0xDC, NULL, DmaWritePort);           /* Mask Reset Register */
+    RegisterIoPort(0xDC,        NULL, DmaWritePort);    /* Mask Reset Register */
     RegisterIoPort(0xDE, DmaReadPort, DmaWritePort);    /* Multi-Channel Mask Register */
 
 

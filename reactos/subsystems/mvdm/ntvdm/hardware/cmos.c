@@ -46,6 +46,7 @@ static VOID RtcUpdatePeriodicTimer(VOID)
     if (RateSelect <= 2) RateSelect += 7;
 
     SetHardwareTimerDelay(PeriodicTimer, HZ_TO_NS(1 << (16 - RateSelect)));
+    // FIXME: This call keeps EnableCount increasing without compensating it!
     EnableHardwareTimer(PeriodicTimer);
 }
 
@@ -101,18 +102,20 @@ static VOID FASTCALL RtcTimeUpdate(ULONGLONG ElapsedTime)
     }
 }
 
-static VOID CmosWriteAddress(BYTE Value)
+static VOID WINAPI CmosWriteAddress(USHORT Port, BYTE Data)
 {
+    UNREFERENCED_PARAMETER(Port);
+
     /* Update the NMI enabled flag */
-    NmiEnabled = !(Value & CMOS_DISABLE_NMI);
+    NmiEnabled = !(Data & CMOS_DISABLE_NMI);
 
     /* Get the register number */
-    Value &= ~CMOS_DISABLE_NMI;
+    Data &= ~CMOS_DISABLE_NMI;
 
-    if (Value < CMOS_REG_MAX)
+    if (Data < CMOS_REG_MAX)
     {
         /* Select the new register */
-        SelectedRegister = Value;
+        SelectedRegister = Data;
     }
     else
     {
@@ -121,10 +124,12 @@ static VOID CmosWriteAddress(BYTE Value)
     }
 }
 
-static BYTE CmosReadData(VOID)
+static BYTE WINAPI CmosReadData(USHORT Port)
 {
     BYTE Value;
     SYSTEMTIME CurrentTime;
+
+    UNREFERENCED_PARAMETER(Port);
 
     /* Get the current time */
     GetLocalTime(&CurrentTime);
@@ -257,10 +262,12 @@ static BYTE CmosReadData(VOID)
     return Value;
 }
 
-static VOID CmosWriteData(BYTE Value)
+static VOID WINAPI CmosWriteData(USHORT Port, BYTE Data)
 {
     BOOLEAN ChangeTime = FALSE;
     SYSTEMTIME CurrentTime;
+
+    UNREFERENCED_PARAMETER(Port);
 
     /* Get the current time */
     GetLocalTime(&CurrentTime);
@@ -270,26 +277,26 @@ static VOID CmosWriteData(BYTE Value)
         case CMOS_REG_SECONDS:
         {
             ChangeTime = TRUE;
-            CurrentTime.wSecond = WRITE_CMOS_DATA(CmosMemory, Value);
+            CurrentTime.wSecond = WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
 
         case CMOS_REG_ALARM_SEC:
         {
-            CmosMemory.AlarmSecond = WRITE_CMOS_DATA(CmosMemory, Value);
+            CmosMemory.AlarmSecond = WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
 
         case CMOS_REG_MINUTES:
         {
             ChangeTime = TRUE;
-            CurrentTime.wMinute = WRITE_CMOS_DATA(CmosMemory, Value);
+            CurrentTime.wMinute = WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
 
         case CMOS_REG_ALARM_MIN:
         {
-            CmosMemory.AlarmMinute = WRITE_CMOS_DATA(CmosMemory, Value);
+            CmosMemory.AlarmMinute = WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
 
@@ -299,13 +306,13 @@ static VOID CmosWriteData(BYTE Value)
 
             ChangeTime = TRUE;
 
-            if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Value & 0x80))
+            if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Data & 0x80))
             {
-                Value &= ~0x80;
+                Data &= ~0x80;
                 Afternoon = TRUE;
             }
 
-            CurrentTime.wHour = WRITE_CMOS_DATA(CmosMemory, Value);
+            CurrentTime.wHour = WRITE_CMOS_DATA(CmosMemory, Data);
 
             /* Convert to 24-hour format */
             if (Afternoon) CurrentTime.wHour += 12;
@@ -317,13 +324,13 @@ static VOID CmosWriteData(BYTE Value)
         {
             BOOLEAN Afternoon = FALSE;
 
-            if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Value & 0x80))
+            if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Data & 0x80))
             {
-                Value &= ~0x80;
+                Data &= ~0x80;
                 Afternoon = TRUE;
             }
 
-            CmosMemory.AlarmHour = WRITE_CMOS_DATA(CmosMemory, Value);
+            CmosMemory.AlarmHour = WRITE_CMOS_DATA(CmosMemory, Data);
 
             /* Convert to 24-hour format */
             if (Afternoon) CmosMemory.AlarmHour += 12;
@@ -339,22 +346,22 @@ static VOID CmosWriteData(BYTE Value)
              * SetLocalTime API value is 0-based.
              * Correct it.
              */
-            Value -= 1;
-            CurrentTime.wDayOfWeek = WRITE_CMOS_DATA(CmosMemory, Value);
+            Data -= 1;
+            CurrentTime.wDayOfWeek = WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
 
         case CMOS_REG_DAY:
         {
             ChangeTime = TRUE;
-            CurrentTime.wDay = WRITE_CMOS_DATA(CmosMemory, Value);
+            CurrentTime.wDay = WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
 
         case CMOS_REG_MONTH:
         {
             ChangeTime = TRUE;
-            CurrentTime.wMonth = WRITE_CMOS_DATA(CmosMemory, Value);
+            CurrentTime.wMonth = WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
 
@@ -365,7 +372,7 @@ static VOID CmosWriteData(BYTE Value)
             /* Clear everything except the century */
             CurrentTime.wYear = (CurrentTime.wYear / 100) * 100;
 
-            CurrentTime.wYear += WRITE_CMOS_DATA(CmosMemory, Value);
+            CurrentTime.wYear += WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
 
@@ -377,14 +384,14 @@ static VOID CmosWriteData(BYTE Value)
 
         case CMOS_REG_STATUS_A:
         {
-            CmosMemory.StatusRegA = Value & 0x7F; // Bit 7 is read-only
+            CmosMemory.StatusRegA = Data & 0x7F; // Bit 7 is read-only
             RtcUpdatePeriodicTimer();
             break;
         }
 
         case CMOS_REG_STATUS_B:
         {
-            CmosMemory.StatusRegB = Value;
+            CmosMemory.StatusRegB = Data;
             break;
         }
 
@@ -399,7 +406,7 @@ static VOID CmosWriteData(BYTE Value)
         {
             /* Sync EMS and UMS */
             CmosMemory.Regs[CMOS_REG_EXT_MEMORY_LOW]        =
-            CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_LOW] = Value;
+            CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_LOW] = Data;
             break;
         }
 
@@ -409,13 +416,13 @@ static VOID CmosWriteData(BYTE Value)
         {
             /* Sync EMS and UMS */
             CmosMemory.Regs[CMOS_REG_EXT_MEMORY_HIGH]        =
-            CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_HIGH] = Value;
+            CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_HIGH] = Data;
             break;
         }
 
         default:
         {
-            CmosMemory.Regs[SelectedRegister] = Value;
+            CmosMemory.Regs[SelectedRegister] = Data;
         }
     }
 
@@ -423,20 +430,6 @@ static VOID CmosWriteData(BYTE Value)
 
     /* Return to Status Register D */
     SelectedRegister = CMOS_REG_STATUS_D;
-}
-
-static BYTE WINAPI CmosReadPort(USHORT Port)
-{
-    ASSERT(Port == CMOS_DATA_PORT);
-    return CmosReadData();
-}
-
-static VOID WINAPI CmosWritePort(USHORT Port, BYTE Data)
-{
-    if (Port == CMOS_ADDRESS_PORT)
-        CmosWriteAddress(Data);
-    else if (Port == CMOS_DATA_PORT)
-        CmosWriteData(Data);
 }
 
 
@@ -511,8 +504,8 @@ VOID CmosInitialize(VOID)
     CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_HIGH] = HIBYTE((MAX_ADDRESS - 0x100000) / 1024);
 
     /* Register the I/O Ports */
-    RegisterIoPort(CMOS_ADDRESS_PORT, NULL        , CmosWritePort);
-    RegisterIoPort(CMOS_DATA_PORT   , CmosReadPort, CmosWritePort);
+    RegisterIoPort(CMOS_ADDRESS_PORT,         NULL, CmosWriteAddress);
+    RegisterIoPort(CMOS_DATA_PORT   , CmosReadData, CmosWriteData   );
 
     ClockTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED,
                                      HZ_TO_NS(1),

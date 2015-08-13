@@ -12,8 +12,10 @@
 /* DEFINES ********************************************************************/
 
 /* Command responses */
-#define KEYBOARD_ACK    0xFA
-#define KEYBOARD_RESEND 0xFE
+#define KEYBOARD_BAT_SUCCESS    0xAA
+#define KEYBOARD_ACK            0xFA
+#define KEYBOARD_ERROR          0xFC
+#define KEYBOARD_RESEND         0xFE
 
 /* FUNCTIONS ******************************************************************/
 
