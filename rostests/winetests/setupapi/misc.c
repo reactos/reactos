@@ -776,6 +776,46 @@ static void test_defaultcallback(void)
     SetupTermDefaultQueueCallback(ctxt);
 }
 
+static void test_SetupLogError(void)
+{
+    BOOL ret;
+    DWORD error;
+
+    SetLastError(0xdeadbeef);
+    ret = SetupLogErrorA("Test without opening\r\n", LogSevInformation);
+    error = GetLastError();
+    ok(!ret, "SetupLogError succeeded\n");
+    ok(error == ERROR_FILE_INVALID, "got wrong error: %d\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupOpenLog(FALSE);
+    if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        win_skip("SetupOpenLog() failed on insufficient permissions\n");
+        return;
+    }
+    ok(ret, "SetupOpenLog failed, error %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SetupLogErrorA("Test with wrong log severity\r\n", LogSevMaximum);
+    error = GetLastError();
+    ok(!ret, "SetupLogError succeeded\n");
+    ok(error == 0xdeadbeef, "got wrong error: %d\n", error);
+    ret = SetupLogErrorA("Test without EOL", LogSevInformation);
+    ok(ret, "SetupLogError failed\n");
+
+    SetLastError(0xdeadbeef);
+    ret = SetupLogErrorA(NULL, LogSevInformation);
+    ok(ret || broken(!ret && GetLastError() == ERROR_INVALID_PARAMETER /* Win Vista+ */),
+        "SetupLogError failed: %08x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SetupOpenLog(FALSE);
+    ok(ret, "SetupOpenLog failed, error %d\n", GetLastError());
+
+    SetupCloseLog();
+}
+
 START_TEST(misc)
 {
     HMODULE hsetupapi = GetModuleHandleA("setupapi.dll");
@@ -807,4 +847,6 @@ START_TEST(misc)
         win_skip("SetupUninstallOEMInfA is not available\n");
 
     test_defaultcallback();
+
+    test_SetupLogError();
 }
