@@ -29,7 +29,7 @@ static MOUSE_MODE Mode, PreviousMode;
 static COORD Position;
 static BYTE Resolution; /* Completely ignored */
 static BOOLEAN Scaling; /* Completely ignored */
-static BOOLEAN Reporting;
+static BOOLEAN Reporting = FALSE;
 static BYTE MouseId;
 static ULONG ButtonState;
 static SHORT HorzCounter;
@@ -72,12 +72,6 @@ static VOID MouseReset(VOID)
     Mode = MOUSE_STREAMING_MODE;
     MouseId = 0;
     ScrollMagicCounter = ExtraButtonMagicCounter = 0;
-
-    PS2QueuePush(PS2Port, MOUSE_ACK);
-
-    /* Send the Basic Assurance Test success code and the device ID */
-    PS2QueuePush(PS2Port, MOUSE_BAT_SUCCESS);
-    PS2QueuePush(PS2Port, MouseId);
 }
 
 static VOID MouseGetPacket(PMOUSE_PACKET Packet)
@@ -131,7 +125,7 @@ static VOID MouseGetPacket(PMOUSE_PACKET Packet)
     if (MouseId >= 3)
     {
         /* Set the scroll counter */
-        Packet->Extra |= (UCHAR)ScrollCounter & 0x0F;
+        Packet->Extra |= ((UCHAR)ScrollCounter & 0x0F);
     }
 
     /* Store the counters in the packet */
@@ -262,7 +256,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         {
             BYTE Status = ButtonState & 7;
 
-            if (Scaling) Status |= 1 << 4;
+            if (Scaling)   Status |= 1 << 4;
             if (Reporting) Status |= 1 << 5;
             if (Mode == MOUSE_REMOTE_MODE) Status |= 1 << 6;
 
@@ -348,6 +342,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         case 0xF4:
         {
             Reporting = TRUE;
+            MouseResetCounters();
             PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
@@ -356,6 +351,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         case 0xF5:
         {
             Reporting = FALSE;
+            MouseResetCounters();
             PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
@@ -366,6 +362,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             /* Reset the configuration and counters */
             MouseResetConfig();
             MouseResetCounters();
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
@@ -380,7 +377,14 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         /* Reset */
         case 0xFF:
         {
+            /* Send ACKnowledge */
+            PS2QueuePush(PS2Port, MOUSE_ACK);
+
             MouseReset();
+
+            /* Send the Basic Assurance Test success code and the device ID */
+            PS2QueuePush(PS2Port, MOUSE_BAT_SUCCESS);
+            PS2QueuePush(PS2Port, MouseId);
             break;
         }
 
@@ -428,7 +432,7 @@ VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
     }
 
     /* Adjust for double vision */
-    if (DoubleWidth) NewPosition.X /= 2;
+    if (DoubleWidth)  NewPosition.X /= 2;
     if (DoubleHeight) NewPosition.Y /= 2;
 
     WaitForSingleObject(MouseMutex, INFINITE);

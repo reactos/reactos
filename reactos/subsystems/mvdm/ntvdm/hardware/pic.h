@@ -30,21 +30,6 @@
 #define PIC_OCW3            (1 << 3)
 #define PIC_OCW3_READ_ISR   0x0B
 
-typedef struct _PIC
-{
-    BOOLEAN Initialization;
-    BYTE MaskRegister;
-    BYTE IntRequestRegister;
-    BYTE InServiceRegister;
-    BYTE IntOffset;
-    BYTE ConfigRegister;
-    BYTE CascadeRegister;
-    BOOLEAN CascadeRegisterSet;
-    BOOLEAN AutoEoi;
-    BOOLEAN Slave;
-    BOOLEAN ReadIsr;
-} PIC, *PPIC;
-
 /* FUNCTIONS ******************************************************************/
 
 VOID PicInterruptRequest(BYTE Number);

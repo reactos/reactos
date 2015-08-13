@@ -1482,7 +1482,7 @@ static VOID VgaUpdateTextCursor(VOID)
 static BYTE WINAPI VgaReadPort(USHORT Port)
 {
     DPRINT("VgaReadPort: Port 0x%X\n", Port);
-    
+
     if (Port != VGA_DAC_MASK) SvgaHdrCounter = 0;
 
     switch (Port)
@@ -2364,11 +2364,11 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     VgaClearMemory();
 
     /* Register the I/O Ports */
-    RegisterIoPort(0x3CC, VgaReadPort, NULL);           // VGA_MISC_READ
+    RegisterIoPort(0x3CC, VgaReadPort,         NULL);   // VGA_MISC_READ
     RegisterIoPort(0x3C2, VgaReadPort, VgaWritePort);   // VGA_MISC_WRITE, VGA_INSTAT0_READ
-    RegisterIoPort(0x3CA, VgaReadPort, NULL);           // VGA_FEATURE_READ
+    RegisterIoPort(0x3CA, VgaReadPort,         NULL);   // VGA_FEATURE_READ
     RegisterIoPort(0x3C0, VgaReadPort, VgaWritePort);   // VGA_AC_INDEX, VGA_AC_WRITE
-    RegisterIoPort(0x3C1, VgaReadPort, NULL);           // VGA_AC_READ
+    RegisterIoPort(0x3C1, VgaReadPort,         NULL);   // VGA_AC_READ
     RegisterIoPort(0x3C4, VgaReadPort, VgaWritePort);   // VGA_SEQ_INDEX
     RegisterIoPort(0x3C5, VgaReadPort, VgaWritePort);   // VGA_SEQ_DATA
     RegisterIoPort(0x3C6, VgaReadPort, VgaWritePort);   // VGA_DAC_MASK

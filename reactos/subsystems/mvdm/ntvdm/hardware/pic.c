@@ -19,17 +19,34 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+typedef struct _PIC
+{
+    BOOLEAN Initialization;
+    BYTE MaskRegister;
+    BYTE IntRequestRegister;
+    BYTE InServiceRegister;
+    BYTE IntOffset;
+    BYTE ConfigRegister;
+    BYTE CascadeRegister;
+    BOOLEAN CascadeRegisterSet;
+    BOOLEAN AutoEoi;
+    BOOLEAN Slave;
+    BOOLEAN ReadIsr;
+} PIC, *PPIC;
+
 static PIC MasterPic, SlavePic;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static BYTE PicReadCommand(BYTE Port)
+static BYTE WINAPI PicReadCommand(USHORT Port)
 {
     PPIC Pic;
 
     /* Which PIC are we accessing? */
-    if (Port == PIC_MASTER_CMD) Pic = &MasterPic;
-    else Pic = &SlavePic;
+    if (Port == PIC_MASTER_CMD)
+        Pic = &MasterPic;
+    else // if (Port == PIC_SLAVE_CMD)
+        Pic = &SlavePic;
 
     if (Pic->ReadIsr)
     {
@@ -44,28 +61,30 @@ static BYTE PicReadCommand(BYTE Port)
     }
 }
 
-static VOID PicWriteCommand(BYTE Port, BYTE Value)
+static VOID WINAPI PicWriteCommand(USHORT Port, BYTE Data)
 {
     PPIC Pic;
 
     /* Which PIC are we accessing? */
-    if (Port == PIC_MASTER_CMD) Pic = &MasterPic;
-    else Pic = &SlavePic;
+    if (Port == PIC_MASTER_CMD)
+        Pic = &MasterPic;
+    else // if (Port == PIC_SLAVE_CMD)
+        Pic = &SlavePic;
 
-    if (Value & PIC_ICW1)
+    if (Data & PIC_ICW1)
     {
         /* Start initialization */
         Pic->Initialization = TRUE;
         Pic->IntOffset = 0xFF;
         Pic->CascadeRegisterSet = FALSE;
-        Pic->ConfigRegister = Value;
+        Pic->ConfigRegister = Data;
         return;
     }
 
-    if (Value & PIC_OCW3)
+    if (Data & PIC_OCW3)
     {
         /* This is an OCR3 */
-        if (Value == PIC_OCW3_READ_ISR)
+        if (Data == PIC_OCW3_READ_ISR)
         {
             /* Return the ISR on next read from command port */
             Pic->ReadIsr = TRUE;
@@ -75,12 +94,12 @@ static VOID PicWriteCommand(BYTE Port, BYTE Value)
     }
 
     /* This is an OCW2 */
-    if (Value & PIC_OCW2_EOI)
+    if (Data & PIC_OCW2_EOI)
     {
-        if (Value & PIC_OCW2_SL)
+        if (Data & PIC_OCW2_SL)
         {
             /* If the SL bit is set, clear a specific IRQ */
-            Pic->InServiceRegister &= ~(1 << (Value & PIC_OCW2_NUM_MASK));
+            Pic->InServiceRegister &= ~(1 << (Data & PIC_OCW2_NUM_MASK));
         }
         else
         {
@@ -96,26 +115,30 @@ static VOID PicWriteCommand(BYTE Port, BYTE Value)
     }
 }
 
-static BYTE PicReadData(BYTE Port)
+static BYTE WINAPI PicReadData(USHORT Port)
 {
     /* Read the mask register */
-    if (Port == PIC_MASTER_DATA) return MasterPic.MaskRegister;
-    else return SlavePic.MaskRegister;
+    if (Port == PIC_MASTER_DATA)
+        return MasterPic.MaskRegister;
+    else // if (Port == PIC_SLAVE_DATA)
+        return SlavePic.MaskRegister;
 }
 
-static VOID PicWriteData(BYTE Port, BYTE Value)
+static VOID WINAPI PicWriteData(USHORT Port, BYTE Data)
 {
     PPIC Pic;
 
     /* Which PIC are we accessing? */
-    if (Port == PIC_MASTER_DATA) Pic = &MasterPic;
-    else Pic = &SlavePic;
+    if (Port == PIC_MASTER_DATA)
+        Pic = &MasterPic;
+    else // if (Port == PIC_SLAVE_DATA)
+        Pic = &SlavePic;
 
     /* Is the PIC ready? */
     if (!Pic->Initialization)
     {
         /* Yes, this is an OCW1 */
-        Pic->MaskRegister = Value;
+        Pic->MaskRegister = Data;
         return;
     }
 
@@ -123,7 +146,7 @@ static VOID PicWriteData(BYTE Port, BYTE Value)
     if (Pic->IntOffset == 0xFF)
     {
         /* This is an ICW2, set the offset (last three bits always zero) */
-        Pic->IntOffset = Value & 0xF8;
+        Pic->IntOffset = Data & 0xF8;
 
         /* Check if we are in single mode and don't need an ICW4 */
         if ((Pic->ConfigRegister & PIC_ICW1_SINGLE)
@@ -139,7 +162,7 @@ static VOID PicWriteData(BYTE Port, BYTE Value)
     if (!(Pic->ConfigRegister & PIC_ICW1_SINGLE) && !Pic->CascadeRegisterSet)
     {
         /* This is an ICW3 */
-        Pic->CascadeRegister = Value;
+        Pic->CascadeRegister    = Data;
         Pic->CascadeRegisterSet = TRUE;
 
         /* Check if we need an ICW4 */
@@ -152,7 +175,7 @@ static VOID PicWriteData(BYTE Port, BYTE Value)
     }
 
     /* This must be an ICW4, we will ignore the 8086 bit (assume always set) */
-    if (Value & PIC_ICW4_AEOI)
+    if (Data & PIC_ICW4_AEOI)
     {
         /* Use automatic end-of-interrupt */
         Pic->AutoEoi = TRUE;
@@ -160,46 +183,6 @@ static VOID PicWriteData(BYTE Port, BYTE Value)
 
     /* Done initializing */
     Pic->Initialization = FALSE;
-}
-
-static BYTE WINAPI PicReadPort(USHORT Port)
-{
-    switch (Port)
-    {
-        case PIC_MASTER_CMD:
-        case PIC_SLAVE_CMD:
-        {
-            return PicReadCommand(Port);
-        }
-
-        case PIC_MASTER_DATA:
-        case PIC_SLAVE_DATA:
-        {
-            return PicReadData(Port);
-        }
-    }
-
-    return 0;
-}
-
-static VOID WINAPI PicWritePort(USHORT Port, BYTE Data)
-{
-    switch (Port)
-    {
-        case PIC_MASTER_CMD:
-        case PIC_SLAVE_CMD:
-        {
-            PicWriteCommand(Port, Data);
-            break;
-        }
-
-        case PIC_MASTER_DATA:
-        case PIC_SLAVE_DATA:
-        {
-            PicWriteData(Port, Data);
-            break;
-        }
-    }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -301,17 +284,19 @@ BYTE PicGetInterrupt(VOID)
     }
 
     /* Spurious interrupt */
-    if (MasterPic.InServiceRegister & (1 << 2)) return SlavePic.IntOffset + 7;
-    else return MasterPic.IntOffset + 7;
+    if (MasterPic.InServiceRegister & (1 << 2))
+        return SlavePic.IntOffset + 7;
+    else
+        return MasterPic.IntOffset + 7;
 }
 
 VOID PicInitialize(VOID)
 {
     /* Register the I/O Ports */
-    RegisterIoPort(PIC_MASTER_CMD , PicReadPort, PicWritePort);
-    RegisterIoPort(PIC_SLAVE_CMD  , PicReadPort, PicWritePort);
-    RegisterIoPort(PIC_MASTER_DATA, PicReadPort, PicWritePort);
-    RegisterIoPort(PIC_SLAVE_DATA , PicReadPort, PicWritePort);
+    RegisterIoPort(PIC_MASTER_CMD , PicReadCommand, PicWriteCommand);
+    RegisterIoPort(PIC_SLAVE_CMD  , PicReadCommand, PicWriteCommand);
+    RegisterIoPort(PIC_MASTER_DATA, PicReadData   , PicWriteData   );
+    RegisterIoPort(PIC_SLAVE_DATA , PicReadData   , PicWriteData   );
 }
 
 
@@ -348,6 +333,14 @@ call_ica_hw_interrupt(INT  ms,
     while (count-- > 0)
     {
         PicInterruptRequest(InterruptNumber);
+        /*
+         * FIXME: We should now restart 16-bit emulation and wait for its termination:
+         *
+         * "When the VDD calls VDDSimulateInterrupt, the address pointed to by
+         * the interrupt vector starts running in 16-bit mode. For an asynchronous
+         * interrupt, the VDD should create another thread and call VDDSimulateInterrupt
+         * from that thread."
+         */
     }
 }
 

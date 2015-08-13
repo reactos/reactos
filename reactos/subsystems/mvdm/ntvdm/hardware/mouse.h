@@ -41,9 +41,9 @@
  * scroll wheels can't be used at the same time.
  */
 #define MOUSE_SCROLL_UP     1
-#define MOUSE_SCROLL_DOWN   -1
+#define MOUSE_SCROLL_DOWN  -1
 #define MOUSE_SCROLL_RIGHT  2
-#define MOUSE_SCROLL_LEFT   -2
+#define MOUSE_SCROLL_LEFT  -2
 
 typedef enum _MOUSE_MODE
 {

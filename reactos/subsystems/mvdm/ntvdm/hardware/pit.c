@@ -509,7 +509,7 @@ VOID PitInitialize(VOID)
     PitSetGate(2, FALSE);
 
     /* Register the I/O Ports */
-    RegisterIoPort(PIT_COMMAND_PORT, NULL       , PitWritePort);
+    RegisterIoPort(PIT_COMMAND_PORT,        NULL, PitWritePort);
     RegisterIoPort(PIT_DATA_PORT(0), PitReadPort, PitWritePort);
     RegisterIoPort(PIT_DATA_PORT(1), PitReadPort, PitWritePort);
     RegisterIoPort(PIT_DATA_PORT(2), PitReadPort, PitWritePort);
