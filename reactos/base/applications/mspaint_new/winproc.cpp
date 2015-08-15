@@ -294,6 +294,7 @@ LRESULT CMainWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CMainWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     SetCursor(LoadCursor(NULL, IDC_ARROW));
+    bHandled = FALSE;
     return 0;
 }
 
@@ -403,12 +404,28 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             PageSetupDlg(&psd);
             break;
         case IDM_FILEPRINT:
-            // DUMMY: Shows the dialog only, no functionality
+            // TODO: Test whether it actually works
             PRINTDLG pd;
             ZeroMemory(&pd, sizeof(pd));
             pd.lStructSize = sizeof(pd);
             pd.hwndOwner = m_hWnd;
-            PrintDlg(&pd);
+            pd.hDevMode = NULL;  // freed by user
+            pd.hDevNames = NULL;  // freed by user
+            pd.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_RETURNDC;
+            pd.nCopies = 1;
+            pd.nFromPage = 0xffff;
+            pd.nToPage = 0xffff;
+            pd.nMinPage = 1;
+            pd.nMaxPage = 0xffff;
+            if (PrintDlg(&pd) == TRUE)
+            {
+                BitBlt(pd.hDC, 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), imageModel.GetDC(), 0, 0, SRCCOPY);
+                DeleteDC(pd.hDC);
+            }
+            if (pd.hDevMode)
+                GlobalFree(pd.hDevMode);
+            if (pd.hDevNames)
+                GlobalFree(pd.hDevNames);
             break;
         case IDM_FILEASWALLPAPERPLANE:
             SetWallpaper(filepathname, 1, 1);
