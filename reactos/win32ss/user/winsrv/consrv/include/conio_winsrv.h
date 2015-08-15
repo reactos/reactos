@@ -148,6 +148,7 @@ typedef struct _WINSRV_CONSOLE
     LIST_ENTRY ProcessList;         /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
     PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when the console leader process is killed */
     BOOLEAN NotifyLastClose;        /* TRUE if the console should send a control event when the console leader process is killed */
+    BOOLEAN HasFocus;               /* TRUE if the console has focus (is in the foreground) */
 
 /******************************* Pausing support ******************************/
     BYTE PauseFlags;
@@ -206,6 +207,12 @@ NTSTATUS NTAPI
 ConSrvConsoleProcessCtrlEvent(IN PCONSRV_CONSOLE Console,
                               IN ULONG ProcessGroupId,
                               IN ULONG CtrlEvent);
+VOID
+ConSrvSetProcessFocus(IN PCSR_PROCESS CsrProcess,
+                      IN BOOLEAN SetForeground);
+NTSTATUS NTAPI
+ConSrvSetConsoleProcessFocus(IN PCONSRV_CONSOLE Console,
+                             IN BOOLEAN SetForeground);
 
 /* coninput.c */
 VOID NTAPI ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg);

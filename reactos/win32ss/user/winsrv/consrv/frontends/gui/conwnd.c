@@ -290,6 +290,7 @@ SendMenuEvent(PCONSRV_CONSOLE Console, UINT CmdId)
 
     if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
+    /* Send a menu event */
     er.EventType = MENU_EVENT;
     er.Event.MenuEvent.dwCommandId = CmdId;
     ConioProcessInputEvent(Console, &er);
@@ -755,6 +756,16 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
 
     if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
+    /* Set console focus state */
+    Console->HasFocus = SetFocus;
+
+    /*
+     * Set the priority of the processes of this console
+     * in accordance with the console focus state.
+     */
+    ConSrvSetConsoleProcessFocus(Console, SetFocus);
+
+    /* Send a focus event */
     er.EventType = FOCUS_EVENT;
     er.Event.FocusEvent.bSetFocus = SetFocus;
     ConioProcessInputEvent(Console, &er);
@@ -1855,6 +1866,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             if (lParam & 0x01000000)
                 dwControlKeyState |= ENHANCED_KEY;
 
+            /* Send a mouse event */
             er.EventType = MOUSE_EVENT;
             er.Event.MouseEvent.dwMousePosition   = PointToCoord(GuiData, lParam);
             er.Event.MouseEvent.dwButtonState     = dwButtonState;

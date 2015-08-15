@@ -689,6 +689,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     InitializeListHead(&Console->ProcessList);
     Console->NotifiedLastCloseProcess = NULL;
     Console->NotifyLastClose = FALSE;
+    Console->HasFocus = FALSE;
 
     /* Initialize pausing support */
     Console->PauseFlags = 0;
@@ -939,6 +940,46 @@ ConSrvConsoleProcessCtrlEvent(IN PCONSRV_CONSOLE Console,
     }
 
     return Status;
+}
+
+VOID
+ConSrvSetProcessFocus(IN PCSR_PROCESS CsrProcess,
+                      IN BOOLEAN SetForeground)
+{
+    // FIXME: Call NtUserSetInformationProcess (currently unimplemented!)
+    // for setting Win32 foreground/background flags.
+
+    if (SetForeground)
+        CsrSetForegroundPriority(CsrProcess);
+    else
+        CsrSetBackgroundPriority(CsrProcess);
+}
+
+NTSTATUS NTAPI
+ConSrvSetConsoleProcessFocus(IN PCONSRV_CONSOLE Console,
+                             IN BOOLEAN SetForeground)
+{
+    PLIST_ENTRY current_entry;
+    PCONSOLE_PROCESS_DATA current;
+
+    /* If the console is already being destroyed, just return */
+    if (!ConDrvValidateConsoleState((PCONSOLE)Console, CONSOLE_RUNNING))
+        return STATUS_UNSUCCESSFUL;
+
+    /*
+     * Loop through the process list, from the most recent process
+     * to the oldest one, and for each, set its foreground priority.
+     */
+    current_entry = Console->ProcessList.Flink;
+    while (current_entry != &Console->ProcessList)
+    {
+        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
+        current_entry = current_entry->Flink;
+
+        ConSrvSetProcessFocus(current->Process, SetForeground);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 

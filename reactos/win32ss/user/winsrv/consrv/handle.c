@@ -579,8 +579,12 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
     /* Return the console handle to the caller */
     ConsoleInitInfo->ConsoleStartInfo->ConsoleHandle = ProcessData->ConsoleHandle;
 
-    /* Insert the process into the processes list of the console */
+    /*
+     * Insert the process into the processes list of the console,
+     * and set its foreground priority.
+     */
     InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
+    ConSrvSetProcessFocus(ProcessData->Process, Console->HasFocus);
 
     /* Add a reference count because the process is tied to the console */
     _InterlockedIncrement(&Console->ReferenceCount);
@@ -694,8 +698,12 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
     /* Return the console handle to the caller */
     ConsoleStartInfo->ConsoleHandle = ProcessData->ConsoleHandle;
 
-    /* Insert the process into the processes list of the console */
+    /*
+     * Insert the process into the processes list of the console,
+     * and set its foreground priority.
+     */
     InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
+    ConSrvSetProcessFocus(ProcessData->Process, Console->HasFocus);
 
     /* Add a reference count because the process is tied to the console */
     _InterlockedIncrement(&Console->ReferenceCount);
