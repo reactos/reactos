@@ -714,7 +714,7 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
     /* Get the Thread Create Time */
     Status = NtQueryInformationThread(hThread,
                                       ThreadTimes,
-                                      (PVOID)&KernelTimes,
+                                      &KernelTimes,
                                       sizeof(KernelTimes),
                                       NULL);
     if (!NT_SUCCESS(Status))
