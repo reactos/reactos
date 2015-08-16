@@ -3863,17 +3863,20 @@ VOID VidBiosAttachToConsole(VOID)
         Attached = TRUE;
     }
 
+    /* Refresh display */
     VgaRefreshDisplay();
     VidBiosSyncCursorPosition();
 }
 
 VOID VidBiosDetachFromConsole(VOID)
 {
-    /* Perform another screen refresh */
+    if (!Attached) return;
+
+    /* Refresh display */
     VgaRefreshDisplay();
 
     /* Detach from the console */
-    VgaDetachFromConsole(FALSE);
+    VgaDetachFromConsole();
     Attached = FALSE;
 }
 

@@ -372,7 +372,7 @@ typedef struct _SVGA_REGISTERS
 
 VOID ScreenEventHandler(PWINDOW_BUFFER_SIZE_RECORD ScreenEvent);
 BOOL VgaAttachToConsole(VOID);
-VOID VgaDetachFromConsole(BOOL ChangeMode);
+VOID VgaDetachFromConsole(VOID);
 
 COORD VgaGetDisplayResolution(VOID);
 VOID VgaRefreshDisplay(VOID);

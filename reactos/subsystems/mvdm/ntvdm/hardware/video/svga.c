@@ -209,6 +209,7 @@ static const COLORREF ConsoleColors[16] =
 /*
  * Console interface -- VGA-mode-agnostic
  */
+// WARNING! This structure *MUST BE* in sync with the one in consrv/include/conio_winsrv.h
 typedef struct _CHAR_CELL
 {
     CHAR Char;
@@ -228,6 +229,9 @@ static HANDLE AnotherEvent = NULL;
 
 static CONSOLE_CURSOR_INFO         OrgConsoleCursorInfo;
 static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
+
+
+static HANDLE ScreenBufferHandle = NULL;
 
 
 /*
@@ -473,7 +477,7 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
      * Windows 2k3 winsrv.dll calls NtVdmControl(VdmQueryVdmProcess == 14, &ConsoleHandle);
      * in the two following APIs:
      * SrvRegisterConsoleVDM  (corresponding Win32 API: RegisterConsoleVDM)
-     * SrvVDMConsoleOperation (corresponding Win32 API: )
+     * SrvVDMConsoleOperation (corresponding Win32 API: ??)
      * to check whether the current process is a VDM process, and fails otherwise
      * with the error 0xC0000022 (STATUS_ACCESS_DENIED).
      *
@@ -481,6 +485,7 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
      * BaseSrvIsFirstVDM API...
      */
 
+    /* Register with the console server */
     Success =
     __RegisterConsoleVDM(1,
                          StartEvent,
@@ -575,6 +580,28 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     VgaUpdateCursorPosition();
 
     return TRUE;
+}
+
+static VOID VgaDetachFromConsoleInternal(VOID)
+{
+    ULONG dummyLength;
+    PVOID dummyPtr;
+    COORD dummySize = {0};
+
+    /* Deregister with the console server */
+    __RegisterConsoleVDM(0,
+                         NULL,
+                         NULL,
+                         NULL,
+                         0,
+                         &dummyLength,
+                         &dummyPtr,
+                         NULL,
+                         0,
+                         dummySize,
+                         &dummyPtr);
+
+    TextFramebuffer = NULL;
 }
 
 static BOOL IsConsoleHandle(HANDLE hHandle)
@@ -1023,7 +1050,7 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
     if (TextResolution.X != Resolution->X ||
         TextResolution.Y != Resolution->Y)
     {
-        VgaDetachFromConsole(TRUE);
+        VgaDetachFromConsoleInternal();
 
         /*
          * VgaAttachToConsoleInternal sets TextResolution to the
@@ -1047,7 +1074,7 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
     /*
      * Set the text mode palette.
      *
-     * WARNING: This call should fail on Windows (and therefore
+     * INFORMATION: This call should fail on Windows (and therefore
      * we get the default palette and our external behaviour is
      * just like Windows' one), but it should success on ReactOS
      * (so that we get console palette changes even for text-mode
@@ -1077,25 +1104,20 @@ static VOID VgaChangeMode(VOID)
                                                                  : GRAPHICS_MODE;
 
     /*
-     * No need to switch to a different screen mode + resolution
-     * if the new ones are the same as the old ones.
+     * Do not switch to a different screen mode + resolution if the new settings
+     * are the same as the old ones. Just repaint the full screen.
      */
-    if ((ScreenMode == NewScreenMode) &&
+    if ((ScreenMode == NewScreenMode) && // CurrResolution == NewResolution
         (CurrResolution.X == NewResolution.X && CurrResolution.Y == NewResolution.Y))
     {
         goto Quit;
     }
 
+    /* Leave the current video mode */
     if (ScreenMode == GRAPHICS_MODE)
-    {
-        /* Leave the current graphics mode */
         VgaLeaveGraphicsMode();
-    }
     else
-    {
-        /* Leave the current text mode */
         VgaLeaveTextMode();
-    }
 
     /* Update the current resolution */
     CurrResolution = NewResolution;
@@ -2270,74 +2292,67 @@ VOID ScreenEventHandler(PWINDOW_BUFFER_SIZE_RECORD ScreenEvent)
 
 BOOL VgaAttachToConsole(VOID)
 {
-    //
-    // FIXME: We should go back to the saved screen state
-    //
     if (TextResolution.X == 0 || TextResolution.Y == 0)
         DPRINT1("VgaAttachToConsole -- TextResolution uninitialized\n");
 
     if (TextResolution.X == 0) TextResolution.X = 80;
     if (TextResolution.Y == 0) TextResolution.Y = 25;
 
-    return VgaAttachToConsoleInternal(&TextResolution);
+    // VgaDetachFromConsoleInternal();
+
+    /*
+     * VgaAttachToConsoleInternal sets TextResolution to the
+     * new resolution and updates ConsoleInfo.
+     */
+    if (!VgaAttachToConsoleInternal(&TextResolution))
+    {
+        DisplayMessage(L"An unexpected error occurred!\n");
+        EmulatorTerminate();
+        return FALSE;
+    }
+
+    /* Restore the screen state */
+    /* Restore the original screen buffer */
+    ASSERT(ScreenBufferHandle);
+    VgaSetActiveScreenBuffer(ScreenBufferHandle);
+    ScreenBufferHandle = NULL;
+
+    return TRUE;
 }
 
-VOID VgaDetachFromConsole(BOOL ChangingMode)
+VOID VgaDetachFromConsole(VOID)
 {
-    ULONG dummyLength;
-    PVOID dummyPtr;
-    COORD dummySize = {0};
+    SMALL_RECT ConRect;
 
-    //
-    // FIXME: We should save the screen state
-    //
+    VgaDetachFromConsoleInternal();
 
-    __RegisterConsoleVDM(0,
-                         NULL,
-                         NULL,
-                         NULL,
-                         0,
-                         &dummyLength,
-                         &dummyPtr,
-                         NULL,
-                         0,
-                         dummySize,
-                         &dummyPtr);
+    /* Save the screen state */
+    if (ScreenMode == TEXT_MODE)
+        ScreenBufferHandle = TextConsoleBuffer;
+    else
+        ScreenBufferHandle = GraphicsConsoleBuffer;
 
-    TextFramebuffer = NULL;
+    /* Restore the old text-mode screen buffer */
+    VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
-    if (!ChangingMode)
-    {
-        SMALL_RECT ConRect;
+    /* Restore the original console size */
+    ConRect.Left   = 0;
+    ConRect.Top    = 0;
+    ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
+    ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
+    /*
+     * See the following trick explanation in VgaAttachToConsoleInternal.
+     */
+    SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
+    SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
+    SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
 
-        /* Restore the old screen buffer */
-        VgaSetActiveScreenBuffer(TextConsoleBuffer);
-
-        /* Restore the original console size */
-        ConRect.Left   = 0;
-        ConRect.Top    = 0;
-        ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
-        ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
-        /*
-         * See the following trick explanation in VgaAttachToConsoleInternal.
-         */
-        SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
-        SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
-        SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
-
-        /* Restore the original cursor shape */
-        SetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo);
-    }
+    /* Restore the original cursor shape */
+    SetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo);
 }
 
 BOOLEAN VgaInitialize(HANDLE TextHandle)
 {
-    /* Clear the SEQ, GC, CRTC and AC registers */
-    RtlZeroMemory(VgaSeqRegisters, sizeof(VgaSeqRegisters));
-    RtlZeroMemory(VgaGcRegisters, sizeof(VgaGcRegisters));
-    RtlZeroMemory(VgaCrtcRegisters, sizeof(VgaCrtcRegisters));
-    RtlZeroMemory(VgaAcRegisters, sizeof(VgaAcRegisters));
-
     /* Save the default text-mode console output handle */
     if (!IsConsoleHandle(TextHandle)) return FALSE;
     TextConsoleBuffer = TextHandle;
@@ -2350,11 +2365,17 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     }
     ConsoleInfo = OrgConsoleBufferInfo;
 
+    /* Clear the SEQ, GC, CRTC and AC registers */
+    RtlZeroMemory(VgaSeqRegisters, sizeof(VgaSeqRegisters));
+    RtlZeroMemory(VgaGcRegisters, sizeof(VgaGcRegisters));
+    RtlZeroMemory(VgaCrtcRegisters, sizeof(VgaCrtcRegisters));
+    RtlZeroMemory(VgaAcRegisters, sizeof(VgaAcRegisters));
+
     /* Initialize the VGA palette and fail if it isn't successfully created */
     if (!VgaInitializePalette()) return FALSE;
     /***/ VgaResetPalette(); /***/
 
-    /* Switch to the text buffer */
+    /* Switch to the text buffer, but do not enter into a text mode */
     VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
     /* Reset the sequencer */
@@ -2391,21 +2412,19 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
 
 VOID VgaCleanup(VOID)
 {
+    /* Do a final display refresh */
+    VgaRefreshDisplay();
+
     DestroyHardwareTimer(VSyncTimer);
     DestroyHardwareTimer(HSyncTimer);
 
+    /* Leave the current video mode */
     if (ScreenMode == GRAPHICS_MODE)
-    {
-        /* Leave the current graphics mode */
         VgaLeaveGraphicsMode();
-    }
     else
-    {
-        /* Leave the current text mode */
         VgaLeaveTextMode();
-    }
 
-    VgaDetachFromConsole(FALSE);
+    VgaDetachFromConsole();
     MemRemoveFastMemoryHook((PVOID)0xA0000, 0x20000);
 
     CloseHandle(AnotherEvent);
