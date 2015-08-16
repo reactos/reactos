@@ -20,6 +20,9 @@ extern int heightSetInDlg;
 
 extern STRETCHSKEW stretchSkew;
 
+class RegistrySettings;
+extern RegistrySettings registrySettings;
+
 class ImageModel;
 extern ImageModel imageModel;
 extern BOOL askBeforeEnlarging;

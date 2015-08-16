@@ -12,7 +12,6 @@
 #include "precomp.h"
 
 #include "dialogs.h"
-#include "registry.h"
 
 /* FUNCTIONS ********************************************************/
 

@@ -12,7 +12,6 @@
 #include "precomp.h"
 
 #include "dialogs.h"
-#include "registry.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -188,6 +187,7 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    GetWindowPlacement(&(registrySettings.WindowPlacement));
     PostQuitMessage(0); /* send a WM_QUIT to the message queue */
     return 0;
 }
@@ -428,13 +428,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 GlobalFree(pd.hDevNames);
             break;
         case IDM_FILEASWALLPAPERPLANE:
-            SetWallpaper(filepathname, 1, 1);
+            RegistrySettings::SetWallpaper(filepathname, 1, 1);
             break;
         case IDM_FILEASWALLPAPERCENTERED:
-            SetWallpaper(filepathname, 1, 0);
+            RegistrySettings::SetWallpaper(filepathname, 1, 0);
             break;
         case IDM_FILEASWALLPAPERSTRETCHED:
-            SetWallpaper(filepathname, 2, 0);
+            RegistrySettings::SetWallpaper(filepathname, 2, 0);
             break;
         case IDM_EDITUNDO:
             imageModel.Undo();

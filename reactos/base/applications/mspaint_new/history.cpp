@@ -29,9 +29,9 @@ ImageModel::ImageModel()
     redoSteps = 0;
     imageSaved = TRUE;
 
-    // TODO: load dimensions from registry
-    int imgXRes = 400;
-    int imgYRes = 300;
+    // prepare a minimal usable bitmap
+    int imgXRes = 1;
+    int imgYRes = 1;
 
     hDrawingDC = CreateCompatibleDC(NULL);
     SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, paletteModel.GetFgColor()));

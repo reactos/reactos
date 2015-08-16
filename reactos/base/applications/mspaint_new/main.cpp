@@ -32,6 +32,8 @@ int textToolTextMaxLen = 0;
 
 PaletteModel paletteModel;
 
+RegistrySettings registrySettings;
+
 ImageModel imageModel;
 BOOL askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 
@@ -134,13 +136,21 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     _stprintf(progtitle, resstr, filename);
     LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, SIZEOF(miniaturetitle));
 
+    /* load settings from registry */
+    registrySettings.Load();
+    showMiniature = registrySettings.ShowThumbnail;
+    imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
+
     /* create main window */
     RECT mainWindowPos = {0, 0, 544, 375};	// FIXME: use equivalent of CW_USEDEFAULT for position
     hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, progtitle, WS_OVERLAPPEDWINDOW);
 
-    RECT miniaturePos = {180, 200, 180 + 120, 200 + 100};
+    RECT miniaturePos = {(LONG) registrySettings.ThumbXPos, (LONG) registrySettings.ThumbYPos,
+                         (LONG) registrySettings.ThumbXPos + (LONG) registrySettings.ThumbWidth,
+                         (LONG) registrySettings.ThumbYPos + (LONG) registrySettings.ThumbHeight};
     miniature.Create(hwnd, miniaturePos, miniaturetitle,
                      WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, WS_EX_PALETTEWINDOW);
+    miniature.ShowWindow(showMiniature ? SW_SHOW : SW_HIDE);
 
     /* loading and setting the window menu from resource */
     menu = LoadMenu(hThisInstance, MAKEINTRESOURCE(ID_MENU));
@@ -276,7 +286,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     imageArea.SendMessage(WM_SIZE, 0, 0);
 
     /* by moving the window, the things in WM_SIZE are done */
-    MoveWindow(hwnd, 100, 100, 600, 450, TRUE);
+    mainWindow.SetWindowPlacement(&(registrySettings.WindowPlacement));
 
     /* creating the text editor window for the text tool */
     RECT textEditWindowPos = {300, 0, 300 + 300, 0 + 200};
@@ -298,6 +308,12 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         /* Send message to WindowProcedure */
         DispatchMessage(&messages);
     }
+
+    /* write back settings to registry */
+    registrySettings.ShowThumbnail = showMiniature;
+    registrySettings.BMPWidth = imageModel.GetWidth();
+    registrySettings.BMPHeight = imageModel.GetHeight();
+    registrySettings.Store();
 
     /* The program return-value is 0 - The value that PostQuitMessage() gave */
     return messages.wParam;

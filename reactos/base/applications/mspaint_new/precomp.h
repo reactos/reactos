@@ -28,6 +28,7 @@
 #include "mouse.h"
 #include "palette.h"
 #include "palettemodel.h"
+#include "registry.h"
 #include "scrollbox.h"
 #include "selection.h"
 #include "selectionmodel.h"
