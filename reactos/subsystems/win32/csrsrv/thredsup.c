@@ -438,6 +438,11 @@ CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
     {
         UnProtectHandle(CsrThread->ThreadHandle);
         Status = NtClose(CsrThread->ThreadHandle);
+
+        if (!NT_SUCCESS(Status))
+            DPRINT1("CSR: NtClose failed, we are going to ASSERT, Status = 0x%08lx; [%02x,%02x] Process: 0x%p; ThreadHandle: 0x%p\n",
+                    Status, CsrThread->ClientId->UniqueProcess, CsrThread->ClientId->UniqueThread, CsrProcess, CsrThread->ThreadHandle);
+
         ASSERT(NT_SUCCESS(Status));
     }
 
