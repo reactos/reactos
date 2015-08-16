@@ -259,6 +259,13 @@ extern PWLSESSION WLSession;
 BOOL
 CreateUserEnvironment(IN PWLSESSION Session);
 
+/* notifiy.c */
+BOOL
+InitNotifications(VOID);
+
+VOID
+CleanupNotifications(VOID);
+
 /* rpcserver.c */
 BOOL
 StartRpcServer(VOID);

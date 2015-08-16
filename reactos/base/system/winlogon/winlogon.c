@@ -384,6 +384,9 @@ WinMain(
     /* Wait for the LSA server */
     WaitForLsass();
 
+    /* Init Notifications */
+    InitNotifications();
+
     /* Load and initialize gina */
     if (!GinaInit(WLSession))
     {
@@ -469,6 +472,8 @@ WinMain(
         TranslateMessage(&Msg);
         DispatchMessageW(&Msg);
     }
+
+    CleanupNotifications();
 
     /* We never go there */
 

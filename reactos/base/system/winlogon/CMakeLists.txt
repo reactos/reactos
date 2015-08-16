@@ -7,6 +7,7 @@ add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/winreg.idl)
 
 list(APPEND SOURCE
     environment.c
+    notify.c
     rpcserver.c
     sas.c
     screensaver.c
