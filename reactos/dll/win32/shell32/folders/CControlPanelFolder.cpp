@@ -55,8 +55,8 @@ class CControlPanelEnum :
 */
 
 static const shvheader ControlPanelSFHeader[] = {
-    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},/*FIXME*/
-    {IDS_SHV_COLUMN9, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 200},/*FIXME*/
+    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},/*FIXME*/
+    {IDS_SHV_COLUMN9, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 80},/*FIXME*/
 };
 
 #define CONROLPANELSHELLVIEWCOLUMNS 2
@@ -154,10 +154,10 @@ BOOL CControlPanelEnum::RegisterCPanelApp(LPCSTR path)
     {
         for (i = 0; i < applet->count; ++i)
         {
-            WideCharToMultiByte(CP_ACP, 0, applet->info[i].szName, -1, displayName, MAX_PATH, 0, 0);
-            WideCharToMultiByte(CP_ACP, 0, applet->info[i].szInfo, -1, comment, MAX_PATH, 0, 0);
-
             applet->proc(0, CPL_INQUIRE, i, (LPARAM)&info);
+
+            LoadStringA(applet->hModule, info.idName, displayName, MAX_PATH);
+            LoadStringA(applet->hModule, info.idInfo, comment, MAX_PATH);
 
             if (info.idIcon > 0)
                 iconIdx = -info.idIcon; /* negative icon index instead of icon number */
@@ -671,8 +671,22 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
                 hr = GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
             case 1:        /* comment */
-                _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
+            {
+                PIDLCPanelStruct* pCPanel = _ILGetCPanelPointer(pidl);
+                if (pCPanel)
+                    lstrcpyA(psd->str.cStr, pCPanel->szName + pCPanel->offsComment);
+                if (_ILIsSpecialFolder(pidl))
+                {
+                    HKEY hKey;
+                    GUID *pGuid = _ILGetGUIDPointer(pidl);
+                    if (HCR_RegOpenClassIDKey(*pGuid, &hKey))
+                    {
+                        RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
+                        RegCloseKey(hKey);
+                    }
+                }
                 break;
+            }
         }
         hr = S_OK;
     }
