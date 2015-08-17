@@ -650,6 +650,11 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     if (!strRet)
         return E_INVALIDARG;
 
+    if (_ILIsPidlSimple(pidl) && _ILIsSpecialFolder(pidl))
+    {
+        return SHELL32_GetDisplayNameOfGUIDItem(this, L"", pidl, dwFlags, strRet);
+    }
+
     pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
@@ -664,84 +669,28 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     }
     else if (_ILIsPidlSimple (pidl))
     {
-        GUID const *clsid;
+        int cLen = 0;
 
-        if ((clsid = _ILGetGUIDPointer (pidl)))
+        /* file system folder or file rooted at the desktop */
+        if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
+                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
         {
-            if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
-            {
-                int bWantsForParsing;
-
-                /*
-                 * We can only get a filesystem path from a shellfolder if the
-                 *  value WantsFORPARSING in CLSID\\{...}\\shellfolder exists.
-                 *
-                 * Exception: The MyComputer folder doesn't have this key,
-                 *   but any other filesystem backed folder it needs it.
-                 */
-                if (IsEqualIID (*clsid, CLSID_MyComputer))
-                {
-                    bWantsForParsing = TRUE;
-                }
-                else
-                {
-                    /* get the "WantsFORPARSING" flag from the registry */
-                    static const WCHAR clsidW[] =
-                    { 'C', 'L', 'S', 'I', 'D', '\\', 0 };
-                    static const WCHAR shellfolderW[] =
-                    { '\\', 's', 'h', 'e', 'l', 'l', 'f', 'o', 'l', 'd', 'e', 'r', 0 };
-                    static const WCHAR wantsForParsingW[] =
-                    {   'W', 'a', 'n', 't', 's', 'F', 'o', 'r', 'P', 'a', 'r', 's', 'i', 'n',
-                        'g', 0
-                    };
-                    WCHAR szRegPath[100];
-                    LONG r;
-
-                    wcscpy (szRegPath, clsidW);
-                    SHELL32_GUIDToStringW (*clsid, &szRegPath[6]);
-                    wcscat (szRegPath, shellfolderW);
-                    r = SHGetValueW(HKEY_CLASSES_ROOT, szRegPath,
-                                    wantsForParsingW, NULL, NULL, NULL);
-                    if (r == ERROR_SUCCESS)
-                        bWantsForParsing = TRUE;
-                    else
-                        bWantsForParsing = FALSE;
-                }
-
-                if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                        bWantsForParsing)
-                {
-                    /*
-                     * we need the filesystem path to the destination folder.
-                     * Only the folder itself can know it
-                     */
-                    hr = SHELL32_GetDisplayNameOfChild (this, pidl, dwFlags,
-                                                        pszPath,
-                                                        MAX_PATH);
-                }
-                else
-                {
-                    /* parsing name like ::{...} */
-                    pszPath[0] = ':';
-                    pszPath[1] = ':';
-                    SHELL32_GUIDToStringW (*clsid, &pszPath[2]);
-                }
-            }
-            else
-            {
-                /* user friendly name */
-                HCR_GetClassNameW (*clsid, pszPath, MAX_PATH);
-            }
+            lstrcpynW(pszPath, sPathTarget, MAX_PATH - 1);
+            PathAddBackslashW(pszPath);
+            cLen = wcslen(pszPath);
         }
-        else
-        {
-            int cLen = 0;
 
-            /* file system folder or file rooted at the desktop */
+        _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
+        if (!_ILIsFolder(pidl))
+            SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
+
+        if (GetFileAttributes(pszPath) == INVALID_FILE_ATTRIBUTES)
+        {
+            /* file system folder or file rooted at the AllUsers desktop */
             if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
                     (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
             {
-                lstrcpynW(pszPath, sPathTarget, MAX_PATH - 1);
+                SHGetSpecialFolderPathW(0, pszPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
                 PathAddBackslashW(pszPath);
                 cLen = wcslen(pszPath);
             }
@@ -749,22 +698,6 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
             _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
             if (!_ILIsFolder(pidl))
                 SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
-
-            if (GetFileAttributes(pszPath) == INVALID_FILE_ATTRIBUTES)
-            {
-                /* file system folder or file rooted at the AllUsers desktop */
-                if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
-                        (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
-                {
-                    SHGetSpecialFolderPathW(0, pszPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
-                    PathAddBackslashW(pszPath);
-                    cLen = wcslen(pszPath);
-                }
-
-                _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
-                if (!_ILIsFolder(pidl))
-                    SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
-            }
         }
     }
     else
