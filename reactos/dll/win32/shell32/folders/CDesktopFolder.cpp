@@ -44,37 +44,6 @@ always shows My Computer.
 /* Undocumented functions from shdocvw */
 extern "C" HRESULT WINAPI IEParseDisplayNameWithBCW(DWORD codepage, LPCWSTR lpszDisplayName, LPBC pbc, LPITEMIDLIST *ppidl);
 
-/***********************************************************************
-*     Desktopfolder implementation
-*/
-
-class CDesktopFolderDropTarget :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IDropTarget
-{
-    private:
-        CComPtr<IShellFolder> m_psf;
-        BOOL m_fAcceptFmt;       /* flag for pending Drop */
-        UINT m_cfShellIDList;    /* clipboardformat for IDropTarget */
-        
-        void SF_RegisterClipFmt();
-        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
-    public:
-        CDesktopFolderDropTarget();
-        
-        HRESULT WINAPI Initialize(IShellFolder *psf);
-
-        // IDropTarget
-        virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragLeave();
-        virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-
-        BEGIN_COM_MAP(CDesktopFolderDropTarget)
-        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
-        END_COM_MAP()
-};
-
 class CDesktopFolderEnum :
     public CEnumIDListBase
 {
@@ -509,7 +478,7 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
 
     if (IsEqualIID (riid, IID_IDropTarget))
     {
-        hr = ShellObjectCreatorInit<CDesktopFolderDropTarget>(this, IID_IDropTarget, ppvOut);
+        hr = m_DesktopFSFolder->CreateViewObject(hwndOwner, riid, ppvOut);
     }
     else if (IsEqualIID (riid, IID_IContextMenu))
     {
@@ -641,11 +610,9 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     else if (IsEqualIID (riid, IID_IDropTarget))
     {
         /* only interested in attempting to bind to shell folders, not files, semicolon intentionate */
-        if (cidl != 1 || FAILED(hr = this->_GetDropTarget(apidl[0], (LPVOID*) &pObj)))
+        if (cidl > 1)
         {
-            IDropTarget * pDt = NULL;
-            hr = ShellObjectCreatorInit<CDesktopFolderDropTarget>(this, IID_IDropTarget, &pDt);
-            pObj = pDt;
+            hr = this->_GetDropTarget(apidl[0], (LPVOID*) &pObj);
         }
     }
     else if ((IsEqualIID(riid, IID_IShellLinkW) ||
@@ -1079,184 +1046,6 @@ HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCIT
         return hr;
 
     return psfHelper->CopyItems(pSFFrom, cidl, apidl, bCopy);
-}
-
-/****************************************************************************
- * IDropTarget implementation
- *
- * This should allow two somewhat separate things, copying files to the users directory,
- * as well as allowing icons to be moved anywhere and updating the registry to save.
- *
- * The first thing I think is best done using fs.cpp to prevent WET code. So we'll simulate
- * a drop to the user's home directory. The second will look at the pointer location and
- * set sensible places for the icons to live.
- *
- */
-void CDesktopFolderDropTarget::SF_RegisterClipFmt()
-{
-    TRACE ("(%p)\n", this);
-
-    if (!m_cfShellIDList)
-        m_cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-}
-
-CDesktopFolderDropTarget::CDesktopFolderDropTarget() :
-    m_psf(NULL),
-    m_fAcceptFmt(FALSE),
-    m_cfShellIDList(0)
-{
-}
-
-HRESULT WINAPI CDesktopFolderDropTarget::Initialize(IShellFolder *psf)
-{
-    m_psf = psf;
-    SF_RegisterClipFmt();
-    return S_OK;
-}
-
-BOOL CDesktopFolderDropTarget::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
-{
-    /* TODO Windows does different drop effects if dragging across drives.
-    i.e., it will copy instead of move if the directories are on different disks. */
-
-    DWORD dwEffect = DROPEFFECT_MOVE;
-
-    *pdwEffect = DROPEFFECT_NONE;
-
-    if (m_fAcceptFmt) { /* Does our interpretation of the keystate ... */
-        *pdwEffect = KeyStateToDropEffect (dwKeyState);
-
-        if (*pdwEffect == DROPEFFECT_NONE)
-            *pdwEffect = dwEffect;
-
-        /* ... matches the desired effect ? */
-        if (dwEffect & *pdwEffect) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-HRESULT WINAPI CDesktopFolderDropTarget::DragEnter(IDataObject *pDataObject,
-                                    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
-{
-    TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
-    FORMATETC fmt;
-    FORMATETC fmt2;
-    m_fAcceptFmt = FALSE;
-
-    InitFormatEtc (fmt, m_cfShellIDList, TYMED_HGLOBAL);
-    InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);
-
-    if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
-        m_fAcceptFmt = TRUE;
-    else if (SUCCEEDED(pDataObject->QueryGetData(&fmt2)))
-        m_fAcceptFmt = TRUE;
-
-    QueryDrop(dwKeyState, pdwEffect);
-    return S_OK;
-}
-
-HRESULT WINAPI CDesktopFolderDropTarget::DragOver(DWORD dwKeyState, POINTL pt,
-                                   DWORD *pdwEffect)
-{
-    TRACE("(%p)\n", this);
-
-    if (!pdwEffect)
-        return E_INVALIDARG;
-
-    QueryDrop(dwKeyState, pdwEffect);
-
-    return S_OK;
-}
-
-HRESULT WINAPI CDesktopFolderDropTarget::DragLeave()
-{
-    TRACE("(%p)\n", this);
-    m_fAcceptFmt = FALSE;
-    return S_OK;
-}
-
-HRESULT WINAPI CDesktopFolderDropTarget::Drop(IDataObject *pDataObject,
-                               DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
-{
-    TRACE("(%p) object dropped desktop\n", this);
-
-    STGMEDIUM medium;
-    bool passthroughtofs = FALSE;
-    FORMATETC formatetc;
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-    
-    HRESULT hr = pDataObject->GetData(&formatetc, &medium);
-    if (SUCCEEDED(hr))
-    {
-        /* lock the handle */
-        LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
-        if (!lpcida)
-        {
-            ReleaseStgMedium(&medium);
-            return E_FAIL;
-        }
-
-        /* convert the clipboard data into pidl (pointer to id list) */
-        LPITEMIDLIST pidl;
-        LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
-        if (!apidl)
-        {
-            ReleaseStgMedium(&medium);
-            return E_FAIL;
-        }
-        passthroughtofs = !_ILIsDesktop(pidl) || (dwKeyState & MK_CONTROL);
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
-    }
-    else
-    {
-        InitFormatEtc (formatetc, CF_HDROP, TYMED_HGLOBAL);
-        if (SUCCEEDED(pDataObject->QueryGetData(&formatetc)))
-        {
-            passthroughtofs = TRUE;
-        }
-    }
-    /* We only want to really move files around if they don't already
-       come from the desktop, or we're linking or copying */
-    if (passthroughtofs)
-    {
-        LPITEMIDLIST pidl = NULL;
-
-        WCHAR szPath[MAX_PATH];
-        STRRET strRet;
-        //LPWSTR pathPtr;
-
-        /* build a complete path to create a simple pidl */
-        hr = m_psf->GetDisplayNameOf(NULL, SHGDN_NORMAL | SHGDN_FORPARSING, &strRet);
-        if (SUCCEEDED(hr))
-        {
-            hr = StrRetToBufW(&strRet, NULL, szPath, MAX_PATH);
-            ASSERT(SUCCEEDED(hr));
-            /*pathPtr = */PathAddBackslashW(szPath);
-            //hr = _ILCreateFromPathW(szPath, &pidl);
-            hr = m_psf->ParseDisplayName(NULL, NULL, szPath, NULL, &pidl, NULL);
-        }
-
-        if (SUCCEEDED(hr))
-        {
-            CComPtr<IDropTarget> pDT;
-            hr = m_psf->BindToObject(pidl, NULL, IID_PPV_ARG(IDropTarget, &pDT));
-            CoTaskMemFree(pidl);
-            if (SUCCEEDED(hr))
-                SHSimulateDrop(pDT, pDataObject, dwKeyState, NULL, pdwEffect);
-            else
-                ERR("Error Binding");
-        }
-        else
-            ERR("Error creating from %s\n", debugstr_w(szPath));
-    }
-
-    /* Todo, rewrite the registry such that the icons are well placed.
-    Blocked by no bags implementation. */
-    return hr;
 }
 
 HRESULT WINAPI CDesktopFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) {
