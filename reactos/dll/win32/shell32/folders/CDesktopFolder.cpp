@@ -292,11 +292,41 @@ CDesktopFolder::~CDesktopFolder()
 HRESULT WINAPI CDesktopFolder::FinalConstruct()
 {
     WCHAR                                szMyPath[MAX_PATH];
+    HRESULT hr;
+    CComPtr<IPersistFolder3> ppf3;
+
+    /* Create the root pidl */
+    pidlRoot = _ILCreateDesktop();
+
+    /* Create the inner fs folder */
+    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder, &m_DesktopFSFolder));
+    if (FAILED(hr))
+        return hr;
+
+    hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
+    if (FAILED(hr))
+        return hr;
+
+    PERSIST_FOLDER_TARGET_INFO info;
+    ZeroMemory(&info, sizeof(PERSIST_FOLDER_TARGET_INFO));
+    info.csidl = CSIDL_DESKTOPDIRECTORY;
+    hr = ppf3->InitializeEx(NULL, pidlRoot, &info);
+
+    /* Create the inner shared fs folder */
+    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder, &m_SharedDesktopFSFolder));
+    if (FAILED(hr))
+        return hr;
+
+    hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
+    if (FAILED(hr))
+        return hr;
+
+    info.csidl = CSIDL_COMMON_DESKTOPDIRECTORY;
+    hr = ppf3->InitializeEx(NULL, pidlRoot, &info);
 
     if (!SHGetSpecialFolderPathW( 0, szMyPath, CSIDL_DESKTOPDIRECTORY, TRUE ))
         return E_UNEXPECTED;
 
-    pidlRoot = _ILCreateDesktop();    /* my qualified pidl */
     sPathTarget = (LPWSTR)SHAlloc((wcslen(szMyPath) + 1) * sizeof(WCHAR));
     wcscpy(sPathTarget, szMyPath);
     return S_OK;
@@ -380,26 +410,14 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     }
     else
     {
-        /* it's a filesystem path on the desktop. Let a FSFolder parse it */
-
         if (*lpszDisplayName)
         {
-            WCHAR szPath[MAX_PATH];
-            LPWSTR pathPtr;
+            /* it's a filesystem path on the desktop. Let a FSFolder parse it */
+            hr = m_DesktopFSFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
+            if (SUCCEEDED(hr))
+                return hr;
 
-            /* build a complete path to create a simple pidl */
-            lstrcpynW(szPath, sPathTarget, MAX_PATH);
-            pathPtr = PathAddBackslashW(szPath);
-            if (pathPtr)
-            {
-                lstrcpynW(pathPtr, lpszDisplayName, MAX_PATH - (pathPtr - szPath));
-                hr = _ILCreateFromPathW(szPath, &pidlTemp);
-            }
-            else
-            {
-                /* should never reach here, but for completeness */
-                hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-            }
+            return m_SharedDesktopFSFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
         }
         else
             pidlTemp = _ILCreateMyComputer();
@@ -476,12 +494,10 @@ HRESULT WINAPI CDesktopFolder::BindToStorage(
  */
 HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    int nReturn;
+    if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
+        return  SHELL32_CompareIDs ((IShellFolder *)this, lParam, pidl1, pidl2);
 
-    TRACE ("(%p)->(0x%08lx,pidl1=%p,pidl2=%p)\n", this, lParam, pidl1, pidl2);
-    nReturn = SHELL32_CompareIDs ((IShellFolder *)this, lParam, pidl1, pidl2);
-    TRACE ("-- %i\n", nReturn);
-    return nReturn;
+    return m_DesktopFSFolder->CompareIDs(lParam, pidl1, pidl2);
 }
 
 /**************************************************************************
@@ -565,7 +581,7 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
             else if (_ILIsNetHood(apidl[i]))
                 *rgfInOut &= dwMyNetPlacesAttributes;
             else if (_ILIsSpecialFolder(apidl[i]))
-                SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
+                SHELL32_GetGuidItemAttributes(this, apidl[i], rgfInOut);
             else if(_ILIsFolder(apidl[i]) || _ILIsValue(apidl[i]))
                 SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
             else
@@ -1044,289 +1060,37 @@ HRESULT WINAPI CDesktopFolder::GetCurFolder(LPITEMIDLIST * pidl)
 
 HRESULT WINAPI CDesktopFolder::GetUniqueName(LPWSTR pwszName, UINT uLen)
 {
-    CComPtr<IEnumIDList>                penum;
-    HRESULT hr;
-    WCHAR wszText[MAX_PATH];
-    WCHAR wszNewFolder[25];
-    const WCHAR wszFormat[] = {'%', 's', ' ', '%', 'd', 0 };
+    CComPtr<ISFHelper> psfHelper;
+    HRESULT hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(ISFHelper, &psfHelper));
+    if (FAILED(hr))
+        return hr;
 
-    LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder,  sizeof(wszNewFolder) / sizeof(WCHAR));
-
-    TRACE ("(%p)(%p %u)\n", this, pwszName, uLen);
-
-    if (uLen < sizeof(wszNewFolder) / sizeof(WCHAR) + 3)
-        return E_POINTER;
-
-    lstrcpynW (pwszName, wszNewFolder, uLen);
-
-    hr = EnumObjects(0,
-                     SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &penum);
-    if (penum) {
-        LPITEMIDLIST pidl;
-        DWORD dwFetched;
-        int i = 1;
-
-next:
-        penum->Reset ();
-        while (S_OK == penum->Next(1, &pidl, &dwFetched) &&
-                dwFetched) {
-            _ILSimpleGetTextW (pidl, wszText, MAX_PATH);
-            if (0 == lstrcmpiW (wszText, pwszName)) {
-                _snwprintf (pwszName, uLen, wszFormat, wszNewFolder, i++);
-                if (i > 99) {
-                    hr = E_FAIL;
-                    break;
-                }
-                goto next;
-            }
-        }
-
-    }
-    return hr;
+    return psfHelper->GetUniqueName(pwszName, uLen);
 }
 
 HRESULT WINAPI CDesktopFolder::AddFolder(HWND hwnd, LPCWSTR pwszName, LPITEMIDLIST *ppidlOut)
 {
-    WCHAR wszNewDir[MAX_PATH];
-    DWORD bRes;
-    HRESULT hres = E_FAIL;
+    CComPtr<ISFHelper> psfHelper;
+    HRESULT hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(ISFHelper, &psfHelper));
+    if (FAILED(hr))
+        return hr;
 
-    TRACE ("(%p)(%s %p)\n", this, debugstr_w(pwszName), ppidlOut);
-
-    wszNewDir[0] = 0;
-    if (sPathTarget)
-        lstrcpynW(wszNewDir, sPathTarget, MAX_PATH);
-    PathAppendW(wszNewDir, pwszName);
-    bRes = CreateDirectoryW (wszNewDir, NULL);
-    if (bRes)
-    {
-        SHChangeNotify (SHCNE_MKDIR, SHCNF_PATHW, wszNewDir, NULL);
-        hres = S_OK;
-        if (ppidlOut)
-            hres = _ILCreateFromPathW(wszNewDir, ppidlOut);
-    }
-
-    return hres;
+    return psfHelper->AddFolder(hwnd, pwszName, ppidlOut);
 }
 
 HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
 {
-    UINT i;
-    SHFILEOPSTRUCTW op;
-    WCHAR wszPath[MAX_PATH];
-    WCHAR wszCaption[50];
-    WCHAR *wszPathsList;
-    HRESULT ret;
-    WCHAR *wszCurrentPath;
-    UINT bRestoreWithDeskCpl = FALSE;
-    int res;
-
-    TRACE ("(%p)(%u %p)\n", this, cidl, apidl);
-    if (cidl == 0) return S_OK;
-
-    for(i = 0; i < cidl; i++)
-    {
-        if (_ILIsMyComputer(apidl[i]))
-            bRestoreWithDeskCpl++;
-        else if (_ILIsNetHood(apidl[i]))
-            bRestoreWithDeskCpl++;
-        else if (_ILIsMyDocuments(apidl[i]))
-            bRestoreWithDeskCpl++;
-    }
-
-    if (bRestoreWithDeskCpl)
-    {
-        /* FIXME use FormatMessage
-         * use a similar message resource as in windows
-         */
-        LoadStringW(shell32_hInstance, IDS_DELETEMULTIPLE_TEXT, wszPath, sizeof(wszPath) / sizeof(WCHAR));
-        wszPath[(sizeof(wszPath)/sizeof(WCHAR))-1] = 0;
-
-        LoadStringW(shell32_hInstance, IDS_DELETEITEM_CAPTION, wszCaption, sizeof(wszCaption) / sizeof(WCHAR));
-        wszCaption[(sizeof(wszCaption)/sizeof(WCHAR))-1] = 0;
-
-        res = SHELL_ConfirmMsgBox(GetActiveWindow(), wszPath, wszCaption, NULL, cidl > 1);
-        if (res == IDC_YESTOALL || res == IDYES)
-        {
-            for(i = 0; i < cidl; i++)
-            {
-                if (_ILIsMyComputer(apidl[i]))
-                    SetNamespaceExtensionVisibleStatus(L"{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0x1);
-                else if (_ILIsNetHood(apidl[i]))
-                    SetNamespaceExtensionVisibleStatus(L"{208D2C60-3AEA-1069-A2D7-08002B30309D}", 0x1);
-                else if (_ILIsMyDocuments(apidl[i]))
-                    SetNamespaceExtensionVisibleStatus(L"{450D8FBA-AD25-11D0-98A8-0800361B1103}", 0x1);
-            }
-        }
-    }
-    if (sPathTarget)
-        lstrcpynW(wszPath, sPathTarget, MAX_PATH);
-    else
-        wszPath[0] = '\0';
-
-    PathAddBackslashW(wszPath);
-    wszPathsList = BuildPathsList(wszPath, cidl, apidl);
-
-    ZeroMemory(&op, sizeof(op));
-    op.hwnd = GetActiveWindow();
-    op.wFunc = FO_DELETE;
-    op.pFrom = wszPathsList;
-    op.fFlags = FOF_ALLOWUNDO;
-    if (SHFileOperationW(&op))
-    {
-        WARN("SHFileOperation failed\n");
-        ret = E_FAIL;
-    }
-    else
-        ret = S_OK;
-
-    /* we currently need to manually send the notifies */
-    wszCurrentPath = wszPathsList;
-    for (i = 0; i < cidl; i++)
-    {
-        LONG wEventId;
-
-        if (_ILIsFolder(apidl[i]))
-            wEventId = SHCNE_RMDIR;
-        else if (_ILIsValue(apidl[i]))
-            wEventId = SHCNE_DELETE;
-        else
-            continue;
-
-        /* check if file exists */
-        if (GetFileAttributesW(wszCurrentPath) == INVALID_FILE_ATTRIBUTES)
-        {
-            LPITEMIDLIST pidl = ILCombine(pidlRoot, apidl[i]);
-            SHChangeNotify(wEventId, SHCNF_IDLIST, pidl, NULL);
-            SHFree(pidl);
-        }
-
-        wszCurrentPath += wcslen(wszCurrentPath) + 1;
-    }
-    HeapFree(GetProcessHeap(), 0, wszPathsList);
-    return ret;
+    return E_NOTIMPL;
 }
 
 HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy)
 {
-    CComPtr<IPersistFolder2> ppf2;
-    WCHAR szSrcPath[MAX_PATH];
-    WCHAR szTargetPath[MAX_PATH];
-    SHFILEOPSTRUCTW op;
-    LPITEMIDLIST pidl;
-    LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList, pszFileName;
-    int res, length;
-    STRRET strRet;
+    CComPtr<ISFHelper> psfHelper;
+    HRESULT hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(ISFHelper, &psfHelper));
+    if (FAILED(hr))
+        return hr;
 
-    TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
-
-    pSFFrom->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
-    if (ppf2)
-    {
-        if (FAILED(ppf2->GetCurFolder(&pidl)))
-            return E_FAIL;
-
-        if (FAILED(pSFFrom->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strRet)))
-        {
-            SHFree (pidl);
-            return E_FAIL;
-        }
-
-        if (FAILED(StrRetToBufW(&strRet, pidl, szSrcPath, MAX_PATH)))
-        {
-            SHFree (pidl);
-            return E_FAIL;
-        }
-        SHFree (pidl);
-
-        pszSrc = PathAddBackslashW (szSrcPath);
-
-        wcscpy(szTargetPath, sPathTarget);
-        pszTarget = PathAddBackslashW (szTargetPath);
-
-        pszSrcList = BuildPathsList(szSrcPath, cidl, apidl);
-        pszTargetList = BuildPathsList(szTargetPath, cidl, apidl);
-
-        if (!pszSrcList || !pszTargetList)
-        {
-            if (pszSrcList)
-                HeapFree(GetProcessHeap(), 0, pszSrcList);
-
-            if (pszTargetList)
-                HeapFree(GetProcessHeap(), 0, pszTargetList);
-
-            SHFree (pidl);
-            return E_OUTOFMEMORY;
-        }
-        ZeroMemory(&op, sizeof(op));
-        if (!pszSrcList[0])
-        {
-            /* remove trailing backslash */
-            pszSrc--;
-            pszSrc[0] = L'\0';
-            op.pFrom = szSrcPath;
-        }
-        else
-        {
-            op.pFrom = pszSrcList;
-        }
-
-        if (!pszTargetList[0])
-        {
-            /* remove trailing backslash */
-            if (pszTarget - szTargetPath > 3)
-            {
-                pszTarget--;
-                pszTarget[0] = L'\0';
-            }
-            else
-            {
-                pszTarget[1] = L'\0';
-            }
-
-            op.pTo = szTargetPath;
-            op.fFlags = 0;
-        }
-        else
-        {
-            op.pTo = pszTargetList;
-            op.fFlags = FOF_MULTIDESTFILES;
-        }
-        op.hwnd = GetActiveWindow();
-        op.wFunc = bCopy ? FO_COPY : FO_MOVE;
-        op.fFlags |= FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
-
-        res = SHFileOperationW(&op);
-
-        if (res == DE_SAMEFILE)
-        {
-            length = wcslen(szTargetPath);
-
-
-            pszFileName = wcsrchr(pszSrcList, '\\');
-            pszFileName++;
-
-            if (LoadStringW(shell32_hInstance, IDS_COPY_OF, pszTarget, MAX_PATH - length))
-            {
-                wcscat(szTargetPath, L" ");
-            }
-
-            wcscat(szTargetPath, pszFileName);
-            op.pTo = szTargetPath;
-
-            res = SHFileOperationW(&op);
-        }
-
-
-        HeapFree(GetProcessHeap(), 0, pszSrcList);
-        HeapFree(GetProcessHeap(), 0, pszTargetList);
-
-        if (res)
-            return E_FAIL;
-        else
-            return S_OK;
-    }
-    return E_FAIL;
+    return psfHelper->CopyItems(pSFFrom, cidl, apidl, bCopy);
 }
 
 /****************************************************************************

@@ -32,6 +32,9 @@ class CDesktopFolder :
 {
     private:
         /* both paths are parsible from the desktop */
+        CComPtr<IShellFolder> m_DesktopFSFolder;
+        CComPtr<IShellFolder> m_SharedDesktopFSFolder;
+
         LPWSTR sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
 
