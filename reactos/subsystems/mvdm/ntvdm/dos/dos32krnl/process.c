@@ -546,7 +546,7 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
          */
         setDX(Segment);
         setDI(FinalSP);
-        setBP(0x091E); // DOS base stack pointer relic value
+        setBP(0x091E); // DOS base stack pointer relic value. In MS-DOS 5.0 and Windows' NTVDM it's 0x091C. This is in fact the old SP value inside DosData disk stack.
         setSI(FinalIP);
 
         setAX(0/*0xFFFF*/); // FIXME: fcbcode
@@ -897,7 +897,7 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
     /* Notify VDDs of process termination */
     VDDTerminateUserHook(Psp);
 
-    /* Check if this PSP is it's own parent */
+    /* Check if this PSP is its own parent */
     if (PspBlock->ParentPsp == Psp) goto Done;
 
     if (KeepResident == 0)
