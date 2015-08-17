@@ -1223,10 +1223,6 @@ HRESULT CDefView::OpenSelectedItems()
     if (FAILED(hResult))
         goto cleanup;
 
-    hResult = IUnknown_SetSite(m_pCM, (IShellView *)this);
-    //if (FAILED( hResult))
-    //    goto cleanup;
-
     hResult = m_pCM->QueryContextMenu(hMenu, 0, 0x20, 0x7fff, CMF_DEFAULTONLY);
     if (FAILED(hResult))
         goto cleanup;
@@ -1251,10 +1247,7 @@ cleanup:
         DestroyMenu(hMenu);
 
     if (m_pCM)
-    {
-        IUnknown_SetSite(m_pCM, NULL);
         m_pCM.Release();
-    }
 
     return hResult;
 }
@@ -1290,10 +1283,6 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (FAILED( hResult))
         goto cleanup;
 
-    hResult = IUnknown_SetSite(m_pCM, (IShellView *)this);
-    //if (FAILED( hResult))
-    //    goto cleanup;
-
     hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
     if (FAILED( hResult))
         goto cleanup;
@@ -1319,10 +1308,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 cleanup:
     
     if (m_pCM)
-    {
-        IUnknown_SetSite(m_pCM, NULL);
         m_pCM.Release();
-    }
 
     if (hMenu)
         DestroyMenu(hMenu);
@@ -1344,10 +1330,6 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     if (FAILED( hResult))
         goto cleanup;
 
-    hResult = IUnknown_SetSite(m_pCM, (IShellView *)this);
-    //if (FAILED( hResult))
-    //    goto cleanup;
-
     hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
     if (FAILED( hResult))
         goto cleanup;
@@ -1361,10 +1343,7 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
 cleanup:
 
     if (m_pCM)
-    {
-        IUnknown_SetSite(m_pCM, NULL);
         m_pCM.Release();
-    }
 
     if (hMenu)
         DestroyMenu(hMenu);
