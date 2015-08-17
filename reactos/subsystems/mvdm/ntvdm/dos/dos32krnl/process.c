@@ -73,7 +73,10 @@ static inline VOID DosRestoreState(VOID)
 {
     PDOS_REGISTER_STATE State;
 
-    /* Pop the state structure from the stack */
+    /*
+     * Pop the state structure from the stack. Note that we
+     * already have one word allocated (the interrupt number).
+     */
     State = SEG_OFF_TO_PTR(getSS(), getSP());
     setSP(getSP() + sizeof(DOS_REGISTER_STATE) - sizeof(WORD));
 
@@ -89,8 +92,8 @@ static inline VOID DosRestoreState(VOID)
     setDI(State->DI);
 }
 
-static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
-                                    LPCSTR ProgramName)
+static WORD DosCopyEnvironmentBlock(IN LPCSTR Environment OPTIONAL,
+                                    IN LPCSTR ProgramName)
 {
     PCHAR Ptr, DestBuffer = NULL;
     ULONG TotalSize = 0;
@@ -237,82 +240,29 @@ VOID DosSetProcessContext(WORD Segment)
     Sda->DiskTransferArea = MAKELONG(0x80, Segment);
 }
 
-DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
-                        IN LPCSTR ExecutablePath,
-                        IN PDOS_EXEC_PARAM_BLOCK Parameters,
-                        IN LPCSTR CommandLine OPTIONAL,
-                        IN LPCSTR Environment OPTIONAL,
-                        IN DWORD ReturnAddress OPTIONAL)
+DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
+                                IN LPBYTE ExeBuffer,
+                                IN DWORD ExeBufferSize,
+                                IN LPCSTR ExePath,
+                                IN PDOS_EXEC_PARAM_BLOCK Parameters,
+                                IN LPCSTR CommandLine OPTIONAL,
+                                IN LPCSTR Environment OPTIONAL,
+                                IN DWORD ReturnAddress OPTIONAL)
 {
     DWORD Result = ERROR_SUCCESS;
-    HANDLE FileHandle = INVALID_HANDLE_VALUE, FileMapping = NULL;
-    LPBYTE Address = NULL;
     WORD Segment = 0;
     WORD EnvBlock = 0;
     WORD LoadSegment;
     WORD MaxAllocSize;
-    DWORD i, FileSize;
-    CHAR FullPath[MAX_PATH];
-    CHAR ShortFullPath[MAX_PATH];
+
+    WORD FinalSS, FinalSP;
+    WORD FinalCS, FinalIP;
 
     /* Buffer for command line conversion: 1 byte for size; 127 bytes for contents */
     CHAR CmdLineBuffer[1 + DOS_CMDLINE_LENGTH];
 
-    DPRINT1("DosLoadExecutable(%d, '%s', 0x%08X, 0x%08X, 0x%08X)\n",
-            LoadType,
-            ExecutablePath,
-            Parameters,
-            CommandLine,
-            Environment);
-
-    /* Try to get the full path to the executable */
-    if (GetFullPathNameA(ExecutablePath, sizeof(FullPath), FullPath, NULL))
-    {
-        /* Try to shorten the full path */
-        if (GetShortPathNameA(FullPath, ShortFullPath, sizeof(ShortFullPath)))
-        {
-            /* Use the shortened full path from now on */
-            ExecutablePath = ShortFullPath;
-        }
-    }
-
-    /* Open a handle to the executable */
-    FileHandle = CreateFileA(ExecutablePath,
-                             GENERIC_READ,
-                             FILE_SHARE_READ,
-                             NULL,
-                             OPEN_EXISTING,
-                             FILE_ATTRIBUTE_NORMAL,
-                             NULL);
-    if (FileHandle == INVALID_HANDLE_VALUE)
-    {
-        Result = GetLastError();
-        goto Cleanup;
-    }
-
-    /* Get the file size */
-    FileSize = GetFileSize(FileHandle, NULL);
-
-    /* Create a mapping object for the file */
-    FileMapping = CreateFileMapping(FileHandle,
-                                    NULL,
-                                    PAGE_READONLY,
-                                    0,
-                                    0,
-                                    NULL);
-    if (FileMapping == NULL)
-    {
-        Result = GetLastError();
-        goto Cleanup;
-    }
-
-    /* Map the file into memory */
-    Address = (LPBYTE)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);
-    if (Address == NULL)
-    {
-        Result = GetLastError();
-        goto Cleanup;
-    }
+    DPRINT1("DosLoadExecutableInternal(%d, 0x%p, '%s', 0x%p, 0x%p, 0x%p)\n",
+            LoadType, ExeBuffer, ExePath, Parameters, CommandLine, Environment);
 
     if (LoadType != DOS_LOAD_OVERLAY)
     {
@@ -388,7 +338,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         }
 
         /* Copy the environment block to DOS memory */
-        EnvBlock = DosCopyEnvironmentBlock(Environment, ExecutablePath);
+        EnvBlock = DosCopyEnvironmentBlock(Environment, ExePath);
         if (EnvBlock == 0)
         {
             Result = Sda->LastErrorCode;
@@ -397,18 +347,18 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     }
 
     /* Check if this is an EXE file or a COM file */
-    if (Address[0] == 'M' && Address[1] == 'Z')
+    if (ExeBuffer[0] == 'M' && ExeBuffer[1] == 'Z')
     {
         /* EXE file */
         PIMAGE_DOS_HEADER Header;
-        DWORD BaseSize;
+        DWORD BaseSize, i;
         PDWORD RelocationTable;
         PWORD RelocWord;
         WORD RelocFactor;
         BOOLEAN LoadHigh = FALSE;
 
         /* Get the MZ header */
-        Header = (PIMAGE_DOS_HEADER)Address;
+        Header = (PIMAGE_DOS_HEADER)ExeBuffer;
 
         /* Get the base size of the file, in paragraphs (rounded up) */
         BaseSize = ((((Header->e_cp - (Header->e_cblp != 0)) * 512)
@@ -452,7 +402,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             }
 
             /* The process owns its own memory */
-            DosChangeMemoryOwner(Segment, Segment);
+            DosChangeMemoryOwner(Segment , Segment);
             DosChangeMemoryOwner(EnvBlock, Segment);
 
             /* Set INT 22h to the return address */
@@ -480,11 +430,11 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
 
         /* Copy the program to the code segment */
         RtlCopyMemory(SEG_OFF_TO_PTR(LoadSegment, 0),
-                      Address + (Header->e_cparhdr << 4),
-                      min(FileSize - (Header->e_cparhdr << 4), BaseSize << 4));
+                      ExeBuffer + (Header->e_cparhdr << 4),
+                      min(ExeBufferSize - (Header->e_cparhdr << 4), BaseSize << 4));
 
         /* Get the relocation table */
-        RelocationTable = (PDWORD)(Address + Header->e_lfarlc);
+        RelocationTable = (PDWORD)(ExeBuffer + Header->e_lfarlc);
 
         /* Perform relocations */
         for (i = 0; i < Header->e_crlc; i++)
@@ -497,39 +447,13 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             *RelocWord += RelocFactor;
         }
 
-        if (LoadType == DOS_LOAD_AND_EXECUTE)
-        {
-            /* Save the program state */
-            if (Sda->CurrentPsp != SYSTEM_PSP)
-            {
-                /* Push the task state */
-                DosSaveState();
+        /* Set the stack to the location from the header */
+        FinalSS = LoadSegment + Header->e_ss;
+        FinalSP = Header->e_sp;
 
-                /* Update the last stack in the PSP */
-                SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
-            }
-
-            /* Set the initial segment registers */
-            setDS(Segment);
-            setES(Segment);
-
-            /* Set the stack to the location from the header */
-            setSS(LoadSegment + Header->e_ss);
-            setSP(Header->e_sp);
-
-            /* Notify VDDs of process execution */
-            VDDCreateUserHook(Segment);
-
-            /* Execute */
-            DosSetProcessContext(Segment);
-            CpuExecute(LoadSegment + Header->e_cs, Header->e_ip);
-        }
-        else if (LoadType == DOS_LOAD_ONLY)
-        {
-            ASSERT(Parameters);
-            Parameters->StackLocation = MAKELONG(Header->e_sp, LoadSegment + Header->e_ss);
-            Parameters->EntryPoint    = MAKELONG(Header->e_ip, LoadSegment + Header->e_cs);
-        }
+        /* Set the code segment/pointer */
+        FinalCS = LoadSegment + Header->e_cs;
+        FinalIP = Header->e_ip;
     }
     else
     {
@@ -541,7 +465,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             DosAllocateMemory(0xFFFF, &MaxAllocSize);
 
             /* Make sure it's enough for the whole program and the PSP */
-            if (((DWORD)MaxAllocSize << 4) < (FileSize + sizeof(DOS_PSP)))
+            if (((DWORD)MaxAllocSize << 4) < (ExeBufferSize + sizeof(DOS_PSP)))
             {
                 Result = ERROR_NOT_ENOUGH_MEMORY;
                 goto Cleanup;
@@ -556,7 +480,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             }
 
             /* The process owns its own memory */
-            DosChangeMemoryOwner(Segment, Segment);
+            DosChangeMemoryOwner(Segment , Segment);
             DosChangeMemoryOwner(EnvBlock, Segment);
 
             /* Set INT 22h to the return address */
@@ -578,48 +502,75 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
 
         /* Copy the program to the code segment */
         RtlCopyMemory(SEG_OFF_TO_PTR(LoadSegment, 0),
-                      Address,
-                      FileSize);
+                      ExeBuffer, ExeBufferSize);
 
-        if (LoadType == DOS_LOAD_AND_EXECUTE)
+        /* Set the stack to the last word of the segment */
+        FinalSS = Segment;
+        FinalSP = 0xFFFE;
+
+        /*
+         * Set the value on the stack to 0x0000, so that a near return
+         * jumps to PSP:0000 which has the exit code.
+         */
+        *((LPWORD)SEG_OFF_TO_PTR(Segment, 0xFFFE)) = 0x0000;
+
+        /* Set the code segment/pointer */
+        FinalCS = Segment;
+        FinalIP = 0x0100;
+    }
+
+    if (LoadType == DOS_LOAD_AND_EXECUTE)
+    {
+        /* Save the program state */
+        if (Sda->CurrentPsp != SYSTEM_PSP)
         {
-            /* Save the program state */
-            if (Sda->CurrentPsp != SYSTEM_PSP)
-            {
-                /* Push the task state */
-                DosSaveState();
+            /* Push the task state */
+            DosSaveState();
 
-                /* Update the last stack in the PSP */
-                SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
-            }
-
-            /* Set the initial segment registers */
-            setDS(Segment);
-            setES(Segment);
-
-            /* Set the stack to the last word of the segment */
-            setSS(Segment);
-            setSP(0xFFFE);
-
-            /*
-             * Set the value on the stack to 0, so that a near return
-             * jumps to PSP:0000 which has the exit code.
-             */
-            *((LPWORD)SEG_OFF_TO_PTR(Segment, 0xFFFE)) = 0;
-
-            /* Notify VDDs of process execution */
-            VDDCreateUserHook(Segment);
-
-            /* Execute */
-            DosSetProcessContext(Segment);
-            CpuExecute(Segment, 0x100);
+            /* Update the last stack in the PSP */
+            SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
         }
-        else if (LoadType == DOS_LOAD_ONLY)
-        {
-            ASSERT(Parameters);
-            Parameters->StackLocation = MAKELONG(0xFFFE, Segment);
-            Parameters->EntryPoint    = MAKELONG(0x0100, Segment);
-        }
+
+        /* Set the initial segment registers */
+        setDS(Segment);
+        setES(Segment);
+
+        /* Set the stack */
+        setSS(FinalSS);
+        setSP(FinalSP);
+
+        /*
+         * Set the other registers as in real DOS: some demos expect them so!
+         * See http://www.fysnet.net/yourhelp.htm
+         * and http://www.beroset.com/asm/showregs.asm
+         */
+        setDX(Segment);
+        setDI(FinalSP);
+        setBP(0x091E); // DOS base stack pointer relic value
+        setSI(FinalIP);
+
+        setAX(0/*0xFFFF*/); // FIXME: fcbcode
+        setBX(0/*0xFFFF*/); // FIXME: fcbcode
+        setCX(0x00FF);
+
+        /*
+         * Keep critical flags, clear test flags (OF, SF, ZF, AF, PF, CF)
+         * and explicitely set the interrupt flag.
+         */
+        setEFLAGS((getEFLAGS() & ~0x08D5) | 0x0200);
+
+        /* Notify VDDs of process execution */
+        VDDCreateUserHook(Segment);
+
+        /* Execute */
+        DosSetProcessContext(Segment);
+        CpuExecute(FinalCS, FinalIP);
+    }
+    else if (LoadType == DOS_LOAD_ONLY)
+    {
+        ASSERT(Parameters);
+        Parameters->StackLocation = MAKELONG(FinalSP, FinalSS);
+        Parameters->EntryPoint    = MAKELONG(FinalIP, FinalCS);
     }
 
 Cleanup:
@@ -630,6 +581,85 @@ Cleanup:
         if (Segment)  DosFreeMemory(Segment);
     }
 
+    return Result;
+}
+
+DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
+                        IN LPCSTR ExecutablePath,
+                        IN PDOS_EXEC_PARAM_BLOCK Parameters,
+                        IN LPCSTR CommandLine OPTIONAL,
+                        IN LPCSTR Environment OPTIONAL,
+                        IN DWORD ReturnAddress OPTIONAL)
+{
+    DWORD Result = ERROR_SUCCESS;
+    HANDLE FileHandle = INVALID_HANDLE_VALUE, FileMapping = NULL;
+    DWORD FileSize;
+    LPBYTE Address = NULL;
+    CHAR FullPath[MAX_PATH];
+    CHAR ShortFullPath[MAX_PATH];
+
+    DPRINT1("DosLoadExecutable(%d, '%s', 0x%p, 0x%p, 0x%p)\n",
+            LoadType, ExecutablePath, Parameters, CommandLine, Environment);
+
+    /* Try to get the full path to the executable */
+    if (GetFullPathNameA(ExecutablePath, sizeof(FullPath), FullPath, NULL))
+    {
+        /* Get the corresponding short path */
+        if (GetShortPathNameA(FullPath, ShortFullPath, sizeof(ShortFullPath)))
+        {
+            /* Use the shortened full path from now on */
+            ExecutablePath = ShortFullPath;
+        }
+    }
+
+    /* Open a handle to the executable */
+    FileHandle = CreateFileA(ExecutablePath,
+                             GENERIC_READ,
+                             FILE_SHARE_READ,
+                             NULL,
+                             OPEN_EXISTING,
+                             FILE_ATTRIBUTE_NORMAL,
+                             NULL);
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        Result = GetLastError();
+        goto Cleanup;
+    }
+
+    /* Get the file size */
+    FileSize = GetFileSize(FileHandle, NULL);
+
+    /* Create a mapping object for the file */
+    FileMapping = CreateFileMapping(FileHandle,
+                                    NULL,
+                                    PAGE_READONLY,
+                                    0,
+                                    0,
+                                    NULL);
+    if (FileMapping == NULL)
+    {
+        Result = GetLastError();
+        goto Cleanup;
+    }
+
+    /* Map the file into memory */
+    Address = (LPBYTE)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);
+    if (Address == NULL)
+    {
+        Result = GetLastError();
+        goto Cleanup;
+    }
+
+    Result = DosLoadExecutableInternal(LoadType,
+                                       Address,
+                                       FileSize,
+                                       ExecutablePath,
+                                       Parameters,
+                                       CommandLine,
+                                       Environment,
+                                       ReturnAddress);
+
+Cleanup:
     /* Unmap the file*/
     if (Address != NULL) UnmapViewOfFile(Address);
 
@@ -690,9 +720,9 @@ Quit:
 }
 
 #ifndef STANDALONE
-WORD DosCreateProcess(LPCSTR ProgramName,
-                      PDOS_EXEC_PARAM_BLOCK Parameters,
-                      DWORD ReturnAddress OPTIONAL)
+WORD DosCreateProcess(IN LPCSTR ProgramName,
+                      IN PDOS_EXEC_PARAM_BLOCK Parameters,
+                      IN DWORD ReturnAddress OPTIONAL)
 {
     DWORD Result;
     DWORD BinaryType;
@@ -851,29 +881,28 @@ Command:
 
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
 {
-    WORD i;
     WORD McbSegment = SysVars->FirstMcb;
     PDOS_MCB CurrentMcb;
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
     LPWORD Stack;
+    BYTE TerminationType;
 #ifndef STANDALONE
     VDM_COMMAND_INFO CommandInfo;
 #endif
 
     DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X, KeepResident 0x%04X\n",
-           Psp,
-           ReturnCode,
-           KeepResident);
-
-    /* Check if this PSP is it's own parent */
-    if (PspBlock->ParentPsp == Psp) goto Done;
+           Psp, ReturnCode, KeepResident);
 
     /* Notify VDDs of process termination */
     VDDTerminateUserHook(Psp);
 
+    /* Check if this PSP is it's own parent */
+    if (PspBlock->ParentPsp == Psp) goto Done;
+
     if (KeepResident == 0)
     {
+        WORD i;
         for (i = 0; i < PspBlock->HandleTableSize; i++)
         {
             /* Close the handle */
@@ -923,10 +952,10 @@ Done:
     IntVecTable[0x23] = PspBlock->BreakAddress;
     IntVecTable[0x24] = PspBlock->CriticalAddress;
 
-    /* Update the current PSP */
+    /* Update the current PSP with the parent's one */
     if (Psp == Sda->CurrentPsp)
     {
-        Sda->CurrentPsp = PspBlock->ParentPsp;
+        DosSetProcessContext(PspBlock->ParentPsp);
         if (Sda->CurrentPsp == SYSTEM_PSP)
         {
             ResetEvent(VdmTaskEvent);
@@ -952,15 +981,19 @@ Done:
 
 #endif
 
-    /* Save the return code - Normal termination */
-    Sda->ErrorLevel = MAKEWORD(ReturnCode, 0x00);
+    /* Save the return code - Normal termination or TSR */
+    TerminationType = (KeepResident != 0 ? 0x03 : 0x00);
+    Sda->ErrorLevel = MAKEWORD(ReturnCode, TerminationType);
 
-    /* Restore the old stack */
-    setSS(HIWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));
-    setSP(LOWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));
+    if (Sda->CurrentPsp != SYSTEM_PSP)
+    {
+        /* Restore the parent's stack */
+        setSS(HIWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));
+        setSP(LOWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));
 
-    /* Pop the task state */
-    DosRestoreState();
+        /* Pop the task state */
+        DosRestoreState();
+    }
 
     /* Return control to the parent process */
     Stack = (LPWORD)SEG_OFF_TO_PTR(getSS(), getSP());
@@ -968,3 +1001,4 @@ Done:
     Stack[STACK_IP] = LOWORD(PspBlock->TerminateAddress);
 }
 
+/* EOF */

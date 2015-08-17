@@ -87,6 +87,18 @@ VOID DosClonePsp(WORD DestSegment, WORD SourceSegment);
 VOID DosCreatePsp(WORD Segment, WORD ProgramSize);
 VOID DosSetProcessContext(WORD Segment);
 
+DWORD DosLoadExecutableInternal
+(
+    IN DOS_EXEC_TYPE LoadType,
+    IN LPBYTE ExeBuffer,
+    IN DWORD ExeBufferSize,
+    IN LPCSTR ExePath,
+    IN PDOS_EXEC_PARAM_BLOCK Parameters,
+    IN LPCSTR CommandLine OPTIONAL,
+    IN LPCSTR Environment OPTIONAL,
+    IN DWORD ReturnAddress OPTIONAL
+);
+
 DWORD DosLoadExecutable
 (
     IN DOS_EXEC_TYPE LoadType,
