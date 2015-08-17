@@ -572,6 +572,13 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
 {
     DWORD dwAttributes;
 
+    if (!_ILIsFolder(pidl) && !_ILIsValue(pidl))
+    {
+        ERR("Got wrong type of pidl!\n");
+        *pdwAttributes &= SFGAO_CANLINK;
+        return S_OK;
+    }
+
     if (*pdwAttributes & ~dwSupportedAttr)
     {
         WARN ("attributes 0x%08x not implemented\n", (*pdwAttributes & ~dwSupportedAttr));
@@ -579,12 +586,6 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     }
 
     dwAttributes = _ILGetFileAttributes(pidl, NULL, 0);
-    if (!dwAttributes)
-    {
-        ERR("Got 0 attrs!\n");
-        *pdwAttributes &= SFGAO_CANLINK;
-        return S_OK;
-    }
 
     /* Set common attributes */
     *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
