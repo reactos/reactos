@@ -398,7 +398,7 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
         }
         else
         {
-            DPRINT1("Got and unknown pidl!\n");
+            ERR("Got and unknown pidl!\n");
         }
     }
     else
