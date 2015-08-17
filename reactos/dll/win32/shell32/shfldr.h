@@ -52,6 +52,21 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
 HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path);
 
+HRESULT SHELL32_BindToGuidItem(LPCITEMIDLIST pidlRoot,
+                               PCUIDLIST_RELATIVE pidl,
+                               LPBC pbcReserved,
+                               REFIID riid,
+                               LPVOID *ppvOut);
+
+HRESULT SHELL32_GetGuidItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
+
+HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
+
+HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPath, PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
+
+extern "C"
+BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
+
 static __inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
 {
     return sprintf(str, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",

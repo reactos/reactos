@@ -330,6 +330,45 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
     return hr;
 }
 
+HRESULT SHELL32_BindToGuidItem(LPCITEMIDLIST pidlRoot,
+                               PCUIDLIST_RELATIVE pidl,
+                               LPBC pbcReserved,
+                               REFIID riid,
+                               LPVOID *ppvOut)
+{
+    CComPtr<IPersistFolder> pFolder;
+    HRESULT hr;
+
+    GUID *pGUID = _ILGetGUIDPointer(pidl);
+    if (!pGUID)
+    {
+        ERR("SHELL32_BindToGuidItem called for non guid item!\n");
+        return E_FAIL;
+    }
+
+    hr = SHCoCreateInstance(NULL, pGUID, NULL, IID_PPV_ARG(IPersistFolder, &pFolder));
+    if (FAILED(hr))
+        return hr;
+
+    hr = pFolder->Initialize(ILCombine(pidlRoot, pidl));
+    if (FAILED(hr))
+        return hr;
+
+    if (_ILIsPidlSimple (pidl))
+    {
+        return pFolder->QueryInterface(riid, ppvOut);
+    }
+    else
+    {
+        CComPtr<IShellFolder> psf;
+        hr = pFolder->QueryInterface(IID_PPV_ARG(IShellFolder, &psf));
+        if (FAILED(hr))
+            return hr;
+
+        return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
+    }
+}
+
 /***********************************************************************
  *    SHELL32_GetDisplayNameOfChild
  *
@@ -380,6 +419,85 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
     return hr;
 }
 
+HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPath, PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
+{
+    HRESULT hr = S_OK;
+    GUID const *clsid = _ILGetGUIDPointer (pidl);
+
+    if (!strRet)
+        return E_INVALIDARG;
+
+    LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+    if (!pszPath)
+        return E_OUTOFMEMORY;
+
+    if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
+    {
+        int bWantsForParsing;
+
+        /*
+            * We can only get a filesystem path from a shellfolder if the
+            *  value WantsFORPARSING in CLSID\\{...}\\shellfolder exists.
+            *
+            * Exception: The MyComputer folder doesn't have this key,
+            *   but any other filesystem backed folder it needs it.
+            */
+        if (IsEqualIID (*clsid, CLSID_MyComputer))
+        {
+            bWantsForParsing = TRUE;
+        }
+        else
+        {
+            HKEY hkeyClass;
+            if (HCR_RegOpenClassIDKey(*clsid, &hkeyClass))
+            {
+                LONG res = SHGetValueW(hkeyClass, L"Shellfolder", L"WantsForParsing", NULL, NULL, NULL);
+                bWantsForParsing = (res == ERROR_SUCCESS);
+                RegCloseKey(hkeyClass);
+            }
+        }
+
+        if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
+                bWantsForParsing)
+        {
+            /*
+                * we need the filesystem path to the destination folder.
+                * Only the folder itself can know it
+                */
+            hr = SHELL32_GetDisplayNameOfChild (psf, pidl, dwFlags,
+                                                pszPath,
+                                                MAX_PATH);
+        }
+        else
+        {
+            wcscpy(pszPath, pszFolderPath);
+            PWCHAR pItemName = &pszPath[wcslen(pszPath)];
+
+            /* parsing name like ::{...} */
+            pItemName[0] = ':';
+            pItemName[1] = ':';
+            SHELL32_GUIDToStringW (*clsid, &pItemName[2]);
+        }
+    }
+    else
+    {
+        /* user friendly name */
+        HCR_GetClassNameW (*clsid, pszPath, MAX_PATH);
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        strRet->uType = STRRET_WSTR;
+        strRet->pOleStr = pszPath;
+    }
+    else
+    {
+        CoTaskMemFree(pszPath);
+    }
+
+    return hr;
+}
+
 /***********************************************************************
  *  SHELL32_GetItemAttributes
  *
@@ -399,26 +517,124 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
  * According to the MSDN documentation this function should not set flags. It claims only to reset flags when necessary.
  * However it turns out the native shell32.dll _sets_ flags in several cases - so do we.
  */
-HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
+
+static const DWORD dwSupportedAttr=
+                      SFGAO_CANCOPY |           /*0x00000001 */
+                      SFGAO_CANMOVE |           /*0x00000002 */
+                      SFGAO_CANLINK |           /*0x00000004 */
+                      SFGAO_CANRENAME |         /*0x00000010 */
+                      SFGAO_CANDELETE |         /*0x00000020 */
+                      SFGAO_HASPROPSHEET |      /*0x00000040 */
+                      SFGAO_DROPTARGET |        /*0x00000100 */
+                      SFGAO_LINK |              /*0x00010000 */
+                      SFGAO_READONLY |          /*0x00040000 */
+                      SFGAO_HIDDEN |            /*0x00080000 */
+                      SFGAO_FILESYSANCESTOR |   /*0x10000000 */
+                      SFGAO_FOLDER |            /*0x20000000 */
+                      SFGAO_FILESYSTEM |        /*0x40000000 */
+                      SFGAO_HASSUBFOLDER;       /*0x80000000 */
+
+HRESULT SHELL32_GetGuidItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
+{
+    if (!_ILIsSpecialFolder(pidl))
+    {
+        ERR("Got wrong type of pidl!\n");
+        *pdwAttributes &= SFGAO_CANLINK;
+        return S_OK;
+    }
+
+    if (*pdwAttributes & ~dwSupportedAttr)
+    {
+        WARN ("attributes 0x%08x not implemented\n", (*pdwAttributes & ~dwSupportedAttr));
+        *pdwAttributes &= dwSupportedAttr;
+    }
+
+    /* First try to get them from the registry */
+    if (HCR_GetFolderAttributes(pidl, pdwAttributes) && *pdwAttributes)
+    {
+        return S_OK;
+    }
+    else
+    {
+        /* If we can't get it from the registry we have to query the child */
+        CComPtr<IShellFolder> psf2;
+        if (SUCCEEDED(psf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &psf2))))
+        {
+            return psf2->GetAttributesOf(0, NULL, pdwAttributes);
+        }
+    }
+
+    *pdwAttributes &= SFGAO_CANLINK;
+    return S_OK;
+}
+
+HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
 {
     DWORD dwAttributes;
-    BOOL has_guid;
-    static const DWORD dwSupportedAttr=
-                          SFGAO_CANCOPY |           /*0x00000001 */
-                          SFGAO_CANMOVE |           /*0x00000002 */
-                          SFGAO_CANLINK |           /*0x00000004 */
-                          SFGAO_CANRENAME |         /*0x00000010 */
-                          SFGAO_CANDELETE |         /*0x00000020 */
-                          SFGAO_HASPROPSHEET |      /*0x00000040 */
-                          SFGAO_DROPTARGET |        /*0x00000100 */
-                          SFGAO_LINK |              /*0x00010000 */
-                          SFGAO_READONLY |          /*0x00040000 */
-                          SFGAO_HIDDEN |            /*0x00080000 */
-                          SFGAO_FILESYSANCESTOR |   /*0x10000000 */
-                          SFGAO_FOLDER |            /*0x20000000 */
-                          SFGAO_FILESYSTEM |        /*0x40000000 */
-                          SFGAO_HASSUBFOLDER;       /*0x80000000 */
 
+    if (*pdwAttributes & ~dwSupportedAttr)
+    {
+        WARN ("attributes 0x%08x not implemented\n", (*pdwAttributes & ~dwSupportedAttr));
+        *pdwAttributes &= dwSupportedAttr;
+    }
+
+    dwAttributes = _ILGetFileAttributes(pidl, NULL, 0);
+    if (!dwAttributes)
+    {
+        ERR("Got 0 attrs!\n");
+        *pdwAttributes &= SFGAO_CANLINK;
+        return S_OK;
+    }
+
+    /* Set common attributes */
+    *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
+                        SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
+
+    if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    {
+        *pdwAttributes |=  (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
+    }
+    else
+        *pdwAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
+
+    if (dwAttributes & FILE_ATTRIBUTE_HIDDEN)
+        *pdwAttributes |=  SFGAO_HIDDEN;
+    else
+        *pdwAttributes &= ~SFGAO_HIDDEN;
+
+    if (dwAttributes & FILE_ATTRIBUTE_READONLY)
+        *pdwAttributes |=  SFGAO_READONLY;
+    else
+        *pdwAttributes &= ~SFGAO_READONLY;
+
+    if (SFGAO_LINK & *pdwAttributes)
+    {
+        char ext[MAX_PATH];
+
+        if (!_ILGetExtension(pidl, ext, MAX_PATH) || lstrcmpiA(ext, "lnk"))
+        *pdwAttributes &= ~SFGAO_LINK;
+    }
+
+    if (SFGAO_HASSUBFOLDER & *pdwAttributes)
+    {
+        CComPtr<IShellFolder> psf2;
+        if (SUCCEEDED(psf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &psf2))))
+        {
+            CComPtr<IEnumIDList> pEnumIL;
+            if (SUCCEEDED(psf2->EnumObjects(0, SHCONTF_FOLDERS, &pEnumIL)))
+            {
+                if (pEnumIL->Skip(1) != S_OK)
+                    *pdwAttributes &= ~SFGAO_HASSUBFOLDER;
+            }
+        }
+    }
+
+    TRACE ("-- 0x%08x\n", *pdwAttributes);
+    return S_OK;
+}
+
+HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
+{
     TRACE ("0x%08x\n", *pdwAttributes);
 
     if (*pdwAttributes & ~dwSupportedAttr)
@@ -427,79 +643,20 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
         *pdwAttributes &= dwSupportedAttr;
     }
 
-    has_guid = _ILGetGUIDPointer(pidl) != NULL;
-
-    dwAttributes = *pdwAttributes;
-
-    if (has_guid && HCR_GetFolderAttributes(pidl, &dwAttributes))
-        *pdwAttributes = dwAttributes;
-    else if (_ILGetDataPointer(pidl))
+    if (_ILIsSpecialFolder(pidl))
     {
-        dwAttributes = _ILGetFileAttributes(pidl, NULL, 0);
-
-        if (!dwAttributes && has_guid)
-        {
-            WCHAR path[MAX_PATH];
-            STRRET strret;
-
-            /* File attributes are not present in the internal PIDL structure, so get them from the file system. */
-
-            HRESULT hr = psf->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strret);
-
-            if (SUCCEEDED(hr))
-            {
-                hr = StrRetToBufW(&strret, pidl, path, MAX_PATH);
-
-                /* call GetFileAttributes() only for file system paths, not for parsing names like "::{...}" */
-                if (SUCCEEDED(hr) && path[0]!=':')
-                    dwAttributes = GetFileAttributesW(path);
-            }
-        }
-
+        return SHELL32_GetGuidItemAttributes(psf, pidl, pdwAttributes);
+    }
+    else if(_ILIsFolder(pidl) || _ILIsValue(pidl))
+    {
+        return SHELL32_GetFSItemAttributes(psf, pidl, pdwAttributes);
+    }
+    else
+    {
         /* Set common attributes */
-        *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
-                          SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
-
-        if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-            *pdwAttributes |=  (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
-        }
-        else
-            *pdwAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
-
-        if (dwAttributes & FILE_ATTRIBUTE_HIDDEN)
-            *pdwAttributes |=  SFGAO_HIDDEN;
-        else
-            *pdwAttributes &= ~SFGAO_HIDDEN;
-
-        if (dwAttributes & FILE_ATTRIBUTE_READONLY)
-            *pdwAttributes |=  SFGAO_READONLY;
-        else
-            *pdwAttributes &= ~SFGAO_READONLY;
-
-        if (SFGAO_LINK & *pdwAttributes)
-        {
-            char ext[MAX_PATH];
-
-            if (!_ILGetExtension(pidl, ext, MAX_PATH) || lstrcmpiA(ext, "lnk"))
-            *pdwAttributes &= ~SFGAO_LINK;
-        }
-
-        if (SFGAO_HASSUBFOLDER & *pdwAttributes)
-        {
-            CComPtr<IShellFolder> psf2;
-            if (SUCCEEDED(psf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &psf2))))
-            {
-                CComPtr<IEnumIDList> pEnumIL;
-                if (SUCCEEDED(psf2->EnumObjects(0, SHCONTF_FOLDERS, &pEnumIL)))
-                {
-                    if (pEnumIL->Skip(1) != S_OK)
-                        *pdwAttributes &= ~SFGAO_HASSUBFOLDER;
-                }
-            }
-        }
-    } else
-        *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME|SFGAO_CANLINK;
+        ERR("We got a pidl that is neither a guid or an FS item!!! Type=0x%x\n",pidl->mkid.abID[0]);
+        *pdwAttributes &= SFGAO_CANLINK;
+    }
 
     TRACE ("-- 0x%08x\n", *pdwAttributes);
     return S_OK;

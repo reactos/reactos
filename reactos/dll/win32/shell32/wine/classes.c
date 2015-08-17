@@ -222,7 +222,7 @@ BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LP
 *
 * Gets the icon for a filetype
 */
-static BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
+BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
 {
 	char	xriid[50];
     sprintf( xriid, "CLSID\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
