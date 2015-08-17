@@ -804,6 +804,10 @@ static void cache_containers_init(void)
         cache_containers_add(DefaultContainerData[i].cache_prefix, wszCachePath,
                 DefaultContainerData[i].default_entry_type, wszMutexName);
     }
+
+#ifdef __REACTOS__
+    bDefaultContainersAdded = TRUE;
+#endif
 }
 
 static void cache_containers_free(void)
@@ -823,9 +827,11 @@ static DWORD cache_containers_find(const char *url, cache_container **ret)
     if(!url)
         return ERROR_INVALID_PARAMETER;
 
+#ifdef __REACTOS__
     /* ReactOS r54992 */
     if (!bDefaultContainersAdded)
         cache_containers_init();
+#endif
 
     LIST_FOR_EACH_ENTRY(container, &UrlContainers, cache_container, entry)
     {
@@ -853,9 +859,11 @@ static BOOL cache_containers_enum(char *search_pattern, DWORD index, cache_conta
     if (search_pattern && index > 0)
         return FALSE;
 
+#ifdef __REACTOS__
     /* ReactOS r54992 */
     if (!bDefaultContainersAdded)
         cache_containers_init();
+#endif
 
     LIST_FOR_EACH_ENTRY(container, &UrlContainers, cache_container, entry)
     {
@@ -4014,7 +4022,9 @@ BOOL init_urlcache(void)
         return FALSE;
     }
 
+#ifndef __REACTOS__
     cache_containers_init();
+#endif
     return TRUE;
 }
 

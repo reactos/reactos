@@ -111,25 +111,50 @@ diff -pudN e:\wine\dlls\wininet/urlcache.c e:\reactos\dll\win32\wininet/urlcache
      for (i = 0; i < sizeof(DefaultContainerData) / sizeof(DefaultContainerData[0]); i++)
      {
          WCHAR wszCachePath[MAX_PATH];
-@@ -835,6 +823,10 @@ static DWORD cache_containers_find(const
+@@ -816,6 +804,10 @@ static void cache_containers_init(void)
+         cache_containers_add(DefaultContainerData[i].cache_prefix, wszCachePath,
+                 DefaultContainerData[i].default_entry_type, wszMutexName);
+     }
++
++#ifdef __REACTOS__
++    bDefaultContainersAdded = TRUE;
++#endif
+ }
+ 
+ static void cache_containers_free(void)
+@@ -835,6 +827,12 @@ static DWORD cache_containers_find(const
      if(!url)
          return ERROR_INVALID_PARAMETER;
  
++#ifdef __REACTOS__
 +    /* ReactOS r54992 */
 +    if (!bDefaultContainersAdded)
 +        cache_containers_init();
++#endif
 +
      LIST_FOR_EACH_ENTRY(container, &UrlContainers, cache_container, entry)
      {
          int prefix_len = strlen(container->cache_prefix);
-@@ -861,6 +853,10 @@ static BOOL cache_containers_enum(char *
+@@ -861,6 +859,12 @@ static BOOL cache_containers_enum(char *
      if (search_pattern && index > 0)
          return FALSE;
  
++#ifdef __REACTOS__
 +    /* ReactOS r54992 */
 +    if (!bDefaultContainersAdded)
 +        cache_containers_init();
++#endif
 +
      LIST_FOR_EACH_ENTRY(container, &UrlContainers, cache_container, entry)
      {
          if (search_pattern)
+@@ -4018,7 +4022,9 @@ BOOL init_urlcache(void)
+         return FALSE;
+     }
+ 
++#ifndef __REACTOS__
+     cache_containers_init();
++#endif
+     return TRUE;
+ }
+ 
