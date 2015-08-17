@@ -250,9 +250,18 @@ SHChangeNotifyRegister(
         item->apidl[i].backBuffer = SHAlloc(BUFFER_SIZE);
         item->apidl[i].overlapped.hEvent = &item->apidl[i];
 
-        if (fSources & SHCNRF_InterruptLevel && _OpenDirectory( &item->apidl[i] ))
-            QueueUserAPC(_AddDirectoryProc, m_hThread, (ULONG_PTR) &item->apidl[i] );
-        else ERR("_OpenDirectory Failed\n");
+        if (fSources & SHCNRF_InterruptLevel)
+        {
+            if (_OpenDirectory( &item->apidl[i] ))
+                QueueUserAPC( _AddDirectoryProc, m_hThread, (ULONG_PTR) &item->apidl[i] );
+            else
+            {
+                CHAR buffer[MAX_PATH];
+                if (!SHGetPathFromIDListA( item->apidl[i].pidl, buffer ))
+                    strcpy( buffer, "<unknown>" );
+                ERR("_OpenDirectory failed for %s\n", buffer);
+            }
+        }
 #endif
     }
     item->hwnd = hwnd;
