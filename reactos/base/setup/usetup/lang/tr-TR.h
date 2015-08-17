@@ -823,85 +823,79 @@ static MUI_ENTRY trTRConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You asked Setup to delete the system partition.",
+        "Kur'a dizge bîlÅmÅnÅ silmeyi sordunuz.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnose programs, hardware configuration",
+        "Dizge bîlÅmleri; tançlama izlenceleri, donançm yapçlandçrma",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "izlenceleri, ReactOS gibi bir iületim dizgesini baülatmak iáin izlenceler",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "veyÉ donançm Åreticisi eliyle saßlanan baüka izlenceler iáerebilir.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "Yalnçzca bîlÅmde bîyle izlencelerin olmadçßçndan emin oldußunuzda ya da",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partiton, or when you are sure you want to delete them.",
+        "onlarç silmek istedißinizden emin oldußunuzda bir dizge bîlÅmÅnÅ siliniz.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "BîlÅmÅ sildißinizde ReactOS Kur'u bitirene dek bilgisayarç sÉbit diskten",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "în yÅkleyemeyebilirsiniz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  Dizge bîlÅmÅnÅ silmek iáin Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "Sonra bîlÅmÅ silmeyi onaylamak iáin yeniden sorulacaksçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
-        "   not be deleted.",
+        "\x07  Bir înceki sayfaya dînmek iáin Äçkçü'a basçnçz. BîlÅm silinmeyecek.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "Giriü = SÅrdÅr  Äçkçü = òptal",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

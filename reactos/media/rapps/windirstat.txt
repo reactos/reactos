@@ -5,7 +5,7 @@ Name = WinDirStat
 Version = 1.1.2
 Licence = GPL
 Description = Program for analyzing disk usage and his cleanup.
-Size = 631 KB
+Size = 631 kB
 Category = 12
 URLSite = http://windirstat.info/
 URLDownload = https://download.sourceforge.net/project/windirstat/windirstat/1.1.2%20installer%20re-release%20(more%20languages!)/windirstat1_1_2_setup.exe
@@ -15,3 +15,7 @@ Description = Programm zur Laufwerkanalyse und Bereinigung.
 
 [Section.0419]
 Description = Программа для анализа использования дискового пространства и его очистки.
+
+[Section.041f]
+Description = Disk kullanımını çözümleme ve silme için izlence.
+Size = 631 KB

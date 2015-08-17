@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
@@ -14,6 +15,11 @@ CDPath = none
 
 [Section.0407]
 Description = Werkzeug zur grafischen Darstellung und Zusammenführen von Dateien und Ordnern.
+
+[Section.041f]
+License = GPL sürüm 2
+Description = Kütükler ve dizinler için, görmelik ayrım görüntüleme ve birleştirme için bir araç.
+Size = 6,13 MB
 
 [Section.0804]
 Description = 视觉上的差异显示和合并、 文件和目录的工具。

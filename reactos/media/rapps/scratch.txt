@@ -15,3 +15,7 @@ Description = Visuelle objektorientierte Programmierumgebug für Kinder.
 
 [Section.0419]
 Description = Визуальная объектно-ориентированная среда программирования для детей.
+
+[Section.041f]
+Description = Çocuklar için görmelik nesneye yönelik izlenceleme ortamı.
+Size = 33,0 MB

@@ -1,5 +1,6 @@
 ; UTF-8
 ; Translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Scribus
@@ -48,7 +49,8 @@ Description = Открытым исходным кодом программы, �
 Description = Open-source program, ktorý prináša profesionálnej stránke rozloženie na ReactOS.
 
 [Section.041f]
-Description = Profesyonel sayfa düzeni getiriyor ReactOS için açık kaynak programı.
+License = GPL sürüm 2
+Description = ReactOS'a profesyonel sayfa düzenlemesi getiren bir açık kaynak izlence.
 Size = 76,52 MB
 
 [Section.0422]

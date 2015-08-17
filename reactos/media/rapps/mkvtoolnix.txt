@@ -15,3 +15,7 @@ Description = Sammlung von Werkzeugen zum Bearbeiten von MKV Dateien.
 
 [Section.0419]
 Description = Набор инструментов для работы с файлами формата mkv.
+
+[Section.041f]
+Description = MKV biçiminde kütüklerle çalışma için araç takımı.
+Size = 5,3 MB

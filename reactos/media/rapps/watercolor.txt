@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
@@ -14,6 +15,11 @@ CDPath = none
 
 [Section.0407]
 Description = Ein Windows Design basierend auf dem Aussehenvon Windows Codename Whistler.
+
+[Section.041f]
+License = Ücretsiz
+Description = Windows Codename Whistler görünümü tabanlı bir Windows teması.
+Size = 861 KB
 
 [Section.0804]
 Description = 基于 Windows 代号 Whistler 的外观的 Windows 主题。

@@ -15,3 +15,6 @@ Description = Ein "Soviet" Echzeitstrategiespiel basierend auf Boswars. (Archiv)
 
 [Section.0419]
 Description =  "советская" стратегия реального времени основанная на Boswars. (архив)
+
+[Section.041f]
+Description =  Boswars tabanlı bir "Sovyet" gerçek zamanlı izlem (RTS) oyunu. (belgelik)
