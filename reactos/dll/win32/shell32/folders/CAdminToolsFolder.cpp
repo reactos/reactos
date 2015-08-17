@@ -114,7 +114,31 @@ HRESULT WINAPI CAdminToolsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, 
 
 HRESULT WINAPI CAdminToolsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
-    return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
+    static const DWORD dwAdminToolsAttributes =
+        SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR | 
+        SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
+
+    if(cidl)
+    {
+        return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
+    }
+    else
+    {
+        if (!rgfInOut)
+            return E_INVALIDARG;
+        if (cidl && !apidl)
+            return E_INVALIDARG;
+
+        if (*rgfInOut == 0)
+            *rgfInOut = ~0;
+
+        *rgfInOut &= dwAdminToolsAttributes;
+
+        /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
+        *rgfInOut &= ~SFGAO_VALIDATE;
+
+        return S_OK;
+    }
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,

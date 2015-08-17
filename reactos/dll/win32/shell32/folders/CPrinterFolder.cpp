@@ -370,10 +370,7 @@ HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
  */
 HRESULT WINAPI CPrinterFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
-    TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
-           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
-
-    return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
+    return E_NOTIMPL;
 }
 
 /**************************************************************************

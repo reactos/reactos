@@ -279,11 +279,30 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
 */
 HRESULT WINAPI CNetFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    FIXME("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
-    pdump(pidl);
+    LPWSTR pszName;
+
+    TRACE ("(%p)->(pidl=%p,0x%08lx,%p)\n", this, pidl, dwFlags, strRet);
+    pdump (pidl);
 
     if (!strRet)
         return E_INVALIDARG;
+
+    if (!pidl->mkid.cb)
+    {
+        pszName = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
+        if (!pszName)
+            return E_OUTOFMEMORY;
+
+        if (LoadStringW(shell32_hInstance, IDS_NETWORKPLACE, pszName, MAX_PATH))
+        {
+            pszName[MAX_PATH-1] = L'\0';
+            strRet->uType = STRRET_WSTR;
+            strRet->pOleStr = pszName;
+            return S_OK;
+        }
+        CoTaskMemFree(pszName);
+        return E_FAIL;
+    }
 
     return E_NOTIMPL;
 }
