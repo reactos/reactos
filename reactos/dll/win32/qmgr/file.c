@@ -365,6 +365,7 @@ static BOOL transfer_file_http(BackgroundCopyFileImpl *file, URL_COMPONENTSW *uc
     DWORD flags = (uc->nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
     char buf[4096];
     BOOL ret = FALSE;
+    DWORD written;
 
     transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_CONNECTING);
 
@@ -397,7 +398,7 @@ static BOOL transfer_file_http(BackgroundCopyFileImpl *file, URL_COMPONENTSW *uc
             break;
         }
         if (!file->read_size) break;
-        if (!(ret = WriteFile(handle, buf, file->read_size, NULL, NULL))) break;
+        if (!(ret = WriteFile(handle, buf, file->read_size, &written, NULL))) break;
 
         EnterCriticalSection(&job->cs);
         file->fileProgress.BytesTransferred += file->read_size;
