@@ -4,36 +4,36 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-1000, "ÑÇÌØ"
+1000, "äºšç‰¹"
 }
 
 STRINGTABLE
 {
-2000, "ÀÚ²ÓÑÇÌØ"
+2000, "ç£Šç¿äºšç‰¹"
 }
 
 STRINGTABLE
 {
-3000, "Ò»°ã"
-3001, "´ó×ÖÌå"
-3002, "ÌØ´ó×ÖÌå"
+3000, "ä¸€èˆ¬"
+3001, "å¤§å­—ä½“"
+3002, "ç‰¹å¤§å­—ä½“"
 }
 
 STRINGTABLE
 {
-4000, "Ò»°ã"
-4001, "´ó×ÖÌå"
-4002, "ÌØ´ó×ÖÌå"
+4000, "ä¸€èˆ¬"
+4001, "å¤§å­—ä½“"
+4002, "ç‰¹å¤§å­—ä½“"
 }
 
 STRINGTABLE
 {
-5000, "ÀÚ²Ó"
-5001, "ÊÓ¾õÑùÊ½"
+5000, "ç£Šç¿"
+5001, "è§†è§‰æ ·å¼"
 5002, "ReactOS Foundation"
-5003, "Pisarz, »ùÓÚ Luna Inspirat"
-5004, "¸ù¾Ý GNU/GPL 2.0, 2011 ÊÍ·Å"
+5003, "Pisarz, åŸºäºŽ Luna Inspirat"
+5004, "æ ¹æ® GNU/GPL 2.0, 2011 é‡Šæ”¾"
 5005, "http://www.reactos.org"
 5006, "1.0"
-5007, "ReactOS µÄÊÓ¾õÑùÊ½"
+5007, "ReactOS çš„è§†è§‰æ ·å¼"
 }
