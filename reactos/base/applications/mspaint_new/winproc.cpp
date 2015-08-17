@@ -613,6 +613,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_VIEWZOOM800:
             zoomTo(8000, 0, 0);
             break;
+
+        case IDM_VIEWFULLSCREEN:
+            fullscreenWindow.ShowWindow(SW_SHOW);
+            ShowWindow(SW_HIDE);
+            break;
     }
     return 0;
 }

@@ -21,6 +21,7 @@
 #include "definitions.h"
 #include "drawing.h"
 #include "dib.h"
+#include "fullscreen.h"
 #include "globalvar.h"
 #include "history.h"
 #include "imgarea.h"

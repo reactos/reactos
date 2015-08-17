@@ -8,6 +8,7 @@ list(APPEND SOURCE
     dialogs.cpp
     dib.cpp
     drawing.cpp
+    fullscreen.cpp
     history.cpp
     imgarea.cpp
     main.cpp

@@ -73,6 +73,7 @@ extern BOOL showGrid;
 extern BOOL showMiniature;
 
 class CMainWindow;
+class CFullscreenWindow;
 class CMiniatureWindow;
 class CToolBox;
 class CToolSettingsWindow;
@@ -84,6 +85,7 @@ class CSizeboxWindow;
 class CTextEditWindow;
 
 extern CMainWindow mainWindow;
+extern CFullscreenWindow fullscreenWindow;
 extern CMiniatureWindow miniature;
 extern CToolBox toolBoxContainer;
 extern CToolSettingsWindow toolSettingsWindow;

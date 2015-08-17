@@ -66,6 +66,7 @@ BOOL showGrid = FALSE;
 BOOL showMiniature = FALSE;
 
 CMainWindow mainWindow;
+CFullscreenWindow fullscreenWindow;
 CMiniatureWindow miniature;
 CToolBox toolBoxContainer;
 CToolSettingsWindow toolSettingsWindow;
@@ -144,6 +145,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* create main window */
     RECT mainWindowPos = {0, 0, 544, 375};	// FIXME: use equivalent of CW_USEDEFAULT for position
     hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, progtitle, WS_OVERLAPPEDWINDOW);
+
+    RECT fullscreenWindowPos = {0, 0, 100, 100};
+    fullscreenWindow.Create(HWND_DESKTOP, fullscreenWindowPos, NULL, WS_POPUPWINDOW | WS_MAXIMIZE);
 
     RECT miniaturePos = {(LONG) registrySettings.ThumbXPos, (LONG) registrySettings.ThumbYPos,
                          (LONG) registrySettings.ThumbXPos + (LONG) registrySettings.ThumbWidth,
