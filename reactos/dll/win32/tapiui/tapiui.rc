@@ -52,3 +52,6 @@ IDB_WIZARD BITMAP "res/302.bmp"
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
