@@ -263,6 +263,9 @@ HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcRese
     TRACE("(%p)->(pidl=%p,%p,%s,%p)\n", this,
           pidl, pbcReserved, shdebugstr_guid(&riid), ppvOut);
 
+    if (_ILIsSpecialFolder(pidl))
+        return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
+
     return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
 }
 
@@ -376,7 +379,7 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
             else if (_ILIsControlPanel(apidl[i]))
                 *rgfInOut &= dwControlPanelAttributes;
             else if (_ILIsSpecialFolder(*apidl))
-                SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
+                SHELL32_GetGuidItemAttributes(this, apidl[i], rgfInOut);
             else
                 ERR("Got unknown pidl type!\n");
         }
@@ -493,91 +496,10 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     }
     else if (_ILIsPidlSimple(pidl))
     {
-        /* take names of special folders only if its only this folder */
         if (_ILIsSpecialFolder(pidl))
-        {
-            GUID const *clsid;
-
-            clsid = _ILGetGUIDPointer (pidl);
-            if (clsid)
-            {
-                if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
-                {
-                    static const WCHAR clsidW[] = L"CLSID\\";
-                    static const WCHAR shellfolderW[] = L"\\shellfolder";
-                    static const WCHAR wantsForParsingW[] = L"WantsForParsing";
-                    BOOL bWantsForParsing = FALSE;
-                    WCHAR szRegPath[100];
-                    LONG r;
-
-                    /*
-                     * We can only get a filesystem path from a shellfolder
-                     * if the value WantsFORPARSING exists in
-                     *      CLSID\\{...}\\shellfolder
-                     * exception: the MyComputer folder has this keys not
-                     *            but like any filesystem backed
-                     *            folder it needs these behaviour
-                     *
-                     * Get the "WantsFORPARSING" flag from the registry
-                     */
-
-                    wcscpy(szRegPath, clsidW);
-                    SHELL32_GUIDToStringW(*clsid, &szRegPath[6]);
-                    wcscat(szRegPath, shellfolderW);
-                    r = SHGetValueW(HKEY_CLASSES_ROOT, szRegPath,
-                                    wantsForParsingW, NULL, NULL, NULL);
-                    if (r == ERROR_SUCCESS)
-                        bWantsForParsing = TRUE;
-
-                    if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                            bWantsForParsing)
-                    {
-                        /*
-                         * We need the filesystem path to the destination folder
-                         * Only the folder itself can know it
-                         */
-                        hr = SHELL32_GetDisplayNameOfChild (this, pidl,
-                                                            dwFlags, pszPath, MAX_PATH);
-                    }
-                    else
-                    {
-                        LPWSTR p = pszPath;
-
-                        /* parsing name like ::{...} */
-                        p[0] = ':';
-                        p[1] = ':';
-                        p += 2;
-                        p += SHELL32_GUIDToStringW(CLSID_MyComputer, p);
-
-                        /* \:: */
-                        p[0] = '\\';
-                        p[1] = ':';
-                        p[2] = ':';
-                        p += 3;
-                        SHELL32_GUIDToStringW(*clsid, p);
-                    }
-                }
-                else
-                {
-                    /* user friendly name */
-
-                    if (_ILIsMyComputer(pidl) && sName)
-                        wcscpy(pszPath, sName);
-                    else
-                        HCR_GetClassNameW (*clsid, pszPath, MAX_PATH);
-
-                    TRACE("pszPath %s\n", debugstr_w(pszPath));
-                }
-            }
-            else
-            {
-                /* append my own path */
-                _ILSimpleGetTextW(pidl, pszPath, MAX_PATH);
-            }
-        }
+            return SHELL32_GetDisplayNameOfGUIDItem(this, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", pidl, dwFlags, strRet);
         else if (_ILIsDrive(pidl))
         {
-
             _ILSimpleGetTextW(pidl, pszPath, MAX_PATH);    /* append my own path */
             /* long view "lw_name (C:)" */
             if (!(dwFlags & SHGDN_FORPARSING))

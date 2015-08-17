@@ -388,9 +388,7 @@ HRESULT WINAPI CControlPanelFolder::BindToObject(
     REFIID riid,
     LPVOID *ppvOut)
 {
-    TRACE("(%p)->(pidl=%p,%p,%s,%p)\n", this, pidl, pbcReserved, shdebugstr_guid(&riid), ppvOut);
-
-    return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
+    return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
 }
 
 /**************************************************************************
@@ -484,7 +482,7 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_A
             if (_ILIsCPanelStruct(*apidl))
                 *rgfInOut &= SFGAO_CANLINK;
             else if (_ILIsSpecialFolder(*apidl))
-                SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
+                SHELL32_GetGuidItemAttributes(this, *apidl, rgfInOut);
             else
                 ERR("Got an unkown pidl here!\n");
             apidl++;
@@ -574,69 +572,24 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
 */
 HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    CHAR szName[MAX_PATH];
-    WCHAR wszName[MAX_PATH+1]; /* +1 for potential backslash */
-    PIDLCPanelStruct *pCPanel;
-    HRESULT hr;
-
-    *szName = '\0';
-
-    TRACE("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
-    pdump(pidl);
-
     if (!pidl)
         return S_FALSE;
 
-    pCPanel = _ILGetCPanelPointer(pidl);
+    PIDLCPanelStruct *pCPanel = _ILGetCPanelPointer(pidl);
 
     if (pCPanel)
     {
         /* copy display name from pidl - it was retrived from applet before;
            SHGDN_FORPARSING does not need special handling */
-        lstrcpyA(szName, pCPanel->szName + pCPanel->offsDispName);
+        strRet->uType = STRRET_CSTR;
+        lstrcpyA(strRet->cStr, pCPanel->szName + pCPanel->offsDispName);
     }
-    /* take names of special folders only if it's only this folder */
     else if (_ILIsSpecialFolder(pidl))
     {
-        BOOL bSimplePidl = _ILIsPidlSimple(pidl);
-        SFGAOF Attr = SFGAO_FILESYSTEM;
-
-        SHELL32_GetItemAttributes(this, pidl, &Attr);
-        if (Attr & SFGAO_FILESYSTEM)
-        {
-            hr = SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, wszName, sizeof(wszName));
-            if (FAILED(hr))
-                return hr;
-        }
-        else if (bSimplePidl)
-        {
-            _ILSimpleGetTextW(pidl, wszName, MAX_PATH);    /* append my own path */
-        }
-        else
-        {
-            FIXME("special pidl\n");
-            if (dwFlags & SHGDN_FORPARSING)
-            {
-                /* go deeper if needed */
-                int cchName;
-
-                PathAddBackslashW(wszName);
-                cchName = wcslen(wszName);
-
-                hr = SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, wszName + cchName, MAX_PATH + 1 - cchName);
-                if (FAILED(hr))
-                    return hr;
-            }
-        }
-
-        if (!WideCharToMultiByte(CP_ACP, 0, wszName, -1, szName, MAX_PATH, NULL, NULL))
-            szName[0] = '\0';
+        static const WCHAR* pszCPanelPath = L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}";
+        return SHELL32_GetDisplayNameOfGUIDItem(this, pszCPanelPath, pidl, dwFlags, strRet);
     }
 
-    strRet->uType = STRRET_CSTR;
-    lstrcpynA(strRet->cStr, szName, MAX_PATH);
-
-    TRACE("--(%p)->(%s)\n", this, szName);
     return S_OK;
 }
 
