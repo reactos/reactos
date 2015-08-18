@@ -50,6 +50,7 @@
 #include <ndk/ldrfuncs.h>
 #include <ndk/lpcfuncs.h>
 #include <ndk/mmfuncs.h>
+#include <ndk/muptypes.h>
 #include <ndk/obfuncs.h>
 #include <ndk/pofuncs.h>
 #include <ndk/psfuncs.h>
