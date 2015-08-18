@@ -31,17 +31,52 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static inline VOID DosSetPspCommandLine(WORD Segment, LPCSTR CommandLine)
+static VOID DosInitPsp(IN WORD Segment,
+                       IN WORD EnvBlock,
+                       IN LPCSTR CommandLine,
+                       IN LPCSTR ProgramName)
 {
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Segment);
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment - 1);
+    LPCSTR PspName;
+    USHORT i;
+
+    /* Link the environment block */
+    PspBlock->EnvBlock = EnvBlock;
 
     /*
-     * Copy the command line block.
+     * Copy the command line.
      * Format of the CommandLine parameter: 1 byte for size; 127 bytes for contents.
      */
     PspBlock->CommandLineSize = min(*(PBYTE)CommandLine, DOS_CMDLINE_LENGTH);
     CommandLine++;
     RtlCopyMemory(PspBlock->CommandLine, CommandLine, DOS_CMDLINE_LENGTH);
+
+    /*
+     * Initialize the owner name of the MCB of the PSP.
+     */
+
+    /* Find the start of the file name, skipping all the path elements */
+    PspName = ProgramName;
+    while (*ProgramName)
+    {
+        switch (*ProgramName++)
+        {
+            /* Path delimiter, skip it */
+            case ':': case '\\': case '/':
+                PspName = ProgramName;
+                break;
+        }
+    }
+    /* Copy the file name up to the extension... */
+    for (i = 0; i < sizeof(Mcb->Name) && PspName[i] != '.' && PspName[i] != '\0'; ++i)
+    {
+        Mcb->Name[i] = RtlUpperChar(PspName[i]);
+    }
+    /* ... and NULL-terminate if needed */
+    if (i < sizeof(Mcb->Name)) Mcb->Name[i] = '\0';
+
+    // FIXME: Initialize the FCBs
 }
 
 static inline VOID DosSaveState(VOID)
@@ -408,10 +443,9 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
             /* Set INT 22h to the return address */
             ((PULONG)BaseAddress)[0x22] = ReturnAddress;
 
-            /* Create the PSP */
+            /* Create the PSP and initialize it */
             DosCreatePsp(Segment, (WORD)TotalSize);
-            DosSetPspCommandLine(Segment, CommandLine);
-            SEGMENT_TO_PSP(Segment)->EnvBlock = EnvBlock;
+            DosInitPsp(Segment, EnvBlock, CommandLine, ExePath);
 
             /* Calculate the segment where the program should be loaded */
             if (!LoadHigh)
@@ -486,10 +520,9 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
             /* Set INT 22h to the return address */
             ((PULONG)BaseAddress)[0x22] = ReturnAddress;
 
-            /* Create the PSP */
+            /* Create the PSP and initialize it */
             DosCreatePsp(Segment, MaxAllocSize);
-            DosSetPspCommandLine(Segment, CommandLine);
-            SEGMENT_TO_PSP(Segment)->EnvBlock = EnvBlock;
+            DosInitPsp(Segment, EnvBlock, CommandLine, ExePath);
 
             /* Calculate the segment where the program should be loaded */
             LoadSegment = Segment + (sizeof(DOS_PSP) >> 4);
