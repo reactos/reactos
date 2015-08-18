@@ -205,6 +205,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
     //
     // And if we get here, it means no suitable physical memory runs were found
     //
+    KeLeaveGuardedRegion();
     return 0;
 }
 
