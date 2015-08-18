@@ -689,7 +689,7 @@ NtGdiSetBoundsRect(
         RECTL_vSetEmptyRect(&pdc->erclBoundsApp);
     }
 
-    if (flags & DCB_ACCUMULATE)
+    if (flags & DCB_ACCUMULATE && prc != NULL)
     {
         /* Capture the rect */
         _SEH2_TRY
