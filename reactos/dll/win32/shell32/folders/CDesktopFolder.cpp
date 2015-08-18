@@ -650,7 +650,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     if (!strRet)
         return E_INVALIDARG;
 
-    if (_ILIsPidlSimple(pidl) && _ILIsSpecialFolder(pidl))
+    if (!_ILIsDesktop(pidl) && _ILIsPidlSimple(pidl) && _ILIsSpecialFolder(pidl))
     {
         return SHELL32_GetDisplayNameOfGUIDItem(this, L"", pidl, dwFlags, strRet);
     }
