@@ -1002,7 +1002,7 @@ IopParseDevice(IN PVOID ParseObject,
             if (FileObject->FileName.Length)
             {
                 /* Free it */
-                ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
+                ExFreePoolWithTag(FileObject->FileName.Buffer, 0);
                 FileObject->FileName.Length = 0;
             }
 
