@@ -59,6 +59,7 @@ list(APPEND SOURCE
     Rectangle.c
     RealizePalette.c
     SelectObject.c
+    SetBoundsRect.c
     SetBrushOrgEx.c
     SetDCPenColor.c
     SetDIBits.c

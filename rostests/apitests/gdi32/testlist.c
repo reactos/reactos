@@ -60,6 +60,7 @@ extern void func_PatBlt(void);
 extern void func_Rectangle(void);
 extern void func_RealizePalette(void);
 extern void func_SelectObject(void);
+extern void func_SetBoundsRect(void);
 extern void func_SetBrushOrgEx(void);
 extern void func_SetDCPenColor(void);
 extern void func_SetDIBits(void);
@@ -129,6 +130,7 @@ const struct test winetest_testlist[] =
     { "Rectangle", func_Rectangle },
     { "RealizePalette", func_RealizePalette },
     { "SelectObject", func_SelectObject },
+    { "SetBoundsRect", func_SetBoundsRect },
     { "SetBrushOrgEx", func_SetBrushOrgEx },
     { "SetDCPenColor", func_SetDCPenColor },
     { "SetDIBits", func_SetDIBits },
