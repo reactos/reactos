@@ -426,6 +426,7 @@ FindFirstVolumeW(IN LPWSTR volume,
                  IN DWORD len)
 {
     DWORD size = 1024;
+    DWORD br;
     HANDLE mgr = CreateFileW( MOUNTMGR_DOS_DEVICE_NAME, 0, FILE_SHARE_READ|FILE_SHARE_WRITE,
                               NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, INVALID_HANDLE_VALUE );
     if (mgr == INVALID_HANDLE_VALUE) return INVALID_HANDLE_VALUE;
@@ -443,7 +444,7 @@ FindFirstVolumeW(IN LPWSTR volume,
         memset( &input, 0, sizeof(input) );
 
         if (!DeviceIoControl( mgr, IOCTL_MOUNTMGR_QUERY_POINTS, &input, sizeof(input),
-                              output, size, NULL, NULL ))
+                              output, size, &br, NULL ))
         {
             if (GetLastError() != ERROR_MORE_DATA) break;
             size = output->Size;
