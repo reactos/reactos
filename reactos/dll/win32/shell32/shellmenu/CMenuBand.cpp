@@ -108,7 +108,8 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetMenuInfo(
 
     if (ppsmc)
     {
-        m_psmc->AddRef();
+        if (m_psmc)
+            m_psmc->AddRef();
         *ppsmc = m_psmc;
     }
 

@@ -814,14 +814,22 @@ HRESULT CMenuFocusManager::UpdateFocus()
             CComPtr<IServiceProvider> bandSite;
             CComPtr<IOleWindow> deskBar;
             hr = topMenu->mb->GetSite(IID_PPV_ARG(IServiceProvider, &bandSite));
+            if (FAILED(hr))
+                goto NoCapture;
             hr = bandSite->QueryService(SID_SMenuPopup, IID_PPV_ARG(IOleWindow, &deskBar));
+            if (FAILED(hr))
+                goto NoCapture;
 
             CComPtr<IOleWindow> deskBarSite;
             hr = IUnknown_GetSite(deskBar, IID_PPV_ARG(IOleWindow, &deskBarSite));
+            if (FAILED(hr))
+                goto NoCapture;
 
             // FIXME: Find the correct place for this
             HWND hWndOwner;
-            deskBarSite->GetWindow(&hWndOwner);
+            hr = deskBarSite->GetWindow(&hWndOwner);
+            if (FAILED(hr))
+                goto NoCapture;
 
             m_PreviousForeground = ::GetForegroundWindow();
             if (m_PreviousForeground != hWndOwner)
@@ -832,9 +840,11 @@ HRESULT CMenuFocusManager::UpdateFocus()
             // Get the HWND of the top-level window
             HWND hWndSite;
             hr = deskBar->GetWindow(&hWndSite);
+            if (FAILED(hr))
+                goto NoCapture;
             SetMenuCapture(hWndSite);
-
         }
+NoCapture:
 
         if (!m_parent || m_parent->type == MenuBarEntry)
         {
