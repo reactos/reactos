@@ -35,8 +35,6 @@ add_importlibs(rshell
     kernel32
     ntdll)
 
-add_cd_file(TARGET rshell DESTINATION reactos FOR all)
-
 add_custom_command(TARGET rshell POST_BUILD 
   COMMAND "${CMAKE_COMMAND}" -E copy 
      "$<TARGET_FILE:rshell>"
