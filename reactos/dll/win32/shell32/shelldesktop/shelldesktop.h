@@ -33,4 +33,7 @@
 
 #include <wine/debug.h>
 
-extern "C" HINSTANCE shell32_hInstance;
+extern "C"
+{
+extern HINSTANCE shell32_hInstance;
+}
