@@ -25,6 +25,7 @@ class CMenuSFToolbar;
 class CMenuFocusManager;
 
 class CMenuBand :
+    public CComCoClass<CMenuBand, &CLSID_MenuBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDeskBand,
     public IObjectWithSite,
@@ -75,6 +76,7 @@ public:
     CMenuBand();
     virtual ~CMenuBand();
 
+    DECLARE_REGISTRY_RESOURCEID(IDR_MENUBAND)
     DECLARE_NOT_AGGREGATABLE(CMenuBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 

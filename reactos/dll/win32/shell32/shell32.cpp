@@ -146,6 +146,38 @@ HRESULT WINAPI SHCreateDefClassObject(
     return S_OK;
 }
 
+/**************************************************************************
+ *  CStartMenuDummy
+ */
+class CStartMenuDummy :
+    public CComCoClass<CStartMenuDummy, &CLSID_StartMenu>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>
+{
+private:
+    CStartMenuDummy();
+    virtual ~CStartMenuDummy();
+
+public:
+    DECLARE_REGISTRY_RESOURCEID(IDR_STARTMENU)
+
+    class _CreatorClass
+    {
+    public:
+        static STDMETHODIMP CreateInstance(void *pv, REFIID riid, LPVOID *ppv)
+        {
+            if (ppv == NULL)
+                return E_POINTER;
+            *ppv = NULL;
+            if (pv != NULL)
+                return CLASS_E_NOAGGREGATION;
+            return CStartMenu_Constructor(riid, ppv);
+        }
+    };
+};
+
+/**************************************************************************
+ *  CShell32Module
+ */
 class CShell32Module : public CComModule
 {
 public:
@@ -174,10 +206,12 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_RecycleBin, CRecycleBin)
     OBJECT_ENTRY(CLSID_OpenWithMenu, COpenWithMenu)
     OBJECT_ENTRY(CLSID_NewMenu, CNewMenu)
-    OBJECT_ENTRY(CLSID_StartMenu, CStartMenu)
-    OBJECT_ENTRY(CLSID_MenuBandSite, CMenuBandSite)
+    OBJECT_ENTRY(CLSID_StartMenu, CStartMenuDummy)
+    OBJECT_ENTRY(CLSID_MenuBandSite, CMenuSite)
     OBJECT_ENTRY(CLSID_MenuBand, CMenuBand)
     OBJECT_ENTRY(CLSID_MenuDeskBar, CMenuDeskBar)
+    OBJECT_ENTRY(CLSID_MergedFolder, CMergedFolder)
+    OBJECT_ENTRY(CLSID_RebarBandSite, CBandSite)
     OBJECT_ENTRY(CLSID_ExeDropHandler, CExeDropHandler)
     OBJECT_ENTRY(CLSID_QueryAssociations, CQueryAssociations)
 END_OBJECT_MAP()

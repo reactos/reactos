@@ -46,6 +46,7 @@ interface IAugmentedShellFolder3 : public IAugmentedShellFolder2
 class CEnumMergedFolder;
 
 class CMergedFolder :
+    public CComCoClass<CMergedFolder, &CLSID_MergedFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
     public IPersistFolder2,
@@ -73,6 +74,7 @@ public:
 
     HRESULT _SetSources(IShellFolder* userLocal, IShellFolder* allUSers);
 
+    DECLARE_REGISTRY_RESOURCEID(IDR_MERGEDFOLDER)
     DECLARE_NOT_AGGREGATABLE(CMergedFolder)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 

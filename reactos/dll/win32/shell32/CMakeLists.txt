@@ -18,8 +18,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR})
 
 list(APPEND SOURCE
-    CMenuBand.cpp
-    CMenuDeskBar.cpp
     CIDLDataObj.cpp
     CQueryAssociations.cpp
     dde.cpp
@@ -60,7 +58,6 @@ list(APPEND SOURCE
     CDefaultContextMenu.cpp
     COpenWithMenu.cpp
     CNewMenu.cpp
-    CStartMenu.cpp
     precomp.h)
 
 add_library(shell32 SHARED
@@ -85,8 +82,8 @@ add_library(shell32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 set_module_type(shell32 win32dll UNICODE HOTPATCHABLE)
-target_link_libraries(shell32 atlnew wine uuid recyclebin)
-add_delay_importlibs(shell32 ole32 userenv version fmifs)
+target_link_libraries(shell32 shellmenu atlnew wine uuid recyclebin)
+add_delay_importlibs(shell32 uxtheme ole32 userenv version fmifs)
 add_importlibs(shell32 advapi32 browseui gdi32 user32 powrprof comctl32 comdlg32 shdocvw shlwapi devmgr winspool winmm msvcrt kernel32 ntdll)
 add_pch(shell32 precomp.h SOURCE)
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)

@@ -20,6 +20,7 @@
 #pragma once
 
 class CMenuSite :
+    public CComCoClass<CMenuSite, &CLSID_MenuBandSite>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl<CMenuSite, CWindow, CControlWinTraits>,
     public IBandSite,
@@ -43,6 +44,7 @@ public:
 
     DECLARE_WND_CLASS_EX(_T("MenuSite"), 0, COLOR_MENU)
 
+    DECLARE_REGISTRY_RESOURCEID(IDR_MENUBANDSITE)
     DECLARE_NOT_AGGREGATABLE(CMenuSite)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
     BEGIN_COM_MAP(CMenuSite)

@@ -25,6 +25,7 @@ typedef CWinTraits<
 > CMenuWinTraits;
 
 class CMenuDeskBar :
+    public CComCoClass<CMenuDeskBar, &CLSID_MenuDeskBar>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl<CMenuDeskBar, CWindow, CMenuWinTraits>,
     public IOleCommandTarget,
@@ -57,6 +58,7 @@ public:
     CMenuDeskBar();
     virtual ~CMenuDeskBar();
 
+    DECLARE_REGISTRY_RESOURCEID(IDR_MENUDESKBAR)
     DECLARE_NOT_AGGREGATABLE(CMenuDeskBar)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 

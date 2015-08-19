@@ -26,6 +26,7 @@
 #include <strsafe.h>
 #include <atlbase.h>
 #include <atlcom.h>
+#include <atlwin.h>
 #include <powrprof.h>
 
 #include <comctl32_undoc.h>
@@ -61,12 +62,15 @@
 #include "droptargets/CexeDropHandler.h"
 #include "COpenWithMenu.h"
 #include "CNewMenu.h"
-#include "CStartMenu.h"
 #include "filedefext.h"
 #include "drvdefext.h"
-#include "CMenuBand.h"
-#include "CMenuDeskBar.h"
 #include "CQueryAssociations.h"
+#include "shellmenu/CBandSite.h"
+#include "shellmenu/CMenuBand.h"
+#include "shellmenu/CMenuDeskBar.h"
+#include "shellmenu/CMenuSite.h"
+#include "shellmenu/CMergedFolder.h"
+#include "shellmenu/shellmenu.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>

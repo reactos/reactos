@@ -60,6 +60,7 @@
 
 #include <shellutils.h>
 #include <rosctrls.h>
+#include "../shresdef.h"
 
 #include <wine/debug.h>
 
@@ -68,7 +69,7 @@
 #pragma warning(pop)
 #endif
 
-#define shell32_hInstance 0
+extern HINSTANCE shell32_hInstance;
 
 extern "C" HRESULT WINAPI CStartMenu_Constructor(REFIID riid, void **ppv);
 extern "C" HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);

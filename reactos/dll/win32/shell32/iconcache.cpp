@@ -845,6 +845,11 @@ EXTERN_C INT WINAPI Shell_GetCachedImageIndexAW(LPCVOID szPath, INT nIndex, BOOL
     return Shell_GetCachedImageIndexA((LPCSTR)szPath, nIndex, bSimulateDoc);
 }
 
+EXTERN_C INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc)
+{
+    return Shell_GetCachedImageIndexAW(szPath, nIndex, bSimulateDoc);
+}
+
 /*************************************************************************
  * ExtractIconExW            [SHELL32.@]
  * RETURNS
