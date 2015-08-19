@@ -3110,3 +3110,8 @@ HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newVie
 {
     return ShellObjectCreatorInit<CDefView>(pFolder, IID_IShellView, newView);
 }
+
+HRESULT WINAPI CDefView_Constructor(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)
+{
+    return ShellObjectCreatorInit<CDefView>(pFolder, riid, ppvOut);
+}

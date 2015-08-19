@@ -528,11 +528,7 @@ HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void *
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
-        hr = IShellView_Constructor ((IShellFolder *)this, &pShellView);
-        if (pShellView)
-        {
-            hr = pShellView->QueryInterface(riid, ppv);
-        }
+        hr = CDefView_Constructor(this, riid, ppv);
     }
     else
         return hr;

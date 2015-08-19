@@ -426,11 +426,7 @@ HRESULT WINAPI CPrinterFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPV
     }
     else if(IsEqualIID(riid, IID_IShellView))
     {
-        hr = IShellView_Constructor((IShellFolder *)this, &pShellView);
-        if (pShellView)
-        {
-            hr = pShellView->QueryInterface(riid, ppvOut);
-        }
+        hr = CDefView_Constructor(this, riid, ppvOut);
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
