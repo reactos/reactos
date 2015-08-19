@@ -16,8 +16,8 @@
 116 stub -noname DDECreatePostNotify
 117 stub -noname DDEHandleViewFolderNotify
 118 stdcall -noname ShellDDEInit(long)
-119 stub -noname SHCreateDesktop
-120 stub -noname SHDesktopMessageLoop
+119 stub -noname SHCreateDesktopDEPRECATED
+120 stub -noname SHDesktopMessageLoopDEPRECATED
 121 stdcall -noname StopWatchModeFORWARD()
 122 stdcall -noname StopWatchFlushFORWARD()
 123 stdcall -noname StopWatchWFORWARD(long str long long long)
