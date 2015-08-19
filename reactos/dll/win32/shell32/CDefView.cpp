@@ -113,6 +113,7 @@ class CDefView :
 
         CLSID m_Category;
         HMENU m_hView;
+        BOOL m_Destroyed;
     private:
 
         HRESULT _MergeToolbar();
@@ -248,6 +249,8 @@ class CDefView :
         LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnGetShellBrowser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+        LRESULT OnNCCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+        LRESULT OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -296,6 +299,8 @@ class CDefView :
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
+        MESSAGE_HANDLER(WM_NCCREATE, OnNCCreate)
+        MESSAGE_HANDLER(WM_NCDESTROY, OnNCDestroy)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
@@ -364,7 +369,8 @@ CDefView::CDefView() :
     m_iDragOverItem(0),
     m_cScrollDelay(0),
     m_isEditing(FALSE),
-    m_hView(NULL)
+    m_hView(NULL),
+    m_Destroyed(FALSE)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
@@ -971,11 +977,20 @@ LRESULT CDefView::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
 LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    if (m_hMenu)
-        DestroyMenu(m_hMenu);
-    RevokeDragDrop(m_hWnd);
-    SHChangeNotifyDeregister(m_hNotify);
-    SHFree(m_pidlParent);
+    if (!m_Destroyed)
+    {
+        m_Destroyed = TRUE;
+        if (m_hMenu)
+        {
+            DestroyMenu(m_hMenu);
+            m_hMenu = NULL;
+        }
+        RevokeDragDrop(m_hWnd);
+        SHChangeNotifyDeregister(m_hNotify);
+        m_hNotify = NULL;
+        SHFree(m_pidlParent);
+        m_pidlParent = NULL;
+    }
     bHandled = FALSE;
     return 0;
 }
@@ -1002,6 +1017,20 @@ LRESULT CDefView::OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 LRESULT CDefView::OnGetShellBrowser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     return reinterpret_cast<LRESULT>(m_pShellBrowser.p);
+}
+
+LRESULT CDefView::OnNCCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    this->AddRef();
+    bHandled = FALSE;
+    return 0;
+}
+
+LRESULT CDefView::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    this->Release();
+    bHandled = FALSE;
+    return 0;
 }
 
 /**********************************************************
@@ -2229,7 +2258,7 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
     if (m_hMenu)
     {
         DestroyMenu(m_hMenu);
-        m_hView = NULL;
+        m_hMenu = NULL;
     }
 
     if (m_ListView)
