@@ -39,7 +39,7 @@ While a system popup is open, it tracks the mouse movements so that it can cance
 and switch to another submenu when the mouse goes over another item from the parent.
 
 */
-#include "precomp.h"
+#include "shellmenu.h"
 #include <windowsx.h>
 #include <commoncontrols.h>
 #include <shlwapi_undoc.h>

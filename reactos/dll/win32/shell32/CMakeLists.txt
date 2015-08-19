@@ -1,5 +1,7 @@
 PROJECT(SHELL)
 
+add_subdirectory(shellmenu)
+
 set_cpp(WITH_RUNTIME)
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 

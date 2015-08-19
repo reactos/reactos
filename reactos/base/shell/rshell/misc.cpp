@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "precomp.h"
+#include "shellmenu.h"
 
 DWORD WINAPI WinList_Init(void)
 {

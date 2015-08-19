@@ -2,22 +2,14 @@ PROJECT(SHELL)
 
 set_cpp(WITH_RUNTIME)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/lib/atl
+    ${REACTOS_SOURCE_DIR}/dll/win32/shell32/shellmenu)
 
 spec2def(rshell.dll rshell.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    CBandSite.cpp
-    CDesktopBrowser.cpp
-    CMenuBand.cpp
-    CMenuDeskBar.cpp
-    CMenuFocusManager.cpp
-    CMenuSite.cpp
-    CMenuToolbars.cpp
-    CMergedFolder.cpp
-    CStartMenu.cpp
     misc.cpp
-    ShellDDE.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
 
 add_library(rshell SHARED ${SOURCE})
@@ -25,6 +17,7 @@ add_library(rshell SHARED ${SOURCE})
 set_module_type(rshell win32dll UNICODE)
 
 target_link_libraries(rshell
+    shellmenu
     atlnew
     uuid
     wine)
