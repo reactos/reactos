@@ -320,7 +320,8 @@ class CDefView :
         END_MSG_MAP()
 
         BEGIN_COM_MAP(CDefView)
-        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+        // Windows returns E_NOINTERFACE for IOleWindow
+        // COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
         COM_INTERFACE_ENTRY_IID(IID_IShellView, IShellView)
         COM_INTERFACE_ENTRY_IID(IID_IFolderView, IFolderView)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderView, IShellFolderView)
@@ -2193,7 +2194,7 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
         TRACE("-- left=%i top=%i right=%i bottom=%i\n", prcView->left, prcView->top, prcView->right, prcView->bottom);
 
     /* Validate the Shell Browser */
-    if (psb == NULL)
+    if (psb == NULL || m_hWnd)
         return E_UNEXPECTED;
 
     /*set up the member variables*/
