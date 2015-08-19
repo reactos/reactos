@@ -28,6 +28,7 @@ list(APPEND SOURCE
     dialogs/folder_options.cpp
     dialogs/filedefext.cpp
     dialogs/fprop.cpp
+    dialogs/recycler_prop.cpp
     CDropTargetHelper.cpp
     CEnumIDListBase.cpp
     CExtractIcon.cpp
