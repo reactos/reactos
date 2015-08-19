@@ -69,8 +69,6 @@
 #pragma warning(pop)
 #endif
 
-extern HINSTANCE shell32_hInstance;
-
 extern "C" HRESULT WINAPI CStartMenu_Constructor(REFIID riid, void **ppv);
 extern "C" HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);
 extern "C" HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv);

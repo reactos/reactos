@@ -8,3 +8,5 @@
 @ stdcall CMenuBand_Constructor(ptr ptr);
 @ stdcall CMergedFolder_Constructor(ptr ptr);
 @ stdcall ShellDDEInit(long);
+@ stdcall SHCreateDesktop(ptr);
+@ stdcall SHDesktopMessageLoop(ptr);

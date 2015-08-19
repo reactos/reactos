@@ -1,5 +1,6 @@
 PROJECT(SHELL)
 
+add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
 
 set_cpp(WITH_RUNTIME)
@@ -20,9 +21,7 @@ include_directories(
 list(APPEND SOURCE
     CIDLDataObj.cpp
     CQueryAssociations.cpp
-    dde.cpp
     debughlp.cpp
-    CDesktopBrowser.cpp
     dialogs/dialogs.cpp
     dialogs/drive.cpp
     dialogs/drvdefext.cpp
@@ -82,7 +81,7 @@ add_library(shell32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 set_module_type(shell32 win32dll UNICODE HOTPATCHABLE)
-target_link_libraries(shell32 shellmenu atlnew wine uuid recyclebin)
+target_link_libraries(shell32 shellmenu shelldesktop atlnew wine uuid recyclebin)
 add_delay_importlibs(shell32 uxtheme ole32 userenv version fmifs)
 add_importlibs(shell32 advapi32 browseui gdi32 user32 powrprof comctl32 comdlg32 shdocvw shlwapi devmgr winspool winmm msvcrt kernel32 ntdll)
 add_pch(shell32 precomp.h SOURCE)

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "shelldesktop.h"
 #include <ddeml.h>
 #include <strsafe.h>
 

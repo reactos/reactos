@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "shelldesktop.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
@@ -209,6 +209,12 @@ BOOL CDesktopBrowser::CreateDeskWnd()
         return FALSE;
 
     SetShellWindowEx(hWnd, FindDesktopListView());
+
+#if 1
+    /* A Windows8+ specific hack */
+    ::ShowWindow(hWndShellView, SW_SHOW);
+    ::ShowWindow(FindDesktopListView(), SW_SHOW);
+#endif
 
     return TRUE;
 }

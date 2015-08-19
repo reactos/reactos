@@ -20,6 +20,7 @@
 
 #include "shellmenu.h"
 
+extern "C"
 HINSTANCE shell32_hInstance = NULL;
 
 DWORD WINAPI WinList_Init(void)

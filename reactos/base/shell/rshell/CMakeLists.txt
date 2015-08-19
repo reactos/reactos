@@ -18,11 +18,13 @@ set_module_type(rshell win32dll UNICODE)
 
 target_link_libraries(rshell
     shellmenu
+    shelldesktop
     atlnew
     uuid
     wine)
 
 add_importlibs(rshell
+    browseui
     uxtheme
     shlwapi
     advapi32
