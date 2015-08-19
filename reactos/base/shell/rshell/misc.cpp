@@ -20,6 +20,8 @@
 
 #include "shellmenu.h"
 
+HINSTANCE shell32_hInstance = NULL;
+
 DWORD WINAPI WinList_Init(void)
 {
     /* do something here (perhaps we may want to add our own implementation fo win8) */
