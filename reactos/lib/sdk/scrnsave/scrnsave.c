@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS Screen Saver Library
  * LICENSE:         GPL v2 or any later version
  * FILE:            lib/sdk/scrnsave/scrnsave.c
- * PURPOSE:         Library for writing screen savers, compatible with MS' scrnsave.lib
+ * PURPOSE:         Library for writing screen savers, compatible with
+ *                  MS' scrnsave.lib without Win9x support.
  * PROGRAMMERS:     Anders Norlander <anorland@hem2.passagen.se>
  *                  Colin Finck <mail@colinfinck.de>
  */
@@ -38,7 +39,7 @@ static int ISSPACE(TCHAR c)
     return (c == ' ' || c == '\t');
 }
 
-#define ISNUM(c) ((c) >= '0' && c <= '9')
+#define ISNUM(c) ((c) >= '0' && (c) <= '9')
 
 static ULONG_PTR _toulptr(const TCHAR *s)
 {
@@ -78,9 +79,11 @@ static LRESULT WINAPI SysScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
             {
                 switch (wParam)
                 {
-                    case SC_CLOSE:
-                    case SC_SCREENSAVE:
-                        return FALSE;
+                    case SC_CLOSE:      // - Closing the screen saver, or...
+                    case SC_NEXTWINDOW: // - Switching to
+                    case SC_PREVWINDOW: //   different windows, or...
+                    case SC_SCREENSAVE: // - Starting another screen saver:
+                        return FALSE;   // Fail it!
                 }
             }
             break;
@@ -102,7 +105,7 @@ LRESULT WINAPI DefScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_ACTIVATEAPP:
             if (!wParam)
             {
-                // wParam is FALSE, so the screensaver is losing the focus.
+                // wParam is FALSE, so the screen saver is losing the focus.
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
             }
             break;
@@ -111,6 +114,8 @@ LRESULT WINAPI DefScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             POINT pt;
             GetCursorPos(&pt);
+            // TODO: Implement mouse move threshold. See:
+            // http://svn.reactos.org/svn/reactos/trunk/rosapps/applications/screensavers/starfield/screensaver.c?r1=67455&r2=67454&pathrev=67455
             if (pt.x == pt_orig.x && pt.y == pt_orig.y)
                 break;
 
@@ -118,11 +123,14 @@ LRESULT WINAPI DefScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
 
         case WM_LBUTTONDOWN:
-        case WM_RBUTTONDOWN:
         case WM_MBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_XBUTTONDOWN:
         case WM_KEYDOWN:
         case WM_KEYUP:
-            // Send a WM_CLOSE to close the screen saver (allows the screensaver author to do clean-up tasks)
+        case WM_SYSKEYDOWN:
+            // Send a WM_CLOSE to close the screen saver (allows
+            // the screen saver to perform clean-up tasks)
             PostMessage(hWnd, WM_CLOSE, 0, 0);
             break;
 
@@ -137,60 +145,81 @@ LRESULT WINAPI DefScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 // Registers the screen saver window class
 static BOOL RegisterScreenSaverClass(void)
 {
-    WNDCLASS cls = {0,};
+    WNDCLASS cls;
 
-    cls.hIcon = LoadIcon(hMainInstance, MAKEINTATOM(ID_APP));
+    cls.hCursor       = NULL;
+    cls.hIcon         = LoadIcon(hMainInstance, MAKEINTATOM(ID_APP));
+    cls.lpszMenuName  = NULL;
     cls.lpszClassName = CLASS_SCRNSAVE;
     cls.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    cls.hInstance = hMainInstance;
-    cls.style = CS_VREDRAW | CS_HREDRAW | CS_SAVEBITS | CS_PARENTDC;
-    cls.lpfnWndProc = SysScreenSaverProc;
+    cls.hInstance     = hMainInstance;
+    cls.style         = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS | CS_SAVEBITS | CS_PARENTDC;
+    cls.lpfnWndProc   = SysScreenSaverProc;
+    cls.cbWndExtra    = 0;
+    cls.cbClsExtra    = 0;
 
-    return RegisterClass(&cls) != 0;
+    return (RegisterClass(&cls) != 0);
 }
 
-static void LaunchConfig(void)
+static int LaunchConfig(HWND hParent)
 {
     // Only show the dialog if the RegisterDialogClasses function succeeded.
     // This is the same behaviour as MS' scrnsave.lib.
-    if( RegisterDialogClasses(hMainInstance) )
-        DialogBox(hMainInstance, MAKEINTRESOURCE(DLG_SCRNSAVECONFIGURE), GetForegroundWindow(), (DLGPROC) ScreenSaverConfigureDialog);
+    if (!RegisterDialogClasses(hMainInstance))
+        return -1;
+
+    return DialogBox(hMainInstance, MAKEINTRESOURCE(DLG_SCRNSAVECONFIGURE),
+                     hParent, (DLGPROC)ScreenSaverConfigureDialog);
 }
 
 static int LaunchScreenSaver(HWND hParent)
 {
-    UINT style;
+    LPCTSTR lpWindowName;
+    UINT style, exstyle;
     RECT rc;
     MSG msg;
 
     if (!RegisterScreenSaverClass())
     {
         MessageBox(NULL, TEXT("RegisterClass() failed"), NULL, MB_ICONHAND);
-        return 1;
+        return -1;
     }
 
     // A slightly different approach needs to be used when displaying in a preview window
     if (hParent)
     {
-        style = WS_CHILD;
+        fChildPreview = TRUE;
+        lpWindowName  = TEXT("Preview");
+
+        style   = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN;
+        exstyle = 0;
+
         GetClientRect(hParent, &rc);
+        rc.left = 0;
+        rc.top  = 0;
     }
     else
     {
-        style = WS_POPUP;
-        rc.right = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        fChildPreview = FALSE;
+        lpWindowName  = TEXT("Screen Saver");
+
+        style   = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+        exstyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
+
+        // Get the left & top side coordinates of the virtual screen
+        rc.left   = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        rc.top    = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        // Get the width and height of the virtual screen
+        rc.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
         rc.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-        style |= WS_VISIBLE;
     }
 
     // Create the main screen saver window
-    hMainWindow = CreateWindowEx(hParent ? 0 : WS_EX_TOPMOST, CLASS_SCRNSAVE,
-                                 TEXT("SCREENSAVER"), style,
-                                 0, 0, rc.right, rc.bottom, hParent, NULL,
-                                 hMainInstance, NULL);
-
-    if(!hMainWindow)
-        return 1;
+    hMainWindow = CreateWindowEx(exstyle, CLASS_SCRNSAVE, lpWindowName, style,
+                                 rc.left, rc.top, rc.right, rc.bottom,
+                                 hParent, NULL, hMainInstance, NULL);
+    if (!hMainWindow)
+        return -1;
 
     // Display window and start pumping messages
     ShowWindow(hMainWindow, SW_SHOW);
@@ -198,7 +227,10 @@ static int LaunchScreenSaver(HWND hParent)
         SetCursor(NULL);
 
     while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
         DispatchMessage(&msg);
+    }
 
     return msg.wParam;
 }
@@ -208,12 +240,16 @@ int APIENTRY _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR CmdLine, int
 {
     LPTSTR p;
 
-	UNREFERENCED_PARAMETER(nCmdShow);
-	UNREFERENCED_PARAMETER(hPrevInst);
+    UNREFERENCED_PARAMETER(nCmdShow);
+    UNREFERENCED_PARAMETER(hPrevInst);
 
     hMainInstance = hInst;
 
-    // Parse the arguments
+    // Parse the arguments:
+    //   -a <hwnd>  (Change the password; only for Win9x, unused on WinNT)
+    //   -s         (Run the screensaver)
+    //   -p <hwnd>  (Preview)
+    //   -c <hwnd>  (Configure)
     for (p = CmdLine; *p; p++)
     {
         switch (*p)
@@ -226,23 +262,34 @@ int APIENTRY _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR CmdLine, int
             case 'P':
             case 'p':
             {
-                // Start the screen saver in preview mode
                 HWND hParent;
-                fChildPreview = TRUE;
 
                 while (ISSPACE(*++p));
-                hParent = (HWND) _toulptr(p);
+                hParent = (HWND)_toulptr(p);
 
+                // Start the screen saver in preview mode
                 if (hParent && IsWindow(hParent))
                     return LaunchScreenSaver(hParent);
+                else
+                    return -1;
             }
-            return 0;
 
             case 'C':
             case 'c':
+            {
+                HWND hParent;
+
+                if (p[1] == ':')
+                    hParent = (HWND)_toulptr(p + 2);
+                else
+                    hParent = GetForegroundWindow();
+
                 // Display the configuration dialog
-                LaunchConfig();
-                return 0;
+                if (hParent && IsWindow(hParent))
+                    return LaunchConfig(hParent);
+                else
+                    return -1;
+            }
 
             case '-':
             case '/':
@@ -252,7 +299,5 @@ int APIENTRY _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR CmdLine, int
         }
     }
 
-    LaunchConfig();
-
-    return 0;
+    return LaunchConfig(NULL);
 }
