@@ -1,0 +1,5 @@
+
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS VBoxSRV management tool\0"
+#define REACTOS_STR_INTERNAL_NAME	"rosvboxmgmt\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"rosvboxmgmt.exe\0"
+#include <reactos/version.rc>

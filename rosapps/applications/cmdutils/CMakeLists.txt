@@ -1,6 +1,8 @@
 add_subdirectory(appwiz)
 add_subdirectory(cat)
+add_subdirectory(nfi)
 add_subdirectory(ntfsinfo)
+add_subdirectory(rosvboxmgmt)
 add_subdirectory(tee)
 add_subdirectory(touch)
 add_subdirectory(uptime)
