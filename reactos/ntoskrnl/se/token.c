@@ -1076,8 +1076,40 @@ SeQueryInformationToken(IN PACCESS_TOKEN Token,
                         IN TOKEN_INFORMATION_CLASS TokenInformationClass,
                         OUT PVOID *TokenInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PSECURITY_IMPERSONATION_LEVEL SeImpersonationLvl;
+    PAGED_CODE();
+
+    switch (TokenInformationClass)
+    {
+        case TokenImpersonationLevel:
+            /* It is mandatory to have an impersonation token */
+            if (((PTOKEN)Token)->TokenType != TokenImpersonation)
+            {
+                Status = STATUS_INVALID_INFO_CLASS;
+                break;
+            }
+
+            /* Allocate the output buffer */
+            SeImpersonationLvl = ExAllocatePoolWithTag(PagedPool, sizeof(SECURITY_IMPERSONATION_LEVEL), TAG_SE);
+            if (SeImpersonationLvl == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            /* Set impersonation level and return the structure */
+            *SeImpersonationLvl = ((PTOKEN)Token)->ImpersonationLevel;
+            *TokenInformation = SeImpersonationLvl;
+            Status = STATUS_SUCCESS;
+            break;
+
+        default:
+            UNIMPLEMENTED;
+            break;
+    }
+
+    return Status;
 }
 
 /*
