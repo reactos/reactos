@@ -1620,7 +1620,7 @@ MupDereferenceMasterQueryContext(PMUP_MQC MasterQueryContext)
 
     if (References != 0)
     {
-        DPRINT1("Still having refs (%ld)\n", References);
+        DPRINT("Still having refs (%ld)\n", References);
         return STATUS_PENDING;
     }
 
@@ -1700,7 +1700,7 @@ QueryPathCompletionRoutine(PDEVICE_OBJECT DeviceObject,
     MasterQueryContext = QueryContext->MasterQueryContext;
     Status = Irp->IoStatus.Status;
 
-    DPRINT1("Reply from %wZ: %u (Status: %lx)\n", &QueryContext->UncProvider->DeviceName, QueryResponse->LengthAccepted, Status);
+    DPRINT("Reply from %wZ: %u (Status: %lx)\n", &QueryContext->UncProvider->DeviceName, QueryResponse->LengthAccepted, Status);
 
     ExAcquireResourceExclusiveLite(&MasterQueryContext->QueryPathListLock, TRUE);
     RemoveEntryList(&QueryContext->QueryPathListEntry);
@@ -1920,7 +1920,7 @@ CreateRedirectedFile(PIRP Irp,
     {
         Prefix = CONTAINING_RECORD(TableEntry, MUP_PFX, PrefixTableEntry);
 
-        DPRINT1("Matching prefix found: %wZ\n", &Prefix->AcceptedPrefix);
+        DPRINT("Matching prefix found: %wZ\n", &Prefix->AcceptedPrefix);
 
         /* If so, check whether the prefix is still valid */
         KeQuerySystemTime(&CurrentTime);
@@ -2115,7 +2115,7 @@ CreateRedirectedFile(PIRP Irp,
 
                     /* Query the provider !*/
                     DPRINT1("Requeting UNC provider: %wZ\n", &UncProvider->DeviceName);
-                    DPRINT1("Calling: %wZ\n", &UncProvider->DeviceObject->DriverObject->DriverName);
+                    DPRINT("Calling: %wZ\n", &UncProvider->DeviceObject->DriverObject->DriverName);
                     Status = IoCallDriver(UncProvider->DeviceObject, QueryIrp);
                 }
 
