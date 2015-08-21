@@ -296,7 +296,7 @@ public:
             (entry->objectType == KEY_OBJECT);
     }
 
-    virtual HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry)
+    HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry)
     {
         NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
 
