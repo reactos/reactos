@@ -25,6 +25,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
+#define HACKY_UNC_PATHS
+
 /***********************************************************************
 *   IShellFolder implementation
 */
@@ -69,6 +71,31 @@ HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LP
         DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
     HRESULT hr = E_UNEXPECTED;
+#ifdef HACKY_UNC_PATHS
+    /* FIXME: the code below is an ugly hack */
+
+    /* Can we use a CFSFolder on that path? */
+    DWORD attrs = GetFileAttributes(lpszDisplayName);
+    if ((attrs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* YES WE CAN */
+
+        /* Create our hacky pidl */
+        int cbData = sizeof(WORD) + sizeof(WCHAR) * (wcslen(lpszDisplayName)+1);
+        LPITEMIDLIST pidl = (LPITEMIDLIST)SHAlloc(cbData + sizeof(WORD));
+        if (!pidl)
+            return NULL;
+
+        pidl->mkid.cb = cbData;
+        wcscpy((WCHAR*)&pidl->mkid.abID[0], lpszDisplayName);
+        *(WORD*)((char*)pidl + cbData) = 0;
+
+        *ppidl = pidl;
+        if (pdwAttributes)
+            *pdwAttributes = SFGAO_FILESYSTEM | SFGAO_CANLINK | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR;
+        return S_OK;
+    }
+#endif
 
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n", this,
           hwndOwner, pbcReserved, lpszDisplayName, debugstr_w (lpszDisplayName),
@@ -103,10 +130,40 @@ HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
 */
 HRESULT WINAPI CNetFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
-    TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
-           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+#ifdef HACKY_UNC_PATHS
+    HRESULT hr;
+    CComPtr<IPersistFolder3> ppf3;
+    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IPersistFolder3, &ppf3));
+    if (FAILED(hr))
+        return hr;
 
+    PERSIST_FOLDER_TARGET_INFO pfti = {0};
+    pfti.csidl = -1;
+    wcscpy(pfti.szTargetParsingName, (WCHAR*)pidl->mkid.abID);
+
+    PCUIDLIST_RELATIVE pidlChild = ILCloneFirst (pidl);
+
+    hr = ppf3->InitializeEx(NULL, ILCombine(pidlRoot,pidlChild), &pfti);
+    if (FAILED(hr))
+        return hr;
+
+    if (_ILIsPidlSimple (pidl))
+    {
+        return ppf3->QueryInterface(riid, ppvOut);
+    }
+    else
+    {
+        CComPtr<IShellFolder> psf;
+        hr = ppf3->QueryInterface(IID_PPV_ARG(IShellFolder, &psf));
+        if (FAILED(hr))
+            return hr;
+
+        return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
+    }
+
+#else
     return E_NOTIMPL;
+#endif
 }
 
 /**************************************************************************
@@ -190,6 +247,9 @@ HRESULT WINAPI CNetFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
     else
     {
         /* FIXME: Implement when enumerating items is implemented */
+#ifdef HACKY_UNC_PATHS
+        *rgfInOut = SFGAO_FILESYSTEM | SFGAO_CANLINK | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR;
+#endif
     }
 
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
@@ -299,7 +359,20 @@ HRESULT WINAPI CNetFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
         CoTaskMemFree(pszName);
         return E_FAIL;
     }
+#ifdef HACKY_UNC_PATHS
+    else
+    {
+        LPCWSTR pstr = (LPCWSTR)pidl->mkid.abID;
+        pszName = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
+        if (!pszName)
+            return E_OUTOFMEMORY;
 
+        wcscpy(pszName, pstr);
+        strRet->pOleStr = pszName;
+        strRet->uType = STRRET_WSTR;
+        return S_OK;
+    }
+#endif
     return E_NOTIMPL;
 }
 
