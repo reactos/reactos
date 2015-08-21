@@ -7,7 +7,7 @@
  */
 
 #include "precomp.h"
-#include "ntobjutil.h"
+#include "ntobjenum.h"
 #include <ntquery.h>
 #include "util.h"
 

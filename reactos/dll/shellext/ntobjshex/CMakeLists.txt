@@ -15,9 +15,9 @@ include_directories(
 spec2def(ntobjshex.dll ntobjshex.spec)
 
 add_library(ntobjshex SHARED
-    ntobjns.cpp
+    ntobjenum.cpp
+    ntobjfolder.cpp
     ntobjshex.cpp
-    ntobjutil.cpp
     ntobjshex.rc
     regfolder.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/ntobjshex.def)

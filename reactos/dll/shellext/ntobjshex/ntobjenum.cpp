@@ -18,7 +18,7 @@
 
 #include <precomp.h>
 
-#include "ntobjutil.h"
+#include "ntobjenum.h"
 #include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);

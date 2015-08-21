@@ -46,5 +46,5 @@ extern HINSTANCE g_hInstance;
 DEFINE_GUID(CLSID_NtObjectFolder,
     0x845b0fb2, 0x66e0, 0x416b, 0x8f, 0x91, 0x31, 0x4e, 0x23, 0xf7, 0xc1, 0x2d);
 
-#include "ntobjns.h"
+#include "ntobjfolder.h"
 #include "regfolder.h"
