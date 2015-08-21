@@ -138,11 +138,11 @@ int getGlobalList(void)
 
 void printUsage(void)
 {
-    wprintf("ReactOS VBox Shared Folders Management\n");
-    wprintf("\tstart: start the VBox Shared folders (mandatory prior any operation!)\n");
-    wprintf("\taddconn <letter> <share name>: add a connection\n");
-    wprintf("\tgetlist: list connections\n");
-    wprintf("\tgetgloballist: list available shares\n");
+    wprintf(L"ReactOS VBox Shared Folders Management\n");
+    wprintf(L"\tstart: start the VBox Shared folders (mandatory prior any operation!)\n");
+    wprintf(L"\taddconn <letter> <share name>: add a connection\n");
+    wprintf(L"\tgetlist: list connections\n");
+    wprintf(L"\tgetgloballist: list available shares\n");
 }
 
 int wmain(int argc, wchar_t *argv[])
