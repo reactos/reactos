@@ -206,7 +206,10 @@ KdpDeleteBreakpointRange(IN PVOID Base,
                          IN PVOID Limit)
 {
     ULONG BpIndex;
-    BOOLEAN Return = FALSE;
+    BOOLEAN DeletedBreakpoints;
+
+    /* Assume no breakpoints will be deleted */
+    DeletedBreakpoints = FALSE;
 
     /* Loop the breakpoint table */
     for (BpIndex = 0; BpIndex < KD_BREAKPOINT_MAX; BpIndex++)
@@ -216,13 +219,13 @@ KdpDeleteBreakpointRange(IN PVOID Base,
             ((KdpBreakpointTable[BpIndex].Address >= Base) &&
              (KdpBreakpointTable[BpIndex].Address <= Limit)))
         {
-            /* Delete it */
-            Return = Return || KdpDeleteBreakpoint(BpIndex + 1);
+            /* Delete it, and remember if we succeeded at least once */
+            if (KdpDeleteBreakpoint(BpIndex + 1)) DeletedBreakpoints = TRUE;
         }
     }
 
-    /* Return to caller */
-    return Return;
+    /* Return whether we deleted anything */
+    return DeletedBreakpoints;
 }
 
 VOID
