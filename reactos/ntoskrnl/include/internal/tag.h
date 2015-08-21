@@ -29,6 +29,9 @@
 /* formerly located in fs/notify.c */
 #define FSRTL_NOTIFY_TAG 'ITON'
 
+/* formerly located in fsrtl/unc.c */
+#define TAG_UNC 'nuSF'
+
 /* formerly located in io/device.c */
 #define TAG_DEVICE_EXTENSION   'TXED'
 #define TAG_SHUTDOWN_ENTRY    'TUHS'

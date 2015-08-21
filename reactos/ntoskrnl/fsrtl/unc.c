@@ -12,8 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_UNC 'nuSF'
-
 KSEMAPHORE FsRtlpUncSemaphore;
 
 ULONG FsRtlpRedirs = 0;
