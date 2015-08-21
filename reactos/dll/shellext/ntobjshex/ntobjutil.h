@@ -50,23 +50,14 @@ struct NtPidlEntry
     // If this is -1, there will be a NtPidlTypeData following this, and before any other extensions
     OBJECT_TYPE objectType;
 
-    OBJECT_BASIC_INFORMATION objectInformation;
-
     USHORT entryNameLength;
     WCHAR entryName[ANYSIZE_ARRAY];
-
 };
 
 struct NtPidlTypeData
 {
     USHORT typeNameLength;
     WCHAR typeName[ANYSIZE_ARRAY];
-};
-
-struct NtPidlSymlinkData
-{
-    USHORT targetNameLength;
-    WCHAR targetName[ANYSIZE_ARRAY];
 };
 
 // REGISTRY browser
@@ -107,8 +98,10 @@ struct RegPidlEntry
 
 #include <poppack.h>
 
-HRESULT EnumerateNtDirectory(HDPA hdpa, PCWSTR path, UINT * hdpaCount);
-HRESULT EnumerateRegistryKey(HDPA hdpa, PCWSTR path, HKEY root, UINT * hdpaCount);
-HRESULT EnumerateRootKeys(HDPA hdpa, UINT * hdpaCount);
-
 HRESULT ReadRegistryValue(HKEY root, PCWSTR path, PCWSTR valueName, PVOID * valueData, PDWORD valueLength);
+
+HRESULT GetEnumRegistryRoot(IEnumIDList ** ppil);
+HRESULT GetEnumRegistryKey(LPCWSTR path, HKEY root, IEnumIDList ** ppil);
+HRESULT GetEnumNTDirectory(LPCWSTR path, IEnumIDList ** ppil);
+
+HRESULT GetNTObjectSymbolicLinkTarget(LPCWSTR path, LPCWSTR entryName, PUNICODE_STRING LinkTarget);

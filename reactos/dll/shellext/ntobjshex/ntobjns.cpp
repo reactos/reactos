@@ -34,7 +34,6 @@ enum NtObjectColumns
 {
     NTOBJECT_COLUMN_NAME = 0,
     NTOBJECT_COLUMN_TYPE,
-    NTOBJECT_COLUMN_CREATEDATE,
     NTOBJECT_COLUMN_LINKTARGET,
     NTOBJECT_COLUMN_END
 };
@@ -43,28 +42,25 @@ class CNtObjectFolderExtractIcon :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IExtractIconW
 {
-    PCIDLIST_ABSOLUTE m_pcidlFolder;
-    PCITEMID_CHILD    m_pcidlChild;
+    PCITEMID_CHILD m_pcidlChild;
+    LPCWSTR m_NtPath;
 
 public:
     CNtObjectFolderExtractIcon() :
-        m_pcidlFolder(NULL),
-        m_pcidlChild(NULL)
+        m_pcidlChild(NULL), m_NtPath(NULL)
     {
 
     }
 
     virtual ~CNtObjectFolderExtractIcon()
     {
-        if (m_pcidlFolder)
-            ILFree((LPITEMIDLIST) m_pcidlFolder);
         if (m_pcidlChild)
             ILFree((LPITEMIDLIST) m_pcidlChild);
     }
 
-    HRESULT Initialize(PCIDLIST_ABSOLUTE parent, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
+    HRESULT Initialize(LPCWSTR ntPath, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
     {
-        m_pcidlFolder = ILClone(parent);
+        m_NtPath = ntPath;
         if (cidl != 1)
             return E_INVALIDARG;
         m_pcidlChild = ILClone(apidl[0]);
@@ -84,11 +80,6 @@ public:
             return E_INVALIDARG;
 
         UINT flags = 0;
-
-#define GIL_CHECKSHIELD 0x0200
-#define GIL_SHIELD 0x0200
-        if (uFlags & GIL_CHECKSHIELD && !(entry->objectInformation.GrantedAccess & STANDARD_RIGHTS_READ))
-            flags |= GIL_SHIELD;
 
         switch (entry->objectType)
         {
@@ -145,193 +136,21 @@ class CNtObjectPidlManager
 private:
     PWSTR m_ntPath;
 
-    HDPA m_hDpa;
-    UINT m_hDpaCount;
-
-    int  DpaDeleteCallback(NtPidlEntry * info)
-    {
-        CoTaskMemFree(info);
-        return 0;
-    }
-
-    static int CALLBACK s_DpaDeleteCallback(void *pItem, void *pData)
-    {
-        CNtObjectPidlManager * mf = (CNtObjectPidlManager*) pData;
-        NtPidlEntry  * item = (NtPidlEntry*) pItem;
-        return mf->DpaDeleteCallback(item);
-    }
-
 public:
     CNtObjectPidlManager() :
-        m_ntPath(NULL),
-        m_hDpa(NULL),
-        m_hDpaCount(0)
+        m_ntPath(NULL)
     {
     }
 
     ~CNtObjectPidlManager()
     {
-        DPA_DestroyCallback(m_hDpa, s_DpaDeleteCallback, this);
     }
 
     HRESULT Initialize(PWSTR ntPath)
     {
         m_ntPath = ntPath;
-        m_hDpa = NULL;
 
         return S_OK;
-    }
-
-    HRESULT Enumerate()
-    {
-        if (m_hDpa)
-            return S_OK;
-
-        m_hDpa = DPA_Create(10);
-
-        if (!m_hDpa)
-            return E_OUTOFMEMORY;
-
-        HRESULT hr = EnumerateNtDirectory(m_hDpa, m_ntPath, &m_hDpaCount);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        return S_OK;
-    }
-
-    HRESULT FindPidlInList(PCUITEMID_CHILD pcidl, const NtPidlEntry ** pinfo)
-    {
-        HRESULT hr;
-
-        if (!m_hDpa)
-        {
-            hr = Enumerate();
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (!m_hDpa)
-                return E_FAIL;
-        }
-
-        const NtPidlEntry * info = (const NtPidlEntry *) pcidl;
-        if ((info->cb < sizeof(NtPidlEntry)) || (info->magic != NT_OBJECT_PIDL_MAGIC))
-        {
-            ERR("FindPidlInList: Requested pidl is not of the correct type.\n");
-            return E_INVALIDARG;
-        }
-
-        TRACE("Searching for pidl { name='%S' } in a list of %d items\n", info->entryName, m_hDpaCount);
-
-        for (UINT i = 0; i < m_hDpaCount; i++)
-        {
-            const NtPidlEntry * pInfo = (const NtPidlEntry *) DPA_GetPtr(m_hDpa, i);
-            ASSERT(pInfo);
-
-            hr = CompareIDs(SHCIDS_CANONICALONLY, pInfo, info);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (hr == S_OK)
-            {
-                *pinfo = pInfo;
-                return S_OK;
-            }
-            else
-            {
-                TRACE("Comparison returned %d for '%S'\n", (int) (short) (hr & 0xFFFF), pInfo->entryName);
-            }
-        }
-
-        ERR("PIDL NOT FOUND: Requested filename: %S\n", info->entryName);
-        *pinfo = NULL;
-
-        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    }
-
-    HRESULT FindByName(LPCWSTR strParsingName, NtPidlEntry ** pinfo)
-    {
-        HRESULT hr;
-
-        if (!m_hDpa)
-        {
-            hr = Enumerate();
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (!m_hDpa)
-                return E_FAIL;
-        }
-
-        TRACE("Searching for '%S' in a list of %d items\n", strParsingName, m_hDpaCount);
-
-        for (int i = 0; i < (int) m_hDpaCount; i++)
-        {
-            NtPidlEntry * pInfo = (NtPidlEntry *) DPA_GetPtr(m_hDpa, i);
-            ASSERT(pInfo);
-
-            int order = CompareStringW(GetThreadLocale(), NORM_IGNORECASE,
-                pInfo->entryName, wcslen(pInfo->entryName),
-                strParsingName, wcslen(strParsingName));
-
-            if (order == CSTR_EQUAL)
-            {
-                *pinfo = pInfo;
-                return S_OK;
-            }
-        }
-
-        TRACE("Pidl not found\n");
-        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    }
-
-    HRESULT GetPidl(UINT index, NtPidlEntry ** pEntry)
-    {
-        if (!m_hDpa)
-        {
-            HRESULT hr = Enumerate();
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (!m_hDpa)
-                return E_FAIL;
-        }
-
-        *pEntry = NULL;
-
-        NtPidlEntry * entry = (NtPidlEntry *) DPA_GetPtr(m_hDpa, index);
-        if (!entry)
-        {
-            return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-        }
-
-        *pEntry = entry;
-        return S_OK;
-    }
-
-    HRESULT GetCount(UINT * count)
-    {
-        if (!m_hDpa)
-        {
-            HRESULT hr = Enumerate();
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (!m_hDpa)
-                return E_FAIL;
-        }
-
-        *count = m_hDpaCount;
-        return S_OK;
-    }
-
-    static LPITEMIDLIST CreatePidlFromItem(const NtPidlEntry * entry)
-    {
-        LPITEMIDLIST idl = (LPITEMIDLIST) CoTaskMemAlloc(entry->cb + 2);
-        if (!idl)
-            return NULL;
-        memset(idl, 0, entry->cb + 2);
-        memcpy(idl, entry, entry->cb);
-        return idl;
     }
 
     static HRESULT CompareIDs(LPARAM lParam, const NtPidlEntry * first, const NtPidlEntry * second)
@@ -413,16 +232,6 @@ public:
 
                 return S_OK;
             }
-            case NTOBJECT_COLUMN_CREATEDATE:
-            {
-                LONGLONG ord = second->objectInformation.CreateTime.QuadPart - first->objectInformation.CreateTime.QuadPart;
-                if (ord > 0)
-                    return MAKE_HRESULT(0, 0, (USHORT) 1);
-                if (ord < 0)
-                    return MAKE_HRESULT(0, 0, (USHORT) -1);
-
-                return S_OK;
-            }
             case NTOBJECT_COLUMN_LINKTARGET:
             {
                 // Can't sort by value
@@ -478,131 +287,34 @@ public:
 
     BOOL IsFolder(LPCITEMIDLIST pcidl)
     {
-        const NtPidlEntry * entry;
-        HRESULT hr = FindPidlInList(pcidl, &entry);
-        if (FAILED_UNEXPECTEDLY(hr))
+        NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
+        if ((entry->cb < sizeof(NtPidlEntry)) || (entry->magic != NT_OBJECT_PIDL_MAGIC))
             return FALSE;
 
         return (entry->objectType == DIRECTORY_OBJECT) ||
             (entry->objectType == SYMBOLICLINK_OBJECT) ||
             (entry->objectType == KEY_OBJECT);
     }
-};
 
-class CNtObjectFolderEnum :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IEnumIDList
-{
-private:
-    CComPtr<CNtObjectFolder> m_Folder;
-
-    HWND m_HwndOwner;
-    SHCONTF m_Flags;
-
-    UINT m_Index;
-    UINT m_Count;
-
-public:
-    CNtObjectFolderEnum() :
-        m_HwndOwner(NULL),
-        m_Flags(0),
-        m_Index(0),
-        m_Count(0)
+    virtual HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry)
     {
-    }
+        NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
 
-    virtual ~CNtObjectFolderEnum()
-    {
-    }
-
-    HRESULT Initialize(CNtObjectFolder * folder, HWND hwndOwner, SHCONTF flags)
-    {
-        m_Folder = folder;
-
-        m_Folder->GetManager().GetCount(&m_Count);
-
-        m_HwndOwner = hwndOwner;
-        m_Flags = flags;
-
-        return Reset();
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE Next(
-        ULONG celt,
-        LPITEMIDLIST *rgelt,
-        ULONG *pceltFetched)
-    {
-        if (pceltFetched)
-            *pceltFetched = 0;
-
-        if (m_Index >= m_Count)
-            return S_FALSE;
-
-        for (int i = 0; i < (int) celt;)
+        if (entry->cb < sizeof(NtPidlEntry))
         {
-            NtPidlEntry * tinfo;
-            BOOL flagsOk = FALSE;
-
-            do {
-                HRESULT hr = m_Folder->GetManager().GetPidl(m_Index++, &tinfo);
-                if (FAILED_UNEXPECTEDLY(hr))
-                    return hr;
-
-                switch (tinfo->objectType)
-                {
-                case SYMBOLICLINK_OBJECT:
-                case DIRECTORY_OBJECT:
-                case KEY_OBJECT:
-                    flagsOk = (m_Flags & SHCONTF_FOLDERS) != 0;
-                    break;
-                default:
-                    flagsOk = (m_Flags & SHCONTF_NONFOLDERS) != 0;
-                    break;
-                }
-            } while (m_Index < m_Count && !flagsOk);
-
-            if (flagsOk)
-            {
-                if (rgelt)
-                    rgelt[i] = m_Folder->GetManager().CreatePidlFromItem(tinfo);
-                i++;
-            }
-
-            if (m_Index == m_Count)
-            {
-                if (pceltFetched)
-                    *pceltFetched = i;
-                return (i == (int) celt) ? S_OK : S_FALSE;
-            }
+            DbgPrint("PCIDL too small %l (required %l)\n", entry->cb, sizeof(NtPidlEntry));
+            return E_INVALIDARG;
         }
 
-        if (pceltFetched) *pceltFetched = celt;
+        if (entry->magic != NT_OBJECT_PIDL_MAGIC)
+        {
+            DbgPrint("PCIDL magic mismatch %04x (expected %04x)\n", entry->magic, NT_OBJECT_PIDL_MAGIC);
+            return E_INVALIDARG;
+        }
+
+        *pentry = entry;
         return S_OK;
     }
-
-    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt)
-    {
-        return Next(celt, NULL, NULL);
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE Reset()
-    {
-        m_Index = 0;
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum)
-    {
-        return ShellObjectCreatorInit<CNtObjectFolderEnum>(m_Folder, m_HwndOwner, m_Flags, IID_PPV_ARG(IEnumIDList, ppenum));
-    }
-
-    DECLARE_NOT_AGGREGATABLE(CNtObjectFolderEnum)
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    BEGIN_COM_MAP(CNtObjectFolderEnum)
-        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-    END_COM_MAP()
-
 };
 
 //-----------------------------------------------------------------------------
@@ -631,8 +343,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
     LPITEMIDLIST *ppidl,
     ULONG *pdwAttributes)
 {
-    NtPidlEntry * info;
-
     if (!ppidl)
         return E_POINTER;
 
@@ -644,19 +354,43 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
 
     TRACE("CNtObjectFolder::ParseDisplayName name=%S (ntPath=%S)\n", lpszDisplayName, m_NtPath);
 
-    HRESULT hr = m_PidlManager->FindByName(lpszDisplayName, &info);
+    const NtPidlEntry * info;
+    IEnumIDList * it;
+    HRESULT hr = GetEnumNTDirectory(m_NtPath, &it);
     if (FAILED(hr))
+        return hr;
+
+    while (TRUE)
+    {
+        hr = it->Next(1, ppidl, NULL);
+
+        if (FAILED(hr))
+            return hr;
+
+        if (hr != S_OK)
+            break;
+
+        hr = m_PidlManager->GetInfoFromPidl(*ppidl, &info);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (StrCmpW(info->entryName, lpszDisplayName) == 0)
+            break;
+    }
+
+    if (hr != S_OK)
     {
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
-    *ppidl = m_PidlManager->CreatePidlFromItem(info);
+    if (pchEaten || pdwAttributes)
+    {
+        if (pchEaten)
+            *pchEaten = wcslen(info->entryName);
 
-    if (pchEaten)
-        *pchEaten = wcslen(info->entryName);
-
-    if (pdwAttributes)
-        *pdwAttributes = m_PidlManager->ConvertAttributes(info, pdwAttributes);
+        if (pdwAttributes)
+            *pdwAttributes = m_PidlManager->ConvertAttributes(info, pdwAttributes);
+    }
 
     return S_OK;
 }
@@ -666,7 +400,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::EnumObjects(
     SHCONTF grfFlags,
     IEnumIDList **ppenumIDList)
 {
-    return ShellObjectCreatorInit<CNtObjectFolderEnum>(this, hwndOwner, grfFlags, IID_PPV_ARG(IEnumIDList, ppenumIDList));
+    return GetEnumNTDirectory(m_NtPath, ppenumIDList);
 }
 
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
@@ -679,12 +413,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
 
     if (IsEqualIID(riid, IID_IShellFolder))
     {
-        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-
-        if (!(info->objectInformation.GrantedAccess & (STANDARD_RIGHTS_READ | FILE_LIST_DIRECTORY)))
-            return E_ACCESSDENIED;
 
         WCHAR path[MAX_PATH];
 
@@ -699,18 +430,32 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
 
         if (info->objectType == SYMBOLICLINK_OBJECT)
         {
-            NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+            WCHAR wbLink[MAX_PATH] = { 0 };
+            UNICODE_STRING link;
+            RtlInitEmptyUnicodeString(&link, wbLink, sizeof(wbLink));
 
-            if (symlink->targetNameLength > 0)
+            hr = GetNTObjectSymbolicLinkTarget(m_NtPath, info->entryName, &link);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (link.Length > 0)
             {
-                if (symlink->targetName[1] == L':' && isalphaW(symlink->targetName[0]))
+                if (link.Buffer[1] == L':' && isalphaW(link.Buffer[0]))
                 {
-                    ERR("TODO: Navigating to WIN32 PATH from NT PATH.\n");
-                    return E_NOTIMPL;
+                    CComPtr<IShellFolder> psfDesktop;
+                    hr = SHGetDesktopFolder(&psfDesktop);
+                    if (FAILED_UNEXPECTEDLY(hr))
+                        return hr;
+
+                    hr = psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, &first, NULL);
+                    if (FAILED_UNEXPECTEDLY(hr))
+                        return hr;
+
+                    return psfDesktop->BindToObject(rest, pbcReserved, riid, ppvOut);
                 }
 
                 StringCbCopyW(path, _countof(path), L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{845B0FB2-66E0-416B-8F91-314E23F7C12D}");
-                PathAppend(path, symlink->targetName);
+                PathAppend(path, link.Buffer);
 
                 CComPtr<IShellFolder> psfDesktop;
                 hr = SHGetDesktopFolder(&psfDesktop);
@@ -731,7 +476,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
 
         if (info->objectType == KEY_OBJECT)
         {
-            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, (HKEY)NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, (HKEY) NULL, IID_PPV_ARG(IShellFolder, &psfChild));
         }
         else
         {
@@ -824,7 +569,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetAttributesOf(
 {
     const NtPidlEntry * info;
 
-    TRACE("GetAttributesOf\n");
+    TRACE("GetAttributesOf %d\n", cidl);
 
     if (cidl == 0)
     {
@@ -836,7 +581,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetAttributesOf(
     {
         PCUITEMID_CHILD pidl = apidl[i];
 
-        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -855,6 +600,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetUIObjectOf(
     UINT *prgfInOut,
     void **ppvOut)
 {
+    DWORD res;
     TRACE("GetUIObjectOf\n");
 
     if (IsEqualIID(riid, IID_IContextMenu) ||
@@ -863,12 +609,14 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetUIObjectOf(
     {
         CComPtr<IContextMenu> pcm;
 
-        HKEY keys [1];
+        HKEY keys[1];
 
         int nkeys = _countof(keys);
         if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
         {
-            RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
+            res = RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
+            if (!NT_SUCCESS(res))
+                return HRESULT_FROM_NT(res);
         }
         else
         {
@@ -884,12 +632,12 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetUIObjectOf(
 
     if (IsEqualIID(riid, IID_IExtractIconW))
     {
-        return ShellObjectCreatorInit<CNtObjectFolderExtractIcon>(m_shellPidl, cidl, apidl, riid, ppvOut);
+        return ShellObjectCreatorInit<CNtObjectFolderExtractIcon>(m_NtPath, cidl, apidl, riid, ppvOut);
     }
 
     if (IsEqualIID(riid, IID_IDataObject))
     {
-        return CIDLData_CreateFromIDArray(m_shellPidl, cidl, apidl, (IDataObject**)ppvOut);
+        return CIDLData_CreateFromIDArray(m_shellPidl, cidl, apidl, (IDataObject**) ppvOut);
     }
 
     if (IsEqualIID(riid, IID_IQueryAssociations))
@@ -921,7 +669,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDisplayNameOf(
 
     TRACE("GetDisplayNameOf %p\n", pidl);
 
-    HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+    HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -964,7 +712,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDisplayNameOf(
             PathAppendW(path, temp);
         }
 
-        ILFree((LPITEMIDLIST)pidlFirst);
+        ILFree((LPITEMIDLIST) pidlFirst);
     }
     else
     {
@@ -1073,11 +821,8 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDefaultColumnState(
     case NTOBJECT_COLUMN_TYPE:
         *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
         return S_OK;
-    case NTOBJECT_COLUMN_CREATEDATE:
-        *pcsFlags = SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT;
-        return S_OK;
     case NTOBJECT_COLUMN_LINKTARGET:
-        *pcsFlags = SHCOLSTATE_TYPE_STR;
+        *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_SLOW;
         return S_OK;
     }
 
@@ -1095,7 +840,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
 
     if (pidl)
     {
-        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -1126,35 +871,25 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
                     return MakeVariantString(pv, ObjectTypeNames[info->objectType]);
                 }
             }
-            else if (pscid->pid == PID_STG_WRITETIME)
-            {
-                DOUBLE varTime;
-                SYSTEMTIME stime;
-                FileTimeToSystemTime((FILETIME*) &(info->objectInformation.CreateTime), &stime);
-                SystemTimeToVariantTime(&stime, &varTime);
-
-                V_VT(pv) = VT_DATE;
-                V_DATE(pv) = varTime;
-                return S_OK;
-            }
         }
         else if (IsEqualGUID(pscid->fmtid, GUID_NtObjectColumns))
         {
-            if (pscid->pid == NTOBJECT_COLUMN_LINKTARGET)
+            if (pscid->pid == NTOBJECT_COLUMN_LINKTARGET && info->objectType == SYMBOLICLINK_OBJECT)
             {
-                if (info->objectType == SYMBOLICLINK_OBJECT)
+                WCHAR wbLink[MAX_PATH] = { 0 };
+                UNICODE_STRING link;
+                RtlInitEmptyUnicodeString(&link, wbLink, sizeof(wbLink));
+
+                HRESULT hr = GetNTObjectSymbolicLinkTarget(m_NtPath, info->entryName, &link);
+
+                if (!FAILED_UNEXPECTEDLY(hr) && link.Length > 0)
                 {
-                    NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
-
-                    if (symlink->targetNameLength > 0)
-                    {
-                        return MakeVariantString(pv, symlink->targetName);
-                    }
+                    return MakeVariantString(pv, link.Buffer);
                 }
-
-                V_VT(pv) = VT_EMPTY;
-                return S_OK;
             }
+
+            V_VT(pv) = VT_EMPTY;
+            return S_OK;
         }
     }
 
@@ -1172,7 +907,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
 
     if (pidl)
     {
-        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -1198,43 +933,28 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
             else
                 MakeStrRetFromString(ObjectTypeNames[info->objectType], &(psd->str));
             return S_OK;
-        case NTOBJECT_COLUMN_CREATEDATE:
-            psd->fmt = LVCFMT_LEFT;
-
-            if (info->objectInformation.CreateTime.QuadPart != 0)
-            {
-                WCHAR dbuff[128];
-                PWSTR tbuff;
-                SYSTEMTIME stime;
-                FileTimeToSystemTime((LPFILETIME) &(info->objectInformation.CreateTime), &stime);
-                GetDateFormat(LOCALE_USER_DEFAULT, 0, &stime, NULL, dbuff, _countof(dbuff));
-                tbuff = dbuff + wcslen(dbuff);
-                *tbuff++ = L' ';
-                GetTimeFormat(LOCALE_USER_DEFAULT, 0, &stime, NULL, tbuff, _countof(dbuff) - (tbuff - dbuff));
-
-                MakeStrRetFromString(dbuff, &(psd->str));
-                return S_OK;
-            }
-
-            MakeStrRetFromString(L"", &(psd->str));
-            return S_OK;
-
         case NTOBJECT_COLUMN_LINKTARGET:
+        {
             psd->fmt = LVCFMT_LEFT;
 
             if (info->objectType == SYMBOLICLINK_OBJECT)
             {
-                NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+                WCHAR wbLink[MAX_PATH] = { 0 };
+                UNICODE_STRING link;
+                RtlInitEmptyUnicodeString(&link, wbLink, sizeof(wbLink));
 
-                if (symlink->targetNameLength > 0)
+                HRESULT hr = GetNTObjectSymbolicLinkTarget(m_NtPath, info->entryName, &link);
+
+                if (!FAILED_UNEXPECTEDLY(hr) && link.Length > 0)
                 {
-                    MakeStrRetFromString(symlink->targetName, symlink->targetNameLength, &(psd->str));
+                    MakeStrRetFromString(link.Buffer, link.Length, &(psd->str));
                     return S_OK;
                 }
             }
 
             MakeStrRetFromString(L"", &(psd->str));
             return S_OK;
+        }
         }
     }
     else
@@ -1254,13 +974,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
 
             // TODO: Make localizable
             MakeStrRetFromString(L"Object Type", &(psd->str));
-            return S_OK;
-        case NTOBJECT_COLUMN_CREATEDATE:
-            psd->fmt = LVCFMT_LEFT;
-            psd->cxChar = 20;
-
-            // TODO: Make localizable
-            MakeStrRetFromString(L"Creation Time", &(psd->str));
             return S_OK;
         case NTOBJECT_COLUMN_LINKTARGET:
             psd->fmt = LVCFMT_LEFT;
@@ -1290,10 +1003,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::MapColumnToSCID(
         pscid->fmtid = storage;
         pscid->pid = PID_STG_STORAGETYPE;
         return S_OK;
-    case NTOBJECT_COLUMN_CREATEDATE:
-        pscid->fmtid = storage;
-        pscid->pid = PID_STG_WRITETIME;
-        return S_OK;
     case NTOBJECT_COLUMN_LINKTARGET:
         pscid->fmtid = GUID_NtObjectColumns;
         pscid->pid = NTOBJECT_COLUMN_LINKTARGET;
@@ -1316,8 +1025,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::MessageSFVCB(UINT uMsg, WPARAM wParam
         return S_FALSE;
     case SFVM_BACKGROUNDENUM:
         return S_OK;
-    case SFVM_DEFITEMCOUNT:
-        return m_PidlManager->GetCount((UINT*) lParam);
     }
     return E_NOTIMPL;
 }

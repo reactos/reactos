@@ -24,6 +24,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
 
+
 // {1C6D6E08-2332-4A7B-A94D-6432DB2B5AE6}
 const GUID CLSID_RegistryFolder = { 0x1c6d6e08, 0x2332, 0x4a7b, { 0xa9, 0x4d, 0x64, 0x32, 0xdb, 0x2b, 0x5a, 0xe6 } };
 
@@ -130,9 +131,6 @@ private:
     PWSTR m_ntPath;
     HKEY m_hRoot;
 
-    HDPA m_hDpa;
-    UINT m_hDpaCount;
-
     int  DpaDeleteCallback(RegPidlEntry * info)
     {
         CoTaskMemFree(info);
@@ -149,186 +147,20 @@ private:
 public:
     CRegistryPidlManager() :
         m_ntPath(NULL),
-        m_hRoot(NULL),
-        m_hDpa(NULL),
-        m_hDpaCount(0)
+        m_hRoot(NULL)
     {
     }
 
     ~CRegistryPidlManager()
     {
-        DPA_DestroyCallback(m_hDpa, s_DpaDeleteCallback, this);
     }
 
     HRESULT Initialize(PWSTR ntPath, HKEY hRoot)
     {
         m_ntPath = ntPath;
         m_hRoot = hRoot;
-        m_hDpa = NULL;
 
         return S_OK;
-    }
-
-    HRESULT Enumerate()
-    {
-        if (m_hDpa)
-            return S_OK;
-
-        m_hDpa = DPA_Create(10);
-
-        if (!m_hDpa)
-            return E_OUTOFMEMORY;
-
-        if (wcslen(m_ntPath) == 0 && m_hRoot == NULL)
-        {
-            HRESULT hr = EnumerateRootKeys(m_hDpa, &m_hDpaCount);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-        }
-        else
-        {
-            HRESULT hr = EnumerateRegistryKey(m_hDpa, m_ntPath, m_hRoot, &m_hDpaCount);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-        }
-        return S_OK;
-    }
-
-    HRESULT FindPidlInList(PCUITEMID_CHILD pcidl, const RegPidlEntry ** pinfo)
-    {
-        HRESULT hr;
-
-        if (!m_hDpa)
-        {
-            hr = Enumerate();
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (!m_hDpa)
-                return E_FAIL;
-        }
-
-        const RegPidlEntry * info = (const RegPidlEntry *) pcidl;
-        if ((info->cb < sizeof(RegPidlEntry)) || (info->magic != REGISTRY_PIDL_MAGIC))
-        {
-            ERR("FindPidlInList: Requested pidl is not of the correct type.\n");
-            return E_INVALIDARG;
-        }
-
-        TRACE("Searching for pidl { name='%S' } in a list of %d items\n", info->entryName, m_hDpaCount);
-
-        for (UINT i = 0; i < m_hDpaCount; i++)
-        {
-            const RegPidlEntry * pInfo = (const RegPidlEntry *) DPA_GetPtr(m_hDpa, i);
-            ASSERT(pInfo);
-
-            hr = CompareIDs(SHCIDS_CANONICALONLY, pInfo, info);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (hr == S_OK)
-            {
-                *pinfo = pInfo;
-                return S_OK;
-            }
-            else
-            {
-                TRACE("Comparison returned %d for '%S'\n", (int) (short) (hr & 0xFFFF), pInfo->entryName);
-            }
-        }
-
-        ERR("PIDL NOT FOUND: Requested filename: %S\n", info->entryName);
-        *pinfo = NULL;
-
-        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    }
-
-    HRESULT FindByName(LPCWSTR strParsingName, RegPidlEntry ** pinfo)
-    {
-        HRESULT hr;
-
-        if (!m_hDpa)
-        {
-            hr = Enumerate();
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (!m_hDpa)
-                return E_FAIL;
-        }
-
-
-        TRACE("Searching for '%S' in a list of %d items\n", strParsingName, m_hDpaCount);
-
-        for (int i = 0; i < (int) m_hDpaCount; i++)
-        {
-            RegPidlEntry * pInfo = (RegPidlEntry *) DPA_GetPtr(m_hDpa, i);
-            ASSERT(pInfo);
-
-            int order = CompareStringW(GetThreadLocale(), NORM_IGNORECASE,
-                pInfo->entryName, wcslen(pInfo->entryName),
-                strParsingName, wcslen(strParsingName));
-
-            if (order == CSTR_EQUAL)
-            {
-                *pinfo = pInfo;
-                return S_OK;
-            }
-        }
-
-        TRACE("Pidl not found\n");
-        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    }
-
-    HRESULT GetPidl(UINT index, RegPidlEntry ** pEntry)
-    {
-        if (!m_hDpa)
-        {
-            HRESULT hr = Enumerate();
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (!m_hDpa)
-                return E_FAIL;
-        }
-
-        *pEntry = NULL;
-
-        RegPidlEntry * entry = (RegPidlEntry *) DPA_GetPtr(m_hDpa, index);
-        if (!entry)
-        {
-            return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-        }
-
-        *pEntry = entry;
-        return S_OK;
-    }
-
-    HRESULT GetCount(UINT * count)
-    {
-        if (!m_hDpa)
-        {
-            HRESULT hr = Enumerate();
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (!m_hDpa)
-                return E_FAIL;
-        }
-
-        *count = m_hDpaCount;
-        return S_OK;
-    }
-
-
-    static LPITEMIDLIST CreatePidlFromItem(const RegPidlEntry * entry)
-    {
-        LPITEMIDLIST idl = (LPITEMIDLIST) CoTaskMemAlloc(entry->cb + 2);
-        if (!idl)
-            return NULL;
-        memset(idl, 0, entry->cb + 2);
-        memcpy(idl, entry, entry->cb);
-        return idl;
     }
 
     static HRESULT CompareIDs(LPARAM lParam, const RegPidlEntry * first, const RegPidlEntry * second)
@@ -460,13 +292,32 @@ public:
 
     BOOL IsFolder(LPCITEMIDLIST pcidl)
     {
-        const RegPidlEntry * entry;
-        HRESULT hr = FindPidlInList(pcidl, &entry);
-        if (FAILED_UNEXPECTEDLY(hr))
+        RegPidlEntry * entry = (RegPidlEntry*) &(pcidl->mkid);
+        if ((entry->cb < sizeof(RegPidlEntry)) || (entry->magic != REGISTRY_PIDL_MAGIC))
             return FALSE;
 
         return (entry->entryType == REG_ENTRY_KEY) ||
             (entry->entryType == REG_ENTRY_ROOT);
+    }
+
+    HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const RegPidlEntry ** pentry)
+    {
+        RegPidlEntry * entry = (RegPidlEntry*) &(pcidl->mkid);
+
+        if (entry->cb < sizeof(RegPidlEntry))
+        {
+            DbgPrint("PCIDL too small %l (required %l)\n", entry->cb, sizeof(RegPidlEntry));
+            return E_INVALIDARG;
+        }
+
+        if (entry->magic != REGISTRY_PIDL_MAGIC)
+        {
+            DbgPrint("PCIDL magic mismatch %04x (expected %04x)\n", entry->magic, REGISTRY_PIDL_MAGIC);
+            return E_INVALIDARG;
+        }
+
+        *pentry = entry;
+        return S_OK;
     }
 
     static HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents)
@@ -574,121 +425,6 @@ public:
     }
 };
 
-class CRegistryFolderEnum :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IEnumIDList
-{
-private:
-    CComPtr<CRegistryFolder> m_Folder;
-
-    HWND m_HwndOwner;
-    SHCONTF m_Flags;
-
-    UINT m_Index;
-    UINT m_Count;
-
-public:
-    CRegistryFolderEnum() :
-        m_HwndOwner(NULL),
-        m_Flags(0),
-        m_Index(0),
-        m_Count(0)
-    {
-    }
-
-    virtual ~CRegistryFolderEnum()
-    {
-    }
-
-    HRESULT Initialize(CRegistryFolder * folder, HWND hwndOwner, SHCONTF flags)
-    {
-        m_Folder = folder;
-
-        m_Folder->GetManager().GetCount(&m_Count);
-
-        m_HwndOwner = hwndOwner;
-        m_Flags = flags;
-
-        return Reset();
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE Next(
-        ULONG celt,
-        LPITEMIDLIST *rgelt,
-        ULONG *pceltFetched)
-    {
-        if (pceltFetched)
-            *pceltFetched = 0;
-
-        if (m_Index >= m_Count)
-            return S_FALSE;
-
-        for (int i = 0; i < (int) celt;)
-        {
-            RegPidlEntry * tinfo;
-            BOOL flagsOk = FALSE;
-
-            do {
-                HRESULT hr = m_Folder->GetManager().GetPidl(m_Index++, &tinfo);
-                if (FAILED_UNEXPECTEDLY(hr))
-                    return hr;
-
-                switch (tinfo->entryType)
-                {
-                case REG_ENTRY_KEY:
-                case REG_ENTRY_ROOT:
-                    flagsOk = (m_Flags & SHCONTF_FOLDERS) != 0;
-                    break;
-                default:
-                    flagsOk = (m_Flags & SHCONTF_NONFOLDERS) != 0;
-                    break;
-                }
-            } while (m_Index < m_Count && !flagsOk);
-
-            if (flagsOk)
-            {
-                if (rgelt)
-                    rgelt[i] = m_Folder->GetManager().CreatePidlFromItem(tinfo);
-                i++;
-            }
-
-            if (m_Index == m_Count)
-            {
-                if (pceltFetched)
-                    *pceltFetched = i;
-                return (i == (int) celt) ? S_OK : S_FALSE;
-            }
-        }
-
-        if (pceltFetched) *pceltFetched = celt;
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt)
-    {
-        return Next(celt, NULL, NULL);
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE Reset()
-    {
-        m_Index = 0;
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum)
-    {
-        return ShellObjectCreatorInit<CRegistryFolderEnum>(m_Folder, m_HwndOwner, m_Flags, IID_PPV_ARG(IEnumIDList, ppenum));
-    }
-
-    DECLARE_NOT_AGGREGATABLE(CRegistryFolderEnum)
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    BEGIN_COM_MAP(CRegistryFolderEnum)
-        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-    END_COM_MAP()
-
-};
-
 //-----------------------------------------------------------------------------
 // CRegistryFolder
 
@@ -715,8 +451,6 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::ParseDisplayName(
     LPITEMIDLIST *ppidl,
     ULONG *pdwAttributes)
 {
-    RegPidlEntry * info;
-
     if (!ppidl)
         return E_POINTER;
 
@@ -728,19 +462,45 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::ParseDisplayName(
 
     TRACE("CRegistryFolder::ParseDisplayName name=%S (ntPath=%S)\n", lpszDisplayName, m_NtPath);
 
-    HRESULT hr = m_PidlManager->FindByName(lpszDisplayName, &info);
+    const RegPidlEntry * info;
+    IEnumIDList * it;
+    HRESULT hr = GetEnumNTDirectory(m_NtPath, &it);
     if (FAILED(hr))
     {
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
-    *ppidl = m_PidlManager->CreatePidlFromItem(info);
+    while (TRUE)
+    {
+        hr = it->Next(1, ppidl, NULL);
 
-    if (pchEaten)
-        *pchEaten = wcslen(info->entryName);
+        if (FAILED(hr))
+            return hr;
 
-    if (pdwAttributes)
-        *pdwAttributes = m_PidlManager->ConvertAttributes(info, pdwAttributes);
+        if (hr != S_OK)
+            break;
+
+        hr = m_PidlManager->GetInfoFromPidl(*ppidl, &info);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (StrCmpW(info->entryName, lpszDisplayName) == 0)
+            break;
+    }
+
+    if (hr != S_OK)
+    {
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    }
+
+    if (pchEaten || pdwAttributes)
+    {
+        if (pchEaten)
+            *pchEaten = wcslen(info->entryName);
+
+        if (pdwAttributes)
+            *pdwAttributes = m_PidlManager->ConvertAttributes(info, pdwAttributes);
+    }
 
     return S_OK;
 }
@@ -750,7 +510,14 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::EnumObjects(
     SHCONTF grfFlags,
     IEnumIDList **ppenumIDList)
 {
-    return ShellObjectCreatorInit<CRegistryFolderEnum>(this, hwndOwner, grfFlags, IID_PPV_ARG(IEnumIDList, ppenumIDList));
+    if (wcslen(m_NtPath) == 0 && m_hRoot == NULL)
+    {
+        return GetEnumRegistryRoot(ppenumIDList);
+    }
+    else
+    {
+        return GetEnumRegistryKey(m_NtPath, m_hRoot, ppenumIDList);
+    }
 }
 
 HRESULT STDMETHODCALLTYPE CRegistryFolder::BindToObject(
@@ -763,7 +530,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::BindToObject(
 
     if (IsEqualIID(riid, IID_IShellFolder))
     {
-        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -886,7 +653,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetAttributesOf(
     {
         PCUITEMID_CHILD pidl = apidl[i];
 
-        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -913,12 +680,15 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetUIObjectOf(
     {
         CComPtr<IContextMenu> pcm;
 
-        HKEY keys [1];
+        DWORD res;
+        HKEY keys[1];
 
         int nkeys = _countof(keys);
         if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
         {
-            RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
+            res = RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
+            if (!NT_SUCCESS(res))
+                return HRESULT_FROM_NT(res);
         }
         else
         {
@@ -971,7 +741,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDisplayNameOf(
 
     TRACE("GetDisplayNameOf %p\n", pidl);
 
-    HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+    HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1144,7 +914,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
 
     if (pidl)
     {
-        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -1170,7 +940,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
                 {
                     if (info->contentsLength > 0)
                     {
-                        PWSTR td = (PWSTR)(((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+                        PWSTR td = (PWSTR) (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
                         return MakeVariantString(pv, td);
                     }
@@ -1217,7 +987,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 
     if (pidl)
     {
-        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -1343,8 +1113,6 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::MessageSFVCB(UINT uMsg, WPARAM wParam
         return S_FALSE;
     case SFVM_BACKGROUNDENUM:
         return S_OK;
-    case SFVM_DEFITEMCOUNT:
-        return m_PidlManager->GetCount((UINT*) lParam);
     }
     return E_NOTIMPL;
 }
