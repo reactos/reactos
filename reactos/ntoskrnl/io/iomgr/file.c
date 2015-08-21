@@ -981,7 +981,7 @@ IopParseDevice(IN PVOID ParseObject,
                     /* Release the old one */
                     if (CompleteName->Buffer != NULL)
                     {
-                        ExFreePoolWithTag(CompleteName->Buffer, TAG_IO_NAME);
+                        ExFreePoolWithTag(CompleteName->Buffer, 0);
                     }
 
                     /* And setup the new one */
