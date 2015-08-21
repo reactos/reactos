@@ -89,8 +89,7 @@ BOOL SHELL32_GetCustomFolderAttributes(
     WCHAR wszFolderPath[MAX_PATH];
 
     /* Hack around not having system attribute on non-Windows file systems */
-    if (0)
-        dwAttrib = _ILGetFileAttributes(pidl, NULL, 0);
+    dwAttrib = _ILGetFileAttributes(pidl, NULL, 0);
 
     if (dwAttrib & FILE_ATTRIBUTE_SYSTEM)
     {
