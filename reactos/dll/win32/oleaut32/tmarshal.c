@@ -1785,7 +1785,11 @@ static HRESULT init_proxy_entry_point(TMProxyImpl *proxy, unsigned int num)
     /* nrofargs including This */
     int nrofargs = 1;
     ITypeInfo *tinfo2;
+    
+#ifdef __i386__
     TMAsmProxy	*xasm = proxy->asmstubs + num;
+#endif
+
     HRESULT hres;
     const FUNCDESC *fdesc;
 

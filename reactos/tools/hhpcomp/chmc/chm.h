@@ -35,8 +35,8 @@
  * many bits as they specify.
  */
 
-/* i386, 32-bit, Windows */
-#ifdef WIN32
+/* i386, 32-bit/64-bit, Windows */
+#ifdef _MSC_VER
 typedef unsigned char           UChar;
 typedef __int16                 Int16;
 typedef unsigned __int16        UInt16;

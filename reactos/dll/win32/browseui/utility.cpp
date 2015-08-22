@@ -10,7 +10,7 @@ void operator delete(void *p)
     LocalFree(p);
 }
 
-void operator delete(void *p, unsigned int)
+void operator delete(void *p, UINT_PTR)
 {
     LocalFree(p);
 }

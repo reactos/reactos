@@ -265,9 +265,9 @@ void _STLP_CALL operator delete(void* s)
 }
 
 #if defined (EH_DELETE_HAS_THROW_SPEC)
-void _STLP_CALL operator delete(void* s, unsigned int) throw()
+void _STLP_CALL operator delete(void* s, uintptr_t) throw()
 #else
-void _STLP_CALL operator delete(void* s, unsigned int)
+void _STLP_CALL operator delete(void* s, uintptr_t)
 #endif
 {
 	::operator delete(s);

@@ -235,7 +235,7 @@ inline void __cdecl operator delete(
 }
 
 inline void __cdecl operator delete(
-  PVOID pVoid, UINT)
+  PVOID pVoid, UINT_PTR)
 {
   if (pVoid) ExFreePool(pVoid);
 }
