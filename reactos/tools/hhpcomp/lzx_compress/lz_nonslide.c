@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 }
 #endif
 
-__inline int lz_left_to_process(lz_info *lzi)
+int lz_left_to_process(lz_info *lzi)
 {
   return lzi->chars_in_buf - lzi->block_loc;
 }
