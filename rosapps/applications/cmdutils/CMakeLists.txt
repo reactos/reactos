@@ -1,5 +1,6 @@
 add_subdirectory(appwiz)
 add_subdirectory(cat)
+add_subdirectory(hackssign)
 add_subdirectory(ntfsinfo)
 add_subdirectory(rosvboxmgmt)
 add_subdirectory(tee)

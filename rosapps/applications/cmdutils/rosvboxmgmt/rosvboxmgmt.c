@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS VBox Shared Folders Management
+ * FILE:            cmdutils/hackssign/client.c
+ * PURPOSE:         Communicate with VBox mini redirector to deal with shared folders
+ * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>
+ */
+
 #include <stdio.h>
 #include <wchar.h>
 #include <windows.h>
