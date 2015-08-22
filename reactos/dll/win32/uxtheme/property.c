@@ -194,7 +194,7 @@ HRESULT WINAPI GetThemeString(HTHEME hTheme, int iPartId, int iStateId,
     if(!hTheme)
         return E_HANDLE;
 
-    if(!(tp = MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_FILENAME, iPropId)))
+    if(!(tp = MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_STRING, iPropId)))
         return E_PROP_ID_UNSUPPORTED;
     return MSSTYLES_GetPropertyString(tp, pszBuff, cchMaxBuffChars);
 }
