@@ -45,6 +45,11 @@
 
 #define PACKAGE_STRING "hhpcomp development version"
 
+/* if O_BINARY is not defined, the system is probably not expecting any such flag */
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 int chmc_section_add(struct chmcFile *chm, const char *name);
 struct chmcSection * chmc_section_create(struct chmcFile *chm,
                                          const char *name);
@@ -133,7 +138,7 @@ int chmc_init(struct chmcFile *chm, const char *filename,
 	chm->config = config;
 
 	if (strcmp(filename, "-") != 0) {
-		chm->fd = creat(filename, 0644);
+		chm->fd = open(filename, O_RDWR | O_CREAT | O_TRUNC | O_BINARY, 0644);
 		if (chm->fd < 0) {
 			chmcerr_set(errno, strerror(errno));
 			chmcerr_return_msg("creat file '%s'", filename);
@@ -978,7 +983,9 @@ static int _lzx_put_bytes(void *arg, int n, void *buf)
 	struct chmcLzxInfo *lzx_info = (struct chmcLzxInfo *)arg;
 	struct chmcSect0 *sect0 = &lzx_info->chm->sect0;
 	int wx;
+	static int counter = 0;
 
+	counter += n;
 	wx = write(lzx_info->section->fd, buf, n);
 	sect0->file_len += wx;
 	lzx_info->section->len += wx;
@@ -1025,7 +1032,7 @@ static int _lzx_get_bytes(void *arg, int n, void *buf)
 	// need to keep current entry file and offset trought blocks
 	// until last entry
 	while (todo) {
-		// end of entris reached?
+		// end of entries reached?
 		if (lzx_info->pos == &chm->entries_list) {
 			lzx_info->eof = 1;
 			break;
@@ -1046,7 +1053,7 @@ static int _lzx_get_bytes(void *arg, int n, void *buf)
 			else
 				if (lzx_info->fd == -1) {
 					// open file if it isn't
-					lzx_info->fd = open(node->name, O_RDONLY);
+					lzx_info->fd = open(node->name, O_RDONLY | O_BINARY);
 					if (lzx_info->fd < 0) {
 						chmc_error("%s: %d: error %d: '%s' %s\n",
 						           __FILE__, __LINE__,
@@ -1073,7 +1080,8 @@ static int _lzx_get_bytes(void *arg, int n, void *buf)
 			{
 				rx = read(lzx_info->fd, (char *)buf + (n - todo), toread);
 				if (rx <= 0) {
-					chmc_error("read error\n");
+					int temp = errno;
+					chmc_error("read error %s \n", strerror(temp));
 					lzx_info->error = 2;
 					break;
 				}
@@ -1610,18 +1618,24 @@ int chmc_write(struct chmcFile *chm)
 
 	assert(chm);
 
+	chmc_dump("write itsf %d\n", _CHMC_ITSF_V3_LEN);
 	write(chm->fd, itsf, _CHMC_ITSF_V3_LEN);
+	chmc_dump("write sect0 %d\n", _CHMC_SECT0_LEN);
 	write(chm->fd, sect0, _CHMC_SECT0_LEN);
+	chmc_dump("write itsp %d\n", _CHMC_ITSP_V1_LEN);
 	write(chm->fd, itsp, _CHMC_ITSP_V1_LEN);
 
 	list_for_each(pos, &chm->pmgl_list) {
 		pmgl = list_entry(pos, struct chmcPmglChunkNode, list);
+		chmc_dump("write pmgl %d\n", _CHMC_CHUNK_LEN);
 		write(chm->fd, &pmgl->chunk, _CHMC_CHUNK_LEN);
 	}
 
+	chmc_dump("itsp->num_blocks %d", itsp->num_blocks);
 	if (itsp->num_blocks > 1) {
 		list_for_each( pos, &chm->pmgi_list ) {
 			pmgi = list_entry(pos, struct chmcPmgiChunkNode, list);
+			chmc_dump("write pmgi %d\n", _CHMC_CHUNK_LEN);
 			write(chm->fd, &pmgi->chunk, _CHMC_CHUNK_LEN);
 		}
 	}
@@ -1640,7 +1654,7 @@ int chmc_appendfile(struct chmcFile *chm, const char *filename, void *buf,
 	if (stat(filename, &statbuf) < 0)
 		return errno;
 
-	in = open(filename, O_RDONLY);
+	in = open(filename, O_RDONLY | O_BINARY);
 	if (in >= 0) {
 		todo = statbuf.st_size;
 

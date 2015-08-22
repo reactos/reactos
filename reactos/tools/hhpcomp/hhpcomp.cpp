@@ -62,11 +62,14 @@ int main(int argc, char** argv)
     struct chmcFile chm;
     struct chmcConfig chm_config;
 
+    memset(&chm, 0, sizeof(struct chmcFile));
+    memset(&chm_config, 0, sizeof(struct chmcConfig));
     chm_config.title    = project_file.get_title_string().c_str();
     chm_config.hhc      = project_file.get_contents_file_string().c_str();
     chm_config.hhk      = project_file.get_index_file_string().c_str();
     chm_config.deftopic = project_file.get_default_topic_string().c_str();
     chm_config.language = project_file.get_language_code();
+    chm_config.tmpdir   = ".";
 
     int err;
     err = chmc_init(&chm, replace_backslashes(project_file.get_compiled_file_string()).c_str(), &chm_config);

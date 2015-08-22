@@ -46,6 +46,11 @@ typedef unsigned long gcc_uint64_t;
 #define TMP_MAX 16384
 #endif
 
+/* if O_BINARY is not defined, the system is probably not expecting any such flag */
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 /*
 
 @deftypefn Replacement int mkstemps (char *@var{template}, int @var{suffix_len})
@@ -87,6 +92,7 @@ mkstemps (
   if ((int) len < 6 + suffix_len
       || strncmp (&template[len - 6 - suffix_len], "XXXXXX", 6))
     {
+      printf("wrong parameter\n");
       return -1;
     }
 
@@ -121,7 +127,7 @@ mkstemps (
 #ifdef VMS
       fd = open (template, O_RDWR|O_CREAT|O_EXCL, 0600, "fop=tmd");
 #else
-      fd = open (template, O_RDWR|O_CREAT|O_EXCL, 0600);
+      fd = open (template, O_RDWR|O_CREAT|O_EXCL|O_BINARY, 0600);
 #endif
       if (fd >= 0)
 	/* The file does not exist.  */
