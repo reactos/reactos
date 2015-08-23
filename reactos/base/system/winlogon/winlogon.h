@@ -240,6 +240,23 @@ typedef struct _WLSESSION
     WLX_PROFILE_V2_0 *Profile;
 } WLSESSION, *PWLSESSION;
 
+typedef enum _NOTIFICATION_TYPE
+{
+    LogonHandler,
+    LogoffHandler,
+    LockHandler,
+    UnlockHandler,
+    StartupHandler,
+    ShutdownHandler,
+    StartScreenSaverHandler,
+    StopScreenSaverHandler,
+    DisconnectHandler,
+    ReconnectHandler,
+    StartShellHandler,
+    PostShellHandler,
+    LastHandler
+} NOTIFICATION_TYPE, *PNOTIFICATION_TYPE;
+
 extern HINSTANCE hAppInstance;
 extern PWLSESSION WLSession;
 
@@ -265,6 +282,11 @@ InitNotifications(VOID);
 
 VOID
 CleanupNotifications(VOID);
+
+VOID
+CallNotificationDlls(
+    PWLSESSION pSession,
+    NOTIFICATION_TYPE Type);
 
 /* rpcserver.c */
 BOOL

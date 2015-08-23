@@ -348,6 +348,8 @@ StartScreenSaver(
 
     SystemParametersInfoW(SPI_SETSCREENSAVERRUNNING, TRUE, NULL, 0);
 
+    CallNotificationDlls(Session, StartScreenSaverHandler);
+
     /* Wait the end of the process or some other activity */
     ResetEvent(Session->hUserActivity);
     HandleArray[0] = ProcessInformation.hProcess;
@@ -362,6 +364,8 @@ StartScreenSaver(
     SetEvent(Session->hEndOfScreenSaver);
 
     CloseHandle(ProcessInformation.hProcess);
+
+    CallNotificationDlls(Session, StopScreenSaverHandler);
 
 cleanup:
     RevertToSelf();

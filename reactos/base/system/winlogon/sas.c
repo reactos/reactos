@@ -446,6 +446,8 @@ HandleLogon(
         goto cleanup;
     }
 
+    CallNotificationDlls(Session, LogonHandler);
+
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
     UpdatePerUserSystemParameters(0, TRUE);
 
@@ -464,6 +466,8 @@ HandleLogon(
         //MessageBoxW(0, StatusMsg, NULL, MB_ICONERROR);
         goto cleanup;
     }
+
+    CallNotificationDlls(Session, StartShellHandler);
 
     if (!InitializeScreenSaver(Session))
         WARN("WL: Failed to initialize screen saver\n");
@@ -783,10 +787,14 @@ HandleLogoff(
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
     UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+
+    CallNotificationDlls(Session, LogoffHandler);
+
     CloseHandle(Session->UserToken);
     UpdatePerUserSystemParameters(0, FALSE);
     Session->LogonState = STATE_LOGGED_OFF;
     Session->UserToken = NULL;
+
     return STATUS_SUCCESS;
 }
 
@@ -894,6 +902,8 @@ HandleShutdown(
         return STATUS_UNSUCCESSFUL;
     }
 
+    CallNotificationDlls(Session, ShutdownHandler);
+
     /* Destroy SAS window */
     UninitializeSAS(Session);
 
@@ -932,6 +942,7 @@ DoGenericAction(
                 if (!HandleLogon(Session))
                 {
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+                    CallNotificationDlls(Session, LogonHandler);
                 }
             }
             break;
@@ -957,6 +968,7 @@ DoGenericAction(
                 SwitchDesktop(Session->WinlogonDesktop);
                 Session->LogonState = STATE_LOCKED;
                 Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
+                CallNotificationDlls(Session, LockHandler);
             }
             break;
         case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
@@ -999,6 +1011,7 @@ DoGenericAction(
         case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
             SwitchDesktop(Session->ApplicationDesktop);
             Session->LogonState = STATE_LOGGED_ON;
+            CallNotificationDlls(Session, UnlockHandler);
             break;
         default:
             WARN("Unknown SAS action 0x%lx\n", wlxAction);

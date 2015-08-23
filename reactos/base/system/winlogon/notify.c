@@ -16,23 +16,6 @@
 // void Event_Handler_Function_Name(PWLX_NOTIFICATION_INFO pInfo);
 typedef VOID (WINAPI *PWLX_NOTIFY_HANDLER)(PWLX_NOTIFICATION_INFO pInfo);
 
-typedef enum _NOTIFICATION_TYPE
-{
-    LogonHandler,
-    LogoffHandler,
-    LockHandler,
-    UnlockHandler,
-    StartupHandler,
-    ShutdownHandler,
-    StartScreenSaverHandler,
-    StopScreenSaverHandler,
-    DisconnectHandler,
-    ReconnectHandler,
-    StartShellHandler,
-    PostShellHandler,
-    LastHandler
-} NOTIFICATION_TYPE, *PNOTIFICATION_TYPE;
-
 static PSTR FuncNames[LastHandler] =
 {
     "Logon",
@@ -204,6 +187,75 @@ InitNotifications(VOID)
 
 
 VOID
+CallNotificationDlls(
+    PWLSESSION pSession,
+    NOTIFICATION_TYPE Type)
+{
+    PLIST_ENTRY ListEntry;
+    PNOTIFICATION_ITEM NotificationDll;
+    WLX_NOTIFICATION_INFO Info;
+
+    TRACE("CallNotificationDlls()\n");
+
+    Info.Size = sizeof(WLX_NOTIFICATION_INFO);
+
+    switch (Type)
+    {
+        case LogoffHandler:
+        case ShutdownHandler:
+            Info.Flags = 3;
+            break;
+
+        default:
+            Info.Flags = 0;
+            break;
+    }
+
+    Info.UserName = NULL; //UserName;
+    Info.Domain = NULL; //Domain;
+    Info.WindowStation = pSession->InteractiveWindowStationName;
+    Info.hToken = pSession->UserToken;
+
+    switch (Type)
+    {
+        case LogonHandler:
+        case StartShellHandler:
+            Info.hDesktop = pSession->ApplicationDesktop;
+            break;
+
+        case StartScreenSaverHandler:
+            Info.hDesktop = pSession->ApplicationDesktop;
+            break;
+
+        default:
+            Info.hDesktop = pSession->WinlogonDesktop;
+            break;
+    }
+
+    Info.pStatusCallback = NULL;
+
+    ListEntry = NotificationDllListHead.Flink;
+    while (ListEntry != &NotificationDllListHead)
+    {
+TRACE("ListEntry %p\n", ListEntry);
+
+        NotificationDll = CONTAINING_RECORD(ListEntry,
+                                            NOTIFICATION_ITEM,
+                                            ListEntry);
+TRACE("NotificationDll: %p\n", NotificationDll);
+        if (NotificationDll != NULL)
+        {
+TRACE("NotificationDll->Handler: %p\n", NotificationDll->Handler[Type]);
+            if (NotificationDll->Handler[Type] != NULL)
+                NotificationDll->Handler[Type](&Info);
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+}
+
+
+VOID
 CleanupNotifications(VOID)
 {
     PLIST_ENTRY ListEntry;
@@ -217,14 +269,14 @@ CleanupNotifications(VOID)
                                             ListEntry);
         if (NotificationDll != NULL)
         {
-
-
-
+            FreeLibrary(NotificationDll->hInstance);
         }
 
         ListEntry = ListEntry->Flink;
 
         RemoveEntryList(&NotificationDll->ListEntry);
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll);
     }
 }
 

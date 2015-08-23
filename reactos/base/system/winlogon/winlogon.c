@@ -434,6 +434,8 @@ WinMain(
     }
 #endif
 
+    CallNotificationDlls(WLSession, StartupHandler);
+
     /* Create a hidden window to get SAS notifications */
     if (!InitializeSAS(WLSession))
     {
