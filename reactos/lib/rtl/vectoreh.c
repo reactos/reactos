@@ -111,7 +111,7 @@ RtlpInitializeVectoredExceptionHandling(VOID)
 /*
  * @implemented
  */
-PVOID NTAPI
+PVOID NTAPI DECLSPEC_HOTPATCH
 RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
                                IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
 {
