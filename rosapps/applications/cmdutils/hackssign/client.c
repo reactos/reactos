@@ -19,9 +19,55 @@ typedef enum _HV_TYPES
     vmVirtualBox,
     vmMax,
 } HV_TYPES;
-PCWSTR hV[] = { L"vmware", L"virtualbox" };
+typedef BOOL (*HV_DET)(void);
+BOOL isVMware(void)
+{
+    HANDLE dev = CreateFile(L"\\\\.\\hgfs",
+                            GENERIC_READ | GENERIC_WRITE,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            NULL, OPEN_EXISTING, 0, NULL);
+    if (dev != INVALID_HANDLE_VALUE)
+    {
+        wprintf(L"VMware detected\n");
+        CloseHandle(dev);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+BOOL isVBox(void)
+{
+    HANDLE dev = CreateFile(L"\\\\.\\VBoxMiniRdrDN",
+                            GENERIC_READ | GENERIC_WRITE,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            NULL, OPEN_EXISTING, 0, NULL);
+    if (dev != INVALID_HANDLE_VALUE)
+    {
+        wprintf(L"VirtualBox detected\n");
+        CloseHandle(dev);
+        return TRUE;
+    }
+
+    return FALSE;
+}
 PCWSTR dev[] = { L"\\Device\\hgfs\\;", L"\\Device\\VBoxMiniRdr\\;" };
 PCWSTR unc[] = { L":\\vmware-host\\Shared Folders\\", L":\\vboxsvr\\" };
+HV_DET det[] = { isVMware, isVBox };
+
+HV_TYPES detectVM(void)
+{
+    HV_TYPES vm;
+
+    for (vm = vmVMware; vm < vmMax; ++vm)
+    {
+        if (det[vm]() == TRUE)
+        {
+            break;
+        }
+    }
+
+    return vm;
+}
 
 BOOL performDevIoCtl(DWORD dwIoControlCode, LPVOID lpInBuffer, DWORD nInBufferSize)
 {
@@ -117,7 +163,7 @@ BOOL startService()
     return TRUE;
 }
 
-int assignLetter(WCHAR letter, PCWSTR path, PCWSTR device)
+int assignLetter(WCHAR letter, PCWSTR path)
 {
     BOOL ret;
     DWORD len;
@@ -127,13 +173,7 @@ int assignLetter(WCHAR letter, PCWSTR path, PCWSTR device)
     DWORD inputBufferSize;
     PASSIGN_INPUT inputBuffer;
 
-    for (vm = vmVMware; vm < vmMax; ++vm)
-    {
-        if (_wcsicmp(device, hV[vm]) == 0)
-        {
-            break;
-        }
-    }
+    vm = detectVM();
     if (vm == vmMax)
     {
         wprintf(L"Unsupported VM type\n");
@@ -221,19 +261,33 @@ int deleteLetter(WCHAR letter)
     return (performDevIoCtl(FSCTL_HACKSSIGN_DELETE, &capsLetter, sizeof(WCHAR)) == FALSE);
 }
 
+int detect(void)
+{
+    HV_TYPES vm;
+
+    vm = detectVM();
+    if (vm == vmMax)
+    {
+        wprintf(L"Unsupported VM type\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 void printUsage(void)
 {
     wprintf(L"ReactOS Hackssign application\n");
-    wprintf(L"\assign <letter> <share name> <vmtype>: Assign a drive letter to the share given the VM type\n");
-    wprintf(L"\t\tVM types are: vmware or virtual\n");
+    wprintf(L"\assign <letter> <share name>: Assign a drive letter to the share\n");
     wprintf(L"\tdelete <letter>: delete driver letter assignation\n");
+    wprintf(L"\tdetect: detect VM type\n");
 }
 
 int wmain(int argc, wchar_t *argv[])
 {
     PCWSTR cmd;
 
-    if (argc < 3)
+    if (argc < 2)
     {
         printUsage();
         return 0;
@@ -243,17 +297,27 @@ int wmain(int argc, wchar_t *argv[])
 
     if (_wcsicmp(cmd, L"assign") == 0)
     {
-        if (argc < 5)
+        if (argc < 4)
         {
             printUsage();
             return 0;
         }
 
-        return assignLetter(argv[2][0], argv[3], argv[4]);
+        return assignLetter(argv[2][0], argv[3]);
     }
     else if (_wcsicmp(cmd, L"delete") == 0)
     {
+        if (argc < 3)
+        {
+            printUsage();
+            return 0;
+        }
+
         return deleteLetter(argv[2][0]);
+    }
+    else if (_wcsicmp(cmd, L"detect") == 0)
+    {
+        return detect();
     }
     else
     {
