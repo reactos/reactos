@@ -2544,12 +2544,14 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
 {
     BOOL bret = FALSE;
     WCHAR toktype;
-    WCHAR tok[MAX_PATH];
+    WCHAR *tok;
     LPCWSTR lptoken;
     LPBYTE lpNext = NULL;
     DWORD len;
 
     *cBytes = sizeof(SECURITY_DESCRIPTOR);
+
+    tok = heap_alloc( (lstrlenW(StringSecurityDescriptor) + 1) * sizeof(WCHAR));
 
     if (SecurityDescriptor)
         lpNext = (LPBYTE)(SecurityDescriptor + 1);
@@ -2672,6 +2674,7 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
     bret = TRUE;
 
 lend:
+    heap_free(tok);
     return bret;
 }
 
