@@ -2116,13 +2116,18 @@ GetTempPathW(IN DWORD count,
 
     ret++; /* add space for terminating 0 */
 
-    if (count)
+    if (count >= ret)
     {
-        lstrcpynW(path, full_tmp_path, count);
-        if (count >= ret)
-            ret--; /* return length without 0 */
-        else if (count < 4)
-            path[0] = 0; /* avoid returning ambiguous "X:" */
+        lstrcpynW(path, tmp_path, count);
+        /* the remaining buffer must be zeroed up to 32766 bytes in XP or 32767
+         * bytes after it, we will assume the > XP behavior for now */
+        memset(path + ret, 0, (min(count, 32767) - ret) * sizeof(WCHAR));
+        ret--; /* return length without 0 */
+    }
+    else if (count)
+    {
+        /* the buffer must be cleared if contents will not fit */
+        memset(path, 0, count * sizeof(WCHAR));
     }
 
     DPRINT("GetTempPathW returning %u, %S\n", ret, path);
