@@ -1050,8 +1050,6 @@ void msvcrt_free_io(void)
 
     for(i=0; i<sizeof(fstream)/sizeof(fstream[0]); i++)
         free(fstream[i]);
-
-    DeleteCriticalSection(&file_cs);
 }
 
 /*********************************************************************
