@@ -17,15 +17,15 @@ WINAPI
 TestLogonEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT1("TestLogonEvent\n");
-    DPRINT1("Size: %lu\n", pInfo->Size);
-    DPRINT1("Flags: %lx\n", pInfo->Flags);
-    DPRINT1("UserName: %S\n", pInfo->UserName);
-    DPRINT1("Domain: %S\n", pInfo->Domain);
-    DPRINT1("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT1("hToken: %p\n", pInfo->hToken);
-    DPRINT1("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT1("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    DPRINT("TestLogonEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -34,15 +34,184 @@ WINAPI
 TestLogoffEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT1("TestLogoffEvent\n");
-    DPRINT1("Size: %lu\n", pInfo->Size);
-    DPRINT1("Flags: %lx\n", pInfo->Flags);
-    DPRINT1("UserName: %S\n", pInfo->UserName);
-    DPRINT1("Domain: %S\n", pInfo->Domain);
-    DPRINT1("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT1("hToken: %p\n", pInfo->hToken);
-    DPRINT1("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT1("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    DPRINT("TestLogoffEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestLockEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestLockEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestUnlockEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestUnlockEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestStartupEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestStartupEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestShutdownEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestShutdownEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestStartScreenSaverEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestStartScreenSaverEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestStopScreenSaverEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestStopScreenSaverEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestStartShellEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestStartShellEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestPostShellEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestStartShellEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+VOID
+WINAPI
+TestDisconnectEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestDisconnectEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+TestReconnectEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TestReconnectEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 /* EOF */
