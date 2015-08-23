@@ -278,7 +278,7 @@ int detect(void)
 void printUsage(void)
 {
     wprintf(L"ReactOS Hackssign application\n");
-    wprintf(L"\assign <letter> <share name>: Assign a drive letter to the share\n");
+    wprintf(L"\tassign <letter> <share name>: Assign a drive letter to the share\n");
     wprintf(L"\tdelete <letter>: delete driver letter assignation\n");
     wprintf(L"\tdetect: detect VM type\n");
 }
