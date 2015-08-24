@@ -545,7 +545,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     UNICODE_STRING File;
     PFILE_RECORD_HEADER FileRecord;
     ULONGLONG MFTIndex;
-    PWSTR Colon;
+    PWSTR Colon, OldColon;
     PNTFS_ATTR_CONTEXT DataContext;
     USHORT Length = 0;
 
@@ -560,6 +560,23 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     {
         Length = File.Length;
         File.Length = (Colon - FileToFind) * sizeof(WCHAR);
+
+        if (_wcsicmp(Colon + 1, L"$DATA") == 0)
+        {
+            OldColon = Colon;
+            Colon[0] = UNICODE_NULL;
+            Colon = wcsrchr(FileToFind, L':');
+            if (Colon != NULL)
+            {
+                Length = File.Length;
+                File.Length = (Colon - FileToFind) * sizeof(WCHAR);
+            }
+            else
+            {
+                Colon = OldColon;
+                Colon[0] = L':';
+            }
+        }
 
         /* Skip colon */
         ++Colon;
