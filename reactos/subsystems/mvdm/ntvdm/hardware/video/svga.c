@@ -217,9 +217,9 @@ typedef struct _CHAR_CELL
 } CHAR_CELL, *PCHAR_CELL;
 C_ASSERT(sizeof(CHAR_CELL) == 2);
 
-static LPVOID ConsoleFramebuffer = NULL; // Active framebuffer, points to
-                                         // either TextFramebuffer or a
-                                         // valid graphics framebuffer.
+static PVOID ConsoleFramebuffer = NULL; // Active framebuffer, points to
+                                        // either TextFramebuffer or a
+                                        // valid graphics framebuffer.
 static HPALETTE TextPaletteHandle = NULL;
 static HPALETTE PaletteHandle = NULL;
 
@@ -232,27 +232,31 @@ static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
 
 
 static HANDLE ScreenBufferHandle = NULL;
+static LPVOID OldConsoleFramebuffer = NULL;
 
 
 /*
  * Text mode -- we always keep a valid text mode framebuffer
  * even if we are in graphics mode. This is needed in order
- * to keep a consistent VGA state.
+ * to keep a consistent VGA state. However, each time the VGA
+ * detaches from the console (and reattaches to it later on),
+ * this text mode framebuffer is recreated.
  */
+static HANDLE TextConsoleBuffer = NULL;
 static CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
 static COORD  TextResolution = {0};
 static PCHAR_CELL TextFramebuffer = NULL;
-static HANDLE TextConsoleBuffer = NULL;
 
-/* Graphics mode */
+/*
+ * Graphics mode
+ */
 static HANDLE GraphicsConsoleBuffer = NULL;
+static PVOID  GraphicsFramebuffer = NULL;
 static HANDLE ConsoleMutex = NULL;
 /* DoubleVision support */
 static BOOLEAN DoubleWidth  = FALSE;
 static BOOLEAN DoubleHeight = FALSE;
 
-static PHARDWARE_TIMER VSyncTimer;
-static PHARDWARE_TIMER HSyncTimer;
 
 /*
  * VGA Hardware
@@ -288,8 +292,10 @@ static BYTE VgaDacRegisters[VGA_PALETTE_SIZE];
 
 // static VGA_REGISTERS VgaRegisters;
 
-static ULONGLONG VerticalRetraceCycle = 0ULL;
+static ULONGLONG VerticalRetraceCycle   = 0ULL;
 static ULONGLONG HorizontalRetraceCycle = 0ULL;
+static PHARDWARE_TIMER VSyncTimer;
+static PHARDWARE_TIMER HSyncTimer;
 
 static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = FALSE;
@@ -950,6 +956,8 @@ static VOID VgaResetPalette(VOID)
 
 static VOID VgaSetActiveScreenBuffer(HANDLE ScreenBuffer)
 {
+    ASSERT(ScreenBuffer);
+
     /* Set the active buffer */
     SetConsoleActiveScreenBuffer(ScreenBuffer);
 
@@ -1002,7 +1010,7 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     if (GraphicsConsoleBuffer == INVALID_HANDLE_VALUE) return FALSE;
 
     /* Save the framebuffer address and mutex */
-    ConsoleFramebuffer = GraphicsBufferInfo.lpBitMap;
+    GraphicsFramebuffer = GraphicsBufferInfo.lpBitMap;
     ConsoleMutex = GraphicsBufferInfo.hMutex;
 
     /* Clear the framebuffer */
@@ -1010,6 +1018,9 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
 
     /* Set the active buffer */
     VgaSetActiveScreenBuffer(GraphicsConsoleBuffer);
+
+    /* The active framebuffer is now the graphics framebuffer */
+    ConsoleFramebuffer = GraphicsFramebuffer;
 
     /* Set the graphics mode palette */
     SetConsolePalette(GraphicsConsoleBuffer,
@@ -1033,9 +1044,12 @@ static VOID VgaLeaveGraphicsMode(VOID)
     /* Cleanup the video data */
     CloseHandle(ConsoleMutex);
     ConsoleMutex = NULL;
-    ConsoleFramebuffer = NULL;
+    GraphicsFramebuffer = NULL;
     CloseHandle(GraphicsConsoleBuffer);
     GraphicsConsoleBuffer = NULL;
+
+    /* Reset the active framebuffer */
+    ConsoleFramebuffer = NULL;
 
     DoubleWidth  = FALSE;
     DoubleHeight = FALSE;
@@ -1171,8 +1185,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                     + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
 
     /*
-     * If console framebuffer is NULL, that means something went wrong
-     * earlier and this is the final display refresh.
+     * If the console framebuffer is NULL, that means something
+     * went wrong earlier and this is the final display refresh.
      */
     if (ConsoleFramebuffer == NULL) return;
 
@@ -2311,11 +2325,22 @@ BOOL VgaAttachToConsole(VOID)
         return FALSE;
     }
 
-    /* Restore the screen state */
     /* Restore the original screen buffer */
-    ASSERT(ScreenBufferHandle);
     VgaSetActiveScreenBuffer(ScreenBufferHandle);
     ScreenBufferHandle = NULL;
+
+    /* Restore the screen state */
+    if (ScreenMode == TEXT_MODE)
+    {
+        /* The text mode framebuffer was recreated */
+        ConsoleFramebuffer = TextFramebuffer;
+    }
+    else
+    {
+        /* The graphics mode framebuffer is unchanged */
+        ConsoleFramebuffer = OldConsoleFramebuffer;
+    }
+    OldConsoleFramebuffer = NULL;
 
     return TRUE;
 }
@@ -2331,6 +2356,10 @@ VOID VgaDetachFromConsole(VOID)
         ScreenBufferHandle = TextConsoleBuffer;
     else
         ScreenBufferHandle = GraphicsConsoleBuffer;
+
+    /* Reset the active framebuffer */
+    OldConsoleFramebuffer = ConsoleFramebuffer;
+    ConsoleFramebuffer = NULL;
 
     /* Restore the old text-mode screen buffer */
     VgaSetActiveScreenBuffer(TextConsoleBuffer);
