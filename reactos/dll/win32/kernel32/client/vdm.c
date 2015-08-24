@@ -15,27 +15,50 @@
 
 /* TYPES **********************************************************************/
 
+#define BINARY_UNKNOWN  (0)
+#define BINARY_PE_EXE32 (1)
+#define BINARY_PE_DLL32 (2)
+#define BINARY_PE_EXE64 (3)
+#define BINARY_PE_DLL64 (4)
+#define BINARY_WIN16    (5)
+#define BINARY_OS216    (6)
+#define BINARY_DOS      (7)
+#define BINARY_UNIX_EXE (8)
+#define BINARY_UNIX_LIB (9)
+
+
+typedef enum _ENV_NAME_TYPE
+{
+    EnvNameNotAPath = 1,
+    EnvNameSinglePath ,
+    EnvNameMultiplePath
+} ENV_NAME_TYPE;
+
 typedef struct _ENV_INFO
 {
-    ULONG NameType;
-    ULONG NameLength;
+    ENV_NAME_TYPE NameType;
+    ULONG  NameLength;
     PWCHAR Name;
 } ENV_INFO, *PENV_INFO;
 
 /* GLOBALS ********************************************************************/
 
-ENV_INFO BasepEnvNameType[] =
+// NOTE: We cannot use ARRAYSIZE in this macro. GCC would complain otherwise.
+#define ENV_NAME_ENTRY(type, name)  \
+    {(type), (sizeof(name)/sizeof(*((ENV_INFO*)0)->Name)) - 1, (name)}
+
+static ENV_INFO BasepEnvNameType[] =
 {
-    {3, sizeof(L"PATH")      , L"PATH"      },
-    {2, sizeof(L"WINDIR")    , L"WINDIR"    },
-    {2, sizeof(L"SYSTEMROOT"), L"SYSTEMROOT"},
-    {3, sizeof(L"TEMP")      , L"TEMP"      },
-    {3, sizeof(L"TMP")       , L"TMP"       },
+    ENV_NAME_ENTRY(EnvNameMultiplePath, L"PATH"),
+    ENV_NAME_ENTRY(EnvNameSinglePath  , L"WINDIR"),
+    ENV_NAME_ENTRY(EnvNameSinglePath  , L"SYSTEMROOT"),
+    ENV_NAME_ENTRY(EnvNameMultiplePath, L"TEMP"),
+    ENV_NAME_ENTRY(EnvNameMultiplePath, L"TMP"),
 };
 
-UNICODE_STRING BaseDotComSuffixName = RTL_CONSTANT_STRING(L".com");
-UNICODE_STRING BaseDotPifSuffixName = RTL_CONSTANT_STRING(L".pif");
-UNICODE_STRING BaseDotExeSuffixName = RTL_CONSTANT_STRING(L".exe");
+static UNICODE_STRING BaseDotComSuffixName = RTL_CONSTANT_STRING(L".com");
+static UNICODE_STRING BaseDotPifSuffixName = RTL_CONSTANT_STRING(L".pif");
+static UNICODE_STRING BaseDotExeSuffixName = RTL_CONSTANT_STRING(L".exe");
 
 /* FUNCTIONS ******************************************************************/
 
@@ -476,7 +499,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     Status = CsrClientCallServer((PCSR_API_MESSAGE)ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCheckVDM),
-                                 sizeof(BASE_CHECK_VDM));
+                                 sizeof(*CheckVdm));
 
     /* Write back the task ID */
     *iTask = CheckVdm->iTask;
@@ -511,7 +534,6 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
                    IN ULONG IndexInfo,
                    IN ULONG BinaryType)
 {
-    NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
     PBASE_UPDATE_VDM_ENTRY UpdateVdmEntry = &ApiMessage.Data.UpdateVDMEntryRequest;
 
@@ -559,14 +581,14 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
     UpdateVdmEntry->BinaryType = BinaryType;
 
     /* Send the message to CSRSS */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepUpdateVDMEntry),
-                                 sizeof(BASE_UPDATE_VDM_ENTRY));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepUpdateVDMEntry),
+                        sizeof(*UpdateVdmEntry));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
         /* Handle failure */
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -607,7 +629,7 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMExitCode),
-                                 sizeof(BASE_GET_VDM_EXIT_CODE));
+                                 sizeof(*GetVdmExitCode));
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Get the exit code from the reply */
@@ -651,7 +673,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
          * %s%c  : Nothing if DOS VDM, -w if WoW VDM, -ws if separate WoW VDM.
          */
         _snwprintf(CommandLine,
-                   sizeof(CommandLine) / sizeof(CommandLine[0]),
+                   ARRAYSIZE(CommandLine),
                    L"\"%s\\ntvdm.exe\" -i%lx %s%c",
                    Buffer,
                    DosSeqId,
@@ -665,7 +687,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
          * %s%c  : Nothing if DOS VDM, -w if WoW VDM, -ws if separate WoW VDM.
          */
         _snwprintf(CommandLine,
-                   sizeof(CommandLine) / sizeof(CommandLine[0]),
+                   ARRAYSIZE(CommandLine),
                    L"\"%s\\ntvdm.exe\" %s%c",
                    Buffer,
                    (BinaryType == BINARY_TYPE_DOS) ? L" " : L"-w",
@@ -676,26 +698,27 @@ BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
     return RtlCreateUnicodeString(CmdLineString, CommandLine);
 }
 
-UINT
+ENV_NAME_TYPE
 WINAPI
 BaseGetEnvNameType_U(IN PWCHAR Name,
                      IN ULONG NameLength)
 {
     PENV_INFO EnvInfo;
-    ULONG NameType, i;
+    ENV_NAME_TYPE NameType;
+    ULONG i;
 
-    /* Start by assuming unknown type */
-    NameType = 1;
+    /* Start by assuming the environment variable doesn't describe paths */
+    NameType = EnvNameNotAPath;
 
     /* Loop all the environment names */
-    for (i = 0; i < (sizeof(BasepEnvNameType) / sizeof(ENV_INFO)); i++)
+    for (i = 0; i < ARRAYSIZE(BasepEnvNameType); i++)
     {
         /* Get this entry */
         EnvInfo = &BasepEnvNameType[i];
 
         /* Check if it matches the name */
         if ((EnvInfo->NameLength == NameLength) &&
-            !(_wcsnicmp(EnvInfo->Name, Name, NameLength)))
+            (_wcsnicmp(EnvInfo->Name, Name, NameLength) == 0))
         {
             /* It does, return the type */
             NameType = EnvInfo->NameType;
@@ -703,8 +726,296 @@ BaseGetEnvNameType_U(IN PWCHAR Name,
         }
     }
 
-    /* Return what we found, or unknown if nothing */
     return NameType;
+}
+
+BOOL
+NTAPI
+BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
+                         OUT PANSI_STRING AnsiEnv,
+                         OUT PUNICODE_STRING UnicodeEnv)
+{
+#define IS_ALPHA(x)   \
+    ( ((x) >= L'A' && (x) <= L'Z') || ((x) >= L'a' && (x) <= L'z') )
+
+// From lib/rtl/path.c :
+// Can be put in some .h ??
+#define IS_PATH_SEPARATOR(x)    ((x) == L'\\' || (x) == L'/')
+
+    BOOL Result;
+    NTSTATUS Status;
+    ULONG RegionSize, EnvironmentSize = 0;
+    PWCHAR Environment, NewEnvironment = NULL;
+    ENV_NAME_TYPE NameType;
+    ULONG NameLength, NumChars, Remaining;
+    PWCHAR SourcePtr, DestPtr, StartPtr;
+
+    /* Make sure we have both strings */
+    if (!AnsiEnv || !UnicodeEnv)
+    {
+        /* Fail */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Check if an environment was passed in */
+    if (!lpEnvironment)
+    {
+        /* Nope, create one */
+        Status = RtlCreateEnvironment(TRUE, &Environment);
+        if (!NT_SUCCESS(Status)) goto Cleanup;
+    }
+    else
+    {
+        /* Use the one we got */
+        Environment = lpEnvironment;
+    }
+
+    /* Do we have something now ? */
+    if (!Environment)
+    {
+        /* Still not, bail out */
+        SetLastError(ERROR_BAD_ENVIRONMENT);
+        goto Cleanup;
+    }
+
+    /*
+     * Count how much space the whole environment takes. The environment block is
+     * doubly NULL-terminated (NULL from last string and final terminating NULL).
+     */
+    SourcePtr = Environment;
+    while (!(*SourcePtr++ == UNICODE_NULL && *SourcePtr == UNICODE_NULL))
+        ++EnvironmentSize;
+    EnvironmentSize += 2; // Add the two terminating NULLs
+
+    /*
+     * Allocate a new copy large enough to hold all the environment with paths
+     * in their short form. Since the short form of a path can be a bit longer
+     * than its long form, for example in the case where characters that are
+     * invalid in the 8.3 representation are present in the long path name:
+     *   'C:\\a+b' --> 'C:\\A_B~1', or:
+     *   'C:\\a b' --> 'C:\\AB2761~1' (with checksum inserted),
+     * we suppose that the possible total number of extra characters needed to
+     * convert the long paths into their short form is at most equal to MAX_PATH.
+     */
+    RegionSize = (EnvironmentSize + MAX_PATH) * sizeof(WCHAR);
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     (PVOID*)&NewEnvironment,
+                                     0,
+                                     &RegionSize,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, bail out */
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        NewEnvironment = NULL;
+        goto Cleanup;
+    }
+
+    /* Parse the environment block */
+    Remaining = MAX_PATH - 2; // '-2': remove the last two NULLs. FIXME: is it really needed??
+    SourcePtr = Environment;
+    DestPtr   = NewEnvironment;
+
+    /* Loop through all the environment strings */
+    while (*SourcePtr != UNICODE_NULL)
+    {
+        /*
+         * 1. Check the type of the environment variable and copy its name.
+         */
+
+        /* Regular environment variable */
+        if (*SourcePtr != L'=')
+        {
+            StartPtr = SourcePtr;
+
+            /* Copy the environment variable name, including the '=' */
+            while (*SourcePtr != UNICODE_NULL)
+            {
+                *DestPtr++ = *SourcePtr;
+                if (*SourcePtr++ == L'=') break;
+            }
+
+            /* Guess the type of the environment variable */
+            NameType = BaseGetEnvNameType_U(StartPtr, SourcePtr - StartPtr - 1);
+        }
+        /* 'Current directory' environment variable (i.e. of '=X:=' form) */
+        else // if (*SourcePtr == L'=')
+        {
+            /* First assume we have a possibly malformed environment variable */
+            NameType = EnvNameNotAPath;
+
+            /* Check for a valid 'Current directory' environment variable */
+            if (IS_ALPHA(SourcePtr[1]) && SourcePtr[2] == L':' && SourcePtr[3] == L'=')
+            {
+                /*
+                 * Small optimization: convert the path to short form only if
+                 * the current directory is not the root directory (i.e. not
+                 * of the '=X:=Y:\' form), otherwise just do a simple copy.
+                 */
+                if ( wcslen(SourcePtr) >= ARRAYSIZE("=X:=Y:\\")-1 &&
+                     !( IS_ALPHA(SourcePtr[4]) && SourcePtr[5] == L':' &&
+                        IS_PATH_SEPARATOR(SourcePtr[6]) && SourcePtr[7] == UNICODE_NULL ) )
+                {
+                    NameType = EnvNameSinglePath;
+
+                    /* Copy the '=X:=' prefix */
+                    *DestPtr++ = SourcePtr[0];
+                    *DestPtr++ = SourcePtr[1];
+                    *DestPtr++ = SourcePtr[2];
+                    *DestPtr++ = SourcePtr[3];
+                    SourcePtr += 4;
+                }
+            }
+            else
+            {
+                /*
+                 * Invalid stuff starting with '=', ie:
+                 * =? (with '?' not being a letter)
+                 * =X??? (with '?' not being ":=" and not followed by something longer than 3 characters)
+                 * =X:=??? (with '?' not being "X:\\")
+                 *
+                 * 'NameType' is already set to 'EnvNameNotAPath'.
+                 */
+            }
+        }
+
+
+        /*
+         * 2. Copy the environment value and perform conversions accordingly.
+         */
+
+        if (NameType == EnvNameNotAPath)
+        {
+            /* Copy everything (up to the NULL terminator included) */
+            do
+            {
+                *DestPtr++ = *SourcePtr;
+            } while (*SourcePtr++ != UNICODE_NULL);
+        }
+        else if (NameType == EnvNameSinglePath)
+        {
+            /* Convert the path to its short form */
+            NameLength = wcslen(SourcePtr);
+            NumChars = GetShortPathNameW(SourcePtr, DestPtr, NameLength + 1 + Remaining);
+            if (NumChars == 0 || NumChars > NameLength + Remaining)
+            {
+                /* If the conversion failed, just copy the original value */
+                RtlCopyMemory(DestPtr, SourcePtr, NameLength * sizeof(WCHAR));
+                NumChars = NameLength;
+            }
+            DestPtr += NumChars;
+            if (NumChars > NameLength)
+                Remaining -= (NumChars - NameLength);
+
+            SourcePtr += NameLength;
+
+            /* Copy the terminating NULL character */
+            *DestPtr++ = *SourcePtr++;
+        }
+        else // if (NameType == EnvNameMultiplePath)
+        {
+            WCHAR Delimiter;
+
+            /* Loop through the list of paths (separated by ';') and convert each path to its short form */
+            do
+            {
+                /* Copy any trailing ';' before going to the next path */
+                while (*SourcePtr == L';')
+                {
+                    *DestPtr++ = *SourcePtr++;
+                }
+
+                StartPtr = SourcePtr;
+
+                /* Find the next path list separator, or terminating NULL */
+                while (*SourcePtr != UNICODE_NULL && *SourcePtr != L';')
+                {
+                    ++SourcePtr;
+                }
+                Delimiter = *SourcePtr;
+
+                NameLength = SourcePtr - StartPtr;
+                if (NameLength)
+                {
+                    /*
+                     * Temporarily replace the possible path list separator by NULL.
+                     * 'lpEnvironment' must point to a read+write memory buffer.
+                     */
+                    *SourcePtr = UNICODE_NULL;
+
+                    NumChars = GetShortPathNameW(StartPtr, DestPtr, NameLength + 1 + Remaining);
+                    if ( NumChars == 0 ||
+                        (Delimiter == L';' ? NumChars > NameLength + Remaining
+                                           : NumChars > NameLength /* + Remaining ?? */) )
+                    {
+                        /* If the conversion failed, just copy the original value */
+                        RtlCopyMemory(DestPtr, StartPtr, NameLength * sizeof(WCHAR));
+                        NumChars = NameLength;
+                    }
+                    DestPtr += NumChars;
+                    if (NumChars > NameLength)
+                        Remaining -= (NumChars - NameLength);
+
+                    /* If removed, restore the path list separator in the source environment value and copy it */
+                    if (Delimiter != UNICODE_NULL)
+                    {
+                        *SourcePtr = Delimiter;
+                        *DestPtr++ = *SourcePtr++;
+                    }
+                }
+            } while (*SourcePtr != UNICODE_NULL);
+
+            /* Copy the terminating NULL character */
+            *DestPtr++ = *SourcePtr++;
+        }
+    }
+
+    /* NULL-terminate the environment block */
+    *DestPtr++ = UNICODE_NULL;
+
+    /* Initialize the Unicode string to hold it */
+    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment,
+                              (DestPtr - NewEnvironment) * sizeof(WCHAR));
+    UnicodeEnv->Length = UnicodeEnv->MaximumLength;
+
+    /* Create its ASCII version */
+    Status = RtlUnicodeStringToAnsiString(AnsiEnv, UnicodeEnv, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Set last error if conversion failure */
+        BaseSetLastNTError(Status);
+    }
+    else
+    {
+        /* Everything went okay, so return success */
+        Result = TRUE;
+        NewEnvironment = NULL;
+    }
+
+Cleanup:
+    /* Cleanup path starts here, start by destroying the environment copy */
+    if (!lpEnvironment && Environment) RtlDestroyEnvironment(Environment);
+
+    /* See if we are here due to failure */
+    if (NewEnvironment)
+    {
+        /* Initialize the paths to be empty */
+        RtlInitEmptyUnicodeString(UnicodeEnv, NULL, 0);
+        RtlInitEmptyAnsiString(AnsiEnv, NULL, 0);
+
+        /* Free the environment copy */
+        RegionSize = 0;
+        Status = NtFreeVirtualMemory(NtCurrentProcess(),
+                                     (PVOID*)&NewEnvironment,
+                                     &RegionSize,
+                                     MEM_RELEASE);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* Return the result */
+    return Result;
 }
 
 BOOL
@@ -729,176 +1040,6 @@ BaseDestroyVDMEnvironment(IN PANSI_STRING AnsiEnv,
 
     /* All done */
     return TRUE;
-}
-
-BOOL
-NTAPI
-BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
-                         IN PANSI_STRING AnsiEnv,
-                         IN PUNICODE_STRING UnicodeEnv)
-{
-    BOOL Result;
-    ULONG RegionSize, EnvironmentSize = 0;
-    PWCHAR SourcePtr, DestPtr, Environment, NewEnvironment = NULL;
-    WCHAR PathBuffer[MAX_PATH];
-    NTSTATUS Status;
-
-    /* Make sure we have both strings */
-    if (!(AnsiEnv) || !(UnicodeEnv))
-    {
-        /* Fail */
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    /* Check if an environment was passed in */
-    if (!lpEnvironment)
-    {
-        /* Nope, create one */
-        Status = RtlCreateEnvironment(TRUE, &Environment);
-        if (!NT_SUCCESS(Status)) goto Quickie;
-    }
-    else
-    {
-        /* Use the one we got */
-        Environment = lpEnvironment;
-    }
-
-    /* Do we have something now ? */
-    if (!Environment)
-    {
-        /* Still not, fail out */
-        SetLastError(ERROR_BAD_ENVIRONMENT);
-        goto Quickie;
-    }
-
-    /* Count how much space the whole environment takes */
-    SourcePtr = Environment;
-    while ((*SourcePtr++ != UNICODE_NULL) && (*SourcePtr != UNICODE_NULL)) EnvironmentSize++;
-    EnvironmentSize += sizeof(UNICODE_NULL);
-
-    /* Allocate a new copy */
-    RegionSize = (EnvironmentSize + MAX_PATH) * sizeof(WCHAR);
-    if (!NT_SUCCESS(NtAllocateVirtualMemory(NtCurrentProcess(),
-                                            (PVOID*)&NewEnvironment,
-                                            0,
-                                            &RegionSize,
-                                            MEM_COMMIT,
-                                            PAGE_READWRITE)))
-    {
-        /* We failed, bail out */
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        NewEnvironment = NULL;
-        goto Quickie;
-    }
-
-    /* Begin parsing the new environment */
-    SourcePtr = Environment;
-    DestPtr   = NewEnvironment;
-
-    while (*SourcePtr != UNICODE_NULL)
-    {
-        while (*SourcePtr != UNICODE_NULL)
-        {
-            if (*SourcePtr == L'=')
-            {
-                /* Store the '=' sign */
-                *DestPtr++ = *SourcePtr++;
-
-                /* Check if this is likely a full path */
-                if (isalphaW(SourcePtr[0])
-                    && (SourcePtr[1] == L':')
-                    && ((SourcePtr[2] == '\\') || (SourcePtr[2] == '/')))
-                {
-                    PWCHAR Delimiter = wcschr(SourcePtr, L';');
-                    ULONG NumChars;
-
-                    if (Delimiter != NULL)
-                    {
-                        wcsncpy(PathBuffer,
-                                SourcePtr,
-                                min(Delimiter - SourcePtr, MAX_PATH));
-
-                        /* Seek to the part after the delimiter */
-                        SourcePtr = Delimiter + 1;
-                    }
-                    else
-                    {
-                        wcsncpy(PathBuffer, SourcePtr, MAX_PATH);
-
-                        /* Seek to the end of the string */
-                        SourcePtr = wcschr(SourcePtr, UNICODE_NULL);
-                    }
-
-                    /* Convert the path into a short path */
-                    NumChars = GetShortPathNameW(PathBuffer,
-                                                 DestPtr,
-                                                 EnvironmentSize - (DestPtr - NewEnvironment));
-                    if (NumChars)
-                    {
-                        /*
-                         * If it failed, this block won't be executed, so it
-                         * will continue from the character after the '=' sign.
-                         */
-                        DestPtr += NumChars;
-
-                        /* Append the delimiter */
-                        if (Delimiter != NULL) *DestPtr++ = L';';
-                    }
-                }
-            }
-            else if (islowerW(*SourcePtr)) *DestPtr++ = toupperW(*SourcePtr++);
-            else *DestPtr++ = *SourcePtr++;
-        }
-
-        /* Copy the terminating NULL character */
-        *DestPtr++ = *SourcePtr++;
-    }
-
-    /* Terminate it */
-    *DestPtr++ = UNICODE_NULL;
-
-    /* Initialize the unicode string to hold it */
-    EnvironmentSize = (DestPtr - NewEnvironment) * sizeof(WCHAR);
-    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, (USHORT)EnvironmentSize);
-    UnicodeEnv->Length = (USHORT)EnvironmentSize;
-
-    /* Create the ASCII version of it */
-    Status = RtlUnicodeStringToAnsiString(AnsiEnv, UnicodeEnv, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Set last error if conversion failure */
-        BaseSetLastNTError(Status);
-    }
-    else
-    {
-        /* Everything went okay, so return success */
-        Result = TRUE;
-        NewEnvironment = NULL;
-    }
-
-Quickie:
-    /* Cleanup path starts here, start by destroying the envrionment copy */
-    if (!(lpEnvironment) && (Environment)) RtlDestroyEnvironment(Environment);
-
-    /* See if we are here due to failure */
-    if (NewEnvironment)
-    {
-        /* Initialize the paths to be empty */
-        RtlInitEmptyUnicodeString(UnicodeEnv, NULL, 0);
-        RtlInitEmptyAnsiString(AnsiEnv, NULL, 0);
-
-        /* Free the environment copy */
-        RegionSize = 0;
-        Status = NtFreeVirtualMemory(NtCurrentProcess(),
-                                     (PVOID*)&NewEnvironment,
-                                     &RegionSize,
-                                     MEM_RELEASE);
-        ASSERT(NT_SUCCESS(Status));
-    }
-
-    /* Return the result */
-    return Result;
 }
 
 
@@ -1003,7 +1144,7 @@ InternalGetBinaryType(HANDLE hFile)
     return BINARY_UNKNOWN;
   }
 
-  /* Mach-o File with Endian set to Big Endian  or Little Endian*/
+  /* Mach-o File with Endian set to Big Endian or Little Endian*/
   if(Header.macho.magic == 0xFEEDFACE ||
      Header.macho.magic == 0xCEFAEDFE)
   {
@@ -1251,7 +1392,7 @@ ExitVDM(BOOL IsWow, ULONG iWowTask)
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         NULL,
                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepExitVDM),
-                        sizeof(BASE_EXIT_VDM));
+                        sizeof(*ExitVdm));
 
     /* Close the returned wait object handle, if any */
     if (NT_SUCCESS(ApiMessage.Status) && (ExitVdm->WaitObjectForVDM != NULL))
@@ -1289,7 +1430,7 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
             Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                          NULL,
                                          CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetReenterCount),
-                                         sizeof(BASE_SET_REENTER_COUNT));
+                                         sizeof(*SetReenterCount));
             BaseSetLastNTError(Status);
             Result = NT_SUCCESS(Status);
         }
@@ -1413,8 +1554,7 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
                 Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                              CaptureBuffer,
                                              CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetNextVDMCommand),
-                                             sizeof(BASE_GET_NEXT_VDM_COMMAND));
-
+                                             sizeof(*GetNextVdmCommand));
                 if (!NT_SUCCESS(Status))
                 {
                     /* Store the correct lengths */
@@ -1568,7 +1708,7 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
         Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                      NULL,
                                      CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepIsFirstVDM),
-                                     sizeof(BASE_IS_FIRST_VDM));
+                                     sizeof(*IsFirstVdm));
         if (!NT_SUCCESS(Status))
         {
             BaseSetLastNTError(Status);
@@ -1614,7 +1754,7 @@ GetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         CaptureBuffer,
                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMCurDirs),
-                        sizeof(BASE_GETSET_VDM_CURDIRS));
+                        sizeof(*VDMCurrentDirsRequest));
 
     /* Set the last error */
     BaseSetLastNTError(ApiMessage.Status);
@@ -1791,7 +1931,7 @@ SetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         CaptureBuffer,
                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetVDMCurDirs),
-                        sizeof(BASE_GETSET_VDM_CURDIRS));
+                        sizeof(*VDMCurrentDirsRequest));
 
     /* Free the capture buffer */
     CsrFreeCaptureBuffer(CaptureBuffer);

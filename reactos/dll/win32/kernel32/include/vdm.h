@@ -12,6 +12,14 @@
 
 BOOL
 NTAPI
+BaseCreateVDMEnvironment(
+    IN PWCHAR lpEnvironment,
+    OUT PANSI_STRING AnsiEnv,
+    OUT PUNICODE_STRING UnicodeEnv
+);
+
+BOOL
+NTAPI
 BaseDestroyVDMEnvironment(
     IN PANSI_STRING AnsiEnv,
     IN PUNICODE_STRING UnicodeEnv
@@ -25,14 +33,6 @@ BaseGetVdmConfigInfo(
     IN ULONG BinaryType,
     IN PUNICODE_STRING CmdLineString,
     OUT PULONG VdmSize
-);
-
-BOOL
-NTAPI
-BaseCreateVDMEnvironment(
-    IN PWCHAR lpEnvironment,
-    IN PANSI_STRING AnsiEnv,
-    IN PUNICODE_STRING UnicodeEnv
 );
 
 BOOL
