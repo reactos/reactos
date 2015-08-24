@@ -48,7 +48,7 @@ NtfsGetStandardInformation(PNTFS_FCB Fcb,
     DPRINT1("NtfsGetStandardInformation(%p, %p, %p, %p)\n", Fcb, DeviceObject, StandardInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_BUFFER_TOO_SMALL;
 
     /* PRECONDITION */
     ASSERT(StandardInfo != NULL);
@@ -78,7 +78,7 @@ NtfsGetPositionInformation(PFILE_OBJECT FileObject,
     DPRINT1("NtfsGetPositionInformation(%p, %p, %p)\n", FileObject, PositionInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_POSITION_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_BUFFER_TOO_SMALL;
 
     PositionInfo->CurrentByteOffset.QuadPart = FileObject->CurrentByteOffset.QuadPart;
 
@@ -104,7 +104,7 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
     DPRINT1("NtfsGetBasicInformation(%p, %p, %p, %p, %p)\n", FileObject, Fcb, DeviceObject, BasicInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_BUFFER_TOO_SMALL;
 
     BasicInfo->CreationTime.QuadPart = FileName->CreationTime;
     BasicInfo->LastAccessTime.QuadPart = FileName->LastAccessTime;
@@ -142,7 +142,7 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
 
     /* If buffer can't hold at least the file name length, bail out */
     if (*BufferLength < (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_BUFFER_TOO_SMALL;
 
     /* Save file name length, and as much file len, as buffer length allows */
     NameInfo->FileNameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
@@ -181,7 +181,7 @@ NtfsGetInternalInformation(PNTFS_FCB Fcb,
     ASSERT(Fcb);
 
     if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_BUFFER_TOO_SMALL;
 
     InternalInfo->IndexNumber.QuadPart = Fcb->MFTIndex;
 
@@ -202,7 +202,7 @@ NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
     DPRINT1("NtfsGetNetworkOpenInformation(%p, %p, %p, %p)\n", Fcb, DeviceExt, NetworkInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
-        return(STATUS_BUFFER_OVERFLOW);
+        return STATUS_BUFFER_TOO_SMALL;
 
     NetworkInfo->CreationTime.QuadPart = FileName->CreationTime;
     NetworkInfo->LastAccessTime.QuadPart = FileName->LastAccessTime;
@@ -232,7 +232,7 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
     PFILE_STREAM_INFORMATION CurrentInfo = StreamInfo, Previous = NULL;
 
     if (*BufferLength < sizeof(FILE_STREAM_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_BUFFER_TOO_SMALL;
 
     FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
     if (FileRecord == NULL)
