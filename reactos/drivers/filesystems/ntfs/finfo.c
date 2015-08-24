@@ -218,6 +218,74 @@ NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+NtfsGetSteamInformation(PNTFS_FCB Fcb,
+                        PDEVICE_EXTENSION DeviceExt,
+                        PFILE_STREAM_INFORMATION StreamInfo,
+                        PULONG BufferLength)
+{
+    NTSTATUS Status;
+    ULONG CurrentSize;
+    PNTFS_ATTR_RECORD Attribute;
+    PFILE_RECORD_HEADER FileRecord;
+    PFILE_STREAM_INFORMATION CurrentInfo = StreamInfo, Previous = NULL;
+
+    if (*BufferLength < sizeof(FILE_STREAM_INFORMATION))
+        return STATUS_BUFFER_OVERFLOW;
+
+    FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (FileRecord == NULL)
+    {
+        DPRINT1("Not enough memory!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(DeviceExt, Fcb->MFTIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't find record!\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    Status = STATUS_SUCCESS;
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+           Attribute->Type != AttributeEnd)
+    {
+        if (Attribute->Type == AttributeData)
+        {
+            CurrentSize = FIELD_OFFSET(FILE_STREAM_INFORMATION, StreamName) + Attribute->NameLength * sizeof(WCHAR);
+
+            if (CurrentSize > *BufferLength)
+            {
+                Status = STATUS_BUFFER_OVERFLOW;
+                break;
+            }
+
+            CurrentInfo->NextEntryOffset = 0;
+            CurrentInfo->StreamNameLength = Attribute->NameLength * sizeof(WCHAR);
+            CurrentInfo->StreamSize.QuadPart = AttributeDataLength(Attribute);
+            CurrentInfo->StreamAllocationSize.QuadPart = AttributeAllocatedLength(Attribute);
+            RtlMoveMemory(CurrentInfo->StreamName, (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset), CurrentInfo->StreamNameLength);
+
+            if (Previous != NULL)
+            {
+                Previous->NextEntryOffset = (ULONG_PTR)CurrentInfo - (ULONG_PTR)Previous;
+            }
+            Previous = CurrentInfo;
+            CurrentInfo = (PFILE_STREAM_INFORMATION)((ULONG_PTR)CurrentInfo + CurrentSize);
+            *BufferLength -= CurrentSize;
+        }
+
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+    }
+
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    return Status;
+}
+
 /*
  * FUNCTION: Retrieve the specified file information
  */
@@ -294,6 +362,13 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
                                                    DeviceObject->DeviceExtension,
                                                    SystemBuffer,
                                                    &BufferLength);
+            break;
+
+        case FileStreamInformation:
+            Status = NtfsGetSteamInformation(Fcb,
+                                             DeviceObject->DeviceExtension,
+                                             SystemBuffer,
+                                             &BufferLength);
             break;
 
         case FileAlternateNameInformation:
