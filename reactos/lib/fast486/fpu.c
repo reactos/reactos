@@ -1982,7 +1982,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             {
                 Fast486FpuLoadEnvironment(State,
                                           (State->PrefixFlags & FAST486_PREFIX_SEG)
-                                          ? FAST486_REG_DS : State->SegmentOverride,
+                                          ? State->SegmentOverride : FAST486_REG_DS,
                                           ModRegRm.MemoryAddress,
                                           OperandSize);
                 break;
@@ -2000,7 +2000,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             {
                 Fast486FpuSaveEnvironment(State,
                                           (State->PrefixFlags & FAST486_PREFIX_SEG)
-                                          ? FAST486_REG_DS : State->SegmentOverride,
+                                          ? State->SegmentOverride : FAST486_REG_DS,
                                           ModRegRm.MemoryAddress,
                                           OperandSize);
                 break;
@@ -3249,7 +3249,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
                 /* Save the environment */
                 if (!Fast486FpuLoadEnvironment(State,
                                                (State->PrefixFlags & FAST486_PREFIX_SEG)
-                                               ? FAST486_REG_DS : State->SegmentOverride,
+                                               ? State->SegmentOverride : FAST486_REG_DS,
                                                ModRegRm.MemoryAddress,
                                                OperandSize))
                 {
@@ -3260,7 +3260,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
                 /* Load the registers */
                 if (!Fast486ReadMemory(State,
                                        (State->PrefixFlags & FAST486_PREFIX_SEG)
-                                       ? FAST486_REG_DS : State->SegmentOverride,
+                                       ? State->SegmentOverride : FAST486_REG_DS,
                                        ModRegRm.MemoryAddress + (OperandSize + 1) * 14,
                                        FALSE,
                                        AllRegs,
@@ -3297,7 +3297,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
                 /* Save the environment */
                 if (!Fast486FpuSaveEnvironment(State,
                                                (State->PrefixFlags & FAST486_PREFIX_SEG)
-                                               ? FAST486_REG_DS : State->SegmentOverride,
+                                               ? State->SegmentOverride : FAST486_REG_DS,
                                                ModRegRm.MemoryAddress,
                                                OperandSize))
                 {
@@ -3319,7 +3319,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
 
                 Fast486WriteMemory(State,
                                    (State->PrefixFlags & FAST486_PREFIX_SEG)
-                                   ? FAST486_REG_DS : State->SegmentOverride,
+                                   ? State->SegmentOverride : FAST486_REG_DS,
                                    ModRegRm.MemoryAddress + (OperandSize + 1) * 14,
                                    AllRegs,
                                    sizeof(AllRegs));
