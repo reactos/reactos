@@ -781,7 +781,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 
     /*
      * Count how much space the whole environment takes. The environment block is
-     * doubly NULL-terminated (NULL from last string and final terminating NULL).
+     * doubly NULL-terminated (NULL from last string and final NULL terminator).
      */
     SourcePtr = Environment;
     while (!(*SourcePtr++ == UNICODE_NULL && *SourcePtr == UNICODE_NULL))
@@ -871,7 +871,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
             else
             {
                 /*
-                 * Invalid stuff starting with '=', ie:
+                 * Invalid stuff starting with '=', i.e.:
                  * =? (with '?' not being a letter)
                  * =X??? (with '?' not being ":=" and not followed by something longer than 3 characters)
                  * =X:=??? (with '?' not being "X:\\")
@@ -888,7 +888,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 
         if (NameType == EnvNameNotAPath)
         {
-            /* Copy everything (up to the NULL terminator included) */
+            /* Copy everything, including the NULL terminator */
             do
             {
                 *DestPtr++ = *SourcePtr;
@@ -911,14 +911,14 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 
             SourcePtr += NameLength;
 
-            /* Copy the terminating NULL character */
+            /* Copy the NULL terminator */
             *DestPtr++ = *SourcePtr++;
         }
         else // if (NameType == EnvNameMultiplePath)
         {
             WCHAR Delimiter;
 
-            /* Loop through the list of paths (separated by ';') and convert each path to its short form */
+            /* Loop through the list of paths (delimited by ';') and convert each path to its short form */
             do
             {
                 /* Copy any trailing ';' before going to the next path */
@@ -929,7 +929,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 
                 StartPtr = SourcePtr;
 
-                /* Find the next path list separator, or terminating NULL */
+                /* Find the next path list delimiter or the NULL terminator */
                 while (*SourcePtr != UNICODE_NULL && *SourcePtr != L';')
                 {
                     ++SourcePtr;
@@ -940,8 +940,8 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
                 if (NameLength)
                 {
                     /*
-                     * Temporarily replace the possible path list separator by NULL.
-                     * 'lpEnvironment' must point to a read+write memory buffer.
+                     * Temporarily replace the possible path list delimiter by NULL.
+                     * 'lpEnvironment' must point to a read+write memory buffer!
                      */
                     *SourcePtr = UNICODE_NULL;
 
@@ -958,7 +958,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
                     if (NumChars > NameLength)
                         Remaining -= (NumChars - NameLength);
 
-                    /* If removed, restore the path list separator in the source environment value and copy it */
+                    /* If removed, restore the path list delimiter in the source environment value and copy it */
                     if (Delimiter != UNICODE_NULL)
                     {
                         *SourcePtr = Delimiter;
@@ -967,7 +967,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
                 }
             } while (*SourcePtr != UNICODE_NULL);
 
-            /* Copy the terminating NULL character */
+            /* Copy the NULL terminator */
             *DestPtr++ = *SourcePtr++;
         }
     }
@@ -980,7 +980,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
                               (DestPtr - NewEnvironment) * sizeof(WCHAR));
     UnicodeEnv->Length = UnicodeEnv->MaximumLength;
 
-    /* Create its ASCII version */
+    /* Create its ANSI version */
     Status = RtlUnicodeStringToAnsiString(AnsiEnv, UnicodeEnv, TRUE);
     if (!NT_SUCCESS(Status))
     {
@@ -1025,7 +1025,7 @@ BaseDestroyVDMEnvironment(IN PANSI_STRING AnsiEnv,
 {
     ULONG Dummy = 0;
 
-    /* Clear the ASCII buffer since Rtl creates this for us */
+    /* Clear the ANSI buffer since Rtl creates this for us */
     if (AnsiEnv->Buffer) RtlFreeAnsiString(AnsiEnv);
 
     /* The Unicode buffer is build by hand, though */
