@@ -256,7 +256,7 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
     {
         if (Attribute->Type == AttributeData)
         {
-            CurrentSize = FIELD_OFFSET(FILE_STREAM_INFORMATION, StreamName) + Attribute->NameLength * sizeof(WCHAR);
+            CurrentSize = FIELD_OFFSET(FILE_STREAM_INFORMATION, StreamName) + Attribute->NameLength * sizeof(WCHAR) + wcslen(L"::$DATA") * sizeof(WCHAR);
 
             if (CurrentSize > *BufferLength)
             {
@@ -268,7 +268,9 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
             CurrentInfo->StreamNameLength = Attribute->NameLength * sizeof(WCHAR);
             CurrentInfo->StreamSize.QuadPart = AttributeDataLength(Attribute);
             CurrentInfo->StreamAllocationSize.QuadPart = AttributeAllocatedLength(Attribute);
-            RtlMoveMemory(CurrentInfo->StreamName, (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset), CurrentInfo->StreamNameLength);
+            CurrentInfo->StreamName[0] = L':';
+            RtlMoveMemory(&CurrentInfo->StreamName[1], (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset), CurrentInfo->StreamNameLength);
+            RtlMoveMemory(&CurrentInfo->StreamName[Attribute->NameLength + 1], L":$DATA", sizeof(L":$DATA") - sizeof(UNICODE_NULL));
 
             if (Previous != NULL)
             {
