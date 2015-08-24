@@ -370,44 +370,6 @@ NtfsOpenRootFCB(PNTFS_VCB Vcb)
 }
 
 
-#if 0
-static VOID
-NtfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
-		    PDIR_RECORD Record,
-		    PWSTR Name)
-/*
- * FUNCTION: Retrieves the file name, be it in short or long file name format
- */
-{
-  if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
-    {
-      wcscpy(Name, L".");
-    }
-  else if (Record->FileIdLength == 1 && Record->FileId[0] == 1)
-    {
-      wcscpy(Name, L"..");
-    }
-  else
-    {
-      if (DeviceExt->CdInfo.JolietLevel == 0)
-	{
-	  ULONG i;
-
-	  for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
-	    Name[i] = (WCHAR)Record->FileId[i];
-	  Name[i] = 0;
-	}
-      else
-	{
-	  NtfsSwapString(Name, Record->FileId, Record->FileIdLength);
-	}
-    }
-
-  DPRINT("Name '%S'\n", Name);
-}
-#endif
-
-
 NTSTATUS
 NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
                         PNTFS_FCB DirectoryFCB,
