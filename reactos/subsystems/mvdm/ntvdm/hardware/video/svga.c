@@ -232,7 +232,7 @@ static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
 
 
 static HANDLE ScreenBufferHandle = NULL;
-static LPVOID OldConsoleFramebuffer = NULL;
+static PVOID  OldConsoleFramebuffer = NULL;
 
 
 /*
