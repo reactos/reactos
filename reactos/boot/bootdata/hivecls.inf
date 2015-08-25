@@ -272,11 +272,16 @@ HKCR,"scrfile\shell\open\command","",0x00000000,"""%1"" /S"
 
 ; shell command files (e.g. "Show Desktop" in quicklaunch bar)
 HKCR,".scf","",0x00000000,"SHCmdFile"
+HKCR,"SHCmdFile","",0x00000000,"ReactOS Explorer Command"
 HKCR,"SHCmdFile","NeverShowExt",0x00000000,""
-HKCR,"SHCmdFile","IsShortcut",0x00000000,"yes"
-HKCR,"SHCmdFile\shell\open\command","",0x00000000,"explorer.exe ""%1"""
+HKCR,"SHCmdFile","InfoTip",0x00000000,"prop:DocComments"
+HKCR,"SHCmdFile\shell\open\command","",0x00000000,"%systemroot%\explorer.exe"
+HKCR,"SHCmdFile\shell\open\ddeexec","",0x00000000,"[ShellFile(\"%1\",\"%1\",%S)]"
+HKCR,"SHCmdFile\shell\open\ddeexec\Application","",0x00000000,"Folders"
+HKCR,"SHCmdFile\shell\open\ddeexec\Topic","",0x00000000,"AppProperties"
 HKCR,"SHCmdFile\CLSID","",0x00000000,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
 HKCR,"SHCmdFile\shellex\IconHandler","",0x00000000,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
+HKCR,"SHCmdFile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; System-Files
 HKCR,".sys","",0x00000000,"sysfile"
