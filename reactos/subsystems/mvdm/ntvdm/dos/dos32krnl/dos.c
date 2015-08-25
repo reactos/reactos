@@ -1314,7 +1314,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                setAX(ERROR_ARENA_TRASHED);
+                setAX(Sda->LastErrorCode);
             }
 
             break;

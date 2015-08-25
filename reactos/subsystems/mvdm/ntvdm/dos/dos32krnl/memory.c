@@ -109,7 +109,7 @@ static VOID DosCombineFreeBlocks(WORD StartBlock)
         if (!ValidateMcb(NextMcb))
         {
             DPRINT1("The DOS memory arena is corrupted!\n");
-            // Sda->LastErrorCode = ERROR_ARENA_TRASHED;
+            Sda->LastErrorCode = ERROR_ARENA_TRASHED;
             return;
         }
 
@@ -297,8 +297,8 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
     /* Make sure this is a valid and allocated block */
     if (BlockData == 0 || !ValidateMcb(Mcb) || Mcb->OwnerPsp == 0)
     {
+        Sda->LastErrorCode = ERROR_INVALID_BLOCK;
         Success = FALSE;
-        Sda->LastErrorCode = ERROR_INVALID_HANDLE;
         goto Done;
     }
 
@@ -310,6 +310,8 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         /* We can't expand the last block */
         if (Mcb->BlockType == 'Z')
         {
+            DPRINT("Cannot expand memory block 0x%04X: this is the last block (size 0x%04X)!\n", Segment, Mcb->Size);
+            Sda->LastErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             Success = FALSE;
             goto Done;
         }
@@ -416,7 +418,11 @@ BOOLEAN DosFreeMemory(WORD BlockData)
     PDOS_MCB Mcb = SEGMENT_TO_MCB(BlockData - 1);
 
     DPRINT("DosFreeMemory: BlockData 0x%04X\n", BlockData);
-    if (BlockData == 0) return FALSE;
+    if (BlockData == 0)
+    {
+        Sda->LastErrorCode = ERROR_INVALID_BLOCK;
+        return FALSE;
+    }
 
     DosMemValidate();
 
@@ -424,6 +430,7 @@ BOOLEAN DosFreeMemory(WORD BlockData)
     if (!ValidateMcb(Mcb))
     {
         DPRINT("MCB block type '%c' not valid!\n", Mcb->BlockType);
+        Sda->LastErrorCode = ERROR_INVALID_BLOCK;
         return FALSE;
     }
 
