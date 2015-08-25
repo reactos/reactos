@@ -1014,7 +1014,7 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     ConsoleMutex = GraphicsBufferInfo.hMutex;
 
     /* Clear the framebuffer */
-    RtlZeroMemory(ConsoleFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
+    RtlZeroMemory(GraphicsFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
 
     /* Set the active buffer */
     VgaSetActiveScreenBuffer(GraphicsConsoleBuffer);
