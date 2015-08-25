@@ -149,7 +149,7 @@ DELAY [/m]n\n\n\
   /m          specifiy than n are milliseconds\n\
               otherwise n are seconds\n"
     STRING_DIR_HELP1 "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+  [/O[[:]sortorder]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
   [drive:][path][filename]\n\
               Specifies drive, directory, and/or files to list.\n\n\
   /A          Displays files with specified attributes.\n\
@@ -168,6 +168,7 @@ DELAY [/m]n\n\n\
                G  Group directories first    -  Prefix to reverse order\n\
   /P          Pauses after each screenful of information.\n\
   /Q          Display the owner of the file.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Displays files in specified directory and all subdirectories.\n\
   /T          Controls which time field displayed or used for sorting\n\
   timefield   C  Creation\n\

@@ -142,7 +142,7 @@ DELAY [/m]n\n\n\
   /m          Millisekunden, ansonsten Sekunden\n"
     STRING_DIR_HELP1 "Listet die Dateien und Unterverzeichnisse eines Verzeichnisses auf.\n\n\
 DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]Attribute]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]Reihenfolge]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+  [/O[[:]Reihenfolge]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
   [Laufwerk:][path][Dateiname]\n\
               Bezeichnet Laufwerk, Verzeichnis und/oder Dateien.\n\n\
   /A          Listet Dateien mit angegebenen Attributen auf.\n\
@@ -162,6 +162,7 @@ DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]Attribute]] [/B] [/C] [/D] [/L] [/N]\n\
                G  Verzeichnisse zuerst        - vorangestellt kehrt die\n\
   /P          Pausiert nach jeder vollen Bildschirmseite.\n\
   /Q          Gibt den Besitzer der Datei aus.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Listet Dateien und alle Unterverzeichnisse auf.\n\
   /T          Bestimmt welche Zeit verwendet wird.\n\
   timefield   C  Erstellung\n\

@@ -151,7 +151,7 @@ DELAY [/m]n\n\n\
   /m          spécifie que n est en millisecondes\n\
               sinon n est en secondes"
     STRING_DIR_HELP1 "DIR [lecteur:][chemin][fichier] [/A[[:]attributs]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]ordredetri]] [/P] [/Q] [/S] [/T[[:]heure]] [/W] [/X] [/4]\n\n\
+  [/O[[:]ordredetri]] [/P] [/Q] [/R] [/S] [/T[[:]heure]] [/W] [/X] [/4]\n\n\
   [lecteur:][chemin][fichier]\n\
          Spécifie le disque, le répertoire, et/ou les fichiers à lister.\n\n\
   /A          Affiche les fichiers avec les attributs indiqués.\n\
@@ -173,6 +173,7 @@ DELAY [/m]n\n\n\
                G  Répertoires d'abord    -  Préfixe pour inverser l'ordre\n\
   /P          S'arrête après chaque page d'information.\n\
   /Q          Affiche le propriétaire du fichier.\n\
+  /R          Affiche les flux de données alternatifs du fichier.\n\
   /S          Affiche les fichiers dans le répertoire indiqué et\n\
               tous les sous-répertoires.\n\
   /T          Contrôle quel champ de temps sera affiché ou utilisé\n\

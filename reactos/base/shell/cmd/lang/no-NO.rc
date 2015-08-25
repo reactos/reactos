@@ -143,7 +143,7 @@ DELAY [/m]n\n\n\
   /m          spesifiserer at n er mikrosekunder\n\
               ellers er n sekunder\n"
     STRING_DIR_HELP1 "DIR [stasjon:][mappe][filnavn] [/A[[:]attributter]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortering]] [/P] [/Q] [/S] [/T[[:]tidsfelt]] [/W] [/X] [/4]\n\n\
+  [/O[[:]sortering]] [/P] [/Q] [/R] [/S] [/T[[:]tidsfelt]] [/W] [/X] [/4]\n\n\
   [stasjon:][mappe][filnavn]\n\
               Spesifisere stasjon, mappe, og/eller filer som skal listes.\n\n\
   /A          Vis filer ved å spesifisere attributter.\n\
@@ -162,6 +162,7 @@ DELAY [/m]n\n\n\
                G  Gruppere mapper først    -  Prefiks for å reversere orden\n\
   /P          Pause etter hvert hele skjermbilde.\n\
   /Q          Viser hvem som eier filen.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Viser alle filer i angitt mappe og alle undermapper.\n\
   /T          Styrer hvilket tidsfelt som vises eller blir brukt for sortering\n\
   timefelt    C  Opprettet \n\

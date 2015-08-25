@@ -160,7 +160,7 @@ DELAY [/m]n\n\n\
   /m          Specifică faptul că «n» sunt milisecunde\n\
               altfel «n» sunt considerate secunde.\n"
     STRING_DIR_HELP1 "DIR [unitate:][cale][fișier] [/A[[:]atribute]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]ordonare]] [/P] [/Q] [/S] [/T[[:]timp]] [/W] [/X] [/4]\n\n\
+  [/O[[:]ordonare]] [/P] [/Q] [/R] [/S] [/T[[:]timp]] [/W] [/X] [/4]\n\n\
   [unitate:][cale][fișier]\n\
               Specifică unitatea, directorul și/sau fișierele de enumerat.\n\n\
   /A          Afișează fișierele după atributele specificate.\n\
@@ -182,6 +182,7 @@ DELAY [/m]n\n\n\
                 -  Prefix pentru inversarea ordinii\n\
   /P          Pauză după un ecran de informații.\n\
   /Q          Afișează posesorul fișierului.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Afișează fișierele din directorul specificat și\n\
               din toate subdirectoarele sale.\n\
   /T          Determină care timp este afișat sau folosit la ordonare\n\

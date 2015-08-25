@@ -145,7 +145,7 @@ DELAY [/m]n\n\n\
   /m          Especifica que n son milisegundos\n\
               En otro caso n son segundos\n"
     STRING_DIR_HELP1 "DIR [unidad:][ruta][nombre de archivo] [/A[[:]atributos]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]orden]] [/P] [/Q] [/S] [/T[[:]fecha]] [/W] [/X] [/4]\n\n\
+  [/O[[:]orden]] [/P] [/Q] [/R] [/S] [/T[[:]fecha]] [/W] [/X] [/4]\n\n\
   [unidad:][ruta][nombre de archivo]\n\
               Especifica la unidad, el directorio o los archivos a listar.\n\n\
   /A          Muestra los archivos con los atributos especificados.\n\
@@ -165,6 +165,7 @@ DELAY [/m]n\n\n\
                G  Los directorios primero       -  Prefijo para el orden inverso\n\
   /P          Pausa después de cada pantalla llena de información.\n\
   /Q          Muestra el propietario del archivo.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Muestra los archivos en el directorio especificado y sus subdirectorios.\n\
   /T          Controla que campo de tiempo se muestra o es usado para ordenar:\n\
   campo de tiempo  C  Creación\n\

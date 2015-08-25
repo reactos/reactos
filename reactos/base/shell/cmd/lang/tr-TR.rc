@@ -146,7 +146,7 @@ DELAY [/m]n\n\n\
   /m          n milisâniye olarak belirtir\n\
               yoksa n sâniyedir\n"
     STRING_DIR_HELP1 "DIR [sürücü:][yol][kütük adı] [/A[[:]öz nitelikler]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]dizme düzeni]] [/P] [/Q] [/S] [/T[[:]zaman aralığı]] [/W] [/X] [/4]\n\n\
+  [/O[[:]dizme düzeni]] [/P] [/Q] [/R] [/S] [/T[[:]zaman aralığı]] [/W] [/X] [/4]\n\n\
   [sürücü:][yol][kütük adı]\n\
                 Dizelgelenecek sürücü, dizin veyâ kütükleri belirtir.\n\n\
   /A            Belirtilen öz nitelikli kütükleri görüntüler.\n\
@@ -166,6 +166,7 @@ DELAY [/m]n\n\n\
                  G  Önce dizinleri öbekle      -  Ters dizme için ön ek\n\
   /P            Bir bilgi görüntülüğünden sonra duraklatır.\n\
   /Q            Kütüğün iyesini göster.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S            Belirtilen dizindeki ve tüm alt dizinlerdeki kütükleri\n\
                 görüntüler.\n\
   /T            Dizme için hangi zaman aralığının görüntüleneceğini ya da\n\

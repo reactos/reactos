@@ -143,7 +143,7 @@ DELAY [/m]n\n\n\
   /m          precisa che n è in millisecondi\n\
               altrimenti n è in secondi\n"
     STRING_DIR_HELP1 "DIR [disco:][percorso][nomefilen] [/A[[:]attributi]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]orderinamento]] [/P] [/Q] [/S] [/T[[:]tempo]] [/W] [/X] [/4]\n\n\
+  [/O[[:]orderinamento]] [/P] [/Q] [/R] [/S] [/T[[:]tempo]] [/W] [/X] [/4]\n\n\
   [disco:][percorso][nomefilen]\n\
               Indica disco, percorso e/o file da elencare.\n\n\
   /A          Visualizza i file con gli attributi indicati.\n\
@@ -162,6 +162,7 @@ DELAY [/m]n\n\n\
                G  Le cartelle per prime    -  Prefisso per invertire l'ordine\n\
   /P          Pasa dopo ogni schermata piena.\n\
   /Q          Visualizza il proprietario del file.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Visualizza i file nella cartella indicata e nelle sottocartelle.\n\
   /T          Sceglie quale campo di tempo è usato per gli ordinamenti.\n\
   timefield   C  Creazione\n\

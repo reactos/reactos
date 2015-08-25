@@ -147,7 +147,7 @@ DELAY [/m]n\n\n\
   /m          specifikoni se n janë millisekonda\n\
               ndryshe n janë sekonda\n"
     STRING_DIR_HELP1 "DIR [drive:][rrugë][emer] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]radhitje]] [/P] [/Q] [/S] [/T[[:]koha]] [/W] [/X] [/4]\n\n\
+  [/O[[:]radhitje]] [/P] [/Q] [/R] [/S] [/T[[:]koha]] [/W] [/X] [/4]\n\n\
   [drive:][rrugë][emer]\n\
               Përcakton, Drejtorin, dhe / ose dokumentin në listë.\n\n\
   /A          Shfaq dokumentat me atributet e specifikuara.\n\
@@ -166,6 +166,7 @@ DELAY [/m]n\n\n\
                G  Grupi skedave se pari      -  Parashtese të kthejë renditjen\n\
   /P          Pauzo pas çdo informacioni në ekran.\n\
   /Q          Shfaq zotëruesin e dosjes.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Shfaq dokumentet në skedën e specifikuar dhe të gjitha nën-skedat.\n\
   /T          Kontrollon secilen fushë kohohore e shfaqura ose e përdorur për klasifikimin\n\
   timefield   C  Krijim\n\

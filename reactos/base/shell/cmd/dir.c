@@ -132,6 +132,9 @@
  *        Removed variables formerly in use to handle pagination
  *        Pagination belongs to ConOutPrintfPaging
  *        Removed already commented out code of old pagination
+ *
+ *    25-Aug-2015 (Pierre Schweitzer)
+ *        Implemented /R switch
  */
 
 #include "precomp.h"
@@ -172,6 +175,7 @@ typedef struct _DirSwitchesFlags
     BOOL bRecursive;    /* Displays files in specified directory and all sub */
     BOOL bShortName;    /* Displays the sort name of files if exist */
     BOOL b4Digit;       /* Four digit year */
+    BOOL bDataStreams;  /* Displays alternate data streams */
     struct
     {
         DWORD dwAttribVal;  /* The desired state of attribute */
@@ -189,9 +193,21 @@ typedef struct _DirSwitchesFlags
     } stTimeField;                  /* The time field to display or use for sorting */
 } DIRSWITCHFLAGS, *LPDIRSWITCHFLAGS;
 
-typedef struct _DIRFINDLISTNODE
+typedef struct _DIRFINDSTREAMNODE
+{
+    WIN32_FIND_STREAM_DATA stStreamInfo;
+    struct _DIRFINDSTREAMNODE *ptrNext;
+} DIRFINDSTREAMNODE, *PDIRFINDSTREAMNODE;
+
+typedef struct _DIRFINDINFO
 {
     WIN32_FIND_DATA stFindInfo;
+    PDIRFINDSTREAMNODE ptrHead;
+} DIRFINDINFO, *PDIRFINDINFO;
+
+typedef struct _DIRFINDLISTNODE
+{
+    DIRFINDINFO stInfo;
     struct _DIRFINDLISTNODE *ptrNext;
 } DIRFINDLISTNODE, *PDIRFINDLISTNODE;
 
@@ -325,6 +341,8 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                 lpFlags->bRecursive = ! bNegative;
             else if (cCurUChar == _T('X'))
                 lpFlags->bShortName = ! bNegative;
+            else if (cCurChar == _T('R'))
+                lpFlags->bDataStreams = ! bNegative;
             else if (cCurChar == _T('4'))
                 lpFlags->b4Digit = ! bNegative;
             else if (cCurChar == _T('?'))
@@ -838,7 +856,7 @@ getName(const TCHAR* file, TCHAR * dest)
  * The function that prints in new style
  */
 static VOID
-DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN]Files' Info */
+DirPrintNewList(PDIRFINDINFO ptrFiles[],        /* [IN]Files' Info */
                 DWORD dwCount,                  /* [IN] The quantity of files */
                 TCHAR *szCurPath,               /* [IN] Full path of current directory */
                 LPDIRSWITCHFLAGS lpFlags)       /* [IN] The flags used */
@@ -850,17 +868,18 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN]Files' Info */
     TCHAR szTime[20];
     INT iSizeFormat;
     ULARGE_INTEGER u64FileSize;
+    PDIRFINDSTREAMNODE ptrCurStream;
 
     for (i = 0; i < dwCount && !bCtrlBreak; i++)
     {
         /* Calculate size */
-        if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+        if (ptrFiles[i]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
         {
             /* Junction */
             iSizeFormat = -14;
             _tcscpy(szSize, _T("<JUNCTION>"));
         }
-        else if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        else if (ptrFiles[i]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Directory */
             iSizeFormat = -14;
@@ -870,18 +889,18 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN]Files' Info */
         {
             /* File */
             iSizeFormat = 14;
-            u64FileSize.HighPart = ptrFiles[i]->nFileSizeHigh;
-            u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
+            u64FileSize.HighPart = ptrFiles[i]->stFindInfo.nFileSizeHigh;
+            u64FileSize.LowPart = ptrFiles[i]->stFindInfo.nFileSizeLow;
             ConvertULargeInteger(u64FileSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
         }
 
         /* Calculate short name */
         szShortName[0] = _T('\0');
         if (lpFlags->bShortName)
-            _stprintf(szShortName, _T(" %-12s"), ptrFiles[i]->cAlternateFileName);
+            _stprintf(szShortName, _T(" %-12s"), ptrFiles[i]->stFindInfo.cAlternateFileName);
 
         /* Format date and time */
-        DirPrintFileDateTime(szDate, szTime, ptrFiles[i], lpFlags);
+        DirPrintFileDateTime(szDate, szTime, &ptrFiles[i]->stFindInfo, lpFlags);
 
         /* Print the line */
         DirPrintf(lpFlags, _T("%10s  %-6s    %*s%s %s\n"),
@@ -890,7 +909,25 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN]Files' Info */
                   iSizeFormat,
                   szSize,
                   szShortName,
-                  ptrFiles[i]->cFileName);
+                  ptrFiles[i]->stFindInfo.cFileName);
+
+        /* Now, loop on the streams */
+        ptrCurStream = ptrFiles[i]->ptrHead;
+        while (ptrCurStream)
+        {
+            ConvertULargeInteger(ptrCurStream->stStreamInfo.StreamSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
+
+            /* Print the line */
+            DirPrintf(lpFlags, _T("%10s  %-6s    %*s%s %s%s\n"),
+                      L"",
+                      L"",
+                      16,
+                      szSize,
+                      L"",
+                      ptrFiles[i]->stFindInfo.cFileName,
+                      ptrCurStream->stStreamInfo.cStreamName);
+            ptrCurStream = ptrCurStream->ptrNext;
+        }
     }
 }
 
@@ -901,7 +938,7 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN]Files' Info */
  * The function that prints in wide list
  */
 static VOID
-DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
+DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
                  DWORD dwCount,                 /* [IN] The quantity of files */
                  TCHAR *szCurPath,              /* [IN] Full path of current directory */
                  LPDIRSWITCHFLAGS lpFlags)      /* [IN] The flags used */
@@ -919,16 +956,16 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
     iLongestName = 1;
     for (i = 0; i < dwCount; i++)
     {
-        if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        if (ptrFiles[i]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Directories need 2 additinal characters for brackets */
-            if ((_tcslen(ptrFiles[i]->cFileName) + 2) > iLongestName)
-                iLongestName = _tcslen(ptrFiles[i]->cFileName) + 2;
+            if ((_tcslen(ptrFiles[i]->stFindInfo.cFileName) + 2) > iLongestName)
+                iLongestName = _tcslen(ptrFiles[i]->stFindInfo.cFileName) + 2;
         }
         else
         {
-            if (_tcslen(ptrFiles[i]->cFileName) > iLongestName)
-                iLongestName = _tcslen(ptrFiles[i]->cFileName);
+            if (_tcslen(ptrFiles[i]->stFindInfo.cFileName) > iLongestName)
+                iLongestName = _tcslen(ptrFiles[i]->stFindInfo.cFileName);
         }
     }
 
@@ -963,10 +1000,10 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
 
             if (temp >= dwCount) break;
 
-            if (ptrFiles[temp]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                _stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->cFileName);
+            if (ptrFiles[temp]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                _stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->stFindInfo.cFileName);
             else
-                _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
+                _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->stFindInfo.cFileName);
 
             DirPrintf(lpFlags, _T("%-*s"), iLongestName + 1, szTempFname);
         }
@@ -983,7 +1020,7 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
  * The function that prints in old style
  */
 static VOID
-DirPrintOldList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN] Files' Info */
+DirPrintOldList(PDIRFINDINFO ptrFiles[],        /* [IN] Files' Info */
                 DWORD dwCount,                  /* [IN] The quantity of files */
                 TCHAR * szCurPath,              /* [IN] Full path of current directory */
                 LPDIRSWITCHFLAGS lpFlags)       /* [IN] The flags used */
@@ -999,21 +1036,21 @@ DirPrintOldList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN] Files' Info */
     for (i = 0; i < dwCount && !bCtrlBreak; i++)
     {
         /* Broke 8.3 format */
-        if (*ptrFiles[i]->cAlternateFileName )
+        if (*ptrFiles[i]->stFindInfo.cAlternateFileName )
         {
             /* If the file is long named then we read the alter name */
-            getName( ptrFiles[i]->cAlternateFileName, szName);
-            _tcscpy(szExt, getExt( ptrFiles[i]->cAlternateFileName));
+            getName( ptrFiles[i]->stFindInfo.cAlternateFileName, szName);
+            _tcscpy(szExt, getExt( ptrFiles[i]->stFindInfo.cAlternateFileName));
         }
         else
         {
             /* If the file is not long name we read its original name */
-            getName( ptrFiles[i]->cFileName, szName);
-            _tcscpy(szExt, getExt( ptrFiles[i]->cFileName));
+            getName( ptrFiles[i]->stFindInfo.cFileName, szName);
+            _tcscpy(szExt, getExt( ptrFiles[i]->stFindInfo.cFileName));
         }
 
         /* Calculate size */
-        if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        if (ptrFiles[i]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Directory, no size it's a directory*/
             iSizeFormat = -17;
@@ -1023,13 +1060,13 @@ DirPrintOldList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN] Files' Info */
         {
             /* File */
             iSizeFormat = 17;
-            u64FileSize.HighPart = ptrFiles[i]->nFileSizeHigh;
-            u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
+            u64FileSize.HighPart = ptrFiles[i]->stFindInfo.nFileSizeHigh;
+            u64FileSize.LowPart = ptrFiles[i]->stFindInfo.nFileSizeLow;
             ConvertULargeInteger(u64FileSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
         }
 
         /* Format date and time */
-        DirPrintFileDateTime(szDate,szTime,ptrFiles[i],lpFlags);
+        DirPrintFileDateTime(szDate,szTime,&ptrFiles[i]->stFindInfo,lpFlags);
 
         /* Print the line */
         DirPrintf(lpFlags, _T("%-8s %-3s  %*s %s  %s\n"),
@@ -1048,7 +1085,7 @@ DirPrintOldList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN] Files' Info */
  * The function that prints in bare format
  */
 static VOID
-DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
+DirPrintBareList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
                  DWORD dwCount,                 /* [IN] The number of files */
                  LPTSTR lpCurPath,              /* [IN] Full path of current directory */
                  LPDIRSWITCHFLAGS lpFlags)      /* [IN] The flags used */
@@ -1057,8 +1094,8 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
 
     for (i = 0; i < dwCount && !bCtrlBreak; i++)
     {
-        if ((_tcscmp(ptrFiles[i]->cFileName, _T(".")) == 0) ||
-            (_tcscmp(ptrFiles[i]->cFileName, _T("..")) == 0))
+        if ((_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T(".")) == 0) ||
+            (_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T("..")) == 0))
         {
             /* at bare format we don't print "." and ".." folder */
             continue;
@@ -1066,12 +1103,12 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
         if (lpFlags->bRecursive)
         {
             /* at recursive mode we print full path of file */
-            DirPrintf(lpFlags, _T("%s\\%s\n"), lpCurPath, ptrFiles[i]->cFileName);
+            DirPrintf(lpFlags, _T("%s\\%s\n"), lpCurPath, ptrFiles[i]->stFindInfo.cFileName);
         }
         else
         {
             /* if we are not in recursive mode we print the file names */
-            DirPrintf(lpFlags, _T("%s\n"), ptrFiles[i]->cFileName);
+            DirPrintf(lpFlags, _T("%s\n"), ptrFiles[i]->stFindInfo.cFileName);
         }
     }
 }
@@ -1083,7 +1120,7 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
  * The functions that prints the files list
  */
 static VOID
-DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[], /* [IN] Files' Info */
+DirPrintFiles(PDIRFINDINFO ptrFiles[],      /* [IN] Files' Info */
               DWORD dwCount,                /* [IN] The quantity of files */
               TCHAR *szCurPath,             /* [IN] Full path of current directory */
               LPDIRSWITCHFLAGS lpFlags)     /* [IN] The flags used */
@@ -1139,8 +1176,8 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[], /* [IN] Files' Info */
  * Compares 2 files based on the order criteria
  */
 static BOOL
-CompareFiles(LPWIN32_FIND_DATA lpFile1, /* [IN] A pointer to WIN32_FIND_DATA of file 1 */
-             LPWIN32_FIND_DATA lpFile2, /* [IN] A pointer to WIN32_FIND_DATA of file 2 */
+CompareFiles(PDIRFINDINFO lpFile1,      /* [IN] A pointer to WIN32_FIND_DATA of file 1 */
+             PDIRFINDINFO lpFile2,      /* [IN] A pointer to WIN32_FIND_DATA of file 2 */
              LPDIRSWITCHFLAGS lpFlags)  /* [IN] The flags that we use to list */
 {
   ULARGE_INTEGER u64File1;
@@ -1157,10 +1194,10 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1, /* [IN] A pointer to WIN32_FIND_DATA of 
         {
         case ORDER_SIZE:        /* Order by size /o:s */
             /* concat the 32bit integers to a 64bit */
-            u64File1.LowPart = lpFile1->nFileSizeLow;
-            u64File1.HighPart = lpFile1->nFileSizeHigh;
-            u64File2.LowPart = lpFile2->nFileSizeLow;
-            u64File2.HighPart = lpFile2->nFileSizeHigh;
+            u64File1.LowPart = lpFile1->stFindInfo.nFileSizeLow;
+            u64File1.HighPart = lpFile1->stFindInfo.nFileSizeHigh;
+            u64File2.LowPart = lpFile2->stFindInfo.nFileSizeLow;
+            u64File2.HighPart = lpFile2->stFindInfo.nFileSizeHigh;
 
             /* In case that differnce is too big for a long */
             if (u64File1.QuadPart < u64File2.QuadPart)
@@ -1172,16 +1209,16 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1, /* [IN] A pointer to WIN32_FIND_DATA of 
             break;
 
         case ORDER_DIRECTORY:   /* Order by directory attribute /o:g */
-            iComp = ((lpFile2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)-
-                (lpFile1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
+            iComp = ((lpFile2->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)-
+                (lpFile1->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
             break;
 
         case ORDER_EXTENSION:   /* Order by extension name /o:e */
-            iComp = _tcsicmp(getExt(lpFile1->cFileName),getExt(lpFile2->cFileName));
+            iComp = _tcsicmp(getExt(lpFile1->stFindInfo.cFileName),getExt(lpFile2->stFindInfo.cFileName));
             break;
 
         case ORDER_NAME:        /* Order by filename /o:n */
-            iComp = _tcsicmp(lpFile1->cFileName, lpFile2->cFileName);
+            iComp = _tcsicmp(lpFile1->stFindInfo.cFileName, lpFile2->stFindInfo.cFileName);
             break;
 
         case ORDER_TIME:        /* Order by file's time /o:t */
@@ -1190,24 +1227,24 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1, /* [IN] A pointer to WIN32_FIND_DATA of 
             {
             case TF_CREATIONDATE:
                 /* concat the 32bit integers to a 64bit */
-                u64File1.LowPart = lpFile1->ftCreationTime.dwLowDateTime;
-                u64File1.HighPart = lpFile1->ftCreationTime.dwHighDateTime ;
-                u64File2.LowPart = lpFile2->ftCreationTime.dwLowDateTime;
-                u64File2.HighPart = lpFile2->ftCreationTime.dwHighDateTime ;
+                u64File1.LowPart = lpFile1->stFindInfo.ftCreationTime.dwLowDateTime;
+                u64File1.HighPart = lpFile1->stFindInfo.ftCreationTime.dwHighDateTime ;
+                u64File2.LowPart = lpFile2->stFindInfo.ftCreationTime.dwLowDateTime;
+                u64File2.HighPart = lpFile2->stFindInfo.ftCreationTime.dwHighDateTime ;
                 break;
             case TF_LASTACCESSEDDATE :
                 /* concat the 32bit integers to a 64bit */
-                u64File1.LowPart = lpFile1->ftLastAccessTime.dwLowDateTime;
-                u64File1.HighPart = lpFile1->ftLastAccessTime.dwHighDateTime ;
-                u64File2.LowPart = lpFile2->ftLastAccessTime.dwLowDateTime;
-                u64File2.HighPart = lpFile2->ftLastAccessTime.dwHighDateTime ;
+                u64File1.LowPart = lpFile1->stFindInfo.ftLastAccessTime.dwLowDateTime;
+                u64File1.HighPart = lpFile1->stFindInfo.ftLastAccessTime.dwHighDateTime ;
+                u64File2.LowPart = lpFile2->stFindInfo.ftLastAccessTime.dwLowDateTime;
+                u64File2.HighPart = lpFile2->stFindInfo.ftLastAccessTime.dwHighDateTime ;
                 break;
             case TF_MODIFIEDDATE:
                 /* concat the 32bit integers to a 64bit */
-                u64File1.LowPart = lpFile1->ftLastWriteTime.dwLowDateTime;
-                u64File1.HighPart = lpFile1->ftLastWriteTime.dwHighDateTime ;
-                u64File2.LowPart = lpFile2->ftLastWriteTime.dwLowDateTime;
-                u64File2.HighPart = lpFile2->ftLastWriteTime.dwHighDateTime ;
+                u64File1.LowPart = lpFile1->stFindInfo.ftLastWriteTime.dwLowDateTime;
+                u64File1.HighPart = lpFile1->stFindInfo.ftLastWriteTime.dwHighDateTime ;
+                u64File2.LowPart = lpFile2->stFindInfo.ftLastWriteTime.dwLowDateTime;
+                u64File2.HighPart = lpFile2->stFindInfo.ftLastWriteTime.dwHighDateTime ;
                 break;
             }
 
@@ -1240,12 +1277,12 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1, /* [IN] A pointer to WIN32_FIND_DATA of 
  * Sort files by the order criterias using quicksort method
  */
 static VOID
-QsortFiles(LPWIN32_FIND_DATA ptrArray[],    /* [IN/OUT] The array with file info pointers */
+QsortFiles(PDIRFINDINFO ptrArray[],         /* [IN/OUT] The array with file info pointers */
            int i,                           /* [IN]     The index of first item in array */
            int j,                           /* [IN]     The index to last item in array */
            LPDIRSWITCHFLAGS lpFlags)        /* [IN]     The flags that we will use to sort */
 {
-    LPWIN32_FIND_DATA lpTemp;   /* A temporary pointer */
+    PDIRFINDINFO lpTemp;   /* A temporary pointer */
     BOOL Way;
 
     if (i < j)
@@ -1289,8 +1326,9 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     BOOL fPoint;                        /* If szPath is a file with extension fPoint will be True*/
     HANDLE hSearch;                     /* The handle of the search */
     HANDLE hRecSearch;                  /* The handle for searching recursivly */
+    HANDLE hStreams;                    /* The handle for alternate streams */
     WIN32_FIND_DATA wfdFileInfo;        /* The info of file that found */
-    LPWIN32_FIND_DATA * ptrFileArray;   /* An array of pointers with all the files */
+    PDIRFINDINFO * ptrFileArray;        /* An array of pointers with all the files */
     PDIRFINDLISTNODE ptrStartNode;      /* The pointer to the first node */
     PDIRFINDLISTNODE ptrNextNode;       /* A pointer used for relatives refernces */
     TCHAR szFullPath[MAX_PATH];         /* The full path that we are listing with trailing \ */
@@ -1301,6 +1339,9 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     DWORD dwCountDirs;                  /* Counter for directories */
     ULONGLONG u64CountBytes;            /* Counter for bytes */
     ULARGE_INTEGER u64Temp;             /* A temporary counter */
+    WIN32_FIND_STREAM_DATA wfsdStreamInfo;
+    PDIRFINDSTREAMNODE * ptrCurNode;    /* The pointer to the first stream */
+    PDIRFINDSTREAMNODE ptrFreeNode;     /* The pointer used during cleanup */
 
     /* Initialize Variables */
     ptrStartNode = NULL;
@@ -1363,6 +1404,12 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                     while (ptrStartNode)
                     {
                         ptrNextNode = ptrStartNode->ptrNext;
+                        while (ptrStartNode->stInfo.ptrHead)
+                        {
+                            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
+                            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
+                            cmd_free(ptrFreeNode);
+                        }
                         cmd_free(ptrStartNode);
                         ptrStartNode = ptrNextNode;
                         dwCount--;
@@ -1376,15 +1423,68 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                 if (ptrNextNode->ptrNext)
                 {
                     /* Copy the info of search at linked list */
-                    memcpy(&ptrNextNode->ptrNext->stFindInfo,
+                    memcpy(&ptrNextNode->ptrNext->stInfo.stFindInfo,
                            &wfdFileInfo,
                            sizeof(WIN32_FIND_DATA));
 
                     /* If lower case is selected do it here */
                     if (lpFlags->bLowerCase)
                     {
-                        _tcslwr(ptrNextNode->ptrNext->stFindInfo.cAlternateFileName);
-                        _tcslwr(ptrNextNode->ptrNext->stFindInfo.cFileName);
+                        _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cAlternateFileName);
+                        _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cFileName);
+                    }
+
+                    /* No streams (yet?) */
+                    ptrNextNode->ptrNext->stInfo.ptrHead = NULL;
+
+                    /* Alternate streams are only displayed with new long list */
+                    if (lpFlags->bNewLongList && lpFlags->bDataStreams)
+                    {
+                        /* Try to get stream information */
+                        hStreams = FindFirstStreamW(wfdFileInfo.cFileName, FindStreamInfoStandard, &wfsdStreamInfo, 0);
+                        if (hStreams != INVALID_HANDLE_VALUE)
+                        {
+                            /* We totally ignore first stream. It contains data about ::$DATA */
+                            ptrCurNode = &ptrNextNode->ptrNext->stInfo.ptrHead;
+                            while (FindNextStreamW(hStreams, &wfsdStreamInfo))
+                            {
+                                *ptrCurNode = cmd_alloc(sizeof(DIRFINDSTREAMNODE));
+                                if (*ptrCurNode == NULL)
+                                {
+                                    WARN("DEBUG: Cannot allocate memory for *ptrCurNode!\n");
+                                    while (ptrStartNode)
+                                    {
+                                        ptrNextNode = ptrStartNode->ptrNext;
+                                        while (ptrStartNode->stInfo.ptrHead)
+                                        {
+                                            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
+                                            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
+                                            cmd_free(ptrFreeNode);
+                                        }
+                                        cmd_free(ptrStartNode);
+                                        ptrStartNode = ptrNextNode;
+                                        dwCount--;
+                                    }
+                                    FindClose(hStreams);
+                                    FindClose(hSearch);
+                                    return 1;
+                                }
+
+                                memcpy(&(*ptrCurNode)->stStreamInfo, &wfsdStreamInfo,
+                                       sizeof(WIN32_FIND_STREAM_DATA));
+
+                                /* If lower case is selected do it here */
+                                if (lpFlags->bLowerCase)
+                                {
+                                    _tcslwr((*ptrCurNode)->stStreamInfo.cStreamName);
+                                }
+
+                                ptrCurNode = &(*ptrCurNode)->ptrNext;
+                            }
+
+                             FindClose(hStreams);
+                             *ptrCurNode = NULL;
+                        }
                     }
 
                     /* Continue at next node at linked list */
@@ -1415,13 +1515,19 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     ptrNextNode->ptrNext = NULL;
 
     /* Calculate and allocate space need for making an array of pointers */
-    ptrFileArray = cmd_alloc(sizeof(LPWIN32_FIND_DATA) * dwCount);
+    ptrFileArray = cmd_alloc(sizeof(PDIRFINDINFO) * dwCount);
     if (ptrFileArray == NULL)
     {
         WARN("DEBUG: Cannot allocate memory for ptrFileArray!\n");
         while (ptrStartNode)
         {
             ptrNextNode = ptrStartNode->ptrNext;
+            while (ptrStartNode->stInfo.ptrHead)
+            {
+                ptrFreeNode = ptrStartNode->stInfo.ptrHead;
+                ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
+                cmd_free(ptrFreeNode);
+            }
             cmd_free(ptrStartNode);
             ptrStartNode = ptrNextNode;
             dwCount --;
@@ -1437,7 +1543,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     dwCount = 0;
     while (ptrNextNode->ptrNext)
     {
-        *(ptrFileArray + dwCount) = &ptrNextNode->ptrNext->stFindInfo;
+        *(ptrFileArray + dwCount) = &ptrNextNode->ptrNext->stInfo;
         ptrNextNode = ptrNextNode->ptrNext;
         dwCount++;
     }
@@ -1467,6 +1573,12 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     while (ptrStartNode)
     {
         ptrNextNode = ptrStartNode->ptrNext;
+        while (ptrStartNode->stInfo.ptrHead)
+        {
+            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
+            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
+            cmd_free(ptrFreeNode);
+        }
         cmd_free(ptrStartNode);
         ptrStartNode = ptrNextNode;
         dwCount --;
@@ -1543,6 +1655,7 @@ CommandDir(LPTSTR rest)
     /* Initialize Switch Flags < Default switches are setted here!> */
     stFlags.b4Digit = TRUE;
     stFlags.bBareFormat = FALSE;
+    stFlags.bDataStreams = FALSE;
     stFlags.bLowerCase = FALSE;
     stFlags.bNewLongList = TRUE;
     stFlags.bPause = FALSE;
@@ -1620,6 +1733,7 @@ CommandDir(LPTSTR rest)
                 TRACE(" Order Criteria [%i]: %i (Reversed: %i)\n",i, stFlags.stOrderBy.eCriteria[i], stFlags.stOrderBy.bCriteriaRev[i] );
             TRACE("(P) Pause : %i\n", stFlags.bPause  );
             TRACE("(Q) Owner : %i\n", stFlags.bUser );
+            TRACE("(R) Data stream : %i\n", stFlags.bDataStreams );
             TRACE("(S) Recursive : %i\n", stFlags.bRecursive );
             TRACE("(T) Time field : %i\n", stFlags.stTimeField.eTimeField );
             TRACE("(X) Short names : %i\n", stFlags.bShortName );

@@ -145,7 +145,7 @@ DELAY [/m]n\n\n\
   /m          menetapkan bahwa n adalah milidetik\n\
               sebaliknya n adalah detik\n"
     STRING_DIR_HELP1 "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+  [/O[[:]sortorder]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
   [drive:][path][filename]\n\
               Menetapkan drive, direktori, dan/atau files ke daftar.\n\n\
   /A          Menampilkan file dengan atribut yang ditetapkan.\n\
@@ -164,6 +164,7 @@ DELAY [/m]n\n\n\
                G  Grup direktori pertama     -  Prefiks untuk membalik urutan\n\
   /P          Menunda setelah setiap layar penuh informasi.\n\
   /Q          Menampilkan pemilik file.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Menampilkan file dalam direktori dan semua subdirektorinya.\n\
   /T          Mengontrol field waktu mana atau dipakai untuk mengurut\n\
   timefield   C  Pembuatan\n\

@@ -151,7 +151,7 @@ DELAY [/m]n\n\n\
   /m          wymusza traktowanie n jako milisekund,\n\
               w innym wypadku będzie traktowane jako sekundy\n"
     STRING_DIR_HELP1 "DIR [napęd:][ścieżka][pliki] [/A[[:]atrybuty]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]porządek]] [/P] [/Q] [/S] [/T[[:]czas]] [/W] [/X] [/4]\n\n\
+  [/O[[:]porządek]] [/P] [/Q] [/R] [/S] [/T[[:]czas]] [/W] [/X] [/4]\n\n\
   [napęd:][ścieżka][nazwa_pliku]\n\
               Wyznacza literę napędu, katalog, i/lub pliki do wyświetlenia.\n\n\
   /A          Wyświetla pliki o określonych atrybutach.\n\
@@ -170,6 +170,7 @@ DELAY [/m]n\n\n\
                G  Wyświetla najpierw katalogi      -  Odwraca kolejność\n\
   /P          Pauza po każdym pełnym ekranie.\n\
   /Q          Wyświetla właściciela plików\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Wyświetla pliki w danym katalogu i wszystkich podkatalogach.\n\
   /T          Pole czasu, odpowiedzialne za wyświetlanie/sortowanie \n\
   czas        C  Utworzenia\n\

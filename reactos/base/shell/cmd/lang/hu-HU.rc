@@ -136,7 +136,7 @@ DELAY [/m]n\n\n\
   /m          specifiy than n are milliseconds\n\
               otherwise n are seconds\n"
     STRING_DIR_HELP1 "DIR [meghajtó:][elérési_út][állománynév] [/A[[:]attribútumok]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]rendezési_feltétel]] [/P] [/Q] [/S] [/T[[:]idõ]] [/W] [/X] [/4]\n\n\
+  [/O[[:]rendezési_feltétel]] [/P] [/Q] [/R] [/S] [/T[[:]idõ]] [/W] [/X] [/4]\n\n\
   [meghajtó:][elérési_út][állományname]\n\
               Az adott hely állományait és mappáit jeleníti meg.\n\n\
   /A          A megadott attribútumu állományokat jeleníti csak meg.\n\
@@ -154,6 +154,7 @@ DELAY [/m]n\n\n\
                G  Mappák legelõl                      -  ""Nem"" prefixel fordított rendezés\n\
   /P          Csak egy képernyõnyi adat megjelenítése egyszerre.\n\
   /Q          Állomány tulajdonsosának megjelenítése.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Almappák tartalmát is megjeleníti.\n\
   /T          Controls which time field displayed or used for sorting\n\
   timefield   C  Létrehozás\n\
