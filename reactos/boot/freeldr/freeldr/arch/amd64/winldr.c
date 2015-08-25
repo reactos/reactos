@@ -344,7 +344,7 @@ WinLdrSetProcessorContext(void)
     /* Disable Interrupts */
     _disable();
 
-    /* Re-initalize EFLAGS */
+    /* Re-initialize EFLAGS */
     __writeeflags(0);
 
     /* Set the new PML4 */
