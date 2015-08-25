@@ -265,7 +265,7 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
             }
 
             CurrentInfo->NextEntryOffset = 0;
-            CurrentInfo->StreamNameLength = Attribute->NameLength * sizeof(WCHAR);
+            CurrentInfo->StreamNameLength = (Attribute->NameLength + wcslen(L"::$DATA")) * sizeof(WCHAR);
             CurrentInfo->StreamSize.QuadPart = AttributeDataLength(Attribute);
             CurrentInfo->StreamAllocationSize.QuadPart = AttributeAllocatedLength(Attribute);
             CurrentInfo->StreamName[0] = L':';
