@@ -1418,93 +1418,88 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                     return 1;
                 }
 
-                /* If cmd_alloc fails we go to next file in hope it works,
-                   without braking the linked list! */
-                if (ptrNextNode->ptrNext)
+                /* Copy the info of search at linked list */
+                memcpy(&ptrNextNode->ptrNext->stInfo.stFindInfo,
+                       &wfdFileInfo,
+                       sizeof(WIN32_FIND_DATA));
+
+                /* If lower case is selected do it here */
+                if (lpFlags->bLowerCase)
                 {
-                    /* Copy the info of search at linked list */
-                    memcpy(&ptrNextNode->ptrNext->stInfo.stFindInfo,
-                           &wfdFileInfo,
-                           sizeof(WIN32_FIND_DATA));
+                    _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cAlternateFileName);
+                    _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cFileName);
+                }
 
-                    /* If lower case is selected do it here */
-                    if (lpFlags->bLowerCase)
+                /* No streams (yet?) */
+                ptrNextNode->ptrNext->stInfo.ptrHead = NULL;
+
+                /* Alternate streams are only displayed with new long list */
+                if (lpFlags->bNewLongList && lpFlags->bDataStreams)
+                {
+                    /* Try to get stream information */
+                    hStreams = FindFirstStreamW(wfdFileInfo.cFileName, FindStreamInfoStandard, &wfsdStreamInfo, 0);
+                    if (hStreams != INVALID_HANDLE_VALUE)
                     {
-                        _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cAlternateFileName);
-                        _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cFileName);
-                    }
-
-                    /* No streams (yet?) */
-                    ptrNextNode->ptrNext->stInfo.ptrHead = NULL;
-
-                    /* Alternate streams are only displayed with new long list */
-                    if (lpFlags->bNewLongList && lpFlags->bDataStreams)
-                    {
-                        /* Try to get stream information */
-                        hStreams = FindFirstStreamW(wfdFileInfo.cFileName, FindStreamInfoStandard, &wfsdStreamInfo, 0);
-                        if (hStreams != INVALID_HANDLE_VALUE)
+                        /* We totally ignore first stream. It contains data about ::$DATA */
+                        ptrCurNode = &ptrNextNode->ptrNext->stInfo.ptrHead;
+                        while (FindNextStreamW(hStreams, &wfsdStreamInfo))
                         {
-                            /* We totally ignore first stream. It contains data about ::$DATA */
-                            ptrCurNode = &ptrNextNode->ptrNext->stInfo.ptrHead;
-                            while (FindNextStreamW(hStreams, &wfsdStreamInfo))
+                            *ptrCurNode = cmd_alloc(sizeof(DIRFINDSTREAMNODE));
+                            if (*ptrCurNode == NULL)
                             {
-                                *ptrCurNode = cmd_alloc(sizeof(DIRFINDSTREAMNODE));
-                                if (*ptrCurNode == NULL)
+                                WARN("DEBUG: Cannot allocate memory for *ptrCurNode!\n");
+                                while (ptrStartNode)
                                 {
-                                    WARN("DEBUG: Cannot allocate memory for *ptrCurNode!\n");
-                                    while (ptrStartNode)
+                                    ptrNextNode = ptrStartNode->ptrNext;
+                                    while (ptrStartNode->stInfo.ptrHead)
                                     {
-                                        ptrNextNode = ptrStartNode->ptrNext;
-                                        while (ptrStartNode->stInfo.ptrHead)
-                                        {
-                                            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-                                            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-                                            cmd_free(ptrFreeNode);
-                                        }
-                                        cmd_free(ptrStartNode);
-                                        ptrStartNode = ptrNextNode;
-                                        dwCount--;
+                                        ptrFreeNode = ptrStartNode->stInfo.ptrHead;
+                                        ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
+                                        cmd_free(ptrFreeNode);
                                     }
-                                    FindClose(hStreams);
-                                    FindClose(hSearch);
-                                    return 1;
+                                    cmd_free(ptrStartNode);
+                                    ptrStartNode = ptrNextNode;
+                                    dwCount--;
                                 }
-
-                                memcpy(&(*ptrCurNode)->stStreamInfo, &wfsdStreamInfo,
-                                       sizeof(WIN32_FIND_STREAM_DATA));
-
-                                /* If lower case is selected do it here */
-                                if (lpFlags->bLowerCase)
-                                {
-                                    _tcslwr((*ptrCurNode)->stStreamInfo.cStreamName);
-                                }
-
-                                ptrCurNode = &(*ptrCurNode)->ptrNext;
+                                FindClose(hStreams);
+                                FindClose(hSearch);
+                                return 1;
                             }
 
-                             FindClose(hStreams);
-                             *ptrCurNode = NULL;
+                            memcpy(&(*ptrCurNode)->stStreamInfo, &wfsdStreamInfo,
+                                   sizeof(WIN32_FIND_STREAM_DATA));
+
+                            /* If lower case is selected do it here */
+                            if (lpFlags->bLowerCase)
+                            {
+                                _tcslwr((*ptrCurNode)->stStreamInfo.cStreamName);
+                            }
+
+                            ptrCurNode = &(*ptrCurNode)->ptrNext;
                         }
-                    }
 
-                    /* Continue at next node at linked list */
-                    ptrNextNode = ptrNextNode->ptrNext;
-                    dwCount ++;
+                         FindClose(hStreams);
+                         *ptrCurNode = NULL;
+                    }
+                }
 
-                    /* Grab statistics */
-                    if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                    {
-                        /* Directory */
-                        dwCountDirs++;
-                    }
-                    else
-                    {
-                        /* File */
-                        dwCountFiles++;
-                        u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
-                        u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
-                        u64CountBytes += u64Temp.QuadPart;
-                    }
+                /* Continue at next node at linked list */
+                ptrNextNode = ptrNextNode->ptrNext;
+                dwCount ++;
+
+                /* Grab statistics */
+                if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
+                    /* Directory */
+                    dwCountDirs++;
+                }
+                else
+                {
+                    /* File */
+                    dwCountFiles++;
+                    u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
+                    u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
+                    u64CountBytes += u64Temp.QuadPart;
                 }
             }
         } while (FindNextFile(hSearch, &wfdFileInfo));
