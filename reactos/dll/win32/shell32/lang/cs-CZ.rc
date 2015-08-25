@@ -800,7 +800,7 @@ BEGIN
 
     IDS_OPEN_VERB "Otevřít"
     IDS_EXPLORE_VERB "Prozkoumat"
-    IDS_RUNAS_VERB "Spustit jako "
+    IDS_RUNAS_VERB "Spustit jako..."
     IDS_EDIT_VERB "Upravit"
     IDS_FIND_VERB "Najít"
     IDS_PRINT_VERB "Tisknout"

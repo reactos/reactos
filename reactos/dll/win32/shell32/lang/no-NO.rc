@@ -794,7 +794,7 @@ BEGIN
 
     IDS_OPEN_VERB "Åpne"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Kjør som"
+    IDS_RUNAS_VERB "Kjør som..."
     IDS_EDIT_VERB "Rediger"
     IDS_FIND_VERB "Finn"
     IDS_PRINT_VERB "Skriv ut"

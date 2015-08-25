@@ -794,7 +794,7 @@ BEGIN
 
     IDS_OPEN_VERB "Apri"
     IDS_EXPLORE_VERB "Esplora"
-    IDS_RUNAS_VERB "Esegui come "
+    IDS_RUNAS_VERB "Esegui come..."
     IDS_EDIT_VERB "Modifica"
     IDS_FIND_VERB "Cerca"
     IDS_PRINT_VERB "Stampa"

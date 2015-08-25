@@ -794,7 +794,7 @@ BEGIN
 
     IDS_OPEN_VERB "Отваряне"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Изпълняване като "
+    IDS_RUNAS_VERB "Изпълняване като..."
     IDS_EDIT_VERB "Обработка"
     IDS_FIND_VERB "Търсене"
     IDS_PRINT_VERB "Разпечатване"

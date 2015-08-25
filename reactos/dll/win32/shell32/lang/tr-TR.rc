@@ -794,7 +794,7 @@ BEGIN
 
     IDS_OPEN_VERB "Aç"
     IDS_EXPLORE_VERB "Araştır"
-    IDS_RUNAS_VERB "Birlikte aç "
+    IDS_RUNAS_VERB "Birlikte aç..."
     IDS_EDIT_VERB "Düzenle"
     IDS_FIND_VERB "Bul"
     IDS_PRINT_VERB "Yazdır"

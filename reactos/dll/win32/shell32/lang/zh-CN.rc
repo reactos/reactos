@@ -801,7 +801,7 @@ BEGIN
 
     IDS_OPEN_VERB "打开"
     IDS_EXPLORE_VERB "浏览"
-    IDS_RUNAS_VERB "运行作为 "
+    IDS_RUNAS_VERB "运行作为..."
     IDS_EDIT_VERB "编辑"
     IDS_FIND_VERB "查找"
     IDS_PRINT_VERB "打印"

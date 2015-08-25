@@ -794,7 +794,7 @@ BEGIN
 
     IDS_OPEN_VERB "Otvoriť"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Spustiť ako "
+    IDS_RUNAS_VERB "Spustiť ako..."
     IDS_EDIT_VERB "Upraviť"
     IDS_FIND_VERB "Find"
     IDS_PRINT_VERB "Tlačiť"

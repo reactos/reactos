@@ -351,7 +351,7 @@ END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Lancer en tant que"
+CAPTION "Exécuter en tant que"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Quel compte d'utilisateur désirez-vous utiliser pour lancer ce programme?", -1, 10, 20, 220, 20
@@ -794,7 +794,7 @@ BEGIN
 
     IDS_OPEN_VERB "Ouvrir"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Lancer en tant que "
+    IDS_RUNAS_VERB "Exécuter en tant que..."
     IDS_EDIT_VERB "Éditer"
     IDS_FIND_VERB "Chercher"
     IDS_PRINT_VERB "Imprimer"

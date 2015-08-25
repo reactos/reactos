@@ -794,7 +794,7 @@ BEGIN
 
     IDS_OPEN_VERB "Open"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Run as "
+    IDS_RUNAS_VERB "Run as..."
     IDS_EDIT_VERB "Edit"
     IDS_FIND_VERB "Find"
     IDS_PRINT_VERB "Print"

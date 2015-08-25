@@ -794,7 +794,7 @@ BEGIN
 
     IDS_OPEN_VERB "開く"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "別のユーザーとして実行 "
+    IDS_RUNAS_VERB "別のユーザーとして実行..."
     IDS_EDIT_VERB "編集"
     IDS_FIND_VERB "検索"
     IDS_PRINT_VERB "印刷"
