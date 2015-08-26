@@ -131,28 +131,9 @@ public:
 
 };
 
-class CNtObjectPidlManager
+class CNtObjectPidlHelper
 {
-private:
-    PWSTR m_ntPath;
-
 public:
-    CNtObjectPidlManager() :
-        m_ntPath(NULL)
-    {
-    }
-
-    ~CNtObjectPidlManager()
-    {
-    }
-
-    HRESULT Initialize(PWSTR ntPath)
-    {
-        m_ntPath = ntPath;
-
-        return S_OK;
-    }
-
     static HRESULT CompareIDs(LPARAM lParam, const NtPidlEntry * first, const NtPidlEntry * second)
     {
         if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
@@ -285,7 +266,7 @@ public:
         return flags & mask;
     }
 
-    BOOL IsFolder(LPCITEMIDLIST pcidl)
+    static BOOL IsFolder(LPCITEMIDLIST pcidl)
     {
         NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
         if ((entry->cb < sizeof(NtPidlEntry)) || (entry->magic != NT_OBJECT_PIDL_MAGIC))
@@ -296,7 +277,7 @@ public:
             (entry->objectType == KEY_OBJECT);
     }
 
-    HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry)
+    static HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry)
     {
         NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
 
@@ -321,7 +302,6 @@ public:
 // CNtObjectFolder
 
 CNtObjectFolder::CNtObjectFolder() :
-    m_PidlManager(NULL),
     m_shellPidl(NULL)
 {
 }
@@ -330,8 +310,6 @@ CNtObjectFolder::~CNtObjectFolder()
 {
     if (m_shellPidl)
         ILFree(m_shellPidl);
-    if (m_PidlManager)
-        delete m_PidlManager;
 }
 
 // IShellFolder
@@ -370,7 +348,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
         if (hr != S_OK)
             break;
 
-        hr = m_PidlManager->GetInfoFromPidl(*ppidl, &info);
+        hr = CNtObjectPidlHelper::GetInfoFromPidl(*ppidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -389,7 +367,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
             *pchEaten = wcslen(info->entryName);
 
         if (pdwAttributes)
-            *pdwAttributes = m_PidlManager->ConvertAttributes(info, pdwAttributes);
+            *pdwAttributes = CNtObjectPidlHelper::ConvertAttributes(info, pdwAttributes);
     }
 
     return S_OK;
@@ -413,7 +391,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
 
     if (IsEqualIID(riid, IID_IShellFolder))
     {
-        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+        HRESULT hr = CNtObjectPidlHelper::GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -514,7 +492,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::CompareIDs(
 {
     TRACE("CompareIDs\n");
 
-    HRESULT hr = m_PidlManager->CompareIDs(lParam, pidl1, pidl2);
+    HRESULT hr = CNtObjectPidlHelper::CompareIDs(lParam, pidl1, pidl2);
     if (hr != S_OK)
         return hr;
 
@@ -581,12 +559,12 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetAttributesOf(
     {
         PCUITEMID_CHILD pidl = apidl[i];
 
-        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+        HRESULT hr = CNtObjectPidlHelper::GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         // Update attributes.
-        *rgfInOut = m_PidlManager->ConvertAttributes(info, rgfInOut);
+        *rgfInOut = CNtObjectPidlHelper::ConvertAttributes(info, rgfInOut);
     }
 
     return S_OK;
@@ -612,7 +590,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetUIObjectOf(
         HKEY keys[1];
 
         int nkeys = _countof(keys);
-        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        if (cidl == 1 && CNtObjectPidlHelper::IsFolder(apidl[0]))
         {
             res = RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
             if (!NT_SUCCESS(res))
@@ -642,7 +620,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetUIObjectOf(
 
     if (IsEqualIID(riid, IID_IQueryAssociations))
     {
-        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        if (cidl == 1 && CNtObjectPidlHelper::IsFolder(apidl[0]))
         {
             CComPtr<IQueryAssociations> pqa;
             HRESULT hr = AssocCreate(CLSID_QueryAssociations, IID_PPV_ARG(IQueryAssociations, &pqa));
@@ -669,7 +647,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDisplayNameOf(
 
     TRACE("GetDisplayNameOf %p\n", pidl);
 
-    HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+    HRESULT hr = CNtObjectPidlHelper::GetInfoFromPidl(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -748,16 +726,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl)
 {
     m_shellPidl = ILClone(pidl);
 
-    PCWSTR ntPath = L"\\";
+    StringCbCopy(m_NtPath, _countof(m_NtPath), L"\\");
 
-    if (!m_PidlManager)
-    {
-        m_PidlManager = new CNtObjectPidlManager();
-
-        StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
-    }
-
-    return m_PidlManager->Initialize(m_NtPath);
+    return S_OK;
 }
 
 // Internal
@@ -765,11 +736,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR
 {
     m_shellPidl = ILClone(pidl);
 
-    if (!m_PidlManager)
-        m_PidlManager = new CNtObjectPidlManager();
-
     StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
-    return m_PidlManager->Initialize(m_NtPath);
+
+    return S_OK;
 }
 
 // IPersistFolder2
@@ -840,7 +809,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
 
     if (pidl)
     {
-        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+        HRESULT hr = CNtObjectPidlHelper::GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -907,7 +876,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
 
     if (pidl)
     {
-        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+        HRESULT hr = CNtObjectPidlHelper::GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 

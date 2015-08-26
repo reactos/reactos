@@ -125,44 +125,9 @@ public:
 
 };
 
-class CRegistryPidlManager
+class CRegistryPidlHelper
 {
-private:
-    PWSTR m_ntPath;
-    HKEY m_hRoot;
-
-    int  DpaDeleteCallback(RegPidlEntry * info)
-    {
-        CoTaskMemFree(info);
-        return 0;
-    }
-
-    static int CALLBACK s_DpaDeleteCallback(void *pItem, void *pData)
-    {
-        CRegistryPidlManager * mf = (CRegistryPidlManager*) pData;
-        RegPidlEntry  * item = (RegPidlEntry*) pItem;
-        return mf->DpaDeleteCallback(item);
-    }
-
 public:
-    CRegistryPidlManager() :
-        m_ntPath(NULL),
-        m_hRoot(NULL)
-    {
-    }
-
-    ~CRegistryPidlManager()
-    {
-    }
-
-    HRESULT Initialize(PWSTR ntPath, HKEY hRoot)
-    {
-        m_ntPath = ntPath;
-        m_hRoot = hRoot;
-
-        return S_OK;
-    }
-
     static HRESULT CompareIDs(LPARAM lParam, const RegPidlEntry * first, const RegPidlEntry * second)
     {
         if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
@@ -290,7 +255,7 @@ public:
         return flags & mask;
     }
 
-    BOOL IsFolder(LPCITEMIDLIST pcidl)
+    static BOOL IsFolder(LPCITEMIDLIST pcidl)
     {
         RegPidlEntry * entry = (RegPidlEntry*) &(pcidl->mkid);
         if ((entry->cb < sizeof(RegPidlEntry)) || (entry->magic != REGISTRY_PIDL_MAGIC))
@@ -300,7 +265,7 @@ public:
             (entry->entryType == REG_ENTRY_ROOT);
     }
 
-    HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const RegPidlEntry ** pentry)
+    static HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const RegPidlEntry ** pentry)
     {
         RegPidlEntry * entry = (RegPidlEntry*) &(pcidl->mkid);
 
@@ -371,7 +336,7 @@ public:
         }
     }
 
-    HRESULT FormatContentsForDisplay(const RegPidlEntry * info, PCWSTR * strContents)
+    static HRESULT FormatContentsForDisplay(const RegPidlEntry * info, LPCWSTR ntPath, PCWSTR * strContents)
     {
         PVOID td = (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
@@ -386,7 +351,7 @@ public:
         {
             PVOID valueData;
             DWORD valueLength;
-            HRESULT hr = ReadRegistryValue(NULL, m_ntPath, info->entryName, &valueData, &valueLength);
+            HRESULT hr = ReadRegistryValue(NULL, ntPath, info->entryName, &valueData, &valueLength);
             if (FAILED_UNEXPECTEDLY(hr))
             {
                 PCWSTR strEmpty = L"(Error reading value)";
@@ -429,7 +394,6 @@ public:
 // CRegistryFolder
 
 CRegistryFolder::CRegistryFolder() :
-    m_PidlManager(NULL),
     m_shellPidl(NULL)
 {
 }
@@ -438,8 +402,6 @@ CRegistryFolder::~CRegistryFolder()
 {
     if (m_shellPidl)
         ILFree(m_shellPidl);
-    if (m_PidlManager)
-        delete m_PidlManager;
 }
 
 // IShellFolder
@@ -480,7 +442,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::ParseDisplayName(
         if (hr != S_OK)
             break;
 
-        hr = m_PidlManager->GetInfoFromPidl(*ppidl, &info);
+        hr = CRegistryPidlHelper::GetInfoFromPidl(*ppidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -499,7 +461,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::ParseDisplayName(
             *pchEaten = wcslen(info->entryName);
 
         if (pdwAttributes)
-            *pdwAttributes = m_PidlManager->ConvertAttributes(info, pdwAttributes);
+            *pdwAttributes = CRegistryPidlHelper::ConvertAttributes(info, pdwAttributes);
     }
 
     return S_OK;
@@ -530,7 +492,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::BindToObject(
 
     if (IsEqualIID(riid, IID_IShellFolder))
     {
-        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+        HRESULT hr = CRegistryPidlHelper::GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -586,7 +548,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::CompareIDs(
 {
     TRACE("CompareIDs\n");
 
-    HRESULT hr = m_PidlManager->CompareIDs(lParam, pidl1, pidl2);
+    HRESULT hr = CRegistryPidlHelper::CompareIDs(lParam, pidl1, pidl2);
     if (hr != S_OK)
         return hr;
 
@@ -653,12 +615,12 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetAttributesOf(
     {
         PCUITEMID_CHILD pidl = apidl[i];
 
-        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+        HRESULT hr = CRegistryPidlHelper::GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         // Update attributes.
-        *rgfInOut = m_PidlManager->ConvertAttributes(info, rgfInOut);
+        *rgfInOut = CRegistryPidlHelper::ConvertAttributes(info, rgfInOut);
     }
 
     return S_OK;
@@ -684,7 +646,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetUIObjectOf(
         HKEY keys[1];
 
         int nkeys = _countof(keys);
-        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        if (cidl == 1 && CRegistryPidlHelper::IsFolder(apidl[0]))
         {
             res = RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
             if (!NT_SUCCESS(res))
@@ -714,7 +676,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetUIObjectOf(
 
     if (IsEqualIID(riid, IID_IQueryAssociations))
     {
-        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        if (cidl == 1 && CRegistryPidlHelper::IsFolder(apidl[0]))
         {
             CComPtr<IQueryAssociations> pqa;
             HRESULT hr = AssocCreate(CLSID_QueryAssociations, IID_PPV_ARG(IQueryAssociations, &pqa));
@@ -741,7 +703,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDisplayNameOf(
 
     TRACE("GetDisplayNameOf %p\n", pidl);
 
-    HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+    HRESULT hr = CRegistryPidlHelper::GetInfoFromPidl(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -821,16 +783,8 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
     m_shellPidl = ILClone(pidl);
     m_hRoot = NULL;
 
-    PCWSTR ntPath = L"";
-
-    if (!m_PidlManager)
-    {
-        m_PidlManager = new CRegistryPidlManager();
-
-        StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
-    }
-
-    return m_PidlManager->Initialize(m_NtPath, m_hRoot);
+    StringCbCopy(m_NtPath, _countof(m_NtPath), L"");
+    return S_OK;
 }
 
 // Internal
@@ -839,11 +793,8 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR
     m_shellPidl = ILClone(pidl);
     m_hRoot = hRoot;
 
-    if (!m_PidlManager)
-        m_PidlManager = new CRegistryPidlManager();
-
     StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
-    return m_PidlManager->Initialize(m_NtPath, m_hRoot);
+    return S_OK;
 }
 
 // IPersistFolder2
@@ -914,7 +865,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
 
     if (pidl)
     {
-        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+        HRESULT hr = CRegistryPidlHelper::GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -953,7 +904,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
             {
                 PCWSTR strValueContents;
 
-                hr = m_PidlManager->FormatContentsForDisplay(info, &strValueContents);
+                hr = CRegistryPidlHelper::FormatContentsForDisplay(info, m_NtPath, &strValueContents);
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
 
@@ -987,7 +938,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 
     if (pidl)
     {
-        HRESULT hr = m_PidlManager->GetInfoFromPidl(pidl, &info);
+        HRESULT hr = CRegistryPidlHelper::GetInfoFromPidl(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -1029,7 +980,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 
             PCWSTR strValueContents;
 
-            hr = m_PidlManager->FormatContentsForDisplay(info, &strValueContents);
+            hr = CRegistryPidlHelper::FormatContentsForDisplay(info, m_NtPath, &strValueContents);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 

@@ -10,8 +10,6 @@
 
 extern const GUID CLSID_RegistryFolder;
 
-class CRegistryPidlManager;
-
 class CRegistryFolder :
     public CComCoClass<CRegistryFolder, &CLSID_RegistryFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -19,8 +17,6 @@ class CRegistryFolder :
     public IPersistFolder2,
     public IShellFolderViewCB
 {
-    CRegistryPidlManager * m_PidlManager;
-
     HKEY m_hRoot;
     WCHAR m_NtPath[MAX_PATH];
 
@@ -30,8 +26,6 @@ public:
 
     CRegistryFolder();
     virtual ~CRegistryFolder();
-
-    CRegistryPidlManager& GetManager() { return *m_PidlManager; }
 
     // IShellFolder
     virtual HRESULT STDMETHODCALLTYPE ParseDisplayName(

@@ -9,8 +9,6 @@
 
 extern const GUID CLSID_NtObjectFolder;
 
-class CNtObjectPidlManager;
-
 class CNtObjectFolder :
     public CComCoClass<CNtObjectFolder, &CLSID_NtObjectFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -18,8 +16,6 @@ class CNtObjectFolder :
     public IPersistFolder2,
     public IShellFolderViewCB
 {
-    CNtObjectPidlManager * m_PidlManager;
-
     WCHAR m_NtPath[MAX_PATH];
 
     LPITEMIDLIST m_shellPidl;
@@ -28,8 +24,6 @@ public:
 
     CNtObjectFolder();
     virtual ~CNtObjectFolder();
-
-    CNtObjectPidlManager& GetManager() { return *m_PidlManager; }
 
     // IShellFolder
     virtual HRESULT STDMETHODCALLTYPE ParseDisplayName(
