@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS shell extensions
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll\shellext\ntobjshex\ntobjns.cpp
+ * FILE:        dll\shellext\ntobjshex\regfolder.cpp
  * PURPOSE:     NT Object Namespace shell extension
  * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
  */
@@ -23,7 +23,6 @@
 #define GET_SHGDN_RELATION(dwFlags)    ((DWORD)dwFlags & (DWORD)0x000000FF)
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
-
 
 // {1C6D6E08-2332-4A7B-A94D-6432DB2B5AE6}
 const GUID CLSID_RegistryFolder = { 0x1c6d6e08, 0x2332, 0x4a7b, { 0xa9, 0x4d, 0x64, 0x32, 0xdb, 0x2b, 0x5a, 0xe6 } };
