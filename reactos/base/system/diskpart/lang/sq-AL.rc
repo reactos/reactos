@@ -11,7 +11,7 @@ BEGIN
     IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /S filename\tRuns the given script.\n\
-/T timeout\tTimeout in seconds to prevent diskpart usage overlap.\n\
+/T timeout\tTimeout in seconds to prevent DiskPart usage overlap.\n\
 /?\t\tDisplay this help message.\n\n"
     IDS_APP_LICENSE, "Liçensuar mbi GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER, "Në kompjuter: %s\n\n"

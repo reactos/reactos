@@ -1,4 +1,4 @@
-/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) + дополнен 2015 25 авг. tower@reactos.org */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -9,7 +9,7 @@ BEGIN
     IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
 Использование: DISKPART [/S <имя_файла>] [/T <тайм-аут>] [/?]\n\n\
 /S <имя_файла>\tЗапускает указанный скрипт.\n\
-/T <тайм-аут>\tTimeout in seconds to prevent diskpart usage overlap.\n\
+/T <тайм-аут>\tТайм-аут в секундах, чтобы предотвратить использование DiskPart.\n\
 /?\t\tОтображает эту справку.\n\n"
     IDS_APP_LICENSE "Распространяется под лицензией GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER "На компьютере: %s\n\n"
@@ -26,7 +26,7 @@ BEGIN
     IDS_DETAIL_INFO_PATH "Путь"
     IDS_DETAIL_INFO_TARGET "Цель"
     IDS_DETAIL_INFO_LUN_ID "LUN ID"
-    IDS_DETAIL_INFO_LOC_PATH "Location Path"
+    IDS_DETAIL_INFO_LOC_PATH "Путь к диску"
     IDS_DETAIL_INFO_CURR_RO_STATE "Текущее состояние ""Только для чтения"""
     IDS_DETAIL_INFO_RO "Только для чтения"
     IDS_DETAIL_INFO_BOOT_DSK "Загрузочный диск"
@@ -42,32 +42,32 @@ BEGIN
     IDS_LIST_DISK_HEAD "\n  Диск ###  Состояние   Размер   Свободно  Дин  GPT\n"
     IDS_LIST_DISK_LINE "  --------  ----------  -------  --------  ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
-    IDS_LIST_PARTITION_HEAD "\n  Partition      Type              Size     Offset\n"
+    IDS_LIST_PARTITION_HEAD "\n  Разметка       Тип              Размер    Отступ\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
-    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
+    IDS_LIST_PARTITION_NO_DISK "\nДиск с разметкой элементов не выбран.\nУкажите диск и повторите попытку.\n\n"
     IDS_LIST_VOLUME_HEAD "Том ###\tИмя\tМетка\n"
 END
 
 /* RESCAN command string */
 STRINGTABLE
 BEGIN
-    IDS_RESCAN_START "\nPlease wait while DiskPart scans your configuration...\n"
-    IDS_RESCAN_END "\nDiskPart has finished scanning your configuration.\n\n"
+    IDS_RESCAN_START "\nОжидайте окончания проверки программой DiskPart конфигурации...\n"
+    IDS_RESCAN_END "\nDiskPart закончил проверку конфигурации.\n\n"
 END
 
 /* SELECT command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
-    IDS_SELECT_DISK_INVALID "\nInvalid disk.\n\n"
-    IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
-    IDS_SELECT_PARTITION_NO_DISK "\nThere is no disk for selecting a partition.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
-    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
+    IDS_SELECT_NO_DISK "\nДиск для обработки не указан.\nВыберите диск и повторите.\n\n"
+    IDS_SELECT_DISK "\nДиск %lu выбран текущим.\n\n"
+    IDS_SELECT_DISK_INVALID "\nОшибка диска.\n\n"
+    IDS_SELECT_NO_PARTITION "\nДиск с разметкой не выбран.\nВыберите диск и повторите.\n\n"
+    IDS_SELECT_PARTITION "\nВыбрана разметка диска %lu текущей разметкой.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nДиск для установки разметки не указан.\nВыберите диск и повторите.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nОшибка в разметке диска.\n\n"
+    IDS_SELECT_NO_VOLUME "\nТом на диске не указан.\nВыберите том диска и повторите.\n\n"
+    IDS_SELECT_VOLUME "\nВыбран текущим %lu том диска.\n\n"
 END
 
 /* Disk Status */
@@ -92,7 +92,7 @@ END
 /* Help Command Descripions */
 STRINGTABLE
 BEGIN
-    IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- Пометка выбранного раздела как активного.\n"
+    IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- Назначение выбранного диска активным.\n"
     IDS_HELP_CMD_DESC_ADD "ADD\t\t- Добавление зеркала к простому тому.\n"
     IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- Назначение имени или точки подключения выбранному тому.\n"
     IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- Присоединяет файл виртуального диска.\n"
@@ -106,7 +106,7 @@ BEGIN
     IDS_HELP_CMD_DESC_DELETE "DELETE\t\t- Удалить объект.\n"
     IDS_HELP_CMD_DESC_DETACH "DETACH\t\t- Отсоединяет файл виртуального диска.\n"
     IDS_HELP_CMD_DESC_DETAIL "DETAIL\t\t- Просмотр параметров объекта.\n"
-    IDS_HELP_CMD_DESC_EXIT "EXIT\t\t- Завершение работыDiskPart.\n"
+    IDS_HELP_CMD_DESC_EXIT "EXIT\t\t- Завершение работы DiskPart.\n"
     IDS_HELP_CMD_DESC_EXPAND "EXPAND\t\t- Увеличение максимального доступного пространства на виртуальном\n\t\t  диске.\n"
     IDS_HELP_CMD_DESC_EXTEND "EXTEND\t\t- Расширить том.\n"
     IDS_HELP_CMD_DESC_FS "FILESYSTEMS\t- Отображение текущей и поддерживаемой файловых систем для тома.\n"
@@ -137,7 +137,7 @@ STRINGTABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Ошибка открытия скрипта: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Ошибка обработки параметров: %s\n"
-    IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
+    IDS_ERROR_INVALID_ARGS "Ошибка в указании параметров\n"
 END
 
 /* Active help descriptions */

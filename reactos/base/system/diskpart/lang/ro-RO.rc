@@ -6,7 +6,8 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APP_HEADER "ReactOS DiskPart"
-    IDS_APP_USAGE "Interpretor pentru partiționare discuri.\n\nUtilizare: DISKPART [/S numefișier] [/T timplimită] [/?]\n\n\
+    IDS_APP_USAGE "Interpretor pentru partiționare discuri.\n\n\
+Utilizare: DISKPART [/S numefișier] [/T timplimită] [/?]\n\n\
 /S numefișier\tExecută scriptul din fișierul dat.\n\
 /T timplimită\tLimită temporală pentru prevenirea utilizării concurente.\n\
 /?\t\tAfișează acest manual.\n\n"

@@ -6,7 +6,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APP_HEADER "ReactOS DiskPart"
-    IDS_APP_USAGE "\nDisk Bölümlendirme Yorumlayıcısı\n\n\
+    IDS_APP_USAGE "\nDisk Bölümlendirme Yorumlayıcısı.\n\n\
 Kullanım: DISKPART [/S kütük adı] [/T süre aşımı] [/?]\n\n\
 /S kütük adı\tVerilen betiği çalıştırır.\n\
 /T süre aşımı\tDiskPart kullanım örtüşmesini önlemeye sâniye olarak süre aşımı.\n\
