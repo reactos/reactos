@@ -104,8 +104,6 @@ typedef struct _VGA_DYNAMIC_FUNC_TABLE
 
 /* FUNCTIONS ******************************************************************/
 
-VOID VidBiosSyncCursorPosition(VOID);
-
 VOID WINAPI VidBiosVideoService(LPWORD Stack);
 
 VOID VidBiosDetachFromConsole(VOID);

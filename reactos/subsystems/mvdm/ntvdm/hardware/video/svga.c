@@ -455,7 +455,6 @@ static VOID VgaUpdateCursorPosition(VOID)
     VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_LOW_REG]  = LOBYTE(Offset);
     VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_HIGH_REG] = HIBYTE(Offset);
 
-    // VidBiosSyncCursorPosition();
     VgaUpdateTextCursor();
 }
 
@@ -519,13 +518,14 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     ASSERT(CharBuff);
 #endif
 
-    /*
-     * Resize the console
-     */
+    /* Retrieve the latest console information */
+    GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
+
+    /* Resize the console */
     ConRect.Left   = 0;
-    ConRect.Top    = ConsoleInfo.srWindow.Top;
     ConRect.Right  = ConRect.Left + Resolution->X - 1;
-    ConRect.Bottom = ConRect.Top  + Resolution->Y - 1;
+    ConRect.Bottom = max(ConsoleInfo.dwCursorPosition.Y, Resolution->Y - 1);
+    ConRect.Top    = ConRect.Bottom - Resolution->Y + 1;
     /*
      * Use this trick to effectively resize the console buffer and window,
      * because:
@@ -534,9 +534,13 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
      * - SetConsoleWindowInfo fails if the new console window size is larger
      *   than the current console screen buffer size.
      */
-    SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
-    SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
-    SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
+    Success = SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
+    DPRINT1("(attach) SetConsoleScreenBufferSize(1) %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
+    Success = SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
+    DPRINT1("(attach) SetConsoleWindowInfo %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
+    Success = SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
+    DPRINT1("(attach) SetConsoleScreenBufferSize(2) %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
+
     /* Update the saved console information */
     GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
 
@@ -544,14 +548,11 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
      * Copy console data into VGA memory
      */
 
-    /* Get the data */
-    AddressSize = VgaGetAddressSize();
+    /* Read the data from the console into the framebuffer... */
     ConRect.Left   = ConRect.Top = 0;
     ConRect.Right  = TextResolution.X;
     ConRect.Bottom = TextResolution.Y;
-    ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
 
-    /* Read the data from the console into the framebuffer... */
     ReadConsoleOutputA(TextConsoleBuffer,
                        CharBuff,
                        TextResolution,
@@ -559,6 +560,8 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
                        &ConRect);
 
     /* ... and copy the framebuffer into the VGA memory */
+    AddressSize  = VgaGetAddressSize();
+    ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
 
     /* Loop through the scanlines */
     for (i = 0; i < TextResolution.Y; i++)
@@ -1058,6 +1061,7 @@ static VOID VgaLeaveGraphicsMode(VOID)
 static BOOL VgaEnterTextMode(PCOORD Resolution)
 {
     /* Switch to the text buffer */
+    // FIXME: Wouldn't it be preferrable to switch to it AFTER we reset everything??
     VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
     /* Adjust the text framebuffer if we changed the resolution */
@@ -1067,8 +1071,8 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
         VgaDetachFromConsoleInternal();
 
         /*
-         * VgaAttachToConsoleInternal sets TextResolution to the
-         * new resolution and updates ConsoleInfo.
+         * VgaAttachToConsoleInternal sets TextResolution
+         * to the new resolution and updates ConsoleInfo.
          */
         if (!VgaAttachToConsoleInternal(Resolution))
         {
@@ -1126,6 +1130,9 @@ static VOID VgaChangeMode(VOID)
     {
         goto Quit;
     }
+
+    // FIXME: Wouldn't it be preferrable to switch to the new console SB
+    // *ONLY* if we succeeded in setting the new mode??
 
     /* Leave the current video mode */
     if (ScreenMode == GRAPHICS_MODE)
@@ -1495,7 +1502,7 @@ static VOID VgaUpdateTextCursor(VOID)
     {
         /* Hidden cursor */
         CursorInfo.bVisible = FALSE;
-        CursorInfo.dwSize   = 1; // The size needs to be non-null in order SetConsoleCursorInfo to succeed.
+        CursorInfo.dwSize   = 1; // The size needs to be non-zero for SetConsoleCursorInfo to succeed.
     }
 
     /* Add the cursor skew to the location */
@@ -2315,8 +2322,8 @@ BOOL VgaAttachToConsole(VOID)
     // VgaDetachFromConsoleInternal();
 
     /*
-     * VgaAttachToConsoleInternal sets TextResolution to the
-     * new resolution and updates ConsoleInfo.
+     * VgaAttachToConsoleInternal sets TextResolution
+     * to the new resolution and updates ConsoleInfo.
      */
     if (!VgaAttachToConsoleInternal(&TextResolution))
     {
@@ -2347,6 +2354,8 @@ BOOL VgaAttachToConsole(VOID)
 
 VOID VgaDetachFromConsole(VOID)
 {
+    BOOL Success;
+
     SMALL_RECT ConRect;
 
     VgaDetachFromConsoleInternal();
@@ -2361,23 +2370,33 @@ VOID VgaDetachFromConsole(VOID)
     OldConsoleFramebuffer = ConsoleFramebuffer;
     ConsoleFramebuffer = NULL;
 
-    /* Restore the old text-mode screen buffer */
-    VgaSetActiveScreenBuffer(TextConsoleBuffer);
-
     /* Restore the original console size */
-    ConRect.Left   = 0;
-    ConRect.Top    = 0;
+    ConRect.Left   = ConRect.Top = 0;
     ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
     ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
-    /*
-     * See the following trick explanation in VgaAttachToConsoleInternal.
-     */
-    SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
-    SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
-    SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
+    /* See the following trick explanation in VgaAttachToConsoleInternal */
+    Success = SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
+    DPRINT1("(detach) SetConsoleScreenBufferSize(1) %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
+    Success = SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
+    DPRINT1("(detach) SetConsoleWindowInfo %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
+    Success = SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
+    DPRINT1("(detach) SetConsoleScreenBufferSize(2) %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
 
     /* Restore the original cursor shape */
     SetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo);
+
+    // FIXME: Should we copy back the screen data to the screen buffer??
+    // WriteConsoleOutputA(...);
+
+    // FIXME: Should we change cursor POSITION??
+    // VgaUpdateTextCursor();
+
+    ///* Update the physical cursor */
+    //SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
+    //SetConsoleCursorPosition(TextConsoleBuffer, Position /*OrgConsoleBufferInfo.dwCursorPosition*/);
+
+    /* Restore the old text-mode screen buffer */
+    VgaSetActiveScreenBuffer(TextConsoleBuffer);
 }
 
 BOOLEAN VgaInitialize(HANDLE TextHandle)
@@ -2395,10 +2414,10 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     ConsoleInfo = OrgConsoleBufferInfo;
 
     /* Clear the SEQ, GC, CRTC and AC registers */
-    RtlZeroMemory(VgaSeqRegisters, sizeof(VgaSeqRegisters));
-    RtlZeroMemory(VgaGcRegisters, sizeof(VgaGcRegisters));
+    RtlZeroMemory(VgaSeqRegisters , sizeof(VgaSeqRegisters ));
+    RtlZeroMemory(VgaGcRegisters  , sizeof(VgaGcRegisters  ));
     RtlZeroMemory(VgaCrtcRegisters, sizeof(VgaCrtcRegisters));
-    RtlZeroMemory(VgaAcRegisters, sizeof(VgaAcRegisters));
+    RtlZeroMemory(VgaAcRegisters  , sizeof(VgaAcRegisters  ));
 
     /* Initialize the VGA palette and fail if it isn't successfully created */
     if (!VgaInitializePalette()) return FALSE;

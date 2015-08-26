@@ -1937,32 +1937,33 @@ typedef struct _VGA_MODE
 {
     PVGA_REGISTERS VgaRegisters;
     WORD PageSize;
+    WORD CharacterWidth;
     WORD CharacterHeight;
     // PCOLORREF Palette;
 } VGA_MODE, *PVGA_MODE;
 
 static CONST VGA_MODE VideoModes[BIOS_MAX_VIDEO_MODE + 1] =
 {
-    {&VideoMode_40x25_text,         0x0800, 16},    /* Mode 00h - 16 color (mono)                       */
-    {&VideoMode_40x25_text,         0x0800, 16},    /* Mode 01h - 16 color                              */
-    {&VideoMode_80x25_text,         0x1000, 16},    /* Mode 02h - 16 color (mono)                       */
-    {&VideoMode_80x25_text,         0x1000, 16},    /* Mode 03h - 16 color                              */
-    {&VideoMode_320x200_4color,     0x4000,  8},    /* Mode 04h - CGA 4 color                           */
-    {&VideoMode_320x200_4color,     0x4000,  8},    /* Mode 05h - CGA same (m) (uses 3rd CGA palette)   */
-    {&VideoMode_640x200_2color,     0x4000,  8},    /* Mode 06h - CGA 640*200 2 color                   */
-    {NULL,                          0x1000,  0},    /* Mode 07h - MDA monochrome text 80*25             */
-    {NULL,                          0x0000,  0},    /* Mode 08h - PCjr                                  */
-    {NULL,                          0x0000,  0},    /* Mode 09h - PCjr                                  */
-    {NULL,                          0x0000,  0},    /* Mode 0Ah - PCjr                                  */
-    {NULL,                          0x0000,  0},    /* Mode 0Bh - Reserved                              */
-    {NULL,                          0x0000,  0},    /* Mode 0Ch - Reserved                              */
-    {&VideoMode_320x200_16color,    0x2000,  8},    /* Mode 0Dh - EGA 320*200 16 color                  */
-    {&VideoMode_640x200_16color,    0x4000,  8},    /* Mode 0Eh - EGA 640*200 16 color                  */
-    {NULL,                          0x8000,  0},    /* Mode 0Fh - EGA 640*350 mono                      */
-    {&VideoMode_640x350_16color,    0x8000, 14},    /* Mode 10h - EGA 640*350 HiRes 16 color            */
-    {&VideoMode_640x480_2color,     0xA000, 16},    /* Mode 11h - VGA 640*480 mono                      */
-    {&VideoMode_640x480_16color,    0xA000, 16},    /* Mode 12h - VGA                                   */
-    {&VideoMode_320x200_256color,   0x2000,  8},    /* Mode 13h - VGA                                   */
+    {&VideoMode_40x25_text,         0x0800, 9, 16},    /* Mode 00h - 16 color (mono)                       */
+    {&VideoMode_40x25_text,         0x0800, 9, 16},    /* Mode 01h - 16 color                              */
+    {&VideoMode_80x25_text,         0x1000, 9, 16},    /* Mode 02h - 16 color (mono)                       */
+    {&VideoMode_80x25_text,         0x1000, 9, 16},    /* Mode 03h - 16 color                              */
+    {&VideoMode_320x200_4color,     0x4000, 8,  8},    /* Mode 04h - CGA 4 color                           */
+    {&VideoMode_320x200_4color,     0x4000, 8,  8},    /* Mode 05h - CGA same (m) (uses 3rd CGA palette)   */
+    {&VideoMode_640x200_2color,     0x4000, 8,  8},    /* Mode 06h - CGA 640*200 2 color                   */
+    {NULL,                          0x1000, 1,  1},    /* Mode 07h - MDA monochrome text 80*25             */
+    {NULL,                          0x0000, 1,  1},    /* Mode 08h - PCjr                                  */
+    {NULL,                          0x0000, 1,  1},    /* Mode 09h - PCjr                                  */
+    {NULL,                          0x0000, 1,  1},    /* Mode 0Ah - PCjr                                  */
+    {NULL,                          0x0000, 1,  1},    /* Mode 0Bh - Reserved                              */
+    {NULL,                          0x0000, 1,  1},    /* Mode 0Ch - Reserved                              */
+    {&VideoMode_320x200_16color,    0x2000, 8,  8},    /* Mode 0Dh - EGA 320*200 16 color                  */
+    {&VideoMode_640x200_16color,    0x4000, 8,  8},    /* Mode 0Eh - EGA 640*200 16 color                  */
+    {NULL,                          0x8000, 1,  1},    /* Mode 0Fh - EGA 640*350 mono                      */
+    {&VideoMode_640x350_16color,    0x8000, 8, 14},    /* Mode 10h - EGA 640*350 HiRes 16 color            */
+    {&VideoMode_640x480_2color,     0xA000, 8, 16},    /* Mode 11h - VGA 640*480 mono                      */
+    {&VideoMode_640x480_16color,    0xA000, 8, 16},    /* Mode 12h - VGA                                   */
+    {&VideoMode_320x200_256color,   0x2000, 8,  8},    /* Mode 13h - VGA                                   */
 };
 
 #define IS_TEXT_MODE(ModeNumber)    \
@@ -2021,10 +2022,10 @@ static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
             /* Move text lines up */
             for (i = Rectangle.Top + Amount; i <= Rectangle.Bottom; i++)
             {
-                EmulatorWriteMemory(&EmulatorContext,
-                                    VideoAddress + ((i - Amount) * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD),
-                       REAL_TO_PHYS(VideoAddress + ( i           * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD)),
-                                    (Rectangle.Right - Rectangle.Left + 1) * sizeof(WORD));
+                EmulatorCopyMemory(&EmulatorContext,
+                                   VideoAddress + ((i - Amount) * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD),
+                                   VideoAddress + ( i           * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD),
+                                   (Rectangle.Right - Rectangle.Left + 1) * sizeof(WORD));
             }
 
             /* Fill the bottom of the rectangle */
@@ -2049,10 +2050,10 @@ static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
             /* Move text lines down */
             for (i = Rectangle.Bottom - Amount; i >= Rectangle.Top; i--)
             {
-                EmulatorWriteMemory(&EmulatorContext,
-                                    VideoAddress + ((i + Amount) * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD),
-                       REAL_TO_PHYS(VideoAddress + ( i           * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD)),
-                                    (Rectangle.Right - Rectangle.Left + 1) * sizeof(WORD));
+                EmulatorCopyMemory(&EmulatorContext,
+                                   VideoAddress + ((i + Amount) * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD),
+                                   VideoAddress + ( i           * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD),
+                                   (Rectangle.Right - Rectangle.Left + 1) * sizeof(WORD));
             }
 
             /* Fill the top of the rectangle */
@@ -2076,10 +2077,10 @@ static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
             /* Move text lines left */
             for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
             {
-                EmulatorWriteMemory(&EmulatorContext,
-                                    VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left         ) * sizeof(WORD),
-                       REAL_TO_PHYS(VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left + Amount) * sizeof(WORD)),
-                                    (Rectangle.Right - Rectangle.Left - Amount + 1) * sizeof(WORD));
+                EmulatorCopyMemory(&EmulatorContext,
+                                   VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left         ) * sizeof(WORD),
+                                   VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left + Amount) * sizeof(WORD),
+                                   (Rectangle.Right - Rectangle.Left - Amount + 1) * sizeof(WORD));
             }
 
             /* Fill the right of the rectangle */
@@ -2099,19 +2100,21 @@ static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
 
         case SCROLL_RIGHT:
         {
+            INT Right;
+
             /* Move text lines right */
             for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
             {
-                EmulatorWriteMemory(&EmulatorContext,
-                                    VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left + Amount) * sizeof(WORD),
-                       REAL_TO_PHYS(VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left         ) * sizeof(WORD)),
-                                    (Rectangle.Right - Rectangle.Left - Amount + 1) * sizeof(WORD));
+                EmulatorCopyMemory(&EmulatorContext,
+                                   VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left + Amount) * sizeof(WORD),
+                                   VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left         ) * sizeof(WORD),
+                                   (Rectangle.Right - Rectangle.Left - Amount + 1) * sizeof(WORD));
             }
 
             /* Fill the left of the rectangle */
+            Right = Rectangle.Left + Amount - 1;
             for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
             {
-                INT Right = Rectangle.Left + Amount - 1;
                 for (j = Rectangle.Left; j <= Right; j++)
                 {
                     EmulatorWriteMemory(&EmulatorContext,
@@ -2372,11 +2375,11 @@ static VOID VidBiosSetCursorShape(WORD CursorStartEnd)
     IOWriteB(VGA_CRTC_DATA , LOBYTE(CursorStartEnd));
 }
 
-VOID VidBiosSyncCursorPosition(VOID)
+static VOID VidBiosSyncCursorPosition(VOID)
 {
     BYTE Row, Column;
     BYTE Low, High;
-    SHORT ScreenColumns = VgaGetDisplayResolution().X;
+    SHORT ScreenColumns = Bda->ScreenColumns;
     WORD Offset;
 
     /* Get the cursor position */
@@ -2493,11 +2496,15 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 
     /* Update the screen size */
     Resolution = VgaGetDisplayResolution();
+    // This could be simplified if the VGA helper always returned the resolution
+    // in number of pixels, instead of in number of cells for text-modes only...
+    if (!IS_TEXT_MODE(ModeNumber))
+    {
+        Resolution.X /= VideoModes[ModeNumber].CharacterWidth ;
+        Resolution.Y /= VideoModes[ModeNumber].CharacterHeight;
+    }
     Bda->ScreenColumns = Resolution.X;
     Bda->ScreenRows    = Resolution.Y - 1;
-
-    /* Adjust the number of columns for graphics modes */
-    if (!IS_TEXT_MODE(ModeNumber)) Bda->ScreenColumns >>= 3;
 
     /* Update the current font */
     Bda->CharacterHeight = VideoModes[ModeNumber].CharacterHeight;
@@ -2592,7 +2599,7 @@ static BOOLEAN VidBiosSetVideoPage(BYTE PageNumber)
      * but we update the cursor position on the VGA side).
      */
     VidBiosGetCursorPosition(&Row, &Column, PageNumber);
-    VidBiosSetCursorPosition(Row, Column, PageNumber);
+    VidBiosSetCursorPosition( Row,  Column, PageNumber);
 
     return TRUE;
 }
@@ -2814,11 +2821,11 @@ static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row
             WORD i, j;
             PUCHAR Font = (PUCHAR)FAR_POINTER(((PULONG)BaseAddress)[0x43]);
             PUCHAR Glyph = &Font[LOBYTE(CharData) * Bda->CharacterHeight];
-            BYTE PixelBuffer[8];
+            BYTE PixelBuffer[8]; // 8 == CharacterWidth
 
             for (i = 0; i < Bda->CharacterHeight; i++)
             {
-                for (j = 0; j < 8; j++)
+                for (j = 0; j < ARRAYSIZE(PixelBuffer); j++)
                 {
                     PixelBuffer[j] = (Glyph[i] & (1 << (7 - j))) ? HIBYTE(CharData) : 0;
                 }
@@ -2826,7 +2833,7 @@ static VOID VidBiosDrawGlyph(WORD CharData, BOOLEAN UseAttr, BYTE Page, BYTE Row
                 EmulatorWriteMemory(&EmulatorContext,
                                     TO_LINEAR(GRAPHICS_VIDEO_SEG,
                                               ((Row * Bda->CharacterHeight + i)
-                                              * Bda->ScreenColumns + Column) << 3),
+                                              * Bda->ScreenColumns + Column) * 8),
                                     (LPVOID)PixelBuffer,
                                     sizeof(PixelBuffer));
             }
