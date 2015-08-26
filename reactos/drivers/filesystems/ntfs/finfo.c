@@ -22,6 +22,7 @@
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMERS:      Eric Kohl
  *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -225,9 +226,10 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
                         PFILE_STREAM_INFORMATION StreamInfo,
                         PULONG BufferLength)
 {
-    NTSTATUS Status;
     ULONG CurrentSize;
+    FIND_ATTR_CONTXT Context;
     PNTFS_ATTR_RECORD Attribute;
+    NTSTATUS Status, BrowseStatus;
     PFILE_RECORD_HEADER FileRecord;
     PFILE_STREAM_INFORMATION CurrentInfo = StreamInfo, Previous = NULL;
 
@@ -249,10 +251,8 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
         return Status;
     }
 
-    Status = STATUS_SUCCESS;
-    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
-    while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
-           Attribute->Type != AttributeEnd)
+    BrowseStatus = FindFirstAttribute(&Context, DeviceExt, FileRecord, FALSE, &Attribute);
+    while (NT_SUCCESS(BrowseStatus))
     {
         if (Attribute->Type == AttributeData)
         {
@@ -281,9 +281,10 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
             *BufferLength -= CurrentSize;
         }
 
-        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+        BrowseStatus = FindNextAttribute(&Context, &Attribute);
     }
 
+    FindCloseAttribute(&Context);
     ExFreePoolWithTag(FileRecord, TAG_NTFS);
     return Status;
 }

@@ -135,7 +135,7 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
             break;
         }
 
-        FileName = GetBestFileNameFromRecord(MftRecord);
+        FileName = GetBestFileNameFromRecord(DeviceExt, MftRecord);
         if (FileName == NULL)
         {
             DPRINT1("$FILE_NAME attribute not found for %I64x\n", Id);

@@ -79,95 +79,6 @@ ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
 }
 
 
-PNTFS_ATTR_CONTEXT
-FindAttributeHelper(PDEVICE_EXTENSION Vcb,
-                    PNTFS_ATTR_RECORD AttrRecord,
-                    PNTFS_ATTR_RECORD AttrRecordEnd,
-                    ULONG Type,
-                    PCWSTR Name,
-                    ULONG NameLength)
-{
-    DPRINT("FindAttributeHelper(%p, %p, %p, 0x%x, %S, %u)\n", Vcb, AttrRecord, AttrRecordEnd, Type, Name, NameLength);
-
-    while (AttrRecord < AttrRecordEnd)
-    {
-        DPRINT("AttrRecord->Type = 0x%x\n", AttrRecord->Type);
-
-        if (AttrRecord->Type == AttributeEnd)
-            break;
-
-        if (AttrRecord->Type == AttributeAttributeList)
-        {
-            PNTFS_ATTR_CONTEXT Context;
-            PNTFS_ATTR_CONTEXT ListContext;
-            PVOID ListBuffer;
-            ULONGLONG ListSize;
-            PNTFS_ATTR_RECORD ListAttrRecord;
-            PNTFS_ATTR_RECORD ListAttrRecordEnd;
-
-            ListContext = PrepareAttributeContext(AttrRecord);
-
-            ListSize = AttributeDataLength(&ListContext->Record);
-            if(ListSize <= 0xFFFFFFFF)
-                ListBuffer = ExAllocatePoolWithTag(NonPagedPool, (ULONG)ListSize, TAG_NTFS);
-            else
-                ListBuffer = NULL;
-
-            if(!ListBuffer)
-            {
-                DPRINT("Failed to allocate memory: %x\n", (ULONG)ListSize);
-                continue;
-            }
-
-            ListAttrRecord = (PNTFS_ATTR_RECORD)ListBuffer;
-            ListAttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize);
-
-            if (ReadAttribute(Vcb, ListContext, 0, ListBuffer, (ULONG)ListSize) == ListSize)
-            {
-                Context = FindAttributeHelper(Vcb, ListAttrRecord, ListAttrRecordEnd,
-                                              Type, Name, NameLength);
-
-                ReleaseAttributeContext(ListContext);
-                ExFreePoolWithTag(ListBuffer, TAG_NTFS);
-
-                if (Context != NULL)
-                {
-                    if (AttrRecord->IsNonResident) DPRINT("Found context = %p\n", Context);
-                    return Context;
-                }
-            }
-        }
-
-        if (AttrRecord->Type == Type)
-        {
-            if (AttrRecord->NameLength == NameLength)
-            {
-                PWCHAR AttrName;
-
-                AttrName = (PWCHAR)((PCHAR)AttrRecord + AttrRecord->NameOffset);
-                DPRINT("%.*S, %.*S\n", AttrRecord->NameLength, AttrName, NameLength, Name);
-                if (RtlCompareMemory(AttrName, Name, NameLength << 1) == (NameLength << 1))
-                {
-                    /* Found it, fill up the context and return. */
-                    DPRINT("Found context\n");
-                    return PrepareAttributeContext(AttrRecord);
-                }
-            }
-        }
-
-        if (AttrRecord->Length == 0)
-        {
-            DPRINT("Null length attribute record\n");
-            return NULL;
-        }
-        AttrRecord = (PNTFS_ATTR_RECORD)((PCHAR)AttrRecord + AttrRecord->Length);
-    }
-
-    DPRINT("Ended\n");
-    return NULL;
-}
-
-
 NTSTATUS
 FindAttribute(PDEVICE_EXTENSION Vcb,
               PFILE_RECORD_HEADER MftRecord,
@@ -176,21 +87,36 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
               ULONG NameLength,
               PNTFS_ATTR_CONTEXT * AttrCtx)
 {
-    PNTFS_ATTR_RECORD AttrRecord;
-    PNTFS_ATTR_RECORD AttrRecordEnd;
+    NTSTATUS Status;
+    FIND_ATTR_CONTXT Context;
+    PNTFS_ATTR_RECORD Attribute;
 
     DPRINT("FindAttribute(%p, %p, 0x%x, %S, %u, %p)\n", Vcb, MftRecord, Type, Name, NameLength, AttrCtx);
 
-    AttrRecord = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + MftRecord->AttributeOffset);
-    AttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + Vcb->NtfsInfo.BytesPerFileRecord);
-
-    *AttrCtx = FindAttributeHelper(Vcb, AttrRecord, AttrRecordEnd, Type, Name, NameLength);
-    if (*AttrCtx == NULL)
+    Status = FindFirstAttribute(&Context, Vcb, MftRecord, FALSE, &Attribute);
+    while (NT_SUCCESS(Status))
     {
-        return STATUS_OBJECT_NAME_NOT_FOUND;
+        if (Attribute->Type == Type && Attribute->NameLength == NameLength)
+        {
+            PWCHAR AttrName;
+
+            AttrName = (PWCHAR)((PCHAR)Attribute + Attribute->NameOffset);
+            DPRINT("%.*S, %.*S\n", Attribute->NameLength, AttrName, NameLength, Name);
+            if (RtlCompareMemory(AttrName, Name, NameLength << 1) == (NameLength << 1))
+            {
+                /* Found it, fill up the context and return. */
+                DPRINT("Found context\n");
+                *AttrCtx = PrepareAttributeContext(Attribute);
+                FindCloseAttribute(&Context);
+                return STATUS_SUCCESS;
+            }
+        }
+
+        Status = FindNextAttribute(&Context, &Attribute);
     }
 
-    return STATUS_SUCCESS;
+    FindCloseAttribute(&Context);
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 

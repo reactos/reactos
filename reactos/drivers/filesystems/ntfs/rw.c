@@ -98,13 +98,14 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext);
     if (!NT_SUCCESS(Status))
     {
+        NTSTATUS BrowseStatus;
+        FIND_ATTR_CONTXT Context;
         PNTFS_ATTR_RECORD Attribute;
 
         DPRINT1("No '%S' data stream associated with file!\n", Fcb->Stream);
 
-        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
-        while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
-               Attribute->Type != AttributeEnd)
+        BrowseStatus = FindFirstAttribute(&Context, DeviceExt, FileRecord, FALSE, &Attribute);
+        while (NT_SUCCESS(BrowseStatus))
         {
             if (Attribute->Type == AttributeData)
             {
@@ -116,8 +117,9 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
                 DPRINT1("Data stream: '%wZ' available\n", &Name);
             }
 
-            Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+            BrowseStatus = FindNextAttribute(&Context, &Attribute);
         }
+        FindCloseAttribute(&Context);
 
         ReleaseAttributeContext(DataContext);
         ExFreePoolWithTag(FileRecord, TAG_NTFS);

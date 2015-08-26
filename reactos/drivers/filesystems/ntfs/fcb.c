@@ -319,7 +319,7 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
         return NULL;
     }
 
-    FileName = GetFileNameFromRecord(MftRecord, NTFS_FILE_NAME_WIN32);
+    FileName = GetFileNameFromRecord(Vcb, MftRecord, NTFS_FILE_NAME_WIN32);
     if (!FileName)
     {
         ExFreePoolWithTag(MftRecord, TAG_NTFS);
@@ -387,7 +387,7 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
 
     DPRINT1("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p, %p)\n", Vcb, DirectoryFCB, Name, Stream, Record, fileFCB);
 
-    FileName = GetBestFileNameFromRecord(Record);
+    FileName = GetBestFileNameFromRecord(Vcb, Record);
     if (!FileName)
     {
         return STATUS_OBJECT_NAME_NOT_FOUND; // Not sure that's the best here
@@ -428,7 +428,7 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
     rcFCB->RFCB.ValidDataLength.QuadPart = Size;
     rcFCB->RFCB.AllocationSize.QuadPart = AllocatedSize;
 
-    StdInfo = GetStandardInformationFromRecord(Record);
+    StdInfo = GetStandardInformationFromRecord(Vcb, Record);
     if (StdInfo != NULL)
     {
         rcFCB->Entry.FileAttributes |= StdInfo->FileAttribute;

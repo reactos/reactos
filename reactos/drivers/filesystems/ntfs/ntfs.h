@@ -462,6 +462,17 @@ typedef struct _FCB
 
 } NTFS_FCB, *PNTFS_FCB;
 
+typedef struct _FIND_ATTR_CONTXT
+{
+    PDEVICE_EXTENSION Vcb;
+    BOOLEAN OnlyResident;
+    PNTFS_ATTR_RECORD FirstAttr;
+    PNTFS_ATTR_RECORD CurrAttr;
+    PNTFS_ATTR_RECORD LastAttr;
+    PNTFS_ATTR_RECORD NonResidentStart;
+    PNTFS_ATTR_RECORD NonResidentEnd;
+} FIND_ATTR_CONTXT, *PFIND_ATTR_CONTXT;
+
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 
 FORCEINLINE
@@ -487,16 +498,35 @@ DecodeRun(PUCHAR DataRun,
           ULONGLONG *DataRunLength);
 
 VOID
-NtfsDumpFileAttributes(PDEVICE_EXTENSION Vcb, PFILE_RECORD_HEADER FileRecord);
+NtfsDumpFileAttributes(PDEVICE_EXTENSION Vcb,
+                       PFILE_RECORD_HEADER FileRecord);
 
 PSTANDARD_INFORMATION
-GetStandardInformationFromRecord(PFILE_RECORD_HEADER FileRecord);
+GetStandardInformationFromRecord(PDEVICE_EXTENSION Vcb,
+                                 PFILE_RECORD_HEADER FileRecord);
 
 PFILENAME_ATTRIBUTE
-GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType);
+GetFileNameFromRecord(PDEVICE_EXTENSION Vcb,
+                      PFILE_RECORD_HEADER FileRecord,
+                      UCHAR NameType);
 
 PFILENAME_ATTRIBUTE
-GetBestFileNameFromRecord(PFILE_RECORD_HEADER FileRecord);
+GetBestFileNameFromRecord(PDEVICE_EXTENSION Vcb,
+                          PFILE_RECORD_HEADER FileRecord);
+
+NTSTATUS
+FindFirstAttribute(PFIND_ATTR_CONTXT Context,
+                   PDEVICE_EXTENSION Vcb,
+                   PFILE_RECORD_HEADER FileRecord,
+                   BOOLEAN OnlyResident,
+                   PNTFS_ATTR_RECORD * Attribute);
+
+NTSTATUS
+FindNextAttribute(PFIND_ATTR_CONTXT Context,
+                  PNTFS_ATTR_RECORD * Attribute);
+
+VOID
+FindCloseAttribute(PFIND_ATTR_CONTXT Context);
 
 /* blockdev.c */
 

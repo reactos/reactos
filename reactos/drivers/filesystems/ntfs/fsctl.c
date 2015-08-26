@@ -570,6 +570,8 @@ GetNfsVolumeData(PDEVICE_EXTENSION DeviceExt,
     PIO_STACK_LOCATION Stack;
     PNTFS_VOLUME_DATA_BUFFER DataBuffer;
     PNTFS_ATTR_RECORD Attribute;
+    FIND_ATTR_CONTXT Context;
+    NTSTATUS Status;
 
     DataBuffer = (PNTFS_VOLUME_DATA_BUFFER)Irp->AssociatedIrp.SystemBuffer;
     Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -595,9 +597,8 @@ GetNfsVolumeData(PDEVICE_EXTENSION DeviceExt,
     DataBuffer->MftZoneStart.QuadPart = 0; // FIXME
     DataBuffer->MftZoneEnd.QuadPart = 0; // FIXME
 
-    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DeviceExt->MasterFileTable + DeviceExt->MasterFileTable->AttributeOffset);
-    while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)DeviceExt->MasterFileTable + DeviceExt->MasterFileTable->BytesInUse) &&
-           Attribute->Type != AttributeEnd)
+    Status = FindFirstAttribute(&Context, DeviceExt, DeviceExt->MasterFileTable, FALSE, &Attribute);
+    while (NT_SUCCESS(Status))
     {
         if (Attribute->Type == AttributeData)
         {
@@ -607,8 +608,9 @@ GetNfsVolumeData(PDEVICE_EXTENSION DeviceExt,
             break;
         }
 
-        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+        Status = FindNextAttribute(&Context, &Attribute);
     }
+    FindCloseAttribute(&Context);
 
     Irp->IoStatus.Information = sizeof(NTFS_VOLUME_DATA_BUFFER);
 
