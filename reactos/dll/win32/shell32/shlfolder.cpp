@@ -25,16 +25,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static const WCHAR wszDotShellClassInfo[] = {
-    '.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0};
-
 /***************************************************************************
- *  SHELL32_GetCustomFolderAttribute (internal function)
+ *  SHELL32_GetCustomFolderAttributeFromPath (internal function)
  *
  * Gets a value from the folder's desktop.ini file, if one exists.
  *
  * PARAMETERS
- *  pidl          [I] Folder containing the desktop.ini file.
+ *  pwszFolderPath[I] Folder containing the desktop.ini file.
  *  pwszHeading   [I] Heading in .ini file.
  *  pwszAttribute [I] Attribute in .ini file.
  *  pwszValue     [O] Buffer to store value into.
@@ -58,54 +55,6 @@ static BOOL __inline SHELL32_GetCustomFolderAttributeFromPath(
     return GetPrivateProfileStringW(pwszHeading, pwszAttribute, wszDefault,
                                     pwszValue, cchValue, pwszFolderPath);
 }
-
-BOOL SHELL32_GetCustomFolderAttribute(
-    LPCITEMIDLIST pidl, LPCWSTR pwszHeading, LPCWSTR pwszAttribute,
-    LPWSTR pwszValue, DWORD cchValue)
-{
-    DWORD dwAttrib = FILE_ATTRIBUTE_SYSTEM;
-    WCHAR wszFolderPath[MAX_PATH];
-
-    /* Hack around not having system attribute on non-Windows file systems */
-    if (0)
-        dwAttrib = _ILGetFileAttributes(pidl, NULL, 0);
-
-    if (dwAttrib & FILE_ATTRIBUTE_SYSTEM)
-    {
-        if (!SHGetPathFromIDListW(pidl, wszFolderPath))
-            return FALSE;
-
-        return SHELL32_GetCustomFolderAttributeFromPath(wszFolderPath, pwszHeading,
-                                                pwszAttribute, pwszValue, cchValue);
-    }
-    return FALSE;
-}
-
-BOOL SHELL32_GetCustomFolderAttributes(
-    LPCITEMIDLIST pidl, LPCWSTR pwszHeading,
-    LPWSTR pwszValue, DWORD cchValue)
-{
-    DWORD dwAttrib = FILE_ATTRIBUTE_SYSTEM;
-    WCHAR wszFolderPath[MAX_PATH];
-
-    /* Hack around not having system attribute on non-Windows file systems */
-    dwAttrib = _ILGetFileAttributes(pidl, NULL, 0);
-
-    if (dwAttrib & FILE_ATTRIBUTE_SYSTEM)
-    {
-        if (!SHGetPathFromIDListW(pidl, wszFolderPath))
-            return FALSE;
-
-        static const WCHAR wszDesktopIni[] =
-                {'d','e','s','k','t','o','p','.','i','n','i',0};
-
-        PathAddBackslashW(wszFolderPath);
-        PathAppendW(wszFolderPath, wszDesktopIni);
-        return GetPrivateProfileSectionW(pwszHeading, pwszValue, cchValue, wszFolderPath);
-    }
-    return FALSE;
-}
-
 
 /***************************************************************************
  *  GetNextElement (internal function)
@@ -276,6 +225,9 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
 HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
                              LPCWSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut)
 {
+    static const WCHAR wszDotShellClassInfo[] = {
+        '.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0 };
+
     GUID const *clsid;
     CComPtr<IShellFolder> pSF;
     HRESULT hr;

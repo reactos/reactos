@@ -27,64 +27,58 @@ IShellIconOverlayIdentifier ** Handlers = NULL;
 static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
                                         LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
-    int icon_idx;
-    bool cont=TRUE;
-    WCHAR wszPath[MAX_PATH];
-    WCHAR wszCLSIDValue[CHARS_IN_GUID];
     static const WCHAR shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
     static const WCHAR iconFile[] = { 'I', 'c', 'o', 'n', 'F', 'i', 'l', 'e', 0 };
     static const WCHAR clsid[] = { 'C', 'L', 'S', 'I', 'D', 0 };
     static const WCHAR clsid2[] = { 'C', 'L', 'S', 'I', 'D', '2', 0 };
     static const WCHAR iconIndex[] = { 'I', 'c', 'o', 'n', 'I', 'n', 'd', 'e', 'x', 0 };
+    static const WCHAR wszDesktopIni[] = { 'd','e','s','k','t','o','p','.','i','n','i',0 };
+    int icon_idx;
+    WCHAR wszFolderPath[MAX_PATH];
 
-    /*
-    Optimisation. GetCustomFolderAttribute has a critical lock on it, and isn't fast.
-    Test the water (i.e., see if the attribute exists) before questioning it three times
-    when most folders don't use it at all.
-    */
-    WCHAR wszBigToe[3];
-    if (!(uFlags & GIL_DEFAULTICON) && SHELL32_GetCustomFolderAttributes(pidl, shellClassInfo,
-                                         wszBigToe, 3))
+    if (!SHGetPathFromIDListW(pidl, wszFolderPath))
+        return FALSE;
+
+    PathAppendW(wszFolderPath, wszDesktopIni);
+
+    if (!(uFlags & GIL_DEFAULTICON) && PathFileExistsW(wszFolderPath))
     {
-        if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconFile,
-                                             wszPath, MAX_PATH))
+        WCHAR wszPath[MAX_PATH];
+        WCHAR wszCLSIDValue[CHARS_IN_GUID];
+
+        if (GetPrivateProfileStringW(shellClassInfo, iconFile, NULL, wszPath, MAX_PATH, wszFolderPath))
         {
-            WCHAR wszIconIndex[10];
-            SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconIndex,
-                                             wszIconIndex, 10);
-            *piIndex = _wtoi(wszIconIndex);
-            cont=FALSE;
+            ExpandEnvironmentStringsW(wszPath, szIconFile, cchMax);
+
+            *piIndex = GetPrivateProfileIntW(shellClassInfo, iconIndex, 0, wszFolderPath);
+            return S_OK;
         }
-        else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid,
-                 wszCLSIDValue, CHARS_IN_GUID) &&
+        else if (GetPrivateProfileStringW(shellClassInfo, clsid, NULL, wszCLSIDValue, CHARS_IN_GUID, wszFolderPath) &&
                  HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
         {
             *piIndex = icon_idx;
-            cont=FALSE;
+            return S_OK;
         }
-        else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid2,
-                 wszCLSIDValue, CHARS_IN_GUID) &&
+        else if (GetPrivateProfileStringW(shellClassInfo, clsid2, NULL, wszCLSIDValue, CHARS_IN_GUID, wszFolderPath) &&
                  HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
         {
             *piIndex = icon_idx;
-            cont=FALSE;
+            return S_OK;
         }
     }
-    if (cont)
+
+    static const WCHAR folder[] = { 'F', 'o', 'l', 'd', 'e', 'r', 0 };
+
+    if (!HCR_GetIconW(folder, szIconFile, NULL, cchMax, &icon_idx))
     {
-        static const WCHAR folder[] = { 'F', 'o', 'l', 'd', 'e', 'r', 0 };
-
-        if (!HCR_GetIconW(folder, szIconFile, NULL, cchMax, &icon_idx))
-        {
-            lstrcpynW(szIconFile, swShell32Name, cchMax);
-            icon_idx = -IDI_SHELL_FOLDER;
-        }
-
-        if (uFlags & GIL_OPENICON)
-            *piIndex = icon_idx < 0 ? icon_idx - 1 : icon_idx + 1;
-        else
-            *piIndex = icon_idx;
+        lstrcpynW(szIconFile, swShell32Name, cchMax);
+        icon_idx = -IDI_SHELL_FOLDER;
     }
+
+    if (uFlags & GIL_OPENICON)
+        *piIndex = icon_idx < 0 ? icon_idx - 1 : icon_idx + 1;
+    else
+        *piIndex = icon_idx;
 
     return S_OK;
 }
