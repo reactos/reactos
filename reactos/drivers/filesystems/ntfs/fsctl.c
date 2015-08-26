@@ -352,6 +352,11 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         VolumeNameU = L"\0";
     }
 
+    if (NT_SUCCESS(Status))
+    {
+        ReleaseAttributeContext(AttrCtxt);
+    }
+
     VolumeFcb = NtfsCreateFCB(VolumeNameU, NULL, DeviceExt);
     if (VolumeFcb == NULL)
     {
@@ -380,6 +385,11 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         NtfsInfo->MajorVersion = VolumeInfo->MajorVersion;
         NtfsInfo->MinorVersion = VolumeInfo->MinorVersion;
         NtfsInfo->Flags = VolumeInfo->Flags;
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        ReleaseAttributeContext(AttrCtxt);
     }
 
     ExFreePool(VolumeRecord);
