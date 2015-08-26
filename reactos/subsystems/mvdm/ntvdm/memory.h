@@ -55,6 +55,16 @@ EmulatorWriteMemory
     ULONG Size
 );
 
+VOID
+FASTCALL
+EmulatorCopyMemory
+(
+    PFAST486_STATE State,
+    ULONG DestAddress,
+    ULONG SrcAddress,
+    ULONG Size
+);
+
 VOID EmulatorSetA20(BOOLEAN Enabled);
 BOOLEAN EmulatorGetA20(VOID);
 

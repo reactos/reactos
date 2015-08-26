@@ -109,9 +109,7 @@ MemFastMoveMemory(OUT VOID UNALIGNED *Destination,
 #endif
 }
 
-static
-inline
-VOID
+static inline VOID
 ReadPage(PMEM_HOOK Hook, ULONG Address, PVOID Buffer, ULONG Size)
 {
     if (Hook && !Hook->hVdd && Hook->FastReadHandler)
@@ -122,9 +120,7 @@ ReadPage(PMEM_HOOK Hook, ULONG Address, PVOID Buffer, ULONG Size)
     MemFastMoveMemory(Buffer, REAL_TO_PHYS(Address), Size);
 }
 
-static
-inline
-VOID
+static inline VOID
 WritePage(PMEM_HOOK Hook, ULONG Address, PVOID Buffer, ULONG Size)
 {
     if (!Hook
@@ -213,6 +209,62 @@ VOID FASTCALL EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buf
             Buffer = (PVOID)((ULONG_PTR)Buffer + Length);
         }
     }
+}
+
+VOID FASTCALL EmulatorCopyMemory(PFAST486_STATE State, ULONG DestAddress, ULONG SrcAddress, ULONG Size)
+{
+    /*
+     * Guest-to-guest memory copy
+     */
+
+    // FIXME: This is a temporary implementation of a more useful functionality
+    // which should be a merge of EmulatorReadMemory & EmulatorWriteMemory without
+    // any local external buffer.
+    // NOTE: Process heap is by default serialized (unless one specifies it shouldn't).
+    static BYTE StaticBuffer[8192]; // Smallest static buffer we can use.
+    static PVOID HeapBuffer = NULL; // Always-growing heap buffer. Use it in case StaticBuffer is too small.
+    static ULONG HeapBufferSize = 0;
+    PVOID LocalBuffer;              // Points to either StaticBuffer or HeapBuffer
+
+    if (Size <= sizeof(StaticBuffer))
+    {
+        /* Use the static buffer */
+        LocalBuffer = StaticBuffer;
+    }
+    else if (/* sizeof(StaticBuffer) <= Size && */ Size <= HeapBufferSize)
+    {
+        /* Use the heap buffer */
+        ASSERT(HeapBufferSize > 0 && HeapBuffer != NULL);
+        LocalBuffer = HeapBuffer;
+    }
+    else // if (Size > HeapBufferSize)
+    {
+        /* Enlarge the heap buffer and use it */
+
+        if (HeapBuffer == NULL)
+        {
+            /* First allocation */
+            LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
+        }
+        else
+        {
+            /* Reallocation */
+            LocalBuffer = RtlReAllocateHeap(RtlGetProcessHeap(), 0 /* HEAP_GENERATE_EXCEPTIONS */, HeapBuffer, Size);
+        }
+        ASSERT(LocalBuffer != NULL); // We must succeed! TODO: Handle it more properly.
+        HeapBuffer = LocalBuffer;    // HeapBuffer is now reallocated.
+        HeapBufferSize = Size;
+    }
+
+    /* Perform memory copy */
+    EmulatorReadMemory( State, SrcAddress , LocalBuffer, Size);
+    EmulatorWriteMemory(State, DestAddress, LocalBuffer, Size);
+
+    // if (LocalBuffer != StaticBuffer)
+    //     RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
+
+    // Note that we don't free HeapBuffer since it's an always-growing buffer.
+    // It is freed when NTVDM termiantes.
 }
 
 VOID EmulatorSetA20(BOOLEAN Enabled)
