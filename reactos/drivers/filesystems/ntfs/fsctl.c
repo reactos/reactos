@@ -89,6 +89,10 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
             return STATUS_UNRECOGNIZED_VOLUME;
         }
     }
+    else if (DiskGeometry.MediaType == Unknown)
+    {
+        DiskGeometry.BytesPerSector = 512;
+    }
 
     DPRINT1("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
     BootSector = ExAllocatePoolWithTag(NonPagedPool,
