@@ -833,7 +833,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     ReleaseAttributeContext(DataContext);
     ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
