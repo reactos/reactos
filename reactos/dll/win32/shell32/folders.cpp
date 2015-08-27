@@ -34,36 +34,40 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
     static const WCHAR iconIndex[] = { 'I', 'c', 'o', 'n', 'I', 'n', 'd', 'e', 'x', 0 };
     static const WCHAR wszDesktopIni[] = { 'd','e','s','k','t','o','p','.','i','n','i',0 };
     int icon_idx;
-    WCHAR wszFolderPath[MAX_PATH];
 
-    if (!SHGetPathFromIDListW(pidl, wszFolderPath))
-        return FALSE;
-
-    PathAppendW(wszFolderPath, wszDesktopIni);
-
-    if (!(uFlags & GIL_DEFAULTICON) && PathFileExistsW(wszFolderPath))
+    if (!(uFlags & GIL_DEFAULTICON) && (_ILGetFileAttributes(ILFindLastID(pidl), NULL, 0) & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0 )
     {
-        WCHAR wszPath[MAX_PATH];
-        WCHAR wszCLSIDValue[CHARS_IN_GUID];
+        WCHAR wszFolderPath[MAX_PATH];
 
-        if (GetPrivateProfileStringW(shellClassInfo, iconFile, NULL, wszPath, MAX_PATH, wszFolderPath))
-        {
-            ExpandEnvironmentStringsW(wszPath, szIconFile, cchMax);
+        if (!SHGetPathFromIDListW(pidl, wszFolderPath))
+            return FALSE;
 
-            *piIndex = GetPrivateProfileIntW(shellClassInfo, iconIndex, 0, wszFolderPath);
-            return S_OK;
-        }
-        else if (GetPrivateProfileStringW(shellClassInfo, clsid, NULL, wszCLSIDValue, CHARS_IN_GUID, wszFolderPath) &&
-                 HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
+        PathAppendW(wszFolderPath, wszDesktopIni);
+
+        if (PathFileExistsW(wszFolderPath))
         {
-            *piIndex = icon_idx;
-            return S_OK;
-        }
-        else if (GetPrivateProfileStringW(shellClassInfo, clsid2, NULL, wszCLSIDValue, CHARS_IN_GUID, wszFolderPath) &&
-                 HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
-        {
-            *piIndex = icon_idx;
-            return S_OK;
+            WCHAR wszPath[MAX_PATH];
+            WCHAR wszCLSIDValue[CHARS_IN_GUID];
+
+            if (GetPrivateProfileStringW(shellClassInfo, iconFile, NULL, wszPath, MAX_PATH, wszFolderPath))
+            {
+                ExpandEnvironmentStringsW(wszPath, szIconFile, cchMax);
+
+                *piIndex = GetPrivateProfileIntW(shellClassInfo, iconIndex, 0, wszFolderPath);
+                return S_OK;
+            }
+            else if (GetPrivateProfileStringW(shellClassInfo, clsid, NULL, wszCLSIDValue, CHARS_IN_GUID, wszFolderPath) &&
+                HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
+            {
+                *piIndex = icon_idx;
+                return S_OK;
+            }
+            else if (GetPrivateProfileStringW(shellClassInfo, clsid2, NULL, wszCLSIDValue, CHARS_IN_GUID, wszFolderPath) &&
+                HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
+            {
+                *piIndex = icon_idx;
+                return S_OK;
+            }
         }
     }
 
