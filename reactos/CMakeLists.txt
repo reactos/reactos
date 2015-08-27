@@ -75,6 +75,9 @@ if(NOT MSVC_IDE)
     unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
 endif()
 
+# Bison and Flex support
+# include(cmake/bison-flex.cmake)
+
 if(NOT CMAKE_CROSSCOMPILING)
 
     add_definitions(-DTARGET_${ARCH})
