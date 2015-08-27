@@ -237,6 +237,8 @@ else()
 
     if(NO_ROSSYM)
         include(cmake/baseaddress_dwarf.cmake)
+    elseif(MSVC)
+        include(cmake/baseaddress_msvc.cmake)
     else()
         include(cmake/baseaddress.cmake)
     endif()
