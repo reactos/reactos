@@ -26,8 +26,8 @@ VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct
 {
-	ULONG ComponentId;
-	ULONG Level;
+    ULONG ComponentId;
+    ULONG Level;
 } KD_COMPONENT_DATA;
 #define MAX_KD_COMPONENT_TABLE_ENTRIES 128
 KD_COMPONENT_DATA KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
@@ -74,6 +74,7 @@ KdpServiceDispatcher(ULONG Service,
             break;
         }
 
+#if defined(_M_IX86) && !defined(_WINKD_) // See ke/i386/traphdlr.c
         /* Register a debug callback */
         case 'CsoR':
         {
@@ -90,6 +91,7 @@ KdpServiceDispatcher(ULONG Service,
             }
             break;
         }
+#endif
 
         /* Special  case for stack frame dumps */
         case 'DsoR':

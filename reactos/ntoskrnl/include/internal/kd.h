@@ -354,7 +354,7 @@ extern ULONG Kd_WIN2000_Mask;
 
 #endif
 
-#if DBG
+#if DBG && defined(_M_IX86) && !defined(_WINKD_) // See ke/i386/traphdlr.c
 #define ID_Win32PreServiceHook 'WSH0'
 #define ID_Win32PostServiceHook 'WSH1'
 typedef void (NTAPI *PKDBG_PRESERVICEHOOK)(ULONG, PULONG_PTR);

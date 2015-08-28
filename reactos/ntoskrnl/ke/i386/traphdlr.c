@@ -49,7 +49,7 @@ UCHAR KiTrapIoTable[] =
 };
 
 PFAST_SYSTEM_CALL_EXIT KiFastCallExitHandler;
-#if DBG && !defined(_WINKD_)
+#if DBG && defined(_M_IX86) && !defined(_WINKD_)
 PKDBG_PRESERVICEHOOK KeWin32PreServiceHook = NULL;
 PKDBG_POSTSERVICEHOOK KeWin32PostServiceHook = NULL;
 #endif
@@ -1278,12 +1278,10 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     if (NT_SUCCESS(Status))
     {
 #ifdef _WINKD_
-        /*
-         * We succeeded. Check whether the kernel debugger has
-         * owed breakpoints to be inserted, then return.
-         */
+        /* Check whether the kernel debugger has owed breakpoints to be inserted */
         KdSetOwedBreakpoints();
 #endif
+        /* We succeeded, return */
         KiEoiHelper(TrapFrame);
     }
 
