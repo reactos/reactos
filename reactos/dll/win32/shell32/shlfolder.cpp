@@ -521,7 +521,7 @@ HRESULT SHELL32_GetGuidItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, L
 
 HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
 {
-    DWORD dwAttributes;
+    DWORD dwFileAttributes, dwShellAttributes;
 
     if (!_ILIsFolder(pidl) && !_ILIsValue(pidl))
     {
@@ -536,35 +536,36 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
         *pdwAttributes &= dwSupportedAttr;
     }
 
-    dwAttributes = _ILGetFileAttributes(pidl, NULL, 0);
+    dwFileAttributes = _ILGetFileAttributes(pidl, NULL, 0);
 
     /* Set common attributes */
-    *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
-                        SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
+    dwShellAttributes = *pdwAttributes;
+    dwShellAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
+                         SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
 
-    if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     {
-        *pdwAttributes |=  (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
+        dwShellAttributes |=  (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
     }
     else
-        *pdwAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
+        dwShellAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
 
-    if (dwAttributes & FILE_ATTRIBUTE_HIDDEN)
-        *pdwAttributes |=  SFGAO_HIDDEN;
+    if (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+        dwShellAttributes |=  SFGAO_HIDDEN;
     else
-        *pdwAttributes &= ~SFGAO_HIDDEN;
+        dwShellAttributes &= ~SFGAO_HIDDEN;
 
-    if (dwAttributes & FILE_ATTRIBUTE_READONLY)
-        *pdwAttributes |=  SFGAO_READONLY;
+    if (dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+        dwShellAttributes |=  SFGAO_READONLY;
     else
-        *pdwAttributes &= ~SFGAO_READONLY;
+        dwShellAttributes &= ~SFGAO_READONLY;
 
     if (SFGAO_LINK & *pdwAttributes)
     {
         char ext[MAX_PATH];
 
         if (!_ILGetExtension(pidl, ext, MAX_PATH) || lstrcmpiA(ext, "lnk"))
-        *pdwAttributes &= ~SFGAO_LINK;
+        dwShellAttributes &= ~SFGAO_LINK;
     }
 
     if (SFGAO_HASSUBFOLDER & *pdwAttributes)
@@ -576,10 +577,12 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
             if (SUCCEEDED(psf2->EnumObjects(0, SHCONTF_FOLDERS, &pEnumIL)))
             {
                 if (pEnumIL->Skip(1) != S_OK)
-                    *pdwAttributes &= ~SFGAO_HASSUBFOLDER;
+                    dwShellAttributes &= ~SFGAO_HASSUBFOLDER;
             }
         }
     }
+
+    *pdwAttributes &= dwShellAttributes;
 
     TRACE ("-- 0x%08x\n", *pdwAttributes);
     return S_OK;
