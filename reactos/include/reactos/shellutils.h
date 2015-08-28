@@ -485,6 +485,37 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 
 
     return S_OK;
 }
+
+HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCSTR pstrValue)
+{
+    pStrRet->uType = STRRET_CSTR;
+    strcpy(pStrRet->cStr, pstrValue);
+    return S_OK;
+}
+
+HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCWSTR pwstrValue)
+{
+    ULONG cchr = wcslen(pwstrValue);
+    LPWSTR buffer = static_cast<LPWSTR>(CoTaskMemAlloc((cchr + 1) * sizeof(WCHAR)));
+    if (buffer == NULL)
+        return E_OUTOFMEMORY;
+
+    pStrRet->uType = STRRET_WSTR;
+    pStrRet->pOleStr = buffer;
+    wcscpy(buffer, pwstrValue);
+    return S_OK;
+}
+
+HRESULT inline SHSetStrRet(LPSTRRET pStrRet, HINSTANCE hInstance, DWORD resId)
+{
+    WCHAR Buffer[MAX_PATH];
+
+    if (!LoadStringW(hInstance, resId, Buffer, MAX_PATH))
+        return E_FAIL;
+
+    return SHSetStrRet(pStrRet, Buffer);
+}
+
 #endif /* __cplusplus */
 
 #endif /* __ROS_SHELL_UTILS_H */
