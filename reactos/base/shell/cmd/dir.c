@@ -1376,6 +1376,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
         WARN("DEBUG: Cannot allocate memory for ptrStartNode!\n");
         return 1;   /* Error cannot allocate memory for 1st object */
     }
+    ptrStartNode->stInfo.ptrHead = NULL;
     ptrNextNode = ptrStartNode;
 
     /*Checking ir szPath is a File with/wout extension*/
@@ -1478,8 +1479,8 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                             ptrCurNode = &(*ptrCurNode)->ptrNext;
                         }
 
-                         FindClose(hStreams);
-                         *ptrCurNode = NULL;
+                        FindClose(hStreams);
+                        *ptrCurNode = NULL;
                     }
                 }
 
@@ -1538,12 +1539,12 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     dwCount = 0;
     while (ptrNextNode->ptrNext)
     {
-        *(ptrFileArray + dwCount) = &ptrNextNode->ptrNext->stInfo;
+        ptrFileArray[dwCount] = &ptrNextNode->ptrNext->stInfo;
         ptrNextNode = ptrNextNode->ptrNext;
         dwCount++;
     }
 
-    /* Sort Data if requested*/
+    /* Sort Data if requested */
     if (lpFlags->stOrderBy.sCriteriaCount > 0)
         QsortFiles(ptrFileArray, 0, dwCount-1, lpFlags);
 
