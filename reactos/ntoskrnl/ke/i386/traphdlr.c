@@ -1277,11 +1277,13 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                            TrapFrame);
     if (NT_SUCCESS(Status))
     {
+#ifdef _WINKD_
         /*
          * We succeeded. Check whether the kernel debugger has
          * owed breakpoints to be inserted, then return.
          */
         KdSetOwedBreakpoints();
+#endif
         KiEoiHelper(TrapFrame);
     }
 
