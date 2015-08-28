@@ -19,12 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/*
-TODO:
-1. The selected items list should not be stored in CControlPanelFolder, it should
-    be a result returned by an internal method.
-*/
-
 #include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -40,9 +34,9 @@ class CControlPanelEnum :
         CControlPanelEnum();
         ~CControlPanelEnum();
         HRESULT WINAPI Initialize(DWORD dwFlags);
-        BOOL RegisterCPanelApp(LPCSTR path);
-        int RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPath);
-        int RegisterCPanelFolders(HKEY hkey_root, LPCSTR szRepPath);
+        BOOL RegisterCPanelApp(LPCWSTR path);
+        int RegisterRegistryCPanelApps(HKEY hkey_root, LPCWSTR szRepPath);
+        int RegisterCPanelFolders(HKEY hkey_root, LPCWSTR szRepPath);
         BOOL CreateCPanelEnumList(DWORD dwFlags);
 
         BEGIN_COM_MAP(CControlPanelEnum)
@@ -76,7 +70,7 @@ HRESULT WINAPI CControlPanelEnum::Initialize(DWORD dwFlags)
     return S_OK;
 }
 
-static LPITEMIDLIST _ILCreateCPanelApplet(LPCSTR pszName, LPCSTR pszDisplayName, LPCSTR pszComment, int iIconIdx)
+static LPITEMIDLIST _ILCreateCPanelApplet(LPCWSTR pszName, LPCWSTR pszDisplayName, LPCWSTR pszComment, int iIconIdx)
 {
     PIDLCPanelStruct *pCP;
     LPITEMIDLIST pidl;
@@ -84,13 +78,13 @@ static LPITEMIDLIST _ILCreateCPanelApplet(LPCSTR pszName, LPCSTR pszDisplayName,
     int cchName, cchDisplayName, cchComment, cbData;
 
     /* Calculate lengths of given strings */
-    cchName = strlen(pszName);
-    cchDisplayName = strlen(pszDisplayName);
-    cchComment = strlen(pszComment);
+    cchName = wcslen(pszName);
+    cchDisplayName = wcslen(pszDisplayName);
+    cchComment = wcslen(pszComment);
 
     /* Allocate PIDL */
     cbData = sizeof(pidl->mkid.cb) + sizeof(pData->type) + sizeof(pData->u.cpanel) - sizeof(pData->u.cpanel.szName)
-             + cchName + cchDisplayName + cchComment + 3;
+             + (cchName + cchDisplayName + cchComment + 3) * sizeof(WCHAR);
     pidl = (LPITEMIDLIST)SHAlloc(cbData + sizeof(WORD));
     if (!pidl)
         return NULL;
@@ -103,11 +97,11 @@ static LPITEMIDLIST _ILCreateCPanelApplet(LPCSTR pszName, LPCSTR pszDisplayName,
     pCP = &pData->u.cpanel;
     pCP->dummy = 0;
     pCP->iconIdx = iIconIdx;
-    strcpy(pCP->szName, pszName);
+    wcscpy(pCP->szName, pszName);
     pCP->offsDispName = cchName + 1;
-    strcpy(pCP->szName + pCP->offsDispName, pszDisplayName);
+    wcscpy(pCP->szName + pCP->offsDispName, pszDisplayName);
     pCP->offsComment = pCP->offsDispName + cchDisplayName + 1;
-    strcpy(pCP->szName + pCP->offsComment, pszComment);
+    wcscpy(pCP->szName + pCP->offsComment, pszComment);
 
     /* Add PIDL NULL terminator */
     *(WORD*)(pCP->szName + pCP->offsComment + cchComment + 1) = 0;
@@ -131,40 +125,24 @@ static PIDLCPanelStruct *_ILGetCPanelPointer(LPCITEMIDLIST pidl)
     return NULL;
 }
 
-BOOL CControlPanelEnum::RegisterCPanelApp(LPCSTR path)
+BOOL CControlPanelEnum::RegisterCPanelApp(LPCWSTR wpath)
 {
-    LPITEMIDLIST pidl;
-    CPlApplet* applet;
-    CPanel panel;
-    CPLINFO info;
-    unsigned i;
+    CPlApplet* applet = Control_LoadApplet(0, wpath, NULL);
     int iconIdx;
-
-    char displayName[MAX_PATH];
-    char comment[MAX_PATH];
-
-    WCHAR wpath[MAX_PATH];
-
-    MultiByteToWideChar(CP_ACP, 0, path, -1, wpath, MAX_PATH);
-
-    panel.first = NULL;
-    applet = Control_LoadApplet(0, wpath, &panel);
 
     if (applet)
     {
-        for (i = 0; i < applet->count; ++i)
+        for (UINT i = 0; i < applet->count; ++i)
         {
-            applet->proc(0, CPL_INQUIRE, i, (LPARAM)&info);
-
-            LoadStringA(applet->hModule, info.idName, displayName, MAX_PATH);
-            LoadStringA(applet->hModule, info.idInfo, comment, MAX_PATH);
-
-            if (info.idIcon > 0)
-                iconIdx = -info.idIcon; /* negative icon index instead of icon number */
+            if (applet->info[i].idIcon > 0)
+                iconIdx = -applet->info[i].idIcon; /* negative icon index instead of icon number */
             else
                 iconIdx = 0;
 
-            pidl = _ILCreateCPanelApplet(path, displayName, comment, iconIdx);
+            LPITEMIDLIST pidl = _ILCreateCPanelApplet(wpath, 
+                                                      applet->info[i].name, 
+                                                      applet->info[i].info, 
+                                                      iconIdx);
 
             if (pidl)
                 AddToEnumList(pidl);
@@ -174,15 +152,15 @@ BOOL CControlPanelEnum::RegisterCPanelApp(LPCSTR path)
     return TRUE;
 }
 
-int CControlPanelEnum::RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPath)
+int CControlPanelEnum::RegisterRegistryCPanelApps(HKEY hkey_root, LPCWSTR szRepPath)
 {
-    char name[MAX_PATH];
-    char value[MAX_PATH];
+    WCHAR name[MAX_PATH];
+    WCHAR value[MAX_PATH];
     HKEY hkey;
 
     int cnt = 0;
 
-    if (RegOpenKeyA(hkey_root, szRepPath, &hkey) == ERROR_SUCCESS)
+    if (RegOpenKeyW(hkey_root, szRepPath, &hkey) == ERROR_SUCCESS)
     {
         int idx = 0;
 
@@ -190,14 +168,14 @@ int CControlPanelEnum::RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPa
         {
             DWORD nameLen = MAX_PATH;
             DWORD valueLen = MAX_PATH;
-            char buffer[MAX_PATH];
+            WCHAR buffer[MAX_PATH];
 
-            if (RegEnumValueA(hkey, idx, name, &nameLen, NULL, NULL, (LPBYTE)&value, &valueLen) != ERROR_SUCCESS)
+            if (RegEnumValueW(hkey, idx, name, &nameLen, NULL, NULL, (LPBYTE)&value, &valueLen) != ERROR_SUCCESS)
                 break;
 
-            if (ExpandEnvironmentStringsA(value, buffer, MAX_PATH))
+            if (ExpandEnvironmentStringsW(value, buffer, MAX_PATH))
             {
-                strcpy(value, buffer);
+                wcscpy(value, buffer);
             }
 
             if (RegisterCPanelApp(value))
@@ -209,24 +187,23 @@ int CControlPanelEnum::RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPa
     return cnt;
 }
 
-int CControlPanelEnum::RegisterCPanelFolders(HKEY hkey_root, LPCSTR szRepPath)
+int CControlPanelEnum::RegisterCPanelFolders(HKEY hkey_root, LPCWSTR szRepPath)
 {
-    char name[MAX_PATH];
+    WCHAR name[MAX_PATH];
     HKEY hkey;
 
     int cnt = 0;
 
-    if (RegOpenKeyA(hkey_root, szRepPath, &hkey) == ERROR_SUCCESS)
+    if (RegOpenKeyW(hkey_root, szRepPath, &hkey) == ERROR_SUCCESS)
     {
-        int idx = 0;
-        for (; ; idx++)
+        for (int idx = 0; ; idx++)
         {
-            if (RegEnumKeyA(hkey, idx, name, MAX_PATH) != ERROR_SUCCESS)
+            if (RegEnumKeyW(hkey, idx, name, MAX_PATH) != ERROR_SUCCESS)
                 break;
 
             if (*name == '{')
             {
-                LPITEMIDLIST pidl = _ILCreateGuidFromStrA(name);
+                LPITEMIDLIST pidl = _ILCreateGuidFromStrW(name);
 
                 if (pidl && AddToEnumList(pidl))
                     ++cnt;
@@ -244,27 +221,26 @@ int CControlPanelEnum::RegisterCPanelFolders(HKEY hkey_root, LPCSTR szRepPath)
  */
 BOOL CControlPanelEnum::CreateCPanelEnumList(DWORD dwFlags)
 {
-    CHAR szPath[MAX_PATH];
-    WIN32_FIND_DATAA wfd;
+    WCHAR szPath[MAX_PATH];
+    WIN32_FIND_DATAW wfd;
     HANDLE hFile;
 
     TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
 
     /* enumerate control panel folders */
     if (dwFlags & SHCONTF_FOLDERS)
-        RegisterCPanelFolders(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
+        RegisterCPanelFolders(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
 
     /* enumerate the control panel applets */
     if (dwFlags & SHCONTF_NONFOLDERS)
     {
-        LPSTR p;
+        LPWSTR p;
 
-        GetSystemDirectoryA(szPath, MAX_PATH);
-        p = PathAddBackslashA(szPath);
-        strcpy(p, "*.cpl");
+        GetSystemDirectoryW(szPath, MAX_PATH);
+        p = PathAddBackslashW(szPath);
+        wcscpy(p, L"*.cpl");
 
-        TRACE("-- (%p)-> enumerate SHCONTF_NONFOLDERS of %s\n", this, debugstr_a(szPath));
-        hFile = FindFirstFileA(szPath, &wfd);
+        hFile = FindFirstFileW(szPath, &wfd);
 
         if (hFile != INVALID_HANDLE_VALUE)
         {
@@ -274,16 +250,16 @@ BOOL CControlPanelEnum::CreateCPanelEnumList(DWORD dwFlags)
                     continue;
 
                 if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-                    strcpy(p, wfd.cFileName);
-                    if (strcmp(wfd.cFileName, "ncpa.cpl"))
+                    wcscpy(p, wfd.cFileName);
+                    if (wcscmp(wfd.cFileName, L"ncpa.cpl"))
                         RegisterCPanelApp(szPath);
                 }
-            } while(FindNextFileA(hFile, &wfd));
+            } while(FindNextFileW(hFile, &wfd));
             FindClose(hFile);
         }
 
-        RegisterRegistryCPanelApps(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls");
-        RegisterRegistryCPanelApps(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls");
+        RegisterRegistryCPanelApps(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls");
+        RegisterRegistryCPanelApps(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls");
     }
     return TRUE;
 }
@@ -576,10 +552,7 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD
 
     if (pCPanel)
     {
-        /* copy display name from pidl - it was retrived from applet before;
-           SHGDN_FORPARSING does not need special handling */
-        strRet->uType = STRRET_CSTR;
-        lstrcpyA(strRet->cStr, pCPanel->szName + pCPanel->offsDispName);
+        return SHSetStrRet(strRet, pCPanel->szName + pCPanel->offsDispName);
     }
     else if (_ILIsSpecialFolder(pidl))
     {
@@ -657,12 +630,8 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
     if (!pidl) {
         psd->fmt = ControlPanelSFHeader[iColumn].fmt;
         psd->cxChar = ControlPanelSFHeader[iColumn].cxChar;
-        psd->str.uType = STRRET_CSTR;
-        LoadStringA(shell32_hInstance, ControlPanelSFHeader[iColumn].colnameid, psd->str.cStr, MAX_PATH);
-        return S_OK;
+        return SHSetStrRet(&psd->str, shell32_hInstance, ControlPanelSFHeader[iColumn].colnameid);
     } else {
-        psd->str.cStr[0] = 0x00;
-        psd->str.uType = STRRET_CSTR;
         switch(iColumn) {
             case 0:        /* name */
                 hr = GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
@@ -671,13 +640,15 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
             {
                 PIDLCPanelStruct* pCPanel = _ILGetCPanelPointer(pidl);
                 if (pCPanel)
-                    lstrcpyA(psd->str.cStr, pCPanel->szName + pCPanel->offsComment);
+                    return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsComment);
                 if (_ILIsSpecialFolder(pidl))
                 {
                     HKEY hKey;
                     GUID *pGuid = _ILGetGUIDPointer(pidl);
                     if (HCR_RegOpenClassIDKey(*pGuid, &hKey))
                     {
+                        psd->str.cStr[0] = 0x00;
+                        psd->str.uType = STRRET_CSTR;
                         RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
                         RegCloseKey(hKey);
                     }
@@ -745,7 +716,7 @@ HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST pidl, LPWSTR szIconFile, UINT cchM
     if (!pcpanel)
         return E_INVALIDARG;
 
-    MultiByteToWideChar(CP_ACP, 0, pcpanel->szName, -1, szIconFile, cchMax);
+    wcsncpy(szIconFile, pcpanel->szName, cchMax);
     *piIndex = (int)pcpanel->iconIdx != -1 ? pcpanel->iconIdx : 0;
 
     return S_OK;
@@ -780,47 +751,21 @@ HRESULT WINAPI CCPLItemMenu::QueryContextMenu(
     UINT idCmdLast,
     UINT uFlags)
 {
-    WCHAR szBuffer[30] = {0};
-    ULONG Count = 1;
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_OPEN, MFT_STRING, MAKEINTRESOURCEW(IDS_OPEN), MFS_DEFAULT);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 1, MFT_SEPARATOR, NULL, MFS_ENABLED);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_CREATELINK, MFT_STRING, MAKEINTRESOURCEW(IDS_CREATELINK), MFS_ENABLED);
 
-    TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
-          this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
-
-    if (LoadStringW(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-    {
-        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_OPEN, MFT_STRING, szBuffer, MFS_DEFAULT); //FIXME identifier
-        Count++;
-    }
-
-    if (LoadStringW(shell32_hInstance, IDS_CREATELINK, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-    {
-        if (Count)
-        {
-            _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        }
-        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_CREATELINK, MFT_STRING, szBuffer, MFS_ENABLED); //FIXME identifier
-        Count++;
-    }
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 2);
 }
 
 EXTERN_C
-void WINAPI Control_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow);
+void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
 
 /**************************************************************************
 * ICPanel_IContextMenu_InvokeCommand()
 */
 HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    WCHAR szPath[MAX_PATH];
-    char szTarget[MAX_PATH];
-    WCHAR* pszPath;
-    INT Length, cLength;
-    CComPtr<IPersistFile>                ppf;
-    CComPtr<IShellLinkA>                isl;
     HRESULT hResult;
 
     PIDLCPanelStruct *pCPanel = _ILGetCPanelPointer(m_apidl[0]);
@@ -831,60 +776,38 @@ HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_OPEN)) //FIXME
     {
-        CHAR szParams[MAX_PATH];
+        WCHAR wszParams[MAX_PATH];
 
-        strcpy(szParams, pCPanel->szName);
-        strcat(szParams, ",");
-        strcat(szParams, pCPanel->szName + pCPanel->offsDispName);
+        wcscpy(wszParams, pCPanel->szName);
+        wcscat(wszParams, L",");
+        wcscat(wszParams, pCPanel->szName + pCPanel->offsDispName);
 
-        Control_RunDLLA (NULL, NULL, szParams, SW_NORMAL);
+        Control_RunDLLW (NULL, NULL, wszParams, SW_NORMAL);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME
     {
-        if (!SHGetSpecialFolderPathW(NULL, szPath, CSIDL_DESKTOPDIRECTORY, FALSE))
-            return E_FAIL;
+        CComPtr<IDataObject> pDataObj;
+        LPITEMIDLIST pidl = _ILCreateControlPanel();
 
-        pszPath = PathAddBackslashW(szPath);
-        if (!pszPath)
-            return E_FAIL;
+        hResult = SHCreateDataObject(pidl, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
+        if (FAILED(hResult))
+            return hResult;
 
-        CHAR* pszDisplayName = pCPanel->szName + pCPanel->offsDispName;
+        SHFree(pidl);
 
-        Length =  MAX_PATH - (pszPath - szPath);
-        cLength = strlen(pszDisplayName);
-        if (Length < cLength + 5)
-        {
-            FIXME("\n");
-            return E_FAIL;
-        }
+        //FIXME: Use SHCreateLinks
+        CComPtr<IShellFolder> psf;
+        CComPtr<IDropTarget> pDT;
 
-        if (MultiByteToWideChar(CP_ACP, 0, pszDisplayName, cLength + 1, pszPath, Length))
-        {
-            pszPath += cLength;
-            Length -= cLength;
-        }
+        hResult = SHGetDesktopFolder(&psf);
+        if (FAILED(hResult))
+            return hResult;
 
-        if (Length > 10)
-        {
-            wcscpy(pszPath, L" - ");
-            cLength = LoadStringW(shell32_hInstance, IDS_LNK_FILE, &pszPath[3], Length - 4) + 3;
-            if (cLength + 5 > Length)
-                cLength = Length - 5;
-            Length -= cLength;
-            pszPath += cLength;
-        }
-        wcscpy(pszPath, L".lnk");
+        hResult = psf->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pDT));
+        if (FAILED(hResult))
+            return hResult;
 
-        strncpy(szTarget, pCPanel->szName, MAX_PATH);
-
-        hResult = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkA, &isl));
-        if (SUCCEEDED(hResult))
-        {
-            isl->SetPath(szTarget);
-            if (SUCCEEDED(isl->QueryInterface(IID_PPV_ARG(IPersistFile,&ppf))))
-                ppf->Save(szPath, TRUE);
-        }
-        return NOERROR;
+        SHSimulateDrop(pDT, pDataObj, MK_CONTROL|MK_SHIFT, NULL, NULL);
     }
     return S_OK;
 }

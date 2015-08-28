@@ -2165,6 +2165,12 @@ static LPWSTR _ILGetTextPointerW(LPCITEMIDLIST pidl)
 
     case PT_VALUEW:
         return (LPWSTR)pdata->u.file.szNames;
+
+#ifdef __REACTOS__ /* r54423 */
+    case PT_CPLAPPLET:
+        return pdata->u.cpanel.szName;
+#endif
+
     }
     return NULL;
 }
@@ -2209,11 +2215,6 @@ LPSTR _ILGetTextPointer(LPCITEMIDLIST pidl)
     case PT_NETPROVIDER:
     case PT_SHARE:
         return pdata->u.network.szNames;
-
-#ifdef __REACTOS__ /* r54423 */
-    case PT_CPLAPPLET:
-        return pdata->u.cpanel.szName;
-#endif
     }
     return NULL;
 }

@@ -113,7 +113,7 @@ typedef struct tagPIDLCPanelStruct
     DWORD iconIdx;		/*02 negative icon ID */
     WORD offsDispName;		/*06*/
     WORD offsComment;		/*08*/
-    CHAR szName[1];		/*10*/ /* terminated by 0x00, followed by display name and comment string */
+    WCHAR szName[1];		/*10*/ /* terminated by 0x00, followed by display name and comment string */
 } PIDLCPanelStruct;
 
 #ifdef __REACTOS__

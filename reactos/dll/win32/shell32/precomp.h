@@ -42,7 +42,7 @@
 #include "debughlp.h"
 #include "wine/shell32_main.h"
 #include "shresdef.h"
-#include "cpanel.h"
+#include "wine/cpanel.h"
 #include "CEnumIDListBase.h"
 #include "shfldr.h"
 #include "shellfolder.h"
