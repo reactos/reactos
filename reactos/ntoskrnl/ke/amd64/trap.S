@@ -15,6 +15,7 @@ EXTERN KiDispatchException:PROC
 EXTERN FrLdrDbgPrint:DWORD
 EXTERN KeBugCheckWithTf:PROC
 EXTERN MmAccessFault:PROC
+EXTERN KdSetOwedBreakpoints:PROC
 EXTERN KiSystemFatalException:PROC
 EXTERN KiNpxNotAvailableFaultHandler:PROC
 EXTERN KiGeneralProtectionFaultHandler:PROC
@@ -508,8 +509,16 @@ FUNC KiPageFault
 
     /* Check for success */
     test eax, eax
-    jge PageFaultReturn
+    jl PageFaultError
 
+    /*
+     * We succeeded. Check whether the kernel debugger has
+     * owed breakpoints to be inserted, then return.
+     */
+    call KdSetOwedBreakpoints
+    jmp PageFaultReturn
+
+PageFaultError:
     /* Disable interrupts again for the debugger */
     cli
 
@@ -527,7 +536,6 @@ FUNC KiPageFault
     je SpecialCode
 
 InPageException:
-
     /* Dispatch in-page exception */
     mov r11d, eax // Param3 = Status
     mov eax, STATUS_IN_PAGE_ERROR // ExceptionCode

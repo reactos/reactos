@@ -7,11 +7,6 @@
  */
 
 //
-// Maximum supported number of breakpoints
-//
-#define KD_BREAKPOINT_MAX                               32
-
-//
 // Default size of the DbgPrint log buffer
 //
 #if DBG
@@ -21,15 +16,29 @@
 #endif
 
 //
+// Maximum supported number of breakpoints
+//
+#define KD_BREAKPOINT_MAX   32
+
+//
+// Highest limit starting which we consider that breakpoint addresses
+// are either in system space, or in user space but inside shared DLLs.
+//
+// I'm wondering whether this can be computed using MmHighestUserAddress
+// or whether there is already some #define somewhere else...
+// See http://www.drdobbs.com/windows/faster-dll-load-load/184416918
+// and http://www.drdobbs.com/rebasing-win32-dlls/184416272
+// for a tentative explanation.
+//
+#define KD_HIGHEST_USER_BREAKPOINT_ADDRESS  (PVOID)0x60000000  // MmHighestUserAddress
+
+//
 // Breakpoint Status Flags
 //
-typedef enum _KDP_BREAKPOINT_FLAGS
-{
-    KdpBreakpointActive = 1,
-    KdpBreakpointPending = 2,
-    KdpBreakpointSuspended = 4,
-    KdpBreakpointExpired = 8
-} KDP_BREAKPOINT_FLAGS;
+#define KD_BREAKPOINT_ACTIVE    0x01
+#define KD_BREAKPOINT_PENDING   0x02
+#define KD_BREAKPOINT_SUSPENDED 0x04
+#define KD_BREAKPOINT_EXPIRED   0x08
 
 //
 // Structure for Breakpoints
@@ -37,7 +46,7 @@ typedef enum _KDP_BREAKPOINT_FLAGS
 typedef struct _BREAKPOINT_ENTRY
 {
     ULONG Flags;
-    PKPROCESS Process;
+    ULONG_PTR DirectoryTableBase;
     PVOID Address;
     KD_BREAKPOINT_TYPE Content;
 } BREAKPOINT_ENTRY, *PBREAKPOINT_ENTRY;
@@ -280,6 +289,12 @@ ULONG
 NTAPI
 KdpAddBreakpoint(
     IN PVOID Address
+);
+
+VOID
+NTAPI
+KdSetOwedBreakpoints(
+    VOID
 );
 
 BOOLEAN

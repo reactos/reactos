@@ -136,7 +136,7 @@ KiGetFeatureBits(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
-    ULONG FeatureBits = KF_WORKING_PTE;;
+    ULONG FeatureBits = KF_WORKING_PTE;
     CPU_INFO CpuInfo;
 
     /* Get the Vendor ID */

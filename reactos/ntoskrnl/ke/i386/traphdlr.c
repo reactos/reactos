@@ -1275,7 +1275,15 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                            (PVOID)Cr2,
                            KiUserTrap(TrapFrame),
                            TrapFrame);
-    if (NT_SUCCESS(Status)) KiEoiHelper(TrapFrame);
+    if (NT_SUCCESS(Status))
+    {
+        /*
+         * We succeeded. Check whether the kernel debugger has
+         * owed breakpoints to be inserted, then return.
+         */
+        KdSetOwedBreakpoints();
+        KiEoiHelper(TrapFrame);
+    }
 
     /* Check for syscall fault */
 #if 0

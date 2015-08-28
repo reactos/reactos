@@ -67,7 +67,7 @@ KdbSymGetAddressInformation(
     IN PROSSYM_INFO  RosSymInfo,
     IN ULONG_PTR  RelativeAddress,
 #ifdef __ROS_DWARF__
-	IN PROSSYM_LINEINFO RosSymLineInfo
+    IN PROSSYM_LINEINFO RosSymLineInfo
 #else
     OUT PULONG LineNumber  OPTIONAL,
     OUT PCH FileName  OPTIONAL,
