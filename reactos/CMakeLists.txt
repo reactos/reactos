@@ -151,7 +151,7 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
-    if(CMAKE_VERSION MATCHES "ReactOS" AND MSVC_VERSION LESS 1900)
+    if(CMAKE_VERSION MATCHES "ReactOS")
         set(PCH 1 CACHE BOOL "Whether to use precompiled headers")
     else()
         set(PCH 0 CACHE BOOL "Whether to use precompiled headers")
