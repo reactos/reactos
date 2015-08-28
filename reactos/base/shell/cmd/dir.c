@@ -341,7 +341,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                 lpFlags->bRecursive = ! bNegative;
             else if (cCurUChar == _T('X'))
                 lpFlags->bShortName = ! bNegative;
-            else if (cCurChar == _T('R'))
+            else if (cCurUChar == _T('R'))
                 lpFlags->bDataStreams = ! bNegative;
             else if (cCurChar == _T('4'))
                 lpFlags->b4Digit = ! bNegative;
@@ -1342,6 +1342,8 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     WIN32_FIND_STREAM_DATA wfsdStreamInfo;
     PDIRFINDSTREAMNODE * ptrCurNode;    /* The pointer to the first stream */
     PDIRFINDSTREAMNODE ptrFreeNode;     /* The pointer used during cleanup */
+    static HANDLE (WINAPI *pFindFirstStreamW)(LPCWSTR, STREAM_INFO_LEVELS, LPVOID, DWORD);
+    static BOOL (WINAPI *pFindNextStreamW)(HANDLE, LPVOID);
 
     /* Initialize Variables */
     ptrStartNode = NULL;
@@ -1437,13 +1439,28 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                 /* Alternate streams are only displayed with new long list */
                 if (lpFlags->bNewLongList && lpFlags->bDataStreams)
                 {
+                    if (!pFindFirstStreamW)
+                    {
+                        pFindFirstStreamW = (PVOID)GetProcAddress(GetModuleHandle(_T("kernel32")), "FindFirstStreamW");
+                        pFindNextStreamW = (PVOID)GetProcAddress(GetModuleHandle(_T("kernel32")), "FindNextStreamW");
+                    }
+
                     /* Try to get stream information */
-                    hStreams = FindFirstStreamW(wfdFileInfo.cFileName, FindStreamInfoStandard, &wfsdStreamInfo, 0);
+                    if (pFindFirstStreamW && pFindNextStreamW)
+                    {
+                        hStreams = pFindFirstStreamW(wfdFileInfo.cFileName, FindStreamInfoStandard, &wfsdStreamInfo, 0);
+                    }
+                    else
+                    {
+                        hStreams = INVALID_HANDLE_VALUE;
+                        ERR("FindFirstStreamW not supported!\n");
+                    }
+
                     if (hStreams != INVALID_HANDLE_VALUE)
                     {
                         /* We totally ignore first stream. It contains data about ::$DATA */
                         ptrCurNode = &ptrNextNode->ptrNext->stInfo.ptrHead;
-                        while (FindNextStreamW(hStreams, &wfsdStreamInfo))
+                        while (pFindNextStreamW(hStreams, &wfsdStreamInfo))
                         {
                             *ptrCurNode = cmd_alloc(sizeof(DIRFINDSTREAMNODE));
                             if (*ptrCurNode == NULL)
