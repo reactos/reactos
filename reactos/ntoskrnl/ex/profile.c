@@ -453,6 +453,7 @@ NtStopProfile(IN HANDLE ProfileHandle)
     /* Unlock the Buffer */
     MmUnmapLockedPages(Profile->LockedBufferAddress, Profile->Mdl);
     MmUnlockPages(Profile->Mdl);
+    IoFreeMdl(Profile->Mdl);
     ExFreePoolWithTag(Profile->ProfileObject, TAG_PROFILE);
 
     /* Clear the Locked Buffer pointer, meaning the Object is Stopped */
