@@ -194,7 +194,7 @@ KdSetOwedBreakpoints(VOID)
                 if (!NT_SUCCESS(Status))
                 {
                     /* This should never happen */
-                    KdpDprintf("Failed to delete deferred breakpoint at address 0x%p\n",
+                    KdpDprintf("Unable to delete deferred breakpoint at address 0x%p\n",
                                KdpBreakpointTable[i].Address);
                     KdpOweBreakpoint = TRUE;
                 }
@@ -252,8 +252,8 @@ KdpLowWriteContent(IN ULONG BpIndex)
     if (!NT_SUCCESS(Status))
     {
         /* Memory is inaccessible now, restoring original instruction is deferred */
-        KdpDprintf("Failed to delete breakpoint at address 0x%p\n",
-                   KdpBreakpointTable[BpIndex].Address);
+        // KdpDprintf("Failed to delete breakpoint at address 0x%p\n",
+        //            KdpBreakpointTable[BpIndex].Address);
         KdpBreakpointTable[BpIndex].Flags |= KD_BREAKPOINT_EXPIRED;
         KdpOweBreakpoint = TRUE;
         return FALSE;
@@ -293,8 +293,9 @@ KdpLowRestoreBreakpoint(IN ULONG BpIndex)
                                  NULL);
     if (!NT_SUCCESS(Status))
     {
-        KdpDprintf("Failed to restore breakpoint at address 0x%p\n",
-                   KdpBreakpointTable[BpIndex].Address);
+        /* Memory is inaccessible now, restoring breakpoint is deferred */
+        // KdpDprintf("Failed to restore breakpoint at address 0x%p\n",
+        //            KdpBreakpointTable[BpIndex].Address);
         KdpBreakpointTable[BpIndex].Flags |= KD_BREAKPOINT_PENDING;
         KdpOweBreakpoint = TRUE;
         return FALSE;
