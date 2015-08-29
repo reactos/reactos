@@ -141,7 +141,7 @@ DbgkOpenProcessDebugPort(
     IN KPROCESSOR_MODE PreviousMode,
     OUT HANDLE *DebugHandle
 );
-                         
+
 extern ULONG DbgkpTraceLevel;
 extern POBJECT_TYPE DbgkDebugObjectType;
 

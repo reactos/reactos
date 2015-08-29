@@ -42,6 +42,25 @@ extern UNICODE_STRING CmVersionString;
 extern UNICODE_STRING CmCSDVersionString;
 extern CHAR NtBuildLab[];
 
+// #ifdef _WINKD_
+/*
+ * WinDBG Debugger Worker Thread data (see dbgctrl.c)
+ */
+typedef enum _WINKD_WORKER_STATE
+{
+    WinKdWorkerDisabled = 0,
+    WinKdWorkerActivate,
+    WinKdWorkerInitialized
+} WINKD_WORKER_STATE;
+
+extern WORK_QUEUE_ITEM ExpDebuggerWorkItem;
+extern WINKD_WORKER_STATE ExpDebuggerWork;
+extern PEPROCESS ExpDebuggerProcessAttach;
+extern PEPROCESS ExpDebuggerProcessKill;
+extern ULONG_PTR ExpDebuggerPageIn;
+VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
+// #endif /* _WINKD_ */
+
 #ifdef _WIN64
 #define HANDLE_LOW_BITS (PAGE_SHIFT - 4)
 #define HANDLE_HIGH_BITS (PAGE_SHIFT - 3)
