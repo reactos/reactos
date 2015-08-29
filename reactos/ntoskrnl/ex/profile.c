@@ -95,7 +95,7 @@ NTAPI
 NtCreateProfile(OUT PHANDLE ProfileHandle,
                 IN HANDLE Process OPTIONAL,
                 IN PVOID RangeBase,
-                IN ULONG RangeSize,
+                IN SIZE_T RangeSize,
                 IN ULONG BucketSize,
                 IN PVOID Buffer,
                 IN ULONG BufferSize,

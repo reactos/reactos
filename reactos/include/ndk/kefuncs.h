@@ -287,6 +287,19 @@ KeSetGdtSelector(
 
 VOID
 NTAPI
+KeProfileInterrupt(
+    _In_ PKTRAP_FRAME TrapFrame
+);
+
+VOID
+NTAPI
+KeProfileInterruptWithSource(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ KPROFILE_SOURCE Source
+);
+
+VOID
+NTAPI
 KeSetProfileIrql(
     _In_ KIRQL ProfileIrql
 );
@@ -353,12 +366,28 @@ NtCreateProfile(
     _Out_ PHANDLE ProfileHandle,
     _In_ HANDLE ProcessHandle,
     _In_ PVOID ImageBase,
-    _In_ ULONG ImageSize,
+    _In_ SIZE_T ImageSize,
     _In_ ULONG Granularity,
     _Out_ PVOID Buffer,
     _In_ ULONG ProfilingSize,
     _In_ KPROFILE_SOURCE Source,
     _In_ KAFFINITY ProcessorMask
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateProfileEx(
+    _Out_ PHANDLE ProfileHandle,
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID ImageBase,
+    _In_ SIZE_T ImageSize,
+    _In_ ULONG Granularity,
+    _Out_ PVOID Buffer,
+    _In_ ULONG ProfilingSize,
+    _In_ KPROFILE_SOURCE Source,
+    _In_ USHORT GroupCount,
+    _In_reads_(GroupCount) PGROUP_AFFINITY Affinity
 );
 
 NTSYSCALLAPI

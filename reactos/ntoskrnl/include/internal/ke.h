@@ -405,19 +405,6 @@ KeSetIntervalProfile(
 
 VOID
 NTAPI
-KeProfileInterrupt(
-    PKTRAP_FRAME TrapFrame
-);
-
-VOID
-NTAPI
-KeProfileInterruptWithSource(
-    IN PKTRAP_FRAME TrapFrame,
-    IN KPROFILE_SOURCE Source
-);
-
-VOID
-NTAPI
 KeUpdateRunTime(
     PKTRAP_FRAME TrapFrame,
     KIRQL Irql
