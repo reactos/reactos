@@ -16,7 +16,7 @@
 
 // #ifdef _WINKD_
 /*
- * WinDBG Debugger Worker Thread data
+ * WinDBG Debugger Worker State Machine data
  */
 WORK_QUEUE_ITEM ExpDebuggerWorkItem;
 /*
@@ -33,19 +33,22 @@ ULONG_PTR ExpDebuggerPageIn;
 
 // #ifdef _WINKD_
 /*
- * WinDBG Debugger Worker Thread
+ * WinDBG Debugger Worker State Machine
  *
- * A worker thread is queued whenever WinDBG wants to attach or kill a user-mode
+ * This functionality is used whenever WinDBG wants to attach or kill a user-mode
  * process from within live kernel-mode session, and/or page-in an address region.
+ * It is implemented as a state machine: when it is in "Ready" state, WinDBG can
+ * initialize the data for the state machine, then switch its state to "Start".
+ * The worker thread balance manager detects this, switches the state to "Initialized"
+ * and queues a worker thread. As long as the state is not "Ready" again, WinDBG
+ * prevents from requeuing a new thread. When the thread is started, it captures
+ * all the data, then resets the machine state to "Ready", thus allowing WinDBG
+ * to requeue another worker thread.
  *
  * WinDBG commands:
  *     .process /i <addr> (where <addr> is the address of the EPROCESS block for this process)
  *     .kill <addr>       (       "                "                "                "       )
  *     .pagein <addr>     (where <addr> is the address to page in)
- *
- * The implementation is very naive because the same data is reused, so that if
- * the worker thread has not started before WinDBG sends fresh new data again,
- * then only the latest data is taken into account.
  */
 VOID
 NTAPI
@@ -59,22 +62,25 @@ ExpDebuggerWorker(IN PVOID Context)
     UNREFERENCED_PARAMETER(Context);
 
     /* Be sure we were started in an initialized state */
-    ASSERTMSG("ExpDebuggerWorker being entered with state != 2\n",
+    ASSERTMSG("ExpDebuggerWorker being entered in non-initialized state!\n",
               ExpDebuggerWork == WinKdWorkerInitialized);
-    if (ExpDebuggerWork != WinKdWorkerInitialized) return;
-
-    /* Reset the worker flag to the disabled state */
-    ExpDebuggerWork = WinKdWorkerDisabled;
+    if (ExpDebuggerWork != WinKdWorkerInitialized)
+    {
+        /* An error happened, so get a chance to restart proper */
+        ExpDebuggerWork = WinKdWorkerReady;
+        return;
+    }
 
     /* Get the processes to be attached or killed, and the address to page in */
     ProcessToAttach = ExpDebuggerProcessAttach;
     ProcessToKill   = ExpDebuggerProcessKill;
     PageInAddress   = ExpDebuggerPageIn;
 
-    /* Reset to their default values */
+    /* Reset the state machine to its ready state */
     ExpDebuggerProcessAttach = NULL;
     ExpDebuggerProcessKill   = NULL;
     ExpDebuggerPageIn = (ULONG_PTR)NULL;
+    ExpDebuggerWork = WinKdWorkerReady;
 
     /* Default to the current process if we don't find the process to be attached or killed */
     Process = NULL;

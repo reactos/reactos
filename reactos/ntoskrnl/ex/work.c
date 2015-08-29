@@ -491,7 +491,7 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
          * If WinDBG wants to attach or kill a user-mode process, and/or
          * page-in an address region, queue a debugger worker thread.
          */
-        if (ExpDebuggerWork == WinKdWorkerActivate)
+        if (ExpDebuggerWork == WinKdWorkerStart)
         {
              ExInitializeWorkItem(&ExpDebuggerWorkItem, ExpDebuggerWorker, NULL);
              ExpDebuggerWork = WinKdWorkerInitialized;

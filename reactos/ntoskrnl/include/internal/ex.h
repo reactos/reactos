@@ -44,12 +44,12 @@ extern CHAR NtBuildLab[];
 
 // #ifdef _WINKD_
 /*
- * WinDBG Debugger Worker Thread data (see dbgctrl.c)
+ * WinDBG Debugger Worker State Machine data (see dbgctrl.c)
  */
 typedef enum _WINKD_WORKER_STATE
 {
-    WinKdWorkerDisabled = 0,
-    WinKdWorkerActivate,
+    WinKdWorkerReady = 0,
+    WinKdWorkerStart,
     WinKdWorkerInitialized
 } WINKD_WORKER_STATE;
 
