@@ -188,9 +188,21 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Start the interrupt */
     if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + 8, &Irql))
     {
-        /* Profiling isn't yet enabled */
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
+        /* Spin until the interrupt pending bit is clear */
+        HalpAcquireCmosSpinLock();
+        while (HalpReadCmos(RTC_REGISTER_C) & RTC_REG_C_IRQ)
+            ;
+        HalpReleaseCmosSpinLock();
+
+        /* If profiling is enabled, call the kernel function */
+        if (!HalpProfilingStopped)
+        {
+            KeProfileInterrupt(TrapFrame);
+        }
+
+        /* Finish the interrupt */
+        _disable();
+        HalEndSystemInterrupt(Irql, TrapFrame);
     }
 
     /* Spurious, just end the interrupt */

@@ -68,6 +68,7 @@ ATTRIB_NORETURN
 #define RTC_REGISTER_B          0x0B
 #define   RTC_REG_B_PI          0x40
 #define RTC_REGISTER_C          0x0C
+#define   RTC_REG_C_IRQ         0x80
 #define RTC_REGISTER_D          0x0D
 #define RTC_REGISTER_CENTURY    0x32
 
@@ -584,6 +585,9 @@ VOID HalpDispatchInterrupt(VOID);
 VOID HalpDispatchInterrupt2(VOID);
 DECLSPEC_NORETURN VOID FASTCALL HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 DECLSPEC_NORETURN VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
+
+/* profil.c */
+extern BOOLEAN HalpProfilingStopped;
 
 /* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
