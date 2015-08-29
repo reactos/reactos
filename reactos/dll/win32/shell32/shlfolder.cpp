@@ -163,7 +163,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
         CComPtr<IPersistFolder> ppf;
         CComPtr<IPersistFolder3> ppf3;
 
-        if (_ILIsFolder(pidlChild) &&
+        if ((_ILIsFolder(pidlChild) || _ILIsDrive(pidlChild)) &&
             SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3))))
         {
             PERSIST_FOLDER_TARGET_INFO ppfti;
