@@ -37,6 +37,12 @@ typedef struct _NOTIFICATION_ITEM
     LIST_ENTRY ListEntry;
 
     HINSTANCE hInstance;
+    BOOL bEnabled;
+    BOOL bAsynchronous;
+    BOOL bSafe;
+    BOOL bImpersonate;
+    BOOL bSmartCardLogon;
+    DWORD dwMaxWait;
     PWLX_NOTIFY_HANDLER Handler[LastHandler];
 } NOTIFICATION_ITEM, *PNOTIFICATION_ITEM;
 
@@ -117,7 +123,57 @@ LoadNotificationDll(
         if (NotificationDll == NULL)
             return;
 
+        NotificationDll->bEnabled = TRUE;
+        NotificationDll->dwMaxWait = 30; /* FIXME: ??? */
         NotificationDll->hInstance = hInstance;
+
+        dwSize = sizeof(BOOL);
+        RegQueryValueExW(hDllKey,
+                         L"Asynchronous",
+                         NULL,
+                         &dwType,
+                         (PBYTE)&NotificationDll->bAsynchronous,
+                         &dwSize);
+
+        dwSize = sizeof(BOOL);
+        RegQueryValueExW(hDllKey,
+                         L"Enabled",
+                         NULL,
+                         &dwType,
+                         (PBYTE)&NotificationDll->bEnabled,
+                         &dwSize);
+
+        dwSize = sizeof(BOOL);
+        RegQueryValueExW(hDllKey,
+                         L"Impersonate",
+                         NULL,
+                         &dwType,
+                         (PBYTE)&NotificationDll->bImpersonate,
+                         &dwSize);
+
+        dwSize = sizeof(BOOL);
+        RegQueryValueExW(hDllKey,
+                         L"Safe",
+                         NULL,
+                         &dwType,
+                         (PBYTE)&NotificationDll->bSafe,
+                         &dwSize);
+
+        dwSize = sizeof(BOOL);
+        RegQueryValueExW(hDllKey,
+                         L"SmartCardLogonNotify",
+                         NULL,
+                         &dwType,
+                         (PBYTE)&NotificationDll->bSmartCardLogon,
+                         &dwSize);
+
+        dwSize = sizeof(DWORD);
+        RegQueryValueExW(hDllKey,
+                         L"MaxWait",
+                         NULL,
+                         &dwType,
+                         (PBYTE)&NotificationDll->dwMaxWait,
+                         &dwSize);
 
         for (i = LogonHandler; i < LastHandler; i++)
         {
@@ -243,7 +299,7 @@ TRACE("ListEntry %p\n", ListEntry);
                                             NOTIFICATION_ITEM,
                                             ListEntry);
 TRACE("NotificationDll: %p\n", NotificationDll);
-        if (NotificationDll != NULL)
+        if (NotificationDll != NULL && NotificationDll->bEnabled)
         {
 TRACE("NotificationDll->Handler: %p\n", NotificationDll->Handler[Type]);
             if (NotificationDll->Handler[Type] != NULL)
