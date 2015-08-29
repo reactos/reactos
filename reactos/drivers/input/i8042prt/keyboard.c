@@ -855,7 +855,7 @@ i8042KbdInterruptService(
             if (InputData->MakeCode == 0x25)
             {
                 /* k - Breakpoint */
-                DbgBreakPoint();
+                DbgBreakPointWithStatus(DBG_STATUS_SYSRQ);
             }
             else if (InputData->MakeCode == 0x30)
             {
