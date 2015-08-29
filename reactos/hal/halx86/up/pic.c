@@ -808,7 +808,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
         Ocw2.EoiMode = SpecificEoi;
 
         /* Check which PIC needs the EOI */
-        if (Irq > 8)
+        if (Irq >= 8)
         {
             /* Send the EOI for the IRQ */
             __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | ((Irq - 8) & 0xFF));
