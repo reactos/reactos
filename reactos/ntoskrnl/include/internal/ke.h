@@ -399,8 +399,8 @@ KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource);
 VOID
 NTAPI
 KeSetIntervalProfile(
-    KPROFILE_SOURCE ProfileSource,
-    ULONG Interval
+    ULONG Interval,
+    KPROFILE_SOURCE ProfileSource
 );
 
 VOID

@@ -261,8 +261,8 @@ KeQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource)
 
 VOID
 NTAPI
-KeSetIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
-                     IN ULONG Interval)
+KeSetIntervalProfile(IN ULONG Interval,
+                     IN KPROFILE_SOURCE ProfileSource)
 {
     HAL_PROFILE_SOURCE_INTERVAL ProfileSourceInterval;
 
@@ -330,12 +330,12 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
         }
 
         /* Get the Pointer to the Bucket Value representing this Program Counter */
-        BucketValue = (PULONG)((((ULONG_PTR)Profile->Buffer +
-                               (ProgramCounter - (ULONG_PTR)Profile->RangeBase))
+        BucketValue = (PULONG)((ULONG_PTR)Profile->Buffer +
+                               ((ProgramCounter - (ULONG_PTR)Profile->RangeBase)
                                 >> Profile->BucketShift) &~ 0x3);
 
         /* Increment the value */
-        ++BucketValue;
+        (*BucketValue)++;
     }
 }
 
