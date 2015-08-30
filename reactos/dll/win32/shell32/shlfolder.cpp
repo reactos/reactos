@@ -588,35 +588,6 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     return S_OK;
 }
 
-HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
-{
-    TRACE ("0x%08x\n", *pdwAttributes);
-
-    if (*pdwAttributes & ~dwSupportedAttr)
-    {
-        WARN ("attributes 0x%08x not implemented\n", (*pdwAttributes & ~dwSupportedAttr));
-        *pdwAttributes &= dwSupportedAttr;
-    }
-
-    if (_ILIsSpecialFolder(pidl))
-    {
-        return SHELL32_GetGuidItemAttributes(psf, pidl, pdwAttributes);
-    }
-    else if(_ILIsFolder(pidl) || _ILIsValue(pidl))
-    {
-        return SHELL32_GetFSItemAttributes(psf, pidl, pdwAttributes);
-    }
-    else
-    {
-        /* Set common attributes */
-        ERR("We got a pidl that is neither a guid or an FS item!!! Type=0x%x\n",pidl->mkid.abID[0]);
-        *pdwAttributes &= SFGAO_CANLINK;
-    }
-
-    TRACE ("-- 0x%08x\n", *pdwAttributes);
-    return S_OK;
-}
-
 /***********************************************************************
  *  SHELL32_CompareIDs
  */

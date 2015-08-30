@@ -335,8 +335,14 @@ HRESULT WINAPI CControlPanelFolder::ParseDisplayName(
         else
         {
             if (pdwAttributes && *pdwAttributes)
-                hr = SHELL32_GetItemAttributes(this,
-                                               pidlTemp, pdwAttributes);
+            {
+                if (_ILIsCPanelStruct(pidlTemp))
+                    *pdwAttributes &= SFGAO_CANLINK;
+                else if (_ILIsSpecialFolder(pidlTemp))
+                    SHELL32_GetGuidItemAttributes(this, pidlTemp, pdwAttributes);
+                else
+                    ERR("Got an unkown pidl here!\n");
+            }
         }
     }
 

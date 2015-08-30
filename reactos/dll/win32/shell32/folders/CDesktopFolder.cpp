@@ -72,6 +72,17 @@ static const shvheader DesktopSFHeader[] = {
 
 #define DESKTOPSHELLVIEWCOLUMNS 5
 
+static const DWORD dwDesktopAttributes =
+    SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
+    SFGAO_STORAGEANCESTOR | SFGAO_HASPROPSHEET | SFGAO_STORAGE | SFGAO_CANLINK;
+static const DWORD dwMyComputerAttributes =
+    SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
+    SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
+static DWORD dwMyNetPlacesAttributes =
+    SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
+    SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
+
+
 CDesktopFolderEnum::CDesktopFolderEnum()
 {
 }
@@ -392,8 +403,16 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
         else
         {
             if (pdwAttributes && *pdwAttributes)
-                hr = SHELL32_GetItemAttributes((IShellFolder *)this,
-                                               pidlTemp, pdwAttributes);
+            {
+                if (_ILIsMyComputer(pidlTemp))
+                    *pdwAttributes &= dwMyComputerAttributes;
+                else if (_ILIsNetHood(pidlTemp))
+                    *pdwAttributes &= dwMyNetPlacesAttributes;
+                else if (_ILIsSpecialFolder(pidlTemp))
+                    SHELL32_GetGuidItemAttributes(this, pidlTemp, pdwAttributes);
+                else if(_ILIsFolder(pidlTemp) || _ILIsValue(pidlTemp))
+                    SHELL32_GetFSItemAttributes(this, pidlTemp, pdwAttributes);
+            }
         }
     }
 
@@ -504,15 +523,6 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
     DWORD *rgfInOut)
 {
     HRESULT hr = S_OK;
-    static const DWORD dwDesktopAttributes =
-        SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
-        SFGAO_STORAGEANCESTOR | SFGAO_HASPROPSHEET | SFGAO_STORAGE | SFGAO_CANLINK;
-    static const DWORD dwMyComputerAttributes =
-        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
-        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
-    static DWORD dwMyNetPlacesAttributes =
-        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
-        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
 
     TRACE("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
           this, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -540,7 +550,7 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
             else if (_ILIsSpecialFolder(apidl[i]))
                 SHELL32_GetGuidItemAttributes(this, apidl[i], rgfInOut);
             else if(_ILIsFolder(apidl[i]) || _ILIsValue(apidl[i]))
-                SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
+                SHELL32_GetFSItemAttributes(this, apidl[i], rgfInOut);
             else
                 ERR("Got an unknown pidl type!!!\n");
         }
