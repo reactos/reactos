@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT morx table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2005, 2008, 2013 by                                          */
+/*  Copyright 2005-2015 by                                                 */
 /*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -107,7 +107,7 @@
       p += rest;
     }
 
-    gxvalid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
 
     GXV_EXIT;
   }

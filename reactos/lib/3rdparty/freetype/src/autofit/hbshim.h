@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    HarfBuzz interface for accessing OpenType features (specification).  */
 /*                                                                         */
-/*  Copyright 2013 by                                                      */
+/*  Copyright 2013-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

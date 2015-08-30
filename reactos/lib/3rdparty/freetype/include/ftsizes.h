@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType size objects management (specification).                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2004, 2006, 2009, 2013 by                   */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

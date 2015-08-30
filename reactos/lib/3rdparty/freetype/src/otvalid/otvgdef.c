@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType GDEF table validation (body).                               */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2007 by                                          */
+/*  Copyright 2004-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -61,7 +61,7 @@
 
     OTV_TRACE(( " (GlyphCount = %d)\n", GlyphCount ));
 
-    otv_Coverage_validate( Coverage, otvalid, GlyphCount );
+    otv_Coverage_validate( Coverage, otvalid, (FT_Int)GlyphCount );
     if ( GlyphCount != otv_Coverage_get_count( Coverage ) )
       FT_INVALID_DATA;
 

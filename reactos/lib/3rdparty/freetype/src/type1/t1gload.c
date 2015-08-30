@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 Glyph Loader (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2006, 2008-2010, 2013, 2014 by                          */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -54,7 +54,7 @@
   /*************************************************************************/
 
 
-  FT_LOCAL_DEF( FT_Error )
+  static FT_Error
   T1_Parse_Glyph_And_Get_Char_String( T1_Decoder  decoder,
                                       FT_UInt     glyph_index,
                                       FT_Data*    char_string )
@@ -92,7 +92,7 @@
     if ( !error )
       error = decoder->funcs.parse_charstrings(
                 decoder, (FT_Byte*)char_string->pointer,
-                char_string->length );
+                (FT_UInt)char_string->length );
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
@@ -194,7 +194,7 @@
     for ( glyph_index = 0; glyph_index < type1->num_glyphs; glyph_index++ )
     {
       /* now get load the unscaled outline */
-      (void)T1_Parse_Glyph( &decoder, glyph_index );
+      (void)T1_Parse_Glyph( &decoder, (FT_UInt)glyph_index );
       if ( glyph_index == 0 || decoder.builder.advance.x > *max_advance )
         *max_advance = decoder.builder.advance.x;
 
@@ -504,7 +504,7 @@
 
       /* Set the control data to null - it is no longer available if   */
       /* loaded incrementally.                                         */
-      t1glyph->control_data = 0;
+      t1glyph->control_data = NULL;
       t1glyph->control_len  = 0;
     }
 #endif

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for color filtering of subpixel bitmap glyphs (body).   */
 /*                                                                         */
-/*  Copyright 2006, 2008-2010, 2013, 2014 by                               */
+/*  Copyright 2006-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -48,7 +48,7 @@
 
       /* take care of bitmap flow */
       if ( bitmap->pitch < 0 )
-        line -= bitmap->pitch * ( bitmap->rows - 1 );
+        line -= bitmap->pitch * (FT_Int)( bitmap->rows - 1 );
 
       /* `fir' and `pix' must be at least 32 bit wide, since the sum of */
       /* the values in `weights' can exceed 0xFF                        */
@@ -112,7 +112,7 @@
 
       /* take care of bitmap flow */
       if ( bitmap->pitch < 0 )
-        column -= bitmap->pitch * ( bitmap->rows - 1 );
+        column -= bitmap->pitch * (FT_Int)( bitmap->rows - 1 );
 
       for ( ; width > 0; width--, column++ )
       {
@@ -182,7 +182,7 @@
     FT_UInt  height = (FT_UInt)bitmap->rows;
     FT_Int   pitch  = bitmap->pitch;
 
-    static const int  filters[3][3] =
+    static const unsigned int  filters[3][3] =
     {
       { 65538 * 9/13, 65538 * 1/6, 65538 * 1/13 },
       { 65538 * 3/13, 65538 * 4/6, 65538 * 3/13 },
@@ -200,7 +200,7 @@
 
       /* take care of bitmap flow */
       if ( bitmap->pitch < 0 )
-        line -= bitmap->pitch * ( bitmap->rows - 1 );
+        line -= bitmap->pitch * (FT_Int)( bitmap->rows - 1 );
 
       for ( ; height > 0; height--, line += pitch )
       {
@@ -243,12 +243,12 @@
 
       /* take care of bitmap flow */
       if ( bitmap->pitch < 0 )
-        column -= bitmap->pitch * ( bitmap->rows - 1 );
+        column -= bitmap->pitch * (FT_Int)( bitmap->rows - 1 );
 
       for ( ; width > 0; width--, column++ )
       {
         FT_Byte*  col     = column;
-        FT_Byte*  col_end = col + height * pitch;
+        FT_Byte*  col_end = col + (FT_Int)height * pitch;
 
 
         for ( ; col < col_end; col += 3 * pitch )

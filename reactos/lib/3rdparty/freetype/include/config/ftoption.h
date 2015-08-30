@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2014 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -378,10 +378,6 @@ FT_BEGIN_HEADER
   /* The size in bytes of the render pool used by the scan-line converter  */
   /* to do all of its work.                                                */
   /*                                                                       */
-  /* This must be greater than 4KByte if you use FreeType to rasterize     */
-  /* glyphs; otherwise, you may set it to zero to avoid unnecessary        */
-  /* allocation of the render pool.                                        */
-  /*                                                                       */
 #define FT_RENDER_POOL_SIZE  16384L
 
 
@@ -435,6 +431,8 @@ FT_BEGIN_HEADER
   /*     af_glyph_hints_dump_points                                        */
   /*     af_glyph_hints_dump_segments                                      */
   /*     af_glyph_hints_dump_edges                                         */
+  /*     af_glyph_hints_get_num_segments                                   */
+  /*     af_glyph_hints_get_segment_offset                                 */
   /*                                                                       */
   /*   As an argument, they use another global variable:                   */
   /*                                                                       */
@@ -659,19 +657,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Define TT_CONFIG_OPTION_INTERPRETER_SWITCH to compile the TrueType    */
-  /* bytecode interpreter with a huge switch statement, rather than a call */
-  /* table.  This results in smaller and faster code for a number of       */
-  /* architectures.                                                        */
-  /*                                                                       */
-  /* Note however that on some compiler/processor combinations, undefining */
-  /* this macro will generate faster, though larger, code.                 */
-  /*                                                                       */
-#define TT_CONFIG_OPTION_INTERPRETER_SWITCH
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* Define TT_CONFIG_OPTION_COMPONENT_OFFSET_SCALED to compile the        */
   /* TrueType glyph loader to use Apple's definition of how to handle      */
   /* component offsets in composite glyphs.                                */
@@ -684,7 +669,7 @@ FT_BEGIN_HEADER
   /* fonts will not have them.                                             */
   /*                                                                       */
   /*   http://www.microsoft.com/typography/otspec/glyf.htm                 */
-  /*   http://fonts.apple.com/TTRefMan/RM06/Chap6glyf.html                 */
+  /*   https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html */
   /*                                                                       */
 #undef TT_CONFIG_OPTION_COMPONENT_OFFSET_SCALED
 
@@ -835,10 +820,12 @@ FT_BEGIN_HEADER
   /* grid.  To find out the optimal scaling and shifting value, various    */
   /* parameter combinations are tried and scored.                          */
   /*                                                                       */
-  /* This experimental option is only active if the render mode is         */
-  /* FT_RENDER_MODE_LIGHT.                                                 */
+  /* This experimental option is active only if the rendering mode is      */
+  /* FT_RENDER_MODE_LIGHT; you can switch warping on and off with the      */
+  /* `warping' property of the auto-hinter (see file `ftautoh.h' for more  */
+  /* information; by default it is switched off).                          */
   /*                                                                       */
-/* #define AF_CONFIG_OPTION_USE_WARPER */
+#define AF_CONFIG_OPTION_USE_WARPER
 
   /* */
 

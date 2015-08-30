@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Glyph Image (FT_Glyph) cache (body).                        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2003, 2004, 2006, 2009, 2011 by                   */
+/*  Copyright 2000-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -185,7 +185,7 @@
 
   FT_LOCAL_DEF( FT_Error )
   FTC_GCache_Lookup( FTC_GCache   cache,
-                     FT_PtrDist   hash,
+                     FT_Offset    hash,
                      FT_UInt      gindex,
                      FTC_GQuery   query,
                      FTC_Node    *anode )

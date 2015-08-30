@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType validator for OpenType tables (body only).                  */
 /*                                                                         */
-/*  Copyright 2004, 2007 by                                                */
+/*  Copyright 2004-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

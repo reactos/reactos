@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services (declaration).       */
 /*                                                                         */
-/*  Copyright 2009, 2012 by                                                */
+/*  Copyright 2009-2015 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM support for Type 1 fonts (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2011, 2013 by                                           */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -169,8 +169,8 @@
       goto Exit;
 
     /* now, read each kern pair */
-    kp             = fi->KernPairs;
-    limit          = p + 4 * fi->NumKernPair;
+    kp    = fi->KernPairs;
+    limit = p + 4 * fi->NumKernPair;
 
     /* PFM kerning data are stored by encoding rather than glyph index, */
     /* so find the PostScript charmap of this font and install it       */
@@ -362,7 +362,7 @@
                         FT_Fixed*  kerning )
   {
     AFM_FontInfo  fi = (AFM_FontInfo)( (T1_Face)face )->afm_data;
-    FT_Int        i;
+    FT_UInt       i;
 
 
     if ( !fi )

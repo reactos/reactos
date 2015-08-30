@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 parser (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2007, 2009, 2013, 2014 by                               */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -86,13 +86,13 @@
     /* `StartData' or `/sfnts'                      */
     {
       FT_Byte   buffer[256 + 10];
-      FT_Long   read_len = 256 + 10; /* same as signed FT_Stream->size */
+      FT_ULong  read_len = 256 + 10;
       FT_Byte*  p        = buffer;
 
 
       for ( offset = FT_STREAM_POS(); ; offset += 256 )
       {
-        FT_Long  stream_len; /* same as signed FT_Stream->size */
+        FT_ULong  stream_len;
 
 
         stream_len = stream->size - FT_STREAM_POS();
@@ -176,7 +176,18 @@
       if ( cur[0] == 'S' && ft_strncmp( (char*)cur, "StartData", 9 ) == 0 )
       {
         if ( ft_strncmp( (char*)arg1, "(Hex)", 5 ) == 0 )
-          parser->binary_length = ft_atol( (const char *)arg2 );
+        {
+          FT_Long  tmp = ft_atol( (const char *)arg2 );
+
+
+          if ( tmp < 0 )
+          {
+            FT_ERROR(( "cid_parser_new: invalid length of hex data\n" ));
+            error = FT_THROW( Invalid_File_Format );
+          }
+          else
+            parser->binary_length = (FT_ULong)tmp;
+        }
 
         goto Exit;
       }

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType exact bbox computation (specification).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2007, 2011, 2013 by                         */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

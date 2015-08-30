@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType-specific tables loader (body).                              */
 /*                                                                         */
-/*  Copyright 1996-2002, 2004-2013 by                                      */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -118,20 +118,20 @@
       /* we only handle the case where `maxp' gives a larger value */
       if ( face->num_locations <= (FT_ULong)face->root.num_glyphs )
       {
-        FT_Long   new_loca_len =
-                    ( (FT_Long)( face->root.num_glyphs ) + 1 ) << shift;
+        FT_ULong  new_loca_len =
+                    ( (FT_ULong)face->root.num_glyphs + 1 ) << shift;
 
         TT_Table  entry = face->dir_tables;
         TT_Table  limit = entry + face->num_tables;
 
-        FT_Long   pos  = FT_Stream_Pos( stream );
+        FT_Long   pos  = (FT_Long)FT_STREAM_POS();
         FT_Long   dist = 0x7FFFFFFFL;
 
 
         /* compute the distance to next table in font file */
         for ( ; entry < limit; entry++ )
         {
-          FT_Long  diff = entry->Offset - pos;
+          FT_Long  diff = (FT_Long)entry->Offset - pos;
 
 
           if ( diff > 0 && diff < dist )
@@ -141,12 +141,12 @@
         if ( entry == limit )
         {
           /* `loca' is the last table */
-          dist = stream->size - pos;
+          dist = (FT_Long)stream->size - pos;
         }
 
-        if ( new_loca_len <= dist )
+        if ( new_loca_len <= (FT_ULong)dist )
         {
-          face->num_locations = face->root.num_glyphs + 1;
+          face->num_locations = (FT_ULong)face->root.num_glyphs + 1;
           table_len           = new_loca_len;
 
           FT_TRACE2(( "adjusting num_locations to %d\n",

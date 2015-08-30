@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK writing system (body).          */
 /*                                                                         */
-/*  Copyright 2006-2014 by                                                 */
+/*  Copyright 2006-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -260,8 +260,8 @@
     FT_Pos      fills[AF_BLUE_STRING_MAX_LEN];
     FT_Pos      flats[AF_BLUE_STRING_MAX_LEN];
 
-    FT_Int      num_fills;
-    FT_Int      num_flats;
+    FT_UInt     num_fills;
+    FT_UInt     num_flats;
 
     FT_Bool     fill;
 
@@ -720,8 +720,8 @@
     {
       AF_Point  pt   = seg->first;
       AF_Point  last = seg->last;
-      AF_Flags  f0   = (AF_Flags)( pt->flags & AF_FLAG_CONTROL );
-      AF_Flags  f1;
+      FT_UInt   f0   = pt->flags & AF_FLAG_CONTROL;
+      FT_UInt   f1;
 
 
       seg->flags &= ~AF_EDGE_ROUND;
@@ -729,7 +729,7 @@
       for ( ; pt != last; f0 = f1 )
       {
         pt = pt->next;
-        f1 = (AF_Flags)( pt->flags & AF_FLAG_CONTROL );
+        f1 = pt->flags & AF_FLAG_CONTROL;
 
         if ( !f0 && !f1 )
           break;
@@ -863,19 +863,19 @@
 
               if ( link == seg2 )
               {
-                seg->link  = 0;
+                seg->link  = NULL;
                 seg->serif = link1;
               }
               else if ( link == link2 )
               {
-                seg->link  = 0;
+                seg->link  = NULL;
                 seg->serif = seg1;
               }
             }
           }
           else
           {
-            seg1->link = link1->link = 0;
+            seg1->link = link1->link = NULL;
 
             break;
           }
@@ -892,7 +892,7 @@
         seg2->num_linked++;
         if ( seg2->link != seg1 )
         {
-          seg1->link = 0;
+          seg1->link = NULL;
 
           if ( seg2->score < dist_threshold || seg1->score < seg2->score * 4 )
             seg1->serif = seg2->link;
@@ -1159,7 +1159,7 @@
         /*      Example: the `c' in cour.pfa at size 13     */
 
         if ( edge->serif && edge->link )
-          edge->serif = 0;
+          edge->serif = NULL;
       }
     }
 
@@ -1190,7 +1190,7 @@
 
   /* Compute all edges which lie within blue zones. */
 
-  FT_LOCAL_DEF( void )
+  static void
   af_cjk_hints_compute_blue_edges( AF_GlyphHints  hints,
                                    AF_CJKMetrics  metrics,
                                    AF_Dimension   dim )
@@ -1301,7 +1301,7 @@
     /* compute flags depending on render mode, etc. */
     mode = metrics->root.scaler.render_mode;
 
-#ifdef AF_CONFIG_OPTION_USE_WARPER
+#if 0 /* AF_CONFIG_OPTION_USE_WARPER */
     if ( mode == FT_RENDER_MODE_LCD || mode == FT_RENDER_MODE_LCD_V )
       metrics->root.scaler.render_mode = mode = FT_RENDER_MODE_NORMAL;
 #endif
@@ -1334,6 +1334,12 @@
 
     scaler_flags |= AF_SCALER_FLAG_NO_ADVANCE;
 
+#ifdef AF_CONFIG_OPTION_USE_WARPER
+    /* get (global) warper flag */
+    if ( !metrics->root.globals->module->warping )
+      scaler_flags |= AF_SCALER_FLAG_NO_WARPER;
+#endif
+
     hints->scaler_flags = scaler_flags;
     hints->other_flags  = other_flags;
 
@@ -1354,13 +1360,13 @@
 
   static FT_Pos
   af_cjk_snap_width( AF_Width  widths,
-                     FT_Int    count,
+                     FT_UInt   count,
                      FT_Pos    width )
   {
-    int     n;
-    FT_Pos  best      = 64 + 32 + 2;
-    FT_Pos  reference = width;
-    FT_Pos  scaled;
+    FT_UInt  n;
+    FT_Pos   best      = 64 + 32 + 2;
+    FT_Pos   reference = width;
+    FT_Pos   scaled;
 
 
     for ( n = 0; n < count; n++ )
@@ -1405,8 +1411,8 @@
   af_cjk_compute_stem_width( AF_GlyphHints  hints,
                              AF_Dimension   dim,
                              FT_Pos         width,
-                             AF_Edge_Flags  base_flags,
-                             AF_Edge_Flags  stem_flags )
+                             FT_UInt        base_flags,
+                             FT_UInt        stem_flags )
   {
     AF_CJKMetrics  metrics  = (AF_CJKMetrics)hints->metrics;
     AF_CJKAxis     axis     = &metrics->axis[dim];
@@ -1530,10 +1536,9 @@
   {
     FT_Pos  dist = stem_edge->opos - base_edge->opos;
 
-    FT_Pos  fitted_width = af_cjk_compute_stem_width(
-                             hints, dim, dist,
-                             (AF_Edge_Flags)base_edge->flags,
-                             (AF_Edge_Flags)stem_edge->flags );
+    FT_Pos  fitted_width = af_cjk_compute_stem_width( hints, dim, dist,
+                                                      base_edge->flags,
+                                                      stem_edge->flags );
 
 
     stem_edge->pos = base_edge->pos + fitted_width;
@@ -1611,8 +1616,8 @@
 
     org_len    = edge2->opos - edge->opos;
     cur_len    = af_cjk_compute_stem_width( hints, dim, org_len,
-                                            (AF_Edge_Flags)edge->flags,
-                                            (AF_Edge_Flags)edge2->flags );
+                                            edge->flags,
+                                            edge2->flags );
 
     org_center = ( edge->opos + edge2->opos ) / 2 + anchor;
     cur_pos1   = org_center - cur_len / 2;
@@ -1713,7 +1718,7 @@
     AF_Edge       edge_limit = edges + axis->num_edges;
     FT_PtrDist    n_edges;
     AF_Edge       edge;
-    AF_Edge       anchor   = 0;
+    AF_Edge       anchor   = NULL;
     FT_Pos        delta    = 0;
     FT_Int        skipped  = 0;
     FT_Bool       has_last_stem = FALSE;
@@ -2191,7 +2196,13 @@
       goto Exit;
 
     /* analyze glyph outline */
+#ifdef AF_CONFIG_OPTION_USE_WARPER
+    if ( ( metrics->root.scaler.render_mode == FT_RENDER_MODE_LIGHT &&
+           AF_HINTS_DO_WARP( hints )                                ) ||
+         AF_HINTS_DO_HORIZONTAL( hints )                              )
+#else
     if ( AF_HINTS_DO_HORIZONTAL( hints ) )
+#endif
     {
       error = af_cjk_hints_detect_features( hints, AF_DIMENSION_HORZ );
       if ( error )
@@ -2217,8 +2228,9 @@
       {
 
 #ifdef AF_CONFIG_OPTION_USE_WARPER
-        if ( dim == AF_DIMENSION_HORZ                                  &&
-             metrics->root.scaler.render_mode == FT_RENDER_MODE_NORMAL )
+        if ( dim == AF_DIMENSION_HORZ                                 &&
+             metrics->root.scaler.render_mode == FT_RENDER_MODE_LIGHT &&
+             AF_HINTS_DO_WARP( hints )                                )
         {
           AF_WarperRec  warper;
           FT_Fixed      scale;
@@ -2239,12 +2251,6 @@
         af_glyph_hints_align_weak_points( hints, (AF_Dimension)dim );
       }
     }
-
-#if 0
-    af_glyph_hints_dump_points( hints );
-    af_glyph_hints_dump_segments( hints );
-    af_glyph_hints_dump_edges( hints );
-#endif
 
     af_glyph_hints_save( hints, outline );
 

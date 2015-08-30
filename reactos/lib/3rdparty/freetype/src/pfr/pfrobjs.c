@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR object methods (body).                                  */
 /*                                                                         */
-/*  Copyright 2002-2008, 2010-2011, 2013, 2014 by                          */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -94,7 +94,7 @@
 
     /* check face index */
     {
-      FT_UInt  num_faces;
+      FT_Long  num_faces;
 
 
       error = pfr_log_font_count( stream,
@@ -118,7 +118,7 @@
 
     /* load the face */
     error = pfr_log_font_load(
-               &face->log_font, stream, face_index,
+               &face->log_font, stream, (FT_UInt)face_index,
                face->header.log_dir_offset,
                FT_BOOL( face->header.phy_font_max_size_high != 0 ) );
     if ( error )
@@ -137,7 +137,7 @@
 
 
       pfrface->face_index = face_index;
-      pfrface->num_glyphs = phy_font->num_chars + 1;
+      pfrface->num_glyphs = (FT_Long)phy_font->num_chars + 1;
 
       pfrface->face_flags |= FT_FACE_FLAG_SCALABLE;
 
@@ -192,7 +192,7 @@
       pfrface->style_name = phy_font->style_name;
 
       pfrface->num_fixed_sizes = 0;
-      pfrface->available_sizes = 0;
+      pfrface->available_sizes = NULL;
 
       pfrface->bbox         = phy_font->bbox;
       pfrface->units_per_EM = (FT_UShort)phy_font->outline_resolution;
@@ -218,13 +218,13 @@
         strike = phy_font->strikes;
         for ( n = 0; n < count; n++, size++, strike++ )
         {
-          size->height = (FT_UShort)strike->y_ppm;
-          size->width  = (FT_UShort)strike->x_ppm;
-          size->size   = strike->y_ppm << 6;
-          size->x_ppem = strike->x_ppm << 6;
-          size->y_ppem = strike->y_ppm << 6;
+          size->height = (FT_Short)strike->y_ppm;
+          size->width  = (FT_Short)strike->x_ppm;
+          size->size   = (FT_Pos)( strike->y_ppm << 6 );
+          size->x_ppem = (FT_Pos)( strike->x_ppm << 6 );
+          size->y_ppem = (FT_Pos)( strike->y_ppm << 6 );
         }
-        pfrface->num_fixed_sizes = count;
+        pfrface->num_fixed_sizes = (FT_Int)count;
       }
 
       /* now compute maximum advance width */
@@ -366,7 +366,7 @@
       FT_BBox            cbox;
       FT_Glyph_Metrics*  metrics = &pfrslot->metrics;
       FT_Pos             advance;
-      FT_Int             em_metrics, em_outline;
+      FT_UInt            em_metrics, em_outline;
       FT_Bool            scaling;
 
 
@@ -390,7 +390,9 @@
       em_outline = face->phy_font.outline_resolution;
 
       if ( em_metrics != em_outline )
-        advance = FT_MulDiv( advance, em_outline, em_metrics );
+        advance = FT_MulDiv( advance,
+                             (FT_Long)em_outline,
+                             (FT_Long)em_metrics );
 
       if ( face->phy_font.flags & PFR_PHY_VERTICAL )
         metrics->vertAdvance = advance;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType bbox computation (body).                                    */
 /*                                                                         */
-/*  Copyright 1996-2002, 2004, 2006, 2010, 2013, 2014 by                   */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -255,6 +255,7 @@
     FT_Pos  peak = 0;
     FT_Int  shift;
 
+
     /* This function finds a peak of a cubic segment if it is above 0    */
     /* using iterative bisection of the segment, or returns 0.           */
     /* The fixed-point arithmetic of bisection is inherently stable      */
@@ -264,8 +265,10 @@
     /* It is called with either q2 or q3 positive, which is necessary    */
     /* for the peak to exist and avoids undefined FT_MSB.                */
 
-    shift = 27 -
-      FT_MSB( FT_ABS( q1 ) | FT_ABS( q2 ) | FT_ABS( q3 ) | FT_ABS( q4 ) );
+    shift = 27 - FT_MSB( (FT_UInt32)( FT_ABS( q1 ) |
+                                      FT_ABS( q2 ) |
+                                      FT_ABS( q3 ) |
+                                      FT_ABS( q4 ) ) );
 
     if ( shift > 0 )
     {

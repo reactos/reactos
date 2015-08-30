@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    The FreeType TrueType glyph service.                                 */
 /*                                                                         */
-/*  Copyright 2007, 2009, 2012 by David Turner.                            */
+/*  Copyright 2007-2015 by                                                 */
+/*  David Turner.                                                          */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */

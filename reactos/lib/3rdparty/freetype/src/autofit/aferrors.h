@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Autofitter error codes (specification only).                         */
 /*                                                                         */
-/*  Copyright 2005, 2012 by                                                */
+/*  Copyright 2005-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

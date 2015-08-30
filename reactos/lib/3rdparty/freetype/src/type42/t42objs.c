@@ -4,8 +4,8 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002-2009, 2011, 2013                                        */
-/*  by Roberto Alameda.                                                    */
+/*  Copyright 2002-2015 by                                                 */
+/*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -92,8 +92,8 @@
     /* the `lengths' field must be released later             */
     type1->glyph_names_block    = loader.glyph_names.block;
     type1->glyph_names          = (FT_String**)loader.glyph_names.elements;
-    loader.glyph_names.block    = 0;
-    loader.glyph_names.elements = 0;
+    loader.glyph_names.block    = NULL;
+    loader.glyph_names.elements = NULL;
 
     /* we must now build type1.encoding when we have a custom array */
     if ( type1->encoding_type == T1_ENCODING_TYPE_ARRAY )
@@ -285,7 +285,7 @@
 
     /* no embedded bitmap support */
     root->num_fixed_sizes = 0;
-    root->available_sizes = 0;
+    root->available_sizes = NULL;
 
     /* Load the TTF font embedded in the T42 font */
     {
@@ -461,8 +461,8 @@
     FT_FREE( face->unicode_map.maps );
     face->unicode_map.num_maps = 0;
 
-    face->root.family_name = 0;
-    face->root.style_name  = 0;
+    face->root.family_name = NULL;
+    face->root.style_name  = NULL;
   }
 
 
@@ -632,10 +632,10 @@
     slot->bitmap_left   = 0;
     slot->bitmap_top    = 0;
     slot->num_subglyphs = 0;
-    slot->subglyphs     = 0;
-    slot->control_data  = 0;
+    slot->subglyphs     = NULL;
+    slot->control_data  = NULL;
     slot->control_len   = 0;
-    slot->other         = 0;
+    slot->other         = NULL;
     slot->format        = FT_GLYPH_FORMAT_NONE;
 
     slot->linearHoriAdvance = 0;

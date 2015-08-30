@@ -4,7 +4,7 @@
 #
 #    Convert source code markup to HTML documentation.
 #
-#  Copyright 2002, 2004, 2008, 2013, 2014 by
+#  Copyright 2002-2015 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,

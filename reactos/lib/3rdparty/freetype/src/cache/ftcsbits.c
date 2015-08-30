@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType sbits manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2006, 2009-2011, 2013, 2014 by                          */
+/*  Copyright 2000-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -52,7 +52,7 @@
     if ( pitch < 0 )
       pitch = -pitch;
 
-    size = (FT_ULong)( pitch * bitmap->rows );
+    size = (FT_ULong)pitch * bitmap->rows;
 
     if ( !FT_ALLOC( sbit->buffer, size ) )
       FT_MEM_COPY( sbit->buffer, bitmap->buffer, size );
@@ -181,7 +181,7 @@
 
       /* now, compute size */
       if ( asize )
-        *asize = FT_ABS( sbit->pitch ) * sbit->height;
+        *asize = (FT_ULong)FT_ABS( sbit->pitch ) * sbit->height;
 
     } /* glyph loading successful */
 
@@ -302,7 +302,7 @@
           pitch = -pitch;
 
         /* add the size of a given glyph image */
-        size += pitch * sbit->height;
+        size += (FT_Offset)pitch * sbit->height;
       }
     }
 

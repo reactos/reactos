@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2014 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,7 +20,7 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 #include FT_MULTIPLE_MASTERS_H
@@ -134,11 +134,6 @@
   /*************************************************************************/
 
 
-#undef  PAIR_TAG
-#define PAIR_TAG( left, right )  ( ( (FT_ULong)left << 16 ) | \
-                                     (FT_ULong)right        )
-
-
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
@@ -189,9 +184,6 @@
 
     return 0;
   }
-
-
-#undef PAIR_TAG
 
 
   static FT_Error
@@ -456,7 +448,7 @@
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
   FT_DEFINE_SERVICEDESCREC5(
     tt_services,
-    FT_SERVICE_ID_XF86_NAME,       FT_XF86_FORMAT_TRUETYPE,
+    FT_SERVICE_ID_FONT_FORMAT,     FT_FONT_FORMAT_TRUETYPE,
     FT_SERVICE_ID_MULTI_MASTERS,   &TT_SERVICE_GX_MULTI_MASTERS_GET,
     FT_SERVICE_ID_TRUETYPE_ENGINE, &tt_service_truetype_engine,
     FT_SERVICE_ID_TT_GLYF,         &TT_SERVICE_TRUETYPE_GLYF_GET,
@@ -464,7 +456,7 @@
 #else
   FT_DEFINE_SERVICEDESCREC4(
     tt_services,
-    FT_SERVICE_ID_XF86_NAME,       FT_XF86_FORMAT_TRUETYPE,
+    FT_SERVICE_ID_FONT_FORMAT,     FT_FONT_FORMAT_TRUETYPE,
     FT_SERVICE_ID_TRUETYPE_ENGINE, &tt_service_truetype_engine,
     FT_SERVICE_ID_TT_GLYF,         &TT_SERVICE_TRUETYPE_GLYF_GET,
     FT_SERVICE_ID_PROPERTIES,      &TT_SERVICE_PROPERTIES_GET )

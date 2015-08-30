@@ -7,7 +7,7 @@
 /*                                                                         */
 /*    Auto-fitter data for blue strings (specification).                   */
 /*                                                                         */
-/*  Copyright 2013, 2014 by                                                */
+/*  Copyright 2013-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -74,30 +74,39 @@ FT_BEGIN_HEADER
 
   typedef enum  AF_Blue_String_
   {
-    AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP = 0,
-    AF_BLUE_STRING_CYRILLIC_CAPITAL_BOTTOM = 17,
-    AF_BLUE_STRING_CYRILLIC_SMALL = 34,
-    AF_BLUE_STRING_CYRILLIC_SMALL_DESCENDER = 51,
-    AF_BLUE_STRING_DEVANAGARI_BASE = 58,
-    AF_BLUE_STRING_DEVANAGARI_TOP = 83,
-    AF_BLUE_STRING_DEVANAGARI_HEAD = 108,
-    AF_BLUE_STRING_DEVANAGARI_BOTTOM = 133,
-    AF_BLUE_STRING_GREEK_CAPITAL_TOP = 140,
-    AF_BLUE_STRING_GREEK_CAPITAL_BOTTOM = 155,
-    AF_BLUE_STRING_GREEK_SMALL_BETA_TOP = 168,
-    AF_BLUE_STRING_GREEK_SMALL = 181,
-    AF_BLUE_STRING_GREEK_SMALL_DESCENDER = 198,
-    AF_BLUE_STRING_HEBREW_TOP = 215,
-    AF_BLUE_STRING_HEBREW_BOTTOM = 232,
-    AF_BLUE_STRING_HEBREW_DESCENDER = 245,
-    AF_BLUE_STRING_LATIN_CAPITAL_TOP = 256,
-    AF_BLUE_STRING_LATIN_CAPITAL_BOTTOM = 265,
-    AF_BLUE_STRING_LATIN_SMALL_F_TOP = 274,
-    AF_BLUE_STRING_LATIN_SMALL = 282,
-    AF_BLUE_STRING_LATIN_SMALL_DESCENDER = 290,
-    AF_BLUE_STRING_TELUGU_TOP = 296,
-    AF_BLUE_STRING_TELUGU_BOTTOM = 318,
-    af_blue_1_1 = 339,
+    AF_BLUE_STRING_ARABIC_TOP = 0,
+    AF_BLUE_STRING_ARABIC_JOIN = 13,
+    AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP = 24,
+    AF_BLUE_STRING_CYRILLIC_CAPITAL_BOTTOM = 41,
+    AF_BLUE_STRING_CYRILLIC_SMALL = 58,
+    AF_BLUE_STRING_CYRILLIC_SMALL_DESCENDER = 75,
+    AF_BLUE_STRING_DEVANAGARI_BASE = 82,
+    AF_BLUE_STRING_DEVANAGARI_TOP = 107,
+    AF_BLUE_STRING_DEVANAGARI_HEAD = 132,
+    AF_BLUE_STRING_DEVANAGARI_BOTTOM = 157,
+    AF_BLUE_STRING_GREEK_CAPITAL_TOP = 164,
+    AF_BLUE_STRING_GREEK_CAPITAL_BOTTOM = 179,
+    AF_BLUE_STRING_GREEK_SMALL_BETA_TOP = 192,
+    AF_BLUE_STRING_GREEK_SMALL = 205,
+    AF_BLUE_STRING_GREEK_SMALL_DESCENDER = 222,
+    AF_BLUE_STRING_HEBREW_TOP = 239,
+    AF_BLUE_STRING_HEBREW_BOTTOM = 256,
+    AF_BLUE_STRING_HEBREW_DESCENDER = 269,
+    AF_BLUE_STRING_LATIN_CAPITAL_TOP = 280,
+    AF_BLUE_STRING_LATIN_CAPITAL_BOTTOM = 289,
+    AF_BLUE_STRING_LATIN_SMALL_F_TOP = 298,
+    AF_BLUE_STRING_LATIN_SMALL = 306,
+    AF_BLUE_STRING_LATIN_SMALL_DESCENDER = 314,
+    AF_BLUE_STRING_TELUGU_TOP = 320,
+    AF_BLUE_STRING_TELUGU_BOTTOM = 342,
+    AF_BLUE_STRING_THAI_TOP = 364,
+    AF_BLUE_STRING_THAI_BOTTOM = 383,
+    AF_BLUE_STRING_THAI_ASCENDER = 405,
+    AF_BLUE_STRING_THAI_LARGE_ASCENDER = 415,
+    AF_BLUE_STRING_THAI_DESCENDER = 425,
+    AF_BLUE_STRING_THAI_LARGE_DESCENDER = 438,
+    AF_BLUE_STRING_THAI_DIGIT_TOP = 445,
+    af_blue_1_1 = 454,
 #ifdef AF_CONFIG_OPTION_CJK
     AF_BLUE_STRING_CJK_TOP = af_blue_1_1 + 1,
     AF_BLUE_STRING_CJK_BOTTOM = af_blue_1_1 + 153,
@@ -138,30 +147,32 @@ FT_BEGIN_HEADER
   /* Properties are specific to a writing system.  We assume that a given  */
   /* blue string can't be used in more than a single writing system, which */
   /* is a safe bet.                                                        */
-#define AF_BLUE_PROPERTY_LATIN_TOP       ( 1 << 0 )   /* must have value 1 */
-#define AF_BLUE_PROPERTY_LATIN_NEUTRAL   ( 1 << 1 )
-#define AF_BLUE_PROPERTY_LATIN_X_HEIGHT  ( 1 << 2 )
-#define AF_BLUE_PROPERTY_LATIN_LONG      ( 1 << 3 )
+#define AF_BLUE_PROPERTY_LATIN_TOP       ( 1U << 0 )  /* must have value 1 */
+#define AF_BLUE_PROPERTY_LATIN_NEUTRAL   ( 1U << 1 )
+#define AF_BLUE_PROPERTY_LATIN_X_HEIGHT  ( 1U << 2 )
+#define AF_BLUE_PROPERTY_LATIN_LONG      ( 1U << 3 )
 
-#define AF_BLUE_PROPERTY_CJK_TOP    ( 1 << 0 )        /* must have value 1 */
-#define AF_BLUE_PROPERTY_CJK_HORIZ  ( 1 << 1 )        /* must have value 2 */
+#define AF_BLUE_PROPERTY_CJK_TOP    ( 1U << 0 )       /* must have value 1 */
+#define AF_BLUE_PROPERTY_CJK_HORIZ  ( 1U << 1 )       /* must have value 2 */
 #define AF_BLUE_PROPERTY_CJK_RIGHT  AF_BLUE_PROPERTY_CJK_TOP
 
 
-#define AF_BLUE_STRINGSET_MAX_LEN  7
+#define AF_BLUE_STRINGSET_MAX_LEN  8
 
   /* The AF_Blue_Stringset enumeration values are offsets into the */
   /* `af_blue_stringsets' array.                                   */
 
   typedef enum  AF_Blue_Stringset_
   {
-    AF_BLUE_STRINGSET_CYRL = 0,
-    AF_BLUE_STRINGSET_DEVA = 6,
-    AF_BLUE_STRINGSET_GREK = 12,
-    AF_BLUE_STRINGSET_HEBR = 19,
-    AF_BLUE_STRINGSET_LATN = 23,
-    AF_BLUE_STRINGSET_TELU = 30,
-    af_blue_2_1 = 33,
+    AF_BLUE_STRINGSET_ARAB = 0,
+    AF_BLUE_STRINGSET_CYRL = 3,
+    AF_BLUE_STRINGSET_DEVA = 9,
+    AF_BLUE_STRINGSET_GREK = 15,
+    AF_BLUE_STRINGSET_HEBR = 22,
+    AF_BLUE_STRINGSET_LATN = 26,
+    AF_BLUE_STRINGSET_TELU = 33,
+    AF_BLUE_STRINGSET_THAI = 36,
+    af_blue_2_1 = 44,
 #ifdef AF_CONFIG_OPTION_CJK
     AF_BLUE_STRINGSET_HANI = af_blue_2_1 + 0,
     af_blue_2_1_1 = af_blue_2_1 + 2,

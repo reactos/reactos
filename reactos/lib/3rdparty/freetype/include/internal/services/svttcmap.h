@@ -4,10 +4,8 @@
 /*                                                                         */
 /*    The FreeType TrueType/sfnt cmap extra information service.           */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
-/*  Masatake YAMATO, Redhat K.K.                                           */
-/*                                                                         */
-/*  Copyright 2003, 2008, 2009, 2012, 2013 by                              */
+/*  Copyright 2003-2015 by                                                 */
+/*  Masatake YAMATO, Redhat K.K.,                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

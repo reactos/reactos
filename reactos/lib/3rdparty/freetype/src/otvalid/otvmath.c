@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType MATH table validation (body).                               */
 /*                                                                         */
-/*  Copyright 2007, 2008 by                                                */
+/*  Copyright 2007-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  Written by George Williams.                                            */
@@ -108,7 +108,7 @@
     table_size = 4 + 4 * cnt;
 
     OTV_SIZE_CHECK( Coverage );
-    otv_Coverage_validate( table + Coverage, otvalid, cnt );
+    otv_Coverage_validate( table + Coverage, otvalid, (FT_Int)cnt );
 
     for ( i = 0; i < cnt; ++i )
     {
@@ -196,7 +196,7 @@
     table_size = 4 + 8 * cnt;
 
     OTV_SIZE_CHECK( Coverage );
-    otv_Coverage_validate( table + Coverage, otvalid, cnt );
+    otv_Coverage_validate( table + Coverage, otvalid, (FT_Int)cnt );
 
     for ( i = 0; i < cnt; ++i )
     {
@@ -378,11 +378,11 @@
 
     OTV_SIZE_CHECK( VCoverage );
     if ( VCoverage )
-      otv_Coverage_validate( table + VCoverage, otvalid, vcnt );
+      otv_Coverage_validate( table + VCoverage, otvalid, (FT_Int)vcnt );
 
     OTV_SIZE_CHECK( HCoverage );
     if ( HCoverage )
-      otv_Coverage_validate( table + HCoverage, otvalid, hcnt );
+      otv_Coverage_validate( table + HCoverage, otvalid, (FT_Int)hcnt );
 
     for ( i = 0; i < vcnt; ++i )
     {

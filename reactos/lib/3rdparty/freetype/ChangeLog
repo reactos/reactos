@@ -1,3 +1,1638 @@
+2015-06-07  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.6 released.
+	=======================
+
+
+	Tag sources with `VER-2-6'.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.6.
+
+	* README, Jamfile (RefDoc), builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2005/index.html,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2008/index.html,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/index.html,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.5.5/2.6/, s/255/26/.
+
+	* include/freetype/freetype.h (FREETYPE_MINOR): Set to 6.
+	(FREETYPE_PATCH): Set to 0.
+
+	* builds/unix/configure.raw (version_info): Set to 18:0:12.
+	* CMakeLists.txt (VERSION_MINOR): Set to 0.
+	(VERSION_PATCH): Set to 6.
+
+	* src/autofit/afmodule.c [!FT_MAKE_OPTION_SINGLE_OBJECT]: Add
+	declarations for dumping functions.
+
+	* src/truetype/ttinterp.c (TT_New_Context): Pacify compiler.
+
+	* builds/toplevel.mk: Use `freetype.mk's code to compute the version
+	string.
+	Don't include a zero patch level in version string.
+	* builds/freetype.mk: Remove code for computing the version string.
+
+2015-06-06  Ashish Azad  <ashish.azad@samsung.com>
+
+	Fix Savannah bug #45260.
+
+	* src/pfr/pfrdrivr.c (pfr_get_kerning): Fix typo.
+
+2015-06-03  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix memory leak.
+
+	Problem reported by Grissiom <chaos.proton@gmail.com>; in
+
+	  http://lists.nongnu.org/archive/html/freetype/2015-05/msg00013.html
+
+	there is an example code to trigger the bug.
+
+	* src/truetype/ttobjs.c (tt_size_init_bytecode): Free old `size'
+	data before allocating again.  Bug most probably introduced four
+	years ago in version 2.4.3.
+
+2015-06-02  Werner Lemberg  <wl@gnu.org>
+
+	[raster] Add more tracing.
+
+	* src/raster/ftraster.c (FT_TRACE7) [_STANDALONE_]: Define.
+	(Vertical_Sweep_Span, Vertical_Sweep_Drop, Horizontal_Sweep_Span,
+	Horizontal_Sweep_Drop, Render_Glyph): Add tracing calls.
+
+2015-06-01  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] While tracing opcodes, show code position and stack.
+
+	* src/truetype/ttinterp.c: Change all existing TRACE7 calls to
+	TRACE6.
+	(opcode_name): Add string lengths.
+	(TT_RunIns): Implement display of code position and stack.
+
+2015-05-31  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] In GX, make private point numbers work correctly.
+
+	This is completely missing in Apple's documentation: If a `gvar'
+	tuple uses private point numbers (this is, deltas are specified for
+	some points only), the uncovered points must be interpolated for
+	this tuple similar to the IUP bytecode instruction.  Examples that
+	need this functionality are glyphs `Oslash' and `Q' in Skia.ttf.
+
+	* src/truetype/ttgxvar.c (tt_delta_shift, tt_delta_interpolate,
+	tt_handle_deltas): New functions.
+	(TT_Vary_Get_Glyph_Deltas): Renamed to...
+	(TT_Vary_Apply_Glyph_Deltas): ... this; it directly processes the
+	points and does no longer return an array of deltas.
+	Add tracing information.
+	Call `tt_handle_deltas' to interpolate missing deltas.
+	Also fix a minor memory leak in case of error.
+
+	* src/truetype/ttgxvar.h: Updated.
+
+	* src/truetype/ttgload.c (TT_Process_Simple_Glyph,
+	load_truetype_glyph): Updated.
+
+2015-05-31  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] In GX, make intermediate tuplets work at extrema.
+
+	* src/truetype/ttgxvar.c (ft_var_apply_tuple): Fix range condition.
+
+2015-05-31  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Add tracing information to GX code.
+
+	* src/truetype/ttgxvar.c (ft_var_load_avar, ft_var_load_gvar,
+	ft_var_apply_tuple, TT_Get_MM_Var, TT_Set_MM_Blend,
+	TT_Set_Var_Design, tt_face_vary_cvt): Do it.
+
+2015-05-28  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/apinames.c (names_dump): Fix invalid reference.
+
+	Problem reported by Guzman Mosqueda, Jose R
+	<jose.r.guzman.mosqueda@intel.com>.
+
+2015-05-24  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix commit from 2015-05-22.
+
+	* src/truetype/ttgload.c, src/truetype/ttinterp.c: Guard new code
+	with `TT_CONFIG_OPTION_SUBPIXEL_HINTING'.
+
+	Problem reported by Nikolaus Waxweiler <madigens@gmail.com>.
+
+2015-05-23  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix return values of GETINFO bytecode instruction.
+
+	* src/truetype/ttinterp.h (TT_ExecContextRec): New fields
+	`vertical_lcd' and `gray_cleartype'.
+
+	* src/truetype/ttgload.c (tt_loader_init): Initialize new fields.
+	Change `symmetrical smoothing' to TRUE, since FreeType produces
+	exactly this.
+
+	* src/truetype/ttinterp.c (Ins_GETINFO): Fix selector/return bit
+	values for symmetrical smoothing, namely 11/18.
+	Handle bits for vertical LCD subpixels (8/15) and Gray ClearType
+	(12/19).
+
+2015-05-23  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Minor.
+
+	* src/truetype/ttinterp.h (TT_ExecContext):
+	 s/subpixel/subpixel_hinting.
+
+	* src/truetype/ttgload.c, src/truetype/ttgload.h: Updated.
+
+2015-05-22  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Support selector index 3 of the INSTCTRL instruction.
+
+	This flag activates `native ClearType hinting', disabling backwards
+	compatibility mode as described in Greg Hitchcocks whitepaper.  In
+	other words, it enables unrestricted functionality of all TrueType
+	instructions in ClearType.
+
+	* src/truetype/ttgload.c (tt_get_metrics): Call `sph_set_tweaks'
+	unconditionally.
+	(tt_loader_init): Unset `ignore_x_mode' flag if bit 2 of
+	`GS.instruct_control' is active.
+
+	* src/truetype/ttinterp.c (Ins_INSTCTRL): Handle selector index 3.
+	(Ins_GETINFO): Updated.
+
+	* docs/CHANGES: Document it.
+
+2015-05-20  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Minor.
+
+	* src/truetype/ttinterp.h (SetSuperRound): Fix type of `GridPeriod'
+	argument.
+
+2015-05-17  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix loading of composite glyphs.
+
+	* src/truetype/ttgload.c (TT_Load_Composite_Glyph): If the
+	ARGS_ARE_XY_VALUES flag is not set, handle argument values as
+	unsigned.  I trust `ttx' (which has exactly such code) that it does
+	the right thing here...
+
+	The reason that noone has ever noticed this bug is probably the fact
+	that point-aligned subglyphs are rare, as are subglyphs with a
+	number of points in the range [128;255], which is quite large (or
+	even in the range [32768;65535], which is extremely unlikely).
+
+2015-05-12  Chris Liddell  <chris.liddell@artifex.com>
+
+	[cff] Make the `*curveto' operators more tolerant.
+
+	* src/cff/cf2intrp.c (cf2_interpT2CharString): The opcodes
+	`vvcurveto', `hhcurveto', `vhcurveto', and `hvcurveto' all iterate,
+	pulling values off the stack until the stack is exhausted.
+	Implicitly the stack must be a multiple (or for subtly different
+	behaviour) a multiple plus a specific number of extra values deep.
+	If that's not the case, enforce it (as the old code did).
+
+2015-05-12  Chris Liddell  <chris.liddell@artifex.com>
+
+	[cff] fix incremental interface with new cff code.
+
+	* src/cff/cf2ft.c (cf2_getSeacComponent): When using the incremental
+	interface to retrieve glyph data for a SEAC, it be left to the
+	incremental interface callback to apply the encoding to raw
+	character index (as it was in the previous code).
+
+2015-04-29  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	[autofit] Speed up IUP.
+
+	* src/autofit/afhints.c (af_iup_interp): Separate trivial snapping to
+	the same position from true interpolation, use `scale' to reduce
+	divisions.
+
+2015-04-28  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Use `name' table for PS name if we have a SFNT-CFF.
+
+	This follows the OpenType 1.7 specification.  See
+
+	  http://tug.org/pipermail/tex-live/2015-April/036634.html
+
+	for a discussion.
+
+	* src/cff/cffdrivr.c (cff_get_ps_name): Use the `sfnt' service if we
+	have an SFNT.
+
+2015-04-27  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	[truetype] Speed up IUP.
+
+	* src/truetype/ttinterp.c (_iup_worker_interpolate): Separate trivial
+	snapping to the same position from true interpolation.
+
+2015-04-21  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] By default, enable warping code but switch off warping.
+
+	Suggested by Behdad.
+
+	* include/config/ftoption.h: Define AF_CONFIG_OPTION_USE_WARPER.
+
+	* src/autofit/afmodule.c (af_autofitter_init): Initialize `warping'
+	with `false'.
+
+2015-04-21  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2015-04-21  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Introduce `warping' property.
+
+	This code replaces the debugging hook from the previous commit with
+	a better, more generic solution.
+
+	* include/ftautoh.h: Document it.
+
+	* src/autofit/afmodule.h (AF_ModuleRec)
+	[AF_CONFIG_OPTION_USE_WARPER]: Add `warping' field.
+
+	* src/autofit/afmodule.c (_af_debug_disable_warper): Remove.
+	(af_property_set, af_property_get, af_autofitter_init)
+	[AF_CONFIG_OPTION_USE_WARPER]: Handle `warping' option.
+
+	* src/autofit/afhints.h (AF_HINTS_DO_WARP): Remove use of the no
+	longer existing `_af_debug_disable_warper'.
+
+	* src/autofit/afcjk.c (af_cjk_hints_init), src/autofit/aflatin.c
+	(af_latin_hints_init), src/autofit/aflatin2.c (af_latin2_hints_init)
+	[AF_CONFIG_OPTION_USE_WARPER]: Add `AF_SCALER_FLAG_NO_WARPER' to the
+	scaler flags if warping is off.
+
+	* src/autofit/aftypes.h: Updated.
+
+2015-04-16  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add debugging hook to disable warper.
+
+	* src/autofit/afmodule.c (_af_debug_disable_warper)
+	[FT_DEBUG_AUTOFIT]: New global variable.
+
+	* src/autofit/aftypes.h: Updated.
+	(AF_SCALER_FLAG_NO_WARPER): New macro (not actively used yet).
+
+	* src/autofit/afhints.h (AF_HINTS_DO_WARP): New macro.
+
+	* src/autofi/aflatin.c (af_latin_hints_apply)
+	[AF_CONFIG_OPTION_USE_WARPER]: Use `AF_HINTS_DO_WARP' to control use
+	of warper.
+
+	* src/autofit/afcjk.c (af_cjk_hints_init, af_cjk_hints_apply)
+	[AF_CONFIG_OPTION_USE_WARPER]: Synchronize with `aflatin.c'.
+
+	* src/autofit/aflatin2.c (af_latin2_hints_apply)
+	[AF_CONFIG_OPTION_USE_WARPER]: Synchronize with `aflatin.c'.
+
+2015-04-10  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Update advance width handling to OpenType 1.7.
+
+	Problem reported by Behdad.
+
+	* src/cff/cffdrivr.c (cff_get_advances): Handle SFNT case
+	separately.
+
+	* src/cff/cffgload.c (cff_slot_load): Use advance width and side
+	bearing values from `hmtx' table if present.
+
+2015-04-03  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	* src/autofit/afhints.c (af_glyph_hints_reload): Use do-while loop.
+
+2015-04-02  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	* src/autofit/aflatin.c (af_latin_hint_edges): Reduce logic.
+
+2015-04-01  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	[autofit] Finish the thought.
+
+	* src/autofit/afhints.c (af_direction_compute): make sure the long arm
+	is never negative so that its `FT_ABS' is not necessary.
+
+2015-04-01  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Call dumper functions for tracing.
+
+	* src/autofit/afcjk.c (af_cjk_hints_apply): Remove dead code.
+	* src/autofit/afhints.c (af_glyph_hints_dump_points): Minor
+	improvement.
+	* src/autofit/afmodule.c (af_autofitter_load_glyph): Implement it.
+
+2015-04-01  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Make debugging stuff work again.
+
+	The interface to ftgrid was broken in the series of commits starting
+	with
+
+	  [autofit] Allocate AF_Loader on the stack instead of AF_Module.
+
+	from 2015-01-14.
+
+	* src/autofit/afmodule.c (_af_debug_hints_rec) [FT_DEBUG_AUTOFIT]:
+	Use a global AF_GlyphHintsRec object for debugging.
+	(af_autofitter_done, af_autofitter_load_glyph): Updated.
+
+	* src/autofit/afloader.c (af_loader_init, af_loader_done): Updated.
+
+2015-04-01  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afhints.c (af_glyph_hints_done): Fix minor thinko.
+
+2015-03-29  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix Savannah bug #44629.
+
+	* src/cff/cf2font.h (CF2_MAX_SUBR), src/cff/cffgload.h
+	(CFF_MAX_SUBRS_CALLS): Set to 16.
+
+2015-03-29  Werner Lemberg  <wl@gnu.org>
+
+	[type1, truetype] Make the MM API more flexible w.r.t. `num_coords'.
+
+	This commit allows `num_coords' to be larger or smaller than the
+	number of available axes while selecting a design instance, either
+	ignoring excess data or using defaults if data is missing.
+
+	* src/truetype/ttgxvar.c (TT_Set_MM_Blend, TT_Set_Var_Design):
+	Implement it.
+
+	* src/type1/t1load.c (T1_Set_MM_Blend, T1_Set_MM_Design,
+	T1_Set_Var_Design): Ditto.
+
+2015-03-29  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Minor.
+
+	* src/type1/t1load.c (T1_Set_MM_Blend, T1_Set_MM_Design): Use
+	FT_THROW.
+	(T1_Set_Var_Design): Use T1_MAX_MM_AXIS and FT_THROW.
+
+2015-03-27  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Trace charstring nesting levels.
+
+	* src/cff/cf2intrp.c (cf2_interpT2CharString) <cf2_cmdCALLGSUBR,
+	cf2_cmdCALLSUBR, cf2_cmdRETURN>: Implement it.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	<cff_op_callsubr, cff_op_callgsubr, cff_op_return>: Ditto.
+
+2015-03-21  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	[base] Optimize `FT_Angle_Diff'.
+
+	Under normal circumstances we are usually close to the desired range
+	of angle values, so that the remainder is not really necessary.
+
+	* src/base/fttrigon.c (FT_Angle_Diff): Use loops instead of remainder.
+
+	* src/autofit/aftypes.h (AF_ANGLE_DIFF): Ditto in the unused macro.
+
+2015-03-21  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Improve `gvar' handling.
+
+	* src/truetype/ttgxvar.c (ft_var_readpackedpoints): Correctly handle
+	single-element runs.  Cf. glyph `Q' in Skia.ttf with weights larger
+	than the default.
+
+2015-03-20  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	* src/base/fttrigon.c (FT_Vector_Rotate): Minor refactoring.
+
+2015-03-17  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	Fix Savannah bug #44412 (part 2).
+
+	* src/base/fttrigon.c (FT_Sin, FT_Cos, FT_Tan): Call `FT_Vector_Unit'.
+
+2015-03-11  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add support for Arabic script.
+
+	Thanks to Titus Nemeth <tn@tntypography.eu> for guidance!
+
+	* src/autofit/afblue.dat: Add blue zone data for Arabic.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Arabic standard characters.
+
+	* src/autofit/afranges.c: Add Arabic data.
+
+	* src/autofit/afstyles.h: Add Arabic data.
+
+	* docs/CHANGES: Document it.
+
+2015-03-11  Werner Lemberg  <wl@gnu.org>
+
+	Rename `svxf86nm.h' to `svfntfmt.h'; update related symbols.
+
+	* include/internal/ftserv.h (FT_SERVICE_XFREE86_NAME_H): Renamed
+	to...
+	(FT_SERVICE_FONT_FORMAT_H): This.
+
+	* include/internal/services/svfntfmt.h (FT_XF86_FORMAT_*): Renamed
+	to ...
+	(FT_FONT_FORMAT_*): This.
+
+	src/base/ftfntfmt.c, src/bdf/bdfdrivr.c, src/cff/cffdrivr.c,
+	src/cid/cidriver.c, src/pcf/pcfdrivr.c, src/pfr/pfrdrivr.c,
+	src/truetype/ttdriver.c, src/type1/t1driver.c,
+	src/type42/t42drivr.c, src/winfonts/winfnt.c: Updated.
+
+2015-03-11  Werner Lemberg  <wl@gnu.org>
+
+	[base] Rename `FT_XFREE86_H' to `FT_FONT_FORMATS_H'.
+
+	* include/config/ftheader.h: Implement it.
+	* src/base/ftfntfmt.c, docs/CHANGES: Updated.
+
+2015-03-11  Werner Lemberg  <wl@gnu.org>
+
+	[base] Rename `FT_Get_X11_Font_Format' to `FT_Get_Font_Format'.
+
+	* include/ftfntfmt.h, src/base/ftfntfmt.c: Implement it.
+
+	* docs/CHANGES: Updated.
+
+2015-03-11  Werner Lemberg  <wl@gnu.org>
+
+	Fix automatic copyright updating.
+
+	* src/tools/update-copyright: Make scanning of `no-copyright'
+	actually work.
+
+	* src/tools/no-copyright: Don't include README in general.
+
+2015-03-11  Werner Lemberg  <wl@gnu.org>
+
+	Rename `ftxf86.[ch]' to `ftfntfmt.[ch]'.
+
+	CMakeLists.txt, builds/amiga/makefile, builds/amiga/makefile.os4,
+	builds/amiga/smakefile, builds/mac/FreeType.m68k_cfm.make.txt,
+	builds/mac/FreeType.m68k_far.make.txt,
+	builds/mac/FreeType.ppc_carbon.make.txt,
+	builds/mac/FreeType.ppc_classic.make.txt, builds/symbian/bld.inf,
+	builds/symbian/freetype.mmp, builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/freetype.vcxproj.filters,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj, docs/INSTALL.ANY,
+	include/config/ftheader.h, include/ftfntfmt.h, modules.cfg,
+	src/base/ftfntfmt.c, vms_make.com: Updated.
+
+2015-03-10  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	Fix Savannah bug #44412 (part 1).
+
+	* src/base/ftstroke.c (ft_stroker_inside): Handle near U-turns.
+
+2015-03-10  Werner Lemberg  <wl@gnu.org>
+
+	[base] Rename `FT_Bitmap_New' to `FT_Bitmap_Init'.
+
+	* include/ftbitmap.h, src/base/ftbitmap.c: Implement it.
+	Update all callers.
+
+	* docs/CHANGES: Updated.
+
+2015-03-06  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttload.c (tt_face_load_font_dir): Fix compiler warning.
+
+	Found by Alexei.
+
+2015-03-05  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	* src/base/ftstroke.c: Simplify.
+
+2015-03-04  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Some fixes and code refactoring in `ttgxvar.c'.
+
+	* src/truetype/ttgxvar.c (ft_var_readpackedpoints): Fix return value
+	of `point_cnt' if two bytes are read.
+	Use a more vertical coding style.
+	(ft_var_readpackeddeltas): Use FT_UInt for `delta_cnt' parameter.
+	Use a more vertical coding style.
+
+2015-03-03  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix Savannah bug #44241.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Reject glyphs
+	with less than 3 points.
+
+2015-03-02  Werner Lemberg  <wl@gnu.org>
+
+	Simplify `TYPEOF' macro.
+
+	No need for two arguments.
+
+	* include/config/ftconfig.h, builds/unix/ftconfig.in,
+	builds/vms/ftconfig.h (TYPEOF): Updated.
+
+	* include/internal/ftobjs.h (FT_PAD_FLOOR, FT_PIX_FLOOR),
+	src/autofit/afwarp.h (AF_WARPER_FLOOR): Updated.
+
+2015-03-01  Werner Lemberg  <wl@gnu.org>
+
+	Various compiler warning fixes for `make multi'.
+
+	* src/autofit/afcjk.c (af_cjk_hints_compute_blue_edges),
+	src/autofit/aflatin.c (af_latin_hint_compute_blue_edges,
+	af_latin_hint_edges), src/autofit/aflatin2.c
+	(af_latin2_hints_compute_blue_edges, af_latin2_hint_edges): Declare
+	as `static'.
+
+	* src/cache/ftccmap.c (FTC_CMAP_QUERY_HASH, FTC_CMAP_NODE_HASH):
+	Removed.  Unused.
+	* src/cache/ftcimage.c: Include FT_INTERNAL_OBJECTS_H.
+	* src/cache/ftcmanag.c (FTC_LRU_GET_MANAGER): Removed.  Unused.
+
+	* src/cff/cf2intrp.c: Include `cf2intrp.h'.
+	* src/cff/cffdrivr.c (PAIR_TAG): Removed.  Unused.
+
+	* src/gzip/ftgzip.c (NO_DUMMY_DECL): Removed.  Unused.
+
+	* src/psaux/afmparse.c (afm_parser_read_int): Declare as `static'.
+
+	* src/pshinter/pshalgo.c (STRONGER, PSH_ZONE_MIN, PSH_ZONE_MAX):
+	Removed.  Unused.
+
+	* src/raster/ftraster.c (Render_Glyph): Declare as `static'.
+
+	* src/sfnt/ttpost.c (load_format_20): Fix signedness warning.
+
+	* src/truetype/ttdriver.c (PAIR_TAG): Removed.  Unused.
+	* src/truetype/ttsubpix.c (is_member_of_family_class,
+	is_member_of_style_class): Declare as `static'.
+
+	* src/type1/t1gload.c (T1_Parse_Glyph_And_Get_Char_String): Declare
+	as `static'.
+	* src/type1/t1load.c (mm_axis_unmap, mm_weights_unmap): Declare as
+	`static'.
+	(T1_FIELD_COUNT): Removed.  Unused.
+	* src/type1/t1parse.h (T1_Done_Table): Removed.  Unused.
+
+	* src/type42/t42parse.c (T1_Done_Table): Removed.  Unused.
+
+2015-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[psaux] Signedness fixes.
+
+	* include/internal/psaux.h, src/psaux/afmparse.c,
+	src/psaux/afmparse.h, src/psaux/psconv.c, src/psaux/psobjs.c,
+	src/psaux/t1cmap.c, src/psaux/t1decode.c: Apply.
+
+2015-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[otvalid] Signedness fixes.
+
+	* src/otvalid/otvcommn.c, src/otvalid/otvgdef.c,
+	src/otvalid/otvgpos.c, src/otvalid/otvgsub.c, src/otvalid/otvmath.c:
+	Apply.
+
+2015-02-25  Werner Lemberg  <wl@gnu.org>
+
+	* src/bzip2/ftbzip2.c (ft_bzip2_alloc): Signedness fix.
+
+2015-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[lzw] Signedness fixes.
+
+	* src/lzw/ftzopen.c, src/lzw/ftzopen.h: Apply.
+
+2015-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[gxvalid] Signedness fixes.
+
+	* src/gxvalid/gxvbsln.c, src/gxvalid/gxvcommn.c,
+	src/gxvalid/gxvcommn.h, src/gxvalid/gxvjust.c,
+	src/gxvalid/gxvkern.c, src/gxvalid/gxvlcar.c, src/gxvalid/gxvmort.c,
+	src/gxvalid/gxvmort1.c, src/gxvalid/gxvmort2.c,
+	src/gxvalid/gxvmorx.c, src/gxvalid/gxvmorx1.c,
+	src/gxvalid/gxvmorx2.c, src/gxvalid/gxvopbd.c,
+	src/gxvalid/gxvprop.c, src/gxvalid/gxvtrak.c: Apply.
+
+2015-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[cache] Signedness fixes.
+
+	* src/cache/ftcbasic.c, src/cache/ftccmap.c, src/cache/ftcimage.c,
+	src/cache/ftcmanag.c, src/cache/ftcsbits.c: Apply.
+
+2015-02-25  Werner Lemberg  <wl@gnu.org>
+
+	Change dimension fields in `FTC_ImageTypeRec' to unsigned type.
+
+	This doesn't break ABI.
+
+	* include/ftcache.h (FTC_ImageTypeRec): Use unsigned types for
+	`width' and `height'.
+
+	* docs/CHANGES: Document it.
+
+2015-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[cache] Don't use `labs'.
+
+	This is the only place in FreeType where this function was used.
+
+	* include/config/ftstdlib.h (ft_labs): Remove.
+
+	* src/cache/ftcimage.c (ftc_inode_weight): Replace `ft_labs' with
+	`FT_ABS'.
+
+2015-02-23  Werner Lemberg  <wl@gnu.org>
+
+	[cache] Replace `FT_PtrDist' with `FT_Offset'.
+
+	* src/cache/ftccache.h (FTC_NodeRec): `FT_Offset' (a.k.a. `size_t')
+	is a better choice for `hash' to hold a pointer than `FT_PtrDist'
+	(a.k.a. `ptrdiff_t'), especially since the latter is signed,
+	causing zillions of signedness warnings.  [Note that `hash' was of
+	type `FT_UInt32' before the change to `FT_PtrDist'.]
+	Update all users.
+
+	* src/cache/ftcbasic.c, src/cache/ftccache.c, src/cache/ftccmap.c,
+	src/cache/ftcglyph.c, src/cache/ftcglyph.h: Updated.
+
+2015-02-23  Werner Lemberg  <wl@gnu.org>
+
+	[smooth, raster] Re-enable standalone compilation.
+
+	* src/raster/ftraster.c (FT_RENDER_POOL_SIZE, FT_MAX)
+	[_STANDALONE_]: Define macros.
+
+	* src/smooth/ftgrays.c (FT_RENDER_POOL_SIZE, FT_MAX, FT_ABS,
+	FT_HYPOT) [_STANDALONE_]: Define macros.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	[smooth] Signedness fixes.
+
+	* src/smooth/ftgrays.c, src/smooth/ftsmooth.c: Apply.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/raster/ftraster.c: Use the file's typedefs everywhere.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttpost.c (load_format_20): Fix error tracing message.
+
+	Bug introduced 6 commits earlier.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	[pshinter] Fix thinko.
+
+	* src/pshinter/pshalgo.c (psh_glyph_find_strong_points): Correctly
+	check `count'.
+	Bug introduced two commits earlier.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	[raster] Signedness fixes.
+
+	* src/raster/ftraster.c, src/raster/ftrend1.c: Apply.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	[pshinter] Signedness fixes.
+
+	* src/pshinter/pshalgo.c, src/pshinter/pshglob.c,
+	src/pshinter/pshrec.c: Apply.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	[pshinter] Use macros for (unsigned) flags, not enumerations.
+
+	* src/pshinter/pshalgo.h (PSH_Hint_Flags): Replace with macros.
+	Updated.
+	* src/pshinter/pshrec.h (PS_Hint_Flags): Replace with macros.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/pshinter/pshrec.c: Simplify.
+	(ps_hints_open, ps_hints_stem): Remove switch statement.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Signedness fixes.
+
+	* src/sfnt/pngshim.c, src/sfnt/sfobjs.c, src/sfnt/ttcmap.c,
+	src/sfnt/ttkern.c, src/sfnt/ttload.c, src/sfnt/ttpost.c,
+	src/sfnt/ttsbit.c: Apply.
+	* src/sfnt/sfdriver.c: Apply.
+	(sfnt_get_ps_name): Simplify.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Signedness fixes.
+
+	* src/bdf/bdf.h, src/bdf/bdfdrivr.c, src/bdf/bdfdrivr.h,
+	src/bdf/bdflib.c: Apply.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/bdf/bdflib.c (_bdf_atous): New function.
+	(_bdf_parse_glyphs, _bdf_parse_start): Use it.
+
+2015-02-22  Werner Lemberg  <wl@gnu.org>
+
+	[pcf] Signedness fixes.
+
+	* src/pcf/pcf.h, src/pcf/pcfdrivr.c: Apply.
+	* src/pcf/pcfread.c: Apply.
+	(pcf_get_encodings): Ignore invalid negative encoding offsets.
+
+2015-02-21  Werner Lemberg  <wl@gnu.org>
+
+	* src/winfonts/winfnt.c: Signedness fixes.
+
+2015-02-21  Werner Lemberg  <wl@gnu.org>
+
+	[type42] Signedness fixes.
+
+	* src/type42/t42parse.c, src/type42/t42parse.h,
+	src/type42/t42types.h: Apply.
+
+2015-02-21  Werner Lemberg  <wl@gnu.org>
+
+	[pfr] Signedness fixes.
+
+	* src/pfr/pfrdrivr.c, src/pfr/pfrgload.c, src/pfr/pfrload.c,
+	src/pfr/pfrload.h, src/pfr/pfrobjs.c, src/pfr/pfrsbit.c,
+	src/pfr/pfrtypes.h: Apply.
+
+2015-02-21  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Minor signedness fixes related to last commit.
+
+	* src/cff/cf2ft.c, src/cff/cf2intrp.c, src/cff/cffgload.c: Apply.
+
+2015-02-20  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Thinkos in bias handling.
+
+	Only the final result is always positive.
+
+	Bug introduced three commits earlier.
+
+	* src/cff/cffgload.c, src/cff/cffgload.h: Apply.
+
+2015-02-20  Werner Lemberg  <wl@gnu.org>
+
+	[cid] Fix signedness issues and emit some better error codes.
+
+	* src/cid/cidgload.c, src/cid/cidload.h, src/cid/cidobjs.c,
+	src/cid/cidparse.h: Apply.
+	* src/cid/cidload.c: Apply.
+	(parse_fd_array): Reject negative values for number of dictionaries.
+	* src/cid/cidparse.c: Apply.
+	(cid_parser_new): Reject negative values for hex data length.
+
+2015-02-20  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Signedness fixes for new engine.
+
+	* src/cff/cf2arrst.c, src/cff/cf2fixed.h, src/cff/cf2ft.c,
+	src/cff/cf2ft.h, src/cff/cf2hints.c, src/cff/cf2intrp.c: Apply.
+
+2015-02-20  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Signedness fixes for basic infrastructure and old engine.
+
+	* include/internal/pshints.h, src/cff/cffdrivr.c,
+	src/cff/cffgload.c, src/cff/cffgload.h, src/cff/cffload.c,
+	src/cff/cffobjs.c, src/cff/cffparse.c, src/pshinter/pshrec.c: Apply.
+
+2015-02-19  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttgxvar.c (TT_Get_MM_Var): Ignore `countSizePairs'.
+
+	This is hard-coded to value 2 in `fvar' version 1.0 (and no newer
+	version exists), but some fonts set it incorrectly.
+
+	Problem reported by Adam Twardoch <adam@fontlab.com>.
+
+2015-02-19  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Emit better error code for invalid private dict size.
+
+	* src/cff/cffparse.c (cff_parse_private_dict): Reject negative
+	values for size and offset.
+
+2015-02-19  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix signedness issues.
+
+	* src/autofit/afangles.c, src/autofit/afcjk.c,
+	src/autofit/afglobal.c, src/autofit/afhints.c,
+	src/autofit/aflatin.c, src/autofit/aflatin2.c, src/autofit/afwarp.c,
+	src/autofit/hbshim.c: Apply.
+
+2015-02-19  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Use macros for (unsigned) flags, not enumerations.
+
+	This harmonizes with other code in FreeType (and reduces the number
+	of necessary casts to avoid compiler warnings).
+
+	* src/autofit/afblue.hin: Make flag macros unsigned.
+	* src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afcjk.h: Replace flag enumeration with macros.
+	* src/autofit/afcjk.c: Updated.
+
+	* src/autofit/afhints.h (AF_Flags, AF_Edge_Flags): Replace with
+	macros.
+	* src/autofit/afhints.c: Updated.
+
+	* src/autofit/aflatin.h: Replace flag enumerations with macros.
+	* src/autofit/aflatin.c, src/autofit/aflatin2.c: Updated.
+
+	* src/autofit/aftypes.h (AF_ScalerFlags): Replace with macros.
+
+2015-02-18  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Fix signedness issues.
+
+	* include/internal/psaux.h, include/internal/t1types.h,
+	src/psaux/psobjs.c, src/psaux/psobjs.h, src/psaux/t1decode.c,
+	src/type1/t1gload.c, src/type1/t1load.c, src/type1/t1parse.c: Apply.
+
+2015-02-18  Werner Lemberg  <wl@gnu.org>
+
+	[psaux, type1] Fix minor AFM issues.
+
+	* include/internal/t1types.h (AFM_KernPairRec): Make indices
+	unsigned.
+	Update users.
+	(AFM_FontInfoRec): Make element counters unsigned.
+	Update users.
+	* src/psaux/afmparse.h (AFM_ValueRec): Add union member for unsigned
+	int.
+
+	* src/psaux/afmparse.c (afm_parse_track_kern, afm_parse_kern_pairs):
+	Reject negative values for number of kerning elements.
+
+	* src/type1/t1afm.c, src/tools/test_afm.c: Updated.
+
+2015-02-18  Werner Lemberg  <wl@gnu.org>
+
+	Don't use `FT_PtrDist' for lengths.
+
+	Use FT_UInt instead.
+
+	* include/internal/psaux.h (PS_Table_FuncsRec, PS_TableRec,
+	T1_DecoderRec): Do it.
+
+	* include/internal/t1types.h (T1_FontRec): Ditto.
+
+	* src/cid/cidload.c (cid_parse_dict): Updated.
+	* src/pfr/pfrload.c (pfr_extra_item_load_font_id): Ditto.
+	* src/psaux/psobjs.c (ps_table_add), src/psaux/psobjs.h: Ditto.
+	* src/type1/t1load.c (parse_blend_axis_types, parse_encoding,
+	parse_chharstrings, parse_dict): Ditto.
+	* src/type42/t42parse.c (t42_parse_encoding, t42_parse_charstrings,
+	t42_parse_dict): Ditto.
+
+2015-02-18  Werner Lemberg  <wl@gnu.org>
+
+	* src/type1/t1driver.c (t1_ps_get_font_value): Clean up.
+	This handles negative values better, avoiding many casts.
+
+2015-02-17  Werner Lemberg  <wl@gnu.org>
+
+	[base] Fix Savannah bug #44284.
+
+	* src/base/ftcalc.c (FT_MulFix): Typos.
+
+2015-02-17  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Finish compiler warning fixes for signedness issues.
+
+	* src/truetype/ttgxvar.c, src/truetype/ttsubpix.c,
+	src/truetype/ttsubpix.h: Apply.
+
+2015-02-17  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttsubpix.c: Adding missing `static' keywords.
+
+2015-02-17  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] More signedness fixes.
+
+	* include/internal/tttypes.h, src/truetype/ttinterp.h,
+	src/truetype/ttobjs.h, src/truetype/ttinterp.c,
+	src/truetype/ttobjs.c: Apply.
+
+2015-02-17  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Various signedness fixes.
+
+	* include/internal/ftgloadr.h, src/truetype/ttpload.c: Apply.
+
+	* src/truetype/ttgload.c: Apply.
+	(TT_Get_VMetrics): Protect against invalid ascenders and descenders
+	while constructing advance height.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	[base] Finish compiler warning fixes for signedness issues.
+
+	* src/base/ftglyph.c, src/base/ftlcdfil.c, src/base/ftstroke.c:
+	Apply.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	* include/tttables.h (TT_OS2): `fsType' must be FT_UShort.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	More minor signedness warning fixes.
+
+	* src/base/ftbbox.c, src/base/ftbitmap.c, src/base/fttrigon.c,
+	src/base/ftutil.c: Apply.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	Next round of minor compiler warning fixes.
+
+	* include/internal/ftrfork.h (FT_RFork_Ref): Change `offset' member
+	type to `FT_Long'.
+	(CONST_FT_RFORK_RULE_ARRAY_BEGIN): Add `static' keyword.
+
+	* include/internal/ftstream.h (FT_Stream_Pos): Return `FT_ULong'.
+
+	* src/base/ftoutln.c, src/base/ftrfork.c, src/base/ftstream.c:
+	Signedess fixes.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	Various minor signedness fixes.
+
+	* include/ftadvanc.h, include/internal/ftobjs.h,
+	src/base/ftgloadr.c, src/base/ftobjs.c: Apply.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	New `TYPEOF' macro.
+
+	This helps suppress signedness warnings, avoiding issues with
+	implicit conversion changes.
+
+	* include/config/ftconfig.h, builds/unix/ftconfig.in,
+	builds/vms/ftconfig.h (TYPEOF): Define.
+
+	* include/internal/ftobjs.h (FT_PAD_FLOOR, FT_PIX_FLOOR),
+	src/autofit/afwarp.h (AF_WARPER_FLOOR): Use it.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftsystem.c: Use casts in standard C function wrappers.
+	(ft_alloc, ft_realloc, ft_ansi_stream_io, FT_Stream_Open): Do it.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #44261.
+
+	* builds/unix/detect.mk (setup) [unix]: Set `CONFIG_SHELL' in the
+	environment also while calling the configure script.
+
+2015-02-16  Werner Lemberg  <wl@gnu.org>
+
+	* include/internal/ftmemory.h: Add some `FT_Offset' casts.
+	(FT_MEM_SET, FT_MEM_COPY, FT_MEM_MOVE, FT_ARRAY_ZERO, FT_ARRAY_COPY,
+	FT_MEM_MOVE): Do it.
+
+2015-02-15  Werner Lemberg  <wl@gnu.org>
+
+	[base] Clean up signedness issues in `ftdbgmem.c'.
+
+	Also fix other minor issues.
+
+	* src/base/ftdbgmem.c (FT_MemTableRec): Replace all FT_ULong types
+	with FT_Long for consistency.
+	(ft_mem_primes): Change type to `FT_Int'.
+	(ft_mem_closest_prime, ft_mem_table_set): Updated.
+
+	(ft_mem_debug_panic, ft_mem_debug_alloc, ft_mem_debug_free,
+	ft_mem_debug_realloc): Use `static' keyword and fix signedness
+	warnings where necessary.
+
+	(ft_mem_table_resize, ft_mem_table_new, ft_mem_table_destroy,
+	ft_mem_table_get_nodep, ft_mem_debug_init, FT_DumpMemory): Fix types
+	and add or remove casts to avoid signedness warnings.
+
+2015-02-15  Werner Lemberg  <wl@gnu.org>
+
+	[base] Clean up signedness in arithmetic functions.
+
+	This makes the code more readable and reduces compiler warnings.
+
+	* src/base/ftcalc.c (FT_MulDiv, FT_MulDiv_No_Round, FT_MulFix,
+	FT_DivFix): Convert input parameters to unsigned, do the
+	computation, then convert the result back to signed.
+	(ft_corner_orientation): Fix casts.
+
+2015-02-07  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix Savannah bug #44184.
+
+	* src/sfnt/ttload.c (check_table_dir, tt_face_load_font_dir): No
+	longer reject `htmx' and `vmtx' tables with invalid length but
+	sanitize them.
+
+2015-02-06  Jon Anderson  <jon@websupergoo.com>
+
+	[truetype] Fix regression in the incremental glyph loader.
+
+	* src/truetype/ttgload.c (load_truetype_glyph): For incremental
+	fonts, the glyph index may be greater than the number of glyphs
+	indicated, so guard the check with a preprocessor conditional.
+
+2015-02-06  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix potential memory leak.
+
+	While this doesn't show up with FreeType, exactly the same code
+	leaks with ttfautohint's modified auto-hinter code (which gets used
+	in a slightly different way).
+
+	It certainly doesn't harm since it is similar to already existing
+	checks in the code for embedded arrays.
+
+	* src/autofit/afhints.c (af_glyph_hints_reload): Set `max_contours'
+	and `max_points' for all cases.
+
+2015-01-31  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add support for Thai script.
+
+	Thanks to Ben Mitchell <ben@rosettatype.com> for guidance with blue
+	zone characters!
+
+	* src/autofit/afblue.dat: Add blue zone data for Thai.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Thai standard characters.
+
+	* src/autofit/afranges.c: Add Thai data.
+
+	* src/autofit/afstyles.h: Add Thai data.
+
+2015-01-23  Behdad Esfahbod  <behdad@behdad.org>
+
+	[raster] Handle `FT_RASTER_FLAG_AA' correctly.
+
+	This fixes a breakage caused by the commit `[raster] Remove
+	5-level gray AA mode from monochrome rasterizer.'.
+
+	Problem reported by Markus Trippelsdorf <markus@trippelsdorf.de>.
+
+	* src/raster/ftraster.c (ft_black_render): Handle
+	`FT_RASTER_FLAG_AA'.
+
+	* src/raster/ftrend1.c (ft_raster1_render): Remove gray AA mode
+	remnants.
+
+2015-01-18  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftobjs.c (FT_New_Library): Fix compiler warning.
+
+2015-01-18  Chris Liddell  <chris.liddell@artifex.com>
+
+	[raster] Fix Savannah bug #44022.
+
+	Add fallback for glyphs with degenerate bounding boxes.
+
+	If a glyph has only one very narrow feature, the bbox can end up
+	with either the width or height of the bbox being 0, in which case
+	no raster memory is allocated and no attempt is made to render the
+	glyph.  This is less than ideal when the drop-out compensation in
+	the rendering code would actually result in the glyph being
+	rendered.
+
+	This problem can be observed with the `I' glyph (gid 47) in the
+	Autodesk RomanS TrueType font.
+
+	* src/raster/ftrend1.c (ft_raster1_render): Add a fallback if either
+	dimension is zero to explicitly round up/down (instead of simply
+	round).
+
+2015-01-17  Werner Lemberg  <wl@gnu.org>
+
+	Add some tools to handle yearly copyright notice updates.
+
+	We are now following the GNU guidelines: A new release automatically
+	means that the copyright year of all affected files gets updated; it
+	is no longer used to track years of modification changes.
+
+	* src/tools/update-copyright-year: New Perl script.
+	* src/tools/update-copyright: New shell script that calls
+	`update-copyright-year' on all files.
+	* src/tools/no-copyright: Exceptions that should not be handled by
+	`update-copyright'
+
+2015-01-14  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated, using a description from Behdad.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	* src/autofit/afmodule.c (af_autofitter_done): Fix compiler warning.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[autofit] Add embedded array of segments and edges.
+
+	Avoids multiple mallocs per typical glyphs.
+
+	With this and recent changes to avoid mallocs, the thread-safe
+	stack-based loader is now as fast as the previous model that had one
+	cached singleton.
+
+	* src/autofit/afhints.h (AF_SEGMENTS_EMBEDDED, AF_EDGES_EMBEDDED):
+	New macros.
+	(AF_AxisHintsRec): Add two arrays for segments and edges.
+
+	* src/autofit/afhints.c (af_axis_hints_new_segment): Only allocate
+	data if number of segments exceeds given threshold value.
+	(af_axis_hints_new_edge):  Only allocate data if number of edges
+	exceeds given threshold value.
+	(af_glyph_hints_done): Updated.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[autofit] Add embedded arrays for points and contours.
+
+	This avoids at least two malloc calls for typical glyphs.
+
+	* src/autofit/afhints.h (AF_POINTS_EMBEDDED, AF_CONTOURS_EMBEDDED):
+	New macros.
+	(AF_GlyphHintsRec): Add two arrays for contours and points.
+
+	* src/autofit/afhints.c (af_glyph_hints_init, af_glyph_hints_done):
+	Updated.
+	(af_glyph_hints_reload): Only allocate data if number of contours or
+	points exceeds given threshold values.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[autofit] Allocate hints object on the stack.
+
+	This avoids one malloc per load.
+
+	* src/autofit/afloader.h (AF_LoaderRec): Change type of `hints' to
+	`AF_GlyphHints'.
+	Update prototype.
+
+	* src/autofit/afloader.c (af_loader_init): Use `AF_GlyphHints'
+	parameter instead of `FT_Memory'.
+	(af_loader_done): Directly reset `load_hints'.
+	(af_loader_load_g): Updated.
+
+	* src/autofit/afmodule.c (af_autofitter_load_glyph): Use local
+	`hints' object.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[autofit] Reuse slot glyph loader.
+
+	No need to create a new glyph loader; we can reuse the one from
+	`slot->internal->loader'.  It's hard to tell why it was written that
+	way originally, but new code looks sound and correct to me, and
+	avoids lots of allocations.
+
+	* src/autofit/afloader.c (af_loader_init): Change return type to
+	`void'.
+	Don't call `FT_GlyphLoader_New'.
+	(af_loader_reset): Don't call `FT_GlyphLoader_Rewind'.
+	(af_loader_load_g): Update code to use `internal->loader', which
+	doesn't need copying of data.
+
+	* src/autofit/afloader.h (AF_LoaderRec): Remove `gloader' member.
+	Update prototype.
+
+	* src/autofit/afmodule.c (af_autofitter_load_glyph): Updated.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[autofit] Remove (unused) support for composite glyphs.
+
+	We never have to deal with composite glyphs in the autohinter, as
+	those will be loaded into FORMAT_OUTLINE by the recursed
+	`FT_Load_Glyph' function.
+
+	In the rare cases that FT_LOAD_NO_RECURSE is set, it will imply
+	FT_LOAD_NO_SCALE as per `FT_Load_Glyph', which then implies
+	FT_LOAD_NO_HINTING:
+
+	  /* resolve load flags dependencies */
+
+	  if ( load_flags & FT_LOAD_NO_RECURSE )
+	    load_flags |= FT_LOAD_NO_SCALE         |
+	                  FT_LOAD_IGNORE_TRANSFORM;
+
+	  if ( load_flags & FT_LOAD_NO_SCALE )
+	  {
+	    load_flags |= FT_LOAD_NO_HINTING |
+	                  FT_LOAD_NO_BITMAP;
+
+	    load_flags &= ~FT_LOAD_RENDER;
+	  }
+
+	and as such the auto-hinter is never called.  Thus, the recursion in
+	`af_loader_load_g' never actually happens.  So remove the depth
+	counter as well.
+
+	* src/autofit/afloader.c (af_loader_load_g): Remove `depth'
+	parameter.
+	<FT_GLYPH_FORMAT_COMPOSITE>: Remove associated code.
+	(af_loader_load_glyph): Updated.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[raster] Fix uninitialized memory access.
+
+	Apparently `ras.cProfile' might be uninitialized.  This will be the
+	case if `ras.top == ras.cProfile->offset', as can be seen in
+	`End_Profile'.  The overshoot code introduced in a change `Fix B/W
+	rasterization of subglyphs with different drop-out modes.' (from
+	2009-06-18) violated this, accessing `ras.cProfile->flags'
+	unconditionally just before calling `End_Profile' (which then
+	detected that `cProfile' is uninitialized and didn't touch it).
+
+	This was harmless, and was not detected by valgrind before because
+	the objects were allocated on the `raster_pool', which was always
+	initialized.  With recent change to allocate raster buffers on the
+	stack, valgrind now reported this invalid access.
+
+	* src/raster/ftraster.c (Convert_Glyph): Don't access an
+	uninitialized `cProfile'.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[smooth] Fix uninitialized memory access.
+
+	Looks like `ras.span_y' could always be used without initialization.
+	This was never detected by valgrind before because the library-wide
+	`raster_pool' was used for the worker object and `raster_pool' was
+	originally zero'ed.  But subsequent reuses of it were using `span_y'
+	uninitialized.  With the recent change to not use `render_pool' and
+	allocate worker and buffer on the stack, valgrind now detects this
+	uninitialized access.
+
+	* src/smooth/ftgrays.c (gray_raster_render): Initialize
+	`ras.span_y'.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[base] Don't initialize unused `driver->glyph_loader'.
+
+	* src/base/ftobjs.c (Destroy_Driver): Don't call
+	`FT_GlyphLoader_Done'.
+	(FT_Add_Module): Don't call `FT_GlyphLoader_New'.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[base] Don't allocate `library->raster_pool' anymore.
+
+	It's unused after the following commits:
+
+	  [raster] Allocate render pool for mono rasterizer on the stack.
+	  [raster] Remove 5-level gray AA mode from monochrome rasterizer.
+
+	The value of FT_RENDER_POOL_SIZE still serves the purpose it used to
+	serve, which is, to adjust the pool size.  But the pool is now
+	allocated on the stack on demand.
+
+	* src/base/ftobjs.c (FT_New_Library, FT_Done_Library): Implement.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[base] Do not reorder library->renderers upon use.
+
+	Instead of keeping `library->renderers' in a MRU order, just leave
+	it as-is.  The MRU machinery wasn't thread-safe.
+
+	With this patch, rasterizing glyphs from different faces from
+	different threads doesn't fail choosing rasterizer
+	(FT_Err_Cannot_Render_Glyph).
+
+	Easiest to see that crash was to add a `printf' (or otherwise let
+	thread yield in FT_Throw with debugging enabled).
+
+	* src/base/ftobjs.c (FT_Render_Glyph_Internal), src/base/ftoutln.c
+	(FT_Outline_Render): Don't call `FT_Set_Renderer'.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[raster] Allocate render pool for mono rasterizer on the stack.
+
+	Instead of using the `render_pool' member of `FT_Library' that is
+	provided down to the rasterizer, completely ignore that and allocate
+	needed objects on the stack instead.
+
+	With this patch, rasterizing glyphs from different faces from
+	different threads doesn't crash in the monochrome rasterizer.
+
+	* src/raster/ftraster.c (black_TRaster): Remove `buffer',
+	`buffer_size', and `worker' members.
+
+	(ft_black_render): Create `buffer' locally.
+	(ft_black_reset): Updated.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[raster] Remove 5-level gray AA mode from monochrome rasterizer.
+
+	It was off by default and couldn't be turned on at runtime.  And the
+	smooth rasterizer superceded it over ten years ago.  No point in
+	keeping.  Comments suggested that it was there for compatibility
+	with FreeType 1.
+
+	550 lines down.
+
+	* src/raster/ftraster.c (FT_RASTER_OPTION_ANTI_ALIASING,
+	RASTER_GRAY_LINES): Remove macros and all associated code.
+
+	(black_TWorker): Remove `gray_min_x' and `gray_max_x'.
+	(black_TRaster): Remove `grays' and `gray_width'.
+
+	(Vertical_Sweep_Init, Vertical_Sweep_Span, Vertical_Sweep_Drop,
+	ft_black_render): Updated.
+
+	* src/raster/ftrend1.c (ft_raster1_render): Simplify code.
+	(ft_raster5_renderer_class): Removed.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[smooth] Allocate render pool for smooth rasterizer on the stack.
+
+	Instead of using the `render_pool' member of `FT_Library' that is
+	provided down to the rasterizer, completely ignore that and allocate
+	needed objects on the stack instead.
+
+	With this patch, rasterizing glyphs from different faces from
+	different threads doesn't crash in the smooth rasterizer.
+
+	Bugs:
+
+	  https://bugzilla.redhat.com/show_bug.cgi?id=678397
+	  https://bugzilla.redhat.com/show_bug.cgi?id=1004315
+	  https://bugzilla.redhat.com/show_bug.cgi?id=1165471
+	  https://bugs.freedesktop.org/show_bug.cgi?id=69034
+
+	* src/smooth/ftgrays.c (gray_TRaster): Remove `buffer',
+	`buffer_size', `band_size', and `worker' members.
+
+	(gray_raster_render): Create `buffer', `buffer_size', and
+	`band_size' locally.
+	(gray_raster_reset): Updated.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[truetype] Allocate TT_ExecContext in TT_Size instead of TT_Driver.
+
+	Previously the code had stipulation for using a per-TT_Size exec
+	context if `size->debug' was true.  But there was no way that
+	`size->debug' could *ever* be true.  As such, the code was always
+	using the singleton `TT_ExecContext' that was stored in `TT_Driver'.
+	This was, clearly, not threadsafe.
+
+	With this patch, loading glyphs from different faces from different
+	threads doesn't crash in the bytecode loader code.
+
+	* src/truetype/ttobjs.h (TT_SizeRec): Remove `debug' member.
+	(TT_DriverRec): Remove `context' member.
+
+	* src/truetype/ttobjs.c (tt_size_run_fpgm, tt_size_run_prep): Remove
+	`TT_ExecContext' code related to a global `TT_Driver' object.
+
+	(tt_driver_done): Don't remove `TT_ExecContext' object here but ...
+	(tt_size_done_bytecode): ... here.
+
+	(tt_driver_init): Don't create `TT_ExecContext' object here but ...
+	(tt_size_init_bytecode): ... here, only on demand.
+
+	* src/truetype/ttinterp.c (TT_Run_Context): Remove defunct debug
+	code.
+	(TT_New_Context): Remove `TT_ExecContext' code related to a global
+	`TT_Driver' object.
+
+	* src/truetype/ttinterp.h: Updated.
+
+	* src/truetype/ttgload.c (TT_Hint_Glyph, tt_loader_init): Updated.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	[autofit] Allocate AF_Loader on the stack instead of AF_Module.
+
+	Stop sharing a global `AF_Loader'.  Allocate one on the stack during
+	glyph load.
+
+	Right now this results in about 25% slowdown, to be fixed in a
+	following commit.
+
+	With this patch loading glyphs from different faces from different
+	threads doesn't immediately crash in the autohinting loader code.
+
+	Bugs:
+
+	  https://bugzilla.redhat.com/show_bug.cgi?id=1164941
+
+	* src/autofit/afloader.c (af_loader_init): Pass
+	`AF_Loader' and `FT_Memory' instead of `AF_Module' as arguments.
+	(af_loader_reset, af_loader_load_glyph): Also pass `loader' as
+	argument.
+	(af_loader_done): Use `AF_Loader' instead of `AF_Module' as
+	argument.
+
+	* src/autofit/afmodule.c (af_autofitter_init): Don't call
+	`af_loader_init'.
+	(af_autofitter_done): Don't call `af_loader_done'.
+	(af_autofitter_load_glyph): Use a local `AF_Loader' object.
+
+	* src/autofit/afloader.h: Include `afmodule.h'.
+	Update prototypes.
+	Move typedef for `AF_Module' to...
+
+	* src/autofit/afmodule.h: ... this place.
+	No longer include `afloader.h'.
+
+2015-01-14  Behdad Esfahbod  <behdad@behdad.org>
+
+	* src/type42/t42objs.h (T42_DriverRec): Remove unused member.
+
+2015-01-12  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #43976.
+
+	Assure that FreeType's internal include directories are found before
+	`CPPFLAGS' (which might be set by the user in the environment), and
+	`CPPFLAGS' before `CFLAGS'.
+
+	* builds/freetype.mk (FT_CFLAGS): Don't add `INCLUDE_FLAGS'.
+	(FT_COMPILE): Make this a special variable for compiling only the
+	files handled in `freetype.mk'.
+	(.c.$O): Removed, unused.
+
+	* src/*/rules.mk (*_COMPILE): Fix order of include directories.
+
+2015-01-11  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Prettyfing.
+
+	* src/truetype/ttinterp.c (project, dualproj, fast_project,
+	fast_dualproj): Rename to...
+	(PROJECT, DUALPROJ, FAST_PROJECT, FAST_DUALPROJ): ... this.
+
+2015-01-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttinterp.c (Ins_JROT, Ins_JROF): Simplify.
+
+	Based on a patch from Behdad.
+
+2015-01-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttinterp.c (Ins_SxVTL): Simplify function call.
+
+2015-01-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttinterp.c (Normalize): Remove unused argument.
+
+2015-01-11  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] More macro expansions.
+
+	* src/truetype/ttinterp.c (FT_UNUSED_EXEC): Remove macro by
+	expansion.
+
+2015-01-11  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] More macro expansions.
+
+	* src/truetype/ttinterp.c (INS_ARG): Remove macro by expansion,
+	adjusting funtion calls where necessary.
+	(FT_UNUSED_ARG): Removed, no longer needed.
+
+2015-01-10  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] More macro expansions.
+
+	Based on a patch from Behdad.
+
+	* src/truetype/ttinterp.c (DO_*): Expand macros into corresponding
+	`Ins_*' functions.
+	(TT_RunIns): Replace `DO_*' macros with `Ins_*' function calls.
+	(ARRAY_BOUND_ERROR): Remove second definition, which is no longer
+	needed.
+	(Ins_SVTCA, Ins_SPVTCA, Ins_SFVTCA): Replaced with...
+	(Ins_SxyTCA): New function.
+
+2015-01-10  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Remove TT_CONFIG_OPTION_INTERPRETER_SWITCH.
+
+	Behdad suggested this code simplification, and nobody objected...
+
+	* include/config/ftoption.h, devel/ftoption.h
+	(TT_CONFIG_OPTION_INTERPRETER_SWITCH): Remove.
+
+	* src/truetype/ttinterp.c [TT_CONFIG_OPTION_INTERPRETER_SWITCH]:
+	Remove related code.
+	(ARRAY_BOUND_ERROR): Use do-while loop.
+
+2015-01-10  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] More macro expansions.
+
+	* src/truetype/ttinterp.c, src/truetype/ttinterp.h (EXEC_ARG_,
+	EXEC_ARG): Remove by replacing with expansion.
+
+2015-01-10  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] More macro expansions.
+
+	Based on a patch from Behdad.
+
+	* src/truetype/ttinterp.c (SKIP_Code, GET_ShortIns, NORMalize,
+	SET_SuperRound, ROUND_None, INS_Goto_CodeRange, CUR_Func_move,
+	CUR_Func_move_orig, CUR_Func_round, CUR_Func_cur_ppem,
+	CUR_Func_read_cvt, CUR_Func_write_cvt, CUR_Func_move_cvt,
+	CURRENT_Ratio, INS_SxVTL, COMPUTE_Funcs, COMPUTE_Round,
+	COMPUTE_Point_Displacement, MOVE_Zp2_Point): Remove by replacing
+	with expansion.
+
+	(Cur_Func_project, CUR_Func_dualproj, CUR_fast_project,
+	CUR_fast_dualproj): Replace with macros `project', `dualproj',
+	`fast_project', `fast_dualproj'.
+
+2015-01-10  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] More macro expansions.
+
+	* src/truetype/ttinterp.c (EXEC_OP_, EXEC_OP): Remove by replacing
+	with expansion.
+
+2015-01-10  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Remove code for static TrueType interpreter.
+
+	This is a follow-up patch.
+
+	* src/truetype/ttinterp.c, src/truetype/ttinterp.h
+	[TT_CONFIG_OPTION_STATIC_INTERPRETER,
+	TT_CONFIG_OPTION_STATIC_RASTER]: Remove macros and related code.
+
+2015-01-10  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttinterp.c (CUR): Remove by replacing with expansion.
+
+	This starts a series of patches that simplifies the code of the
+	bytecode interpreter.
+
 2014-12-30  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.5.5 released.
@@ -31,6 +1666,8 @@
 	* builds/unix/configure.raw (version_info): Set to 17:4:11.
 	* CMakeLists.txt (VERSION_PATCH): Set to 5.
 	* docs/CHANGES: Updated.
+
+	* builds/toplevel.mk (dist): Fix typos.
 
 2014-12-24  Alexei Podtelezhnikov <apodtele@gmail.com>
 
@@ -5143,7 +6780,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2013-2014 by
+Copyright 2013-2015 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

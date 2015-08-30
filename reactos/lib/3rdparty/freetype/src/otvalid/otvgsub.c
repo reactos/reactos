@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType GSUB table validation (body).                               */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2007 by                                          */
+/*  Copyright 2004-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -70,11 +70,11 @@
 
         otv_Coverage_validate( Coverage, otvalid, -1 );
 
-        idx = otv_Coverage_get_first( Coverage ) + DeltaGlyphID;
+        idx = (FT_Long)otv_Coverage_get_first( Coverage ) + DeltaGlyphID;
         if ( idx < 0 )
           FT_INVALID_DATA;
 
-        idx = otv_Coverage_get_last( Coverage ) + DeltaGlyphID;
+        idx = (FT_Long)otv_Coverage_get_last( Coverage ) + DeltaGlyphID;
         if ( (FT_UInt)idx >= otvalid->glyph_count )
           FT_INVALID_DATA;
       }
@@ -91,7 +91,9 @@
 
         OTV_TRACE(( " (GlyphCount = %d)\n", GlyphCount ));
 
-        otv_Coverage_validate( table + Coverage, otvalid, GlyphCount );
+        otv_Coverage_validate( table + Coverage,
+                               otvalid,
+                               (FT_Int)GlyphCount );
 
         OTV_LIMIT_CHECK( GlyphCount * 2 );
 

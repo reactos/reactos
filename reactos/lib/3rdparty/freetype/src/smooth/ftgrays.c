@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    A new `perfect' anti-aliasing renderer (body).                       */
 /*                                                                         */
-/*  Copyright 2000-2003, 2005-2014 by                                      */
+/*  Copyright 2000-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -94,12 +94,32 @@
 #ifdef _STANDALONE_
 
 
+  /* The size in bytes of the render pool used by the scan-line converter  */
+  /* to do all of its work.                                                */
+#define FT_RENDER_POOL_SIZE  16384L
+
+
   /* Auxiliary macros for token concatenation. */
 #define FT_ERR_XCAT( x, y )  x ## y
 #define FT_ERR_CAT( x, y )   FT_ERR_XCAT( x, y )
 
 #define FT_BEGIN_STMNT  do {
 #define FT_END_STMNT    } while ( 0 )
+
+#define FT_MAX( a, b )  ( (a) > (b) ? (a) : (b) )
+#define FT_ABS( a )     ( (a) < 0 ? -(a) : (a) )
+
+
+  /*
+   *  Approximate sqrt(x*x+y*y) using the `alpha max plus beta min'
+   *  algorithm.  We use alpha = 1, beta = 3/8, giving us results with a
+   *  largest error less than 7% compared to the exact value.
+   */
+#define FT_HYPOT( x, y )                 \
+          ( x = FT_ABS( x ),             \
+            y = FT_ABS( y ),             \
+            x > y ? x + ( 3 * y >> 3 )   \
+                  : y + ( 3 * x >> 3 ) )
 
 
   /* define this to dump debugging information */
@@ -464,11 +484,7 @@ typedef ptrdiff_t  FT_PtrDist;
 
   typedef struct gray_TRaster_
   {
-    void*         buffer;
-    long          buffer_size;
-    int           band_size;
     void*         memory;
-    gray_PWorker  worker;
 
   } gray_TRaster, *gray_PRaster;
 
@@ -480,7 +496,7 @@ typedef ptrdiff_t  FT_PtrDist;
   /*                                                                       */
   static void
   gray_init_cells( RAS_ARG_ void*  buffer,
-                   long            byte_size )
+                            long   byte_size )
   {
     ras.buffer      = buffer;
     ras.buffer_size = byte_size;
@@ -638,8 +654,8 @@ typedef ptrdiff_t  FT_PtrDist;
       ras.ey    = ey;
     }
 
-    ras.invalid = ( (unsigned)ey >= (unsigned)ras.count_ey ||
-                              ex >= ras.count_ex           );
+    ras.invalid = ( (unsigned int)ey >= (unsigned int)ras.count_ey ||
+                                  ex >= ras.count_ex               );
   }
 
 
@@ -1212,7 +1228,7 @@ typedef ptrdiff_t  FT_PtrDist;
     /* first of all, compute the scanline offset */
     p = (unsigned char*)map->buffer - y * map->pitch;
     if ( map->pitch >= 0 )
-      p += (unsigned)( ( map->rows - 1 ) * map->pitch );
+      p += ( map->rows - 1 ) * (unsigned int)map->pitch;
 
     for ( ; count > 0; count--, spans++ )
     {
@@ -1744,14 +1760,17 @@ typedef ptrdiff_t  FT_PtrDist;
 
   } gray_TBand;
 
-    FT_DEFINE_OUTLINE_FUNCS(func_interface,
-      (FT_Outline_MoveTo_Func) gray_move_to,
-      (FT_Outline_LineTo_Func) gray_line_to,
-      (FT_Outline_ConicTo_Func)gray_conic_to,
-      (FT_Outline_CubicTo_Func)gray_cubic_to,
-      0,
-      0
-    )
+
+  FT_DEFINE_OUTLINE_FUNCS(
+    func_interface,
+
+    (FT_Outline_MoveTo_Func) gray_move_to,
+    (FT_Outline_LineTo_Func) gray_line_to,
+    (FT_Outline_ConicTo_Func)gray_conic_to,
+    (FT_Outline_CubicTo_Func)gray_cubic_to,
+    0,
+    0 )
+
 
   static int
   gray_convert_glyph_inner( RAS_ARG )
@@ -1842,13 +1861,13 @@ typedef ptrdiff_t  FT_PtrDist;
           ras.ycells = (PCell*)ras.buffer;
           ras.ycount = band->max - band->min;
 
-          cell_start = sizeof ( PCell ) * ras.ycount;
-          cell_mod   = cell_start % sizeof ( TCell );
+          cell_start = (long)sizeof ( PCell ) * ras.ycount;
+          cell_mod   = cell_start % (long)sizeof ( TCell );
           if ( cell_mod > 0 )
-            cell_start += sizeof ( TCell ) - cell_mod;
+            cell_start += (long)sizeof ( TCell ) - cell_mod;
 
           cell_end  = ras.buffer_size;
-          cell_end -= cell_end % sizeof ( TCell );
+          cell_end -= cell_end % (long)sizeof ( TCell );
 
           cells_max = (PCell)( (char*)ras.buffer + cell_end );
           ras.cells = (PCell)( (char*)ras.buffer + cell_start );
@@ -1918,12 +1937,18 @@ typedef ptrdiff_t  FT_PtrDist;
   gray_raster_render( gray_PRaster             raster,
                       const FT_Raster_Params*  params )
   {
-    const FT_Outline*  outline    = (const FT_Outline*)params->source;
-    const FT_Bitmap*   target_map = params->target;
-    gray_PWorker       worker;
+    const FT_Outline*  outline     = (const FT_Outline*)params->source;
+    const FT_Bitmap*   target_map  = params->target;
+
+    gray_TWorker  worker[1];
+
+    TCell  buffer[FT_MAX( FT_RENDER_POOL_SIZE, 2048 ) / sizeof ( TCell )];
+    long   buffer_size = sizeof ( buffer );
+    int    band_size   = (int)( buffer_size /
+                                (long)( sizeof ( TCell ) * 8 ) );
 
 
-    if ( !raster || !raster->buffer || !raster->buffer_size )
+    if ( !raster )
       return FT_THROW( Invalid_Argument );
 
     if ( !outline )
@@ -1939,8 +1964,6 @@ typedef ptrdiff_t  FT_PtrDist;
     if ( outline->n_points !=
            outline->contours[outline->n_contours - 1] + 1 )
       return FT_THROW( Invalid_Outline );
-
-    worker = raster->worker;
 
     /* if direct mode is not set, we must have a target bitmap */
     if ( !( params->flags & FT_RASTER_FLAG_DIRECT ) )
@@ -1966,8 +1989,8 @@ typedef ptrdiff_t  FT_PtrDist;
       /* compute clip box from target pixmap */
       ras.clip_box.xMin = 0;
       ras.clip_box.yMin = 0;
-      ras.clip_box.xMax = target_map->width;
-      ras.clip_box.yMax = target_map->rows;
+      ras.clip_box.xMax = (FT_Pos)target_map->width;
+      ras.clip_box.yMax = (FT_Pos)target_map->rows;
     }
     else if ( params->flags & FT_RASTER_FLAG_CLIP )
       ras.clip_box = params->clip_box;
@@ -1979,13 +2002,14 @@ typedef ptrdiff_t  FT_PtrDist;
       ras.clip_box.yMax =  32767L;
     }
 
-    gray_init_cells( RAS_VAR_ raster->buffer, raster->buffer_size );
+    gray_init_cells( RAS_VAR_ buffer, buffer_size );
 
     ras.outline        = *outline;
     ras.num_cells      = 0;
     ras.invalid        = 1;
-    ras.band_size      = raster->band_size;
+    ras.band_size      = band_size;
     ras.num_gray_spans = 0;
+    ras.span_y         = 0;
 
     if ( params->flags & FT_RASTER_FLAG_DIRECT )
     {
@@ -2069,34 +2093,9 @@ typedef ptrdiff_t  FT_PtrDist;
                      char*      pool_base,
                      long       pool_size )
   {
-    gray_PRaster  rast = (gray_PRaster)raster;
-
-
-    if ( raster )
-    {
-      if ( pool_base && pool_size >= (long)sizeof ( gray_TWorker ) + 2048 )
-      {
-        gray_PWorker  worker = (gray_PWorker)pool_base;
-
-
-        rast->worker      = worker;
-        rast->buffer      = pool_base +
-                              ( ( sizeof ( gray_TWorker ) +
-                                  sizeof ( TCell ) - 1 )  &
-                                ~( sizeof ( TCell ) - 1 ) );
-        rast->buffer_size = (long)( ( pool_base + pool_size ) -
-                                    (char*)rast->buffer ) &
-                                      ~( sizeof ( TCell ) - 1 );
-        rast->band_size   = (int)( rast->buffer_size /
-                                     ( sizeof ( TCell ) * 8 ) );
-      }
-      else
-      {
-        rast->buffer      = NULL;
-        rast->buffer_size = 0;
-        rast->worker      = NULL;
-      }
-    }
+    FT_UNUSED( raster );
+    FT_UNUSED( pool_base );
+    FT_UNUSED( pool_size );
   }
 
 
@@ -2114,15 +2113,16 @@ typedef ptrdiff_t  FT_PtrDist;
   }
 
 
-  FT_DEFINE_RASTER_FUNCS(ft_grays_raster,
+  FT_DEFINE_RASTER_FUNCS(
+    ft_grays_raster,
+
     FT_GLYPH_FORMAT_OUTLINE,
 
     (FT_Raster_New_Func)     gray_raster_new,
     (FT_Raster_Reset_Func)   gray_raster_reset,
     (FT_Raster_Set_Mode_Func)gray_raster_set_mode,
     (FT_Raster_Render_Func)  gray_raster_render,
-    (FT_Raster_Done_Func)    gray_raster_done
-  )
+    (FT_Raster_Done_Func)    gray_raster_done )
 
 
 /* END */

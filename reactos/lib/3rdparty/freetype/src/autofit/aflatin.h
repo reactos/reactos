@@ -5,7 +5,7 @@
 /*    Auto-fitter hinting routines for latin writing system                */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2003-2007, 2009, 2011-2014 by                                */
+/*  Copyright 2003-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -63,15 +63,11 @@ FT_BEGIN_HEADER
 #define AF_LATIN_MAX_WIDTHS  16
 
 
-  enum
-  {
-    AF_LATIN_BLUE_ACTIVE     = 1 << 0, /* set if zone height is <= 3/4px   */
-    AF_LATIN_BLUE_TOP        = 1 << 1, /* set if we have a top blue zone   */
-    AF_LATIN_BLUE_NEUTRAL    = 1 << 2, /* set if we have neutral blue zone */
-    AF_LATIN_BLUE_ADJUSTMENT = 1 << 3, /* used for scale adjustment        */
-                                       /* optimization                     */
-    AF_LATIN_BLUE_FLAG_MAX
-  };
+#define AF_LATIN_BLUE_ACTIVE      ( 1U << 0 ) /* zone height is <= 3/4px   */
+#define AF_LATIN_BLUE_TOP         ( 1U << 1 ) /* we have a top blue zone   */
+#define AF_LATIN_BLUE_NEUTRAL     ( 1U << 2 ) /* we have neutral blue zone */
+#define AF_LATIN_BLUE_ADJUSTMENT  ( 1U << 3 ) /* used for scale adjustment */
+                                              /* optimization              */
 
 
   typedef struct  AF_LatinBlueRec_
@@ -138,15 +134,11 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*************************************************************************/
 
-  enum
-  {
-    AF_LATIN_HINTS_HORZ_SNAP   = 1 << 0, /* enable stem width snapping  */
-    AF_LATIN_HINTS_VERT_SNAP   = 1 << 1, /* enable stem height snapping */
-    AF_LATIN_HINTS_STEM_ADJUST = 1 << 2, /* enable stem width/height    */
-                                         /* adjustment                  */
-    AF_LATIN_HINTS_MONO        = 1 << 3  /* indicate monochrome         */
-                                         /* rendering                   */
-  };
+#define AF_LATIN_HINTS_HORZ_SNAP    ( 1U << 0 ) /* stem width snapping  */
+#define AF_LATIN_HINTS_VERT_SNAP    ( 1U << 1 ) /* stem height snapping */
+#define AF_LATIN_HINTS_STEM_ADJUST  ( 1U << 2 ) /* stem width/height    */
+                                                /* adjustment           */
+#define AF_LATIN_HINTS_MONO         ( 1U << 3 ) /* monochrome rendering */
 
 
 #define AF_LATIN_HINTS_DO_HORZ_SNAP( h )             \

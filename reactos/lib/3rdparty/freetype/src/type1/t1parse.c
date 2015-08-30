@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (body).                                                */
 /*                                                                         */
-/*  Copyright 1996-2005, 2008, 2009, 2012-2014 by                          */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -143,13 +143,13 @@
     FT_ULong   size;
 
 
-    psaux->ps_parser_funcs->init( &parser->root, 0, 0, memory );
+    psaux->ps_parser_funcs->init( &parser->root, NULL, NULL, memory );
 
     parser->stream       = stream;
     parser->base_len     = 0;
-    parser->base_dict    = 0;
+    parser->base_dict    = NULL;
     parser->private_len  = 0;
-    parser->private_dict = 0;
+    parser->private_dict = NULL;
     parser->in_pfb       = 0;
     parser->in_memory    = 0;
     parser->single_block = 0;
@@ -273,7 +273,7 @@
       /* made of several segments.  We thus first read the number of   */
       /* segments to compute the total size of the private dictionary  */
       /* then re-read them into memory.                                */
-      FT_Long    start_pos = FT_STREAM_POS();
+      FT_ULong   start_pos = FT_STREAM_POS();
       FT_UShort  tag;
 
 
@@ -411,9 +411,11 @@
       /* fine that are violating this limitation, so we add a heuristic  */
       /* test to stop at \r only if it is not used for EOL.              */
 
-      pos_lf  = ft_memchr( cur, '\n', limit - cur );
-      test_cr = FT_BOOL( !pos_lf                                      ||
-                         pos_lf > ft_memchr( cur, '\r', limit - cur ) );
+      pos_lf  = ft_memchr( cur, '\n', (size_t)( limit - cur ) );
+      test_cr = FT_BOOL( !pos_lf                                       ||
+                         pos_lf > ft_memchr( cur,
+                                             '\r',
+                                             (size_t)( limit - cur ) ) );
 
       while ( cur < limit                    &&
               ( *cur == ' '                ||
@@ -429,7 +431,7 @@
         goto Exit;
       }
 
-      size = (FT_ULong)( parser->base_len - ( cur - parser->base_dict ) );
+      size = parser->base_len - (FT_ULong)( cur - parser->base_dict );
 
       if ( parser->in_memory )
       {
@@ -443,7 +445,7 @@
         parser->single_block = 1;
         parser->private_dict = parser->base_dict;
         parser->private_len  = size;
-        parser->base_dict    = 0;
+        parser->base_dict    = NULL;
         parser->base_len     = 0;
       }
 
@@ -459,7 +461,7 @@
            ft_isxdigit( cur[2] ) && ft_isxdigit( cur[3] ) )
       {
         /* ASCII hexadecimal encoding */
-        FT_Long  len;
+        FT_ULong  len;
 
 
         parser->root.cursor = cur;

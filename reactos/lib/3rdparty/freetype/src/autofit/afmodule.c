@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter module implementation (body).                            */
 /*                                                                         */
-/*  Copyright 2003-2006, 2009, 2011-2014 by                                */
+/*  Copyright 2003-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,10 +23,27 @@
 #include "afpic.h"
 
 #ifdef FT_DEBUG_AUTOFIT
-  int    _af_debug_disable_horz_hints;
-  int    _af_debug_disable_vert_hints;
-  int    _af_debug_disable_blue_hints;
-  void*  _af_debug_hints;
+
+#ifndef FT_MAKE_OPTION_SINGLE_OBJECT
+  extern void
+  af_glyph_hints_dump_segments( AF_GlyphHints  hints,
+                                FT_Bool        to_stdout );
+  extern void
+  af_glyph_hints_dump_points( AF_GlyphHints  hints,
+                              FT_Bool        to_stdout );
+  extern void
+  af_glyph_hints_dump_edges( AF_GlyphHints  hints,
+                             FT_Bool        to_stdout );
+#endif
+
+  int  _af_debug_disable_horz_hints;
+  int  _af_debug_disable_vert_hints;
+  int  _af_debug_disable_blue_hints;
+
+  /* we use a global object instead of a local one for debugging */
+  AF_GlyphHintsRec  _af_debug_hints_rec[1];
+
+  void*  _af_debug_hints = _af_debug_hints_rec;
 #endif
 
 #include FT_INTERNAL_OBJECTS_H
@@ -141,6 +158,17 @@
 
       return error;
     }
+#ifdef AF_CONFIG_OPTION_USE_WARPER
+    else if ( !ft_strcmp( property_name, "warping" ) )
+    {
+      FT_Bool*  warping = (FT_Bool*)value;
+
+
+      module->warping = *warping;
+
+      return error;
+    }
+#endif /* AF_CONFIG_OPTION_USE_WARPER */
 
     FT_TRACE0(( "af_property_set: missing property `%s'\n",
                 property_name ));
@@ -157,6 +185,9 @@
     AF_Module  module         = (AF_Module)ft_module;
     FT_UInt    fallback_style = module->fallback_style;
     FT_UInt    default_script = module->default_script;
+#ifdef AF_CONFIG_OPTION_USE_WARPER
+    FT_Bool    warping        = module->warping;
+#endif
 
 
     if ( !ft_strcmp( property_name, "glyph-to-script-map" ) )
@@ -203,7 +234,17 @@
 
       return error;
     }
+#ifdef AF_CONFIG_OPTION_USE_WARPER
+    else if ( !ft_strcmp( property_name, "warping" ) )
+    {
+      FT_Bool*  val = (FT_Bool*)value;
 
+
+      *val = warping;
+
+      return error;
+    }
+#endif /* AF_CONFIG_OPTION_USE_WARPER */
 
     FT_TRACE0(( "af_property_get: missing property `%s'\n",
                 property_name ));
@@ -252,18 +293,23 @@
 
     module->fallback_style = AF_STYLE_FALLBACK;
     module->default_script = AF_SCRIPT_DEFAULT;
+#ifdef AF_CONFIG_OPTION_USE_WARPER
+    module->warping        = 0;
+#endif
 
-    return af_loader_init( module );
+    return FT_Err_Ok;
   }
 
 
   FT_CALLBACK_DEF( void )
   af_autofitter_done( FT_Module  ft_module )      /* AF_Module */
   {
-    AF_Module  module = (AF_Module)ft_module;
+    FT_UNUSED( ft_module );
 
-
-    af_loader_done( module );
+#ifdef FT_DEBUG_AUTOFIT
+    if ( _af_debug_hints_rec->memory )
+      af_glyph_hints_done( _af_debug_hints_rec );
+#endif
   }
 
 
@@ -274,10 +320,56 @@
                             FT_UInt       glyph_index,
                             FT_Int32      load_flags )
   {
+    FT_Error   error  = FT_Err_Ok;
+    FT_Memory  memory = module->root.library->memory;
+
+#ifdef FT_DEBUG_AUTOFIT
+
+    /* in debug mode, we use a global object that survives this routine */
+
+    AF_GlyphHints  hints = _af_debug_hints_rec;
+    AF_LoaderRec   loader[1];
+
     FT_UNUSED( size );
 
-    return af_loader_load_glyph( module, slot->face,
-                                 glyph_index, load_flags );
+
+    if ( hints->memory )
+      af_glyph_hints_done( hints );
+
+    af_glyph_hints_init( hints, memory );
+    af_loader_init( loader, hints );
+
+    error = af_loader_load_glyph( loader, module, slot->face,
+                                  glyph_index, load_flags );
+
+    af_glyph_hints_dump_points( hints, 0 );
+    af_glyph_hints_dump_segments( hints, 0 );
+    af_glyph_hints_dump_edges( hints, 0 );
+
+    af_loader_done( loader );
+
+    return error;
+
+#else /* !FT_DEBUG_AUTOFIT */
+
+    AF_GlyphHintsRec  hints[1];
+    AF_LoaderRec      loader[1];
+
+    FT_UNUSED( size );
+
+
+    af_glyph_hints_init( hints, memory );
+    af_loader_init( loader, hints );
+
+    error = af_loader_load_glyph( loader, module, slot->face,
+                                  glyph_index, load_flags );
+
+    af_loader_done( loader );
+    af_glyph_hints_done( hints );
+
+    return error;
+
+#endif /* !FT_DEBUG_AUTOFIT */
   }
 
 

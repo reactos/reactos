@@ -48,7 +48,12 @@ FT_BEGIN_HEADER
 
 
 #define CF2_OPERAND_STACK_SIZE  48
-#define CF2_MAX_SUBR            10 /* maximum subroutine nesting */
+#define CF2_MAX_SUBR            16 /* maximum subroutine nesting;         */
+                                   /* only 10 are allowed but there exist */
+                                   /* fonts like `HiraKakuProN-W3.ttf'    */
+                                   /* (Hiragino Kaku Gothic ProN W3;      */
+                                   /* 8.2d6e1; 2014-12-19) that exceed    */
+                                   /* this limit                          */
 
 
   /* typedef is in `cf2glue.h' */

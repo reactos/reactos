@@ -5,7 +5,7 @@
 /*    Load the basic TrueType tables, i.e., tables that can be either in   */
 /*    TTF or OTF fonts (body).                                             */
 /*                                                                         */
-/*  Copyright 1996-2010, 2012-2014 by                                      */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -208,12 +208,23 @@
 
       /* we ignore invalid tables */
 
-      /* table.Offset + table.Length > stream->size ? */
-      if ( table.Length > stream->size                ||
-           table.Offset > stream->size - table.Length )
-      {
-        FT_TRACE2(( "check_table_dir: table entry %d invalid\n", nn ));
+      if ( table.Offset > stream->size )
         continue;
+      else if ( table.Length > stream->size - table.Offset )
+      {
+        /* Some tables have such a simple structure that clipping its     */
+        /* contents is harmless.  This also makes FreeType less sensitive */
+        /* to invalid table lengths (which programs like Acroread seem to */
+        /* ignore in general).                                            */
+
+        if ( table.Tag == TTAG_hmtx ||
+             table.Tag == TTAG_vmtx )
+          valid_entries++;
+        else
+        {
+          FT_TRACE2(( "check_table_dir: table entry %d invalid\n", nn ));
+          continue;
+        }
       }
       else
         valid_entries++;
@@ -397,12 +408,38 @@
       entry->Offset   = FT_GET_ULONG();
       entry->Length   = FT_GET_ULONG();
 
-      /* ignore invalid tables */
+      /* ignore invalid tables that can't be sanitized */
 
-      /* entry->Offset + entry->Length > stream->size ? */
-      if ( entry->Length > stream->size                 ||
-           entry->Offset > stream->size - entry->Length )
+      if ( entry->Offset > stream->size )
         continue;
+      else if ( entry->Length > stream->size - entry->Offset )
+      {
+        if ( entry->Tag == TTAG_hmtx ||
+             entry->Tag == TTAG_vmtx )
+        {
+#ifdef FT_DEBUG_LEVEL_TRACE
+          FT_ULong  old_length = entry->Length;
+#endif
+
+
+          /* make metrics table length a multiple of 4 */
+          entry->Length = ( stream->size - entry->Offset ) & ~3U;
+
+          FT_TRACE2(( "  %c%c%c%c  %08lx  %08lx  %08lx"
+                      " (sanitized; original length %08lx)\n",
+                      (FT_Char)( entry->Tag >> 24 ),
+                      (FT_Char)( entry->Tag >> 16 ),
+                      (FT_Char)( entry->Tag >> 8  ),
+                      (FT_Char)( entry->Tag       ),
+                      entry->Offset,
+                      entry->Length,
+                      entry->CheckSum,
+                      old_length ));
+          entry++;
+        }
+        else
+          continue;
+      }
       else
       {
         FT_TRACE2(( "  %c%c%c%c  %08lx  %08lx  %08lx\n",

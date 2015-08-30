@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include FT_TRUETYPE_IDS_H
 
 #include FT_SERVICE_BDF_H
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 
 #include "bdf.h"
 #include "bdfdrivr.h"
@@ -106,7 +106,7 @@ THE SOFTWARE.
 
 
       mid  = ( min + max ) >> 1;
-      code = encodings[mid].enc;
+      code = (FT_ULong)encodings[mid].enc;
 
       if ( charcode == code )
       {
@@ -146,7 +146,7 @@ THE SOFTWARE.
 
 
       mid  = ( min + max ) >> 1;
-      code = encodings[mid].enc;
+      code = (FT_ULong)encodings[mid].enc;
 
       if ( charcode == code )
       {
@@ -165,7 +165,7 @@ THE SOFTWARE.
     charcode = 0;
     if ( min < cmap->num_encodings )
     {
-      charcode = encodings[min].enc;
+      charcode = (FT_ULong)encodings[min].enc;
       result   = encodings[min].glyph + 1;
     }
 
@@ -420,14 +420,14 @@ THE SOFTWARE.
           goto Exit;
       }
       else
-        bdfface->family_name = 0;
+        bdfface->family_name = NULL;
 
       if ( ( error = bdf_interpret_style( face ) ) != 0 )
         goto Exit;
 
       /* the number of glyphs (with one slot for the undefined glyph */
       /* at position 0 and all unencoded glyphs)                     */
-      bdfface->num_glyphs = font->glyphs_size + 1;
+      bdfface->num_glyphs = (FT_Long)( font->glyphs_size + 1 );
 
       bdfface->num_fixed_sizes = 1;
       if ( FT_NEW_ARRAY( bdfface->available_sizes, 1 ) )
@@ -494,7 +494,7 @@ THE SOFTWARE.
         {
           (face->en_table[n]).enc = cur[n].encoding;
           FT_TRACE4(( "  idx %d, val 0x%lX\n", n, cur[n].encoding ));
-          (face->en_table[n]).glyph = (FT_Short)n;
+          (face->en_table[n]).glyph = (FT_UShort)n;
 
           if ( cur[n].encoding == font->default_char )
           {
@@ -509,7 +509,7 @@ THE SOFTWARE.
 
       /* charmaps */
       {
-        bdf_property_t  *charset_registry = 0, *charset_encoding = 0;
+        bdf_property_t  *charset_registry, *charset_encoding;
         FT_Bool          unicode_charmap  = 0;
 
 
@@ -734,11 +734,11 @@ THE SOFTWARE.
     slot->bitmap_left = glyph.bbx.x_offset;
     slot->bitmap_top  = glyph.bbx.ascent;
 
-    slot->metrics.horiAdvance  = glyph.dwidth << 6;
-    slot->metrics.horiBearingX = glyph.bbx.x_offset << 6;
-    slot->metrics.horiBearingY = glyph.bbx.ascent << 6;
-    slot->metrics.width        = bitmap->width << 6;
-    slot->metrics.height       = bitmap->rows << 6;
+    slot->metrics.horiAdvance  = (FT_Pos)( glyph.dwidth << 6 );
+    slot->metrics.horiBearingX = (FT_Pos)( glyph.bbx.x_offset << 6 );
+    slot->metrics.horiBearingY = (FT_Pos)( glyph.bbx.ascent << 6 );
+    slot->metrics.width        = (FT_Pos)( bitmap->width << 6 );
+    slot->metrics.height       = (FT_Pos)( bitmap->rows << 6 );
 
     /*
      * XXX DWIDTH1 and VVECTOR should be parsed and
@@ -836,8 +836,8 @@ THE SOFTWARE.
 
   static const FT_ServiceDescRec  bdf_services[] =
   {
-    { FT_SERVICE_ID_BDF,       &bdf_service_bdf },
-    { FT_SERVICE_ID_XF86_NAME, FT_XF86_FORMAT_BDF },
+    { FT_SERVICE_ID_BDF,         &bdf_service_bdf },
+    { FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_BDF },
     { NULL, NULL }
   };
 

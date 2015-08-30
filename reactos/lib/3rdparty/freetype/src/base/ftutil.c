@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility file for memory and list management (body).         */
 /*                                                                         */
-/*  Copyright 2002, 2004-2007, 2013 by                                     */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -180,7 +180,7 @@
               FT_Error    *p_error )
   {
     FT_Error    error;
-    FT_Pointer  p = ft_mem_qalloc( memory, size, &error );
+    FT_Pointer  p = ft_mem_qalloc( memory, (FT_Long)size, &error );
 
 
     if ( !error && address )
@@ -275,7 +275,7 @@
 
     before = list->tail;
 
-    node->next = 0;
+    node->next = NULL;
     node->prev = before;
 
     if ( before )
@@ -302,7 +302,7 @@
     after = list->head;
 
     node->next = after;
-    node->prev = 0;
+    node->prev = NULL;
 
     if ( !after )
       list->tail = node;
@@ -366,7 +366,7 @@
     else
       list->tail = before;
 
-    node->prev       = 0;
+    node->prev       = NULL;
     node->next       = list->head;
     list->head->prev = node;
     list->head       = node;
@@ -433,8 +433,8 @@
       cur = next;
     }
 
-    list->head = 0;
-    list->tail = 0;
+    list->head = NULL;
+    list->tail = NULL;
   }
 
 

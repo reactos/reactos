@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter routines to compute global hinting values (body).        */
 /*                                                                         */
-/*  Copyright 2003-2014 by                                                 */
+/*  Copyright 2003-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -314,8 +314,9 @@
 
     memory = face->memory;
 
-    if ( FT_ALLOC( globals, sizeof ( *globals ) +
-                            face->num_glyphs * sizeof ( FT_Byte ) ) )
+    if ( FT_ALLOC( globals,
+                   sizeof ( *globals ) +
+                     (FT_ULong)face->num_glyphs * sizeof ( FT_Byte ) ) )
       goto Exit;
 
     globals->face         = face;

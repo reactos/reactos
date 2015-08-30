@@ -5,7 +5,8 @@
 /*    TrueTypeGX/AAT mort table validation                                 */
 /*    body for type2 (Ligature Substitution) subtable.                     */
 /*                                                                         */
-/*  Copyright 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,       */
+/*  Copyright 2005-2015 by                                                 */
+/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -302,7 +303,7 @@
     p += gxvalid->subtable_length;
     gxv_mort_subtable_type2_ligatureTable_validate( table, gxvalid );
 
-    gxvalid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
 
     GXV_EXIT;
   }

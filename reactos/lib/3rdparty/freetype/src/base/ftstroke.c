@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (body).                                        */
 /*                                                                         */
-/*  Copyright 2002-2006, 2008-2011, 2013, 2014 by                          */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -347,7 +347,7 @@
   ft_stroke_border_close( FT_StrokeBorder  border,
                           FT_Bool          reverse )
   {
-    FT_UInt  start = border->start;
+    FT_UInt  start = (FT_UInt)border->start;
     FT_UInt  count = border->num_points;
 
 
@@ -599,7 +599,7 @@
     if ( border->start >= 0 )
       ft_stroke_border_close( border, FALSE );
 
-    border->start = border->num_points;
+    border->start = (FT_Int)border->num_points;
     border->movable = FALSE;
 
     return ft_stroke_border_lineto( border, to, FALSE );
@@ -742,7 +742,7 @@
       }
     }
 
-    outline->n_points = (short)( outline->n_points + border->num_points );
+    outline->n_points += (short)border->num_points;
 
     FT_ASSERT( FT_Outline_Check( outline ) == 0 );
   }
@@ -999,7 +999,9 @@
 
     /* Only intersect borders if between two lineto's and both */
     /* lines are long enough (line_length is zero for curves). */
-    if ( !border->movable || line_length == 0 )
+    /* Also avoid U-turns of nearly 180 degree.                */
+    if ( !border->movable || line_length == 0  ||
+         theta > 0x59C000 || theta < -0x59C000 )
       intersect = FALSE;
     else
     {
@@ -1220,11 +1222,8 @@
       goto Exit;
 
     /* when we turn to the right, the inside side is 0 */
-    inside_side = 0;
-
     /* otherwise, the inside side is 1 */
-    if ( turn < 0 )
-      inside_side = 1;
+    inside_side = ( turn < 0 );
 
     /* process the inside side */
     error = ft_stroker_inside( stroker, inside_side, line_length );
@@ -1232,7 +1231,7 @@
       goto Exit;
 
     /* process the outside side */
-    error = ft_stroker_outside( stroker, 1 - inside_side, line_length );
+    error = ft_stroker_outside( stroker, !inside_side, line_length );
 
   Exit:
     return error;
@@ -1822,7 +1821,7 @@
 
     FT_ASSERT( left->start >= 0 );
 
-    new_points = left->num_points - left->start;
+    new_points = (FT_Int)left->num_points - left->start;
     if ( new_points > 0 )
     {
       error = ft_stroke_border_grow( right, (FT_UInt)new_points );
@@ -1862,8 +1861,8 @@
         }
       }
 
-      left->num_points   = left->start;
-      right->num_points += new_points;
+      left->num_points   = (FT_UInt)left->start;
+      right->num_points += (FT_UInt)new_points;
 
       right->movable = FALSE;
       left->movable  = FALSE;
@@ -1941,11 +1940,8 @@
       if ( turn != 0 )
       {
         /* when we turn to the right, the inside side is 0 */
-        inside_side = 0;
-
         /* otherwise, the inside side is 1 */
-        if ( turn < 0 )
-          inside_side = 1;
+        inside_side = ( turn < 0 );
 
         error = ft_stroker_inside( stroker,
                                    inside_side,
@@ -1955,7 +1951,7 @@
 
         /* process the outside side */
         error = ft_stroker_outside( stroker,
-                                    1 - inside_side,
+                                    !inside_side,
                                     stroker->subpath_line_length );
         if ( error )
           goto Exit;
@@ -2118,7 +2114,7 @@
       FT_UInt  last;  /* index of last point in contour */
 
 
-      last  = outline->contours[n];
+      last  = (FT_UInt)outline->contours[n];
       limit = outline->points + last;
 
       /* skip empty points; we don't stroke these */
@@ -2347,7 +2343,9 @@
       FT_Outline_Done( glyph->library, outline );
 
       error = FT_Outline_New( glyph->library,
-                              num_points, num_contours, outline );
+                              num_points,
+                              (FT_Int)num_contours,
+                              outline );
       if ( error )
         goto Fail;
 
@@ -2437,7 +2435,7 @@
 
       error = FT_Outline_New( glyph->library,
                               num_points,
-                              num_contours,
+                              (FT_Int)num_contours,
                               outline );
       if ( error )
         goto Fail;

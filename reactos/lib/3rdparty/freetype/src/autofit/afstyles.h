@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter styles (specification only).                             */
 /*                                                                         */
-/*  Copyright 2013, 2014 by                                                */
+/*  Copyright 2013-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -80,6 +80,14 @@
                        "default",                        \
                        DEFAULT )
 
+
+  STYLE( arab_dflt, ARAB_DFLT,
+         "Arabic default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_ARAB,
+         AF_BLUE_STRINGSET_ARAB,
+         AF_COVERAGE_DEFAULT )
+
   META_STYLE_LATIN( cyrl, CYRL, "Cyrillic" )
 
   META_STYLE_LATIN( grek, GREK, "Greek" )
@@ -120,6 +128,13 @@
          AF_WRITING_SYSTEM_LATIN,
          AF_SCRIPT_TELU,
          AF_BLUE_STRINGSET_TELU,
+         AF_COVERAGE_DEFAULT )
+
+  STYLE( thai_dflt, THAI_DFLT,
+         "Thai default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_THAI,
+         AF_BLUE_STRINGSET_THAI,
          AF_COVERAGE_DEFAULT )
 
 #ifdef AF_CONFIG_OPTION_INDIC

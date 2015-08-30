@@ -5,7 +5,7 @@
 /*    ANSI-specific library and header configuration file (specification   */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 2002-2007, 2009, 2011-2012 by                                */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -141,8 +141,7 @@
   /**********************************************************************/
 
 
-#define ft_atol   atol
-#define ft_labs   labs
+#define ft_atol  atol
 
 
   /**********************************************************************/

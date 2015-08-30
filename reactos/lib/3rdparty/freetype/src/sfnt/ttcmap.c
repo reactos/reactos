@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType character mapping table (cmap) support (body).              */
 /*                                                                         */
-/*  Copyright 2002-2010, 2012-2014 by                                      */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -360,7 +360,7 @@
 
 
         ids = p - 2 + offset;
-        if ( ids < glyph_ids || ids + code_count*2 > table + length )
+        if ( ids < glyph_ids || ids + code_count * 2 > table + length )
           FT_INVALID_OFFSET;
 
         /* check glyph IDs */
@@ -375,7 +375,7 @@
             idx = TT_NEXT_USHORT( p );
             if ( idx != 0 )
             {
-              idx = ( idx + delta ) & 0xFFFFU;
+              idx = (FT_UInt)( (FT_Int)idx + delta ) & 0xFFFFU;
               if ( idx >= TT_VALID_GLYPH_COUNT( valid ) )
                 FT_INVALID_GLYPH_ID;
             }
@@ -472,7 +472,7 @@
         idx = TT_PEEK_USHORT( p );
 
         if ( idx != 0 )
-          result = (FT_UInt)( idx + delta ) & 0xFFFFU;
+          result = (FT_UInt)( (FT_Int)idx + delta ) & 0xFFFFU;
       }
     }
     return result;
@@ -524,7 +524,7 @@
 
           if ( idx != 0 )
           {
-            gindex = ( idx + delta ) & 0xFFFFU;
+            gindex = (FT_UInt)( (FT_Int)idx + delta ) & 0xFFFFU;
             if ( gindex != 0 )
             {
               result = charcode;
@@ -786,7 +786,7 @@
 
             if ( gindex != 0 )
             {
-              gindex = (FT_UInt)( ( gindex + delta ) & 0xFFFFU );
+              gindex = (FT_UInt)( (FT_Int)gindex + delta ) & 0xFFFFU;
               if ( gindex != 0 )
               {
                 cmap->cur_charcode = charcode;
@@ -800,7 +800,7 @@
         {
           do
           {
-            FT_UInt  gindex = (FT_UInt)( ( charcode + delta ) & 0xFFFFU );
+            FT_UInt  gindex = (FT_UInt)( (FT_Int)charcode + delta ) & 0xFFFFU;
 
 
             if ( gindex != 0 )
@@ -993,7 +993,7 @@
               idx = FT_NEXT_USHORT( p );
               if ( idx != 0 )
               {
-                idx = (FT_UInt)( idx + delta ) & 0xFFFFU;
+                idx = (FT_UInt)( (FT_Int)idx + delta ) & 0xFFFFU;
 
                 if ( idx >= TT_VALID_GLYPH_COUNT( valid ) )
                   FT_INVALID_GLYPH_ID;
@@ -1090,10 +1090,10 @@
             p += offset + ( charcode - start ) * 2;
             gindex = TT_PEEK_USHORT( p );
             if ( gindex != 0 )
-              gindex = (FT_UInt)( gindex + delta ) & 0xFFFFU;
+              gindex = (FT_UInt)( (FT_Int)gindex + delta ) & 0xFFFFU;
           }
           else
-            gindex = (FT_UInt)( charcode + delta ) & 0xFFFFU;
+            gindex = (FT_UInt)( (FT_Int)charcode + delta ) & 0xFFFFU;
 
           break;
         }
@@ -1294,10 +1294,10 @@
           p += offset + ( charcode - start ) * 2;
           gindex = TT_PEEK_USHORT( p );
           if ( gindex != 0 )
-            gindex = (FT_UInt)( gindex + delta ) & 0xFFFFU;
+            gindex = (FT_UInt)( (FT_Int)gindex + delta ) & 0xFFFFU;
         }
         else
-          gindex = (FT_UInt)( charcode + delta ) & 0xFFFFU;
+          gindex = (FT_UInt)( (FT_Int)charcode + delta ) & 0xFFFFU;
 
         break;
       }

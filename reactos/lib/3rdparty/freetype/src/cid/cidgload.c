@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 Glyph Loader (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2007, 2009, 2010, 2013 by                               */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,10 +44,10 @@
     CID_Face       face = (CID_Face)decoder->builder.face;
     CID_FaceInfo   cid  = &face->cid;
     FT_Byte*       p;
-    FT_UInt        fd_select;
+    FT_ULong       fd_select;
     FT_Stream      stream       = face->cid_stream;
     FT_Error       error        = FT_Err_Ok;
-    FT_Byte*       charstring   = 0;
+    FT_Byte*       charstring   = NULL;
     FT_Memory      memory       = face->root.memory;
     FT_ULong       glyph_length = 0;
     PSAux_Service  psaux        = (PSAux_Service)face->psaux;
@@ -75,11 +75,11 @@
         goto Exit;
 
       p         = (FT_Byte*)glyph_data.pointer;
-      fd_select = (FT_UInt)cid_get_offset( &p, (FT_Byte)cid->fd_bytes );
+      fd_select = cid_get_offset( &p, (FT_Byte)cid->fd_bytes );
 
       if ( glyph_data.length != 0 )
       {
-        glyph_length = glyph_data.length - cid->fd_bytes;
+        glyph_length = (FT_ULong)( glyph_data.length - cid->fd_bytes );
         (void)FT_ALLOC( charstring, glyph_length );
         if ( !error )
           ft_memcpy( charstring, glyph_data.pointer + cid->fd_bytes,
@@ -99,7 +99,7 @@
     /* For ordinary fonts read the CID font dictionary index */
     /* and charstring offset from the CIDMap.                */
     {
-      FT_UInt   entry_len = cid->fd_bytes + cid->gd_bytes;
+      FT_UInt   entry_len = (FT_UInt)( cid->fd_bytes + cid->gd_bytes );
       FT_ULong  off1;
 
 
@@ -109,13 +109,13 @@
         goto Exit;
 
       p            = (FT_Byte*)stream->cursor;
-      fd_select    = (FT_UInt) cid_get_offset( &p, (FT_Byte)cid->fd_bytes );
-      off1         = (FT_ULong)cid_get_offset( &p, (FT_Byte)cid->gd_bytes );
+      fd_select    = cid_get_offset( &p, (FT_Byte)cid->fd_bytes );
+      off1         = cid_get_offset( &p, (FT_Byte)cid->gd_bytes );
       p           += cid->fd_bytes;
       glyph_length = cid_get_offset( &p, (FT_Byte)cid->gd_bytes ) - off1;
       FT_FRAME_EXIT();
 
-      if ( fd_select >= (FT_UInt)cid->num_dicts )
+      if ( fd_select >= (FT_ULong)cid->num_dicts )
       {
         error = FT_THROW( Invalid_Offset );
         goto Exit;
@@ -133,7 +133,7 @@
     {
       CID_FaceDict  dict;
       CID_Subrs     cid_subrs = face->subrs + fd_select;
-      FT_Int        cs_offset;
+      FT_UInt       cs_offset;
 
 
       /* Set up subrs */
@@ -151,7 +151,7 @@
       /* Decode the charstring. */
 
       /* Adjustment for seed bytes. */
-      cs_offset = ( decoder->lenIV >= 0 ? decoder->lenIV : 0 );
+      cs_offset = decoder->lenIV >= 0 ? (FT_UInt)decoder->lenIV : 0;
 
       /* Decrypt only if lenIV >= 0. */
       if ( decoder->lenIV >= 0 )
@@ -159,7 +159,7 @@
 
       error = decoder->funcs.parse_charstrings(
                 decoder, charstring + cs_offset,
-                (FT_Int)glyph_length - cs_offset );
+                glyph_length - cs_offset );
     }
 
     FT_FREE( charstring );

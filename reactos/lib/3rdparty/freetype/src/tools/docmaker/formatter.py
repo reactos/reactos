@@ -3,7 +3,7 @@
 #
 #    Convert parsed content blocks to a structured document (library file).
 #
-#  Copyright 2002, 2004, 2007, 2008, 2014 by
+#  Copyright 2002-2015 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,

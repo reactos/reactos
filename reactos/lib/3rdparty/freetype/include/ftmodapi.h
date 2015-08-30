@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType modules public interface (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2003, 2006, 2008-2010, 2012, 2013 by                    */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -469,7 +469,9 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    This function is used to create a new FreeType library instance    */
   /*    from a given memory object.  It is thus possible to use libraries  */
-  /*    with distinct memory allocators within the same program.           */
+  /*    with distinct memory allocators within the same program.  Note,    */
+  /*    however, that the used @FT_Memory structure is expected to remain  */
+  /*    valid for the life of the @FT_Library object.                      */
   /*                                                                       */
   /*    Normally, you would call this function (followed by a call to      */
   /*    @FT_Add_Default_Modules or a series of calls to @FT_Add_Module)    */

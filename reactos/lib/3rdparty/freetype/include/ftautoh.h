@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for controlling the auto-hinter (specification only).   */
 /*                                                                         */
-/*  Copyright 2012, 2013 by                                                */
+/*  Copyright 2012-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -300,7 +300,7 @@ FT_BEGIN_HEADER
    * @description:
    *   *Experimental* *only*
    *
-   *   If Freetype gets compiled with FT_CONFIG_OPTION_USE_HARFBUZZ to make
+   *   If FreeType gets compiled with FT_CONFIG_OPTION_USE_HARFBUZZ to make
    *   the HarfBuzz library access OpenType features for getting better
    *   glyph coverages, this property sets the (auto-fitter) script to be
    *   used for the default (OpenType) script data of a font's GSUB table.
@@ -390,6 +390,54 @@ FT_BEGIN_HEADER
     FT_UInt  limit;
 
   } FT_Prop_IncreaseXHeight;
+
+
+  /**************************************************************************
+   *
+   * @property:
+   *   warping
+   *
+   * @description:
+   *   *Experimental* *only*
+   *
+   *   If FreeType gets compiled with option AF_CONFIG_OPTION_USE_WARPER to
+   *   activate the warp hinting code in the auto-hinter, this property
+   *   switches warping on and off.
+   *
+   *   Warping only works in `light' auto-hinting mode.  The idea of the
+   *   code is to slightly scale and shift a glyph along the non-hinted
+   *   dimension (which is usually the horizontal axis) so that as much of
+   *   its segments are aligned (more or less) to the grid.  To find out a
+   *   glyph's optimal scaling and shifting value, various parameter
+   *   combinations are tried and scored.
+   *
+   *   By default, warping is off.  The example below shows how to switch on
+   *   warping (omitting the error handling).
+   *
+   *   {
+   *     FT_Library  library;
+   *     FT_Bool     warping = 1;
+   *
+   *
+   *     FT_Init_FreeType( &library );
+   *
+   *     FT_Property_Set( library, "autofitter",
+   *                               "warping", &warping );
+   *   }
+   *
+   * @note:
+   *   This property can be used with @FT_Property_Get also.
+   *
+   *   The warping code can also change advance widths.  Have a look at the
+   *   `lsb_delta' and `rsb_delta' fields in the @FT_GlyphSlotRec structure
+   *   for details on improving inter-glyph distances while rendering.
+   *
+   *   Since warping is a global property of the auto-hinter it is best to
+   *   change its value before rendering any face.  Otherwise, you should
+   *   reload all faces that get auto-hinted in `light' hinting mode.
+   *
+   */
+
 
   /* */
 
