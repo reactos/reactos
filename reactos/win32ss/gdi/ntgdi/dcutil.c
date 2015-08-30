@@ -159,9 +159,15 @@ IntGdiSetTextColor(HDC hDC,
     }
     pdcattr = pdc->pdcattr;
 
-    // What about ulForegroundClr, like in gdi32?
-    crOldColor = pdcattr->crForegroundClr;
-    pdcattr->crForegroundClr = color;
+    crOldColor = (COLORREF) pdcattr->ulForegroundClr;
+    pdcattr->ulForegroundClr = (ULONG)color;
+
+    if (pdcattr->crForegroundClr != color)
+    {
+        pdcattr->ulDirty_ |= (DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
+        pdcattr->crForegroundClr = color;
+    }
+
     DC_vUpdateTextBrush(pdc);
 
     DC_UnlockDc(pdc);
