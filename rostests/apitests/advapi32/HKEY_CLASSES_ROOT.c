@@ -60,8 +60,9 @@ GetKeyName(HKEY hKey, PUNICODE_STRING KeyName)
     Status = NtQueryKey(hKey, KeyNameInformation, NameInformation, InfoLength, &InfoLength);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    RtlInitUnicodeString(&InfoName, NameInformation->Name);
+    InfoName.Buffer = NameInformation->Name;
     InfoName.Length = NameInformation->NameLength;
+    InfoName.MaximumLength = InfoName.Length;
 
     RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &InfoName, KeyName);
 
