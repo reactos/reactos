@@ -77,6 +77,9 @@ png_malloc_base,(png_const_structrp png_ptr, png_alloc_size_t size),
    PNG_UNUSED(png_ptr)
 #endif
 
+   /* Some compilers complain that this is always true.  However, it
+    * can be false when integer overflow happens.
+    */
    if (size > 0 && size <= PNG_SIZE_MAX
 #     ifdef PNG_MAX_MALLOC_64K
          && size <= 65536U
