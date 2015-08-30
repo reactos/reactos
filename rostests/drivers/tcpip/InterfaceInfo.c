@@ -19,6 +19,7 @@ START_TEST(InterfaceInfo)
     HANDLE FileHandle;
     DWORD BufferSize;
     BOOL Result;
+    DWORD Error;
     ULONG i;
 
     /* Open a control channel file for TCP */
@@ -44,8 +45,9 @@ START_TEST(InterfaceInfo)
         sizeof(InterfaceInfo),
         &BufferSize,
         NULL);
+    Error = GetLastError();
     ok(!Result, "DeviceIoControl succeeded.\n");
-    ok_long(GetLastError(), ERROR_INVALID_FUNCTION);
+    ok_long(Error, ERROR_INVALID_FUNCTION);
     ok_long(BufferSize, 0);
 
     CloseHandle(FileHandle);
@@ -73,7 +75,7 @@ START_TEST(InterfaceInfo)
         sizeof(InterfaceInfo),
         &BufferSize,
         NULL);
-    ok(Result, "DeviceIoControl failed.\n");
+    ok(Result, "DeviceIoControl failed, GLE %lu.\n", GetLastError());
     ok(BufferSize != 0, "Buffer size is zero.\n");
     trace("Buffer size is %lu.\n", BufferSize);
 
@@ -92,14 +94,17 @@ START_TEST(InterfaceInfo)
                 BufferSize,
                 &BufferSize,
                 NULL);
-        ok(Result, "DeviceIoControl failed.\n");
+        ok(Result, "DeviceIoControl failed, GLE %lu.\n", GetLastError());
     }
 
-    /* Nothing much to test. Just print out the adapters we got */
-    trace("We got %ld adapters.\n", pInterfaceInfo->NumAdapters);
-    for (i = 0; i < pInterfaceInfo->NumAdapters; i++)
+    if (Result && BufferSize >= RTL_SIZEOF_THROUGH_FIELD(IP_INTERFACE_INFO, NumAdapters))
     {
-        trace("\tIndex %lu, name %S\n", pInterfaceInfo->Adapter[i].Index, pInterfaceInfo->Adapter[i].Name);
+        /* Nothing much to test. Just print out the adapters we got */
+        trace("We got %ld adapters.\n", pInterfaceInfo->NumAdapters);
+        for (i = 0; i < pInterfaceInfo->NumAdapters; i++)
+        {
+            trace("\tIndex %lu, name %S\n", pInterfaceInfo->Adapter[i].Index, pInterfaceInfo->Adapter[i].Name);
+        }
     }
 
     if (pInterfaceInfo != &InterfaceInfo)
