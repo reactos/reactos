@@ -148,9 +148,9 @@ FT_BEGIN_HEADER
     int            nprops;
     PCF_Property   properties;
 
-    FT_ULong       nmetrics;
+    FT_Long        nmetrics;
     PCF_Metric     metrics;
-    FT_ULong       nencodings;
+    FT_Long        nencodings;
     PCF_Encoding   encodings;
 
     FT_Short       defaultChar;

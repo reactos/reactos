@@ -5,7 +5,7 @@
 /*    Postcript name table processing for TrueType and OpenType fonts      */
 /*    (body).                                                              */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2003, 2006-2010, 2013, 2014 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -52,7 +52,7 @@
 
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
-#define MAC_NAME( x )  (FT_String*)psnames->macintosh_name( (FT_UInt)(x) )
+#define MAC_NAME( x )  ( (FT_String*)psnames->macintosh_name( x ) )
 
 
 #else /* FT_CONFIG_OPTION_POSTSCRIPT_NAMES */
@@ -62,7 +62,7 @@
    /* table of Mac names.  Thus, it is possible to build a version of */
    /* FreeType without the Type 1 driver & PSNames module.            */
 
-#define MAC_NAME( x )  (FT_String*)tt_post_default_names[x]
+#define MAC_NAME( x )  ( (FT_String*)tt_post_default_names[x] )
 
   /* the 258 default Mac PS glyph names; see file `tools/glnames.py' */
 
@@ -155,7 +155,7 @@
   static FT_Error
   load_format_20( TT_Face    face,
                   FT_Stream  stream,
-                  FT_ULong   post_limit )
+                  FT_Long    post_limit )
   {
     FT_Memory   memory = stream->memory;
     FT_Error    error;
@@ -163,8 +163,8 @@
     FT_Int      num_glyphs;
     FT_UShort   num_names;
 
-    FT_UShort*  glyph_indices = NULL;
-    FT_Char**   name_strings  = NULL;
+    FT_UShort*  glyph_indices = 0;
+    FT_Char**   name_strings  = 0;
 
 
     if ( FT_READ_USHORT( num_glyphs ) )
@@ -243,17 +243,14 @@
             goto Fail1;
         }
 
-        if ( len > post_limit                   ||
-             FT_STREAM_POS() > post_limit - len )
+        if ( (FT_Int)len > post_limit                   ||
+             FT_STREAM_POS() > post_limit - (FT_Int)len )
         {
-          FT_Int  d = (FT_Int)post_limit - (FT_Int)FT_STREAM_POS();
-
-
           FT_ERROR(( "load_format_20:"
                      " exceeding string length (%d),"
                      " truncating at end of post table (%d byte left)\n",
-                     len, d ));
-          len = (FT_UInt)FT_MAX( 0, d );
+                     len, post_limit - FT_STREAM_POS() ));
+          len = FT_MAX( 0, post_limit - FT_STREAM_POS() );
         }
 
         if ( FT_NEW_ARRAY( name_strings[n], len + 1 ) ||
@@ -310,13 +307,13 @@
   static FT_Error
   load_format_25( TT_Face    face,
                   FT_Stream  stream,
-                  FT_ULong   post_limit )
+                  FT_Long    post_limit )
   {
     FT_Memory  memory = stream->memory;
     FT_Error   error;
 
     FT_Int     num_glyphs;
-    FT_Char*   offset_table = NULL;
+    FT_Char*   offset_table = 0;
 
     FT_UNUSED( post_limit );
 
@@ -380,7 +377,7 @@
     FT_Error   error;
     FT_Fixed   format;
     FT_ULong   post_len;
-    FT_ULong   post_limit;
+    FT_Long    post_limit;
 
 
     /* get a stream for the face's resource */
@@ -550,7 +547,10 @@
       }
 
       if ( idx < (FT_UInt)table->num_glyphs )    /* paranoid checking */
-        *PSname = MAC_NAME( (FT_Int)idx + table->offsets[idx] );
+      {
+        idx    += table->offsets[idx];
+        *PSname = MAC_NAME( idx );
+      }
     }
 
     /* nothing to do for format == 0x00030000L */

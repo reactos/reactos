@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    PNG Bitmap glyph support.                                            */
 /*                                                                         */
-/*  Copyright 2013-2015 by                                                 */
-/*  Google, Inc.                                                           */
+/*  Copyright 2013, 2014 by Google, Inc.                                   */
 /*  Written by Stuart Gill and Behdad Esfahbod.                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -37,11 +36,11 @@
   /* This code is freely based on cairo-png.c.  There's so many ways */
   /* to call libpng, and the way cairo does it is defacto standard.  */
 
-  static unsigned int
-  multiply_alpha( unsigned int  alpha,
-                  unsigned int  color )
+  static int
+  multiply_alpha( int  alpha,
+                  int  color )
   {
-    unsigned int  temp = alpha * color + 0x80;
+    int  temp = ( alpha * color ) + 0x80;
 
 
     return ( temp + ( temp >> 8 ) ) >> 8;
@@ -82,10 +81,10 @@
           blue  = multiply_alpha( alpha, blue  );
         }
 
-        base[0] = (unsigned char)blue;
-        base[1] = (unsigned char)green;
-        base[2] = (unsigned char)red;
-        base[3] = (unsigned char)alpha;
+        base[0] = blue;
+        base[1] = green;
+        base[2] = red;
+        base[3] = alpha;
       }
     }
   }
@@ -110,9 +109,9 @@
       unsigned int    blue  = base[2];
 
 
-      base[0] = (unsigned char)blue;
-      base[1] = (unsigned char)green;
-      base[2] = (unsigned char)red;
+      base[0] = blue;
+      base[1] = green;
+      base[2] = red;
       base[3] = 0xFF;
     }
   }
@@ -258,16 +257,16 @@
 
     if ( populate_map_and_metrics )
     {
-      FT_ULong  size;
+      FT_Long  size;
 
 
-      metrics->width  = (FT_UShort)imgWidth;
-      metrics->height = (FT_UShort)imgHeight;
+      metrics->width  = (FT_Int)imgWidth;
+      metrics->height = (FT_Int)imgHeight;
 
       map->width      = metrics->width;
       map->rows       = metrics->height;
       map->pixel_mode = FT_PIXEL_MODE_BGRA;
-      map->pitch      = (int)( map->width * 4 );
+      map->pitch      = map->width * 4;
       map->num_grays  = 256;
 
       /* reject too large bitmaps similarly to the rasterizer */
@@ -278,7 +277,7 @@
       }
 
       /* this doesn't overflow: 0x7FFF * 0x7FFF * 4 < 2^32 */
-      size = map->rows * (FT_ULong)map->pitch;
+      size = map->rows * map->pitch;
 
       error = ft_glyphslot_alloc_bitmap( slot, size );
       if ( error )

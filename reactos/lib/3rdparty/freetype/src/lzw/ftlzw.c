@@ -8,10 +8,11 @@
 /*  be used to parse compressed PCF fonts, as found with many X11 server   */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2004-2015 by                                                 */
+/*  Copyright 2004-2006, 2009, 2010, 2012-2014 by                          */
 /*  Albert Chin-A-Young.                                                   */
 /*                                                                         */
-/*  based on code in `src/gzip/ftgzip.c'                                   */
+/*  Based on code in src/gzip/ftgzip.c, Copyright 2004 by                  */
+/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    I/O stream support (body).                                           */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2002, 2004-2006, 2008-2011, 2013 by                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,9 +39,9 @@
     stream->base   = (FT_Byte*) base;
     stream->size   = size;
     stream->pos    = 0;
-    stream->cursor = NULL;
-    stream->read   = NULL;
-    stream->close  = NULL;
+    stream->cursor = 0;
+    stream->read   = 0;
+    stream->close  = 0;
   }
 
 
@@ -95,11 +95,11 @@
     if ( distance < 0 )
       return FT_THROW( Invalid_Stream_Operation );
 
-    return FT_Stream_Seek( stream, stream->pos + (FT_ULong)distance );
+    return FT_Stream_Seek( stream, (FT_ULong)( stream->pos + distance ) );
   }
 
 
-  FT_BASE_DEF( FT_ULong )
+  FT_BASE_DEF( FT_Long )
   FT_Stream_Pos( FT_Stream  stream )
   {
     return stream->pos;
@@ -203,8 +203,8 @@
       *pbytes = (FT_Byte*)stream->cursor;
 
       /* equivalent to FT_Stream_ExitFrame(), with no memory block release */
-      stream->cursor = NULL;
-      stream->limit  = NULL;
+      stream->cursor = 0;
+      stream->limit  = 0;
     }
 
     return error;
@@ -226,7 +226,7 @@
       FT_FREE( *pbytes );
 #endif
     }
-    *pbytes = NULL;
+    *pbytes = 0;
   }
 
 
@@ -260,9 +260,7 @@
 
 #ifdef FT_DEBUG_MEMORY
       /* assume _ft_debug_file and _ft_debug_lineno are already set */
-      stream->base = (unsigned char*)ft_mem_qalloc( memory,
-                                                    (FT_Long)count,
-                                                    &error );
+      stream->base = (unsigned char*)ft_mem_qalloc( memory, count, &error );
       if ( error )
         goto Exit;
 #else
@@ -335,8 +333,8 @@
       FT_FREE( stream->base );
 #endif
     }
-    stream->cursor = NULL;
-    stream->limit  = NULL;
+    stream->cursor = 0;
+    stream->limit  = 0;
   }
 
 
@@ -350,7 +348,7 @@
 
     result = 0;
     if ( stream->cursor < stream->limit )
-      result = (FT_Char)*stream->cursor++;
+      result = *stream->cursor++;
 
     return result;
   }
@@ -359,8 +357,8 @@
   FT_BASE_DEF( FT_UShort )
   FT_Stream_GetUShort( FT_Stream  stream )
   {
-    FT_Byte*   p;
-    FT_UShort  result;
+    FT_Byte*  p;
+    FT_Short  result;
 
 
     FT_ASSERT( stream && stream->cursor );
@@ -378,8 +376,8 @@
   FT_BASE_DEF( FT_UShort )
   FT_Stream_GetUShortLE( FT_Stream  stream )
   {
-    FT_Byte*   p;
-    FT_UShort  result;
+    FT_Byte*  p;
+    FT_Short  result;
 
 
     FT_ASSERT( stream && stream->cursor );
@@ -398,7 +396,7 @@
   FT_Stream_GetUOffset( FT_Stream  stream )
   {
     FT_Byte*  p;
-    FT_ULong  result;
+    FT_Long   result;
 
 
     FT_ASSERT( stream && stream->cursor );
@@ -416,7 +414,7 @@
   FT_Stream_GetULong( FT_Stream  stream )
   {
     FT_Byte*  p;
-    FT_ULong  result;
+    FT_Long   result;
 
 
     FT_ASSERT( stream && stream->cursor );
@@ -434,7 +432,7 @@
   FT_Stream_GetULongLE( FT_Stream  stream )
   {
     FT_Byte*  p;
-    FT_ULong  result;
+    FT_Long   result;
 
 
     FT_ASSERT( stream && stream->cursor );
@@ -473,7 +471,7 @@
     }
     stream->pos++;
 
-    return (FT_Char)result;
+    return result;
 
   Fail:
     *error = FT_THROW( Invalid_Stream_Operation );
@@ -487,11 +485,11 @@
 
   FT_BASE_DEF( FT_UShort )
   FT_Stream_ReadUShort( FT_Stream  stream,
-                        FT_Error*  error )
+                       FT_Error*  error )
   {
-    FT_Byte    reads[2];
-    FT_Byte*   p      = 0;
-    FT_UShort  result = 0;
+    FT_Byte   reads[2];
+    FT_Byte*  p = 0;
+    FT_Short  result = 0;
 
 
     FT_ASSERT( stream );
@@ -508,7 +506,9 @@
         p = reads;
       }
       else
+      {
         p = stream->base + stream->pos;
+      }
 
       if ( p )
         result = FT_NEXT_USHORT( p );
@@ -532,11 +532,11 @@
 
   FT_BASE_DEF( FT_UShort )
   FT_Stream_ReadUShortLE( FT_Stream  stream,
-                          FT_Error*  error )
+                         FT_Error*  error )
   {
-    FT_Byte    reads[2];
-    FT_Byte*   p      = 0;
-    FT_UShort  result = 0;
+    FT_Byte   reads[2];
+    FT_Byte*  p = 0;
+    FT_Short  result = 0;
 
 
     FT_ASSERT( stream );
@@ -553,7 +553,9 @@
         p = reads;
       }
       else
+      {
         p = stream->base + stream->pos;
+      }
 
       if ( p )
         result = FT_NEXT_USHORT_LE( p );
@@ -577,11 +579,11 @@
 
   FT_BASE_DEF( FT_ULong )
   FT_Stream_ReadUOffset( FT_Stream  stream,
-                         FT_Error*  error )
+                        FT_Error*  error )
   {
     FT_Byte   reads[3];
-    FT_Byte*  p      = 0;
-    FT_ULong  result = 0;
+    FT_Byte*  p = 0;
+    FT_Long   result = 0;
 
 
     FT_ASSERT( stream );
@@ -598,7 +600,9 @@
         p = reads;
       }
       else
+      {
         p = stream->base + stream->pos;
+      }
 
       if ( p )
         result = FT_NEXT_UOFF3( p );
@@ -622,11 +626,11 @@
 
   FT_BASE_DEF( FT_ULong )
   FT_Stream_ReadULong( FT_Stream  stream,
-                       FT_Error*  error )
+                      FT_Error*  error )
   {
     FT_Byte   reads[4];
-    FT_Byte*  p      = 0;
-    FT_ULong  result = 0;
+    FT_Byte*  p = 0;
+    FT_Long   result = 0;
 
 
     FT_ASSERT( stream );
@@ -643,7 +647,9 @@
         p = reads;
       }
       else
+      {
         p = stream->base + stream->pos;
+      }
 
       if ( p )
         result = FT_NEXT_ULONG( p );
@@ -667,11 +673,11 @@
 
   FT_BASE_DEF( FT_ULong )
   FT_Stream_ReadULongLE( FT_Stream  stream,
-                         FT_Error*  error )
+                        FT_Error*  error )
   {
     FT_Byte   reads[4];
-    FT_Byte*  p      = 0;
-    FT_ULong  result = 0;
+    FT_Byte*  p = 0;
+    FT_Long   result = 0;
 
 
     FT_ASSERT( stream );
@@ -688,7 +694,9 @@
         p = reads;
       }
       else
+      {
         p = stream->base + stream->pos;
+      }
 
       if ( p )
         result = FT_NEXT_ULONG_LE( p );

@@ -5,8 +5,7 @@
 /*    TrueTypeGX/AAT morx table validation                                 */
 /*    body for type1 (Contextual Substitution) subtable.                   */
 /*                                                                         */
-/*  Copyright 2005-2015 by                                                 */
-/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
+/*  Copyright 2005, 2007 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -149,11 +148,11 @@
 
     if ( optdata->substitutionTable_num_lookupTables < markIndex + 1 )
       optdata->substitutionTable_num_lookupTables =
-        (FT_UShort)( markIndex + 1 );
+        (FT_Short)( markIndex + 1 );
 
     if ( optdata->substitutionTable_num_lookupTables < currentIndex + 1 )
       optdata->substitutionTable_num_lookupTables =
-        (FT_UShort)( currentIndex + 1 );
+        (FT_Short)( currentIndex + 1 );
   }
 
 

@@ -101,7 +101,7 @@
       FT_Error   error  = FT_Err_Ok;        /* for FT_REALLOC */
       FT_Memory  memory = arrstack->memory; /* for FT_REALLOC */
 
-      size_t  newSize = numElements * arrstack->sizeItem;
+      FT_Long  newSize = (FT_Long)( numElements * arrstack->sizeItem );
 
 
       if ( numElements > LONG_MAX / arrstack->sizeItem )

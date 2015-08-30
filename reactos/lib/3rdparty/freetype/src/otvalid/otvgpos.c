@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType GPOS table validation (body).                               */
 /*                                                                         */
-/*  Copyright 2002-2015 by                                                 */
+/*  Copyright 2002, 2004, 2005, 2006, 2007, 2008 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -395,9 +395,7 @@
 
         len_value = otv_value_length( ValueFormat );
 
-        otv_Coverage_validate( table + Coverage,
-                               otvalid,
-                               (FT_Int)ValueCount );
+        otv_Coverage_validate( table + Coverage, otvalid, ValueCount );
 
         OTV_LIMIT_CHECK( ValueCount * len_value );
 
@@ -607,9 +605,7 @@
 
         OTV_TRACE(( " (EntryExitCount = %d)\n", EntryExitCount ));
 
-        otv_Coverage_validate( table + Coverage,
-                               otvalid,
-                               (FT_Int)EntryExitCount );
+        otv_Coverage_validate( table + Coverage, otvalid, EntryExitCount );
 
         OTV_LIMIT_CHECK( EntryExitCount * 4 );
 

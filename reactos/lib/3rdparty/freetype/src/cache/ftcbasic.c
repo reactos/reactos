@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType basic cache interface (body).                           */
 /*                                                                         */
-/*  Copyright 2003-2015 by                                                 */
+/*  Copyright 2003-2007, 2009-2011, 2013, 2014 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -45,8 +45,8 @@
           FT_BOOL( FTC_SCALER_COMPARE( &(a)->scaler, &(b)->scaler ) && \
                    (a)->load_flags == (b)->load_flags               )
 
-#define FTC_BASIC_ATTR_HASH( a )                                     \
-          ( FTC_SCALER_HASH( &(a)->scaler ) + 31 * (a)->load_flags )
+#define FTC_BASIC_ATTR_HASH( a )                                   \
+          ( FTC_SCALER_HASH( &(a)->scaler ) + 31*(a)->load_flags )
 
 
   typedef struct  FTC_BasicQueryRec_
@@ -138,10 +138,8 @@
       FT_Face  face = size->face;
 
 
-      error = FT_Load_Glyph(
-                face,
-                gindex,
-                (FT_Int)family->attrs.load_flags | FT_LOAD_RENDER );
+      error = FT_Load_Glyph( face, gindex,
+                             family->attrs.load_flags | FT_LOAD_RENDER );
       if ( !error )
         *aface = face;
     }
@@ -171,9 +169,7 @@
     {
       face = size->face;
 
-      error = FT_Load_Glyph( face,
-                             gindex,
-                             (FT_Int)family->attrs.load_flags );
+      error = FT_Load_Glyph( face, gindex, family->attrs.load_flags );
       if ( !error )
       {
         if ( face->glyph->format == FT_GLYPH_FORMAT_BITMAP  ||
@@ -287,7 +283,7 @@
     FTC_BasicQueryRec  query;
     FTC_Node           node = 0; /* make compiler happy */
     FT_Error           error;
-    FT_Offset          hash;
+    FT_PtrDist         hash;
 
 
     /* some argument checks are delayed to `FTC_Cache_Lookup' */
@@ -304,7 +300,7 @@
     if ( (FT_ULong)( type->flags - FT_INT_MIN ) > FT_UINT_MAX )
       FT_TRACE1(( "FTC_ImageCache_Lookup:"
                   " higher bits in load_flags 0x%x are dropped\n",
-                  (FT_ULong)type->flags & ~((FT_ULong)FT_UINT_MAX) ));
+                  type->flags & ~((FT_ULong)FT_UINT_MAX) ));
 
     query.attrs.scaler.face_id = type->face_id;
     query.attrs.scaler.width   = type->width;
@@ -360,7 +356,7 @@
     FTC_BasicQueryRec  query;
     FTC_Node           node = 0; /* make compiler happy */
     FT_Error           error;
-    FT_Offset          hash;
+    FT_PtrDist         hash;
 
 
     /* some argument checks are delayed to `FTC_Cache_Lookup' */
@@ -470,7 +466,7 @@
     FT_Error           error;
     FTC_BasicQueryRec  query;
     FTC_Node           node = 0; /* make compiler happy */
-    FT_Offset          hash;
+    FT_PtrDist         hash;
 
 
     if ( anode )
@@ -485,7 +481,7 @@
     if ( (FT_ULong)( type->flags - FT_INT_MIN ) > FT_UINT_MAX )
       FT_TRACE1(( "FTC_ImageCache_Lookup:"
                   " higher bits in load_flags 0x%x are dropped\n",
-                  (FT_ULong)type->flags & ~((FT_ULong)FT_UINT_MAX) ));
+                  type->flags & ~((FT_ULong)FT_UINT_MAX) ));
 
     query.attrs.scaler.face_id = type->face_id;
     query.attrs.scaler.width   = type->width;
@@ -545,7 +541,7 @@
     FT_Error           error;
     FTC_BasicQueryRec  query;
     FTC_Node           node = 0; /* make compiler happy */
-    FT_Offset          hash;
+    FT_PtrDist         hash;
 
 
     if ( anode )

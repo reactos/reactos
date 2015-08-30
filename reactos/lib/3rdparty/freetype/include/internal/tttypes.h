@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType type definitions and interface (specification    */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2002, 2004-2008, 2012-2013 by                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -614,7 +614,8 @@ FT_BEGIN_HEADER
   /*                       in use by other platforms (e.g. Newton).        */
   /*                       For details, please see                         */
   /*                                                                       */
-  /*                         https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6bloc.html */
+  /*                         http://fonts.apple.com/                       */
+  /*                                TTRefMan/RM06/Chap6bloc.html           */
   /*                                                                       */
   /*   hori             :: The line metrics for horizontal layouts.        */
   /*                                                                       */
@@ -634,7 +635,8 @@ FT_BEGIN_HEADER
   /*   flags            :: Is this a vertical or horizontal strike?  For   */
   /*                       details, please see                             */
   /*                                                                       */
-  /*                         https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6bloc.html */
+  /*                         http://fonts.apple.com/                       */
+  /*                                TTRefMan/RM06/Chap6bloc.html           */
   /*                                                                       */
   typedef struct  TT_SBit_StrikeRec_
   {
@@ -1111,7 +1113,7 @@ FT_BEGIN_HEADER
   /*                            This field also contains the associated    */
   /*                            vertical metrics table (`vmtx'), if found. */
   /*                            IMPORTANT: The contents of this field is   */
-  /*                            undefined if the `vertical_info' field is  */
+  /*                            undefined if the `verticalInfo' field is   */
   /*                            unset.                                     */
   /*                                                                       */
   /*    num_names            :: The number of name records within this     */
@@ -1438,7 +1440,7 @@ FT_BEGIN_HEADER
   {
     FT_Memory   memory;
     FT_UShort   max_points;
-    FT_Short    max_contours;
+    FT_UShort   max_contours;
     FT_UShort   n_points;    /* number of points in zone    */
     FT_Short    n_contours;  /* number of contours          */
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*                                                                         */
-/*  Copyright 2005-2015 by                                                 */
+/*  Copyright 2005-2009, 2013, 2014 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  Copyright 2013 by Google, Inc.                                         */
@@ -101,10 +101,10 @@
 
         p = face->sbit_table;
 
-        version     = FT_NEXT_LONG( p );
+        version     = FT_NEXT_ULONG( p );
         num_strikes = FT_NEXT_ULONG( p );
 
-        if ( ( (FT_ULong)version & 0xFFFF0000UL ) != 0x00020000UL )
+        if ( ( version & 0xFFFF0000UL ) != 0x00020000UL )
         {
           error = FT_THROW( Unknown_File_Format );
           goto Exit;
@@ -273,7 +273,6 @@
         FT_UShort       ppem, resolution;
         TT_HoriHeader  *hori;
         FT_ULong        table_size;
-        FT_Pos          ppem_, upem_; /* to reduce casts */
 
         FT_Error  error;
         FT_Byte*  p;
@@ -306,15 +305,12 @@
         metrics->x_ppem = ppem;
         metrics->y_ppem = ppem;
 
-        ppem_ = (FT_Pos)ppem;
-        upem_ = (FT_Pos)upem;
-
-        metrics->ascender    = ppem_ * hori->Ascender * 64 / upem_;
-        metrics->descender   = ppem_ * hori->Descender * 64 / upem_;
-        metrics->height      = ppem_ * ( hori->Ascender -
-                                         hori->Descender +
-                                         hori->Line_Gap ) * 64 / upem_;
-        metrics->max_advance = ppem_ * hori->advance_Width_Max * 64 / upem_;
+        metrics->ascender    = ppem * hori->Ascender * 64 / upem;
+        metrics->descender   = ppem * hori->Descender * 64 / upem;
+        metrics->height      = ppem * ( hori->Ascender -
+                                        hori->Descender +
+                                        hori->Line_Gap ) * 64 / upem;
+        metrics->max_advance = ppem * hori->advance_Width_Max * 64 / upem;
 
         return error;
       }
@@ -424,7 +420,7 @@
     FT_Error    error = FT_Err_Ok;
     FT_UInt     width, height;
     FT_Bitmap*  map = decoder->bitmap;
-    FT_ULong    size;
+    FT_Long     size;
 
 
     if ( !decoder->metrics_loaded )
@@ -436,38 +432,38 @@
     width  = decoder->metrics->width;
     height = decoder->metrics->height;
 
-    map->width = width;
-    map->rows  = height;
+    map->width = (int)width;
+    map->rows  = (int)height;
 
     switch ( decoder->bit_depth )
     {
     case 1:
       map->pixel_mode = FT_PIXEL_MODE_MONO;
-      map->pitch      = (int)( ( map->width + 7 ) >> 3 );
+      map->pitch      = ( map->width + 7 ) >> 3;
       map->num_grays  = 2;
       break;
 
     case 2:
       map->pixel_mode = FT_PIXEL_MODE_GRAY2;
-      map->pitch      = (int)( ( map->width + 3 ) >> 2 );
+      map->pitch      = ( map->width + 3 ) >> 2;
       map->num_grays  = 4;
       break;
 
     case 4:
       map->pixel_mode = FT_PIXEL_MODE_GRAY4;
-      map->pitch      = (int)( ( map->width + 1 ) >> 1 );
+      map->pitch      = ( map->width + 1 ) >> 1;
       map->num_grays  = 16;
       break;
 
     case 8:
       map->pixel_mode = FT_PIXEL_MODE_GRAY;
-      map->pitch      = (int)( map->width );
+      map->pitch      = map->width;
       map->num_grays  = 256;
       break;
 
     case 32:
       map->pixel_mode = FT_PIXEL_MODE_BGRA;
-      map->pitch      = (int)( map->width * 4 );
+      map->pitch      = map->width * 4;
       map->num_grays  = 256;
       break;
 
@@ -476,7 +472,7 @@
       goto Exit;
     }
 
-    size = map->rows * (FT_ULong)map->pitch;
+    size = map->rows * map->pitch;
 
     /* check that there is no empty image */
     if ( size == 0 )
@@ -565,8 +561,7 @@
   {
     FT_Error    error = FT_Err_Ok;
     FT_Byte*    line;
-    FT_Int      pitch, width, height, line_bits, h;
-    FT_UInt     bit_height, bit_width;
+    FT_Int      bit_height, bit_width, pitch, width, height, line_bits, h;
     FT_Bitmap*  bitmap;
 
 
@@ -582,8 +577,8 @@
 
     line_bits = width * decoder->bit_depth;
 
-    if ( x_pos < 0 || (FT_UInt)( x_pos + width ) > bit_width   ||
-         y_pos < 0 || (FT_UInt)( y_pos + height ) > bit_height )
+    if ( x_pos < 0 || x_pos + width > bit_width   ||
+         y_pos < 0 || y_pos + height > bit_height )
     {
       FT_TRACE1(( "tt_sbit_decoder_load_byte_aligned:"
                   " invalid bitmap dimensions\n" ));
@@ -704,8 +699,7 @@
   {
     FT_Error    error = FT_Err_Ok;
     FT_Byte*    line;
-    FT_Int      pitch, width, height, line_bits, h, nbits;
-    FT_UInt     bit_height, bit_width;
+    FT_Int      bit_height, bit_width, pitch, width, height, line_bits, h, nbits;
     FT_Bitmap*  bitmap;
     FT_UShort   rval;
 
@@ -722,8 +716,8 @@
 
     line_bits = width * decoder->bit_depth;
 
-    if ( x_pos < 0 || (FT_UInt)( x_pos + width ) > bit_width   ||
-         y_pos < 0 || (FT_UInt)( y_pos + height ) > bit_height )
+    if ( x_pos < 0 || x_pos + width  > bit_width  ||
+         y_pos < 0 || y_pos + height > bit_height )
     {
       FT_TRACE1(( "tt_sbit_decoder_load_bit_aligned:"
                   " invalid bitmap dimensions\n" ));
@@ -1385,9 +1379,9 @@
 
       metrics->horiBearingX = (FT_Short)originOffsetX;
       metrics->horiBearingY = (FT_Short)( -originOffsetY + metrics->height );
-      metrics->horiAdvance  = (FT_UShort)( aadvance *
-                                           face->root.size->metrics.x_ppem /
-                                           face->header.Units_Per_EM );
+      metrics->horiAdvance  = (FT_Short)( aadvance *
+                                          face->root.size->metrics.x_ppem /
+                                          face->header.Units_Per_EM );
     }
 
     return error;
@@ -1448,7 +1442,7 @@
       FT_Library  library = face->root.glyph->library;
 
 
-      FT_Bitmap_Init( &new_map );
+      FT_Bitmap_New( &new_map );
 
       /* Convert to 8bit grayscale. */
       error = FT_Bitmap_Convert( library, map, &new_map, 1 );

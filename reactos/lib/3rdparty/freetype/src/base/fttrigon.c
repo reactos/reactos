@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType trigonometric functions (body).                             */
 /*                                                                         */
-/*  Copyright 2001-2015 by                                                 */
+/*  Copyright 2001-2005, 2012-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -92,8 +92,8 @@
        s = -1;
     }
 
-    lo1 = (FT_UInt32)val & 0x0000FFFFU;
-    hi1 = (FT_UInt32)val >> 16;
+    lo1 = val & 0x0000FFFFU;
+    hi1 = val >> 16;
     lo2 = FT_TRIG_SCALE & 0x0000FFFFU;
     hi2 = FT_TRIG_SCALE >> 16;
 
@@ -120,7 +120,7 @@
     lo += 0x40000000UL;
     hi += ( lo < 0x40000000UL );
 
-    val = (FT_Fixed)hi;
+    val  = (FT_Fixed)hi;
 
     return s < 0 ? -val : val;
   }
@@ -139,7 +139,7 @@
     x = vec->x;
     y = vec->y;
 
-    shift = FT_MSB( (FT_UInt32)( FT_ABS( x ) | FT_ABS( y ) ) );
+    shift = FT_MSB( FT_ABS( x ) | FT_ABS( y ) );
 
     if ( shift <= FT_TRIG_SAFE_MSB )
     {
@@ -299,9 +299,11 @@
     FT_Vector  v;
 
 
-    FT_Vector_Unit( &v, angle );
+    v.x = FT_TRIG_SCALE >> 8;
+    v.y = 0;
+    ft_trig_pseudo_rotate( &v, angle );
 
-    return v.x;
+    return ( v.x + 0x80L ) >> 8;
   }
 
 
@@ -310,12 +312,7 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_Sin( FT_Angle  angle )
   {
-    FT_Vector  v;
-
-
-    FT_Vector_Unit( &v, angle );
-
-    return v.y;
+    return FT_Cos( FT_ANGLE_PI2 - angle );
   }
 
 
@@ -327,7 +324,9 @@
     FT_Vector  v;
 
 
-    FT_Vector_Unit( &v, angle );
+    v.x = FT_TRIG_SCALE >> 8;
+    v.y = 0;
+    ft_trig_pseudo_rotate( &v, angle );
 
     return FT_DivFix( v.y, v.x );
   }
@@ -389,32 +388,33 @@
     FT_Vector  v;
 
 
-    if ( !vec || !angle )
+    if ( !vec )
       return;
 
-    v = *vec;
+    v.x   = vec->x;
+    v.y   = vec->y;
 
-    if ( v.x == 0 && v.y == 0 )
-      return;
-
-    shift = ft_trig_prenorm( &v );
-    ft_trig_pseudo_rotate( &v, angle );
-    v.x = ft_trig_downscale( v.x );
-    v.y = ft_trig_downscale( v.y );
-
-    if ( shift > 0 )
+    if ( angle && ( v.x != 0 || v.y != 0 ) )
     {
-      FT_Int32  half = (FT_Int32)1L << ( shift - 1 );
+      shift = ft_trig_prenorm( &v );
+      ft_trig_pseudo_rotate( &v, angle );
+      v.x = ft_trig_downscale( v.x );
+      v.y = ft_trig_downscale( v.y );
+
+      if ( shift > 0 )
+      {
+        FT_Int32  half = (FT_Int32)1L << ( shift - 1 );
 
 
-      vec->x = ( v.x + half + FT_SIGN_LONG( v.x ) ) >> shift;
-      vec->y = ( v.y + half + FT_SIGN_LONG( v.y ) ) >> shift;
-    }
-    else
-    {
-      shift  = -shift;
-      vec->x = (FT_Pos)( (FT_ULong)v.x << shift );
-      vec->y = (FT_Pos)( (FT_ULong)v.y << shift );
+        vec->x = ( v.x + half + FT_SIGN_LONG( v.x ) ) >> shift;
+        vec->y = ( v.y + half + FT_SIGN_LONG( v.y ) ) >> shift;
+      }
+      else
+      {
+        shift  = -shift;
+        vec->x = (FT_Pos)( (FT_ULong)v.x << shift );
+        vec->y = (FT_Pos)( (FT_ULong)v.y << shift );
+      }
     }
   }
 
@@ -450,7 +450,7 @@
     v.x = ft_trig_downscale( v.x );
 
     if ( shift > 0 )
-      return ( v.x + ( 1L << ( shift - 1 ) ) ) >> shift;
+      return ( v.x + ( 1 << ( shift - 1 ) ) ) >> shift;
 
     return (FT_Fixed)( (FT_UInt32)v.x << -shift );
   }
@@ -512,10 +512,11 @@
     FT_Angle  delta = angle2 - angle1;
 
 
-    while ( delta <= -FT_ANGLE_PI )
+    delta %= FT_ANGLE_2PI;
+    if ( delta < 0 )
       delta += FT_ANGLE_2PI;
 
-    while ( delta > FT_ANGLE_PI )
+    if ( delta > FT_ANGLE_PI )
       delta -= FT_ANGLE_2PI;
 
     return delta;

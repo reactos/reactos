@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter types (specification only).                              */
 /*                                                                         */
-/*  Copyright 2003-2015 by                                                 */
+/*  Copyright 2003-2009, 2011-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -138,10 +138,11 @@ extern void*  _af_debug_hints;
     AF_Angle  _delta = (angle2) - (angle1);     \
                                                 \
                                                 \
-    while ( _delta <= -AF_ANGLE_PI )            \
+    _delta %= AF_ANGLE_2PI;                     \
+    if ( _delta < 0 )                           \
       _delta += AF_ANGLE_2PI;                   \
                                                 \
-    while ( _delta > AF_ANGLE_PI )              \
+    if ( _delta > AF_ANGLE_PI )                 \
       _delta -= AF_ANGLE_2PI;                   \
                                                 \
     result = _delta;                            \
@@ -167,10 +168,13 @@ extern void*  _af_debug_hints;
    *  auto-hinted glyph image.
    */
 
-#define AF_SCALER_FLAG_NO_HORIZONTAL  1U /* disable horizontal hinting */
-#define AF_SCALER_FLAG_NO_VERTICAL    2U /* disable vertical hinting   */
-#define AF_SCALER_FLAG_NO_ADVANCE     4U /* disable advance hinting    */
-#define AF_SCALER_FLAG_NO_WARPER      8U /* disable warper             */
+  typedef enum  AF_ScalerFlags_
+  {
+    AF_SCALER_FLAG_NO_HORIZONTAL = 1,  /* disable horizontal hinting */
+    AF_SCALER_FLAG_NO_VERTICAL   = 2,  /* disable vertical hinting   */
+    AF_SCALER_FLAG_NO_ADVANCE    = 4   /* disable advance hinting    */
+
+  } AF_ScalerFlags;
 
 
   typedef struct  AF_ScalerRec_

@@ -14,7 +14,6 @@ list(APPEND SOURCE
   src/base/ftcid.c
   src/base/ftdbgmem.c
   src/base/ftdebug.c
-  src/base/ftfntfmt.c
   src/base/ftfstype.c
   src/base/ftgasp.c
   src/base/ftgloadr.c
@@ -38,6 +37,7 @@ list(APPEND SOURCE
   src/base/fttype1.c
   src/base/ftutil.c
   src/base/ftwinfnt.c
+  src/base/ftxf86.c
   src/bdf/bdf.c
   src/bzip2/ftbzip2.c
   src/cache/ftcache.c

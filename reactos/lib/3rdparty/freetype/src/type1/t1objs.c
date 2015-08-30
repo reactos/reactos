@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 objects manager (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2009, 2011, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -86,7 +86,7 @@
       if ( funcs )
         funcs->destroy( (PSH_Globals)size->root.internal );
 
-      size->root.internal = NULL;
+      size->root.internal = 0;
     }
   }
 
@@ -144,7 +144,7 @@
   FT_LOCAL_DEF( void )
   T1_GlyphSlot_Done( FT_GlyphSlot  slot )
   {
-    slot->internal->glyph_hints = NULL;
+    slot->internal->glyph_hints = 0;
   }
 
 
@@ -224,7 +224,7 @@
     }
 
     T1_Done_Blend( face );
-    face->blend = NULL;
+    face->blend = 0;
 #endif
 
     /* release font info strings */
@@ -457,7 +457,7 @@
 
       /* no embedded bitmap support */
       root->num_fixed_sizes = 0;
-      root->available_sizes = NULL;
+      root->available_sizes = 0;
 
       root->bbox.xMin =   type1->font_bbox.xMin            >> 16;
       root->bbox.yMin =   type1->font_bbox.yMin            >> 16;

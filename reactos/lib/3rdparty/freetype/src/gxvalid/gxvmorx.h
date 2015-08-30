@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT common definition for morx table (specification).     */
 /*                                                                         */
-/*  Copyright 2005-2015 by                                                 */
-/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
+/*  Copyright 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

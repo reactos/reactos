@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm (body).                                 */
 /*                                                                         */
-/*  Copyright 2001-2015 by                                                 */
+/*  Copyright 2001-2010, 2012-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -30,14 +30,16 @@
 
 
 #ifdef DEBUG_HINTER
-  PSH_Hint_Table  ps_debug_hint_table = NULL;
-  PSH_HintFunc    ps_debug_hint_func  = NULL;
-  PSH_Glyph       ps_debug_glyph      = NULL;
+  PSH_Hint_Table  ps_debug_hint_table = 0;
+  PSH_HintFunc    ps_debug_hint_func  = 0;
+  PSH_Glyph       ps_debug_glyph      = 0;
 #endif
 
 
 #define  COMPUTE_INFLEXS  /* compute inflection points to optimize `S' */
                           /* and similar glyphs                        */
+#define  STRONGER         /* slightly increase the contrast of smooth  */
+                          /* hinting                                   */
 
 
   /*************************************************************************/
@@ -65,13 +67,13 @@
   {
     FT_FREE( table->zones );
     table->num_zones = 0;
-    table->zone      = NULL;
+    table->zone      = 0;
 
     FT_FREE( table->sort );
     FT_FREE( table->hints );
     table->num_hints   = 0;
     table->max_hints   = 0;
-    table->sort_global = NULL;
+    table->sort_global = 0;
   }
 
 
@@ -119,7 +121,7 @@
       PSH_Hint   hint2;
 
 
-      hint->parent = NULL;
+      hint->parent = 0;
       for ( ; count > 0; count--, sorted++ )
       {
         hint2 = sorted[0];
@@ -192,7 +194,7 @@
     table->sort_global = table->sort + count;
     table->num_hints   = 0;
     table->num_zones   = 0;
-    table->zone        = NULL;
+    table->zone        = 0;
 
     /* initialize the `table->hints' array */
     {
@@ -888,6 +890,9 @@
   /*************************************************************************/
   /*************************************************************************/
 
+#define PSH_ZONE_MIN  -3200000L
+#define PSH_ZONE_MAX  +3200000L
+
 #define xxDEBUG_ZONES
 
 
@@ -904,6 +909,10 @@
              zone->min,
              zone->max );
   }
+
+#else
+
+#define psh_print_zone( x )  do { } while ( 0 )
 
 #endif /* DEBUG_ZONES */
 
@@ -1140,7 +1149,7 @@
     glyph->num_points   = 0;
     glyph->num_contours = 0;
 
-    glyph->memory = NULL;
+    glyph->memory = 0;
   }
 
 
@@ -1265,8 +1274,8 @@
          FT_NEW_ARRAY( glyph->contours, outline->n_contours ) )
       goto Exit;
 
-    glyph->num_points   = (FT_UInt)outline->n_points;
-    glyph->num_contours = (FT_UInt)outline->n_contours;
+    glyph->num_points   = outline->n_points;
+    glyph->num_contours = outline->n_contours;
 
     {
       FT_UInt      first = 0, next, n;
@@ -1276,15 +1285,15 @@
 
       for ( n = 0; n < glyph->num_contours; n++ )
       {
-        FT_UInt    count;
+        FT_Int     count;
         PSH_Point  point;
 
 
-        next  = (FT_UInt)outline->contours[n] + 1;
+        next  = outline->contours[n] + 1;
         count = next - first;
 
         contour->start = points + first;
-        contour->count = count;
+        contour->count = (FT_UInt)count;
 
         if ( count > 0 )
         {
@@ -1687,12 +1696,16 @@
       mask++;
       for ( ; num_masks > 1; num_masks--, mask++ )
       {
-        FT_UInt  next = FT_MIN( mask->end_point, glyph->num_points );
+        FT_UInt  next;
+        FT_Int   count;
 
 
-        if ( next > first )
+        next  = mask->end_point > glyph->num_points
+                  ? glyph->num_points
+                  : mask->end_point;
+        count = next - first;
+        if ( count > 0 )
         {
-          FT_UInt    count = next - first;
           PSH_Point  point = glyph->points + first;
 
 
@@ -2035,7 +2048,7 @@
       /* count the number of strong points in this contour */
       next      = start + contour->count;
       fit_count = 0;
-      first     = NULL;
+      first     = 0;
 
       for ( point = start; point < next; point++ )
         if ( psh_point_is_fitted( point ) )

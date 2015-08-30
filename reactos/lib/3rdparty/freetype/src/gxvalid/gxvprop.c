@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT prop table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2004-2015 by                                                 */
-/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
+/*  Copyright 2004, 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -279,7 +278,7 @@
     GXV_INIT;
 
     GXV_LIMIT_CHECK( 4 + 2 + 2 );
-    version     = FT_NEXT_LONG( p );
+    version     = FT_NEXT_ULONG( p );
     format      = FT_NEXT_USHORT( p );
     defaultProp = FT_NEXT_USHORT( p );
 

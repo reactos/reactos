@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache Manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2006, 2008-2010, 2013, 2014 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,6 +34,8 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_cache
 
+#define FTC_LRU_GET_MANAGER( lru )  ( (FTC_Manager)(lru)->user_data )
+
 
   static FT_Error
   ftc_scaler_lookup_size( FTC_Manager  manager,
@@ -58,11 +60,8 @@
     if ( scaler->pixel )
       error = FT_Set_Pixel_Sizes( face, scaler->width, scaler->height );
     else
-      error = FT_Set_Char_Size( face,
-                                (FT_F26Dot6)scaler->width,
-                                (FT_F26Dot6)scaler->height,
-                                scaler->x_res,
-                                scaler->y_res );
+      error = FT_Set_Char_Size( face, scaler->width, scaler->height,
+                                scaler->x_res, scaler->y_res );
     if ( error )
     {
       FT_Done_Size( size );

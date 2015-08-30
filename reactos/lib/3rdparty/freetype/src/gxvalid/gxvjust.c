@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT just table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2005-2015 by                                                 */
-/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
+/*  Copyright 2005, 2014 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -42,7 +41,7 @@
 
   /*
    * referred `just' table format specification:
-   * https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6just.html
+   * http://developer.apple.com/fonts/TTRefMan/RM06/Chap6just.html
    * last updated 2000.
    * ----------------------------------------------
    * [JUST HEADER]: GXV_JUST_HEADER_SIZE
@@ -121,7 +120,7 @@
       GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
     }
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
   }
 
 
@@ -143,7 +142,7 @@
       p += gxvalid->subtable_length;
     }
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
   }
 
 
@@ -168,7 +167,7 @@
       p += gxvalid->subtable_length;
     }
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
 
     GXV_EXIT;
   }
@@ -192,8 +191,8 @@
 
 
     GXV_LIMIT_CHECK( 4 + 4 + 2 + 2 );
-    lowerLimit      = FT_NEXT_LONG( p );
-    upperLimit      = FT_NEXT_LONG( p );
+    lowerLimit      = FT_NEXT_ULONG( p );
+    upperLimit      = FT_NEXT_ULONG( p );
 #ifdef GXV_LOAD_UNUSED_VARS
     order           = FT_NEXT_USHORT( p );
 #else
@@ -218,7 +217,7 @@
       gxv_just_check_max_gid( glyphs, "type0:glyphs", gxvalid );
     }
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
   }
 
 
@@ -236,7 +235,7 @@
 
     gxv_just_check_max_gid( addGlyph, "type1:addGlyph", gxvalid );
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
   }
 
 
@@ -267,7 +266,7 @@
 
     gxv_just_check_max_gid( substGlyph, "type2:substGlyph", gxvalid );
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
   }
 
 
@@ -285,11 +284,11 @@
 
     GXV_LIMIT_CHECK( 4 + 4 + 4 + 4 );
     variantsAxis   = FT_NEXT_ULONG( p );
-    minimumLimit   = FT_NEXT_LONG( p );
-    noStretchValue = FT_NEXT_LONG( p );
-    maximumLimit   = FT_NEXT_LONG( p );
+    minimumLimit   = FT_NEXT_ULONG( p );
+    noStretchValue = FT_NEXT_ULONG( p );
+    maximumLimit   = FT_NEXT_ULONG( p );
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
 
     if ( variantsAxis != 0x64756374L ) /* 'duct' */
       GXV_TRACE(( "variantsAxis 0x%08x is non default value",
@@ -327,7 +326,7 @@
                    flags ));
     gxv_just_check_max_gid( glyph, "type5:glyph", gxvalid );
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
   }
 
 
@@ -395,7 +394,7 @@
       p += gxvalid->subtable_length;
     }
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
 
     GXV_EXIT;
   }
@@ -454,7 +453,7 @@
     gxv_just_pcActionRecord_validate( p, limit, gxvalid );
     p += gxvalid->subtable_length;
 
-    gxvalid->subtable_length = (FT_ULong)( p - table );
+    gxvalid->subtable_length = p - table;
 
     GXV_EXIT;
   }
@@ -677,8 +676,7 @@
     format      = FT_NEXT_USHORT( p );
     horizOffset = FT_NEXT_USHORT( p );
     vertOffset  = FT_NEXT_USHORT( p );
-    gxv_odtect_add_range( table, (FT_ULong)( p - table ),
-                          "just header", odtect );
+    gxv_odtect_add_range( table, p - table, "just header", odtect );
 
 
     /* Version 1.0 (always:2000) */
