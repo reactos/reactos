@@ -274,7 +274,7 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
     if (FAILED(hr))
         return hr;
 
-    hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
+    hr = m_SharedDesktopFSFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
     if (FAILED(hr))
         return hr;
 
