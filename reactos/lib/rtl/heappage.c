@@ -1266,7 +1266,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
             RtlpDphNumberOfDelayedFreeBlocks--;
 
             /* Free the normal heap */
-            RtlFreeHeap (NormalHeap, 0, BlockInfo);
+            RtlFreeHeap(NormalHeap, 0, BlockInfo);
         }
 
         /* Move to the next one */
@@ -1613,6 +1613,7 @@ PVOID NTAPI
 RtlpPageHeapDestroy(HANDLE HeapPtr)
 {
     PDPH_HEAP_ROOT DphRoot;
+    PVOID Ptr;
     PDPH_HEAP_BLOCK Node, Next;
     PHEAP NormalHeap;
     ULONG Value;
@@ -1637,10 +1638,11 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
     RtlpDphFreeDelayedBlocksFromHeap(DphRoot, NormalHeap);
 
     /* Go through the busy blocks */
-    Node = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, TRUE);
+    Ptr = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, TRUE);
 
-    while (Node)
+    while (Ptr)
     {
+        Node = CONTAINING_RECORD(Ptr, DPH_HEAP_BLOCK, pUserAllocation);
         if (!(DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN))
         {
             if (!RtlpDphIsPageHeapBlock(DphRoot, Node->pUserAllocation, &Value, TRUE))
@@ -1653,7 +1655,7 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
         //AVrfInternalHeapFreeNotification();
 
         /* Go to the next node */
-        Node = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);
+        Ptr = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);
     }
 
     /* Acquire the global heap list lock */
