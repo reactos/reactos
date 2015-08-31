@@ -116,6 +116,7 @@ list(APPEND SOURCE
     urlmon.idl
     vmr9.idl
 #   vmrender.idl
+    vss.idl
     wbemcli.idl
     wbemdisp.idl
     wbemprov.idl
