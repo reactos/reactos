@@ -2376,6 +2376,9 @@ NetUserDel(LPCWSTR servername,
         goto done;
     }
 
+    /* A successful delete invalidates the handle */
+    UserHandle = NULL;
+
 done:
     if (UserHandle != NULL)
         SamCloseHandle(UserHandle);
