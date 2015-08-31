@@ -61,7 +61,7 @@ DsRolepGetBasicInfo(
     Status = LsarQueryInformationPolicy(PolicyHandle,
                                         PolicyAccountDomainInformation,
                                         &PolicyInfo);
-    LsarClose(PolicyHandle);
+    LsarClose(&PolicyHandle);
     if (!NT_SUCCESS(Status))
     {
         TRACE("LsarQueryInformationPolicy with NT status %x\n",
