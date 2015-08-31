@@ -660,7 +660,11 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     if (!strRet)
         return E_INVALIDARG;
 
-    if (!_ILIsDesktop(pidl) && _ILIsPidlSimple(pidl) && _ILIsSpecialFolder(pidl))
+    if (!_ILIsPidlSimple (pidl))
+    {
+        return SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, strRet);
+    }
+    else if (!_ILIsDesktop(pidl) && ILIsSpecialFolder(pidl))
     {
         return SHELL32_GetDisplayNameOfGUIDItem(this, L"", pidl, dwFlags, strRet);
     }
@@ -677,7 +681,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
         else
             HCR_GetClassNameW(CLSID_ShellDesktop, pszPath, MAX_PATH);
     }
-    else if (_ILIsPidlSimple (pidl))
+    else
     {
         int cLen = 0;
 
@@ -709,12 +713,6 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
             if (!_ILIsFolder(pidl))
                 SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
         }
-    }
-    else
-    {
-        /* a complex pidl, let the subfolder do the work */
-        hr = SHELL32_GetDisplayNameOfChild (this, pidl, dwFlags,
-                                            pszPath, MAX_PATH);
     }
 
     if (SUCCEEDED(hr))

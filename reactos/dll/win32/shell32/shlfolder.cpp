@@ -335,54 +335,34 @@ HRESULT SHELL32_BindToGuidItem(LPCITEMIDLIST pidlRoot,
  * virtual folders with the registry key WantsFORPARSING set.
  */
 HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
-                       LPCITEMIDLIST pidl, DWORD dwFlags, LPWSTR szOut, DWORD dwOutLen)
+                       LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    LPITEMIDLIST pidlFirst;
-    HRESULT hr = E_INVALIDARG;
+    LPITEMIDLIST pidlFirst = ILCloneFirst(pidl);
+    if (!pidlFirst)
+        return E_OUTOFMEMORY;
 
-    TRACE ("(%p)->(pidl=%p 0x%08x %p 0x%08x)\n", psf, pidl, dwFlags, szOut, dwOutLen);
-    pdump (pidl);
-
-    pidlFirst = ILCloneFirst(pidl);
-    if (pidlFirst)
+    CComPtr<IShellFolder> psfChild;
+    HRESULT hr = psf->BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+    if (SUCCEEDED (hr))
     {
-        CComPtr<IShellFolder> psfChild;
-
-        hr = psf->BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
-        if (SUCCEEDED (hr))
-        {
-            STRRET strTemp;
-            LPITEMIDLIST pidlNext = ILGetNext (pidl);
-
-            hr = psfChild->GetDisplayNameOf(pidlNext, dwFlags, &strTemp);
-            if (SUCCEEDED (hr))
-            {
-                if(!StrRetToStrNW (szOut, dwOutLen, &strTemp, pidlNext))
-                    hr = E_FAIL;
-            }
-        }
-        ILFree (pidlFirst);
-    } else
-        hr = E_OUTOFMEMORY;
-
-    TRACE ("-- ret=0x%08x %s\n", hr, debugstr_w(szOut));
+        hr = psfChild->GetDisplayNameOf(ILGetNext (pidl), dwFlags, strRet);
+    }
+    ILFree (pidlFirst);
 
     return hr;
 }
 
 HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPath, PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    HRESULT hr = S_OK;
+    HRESULT hr;
     GUID const *clsid = _ILGetGUIDPointer (pidl);
 
     if (!strRet)
         return E_INVALIDARG;
 
-    LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
-    if (!pszPath)
-        return E_OUTOFMEMORY;
-
-    if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
+    /* First of all check if we need to query the name from the child item */
+    if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING && 
+        GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL)
     {
         int bWantsForParsing;
 
@@ -408,32 +388,38 @@ HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPa
             }
         }
 
-        if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                bWantsForParsing)
+        if (bWantsForParsing)
         {
             /*
-                * we need the filesystem path to the destination folder.
-                * Only the folder itself can know it
-                */
-            hr = SHELL32_GetDisplayNameOfChild (psf, pidl, dwFlags,
-                                                pszPath,
-                                                MAX_PATH);
+             * we need the filesystem path to the destination folder.
+             * Only the folder itself can know it
+             */
+            return SHELL32_GetDisplayNameOfChild (psf, pidl, dwFlags, strRet);
         }
-        else
-        {
-            wcscpy(pszPath, pszFolderPath);
-            PWCHAR pItemName = &pszPath[wcslen(pszPath)];
+    }
 
-            /* parsing name like ::{...} */
-            pItemName[0] = ':';
-            pItemName[1] = ':';
-            SHELL32_GUIDToStringW (*clsid, &pItemName[2]);
-        }
+    /* Allocate the buffer for the result */
+    LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+    if (!pszPath)
+        return E_OUTOFMEMORY;
+
+    hr = S_OK;
+
+    if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
+    {
+        wcscpy(pszPath, pszFolderPath);
+        PWCHAR pItemName = &pszPath[wcslen(pszPath)];
+
+        /* parsing name like ::{...} */
+        pItemName[0] = ':';
+        pItemName[1] = ':';
+        SHELL32_GUIDToStringW (*clsid, &pItemName[2]);
     }
     else
     {
         /* user friendly name */
-        HCR_GetClassNameW (*clsid, pszPath, MAX_PATH);
+        if (!HCR_GetClassNameW (*clsid, pszPath, MAX_PATH))
+            hr = E_FAIL;
     }
 
     if (SUCCEEDED(hr))

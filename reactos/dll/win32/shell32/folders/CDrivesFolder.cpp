@@ -483,6 +483,11 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     if (!strRet)
         return E_INVALIDARG;
 
+    if (!_ILIsPidlSimple (pidl))
+    {
+        return SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, strRet);
+    }
+
     pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
@@ -496,7 +501,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
         pszPath[1] = ':';
         SHELL32_GUIDToStringW(CLSID_MyComputer, &pszPath[2]);
     }
-    else if (_ILIsPidlSimple(pidl))
+    else
     {
         if (_ILIsSpecialFolder(pidl))
             return SHELL32_GetDisplayNameOfGUIDItem(this, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", pidl, dwFlags, strRet);
@@ -556,11 +561,6 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
             CoTaskMemFree(pszPath);
             return E_INVALIDARG;
         }
-    }
-    else
-    {
-        /* Complex pidl. Let the child folder do the work */
-        hr = SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, pszPath, MAX_PATH);
     }
 
     if (SUCCEEDED(hr))

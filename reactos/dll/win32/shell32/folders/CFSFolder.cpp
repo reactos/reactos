@@ -591,67 +591,47 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         DWORD dwFlags, LPSTRRET strRet)
 {
-    LPWSTR pszPath;
-
-    HRESULT hr = S_OK;
-    int len = 0;
-
-    TRACE("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
-    pdump(pidl);
-
     if (!pidl || !strRet)
         return E_INVALIDARG;
 
-    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+    /* If it is a complex pidl, let the child handle it */
+    if (!_ILIsPidlSimple (pidl)) /* complex pidl */
+    {
+        return SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, strRet);
+    }
+    else if (!pidl->mkid.cb) /* empty pidl */
+    {
+        /* If it is an empty pidl return only the path of the folder */
+        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) && 
+            (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
+            sPathTarget)
+        {
+            return SHSetStrRet(strRet, sPathTarget);
+        }
+        return E_INVALIDARG;
+    }
+    
+    int len = 0;
+    LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
 
-    if (_ILIsDesktop(pidl)) /* empty pidl */
+    if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
+        (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
+        sPathTarget)
     {
-        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
-                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
-        {
-            if (sPathTarget)
-                lstrcpynW(pszPath, sPathTarget, MAX_PATH);
-        }
-        else
-            hr = E_INVALIDARG; /* pidl has to contain exactly one non null SHITEMID */
+        lstrcpynW(pszPath, sPathTarget, MAX_PATH);
+        PathAddBackslashW(pszPath);
+        len = wcslen(pszPath);
     }
-    else if (_ILIsPidlSimple(pidl))
-    {
-        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
-                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
-                sPathTarget)
-        {
-            lstrcpynW(pszPath, sPathTarget, MAX_PATH);
-            PathAddBackslashW(pszPath);
-            len = wcslen(pszPath);
-        }
-        _ILSimpleGetTextW(pidl, pszPath + len, MAX_PATH + 1 - len);
-        if (!_ILIsFolder(pidl)) SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
-    } else
-        hr = SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, pszPath, MAX_PATH);
+    _ILSimpleGetTextW(pidl, pszPath + len, MAX_PATH + 1 - len);
+    if (!_ILIsFolder(pidl)) SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
 
-    if (SUCCEEDED(hr)) {
-        /* Win9x always returns ANSI strings, NT always returns Unicode strings */
-        if (GetVersion() & 0x80000000)
-        {
-            strRet->uType = STRRET_CSTR;
-            if (!WideCharToMultiByte(CP_ACP, 0, pszPath, -1, strRet->cStr, MAX_PATH,
-                                     NULL, NULL))
-                strRet->cStr[0] = '\0';
-            CoTaskMemFree(pszPath);
-        }
-        else
-        {
-            strRet->uType = STRRET_WSTR;
-            strRet->pOleStr = pszPath;
-        }
-    } else
-        CoTaskMemFree(pszPath);
+    strRet->uType = STRRET_WSTR;
+    strRet->pOleStr = pszPath;
 
     TRACE ("-- (%p)->(%s)\n", this, strRet->uType == STRRET_CSTR ? strRet->cStr : debugstr_w(strRet->pOleStr));
-    return hr;
+    return S_OK;
 }
 
 /**************************************************************************
