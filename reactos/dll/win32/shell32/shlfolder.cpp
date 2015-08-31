@@ -149,7 +149,7 @@ HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
  *   In this case the absolute path is built from pidlChild (eg. C:)
  */
 static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
-                LPCITEMIDLIST pidlChild, REFCLSID clsid, LPVOID * ppvOut)
+                LPCITEMIDLIST pidlChild, REFCLSID clsid, IShellFolder** ppsfOut)
 {
     HRESULT hr;
     CComPtr<IShellFolder> pShellFolder;
@@ -163,8 +163,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
         CComPtr<IPersistFolder> ppf;
         CComPtr<IPersistFolder3> ppf3;
 
-        if ((_ILIsFolder(pidlChild) || _ILIsDrive(pidlChild)) &&
-            SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3))))
+        if (SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3))))
         {
             PERSIST_FOLDER_TARGET_INFO ppfti;
 
@@ -198,15 +197,35 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
         ILFree (pidlAbsolute);
     }
 
-    *ppvOut = pShellFolder.Detach();
+    *ppsfOut = pShellFolder.Detach();
 
-    TRACE ("-- (%p) ret=0x%08x\n", *ppvOut, hr);
+    TRACE ("-- (%p) ret=0x%08x\n", *ppsfOut, hr);
 
     return hr;
 }
 
+void SHELL32_GetCLSIDForDirectory(LPCWSTR pathRoot, LPCITEMIDLIST pidl, CLSID* pclsidFolder)
+{
+    static const WCHAR wszDotShellClassInfo[] = {
+        '.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0 };
+    static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
+    WCHAR wszCLSIDValue[CHARS_IN_GUID], wszFolderPath[MAX_PATH], *pwszPathTail = wszFolderPath;
+
+    /* see if folder CLSID should be overridden by desktop.ini file */
+    if (pathRoot) {
+        lstrcpynW(wszFolderPath, pathRoot, MAX_PATH);
+        pwszPathTail = PathAddBackslashW(wszFolderPath);
+    }
+
+    _ILSimpleGetTextW(pidl,pwszPathTail,MAX_PATH - (int)(pwszPathTail - wszFolderPath));
+
+    if (SHELL32_GetCustomFolderAttributeFromPath (wszFolderPath,
+        wszDotShellClassInfo, wszCLSID, wszCLSIDValue, CHARS_IN_GUID))
+        CLSIDFromString (wszCLSIDValue, pclsidFolder);
+}
+
 /***********************************************************************
- *    SHELL32_BindToChild [Internal]
+ *    SHELL32_BindToFS [Internal]
  *
  * Common code for IShellFolder_BindToObject.
  *
@@ -222,49 +241,40 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
  *  This function makes special assumptions on the shell namespace, which
  *  means you probably can't use it for your IShellFolder implementation.
  */
-HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
+HRESULT SHELL32_BindToFS (LPCITEMIDLIST pidlRoot,
                              LPCWSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut)
 {
-    static const WCHAR wszDotShellClassInfo[] = {
-        '.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0 };
-
-    GUID const *clsid;
     CComPtr<IShellFolder> pSF;
     HRESULT hr;
-    LPITEMIDLIST pidlChild;
+    LPCITEMIDLIST pidlChild;
 
     if (!pidlRoot || !ppvOut || !pidlComplete || !pidlComplete->mkid.cb)
         return E_INVALIDARG;
 
+    if (_ILIsValue(pidlComplete))
+    {
+        ERR("Binding to file is unimplemented\n");
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    }
+    if (!_ILIsFolder(pidlComplete) && !_ILIsDrive(pidlComplete))
+    {
+        ERR("Got an unknown type of pidl!\n");
+        return E_FAIL;
+    }
+
     *ppvOut = NULL;
 
-    pidlChild = ILCloneFirst (pidlComplete);
+    pidlChild = (_ILIsPidlSimple (pidlComplete)) ? pidlComplete : ILCloneFirst (pidlComplete);
 
-    if ((clsid = _ILGetGUIDPointer (pidlChild))) {
-        /* virtual folder */
-        hr = SHELL32_CoCreateInitSF (pidlRoot, pathRoot, pidlChild, *clsid, (LPVOID *)&pSF);
-    } else {
-        /* file system folder */
-        CLSID clsidFolder = CLSID_ShellFSFolder;
-        static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
-        WCHAR wszCLSIDValue[CHARS_IN_GUID], wszFolderPath[MAX_PATH], *pwszPathTail = wszFolderPath;
+    CLSID clsidFolder = CLSID_ShellFSFolder;
+    DWORD attributes = _ILGetFileAttributes(ILFindLastID(pidlChild), NULL, 0);
+    if ((attributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
+        SHELL32_GetCLSIDForDirectory(pathRoot, pidlChild, &clsidFolder);
 
-        /* see if folder CLSID should be overridden by desktop.ini file */
-        if (pathRoot) {
-            lstrcpynW(wszFolderPath, pathRoot, MAX_PATH);
-            pwszPathTail = PathAddBackslashW(wszFolderPath);
-        }
+    hr = SHELL32_CoCreateInitSF (pidlRoot, pathRoot, pidlChild, clsidFolder, &pSF);
 
-        _ILSimpleGetTextW(pidlChild,pwszPathTail,MAX_PATH - (int)(pwszPathTail - wszFolderPath));
-
-        if (SHELL32_GetCustomFolderAttributeFromPath (wszFolderPath,
-            wszDotShellClassInfo, wszCLSID, wszCLSIDValue, CHARS_IN_GUID))
-            CLSIDFromString (wszCLSIDValue, &clsidFolder);
-
-        hr = SHELL32_CoCreateInitSF (pidlRoot, pathRoot, pidlChild,
-                                     clsidFolder, (LPVOID *)&pSF);
-    }
-    ILFree (pidlChild);
+    if (pidlChild != pidlComplete)
+        ILFree ((LPITEMIDLIST)pidlChild);
 
     if (SUCCEEDED (hr)) {
         if (_ILIsPidlSimple (pidlComplete)) {
@@ -290,27 +300,41 @@ HRESULT SHELL32_BindToGuidItem(LPCITEMIDLIST pidlRoot,
     CComPtr<IPersistFolder> pFolder;
     HRESULT hr;
 
+    if (!pidlRoot || !ppvOut || !pidl || !pidl->mkid.cb)
+        return E_INVALIDARG;
+
+    *ppvOut = NULL;
+
     GUID *pGUID = _ILGetGUIDPointer(pidl);
     if (!pGUID)
     {
         ERR("SHELL32_BindToGuidItem called for non guid item!\n");
-        return E_FAIL;
+        return E_INVALIDARG;
     }
 
     hr = SHCoCreateInstance(NULL, pGUID, NULL, IID_PPV_ARG(IPersistFolder, &pFolder));
     if (FAILED(hr))
         return hr;
 
-    hr = pFolder->Initialize(ILCombine(pidlRoot, pidl));
-    if (FAILED(hr))
-        return hr;
-
     if (_ILIsPidlSimple (pidl))
     {
+        hr = pFolder->Initialize(ILCombine(pidlRoot, pidl));
+        if (FAILED(hr))
+            return hr;
+
         return pFolder->QueryInterface(riid, ppvOut);
     }
     else
     {
+        LPITEMIDLIST pidlChild = ILCloneFirst (pidl);
+        if (!pidlChild)
+            return E_OUTOFMEMORY;
+
+        hr = pFolder->Initialize(ILCombine(pidlRoot, pidlChild));
+        ILFree(pidlChild);
+        if (FAILED(hr))
+            return hr;
+
         CComPtr<IShellFolder> psf;
         hr = pFolder->QueryInterface(IID_PPV_ARG(IShellFolder, &psf));
         if (FAILED(hr))

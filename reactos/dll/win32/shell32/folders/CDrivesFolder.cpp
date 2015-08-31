@@ -272,7 +272,7 @@ HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcRese
     if (_ILIsSpecialFolder(pidl))
         return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
 
-    return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
+    return SHELL32_BindToFS(pidlRoot, NULL, pidl, riid, ppvOut);
 }
 
 /**************************************************************************

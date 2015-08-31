@@ -207,6 +207,13 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
         pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, szElement);
         if (pidlTemp != NULL)
         {
+            /* We are creating an id list without ensuring that the items exist.
+               If we have a remaining path, this must be a folder. 
+               We have to do it now because it is set as a file by default */
+            if (szNext)
+            {
+                pidlTemp->mkid.abID[0] = PT_FOLDER;
+            }
             hr = S_OK;
         }
         else
@@ -280,7 +287,7 @@ HRESULT WINAPI CFSFolder::BindToObject(
     TRACE("(%p)->(pidl=%p,%p,%s,%p)\n", this, pidl, pbc,
           shdebugstr_guid(&riid), ppvOut);
 
-    return SHELL32_BindToChild(pidlRoot, sPathTarget, pidl, riid, ppvOut);
+    return SHELL32_BindToFS(pidlRoot, sPathTarget, pidl, riid, ppvOut);
 }
 
 /**************************************************************************

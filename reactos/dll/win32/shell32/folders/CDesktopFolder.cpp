@@ -446,7 +446,10 @@ HRESULT WINAPI CDesktopFolder::BindToObject(
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n",
            this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
-    return SHELL32_BindToChild( pidlRoot, sPathTarget, pidl, riid, ppvOut );
+    if (_ILIsSpecialFolder(pidl))
+        return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
+
+    return SHELL32_BindToFS( pidlRoot, sPathTarget, pidl, riid, ppvOut );
 }
 
 /**************************************************************************
