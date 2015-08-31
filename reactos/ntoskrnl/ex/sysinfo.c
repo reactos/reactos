@@ -2605,6 +2605,7 @@ NtFlushInstructionCache(
     {
         /* Detach from the process */
         KeUnstackDetachProcess(&ApcState);
+        ObDereferenceObject(Process);
     }
 
     return STATUS_SUCCESS;
