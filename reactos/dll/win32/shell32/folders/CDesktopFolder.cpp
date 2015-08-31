@@ -664,7 +664,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     {
         return SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, strRet);
     }
-    else if (!_ILIsDesktop(pidl) && ILIsSpecialFolder(pidl))
+    else if (!_ILIsDesktop(pidl) && _ILIsSpecialFolder(pidl))
     {
         return SHELL32_GetDisplayNameOfGUIDItem(this, L"", pidl, dwFlags, strRet);
     }
