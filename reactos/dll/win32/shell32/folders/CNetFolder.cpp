@@ -494,7 +494,7 @@ HRESULT WINAPI CNetFolder::Initialize(LPCITEMIDLIST pidl)
 {
     TRACE("(%p)->(%p)\n", this, pidl);
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 /**************************************************************************

@@ -256,7 +256,7 @@ HRESULT WINAPI CMyDocsFolder::Initialize(LPCITEMIDLIST pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 HRESULT WINAPI CMyDocsFolder::GetCurFolder(LPITEMIDLIST *pidl)
