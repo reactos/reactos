@@ -4190,7 +4190,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
              (MemoryArea->Type != MEMORY_AREA_CACHE)) ||
             MemoryArea->DeleteInProgress)
     {
-        if (MemoryArea) NT_ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
+        if (MemoryArea) ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
         MmUnlockAddressSpace(AddressSpace);
         return STATUS_NOT_MAPPED_VIEW;
     }
@@ -4237,7 +4237,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
             {
                 DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
                         SBaseAddress, Process, Status);
-                NT_ASSERT(NT_SUCCESS(Status));
+                ASSERT(NT_SUCCESS(Status));
             }
         }
     }
@@ -4248,7 +4248,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         {
             DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
                     BaseAddress, Process, Status);
-            NT_ASSERT(NT_SUCCESS(Status));
+            ASSERT(NT_SUCCESS(Status));
         }
     }
 
@@ -4526,14 +4526,14 @@ MmMapViewOfSection(IN PVOID SectionObject,
         if (((ImageBase + ImageSize) > (ULONG_PTR)MmHighestUserAddress) ||
                 ((ImageBase + ImageSize) < ImageSize))
         {
-            NT_ASSERT(*BaseAddress == NULL);
+            ASSERT(*BaseAddress == NULL);
             ImageBase = ALIGN_DOWN_BY((ULONG_PTR)MmHighestUserAddress - ImageSize,
                                       MM_VIRTMEM_GRANULARITY);
             NotAtBase = TRUE;
         }
         else if (ImageBase != ALIGN_DOWN_BY(ImageBase, MM_VIRTMEM_GRANULARITY))
         {
-            NT_ASSERT(*BaseAddress == NULL);
+            ASSERT(*BaseAddress == NULL);
             ImageBase = ALIGN_DOWN_BY(ImageBase, MM_VIRTMEM_GRANULARITY);
             NotAtBase = TRUE;
         }
@@ -4651,7 +4651,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
     }
 
     MmUnlockAddressSpace(AddressSpace);
-    NT_ASSERT(*BaseAddress == ALIGN_DOWN_POINTER_BY(*BaseAddress, MM_VIRTMEM_GRANULARITY));
+    ASSERT(*BaseAddress == ALIGN_DOWN_POINTER_BY(*BaseAddress, MM_VIRTMEM_GRANULARITY));
 
     if (NotAtBase)
         Status = STATUS_IMAGE_NOT_AT_BASE;

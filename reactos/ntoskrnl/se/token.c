@@ -123,7 +123,7 @@ SepUpdateSinglePrivilegeFlagToken(
     _In_ ULONG Index)
 {
     ULONG TokenFlag;
-    NT_ASSERT(Index < Token->PrivilegeCount);
+    ASSERT(Index < Token->PrivilegeCount);
 
     /* The high part of all values we are interested in is 0 */
     if (Token->Privileges[Index].Luid.HighPart != 0)
@@ -189,7 +189,7 @@ SepRemovePrivilegeToken(
     _In_ ULONG Index)
 {
     ULONG MoveCount;
-    NT_ASSERT(Index < Token->PrivilegeCount);
+    ASSERT(Index < Token->PrivilegeCount);
 
     /* Calculate the number of trailing privileges */
     MoveCount = Token->PrivilegeCount - Index - 1;
