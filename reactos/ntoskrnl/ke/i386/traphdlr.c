@@ -262,8 +262,8 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
         }
     }
 
-    /* User or kernel trap -- get ready to issue an exception */
-    if (Thread->NpxState == NPX_STATE_NOT_LOADED)
+    /* User or kernel trap -- check if we need to unload the current state */
+    if (Thread->NpxState == NPX_STATE_LOADED)
     {
         /* Update CR0 */
         Cr0 = __readcr0();
@@ -310,8 +310,6 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Get legal exceptions that software should handle */
-    /* We do this by first masking off from the Mask the bits we need, */
-    /* This is done so we can keep the FSW_STACK_FAULT bit in Error. */
     Mask &= (FSW_INVALID_OPERATION |
              FSW_DENORMAL |
              FSW_ZERO_DIVIDE |
@@ -323,9 +321,10 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
     /* Check for invalid operation */
     if (Error & FSW_INVALID_OPERATION)
     {
-        /* NOTE: Stack fault is handled differently than any other case. */
-        /* 1. It's only raised for invalid operation. */
-        /* 2. It's only raised if invalid operation is not masked. */
+        /*
+         * Now check if this is actually a Stack Fault. This is needed because
+         * on x86 the Invalid Operation error is set for Stack Check faults as well.
+         */
         if (Error & FSW_STACK_FAULT)
         {
             /* Issue stack check fault */
@@ -335,12 +334,14 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
                                      DataOffset,
                                      TrapFrame);
         }
-
-        /* Issue fault */
-        KiDispatchException1Args(STATUS_FLOAT_INVALID_OPERATION,
-                                 ErrorOffset,
-                                 0,
-                                 TrapFrame);
+        else
+        {
+            /* This is an invalid operation fault after all, so raise that instead */
+            KiDispatchException1Args(STATUS_FLOAT_INVALID_OPERATION,
+                                     ErrorOffset,
+                                     0,
+                                     TrapFrame);
+        }
     }
 
     /* Check for divide by zero */
