@@ -18,6 +18,7 @@ EXTERN @KiSwapContextExit@8:PROC
 EXTERN @KiRetireDpcList@4:PROC
 EXTERN @KiEnterV86Mode@4:PROC
 EXTERN @KiExitV86Mode@4:PROC
+EXTERN _KeI386FxsrPresent:DWORD
 
 /* FUNCTIONS ****************************************************************/
 .code
