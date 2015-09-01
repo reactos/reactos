@@ -696,7 +696,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
       }
       default:
           TRACE("DWP calling IDWP Msg %d\n",Msg);
-          *lResult = IntDefWindowProc(Wnd, Msg, wParam, lParam, FALSE);
+          //*lResult = IntDefWindowProc(Wnd, Msg, wParam, lParam, FALSE);
    }
    return TRUE; /* We are done. Do not do any callbacks to user mode */
 }
