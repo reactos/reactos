@@ -310,7 +310,12 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
                 (lstrlenW(ui->wkui0_username) + 1) * sizeof(WCHAR),
                 (LPVOID *) bufptr);
             if (nastatus != NERR_Success)
+            {
+                NetApiBufferFree(ui);
                 return nastatus;
+            }
+            ui = (PWKSTA_USER_INFO_0) *bufptr;
+            ui->wkui0_username = (LMSTR) (*bufptr + sizeof(WKSTA_USER_INFO_0));
         }
         break;
     }
