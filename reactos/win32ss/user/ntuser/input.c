@@ -492,16 +492,6 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 
            ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
 
-           // FIXME: conditions?
-           if (ptiTo->MessageQueue == gpqForeground)
-           {
-              ERR("ptiTo is Foreground\n");
-           }
-           else
-           {
-              ERR("ptiTo NOT Foreground\n");
-           }
-
            if (ptiFrom->MessageQueue == gpqForeground)
            {
               ERR("ptiFrom is Foreground\n");
@@ -517,6 +507,10 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
            else
            {
               ERR("ptiFrom NOT Foreground\n");
+              if ( ptiTo->MessageQueue->spwndActive == 0 )
+                  ptiTo->MessageQueue->spwndActive = ptiFrom->MessageQueue->spwndActive;
+              if ( ptiTo->MessageQueue->spwndFocus == 0 )
+                  ptiTo->MessageQueue->spwndFocus  = ptiFrom->MessageQueue->spwndFocus;
            }
 
            CurIcon = ptiFrom->MessageQueue->CursorObject;
@@ -584,6 +578,9 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 
         if (ptiTo->MessageQueue == ptiFrom->MessageQueue)
         {
+           PWND spwndActive = ptiTo->MessageQueue->spwndActive;
+           PWND spwndFocus  = ptiTo->MessageQueue->spwndFocus;
+
            if (gptiForeground == ptiFrom)
            {
               ERR("ptiTo is now pti FG.\n");
@@ -598,6 +595,22 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 
            ptiFrom->MessageQueue = MsqCreateMessageQueue(ptiFrom);
 
+           if (spwndActive)
+           {
+              if (spwndActive->head.pti == ptiFrom)
+              {
+                 ptiFrom->MessageQueue->spwndActive = spwndActive;
+                 ptiTo->MessageQueue->spwndActive = 0;
+              }
+           }
+           if (spwndFocus)
+           {
+              if (spwndFocus->head.pti == ptiFrom)
+              {
+                 ptiFrom->MessageQueue->spwndFocus = spwndFocus;
+                 ptiTo->MessageQueue->spwndFocus = 0;
+              }
+           }
            ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
         }
         else
@@ -610,6 +623,8 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
        ATM which one?
      */
     RtlCopyMemory(ptiTo->MessageQueue->afKeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
+
+    ptiTo->MessageQueue->msgDblClk.message = 0;
 
     /* Generate mouse move message */
     msg.message = WM_MOUSEMOVE;

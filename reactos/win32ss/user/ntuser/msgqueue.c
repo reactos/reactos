@@ -639,7 +639,13 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
           return;
        }
 
-       MessageQueue->ptiMouse = pti;
+       // Check to see if this is attached.
+       if ( pti != MessageQueue->ptiMouse &&
+            MessageQueue->cThreads > 1 )
+       {
+          // Set the send pti to the message queue mouse pti.
+          pti = MessageQueue->ptiMouse;
+       }
 
        if (Msg->message == WM_MOUSEMOVE)
        {
@@ -1252,6 +1258,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                }
                Entry = Entry->Flink;
             }
+            break;
          }
 
          if (WaitStatus == STATUS_USER_APC) break;
@@ -1413,7 +1420,7 @@ IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
    }
 }
 
-BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT last)
+BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, UINT first, UINT last)
 {
     MSG clk_msg;
     POINT pt;
@@ -1454,11 +1461,21 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     TRACE("Got mouse message for %p, hittest: 0x%x\n", msg->hwnd, hittest);
 
     // Null window or not the same "Hardware" message queue.
-    if (pwndMsg == NULL || pwndMsg->head.pti->MessageQueue != pti->MessageQueue)
+    if (pwndMsg == NULL || pwndMsg->head.pti->MessageQueue != MessageQueue)
     {
         // Crossing a boundary, so set cursor. See default message queue cursor.
         UserSetCursor(SYSTEMCUR(ARROW), FALSE);
         /* Remove and ignore the message */
+        *RemoveMessages = TRUE;
+        return FALSE;
+    }
+
+    // Check to see if this is attached,
+    if ( pwndMsg->head.pti != pti &&  // window thread is not current,
+         MessageQueue->cThreads > 1 ) // and is attached...
+    {
+        // This is not for us and we should leave so the other thread can check for messages!!!
+        *NotForUs = TRUE;
         *RemoveMessages = TRUE;
         return FALSE;
     }
@@ -1795,11 +1812,11 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     return Ret;
 }
 
-BOOL co_IntProcessHardwareMessage(MSG* Msg, BOOL* RemoveMessages, UINT first, UINT last)
+BOOL co_IntProcessHardwareMessage(MSG* Msg, BOOL* RemoveMessages, BOOL* NotForUs, UINT first, UINT last)
 {
     if ( IS_MOUSE_MESSAGE(Msg->message))
     {
-        return co_IntProcessMouseMessage(Msg, RemoveMessages, first, last);
+        return co_IntProcessMouseMessage(Msg, RemoveMessages, NotForUs, first, last);
     }
     else if ( IS_KBD_MESSAGE(Msg->message))
     {
@@ -1835,7 +1852,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
                          IN UINT QSflags,
                          OUT MSG* pMsg)
 {
-   BOOL AcceptMessage;
+   BOOL AcceptMessage, NotForUs;
    PUSER_MESSAGE CurrentMessage;
    PLIST_ENTRY ListHead;
    MSG msg;
@@ -1858,7 +1875,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
 
    if (MessageQueue->ptiSysLock != pti)
    {
-      ERR("MsqPeekHardwareMessage: Thread Q is locked to another pti!\n");
+      ERR("Thread Q is locked to ptiSysLock 0x%p pti 0x%p\n",MessageQueue->ptiSysLock,pti);
       return FALSE;
    }
 
@@ -1891,8 +1908,10 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
          msg = CurrentMessage->Msg;
          QS_Flags = CurrentMessage->QS_Flags;
 
+         NotForUs = FALSE;
+
          UpdateKeyStateFromMsg(MessageQueue, &msg);
-         AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, MsgFilterLow, MsgFilterHigh);
+         AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, &NotForUs, MsgFilterLow, MsgFilterHigh);
 
          if (Remove)
          {
@@ -1905,6 +1924,12 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
          }
 
          MessageQueue->idSysPeek = idSave;
+
+         if (NotForUs)
+         {
+            Ret = FALSE;
+            break;
+         }
 
          if (AcceptMessage)
          {
