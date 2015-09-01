@@ -213,6 +213,7 @@ KdpPrompt(IN LPSTR PromptString,
 {
     STRING PromptBuffer, ResponseBuffer;
     BOOLEAN Enable, Resend;
+    PVOID CapturedPrompt, CapturedResponse;
 
     /* Normalize the lengths */
     PromptLength = min(PromptLength, 512);
@@ -221,13 +222,32 @@ KdpPrompt(IN LPSTR PromptString,
     /* Check if we need to verify the string */
     if (PreviousMode != KernelMode)
     {
-        /* FIXME: Handle user-mode */
+        /* Capture user-mode buffers */
+        _SEH2_TRY
+        {
+            ProbeForRead(PromptString, PromptLength, 1);
+            CapturedPrompt = alloca(512);
+            KdpQuickMoveMemory(CapturedPrompt, PromptString, PromptLength);
+            PromptString = CapturedPrompt;
+
+            ProbeForWrite(ResponseString, MaximumResponseLength, 1);
+            CapturedResponse = alloca(512);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        CapturedResponse = ResponseString;
     }
 
     /* Setup the prompt and response  buffers */
     PromptBuffer.Buffer = PromptString;
     PromptBuffer.Length = PromptLength;
-    ResponseBuffer.Buffer = ResponseString;
+    ResponseBuffer.Buffer = CapturedResponse;
     ResponseBuffer.Length = 0;
     ResponseBuffer.MaximumLength = MaximumResponseLength;
 
@@ -249,6 +269,20 @@ KdpPrompt(IN LPSTR PromptString,
     /* Exit the debugger */
     KdExitDebugger(Enable);
 
+    /* Copy back response if required */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            KdpQuickMoveMemory(ResponseString, ResponseBuffer.Buffer, ResponseBuffer.Length);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END;
+    }
+
     /* Return the number of characters received */
     return ResponseBuffer.Length;
 }
@@ -267,6 +301,7 @@ KdpPrint(IN ULONG ComponentId,
     NTSTATUS ReturnStatus;
     BOOLEAN Enable;
     STRING OutputString;
+    PVOID CapturedString;
 
     /* Assume failure */
     *Handled = FALSE;
@@ -288,7 +323,19 @@ KdpPrint(IN ULONG ComponentId,
     /* Check if we need to verify the buffer */
     if (PreviousMode != KernelMode)
     {
-        /* FIXME: Support user-mode */
+        /* Capture user-mode buffers */
+        _SEH2_TRY
+        {
+            ProbeForRead(String, Length, 1);
+            CapturedString = alloca(512);
+            KdpQuickMoveMemory(CapturedString, String, Length);
+            String = CapturedString;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return STATUS_ACCESS_VIOLATION);
+        }
+        _SEH2_END;
     }
 
     /* Setup the output string */
