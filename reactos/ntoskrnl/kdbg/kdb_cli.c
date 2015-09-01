@@ -3745,19 +3745,7 @@ KdpPrompt(IN LPSTR InString,
              * DbgPrompt does not null terminate, but it does
              */
             *(PCHAR)(OutString + i) = 0;
-
-            /* Print a new line */
-            KdPortPutByteEx(&SerialPortInfo, '\r');
-            KdPortPutByteEx(&SerialPortInfo, '\n');
-
-            /* Release spinlock */
-            KiReleaseSpinLock(&KdpSerialSpinLock);
-
-            /* Lower IRQL back */
-            KeLowerIrql(OldIrql);
-
-            /* Return the length  */
-            return OutStringLength + 1;
+            break;
         }
 
         /* Write it back and print it to the log */
@@ -3779,5 +3767,5 @@ KdpPrompt(IN LPSTR InString,
     KeLowerIrql(OldIrql);
 
     /* Return the length  */
-    return OutStringLength;
+    return i;
 }
