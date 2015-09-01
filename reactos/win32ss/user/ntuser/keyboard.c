@@ -936,7 +936,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
             /* FIXME: Set KF_DLGMODE and KF_MENUMODE when needed */
             if (pFocusQueue->QF_flags & QF_DIALOGACTIVE)
                 Msg.lParam |= KF_DLGMODE << 16;
-            if (pFocusQueue->MenuOwner) // pFocusQueue->MenuState) // MenuState needs a start flag...
+            if (pFocusQueue->MenuOwner) // pti->pMenuState->fMenuStarted
                 Msg.lParam |= KF_MENUMODE << 16;
         }
 
@@ -951,7 +951,6 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         if (!Wnd) {ERR("Window is NULL\n");}
         MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0, dwExtraInfo);
     }
-
     return TRUE;
 }
 

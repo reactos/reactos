@@ -65,8 +65,11 @@ PWND FASTCALL VerifyWnd(PWND pWnd)
 {
    HWND hWnd;
    UINT State, State2;
+   ULONG Error;
 
    if (!pWnd) return NULL;
+
+   Error = EngGetLastError();
 
    _SEH2_TRY
    {
@@ -76,6 +79,7 @@ PWND FASTCALL VerifyWnd(PWND pWnd)
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+      EngSetLastError(Error);
       _SEH2_YIELD(return NULL);
    }
    _SEH2_END
@@ -83,8 +87,9 @@ PWND FASTCALL VerifyWnd(PWND pWnd)
    if ( UserObjectInDestroy(hWnd) ||
         State & WNDS_DESTROYED ||
         State2 & WNDS2_INDESTROY )
-      return NULL;
+      pWnd = NULL;
 
+   EngSetLastError(Error);
    return pWnd;
 }
 
@@ -362,6 +367,20 @@ IntGetWindow(HWND hWnd,
     return Ret;
 }
 
+DWORD FASTCALL IntGetWindowContextHelpId( PWND pWnd )
+{
+   PPROPERTY HelpId;
+
+   do
+   {
+      HelpId = IntGetProp(pWnd, gpsi->atomContextHelpIdProp);
+      if (!HelpId) break;
+      pWnd = IntGetParent(pWnd);
+   }
+   while (pWnd && pWnd->fnid != FNID_DESKTOP);
+   return (DWORD) (HelpId ? HelpId->Data : 0 );
+}
+
 /***********************************************************************
  *           IntSendDestroyMsg
  */
@@ -593,6 +612,7 @@ LRESULT co_UserFreeWindow(PWND Window,
         Window->IDMenu &&
         (Menu = UserGetMenuObject((HMENU)Window->IDMenu)))
    {
+      TRACE("UFW: IDMenu %p\n",Window->IDMenu);
       IntDestroyMenuObject(Menu, TRUE);
       Window->IDMenu = 0;
    }
@@ -3497,7 +3517,7 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
                                             Ansi);
          if (!OldValue) return 0;
       }
-*/
+ */
       *((LONG *)((PCHAR)(Window + 1) + Index)) = NewValue;
    }
    else
@@ -3911,6 +3931,78 @@ CLEANUP:
    TRACE("Leave NtUserSetWindowFNID\n");
    UserLeave();
    END_CLEANUP;
+}
+
+BOOL APIENTRY
+DefSetText(PWND Wnd, PCWSTR WindowText)
+{
+   UNICODE_STRING UnicodeString;
+   BOOL Ret = FALSE;
+
+   RtlInitUnicodeString(&UnicodeString, WindowText);
+
+   if (UnicodeString.Length != 0)
+   {
+      if (Wnd->strName.MaximumLength > 0 &&
+          UnicodeString.Length <= Wnd->strName.MaximumLength - sizeof(UNICODE_NULL))
+      {
+         ASSERT(Wnd->strName.Buffer != NULL);
+
+         Wnd->strName.Length = UnicodeString.Length;
+         Wnd->strName.Buffer[UnicodeString.Length / sizeof(WCHAR)] = L'\0';
+         RtlCopyMemory(Wnd->strName.Buffer,
+                              UnicodeString.Buffer,
+                              UnicodeString.Length);
+      }
+      else
+      {
+         PWCHAR buf;
+         Wnd->strName.MaximumLength = Wnd->strName.Length = 0;
+         buf = Wnd->strName.Buffer;
+         Wnd->strName.Buffer = NULL;
+         if (buf != NULL)
+         {
+            DesktopHeapFree(Wnd->head.rpdesk, buf);
+         }
+
+         Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->head.rpdesk,
+                                                   UnicodeString.Length + sizeof(UNICODE_NULL));
+         if (Wnd->strName.Buffer != NULL)
+         {
+            Wnd->strName.Buffer[UnicodeString.Length / sizeof(WCHAR)] = L'\0';
+            RtlCopyMemory(Wnd->strName.Buffer,
+                                 UnicodeString.Buffer,
+                                 UnicodeString.Length);
+            Wnd->strName.MaximumLength = UnicodeString.Length + sizeof(UNICODE_NULL);
+            Wnd->strName.Length = UnicodeString.Length;
+         }
+         else
+         {
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto Exit;
+         }
+      }
+   }
+   else
+   {
+      Wnd->strName.Length = 0;
+      if (Wnd->strName.Buffer != NULL)
+          Wnd->strName.Buffer[0] = L'\0';
+   }
+
+   // FIXME: HAX! Windows does not do this in here!
+   // In User32, these are called after: NotifyWinEvent EVENT_OBJECT_NAMECHANGE than
+   // RepaintButton, StaticRepaint, NtUserCallHwndLock HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK, etc.
+   /* Send shell notifications */
+   if (!Wnd->spwndOwner && !IntGetParent(Wnd))
+   {
+      co_IntShellHookNotify(HSHELL_REDRAW, (WPARAM) UserHMGetHandle(Wnd), FALSE); // FIXME Flashing?
+   }
+
+   Ret = TRUE;
+Exit:
+   if (UnicodeString.Buffer) RtlFreeUnicodeString(&UnicodeString);
+   return Ret;
 }
 
 /*

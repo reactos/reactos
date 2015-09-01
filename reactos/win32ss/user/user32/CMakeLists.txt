@@ -60,6 +60,7 @@ list(APPEND SOURCE
     windows/text.c
     windows/window.c
     windows/winpos.c
+    ${REACTOS_SOURCE_DIR}/win32ss/user/rtl/text.c
     ${CMAKE_CURRENT_BINARY_DIR}/user32_stubs.c
     include/user32.h)
 

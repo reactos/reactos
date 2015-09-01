@@ -393,6 +393,8 @@ co_IntCallWindowProc(WNDPROC Proc,
           case WM_WINDOWPOSCHANGING:
           case WM_SIZING:
           case WM_MOVING:
+          case WM_MEASUREITEM:
+          case WM_NEXTMENU:
             TRACE("Copy lParam, Message %u Size %d lParam %d!\n", Message, lParamBufferSize, lParam);
             if (InSendMessage)
                // Copy into kernel space.

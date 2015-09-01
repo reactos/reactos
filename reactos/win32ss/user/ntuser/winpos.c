@@ -2280,7 +2280,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
                     Cmd = SW_SHOWDEFAULT;
                }
                FirstTime = TRUE;
-               ERR("co_WPSW FT 1\n");
+               TRACE("co_WPSW FT 1\n");
             }
          }
       }
@@ -2292,7 +2292,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       {
          Cmd = pti->ppi->usi.wShowWindow;
          FirstTime = TRUE;
-         ERR("co_WPSW FT 2\n");
+         TRACE("co_WPSW FT 2\n");
       }
    }
 

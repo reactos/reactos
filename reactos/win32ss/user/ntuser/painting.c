@@ -1865,8 +1865,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-static const WCHAR ELLIPSISW[] = {'.','.','.', 0};
-
 BOOL
 UserDrawCaptionText(
    PWND pWnd,
@@ -1884,7 +1882,6 @@ UserDrawCaptionText(
    SIZE Size;
    BOOL Ret = TRUE;
    ULONG fit = 0, Length;
-   WCHAR szText[128];
    RECTL r = *lpRc;
 
    TRACE("UserDrawCaptionText: %wZ\n", Text);
@@ -1936,26 +1933,33 @@ UserDrawCaptionText(
    GreGetTextExtentExW(hDc, Text->Buffer, Text->Length/sizeof(WCHAR), r.right - r.left, &fit, 0, &Size, 0);
 
    Length = (Text->Length/sizeof(WCHAR) == fit ? fit : fit+1);
-   
-   RtlZeroMemory(&szText, sizeof(szText));
-   RtlCopyMemory(&szText, Text->Buffer, Text->Length);
 
-   if (Text->Length/sizeof(WCHAR) > Length && Length > 3)
+   if (Text->Length/sizeof(WCHAR) > Length)
    {
-      RtlCopyMemory(&szText[Length-3], ELLIPSISW, sizeof(ELLIPSISW));
       Ret = FALSE;
    }
 
-   GreExtTextOutW( hDc,
-                   lpRc->left,
-                   lpRc->top + (lpRc->bottom - lpRc->top) / 2 - Size.cy / 2, // DT_SINGLELINE && DT_VCENTER
-                   ETO_CLIPPED,
-                  (RECTL *)lpRc,
-                  (LPWSTR)&szText,
-                   Length,
-                   NULL,
-                   0 );
-
+   if (Ret)
+   {  // Faster while in setup.
+      GreExtTextOutW( hDc,
+                      lpRc->left,
+                      lpRc->top + (lpRc->bottom - lpRc->top) / 2 - Size.cy / 2, // DT_SINGLELINE && DT_VCENTER
+                      ETO_CLIPPED,
+                     (RECTL *)lpRc,
+                      Text->Buffer,
+                      Length,
+                      NULL,
+                      0 );
+   }
+   else
+   {
+      DrawTextW( hDc,
+                 Text->Buffer,
+                 Text->Length/sizeof(WCHAR),
+                (RECTL *)&r,
+                 DT_END_ELLIPSIS|DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX|DT_LEFT);
+   }
+ 
    IntGdiSetTextColor(hDc, OldTextColor);
 
    if (hOldFont)
@@ -2209,8 +2213,26 @@ NtUserDrawCaptionTemp(
    if (str != NULL)
       Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, &SafeStr, uFlags);
    else
+   {
+      if ( RECTL_bIsEmptyRect(&SafeRect) && hFont == 0 && hIcon == 0 )
+      {
+         Ret = TRUE;
+         if (uFlags & DC_DRAWCAPTIONMD)
+         {
+            ERR("NC Caption Mode\n");
+            UserDrawCaptionBar(pWnd, hDC, uFlags);
+            goto Exit;
+         }
+         else if (uFlags & DC_DRAWFRAMEMD)
+         {
+            ERR("NC Paint Mode\n");
+            NC_DoNCPaint(pWnd, hDC, uFlags); // Update Menus too!
+            goto Exit;
+         }
+      }
       Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, NULL, uFlags);
-
+   }
+Exit:
    UserLeave();
    return Ret;
 }
@@ -2222,7 +2244,7 @@ NtUserDrawCaption(HWND hWnd,
    LPCRECT lpRc,
    UINT uFlags)
 {
-	return NtUserDrawCaptionTemp(hWnd, hDC, lpRc, 0, 0, NULL, uFlags);
+   return NtUserDrawCaptionTemp(hWnd, hDC, lpRc, 0, 0, NULL, uFlags);
 }
 
 BOOL

@@ -184,7 +184,7 @@
 @ stdcall DrawIcon(long long long long)
 @ stdcall DrawIconEx(long long long long long long long long long)
 @ stdcall DrawMenuBar(long)
-@ stdcall DrawMenuBarTemp(long long long long long)
+@ stdcall DrawMenuBarTemp(long long long long long) NtUserDrawMenuBarTemp
 @ stdcall DrawStateA(long long ptr long long long long long long long)
 @ stdcall DrawStateW(long long ptr long long long long long long long)
 @ stdcall DrawTextA(long str long ptr long)
@@ -198,7 +198,7 @@
 @ stdcall EnableWindow(long long)
 @ stdcall EndDeferWindowPos(long)
 @ stdcall EndDialog(long long)
-@ stdcall EndMenu()
+@ stdcall EndMenu() NtUserEndMenu
 @ stdcall EndPaint(long ptr) NtUserEndPaint
 @ stdcall EndTask(ptr long long)
 @ stdcall EnterReaderModeHelper(ptr)
@@ -302,7 +302,7 @@
 @ stdcall GetLayeredWindowAttributes(long ptr ptr ptr) NtUserGetLayeredWindowAttributes
 @ stdcall GetListBoxInfo(long) NtUserGetListBoxInfo
 @ stdcall GetMenu(long)
-@ stdcall GetMenuBarInfo(long long long ptr) ; tempo haxzo NtUserGetMenuBarInfo
+@ stdcall GetMenuBarInfo(long long long ptr) NtUserGetMenuBarInfo
 @ stdcall GetMenuCheckMarkDimensions()
 @ stdcall GetMenuContextHelpId(long)
 @ stdcall GetMenuDefaultItem(long long long)
@@ -349,7 +349,7 @@
 @ stdcall GetSubMenu(long long)
 @ stdcall GetSysColor(long)
 @ stdcall GetSysColorBrush(long)
-@ stdcall GetSystemMenu(long long) ; Direct call NtUserGetSystemMenu
+@ stdcall GetSystemMenu(long long) ; NtUserGetSystemMenu
 @ stdcall GetSystemMetrics(long)
 @ stdcall GetTabbedTextExtentA(long str long long ptr)
 @ stdcall GetTabbedTextExtentW(long wstr long long ptr)
@@ -387,7 +387,7 @@
 @ stdcall GrayStringA(long long ptr long long long long long long)
 @ stdcall GrayStringW(long long ptr long long long long long long)
 @ stdcall HideCaret(long) NtUserHideCaret
-@ stdcall HiliteMenuItem(long long long long) ; Use both ReactOS and wine  NtUserHiliteMenuItem
+@ stdcall HiliteMenuItem(long long long long) NtUserHiliteMenuItem
 @ stdcall IMPGetIMEA(long ptr)
 @ stdcall IMPGetIMEW(long ptr)
 @ stdcall IMPQueryIMEA(ptr)
@@ -478,7 +478,7 @@
 @ stdcall MapVirtualKeyExW(long long long)
 @ stdcall MapVirtualKeyW(long long)
 @ stdcall MapWindowPoints(long long ptr long)
-@ stdcall MenuItemFromPoint(long long double) ; Direct call NtUserMenuItemFromPoint
+@ stdcall MenuItemFromPoint(long long double) NtUserMenuItemFromPoint
 @ stdcall MenuWindowProcA (long ptr long long long)
 @ stdcall MenuWindowProcW (long ptr long long long)
 @ stdcall MessageBeep(long)
@@ -635,7 +635,7 @@
 @ stdcall SetSysColors(long ptr ptr)
 @ stdcall SetSysColorsTemp(ptr ptr long)
 @ stdcall SetSystemCursor(long long)
-@ stdcall SetSystemMenu(long long) ; Direct call NtUserSetSystemMenu
+@ stdcall SetSystemMenu(long long) ; NtUserSetSystemMenu
 @ stdcall SetSystemTimer(long long long ptr) NtUserSetSystemTimer
 @ stdcall SetTaskmanWindow (long)
 @ stdcall SetThreadDesktop(long) NtUserSetThreadDesktop
@@ -684,7 +684,7 @@
 @ stdcall ToUnicodeEx(long long ptr ptr long long long)
 @ stdcall TrackMouseEvent(ptr) NtUserTrackMouseEvent
 @ stdcall TrackPopupMenu(long long long long long long ptr)
-@ stdcall TrackPopupMenuEx(long long long long long ptr) ; Direct call NtUserTrackPopupMenuEx
+@ stdcall TrackPopupMenuEx(long long long long long ptr) NtUserTrackPopupMenuEx
 @ stdcall TranslateAccelerator(long long ptr) TranslateAcceleratorA
 @ stdcall TranslateAcceleratorA(long long ptr)
 @ stdcall TranslateAcceleratorW(long long ptr)

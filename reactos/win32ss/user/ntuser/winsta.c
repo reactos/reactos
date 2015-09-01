@@ -297,6 +297,9 @@ co_IntInitializeDesktopGraphics(VOID)
    /* Setup the icons */
    co_IntSetWndIcons();
 
+   /* Setup Menu */
+   MenuInit();
+
    /* Show the desktop */
    pdesk = IntGetActiveDesktop();
    ASSERT(pdesk);

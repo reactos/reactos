@@ -66,6 +66,62 @@ typedef struct _SETMENUITEMRECT
   RECTL rcRect;
 } SETMENUITEMRECT, *PSETMENUITEMRECT;
 
+
+//
+// Legacy ReactOS Menu transfer structures.
+//
+typedef struct tagROSMENUINFO
+{
+    /* ----------- MENUINFO ----------- */
+    DWORD cbSize;
+    DWORD fMask;
+    DWORD dwStyle;
+    UINT cyMax;
+    HBRUSH  hbrBack;
+    DWORD dwContextHelpID;
+    ULONG_PTR dwMenuData;
+    /* ----------- Extra ----------- */
+    ULONG fFlags; /* Menu flags (MF_POPUP, MF_SYSMENU) */
+    UINT iItem; /* Currently focused item */
+    UINT cItems; /* Number of items in the menu */
+    WORD cxMenu; /* Width of the whole menu */
+    WORD cyMenu; /* Height of the whole menu */
+    ULONG cxTextAlign;
+    PWND spwndNotify; /* window receiving the messages for ownerdraw */
+    INT iTop;
+    INT iMaxTop;
+    DWORD dwArrowsOn:2;
+
+    HMENU Self; /* Handle of this menu */
+    HWND Wnd; /* Window containing the menu */
+    BOOL TimeToHide; /* Request hiding when receiving a second click in the top-level menu item */
+} ROSMENUINFO, *PROSMENUINFO;
+
+typedef struct tagROSMENUITEMINFO
+{
+    /* ----------- MENUITEMINFOW ----------- */
+    UINT cbSize;
+    UINT fMask;
+    UINT fType;
+    UINT fState;
+    UINT wID;
+    HMENU hSubMenu;
+    HBITMAP hbmpChecked;
+    HBITMAP hbmpUnchecked;
+    DWORD dwItemData;
+    LPWSTR dwTypeData;
+    UINT cch;
+    HBITMAP hbmpItem;
+    /* ----------- Extra ----------- */
+    RECT Rect; /* Item area (relative to menu window) */
+    UINT dxTab; /* X position of text after Tab */
+    LPWSTR lpstr; /* Copy of the text pointer in MenuItem->Text */
+    SIZE maxBmpSize; /* Maximum size of the bitmap items in MIIM_BITMAP state */
+} ROSMENUITEMINFO, *PROSMENUITEMINFO;
+//
+//
+//
+
 PMENU FASTCALL
 IntGetMenuObject(HMENU hMenu);
 
@@ -101,3 +157,14 @@ BOOL FASTCALL IntRemoveMenuItem(PMENU Menu, UINT uPosition, UINT uFlags, BOOL bR
 PITEM FASTCALL MENU_FindItem( PMENU *pmenu, UINT *nPos, UINT wFlags );
 BOOL FASTCALL IntMenuItemInfo(PMENU Menu, UINT Item, BOOL ByPosition, PROSMENUITEMINFO UnsafeItemInfo, BOOL SetOrGet, PUNICODE_STRING lpstr);
 BOOL FASTCALL IntSetMenu(PWND Wnd,HMENU Menu,BOOL *Changed);
+UINT MENU_DrawMenuBar( HDC hDC, LPRECT lprect, PWND pWnd, BOOL suppress_draw );
+BOOL MenuInit(VOID);
+VOID MENU_TrackKbdMenuBar(PWND pwnd, UINT wParam, WCHAR wChar);
+VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt);
+BOOL WINAPI PopupMenuWndProc(PWND Wnd,UINT Message,WPARAM wParam,LPARAM lParam,LRESULT *lResult);
+BOOL FASTCALL IntSetMenuItemInfo(PMENU, PITEM, PROSMENUITEMINFO, PUNICODE_STRING);
+PWND MENU_IsMenuActive(VOID);
+void MENU_EndMenu( PWND pwnd );
+void FASTCALL MENU_InitSysMenuPopup(PMENU menu, DWORD style, DWORD clsStyle, LONG HitTest );
+INT FASTCALL IntMenuItemFromPoint(PWND pWnd, HMENU hMenu, POINT ptScreen);
+BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y, PWND pWnd, LPTPMPARAMS lpTpm);

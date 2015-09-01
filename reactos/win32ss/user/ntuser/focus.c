@@ -66,7 +66,7 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
                     (LPARAM)hWnd);
 
          if (WndPrev)
-            WndPrev->state &= ~WNDS_ACTIVEFRAME;
+            WndPrev->state &= ~(WNDS_ACTIVEFRAME|WNDS_HASCAPTION);
       }
       else
       {
@@ -700,7 +700,7 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
    }
 
    // FIXME: Used in the menu loop!!!
-   //ThreadQueue->QF_flags |= QF_ACTIVATIONCHANGE;
+   ThreadQueue->QF_flags |= QF_ACTIVATIONCHANGE;
 
    //ERR("co_IntSetActiveWindow Exit\n");
    if (Wnd) Wnd->state &= ~WNDS_BEINGACTIVATED;
@@ -946,7 +946,11 @@ co_UserSetCapture(HWND hWnd)
    if (Window)
       IntNotifyWinEvent(EVENT_SYSTEM_CAPTURESTART, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
 
-   if (hWndPrev && hWndPrev != hWnd)
+   //
+   // Only send the message if we have a previous Window!
+   // Fix msg_menu tracking popup menu and win test_capture_4!!!!
+   //
+   if (hWndPrev)
    {
       if (ThreadQueue->MenuOwner && Window) ThreadQueue->QF_flags |= QF_CAPTURELOCKED;
 

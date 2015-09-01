@@ -43,6 +43,7 @@ extern "C" {
 #define WM_LBTRACKPOINT     0x00000131
 #define LB_CARETON          0x000001a3
 #define LB_CARETOFF         0x000001a4
+#define MN_SETHMENU         0x000001e0
 #define WM_DROPOBJECT       0x0000022A
 #define WM_QUERYDROPOBJECT  0x0000022B
 #define WM_BEGINDRAG        0x0000022C
@@ -59,6 +60,9 @@ extern "C" {
 #define DCX_KEEPCLIPRGN  0x00040000
 #define DCX_KEEPLAYOUT   0x40000000
 #define DCX_PROCESSOWNED 0x80000000
+
+/* Non SDK TPM types.*/
+#define TPM_SYSTEM_MENU  0x00000200
 
 /* NtUserCreateWindowEx dwFlags bits. */
 #define NUCWE_ANSI       0x00000001
@@ -132,7 +136,20 @@ extern "C" {
 //
 // Undocumented flags for DrawCaptionTemp
 //
+#define DC_NOVISIBLE 0x0800
 #define DC_NOSENDMSG 0x2000
+#define DC_FRAME     0x8000  // Missing from WinUser.H!
+
+#define DC_DRAWCAPTIONMD  0x10000000
+#define DC_REDRAWHUNGWND  0x20000000
+#define DC_DRAWFRAMEMD    0x80000000
+
+//
+// Undocumented states for DrawFrameControl
+//
+#define DFCS_MENUARROWUP   0x0008
+#define DFCS_MENUARROWDOWN 0x0010
+
 
 #define STARTF_SCRNSAVER 0x80000000
 

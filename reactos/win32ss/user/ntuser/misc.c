@@ -397,6 +397,28 @@ NtUserGetGUIThreadInfo(
    CaretInfo = MsgQueue->CaretInfo;
 
    SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
+/*
+   if (W32Thread->pMenuState->pGlobalPopupMenu)
+   {
+       SafeGui.flags |= GUI_INMENUMODE;
+
+       if (W32Thread->pMenuState->pGlobalPopupMenu->spwndNotify)
+          SafeGui.hwndMenuOwner = UserHMGetHandle(W32Thread->pMenuState->pGlobalPopupMenu->spwndNotify);
+
+       if (W32Thread->pMenuState->pGlobalPopupMenu->fHasMenuBar)
+       {
+          if (W32Thread->pMenuState->pGlobalPopupMenu->fIsSysMenu)
+          {
+             SafeGui.flags |= GUI_SYSTEMMENUMODE;
+          }
+       }
+       else
+       {
+          SafeGui.flags |= GUI_POPUPMENUMODE;
+       }
+   }
+ */
+   SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
 
    if (MsgQueue->MenuOwner)
       SafeGui.flags |= GUI_INMENUMODE | MsgQueue->MenuState;
@@ -409,7 +431,6 @@ NtUserGetGUIThreadInfo(
    SafeGui.hwndActive = MsgQueue->spwndActive ? UserHMGetHandle(MsgQueue->spwndActive) : 0;
    SafeGui.hwndFocus = MsgQueue->spwndFocus ? UserHMGetHandle(MsgQueue->spwndFocus) : 0;
    SafeGui.hwndCapture = MsgQueue->spwndCapture ? UserHMGetHandle(MsgQueue->spwndCapture) : 0;
-   SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
    SafeGui.hwndMoveSize = MsgQueue->MoveSize;
    SafeGui.hwndCaret = CaretInfo->hWnd;
 

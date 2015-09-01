@@ -34,7 +34,7 @@ LRESULT WINAPI RealUserDrawCaption(HWND hWnd, HDC hDC, LPCRECT lpRc, UINT uFlags
 
 DWORD gcLoadUserApiHook = 0;
 LONG gcCallUserApiHook = 0;
-DWORD gfUserApiHook;
+DWORD gfUserApiHook = 0;
 HINSTANCE ghmodUserApiHook = NULL;
 USERAPIHOOKPROC gpfnInitUserApi;
 RTL_CRITICAL_SECTION gcsUserApiHook;

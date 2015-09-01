@@ -922,23 +922,6 @@ NtUserCtxDisplayIOCtl(
 }
 
 /*
- * @unimplemented
- */
-DWORD
-APIENTRY
-NtUserDrawMenuBarTemp(
-   HWND hWnd,
-   HDC hDC,
-   PRECT hRect,
-   HMENU hMenu,
-   HFONT hFont)
-{
-   /* We'll use this function just for caching the menu bar */
-   STUB
-   return 0;
-}
-
-/*
  * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
  */
 /*
@@ -1011,35 +994,6 @@ NtUserUpdateLayeredWindow(
    STUB
 
    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserEndMenu(VOID)
-{
-   STUB
-
-   return 0;
-}
-
-/*
- * @implemented
- */
-/* NOTE: unused function */
-BOOL APIENTRY
-NtUserTrackPopupMenuEx(
-   HMENU hMenu,
-   UINT fuFlags,
-   int x,
-   int y,
-   HWND hWnd,
-   LPTPMPARAMS lptpm)
-{
-   STUB
-
-   return FALSE;
 }
 
 DWORD APIENTRY

@@ -136,6 +136,10 @@ static MSGMEMORY g_MsgMemory[] =
     { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
     { WM_SIZING, sizeof(RECT), MMS_FLAG_READWRITE },
     { WM_MOVING, sizeof(RECT), MMS_FLAG_READWRITE },
+    { WM_MEASUREITEM, sizeof(MEASUREITEMSTRUCT), MMS_FLAG_READWRITE },
+    { WM_DRAWITEM, sizeof(DRAWITEMSTRUCT), MMS_FLAG_READWRITE },
+    { WM_HELP, sizeof(HELPINFO), MMS_FLAG_READWRITE },
+    { WM_NEXTMENU, sizeof(MDINEXTMENU), MMS_FLAG_READWRITE },
 };
 
 static PMSGMEMORY FASTCALL
@@ -745,7 +749,13 @@ IntDispatchMessage(PMSG pMsg)
                                                  pMsg->message,
                                                  pMsg->wParam,
                                                  pMsg->lParam,
-                                                 &retval);
+                                                &retval);
+          case FNID_MENU:
+            DoCallBack = !PopupMenuWndProc( Window,
+                                            pMsg->message,
+                                            pMsg->wParam,
+                                            pMsg->lParam,
+                                           &retval);
             break;
        }
     }
@@ -949,7 +959,7 @@ co_IntPeekMessage( PMSG Msg,
     return TRUE;
 }
 
-static BOOL FASTCALL
+BOOL FASTCALL
 co_IntWaitMessage( PWND Window,
                    UINT MsgFilterMin,
                    UINT MsgFilterMax )
@@ -1353,6 +1363,9 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
               case FNID_MESSAGEWND:
                 DoCallBack = !UserMessageWindowProc(Window, Msg, wParam, lParam,(LRESULT*)&Result);
                 break;
+              case FNID_MENU:
+                DoCallBack = !PopupMenuWndProc( Window, Msg, wParam, lParam,(LRESULT*)&Result);
+                break;
            }
            if (!DoCallBack)
            {
@@ -1643,6 +1656,9 @@ co_IntSendMessageWithCallBack( HWND hWnd,
                 break;
               case FNID_MESSAGEWND:
                 DoCallBack = !UserMessageWindowProc(Window, Msg, wParam, lParam,(LRESULT*)&Result);
+                break;
+              case FNID_MENU:
+                DoCallBack = !PopupMenuWndProc( Window, Msg, wParam, lParam,(LRESULT*)&Result);
                 break;
            }
         }
@@ -2333,13 +2349,21 @@ NtUserMessageCall( HWND hWnd,
            }
            break;
         }
-
+   case FNID_MENU:
+       {
+          Window = UserGetWindowObject(hWnd);
+          if (Window)
+          {
+              Ret = PopupMenuWndProc( Window, Msg, wParam, lParam, &lResult);
+          }
+          break;
+       }
    case FNID_MESSAGEWND:
        {
            Window = UserGetWindowObject(hWnd);
            if (Window)
            {
-                Ret = !UserMessageWindowProc(Window, Msg, wParam, lParam,&lResult);
+                Ret = !UserMessageWindowProc(Window, Msg, wParam, lParam, &lResult);
            }
            break;
        }
@@ -2832,6 +2856,7 @@ NtUserMessageCall( HWND hWnd,
     case FNID_CALLWNDPROCRET:
     case FNID_SCROLLBAR:
     case FNID_DESKTOP:
+    case FNID_MENU:
         if (ResultInfo)
         {
             _SEH2_TRY

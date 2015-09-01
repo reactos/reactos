@@ -979,6 +979,14 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     TCHAR Symbol;
     switch(uFlags & 0xff)
     {
+        case DFCS_MENUARROWUP:
+            Symbol = '5';
+            break;
+
+        case DFCS_MENUARROWDOWN:
+            Symbol = '6';
+            break;
+
         case DFCS_MENUARROW:
             Symbol = '8';
             break;

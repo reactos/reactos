@@ -55,6 +55,10 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                                         PWND OwnerWindow,
                                         PVOID acbiBuffer,
                                         PDESKTOP pdeskCreated);
+PWND FASTCALL co_UserCreateWindowEx(CREATESTRUCTW* Cs,
+                                    PUNICODE_STRING ClassName,
+                                    PLARGE_STRING WindowName,
+                                    PVOID acbiBuffer);
 BOOL FASTCALL IntEnableWindow(HWND,BOOL);
 BOOL FASTCALL IntIsWindowVisible(PWND);
 DWORD FASTCALL GetNCHitEx(PWND,POINT);

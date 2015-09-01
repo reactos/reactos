@@ -2556,6 +2556,15 @@ InvalidParameter:
                                       Offset,
                                       dwNewLong,
                                       Ansi);
+            switch(Offset)
+            {
+               case GCLP_HICONSM:
+               case GCLP_HICON:
+               {
+                  if (Ret && Ret != dwNewLong)
+                     UserPaintCaption(Window, DC_ICON);
+               }
+            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {

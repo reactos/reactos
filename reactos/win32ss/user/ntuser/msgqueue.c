@@ -2005,8 +2005,28 @@ NTSTATUS FASTCALL
 co_MsqWaitForNewMessages(PTHREADINFO pti, PWND WndFilter,
                          UINT MsgFilterMin, UINT MsgFilterMax)
 {
-   NTSTATUS ret;
+   NTSTATUS ret = STATUS_SUCCESS;
+
+   // Post mouse moves before waiting for messages.
+   if (pti->MessageQueue->QF_flags & QF_MOUSEMOVED)
+   {
+      IntCoalesceMouseMove(pti);
+   }
+
+   if ( pti->nCntsQBits[QSRosMouseButton] != 0 ||
+        pti->nCntsQBits[QSRosMouseMove]   != 0 ||
+        pti->nCntsQBits[QSRosKey]         != 0 ||
+        pti->nCntsQBits[QSRosSendMessage] != 0 ||
+        pti->nCntsQBits[QSRosPostMessage] != 0 )
+   {
+      TRACE("No time to wait!\n");
+      return ret;
+   }
+
    UserLeaveCo();
+
+   ZwYieldExecution(); // Let someone else run!
+
    ret = KeWaitForSingleObject( pti->pEventQueueServer,
                                 UserRequest,
                                 UserMode,

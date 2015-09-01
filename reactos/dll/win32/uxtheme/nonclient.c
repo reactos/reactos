@@ -1070,7 +1070,13 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
     {
     case WM_NCPAINT:
         return ThemeHandleNCPaint(hWnd, (HRGN)wParam);
+    //
+    // WM_NCUAHDRAWCAPTION : wParam are DC_* flags.
+    //
     case WM_NCUAHDRAWCAPTION:
+    //
+    // WM_NCUAHDRAWFRAME : wParam is HDC, lParam are DC_ACTIVE and or DC_REDRAWHUNGWND.
+    //
     case WM_NCUAHDRAWFRAME:
     case WM_NCACTIVATE:
         ThemeHandleNCPaint(hWnd, (HRGN)1);

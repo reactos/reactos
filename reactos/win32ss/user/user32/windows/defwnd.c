@@ -16,20 +16,9 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
-LRESULT DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect);
-LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
-LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
-LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
-LRESULT NC_HandleNCRButtonDown( HWND hwnd, WPARAM wParam, LPARAM lParam );
-void FASTCALL MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest );
-void MENU_EndMenu( HWND );
 
 /* GLOBALS *******************************************************************/
-
-static short iF10Key = 0;
-static short iMenuSysKey = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -219,6 +208,21 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   if (!IsWindowEnabled( hWnd )) return 0;
 
+  switch (wParam & 0xfff0)
+    {
+      case SC_MOVE:
+      case SC_SIZE:
+//      case SC_DEFAULT:
+      case SC_MOUSEMENU:
+      case SC_KEYMENU:
+      case SC_SCREENSAVE:
+        NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+        return 0;
+
+      default:
+        break;
+    }
+
   if (ISITHOOKED(WH_CBT))
   {
      NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
@@ -227,10 +231,6 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   switch (wParam & 0xfff0)
     {
-      case SC_MOVE:
-      case SC_SIZE:
-	NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
-	break;
 
     case SC_MINIMIZE:
         if (hWnd == GetActiveWindow())
@@ -253,17 +253,6 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_CLOSE:
         return SendMessageW(hWnd, WM_CLOSE, 0, 0);
 
-//      case SC_DEFAULT:
-      case SC_MOUSEMENU:
-        {
-          Pt.x = (short)LOWORD(lParam);
-          Pt.y = (short)HIWORD(lParam);
-          MenuTrackMouseMenuBar(hWnd, wParam & 0x000f, Pt);
-        }
-	break;
-      case SC_KEYMENU:
-        MenuTrackKbdMenuBar(hWnd, wParam, (WCHAR)lParam);
-	break;
       case SC_VSCROLL:
       case SC_HSCROLL:
         {
@@ -277,9 +266,6 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         WinExec( "taskman.exe", SW_SHOWNORMAL );
         break;
 
-      case SC_SCREENSAVE:
-        NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
-        break;
 
       case SC_NEXTWINDOW:
       case SC_PREVWINDOW:
@@ -359,38 +345,6 @@ DefWndControlColor(HDC hDC, UINT ctlType)
   return GetSysColorBrush(COLOR_WINDOW);
 }
 
-static void DefWndPrint( HWND hwnd, HDC hdc, ULONG uFlags)
-{
-  /*
-   * Visibility flag.
-   */
-  if ( (uFlags & PRF_CHECKVISIBLE) &&
-       !IsWindowVisible(hwnd) )
-      return;
-
-  /*
-   * Unimplemented flags.
-   */
-  if ( (uFlags & PRF_CHILDREN) ||
-       (uFlags & PRF_OWNED)    ||
-       (uFlags & PRF_NONCLIENT) )
-  {
-    FIXME("WM_PRINT message with unsupported flags\n");
-  }
-
-  /*
-   * Background
-   */
-  if ( uFlags & PRF_ERASEBKGND)
-    SendMessageW(hwnd, WM_ERASEBKGND, (WPARAM)hdc, 0);
-
-  /*
-   * Client area
-   */
-  if ( uFlags & PRF_CLIENT)
-    SendMessageW(hwnd, WM_PRINTCLIENT, (WPARAM)hdc, uFlags);
-}
-
 static BOOL CALLBACK
 UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
 {
@@ -398,21 +352,13 @@ UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-/*
- RealUserDrawCaption: This function is passed through RegisterUserApiHook to uxtheme
-                      to call it when the classic caption is needed to be drawn.
- */
-LRESULT WINAPI
-RealUserDrawCaption(HWND hWnd, HDC hDC, LPCRECT lpRc, UINT uFlags)
-{
-    return DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
-}
-
 static void
-UserPaintCaption(HWND hwnd)
+UserPaintCaption(PWND pwnd, INT Flags)
 {
-    /* FIXME: this is not 100% correct */
-
+  if ( pwnd->style & WS_VISIBLE && (pwnd->style & WS_CAPTION) == WS_CAPTION )
+  {
+     if (pwnd->state & WNDS_HASCAPTION && NtUserQueryWindow(UserHMGetHandle(pwnd), QUERY_WINDOW_FOREGROUND))
+        Flags |= DC_ACTIVE;
     /* 
      * When themes are not enabled we can go on and paint the non client area.
      * However if we do that with themes enabled we will draw a classic frame.
@@ -426,51 +372,16 @@ UserPaintCaption(HWND hwnd)
          * RealUserDrawCaption in order to draw the classic caption when themes
          * are disabled but the themes service is enabled
          */
-        SendMessage(hwnd, WM_NCUAHDRAWCAPTION,0,0);
+        SendMessageW(UserHMGetHandle(pwnd), WM_NCUAHDRAWCAPTION, Flags, 0);
     }
     else
     {
-        DefWndNCPaint(hwnd, HRGN_WINDOW, -1);
+        RECT rc = {0,0,0,0};
+        HDC hDC = GetDCEx(UserHMGetHandle(pwnd), NULL, DCX_WINDOW|DCX_USESTYLE);
+        NtUserDrawCaption(UserHMGetHandle(pwnd), hDC, &rc, DC_DRAWCAPTIONMD|Flags);
+        ReleaseDC(UserHMGetHandle(pwnd), hDC);
     }
-}
-
-// WM_SETICON
-LRESULT FASTCALL
-DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
-{
-    HICON hIcon, hIconSmall, hIconOld;
-
-    if ( wParam > ICON_SMALL2 )
-    {  
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-    hIconSmall = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp);
-    hIcon = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconProp);
-
-    hIconOld = wParam == ICON_BIG ? hIcon : hIconSmall;
-
-    switch(wParam)
-    {
-        case ICON_BIG:
-            hIcon = (HICON)lParam;
-            break;
-        case ICON_SMALL:
-            hIconSmall = (HICON)lParam;
-            break;
-        case ICON_SMALL2:
-            ERR("FIXME: Set ICON_SMALL2 support!\n");
-        default:
-            break;
-    }
-
-    NtUserSetProp(UserHMGetHandle(pWnd), gpsi->atomIconProp, hIcon);
-    NtUserSetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp, hIconSmall);
-
-    if ((pWnd->style & WS_CAPTION ) == WS_CAPTION)
-       UserPaintCaption(UserHMGetHandle(pWnd));  /* Repaint caption */
-
-    return (LRESULT)hIconOld;
+  }
 }
 
 LRESULT FASTCALL
@@ -497,41 +408,6 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     return (LRESULT)hIconRet;
 }
 
-VOID FASTCALL
-DefWndScreenshot(HWND hWnd)
-{
-    RECT rect;
-    HDC hdc;
-    INT w;
-    INT h;
-    HBITMAP hbitmap;
-    HDC hdc2;
-
-    OpenClipboard(hWnd);
-    EmptyClipboard();
-
-    hdc = GetWindowDC(hWnd);
-    GetWindowRect(hWnd, &rect);
-    w = rect.right - rect.left;
-    h = rect.bottom - rect.top;
-
-    hbitmap = CreateCompatibleBitmap(hdc, w, h);
-    hdc2 = CreateCompatibleDC(hdc);
-    SelectObject(hdc2, hbitmap);
-
-    BitBlt(hdc2, 0, 0, w, h,
-           hdc, 0, 0,
-           SRCCOPY);
-
-    SetClipboardData(CF_BITMAP, hbitmap);
-
-    ReleaseDC(hWnd, hdc);
-    ReleaseDC(hWnd, hdc2);
-
-    CloseClipboard();
-}
-
-
 
 LRESULT WINAPI
 User32DefWindowProc(HWND hWnd,
@@ -549,31 +425,16 @@ User32DefWindowProc(HWND hWnd,
 
     switch (Msg)
     {
-	case WM_NCPAINT:
-	{
-            return DefWndNCPaint(hWnd, (HRGN)wParam, -1);
-        }
-
-        case WM_NCCALCSIZE:
-        {
-            return DefWndNCCalcSize(hWnd, (BOOL)wParam, (RECT*)lParam);
-        }
-
         case WM_POPUPSYSTEMMENU:
         {
             /* This is an undocumented message used by the windows taskbar to
                display the system menu of windows that belong to other processes. */
             HMENU menu = GetSystemMenu(hWnd, FALSE);
-
+            ERR("WM_POPUPSYSTEMMENU\n");
             if (menu)
-                TrackPopupMenu(menu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON,
+                TrackPopupMenu(menu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_SYSTEM_MENU,
                                LOWORD(lParam), HIWORD(lParam), 0, hWnd, NULL);
             return 0;
-        }
-
-        case WM_NCACTIVATE:
-        {
-            return DefWndNCActivate(hWnd, wParam, lParam);
         }
 
         case WM_NCHITTEST:
@@ -584,32 +445,9 @@ User32DefWindowProc(HWND hWnd,
             return (DefWndNCHitTest(hWnd, Point));
         }
 
-        case WM_LBUTTONDOWN:
-        case WM_RBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-            iF10Key = iMenuSysKey = 0;
-            break;
-
-        case WM_NCLBUTTONDOWN:
-        {
-            return (DefWndNCLButtonDown(hWnd, wParam, lParam));
-        }
-
-        case WM_LBUTTONDBLCLK:
-            return (DefWndNCLButtonDblClk(hWnd, HTCLIENT, lParam));
-
-        case WM_NCLBUTTONDBLCLK:
-        {
-            return (DefWndNCLButtonDblClk(hWnd, wParam, lParam));
-        }
-
-        case WM_NCRBUTTONDOWN:
-            return NC_HandleNCRButtonDown( hWnd, wParam, lParam );
-
         case WM_RBUTTONUP:
         {
             POINT Pt;
-
             Pt.x = GET_X_LPARAM(lParam);
             Pt.y = GET_Y_LPARAM(lParam);
             ClientToScreen(hWnd, &Pt);
@@ -632,6 +470,7 @@ User32DefWindowProc(HWND hWnd,
            * "If it is appropriate to do so, the system sends the WM_SYSCOMMAND
            * message to the window". When is it appropriate?
            */
+           ERR("WM_NCRBUTTONUP\n");
             break;
 
         case WM_CONTEXTMENU:
@@ -649,94 +488,9 @@ User32DefWindowProc(HWND hWnd,
             }
             else
             {
-                POINT Pt;
-                LONG_PTR Style;
-                LONG HitCode;
-
-                Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
-
-                Pt.x = GET_X_LPARAM(lParam);
-                Pt.y = GET_Y_LPARAM(lParam);
-                if (Style & WS_CHILD)
-                {
-                    ScreenToClient(GetParent(hWnd), &Pt);
-                }
-
-                HitCode = DefWndNCHitTest(hWnd, Pt);
-
-                if (HitCode == HTCAPTION || HitCode == HTSYSMENU)
-                {
-                    HMENU SystemMenu;
-                    UINT Flags;
-
-                    if((SystemMenu = GetSystemMenu(hWnd, FALSE)))
-                    {
-                      MenuInitSysMenuPopup(SystemMenu, GetWindowLongPtrW(hWnd, GWL_STYLE),
-                                           GetClassLongPtrW(hWnd, GCL_STYLE), HitCode);
-
-                      if(HitCode == HTCAPTION)
-                        Flags = TPM_LEFTBUTTON | TPM_RIGHTBUTTON;
-                      else
-                        Flags = TPM_LEFTBUTTON;
-
-                      TrackPopupMenu(SystemMenu, Flags,
-                                     Pt.x, Pt.y, 0, hWnd, NULL);
-                    }
-                }
-	    }
+               goto GoSS;            
+            }
             break;
-        }
-
-        case WM_PRINT:
-        {
-            DefWndPrint(hWnd, (HDC)wParam, lParam);
-            return (0);
-        }
-
-        case WM_SYSCOLORCHANGE:
-        {
-            /* force to redraw non-client area */
-            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
-            /* Use InvalidateRect to redraw client area, enable
-             * erase to redraw all subcontrols otherwise send the
-             * WM_SYSCOLORCHANGE to child windows/controls is required
-             */
-            InvalidateRect(hWnd,NULL,TRUE);
-            return (0);
-        }
-
-        case WM_PAINTICON:
-        case WM_PAINT:
-        {
-            PAINTSTRUCT Ps;
-            HDC hDC;
-
-            /* If already in Paint and Client area is not empty just return. */
-            if (pWnd->state2 & WNDS2_STARTPAINT && !IsRectEmpty(&pWnd->rcClient))
-            {
-               ERR("In Paint and Client area is not empty!\n");
-               return 0;
-            }
-
-            hDC = BeginPaint(hWnd, &Ps);
-            if (hDC)
-            {
-                HICON hIcon;
-
-                if (IsIconic(hWnd) && ((hIcon = (HICON)GetClassLongPtrW( hWnd, GCLP_HICON))))
-                {
-                    RECT ClientRect;
-                    INT x, y;
-                    GetClientRect(hWnd, &ClientRect);
-                    x = (ClientRect.right - ClientRect.left -
-                         GetSystemMetrics(SM_CXICON)) / 2;
-                    y = (ClientRect.bottom - ClientRect.top -
-                         GetSystemMetrics(SM_CYICON)) / 2;
-                    DrawIcon(hDC, x, y, hIcon);
-                }
-                EndPaint(hWnd, &Ps);
-            }
-            return (0);
         }
 
         case WM_CLOSE:
@@ -806,109 +560,6 @@ User32DefWindowProc(HWND hWnd,
         case WM_SYSCOMMAND:
             return (DefWndHandleSysCommand(hWnd, wParam, lParam));
 
-        case WM_KEYDOWN:
-            if(wParam == VK_F10) iF10Key = VK_F10;
-            break;
-
-        case WM_SYSKEYDOWN:
-        {
-            if (HIWORD(lParam) & KF_ALTDOWN)
-            {   /* Previous state, if the key was down before this message,
-                   this is a cheap way to ignore autorepeat keys. */
-                if ( !(HIWORD(lParam) & KF_REPEAT) )
-                {
-                   if ( ( wParam == VK_MENU  ||
-                          wParam == VK_LMENU ||
-                          wParam == VK_RMENU ) && !iMenuSysKey )
-                       iMenuSysKey = 1;
-                   else
-                       iMenuSysKey = 0;
-                }
-
-                iF10Key = 0;
-
-                if (wParam == VK_F4) /* Try to close the window */
-                {
-                   HWND top = GetAncestor(hWnd, GA_ROOT);
-                   if (!(GetClassLongPtrW(top, GCL_STYLE) & CS_NOCLOSE))
-                      PostMessageW(top, WM_SYSCOMMAND, SC_CLOSE, 0);
-                }
-                else if (wParam == VK_SNAPSHOT) // Alt-VK_SNAPSHOT?
-                {
-                   HWND hwnd = hWnd;
-                   while (GetParent(hwnd) != NULL)
-                   {
-                       hwnd = GetParent(hwnd);
-                   }
-                   DefWndScreenshot(hwnd);
-                }
-                else if ( wParam == VK_ESCAPE || wParam == VK_TAB ) // Alt-Tab/ESC Alt-Shift-Tab/ESC
-                {
-                   WPARAM wParamTmp;
-                   HWND Active = GetActiveWindow(); // Noticed MDI problem.
-                   if (!Active)
-                   {
-                      FIXME("WM_SYSKEYDOWN VK_ESCAPE no active\n");
-                      break;
-                   }
-                   wParamTmp = GetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
-                   SendMessageW( Active, WM_SYSCOMMAND, wParamTmp, wParam );
-                }
-            }
-            else if( wParam == VK_F10 )
-            {
-                if (GetKeyState(VK_SHIFT) & 0x8000)
-                    SendMessageW( hWnd, WM_CONTEXTMENU, (WPARAM)hWnd, MAKELPARAM(-1, -1) );
-                iF10Key = 1;
-            }
-            break;
-        }
-
-        case WM_KEYUP:
-        case WM_SYSKEYUP:
-        {
-           /* Press and release F10 or ALT */
-            if (((wParam == VK_MENU || wParam == VK_LMENU || wParam == VK_RMENU)
-                 && iMenuSysKey) || ((wParam == VK_F10) && iF10Key))
-                SendMessageW( GetAncestor( hWnd, GA_ROOT ), WM_SYSCOMMAND, SC_KEYMENU, 0L );
-            iMenuSysKey = iF10Key = 0;
-            break;
-        }
-
-        case WM_SYSCHAR:
-        {
-            iMenuSysKey = 0;
-            if (wParam == VK_RETURN && IsIconic(hWnd))
-            {
-                PostMessageW( hWnd, WM_SYSCOMMAND, SC_RESTORE, 0L );
-                break;
-            }
-            if ((HIWORD(lParam) & KF_ALTDOWN) && wParam)
-            {
-                if (wParam == VK_TAB || wParam == VK_ESCAPE) break;
-                if (wParam == VK_SPACE && (GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD))
-                    SendMessageW( GetParent(hWnd), Msg, wParam, lParam );
-                else
-                    SendMessageW( hWnd, WM_SYSCOMMAND, SC_KEYMENU, wParam );
-            }
-            else /* check for Ctrl-Esc */
-                if (wParam != VK_ESCAPE) MessageBeep(0);
-            break;
-        }
-
-        case WM_CANCELMODE:
-        {
-            iMenuSysKey = 0;
-            /* FIXME: Check for a desktop. */
-            //if (!(GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD)) EndMenu();
-            MENU_EndMenu( hWnd );
-            if (GetCapture() == hWnd)
-            {
-                ReleaseCapture();
-            }
-            break;
-        }
-
         case WM_VKEYTOITEM:
         case WM_CHARTOITEM:
             return (-1);
@@ -957,11 +608,6 @@ User32DefWindowProc(HWND hWnd,
             if (lParam == NF_QUERY)
                 return IsWindowUnicode(hWnd) ? NFR_UNICODE : NFR_ANSI;
             break;
-        }
-
-        case WM_SETICON:
-        {
-           return DefWndSetIcon(pWnd, wParam, lParam);
         }
 
         case WM_GETICON:
@@ -1201,6 +847,30 @@ User32DefWindowProc(HWND hWnd,
 /* Move to Win32k !*/
         case WM_SHOWWINDOW:
             if (!lParam) break; // Call when it is necessary.
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_NCLBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
+        case WM_NCLBUTTONDBLCLK:
+        case WM_NCRBUTTONDOWN:
+        case WM_KEYF1:
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_SYSCHAR:
+        case WM_CANCELMODE:
+        case WM_PAINTICON:
+        case WM_PAINT:
+        case WM_PRINT:
+        case WM_SETICON:
+        case WM_SYSCOLORCHANGE:
+        case WM_NCUAHDRAWCAPTION:
+        case WM_NCUAHDRAWFRAME:
+        case WM_NCPAINT:
+        case WM_NCACTIVATE:
+        case WM_NCCALCSIZE:
         case WM_SYNCPAINT:
         case WM_SETREDRAW:
         case WM_CLIENTSHUTDOWN:
@@ -1210,6 +880,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_WINDOWPOSCHANGED:
         case WM_APPCOMMAND:
         case WM_SETCURSOR:
+GoSS:
         {
             LRESULT lResult;
             NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
@@ -1399,7 +1070,7 @@ RealDefWindowProcA(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                UserPaintCaption(hWnd);
+                UserPaintCaption(Wnd, DC_TEXT);
                 IntNotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
             }
             Result = 1;
@@ -1564,7 +1235,7 @@ RealDefWindowProcW(HWND hWnd,
             DefSetText(hWnd, (PCWSTR)lParam, FALSE);
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
-                UserPaintCaption(hWnd);
+                UserPaintCaption(Wnd, DC_TEXT);
             Result = 1;
             break;
         }

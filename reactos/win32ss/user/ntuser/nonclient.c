@@ -31,6 +31,12 @@ DBG_DEFAULT_CHANNEL(UserDefwnd);
 #define ON_BOTTOM_BORDER(hit) \
  (((hit) == HTBOTTOM) || ((hit) == HTBOTTOMLEFT) || ((hit) == HTBOTTOMRIGHT))
 
+#define HASSIZEGRIP(Style, ExStyle, ParentStyle, WindowRect, ParentClientRect) \
+            ((!(Style & WS_CHILD) && (Style & WS_THICKFRAME) && !(Style & WS_MAXIMIZE))  || \
+             ((Style & WS_CHILD) && (ParentStyle & WS_THICKFRAME) && !(ParentStyle & WS_MAXIMIZE) && \
+             (WindowRect.right - WindowRect.left == ParentClientRect.right) && \
+             (WindowRect.bottom - WindowRect.top == ParentClientRect.bottom)))
+
 
 VOID FASTCALL
 UserDrawWindowFrame(HDC hdc,
@@ -106,6 +112,32 @@ NC_GetInsideRect(PWND Wnd, RECT *rect)
           RECTL_vInflateRect (rect, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
        if (ExStyle & WS_EX_STATICEDGE)
           RECTL_vInflateRect (rect, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+    }
+}
+
+/***********************************************************************
+ *           NC_GetSysPopupPos
+ */
+void FASTCALL
+NC_GetSysPopupPos(PWND Wnd, RECT *Rect)
+{
+  RECT WindowRect;
+
+  if ((Wnd->style & WS_MINIMIZE) != 0)
+  {
+      IntGetWindowRect(Wnd, Rect);
+  }
+  else
+    {
+      NC_GetInsideRect(Wnd, Rect);
+      IntGetWindowRect(Wnd, &WindowRect);
+      RECTL_vOffsetRect(Rect, WindowRect.left, WindowRect.top);
+      if (Wnd->style & WS_CHILD)
+      {
+          IntClientToScreen(IntGetParent(Wnd), (POINT *) Rect);
+      }
+      Rect->right = Rect->left + UserGetSystemMetrics(SM_CYCAPTION) - 1;
+      Rect->bottom = Rect->top + UserGetSystemMetrics(SM_CYCAPTION) - 1;
     }
 }
 
@@ -597,6 +629,1073 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
    }
    return pIcon;
 }
+
+BOOL
+UserDrawSysMenuButton(PWND pWnd, HDC hDC, LPRECT Rect, BOOL Down)
+{
+   PCURICON_OBJECT WindowIcon;
+   BOOL Ret = FALSE;
+
+   if ((WindowIcon = NC_IconForWindow(pWnd)))
+   {
+      UserReferenceObject(WindowIcon);
+
+      Ret = UserDrawIconEx( hDC,
+                            Rect->left + 2,
+                            Rect->top + 2,
+                            WindowIcon,
+                            UserGetSystemMetrics(SM_CXSMICON),
+                            UserGetSystemMetrics(SM_CYSMICON),
+                            0, NULL, DI_NORMAL);
+
+      UserDereferenceObject(WindowIcon);
+   }
+   return Ret;
+}
+
+void
+UserGetInsideRectNC(PWND Wnd, RECT *rect)
+{
+    ULONG Style;
+    ULONG ExStyle;
+
+    Style = Wnd->style;
+    ExStyle = Wnd->ExStyle;
+
+    rect->top    = rect->left = 0;
+    rect->right  = Wnd->rcWindow.right - Wnd->rcWindow.left;
+    rect->bottom = Wnd->rcWindow.bottom - Wnd->rcWindow.top;
+
+    if (Style & WS_ICONIC)
+    {
+        return;
+    }
+
+    /* Remove frame from rectangle */
+    if (UserHasThickFrameStyle(Style, ExStyle ))
+    {
+        RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME));
+    }
+    else
+    {
+        if (UserHasDlgFrameStyle(Style, ExStyle ))
+        {
+            RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
+            /* FIXME: this isn't in NC_AdjustRect? why not? */
+            if (ExStyle & WS_EX_DLGMODALFRAME)
+	            RECTL_vInflateRect( rect, -1, 0 );
+        }
+        else
+        {
+            if (UserHasThinFrameStyle(Style, ExStyle))
+            {
+                RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+            }
+        }
+    }
+    /* We have additional border information if the window
+     * is a child (but not an MDI child) */
+    if ((Style & WS_CHILD) && !(ExStyle & WS_EX_MDICHILD))
+    {
+       if (ExStyle & WS_EX_CLIENTEDGE)
+          RECTL_vInflateRect (rect, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
+       if (ExStyle & WS_EX_STATICEDGE)
+          RECTL_vInflateRect (rect, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+    }
+}
+
+BOOL
+IntIsScrollBarVisible(PWND pWnd, INT hBar)
+{
+  SCROLLBARINFO sbi;
+  sbi.cbSize = sizeof(SCROLLBARINFO);
+
+  if(!co_IntGetScrollBarInfo(pWnd, hBar, &sbi))
+    return FALSE;
+
+  return !(sbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN);
+}
+
+BOOL
+UserHasMenu(PWND pWnd, ULONG Style)
+{
+   return (!(Style & WS_CHILD) && UlongToHandle(pWnd->IDMenu) != 0);
+}
+
+/*
+ * FIXME:
+ * - Cache bitmaps, then just bitblt instead of calling DFC() (and
+ *   wasting precious CPU cycles) every time
+ * - Center the buttons verticaly in the rect
+ */
+VOID
+UserDrawCaptionButton(PWND pWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDown, ULONG Type)
+{
+   RECT TempRect;
+
+   if (!(Style & WS_SYSMENU))
+   {
+      return;
+   }
+
+   TempRect = *Rect;
+
+   switch (Type)
+   {
+      case DFCS_CAPTIONMIN:
+      {
+         if (ExStyle & WS_EX_TOOLWINDOW)
+            return; /* ToolWindows don't have min/max buttons */
+
+         if (Style & WS_SYSMENU)
+             TempRect.right -= UserGetSystemMetrics(SM_CXSIZE) + 1;
+
+         if (Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
+             TempRect.right -= UserGetSystemMetrics(SM_CXSIZE) - 2;
+
+         TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSIZE) + 1;
+         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 2;
+         TempRect.top += 2;
+         TempRect.right -= 1;
+
+         DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
+                          ((Style & WS_MINIMIZE) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMIN) |
+                          (bDown ? DFCS_PUSHED : 0) |
+                          ((Style & WS_MINIMIZEBOX) ? 0 : DFCS_INACTIVE));
+         break;
+      }
+      case DFCS_CAPTIONMAX:
+      {
+         if (ExStyle & WS_EX_TOOLWINDOW)
+             return; /* ToolWindows don't have min/max buttons */
+
+         if (Style & WS_SYSMENU)
+             TempRect.right -= UserGetSystemMetrics(SM_CXSIZE) + 1;
+
+         TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSIZE) + 1;
+         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 2;
+         TempRect.top += 2;
+         TempRect.right -= 1;
+
+         DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
+                          ((Style & WS_MAXIMIZE) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX) |
+                          (bDown ? DFCS_PUSHED : 0) |
+                          ((Style & WS_MAXIMIZEBOX) ? 0 : DFCS_INACTIVE));
+         break;
+      }
+      case DFCS_CAPTIONCLOSE:
+      {
+          PMENU pSysMenu = IntGetSystemMenu(pWnd, FALSE);
+          UINT MenuState = IntGetMenuState(UserHMGetHandle(pSysMenu), SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
+
+         /* FIXME: A tool window has a smaller Close button */
+
+         if (ExStyle & WS_EX_TOOLWINDOW)
+         {
+            TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSMSIZE);
+            TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSMSIZE) - 2;
+         }
+         else
+         {
+            TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSIZE);
+            TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 2;
+         }
+         TempRect.top += 2;
+         TempRect.right -= 2;
+
+         DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
+                          (DFCS_CAPTIONCLOSE | (bDown ? DFCS_PUSHED : 0) |
+                          ((!(MenuState & (MF_GRAYED|MF_DISABLED)) && !(pWnd->pcls->style & CS_NOCLOSE)) ? 0 : DFCS_INACTIVE)));
+         break;
+      }
+   }
+}
+
+VOID
+UserDrawCaptionButtonWnd(PWND pWnd, HDC hDC, BOOL bDown, ULONG Type)
+{
+   RECT WindowRect;
+   SIZE WindowBorder;
+
+   IntGetWindowRect(pWnd, &WindowRect);
+
+   WindowRect.right -= WindowRect.left;
+   WindowRect.bottom -= WindowRect.top;
+   WindowRect.left = WindowRect.top = 0;
+
+   UserGetWindowBorders(pWnd->style, pWnd->ExStyle, &WindowBorder, FALSE);
+
+   RECTL_vInflateRect(&WindowRect, -WindowBorder.cx, -WindowBorder.cy);
+
+   UserDrawCaptionButton(pWnd, &WindowRect, pWnd->style, pWnd->ExStyle, hDC, bDown, Type);
+}
+
+VOID
+NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyle)
+{
+   /* Firstly the "thick" frame */
+   if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE))
+   {
+      LONG Width =
+         (UserGetSystemMetrics(SM_CXFRAME) - UserGetSystemMetrics(SM_CXDLGFRAME)) *
+         UserGetSystemMetrics(SM_CXBORDER);
+
+      LONG Height =
+         (UserGetSystemMetrics(SM_CYFRAME) - UserGetSystemMetrics(SM_CYDLGFRAME)) *
+         UserGetSystemMetrics(SM_CYBORDER);
+
+      NtGdiSelectBrush(hDC, IntGetSysColorBrush(Active ? COLOR_ACTIVEBORDER : COLOR_INACTIVEBORDER));
+
+      /* Draw frame */
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, CurrentRect->right - CurrentRect->left, Height, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom - 1, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->right - 1, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
+
+      RECTL_vInflateRect(CurrentRect, -Width, -Height);
+   }
+
+   /* Now the other bit of the frame */
+   if (Style & (WS_DLGFRAME | WS_BORDER) || ExStyle & WS_EX_DLGMODALFRAME)
+   {
+      DWORD Width = UserGetSystemMetrics(SM_CXBORDER);
+      DWORD Height = UserGetSystemMetrics(SM_CYBORDER);
+
+      NtGdiSelectBrush(hDC, IntGetSysColorBrush(
+         (ExStyle & (WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE)) ? COLOR_3DFACE :
+         (ExStyle & WS_EX_STATICEDGE) ? COLOR_WINDOWFRAME :
+         (Style & (WS_DLGFRAME | WS_THICKFRAME)) ? COLOR_3DFACE :
+         COLOR_WINDOWFRAME));
+
+      /* Draw frame */
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, CurrentRect->right - CurrentRect->left, Height, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom - 1, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->right - 1, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
+
+      RECTL_vInflateRect(CurrentRect, -Width, -Height);
+   }
+}
+
+VOID UserDrawCaptionBar(
+   PWND pWnd,
+   HDC hDC,
+   INT Flags)
+{
+   DWORD Style, ExStyle;
+   RECT WindowRect, CurrentRect, TempRect;
+   HPEN PreviousPen;
+   BOOL Gradient = FALSE;
+   PCURICON_OBJECT pIcon = NULL;
+
+   if (!(Flags & DC_NOVISIBLE) && !IntIsWindowVisible(pWnd)) return;
+
+   TRACE("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
+
+   Style = pWnd->style;
+   ExStyle = pWnd->ExStyle;
+
+   IntGetWindowRect(pWnd, &WindowRect);
+
+   CurrentRect.top = CurrentRect.left = 0;
+   CurrentRect.right = WindowRect.right - WindowRect.left;
+   CurrentRect.bottom = WindowRect.bottom - WindowRect.top;
+
+   /* Draw outer edge */
+   if (UserHasWindowEdge(Style, ExStyle))
+   {
+      DrawEdge(hDC, &CurrentRect, EDGE_RAISED, BF_RECT | BF_ADJUST);
+   }
+   else if (ExStyle & WS_EX_STATICEDGE)
+   {
+#if 0
+      DrawEdge(hDC, &CurrentRect, BDR_SUNKENINNER, BF_RECT | BF_ADJUST | BF_FLAT);
+#else
+      NtGdiSelectBrush(hDC, IntGetSysColorBrush(COLOR_BTNSHADOW));
+      NtGdiPatBlt(hDC, CurrentRect.left, CurrentRect.top, CurrentRect.right - CurrentRect.left, 1, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect.left, CurrentRect.top, 1, CurrentRect.bottom - CurrentRect.top, PATCOPY);
+
+      NtGdiSelectBrush(hDC, IntGetSysColorBrush(COLOR_BTNHIGHLIGHT));
+      NtGdiPatBlt(hDC, CurrentRect.left, CurrentRect.bottom - 1, CurrentRect.right - CurrentRect.left, 1, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect.right - 1, CurrentRect.top, 1, CurrentRect.bottom - CurrentRect.top, PATCOPY);
+
+      RECTL_vInflateRect(&CurrentRect, -1, -1);
+#endif
+   }
+
+   if (Flags & DC_FRAME) NC_DrawFrame(hDC, &CurrentRect, (Flags & DC_ACTIVE), Style, ExStyle);
+
+   /* Draw caption */
+   if ((Style & WS_CAPTION) == WS_CAPTION)
+   {
+      TempRect = CurrentRect;
+
+      if (UserSystemParametersInfo(SPI_GETGRADIENTCAPTIONS, 0, &Gradient, 0) && Gradient)
+      {
+         Flags |= DC_GRADIENT;
+      }
+
+      if (ExStyle & WS_EX_TOOLWINDOW)
+      {
+         Flags |= DC_SMALLCAP;
+         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSMCAPTION) - 1;
+         CurrentRect.top += UserGetSystemMetrics(SM_CYSMCAPTION);
+      }
+      else
+      {
+         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYCAPTION) - 1;
+         CurrentRect.top += UserGetSystemMetrics(SM_CYCAPTION);
+      }
+
+      if (!(Flags & DC_ICON)               &&
+           (Style & WS_SYSMENU)            &&
+          !(Flags & DC_SMALLCAP)           &&
+          !(ExStyle & WS_EX_DLGMODALFRAME) && 
+          !(ExStyle & WS_EX_TOOLWINDOW) )
+      {
+         pIcon = NC_IconForWindow(pWnd); // Force redraw of caption with icon if DC_ICON not flaged....
+      }
+      UserDrawCaption(pWnd, hDC, &TempRect, NULL, pIcon ? UserHMGetHandle(pIcon) : NULL, NULL, Flags);
+
+      /* Draw buttons */
+      if (Style & WS_SYSMENU)
+      {
+         UserDrawCaptionButton(pWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONCLOSE);
+         if ((Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX)) && !(ExStyle & WS_EX_TOOLWINDOW))
+         {
+            UserDrawCaptionButton(pWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMIN);
+            UserDrawCaptionButton(pWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMAX);
+         }
+      }
+
+      if (!(Style & WS_MINIMIZE))
+      {
+         /* Line under caption */
+         PreviousPen = NtGdiSelectPen(hDC, NtGdiGetStockObject(DC_PEN));
+
+         IntSetDCPenColor( hDC, IntGetSysColor(((ExStyle & (WS_EX_STATICEDGE|WS_EX_CLIENTEDGE|WS_EX_DLGMODALFRAME)) == WS_EX_STATICEDGE) ?
+                                             COLOR_WINDOWFRAME : COLOR_3DFACE));
+
+         GreMoveTo(hDC, TempRect.left, TempRect.bottom, NULL);
+
+         NtGdiLineTo(hDC, TempRect.right, TempRect.bottom);
+
+         NtGdiSelectPen(hDC, PreviousPen);
+      }
+   }
+
+   if (!(Style & WS_MINIMIZE))
+   {
+      if (ExStyle & WS_EX_CLIENTEDGE)
+      {
+          DrawEdge(hDC, &CurrentRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+      }
+   }
+}
+
+// Note from Wine:
+/* MSDN docs are pretty idiotic here, they say app CAN use clipRgn in
+   the call to GetDCEx implying that it is allowed not to use it either.
+   However, the suggested GetDCEx(    , DCX_WINDOW | DCX_INTERSECTRGN)
+   will cause clipRgn to be deleted after ReleaseDC().
+   Now, how is the "system" supposed to tell what happened?
+ */
+/*
+ * FIXME:
+ * - Drawing of WS_BORDER after scrollbars
+ * - Correct drawing of size-box
+ */
+LRESULT
+NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
+{
+   DWORD Style, ExStyle;
+   PWND Parent;
+   RECT WindowRect, CurrentRect, TempRect;
+   BOOL Active = FALSE;
+   PCURICON_OBJECT pIcon = NULL;
+
+   if (!IntIsWindowVisible(pWnd) ||
+       (pWnd->state & WNDS_NONCPAINT && !(pWnd->state & WNDS_FORCEMENUDRAW)) ||
+        IntEqualRect(&pWnd->rcWindow, &pWnd->rcClient) )
+      return 0;
+
+   Style = pWnd->style;
+
+   TRACE("DefWndNCPaint: pWnd %p, hDc %p, Active %s.\n", pWnd, hDC, Flags & DC_ACTIVE ? "TRUE" : "FALSE");
+
+   Parent = IntGetParent(pWnd);
+   ExStyle = pWnd->ExStyle;
+
+   if (Flags == -1) // NC paint mode.
+   {
+      if (ExStyle & WS_EX_MDICHILD)
+      {
+         Active = IntIsChildWindow(gpqForeground->spwndActive, pWnd);
+
+         if (Active)
+            Active = (UserHMGetHandle(pWnd) == (HWND)co_IntSendMessage(UserHMGetHandle(Parent), WM_MDIGETACTIVE, 0, 0));
+      }
+      else
+      {
+         Active = (gpqForeground == pWnd->head.pti->MessageQueue);
+      }
+      Flags = DC_NC;
+   }
+
+   IntGetWindowRect(pWnd, &WindowRect);
+
+   CurrentRect.top = CurrentRect.left = 0;
+   CurrentRect.right = WindowRect.right - WindowRect.left;
+   CurrentRect.bottom = WindowRect.bottom - WindowRect.top;
+
+   /* Draw outer edge */
+   if (UserHasWindowEdge(pWnd->style, pWnd->ExStyle))
+   {
+      DrawEdge(hDC, &CurrentRect, EDGE_RAISED, BF_RECT | BF_ADJUST);
+   }
+   else if (pWnd->ExStyle & WS_EX_STATICEDGE)
+   {
+#if 0
+      DrawEdge(hDC, &CurrentRect, BDR_SUNKENINNER, BF_RECT | BF_ADJUST | BF_FLAT);
+#else
+      NtGdiSelectBrush(hDC, IntGetSysColorBrush(COLOR_BTNSHADOW));
+      NtGdiPatBlt(hDC, CurrentRect.left, CurrentRect.top, CurrentRect.right - CurrentRect.left, 1, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect.left, CurrentRect.top, 1, CurrentRect.bottom - CurrentRect.top, PATCOPY);
+
+      NtGdiSelectBrush(hDC, IntGetSysColorBrush(COLOR_BTNHIGHLIGHT));
+      NtGdiPatBlt(hDC, CurrentRect.left, CurrentRect.bottom - 1, CurrentRect.right - CurrentRect.left, 1, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect.right - 1, CurrentRect.top, 1, CurrentRect.bottom - CurrentRect.top, PATCOPY);
+
+      RECTL_vInflateRect(&CurrentRect, -1, -1);
+#endif
+   }
+
+   if (Flags & DC_FRAME) NC_DrawFrame(hDC, &CurrentRect, Active ? Active : (Flags & DC_ACTIVE), Style, ExStyle);
+
+   /* Draw caption */
+   if ((Style & WS_CAPTION) == WS_CAPTION)
+   {
+      HPEN PreviousPen;
+      BOOL Gradient = FALSE;
+
+      if (Flags & DC_REDRAWHUNGWND)
+      {
+         Flags &= ~DC_REDRAWHUNGWND;
+         Flags |= DC_NOSENDMSG;
+      }
+
+      if (UserSystemParametersInfo(SPI_GETGRADIENTCAPTIONS, 0, &Gradient, 0) && Gradient)
+      {
+         Flags |= DC_GRADIENT;
+      }
+
+      if (Active)
+      {
+         if (!(pWnd->state & WNDS_ACTIVEFRAME))
+         {
+            ERR("Wnd is active and not set active!\n");
+         }
+         Flags |= DC_ACTIVE;
+      }
+
+      TempRect = CurrentRect;
+
+      if (ExStyle & WS_EX_TOOLWINDOW)
+      {
+         Flags |= DC_SMALLCAP;
+         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSMCAPTION) - 1;
+         CurrentRect.top += UserGetSystemMetrics(SM_CYSMCAPTION);
+      }
+      else
+      {
+         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYCAPTION) - 1;
+         CurrentRect.top += UserGetSystemMetrics(SM_CYCAPTION);
+      }
+
+      if (!(Flags & DC_ICON)               &&
+           (Style & WS_SYSMENU)            &&
+          !(Flags & DC_SMALLCAP)           &&
+          !(ExStyle & WS_EX_DLGMODALFRAME) && 
+          !(ExStyle & WS_EX_TOOLWINDOW) )
+      {
+         pIcon = NC_IconForWindow(pWnd); // Force redraw of caption with icon if DC_ICON not flaged....
+      }
+      UserDrawCaption(pWnd, hDC, &TempRect, NULL, pIcon ? UserHMGetHandle(pIcon) : NULL, NULL, Flags);
+
+      /* Draw buttons */
+      if (Style & WS_SYSMENU)
+      {
+         UserDrawCaptionButton(pWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONCLOSE);
+         if ((Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX)) && !(ExStyle & WS_EX_TOOLWINDOW))
+         {
+            UserDrawCaptionButton(pWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMIN);
+            UserDrawCaptionButton(pWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMAX);
+         }
+      }
+      if (!(Style & WS_MINIMIZE))
+      {
+        /* Line under caption */
+         PreviousPen = NtGdiSelectPen(hDC, NtGdiGetStockObject(DC_PEN));
+
+         IntSetDCPenColor( hDC, IntGetSysColor(
+                         ((ExStyle & (WS_EX_STATICEDGE | WS_EX_CLIENTEDGE | WS_EX_DLGMODALFRAME)) == WS_EX_STATICEDGE) ?
+                          COLOR_WINDOWFRAME : COLOR_3DFACE));
+
+         GreMoveTo(hDC, TempRect.left, TempRect.bottom, NULL);
+
+         NtGdiLineTo(hDC, TempRect.right, TempRect.bottom);
+
+         NtGdiSelectPen(hDC, PreviousPen);
+      }
+   }
+
+   if (!(Style & WS_MINIMIZE))
+   {
+     PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
+     /* Draw menu bar */
+     if (menu && !(Style & WS_CHILD))
+     {
+         TempRect = CurrentRect;
+         TempRect.bottom = TempRect.top + menu->cyMenu;
+         CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+     }
+
+     if (ExStyle & WS_EX_CLIENTEDGE)
+     {
+         DrawEdge(hDC, &CurrentRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+     }
+
+     /* Draw the scrollbars */
+     if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
+         IntIsScrollBarVisible(pWnd, OBJID_VSCROLL) && IntIsScrollBarVisible(pWnd, OBJID_HSCROLL))
+     {
+        RECT ParentClientRect;
+
+        TempRect = CurrentRect;
+
+        if (ExStyle & WS_EX_LEFTSCROLLBAR)
+           TempRect.right = TempRect.left + UserGetSystemMetrics(SM_CXVSCROLL);
+        else
+           TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXVSCROLL);
+
+        TempRect.top = TempRect.bottom - UserGetSystemMetrics(SM_CYHSCROLL);
+
+        FillRect(hDC, &TempRect, IntGetSysColorBrush(COLOR_BTNFACE));
+
+        if (Parent)
+           IntGetClientRect(Parent, &ParentClientRect);
+
+        if (HASSIZEGRIP(Style, ExStyle, Parent->style, WindowRect, ParentClientRect))
+        {
+           DrawFrameControl(hDC, &TempRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+        }
+
+        IntDrawScrollBar(pWnd, hDC, SB_VERT);
+        IntDrawScrollBar(pWnd, hDC, SB_HORZ);
+     }
+     else
+     {
+        if (Style & WS_VSCROLL && IntIsScrollBarVisible(pWnd, OBJID_VSCROLL))
+        {
+           IntDrawScrollBar(pWnd, hDC, SB_VERT);
+        }
+        else if (Style & WS_HSCROLL && IntIsScrollBarVisible(pWnd, OBJID_HSCROLL))
+        {
+           IntDrawScrollBar(pWnd, hDC, SB_HORZ);
+        }
+     }
+   }
+   return 0; // For WM_NCPAINT message, return 0.
+}
+
+LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect )
+{
+   LRESULT Result = 0;
+   SIZE WindowBorders;
+   RECT OrigRect;
+   DWORD Style = Wnd->style;
+
+   if (Rect == NULL)
+   {
+      return Result;
+   }
+   OrigRect = *Rect;
+
+   Wnd->state &= ~WNDS_HASCAPTION;
+
+   if (wparam)
+   {
+      if (Wnd->pcls->style & CS_VREDRAW)
+      {
+         Result |= WVR_VREDRAW;
+      }
+      if (Wnd->pcls->style & CS_HREDRAW)
+      {
+         Result |= WVR_HREDRAW;
+      }
+      Result |= WVR_VALIDRECTS;
+   }
+
+   if (!(Wnd->style & WS_MINIMIZE))
+   {
+      if (UserHasWindowEdge(Wnd->style, Wnd->ExStyle))
+      {
+         UserGetWindowBorders(Wnd->style, Wnd->ExStyle, &WindowBorders, FALSE);
+         RECTL_vInflateRect(Rect, -WindowBorders.cx, -WindowBorders.cy);
+      }
+      else if ((Wnd->ExStyle & WS_EX_STATICEDGE) || (Wnd->style & WS_BORDER))
+      {
+         RECTL_vInflateRect(Rect, -1, -1);
+      }
+
+      if ((Wnd->style & WS_CAPTION) == WS_CAPTION)
+      {
+         Wnd->state |= WNDS_HASCAPTION;
+
+         if (Wnd->ExStyle & WS_EX_TOOLWINDOW)
+            Rect->top += UserGetSystemMetrics(SM_CYSMCAPTION);
+         else
+            Rect->top += UserGetSystemMetrics(SM_CYCAPTION);
+      }
+
+      if (Wnd->IDMenu && ((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
+      {
+         HDC hDC = UserGetDCEx(Wnd, 0, DCX_USESTYLE | DCX_WINDOW);
+
+         Wnd->state |= WNDS_HASMENU;
+
+         if (hDC)
+         {
+           RECT CliRect = *Rect;
+           CliRect.bottom -= OrigRect.top;
+           CliRect.right -= OrigRect.left;
+           CliRect.left -= OrigRect.left;
+           CliRect.top -= OrigRect.top;
+           Rect->top += MENU_DrawMenuBar(hDC, &CliRect, Wnd, TRUE);
+           UserReleaseDC(Wnd, hDC, FALSE);
+         }
+      }
+
+      if (Wnd->ExStyle & WS_EX_CLIENTEDGE)
+      {
+         RECTL_vInflateRect(Rect, -2 * UserGetSystemMetrics(SM_CXBORDER), -2 * UserGetSystemMetrics(SM_CYBORDER));
+      }
+
+      if (Wnd->style & (WS_VSCROLL | WS_HSCROLL))
+      {
+        SCROLLBARINFO sbi;
+        SETSCROLLBARINFO ssbi;
+
+        sbi.cbSize = sizeof(SCROLLBARINFO);
+        if ((Style & WS_VSCROLL) && co_IntGetScrollBarInfo(Wnd, OBJID_VSCROLL, &sbi))
+        {
+          int i;
+          LONG sx = Rect->right;
+
+          Wnd->state |= WNDS_HASVERTICALSCROOLLBAR;
+
+          sx -= UserGetSystemMetrics(SM_CXVSCROLL);
+
+          for (i = 0; i <= CCHILDREN_SCROLLBAR; i++)
+              ssbi.rgstate[i] = sbi.rgstate[i];
+
+          if (sx <= Rect->left)
+             ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
+          else
+             ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
+
+          co_IntSetScrollBarInfo(Wnd, OBJID_VSCROLL, &ssbi);
+
+          if (ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
+             Style &= ~WS_VSCROLL;
+        }
+        else
+          Style &= ~WS_VSCROLL;
+
+        if ((Style & WS_HSCROLL) && co_IntGetScrollBarInfo(Wnd, OBJID_HSCROLL, &sbi))
+        {
+          int i;
+          LONG sy = Rect->bottom;
+
+          Wnd->state |= WNDS_HASHORIZONTALSCROLLBAR;
+
+          sy -= UserGetSystemMetrics(SM_CYHSCROLL);
+
+          for (i = 0; i <= CCHILDREN_SCROLLBAR; i++)
+              ssbi.rgstate[i] = sbi.rgstate[i];
+
+          if (sy <= Rect->top)
+             ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
+          else
+             ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
+
+          co_IntSetScrollBarInfo(Wnd, OBJID_HSCROLL, &ssbi);
+
+          if (ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
+             Style &= ~WS_HSCROLL;
+        }
+        else
+          Style &= ~WS_HSCROLL;
+      }
+
+      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL))
+      {
+         if ((Wnd->ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+            Rect->left += UserGetSystemMetrics(SM_CXVSCROLL);
+         else
+            Rect->right -= UserGetSystemMetrics(SM_CXVSCROLL);
+
+         Rect->bottom -= UserGetSystemMetrics(SM_CYHSCROLL);
+      }
+      else
+      {
+         if (Style & WS_VSCROLL)
+         {
+            if ((Wnd->ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+               Rect->left += UserGetSystemMetrics(SM_CXVSCROLL);
+            else
+               Rect->right -= UserGetSystemMetrics(SM_CXVSCROLL);
+         }
+         else if (Style & WS_HSCROLL)
+            Rect->bottom -= UserGetSystemMetrics(SM_CYHSCROLL);
+      }
+
+      if (Rect->top > Rect->bottom)
+         Rect->bottom = Rect->top;
+
+      if (Rect->left > Rect->right)
+         Rect->right = Rect->left;
+   }
+   else
+   {
+      Rect->right = Rect->left;
+      Rect->bottom = Rect->top;
+   }
+
+   return Result;
+}
+
+static
+INT NC_DoNCActive(PWND Wnd)
+{
+   INT Ret = 0;
+
+   if ( IntGetSysColor(COLOR_CAPTIONTEXT) != IntGetSysColor(COLOR_INACTIVECAPTIONTEXT) ||
+        IntGetSysColor(COLOR_ACTIVECAPTION) != IntGetSysColor(COLOR_INACTIVECAPTION) )
+       Ret = DC_CAPTION;
+
+   if (!(Wnd->style & WS_MINIMIZED) && UserHasThickFrameStyle(Wnd->style, Wnd->ExStyle))
+   {
+      //if (IntGetSysColor(COLOR_ACTIVEBORDER) != IntGetSysColor(COLOR_INACTIVEBORDER)) // Why are these the same?
+      {
+          Ret = DC_FRAME;
+      }
+   }
+   return Ret;
+}
+
+LRESULT NC_HandleNCActivate( PWND Wnd, WPARAM wParam, LPARAM lParam )
+{
+   INT Flags;
+  /* Lotus Notes draws menu descriptions in the caption of its main
+   * window. When it wants to restore original "system" view, it just
+   * sends WM_NCACTIVATE message to itself. Any optimizations here in
+   * attempt to minimize redrawings lead to a not restored caption.
+   */
+   if (wParam & DC_ACTIVE)
+   {
+      Wnd->state |= WNDS_ACTIVEFRAME|WNDS_HASCAPTION;
+      wParam = DC_CAPTION|DC_ACTIVE;
+   }
+   else
+   {
+      Wnd->state &= ~(WNDS_ACTIVEFRAME|WNDS_HASCAPTION);
+      wParam = DC_CAPTION;
+   }
+
+   if (Wnd->state & WNDS_NONCPAINT || !(Wnd->style & WS_VISIBLE))
+      return 0;
+
+   /* This isn't documented but is reproducible in at least XP SP2 and
+    * Outlook 2007 depends on it
+    */
+   // MSDN:
+   // If this parameter is set to -1, DefWindowProc does not repaint the
+   // nonclient area to reflect the state change.
+   if ( lParam != -1 &&
+        ( Flags = NC_DoNCActive(Wnd)) != 0 )
+   {
+      HDC hDC;
+      HRGN hRgnTemp = NULL, hRgn = (HRGN)lParam;
+
+      if (GreIsHandleValid(hRgn))
+      {
+         hRgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
+         if (NtGdiCombineRgn(hRgnTemp, hRgn, 0, RGN_COPY) == ERROR)
+         {
+            GreDeleteObject(hRgnTemp);
+            hRgnTemp = NULL;
+         }
+      }
+
+      if ((hDC = UserGetDCEx(Wnd, hRgnTemp, DCX_WINDOW|DCX_USESTYLE)))
+      {
+         NC_DoNCPaint(Wnd, hDC, wParam | Flags); // Redraw MENUs.
+         UserReleaseDC(Wnd, hDC, FALSE);
+      }
+      else
+         GreDeleteObject(hRgnTemp);
+   }
+
+   return TRUE;
+}
+
+VOID
+NC_DoButton(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+   MSG Msg;
+   HDC WindowDC;
+   BOOL Pressed = TRUE, OldState;
+   WPARAM SCMsg;
+   PMENU SysMenu;
+   ULONG ButtonType;
+   DWORD Style;
+   UINT MenuState;
+
+   Style = pWnd->style;
+   switch (wParam)
+   {
+      case HTCLOSE:
+         SysMenu = IntGetSystemMenu(pWnd, FALSE);
+         MenuState = IntGetMenuState(UserHMGetHandle(SysMenu), SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
+         if (!(Style & WS_SYSMENU) || (MenuState & (MF_GRAYED|MF_DISABLED)) || (pWnd->style & CS_NOCLOSE))
+            return;
+         ButtonType = DFCS_CAPTIONCLOSE;
+         SCMsg = SC_CLOSE;
+         break;
+      case HTMINBUTTON:
+         if (!(Style & WS_MINIMIZEBOX))
+            return;
+         ButtonType = DFCS_CAPTIONMIN;
+         SCMsg = ((Style & WS_MINIMIZE) ? SC_RESTORE : SC_MINIMIZE);
+         break;
+      case HTMAXBUTTON:
+         if (!(Style & WS_MAXIMIZEBOX))
+            return;
+         ButtonType = DFCS_CAPTIONMAX;
+         SCMsg = ((Style & WS_MAXIMIZE) ? SC_RESTORE : SC_MAXIMIZE);
+         break;
+
+      default:
+         ASSERT(FALSE);
+         return;
+   }
+
+   /*
+    * FIXME: Not sure where to do this, but we must flush the pending
+    * window updates when someone clicks on the close button and at
+    * the same time the window is overlapped with another one. This
+    * looks like a good place for now...
+    */
+   co_IntUpdateWindows(pWnd, RDW_ALLCHILDREN, FALSE);
+
+   WindowDC = UserGetWindowDC(pWnd);
+   UserDrawCaptionButtonWnd(pWnd, WindowDC, TRUE, ButtonType);
+
+   co_UserSetCapture(UserHMGetHandle(pWnd));
+
+   for (;;)
+   {
+      if (co_IntGetPeekMessage(&Msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE, TRUE) <= 0)
+         break;
+      if (IntCallMsgFilter( &Msg, MSGF_MAX )) continue;
+
+      if (Msg.message == WM_LBUTTONUP)
+         break;
+
+      if (Msg.message != WM_MOUSEMOVE)
+         continue;
+
+      OldState = Pressed;
+      Pressed = (GetNCHitEx(pWnd, Msg.pt) == wParam);
+      if (Pressed != OldState)
+         UserDrawCaptionButtonWnd(pWnd, WindowDC, Pressed, ButtonType);
+   }
+
+   if (Pressed)
+      UserDrawCaptionButtonWnd(pWnd, WindowDC, FALSE, ButtonType);
+   IntReleaseCapture();
+   UserReleaseDC(pWnd, WindowDC, FALSE);
+   if (Pressed)
+      co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SCMsg, SCMsg == SC_CLOSE ? lParam : MAKELONG(Msg.pt.x,Msg.pt.y));
+}
+
+
+LRESULT
+NC_HandleNCLButtonDown(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+    switch (wParam)
+    {
+        case HTCAPTION:
+        {
+            PWND TopWnd = pWnd, parent;
+            while(1)
+            {
+                if ((TopWnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD)
+                    break;
+                parent = UserGetAncestor( TopWnd, GA_PARENT );
+                if (!parent || parent == UserGetDesktopWindow()) break;
+                TopWnd = parent;
+            }
+
+            if ( co_IntSetForegroundWindowMouse(TopWnd) ||
+                 //NtUserCallHwndLock(hTopWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE) ||
+                 UserGetActiveWindow() == UserHMGetHandle(TopWnd))
+            {
+               co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
+            }
+            break;
+        }
+        case HTSYSMENU:
+        {
+          LONG style = pWnd->style;
+          if (style & WS_SYSMENU)
+          {
+              if(!(style & WS_MINIMIZE) )
+              {
+                RECT rect;
+                HDC hDC = UserGetWindowDC(pWnd);
+                UserGetInsideRectNC(pWnd, &rect);
+                UserDrawSysMenuButton(pWnd, hDC, &rect, TRUE);
+                UserReleaseDC( pWnd, hDC, FALSE );
+              }
+	      co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, lParam);
+	  }
+	  break;
+        }
+        case HTMENU:
+        {
+            co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTMENU, lParam);
+            break;
+        }
+        case HTHSCROLL:
+        {
+            co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
+            break;
+        }
+        case HTVSCROLL:
+        {
+            co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
+            break;
+        }
+        case HTMINBUTTON:
+        case HTMAXBUTTON:
+        case HTCLOSE:
+        {
+          NC_DoButton(pWnd, wParam, lParam);
+          break;
+        }
+        case HTLEFT:
+        case HTRIGHT:
+        case HTTOP:
+        case HTBOTTOM:
+        case HTTOPLEFT:
+        case HTTOPRIGHT:
+        case HTBOTTOMLEFT:
+        case HTBOTTOMRIGHT:
+        {
+           /* Old comment:
+            * "make sure hittest fits into 0xf and doesn't overlap with HTSYSMENU"
+            * This was previously done by setting wParam=SC_SIZE + wParam - 2
+            */
+           /* But that is not what WinNT does. Instead it sends this. This
+            * is easy to differentiate from HTSYSMENU, because HTSYSMENU adds
+            * SC_MOUSEMENU into wParam.
+            */
+            co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_SIZE + wParam - (HTLEFT - WMSZ_LEFT), lParam);
+            break;
+        }
+        case HTBORDER:
+            break;
+    }
+    return(0);
+}
+
+
+LRESULT
+NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+  ULONG Style;
+
+  Style = pWnd->style;
+  switch(wParam)
+  {
+    case HTCAPTION:
+    {
+      /* Maximize/Restore the window */
+      if((Style & WS_CAPTION) == WS_CAPTION && (Style & WS_MAXIMIZEBOX))
+      {
+        co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, ((Style & (WS_MINIMIZE | WS_MAXIMIZE)) ? SC_RESTORE : SC_MAXIMIZE), 0);
+      }
+      break;
+    }
+    case HTSYSMENU:
+    {
+      PMENU SysMenu = IntGetSystemMenu(pWnd, FALSE);
+      UINT state = IntGetMenuState(UserHMGetHandle(SysMenu), SC_CLOSE, MF_BYCOMMAND);
+                  
+      /* If the close item of the sysmenu is disabled or not present do nothing */
+      if ((state & (MF_DISABLED | MF_GRAYED)) || (state == 0xFFFFFFFF))
+          break;
+
+      co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_CLOSE, lParam);
+      break;
+    }
+    default:
+      return NC_HandleNCLButtonDown(pWnd, wParam, lParam);
+  }
+  return(0);
+}
+
+/***********************************************************************
+ *           NC_HandleNCRButtonDown
+ *
+ * Handle a WM_NCRBUTTONDOWN message. Called from DefWindowProc().
+ */
+LRESULT NC_HandleNCRButtonDown( PWND pwnd, WPARAM wParam, LPARAM lParam ) 
+{
+  MSG msg;
+  INT hittest = wParam;
+
+  switch (hittest)
+  {
+  case HTCAPTION:
+  case HTSYSMENU:
+      if (!IntGetSystemMenu( pwnd, FALSE )) break;
+
+      co_UserSetCapture( UserHMGetHandle(pwnd) );
+      for (;;)
+      {
+          if (!co_IntGetPeekMessage(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE, TRUE)) break;
+          if (IntCallMsgFilter( &msg, MSGF_MAX )) continue;
+          if (msg.message == WM_RBUTTONUP)
+          {
+             hittest = GetNCHitEx( pwnd, msg.pt );
+             break;
+          }
+          if (UserHMGetHandle(pwnd) != IntGetCapture()) return 0;
+      }
+      IntReleaseCapture();
+      if (hittest == HTCAPTION || hittest == HTSYSMENU || hittest == HTHSCROLL || hittest == HTVSCROLL)
+      {
+         TRACE("Msg pt %x and Msg.lParam %x and lParam %x\n",MAKELONG(msg.pt.x,msg.pt.y),msg.lParam,lParam);
+         co_IntSendMessage( UserHMGetHandle(pwnd), WM_CONTEXTMENU, (WPARAM)UserHMGetHandle(pwnd), MAKELONG(msg.pt.x,msg.pt.y));
+      }
+      break;
+  }
+  return 0;
+}
+
 
 DWORD FASTCALL
 GetNCHitEx(PWND pWnd, POINT pt)

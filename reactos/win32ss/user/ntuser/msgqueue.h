@@ -274,5 +274,9 @@ UserPostThreadMessage( PTHREADINFO pti,
                        UINT Msg,
                        WPARAM wParam,
                        LPARAM lParam );
+BOOL FASTCALL
+co_IntWaitMessage( PWND Window,
+                   UINT MsgFilterMin,
+                   UINT MsgFilterMax );
 
 /* EOF */

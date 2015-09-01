@@ -52,8 +52,6 @@ extern HANDLE hModuleWin;    // This Win32k Instance.
 extern struct _CLS *SystemClassList;
 extern BOOL RegisteredSysClasses;
 
-typedef struct tagMENUSTATE MENUSTATE, *PMENUSTATE;
-
 #include <pshpack1.h>
 // FIXME: Move to ntuser.h
 typedef struct _TL
@@ -110,7 +108,7 @@ typedef struct _THREADINFO
     HDESK               hdesk;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
-    PMENUSTATE          pMenuState;
+    struct tagMENUSTATE* pMenuState;
     DWORD               dwExpWinVer;
     DWORD               dwCompatFlags;
     DWORD               dwCompatFlags2;

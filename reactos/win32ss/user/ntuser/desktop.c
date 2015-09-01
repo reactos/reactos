@@ -664,6 +664,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
       case WM_SYSCOLORCHANGE:
          co_UserRedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
          return TRUE;
+
       case WM_SETCURSOR:
       {
           PCURICON_OBJECT pcurOld, pcurNew;
@@ -691,8 +692,11 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
               HDESK hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
               IntSetThreadDesktop(hdesk, FALSE);
           }
+          break;
       }
-
+      default:
+          TRACE("DWP calling IDWP Msg %d\n",Msg);
+          *lResult = IntDefWindowProc(Wnd, Msg, wParam, lParam, FALSE);
    }
    return TRUE; /* We are done. Do not do any callbacks to user mode */
 }
@@ -711,6 +715,9 @@ UserMessageWindowProc(PWND pwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT
     case WM_DESTROY:
         pwnd->fnid |= FNID_DESTROY;
         break;
+    default:
+        ERR("UMWP calling IDWP\n");
+        *lResult = IntDefWindowProc(pwnd, Msg, wParam, lParam, FALSE);
     }
 
     return TRUE; /* We are done. Do not do any callbacks to user mode */
