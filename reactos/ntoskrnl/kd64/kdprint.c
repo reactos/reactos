@@ -227,7 +227,7 @@ KdpPrompt(IN LPSTR PromptString,
         {
             ProbeForRead(PromptString, PromptLength, 1);
             CapturedPrompt = alloca(512);
-            KdpQuickMoveMemory(CapturedPrompt, PromptString, PromptLength);
+            RtlMoveMemory(CapturedPrompt, PromptString, PromptLength);
             PromptString = CapturedPrompt;
 
             ProbeForWrite(ResponseString, MaximumResponseLength, 1);
@@ -274,7 +274,7 @@ KdpPrompt(IN LPSTR PromptString,
     {
         _SEH2_TRY
         {
-            KdpQuickMoveMemory(ResponseString, ResponseBuffer.Buffer, ResponseBuffer.Length);
+            RtlMoveMemory(ResponseString, ResponseBuffer.Buffer, ResponseBuffer.Length);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -328,7 +328,7 @@ KdpPrint(IN ULONG ComponentId,
         {
             ProbeForRead(String, Length, 1);
             CapturedString = alloca(512);
-            KdpQuickMoveMemory(CapturedString, String, Length);
+            RtlMoveMemory(CapturedString, String, Length);
             String = CapturedString;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
