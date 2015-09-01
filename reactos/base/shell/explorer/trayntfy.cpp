@@ -163,8 +163,14 @@ public:
 
         if (iconData->uFlags & NIF_ICON)
         {
+            TBBUTTONINFO tbbiOld = { 0 };
+            tbbiOld.cbSize = sizeof(tbbiOld);
+            tbbiOld.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
+
+            GetButtonInfo(index, &tbbiOld);
+
             tbbi.dwMask |= TBIF_IMAGE;
-            tbbi.iImage = ImageList_AddIcon(m_ImageList, iconData->hIcon);
+            tbbi.iImage = ImageList_ReplaceIcon(m_ImageList, tbbiOld.iImage, iconData->hIcon);
         }
 
         if (iconData->uFlags & NIF_TIP)
@@ -208,6 +214,14 @@ public:
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index < 0)
             return FALSE;
+
+        TBBUTTONINFO tbbiOld = { 0 };
+        tbbiOld.cbSize = sizeof(tbbiOld);
+        tbbiOld.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
+
+        GetButtonInfo(index, &tbbiOld);
+
+        ImageList_Remove(m_ImageList, tbbiOld.iImage);
 
         DeleteButton(index);
 
