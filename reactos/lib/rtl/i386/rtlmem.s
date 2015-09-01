@@ -16,7 +16,6 @@ PUBLIC _RtlFillMemory@12
 PUBLIC _RtlFillMemoryUlong@12
 PUBLIC _RtlMoveMemory@12
 PUBLIC _RtlZeroMemory@8
-PUBLIC @RtlPrefetchMemoryNonTemporal@8
 
 /* FUNCTIONS *****************************************************************/
 .code
@@ -327,36 +326,5 @@ _RtlMoveMemory@12:
 	dec esi
 	dec edi
 	jmp .CopyDownBytes
-
-
-
-@RtlPrefetchMemoryNonTemporal@8:
-
-    /*
-     * Overwritten by ntoskrnl/ke/i386/kernel.c if SSE is supported
-     * (see Ki386SetProcessorFeatures())
-     */
-    ret
-
-    /* Get granularity */
-    mov eax, [_Ke386CacheAlignment]
-
-FetchLine:
-
-    /* Prefetch this line */
-    prefetchnta byte ptr [ecx]
-
-    /* Update address and count */
-    add ecx, eax
-    sub edx, eax
-
-    /* Keep looping for the next line, or return if done */
-    ja FetchLine
-    ret
-
-
-/* FIXME: HACK */
-_Ke386CacheAlignment:
-    .long   64
 
 END

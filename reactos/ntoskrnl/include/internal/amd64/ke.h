@@ -81,7 +81,6 @@ typedef struct _KI_INTERRUPT_DISPATCH_ENTRY
 } KI_INTERRUPT_DISPATCH_ENTRY, *PKI_INTERRUPT_DISPATCH_ENTRY;
 #include <poppack.h>
 
-extern ULONG Ke386CacheAlignment;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;

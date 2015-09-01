@@ -162,7 +162,7 @@ KiInitMachineDependent(VOID)
             /* FIXME: Implement and enable XMM Page Zeroing for Mm */
 
             /* Patch the RtlPrefetchMemoryNonTemporal routine to enable it */
-            *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+            *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90; // NOP
         }
     }
 
