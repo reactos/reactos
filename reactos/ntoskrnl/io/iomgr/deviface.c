@@ -876,7 +876,7 @@ NextReferenceString:
     }
 
     /* Add final NULL to ReturnBuffer */
-    NT_ASSERT(ReturnBuffer.Length <= ReturnBuffer.MaximumLength);
+    ASSERT(ReturnBuffer.Length <= ReturnBuffer.MaximumLength);
     if (ReturnBuffer.Length >= ReturnBuffer.MaximumLength)
     {
         PWSTR NewBuffer;

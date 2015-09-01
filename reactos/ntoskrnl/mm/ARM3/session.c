@@ -930,7 +930,7 @@ MmAttachSession(
 
     /* The parameter is the actual process! */
     EntryProcess = SessionEntry;
-    NT_ASSERT(EntryProcess != NULL);
+    ASSERT(EntryProcess != NULL);
 
     /* Sanity checks */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
@@ -998,7 +998,7 @@ MmDetachSession(
 
     /* The parameter is the actual process! */
     EntryProcess = SessionEntry;
-    NT_ASSERT(EntryProcess != NULL);
+    ASSERT(EntryProcess != NULL);
 
     /* Sanity checks */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
@@ -1039,7 +1039,7 @@ MmQuitNextSession(
 
     /* The parameter is the actual process! */
     EntryProcess = SessionEntry;
-    NT_ASSERT(EntryProcess != NULL);
+    ASSERT(EntryProcess != NULL);
 
     /* Sanity checks */
     ASSERT(KeGetCurrentIrql () <= APC_LEVEL);

@@ -439,10 +439,10 @@ SepPropagateAcl(
     PSID Sid;
     BOOLEAN WriteTwoAces;
 
-    NT_ASSERT(RtlValidAcl(AclSource));
-    NT_ASSERT(AclSource->AclSize % sizeof(ULONG) == 0);
-    NT_ASSERT(AclSource->Sbz1 == 0);
-    NT_ASSERT(AclSource->Sbz2 == 0);
+    ASSERT(RtlValidAcl(AclSource));
+    ASSERT(AclSource->AclSize % sizeof(ULONG) == 0);
+    ASSERT(AclSource->Sbz1 == 0);
+    ASSERT(AclSource->Sbz2 == 0);
 
     Written = 0;
     if (*AclLength >= Written + sizeof(ACL))
@@ -457,18 +457,18 @@ SepPropagateAcl(
     CurrentSource = (PUCHAR)(AclSource + 1);
     for (i = 0; i < AclSource->AceCount; i++)
     {
-        NT_ASSERT((ULONG_PTR)CurrentDest % sizeof(ULONG) == 0);
-        NT_ASSERT((ULONG_PTR)CurrentSource % sizeof(ULONG) == 0);
+        ASSERT((ULONG_PTR)CurrentDest % sizeof(ULONG) == 0);
+        ASSERT((ULONG_PTR)CurrentSource % sizeof(ULONG) == 0);
         AceDest = (PACCESS_ALLOWED_ACE)CurrentDest;
         AceSource = (PACCESS_ALLOWED_ACE)CurrentSource;
 
         /* These all have the same structure */
-        NT_ASSERT(AceSource->Header.AceType == ACCESS_ALLOWED_ACE_TYPE ||
+        ASSERT(AceSource->Header.AceType == ACCESS_ALLOWED_ACE_TYPE ||
                   AceSource->Header.AceType == ACCESS_DENIED_ACE_TYPE ||
                   AceSource->Header.AceType == SYSTEM_AUDIT_ACE_TYPE);
 
-        NT_ASSERT(AceSource->Header.AceSize % sizeof(ULONG) == 0);
-        NT_ASSERT(AceSource->Header.AceSize >= sizeof(*AceSource));
+        ASSERT(AceSource->Header.AceSize % sizeof(ULONG) == 0);
+        ASSERT(AceSource->Header.AceSize >= sizeof(*AceSource));
         if (!SepShouldPropagateAce(AceSource->Header.AceFlags,
                                    &AceFlags,
                                    IsInherited,
@@ -482,7 +482,7 @@ SepPropagateAcl(
         AceSize = AceSource->Header.AceSize;
         Mask = AceSource->Mask;
         Sid = (PSID)&AceSource->SidStart;
-        NT_ASSERT(AceSize >= FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + RtlLengthSid(Sid));
+        ASSERT(AceSize >= FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + RtlLengthSid(Sid));
 
         WriteTwoAces = FALSE;
         /* Map effective ACE to specific rights */
@@ -598,7 +598,7 @@ SepSelectAcl(
                                      *IsInherited,
                                      IsDirectoryObject,
                                      GenericMapping);
-            NT_ASSERT(Status == STATUS_BUFFER_TOO_SMALL);
+            ASSERT(Status == STATUS_BUFFER_TOO_SMALL);
 
             /* Use the parent ACL only if it's not empty */
             if (*AclLength != sizeof(ACL))
@@ -633,7 +633,7 @@ SepSelectAcl(
                                  *IsInherited,
                                  IsDirectoryObject,
                                  GenericMapping);
-        NT_ASSERT(Status == STATUS_BUFFER_TOO_SMALL);
+        ASSERT(Status == STATUS_BUFFER_TOO_SMALL);
     }
     return Acl;
 }

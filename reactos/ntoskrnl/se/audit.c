@@ -644,7 +644,7 @@ SepAccessCheckAndAuditAlarm(
     _SEH2_TRY
     {
         /* Loop all result entries (only 1 when no list was requested) */
-        NT_ASSERT(UseResultList || (ResultListLength == 1));
+        ASSERT(UseResultList || (ResultListLength == 1));
         for (i = 0; i < ResultListLength; i++)
         {
             AccessStatusList[i] = SafeAccessStatusList[i];

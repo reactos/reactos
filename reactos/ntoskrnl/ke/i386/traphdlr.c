@@ -1537,7 +1537,7 @@ KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
     Thread = KeGetCurrentThread();
     Thread->TrapFrame = TrapFrame;
     Thread->PreviousMode = KiUserTrap(TrapFrame);
-    NT_ASSERT(Thread->PreviousMode != KernelMode);
+    ASSERT(Thread->PreviousMode != KernelMode);
 
     /* Pass the register parameters to NtCallbackReturn.
        Result pointer is in ecx, result length in edx, status in eax */

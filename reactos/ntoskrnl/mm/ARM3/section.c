@@ -1121,7 +1121,7 @@ MiMapViewInSystemSpace(IN PVOID Section,
         Status = MiSessionCommitPageTables(Base,
                                            (PVOID)((ULONG_PTR)Base +
                                            Buckets * MI_SYSTEM_VIEW_BUCKET_SIZE));
-        NT_ASSERT(NT_SUCCESS(Status));
+        ASSERT(NT_SUCCESS(Status));
     }
 
     /* Create the actual prototype PTEs for this mapping */

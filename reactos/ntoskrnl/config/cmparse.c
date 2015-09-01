@@ -24,7 +24,7 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
 {
     BOOLEAN NameValid = TRUE;
 
-    NT_ASSERT(RemainingName->Length % sizeof(WCHAR) == 0);
+    ASSERT(RemainingName->Length % sizeof(WCHAR) == 0);
 
     /* Check if there's nothing left in the name */
     if (!(RemainingName->Buffer) ||

@@ -465,7 +465,7 @@ SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     PAGED_CODE();
 
-    NT_ASSERT(AccessMode != KernelMode);
+    ASSERT(AccessMode != KernelMode);
 
     if (SecurityDescriptor == NULL)
         return FALSE;

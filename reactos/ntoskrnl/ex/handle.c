@@ -85,7 +85,7 @@ ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
         default:
 
-            NT_ASSERT(FALSE);
+            ASSERT(FALSE);
             Entry = NULL;
     }
 

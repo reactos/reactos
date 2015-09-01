@@ -129,7 +129,7 @@ SepPrivilegeCheck(PTOKEN Token,
     SepReleaseTokenLock(Token);
 
     /* When we reached this point, we did not find all privileges */
-    NT_ASSERT(Required > 0);
+    ASSERT(Required > 0);
     return FALSE;
 }
 

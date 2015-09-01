@@ -312,7 +312,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
                    OUT PVOID *Result,
                    OUT PULONG ResultLength)
 {
-    NT_ASSERT(FALSE);
+    ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -322,7 +322,7 @@ KiCallUserMode(
     IN PVOID *OutputBuffer,
     IN PULONG OutputLength)
 {
-    NT_ASSERT(FALSE);
+    ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -333,7 +333,7 @@ NtCallbackReturn(
     _In_ ULONG ResultLength,
     _In_ NTSTATUS CallbackStatus)
 {
-    NT_ASSERT(FALSE);
+    ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 

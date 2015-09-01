@@ -1245,7 +1245,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Set the index and the entry into the object type array */
     LocalObjectType->Index = ObpTypeObjectType->TotalNumberOfObjects;
 
-    NT_ASSERT(LocalObjectType->Index != 0);
+    ASSERT(LocalObjectType->Index != 0);
 
     if (LocalObjectType->Index < 32)
     {

@@ -453,7 +453,7 @@ CcFastCopyRead (
                          TRUE,
                          Buffer,
                          IoStatus);
-    NT_ASSERT(Success == TRUE);
+    ASSERT(Success == TRUE);
 }
 
 /*
@@ -479,7 +479,7 @@ CcFastCopyWrite (
                           Length,
                           TRUE,
                           Buffer);
-    NT_ASSERT(Success == TRUE);
+    ASSERT(Success == TRUE);
 }
 
 /*

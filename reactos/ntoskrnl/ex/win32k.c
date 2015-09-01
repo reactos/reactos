@@ -77,7 +77,7 @@ ExpWin32SessionCallout(
         if (SessionEntry == NULL)
         {
             /* The requested session does not even exist! */
-            NT_ASSERT(FALSE);
+            ASSERT(FALSE);
             return STATUS_NOT_FOUND;
         }
 
@@ -92,7 +92,7 @@ ExpWin32SessionCallout(
 
             /* Cleanup and return */
             MmQuitNextSession(SessionEntry);
-            NT_ASSERT(FALSE);
+            ASSERT(FALSE);
             return Status;
         }
     }

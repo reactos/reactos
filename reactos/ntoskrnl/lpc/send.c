@@ -793,7 +793,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     MessageType = LocalLpcRequest.u2.s2.Type;
 
     /* Due to the above probe, we know that TotalLength is positive */
-    NT_ASSERT(LocalLpcRequest.u1.s1.TotalLength >= 0);
+    ASSERT(LocalLpcRequest.u1.s1.TotalLength >= 0);
 
     /* Validate the length */
     if ((((ULONG)(USHORT)LocalLpcRequest.u1.s1.DataLength + sizeof(PORT_MESSAGE)) >

@@ -934,7 +934,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 
         NextEntry = NextEntry->Flink;
     }
-    NT_ASSERT(NextEntry != &PsLoadedModuleList);
+    ASSERT(NextEntry != &PsLoadedModuleList);
 
     /*
      * Initialize the driver
@@ -1374,7 +1374,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
         /* Set the unload invoked flag and call the unload routine */
         DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
         Status = IopLoadUnloadDriver(NULL, &DriverObject);
-        NT_ASSERT(Status == STATUS_SUCCESS);
+        ASSERT(Status == STATUS_SUCCESS);
 
         /* Mark the driver object temporary, so it could be deleted later */
         ObMakeTemporaryObject(DriverObject);
@@ -1874,7 +1874,7 @@ IopLoadUnloadDriverWorker(
 {
     PLOAD_UNLOAD_PARAMS LoadParams = Parameter;
 
-    NT_ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
+    ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
     LoadParams->Status = IopLoadUnloadDriver(LoadParams->RegistryPath,
                                              &LoadParams->DriverObject);
     KeSetEvent(&LoadParams->Event, 0, FALSE);

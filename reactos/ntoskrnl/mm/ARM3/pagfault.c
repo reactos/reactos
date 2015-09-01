@@ -189,7 +189,7 @@ MiAccessCheck(IN PMMPTE PointerPte,
     /* Check if this is a guard page */
     if ((ProtectionMask & MM_PROTECT_SPECIAL) == MM_GUARDPAGE)
     {
-        NT_ASSERT(ProtectionMask != MM_DECOMMIT);
+        ASSERT(ProtectionMask != MM_DECOMMIT);
 
         /* Attached processes can't expand their stack */
         if (KeIsAttachedProcess()) return STATUS_ACCESS_VIOLATION;
@@ -200,7 +200,7 @@ MiAccessCheck(IN PMMPTE PointerPte,
 
         /* Remove the guard page bit, and return a guard page violation */
         TempPte.u.Soft.Protection = ProtectionMask & ~MM_GUARDPAGE;
-        NT_ASSERT(TempPte.u.Long != 0);
+        ASSERT(TempPte.u.Long != 0);
         MI_WRITE_INVALID_PTE(PointerPte, TempPte);
         return STATUS_GUARD_PAGE_VIOLATION;
     }
@@ -1080,7 +1080,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     }
 
     /* There is no such thing as a decommitted prototype PTE */
-    NT_ASSERT(TempPte.u.Long != MmDecommittedPte.u.Long);
+    ASSERT(TempPte.u.Long != MmDecommittedPte.u.Long);
 
     /* Check for access rights on the PTE proper */
     PteContents = *PointerPte;
@@ -1420,7 +1420,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         /* Resolve */
         Status = MiResolveTransitionFault(Address, PointerPte, Process, LockIrql, &InPageBlock);
 
-        NT_ASSERT(NT_SUCCESS(Status));
+        ASSERT(NT_SUCCESS(Status));
 
         /* And now release the lock and leave*/
         KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
@@ -2069,7 +2069,7 @@ UserFault:
         if ((ProtectionCode & MM_PROTECT_SPECIAL) == MM_GUARDPAGE)
         {
             /* The VAD protection cannot be MM_DECOMMIT! */
-            NT_ASSERT(ProtectionCode != MM_DECOMMIT);
+            ASSERT(ProtectionCode != MM_DECOMMIT);
 
             /* Remove the bit */
             TempPte.u.Soft.Protection = ProtectionCode & ~MM_GUARDPAGE;
@@ -2185,7 +2185,7 @@ UserFault:
         /* Write the prototype PTE */
         TempPte = PrototypePte;
         TempPte.u.Soft.Protection = ProtectionCode;
-        NT_ASSERT(TempPte.u.Long != 0);
+        ASSERT(TempPte.u.Long != 0);
         MI_WRITE_INVALID_PTE(PointerPte, TempPte);
     }
     else

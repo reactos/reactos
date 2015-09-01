@@ -125,7 +125,7 @@ WmipCaptureGuidObjectAttributes(
     _Out_ PWSTR ObjectNameBuffer,
     _In_ KPROCESSOR_MODE AccessMode)
 {
-    NT_ASSERT(AccessMode != KernelMode);
+    ASSERT(AccessMode != KernelMode);
 
     _SEH2_TRY
     {

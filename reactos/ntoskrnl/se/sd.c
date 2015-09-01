@@ -864,7 +864,7 @@ SeSetSecurityDescriptorInfoEx(
         Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
     }
     OwnerLength = Owner ? RtlLengthSid(Owner) : 0;
-    NT_ASSERT(OwnerLength % sizeof(ULONG) == 0);
+    ASSERT(OwnerLength % sizeof(ULONG) == 0);
 
     /* Get group and group size */
     if (SecurityInformation & GROUP_SECURITY_INFORMATION)
@@ -878,7 +878,7 @@ SeSetSecurityDescriptorInfoEx(
         Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
     }
     GroupLength = Group ? RtlLengthSid(Group) : 0;
-    NT_ASSERT(GroupLength % sizeof(ULONG) == 0);
+    ASSERT(GroupLength % sizeof(ULONG) == 0);
 
     /* Get DACL and DACL size */
     if (SecurityInformation & DACL_SECURITY_INFORMATION)
@@ -1211,7 +1211,7 @@ SeAssignSecurityEx(
         }
     }
     OwnerLength = RtlLengthSid(Owner);
-    NT_ASSERT(OwnerLength % sizeof(ULONG) == 0);
+    ASSERT(OwnerLength % sizeof(ULONG) == 0);
 
     /* Inherit the Group SID */
     if (ExplicitDescriptor != NULL)
@@ -1248,7 +1248,7 @@ SeAssignSecurityEx(
         return STATUS_INVALID_PRIMARY_GROUP;
     }
     GroupLength = RtlLengthSid(Group);
-    NT_ASSERT(GroupLength % sizeof(ULONG) == 0);
+    ASSERT(GroupLength % sizeof(ULONG) == 0);
 
     /* Inherit the DACL */
     DaclLength = 0;
@@ -1283,7 +1283,7 @@ SeAssignSecurityEx(
                         GenericMapping);
     if (DaclPresent)
         Control |= SE_DACL_PRESENT;
-    NT_ASSERT(DaclLength % sizeof(ULONG) == 0);
+    ASSERT(DaclLength % sizeof(ULONG) == 0);
 
     /* Inherit the SACL */
     SaclLength = 0;
@@ -1318,7 +1318,7 @@ SeAssignSecurityEx(
                         GenericMapping);
     if (SaclPresent)
         Control |= SE_SACL_PRESENT;
-    NT_ASSERT(SaclLength % sizeof(ULONG) == 0);
+    ASSERT(SaclLength % sizeof(ULONG) == 0);
 
     /* Allocate and initialize the new security descriptor */
     Length = sizeof(SECURITY_DESCRIPTOR_RELATIVE) +
@@ -1356,7 +1356,7 @@ SeAssignSecurityEx(
                                  SaclIsInherited,
                                  IsDirectoryObject,
                                  GenericMapping);
-        NT_ASSERT(Status == STATUS_SUCCESS);
+        ASSERT(Status == STATUS_SUCCESS);
         Descriptor->Sacl = Current;
         Current += SaclLength;
     }
@@ -1371,7 +1371,7 @@ SeAssignSecurityEx(
                                  DaclIsInherited,
                                  IsDirectoryObject,
                                  GenericMapping);
-        NT_ASSERT(Status == STATUS_SUCCESS);
+        ASSERT(Status == STATUS_SUCCESS);
         Descriptor->Dacl = Current;
         Current += DaclLength;
     }

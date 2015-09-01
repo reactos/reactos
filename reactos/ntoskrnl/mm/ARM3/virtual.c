@@ -7,7 +7,6 @@
  */
 
 /* INCLUDES *******************************************************************/
-/* So long, and Thanks for All the Fish */
 
 #include <ntoskrnl.h>
 #define NDEBUG
@@ -431,7 +430,7 @@ MiDeletePte(IN PMMPTE PointerPte,
             /* Make the page free. For prototypes, it will be made free when deleting the section object */
             if (Pfn1->u2.ShareCount == 0)
             {
-                NT_ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+                ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
 
                 /* And it should be in standby or modified list */
                 ASSERT((Pfn1->u3.e1.PageLocation == ModifiedPageList) || (Pfn1->u3.e1.PageLocation == StandbyPageList));
@@ -1887,7 +1886,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         {
             DPRINT1("MmQuerySectionView failed. MemoryArea=%p (%p-%p), BaseAddress=%p\n",
                     MemoryArea, MA_GetStartingAddress(MemoryArea), MA_GetEndingAddress(MemoryArea), BaseAddress);
-            NT_ASSERT(NT_SUCCESS(Status));
+            ASSERT(NT_SUCCESS(Status));
         }
     }
     else
@@ -4856,7 +4855,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     //
     TempPte.u.Long = 0;
     TempPte.u.Soft.Protection = ProtectionMask;
-    NT_ASSERT(TempPte.u.Long != 0);
+    ASSERT(TempPte.u.Long != 0);
 
     //
     // Get the PTE, PDE and the last PTE for this address range

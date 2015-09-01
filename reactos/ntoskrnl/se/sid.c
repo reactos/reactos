@@ -499,8 +499,8 @@ SeCaptureSidAndAttributesArray(
                 RtlCopyMemory(CurrentDest, SrcSidAndAttributes[i].Sid, SidLength);
 
                 /* Sanity checks */
-                NT_ASSERT(RtlLengthSid(SidAndAttributes[i].Sid) == SidLength);
-                NT_ASSERT(RtlValidSid(SidAndAttributes[i].Sid));
+                ASSERT(RtlLengthSid(SidAndAttributes[i].Sid) == SidLength);
+                ASSERT(RtlValidSid(SidAndAttributes[i].Sid));
 
                 /* Update the current destination address */
                 CurrentDest += ALIGN_UP_BY(SidLength, sizeof(ULONG));

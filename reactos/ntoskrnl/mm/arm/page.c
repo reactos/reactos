@@ -301,14 +301,14 @@ MmGetPageFileMapping(
     PVOID Address,
     SWAPENTRY* SwapEntry)
 {
-    NT_ASSERT(FALSE);
+    ASSERT(FALSE);
 }
 
 BOOLEAN
 NTAPI
 MmIsDisabledPage(PEPROCESS Process, PVOID Address)
 {
-    NT_ASSERT(FALSE);
+    ASSERT(FALSE);
     return FALSE;
 }
 
@@ -317,6 +317,6 @@ NTAPI
 INIT_FUNCTION
 MiInitializeSessionSpaceLayout(VOID)
 {
-    NT_ASSERT(FALSE);
+    ASSERT(FALSE);
 }
 
