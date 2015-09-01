@@ -15,6 +15,9 @@
 VOID KiFastCallEntry(VOID);
 VOID KiFastCallEntryWithSingleStep(VOID);
 
+extern PVOID FrRestore;
+VOID FASTCALL Ke386LoadFpuState(IN PFX_SAVE_AREA SaveArea);
+
 /* GLOBALS ********************************************************************/
 
 UCHAR KiTrapPrefixTable[] =
@@ -251,16 +254,16 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
         SaveArea->Cr0NpxState |= CR0_TS;
 
         /* Only valid if it happened during a restore */
-        //if ((PVOID)TrapFrame->Eip == FrRestore)
+        if ((PVOID)TrapFrame->Eip == FrRestore)
         {
             /* It did, so just skip the instruction */
-            //TrapFrame->Eip += 3; /* sizeof(FRSTOR) */
-            //KiEoiHelper(TrapFrame);
+            TrapFrame->Eip += 3; /* Size of FRSTOR instruction */
+            KiEoiHelper(TrapFrame);
         }
     }
 
     /* User or kernel trap -- get ready to issue an exception */
-    //if (Thread->NpxState == NPX_STATE_NOT_LOADED)
+    if (Thread->NpxState == NPX_STATE_NOT_LOADED)
     {
         /* Update CR0 */
         Cr0 = __readcr0();
@@ -744,7 +747,7 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
     KiEnterTrap(TrapFrame);
 
     /* Try to handle NPX delay load */
-    while (TRUE)
+    for (;;)
     {
         /* Get the current thread */
         Thread = KeGetCurrentThread();
@@ -775,15 +778,14 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
                 NpxSaveArea = KiGetThreadNpxArea(NpxThread);
 
                 /* Save FPU state */
-                DPRINT("FIXME: Save FPU state: %p\n", NpxSaveArea);
-                //Ke386SaveFpuState(NpxSaveArea);
+                Ke386SaveFpuState(NpxSaveArea);
 
                 /* Update NPX state */
                 NpxThread->NpxState = NPX_STATE_NOT_LOADED;
            }
 
             /* Load FPU state */
-            //Ke386LoadFpuState(SaveArea);
+            Ke386LoadFpuState(SaveArea);
 
             /* Update NPX state */
             Thread->NpxState = NPX_STATE_LOADED;
@@ -823,7 +825,7 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
     {
         /*
          * If it's incorrectly set, then maybe the state is actually still valid
-         * but we could've lock track of that due to a BIOS call.
+         * but we could have lost track of that due to a BIOS call.
          * Make sure MP is still set, which should verify the theory.
          */
         if (Cr0 & CR0_MP)

@@ -159,4 +159,28 @@ PUBLIC @Ki386BiosCallReturnAddress@4
     popad
     ret 4
 
+PUBLIC _FrRestore
+PUBLIC @Ke386LoadFpuState@4
+@Ke386LoadFpuState@4:
+
+    /* Check if we have FXSR and choose which operand to use */
+    test byte ptr [_KeI386FxsrPresent], 1
+    jz _FrRestore
+
+    /* Restore all the FPU, MMX, XMM and MXCSR registers */
+    fxrstor [ecx]
+    ret
+
+    /*
+     * Just restore the basic FPU registers.
+     * This may raise an exception depending
+     * on the status word, which KiNpxHandler will
+     * need to check for and handle during delayed load
+     * to avoid raising an unhandled exception
+     * and crashing the system.
+     */
+_FrRestore:
+    frstor [ecx]
+    ret
+
 END
