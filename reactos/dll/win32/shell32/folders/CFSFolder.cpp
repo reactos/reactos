@@ -1034,7 +1034,6 @@ HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
     LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList, pszFileName;
     int res, length;
     HRESULT hr;
-    STRRET strRet;
 
     TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
 
@@ -1047,20 +1046,11 @@ HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
             return hr;
         }
 
-        hr = pSFFrom->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strRet);
-        if (FAILED(hr))
-        {
-            SHFree(pidl);
-            return hr;
-        }
-
-        hr = StrRetToBufW(&strRet, pidl, szSrcPath, MAX_PATH);
-        if (FAILED(hr))
-        {
-            SHFree(pidl);
-            return hr;
-        }
+        hr = SHGetPathFromIDListW(pidl, szSrcPath);
         SHFree(pidl);
+
+        if (FAILED(hr))
+            return hr;
 
         pszSrc = PathAddBackslashW(szSrcPath);
 
