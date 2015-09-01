@@ -95,6 +95,12 @@
 extern UCHAR _KeNumberProcessors;
 #define ExRaiseStatus RtlRaiseStatus
 
+//
+// NT_ASSERT Best Assert
+//
+#undef ASSERT
+#define ASSERT NT_ASSERT
+
 /* Internal Headers */
 #include "internal/ntoskrnl.h"
 #include "config.h"
