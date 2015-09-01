@@ -171,22 +171,32 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 
 HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
 {
+    BOOL PrevState;
+
     TRACE("Volume_Update\n");
 
+    PrevState = g_IsMute;
     Volume_IsMute();
 
-    WCHAR strTooltip[128];
-    HICON icon;
-    if (g_IsMute) {
-        icon = g_hIconMute;
-        LoadStringW(g_hInstance, IDS_VOL_MUTED, strTooltip, _countof(strTooltip));
-    }
-    else {
-        icon = g_hIconVolume;
-        LoadStringW(g_hInstance, IDS_VOL_VOLUME, strTooltip, _countof(strTooltip));
-    }
+    if (PrevState != g_IsMute)
+    {
+        WCHAR strTooltip[128];
+        HICON icon;
+        if (g_IsMute) {
+            icon = g_hIconMute;
+            LoadStringW(g_hInstance, IDS_VOL_MUTED, strTooltip, _countof(strTooltip));
+        }
+        else {
+            icon = g_hIconVolume;
+            LoadStringW(g_hInstance, IDS_VOL_VOLUME, strTooltip, _countof(strTooltip));
+        }
 
-    return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_VOLUME, icon, strTooltip);
+        return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_VOLUME, icon, strTooltip);
+    }
+    else
+    {
+        return S_OK;
+    }
 }
 
 HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray)
