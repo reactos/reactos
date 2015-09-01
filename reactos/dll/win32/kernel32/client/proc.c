@@ -1507,12 +1507,12 @@ BOOL
 WINAPI
 FlushInstructionCache(IN HANDLE hProcess,
                       IN LPCVOID lpBaseAddress,
-                      IN SIZE_T dwSize)
+                      IN SIZE_T nSize)
 {
     NTSTATUS Status;
 
     /* Call the native function */
-    Status = NtFlushInstructionCache(hProcess, (PVOID)lpBaseAddress, dwSize);
+    Status = NtFlushInstructionCache(hProcess, (PVOID)lpBaseAddress, nSize);
     if (!NT_SUCCESS(Status))
     {
         /* Handle failure case */

@@ -56,7 +56,7 @@ PFAST_SYSTEM_CALL_EXIT KiFastCallExitHandler;
 PKDBG_PRESERVICEHOOK KeWin32PreServiceHook = NULL;
 PKDBG_POSTSERVICEHOOK KeWin32PostServiceHook = NULL;
 #endif
-#if TRAP_DEBUG
+#if DBG
 BOOLEAN StopChecking = FALSE;
 #endif
 

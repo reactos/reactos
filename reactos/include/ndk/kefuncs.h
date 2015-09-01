@@ -398,15 +398,6 @@ NtDelayExecution(
     _In_ LARGE_INTEGER *Interval
 );
 
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtFlushInstructionCache(
-    _In_ HANDLE ProcessHandle,
-    _In_ PVOID BaseAddress,
-    _In_ ULONG NumberOfBytesToFlush
-);
-
 ULONG
 NTAPI
 NtGetCurrentProcessorNumber(

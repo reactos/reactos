@@ -98,8 +98,10 @@ extern UCHAR _KeNumberProcessors;
 //
 // NT_ASSERT Best Assert
 //
+#if defined(_MSC_VER)
 #undef ASSERT
 #define ASSERT NT_ASSERT
+#endif
 
 /* Internal Headers */
 #include "internal/ntoskrnl.h"

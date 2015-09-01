@@ -146,21 +146,6 @@ RtlMoveMemory(PVOID Destination,
     memmove(Destination, Source, Length);
 }
 
-
-/*
-* @implemented
-*/
-VOID
-FASTCALL
-RtlPrefetchMemoryNonTemporal(IN PVOID Source,
-                             IN SIZE_T Length)
-{
-    /* By nature of prefetch, this is non-portable. */
-    (void)Source;
-    (void)Length;
-}
-
-
 #undef RtlZeroMemory
 /*
  * @implemented

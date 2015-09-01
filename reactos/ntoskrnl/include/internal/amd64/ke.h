@@ -190,6 +190,19 @@ KeFlushProcessTb(VOID)
 
 FORCEINLINE
 VOID
+KeSweepICache(IN PVOID BaseAddress,
+              IN SIZE_T FlushSize)
+{
+    //
+    // Always sweep the whole cache
+    //
+    UNREFERENCED_PARAMETER(BaseAddress);
+    UNREFERENCED_PARAMETER(FlushSize);
+    __wbinvd();
+}
+
+FORCEINLINE
+VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
 #ifndef CONFIG_SMP

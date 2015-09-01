@@ -100,6 +100,3 @@ RtlZeroMemory:
         mr 5,4
         xor 4,4,4
         b memset
-
-RtlPrefetchMemoryNonTemporal:
-        blr

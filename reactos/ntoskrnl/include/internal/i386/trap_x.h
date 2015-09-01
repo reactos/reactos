@@ -8,8 +8,6 @@
 
 #pragma once
 
-#define TRAP_DEBUG 0
-
 #define UNREACHABLE __assume(0)
 
 #if _MSC_VER
@@ -72,9 +70,9 @@ KiDumpTrapFrame(IN PKTRAP_FRAME TrapFrame)
     DbgPrint("V86Gs: %x\n", TrapFrame->V86Gs);
 }
 
-#if TRAP_DEBUG
-VOID
+#if DBG
 FORCEINLINE
+VOID
 KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
 {
     /* Set the debug information */

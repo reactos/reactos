@@ -2916,6 +2916,73 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
 
 NTSTATUS
 NTAPI
+NtFlushInstructionCache(_In_ HANDLE ProcessHandle,
+                        _In_opt_ PVOID BaseAddress,
+                        _In_ SIZE_T FlushSize)
+{
+    KAPC_STATE ApcState;
+    PKPROCESS Process;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Is a base address given? */
+    if (BaseAddress != NULL)
+    {
+        /* If the requested size is 0, there is nothing to do */
+        if (FlushSize == 0)
+        {
+            return STATUS_SUCCESS;
+        }
+
+        /* Is this a user mode call? */
+        if (ExGetPreviousMode() != KernelMode)
+        {
+            /* Make sure the base address is in user space */
+            if (BaseAddress > MmHighestUserAddress)
+            {
+                DPRINT1("Invalid BaseAddress 0x%p\n", BaseAddress);
+                return STATUS_ACCESS_VIOLATION;
+            }
+        }
+    }
+
+    /* Is another process requested? */
+    if (ProcessHandle != NtCurrentProcess())
+    {
+        /* Reference the process */
+        Status = ObReferenceObjectByHandle(ProcessHandle,
+                                           PROCESS_VM_WRITE,
+                                           PsProcessType,
+                                           ExGetPreviousMode(),
+                                           (PVOID*)&Process,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to reference the process %p\n", ProcessHandle);
+            return Status;
+        }
+
+        /* Attach to the process */
+        KeStackAttachProcess(Process, &ApcState);
+    }
+
+    /* Forward to Ke */
+    KeSweepICache(BaseAddress, FlushSize);
+
+    /* Check if we attached */
+    if (ProcessHandle != NtCurrentProcess())
+    {
+        /* Detach from the process and dereference it */
+        KeUnstackDetachProcess(&ApcState);
+        ObDereferenceObject(Process);
+    }
+
+    /* All done, return to caller */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 NtProtectVirtualMemory(IN HANDLE ProcessHandle,
                        IN OUT PVOID *UnsafeBaseAddress,
                        IN OUT SIZE_T *UnsafeNumberOfBytesToProtect,
