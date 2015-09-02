@@ -292,8 +292,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
          return ret;
    }
 
-   if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
-      PrintStackTrace(ExceptionInfo);
+   PrintStackTrace(ExceptionInfo);
 
    /* Save exception code and address */
    ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
