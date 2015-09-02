@@ -45,7 +45,6 @@
 #include "wine/cpanel.h"
 #include "CEnumIDListBase.h"
 #include "shfldr.h"
-#include "shellfolder.h"
 #include "CShellItem.h"
 #include "CShellLink.h"
 #include "CDropTargetHelper.h"

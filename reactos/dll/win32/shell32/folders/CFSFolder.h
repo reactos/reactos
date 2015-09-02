@@ -30,8 +30,7 @@ class CFSFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
     public IPersistFolder3,
-    public IDropTarget,
-    public ISFHelper
+    public IDropTarget
 {
     private:
         CLSID *pclsid;
@@ -52,6 +51,7 @@ class CFSFolder :
         virtual HRESULT WINAPI _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
         virtual HRESULT WINAPI _LoadDynamicDropTargetHandlerForKey(HKEY hRootKey, LPCWSTR pwcsname, LPVOID *ppvOut);
         virtual HRESULT WINAPI _LoadDynamicDropTargetHandler(const CLSID *pclsid, LPCWSTR pwcsname, LPVOID *ppvOut);
+        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
 
     public:
         CFSFolder();
@@ -98,12 +98,6 @@ class CFSFolder :
         virtual HRESULT WINAPI DragLeave();
         virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
 
-        // ISFHelper
-        virtual HRESULT WINAPI GetUniqueName(LPWSTR pwszName, UINT uLen);
-        virtual HRESULT WINAPI AddFolder(HWND hwnd, LPCWSTR pwszName, LPITEMIDLIST *ppidlOut);
-        virtual HRESULT WINAPI DeleteItems(UINT cidl, LPCITEMIDLIST *apidl);
-        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
-
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
         DECLARE_NOT_AGGREGATABLE(CFSFolder)
 
@@ -117,7 +111,6 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder3, IPersistFolder3)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
-        COM_INTERFACE_ENTRY_IID(IID_ISFHelper, ISFHelper)
         END_COM_MAP()
 };
 

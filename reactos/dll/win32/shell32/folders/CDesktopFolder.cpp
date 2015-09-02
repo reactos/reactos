@@ -957,41 +957,6 @@ HRESULT WINAPI CDesktopFolder::GetCurFolder(LPITEMIDLIST * pidl)
     return S_OK;
 }
 
-HRESULT WINAPI CDesktopFolder::GetUniqueName(LPWSTR pwszName, UINT uLen)
-{
-    CComPtr<ISFHelper> psfHelper;
-    HRESULT hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(ISFHelper, &psfHelper));
-    if (FAILED(hr))
-        return hr;
-
-    return psfHelper->GetUniqueName(pwszName, uLen);
-}
-
-HRESULT WINAPI CDesktopFolder::AddFolder(HWND hwnd, LPCWSTR pwszName, LPITEMIDLIST *ppidlOut)
-{
-    CComPtr<ISFHelper> psfHelper;
-    HRESULT hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(ISFHelper, &psfHelper));
-    if (FAILED(hr))
-        return hr;
-
-    return psfHelper->AddFolder(hwnd, pwszName, ppidlOut);
-}
-
-HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy)
-{
-    CComPtr<ISFHelper> psfHelper;
-    HRESULT hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(ISFHelper, &psfHelper));
-    if (FAILED(hr))
-        return hr;
-
-    return psfHelper->CopyItems(pSFFrom, cidl, apidl, bCopy);
-}
-
 HRESULT WINAPI CDesktopFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) {
     HRESULT hr;
 

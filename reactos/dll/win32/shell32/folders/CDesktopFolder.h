@@ -27,8 +27,7 @@ class CDesktopFolder :
     public CComCoClass<CDesktopFolder, &CLSID_ShellDesktop>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2,
-    public ISFHelper
+    public IPersistFolder2
 {
     private:
         /* both paths are parsible from the desktop */
@@ -75,12 +74,6 @@ class CDesktopFolder :
         // *** IPersistFolder2 methods ***
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
 
-        // *** ISFHelper methods ***
-        virtual HRESULT WINAPI GetUniqueName(LPWSTR pwszName, UINT uLen);
-        virtual HRESULT WINAPI AddFolder(HWND hwnd, LPCWSTR pwszName, LPITEMIDLIST *ppidlOut);
-        virtual HRESULT WINAPI DeleteItems(UINT cidl, LPCITEMIDLIST *apidl);
-        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
-
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLDESKTOP)
         DECLARE_CENTRAL_INSTANCE_NOT_AGGREGATABLE(CDesktopFolder)
 
@@ -92,7 +85,6 @@ class CDesktopFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-        COM_INTERFACE_ENTRY_IID(IID_ISFHelper, ISFHelper)
         END_COM_MAP()
 };
 

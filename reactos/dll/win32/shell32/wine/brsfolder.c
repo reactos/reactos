@@ -38,7 +38,6 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shresdef.h"
-#include "shellfolder.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
