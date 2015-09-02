@@ -219,7 +219,6 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IRunnableObject)                   },
     { ID_NAME(IID_IServerSecurity),             TRUE },
     { ID_NAME(IID_IServiceProvider)                  },
-    { ID_NAME(IID_ISFHelper),                   TRUE },
     { ID_NAME(IID_IShellApp),                   TRUE },
     { ID_NAME(IID_IShellBrowser)                     },
     { ID_NAME(IID_IShellBrowserService),        TRUE },
