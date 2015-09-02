@@ -2013,16 +2013,6 @@ co_MsqWaitForNewMessages(PTHREADINFO pti, PWND WndFilter,
       IntCoalesceMouseMove(pti);
    }
 
-   if ( pti->nCntsQBits[QSRosMouseButton] != 0 ||
-        pti->nCntsQBits[QSRosMouseMove]   != 0 ||
-        pti->nCntsQBits[QSRosKey]         != 0 ||
-        pti->nCntsQBits[QSRosSendMessage] != 0 ||
-        pti->nCntsQBits[QSRosPostMessage] != 0 )
-   {
-      TRACE("No time to wait!\n");
-      return ret;
-   }
-
    UserLeaveCo();
 
    ZwYieldExecution(); // Let someone else run!

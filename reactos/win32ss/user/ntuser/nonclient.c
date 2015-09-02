@@ -497,7 +497,13 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                        // Only the windows that overlap will be redrawn.
                        if (RECTL_bIntersectRect( &rect, &pwnd->rcWindow, &pwndTemp->rcWindow ))
                        {
-                          co_UserRedrawWindow( pwndTemp, NULL, NULL, RDW_UPDATENOW | RDW_ALLCHILDREN);
+                          if (pwnd->head.pti == pwndTemp->head.pti)
+                          co_UserRedrawWindow( pwndTemp, NULL, NULL, RDW_UPDATENOW | RDW_NOCHILDREN);
+                          else
+                          {
+                            ERR("Not Same Thread!\n");
+                            co_UserRedrawWindow( pwndTemp, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+                          }
                        }
                     }
                  }
@@ -890,7 +896,7 @@ VOID UserDrawCaptionBar(
 
    if (!(Flags & DC_NOVISIBLE) && !IntIsWindowVisible(pWnd)) return;
 
-   TRACE("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
+   ERR("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
 
    Style = pWnd->style;
    ExStyle = pWnd->ExStyle;
@@ -1506,8 +1512,7 @@ NC_DoButton(PWND pWnd, WPARAM wParam, LPARAM lParam)
 
    for (;;)
    {
-      if (co_IntGetPeekMessage(&Msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE, TRUE) <= 0)
-         break;
+      if (!co_IntGetPeekMessage(&Msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE, TRUE)) break;
       if (IntCallMsgFilter( &Msg, MSGF_MAX )) continue;
 
       if (Msg.message == WM_LBUTTONUP)
