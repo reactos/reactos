@@ -463,7 +463,7 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     IntSetProp(pWnd, gpsi->atomIconSmProp, hIconSmall);
 
     if ((pWnd->style & WS_CAPTION ) == WS_CAPTION)
-       UserPaintCaption(pWnd, DC_ICON);
+       UserPaintCaption(pWnd, DC_CAPTION);
 
     return (LRESULT)hIconOld;
 }
