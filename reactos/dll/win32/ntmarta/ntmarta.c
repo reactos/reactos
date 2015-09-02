@@ -252,7 +252,7 @@ AccpGetTrusteeObjects(IN PTRUSTEE_W Trustee,
                 *pObjectTypeGuid = pOas->ObjectTypeGuid;
 
             if (pInheritedObjectTypeGuid != NULL && pOas->ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT)
-                *pObjectTypeGuid = pOas->InheritedObjectTypeGuid;
+                *pInheritedObjectTypeGuid = pOas->InheritedObjectTypeGuid;
 
             Ret = pOas->ObjectsPresent;
             break;
@@ -705,7 +705,7 @@ AccRewriteGetHandleRights(HANDLE handle,
 
         if (SecurityInfo & GROUP_SECURITY_INFORMATION && ppsidGroup != NULL)
         {
-            *ppsidOwner = NULL;
+            *ppsidGroup = NULL;
             if (!GetSecurityDescriptorGroup(pSD,
                                             ppsidGroup,
                                             &Defaulted))
