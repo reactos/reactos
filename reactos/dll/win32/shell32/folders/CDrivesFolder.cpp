@@ -66,6 +66,15 @@ static const shvheader MyComputerSFHeader[] = {
 
 #define MYCOMPUTERSHELLVIEWCOLUMNS 4
 
+static const DWORD dwComputerAttributes =
+    SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
+    SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
+static const DWORD dwControlPanelAttributes =
+    SFGAO_HASSUBFOLDER | SFGAO_FOLDER | SFGAO_CANLINK;
+static const DWORD dwDriveAttributes =
+    SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
+    SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK;
+
 CDrivesFolderEnum::CDrivesFolderEnum()
 {
 }
@@ -237,8 +246,8 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
         hr = S_OK;
         if (pdwAttributes && *pdwAttributes)
         {
-            if (_ILIsCPanelStruct(pidlTemp))
-                *pdwAttributes &= SFGAO_CANLINK;
+            if (_ILIsDrive(pidlTemp))
+                *pdwAttributes &= dwDriveAttributes;
             else if (_ILIsSpecialFolder(pidlTemp))
                 SHELL32_GetGuidItemAttributes(this, pidlTemp, pdwAttributes);
             else
@@ -351,15 +360,6 @@ static BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
 */
 HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
-    static const DWORD dwComputerAttributes =
-        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
-        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
-    static const DWORD dwControlPanelAttributes =
-        SFGAO_HASSUBFOLDER | SFGAO_FOLDER | SFGAO_CANLINK;
-    static const DWORD dwDriveAttributes =
-        SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
-        SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK;
-
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
            this, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
 
