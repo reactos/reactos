@@ -31,7 +31,7 @@ RtlGetCallersAddress(OUT PVOID *CallersAddress,
     FrameCount = RtlCaptureStackBackTrace(2, 2, &BackTrace[0],BackTraceHash);
 
     /* Only if user want it */
-    if (*CallersAddress != NULL)
+    if (CallersAddress != NULL)
     {
         /* only when first frames exist */
         if (FrameCount >= 1)
@@ -45,7 +45,7 @@ RtlGetCallersAddress(OUT PVOID *CallersAddress,
     }
 
     /* Only if user want it */
-    if (*CallersCaller != NULL)
+    if (CallersCaller != NULL)
     {
         /* only when second frames exist */
         if (FrameCount >= 2)
