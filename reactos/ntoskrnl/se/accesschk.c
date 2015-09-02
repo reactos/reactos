@@ -493,7 +493,7 @@ SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             continue;
 
         /* If access-allowed ACE */
-        if (Ace->Header.AceType & ACCESS_ALLOWED_ACE_TYPE)
+        if (Ace->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
         {
             /* Check if all accesses are granted */
             if (!(Ace->Mask & DesiredAccess))
@@ -504,9 +504,9 @@ SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                 return TRUE;
         }
         /* If access-denied ACE */
-        else if (Ace->Header.AceType & ACCESS_DENIED_ACE_TYPE)
+        else if (Ace->Header.AceType == ACCESS_DENIED_ACE_TYPE)
         {
-            /* Here, only check if it denies all the access wanted and deny if so */
+            /* Here, only check if it denies any access wanted and deny if so */
             if (Ace->Mask & DesiredAccess)
                 return FALSE;
         }
