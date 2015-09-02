@@ -497,13 +497,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                        // Only the windows that overlap will be redrawn.
                        if (RECTL_bIntersectRect( &rect, &pwnd->rcWindow, &pwndTemp->rcWindow ))
                        {
-                          if (pwnd->head.pti == pwndTemp->head.pti)
                           co_UserRedrawWindow( pwndTemp, NULL, NULL, RDW_UPDATENOW | RDW_NOCHILDREN);
-                          else
-                          {
-                            ERR("Not Same Thread!\n");
-                            co_UserRedrawWindow( pwndTemp, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
-                          }
                        }
                     }
                  }
