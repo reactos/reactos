@@ -51,6 +51,7 @@ private:
 		SHELLNEW_ITEM *pNext;
 	};
 
+    LPITEMIDLIST m_pidlFolder;
     LPWSTR m_wszPath;
     SHELLNEW_ITEM *m_pItems;
     SHELLNEW_ITEM *m_pLinkItem;
@@ -65,8 +66,9 @@ private:
 	BOOL LoadAllItems();
 	UINT InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu);
 	SHELLNEW_ITEM *FindItemFromIdOffset(UINT IdOffset);
-	HRESULT CreateNewFolder(IShellView *psv);
-	HRESULT CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi, IShellView *psv);
+	HRESULT CreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
+	HRESULT CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi);
+    HRESULT SelectNewItem(LPCMINVOKECOMMANDINFO lpici, LONG wEventId, UINT uFlags, LPWSTR pszName);
 
 public:
 	CNewMenu();

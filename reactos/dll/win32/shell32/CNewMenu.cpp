@@ -38,6 +38,9 @@ CNewMenu::CNewMenu()
 CNewMenu::~CNewMenu()
 {
     UnloadAllItems();
+
+    if (m_pidlFolder)
+        ILFree(m_pidlFolder);
 }
 
 void CNewMenu::UnloadItem(SHELLNEW_ITEM *pItem)
@@ -296,93 +299,82 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::FindItemFromIdOffset(UINT IdOffset)
     return pItem;
 }
 
-HRESULT CNewMenu::CreateNewFolder(IShellView *psv)
+HRESULT CNewMenu::SelectNewItem(LPCMINVOKECOMMANDINFO lpici, LONG wEventId, UINT uFlags, LPWSTR pszName)
 {
-    WCHAR wszName[MAX_PATH];
-    CComPtr<ISFHelper> psfhlp; 
-    CComPtr<IFolderView> pFolderView;
-    CComPtr<IShellFolder> pParentFolder;
-    HRESULT hr;
-
-    //if (m_pSite == NULL)
-    //    return E_FAIL;
-
-    /* Get current folder */
-    hr = IUnknown_QueryService(psv, SID_IFolderView, IID_PPV_ARG(IFolderView, &pFolderView));
-    if (FAILED(hr))
-        return hr;
-
-    hr = pFolderView->GetFolder(IID_PPV_ARG(IShellFolder, &pParentFolder));
-    if (FAILED(hr))
-        return hr;
-
-    hr = pParentFolder->QueryInterface(IID_PPV_ARG(ISFHelper, &psfhlp));
-    if (FAILED(hr))
-        return hr;
-
+    CComPtr<IShellBrowser> lpSB;
+    CComPtr<IShellView> lpSV;
+    HRESULT hr = E_FAIL;
     LPITEMIDLIST pidl;
+    PITEMID_CHILD pidlNewItem;
 
-    /* Get unique name and create a folder */
-    hr = psfhlp->GetUniqueName(wszName, _countof(wszName));
-    if (hr != S_OK)
-        return hr;
-    hr = psfhlp->AddFolder(0, wszName, &pidl);
-    if (hr != S_OK)
-    {
-        WCHAR wszBuf[256];
-        StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create folder: %s", wszName);
-        MessageBoxW(NULL, wszBuf, L"Cannot create folder", MB_OK|MB_ICONERROR);
-        return hr;
-    }
+    /* Notify the view object about the new item */
+    SHChangeNotify(wEventId, uFlags, (LPCVOID) pszName, NULL);
 
-    /* Do a labeledit */
-    psv->Refresh();
-    psv->SelectItem(pidl, SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE |
-                          SVSI_FOCUSED | SVSI_SELECT);
+    /* FIXME: I think that this can be implemented using callbacks to the shell folder */
+
+    /* Note: CWM_GETISHELLBROWSER returns shell browser without adding reference */
+    lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER, 0, 0);
+    if (!lpSB)
+        return E_FAIL;
+
+    hr = lpSB->QueryActiveShellView(&lpSV);
+    if (FAILED(hr))
+        return hr;
+
+    /* Attempt to get the pidl of the new item */
+    hr = SHILCreateFromPathW(pszName, &pidl, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    pidlNewItem = ILFindLastID(pidl);
+
+    hr = lpSV->SelectItem(pidlNewItem, SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE |
+                                       SVSI_FOCUSED | SVSI_SELECT);
 
     SHFree(pidl);
+
+    return hr;
+}
+
+HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
+{
+    WCHAR wszPath[MAX_PATH];
+    WCHAR wszName[MAX_PATH];
+    WCHAR wszNewFolder[25];
+    HRESULT hr;
+    
+    /* Get folder path */
+    hr = SHGetPathFromIDListW(m_pidlFolder, wszPath);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (!LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder, _countof(wszNewFolder)))
+        return E_FAIL;
+
+    /* Create the name of the new directory */
+    if (!PathYetAnotherMakeUniqueName(wszName, wszPath, NULL, wszNewFolder))
+        return E_FAIL;
+
+    /* Create the new directory and show the appropriate dialog in case of error */
+    if (SHCreateDirectory (lpici->hwnd, wszName) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    /* Show and select the new item in the def view */
+    SelectNewItem(lpici, SHCNE_MKDIR, SHCNF_PATHW, wszName);
+
     return S_OK;
 }
 
-HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi, IShellView *psv)
+HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi)
 {
-    LPITEMIDLIST pidl;
-    STRRET strTemp;
     WCHAR wszBuf[MAX_PATH];
     WCHAR wszPath[MAX_PATH];
-    CComPtr<IFolderView> pFolderView;
-    CComPtr<IShellFolder> pParentFolder;
-    CComPtr<IPersistFolder2> psf;
     HRESULT hr;
 
-    /* Get current folder */
-    hr = IUnknown_QueryService(psv, SID_IFolderView, IID_PPV_ARG(IFolderView, &pFolderView));
-    if (FAILED(hr))
-        return hr;
-
-    hr = pFolderView->GetFolder(IID_PPV_ARG(IShellFolder, &pParentFolder));
-    if (FAILED(hr))
-        return hr;
-
-    if (pParentFolder->QueryInterface(IID_PPV_ARG(IPersistFolder2, &psf)) != S_OK)
-    {
-        ERR("Failed to get interface IID_IPersistFolder2\n");
-        return E_FAIL;
-    }
-
-    if (psf->GetCurFolder(&pidl) != S_OK)
-    {
-        ERR("IPersistFolder2_GetCurFolder failed\n");
-        return E_FAIL;
-    }
-
     /* Get folder path */
-    if (pParentFolder == NULL || pParentFolder->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strTemp) != S_OK)
-    {
-        ERR("IShellFolder_GetDisplayNameOf failed\n");
-        return E_FAIL;
-    }
-    StrRetToBufW(&strTemp, pidl, wszPath, _countof(wszPath));
+    hr = SHGetPathFromIDListW(m_pidlFolder, wszPath);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     switch (pItem->Type)
     {
@@ -468,16 +460,7 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             if (bSuccess)
             {
                 TRACE("Notifying fs %s\n", debugstr_w(wszPath));
-                SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, (LPCVOID)wszPath, NULL);
-                psv->Refresh();
-
-                LPITEMIDLIST pidl;
-                hr = _ILCreateFromPathW(wszPath, &pidl);
-                if (SUCCEEDED(hr))
-                {
-                    psv->SelectItem(pidl, SVSI_DESELECTOTHERS|SVSI_EDIT|SVSI_ENSUREVISIBLE|SVSI_FOCUSED|SVSI_SELECT);
-                    ILFree(pidl);
-                }
+                SelectNewItem(lpcmi, SHCNE_CREATE, SHCNF_PATHW, wszPath);
             }
             else
             {
@@ -551,22 +534,15 @@ HRESULT
 WINAPI
 CNewMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
-    CComPtr<IShellBrowser> lpSB;
-    CComPtr<IShellView> lpSV;
     HRESULT hr = E_FAIL;
 
-    /* Note: CWM_GETISHELLBROWSER returns shell browser without adding reference */
-    lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-    if (lpSB)
-        lpSB->QueryActiveShellView(&lpSV);
-
     if (LOWORD(lpici->lpVerb) == 0)
-        hr = CreateNewFolder(lpSV);
+        hr = CreateNewFolder(lpici);
     else
     {
         SHELLNEW_ITEM *pItem = FindItemFromIdOffset(LOWORD(lpici->lpVerb));
         if (pItem)
-            hr = CreateNewItem(pItem, lpici, lpSV);
+            hr = CreateNewItem(pItem, lpici);
     }
 
     TRACE("CNewMenu::InvokeCommand %x\n", hr);
@@ -657,6 +633,8 @@ HRESULT WINAPI
 CNewMenu::Initialize(LPCITEMIDLIST pidlFolder,
                      IDataObject *pdtobj, HKEY hkeyProgID)
 {
+    m_pidlFolder = ILClone(pidlFolder);
+
     /* Load folder and shortcut icons */
     m_hiconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 16, 16, LR_SHARED);
     m_hiconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 16, 16, LR_SHARED);

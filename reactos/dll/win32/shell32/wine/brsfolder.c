@@ -735,7 +735,12 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
 {
     DWORD flags = BrowseFlagsToSHCONTF(info->lpBrowseInfo->ulFlags);
     IShellFolder *desktop, *cur;
+#ifdef __REACTOS__
+    WCHAR wszNewFolder[25];
+    WCHAR path[25];
+#else
     ISFHelper *sfhelper;
+#endif
     WCHAR name[MAX_PATH];
     HTREEITEM parent, added;
     LPTV_ITEMDATA item_data;
@@ -758,6 +763,22 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(FAILED(hr))
         return hr;
 
+#ifdef __REACTOS__
+    hr = SHGetPathFromIDListW(info->pidlRet, path);
+    if(FAILED(hr))
+        return hr;
+
+    len = strlenW(name);
+    if(len<MAX_PATH)
+        len++;
+        
+    if (!LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder, _countof(wszNewFolder)))
+        return E_FAIL;
+
+    if (!PathYetAnotherMakeUniqueName(name, path, NULL, wszNewFolder))
+        return E_FAIL;
+#else
+
     hr = IShellFolder_QueryInterface(cur, &IID_ISFHelper, (void**)&sfhelper);
     if(FAILED(hr))
         return hr;
@@ -765,7 +786,7 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     hr = SHGetPathFromIDListW(info->pidlRet, name);
     if(FAILED(hr))
         goto cleanup;
-
+        
     len = strlenW(name);
     if(len<MAX_PATH)
         name[len++] = '\\';
@@ -773,6 +794,7 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     ISFHelper_Release(sfhelper);
     if(FAILED(hr))
         goto cleanup;
+#endif
 
     hr = E_FAIL;
     if(!CreateDirectoryW(name, NULL))
