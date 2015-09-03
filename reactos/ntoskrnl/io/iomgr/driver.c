@@ -197,7 +197,6 @@ IopSuffixUnicodeString(
  */
 VOID
 FASTCALL
-INIT_FUNCTION
 IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
 {
     CHAR TextBuffer[256];

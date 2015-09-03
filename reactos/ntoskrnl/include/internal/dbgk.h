@@ -47,7 +47,6 @@
 #endif
 
 VOID
-INIT_FUNCTION
 NTAPI
 DbgkInitialize(
     VOID

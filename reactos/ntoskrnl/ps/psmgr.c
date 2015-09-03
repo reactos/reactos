@@ -242,7 +242,6 @@ PspLookupKernelUserEntryPoints(VOID)
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 PspMapSystemDll(IN PEPROCESS Process,
                 IN PVOID *DllBase,
                 IN BOOLEAN UseLargePages)

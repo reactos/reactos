@@ -16,9 +16,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+//INIT_FUNCTION
 PSECURITY_DESCRIPTOR
 NTAPI
-INIT_FUNCTION
 CmpHiveRootSecurityDescriptor(VOID)
 {
     NTSTATUS Status;

@@ -662,7 +662,6 @@ IoDestroyDriverList(
 );
 
 NTSTATUS
-INIT_FUNCTION
 IopInitPlugPlayEvents(VOID);
 
 NTSTATUS
