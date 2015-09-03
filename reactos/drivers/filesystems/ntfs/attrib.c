@@ -386,51 +386,6 @@ NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
 
 static
 VOID
-NtfsDumpAttribute(PDEVICE_EXTENSION Vcb, PNTFS_ATTR_RECORD Attribute);
-
-
-static
-VOID
-NtfsDumpAttributeListAttribute(PDEVICE_EXTENSION Vcb,
-                               PNTFS_ATTR_RECORD Attribute)
-{
-    PNTFS_ATTR_CONTEXT ListContext;
-    PVOID ListBuffer;
-    ULONGLONG ListSize;
-
-    ListContext = PrepareAttributeContext(Attribute);
-
-    ListSize = AttributeDataLength(&ListContext->Record);
-    if (ListSize <= 0xFFFFFFFF)
-        ListBuffer = ExAllocatePoolWithTag(NonPagedPool, (ULONG)ListSize, TAG_NTFS);
-    else
-        ListBuffer = NULL;
-
-    if (!ListBuffer)
-    {
-        DPRINT("Failed to allocate memory: %x\n", (ULONG)ListSize);
-        return;
-    }
-
-    if (ReadAttribute(Vcb, ListContext, 0, ListBuffer, (ULONG)ListSize) == ListSize)
-    {
-        Attribute = (PNTFS_ATTR_RECORD)ListBuffer;
-        while (Attribute < (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize) &&
-               Attribute->Type != AttributeEnd)
-        {
-            NtfsDumpAttribute(Vcb, Attribute);
-
-            Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
-        }
-
-        ReleaseAttributeContext(ListContext);
-        ExFreePoolWithTag(ListBuffer, TAG_NTFS);
-    }
-}
-
-
-static
-VOID
 NtfsDumpAttribute(PDEVICE_EXTENSION Vcb,
                   PNTFS_ATTR_RECORD Attribute)
 {
@@ -447,10 +402,6 @@ NtfsDumpAttribute(PDEVICE_EXTENSION Vcb,
 
         case AttributeStandardInformation:
             NtfsDumpStandardInformationAttribute(Attribute);
-            break;
-
-        case AttributeAttributeList:
-            NtfsDumpAttributeListAttribute(Vcb, Attribute);
             break;
 
         case AttributeObjectId:
