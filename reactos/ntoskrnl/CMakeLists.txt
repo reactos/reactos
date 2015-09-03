@@ -28,6 +28,7 @@ set_subsystem(ntoskrnl native)
 
 if(MSVC)
     set_image_base(ntoskrnl 0x00400000)
+    add_target_link_flags(ntoskrnl "/SECTION:.rsrc,!DP") #Accessed from bugcheck code
 else()
     if(GDB)
         set_image_base(ntoskrnl 0x00800000)
