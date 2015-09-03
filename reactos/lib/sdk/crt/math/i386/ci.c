@@ -62,7 +62,7 @@ double	CDECL	_CIatan(void)
 double	CDECL	_CIatan2(void)
 {
 	FPU_DOUBLES(x, y);
-	return atan2(x, y);
+	return atan2(y, x);
 }
 /*
  * @implemented
