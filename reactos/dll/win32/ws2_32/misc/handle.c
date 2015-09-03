@@ -251,10 +251,11 @@ CloseProviderHandle(HANDLE Handle)
 
     Provider = DeleteProviderHandle(ProviderHandleTable,
                                     Handle);
-    if (!Provider)
-        return FALSE;
 
     LeaveCriticalSection(&ProviderHandleTableLock);
+
+    if (!Provider)
+        return FALSE;
 
     DereferenceProviderByPointer(Provider);
 
