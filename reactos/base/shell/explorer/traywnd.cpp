@@ -190,7 +190,7 @@ DefSize:
         HDC hDC = NULL;
         HDC hDCScreen = NULL;
         SIZE Size, SmallIcon;
-        HBITMAP hbmpOld;
+        HBITMAP hbmpOld, hbmp = NULL;
         HBITMAP hBitmap = NULL;
         HICON hIconStart;
         BOOL Ret;
@@ -243,10 +243,10 @@ DefSize:
         Size.cy = max(Size.cy, SmallIcon.cy);
 
         /* Create the bitmap */
-        hBitmap = CreateCompatibleBitmap(hDCScreen,
+        hbmp = CreateCompatibleBitmap(hDCScreen,
                                       Size.cx,
                                       Size.cy);
-        if (hBitmap == NULL)
+        if (hbmp == NULL)
             goto Cleanup;
 
         /* Caluclate the button rect */
@@ -256,13 +256,13 @@ DefSize:
         rcButton.bottom = Size.cy;
 
         /* Draw the button */
-        hbmpOld = (HBITMAP) SelectObject(hDC, hBitmap);
+        hbmpOld = (HBITMAP) SelectObject(hDC, hbmp);
 
         Flags = DC_TEXT | DC_INBUTTON;
         if (hIconStart != NULL)
             Flags |= DC_ICON;
 
-        DrawCaptionTemp(NULL,
+        Ret = DrawCaptionTemp(NULL,
                         hDC,
                         &rcButton,
                         m_Font,
@@ -275,11 +275,18 @@ DefSize:
         if (!Ret)
             goto Cleanup;
 
+        /* We successfully created the bitmap! */
+        hBitmap = hbmp;
+        hbmp = NULL;
+
 Cleanup:
         if (hDCScreen != NULL)
         {
             ::ReleaseDC(NULL, hDCScreen);
         }
+
+        if (hbmp != NULL)
+            DeleteObject(hbmp);
 
         if (hDC != NULL)
             DeleteDC(hDC);
