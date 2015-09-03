@@ -1397,16 +1397,25 @@ static void test_ThreadErrorMode(void)
     pSetThreadErrorMode(oldmode, NULL);
 }
 
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+#if (defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))) || (defined(_MSC_VER) && defined(__i386__))
 static inline void set_fpu_cw(WORD cw)
 {
+#ifdef _MSC_VER
+    __asm { fnclex }
+    __asm { fldcw [cw] }
+#else
     __asm__ volatile ("fnclex; fldcw %0" : : "m" (cw));
+#endif
 }
 
 static inline WORD get_fpu_cw(void)
 {
     WORD cw = 0;
+#ifdef _MSC_VER
+    __asm { fnstcw [cw] }
+#else
     __asm__ volatile ("fnstcw %0" : "=m" (cw));
+#endif
     return cw;
 }
 
@@ -1769,7 +1778,7 @@ START_TEST(thread)
    test_RegisterWaitForSingleObject();
    test_TLS();
    test_ThreadErrorMode();
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+#if (defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))) || (defined(_MSC_VER) && defined(__i386__))
    test_thread_fpu_cw();
 #endif
    test_thread_actctx();
