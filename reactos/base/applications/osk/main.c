@@ -40,10 +40,15 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
 
     hIcon = (HICON)LoadImage(Globals.hInstance, MAKEINTRESOURCE(IdResource),
                              IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-    if (hIcon == NULL) return FALSE;
+    if (hIcon == NULL)
+        return FALSE;
 
     hWndItem = GetDlgItem(Globals.hMainWnd, IdDlgItem);
-    if (hWndItem == NULL) return FALSE;
+    if (hWndItem == NULL)
+    {
+        DestroyIcon(hIcon);
+        return FALSE;
+    }
 
     SendMessage(hWndItem, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
 
