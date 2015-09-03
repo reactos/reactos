@@ -200,7 +200,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
     // Calculate pages used
     //
     StackPages = BYTES_TO_PAGES(GuiStack ?
-                                KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+                                MmLargeStackSize : KERNEL_STACK_SIZE);
 
     /* Acquire the PFN lock */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -275,7 +275,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         // We'll allocate 64KB stack, but only commit 12K
         //
-        StackPtes = BYTES_TO_PAGES(KERNEL_LARGE_STACK_SIZE);
+        StackPtes = BYTES_TO_PAGES(MmLargeStackSize);
         StackPages = BYTES_TO_PAGES(KERNEL_LARGE_STACK_COMMIT);
     }
     else
@@ -317,7 +317,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     // Select the right PTE address where we actually start committing pages
     //
     PointerPte = StackPte;
-    if (GuiStack) PointerPte += BYTES_TO_PAGES(KERNEL_LARGE_STACK_SIZE -
+    if (GuiStack) PointerPte += BYTES_TO_PAGES(MmLargeStackSize -
                                                KERNEL_LARGE_STACK_COMMIT);
 
 
@@ -382,7 +382,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Make sure the stack did not overflow
     //
     ASSERT(((ULONG_PTR)Thread->StackBase - (ULONG_PTR)Thread->StackLimit) <=
-           (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE));
+           (MmLargeStackSize + PAGE_SIZE));
 
     //
     // Get the current stack limit
@@ -400,7 +400,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Now make sure you're not going past the reserved space
     //
     LastPte = MiAddressToPte((PVOID)((ULONG_PTR)Thread->StackBase -
-                                     KERNEL_LARGE_STACK_SIZE));
+                                     MmLargeStackSize));
     if (NewLimitPte < LastPte)
     {
         //

@@ -341,7 +341,7 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"LargeStackSize",
-        &DummyData,
+        &MmLargeStackSize,
         NULL,
         NULL
     },
