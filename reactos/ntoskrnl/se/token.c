@@ -1080,6 +1080,12 @@ SeQueryInformationToken(IN PACCESS_TOKEN Token,
     PSECURITY_IMPERSONATION_LEVEL SeImpersonationLvl;
     PAGED_CODE();
 
+    if (TokenInformationClass >= MaxTokenInfoClass)
+    {
+        DPRINT1("SeQueryInformationToken(%d) invalid information class\n", TokenInformationClass);
+        return STATUS_INVALID_INFO_CLASS;
+    }
+    
     switch (TokenInformationClass)
     {
         case TokenImpersonationLevel:
@@ -1106,6 +1112,7 @@ SeQueryInformationToken(IN PACCESS_TOKEN Token,
 
         default:
             UNIMPLEMENTED;
+            Status = STATUS_NOT_IMPLEMENTED;
             break;
     }
 
