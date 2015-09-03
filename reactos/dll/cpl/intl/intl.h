@@ -13,6 +13,7 @@
 #include <setupapi.h>
 #include <tchar.h>
 #include <malloc.h>
+#include <ndk/exfuncs.h>
 
 #include "resource.h"
 

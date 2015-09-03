@@ -135,11 +135,39 @@ CreateLanguagesList(HWND hwnd)
     /* or should it be System and not user? */
     GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(TCHAR));
 
+    DPRINT("LCID: %08lx\n", GetUserDefaultLCID());
+    DPRINT("Language: %S\n", langSel);
+
     SendMessage(hList,
                 CB_SELECTSTRING,
                 -1,
                 (LPARAM)langSel);
 }
+
+
+static
+VOID
+SetLocaleString(HKEY hKey,
+                LCID lcId,
+                LCTYPE lcType,
+                PWSTR pszValueName)
+{
+    WCHAR szBuffer[256];
+
+    if (GetLocaleInfo(lcId,
+                      lcType | LOCALE_NOUSEROVERRIDE,
+                      szBuffer,
+                      256))
+    {
+        RegSetValueExW(hKey,
+                       pszValueName,
+                       0,
+                       REG_SZ,
+                       (PBYTE)szBuffer,
+                       (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+    }
+}
+
 
 /* Sets new locale */
 VOID
@@ -151,13 +179,14 @@ SetNewLocale(LCID lcid)
 
     // Set locale
     HKEY localeKey;
-    HKEY langKey;
+//    HKEY langKey;
     DWORD ret;
-    TCHAR value[9];
+    WCHAR value[9];
     DWORD valuesize;
-    TCHAR ACPPage[9];
-    TCHAR OEMPage[9];
+//    TCHAR ACPPage[9];
+//    TCHAR OEMPage[9];
 
+#if 0
     ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(TCHAR));
     if (ret == 0)
     {
@@ -171,20 +200,72 @@ SetNewLocale(LCID lcid)
         PrintErrorMsgBox(IDS_ERROR_ANSI_CODE_PAGE);
         return;
     }
+#endif
 
-    ret = RegOpenKey(HKEY_CURRENT_USER, _T("Control Panel\\International"), &localeKey);
+    ret = RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\International",
+                        0, KEY_READ | KEY_WRITE, &localeKey);
     if (ret != ERROR_SUCCESS)
     {
         PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
         return;
     }
 
-    wsprintf(value, _T("%04X"), (DWORD)lcid);
-    valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
+    wsprintf(value, L"%08x", (DWORD)lcid);
+    valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
 
-    RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (LPBYTE)value, valuesize);
+    ret = RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (PBYTE)value, valuesize);
+    if (ret != ERROR_SUCCESS)
+    {
+        RegCloseKey(localeKey);
+        PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+        return;
+    }
+
+    SetLocaleString(localeKey, lcid, LOCALE_ICALENDARTYPE, L"iCalendarType");
+    SetLocaleString(localeKey, lcid, LOCALE_ICOUNTRY, L"iCountry");
+    SetLocaleString(localeKey, lcid, LOCALE_ICURRDIGITS, L"iCurrDigits");
+    SetLocaleString(localeKey, lcid, LOCALE_ICURRENCY, L"iCurrency");
+    SetLocaleString(localeKey, lcid, LOCALE_IDATE, L"iDate");
+    SetLocaleString(localeKey, lcid, LOCALE_IDIGITS, L"iDigits");
+    SetLocaleString(localeKey, lcid, LOCALE_IFIRSTDAYOFWEEK, L"iFirstDayOfWeek");
+    SetLocaleString(localeKey, lcid, LOCALE_IFIRSTWEEKOFYEAR, L"iFirstWeekOfYear");
+    SetLocaleString(localeKey, lcid, LOCALE_ILZERO, L"iLZero");
+    SetLocaleString(localeKey, lcid, LOCALE_IMEASURE, L"iMeasure");
+    SetLocaleString(localeKey, lcid, LOCALE_INEGCURR, L"iNegCurr");
+    SetLocaleString(localeKey, lcid, LOCALE_INEGNUMBER, L"iNegNumber");
+    SetLocaleString(localeKey, lcid, LOCALE_ITIME, L"iTime");
+    SetLocaleString(localeKey, lcid, LOCALE_ITIMEMARKPOSN, L"iTimePrefix");
+    SetLocaleString(localeKey, lcid, LOCALE_ITLZERO, L"iTLZero");
+    SetLocaleString(localeKey, lcid, LOCALE_IDIGITSUBSTITUTION, L"NumShape");
+    SetLocaleString(localeKey, lcid, LOCALE_S1159, L"s1159");
+    SetLocaleString(localeKey, lcid, LOCALE_S2359, L"s2359");
+    SetLocaleString(localeKey, lcid, LOCALE_SCOUNTRY, L"sCountry");
+    SetLocaleString(localeKey, lcid, LOCALE_SCURRENCY, L"sCurrency");
+    SetLocaleString(localeKey, lcid, LOCALE_SDATE, L"sDate");
+    SetLocaleString(localeKey, lcid, LOCALE_SDECIMAL, L"sDecimal");
+    SetLocaleString(localeKey, lcid, LOCALE_SGROUPING, L"sGrouping");
+    SetLocaleString(localeKey, lcid, LOCALE_SABBREVLANGNAME, L"sLanguage");
+    SetLocaleString(localeKey, lcid, LOCALE_SLIST, L"sList");
+    SetLocaleString(localeKey, lcid, LOCALE_SLONGDATE, L"sLongDate");
+    SetLocaleString(localeKey, lcid, LOCALE_SMONDECIMALSEP, L"sMonDecimalSep");
+    SetLocaleString(localeKey, lcid, LOCALE_SMONGROUPING, L"sMonGrouping");
+    SetLocaleString(localeKey, lcid, LOCALE_SMONTHOUSANDSEP, L"sMonThousandSep");
+    SetLocaleString(localeKey, lcid, LOCALE_SNATIVEDIGITS, L"sNativeDigits");
+    SetLocaleString(localeKey, lcid, LOCALE_SNEGATIVESIGN, L"sNegativeSign");
+    SetLocaleString(localeKey, lcid, LOCALE_SPOSITIVESIGN, L"sPositiveSign");
+    SetLocaleString(localeKey, lcid, LOCALE_SSHORTDATE, L"sShortDate");
+    SetLocaleString(localeKey, lcid, LOCALE_STHOUSAND, L"sThousand");
+    SetLocaleString(localeKey, lcid, LOCALE_STIME, L"sTime");
+    SetLocaleString(localeKey, lcid, LOCALE_STIMEFORMAT, L"sTimeFormat");
+
+    /* Flush and close the locale key */
+    RegFlushKey(localeKey);
     RegCloseKey(localeKey);
 
+    /* Set the new locale for the current process */
+    NtSetDefaultLocale(TRUE, lcid);
+
+#if 0
     ret = RegOpenKey(HKEY_USERS, _T(".DEFAULT\\Control Panel\\International"), &localeKey);
     if (ret != ERROR_SUCCESS)
     {
@@ -192,7 +273,7 @@ SetNewLocale(LCID lcid)
         return;
     }
 
-    wsprintf(value, _T("%04X"), (DWORD)lcid);
+    wsprintf(value, _T("%08X"), (DWORD)lcid);
     valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
 
     RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (BYTE *)value, valuesize);
@@ -224,6 +305,7 @@ SetNewLocale(LCID lcid)
     RegSetValueExW(langKey, _T("ACP"), 0, REG_SZ, (BYTE *)ACPPage, (_tcslen(ACPPage) +1 ) * sizeof(TCHAR));
 
     RegCloseKey(langKey);
+#endif
 }
 
 /* Location enumerate procedure */
@@ -318,7 +400,7 @@ GeneralPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
             CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
-            UpdateLocaleSample(hwndDlg, LOCALE_USER_DEFAULT);
+            UpdateLocaleSample(hwndDlg, GetUserDefaultLCID());
             CreateLocationsList(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO));
             if (IsUnattendedSetupEnabled)
             {
