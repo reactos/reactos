@@ -472,7 +472,10 @@ ScStartService(PACTIVE_SERVICE lpService,
                                            &ThreadParamsW->dwArgCount,
                                            &ThreadParamsW->lpArgVector);
         if (dwError != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, ThreadParamsW);
             return dwError;
+        }
         ThreadParamsW->lpServiceMain = lpService->ServiceMain.W;
         ThreadHandle = CreateThread(NULL,
                                     0,
@@ -500,7 +503,10 @@ ScStartService(PACTIVE_SERVICE lpService,
                                         &ThreadParamsA->dwArgCount,
                                         &ThreadParamsA->lpArgVector);
         if (dwError != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, ThreadParamsA);
             return dwError;
+        }
         ThreadParamsA->lpServiceMain = lpService->ServiceMain.A;
         ThreadHandle = CreateThread(NULL,
                                     0,
