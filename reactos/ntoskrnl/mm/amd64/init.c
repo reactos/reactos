@@ -62,7 +62,7 @@ BOOLEAN MiPfnsInitialized = FALSE;
 VOID
 NTAPI
 INIT_FUNCTION
-MiInitializeSessionSpaceLayout()
+MiInitializeSessionSpaceLayout(VOID)
 {
     MmSessionSize = MI_SESSION_SIZE;
     MmSessionViewSize = MI_SESSION_VIEW_SIZE;
@@ -185,7 +185,7 @@ MiMapPTEs(
 VOID
 NTAPI
 INIT_FUNCTION
-MiInitializePageTable()
+MiInitializePageTable(VOID)
 {
     ULONG64 PxePhysicalAddress;
     MMPTE TmplPte, *PointerPxe;
@@ -367,7 +367,7 @@ MiBuildNonPagedPool(VOID)
 VOID
 NTAPI
 INIT_FUNCTION
-MiBuildSystemPteSpace()
+MiBuildSystemPteSpace(VOID)
 {
     PMMPTE PointerPte;
 
