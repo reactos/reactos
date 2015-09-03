@@ -988,13 +988,20 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     hFont = GreCreateFontIndirectW(&lf);
     /* save font */
     hOldFont = NtGdiSelectFont(dc, hFont);
-    if(uFlags & DFCS_INACTIVE)
+
+    if ((uFlags & 0xff) == DFCS_MENUARROWUP ||
+        (uFlags & 0xff) == DFCS_MENUARROWDOWN )
     {
-        /* draw shadow */
-        IntGdiSetTextColor(dc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
-        GreTextOutW(dc, r->left + 1, r->top + 1, &Symbol, 1);
+#if 0
+       if (uFlags & DFCS_INACTIVE)
+       {
+           /* draw shadow */
+           IntGdiSetTextColor(dc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
+           GreTextOutW(dc, r->left + 1, r->top + 1, &Symbol, 1);
+       }
+#endif
+       IntGdiSetTextColor(dc, IntGetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     }
-    IntGdiSetTextColor(dc, IntGetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     /* draw selected symbol */
     GreTextOutW(dc, r->left, r->top, &Symbol, 1);
     /* restore previous settings */

@@ -1019,16 +1019,20 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     hFont = CreateFontIndirect(&lf);
     /* save font */
     hOldFont = SelectObject(dc, hFont);
-    // FIXME selecting color doesn't work
-#if 0
-    if(uFlags & DFCS_INACTIVE)
+
+    if ((uFlags & 0xff) == DFCS_MENUARROWUP ||  
+        (uFlags & 0xff) == DFCS_MENUARROWDOWN ) 
     {
-        /* draw shadow */
-        SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-        TextOut(dc, r->left + 1, r->top + 1, &Symbol, 1);
-    }
-    SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
+#if 0
+       if (uFlags & DFCS_INACTIVE)
+       {
+           /* draw shadow */
+           SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+           TextOut(dc, r->left + 1, r->top + 1, &Symbol, 1);
+       }
 #endif
+       SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
+    }
     /* draw selected symbol */
     TextOut(dc, r->left, r->top, &Symbol, 1);
     /* restore previous settings */
