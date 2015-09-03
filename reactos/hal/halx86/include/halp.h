@@ -4,16 +4,12 @@
 
 #pragma once
 
-#define PLACE_IN_SECTION(s)	__attribute__((section (s)))
-#ifdef __GNUC__
-#define INIT_FUNCTION
-#define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
-#define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
+#if defined(__GNUC__) && !defined(_MINIHAL_)
+#define INIT_FUNCTION __attribute__((section ("INIT")))
 #else
-#define INIT_FUNCTION
-#define PAGE_LOCKED_FUNCTION
-#define PAGE_UNLOCKED_FUNCTION
+#define INIT_FUNCTION  /* Done via alloc_text for MSC */
 #endif
+
 
 #ifdef _MSC_VER
 #define REGISTERCALL FASTCALL
