@@ -53,7 +53,7 @@ DoLinearRegression(
 
 VOID
 NTAPI
-HalpInitializeTsc()
+HalpInitializeTsc(VOID)
 {
     ULONG_PTR Flags;
     KIDTENTRY OldIdtEntry, *IdtPointer;

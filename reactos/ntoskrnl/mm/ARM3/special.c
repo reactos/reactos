@@ -588,7 +588,7 @@ MmFreeSpecialPool(PVOID P)
 
 VOID
 NTAPI
-MiTestSpecialPool()
+MiTestSpecialPool(VOID)
 {
     ULONG i;
     PVOID p1, p2[100];

@@ -52,7 +52,7 @@ Ke386SaveFpuState(IN PFX_SAVE_AREA SaveArea)
 
 FORCEINLINE
 USHORT
-Ke386GetLocalDescriptorTable()
+Ke386GetLocalDescriptorTable(VOID)
 {
     USHORT Ldt;
     __asm__("sldt %0\n\t"

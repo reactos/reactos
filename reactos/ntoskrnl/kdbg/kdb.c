@@ -1236,7 +1236,7 @@ KdbpCallMainLoop(VOID)
  * Disables interrupts, releases display ownership, ...
  */
 static VOID
-KdbpInternalEnter()
+KdbpInternalEnter(VOID)
 {
     PETHREAD Thread;
     PVOID SavedInitialStack, SavedStackBase, SavedKernelStack;

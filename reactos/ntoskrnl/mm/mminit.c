@@ -67,7 +67,7 @@ MiCreateArm3StaticMemoryArea(PVOID BaseAddress, ULONG Size, BOOLEAN Executable)
 VOID
 INIT_FUNCTION
 NTAPI
-MiInitSystemMemoryAreas()
+MiInitSystemMemoryAreas(VOID)
 {
     //
     // Create all the static memory areas.

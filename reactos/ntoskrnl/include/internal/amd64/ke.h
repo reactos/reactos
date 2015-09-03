@@ -260,7 +260,7 @@ KeQueryInterruptHandler(IN ULONG Vector)
 
 VOID
 FORCEINLINE
-KiSendEOI()
+KiSendEOI(VOID)
 {
     /* Write 0 to the apic EOI register */
     *((volatile ULONG*)APIC_EOI_REGISTER) = 0;

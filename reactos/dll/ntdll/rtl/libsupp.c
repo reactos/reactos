@@ -66,7 +66,7 @@ RtlpClearInDbgPrint(VOID)
 
 KPROCESSOR_MODE
 NTAPI
-RtlpGetMode()
+RtlpGetMode(VOID)
 {
    return UserMode;
 }
@@ -298,8 +298,8 @@ BOOLEAN
 RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
    RtlInitializeHandleTable(0xCFFF,
-			    sizeof(RTL_ATOM_HANDLE),
-			    &AtomTable->RtlHandleTable);
+                            sizeof(RTL_ATOM_HANDLE),
+                            &AtomTable->RtlHandleTable);
 
    return TRUE;
 }

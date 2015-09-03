@@ -37,7 +37,7 @@ PETHREAD MiExpansionLockOwner;
 
 FORCEINLINE
 KIRQL
-MiAcquireExpansionLock()
+MiAcquireExpansionLock(VOID)
 {
     KIRQL OldIrql;
 

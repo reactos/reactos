@@ -31,7 +31,7 @@ Ke386CallBios(IN ULONG Int,
 
 VOID
 NTAPI
-KiUnexpectedInterrupt()
+KiUnexpectedInterrupt(VOID)
 {
 }
 

@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/include/amd64/asmmacro.S
- * PURPOSE:         ASM macros for for GAS and MASM/ML64
+ * PURPOSE:         ASM macros for GAS and MASM/ML64
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

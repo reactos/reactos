@@ -208,7 +208,7 @@ PspReapRoutine(IN PVOID Context)
 #if DBG
 VOID
 NTAPI
-PspCheckProcessList()
+PspCheckProcessList(VOID)
 {
     PLIST_ENTRY Entry;
 
@@ -1066,7 +1066,7 @@ BOOLEAN
 NTAPI
 PspIsProcessExiting(IN PEPROCESS Process)
 {
-	return Process->Flags & PSF_PROCESS_EXITING_BIT;
+    return Process->Flags & PSF_PROCESS_EXITING_BIT;
 }
 
 VOID

@@ -1201,7 +1201,7 @@ RtlpDphFreeNodeForTable(IN PRTL_AVL_TABLE Table,
 }
 
 NTSTATUS NTAPI
-RtlpDphInitializeDelayedFreeQueue()
+RtlpDphInitializeDelayedFreeQueue(VOID)
 {
     NTSTATUS Status;
 
@@ -1278,7 +1278,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
 }
 
 NTSTATUS NTAPI
-RtlpDphTargetDllsLogicInitialize()
+RtlpDphTargetDllsLogicInitialize(VOID)
 {
     UNIMPLEMENTED;
     return STATUS_SUCCESS;
@@ -1428,7 +1428,7 @@ RtlpDphIsNormalFreeHeapBlock(PVOID Block,
 }
 
 NTSTATUS NTAPI
-RtlpDphProcessStartupInitialization()
+RtlpDphProcessStartupInitialization(VOID)
 {
     NTSTATUS Status;
     PTEB Teb = NtCurrentTeb();

@@ -181,7 +181,7 @@ GdbGetChar(VOID)
 /* scan for the sequence $<data>#<Checksum>     */
 
 PCHAR
-GspGetPacket()
+GspGetPacket(VOID)
 {
     PCHAR Buffer = &GspInBuffer[0];
     CHAR Checksum;

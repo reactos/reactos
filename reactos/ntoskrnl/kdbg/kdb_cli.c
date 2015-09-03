@@ -3512,7 +3512,7 @@ KdbpCliModuleLoaded(
  * call this function if KdbInitFileBuffer is not NULL.
  */
 VOID
-KdbpCliInterpretInitFile()
+KdbpCliInterpretInitFile(VOID)
 {
     PCHAR p1, p2;
     INT i;
@@ -3561,7 +3561,7 @@ KdbpCliInterpretInitFile()
  * Reads the KDBinit file from the SystemRoot\System32\drivers\etc directory and executes it.
  */
 VOID
-KdbpCliInit()
+KdbpCliInit(VOID)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;

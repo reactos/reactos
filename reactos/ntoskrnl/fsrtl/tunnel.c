@@ -196,7 +196,7 @@ FsRtlGetTunnelParameterValue(
 INIT_FUNCTION
 VOID
 NTAPI
-FsRtlInitializeTunnels()
+FsRtlInitializeTunnels(VOID)
 {
     ULONG TunnelEntries;
     UNICODE_STRING MaximumTunnelEntryAgeInSeconds = RTL_CONSTANT_STRING(L"MaximumTunnelEntryAgeInSeconds");

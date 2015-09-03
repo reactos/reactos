@@ -228,7 +228,7 @@ HalpTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 DECLSPEC_NORETURN
-HalpTrap06()
+HalpTrap06(VOID)
 {
     /* Restore ES/DS to known good values first */
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
@@ -247,7 +247,7 @@ HalpTrap06()
 
 VOID
 NTAPI
-HalpBiosCall()
+HalpBiosCall(VOID)
 {
     /* Must be volatile so it doesn't get optimized away! */
     volatile KTRAP_FRAME V86TrapFrame;

@@ -395,7 +395,7 @@ LdrQueryImageFileExecutionOptions(IN PUNICODE_STRING SubKey,
 
 VOID
 NTAPI
-LdrpEnsureLoaderLockIsHeld()
+LdrpEnsureLoaderLockIsHeld(VOID)
 {
     // Ignored atm
 }

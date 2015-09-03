@@ -332,7 +332,7 @@ IopCreateObjectTypes(VOID)
 BOOLEAN
 INIT_FUNCTION
 NTAPI
-IopCreateRootDirectories()
+IopCreateRootDirectories(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DirName;
