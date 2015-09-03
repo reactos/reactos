@@ -85,7 +85,6 @@ KeI386VdmInitialize(VOID)
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 VdmpInitialize(PVOID ControlData)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
