@@ -120,7 +120,7 @@ LONG TEXT_TabbedTextOut( HDC hdc,
             if (lpstr[j] == '\t') break;
         /* get the extent of the normal character part */
 #ifdef _WIN32K_
-        GreGetTextExtentW( hdc, (LPWSTR)lpstr + i, j - i , &extent, 1 );
+        GreGetTextExtentW( hdc, (LPWSTR)lpstr + i, j - i , &extent, 0 );
 #else
         GetTextExtentPointW( hdc, lpstr + i, j - i , &extent );
 #endif
@@ -1025,13 +1025,13 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
     HPEN hpen;
     HPEN oldPen;
 #ifdef _WIN32K_
-    GreGetTextExtentW (hdc, (LPWSTR)str, offset, &size, 1);
+    GreGetTextExtentW (hdc, (LPWSTR)str, offset, &size, 0);
 #else
     GetTextExtentPointW (hdc, str, offset, &size);
 #endif
     prefix_x = x + size.cx;
 #ifdef _WIN32K_
-    GreGetTextExtentW (hdc, (LPWSTR)str, offset+1, &size, 1);
+    GreGetTextExtentW (hdc, (LPWSTR)str, offset+1, &size, 0);
 #else
     GetTextExtentPointW (hdc, str, offset+1, &size);
 #endif
@@ -1272,7 +1272,7 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                     len_seg = p - str;
                     if (len_seg != len &&
 #ifdef _WIN32K_
-                        !GreGetTextExtentW(hdc, (LPWSTR)str, len_seg, &size, 1))
+                        !GreGetTextExtentW(hdc, (LPWSTR)str, len_seg, &size, 0))
 #else
                         !GetTextExtentPointW(hdc, str, len_seg, &size))
 #endif
