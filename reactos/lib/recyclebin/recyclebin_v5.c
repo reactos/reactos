@@ -222,7 +222,10 @@ RecycleBin5_RecycleBin5_DeleteFile(
 	/* Check if file exists */
 	dwAttributes = GetFileAttributesW(szFullName);
 	if (dwAttributes == INVALID_FILE_ATTRIBUTES)
+	{
+		CoTaskMemFree(szFullName);
 		return HRESULT_FROM_WIN32(GetLastError());
+	}
 
 	if (dwBufferLength < 2 || szFullName[1] != ':')
 	{
@@ -261,8 +264,8 @@ RecycleBin5_RecycleBin5_DeleteFile(
 	FileSize.u.LowPart = GetFileSize(s->hInfo, &FileSize.u.HighPart);
 	if (FileSize.u.LowPart < sizeof(INFO2_HEADER))
 	{
-		UnmapViewOfFile(pHeader);
-		return HRESULT_FROM_WIN32(GetLastError());
+		hr = HRESULT_FROM_WIN32(GetLastError());
+		goto cleanup;
 	}
 	dwEntries = (DWORD)((FileSize.QuadPart - sizeof(INFO2_HEADER)) / sizeof(DELETED_FILE_RECORD)) - 1;
 	pDeletedFile = ((PDELETED_FILE_RECORD)(pHeader + 1)) + dwEntries;
