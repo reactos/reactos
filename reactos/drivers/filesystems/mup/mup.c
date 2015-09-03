@@ -2214,12 +2214,9 @@ MupCreate(PDEVICE_OBJECT DeviceObject,
     _SEH2_TRY
     {
         /* If DFS is enabled, check if that's for DFS and is so relay */
-        if (MupEnableDfs)
+        if (MupEnableDfs && (DeviceObject->DeviceType == FILE_DEVICE_DFS || DeviceObject->DeviceType == FILE_DEVICE_DFS_FILE_SYSTEM))
         {
-            if (DeviceObject->DeviceType == FILE_DEVICE_DFS || DeviceObject->DeviceType == FILE_DEVICE_DFS_FILE_SYSTEM)
-            {
-                Status = DfsFsdCreate(DeviceObject, Irp);
-            }
+            Status = DfsFsdCreate(DeviceObject, Irp);
         }
         else
         {
