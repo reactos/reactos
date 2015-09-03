@@ -121,7 +121,10 @@ LoadNotificationDll(
                                           HEAP_ZERO_MEMORY,
                                           sizeof(NOTIFICATION_ITEM));
         if (NotificationDll == NULL)
+        {
+            FreeLibrary(hInstance);
             return;
+        }
 
         NotificationDll->bEnabled = TRUE;
         NotificationDll->dwMaxWait = 30; /* FIXME: ??? */
