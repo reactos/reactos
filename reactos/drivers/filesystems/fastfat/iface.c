@@ -43,6 +43,7 @@ PVFAT_GLOBAL_DATA VfatGlobalData;
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 DriverEntry(

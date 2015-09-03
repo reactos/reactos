@@ -6,6 +6,14 @@
 #include <pseh/pseh2.h>
 #include <ndk/muptypes.h>
 
+#ifdef __GNUC__
+#define INIT_SECTION __attribute__((section ("INIT")))
+#define INIT_FUNCTION INIT_SECTION
+#else
+#define INIT_SECTION /* Done via alloc_text for MSC */
+#define INIT_FUNCTION INIT_SECTION
+#endif
+
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define IO_METHOD_FROM_CTL_CODE(C) (C & 0x00000003)
 

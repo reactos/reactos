@@ -5,6 +5,14 @@
 #include <ntddcdrm.h>
 #include <pseh/pseh2.h>
 
+#ifdef __GNUC__
+#define INIT_SECTION __attribute__((section ("INIT")))
+#define INIT_FUNCTION INIT_SECTION
+#else
+#define INIT_SECTION /* Done via alloc_text for MSC */
+#define INIT_FUNCTION INIT_SECTION
+#endif
+
 #define CDFS_BASIC_SECTOR 2048
 #define CDFS_PRIMARY_DESCRIPTOR_LOCATION 16
 #define BLOCKSIZE CDFS_BASIC_SECTOR

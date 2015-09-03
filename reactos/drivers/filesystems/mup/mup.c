@@ -53,6 +53,7 @@ NTSTATUS MupOrderedErrorList[] = { STATUS_UNSUCCESSFUL,
 
 /* FUNCTIONS ****************************************************************/
 
+INIT_FUNCTION
 VOID
 MupInitializeData()
 {
@@ -78,6 +79,7 @@ MupUninitializeData()
   ExDeleteResourceLite(&MupVcbLock);
 }
 
+INIT_FUNCTION
 VOID
 MupInitializeVcb(PMUP_VCB Vcb)
 {
@@ -2512,6 +2514,7 @@ MupUnload(PDRIVER_OBJECT DriverObject)
     MupUninitializeData();
 }
 
+INIT_FUNCTION
 NTSTATUS
 DfsDriverEntry(PDRIVER_OBJECT DriverObject,
                PUNICODE_STRING RegistryPath)
@@ -2530,6 +2533,7 @@ DfsDriverEntry(PDRIVER_OBJECT DriverObject,
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
