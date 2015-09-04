@@ -474,8 +474,14 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetData(ASSOCF cfFlags, ASSOCDATA 
             void *data;
             DWORD size;
             HRESULT hres = this->GetValue(this->hkeyProgID, edit_flags, &data, &size);
-            if(FAILED(hres) || !pcbOut)
+            if(FAILED(hres))
             {
+                return hres;
+            }
+            
+            if (!pcbOut)
+            {
+                HeapFree(GetProcessHeap(), 0, data);
                 return hres;
             }
             
