@@ -300,7 +300,7 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
 }
 
 static HMENU
-BuildLeftPopupMenu()
+BuildLeftPopupMenu(VOID)
 {
     HMENU hMenu;
     HKEY hKey;
@@ -334,7 +334,7 @@ BuildLeftPopupMenu()
 }
 
 BOOL
-SetHooks()
+SetHooks(VOID)
 {
     hDllLib = LoadLibrary(_T("kbsdll.dll"));
     if (!hDllLib) return FALSE;
@@ -349,14 +349,14 @@ SetHooks()
 }
 
 VOID
-DeleteHooks()
+DeleteHooks(VOID)
 {
     if (KbSwitchDeleteHooks) KbSwitchDeleteHooks();
     if (hDllLib) FreeLibrary(hDllLib);
 }
 
 ULONG
-GetNextLayout()
+GetNextLayout(VOID)
 {
     TCHAR szLayoutNum[3 + 1], szLayoutID[CCH_LAYOUT_ID + 1];
     ULONG Ret = ulCurrentLayoutNum;

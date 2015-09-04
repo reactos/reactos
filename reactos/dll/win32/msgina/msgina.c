@@ -263,7 +263,7 @@ typedef DWORD (WINAPI *pThemeWait)(DWORD dwTimeout);
 typedef BOOL (WINAPI *pThemeWatch)(void);
 
 static void
-InitThemeSupport()
+InitThemeSupport(VOID)
 {
     HMODULE hDll = LoadLibraryW(L"shsvcs.dll");
     pThemeWait themeWait;

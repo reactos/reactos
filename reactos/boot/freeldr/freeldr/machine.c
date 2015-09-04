@@ -49,13 +49,13 @@ MachConsPutChar(int Ch)
 }
 
 BOOLEAN
-MachConsKbHit()
+MachConsKbHit(VOID)
 {
     return MachVtbl.ConsKbHit();
 }
 
 int
-MachConsGetCh()
+MachConsGetCh(VOID)
 {
     return MachVtbl.ConsGetCh();
 }

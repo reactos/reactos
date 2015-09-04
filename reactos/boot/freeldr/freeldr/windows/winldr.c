@@ -408,7 +408,7 @@ WinLdrLoadModule(PCSTR ModuleName,
 }
 
 USHORT
-WinLdrDetectVersion()
+WinLdrDetectVersion(VOID)
 {
     LONG rc;
     FRLDRHKEY hKey;

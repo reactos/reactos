@@ -804,7 +804,7 @@ CabinetFindNext(PCAB_SEARCH Search)
 
 #if 0
 int
-Validate()
+Validate(VOID)
 {
     return (int)RtlValidateHeap(ProcessHeap, 0, 0);
 }

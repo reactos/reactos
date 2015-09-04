@@ -195,7 +195,7 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
 
 /* Font-load specific funcs */
 VOID
-OpenBitPlane()
+OpenBitPlane(VOID)
 {
     /* disable interrupts */
     _disable();
@@ -216,7 +216,7 @@ OpenBitPlane()
 }
 
 VOID
-CloseBitPlane()
+CloseBitPlane(VOID)
 {
     /* disable interrupts */
     _disable();

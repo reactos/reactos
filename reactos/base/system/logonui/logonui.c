@@ -89,7 +89,7 @@ ParseCmdline(int argc, WCHAR* argv[])
 }
 
 static VOID
-Run()
+Run(VOID)
 {
     HWND hDesktopWnd;
     HDC hdcDesktop, hdcMem;

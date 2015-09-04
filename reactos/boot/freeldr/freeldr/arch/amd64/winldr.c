@@ -29,7 +29,7 @@ ULONG_PTR TssBasePage;
 /* FUNCTIONS **************************************************************/
 
 BOOLEAN
-MempAllocatePageTables()
+MempAllocatePageTables(VOID)
 {
     TRACE(">>> MempAllocatePageTables\n");
 
@@ -203,7 +203,7 @@ MempUnmapPage(PFN_NUMBER Page)
 }
 
 VOID
-WinLdrpMapApic()
+WinLdrpMapApic(VOID)
 {
     BOOLEAN LocalAPIC;
     LARGE_INTEGER MsrValue;
@@ -235,7 +235,7 @@ WinLdrpMapApic()
 }
 
 BOOLEAN
-WinLdrMapSpecialPages()
+WinLdrMapSpecialPages(VOID)
 {
     PHARDWARE_PTE PpeBase, PdeBase;
 
@@ -418,7 +418,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 
 VOID
-MempDump()
+MempDump(VOID)
 {
 }
 

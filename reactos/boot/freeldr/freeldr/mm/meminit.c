@@ -236,7 +236,7 @@ ArcGetMemoryDescriptor(const FREELDR_MEMORY_DESCRIPTOR* Current)
 
 static
 VOID
-MmCheckFreeldrImageFile()
+MmCheckFreeldrImageFile(VOID)
 {
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_FILE_HEADER FileHeader;

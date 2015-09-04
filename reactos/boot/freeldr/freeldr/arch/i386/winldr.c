@@ -47,7 +47,7 @@ PVOID GdtIdt;
 /* FUNCTIONS **************************************************************/
 
 BOOLEAN
-MempAllocatePageTables()
+MempAllocatePageTables(VOID)
 {
     ULONG NumPageTables, TotalSize;
     PUCHAR Buffer;
@@ -222,7 +222,7 @@ MempUnmapPage(PFN_NUMBER Page)
 }
 
 VOID
-WinLdrpMapApic()
+WinLdrpMapApic(VOID)
 {
     BOOLEAN LocalAPIC;
     LARGE_INTEGER MsrValue;
@@ -297,7 +297,7 @@ enum
     UltraVision_8x10Font = 0x12,
 };
 
-void WinLdrSetupSpecialDataPointers()
+void WinLdrSetupSpecialDataPointers(VOID)
 {
     REGS BiosRegs;
 
@@ -670,7 +670,7 @@ WinLdrSetProcessorContext(void)
 
 #if DBG
 VOID
-MempDump()
+MempDump(VOID)
 {
     ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
     int i, j;
