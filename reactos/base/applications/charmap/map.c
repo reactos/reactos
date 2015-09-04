@@ -487,7 +487,7 @@ OnPaint(PMAP infoPtr,
         {
             return;
         }
-        hdc = (HDC)wParam;
+        ps.hdc = (HDC)wParam;
     }
     else
     {
