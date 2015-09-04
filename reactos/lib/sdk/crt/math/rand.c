@@ -33,17 +33,41 @@ srand(unsigned int seed)
 int CDECL rand_s(unsigned int *pval)
 {
     BOOLEAN (WINAPI *pSystemFunction036)(PVOID, ULONG); // RtlGenRandom
-    HINSTANCE hadvapi32 = LoadLibraryA("advapi32.dll");    
-    int ret = 0;
-    pSystemFunction036 = (void*)GetProcAddress(hadvapi32, "SystemFunction036");
-#if 1
-    if (!pval || (pSystemFunction036 && !pSystemFunction036(pval, sizeof(*pval))))
+    HINSTANCE hadvapi32;
+
+    if (!pval)
     {
         _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
         *_errno() = EINVAL;
-        ret = EINVAL;
+        return EINVAL;
     }
-#endif
-    if(hadvapi32) FreeLibrary(hadvapi32);
-    return ret;
+
+    *pval = 0;
+    hadvapi32 = LoadLibraryA("advapi32.dll");
+    if (!hadvapi32)
+    {
+        _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    pSystemFunction036 = (void*)GetProcAddress(hadvapi32, "SystemFunction036");
+    if (!pSystemFunction036)
+    {
+        _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
+        *_errno() = EINVAL;
+        FreeLibrary(hadvapi32);
+        return EINVAL;
+    }
+
+    if (!pSystemFunction036(pval, sizeof(*pval)))
+    {
+        _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
+        *_errno() = EINVAL;
+        FreeLibrary(hadvapi32);
+        return EINVAL;
+    }
+
+    FreeLibrary(hadvapi32);
+    return 0;
 }
