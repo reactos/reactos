@@ -125,7 +125,7 @@ CompareSymEntry(const PROSSYM_ENTRY SymEntry1, const PROSSYM_ENTRY SymEntry2)
 
     if (SymEntry2->SourceLine == 0)
     {
-        return +1;
+        return -1;
     }
 
     if (SymEntry1->SourceLine == 0)
