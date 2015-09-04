@@ -421,6 +421,9 @@ void WhoamiPrintTable(WhoamiTable *pTable)
             WhoamiFree(pTable->Content[i * pTable->Cols + j]);
 
     WhoamiFree(pTable);
+    
+    if (PrintFormat != csv)
+        HeapFree(GetProcessHeap(), 0, ColLength);
 }
 
 int WhoamiLogonId(void)
