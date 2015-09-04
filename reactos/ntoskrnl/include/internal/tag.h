@@ -75,7 +75,7 @@
 #define TAG_IOWI 'IWOI'
 
 /* formerly located in io/irp.c */
-#define TAG_IRP      ' PRI'
+#define TAG_IRP      ' prI'
 #define TAG_SYS_BUF  'BSYS'
 
 /* formerly located in io/irq.c */
