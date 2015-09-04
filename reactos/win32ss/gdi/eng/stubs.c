@@ -669,7 +669,7 @@ EngHangNotification(
  */
 BOOL
 APIENTRY
-EngLpkInstalled()
+EngLpkInstalled(VOID)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -803,7 +803,7 @@ HT_Get8BPPMaskPalette(
  */
 BOOL
 APIENTRY
-NtGdiAnyLinkedFonts()
+NtGdiAnyLinkedFonts(VOID)
 {
     UNIMPLEMENTED;
     return FALSE;

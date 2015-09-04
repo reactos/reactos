@@ -30,7 +30,7 @@ static PMONITOR gMonitorList = NULL;
  */
 static
 PMONITOR
-IntCreateMonitorObject()
+IntCreateMonitorObject(VOID)
 {
     return UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_MONITOR, sizeof(MONITOR));
 }
@@ -99,7 +99,7 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
  *   PMONITOR
  */
 PMONITOR NTAPI
-UserGetPrimaryMonitor()
+UserGetPrimaryMonitor(VOID)
 {
     PMONITOR pMonitor;
 

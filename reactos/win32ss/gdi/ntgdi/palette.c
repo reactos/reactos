@@ -60,7 +60,7 @@ unsigned short GetNumberOfBits(unsigned int dwMask)
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitPaletteImpl()
+InitPaletteImpl(VOID)
 {
     // Create default palette (20 system colors)
     gppalDefault = PALETTE_AllocPalWithHandle(PAL_INDEXED,

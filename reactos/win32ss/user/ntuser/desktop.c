@@ -723,7 +723,7 @@ UserMessageWindowProc(PWND pwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT
     return TRUE; /* We are done. Do not do any callbacks to user mode */
 }
 
-VOID NTAPI DesktopThreadMain()
+VOID NTAPI DesktopThreadMain(VOID)
 {
     BOOL Ret;
     MSG Msg;
@@ -769,7 +769,7 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
 }
 
 VOID APIENTRY
-UserRedrawDesktop()
+UserRedrawDesktop(VOID)
 {
     PWND Window = NULL;
     PREGION Rgn;

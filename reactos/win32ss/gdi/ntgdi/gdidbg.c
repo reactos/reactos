@@ -20,7 +20,7 @@ extern PENTRY gpentHmgr;;
 ULONG gulLogUnique = 0;
 
 /* Note: the following values need to be sorted */
-DBG_CHANNEL DbgChannels[DbgChCount]={
+DBG_CHANNEL DbgChannels[DbgChCount] = {
     {L"EngBlt", DbgChEngBlt},
     {L"EngBrush", DbgChEngBrush},
     {L"EngClip", DbgChEngClip},
@@ -281,7 +281,7 @@ DbgDumpGdiHandleTableWithBT(void)
 
 BOOL
 NTAPI
-DbgGdiHTIntegrityCheck()
+DbgGdiHTIntegrityCheck(VOID)
 {
 	ULONG i, nDeleted = 0, nFree = 0, nUsed = 0;
 	PGDI_TABLE_ENTRY pEntry;
@@ -516,7 +516,7 @@ DbgCleanupEventList(PSLIST_HEADER pslh)
 
 VOID
 NTAPI
-DbgDumpLockedGdiHandles()
+DbgDumpLockedGdiHandles(VOID)
 {
     ULONG i;
 
@@ -733,7 +733,7 @@ DbgParseDebugChannels(PPROCESSINFO ppi, PUNICODE_STRING Value)
     return TRUE;
 }
 
-BOOL DbgInitDebugChannels()
+BOOL DbgInitDebugChannels(VOID)
 {
     WCHAR valBuffer[100];
     UNICODE_STRING Value;

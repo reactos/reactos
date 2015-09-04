@@ -1937,7 +1937,7 @@ IntGetQueueStatus(DWORD Changes)
 }
 
 BOOL APIENTRY
-IntInitMessagePumpHook()
+IntInitMessagePumpHook(VOID)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
@@ -1950,7 +1950,7 @@ IntInitMessagePumpHook()
 }
 
 BOOL APIENTRY
-IntUninitMessagePumpHook()
+IntUninitMessagePumpHook(VOID)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 

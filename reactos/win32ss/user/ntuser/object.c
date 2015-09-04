@@ -246,7 +246,7 @@ static const struct
 
 #if DBG
 
-void DbgUserDumpHandleTable()
+void DbgUserDumpHandleTable(VOID)
 {
     int HandleCounts[TYPE_CTYPES];
     PPROCESSINFO ppiList;

@@ -50,7 +50,7 @@ static const MATRIX	gmxWorldToPageDefault =
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitDcImpl()
+InitDcImpl(VOID)
 {
     psurfDefaultBitmap = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
     if (!psurfDefaultBitmap)

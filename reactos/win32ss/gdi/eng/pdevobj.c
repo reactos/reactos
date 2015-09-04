@@ -18,7 +18,7 @@ static HSEMAPHORE ghsemPDEV;
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitPDEVImpl()
+InitPDEVImpl(VOID)
 {
     ghsemPDEV = EngCreateSemaphore();
     if (!ghsemPDEV) return STATUS_INSUFFICIENT_RESOURCES;
@@ -50,7 +50,7 @@ DbgLookupDHPDEV(DHPDEV dhpdev)
 #endif
 
 PPDEVOBJ
-PDEVOBJ_AllocPDEV()
+PDEVOBJ_AllocPDEV(VOID)
 {
     PPDEVOBJ ppdev;
 

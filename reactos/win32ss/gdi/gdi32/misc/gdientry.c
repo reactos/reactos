@@ -2028,7 +2028,7 @@ DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
  */
 ULONG
 WINAPI
-DdQueryDisplaySettingsUniqueness()
+DdQueryDisplaySettingsUniqueness(VOID)
 {
     return GdiSharedHandleTable->flDeviceUniq;
 }

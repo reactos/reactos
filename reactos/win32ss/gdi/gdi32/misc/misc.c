@@ -41,7 +41,7 @@ extern PGDIHANDLECACHE GdiHandleCache;
  */
 BOOL
 WINAPI
-GdiFlush()
+GdiFlush(VOID)
 {
     NtGdiFlush();
     return TRUE;
@@ -459,7 +459,7 @@ GdiSetBatchLimit(DWORD	Limit)
  */
 DWORD
 WINAPI
-GdiGetBatchLimit()
+GdiGetBatchLimit(VOID)
 {
     return GDI_BatchLimit;
 }

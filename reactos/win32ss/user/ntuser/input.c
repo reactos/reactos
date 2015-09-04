@@ -125,7 +125,7 @@ OpenInputDevice(PHANDLE pHandle, PFILE_OBJECT *ppObject, CONST WCHAR *pszDeviceN
  * Reads data from input devices and supports win32 timers
  */
 VOID NTAPI
-RawInputThreadMain()
+RawInputThreadMain(VOID)
 {
     NTSTATUS MouStatus = STATUS_UNSUCCESSFUL, KbdStatus = STATUS_UNSUCCESSFUL, Status;
     IO_STATUS_BLOCK MouIosb, KbdIosb;

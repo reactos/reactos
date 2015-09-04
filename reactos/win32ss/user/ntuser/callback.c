@@ -424,7 +424,7 @@ co_IntCallWindowProc(WNDPROC Proc,
 }
 
 HMENU APIENTRY
-co_IntLoadSysMenuTemplate()
+co_IntLoadSysMenuTemplate(VOID)
 {
    LRESULT Result = 0;
    NTSTATUS Status;

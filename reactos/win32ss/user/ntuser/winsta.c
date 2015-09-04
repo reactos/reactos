@@ -45,7 +45,7 @@ InitWindowStationImpl(VOID)
 
 NTSTATUS
 NTAPI
-UserCreateWinstaDirectory()
+UserCreateWinstaDirectory(VOID)
 {
     PPEB Peb;
     NTSTATUS Status;

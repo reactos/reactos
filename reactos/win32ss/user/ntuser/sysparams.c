@@ -186,7 +186,7 @@ SpiLoadFont(PLOGFONTW plfOut, LPWSTR pwszValueName, PLOGFONTW plfDefault)
 
 static
 VOID
-SpiFixupValues()
+SpiFixupValues(VOID)
 {
     /* Fixup values */
     gspv.ncm.iCaptionWidth = max(gspv.ncm.iCaptionWidth, 8);
@@ -210,7 +210,7 @@ SpiFixupValues()
 
 static
 VOID
-SpiUpdatePerUserSystemParameters()
+SpiUpdatePerUserSystemParameters(VOID)
 {
     static LOGFONTW lf1 = {-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE,
                            FALSE, ANSI_CHARSET, 0, 0, DEFAULT_QUALITY,
@@ -320,7 +320,7 @@ SpiUpdatePerUserSystemParameters()
 }
 
 BOOL
-InitSysParams()
+InitSysParams(VOID)
 {
     SpiUpdatePerUserSystemParameters();
     gbSpiInitialized = TRUE;
@@ -724,7 +724,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
 }
 
 static BOOL
-SpiNotifyNCMetricsChanged()
+SpiNotifyNCMetricsChanged(VOID)
 {
     PWND pwndDesktop, pwndCurrent;
     HWND *ahwnd;

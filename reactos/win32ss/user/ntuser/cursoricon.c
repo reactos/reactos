@@ -184,7 +184,7 @@ IntLoadSystenIcons(HICON hcur, DWORD id)
 }
 
 PSYSTEM_CURSORINFO
-IntGetSysCursorInfo()
+IntGetSysCursorInfo(VOID)
 {
     return &gSysCursorInfo;
 }

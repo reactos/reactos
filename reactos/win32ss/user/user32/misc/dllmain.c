@@ -24,7 +24,7 @@ HICON hIconSmWindows = NULL, hIconWindows = NULL;
 WCHAR szAppInit[KEY_LENGTH];
 
 BOOL
-GetDllList()
+GetDllList(VOID)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES Attributes;
@@ -123,7 +123,7 @@ end:
 
 
 VOID
-LoadAppInitDlls()
+LoadAppInitDlls(VOID)
 {
     szAppInit[0] = UNICODE_NULL;
 
@@ -156,7 +156,7 @@ LoadAppInitDlls()
 }
 
 VOID
-UnloadAppInitDlls()
+UnloadAppInitDlls(VOID)
 {
     if (szAppInit[0] != UNICODE_NULL)
     {

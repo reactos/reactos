@@ -41,7 +41,7 @@ DriverEntry(IN PVOID Context1,
 *--*/
 ULONG
 NTAPI
-DxApiGetVersion()
+DxApiGetVersion(VOID)
 {
     /* MSDN say this always return Direct Sound version 4.02 */
     return 0x402;

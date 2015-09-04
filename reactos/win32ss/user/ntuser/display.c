@@ -152,7 +152,7 @@ InitDisplayDriver(
 
 NTSTATUS
 NTAPI
-InitVideo()
+InitVideo(VOID)
 {
     ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
     WCHAR awcDeviceName[20];
