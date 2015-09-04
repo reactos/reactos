@@ -2139,7 +2139,6 @@ ScsiCdRomStartIo(
                     IoCompleteRequest(Irp, IO_DISK_INCREMENT);
                     ExFreePool(senseBuffer);
                     ExFreePool(srb);
-                    IoFreeIrp(irp2);
                     IoStartNextPacket(DeviceObject, FALSE);
                     DebugPrint((2, "ScsiCdRomStartIo: [%lx] bailing with status %lx at line %s\n", Irp, Irp->IoStatus.Status, __LINE__));
                     return;
@@ -2764,6 +2763,9 @@ ScsiCdRomStartIo(
             //
 
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            ExFreePool(senseBuffer);
+            ExFreePool(srb);
+            IoFreeIrp(irp2);
             return;
 
         } // end switch()
@@ -2952,6 +2954,17 @@ CdRomDeviceControlCompletion(
             if (((realIrpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL) ||
                 (realIrpStack->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL)) &&
                 (realIrpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_CDROM_CHECK_VERIFY)) {
+
+                ExFreePool(srb->SenseInfoBuffer);
+                if (srb->DataBuffer) {
+                    ExFreePool(srb->DataBuffer);
+                }
+                ExFreePool(srb);
+                if (Irp->MdlAddress) {
+                    IoFreeMdl(Irp->MdlAddress);
+                }
+
+                IoFreeIrp(Irp);
 
                 //
                 // Update the geometry information, as the media could have changed.
