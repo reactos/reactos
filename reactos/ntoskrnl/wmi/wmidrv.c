@@ -552,8 +552,9 @@ WmipShutdown(
   _Inout_  PDEVICE_OBJECT DeviceObject,
   _Inout_  PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
 }
 
 _Function_class_(FAST_IO_DEVICE_CONTROL)
