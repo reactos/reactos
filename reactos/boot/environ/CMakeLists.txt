@@ -33,7 +33,7 @@ endif()
 add_asm_files(bootmgr_common_asm ${BOOTMGR_COMMON_ASM_SOURCE})
 add_library(bootmgr_common ${BOOTMGR_COMMON_SOURCE} ${bootmgr_common_asm})
 add_pch(bootmgr_common app/bootmgr/bootmgr.h BOOTMGR_COMMON_SOURCE)
-#add_dependencies(bootmgr_common bugcodes)
+add_dependencies(bootmgr_common bugcodes)
 
 list(APPEND BOOTMGR_BASE_SOURCE
      app/bootmgr/efiemu.c
