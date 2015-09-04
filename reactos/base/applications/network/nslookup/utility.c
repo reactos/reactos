@@ -33,6 +33,9 @@ BOOL SendRequest( PCHAR pInBuffer,
     /* Create the sockets for both send and receive. */
     s = socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
 
+    if (s == INVALID_SOCKET)
+        return FALSE;
+
     /* Set up the structure to tell it where we are going. */
     RecAddr.sin_family = AF_INET;
     RecAddr.sin_port = htons( State.port );
@@ -130,6 +133,7 @@ BOOL SendRequest( PCHAR pInBuffer,
             _tprintf( _T("sendto() failed with unknown error\n") );
         }
 
+        closesocket( s );
         return FALSE;
     }
 
@@ -221,6 +225,7 @@ BOOL SendRequest( PCHAR pInBuffer,
                 _tprintf( _T("recvfrom() failed with unknown error\n") );
             }
 
+            closesocket( s );
             return FALSE;
         }
 
