@@ -208,32 +208,35 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
                                         0,
                                         dwDataSize);
 
+            if (ConTypeTmp == NULL)
+                return NULL;
+                                        
             ConType = (LPTSTR)HeapAlloc(ProcessHeap,
                                         0,
                                         dwDataSize);
-            if (ConType && ConTypeTmp)
+
+            if (ConType == NULL)
             {
-                if(RegQueryValueEx(hKey,
-                                   _T("Name"),
-                                   NULL,
-                                   &dwType,
-                                   (PBYTE)ConTypeTmp,
-                                   &dwDataSize) != ERROR_SUCCESS)
-                {
-                    HeapFree(ProcessHeap,
-                             0,
-                             ConType);
-
-                    HeapFree(ProcessHeap,
-                             0,
-                             ConTypeTmp);
-
-                    ConType = NULL;
-                }
-
-                if (ConType) CharToOem(ConTypeTmp, ConType);
                 HeapFree(ProcessHeap, 0, ConTypeTmp);
+                return NULL;
             }
+                                        
+            if(RegQueryValueEx(hKey,
+                               _T("Name"),
+                               NULL,
+                               &dwType,
+                               (PBYTE)ConTypeTmp,
+                               &dwDataSize) != ERROR_SUCCESS)
+            {
+                HeapFree(ProcessHeap,
+                         0,
+                         ConType);
+
+                ConType = NULL;
+            }
+
+            if (ConType) CharToOem(ConTypeTmp, ConType);
+            HeapFree(ProcessHeap, 0, ConTypeTmp);
         }
     }
 
@@ -580,12 +583,12 @@ VOID Release(LPTSTR Index)
                 for (i = 0; i < pInfo->NumAdapters; i++)
                 {
                      CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
-                     _tprintf(_T("name - %S\n"), pInfo->Adapter[i].Name);
+                     _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
 
                      /* Call IpReleaseAddress to release the IP address on the specified adapter. */
                      if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
                      {
-                         _tprintf(_T("\nAn error occured while releasing interface %S : \n"), AdapterInfo.Name);
+                         _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), AdapterInfo.Name);
                          DoFormatMessage(ret);
                      }
                 }
@@ -656,7 +659,7 @@ VOID Renew(LPTSTR Index)
             for (i = 0; i < pInfo->NumAdapters; i++)
             {
                 CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
-                _tprintf(_T("name - %S\n"), pInfo->Adapter[i].Name);
+                _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
 
 
                 /* Call IpRenewAddress to renew the IP address on the specified adapter. */
