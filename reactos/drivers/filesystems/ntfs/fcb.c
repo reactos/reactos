@@ -414,7 +414,7 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
         pathName[FileName->NameLength] = UNICODE_NULL;
     }
 
-    Size = NtfsGetFileSize(Vcb, Record, Stream, wcslen(Stream), &AllocatedSize);
+    Size = NtfsGetFileSize(Vcb, Record, (Stream ? Stream : L""), (Stream ? wcslen(Stream) : 0), &AllocatedSize);
 
     rcFCB = NtfsCreateFCB(pathName, Stream, Vcb);
     if (!rcFCB)
