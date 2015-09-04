@@ -668,6 +668,7 @@ WdmAudCommitWaveBufferByLegacy(
     if (Overlap->Standard.hEvent == NULL)
     {
         // no memory
+        HeapFree(GetProcessHeap(), 0, DeviceInfo);
         return MMSYSERR_NOMEM;
     }
 
