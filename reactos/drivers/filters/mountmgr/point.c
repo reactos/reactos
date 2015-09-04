@@ -356,7 +356,7 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
         /* Find back correct mount point */
         if (UniqueId)
         {
-            if (!UniqueId->UniqueIdLength != DeviceInformation->UniqueId->UniqueIdLength)
+            if (UniqueId->UniqueIdLength != DeviceInformation->UniqueId->UniqueIdLength)
             {
                 continue;
             }
