@@ -49,6 +49,11 @@ UrbCompletion(
     IoCompleteRequest(OriginalIrp, IO_NO_INCREMENT);
 
     //
+    // Free our allocated IRP
+    //
+    IoFreeIrp(Irp);
+
+    //
     // Return this status so the IO Manager doesnt mess with the Irp
     //
     return STATUS_MORE_PROCESSING_REQUIRED;
