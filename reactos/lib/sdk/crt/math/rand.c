@@ -34,15 +34,16 @@ int CDECL rand_s(unsigned int *pval)
 {
     BOOLEAN (WINAPI *pSystemFunction036)(PVOID, ULONG); // RtlGenRandom
     HINSTANCE hadvapi32 = LoadLibraryA("advapi32.dll");    
+    int ret = 0;
     pSystemFunction036 = (void*)GetProcAddress(hadvapi32, "SystemFunction036");
 #if 1
     if (!pval || (pSystemFunction036 && !pSystemFunction036(pval, sizeof(*pval))))
     {
         _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
         *_errno() = EINVAL;
-        return EINVAL;
+        ret = EINVAL;
     }
 #endif
     if(hadvapi32) FreeLibrary(hadvapi32);
-    return 0;
+    return ret;
 }
