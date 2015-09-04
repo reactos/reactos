@@ -11,6 +11,10 @@ add_executable(geninc geninc/geninc.c)
 add_executable(mkshelllink mkshelllink/mkshelllink.c)
 add_executable(obj2bin obj2bin/obj2bin.c)
 add_executable(spec2def spec2def/spec2def.c)
+
+if(MSVC)
+    set_property(SOURCE utf16le/utf16le.cpp APPEND_STRING PROPERTY COMPILE_FLAGS " /EHsc")
+endif()
 add_executable(utf16le utf16le/utf16le.cpp)
 
 add_subdirectory(cabman)
