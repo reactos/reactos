@@ -476,6 +476,9 @@ HANDLE StartAdapterDiscovery(VOID) {
                               FALSE,
                               NULL);
 
+    if (EventHandle == NULL)
+        return NULL;
+
     ThreadHandle = CreateThread(NULL,
                                 0,
                                 AdapterDiscoveryThread,
@@ -484,7 +487,10 @@ HANDLE StartAdapterDiscovery(VOID) {
                                 NULL);
 
     if (ThreadHandle == NULL)
+    {
+        CloseHandle(EventHandle);
         return NULL;
+    }
 
     CloseHandle(ThreadHandle);
 
