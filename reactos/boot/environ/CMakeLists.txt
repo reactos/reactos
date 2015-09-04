@@ -61,6 +61,12 @@ set_entrypoint(bootmgfw EfiEntry)
 
 target_link_libraries(bootmgfw bootmgr_common cportlib cmlib rtl libcntpr)
 
+if(STACK_PROTECTOR)
+    target_link_libraries(bootmgfw gcc_ssp)
+elseif(RUNTIME_CHECKS)
+    target_link_libraries(bootmgfw runtmchk)
+endif()
+
 add_dependencies(bootmgfw asm bugcodes)
 
 add_cd_file(TARGET bootmgfw FILE ${_bootmgfw_output_file} DESTINATION loader NO_CAB FOR bootcd regtest)
