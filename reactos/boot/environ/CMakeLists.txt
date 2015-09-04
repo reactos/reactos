@@ -50,7 +50,13 @@ else()
 endif()
 
 set_image_base(bootmgfw 0x10000)
-set_subsystem(bootmgfw 10)
+
+if(MSVC)
+    set_subsystem(bootmgfw EFI_APPLICATION)
+else()
+    set_subsystem(bootmgfw 10)
+endif()
+
 set_entrypoint(bootmgfw EfiEntry)
 
 target_link_libraries(bootmgfw bootmgr_common cportlib cmlib rtl libcntpr)
