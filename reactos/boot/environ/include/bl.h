@@ -9,6 +9,19 @@
 #ifndef _BL_H
 #define _BL_H
 
+/* INCLUDES ******************************************************************/
+
+/* C Headers */
+#include <stdlib.h>
+#include <stdio.h>
+#include <wchar.h>
+
+/* NT Base Headers */
+#include <ntifs.h>
+
+/* UEFI Headers */
+#include <Uefi.h>
+
 /* DATA STRUCTURES ***********************************************************/
 
 typedef struct _BL_LIBRARY_PARAMETERS
