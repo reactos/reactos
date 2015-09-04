@@ -260,6 +260,7 @@ i8042InitializeHwHacks(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IoWMIOpenBlock failed: 0x%08lx\n", Status);
+        ExFreePoolWithTag(AllData, 'BTMS');
         return;
     }
 
