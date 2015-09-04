@@ -950,6 +950,10 @@ InitializeProvider(PCWSTR ProviderName,
 
         Status = ZwQueryValueKey(KeyHandle, &Value, KeyValueFullInformation, Info, ResultLength, &ResultLength);
     }
+    else
+    {
+        Info = NULL;
+    }
 
     ZwClose(KeyHandle);
 
@@ -959,6 +963,7 @@ InitializeProvider(PCWSTR ProviderName,
      */
     if (NT_SUCCESS(Status))
     {
+        ASSERT(Info != NULL);
         AddUnregisteredProvider((PWSTR)((ULONG_PTR)Info + Info->DataOffset), ProviderOrder);
     }
 
@@ -1006,11 +1011,17 @@ MupGetProviderInformation(VOID)
 
         Status = ZwQueryValueKey(KeyHandle, &ProviderOrder, KeyValueFullInformation, Info, ResultLength, &ResultLength);
     }
+    else
+    {
+        Info = NULL;
+    }
 
     ZwClose(KeyHandle);
 
     if (NT_SUCCESS(Status))
     {
+        ASSERT(Info != NULL);
+
         Providers = (PWSTR)((ULONG_PTR)Info + Info->DataOffset);
         End = FALSE;
         ProviderCount = 0;
