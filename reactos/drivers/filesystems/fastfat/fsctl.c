@@ -429,7 +429,6 @@ VfatMount(
     {
         HashTableSize = 65537; // 65536 = 64 * 1024;
     }
-    HashTableSize = FCB_HASH_TABLE_SIZE;
     DPRINT("VFAT: Recognized volume\n");
     Status = IoCreateDevice(VfatGlobalData->DriverObject,
                             ROUND_UP(sizeof (DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize,

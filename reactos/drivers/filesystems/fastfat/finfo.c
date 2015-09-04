@@ -529,6 +529,7 @@ VfatSetRenameInformation(
         RootFCB = RootFileObject->FsContext;
     }
 
+    RtlInitEmptyUnicodeString(&NewName, NULL, 0);
     ParentFCB = NULL;
 
     if (TargetFileObject == NULL)
