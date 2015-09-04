@@ -616,7 +616,10 @@ IntFillPolygon(
         //DEBUG_PRINT_ACTIVE_EDGELIST(ActiveHead);
 
         if (!ActiveHead)
+        {
+            POLYGONFILL_DestroyEdgeList(list);
             return FALSE;
+        }
 
         pLeft = ActiveHead;
         pRight = pLeft->pNext;
