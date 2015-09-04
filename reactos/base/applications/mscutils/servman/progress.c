@@ -350,7 +350,10 @@ RunActionWithProgress(HWND hParent,
 
             /* Exit early if the user decided not to stop the dependants */
             if (StopDepends == FALSE)
+            {
+                HeapFree(GetProcessHeap(), 0, ServiceList);
                 return FALSE;
+            }
         }
     }
 
