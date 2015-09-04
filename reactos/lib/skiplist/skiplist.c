@@ -28,11 +28,11 @@ _GetRandomLevel()
     DWORD dwLevel = 0;
     DWORD dwShifted;
 
-    // Generate 32 uniformly distributed pseudo-random bits using the Park-Miller Lehmer Minimal Standard Random Number Generator.
+    // Generate 31 uniformly distributed pseudo-random bits using the Park-Miller Lehmer Minimal Standard Random Number Generator.
     dwRandom = (DWORD)(((ULONGLONG)dwRandom * 48271UL) % 2147483647UL);
 
-    // Shift out (32 - SKIPLIST_LEVELS) bits to the right to have no more than SKIPLIST_LEVELS bits set.
-    dwShifted = dwRandom >> (32 - SKIPLIST_LEVELS);
+    // Shift out (31 - SKIPLIST_LEVELS) bits to the right to have no more than SKIPLIST_LEVELS bits set.
+    dwShifted = dwRandom >> (31 - SKIPLIST_LEVELS);
 
     // BitScanForward doesn't operate on a zero input value.
     if (dwShifted)
@@ -42,7 +42,7 @@ _GetRandomLevel()
         BitScanForward(&dwLevel, dwShifted);
     }
 
-    // dwLevel can't have a value higher than 31 this way, so a CHAR is more than enough.
+    // dwLevel can't have a value higher than 30 this way, so a CHAR is more than enough.
     return (CHAR)dwLevel;
 }
 

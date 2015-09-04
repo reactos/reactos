@@ -8,15 +8,15 @@
 #ifndef _REACTOS_SKIPLIST_H
 #define _REACTOS_SKIPLIST_H
 
-// Define SKIPLIST_LEVELS to a value between 1 and 32 before including this header.
+// Define SKIPLIST_LEVELS to a value between 1 and 31 before including this header.
 // This specifies the maximum number of levels you want your Skiplist to have.
 // A value of X is recommended for handling up to 2^X elements.
 #ifndef SKIPLIST_LEVELS
-#error Please define SKIPLIST_LEVELS to a value between 1 and 32.
+#error Please define SKIPLIST_LEVELS to a value between 1 and 31.
 #endif
 
 C_ASSERT(SKIPLIST_LEVELS >= 1);
-C_ASSERT(SKIPLIST_LEVELS <= 32);
+C_ASSERT(SKIPLIST_LEVELS <= 31);
 
 // Function pointer definitions
 typedef PVOID (WINAPI *PSKIPLIST_ALLOCATE_ROUTINE)(DWORD);
