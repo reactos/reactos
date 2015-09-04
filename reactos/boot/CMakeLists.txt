@@ -46,3 +46,5 @@ add_custom_target(hybridcd
 
 add_subdirectory(freeldr)
 add_subdirectory(bootdata)
+add_subdirectory(environ)
+
