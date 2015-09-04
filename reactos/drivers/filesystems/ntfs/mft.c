@@ -87,22 +87,36 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
               ULONG NameLength,
               PNTFS_ATTR_CONTEXT * AttrCtx)
 {
+    BOOLEAN Found;
     NTSTATUS Status;
     FIND_ATTR_CONTXT Context;
     PNTFS_ATTR_RECORD Attribute;
 
     DPRINT("FindAttribute(%p, %p, 0x%x, %S, %u, %p)\n", Vcb, MftRecord, Type, Name, NameLength, AttrCtx);
 
+    Found = FALSE;
     Status = FindFirstAttribute(&Context, Vcb, MftRecord, FALSE, &Attribute);
     while (NT_SUCCESS(Status))
     {
         if (Attribute->Type == Type && Attribute->NameLength == NameLength)
         {
-            PWCHAR AttrName;
+            if (NameLength != 0)
+            {
+                PWCHAR AttrName;
 
-            AttrName = (PWCHAR)((PCHAR)Attribute + Attribute->NameOffset);
-            DPRINT("%.*S, %.*S\n", Attribute->NameLength, AttrName, NameLength, Name);
-            if (RtlCompareMemory(AttrName, Name, NameLength << 1) == (NameLength << 1))
+                AttrName = (PWCHAR)((PCHAR)Attribute + Attribute->NameOffset);
+                DPRINT("%.*S, %.*S\n", Attribute->NameLength, AttrName, NameLength, Name);
+                if (RtlCompareMemory(AttrName, Name, NameLength << 1) == (NameLength << 1))
+                {
+                    Found = TRUE;
+                }
+            }
+            else
+            {
+                Found = TRUE;
+            }
+
+            if (Found)
             {
                 /* Found it, fill up the context and return. */
                 DPRINT("Found context\n");
