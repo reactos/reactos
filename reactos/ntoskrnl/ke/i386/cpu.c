@@ -525,149 +525,114 @@ KiGetCacheInformation(VOID)
                             CurrentRegister >>= 8;
                             if (!RegisterByte) continue;
 
-                            /*
-                             * Valid values are from 0x40 (0 bytes) to 0x49
-                             * (32MB), or from 0x80 to 0x89 (same size but
-                             * 8-way associative.
-                             */
-                            if (((RegisterByte > 0x40) && (RegisterByte <= 0x47)) ||
-                                ((RegisterByte > 0x78) && (RegisterByte <= 0x7C)) ||
-                                ((RegisterByte > 0x80) && (RegisterByte <= 0x85)))
+                            Size = 0;
+                            switch (RegisterByte)
                             {
-                                /* Compute associativity */
-                                Associativity = 4;
-                                if (RegisterByte >= 0x79) Associativity = 8;
-
-                                /* Mask out only the first nibble */
-                                RegisterByte &= 0x07;
-
-                                /* Check if this cache is bigger than the last */
-                                Size = 0x10000 << RegisterByte;
-                                if ((Size / Associativity) > CurrentSize)
-                                {
-                                    /* Set the L2 Cache Size and Associativity */
-                                    CurrentSize = Size / Associativity;
-                                    Pcr->SecondLevelCacheSize = Size;
-                                    Pcr->SecondLevelCacheAssociativity = Associativity;
-                                }
+                                case 0x06:
+                                case 0x08:
+                                    KePrefetchNTAGranularity = 32;
+                                    break;
+                                case 0x09:
+                                    KePrefetchNTAGranularity = 64;
+                                    break;
+                                case 0x0a:
+                                case 0x0c:
+                                    KePrefetchNTAGranularity = 32;
+                                    break;
+                                case 0x0d:
+                                case 0x0e:
+                                    KePrefetchNTAGranularity = 64;
+                                    break;
+                                case 0x1d:
+                                    Size = 128 * 1024;
+                                    Associativity = 2;
+                                    break;
+                                case 0x21:
+                                    Size = 256 * 1024;
+                                    Associativity = 8;
+                                    break;
+                                case 0x24:
+                                    Size = 1024 * 1024;
+                                    Associativity = 16;
+                                    break;
+                                case 0x2c:
+                                case 0x30:
+                                    KePrefetchNTAGranularity = 64;
+                                    break;
+                                case 0x41:
+                                case 0x42:
+                                case 0x43:
+                                case 0x44:
+                                case 0x45:
+                                    Size = (1 << (RegisterByte - 0x41)) * 128 * 1024;
+                                    Associativity = 4;
+                                    break;
+                                case 0x48:
+                                    Size = 3 * 1024 * 1024;
+                                    Associativity = 12;
+                                    break;
+                                case 0x49:
+                                    Size = 4 * 1024 * 1024;
+                                    Associativity = 16;
+                                    break;
+                                case 0x4e:
+                                    Size = 6 * 1024 * 1024;
+                                    Associativity = 24;
+                                    break;
+                                case 0x60:
+                                case 0x66:
+                                case 0x67:
+                                case 0x68:
+                                    KePrefetchNTAGranularity = 64;
+                                    break;
+                                case 0x78:
+                                    Size = 1024 * 1024;
+                                    Associativity = 4;
+                                    break;
+                                case 0x79:
+                                case 0x7a:
+                                case 0x7b:
+                                case 0x7c:
+                                case 0x7d:
+                                    Size = (1 << (RegisterByte - 0x79)) * 128 * 1024;
+                                    Associativity = 8;
+                                    break;
+                                case 0x7f:
+                                    Size = 512 * 1024;
+                                    Associativity = 2;
+                                    break;
+                                case 0x80:
+                                    Size = 512 * 1024;
+                                    Associativity = 8;
+                                    break;
+                                case 0x82:
+                                case 0x83:
+                                case 0x84:
+                                case 0x85:
+                                    Size = (1 << (RegisterByte - 0x82)) * 256 * 1024;
+                                    Associativity = 8;
+                                    break;
+                                case 0x86:
+                                    Size = 512 * 1024;
+                                    Associativity = 4;
+                                    break;
+                                case 0x87:
+                                    Size = 1024 * 1024;
+                                    Associativity = 8;
+                                    break;
+                                case 0xf0:
+                                    KePrefetchNTAGranularity = 64;
+                                    break;
+                                case 0xf1:
+                                    KePrefetchNTAGranularity = 128;
+                                    break;
                             }
-                            else if ((RegisterByte > 0x21) && (RegisterByte <= 0x29))
+                            if (Size && (Size / Associativity) > CurrentSize)
                             {
-                                /* Set minimum cache line size */
-                                if (CacheLine < 128) CacheLine = 128;
-
-                                /* Hard-code size/associativity */
-                                Associativity = 8;
-                                switch (RegisterByte)
-                                {
-                                    case 0x22:
-                                        Size = 512 * 1024;
-                                        Associativity = 4;
-                                        break;
-
-                                    case 0x23:
-                                        Size = 1024 * 1024;
-                                        break;
-
-                                    case 0x25:
-                                        Size = 2048 * 1024;
-                                        break;
-
-                                    case 0x29:
-                                        Size = 4096 * 1024;
-                                        break;
-
-                                    default:
-                                        Size = 0;
-                                        break;
-                                }
-
-                                /* Check if this cache is bigger than the last */
-                                if ((Size / Associativity) > CurrentSize)
-                                {
-                                    /* Set the L2 Cache Size and Associativity */
-                                    CurrentSize = Size / Associativity;
-                                    Pcr->SecondLevelCacheSize = Size;
-                                    Pcr->SecondLevelCacheAssociativity = Associativity;
-                                }
-                            }
-                            else if (((RegisterByte > 0x65) && (RegisterByte < 0x69)) ||
-                                      (RegisterByte == 0x2C) || (RegisterByte == 0xF0))
-                            {
-                                /* Indicates L1 cache line of 64 bytes */
-                                KePrefetchNTAGranularity = 64;
-                            }
-                            else if (RegisterByte == 0xF1)
-                            {
-                                /* Indicates L1 cache line of 128 bytes */
-                                KePrefetchNTAGranularity = 128;
-                            }
-                            else if (((RegisterByte >= 0x4A) && (RegisterByte <= 0x4C)) ||
-                                      (RegisterByte == 0x78) ||
-                                      (RegisterByte == 0x7D) ||
-                                      (RegisterByte == 0x7F) ||
-                                      (RegisterByte == 0x86) ||
-                                      (RegisterByte == 0x87))
-                            {
-                                /* Set minimum cache line size */
-                                if (CacheLine < 64) CacheLine = 64;
-
-                                /* Hard-code size/associativity */
-                                switch (RegisterByte)
-                                {
-                                    case 0x4A:
-                                        Size = 4 * 1024 * 1024;
-                                        Associativity = 8;
-                                        break;
-
-                                    case 0x4B:
-                                        Size = 6 * 1024 * 1024;
-                                        Associativity = 12;
-                                        break;
-
-                                    case 0x4C:
-                                        Size = 8 * 1024 * 1024;
-                                        Associativity = 16;
-                                        break;
-
-                                    case 0x78:
-                                        Size = 1 * 1024 * 1024;
-                                        Associativity = 4;
-                                        break;
-
-                                    case 0x7D:
-                                        Size = 2 * 1024 * 1024;
-                                        Associativity = 8;
-                                        break;
-
-                                    case 0x7F:
-                                        Size = 512 * 1024;
-                                        Associativity = 2;
-                                        break;
-
-                                    case 0x86:
-                                        Size = 512 * 1024;
-                                        Associativity = 4;
-                                        break;
-
-                                    case 0x87:
-                                        Size = 1 * 1024 * 1024;
-                                        Associativity = 8;
-                                        break;
-
-                                    default:
-                                        Size = 0;
-                                        break;
-                                }
-
-                                /* Check if this cache is bigger than the last */
-                                if ((Size / Associativity) > CurrentSize)
-                                {
-                                    /* Set the L2 Cache Size and Associativity */
-                                    CurrentSize = Size / Associativity;
-                                    Pcr->SecondLevelCacheSize = Size;
-                                    Pcr->SecondLevelCacheAssociativity = Associativity;
-                                }
+                                /* Set the L2 Cache Size and Associativity */
+                                CurrentSize = Size / Associativity;
+                                Pcr->SecondLevelCacheSize = Size;
+                                Pcr->SecondLevelCacheAssociativity = Associativity;
                             }
                         }
                     }
