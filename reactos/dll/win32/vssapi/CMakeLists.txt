@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/vssapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/vssapi.def)
 
-if(MSVC)
+if(MSVC AND ARCH STREQUAL "i386")
     add_asm_files(vssapi_asm msvc.s)
 endif()
 
