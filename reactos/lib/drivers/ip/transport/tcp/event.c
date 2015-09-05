@@ -351,7 +351,7 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
 }
 
 VOID
-TCPSendEventHandler(void *arg, u16_t space)
+TCPSendEventHandler(void *arg, const u16_t space)
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;
@@ -471,7 +471,7 @@ TCPRecvEventHandler(void *arg)
 }
 
 VOID
-TCPConnectEventHandler(void *arg, err_t err)
+TCPConnectEventHandler(void *arg, const err_t err)
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;

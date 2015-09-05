@@ -37,8 +37,6 @@ USHORT NlsOemDefaultChar = '\0';
 USHORT NlsUnicodeDefaultChar = 0;
 
 
-#define INIT_FUNCTION
-
 /* FUNCTIONS *****************************************************************/
 
 /*

@@ -41,7 +41,7 @@ extern void GLAPIENTRY
 _mesa_DrawBuffer( GLenum mode );
 
 extern void
-_mesa_drawbuffer(struct gl_context *ctx, const GLenum buffers, const GLbitfield destMask);
+_mesa_drawbuffer(struct gl_context *ctx, const GLenum buffers, GLbitfield destMask);
 
 extern void
 _mesa_readbuffer(struct gl_context *ctx, GLenum buffer, GLint bufferIndex);

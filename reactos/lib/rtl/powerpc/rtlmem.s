@@ -9,7 +9,6 @@
 .globl RtlFillMemoryUlonglong
 .globl RtlMoveMemory
 .globl RtlZeroMemory
-.globl RtlPrefetchMemoryNonTemporal
         
 RtlCompareMemory:
 1:
