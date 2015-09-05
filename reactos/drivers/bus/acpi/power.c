@@ -70,7 +70,6 @@ Bus_FDO_Power (
                ((powerType == SystemPowerState) ? \
                DbgSystemPowerString(powerState.SystemState) :\
                DbgDevicePowerString(powerState.DeviceState)));
-    }
 
   if (powerType == SystemPowerState)
   {     
@@ -105,6 +104,7 @@ Bus_FDO_Power (
         status = STATUS_UNSUCCESSFUL;
       }
   }
+    }
     PoStartNextPowerIrp (Irp);
     IoSkipCurrentIrpStackLocation(Irp);
     status =  PoCallDriver (Data->NextLowerDriver, Irp);
