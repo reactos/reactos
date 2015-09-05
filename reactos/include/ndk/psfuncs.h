@@ -326,13 +326,12 @@ NtAlertResumeThread(
     _Out_opt_ PULONG SuspendCount
 );
 
-typedef ULONG APPHELPCACHESERVICECLASS;
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtApphelpCacheControl(
     _In_ APPHELPCACHESERVICECLASS Service,
-    _In_ PVOID ServiceData
+    _In_opt_ PAPPHELP_CACHE_SERVICE_LOOKUP ServiceData
 );
 
 NTSYSCALLAPI

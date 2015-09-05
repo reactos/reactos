@@ -811,6 +811,29 @@ typedef struct _PROCESS_FOREGROUND_BACKGROUND
 } PROCESS_FOREGROUND_BACKGROUND, *PPROCESS_FOREGROUND_BACKGROUND;
 
 //
+// Apphelp SHIM Cache
+//
+typedef enum _APPHELPCACHESERVICECLASS
+{
+    ApphelpCacheServiceLookup = 0,
+    ApphelpCacheServiceRemove = 1,
+    ApphelpCacheServiceUpdate = 2,
+    ApphelpCacheServiceFlush = 3,
+    ApphelpCacheServiceDump = 4,
+
+    ApphelpDBGReadRegistry = 0x100,
+    ApphelpDBGWriteRegistry = 0x101,
+} APPHELPCACHESERVICECLASS;
+
+
+typedef struct _APPHELP_CACHE_SERVICE_LOOKUP
+{
+    UNICODE_STRING ImageName;
+    HANDLE ImageHandle;
+} APPHELP_CACHE_SERVICE_LOOKUP, *PAPPHELP_CACHE_SERVICE_LOOKUP;
+
+
+//
 // Thread Information Structures for NtQueryProcessInformation
 //
 typedef struct _THREAD_BASIC_INFORMATION
