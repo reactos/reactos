@@ -244,11 +244,11 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/po/poshtdwn.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/po/povolume.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/po/power.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/apphelp.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/debug.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/job.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/kill.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/process.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/apphelp.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/psmgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/psnotify.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/query.c
