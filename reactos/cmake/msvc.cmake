@@ -48,8 +48,8 @@ endif ()
 # - C4244: implicit integer truncation
 # - C4290: C++ exception specification ignored
 # - C4800: forcing value to bool 'true' or 'false' (performance warning)
-#add_compile_flags("/wd4244 /wd4290 /wd4800 ")
-add_compile_flags("/wd4244 /wd4290 /wd4800")
+# - C4200: nonstandard extension used : zero-sized array in struct/union
+add_compile_flags("/wd4244 /wd4290 /wd4800 /wd4200")
 
 # FIXME: Temporarily disable C4018 until we fix more of the others. CORE-10113
 add_compile_flags("/wd4018")
