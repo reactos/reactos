@@ -31,7 +31,7 @@ add_library(mesa_swrast STATIC ${SOURCE})
 add_pch(mesa_swrast precomp.h SOURCE)
 
 if(MSVC)
-	add_target_compile_flags(mesa_swrast "/wd4189")
+    replace_compile_flags("/we4189" " ")
 else()
     add_target_compile_flags(mesa_swrast "-Wno-unused-variable")
 endif()
