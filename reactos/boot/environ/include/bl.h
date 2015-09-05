@@ -19,6 +19,9 @@
 /* NT Base Headers */
 #include <ntifs.h>
 
+/* NDK Headers */
+#include <ntndk.h>
+
 /* UEFI Headers */
 #include <Uefi.h>
 #include <DevicePath.h>
@@ -27,6 +30,8 @@
 /* DEFINES *******************************************************************/
 
 #define BL_APPLICATION_FLAG_CONVERTED_FROM_EFI          0x01
+
+#define BL_APP_ENTRY_SIGNATURE                          "BTAPENT"
 
 #define BOOT_APPLICATION_SIGNATURE_1                    'TOOB'
 #define BOOT_APPLICATION_SIGNATURE_2                    ' PPA'
@@ -41,7 +46,24 @@
 
 #define BL_APPLICATION_ENTRY_FLAG_NO_GUID               0x01
 
+#define BL_CONTEXT_PAGING_ON                            1
+#define BL_CONTEXT_INTERRUPTS_ON                        2
+
 /* ENUMERATIONS **************************************************************/
+
+typedef enum _BL_TRANSLATION_TYPE
+{
+    BlNone,
+    BlVirtual,
+    BlPae,
+    BlMax
+} BL_TRANSLATION_TYPE;
+
+typedef enum _BL_ARCH_MODE
+{
+    BlProtectedMode,
+    BlRealMode
+} BL_ARCH_MODE;
 
 //
 // Boot Device Types
@@ -325,12 +347,30 @@ typedef struct _BL_WINDOWS_LOAD_OPTIONS
     WCHAR LoadOptions[ANYSIZE_ARRAY];
 } BL_WINDOWS_LOAD_OPTIONS, *PBL_WINDOWS_LOAD_OPTIONS;
 
+typedef struct _BL_ARCH_CONTEXT
+{
+    BL_ARCH_MODE Mode;
+    BL_TRANSLATION_TYPE TranslationType;
+    ULONG ContextFlags;
+} BL_ARCH_CONTEXT, *PBL_ARCH_CONTEXT;
+
 /* INITIALIZATION ROUTINES ***************************************************/
 
 NTSTATUS
 BlInitializeLibrary(
     _In_ PBOOT_APPLICATION_PARAMETER_BLOCK BootAppParameters,
     _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
+    );
+
+NTSTATUS
+BlpArchInitialize (
+    _In_ ULONG Phase
+    );
+
+NTSTATUS
+BlpFwInitialize (
+    _In_ ULONG Phase,
+    _In_ PBL_FIRMWARE_DESCRIPTOR FirmwareParameters
     );
 
 /* UTILITY ROUTINES **********************************************************/
@@ -340,11 +380,28 @@ EfiGetEfiStatusCode(
     _In_ NTSTATUS Status
     );
 
+NTSTATUS
+EfiGetNtStatusCode (
+    _In_ EFI_STATUS EfiStatus
+    );
+
 /* BCD ROUTINES **************************************************************/
 
 ULONG
 BlGetBootOptionSize (
     _In_ PBL_BCD_OPTION BcdOption
     );
+
+/* CONTEXT ROUTINES **********************************************************/
+
+VOID
+BlpArchSwitchContext (
+    _In_ BL_ARCH_MODE NewMode
+    );
+
+extern ULONG BlpApplicationFlags;
+extern BL_LIBRARY_PARAMETERS BlpLibraryParameters;
+extern BL_TRANSLATION_TYPE  MmTranslationType;
+extern PBL_ARCH_CONTEXT CurrentExecutionContext;
 
 #endif

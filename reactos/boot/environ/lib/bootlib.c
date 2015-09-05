@@ -1,10 +1,10 @@
 /*
-* COPYRIGHT:       See COPYING.ARM in the top level directory
-* PROJECT:         ReactOS UEFI Boot Library
-* FILE:            boot/environ/lib/bootlib.c
-* PURPOSE:         Boot Library Initialization
-* PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ * COPYRIGHT:       See COPYING.ARM in the top level directory
+ * PROJECT:         ReactOS UEFI Boot Library
+ * FILE:            boot/environ/lib/bootlib.c
+ * PURPOSE:         Boot Library Initialization
+ * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
+ */
 
 /* INCLUDES ******************************************************************/
 
@@ -13,6 +13,14 @@
 /* DATA VARIABLES ************************************************************/
 
 BL_LIBRARY_PARAMETERS BlpLibraryParameters;
+PBL_DEVICE_DESCRIPTOR BlpBootDevice;
+PWCHAR BlpApplicationBaseDirectory;
+PBOOT_APPLICATION_PARAMETER_BLOCK BlpApplicationParameters;
+BL_APPLICATION_ENTRY BlpApplicationEntry;
+BOOLEAN BlpLibraryParametersInitialized;
+
+/* temp */
+BL_TRANSLATION_TYPE MmTranslationType;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -37,10 +45,66 @@ InitializeLibrary (
     _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
     )
 {
-    DBG_UNREFERENCED_PARAMETER(BootAppParameters);
-    DBG_UNREFERENCED_PARAMETER(LibraryParameters);
+    NTSTATUS Status;
+    //PBL_MEMORY_DATA MemoryData;
+    PBL_APPLICATION_ENTRY AppEntry;
+    PBL_FIRMWARE_DESCRIPTOR FirmwareDescriptor;
+    ULONG_PTR ParamPointer = (ULONG_PTR)BootAppParameters;
 
-    return STATUS_NOT_IMPLEMENTED;
+    /* Validate correct Boot Application data */
+    if (!(BootAppParameters) ||
+        (BootAppParameters->Signature[0] != BOOT_APPLICATION_SIGNATURE_1) ||
+        (BootAppParameters->Signature[1] != BOOT_APPLICATION_SIGNATURE_2) ||
+        (BootAppParameters->Size < sizeof(*BootAppParameters)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get sub-structures */
+    //MemoryData = (PBL_MEMORY_DATA)(ParamPointer + BootAppParameters->MemoryDataOffset);
+    FirmwareDescriptor = (PBL_FIRMWARE_DESCRIPTOR)(ParamPointer + BootAppParameters->FirmwareParametersOffset);
+    AppEntry = (PBL_APPLICATION_ENTRY)(ParamPointer + BootAppParameters->AppEntryOffset);
+    BlpBootDevice = (PBL_DEVICE_DESCRIPTOR)(ParamPointer + BootAppParameters->BootDeviceOffset);
+    BlpApplicationBaseDirectory = LibraryParameters->ApplicationBaseDirectory;
+
+    /* Initialize the firmware table */
+    Status = BlpFwInitialize(0, FirmwareDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Find boot application entry */
+    if (strncmp(AppEntry->Signature, BL_APP_ENTRY_SIGNATURE, 7))
+    {
+        Status = STATUS_INVALID_PARAMETER_9;
+    }
+
+    /* Read parameters */
+    BlpApplicationParameters = BootAppParameters;
+    BlpLibraryParameters = *LibraryParameters;
+
+    /* Save the application entry */
+    if (AppEntry->Flags & 2)
+    {
+        AppEntry->Flags = (AppEntry->Flags & ~0x2) | 0x80;
+    }
+    BlpApplicationEntry = *AppEntry;
+
+    /* Everything has been captured */
+    BlpLibraryParametersInitialized = TRUE;
+
+    /* Initialize the architecture (PM or RM) switching */
+    Status = BlpArchInitialize(0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    Status = STATUS_NOT_IMPLEMENTED;
+
+Quickie:
+    return Status;
 }
 
 /*++

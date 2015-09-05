@@ -677,7 +677,7 @@ EfiInitpCreateApplicationEntry (
 
     /* Zero out the header, and write down the signature */
     RtlZeroMemory(Entry, sizeof(BL_APPLICATION_ENTRY));
-    RtlCopyMemory(Entry->Signature, "BTAPENT", 7);
+    RtlCopyMemory(Entry->Signature, BL_APP_ENTRY_SIGNATURE, 7);
 
     /* Check if a BCD object was passed on the command-line */
     ObjectString = wcsstr(CommandLine, L"BCDOBJECT=");
