@@ -1,0 +1,101 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS System Configuration Tool"
+#define REACTOS_STR_INTERNAL_NAME     "msconfig"
+#define REACTOS_STR_ORIGINAL_FILENAME "msconfig.exe"
+#include <reactos/version.rc>
+
+IDI_APPICON ICON "res/msconfig.ico"
+
+#include <reactos/manifest_exe.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_BG_BG
+    #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_CA_ES
+    #include "lang/ca-ES.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "lang/el-GR.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/hu-HU.rc"
+#endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/id-ID.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/ko-KR.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/nl-NL.rc"
+#endif
+#ifdef LANGUAGE_NB_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_PT_BR
+    #include "lang/pt-BR.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/sk-SK.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/sv-SE.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "lang/th-TH.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif
