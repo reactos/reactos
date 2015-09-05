@@ -72,6 +72,115 @@ AhCreateLoadOptionsList (
 }
 
 /*++
+ * @name EfiInitpAppendPathString
+ *
+ *     The EfiInitpAppendPathString routine 
+ *
+ * @param  DestinationPath
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @param  RemainingSize
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  AppendPath
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  AppendLength
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  BytesAppended
+ *         Pointer to the UEFI System Table.
+ *
+ * @return None
+ *
+ *--*/
+NTSTATUS
+EfiInitpAppendPathString (
+    _In_ PWCHAR PathString,
+    _In_ ULONG MaximumLength,
+    _In_ PWCHAR NewPathString,
+    _In_ ULONG NewPathLength,
+    _Out_ PULONG ResultLength
+    )
+{
+    NTSTATUS Status;
+    ULONG FinalPathLength;
+
+    /* We deal in Unicode, validate the length */
+    if (NewPathLength & 1)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Is the new element at least a character? */
+    Status = STATUS_SUCCESS;
+    if (NewPathLength >= sizeof(WCHAR))
+    {
+        /* Is the last character already a NULL character? */
+        if (NewPathString[(NewPathLength - sizeof(WCHAR)) / sizeof(WCHAR)] ==
+            UNICODE_NULL)
+        {
+            /* Then we won't need to count it */
+            NewPathLength -= sizeof(UNICODE_NULL);
+        }
+
+        /* Was it more than just a NULL character? */
+        if (NewPathLength >= sizeof(WCHAR))
+        {
+            /* Yep -- but does it have a separator? */
+            if (*NewPathString == OBJ_NAME_PATH_SEPARATOR)
+            {
+                /* Skip it, we'll add our own later */
+                NewPathString++;
+                NewPathLength -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+            }
+
+            /* Was it more than just a separator? */
+            if (NewPathLength >= sizeof(WCHAR))
+            {
+                /* Yep -- but does it end with a separator? */
+                if (NewPathString[(NewPathLength - sizeof(WCHAR)) / sizeof(WCHAR)] ==
+                    OBJ_NAME_PATH_SEPARATOR)
+                {
+                    /* That's something else we won't need for now */
+                    NewPathLength -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+                }
+            }
+        }
+    }
+
+    /* Check if anything needs to be appended after all */
+    if (NewPathLength != 0)
+    {
+        /* We will append the length of the new path element, plus a separator */
+        FinalPathLength = NewPathLength + sizeof(OBJ_NAME_PATH_SEPARATOR);
+        if (MaximumLength >= FinalPathLength)
+        {
+            /* Add a separator to the existing path*/
+            *PathString = OBJ_NAME_PATH_SEPARATOR;
+
+            /* Followed by the new path element */
+            RtlCopyMemory(PathString + 1, NewPathString, NewPathLength);
+
+            /* Return the number of bytes appended */
+            *ResultLength = FinalPathLength;
+        }
+        else
+        {
+            /* There's not enough space to do this */
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+    }
+    else
+    {
+        /* Nothing to append */
+       *ResultLength = 0;
+    }
+
+    return Status;
+}
+
+/*++
  * @name EfiInitpConvertEfiDevicePath
  *
  *     The EfiInitpConvertEfiDevicePath routine 
@@ -93,13 +202,97 @@ AhCreateLoadOptionsList (
  *--*/
 NTSTATUS
 EfiInitpConvertEfiFilePath (
-    _In_ EFI_DEVICE_PATH_PROTOCOL *FilePath,
+    _In_ EFI_DEVICE_PATH_PROTOCOL *DevicePath,
     _In_ ULONG PathType,
     _In_ PBL_BCD_OPTION Option,
     _In_ ULONG MaximumLength
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG BytesAppended, DataSize, StringLength;
+    PBCDE_STRING StringEntry;
+    PWCHAR PathString;
+    FILEPATH_DEVICE_PATH *FilePath;
+    NTSTATUS Status;
+
+    /* Make sure we have enough space for the option */
+    if (MaximumLength < sizeof(*Option))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Set the initial size of the option, and consume from our buffer */
+    DataSize = sizeof(*Option);
+    MaximumLength -= sizeof(*Option);
+
+    /* Zero out and fill the option header */
+    RtlZeroMemory(Option, DataSize);
+    Option->Type = PathType;
+    Option->DataOffset = sizeof(*Option);
+
+    /* Extract the string option */
+    StringEntry = (PBCDE_STRING)(Option + 1);
+    PathString = StringEntry->String;
+
+    /* Start parsing the device path */
+    FilePath = (FILEPATH_DEVICE_PATH*)DevicePath;
+    while (IsDevicePathEndType(FilePath) == FALSE)
+    {
+        /* Is this a file path? */
+        if ((FilePath->Header.Type == MEDIA_DEVICE_PATH) &&
+            (FilePath->Header.SubType == MEDIA_FILEPATH_DP))
+        {
+            /* Get the length of the file path string, avoiding overflow */
+            StringLength = DevicePathNodeLength(FilePath) -
+                           FIELD_OFFSET(FILEPATH_DEVICE_PATH, PathName);
+            if (StringLength < FIELD_OFFSET(FILEPATH_DEVICE_PATH, PathName))
+            {
+                Status = STATUS_INTEGER_OVERFLOW;
+                goto Quickie;
+            }
+
+            /* Append this path string to the current path string */
+            Status = EfiInitpAppendPathString(PathString,
+                                              MaximumLength,
+                                              FilePath->PathName,
+                                              StringLength,
+                                              &BytesAppended);
+            if (!NT_SUCCESS(Status)) return Status;
+
+            /* Increase the size of the data, consume buffer space */
+            DataSize += BytesAppended;
+            MaximumLength -= BytesAppended;
+
+            /* Move to the next path string */
+            PathString = (PWCHAR)((ULONG_PTR)PathString + BytesAppended);
+        }
+
+        /* Move to the next path node */
+        FilePath = (FILEPATH_DEVICE_PATH*)NextDevicePathNode(FilePath);
+    }
+
+    /* Check if we still have space for a NULL-terminator */
+    if (MaximumLength < sizeof(UNICODE_NULL))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    /* We do -- NULL-terminate the string */
+    *PathString = UNICODE_NULL;
+    DataSize += sizeof(UNICODE_NULL);
+
+    /* Check if all of this has amounted to a single NULL-char */
+    if (PathString == StringEntry->String)
+    {
+        /* Then this option is empty */
+        Option->Failed = TRUE;
+    }
+
+    /* Set the final size of the option */
+    Option->DataSize = DataSize;
+
+Quickie:
+    return STATUS_SUCCESS;
 }
 
 /*++
@@ -264,7 +457,7 @@ EfiInitTranslateDevicePath(
                     /* Set GPT partition ID */
                     DeviceEntry->Partition.Disk.HardDisk.PartitionType = GptPartition;
 
-                    /* Copy the siggnature GUID */
+                    /* Copy the signature GUID */
                     RtlCopyMemory(&DeviceEntry->Partition.Gpt.PartitionGuid,
                                   DiskPath->Signature, 
                                   sizeof(GUID));
