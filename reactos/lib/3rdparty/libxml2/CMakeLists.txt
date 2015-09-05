@@ -68,7 +68,7 @@ add_pch(libxml2 libxml.h SOURCE)
 add_dependencies(libxml2 psdk)
 
 if(MSVC)
-	add_target_compile_flags(libxml2 "/wd4189")
+    replace_compile_flags("/we4189" " ")
 else()
     add_target_compile_flags(libxml2 "-w")
 endif()

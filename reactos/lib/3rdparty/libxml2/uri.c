@@ -2389,9 +2389,7 @@ xmlCanonicPath(const xmlChar *path)
  */
 #if defined(_WIN32) && !defined(__CYGWIN__)
     int len = 0;
-#ifndef __REACTOS__
     int i = 0;
-#endif
     xmlChar *p = NULL;
 #endif
     xmlURIPtr uri;
