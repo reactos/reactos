@@ -267,6 +267,9 @@ PopGracefulShutdown(IN PVOID Context)
     DPRINT("HAL shutting down\n");
     HalEndOfBoot();
 
+    /* Shut down the Shim cache if enabled */
+    ApphelpCacheShutdown();
+
     /* In this step, the I/O manager does first-chance shutdown notification */
     DPRINT("I/O manager shutting down in phase 0\n");
     IoShutdownSystem(0);

@@ -250,7 +250,7 @@ PspMapSystemDll(IN PEPROCESS Process,
     LARGE_INTEGER Offset = {{0, 0}};
     SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
-    
+
     /* Map the System DLL */
     Status = MmMapViewOfSection(PspSystemDllSection,
                                 Process,
@@ -267,7 +267,7 @@ PspMapSystemDll(IN PEPROCESS Process,
         /* Normalize status code */
         Status = STATUS_CONFLICTING_ADDRESSES;
     }
-    
+
     /* Write the image base and return status */
     if (DllBase) *DllBase = ImageBase;
     return Status;
@@ -675,15 +675,6 @@ PsGetVersion(OUT PULONG MajorVersion OPTIONAL,
 
     /* Return TRUE if this is a Checked Build */
     return (NtBuildNumber >> 28) == 0xC;
-}
-
-NTSTATUS
-NTAPI
-NtApphelpCacheControl(IN APPHELPCACHESERVICECLASS Service,
-                      IN PAPPHELP_CACHE_SERVICE_LOOKUP ServiceData)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

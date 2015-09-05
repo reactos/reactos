@@ -1280,6 +1280,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","GlobalFlag", 0x00010003
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ObjectDirectories",0x00010000, \
  "\Windows", \
  "\RPC Control"
+# This is an empty app compat cache
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache","AppCompatCache", 0x00000001, \
+  fe,0f,dc,ba,00,00,00,00
 
 ; DOS devices
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","AUX",0x00000000,"\DosDevices\COM1"

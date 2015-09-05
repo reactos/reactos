@@ -413,6 +413,18 @@ NTAPI
 PspIsProcessExiting(IN PEPROCESS Process);
 
 //
+// Apphelp functions
+//
+NTSTATUS
+NTAPI
+INIT_FUNCTION
+ApphelpCacheInitialize(VOID);
+
+VOID
+NTAPI
+ApphelpCacheShutdown(VOID);
+
+//
 // Global data inside the Process Manager
 //
 extern ULONG PspTraceLevel;
