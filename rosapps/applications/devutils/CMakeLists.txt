@@ -1,6 +1,7 @@
 add_subdirectory(gdb2)
 add_subdirectory(gdihv)
 add_subdirectory(genguid)
+add_subdirectory(shimdbg)
 add_subdirectory(symdump)
 add_subdirectory(syscalldump)
 add_subdirectory(vgafontedit)
