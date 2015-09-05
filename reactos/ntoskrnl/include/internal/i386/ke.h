@@ -526,6 +526,12 @@ KiDispatchExceptionFromTrapFrame(
     IN PKTRAP_FRAME TrapFrame
 );
 
+NTSTATUS
+NTAPI
+KiConvertToGuiThread(
+    VOID
+);
+
 //
 // Global x86 only Kernel data
 //
@@ -775,55 +781,6 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
         }
     }
 }
-
-//
-// Converts a base thread to a GUI thread
-//
-#ifdef __GNUC__
-FORCEINLINE
-NTSTATUS
-KiConvertToGuiThread(VOID)
-{
-    NTSTATUS NTAPI PsConvertToGuiThread(VOID);
-    NTSTATUS Result;
-    PVOID StackFrame;
-
-    /*
-     * Converting to a GUI thread safely updates ESP in-place as well as the
-     * current Thread->TrapFrame and EBP when KeSwitchKernelStack is called.
-     *
-     * However, PsConvertToGuiThread "helpfully" restores EBP to the original
-     * caller's value, since it is considered a nonvolatile register. As such,
-     * as soon as we're back after the conversion and we try to store the result
-     * which will probably be in some stack variable (EBP-based), we'll crash as
-     * we are touching the de-allocated non-expanded stack.
-     *
-     * Thus we need a way to update our EBP before EBP is touched, and the only
-     * way to guarantee this is to do the call itself in assembly, use the EAX
-     * register to store the result, fixup EBP, and then let the C code continue
-     * on its merry way.
-     *
-     */
-    __asm__ __volatile__
-    (
-        "movl %%ebp, %1\n\t"
-        "subl %%esp, %1\n\t"
-        "call _PsConvertToGuiThread@0\n\t"
-        "addl %%esp, %1\n\t"
-        "movl %1, %%ebp"
-        : "=a"(Result), "=r"(StackFrame)
-        : "p"(PsConvertToGuiThread)
-        : "%esp", "%ecx", "%edx", "memory"
-    );
-    return Result;
-}
-#elif defined(_MSC_VER)
-NTSTATUS
-NTAPI
-KiConvertToGuiThread(VOID);
-#else
-#error Unknown Compiler
-#endif
 
 //
 // Switches from boot loader to initial kernel stack
