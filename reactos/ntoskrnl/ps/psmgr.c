@@ -680,7 +680,7 @@ PsGetVersion(OUT PULONG MajorVersion OPTIONAL,
 NTSTATUS
 NTAPI
 NtApphelpCacheControl(IN APPHELPCACHESERVICECLASS Service,
-                      IN PVOID ServiceData)
+                      IN PAPPHELP_CACHE_SERVICE_LOOKUP ServiceData)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
