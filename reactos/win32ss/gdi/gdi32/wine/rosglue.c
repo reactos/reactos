@@ -519,7 +519,8 @@ _assert (
     DbgRaiseAssertionFailure();
 }
 
-#if (_MSC_VER < 1900) && (DBG != 1)
+#if defined(_MSC_VER) && (DBG != 1)
+
 /* MSVC uses its own in this case. */
 #else
 
