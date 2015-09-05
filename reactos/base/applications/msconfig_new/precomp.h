@@ -1,7 +1,16 @@
 #ifndef _MSCONFIG_PCH_
 #define _MSCONFIG_PCH_
 
+// NOTE: It is completely idiotic to need those defines defined
+// for having the *_s string functions. In the MS CRT they are
+// directly available without further tricks.
+#define MINGW_HAS_SECURE_API    1
+
 #include <stdarg.h>
+
+#include <stdio.h>
+#include <string.h> // FIXME: Should be normally useless in a proper CRT...
+#include <tchar.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -10,9 +19,11 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <winreg.h>
-#include <tchar.h>
-#include <stdio.h>
+#include <winuser.h>
+#include <winver.h>
+
 #include <shlobj.h>
 #include <strsafe.h>
 

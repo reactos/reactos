@@ -131,7 +131,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG "Program konfiguracji systemu"
+    IDS_MSCONFIG            "Program konfiguracji systemu"
+    IDS_MSCONFIG_2          "System Configuration"
+END
+
+STRINGTABLE
+BEGIN
     IDS_TAB_GENERAL "Ogólne"
     IDS_TAB_SYSTEM "SYSTEM.INI"
     IDS_TAB_FREELDR "FREELDR.INI"

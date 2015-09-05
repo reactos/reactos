@@ -125,7 +125,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG "โปรแกรมโครงแบบระบบ"
+    IDS_MSCONFIG            "โปรแกรมโครงแบบระบบ"
+    IDS_MSCONFIG_2          "System Configuration"
+END
+
+STRINGTABLE
+BEGIN
     IDS_TAB_GENERAL "ทั่วไป"
     IDS_TAB_SYSTEM "SYSTEM.INI"
     IDS_TAB_FREELDR "FREELDR.INI"

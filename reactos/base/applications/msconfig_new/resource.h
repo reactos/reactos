@@ -111,6 +111,7 @@
 #define IDS_SERVICES_YES            2202
 #define IDS_SERVICES_UNKNOWN        2203
 
-#define IDS_MSCONFIG 3000
+#define IDS_MSCONFIG    3000
+#define IDS_MSCONFIG_2  3001
 
-#define IDI_APPICON 3001
+#define IDI_APPICON 3010

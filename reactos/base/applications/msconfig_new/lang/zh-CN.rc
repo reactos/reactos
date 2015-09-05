@@ -125,7 +125,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG "系统配置实用程序"
+    IDS_MSCONFIG           "系统配置实用程序"
+    IDS_MSCONFIG_2          "System Configuration"
+END
+
+STRINGTABLE
+BEGIN
     IDS_TAB_GENERAL "一般"
     IDS_TAB_SYSTEM "SYSTEM.INI"
     IDS_TAB_FREELDR "FREELDR.INI"

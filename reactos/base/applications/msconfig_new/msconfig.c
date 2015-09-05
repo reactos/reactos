@@ -8,6 +8,7 @@
  */
 
 #include "precomp.h"
+#include "utils.h"
 
 #include "toolspage.h"
 #include "srvpage.h"
@@ -16,9 +17,24 @@
 #include "systempage.h"
 #include "generalpage.h"
 
-HINSTANCE hInst = 0;
+/* Allow only for a single instance of MSConfig */
+#ifdef _MSC_VER
+    #pragma data_seg("MSConfigInstance")
+    HWND hSingleWnd = NULL;
+    #pragma data_seg()
+    #pragma comment(linker, "/SECTION:MSConfigInstance,RWS")
+#else
+    HWND hSingleWnd __attribute__((section ("MSConfigInstance"), shared)) = NULL;
+#endif
 
+/* Defaults for ReactOS */
+BOOL bIsWindows = FALSE;
+BOOL bIsOSVersionLessThanVista = TRUE;
+
+HINSTANCE hInst = NULL;
+LPWSTR szAppName = NULL;
 HWND hMainWnd;                   /* Main Window */
+
 HWND hTabWnd;                    /* Tab Control Window */
 UINT uXIcon = 0, uYIcon = 0;     /* Icon sizes */
 HICON hDialogIcon = NULL;
@@ -32,7 +48,7 @@ void MsConfig_OnTabWndSelChange(void);
 //
  
 //
-//	Copied from uxtheme.h
+//  Copied from uxtheme.h
 //  If you have this new header, then delete these and
 //  #include <uxtheme.h> instead!
 //
@@ -45,7 +61,7 @@ void MsConfig_OnTabWndSelChange(void);
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 
 //
-//	Try to call EnableThemeDialogTexture, if uxtheme.dll is present
+//  Try to call EnableThemeDialogTexture, if uxtheme.dll is present
 //
 BOOL EnableDialogTheme(HWND hwnd)
 {
@@ -300,26 +316,95 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+
+BOOL Initialize(HINSTANCE hInstance)
+{
+    BOOL Success = TRUE;
+    LPWSTR lpszVistaAppName = NULL;
+    HANDLE hSemaphore;
+    INITCOMMONCONTROLSEX InitControls;
+
+    /* Initialize our global version flags */
+    bIsWindows = TRUE; /* IsWindowsOS(); */ // TODO: Commented for testing purposes...
+    bIsOSVersionLessThanVista = TRUE; /* IsOSVersionLessThanVista(); */ // TODO: Commented for testing purposes...
+
+    /* Initialize global strings */
+    szAppName = LoadResourceString(hInstance, IDS_MSCONFIG);
+    if (!bIsOSVersionLessThanVista)
+        lpszVistaAppName = LoadResourceString(hInstance, IDS_MSCONFIG_2);
+
+    /* We use a semaphore in order to have a single-instance application */
+    hSemaphore = CreateSemaphoreW(NULL, 0, 1, L"MSConfigRunning");
+    if (!hSemaphore || GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        CloseHandle(hSemaphore);
+
+        /*
+         * A semaphore with the same name already exist. It should have been
+         * created by another instance of MSConfig. Try to find its window
+         * and bring it to front.
+         */
+        if ( (hSingleWnd && IsWindow(hSingleWnd))                         ||
+             ( (hSingleWnd = FindWindowW(L"#32770", szAppName)) != NULL ) ||
+             (!bIsOSVersionLessThanVista ? ( (hSingleWnd = FindWindowW(L"#32770", lpszVistaAppName)) != NULL ) : FALSE) )
+        {
+            /* Found it. Show the window. */
+            ShowWindow(hSingleWnd, SW_SHOWNORMAL);
+            SetForegroundWindow(hSingleWnd);
+        }
+
+        /* Quit this instance of MSConfig */
+        Success = FALSE;
+    }
+    if (!bIsOSVersionLessThanVista) MemFree(lpszVistaAppName);
+
+    /* Quit now if we failed */
+    if (!Success)
+    {
+        MemFree(szAppName);
+        return FALSE;
+    }
+
+    /* Initialize the common controls */
+    InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    InitControls.dwICC  = ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_UPDOWN_CLASS /* | ICC_PROGRESS_CLASS | ICC_HOTKEY_CLASS*/;
+    InitCommonControlsEx(&InitControls);
+
+    hInst = hInstance;
+
+    return Success;
+}
+
+VOID Cleanup(VOID)
+{
+    MemFree(szAppName);
+
+    // // Close the sentry semaphore.
+    // CloseHandle(hSemaphore);
+}
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                        HINSTANCE hPrevInstance,
                        LPTSTR    lpCmdLine,
                        int       nCmdShow)
 {
-
-    INITCOMMONCONTROLSEX InitControls;
-
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
     UNREFERENCED_PARAMETER(nCmdShow);
 
-    InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    InitControls.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES;
-    InitCommonControlsEx(&InitControls);
+    /*
+     * Initialize this instance of MSConfig. Quit if we have
+     * another instance already running.
+     */
+    if (!Initialize(hInstance))
+        return -1;
 
-    hInst = hInstance;
- 
-    DialogBox(hInst, (LPCTSTR)IDD_MSCONFIG_DIALOG, NULL,  MsConfigWndProc);
-  
+    // hInst = hInstance;
+
+    DialogBox(hInst, (LPCTSTR)IDD_MSCONFIG_DIALOG, NULL, MsConfigWndProc);
+
+    /* Finish cleanup and return */
+    Cleanup();
     return 0;
 }
 
