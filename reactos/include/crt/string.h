@@ -1150,5 +1150,5 @@ extern "C" {
 #define stricmp _stricmp
 #define wcsicmp _wcsicmp
 
+#include <sec_api/string_s.h>
 #endif
-
