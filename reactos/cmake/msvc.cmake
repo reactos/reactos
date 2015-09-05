@@ -51,6 +51,9 @@ endif ()
 #add_compile_flags("/wd4244 /wd4290 /wd4800 ")
 add_compile_flags("/wd4244 /wd4290 /wd4800")
 
+# FIXME: Temporarily disable C4018 until we fix more of the others. CORE-10113
+add_compile_flags("/wd4018")
+
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
 # - C4020: too many actual parameters
