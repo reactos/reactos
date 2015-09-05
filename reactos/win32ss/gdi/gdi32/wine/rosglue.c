@@ -519,8 +519,8 @@ _assert (
     DbgRaiseAssertionFailure();
 }
 
-#if defined(_MSC_VER) && (DBG != 1)
-// MSVC uses it's own in this case. Thus skipping it.
+#if (_MSC_VER < 1900) && (DBG != 1)
+/* MSVC uses its own in this case. */
 #else
 
 double
