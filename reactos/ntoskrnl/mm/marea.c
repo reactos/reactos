@@ -575,13 +575,16 @@ NTSTATUS
 NTAPI
 MmDeleteProcessAddressSpace(PEPROCESS Process)
 {
+    KIRQL OldIrql;
     PVOID Address;
 
     DPRINT("MmDeleteProcessAddressSpace(Process %p (%s))\n", Process,
            Process->ImageFileName);
 
 #ifndef _M_AMD64
+    OldIrql = MiAcquireExpansionLock();
     RemoveEntryList(&Process->MmProcessLinks);
+    MiReleaseExpansionLock(OldIrql);
 #endif
     MmLockAddressSpace(&Process->Vm);
 

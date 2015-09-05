@@ -1178,7 +1178,9 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     Pfn1->PteAddress = (PMMPTE)PDE_BASE;
 
     /* Insert us into the Mm process list */
+    OldIrql = MiAcquireExpansionLock();
     InsertTailList(&MmProcessList, &Process->MmProcessLinks);
+    MiReleaseExpansionLock(OldIrql);
 
     /* Get a PTE to map the page directory */
     PointerPte = MiReserveSystemPtes(1, SystemPteSpace);

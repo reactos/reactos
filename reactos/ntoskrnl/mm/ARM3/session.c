@@ -35,29 +35,6 @@ PETHREAD MiExpansionLockOwner;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-FORCEINLINE
-KIRQL
-MiAcquireExpansionLock(VOID)
-{
-    KIRQL OldIrql;
-
-    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    KeAcquireSpinLock(&MmExpansionLock, &OldIrql);
-    ASSERT(MiExpansionLockOwner == NULL);
-    MiExpansionLockOwner = PsGetCurrentThread();
-    return OldIrql;
-}
-
-FORCEINLINE
-VOID
-MiReleaseExpansionLock(KIRQL OldIrql)
-{
-    ASSERT(MiExpansionLockOwner == PsGetCurrentThread());
-    MiExpansionLockOwner = NULL;
-    KeReleaseSpinLock(&MmExpansionLock, OldIrql);
-    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-}
-
 VOID
 NTAPI
 MiInitializeSessionWsSupport(VOID)

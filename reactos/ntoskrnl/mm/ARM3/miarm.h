@@ -634,6 +634,8 @@ extern SIZE_T MmSystemLockPagesCount;
 extern ULONG_PTR MmSubsectionBase;
 extern LARGE_INTEGER MmCriticalSectionTimeout;
 extern LIST_ENTRY MmWorkingSetExpansionHead;
+extern KSPIN_LOCK MmExpansionLock;
+extern PETHREAD MiExpansionLockOwner;
 
 FORCEINLINE
 BOOLEAN
@@ -1328,6 +1330,29 @@ MiLockProcessWorkingSetForFault(IN PEPROCESS Process,
         /* Reacquire unsafely */
         MiLockProcessWorkingSetUnsafe(Process, Thread);
     }
+}
+
+FORCEINLINE
+KIRQL
+MiAcquireExpansionLock(VOID)
+{
+    KIRQL OldIrql;
+
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    KeAcquireSpinLock(&MmExpansionLock, &OldIrql);
+    ASSERT(MiExpansionLockOwner == NULL);
+    MiExpansionLockOwner = PsGetCurrentThread();
+    return OldIrql;
+}
+
+FORCEINLINE
+VOID
+MiReleaseExpansionLock(KIRQL OldIrql)
+{
+    ASSERT(MiExpansionLockOwner == PsGetCurrentThread());
+    MiExpansionLockOwner = NULL;
+    KeReleaseSpinLock(&MmExpansionLock, OldIrql);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 }
 
 //
