@@ -32,41 +32,377 @@ BOOT_APPLICATION_PARAMETER_BLOCK_SCRATCH EfiInitScratch;
 
 /* FUNCTIONS *****************************************************************/
 
+/*++
+ * @name AhCreateLoadOptionsList
+ *
+ *     The AhCreateLoadOptionsList routine 
+ *
+ * @param  CommandLine
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @param  BootOptions
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  MaximumLength
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  OptionSize
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  PreviousOption
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  PreviousOptionSize
+ *         Pointer to the UEFI System Table.
+ *
+ * @return None
+ *
+ *--*/
 NTSTATUS
 AhCreateLoadOptionsList (
     _In_ PWCHAR CommandLine,
-    _In_ PBOOT_ENTRY_OPTION BootOptions,
+    _In_ PBL_BCD_OPTION BootOptions,
     _In_ ULONG MaximumLength,
     _Out_ PULONG OptionSize,
-    _In_ PBOOT_ENTRY_OPTION* PreviousOption,
+    _In_ PBL_BCD_OPTION* PreviousOption,
     _In_ PULONG PreviousOptionSize
     )
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*++
+ * @name EfiInitpConvertEfiDevicePath
+ *
+ *     The EfiInitpConvertEfiDevicePath routine 
+ *
+ * @param  DevicePath
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @param  DeviceType
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  Option
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  MaximumLength
+ *         Pointer to the UEFI System Table.
+ *
+ * @return None
+ *
+ *--*/
 NTSTATUS
 EfiInitpConvertEfiFilePath (
     _In_ EFI_DEVICE_PATH_PROTOCOL *FilePath,
     _In_ ULONG PathType,
-    _In_ PBOOT_ENTRY_OPTION Option,
+    _In_ PBL_BCD_OPTION Option,
     _In_ ULONG MaximumLength
     )
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*++
+ * @name EfiInitpGetDeviceNode
+ *
+ *     The EfiInitpGetDeviceNode routine 
+ *
+ * @param  DevicePath
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @return None
+ *
+ *--*/
+EFI_DEVICE_PATH_PROTOCOL*
+EfiInitpGetDeviceNode (
+    _In_ EFI_DEVICE_PATH_PROTOCOL *DevicePath
+    )
+{
+    EFI_DEVICE_PATH_PROTOCOL* NextPath;
+
+    /* Check if we hit the end terminator */
+    if (IsDevicePathEndType(DevicePath))
+    {
+        return DevicePath;
+    }
+
+    /* Loop each device path, until we get to the end or to a file path device node */
+    for ((NextPath = NextDevicePathNode(DevicePath));
+         !(IsDevicePathEndType(NextPath)) && ((NextPath->Type != MEDIA_DEVICE_PATH) &&
+                                              (NextPath->SubType != MEDIA_FILEPATH_DP));
+         (NextPath = NextDevicePathNode(NextPath)))
+    {
+        /* Keep iterating down */
+        DevicePath = NextPath;
+    }
+
+    /* Return the path found */
+    return DevicePath;
+}
+
+/*++
+ * @name EfiInitTranslateDevicePath
+ *
+ *     The EfiInitTranslateDevicePath routine 
+ *
+ * @param  DevicePath
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @param  DeviceEntry
+ *         Pointer to the UEFI System Table.
+ *
+ * @return None
+ *
+ *--*/
+NTSTATUS
+EfiInitTranslateDevicePath(
+    _In_ EFI_DEVICE_PATH_PROTOCOL *DevicePath,
+    _In_ PBL_DEVICE_DESCRIPTOR DeviceEntry
+    )
+{
+    NTSTATUS Status;
+    EFI_DEVICE_PATH_PROTOCOL* DeviceNode;
+    MEMMAP_DEVICE_PATH* MemDevicePath;
+    ACPI_HID_DEVICE_PATH *AcpiPath;
+    HARDDRIVE_DEVICE_PATH *DiskPath;
+
+    /* Assume failure */
+    Status = STATUS_UNSUCCESSFUL;
+
+    /* Set size first */
+    DeviceEntry->Size = sizeof(*DeviceEntry);
+
+    /* Check if we are booting from a RAM Disk */
+    if ((DevicePath->Type == HARDWARE_DEVICE_PATH) &&
+        (DevicePath->SubType == HW_MEMMAP_DP))
+    {
+        /* Get the EFI data structure matching this */
+        MemDevicePath = (MEMMAP_DEVICE_PATH*)DevicePath;
+
+        /* Set the boot library specific device types */
+        DeviceEntry->DeviceType = LocalDevice;
+        DeviceEntry->Local.Type = RamDiskDevice;
+
+        /* Extract the base, size, and offset */
+        DeviceEntry->Local.RamDisk.ImageBase.QuadPart = MemDevicePath->StartingAddress;
+        DeviceEntry->Local.RamDisk.ImageSize.QuadPart = MemDevicePath->EndingAddress -
+                                                        MemDevicePath->StartingAddress;
+        DeviceEntry->Local.RamDisk.ImageOffset = 0;
+        return STATUS_SUCCESS;
+    }
+
+    /* Otherwise, check what kind of device node this is */
+    DeviceNode = EfiInitpGetDeviceNode(DevicePath);
+    switch (DeviceNode->Type)
+    {
+        /* ACPI */
+        case ACPI_DEVICE_PATH:
+
+            /* We only support floppy drives */
+            AcpiPath = (ACPI_HID_DEVICE_PATH*)DeviceNode;
+            if ((AcpiPath->HID != EISA_PNP_ID(0x604)) &&
+                (AcpiPath->HID != EISA_PNP_ID(0x700)))
+            {
+                return Status;
+            }
+
+            /* Set the boot library specific device types */
+            DeviceEntry->DeviceType = LocalDevice;
+            DeviceEntry->Local.Type = FloppyDevice;
+
+            /* The ACPI UID is the drive number */
+            DeviceEntry->Local.FloppyDisk.DriveNumber = AcpiPath->UID;
+            return STATUS_SUCCESS;
+
+        /* Network, ATAPI, SCSI, USB */
+        case MESSAGING_DEVICE_PATH:
+
+            /* Check if it's network */
+            if ((DeviceNode->SubType == MSG_MAC_ADDR_DP) ||
+                (DeviceNode->SubType == MSG_IPv4_DP))
+            {
+                /* Set the boot library specific device types */
+                DeviceEntry->DeviceType = UdpDevice;
+                DeviceEntry->Remote.Unknown = 256;
+                return STATUS_SUCCESS;
+            }
+
+            /* Other types should come in as MEDIA_DEVICE_PATH -- Windows assumes this is a floppy */
+            DeviceEntry->DeviceType = LocalDevice;
+            DeviceEntry->Local.Type = FloppyDevice;
+            DeviceEntry->Local.FloppyDisk.DriveNumber = 0;
+            return STATUS_SUCCESS;
+
+        /* Disk or CDROM */
+        case MEDIA_DEVICE_PATH:
+
+            /* Extract the disk path and check if it's a physical disk */
+            DiskPath = (HARDDRIVE_DEVICE_PATH*)DeviceNode;
+            if (DeviceNode->SubType == MEDIA_HARDDRIVE_DP)
+            {
+                /* Check if this is an MBR partition */
+                if (DiskPath->SignatureType == SIGNATURE_TYPE_MBR)
+                {
+                    /* Set that this is a local partition */
+                    DeviceEntry->DeviceType = PartitionDevice;
+                    DeviceEntry->Partition.Disk.Type = LocalDevice;
+
+                    DeviceEntry->Partition.Disk.HardDisk.PartitionType = MbrPartition;
+                    DeviceEntry->Partition.Disk.HardDisk.Mbr.PartitionSignature =
+                        *(PULONG)&DiskPath->Signature[0];
+                    DeviceEntry->Partition.Mbr.PartitionNumber = DiskPath->PartitionNumber;
+                    return STATUS_SUCCESS;
+                }
+
+                /* Check if it's a GPT partition */
+                if (DiskPath->SignatureType == SIGNATURE_TYPE_GUID)
+                {
+                    /* Set that this is a local disk */
+                    DeviceEntry->DeviceType = HardDiskDevice;
+                    DeviceEntry->Partition.Disk.Type = LocalDevice;
+
+                    /* Set GPT partition ID */
+                    DeviceEntry->Partition.Disk.HardDisk.PartitionType = GptPartition;
+
+                    /* Copy the siggnature GUID */
+                    RtlCopyMemory(&DeviceEntry->Partition.Gpt.PartitionGuid,
+                                  DiskPath->Signature, 
+                                  sizeof(GUID));
+
+                    DeviceEntry->Flags |= 4u;
+                    return STATUS_SUCCESS;
+                }
+
+                /* Othertwise, raw boot is not supported */
+                DeviceEntry->DeviceType = HardDiskDevice;
+                DeviceEntry->Partition.Disk.HardDisk.PartitionType = RawPartition;
+                DeviceEntry->Partition.Disk.HardDisk.Raw.DiskNumber = 0;
+            }
+            else if (DeviceNode->SubType == MEDIA_CDROM_DP)
+            {
+                /* Set the right type for a CDROM */
+                DeviceEntry->DeviceType = LocalDevice;
+                DeviceEntry->Local.Type = CdRomDevice;
+
+                /* Set the drive number to zero */
+                DeviceEntry->Local.FloppyDisk.DriveNumber = 0;
+                return STATUS_SUCCESS;
+            }
+
+        /* Fail anything else */
+        default:
+            break;
+    }
+
+    /* Return here only on failure */
+    return Status;
+}
+
+/*++
+ * @name EfiInitpConvertEfiDevicePath
+ *
+ *     The EfiInitpConvertEfiDevicePath routine 
+ *
+ * @param  DevicePath
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @param  DeviceType
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  Option
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  MaximumLength
+ *         Pointer to the UEFI System Table.
+ *
+ * @return None
+ *
+ *--*/
 NTSTATUS
 EfiInitpConvertEfiDevicePath (
     _In_ EFI_DEVICE_PATH_PROTOCOL *DevicePath,
     _In_ ULONG DeviceType,
-    _In_ PBOOT_ENTRY_OPTION Option,
+    _In_ PBL_BCD_OPTION Option,
     _In_ ULONG MaximumLength
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+    PBCDE_DEVICE DeviceEntry;
+    NTSTATUS Status;
+
+    /* Make sure we have enough space for the option */
+    if (MaximumLength < sizeof(*Option))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    /* Zero out the option */
+    RtlZeroMemory(Option, sizeof(*Option));
+
+    /* Make sure we have enough space for the device entry */
+    if ((MaximumLength - sizeof(*Option)) < (ULONG)FIELD_OFFSET(BCDE_DEVICE, Device))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    /* Fill it out */
+    DeviceEntry = (PBCDE_DEVICE)(Option + 1);
+    Status = EfiInitTranslateDevicePath(DevicePath, &DeviceEntry->Device);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Fill out the rest of the option structure */
+    Option->DataOffset = sizeof(*Option);
+    Option->Type = DeviceType;
+    Option->DataSize = FIELD_OFFSET(BCDE_DEVICE, Device) +
+                       DeviceEntry->Device.Size;
+    Status = STATUS_SUCCESS;
+
+Quickie:
+    return Status;
 }
 
+/*++
+ * @name EfiInitpCreateApplicationEntry
+ *
+ *     The EfiInitpCreateApplicationEntry routine 
+ *
+ * @param  SystemTable
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @param  Entry
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  MaximumLength
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  DevicePath
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  FilePath
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  LoadOptions
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  LoadOptionsSize
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  Flags
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  ResultLength
+ *         Pointer to the UEFI System Table.
+ *
+ * @param  AppEntryDevice
+ *         Pointer to the UEFI System Table.
+ *
+ * @return None
+ *
+ *--*/
 VOID
 EfiInitpCreateApplicationEntry (
     __in EFI_SYSTEM_TABLE *SystemTable,
@@ -83,7 +419,7 @@ EfiInitpCreateApplicationEntry (
 {
     PBL_WINDOWS_LOAD_OPTIONS WindowsOptions;
     PWCHAR ObjectString, CommandLine;
-    PBOOT_ENTRY_OPTION Option, PreviousOption;
+    PBL_BCD_OPTION Option, PreviousOption;
     ULONG HeaderSize, TotalOptionSize, Size, CommandLineSize, RemainingSize;
     NTSTATUS Status;
     UNICODE_STRING GuidString;
@@ -183,7 +519,7 @@ EfiInitpCreateApplicationEntry (
     {
         /* We failed, so mark the option as such and return an empty one */
         Entry->BcdData.Failed = TRUE;
-        TotalOptionSize = sizeof(BOOT_ENTRY_OPTION);
+        TotalOptionSize = sizeof(BL_BCD_OPTION);
         goto Quickie;
     }
 
@@ -243,7 +579,7 @@ EfiInitpCreateApplicationEntry (
         OsPath = (PVOID)((ULONG_PTR)WindowsOptions + WindowsOptions->OsPathOffset);
 
         /* IS the OS path in EFI format? */
-        if ((OsPath->Length > FIELD_OFFSET(BL_FILE_PATH_DESCRIPTOR, Path)) &&
+        if ((OsPath->Length > (ULONG)FIELD_OFFSET(BL_FILE_PATH_DESCRIPTOR, Path)) &&
             (OsPath->PathType == EfiPath))
         {
             /* Convert the device portion  */

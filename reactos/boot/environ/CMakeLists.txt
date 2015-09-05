@@ -7,34 +7,34 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs)
 
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 
-list(APPEND BOOTMGR_COMMON_SOURCE
+list(APPEND BOOTLIB_SOURCE
      app/bootmgr/bootmgr.h
      lib/bootlib.c
      lib/misc/bcd.c
      lib/misc/util.c)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND BOOTMGR_COMMON_ASM_SOURCE
+    list(APPEND BOOTLIB_ASM_SOURCE
          #lib/arch/i386/foo.asm
          )
-    list(APPEND BOOTMGR_COMMON_SOURCE
+    list(APPEND BOOTLIB_SOURCE
          #lib/arch/i386/foo.c
          )
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND BOOTMGR_COMMON_ASM_SOURCE
+    list(APPEND BOOTLIB_ASM_SOURCE
          #lib/arch/amd64/foo.asm
          )
-    list(APPEND BOOTMGR_COMMON_SOURCE
+    list(APPEND BOOTLIB_SOURCE
          #lib/arch/amd64/foo.c
          )
 else()
 #TBD
 endif()
 
-add_asm_files(bootmgr_common_asm ${BOOTMGR_COMMON_ASM_SOURCE})
-add_library(bootmgr_common ${BOOTMGR_COMMON_SOURCE} ${bootmgr_common_asm})
-add_pch(bootmgr_common app/bootmgr/bootmgr.h BOOTMGR_COMMON_SOURCE)
-add_dependencies(bootmgr_common bugcodes)
+add_asm_files(bootlib_asm ${BOOTLIB_ASM_SOURCE})
+add_library(bootlib ${BOOTLIB_SOURCE} ${bootlib_asm})
+add_pch(bootlib app/bootmgr/bootmgr.h BOOTLIB_SOURCE)
+add_dependencies(bootlib bugcodes)
 
 list(APPEND BOOTMGR_BASE_SOURCE
      app/bootmgr/efiemu.c
@@ -61,7 +61,7 @@ endif()
 
 set_entrypoint(bootmgfw EfiEntry)
 
-target_link_libraries(bootmgfw bootmgr_common cportlib cmlib rtl libcntpr)
+target_link_libraries(bootmgfw bootlib cportlib cmlib rtl libcntpr)
 
 if(STACK_PROTECTOR)
     target_link_libraries(bootmgfw gcc_ssp)

@@ -12,19 +12,30 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*++
+ * @name BlGetBootOptionListSize
+ *
+ *     The BlGetBootOptionListSize routine
+ *
+ * @param  BcdOption
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @return Size of the BCD option
+ *
+ *--*/
 ULONG
 BlGetBootOptionListSize (
-    _In_ PBOOT_ENTRY_OPTION BcdOption
+    _In_ PBL_BCD_OPTION BcdOption
     )
 {
     ULONG Size = 0, NextOffset = 0;
-    PBOOT_ENTRY_OPTION NextOption;
+    PBL_BCD_OPTION NextOption;
 
     /* Loop all the options*/
     do
     {
         /* Move to the next one */
-        NextOption = (PBOOT_ENTRY_OPTION)((ULONG_PTR)BcdOption + NextOffset);
+        NextOption = (PBL_BCD_OPTION)((ULONG_PTR)BcdOption + NextOffset);
 
         /* Compute the size of the next one */
         Size += BlGetBootOptionSize(NextOption);
@@ -37,9 +48,20 @@ BlGetBootOptionListSize (
     return Size;
 }
 
+/*++
+ * @name BlGetBootOptionSize
+ *
+ *     The BlGetBootOptionSize routine
+ *
+ * @param  BcdOption
+ *         UEFI Image Handle for the current loaded application.
+ *
+ * @return Size of the BCD option
+ *
+ *--*/
 ULONG
 BlGetBootOptionSize (
-    _In_ PBOOT_ENTRY_OPTION BcdOption
+    _In_ PBL_BCD_OPTION BcdOption
     )
 {
     ULONG Size, Offset;

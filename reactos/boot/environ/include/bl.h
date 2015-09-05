@@ -48,8 +48,31 @@
 //
 typedef enum _BL_DEVICE_TYPE
 {
-    UdpDevice = 4
+    LocalDevice = 0,
+    PartitionDevice = 2,
+    UdpDevice = 4,
+    HardDiskDevice = 6
 } BL_DEVICE_TYPE;
+
+//
+// Local Device Types
+//
+typedef enum _BL_LOCAL_DEVICE_TYPE
+{
+    FloppyDevice = 1,
+    CdRomDevice = 2,
+    RamDiskDevice = 3,
+} BL_LOCAL_DEVICE_TYPE;
+
+//
+// Partition types
+//
+typedef enum _BL_PARTITION_TYPE
+{
+    GptPartition,
+    MbrPartition,
+    RawPartition,
+} BL_PARTITION_TYPE;
 
 //
 // File Path Types
@@ -191,7 +214,7 @@ typedef struct _BL_MEMORY_DESCRIPTOR
     BL_MEMORY_TYPE Type;
 } BL_MEMORY_DESCRIPTOR, *PBL_MEMORY_DESCRIPTOR;
 
-typedef struct _BOOT_ENTRY_OPTION
+typedef struct _BL_BCD_OPTION
 {
     ULONG Type;
     ULONG DataOffset;
@@ -199,7 +222,7 @@ typedef struct _BOOT_ENTRY_OPTION
     ULONG ListOffset;
     ULONG NextEntryOffset;
     ULONG Failed;
-} BOOT_ENTRY_OPTION, *PBOOT_ENTRY_OPTION;
+} BL_BCD_OPTION, *PBL_BCD_OPTION;
 
 typedef struct _BL_APPLICATION_ENTRY
 {
@@ -207,7 +230,7 @@ typedef struct _BL_APPLICATION_ENTRY
     ULONG Flags;
     GUID Guid;
     ULONG Unknown[4];
-    BOOT_ENTRY_OPTION BcdData;
+    BL_BCD_OPTION BcdData;
 } BL_APPLICATION_ENTRY, *PBL_APPLICATION_ENTRY;
 
 typedef struct _BL_HARDDISK_DEVICE
@@ -270,15 +293,18 @@ typedef struct _BL_DEVICE_DESCRIPTOR
 
         struct
         {
-            ULONG PartitionNumber;
-            BL_LOCAL_DEVICE Disk;
-        } MbrPartition;
+            union
+            {
+                ULONG PartitionNumber;
+            } Mbr;
 
-        struct
-        {
-            GUID PartitionGuid;
+            union
+            {
+                GUID PartitionGuid;
+            } Gpt;
+
             BL_LOCAL_DEVICE Disk;
-        } GptPartition;
+        } Partition;
     };
 } BL_DEVICE_DESCRIPTOR, *PBL_DEVICE_DESCRIPTOR;
 
@@ -318,7 +344,7 @@ EfiGetEfiStatusCode(
 
 ULONG
 BlGetBootOptionSize (
-    _In_ PBOOT_ENTRY_OPTION BcdOption
+    _In_ PBL_BCD_OPTION BcdOption
     );
 
 #endif
