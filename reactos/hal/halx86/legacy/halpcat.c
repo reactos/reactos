@@ -12,6 +12,15 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+//#pragma alloc_text(INIT, HaliInitPnpDriver)
+#pragma alloc_text(INIT, HalpBuildAddressMap)
+#pragma alloc_text(INIT, HalpGetDebugPortTable)
+#pragma alloc_text(INIT, HalpIs16BitPortDecodeSupported)
+#pragma alloc_text(INIT, HalpSetupAcpiPhase0)
+#pragma alloc_text(INIT, HalReportResourceUsage)
+#endif
+
 /* GLOBALS ********************************************************************/
 
 /* This determines the HAL type */
@@ -21,18 +30,18 @@ PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+INIT_SECTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* There is no ACPI on these HALs */
     return STATUS_NO_SUCH_DEVICE;
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpBuildAddressMap(VOID)
 {
     /* FIXME: Inherit ROM blocks from the registry */
@@ -42,18 +51,18 @@ HalpBuildAddressMap(VOID)
     //HalpAddROMRanges();
 }
 
+INIT_SECTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 HalpGetDebugPortTable(VOID)
 {
     /* No ACPI */
     return FALSE;
 }
 
+INIT_SECTION
 ULONG
 NTAPI
-INIT_FUNCTION
 HalpIs16BitPortDecodeSupported(VOID)
 {
     /* Only EISA systems support this */
@@ -61,9 +70,9 @@ HalpIs16BitPortDecodeSupported(VOID)
 }
 
 #if 0
+INIT_SECTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HaliInitPnpDriver(VOID)
 {
     /* On PC-AT, this will interface with the PCI driver */
@@ -75,9 +84,9 @@ HaliInitPnpDriver(VOID)
 /*
  * @implemented
  */
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalReportResourceUsage(VOID)
 {
     INTERFACE_TYPE InterfaceType;

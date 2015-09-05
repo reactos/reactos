@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+#pragma alloc_text(INIT, HalpInitializeClock)
+#endif
+
 /* GLOBALS *******************************************************************/
 
 #define PIT_LATCH  0x00
@@ -107,9 +111,9 @@ HalpSetTimerRollOver(USHORT RollOver)
     __writeeflags(Flags);
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpInitializeClock(VOID)
 {
     ULONG Increment;

@@ -4,10 +4,10 @@
 
 #pragma once
 
-#if defined(__GNUC__) && !defined(_MINIHAL_)
-#define INIT_FUNCTION __attribute__((section ("INIT")))
+#ifdef __GNUC__
+#define INIT_SECTION __attribute__((section ("INIT")))
 #else
-#define INIT_FUNCTION  /* Done via alloc_text for MSC */
+#define INIT_SECTION /* Done via alloc_text for MSC */
 #endif
 
 

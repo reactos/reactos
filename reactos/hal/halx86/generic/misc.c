@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+#pragma alloc_text(INIT, HalpMarkAcpiHal)
+#pragma alloc_text(INIT, HalpReportSerialNumber)
+#endif
+
 /* GLOBALS  *******************************************************************/
 
 BOOLEAN HalpNMIInProgress;
@@ -22,9 +27,9 @@ CHAR HalpSerialNumber[31];
 /* PRIVATE FUNCTIONS **********************************************************/
 
 #ifndef _MINIHAL_
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpReportSerialNumber(VOID)
 {
     NTSTATUS Status;
@@ -53,9 +58,9 @@ HalpReportSerialNumber(VOID)
     }
 }
 
+INIT_SECTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HalpMarkAcpiHal(VOID)
 {
     NTSTATUS Status;
