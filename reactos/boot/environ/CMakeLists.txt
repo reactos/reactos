@@ -10,6 +10,7 @@ add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 list(APPEND BOOTMGR_COMMON_SOURCE
      app/bootmgr/bootmgr.h
      lib/bootlib.c
+     lib/misc/bcd.c
      lib/misc/util.c)
 
 if(ARCH STREQUAL "i386")
@@ -38,6 +39,7 @@ add_dependencies(bootmgr_common bugcodes)
 list(APPEND BOOTMGR_BASE_SOURCE
      app/bootmgr/efiemu.c
      app/bootmgr/bootmgr.c
+     app/bootmgr/rtlcompat.c
      )
 
 add_executable(bootmgfw ${BOOTMGR_BASE_SOURCE})
