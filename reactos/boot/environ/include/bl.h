@@ -61,8 +61,15 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 #define BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG        0x20
 #define BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG   0x2000
 
+#define BL_MM_DESCRIPTOR_REQUIRES_FIXED_FLAG            0x40000
 #define BL_MM_DESCRIPTOR_REQUIRES_COALESCING_FLAG       0x2000000
 #define BL_MM_DESCRIPTOR_REQUIRES_UPDATING_FLAG         0x4000000
+#define BL_MM_DESCRIPTOR_NEVER_USE_FIRMWARE_FLAG        0x8000000
+#define BL_MM_DESCRIPTOR_SPECIAL_PAGES_FLAG             0x20000000
+#define BL_MM_DESCRIPTOR_CAME_FROM_FIRMWARE_FLAG        0x80000000
+
+#define BL_MM_REQUEST_DEFAULT_TYPE                      1
+#define BL_MM_REQUEST_TOP_DOWN_TYPE                     2
 
 #define BL_MM_REMOVE_VIRTUAL_REGION_FLAG                0x80000000
 
@@ -474,6 +481,15 @@ BlpMmInitialize (
     _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
     );
 
+/* FIRMWARE ROUTINES *********************************************************/
+
+NTSTATUS
+EfiAllocatePages (
+    _In_ ULONG Type,
+    _In_ ULONG Pages,
+    _Inout_ EFI_PHYSICAL_ADDRESS* Memory
+    );
+
 /* UTILITY ROUTINES **********************************************************/
 
 EFI_STATUS
@@ -553,11 +569,35 @@ MmMdInitByteGranularDescriptor (
     _In_ ULONGLONG PageCount
     );
 
+VOID
+MmMdFreeGlobalDescriptors (
+    VOID
+    );
+
 NTSTATUS
 MmMdAddDescriptorToList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
     _In_ PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
     _In_ ULONG Flags
+    );
+
+VOID
+MmMdRemoveDescriptorFromList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ PBL_MEMORY_DESCRIPTOR Entry
+    );
+
+BOOLEAN
+MmMdFindSatisfyingRegion (
+    _In_ PBL_MEMORY_DESCRIPTOR Descriptor,
+    _Out_ PBL_MEMORY_DESCRIPTOR NewDescriptor,
+    _In_ ULONGLONG Pages,
+    _In_ PBL_ADDRESS_RANGE BaseRange,
+    _In_ PBL_ADDRESS_RANGE VirtualRange,
+    _In_ BOOLEAN TopDown,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _In_ ULONG Flags,
+    _In_ ULONG Alignment
     );
 
 NTSTATUS
@@ -567,6 +607,11 @@ MmMdRemoveRegionFromMdlEx (
     __in ULONGLONG BasePage,
     __in ULONGLONG PageCount,
     __in PBL_MEMORY_DESCRIPTOR_LIST NewMdList
+    );
+
+NTSTATUS
+MmMdFreeDescriptor (
+    _In_ PBL_MEMORY_DESCRIPTOR MemoryDescriptor
     );
 
 NTSTATUS

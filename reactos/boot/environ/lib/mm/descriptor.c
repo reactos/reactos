@@ -646,6 +646,151 @@ Quickie:
     return Status;
 }
 
+BOOLEAN
+MmMdFindSatisfyingRegion (
+    _In_ PBL_MEMORY_DESCRIPTOR Descriptor,
+    _Out_ PBL_MEMORY_DESCRIPTOR NewDescriptor,
+    _In_ ULONGLONG Pages,
+    _In_ PBL_ADDRESS_RANGE BaseRange,
+    _In_ PBL_ADDRESS_RANGE VirtualRange,
+    _In_ BOOLEAN TopDown,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _In_ ULONG Flags,
+    _In_ ULONG Alignment
+    )
+{
+    ULONGLONG BaseMin, BaseMax;
+    ULONGLONG VirtualPage, BasePage;
+
+    /* Extract the minimum and maximum range */
+    BaseMin = BaseRange->Minimum;
+    BaseMax = BaseRange->Maximum;
+
+    /* Don't go below where the descriptor starts */
+    if (BaseMin < Descriptor->BasePage)
+    {
+        BaseMin = Descriptor->BasePage;
+    }
+
+    /* Don't go beyond where the descriptor ends */
+    if (BaseMax > (Descriptor->BasePage + Descriptor->PageCount - 1))
+    {
+        BaseMax = (Descriptor->BasePage + Descriptor->PageCount - 1);
+    }
+
+    /* Check for start overflow */
+    if (BaseMin > BaseMax)
+    {
+        EarlyPrint(L"Descriptor overflow\n");
+        return FALSE;
+    }
+
+    /* Align the base as required */
+    if (Alignment != 1)
+    {
+        BaseMin = ALIGN_UP_BY(BaseMin, Alignment);
+    }
+
+    /* Check for range overflow */
+    if (((BaseMin + Pages - 1) < BaseMin) || ((BaseMin + Pages - 1) > BaseMax))
+    {
+        return FALSE;
+    }
+
+    /* Check if this was a top-down request */
+    if (TopDown)
+    {
+        /* Then get the highest page possible */
+        BasePage = BaseMax - Pages + 1;
+        if (Alignment != 1)
+        {
+            /* Align it as needed */
+            BasePage = ALIGN_DOWN_BY(BasePage, Alignment);
+        }
+    }
+    else
+    {
+        /* Otherwise, get the lowest page possible */
+        BasePage = BaseMin;
+    }
+
+    /* If a virtual address range was passed in, this must be a virtual descriptor */
+    if (((VirtualRange->Minimum) || (VirtualRange->Maximum)) &&
+        !(Descriptor->VirtualPage))
+    {
+        return FALSE;
+    }
+
+    /* Any mapped page already? */
+    if (Descriptor->VirtualPage)
+    {
+        EarlyPrint(L"Virtual memory not yet supported\n");
+        return FALSE;
+    }
+    else
+    {
+        /* Nothing to worry about */
+        VirtualPage = 0;
+    }
+
+    /* Bail out if the memory type attributes don't match */
+    if ((((Flags & 0xFF) & (Descriptor->Flags & 0xFF)) != (Flags & 0xFF)) ||
+        (((Flags & 0xFF00) & (Descriptor->Flags & 0xFF00)) != (Flags & 0xFF00)))
+    {
+        EarlyPrint(L"Incorrect memory attributes\n");
+        return FALSE;
+    }
+
+    /* Bail out if the allocation flags don't match */
+    if (((Flags ^ Descriptor->Flags) & 0x190000))
+    {
+        EarlyPrint(L"Incorrect memory allocation flags\n");
+        return FALSE;
+    }
+
+    /* Bail out if the type doesn't match */
+    if (Descriptor->Type != MemoryType)
+    {
+        //EarlyPrint(L"Incorrect descriptor type\n");
+        return FALSE;
+    }
+
+    /* We have a matching region, fill out the descriptor for it */
+    NewDescriptor->BasePage = BasePage;
+    NewDescriptor->PageCount = Pages;
+    NewDescriptor->Type = Descriptor->Type;
+    NewDescriptor->VirtualPage = VirtualPage;
+    NewDescriptor->Flags = Descriptor->Flags;
+    //EarlyPrint(L"Found a matching descriptor: %08I64X with %08I64X pages\n", BasePage, Pages);
+    return TRUE;
+}
+
+VOID
+MmMdFreeGlobalDescriptors (
+    VOID
+    )
+{
+    ULONG Index = 0;
+
+    /* Make sure we're not int middle of a call using a descriptor */
+    if (MmDescriptorCallTreeCount != 1)
+    {
+        return;
+    }
+
+    /* Loop every current global descriptor */
+    while (Index < MmGlobalMemoryDescriptorsUsed)
+    {
+        EarlyPrint(L"Global descriptors not yet supported\n");
+
+        /* Keep going */
+        Index++;
+    }
+
+    /* All global descriptors freed */
+    MmGlobalMemoryDescriptorsUsed = 0;
+}
+
 VOID
 MmMdInitialize (
     _In_ ULONG Phase,
