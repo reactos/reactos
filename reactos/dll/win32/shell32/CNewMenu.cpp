@@ -24,15 +24,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-CNewMenu::CNewMenu()
+CNewMenu::CNewMenu() :
+    m_pidlFolder(NULL),
+    m_wszPath(NULL),
+    m_pItems(NULL),
+    m_pLinkItem(NULL),
+    m_pSite(NULL),
+    m_hiconFolder(NULL),
+    m_hiconLink(NULL),
+    m_idCmdFirst(0)
 {
-    m_wszPath = NULL;
-    m_pItems = NULL;
-    m_pLinkItem = NULL;
-    m_pSite = NULL;
-    m_hiconFolder = NULL;
-    m_hiconLink = NULL;
-    m_idCmdFirst = 0;
 }
 
 CNewMenu::~CNewMenu()
