@@ -7,8 +7,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <windows.h>
-#include "FAT.h"
+#include <time.h>
 #include "fatfs/ff.h"
 #include "fatfs/diskio.h"
 
@@ -16,7 +15,7 @@ char* imageFileName;
 
 FATFS g_Filesystem;
 
-BOOL isMounted;
+int isMounted = 0;
 
 // tool needed by fatfs
 DWORD get_fattime()
@@ -24,9 +23,11 @@ DWORD get_fattime()
 	/* 31-25: Year(0-127 org.1980), 24-21: Month(1-12), 20-16: Day(1-31) */
 	/* 15-11: Hour(0-23), 10-5: Minute(0-59), 4-0: Second(0-29 *2) */
 
-	SYSTEMTIME stm;
+	time_t rawtime;
+	struct tm * timeinfo;
 
-	GetLocalTime(&stm);
+	time (&rawtime);
+	timeinfo = localtime (&rawtime);
 
 	union FatTime {
 		struct {
@@ -40,12 +41,12 @@ DWORD get_fattime()
 		DWORD whole;
 	} myTime = {
 		{
-			stm.wSecond / 2,
-			stm.wMinute,
-			stm.wHour,
-			stm.wDay,
-			stm.wMonth,
-			stm.wYear - 1980,
+			timeinfo->tm_sec / 2,
+			timeinfo->tm_min,
+			timeinfo->tm_hour,
+			timeinfo->tm_mday,
+			timeinfo->tm_mon,
+			timeinfo->tm_year - 1980,
 		}
 	};
 
@@ -58,34 +59,34 @@ BOOL is_command(const char* parg)
 }
 
 #define NEED_PARAMS(_min_,_max_) \
-    do {\
-        if(nargs<_min_) { printf("Too few args for command %s.\n",argv[-1]); goto print_help; } \
-        if(nargs>_max_) { printf("Too many args for command %s.\n",argv[-1]); goto print_help; } \
-    } while(0)
+	do {\
+		if(nargs<_min_) { printf("Too few args for command %s.\n",argv[-1]); goto print_help; } \
+		if(nargs>_max_) { printf("Too many args for command %s.\n",argv[-1]); goto print_help; } \
+	} while(0)
 
 BOOL need_mount()
-{   
-    if(isMounted)
-        return FR_OK;
-    
-    int r = f_mount(&g_Filesystem, "0:", 0);
+{
+	if(isMounted)
+		return FR_OK;
+
+	int r = f_mount(&g_Filesystem, "0:", 0);
 	if(r)
-        return r;
-    
-    isMounted = TRUE;
-    return FR_OK;
+		return r;
+
+	isMounted = 1;
+	return FR_OK;
 }
 
 #define NEED_MOUNT() \
-    do { ret = need_mount(); if(ret) \
-    {\
-        printf("Error: could not mount image file '%s' (%d). \n", imageFileName, ret); \
-        goto print_help; \
-    } } while(0)
+	do { ret = need_mount(); if(ret) \
+	{\
+		printf("Error: could not mount image file '%s' (%d). \n", imageFileName, ret); \
+		goto print_help; \
+	} } while(0)
 
 int main(int oargc, char* oargv[])
 {
-    int ret;
+	int ret;
 	int    argc = oargc-1;
 	char** argv = oargv+1;
 
@@ -135,10 +136,10 @@ int main(int oargc, char* oargv[])
 		if(strcmp(parg,"format")==0)
 		{
 			// NOTE: The fs driver detects which FAT format fits best based on size
-            
+
 			NEED_PARAMS(1,1);
 
-            NEED_MOUNT();
+			NEED_MOUNT();
 
 			// Arg 1: number of sectors
 			int sectors = atoi(argv[0]);
@@ -150,13 +151,13 @@ int main(int oargc, char* oargv[])
 			}
 
 			disk_ioctl(0, SET_SECTOR_COUNT, &sectors);
-		
-            ret = f_mkfs("0:", 1, 4096);
+
+			ret = f_mkfs("0:", 1, 4096);
 			if (ret)
-            {
-                printf("ERROR: Formatting drive: %d.\n", ret);
-                goto print_help;
-            }
+			{
+				printf("ERROR: Formatting drive: %d.\n", ret);
+				goto print_help;
+			}
 		}
 		else if(strcmp(parg,"boot")==0)
 		{
@@ -168,8 +169,8 @@ int main(int oargc, char* oargv[])
 		else if(strcmp(parg,"add")==0)
 		{
 			NEED_PARAMS(2,2);
-            
-            NEED_MOUNT();
+
+			NEED_MOUNT();
 
 			// Arg 1: external file to add
 			// Arg 2: virtual filename
@@ -204,8 +205,8 @@ int main(int oargc, char* oargv[])
 		{
 			NEED_PARAMS(2,2);
 
-            NEED_MOUNT();
-            
+			NEED_MOUNT();
+
 			// Arg 1: virtual file to extract
 			// Arg 2: external filename
 
@@ -239,8 +240,7 @@ int main(int oargc, char* oargv[])
 		{
 			NEED_PARAMS(2,2);
 
-            NEED_MOUNT();
-            
+			NEED_MOUNT();
 			// Arg 1: src path & filename
 			// Arg 2: new path & filename
 
@@ -249,10 +249,9 @@ int main(int oargc, char* oargv[])
 		}
 		else if(strcmp(parg,"copy")==0)
 		{
-			NEED_PARAMS(2,2);
+			NEED_PARAMS(2,2)
 
-            NEED_MOUNT();
-            
+			NEED_MOUNT();
 			// Arg 1: src path & filename
 			// Arg 2: new path & filename
 
@@ -286,8 +285,7 @@ int main(int oargc, char* oargv[])
 		{
 			NEED_PARAMS(1,1);
 
-            NEED_MOUNT();
-            
+			NEED_MOUNT();
 			// Arg 1: folder path
 			f_mkdir(argv[1]);
 		}
@@ -295,8 +293,7 @@ int main(int oargc, char* oargv[])
 		{
 			NEED_PARAMS(1,1);
 
-            NEED_MOUNT();
-            
+			NEED_MOUNT();
 			// Arg 1: file/folder path (cannot delete non-empty folders)
 			f_unlink(argv[1]);
 		}

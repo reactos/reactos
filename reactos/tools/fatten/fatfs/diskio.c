@@ -7,13 +7,14 @@
 /* storage control module to the FatFs module with a defined API.        */
 /*-----------------------------------------------------------------------*/
 #include "diskio.h"
-#include "../FAT.h"
 #include <stdio.h>
+
+extern char* imageFileName;
 
 /*-----------------------------------------------------------------------*/
 /* Correspondence between physical drive number and image file handles.  */
 
-HANDLE driveHandle[1] = {INVALID_HANDLE_VALUE};
+FILE* driveHandle[1] = {NULL};
 const int driveHandleCount = sizeof(driveHandle) / sizeof(FILE*);
 
 /*-----------------------------------------------------------------------*/
@@ -26,12 +27,12 @@ DSTATUS disk_initialize (
 {
 	if(pdrv == 0) // only one drive (image file) supported atm.
 	{
-		if(driveHandle[0]!=INVALID_HANDLE_VALUE)
+		if(driveHandle[0]!=NULL)
 			return 0;
 
-		driveHandle[0]=CreateFile(imageFileName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL /* | FILE_FLAG_RANDOM_ACCESS */, NULL);
+		driveHandle[0]=fopen(imageFileName, "r+b");
 
-		if(driveHandle[0]!=INVALID_HANDLE_VALUE)
+		if(driveHandle[0]!=NULL)
 			return 0;
 	}
 	return STA_NOINIT;
@@ -49,7 +50,7 @@ DSTATUS disk_status (
 {
 	if(pdrv < driveHandleCount)
 	{
-		if(driveHandle[pdrv] != INVALID_HANDLE_VALUE)
+		if(driveHandle[pdrv] != NULL)
 			return 0;
 	}
 	return STA_NOINIT;
@@ -72,15 +73,14 @@ DRESULT disk_read (
 
 	if(pdrv < driveHandleCount)
 	{
-		if(driveHandle[pdrv] != INVALID_HANDLE_VALUE)
+		if(driveHandle[pdrv] != NULL)
 		{
-			if(SetFilePointer(driveHandle[pdrv], sector * 512, NULL, SEEK_SET) == INVALID_SET_FILE_POINTER)
+			if(fseek(driveHandle[pdrv], sector * 512, SEEK_SET))
 				return RES_ERROR;
 
-			if(!ReadFile(driveHandle[pdrv], buff, 512 * count, &result, NULL))
-				return RES_ERROR;
+			result = fread(buff, 512, count, driveHandle[pdrv]);
 
-			if(result == (512 * count))
+			if(result == count)
 				return RES_OK;
 
 			return RES_ERROR;
@@ -108,18 +108,18 @@ DRESULT disk_write (
 
 	if(pdrv < driveHandleCount)
 	{
-		if(driveHandle[pdrv] != INVALID_HANDLE_VALUE)
+		if(driveHandle[pdrv] != NULL)
 		{
-			if(SetFilePointer(driveHandle[pdrv], sector * 512, NULL, SEEK_SET) == INVALID_SET_FILE_POINTER)
+			if(fseek(driveHandle[pdrv], sector * 512, SEEK_SET))
 				return RES_ERROR;
 
-			if(!WriteFile(driveHandle[pdrv], buff, 512 * count, &result, NULL))
+			result = fwrite(buff, 512, count, driveHandle[pdrv]);
 				return RES_ERROR;
 
-			if(result == (512 * count))
-				return RES_OK;
+			if(result != (512 * count))
+				return RES_ERROR;
 
-			return RES_ERROR;
+			return RES_OK;
 		}
 	}
 
@@ -141,11 +141,12 @@ DRESULT disk_ioctl (
 {
 	if(pdrv < driveHandleCount)
 	{
-		if(driveHandle[pdrv] != INVALID_HANDLE_VALUE)
+		if(driveHandle[pdrv] != NULL)
 		{
 			switch(cmd)
 			{
 			case CTRL_SYNC:
+				fflush(driveHandle[pdrv]);
 				return RES_OK;
 			case GET_SECTOR_SIZE:
 				*(DWORD*)buff = 512;
@@ -154,15 +155,32 @@ DRESULT disk_ioctl (
 				*(DWORD*)buff = 512;
 				return RES_OK;
 			case GET_SECTOR_COUNT:
-				{
-					*(DWORD*)buff = GetFileSize(driveHandle[pdrv], NULL) / 512;
-				}
+				fseek(driveHandle[pdrv], 0, SEEK_END);
+				*(DWORD*)buff = ftell(driveHandle[pdrv]) / 512;
 				return RES_OK;
 			case SET_SECTOR_COUNT:
+			{
+				int count = *(DWORD*)buff;
+				long size;
+				
+				fseek(driveHandle[pdrv], 0, SEEK_END);
+				size = ftell(driveHandle[pdrv]) / 512;
+				
+				if(size < count)
 				{
-					SetFilePointer(driveHandle[pdrv], (*(DWORD*)buff)*512, NULL, SEEK_SET);
-					SetEndOfFile(driveHandle[pdrv]);
+					if(fseek(driveHandle[pdrv], count * 512 - 1, SEEK_SET))
+					    return RES_ERROR;   
+
+					fwrite(buff, 1, 1, driveHandle[pdrv]);
+
+					return RES_OK;
 				}
+				else
+				{
+				    // SHRINKING NOT IMPLEMENTED
+				    return RES_OK;
+				}
+			}
 			}
 		}
 	}
