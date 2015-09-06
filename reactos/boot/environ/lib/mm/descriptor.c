@@ -476,14 +476,6 @@ MmMdAddDescriptorToList (
     }
 }
 
-typedef enum _BL_MEMORY_DESCRIPTOR_TYPE
-{
-    BlMdPhysical,
-    BlMdVirtual,
-} BL_MEMORY_DESCRIPTOR_TYPE;
-
-#define BL_MM_REMOVE_VIRTUAL_REGION_FLAG    0x80000000
-
 NTSTATUS
 MmMdRemoveRegionFromMdlEx (
     __in PBL_MEMORY_DESCRIPTOR_LIST MdList,
@@ -498,7 +490,11 @@ MmMdRemoveRegionFromMdlEx (
     PLIST_ENTRY ListHead, NextEntry;
     PBL_MEMORY_DESCRIPTOR Descriptor;
     BL_MEMORY_DESCRIPTOR NewDescriptor;
+    ULONGLONG RegionSize;
     ULONGLONG FoundBasePage, FoundEndPage, FoundPageCount, EndPage;
+
+    /* Set initial status */
+    Status = STATUS_SUCCESS;
 
     /* Check if removed descriptors should go into a new list */
     if (NewMdList != NULL)
@@ -551,7 +547,7 @@ MmMdRemoveRegionFromMdlEx (
         FoundPageCount = Descriptor->PageCount;
         FoundEndPage = FoundBasePage + FoundPageCount;
         EndPage = PageCount + BasePage;
-        EarlyPrint(L"Looking for Region 0x%08I64X-0x%08I64X in 0x%08I64X-0x%08I64X\n", BasePage, EndPage, FoundBasePage, FoundEndPage);
+        //EarlyPrint(L"Looking for Region 0x%08I64X-0x%08I64X in 0x%08I64X-0x%08I64X\n", BasePage, EndPage, FoundBasePage, FoundEndPage);
 
         /* Make a copy of the original descriptor */
         RtlCopyMemory(&NewDescriptor, NextEntry, sizeof(NewDescriptor));
@@ -566,28 +562,71 @@ MmMdRemoveRegionFromMdlEx (
                 if ((FoundBasePage >= BasePage) || (EndPage >= FoundEndPage))
                 {
                     /* This descriptor doesn't cover any part of the range */
-                    EarlyPrint(L"No part of this descriptor contains the region\n");
+                    //EarlyPrint(L"No part of this descriptor contains the region\n");
                 }
                 else
                 {
                     /* This descriptor covers the head of the allocation */
-                    EarlyPrint(L"Descriptor covers the head of the region\n");
+                    //EarlyPrint(L"Descriptor covers the head of the region\n");
                 }
             }
             else
             {
                 /* This descriptor contains the entire allocation */
-                EarlyPrint(L"Descriptor contains the entire region\n");
+                //EarlyPrint(L"Descriptor contains the entire region\n");
             }
+
+            /* Keep going */
+            NextEntry = NextEntry->Flink;
         }
         else
         {
-            /* This descriptor covers the end of the allocation */
-            EarlyPrint(L"Descriptor covers the end of the region\n");
-        }
+            /*
+             * This descriptor contains the end of the allocation. It may:
+             *
+             * - Contain the full allocation (i.e.: the start is aligned)
+             * - Contain parts of the end of the allocation (i.e.: the end is beyond)
+             * - Contain the entire tail end of the allocation (i..e:the end is within)
+             *
+             * So first, figure out if we cover the entire end or not
+             */
+            if (EndPage > FoundEndPage)
+            {
+                /* The allocation goes past the end of this descriptor */
+                EndPage = FoundEndPage;
+            }
 
-        /* Keep going */
-        NextEntry = NextEntry->Flink;
+            /* This is how many pages we will eat away from the descriptor */
+            RegionSize = EndPage - FoundBasePage;
+
+            /* Update the descriptor to account for the consumed pages */
+            Descriptor->BasePage += RegionSize;
+            Descriptor->PageCount -= RegionSize;
+            if (Descriptor->VirtualPage)
+            {
+                Descriptor->VirtualPage += RegionSize;
+            }
+
+            /* Go to the next entry */
+            NextEntry = NextEntry->Flink;
+
+            /* Check if the descriptor is now empty */
+            if (!Descriptor->PageCount)
+            {
+                /* Remove it */
+                //EarlyPrint(L"Entire descriptor consumed\n");
+                MmMdRemoveDescriptorFromList(MdList, Descriptor);
+                MmMdFreeDescriptor(Descriptor);
+
+                /* Check if we're supposed to insert it into a new list */
+                if (HaveNewList)
+                {
+                    EarlyPrint(L"Not yet implemented\n");
+                    Status = STATUS_NOT_IMPLEMENTED;
+                    goto Quickie;
+                }
+            }
+        }
     }
 
 Quickie:

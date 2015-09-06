@@ -530,9 +530,11 @@ MmFwGetMemoryMap (
     }
 
     /* Loop the EFI memory map */
+#if 0
     EarlyPrint(L"UEFI MEMORY MAP\n\n");
     EarlyPrint(L"TYPE        START              END                   ATTRIBUTES\n");
     EarlyPrint(L"===============================================================\n");
+#endif
     while (EfiMemoryMapSize != 0)
     {
         /* Check if this is an EFI buffer, but we're not in real mode */
@@ -571,13 +573,13 @@ MmFwGetMemoryMap (
         {
             goto LoopAgain;
         }
-
+#if 0
         EarlyPrint(L"%08X    0x%016I64X-0x%016I64X    0x%I64X\n",
                    MemoryType,
                    StartPage << PAGE_SHIFT,
                    EndPage << PAGE_SHIFT,
                    EfiDescriptor.Attribute);
-
+#endif
         /* Check for any range of memory below 1MB */
         if (StartPage < 0x100)
         {

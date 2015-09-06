@@ -22,9 +22,16 @@ MmTrInitialize (
     VOID
     )
 {
+    /* Nothing to track if we're using physical memory */
+    if (MmTranslationType == BlNone)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* TODO */
+    EarlyPrint(L"Required for protected mode\n");
     return STATUS_NOT_IMPLEMENTED;
 }
-
 
 NTSTATUS
 BlMmRemoveBadMemory (

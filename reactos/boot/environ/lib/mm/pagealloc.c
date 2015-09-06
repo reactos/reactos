@@ -43,6 +43,20 @@ BlpMmInitializeConstraints (
 }
 
 NTSTATUS
+MmPapAllocatePagesInRange (
+    _Inout_ PULONG PhysicalAddress,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _In_ ULONGLONG Pages,
+    _In_ ULONG Attributes,
+    _In_ ULONG Alignment,
+    _In_opt_ PBL_ADDRESS_RANGE Range,
+    _In_ ULONG Type
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
 MmPaInitialize (
     __in PBL_MEMORY_DATA BootMemoryData,
     __in ULONG MinimumAllocationCount
@@ -75,6 +89,7 @@ MmPaInitialize (
                               BL_MM_FLAG_REQUEST_COALESCING);
     if (NT_SUCCESS(Status))
     {
+#if 0
         PLIST_ENTRY listHead, nextEntry;
 
         /* Loop the NT firmware memory list */
@@ -93,6 +108,7 @@ MmPaInitialize (
 
             nextEntry = nextEntry->Flink;
         }
+#endif
 
         /*
          * Because BL supports cross x86-x64 application launches and a LIST_ENTRY
@@ -148,6 +164,7 @@ MmPaInitialize (
         if (NT_SUCCESS(Status))
         {
             /* The Page Allocator has initialized */
+            EarlyPrint(L"Page Allocator initialized\n");
             PapInitializationStatus = TRUE;
             Status = STATUS_SUCCESS;
         }

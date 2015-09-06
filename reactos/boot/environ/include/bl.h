@@ -64,6 +64,8 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 #define BL_MM_DESCRIPTOR_REQUIRES_COALESCING_FLAG       0x2000000
 #define BL_MM_DESCRIPTOR_REQUIRES_UPDATING_FLAG         0x4000000
 
+#define BL_MM_REMOVE_VIRTUAL_REGION_FLAG                0x80000000
+
 #define BL_LIBRARY_FLAG_REINITIALIZE                    0x02
 #define BL_LIBRARY_FLAG_REINITIALIZE_ALL                0x04
 #define BL_LIBRARY_FLAG_INITIALIZATION_COMPLETED        0x20
@@ -71,6 +73,12 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 #define BL_MEMORY_CLASS_SHIFT                           28
 
 /* ENUMERATIONS **************************************************************/
+
+typedef enum _BL_MEMORY_DESCRIPTOR_TYPE
+{
+    BlMdPhysical,
+    BlMdVirtual,
+} BL_MEMORY_DESCRIPTOR_TYPE;
 
 typedef enum _BL_TRANSLATION_TYPE
 {
@@ -144,6 +152,7 @@ typedef enum _BL_MEMORY_TYPE
     // Loader Memory
     //
     BlLoaderMemory = 0xD0000002,
+    BlLoaderHeap = 0xD0000005,
     BlLoaderPageDirectory = 0xD0000006,
     BlLoaderReferencePage = 0xD0000007,
     BlLoaderRamDisk = 0xD0000008,
@@ -397,6 +406,12 @@ typedef struct _BL_MEMORY_DESCRIPTOR_LIST
     ULONG Type;
 } BL_MEMORY_DESCRIPTOR_LIST, *PBL_MEMORY_DESCRIPTOR_LIST;
 
+typedef struct _BL_ADDRESS_RANGE
+{
+    ULONGLONG Minimum;
+    ULONGLONG Maximum;
+} BL_ADDRESS_RANGE, *PBL_ADDRESS_RANGE;
+
 /* INLINE ROUTINES ***********************************************************/
 
 FORCEINLINE
@@ -552,6 +567,17 @@ MmMdRemoveRegionFromMdlEx (
     __in ULONGLONG BasePage,
     __in ULONGLONG PageCount,
     __in PBL_MEMORY_DESCRIPTOR_LIST NewMdList
+    );
+
+NTSTATUS
+MmPapAllocatePagesInRange (
+    _Inout_ PULONG PhysicalAddress,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _In_ ULONGLONG Pages,
+    _In_ ULONG Attributes,
+    _In_ ULONG Alignment,
+    _In_opt_ PBL_ADDRESS_RANGE Range,
+    _In_ ULONG Type
     );
 
 extern ULONG MmDescriptorCallTreeCount;
