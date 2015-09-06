@@ -18,7 +18,11 @@ list(APPEND BOOTLIB_SOURCE
      lib/mm/heapalloc.c
      lib/mm/blkalloc.c
      lib/mm/descriptor.c
-     lib/platform/time.c)
+     lib/platform/time.c
+     lib/io/io.c
+     lib/io/device.c
+     lib/io/file.c
+     lib/io/fat.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND BOOTLIB_ASM_SOURCE

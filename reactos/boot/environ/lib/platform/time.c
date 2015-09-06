@@ -14,6 +14,8 @@
 
 ULONGLONG BlpTimePerformanceFrequency;
 
+/* FUNCTIONS *****************************************************************/
+
 NTSTATUS
 BlpTimeMeasureTscFrequency (
     VOID

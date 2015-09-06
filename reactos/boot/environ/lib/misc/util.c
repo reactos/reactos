@@ -10,6 +10,24 @@
 
 #include "bl.h"
 
+/* DATA VARIABLES ************************************************************/
+
+PVOID UtlRsdt;
+PVOID UtlXsdt;
+
+PVOID UtlMcContext;
+PVOID UtlMcDisplayMessageRoutine;
+PVOID UtlMcUpdateMessageRoutine;
+
+PVOID UtlProgressRoutine;
+PVOID UtlProgressContext;
+PVOID UtlProgressInfoRoutine;
+ULONG UtlProgressGranularity;
+ULONG UtlCurrentPercentComplete;
+ULONG UtlNextUpdatePercentage;
+BOOLEAN UtlProgressNeedsInfoUpdate;
+PVOID UtlProgressInfo;
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -146,3 +164,26 @@ EfiGetNtStatusCode (
     }
 }
 
+NTSTATUS
+BlUtlInitialize (
+    VOID
+    )
+{
+    UtlRsdt = 0;
+    UtlXsdt = 0;
+
+    UtlMcContext = 0;
+    UtlMcDisplayMessageRoutine = 0;
+    UtlMcUpdateMessageRoutine = 0;
+
+    UtlProgressRoutine = 0;
+    UtlProgressContext = 0;
+    UtlProgressInfoRoutine = 0;
+    UtlProgressGranularity = 0;
+    UtlCurrentPercentComplete = 0;
+    UtlNextUpdatePercentage = 0;
+    UtlProgressNeedsInfoUpdate = 0;
+    UtlProgressInfo = 0;
+
+    return STATUS_SUCCESS;
+}

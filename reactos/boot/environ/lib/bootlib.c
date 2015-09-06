@@ -18,6 +18,8 @@ PWCHAR BlpApplicationBaseDirectory;
 PBOOT_APPLICATION_PARAMETER_BLOCK BlpApplicationParameters;
 BL_APPLICATION_ENTRY BlpApplicationEntry;
 BOOLEAN BlpLibraryParametersInitialized;
+BOOLEAN EnSubsystemInitialized;
+LIST_ENTRY EnEventNotificationList;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -173,6 +175,52 @@ InitializeLibrary (
         /* Destroy memory manager in phase 1 */
         EarlyPrint(L"Arch2 init failed\n");
         //BlpMmDestroy(1);
+        return Status;
+    }
+
+#if 0
+    /* Initialize support for Trusted Platform Module v1.2 */
+    BlpTpmInitialize();
+#endif
+
+    /* Initialize the event manager */
+    EnSubsystemInitialized = 1;
+    InitializeListHead(&EnEventNotificationList);
+
+    /* Initialize the I/O Manager */
+    Status = BlpIoInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Destroy memory manager in phase 1 and the event manager */
+        EarlyPrint(L"IO init failed\n");
+        //if (EnSubsystemInitialized) BlpEnDestroy();
+        //BlpMmDestroy(1);
+        return Status;
+    }
+
+#if 0
+    /* Initialize the network stack */
+    Status = BlNetInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Destroy the I/O, event, and memory managers in phase 1 */
+        BlpIoDestroy();
+        if (EnSubsystemInitialized) BlpEnDestroy();
+        BlpMmDestroy(1);
+        return Status;
+    }
+#endif
+
+    /* Initialize the utility library */
+    Status = BlUtlInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Destroy the network, I/O, event, and memory managers in phase 1 */
+        //BlNetDestroy();
+        //BlpIoDestroy();
+        //if (EnSubsystemInitialized) BlpEnDestroy();
+        //BlpMmDestroy(1);
+        EarlyPrint(L"Util init failed\n");
         return Status;
     }
 

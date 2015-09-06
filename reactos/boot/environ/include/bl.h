@@ -78,6 +78,8 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 #define BL_LIBRARY_FLAG_ZERO_HEAP_ALLOCATIONS_ON_FREE   0x10
 #define BL_LIBRARY_FLAG_INITIALIZATION_COMPLETED        0x20
 
+#define BL_FS_REGISTER_AT_HEAD_FLAG                     1
+
 #define BL_MEMORY_CLASS_SHIFT                           28
 
 /* ENUMERATIONS **************************************************************/
@@ -199,6 +201,38 @@ typedef enum _BL_MEMORY_ATTR
     BlMemoryExecuteProtected = 0x400,
     BlMemoryRuntime = 0x1000000
 } BL_MEMORY_ATTR;
+
+/* CALLBACKS *****************************************************************/
+
+typedef
+NTSTATUS
+(*PBL_FS_INIT_CALLBACK) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_FS_DESTROY_CALLBACK) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_FS_MOUNT_CALLBACK) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_FS_PURGE_CALLBACK) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_FILE_DESTROY_CALLBACK) (
+    _In_ PVOID Entry
+    );
 
 /* DATA STRUCTURES ***********************************************************/
 
@@ -420,6 +454,34 @@ typedef struct _BL_ADDRESS_RANGE
     ULONGLONG Maximum;
 } BL_ADDRESS_RANGE, *PBL_ADDRESS_RANGE;
 
+typedef struct _BL_FILE_ENTRY
+{
+    ULONG DeviceIndex;
+    PBL_FILE_DESTROY_CALLBACK DestroyCallback;
+} BL_FILE_ENTRY, *PBL_FILE_ENTRY;
+
+typedef struct _BL_DEVICE_ENTRY
+{
+    ULONG ReferenceCount;
+} BL_DEVICE_ENTRY, *PBL_DEVICE_ENTRY;
+
+typedef struct _BL_FILE_SYSTEM_ENTRY
+{
+    LIST_ENTRY ListEntry;
+    PBL_FS_INIT_CALLBACK InitCallback;
+    PBL_FS_DESTROY_CALLBACK DestroyCallback;
+    PBL_FS_MOUNT_CALLBACK MountCallback;
+    PBL_FS_PURGE_CALLBACK PurgeCallback;
+} BL_FILE_SYSTEM_ENTRY, *PBL_FILE_SYSTEM_ENTRY;
+
+typedef struct _BL_FILE_SYSTEM_REGISTRATION_TABLE
+{
+    PBL_FS_INIT_CALLBACK Init;
+    PBL_FS_DESTROY_CALLBACK Destroy;
+    PBL_FS_MOUNT_CALLBACK Mount;
+    PBL_FS_PURGE_CALLBACK Purge;
+} BL_FILE_SYSTEM_REGISTRATION_TABLE;
+
 /* INLINE ROUTINES ***********************************************************/
 
 FORCEINLINE
@@ -513,6 +575,26 @@ MmMdInitialize (
     _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
     );
 
+NTSTATUS
+BlpDeviceInitialize (
+    VOID
+    );
+
+NTSTATUS
+BlpIoInitialize (
+    VOID
+    );
+
+NTSTATUS
+BlpFileInitialize (
+    VOID
+    );
+
+NTSTATUS
+FatInitialize (
+    VOID
+    );
+
 /* FIRMWARE ROUTINES *********************************************************/
 
 NTSTATUS
@@ -544,6 +626,11 @@ EfiGetEfiStatusCode(
 NTSTATUS
 EfiGetNtStatusCode (
     _In_ EFI_STATUS EfiStatus
+    );
+
+NTSTATUS
+BlUtlInitialize (
+    VOID
     );
 
 /* BCD ROUTINES **************************************************************/
@@ -645,6 +732,11 @@ MmFwGetMemoryMap (
 PVOID
 BlMmAllocateHeap (
     _In_ ULONG Size
+    );
+
+NTSTATUS
+BlMmFreeHeap (
+    _In_ PVOID Buffer
     );
 
 extern ULONG MmDescriptorCallTreeCount;
