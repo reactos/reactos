@@ -456,33 +456,6 @@ FdoStartDevice(
 }
 
 
-static NTSTATUS
-FdoSetPower(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    PIO_STACK_LOCATION IrpSp)
-{
-    NTSTATUS Status;
-
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-
-    DPRINT("Called\n");
-
-    if (IrpSp->Parameters.Power.Type == DevicePowerState)
-    {
-        /* FIXME: Set device power state for the device */
-        Status = STATUS_UNSUCCESSFUL;
-    }
-    else
-    {
-        Status = STATUS_UNSUCCESSFUL;
-    }
-
-    return Status;
-}
-
-
 /*** PUBLIC ******************************************************************/
 
 NTSTATUS
@@ -616,30 +589,16 @@ FdoPowerControl(
  *     Status
  */
 {
-    PIO_STACK_LOCATION IrpSp;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
 
     DPRINT("Called\n");
 
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
 
-    switch (IrpSp->MinorFunction)
-    {
-        case IRP_MN_SET_POWER:
-            Status = FdoSetPower(DeviceObject, Irp, IrpSp);
-            break;
-
-        default:
-            DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-    }
-
-    if (Status != STATUS_PENDING)
-    {
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    Status = PoCallDriver(DeviceExtension->Ldo, Irp);
 
     DPRINT("Leaving. Status 0x%X\n", Status);
 

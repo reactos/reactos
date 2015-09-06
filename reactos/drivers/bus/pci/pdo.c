@@ -202,7 +202,7 @@ PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
 {
     ULONG Size;
     ULONG AllOnes;
-    
+
     /* Read the original value */
     Size = HalGetBusDataByOffset(PCIConfiguration,
                                  DeviceExtension->PciDevice->BusNumber,
@@ -215,7 +215,7 @@ PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
         DPRINT1("Wrong size %lu\n", Size);
         return FALSE;
     }
-    
+
     /* Write all ones to determine which bits are held to zero */
     AllOnes = MAXULONG;
     Size = HalSetBusDataByOffset(PCIConfiguration,
@@ -229,7 +229,7 @@ PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
         DPRINT1("Wrong size %lu\n", Size);
         return FALSE;
     }
-    
+
     /* Get the range length */
     Size = HalGetBusDataByOffset(PCIConfiguration,
                                  DeviceExtension->PciDevice->BusNumber,
@@ -255,7 +255,7 @@ PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
         DPRINT1("Wrong size %lu\n", Size);
         return FALSE;
     }
-    
+
     return TRUE;
 }
 
@@ -283,13 +283,13 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
         ULONGLONG Bar;
     } NewValue;
     ULONG Offset;
-    
+
     /* Compute the offset of this BAR in PCI config space */
     Offset = 0x10 + Bar * 4;
-    
+
     /* Assume this is a 32-bit BAR until we find wrong */
     *NextBar = Bar + 1;
-    
+
     /* Initialize BAR values to zero */
     OriginalValue.Bar = 0ULL;
     NewValue.Bar = 0ULL;
@@ -301,7 +301,7 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
     {
         return FALSE;
     }
-    
+
     /* Check if this is a memory BAR */
     if (!(OriginalValue.Bars.Bar0 & PCI_ADDRESS_IO_SPACE))
     {
@@ -321,13 +321,13 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
                 *MaximumAddress = 0xFFFFFFFFFFFFFFFFULL;
             }
         }
-        
+
         /* Check if this is a 64-bit BAR */
         if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
         {
             /* We've now consumed the next BAR too */
             *NextBar = Bar + 2;
-            
+
             /* Read the next BAR */
             if (!PdoReadPciBar(DeviceExtension, Offset + 4,
                                &OriginalValue.Bars.Bar1,
@@ -354,7 +354,7 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
         *Flags = 0;
         return TRUE;
     }
-    
+
     *Base = OriginalValue.Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK_64;
 
     *Length = ~((NewValue.Bar & PCI_ADDRESS_IO_SPACE)
@@ -1490,36 +1490,6 @@ PdoQueryDeviceRelations(
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-PdoSetPower(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    PIO_STACK_LOCATION IrpSp)
-{
-    NTSTATUS Status;
-
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-    DPRINT("Called\n");
-
-    if (IrpSp->Parameters.Power.Type == DevicePowerState)
-    {
-        Status = STATUS_SUCCESS;
-
-        switch (IrpSp->Parameters.Power.State.SystemState)
-        {
-            default:
-                Status = STATUS_UNSUCCESSFUL;
-        }
-    }
-    else
-    {
-        Status = STATUS_UNSUCCESSFUL;
-    }
-
-    return Status;
-}
-
 
 /*** PUBLIC ******************************************************************/
 
@@ -1683,7 +1653,7 @@ PdoPowerControl(
  */
 {
     PIO_STACK_LOCATION IrpSp;
-    NTSTATUS Status;
+    NTSTATUS Status = Irp->IoStatus.Status;
 
     DPRINT("Called\n");
 
@@ -1691,21 +1661,15 @@ PdoPowerControl(
 
     switch (IrpSp->MinorFunction)
     {
+        case IRP_MN_QUERY_POWER:
         case IRP_MN_SET_POWER:
-            Status = PdoSetPower(DeviceObject, Irp, IrpSp);
-            break;
-
-        default:
-            DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_SUCCESS;
             break;
     }
 
-    if (Status != STATUS_PENDING)
-    {
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+    PoStartNextPowerIrp(Irp);
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     DPRINT("Leaving. Status 0x%X\n", Status);
 
