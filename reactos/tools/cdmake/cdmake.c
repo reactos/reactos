@@ -166,11 +166,11 @@ DWORD unused_bytes_at_ends_of_files;
 DWORD number_of_directories;
 DWORD bytes_in_directories;
 
-char bootimage[512];
 BOOL eltorito;
 DWORD boot_catalog_sector;
 DWORD boot_image_sector;
 WORD boot_image_size;  // counted in 512 byte sectors
+char bootimage[512];
 
 BOOL joliet;
 DWORD joliet_path_table_size;
@@ -575,7 +575,7 @@ This function checks to see if there's a cdname conflict.
 #define strcasecmp stricmp
 #endif//_WIN32
 
-int cdname_exists(PDIR_RECORD d)
+BOOL cdname_exists(PDIR_RECORD d)
 {
     PDIR_RECORD p = d->parent->first_record;
     while (p)
@@ -583,10 +583,10 @@ int cdname_exists(PDIR_RECORD d)
         if ( p != d
             && !strcasecmp(p->name_on_cd, d->name_on_cd)
             && !strcasecmp(p->extension_on_cd, d->extension_on_cd) )
-            return 1;
+            return TRUE;
         p = p->next_in_directory;
     }
-    return 0;
+    return FALSE;
 }
 
 void parse_filename_into_dirrecord(const char* filename, PDIR_RECORD d, BOOL dir)
@@ -809,7 +809,7 @@ make_directory_records(PDIR_RECORD d)
     d->first_record = NULL;
     strcpy(end_source, "*.*");
 
-    findhandle =_findfirst(source, &f);
+    findhandle = _findfirst(source, &f);
     if (findhandle != 0)
     {
         do
@@ -839,7 +839,7 @@ make_directory_records(PDIR_RECORD d)
     }
 
     strcpy(end_source, "*.*");
-    findhandle= _findfirst(source, &f);
+    findhandle = _findfirst(source, &f);
     if (findhandle)
     {
         do
@@ -1121,14 +1121,14 @@ new_empty_dirrecord(PDIR_RECORD d, BOOL directory)
 }
 
 #if _WIN32
-static int
+static BOOL
 get_cd_file_time(HANDLE handle, PDATE_AND_TIME cd_time_info)
 {
     FILETIME file_time;
     SYSTEMTIME sys_time;
 
     if (!GetFileTime(handle, NULL, NULL, &file_time))
-        return -1;
+        return FALSE;
 
     FileTimeToSystemTime(&file_time, &sys_time);
     memset(cd_time_info, 0, sizeof(*cd_time_info));
@@ -1140,7 +1140,7 @@ get_cd_file_time(HANDLE handle, PDATE_AND_TIME cd_time_info)
     cd_time_info->minute = sys_time.wMinute;
     cd_time_info->second = sys_time.wSecond;
 
-    return 0;
+    return TRUE;
 }
 #endif
 
@@ -1175,7 +1175,7 @@ scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
                 error_exit("Can't open timestamp file %s\n", file->source_name);
             }
 
-            if (get_cd_file_time(open_file, &d->date_and_time) == -1)
+            if (!get_cd_file_time(open_file, &d->date_and_time))
             {
                 error_exit("Can't stat timestamp file %s\n", file->source_name);
             }
@@ -1210,7 +1210,7 @@ scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
             {
                 error_exit("Can't open file %s\n", file->source_name);
             }
-            if (get_cd_file_time(open_file, &new_d->date_and_time) == -1)
+            if (!get_cd_file_time(open_file, &new_d->date_and_time))
             {
                 error_exit("Can't stat file %s\n", file->source_name);
             }
@@ -1294,6 +1294,31 @@ static void get_time_string(char *str)
             root.date_and_time.second);
 }
 
+static BOOL write_from_file(FILE *file, DWORD size)
+{
+    int n;
+
+    fseek(file, 0, SEEK_SET);
+    while (size > 0)
+    {
+        n = BUFFER_SIZE - cd.count;
+        if ((DWORD)n > size)
+            n = size;
+
+        if (fread(cd.buffer + cd.count, n, 1, file) < 1)
+            return FALSE;
+
+        cd.count += n;
+        if (cd.count == BUFFER_SIZE)
+            flush_buffer();
+        cd.sector += n / SECTOR_SIZE;
+        cd.offset += n % SECTOR_SIZE;
+        size -= n;
+    }
+
+    return TRUE;
+}
+
 static void pass(void)
 {
     PDIR_RECORD d;
@@ -1303,15 +1328,14 @@ static void pass(void)
     DWORD size;
     DWORD number_of_sectors;
     char *old_end_source;
-    int n;
     FILE *file;
     char timestring[17];
 
     get_time_string(timestring);
 
     // first 16 sectors are zeros
-
     write_block(16 * SECTOR_SIZE, 0);
+
 
     // Primary Volume Descriptor
 
@@ -1356,7 +1380,6 @@ static void pass(void)
 
 
     // Boot Volume Descriptor
-
     if (eltorito)
     {
         write_byte(0);
@@ -1369,7 +1392,6 @@ static void pass(void)
     }
 
     // Supplementary Volume Descriptor
-
     if (joliet)
     {
         write_string("\2CD001\1");
@@ -1413,7 +1435,6 @@ static void pass(void)
         fill_sector();
     }
 
-
     // Volume Descriptor Set Terminator
     write_string("\377CD001\1");
     fill_sector();
@@ -1429,7 +1450,7 @@ static void pass(void)
         write_little_endian_word(0);  // reserved
         write_string("ReactOS Foundation");
         write_block(6, 0); // padding
-        write_little_endian_word(0x62E);  // checksum
+        write_little_endian_word(0x62E);  // checksum // FIXME: This is hardcoded!!
         write_little_endian_word(0xAA55);  // signature
 
         // default entry
@@ -1454,29 +1475,16 @@ static void pass(void)
             error_exit("Can't open %s\n", bootimage);
         fseek(file, 0, SEEK_END);
         size = ftell(file);
-        fseek(file, 0, SEEK_SET);
         if (size == 0 || (size % 2048))
         {
             fclose(file);
             error_exit("Invalid boot image size (%lu bytes)\n", size);
         }
         boot_image_size = size / 512;
-        while (size > 0)
+        if (!write_from_file(file, size))
         {
-            n = BUFFER_SIZE - cd.count;
-            if ((DWORD) n > size)
-                n = size;
-            if (fread(cd.buffer + cd.count, n, 1, file) < 1)
-            {
-                fclose(file);
-                error_exit("Read error in file %s\n", bootimage);
-            }
-            cd.count += n;
-            if (cd.count == BUFFER_SIZE)
-                flush_buffer();
-            cd.sector += n / SECTOR_SIZE;
-            cd.offset += n % SECTOR_SIZE;
-            size -= n;
+            fclose(file);
+            error_exit("Read error in file %s\n", bootimage);
         }
         fclose(file);
 //      fill_sector();
@@ -1581,7 +1589,7 @@ static void pass(void)
         fill_sector();
     }
 
-    // directories and files
+    // Directories and files
     for (d = &root; d != NULL; d = d->next_in_path_table)
     {
         // write directory
@@ -1652,23 +1660,10 @@ static void pass(void)
                     file = fopen(file_source, "rb");
                     if (file == NULL)
                         error_exit("Can't open %s\n", file_source);
-                    fseek(file, 0, SEEK_SET);
-                    while (size > 0)
+                    if (!write_from_file(file, size))
                     {
-                        n = BUFFER_SIZE - cd.count;
-                        if ((DWORD) n > size)
-                            n = size;
-                        if (fread(cd.buffer + cd.count, n, 1, file) < 1)
-                        {
-                            fclose(file);
-                            error_exit("Read error in file %s\n", file_source);
-                        }
-                        cd.count += n;
-                        if (cd.count == BUFFER_SIZE)
-                            flush_buffer();
-                        cd.sector += n / SECTOR_SIZE;
-                        cd.offset += n % SECTOR_SIZE;
-                        size -= n;
+                        fclose(file);
+                        error_exit("Read error in file %s\n", file_source);
                     }
                     fclose(file);
                     end_source = old_end_source;
