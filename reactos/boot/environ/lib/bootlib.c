@@ -132,6 +132,50 @@ InitializeLibrary (
         goto Quickie;
     }
 
+    /* Initialize firmware now that the heap, etc works */
+    Status = BlpFwInitialize(1, FirmwareDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Destroy memory manager in phase 1 */
+        //BlpMmDestroy(1);
+        EarlyPrint(L"Firmware2 init failed!\n");
+        return Status;
+    }
+
+#if 0
+    /* Modern systems have an undocumented BCD system for the boot frequency */
+    Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
+                                    0x15000075,
+                                    &BootFrequency);
+    if (NT_SUCCESS(Status) && (BootFrequency))
+    {
+        /* Use it if present */
+        BlpTimePerformanceFrequency = BootFrequency;
+    }
+    else
+#endif
+    {
+        /* Use the TSC for calibration */
+        Status = BlpTimeCalibratePerformanceCounter();
+        if (!NT_SUCCESS(Status))
+        {
+            /* Destroy memory manager in phase 1 */
+            EarlyPrint(L"TSC calibration failed\n");
+            //BlpMmDestroy(1);
+            return Status;
+        }
+    }
+
+    /* Now setup the rest of the architecture (IDT, etc) */
+    Status = BlpArchInitialize(1);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Destroy memory manager in phase 1 */
+        EarlyPrint(L"Arch2 init failed\n");
+        //BlpMmDestroy(1);
+        return Status;
+    }
+
     EarlyPrint(L"TODO!\n");
     Status = STATUS_NOT_IMPLEMENTED;
 

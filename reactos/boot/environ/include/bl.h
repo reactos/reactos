@@ -522,6 +522,18 @@ EfiAllocatePages (
     _Inout_ EFI_PHYSICAL_ADDRESS* Memory
     );
 
+NTSTATUS
+EfiStall (
+    _In_ ULONG StallTime
+    );
+
+/* PLATFORM TIMER ROUTINES ***************************************************/
+
+NTSTATUS
+BlpTimeCalibratePerformanceCounter (
+    VOID
+    );
+
 /* UTILITY ROUTINES **********************************************************/
 
 EFI_STATUS

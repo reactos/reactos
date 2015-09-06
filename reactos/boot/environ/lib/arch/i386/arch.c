@@ -19,13 +19,20 @@ PBL_ARCH_CONTEXT CurrentExecutionContext;
 /* FUNCTIONS *****************************************************************/
 
 VOID
-//__declspec(naked) fixme: gcc
+DECLSPEC_NORETURN
 ArchTrapNoProcess (
     VOID
     )
 {
     /* Do nothing, this is an unsupported debugging interrupt */
-    // _asm { iret } FIXME: GCC
+#if defined(__GNUC__)
+    __asm__ __volatile__ ("iret");
+#elif defined (_MSC_VER)
+    _asm { iret };
+#else
+#error wtf are you using
+#endif
+    __assume(0);
 }
 
 VOID
@@ -208,8 +215,13 @@ BlpArchInitialize (
         IdtBase = (PKIDTENTRY)Idtr.Base;
 
         /* Get the Code Segment */
-       // _asm { mov CodeSegment, cs } FIXME: GCC
-        CodeSegment = 8; // fix fix
+#if defined(__GNUC__)
+        __asm__ __volatile__ ("mov %%cs,%0\n\t" :"=r" (CodeSegment));
+#elif defined (_MSC_VER)
+        _asm { mov CodeSegment, cs };
+#else
+#error wtf are you using
+#endif
 
         /* Set up INT 3, ASSERT, and SECURITY_ASSERT to be no-op (for Rtl) */
         IdtBase[3].Offset = (USHORT)(ULONG_PTR)ArchTrapNoProcess;
@@ -230,7 +242,13 @@ BlpArchInitialize (
         __lidt(&Idtr);
 
         /* Reset FPU state */
-       //  __asm { fninit } FIXME: GCC
+#if defined(__GNUC__)
+        __asm__ __volatile__ ("fninit");
+#elif defined (_MSC_VER)
+        _asm { fninit };
+#else
+#error wtf are you using
+#endif
     }
     else
     {

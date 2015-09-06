@@ -47,10 +47,10 @@ typedef struct _BL_BUSY_HEAP_ENTRY
 typedef struct _BL_HEAP_BOUNDARIES
 {
     LIST_ENTRY ListEntry;
-    ULONG_PTR HeapHigh;
+    ULONG_PTR HeapEnd;
     ULONG_PTR HeapLimit;
-    ULONG_PTR HeapBottom;
-    PBL_BUSY_HEAP_ENTRY HeapTop;
+    ULONG_PTR HeapBase;
+    PBL_BUSY_HEAP_ENTRY HeapStart;
 } BL_HEAP_BOUNDARIES, *PBL_HEAP_BOUNDARIES;
 
 ULONG HapInitializationStatus;
@@ -125,7 +125,7 @@ MmHapHeapAllocatorExtend (
 
         /* Check if we have a page free above the heap */
         HeapLimit = Heap->HeapLimit + PAGE_SIZE;
-        if (HeapLimit <= Heap->HeapHigh)
+        if (HeapLimit <= Heap->HeapEnd)
         {
             EarlyPrint(L"Heap extension TODO\n");
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -147,32 +147,32 @@ MmHapHeapAllocatorExtend (
 
     /* Set the heap bottom, limit, and top */
     NewHeap = (PBL_HEAP_BOUNDARIES)HeapBase->Buffer;
-    NewHeap->HeapBottom = (ULONG_PTR)HeapBase;
+    NewHeap->HeapBase = (ULONG_PTR)HeapBase;
     NewHeap->HeapLimit = (ULONG_PTR)HeapBase + AlignedSize;
-    NewHeap->HeapTop = (PBL_BUSY_HEAP_ENTRY)(NewHeap + 1);
+    NewHeap->HeapStart = (PBL_BUSY_HEAP_ENTRY)(NewHeap + 1);
 
     /* Set the buffer links */
     HeapBase->BufferPrevious.P = NULL;
-    HeapBase->BufferNext.P = NewHeap->HeapTop;
+    HeapBase->BufferNext.P = NewHeap->HeapStart;
 
     /* Set the buffer at the top of the heap and mark it as being free */
-    NewHeap->HeapTop->BufferPrevious.P = HeapBase;
-    NewHeap->HeapTop->BufferNext.P =  NewHeap->HeapTop;
-    NewHeap->HeapTop->BufferNext.BufferFree = 1;
-    NewHeap->HeapTop->BufferNext.BufferOnHeap = 1;
+    NewHeap->HeapStart->BufferPrevious.P = HeapBase;
+    NewHeap->HeapStart->BufferNext.P =  NewHeap->HeapStart;
+    NewHeap->HeapStart->BufferNext.BufferFree = 1;
+    NewHeap->HeapStart->BufferNext.BufferOnHeap = 1;
 
     /* Is this the first heap ever? */
     if (IsListEmpty(&MmHeapBoundaries))
     {
         /* We will host the free list at the top of the heap */
-        MmFreeList = (PBL_FREE_HEAP_ENTRY*)((ULONG_PTR)NewHeap->HeapLimit - sizeof(BL_HEAP_BOUNDARIES));
+        MmFreeList = (PBL_FREE_HEAP_ENTRY*)((ULONG_PTR)NewHeap->HeapLimit - 8 * sizeof(PBL_FREE_HEAP_ENTRY));
         NewHeap->HeapLimit = (ULONG_PTR)MmFreeList;
         RtlZeroMemory(MmFreeList, 8 * sizeof(PBL_FREE_HEAP_ENTRY));
     }
 
     /* Remove a page on top */
     HeapLimit = NewHeap->HeapLimit;
-    NewHeap->HeapHigh = NewHeap->HeapLimit;
+    NewHeap->HeapEnd = NewHeap->HeapLimit;
     NewHeap->HeapLimit -= PAGE_SIZE;
 
     /* Add us into the heap list */
@@ -595,29 +595,24 @@ BlMmAllocateHeap (
                                      ListEntry);
 
             /* Check if we have space in the heap page for this allocation? */
-            FreeEntry = Heap->HeapTop;
+            FreeEntry = Heap->HeapStart;
             NextEntry = (PBL_BUSY_HEAP_ENTRY)((ULONG_PTR)FreeEntry + BufferSize);
-
-            EarlyPrint(L"Free Entry: %p Size: %lx Next: %p\n", FreeEntry, BufferSize, NextEntry);
-
-            EarlyPrint(L"Heap Limit: %p\n", Heap->HeapLimit);
-            EarlyPrint(L"Minus one busy entry: %p\n", Heap->HeapLimit - sizeof(BL_BUSY_HEAP_ENTRY));
 
             if ((NextEntry >= FreeEntry) &&
                 ((ULONG_PTR)NextEntry <= Heap->HeapLimit - sizeof(BL_BUSY_HEAP_ENTRY)))
             {
                 /* Update the heap top pointer past this allocation */
-                Heap->HeapTop = NextEntry;
+                Heap->HeapStart = NextEntry;
 
                 /* Make this allocation point to the slot */
-                FreeEntry->BufferNext.P = Heap->HeapTop;
+                FreeEntry->BufferNext.P = Heap->HeapStart;
 
                 /* And make the free heap entry point back to us */
-                Heap->HeapTop->BufferNext.P = FreeEntry;
+                Heap->HeapStart->BufferNext.P = FreeEntry;
 
                 /* Mark the heap entry as being free and on the heap */
-                Heap->HeapTop->BufferNext.BufferFree = 1;
-                Heap->HeapTop->BufferNext.BufferOnHeap = 1;
+                Heap->HeapStart->BufferNext.BufferFree = 1;
+                Heap->HeapStart->BufferNext.BufferOnHeap = 1;
 
                 /* The previously freed entry on the heap page is now ours */
                 BusyEntry = FreeEntry;
@@ -639,6 +634,7 @@ BlMmAllocateHeap (
     BusyEntry->BufferNext.P = MmHapDecodeLink(BusyEntry->BufferNext);
 
     /* Return the entry's data buffer */
+    EarlyPrint(L"Returning buffer at 0x%p\n", &BusyEntry->Buffer);
     return &BusyEntry->Buffer;
 }
 
@@ -668,8 +664,8 @@ BlMmFreeHeap (
         Heap = CONTAINING_RECORD(NextEntry, BL_HEAP_BOUNDARIES, ListEntry);
 
         /* Is this entry part of this heap? */
-        if (((ULONG_PTR)Heap->HeapBottom <= (ULONG_PTR)BusyEntry) &&
-            ((ULONG_PTR)BusyEntry < (ULONG_PTR)Heap->HeapTop))
+        if (((ULONG_PTR)Heap->HeapBase <= (ULONG_PTR)BusyEntry) &&
+            ((ULONG_PTR)BusyEntry < (ULONG_PTR)Heap->HeapStart))
         {
             /* Ignore double-free */
             if (BusyEntry->BufferNext.BufferFree)

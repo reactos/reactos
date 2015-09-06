@@ -219,6 +219,35 @@ EfiFreePages (
 }
 
 NTSTATUS
+EfiStall (
+    _In_ ULONG StallTime
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = EfiBS->Stall(StallTime);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
 EfiAllocatePages (
     _In_ ULONG Type,
     _In_ ULONG Pages,
@@ -749,7 +778,7 @@ BlpFwInitialize (
         {
             /* Set the initial key toggle state */
             KeyToggleState = EFI_TOGGLE_STATE_VALID | 40;
-            EfiConInExSetState(EfiST->ConsoleInHandle, &KeyToggleState);
+            EfiConInExSetState(EfiConInEx, &KeyToggleState);
         }
 
         /* Setup the watchdog timer */
