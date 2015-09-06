@@ -834,7 +834,32 @@ IntVideoPortDispatchPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status = Irp->IoStatus.Status;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    if (DeviceExtension->Common.Fdo)
+    {
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+    }
+    else
+    {
+        switch (IrpSp->MinorFunction)
+        {
+            case IRP_MN_QUERY_POWER:
+            case IRP_MN_SET_POWER:
+                Status = STATUS_SUCCESS;
+                break;
+        }
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 }
 
 NTSTATUS
@@ -843,7 +868,20 @@ IntVideoPortDispatchSystemControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+    if (DeviceExtension->Common.Fdo)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+    }
+    else
+    {
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 }
 
 VOID
