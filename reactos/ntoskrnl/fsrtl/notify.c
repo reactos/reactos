@@ -166,7 +166,7 @@ FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
                if (Buffer == NULL)
                {
                    PsChargePoolQuota(NotifyChange->OwningProcess, PagedPool, BufferLength);
-                   Buffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE, BufferLength, 'NrSF');
+                   Buffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE, BufferLength, TAG_FS_NOTIFICATIONS);
                    NotifyChange->AllocatedBuffer = Buffer;
                }
 
@@ -200,7 +200,7 @@ FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
            if (NotifyChange->AllocatedBuffer)
            {
                PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NotifyChange->ThisBufferLength);
-               ExFreePoolWithTag(NotifyChange->AllocatedBuffer, 'NrSF');
+               ExFreePoolWithTag(NotifyChange->AllocatedBuffer, TAG_FS_NOTIFICATIONS);
            }
 
            /* In case of full name, remember subject context for later deletion */
@@ -1328,7 +1328,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                                 PsChargePoolQuota(NotifyChange->OwningProcess, PagedPool, NumberOfBytes);
                                 PoolQuotaCharged = TRUE;
                                 OutputBuffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                                                     NumberOfBytes, 'NrSF');
+                                                                     NumberOfBytes, TAG_FS_NOTIFICATIONS);
                                 NotifyChange->Buffer = OutputBuffer;
                                 NotifyChange->AllocatedBuffer = OutputBuffer;
                             }
@@ -1371,7 +1371,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                             if (NotifyChange->AllocatedBuffer != NULL)
                             {
                                 PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NotifyChange->ThisBufferLength);
-                                ExFreePoolWithTag(NotifyChange->AllocatedBuffer, 'NrSF');
+                                ExFreePoolWithTag(NotifyChange->AllocatedBuffer, TAG_FS_NOTIFICATIONS);
                             }
 
                             NotifyChange->Buffer = NULL;

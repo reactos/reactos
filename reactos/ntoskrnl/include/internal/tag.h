@@ -50,6 +50,7 @@
 #define TAG_FILE_SYSTEM       'SYSF'
 #define TAG_FS_CHANGE_NOTIFY  'NCSF'
 #define IFS_POOL_TAG          'trSF'
+#define TAG_FS_NOTIFICATIONS  'NrSF'
 
 /* formerly located in io/iocomp.c */
 #define IOC_TAG   'TCOI'
