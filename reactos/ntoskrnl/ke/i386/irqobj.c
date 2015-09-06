@@ -447,8 +447,16 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             /* The vector is shared and the interrupts are compatible */
             Interrupt->Connected = Connected = TRUE;
 
-            /* FIXME */
-            // ASSERT(Irql <= SYNCH_LEVEL);
+            /*
+             * Verify the IRQL for chained connect,
+             */
+#if defined(CONFIG_SMP)
+            ASSERT(Irql <= SYNCH_LEVEL);
+#elif (NTDDI_VERSION >= NTDDI_WS03)
+            ASSERT(Irql <= (IPI_LEVEL - 2));
+#else
+            ASSERT(Irql <= (IPI_LEVEL - 1));
+#endif
 
             /* Check if this is the first chain */
             if (Dispatch.Type != ChainConnect)
