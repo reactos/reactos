@@ -19,7 +19,130 @@ BOOLEAN MmGlobalMemoryDescriptorsUsed;
 PBL_MEMORY_DESCRIPTOR MmDynamicMemoryDescriptors;
 ULONG MmDynamicMemoryDescriptorCount;
 
+BL_MEMORY_TYPE MmPlatformMemoryTypePrecedence[] =
+{
+    BlReservedMemory,
+    BlUnusableMemory,
+    BlDeviceIoMemory,
+    BlDevicePortMemory,
+    BlPalMemory,
+    BlEfiRuntimeMemory,
+    BlAcpiNvsMemory,
+    BlAcpiReclaimMemory,
+    BlEfiBootMemory
+};
+
 /* FUNCTIONS *****************************************************************/
+
+/* The order is Conventional > Other > System > Loader > Application  */
+BOOLEAN
+MmMdpHasPrecedence (
+    _In_ BL_MEMORY_TYPE Type1,
+    _In_ BL_MEMORY_TYPE Type2
+    )
+{
+    BL_MEMORY_CLASS Class1, Class2;
+    ULONG i, j;
+
+    /* Descriptor is free RAM -- it preceeds */
+    if (Type1 == BlConventionalMemory)
+    {
+        return TRUE;
+    }
+
+    /* It isn't free RAM, but the comparator is -- it suceeds it */
+    if (Type2 == BlConventionalMemory)
+    {
+        return FALSE;
+    }
+
+    /* Descriptor is not system, application, or loader class -- it preceeds */
+    Class1 = Type1 >> BL_MEMORY_CLASS_SHIFT;
+    if ((Class1 != BlSystemClass) &&
+        (Class1 != BlApplicationClass) &&
+        (Class1 != BlLoaderClass))
+    {
+        return TRUE;
+    }
+
+    /* It isn't one of those classes, but the comparator it -- it suceeds it */
+    Class2 = Type2 >> BL_MEMORY_CLASS_SHIFT;
+    if ((Class2 != BlSystemClass) &&
+        (Class2 != BlApplicationClass) &&
+        (Class2 != BlLoaderClass))
+    {
+        return FALSE;
+    }
+
+    /* Descriptor is system class */
+    if (Class1 == BlSystemClass)
+    {
+        /* And so is the other guy... */
+        if (Class2 == BlSystemClass)
+        {
+            i = 0;
+            j = 0;
+
+            /* Scan for the descriptor's system precedence index */
+            do
+            {
+                if (MmPlatformMemoryTypePrecedence[j] == Type1)
+                {
+                    break;
+                }
+            } while (++j < RTL_NUMBER_OF(MmPlatformMemoryTypePrecedence));
+
+            /* Use an invalid index if one wasn't found */
+            if (j == RTL_NUMBER_OF(MmPlatformMemoryTypePrecedence))
+            {
+                j = 0xFFFFFFFF;
+            }
+
+            /* Now scan for the comparator's system precedence index */
+            while (MmPlatformMemoryTypePrecedence[i] != Type2)
+            {
+                /* Use an invalid index if one wasn't found */
+                if (++i >= RTL_NUMBER_OF(MmPlatformMemoryTypePrecedence))
+                {
+                    i = 0xFFFFFFFF;
+                    break;
+                }
+            }
+
+            /* Does the current have a valid index? */
+            if (j != 0xFFFFFFFF)
+            {
+                /* Yes, what about the comparator? */
+                if (i != 0xFFFFFFFF)
+                {
+                    /* Let the indexes fight! */
+                    return i >= j;
+                }
+
+                /* Succeed the comparator, its index is unknown */
+                return FALSE;
+            }
+        }
+
+        /* The comparator isn't system, so it preceeds it */
+        return TRUE;
+    }
+
+    /* Descriptor is not system class, but comparator is -- it suceeds it */
+    if (Class2 == BlSystemClass)
+    {
+        return FALSE;
+    }
+
+    /* Descriptor is loader class -- it preceeds */
+    if (Class1 == BlLoaderClass)
+    {
+        return TRUE;
+    }
+
+    /* It isn't loader class  -- if the other guy is, suceed it */
+    return Class2 != BlLoaderClass;
+}
 
 VOID
 MmMdpSwitchToDynamicDescriptors (
@@ -112,6 +235,157 @@ MmMdFreeList(
         MmMdFreeDescriptor(Entry);
     }
 }
+
+PBL_MEMORY_DESCRIPTOR
+MmMdInitByteGranularDescriptor (
+    _In_ ULONG Flags,
+    _In_ BL_MEMORY_TYPE Type,
+    _In_ ULONGLONG BasePage,
+    _In_ ULONGLONG VirtualPage,
+    _In_ ULONGLONG PageCount
+    )
+{
+    PBL_MEMORY_DESCRIPTOR MemoryDescriptor;
+
+    /* If we're out of descriptors, bail out */
+    if (MmGlobalMemoryDescriptorsUsed >= MmGlobalMemoryDescriptorCount)
+    {
+        EarlyPrint(L"Out of descriptors!\n");
+        return NULL;
+    }
+
+    /* Take one of the available descriptors and fill it out */
+    MemoryDescriptor = &MmGlobalMemoryDescriptors[MmGlobalMemoryDescriptorsUsed];
+    MemoryDescriptor->BaseAddress = BasePage;
+    MemoryDescriptor->VirtualPage = VirtualPage;
+    MemoryDescriptor->PageCount = PageCount;
+    MemoryDescriptor->Flags = Flags;
+    MemoryDescriptor->Type = Type;
+    InitializeListHead(&MemoryDescriptor->ListEntry);
+
+    /* Increment the count and return the descriptor */
+    MmGlobalMemoryDescriptorsUsed++;
+    return MemoryDescriptor;
+}
+
+NTSTATUS
+MmMdAddDescriptorToList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
+    _In_ ULONG Flags
+    )
+{
+    PLIST_ENTRY ThisEntry, FirstEntry;
+    PBL_MEMORY_DESCRIPTOR ThisDescriptor;
+
+    /* Arguments must be present */
+    if (!(MdList) || !(MemoryDescriptor))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if coalescing is forcefully disabled */
+    if (Flags & BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG)
+    {
+        /* Then we won't be coalescing */
+        Flags &= BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG;
+    }
+    else
+    {
+        /* Coalesce if the descriptor requires it */
+        if (MemoryDescriptor->Flags & BL_MM_DESCRIPTOR_REQUIRES_COALESCING_FLAG)
+        {
+            Flags |= BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG;
+        }
+    }
+
+    /* Check if truncation is forcefully disabled */
+    if (Flags & BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG)
+    {
+        Flags &= ~BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG;
+    }
+
+    /* Update the current list pointer if the descriptor requires it */
+    if (MemoryDescriptor->Flags & BL_MM_DESCRIPTOR_REQUIRES_UPDATING_FLAG)
+    {
+        Flags |= BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG;
+    }
+
+    /* Get the current descriptor */
+    ThisEntry = MdList->This;
+    ThisDescriptor = CONTAINING_RECORD(ThisEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+    /* Also get the first descriptor */
+    FirstEntry = MdList->First;
+
+    /* Check if there's no current pointer, or if it's higher than the new one */
+    if (!(ThisEntry) ||
+        (MemoryDescriptor->BaseAddress <= ThisDescriptor->BaseAddress))
+    {
+        /* Start at the first descriptor instead, since current is past us */
+        ThisEntry = FirstEntry->Flink;
+        ThisDescriptor = CONTAINING_RECORD(ThisEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+    }
+
+    /* Loop until we find the right location to insert */
+    while (1)
+    {
+        /* Have we gotten back to the first entry? */
+        if (ThisEntry == FirstEntry)
+        {
+            /* Then we didn't find a good match, so insert it right here */
+            InsertTailList(FirstEntry, &MemoryDescriptor->ListEntry);
+
+            /* Do we have to truncate? */
+            if (Flags & BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG)
+            {
+                /* Do it and then exit */
+#if 0
+                if (MmMdpTruncateDescriptor(MdList, Flags))
+                {
+                    return STATUS_SUCCESS;
+                }
+#endif
+            }
+
+            /* Do we have to coalesce? */
+            if (Flags & BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG)
+            {
+                /* Do it and then exit */
+#if 0
+                if (MmMdpCoalesceDescriptor(MdList))
+                {
+                    return STATUS_SUCCESS;
+                }
+#endif
+            }
+
+            /* Do we have to update the current pointer? */
+            if (Flags & BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG)
+            {
+                /* Do it */
+                MmMdpSaveCurrentListPointer(MdList, &MemoryDescriptor->ListEntry);
+            }
+
+            /* We're done */
+            return STATUS_SUCCESS;
+        }
+
+        /* Is the new descriptor below this address, and has precedence over it? */
+        if ((MemoryDescriptor->BaseAddress < ThisDescriptor->BaseAddress) &&
+            (MmMdpHasPrecedence(MemoryDescriptor->Type, ThisDescriptor->Type)))
+        {
+            /* Then insert right here */
+            InsertTailList(ThisEntry, &MemoryDescriptor->ListEntry);
+            return STATUS_SUCCESS;
+        }
+
+        /* Try the next descriptor */
+        ThisEntry = ThisEntry->Flink;
+        ThisDescriptor = CONTAINING_RECORD(ThisEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+    }
+}
+
 
 VOID
 MmMdInitialize (

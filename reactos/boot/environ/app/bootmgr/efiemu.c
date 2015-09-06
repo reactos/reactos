@@ -930,10 +930,10 @@ EfiInitCreateInputParametersEx (
         EfiInitScratch.MemoryDataOffset;
     EfiInitScratch.BootMemoryData.DescriptorSize = sizeof(BL_MEMORY_DESCRIPTOR);
     EfiInitScratch.BootMemoryData.DescriptorCount = 1;
-    EfiInitScratch.BootMemoryData.Unknown = 8;
+    EfiInitScratch.BootMemoryData.DescriptorOffset = FIELD_OFFSET(BL_MEMORY_DESCRIPTOR, BasePage);
 
     /* Build the memory entry descriptor for this image itself */
-    EfiInitScratch.MemEntry.Flags = 8;
+    EfiInitScratch.MemEntry.Flags = BlMemoryWriteBack;
     EfiInitScratch.MemEntry.Type = BlLoaderMemory;
     EfiInitScratch.MemEntry.BasePage = EfiInitScratch.ImageBase >> PAGE_SHIFT;
     EfiInitScratch.MemEntry.PageCount = ALIGN_UP_BY(EfiInitScratch.ImageSize, PAGE_SIZE) >> PAGE_SHIFT;

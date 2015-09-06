@@ -31,7 +31,8 @@ BlMmRemoveBadMemory (
     VOID
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+    /* FIXME: Read BCD option to see what bad memory to remove */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

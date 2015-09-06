@@ -371,7 +371,7 @@ MmFwGetMemoryMap (
     )
 {
     BL_LIBRARY_PARAMETERS LibraryParameters = BlpLibraryParameters;
-    BOOLEAN UseEfiBuffer;
+    BOOLEAN UseEfiBuffer, HaveRamDisk;
     NTSTATUS Status;
     ULONGLONG Pages, StartPage, EndPage;
     UINTN EfiMemoryMapSize, MapKey, DescriptorSize, DescriptorVersion;
@@ -381,6 +381,11 @@ MmFwGetMemoryMap (
     BL_ARCH_MODE OldMode;
     EFI_MEMORY_DESCRIPTOR EfiDescriptor;
     BL_MEMORY_TYPE MemoryType;
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    BL_MEMORY_ATTR Attribute;
+
+    /* Initialize EFI memory map attributes */
+    EfiMemoryMapSize = MapKey = DescriptorSize = DescriptorVersion = 0;
 
     /* Increment the nesting depth */
     MmDescriptorCallTreeCount++;
@@ -509,6 +514,21 @@ MmFwGetMemoryMap (
         goto Quickie;
     }
 
+    /* Did we boot from a RAM disk? */
+    if ((BlpBootDevice->DeviceType == LocalDevice) &&
+        (BlpBootDevice->Local.Type == RamDiskDevice))
+    {
+        /* We don't handle this yet */
+        EarlyPrint(L"RAM boot not supported\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+        goto Quickie;
+    }
+    else
+    {
+        /* We didn't, so there won't be any need to find the memory descriptor */
+        HaveRamDisk = FALSE;
+    }
+
     /* Loop the EFI memory map */
     EarlyPrint(L"UEFI MEMORY MAP\n\n");
     EarlyPrint(L"TYPE        START              END                   ATTRIBUTES\n");
@@ -552,17 +572,136 @@ MmFwGetMemoryMap (
             goto LoopAgain;
         }
 
-        EarlyPrint(L"%08X    0x%016I64X-0x%016I64X    0x%X\n",
+        EarlyPrint(L"%08X    0x%016I64X-0x%016I64X    0x%I64X\n",
                    MemoryType,
                    StartPage << PAGE_SHIFT,
                    EndPage << PAGE_SHIFT,
                    EfiDescriptor.Attribute);
 
-        /* Consume this descriptor, and move to the next one */
+        /* Check for any range of memory below 1MB */
+        if (StartPage < 0x100)
+        {
+            /* Does this range actually contain NULL? */
+            if (StartPage == 0)
+            {
+                /* Manually create a reserved descriptof for this page */
+                Attribute = MmFwpGetOsAttributeType(EfiDescriptor.Attribute);
+                Descriptor = MmMdInitByteGranularDescriptor(Attribute,
+                                                            BlReservedMemory,
+                                                            0,
+                                                            0,
+                                                            1);
+                if (!Descriptor)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                /* Add this descriptor into the list */
+                Status = MmMdAddDescriptorToList(MemoryMap,
+                                                 Descriptor,
+                                                 BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG);
+                if (!NT_SUCCESS(Status))
+                {
+                    EarlyPrint(L"Failed to add zero page descriptor: %lx\n", Status);
+                    break;
+                }
+
+                /* Now handle the rest of the range, unless this was it */
+                StartPage = 1;
+                if (EndPage == 1)
+                {
+                    goto LoopAgain;
+                }
+            }
+
+            /* Does the range go beyond 1MB? */
+            if (EndPage > 0x100)
+            {
+                /* Then create the descriptor for everything up until the megabyte */
+                Attribute = MmFwpGetOsAttributeType(EfiDescriptor.Attribute);
+                Descriptor = MmMdInitByteGranularDescriptor(Attribute,
+                                                            MemoryType,
+                                                            StartPage,
+                                                            0,
+                                                            0x100 - StartPage);
+                if (!Descriptor)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                /* Check if this region is currently free RAM */
+                if (Descriptor->Type == BlConventionalMemory)
+                {
+                    /* Set an unknown flag on the descriptor */
+                    Descriptor->Flags |= 0x80000;
+                }
+
+                /* Add this descriptor into the list */
+                Status = MmMdAddDescriptorToList(MemoryMap,
+                                                 Descriptor,
+                                                 BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG);
+                if (!NT_SUCCESS(Status))
+                {
+                    EarlyPrint(L"Failed to add 1MB descriptor: %lx\n", Status);
+                    break;
+                }
+
+                /* Now handle the rest of the range above 1MB */
+                StartPage = 0x100;
+            }
+        }
+
+        /* Check if we loaded from a RAM disk */
+        if (HaveRamDisk)
+        {
+            /* We don't handle this yet */
+            EarlyPrint(L"RAM boot not supported\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            goto Quickie;
+        }
+
+        /* Create a descriptor for the current range */
+        Attribute = MmFwpGetOsAttributeType(EfiDescriptor.Attribute);
+        Descriptor = MmMdInitByteGranularDescriptor(Attribute,
+                                                    MemoryType,
+                                                    StartPage,
+                                                    0,
+                                                    EndPage - StartPage);
+        if (!Descriptor)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+        }
+
+        /* Check if this region is currently free RAM below 1MB */
+        if ((Descriptor->Type == BlConventionalMemory) && (EndPage <= 0x100))
+        {
+            /* Set an unknown flag on the descriptor */
+            Descriptor->Flags |= 0x80000;
+        }
+
+        /* Add the descriptor to the list, requesting coalescing as asked */
+        Status = MmMdAddDescriptorToList(MemoryMap,
+                                         Descriptor,
+                                         BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG |
+                                         (Flags & BL_MM_FLAG_REQUEST_COALESCING) ?
+                                         BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG : 0);
+        if (!NT_SUCCESS(Status))
+        {
+            EarlyPrint(L"Failed to add full descriptor: %lx\n", Status);
+            break;
+        }
+
 LoopAgain:
+        /* Consume this descriptor, and move to the next one */
         EfiMemoryMapSize -= DescriptorSize;
         EfiMemoryMap = (PVOID)((ULONG_PTR)EfiMemoryMap + DescriptorSize);
     }
+
+    /* FIXME: @TODO: Mark the EfiBuffer as free, since we're about to free it */
+    /* For now, just "leak" the 1-2 pages... */
 
 Quickie:
     /* Free the EFI buffer, if we had one */

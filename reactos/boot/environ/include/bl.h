@@ -53,11 +53,22 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 #define BL_CONTEXT_INTERRUPTS_ON                        2
 
 #define BL_MM_FLAG_USE_FIRMWARE_FOR_MEMORY_MAP_BUFFERS  0x01
-#define BL_MM_FLAG_UNKNOWN                              0x02
+#define BL_MM_FLAG_REQUEST_COALESCING                   0x02
+
+#define BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG              0x01
+#define BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG              0x02
+#define BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG        0x10
+#define BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG        0x20
+#define BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG   0x2000
+
+#define BL_MM_DESCRIPTOR_REQUIRES_COALESCING_FLAG       0x2000000
+#define BL_MM_DESCRIPTOR_REQUIRES_UPDATING_FLAG         0x4000000
 
 #define BL_LIBRARY_FLAG_REINITIALIZE                    0x02
 #define BL_LIBRARY_FLAG_REINITIALIZE_ALL                0x04
 #define BL_LIBRARY_FLAG_INITIALIZATION_COMPLETED        0x20
+
+#define BL_MEMORY_CLASS_SHIFT                           28
 
 /* ENUMERATIONS **************************************************************/
 
@@ -222,7 +233,7 @@ typedef struct _BL_MEMORY_DATA
     ULONG MdListOffset;
     ULONG DescriptorCount;
     ULONG DescriptorSize;
-    ULONG Unknown;
+    ULONG DescriptorOffset;
 } BL_MEMORY_DATA, *PBL_MEMORY_DATA;
 
 typedef struct _BL_FIRMWARE_DESCRIPTOR
@@ -518,10 +529,27 @@ MmMdFreeList(
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList
     );
 
+PBL_MEMORY_DESCRIPTOR
+MmMdInitByteGranularDescriptor (
+    _In_ ULONG Flags,
+    _In_ BL_MEMORY_TYPE Type,
+    _In_ ULONGLONG BasePage,
+    _In_ ULONGLONG VirtualPage,
+    _In_ ULONGLONG PageCount
+    );
+
+NTSTATUS
+MmMdAddDescriptorToList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
+    _In_ ULONG Flags
+    );
+
 extern ULONG MmDescriptorCallTreeCount;
 extern ULONG BlpApplicationFlags;
 extern BL_LIBRARY_PARAMETERS BlpLibraryParameters;
 extern BL_TRANSLATION_TYPE  MmTranslationType;
 extern PBL_ARCH_CONTEXT CurrentExecutionContext;
+extern PBL_DEVICE_DESCRIPTOR BlpBootDevice;
 
 #endif
