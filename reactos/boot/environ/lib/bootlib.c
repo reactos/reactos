@@ -165,11 +165,11 @@ BlInitializeLibrary(
     NTSTATUS Status;
 
     /* Are we re-initializing the library? */
-    if (LibraryParameters->LibraryFlags & 2)
+    if (LibraryParameters->LibraryFlags & BL_LIBRARY_FLAG_REINITIALIZE)
     {
         /* From scratch? */
         BlpLibraryParameters = *LibraryParameters;
-        if (LibraryParameters->LibraryFlags & 4)
+        if (LibraryParameters->LibraryFlags & BL_LIBRARY_FLAG_REINITIALIZE_ALL)
         {
 #if 0
             /* Initialize all the core modules again */

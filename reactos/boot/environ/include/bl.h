@@ -52,6 +52,13 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 #define BL_CONTEXT_PAGING_ON                            1
 #define BL_CONTEXT_INTERRUPTS_ON                        2
 
+#define BL_MM_FLAG_USE_FIRMWARE_FOR_MEMORY_MAP_BUFFERS  0x01
+#define BL_MM_FLAG_UNKNOWN                              0x02
+
+#define BL_LIBRARY_FLAG_REINITIALIZE                    0x02
+#define BL_LIBRARY_FLAG_REINITIALIZE_ALL                0x04
+#define BL_LIBRARY_FLAG_INITIALIZATION_COMPLETED        0x20
+
 /* ENUMERATIONS **************************************************************/
 
 typedef enum _BL_TRANSLATION_TYPE
@@ -151,6 +158,19 @@ typedef enum _BL_MEMORY_TYPE
     BlDevicePortMemory = 0xF000000B,
     BlPalMemory = 0xF000000C,
 } BL_MEMORY_TYPE;
+
+typedef enum _BL_MEMORY_ATTR
+{
+    BlMemoryUncached = 1,
+    BlMemoryWriteCombined = 2,
+    BlMemoryWriteThrough = 4,
+    BlMemoryWriteBack = 8,
+    BlMemoryUncachedExported = 0x10,
+    BlMemoryWriteProtected = 0x100,
+    BlMemoryReadProtected = 0x200,
+    BlMemoryExecuteProtected = 0x400,
+    BlMemoryRuntime = 0x1000000
+} BL_MEMORY_ATTR;
 
 /* DATA STRUCTURES ***********************************************************/
 
@@ -358,6 +378,14 @@ typedef struct _BL_ARCH_CONTEXT
     ULONG ContextFlags;
 } BL_ARCH_CONTEXT, *PBL_ARCH_CONTEXT;
 
+typedef struct _BL_MEMORY_DESCRIPTOR_LIST
+{
+    LIST_ENTRY ListHead;
+    PLIST_ENTRY First;
+    PLIST_ENTRY This;
+    ULONG Type;
+} BL_MEMORY_DESCRIPTOR_LIST, *PBL_MEMORY_DESCRIPTOR_LIST;
+
 /* INLINE ROUTINES ***********************************************************/
 
 FORCEINLINE
@@ -380,6 +408,18 @@ BlSetupDefaultParameters (
 
     /* Copy the defaults */
     RtlCopyMemory(LibraryParameters, &DefaultParameters, sizeof(*LibraryParameters));
+}
+
+FORCEINLINE
+VOID
+MmMdInitializeListHead (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST List
+    )
+{
+    /* Initialize the list */
+    InitializeListHead(&List->ListHead);
+    List->First = &List->ListHead;
+    List->This = NULL;
 }
 
 /* INITIALIZATION ROUTINES ***************************************************/
@@ -461,12 +501,24 @@ MmHaInitialize (
     _In_ ULONG HeapAttributes
     );
 
-NTSTATUS
+VOID
 MmMdInitialize (
     _In_ ULONG Phase,
     _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
     );
 
+NTSTATUS
+MmFwGetMemoryMap (
+    _Out_ PBL_MEMORY_DESCRIPTOR_LIST MemoryMap,
+    _In_ ULONG Flags
+    );
+
+VOID
+MmMdFreeList(
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList
+    );
+
+extern ULONG MmDescriptorCallTreeCount;
 extern ULONG BlpApplicationFlags;
 extern BL_LIBRARY_PARAMETERS BlpLibraryParameters;
 extern BL_TRANSLATION_TYPE  MmTranslationType;
