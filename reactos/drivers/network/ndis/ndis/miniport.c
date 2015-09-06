@@ -2400,6 +2400,19 @@ NdisIDispatchPnp(
 
 NTSTATUS
 NTAPI
+NdisIPower(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+  PLOGICAL_ADAPTER Adapter = DeviceObject->DeviceExtension;
+
+  PoStartNextPowerIrp(Irp);
+  IoSkipCurrentIrpStackLocation(Irp);
+  return PoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
+}
+
+NTSTATUS
+NTAPI
 NdisIAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -2580,6 +2593,12 @@ NdisGenericIrpHandler(
         {
             return NdisIDeviceIoControl(DeviceObject, Irp);
         }
+        else if (IrpSp->MajorFunction == IRP_MJ_POWER)
+        {
+            return NdisIPower(DeviceObject, Irp);
+        }
+        NDIS_DbgPrint(MIN_TRACE, ("Unexpected IRP MajorFunction 0x%x\n", IrpSp->MajorFunction));
+        ASSERT(FALSE);
     }
     else if (DeviceObject->DeviceType == FILE_DEVICE_NETWORK)
     {
