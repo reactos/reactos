@@ -1010,6 +1010,9 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
+        /* Reset event */
+        KeResetEvent(Event);
+
         /* Call the driver and check if it's pending */
         Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
