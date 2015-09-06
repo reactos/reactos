@@ -72,5 +72,5 @@ endif()
 
 add_dependencies(bootmgfw asm bugcodes)
 
-add_cd_file(TARGET bootmgfw FILE ${_bootmgfw_output_file} DESTINATION loader NO_CAB FOR bootcd regtest)
+add_cd_file(TARGET bootmgfw FILE ${_bootmgfw_output_file} DESTINATION efi/boot NO_CAB FOR bootcd regtest NAME_ON_CD bootia32.efi)
 

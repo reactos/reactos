@@ -10,6 +10,11 @@
 
 #include "bootmgr.h"
 
+/* DATA VARIABLES ************************************************************/
+
+ULONGLONG ApplicationStartTime;
+ULONGLONG PostTime;
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -33,8 +38,23 @@ BmMain (
     NTSTATUS Status;
     BL_LIBRARY_PARAMETERS LibraryParameters;
 
+    EarlyPrint(L"ReactOS UEFI Boot Manager Initializing...\n");
+
+    /* Save the start/end-of-POST time */
+    ApplicationStartTime = __rdtsc();
+    PostTime = ApplicationStartTime;
+
+    /* Setup the boot library parameters for this application */
+    BlSetupDefaultParameters(&LibraryParameters);
+    LibraryParameters.TranslationType = BlNone;
+    LibraryParameters.LibraryFlags = 0x400 | 0x8;
+    LibraryParameters.MinimumAllocationCount = 16;
+    LibraryParameters.MinimumHeapSize = 512 * 1024;
+
+    /* Initialize the boot library */
     Status = BlInitializeLibrary(BootParameters, &LibraryParameters);
 
+    EarlyPrint(L"ReactOS UEFI Boot Manager Exiting: %lx\n", Status);
     return Status;
 }
 

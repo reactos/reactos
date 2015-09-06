@@ -24,6 +24,28 @@ BL_TRANSLATION_TYPE MmTranslationType;
 
 /* FUNCTIONS *****************************************************************/
 
+/* HACKKKYYY */
+EFI_SYSTEM_TABLE* g_SystemTable;
+
+VOID
+EarlyPrint(_In_ PWCHAR Format, ...)
+{
+    WCHAR buffer[1024];
+    va_list args;
+
+    va_start(args, Format);
+
+    vswprintf(buffer, Format, args);
+
+    g_SystemTable->ConOut->OutputString(g_SystemTable->ConOut, L"\r");
+    g_SystemTable->ConOut->OutputString(g_SystemTable->ConOut, buffer);
+
+    g_SystemTable->BootServices->Stall(1000000);
+
+    va_end(args);
+}
+/* END HACKKKYYY */
+
 /*++
  * @name InitializeLibrary
  *
@@ -57,7 +79,8 @@ InitializeLibrary (
         (BootAppParameters->Signature[1] != BOOT_APPLICATION_SIGNATURE_2) ||
         (BootAppParameters->Size < sizeof(*BootAppParameters)))
     {
-        return STATUS_INVALID_PARAMETER;
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
     }
 
     /* Get sub-structures */
@@ -78,6 +101,7 @@ InitializeLibrary (
     if (strncmp(AppEntry->Signature, BL_APP_ENTRY_SIGNATURE, 7))
     {
         Status = STATUS_INVALID_PARAMETER_9;
+        goto Quickie;
     }
 
     /* Read parameters */
@@ -101,9 +125,11 @@ InitializeLibrary (
         goto Quickie;
     }
 
+    EarlyPrint(L"TODO!\n");
     Status = STATUS_NOT_IMPLEMENTED;
 
 Quickie:
+    EarlyPrint(L"Exiting init: %lx\n", Status);
     return Status;
 }
 

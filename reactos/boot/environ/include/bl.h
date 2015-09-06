@@ -27,6 +27,9 @@
 #include <DevicePath.h>
 #include <LoadedImage.h>
 
+VOID
+EarlyPrint(_In_ PWCHAR Format, ...);
+
 /* DEFINES *******************************************************************/
 
 #define BL_APPLICATION_FLAG_CONVERTED_FROM_EFI          0x01
@@ -160,6 +163,7 @@ typedef struct _BL_LIBRARY_PARAMETERS
     ULONG HeapAllocationAttributes;
     PWCHAR ApplicationBaseDirectory;
     ULONG DescriptorCount;
+    PWCHAR FontBaseDirectory;
 } BL_LIBRARY_PARAMETERS, *PBL_LIBRARY_PARAMETERS;
 
 /* This should eventually go into a more public header */
@@ -243,7 +247,7 @@ typedef struct _BL_BCD_OPTION
     ULONG DataSize;
     ULONG ListOffset;
     ULONG NextEntryOffset;
-    ULONG Failed;
+    ULONG Empty;
 } BL_BCD_OPTION, *PBL_BCD_OPTION;
 
 typedef struct _BL_APPLICATION_ENTRY
@@ -353,6 +357,30 @@ typedef struct _BL_ARCH_CONTEXT
     BL_TRANSLATION_TYPE TranslationType;
     ULONG ContextFlags;
 } BL_ARCH_CONTEXT, *PBL_ARCH_CONTEXT;
+
+/* INLINE ROUTINES ***********************************************************/
+
+FORCEINLINE
+VOID
+BlSetupDefaultParameters (
+    _Out_ PBL_LIBRARY_PARAMETERS LibraryParameters
+    )
+{
+    BL_LIBRARY_PARAMETERS DefaultParameters =
+    {
+        0x20,
+        BlVirtual,
+        1024,
+        2 * 1024 * 1024,
+        0,
+        NULL,
+        0,
+        NULL
+    };
+
+    /* Copy the defaults */
+    RtlCopyMemory(LibraryParameters, &DefaultParameters, sizeof(*LibraryParameters));
+}
 
 /* INITIALIZATION ROUTINES ***************************************************/
 
