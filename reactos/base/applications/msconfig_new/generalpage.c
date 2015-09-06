@@ -9,17 +9,43 @@
 
 #include "precomp.h"
 
-HWND hGeneralPage;
-HWND hGeneralDialog;
+static LPCWSTR lpszRestoreProgPath1 = L"%SystemRoot%\\System32\\rstrui.exe";
+static LPCWSTR lpszRestoreProgPath2 = L"%SystemRoot%\\System32\\restore\\rstrui.exe";
 
-VOID
-EnableCheckboxControls(HWND hDlg, BOOL bEnable)
+HWND hGeneralPage;
+
+#if 0 // TODO: Will be used later on...
+static VOID EnableSelectiveStartupControls(BOOL bEnable)
 {
-    EnableWindow(GetDlgItem(hDlg, IDC_CBX_SYSTEM_INI), bEnable);
-    EnableWindow(GetDlgItem(hDlg, IDC_CBX_SYSTEM_SERVICE), bEnable);
-    EnableWindow(GetDlgItem(hDlg, IDC_CBX_STARTUP_ITEM), bEnable);
+    assert(hGeneralPage);
+
+    EnableWindow(GetDlgItem(hGeneralPage, IDC_CBX_LOAD_SYSTEM_SERVICES), bEnable);
+    EnableWindow(GetDlgItem(hGeneralPage, IDC_CBX_LOAD_STARTUP_ITEMS)  , bEnable);
+
+    EnableWindow(GetDlgItem(hGeneralPage, IDC_CBX_USE_ORIGINAL_BOOTCFG), bEnable);
+
+    // EnableWindow(GetDlgItem(hGeneralPage, IDC_RB_USE_ORIGINAL_BOOTCAT), bEnable);
+    // EnableWindow(GetDlgItem(hGeneralPage, IDC_RB_USE_MODIFIED_BOOTCAT), (bEnable ? !bIsOriginalBootIni : FALSE));
+
+    EnableWindow(GetDlgItem(hGeneralPage, IDC_CBX_SYSTEM_INI), bEnable);
+    EnableWindow(GetDlgItem(hGeneralPage, IDC_CBX_WIN_INI)   , bEnable);
+
+    return;
 }
 
+static VOID CheckSelectiveStartupControls(BOOL bCheck)
+{
+    assert(hGeneralPage);
+
+    Button_SetCheck(GetDlgItem(hGeneralPage, IDC_CBX_LOAD_SYSTEM_SERVICES), (bCheck ? BST_CHECKED : BST_UNCHECKED));
+    Button_SetCheck(GetDlgItem(hGeneralPage, IDC_CBX_LOAD_STARTUP_ITEMS)  , (bCheck ? BST_CHECKED : BST_UNCHECKED));
+    Button_SetCheck(GetDlgItem(hGeneralPage, IDC_CBX_USE_ORIGINAL_BOOTCFG), (bCheck ? BST_CHECKED : BST_UNCHECKED));
+    Button_SetCheck(GetDlgItem(hGeneralPage, IDC_CBX_SYSTEM_INI)          , (bCheck ? BST_CHECKED : BST_UNCHECKED));
+    Button_SetCheck(GetDlgItem(hGeneralPage, IDC_CBX_WIN_INI)             , (bCheck ? BST_CHECKED : BST_UNCHECKED));
+
+    return;
+}
+#endif
 
 INT_PTR CALLBACK
 GeneralPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -28,26 +54,20 @@ GeneralPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
-    case WM_INITDIALOG:
-        hGeneralDialog = hDlg;
-        SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-        /* FIXME */
-        SendDlgItemMessage(hDlg, IDC_CBX_NORMAL_START, BM_SETCHECK, BST_CHECKED, 0);
-        EnableCheckboxControls(hDlg, FALSE);
-        return TRUE;
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
+        case WM_INITDIALOG:
         {
-            case IDC_CBX_NORMAL_START:
-            case IDC_CBX_DIAGNOSTIC_START:
-                EnableCheckboxControls(hDlg, FALSE);
-                break;
-            case IDC_CBX_SELECTIVE_STARTUP:
-                EnableCheckboxControls(hDlg, TRUE);
-                break;
-            default:
-                break;
+            hGeneralPage = hDlg;
+            PropSheet_UnChanged(hMainWnd, hGeneralPage);
+
+#if 0
+            /* FIXME */
+            SendDlgItemMessage(hDlg, IDC_RB_NORMAL_STARTUP, BM_SETCHECK, BST_CHECKED, 0);
+            EnableCheckboxControls(hDlg, FALSE);
+#endif
+
+            return TRUE;
         }
     }
-    return 0;
+
+    return FALSE;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
-#define IDD_MSCONFIG_DIALOG       101
+#define IDC_STATIC                 -1
+
 #define IDD_TOOLS_PAGE            102
 #define IDD_SERVICES_PAGE         103
 #define IDD_GENERAL_PAGE          104
@@ -21,12 +22,19 @@
 #define IDC_BTN_SERVICES_DEACTIVATE   1010
 #define IDC_BTN_STARTUP_ACTIVATE      1011
 #define IDC_BTN_STARTUP_DEACTIVATE    1012
-#define IDC_CBX_NORMAL_START          1013
-#define IDC_CBX_DIAGNOSTIC_START      1014
-#define IDC_CBX_SELECTIVE_STARTUP     1015
-#define IDC_CBX_SYSTEM_INI            1016
-#define IDC_CBX_SYSTEM_SERVICE        1017
-#define IDC_CBX_STARTUP_ITEM          1018
+
+/* General page controls */
+#define IDC_RB_NORMAL_STARTUP           1013
+#define IDC_RB_DIAGNOSTIC_STARTUP       1014
+#define IDC_RB_SELECTIVE_STARTUP        1015
+#define IDC_CBX_SYSTEM_INI              1016
+#define IDC_CBX_WIN_INI                 1218
+#define IDC_CBX_LOAD_SYSTEM_SERVICES    1017
+#define IDC_CBX_LOAD_STARTUP_ITEMS      1018
+#define IDC_CBX_USE_ORIGINAL_BOOTCFG    1118
+#define IDC_BTN_SYSTEM_RESTORE_START    1318
+#define IDC_BTN_FILE_EXTRACTION         1418
+
 #define IDC_LIST_BOX                  1019
 #define IDC_BTN_CHECK_BOOT_PATH       1020
 #define IDC_BTN_SET_DEFAULT_BOOT      1021
@@ -74,7 +82,6 @@
 #define IDS_TAB_FREELDR  2003
 #define IDS_TAB_STARTUP  2004
 #define IDS_TAB_SERVICES 2005
-#define IDS_TAB_GENERAL  2006
 
 #define IDS_TOOLS_COLUMN_NAME       2010
 #define IDS_TOOLS_COLUMN_DESCR      2011
@@ -111,7 +118,19 @@
 #define IDS_SERVICES_YES            2202
 #define IDS_SERVICES_UNKNOWN        2203
 
+
+
+
+
+
+
 #define IDS_MSCONFIG    3000
 #define IDS_MSCONFIG_2  3001
 
 #define IDI_APPICON 3010
+
+#define IDR_MSCONFIG    3020
+
+#define IDM_ABOUT       3030
+#define IDS_ABOUT       3031
+#define IDD_ABOUTBOX    3032

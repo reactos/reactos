@@ -6,6 +6,8 @@
 // directly available without further tricks.
 #define MINGW_HAS_SECURE_API    1
 
+#include <assert.h>
+
 #include <stdarg.h>
 
 #include <stdio.h>

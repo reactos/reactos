@@ -13,6 +13,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_APPICON ICON "res/msconfig.ico"
 
+IDR_MSCONFIG ACCELERATORS
+BEGIN
+//    "?",  IDM_ABOUT,    ASCII,      ALT,  NOINVERT
+    VK_F1,  IDM_ABOUT,  VIRTKEY,    SHIFT,  NOINVERT
+END
+
 #include <reactos/manifest_exe.rc>
 
 /* UTF-8 */

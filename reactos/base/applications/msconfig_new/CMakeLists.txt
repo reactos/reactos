@@ -2,11 +2,11 @@
 PROJECT(msconfig_new)
 
 list(APPEND SOURCE
-    toolspage.c
-    srvpage.c
-    systempage.c
-    startuppage.c
-    freeldrpage.c
+    # toolspage.c
+    # srvpage.c
+    # systempage.c
+    # startuppage.c
+    # freeldrpage.c
     generalpage.c
     msconfig.c
     stringutils.c
