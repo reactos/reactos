@@ -116,6 +116,9 @@ BlpMmInitialize (
     if (LibraryParameters->DescriptorCount > 512)
     {
         /* Switch to using a dynamic buffer instead */
+        EarlyPrint(L"Warning: too many descriptors\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+        goto Quickie;
         //MmMdpSwitchToDynamicDescriptors(LibraryParameters->DescriptorCount);
     }
 

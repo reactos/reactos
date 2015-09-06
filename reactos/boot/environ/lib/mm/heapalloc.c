@@ -59,6 +59,30 @@ ULONG HapMinimumHeapSize;
 ULONG HapAllocationAttributes;
 PBL_FREE_HEAP_ENTRY* MmFreeList;
 
+/* INLINES *******************************************************************/
+
+FORCEINLINE
+PBL_FREE_HEAP_ENTRY
+MmHapDecodeLink (
+    _In_ BL_HEAP_POINTER Link
+    )
+{
+    /* Decode the buffer pointer by ignoring the flags */
+    return (PBL_FREE_HEAP_ENTRY)(Link.BufferPointer << BL_HEAP_POINTER_FLAG_BITS);
+}
+
+FORCEINLINE
+ULONG
+MmHapBufferSize (
+    _In_ PVOID FreeEntry
+    )
+{
+    PBL_FREE_HEAP_ENTRY Entry = FreeEntry;
+
+    /* The space between the next buffer header and this one is the size */
+    return (ULONG_PTR)MmHapDecodeLink(Entry->BufferNext) - (ULONG_PTR)Entry;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -103,7 +127,7 @@ MmHapHeapAllocatorExtend (
         HeapLimit = Heap->HeapLimit + PAGE_SIZE;
         if (HeapLimit <= Heap->HeapHigh)
         {
-            EarlyPrint(L"TODO\n");
+            EarlyPrint(L"Heap extension TODO\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
     }
@@ -156,6 +180,339 @@ MmHapHeapAllocatorExtend (
     return STATUS_SUCCESS;
 }
 
+ULONG
+MmHapGetBucketId (
+    _In_ ULONG Size
+    )
+{
+    ULONG BucketIndex = 0;
+
+    /* Use the last bucket if this is a large allocation */
+    if (Size >= PAGE_SIZE) return 7;
+
+    /* Otherwise, use a higher index for each new power of two */
+    while (Size >> BucketIndex)
+    {
+        BucketIndex++;
+    }
+
+    /* Allocations are at least 8 bytes (2^3 = 4th index) */
+    return BucketIndex - 5;
+}
+
+VOID
+MmHapReportHeapCorruption (
+    _In_ PBL_FREE_HEAP_ENTRY BufferEntry
+    )
+{
+#if 0
+    BOOLEAN DebuggerEnabled;
+
+    BlStatusPrint(L"Heap corruption in the links surrounding %p!\n", BufferEntry);
+
+    DebuggerEnabled = BlBdDebuggerEnabled();
+    if (DebuggerEnabled)
+    {
+        BlStatusPrint(L"\n*** Fatal Error 0x%08x :\n                (0x%p, 0x%p, 0x%p, 0x%p)\n\n", 2, BufferEntry, NULL, NULL, NULL);
+        __debugbreak();
+    }
+#else
+    EarlyPrint(L"Heap corruption in the links surrounding %p!\n", BufferEntry);
+#endif
+}
+
+PVOID
+MmHapCheckFreeLinks (
+    _In_ PVOID BufferEntry
+    )
+{
+    PBL_FREE_HEAP_ENTRY Prev, Next;
+    PBL_FREE_HEAP_ENTRY Entry = BufferEntry;
+
+    /* Get the previous and next free pointers */
+    Prev = MmHapDecodeLink(Entry->FreePrevious);
+    Next = MmHapDecodeLink(Entry->FreeNext);
+
+    /* Make sure that both the previous and next entries point to this one */
+    if (((Next) && (MmHapDecodeLink(Next->FreePrevious)) != Entry) ||
+        ((Prev) && (MmHapDecodeLink(Prev->FreeNext)) != Entry))
+    {
+        /* They don't, so the free headers are corrupted */
+        MmHapReportHeapCorruption(Entry);
+        return NULL;
+    }
+
+    /* They do, return the free entry as valid */
+    return Entry;
+}
+
+PVOID
+MmHapCheckBufferLinks (
+    _In_ PVOID BufferEntry
+    )
+{
+    PBL_FREE_HEAP_ENTRY Prev, Next;
+    PBL_FREE_HEAP_ENTRY Entry = BufferEntry;
+
+    /* Get the previous and next buffer pointers */
+    Prev = MmHapDecodeLink(Entry->BufferPrevious);
+    Next = MmHapDecodeLink(Entry->BufferNext);
+
+    /* Make sure that both the previous and next entries point to this one */
+    if (((Next) && (MmHapDecodeLink(Next->BufferPrevious)) != Entry) ||
+        ((Prev) && (MmHapDecodeLink(Prev->BufferNext)) != Entry))
+    {
+        /* They don't, so the heap headers are corrupted */
+        MmHapReportHeapCorruption(Entry);
+        return NULL;
+    }
+
+    /* They, do the entry is valid */
+    return Entry;
+}
+
+PBL_FREE_HEAP_ENTRY
+MmHapRemoveBufferFromFreeList (
+    _In_ PBL_FREE_HEAP_ENTRY FreeEntry
+    )
+{
+    PBL_FREE_HEAP_ENTRY Prev, Next;
+
+    /* Firest, make sure the free entry is valid */
+    FreeEntry = MmHapCheckFreeLinks(FreeEntry);
+    if (!FreeEntry)
+    {
+        return FreeEntry;
+    }
+
+    /* Get the previous and next entry */
+    Prev = MmHapDecodeLink(FreeEntry->FreePrevious);
+    Next = MmHapDecodeLink(FreeEntry->FreeNext);
+
+    /* Update the next entry to point to our previous entry */
+    if (Next)
+    {
+        Next->FreePrevious.P = Prev;
+    }
+
+    /* Are we at the head? */
+    if (Prev)
+    {
+        /* Nope, so update our previous entry to point to our next entry */
+        Prev->FreeNext.P = Next;
+    }
+    else
+    {
+        /* Yep, so update the appropriate bucket listhead */
+        MmFreeList[MmHapGetBucketId(MmHapBufferSize(FreeEntry))] = Prev;
+    }
+
+    /* Return the (now removed) entry */
+    return FreeEntry;
+}
+
+PBL_FREE_HEAP_ENTRY
+MmHapCoalesceFreeBuffer (
+    _In_ PBL_FREE_HEAP_ENTRY FreeEntry
+    )
+{
+    PBL_FREE_HEAP_ENTRY Prev, Next;
+
+    /* First make sure that this is a valid buffer entry */
+    if (!MmHapCheckBufferLinks(FreeEntry))
+    {
+        return NULL;
+    }
+
+    /* Get the next entry and check if it's free */
+    Next = MmHapDecodeLink(FreeEntry->BufferNext);
+    if (!(Next->BufferNext.BufferOnHeap) && (Next->BufferNext.BufferFree))
+    {
+        /* Remove the next buffer from the free list since we're coalescing */
+        Next = MmHapRemoveBufferFromFreeList(Next);
+        if (!Next)
+        {
+            return NULL;
+        }
+
+        /* The forward link of the *new* free buffer should now point to us */
+        MmHapDecodeLink(Next->BufferNext)->BufferPrevious.P = FreeEntry;
+
+        /* Our forward link should point to the *new* free buffer as well */
+        FreeEntry->BufferNext.P = MmHapDecodeLink(Next->BufferNext);
+
+        /* Mark our buffer as free */
+        FreeEntry->BufferNext.BufferFree = 1;
+    }
+
+    /* Get the previous entry and check if it's free */
+    Prev = MmHapDecodeLink(FreeEntry->BufferPrevious);
+    if (!(Prev) || !(Prev->BufferNext.BufferFree)) return FreeEntry;
+
+    /* It's free, so remove it */
+    Prev = MmHapRemoveBufferFromFreeList(Prev);
+    if (!Prev)
+    {
+        return NULL;
+    }
+
+    /* The previous link of our next buffer should now point to our *previous* */
+    MmHapDecodeLink(FreeEntry->BufferNext)->BufferPrevious.P = Prev;
+
+    /* Our previous link should point the next free buffer now */
+    Prev->BufferNext.P = MmHapDecodeLink(FreeEntry->BufferNext);
+
+    /* Set the new freed buffer as the previous buffer, and mark it free */
+    FreeEntry = Prev;
+    FreeEntry->BufferNext.BufferFree = 1;
+    return FreeEntry;
+}
+
+PBL_FREE_HEAP_ENTRY
+MmHapAddToFreeList (
+    _In_ PBL_BUSY_HEAP_ENTRY Entry,
+    _In_ ULONG Flags
+    )
+{
+    PBL_FREE_HEAP_ENTRY FreeEntry, Head;
+    ULONG BucketId;
+    BL_LIBRARY_PARAMETERS LocalParameters;
+
+    /* First, check if the entry is valid */
+    Entry = MmHapCheckBufferLinks(Entry);
+    if (!Entry)
+    {
+        return NULL;
+    }
+
+    /* Check if we should zero the entry */
+    LocalParameters = BlpLibraryParameters;
+    if ((LocalParameters.LibraryFlags & BL_LIBRARY_FLAG_ZERO_HEAP_ALLOCATIONS_ON_FREE) &&
+        !(Flags))
+    {
+        /* Yep, zero it out */
+        RtlZeroMemory(Entry->Buffer, MmHapBufferSize(Entry));
+    }
+
+    /* Now mark the entry as free */
+    Entry->BufferNext.BufferFree = 1;
+
+    /* Now that this buffer is free, try to coalesce it */
+    FreeEntry = MmHapCoalesceFreeBuffer((PBL_FREE_HEAP_ENTRY)Entry);
+    if (!FreeEntry)
+    {
+        return FreeEntry;
+    }
+
+    /* Compute the bucket ID for the free list */
+    BucketId = MmHapGetBucketId(MmHapBufferSize(Entry));
+
+    /* Get the current head for this bucket, if one exists */
+    Head = MmFreeList ? MmFreeList[BucketId] : NULL;
+
+    /* Update the head's backlink to point to this newly freed entry */
+    if (Head)
+    {
+        Head->FreePrevious.P = FreeEntry;
+    }
+
+    /* Nobody behind us, the old head in front of us */
+    FreeEntry->FreePrevious.P = NULL;
+    FreeEntry->FreeNext.P = Head;
+
+    /* Put us at the head of list now, and return the entry */
+    MmFreeList[BucketId] = FreeEntry;
+    return FreeEntry;
+}
+
+PBL_BUSY_HEAP_ENTRY
+MmHapFindBufferInFreeList (
+    _In_ ULONG Size
+    )
+{
+    PBL_FREE_HEAP_ENTRY FreeEntry = NULL;
+    PBL_BUSY_HEAP_ENTRY NextEntry;
+    ULONG BucketId;
+
+    /* Get the appropriate bucket for our size */
+    BucketId = MmHapGetBucketId(Size);
+    if (BucketId >= 8)
+    {
+        return NULL;
+    }
+
+    /* Keep going as long as we don't have a free entry */
+    while (!FreeEntry)
+    {
+        /* Fet the first free entry in this list */
+        FreeEntry = MmFreeList ? MmFreeList[BucketId] : NULL;
+
+        /* Loop as long as there's entries in the list */
+        while (FreeEntry)
+        {
+            /* Can this free entry satisfy our needs? */
+            if (MmHapBufferSize(FreeEntry) >= Size)
+            {
+                /* All good */
+                break;
+            }
+
+            /* It cannot, keep going to the next one */
+            FreeEntry = MmHapDecodeLink(FreeEntry->FreeNext);
+        }
+
+        /* Try the next list -- have we exhausted all the lists? */
+        if (++BucketId >= 8)
+        {
+            /* Have we not found an entry yet? Fail if so... */
+            if (!FreeEntry)
+            {
+                return NULL;
+            }
+        }
+    }
+
+    /* We should have an entry if we're here. Remove it from the free list */
+    NT_ASSERT(FreeEntry != NULL);
+    FreeEntry = MmHapRemoveBufferFromFreeList(FreeEntry);
+    if (!FreeEntry)
+    {
+        return NULL;
+    }
+
+    /* Make sure it's not corrupted */
+    FreeEntry = MmHapCheckBufferLinks(FreeEntry);
+    if (!FreeEntry)
+    {
+        return NULL;
+    }
+
+    /* Do we have space for at least another buffer? */
+    if ((MmHapBufferSize(FreeEntry) - Size) >= sizeof(BL_FREE_HEAP_ENTRY))
+    {
+        /* Go to where the new next buffer will  start */
+        NextEntry = (PBL_BUSY_HEAP_ENTRY)((ULONG_PTR)FreeEntry + Size);
+
+        /* Make the new next buffer point to the next buffer */
+        NextEntry->BufferNext.P = MmHapDecodeLink(FreeEntry->BufferNext);
+
+        /* Make the old next buffer point back to the new one */
+        MmHapDecodeLink(FreeEntry->BufferNext)->BufferPrevious.P = NextEntry;
+
+        /* Point the new next buffer point back to us */
+        NextEntry->BufferPrevious.P = FreeEntry;
+
+        /* Point us to the new next buffer */
+        FreeEntry->BufferNext.P = NextEntry;
+
+        /* And insert the new next buffer into the free list */
+        MmHapAddToFreeList(NextEntry, 1);
+    }
+
+    /* Return the entry, which is now allocated */
+    return (PBL_BUSY_HEAP_ENTRY)FreeEntry;
+}
+
 NTSTATUS
 MmHaInitialize (
     _In_ ULONG HeapSize,
@@ -180,9 +537,156 @@ MmHaInitialize (
     {
         /* The heap is ready! */
         HapInitializationStatus = 1;
+        EarlyPrint(L"Heap Allocator Initialized!\n");
         Status = STATUS_SUCCESS;
     }
 
     /* Return initialization status */
     return Status;
 }
+
+PVOID
+BlMmAllocateHeap (
+    _In_ ULONG Size
+    )
+{
+    ULONG BufferSize;
+    PBL_HEAP_BOUNDARIES Heap;
+    PBL_BUSY_HEAP_ENTRY BusyEntry, FreeEntry, NextEntry;
+
+    /* Ignore heap allocation if the heap allocator isn't ready yet */
+    if (HapInitializationStatus != 1)
+    {
+        return NULL;
+    }
+
+    /* Align the buffer size to the minimum size required */
+    BufferSize = ALIGN_UP(Size + sizeof(BL_BUSY_HEAP_ENTRY),
+                          sizeof(BL_BUSY_HEAP_ENTRY));
+
+    /* Watch out for overflow */
+    if (BufferSize <= Size)
+    {
+        return NULL;
+    }
+
+    /* Make sure it's at least big enough to hold a free entry later on */
+    if (BufferSize < sizeof(BL_FREE_HEAP_ENTRY))
+    {
+        BufferSize = sizeof(BL_FREE_HEAP_ENTRY);
+    }
+
+    /* Loop while we try to allocate memory */
+    while (1)
+    {
+        /* Find a free buffer for this allocation */
+        BusyEntry = MmHapFindBufferInFreeList(BufferSize);
+        if (BusyEntry)
+        {
+            break;
+        }
+
+        /* We couldn't find a free buffer. Do we have any heaps? */
+        if (!IsListEmpty(&MmHeapBoundaries))
+        {
+            /* Get the current heap */
+            Heap = CONTAINING_RECORD(MmHeapBoundaries.Flink,
+                                     BL_HEAP_BOUNDARIES,
+                                     ListEntry);
+
+            /* Check if we have space in the heap page for this allocation? */
+            FreeEntry = Heap->HeapTop;
+            NextEntry = (PBL_BUSY_HEAP_ENTRY)((ULONG_PTR)FreeEntry + BufferSize);
+
+            EarlyPrint(L"Free Entry: %p Size: %lx Next: %p\n", FreeEntry, BufferSize, NextEntry);
+
+            EarlyPrint(L"Heap Limit: %p\n", Heap->HeapLimit);
+            EarlyPrint(L"Minus one busy entry: %p\n", Heap->HeapLimit - sizeof(BL_BUSY_HEAP_ENTRY));
+
+            if ((NextEntry >= FreeEntry) &&
+                ((ULONG_PTR)NextEntry <= Heap->HeapLimit - sizeof(BL_BUSY_HEAP_ENTRY)))
+            {
+                /* Update the heap top pointer past this allocation */
+                Heap->HeapTop = NextEntry;
+
+                /* Make this allocation point to the slot */
+                FreeEntry->BufferNext.P = Heap->HeapTop;
+
+                /* And make the free heap entry point back to us */
+                Heap->HeapTop->BufferNext.P = FreeEntry;
+
+                /* Mark the heap entry as being free and on the heap */
+                Heap->HeapTop->BufferNext.BufferFree = 1;
+                Heap->HeapTop->BufferNext.BufferOnHeap = 1;
+
+                /* The previously freed entry on the heap page is now ours */
+                BusyEntry = FreeEntry;
+                break;
+            }
+        }
+
+        /* We have no heaps or space on any heap -- extend the heap and retry */
+        if (!NT_SUCCESS(MmHapHeapAllocatorExtend(BufferSize)))
+        {
+            EarlyPrint(L"Heap extension failed!\n");
+            return NULL;
+        }
+
+        EarlyPrint(L"Heap extended -- trying again\n");
+    }
+
+    /* Clear all the bits, marking this entry as allocated */
+    BusyEntry->BufferNext.P = MmHapDecodeLink(BusyEntry->BufferNext);
+
+    /* Return the entry's data buffer */
+    return &BusyEntry->Buffer;
+}
+
+NTSTATUS
+BlMmFreeHeap (
+    _In_ PVOID Buffer
+    )
+{
+    PBL_BUSY_HEAP_ENTRY BusyEntry;
+    PBL_HEAP_BOUNDARIES Heap;
+    PLIST_ENTRY NextEntry;
+
+    /* If the heap is not initialized, fail */
+    if (HapInitializationStatus != 1)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Get the heap header */
+    BusyEntry = CONTAINING_RECORD(Buffer, BL_BUSY_HEAP_ENTRY, Buffer);
+
+    /* Loop all the heaps */
+    NextEntry = MmHeapBoundaries.Flink;
+    while (NextEntry != &MmHeapBoundaries)
+    {
+        /* Get the current heap in the list */
+        Heap = CONTAINING_RECORD(NextEntry, BL_HEAP_BOUNDARIES, ListEntry);
+
+        /* Is this entry part of this heap? */
+        if (((ULONG_PTR)Heap->HeapBottom <= (ULONG_PTR)BusyEntry) &&
+            ((ULONG_PTR)BusyEntry < (ULONG_PTR)Heap->HeapTop))
+        {
+            /* Ignore double-free */
+            if (BusyEntry->BufferNext.BufferFree)
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* It is -- add it to the free list */
+            MmHapAddToFreeList(BusyEntry, 0);
+            return STATUS_SUCCESS;
+        }
+
+        /* It isn't, move to the next heap */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* The entry is not on any valid heap */
+    return STATUS_INVALID_PARAMETER;
+}
+

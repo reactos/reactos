@@ -12,6 +12,15 @@
 
 /* DATA VARIABLES ************************************************************/
 
+PVOID MmBlockAllocatorTable;
+ULONG MmBlockAllocatorTableEntries;
+BOOLEAN MmBlockAllocatorInitialized;
+
+typedef struct _BL_BLOCK_DESCRIPTOR
+{
+    LIST_ENTRY NextEntry;
+    UCHAR Unknown[50 - sizeof(LIST_ENTRY)];
+} BL_BLOCK_DESCRIPTOR, *PBL_BLOCK_DESCRIPTOR;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -20,5 +29,27 @@ MmBaInitialize (
     VOID
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ULONG Size;
+
+    /* Allocate 8 table entries */
+    MmBlockAllocatorTableEntries = 8;
+    Size = sizeof(BL_BLOCK_DESCRIPTOR) * MmBlockAllocatorTableEntries;
+    MmBlockAllocatorTable = BlMmAllocateHeap(Size);
+    if (MmBlockAllocatorTable)
+    {
+        /* Zero them out -- we're all done */
+        Status = STATUS_SUCCESS;
+        RtlZeroMemory(MmBlockAllocatorTable, Size);
+        MmBlockAllocatorInitialized = 1;
+    }
+    else
+    {
+        /* Bail out since we're out of memory */
+        Status = STATUS_NO_MEMORY;
+        MmBlockAllocatorInitialized = 0;
+    }
+
+    /* Return initialization status */
+    return Status;
 }

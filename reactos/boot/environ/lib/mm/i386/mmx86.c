@@ -32,6 +32,8 @@ typedef VOID
 PBL_MM_RELOCATE_SELF_MAP BlMmRelocateSelfMap;
 PBL_MM_FLUSH_TLB BlMmFlushTlb;
 
+ULONG MmDeferredMappingCount;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -41,6 +43,39 @@ MmArchNullFunction (
 {
     /* Nothing to do */
     return;
+}
+
+NTSTATUS
+Mmx86pMapMemoryRegions (
+    _In_ ULONG Phase,
+    _In_ PBL_MEMORY_DATA MemoryData
+    )
+{
+    BOOLEAN DoDeferred;
+
+    /* In phase 1 we don't initialize deferred mappings*/
+    if (Phase == 1)
+    {
+        DoDeferred = 0;
+    }
+    else
+    {
+        /* Don't do anything if there's nothing to initialize */
+        if (!MmDeferredMappingCount)
+        {
+            return STATUS_SUCCESS;
+        }
+
+        DoDeferred = 1;
+    }
+
+    if (DoDeferred)
+    {
+        EarlyPrint(L"Deferred todo\n");
+    }
+
+    EarlyPrint(L"Phase 1 TODO\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -56,8 +91,7 @@ MmArchInitialize (
     /* For phase 2, just map deferred regions */
     if (Phase != 1)
     {
-        //return Mmx86pMapMemoryRegions(2, MemoryData);
-        return STATUS_NOT_IMPLEMENTED;
+        return Mmx86pMapMemoryRegions(2, MemoryData);
     }
 
     /* What translation type are we switching to? */

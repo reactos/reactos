@@ -75,6 +75,7 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 
 #define BL_LIBRARY_FLAG_REINITIALIZE                    0x02
 #define BL_LIBRARY_FLAG_REINITIALIZE_ALL                0x04
+#define BL_LIBRARY_FLAG_ZERO_HEAP_ALLOCATIONS_ON_FREE   0x10
 #define BL_LIBRARY_FLAG_INITIALIZATION_COMPLETED        0x20
 
 #define BL_MEMORY_CLASS_SHIFT                           28
@@ -481,6 +482,37 @@ BlpMmInitialize (
     _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
     );
 
+NTSTATUS
+MmBaInitialize (
+    VOID
+    );
+
+NTSTATUS
+MmPaInitialize (
+    _In_ PBL_MEMORY_DATA MemoryData,
+    _In_ ULONG MinimumPages
+    );
+
+NTSTATUS
+MmArchInitialize (
+    _In_ ULONG Phase,
+    _In_ PBL_MEMORY_DATA MemoryData,
+    _In_ BL_TRANSLATION_TYPE TranslationType,
+    _In_ BL_TRANSLATION_TYPE LibraryTranslationType
+    );
+
+NTSTATUS
+MmHaInitialize (
+    _In_ ULONG HeapSize,
+    _In_ ULONG HeapAttributes
+    );
+
+VOID
+MmMdInitialize (
+    _In_ ULONG Phase,
+    _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
+    );
+
 /* FIRMWARE ROUTINES *********************************************************/
 
 NTSTATUS
@@ -516,44 +548,7 @@ BlpArchSwitchContext (
     _In_ BL_ARCH_MODE NewMode
     );
 
-/* MEMORY MANAGER ROUTINES ***************************************************/
-
-NTSTATUS
-MmBaInitialize (
-    VOID
-    );
-
-NTSTATUS
-MmPaInitialize (
-    _In_ PBL_MEMORY_DATA MemoryData,
-    _In_ ULONG MinimumPages
-    );
-
-NTSTATUS
-MmArchInitialize (
-    _In_ ULONG Phase,
-    _In_ PBL_MEMORY_DATA MemoryData,
-    _In_ BL_TRANSLATION_TYPE TranslationType,
-    _In_ BL_TRANSLATION_TYPE LibraryTranslationType
-    );
-
-NTSTATUS
-MmHaInitialize (
-    _In_ ULONG HeapSize,
-    _In_ ULONG HeapAttributes
-    );
-
-VOID
-MmMdInitialize (
-    _In_ ULONG Phase,
-    _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
-    );
-
-NTSTATUS
-MmFwGetMemoryMap (
-    _Out_ PBL_MEMORY_DESCRIPTOR_LIST MemoryMap,
-    _In_ ULONG Flags
-    );
+/* MEMORY DESCRIPTOR ROUTINES ************************************************/
 
 VOID
 MmMdFreeList(
@@ -614,6 +609,8 @@ MmMdFreeDescriptor (
     _In_ PBL_MEMORY_DESCRIPTOR MemoryDescriptor
     );
 
+/* PAGE ALLOCATOR ROUTINES ***************************************************/
+
 NTSTATUS
 MmPapAllocatePagesInRange (
     _Inout_ PULONG PhysicalAddress,
@@ -623,6 +620,19 @@ MmPapAllocatePagesInRange (
     _In_ ULONG Alignment,
     _In_opt_ PBL_ADDRESS_RANGE Range,
     _In_ ULONG Type
+    );
+
+NTSTATUS
+MmFwGetMemoryMap (
+    _Out_ PBL_MEMORY_DESCRIPTOR_LIST MemoryMap,
+    _In_ ULONG Flags
+    );
+
+/* HEAP ALLOCATOR ROUTINES ***************************************************/
+
+PVOID
+BlMmAllocateHeap (
+    _In_ ULONG Size
     );
 
 extern ULONG MmDescriptorCallTreeCount;
