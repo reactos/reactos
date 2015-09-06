@@ -15,6 +15,7 @@ if /I "%1" == "/?" (
     echo Syntax: path\to\source\configure.cmd [script-options] [Cmake-options]
     echo Available script-options: Codeblocks, Eclipse, Makefiles, clang, VSSolution, RTC
     echo Cmake-options: -DVARIABLE:TYPE=VALUE
+    endlocal
     exit /b
 )
 
@@ -27,7 +28,8 @@ if /I "%1" == "arm_hosttools" (
 
     :: Configure host tools for x86
     cmake -G %3 -DARCH:STRING=i386 %~dp0
-    exit
+    endlocal
+    exit /b
 )
 
 :: Get the source root directory
@@ -59,6 +61,7 @@ if defined ROS_ARCH (
     cl 2>&1 | find "19.00." > NUL && set VS_VERSION=14
     if not defined VS_VERSION (
         echo Error: Visual Studio version too old or version detection failed.
+        endlocal
         exit /b
     )
     set BUILD_ENVIRONMENT=VS
@@ -67,18 +70,24 @@ if defined ROS_ARCH (
     echo Detected Visual Studio Environment !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
 ) else (
     echo Error: Unable to detect build environment. Configure script failure.
+    endlocal
     exit /b
 )
 
 :: Checkpoint
 if not defined ARCH (
     echo Unknown build architecture
+    endlocal
     exit /b
 )
 
+set NEW_STYLE_BUILD=0
+
 :: Parse command line parameters
 :repeat
-    if "%BUILD_ENVIRONMENT%" == "MinGW" (
+    if /I "%1%" == "-DNEW_STYLE_BUILD" (
+        set NEW_STYLE_BUILD=%2
+    ) else if "%BUILD_ENVIRONMENT%" == "MinGW" (
         if /I "%1" == "Codeblocks" (
             set CMAKE_GENERATOR="CodeBlocks - MinGW Makefiles"
         ) else if /I "%1" == "Eclipse" (
@@ -168,47 +177,65 @@ if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
     cd %REACTOS_OUTPUT_PATH%
 )
 
-if not exist host-tools (
-    mkdir host-tools
-)
-if not exist reactos (
-    mkdir reactos
-)
+if "%NEW_STYLE_BUILD%"=="0" (
 
-echo Preparing host tools...
-cd host-tools
-if EXIST CMakeCache.txt (
-    del CMakeCache.txt /q
-)
-set REACTOS_BUILD_TOOLS_DIR=%CD%
+    if not exist host-tools (
+        mkdir host-tools
+    )
 
-:: Use x86 for ARM host tools
-if "%ARCH%" == "arm" (
-    :: Launch new script instance for x86 host tools configuration
-    start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR_HOST%
-) else (
-    cmake -G %CMAKE_GENERATOR% -DARCH:STRING=%ARCH% "%REACTOS_SOURCE_DIR%"
-)
+    if not exist reactos (
+        mkdir reactos
+    )
 
-cd..
+    echo Preparing host tools...
+    cd host-tools
+    if EXIST CMakeCache.txt (
+        del CMakeCache.txt /q
+    )
+
+    set REACTOS_BUILD_TOOLS_DIR=!CD!
+
+    :: Use x86 for ARM host tools
+    if "%ARCH%" == "arm" (
+        :: Launch new script instance for x86 host tools configuration
+        start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR_HOST%
+    ) else (
+        cmake -G %CMAKE_GENERATOR% -DARCH:STRING=%ARCH% "%REACTOS_SOURCE_DIR%"
+    )
+
+    cd..
+
+)
 
 echo Preparing reactos...
-cd reactos
+
+if "%NEW_STYLE_BUILD%"=="0" (
+    cd reactos
+)
+
 if EXIST CMakeCache.txt (
     del CMakeCache.txt /q
+)
+
+if "%NEW_STYLE_BUILD%"=="0" (
+    set BUILD_TOOLS_FLAG=-DREACTOS_BUILD_TOOLS_DIR:PATH="%REACTOS_BUILD_TOOLS_DIR%"
 )
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
-    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:PATH="%REACTOS_BUILD_TOOLS_DIR%" %* "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* "%REACTOS_SOURCE_DIR%"
 ) else (
-    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:PATH="%REACTOS_BUILD_TOOLS_DIR%" -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
 )
 
-cd..
+if "%NEW_STYLE_BUILD%"=="0" (
+    cd..
+)
 
-echo Configure script complete^^! Enter directories and execute appropriate build commands (ex: ninja, make, nmake, etc...).
+echo Configure script complete^^! Execute appropriate build commands (ex: ninja, make, nmake, etc...).
+endlocal
 exit /b
 
 :cmake_notfound
 echo Unable to find cmake, if it is installed, check your PATH variable.
+endlocal
 exit /b
