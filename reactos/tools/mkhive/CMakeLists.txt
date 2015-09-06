@@ -16,5 +16,5 @@ list(APPEND SOURCE
     registry.c
     rtl.c)
 
-add_executable(mkhive ${SOURCE})
+add_host_tool(mkhive ${SOURCE})
 target_link_libraries(mkhive unicode cmlibhost inflibhost)

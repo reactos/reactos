@@ -41,6 +41,10 @@ if(NOT CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS")
     set(CMAKE_DISABLE_NINJA_DEPSLOG TRUE)
 endif()
 
+if(NOT DEFINED NEW_STYLE_BUILD)
+    set(NEW_STYLE_BUILD FALSE)
+endif()
+
 if(NOT ARCH)
     set(ARCH i386)
 endif()
@@ -80,6 +84,10 @@ endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
 
+    if(NEW_STYLE_BUILD)
+        set(TOOLS_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+
     add_definitions(-DTARGET_${ARCH})
 
     if(MSVC)
@@ -102,13 +110,19 @@ if(NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(tools)
     add_subdirectory(lib)
 
-    if(NOT MSVC)
-        export(TARGETS bin2c widl gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
-    else()
-        export(TARGETS bin2c widl gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+    if(NOT NEW_STYLE_BUILD)
+        if(NOT MSVC)
+            export(TARGETS bin2c widl gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        else()
+            export(TARGETS bin2c widl gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        endif()
     endif()
 
 else()
+
+    if(NEW_STYLE_BUILD)
+        include(cmake/host-tools.cmake)
+    endif()
 
     # adjust the default behaviour of the FIND_XXX() commands:
     # search headers and libraries in the target environment, search
@@ -130,12 +144,13 @@ else()
         ${REACTOS_BINARY_DIR}/boot/ros_cab.txt
         ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt)
 
-    if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
-        set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
+    if(NOT NEW_STYLE_BUILD)
+        if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
+            set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
+        endif()
+        set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
+        include(${IMPORT_EXECUTABLES})
     endif()
-
-    set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
-    include(${IMPORT_EXECUTABLES})
 
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)

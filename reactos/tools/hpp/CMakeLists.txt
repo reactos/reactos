@@ -1,2 +1,2 @@
 
-add_executable(hpp hpp.c)
+add_host_tool(hpp hpp.c)

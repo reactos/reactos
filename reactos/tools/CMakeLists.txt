@@ -1,21 +1,28 @@
 
+function(add_host_tool _tool)
+    add_executable(${_tool} ${ARGN})
+    if(NEW_STYLE_BUILD)
+        set_target_properties(${_tool} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TOOLS_FOLDER})
+    endif()
+endfunction()
+
 #add_executable(pefixup pefixup.c)
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-add_executable(bin2c bin2c.c)
-add_executable(gendib gendib/gendib.c)
-add_executable(geninc geninc/geninc.c)
-add_executable(mkshelllink mkshelllink/mkshelllink.c)
-add_executable(obj2bin obj2bin/obj2bin.c)
-add_executable(spec2def spec2def/spec2def.c)
+add_host_tool(bin2c bin2c.c)
+add_host_tool(gendib gendib/gendib.c)
+add_host_tool(geninc geninc/geninc.c)
+add_host_tool(mkshelllink mkshelllink/mkshelllink.c)
+add_host_tool(obj2bin obj2bin/obj2bin.c)
+add_host_tool(spec2def spec2def/spec2def.c)
 
 if(MSVC)
     set_property(SOURCE utf16le/utf16le.cpp APPEND_STRING PROPERTY COMPILE_FLAGS " /EHsc")
 endif()
-add_executable(utf16le utf16le/utf16le.cpp)
+add_host_tool(utf16le utf16le/utf16le.cpp)
 
 add_subdirectory(cabman)
 add_subdirectory(cdmake)

@@ -1,2 +1,2 @@
 
-add_executable(cdmake cdmake.c dirhash.c llmsort.c)
+add_host_tool(cdmake cdmake.c dirhash.c llmsort.c)
