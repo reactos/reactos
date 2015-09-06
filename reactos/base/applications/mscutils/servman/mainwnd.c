@@ -15,6 +15,8 @@ static const WCHAR szMainWndClass[] = L"ServManWndClass";
 
 BOOL bSortAscending = TRUE;
 
+/* Temporary copy for access from list-view sort CompareFunc */
+HWND hListView;
 
 /* Toolbar buttons */
 static const TBBUTTON Buttons [] =
@@ -23,7 +25,7 @@ static const TBBUTTON Buttons [] =
     {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},          /* refresh */
     {TBICON_EXPORT,  ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},          /* export */
 
-    /* Note: First item for a seperator is its width in pixels */
+    /* Note: First item for a separator is its width in pixels */
     {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
     {TBICON_CREATE,  ID_CREATE,  TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },         /* create */
@@ -244,20 +246,21 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 static INT CALLBACK
 CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-    ENUM_SERVICE_STATUS_PROCESS *Param1;
-    ENUM_SERVICE_STATUS_PROCESS *Param2;
-//    INT iSubItem = (LPARAM)lParamSort;
+    WCHAR Item1[256], Item2[256];
+    LVFINDINFO IndexInfo;
+    INT Index;
 
-    if (bSortAscending) {
-        Param1 = (ENUM_SERVICE_STATUS_PROCESS *)lParam1;
-        Param2 = (ENUM_SERVICE_STATUS_PROCESS *)lParam2;
-    }
-    else
-    {
-        Param1 = (ENUM_SERVICE_STATUS_PROCESS *)lParam2;
-        Param2 = (ENUM_SERVICE_STATUS_PROCESS *)lParam1;
-    }
-    return _wcsicmp(Param1->lpDisplayName, Param2->lpDisplayName);
+    IndexInfo.flags = LVFI_PARAM;
+
+    IndexInfo.lParam = lParam1;
+    Index = ListView_FindItem(hListView, -1, &IndexInfo);
+    ListView_GetItemText(hListView, Index, (INT)lParamSort, Item1, sizeof(Item1) / sizeof(WCHAR));
+
+    IndexInfo.lParam = lParam2;
+    Index = ListView_FindItem(hListView, -1, &IndexInfo);
+    ListView_GetItemText(hListView, Index, (INT)lParamSort, Item2, sizeof(Item2) / sizeof(WCHAR));
+
+    return bSortAscending ? wcscmp(Item1, Item2) : wcscmp(Item2, Item1);
 }
 
 
@@ -732,15 +735,25 @@ MainWndProc(HWND hwnd,
 
                 case LVN_COLUMNCLICK:
                 {
+                    static int iLastSortColumn = 0;
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
 
+                    /* get new sort parameters */
+                    if (pnmv->iSubItem == iLastSortColumn)
+                        bSortAscending = !bSortAscending;
+                    else
+                    {
+                        iLastSortColumn = pnmv->iSubItem;
+                        bSortAscending = TRUE;
+                    }
+
+                    /* store a copy to have access from callback */
+                    hListView = Info->hListView;
                     (void)ListView_SortItems(Info->hListView,
                                              CompareFunc,
                                              pnmv->iSubItem);
-                    bSortAscending = !bSortAscending;
                 }
                 break;
-
                 case LVN_ITEMCHANGED:
                 {
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
