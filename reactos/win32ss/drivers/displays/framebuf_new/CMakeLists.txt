@@ -1,6 +1,4 @@
 
-spec2def(framebuf_new.dll framebuf_new.spec)
-
 list(APPEND SOURCE
     debug.c
     enable.c
@@ -11,8 +9,7 @@ list(APPEND SOURCE
 
 add_library(framebuf_new SHARED
     ${SOURCE}
-    framebuf_new.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new.def)
+    framebuf_new.rc)
 
 set_module_type(framebuf_new kerneldll ENTRYPOINT DrvEnableDriver 12)
 target_link_libraries(framebuf_new libcntpr)

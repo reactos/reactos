@@ -1,6 +1,4 @@
 
-spec2def(framebuf.dll framebuf.spec)
-
 list(APPEND SOURCE
     enable.c
     palette.c
@@ -11,8 +9,7 @@ list(APPEND SOURCE
 
 add_library(framebuf SHARED
     ${SOURCE}
-    framebuf.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/framebuf.def)
+    framebuf.rc)
 
 set_module_type(framebuf kerneldll ENTRYPOINT DrvEnableDriver 12)
 add_pch(framebuf framebuf.h SOURCE)
