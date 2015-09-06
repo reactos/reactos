@@ -415,6 +415,7 @@ UserPaintCaption(PWND pWnd, INT Flags)
          * RealUserDrawCaption in order to draw the classic caption when themes
          * are disabled but the themes service is enabled
          */
+         TRACE("UDCB Flags %08x\n");
          co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCUAHDRAWCAPTION, Flags, 0);
       }
       else
@@ -463,7 +464,7 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     IntSetProp(pWnd, gpsi->atomIconSmProp, hIconSmall);
 
     if ((pWnd->style & WS_CAPTION ) == WS_CAPTION)
-       UserPaintCaption(pWnd, DC_CAPTION);
+       UserPaintCaption(pWnd, DC_ICON);
 
     return (LRESULT)hIconOld;
 }

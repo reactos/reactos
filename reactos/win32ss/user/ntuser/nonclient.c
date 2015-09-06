@@ -930,6 +930,8 @@ VOID UserDrawCaptionBar(
    {
       TempRect = CurrentRect;
 
+      Flags |= DC_TEXT|DC_BUTTONS; // Icon will be checked if not already set.
+
       if (UserSystemParametersInfo(SPI_GETGRADIENTCAPTIONS, 0, &Gradient, 0) && Gradient)
       {
          Flags |= DC_GRADIENT;
@@ -1039,8 +1041,9 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
       {
          Active = (gpqForeground == pWnd->head.pti->MessageQueue);
       }
-      Flags = DC_NC;
    }
+
+   Flags = DC_NC; // Redraw everything!
 
    IntGetWindowRect(pWnd, &WindowRect);
 
@@ -1112,14 +1115,6 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
          CurrentRect.top += UserGetSystemMetrics(SM_CYCAPTION);
       }
 
-      if (!(Flags & DC_ICON)               &&
-           (Style & WS_SYSMENU)            &&
-          !(Flags & DC_SMALLCAP)           &&
-          !(ExStyle & WS_EX_DLGMODALFRAME) && 
-          !(ExStyle & WS_EX_TOOLWINDOW) )
-      {
-         pIcon = NC_IconForWindow(pWnd); // Force redraw of caption with icon if DC_ICON not flaged....
-      }
       UserDrawCaption(pWnd, hDC, &TempRect, NULL, pIcon ? UserHMGetHandle(pIcon) : NULL, NULL, Flags);
 
       /* Draw buttons */
@@ -1409,7 +1404,7 @@ LRESULT NC_HandleNCActivate( PWND Wnd, WPARAM wParam, LPARAM lParam )
    }
    else
    {
-      Wnd->state &= ~(WNDS_ACTIVEFRAME|WNDS_HASCAPTION);
+      Wnd->state &= ~WNDS_ACTIVEFRAME;
       wParam = DC_CAPTION;
    }
 
