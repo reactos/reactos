@@ -50,7 +50,7 @@ MmPaInitialize (
 {
     NTSTATUS Status;
     ULONG ExistingDescriptors, FinalOffset;
-    PBL_MEMORY_DESCRIPTOR Descriptor;
+    PBL_MEMORY_DESCRIPTOR Descriptor, NewDescriptor;
 
     /* Initialize physical allocator variables */
     PapMaximumPhysicalPage = 0xFFFFFFFFFFFFF;
@@ -109,9 +109,38 @@ MmPaInitialize (
         ExistingDescriptors = BootMemoryData->DescriptorCount;
         while (ExistingDescriptors != 0)
         {
-            EarlyPrint(L"Existing migration of memory not supported\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
+            /* Remove this region from our free memory MDL */
+            Status = MmMdRemoveRegionFromMdlEx(&MmMdlUnmappedUnallocated,
+                                               0x40000000,
+                                               Descriptor->BasePage,
+                                               Descriptor->PageCount,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Build a descriptor for it */
+            NewDescriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                           Descriptor->Type,
+                                                           Descriptor->BasePage,
+                                                           Descriptor->VirtualPage,
+                                                           Descriptor->PageCount);
+            if (!NewDescriptor)
+            {
+                return STATUS_NO_MEMORY;
+            }
+
+            /* And add this region to the reserved & allocated MDL */
+            Status = MmMdAddDescriptorToList(&MmMdlReservedAllocated, NewDescriptor, 0);
+            if (!NT_SUCCESS(Status))
+            {
+                return Status;
+            }
+
+            /* Move on to the next descriptor */
+            ExistingDescriptors--;
+            Descriptor = (PBL_MEMORY_DESCRIPTOR)((ULONG_PTR)Descriptor + BootMemoryData->DescriptorSize);
         }
 
         /* We are done, so check for any RAM constraints which will make us truncate memory */

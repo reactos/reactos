@@ -545,6 +545,15 @@ MmMdAddDescriptorToList (
     _In_ ULONG Flags
     );
 
+NTSTATUS
+MmMdRemoveRegionFromMdlEx (
+    __in PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    __in ULONG Flags,
+    __in ULONGLONG BasePage,
+    __in ULONGLONG PageCount,
+    __in PBL_MEMORY_DESCRIPTOR_LIST NewMdList
+    );
+
 extern ULONG MmDescriptorCallTreeCount;
 extern ULONG BlpApplicationFlags;
 extern BL_LIBRARY_PARAMETERS BlpLibraryParameters;

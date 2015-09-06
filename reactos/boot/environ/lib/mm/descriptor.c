@@ -268,6 +268,100 @@ MmMdInitByteGranularDescriptor (
     return MemoryDescriptor;
 }
 
+BOOLEAN
+MmMdpTruncateDescriptor (
+    __in PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    __in PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
+    __in ULONG Flags
+    )
+{
+    PBL_MEMORY_DESCRIPTOR NextDescriptor, PreviousDescriptor;
+    PLIST_ENTRY NextEntry, PreviousEntry;
+    ULONGLONG EndPage, PreviousEndPage;// , NextEndPage;
+
+    /* Get the next descriptor */
+    NextEntry = MemoryDescriptor->ListEntry.Flink;
+    NextDescriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+    /* Get the previous descriptor */
+    PreviousEntry = MemoryDescriptor->ListEntry.Blink;
+    PreviousDescriptor = CONTAINING_RECORD(PreviousEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+    /* Calculate end pages */
+    EndPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
+    //NextEndPage = NextDescriptor->BasePage + NextDescriptor->PageCount;
+    PreviousEndPage = PreviousDescriptor->BasePage + PreviousDescriptor->PageCount;
+
+    /* Check for backward overlap */
+    if ((PreviousEntry != MdList->First) && (MemoryDescriptor->BasePage < PreviousEndPage))
+    {
+        EarlyPrint(L"Overlap detected -- this is unexpected on x86/x64 platforms\n");
+    }
+
+    /* Check for forward overlap */
+    if ((NextEntry != MdList->First) && (NextDescriptor->BasePage < EndPage))
+    {
+        EarlyPrint(L"Overlap detected -- this is unexpected on x86/x64 platforms\n");
+    }
+
+    /* Nothing to do */
+    return FALSE;
+}
+
+BOOLEAN
+MmMdpCoalesceDescriptor (
+    __in PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    __in PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
+    __in ULONG Flags
+    )
+{
+    PBL_MEMORY_DESCRIPTOR NextDescriptor, PreviousDescriptor;
+    PLIST_ENTRY NextEntry, PreviousEntry;
+    ULONGLONG EndPage, PreviousEndPage, PreviousMappedEndPage, MappedEndPage;
+
+    /* Get the next descriptor */
+    NextEntry = MemoryDescriptor->ListEntry.Flink;
+    NextDescriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+    /* Get the previous descriptor */
+    PreviousEntry = MemoryDescriptor->ListEntry.Blink;
+    PreviousDescriptor = CONTAINING_RECORD(PreviousEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+    /* Calculate end pages */
+    EndPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
+    MappedEndPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
+    PreviousMappedEndPage = PreviousDescriptor->VirtualPage + PreviousDescriptor->PageCount;
+    PreviousEndPage = PreviousDescriptor->BasePage + PreviousDescriptor->PageCount;
+    PreviousMappedEndPage = PreviousDescriptor->VirtualPage + PreviousDescriptor->PageCount;
+
+    /* Check if the previous entry touches the current entry, and is compatible */
+    if ((PreviousEntry != MdList->First) &&
+        (PreviousDescriptor->Type == MemoryDescriptor->Type) &&
+        ((PreviousDescriptor->Flags ^ MemoryDescriptor->Flags) & 0x1B19FFFF) &&
+        (PreviousEndPage == MemoryDescriptor->BasePage) &&
+        ((!(MemoryDescriptor->VirtualPage) && !(PreviousDescriptor->VirtualPage)) ||
+          ((MemoryDescriptor->VirtualPage) && (PreviousDescriptor->VirtualPage) &&
+           (PreviousMappedEndPage == MemoryDescriptor->VirtualPage))))
+    {
+        EarlyPrint(L"Previous descriptor coalescible!\n");
+    }
+
+    /* CHeck if the current entry touches the next entry, and is compatible */
+    if ((NextEntry != MdList->First) &&
+        (NextDescriptor->Type == MemoryDescriptor->Type) &&
+        ((NextDescriptor->Flags ^ MemoryDescriptor->Flags) & 0x1B19FFFF) &&
+        (EndPage == NextDescriptor->BasePage) &&
+        ((!(MemoryDescriptor->VirtualPage) && !(PreviousDescriptor->VirtualPage)) ||
+            ((MemoryDescriptor->VirtualPage) && (PreviousDescriptor->VirtualPage) &&
+                (MappedEndPage == NextDescriptor->VirtualPage))))
+    {
+        EarlyPrint(L"Next descriptor coalescible!\n");
+    }
+
+    /* Nothing to do */
+    return FALSE;
+}
+
 NTSTATUS
 MmMdAddDescriptorToList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
@@ -340,24 +434,20 @@ MmMdAddDescriptorToList (
             if (Flags & BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG)
             {
                 /* Do it and then exit */
-#if 0
-                if (MmMdpTruncateDescriptor(MdList, Flags))
+                if (MmMdpTruncateDescriptor(MdList, MemoryDescriptor, Flags))
                 {
                     return STATUS_SUCCESS;
                 }
-#endif
             }
 
             /* Do we have to coalesce? */
             if (Flags & BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG)
             {
                 /* Do it and then exit */
-#if 0
-                if (MmMdpCoalesceDescriptor(MdList))
+                if (MmMdpCoalesceDescriptor(MdList, MemoryDescriptor, Flags))
                 {
                     return STATUS_SUCCESS;
                 }
-#endif
             }
 
             /* Do we have to update the current pointer? */
@@ -386,6 +476,17 @@ MmMdAddDescriptorToList (
     }
 }
 
+NTSTATUS
+MmMdRemoveRegionFromMdlEx (
+    __in PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    __in ULONG Flags,
+    __in ULONGLONG BasePage,
+    __in ULONGLONG PageCount,
+    __in PBL_MEMORY_DESCRIPTOR_LIST NewMdList
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 VOID
 MmMdInitialize (
