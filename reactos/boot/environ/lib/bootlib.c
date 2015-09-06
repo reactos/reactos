@@ -19,9 +19,6 @@ PBOOT_APPLICATION_PARAMETER_BLOCK BlpApplicationParameters;
 BL_APPLICATION_ENTRY BlpApplicationEntry;
 BOOLEAN BlpLibraryParametersInitialized;
 
-/* temp */
-BL_TRANSLATION_TYPE MmTranslationType;
-
 /* FUNCTIONS *****************************************************************/
 
 /* HACKKKYYY */
@@ -68,7 +65,7 @@ InitializeLibrary (
     )
 {
     NTSTATUS Status;
-    //PBL_MEMORY_DATA MemoryData;
+    PBL_MEMORY_DATA MemoryData;
     PBL_APPLICATION_ENTRY AppEntry;
     PBL_FIRMWARE_DESCRIPTOR FirmwareDescriptor;
     ULONG_PTR ParamPointer = (ULONG_PTR)BootAppParameters;
@@ -84,7 +81,7 @@ InitializeLibrary (
     }
 
     /* Get sub-structures */
-    //MemoryData = (PBL_MEMORY_DATA)(ParamPointer + BootAppParameters->MemoryDataOffset);
+    MemoryData = (PBL_MEMORY_DATA)(ParamPointer + BootAppParameters->MemoryDataOffset);
     FirmwareDescriptor = (PBL_FIRMWARE_DESCRIPTOR)(ParamPointer + BootAppParameters->FirmwareParametersOffset);
     AppEntry = (PBL_APPLICATION_ENTRY)(ParamPointer + BootAppParameters->AppEntryOffset);
     BlpBootDevice = (PBL_DEVICE_DESCRIPTOR)(ParamPointer + BootAppParameters->BootDeviceOffset);
@@ -122,6 +119,16 @@ InitializeLibrary (
     Status = BlpArchInitialize(0);
     if (!NT_SUCCESS(Status))
     {
+        goto Quickie;
+    }
+
+    /* Initialize the memory manager */
+    Status = BlpMmInitialize(MemoryData,
+                             BootAppParameters->MemoryTranslationType,
+                             LibraryParameters);
+    if (!NT_SUCCESS(Status))
+    {
+        EarlyPrint(L"MM init failed!\n");
         goto Quickie;
     }
 

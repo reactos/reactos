@@ -1,9 +1,9 @@
 /*
-* COPYRIGHT:       See COPYING.ARM in the top level directory
-* PROJECT:         ReactOS UEFI Boot Library
-* FILE:            boot/environ/include/bl.h
-* PURPOSE:         Main Boot Library Header
-* PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
+ * COPYRIGHT:       See COPYING.ARM in the top level directory
+ * PROJECT:         ReactOS UEFI Boot Library
+ * FILE:            boot/environ/include/bl.h
+ * PURPOSE:         Main Boot Library Header
+ * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
 */
 
 #ifndef _BL_H
@@ -401,6 +401,13 @@ BlpFwInitialize (
     _In_ PBL_FIRMWARE_DESCRIPTOR FirmwareParameters
     );
 
+NTSTATUS
+BlpMmInitialize (
+    _In_ PBL_MEMORY_DATA MemoryData,
+    _In_ BL_TRANSLATION_TYPE TranslationType,
+    _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
+    );
+
 /* UTILITY ROUTINES **********************************************************/
 
 EFI_STATUS
@@ -425,6 +432,39 @@ BlGetBootOptionSize (
 VOID
 BlpArchSwitchContext (
     _In_ BL_ARCH_MODE NewMode
+    );
+
+/* MEMORY MANAGER ROUTINES ***************************************************/
+
+NTSTATUS
+MmBaInitialize (
+    VOID
+    );
+
+NTSTATUS
+MmPaInitialize (
+    _In_ PBL_MEMORY_DATA MemoryData,
+    _In_ ULONG MinimumPages
+    );
+
+NTSTATUS
+MmArchInitialize (
+    _In_ ULONG Phase,
+    _In_ PBL_MEMORY_DATA MemoryData,
+    _In_ BL_TRANSLATION_TYPE TranslationType,
+    _In_ BL_TRANSLATION_TYPE LibraryTranslationType
+    );
+
+NTSTATUS
+MmHaInitialize (
+    _In_ ULONG HeapSize,
+    _In_ ULONG HeapAttributes
+    );
+
+NTSTATUS
+MmMdInitialize (
+    _In_ ULONG Phase,
+    _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
     );
 
 extern ULONG BlpApplicationFlags;

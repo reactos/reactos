@@ -12,7 +12,12 @@ list(APPEND BOOTLIB_SOURCE
      lib/bootlib.c
      lib/misc/bcd.c
      lib/misc/util.c
-     lib/firmware/efi/firmware.c)
+     lib/firmware/efi/firmware.c
+     lib/mm/mm.c
+     lib/mm/pagealloc.c
+     lib/mm/heapalloc.c
+     lib/mm/blkalloc.c
+     lib/mm/descriptor.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND BOOTLIB_ASM_SOURCE
@@ -20,6 +25,7 @@ if(ARCH STREQUAL "i386")
          )
     list(APPEND BOOTLIB_SOURCE
          lib/arch/i386/arch.c
+         lib/mm/i386/mmx86.c
          )
 elseif(ARCH STREQUAL "amd64")
     list(APPEND BOOTLIB_ASM_SOURCE
