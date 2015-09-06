@@ -37,7 +37,7 @@ EarlyPrint(_In_ PWCHAR Format, ...)
     g_SystemTable->ConOut->OutputString(g_SystemTable->ConOut, L"\r");
     g_SystemTable->ConOut->OutputString(g_SystemTable->ConOut, buffer);
 
-    g_SystemTable->BootServices->Stall(1000000);
+    g_SystemTable->BootServices->Stall(200000);
 
     va_end(args);
 }

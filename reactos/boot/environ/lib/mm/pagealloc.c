@@ -85,7 +85,7 @@ MmPaInitialize (
         {
             Descriptor = CONTAINING_RECORD(nextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
 
-            EarlyPrint(L"Type: %lX Flags: %lX Start: 0x%I64X End: 0x%I64X\n",
+            EarlyPrint(L"Type: %08lX Flags: %08lX Base: 0x%016I64X End: 0x%016I64X\n",
                        Descriptor->Type,
                        Descriptor->Flags,
                        Descriptor->BasePage << PAGE_SHIFT,

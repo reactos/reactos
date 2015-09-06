@@ -476,6 +476,14 @@ MmMdAddDescriptorToList (
     }
 }
 
+typedef enum _BL_MEMORY_DESCRIPTOR_TYPE
+{
+    BlMdPhysical,
+    BlMdVirtual,
+} BL_MEMORY_DESCRIPTOR_TYPE;
+
+#define BL_MM_REMOVE_VIRTUAL_REGION_FLAG    0x80000000
+
 NTSTATUS
 MmMdRemoveRegionFromMdlEx (
     __in PBL_MEMORY_DESCRIPTOR_LIST MdList,
@@ -485,7 +493,118 @@ MmMdRemoveRegionFromMdlEx (
     __in PBL_MEMORY_DESCRIPTOR_LIST NewMdList
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+    BOOLEAN HaveNewList, UseVirtualPage;
+    NTSTATUS Status;
+    PLIST_ENTRY ListHead, NextEntry;
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    BL_MEMORY_DESCRIPTOR NewDescriptor;
+    ULONGLONG FoundBasePage, FoundEndPage, FoundPageCount, EndPage;
+
+    /* Check if removed descriptors should go into a new list */
+    if (NewMdList != NULL)
+    {
+        /* Initialize it */
+        MmMdInitializeListHead(NewMdList);
+        NewMdList->Type = MdList->Type;
+
+        /* Remember for later */
+        HaveNewList = TRUE;
+    }
+    else
+    {
+        /* For later */
+        HaveNewList = FALSE;
+    }
+
+    /* Is the region being removed physical? */
+    UseVirtualPage = FALSE;
+    if (!(Flags & BL_MM_REMOVE_VIRTUAL_REGION_FLAG))
+    {
+        /* Is this a list of virtual descriptors? */
+        if (MdList->Type == BlMdVirtual)
+        {
+            /* Request is nonsensical, fail */
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quickie;
+        }
+    }
+    else
+    {
+        /* Is this a list of physical descriptors? */
+        if (MdList->Type == BlMdPhysical)
+        {
+            /* We'll have to use the virtual page instead */
+            UseVirtualPage = TRUE;
+        }
+    }
+
+    /* Loop the list*/
+    ListHead = MdList->First;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the descriptor */
+        Descriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+        /* Extract range details */
+        FoundBasePage = UseVirtualPage ? Descriptor->VirtualPage : Descriptor->BasePage;
+        FoundPageCount = Descriptor->PageCount;
+        FoundEndPage = FoundBasePage + FoundPageCount;
+        EndPage = PageCount + BasePage;
+        EarlyPrint(L"Looking for Region 0x%08I64X-0x%08I64X in 0x%08I64X-0x%08I64X\n", BasePage, EndPage, FoundBasePage, FoundEndPage);
+
+        /* Make a copy of the original descriptor */
+        RtlCopyMemory(&NewDescriptor, NextEntry, sizeof(NewDescriptor));
+
+        /* Check if the region to be removed starts after the found region starts */
+        if ((BasePage > FoundBasePage) || (FoundBasePage >= EndPage))
+        {
+            /* Check if the region ends after the found region */
+            if ((BasePage >= FoundEndPage) || (FoundEndPage > EndPage))
+            {
+                /* Check if the found region starts after the region or ends before the region */
+                if ((FoundBasePage >= BasePage) || (EndPage >= FoundEndPage))
+                {
+                    /* This descriptor doesn't cover any part of the range */
+                    EarlyPrint(L"No part of this descriptor contains the region\n");
+                }
+                else
+                {
+                    /* This descriptor covers the head of the allocation */
+                    EarlyPrint(L"Descriptor covers the head of the region\n");
+                }
+            }
+            else
+            {
+                /* This descriptor contains the entire allocation */
+                EarlyPrint(L"Descriptor contains the entire region\n");
+            }
+        }
+        else
+        {
+            /* This descriptor covers the end of the allocation */
+            EarlyPrint(L"Descriptor covers the end of the region\n");
+        }
+
+        /* Keep going */
+        NextEntry = NextEntry->Flink;
+    }
+
+Quickie:
+    /* Check for failure cleanup */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Did we have to build a new list? */
+        if (HaveNewList)
+        {
+            /* Free and re-initialize it */
+            MmMdFreeList(NewMdList);
+            MmMdInitializeListHead(NewMdList);
+            NewMdList->Type = MdList->Type;
+        }
+    }
+
+    return Status;
 }
 
 VOID
