@@ -38,3 +38,5 @@ if(NOT MSVC)
     add_subdirectory(log2lines)
     add_subdirectory(rsym)
 endif()
+
+#add_subdirectory(fatten)
