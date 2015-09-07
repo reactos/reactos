@@ -665,7 +665,6 @@ EfiInitpCreateApplicationEntry (
     RemainingSize = MaximumLength;
     if (RemainingSize < sizeof(BL_APPLICATION_ENTRY))
     {
-        EarlyPrint(L"Remaining size too small!\n");
         Status = STATUS_INVALID_PARAMETER;
         goto Quickie;
     }
@@ -709,7 +708,6 @@ EfiInitpCreateApplicationEntry (
     if (!NT_SUCCESS(Status))
     {
         /* We failed, so mark the option as such and return an empty one */
-        EarlyPrint(L"Failed to convert device path: %lx\n", Status);
         Entry->BcdData.Empty = TRUE;
         TotalOptionSize = sizeof(BL_BCD_OPTION);
         goto Quickie;
@@ -731,7 +729,6 @@ EfiInitpCreateApplicationEntry (
     {
         /* lol */
         Status = STATUS_NOT_IMPLEMENTED;
-        EarlyPrint(L"UDP Boot not supported!\n");
     }
     else
     {
@@ -745,7 +742,6 @@ EfiInitpCreateApplicationEntry (
     /* Bail out on failure */
     if (!NT_SUCCESS(Status))
     {
-        EarlyPrint(L"Failed to convert file path: %lx\n", Status);
         goto Quickie;
     }
 
@@ -784,7 +780,6 @@ EfiInitpCreateApplicationEntry (
                                                   RemainingSize);
             if (!NT_SUCCESS(Status))
             {
-                EarlyPrint(L"Failed to convert OS device path: %lx\n", Status);
                 goto Quickie;
             }
 
@@ -811,7 +806,6 @@ EfiInitpCreateApplicationEntry (
                                                 RemainingSize);
             if (!NT_SUCCESS(Status))
             {
-                EarlyPrint(L"Failed to convert OS file path: %lx\n", Status);
                 goto Quickie;
             }
 
@@ -898,7 +892,6 @@ EfiInitCreateInputParametersEx (
                                           (VOID**)&LoadedImage);
     if (Status != EFI_SUCCESS)
     {
-        EarlyPrint(L"Loaded image failed: %lx\n", Status);
         return NULL;
     }
 
@@ -912,7 +905,6 @@ EfiInitCreateInputParametersEx (
                                           (VOID**)&DevicePath);
     if (Status != EFI_SUCCESS)
     {
-        EarlyPrint(L"Device Path failed: %lx\n", Status);
         return NULL;
     }
 
@@ -1020,10 +1012,6 @@ EfiEntry (
 {
     NTSTATUS Status;
     PBOOT_APPLICATION_PARAMETER_BLOCK BootParameters;
-    extern EFI_SYSTEM_TABLE *g_SystemTable;
-
-    /* Temporary debugging string */
-    g_SystemTable = SystemTable;
 
     /* Convert EFI parameters to Windows Boot Application parameters */
     BootParameters = EfiInitCreateInputParametersEx(ImageHandle, SystemTable);
@@ -1035,7 +1023,6 @@ EfiEntry (
     else
     {
         /* Conversion failed, bail out */
-        EarlyPrint(L"EFI Input Conversion failed\n");
         Status = STATUS_INVALID_PARAMETER;
     }
 

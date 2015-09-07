@@ -29,9 +29,6 @@
 #include <GraphicsOutput.h>
 #include <UgaDraw.h>
 
-VOID
-EarlyPrint(_In_ PWCHAR Format, ...);
-
 /* DEFINES *******************************************************************/
 
 #define BL_APPLICATION_FLAG_CONVERTED_FROM_EFI          0x01
@@ -50,6 +47,7 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 #define BL_FIRMWARE_DESCRIPTOR_VERSION                  2
 
 #define BL_APPLICATION_ENTRY_FLAG_NO_GUID               0x01
+#define BL_APPLICATION_ENTRY_REBOOT_ON_ERROR            0x20
 
 #define BL_CONTEXT_PAGING_ON                            1
 #define BL_CONTEXT_INTERRUPTS_ON                        2
@@ -407,7 +405,8 @@ typedef struct _BL_FIRMWARE_DESCRIPTOR
 typedef struct _BL_RETURN_ARGUMENTS
 {
     ULONG Version;
-    ULONG ReturnArgumentData[6];
+    NTSTATUS Status;
+    ULONG ReturnArgumentData[5];
 } BL_RETURN_ARGUMENTS, *PBL_RETURN_ARGUMENTS;
 
 typedef struct _BL_MEMORY_DESCRIPTOR
@@ -784,7 +783,18 @@ BlpDisplayInitialize (
     _In_ ULONG Flags
     );
 
+VOID
+BlDestroyLibrary (
+    VOID
+    );
+
 /* FIRMWARE ROUTINES *********************************************************/
+
+VOID
+EfiPrintf (
+    _In_ PWCHAR Format,
+    ...
+    );
 
 NTSTATUS
 EfiAllocatePages (
@@ -878,6 +888,11 @@ EfiGopGetFrameBuffer (
     _Out_ UINTN *FrameBufferSize
     );
 
+VOID
+EfiResetSystem (
+    _In_ EFI_RESET_TYPE ResetType
+    );
+
 /* PLATFORM TIMER ROUTINES ***************************************************/
 
 NTSTATUS
@@ -899,6 +914,11 @@ EfiGetNtStatusCode (
 
 NTSTATUS
 BlUtlInitialize (
+    VOID
+    );
+
+VOID
+BlFwReboot (
     VOID
     );
 
