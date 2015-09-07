@@ -536,7 +536,7 @@ EfiGopGetCurrentMode (
 
     /* Make the EFI call */
     *Mode = GopInterface->Mode->Mode;
-    RtlCopyMemory(Information, GopInterface->Mode, sizeof(*Information));
+    RtlCopyMemory(Information, GopInterface->Mode->Info, sizeof(*Information));
 
     /* Switch back to protected mode if we came from there */
     if (OldMode != BlRealMode)

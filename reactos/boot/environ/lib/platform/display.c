@@ -908,6 +908,7 @@ ConsoleEfiGopOpen (
                              (PVOID*)&GopProtocol);
     if (!NT_SUCCESS(Status))
     {
+        EarlyPrint(L"GOP OPEN failed: %lx\n", Status);
         return STATUS_NOT_SUPPORTED;
     }
 
@@ -915,6 +916,7 @@ ConsoleEfiGopOpen (
     Status = EfiGopGetCurrentMode(GopProtocol, &CurrentMode, &ModeInformation);
     if (!NT_SUCCESS(Status))
     {
+        EarlyPrint(L"GOP mode failed: %lx\n", Status);
         goto Quickie;
     }
 
@@ -967,6 +969,7 @@ ConsoleEfiGopOpen (
 
 Quickie:
     /* We failed, close the protocol and return the failure code */
+    EarlyPrint(L"Get format failed: %lx\n", Status);
     EfiCloseProtocol(GraphicsConsole->Handle, &EfiGraphicsOutputProtocol);
     return Status;
 }
@@ -995,18 +998,18 @@ ConsoleEfiGraphicalOpenProtocol (
     if (!NT_SUCCESS(Status))
     {
         /* Nothing supports this (no video card?) */
+        EarlyPrint(L"Status: %lx Count: %d\n", Status, HandleCount);
         return STATUS_UNSUCCESSFUL;
     }
 
     /* Scan through the handles we received */
-    for (HandleIndex = 0; HandleCount < HandleIndex; HandleIndex++)
+    for (HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++)
     {
         /* Try to open each one */
         GraphicsConsole->Handle = HandleArray[HandleIndex];
         Handle = HandleArray[HandleIndex];
-        if (NT_SUCCESS(EfiOpenProtocol(Handle,
-                                       &EfiDevicePathProtocol,
-                                      &Interface)))
+        Status = EfiOpenProtocol(Handle, &EfiDevicePathProtocol, &Interface);
+        if (NT_SUCCESS(Status))
         {
             /* Test worked, close the protocol */
             EfiCloseProtocol(Handle, &EfiDevicePathProtocol);
@@ -1299,6 +1302,7 @@ ConsoleGraphicalConstruct (
     Status = ConsoleTextLocalConstruct(&GraphicsConsole->TextConsole, FALSE);
     if (!NT_SUCCESS(Status))
     {
+        EarlyPrint(L"Text failed: %lx\n", Status);
         return Status;
     }
 
@@ -1310,10 +1314,12 @@ ConsoleGraphicalConstruct (
     if (!NT_SUCCESS(Status))
     {
         /* That failed, try an older EFI 1.02 UGA console */
+        EarlyPrint(L"GOP open failed!\n", Status);
         Status = ConsoleEfiGraphicalOpenProtocol(GraphicsConsole, BlUgaConsole);
         if (!NT_SUCCESS(Status))
         {
             /* That failed too, give up */
+            EarlyPrint(L"UGA failed!\n", Status);
             ConsoleTextLocalDestruct(&GraphicsConsole->TextConsole);
             return STATUS_UNSUCCESSFUL;
         }
@@ -1324,6 +1330,7 @@ ConsoleGraphicalConstruct (
     if (!NT_SUCCESS(Status))
     {
         /* Failed to enable it, undo everything */
+        EarlyPrint(L"Enable failed\n");
         ConsoleFirmwareGraphicalClose(GraphicsConsole);
         ConsoleTextLocalDestruct(&GraphicsConsole->TextConsole);
         return STATUS_UNSUCCESSFUL;
@@ -1426,6 +1433,7 @@ DsppInitialize (
             {
                 /* Construct it */
                 Status = ConsoleGraphicalConstruct(GraphicsConsole);
+                EarlyPrint(L"GFX FAILED: %lx\n", Status);
                 if (!NT_SUCCESS(Status))
                 {
                     BlMmFreeHeap(GraphicsConsole);
