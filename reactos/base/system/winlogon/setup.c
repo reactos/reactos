@@ -155,6 +155,8 @@ RunSetup(VOID)
                            NULL,
                            0,
                            NULL);
+    if (hThread != NULL)
+        CloseHandle(hThread);
 
     return hThread != NULL;
 }
