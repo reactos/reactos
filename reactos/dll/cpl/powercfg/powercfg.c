@@ -14,7 +14,7 @@
 #include <winreg.h>
 #include <regstr.h>
 
-#define NUM_APPLETS	(1)
+#define NUM_APPLETS (1)
 
 static LONG APIENTRY Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
@@ -101,9 +101,9 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   if (GetPwrCapabilities(&spc))
   {
     if (spc.SystemBatteriesPresent)
-	{
-	  InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, (DLGPROC)AlarmsDlgProc);
-	}
+    {
+      InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, (DLGPROC)AlarmsDlgProc);
+    }
   }
   InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, (DLGPROC)AdvancedDlgProc);
   InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, (DLGPROC)HibernateDlgProc);
