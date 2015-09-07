@@ -248,6 +248,186 @@ EfiStall (
 }
 
 NTSTATUS
+EfiConOutQueryMode (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ ULONG Mode,
+    _In_ PULONG Columns,
+    _In_ PULONG Rows
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = TextInterface->QueryMode(TextInterface, Mode, Columns, Rows);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
+EfiConOutSetMode (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ ULONG Mode
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = TextInterface->SetMode(TextInterface, Mode);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
+EfiConOutSetAttribute (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ ULONG Attribute
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = TextInterface->SetAttribute(TextInterface, Attribute);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
+EfiConOutSetCursorPosition (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ ULONG Column,
+    _In_ ULONG Row
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = TextInterface->SetCursorPosition(TextInterface, Column, Row);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
+EfiConOutEnableCursor (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ BOOLEAN Visible
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = TextInterface->EnableCursor(TextInterface, Visible);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+VOID
+EfiConOutReadCurrentMode (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _Out_ EFI_SIMPLE_TEXT_OUTPUT_MODE* Mode
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return;
+    }
+
+    /* Make the EFI call */
+    RtlCopyMemory(Mode, TextInterface->Mode, sizeof(*Mode));
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+}
+
+NTSTATUS
 EfiAllocatePages (
     _In_ ULONG Type,
     _In_ ULONG Pages,

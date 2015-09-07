@@ -73,10 +73,12 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 
 #define BL_MM_REMOVE_VIRTUAL_REGION_FLAG                0x80000000
 
+#define BL_LIBRARY_FLAG_NO_DISPLAY                      0x01
 #define BL_LIBRARY_FLAG_REINITIALIZE                    0x02
 #define BL_LIBRARY_FLAG_REINITIALIZE_ALL                0x04
 #define BL_LIBRARY_FLAG_ZERO_HEAP_ALLOCATIONS_ON_FREE   0x10
 #define BL_LIBRARY_FLAG_INITIALIZATION_COMPLETED        0x20
+#define BL_LIBRARY_FLAG_NO_GRAPHICS_CONSOLE             0x800
 
 #define BL_FS_REGISTER_AT_HEAD_FLAG                     1
 
@@ -595,6 +597,11 @@ FatInitialize (
     VOID
     );
 
+NTSTATUS
+BlpDisplayInitialize (
+    _In_ ULONG Flags
+    );
+
 /* FIRMWARE ROUTINES *********************************************************/
 
 NTSTATUS
@@ -607,6 +614,45 @@ EfiAllocatePages (
 NTSTATUS
 EfiStall (
     _In_ ULONG StallTime
+    );
+
+NTSTATUS
+EfiConOutQueryMode (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ ULONG Mode,
+    _In_ PULONG Columns,
+    _In_ PULONG Rows
+    );
+
+NTSTATUS
+EfiConOutSetMode (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ ULONG Mode
+    );
+
+VOID
+EfiConOutReadCurrentMode (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _Out_ EFI_SIMPLE_TEXT_OUTPUT_MODE* Mode
+    );
+
+NTSTATUS
+EfiConOutSetAttribute (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ ULONG Attribute
+    );
+
+NTSTATUS
+EfiConOutSetCursorPosition (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ ULONG Column,
+    _In_ ULONG Row
+    );
+
+NTSTATUS
+EfiConOutEnableCursor (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ BOOLEAN Visible
     );
 
 /* PLATFORM TIMER ROUTINES ***************************************************/
@@ -739,11 +785,21 @@ BlMmFreeHeap (
     _In_ PVOID Buffer
     );
 
+/* DISPLAY ROUTINES **********************************************************/
+
+VOID
+BlDisplayGetTextCellResolution (
+    _Out_ PULONG TextWidth,
+    _Out_ PULONG TextHeight
+    );
+
 extern ULONG MmDescriptorCallTreeCount;
 extern ULONG BlpApplicationFlags;
 extern BL_LIBRARY_PARAMETERS BlpLibraryParameters;
 extern BL_TRANSLATION_TYPE  MmTranslationType;
 extern PBL_ARCH_CONTEXT CurrentExecutionContext;
 extern PBL_DEVICE_DESCRIPTOR BlpBootDevice;
+extern BL_APPLICATION_ENTRY BlpApplicationEntry;
+extern SIMPLE_TEXT_OUTPUT_INTERFACE *EfiConOut;
 
 #endif

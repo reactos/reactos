@@ -18,8 +18,9 @@ PWCHAR BlpApplicationBaseDirectory;
 PBOOT_APPLICATION_PARAMETER_BLOCK BlpApplicationParameters;
 BL_APPLICATION_ENTRY BlpApplicationEntry;
 BOOLEAN BlpLibraryParametersInitialized;
-BOOLEAN EnSubsystemInitialized;
-LIST_ENTRY EnEventNotificationList;
+
+ULONG PdPersistAllocations;
+LIST_ENTRY BlBadpListHead;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -178,34 +179,46 @@ InitializeLibrary (
         return Status;
     }
 
-#if 0
+#ifdef BL_TPM_SUPPORT
     /* Initialize support for Trusted Platform Module v1.2 */
     BlpTpmInitialize();
 #endif
 
+#ifdef BL_TPM_SUPPORT
     /* Initialize the event manager */
     EnSubsystemInitialized = 1;
     InitializeListHead(&EnEventNotificationList);
+#endif
 
-    /* Initialize the I/O Manager */
+    /* Initialize the I/O Manager */i
     Status = BlpIoInitialize();
     if (!NT_SUCCESS(Status))
     {
         /* Destroy memory manager in phase 1 and the event manager */
         EarlyPrint(L"IO init failed\n");
-        //if (EnSubsystemInitialized) BlpEnDestroy();
+#ifdef BL_TPM_SUPPORT
+        if (EnSubsystemInitialized)
+        {
+            BlpEnDestroy();
+        }
+#endif
         //BlpMmDestroy(1);
         return Status;
     }
 
-#if 0
+#ifdef BL_NET_SUPPORT
     /* Initialize the network stack */
     Status = BlNetInitialize();
     if (!NT_SUCCESS(Status))
     {
         /* Destroy the I/O, event, and memory managers in phase 1 */
         BlpIoDestroy();
-        if (EnSubsystemInitialized) BlpEnDestroy();
+#ifdef BL_TPM_SUPPORT
+        if (EnSubsystemInitialized)
+        {
+            BlpEnDestroy();
+        }
+#endif
         BlpMmDestroy(1);
         return Status;
     }
@@ -216,16 +229,122 @@ InitializeLibrary (
     if (!NT_SUCCESS(Status))
     {
         /* Destroy the network, I/O, event, and memory managers in phase 1 */
-        //BlNetDestroy();
+#ifdef BL_NET_SUPPORT
+        BlNetDestroy();
+#endif
         //BlpIoDestroy();
-        //if (EnSubsystemInitialized) BlpEnDestroy();
+#ifdef BL_TPM_SUPPORT
+        if (EnSubsystemInitialized)
+        {
+            BlpEnDestroy();
+        }
+#endif
         //BlpMmDestroy(1);
         EarlyPrint(L"Util init failed\n");
         return Status;
     }
 
-    EarlyPrint(L"TODO!\n");
-    Status = STATUS_NOT_IMPLEMENTED;
+#ifdef BL_KD_SUPPORT
+    /* Initialize PCI Platform Support */
+    PltInitializePciConfiguration();
+#endif
+
+#ifdef BL_SECURE_BOOT_SUPPORT
+    /* Read the current SecureBoot Policy*/
+    Status = BlSecureBootSetActivePolicyFromPersistedData();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Destroy everything that we've currently set up */
+#ifdef BL_KD_SUPPORT
+        PltDestroyPciConfiguration();
+#endif
+#ifdef BL_NET_SUPPORT
+        BlNetDestroy();
+#endif
+        BlpIoDestroy();
+#ifdef BL_TPM_SUPPORT
+        if (EnSubsystemInitialized)
+        {
+            BlpEnDestroy();
+        }
+#endif
+        BlpMmDestroy(1);
+        return Status;
+    }
+#endif
+
+#ifdef BL_TPM_SUPPORT
+    /* Initialize phase 0 of the security subsystem */
+    SipInitializePhase0();
+#endif
+
+#ifdef BL_KD_SUPPORT
+    /* Bring up the boot debugger, now that SecureBoot has been processed */
+    BlBdInitialize();
+#endif
+
+#ifdef BL_ETW_SUPPORT
+    /* Initialize internal logging */
+    BlpLogInitialize();
+#endif
+
+    /* Are graphics enabled? */
+    if (!(LibraryParameters->LibraryFlags & BL_LIBRARY_FLAG_NO_DISPLAY))
+    {
+        /* Initialize the graphics library */
+        BlpDisplayInitialize(LibraryParameters->LibraryFlags);
+    }
+
+    /* Initialize the boot application persistent data */
+    PdPersistAllocations = 0;
+    InitializeListHead(&BlBadpListHead);
+
+#ifdef BL_TPM_SUPPORT
+    /* Now setup the security subsystem in phase 1 */
+    BlpSiInitialize(1);
+#endif
+
+#if 0
+    /* Setup the text, UI and font resources */
+    Status = BlpResourceInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Tear down everything if this failed */
+        if (!(LibraryParameters->LibraryFlags & BL_LIBRARY_FLAG_TEXT_MODE))
+        {
+//            BlpDisplayDestroy();
+        }
+        //BlpBdDestroy();
+#ifdef BL_KD_SUPPORT
+        PltDestroyPciConfiguration();
+#endif
+#ifdef BL_NET_SUPPORT
+        BlNetDestroy();
+#endif
+        //BlpIoDestroy();
+#ifdef BL_TPM_SUPPORT
+        if (EnSubsystemInitialized)
+        {
+            BlpEnDestroy();
+        }
+#endif
+        //BlpMmDestroy(1);
+        return Status;
+    }
+#endif
+
+#if BL_BITLOCKER_SUPPORT
+    /* Setup the boot cryptography library */
+    g_pEnvironmentData = &SymCryptEnvironmentWindowsBootLibrary;
+    if (SymCryptEnvWindowsBootLibInit)
+    {
+        SymCryptEnvWindowsBootLibInit();
+    }
+#endif
+
+    /* We are fully initialized, remember this and exit with success */
+    BlpLibraryParameters.LibraryFlags |= BL_LIBRARY_FLAG_INITIALIZATION_COMPLETED;
+    Status = STATUS_SUCCESS;
 
 Quickie:
     EarlyPrint(L"Exiting init: %lx\n", Status);
