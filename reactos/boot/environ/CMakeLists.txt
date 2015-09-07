@@ -23,7 +23,14 @@ list(APPEND BOOTLIB_SOURCE
      lib/io/device.c
      lib/io/file.c
      lib/io/fat.c
-     lib/platform/display.c)
+     lib/io/display/display.c
+     lib/io/display/emscons.c
+     lib/io/display/guicons.c
+     lib/io/display/textcons.c
+     lib/io/display/efi/textcons.c
+     lib/io/display/efi/guicons.c
+     lib/io/display/efi/gop.c
+     lib/io/display/efi/uga.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND BOOTLIB_ASM_SOURCE
