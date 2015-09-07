@@ -19,7 +19,7 @@ BOOLEAN MmBlockAllocatorInitialized;
 typedef struct _BL_BLOCK_DESCRIPTOR
 {
     LIST_ENTRY NextEntry;
-    UCHAR Unknown[50 - sizeof(LIST_ENTRY)];
+    UCHAR Unknown[0x50 - sizeof(LIST_ENTRY)];
 } BL_BLOCK_DESCRIPTOR, *PBL_BLOCK_DESCRIPTOR;
 
 /* FUNCTIONS *****************************************************************/

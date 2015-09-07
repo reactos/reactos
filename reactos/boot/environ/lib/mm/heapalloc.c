@@ -83,6 +83,19 @@ MmHapBufferSize (
     return (ULONG_PTR)MmHapDecodeLink(Entry->BufferNext) - (ULONG_PTR)Entry;
 }
 
+FORCEINLINE
+ULONG
+MmHapUserBufferSize (
+    _In_ PVOID FreeEntry
+    )
+{
+    PBL_FREE_HEAP_ENTRY Entry = FreeEntry;
+
+    /* Get the size of the buffer as the user sees it */
+    return MmHapBufferSize(Entry) - FIELD_OFFSET(BL_BUSY_HEAP_ENTRY, Buffer);
+}
+
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -97,7 +110,7 @@ MmHapHeapAllocatorExtend (
 
     /* Compute a new heap, and add 2 more pages for the free list */
     HeapSize = ExtendSize + (2 * PAGE_SIZE);
-    if ((ExtendSize + (2 * PAGE_SIZE)) < ExtendSize)
+    if (HeapSize < ExtendSize)
     {
         return STATUS_INTEGER_OVERFLOW;
     }
@@ -188,7 +201,10 @@ MmHapGetBucketId (
     ULONG BucketIndex = 0;
 
     /* Use the last bucket if this is a large allocation */
-    if (Size >= PAGE_SIZE) return 7;
+    if (Size >= PAGE_SIZE)
+    {
+        return 7;
+    }
 
     /* Otherwise, use a higher index for each new power of two */
     while (Size >> BucketIndex)
@@ -196,7 +212,7 @@ MmHapGetBucketId (
         BucketIndex++;
     }
 
-    /* Allocations are at least 8 bytes (2^3 = 4th index) */
+    /* Allocations are at least 16 bytes (2^4 = 5th index) */
     return BucketIndex - 5;
 }
 
@@ -347,7 +363,10 @@ MmHapCoalesceFreeBuffer (
 
     /* Get the previous entry and check if it's free */
     Prev = MmHapDecodeLink(FreeEntry->BufferPrevious);
-    if (!(Prev) || !(Prev->BufferNext.BufferFree)) return FreeEntry;
+    if (!(Prev) || !(Prev->BufferNext.BufferFree))
+    {
+        return FreeEntry;
+    }
 
     /* It's free, so remove it */
     Prev = MmHapRemoveBufferFromFreeList(Prev);
@@ -391,7 +410,7 @@ MmHapAddToFreeList (
         !(Flags))
     {
         /* Yep, zero it out */
-        RtlZeroMemory(Entry->Buffer, MmHapBufferSize(Entry));
+        RtlZeroMemory(Entry->Buffer, MmHapUserBufferSize(Entry));
     }
 
     /* Now mark the entry as free */
@@ -560,8 +579,8 @@ BlMmAllocateHeap (
     }
 
     /* Align the buffer size to the minimum size required */
-    BufferSize = ALIGN_UP(Size + sizeof(BL_BUSY_HEAP_ENTRY),
-                          sizeof(BL_BUSY_HEAP_ENTRY));
+    BufferSize = ALIGN_UP(Size + FIELD_OFFSET(BL_BUSY_HEAP_ENTRY, Buffer),
+                          FIELD_OFFSET(BL_BUSY_HEAP_ENTRY, Buffer));
 
     /* Watch out for overflow */
     if (BufferSize <= Size)
@@ -598,7 +617,8 @@ BlMmAllocateHeap (
             NextEntry = (PBL_BUSY_HEAP_ENTRY)((ULONG_PTR)FreeEntry + BufferSize);
 
             if ((NextEntry >= FreeEntry) &&
-                ((ULONG_PTR)NextEntry <= Heap->HeapLimit - sizeof(BL_BUSY_HEAP_ENTRY)))
+                ((ULONG_PTR)NextEntry <=
+                 Heap->HeapLimit - FIELD_OFFSET(BL_BUSY_HEAP_ENTRY, Buffer)))
             {
                 /* Update the heap top pointer past this allocation */
                 Heap->HeapStart = NextEntry;
@@ -607,7 +627,7 @@ BlMmAllocateHeap (
                 FreeEntry->BufferNext.P = Heap->HeapStart;
 
                 /* And make the free heap entry point back to us */
-                Heap->HeapStart->BufferNext.P = FreeEntry;
+                Heap->HeapStart->BufferPrevious.P = FreeEntry;
 
                 /* Mark the heap entry as being free and on the heap */
                 Heap->HeapStart->BufferNext.BufferFree = 1;
