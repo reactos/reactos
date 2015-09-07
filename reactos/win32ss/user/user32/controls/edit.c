@@ -649,7 +649,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 			prev = current_line->net_length - 1;
 			w = current_line->net_length;
 			d = (float)current_line->width/(float)fw;
-			if (d > 1.2) d -= 0.2;
+			if (d > 1.2f) d -= 0.2f;
 			next = prev/d;
 			if (next >= prev) next = prev-1;
 			do {
