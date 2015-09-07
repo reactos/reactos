@@ -8,10 +8,7 @@ spec2def(kernel32_vista.dll kernel32_vista.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     DllMain.c
     GetTickCount64.c
-    IdnToAscii.c
-    IdnToUnicode.c
     InitOnceExecuteOnce.c
-    nameprep.c
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32_vista.def)
 
 add_library(kernel32_vista SHARED ${SOURCE})
