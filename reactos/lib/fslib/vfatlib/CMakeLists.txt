@@ -14,4 +14,5 @@ list(APPEND SOURCE
     vfatlib.h)
 
 add_library(vfatlib ${SOURCE})
+add_dependencies(vfatlib xdk)
 add_pch(vfatlib vfatlib.h SOURCE)

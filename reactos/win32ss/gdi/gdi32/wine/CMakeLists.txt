@@ -19,7 +19,7 @@ list(APPEND SOURCE
     mfdrv/init.c
     mfdrv/objects.c
     mfdrv/text.c
-    rosglue.c
-)
+    rosglue.c)
 
 add_library(winegdi ${SOURCE})
+add_dependencies(winegdi xdk)

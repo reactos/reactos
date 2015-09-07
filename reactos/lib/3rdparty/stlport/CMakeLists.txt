@@ -47,4 +47,5 @@ add_library(stlport
     src/cxa.c
     src/c_locale.c)
 
+add_dependencies(stlport xdk)
 add_pch(stlport src/stlport_prefix.h SOURCE)

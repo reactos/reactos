@@ -18,3 +18,4 @@ add_library(wine ${SOURCE})
 add_dependencies(wine psdk)
 
 add_library(wineldr loader.c)
+add_dependencies(wineldr xdk)

@@ -28,6 +28,7 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(mesa_swrast STATIC ${SOURCE})
+add_dependencies(mesa_swrast xdk)
 add_pch(mesa_swrast precomp.h SOURCE)
 
 if(MSVC)

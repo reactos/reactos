@@ -11,3 +11,4 @@ list(APPEND SOURCE
     fpu.c)
 
 add_library(fast486 ${SOURCE})
+add_dependencies(fast486 xdk)

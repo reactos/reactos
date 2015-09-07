@@ -20,3 +20,4 @@ elseif(ARCH STREQUAL "arm")
 endif()
 
 add_library(cpprt ${SOURCE} ${cpprt_asm})
+add_dependencies(cpprt xdk)

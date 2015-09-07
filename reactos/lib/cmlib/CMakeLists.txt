@@ -16,7 +16,7 @@ list(APPEND SOURCE
 
 if(CMAKE_CROSSCOMPILING)
     add_library(cmlib ${SOURCE})
-    add_dependencies(cmlib bugcodes)
+    add_dependencies(cmlib bugcodes xdk)
     add_pch(cmlib cmlib.h SOURCE)
 else()
     add_definitions(

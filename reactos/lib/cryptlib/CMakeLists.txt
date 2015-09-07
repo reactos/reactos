@@ -1,5 +1,5 @@
 
-add_library(cryptlib
+list(APPEND SOURCE
     aes.c
     des.c
     md4.c
@@ -8,3 +8,6 @@ add_library(cryptlib
     rc4.c
     sha1.c
     util.c)
+
+add_library(cryptlib ${SOURCE})
+add_dependencies(cryptlib xdk)

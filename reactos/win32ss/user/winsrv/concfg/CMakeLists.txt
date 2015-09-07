@@ -1,5 +1,3 @@
 
-list(APPEND SOURCE
-    settings.c)
-
-add_library(concfg ${SOURCE})
+add_library(concfg settings.c)
+add_dependencies(concfg xdk)
