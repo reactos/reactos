@@ -8,7 +8,7 @@
  *                  Eric Pouech
  *                  Jacek Caban for CodeWeavers
  *                  Alexandre Julliard
- *                  Stefan Ginsberg (stefan__100__@hotmail.com)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  *                  Samuel Serapión
  */
 

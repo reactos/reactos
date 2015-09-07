@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         Slist Routines
  * FILE:            lib/rtl/slist.c
- * PROGRAMERS:      Stefan Ginsberg (stefan__100__@hotmail.com)
+ * PROGRAMERS:      Stefan Ginsberg (stefan.ginsberg@reactos.org)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

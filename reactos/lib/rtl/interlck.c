@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         RTL Interlocked Routines
  * FILE:            lib/rtl/interlck.c
- * PROGRAMERS:      Stefan Ginsberg (stefan__100__@hotmail.com)
+ * PROGRAMERS:      Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
