@@ -770,18 +770,46 @@ MmMdFreeGlobalDescriptors (
     VOID
     )
 {
+    PBL_MEMORY_DESCRIPTOR Descriptor, OldDescriptor;
     ULONG Index = 0;
+    PLIST_ENTRY OldFlink, OldBlink;
 
     /* Make sure we're not int middle of a call using a descriptor */
+    EarlyPrint(L"Call depth is %d\n", MmDescriptorCallTreeCount);
     if (MmDescriptorCallTreeCount != 1)
     {
         return;
     }
 
     /* Loop every current global descriptor */
+    EarlyPrint(L"MmGlobalMemoryDescriptorsUsed: %d\n", MmGlobalMemoryDescriptorsUsed);
     while (Index < MmGlobalMemoryDescriptorsUsed)
     {
-        EarlyPrint(L"Global descriptors not yet supported\n");
+        /* Does it have any valid pageS? */
+        OldDescriptor = &MmGlobalMemoryDescriptors[Index];
+        if (OldDescriptor->PageCount)
+        {
+            /* Allocate a copy of it */
+            Descriptor = BlMmAllocateHeap(sizeof(*Descriptor));
+            if (!Descriptor)
+            {
+                return;
+            }
+
+            /* Save the links */
+            OldFlink = OldDescriptor->ListEntry.Blink;
+            OldBlink = OldDescriptor->ListEntry.Flink;
+
+            /* Make the copy */
+            *Descriptor = *OldDescriptor;
+
+            /* Fix the links */
+            OldBlink->Flink = &Descriptor->ListEntry;
+            OldFlink->Blink = &Descriptor->ListEntry;
+
+            /* Zero the descriptor */
+            RtlZeroMemory(OldDescriptor, sizeof(*OldDescriptor));
+        }
 
         /* Keep going */
         Index++;

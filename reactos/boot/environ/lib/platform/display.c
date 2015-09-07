@@ -146,17 +146,12 @@ typedef enum _BL_GRAPHICS_CONSOLE_TYPE
 typedef struct _BL_GRAPHICS_CONSOLE
 {
     BL_TEXT_CONSOLE TextConsole;
-
     BL_DISPLAY_MODE DisplayMode;
-
     ULONG PixelDepth;
-
     ULONG FgColor;
     ULONG BgColor;
-
     BL_DISPLAY_MODE OldDisplayMode;
     ULONG OldPixelDepth;
-
     EFI_HANDLE Handle;
     BL_GRAPHICS_CONSOLE_TYPE Type;
     EFI_GRAPHICS_OUTPUT_PROTOCOL* Protocol;
@@ -166,6 +161,11 @@ typedef struct _BL_GRAPHICS_CONSOLE
     ULONG Mode;
     ULONG OldMode;
 } BL_GRAPHICS_CONSOLE, *PBL_GRAPHICS_CONSOLE;
+
+typedef struct _BL_REMOTE_CONSOLE
+{
+    BL_TEXT_CONSOLE TextConsole;
+} BL_REMOTE_CONSOLE, *PBL_REMOTE_CONSOLE;
 
 PVOID BfiCachedStrikeData;
 LIST_ENTRY BfiDeferredListHead;
@@ -1343,6 +1343,49 @@ ConsoleGraphicalConstruct (
 }
 
 NTSTATUS
+ConsoleRemoteConstruct (
+    _In_ PBL_REMOTE_CONSOLE RemoteConsole
+    )
+{
+#ifdef BL_EMS_SUPPORT
+#error Implement me
+#else
+    /* We don't support EMS for now */
+    return STATUS_NOT_IMPLEMENTED;
+#endif
+}
+
+NTSTATUS
+ConsoleCreateRemoteConsole (
+    _In_ PBL_TEXT_CONSOLE* TextConsole
+    )
+{
+    PBL_REMOTE_CONSOLE RemoteConsole;
+    NTSTATUS Status;
+
+    /* Allocate the remote console */
+    RemoteConsole = BlMmAllocateHeap(sizeof(*RemoteConsole));
+    if (!RemoteConsole)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Construct it */
+    Status = ConsoleRemoteConstruct(RemoteConsole);
+    if (Status < 0)
+    {
+        /* Failed to construct it, delete it */
+        BlMmFreeHeap(RemoteConsole);
+        return Status;
+    }
+
+    /* Save the global pointer and return a pointer to the text console */
+    DspRemoteInputConsole = RemoteConsole;
+    *TextConsole = &RemoteConsole->TextConsole;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 DsppInitialize (
     _In_ ULONG Flags
     )
@@ -1353,8 +1396,7 @@ DsppInitialize (
     PBL_DISPLAY_MODE DisplayMode;
     //ULONG GraphicsResolution;
     PBL_GRAPHICS_CONSOLE GraphicsConsole;
-   // PVOID RemoteConsole;
-    PBL_TEXT_CONSOLE TextConsole;
+    PBL_TEXT_CONSOLE TextConsole, RemoteConsole;
 
     /* Initialize font data */
     BfiCachedStrikeData = 0;
@@ -1362,11 +1404,11 @@ DsppInitialize (
     InitializeListHead(&BfiFontFileListHead);
 
     /* Allocate the font rectangle */
-   // BfiGraphicsRectangle = BlMmAllocateHeap(0x5A);
-    //if (!BfiGraphicsRectangle)
-    //{
-        //return STATUS_NO_MEMORY;
-    //}
+    BfiGraphicsRectangle = BlMmAllocateHeap(0x5A);
+    if (!BfiGraphicsRectangle)
+    {
+        return STATUS_NO_MEMORY;
+    }
 
     /* Display re-initialization not yet handled */
     if (LibraryParameters.LibraryFlags & BL_LIBRARY_FLAG_REINITIALIZE_ALL)
@@ -1406,6 +1448,7 @@ DsppInitialize (
 #endif
         if (NT_SUCCESS(Status))
         {
+            ConsoleGraphicalResolutionListFlags |= BL_DISPLAY_GRAPHICS_FORCED_VIDEO_MODE_FLAG;
             EarlyPrint(L"Display selection not yet handled\n");
             return STATUS_NOT_IMPLEMENTED;
         }
@@ -1421,7 +1464,9 @@ DsppInitialize (
 #endif
         if (NT_SUCCESS(Status))
         {
-            ConsoleGraphicalResolutionListFlags |= 2;
+            ConsoleGraphicalResolutionListFlags |= BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG;
+            EarlyPrint(L"High res mode not yet handled\n");
+            return STATUS_NOT_IMPLEMENTED;
         }
 
         /* Do we need graphics mode after all? */
@@ -1433,11 +1478,16 @@ DsppInitialize (
             {
                 /* Construct it */
                 Status = ConsoleGraphicalConstruct(GraphicsConsole);
-                EarlyPrint(L"GFX FAILED: %lx\n", Status);
                 if (!NT_SUCCESS(Status))
                 {
+                    EarlyPrint(L"GFX FAILED: %lx\n", Status);
                     BlMmFreeHeap(GraphicsConsole);
                     GraphicsConsole = NULL;
+                }
+                else
+                {
+                    /* TEST */
+                    RtlFillMemory(GraphicsConsole->FrameBuffer, GraphicsConsole->FrameBufferSize, 0x55);
                 }
             }
         }
@@ -1450,7 +1500,8 @@ DsppInitialize (
         }
 
         /* Mask out all the flags now */
-        ConsoleGraphicalResolutionListFlags &= ~3;
+        ConsoleGraphicalResolutionListFlags &= ~(BL_DISPLAY_GRAPHICS_FORCED_VIDEO_MODE_FLAG |
+                                                 BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG);
     }
 
     /* Do we have a graphics console? */
@@ -1477,15 +1528,14 @@ DsppInitialize (
     DspGraphicalConsole = NULL;
 
     /* If we don't have a text console, go get a remote console */
-    //RemoteConsole = NULL;
+    RemoteConsole = NULL;
     if (!TextConsole)
     {
-        EarlyPrint(L"Display path not handled\n");
-        return STATUS_NOT_SUPPORTED;
+        ConsoleCreateRemoteConsole(&RemoteConsole);
     }
 
     /* Do we have a remote console? */
-    if (!DspRemoteInputConsole)
+    if (!RemoteConsole)
     {
         /* Nope -- what about a graphical one? */
         if (GraphicsConsole)

@@ -304,7 +304,7 @@ BlpMmInitialize (
         /* Go back to static descriptors and kill the heap */
         //MmMdpSwitchToStaticDescriptors();
         //HapInitializationStatus = 0;
-        ++MmDescriptorCallTreeCount;
+        //++MmDescriptorCallTreeCount;
 
         /* Destroy the Phase 1 initialization */
         //MmPaDestroy(0);
@@ -315,7 +315,7 @@ BlpMmInitialize (
 
 Quickie:
     /* Free the memory descriptors and return the initialization state */
-    //MmMdFreeGlobalDescriptors();
+    MmMdFreeGlobalDescriptors();
     --MmDescriptorCallTreeCount;
     return Status;
 }
