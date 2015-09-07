@@ -647,7 +647,7 @@ function(set_module_type MODULE TYPE)
 
     # Now do some stuff which is specific to each type
     if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
-        add_dependencies(${MODULE} bugcodes)
+        add_dependencies(${MODULE} bugcodes xdk)
         if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
             set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
         endif()

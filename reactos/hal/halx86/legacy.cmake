@@ -12,7 +12,7 @@ list(APPEND HAL_LEGACY_SOURCE
     legacy/halpcat.c)
 
 add_object_library(lib_hal_legacy ${HAL_LEGACY_SOURCE})
-add_dependencies(lib_hal_legacy bugcodes)
+add_dependencies(lib_hal_legacy bugcodes xdk)
 #add_pch(lib_hal_legacy include/hal.h)
 
 if(MSVC)

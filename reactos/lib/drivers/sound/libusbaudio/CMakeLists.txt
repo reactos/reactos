@@ -9,4 +9,4 @@ list(APPEND SOURCE
     format.c)
 
 add_library(libusbaudio ${SOURCE})
-add_dependencies(libusbaudio bugcodes)
+add_dependencies(libusbaudio bugcodes xdk)

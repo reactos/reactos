@@ -59,7 +59,7 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(lwip ${SOURCE})
-add_dependencies(lwip bugcodes)
+add_dependencies(lwip bugcodes xdk)
 add_pch(lwip precomp.h SOURCE)
 
 if(NOT MSVC)

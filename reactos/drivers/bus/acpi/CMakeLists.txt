@@ -165,7 +165,7 @@ add_library(acpica
 
 add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
 set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE")
-add_dependencies(acpica bugcodes)
+add_dependencies(acpica bugcodes xdk)
 
 list(APPEND ACPI_SOURCE
     busmgr/bus.c
