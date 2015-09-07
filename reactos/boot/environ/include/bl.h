@@ -26,6 +26,8 @@
 #include <Uefi.h>
 #include <DevicePath.h>
 #include <LoadedImage.h>
+#include <GraphicsOutput.h>
+#include <UgaDraw.h>
 
 VOID
 EarlyPrint(_In_ PWCHAR Format, ...);
@@ -60,13 +62,6 @@ EarlyPrint(_In_ PWCHAR Format, ...);
 #define BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG        0x10
 #define BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG        0x20
 #define BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG   0x2000
-
-#define BL_MM_DESCRIPTOR_REQUIRES_FIXED_FLAG            0x40000
-#define BL_MM_DESCRIPTOR_REQUIRES_COALESCING_FLAG       0x2000000
-#define BL_MM_DESCRIPTOR_REQUIRES_UPDATING_FLAG         0x4000000
-#define BL_MM_DESCRIPTOR_NEVER_USE_FIRMWARE_FLAG        0x8000000
-#define BL_MM_DESCRIPTOR_SPECIAL_PAGES_FLAG             0x20000000
-#define BL_MM_DESCRIPTOR_CAME_FROM_FIRMWARE_FLAG        0x80000000
 
 #define BL_MM_REQUEST_DEFAULT_TYPE                      1
 #define BL_MM_REQUEST_TOP_DOWN_TYPE                     2
@@ -193,15 +188,45 @@ typedef enum _BL_MEMORY_TYPE
 
 typedef enum _BL_MEMORY_ATTR
 {
-    BlMemoryUncached = 1,
-    BlMemoryWriteCombined = 2,
-    BlMemoryWriteThrough = 4,
-    BlMemoryWriteBack = 8,
-    BlMemoryUncachedExported = 0x10,
-    BlMemoryWriteProtected = 0x100,
-    BlMemoryReadProtected = 0x200,
-    BlMemoryExecuteProtected = 0x400,
-    BlMemoryRuntime = 0x1000000
+    //
+    // Memory Caching Attributes
+    //
+    BlMemoryUncached =          0x00000001,
+    BlMemoryWriteCombined =     0x00000002,
+    BlMemoryWriteThrough =      0x00000004,
+    BlMemoryWriteBack =         0x00000008,
+    BlMemoryUncachedExported =  0x00000010,
+    BlMemoryValidCacheAttributes            = BlMemoryUncached | BlMemoryWriteCombined | BlMemoryWriteThrough | BlMemoryWriteBack | BlMemoryUncachedExported,
+    BlMemoryValidCacheAttributeMask         = 0x000000FF,
+
+    //
+    // Memory Protection Attributes
+    //
+    BlMemoryWriteProtected =    0x00000100,
+    BlMemoryReadProtected =     0x00000200,
+    BlMemoryExecuteProtected =  0x00000400,
+    BlMemoryValidProtectionAttributes       = BlMemoryWriteProtected | BlMemoryReadProtected | BlMemoryExecuteProtected,
+    BlMemoryValidProtectionAttributeMask    = 0x0000FF00,
+
+    //
+    // Memory Allocation Attributes
+    //
+    BlMemoryNonFixed =          0x00020000,
+    BlMemoryFixed =             0x00040000,
+    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed,
+    BlMemoryValidAllocationAttributeMask    = 0x00FF0000,
+
+    //
+    // Memory Type Attributes
+    //
+    BlMemoryRuntime =           0x01000000,
+    BlMemoryCoalesced =         0x02000000,
+    BlMemoryUpdate =            0x04000000,
+    BlMemoryNonFirmware =       0x08000000,
+    BlMemorySpecial =           0x20000000,
+    BlMemoryFirmware =          0x80000000,
+    BlMemoryValidTypeAttributes             = BlMemoryRuntime | BlMemoryCoalesced | BlMemoryUpdate | BlMemoryNonFirmware | BlMemorySpecial | BlMemoryFirmware,
+    BlMemoryValidTypeAttributeMask          = 0xFF000000,
 } BL_MEMORY_ATTR;
 
 /* CALLBACKS *****************************************************************/
@@ -655,6 +680,47 @@ EfiConOutEnableCursor (
     _In_ BOOLEAN Visible
     );
 
+NTSTATUS
+EfiLocateHandleBuffer (
+    _In_ EFI_LOCATE_SEARCH_TYPE SearchType,
+    _In_ EFI_GUID *Protocol,
+    _Inout_ PULONG HandleCount,
+    _Inout_ EFI_HANDLE** Buffer
+    );
+
+NTSTATUS
+EfiOpenProtocol (
+    _In_ EFI_HANDLE Handle,
+    _In_ EFI_GUID *Protocol,
+    _Out_ PVOID* Interface
+    );
+
+NTSTATUS
+EfiCloseProtocol (
+    _In_ EFI_HANDLE Handle,
+    _In_ EFI_GUID *Protocol
+    );
+
+NTSTATUS
+EfiGopGetCurrentMode (
+    _In_ EFI_GRAPHICS_OUTPUT_PROTOCOL *GopInterface,
+    _Out_ UINTN* Mode,
+    _Out_ EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Information
+    );
+
+NTSTATUS
+EfiGopSetMode (
+    _In_ EFI_GRAPHICS_OUTPUT_PROTOCOL *GopInterface,
+    _In_ ULONG Mode
+    );
+
+VOID
+EfiGopGetFrameBuffer (
+    _In_ EFI_GRAPHICS_OUTPUT_PROTOCOL *GopInterface,
+    _Out_ PHYSICAL_ADDRESS* FrameBuffer,
+    _Out_ UINTN *FrameBufferSize
+    );
+
 /* PLATFORM TIMER ROUTINES ***************************************************/
 
 NTSTATUS
@@ -773,6 +839,16 @@ MmFwGetMemoryMap (
     _In_ ULONG Flags
     );
 
+/* VIRTUAL MEMORY ROUTINES ***************************************************/
+
+NTSTATUS
+BlMmMapPhysicalAddressEx (
+    _In_ PVOID* VirtualAddress,
+    _In_ ULONG Attributes,
+    _In_ ULONGLONG Size,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress
+    );
+
 /* HEAP ALLOCATOR ROUTINES ***************************************************/
 
 PVOID
@@ -801,5 +877,10 @@ extern PBL_ARCH_CONTEXT CurrentExecutionContext;
 extern PBL_DEVICE_DESCRIPTOR BlpBootDevice;
 extern BL_APPLICATION_ENTRY BlpApplicationEntry;
 extern SIMPLE_TEXT_OUTPUT_INTERFACE *EfiConOut;
+extern EFI_GUID EfiGraphicsOutputProtocol;
+extern EFI_GUID EfiUgaDrawProtocol;
+extern EFI_GUID EfiLoadedImageProtocol;
+extern EFI_GUID EfiDevicePathProtocol;
+extern EFI_GUID EfiSimpleTextInputExProtocol;
 
 #endif

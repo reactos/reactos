@@ -12,8 +12,6 @@
 
 /* DATA VARIABLES ************************************************************/
 
-GUID EfiSimpleTextInputExProtocol = EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID;
-
 PBL_FIRMWARE_DESCRIPTOR EfiFirmwareParameters;
 BL_FIRMWARE_DESCRIPTOR EfiFirmwareData;
 EFI_HANDLE EfiImageHandle;
@@ -25,6 +23,12 @@ EFI_RUNTIME_SERVICES *EfiRT;
 EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *EfiConOut;
 EFI_SIMPLE_TEXT_INPUT_PROTOCOL *EfiConIn;
 EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *EfiConInEx;
+
+EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+EFI_GUID EfiUgaDrawProtocol = EFI_UGA_DRAW_PROTOCOL_GUID;
+EFI_GUID EfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+EFI_GUID EfiDevicePathProtocol = EFI_DEVICE_PATH_PROTOCOL_GUID;
+EFI_GUID EfiSimpleTextInputExProtocol = EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -89,6 +93,65 @@ EfiOpenProtocol (
         *Interface = NULL;
     }
 
+    return Status;
+}
+
+NTSTATUS
+EfiCloseProtocol (
+    _In_ EFI_HANDLE Handle,
+    _In_ EFI_GUID *Protocol
+    )
+{
+    EFI_STATUS EfiStatus;
+    NTSTATUS Status;
+    BL_ARCH_MODE OldMode;
+
+    /* Are we using virtual memory/ */
+    if (MmTranslationType != BlNone)
+    {
+        /* We need complex tracking to make this work */
+        //Status = EfiVmOpenProtocol(Handle, Protocol, Interface);
+        Status = STATUS_NOT_SUPPORTED;
+    }
+    else
+    {
+        /* Are we on legacy 1.02? */
+        if (EfiST->FirmwareRevision == EFI_1_02_SYSTEM_TABLE_REVISION)
+        {
+            /* Nothing to close */
+            EfiStatus = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Are we in protected mode? */
+            OldMode = CurrentExecutionContext->Mode;
+            if (OldMode != BlRealMode)
+            {
+                /* FIXME: Not yet implemented */
+                return STATUS_NOT_IMPLEMENTED;
+            }
+
+            /* Use the UEFI version */
+            EfiStatus = EfiBS->CloseProtocol(Handle, Protocol, EfiImageHandle, NULL);
+
+            /* Switch back to protected mode if we came from there */
+            if (OldMode != BlRealMode)
+            {
+                BlpArchSwitchContext(OldMode);
+            }
+
+            /* Normalize not found as success */
+            if (EfiStatus == EFI_NOT_FOUND)
+            {
+                EfiStatus = EFI_SUCCESS;
+            }
+        }
+
+        /* Convert the error to an NTSTATUS */
+        Status = EfiGetNtStatusCode(EfiStatus);
+    }
+
+    /* All done */
     return Status;
 }
 
@@ -424,6 +487,187 @@ EfiConOutReadCurrentMode (
     {
         BlpArchSwitchContext(OldMode);
     }
+}
+
+VOID
+EfiGopGetFrameBuffer (
+    _In_ EFI_GRAPHICS_OUTPUT_PROTOCOL *GopInterface,
+    _Out_ PHYSICAL_ADDRESS* FrameBuffer,
+    _Out_ UINTN *FrameBufferSize
+    )
+{
+    BL_ARCH_MODE OldMode;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return;
+    }
+
+    /* Make the EFI call */
+    FrameBuffer->QuadPart = GopInterface->Mode->FrameBufferBase;
+    *FrameBufferSize = GopInterface->Mode->FrameBufferSize;
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+}
+
+NTSTATUS
+EfiGopGetCurrentMode (
+    _In_ EFI_GRAPHICS_OUTPUT_PROTOCOL *GopInterface,
+    _Out_ UINTN* Mode, 
+    _Out_ EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Information
+    )
+{
+    BL_ARCH_MODE OldMode;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    *Mode = GopInterface->Mode->Mode;
+    RtlCopyMemory(Information, GopInterface->Mode, sizeof(*Information));
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Return back */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+EfiGopSetMode (
+    _In_ EFI_GRAPHICS_OUTPUT_PROTOCOL *GopInterface,
+    _In_ ULONG Mode
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+    BOOLEAN ModeChanged;
+    NTSTATUS Status;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    if (Mode == GopInterface->Mode->Mode)
+    {
+        EfiStatus = EFI_SUCCESS;
+        ModeChanged = FALSE;
+    }
+    {
+        EfiStatus = GopInterface->SetMode(GopInterface, Mode);
+        ModeChanged = TRUE;
+    }
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Print out to the debugger if the mode was changed */
+    Status = EfiGetNtStatusCode(EfiStatus);
+    if ((ModeChanged) && (NT_SUCCESS(Status)))
+    {
+        /* FIXME @TODO: Should be BlStatusPrint */
+        EarlyPrint(L"Console video mode  set to 0x%x\r\n", Mode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return Status;
+}
+
+NTSTATUS
+EfiLocateHandleBuffer (
+    _In_ EFI_LOCATE_SEARCH_TYPE SearchType,
+    _In_ EFI_GUID *Protocol,
+    _Inout_ PULONG HandleCount,
+    _Inout_ EFI_HANDLE** Buffer
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+    UINTN BufferSize;
+
+    /* Bail out if we're missing parameters */
+    if (!(Buffer) || !(HandleCount))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if a buffer was passed in*/
+    if (*Buffer)
+    {
+        /* Then we should already have a buffer size*/
+        BufferSize = sizeof(EFI_HANDLE) * *HandleCount;
+    }
+    else
+    {
+        /* Then no buffer size exists */
+        BufferSize = 0;
+    }
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Try the first time */
+    EfiStatus = EfiBS->LocateHandle(SearchType, Protocol, NULL, &BufferSize, *Buffer);
+    if (EfiStatus == EFI_BUFFER_TOO_SMALL)
+    {
+        /* Did we have an existing buffer? */
+        if (*Buffer)
+        {
+            /* Free it */
+            BlMmFreeHeap(*Buffer);
+        }
+
+        /* Allocate a new one */
+        *Buffer = BlMmAllocateHeap(BufferSize);
+        if (!(*Buffer))
+        {
+            /* No space, fail */
+            return STATUS_NO_MEMORY;
+        }
+
+        /* Try again */
+        EfiStatus = EfiBS->LocateHandle(SearchType, Protocol, NULL, &BufferSize, *Buffer);
+
+        /* Switch back to protected mode if we came from there */
+        if (OldMode != BlRealMode)
+        {
+            BlpArchSwitchContext(OldMode);
+        }
+    }
+
+    /* Return the number of handles */
+    *HandleCount = BufferSize / sizeof(EFI_HANDLE);
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
 }
 
 NTSTATUS

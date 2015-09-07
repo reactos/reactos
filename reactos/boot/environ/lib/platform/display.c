@@ -120,6 +120,12 @@ typedef struct _BL_TEXT_CONSOLE_VTABLE
     PCONSOLE_WRITE_TEXT WriteText;
 } BL_TEXT_CONSOLE_VTABLE, *PBL_TEXT_CONSOLE_VTABLE;
 
+typedef struct _BL_GRAPHICS_CONSOLE_VTABLE
+{
+    BL_TEXT_CONSOLE_VTABLE Text;
+    /// more for graphics ///
+} BL_GRAPHICS_CONSOLE_VTABLE, *PBL_GRAPHICS_CONSOLE_VTABLE;
+
 typedef struct _BL_TEXT_CONSOLE
 {
     PBL_TEXT_CONSOLE_VTABLE Callbacks;
@@ -130,6 +136,36 @@ typedef struct _BL_TEXT_CONSOLE
     ULONG Mode;
     EFI_SIMPLE_TEXT_OUTPUT_MODE OldMode;
 } BL_TEXT_CONSOLE, *PBL_TEXT_CONSOLE;
+
+typedef enum _BL_GRAPHICS_CONSOLE_TYPE
+{
+    BlGopConsole,
+    BlUgaConsole
+} BL_GRAPHICS_CONSOLE_TYPE;
+
+typedef struct _BL_GRAPHICS_CONSOLE
+{
+    BL_TEXT_CONSOLE TextConsole;
+
+    BL_DISPLAY_MODE DisplayMode;
+
+    ULONG PixelDepth;
+
+    ULONG FgColor;
+    ULONG BgColor;
+
+    BL_DISPLAY_MODE OldDisplayMode;
+    ULONG OldPixelDepth;
+
+    EFI_HANDLE Handle;
+    BL_GRAPHICS_CONSOLE_TYPE Type;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* Protocol;
+    PVOID FrameBuffer;
+    ULONG FrameBufferSize;
+    ULONG PixelsPerScanLine;
+    ULONG Mode;
+    ULONG OldMode;
+} BL_GRAPHICS_CONSOLE, *PBL_GRAPHICS_CONSOLE;
 
 PVOID BfiCachedStrikeData;
 LIST_ENTRY BfiDeferredListHead;
@@ -144,6 +180,7 @@ BL_DISPLAY_MODE ConsoleGraphicalResolutionList[3] =
     {800, 600, 800},
     {1024, 600, 1024}
 };
+ULONG ConsoleGraphicalResolutionListSize = RTL_NUMBER_OF(ConsoleGraphicalResolutionList);
 
 BL_DISPLAY_MODE ConsoleTextResolutionList[1] =
 {
@@ -209,6 +246,11 @@ BL_TEXT_CONSOLE_VTABLE ConsoleTextLocalVtbl =
     ConsoleTextLocalSetTextResolution,
     ConsoleTextLocalClearText,
     ConsoleTextLocalWriteText
+};
+
+BL_GRAPHICS_CONSOLE_VTABLE ConsoleGraphicalVtbl =
+{
+    {NULL},
 };
 
 PVOID DspRemoteInputConsole;
@@ -723,6 +765,269 @@ ConsoleFirmwareTextOpen (
 }
 
 NTSTATUS
+ConsoleEfiUgaOpen (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    EarlyPrint(L"UGA not implemented\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+ConsoleEfiGopGetGraphicalFormat (
+    _In_ EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *ModeInfo,
+    _Out_ PULONG PixelDepth
+    )
+{
+    /* Convert the format to depth */
+    if (ModeInfo->PixelFormat == PixelBlueGreenRedReserved8BitPerColor)
+    {
+        *PixelDepth = 32;
+        return STATUS_SUCCESS;
+    }
+    if (ModeInfo->PixelFormat == PixelBitMask)
+    {
+        *PixelDepth = 24;
+        return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
+BOOLEAN
+ConsoleEfiGopIsPixelFormatSupported (
+    _In_ EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Mode
+    )
+{
+    BOOLEAN Supported;
+    EFI_PIXEL_BITMASK PixelMask;
+
+    Supported = FALSE;
+
+    /* Check if it's simple BGR8 */
+    if (Mode->PixelFormat == PixelBlueGreenRedReserved8BitPerColor)
+    {
+        Supported = TRUE;
+    }
+    else
+    {
+        /* Otherwise, we can check if it's a masked format */
+        if (Mode->PixelFormat == PixelBitMask)
+        {
+            /* Check if the masked format is BGR8 */
+            PixelMask.BlueMask = 0xFF;
+            PixelMask.GreenMask = 0xFF00;
+            PixelMask.RedMask = 0xFF0000;
+            PixelMask.ReservedMask = 0;
+            if (RtlEqualMemory(&Mode->PixelInformation,
+                               &PixelMask,
+                               sizeof(PixelMask)))
+            {
+                Supported = TRUE;
+            }
+        }
+    }
+
+    /* Return if the format was supported */
+    return Supported;
+}
+
+#define BL_DISPLAY_GRAPHICS_FORCED_VIDEO_MODE_FLAG          0x01
+#define BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG       0x02
+
+NTSTATUS
+ConsoleEfiGopFindModeFromAllowed (
+    _In_ EFI_GRAPHICS_OUTPUT_PROTOCOL *GopProtocol,
+    _In_ PBL_DISPLAY_MODE SupportedModes,
+    _In_ ULONG MaximumIndex,
+    _Out_ PULONG SupportedMode
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+ConsoleEfiUgaClose (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    return;
+}
+
+VOID
+ConsoleEfiGopClose (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    ULONG OldMode;
+
+    /* Did we switch modes when we turned on the console? */
+    OldMode = GraphicsConsole->OldMode;
+    if (GraphicsConsole->Mode != OldMode)
+    {
+        /* Restore the old mode and reset the OEM bitmap in ACPI */
+        EfiGopSetMode(GraphicsConsole->Protocol, OldMode);
+        //BlDisplayInvalidateOemBitmap();
+    }
+
+    /* Close the GOP protocol */
+    EfiCloseProtocol(GraphicsConsole->Handle,
+                     &EfiGraphicsOutputProtocol);
+}
+
+VOID
+ConsoleFirmwareGraphicalClose (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    /* Call the correct close routine based on the console mode */
+    if (GraphicsConsole->Type == BlUgaConsole)
+    {
+        ConsoleEfiUgaClose(GraphicsConsole);
+    }
+    else
+    {
+        ConsoleEfiGopClose(GraphicsConsole);
+    }
+
+}
+NTSTATUS
+ConsoleEfiGopOpen (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    NTSTATUS Status;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *GopProtocol;
+    ULONG Mode, PixelDepth;
+    UINTN CurrentMode;
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION ModeInformation;
+    BOOLEAN CurrentModeOk;
+
+    /* Open a handle to GOP */
+    Status = EfiOpenProtocol(GraphicsConsole->Handle,
+                             &EfiGraphicsOutputProtocol,
+                             (PVOID*)&GopProtocol);
+    if (!NT_SUCCESS(Status))
+    {
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    /* Get the current mode */
+    Status = EfiGopGetCurrentMode(GopProtocol, &CurrentMode, &ModeInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    Mode = CurrentMode;
+
+    /* Check if any custom BCD options were provided */
+    if (ConsoleGraphicalResolutionListFlags &
+        (BL_DISPLAY_GRAPHICS_FORCED_VIDEO_MODE_FLAG |
+         BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG))
+    {
+        /* We'll have to find a mode */
+        CurrentModeOk = FALSE;
+    }
+    else
+    {
+        /* Then we should be in the default mode, check if the pixel format is OK */
+        CurrentModeOk = ConsoleEfiGopIsPixelFormatSupported(&ModeInformation);
+    }
+
+    /* Is the mode/format OK? */
+    if (!CurrentModeOk)
+    {
+        /* Nope -- we'll have to go find one */
+        Status = ConsoleEfiGopFindModeFromAllowed(GopProtocol,
+                                                  ConsoleGraphicalResolutionList,
+                                                  ConsoleGraphicalResolutionListSize,
+                                                  &Mode);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Quickie;
+        }
+    }
+
+    /* Store mode information */
+    GraphicsConsole->Protocol = GopProtocol;
+    GraphicsConsole->Mode = Mode;
+    GraphicsConsole->OldMode = CurrentMode;
+
+    /* Get format information */
+    Status = ConsoleEfiGopGetGraphicalFormat(&ModeInformation, &PixelDepth);
+    if (NT_SUCCESS(Status))
+    {
+        /* Store it */
+        GraphicsConsole->OldDisplayMode.HRes = ModeInformation.HorizontalResolution;
+        GraphicsConsole->OldDisplayMode.VRes = ModeInformation.VerticalResolution;
+        GraphicsConsole->OldDisplayMode.HRes2 = ModeInformation.PixelsPerScanLine;
+        GraphicsConsole->PixelDepth = PixelDepth;
+        return STATUS_SUCCESS;
+    }
+
+Quickie:
+    /* We failed, close the protocol and return the failure code */
+    EfiCloseProtocol(GraphicsConsole->Handle, &EfiGraphicsOutputProtocol);
+    return Status;
+}
+
+NTSTATUS
+ConsoleEfiGraphicalOpenProtocol (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole,
+    _In_ BL_GRAPHICS_CONSOLE_TYPE Type
+    )
+{
+    ULONG HandleIndex, HandleCount;
+    EFI_HANDLE* HandleArray;
+    EFI_HANDLE Handle;
+    NTSTATUS Status;
+    PVOID Interface;
+
+    /* Find a device handle that implements either GOP or UGA */
+    HandleCount = 0;
+    HandleArray = NULL;
+    Status = EfiLocateHandleBuffer(ByProtocol,
+                                   (Type == BlGopConsole) ?
+                                   &EfiGraphicsOutputProtocol :
+                                   &EfiUgaDrawProtocol,
+                                   &HandleCount,
+                                   &HandleArray);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Nothing supports this (no video card?) */
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Scan through the handles we received */
+    for (HandleIndex = 0; HandleCount < HandleIndex; HandleIndex++)
+    {
+        /* Try to open each one */
+        GraphicsConsole->Handle = HandleArray[HandleIndex];
+        Handle = HandleArray[HandleIndex];
+        if (NT_SUCCESS(EfiOpenProtocol(Handle,
+                                       &EfiDevicePathProtocol,
+                                      &Interface)))
+        {
+            /* Test worked, close the protocol */
+            EfiCloseProtocol(Handle, &EfiDevicePathProtocol);
+
+            /* Now open the real protocol we want, either UGA or GOP */
+            Status = Type ? ConsoleEfiUgaOpen(GraphicsConsole) :
+                            ConsoleEfiGopOpen(GraphicsConsole);
+            if (NT_SUCCESS(Status))
+            {
+                /* It worked -- store the type of console this is */
+                GraphicsConsole->Type = Type;
+                return STATUS_SUCCESS;
+            }
+        }
+    }
+
+    /* We failed to find a working GOP/UGA protocol provider */
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
 ConsoleTextLocalDestruct (
     _In_ struct _BL_TEXT_CONSOLE* Console
     )
@@ -801,7 +1106,7 @@ DsppGraphicsDisabledByBcd (
     )
 {
     //EarlyPrint(L"Disabling graphics\n");
-    return TRUE;
+    return FALSE;
 }
 
 NTSTATUS
@@ -860,6 +1165,177 @@ ConsoleTextLocalConstruct (
 }
 
 NTSTATUS
+ConsoleEfiUgaSetResolution  (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole,
+    _In_ PBL_DISPLAY_MODE DisplayMode,
+    _In_ ULONG DisplayModeCount
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+ConsoleEfiGopEnable (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    PVOID FrameBuffer;
+    UINTN CurrentMode, Dummy;
+    ULONG Mode, PixelDepth;
+    UINTN FrameBufferSize;
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION ModeInformation;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* Protocol;
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS FrameBufferPhysical;
+
+    /* Capture the current mode and protocol */
+    Mode = GraphicsConsole->Mode;
+    Protocol = GraphicsConsole->Protocol;
+
+    /* Get the current mode and its information */
+    Status = EfiGopGetCurrentMode(Protocol, &CurrentMode, &ModeInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Check if we're not in the mode we should be */
+    if (CurrentMode != Mode)
+    {
+        /* Switch modes */
+        Status = EfiGopSetMode(Protocol, Mode);
+        if (Status < 0)
+        {
+            return Status;
+        }
+
+        /* Reset the OEM bitmap and get the new more information */
+//        BlDisplayInvalidateOemBitmap();
+        EfiGopGetCurrentMode(Protocol, &Dummy, &ModeInformation);
+    }
+
+    /* Get the pixel depth for this mode */
+    Status = ConsoleEfiGopGetGraphicalFormat(&ModeInformation, &PixelDepth);
+    if (NT_SUCCESS(Status))
+    {
+        /* Get the framebuffer for this mode */
+        EfiGopGetFrameBuffer(Protocol, &FrameBufferPhysical, &FrameBufferSize);
+
+        /* Map the framebuffer, try as writeback first */
+        FrameBuffer = NULL;
+        Status = BlMmMapPhysicalAddressEx(&FrameBuffer,
+                                          BlMemoryWriteBack,
+                                          FrameBufferSize,
+                                          FrameBufferPhysical);
+        if (!NT_SUCCESS(Status))
+        {
+            /* That didn't work, so try uncached next */
+            Status = BlMmMapPhysicalAddressEx(&FrameBuffer,
+                                              BlMemoryUncached,
+                                              FrameBufferSize,
+                                              FrameBufferPhysical);
+        }
+    }
+
+    /* Check if getting all the required information worked out */
+    if (NT_SUCCESS(Status))
+    {
+        /* Capture the resolution, depth, and framebuffer information */
+        GraphicsConsole->DisplayMode.HRes = ModeInformation.HorizontalResolution;
+        GraphicsConsole->DisplayMode.VRes = ModeInformation.VerticalResolution;
+        GraphicsConsole->DisplayMode.HRes2 = ModeInformation.PixelsPerScanLine;
+        GraphicsConsole->PixelDepth = PixelDepth;
+        GraphicsConsole->FrameBuffer = FrameBuffer;
+        GraphicsConsole->FrameBufferSize = FrameBufferSize;
+        GraphicsConsole->PixelsPerScanLine = ModeInformation.PixelsPerScanLine;
+
+        /* All good */
+        Status = STATUS_SUCCESS;
+    }
+    else if (CurrentMode != GraphicsConsole->Mode)
+    {
+        /* We failed seomewhere, reset the mode and the OEM bitmap back */
+        EfiGopSetMode(Protocol, CurrentMode);
+        //BlDisplayInvalidateOemBitmap();
+    }
+
+    /* Return back to caller */
+    return Status;
+}
+
+NTSTATUS
+ConsoleFirmwareGraphicalEnable (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    NTSTATUS Status;
+
+    /* Check what type of console this is */
+    if (GraphicsConsole->Type == BlUgaConsole)
+    {
+        /* Handle UGA */
+        Status = ConsoleEfiUgaSetResolution(GraphicsConsole,
+                                            &GraphicsConsole->DisplayMode,
+                                            1);
+    }
+    else
+    {
+        /* Handle GOP */
+        Status = ConsoleEfiGopEnable(GraphicsConsole);
+    }
+
+    /* Return back to caller */
+    return Status;
+}
+
+NTSTATUS
+ConsoleGraphicalConstruct (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    NTSTATUS Status;
+
+    /* Create a text console */
+    Status = ConsoleTextLocalConstruct(&GraphicsConsole->TextConsole, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* But overwrite its callbacks with ours */
+    GraphicsConsole->TextConsole.Callbacks = &ConsoleGraphicalVtbl.Text;
+
+    /* Try to create a GOP console */
+    Status = ConsoleEfiGraphicalOpenProtocol(GraphicsConsole, BlGopConsole);
+    if (!NT_SUCCESS(Status))
+    {
+        /* That failed, try an older EFI 1.02 UGA console */
+        Status = ConsoleEfiGraphicalOpenProtocol(GraphicsConsole, BlUgaConsole);
+        if (!NT_SUCCESS(Status))
+        {
+            /* That failed too, give up */
+            ConsoleTextLocalDestruct(&GraphicsConsole->TextConsole);
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    /* Enable the console */
+    Status = ConsoleFirmwareGraphicalEnable(GraphicsConsole);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to enable it, undo everything */
+        ConsoleFirmwareGraphicalClose(GraphicsConsole);
+        ConsoleTextLocalDestruct(&GraphicsConsole->TextConsole);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Save the graphics text color from the text mode text color */
+    GraphicsConsole->FgColor = GraphicsConsole->TextConsole.State.FgColor;
+    GraphicsConsole->BgColor = GraphicsConsole->TextConsole.State.BgColor;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 DsppInitialize (
     _In_ ULONG Flags
     )
@@ -869,7 +1345,7 @@ DsppInitialize (
     NTSTATUS Status;
     PBL_DISPLAY_MODE DisplayMode;
     //ULONG GraphicsResolution;
-    PVOID GraphicsConsole;
+    PBL_GRAPHICS_CONSOLE GraphicsConsole;
    // PVOID RemoteConsole;
     PBL_TEXT_CONSOLE TextConsole;
 
@@ -944,8 +1420,18 @@ DsppInitialize (
         /* Do we need graphics mode after all? */
         if (!NoGraphics)
         {
-            EarlyPrint(L"Display path not handled\n");
-            return STATUS_NOT_SUPPORTED;
+            /* Yep -- go allocate it */
+            GraphicsConsole = BlMmAllocateHeap(sizeof(*GraphicsConsole));
+            if (GraphicsConsole)
+            {
+                /* Construct it */
+                Status = ConsoleGraphicalConstruct(GraphicsConsole);
+                if (!NT_SUCCESS(Status))
+                {
+                    BlMmFreeHeap(GraphicsConsole);
+                    GraphicsConsole = NULL;
+                }
+            }
         }
 
         /* Are we using something else than the default mode? */

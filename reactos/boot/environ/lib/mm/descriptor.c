@@ -387,7 +387,7 @@ MmMdAddDescriptorToList (
     else
     {
         /* Coalesce if the descriptor requires it */
-        if (MemoryDescriptor->Flags & BL_MM_DESCRIPTOR_REQUIRES_COALESCING_FLAG)
+        if (MemoryDescriptor->Flags & BlMemoryCoalesced)
         {
             Flags |= BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG;
         }
@@ -400,7 +400,7 @@ MmMdAddDescriptorToList (
     }
 
     /* Update the current list pointer if the descriptor requires it */
-    if (MemoryDescriptor->Flags & BL_MM_DESCRIPTOR_REQUIRES_UPDATING_FLAG)
+    if (MemoryDescriptor->Flags & BlMemoryUpdate)
     {
         Flags |= BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG;
     }

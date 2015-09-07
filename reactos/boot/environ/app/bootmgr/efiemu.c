@@ -25,9 +25,6 @@ typedef struct _BOOT_APPLICATION_PARAMETER_BLOCK_SCRATCH
 
 ULONG BlpApplicationFlags;
 
-GUID EfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
-GUID EfiDevicePathProtocol = EFI_DEVICE_PATH_PROTOCOL_GUID;
-
 BOOT_APPLICATION_PARAMETER_BLOCK_SCRATCH EfiInitScratch;
 
 /* FUNCTIONS *****************************************************************/

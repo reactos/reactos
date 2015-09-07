@@ -23,7 +23,7 @@ typedef struct _BL_HEAP_POINTER
             ULONG_PTR BufferFree : 1;
             ULONG_PTR BufferOnHeap : 1;
             ULONG_PTR NotUsed : 1;
-            ULONG_PTR BufferPointer : (sizeof(ULONG_PTR) - BL_HEAP_POINTER_FLAG_BITS);
+            ULONG_PTR BufferPointer : ((8 * sizeof(ULONG_PTR)) - BL_HEAP_POINTER_FLAG_BITS);
         };
         PVOID P;
     };

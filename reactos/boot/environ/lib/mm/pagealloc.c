@@ -141,8 +141,8 @@ MmPapAllocateRegionFromMdl (
 
     /* Are we using the physical memory list, and are we OK with using firmware? */
     if ((CurrentList == &MmMdlUnmappedUnallocated) &&
-        !((Request->Flags & BL_MM_DESCRIPTOR_NEVER_USE_FIRMWARE_FLAG) ||
-          (LocalDescriptor.Flags & BL_MM_DESCRIPTOR_NEVER_USE_FIRMWARE_FLAG)))
+        !((Request->Flags & BlMemoryNonFirmware) ||
+          (LocalDescriptor.Flags & BlMemoryNonFirmware)))
     {
         /* Allocate the requested address from EFI */
         EfiAddress = LocalDescriptor.BasePage << PAGE_SHIFT;
@@ -222,7 +222,7 @@ MmPapAllocateRegionFromMdl (
         /* Remember if it came from EFI */
         if (GotFwPages)
         {
-            FoundDescriptor->Flags |= BL_MM_DESCRIPTOR_CAME_FROM_FIRMWARE_FLAG;
+            FoundDescriptor->Flags |= BlMemoryFirmware;
         }
 
         /* Add the descriptor to the requested list */
@@ -253,7 +253,7 @@ MmPaAllocatePages (
     /* Heap and page directory/table pages have a special flag */
     if ((MemoryType >= BlLoaderHeap) && (MemoryType <= BlLoaderReferencePage))
     {
-        Request->Flags |= BL_MM_DESCRIPTOR_SPECIAL_PAGES_FLAG;
+        Request->Flags |= BlMemorySpecial;
     }
 
     /* Try to find a free region of RAM matching this range and request */
@@ -334,7 +334,7 @@ MmPapAllocatePhysicalPagesInRange (
     Request.VirtualRange.Maximum = 0;
 
     /* Check if a fixed allocation was requested*/
-    if (Attributes & BL_MM_DESCRIPTOR_REQUIRES_FIXED_FLAG)
+    if (Attributes & BlMemoryFixed)
     {
         /* Force the only available range to be the passed in address */
         Request.BaseRange.Minimum = BaseAddress->QuadPart >> PAGE_SHIFT;
@@ -425,8 +425,7 @@ MmPapAllocatePagesInRange (
     else
     {
         /* Check if this is a fixed allocation */
-        BaseAddress.QuadPart = (Attributes & BL_MM_DESCRIPTOR_REQUIRES_FIXED_FLAG) ?
-                               *PhysicalAddress : 0;
+        BaseAddress.QuadPart = (Attributes & BlMemoryFixed) ? *PhysicalAddress : 0;
 
         /* Allocate the pages */
         Status = MmPapAllocatePhysicalPagesInRange(&BaseAddress,
