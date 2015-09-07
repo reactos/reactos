@@ -24,28 +24,6 @@ LIST_ENTRY BlBadpListHead;
 
 /* FUNCTIONS *****************************************************************/
 
-/* HACKKKYYY */
-EFI_SYSTEM_TABLE* g_SystemTable;
-
-VOID
-EarlyPrint(_In_ PWCHAR Format, ...)
-{
-    WCHAR buffer[1024];
-    va_list args;
-
-    va_start(args, Format);
-
-    vswprintf(buffer, Format, args);
-
-    g_SystemTable->ConOut->OutputString(g_SystemTable->ConOut, L"\r");
-    g_SystemTable->ConOut->OutputString(g_SystemTable->ConOut, buffer);
-
-    g_SystemTable->BootServices->Stall(200000);
-
-    va_end(args);
-}
-/* END HACKKKYYY */
-
 /*++
  * @name InitializeLibrary
  *
@@ -131,7 +109,7 @@ InitializeLibrary (
                              LibraryParameters);
     if (!NT_SUCCESS(Status))
     {
-        EarlyPrint(L"MM init failed!\n");
+        EfiPrintf(L"MM init failed!\r\n");
         goto Quickie;
     }
 
@@ -141,7 +119,7 @@ InitializeLibrary (
     {
         /* Destroy memory manager in phase 1 */
         //BlpMmDestroy(1);
-        EarlyPrint(L"Firmware2 init failed!\n");
+        EfiPrintf(L"Firmware2 init failed!\r\n");
         return Status;
     }
 
@@ -163,7 +141,7 @@ InitializeLibrary (
         if (!NT_SUCCESS(Status))
         {
             /* Destroy memory manager in phase 1 */
-            EarlyPrint(L"TSC calibration failed\n");
+            EfiPrintf(L"TSC calibration failed\r\n");
             //BlpMmDestroy(1);
             return Status;
         }
@@ -174,7 +152,7 @@ InitializeLibrary (
     if (!NT_SUCCESS(Status))
     {
         /* Destroy memory manager in phase 1 */
-        EarlyPrint(L"Arch2 init failed\n");
+        EfiPrintf(L"Arch2 init failed\r\n");
         //BlpMmDestroy(1);
         return Status;
     }
@@ -195,7 +173,7 @@ InitializeLibrary (
     if (!NT_SUCCESS(Status))
     {
         /* Destroy memory manager in phase 1 and the event manager */
-        EarlyPrint(L"IO init failed\n");
+        EfiPrintf(L"IO init failed\r\n");
 #ifdef BL_TPM_SUPPORT
         if (EnSubsystemInitialized)
         {
@@ -240,7 +218,7 @@ InitializeLibrary (
         }
 #endif
         //BlpMmDestroy(1);
-        EarlyPrint(L"Util init failed\n");
+        EfiPrintf(L"Util init failed\r\n");
         return Status;
     }
 
@@ -407,3 +385,11 @@ BlInitializeLibrary(
     return Status;
 }
 
+VOID
+BlDestroyLibrary (
+    VOID
+    )
+{
+    EfiPrintf(L"Destroy not yet implemented\r\n");
+    return;
+}

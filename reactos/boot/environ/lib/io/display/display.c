@@ -43,7 +43,7 @@ DsppGraphicsDisabledByBcd (
     VOID
     )
 {
-    //EarlyPrint(L"Disabling graphics\n");
+    //EarlyPrint(L"Disabling graphics\r\n");
     return FALSE;
 }
 
@@ -75,7 +75,7 @@ DsppInitialize (
     /* Display re-initialization not yet handled */
     if (LibraryParameters.LibraryFlags & BL_LIBRARY_FLAG_REINITIALIZE_ALL)
     {
-        EarlyPrint(L"Display path not handled\n");
+        EfiPrintf(L"Display path not handled\r\n");
         return STATUS_NOT_SUPPORTED;
     }
 
@@ -111,7 +111,7 @@ DsppInitialize (
         if (NT_SUCCESS(Status))
         {
             ConsoleGraphicalResolutionListFlags |= BL_DISPLAY_GRAPHICS_FORCED_VIDEO_MODE_FLAG;
-            EarlyPrint(L"Display selection not yet handled\n");
+            EfiPrintf(L"Display selection not yet handled\r\n");
             return STATUS_NOT_IMPLEMENTED;
         }
 
@@ -127,7 +127,7 @@ DsppInitialize (
         if (NT_SUCCESS(Status))
         {
             ConsoleGraphicalResolutionListFlags |= BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG;
-            EarlyPrint(L"High res mode not yet handled\n");
+            EfiPrintf(L"High res mode not yet handled\r\n");
             return STATUS_NOT_IMPLEMENTED;
         }
 
@@ -142,7 +142,7 @@ DsppInitialize (
                 Status = ConsoleGraphicalConstruct(GraphicsConsole);
                 if (!NT_SUCCESS(Status))
                 {
-                    EarlyPrint(L"GFX FAILED: %lx\n", Status);
+                    EfiPrintf(L"GFX FAILED: %lx\r\n", Status);
                     BlMmFreeHeap(GraphicsConsole);
                     GraphicsConsole = NULL;
                 }
@@ -157,7 +157,7 @@ DsppInitialize (
         /* Are we using something else than the default mode? */
         if (DisplayMode != &ConsoleGraphicalResolutionList[0])
         {
-            EarlyPrint(L"Display path not handled\n");
+            EfiPrintf(L"Display path not handled\r\n");
             return STATUS_NOT_SUPPORTED;
         }
 
@@ -217,7 +217,7 @@ DsppInitialize (
     }
 
     /* We have a remote console -- have to figure out how to use it*/
-    EarlyPrint(L"Display path not handled\n");
+    EfiPrintf(L"Display path not handled\r\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -273,7 +273,7 @@ BlDisplayGetTextCellResolution (
         if (DspGraphicalConsole)
         {
             /* Yep -- query it */
-            EarlyPrint(L"Not supported\n");
+            EfiPrintf(L"Not supported\r\n");
             Status = STATUS_NOT_IMPLEMENTED;
         }
     }

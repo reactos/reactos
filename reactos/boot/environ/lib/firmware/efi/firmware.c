@@ -30,7 +30,37 @@ EFI_GUID EfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 EFI_GUID EfiDevicePathProtocol = EFI_DEVICE_PATH_PROTOCOL_GUID;
 EFI_GUID EfiSimpleTextInputExProtocol = EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID;
 
+WCHAR BlScratchBuffer[8192];
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+EfiPrintf (
+    _In_ PWCHAR Format,
+    ...
+    )
+{
+    va_list args;
+    va_start(args, Format);
+
+    /* Capture the buffer in our scratch pad, and NULL-terminate */
+    vsnwprintf(BlScratchBuffer, RTL_NUMBER_OF(BlScratchBuffer) - 1, Format, args);
+    BlScratchBuffer[RTL_NUMBER_OF(BlScratchBuffer) - 1] = UNICODE_NULL;
+
+    /* Check which mode we're in */
+    if (CurrentExecutionContext->Mode == BlRealMode)
+    {
+        /* Call EFI directly */
+        EfiConOut->OutputString(EfiConOut, BlScratchBuffer);
+    }
+    else
+    {
+        /* FIXME: @TODO: Not yet supported */
+    }
+
+    /* All done */
+    va_end(args);
+}
 
 NTSTATUS
 EfiOpenProtocol (
@@ -589,7 +619,7 @@ EfiGopSetMode (
     if ((ModeChanged) && (NT_SUCCESS(Status)))
     {
         /* FIXME @TODO: Should be BlStatusPrint */
-        EarlyPrint(L"Console video mode  set to 0x%x\r\n", Mode);
+        EfiPrintf(L"Console video mode  set to 0x%x\r\r\n", Mode);
     }
 
     /* Convert the error to an NTSTATUS */
@@ -668,6 +698,25 @@ EfiLocateHandleBuffer (
 
     /* Convert the error to an NTSTATUS */
     return EfiGetNtStatusCode(EfiStatus);
+}
+
+VOID
+EfiResetSystem (
+    _In_ EFI_RESET_TYPE ResetType
+    )
+{
+    BL_ARCH_MODE OldMode;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return;
+    }
+
+    /* Call the EFI runtime */
+    EfiRT->ResetSystem(ResetType, EFI_SUCCESS, 0, NULL);
 }
 
 NTSTATUS
@@ -868,7 +917,7 @@ MmFwGetMemoryMap (
     if (Status != STATUS_BUFFER_TOO_SMALL)
     {
         /* This should've failed because our buffer was too small, nothing else */
-        EarlyPrint(L"Got strange EFI status for memory map: %lx\n", Status);
+        EfiPrintf(L"Got strange EFI status for memory map: %lx\r\n", Status);
         if (NT_SUCCESS(Status))
         {
             Status = STATUS_UNSUCCESSFUL;
@@ -879,7 +928,7 @@ MmFwGetMemoryMap (
     /* Add 4 more descriptors just in case things changed */
     EfiMemoryMapSize += (4 * DescriptorSize);
     Pages = BYTES_TO_PAGES(EfiMemoryMapSize);
-    EarlyPrint(L"Memory map size: %lx bytes, %d pages\n", EfiMemoryMapSize, Pages);
+    EfiPrintf(L"Memory map size: %lx bytes, %d pages\r\n", EfiMemoryMapSize, Pages);
 
     /* Should we use EFI to grab memory? */
     if (UseEfiBuffer)
@@ -893,7 +942,7 @@ MmFwGetMemoryMap (
                                   &EfiBuffer);
         if (!NT_SUCCESS(Status))
         {
-            EarlyPrint(L"EFI allocation failed: %lx\n", Status);
+            EfiPrintf(L"EFI allocation failed: %lx\r\n", Status);
             goto Quickie;
         }
 
@@ -953,7 +1002,7 @@ MmFwGetMemoryMap (
     /* So far so good? */
     if (!NT_SUCCESS(Status))
     {
-        EarlyPrint(L"Failed to get EFI memory map: %lx\n", Status);
+        EfiPrintf(L"Failed to get EFI memory map: %lx\r\n", Status);
         goto Quickie;
     }
 
@@ -961,7 +1010,7 @@ MmFwGetMemoryMap (
     if (((EfiMemoryMapSize % DescriptorSize)) ||
         (DescriptorSize < sizeof(EFI_MEMORY_DESCRIPTOR)))
     {
-        EarlyPrint(L"Incorrect descriptor size\n");
+        EfiPrintf(L"Incorrect descriptor size\r\n");
         Status = STATUS_UNSUCCESSFUL;
         goto Quickie;
     }
@@ -971,7 +1020,7 @@ MmFwGetMemoryMap (
         (BlpBootDevice->Local.Type == RamDiskDevice))
     {
         /* We don't handle this yet */
-        EarlyPrint(L"RAM boot not supported\n");
+        EfiPrintf(L"RAM boot not supported\r\n");
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -983,9 +1032,9 @@ MmFwGetMemoryMap (
 
     /* Loop the EFI memory map */
 #if 0
-    EarlyPrint(L"UEFI MEMORY MAP\n\n");
-    EarlyPrint(L"TYPE        START              END                   ATTRIBUTES\n");
-    EarlyPrint(L"===============================================================\n");
+    EfiPrintf(L"UEFI MEMORY MAP\n\r\n");
+    EfiPrintf(L"TYPE        START              END                   ATTRIBUTES\r\n");
+    EfiPrintf(L"===============================================================\r\n");
 #endif
     while (EfiMemoryMapSize != 0)
     {
@@ -1026,7 +1075,7 @@ MmFwGetMemoryMap (
             goto LoopAgain;
         }
 #if 0
-        EarlyPrint(L"%08X    0x%016I64X-0x%016I64X    0x%I64X\n",
+        EfiPrintf(L"%08X    0x%016I64X-0x%016I64X    0x%I64X\r\n",
                    MemoryType,
                    StartPage << PAGE_SHIFT,
                    EndPage << PAGE_SHIFT,
@@ -1057,7 +1106,7 @@ MmFwGetMemoryMap (
                                                  BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG);
                 if (!NT_SUCCESS(Status))
                 {
-                    EarlyPrint(L"Failed to add zero page descriptor: %lx\n", Status);
+                    EfiPrintf(L"Failed to add zero page descriptor: %lx\r\n", Status);
                     break;
                 }
 
@@ -1098,7 +1147,7 @@ MmFwGetMemoryMap (
                                                  BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG);
                 if (!NT_SUCCESS(Status))
                 {
-                    EarlyPrint(L"Failed to add 1MB descriptor: %lx\n", Status);
+                    EfiPrintf(L"Failed to add 1MB descriptor: %lx\r\n", Status);
                     break;
                 }
 
@@ -1111,7 +1160,7 @@ MmFwGetMemoryMap (
         if (HaveRamDisk)
         {
             /* We don't handle this yet */
-            EarlyPrint(L"RAM boot not supported\n");
+            EfiPrintf(L"RAM boot not supported\r\n");
             Status = STATUS_NOT_IMPLEMENTED;
             goto Quickie;
         }
@@ -1144,7 +1193,7 @@ MmFwGetMemoryMap (
                                          BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG : 0);
         if (!NT_SUCCESS(Status))
         {
-            EarlyPrint(L"Failed to add full descriptor: %lx\n", Status);
+            EfiPrintf(L"Failed to add full descriptor: %lx\r\n", Status);
             break;
         }
 

@@ -19,7 +19,7 @@ ConsoleEfiUgaOpen (
     _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
     )
 {
-    EarlyPrint(L"UGA not implemented\n");
+    EfiPrintf(L"UGA not implemented\r\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 

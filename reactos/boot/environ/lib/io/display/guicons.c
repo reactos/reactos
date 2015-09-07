@@ -30,7 +30,7 @@ ConsoleGraphicalConstruct (
     Status = ConsoleTextLocalConstruct(&GraphicsConsole->TextConsole, FALSE);
     if (!NT_SUCCESS(Status))
     {
-        EarlyPrint(L"Text failed: %lx\n", Status);
+        EfiPrintf(L"Text failed: %lx\r\n", Status);
         return Status;
     }
 
@@ -42,12 +42,12 @@ ConsoleGraphicalConstruct (
     if (!NT_SUCCESS(Status))
     {
         /* That failed, try an older EFI 1.02 UGA console */
-        EarlyPrint(L"GOP open failed!\n", Status);
+        EfiPrintf(L"GOP open failed!\r\n", Status);
         Status = ConsoleEfiGraphicalOpenProtocol(GraphicsConsole, BlUgaConsole);
         if (!NT_SUCCESS(Status))
         {
             /* That failed too, give up */
-            EarlyPrint(L"UGA failed!\n", Status);
+            EfiPrintf(L"UGA failed!\r\n", Status);
             ConsoleTextLocalDestruct(&GraphicsConsole->TextConsole);
             return STATUS_UNSUCCESSFUL;
         }
@@ -58,7 +58,7 @@ ConsoleGraphicalConstruct (
     if (!NT_SUCCESS(Status))
     {
         /* Failed to enable it, undo everything */
-        EarlyPrint(L"Enable failed\n");
+        EfiPrintf(L"Enable failed\r\n");
         ConsoleFirmwareGraphicalClose(GraphicsConsole);
         ConsoleTextLocalDestruct(&GraphicsConsole->TextConsole);
         return STATUS_UNSUCCESSFUL;

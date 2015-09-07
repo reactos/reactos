@@ -118,7 +118,7 @@ ConsoleTextLocalConstruct (
         Status = ConsoleFirmwareTextOpen(TextConsole);
         if (!NT_SUCCESS(Status))
         {
-            EarlyPrint(L"Failed to activate console: %lx\n", Status);
+            EfiPrintf(L"Failed to activate console: %lx\r\n", Status);
             return Status;
         }
     }
@@ -138,7 +138,7 @@ ConsoleTextLocalConstruct (
         if (!NT_SUCCESS(Status))
         {
             /* We failed, back down */
-            EarlyPrint(L"Failed to set console state: %lx\n", Status);
+            EfiPrintf(L"Failed to set console state: %lx\r\n", Status);
             ConsoleFirmwareTextClose(TextConsole);
             return Status;
         }

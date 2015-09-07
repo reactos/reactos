@@ -29,7 +29,7 @@ MmTrInitialize (
     }
 
     /* TODO */
-    EarlyPrint(L"Required for protected mode\n");
+    EfiPrintf(L"Required for protected mode\r\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -60,7 +60,7 @@ MmSelectMappingAddress (
     }
 
     /* Have to allocate physical pages */
-    EarlyPrint(L"VM Todo\n");
+    EfiPrintf(L"VM Todo\r\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -99,7 +99,7 @@ MmMapPhysicalAddress (
         return STATUS_UNSUCCESSFUL;
     }
 
-    EarlyPrint(L"VM todo\n");
+    EfiPrintf(L"VM todo\r\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -188,7 +188,7 @@ BlMmMapPhysicalAddressEx (
     if (MmTranslationType != BlNone)
     {
         /* For virtual memory, there's more to do */
-        EarlyPrint(L"VM not supported for mapping\n");
+        EfiPrintf(L"VM not supported for mapping\r\n");
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -220,7 +220,7 @@ BlpMmInitialize (
     if ((TranslationType > BlPae) || (LibraryParameters->TranslationType > BlPae))
     {
         /* Bail out */
-        EarlyPrint(L"Invalid translation types present\n");
+        EfiPrintf(L"Invalid translation types present\r\n");
         Status = STATUS_INVALID_PARAMETER;
         goto Quickie;
     }
@@ -278,7 +278,7 @@ BlpMmInitialize (
     if (LibraryParameters->DescriptorCount > 512)
     {
         /* Switch to using a dynamic buffer instead */
-        EarlyPrint(L"Warning: too many descriptors\n");
+        EfiPrintf(L"Warning: too many descriptors\r\n");
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
         //MmMdpSwitchToDynamicDescriptors(LibraryParameters->DescriptorCount);

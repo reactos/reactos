@@ -212,7 +212,7 @@ ConsoleEfiGopOpen (
                              (PVOID*)&GopProtocol);
     if (!NT_SUCCESS(Status))
     {
-        EarlyPrint(L"GOP OPEN failed: %lx\n", Status);
+        EfiPrintf(L"GOP OPEN failed: %lx\r\n", Status);
         return STATUS_NOT_SUPPORTED;
     }
 
@@ -220,7 +220,7 @@ ConsoleEfiGopOpen (
     Status = EfiGopGetCurrentMode(GopProtocol, &CurrentMode, &ModeInformation);
     if (!NT_SUCCESS(Status))
     {
-        EarlyPrint(L"GOP mode failed: %lx\n", Status);
+        EfiPrintf(L"GOP mode failed: %lx\r\n", Status);
         goto Quickie;
     }
 
@@ -273,7 +273,7 @@ ConsoleEfiGopOpen (
 
 Quickie:
     /* We failed, close the protocol and return the failure code */
-    EarlyPrint(L"Get format failed: %lx\n", Status);
+    EfiPrintf(L"Get format failed: %lx\r\n", Status);
     EfiCloseProtocol(GraphicsConsole->Handle, &EfiGraphicsOutputProtocol);
     return Status;
 }

@@ -187,3 +187,17 @@ BlUtlInitialize (
 
     return STATUS_SUCCESS;
 }
+
+VOID
+BlFwReboot (
+    VOID
+    )
+{
+#ifdef BL_KD_SUPPORTED
+    /* Stop the boot debugger*/
+    BlBdStop();
+#endif
+
+    /* Reset the machine */
+    EfiResetSystem(EfiResetCold);
+}

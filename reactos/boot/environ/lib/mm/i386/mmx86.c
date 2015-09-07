@@ -71,10 +71,10 @@ Mmx86pMapMemoryRegions (
 
     if (DoDeferred)
     {
-        EarlyPrint(L"Deferred todo\n");
+        EfiPrintf(L"Deferred todo\r\n");
     }
 
-    EarlyPrint(L"Phase 1 TODO\n");
+    EfiPrintf(L"Phase 1 TODO\r\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 

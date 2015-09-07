@@ -54,7 +54,7 @@ ConsoleEfiGraphicalOpenProtocol (
     if (!NT_SUCCESS(Status))
     {
         /* Nothing supports this (no video card?) */
-        EarlyPrint(L"Status: %lx Count: %d\n", Status, HandleCount);
+        EfiPrintf(L"Status: %lx Count: %d\r\n", Status, HandleCount);
         return STATUS_UNSUCCESSFUL;
     }
 

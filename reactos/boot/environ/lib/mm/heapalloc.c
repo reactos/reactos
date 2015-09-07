@@ -140,7 +140,7 @@ MmHapHeapAllocatorExtend (
         HeapLimit = Heap->HeapLimit + PAGE_SIZE;
         if (HeapLimit <= Heap->HeapEnd)
         {
-            EarlyPrint(L"Heap extension TODO\n");
+            EfiPrintf(L"Heap extension TODO\r\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
     }
@@ -224,16 +224,16 @@ MmHapReportHeapCorruption (
 #if 0
     BOOLEAN DebuggerEnabled;
 
-    BlStatusPrint(L"Heap corruption in the links surrounding %p!\n", BufferEntry);
+    BlStatusPrint(L"Heap corruption in the links surrounding %p!\r\n", BufferEntry);
 
     DebuggerEnabled = BlBdDebuggerEnabled();
     if (DebuggerEnabled)
     {
-        BlStatusPrint(L"\n*** Fatal Error 0x%08x :\n                (0x%p, 0x%p, 0x%p, 0x%p)\n\n", 2, BufferEntry, NULL, NULL, NULL);
+        BlStatusPrint(L"\n*** Fatal Error 0x%08x :\n                (0x%p, 0x%p, 0x%p, 0x%p)\n\r\n", 2, BufferEntry, NULL, NULL, NULL);
         __debugbreak();
     }
 #else
-    EarlyPrint(L"Heap corruption in the links surrounding %p!\n", BufferEntry);
+    EfiPrintf(L"Heap corruption in the links surrounding %p!\r\n", BufferEntry);
 #endif
 }
 
@@ -642,18 +642,18 @@ BlMmAllocateHeap (
         /* We have no heaps or space on any heap -- extend the heap and retry */
         if (!NT_SUCCESS(MmHapHeapAllocatorExtend(BufferSize)))
         {
-            EarlyPrint(L"Heap extension failed!\n");
+            EfiPrintf(L"Heap extension failed!\r\n");
             return NULL;
         }
 
-        EarlyPrint(L"Heap extended -- trying again\n");
+        EfiPrintf(L"Heap extended -- trying again\r\n");
     }
 
     /* Clear all the bits, marking this entry as allocated */
     BusyEntry->BufferNext.P = MmHapDecodeLink(BusyEntry->BufferNext);
 
     /* Return the entry's data buffer */
-    EarlyPrint(L"Returning buffer at 0x%p\n", &BusyEntry->Buffer);
+    EfiPrintf(L"Returning buffer at 0x%p\r\n", &BusyEntry->Buffer);
     return &BusyEntry->Buffer;
 }
 

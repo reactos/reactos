@@ -131,7 +131,7 @@ MmPapAllocateRegionFromMdl (
     /* Check if we exhausted the list */
     if (NextEntry == ListHead)
     {
-        EarlyPrint(L"No matching memory found\n");
+        EfiPrintf(L"No matching memory found\r\n");
         return Status;
     }
 
@@ -151,7 +151,7 @@ MmPapAllocateRegionFromMdl (
                                   &EfiAddress);
         if (!NT_SUCCESS(Status))
         {
-            EarlyPrint(L"EFI memory allocation failure\n");
+            EfiPrintf(L"EFI memory allocation failure\r\n");
             return Status;
         }
 
@@ -165,14 +165,14 @@ MmPapAllocateRegionFromMdl (
     /* Are we allocating from the virtual memory list? */
     if (CurrentList == &MmMdlMappedUnallocated)
     {
-        EarlyPrint(L"Virtual memory not yet supported\n");
+        EfiPrintf(L"Virtual memory not yet supported\r\n");
         return STATUS_NOT_IMPLEMENTED;
     }
 
     /* Does the memory we received not exactly fall onto the beginning of its descriptor? */
     if (LocalDescriptor.BasePage != FoundDescriptor->BasePage)
     {
-        EarlyPrint(L"Local Page: %08I64X Found Page: %08I64X\n", LocalDescriptor.BasePage, FoundDescriptor->BasePage);
+        EfiPrintf(L"Local Page: %08I64X Found Page: %08I64X\r\n", LocalDescriptor.BasePage, FoundDescriptor->BasePage);
         TempDescriptor = MmMdInitByteGranularDescriptor(FoundDescriptor->Flags,
                                                         FoundDescriptor->Type,
                                                         FoundDescriptor->BasePage,
@@ -193,7 +193,7 @@ MmPapAllocateRegionFromMdl (
                           LocalDescriptor.VirtualPage + LocalDescriptor.PageCount : 0;
     if (LocalEndPage != FoundEndPage)
     {
-        EarlyPrint(L"Local Page: %08I64X Found Page: %08I64X\n", LocalEndPage, FoundEndPage);
+        EfiPrintf(L"Local Page: %08I64X Found Page: %08I64X\r\n", LocalEndPage, FoundEndPage);
         TempDescriptor = MmMdInitByteGranularDescriptor(FoundDescriptor->Flags,
                                                         FoundDescriptor->Type,
                                                         LocalEndPage,
@@ -266,7 +266,7 @@ MmPaAllocatePages (
     if (Status == STATUS_NOT_FOUND)
     {
         /* Need to re-synchronize the memory map and check other lists */
-        EarlyPrint(L"No RAM found -- backup plan not yet implemented\n");
+        EfiPrintf(L"No RAM found -- backup plan not yet implemented\r\n");
     }
 
     /* Did we get the region we wanted? */
@@ -277,7 +277,7 @@ MmPaAllocatePages (
     }
 
     /* Nope, we have to hunt for it elsewhere */
-    EarlyPrint(L"TODO\n");
+    EfiPrintf(L"TODO\r\n");
     return Status;
 }
 
@@ -488,14 +488,14 @@ MmPaInitialize (
         PLIST_ENTRY listHead, nextEntry;
 
         /* Loop the NT firmware memory list */
-        EarlyPrint(L"NT MEMORY MAP\n\n");
+        EfiPrintf(L"NT MEMORY MAP\n\r\n");
         listHead = &MmMdlUnmappedUnallocated.ListHead;
         nextEntry = listHead->Flink;
         while (listHead != nextEntry)
         {
             Descriptor = CONTAINING_RECORD(nextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
 
-            EarlyPrint(L"Type: %08lX Flags: %08lX Base: 0x%016I64X End: 0x%016I64X\n",
+            EfiPrintf(L"Type: %08lX Flags: %08lX Base: 0x%016I64X End: 0x%016I64X\r\n",
                        Descriptor->Type,
                        Descriptor->Flags,
                        Descriptor->BasePage << PAGE_SHIFT,

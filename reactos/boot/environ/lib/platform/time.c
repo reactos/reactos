@@ -50,7 +50,6 @@ BlpTimeMeasureTscFrequency (
 
     /* Set the frequency based on the two measurements we took */
     BlpTimePerformanceFrequency = 125 * (Delta - (TimeStamp2 - TimeStamp1)) & 0x1FFFFFFFFFFFFFF;
-    EarlyPrint(L"Computed frequency as: %I64d\n", BlpTimePerformanceFrequency);
     return STATUS_SUCCESS;
 }
 
@@ -79,7 +78,7 @@ BlpTimeCalibratePerformanceCounter (
             {
                 /* Read the TSC frequency from the MSR */
                 BlpTimePerformanceFrequency = __readmsr(0x40000022);
-                EarlyPrint(L"Using frequency as: %I64d\n", BlpTimePerformanceFrequency);
+                EfiPrintf(L"Using Hyper-V frequency as: %I64d\r\n", BlpTimePerformanceFrequency);
                 return STATUS_SUCCESS;
             }
         }

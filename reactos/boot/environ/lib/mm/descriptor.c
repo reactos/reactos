@@ -149,7 +149,7 @@ MmMdpSwitchToDynamicDescriptors (
     _In_ ULONG Count
     )
 {
-    EarlyPrint(L"NOT SUPPORTED!!!\n");
+    EfiPrintf(L"NOT SUPPORTED!!!\r\n");
     while (1);
 }
 
@@ -173,7 +173,7 @@ MmMdFreeDescriptor (
     else
     {
         /* It's a dynamic descriptor, so free it */
-        EarlyPrint(L"Dynamic descriptors not yet supported\n");
+        EfiPrintf(L"Dynamic descriptors not yet supported\r\n");
         Status = STATUS_NOT_IMPLEMENTED;
     }
 
@@ -250,7 +250,7 @@ MmMdInitByteGranularDescriptor (
     /* If we're out of descriptors, bail out */
     if (MmGlobalMemoryDescriptorsUsed >= MmGlobalMemoryDescriptorCount)
     {
-        EarlyPrint(L"Out of descriptors!\n");
+        EfiPrintf(L"Out of descriptors!\r\n");
         return NULL;
     }
 
@@ -295,13 +295,13 @@ MmMdpTruncateDescriptor (
     /* Check for backward overlap */
     if ((PreviousEntry != MdList->First) && (MemoryDescriptor->BasePage < PreviousEndPage))
     {
-        EarlyPrint(L"Overlap detected -- this is unexpected on x86/x64 platforms\n");
+        EfiPrintf(L"Overlap detected -- this is unexpected on x86/x64 platforms\r\n");
     }
 
     /* Check for forward overlap */
     if ((NextEntry != MdList->First) && (NextDescriptor->BasePage < EndPage))
     {
-        EarlyPrint(L"Overlap detected -- this is unexpected on x86/x64 platforms\n");
+        EfiPrintf(L"Overlap detected -- this is unexpected on x86/x64 platforms\r\n");
     }
 
     /* Nothing to do */
@@ -343,7 +343,7 @@ MmMdpCoalesceDescriptor (
           ((MemoryDescriptor->VirtualPage) && (PreviousDescriptor->VirtualPage) &&
            (PreviousMappedEndPage == MemoryDescriptor->VirtualPage))))
     {
-        EarlyPrint(L"Previous descriptor coalescible!\n");
+        EfiPrintf(L"Previous descriptor coalescible!\r\n");
     }
 
     /* CHeck if the current entry touches the next entry, and is compatible */
@@ -355,7 +355,7 @@ MmMdpCoalesceDescriptor (
             ((MemoryDescriptor->VirtualPage) && (PreviousDescriptor->VirtualPage) &&
                 (MappedEndPage == NextDescriptor->VirtualPage))))
     {
-        EarlyPrint(L"Next descriptor coalescible!\n");
+        EfiPrintf(L"Next descriptor coalescible!\r\n");
     }
 
     /* Nothing to do */
@@ -547,7 +547,7 @@ MmMdRemoveRegionFromMdlEx (
         FoundPageCount = Descriptor->PageCount;
         FoundEndPage = FoundBasePage + FoundPageCount;
         EndPage = PageCount + BasePage;
-        //EarlyPrint(L"Looking for Region 0x%08I64X-0x%08I64X in 0x%08I64X-0x%08I64X\n", BasePage, EndPage, FoundBasePage, FoundEndPage);
+        //EarlyPrint(L"Looking for Region 0x%08I64X-0x%08I64X in 0x%08I64X-0x%08I64X\r\n", BasePage, EndPage, FoundBasePage, FoundEndPage);
 
         /* Make a copy of the original descriptor */
         RtlCopyMemory(&NewDescriptor, NextEntry, sizeof(NewDescriptor));
@@ -562,18 +562,18 @@ MmMdRemoveRegionFromMdlEx (
                 if ((FoundBasePage >= BasePage) || (EndPage >= FoundEndPage))
                 {
                     /* This descriptor doesn't cover any part of the range */
-                    //EarlyPrint(L"No part of this descriptor contains the region\n");
+                    //EarlyPrint(L"No part of this descriptor contains the region\r\n");
                 }
                 else
                 {
                     /* This descriptor covers the head of the allocation */
-                    //EarlyPrint(L"Descriptor covers the head of the region\n");
+                    //EarlyPrint(L"Descriptor covers the head of the region\r\n");
                 }
             }
             else
             {
                 /* This descriptor contains the entire allocation */
-                //EarlyPrint(L"Descriptor contains the entire region\n");
+                //EarlyPrint(L"Descriptor contains the entire region\r\n");
             }
 
             /* Keep going */
@@ -614,14 +614,14 @@ MmMdRemoveRegionFromMdlEx (
             if (!Descriptor->PageCount)
             {
                 /* Remove it */
-                //EarlyPrint(L"Entire descriptor consumed\n");
+                //EarlyPrint(L"Entire descriptor consumed\r\n");
                 MmMdRemoveDescriptorFromList(MdList, Descriptor);
                 MmMdFreeDescriptor(Descriptor);
 
                 /* Check if we're supposed to insert it into a new list */
                 if (HaveNewList)
                 {
-                    EarlyPrint(L"Not yet implemented\n");
+                    EfiPrintf(L"Not yet implemented\r\n");
                     Status = STATUS_NOT_IMPLEMENTED;
                     goto Quickie;
                 }
@@ -681,7 +681,7 @@ MmMdFindSatisfyingRegion (
     /* Check for start overflow */
     if (BaseMin > BaseMax)
     {
-        EarlyPrint(L"Descriptor overflow\n");
+        EfiPrintf(L"Descriptor overflow\r\n");
         return FALSE;
     }
 
@@ -724,7 +724,7 @@ MmMdFindSatisfyingRegion (
     /* Any mapped page already? */
     if (Descriptor->VirtualPage)
     {
-        EarlyPrint(L"Virtual memory not yet supported\n");
+        EfiPrintf(L"Virtual memory not yet supported\r\n");
         return FALSE;
     }
     else
@@ -737,21 +737,21 @@ MmMdFindSatisfyingRegion (
     if ((((Flags & 0xFF) & (Descriptor->Flags & 0xFF)) != (Flags & 0xFF)) ||
         (((Flags & 0xFF00) & (Descriptor->Flags & 0xFF00)) != (Flags & 0xFF00)))
     {
-        EarlyPrint(L"Incorrect memory attributes\n");
+        EfiPrintf(L"Incorrect memory attributes\r\n");
         return FALSE;
     }
 
     /* Bail out if the allocation flags don't match */
     if (((Flags ^ Descriptor->Flags) & 0x190000))
     {
-        EarlyPrint(L"Incorrect memory allocation flags\n");
+        EfiPrintf(L"Incorrect memory allocation flags\r\n");
         return FALSE;
     }
 
     /* Bail out if the type doesn't match */
     if (Descriptor->Type != MemoryType)
     {
-        //EarlyPrint(L"Incorrect descriptor type\n");
+        //EarlyPrint(L"Incorrect descriptor type\r\n");
         return FALSE;
     }
 
@@ -761,7 +761,7 @@ MmMdFindSatisfyingRegion (
     NewDescriptor->Type = Descriptor->Type;
     NewDescriptor->VirtualPage = VirtualPage;
     NewDescriptor->Flags = Descriptor->Flags;
-    //EarlyPrint(L"Found a matching descriptor: %08I64X with %08I64X pages\n", BasePage, Pages);
+    //EarlyPrint(L"Found a matching descriptor: %08I64X with %08I64X pages\r\n", BasePage, Pages);
     return TRUE;
 }
 
@@ -775,14 +775,12 @@ MmMdFreeGlobalDescriptors (
     PLIST_ENTRY OldFlink, OldBlink;
 
     /* Make sure we're not int middle of a call using a descriptor */
-    EarlyPrint(L"Call depth is %d\n", MmDescriptorCallTreeCount);
     if (MmDescriptorCallTreeCount != 1)
     {
         return;
     }
 
     /* Loop every current global descriptor */
-    EarlyPrint(L"MmGlobalMemoryDescriptorsUsed: %d\n", MmGlobalMemoryDescriptorsUsed);
     while (Index < MmGlobalMemoryDescriptorsUsed)
     {
         /* Does it have any valid pageS? */

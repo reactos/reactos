@@ -348,7 +348,7 @@ ConsoleEfiTextFindModeFromAllowed (
     }
 
     /* Scan all the EFI modes */
-    EarlyPrint(L"Scanning through %d modes\n", MaxMode);
+    EfiPrintf(L"Scanning through %d modes\r\n", MaxMode);
     for (MaxQueriedMode = 0, Mode = 0; Mode < MaxMode; Mode++)
     {
         /* Query information on this mode */
@@ -359,7 +359,7 @@ ConsoleEfiTextFindModeFromAllowed (
                                           &VRes)))
         {
             /* This mode was succesfully queried. Save the data */
-            EarlyPrint(L"EFI Firmware Supported Mode %d is H: %d V: %d\n", Mode, HRes, VRes);
+            EfiPrintf(L"EFI Firmware Supported Mode %d is H: %d V: %d\r\n", Mode, HRes, VRes);
             ModeEntry->HRes = HRes;
             ModeEntry->VRes = VRes;
             ModeEntry->HRes2 = HRes;
@@ -376,7 +376,7 @@ ConsoleEfiTextFindModeFromAllowed (
         {
             /* Check if the UEFI mode is compatible with our supported mode */
             ModeEntry = &ModeList[MatchingMode];
-            EarlyPrint(L"H1: %d V1: %d - H2: %d - V2: %d\n", ModeEntry->HRes, ModeEntry->VRes, SupportedModeEntry->HRes, SupportedModeEntry->VRes);
+            EfiPrintf(L"H1: %d V1: %d - H2: %d - V2: %d\r\n", ModeEntry->HRes, ModeEntry->VRes, SupportedModeEntry->HRes, SupportedModeEntry->VRes);
             if ((ModeEntry->HRes == SupportedModeEntry->HRes) &&
                 (ModeEntry->VRes == SupportedModeEntry->VRes))
             {
@@ -446,19 +446,19 @@ ConsoleFirmwareTextOpen (
     if (!ConsolepFindResolution(&DisplayMode, ConsoleTextResolutionList, 1))
     {
         /* It isn't -- find a matching EFI mode for what we need */
-        EarlyPrint(L"In incorrect mode, scanning for right one\n");
+        EfiPrintf(L"In incorrect mode, scanning for right one\r\n");
         Status = ConsoleEfiTextFindModeFromAllowed(EfiConOut,
                                                    ConsoleTextResolutionList,
                                                    1,
                                                    &Mode);
         if (!NT_SUCCESS(Status))
         {
-            EarlyPrint(L"Failed to find mode: %lx\n", Status);
+            EfiPrintf(L"Failed to find mode: %lx\r\n", Status);
             return Status;
         }
 
         /* Set the new EFI mode */
-        EarlyPrint(L"Setting new mode: %d\n", Mode);
+        EfiPrintf(L"Setting new mode: %d\r\n", Mode);
         Status = EfiConOutSetMode(EfiConOut, Mode);
         if (!NT_SUCCESS(Status))
         {
