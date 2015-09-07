@@ -251,8 +251,8 @@ NTSTATUS
 EfiConOutQueryMode (
     _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
     _In_ ULONG Mode,
-    _In_ PULONG Columns,
-    _In_ PULONG Rows
+    _In_ UINTN* Columns,
+    _In_ UINTN* Rows
     )
 {
     BL_ARCH_MODE OldMode;
@@ -407,7 +407,6 @@ EfiConOutReadCurrentMode (
     )
 {
     BL_ARCH_MODE OldMode;
-    EFI_STATUS EfiStatus;
 
     /* Are we in protected mode? */
     OldMode = CurrentExecutionContext->Mode;

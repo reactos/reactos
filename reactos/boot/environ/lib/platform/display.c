@@ -535,7 +535,8 @@ ConsoleEfiTextFindModeFromAllowed (
     )
 {
     EFI_SIMPLE_TEXT_OUTPUT_MODE ModeInfo;
-    ULONG MaxMode, MaxQueriedMode, Mode, HRes, VRes, i, MatchingMode;
+    ULONG MaxMode, MaxQueriedMode, Mode, i, MatchingMode;
+    UINTN HRes, VRes;
     ULONGLONG ModeListSize;
     PBL_DISPLAY_MODE ModeEntry, ModeList, SupportedModeEntry;
     NTSTATUS Status;
@@ -632,7 +633,8 @@ ConsoleFirmwareTextOpen (
 {
     BL_DISPLAY_MODE DisplayMode;
     EFI_SIMPLE_TEXT_OUTPUT_MODE CurrentMode, NewMode;
-    ULONG HRes, VRes, Mode;
+    UINTN HRes, VRes;
+    ULONG Mode;
     NTSTATUS Status;
 
     /* Read the current mode and its settings */
@@ -834,12 +836,12 @@ DsppInitialize (
     )
 {
     BL_LIBRARY_PARAMETERS LibraryParameters = BlpLibraryParameters;
-    BOOLEAN NoGraphics, HighestMode;
+    BOOLEAN NoGraphics;// , HighestMode;
     NTSTATUS Status;
     PBL_DISPLAY_MODE DisplayMode;
-    ULONG GraphicsResolution;
+    //ULONG GraphicsResolution;
     PVOID GraphicsConsole;
-    PVOID RemoteConsole;
+   // PVOID RemoteConsole;
     PBL_TEXT_CONSOLE TextConsole;
 
     /* Initialize font data */
@@ -887,7 +889,7 @@ DsppInitialize (
                                         BcdLibraryInteger_GraphicsResolution,
                                         &GraphicsResolution);
 #else
-        GraphicsResolution = 0;
+        //GraphicsResolution = 0;
         Status = STATUS_NOT_FOUND;
 #endif
         if (NT_SUCCESS(Status))
@@ -902,7 +904,7 @@ DsppInitialize (
                                         BcdLibraryBoolean_GraphicsForceHighestMode,
                                         &HighestMode);
 #else
-        HighestMode = 0;
+        //HighestMode = 0;
         Status = STATUS_NOT_FOUND;
 #endif
         if (NT_SUCCESS(Status))
@@ -952,7 +954,7 @@ DsppInitialize (
     DspGraphicalConsole = NULL;
 
     /* If we don't have a text console, go get a remote console */
-    RemoteConsole = NULL;
+    //RemoteConsole = NULL;
     if (!TextConsole)
     {
         EarlyPrint(L"Display path not handled\n");

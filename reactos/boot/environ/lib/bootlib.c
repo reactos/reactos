@@ -190,7 +190,7 @@ InitializeLibrary (
     InitializeListHead(&EnEventNotificationList);
 #endif
 
-    /* Initialize the I/O Manager */i
+    /* Initialize the I/O Manager */
     Status = BlpIoInitialize();
     if (!NT_SUCCESS(Status))
     {

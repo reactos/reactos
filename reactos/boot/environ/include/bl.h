@@ -620,8 +620,8 @@ NTSTATUS
 EfiConOutQueryMode (
     _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
     _In_ ULONG Mode,
-    _In_ PULONG Columns,
-    _In_ PULONG Rows
+    _In_ UINTN* Columns,
+    _In_ UINTN* Rows
     );
 
 NTSTATUS
