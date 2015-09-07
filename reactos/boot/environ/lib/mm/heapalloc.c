@@ -537,7 +537,6 @@ MmHaInitialize (
     {
         /* The heap is ready! */
         HapInitializationStatus = 1;
-        EarlyPrint(L"Heap Allocator Initialized!\n");
         Status = STATUS_SUCCESS;
     }
 

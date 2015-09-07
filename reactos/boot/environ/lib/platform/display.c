@@ -147,7 +147,7 @@ BL_DISPLAY_MODE ConsoleGraphicalResolutionList[3] =
 
 BL_DISPLAY_MODE ConsoleTextResolutionList[1] =
 {
-    {80, 31, 80}
+    {80, 25, 80}
 };
 
 NTSTATUS
@@ -231,14 +231,15 @@ ConsolepFindResolution (
     while (List != ListEnd)
     {
         /* Does this resolution match? */
-        if ((Mode->HRes != List->HRes) || (Mode->VRes != List->VRes))
+        if ((Mode->HRes == List->HRes) && (Mode->VRes == List->VRes))
         {
-            /* Try another one*/
-            List++;
+            /* Yep -- we got a match */
+            return TRUE;
+
         }
 
-        /* Yep -- we got a match */
-        return TRUE;
+        /* Try another one*/
+        List++;
     }
 
     /* No matches were found */
@@ -250,6 +251,7 @@ ConsoleEfiTextGetColorForeground (
     _In_ UINT32 Attributes
     )
 {
+    /* Read the foreground color attribute and convert to CGA color index */
     switch (Attributes & 0x0F)
     {
         case EFI_BLACK:
@@ -293,6 +295,7 @@ ConsoleEfiTextGetColorBackground (
     _In_ UINT32 Attributes
     )
 {
+    /* Read the background color attribute and convert to CGA color index */
     switch (Attributes & 0xF0)
     {
         case EFI_BACKGROUND_MAGENTA:
@@ -301,8 +304,8 @@ ConsoleEfiTextGetColorBackground (
             return Brown;
         case EFI_BACKGROUND_LIGHTGRAY:
             return White;
-        default:
         case EFI_BACKGROUND_BLACK:
+        default:
             return Black;
         case EFI_BACKGROUND_RED:
             return Red;
@@ -320,6 +323,7 @@ ConsoleEfiTextGetEfiColorBackground (
     _In_ BL_COLOR Color
     )
 {
+    /* Convert the CGA color index into an EFI background attribute */
     switch (Color)
     {
         case Blue:
@@ -355,6 +359,7 @@ ConsoleEfiTextGetEfiColorForeground (
     _In_ BL_COLOR Color
     )
 {
+    /* Convert the CGA color index into an EFI foreground attribute */
     switch (Color)
     {
         case Black:
@@ -433,43 +438,49 @@ ConsoleFirmwareTextSetState (
     ULONG FgColor, BgColor, Attribute, XPos, YPos, TextHeight, TextWidth;
     BOOLEAN Visible;
 
-    Status = STATUS_SUCCESS;
-
+    /* Check if foreground state is being set */
     if (Mask & 1)
     {
+        /* Check if there's a difference from current */
         FgColor = State->FgColor;
-        
         if (TextConsole->State.FgColor != FgColor)
         {
-            if (FgColor >= 16)
+            /* Ignore invalid color */
+            if (FgColor > White)
             {
                 return STATUS_INVALID_PARAMETER;
             }
 
-            Attribute = ConsoleEfiTextGetAttribute(TextConsole->State.BgColor, FgColor);
+            /* Convert from NT/CGA format to EFI, and then set the attribute */
+            Attribute = ConsoleEfiTextGetAttribute(TextConsole->State.BgColor,
+                                                   FgColor);
             Status = EfiConOutSetAttribute(TextConsole->Protocol, Attribute);
-
-
             if (!NT_SUCCESS(Status))
             {
                 return Status;
             }
 
+            /* Update cached state */
             TextConsole->State.FgColor = FgColor;
         }
     }
 
+    /* Check if background state is being set */
     if (Mask & 2)
     {
+        /* Check if there's a difference from current */
         BgColor = State->BgColor;
         if (TextConsole->State.BgColor != BgColor)
         {
-            if (BgColor >= 16)
+            /* Ignore invalid color */
+            if (BgColor > White)
             {
                 return STATUS_INVALID_PARAMETER;
             }
 
-            Attribute = ConsoleEfiTextGetAttribute(BgColor, TextConsole->State.FgColor);
+            /* Convert from NT/CGA format to EFI, and then set the attribute */
+            Attribute = ConsoleEfiTextGetAttribute(BgColor,
+                                                   TextConsole->State.FgColor);
             Status = EfiConOutSetAttribute(TextConsole->Protocol, Attribute);
 
             if (!NT_SUCCESS(Status))
@@ -477,53 +488,63 @@ ConsoleFirmwareTextSetState (
                 return Status;
             }
 
+            /* Update cached state */
             TextConsole->State.BgColor = BgColor;
         }
     }
 
+    /* Check if position state is being set */
     if (Mask & 4)
     {
+        /* Check if there's a difference from current */
         XPos = State->XPos;
         YPos = State->YPos;
-
-        if ((TextConsole->State.XPos != XPos) || (TextConsole->State.YPos != YPos))
+        if ((TextConsole->State.XPos != XPos) ||
+            (TextConsole->State.YPos != YPos))
         {
+            /* Set the new cursor position */
             BlDisplayGetTextCellResolution(&TextWidth, &TextHeight);
             Status = EfiConOutSetCursorPosition(TextConsole->Protocol,
                                                 XPos/ TextWidth,
                                                 YPos / TextHeight);
-
             if (!NT_SUCCESS(Status))
             {
                 return Status;
             }
 
+            /* Update cached state */
             TextConsole->State.XPos = XPos;
             TextConsole->State.YPos = YPos;
         }
     }
 
+    /* Check if cursor state is being set */
     if (Mask & 8)
     {
+        /* Check if there's a difference from current */
         Visible = State->CursorVisible;
         if (TextConsole->State.CursorVisible != Visible)
         {
+            /* Ignore invalid state */
             if (Visible >= 3)
             {
                 return STATUS_INVALID_PARAMETER;
             }
 
+            /* Set the new cursor state */
             Status = EfiConOutEnableCursor(TextConsole->Protocol, Visible);
             if (!NT_SUCCESS(Status))
             {
                 return Status;
             }
 
+            /* Update cached status */
             TextConsole->State.CursorVisible = Visible;
         }
     }
 
-    return Status;
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -560,6 +581,7 @@ ConsoleEfiTextFindModeFromAllowed (
     }
 
     /* Scan all the EFI modes */
+    EarlyPrint(L"Scanning through %d modes\n", MaxMode);
     for (MaxQueriedMode = 0, Mode = 0; Mode < MaxMode; Mode++)
     {
         /* Query information on this mode */
@@ -570,10 +592,11 @@ ConsoleEfiTextFindModeFromAllowed (
                                           &VRes)))
         {
             /* This mode was succesfully queried. Save the data */
+            EarlyPrint(L"EFI Firmware Supported Mode %d is H: %d V: %d\n", Mode, HRes, VRes);
             ModeEntry->HRes = HRes;
             ModeEntry->VRes = VRes;
             ModeEntry->HRes2 = HRes;
-            MaxQueriedMode = Mode;
+            MaxQueriedMode = Mode + 1;
         }
     }
 
@@ -582,10 +605,11 @@ ConsoleEfiTextFindModeFromAllowed (
     {
         /* Loop all the UEFI queried modes */
         SupportedModeEntry = &SupportedModes[i];
-        for (MatchingMode = 0; MatchingMode < MaxQueriedMode; MatchingMode)
+        for (MatchingMode = 0; MatchingMode < MaxQueriedMode; MatchingMode++)
         {
             /* Check if the UEFI mode is compatible with our supported mode */
             ModeEntry = &ModeList[MatchingMode];
+            EarlyPrint(L"H1: %d V1: %d - H2: %d - V2: %d\n", ModeEntry->HRes, ModeEntry->VRes, SupportedModeEntry->HRes, SupportedModeEntry->VRes);
             if ((ModeEntry->HRes == SupportedModeEntry->HRes) &&
                 (ModeEntry->VRes == SupportedModeEntry->VRes))
             {
@@ -655,16 +679,19 @@ ConsoleFirmwareTextOpen (
     if (!ConsolepFindResolution(&DisplayMode, ConsoleTextResolutionList, 1))
     {
         /* It isn't -- find a matching EFI mode for what we need */
+        EarlyPrint(L"In incorrect mode, scanning for right one\n");
         Status = ConsoleEfiTextFindModeFromAllowed(EfiConOut,
                                                    ConsoleTextResolutionList,
                                                    1,
                                                    &Mode);
         if (!NT_SUCCESS(Status))
         {
+            EarlyPrint(L"Failed to find mode: %lx\n", Status);
             return Status;
         }
 
         /* Set the new EFI mode */
+        EarlyPrint(L"Setting new mode: %d\n", Mode);
         Status = EfiConOutSetMode(EfiConOut, Mode);
         if (!NT_SUCCESS(Status))
         {
@@ -773,7 +800,7 @@ DsppGraphicsDisabledByBcd (
     VOID
     )
 {
-    EarlyPrint(L"Disabling graphics\n");
+    //EarlyPrint(L"Disabling graphics\n");
     return TRUE;
 }
 
@@ -796,6 +823,7 @@ ConsoleTextLocalConstruct (
         Status = ConsoleFirmwareTextOpen(TextConsole);
         if (!NT_SUCCESS(Status))
         {
+            EarlyPrint(L"Failed to activate console: %lx\n", Status);
             return Status;
         }
     }
@@ -815,6 +843,7 @@ ConsoleTextLocalConstruct (
         if (!NT_SUCCESS(Status))
         {
             /* We failed, back down */
+            EarlyPrint(L"Failed to set console state: %lx\n", Status);
             ConsoleFirmwareTextClose(TextConsole);
             return Status;
         }
@@ -850,11 +879,11 @@ DsppInitialize (
     InitializeListHead(&BfiFontFileListHead);
 
     /* Allocate the font rectangle */
-    BfiGraphicsRectangle = BlMmAllocateHeap(0x5A);
-    if (!BfiGraphicsRectangle)
-    {
-        return STATUS_NO_MEMORY;
-    }
+   // BfiGraphicsRectangle = BlMmAllocateHeap(0x5A);
+    //if (!BfiGraphicsRectangle)
+    //{
+        //return STATUS_NO_MEMORY;
+    //}
 
     /* Display re-initialization not yet handled */
     if (LibraryParameters.LibraryFlags & BL_LIBRARY_FLAG_REINITIALIZE_ALL)

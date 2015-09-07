@@ -347,7 +347,6 @@ InitializeLibrary (
     Status = STATUS_SUCCESS;
 
 Quickie:
-    EarlyPrint(L"Exiting init: %lx\n", Status);
     return Status;
 }
 

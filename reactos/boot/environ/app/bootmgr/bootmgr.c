@@ -55,6 +55,7 @@ BmMain (
     Status = BlInitializeLibrary(BootParameters, &LibraryParameters);
 
     EarlyPrint(L"ReactOS UEFI Boot Manager Exiting: %lx\n", Status);
+    EfiStall(3000000);
     return Status;
 }
 

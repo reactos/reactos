@@ -560,7 +560,6 @@ MmPaInitialize (
         if (NT_SUCCESS(Status))
         {
             /* The Page Allocator has initialized */
-            EarlyPrint(L"Page Allocator initialized\n");
             PapInitializationStatus = TRUE;
             Status = STATUS_SUCCESS;
         }
