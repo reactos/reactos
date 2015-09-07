@@ -702,8 +702,13 @@ typedef struct _GROUP_AFFINITY {
  #define RTL_NUMBER_OF_V2(A) \
      (({ int _check_array_type[__builtin_types_compatible_p(typeof(A), typeof(&A[0])) ? -1 : 1]; (void)_check_array_type; }), \
      RTL_NUMBER_OF_V1(A))
+#elif defined(__cplusplus)
+extern "C++" {
+ template <typename T, size_t N>
+ static char (& SAFE_RTL_NUMBER_OF(T (&)[N]))[N];
+}
+ #define RTL_NUMBER_OF_V2(A) sizeof(SAFE_RTL_NUMBER_OF(A))
 #else
- /// \todo implement security checks for cplusplus / MSVC
  #define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
 #endif
 
