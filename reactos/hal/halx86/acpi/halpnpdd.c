@@ -822,8 +822,23 @@ NTAPI
 HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
+    PFDO_EXTENSION FdoExtension;
+
     DPRINT("HAL: PnP Driver Power!\n");
-    return STATUS_SUCCESS;
+    FdoExtension = DeviceObject->DeviceExtension;
+    if (FdoExtension->ExtensionType == FdoExtensionType)
+    {
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(FdoExtension->AttachedDeviceObject, Irp);
+    }
+    else
+    {
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
 }
 
 NTSTATUS
