@@ -47,7 +47,7 @@ endif()
 add_asm_files(bootlib_asm ${BOOTLIB_ASM_SOURCE})
 add_library(bootlib ${BOOTLIB_SOURCE} ${bootlib_asm})
 add_pch(bootlib app/bootmgr/bootmgr.h BOOTLIB_SOURCE)
-add_dependencies(bootlib bugcodes)
+add_dependencies(bootlib bugcodes xdk)
 
 list(APPEND BOOTMGR_BASE_SOURCE
      app/bootmgr/efiemu.c
