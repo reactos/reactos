@@ -20,14 +20,16 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wincon.h>
 #include <stdio.h>
 
 #define MAX_PORTNAME_LEN 20
 #define MAX_COMPORT_NUM  10
 #define MAX_COMPARAM_LEN 20
 
-#define NUM_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 #define ASSERT(a)
 
 const WCHAR* const usage_strings[] =
@@ -63,7 +65,7 @@ int Usage()
     int i;
 
     wprintf(L"\nConfigures system devices.\n\n");
-    for (i = 0; i < NUM_ELEMENTS(usage_strings); i++)
+    for (i = 0; i < ARRAYSIZE(usage_strings); i++)
     {
         wprintf(L"%s\n", usage_strings[i]);
     }
@@ -78,7 +80,7 @@ int QueryDevices()
     WCHAR* ptr = buffer;
 
     *ptr = L'\0';
-    if (QueryDosDeviceW(NULL, buffer, NUM_ELEMENTS(buffer)))
+    if (QueryDosDeviceW(NULL, buffer, ARRAYSIZE(buffer)))
     {
         while (*ptr != L'\0')
         {
@@ -117,7 +119,7 @@ int ShowParallelStatus(int nPortNum)
     swprintf(szPortName, L"LPT%d", nPortNum);
     wprintf(L"\nStatus for device LPT%d:\n", nPortNum);
     wprintf(L"-----------------------\n");
-    if (QueryDosDeviceW(szPortName, buffer, NUM_ELEMENTS(buffer)))
+    if (QueryDosDeviceW(szPortName, buffer, ARRAYSIZE(buffer)))
     {
         WCHAR* ptr = wcsrchr(buffer, L'\\');
         if (ptr != NULL)
@@ -226,12 +228,12 @@ int ShowSerialStatus(int nPortNum)
     {
         return 1;
     }
-    if (dcb.Parity > NUM_ELEMENTS(parity_strings))
+    if (dcb.Parity >= ARRAYSIZE(parity_strings))
     {
         wprintf(L"ERROR: Invalid value for Parity Bits %d:\n", dcb.Parity);
         dcb.Parity = 0;
     }
-    if (dcb.StopBits > NUM_ELEMENTS(stopbit_strings))
+    if (dcb.StopBits >= ARRAYSIZE(stopbit_strings))
     {
         wprintf(L"ERROR: Invalid value for Stop Bits %d:\n", dcb.StopBits);
         dcb.StopBits = 0;
