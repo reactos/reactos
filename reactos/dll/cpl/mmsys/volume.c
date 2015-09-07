@@ -224,8 +224,9 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     UINT NumMixers;
     MIXERCAPS mxc;
-    LPCWSTR nodevices;
-    LoadString(hApplet, IDS_NO_DEVICES, (LPTSTR)&nodevices, 0);
+    TCHAR szNoDevices[256];
+
+    LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
 
     NumMixers = mixerGetNumDevs();
     if (!NumMixers)
@@ -237,7 +238,7 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
         SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconNoHW);
-        SetDlgItemText(hwndDlg, IDC_DEVICE_NAME, nodevices);
+        SetDlgItemText(hwndDlg, IDC_DEVICE_NAME, szNoDevices);
         return;
     }
 
