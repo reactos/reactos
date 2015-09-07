@@ -112,9 +112,9 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     if(NOT NEW_STYLE_BUILD)
         if(NOT MSVC)
-            export(TARGETS bin2c widl gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+            export(TARGETS bin2c widl gendib cabman cdmake hpp mkhive obj2bin spec2def geninc rsym mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
         else()
-            export(TARGETS bin2c widl gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+            export(TARGETS bin2c widl gendib cabman cdmake hpp mkhive obj2bin spec2def geninc mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
         endif()
     endif()
 
@@ -234,6 +234,7 @@ else()
         ${REACTOS_BINARY_DIR}/include
         ${REACTOS_BINARY_DIR}/include/psdk
         ${REACTOS_BINARY_DIR}/include/dxsdk
+        ${REACTOS_BINARY_DIR}/include/ddk
         ${REACTOS_BINARY_DIR}/include/reactos
         include/crt
         include/ddk
@@ -247,6 +248,7 @@ else()
 
     add_dependency_header()
 
+    add_subdirectory(include/xdk)
     add_subdirectory(include/psdk)
     add_subdirectory(include/dxsdk)
     add_subdirectory(include/reactos/wine)

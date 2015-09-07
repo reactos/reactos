@@ -134,6 +134,7 @@ list(APPEND SOURCE
     xmllite.idl)
 
 add_idl_headers(psdk ${SOURCE})
+add_dependencies(psdk xdk)
 add_typelib(stdole2.idl)
 add_custom_target(stdole2 DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb)
 

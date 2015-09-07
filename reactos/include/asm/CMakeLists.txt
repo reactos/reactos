@@ -2,7 +2,7 @@
 add_library(genincdata SHARED genincdata.c)
 
 set_entrypoint(genincdata 0)
-add_dependencies(genincdata bugcodes psdk)
+add_dependencies(genincdata bugcodes psdk xdk)
 
 if(MSVC)
     set(OPT_MS "-ms")
