@@ -11,8 +11,6 @@
 #include "fatfs/ff.h"
 #include "fatfs/diskio.h"
 
-char* g_imageFileName;
-
 FATFS g_Filesystem;
 
 static int isMounted = 0;
@@ -89,7 +87,7 @@ int need_mount()
 #define NEED_MOUNT() \
     do { ret = need_mount(); if(ret) \
     {\
-        printf("Error: could not mount image file '%s' (%d). \n", g_imageFileName, ret); \
+        printf("Error: could not mount disk (%d). \n", ret); \
         PRINT_HELP_AND_QUIT(); \
     } } while(0)
 
@@ -136,7 +134,11 @@ int main(int oargc, char* oargv[])
         PRINT_HELP_AND_QUIT();
     }
 
-    g_imageFileName = argv[0];
+    if (disk_openimage(0, argv[0]))
+    {
+        printf("Error: could not open image file '%s'. \n", argv[0]);
+        PRINT_HELP_AND_QUIT();
+    }
 
     argc--;
     argv++;
@@ -168,8 +170,6 @@ int main(int oargc, char* oargv[])
 
             NEED_PARAMS(1, 1);
 
-            NEED_MOUNT();
-
             // Arg 1: number of sectors
             sectors = atoi(argv[0]);
 
@@ -181,6 +181,8 @@ int main(int oargc, char* oargv[])
             }
 
             disk_ioctl(0, SET_SECTOR_COUNT, &sectors);
+
+            NEED_MOUNT();
 
             ret = f_mkfs("0:", 1, sectors < 4096 ? 1 : 8);
             if (ret)

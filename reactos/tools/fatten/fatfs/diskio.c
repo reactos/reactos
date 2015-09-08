@@ -9,13 +9,54 @@
 #include "diskio.h"
 #include <stdio.h>
 
-extern char* g_imageFileName;
-
 /*-----------------------------------------------------------------------*/
 /* Correspondence between physical drive number and image file handles.  */
 
+UINT sectorCount[1] = { 0 };
 FILE* driveHandle[1] = { NULL };
 const int driveHandleCount = sizeof(driveHandle) / sizeof(FILE*);
+
+/*-----------------------------------------------------------------------*/
+/* Open an image file a Drive                                            */
+/*-----------------------------------------------------------------------*/
+
+DSTATUS disk_openimage(BYTE pdrv, const char* imageFileName)
+{
+    if (pdrv < driveHandleCount)
+    {
+        if (driveHandle[0] != NULL)
+            return 0;
+
+        driveHandle[0] = fopen(imageFileName, "r+b");
+        if (!driveHandle[0])
+        {
+            driveHandle[0] = fopen(imageFileName, "w+");
+        }
+
+        if (driveHandle[0] != NULL)
+            return 0;
+    }
+    return STA_NOINIT;
+}
+
+
+/*-----------------------------------------------------------------------*/
+/* Cleanup a Drive                                                       */
+/*-----------------------------------------------------------------------*/
+
+VOID disk_cleanup(
+    BYTE pdrv		/* Physical drive nmuber (0..) */
+    )
+{
+    if (pdrv < driveHandleCount)
+    {
+        if (driveHandle[pdrv] != NULL)
+        {
+            fclose(driveHandle[pdrv]);
+            driveHandle[pdrv] = NULL;
+        }
+    }
+}
 
 /*-----------------------------------------------------------------------*/
 /* Inidialize a Drive                                                    */
@@ -27,17 +68,7 @@ DSTATUS disk_initialize(
 {
     if (pdrv == 0) /* only one drive (image file) supported atm. */
     {
-        if (driveHandle[0] != NULL)
-            return 0;
-
-        driveHandle[0] = fopen(g_imageFileName, "r+b");
-        if(!driveHandle[0])
-        {
-            driveHandle[0] = fopen(g_imageFileName, "w+");
-        }
-
-        if (driveHandle[0] != NULL)
-            return 0;
+        return 0;
     }
     return STA_NOINIT;
 }
@@ -58,26 +89,6 @@ DSTATUS disk_status(
             return 0;
     }
     return STA_NOINIT;
-}
-
-
-
-/*-----------------------------------------------------------------------*/
-/* Cleanup a Drive                                                       */
-/*-----------------------------------------------------------------------*/
-
-VOID disk_cleanup(
-    BYTE pdrv		/* Physical drive nmuber (0..) */
-    )
-{
-    if (pdrv < driveHandleCount)
-    {
-        if (driveHandle[pdrv] != NULL)
-        {
-            fclose(driveHandle[pdrv]);
-            driveHandle[pdrv] = NULL;
-        }
-    }
 }
 
 /*-----------------------------------------------------------------------*/
@@ -177,18 +188,23 @@ DRESULT disk_ioctl(
                 return RES_OK;
             case GET_SECTOR_COUNT:
             {
-                int temp = 0;
-                if(fseek(driveHandle[pdrv], 0, SEEK_END))
-                    printf("fseek failed!\n");
-                else
-                    temp = ftell(driveHandle[pdrv]);
-                *(DWORD*)buff = temp/512;
+                if (sectorCount[pdrv] <= 0)
+                {
+                    if (fseek(driveHandle[pdrv], 0, SEEK_END))
+                        printf("fseek failed!\n");
+                    else
+                        sectorCount[pdrv] = ftell(driveHandle[pdrv]) / 512;
+                }
+
+                *(DWORD*)buff = sectorCount[pdrv];
                 return RES_OK;
             }
             case SET_SECTOR_COUNT:
             {
                 int count = *(DWORD*)buff;
                 long size;
+
+                sectorCount[pdrv] = count;
 
                 fseek(driveHandle[pdrv], 0, SEEK_END);
                 size = ftell(driveHandle[pdrv]) / 512;

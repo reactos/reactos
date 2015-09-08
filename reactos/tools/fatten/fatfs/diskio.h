@@ -31,10 +31,11 @@ typedef enum {
 /*---------------------------------------*/
 /* Prototypes for disk control functions */
 
+DSTATUS disk_openimage(BYTE pdrv, const char* imageFileName);
+VOID disk_cleanup(BYTE pdrv);
 
 DSTATUS disk_initialize (BYTE pdrv);
 DSTATUS disk_status (BYTE pdrv);
-VOID disk_cleanup (BYTE pdrv);
 DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count);
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count);
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
@@ -57,7 +58,7 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
 #define CTRL_ERASE_SECTOR	4	/* Force erased a block of sectors (for only _USE_ERASE) */
 
 /* Custom command for image file resizing */
-#define SET_SECTOR_COUNT	253
+#define SET_SECTOR_COUNT	126
 
 #ifdef __cplusplus
 }
