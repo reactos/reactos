@@ -1,7 +1,22 @@
 ## efisys.bin
 
+# EFI platform ID, used in environ/CMakelists.txt for bootmgfw filename naming also.
+if(ARCH STREQUAL "amd64")
+    set(EFI_PLATFORM_ID "x64")
+elseif(ARCH STREQUAL "i386")
+    set(EFI_PLATFORM_ID "ia32")
+elseif(ARCH STREQUAL "ia64")
+    set(EFI_PLATFORM_ID "ia64")
+elseif(ARCH STREQUAL "arm")
+    set(EFI_PLATFORM_ID "arm")
+elseif(ARCH STREQUAL "aarch64")
+    set(EFI_PLATFORM_ID "aa64")
+else()
+    message(FATAL_ERROR "Unknown ARCH, can't generate a valid UEFI boot filename.")
+endif()
+
 add_custom_target(efisys
-    COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 -mkdir efi -mkdir efi/boot -add $<TARGET_FILE:bootmgfw> efi/boot/bootia32.efi
+    COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 -mkdir EFI -mkdir EFI/BOOT -add $<TARGET_FILE:bootmgfw> EFI/BOOT/boot${EFI_PLATFORM_ID}.EFI
     DEPENDS native-fatten bootmgfw
     VERBATIM)
 
@@ -10,8 +25,9 @@ add_custom_target(efisys
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "")
 
 add_custom_target(bootcd
+#    COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin\#pEF,e,b${CMAKE_CURRENT_BINARY_DIR}/efisys.bin @${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst REACTOS ${REACTOS_BINARY_DIR}/bootcd.iso
     COMMAND native-cdmake -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin @${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst REACTOS ${REACTOS_BINARY_DIR}/bootcd.iso
-    DEPENDS native-cdmake
+    DEPENDS native-cdmake efisys
     VERBATIM)
 
 ##bootcdregtest
