@@ -31,6 +31,10 @@ DSTATUS disk_initialize(
             return 0;
 
         driveHandle[0] = fopen(imageFileName, "r+b");
+        if(!driveHandle[0])
+        {
+            driveHandle[0] = fopen(imageFileName, "w+");
+        }
 
         if (driveHandle[0] != NULL)
             return 0;
@@ -80,10 +84,10 @@ DRESULT disk_read(
 
             result = fread(buff, 512, count, driveHandle[pdrv]);
 
-            if (result == count)
-                return RES_OK;
+            if (result != count)
+                return RES_ERROR;
 
-            return RES_ERROR;
+            return RES_OK;
         }
     }
 
@@ -114,9 +118,8 @@ DRESULT disk_write(
                 return RES_ERROR;
 
             result = fwrite(buff, 512, count, driveHandle[pdrv]);
-            return RES_ERROR;
 
-            if (result != (512 * count))
+            if (result != count)
                 return RES_ERROR;
 
             return RES_OK;
@@ -155,9 +158,15 @@ DRESULT disk_ioctl(
                 *(DWORD*)buff = 512;
                 return RES_OK;
             case GET_SECTOR_COUNT:
-                fseek(driveHandle[pdrv], 0, SEEK_END);
-                *(DWORD*)buff = ftell(driveHandle[pdrv]) / 512;
+            {
+                int temp = 0;
+                if(fseek(driveHandle[pdrv], 0, SEEK_END))
+                    printf("fseek failed!\n");
+                else
+                    temp = ftell(driveHandle[pdrv]);
+                *(DWORD*)buff = temp/512;
                 return RES_OK;
+            }
             case SET_SECTOR_COUNT:
             {
                 int count = *(DWORD*)buff;
