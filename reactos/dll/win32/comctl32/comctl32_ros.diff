@@ -1,6 +1,6 @@
 diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commctrl.c
---- e:\wine\dlls\comctl32/commctrl.c	2015-02-21 17:13:08.585542200 +0100
-+++ e:\reactos\dll\win32\comctl32/commctrl.c	2015-03-18 17:10:39.955584600 +0100
+--- e:\wine\dlls\comctl32/commctrl.c	2015-02-21 17:13:09 +0100
++++ e:\reactos\dll\win32\comctl32/commctrl.c	2015-08-27 22:05:04 +0100
 @@ -52,25 +52,26 @@
   *   -- ICC_WIN95_CLASSES
   */
@@ -259,8 +259,8 @@ diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commct
 +    return TRUE;
 +}
 diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/imagelist.c
---- e:\wine\dlls\comctl32/imagelist.c	2015-02-21 17:13:08.589542200 +0100
-+++ e:\reactos\dll\win32\comctl32/imagelist.c	2015-03-18 17:15:00.458921400 +0100
+--- e:\wine\dlls\comctl32/imagelist.c	2015-02-21 17:13:09 +0100
++++ e:\reactos\dll\win32\comctl32/imagelist.c	2015-08-27 22:05:04 +0100
 @@ -33,27 +33,14 @@
   *
   *  TODO:
@@ -430,8 +430,8 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
      if (fState & ILS_SHADOW) FIXME("ILS_SHADOW: unimplemented!\n");
  
 diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listview.c
---- e:\wine\dlls\comctl32/listview.c	2015-04-05 20:44:56.799078500 +0100
-+++ e:\reactos\dll\win32\comctl32/listview.c	2015-07-20 23:15:49.816768600 +0100
+--- e:\wine\dlls\comctl32/listview.c	2015-04-05 20:44:57 +0100
++++ e:\reactos\dll\win32\comctl32/listview.c	2015-08-27 22:05:04 +0100
 @@ -306,6 +287,9 @@ typedef struct tagLISTVIEW_INFO
    COLORREF clrBk;
    COLORREF clrText;
@@ -549,8 +549,8 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  
  /*	case WM_TIMER: */
 diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/propsheet.c
---- e:\wine\dlls\comctl32/propsheet.c	2015-03-21 14:04:47.573770300 +0100
-+++ e:\reactos\dll\win32\comctl32/propsheet.c	2015-03-18 17:24:03.692899000 +0100
+--- e:\wine\dlls\comctl32/propsheet.c	2015-03-21 14:04:48 +0100
++++ e:\reactos\dll\win32\comctl32/propsheet.c	2015-08-27 22:05:04 +0100
 @@ -2432,12 +2416,19 @@ static void PROPSHEET_SetWizButtons(HWND
    HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
    BOOL enable_finish = ((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH);
@@ -606,8 +606,8 @@ diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/props
  
  /******************************************************************************
 diff -pudN e:\wine\dlls\comctl32/rebar.c e:\reactos\dll\win32\comctl32/rebar.c
---- e:\wine\dlls\comctl32/rebar.c	2015-04-05 20:44:56.800079100 +0100
-+++ e:\reactos\dll\win32\comctl32/rebar.c	2015-07-20 23:20:27.952677100 +0100
+--- e:\wine\dlls\comctl32/rebar.c	2015-04-05 20:44:57 +0100
++++ e:\reactos\dll\win32\comctl32/rebar.c	2015-08-27 22:05:04 +0100
 @@ -50,7 +50,6 @@
   *   - WM_QUERYNEWPALETTE
   *   - WM_RBUTTONDOWN
@@ -793,8 +793,8 @@ diff -pudN e:\wine\dlls\comctl32/rebar.c e:\reactos\dll\win32\comctl32/rebar.c
  
  /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
 diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar.c
---- e:\wine\dlls\comctl32/toolbar.c	2015-07-14 15:44:33.982074600 +0100
-+++ e:\reactos\dll\win32\comctl32/toolbar.c	2015-07-20 23:37:43.996935400 +0100
+--- e:\wine\dlls\comctl32/toolbar.c	2015-07-14 15:44:34 +0100
++++ e:\reactos\dll\win32\comctl32/toolbar.c	2015-09-08 13:22:39 +0100
 @@ -33,11 +33,9 @@
   *     - TBSTYLE_REGISTERDROP
   *     - TBSTYLE_EX_DOUBLEBUFFER
@@ -1006,7 +1006,22 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
              if (sizeString.cy > 0)
                  sizeButton.cy += 1 + sizeString.cy;
              sizeButton.cx = infoPtr->szPadding.cx +
-@@ -1970,6 +2038,17 @@ TOOLBAR_RelayEvent (HWND hwndTip, HWND h
+@@ -1711,7 +1779,14 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *info
+ 	{
+             if (btnPtr->cx)
+               cx = btnPtr->cx;
++#ifdef __REACTOS__
++            /* Revert Wine Commit 5b7b911 as it breaks Explorer Toolbar Buttons
++               FIXME: Revisit this when the bug is fixed. CORE-9970 */
++            else if ((infoPtr->dwExStyle & TBSTYLE_EX_MIXEDBUTTONS) || 
++                (btnPtr->fsStyle & BTNS_AUTOSIZE))
++#else
+             else if (btnPtr->fsStyle & BTNS_AUTOSIZE)
++#endif
+             {
+               SIZE sz;
+ 	      HDC hdc;
+@@ -1970,6 +2045,17 @@ TOOLBAR_RelayEvent (HWND hwndTip, HWND h
      SendMessageW (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
  }
  
@@ -1024,7 +1039,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  static void
  TOOLBAR_TooltipAddTool(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *button)
  {
-@@ -3551,6 +3630,36 @@ TOOLBAR_GetMaxSize (const TOOLBAR_INFO *
+@@ -3551,6 +3637,36 @@ TOOLBAR_GetMaxSize (const TOOLBAR_INFO *
      return TRUE;
  }
  
@@ -1061,7 +1076,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
  /* << TOOLBAR_GetObject >> */
  
-@@ -4806,6 +4915,44 @@ TOOLBAR_SetMaxTextRows (TOOLBAR_INFO *in
+@@ -4806,6 +4922,44 @@ TOOLBAR_SetMaxTextRows (TOOLBAR_INFO *in
      return TRUE;
  }
  
@@ -1106,7 +1121,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
  /* MSDN gives slightly wrong info on padding.
   * 1. It is not only used on buttons with the BTNS_AUTOSIZE style
-@@ -6052,6 +6199,8 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wPar
+@@ -6052,6 +6206,8 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wPar
      infoPtr->clrBtnShadow = CLR_DEFAULT;
      infoPtr->szPadding.cx = DEFPAD_CX;
      infoPtr->szPadding.cy = DEFPAD_CY;
@@ -1115,7 +1130,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
      infoPtr->iListGap = DEFLISTGAP;
      infoPtr->iTopMargin = default_top_margin(infoPtr);
      infoPtr->dwStyle = lpcs->style;
-@@ -6461,7 +6610,7 @@ TOOLBAR_SysColorChange (void)
+@@ -6461,7 +6617,7 @@ TOOLBAR_SysColorChange (void)
      return 0;
  }
  
@@ -1124,7 +1139,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  /* update theme after a WM_THEMECHANGED message */
  static LRESULT theme_changed (HWND hwnd)
  {
-@@ -6470,7 +6619,7 @@ static LRESULT theme_changed (HWND hwnd)
+@@ -6470,7 +6626,7 @@ static LRESULT theme_changed (HWND hwnd)
      OpenThemeData (hwnd, themeClass);
      return 0;
  }
@@ -1133,7 +1148,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
  static LRESULT WINAPI
  ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-@@ -6575,6 +6724,10 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
+@@ -6575,6 +6731,10 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
  
  	case TB_GETMAXSIZE:
  	    return TOOLBAR_GetMaxSize (infoPtr, (LPSIZE)lParam);
@@ -1144,7 +1159,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
  /*	case TB_GETOBJECT:			*/ /* 4.71 */
  
-@@ -6716,6 +6869,11 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
+@@ -6716,6 +6876,11 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
  	case TB_SETMAXTEXTROWS:
  	    return TOOLBAR_SetMaxTextRows (infoPtr, wParam);
  
@@ -1156,7 +1171,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  	case TB_SETPADDING:
  	    return TOOLBAR_SetPadding (infoPtr, lParam);
  
-@@ -6855,8 +7013,12 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
+@@ -6855,8 +7020,12 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
  	case WM_SYSCOLORCHANGE:
  	    return TOOLBAR_SysColorChange ();
              
@@ -1171,8 +1186,8 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  /*	case WM_WININICHANGE: */
  
 diff -pudN e:\wine\dlls\comctl32/tooltips.c e:\reactos\dll\win32\comctl32/tooltips.c
---- e:\wine\dlls\comctl32/tooltips.c	2015-05-25 19:35:12.759980900 +0100
-+++ e:\reactos\dll\win32\comctl32/tooltips.c	2015-07-20 23:40:13.399480800 +0100
+--- e:\wine\dlls\comctl32/tooltips.c	2015-05-25 19:35:13 +0100
++++ e:\reactos\dll\win32\comctl32/tooltips.c	2015-08-27 22:05:04 +0100
 @@ -2009,7 +1996,36 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO 
  static LRESULT
  TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
@@ -1211,8 +1226,8 @@ diff -pudN e:\wine\dlls\comctl32/tooltips.c e:\reactos\dll\win32\comctl32/toolti
      return 0;
  }
 diff -pudN e:\wine\dlls\comctl32/treeview.c e:\reactos\dll\win32\comctl32/treeview.c
---- e:\wine\dlls\comctl32/treeview.c	2015-07-14 15:44:33.989075000 +0100
-+++ e:\reactos\dll\win32\comctl32/treeview.c	2015-07-20 23:42:19.453690600 +0100
+--- e:\wine\dlls\comctl32/treeview.c	2015-07-14 15:44:34 +0100
++++ e:\reactos\dll\win32\comctl32/treeview.c	2015-08-27 22:05:04 +0100
 @@ -2890,7 +2868,14 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr,
  	}
      }

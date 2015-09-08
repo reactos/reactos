@@ -1779,7 +1779,14 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 	{
             if (btnPtr->cx)
               cx = btnPtr->cx;
+#ifdef __REACTOS__
+            /* Revert Wine Commit 5b7b911 as it breaks Explorer Toolbar Buttons
+               FIXME: Revisit this when the bug is fixed. CORE-9970 */
+            else if ((infoPtr->dwExStyle & TBSTYLE_EX_MIXEDBUTTONS) || 
+                (btnPtr->fsStyle & BTNS_AUTOSIZE))
+#else
             else if (btnPtr->fsStyle & BTNS_AUTOSIZE)
+#endif
             {
               SIZE sz;
 	      HDC hdc;
