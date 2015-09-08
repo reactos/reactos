@@ -1041,9 +1041,11 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
       {
          Active = (gpqForeground == pWnd->head.pti->MessageQueue);
       }
+      Flags = DC_NC; // Redraw everything!
    }
+   else
+      Flags |= DC_NC;
 
-   Flags = DC_NC; // Redraw everything!
 
    IntGetWindowRect(pWnd, &WindowRect);
 
