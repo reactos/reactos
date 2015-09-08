@@ -1,6 +1,7 @@
 include_directories(include)
 
 add_library(apitest apitest.c)
+add_dependencies(apitest xdk)
 
 add_subdirectory(advapi32)
 add_subdirectory(browseui)
