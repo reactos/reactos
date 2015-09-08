@@ -27,14 +27,14 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "Интернет-Настройки"
-    IDS_CPL_INFO        "Настроить Wine Интернет-Браузер и настройки, связанные с"
+    IDS_CPL_INFO        "Настроить WINE Internet Explorer и настройки, связанные с"
     IDS_SEC_SETTINGS    "Параметры безопасности этой зоны: "
     IDS_SEC_LEVEL0      "Пользовательские"
-    IDS_SEC_LEVEL1      "Низкий"
+    IDS_SEC_LEVEL1      "Низкие"
     IDS_SEC_LEVEL2      "Ниже среднего"
-    IDS_SEC_LEVEL3      "Средний"
+    IDS_SEC_LEVEL3      "Средние"
     IDS_SEC_LEVEL4      "Выше среднего"
-    IDS_SEC_LEVEL5      "Высокий"
+    IDS_SEC_LEVEL5      "Высокие"
 END
 
 /* "General" propsheet */

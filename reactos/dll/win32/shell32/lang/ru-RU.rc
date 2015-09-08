@@ -699,9 +699,9 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Подтверждение замены файла"
     IDS_OVERWRITEFOLDER_TEXT "Эта папка уже содержит папку с именем '%1'.\n\nЕсли в папке содержатся файлы с одинаковыми именами, то они так же будут\nзаменены. Продолжить?"
 
-    IDS_FILEOOP_COPYING "Копирование"
-    IDS_FILEOOP_MOVING "Перемещение"
-    IDS_FILEOOP_DELETING "Удаление"
+    IDS_FILEOOP_COPYING "Копирование..."
+    IDS_FILEOOP_MOVING "Перемещение..."
+    IDS_FILEOOP_DELETING "Удаление..."
     IDS_FILEOOP_FROM_TO "Из %1 в %2"
     IDS_FILEOOP_FROM "Из %1"
     IDS_FILEOOP_PREFLIGHT "Подготовка"
@@ -753,11 +753,11 @@ BEGIN
     IDS_NEWFOLDER "Новая папка"
 
     IDS_DRIVE_FIXED "Локальный диск"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "CD привод"
     IDS_DRIVE_NETWORK "Сетевой диск"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_REMOVABLE "Съемный диск"
+    IDS_FS_UNKNOWN "Неизвестно"
 
     /* Open With */
     IDS_OPEN_WITH "Открыть с помощью"

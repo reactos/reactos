@@ -536,7 +536,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS "ангстрем"
-    IDS_LENGTH_ASTRONOMICAL_UNITS "астрономическая еденица"
+    IDS_LENGTH_ASTRONOMICAL_UNITS "астрономическая единица"
     IDS_LENGTH_BARLEYCORNS "барлейкорн"
     IDS_LENGTH_CENTIMETERS "сантиметр"
     IDS_LENGTH_CHAINS_UK "чейн (британский)"
@@ -621,7 +621,7 @@ STRINGTABLE
 BEGIN
     IDS_TIME_DAYS "день"
     IDS_TIME_HOURS "час"
-    IDS_TIME_NANOSECONDS "Nanoseconds"
+    IDS_TIME_NANOSECONDS "наносекунда"
     IDS_TIME_MICROSECONDS "микросекунда"
     IDS_TIME_MILLISECONDS "миллисекунда"
     IDS_TIME_MINUTES "минута"

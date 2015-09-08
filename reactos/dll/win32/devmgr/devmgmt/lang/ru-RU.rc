@@ -1,0 +1,98 @@
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&Файл"
+  BEGIN
+    MENUITEM "В&ыход",                                 IDC_EXIT
+  END
+  POPUP "&Действие"
+  BEGIN
+    MENUITEM "Обнов&ить драйвера...",                  IDC_UPDATE_DRV
+    MENUITEM "&Включить устройство",                   IDC_ENABLE_DRV
+    MENUITEM "&Отключить устройство",                  IDC_DISABLE_DRV
+    MENUITEM "&Удалить драйвера",                      IDC_UNINSTALL_DRV
+    MENUITEM SEPARATOR
+    MENUITEM "О&бновить конфигурацию оборудования",    IDC_SCAN_HARDWARE
+    MENUITEM "Добавить &устройство",                   IDC_ADD_HARDWARE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Сво&йства",                              IDC_PROPERTIES
+  END
+  POPUP "&Вид"
+  BEGIN
+    MENUITEM "&Устройства по типу",                    IDC_DEVBYTYPE
+    MENUITEM "Устройства по под&ключению",             IDC_DEVBYCONN
+    MENUITEM "&Ресурсы по типу",                       IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ресурсы по подк&лючению",                IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Показать &скрытые устройства",           IDC_SHOWHIDDEN
+  END
+  POPUP "&Справка"
+  BEGIN
+    MENUITEM "О &программе",                           IDC_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "Обнов&ить драйвера...",                  IDC_UPDATE_DRV
+    MENUITEM "&Включить устройство",                   IDC_ENABLE_DRV
+    MENUITEM "&Отключить устройство",                  IDC_DISABLE_DRV
+    MENUITEM "&Удалить драйвера",                      IDC_UNINSTALL_DRV
+    MENUITEM SEPARATOR
+    MENUITEM "О&бновить конфигурацию оборудования",    IDC_SCAN_HARDWARE
+    MENUITEM "Добавить &устройство",                   IDC_ADD_HARDWARE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Сво&йства",                              IDC_PROPERTIES
+  END
+END
+
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROPERTIES    "Свойства"
+  IDS_TOOLTIP_SCAN          "Обновить конфигурацию оборудования"
+  IDS_TOOLTIP_ENABLE        "Включить"
+  IDS_TOOLTIP_DISABLE       "Отключить"
+  IDS_TOOLTIP_UPDATE        "Обновить драйвера"
+  IDS_TOOLTIP_UNINSTALL     "Удалить"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME           "Диспетчер устройств ReactOS"
+  IDS_HINT_BLANK        " "
+  IDS_HINT_PROPERTIES   " Открытие страницы свойств для выделенного объекта."
+  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
+  IDS_HINT_ENABLE       " Включение выбранного устройства."
+  IDS_HINT_DISABLE      " Отключение выбранного устройства."
+  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
+  IDS_HINT_UNINSTALL    " Удаление драйвера для выбранного устройства."
+  IDS_HINT_ADD          " Добавить старое (не Plug-and-Play) устройство на этот компьютер." 
+  IDS_HINT_ABOUT        " About ReactOS Device Manager."
+  IDS_HINT_EXIT         " Exits the program."
+
+  IDS_HINT_DEV_BY_TYPE  " Показывает устройства, отсортированные по типу оборудования."
+  IDS_HINT_DEV_BY_CONN  " Показывает устройства, отсортированные по подключению."
+  IDS_HINT_RES_BY_TYPE  " Показывает ресурсы, отсортированные по типу."
+  IDS_HINT_RES_BY_CONN  " Показывает ресурсы, отсортированные по подключению."
+  IDS_HINT_SHOW_HIDDEN  " Показывает удаленные из системы и устаревшие устройства."
+
+  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_MOVE     " Moves this window."
+  IDS_HINT_SYS_SIZE     " Resizes this window."
+  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
+  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_CLOSE    " Closes this window."
+END

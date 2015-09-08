@@ -26,12 +26,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Параметры порта"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Filter Resource Method", -1, 6, 6, 237, 75, WS_GROUP
-    AUTORADIOBUTTON "Try not to use an interrupt", IDC_TRY_INTERRUPT, 11, 22, 227, 10
-    AUTORADIOBUTTON "Never use an interrupt", IDC_NEVER_INTERRUPT, 11, 44, 227, 10
-    AUTORADIOBUTTON "Use any interrupt assigned to the port", IDC_ANY_INTERRUPT, 11, 66, 227, 10, WS_GROUP
-    AUTOCHECKBOX "Enable legacy Plug and Play detection", -1, 6, 90, 237, 10
-    LTEXT "LPT Port Number:", -1, 6, 107, 140, 10, WS_GROUP
+    GROUPBOX "Метод фильтрации ресурсов", -1, 6, 6, 237, 75, WS_GROUP
+    AUTORADIOBUTTON "По возможности не использовать прерывание", IDC_TRY_INTERRUPT, 11, 22, 227, 10
+    AUTORADIOBUTTON "Не использовать прерывание в любом случае", IDC_NEVER_INTERRUPT, 11, 44, 227, 10
+    AUTORADIOBUTTON "Использовать любое прерывание, назначенное порту", IDC_ANY_INTERRUPT, 11, 66, 227, 10, WS_GROUP
+    AUTOCHECKBOX "Разрешить обнаружение старого Plug and Play порта", -1, 6, 90, 237, 10
+    LTEXT "Номер LPT порта:", -1, 6, 107, 140, 10, WS_GROUP
     COMBOBOX IDC_PARALLEL_NAME, 65, 105, 75, 20, WS_TABSTOP | CBS_DROPDOWNLIST
 END
 

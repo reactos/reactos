@@ -42,7 +42,7 @@ BEGIN
     EDITTEXT IDC_STATIC_MEM, 155, 130, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_SWAP, 155, 140, 220, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_VERSION, 155, 150, 215, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CHECKBOX "Check for WHQL digital signatures", IDC_WHQL_SIGN_CHECK, 15, 170, 135, 10, WS_DISABLED
+    CHECKBOX "Проверить цифровые подписи WHQL", IDC_WHQL_SIGN_CHECK, 15, 170, 135, 10, WS_DISABLED
 END
 
 IDD_DISPLAY_DIALOG DIALOGEX 0, 0, 462, 220
@@ -53,7 +53,7 @@ BEGIN
     RTEXT "Имя:", IDC_STATIC, 20, 10, 70, 10
     RTEXT "Изготовитель:", IDC_STATIC, 20, 20, 70, 10
     RTEXT "Тип микросхем:", IDC_STATIC, 20, 30, 70, 10
-    RTEXT "Тип конвертера DAC:", IDC_STATIC, 7, 40, 80, 10
+    RTEXT "Тип ЦАП:", IDC_STATIC, 7, 40, 80, 10
     RTEXT "Всего памяти:", IDC_STATIC, 20, 50, 70, 10
     RTEXT "Режим экрана:", IDC_STATIC, 20, 60, 70, 10
     RTEXT "Монитор:", IDC_STATIC, 20, 70, 70, 10
@@ -101,7 +101,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Устройство", IDC_STATIC, 5, 0, 250, 95
     RTEXT "Имя:", IDC_STATIC, 20, 10, 70, 10
-    RTEXT "Код устройства:", IDC_STATIC, 20, 20, 70, 10
+    RTEXT "Код оборудования:", IDC_STATIC, 20, 20, 70, 10
     RTEXT "Код изготовителя:", IDC_STATIC, 20, 30, 70, 10
     RTEXT "Код продукта:", IDC_STATIC, 20, 40, 70, 10
     RTEXT "Тип:", IDC_STATIC, 20, 50, 70, 10
@@ -139,15 +139,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     RTEXT "General MIDI DLS Collection:", IDC_STATIC, 0, 0, 100, 10
     EDITTEXT IDC_MIDI_DLS_COLLECTION, 105, 0, 250, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Music Ports", IDC_STATIC, 5, 10, 452, 85
-    GROUPBOX "ReactX Features", IDC_STATIC, 5, 97, 452, 70
+    GROUPBOX "Звуковые порты", IDC_STATIC, 5, 10, 452, 85
+    GROUPBOX "Возможности ReactX", IDC_STATIC, 5, 97, 452, 70
     LTEXT "Default Port Acceleration:", IDC_STATIC, 15, 120, 95, 17
     LTEXT "", IDC_STATIC_DEFAULT_PORT_ACCELERATION, 115, 120, 50, 10
-    PUSHBUTTON "Disable", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
-    LTEXT "Test using this port:", IDC_STATIC, 180, 105, 100, 10
+    PUSHBUTTON "Выключить", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
+    LTEXT "Проверить с использованием этого порта:", IDC_STATIC, 180, 105, 100, 10
     LISTBOX IDC_DMUSIC_TEST_LIST, 180, 115, 180, 45, LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Test DirectMusic", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED
-    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
+    PUSHBUTTON "Проверить DirectMusic", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED
+    GROUPBOX "Примечания", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_MUSIC_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -160,7 +160,7 @@ BEGIN
     GROUPBOX "Устройства ввода", IDC_STATIC, 5, 87, 452, 81
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
             WS_VISIBLE | WS_BORDER | WS_TABSTOP, 15, 99, 432, 60, 0x00000200
-    GROUPBOX "Информация", IDC_STATIC, 5, 170, 452, 50
+    GROUPBOX "Примечания", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_RICH_INFO, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -171,10 +171,10 @@ BEGIN
     GROUPBOX "Зарегистрированные поставщики DirectPlay", IDC_STATIC, 5, 0, 452, 75
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 15, 12, 432, 55
     GROUPBOX "Registered Lobbyable DirectPlay Applications", IDC_STATIC, 5, 77, 452, 55
-    GROUPBOX "ReactX Features", IDC_STATIC, 5, 133, 452, 35
-    PUSHBUTTON "DirectPlay Voice Options", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
-    PUSHBUTTON "Test DirectPlay", IDC_BUTTON_TESTDPLAY, 130, 145, 80, 14, WS_DISABLED
-    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
+    GROUPBOX "Возможности ReactX", IDC_STATIC, 5, 133, 452, 35
+    PUSHBUTTON "Настройки голоса DirectPlay", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
+    PUSHBUTTON "Проверить DirectPlay", IDC_BUTTON_TESTDPLAY, 130, 145, 80, 14, WS_DISABLED
+    GROUPBOX "Примечания", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_NETWORK_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -183,8 +183,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Still can't find the information you're looking for? Here are some additional things you can do:", IDC_STATIC, 5, 0, 300, 10
-    PUSHBUTTON "System Information", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
-    LTEXT "Displays additional system information", IDC_STATIC, 90, 23, 300, 10
+    PUSHBUTTON "Системная информация", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
+    LTEXT "Показать дополнительную системную информацию", IDC_STATIC, 90, 23, 300, 10
     PUSHBUTTON "Refresh Rate Override", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
     LTEXT "Overrides the Refresh Rate for DirectDraw", IDC_STATIC, 90, 43, 300, 10
 END
@@ -242,13 +242,13 @@ BEGIN
     IDS_OPTION_NO "Нет"
     IDS_D3DTEST_DESCRIPTION "Будет произведена проверка Direct3D на этом устройстве. Продолжить?"
     IDS_D3DTEST_D3Dx "Этот тест будет использовать интерфейс Direct3D %u с аппаратным ускорением."
-    IDS_OS_VERSION "%s %s (%d.%d, Build %d)"
-    IDS_DMUSIC_DESC "Description"
-    IDS_DMUSIC_TYPE "Type"
-    IDS_DMUSIC_KERNEL "Kernel Mode"
-    IDS_DMUSIC_IO "In/Out"
-    IDS_DMUSIC_DLS "Supports DLS"
-    IDS_DMUSIC_EXT "External"
-    IDS_DMUSIC_PORT "Default Port"
-    IDS_DDDISABLE_MSG "This will disable all hardware acceleration for DirectDraw on all display devices\n.Do you wish to continue?\n"
+    IDS_OS_VERSION "%s %s (%d.%d, сборка %d)"
+    IDS_DMUSIC_DESC "Описание"
+    IDS_DMUSIC_TYPE "Тип"
+    IDS_DMUSIC_KERNEL "Режим ядра"
+    IDS_DMUSIC_IO "Ввод/Вывод"
+    IDS_DMUSIC_DLS "Поддерживает DLS"
+    IDS_DMUSIC_EXT "Внешний"
+    IDS_DMUSIC_PORT "Стандартный порт"
+    IDS_DDDISABLE_MSG "Это отключит все аппаратное ускорение DirectDraw на всех дисплеях\n.Вы хотите продолжить?\n"
 END

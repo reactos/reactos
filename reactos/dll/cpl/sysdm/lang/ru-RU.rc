@@ -65,7 +65,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Системные параметры"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Version Info", IDC_STATIC, 6, 3, 210, 73
+    GROUPBOX "Информация о версии", IDC_STATIC, 6, 3, 210, 73
     CONTROL "Report as Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
@@ -100,22 +100,22 @@ END
 
 IDD_HARDWAREPROFILE DIALOGEX 0, 0, 212, 188
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "General"
+CAPTION "Общие"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
     LTEXT "", IDC_HWPPROP_PROFILE, 48, 16, 150, 8
     LTEXT "Dock ID:", IDC_STATIC, 10, 42, 43, 8
     LTEXT "", IDC_HWPPROP_DOCKID, 64, 42, 135, 8
-    LTEXT "Serial Number:", IDC_STATIC, 10, 55, 52, 8
+    LTEXT "Серийный номер:", IDC_STATIC, 10, 55, 52, 8
     LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
     GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
-    AUTOCHECKBOX "This is a &portable computer", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "Это &переносной компьютер", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "The docking &state is unknown", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "The computer is &docked", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "The computer is &undocked", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
-    GROUPBOX "Hardware profiles selection", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Always &include this profile as an option when ReactOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    GROUPBOX "Выбор профилей оборудования", IDC_STATIC, 10, 138, 192, 42
+    AUTOCHECKBOX "Всегда &отображать этот профиль при запуске ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
@@ -136,9 +136,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Переименовать профиль"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Из:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "Старое:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-    LTEXT "В:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "Новое:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
     DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 199, 30, 50, 14
@@ -233,7 +233,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Переменные среды"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Переменные пользователя", IDC_STATIC, 7, 12, 238, 100
+    GROUPBOX "Пользовательские переменные", IDC_STATIC, 7, 12, 238, 100
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Создать...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
@@ -295,13 +295,13 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Введите числовое значение для параметра максимальный размер файла подкачки."
     IDS_WARNINITIALRANGE "Начальный размер файла подкачки должен быть не меньше, чем 16 МБ и не должен превышать свободного места на выбранном диске."
     IDS_WARNMAXIMUMRANGE "Максимальный размер файла подкачки должен быть не меньше, чем начальный размер, который не должен превышать свободного места на выбранном диске."
-    IDS_PAGEFILE_NONE "none"
-    IDS_PAGEFILE_SYSTEM "system managed"
+    IDS_PAGEFILE_NONE "Нет"
+    IDS_PAGEFILE_SYSTEM "По выбору системы"
     IDS_INFOREBOOT "Необходимо перезагрузить компьютер для применения изменений."
     IDS_DEVS "\nКоманда ReactOS\n\nКоординатор проекта\n\nАлексей Брагин\n\nКоллектив разработчиков\n\nАлексей Брагин\nЭндрю Гринвуд\nАндрей Коротаев\nАрт Йеркс\nКристоф фон Виттих\nКолин Финк\nДаниэль Раймер\nДмитрий Чапышев\nЭрик Коль\nГед Мёрфи\nГрегор Брюнмар\nЭрве Поссино\nДжеймс Тэбор\nДжеффри Морлан\nЙоханнес Андервальд\nKamil Horníček\nKJK::Гиперион\nМаартен Босма\nМагнус Олсен\nМарк Пиулахс\nМаттиас Купфер\nМайк Норделл\nПитер Вард\nПьер Швейцер\nСавелий Третьяков\nСтефан Гинсберг\nСильвейн Петреоль\nТомас Блюмель\nТимо Кройцер\n\nАлекс Ионеску\nФилип Навара\nГуннар Далснес\nМартин Фукс\nРойс Митчелл III\nБрэндон Тёрнер\nБрайан Палмер\nКаспер Хорнструп\nДэвид Велч\nЭмануэль Алиберти\nГе ван Гельдорп\nГрегор Анич\nДжейсон Филби\nЙенс Коллин\nМихаэль Вирт\nНатан Вудс\nРоберт Дикенсон\nРекс Джоллифф\nVizzini\n\nРелиз-инженеры\n\nКолин Финк\nЦзылян Гуо\n\nРазработка веб-сайта\n\nКолин Финк\nЯн Блумквист Кинандер\nКлеменс Фридл\nЦзылян Гуо\n\nГрафический дизайн\n\nMindflyer\nWierd_W\n\nБлагодарности\n\nвсем участникам проекта\nКоманде Wine\n\n"
-    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
-    IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
-    IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
-    IDS_HWPROFILE_PROFILE "Profile"
-    IDS_HWPROFILE_WARNING "Warning"
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Подтверждение удаления профиля"
+    IDS_HWPROFILE_CONFIRM_DELETE "Вы уверены что хотите удалить профиль оборудования ""%s""?"
+    IDS_HWPROFILE_ALREADY_IN_USE "Профиль с таким названием уже существует."
+    IDS_HWPROFILE_PROFILE "Профиль"
+    IDS_HWPROFILE_WARNING "Внимание"
 END

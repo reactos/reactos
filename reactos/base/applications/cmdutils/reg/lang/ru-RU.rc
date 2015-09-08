@@ -11,7 +11,7 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Ошибка: Неправильные параметры командной строки\n"
     STRING_NO_REMOTE, "Ошибка: Невозможно добавить ключи на удаленной машине\n"
     STRING_CANNOT_FIND, "Ошибка: Не удалось найти указанный ключ реестра или значение\n"
-    STRING_ERROR, "Unexpected error: "
-    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
-    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
+    STRING_ERROR, "Непредвиденная ошибка: "
+    STRING_UNSUPPORTED_TYPE, "Ошибка: Неподдерживаемый тип\n"
+    STRING_INVALID_DWORD, "Ошибка: /d должно быть положительным числом\n"
 }

@@ -205,7 +205,7 @@ BEGIN
     IDS_COLOR_16BIT "Среднее (16 бит)"
     IDS_COLOR_24BIT "Высокое (24 бита)"
     IDS_COLOR_32BIT "Самое высокое (32 бита)"
-    IDS_PIXEL "%lux%lu точек"
+    IDS_PIXEL "%lux%lu пикселей"
 END
 
 STRINGTABLE

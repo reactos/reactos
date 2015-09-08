@@ -12,9 +12,9 @@ BEGIN
     IDS_ERROR_NOMEM "Недостаточно памяти для выполнения операции."
     IDS_ERROR_NOFONT "%1 не является корректным файлом шрифта."
     IDS_ERROR_NOCLASS "Невозможно инициализировать класс окна."
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
-TrueType Font (*.ttf)\0*.ttf\0\
-OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
-All Files (*.*)\0*.*\0"
+    IDS_FILTER_LIST "Все поддерживаемые шрифты (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType шрифты (*.ttf)\0*.ttf\0\
+OpenType шрифты (*.otf)\0*.otf\0\
+Файлы шрифтов (*.fon)\0*.fon\0\
+Все файлы (*.*)\0*.*\0"
 END

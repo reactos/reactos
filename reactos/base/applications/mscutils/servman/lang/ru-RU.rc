@@ -10,13 +10,13 @@ BEGIN
     END
     POPUP "Действие"
     BEGIN
-        MENUITEM "Соединение с...", ID_CONNECT, GRAYED
+        MENUITEM "Подключиться к...", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Пуск", ID_START, GRAYED
-        MENUITEM "Стоп", ID_STOP, GRAYED
-        MENUITEM "Пауза", ID_PAUSE, GRAYED
+        MENUITEM "Запустить", ID_START, GRAYED
+        MENUITEM "Остановить", ID_STOP, GRAYED
+        MENUITEM "Приостановить", ID_PAUSE, GRAYED
         MENUITEM "Продолжить", ID_RESUME, GRAYED
-        MENUITEM "Перезапуск", ID_RESTART, GRAYED
+        MENUITEM "Перезапустить", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Обновить", ID_REFRESH
         MENUITEM SEPARATOR
@@ -24,7 +24,7 @@ BEGIN
         MENUITEM "Создать...", ID_CREATE, GRAYED
         MENUITEM "Удалить...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Свойства...", ID_PROP, GRAYED
+        MENUITEM "Свойства", ID_PROP, GRAYED
     END
     POPUP "Вид"
     BEGIN
@@ -46,20 +46,20 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "Пуск", ID_START, GRAYED
-        MENUITEM "Стоп", ID_STOP, GRAYED
-        MENUITEM "Пауза", ID_PAUSE, GRAYED
+        MENUITEM "Запустить", ID_START, GRAYED
+        MENUITEM "Остановить", ID_STOP, GRAYED
+        MENUITEM "Приостановить", ID_PAUSE, GRAYED
         MENUITEM "Продолжить", ID_RESUME, GRAYED
-        MENUITEM "Перезапуск", ID_RESTART, GRAYED
+        MENUITEM "Перезапустить", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Обновить", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Изменить...", ID_EDIT, GRAYED
         MENUITEM "Удалить...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Свойства...", ID_PROP, GRAYED
+        MENUITEM "Свойства", ID_PROP, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Справка...", ID_HELP
+        MENUITEM "Справка", ID_HELP
     END
 END
 
@@ -84,12 +84,12 @@ BEGIN
     EDITTEXT IDC_DESCRIPTION, 78, 46, 167, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
     EDITTEXT IDC_EXEPATH, 6, 86, 240, 11, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
     COMBOBOX IDC_START_TYPE, 78, 107, 168, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    PUSHBUTTON "Пуск", IDC_START, 6, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "Стоп", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "Пауза", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Запустить", IDC_START, 6, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Остановить", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Приостановить", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "Продолжить", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
     LTEXT "Имя службы:", IDC_STATIC, 6, 11, 53, 11
-    LTEXT "Выводимое имя:", IDC_STATIC, 6, 29, 63, 11
+    LTEXT "Отображаемое имя:", IDC_STATIC, 6, 29, 63, 11
     LTEXT "Описание:", IDC_STATIC, 6, 47, 53, 11
     LTEXT "Исполняемый файл:", IDC_STATIC, 6, 75, 82, 9
     LTEXT "Тип запуска:", IDC_STATIC, 6, 108, 53, 11
@@ -133,7 +133,7 @@ BEGIN
     LTEXT "Описание:", IDC_STATIC, 8, 86, 58, 9
     PUSHBUTTON "OK", IDOK, 126, 192, 44, 14
     PUSHBUTTON "Отмена", IDCANCEL, 176, 192, 46, 14
-    LTEXT "Дополнително (нажмите ""Справка"" для уточнения)", IDC_STATIC, 8, 151, 206, 9
+    LTEXT "Дополнительно (нажмите ""Справка"" для уточнения)", IDC_STATIC, 8, 151, 206, 9
     PUSHBUTTON "Справка", ID_CREATE_HELP, 8, 192, 44, 14
 END
 
@@ -143,7 +143,7 @@ FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-    LTEXT "Вы уверены, что хотите удалить выбранную службу? Вы не сможете востановить ее после удаления!", IDC_STATIC, 50, 6, 125, 25
+    LTEXT "Вы уверены, что хотите удалить выбранную службу? Вы не сможете восстановить ее после удаления!", IDC_STATIC, 50, 6, 125, 25
     LTEXT "Имя службы:", IDC_STATIC, 6, 40, 80, 9
     LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
     EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |
@@ -153,7 +153,7 @@ BEGIN
 END
 
 IDD_DLG_DEPEND_STOP DIALOGEX 6, 6, 240, 148
-CAPTION "Stop Other Services"
+CAPTION "Остановить другие службы"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
@@ -199,16 +199,16 @@ STRINGTABLE
 BEGIN
     IDS_SERVICES_STARTED "Работает"
     IDS_SERVICES_STOPPED "Остановлено"
-    IDS_SERVICES_AUTO "Авто"
+    IDS_SERVICES_AUTO "Автоматически"
     IDS_SERVICES_MAN "Вручную"
-    IDS_SERVICES_DIS "Отключено"
+    IDS_SERVICES_DIS "Отключена"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NUM_SERVICES "Номер службы: %d"
-    IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
-    IDS_NO_DEPENDS "<No Dependencies>"
+    IDS_NUM_SERVICES "Всего служб: %d"
+    IDS_STOP_DEPENDS "После остановки %s, следующие службы тоже будут остановлены"
+    IDS_NO_DEPENDS "<Нет зависимостей>"
     IDS_LICENSE "Эта программа является свободным программным обеспечением; Вы можете распространять и/или изменять ее в соответствии с лицензией GNU General Public License версии 2 или более поздней, опубликованной Free Software Foundation.\r\n\r\nЭта программа распространяется с надеждой, что она может быть полезна, но БЕЗ ВСЯКОЙ ГАРАНТИИ; не подразумевается даже РАБОТОСПОСОБНОСТЬ или ПРИГОДНОСТЬ ДЛЯ ВЫПОЛНЕНИЯ НЕОБХОДИМЫХ ЗАДАЧ. См. GNU General Public License для получения дополнительных сведений.\r\n\r\nВы должны получить копию лицензии GNU вместе с этой программой, в противном случае обращайтесь в Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
@@ -222,15 +222,15 @@ BEGIN
     IDS_TOOLTIP_START "Запустить службу"
     IDS_TOOLTIP_STOP "Остановить службу"
     IDS_TOOLTIP_PAUSE "Приостановить службу"
-    IDS_TOOLTIP_RESTART "Перезапуск службы"
+    IDS_TOOLTIP_RESTART "Перезапустить службу"
 END
 
 STRINGTABLE
 BEGIN
     IDS_PROGRESS_INFO_START "ReactOS запускает службу"
-    IDS_PROGRESS_INFO_STOP "ReactOS остановливает службу"
-    IDS_PROGRESS_INFO_PAUSE "ReactOS останавливает следующие службы"
-    IDS_PROGRESS_INFO_RESUME "ReactOS возобновляет работу следующих служб"
+    IDS_PROGRESS_INFO_STOP "ReactOS останавливает службу"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS приостанавливает службу"
+    IDS_PROGRESS_INFO_RESUME "ReactOS возобновляет службу"
     IDS_CREATE_SUCCESS "Создание службы успешно завершено"
     IDS_DELETE_SUCCESS "Удаление службы успешно завершено"
     IDS_CREATE_REQ "* = обязательные поля"
@@ -266,7 +266,7 @@ BEGIN
     IDS_HINT_CUST " Настройка вида."
     IDS_HINT_HELP " Показать окно справки."
     IDS_HINT_ABOUT " О Диспетчере служб ReactOS."
-    IDS_HINT_SYS_RESTORE " Востановить нормальный размер окна."
+    IDS_HINT_SYS_RESTORE " Восстановить нормальный размер окна."
     IDS_HINT_SYS_MOVE " Переместить это окно."
     IDS_HINT_SYS_SIZE " Изменить размер этого окна."
     IDS_HINT_SYS_MINIMIZE " Сворачивание окна в значок."
