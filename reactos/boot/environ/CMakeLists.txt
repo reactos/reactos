@@ -46,9 +46,13 @@ elseif(ARCH STREQUAL "amd64")
          )
     list(APPEND BOOTLIB_SOURCE
          #lib/arch/amd64/foo.c
+         lib/arch/stub/arch.c
+         lib/mm/stub/mm.c
          )
 else()
-#TBD
+    list(APPEND BOOTLIB_SOURCE
+         lib/arch/stub/arch.c
+         )
 endif()
 
 add_asm_files(bootlib_asm ${BOOTLIB_ASM_SOURCE})
