@@ -29,6 +29,7 @@ DWORD get_fattime()
     time(&rawtime);
     timeinfo = localtime(&rawtime);
 
+    {
     union FatTime {
         struct {
             DWORD Second : 5; // div 2
@@ -51,6 +52,7 @@ DWORD get_fattime()
     };
 
     return myTime.whole;
+    }
 }
 
 int is_command(const char* parg)
@@ -66,10 +68,12 @@ int is_command(const char* parg)
 
 int need_mount()
 {
+    int r;
+
     if (isMounted)
         return FR_OK;
 
-    int r = f_mount(&g_Filesystem, "0:", 0);
+    r = f_mount(&g_Filesystem, "0:", 0);
     if (r)
         return r;
 
@@ -116,6 +120,8 @@ int main(int oargc, char* oargv[])
     while (argc > 0)
     {
         char *parg = *argv;
+        int nargs = 0;
+        int i = 0;
 
         if (!is_command(parg))
         {
@@ -128,21 +134,20 @@ int main(int oargc, char* oargv[])
         argc--;
 
         // find next command, to calculare number of args
-        int nargs = 0;
-        int i = 0;
         while ((argv[i] != NULL) && !is_command(argv[i++]))
             nargs++;
 
         if (strcmp(parg, "format") == 0)
         {
             // NOTE: The fs driver detects which FAT format fits best based on size
+            int sectors;
 
             NEED_PARAMS(1, 1);
 
             NEED_MOUNT();
 
             // Arg 1: number of sectors
-            int sectors = atoi(argv[0]);
+            sectors = atoi(argv[0]);
 
             if (sectors <= 0)
             {
@@ -168,15 +173,18 @@ int main(int oargc, char* oargv[])
         }
         else if (strcmp(parg, "add") == 0)
         {
+            FILE* fe;
+            FIL   fv = { 0 };
+            char buff[32768];
+            UINT rdlen = 0;
+            UINT wrlen = 0;
+
             NEED_PARAMS(2, 2);
 
             NEED_MOUNT();
 
             // Arg 1: external file to add
             // Arg 2: virtual filename
-
-            FILE* fe;
-            FIL   fv = { 0 };
 
             fe = fopen(argv[0], "rb");
 
@@ -192,10 +200,6 @@ int main(int oargc, char* oargv[])
                 return 1;
             }
 
-            char buff[32768];
-            UINT rdlen = 0;
-            UINT wrlen = 0;
-
             while ((rdlen = fread(buff, 1, 32768, fe)) > 0)
             {
                 f_write(&fv, buff, rdlen, &wrlen);
@@ -206,15 +210,18 @@ int main(int oargc, char* oargv[])
         }
         else if (strcmp(parg, "extract") == 0)
         {
+            FIL   fe = { 0 };
+            FILE* fv;
+            char buff[32768];
+            UINT rdlen = 0;
+            UINT wrlen = 0;
+
             NEED_PARAMS(2, 2);
 
             NEED_MOUNT();
 
             // Arg 1: virtual file to extract
             // Arg 2: external filename
-
-            FIL   fe = { 0 };
-            FILE* fv;
 
             if (f_open(&fe, argv[0], FA_READ))
             {
@@ -229,10 +236,6 @@ int main(int oargc, char* oargv[])
                 printf("Error: unable to open external file '%s' for writing.", argv[1]);
                 return 1;
             }
-
-            char buff[32768];
-            UINT rdlen = 0;
-            UINT wrlen = 0;
 
             while ((f_read(&fe, buff, 32768, &rdlen) == 0) && (rdlen > 0))
             {
@@ -255,14 +258,17 @@ int main(int oargc, char* oargv[])
         }
         else if (strcmp(parg, "copy") == 0)
         {
+            FIL fe = { 0 };
+            FIL fv = { 0 };
+            char buff[32768];
+            UINT rdlen = 0;
+            UINT wrlen = 0;
+
             NEED_PARAMS(2, 2);
 
             NEED_MOUNT();
             // Arg 1: src path & filename
             // Arg 2: new path & filename
-
-            FIL fe = { 0 };
-            FIL fv = { 0 };
 
             if (f_open(&fe, argv[0], FA_READ))
             {
@@ -274,10 +280,6 @@ int main(int oargc, char* oargv[])
                 printf("Error: unable to open file '%s' for writing.", argv[1]);
                 return 1;
             }
-
-            char buff[32768];
-            UINT rdlen = 0;
-            UINT wrlen = 0;
 
             while ((f_read(&fe, buff, 32768, &rdlen) == 0) && (rdlen > 0))
             {
@@ -307,17 +309,19 @@ int main(int oargc, char* oargv[])
         }
         else if (strcmp(parg, "list") == 0)
         {
+            char* root = "/";
+            DIR dir = { 0 };
+            FILINFO info = { 0 };
+            char lfname[257];
+
             NEED_PARAMS(0, 1);
 
             // Arg 1: folder path (optional)
-            char* root = "/";
 
             if (nargs == 1)
             {
                 root = argv[0];
             }
-
-            DIR dir = { 0 };
 
             if (f_opendir(&dir, root))
             {
@@ -327,8 +331,6 @@ int main(int oargc, char* oargv[])
 
             printf("Listing directory contents of: %s\n", root);
 
-            FILINFO info = { 0 };
-            char lfname[257];
             info.lfname = lfname;
             info.lfsize = 256;
             while ((!f_readdir(&dir, &info)) && (strlen(info.fname) > 0))
