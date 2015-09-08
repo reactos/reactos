@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph loader (specification).                           */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2005, 2006 by                                    */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -121,23 +121,25 @@ FT_BEGIN_HEADER
                               FT_UInt         n_contours );
 
 
-#define FT_GLYPHLOADER_CHECK_P( _loader, _count )           \
-  ( (_count) == 0                                        || \
-    ( (_loader)->base.outline.n_points    +                 \
-      (_loader)->current.outline.n_points +                 \
-      (unsigned long)(_count) ) <= (_loader)->max_points )
+#define FT_GLYPHLOADER_CHECK_P( _loader, _count )       \
+  ( (_count) == 0                                    || \
+    ( (FT_UInt)(_loader)->base.outline.n_points    +    \
+      (FT_UInt)(_loader)->current.outline.n_points +    \
+      (FT_UInt)(_count) ) <= (_loader)->max_points   )
 
-#define FT_GLYPHLOADER_CHECK_C( _loader, _count )            \
-  ( (_count) == 0                                         || \
-    ( (_loader)->base.outline.n_contours    +                \
-      (_loader)->current.outline.n_contours +                \
-      (unsigned long)(_count)) <= (_loader)->max_contours )
+#define FT_GLYPHLOADER_CHECK_C( _loader, _count )         \
+  ( (_count) == 0                                      || \
+    ( (FT_UInt)(_loader)->base.outline.n_contours    +    \
+      (FT_UInt)(_loader)->current.outline.n_contours +    \
+      (FT_UInt)(_count) ) <= (_loader)->max_contours   )
 
-#define FT_GLYPHLOADER_CHECK_POINTS( _loader, _points, _contours )      \
-  ( ( FT_GLYPHLOADER_CHECK_P( _loader, _points )   &&                   \
-      FT_GLYPHLOADER_CHECK_C( _loader, _contours ) )                    \
-    ? 0                                                                 \
-    : FT_GlyphLoader_CheckPoints( (_loader), (_points), (_contours) ) )
+#define FT_GLYPHLOADER_CHECK_POINTS( _loader, _points, _contours ) \
+  ( ( FT_GLYPHLOADER_CHECK_P( _loader, _points )   &&              \
+      FT_GLYPHLOADER_CHECK_C( _loader, _contours ) )               \
+    ? 0                                                            \
+    : FT_GlyphLoader_CheckPoints( (_loader),                       \
+                                  (FT_UInt)(_points),              \
+                                  (FT_UInt)(_contours) ) )
 
 
   /* check that there is enough space to add `n_subs' sub-glyphs to */

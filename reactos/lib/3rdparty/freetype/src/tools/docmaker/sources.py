@@ -3,7 +3,7 @@
 #
 #    Convert source code comments to multi-line blocks (library file).
 #
-#  Copyright 2002-2004, 2006-2009, 2012-2014 by
+#  Copyright 2002-2015 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,

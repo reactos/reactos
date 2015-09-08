@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2014 by                                                 */
+/*  Copyright 2000-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -150,7 +150,7 @@
       if ( name                               &&
            name[0] == glyph_name[0]           &&
            ft_strcmp( name, glyph_name ) == 0 )
-        return n;
+        return (FT_Int)n;
     }
 
     return -1;
@@ -298,7 +298,7 @@
 
     /* the seac operator must not be nested */
     decoder->seac = TRUE;
-    error = t1_decoder_parse_glyph( decoder, bchar_index );
+    error = t1_decoder_parse_glyph( decoder, (FT_UInt)bchar_index );
     decoder->seac = FALSE;
     if ( error )
       goto Exit;
@@ -320,7 +320,7 @@
 
     /* the seac operator must not be nested */
     decoder->seac = TRUE;
-    error = t1_decoder_parse_glyph( decoder, achar_index );
+    error = t1_decoder_parse_glyph( decoder, (FT_UInt)achar_index );
     decoder->seac = FALSE;
     if ( error )
       goto Exit;
@@ -381,10 +381,10 @@
 
 
     /* compute random seed from stack address of parameter */
-    seed = (FT_Fixed)( ( (FT_PtrDist)(char*)&seed              ^
-                         (FT_PtrDist)(char*)&decoder           ^
-                         (FT_PtrDist)(char*)&charstring_base ) &
-                         FT_ULONG_MAX ) ;
+    seed = (FT_Fixed)( ( (FT_Offset)(char*)&seed            ^
+                         (FT_Offset)(char*)&decoder         ^
+                         (FT_Offset)(char*)&charstring_base ) &
+                         FT_ULONG_MAX                         );
     seed = ( seed ^ ( seed >> 10 ) ^ ( seed >> 20 ) ) & 0xFFFFL;
     if ( seed == 0 )
       seed = 0x7384;
@@ -796,7 +796,8 @@
           known_othersubr_result_cnt = 1;
 
           if ( hinter )
-            hinter->reset( hinter->hints, builder->current->n_points );
+            hinter->reset( hinter->hints,
+                           (FT_UInt)builder->current->n_points );
           break;
 
         case 12:
@@ -861,7 +862,7 @@
               *values++ = tmp;
             }
 
-            known_othersubr_result_cnt = num_points;
+            known_othersubr_result_cnt = (FT_Int)num_points;
             break;
           }
 
@@ -879,8 +880,8 @@
 
             idx = Fix2Int( top[0] );
 
-            if ( idx < 0                                           ||
-                 idx + blend->num_designs > decoder->len_buildchar )
+            if ( idx < 0                                                    ||
+                 (FT_UInt)idx + blend->num_designs > decoder->len_buildchar )
               goto Unexpected_OtherSubr;
 
             ft_memcpy( &decoder->buildchar[idx],
@@ -1094,7 +1095,8 @@
           /* close hints recording session */
           if ( hinter )
           {
-            if ( hinter->close( hinter->hints, builder->current->n_points ) )
+            if ( hinter->close( hinter->hints,
+                                (FT_UInt)builder->current->n_points ) )
               goto Syntax_Error;
 
             /* apply hints to the loaded glyph outline now */
@@ -1346,7 +1348,7 @@
             FT_TRACE4(( " callsubr" ));
 
             idx = Fix2Int( top[0] );
-            if ( idx < 0 || idx >= (FT_Int)decoder->num_subrs )
+            if ( idx < 0 || idx >= decoder->num_subrs )
             {
               FT_ERROR(( "t1_decoder_parse_charstrings:"
                          " invalid subrs index\n" ));
@@ -1579,7 +1581,7 @@
 
     /* retrieve PSNames interface from list of current modules */
     {
-      FT_Service_PsCMaps  psnames = 0;
+      FT_Service_PsCMaps  psnames;
 
 
       FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );

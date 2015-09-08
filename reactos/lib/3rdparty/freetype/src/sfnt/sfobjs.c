@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    SFNT object management (base).                                       */
 /*                                                                         */
-/*  Copyright 1996-2008, 2010-2014 by                                      */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -376,8 +376,8 @@
     FT_FREE( stream->base );
 
     stream->size  = 0;
-    stream->base  = 0;
-    stream->close = 0;
+    stream->base  = NULL;
+    stream->close = NULL;
   }
 
 
@@ -580,8 +580,8 @@
       table->OrigOffset = sfnt_offset;
 
       /* The offsets must be multiples of 4. */
-      woff_offset += ( table->CompLength + 3 ) & ~3;
-      sfnt_offset += ( table->OrigLength + 3 ) & ~3;
+      woff_offset += ( table->CompLength + 3 ) & ~3U;
+      sfnt_offset += ( table->OrigLength + 3 ) & ~3U;
     }
 
     /*
@@ -609,7 +609,7 @@
     if ( woff.privOffset )
     {
       /* ... if it isn't the last block. */
-      woff_offset = ( woff_offset + 3 ) & ~3;
+      woff_offset = ( woff_offset + 3 ) & ~3U;
 
       if ( woff.privOffset != woff_offset                  ||
            woff.privOffset + woff.privLength > woff.length )
@@ -1431,8 +1431,8 @@
         root->ascender  = face->horizontal.Ascender;
         root->descender = face->horizontal.Descender;
 
-        root->height = (FT_Short)( root->ascender - root->descender +
-                                   face->horizontal.Line_Gap );
+        root->height = root->ascender - root->descender +
+                       face->horizontal.Line_Gap;
 
         if ( !( root->ascender || root->descender ) )
         {
@@ -1443,23 +1443,24 @@
               root->ascender  = face->os2.sTypoAscender;
               root->descender = face->os2.sTypoDescender;
 
-              root->height = (FT_Short)( root->ascender - root->descender +
-                                         face->os2.sTypoLineGap );
+              root->height = root->ascender - root->descender +
+                             face->os2.sTypoLineGap;
             }
             else
             {
               root->ascender  =  (FT_Short)face->os2.usWinAscent;
               root->descender = -(FT_Short)face->os2.usWinDescent;
 
-              root->height = (FT_UShort)( root->ascender - root->descender );
+              root->height = root->ascender - root->descender;
             }
           }
         }
 
-        root->max_advance_width  = face->horizontal.advance_Width_Max;
-        root->max_advance_height = (FT_Short)( face->vertical_info
-                                     ? face->vertical.advance_Height_Max
-                                     : root->height );
+        root->max_advance_width  =
+          (FT_Short)face->horizontal.advance_Width_Max;
+        root->max_advance_height =
+          (FT_Short)( face->vertical_info ? face->vertical.advance_Height_Max
+                                          : root->height );
 
         /* See http://www.microsoft.com/OpenType/OTSpec/post.htm -- */
         /* Adjust underline position from top edge to centre of     */
@@ -1569,7 +1570,7 @@
 
     FT_FREE( face->postscript_name );
 
-    face->sfnt = 0;
+    face->sfnt = NULL;
   }
 
 

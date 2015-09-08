@@ -448,14 +448,14 @@ THE SOFTWARE.
   pcf_get_properties( FT_Stream  stream,
                       PCF_Face   face )
   {
-    PCF_ParseProperty  props      = 0;
+    PCF_ParseProperty  props      = NULL;
     PCF_Property       properties = NULL;
     FT_ULong           nprops, i;
     FT_ULong           format, size;
     FT_Error           error;
     FT_Memory          memory     = FT_FACE( face )->memory;
     FT_ULong           string_size;
-    FT_String*         strings    = 0;
+    FT_String*         strings    = NULL;
 
 
     error = pcf_seek_to_table_type( stream,
@@ -485,9 +485,9 @@ THE SOFTWARE.
       goto Bail;
 
     FT_TRACE4(( "  nprop = %d (truncate %d props)\n",
-                (int)nprops, nprops - (int)nprops ));
+                (int)nprops, nprops - (FT_ULong)(int)nprops ));
 
-    nprops = (int)nprops;
+    nprops = (FT_ULong)(int)nprops;
 
     /* rough estimate */
     if ( nprops > size / PCF_PROPERTY_SIZE )
@@ -620,7 +620,7 @@ THE SOFTWARE.
     FT_Error    error;
     FT_Memory   memory  = FT_FACE( face )->memory;
     FT_ULong    format, size;
-    PCF_Metric  metrics = 0;
+    PCF_Metric  metrics = NULL;
     FT_ULong    nmetrics, i;
 
 
@@ -766,8 +766,7 @@ THE SOFTWARE.
 
     FT_TRACE4(( "  number of bitmaps: %d\n", nbitmaps ));
 
-    /* XXX: PCF_Face->nmetrics is signed FT_Long, see pcf.h */
-    if ( face->nmetrics < 0 || nbitmaps != (FT_ULong)face->nmetrics )
+    if ( nbitmaps != face->nmetrics )
       return FT_THROW( Invalid_File_Format );
 
     if ( FT_NEW_ARRAY( offsets, nbitmaps ) )
@@ -795,9 +794,10 @@ THE SOFTWARE.
       if ( error )
         goto Bail;
 
-      sizebitmaps = bitmapSizes[PCF_GLYPH_PAD_INDEX( format )];
+      sizebitmaps = (FT_ULong)bitmapSizes[PCF_GLYPH_PAD_INDEX( format )];
 
-      FT_TRACE4(( "  padding %d implies a size of %ld\n", i, bitmapSizes[i] ));
+      FT_TRACE4(( "  padding %d implies a size of %ld\n",
+                  i, bitmapSizes[i] ));
     }
 
     FT_TRACE4(( "  %d bitmaps, padding index %ld\n",
@@ -817,7 +817,7 @@ THE SOFTWARE.
                     " invalid offset to bitmap data of glyph %d\n", i ));
       }
       else
-        face->metrics[i].bits = stream->pos + offsets[i];
+        face->metrics[i].bits = stream->pos + (FT_ULong)offsets[i];
     }
 
     face->bitmapsFormat = format;
@@ -837,8 +837,10 @@ THE SOFTWARE.
     FT_ULong      format, size;
     int           firstCol, lastCol;
     int           firstRow, lastRow;
-    int           nencoding, encodingOffset;
-    int           i, j, k;
+    FT_ULong      nencoding;
+    int           encodingOffset;
+    int           i, j;
+    FT_ULong      k;
     PCF_Encoding  encoding = NULL;
 
 
@@ -893,7 +895,8 @@ THE SOFTWARE.
     FT_TRACE4(( "  firstCol %d, lastCol %d, firstRow %d, lastRow %d\n",
                 firstCol, lastCol, firstRow, lastRow ));
 
-    nencoding = ( lastCol - firstCol + 1 ) * ( lastRow - firstRow + 1 );
+    nencoding = (FT_ULong)( lastCol - firstCol + 1 ) *
+                (FT_ULong)( lastRow - firstRow + 1 );
 
     if ( FT_NEW_ARRAY( encoding, nencoding ) )
       return FT_THROW( Out_Of_Memory );
@@ -912,10 +915,10 @@ THE SOFTWARE.
         else
           encodingOffset = FT_GET_SHORT_LE();
 
-        if ( encodingOffset != -1 )
+        if ( encodingOffset > -1 )
         {
           encoding[k].enc   = i * 256 + j;
-          encoding[k].glyph = (FT_Short)encodingOffset;
+          encoding[k].glyph = (FT_UShort)encodingOffset;
 
           FT_TRACE5(( "  code %d (0x%04X): idx %d\n",
                       encoding[k].enc, encoding[k].enc, encoding[k].glyph ));
@@ -1256,7 +1259,7 @@ THE SOFTWARE.
        *
        * This implies bumping the number of `available' glyphs by 1.
        */
-      root->num_glyphs = face->nmetrics + 1;
+      root->num_glyphs = (FT_Long)( face->nmetrics + 1 );
 
       root->num_fixed_sizes = 1;
       if ( FT_NEW_ARRAY( root->available_sizes, 1 ) )
@@ -1313,7 +1316,7 @@ THE SOFTWARE.
 
       /* set up charset */
       {
-        PCF_Property  charset_registry = 0, charset_encoding = 0;
+        PCF_Property  charset_registry, charset_encoding;
 
 
         charset_registry = pcf_find_property( face, "CHARSET_REGISTRY" );

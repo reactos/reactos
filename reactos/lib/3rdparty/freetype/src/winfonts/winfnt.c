@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2004, 2006-2014 by                                      */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*  Copyright 2003 Huw D M Davies for Codeweavers                          */
 /*  Copyright 2007 Dmitry Timoshkov for Codeweavers                        */
@@ -28,7 +28,7 @@
 #include "winfnt.h"
 #include "fnterrs.h"
 #include FT_SERVICE_WINFNT_H
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 
   /*************************************************************************/
   /*                                                                       */
@@ -201,7 +201,7 @@
     FT_FREE( font->family_name );
 
     FT_FREE( font );
-    face->font = 0;
+    face->font = NULL;
   }
 
 
@@ -277,7 +277,7 @@
     WinMZ_HeaderRec  mz_header;
 
 
-    face->font = 0;
+    face->font = NULL;
 
     /* does it begin with an MZ header? */
     if ( FT_STREAM_SEEK( 0 )                                      ||
@@ -331,8 +331,8 @@
           if ( type_id == 0x8008U )
           {
             font_count  = count;
-            font_offset = (FT_ULong)( FT_STREAM_POS() + 4 +
-                                      ( stream->cursor - stream->limit ) );
+            font_offset = FT_STREAM_POS() + 4 +
+                          (FT_ULong)( stream->cursor - stream->limit );
             break;
           }
 
@@ -370,8 +370,8 @@
         if ( FT_NEW( face->font ) )
           goto Exit;
 
-        if ( FT_STREAM_SEEK( font_offset + face_index * 12 ) ||
-             FT_FRAME_ENTER( 12 )                            )
+        if ( FT_STREAM_SEEK( font_offset + (FT_ULong)face_index * 12 ) ||
+             FT_FRAME_ENTER( 12 )                                      )
           goto Fail;
 
         face->font->offset   = (FT_ULong)FT_GET_USHORT_LE() << size_shift;
@@ -391,7 +391,7 @@
         WinPE_RsrcDirEntryRec   dir_entry1, dir_entry2, dir_entry3;
         WinPE_RsrcDataEntryRec  data_entry;
 
-        FT_Long    root_dir_offset, name_dir_offset, lang_dir_offset;
+        FT_ULong   root_dir_offset, name_dir_offset, lang_dir_offset;
         FT_UShort  i, j, k;
 
 
@@ -739,9 +739,9 @@
     /* we now need to fill the root FT_Face fields */
     /* with relevant information                   */
     {
-      FT_Face     root = FT_FACE( face );
-      FNT_Font    font = face->font;
-      FT_PtrDist  family_size;
+      FT_Face   root = FT_FACE( face );
+      FNT_Font  font = face->font;
+      FT_ULong  family_size;
 
 
       root->face_index = face_index;
@@ -769,9 +769,9 @@
         FT_UShort        x_res, y_res;
 
 
-        bsize->width  = font->header.avg_width;
-        bsize->height = (FT_Short)(
-          font->header.pixel_height + font->header.external_leading );
+        bsize->width  = (FT_Short)font->header.avg_width;
+        bsize->height = (FT_Short)( font->header.pixel_height +
+                                    font->header.external_leading );
         bsize->size   = font->header.nominal_point_size << 6;
 
         x_res = font->header.horizontal_resolution;
@@ -964,7 +964,7 @@
     FNT_Font    font;
     FT_Error    error  = FT_Err_Ok;
     FT_Byte*    p;
-    FT_Int      len;
+    FT_UInt     len;
     FT_Bitmap*  bitmap = &slot->bitmap;
     FT_ULong    offset;
     FT_Bool     new_format;
@@ -1009,7 +1009,7 @@
 
     p = font->fnt_frame + offset;
 
-    bitmap->width = FT_NEXT_SHORT_LE( p );
+    bitmap->width = FT_NEXT_USHORT_LE( p );
 
     /* jump to glyph entry */
     if ( new_format )
@@ -1030,12 +1030,12 @@
     /* allocate and build bitmap */
     {
       FT_Memory  memory = FT_FACE_MEMORY( slot->face );
-      FT_Int     pitch  = ( bitmap->width + 7 ) >> 3;
+      FT_UInt    pitch  = ( bitmap->width + 7 ) >> 3;
       FT_Byte*   column;
       FT_Byte*   write;
 
 
-      bitmap->pitch      = pitch;
+      bitmap->pitch      = (int)pitch;
       bitmap->rows       = font->header.pixel_height;
       bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
 
@@ -1069,14 +1069,14 @@
     slot->format          = FT_GLYPH_FORMAT_BITMAP;
 
     /* now set up metrics */
-    slot->metrics.width        = bitmap->width << 6;
-    slot->metrics.height       = bitmap->rows << 6;
-    slot->metrics.horiAdvance  = bitmap->width << 6;
+    slot->metrics.width        = (FT_Pos)( bitmap->width << 6 );
+    slot->metrics.height       = (FT_Pos)( bitmap->rows << 6 );
+    slot->metrics.horiAdvance  = (FT_Pos)( bitmap->width << 6 );
     slot->metrics.horiBearingX = 0;
     slot->metrics.horiBearingY = slot->bitmap_top << 6;
 
     ft_synthesize_vertical_metrics( &slot->metrics,
-                                    bitmap->rows << 6 );
+                                    (FT_Pos)( bitmap->rows << 6 ) );
 
   Exit:
     return error;
@@ -1108,8 +1108,8 @@
 
   static const FT_ServiceDescRec  winfnt_services[] =
   {
-    { FT_SERVICE_ID_XF86_NAME, FT_XF86_FORMAT_WINFNT },
-    { FT_SERVICE_ID_WINFNT,    &winfnt_service_rec },
+    { FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_WINFNT },
+    { FT_SERVICE_ID_WINFNT,      &winfnt_service_rec },
     { NULL, NULL }
   };
 

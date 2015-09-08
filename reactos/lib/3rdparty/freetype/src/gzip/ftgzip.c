@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2002-2006, 2009-2014 by                                      */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -58,7 +58,6 @@
  /* conflicts when a program is linked with both FreeType and the    */
  /* original ZLib.                                                   */
 
-#define NO_DUMMY_DECL
 #ifndef USE_ZLIB_ZCALLOC
 #define MY_ZCALLOC /* prevent all zcalloc() & zfree() in zutils.c */
 #endif

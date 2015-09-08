@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType name ID definitions (specification only).                   */
 /*                                                                         */
-/*  Copyright 1996-2004, 2006-2008, 2012-2014 by                           */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -321,7 +321,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* The canonical source for the Apple assigned Language ID's is at       */
   /*                                                                       */
-  /*   https://developer.apple.com/fonts/TTRefMan/RM06/Chap6name.html      */
+  /*   https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html */
   /*                                                                       */
 #define TT_MAC_LANGID_ENGLISH                       0
 #define TT_MAC_LANGID_FRENCH                        1

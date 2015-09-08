@@ -5,7 +5,7 @@
 /*    FreeType API for controlling the TrueType driver                     */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 2013 by                                                      */
+/*  Copyright 2013-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -67,13 +67,13 @@ FT_BEGIN_HEADER
    *   TT_CONFIG_OPTION_SUBPIXEL_HINTING is defined, and no subpixel
    *   support otherwise (since it isn't available then).
    *
-   *   If subpixel hinting is on, many TrueType bytecode instructions
-   *   behave differently compared to B/W or grayscale rendering.  The
-   *   main idea is to render at a much increased horizontal resolution,
-   *   then sampling down the created output to subpixel precision.
-   *   However, many older fonts are not suited to this and must be
-   *   specially taken care of by applying (hardcoded) font-specific
-   *   tweaks.
+   *   If subpixel hinting is on, many TrueType bytecode instructions behave
+   *   differently compared to B/W or grayscale rendering (except if `native
+   *   ClearType' is selected by the font).  The main idea is to render at a
+   *   much increased horizontal resolution, then sampling down the created
+   *   output to subpixel precision.  However, many older fonts are not
+   *   suited to this and must be specially taken care of by applying
+   *   (hardcoded) font-specific tweaks.
    *
    *   Details on subpixel hinting and some of the necessary tweaks can be
    *   found in Greg Hitchcock's whitepaper at
@@ -135,24 +135,87 @@ FT_BEGIN_HEADER
    *   `FT_Err_Unimplemented_Feature' error.
    *
    *   Depending on the graphics framework, Microsoft uses different
-   *   bytecode engines.  As a consequence, the version numbers returned by
-   *   a call to the `GETINFO[1]' bytecode instruction are more convoluted
-   *   than desired.
+   *   bytecode and rendering engines.  As a consequence, the version
+   *   numbers returned by a call to the `GETINFO' bytecode instruction are
+   *   more convoluted than desired.
+   *
+   *   Here are two tables that try to shed some light on the possible
+   *   values for the MS rasterizer engine, together with the additional
+   *   features introduced by it.
    *
    *   {
-   *      framework   Windows version   result of GETINFO[1]
-   *     ----------------------------------------------------
-   *       GDI         before XP         35
-   *       GDI         XP and later      37
-   *       GDI+ old    before Vista      37
-   *       GDI+ old    Vista, 7          38
-   *       GDI+        after 7           40
-   *       DWrite      before 8          39
-   *       DWrite      8 and later       40
+   *     GETINFO framework               version feature
+   *     -------------------------------------------------------------------
+   *         3   GDI (Win 3.1),            v1.0  16-bit, first version
+   *             TrueImage
+   *        33   GDI (Win NT 3.1),         v1.5  32-bit
+   *             HP Laserjet
+   *        34   GDI (Win 95)              v1.6  font smoothing,
+   *                                             new SCANTYPE opcode
+   *        35   GDI (Win 98/2000)         v1.7  (UN)SCALED_COMPONENT_OFFSET
+   *                                               bits in composite glyphs
+   *        36   MGDI (Win CE 2)           v1.6+ classic ClearType
+   *        37   GDI (XP and later),       v1.8  ClearType
+   *             GDI+ old (before Vista)
+   *        38   GDI+ old (Vista, Win 7),  v1.9  subpixel ClearType,
+   *             WPF                             Y-direction ClearType,
+   *                                             additional error checking
+   *        39   DWrite (before Win 8)     v2.0  subpixel ClearType flags
+   *                                               in GETINFO opcode,
+   *                                             bug fixes
+   *        40   GDI+ (after Win 7),       v2.1  Y-direction ClearType flag
+   *             DWrite (Win 8)                    in GETINFO opcode,
+   *                                             Gray ClearType
    *   }
    *
-   *   Since FreeType doesn't provide all capabilities of DWrite ClearType,
-   *   using version~38 seems justified.
+   *   The `version' field gives a rough orientation only, since some
+   *   applications provided certain features much earlier (as an example,
+   *   Microsoft Reader used subpixel and Y-direction ClearType already in
+   *   Windows 2000).  Similarly, updates to a given framework might include
+   *   improved hinting support.
+   *
+   *   {
+   *      version   sampling          rendering        comment
+   *               x        y       x           y
+   *     --------------------------------------------------------------
+   *       v1.0   normal  normal  B/W           B/W    bi-level
+   *       v1.6   high    high    gray          gray   grayscale
+   *       v1.8   high    normal  color-filter  B/W    (GDI) ClearType
+   *       v1.9   high    high    color-filter  gray   Color ClearType
+   *       v2.1   high    normal  gray          B/W    Gray ClearType
+   *       v2.1   high    high    gray          gray   Gray ClearType
+   *   }
+   *
+   *   Color and Gray ClearType are the two available variants of
+   *   `Y-direction ClearType', meaning grayscale rasterization along the
+   *   Y-direction; the name used in the TrueType specification for this
+   *   feature is `symmetric smoothing'.  `Classic ClearType' is the
+   *   original algorithm used before introducing a modified version in
+   *   Win~XP.  Another name for v1.6's grayscale rendering is `font
+   *   smoothing', and `Color ClearType' is sometimes also called `DWrite
+   *   ClearType'.  To differentiate between today's Color ClearType and the
+   *   earlier ClearType variant with B/W rendering along the vertical axis,
+   *   the latter is sometimes called `GDI ClearType'.
+   *
+   *   `Normal' and `high' sampling describe the (virtual) resolution to
+   *   access the rasterized outline after the hinting process.  `Normal'
+   *   means 1 sample per grid line (i.e., B/W).  In the current Microsoft
+   *   implementation, `high' means an extra virtual resolution of 16x16 (or
+   *   16x1) grid lines per pixel for bytecode instructions like `MIRP'.
+   *   After hinting, these 16 grid lines are mapped to 6x5 (or 6x1) grid
+   *   lines for color filtering if Color ClearType is activated.
+   *
+   *   Note that `Gray ClearType' is essentially the same as v1.6's
+   *   grayscale rendering.  However, the GETINFO instruction handles it
+   *   differently: v1.6 returns bit~12 (hinting for grayscale), while v2.1
+   *   returns bits~13 (hinting for ClearType), 18 (symmetrical smoothing),
+   *   and~19 (Gray ClearType).  Also, this mode respects bits 2 and~3 for
+   *   the version~1 gasp table exclusively (like Color ClearType), while
+   *   v1.6 only respects the values of version~0 (bits 0 and~1).
+   *
+   *   FreeType doesn't provide all capabilities of the most recent
+   *   ClearType incarnation, thus we identify our subpixel support as
+   *   version~38.
    *
    */
 #define TT_INTERPRETER_VERSION_35  35

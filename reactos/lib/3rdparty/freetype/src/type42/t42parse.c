@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font parser (body).                                          */
 /*                                                                         */
-/*  Copyright 2002-2014 by                                                 */
+/*  Copyright 2002-2015 by                                                 */
 /*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -104,12 +104,6 @@
 
 
 #define T1_Add_Table( p, i, o, l )  (p)->funcs.add( (p), i, o, l )
-#define T1_Done_Table( p )          \
-          do                        \
-          {                         \
-            if ( (p)->funcs.done )  \
-              (p)->funcs.done( p ); \
-          } while ( 0 )
 #define T1_Release_Table( p )          \
           do                           \
           {                            \
@@ -148,11 +142,11 @@
     FT_Long   size;
 
 
-    psaux->ps_parser_funcs->init( &parser->root, 0, 0, memory );
+    psaux->ps_parser_funcs->init( &parser->root, NULL, NULL, memory );
 
     parser->stream    = stream;
     parser->base_len  = 0;
-    parser->base_dict = 0;
+    parser->base_dict = NULL;
     parser->in_memory = 0;
 
     /*******************************************************************/
@@ -184,7 +178,7 @@
     if ( error || FT_STREAM_SEEK( 0 ) )
       goto Exit;
 
-    size = stream->size;
+    size = (FT_Long)stream->size;
 
     /* now, try to load `size' bytes of the `base' dictionary we */
     /* found previously                                          */
@@ -433,7 +427,7 @@
 
           if ( cur + 2 < limit && *cur == '/' && n < count )
           {
-            FT_PtrDist  len;
+            FT_UInt  len;
 
 
             cur++;
@@ -445,7 +439,7 @@
             if ( parser->root.error )
               return;
 
-            len = parser->root.cursor - cur;
+            len = (FT_UInt)( parser->root.cursor - cur );
 
             parser->root.error = T1_Add_Table( char_table, charcode,
                                                cur, len + 1 );
@@ -524,9 +518,9 @@
     FT_Byte*    limit  = parser->root.limit;
     FT_Error    error;
     FT_Int      num_tables = 0;
-    FT_ULong    count;
+    FT_Long     count;
 
-    FT_Long     n, string_size, old_string_size, real_size;
+    FT_ULong    n, string_size, old_string_size, real_size;
     FT_Byte*    string_buf = NULL;
     FT_Bool     allocated  = 0;
 
@@ -579,7 +573,7 @@
           goto Exit;
 
         /* don't include delimiters */
-        string_size = (FT_Long)( ( parser->root.cursor - cur - 2 + 1 ) / 2 );
+        string_size = (FT_ULong)( ( parser->root.cursor - cur - 2 + 1 ) / 2 );
         if ( !string_size )
         {
           FT_ERROR(( "t42_parse_sfnts: invalid data in sfnts array\n" ));
@@ -594,11 +588,14 @@
         parser->root.cursor = cur;
         (void)T1_ToBytes( parser, string_buf, string_size, &real_size, 1 );
         old_string_size = string_size;
-        string_size = real_size;
+        string_size     = real_size;
       }
 
       else if ( ft_isdigit( *cur ) )
       {
+        FT_Long  tmp;
+
+
         if ( allocated )
         {
           FT_ERROR(( "t42_parse_sfnts: "
@@ -607,13 +604,15 @@
           goto Fail;
         }
 
-        string_size = T1_ToInt( parser );
-        if ( string_size < 0 )
+        tmp = T1_ToInt( parser );
+        if ( tmp < 0 )
         {
           FT_ERROR(( "t42_parse_sfnts: invalid string size\n" ));
           error = FT_THROW( Invalid_File_Format );
           goto Fail;
         }
+        else
+          string_size = (FT_ULong)tmp;
 
         T1_Skip_PS_Token( parser );             /* `RD' */
         if ( parser->root.error )
@@ -621,7 +620,7 @@
 
         string_buf = parser->root.cursor + 1;   /* one space after `RD' */
 
-        if ( limit - parser->root.cursor < string_size )
+        if ( (FT_ULong)( limit - parser->root.cursor ) < string_size )
         {
           FT_ERROR(( "t42_parse_sfnts: too much binary data\n" ));
           error = FT_THROW( Invalid_File_Format );
@@ -667,7 +666,7 @@
             status         = BEFORE_TABLE_DIR;
             face->ttf_size = 12 + 16 * num_tables;
 
-            if ( (FT_ULong)( limit - parser->root.cursor ) < face->ttf_size )
+            if ( (FT_Long)( limit - parser->root.cursor ) < face->ttf_size )
             {
               FT_ERROR(( "t42_parse_sfnts: invalid data in sfnts array\n" ));
               error = FT_THROW( Invalid_File_Format );
@@ -700,7 +699,7 @@
               len = FT_PEEK_ULONG( p );
 
               /* Pad to a 4-byte boundary length */
-              face->ttf_size += ( len + 3 ) & ~3;
+              face->ttf_size += (FT_Long)( ( len + 3 ) & ~3U );
             }
 
             status = OTHER_TABLES;
@@ -754,8 +753,8 @@
 
     FT_Byte*       cur;
     FT_Byte*       limit        = parser->root.limit;
-    FT_UInt        n;
-    FT_UInt        notdef_index = 0;
+    FT_Int         n;
+    FT_Int         notdef_index = 0;
     FT_Byte        notdef_found = 0;
 
 
@@ -770,15 +769,21 @@
 
     if ( ft_isdigit( *parser->root.cursor ) )
     {
-      loader->num_glyphs = (FT_UInt)T1_ToInt( parser );
+      loader->num_glyphs = T1_ToInt( parser );
       if ( parser->root.error )
         return;
+      if ( loader->num_glyphs < 0 )
+      {
+        FT_ERROR(( "t42_parse_encoding: invalid number of glyphs\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Fail;
+      }
     }
     else if ( *parser->root.cursor == '<' )
     {
       /* We have `<< ... >>'.  Count the number of `/' in the dictionary */
       /* to get its size.                                                */
-      FT_UInt  count = 0;
+      FT_Int  count = 0;
 
 
       T1_Skip_PS_Token( parser );
@@ -873,7 +878,7 @@
 
       if ( *cur == '/' )
       {
-        FT_PtrDist  len;
+        FT_UInt  len;
 
 
         if ( cur + 2 >= limit )
@@ -884,7 +889,7 @@
         }
 
         cur++;                              /* skip `/' */
-        len = parser->root.cursor - cur;
+        len = (FT_UInt)( parser->root.cursor - cur );
 
         error = T1_Add_Table( name_table, n, cur, len + 1 );
         if ( error )
@@ -914,7 +919,7 @@
           goto Fail;
         }
 
-        len = parser->root.cursor - cur;
+        len = (FT_UInt)( parser->root.cursor - cur );
 
         error = T1_Add_Table( code_table, n, cur, len + 1 );
         if ( error )
@@ -1135,7 +1140,7 @@
       /* look for immediates */
       else if ( *cur == '/' && cur + 2 < limit )
       {
-        FT_PtrDist  len;
+        FT_UInt  len;
 
 
         cur++;
@@ -1145,7 +1150,7 @@
         if ( parser->root.error )
           goto Exit;
 
-        len = parser->root.cursor - cur;
+        len = (FT_UInt)( parser->root.cursor - cur );
 
         if ( len > 0 && len < 22 && parser->root.cursor < limit )
         {
@@ -1164,9 +1169,9 @@
             if ( !name )
               continue;
 
-            if ( cur[0] == name[0]                                  &&
-                 len == (FT_PtrDist)ft_strlen( (const char *)name ) &&
-                 ft_memcmp( cur, name, len ) == 0                   )
+            if ( cur[0] == name[0]                      &&
+                 len == ft_strlen( (const char *)name ) &&
+                 ft_memcmp( cur, name, len ) == 0       )
             {
               /* we found it -- run the parsing callback! */
               parser->root.error = t42_load_keyword( face,

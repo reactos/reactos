@@ -6,7 +6,7 @@
 #
 
 
-# Copyright 1996-2000, 2003, 2005, 2007, 2008, 2011 by
+# Copyright 1996-2015 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -35,7 +35,7 @@ import sys, string, struct, re, os.path
 #
 # See
 #
-#   http://fonts.apple.com/TTRefMan/RM06/Chap6post.html
+#   https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6post.html
 #
 # for the official list.
 #
@@ -5267,7 +5267,7 @@ def main():
   write( "/*                                                                         */\n" )
   write( "/*    PostScript glyph names.                                              */\n" )
   write( "/*                                                                         */\n" )
-  write( "/*  Copyright 2005, 2008, 2011 by                                          */\n" )
+  write( "/*  Copyright 2005-2015 by                                                 */\n" )
   write( "/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */\n" )
   write( "/*                                                                         */\n" )
   write( "/*  This file is part of the FreeType project, and may only be used,       */\n" )

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache subsystem (specification).                            */
 /*                                                                         */
-/*  Copyright 1996-2008, 2010, 2013, 2014 by                               */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -667,8 +667,8 @@ FT_BEGIN_HEADER
   typedef struct  FTC_ImageTypeRec_
   {
     FTC_FaceID  face_id;
-    FT_Int      width;
-    FT_Int      height;
+    FT_UInt     width;
+    FT_UInt     height;
     FT_Int32    flags;
 
   } FTC_ImageTypeRec;

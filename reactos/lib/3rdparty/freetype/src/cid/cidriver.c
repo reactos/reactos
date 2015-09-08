@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID driver interface (body).                                         */
 /*                                                                         */
-/*  Copyright 1996-2004, 2006, 2008, 2009, 2011, 2013 by                   */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,7 +24,7 @@
 #include "ciderrs.h"
 
 #include FT_SERVICE_POSTSCRIPT_NAME_H
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 #include FT_SERVICE_POSTSCRIPT_INFO_H
 #include FT_SERVICE_CID_H
 
@@ -168,7 +168,7 @@
 
   static const FT_ServiceDescRec  cid_services[] =
   {
-    { FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CID },
+    { FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CID },
     { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cid_service_ps_name },
     { FT_SERVICE_ID_POSTSCRIPT_INFO,      &cid_service_ps_info },
     { FT_SERVICE_ID_CID,                  &cid_service_cid_info },

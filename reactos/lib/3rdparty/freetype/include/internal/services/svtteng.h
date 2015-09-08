@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType TrueType engine query service (specification).          */
 /*                                                                         */
-/*  Copyright 2006 by                                                      */
+/*  Copyright 2006-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

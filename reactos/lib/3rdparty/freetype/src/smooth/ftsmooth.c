@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Anti-aliasing renderer interface (body).                             */
 /*                                                                         */
-/*  Copyright 2000-2006, 2009-2013 by                                      */
+/*  Copyright 2000-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -230,7 +230,7 @@
     }
 
     /* allocate new one */
-    if ( FT_ALLOC( bitmap->buffer, (FT_ULong)pitch * height ) )
+    if ( FT_ALLOC( bitmap->buffer, (FT_ULong)( pitch * height ) ) )
       goto Exit;
     else
       have_buffer = TRUE;
@@ -243,8 +243,8 @@
 
     bitmap->pixel_mode = FT_PIXEL_MODE_GRAY;
     bitmap->num_grays  = 256;
-    bitmap->width      = width;
-    bitmap->rows       = height;
+    bitmap->width      = (unsigned int)width;
+    bitmap->rows       = (unsigned int)height;
     bitmap->pitch      = pitch;
 
     /* translate outline to render it into the bitmap */

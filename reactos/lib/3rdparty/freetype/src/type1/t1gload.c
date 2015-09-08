@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 Glyph Loader (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2006, 2008-2010, 2013, 2014 by                          */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -54,7 +54,7 @@
   /*************************************************************************/
 
 
-  FT_LOCAL_DEF( FT_Error )
+  static FT_Error
   T1_Parse_Glyph_And_Get_Char_String( T1_Decoder  decoder,
                                       FT_UInt     glyph_index,
                                       FT_Data*    char_string )
@@ -92,7 +92,7 @@
     if ( !error )
       error = decoder->funcs.parse_charstrings(
                 decoder, (FT_Byte*)char_string->pointer,
-                char_string->length );
+                (FT_UInt)char_string->length );
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
@@ -154,7 +154,13 @@
                           FT_Pos*  max_advance )
   {
     FT_Error       error;
+#ifdef __REACTOS__
+    T1_DecoderRec *decoder = malloc(sizeof(T1_DecoderRec));
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder)
+#else
     T1_DecoderRec  decoder;
+#endif
     FT_Int         glyph_index;
     T1_Font        type1 = &face->type1;
     PSAux_Service  psaux = (PSAux_Service)face->psaux;
@@ -175,7 +181,14 @@
                                            FT_RENDER_MODE_NORMAL,
                                            T1_Parse_Glyph );
     if ( error )
+#ifdef __REACTOS__
+    {
+        free(&decoder);
+        return error;
+    }
+#else
       return error;
+#endif
 
     decoder.builder.metrics_only = 1;
     decoder.builder.load_points  = 0;
@@ -194,7 +207,7 @@
     for ( glyph_index = 0; glyph_index < type1->num_glyphs; glyph_index++ )
     {
       /* now get load the unscaled outline */
-      (void)T1_Parse_Glyph( &decoder, glyph_index );
+      (void)T1_Parse_Glyph( &decoder, (FT_UInt)glyph_index );
       if ( glyph_index == 0 || decoder.builder.advance.x > *max_advance )
         *max_advance = decoder.builder.advance.x;
 
@@ -202,7 +215,10 @@
     }
 
     psaux->t1_decoder_funcs->done( &decoder );
-
+#ifdef __REACTOS__
+    free(&decoder);
+#undef decoder
+#endif
     return FT_Err_Ok;
   }
 
@@ -215,7 +231,13 @@
                    FT_Fixed*  advances )
   {
     T1_Face        face  = (T1_Face)t1face;
+#ifdef __REACTOS__
+    T1_DecoderRec *decoder = malloc(sizeof(T1_DecoderRec));
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder)
+#else
     T1_DecoderRec  decoder;
+#endif
     T1_Font        type1 = &face->type1;
     PSAux_Service  psaux = (PSAux_Service)face->psaux;
     FT_UInt        nn;
@@ -227,6 +249,9 @@
       for ( nn = 0; nn < count; nn++ )
         advances[nn] = 0;
 
+#ifdef __REACTOS__
+      free(&decoder);
+#endif
       return FT_Err_Ok;
     }
 
@@ -240,7 +265,14 @@
                                            FT_RENDER_MODE_NORMAL,
                                            T1_Parse_Glyph );
     if ( error )
+#ifdef __REACTOS__
+    {
+        free(&decoder);
+        return error;
+    }
+#else
       return error;
+#endif
 
     decoder.builder.metrics_only = 1;
     decoder.builder.load_points  = 0;
@@ -260,7 +292,10 @@
       else
         advances[nn] = 0;
     }
-
+#ifdef __REACTOS__
+    free(&decoder);
+#undef decoder
+#endif
     return FT_Err_Ok;
   }
 
@@ -273,7 +308,13 @@
   {
     T1_GlyphSlot            glyph = (T1_GlyphSlot)t1glyph;
     FT_Error                error;
+#ifdef __REACTOS__
+    T1_DecoderRec *decoder = malloc(sizeof(T1_DecoderRec));
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder)
+#else
     T1_DecoderRec           decoder;
+#endif
     T1_Face                 face = (T1_Face)t1glyph->face;
     FT_Bool                 hinting;
     T1_Font                 type1         = &face->type1;
@@ -504,7 +545,7 @@
 
       /* Set the control data to null - it is no longer available if   */
       /* loaded incrementally.                                         */
-      t1glyph->control_data = 0;
+      t1glyph->control_data = NULL;
       t1glyph->control_len  = 0;
     }
 #endif
@@ -512,6 +553,10 @@
     if ( must_finish_decoder )
       decoder_funcs->done( &decoder );
 
+#ifdef __REACTOS__
+    free(&decoder);
+#undef decoder
+#endif
     return error;
   }
 

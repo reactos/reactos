@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2006, 2008, 2010, 2012-2013 by                          */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -83,11 +83,12 @@ FT_BEGIN_HEADER
             x > y ? x + ( 3 * y >> 3 )   \
                   : y + ( 3 * x >> 3 ) )
 
-#define FT_PAD_FLOOR( x, n )  ( (x) & ~((n)-1) )
+  /* we use the TYPEOF macro to suppress signedness compilation warnings */
+#define FT_PAD_FLOOR( x, n )  ( (x) & ~TYPEOF( x )( (n)-1 ) )
 #define FT_PAD_ROUND( x, n )  FT_PAD_FLOOR( (x) + ((n)/2), n )
 #define FT_PAD_CEIL( x, n )   FT_PAD_FLOOR( (x) + ((n)-1), n )
 
-#define FT_PIX_FLOOR( x )     ( (x) & ~63 )
+#define FT_PIX_FLOOR( x )     ( (x) & ~TYPEOF( x )63 )
 #define FT_PIX_ROUND( x )     FT_PIX_FLOOR( (x) + 32 )
 #define FT_PIX_CEIL( x )      FT_PIX_FLOOR( (x) + 63 )
 
@@ -404,7 +405,7 @@ FT_BEGIN_HEADER
   /*    glyph_hints       :: Format-specific glyph hints management.       */
   /*                                                                       */
 
-#define FT_GLYPH_OWN_BITMAP  0x1
+#define FT_GLYPH_OWN_BITMAP  0x1U
 
   typedef struct  FT_Slot_InternalRec_
   {
@@ -613,12 +614,12 @@ FT_BEGIN_HEADER
 
 #define FT_REQUEST_WIDTH( req )                                            \
           ( (req)->horiResolution                                          \
-              ? (FT_Pos)( (req)->width * (req)->horiResolution + 36 ) / 72 \
+              ? ( (req)->width * (FT_Pos)(req)->horiResolution + 36 ) / 72 \
               : (req)->width )
 
 #define FT_REQUEST_HEIGHT( req )                                            \
           ( (req)->vertResolution                                           \
-              ? (FT_Pos)( (req)->height * (req)->vertResolution + 36 ) / 72 \
+              ? ( (req)->height * (FT_Pos)(req)->vertResolution + 36 ) / 72 \
               : (req)->height )
 
 
@@ -740,9 +741,8 @@ FT_BEGIN_HEADER
   /*     faces_list   :: The list of faces currently opened by this        */
   /*                     driver.                                           */
   /*                                                                       */
-  /*     glyph_loader :: The glyph loader for all faces managed by this    */
-  /*                     driver.  This object isn't defined for unscalable */
-  /*                     formats.                                          */
+  /*     glyph_loader :: Unused.  Used to be glyph loader for all faces    */
+  /*                     managed by this driver.                           */
   /*                                                                       */
   typedef struct  FT_DriverRec_
   {

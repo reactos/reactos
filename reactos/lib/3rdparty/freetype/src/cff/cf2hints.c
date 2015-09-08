@@ -697,10 +697,10 @@
 
     /* make room to insert */
     {
-      CF2_Int  iSrc = hintmap->count - 1;
-      CF2_Int  iDst = isPair ? hintmap->count + 1 : hintmap->count;
+      CF2_UInt  iSrc = hintmap->count - 1;
+      CF2_UInt  iDst = isPair ? hintmap->count + 1 : hintmap->count;
 
-      CF2_Int  count = hintmap->count - indexInsert;
+      CF2_UInt  count = hintmap->count - indexInsert;
 
 
       if ( iDst >= CF2_MAX_HINT_EDGES )

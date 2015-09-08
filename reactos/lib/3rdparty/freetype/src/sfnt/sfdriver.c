@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level SFNT driver interface (body).                             */
 /*                                                                         */
-/*  Copyright 1996-2007, 2009-2014 by                                      */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -266,7 +266,7 @@
       {
         FT_Stream   stream = face->name_table.stream;
         FT_String*  r      = (FT_String*)result;
-        FT_Byte*    p;
+        FT_Char*    p;
 
 
         if ( FT_STREAM_SEEK( name->stringOffset ) ||
@@ -280,11 +280,11 @@
           goto Exit;
         }
 
-        p = (FT_Byte*)stream->cursor;
+        p = (FT_Char*)stream->cursor;
 
         for ( ; len > 0; len--, p += 2 )
         {
-          if ( p[0] == 0 && p[1] >= 32 && p[1] < 128 )
+          if ( p[0] == 0 && p[1] >= 32 )
             *r++ = p[1];
         }
         *r = '\0';

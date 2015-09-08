@@ -48,7 +48,7 @@ THE SOFTWARE.
 #define FT_COMPONENT  trace_pcfread
 
 #include FT_SERVICE_BDF_H
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 
 
   /*************************************************************************/
@@ -64,7 +64,7 @@ THE SOFTWARE.
   typedef struct  PCF_CMapRec_
   {
     FT_CMapRec    root;
-    FT_UInt       num_encodings;
+    FT_ULong      num_encodings;
     PCF_Encoding  encodings;
 
   } PCF_CMapRec, *PCF_CMap;
@@ -80,7 +80,7 @@ THE SOFTWARE.
     FT_UNUSED( init_data );
 
 
-    cmap->num_encodings = (FT_UInt)face->nencodings;
+    cmap->num_encodings = face->nencodings;
     cmap->encodings     = face->encodings;
 
     return FT_Err_Ok;
@@ -104,7 +104,7 @@ THE SOFTWARE.
   {
     PCF_CMap      cmap      = (PCF_CMap)pcfcmap;
     PCF_Encoding  encodings = cmap->encodings;
-    FT_UInt       min, max, mid;
+    FT_ULong      min, max, mid;
     FT_UInt       result    = 0;
 
 
@@ -117,7 +117,7 @@ THE SOFTWARE.
 
 
       mid  = ( min + max ) >> 1;
-      code = encodings[mid].enc;
+      code = (FT_ULong)encodings[mid].enc;
 
       if ( charcode == code )
       {
@@ -141,7 +141,7 @@ THE SOFTWARE.
   {
     PCF_CMap      cmap      = (PCF_CMap)pcfcmap;
     PCF_Encoding  encodings = cmap->encodings;
-    FT_UInt       min, max, mid;
+    FT_ULong      min, max, mid;
     FT_ULong      charcode  = *acharcode + 1;
     FT_UInt       result    = 0;
 
@@ -155,7 +155,7 @@ THE SOFTWARE.
 
 
       mid  = ( min + max ) >> 1;
-      code = encodings[mid].enc;
+      code = (FT_ULong)encodings[mid].enc;
 
       if ( charcode == code )
       {
@@ -172,7 +172,7 @@ THE SOFTWARE.
     charcode = 0;
     if ( min < cmap->num_encodings )
     {
-      charcode = encodings[min].enc;
+      charcode = (FT_ULong)encodings[min].enc;
       result   = encodings[min].glyph + 1;
     }
 
@@ -487,7 +487,7 @@ THE SOFTWARE.
     FT_Error    error  = FT_Err_Ok;
     FT_Bitmap*  bitmap = &slot->bitmap;
     PCF_Metric  metric;
-    FT_Offset   bytes;
+    FT_ULong    bytes;
 
     FT_UNUSED( load_flags );
 
@@ -513,8 +513,10 @@ THE SOFTWARE.
 
     metric = face->metrics + glyph_index;
 
-    bitmap->rows       = metric->ascent + metric->descent;
-    bitmap->width      = metric->rightSideBearing - metric->leftSideBearing;
+    bitmap->rows       = (unsigned int)( metric->ascent +
+                                         metric->descent );
+    bitmap->width      = (unsigned int)( metric->rightSideBearing -
+                                         metric->leftSideBearing );
     bitmap->num_grays  = 1;
     bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
 
@@ -526,19 +528,19 @@ THE SOFTWARE.
     switch ( PCF_GLYPH_PAD( face->bitmapsFormat ) )
     {
     case 1:
-      bitmap->pitch = ( bitmap->width + 7 ) >> 3;
+      bitmap->pitch = (int)( ( bitmap->width + 7 ) >> 3 );
       break;
 
     case 2:
-      bitmap->pitch = ( ( bitmap->width + 15 ) >> 4 ) << 1;
+      bitmap->pitch = (int)( ( ( bitmap->width + 15 ) >> 4 ) << 1 );
       break;
 
     case 4:
-      bitmap->pitch = ( ( bitmap->width + 31 ) >> 5 ) << 2;
+      bitmap->pitch = (int)( ( ( bitmap->width + 31 ) >> 5 ) << 2 );
       break;
 
     case 8:
-      bitmap->pitch = ( ( bitmap->width + 63 ) >> 6 ) << 3;
+      bitmap->pitch = (int)( ( ( bitmap->width + 63 ) >> 6 ) << 3 );
       break;
 
     default:
@@ -546,7 +548,7 @@ THE SOFTWARE.
     }
 
     /* XXX: to do: are there cases that need repadding the bitmap? */
-    bytes = bitmap->pitch * bitmap->rows;
+    bytes = (FT_ULong)bitmap->pitch * bitmap->rows;
 
     error = ft_glyphslot_alloc_bitmap( slot, (FT_ULong)bytes );
     if ( error )
@@ -581,12 +583,12 @@ THE SOFTWARE.
     slot->bitmap_left = metric->leftSideBearing;
     slot->bitmap_top  = metric->ascent;
 
-    slot->metrics.horiAdvance  = metric->characterWidth << 6;
-    slot->metrics.horiBearingX = metric->leftSideBearing << 6;
-    slot->metrics.horiBearingY = metric->ascent << 6;
-    slot->metrics.width        = ( metric->rightSideBearing -
-                                   metric->leftSideBearing ) << 6;
-    slot->metrics.height       = bitmap->rows << 6;
+    slot->metrics.horiAdvance  = (FT_Pos)( metric->characterWidth << 6 );
+    slot->metrics.horiBearingX = (FT_Pos)( metric->leftSideBearing << 6 );
+    slot->metrics.horiBearingY = (FT_Pos)( metric->ascent << 6 );
+    slot->metrics.width        = (FT_Pos)( ( metric->rightSideBearing -
+                                             metric->leftSideBearing ) << 6 );
+    slot->metrics.height       = (FT_Pos)( bitmap->rows << 6 );
 
     ft_synthesize_vertical_metrics( &slot->metrics,
                                     ( face->accel.fontAscent +
@@ -667,8 +669,8 @@ THE SOFTWARE.
 
   static const FT_ServiceDescRec  pcf_services[] =
   {
-    { FT_SERVICE_ID_BDF,       &pcf_service_bdf },
-    { FT_SERVICE_ID_XF86_NAME, FT_XF86_FORMAT_PCF },
+    { FT_SERVICE_ID_BDF,         &pcf_service_bdf },
+    { FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_PCF },
     { NULL, NULL }
   };
 

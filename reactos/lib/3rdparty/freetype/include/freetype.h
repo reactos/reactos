@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType high-level API and common types (specification only).       */
 /*                                                                         */
-/*  Copyright 1996-2014 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -394,8 +394,11 @@ FT_BEGIN_HEADER
   /*    It also embeds a memory manager (see @FT_Memory), as well as a     */
   /*    scan-line converter object (see @FT_Raster).                       */
   /*                                                                       */
-  /*    In multi-threaded applications, make sure that the same FT_Library */
-  /*    object or any of its children doesn't get accessed in parallel.    */
+  /*    In multi-threaded applications it is easiest to use one            */
+  /*    `FT_Library' object per thread.  In case this is too cumbersome,   */
+  /*    a single `FT_Library' object across threads is possible also       */
+  /*    (since FreeType version 2.5.6), as long as a mutex lock is used    */
+  /*    around @FT_New_Face and @FT_Done_Face.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    Library objects are normally created by @FT_Init_FreeType, and     */
@@ -476,6 +479,14 @@ FT_BEGIN_HEADER
   /*    a given filepathname or a custom input stream.                     */
   /*                                                                       */
   /*    Use @FT_Done_Face to destroy it (along with its slot and sizes).   */
+  /*                                                                       */
+  /*    An `FT_Face' object can only be safely used from one thread at a   */
+  /*    time.  Similarly, creation and destruction of `FT_Face' with the   */
+  /*    same @FT_Library object can only be done from one thread at a      */
+  /*    time.  On the other hand, functions like @FT_Load_Glyph and its    */
+  /*    siblings are thread-safe and do not need the lock to be held as    */
+  /*    long as the same `FT_Face' object is not used from multiple        */
+  /*    threads at the same time.                                          */
   /*                                                                       */
   /* <Also>                                                                */
   /*    See @FT_FaceRec for the publicly accessible fields of a given face */
@@ -631,9 +642,13 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_ENCODING_MS_SYMBOL ::                                           */
   /*      Corresponds to the Microsoft Symbol encoding, used to encode     */
-  /*      mathematical symbols in the 32..255 character code range.  For   */
-  /*      more information, see                                            */
-  /*      `http://www.kostis.net/charsets/symbol.htm'.                     */
+  /*      mathematical symbols and wingdings.  For more information, see   */
+  /*      `http://www.microsoft.com/typography/otspec/recom.htm',          */
+  /*      `http://www.kostis.net/charsets/symbol.htm', and                 */
+  /*      `http://www.kostis.net/charsets/wingding.htm'.                   */
+  /*                                                                       */
+  /*      This encoding uses character codes from the PUA (Private Unicode */
+  /*      Area) in the range U+F020-U+F0FF.                                */
   /*                                                                       */
   /*    FT_ENCODING_SJIS ::                                                */
   /*      Corresponds to Japanese SJIS encoding.  More info at             */
@@ -651,7 +666,7 @@ FT_BEGIN_HEADER
   /*    FT_ENCODING_WANSUNG ::                                             */
   /*      Corresponds to the Korean encoding system known as Wansung.      */
   /*      For more information see                                         */
-  /*      `http://msdn.microsoft.com/en-US/goglobal/cc305154'.             */
+  /*      `https://msdn.microsoft.com/en-US/goglobal/cc305154'.            */
   /*                                                                       */
   /*    FT_ENCODING_JOHAB ::                                               */
   /*      The Korean standard character set (KS~C 5601-1992), which        */
@@ -892,6 +907,11 @@ FT_BEGIN_HEADER
   /*                           format specific interface to access them.   */
   /*                           Can be NULL (e.g., in fonts embedded in a   */
   /*                           PDF file).                                  */
+  /*                                                                       */
+  /*                           In case the font doesn't provide a specific */
+  /*                           family name entry, FreeType tries to        */
+  /*                           synthesize one, deriving it from other name */
+  /*                           entries.                                    */
   /*                                                                       */
   /*    style_name          :: The face's style name.  This is an ASCII    */
   /*                           string, usually in English, that describes  */
@@ -1140,7 +1160,7 @@ FT_BEGIN_HEADER
   /*      TrueType bytecode instructions to move and scale all of its      */
   /*      subglyphs.                                                       */
   /*                                                                       */
-  /*      It is not possible to autohint such fonts using                  */
+  /*      It is not possible to auto-hint such fonts using                 */
   /*      @FT_LOAD_FORCE_AUTOHINT; it will also ignore                     */
   /*      @FT_LOAD_NO_HINTING.  You have to set both @FT_LOAD_NO_HINTING   */
   /*      and @FT_LOAD_NO_AUTOHINT to really disable hinting; however, you */
@@ -1649,11 +1669,11 @@ FT_BEGIN_HEADER
   /*                         needs to know about the image format.         */
   /*                                                                       */
   /*    lsb_delta         :: The difference between hinted and unhinted    */
-  /*                         left side bearing while autohinting is        */
+  /*                         left side bearing while auto-hinting is       */
   /*                         active.  Zero otherwise.                      */
   /*                                                                       */
   /*    rsb_delta         :: The difference between hinted and unhinted    */
-  /*                         right side bearing while autohinting is       */
+  /*                         right side bearing while auto-hinting is      */
   /*                         active.  Zero otherwise.                      */
   /*                                                                       */
   /* <Note>                                                                */
@@ -1676,7 +1696,7 @@ FT_BEGIN_HEADER
   /*    `slot->format' is also changed to @FT_GLYPH_FORMAT_BITMAP.         */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    Here a small pseudo code fragment that shows how to use            */
+  /*    Here is a small pseudo code fragment that shows how to use         */
   /*    `lsb_delta' and `rsb_delta':                                       */
   /*                                                                       */
   /*    {                                                                  */
@@ -1769,8 +1789,8 @@ FT_BEGIN_HEADER
   /*    use @FT_New_Library instead, followed by a call to                 */
   /*    @FT_Add_Default_Modules (or a series of calls to @FT_Add_Module).  */
   /*                                                                       */
-  /*    For multi-threading applications each thread should have its own   */
-  /*    FT_Library object.                                                 */
+  /*    See the documentation of @FT_Library and @FT_Face for              */
+  /*    multi-threading issues.                                            */
   /*                                                                       */
   /*    If you need reference-counting (cf. @FT_Reference_Library), use    */
   /*    @FT_New_Library and @FT_Done_Library.                              */
@@ -3398,8 +3418,9 @@ FT_BEGIN_HEADER
   /*    @FT_Get_FSType_Flags; they inform client applications of embedding */
   /*    and subsetting restrictions associated with a font.                */
   /*                                                                       */
-  /*    See http://www.adobe.com/devnet/acrobat/pdfs/FontPolicies.pdf for  */
-  /*    more details.                                                      */
+  /*    See                                                                */
+  /*    http://www.adobe.com/content/dam/Adobe/en/devnet/acrobat/pdfs/FontPolicies.pdf */
+  /*    for more details.                                                  */
   /*                                                                       */
   /* <Values>                                                              */
   /*    FT_FSTYPE_INSTALLABLE_EMBEDDING ::                                 */
@@ -3936,8 +3957,8 @@ FT_BEGIN_HEADER
    *
    */
 #define FREETYPE_MAJOR  2
-#define FREETYPE_MINOR  5
-#define FREETYPE_PATCH  5
+#define FREETYPE_MINOR  6
+#define FREETYPE_PATCH  0
 
 
   /*************************************************************************/

@@ -7,7 +7,7 @@
 /*                                                                         */
 /*    Auto-fitter data for blue strings (body).                            */
 /*                                                                         */
-/*  Copyright 2013 by                                                      */
+/*  Copyright 2013-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -26,6 +26,10 @@
   af_blue_strings[] =
   {
     /* */
+    '\xD8', '\xA7', '\xD8', '\xA5', '\xD9', '\x84', '\xD9', '\x83', '\xD8', '\xB7', '\xD8', '\xB8',  /* ا إ ل ك ط ظ */
+    '\0',
+    '\xD8', '\xAA', '\xD8', '\xAB', '\xD8', '\xB7', '\xD8', '\xB8', '\xD9', '\x83',  /* ت ث ط ظ ك */
+    '\0',
     '\xD0', '\x91', '\xD0', '\x92', '\xD0', '\x95', '\xD0', '\x9F', '\xD0', '\x97', '\xD0', '\x9E', '\xD0', '\xA1', '\xD0', '\xAD',  /* БВЕПЗОСЭ */
     '\0',
     '\xD0', '\x91', '\xD0', '\x92', '\xD0', '\x95', '\xD0', '\xA8', '\xD0', '\x97', '\xD0', '\x9E', '\xD0', '\xA1', '\xD0', '\xAD',  /* БВЕШЗОСЭ */
@@ -71,6 +75,20 @@
     '\xE0', '\xB0', '\x87', '\xE0', '\xB0', '\x8C', '\xE0', '\xB0', '\x99', '\xE0', '\xB0', '\x9E', '\xE0', '\xB0', '\xA3', '\xE0', '\xB0', '\xB1', '\xE0', '\xB1', '\xAF',  /* ఇ ఌ ఙ ఞ ణ ఱ ౯ */
     '\0',
     '\xE0', '\xB0', '\x85', '\xE0', '\xB0', '\x95', '\xE0', '\xB0', '\x9A', '\xE0', '\xB0', '\xB0', '\xE0', '\xB0', '\xBD', '\xE0', '\xB1', '\xA8', '\xE0', '\xB1', '\xAC',  /* అ క చ ర ఽ ౨ ౬ */
+    '\0',
+    '\xE0', '\xB8', '\x9A', '\xE0', '\xB9', '\x80', '\xE0', '\xB9', '\x81', '\xE0', '\xB8', '\xAD', '\xE0', '\xB8', '\x81', '\xE0', '\xB8', '\xB2',  /* บ เ แ อ ก า */
+    '\0',
+    '\xE0', '\xB8', '\x9A', '\xE0', '\xB8', '\x9B', '\xE0', '\xB8', '\xA9', '\xE0', '\xB8', '\xAF', '\xE0', '\xB8', '\xAD', '\xE0', '\xB8', '\xA2', '\xE0', '\xB8', '\xAE',  /* บ ป ษ ฯ อ ย ฮ */
+    '\0',
+    '\xE0', '\xB8', '\x9B', '\xE0', '\xB8', '\x9D', '\xE0', '\xB8', '\x9F',  /* ป ฝ ฟ */
+    '\0',
+    '\xE0', '\xB9', '\x82', '\xE0', '\xB9', '\x83', '\xE0', '\xB9', '\x84',  /* โ ใ ไ */
+    '\0',
+    '\xE0', '\xB8', '\x8E', '\xE0', '\xB8', '\x8F', '\xE0', '\xB8', '\xA4', '\xE0', '\xB8', '\xA6',  /* ฎ ฏ ฤ ฦ */
+    '\0',
+    '\xE0', '\xB8', '\x8D', '\xE0', '\xB8', '\x90',  /* ญ ฐ */
+    '\0',
+    '\xE0', '\xB9', '\x90', '\xE0', '\xB9', '\x91', '\xE0', '\xB9', '\x93',  /* ๐ ๑ ๓ */
 #ifdef AF_CONFIG_OPTION_CJK
     '\0',
     '\xE4', '\xBB', '\x96', '\xE4', '\xBB', '\xAC', '\xE4', '\xBD', '\xA0', '\xE4', '\xBE', '\x86', '\xE5', '\x80', '\x91', '\xE5', '\x88', '\xB0', '\xE5', '\x92', '\x8C', '\xE5', '\x9C', '\xB0',  /* 他们你來們到和地 */
@@ -121,6 +139,9 @@
   af_blue_stringsets[] =
   {
     /* */
+    { AF_BLUE_STRING_ARABIC_TOP,   AF_BLUE_PROPERTY_LATIN_TOP },
+    { AF_BLUE_STRING_ARABIC_JOIN,  0                          },
+    { AF_BLUE_STRING_MAX,          0                          },
     { AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        },
     { AF_BLUE_STRING_CYRILLIC_CAPITAL_BOTTOM,  0                                 },
     { AF_BLUE_STRING_CYRILLIC_SMALL,           AF_BLUE_PROPERTY_LATIN_TOP      |
@@ -160,6 +181,15 @@
     { AF_BLUE_STRING_TELUGU_TOP,    AF_BLUE_PROPERTY_LATIN_TOP },
     { AF_BLUE_STRING_TELUGU_BOTTOM, 0                          },
     { AF_BLUE_STRING_MAX,           0                          },
+    { AF_BLUE_STRING_THAI_TOP,             AF_BLUE_PROPERTY_LATIN_TOP      |
+                                           AF_BLUE_PROPERTY_LATIN_X_HEIGHT   },
+    { AF_BLUE_STRING_THAI_BOTTOM,          0                                 },
+    { AF_BLUE_STRING_THAI_ASCENDER,        AF_BLUE_PROPERTY_LATIN_TOP        },
+    { AF_BLUE_STRING_THAI_LARGE_ASCENDER,  AF_BLUE_PROPERTY_LATIN_TOP        },
+    { AF_BLUE_STRING_THAI_DESCENDER,       0                                 },
+    { AF_BLUE_STRING_THAI_LARGE_DESCENDER, 0                                 },
+    { AF_BLUE_STRING_THAI_DIGIT_TOP,       0                                 },
+    { AF_BLUE_STRING_MAX,                  0                                 },
 #ifdef AF_CONFIG_OPTION_CJK
     { AF_BLUE_STRING_CJK_TOP,    AF_BLUE_PROPERTY_CJK_TOP     },
     { AF_BLUE_STRING_CJK_BOTTOM, 0                            },

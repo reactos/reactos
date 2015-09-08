@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (body).                             */
 /*                                                                         */
-/*  Copyright 2004-2010, 2013, 2014 by                                     */
+/*  Copyright 2004-2015 by                                                 */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  FT_Raccess_Get_HeaderInfo() and raccess_guess_darwin_hfsplus() are     */
@@ -63,7 +63,7 @@
     FT_UNUSED( library );
 
 
-    error = FT_Stream_Seek( stream, rfork_offset );
+    error = FT_Stream_Seek( stream, (FT_ULong)rfork_offset );
     if ( error )
       return error;
 
@@ -89,7 +89,7 @@
     if ( *rdata_pos + rdata_len != map_pos || map_pos == rfork_offset )
       return FT_THROW( Unknown_File_Format );
 
-    error = FT_Stream_Seek( stream, map_pos );
+    error = FT_Stream_Seek( stream, (FT_ULong)map_pos );
     if ( error )
       return error;
 
@@ -124,7 +124,7 @@
     if ( type_list == -1 )
       return FT_THROW( Unknown_File_Format );
 
-    error = FT_Stream_Seek( stream, map_pos + type_list );
+    error = FT_Stream_Seek( stream, (FT_ULong)( map_pos + type_list ) );
     if ( error )
       return error;
 
@@ -166,7 +166,7 @@
 
 
     FT_TRACE3(( "\n" ));
-    error = FT_Stream_Seek( stream, map_offset );
+    error = FT_Stream_Seek( stream, (FT_ULong)map_offset );
     if ( error )
       return error;
 
@@ -194,7 +194,7 @@
         *count = subcnt + 1;
         rpos  += map_offset;
 
-        error = FT_Stream_Seek( stream, rpos );
+        error = FT_Stream_Seek( stream, (FT_ULong)rpos );
         if ( error )
           return error;
 
@@ -220,7 +220,7 @@
 
         if (sort_by_res_id)
         {
-          ft_qsort( ref, *count, sizeof ( FT_RFork_Ref ),
+          ft_qsort( ref, (size_t)*count, sizeof ( FT_RFork_Ref ),
                     ( int(*)(const void*, const void*) )
                     ft_raccess_sort_ref_by_id );
 
@@ -713,9 +713,9 @@
     FT_UShort  n_of_entries;
 
     int        i;
-    FT_UInt32  entry_id, entry_offset, entry_length = 0;
+    FT_Int32   entry_id, entry_offset, entry_length = 0;
 
-    const FT_UInt32  resource_fork_entry_id = 0x2;
+    const FT_Int32  resource_fork_entry_id = 0x2;
 
     FT_UNUSED( library );
     FT_UNUSED( base_file_name );
@@ -813,7 +813,9 @@
     tmp = ft_strrchr( original_name, '/' );
     if ( tmp )
     {
-      ft_strncpy( new_name, original_name, tmp - original_name + 1 );
+      ft_strncpy( new_name,
+                  original_name,
+                  (size_t)( tmp - original_name + 1 ) );
       new_name[tmp - original_name + 1] = '\0';
       slash = tmp + 1;
     }

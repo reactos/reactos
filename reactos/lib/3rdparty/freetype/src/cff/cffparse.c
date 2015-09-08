@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF token stream parser (body)                                       */
 /*                                                                         */
-/*  Copyright 1996-2004, 2007-2014 by                                      */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -129,7 +129,7 @@
                   FT_Long*  scaling )
   {
     FT_Byte*  p = start;
-    FT_UInt   nib;
+    FT_Int    nib;
     FT_UInt   phase;
 
     FT_Long   result, number, exponent;
@@ -166,7 +166,7 @@
       }
 
       /* Get the nibble. */
-      nib   = ( p[0] >> phase ) & 0xF;
+      nib   = (FT_Int)( p[0] >> phase ) & 0xF;
       phase = 4 - phase;
 
       if ( nib == 0xE )
@@ -559,7 +559,7 @@
       offset->x  = cff_parse_fixed_scaled( data++, scaling );
       offset->y  = cff_parse_fixed_scaled( data,   scaling );
 
-      *upm = power_tens[scaling];
+      *upm = (FT_ULong)power_tens[scaling];
 
       FT_TRACE4(( " [%f %f %f %f %f %f]\n",
                   (double)matrix->xx / *upm / 65536,
@@ -617,14 +617,34 @@
 
     if ( parser->top >= parser->stack + 2 )
     {
-      dict->private_size   = cff_parse_num( data++ );
-      dict->private_offset = cff_parse_num( data   );
+      FT_Long  tmp;
+
+
+      tmp = cff_parse_num( data++ );
+      if ( tmp < 0 )
+      {
+        FT_ERROR(( "cff_parse_private_dict: Invalid dictionary size\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Fail;
+      }
+      dict->private_size = (FT_ULong)tmp;
+
+      tmp = cff_parse_num( data );
+      if ( tmp < 0 )
+      {
+        FT_ERROR(( "cff_parse_private_dict: Invalid dictionary offset\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Fail;
+      }
+      dict->private_offset = (FT_ULong)tmp;
+
       FT_TRACE4(( " %lu %lu\n",
                   dict->private_size, dict->private_offset ));
 
       error = FT_Err_Ok;
     }
 
+  Fail:
     return error;
   }
 

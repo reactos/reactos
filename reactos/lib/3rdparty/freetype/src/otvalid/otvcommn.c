@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType common tables validation (body).                            */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006, 2007 by                                    */
+/*  Copyright 2004-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -687,7 +687,7 @@
 
     OTV_TRACE(( " (Count = %d)\n", Count ));
 
-    otv_Coverage_validate( table + Coverage, otvalid, Count );
+    otv_Coverage_validate( table + Coverage, otvalid, (FT_Int)Count );
 
     OTV_LIMIT_CHECK( Count * 2 );
 

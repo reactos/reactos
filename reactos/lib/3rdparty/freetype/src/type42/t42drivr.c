@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level Type 42 driver interface (body).                          */
 /*                                                                         */
-/*  Copyright 2002-2004, 2006, 2007, 2009, 2011, 2013 by                   */
+/*  Copyright 2002-2015 by                                                 */
 /*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,7 +41,7 @@
 #include "t42error.h"
 #include FT_INTERNAL_DEBUG_H
 
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_POSTSCRIPT_INFO_H
@@ -180,7 +180,7 @@
     { FT_SERVICE_ID_GLYPH_DICT,           &t42_service_glyph_dict },
     { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &t42_service_ps_font_name },
     { FT_SERVICE_ID_POSTSCRIPT_INFO,      &t42_service_ps_info },
-    { FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_TYPE_42 },
+    { FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_TYPE_42 },
     { NULL, NULL }
   };
 

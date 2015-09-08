@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific configuration file (specification only).               */
 /*                                                                         */
-/*  Copyright 1996-2004, 2006-2008, 2010-2011, 2013, 2014 by               */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -319,9 +319,26 @@ FT_BEGIN_HEADER
 #endif
 
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* miscellaneous                                                         */
+  /*                                                                       */
+  /*************************************************************************/
+
+
 #define FT_BEGIN_STMNT  do {
 #define FT_END_STMNT    } while ( 0 )
 #define FT_DUMMY_STMNT  FT_BEGIN_STMNT FT_END_STMNT
+
+
+  /* typeof condition taken from gnulib's `intprops.h' header file */
+#if ( __GNUC__ >= 2                         || \
+      defined( __IBM__TYPEOF__ )            || \
+      ( __SUNPRO_C >= 0x5110 && !__STDC__ ) )
+#define TYPEOF( type )  (__typeof__ (type))
+#else
+#define TYPEOF( type )  /* empty */
+#endif
 
 
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT

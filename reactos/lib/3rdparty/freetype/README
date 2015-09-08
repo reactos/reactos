@@ -1,5 +1,5 @@
-  FreeType 2.5.5
-  ==============
+  FreeType 2.6
+  ============
 
   Homepage: http://www.freetype.org
 
@@ -24,9 +24,9 @@
 
   and download one of the following files.
 
-    freetype-doc-2.5.5.tar.bz2
-    freetype-doc-2.5.5.tar.gz
-    ftdoc255.zip
+    freetype-doc-2.6.tar.bz2
+    freetype-doc-2.6.tar.gz
+    ftdoc26.zip
 
   To view the documentation online, go to
 
@@ -70,7 +70,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006-2014 by
+Copyright 2006-2015 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

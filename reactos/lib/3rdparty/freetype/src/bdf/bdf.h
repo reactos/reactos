@@ -167,10 +167,10 @@ FT_BEGIN_HEADER
 
   typedef struct  hashtable_
   {
-    int        limit;
-    int        size;
-    int        used;
-    hashnode*  table;
+    unsigned int  limit;
+    unsigned int  size;
+    unsigned int  used;
+    hashnode*     table;
 
   } hashtable;
 
@@ -194,7 +194,7 @@ FT_BEGIN_HEADER
     char*            name;           /* Name of the font.                   */
     bdf_bbx_t        bbx;            /* Font bounding box.                  */
 
-    long             point_size;     /* Point size of the font.             */
+    unsigned long    point_size;     /* Point size of the font.             */
     unsigned long    resolution_x;   /* Font horizontal resolution.         */
     unsigned long    resolution_y;   /* Font vertical resolution.           */
 

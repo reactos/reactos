@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level `autohint' module-specific interface (specification).     */
 /*                                                                         */
-/*  Copyright 1996-2002, 2007, 2009, 2012 by                               */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

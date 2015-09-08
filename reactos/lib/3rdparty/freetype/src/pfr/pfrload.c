@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR loader (body).                                          */
 /*                                                                         */
-/*  Copyright 2002-2005, 2007, 2009, 2010, 2013, 2014 by                   */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -199,7 +199,7 @@
   FT_LOCAL_DEF( FT_Error )
   pfr_log_font_count( FT_Stream  stream,
                       FT_UInt32  section_offset,
-                      FT_UInt   *acount )
+                      FT_Long   *acount )
   {
     FT_Error  error;
     FT_UInt   count;
@@ -212,7 +212,7 @@
     result = count;
 
   Exit:
-    *acount = result;
+    *acount = (FT_Long)result;
     return error;
   }
 
@@ -449,9 +449,9 @@
                                FT_Byte*     limit,
                                PFR_PhyFont  phy_font )
   {
-    FT_Error    error  = FT_Err_Ok;
-    FT_Memory   memory = phy_font->memory;
-    FT_PtrDist  len    = limit - p;
+    FT_Error   error  = FT_Err_Ok;
+    FT_Memory  memory = phy_font->memory;
+    FT_UInt    len    = (FT_UInt)( limit - p );
 
 
     if ( phy_font->font_id != NULL )
@@ -535,7 +535,8 @@
     item->pair_count = PFR_NEXT_BYTE( p );
     item->base_adj   = PFR_NEXT_SHORT( p );
     item->flags      = PFR_NEXT_BYTE( p );
-    item->offset     = phy_font->offset + ( p - phy_font->cursor );
+    item->offset     = phy_font->offset +
+                       (FT_Offset)( p - phy_font->cursor );
 
 #ifndef PFR_CONFIG_NO_CHECKS
     item->pair_size = 3;
@@ -864,7 +865,7 @@
 
 
       phy_font->num_chars    = count = PFR_NEXT_USHORT( p );
-      phy_font->chars_offset = offset + ( p - stream->cursor );
+      phy_font->chars_offset = offset + (FT_Offset)( p - stream->cursor );
 
       if ( FT_NEW_ARRAY( phy_font->chars, count ) )
         goto Fail;
@@ -898,7 +899,7 @@
 
         cur->advance   = ( flags & PFR_PHY_PROPORTIONAL )
                          ? PFR_NEXT_SHORT( p )
-                         : (FT_Int) phy_font->standard_advance;
+                         : phy_font->standard_advance;
 
 #if 0
         cur->ascii     = ( flags & PFR_PHY_ASCII_CODE )

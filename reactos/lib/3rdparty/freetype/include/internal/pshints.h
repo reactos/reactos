@@ -6,7 +6,7 @@
 /*    recorders (specification only).  These are used to support native    */
 /*    T1/T2 hints in the `type1', `cid', and `cff' font drivers.           */
 /*                                                                         */
-/*  Copyright 2001-2003, 2005-2007, 2009, 2012, 2014 by                    */
+/*  Copyright 2001-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -465,7 +465,7 @@ FT_BEGIN_HEADER
   typedef void
   (*T2_Hints_StemsFunc)( T2_Hints   hints,
                          FT_UInt    dimension,
-                         FT_UInt    count,
+                         FT_Int     count,
                          FT_Fixed*  coordinates );
 
 

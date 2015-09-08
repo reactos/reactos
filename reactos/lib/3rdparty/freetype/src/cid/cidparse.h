@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 parser (specification).                              */
 /*                                                                         */
-/*  Copyright 1996-2004, 2014 by                                           */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -64,11 +64,11 @@ FT_BEGIN_HEADER
     FT_Stream     stream;
 
     FT_Byte*      postscript;
-    FT_Long       postscript_len;
+    FT_ULong      postscript_len;
 
     FT_ULong      data_offset;
 
-    FT_Long       binary_length;
+    FT_ULong      binary_length;
 
     CID_FaceInfo  cid;
     FT_Int        num_dict;

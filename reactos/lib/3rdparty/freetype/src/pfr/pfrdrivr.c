@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR driver interface (body).                                */
 /*                                                                         */
-/*  Copyright 2002-2004, 2006, 2008, 2010, 2011, 2013, 2014 by             */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,7 +20,7 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_SERVICE_PFR_H
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 #include "pfrdrivr.h"
 #include "pfrobjs.h"
 
@@ -43,12 +43,14 @@
     if ( phys->outline_resolution != phys->metrics_resolution )
     {
       if ( avector->x != 0 )
-        avector->x = FT_MulDiv( avector->x, phys->outline_resolution,
-                                            phys->metrics_resolution );
+        avector->x = FT_MulDiv( avector->x,
+                                (FT_Long)phys->outline_resolution,
+                                (FT_Long)phys->metrics_resolution );
 
       if ( avector->y != 0 )
-        avector->y = FT_MulDiv( avector->x, phys->outline_resolution,
-                                            phys->metrics_resolution );
+        avector->y = FT_MulDiv( avector->y,
+                                (FT_Long)phys->outline_resolution,
+                                (FT_Long)phys->metrics_resolution );
     }
 
     return FT_Err_Ok;
@@ -118,10 +120,10 @@
     if ( size )
     {
       x_scale = FT_DivFix( size->metrics.x_ppem << 6,
-                           phys->metrics_resolution );
+                           (FT_Long)phys->metrics_resolution );
 
       y_scale = FT_DivFix( size->metrics.y_ppem << 6,
-                           phys->metrics_resolution );
+                           (FT_Long)phys->metrics_resolution );
     }
 
     if ( ametrics_x_scale )
@@ -151,7 +153,7 @@
   static const FT_ServiceDescRec  pfr_services[] =
   {
     { FT_SERVICE_ID_PFR_METRICS, &pfr_metrics_service_rec },
-    { FT_SERVICE_ID_XF86_NAME,   FT_XF86_FORMAT_PFR },
+    { FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_PFR },
     { NULL, NULL }
   };
 

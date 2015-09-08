@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType and CFF data/program tables loader (body).                  */
 /*                                                                         */
-/*  Copyright 1996-2014 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -357,7 +357,7 @@
 
       case 3:
         for ( ; p < p_end; p += 3, poff++ )
-          poff[0] = FT_PEEK_OFF3( p );
+          poff[0] = FT_PEEK_UOFF3( p );
         break;
 
       default:
@@ -809,7 +809,7 @@
     /* When multiple GIDs map to the same CID, we choose the lowest */
     /* GID.  This is not described in any spec, but it matches the  */
     /* behaviour of recent Acroread versions.                       */
-    for ( j = num_glyphs - 1; j >= 0 ; j-- )
+    for ( j = (FT_Long)num_glyphs - 1; j >= 0 ; j-- )
       charset->cids[charset->sids[j]] = (FT_UShort)j;
 
     charset->max_cid    = max_cid;
@@ -1447,7 +1447,7 @@
     FT_ULong         base_offset;
     CFF_FontRecDict  dict;
     CFF_IndexRec     string_index;
-    FT_Int           subfont_index;
+    FT_UInt          subfont_index;
 
 
     FT_ZERO( font );
@@ -1495,9 +1495,9 @@
     if ( pure_cff )
     {
       /* well, we don't really forget the `disabled' fonts... */
-      subfont_index = face_index;
+      subfont_index = (FT_UInt)face_index;
 
-      if ( subfont_index >= (FT_Int)font->name_index.count )
+      if ( subfont_index >= font->name_index.count )
       {
         FT_ERROR(( "cff_font_load:"
                    " invalid subfont index for pure CFF font (%d)\n",

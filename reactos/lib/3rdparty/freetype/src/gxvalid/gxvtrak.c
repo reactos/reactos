@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT trak table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2004, 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
+/*  Copyright 2004-2015 by                                                 */
+/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -48,7 +49,7 @@
 
     /*
      * referred track table format specification:
-     * http://developer.apple.com/fonts/TTRefMan/RM06/Chap6trak.html
+     * https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6trak.html
      * last update was 1996.
      * ----------------------------------------------
      * [MINIMUM HEADER]: GXV_TRAK_SIZE_MIN
@@ -134,7 +135,7 @@
       }
     }
 
-    gxvalid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
     GXV_EXIT;
   }
 
@@ -161,7 +162,8 @@
     nSizes          = FT_NEXT_USHORT( p );
     sizeTableOffset = FT_NEXT_ULONG( p );
 
-    gxv_odtect_add_range( table, p - table, "trackData header", odtect );
+    gxv_odtect_add_range( table, (FT_ULong)( p - table ),
+                          "trackData header", odtect );
 
     /* validate trackTable */
     gxv_trak_trackTable_validate( p, limit, nTracks, gxvalid );

@@ -43,6 +43,7 @@
 #include "cf2font.h"
 #include "cf2stack.h"
 #include "cf2hints.h"
+#include "cf2intrp.h"
 
 #include "cf2error.h"
 
@@ -462,7 +463,13 @@
     CF2_ArrStackRec  vStemHintArray;
 
     CF2_HintMaskRec   hintMask;
+#ifdef __REACTOS__
+    CF2_GlyphPathRec *glyphPath = malloc(sizeof(CF2_GlyphPathRec));
+/* Ugly but it allows us to reduce the diff */
+#define glyphPath (*glyphPath)
+#else
     CF2_GlyphPathRec  glyphPath;
+#endif
 
 
     /* initialize the remaining objects */
@@ -760,16 +767,19 @@
 
           /* push our current CFF charstring region on subrStack */
           charstring = (CF2_Buffer)
-                         cf2_arrstack_getPointer( &subrStack,
-                                                  charstringIndex + 1 );
+                         cf2_arrstack_getPointer(
+                           &subrStack,
+                           (size_t)charstringIndex + 1 );
 
           /* set up the new CFF region and pointer */
-          subrIndex = cf2_stack_popInt( opStack );
+          subrIndex = (CF2_UInt)cf2_stack_popInt( opStack );
 
           switch ( op1 )
           {
           case cf2_cmdCALLGSUBR:
-            FT_TRACE4(( "(%d)\n", subrIndex + decoder->globals_bias ));
+            FT_TRACE4(( " (idx %d, entering level %d)\n",
+                        subrIndex + (CF2_UInt)decoder->globals_bias,
+                        charstringIndex + 1 ));
 
             if ( cf2_initGlobalRegionBuffer( decoder,
                                              subrIndex,
@@ -782,7 +792,9 @@
 
           default:
             /* cf2_cmdCALLSUBR */
-            FT_TRACE4(( "(%d)\n", subrIndex + decoder->locals_bias ));
+            FT_TRACE4(( " (idx %d, entering level %d)\n",
+                        subrIndex + (CF2_UInt)decoder->locals_bias,
+                        charstringIndex + 1 ));
 
             if ( cf2_initLocalRegionBuffer( decoder,
                                             subrIndex,
@@ -798,7 +810,7 @@
         continue; /* do not clear the stack */
 
       case cf2_cmdRETURN:
-        FT_TRACE4(( " return\n" ));
+        FT_TRACE4(( " return (leaving level %d)\n", charstringIndex ));
 
         if ( charstringIndex < 1 )
         {
@@ -809,8 +821,9 @@
 
         /* restore position in previous charstring */
         charstring = (CF2_Buffer)
-                       cf2_arrstack_getPointer( &subrStack,
-                                                --charstringIndex );
+                       cf2_arrstack_getPointer(
+                         &subrStack,
+                         (CF2_UInt)--charstringIndex );
         continue;     /* do not clear the stack */
 
       case cf2_cmdESC:
@@ -1088,8 +1101,8 @@
           /* must be either 4 or 5 --                       */
           /* this is a (deprecated) implied `seac' operator */
 
-          CF2_UInt       achar;
-          CF2_UInt       bchar;
+          CF2_Int        achar;
+          CF2_Int        bchar;
           CF2_BufferRec  component;
           CF2_Fixed      dummyWidth;   /* ignore component width */
           FT_Error       error2;
@@ -1190,7 +1203,13 @@
            * discard `counterMask' and `counterHintMap'.
            *
            */
+#ifdef __REACTOS__
+          CF2_HintMapRec *counterHintMap = malloc(sizeof(CF2_HintMapRec));
+/* Ugly but it allows us to reduce the diff */
+#define counterHintMap (*counterHintMap)
+#else
           CF2_HintMapRec   counterHintMap;
+#endif
           CF2_HintMaskRec  counterMask;
 
 
@@ -1211,6 +1230,9 @@
                              &counterMask,
                              0,
                              FALSE );
+#ifdef __REACTOS__
+          free(&counterHintMap);
+#endif
         }
         break;
 
@@ -1291,9 +1313,15 @@
 
       case cf2_cmdVVCURVETO:
         {
-          CF2_UInt  count = cf2_stack_count( opStack );
+          CF2_UInt  count, count1 = cf2_stack_count( opStack );
           CF2_UInt  index = 0;
 
+
+          /* if `cf2_stack_count' isn't of the form 4n or 4n+1, */
+          /* we enforce it by clearing the second bit           */
+          /* (and sorting the stack indexing to suit)           */
+          count  = count1 & ~2;
+          index += count1 - count;
 
           FT_TRACE4(( " vvcurveto\n" ));
 
@@ -1330,9 +1358,15 @@
 
       case cf2_cmdHHCURVETO:
         {
-          CF2_UInt  count = cf2_stack_count( opStack );
+          CF2_UInt  count, count1 = cf2_stack_count( opStack );
           CF2_UInt  index = 0;
 
+
+          /* if `cf2_stack_count' isn't of the form 4n or 4n+1, */
+          /* we enforce it by clearing the second bit           */
+          /* (and sorting the stack indexing to suit)           */
+          count  = count1 & ~2;
+          index += count1 - count;
 
           FT_TRACE4(( " hhcurveto\n" ));
 
@@ -1370,11 +1404,18 @@
       case cf2_cmdVHCURVETO:
       case cf2_cmdHVCURVETO:
         {
-          CF2_UInt  count = cf2_stack_count( opStack );
+          CF2_UInt  count, count1 = cf2_stack_count( opStack );
           CF2_UInt  index = 0;
 
           FT_Bool  alternate = op1 == cf2_cmdHVCURVETO;
 
+
+          /* if `cf2_stack_count' isn't of the form 8n, 8n+1, */
+          /* 8n+4, or 8n+5, we enforce it by clearing the     */
+          /* second bit                                       */
+          /* (and sorting the stack indexing to suit)         */
+          count  = count1 & ~2;
+          index += count1 - count;
 
           FT_TRACE4(( alternate ? " hvcurveto\n" : " vhcurveto\n" ));
 
@@ -1537,6 +1578,12 @@
     cf2_stack_free( opStack );
 
     FT_TRACE4(( "\n" ));
+
+#ifdef __REACTOS__
+    free(&glyphPath);
+#undef counterHintMap
+#undef glyphPath
+#endif
 
     return;
   }

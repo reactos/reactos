@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2014 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -226,8 +226,8 @@
       CFF_Font      font     = (CFF_Font)face->extra.data;
       CFF_Internal  internal = (CFF_Internal)size->internal;
 
-      FT_ULong  top_upm  = font->top_font.font_dict.units_per_em;
-      FT_UInt   i;
+      FT_Long  top_upm  = (FT_Long)font->top_font.font_dict.units_per_em;
+      FT_UInt  i;
 
 
       funcs->set_scale( internal->topfont,
@@ -237,7 +237,7 @@
       for ( i = font->num_subfonts; i > 0; i-- )
       {
         CFF_SubFont  sub     = font->subfonts[i - 1];
-        FT_ULong     sub_upm = sub->font_dict.units_per_em;
+        FT_Long      sub_upm = (FT_Long)sub->font_dict.units_per_em;
         FT_Pos       x_scale, y_scale;
 
 
@@ -298,8 +298,8 @@
       CFF_Font      font     = (CFF_Font)cffface->extra.data;
       CFF_Internal  internal = (CFF_Internal)size->internal;
 
-      FT_ULong  top_upm  = font->top_font.font_dict.units_per_em;
-      FT_UInt   i;
+      FT_Long  top_upm  = (FT_Long)font->top_font.font_dict.units_per_em;
+      FT_UInt  i;
 
 
       funcs->set_scale( internal->topfont,
@@ -309,7 +309,7 @@
       for ( i = font->num_subfonts; i > 0; i-- )
       {
         CFF_SubFont  sub     = font->subfonts[i - 1];
-        FT_ULong     sub_upm = sub->font_dict.units_per_em;
+        FT_Long      sub_upm = (FT_Long)sub->font_dict.units_per_em;
         FT_Pos       x_scale, y_scale;
 
 
@@ -342,7 +342,7 @@
   FT_LOCAL_DEF( void )
   cff_slot_done( FT_GlyphSlot  slot )
   {
-    slot->internal->glyph_hints = 0;
+    slot->internal->glyph_hints = NULL;
   }
 
 
@@ -592,7 +592,7 @@
       /* Note that this is only necessary for pure CFF and CEF fonts; */
       /* SFNT based fonts use the `name' table instead.               */
 
-      cffface->num_glyphs = cff->num_glyphs;
+      cffface->num_glyphs = (FT_Long)cff->num_glyphs;
 
       dict = &cff->top_font.font_dict;
 
@@ -646,7 +646,7 @@
 
         if ( temp != 0x10000L )
         {
-          *upm = FT_DivFix( *upm, temp );
+          *upm = (FT_ULong)FT_DivFix( (FT_Long)*upm, temp );
 
           matrix->xx = FT_DivFix( matrix->xx, temp );
           matrix->yx = FT_DivFix( matrix->yx, temp );
@@ -682,7 +682,8 @@
           if ( top->has_font_matrix )
           {
             if ( top->units_per_em > 1 && sub->units_per_em > 1 )
-              scaling = FT_MIN( top->units_per_em, sub->units_per_em );
+              scaling = (FT_Long)FT_MIN( top->units_per_em,
+                                         sub->units_per_em );
             else
               scaling = 1;
 
@@ -693,9 +694,10 @@
                                         &top->font_matrix,
                                         scaling );
 
-            sub->units_per_em = FT_MulDiv( sub->units_per_em,
-                                           top->units_per_em,
-                                           scaling );
+            sub->units_per_em = (FT_ULong)
+                                  FT_MulDiv( (FT_Long)sub->units_per_em,
+                                             (FT_Long)top->units_per_em,
+                                             scaling );
           }
         }
         else
@@ -713,7 +715,7 @@
 
         if ( temp != 0x10000L )
         {
-          *upm = FT_DivFix( *upm, temp );
+          *upm = (FT_ULong)FT_DivFix( (FT_Long)*upm, temp );
 
           matrix->xx = FT_DivFix( matrix->xx, temp );
           matrix->yx = FT_DivFix( matrix->yx, temp );
@@ -733,13 +735,13 @@
 
 
         /* set up num_faces */
-        cffface->num_faces = cff->num_faces;
+        cffface->num_faces = (FT_Long)cff->num_faces;
 
         /* compute number of glyphs */
         if ( dict->cid_registry != 0xFFFFU )
-          cffface->num_glyphs = cff->charset.max_cid + 1;
+          cffface->num_glyphs = (FT_Long)( cff->charset.max_cid + 1 );
         else
-          cffface->num_glyphs = cff->charstrings_index.count;
+          cffface->num_glyphs = (FT_Long)cff->charstrings_index.count;
 
         /* set global bbox, as well as EM size */
         cffface->bbox.xMin =   dict->font_bbox.xMin            >> 16;
@@ -763,7 +765,8 @@
           (FT_Short)( dict->underline_thickness >> 16 );
 
         /* retrieve font family & style name */
-        cffface->family_name = cff_index_get_name( cff, face_index );
+        cffface->family_name = cff_index_get_name( cff,
+                                                   (FT_UInt)face_index );
         if ( cffface->family_name )
         {
           char*  full   = cff_index_get_sid_string( cff,
