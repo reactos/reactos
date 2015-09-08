@@ -65,12 +65,15 @@ HRESULT CreateMergedFolder(REFIID riid, void **ppv)
     if (!hRShell)
         hRShell = LoadLibrary(L"rshell.dll");
 
-    PMERGEDFOLDER_CONSTRUCTOR pCMergedFolder_Constructor = (PMERGEDFOLDER_CONSTRUCTOR)
-         GetProcAddress(hRShell, "CMergedFolder_Constructor");
-
-    if (pCMergedFolder_Constructor)
+    if (hRShell)
     {
-        return pCMergedFolder_Constructor(riid, ppv);
+        PMERGEDFOLDER_CONSTRUCTOR pCMergedFolder_Constructor = (PMERGEDFOLDER_CONSTRUCTOR)
+             GetProcAddress(hRShell, "CMergedFolder_Constructor");
+
+        if (pCMergedFolder_Constructor)
+        {
+            return pCMergedFolder_Constructor(riid, ppv);
+        }
     }
 #endif
     return CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, riid, ppv);
@@ -85,10 +88,13 @@ HRESULT CreateMenuBand(REFIID iid, LPVOID *ppv)
     if (!hRShell) 
         hRShell = LoadLibraryW(L"rshell.dll");
 
-    PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hRShell, "CMenuBand_Constructor");
-    if (func)
+    if (hRShell)
     {
-        return func(iid , ppv);
+        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hRShell, "CMenuBand_Constructor");
+        if (func)
+        {
+            return func(iid , ppv);
+        }
     }
 #endif
     return CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER, iid, ppv);
