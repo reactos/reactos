@@ -9,7 +9,7 @@
 #include "diskio.h"
 #include <stdio.h>
 
-extern char* imageFileName;
+extern char* g_imageFileName;
 
 /*-----------------------------------------------------------------------*/
 /* Correspondence between physical drive number and image file handles.  */
@@ -30,10 +30,10 @@ DSTATUS disk_initialize(
         if (driveHandle[0] != NULL)
             return 0;
 
-        driveHandle[0] = fopen(imageFileName, "r+b");
+        driveHandle[0] = fopen(g_imageFileName, "r+b");
         if(!driveHandle[0])
         {
-            driveHandle[0] = fopen(imageFileName, "w+");
+            driveHandle[0] = fopen(g_imageFileName, "w+");
         }
 
         if (driveHandle[0] != NULL)
