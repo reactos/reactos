@@ -590,16 +590,16 @@
 @ stdcall KeGetCurrentThread()
 @ stdcall KeGetPreviousMode()
 @ stdcall KeGetRecommendedSharedDataAlignment()
-; -arch=i386 KeI386AbiosCall
+@ stdcall -arch=i386 KeI386AbiosCall(long ptr ptr long)
 @ stdcall -arch=i386 KeI386AllocateGdtSelectors(ptr long)
-; -arch=i386 KeI386Call16BitCStyleFunction
-; -arch=i386 KeI386Call16BitFunction
+@ stdcall -arch=i386 KeI386Call16BitCStyleFunction(long long ptr long)
+@ stdcall -arch=i386 KeI386Call16BitFunction(ptr)
 @ stdcall -arch=i386 KeI386FlatToGdtSelector(long long long)
-; -arch=i386 KeI386GetLid
+@ stdcall -arch=i386 KeI386GetLid(long long long ptr ptr)
 @ extern -arch=i386 KeI386MachineType
 @ stdcall -arch=i386 KeI386ReleaseGdtSelectors(ptr long)
-; -arch=i386 KeI386ReleaseLid
-; -arch=i386 KeI386SetGdtSelector
+@ stdcall -arch=i386 KeI386ReleaseLid(long ptr)
+@ stdcall -arch=i386 KeI386SetGdtSelector(long ptr)
 @ stdcall KeInitializeApc(ptr ptr long ptr ptr ptr long ptr)
 @ stdcall KeInitializeCrashDumpHeader(long long ptr long ptr)
 @ stdcall KeInitializeDeviceQueue(ptr)
@@ -625,7 +625,7 @@
 @ stdcall KeIpiGenericCall(ptr ptr)
 @ stdcall KeIsAttachedProcess()
 @ stdcall -arch=i386,arm KeIsExecutingDpc()
-;KeIsWaitListEmpty
+@ stdcall KeIsWaitListEmpty(ptr)
 ;@ cdecl -arch=x86_64 KeLastBranchMSR()
 @ stdcall KeLeaveCriticalRegion() _KeLeaveCriticalRegion
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
@@ -725,7 +725,7 @@
 @ fastcall -arch=i386,arm KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
-;-arch=i386,arm KiCheckForSListAddress
+@ fastcall -arch=i386,arm KiCheckForSListAddress(ptr)
 @ stdcall -arch=i386 KiCoprocessorError()
 ;@ cdecl -arch=x86_64 KiCpuId()
 @ stdcall -arch=i386,arm KiDeliverApc(long ptr ptr)
@@ -763,7 +763,7 @@
 @ stdcall MmCanFileBeTruncated(ptr ptr)
 @ stdcall MmCommitSessionMappedView(ptr ptr)
 @ stdcall MmCreateMdl(ptr ptr long)
-;MmCreateMirror
+@ stdcall MmCreateMirror()
 @ stdcall MmCreateSection(ptr long ptr ptr long long ptr ptr)
 @ stdcall MmDisableModifiedWriteOfSection(long)
 @ stdcall MmFlushImageSection(ptr long)
@@ -781,7 +781,7 @@
 @ extern MmHighestUserAddress
 @ stdcall MmIsAddressValid(ptr)
 @ stdcall MmIsDriverVerifying(ptr)
-;MmIsIoSpaceActive
+@ stdcall MmIsIoSpaceActive(long long ptr)
 @ stdcall MmIsNonPagedSystemAddressValid(ptr)
 @ stdcall MmIsRecursiveIoFault()
 @ stdcall MmIsThisAnNtAsSystem()
@@ -926,10 +926,10 @@
 @ stdcall ObSetSecurityObjectByPointer(ptr long ptr)
 @ fastcall ObfDereferenceObject(ptr)
 @ fastcall ObfReferenceObject(ptr)
-;PfxFindPrefix
-;PfxInitialize
-;PfxInsertPrefix
-;PfxRemovePrefix
+@ stdcall PfxFindPrefix(ptr ptr)
+@ stdcall PfxInitialize(ptr)
+@ stdcall PfxInsertPrefix(ptr ptr ptr)
+@ stdcall PfxRemovePrefix(ptr ptr)
 @ stdcall PoCallDriver(ptr ptr)
 @ stdcall PoCancelDeviceNotify(ptr)
 @ stdcall PoQueueShutdownWorkItem(ptr)
@@ -1040,7 +1040,7 @@
 @ stdcall PsSetThreadWin32Thread(ptr ptr ptr)
 @ stdcall PsTerminateSystemThread(long)
 @ extern PsThreadType
-;PsWrapApcWow64Thread
+@ stdcall PsWrapApcWow64Thread(ptr ptr)
 @ stdcall -arch=i386,arm READ_REGISTER_BUFFER_UCHAR(ptr ptr long)
 @ stdcall -arch=i386,arm READ_REGISTER_BUFFER_ULONG(ptr ptr long)
 @ stdcall -arch=i386,arm READ_REGISTER_BUFFER_USHORT(ptr ptr long)
@@ -1290,14 +1290,14 @@
 @ stdcall RtlTimeToSecondsSince1970(ptr ptr)
 @ stdcall RtlTimeToSecondsSince1980(ptr ptr)
 @ stdcall RtlTimeToTimeFields(ptr ptr)
-;RtlTraceDatabaseAdd
-;RtlTraceDatabaseCreate
-;RtlTraceDatabaseDestroy
-;RtlTraceDatabaseEnumerate
-;RtlTraceDatabaseFind
-;RtlTraceDatabaseLock
-;RtlTraceDatabaseUnlock
-;RtlTraceDatabaseValidate
+@ stdcall RtlTraceDatabaseAdd(ptr long ptr ptr)
+@ stdcall RtlTraceDatabaseCreate(long ptr long long ptr)
+@ stdcall RtlTraceDatabaseDestroy(ptr)
+@ stdcall RtlTraceDatabaseEnumerate(ptr ptr ptr)
+@ stdcall RtlTraceDatabaseFind(ptr long ptr ptr)
+@ stdcall RtlTraceDatabaseLock(ptr)
+@ stdcall RtlTraceDatabaseUnlock(ptr)
+@ stdcall RtlTraceDatabaseValidate(ptr)
 @ fastcall -arch=i386,arm RtlUlongByteSwap(long)
 @ fastcall -arch=i386,arm RtlUlonglongByteSwap(long long)
 @ stdcall RtlUnicodeStringToAnsiSize(ptr) RtlxUnicodeStringToAnsiSize
@@ -1394,7 +1394,7 @@
 @ stdcall SeValidSecurityDescriptor(long ptr)
 @ stdcall VerSetConditionMask(long long long long)
 @ cdecl VfFailDeviceNode(ptr long long long ptr ptr ptr)
-;VfFailDriver
+@ cdecl VfFailDriver(long long long ptr ptr ptr)
 @ cdecl VfFailSystemBIOS(long long long ptr ptr ptr)
 @ stdcall VfIsVerificationEnabled(long ptr)
 @ stdcall -arch=i386,arm WRITE_REGISTER_BUFFER_UCHAR(ptr ptr long)
@@ -1403,17 +1403,17 @@
 @ stdcall -arch=i386,arm WRITE_REGISTER_UCHAR(ptr long)
 @ stdcall -arch=i386,arm WRITE_REGISTER_ULONG(ptr long)
 @ stdcall -arch=i386,arm WRITE_REGISTER_USHORT(ptr long)
-;WmiFlushTrace
-;WmiGetClock
-;WmiQueryTrace
+@ stdcall WmiFlushTrace(ptr)
+@ stdcall WmiGetClock(long ptr)
+@ stdcall WmiQueryTrace(ptr)
 @ stdcall WmiQueryTraceInformation(long ptr long ptr ptr)
-;WmiStartTrace
-;WmiStopTrace
-;WmiTraceFastEvent
+@ stdcall WmiStartTrace(ptr)
+@ stdcall WmiStopTrace(ptr)
+@ stdcall WmiTraceFastEvent(ptr)
 @ cdecl WmiTraceMessage()
 @ stdcall WmiTraceMessageVa(double long ptr long long)
-;WmiUpdateTrace
-;XIPDispatch
+@ stdcall WmiUpdateTrace(ptr)
+@ stdcall XIPDispatch(long ptr long)
 @ stdcall ZwAccessCheckAndAuditAlarm(ptr ptr ptr ptr ptr long ptr long ptr ptr ptr)
 @ stdcall ZwAddBootEntry(ptr long)
 @ stdcall ZwAddDriverEntry(ptr long)
@@ -1542,9 +1542,9 @@
 @ cdecl -arch=arm __jump_unwind()
 @ cdecl -arch=x86_64 __chkstk()
 ;@ cdecl -arch=x86_64 __misaligned_access()
-;@ cdecl -arch=i386 _CIcos
-;@ cdecl -arch=i386 _CIsin
-;@ cdecl -arch=i386 _CIsqrt
+@ cdecl -arch=i386 _CIcos()
+@ cdecl -arch=i386 _CIsin()
+@ cdecl -arch=i386 _CIsqrt()
 @ cdecl -arch=i386,arm _abnormal_termination()
 @ cdecl -arch=i386 _alldiv()
 @ cdecl -arch=i386 _alldvrm()

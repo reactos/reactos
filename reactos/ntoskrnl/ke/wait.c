@@ -267,6 +267,14 @@ Quickie:
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+BOOLEAN
+NTAPI
+KeIsWaitListEmpty(IN PVOID Object)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /*
  * @implemented
  */

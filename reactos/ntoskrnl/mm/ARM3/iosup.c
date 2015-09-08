@@ -265,4 +265,13 @@ MmUnmapVideoDisplay(IN PVOID BaseAddress,
     MmUnmapIoSpace(BaseAddress, NumberOfBytes);
 }
 
+LOGICAL
+NTAPI
+MmIsIoSpaceActive(IN PHYSICAL_ADDRESS StartAddress,
+                  IN SIZE_T NumberOfBytes)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /* EOF */

@@ -19,6 +19,18 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef PVOID PWMI_LOGGER_INFORMATION; // FIXME
+
+typedef enum _WMI_CLOCK_TYPE
+{
+    WMICT_DEFAULT,
+    WMICT_SYSTEMTIME,
+    WMICT_PERFCOUNTER,
+    WMICT_PROCESS,
+    WMICT_THREAD,
+    WMICT_CPUCYCLE
+} WMI_CLOCK_TYPE;
+
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -344,6 +356,63 @@ WmiTraceMessageVa(IN TRACEHANDLE LoggerHandle,
                   IN LPGUID MessageGuid,
                   IN USHORT MessageNumber,
                   IN va_list MessageArgList)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+WmiFlushTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+LONG64
+FASTCALL
+WmiGetClock(IN WMI_CLOCK_TYPE ClockType,
+            IN PVOID Context)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+WmiQueryTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+WmiStartTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+    
+NTSTATUS
+NTAPI
+WmiStopTrace(IN PWMI_LOGGER_INFORMATION LoggerInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+FASTCALL
+WmiTraceFastEvent(IN PWNODE_HEADER Wnode)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+WmiUpdateTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

@@ -1740,6 +1740,13 @@ ExitCall:
     KiServiceExit(TrapFrame, Result);
 }
 
+VOID
+FASTCALL
+KiCheckForSListAddress(IN PKTRAP_FRAME TrapFrame)
+{
+    UNIMPLEMENTED;   
+}
+
 /*
  * @implemented
  */

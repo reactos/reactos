@@ -42,6 +42,7 @@ list(APPEND SOURCE
     nls.c
     path.c
     ppb.c
+    prefix.c
     priv.c
     process.c
     propvar.c
@@ -61,6 +62,7 @@ list(APPEND SOURCE
     time.c
     timezone.c
     timerqueue.c
+    trace.c
     unicode.c
     unicodeprefix.c
     vectoreh.c

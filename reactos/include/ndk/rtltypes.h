@@ -834,6 +834,27 @@ typedef struct _UNICODE_PREFIX_TABLE
     PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
 } UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
 
+#ifdef NTOS_MODE_USER
+//
+// Pfx* routines' table structures
+//
+typedef struct _PREFIX_TABLE_ENTRY
+{
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  struct _PREFIX_TABLE_ENTRY *NextPrefixTree;
+  RTL_SPLAY_LINKS Links;
+  PSTRING Prefix;
+} PREFIX_TABLE_ENTRY, *PPREFIX_TABLE_ENTRY;
+
+typedef struct _PREFIX_TABLE
+{
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  PPREFIX_TABLE_ENTRY NextPrefixTree;
+} PREFIX_TABLE, *PPREFIX_TABLE;
+#endif
+
 //
 // Time Structure for RTL Time calls
 //
@@ -1607,6 +1628,12 @@ typedef struct _STACK_TRACE_DATABASE
     RTL_CRITICAL_SECTION CriticalSection;
 } STACK_TRACE_DATABASE, *PSTACK_TRACE_DATABASE;
 
+//
+// Trace Database
+//
+
+typedef ULONG (NTAPI *RTL_TRACE_HASH_FUNCTION) (ULONG Count, PVOID *Trace);
+
 typedef struct _RTL_TRACE_BLOCK
 {
     ULONG Magic;
@@ -1618,6 +1645,50 @@ typedef struct _RTL_TRACE_BLOCK
     struct _RTL_TRACE_BLOCK *Next;
     PVOID *Trace;
 } RTL_TRACE_BLOCK, *PRTL_TRACE_BLOCK;
+
+typedef struct _RTL_TRACE_DATABASE
+{
+    ULONG Magic;
+    ULONG Flags;
+    ULONG Tag;
+    struct _RTL_TRACE_SEGMENT *SegmentList;
+    SIZE_T MaximumSize;
+    SIZE_T CurrentSize;
+    PVOID Owner;
+#ifdef NTOS_MODE_USER
+    RTL_CRITICAL_SECTION Lock;
+#else
+    union
+    {
+        KSPIN_LOCK SpinLock;
+        FAST_MUTEX FastMutex;
+    } u;
+#endif
+    ULONG NoOfBuckets;
+    struct _RTL_TRACE_BLOCK **Buckets;
+    RTL_TRACE_HASH_FUNCTION HashFunction;
+    SIZE_T NoOfTraces;
+    SIZE_T NoOfHits;
+    ULONG HashCounter[16];
+} RTL_TRACE_DATABASE, *PRTL_TRACE_DATABASE;
+
+typedef struct _RTL_TRACE_SEGMENT
+{
+    ULONG Magic;
+    struct _RTL_TRACE_DATABASE *Database;
+    struct _RTL_TRACE_SEGMENT *NextSegment;
+    SIZE_T TotalSize;
+    PCHAR SegmentStart;
+    PCHAR SegmentEnd;
+    PCHAR SegmentFree;
+} RTL_TRACE_SEGMENT, *PRTL_TRACE_SEGMENT;
+
+typedef struct _RTL_TRACE_ENUMERATE
+{
+    struct _RTL_TRACE_DATABASE *Database;
+    ULONG Index;
+    struct _RTL_TRACE_BLOCK *Block;
+} RTL_TRACE_ENUMERATE, * PRTL_TRACE_ENUMERATE;
 
 //
 // Auto-Managed Rtl* String Buffer

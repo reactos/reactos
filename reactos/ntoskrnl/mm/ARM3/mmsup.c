@@ -260,4 +260,12 @@ MmQuerySystemSize(VOID)
     return MmSystemSize;
 }
 
+NTSTATUS
+NTAPI
+MmCreateMirror(VOID)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;    
+}
+
 /* EOF */

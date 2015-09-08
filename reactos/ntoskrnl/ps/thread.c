@@ -929,6 +929,15 @@ PsSetThreadWin32Thread(
 
 NTSTATUS
 NTAPI
+PsWrapApcWow64Thread(IN OUT PVOID *ApcContext,
+                     IN OUT PVOID *ApcRoutine)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}    
+
+NTSTATUS
+NTAPI
 NtCreateThread(OUT PHANDLE ThreadHandle,
                IN ACCESS_MASK DesiredAccess,
                IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
