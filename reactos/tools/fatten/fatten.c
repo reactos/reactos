@@ -182,7 +182,7 @@ int main(int oargc, char* oargv[])
 
             if (!fe)
             {
-                printf("Error: unable to open external file '%s' for reading. errno=%d", argv[0], errno);
+                printf("Error: unable to open external file '%s' for reading.", argv[0]);
                 return 1;
             }
 
