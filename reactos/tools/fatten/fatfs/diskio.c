@@ -63,6 +63,24 @@ DSTATUS disk_status(
 
 
 /*-----------------------------------------------------------------------*/
+/* Cleanup a Drive                                                       */
+/*-----------------------------------------------------------------------*/
+
+VOID disk_cleanup(
+    BYTE pdrv		/* Physical drive nmuber (0..) */
+    )
+{
+    if (pdrv < driveHandleCount)
+    {
+        if (driveHandle[pdrv] != NULL)
+        {
+            fclose(driveHandle[pdrv]);
+            driveHandle[pdrv] = NULL;
+        }
+    }
+}
+
+/*-----------------------------------------------------------------------*/
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 

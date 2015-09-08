@@ -67,8 +67,8 @@ int is_command(const char* parg)
 
 #define NEED_PARAMS(_min_,_max_) \
     do {\
-        if(nargs<_min_) { printf("Too few args for command %s.\n",argv[-1]); goto print_help; } \
-        if(nargs>_max_) { printf("Too many args for command %s.\n",argv[-1]); goto print_help; } \
+        if(nargs<_min_) { printf("Too few args for command %s.\n",argv[-1]); PRINT_HELP_AND_QUIT(); } \
+        if(nargs>_max_) { printf("Too many args for command %s.\n",argv[-1]); PRINT_HELP_AND_QUIT(); } \
     } while(0)
 
 int need_mount()
@@ -90,8 +90,33 @@ int need_mount()
     do { ret = need_mount(); if(ret) \
     {\
         printf("Error: could not mount image file '%s' (%d). \n", imageFileName, ret); \
-        goto print_help; \
+        PRINT_HELP_AND_QUIT(); \
     } } while(0)
+
+void print_help(char const * const name)
+{
+    printf("Syntax: %s image_file [list of commands]\n\n", name);
+    printf("Commands: [Note: both '/' and '-' are accepted as command prefixes.] \n");
+    printf("    /format <sectors> [<filesystem>]         Formats the disk image.\n");
+    printf("    /boot <sector file>          Writes a new boot sector.\n");
+    printf("    /add <src path> <dst path>   Copies an external file or directory\n"
+        "                                 into the image.\n");
+    printf("    /extract <src path> <dst path>  Copies a file or directory from the image\n"
+        "                                 into an external file or directory.\n");
+    printf("    /move <src path> <new path>  Moves/renames a file or directory.\n");
+    printf("    /copy <src path> <new path>  Copies a file or directory.\n");
+    printf("    /mkdir <src path> <new path> Creates a directory.\n");
+    printf("    /rmdir <src path> <new path> Creates a directory.\n");
+    printf("    /list [<pattern>]            Lists files a directory (defaults to root).\n");
+    //printf("    /recursive                   Enables recursive processing for directories.\n");
+}
+
+#define PRINT_HELP_AND_QUIT() \
+    do { \
+        ret = 1; \
+        print_help(oargv[0]); \
+        goto exit; \
+    } while (0)
 
 int main(int oargc, char* oargv[])
 {
@@ -102,13 +127,13 @@ int main(int oargc, char* oargv[])
     // first parameter must be the image file.
     if (argc == 0)
     {
-        goto print_help;
+        PRINT_HELP_AND_QUIT();
     }
 
     if (is_command(argv[0]))
     {
         printf("Error: first parameter must be a filename, found '%s' instead. \n", argv[0]);
-        goto print_help;
+        PRINT_HELP_AND_QUIT();
     }
 
     imageFileName = argv[0];
@@ -116,7 +141,7 @@ int main(int oargc, char* oargv[])
     if (disk_initialize(0))
     {
         printf("Error: could not open image file '%s'. \n", imageFileName);
-        goto print_help;
+        PRINT_HELP_AND_QUIT();
     }
 
     argc--;
@@ -131,7 +156,7 @@ int main(int oargc, char* oargv[])
         if (!is_command(parg))
         {
             printf("Error: Expected a command, found '%s' instead. \n", parg);
-            goto print_help;
+            PRINT_HELP_AND_QUIT();
         }
 
         parg++;
@@ -157,7 +182,8 @@ int main(int oargc, char* oargv[])
             if (sectors <= 0)
             {
                 printf("Error: Sectors must be > 0\n");
-                return 1;
+                ret = 1;
+                goto exit;
             }
 
             disk_ioctl(0, SET_SECTOR_COUNT, &sectors);
@@ -166,7 +192,7 @@ int main(int oargc, char* oargv[])
             if (ret)
             {
                 printf("ERROR: Formatting drive: %d.\n", ret);
-                goto print_help;
+                PRINT_HELP_AND_QUIT();
             }
         }
         else if (strcmp(parg, "boot") == 0)
@@ -195,13 +221,16 @@ int main(int oargc, char* oargv[])
             if (!fe)
             {
                 printf("Error: unable to open external file '%s' for reading.", argv[0]);
-                return 1;
+                ret = 1;
+                goto exit;
             }
 
             if (f_open(&fv, argv[1], FA_WRITE | FA_CREATE_ALWAYS))
             {
                 printf("Error: unable to open file '%s' for writing.", argv[1]);
-                return 1;
+                fclose(fe);
+                ret = 1;
+                goto exit;
             }
 
             while ((rdlen = fread(buff, 1, 32768, fe)) > 0)
@@ -229,7 +258,8 @@ int main(int oargc, char* oargv[])
             if (f_open(&fe, argv[0], FA_READ))
             {
                 printf("Error: unable to open file '%s' for reading.", argv[0]);
-                return 1;
+                ret = 1;
+                goto exit;
             }
 
             fv = fopen(argv[1], "wb");
@@ -237,7 +267,9 @@ int main(int oargc, char* oargv[])
             if (!fv)
             {
                 printf("Error: unable to open external file '%s' for writing.", argv[1]);
-                return 1;
+                f_close(&fe);
+                ret = 1;
+                goto exit;
             }
 
             while ((f_read(&fe, buff, 32768, &rdlen) == 0) && (rdlen > 0))
@@ -275,12 +307,15 @@ int main(int oargc, char* oargv[])
             if (f_open(&fe, argv[0], FA_READ))
             {
                 printf("Error: unable to open file '%s' for reading.", argv[0]);
-                return 1;
+                ret = 1;
+                goto exit;
             }
             if (f_open(&fv, argv[1], FA_WRITE | FA_CREATE_ALWAYS))
             {
                 printf("Error: unable to open file '%s' for writing.", argv[1]);
-                return 1;
+                f_close(&fe);
+                ret = 1;
+                goto exit;
             }
 
             while ((f_read(&fe, buff, 32768, &rdlen) == 0) && (rdlen > 0))
@@ -328,7 +363,8 @@ int main(int oargc, char* oargv[])
             if (f_opendir(&dir, root))
             {
                 printf("Error opening directory '%s'.\n", root);
-                return 1;
+                ret = 1;
+                goto exit;
             }
 
             printf("Listing directory contents of: %s\n", root);
@@ -346,30 +382,18 @@ int main(int oargc, char* oargv[])
         else
         {
             printf("Error: Unknown or invalid command: %s\n", argv[-1]);
-            goto print_help;
+            PRINT_HELP_AND_QUIT();
         }
         argv += nargs;
         argc -= nargs;
     }
 
-    return 0;
+    ret = 0;
 
-print_help:
-    printf("Syntax: %s image_file [list of commands]\n\n", oargv[0]);
-    printf("Commands: [Note: both '/' and '-' are accepted as command prefixes.] \n");
-    printf("    /format <sectors> [<filesystem>]         Formats the disk image.\n");
-    printf("    /boot <sector file>          Writes a new boot sector.\n");
-    printf("    /add <src path> <dst path>   Copies an external file or directory\n"
-        "                                 into the image.\n");
-    printf("    /extract <src path> <dst path>  Copies a file or directory from the image\n"
-        "                                 into an external file or directory.\n");
-    printf("    /move <src path> <new path>  Moves/renames a file or directory.\n");
-    printf("    /copy <src path> <new path>  Copies a file or directory.\n");
-    printf("    /mkdir <src path> <new path> Creates a directory.\n");
-    printf("    /rmdir <src path> <new path> Creates a directory.\n");
-    printf("    /list [<pattern>]            Lists files a directory (defaults to root).\n");
-    //printf("    /recursive                   Enables recursive processing for directories.\n");
+exit:
 
-    return 1;
+    disk_cleanup(0);
+
+    return ret;
 }
 
