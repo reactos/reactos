@@ -320,7 +320,7 @@
 #define IDI_SHELL_FLOPPY             8
 #define IDI_SHELL_DRIVE              9
 #define IDI_SHELL_NETDRIVE          10
-#define IDI_SHELL_NETDRIVE2         11
+#define IDI_SHELL_NETDRIVE_OFF      11
 #define IDI_SHELL_CDROM             12
 #define IDI_SHELL_RAMDISK           13
 #define IDI_SHELL_ENTIRE_NETWORK    14
@@ -402,16 +402,20 @@
 #define IDI_SHELL_PICTURE_FILE     226
 /* TODO: 227.ico */
 #define IDI_SHELL_CD_MUSIC2        228
-/* TODO: 229.ico, 230.ico, 231.ico, 232.ico */
+/* TODO: 229.ico */
+#define IDI_SHELL_ZIP_DRIVE2       230
+/* TODO: 231.ico, 232.ico */
 #define IDI_SHELL_FDD              233
 /* TODO: 234.ico */
 #define IDI_SHELL_MY_DOCUMENTS     235
 #define IDI_SHELL_MY_PICTURES      236
 #define IDI_SHELL_MY_MUSIC         237
 #define IDI_SHELL_MY_MOVIES        238
-/* TODO: 239.ico */
+#define IDI_SHELL_WEB_BROWSER2     239
 #define IDI_SHELL_FULL_RECYCLE_BIN2 240
-/* TODO: 241.ico, 242.ico, 243.ico, 244.ico */
+/* TODO: 241.ico */
+#define IDI_SHELL_RENAME            242
+/* TODO: 243.ico, 244.ico */
 #define IDI_SHELL_PRINTER3         245
 #define IDI_SHELL_ICON_246         246
 /* TODO: 247.ico */
@@ -457,7 +461,10 @@
 /* TODO: 306.ico, 307.ico */
 #define IDI_SHELL_SMART_MEDIA      308
 #define IDI_SHELL_CAMERA1          309
-/* TODO: 310.ico, 311.ico, 312.ico, 313.ico, 314.ico */
+/* TODO: 310.ico, 311.ico */
+#define IDI_SHELL_JAZ_DRIVE        312
+#define IDI_SHELL_ZIP_DRIVE        313
+/* TODO: 314.ico */
 #define IDI_SHELL_SCANNER          315
 /* TODO: 316.ico */
 #define IDI_SHELL_CAMCORDER        317
@@ -474,8 +481,10 @@
 #define IDI_SHELL_SHUTDOWN1        329
 #define IDI_SHELL_CONTROL_PANEL1   330
 /* TODO: 331.ico, 337.ico, 338.ico, 512.ico */
+#define IDI_SHELL_WEB_BROWSER      512
 #define IDI_SHELL_IDEA             1001
-/* TODO: 1002.ico, 1003.ico */
+#define IDI_SHELL_PRINTER_OK2      1002
+/* TODO: 1003.ico */
 #define IDI_SHELL_HELP_FILE1       1004
 /* TODO: 1005.ico, 1006.ico, 1007.ico, 1008.ico, 1009.ico, 1010.ico, 1011.ico */
 #define IDI_SHELL_SHUTDOWN2        8240
