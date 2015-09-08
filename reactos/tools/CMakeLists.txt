@@ -39,4 +39,4 @@ if(NOT MSVC)
     add_subdirectory(rsym)
 endif()
 
-#add_subdirectory(fatten)
+add_subdirectory(fatten)

@@ -1,5 +1,5 @@
 
-add_executable(fatten
+add_host_tool(fatten
     fatten.c
     fatfs/diskio.c
     fatfs/ff.c

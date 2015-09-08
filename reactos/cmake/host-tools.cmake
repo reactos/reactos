@@ -6,7 +6,7 @@ endif()
 string(TOUPPER ${CMAKE_BUILD_TYPE} _build_type)
 
 # List of host tools
-list(APPEND host_tools_list bin2c hpp widl gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink utf16le)
+list(APPEND host_tools_list bin2c hpp widl gendib cabman cdmake fatten mkhive obj2bin spec2def geninc mkshelllink utf16le)
 if(NOT MSVC)
     list(APPEND host_tools_list rsym)
 endif()

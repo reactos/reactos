@@ -112,9 +112,9 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     if(NOT NEW_STYLE_BUILD)
         if(NOT MSVC)
-            export(TARGETS bin2c widl gendib cabman cdmake hpp mkhive obj2bin spec2def geninc rsym mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+            export(TARGETS bin2c widl gendib cabman cdmake fatten hpp mkhive obj2bin spec2def geninc rsym mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
         else()
-            export(TARGETS bin2c widl gendib cabman cdmake hpp mkhive obj2bin spec2def geninc mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+            export(TARGETS bin2c widl gendib cabman cdmake fatten hpp mkhive obj2bin spec2def geninc mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
         endif()
     endif()
 

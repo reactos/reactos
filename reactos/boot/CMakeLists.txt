@@ -1,3 +1,10 @@
+## efisys.bin
+
+add_custom_target(efisys
+    COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 -mkdir efi -mkdir efi/boot -add $<TARGET_FILE:bootmgfw> efi/boot/bootia32.efi
+    DEPENDS native-fatten bootmgfw
+    VERBATIM)
+
 ##bootcd
 #clear it out
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "")

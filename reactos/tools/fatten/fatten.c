@@ -178,11 +178,14 @@ int main(int oargc, char* oargv[])
             FILE* fe;
             FIL   fv = { 0 };
 
-            if (fe = fopen(argv[0], "rb"))
+            fe = fopen(argv[0], "rb");
+
+            if (!fe)
             {
-                printf("Error: unable to open external file '%s' for reading.", argv[0]);
+                printf("Error: unable to open external file '%s' for reading. errno=%d", argv[0], errno);
                 return 1;
             }
+
             if (f_open(&fv, argv[1], FA_WRITE | FA_CREATE_ALWAYS))
             {
                 printf("Error: unable to open file '%s' for writing.", argv[1]);
@@ -218,7 +221,10 @@ int main(int oargc, char* oargv[])
                 printf("Error: unable to open file '%s' for reading.", argv[0]);
                 return 1;
             }
-            if (fv = fopen(argv[1], "wb"))
+
+            fv = fopen(argv[1], "wb");
+
+            if (!fv)
             {
                 printf("Error: unable to open external file '%s' for writing.", argv[1]);
                 return 1;
@@ -286,16 +292,18 @@ int main(int oargc, char* oargv[])
             NEED_PARAMS(1, 1);
 
             NEED_MOUNT();
+
             // Arg 1: folder path
-            f_mkdir(argv[1]);
+            f_mkdir(argv[0]);
         }
         else if (strcmp(parg, "delete") == 0)
         {
             NEED_PARAMS(1, 1);
 
             NEED_MOUNT();
+
             // Arg 1: file/folder path (cannot delete non-empty folders)
-            f_unlink(argv[1]);
+            f_unlink(argv[0]);
         }
         else if (strcmp(parg, "list") == 0)
         {
