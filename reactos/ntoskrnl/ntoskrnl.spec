@@ -766,6 +766,7 @@
 @ stdcall MmCreateMirror()
 @ stdcall MmCreateSection(ptr long ptr ptr long long ptr ptr)
 @ stdcall MmDisableModifiedWriteOfSection(long)
+@ stdcall MmDoesFileHaveUserWritableReferences(ptr)
 @ stdcall MmFlushImageSection(ptr long)
 @ stdcall MmForceSectionClosed(ptr long)
 @ stdcall MmFreeContiguousMemory(ptr)

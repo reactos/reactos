@@ -3155,6 +3155,14 @@ MiDeleteARM3Section(PVOID ObjectBody)
     MiCheckControlArea(ControlArea, OldIrql);
 }
 
+ULONG
+NTAPI
+MmDoesFileHaveUserWritableReferences(IN PSECTION_OBJECT_POINTERS SectionPointer)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS
