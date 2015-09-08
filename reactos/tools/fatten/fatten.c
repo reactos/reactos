@@ -15,7 +15,8 @@ char* imageFileName;
 
 FATFS g_Filesystem;
 
-int isMounted = 0;
+static int isMounted = 0;
+static char buff[32768];
 
 // tool needed by fatfs
 DWORD get_fattime()
@@ -57,7 +58,11 @@ DWORD get_fattime()
 
 int is_command(const char* parg)
 {
+#if _WIN32
     return (parg[0] == '/') || (parg[0] == '-');
+#else
+    return (parg[0] == '-');
+#endif
 }
 
 #define NEED_PARAMS(_min_,_max_) \
@@ -175,7 +180,6 @@ int main(int oargc, char* oargv[])
         {
             FILE* fe;
             FIL   fv = { 0 };
-            char buff[32768];
             UINT rdlen = 0;
             UINT wrlen = 0;
 
@@ -212,7 +216,6 @@ int main(int oargc, char* oargv[])
         {
             FIL   fe = { 0 };
             FILE* fv;
-            char buff[32768];
             UINT rdlen = 0;
             UINT wrlen = 0;
 
@@ -260,7 +263,6 @@ int main(int oargc, char* oargv[])
         {
             FIL fe = { 0 };
             FIL fv = { 0 };
-            char buff[32768];
             UINT rdlen = 0;
             UINT wrlen = 0;
 
