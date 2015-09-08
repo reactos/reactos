@@ -52,6 +52,7 @@ elseif(ARCH STREQUAL "amd64")
 else()
     list(APPEND BOOTLIB_SOURCE
          lib/arch/stub/arch.c
+         lib/mm/stub/mm.c
          )
 endif()
 
