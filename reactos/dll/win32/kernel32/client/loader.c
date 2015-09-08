@@ -381,6 +381,7 @@ done:
     /* Set last error in failure case */
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("LoadLibraryExW(%ls) failing with status %lx\n", lpLibFileName, Status);
         BaseSetLastNTError(Status);
         return NULL;
     }
