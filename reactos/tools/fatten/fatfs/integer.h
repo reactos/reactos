@@ -5,12 +5,12 @@
 #ifndef _FF_INTEGER
 #define _FF_INTEGER
 
-#ifdef _WIN32	/* Windows */
+#if defined(_MSC_VER) && (_MSC_VER < 0x1700) /* Windows with older MSVC */
 
 #include <windows.h>
 #include <tchar.h>
 
-#else			/* Unixes */
+#else                                        /* Unixes */
 
 #include <stdint.h>
 
@@ -22,7 +22,7 @@ typedef int16_t			SHORT;
 typedef uint16_t		WORD;
 typedef uint16_t		WCHAR;
 
-/* These types MUST be 16 bit or 32 bit */
+/* These types MUST be at least 16 bit */
 typedef int_fast16_t	INT;
 typedef uint_fast16_t	UINT;
 

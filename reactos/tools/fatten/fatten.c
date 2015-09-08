@@ -53,7 +53,7 @@ DWORD get_fattime()
     return myTime.whole;
 }
 
-BOOL is_command(const char* parg)
+int is_command(const char* parg)
 {
     return (parg[0] == '/') || (parg[0] == '-');
 }
@@ -64,7 +64,7 @@ BOOL is_command(const char* parg)
         if(nargs>_max_) { printf("Too many args for command %s.\n",argv[-1]); goto print_help; } \
     } while(0)
 
-BOOL need_mount()
+int need_mount()
 {
     if (isMounted)
         return FR_OK;
@@ -320,7 +320,7 @@ int main(int oargc, char* oargv[])
             printf("Listing directory contents of: %s\n", root);
 
             FILINFO info = { 0 };
-            CHAR lfname[257];
+            char lfname[257];
             info.lfname = lfname;
             info.lfsize = 256;
             while ((!f_readdir(&dir, &info)) && (strlen(info.fname) > 0))
