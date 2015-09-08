@@ -714,6 +714,9 @@ static HRESULT UXTHEME_DrawImageBackground(HTHEME hTheme, HDC hdc, int iPartId,
         GetThemeMargins(hTheme, hdc, iPartId, iStateId, TMT_SIZINGMARGINS, NULL, &sm);
 
         /* Resize source image if destination smaller than margins */
+#ifndef __REACTOS__
+        /* Revert Wine Commit 2b650fa as it breaks themed Explorer Toolbar Separators
+           FIXME: Revisit this when the bug is fixed. CORE-9636 and Wine Bug #38538 */
         if (sm.cyTopHeight + sm.cyBottomHeight > dstSize.y || sm.cxLeftWidth + sm.cxRightWidth > dstSize.x) {
             if (sm.cyTopHeight + sm.cyBottomHeight > dstSize.y) {
                 sm.cyTopHeight = MulDiv(sm.cyTopHeight, dstSize.y, srcSize.y);
@@ -740,6 +743,7 @@ static HRESULT UXTHEME_DrawImageBackground(HTHEME hTheme, HDC hdc, int iPartId,
             rcSrc.right = srcSize.x;
             rcSrc.bottom = srcSize.y;
         }
+#endif
 
         hdcDst = hdc;
         OffsetViewportOrgEx(hdcDst, rcDst.left, rcDst.top, &org);
