@@ -178,7 +178,7 @@ int main(int oargc, char* oargv[])
             FILE* fe;
             FIL   fv = { 0 };
 
-            if (fopen_s(&fe, argv[0], "rb"))
+            if (fe = fopen(argv[0], "rb"))
             {
                 printf("Error: unable to open external file '%s' for reading.", argv[0]);
                 return 1;
@@ -218,7 +218,7 @@ int main(int oargc, char* oargv[])
                 printf("Error: unable to open file '%s' for reading.", argv[0]);
                 return 1;
             }
-            if (fopen_s(&fv, argv[1], "wb"))
+            if (fv = fopen(argv[1], "wb"))
             {
                 printf("Error: unable to open external file '%s' for writing.", argv[1]);
                 return 1;
