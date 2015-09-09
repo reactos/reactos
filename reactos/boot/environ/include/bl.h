@@ -506,6 +506,13 @@ typedef struct _BL_APPLICATION_ENTRY
     BL_BCD_OPTION BcdData;
 } BL_APPLICATION_ENTRY, *PBL_APPLICATION_ENTRY;
 
+typedef struct _BL_LOADED_APPLICATION_ENTRY
+{
+    ULONG Flags;
+    GUID Guid;
+    PBL_BCD_OPTION BcdData;
+} BL_LOADED_APPLICATION_ENTRY, *PBL_LOADED_APPLICATION_ENTRY;
+
 typedef struct _BL_HARDDISK_DEVICE
 {
     ULONG PartitionType;
@@ -1123,6 +1130,27 @@ BlGetBootOptionSize (
     _In_ PBL_BCD_OPTION BcdOption
     );
 
+NTSTATUS
+BlGetBootOptionString (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type,
+    _Out_ PWCHAR* Value
+    );
+
+NTSTATUS
+BlGetBootOptionInteger (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type,
+    _Out_ PULONGLONG Value
+    );
+
+NTSTATUS
+BlGetBootOptionBoolean (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type,
+    _Out_ PBOOLEAN Value
+    );
+
 /* CONTEXT ROUTINES **********************************************************/
 
 VOID
@@ -1412,7 +1440,7 @@ extern BL_LIBRARY_PARAMETERS BlpLibraryParameters;
 extern BL_TRANSLATION_TYPE  MmTranslationType;
 extern PBL_ARCH_CONTEXT CurrentExecutionContext;
 extern PBL_DEVICE_DESCRIPTOR BlpBootDevice;
-extern BL_APPLICATION_ENTRY BlpApplicationEntry;
+extern BL_LOADED_APPLICATION_ENTRY BlpApplicationEntry;
 extern SIMPLE_TEXT_OUTPUT_INTERFACE *EfiConOut;
 extern EFI_GUID EfiGraphicsOutputProtocol;
 extern EFI_GUID EfiUgaDrawProtocol;

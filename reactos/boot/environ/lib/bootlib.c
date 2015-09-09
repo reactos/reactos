@@ -16,7 +16,7 @@ BL_LIBRARY_PARAMETERS BlpLibraryParameters;
 PBL_DEVICE_DESCRIPTOR BlpBootDevice;
 PWCHAR BlpApplicationBaseDirectory;
 PBOOT_APPLICATION_PARAMETER_BLOCK BlpApplicationParameters;
-BL_APPLICATION_ENTRY BlpApplicationEntry;
+BL_LOADED_APPLICATION_ENTRY BlpApplicationEntry;
 BOOLEAN BlpLibraryParametersInitialized;
 
 ULONG PdPersistAllocations;
@@ -86,12 +86,16 @@ InitializeLibrary (
     BlpApplicationParameters = BootAppParameters;
     BlpLibraryParameters = *LibraryParameters;
 
-    /* Save the application entry */
+    /* Save the application entry flags */
     if (AppEntry->Flags & 2)
     {
         AppEntry->Flags = (AppEntry->Flags & ~0x2) | 0x80;
     }
-    BlpApplicationEntry = *AppEntry;
+    BlpApplicationEntry.Flags = AppEntry->Flags;
+
+    /* Copy the GUID and point to the options */
+    BlpApplicationEntry.Guid = AppEntry->Guid;
+    BlpApplicationEntry.BcdData = &AppEntry->BcdData;
 
     /* Everything has been captured */
     BlpLibraryParametersInitialized = TRUE;

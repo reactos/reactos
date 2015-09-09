@@ -12,7 +12,6 @@
 
 /* DATA VARIABLES ************************************************************/
 
-#include <initguid.h>
 DEFINE_GUID(GUID_WINDOWS_BOOTMGR,
             0x9DEA862C,
             0x5CDD,
@@ -27,6 +26,103 @@ PWCHAR BootDirectory;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
+BmpFwGetApplicationDirectoryPath (
+    _In_ PUNICODE_STRING ApplicationDirectoryPath
+    )
+{
+    NTSTATUS Status;
+    ULONG i, AppPathLength;
+    PWCHAR ApplicationPath, PathCopy;
+
+    /* Clear the incoming string */
+    ApplicationDirectoryPath->Length = 0;
+    ApplicationDirectoryPath->MaximumLength = 0;
+    ApplicationDirectoryPath->Buffer = 0;
+
+    /* Get the boot application path */
+    ApplicationPath = NULL;
+    Status = BlGetBootOptionString(BlpApplicationEntry.BcdData,
+                                   BcdLibraryString_ApplicationPath,
+                                   &ApplicationPath);
+    if (NT_SUCCESS(Status))
+    {
+        /* Calculate the length of the application path */
+        for (i = wcslen(ApplicationPath) - 1; i > 0; i--)
+        {
+            /* Keep going until the path separator */
+            if (ApplicationPath[i] == OBJ_NAME_PATH_SEPARATOR)
+            {
+                break;
+            }
+        }
+
+        /* Check if we have space for one more character */
+        AppPathLength = i + 1;
+        if (AppPathLength < i)
+        {
+            /* Nope, we'll overflow */
+            AppPathLength = -1;
+            Status = STATUS_INTEGER_OVERFLOW;
+        }
+        else
+        {
+            /* Go ahead */
+            Status = STATUS_SUCCESS;
+        }
+
+        /* No overflow? */
+        if (NT_SUCCESS(Status))
+        {
+            /* Check if it's safe to multiply by two */
+            if ((AppPathLength * sizeof(WCHAR)) > 0xFFFFFFFF)
+            {
+                /* Nope */
+                AppPathLength = -1;
+                Status = STATUS_INTEGER_OVERFLOW;
+            }
+            else
+            {
+                /* We're good, do the multiplication */
+                Status = STATUS_SUCCESS;
+                AppPathLength *= sizeof(WCHAR);
+            }
+
+            /* Allocate a copy for the string */
+            if (NT_SUCCESS(Status))
+            {
+                PathCopy = BlMmAllocateHeap(AppPathLength);
+                if (PathCopy)
+                {
+                    /* NULL-terminate it */
+                    RtlCopyMemory(PathCopy,
+                                  ApplicationPath,
+                                  AppPathLength - sizeof(UNICODE_NULL));
+                    PathCopy[AppPathLength] = UNICODE_NULL;
+
+                    /* Finally, initialize the outoing string */
+                    RtlInitUnicodeString(ApplicationDirectoryPath, PathCopy);
+                }
+                else
+                {
+                    /* No memory, fail */
+                    Status = STATUS_NO_MEMORY;
+                }
+            }
+        }
+    }
+
+    /* Check if we had an application path */
+    if (ApplicationPath)
+    {
+        /* No longer need this, free it */
+        BlMmFreeHeap(ApplicationPath);
+    }
+
+    /* All done! */
+    return Status;
+
+}
+NTSTATUS
 BmFwInitializeBootDirectoryPath (
     VOID
     )
@@ -34,13 +130,13 @@ BmFwInitializeBootDirectoryPath (
     PWCHAR FinalPath;
     NTSTATUS Status;
     PWCHAR BcdDirectory;
-   // UNICODE_STRING BcdPath;
-    //ULONG FinalSize;
+    UNICODE_STRING BcdPath;
+    ULONG FinalSize;
     ULONG FileHandle, DeviceHandle;
 
     /* Initialize everything for failure */
-   // BcdPath.MaximumLength = 0;
-   // BcdPath.Buffer = NULL;
+    BcdPath.MaximumLength = 0;
+    BcdPath.Buffer = NULL;
     BcdDirectory = NULL;
     FinalPath = NULL;
     FileHandle = -1;
@@ -51,39 +147,40 @@ BmFwInitializeBootDirectoryPath (
     if (!NT_SUCCESS(Status))
     {
         EfiPrintf(L"Device open failed: %lx\r\n", Status);
-        EfiStall(2000000);
         goto Quickie;
     }
 
-    /* For now, do nothing */
-    EfiPrintf(L"Successfully opened boot device: %lx\r\n", DeviceHandle);
-    EfiStall(2000000);
-
-#if 0
+    /* Get the directory path */
     Status = BmpFwGetApplicationDirectoryPath(&BcdPath);
     BcdDirectory = BcdPath.Buffer;
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"path failed: %lx\n", Status);
         goto Quickie;
     }
 
+    /* Add the BCD file name to it */
     FinalSize = BcdPath.MaximumLength + sizeof(L"\\BCD") - sizeof(UNICODE_NULL);
     if (FinalSize < BcdPath.MaximumLength)
     {
         goto Quickie;
     }
 
+    /* Allocate space for the final path */
     FinalPath = BlMmAllocateHeap(FinalSize);
     if (!FinalPath)
     {
         goto Quickie;
     }
 
+    /* Build it */
     RtlZeroMemory(FinalPath, FinalSize);
     RtlCopyMemory(FinalPath, BcdDirectory, BcdPath.MaximumLength);
     wcsncat(FinalPath, L"\\BCD", FinalSize / sizeof(WCHAR));
 
+    /* Try to open the file */
     EfiPrintf(L"Opening: %s\r\n", FinalPath);
+#if 0
     Status = BlFileOpen(DeviceHandle, FinalPath, 1u, &FileHandle);
     if (!NT_SUCCESS(Status))
     {

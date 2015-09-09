@@ -17,6 +17,7 @@
 #include <wchar.h>
 
 /* NT Base Headers */
+#include <initguid.h>
 #include <ntifs.h>
 
 /* UEFI Headers */
@@ -24,6 +25,9 @@
 
 /* Boot Library Headers */
 #include <bl.h>
+
+/* BCD Headers */
+#include <bcd.h>
 
 /* FUNCTIONS *****************************************************************/
 
