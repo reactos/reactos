@@ -862,6 +862,7 @@ i8042KbdInterruptService(
                 /* b - Bugcheck */
                 KeBugCheck(MANUALLY_INITIATED_CRASH);
             }
+#if defined(KDBG)
             else
             {
 			    /* Send request to the kernel debugger.
@@ -874,6 +875,7 @@ i8042KbdInterruptService(
 			                         NULL,
 			                         KernelMode);
             }
+#endif
 		}
 	}
 

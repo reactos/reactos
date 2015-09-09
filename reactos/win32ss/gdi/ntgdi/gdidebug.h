@@ -2,7 +2,7 @@
 
 #define GDI_DBG_MAX_BTS 10
 
-#if DBG
+#if DBG && defined(KDBG)
 #define ASSERT_NOGDILOCKS() GdiDbgAssertNoLocks(__FILE__,__LINE__)
 #define KeRosDumpStackFrames(Frames, Count) \
     KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
@@ -36,7 +36,7 @@ DbgDumpGdiHandleTableWithBT(VOID);
 
 #endif
 
-#if KDBG
+#if defined(KDBG)
 
 BOOLEAN
 NTAPI
