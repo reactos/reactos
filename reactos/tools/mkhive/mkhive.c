@@ -145,7 +145,7 @@ int main (int argc, char *argv[])
 
     convert_path (FileName, argv[1]);
     strcat (FileName, DIR_SEPARATOR_STRING);
-    strcat (FileName, "bcd");
+    strcat (FileName, "BCD");
     if (!ExportBinaryHive (FileName, &SystemHive))
     {
         return 1;
