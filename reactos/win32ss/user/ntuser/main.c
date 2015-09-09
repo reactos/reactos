@@ -888,7 +888,7 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
 /*
  * This definition doesn't work
  */
-INIT_FUNCTION
+INIT_SECTION
 NTSTATUS
 APIENTRY
 DriverEntry(
@@ -942,7 +942,7 @@ DriverEntry(
     PsEstablishWin32Callouts(&CalloutData);
 
     /* Register service hook callbacks */
-#if DBG
+#if DBG && defined(KDBG)
     KdSystemDebugControl('CsoR', DbgPreServiceHook, ID_Win32PreServiceHook, 0, 0, 0, 0);
     KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);
 #endif

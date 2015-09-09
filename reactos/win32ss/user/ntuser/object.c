@@ -726,7 +726,6 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
 }
 
 /*
- * NtUserValidateHandleSecure W2k3 has one argument.
  *
  * Status
  *    @implemented
@@ -735,8 +734,7 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
 BOOL
 APIENTRY
 NtUserValidateHandleSecure(
-   HANDLE handle,
-   BOOL Restricted)
+   HANDLE handle)
 {
    UINT uType;
    PPROCESSINFO ppi;

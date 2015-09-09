@@ -270,6 +270,37 @@ NtUserSetDbgTag(
    DWORD Unknown0,
    DWORD Unknown1)
 {
+   STUB;
+
+   return 0;
+}
+
+DWORD
+APIENTRY
+NtUserSetDbgTagCount(
+    DWORD Unknown0)
+{
+    STUB;
+
+    return 0;
+}
+
+DWORD
+APIENTRY
+NtUserSetRipFlags(
+   DWORD Unknown0)
+{
+   STUB;
+
+   return 0;
+}
+
+DWORD
+APIENTRY
+NtUserDbgWin32HeapFail(
+    DWORD Unknown0,
+    DWORD Unknown1)
+{
    STUB
 
    return 0;
@@ -277,9 +308,9 @@ NtUserSetDbgTag(
 
 DWORD
 APIENTRY
-NtUserSetRipFlags(
-   DWORD Unknown0,
-   DWORD Unknown1)
+NtUserDbgWin32HeapStat(
+    DWORD Unknown0,
+    DWORD Unknown1)
 {
    STUB
 
@@ -1029,5 +1060,26 @@ BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
     STUB;
     return FALSE;
 }
+
+// Yes, I know, these do not belong here, just tell me where to put them
+BOOL
+APIENTRY
+NtGdiMakeObjectXferable(
+    _In_ HANDLE hHandle,
+    _In_ DWORD dwProcessId)
+{
+    STUB;
+    return 0;
+}
+
+DWORD
+APIENTRY
+NtDxEngGetRedirectionBitmap(
+    DWORD Unknown0)
+{
+    STUB;
+    return 0;
+}
+
 
 /* EOF */

@@ -457,14 +457,14 @@ ChangeDisplaySettingsExA(
         pDevModeW = GdiConvertToDevmodeW(lpDevMode);
         if(pDevModeW)
         {
-            rc = NtUserChangeDisplaySettings(pDeviceName, pDevModeW, hwnd, dwflags, lParam);
+            rc = NtUserChangeDisplaySettings(pDeviceName, pDevModeW, hwnd, dwflags);
             RtlFreeHeap(GetProcessHeap(), 0, pDevModeW);
         }
         else
             rc = DISP_CHANGE_SUCCESSFUL;
     }
     else
-        rc = NtUserChangeDisplaySettings(pDeviceName, NULL, hwnd, dwflags, lParam);
+        rc = NtUserChangeDisplaySettings(pDeviceName, NULL, hwnd, dwflags);
 
     if (lpszDeviceName != NULL)
         RtlFreeUnicodeString(&DeviceName);
@@ -509,7 +509,7 @@ ChangeDisplaySettingsExW(
     else
         pDeviceName = NULL;
 
-    rc = NtUserChangeDisplaySettings(pDeviceName, lpDevMode, hwnd, dwflags, lParam);
+    rc = NtUserChangeDisplaySettings(pDeviceName, lpDevMode, hwnd, dwflags);
 
     return rc;
 }

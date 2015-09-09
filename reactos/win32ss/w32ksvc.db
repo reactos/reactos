@@ -152,7 +152,6 @@ NtGdiExtTextOutW                                 9
 NtGdiFillPath                                    1
 NtGdiFillRgn                                     3
 NtGdiFlattenPath                                 1
-NtGdiFlushUserBatch                              0
 NtGdiFlush                                       0
 NtGdiForceUFIMapping                             2
 NtGdiFrameRgn                                    5
@@ -235,7 +234,7 @@ NtGdiMonoBitmap                                  1
 NtGdiMoveTo                                      4
 NtGdiOffsetClipRgn                               3
 NtGdiOffsetRgn                                   3
-NtGdiOpenDCW                                     8
+NtGdiOpenDCW                                     8 #7
 NtGdiPatBlt                                      6
 NtGdiPolyPatBlt                                  5
 NtGdiPathToRegion                                1
@@ -328,7 +327,7 @@ NtUserCallNoParam                                1
 NtUserCallOneParam                               2
 NtUserCallTwoParam                               3
 NtUserChangeClipboardChain                       2
-NtUserChangeDisplaySettings                      5
+NtUserChangeDisplaySettings                      5 #4
 NtUserCheckImeHotKey                             2
 NtUserCheckMenuItem                              3
 NtUserChildWindowFromPointEx                     4
@@ -374,14 +373,12 @@ NtUserEndDeferWindowPosEx                        2
 NtUserEndMenu                                    0
 NtUserEndPaint                                   2
 NtUserEnumDisplayDevices                         4
-# NtUserEnumDisplayMonitors                      4 Wrong number of param ?
-NtUserEnumDisplayMonitors                        5
+NtUserEnumDisplayMonitors                        5 #4
 NtUserEnumDisplaySettings                        4
 NtUserEvent                                      1
 NtUserExcludeUpdateRgn                           2
 NtUserFillWindow                                 4
-# NtUserFindExistingCursorIcon                   3  Wrong number of param ?
-NtUserFindExistingCursorIcon                     4
+NtUserFindExistingCursorIcon                     3
 NtUserFindWindowEx                               5
 NtUserFlashWindowEx                              1
 NtUserGetAltTabInfo                              6
@@ -391,7 +388,7 @@ NtUserGetAsyncKeyState                           1
 NtUserGetAtomName                                2
 NtUserGetCaretBlinkTime                          0
 NtUserGetCaretPos                                1
-NtUserGetClassInfo                               5
+NtUserGetClassInfo                               5 #Ex?
 NtUserGetClassName                               3
 NtUserGetClipboardData                           2
 NtUserGetClipboardFormatName                     3
@@ -486,7 +483,6 @@ NtUserProcessConnect                             3
 NtUserQueryInformationThread                     4
 NtUserQueryInputContext                          2
 NtUserQuerySendMessage                           1
-NtUserQueryUserCounters                          5
 NtUserQueryWindow                                2
 NtUserRealChildWindowFromPoint                   3
 NtUserRealInternalGetMessage                     6
@@ -518,7 +514,6 @@ NtUserSetConsoleReserveKeys                      2
 NtUserSetCursor                                  1
 NtUserSetCursorContents                          2
 NtUserSetCursorIconData                          6 #4
-NtUserSetDbgTag                                  2
 NtUserSetFocus                                   1
 NtUserSetImeHotKey                               5
 NtUserSetImeInfoEx                               1
@@ -536,7 +531,6 @@ NtUserSetObjectInformation                       4
 NtUserSetParent                                  2
 NtUserSetProcessWindowStation                    1
 NtUserSetProp                                    3
-NtUserSetRipFlags                                2
 NtUserSetScrollInfo                              4
 NtUserSetShellWindowEx                           2
 NtUserSetSysColors                               4
@@ -588,9 +582,9 @@ NtUserGetLayeredWindowAttributes                 4
 NtUserSetLayeredWindowAttributes                 4
 NtUserUpdatePerUserSystemParameters              2
 NtUserUserHandleGrantAccess                      3
-NtUserValidateHandleSecure                       2
+NtUserValidateHandleSecure                       1
 NtUserValidateRect                               2
-NtUserValidateTimerCallback                      3
+NtUserValidateTimerCallback                      1
 NtUserVkKeyScanEx                                3
 NtUserWaitForInputIdle                           3
 NtUserWaitForMsgAndEvent                         1
@@ -671,8 +665,18 @@ NtGdiSetPUMPDOBJ                                 4
 NtGdiBRUSHOBJ_DeleteRbrush                       2
 NtGdiUMPDEngFreeUserMem                          1
 NtGdiDrawStream                                  3
-#
-#
+
+# Checked build only
+NtUserDbgWin32HeapFail                           2
+NtUserDbgWin32HeapStat                           2
+NtUserSetDbgTag                                  2
+NtUserSetDbgTagCount                             1
+NtUserSetRipFlags                                2
+
+# Stray Syscalls
+NtGdiMakeObjectXferable                          2
+DxEngGetRedirectionBitmap                        1
+
 #ReactOS specific syscalls
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowOrgEx                     4
@@ -685,3 +689,4 @@ NtUserMonitorFromPoint                  3
 NtUserMonitorFromRect                   2
 NtUserMonitorFromWindow                 2
 NtUserSetScrollBarInfo                  3
+#

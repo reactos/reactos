@@ -94,6 +94,16 @@ IntGetSysColor(INT nIndex);
 
 /* Other Stuff */
 
+NTSTATUS
+APIENTRY
+NtGdiFlushUserBatch(
+    VOID);
+    
+DWORD
+APIENTRY
+NtDxEngGetRedirectionBitmap(
+    DWORD Unknown0);
+
 HBITMAP
 FASTCALL
 IntCreateCompatibleBitmap(

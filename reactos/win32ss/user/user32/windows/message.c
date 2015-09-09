@@ -1876,7 +1876,7 @@ DispatchMessageA(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG)lpmsg );
 
-        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam))
+        if (!NtUserValidateTimerCallback(lpmsg->lParam))
         {
            WARN("Validating Timer Callback failed!\n");
            return 0;
@@ -1969,7 +1969,7 @@ DispatchMessageW(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG) lpmsg );
 
-        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam))
+        if (!NtUserValidateTimerCallback(lpmsg->lParam))
         {
            WARN("Validating Timer Callback failed!\n");
            return 0;

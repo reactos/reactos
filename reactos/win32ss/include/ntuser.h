@@ -1218,6 +1218,18 @@ NtUserCtxDisplayIOCtl(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
     DWORD dwUnknown3);
+    
+DWORD
+APIENTRY
+NtUserDbgWin32HeapFail(
+    DWORD Unknown0,
+    DWORD Unknown1);
+
+DWORD
+APIENTRY
+NtUserDbgWin32HeapStat(
+    DWORD Unknown0,
+    DWORD Unknown1);
 
 BOOL
 NTAPI
@@ -1685,8 +1697,7 @@ NtUserChangeDisplaySettings(
     PUNICODE_STRING lpszDeviceName,
     LPDEVMODEW lpDevMode,
     HWND hwnd,
-    DWORD dwflags,
-    LPVOID lParam);
+    DWORD dwflags);
 
 BOOL
 NTAPI
@@ -3026,6 +3037,11 @@ NTAPI
 NtUserSetDbgTag(
     DWORD Unknown0,
     DWORD Unknown1);
+    
+DWORD
+APIENTRY
+NtUserSetDbgTagCount(
+    DWORD Unknown0);
 
 HWND
 NTAPI
@@ -3123,8 +3139,7 @@ NtUserSetProp(
 DWORD
 NTAPI
 NtUserSetRipFlags(
-    DWORD Unknown0,
-    DWORD Unknown1);
+    DWORD Unknown0);
 
 DWORD
 NTAPI
@@ -3430,8 +3445,7 @@ NtUserUserHandleGrantAccess(
 BOOL
 NTAPI
 NtUserValidateHandleSecure(
-    HANDLE hHdl,
-    BOOL Restricted);
+    HANDLE hHdl);
 
 BOOL
 NTAPI
@@ -3442,8 +3456,6 @@ NtUserValidateRect(
 BOOL
 APIENTRY
 NtUserValidateTimerCallback(
-    HWND hWnd,
-    WPARAM wParam,
     LPARAM lParam);
 
 DWORD

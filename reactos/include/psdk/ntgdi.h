@@ -1764,14 +1764,6 @@ APIENTRY
 NtGdiFlattenPath(
     _In_ HDC hdc);
 
-/* Not in MS ntgdi.h */
-__kernel_entry
-W32KAPI
-NTSTATUS
-APIENTRY
-NtGdiFlushUserBatch(
-    VOID);
-
 __kernel_entry
 W32KAPI
 HRGN

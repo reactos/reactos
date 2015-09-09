@@ -696,8 +696,6 @@ CLEANUP:
 BOOL
 APIENTRY
 NtUserValidateTimerCallback(
-    HWND hWnd,
-    WPARAM wParam,
     LPARAM lParam)
 {
   BOOL Ret = FALSE;
