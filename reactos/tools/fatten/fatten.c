@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include "fatfs/ff.h"
 #include "fatfs/diskio.h"
 
@@ -93,19 +94,30 @@ int need_mount()
 void print_help(char const * const name)
 {
     printf("Syntax: %s image_file [list of commands]\n\n", name);
-    printf("Commands: [Note: both '/' and '-' are accepted as command prefixes.] \n");
-    printf("    /format <sectors> [<filesystem>]         Formats the disk image.\n");
-    printf("    /boot <sector file>          Writes a new boot sector.\n");
-    printf("    /add <src path> <dst path>   Copies an external file or directory\n"
-        "                                 into the image.\n");
-    printf("    /extract <src path> <dst path>  Copies a file or directory from the image\n"
-        "                                 into an external file or directory.\n");
-    printf("    /move <src path> <new path>  Moves/renames a file or directory.\n");
-    printf("    /copy <src path> <new path>  Copies a file or directory.\n");
-    printf("    /mkdir <src path> <new path> Creates a directory.\n");
-    printf("    /rmdir <src path> <new path> Creates a directory.\n");
-    printf("    /list [<pattern>]            Lists files a directory (defaults to root).\n");
-    //printf("    /recursive                   Enables recursive processing for directories.\n");
+#if _WIN32
+    printf("Commands: [Note: both '/' and '-' are accepted as command prefixes.]\n");
+#else
+    printf("Commands:\n");
+#endif
+    printf("    -format <sectors> [<filesystem>]\n"
+           "            Formats the disk image.\n");
+    printf("    -boot <sector file> [<custom header label>]\n"
+           "            Writes a new boot sector.\n");
+    printf("    -add <src path> <dst path>\n"
+           "            Copies an external file or directory into the image.\n");
+    printf("    -extract <src path> <dst path>\n"
+           "            Copies a file or directory from the image into an external file\n"
+           "            or directory.\n");
+    printf("    -move <src path> <new path>\n"
+           "            Moves/renames a file or directory.\n");
+    printf("    -copy <src path> <new path>\n"
+           "            Copies a file or directory.\n");
+    printf("    -mkdir <src path> <new path>\n"
+           "            Creates a directory.\n");
+    printf("    -rmdir <src path> <new path>\n"
+           "            Creates a directory.\n");
+    printf("    -list [<pattern>]\n"
+           "            Lists files a directory (defaults to root).\n");
 }
 
 #define PRINT_HELP_AND_QUIT() \
@@ -167,7 +179,7 @@ int main(int oargc, char* oargv[])
             // NOTE: The fs driver detects which FAT format fits best based on size
             int sectors;
 
-            NEED_PARAMS(1, 1);
+            NEED_PARAMS(1, 2);
 
             // Arg 1: number of sectors
             sectors = atoi(argv[0]);
@@ -188,6 +200,76 @@ int main(int oargc, char* oargv[])
             {
                 printf("ERROR: Formatting drive: %d.\n", ret);
                 PRINT_HELP_AND_QUIT();
+            }
+
+            // Arg 2: custom header label (optional)
+            if (nargs > 1)
+            {
+                char label[8];
+
+                int i, invalid=0;
+                int len = strlen(argv[1]);
+
+                if (len <= 8)
+                {
+                    // Copy and verify each character
+                    for (i = 0; i < len; i++)
+                    {
+                        char ch = argv[1][i];
+                        label[i] = ch;
+
+                        if (!isupper(ch) && !isspace(ch))
+                        {
+                            invalid =1;
+                            break;
+                        }
+                    }
+                
+                    if (!invalid)
+                    {
+                        // Pad the label with spaces
+                        while (len < 8)
+                        {
+                            label[len++] = ' ';
+                        }
+                    }
+                }
+                else
+                {
+                    invalid = 1;
+                }
+
+                if (invalid)
+                {
+                    printf("Error: header label is limited to 8 uppercase letters and spaces.");
+                    ret = 1;
+                    goto exit;
+                }
+
+                if (disk_read(0, buff, 0, 1))
+                {
+                    printf("Error: unable to read existing boot sector from image.");
+                    ret = 1;
+                    goto exit;
+                }
+
+
+                if (g_Filesystem.fs_type == FS_FAT32)
+                {
+                    memcpy(buff + 71, label, 8);
+                }
+                else
+                {
+                    memcpy(buff + 43, label, 8);
+                }
+
+                if (disk_write(0, buff, 0, 1))
+                {
+                    printf("Error: unable to write new boot sector to image.");
+                    ret = 1;
+                    goto exit;
+                }
+
             }
         }
         else if (strcmp(parg, "boot") == 0)
