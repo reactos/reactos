@@ -1222,7 +1222,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002
 HKLM,"SYSTEM\CurrentControlSet\Control\ReactOS\Settings\Version","ReportAsWorkstation",0x00010001,0x00000000
 ; Some installers check for SP1
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDReleaseType",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000100
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000200
 
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x00000012

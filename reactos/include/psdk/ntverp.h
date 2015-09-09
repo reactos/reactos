@@ -14,10 +14,10 @@
  */
 
 //
-// Windows NT Build 3790.1830
+// Windows NT Build 3790.3959
 //
 #define VER_PRODUCTBUILD                    3790
-#define VER_PRODUCTBUILD_QFE                1830
+#define VER_PRODUCTBUILD_QFE                3959
 
 //
 // Windows NT Version 5.2
