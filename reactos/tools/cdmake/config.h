@@ -9,6 +9,7 @@
 #define DIR_SEPARATOR_STRING "\\"
 #endif
 
+#define MANUFACTURER_ID "ReactOS Foundation"
 #define PUBLISHER_ID    "ReactOS Foundation"
 #define DATA_PREP_ID    "ReactOS Foundation"
 #define APP_ID          "CDMAKE CD-ROM Premastering Utility"

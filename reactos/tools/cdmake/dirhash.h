@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS CD-ROM Maker
+ * FILE:            tools/cdmake/dirhash.h
+ * PURPOSE:         CD-ROM Premastering Utility - Directory names hashing
+ * PROGRAMMERS:     Art Yerkes
+ */
 #ifndef _DIRHASH_H_
 #define _DIRHASH_H_
 
