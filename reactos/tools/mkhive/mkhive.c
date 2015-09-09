@@ -143,6 +143,14 @@ int main (int argc, char *argv[])
         return 1;
     }
 
+    convert_path (FileName, argv[1]);
+    strcat (FileName, DIR_SEPARATOR_STRING);
+    strcat (FileName, "bcd");
+    if (!ExportBinaryHive (FileName, &SystemHive))
+    {
+        return 1;
+    }
+
     RegShutdownRegistry ();
 
     printf ("  Done.\n");

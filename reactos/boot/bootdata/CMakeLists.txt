@@ -10,7 +10,8 @@ add_registry_inf(
     hivecls.inf
     hivedef.inf
     hivesft.inf
-    hivesys.inf)
+    hivesys.inf
+    hivebcd.inf)
 
 
 #regtest

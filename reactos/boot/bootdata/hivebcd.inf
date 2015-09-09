@@ -1,0 +1,11 @@
+[Version]
+Signature = "$ReactOS$"
+
+[AddReg]
+
+HKLM,"BCD00000000\Description\Control","System",0x00010003,1
+HKLM,"BCD00000000\Description\Control","TreatAtSystem",0x00010003,1
+HKLM,"BCD00000000\Description\Control","KeyName",2,"BCD00000000"
+HKLM,"BCD00000000\Description\Objects",,0x00000012
+
+; EOF
