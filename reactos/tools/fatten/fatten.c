@@ -11,8 +11,7 @@
 #include "fatfs/ff.h"
 #include "fatfs/diskio.h"
 
-FATFS g_Filesystem;
-
+static FATFS g_Filesystem;
 static int isMounted = 0;
 static char buff[32768];
 
@@ -277,7 +276,7 @@ int main(int oargc, char* oargv[])
                 goto exit;
             }
 
-            while ((rdlen = fread(buff, 1, 32768, fe)) > 0)
+            while ((rdlen = fread(buff, 1, sizeof(buff), fe)) > 0)
             {
                 f_write(&fv, buff, rdlen, &wrlen);
             }
@@ -316,7 +315,7 @@ int main(int oargc, char* oargv[])
                 goto exit;
             }
 
-            while ((f_read(&fe, buff, 32768, &rdlen) == 0) && (rdlen > 0))
+            while ((f_read(&fe, buff, sizeof(buff), &rdlen) == 0) && (rdlen > 0))
             {
                 fwrite(buff, 1, rdlen, fv);
             }
@@ -362,7 +361,7 @@ int main(int oargc, char* oargv[])
                 goto exit;
             }
 
-            while ((f_read(&fe, buff, 32768, &rdlen) == 0) && (rdlen > 0))
+            while ((f_read(&fe, buff, sizeof(buff), &rdlen) == 0) && (rdlen > 0))
             {
                 f_write(&fv, buff, rdlen, &wrlen);
             }
