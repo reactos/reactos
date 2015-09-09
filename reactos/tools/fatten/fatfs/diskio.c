@@ -30,7 +30,7 @@ DSTATUS disk_openimage(BYTE pdrv, const char* imageFileName)
         driveHandle[0] = fopen(imageFileName, "r+b");
         if (!driveHandle[0])
         {
-            driveHandle[0] = fopen(imageFileName, "w+");
+            driveHandle[0] = fopen(imageFileName, "w+b");
         }
 
         if (driveHandle[0] != NULL)

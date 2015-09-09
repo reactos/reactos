@@ -232,8 +232,10 @@ int main(int oargc, char* oargv[])
             }
             else
             {
-                // Quick&dirty hardcoded length.
-                memcpy(buff + 2, temp + 2, 0x3E - 0x02);
+#define FAT16_HEADER_START 3
+#define FAT16_HEADER_END 62
+
+                memcpy(buff + FAT16_HEADER_START, temp + FAT16_HEADER_START, FAT16_HEADER_END - FAT16_HEADER_START);
             }
 
             if (disk_write(0, buff, 0, 1))
