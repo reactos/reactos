@@ -45,7 +45,7 @@ DWORD get_fattime()
             timeinfo->tm_hour,
             timeinfo->tm_mday,
             timeinfo->tm_mon,
-            timeinfo->tm_year - 1980,
+            timeinfo->tm_year - 80,
         }
     };
 
