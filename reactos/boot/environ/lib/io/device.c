@@ -151,6 +151,587 @@ BlockIoOpen (
     _In_ PBL_DEVICE_ENTRY DeviceEntry
     );
 
+BL_DEVICE_CALLBACKS BlockIoDeviceFunctionTable =
+{
+    NULL,
+    BlockIoOpen,
+    NULL,
+};
+
+BOOLEAN
+BlpDeviceCompare (
+    _In_ PBL_DEVICE_DESCRIPTOR Device1,
+    _In_ PBL_DEVICE_DESCRIPTOR Device2
+    )
+{
+    BOOLEAN DeviceMatch;
+    ULONG DeviceSize;
+
+    /* Assume failure */
+    DeviceMatch = FALSE;
+
+    /* Check if the two devices exist and are identical in typ */
+    if ((Device1) && (Device2) && (Device1->DeviceType == Device2->DeviceType))
+    {
+        /* Take the bigger of the two sizes */
+        DeviceSize = max(Device1->Size, Device2->Size);
+        if (DeviceSize >= (ULONG)FIELD_OFFSET(BL_DEVICE_DESCRIPTOR, Local))
+        {
+            /* Compare the two devices up to their size */
+            if (RtlEqualMemory(&Device1->Local,
+                &Device2->Local,
+                DeviceSize - FIELD_OFFSET(BL_DEVICE_DESCRIPTOR, Local)))
+            {
+                /* They match! */
+                DeviceMatch = TRUE;
+            }
+        }
+    }
+
+    /* Return matching state */
+    return DeviceMatch;
+}
+
+NTSTATUS
+BlockIopFreeAllocations (
+    _In_ PBL_BLOCK_DEVICE BlockDevice
+    )
+{
+    /* If a block device was passed in, free it */
+    if (BlockDevice)
+    {
+        BlMmFreeHeap(BlockDevice);
+    }
+
+    /* Nothing else to do */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+BlockIoEfiGetBlockIoInformation (
+    _In_ PBL_BLOCK_DEVICE BlockDevice
+    )
+{
+    NTSTATUS Status;
+    EFI_BLOCK_IO_MEDIA *Media;
+
+    /* Open the Block I/O protocol on this device */
+    Status = EfiOpenProtocol(BlockDevice->Handle,
+                             &EfiBlockIoProtocol,
+                             (PVOID*)&BlockDevice->Protocol);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Get information on the block media */
+    Media = BlockDevice->Protocol->Media;
+
+    EfiPrintf(L"Block I/O Info for Device 0x%p, 0x%lX\r\n", BlockDevice, BlockDevice->Handle);
+    EfiPrintf(L"Removable: %d Present: %d Last Block: %I64d BlockSize: %d IoAlign: %d MediaId: %d ReadOnly: %d\r\n",
+              Media->RemovableMedia, Media->MediaPresent, Media->LastBlock, Media->BlockSize, Media->IoAlign,
+              Media->MediaId, Media->ReadOnly);
+
+    /* Set the appropriate device flags */
+    BlockDevice->DeviceFlags = 0;
+    if (Media->RemovableMedia)
+    {
+        BlockDevice->DeviceFlags = BL_BLOCK_DEVICE_REMOVABLE_FLAG;
+    }
+    if (Media->MediaPresent)
+    {
+        BlockDevice->DeviceFlags |= 2;
+    }
+
+    /* No clue */
+    BlockDevice->Unknown = 0;
+
+    /* Set the block size */
+    BlockDevice->BlockSize = Media->BlockSize;
+
+    /* Make sure there's a last block value */
+    if (!Media->LastBlock)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Don't let it be too high */
+    if (Media->LastBlock > 0xFFFFFFFFFFE)
+    {
+        BlockDevice->LastBlock = 0xFFFFFFFFFFE;
+    }
+    else
+    {
+        BlockDevice->LastBlock = Media->LastBlock;
+    }
+
+    /* Make the alignment the smaller of the I/O alignment or the block size */
+    if (Media->IoAlign >= Media->BlockSize)
+    {
+        BlockDevice->Alignment = Media->IoAlign;
+    }
+    else
+    {
+        BlockDevice->Alignment = Media->BlockSize;
+    }
+
+    /* All good */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+BlockIoEfiGetChildHandle (
+    _In_ PBL_PROTOCOL_HANDLE ProtocolInterface,
+    _In_ PBL_PROTOCOL_HANDLE ChildProtocolInterface)
+{
+    NTSTATUS Status;
+    ULONG i, DeviceCount;
+    EFI_DEVICE_PATH *DevicePath, *ParentDevicePath;
+    EFI_HANDLE *DeviceHandles;
+    EFI_HANDLE Handle;
+
+    /* Find all the Block I/O device handles on the system */
+    DeviceCount = 0;
+    DeviceHandles = 0;
+    Status = EfiLocateHandleBuffer(ByProtocol,
+                                   &EfiBlockIoProtocol,
+                                   &DeviceCount,
+                                   &DeviceHandles);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to enumerate, bail out */
+        return Status;
+    }
+
+    /* Loop all the handles */
+    for (i = 0; i < DeviceCount; i++)
+    {
+        /* Check if this is the device itself */
+        Handle = DeviceHandles[i];
+        if (Handle == ProtocolInterface->Handle)
+        {
+            /* Skip it */
+            continue;
+        }
+
+        /* Get the device path of this device */
+        Status = EfiOpenProtocol(Handle,
+                                 &EfiDevicePathProtocol,
+                                 (PVOID*)&DevicePath);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed, skip it */
+            continue;
+        }
+
+        /* See if we are its parent  */
+        ParentDevicePath = EfiIsDevicePathParent(ProtocolInterface->Interface,
+                                                 DevicePath);
+        if (ParentDevicePath == ProtocolInterface->Interface)
+        {
+            /* Yup, return back to caller */
+            ChildProtocolInterface->Handle = Handle;
+            ChildProtocolInterface->Interface = DevicePath;
+            break;
+        }
+
+        /* Close the device path */
+        EfiCloseProtocol(Handle, &EfiDevicePathProtocol);
+    }
+
+    /* If we got here, nothing was found */
+    Status = STATUS_NO_SUCH_DEVICE;
+
+    /* Free the handle array buffer */
+    BlMmFreeHeap(DeviceHandles);
+    return Status;
+}
+
+NTSTATUS
+BlockIoGetGPTDiskSignature (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _Out_ PGUID DiskSignature
+    )
+{
+    EfiPrintf(L"GPT not supported\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlockIoEfiGetDeviceInformation (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry
+    )
+{
+    NTSTATUS Status;
+    PBL_DEVICE_DESCRIPTOR Device;
+    PBL_BLOCK_DEVICE BlockDevice;
+    EFI_DEVICE_PATH *LeafNode;
+    BL_PROTOCOL_HANDLE Protocol[2];
+    ACPI_HID_DEVICE_PATH *AcpiPath;
+    HARDDRIVE_DEVICE_PATH *DiskPath;
+    BOOLEAN Found;
+    ULONG i;
+
+    /* Extract the identifier, and the block device object */
+    Device = DeviceEntry->DeviceDescriptor;
+    BlockDevice = (PBL_BLOCK_DEVICE)DeviceEntry->DeviceSpecificData;
+
+    /* Initialize protocol handles */
+    Protocol[0].Handle = BlockDevice->Handle;
+    Protocol[1].Handle = 0;
+
+    /* Open this device */
+    Status = EfiOpenProtocol(Protocol[0].Handle,
+                             &EfiDevicePathProtocol,
+                             &Protocol[0].Interface);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        return Status;
+    }
+
+    /* Iteratate twice -- once for the top level, once for the bottom */
+    for (i = 0, Found = FALSE; Found == FALSE && Protocol[i].Handle; i++)
+    {
+        LeafNode = EfiGetLeafNode(Protocol[i].Interface);
+        EfiPrintf(L"Pass %d, Leaf node: %p Type: %d\r\n", i, LeafNode, LeafNode->Type);
+        if (LeafNode->Type == ACPI_DEVICE_PATH)
+        {
+            /* We only support floppy drives */
+            AcpiPath = (ACPI_HID_DEVICE_PATH*)LeafNode;
+            if ((AcpiPath->HID == EISA_PNP_ID(0x604)) &&
+                (AcpiPath->HID == EISA_PNP_ID(0x700)))
+            {
+                /* Set the boot library specific device types */
+                Device->DeviceType = LocalDevice;
+                Device->Local.Type = FloppyDevice;
+
+                /* The ACPI UID is the drive number */
+                Device->Local.FloppyDisk.DriveNumber = AcpiPath->UID;
+
+                /* We found a match */
+                Found = TRUE;
+            }
+        }
+        else if ((LeafNode->Type == MEDIA_DEVICE_PATH) && (i == 1))
+        {
+            /* Extract the disk path and check if it's a physical disk */
+            DiskPath = (HARDDRIVE_DEVICE_PATH*)LeafNode;
+            EfiPrintf(L"Disk path: %p Type: %lx\r\n", DiskPath, LeafNode->SubType);
+            if (LeafNode->SubType == MEDIA_HARDDRIVE_DP)
+            {
+                /* Set this as a local  device */
+                Device->Local.Type = LocalDevice;
+
+                /* Check if this is an MBR partition */
+                if (DiskPath->SignatureType == SIGNATURE_TYPE_MBR)
+                {
+                    /* Set that this is a local partition */
+                    Device->DeviceType = LegacyPartitionDevice;
+                    Device->Partition.Disk.Type = LocalDevice;
+
+                    /* Write the MBR partition signature */
+                    BlockDevice->PartitionType = MbrPartition;
+                    BlockDevice->Disk.Mbr.Signature = *(PULONG)&DiskPath->Signature[0];
+                    Found = TRUE;
+                }
+                else if (DiskPath->SignatureType == SIGNATURE_TYPE_GUID)
+                {
+                    /* Set this as a GPT partition */
+                    BlockDevice->PartitionType = GptPartition;
+                    Device->Local.HardDisk.PartitionType = GptPartition;
+
+                    /* Get the GPT signature */
+                    Status = BlockIoGetGPTDiskSignature(DeviceEntry,
+                                                        &Device->Local.HardDisk.Gpt.PartitionSignature);
+                    if (NT_SUCCESS(Status))
+                    {
+                        /* Copy it */
+                        RtlCopyMemory(&BlockDevice->Disk.Gpt.Signature,
+                                      &Device->Local.HardDisk.Gpt.PartitionSignature,
+                                      sizeof(&BlockDevice->Disk.Gpt.Signature));
+                        Found = TRUE;
+                    }
+                }
+
+                /* Otherwise, this is a raw disk */
+                BlockDevice->PartitionType = RawPartition;
+                Device->Local.HardDisk.PartitionType = RawPartition;
+                Device->Local.HardDisk.Raw.DiskNumber = BlockIoFirmwareRawDiskCount++;;
+            }
+            else if (LeafNode->SubType == MEDIA_CDROM_DP)
+            {
+                /* Set block device information */
+                EfiPrintf(L"Found CD-ROM\r\n");
+                BlockDevice->PartitionType = RawPartition;
+                BlockDevice->Type = CdRomDevice;
+
+                /* Set CDROM data */
+                Device->Local.Type = CdRomDevice;
+                Device->Local.FloppyDisk.DriveNumber = 0;
+                Found = TRUE;
+            }
+        }
+        else if ((LeafNode->Type != MEDIA_DEVICE_PATH) &&
+                 (LeafNode->Type != ACPI_DEVICE_PATH) &&
+                 (i == 0))
+        {
+            /* This is probably a messaging device node. Are we under it? */
+            Status = BlockIoEfiGetChildHandle(Protocol, &Protocol[1]);
+            EfiPrintf(L"Pass 0, non DP/ACPI path. Child handle obtained: %lx\r\n", Protocol[1].Handle);
+            if (!NT_SUCCESS(Status))
+            {
+                /* We're not. So this must be a raw device */
+                Device->DeviceType = LocalDevice;
+                Found = TRUE;
+
+                /* Is it a removable raw device? */
+                if (BlockDevice->DeviceFlags & BL_BLOCK_DEVICE_REMOVABLE_FLAG)
+                {
+                    /* This is a removable (CD or Floppy or USB) device */
+                    BlockDevice->Type = FloppyDevice;
+                    Device->Local.Type = FloppyDevice;
+                    Device->Local.FloppyDisk.DriveNumber = BlockIoFirmwareRemovableDiskCount++;
+                    EfiPrintf(L"Found Floppy\r\n");
+                }
+                else
+                {
+                    /* It's a fixed device */
+                    BlockDevice->Type = DiskDevice;
+                    Device->Local.Type = DiskDevice;
+
+                    /* Set it as a raw partition */
+                    Device->Local.HardDisk.PartitionType = RawPartition;
+                    Device->Local.HardDisk.Mbr.PartitionSignature = BlockIoFirmwareRawDiskCount++;
+                    EfiPrintf(L"Found raw disk\r\n");
+                }
+            }
+        }
+    }
+
+    /* Close any protocols that we opened for each handle */
+    while (i)
+    {
+        EfiCloseProtocol(Protocol[--i].Handle, &EfiDevicePathProtocol);
+    }
+
+    /* Return appropriate status */
+    return Found ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED;
+}
+
+NTSTATUS
+BlockIoEfiReset (
+    VOID
+    )
+{
+    EfiPrintf(L"not implemented\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlockIoEfiFlush (
+    VOID
+    )
+{
+    EfiPrintf(L"not implemented\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlockIoEfiCreateDeviceEntry (
+    _In_ PBL_DEVICE_ENTRY *DeviceEntry,
+    _Out_ PVOID Handle
+    )
+{
+    PBL_DEVICE_ENTRY IoDeviceEntry;
+    PBL_BLOCK_DEVICE BlockDevice;
+    NTSTATUS Status;
+    PBL_DEVICE_DESCRIPTOR Device;
+
+    /* Allocate the entry for this device and zero it out */
+    IoDeviceEntry = BlMmAllocateHeap(sizeof(*IoDeviceEntry));
+    if (!IoDeviceEntry)
+    {
+        return STATUS_NO_MEMORY;
+    }
+    RtlZeroMemory(IoDeviceEntry, sizeof(*IoDeviceEntry));
+
+    /* Allocate the device descriptor for this device and zero it out */
+    Device = BlMmAllocateHeap(sizeof(*Device));
+    if (!Device)
+    {
+        return STATUS_NO_MEMORY;
+    }
+    RtlZeroMemory(Device, sizeof(*Device));
+
+    /* Allocate the block device specific data, and zero it out */
+    BlockDevice = BlMmAllocateHeap(sizeof(*BlockDevice));
+    if (!BlockDevice)
+    {
+        return STATUS_NO_MEMORY;
+    }
+    RtlZeroMemory(BlockDevice, sizeof(*BlockDevice));
+
+    /* Save the descriptor and block device specific data */
+    IoDeviceEntry->DeviceSpecificData = BlockDevice;
+    IoDeviceEntry->DeviceDescriptor = Device;
+
+    /* Set the size of the descriptor */
+    Device->Size = sizeof(*Device);
+
+    /* Copy the standard I/O callbacks */
+    RtlCopyMemory(&IoDeviceEntry->Callbacks,
+                  &BlockIoDeviceFunctionTable,
+                  sizeof(IoDeviceEntry->Callbacks));
+
+    /* Add the two that are firmware specific */
+    IoDeviceEntry->Callbacks.Reset = BlockIoEfiReset;
+    IoDeviceEntry->Callbacks.Flush = BlockIoEfiFlush;
+
+    /* Save the EFI handle */
+    BlockDevice->Handle = Handle;
+
+    /* Get information on this device from EFI, caching it in the device */
+    Status = BlockIoEfiGetBlockIoInformation(BlockDevice);
+    if (NT_SUCCESS(Status))
+    {
+        /* Build the descriptor structure for this device */
+        Status = BlockIoEfiGetDeviceInformation(IoDeviceEntry);
+        if (NT_SUCCESS(Status))
+        {
+            /* We have a fully constructed device, reuturn it */
+            *DeviceEntry = IoDeviceEntry;
+            return STATUS_SUCCESS;
+        }
+    }
+
+    /* Failure path, free the descriptor if we allocated one */
+    if (IoDeviceEntry->DeviceDescriptor)
+    {
+        BlMmFreeHeap(IoDeviceEntry->DeviceDescriptor);
+    }
+
+    /* Free any other specific allocations */
+    BlockIopFreeAllocations(IoDeviceEntry->DeviceSpecificData);
+
+    /* Free the device entry itself and return the failure code */
+    BlMmFreeHeap(IoDeviceEntry);
+    EfiPrintf(L"Failed: %lx\r\n", Status);
+    return Status;
+}
+
+NTSTATUS
+BlockIoFirmwareOpen (
+    _In_ PBL_DEVICE_DESCRIPTOR Device,
+    _In_ PBL_BLOCK_DEVICE BlockIoDevice
+    )
+{
+    NTSTATUS Status;
+    BOOLEAN DeviceMatch;
+    BL_HASH_ENTRY HashEntry;
+    ULONG i, Id, DeviceCount;
+    PBL_DEVICE_ENTRY DeviceEntry;
+    EFI_HANDLE* DeviceHandles;
+
+    /* Initialize everything */
+    DeviceEntry = NULL;
+    DeviceCount = 0;
+    DeviceHandles = 0;
+    DeviceEntry = NULL;
+
+    /* Ask EFI for handles to all block devices */
+    Status = EfiLocateHandleBuffer(ByProtocol,
+                                   &EfiBlockIoProtocol,
+                                   &DeviceCount,
+                                   &DeviceHandles);
+    if (!NT_SUCCESS(Status))
+    {
+        return STATUS_NO_SUCH_DEVICE;
+    }
+
+    /* Build a hash entry, with the value inline */
+    HashEntry.Flags = 1;
+    HashEntry.Size = sizeof(EFI_HANDLE);
+
+    /* Loop each device we got */
+    DeviceMatch = FALSE;
+    Status = STATUS_NO_SUCH_DEVICE;
+    for (i = 0; i < DeviceCount; i++)
+    {
+        /* Check if we have a match in the device hash table */
+        HashEntry.Value = DeviceHandles[i];
+        Status = BlHtLookup(HashTableId, &HashEntry, 0);
+        if (NT_SUCCESS(Status))
+        {
+            /* We already know about this device */
+            EfiPrintf(L"Device is known\r\n");
+            continue;
+        }
+
+        /* New device, store it in the hash table */
+        Status = BlHtStore(HashTableId,
+                           &HashEntry,
+                           DeviceHandles[i],
+                           sizeof(DeviceHandles[i]));
+        if (!NT_SUCCESS(Status))
+        {
+            /* Free the array and fail */
+            BlMmFreeHeap(DeviceHandles);
+            break;
+        }
+
+        /* Create an entry for this device*/
+        Status = BlockIoEfiCreateDeviceEntry(&DeviceEntry, DeviceHandles[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            EfiPrintf(L"EFI create failed: %lx\n", Status);
+            break;
+        }
+
+        /* Add the device entry to the device table */
+        Status = BlTblSetEntry(&BlockIoDeviceTable,
+                               &BlockIoDeviceTableEntries,
+                               DeviceEntry,
+                               &Id,
+                               TblDoNotPurgeEntry);
+        if (!NT_SUCCESS(Status))
+        {
+            EfiPrintf(L"Failure path not implemented: %lx\r\n", Status);
+#if 0
+            BlHtDelete(HashTableId, &HashKey);
+#endif
+            /* Free the block I/O device data */
+            BlockIopFreeAllocations(DeviceEntry->DeviceSpecificData);
+
+            /* Free the descriptor */
+            BlMmFreeHeap(DeviceEntry->DeviceDescriptor);
+
+            /* Free the entry */
+            BlMmFreeHeap(DeviceEntry);
+            break;
+        }
+
+        /* Does this device match what we're looking for? */
+        DeviceMatch = BlpDeviceCompare(DeviceEntry->DeviceDescriptor, Device);
+        EfiPrintf(L"Device match: %d\r\n", DeviceMatch);
+        if (DeviceMatch)
+        {
+            /* Yep, return the data back */
+            RtlCopyMemory(BlockIoDevice,
+                          DeviceEntry->DeviceSpecificData,
+                          sizeof(*BlockIoDevice));
+            Status = STATUS_SUCCESS;
+            break;
+        }
+    }
+
+    /* Free the device handle buffer array */
+    BlMmFreeHeap(DeviceHandles);
+ 
+    /* Return status */
+    return Status;
+}
+
 NTSTATUS
 PartitionOpen (
     _In_ PBL_DEVICE_DESCRIPTOR Device,
@@ -172,13 +753,55 @@ VhdFileDeviceOpen (
 }
 
 NTSTATUS
+DiskClose (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry
+    )
+{
+    NTSTATUS Status, LocalStatus;
+    PBL_BLOCK_DEVICE BlockDevice;
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+    BlockDevice = DeviceEntry->DeviceSpecificData;
+
+    /* Close the protocol */
+    LocalStatus = EfiCloseProtocol(BlockDevice->Handle, &EfiBlockIoProtocol);
+    if (!NT_SUCCESS(LocalStatus))
+    {
+        /* Only inherit failures */
+        Status = LocalStatus;
+    }
+
+    /* Free the block device allocations */
+    LocalStatus = BlockIopFreeAllocations(BlockDevice);
+    if (!NT_SUCCESS(LocalStatus))
+    {
+        /* Only inherit failures */
+        Status = LocalStatus;
+    }
+
+    /* Return back to caller */
+    return Status;
+}
+
+NTSTATUS
 DiskOpen (
     _In_ PBL_DEVICE_DESCRIPTOR Device,
     _In_ PBL_DEVICE_ENTRY DeviceEntry
     )
 {
-    EfiPrintf(L"Not implemented!\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    /* Use firmware-specific functions to open the disk */
+    Status = BlockIoFirmwareOpen(Device, DeviceEntry->DeviceSpecificData);
+    if (NT_SUCCESS(Status))
+    {
+        /* Overwrite with our own close routine */
+        DeviceEntry->Callbacks.Close = DiskClose;
+    }
+
+    /* Return back to caller */
+    return Status;
 }
 
 NTSTATUS
@@ -256,12 +879,7 @@ BL_DEVICE_CALLBACKS VirtualDiskDeviceFunctionTable =
     NULL,
 };
 
-BL_DEVICE_CALLBACKS BlockIoDeviceFunctionTable =
-{
-    NULL,
-    BlockIoOpen,
-    NULL,
-};
+
 
 BL_DEVICE_CALLBACKS UdpFunctionTable =
 {
@@ -278,137 +896,7 @@ BL_DEVICE_CALLBACKS SerialPortFunctionTable =
 };
 
 
-ULONG BcpBlockAllocatorHandle;
-ULONG BcpHashTableId;
 
-NTSTATUS
-BcpDestroy (
-    VOID
-    )
-{
-    //BcpPurgeCacheEntries();
-    //return BlpMmDeleteBlockAllocator(BcpBlockAllocatorHandle);
-    EfiPrintf(L"Destructor for block cache not yet implemented\r\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-BOOLEAN
-BcpCompareKey (
-    _In_ PBL_HASH_ENTRY Entry1,
-    _In_ PBL_HASH_ENTRY Entry2
-    )
-{
-    PULONG Value1, Value2;
-
-    Value1 = Entry1->Value;
-    Value2 = Entry2->Value;
-    return Entry1->Size == Entry2->Size && Entry1->Flags == Entry2->Flags && *Value1 == *Value2 && Value1[1] == Value2[1] && Value1[2] == Value2[2];
-}
-
-ULONG
-BcpHashFunction (
-    _In_ PBL_HASH_ENTRY Entry,
-    _In_ ULONG TableSize
-    )
-{
-    ULONG i, j, ValueHash;
-    PUCHAR ValueBuffer;
-
-    j = 0;
-    ValueHash = 0;
-    i = 0;
-
-    ValueBuffer = Entry->Value;
-
-    do
-    {
-        ValueHash += ValueBuffer[i++];
-    }
-    while (i < 8);
-
-    do
-    {
-        ValueHash += ValueBuffer[j++ + 8];
-    }
-    while (j < 4);
-
-    return ValueHash % TableSize;
-}
-
-NTSTATUS
-BcInitialize (
-    VOID
-    )
-{
-    NTSTATUS Status;
-
-    Status = BlHtCreate(50, BcpHashFunction, BcpCompareKey, &BcpHashTableId);
-    if (!NT_SUCCESS(Status))
-    {
-        goto Quickie;
-    }
-
-    BcpBlockAllocatorHandle = BlpMmCreateBlockAllocator();
-    if (BcpBlockAllocatorHandle == -1)
-    {
-        Status = STATUS_UNSUCCESSFUL;
-        goto Quickie;
-    }
-
-    Status = BlpIoRegisterDestroyRoutine(BcpDestroy);
-    if (Status >= 0)
-    {
-        return Status;
-    }
-
-Quickie:
-    EfiPrintf(L"Failure path not yet implemented\n");
-#if 0
-    if (BcpHashTableId != -1)
-    {
-        BlHtDestroy(BcpHashTableId);
-    }
-    if (BcpBlockAllocatorHandle != -1)
-    {
-        BlpMmDeleteBlockAllocator(BcpBlockAllocatorHandle);
-    }
-#endif
-  return Status;
-}
-
-BOOLEAN
-BlpDeviceCompare (
-    _In_ PBL_DEVICE_DESCRIPTOR Device1,
-    _In_ PBL_DEVICE_DESCRIPTOR Device2
-    )
-{
-    BOOLEAN DeviceMatch;
-    ULONG DeviceSize;
-
-    /* Assume failure */
-    DeviceMatch = FALSE;
-
-    /* Check if the two devices exist and are identical in typ */
-    if ((Device1) && (Device2) && (Device1->DeviceType == Device2->DeviceType))
-    {
-        /* Take the bigger of the two sizes */
-        DeviceSize = max(Device1->Size, Device2->Size);
-        if (DeviceSize >= (ULONG)FIELD_OFFSET(BL_DEVICE_DESCRIPTOR, Local))
-        {
-            /* Compare the two devices up to their size */
-            if (RtlEqualMemory(&Device1->Local,
-                               &Device2->Local,
-                               DeviceSize - FIELD_OFFSET(BL_DEVICE_DESCRIPTOR, Local)))
-            {
-                /* They match! */
-                DeviceMatch = TRUE;
-            }
-        }
-    }
-
-    /* Return matching state */
-    return DeviceMatch;
-}
 
 BOOLEAN
 DeviceTableCompare (
@@ -643,524 +1131,6 @@ BlockIopInitialize (
     return Status;
 }
 
-NTSTATUS
-BlockIopFreeAllocations (
-    _In_ PBL_BLOCK_DEVICE BlockDevice
-    )
-{
-    /* If a block device was passed in, free it */
-    if (BlockDevice)
-    {
-        BlMmFreeHeap(BlockDevice);
-    }
-
-    /* Nothing else to do */
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-BlockIoEfiGetBlockIoInformation (
-    _In_ PBL_BLOCK_DEVICE BlockDevice
-    )
-{
-    NTSTATUS Status;
-    EFI_BLOCK_IO_MEDIA *Media;
-
-    /* Open the Block I/O protocol on this device */
-    Status = EfiOpenProtocol(BlockDevice->Handle,
-                             &EfiBlockIoProtocol,
-                             (PVOID*)&BlockDevice->Protocol);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    /* Get information on the block media */
-    Media = BlockDevice->Protocol->Media;
-
-    /* Set the appropriate device flags */
-    BlockDevice->DeviceFlags = 0;
-    if (Media->RemovableMedia)
-    {
-        BlockDevice->DeviceFlags = 1;
-    }
-    if (Media->MediaPresent)
-    {
-        BlockDevice->DeviceFlags |= 2;
-    }
-
-    /* No clue */
-    BlockDevice->Unknown = 0;
-
-    /* Set the block size */
-    BlockDevice->BlockSize = Media->BlockSize;
-
-    /* Make sure there's a last block value */
-    if (!Media->LastBlock)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Don't let it be too high */
-    if (Media->LastBlock > 0xFFFFFFFFFFE)
-    {
-        BlockDevice->LastBlock = 0xFFFFFFFFFFE;
-    }
-    else
-    {
-        BlockDevice->LastBlock = Media->LastBlock;
-    }
-
-    /* Make the alignment the smaller of the I/O alignment or the block size */
-    if (Media->IoAlign >= Media->BlockSize)
-    {
-        BlockDevice->Alignment = Media->IoAlign;
-    }
-    else
-    {
-        BlockDevice->Alignment = Media->BlockSize;
-    }
-
-    /* All good */
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-BlockIoEfiGetChildHandle (
-    _In_ PBL_PROTOCOL_HANDLE ProtocolInterface,
-    _In_ PBL_PROTOCOL_HANDLE ChildProtocolInterface)
-{
-    NTSTATUS Status;
-    ULONG i, DeviceCount;
-    EFI_DEVICE_PATH *DevicePath, *ParentDevicePath;
-    EFI_HANDLE *DeviceHandles;
-    EFI_HANDLE Handle;
-
-    /* Find all the Block I/O device handles on the system */
-    DeviceCount = 0;
-    DeviceHandles = 0;
-    Status = EfiLocateHandleBuffer(ByProtocol,
-                                   &EfiBlockIoProtocol,
-                                   &DeviceCount,
-                                   &DeviceHandles);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed to enumerate, bail out */
-        return Status;
-    }
-
-    /* Loop all the handles */
-    for (i = 0; i < DeviceCount; i++)
-    {
-        /* Check if this is the device itself */
-        Handle = DeviceHandles[i];
-        if (Handle == ProtocolInterface->Handle)
-        {
-            /* Skip it */
-            continue;
-        }
-
-        /* Get the device path of this device */
-        Status = EfiOpenProtocol(Handle,
-                                 &EfiDevicePathProtocol,
-                                 (PVOID*)&DevicePath);
-        if (!NT_SUCCESS(Status))
-        {
-            /* We failed, skip it */
-            continue;
-        }
-
-        /* See if we are its parent  */
-        ParentDevicePath = EfiIsDevicePathParent(ProtocolInterface->Interface,
-                                                 DevicePath);
-        if (ParentDevicePath == ProtocolInterface->Interface)
-        {
-            /* Yup, return back to caller */
-            ChildProtocolInterface->Handle = Handle;
-            ChildProtocolInterface->Interface = DevicePath;
-            break;
-        }
-
-        /* Close the device path */
-        EfiCloseProtocol(Handle, &EfiDevicePathProtocol);
-    }
-
-    /* If we got here, nothing was found */
-    Status = STATUS_NO_SUCH_DEVICE;
-
-    /* Free the handle array buffer */
-    BlMmFreeHeap(DeviceHandles);
-    return Status;
-}
-
-NTSTATUS
-BlockIoGetGPTDiskSignature (
-    _In_ PBL_DEVICE_ENTRY DeviceEntry,
-    _Out_ PGUID DiskSignature
-    )
-{
-    EfiPrintf(L"GPT not supported\r\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-BlockIoEfiGetDeviceInformation (
-    _In_ PBL_DEVICE_ENTRY DeviceEntry
-    )
-{
-    NTSTATUS Status;
-    PBL_DEVICE_DESCRIPTOR Device;
-    PBL_BLOCK_DEVICE BlockDevice;
-    EFI_DEVICE_PATH *LeafNode;
-    EFI_HANDLE Handle;
-    BL_PROTOCOL_HANDLE Protocol[2];
-    ACPI_HID_DEVICE_PATH *AcpiPath;
-    HARDDRIVE_DEVICE_PATH *DiskPath;
-    BOOLEAN Found;
-    ULONG i;
-
-    Device = DeviceEntry->DeviceDescriptor;
-    BlockDevice = (PBL_BLOCK_DEVICE)DeviceEntry->DeviceSpecificData;
-
-    Found = FALSE;
-
-    Handle = BlockDevice->Handle;
-
-    Protocol[0].Handle = Handle;
-    Protocol[1].Handle = 0;
-
-    Status = EfiOpenProtocol(Handle,
-                             &EfiDevicePathProtocol,
-                             &Protocol[0].Interface);
-    if (Status < 0)
-    {
-        return Status;
-    }
-
-    for (i = 0, Found = FALSE; Found == FALSE && Protocol[i].Handle; i++)
-    {
-        LeafNode = EfiGetLeafNode(Protocol[i].Interface);
-        if (LeafNode->Type == ACPI_DEVICE_PATH)
-        {
-            /* We only support floppy drives */
-            AcpiPath = (ACPI_HID_DEVICE_PATH*)LeafNode;
-            if ((AcpiPath->HID == EISA_PNP_ID(0x604)) &&
-                (AcpiPath->HID == EISA_PNP_ID(0x700)))
-            {
-                /* Set the boot library specific device types */
-                Device->DeviceType = LocalDevice;
-                Device->Local.Type = FloppyDevice;
-
-                /* The ACPI UID is the drive number */
-                Device->Local.FloppyDisk.DriveNumber = AcpiPath->UID;
-
-                /* We found a match */
-                Found = TRUE;
-            }
-        }
-        else if ((LeafNode->Type == MEDIA_DEVICE_PATH) && (i == 1))
-        {
-            /* Extract the disk path and check if it's a physical disk */
-            DiskPath = (HARDDRIVE_DEVICE_PATH*)LeafNode;
-            if (LeafNode->SubType == MEDIA_HARDDRIVE_DP)
-            {
-                Device->Local.Type = LocalDevice;
-
-                /* Check if this is an MBR partition */
-                if (DiskPath->SignatureType == SIGNATURE_TYPE_MBR)
-                {
-                    /* Set that this is a local partition */
-                    Device->DeviceType = LegacyPartitionDevice;
-                    Device->Partition.Disk.Type = LocalDevice;
-
-                    BlockDevice->PartitionType = MbrPartition;
-                    BlockDevice->Disk.Mbr.Signature = *(PULONG)&DiskPath->Signature[0];
-                    Found = TRUE;
-                }
-                else if (DiskPath->SignatureType == SIGNATURE_TYPE_GUID)
-                {
-                    BlockDevice->PartitionType = 0;
-                    Device->Local.HardDisk.PartitionType = GptPartition;
-
-                    Status = BlockIoGetGPTDiskSignature(DeviceEntry,
-                                                        &Device->Local.HardDisk.Gpt.PartitionSignature);
-                    if (NT_SUCCESS(Status))
-                    {
-                        RtlCopyMemory(&BlockDevice->Disk.Gpt.Signature,
-                                      &Device->Local.HardDisk.Gpt.PartitionSignature,
-                                      sizeof(&BlockDevice->Disk.Gpt.Signature));
-                        Found = TRUE;
-                    }
-                }
-
-                /* Otherwise, raw boot is not supported */
-                BlockDevice->PartitionType = RawPartition;
-                Device->Local.HardDisk.PartitionType = RawPartition;
-                Device->Local.HardDisk.Raw.DiskNumber = BlockIoFirmwareRawDiskCount++;;
-            }
-            else if (LeafNode->SubType == MEDIA_CDROM_DP)
-            {
-                /* Set block device information */
-                BlockDevice->PartitionType = RawPartition;
-                BlockDevice->Type = CdRomDevice;
-
-                /* Set CDROM data */
-                Device->Local.Type = CdRomDevice;
-                Device->Local.FloppyDisk.DriveNumber = 0;
-                Found = TRUE;
-            }
-        }
-        else if ((LeafNode->Type != MEDIA_DEVICE_PATH) &&
-                 (LeafNode->Type == ACPI_DEVICE_PATH) &&
-                 (i == 0))
-        {
-            Status = BlockIoEfiGetChildHandle(Protocol, &Protocol[i]);
-            if (!NT_SUCCESS(Status))
-            {
-                Device->DeviceType = LocalDevice;
-                Found = 1;
-                if (BlockDevice->DeviceFlags & 1)
-                {
-                    BlockDevice->Type = FloppyDevice;
-                    Device->Local.HardDisk.PartitionType = BlockIoFirmwareRemovableDiskCount++;
-                    Device->Local.Type = FloppyDevice;
-                }
-                else
-                {
-                    BlockDevice->Type = DiskDevice;
-                    Device->Local.Type = DiskDevice;
-                    Device->Local.HardDisk.PartitionType = RawPartition;
-                    BlockDevice->PartitionType = RawPartition;
-                    Device->Local.HardDisk.Mbr.PartitionSignature = BlockIoFirmwareRawDiskCount++;
-                }
-            }
-        }
-    }
-
-    while (i)
-    {
-        EfiCloseProtocol(Protocol[--i].Handle, &EfiDevicePathProtocol);
-    }
-
-    if (Found)
-    {
-        Status = 0;
-    }
-    else
-    {
-        Status = STATUS_NOT_SUPPORTED;
-    }
-    return Status;
-}
-
-NTSTATUS
-BlockIoEfiReset (
-    VOID
-    )
-{
-    EfiPrintf(L"not implemented\r\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-BlockIoEfiFlush (
-    VOID
-    )
-{
-    EfiPrintf(L"not implemented\r\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-BlockIoEfiCreateDeviceEntry (
-    _In_ PBL_DEVICE_ENTRY *DeviceEntry,
-    _Out_ PVOID Handle
-    )
-{
-    PBL_DEVICE_ENTRY IoDeviceEntry;
-    PBL_BLOCK_DEVICE BlockDevice;
-    NTSTATUS Status;
-    PBL_DEVICE_DESCRIPTOR Device;
-
-    /* Allocate the entry for this device and zero it out */
-    IoDeviceEntry = BlMmAllocateHeap(sizeof(*IoDeviceEntry));
-    if (!IoDeviceEntry)
-    {
-        return STATUS_NO_MEMORY;
-    }
-    RtlZeroMemory(IoDeviceEntry, sizeof(*IoDeviceEntry));
-
-    /* Allocate the device descriptor for this device and zero it out */
-    Device = BlMmAllocateHeap(sizeof(*Device));
-    if (!Device)
-    {
-        return STATUS_NO_MEMORY;
-    }
-    RtlZeroMemory(Device, sizeof(*Device));
-
-    /* Allocate the block device specific data, and zero it out */
-    BlockDevice = BlMmAllocateHeap(sizeof(*BlockDevice));
-    if (!BlockDevice)
-    {
-        return STATUS_NO_MEMORY;
-    }
-    RtlZeroMemory(BlockDevice, sizeof(*BlockDevice));
-
-    /* Save the descriptor and block device specific data */
-    IoDeviceEntry->DeviceSpecificData = BlockDevice;
-    IoDeviceEntry->DeviceDescriptor = Device;
-
-    /* Set the size of the descriptor */
-    Device->Size = sizeof(*Device);
-
-    /* Copy the standard I/O callbacks */
-    RtlCopyMemory(&IoDeviceEntry->Callbacks,
-                  &BlockIoDeviceFunctionTable,
-                  sizeof(IoDeviceEntry->Callbacks));
-
-    /* Add the two that are firmware specific */
-    IoDeviceEntry->Callbacks.Reset = BlockIoEfiReset;
-    IoDeviceEntry->Callbacks.Flush = BlockIoEfiFlush;
-
-    /* Save the EFI handle */
-    BlockDevice->Handle = Handle;
-
-    /* Get information on this device from EFI, caching it in the device */
-    Status = BlockIoEfiGetBlockIoInformation(BlockDevice);
-    if (NT_SUCCESS(Status))
-    {
-        /* Build the descriptor structure for this device */
-        Status = BlockIoEfiGetDeviceInformation(IoDeviceEntry);
-        if (NT_SUCCESS(Status))
-        {
-            /* We have a fully constructed device, reuturn it */
-            *DeviceEntry = IoDeviceEntry;
-            return STATUS_SUCCESS;
-        }
-    }
-
-    /* Failure path, free the descriptor if we allocated one */
-    if (IoDeviceEntry->DeviceDescriptor)
-    {
-        BlMmFreeHeap(IoDeviceEntry->DeviceDescriptor);
-    }
-
-    /* Free any other specific allocations */
-    BlockIopFreeAllocations(IoDeviceEntry->DeviceSpecificData);
-
-    /* Free the device entry itself and return the failure code */
-    BlMmFreeHeap(IoDeviceEntry);
-    return Status;
-}
-
-NTSTATUS
-BlockIoFirmwareOpen (
-    _In_ PBL_DEVICE_DESCRIPTOR Device,
-    _In_ PBL_BLOCK_DEVICE BlockIoDevice
-    )
-{
-    NTSTATUS Status;
-    BOOLEAN DeviceMatch;
-    BL_HASH_ENTRY HashEntry;
-    ULONG i, Id, DeviceCount;
-    PBL_DEVICE_ENTRY DeviceEntry;
-    EFI_HANDLE* DeviceHandles;
-
-    /* Initialize everything */
-    DeviceEntry = NULL;
-    DeviceCount = 0;
-    DeviceHandles = 0;
-    DeviceEntry = NULL;
-
-    /* Ask EFI for handles to all block devices */
-    Status = EfiLocateHandleBuffer(ByProtocol,
-                                   &EfiBlockIoProtocol,
-                                   &DeviceCount,
-                                   &DeviceHandles);
-    if (!NT_SUCCESS(Status))
-    {
-        return STATUS_NO_SUCH_DEVICE;
-    }
-
-    /* Build a hash entry, with the value inline */
-    HashEntry.Flags = 1;
-    HashEntry.Size = sizeof(EFI_HANDLE);
-
-    /* Loop each device we got */
-    DeviceMatch = FALSE;
-    Status = STATUS_NO_SUCH_DEVICE;
-    for (i = 0; i < DeviceCount; i++)
-    {
-        /* Check if we have a match in the device hash table */
-        HashEntry.Value = DeviceHandles[i];
-        Status = BlHtLookup(HashTableId, &HashEntry, 0);
-        if (NT_SUCCESS(Status))
-        {
-            /* We already know about this device */
-            continue;
-        }
-
-        /* New device, store it in the hash table */
-        Status = BlHtStore(HashTableId,
-                           &HashEntry,
-                           DeviceHandles[i],
-                           sizeof(DeviceHandles[i]));
-        if (!NT_SUCCESS(Status))
-        {
-            /* Free the array and fail */
-            BlMmFreeHeap(DeviceHandles);
-            break;
-        }
-
-        /* Create an entry for this device*/
-        Status = BlockIoEfiCreateDeviceEntry(&DeviceEntry, DeviceHandles[i]);
-        if (!NT_SUCCESS(Status))
-        {
-            break;
-        }
-
-        /* Add the device entry to the device table */
-        Status = BlTblSetEntry(&BlockIoDeviceTable,
-                               &BlockIoDeviceTableEntries,
-                               DeviceEntry,
-                               &Id,
-                               TblDoNotPurgeEntry);
-        if (!NT_SUCCESS(Status))
-        {
-            EfiPrintf(L"Failure path not implemented: %lx\r\n", Status);
-#if 0
-            BlHtDelete(HashTableId, &HashKey);
-#endif
-            /* Free the block I/O device data */
-            BlockIopFreeAllocations(DeviceEntry->DeviceSpecificData);
-
-            /* Free the descriptor */
-            BlMmFreeHeap(DeviceEntry->DeviceDescriptor);
-
-            /* Free the entry */
-            BlMmFreeHeap(DeviceEntry);
-            break;
-        }
-
-        /* Does this device match what we're looking for? */
-        DeviceMatch = BlpDeviceCompare(DeviceEntry->DeviceDescriptor, Device);
-        if (DeviceMatch)
-        {
-            /* Yep, return the data back */
-            RtlCopyMemory(BlockIoDevice,
-                          DeviceEntry->DeviceSpecificData,
-                          sizeof(*BlockIoDevice));
-            Status = STATUS_SUCCESS;
-            break;
-        }
-    }
-
-    /* Free the device handle buffer array */
-    BlMmFreeHeap(DeviceHandles);
- 
-    /* Return status */
-    return Status;
-}
 
 BOOLEAN
 BlockIoDeviceTableCompare (
@@ -1197,6 +1167,7 @@ BlockIoOpen (
         if (!NT_SUCCESS(Status))
         {
             /* Failed to initialize block I/O */
+            EfiPrintf(L"Block I/O Init failed\r\n");
             return Status;
         }
     }
@@ -1229,6 +1200,7 @@ BlockIoOpen (
     if (FoundDeviceEntry)
     {
         /* We already found a device, so copy its device data and callbacks */
+        EfiPrintf(L"Device entry found: %p\r\n", FoundDeviceEntry);
         RtlCopyMemory(BlockDevice, FoundDeviceEntry->DeviceSpecificData, sizeof(*BlockDevice));
         RtlCopyMemory(&DeviceEntry->Callbacks,
                       &FoundDeviceEntry->Callbacks,
@@ -1423,6 +1395,7 @@ BlpDeviceOpen (
     if (DeviceEntry)
     {
         /* Return it, taking a reference on it */
+        EfiPrintf(L"Device found: %p\r\n", DeviceEntry);
         *DeviceId = DeviceEntry->DeviceId;
         ++DeviceEntry->ReferenceCount;
         DeviceEntry->Flags |= 1;
@@ -1519,6 +1492,7 @@ DeviceOpened:
         if (NT_SUCCESS(Status))
         {
             /* It worked -- return the ID in the table to the caller */
+            EfiPrintf(L"Device ID: %lx\r\n", *DeviceId);
             DeviceEntry->DeviceId = *DeviceId;
             return STATUS_SUCCESS;
         }
@@ -1526,6 +1500,7 @@ DeviceOpened:
 
 Quickie:
     /* Failure path -- did we allocate a device entry? */
+    EfiPrintf(L"Block failure: %lx\r\n", Status);
     if (DeviceEntry)
     {
         /* Yep -- did it have a descriptor? */

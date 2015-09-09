@@ -81,6 +81,8 @@
 
 #define BL_FS_REGISTER_AT_HEAD_FLAG                     1
 
+#define BL_BLOCK_DEVICE_REMOVABLE_FLAG                  0x01
+
 #define BL_MEMORY_CLASS_SHIFT                           28
 
 /* ENUMERATIONS **************************************************************/
@@ -896,6 +898,11 @@ BlpDisplayInitialize (
 
 VOID
 BlDestroyLibrary (
+    VOID
+    );
+
+NTSTATUS
+BcInitialize (
     VOID
     );
 

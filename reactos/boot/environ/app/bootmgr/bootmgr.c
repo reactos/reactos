@@ -50,6 +50,8 @@ BmFwInitializeBootDirectoryPath (
     Status = BlpDeviceOpen(BlpBootDevice, 1u, 0, &DeviceHandle);
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"Device open failed: %lx\r\n", Status);
+        EfiStall(2000000);
         goto Quickie;
     }
 
@@ -176,9 +178,6 @@ BmMain (
         goto Quickie;
     }
 
-    EfiPrintf(L"We are A-OK!\n");
-    EfiStall(10000000);
-
     /* Get the application identifier */
     AppIdentifier = BlGetApplicationIdentifier();
     if (!AppIdentifier)
@@ -195,7 +194,7 @@ BmMain (
 
     //Status = BmOpenDataStore(&BcdHandle);
 
-    EfiPrintf(L"We are A-OK!\n");
+    EfiPrintf(L"We are A-OK!\r\n");
     EfiStall(10000000);
 
 Quickie:

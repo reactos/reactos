@@ -653,7 +653,7 @@ BlMmAllocateHeap (
     BusyEntry->BufferNext.P = MmHapDecodeLink(BusyEntry->BufferNext);
 
     /* Return the entry's data buffer */
-    EfiPrintf(L"Returning buffer at 0x%p\r\n", &BusyEntry->Buffer);
+    //EfiPrintf(L"Returning buffer at 0x%p\r\n", &BusyEntry->Buffer);
     return &BusyEntry->Buffer;
 }
 
@@ -673,7 +673,7 @@ BlMmFreeHeap (
     }
 
     /* Get the heap header */
-    EfiPrintf(L"Freeing entry at: %p\r\n", Buffer);
+    //EfiPrintf(L"Freeing entry at: %p\r\n", Buffer);
     if (Buffer)
     {
         /* Don't free heap until we discover the corruption */
