@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/selectionmodel.cpp
+ * FILE:        base/applications/mspaint/selectionmodel.cpp
  * PURPOSE:     Keep track of selection parameters, notify listeners
  * PROGRAMMERS: Benedikt Freisen
  */

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command
- * FILE:
+ * FILE:            base/applications/network/net/cmdUser.c
  * PURPOSE:
  *
  * PROGRAMMERS:     Eric Kohl

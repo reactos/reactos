@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/toolsettings.cpp
+ * FILE:        base/applications/mspaint/toolsettings.cpp
  * PURPOSE:     Window procedure of the tool settings window
  * PROGRAMMERS: Benedikt Freisen
  */

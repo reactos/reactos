@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Device Managment
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/devmgmt/enumdevices.c
+ * FILE:        base/applications/mscutils/devmgmt/enumdevices.c
  * PURPOSE:     Enumerates all devices on the local machine
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *

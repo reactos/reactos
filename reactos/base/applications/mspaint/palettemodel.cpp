@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/palettemodel.cpp
+ * FILE:        base/applications/mspaint/palettemodel.cpp
  * PURPOSE:     Keep track of palette data, notify listeners
  * PROGRAMMERS: Benedikt Freisen
  */

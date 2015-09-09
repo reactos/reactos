@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/splitter.c
+ * FILE:            base/applications/rapps_new/splitter.cpp
  * PURPOSE:         SplitterBar functions
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */

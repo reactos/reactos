@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/toolbox.h
+ * FILE:        base/applications/mspaint/toolbox.h
  * PURPOSE:     Window procedure of the main window and all children apart from
  *              hPalWin, hToolSettings and hSelection
  * PROGRAMMERS: Benedikt Freisen

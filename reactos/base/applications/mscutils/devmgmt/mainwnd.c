@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Device Managment
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/devmgmt/mainwnd.c
+ * FILE:        base/applications/mscutils/devmgmt/mainwnd.c
  * PURPOSE:     Main window message handler
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *

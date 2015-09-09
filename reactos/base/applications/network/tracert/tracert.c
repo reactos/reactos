@@ -1,7 +1,7 @@
  /*
  * PROJECT:     ReactOS trace route utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/network/tracert.c
+ * FILE:        base/applications/network/tracert/tracert.c
  * PURPOSE:     Trace network paths through networks
  * COPYRIGHT:   Copyright 2006 - 2007 Ged Murphy <gedmurphy@reactos.org>
  *

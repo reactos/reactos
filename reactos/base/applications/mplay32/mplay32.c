@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Multimedia Player
- * FILE:            base\applications\mplay32\mplay32.c
+ * FILE:            base/applications/mplay32/mplay32.c
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 

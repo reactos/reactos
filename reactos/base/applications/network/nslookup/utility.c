@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS nslookup utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        applications/network/nslookup/utility.c
+ * FILE:        base/applications/network/nslookup/utility.c
  * PURPOSE:     Support functions for nslookup.c
  * COPYRIGHT:   Copyright 2009 Lucas Suggs <lucas.suggs@gmail.com>
  */

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/installed.c
+ * FILE:            base/applications/rapps_new/installed.cpp
  * PURPOSE:         Functions for working with installed applications
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */

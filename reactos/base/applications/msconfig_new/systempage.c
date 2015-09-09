@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/msconfig/systempage.c
+ * FILE:        base/applications/msconfig_new/systempage.c
  * PURPOSE:     System page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *                        2011      Gregor Schneider <Gregor.Schneider@reactos.org>

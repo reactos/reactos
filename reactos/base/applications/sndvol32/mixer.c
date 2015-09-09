@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        subsys/system/sndvol32/mixer.c
+ * FILE:        base/applications/sndvol32/mixer.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
 

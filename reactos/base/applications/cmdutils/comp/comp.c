@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS comp utility
- * FILE:        comp.c
+ * FILE:        base/applications/cmdutils/comp/comp.c
  * PURPOSE:     Compares the contents of two files
  * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
  * REVISIONS:

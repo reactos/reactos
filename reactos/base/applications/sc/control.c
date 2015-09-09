@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/sc/control.c
+ * FILE:        base/applications/sc/control.c
  * PURPOSE:     Stops, pauses and resumes a service
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *

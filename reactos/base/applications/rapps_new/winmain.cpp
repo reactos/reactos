@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/winmain.c
+ * FILE:            base/applications/rapps_new/winmain.cpp
  * PURPOSE:         Main program
  * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)

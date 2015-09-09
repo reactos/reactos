@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Device Managment
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/devmgmt/about.c
+ * FILE:        base/applications/mscutils/devmgmt/about.c
  * PURPOSE:     About dialog box message handler
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *

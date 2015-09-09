@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/toolsmodel.h
+ * FILE:        base/applications/mspaint/toolsmodel.h
  * PURPOSE:     Keep track of tool parameters, notify listeners
  * PROGRAMMERS: Benedikt Freisen
  */

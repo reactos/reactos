@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/misc.c
+ * FILE:        base/applications/mscutils/servman/misc.c
  * PURPOSE:     miscallanous functions
  * COPYRIGHT:   Copyright 2005 Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>

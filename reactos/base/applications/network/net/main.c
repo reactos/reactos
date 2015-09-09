@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command
- * FILE:
+ * FILE:            base/applications/network/net/main.c
  * PURPOSE:
  *
  * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)

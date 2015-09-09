@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/sizebox.cpp
+ * FILE:        base/applications/mspaint/sizebox.cpp
  * PURPOSE:     Window procedure of the size boxes
  * PROGRAMMERS: Benedikt Freisen
  */

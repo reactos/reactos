@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/aboutdlg.c
+ * FILE:            base/applications/rapps_new/aboutdlg.cpp
  * PURPOSE:         About Dialog
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */

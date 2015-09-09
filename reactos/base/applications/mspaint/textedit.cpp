@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/textedit.cpp
+ * FILE:        base/applications/mspaint/textedit.cpp
  * PURPOSE:     Text editor and font chooser for the text tool
  * PROGRAMMERS: Benedikt Freisen
  */

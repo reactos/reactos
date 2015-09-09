@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/settingsdlg.c
+ * FILE:            base/applications/rapps_new/settingsdlg.cpp
  * PURPOSE:         Settings Dialog
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */

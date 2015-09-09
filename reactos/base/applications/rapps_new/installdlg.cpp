@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/installdlg.c
+ * FILE:            base/applications/rapps_new/installdlg.cpp
  * PURPOSE:         "Download and Install" Dialog
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/globalvar.h
+ * FILE:        base/applications/mspaint/globalvar.h
  * PURPOSE:     Declaring global variables for later initialization
  * PROGRAMMERS: Benedikt Freisen
  */

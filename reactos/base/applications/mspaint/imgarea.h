@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/imgarea.h
+ * FILE:        base/applications/mspaint/imgarea.h
  * PURPOSE:     Window procedure of the main window and all children apart from
  *              hPalWin, hToolSettings and hSelection
  * PROGRAMMERS: Benedikt Freisen

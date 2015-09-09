@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command
- * FILE:            cmdContinue.c
+ * FILE:            base/applications/network/net/cmdContinue.c
  * PURPOSE:
  *
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mscutils/servman/tv1_dependencies.c
+ * FILE:        base/applications/mscutils/servman/dependencies_tv1.c
  * PURPOSE:     Helper functions for service dependents
  * COPYRIGHT:   Copyright 2009 Ged Murphy <gedmurphy@reactos.org>
  *

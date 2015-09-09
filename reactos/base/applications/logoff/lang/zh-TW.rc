@@ -1,7 +1,7 @@
 /*
  * PROJECT:    ReactOS Logoff
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/logout/lang/zh-TW.rc
+ * FILE:       base/applications/logoff/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language File for Logout
  * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
  */

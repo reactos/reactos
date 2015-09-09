@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint_new/history.h
+ * FILE:        base/applications/mspaint/history.h
  * PURPOSE:     Undo and redo functionality
  * PROGRAMMERS: Benedikt Freisen
  */

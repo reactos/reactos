@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Device Managment
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/devmgmt/devmgmt.c
+ * FILE:        base/applications/mscutils/devmgmt/devmgmt.c
  * PURPOSE:     Program HQ
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *
