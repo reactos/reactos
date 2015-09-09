@@ -17,7 +17,7 @@ static int isMounted = 0;
 static char buff[32768];
 
 // tool needed by fatfs
-DWORD get_fattime()
+DWORD get_fattime(void)
 {
     /* 31-25: Year(0-127 org.1980), 24-21: Month(1-12), 20-16: Day(1-31) */
     /* 15-11: Hour(0-23), 10-5: Minute(0-59), 4-0: Second(0-29 *2) */
@@ -63,13 +63,13 @@ int is_command(const char* parg)
 #endif
 }
 
-#define NEED_PARAMS(_min_,_max_) \
+#define NEED_PARAMS(_min_, _max_) \
     do {\
-        if(nargs<_min_) { printf("Too few args for command %s.\n",argv[-1]); PRINT_HELP_AND_QUIT(); } \
-        if(nargs>_max_) { printf("Too many args for command %s.\n",argv[-1]); PRINT_HELP_AND_QUIT(); } \
+        if (nargs < _min_) { printf("Too few args for command %s.\n" , argv[-1]); PRINT_HELP_AND_QUIT(); } \
+        if (nargs > _max_) { printf("Too many args for command %s.\n", argv[-1]); PRINT_HELP_AND_QUIT(); } \
     } while(0)
 
-int need_mount()
+int need_mount(void)
 {
     int r;
 
@@ -87,7 +87,7 @@ int need_mount()
 #define NEED_MOUNT() \
     do { ret = need_mount(); if(ret) \
     {\
-        printf("Error: could not mount disk (%d). \n", ret); \
+        printf("Error: could not mount disk (%d).\n", ret); \
         PRINT_HELP_AND_QUIT(); \
     } } while(0)
 
@@ -99,9 +99,9 @@ void print_help(char const * const name)
 #else
     printf("Commands:\n");
 #endif
-    printf("    -format <sectors> [<filesystem>]\n"
+    printf("    -format <sectors> [<filesystem>] [<custom header label>]\n"
            "            Formats the disk image.\n");
-    printf("    -boot <sector file> [<custom header label>]\n"
+    printf("    -boot <sector file>\n"
            "            Writes a new boot sector.\n");
     printf("    -add <src path> <dst path>\n"
            "            Copies an external file or directory into the image.\n");
@@ -207,7 +207,7 @@ int main(int oargc, char* oargv[])
             {
                 char label[8];
 
-                int i, invalid=0;
+                int i, invalid = 0;
                 int len = strlen(argv[1]);
 
                 if (len <= 8)
@@ -220,7 +220,7 @@ int main(int oargc, char* oargv[])
 
                         if (!isupper(ch) && !isspace(ch))
                         {
-                            invalid =1;
+                            invalid = 1;
                             break;
                         }
                     }
@@ -269,7 +269,6 @@ int main(int oargc, char* oargv[])
                     ret = 1;
                     goto exit;
                 }
-
             }
         }
         else if (strcmp(parg, "boot") == 0)
@@ -282,7 +281,6 @@ int main(int oargc, char* oargv[])
             // Arg 1: boot file
 
             fe = fopen(argv[0], "rb");
-
             if (!fe)
             {
                 printf("Error: unable to open external file '%s' for reading.", argv[0]);
@@ -290,7 +288,7 @@ int main(int oargc, char* oargv[])
                 goto exit;
             }
 
-            if(!fread(buff, 512, 1, fe))
+            if (!fread(buff, 512, 1, fe))
             {
                 printf("Error: unable to read boot sector from file '%s'.", argv[0]);
                 fclose(fe);
@@ -302,7 +300,7 @@ int main(int oargc, char* oargv[])
 
             NEED_MOUNT();
 
-            if(disk_read(0, temp, 0, 1))
+            if (disk_read(0, temp, 0, 1))
             {
                 printf("Error: unable to read existing boot sector from image.");
                 ret = 1;
@@ -345,7 +343,6 @@ int main(int oargc, char* oargv[])
             // Arg 2: virtual filename
 
             fe = fopen(argv[0], "rb");
-
             if (!fe)
             {
                 printf("Error: unable to open external file '%s' for reading.", argv[0]);
@@ -391,7 +388,6 @@ int main(int oargc, char* oargv[])
             }
 
             fv = fopen(argv[1], "wb");
-
             if (!fv)
             {
                 printf("Error: unable to open external file '%s' for writing.", argv[1]);
@@ -498,7 +494,7 @@ int main(int oargc, char* oargv[])
             printf("Listing directory contents of: %s\n", root);
 
             info.lfname = lfname;
-            info.lfsize = 256;
+            info.lfsize = sizeof(lfname)-1;
             while ((!f_readdir(&dir, &info)) && (strlen(info.fname) > 0))
             {
                 if (strlen(info.lfname) > 0)
@@ -524,4 +520,3 @@ exit:
 
     return ret;
 }
-
