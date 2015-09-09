@@ -146,7 +146,7 @@ MmHapHeapAllocatorExtend (
     }
 
     /* We do not -- allocate one */
-    Status = MmPapAllocatePagesInRange((PULONG)&HeapBase,
+    Status = MmPapAllocatePagesInRange((PVOID*)&HeapBase,
                                        BlLoaderHeap,
                                        AlignedSize >> PAGE_SHIFT,
                                        HapAllocationAttributes,
@@ -673,6 +673,13 @@ BlMmFreeHeap (
     }
 
     /* Get the heap header */
+    EfiPrintf(L"Freeing entry at: %p\r\n", Buffer);
+    if (Buffer)
+    {
+        /* Don't free heap until we discover the corruption */
+        return STATUS_SUCCESS;
+    }
+
     BusyEntry = CONTAINING_RECORD(Buffer, BL_BUSY_HEAP_ENTRY, Buffer);
 
     /* Loop all the heaps */

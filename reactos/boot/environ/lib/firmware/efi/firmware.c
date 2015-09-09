@@ -29,10 +29,83 @@ EFI_GUID EfiUgaDrawProtocol = EFI_UGA_DRAW_PROTOCOL_GUID;
 EFI_GUID EfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 EFI_GUID EfiDevicePathProtocol = EFI_DEVICE_PATH_PROTOCOL_GUID;
 EFI_GUID EfiSimpleTextInputExProtocol = EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID;
+EFI_GUID EfiBlockIoProtocol = EFI_BLOCK_IO_PROTOCOL_GUID;
 
 WCHAR BlScratchBuffer[8192];
 
 /* FUNCTIONS *****************************************************************/
+
+EFI_DEVICE_PATH *
+EfiIsDevicePathParent (
+    _In_ EFI_DEVICE_PATH *DevicePath1,
+    _In_ EFI_DEVICE_PATH *DevicePath2
+    )
+{
+    USHORT Length1, Length2;
+
+    /* Loop each element of the device path */
+    while (!IsDevicePathEndType(DevicePath1) && !IsDevicePathEndType(DevicePath2))
+    {
+        /* Check if the element has a different length */
+        Length1 = DevicePathNodeLength(DevicePath1);
+        Length2 = DevicePathNodeLength(DevicePath2);
+        if (Length1 != Length2)
+        {
+            /* Then they're not related */
+            return NULL;
+        }
+
+        /* Check if the rest of the element data matches */
+        if (RtlCompareMemory(DevicePath1, DevicePath2, Length1) != Length1)
+        {
+            /* Nope, not related */
+            return NULL;
+        }
+
+        /* Move to the next element */
+        DevicePath1 = NextDevicePathNode(DevicePath1);
+        DevicePath2 = NextDevicePathNode(DevicePath2);
+    }
+
+    /* If the last element in path 1 is empty, then path 2 is the child (deeper) */
+    if (!IsDevicePathEndType(DevicePath1))
+    {
+        return DevicePath2;
+    }
+
+    /* If the last element in path 2 is empty, then path 1 is the child (deeper) */
+    if (!IsDevicePathEndType(DevicePath2))
+    {
+        return DevicePath1;
+    }
+
+    /* They're both the end, so they're identical, so there's no parent */
+    return NULL;
+}
+
+EFI_DEVICE_PATH*
+EfiGetLeafNode (
+    _In_ EFI_DEVICE_PATH *DevicePath
+    )
+{
+    EFI_DEVICE_PATH *NextDevicePath;
+
+    /* Make sure we're not already at the end */
+    if (!IsDevicePathEndType(DevicePath))
+    {
+        /* Grab the next node element, and keep going until the end */
+        for (NextDevicePath = NextDevicePathNode(DevicePath);
+             !IsDevicePathEndType(NextDevicePath);
+             NextDevicePath = NextDevicePathNode(NextDevicePath))
+        {
+            /* Save the current node we're at  */
+            DevicePath = NextDevicePath;
+        }
+    }
+
+    /* This now contains the deepeest (leaf) node */
+    return DevicePath;
+}
 
 VOID
 EfiPrintf (

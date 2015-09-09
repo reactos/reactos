@@ -66,7 +66,7 @@ DsppInitialize (
     InitializeListHead(&BfiFontFileListHead);
 
     /* Allocate the font rectangle */
-    BfiGraphicsRectangle = BlMmAllocateHeap(0x5A);
+    BfiGraphicsRectangle = BlMmAllocateHeap(90);
     if (!BfiGraphicsRectangle)
     {
         return STATUS_NO_MEMORY;

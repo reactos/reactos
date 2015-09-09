@@ -253,7 +253,10 @@ EfiInitpConvertEfiFilePath (
                                               FilePath->PathName,
                                               StringLength,
                                               &BytesAppended);
-            if (!NT_SUCCESS(Status)) return Status;
+            if (!NT_SUCCESS(Status))
+            {
+                return Status;
+            }
 
             /* Increase the size of the data, consume buffer space */
             DataSize += BytesAppended;
@@ -345,7 +348,7 @@ EfiInitpGetDeviceNode (
  *
  *--*/
 NTSTATUS
-EfiInitTranslateDevicePath(
+EfiInitTranslateDevicePath (
     _In_ EFI_DEVICE_PATH_PROTOCOL *DevicePath,
     _In_ PBL_DEVICE_DESCRIPTOR DeviceEntry
     )
@@ -418,7 +421,7 @@ EfiInitTranslateDevicePath(
             }
 
             /* Other types should come in as MEDIA_DEVICE_PATH -- Windows assumes this is a floppy */
-            DeviceEntry->DeviceType = LocalDevice;
+            DeviceEntry->DeviceType = DiskDevice;
             DeviceEntry->Local.Type = FloppyDevice;
             DeviceEntry->Local.FloppyDisk.DriveNumber = 0;
             return STATUS_SUCCESS;
@@ -434,7 +437,7 @@ EfiInitTranslateDevicePath(
                 if (DiskPath->SignatureType == SIGNATURE_TYPE_MBR)
                 {
                     /* Set that this is a local partition */
-                    DeviceEntry->DeviceType = PartitionDevice;
+                    DeviceEntry->DeviceType = LegacyPartitionDevice;
                     DeviceEntry->Partition.Disk.Type = LocalDevice;
 
                     DeviceEntry->Partition.Disk.HardDisk.PartitionType = MbrPartition;
@@ -448,7 +451,7 @@ EfiInitTranslateDevicePath(
                 if (DiskPath->SignatureType == SIGNATURE_TYPE_GUID)
                 {
                     /* Set that this is a local disk */
-                    DeviceEntry->DeviceType = HardDiskDevice;
+                    DeviceEntry->DeviceType = PartitionDevice;
                     DeviceEntry->Partition.Disk.Type = LocalDevice;
 
                     /* Set GPT partition ID */
@@ -463,15 +466,16 @@ EfiInitTranslateDevicePath(
                     return STATUS_SUCCESS;
                 }
 
-                /* Othertwise, raw boot is not supported */
-                DeviceEntry->DeviceType = HardDiskDevice;
+                /* Otherwise, raw boot is not supported */
+                DeviceEntry->DeviceType = PartitionDevice;
+                DeviceEntry->Partition.Disk.Type = LocalDevice;
                 DeviceEntry->Partition.Disk.HardDisk.PartitionType = RawPartition;
                 DeviceEntry->Partition.Disk.HardDisk.Raw.DiskNumber = 0;
             }
             else if (DeviceNode->SubType == MEDIA_CDROM_DP)
             {
                 /* Set the right type for a CDROM */
-                DeviceEntry->DeviceType = LocalDevice;
+                DeviceEntry->DeviceType = DiskDevice;
                 DeviceEntry->Local.Type = CdRomDevice;
 
                 /* Set the drive number to zero */

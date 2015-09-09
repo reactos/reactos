@@ -18,6 +18,20 @@ PVOID* IoMgrDestroyRoutineTable;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
+BlpIoRegisterDestroyRoutine (
+    _In_ PBL_IO_DESTROY_ROUTINE DestroyRoutine
+    )
+{
+    ULONG Id;
+
+    return BlTblSetEntry(&IoMgrDestroyRoutineTable,
+                         &IoMgrRoutineEntries,
+                         DestroyRoutine,
+                         &Id,
+                         TblDoNotPurgeEntry);
+}
+
+NTSTATUS
 BlpIoInitialize (
     VOID
     )

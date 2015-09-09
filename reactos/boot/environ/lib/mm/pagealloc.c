@@ -391,7 +391,7 @@ Quickie:
 
 NTSTATUS
 MmPapAllocatePagesInRange (
-    _Inout_ PULONG PhysicalAddress,
+    _Inout_ PVOID* PhysicalAddress,
     _In_ BL_MEMORY_TYPE MemoryType,
     _In_ ULONGLONG Pages,
     _In_ ULONG Attributes,
@@ -425,7 +425,7 @@ MmPapAllocatePagesInRange (
     else
     {
         /* Check if this is a fixed allocation */
-        BaseAddress.QuadPart = (Attributes & BlMemoryFixed) ? *PhysicalAddress : 0;
+        BaseAddress.QuadPart = (Attributes & BlMemoryFixed) ? (ULONG_PTR)*PhysicalAddress : 0;
 
         /* Allocate the pages */
         Status = MmPapAllocatePhysicalPagesInRange(&BaseAddress,
@@ -441,7 +441,7 @@ MmPapAllocatePagesInRange (
                                                    Type);
 
         /* Return the allocated address */
-        *PhysicalAddress = BaseAddress.LowPart;
+        *PhysicalAddress = (PVOID)BaseAddress.LowPart;
     }
 
 Exit:

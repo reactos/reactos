@@ -22,43 +22,42 @@ DEFINE_GUID(GUID_WINDOWS_BOOTMGR,
 ULONGLONG ApplicationStartTime;
 ULONGLONG PostTime;
 GUID BmApplicationIdentifier;
+PWCHAR BootDirectory;
 
 /* FUNCTIONS *****************************************************************/
 
-PGUID
-BlGetApplicationIdentifier (
+NTSTATUS
+BmFwInitializeBootDirectoryPath (
     VOID
     )
 {
-    return NULL;
-}
-
-PWCHAR BootDirectory;
-
-NTSTATUS
-BmFwInitializeBootDirectoryPath()
-{
-#if 0
     PWCHAR FinalPath;
     NTSTATUS Status;
     PWCHAR BcdDirectory;
-    UNICODE_STRING BcdPath;
-    ULONG FinalSize, FileHandle, DeviceHandle;
+   // UNICODE_STRING BcdPath;
+    //ULONG FinalSize;
+    ULONG FileHandle, DeviceHandle;
 
-    BcdPath.MaximumLength = 0;
-    BcdPath.Buffer = NULL;
-
+    /* Initialize everything for failure */
+   // BcdPath.MaximumLength = 0;
+   // BcdPath.Buffer = NULL;
+    BcdDirectory = NULL;
     FinalPath = NULL;
-
     FileHandle = -1;
     DeviceHandle = -1;
 
+    /* Try to open the boot device */
     Status = BlpDeviceOpen(BlpBootDevice, 1u, 0, &DeviceHandle);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
+    /* For now, do nothing */
+    EfiPrintf(L"Successfully opened boot device: %lx\r\n", DeviceHandle);
+    EfiStall(2000000);
+
+#if 0
     Status = BmpFwGetApplicationDirectoryPath(&BcdPath);
     BcdDirectory = BcdPath.Buffer;
     if (!NT_SUCCESS(Status))
@@ -91,8 +90,10 @@ BmFwInitializeBootDirectoryPath()
     }
 
     BootDirectory = L"\\EFI\\Microsoft\\Boot";
+#endif
 
 Quickie:
+    /* Free all the allocations we made */
     if (BcdDirectory)
     {
         Status = BlMmFreeHeap(BcdDirectory);
@@ -101,18 +102,21 @@ Quickie:
     {
         Status = BlMmFreeHeap(FinalPath);
     }
+
+    /* Close the BCD file */
     if (FileHandle != -1)
     {
-        Status = BlFileClose(FileHandle);
+        //Status = BlFileClose(FileHandle);
     }
+
+    /* Close the boot device */
     if (DeviceHandle != -1)
     {
         Status = BlDeviceClose(DeviceHandle);
     }
+
+    /* Return back to the caller */
     return Status;
-#else
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 
@@ -171,6 +175,9 @@ BmMain (
         /* Go to exit path */
         goto Quickie;
     }
+
+    EfiPrintf(L"We are A-OK!\n");
+    EfiStall(10000000);
 
     /* Get the application identifier */
     AppIdentifier = BlGetApplicationIdentifier();

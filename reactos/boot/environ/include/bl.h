@@ -28,6 +28,7 @@
 #include <LoadedImage.h>
 #include <GraphicsOutput.h>
 #include <UgaDraw.h>
+#include <BlockIo.h>
 
 /* DEFINES *******************************************************************/
 
@@ -75,6 +76,8 @@
 
 #define BL_DISPLAY_GRAPHICS_FORCED_VIDEO_MODE_FLAG      0x01
 #define BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG   0x02
+
+#define BL_HT_VALUE_IS_INLINE                           0x01
 
 #define BL_FS_REGISTER_AT_HEAD_FLAG                     1
 
@@ -127,10 +130,13 @@ typedef enum _BL_ARCH_MODE
 //
 typedef enum _BL_DEVICE_TYPE
 {
-    LocalDevice = 0,
-    PartitionDevice = 2,
+    DiskDevice = 0,
+    LegacyPartitionDevice = 2,
+    SerialDevice = 3,
     UdpDevice = 4,
-    HardDiskDevice = 6
+    BootDevice = 5,
+    PartitionDevice = 6,
+    LocateDevice = 8,
 } BL_DEVICE_TYPE;
 
 //
@@ -138,9 +144,12 @@ typedef enum _BL_DEVICE_TYPE
 //
 typedef enum _BL_LOCAL_DEVICE_TYPE
 {
+    LocalDevice = 0,
     FloppyDevice = 1,
     CdRomDevice = 2,
     RamDiskDevice = 3,
+    FileDevice = 5,
+    VirtualDiskDevice = 6
 } BL_LOCAL_DEVICE_TYPE;
 
 //
@@ -180,11 +189,13 @@ typedef enum _BL_MEMORY_TYPE
     // Loader Memory
     //
     BlLoaderMemory = 0xD0000002,
+    BlLoaderDeviceMemory = 0xD0000004,
     BlLoaderHeap = 0xD0000005,
     BlLoaderPageDirectory = 0xD0000006,
     BlLoaderReferencePage = 0xD0000007,
     BlLoaderRamDisk = 0xD0000008,
     BlLoaderData = 0xD000000A,
+    BlLoaderBlockMemory = 0xD000000C,
     BlLoaderSelfMap = 0xD000000F,
 
     //
@@ -339,6 +350,50 @@ NTSTATUS
     _In_ struct _BL_TEXT_CONSOLE* Console,
     _In_ PCHAR Text,
     _In_ ULONG Attribute
+    );
+
+typedef
+BOOLEAN
+(*PBL_TBL_LOOKUP_ROUTINE) (
+    _In_ PVOID Entry,
+    _In_ PVOID Argument1,
+    _In_ PVOID Argument2,
+    _In_ PVOID Argument3,
+    _In_ PVOID Argument4
+    );
+
+typedef
+NTSTATUS
+(*PBL_TBL_MAP_ROUTINE) (
+    _In_ PVOID Entry,
+    _In_ ULONG EntryIndex
+    );
+
+typedef
+NTSTATUS
+(*PBL_TBL_SET_ROUTINE) (
+    _In_ PVOID Entry
+    );
+
+typedef
+NTSTATUS
+(*PBL_IO_DESTROY_ROUTINE) (
+    VOID
+    );
+
+struct _BL_HASH_ENTRY;
+typedef
+BOOLEAN
+(*PBL_HASH_TABLE_COMPARE_FUNCTION) (
+    _In_ struct _BL_HASH_ENTRY* Entry1,
+    _In_ struct _BL_HASH_ENTRY* Entry2
+    );
+
+typedef
+ULONG
+(*PBL_HASH_TABLE_HASH_FUNCTION) (
+    _In_ struct _BL_HASH_ENTRY* Entry,
+    _In_ ULONG TableSize
     );
 
 /* DATA STRUCTURES ***********************************************************/
@@ -568,11 +623,6 @@ typedef struct _BL_FILE_ENTRY
     PBL_FILE_DESTROY_CALLBACK DestroyCallback;
 } BL_FILE_ENTRY, *PBL_FILE_ENTRY;
 
-typedef struct _BL_DEVICE_ENTRY
-{
-    ULONG ReferenceCount;
-} BL_DEVICE_ENTRY, *PBL_DEVICE_ENTRY;
-
 typedef struct _BL_FILE_SYSTEM_ENTRY
 {
     LIST_ENTRY ListEntry;
@@ -664,6 +714,67 @@ typedef struct _BL_REMOTE_CONSOLE
 {
     BL_TEXT_CONSOLE TextConsole;
 } BL_REMOTE_CONSOLE, *PBL_REMOTE_CONSOLE;
+
+typedef struct _BL_HASH_TABLE
+{
+    PLIST_ENTRY HashLinks;
+    ULONG Size;
+    PBL_HASH_TABLE_COMPARE_FUNCTION CompareFunction;
+    PBL_HASH_TABLE_HASH_FUNCTION HashFunction;
+} BL_HASH_TABLE, *PBL_HASH_TABLE;
+
+typedef struct _BL_HASH_ENTRY
+{
+    ULONG Size;
+    ULONG Flags;
+    PVOID Value;
+} BL_HASH_ENTRY, *PBL_HASH_ENTRY;
+
+typedef struct _BL_HASH_VALUE
+{
+    ULONG DataSize;
+    PVOID Data;
+} BL_HASH_VALUE, *PBL_HASH_VALUE;
+
+typedef struct _BL_HASH_NODE
+{
+    LIST_ENTRY ListEntry;
+    BL_HASH_ENTRY Entry;
+    BL_HASH_VALUE Value;
+} BL_HASH_NODE, *PBL_HASH_NODE;
+
+typedef struct _BL_BLOCK_DEVICE
+{
+    BL_LOCAL_DEVICE_TYPE Type;
+    ULONG DeviceFlags;
+    ULONG Unknown;
+    BL_PARTITION_TYPE PartitionType;
+    ULONG BlockSize;
+    ULONG Alignment;
+    struct
+    {
+        union
+        {
+            struct
+            {
+                ULONG Signature;
+            } Mbr;
+            struct
+            {
+                GUID Signature;
+            } Gpt;
+        };
+    } Disk;
+    ULONGLONG LastBlock;
+    EFI_BLOCK_IO* Protocol;
+    EFI_HANDLE Handle;
+} BL_BLOCK_DEVICE, *PBL_BLOCK_DEVICE;
+
+typedef struct _BL_PROTOCOL_HANDLE
+{
+    EFI_HANDLE Handle;
+    PVOID Interface;
+} BL_PROTOCOL_HANDLE, *PBL_PROTOCOL_HANDLE;
 
 /* INLINE ROUTINES ***********************************************************/
 
@@ -893,6 +1004,17 @@ EfiResetSystem (
     _In_ EFI_RESET_TYPE ResetType
     );
 
+EFI_DEVICE_PATH*
+EfiGetLeafNode (
+    _In_ EFI_DEVICE_PATH *DevicePath
+    );
+
+EFI_DEVICE_PATH *
+EfiIsDevicePathParent (
+    _In_ EFI_DEVICE_PATH *DevicePath1,
+    _In_ EFI_DEVICE_PATH *DevicePath2
+    );
+
 /* PLATFORM TIMER ROUTINES ***************************************************/
 
 NTSTATUS
@@ -920,6 +1042,71 @@ BlUtlInitialize (
 VOID
 BlFwReboot (
     VOID
+    );
+
+PGUID
+BlGetApplicationIdentifier (
+    VOID
+    );
+
+/* TABLE ROUTINES ************************************************************/
+
+NTSTATUS
+BlTblMap (
+    _In_ PVOID *Table,
+    _In_ ULONG Count,
+    _In_ PBL_TBL_MAP_ROUTINE MapCallback
+    );
+
+PVOID
+BlTblFindEntry (
+    _In_ PVOID *Table,
+    _In_ ULONG Count,
+    _Out_ PULONG EntryIndex,
+    _In_ PBL_TBL_LOOKUP_ROUTINE Callback,
+    _In_ PVOID Argument1,
+    _In_ PVOID Argument2,
+    _In_ PVOID Argument3,
+    _In_ PVOID Argument4
+    );
+
+NTSTATUS
+BlTblSetEntry (
+    _Inout_ PVOID** Table,
+    _Inout_ PULONG Count,
+    _In_ PVOID Entry,
+    _Out_ PULONG EntryIndex,
+    _In_ PBL_TBL_SET_ROUTINE Callback
+    );
+
+NTSTATUS
+TblDoNotPurgeEntry (
+    _In_ PVOID Entry
+    );
+
+/* HASH TABLE ROUTINES *******************************************************/
+
+NTSTATUS
+BlHtStore (
+    _In_ ULONG TableId,
+    _In_ PBL_HASH_ENTRY Entry,
+    _In_ PVOID Data,
+    _In_ ULONG DataSize
+    );
+
+NTSTATUS
+BlHtLookup (
+    _In_ ULONG TableId,
+    _In_ PBL_HASH_ENTRY Entry,
+    _Out_ PBL_HASH_VALUE *Value
+    );
+
+NTSTATUS
+BlHtCreate (
+    _In_ ULONG Size,
+    _In_ PBL_HASH_TABLE_HASH_FUNCTION HashFunction,
+    _In_ PBL_HASH_TABLE_COMPARE_FUNCTION CompareFunction,
+    _Out_ PULONG Id
     );
 
 /* BCD ROUTINES **************************************************************/
@@ -1001,7 +1188,7 @@ MmMdFreeDescriptor (
 
 NTSTATUS
 MmPapAllocatePagesInRange (
-    _Inout_ PULONG PhysicalAddress,
+    _Inout_ PVOID* PhysicalAddress,
     _In_ BL_MEMORY_TYPE MemoryType,
     _In_ ULONGLONG Pages,
     _In_ ULONG Attributes,
@@ -1026,6 +1213,13 @@ BlMmMapPhysicalAddressEx (
     _In_ PHYSICAL_ADDRESS PhysicalAddress
     );
 
+/* BLOCK ALLOCATOR ROUTINES **************************************************/
+
+NTSTATUS
+BlpMmCreateBlockAllocator (
+    VOID
+    );
+
 /* HEAP ALLOCATOR ROUTINES ***************************************************/
 
 PVOID
@@ -1046,7 +1240,27 @@ BlDisplayGetTextCellResolution (
     _Out_ PULONG TextHeight
     );
 
-/* TExT CONSOLE ROUTINES *****************************************************/
+/* I/O ROUTINES **************************************************************/
+
+NTSTATUS
+BlpIoRegisterDestroyRoutine (
+    _In_ PBL_IO_DESTROY_ROUTINE DestroyRoutine
+    );
+
+NTSTATUS
+BlDeviceClose (
+    _In_ ULONG DeviceId
+    );
+
+NTSTATUS
+BlpDeviceOpen (
+    _In_ PBL_DEVICE_DESCRIPTOR Device,
+    _In_ ULONG Flags,
+    _In_ ULONG Unknown,
+    _Out_ PULONG DeviceId
+    );
+
+/* TEXT CONSOLE ROUTINES *****************************************************/
 
 NTSTATUS
 ConsoleTextLocalDestruct (
@@ -1197,6 +1411,7 @@ extern EFI_GUID EfiGraphicsOutputProtocol;
 extern EFI_GUID EfiUgaDrawProtocol;
 extern EFI_GUID EfiLoadedImageProtocol;
 extern EFI_GUID EfiDevicePathProtocol;
+extern EFI_GUID EfiBlockIoProtocol;
 extern EFI_GUID EfiSimpleTextInputExProtocol;
 extern ULONG ConsoleGraphicalResolutionListFlags;
 extern BL_DISPLAY_MODE ConsoleGraphicalResolutionList[];

@@ -393,3 +393,13 @@ BlDestroyLibrary (
     EfiPrintf(L"Destroy not yet implemented\r\n");
     return;
 }
+
+PGUID
+BlGetApplicationIdentifier (
+    VOID
+    )
+{
+    /* Return the GUID, if one was present */
+    return (BlpApplicationEntry.Flags & BL_APPLICATION_ENTRY_FLAG_NO_GUID) ?
+            NULL : &BlpApplicationEntry.Guid;
+}
