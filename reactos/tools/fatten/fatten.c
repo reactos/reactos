@@ -193,10 +193,58 @@ int main(int oargc, char* oargv[])
         }
         else if (strcmp(parg, "boot") == 0)
         {
+            FILE* fe;
+            BYTE* temp = buff + 1024;
+
             NEED_PARAMS(1, 1);
 
             // Arg 1: boot file
-            printf("Not Implemented.");
+
+            fe = fopen(argv[0], "rb");
+
+            if (!fe)
+            {
+                printf("Error: unable to open external file '%s' for reading.", argv[0]);
+                ret = 1;
+                goto exit;
+            }
+
+            if(!fread(buff, 512, 1, fe))
+            {
+                printf("Error: unable to read boot sector from file '%s'.", argv[0]);
+                ret = 1;
+                goto exit;
+            }
+
+            NEED_MOUNT();
+
+            if(disk_read(0, temp, 0, 1))
+            {
+                printf("Error: unable to read existing boot sector from image.");
+                ret = 1;
+                goto exit;
+            }
+
+            if (g_Filesystem.fs_type == FS_FAT32)
+            {
+                printf("TODO: writing boot sectors for FAT32 images not yet supported.");
+                ret = 1;
+                goto exit;
+            }
+            else
+            {
+                // Quick&dirty hardcoded length.
+                memcpy(buff + 2, temp + 2, 0x3E - 0x02);
+            }
+
+            if (disk_write(0, buff, 0, 1))
+            {
+                printf("Error: unable to write new boot sector to image.");
+                ret = 1;
+                goto exit;
+            }
+
+            fclose(fe);
         }
         else if (strcmp(parg, "add") == 0)
         {

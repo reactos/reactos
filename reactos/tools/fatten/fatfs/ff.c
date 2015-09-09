@@ -4058,7 +4058,7 @@ FRESULT f_forward (
 /*-----------------------------------------------------------------------*/
 #define N_ROOTDIR12	224		/* Number of root directory entries for FAT12/16 */
 #define N_ROOTDIR16	512		/* Number of root directory entries for FAT12/16 */
-#define N_FATS		1		/* Number of FATs (1 or 2) */
+#define N_FATS		2		/* Number of FATs (1 or 2) */
 
 
 FRESULT f_mkfs (
