@@ -150,13 +150,23 @@ HalEnableSystemInterrupt(
     _In_ KINTERRUPT_MODE InterruptMode
 );
 
+#ifdef __REACTOS__
 NTHALAPI
 VOID
 NTAPI
 HalEndSystemInterrupt(
-    KIRQL Irql,
+    _In_ KIRQL Irql,
     _In_ PKTRAP_FRAME TrapFrame
 );
+#else
+NTHALAPI
+VOID
+NTAPI
+HalEndSystemInterrupt(
+    _In_ KIRQL Irql,
+    _In_ UCHAR Vector
+);
+#endif
 
 #ifdef _ARM_ // FIXME: ndk/arm? armddk.h?
 ULONG

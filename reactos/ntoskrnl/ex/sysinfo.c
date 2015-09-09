@@ -499,7 +499,10 @@ NtQuerySystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
 NTSTATUS
 NTAPI
 NtSetSystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
-                              IN LPGUID VendorGuid)
+                              IN LPGUID VendorGuid
+                              IN PVOID Value,
+                              IN OUT PULONG ReturnLength,
+                              IN OUT PULONG Attributes)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

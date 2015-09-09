@@ -246,7 +246,7 @@
     SVC_(SetQuotaInformationFile, 4)
     SVC_(SetSecurityObject, 3)
     SVC_(SetSystemEnvironmentValue, 2)
-    SVC_(SetSystemEnvironmentValueEx, 2)
+    SVC_(SetSystemEnvironmentValueEx, 5)
     SVC_(SetSystemInformation, 3)
     SVC_(SetSystemPowerState, 3)
     SVC_(SetSystemTime, 2)

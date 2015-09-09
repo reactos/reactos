@@ -678,25 +678,6 @@ GetFileBandwidthReservation(IN HANDLE hFile,
 /*
  * @unimplemented
  */
-BOOL
-WINAPI
-SetFileCompletionNotificationModes(IN HANDLE FileHandle,
-                                   IN UCHAR Flags)
-{
-    if (Flags & ~(FILE_SKIP_COMPLETION_PORT_ON_SUCCESS | FILE_SKIP_SET_EVENT_ON_HANDLE))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
 HANDLE
 WINAPI
 OpenFileById(IN HANDLE hFile,

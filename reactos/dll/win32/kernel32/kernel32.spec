@@ -809,7 +809,7 @@
 @ stdcall SetFileApisToOEM()
 @ stdcall SetFileAttributesA(str long)
 @ stdcall SetFileAttributesW(wstr long)
-;@ stdcall -stub SetFileCompletionNotificationModes(ptr long); 2K3 SP2 has it!
+@ stdcall SetFileCompletionNotificationModes(ptr long)
 @ stdcall SetFilePointer(long long ptr long)
 @ stdcall SetFilePointerEx(long double ptr long)
 @ stdcall SetFileShortNameA(long str)
