@@ -293,9 +293,12 @@ int main(int oargc, char* oargv[])
             if(!fread(buff, 512, 1, fe))
             {
                 printf("Error: unable to read boot sector from file '%s'.", argv[0]);
+                fclose(fe);
                 ret = 1;
                 goto exit;
             }
+
+            fclose(fe);
 
             NEED_MOUNT();
 
@@ -326,8 +329,6 @@ int main(int oargc, char* oargv[])
                 ret = 1;
                 goto exit;
             }
-
-            fclose(fe);
         }
         else if (strcmp(parg, "add") == 0)
         {
