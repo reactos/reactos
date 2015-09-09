@@ -814,6 +814,7 @@ APIENTRY
 NtUserChangeDisplaySettings(
     PUNICODE_STRING pustrDevice,
     LPDEVMODEW lpDevMode,
+    HWND hWnd,
     DWORD dwflags)
 {
     WCHAR awcDevice[CCHDEVICENAME];
@@ -822,7 +823,8 @@ NtUserChangeDisplaySettings(
     LONG lRet;
 
     /* Check arguments */
-    if (dwflags != CDS_VIDEOPARAMETERS)
+    if ((dwflags != CDS_VIDEOPARAMETERS) ||
+        (hWnd != NULL))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return DISP_CHANGE_BADPARAM;

@@ -328,7 +328,7 @@
     SVC_(UserCallOneParam, 2)
     SVC_(UserCallTwoParam, 3)
     SVC_(UserChangeClipboardChain, 2)
-    SVC_(UserChangeDisplaySettings, 3)
+    SVC_(UserChangeDisplaySettings, 4)
     SVC_(UserCheckImeHotKey, 2)
     SVC_(UserCheckMenuItem, 3)
     SVC_(UserChildWindowFromPointEx, 4)
