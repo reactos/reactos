@@ -84,13 +84,13 @@ MmPapAllocateRegionFromMdl (
     ListHead = CurrentList->First;
     if (Request->Type & BL_MM_REQUEST_TOP_DOWN_TYPE)
     {
-        NextEntry = ListHead->Flink;
-        TopDown = FALSE;
+        NextEntry = ListHead->Blink;
+        TopDown = TRUE;
     }
     else
     {
-        NextEntry = ListHead->Blink;
-        TopDown = TRUE;
+        NextEntry = ListHead->Flink;
+        TopDown = FALSE;
     }
 
     /* Loop through the list */

@@ -201,17 +201,17 @@ BlTblFindEntry (
     )
 {
     PVOID Entry = NULL;
-    ULONG Index = 0;
+    ULONG Index;
     BOOLEAN Result;
 
     /* Check for invalid parameters */
-    if (!(Table) || !(EntryIndex) || !(Count))
+    if (!(Table) || !(EntryIndex))
     {
         return Entry;
     }
 
     /* Loop each entry in the table */
-    while (Index < Count)
+    for (Index = 0; Index < Count;  Index++)
     {
         /* Check if this entry is filled out */
         if (Table[Index])

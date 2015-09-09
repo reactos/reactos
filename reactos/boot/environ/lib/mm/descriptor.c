@@ -751,7 +751,7 @@ MmMdFindSatisfyingRegion (
     /* Bail out if the type doesn't match */
     if (Descriptor->Type != MemoryType)
     {
-        //EarlyPrint(L"Incorrect descriptor type\r\n");
+        //EfiPrintf(L"Incorrect descriptor type: %lx %lx\r\n", Descriptor->Type, MemoryType);
         return FALSE;
     }
 
@@ -761,7 +761,7 @@ MmMdFindSatisfyingRegion (
     NewDescriptor->Type = Descriptor->Type;
     NewDescriptor->VirtualPage = VirtualPage;
     NewDescriptor->Flags = Descriptor->Flags;
-    //EarlyPrint(L"Found a matching descriptor: %08I64X with %08I64X pages\r\n", BasePage, Pages);
+    //EfiPrintf(L"Found a matching descriptor: %08I64X with %08I64X pages\r\n", BasePage, Pages);
     return TRUE;
 }
 
@@ -795,8 +795,8 @@ MmMdFreeGlobalDescriptors (
             }
 
             /* Save the links */
-            OldFlink = OldDescriptor->ListEntry.Blink;
-            OldBlink = OldDescriptor->ListEntry.Flink;
+            OldBlink = OldDescriptor->ListEntry.Blink;
+            OldFlink = OldDescriptor->ListEntry.Flink;
 
             /* Make the copy */
             *Descriptor = *OldDescriptor;
