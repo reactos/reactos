@@ -1851,6 +1851,7 @@ static char HELP[] =
 Program execution starts here.
 -----------------------------------------------------------------------------*/
 
+#if (defined(__GNUC__) || (_MSC_VER < 1900))
 char* strtok_s(char *str, const char *delim, char **ctx)
 {
     if (delim == NULL || ctx == NULL || (str == NULL && *ctx == NULL))
@@ -1874,6 +1875,7 @@ char* strtok_s(char *str, const char *delim, char **ctx)
 
     return str;
 }
+#endif
 
 int main(int argc, char **argv)
 {
