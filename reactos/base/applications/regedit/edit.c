@@ -671,7 +671,12 @@ ParseResources(HWND hwnd)
     LVITEMW item;
     INT iItem;
 
-    pFullDescriptor = &resourceValueData->List[fullResourceIndex];
+    pFullDescriptor = &resourceValueData->List[0];
+    for (i = 0; i < fullResourceIndex; i++)
+    {
+        pFullDescriptor = (PVOID)(pFullDescriptor->PartialResourceList.PartialDescriptors +
+                                  pFullDescriptor->PartialResourceList.Count);
+    }
     pPartialResourceList = &pFullDescriptor->PartialResourceList;
 
     /* Interface type */
@@ -697,7 +702,7 @@ ParseResources(HWND hwnd)
                 hwndLV = GetDlgItem(hwnd, IDC_PORT_LIST);
 
 #ifdef _M_AMD64
-                wsprintf(buffer, L"0x%16I64x", pDescriptor->u.Port.Start.QuadPart);
+                wsprintf(buffer, L"0x%016I64x", pDescriptor->u.Port.Start.QuadPart);
 #else
                 wsprintf(buffer, L"0x%08lx", pDescriptor->u.Port.Start.u.LowPart);
 #endif
@@ -761,7 +766,7 @@ ParseResources(HWND hwnd)
                 hwndLV = GetDlgItem(hwnd, IDC_MEMORY_LIST);
 
 #ifdef _M_AMD64
-                wsprintf(buffer, L"0x%16I64x", pDescriptor->u.Memory.Start.QuadPart);
+                wsprintf(buffer, L"0x%016I64x", pDescriptor->u.Memory.Start.QuadPart);
 #else
                 wsprintf(buffer, L"0x%08lx", pDescriptor->u.Memory.Start.u.LowPart);
 #endif
@@ -975,10 +980,9 @@ static VOID AddFullResourcesToList(HWND hwnd)
     ULONG i;
     INT iItem;
 
+    pFullDescriptor = &resourceValueData->List[0];
     for (i = 0; i < resourceValueData->Count; i++)
     {
-        pFullDescriptor = &resourceValueData->List[i];
-
         wsprintf(buffer, L"%lu", pFullDescriptor->BusNumber);
 
         item.mask = LVIF_TEXT;
@@ -995,6 +999,8 @@ static VOID AddFullResourcesToList(HWND hwnd)
             GetInterfaceType(pFullDescriptor->InterfaceType, buffer, 80);
             ListView_SetItemText(hwnd, iItem, 1, buffer);
         }
+        pFullDescriptor = (PVOID)(pFullDescriptor->PartialResourceList.PartialDescriptors +
+                                  pFullDescriptor->PartialResourceList.Count);
     }
 }
 
