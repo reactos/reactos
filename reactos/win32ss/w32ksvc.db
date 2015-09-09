@@ -1,6 +1,6 @@
 # NAME                                      ARG_COUNT
 #
-# Funcs order should match Windows XP 5.1.2600 SP2
+# Funcs order should match Windows 2003 Service Pack 2
 #
 NtGdiAbortDoc                                    1
 NtGdiAbortPath                                   1
@@ -234,7 +234,7 @@ NtGdiMonoBitmap                                  1
 NtGdiMoveTo                                      4
 NtGdiOffsetClipRgn                               3
 NtGdiOffsetRgn                                   3
-NtGdiOpenDCW                                     8 #7
+NtGdiOpenDCW                                     7
 NtGdiPatBlt                                      6
 NtGdiPolyPatBlt                                  5
 NtGdiPathToRegion                                1
@@ -327,7 +327,7 @@ NtUserCallNoParam                                1
 NtUserCallOneParam                               2
 NtUserCallTwoParam                               3
 NtUserChangeClipboardChain                       2
-NtUserChangeDisplaySettings                      5 #4
+NtUserChangeDisplaySettings                      4
 NtUserCheckImeHotKey                             2
 NtUserCheckMenuItem                              3
 NtUserChildWindowFromPointEx                     4
@@ -388,7 +388,7 @@ NtUserGetAsyncKeyState                           1
 NtUserGetAtomName                                2
 NtUserGetCaretBlinkTime                          0
 NtUserGetCaretPos                                1
-NtUserGetClassInfo                               5 #Ex?
+NtUserGetClassInfo                               5
 NtUserGetClassName                               3
 NtUserGetClipboardData                           2
 NtUserGetClipboardFormatName                     3
@@ -513,7 +513,7 @@ NtUserSetClipboardViewer                         1
 NtUserSetConsoleReserveKeys                      2
 NtUserSetCursor                                  1
 NtUserSetCursorContents                          2
-NtUserSetCursorIconData                          6 #4
+NtUserSetCursorIconData                          4
 NtUserSetFocus                                   1
 NtUserSetImeHotKey                               5
 NtUserSetImeInfoEx                               1

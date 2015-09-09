@@ -1696,7 +1696,6 @@ NTAPI
 NtUserChangeDisplaySettings(
     PUNICODE_STRING lpszDeviceName,
     LPDEVMODEW lpDevMode,
-    HWND hwnd,
     DWORD dwflags);
 
 BOOL

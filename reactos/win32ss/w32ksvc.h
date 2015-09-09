@@ -1,6 +1,6 @@
     // SVC_(<NAME>, <ARG_COUNT>)
     //
-    // Funcs order should match Windows XP 5.1.2600 SP2
+    // Funcs order should match Windows 2003 Service Pack 2
     // Note: these MUST be indented for the ARM assembler!
     //
     SVC_(GdiAbortDoc, 1)
@@ -235,7 +235,7 @@
     SVC_(GdiMoveTo, 4)
     SVC_(GdiOffsetClipRgn, 3)
     SVC_(GdiOffsetRgn, 3)
-    SVC_(GdiOpenDCW, 8) /* FIXME: 7 params on XP/2k3 */
+    SVC_(GdiOpenDCW, 7)
     SVC_(GdiPatBlt, 6)
     SVC_(GdiPolyPatBlt, 5)
     SVC_(GdiPathToRegion, 1)
@@ -328,7 +328,7 @@
     SVC_(UserCallOneParam, 2)
     SVC_(UserCallTwoParam, 3)
     SVC_(UserChangeClipboardChain, 2)
-    SVC_(UserChangeDisplaySettings, 4)
+    SVC_(UserChangeDisplaySettings, 3)
     SVC_(UserCheckImeHotKey, 2)
     SVC_(UserCheckMenuItem, 3)
     SVC_(UserChildWindowFromPointEx, 4)
@@ -490,7 +490,7 @@
     SVC_(UserRealWaitMessageEx, 2)
     SVC_(UserRedrawWindow, 4)
     SVC_(UserRegisterClassExWOW, 7)
-    SVC_(UserRegisterUserApiHook, 4) /* Note: 2 params on XP, 4 on 2k3 */
+    SVC_(UserRegisterUserApiHook, 4)
     SVC_(UserRegisterHotKey, 4)
     SVC_(UserRegisterRawInputDevices, 3)
     SVC_(UserRegisterTasklist, 1)
@@ -578,7 +578,7 @@
     SVC_(UserUnregisterHotKey, 2)
     SVC_(UserUpdateInputContext, 3)
     SVC_(UserUpdateInstance, 3)
-    SVC_(UserUpdateLayeredWindow, 10) /* Note: 9 params on XP, 10 on 2k3 */
+    SVC_(UserUpdateLayeredWindow, 10)
     SVC_(UserGetLayeredWindowAttributes, 4)
     SVC_(UserSetLayeredWindowAttributes, 4)
     SVC_(UserUpdatePerUserSystemParameters, 2)
@@ -674,17 +674,15 @@
     SVC_(UserSetDbgTagCount, 1)
     SVC_(UserSetRipFlags, 1)
 #endif //DBG
-    //Stray syscalls
+    //Stray syscalls (must be placed here to be correct for both checked/free builds)
     SVC_(GdiMakeObjectXferable, 2)
     SVC_(DxEngGetRedirectionBitmap, 1)
-
-    // ReactOS-specific syscalls)
+    // ReactOS-specific syscalls (must be at the end to not interfere!)
     SVC_(GdiSetViewportOrgEx, 4)
     SVC_(GdiSetWindowOrgEx, 4)
     SVC_(GdiGetFontFamilyInfo, 4)
     SVC_(GdiOffsetViewportOrgEx, 4)
     SVC_(GdiOffsetWindowOrgEx, 4)
-
     SVC_(UserGetMonitorInfo, 2)
     SVC_(UserMonitorFromPoint, 3)
     SVC_(UserMonitorFromRect, 2)

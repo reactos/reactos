@@ -65,7 +65,6 @@ IntCreateDICW(
                        iType,             // DCW 0 and ICW 1.
                        Display,
                        hspool,
-                       (PVOID) NULL,       // NULL for now.
                        (PVOID) &UMdhpdev );
 #if 0
 // Handle something other than a normal dc object.

@@ -655,7 +655,6 @@ APIENTRY
 UserChangeDisplaySettings(
    PUNICODE_STRING pustrDevice,
    LPDEVMODEW pdm,
-   HWND hwnd,
    DWORD flags,
    LPVOID lParam)
 {
@@ -815,7 +814,6 @@ APIENTRY
 NtUserChangeDisplaySettings(
     PUNICODE_STRING pustrDevice,
     LPDEVMODEW lpDevMode,
-    HWND hwnd,
     DWORD dwflags)
 {
     WCHAR awcDevice[CCHDEVICENAME];
@@ -824,8 +822,7 @@ NtUserChangeDisplaySettings(
     LONG lRet;
 
     /* Check arguments */
-    if ((dwflags != CDS_VIDEOPARAMETERS) ||
-        (hwnd != NULL))
+    if (dwflags != CDS_VIDEOPARAMETERS)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return DISP_CHANGE_BADPARAM;
@@ -904,7 +901,7 @@ NtUserChangeDisplaySettings(
     UserEnterExclusive();
 
     /* Call internal function */
-    lRet = UserChangeDisplaySettings(pustrDevice, lpDevMode, hwnd, dwflags, NULL);
+    lRet = UserChangeDisplaySettings(pustrDevice, lpDevMode, dwflags, NULL);
 
     /* Release lock */
     UserLeave();
