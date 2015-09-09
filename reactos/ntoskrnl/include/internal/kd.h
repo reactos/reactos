@@ -36,7 +36,7 @@ KdPortPutByteEx(
 
 #if defined(KDBG) || DBG
 
-#if KDBG
+#if defined(KDBG)
 typedef
 BOOLEAN
 (NTAPI *PKDBG_CLI_ROUTINE)(

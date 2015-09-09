@@ -100,7 +100,7 @@ KdpServiceDispatcher(ULONG Service,
             break;
         }
 
-#if KDBG
+#if defined(KDBG)
         /* Register KDBG CLI callback */
         case 'RbdK':
         {

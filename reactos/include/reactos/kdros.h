@@ -45,7 +45,7 @@ KdRosDumpStackFrames(
     KdSystemDebugControl('DsoR', Backtrace, Count, 0, 0, 0, 0);
 }
 
-#if KDBG
+#if defined(KDBG)
 FORCEINLINE
 VOID
 KdRosRegisterCliCallback(

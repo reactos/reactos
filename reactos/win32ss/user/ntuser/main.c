@@ -255,7 +255,7 @@ InitProcessCallback(PEPROCESS Process)
 
 #if DBG
     DbgInitDebugChannels();
-#if KDBG
+#if defined(KDBG)
     KdRosRegisterCliCallback(DbgGdiKdbgCliCallback);
 #endif
 #endif

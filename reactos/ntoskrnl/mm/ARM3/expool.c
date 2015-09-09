@@ -464,7 +464,7 @@ ExpComputePartialHashForAddress(IN PVOID BaseAddress)
 
 VOID
 NTAPI
-INIT_FUNCTION
+INIT_SECTION
 ExpSeedHotTags(VOID)
 {
     ULONG i, Key, Hash, Index;
@@ -794,7 +794,7 @@ ExpInsertPoolTracker(IN ULONG Key,
 
 VOID
 NTAPI
-INIT_FUNCTION
+INIT_SECTION
 ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
                            IN POOL_TYPE PoolType,
                            IN ULONG PoolIndex,
@@ -845,7 +845,7 @@ ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
 
 VOID
 NTAPI
-INIT_FUNCTION
+INIT_SECTION
 InitializePool(IN POOL_TYPE PoolType,
                IN ULONG Threshold)
 {
@@ -2669,7 +2669,7 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
     return Buffer;
 }
 
-#if DBG && KDBG
+#if DBG && defined(KDBG)
 
 BOOLEAN
 ExpKdbgExtPool(
