@@ -24,6 +24,7 @@ PMMPTE MmSystemPtesEnd[MaximumPtePoolTypes];
 MMPTE MmFirstFreeSystemPte[MaximumPtePoolTypes];
 ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
 ULONG MmTotalSystemPtes;
+ULONG MiNumberOfExtraSystemPdes;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

@@ -43,6 +43,8 @@ ULONG MiSpecialPoolExtraCount;
 PMMPTE MiSpecialPoolFirstPte;
 PMMPTE MiSpecialPoolLastPte;
 
+PFN_COUNT MmSpecialPagesInUse;
+PFN_COUNT MiSpecialPagesNonPaged;
 PFN_NUMBER MiSpecialPagesNonPagedMaximum;
 
 BOOLEAN MmSpecialPoolCatchOverruns = TRUE;
