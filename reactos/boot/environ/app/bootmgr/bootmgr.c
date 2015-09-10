@@ -180,8 +180,7 @@ BmFwInitializeBootDirectoryPath (
 
     /* Try to open the file */
     EfiPrintf(L"Opening: %s\r\n", FinalPath);
-#if 0
-    Status = BlFileOpen(DeviceHandle, FinalPath, 1u, &FileHandle);
+    Status = BlFileOpen(DeviceHandle, FinalPath, 1, &FileHandle);
     if (!NT_SUCCESS(Status))
     {
         BootDirectory = BcdDirectory;
@@ -189,7 +188,6 @@ BmFwInitializeBootDirectoryPath (
     }
 
     BootDirectory = L"\\EFI\\Microsoft\\Boot";
-#endif
 
 Quickie:
     /* Free all the allocations we made */
@@ -205,7 +203,7 @@ Quickie:
     /* Close the BCD file */
     if (FileHandle != -1)
     {
-        //Status = BlFileClose(FileHandle);
+        Status = BlFileClose(FileHandle);
     }
 
     /* Close the boot device */

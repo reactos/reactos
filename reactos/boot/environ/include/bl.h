@@ -265,6 +265,52 @@ typedef enum _BL_MEMORY_ATTR
 
 /* CALLBACKS *****************************************************************/
 
+struct _BL_FILE_ENTRY;
+typedef
+NTSTATUS
+(*PBL_FILE_OPEN) (
+    _In_ struct _BL_FILE_ENTRY* ParentFileEntry,
+    _In_ PWCHAR FileName,
+    _In_ ULONG OpenFlags,
+    _Out_ struct _BL_FILE_ENTRY** FileEntry
+    );
+
+typedef
+NTSTATUS
+(*PBL_FILE_CLOSE) (
+    _In_ struct _BL_FILE_ENTRY* FileEntry
+    );
+
+typedef
+NTSTATUS
+(*PBL_FILE_READ) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_FILE_WRITE) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_FILE_GET_NEXT) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_FILE_GET_INFO) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_FILE_SET_INFO) (
+    VOID
+    );
+
 typedef
 NTSTATUS
 (*PBL_FS_INIT_CALLBACK) (
@@ -280,7 +326,9 @@ NTSTATUS
 typedef
 NTSTATUS
 (*PBL_FS_MOUNT_CALLBACK) (
-    VOID
+    _In_ ULONG DeviceId,
+    _In_ ULONG Unknown,
+    _Out_ struct _BL_FILE_ENTRY** FileEntry
     );
 
 typedef
@@ -397,6 +445,73 @@ ULONG
     _In_ struct _BL_HASH_ENTRY* Entry,
     _In_ ULONG TableSize
     );
+
+struct _BL_DEVICE_ENTRY;
+struct _BL_DEVICE_DESCRIPTOR;
+struct _BL_DEVICE_INFORMATION;
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_ENUMERATE_DEVICE_CLASS) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_OPEN) (
+    _In_ struct _BL_DEVICE_DESCRIPTOR* Device,
+    _In_ struct _BL_DEVICE_ENTRY* DeviceEntry
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_CLOSE) (
+    _In_ struct _BL_DEVICE_ENTRY* DeviceEntry
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_READ) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_WRITE) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_GET_INFORMATION) (
+    _In_ struct _BL_DEVICE_ENTRY* DeviceEntry,
+    _Out_ struct _BL_DEVICE_INFORMATION* DeviceInformation
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_SET_INFORMATION) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_RESET) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_FLUSH) (
+    VOID
+    );
+
+typedef
+NTSTATUS
+(*PBL_DEVICE_CREATE) (
+    VOID
+    );
+
 
 /* DATA STRUCTURES ***********************************************************/
 
@@ -626,9 +741,28 @@ typedef struct _BL_ADDRESS_RANGE
     ULONGLONG Maximum;
 } BL_ADDRESS_RANGE, *PBL_ADDRESS_RANGE;
 
+typedef struct _BL_FILE_CALLBACKS
+{
+    PBL_FILE_OPEN Open;
+    PBL_FILE_CLOSE Close;
+    PBL_FILE_READ Read;
+    PBL_FILE_WRITE Write;
+    PBL_FILE_GET_NEXT GetNext;
+    PBL_FILE_GET_INFO GetInfo;
+    PBL_FILE_SET_INFO SetInfo;
+} BL_FILE_CALLBACKS, *PBL_FILE_CALLBACKS;
+
 typedef struct _BL_FILE_ENTRY
 {
-    ULONG DeviceIndex;
+    ULONG ReferenceCount;
+    ULONG FileId;
+    ULONG DeviceId;
+    ULONG Flags;
+    PWCHAR FilePath;
+    ULONG Unknown;
+    ULONG Unknown1;
+    ULONG Unknown2;
+    BL_FILE_CALLBACKS Callbacks;
     PBL_FILE_DESTROY_CALLBACK DestroyCallback;
 } BL_FILE_ENTRY, *PBL_FILE_ENTRY;
 
@@ -752,7 +886,7 @@ typedef struct _BL_HASH_NODE
     BL_HASH_VALUE Value;
 } BL_HASH_NODE, *PBL_HASH_NODE;
 
-typedef struct _BL_BLOCK_DEVICE
+typedef struct _BL_BLOCK_DEVICE_INFORMATION
 {
     BL_LOCAL_DEVICE_TYPE Type;
     ULONG DeviceFlags;
@@ -774,6 +908,20 @@ typedef struct _BL_BLOCK_DEVICE
             } Gpt;
         };
     } Disk;
+} BL_BLOCK_DEVICE_INFORMATION, *PBL_BLOCK_DEVICE_INFORMATION;
+
+typedef struct _BL_DEVICE_INFORMATION
+{
+    BL_DEVICE_TYPE DeviceType;
+    union
+    {
+        BL_BLOCK_DEVICE_INFORMATION BlockDeviceInfo;
+    };
+} BL_DEVICE_INFORMATION, *PBL_DEVICE_INFORMATION;
+
+typedef struct _BL_BLOCK_DEVICE
+{
+    BL_BLOCK_DEVICE_INFORMATION;
     ULONGLONG LastBlock;
     EFI_BLOCK_IO* Protocol;
     EFI_HANDLE Handle;
@@ -784,6 +932,31 @@ typedef struct _BL_PROTOCOL_HANDLE
     EFI_HANDLE Handle;
     PVOID Interface;
 } BL_PROTOCOL_HANDLE, *PBL_PROTOCOL_HANDLE;
+
+typedef struct _BL_DEVICE_CALLBACKS
+{
+    PBL_DEVICE_ENUMERATE_DEVICE_CLASS EnumerateDeviceClass;
+    PBL_DEVICE_OPEN Open;
+    PBL_DEVICE_CLOSE Close;
+    PBL_DEVICE_READ Read;
+    PBL_DEVICE_WRITE Write;
+    PBL_DEVICE_GET_INFORMATION GetInformation;
+    PBL_DEVICE_SET_INFORMATION SetInformation;
+    PBL_DEVICE_RESET Reset;
+    PBL_DEVICE_FLUSH Flush;
+    PBL_DEVICE_CREATE Create;
+} BL_DEVICE_CALLBACKS, *PBL_DEVICE_CALLBACKS;
+
+typedef struct _BL_DEVICE_ENTRY
+{
+    ULONG DeviceId;
+    ULONG Flags;
+    ULONG Unknown;
+    ULONG ReferenceCount;
+    BL_DEVICE_CALLBACKS Callbacks;
+    PVOID DeviceSpecificData;
+    PBL_DEVICE_DESCRIPTOR DeviceDescriptor;
+} BL_DEVICE_ENTRY, *PBL_DEVICE_ENTRY;
 
 /* INLINE ROUTINES ***********************************************************/
 
@@ -890,11 +1063,6 @@ BlpIoInitialize (
 
 NTSTATUS
 BlpFileInitialize (
-    VOID
-    );
-
-NTSTATUS
-FatInitialize (
     VOID
     );
 
@@ -1034,6 +1202,20 @@ EfiIsDevicePathParent (
 NTSTATUS
 BlpTimeCalibratePerformanceCounter (
     VOID
+    );
+
+/* FILESYSTEM ROUTINES *******************************************************/
+
+NTSTATUS
+FatInitialize (
+    VOID
+    );
+
+NTSTATUS
+FatMount (
+    _In_ ULONG DeviceId,
+    _In_ ULONG Unknown,
+    _Out_ PBL_FILE_ENTRY* FileEntry
     );
 
 /* UTILITY ROUTINES **********************************************************/
@@ -1293,6 +1475,27 @@ BlpDeviceOpen (
     _In_ ULONG Flags,
     _In_ ULONG Unknown,
     _Out_ PULONG DeviceId
+    );
+
+NTSTATUS
+BlDeviceGetInformation (
+    _In_ ULONG DeviceId,
+    _Out_ PBL_DEVICE_INFORMATION DeviceInformation
+    );
+
+/* FILE I/O ROUTINES *********************************************************/
+
+NTSTATUS
+BlFileClose (
+    _In_ ULONG FileId
+    );
+
+NTSTATUS
+BlFileOpen (
+    _In_ ULONG DeviceId,
+    _In_ PWCHAR FileName,
+    _In_ ULONG OpenFlags,
+    _Out_ PULONG FileId
     );
 
 /* TEXT CONSOLE ROUTINES *****************************************************/

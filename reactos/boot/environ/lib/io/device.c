@@ -12,110 +12,22 @@
 
 /* DATA VARIABLES ************************************************************/
 
-typedef struct _BL_DEVICE_INFORMATION
+typedef struct _BL_DEVICE_IO_INFORMATION
 {
     ULONG Unknown0;
     ULONG Unknown1;
     ULONG Unknown2;
     ULONG Unknown3;
-} BL_DEVICE_INFORMATION, *PBL_DEVICE_INFORMATION;
+} BL_DEVICE_IO_INFORMATION, *PBL_DEVICE_IO_INFORMATION;
 
 LIST_ENTRY DmRegisteredDevices;
 ULONG DmTableEntries;
 LIST_ENTRY DmRegisteredDevices;
 PVOID* DmDeviceTable;
 
-BL_DEVICE_INFORMATION DmDeviceIoInformation;
+BL_DEVICE_IO_INFORMATION DmDeviceIoInformation;
 
 /* FUNCTIONS *****************************************************************/
-
-struct _BL_DEVICE_ENTRY;
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_ENUMERATE_DEVICE_CLASS) (
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_OPEN) (
-    _In_ PBL_DEVICE_DESCRIPTOR Device,
-    _In_ struct _BL_DEVICE_ENTRY* DeviceEntry
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_CLOSE) (
-    _In_ struct _BL_DEVICE_ENTRY* DeviceEntry
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_READ) (
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_WRITE) (
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_GET_INFORMATION) (
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_SET_INFORMATION) (
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_RESET) (
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_FLUSH) (
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PBL_DEVICE_CREATE) (
-    VOID
-    );
-
-typedef struct _BL_DEVICE_CALLBACKS
-{
-    PBL_DEVICE_ENUMERATE_DEVICE_CLASS EnumerateDeviceClass;
-    PBL_DEVICE_OPEN Open;
-    PBL_DEVICE_CLOSE Close;
-    PBL_DEVICE_READ Read;
-    PBL_DEVICE_WRITE Write;
-    PBL_DEVICE_GET_INFORMATION GetInformation;
-    PBL_DEVICE_SET_INFORMATION SetInformation;
-    PBL_DEVICE_RESET Reset;
-    PBL_DEVICE_FLUSH Flush;
-    PBL_DEVICE_CREATE Create;
-} BL_DEVICE_CALLBACKS, *PBL_DEVICE_CALLBACKS;
-
-typedef struct _BL_DEVICE_ENTRY
-{
-    ULONG DeviceId;
-    ULONG Flags;
-    ULONG Unknown;
-    ULONG ReferenceCount;
-    BL_DEVICE_CALLBACKS Callbacks;
-    PVOID DeviceSpecificData;
-    PBL_DEVICE_DESCRIPTOR DeviceDescriptor;
-} BL_DEVICE_ENTRY, *PBL_DEVICE_ENTRY;
 
 typedef struct _BL_REGISTERED_DEVICE
 {
@@ -151,12 +63,71 @@ BlockIoOpen (
     _In_ PBL_DEVICE_ENTRY DeviceEntry
     );
 
+NTSTATUS
+BlockIoGetInformation (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _Out_ PBL_DEVICE_INFORMATION DeviceInformation
+    );
+
 BL_DEVICE_CALLBACKS BlockIoDeviceFunctionTable =
 {
     NULL,
     BlockIoOpen,
     NULL,
+    NULL,
+    NULL,
+    BlockIoGetInformation
 };
+
+NTSTATUS
+BlockIoGetInformation (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _Out_ PBL_DEVICE_INFORMATION DeviceInformation
+    )
+{
+    PBL_BLOCK_DEVICE BlockDevice;
+
+    BlockDevice = DeviceEntry->DeviceSpecificData;
+
+    RtlCopyMemory(&DeviceInformation->BlockDeviceInfo,
+                  BlockDevice,
+                  sizeof(DeviceInformation->BlockDeviceInfo));
+    DeviceInformation->DeviceType = DiskDevice;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+BlDeviceGetInformation (
+    _In_ ULONG DeviceId, 
+    _Out_ PBL_DEVICE_INFORMATION DeviceInformation
+    )
+{
+    PBL_DEVICE_ENTRY DeviceEntry;
+
+    if (!(DeviceInformation))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (DmTableEntries <= DeviceId)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    DeviceEntry = DmDeviceTable[DeviceId];
+    if (!DeviceEntry)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!(DeviceEntry->Flags & 1))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    DeviceInformation->DeviceType = DeviceEntry->DeviceDescriptor->DeviceType;
+    return DeviceEntry->Callbacks.GetInformation(DeviceEntry, DeviceInformation);
+}
 
 BOOLEAN
 BlpDeviceCompare (
@@ -879,8 +850,6 @@ BL_DEVICE_CALLBACKS VirtualDiskDeviceFunctionTable =
     NULL,
 };
 
-
-
 BL_DEVICE_CALLBACKS UdpFunctionTable =
 {
     NULL,
@@ -894,9 +863,6 @@ BL_DEVICE_CALLBACKS SerialPortFunctionTable =
     SpOpen,
     NULL,
 };
-
-
-
 
 BOOLEAN
 DeviceTableCompare (

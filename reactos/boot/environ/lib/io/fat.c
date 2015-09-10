@@ -19,6 +19,18 @@ PWCHAR FatpLongFileName;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
+FatMount (
+    _In_ ULONG DeviceId,
+    _In_ ULONG Unknown,
+    _Out_ PBL_FILE_ENTRY* FileEntry
+    )
+{
+    EfiPrintf(L"FAT Mount on Device %d TODO\r\n", DeviceId);
+    EfiStall(3000000);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
 FatInitialize (
     VOID
     )
