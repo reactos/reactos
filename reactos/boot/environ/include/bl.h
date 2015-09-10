@@ -898,7 +898,7 @@ typedef struct _BL_BLOCK_DEVICE_INFORMATION
     BL_PARTITION_TYPE PartitionType;
     ULONG BlockSize;
     ULONG Alignment;
-    ULONGLONG MaxBlock;
+    ULONGLONG LastBlock;
     ULONGLONG Offset;
     ULONG Block;
     struct
@@ -929,7 +929,7 @@ typedef struct _BL_DEVICE_INFORMATION
 typedef struct _BL_BLOCK_DEVICE
 {
     BL_BLOCK_DEVICE_INFORMATION;
-    ULONGLONG LastBlock;
+    ULONGLONG StartOffset;
     EFI_BLOCK_IO* Protocol;
     EFI_HANDLE Handle;
 } BL_BLOCK_DEVICE, *PBL_BLOCK_DEVICE;

@@ -73,16 +73,486 @@ BlockIoSetInformation (
     _Out_ PBL_DEVICE_INFORMATION DeviceInformation
     );
 
+NTSTATUS
+BlockIoRead (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_ PULONG BytesRead
+    );
+
 BL_DEVICE_CALLBACKS BlockIoDeviceFunctionTable =
 {
     NULL,
     BlockIoOpen,
     NULL,
-    NULL,
+    BlockIoRead,
     NULL,
     BlockIoGetInformation,
     BlockIoSetInformation
 };
+
+NTSTATUS
+BlockIoFirmwareWrite (
+    _In_ PBL_BLOCK_DEVICE BlockDevice,
+    _In_ PVOID Buffer,
+    _In_ ULONGLONG Block,
+    _In_ ULONGLONG BlockCount
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlockIoFirmwareRead (
+    _In_ PBL_BLOCK_DEVICE BlockDevice,
+    _In_ PVOID Buffer,
+    _In_ ULONGLONG Block,
+    _In_ ULONGLONG BlockCount
+    )
+{
+    NTSTATUS Status;
+    EFI_BLOCK_IO *BlockProtocol;
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+    ULONG FailureCount;
+
+    for (FailureCount = 0, Status = STATUS_SUCCESS;
+         FailureCount < 2 && NT_SUCCESS(Status);
+         FailureCount++)
+    {
+        BlockProtocol = BlockDevice->Protocol;
+
+        OldMode = CurrentExecutionContext->Mode;
+        if (CurrentExecutionContext->Mode != 1)
+        {
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
+
+        EfiPrintf(L"EFI Reading BLOCK %d off media %lx (%d blocks)\r\n",
+                 Block, BlockProtocol->Media->MediaId, BlockCount);
+        EfiStatus = BlockProtocol->ReadBlocks(BlockProtocol,
+                                              BlockProtocol->Media->MediaId,
+                                              Block,
+                                              BlockProtocol->Media->BlockSize * BlockCount,
+                                              Buffer);
+        if (EfiStatus == EFI_SUCCESS)
+        {
+            EfiPrintf(L"EFI Read complete into buffer\r\n");
+            EfiPrintf(L"Buffer data: %lx %lx %lx %lx\r\n", *(PULONG)Buffer, *((PULONG)Buffer + 1), *((PULONG)Buffer + 2), *((PULONG)Buffer + 3));
+        }
+
+        if (OldMode != 1)
+        {
+            BlpArchSwitchContext(OldMode);
+        }
+
+        Status = EfiGetNtStatusCode(EfiStatus);
+        if (Status != STATUS_MEDIA_CHANGED)
+        {
+            break;
+        }
+
+        EfiCloseProtocol(BlockDevice->Handle, &EfiBlockIoProtocol);
+
+        Status = EfiOpenProtocol(BlockDevice->Handle,
+                                 &EfiBlockIoProtocol,
+                                 (PVOID*)BlockDevice->Protocol);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+BlockIopFirmwareOperation (
+    PBL_DEVICE_ENTRY DeviceEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONGLONG Block,
+    _In_ ULONGLONG BlockCount,
+    _In_ ULONG OperationType
+    )
+{
+    ULONG FailureCount;
+    PBL_BLOCK_DEVICE BlockDevice;
+    NTSTATUS Status;
+
+    BlockDevice = DeviceEntry->DeviceSpecificData;
+
+    if (OperationType == 1)
+    {
+        for (FailureCount = 0; FailureCount < 3; FailureCount++)
+        {
+            Status = BlockIoFirmwareWrite(BlockDevice, Buffer, Block, BlockCount);
+            if (Status >= 0)
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        for (FailureCount = 0; FailureCount < 3; FailureCount++)
+        {
+            Status = BlockIoFirmwareRead(BlockDevice, Buffer, Block, BlockCount);
+            if (Status >= 0)
+            {
+                break;
+            }
+        }
+    }
+    return Status;
+}
+
+NTSTATUS
+BlockIopFreeAlignedBuffer (
+    _Inout_ PVOID* Buffer,
+    _Inout_ PULONG BufferSize
+    )
+{
+    NTSTATUS Status;
+
+    if (*BufferSize)
+    {
+        EfiPrintf(L"Aligned free not yet implemented\r\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+        //Status = MmPapFreePages(*Buffer, 1);
+
+        *Buffer = NULL;
+        *BufferSize = 0;
+    }
+    else
+    {
+        Status = STATUS_SUCCESS;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+BlockIopAllocateAlignedBuffer (
+    _Inout_ PVOID* Buffer,
+    _Inout_ PULONG BufferSize,
+    _In_ ULONG Size,
+    _In_ ULONG Alignment
+    )
+{
+    NTSTATUS Status;
+
+    if (!Alignment)
+    {
+        ++Alignment;
+    }
+
+    Status = STATUS_SUCCESS;
+    if ((Size > *BufferSize) || ((Alignment - 1) & (ULONG_PTR)*Buffer))
+    {
+        BlockIopFreeAlignedBuffer(Buffer, BufferSize);
+
+        *BufferSize = ROUND_TO_PAGES(Size);
+
+        Status = MmPapAllocatePagesInRange(Buffer,
+                                           BlLoaderDeviceMemory,
+                                           *BufferSize >> PAGE_SHIFT,
+                                           0,
+                                           Alignment >> PAGE_SHIFT,
+                                           NULL,
+                                           0);
+        if (!NT_SUCCESS(Status))
+        {
+            *BufferSize = 0;
+        }
+    }
+
+    return Status;
+}
+
+NTSTATUS
+BlockIopReadUsingPrefetch (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG BlockCount
+    )
+{
+    EfiPrintf(L"No prefetch support\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlockIopOperation (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG BlockCount,
+    _In_ ULONG OperationType
+    )
+{
+    PBL_BLOCK_DEVICE BlockDevice;
+    ULONG BufferSize, Alignment;
+    ULONGLONG Offset;
+    NTSTATUS Status;
+
+    BlockDevice = DeviceEntry->DeviceSpecificData;
+    BufferSize = BlockDevice->BlockSize * BlockCount;
+    Offset = BlockDevice->Block + BlockDevice->StartOffset;
+    if ((BlockDevice->LastBlock + 1) < (BlockDevice->Block + BlockCount))
+    {
+        EfiPrintf(L"Read past end of device\r\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Alignment = BlockDevice->Alignment;
+    if (!Alignment || !((Alignment - 1) & (ULONG_PTR)Buffer))
+    {
+        Status = BlockIopFirmwareOperation(DeviceEntry,
+                                           Buffer,
+                                           Offset,
+                                           BlockCount,
+                                           OperationType);
+        if (!NT_SUCCESS(Status))
+        {
+            EfiPrintf(L"EFI op failed: %lx\r\n", Status);
+            return Status;
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    EfiPrintf(L"Firmware alignment fixup required\r\n");
+    Status = BlockIopAllocateAlignedBuffer(&BlockIopAlignedBuffer,
+                                           &BlockIopAlignedBufferSize,
+                                           BufferSize,
+                                           BlockDevice->Alignment);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"No memory for align\r\n");
+        return STATUS_NO_MEMORY;
+    }
+
+    if (OperationType == 1)
+    {
+        RtlCopyMemory(BlockIopAlignedBuffer, Buffer, BufferSize);
+    }
+
+    Status = BlockIopFirmwareOperation(DeviceEntry,
+                                       BlockIopAlignedBuffer,
+                                       Offset,
+                                       BlockCount,
+                                       OperationType);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    if (!OperationType)
+    {
+        RtlCopyMemory(Buffer, BlockIopAlignedBuffer, BufferSize);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+BlockIopReadWriteVirtualDevice (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG Size,
+    _In_ ULONG Operation,
+    _Out_ PULONG BytesRead
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlockIopReadPhysicalDevice (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_ PULONG BytesRead
+    )
+{
+    PBL_BLOCK_DEVICE BlockDevice;
+    PVOID ReadBuffer; // edi@1
+    ULONGLONG OffsetEnd, AlignedOffsetEnd, Offset;
+    NTSTATUS Status;
+
+    BlockDevice = DeviceEntry->DeviceSpecificData;
+    ReadBuffer = Buffer;
+    OffsetEnd = Size + BlockDevice->Offset;
+    if (OffsetEnd < Size)
+    {
+        OffsetEnd = -1;
+        return STATUS_INTEGER_OVERFLOW;
+    }
+
+    AlignedOffsetEnd = ~(BlockDevice->BlockSize - 1) & (OffsetEnd + BlockDevice->BlockSize - 1);
+    if (AlignedOffsetEnd < OffsetEnd)
+    {
+        return STATUS_INTEGER_OVERFLOW;
+    }
+
+    if ((BlockDevice->Offset) || (Size != AlignedOffsetEnd))
+    {
+        Status = BlockIopAllocateAlignedBuffer(&BlockIopReadBlockBuffer,
+                                               &BlockIopReadBlockBufferSize,
+                                               AlignedOffsetEnd,
+                                               BlockDevice->Alignment);
+        if (!NT_SUCCESS(Status))
+        {
+            EfiPrintf(L"Failed to allocate buffer: %lx\r\n", Status);
+            return Status;
+        }
+
+        ReadBuffer = BlockIopReadBlockBuffer;
+    }
+
+    Offset = AlignedOffsetEnd / BlockDevice->BlockSize;
+
+    if (BlockDevice->Unknown & 2)
+    {
+        Status = BlockIopReadUsingPrefetch(DeviceEntry,
+                                           ReadBuffer,
+                                           AlignedOffsetEnd / BlockDevice->BlockSize);
+        if (NT_SUCCESS(Status))
+        {
+            goto ReadComplete;
+        }
+    }
+
+    Status = BlockIopOperation(DeviceEntry, ReadBuffer, Offset, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"Block I/O failed:%lx\r\n", Status);
+        return Status;
+    }
+
+    BlockDevice->Block += Offset;
+
+ReadComplete:
+    if (ReadBuffer != Buffer)
+    {
+        RtlCopyMemory(Buffer,
+                      (PVOID)((ULONG_PTR)ReadBuffer +
+                              (ULONG_PTR)BlockDevice->Offset),
+                      Size);
+    }
+
+    if (BytesRead)
+    {
+        *BytesRead = Size;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+BlockIopBlockInformationCheck (
+    _In_ PBL_BLOCK_DEVICE BlockDevice,
+    _In_opt_ PULONG DesiredSize,
+    _Out_opt_ PULONG Size,
+    _Out_opt_ PULONG OutputAdjustedSize
+    )
+{
+    ULONG RealSize;
+    ULONGLONG Offset, LastOffset, RemainingOffset, MaxOffset;
+    NTSTATUS Status;
+
+    RealSize = 0;
+
+    Offset = (BlockDevice->Offset * BlockDevice->BlockSize) + BlockDevice->Block;
+
+    if (Offset > ((BlockDevice->LastBlock + 1) * BlockDevice->BlockSize))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    LastOffset = (BlockDevice->LastBlock * BlockDevice->BlockSize) + BlockDevice->BlockSize - 1;
+
+    MaxOffset = BlockDevice->LastBlock;
+    if (MaxOffset < BlockDevice->BlockSize)
+    {
+        MaxOffset = BlockDevice->BlockSize;
+    }
+
+    if (LastOffset < MaxOffset)
+    {
+
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    if (Offset > LastOffset)
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    RemainingOffset = LastOffset - Offset + 1;
+
+    if (DesiredSize != FALSE)
+    {
+        RealSize = *DesiredSize;
+    }
+    else
+    {
+        RealSize = ULONG_MAX;
+    }
+
+    if (RemainingOffset < RealSize)
+    {
+        if (Size == FALSE)
+        {
+            RealSize = 0;
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quickie;
+        }
+
+        RealSize = RemainingOffset;
+    }
+
+    Status = STATUS_SUCCESS;
+
+Quickie:
+    if (Size)
+    {
+        *Size = RealSize;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+BlockIoRead (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_ PULONG BytesRead
+    )
+{
+    PBL_BLOCK_DEVICE BlockDevice;
+    NTSTATUS Status;
+
+    BlockDevice = DeviceEntry->DeviceSpecificData;
+
+    Status = BlockIopBlockInformationCheck(BlockDevice, &Size, BytesRead, &Size);
+    if (NT_SUCCESS(Status))
+    {
+        if (BlockDevice->DeviceFlags & 4)
+        {
+            Status = BlockIopReadWriteVirtualDevice(DeviceEntry, Buffer, Size, 0, BytesRead);
+        }
+        else
+        {
+            Status = BlockIopReadPhysicalDevice(DeviceEntry, Buffer, Size, BytesRead);
+        }
+    }
+    else if (BytesRead)
+    {
+        *BytesRead = 0;
+    }
+    return Status;
+}
 
 NTSTATUS
 BlockIoSetInformation (
@@ -96,8 +566,9 @@ BlockIoSetInformation (
     BlockDevice = DeviceEntry->DeviceSpecificData;
 
     Offset = DeviceInformation->BlockDeviceInfo.Block * BlockDevice->BlockSize + DeviceInformation->BlockDeviceInfo.Offset;
-    if (Offset > ((BlockDevice->MaxBlock + 1) * BlockDevice->BlockSize - 1))
+    if (Offset > ((BlockDevice->LastBlock + 1) * BlockDevice->BlockSize - 1))
     {
+        EfiPrintf(L"Invalid offset\r\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -159,7 +630,7 @@ BlDeviceSetInformation (
 
 NTSTATUS
 BlDeviceGetInformation (
-    _In_ ULONG DeviceId, 
+    _In_ ULONG DeviceId,
     _Out_ PBL_DEVICE_INFORMATION DeviceInformation
     )
 {
@@ -198,33 +669,37 @@ BlDeviceRead (
     _Out_ PULONG BytesRead
     )
 {
-    PBL_DEVICE_ENTRY DeviceEntry; // ecx@3
+    PBL_DEVICE_ENTRY DeviceEntry;
     NTSTATUS Status;
     ULONG BytesTransferred;
 
-    if (Buffer
-        && DmTableEntries > DeviceId
-        && (DeviceEntry = DmDeviceTable[DeviceId]) != 0
-        && DeviceEntry->Flags & 1
-        && DeviceEntry->Flags & 2)
+    if (!(Buffer) || (DmTableEntries <= DeviceId))
     {
-        EfiPrintf(L"Calling read...\r\n");
-        Status = DeviceEntry->Callbacks.Read(DeviceEntry, Buffer, Size, &BytesTransferred);
-
-        if (!DeviceEntry->Unknown)
-        {
-            DmDeviceIoInformation.ReadCount += BytesTransferred;
-        }
-
-        if (BytesRead)
-        {
-            *BytesRead = BytesTransferred;
-        }
+        return STATUS_INVALID_PARAMETER;
     }
-    else
+
+    DeviceEntry = DmDeviceTable[DeviceId];
+    if (!DeviceEntry)
     {
-        Status = STATUS_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
     }
+
+    if (!(DeviceEntry->Flags & 1) || !(DeviceEntry->Flags & 2))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = DeviceEntry->Callbacks.Read(DeviceEntry, Buffer, Size, &BytesTransferred);
+    if (!DeviceEntry->Unknown)
+    {
+        DmDeviceIoInformation.ReadCount += BytesTransferred;
+    }
+
+    if (BytesRead)
+    {
+        *BytesRead = BytesTransferred;
+    }
+
     return Status;
 }
 
@@ -241,21 +716,21 @@ BlDeviceReadAtOffset (
     BL_DEVICE_INFORMATION DeviceInformation;
 
     Status = BlDeviceGetInformation(DeviceId, &DeviceInformation);
-    if (Status >= 0)
+    if (!NT_SUCCESS(Status))
     {
-        DeviceInformation.BlockDeviceInfo.Block = Offset / DeviceInformation.BlockDeviceInfo.BlockSize;
-        DeviceInformation.BlockDeviceInfo.Offset = Offset % DeviceInformation.BlockDeviceInfo.BlockSize;
-        Status = BlDeviceSetInformation(DeviceId, &DeviceInformation);
-
-        if (NT_SUCCESS(Status))
-        {
-            EfiPrintf(L"Block: %d Offset: %d\r\n", DeviceInformation.BlockDeviceInfo.Block, DeviceInformation.BlockDeviceInfo.Offset);
-            Status = BlDeviceRead(DeviceId, Buffer, Size, BytesRead);
-        }
+        return Status;
     }
+
+    DeviceInformation.BlockDeviceInfo.Block = Offset / DeviceInformation.BlockDeviceInfo.BlockSize;
+    DeviceInformation.BlockDeviceInfo.Offset = Offset % DeviceInformation.BlockDeviceInfo.BlockSize;
+    Status = BlDeviceSetInformation(DeviceId, &DeviceInformation);
+    if (NT_SUCCESS(Status))
+    {
+        Status = BlDeviceRead(DeviceId, Buffer, Size, BytesRead);
+    }
+
     return Status;
 }
-
 
 BOOLEAN
 BlpDeviceCompare (
@@ -1633,7 +2108,7 @@ BlpDeviceInitialize (
     {
         /* Clear it */
         RtlZeroMemory(DmDeviceTable, DmTableEntries * sizeof(PVOID));
-#if 0
+#if BL_BITLOCKER_SUPPORT
         /* Initialize BitLocker support */
         Status = FvebInitialize();
 #else

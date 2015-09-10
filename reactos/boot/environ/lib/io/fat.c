@@ -30,6 +30,7 @@ FatMount (
     ULONG UnknownFlag;
     NTSTATUS Status;
     PACKED_BOOT_SECTOR FatBootSector;
+    BIOS_PARAMETER_BLOCK BiosBlock;
 
     EfiPrintf(L"FAT Mount on Device %d\r\n", DeviceId);
 
@@ -58,7 +59,21 @@ FatMount (
         return Status;
     }
 
+    FatUnpackBios(&BiosBlock, &FatBootSector.PackedBpb);
+
     EfiPrintf(L"Drive read\r\n");
+
+    EfiPrintf(L"Jump: %lx Bytes Per Sector: %d Sectors Per Cluster: %d Reserved: %d Fats: %d Sectors: %d Large Sectors: %d Media: %lx RootEntries: %d\r\n",
+        FatBootSector.Jump[0],
+        BiosBlock.BytesPerSector,
+        BiosBlock.SectorsPerCluster,
+        BiosBlock.ReservedSectors,
+        BiosBlock.Fats,
+        BiosBlock.Sectors,
+        BiosBlock.LargeSectors,
+        BiosBlock.Media,
+        BiosBlock.RootEntries);
+
     EfiStall(3000000);
     return STATUS_NOT_IMPLEMENTED;
 }
