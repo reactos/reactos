@@ -3929,7 +3929,11 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
 
                 case WM_RBUTTONDBLCLK:
                 case WM_RBUTTONDOWN:
-                     if (!(wFlags & TPM_RIGHTBUTTON)) break;
+                     if (!(wFlags & TPM_RIGHTBUTTON))
+                     {
+                        if ( msg.message == WM_RBUTTONDBLCLK ) fInsideMenuLoop = FALSE; // Must exit or loop forever!
+                        break;
+                     }
                     /* fall through */
                 case WM_LBUTTONDBLCLK:
                 case WM_LBUTTONDOWN:
@@ -3937,7 +3941,8 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     /* Else, end menu tracking */
                     fRemove = MENU_ButtonDown(&mt, pmMouse, wFlags);
                     fInsideMenuLoop = fRemove;
-                    if (msg.message == WM_LBUTTONDBLCLK) fInsideMenuLoop = FALSE; // Must exit or loop forever!
+                    if ( msg.message == WM_LBUTTONDBLCLK ||
+                         msg.message == WM_RBUTTONDBLCLK ) fInsideMenuLoop = FALSE; // Must exit or loop forever!
                     break;
 
                 case WM_RBUTTONUP:
