@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "bl.h"
-#include "..\drivers\filesystems\fs_rec\fs_rec.h"
+#include "../drivers/filesystems/fs_rec/fs_rec.h"
 
 /* DATA VARIABLES ************************************************************/
 
