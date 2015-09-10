@@ -19,6 +19,8 @@ TestMmAllocatePagesForMdl(VOID)
     PMDL Mdls[32];
     PVOID SystemVas[32];
     ULONG i;
+    PPFN_NUMBER MdlPages;
+    ULONG MdlPageCount;
 
     LowAddress.QuadPart = 0;
     HighAddress.QuadPart = -1;
@@ -34,6 +36,14 @@ TestMmAllocatePagesForMdl(VOID)
     ok(MmGetMdlByteCount(Mdl) == 2 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
     ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
     ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
+    MdlPages = MmGetMdlPfnArray(Mdl);
+    MdlPageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Mdl), MmGetMdlByteCount(Mdl));
+    ok(MdlPageCount == 2 * 1024 * 1024 / PAGE_SIZE, "MdlPageCount = %lu\n", MdlPageCount);
+    for (i = 0; i < MdlPageCount; i++)
+    {
+        ok(MdlPages[i] != 0 && MdlPages[i] != (PFN_NUMBER)-1,
+           "MdlPages[%lu] = 0x%I64x\n", i, (ULONGLONG)MdlPages[i]);
+    }
     MmFreePagesFromMdl(Mdl);
     ExFreePoolWithTag(Mdl, 0);
 
@@ -105,6 +115,14 @@ TestMmAllocatePagesForMdl(VOID)
         ok(MmGetMdlByteCount(Mdl) != 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
         ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
         ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
+        MdlPages = MmGetMdlPfnArray(Mdl);
+        MdlPageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Mdl), MmGetMdlByteCount(Mdl));
+        ok(MdlPageCount < 2UL * 1024 * 1024 * 1024 / PAGE_SIZE, "MdlPageCount = %lu\n", MdlPageCount);
+        for (i = 0; i < MdlPageCount; i++)
+        {
+            ok(MdlPages[i] != 0 && MdlPages[i] != (PFN_NUMBER)-1,
+               "MdlPages[%lu] = 0x%I64x\n", i, (ULONGLONG)MdlPages[i]);
+        }
         SystemVa = MmMapLockedPagesSpecifyCache(Mdl,
                                                 KernelMode,
                                                 MmCached,
