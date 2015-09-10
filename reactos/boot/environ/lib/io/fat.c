@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "bl.h"
+#include "..\drivers\filesystems\fs_rec\fs_rec.h"
 
 /* DATA VARIABLES ************************************************************/
 
@@ -25,7 +26,39 @@ FatMount (
     _Out_ PBL_FILE_ENTRY* FileEntry
     )
 {
-    EfiPrintf(L"FAT Mount on Device %d TODO\r\n", DeviceId);
+    BL_DEVICE_INFORMATION DeviceInformation;
+    ULONG UnknownFlag;
+    NTSTATUS Status;
+    PACKED_BOOT_SECTOR FatBootSector;
+
+    EfiPrintf(L"FAT Mount on Device %d\r\n", DeviceId);
+
+    /* Capture thing */
+    BlDeviceGetInformation(DeviceId, &DeviceInformation);
+    UnknownFlag = DeviceInformation.BlockDeviceInfo.Unknown;
+
+    /* Set thing to 1 */
+    DeviceInformation.BlockDeviceInfo.Unknown |= 1;
+    BlDeviceSetInformation(DeviceId, &DeviceInformation);
+
+    /* Read the boot sector */
+    EfiPrintf(L"Reading fat boot sector...\r\n");
+    Status = BlDeviceReadAtOffset(DeviceId,
+                                  sizeof(FatBootSector),
+                                  0,
+                                  &FatBootSector,
+                                  NULL);
+
+    /* Restore thing back */
+    DeviceInformation.BlockDeviceInfo.Unknown = UnknownFlag;
+    BlDeviceSetInformation(DeviceId, &DeviceInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"Failed reading drive: %lx\r\n", Status);
+        return Status;
+    }
+
+    EfiPrintf(L"Drive read\r\n");
     EfiStall(3000000);
     return STATUS_NOT_IMPLEMENTED;
 }

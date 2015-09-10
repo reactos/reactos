@@ -472,7 +472,10 @@ NTSTATUS
 typedef
 NTSTATUS
 (*PBL_DEVICE_READ) (
-    VOID
+    _In_ struct _BL_DEVICE_ENTRY* DeviceEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_ PULONG BytesRead
     );
 
 typedef
@@ -491,7 +494,8 @@ NTSTATUS
 typedef
 NTSTATUS
 (*PBL_DEVICE_SET_INFORMATION) (
-    VOID
+    _In_ struct _BL_DEVICE_ENTRY* DeviceEntry,
+    _In_ struct _BL_DEVICE_INFORMATION* DeviceInformation
     );
 
 typedef
@@ -894,6 +898,9 @@ typedef struct _BL_BLOCK_DEVICE_INFORMATION
     BL_PARTITION_TYPE PartitionType;
     ULONG BlockSize;
     ULONG Alignment;
+    ULONGLONG MaxBlock;
+    ULONGLONG Offset;
+    ULONG Block;
     struct
     {
         union
@@ -1481,6 +1488,21 @@ NTSTATUS
 BlDeviceGetInformation (
     _In_ ULONG DeviceId,
     _Out_ PBL_DEVICE_INFORMATION DeviceInformation
+    );
+
+NTSTATUS
+BlDeviceSetInformation (
+    _In_ ULONG DeviceId,
+    _In_ PBL_DEVICE_INFORMATION DeviceInformation
+    );
+
+NTSTATUS
+BlDeviceReadAtOffset (
+    _In_ ULONG DeviceId,
+    _In_ ULONG Size,
+    _In_ ULONGLONG Offset,
+    _In_ PVOID Buffer,
+    _Out_ PULONG BytesRead
     );
 
 /* FILE I/O ROUTINES *********************************************************/

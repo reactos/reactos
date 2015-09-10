@@ -14,10 +14,8 @@
 
 typedef struct _BL_DEVICE_IO_INFORMATION
 {
-    ULONG Unknown0;
-    ULONG Unknown1;
-    ULONG Unknown2;
-    ULONG Unknown3;
+    ULONGLONG ReadCount;
+    ULONGLONG WriteCount;
 } BL_DEVICE_IO_INFORMATION, *PBL_DEVICE_IO_INFORMATION;
 
 LIST_ENTRY DmRegisteredDevices;
@@ -69,6 +67,12 @@ BlockIoGetInformation (
     _Out_ PBL_DEVICE_INFORMATION DeviceInformation
     );
 
+NTSTATUS
+BlockIoSetInformation (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _Out_ PBL_DEVICE_INFORMATION DeviceInformation
+    );
+
 BL_DEVICE_CALLBACKS BlockIoDeviceFunctionTable =
 {
     NULL,
@@ -76,8 +80,32 @@ BL_DEVICE_CALLBACKS BlockIoDeviceFunctionTable =
     NULL,
     NULL,
     NULL,
-    BlockIoGetInformation
+    BlockIoGetInformation,
+    BlockIoSetInformation
 };
+
+NTSTATUS
+BlockIoSetInformation (
+    _In_ PBL_DEVICE_ENTRY DeviceEntry,
+    _Out_ PBL_DEVICE_INFORMATION DeviceInformation
+    )
+{
+    PBL_BLOCK_DEVICE BlockDevice;
+    ULONGLONG Offset;
+
+    BlockDevice = DeviceEntry->DeviceSpecificData;
+
+    Offset = DeviceInformation->BlockDeviceInfo.Block * BlockDevice->BlockSize + DeviceInformation->BlockDeviceInfo.Offset;
+    if (Offset > ((BlockDevice->MaxBlock + 1) * BlockDevice->BlockSize - 1))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    BlockDevice->Block = Offset / BlockDevice->BlockSize;
+    BlockDevice->Offset = Offset % BlockDevice->BlockSize;
+    BlockDevice->Unknown = DeviceInformation->BlockDeviceInfo.Unknown;
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 BlockIoGetInformation (
@@ -94,6 +122,39 @@ BlockIoGetInformation (
                   sizeof(DeviceInformation->BlockDeviceInfo));
     DeviceInformation->DeviceType = DiskDevice;
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+BlDeviceSetInformation (
+    _In_ ULONG DeviceId,
+    _Out_ PBL_DEVICE_INFORMATION DeviceInformation
+    )
+{
+    PBL_DEVICE_ENTRY DeviceEntry;
+
+    if (!(DeviceInformation))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (DmTableEntries <= DeviceId)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    DeviceEntry = DmDeviceTable[DeviceId];
+    if (!DeviceEntry)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!(DeviceEntry->Flags & 1))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    DeviceInformation->DeviceType = DeviceEntry->DeviceDescriptor->DeviceType;
+    return DeviceEntry->Callbacks.SetInformation(DeviceEntry, DeviceInformation);
 }
 
 NTSTATUS
@@ -128,6 +189,73 @@ BlDeviceGetInformation (
     DeviceInformation->DeviceType = DeviceEntry->DeviceDescriptor->DeviceType;
     return DeviceEntry->Callbacks.GetInformation(DeviceEntry, DeviceInformation);
 }
+
+NTSTATUS
+BlDeviceRead (
+    _In_ ULONG DeviceId,
+    _In_ PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_ PULONG BytesRead
+    )
+{
+    PBL_DEVICE_ENTRY DeviceEntry; // ecx@3
+    NTSTATUS Status;
+    ULONG BytesTransferred;
+
+    if (Buffer
+        && DmTableEntries > DeviceId
+        && (DeviceEntry = DmDeviceTable[DeviceId]) != 0
+        && DeviceEntry->Flags & 1
+        && DeviceEntry->Flags & 2)
+    {
+        EfiPrintf(L"Calling read...\r\n");
+        Status = DeviceEntry->Callbacks.Read(DeviceEntry, Buffer, Size, &BytesTransferred);
+
+        if (!DeviceEntry->Unknown)
+        {
+            DmDeviceIoInformation.ReadCount += BytesTransferred;
+        }
+
+        if (BytesRead)
+        {
+            *BytesRead = BytesTransferred;
+        }
+    }
+    else
+    {
+        Status = STATUS_INVALID_PARAMETER;
+    }
+    return Status;
+}
+
+NTSTATUS
+BlDeviceReadAtOffset (
+    _In_ ULONG DeviceId,
+    _In_ ULONG Size,
+    _In_ ULONGLONG Offset,
+    _In_ PVOID Buffer,
+    _Out_ PULONG BytesRead
+    )
+{
+    NTSTATUS Status;
+    BL_DEVICE_INFORMATION DeviceInformation;
+
+    Status = BlDeviceGetInformation(DeviceId, &DeviceInformation);
+    if (Status >= 0)
+    {
+        DeviceInformation.BlockDeviceInfo.Block = Offset / DeviceInformation.BlockDeviceInfo.BlockSize;
+        DeviceInformation.BlockDeviceInfo.Offset = Offset % DeviceInformation.BlockDeviceInfo.BlockSize;
+        Status = BlDeviceSetInformation(DeviceId, &DeviceInformation);
+
+        if (NT_SUCCESS(Status))
+        {
+            EfiPrintf(L"Block: %d Offset: %d\r\n", DeviceInformation.BlockDeviceInfo.Block, DeviceInformation.BlockDeviceInfo.Offset);
+            Status = BlDeviceRead(DeviceId, Buffer, Size, BytesRead);
+        }
+    }
+    return Status;
+}
+
 
 BOOLEAN
 BlpDeviceCompare (
@@ -1496,10 +1624,8 @@ BlpDeviceInitialize (
     InitializeListHead(&DmRegisteredDevices);
 
     /* Initialize device information */
-    DmDeviceIoInformation.Unknown0 = 0;
-    DmDeviceIoInformation.Unknown1 = 0;
-    DmDeviceIoInformation.Unknown2 = 0;
-    DmDeviceIoInformation.Unknown3 = 0;
+    DmDeviceIoInformation.ReadCount = 0;
+    DmDeviceIoInformation.WriteCount = 0;
 
     /* Allocate the device table */
     DmDeviceTable = BlMmAllocateHeap(DmTableEntries * sizeof(PVOID));
