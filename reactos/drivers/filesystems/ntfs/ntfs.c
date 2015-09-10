@@ -31,6 +31,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, DriverEntry)
+#pragma alloc_text(INIT, NtfsInitializeFunctionPointers)
+#endif
+
 /* GLOBALS *****************************************************************/
 
 PNTFS_GLOBAL_DATA NtfsGlobalData = NULL;
@@ -44,7 +49,7 @@ PNTFS_GLOBAL_DATA NtfsGlobalData = NULL;
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
-INIT_FUNCTION
+INIT_SECTION
 NTSTATUS
 NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
@@ -123,7 +128,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  *           DriverObject = object describing this driver
  * RETURNS: Nothing
  */
-INIT_FUNCTION
+INIT_SECTION
 VOID
 NTAPI
 NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject)

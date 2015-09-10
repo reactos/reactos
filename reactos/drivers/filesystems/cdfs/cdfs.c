@@ -32,6 +32,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, DriverEntry)
+#endif
+
 /* GLOBALS ******************************************************************/
 
 PCDFS_GLOBAL_DATA CdfsGlobalData;
@@ -39,7 +43,7 @@ PCDFS_GLOBAL_DATA CdfsGlobalData;
 
 /* FUNCTIONS ****************************************************************/
 
-INIT_FUNCTION
+INIT_SECTION
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)

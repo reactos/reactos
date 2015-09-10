@@ -32,6 +32,36 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS
+NTAPI
+DriverEntry(
+    PDRIVER_OBJECT DriverObject,
+    PUNICODE_STRING RegistryPath
+);
+
+NTSTATUS
+DfsDriverEntry(
+    PDRIVER_OBJECT DriverObject,
+    PUNICODE_STRING RegistryPath
+);
+
+VOID
+MupInitializeData(
+    VOID
+);
+
+VOID
+MupInitializeVcb(
+    PMUP_VCB Vcb
+);
+
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, DriverEntry)
+#pragma alloc_text(INIT, DfsDriverEntry)
+#pragma alloc_text(INIT, MupInitializeData)
+#pragma alloc_text(INIT, MupInitializeVcb)
+#endif
+
 ERESOURCE MupGlobalLock;
 ERESOURCE MupPrefixTableLock;
 ERESOURCE MupCcbListLock;
@@ -53,9 +83,9 @@ NTSTATUS MupOrderedErrorList[] = { STATUS_UNSUCCESSFUL,
 
 /* FUNCTIONS ****************************************************************/
 
-INIT_FUNCTION
+INIT_SECTION
 VOID
-MupInitializeData()
+MupInitializeData(VOID)
 {
     ExInitializeResourceLite(&MupGlobalLock);
     ExInitializeResourceLite(&MupPrefixTableLock);
@@ -79,7 +109,7 @@ MupUninitializeData()
   ExDeleteResourceLite(&MupVcbLock);
 }
 
-INIT_FUNCTION
+INIT_SECTION
 VOID
 MupInitializeVcb(PMUP_VCB Vcb)
 {
@@ -2522,7 +2552,7 @@ MupUnload(PDRIVER_OBJECT DriverObject)
     MupUninitializeData();
 }
 
-INIT_FUNCTION
+INIT_SECTION
 NTSTATUS
 DfsDriverEntry(PDRIVER_OBJECT DriverObject,
                PUNICODE_STRING RegistryPath)
@@ -2541,7 +2571,7 @@ DfsDriverEntry(PDRIVER_OBJECT DriverObject,
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
-INIT_FUNCTION
+INIT_SECTION
 NTSTATUS
 NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,

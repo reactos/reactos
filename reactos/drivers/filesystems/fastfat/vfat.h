@@ -8,10 +8,8 @@
 
 #ifdef __GNUC__
 #define INIT_SECTION __attribute__((section ("INIT")))
-#define INIT_FUNCTION INIT_SECTION
 #else
 #define INIT_SECTION /* Done via alloc_text for MSC */
-#define INIT_FUNCTION INIT_SECTION
 #endif
 
 #define USE_ROS_CC_AND_FS
