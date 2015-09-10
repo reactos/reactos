@@ -234,6 +234,12 @@ HasDriveLetter(
     IN PDEVICE_INFORMATION DeviceInformation
 );
 
+INIT_SECTION
+BOOLEAN
+MountmgrReadNoAutoMount(
+    IN PUNICODE_STRING RegistryPath
+);
+
 /* database.c */
 
 extern PWSTR DatabasePath;
