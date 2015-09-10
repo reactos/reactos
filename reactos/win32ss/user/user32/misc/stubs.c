@@ -41,7 +41,7 @@ VOID
 WINAPI
 SetDebugErrorLevel( DWORD dwLevel )
 {
-    DbgPrint("(%lu): stub\n", dwLevel);
+    FIXME("(%lu): stub\n", dwLevel);
 }
 
 
