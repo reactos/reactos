@@ -29,6 +29,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MountmgrReadNoAutoMount)
+#pragma alloc_text(INIT, DriverEntry)
+#endif
+
 /* FIXME */
 GUID MountedDevicesGuid = {0x53F5630D, 0xB6BF, 0x11D0, {0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B}};
 
@@ -912,6 +917,7 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
 /*
  * @implemented
  */
+INIT_SECTION
 BOOLEAN
 MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
 {
@@ -1805,6 +1811,7 @@ MountMgrShutdown(IN PDEVICE_OBJECT DeviceObject,
 
 /* FUNCTIONS ****************************************************************/
 
+INIT_SECTION
 NTSTATUS
 NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,

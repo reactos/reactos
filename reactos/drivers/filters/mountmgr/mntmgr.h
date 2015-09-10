@@ -8,6 +8,12 @@
 #include <ndk/psfuncs.h>
 #include <ntdddisk.h>
 
+#ifdef __GNUC__
+#define INIT_SECTION __attribute__((section ("INIT")))
+#else
+#define INIT_SECTION /* Done via alloc_text for MSC */
+#endif
+
 /* Enter FIXME */
 #ifdef IsEqualGUID
 #undef IsEqualGUID
