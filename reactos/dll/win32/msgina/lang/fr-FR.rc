@@ -25,11 +25,11 @@ CAPTION "Connexion"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "Utilisateur :", IDC_STATIC, 6, 60, 52, 8
+    LTEXT "Utilisateur:", IDC_STATIC, 6, 60, 52, 8
     EDITTEXT IDC_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
-    LTEXT "Mot de passe :", IDC_STATIC, 6, 78, 52, 8
+    LTEXT "Mot de passe:", IDC_STATIC, 6, 78, 52, 8
     EDITTEXT IDC_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Log on to:", IDC_STATIC, 6, 96, 52, 8
+    LTEXT "Connexion à:", IDC_STATIC, 6, 96, 52, 8
     COMBOBOX IDC_LOGON_TO, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Annuler", IDCANCEL, 160, 122, 50, 14
@@ -49,7 +49,7 @@ BEGIN
     PUSHBUTTON "Verrouiller l'ordinateur", IDC_LOCK, 4, 135, 82, 14
     PUSHBUTTON "Déconnecter", IDC_LOGOFF, 93, 135, 85, 14
     PUSHBUTTON "Éteindre", IDC_SHUTDOWN, 184, 135, 70, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
+    PUSHBUTTON "Changer le mot de passe", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Gestionnaire de tâches", IDC_TASKMGR, 93, 154, 85, 14
     PUSHBUTTON "Annuler", IDCANCEL, 184, 154, 70, 14
 END
@@ -68,50 +68,50 @@ END
 
 IDD_UNLOCK_DLG DIALOGEX 0, 0, 275, 179
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Unlock Computer"
+CAPTION "Déverrouiller l'ordinateur"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "This computer is in use and has been locked.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "Cet ordinateur est actuellement verrouillé.", IDC_STATIC, 36, 61, 232, 8
     LTEXT "Message", IDC_LOCKMSG, 36, 75, 232, 26
-    LTEXT "User name:", IDC_STATIC, 36, 107, 40, 8
+    LTEXT "Utilisateur:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
-    LTEXT "Password:", IDC_STATIC, 36, 125, 42, 8
+    LTEXT "Mot de passe:", IDC_STATIC, 36, 125, 50, 8
     EDITTEXT IDC_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 144, 154, 50, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 144, 154, 50, 14
 END
 
 IDD_CHANGE_PASSWORD DIALOGEX 0, 0, 275, 166
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Change Password"
+CAPTION "Changer le mot de passe"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "User name:", IDC_STATIC, 7, 61, 78, 8
+    LTEXT "Utilisateur:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Log on to:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Se connecter à:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
-    LTEXT "Old Password:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Ancien mot de passe:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "New Password:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Nouveau mot de passe:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirm new Password:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Confirmez le nouveau mot de passe:", IDC_STATIC, 7, 127, 78, 16
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 218, 145, 50, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 218, 145, 50, 14
 END
 
 IDD_LOGOFF_DLG DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Log Off ReactOS"
+CAPTION "Déconnexion de ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
-    LTEXT "Are you sure you want to log off?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "Yes", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "No", IDNO, 95, 39, 50, 14
+    LTEXT "Êtes vous sûr de vouloir vous déconnecter?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Oui", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Non", IDNO, 95, 39, 50, 14
 END
 
 IDD_SHUTDOWN_DLG DIALOGEX 0, 0, 275, 146
@@ -160,34 +160,34 @@ BEGIN
     IDS_ASKFORUSER "Utilisateur : "
     IDS_ASKFORPASSWORD "Mot de passe : "
     IDS_FORCELOGOFF "Cela déconnectera l'utilisateur en cours et perdra les données non sauvées. Continuer ?"
-    IDS_LOCKMSG "Seulement %s ou bien un Administrateur peut déverrouiller cet ordinateur."
-    IDS_LOGONMSG "You are logged on as %s."
-    IDS_LOGONDATE "Logon date: %s %s"
-    IDS_COMPUTERLOCKED "Computer locked"
-    IDS_LOCKEDWRONGPASSWORD "The password is wrong. Please enter your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOCKEDWRONGUSER "This computer is locked. Only %s\\%s or an Administrator can unlock this computer."
-    IDS_CHANGEPWDTITLE "Change Password"
-    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
-    IDS_PASSWORDCHANGED "Your password has been changed."
-    IDS_LOGONTITLE "Logon Message"
-    IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
-    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
-    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
+    IDS_LOCKMSG "Seul %s ou un administrateur peut déverrouiller cet ordinateur."
+    IDS_LOGONMSG "Vous êtes connecté en tant que %s."
+    IDS_LOGONDATE "Date de connexion: %s %s"
+    IDS_COMPUTERLOCKED "Ordinateur verrouillé"
+    IDS_LOCKEDWRONGPASSWORD "Le mot de passe est incorrect. Entrez à nouveau votre mot de passe en respectant les majuscules."
+    IDS_LOCKEDWRONGUSER "Cet ordinateur est actuellement verrouillé. Seul %s\\%s ou un administrateur peut déverrouiller cet ordinateur."
+    IDS_CHANGEPWDTITLE "Changer le mot de passe"
+    IDS_NONMATCHINGPASSWORDS "Les mots de passe ne correspondent pas. Entrez le même mot de passe dans les deux zones de texte."
+    IDS_PASSWORDCHANGED "Votre mot de passe a été changé."
+    IDS_LOGONTITLE "Connexion"
+    IDS_LOGONWRONGUSERORPWD "Le système ne peut vous connecter. Vérifiez vos noms d'utilisateur et de domaine. Entrez à nouveau votre mot de passe en respectant les majuscules."
+    IDS_LOGONUSERDISABLED "Votre compte est désactivé. Voyez votre administrateur système."
+    IDS_PASSWORDMUSTCHANGE "Vous devez changer votre mot de passe à la première connexion."
+    IDS_PASSWORDEXPIRED "Votre mot de passe a expiré et doit être changé."
 END
 
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "Log off ""%s"""
-    IDS_SHUTDOWN_SHUTDOWN "Shut down"
-    IDS_SHUTDOWN_RESTART "Restart"
-    IDS_SHUTDOWN_SLEEP "Sleep"
-    IDS_SHUTDOWN_HIBERNATE "Hibernate"
+    IDS_SHUTDOWN_LOGOFF "Fermer la session ""%s"""
+    IDS_SHUTDOWN_SHUTDOWN "Éteindre"
+    IDS_SHUTDOWN_RESTART "Redémarrer"
+    IDS_SHUTDOWN_SLEEP "Mettre en veille"
+    IDS_SHUTDOWN_HIBERNATE "Veille prolongée"
     /* Shut down descriptions */
-    IDS_SHUTDOWN_LOGOFF_DESC "Ends your current session and allows other users to log on to the system."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Ends your current session and shuts down the system so you can safely shut down the power."
-    IDS_SHUTDOWN_RESTART_DESC "Ends your current session and reboots the system."
-    IDS_SHUTDOWN_SLEEP_DESC "Puts the system in sleep mode."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Saves the current session and shuts down the computer."
+    IDS_SHUTDOWN_LOGOFF_DESC "Ferme la session et permet aux autres utilisateurs de se connecter."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Ferme la session et arrête le système."
+    IDS_SHUTDOWN_RESTART_DESC "Ferme la session et redémarre le système."
+    IDS_SHUTDOWN_SLEEP_DESC "Met le système en veille."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Sauve la session en cours et arrête le système."
 END
