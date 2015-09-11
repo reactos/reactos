@@ -23,6 +23,14 @@ BL_FILE_SYSTEM_REGISTRATION_TABLE FatRegisterFunctionTable =
     FatMount,
     NULL
 };
+BL_FILE_SYSTEM_REGISTRATION_TABLE EtfsRegisterFunctionTable =
+{
+    EtfsInitialize,
+    NULL,
+    EtfsMount,
+    NULL
+};
+
 
 extern ULONG DmTableEntries;
 extern PVOID* DmDeviceTable;
@@ -106,7 +114,7 @@ FileTableCompareWithSubsetAttributes (
     PBL_FILE_ENTRY FileEntry = (PBL_FILE_ENTRY)Entry;
     ULONG DeviceId = *(PULONG)Argument1;
     PWCHAR FilePath = (PWCHAR)Argument2;
-    ULONG OpenFlags = *(PULONG)Argument3;
+    ULONG Flags = *(PULONG)Argument3;
     ULONG Unknown = *(PULONG)Argument4;
     BOOLEAN Found;
 
@@ -114,9 +122,9 @@ FileTableCompareWithSubsetAttributes (
 
     if ((FileEntry->DeviceId == DeviceId) && !(_wcsicmp(FileEntry->FilePath, FilePath)) && (FileEntry->Unknown == Unknown))
     {
-        if ((!(OpenFlags & 1) || (FileEntry->Flags & 2)) && (!(OpenFlags & 2) || (FileEntry->Flags & 4)))
+        if ((!(Flags & 1) || (FileEntry->Flags & 2)) && (!(Flags & 2) || (FileEntry->Flags & 4)))
         {
-            if ((!(OpenFlags & 4) || (FileEntry->Flags & 0x10000)) && ((OpenFlags & 4) || !(FileEntry->Flags & 0x10000)))
+            if ((!(Flags & 4) || (FileEntry->Flags & 0x10000)) && ((Flags & 4) || !(FileEntry->Flags & 0x10000)))
             {
                 Found = TRUE;
             }
@@ -137,7 +145,7 @@ FileTableCompareWithSameAttributes (
     PBL_FILE_ENTRY FileEntry = (PBL_FILE_ENTRY)Entry;
     ULONG DeviceId = *(PULONG)Argument1;
     PWCHAR FilePath = (PWCHAR)Argument2;
-    ULONG OpenFlags = *(PULONG)Argument3;
+    ULONG Flags = *(PULONG)Argument3;
     ULONG Unknown = *(PULONG)Argument4;
     BOOLEAN Found;
 
@@ -145,9 +153,9 @@ FileTableCompareWithSameAttributes (
 
     if ((FileEntry->DeviceId == DeviceId) && !(_wcsicmp(FileEntry->FilePath, FilePath)) && (FileEntry->Unknown == Unknown))
     {
-        if ((!(OpenFlags & 1) || (FileEntry->Flags & 2)) && ((OpenFlags & 1) || !(FileEntry->Flags & 2)) && (!(OpenFlags & 2) || (FileEntry->Flags & 4)) && ((OpenFlags & 2) || !(FileEntry->Flags & 4)))
+        if ((!(Flags & 1) || (FileEntry->Flags & 2)) && ((Flags & 1) || !(FileEntry->Flags & 2)) && (!(Flags & 2) || (FileEntry->Flags & 4)) && ((Flags & 2) || !(FileEntry->Flags & 4)))
         {
-            if ((!(OpenFlags & 4) || (FileEntry->Flags & 0x10000)) && ((OpenFlags & 4) || !(FileEntry->Flags & 0x10000)))
+            if ((!(Flags & 4) || (FileEntry->Flags & 0x10000)) && ((Flags & 4) || !(FileEntry->Flags & 0x10000)))
             {
                 Found = TRUE;
             }
@@ -240,7 +248,7 @@ NTSTATUS
 FileIoOpen (
     _In_ ULONG DeviceId,
     _In_ PWCHAR FileName,
-    _In_ ULONG OpenFlags,
+    _In_ ULONG Flags,
     _In_ ULONG Unknown,
     _In_ PBL_TBL_LOOKUP_ROUTINE CompareRoutine,
     _Out_ PBL_FILE_ENTRY *ReturnFileEntry
@@ -256,7 +264,7 @@ FileIoOpen (
 
     ParentDirectoryEntry = NULL;
     FileNameCopy = NULL;
-    OpenFlags |= 1;
+    Flags |= 1;
     ParentFileName = NULL;
     Status = STATUS_SUCCESS;
 
@@ -271,13 +279,13 @@ FileIoOpen (
         return STATUS_ACCESS_DENIED;
     }
 
-    if ((OpenFlags & 1) && (!(DeviceEntry->Flags & 1) || !(DeviceEntry->Flags & 2)))
+    if ((Flags & 1) && (!(DeviceEntry->Flags & 1) || !(DeviceEntry->Flags & 2)))
     {
         EfiPrintf(L"Access denied\r\n");
         return STATUS_ACCESS_DENIED;
     }
 
-    if ((OpenFlags & 2) && (!(DeviceEntry->Flags & 1) || !(DeviceEntry->Flags & 4)))
+    if ((Flags & 2) && (!(DeviceEntry->Flags & 1) || !(DeviceEntry->Flags & 4)))
     {
         EfiPrintf(L"Access denied2\r\n");
         return STATUS_ACCESS_DENIED;
@@ -289,7 +297,7 @@ FileIoOpen (
                                                 CompareRoutine,
                                                 &DeviceId,
                                                 FileName,
-                                                &OpenFlags,
+                                                &Flags,
                                                 &Unknown);
     if (FileEntry)
     {
@@ -326,7 +334,7 @@ FileIoOpen (
 
         Status = ParentDirectoryEntry->Callbacks.Open(ParentDirectoryEntry,
                                                       FileNameCopy,
-                                                      OpenFlags,
+                                                      Flags,
                                                       &FileEntry);
     }
     else
@@ -350,7 +358,7 @@ FileIoOpen (
             NextEntry = NextEntry->Flink;
         }
 
-        FileNameCopy = 0;
+        FileNameCopy = NULL;
     }
 
     if (!NT_SUCCESS(Status))
@@ -361,12 +369,12 @@ FileIoOpen (
 
     FileEntry->Unknown = Unknown;
 
-    if (OpenFlags & 1)
+    if (Flags & 1)
     {
         FileEntry->Flags |= 2u;
     }
     
-    if (OpenFlags & 2)
+    if (Flags & 2)
     {
         FileEntry->Flags |= 4u;
     }
@@ -385,6 +393,7 @@ FileIoOpen (
     ++DeviceEntry->ReferenceCount;
     Status = STATUS_SUCCESS;
 
+    EfiPrintf(L"File %s opened with ID: %lx\r\n", FileEntry->FilePath, FileId);
     FileEntry->FileId = FileId;
 
 FileOpened:
@@ -396,7 +405,7 @@ FileOpened:
 
     FileEntry->Flags |= 1;
     
-    if (OpenFlags & 0x10)
+    if (Flags & 0x10)
     {
         FileEntry->Flags |= 0x10;
     }
@@ -426,7 +435,7 @@ NTSTATUS
 BlFileOpen (
     _In_ ULONG DeviceId,
     _In_ PWCHAR FileName,
-    _In_ ULONG OpenFlags,
+    _In_ ULONG Flags,
     _Out_ PULONG FileId
     )
 {
@@ -437,7 +446,7 @@ BlFileOpen (
     if (!(FileName) ||
         (*FileName != OBJ_NAME_PATH_SEPARATOR) ||
         !(FileId) ||
-        !(OpenFlags & 3))
+        !(Flags & 3))
     {
         EfiPrintf(L"Invalid file options\r\n");
         return STATUS_INVALID_PARAMETER;
@@ -460,7 +469,7 @@ BlFileOpen (
 
     Status = FileIoOpen(DeviceId,
                         FileName,
-                        OpenFlags,
+                        Flags,
                         0,
                         FileTableCompareWithSameAttributes,
                         &FileEntry);
@@ -597,7 +606,7 @@ BlpFileInitialize (
                                            UdfsRegisterFunctionTable.Purge,
                                            0);
     }
-
+#endif
     if (NT_SUCCESS(Status))
     {
         /* Initialize El-Torito CDFS */
@@ -607,7 +616,6 @@ BlpFileInitialize (
                                            EtfsRegisterFunctionTable.Purge,
                                            0);
     }
-#endif
 
     /* Destroy the file manager if any of the file systems didn't initialize */
     if (!NT_SUCCESS(Status))

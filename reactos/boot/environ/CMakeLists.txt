@@ -20,6 +20,7 @@ list(APPEND BOOTLIB_SOURCE
      lib/mm/descriptor.c
      lib/platform/time.c
      lib/io/blkcache.c
+     lib/io/etfs.c
      lib/io/io.c
      lib/io/device.c
      lib/io/file.c

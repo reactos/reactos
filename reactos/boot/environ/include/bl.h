@@ -269,9 +269,9 @@ struct _BL_FILE_ENTRY;
 typedef
 NTSTATUS
 (*PBL_FILE_OPEN) (
-    _In_ struct _BL_FILE_ENTRY* ParentFileEntry,
+    _In_ struct _BL_FILE_ENTRY* Directory,
     _In_ PWCHAR FileName,
-    _In_ ULONG OpenFlags,
+    _In_ ULONG Flags,
     _Out_ struct _BL_FILE_ENTRY** FileEntry
     );
 
@@ -758,16 +758,17 @@ typedef struct _BL_FILE_CALLBACKS
 
 typedef struct _BL_FILE_ENTRY
 {
-    ULONG ReferenceCount;
-    ULONG FileId;
-    ULONG DeviceId;
-    ULONG Flags;
     PWCHAR FilePath;
+    ULONG DeviceId;
+    ULONG FileId;
+    ULONG Flags;
+    ULONG ReferenceCount;
     ULONG Unknown;
-    ULONG Unknown1;
-    ULONG Unknown2;
+    ULONGLONG Unknown1;
+    ULONGLONG Unknown2;
     BL_FILE_CALLBACKS Callbacks;
-    PBL_FILE_DESTROY_CALLBACK DestroyCallback;
+    //PBL_FILE_DESTROY_CALLBACK DestroyCallback;
+    PVOID FsSpecificData;
 } BL_FILE_ENTRY, *PBL_FILE_ENTRY;
 
 typedef struct _BL_FILE_SYSTEM_ENTRY
@@ -1220,6 +1221,18 @@ FatInitialize (
 
 NTSTATUS
 FatMount (
+    _In_ ULONG DeviceId,
+    _In_ ULONG Unknown,
+    _Out_ PBL_FILE_ENTRY* FileEntry
+    );
+
+NTSTATUS
+EtfsInitialize (
+    VOID
+    );
+
+NTSTATUS
+EtfsMount (
     _In_ ULONG DeviceId,
     _In_ ULONG Unknown,
     _Out_ PBL_FILE_ENTRY* FileEntry

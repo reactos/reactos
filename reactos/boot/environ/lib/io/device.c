@@ -130,8 +130,8 @@ BlockIoFirmwareRead (
             break;
         }
 
-        EfiPrintf(L"EFI Reading BLOCK %d off media %lx (%d blocks)\r\n",
-                 Block, BlockProtocol->Media->MediaId, BlockCount);
+        //EfiPrintf(L"EFI Reading BLOCK %d off media %lx (%d blocks)\r\n",
+                 //Block, BlockProtocol->Media->MediaId, BlockCount);
         EfiStatus = BlockProtocol->ReadBlocks(BlockProtocol,
                                               BlockProtocol->Media->MediaId,
                                               Block,
@@ -139,8 +139,8 @@ BlockIoFirmwareRead (
                                               Buffer);
         if (EfiStatus == EFI_SUCCESS)
         {
-            EfiPrintf(L"EFI Read complete into buffer\r\n");
-            EfiPrintf(L"Buffer data: %lx %lx %lx %lx\r\n", *(PULONG)Buffer, *((PULONG)Buffer + 1), *((PULONG)Buffer + 2), *((PULONG)Buffer + 3));
+            //EfiPrintf(L"EFI Read complete into buffer\r\n");
+            //EfiPrintf(L"Buffer data: %lx %lx %lx %lx\r\n", *(PULONG)Buffer, *((PULONG)Buffer + 1), *((PULONG)Buffer + 2), *((PULONG)Buffer + 3));
         }
 
         if (OldMode != 1)

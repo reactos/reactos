@@ -43,7 +43,6 @@ FatMount (
     BlDeviceSetInformation(DeviceId, &DeviceInformation);
 
     /* Read the boot sector */
-    EfiPrintf(L"Reading fat boot sector...\r\n");
     Status = BlDeviceReadAtOffset(DeviceId,
                                   sizeof(FatBootSector),
                                   0,
@@ -61,7 +60,11 @@ FatMount (
 
     FatUnpackBios(&BiosBlock, &FatBootSector.PackedBpb);
 
-    EfiPrintf(L"Drive read\r\n");
+    /* For now, quickly fail if this isn't FAT */
+    if (FatBootSector.Jump[0] != 0xE9)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
 
     EfiPrintf(L"Jump: %lx Bytes Per Sector: %d Sectors Per Cluster: %d Reserved: %d Fats: %d Sectors: %d Large Sectors: %d Media: %lx RootEntries: %d\r\n",
         FatBootSector.Jump[0],
@@ -74,7 +77,6 @@ FatMount (
         BiosBlock.Media,
         BiosBlock.RootEntries);
 
-    EfiStall(3000000);
     return STATUS_NOT_IMPLEMENTED;
 }
 
