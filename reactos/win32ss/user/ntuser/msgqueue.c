@@ -62,7 +62,7 @@ IntTopLevelWindowFromPoint(INT x, INT y)
         }
 
         if ((pWnd->style & WS_VISIBLE) &&
-            (pWnd->ExStyle & (WS_EX_LAYERED|WS_EX_TRANSPARENT)) == 0 &&
+            (pWnd->ExStyle & (WS_EX_LAYERED|WS_EX_TRANSPARENT)) != (WS_EX_LAYERED|WS_EX_TRANSPARENT) &&
             IntPtInWindow(pWnd, x, y))
             return pWnd;
     }

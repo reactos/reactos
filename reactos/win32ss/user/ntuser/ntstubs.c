@@ -980,53 +980,6 @@ NtUserLockWindowUpdate(HWND hWnd)
    return 0;
 }
 
-BOOL
-APIENTRY
-NtUserGetLayeredWindowAttributes(
-    HWND hwnd,
-    COLORREF *pcrKey,
-    BYTE *pbAlpha,
-    DWORD *pdwFlags)
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserSetLayeredWindowAttributes(HWND hwnd,
-			   COLORREF crKey,
-			   BYTE bAlpha,
-			   DWORD dwFlags)
-{
-  STUB;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtUserUpdateLayeredWindow(
-   HWND hwnd,
-   HDC hdcDst,
-   POINT *pptDst,
-   SIZE *psize,
-   HDC hdcSrc,
-   POINT *pptSrc,
-   COLORREF crKey,
-   BLENDFUNCTION *pblend,
-   DWORD dwFlags,
-   RECT *prcDirty)
-{
-   STUB
-
-   return 0;
-}
-
 DWORD APIENTRY
 NtUserQuerySendMessage(DWORD Unknown0)
 {

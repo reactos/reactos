@@ -3546,6 +3546,11 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
             else
                Style.styleNew &= ~WS_EX_WINDOWEDGE;
 
+            if (!(Window->ExStyle & WS_EX_LAYERED))
+            {
+               SetLayeredStatus(Window, 0);
+            }
+
             Window->ExStyle = (DWORD)Style.styleNew;
 
             co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_EXSTYLE, (LPARAM) &Style);

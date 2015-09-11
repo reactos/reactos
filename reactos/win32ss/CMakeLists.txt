@@ -122,6 +122,7 @@ list(APPEND SOURCE
     user/ntuser/ime.c
     user/ntuser/keyboard.c
     user/ntuser/kbdlayout.c
+    user/ntuser/layered.c
     user/ntuser/menu.c
     user/ntuser/message.c
     user/ntuser/metric.c

@@ -145,4 +145,9 @@ HBRUSH FASTCALL DefWndControlColor(HDC hDC,UINT ctlType);
 BOOL UserDrawSysMenuButton(PWND pWnd, HDC hDC, LPRECT Rect, BOOL Down);
 BOOL UserPaintCaption(PWND pWnd, INT Flags);
 
+/************** LAYERED **************/
+
+BOOL FASTCALL SetLayeredStatus(PWND pWnd, BYTE set);
+BOOL FASTCALL GetLayeredStatus(PWND pWnd);
+
 /* EOF */

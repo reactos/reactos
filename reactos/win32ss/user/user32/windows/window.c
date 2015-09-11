@@ -1713,8 +1713,11 @@ UpdateLayeredWindow( HWND hwnd,
                      BLENDFUNCTION *pbl,
                      DWORD dwFlags)
 {
-  if ( dwFlags & ULW_EX_NORESIZE)
-     dwFlags = ~(ULW_EX_NORESIZE|ULW_OPAQUE|ULW_ALPHA|ULW_COLORKEY);
+  if (dwFlags & ULW_EX_NORESIZE)  /* only valid for UpdateLayeredWindowIndirect */
+  {
+     SetLastError( ERROR_INVALID_PARAMETER );
+     return FALSE;
+  }
   return NtUserUpdateLayeredWindow( hwnd,
                                     hdcDst,
                                     pptDst,
