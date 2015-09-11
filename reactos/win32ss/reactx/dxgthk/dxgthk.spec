@@ -1,4 +1,3 @@
-@ stdcall DriverEntry(ptr ptr)
 @ stdcall EngAcquireSemaphore(ptr) win32k.EngAcquireSemaphore
 @ stdcall EngAllocMem(long long long) win32k.EngAllocMem
 @ stdcall EngAllocUserMem(long long) win32k.EngAllocUserMem
