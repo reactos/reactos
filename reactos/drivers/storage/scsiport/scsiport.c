@@ -1026,7 +1026,6 @@ ScsiPortInitialize(IN PVOID Argument1,
     ULONG Result;
     NTSTATUS Status;
     ULONG MaxBus;
-    ULONG BusNumber = 0;
     PCI_SLOT_NUMBER SlotNumber;
 
     PDEVICE_OBJECT PortDeviceObject;
@@ -1683,7 +1682,7 @@ CreatePortConfig:
       if (!Again)
           ConfigInfo.BusNumber++;
 
-      DPRINT("Bus: %lu  MaxBus: %lu\n", BusNumber, MaxBus);
+      DPRINT("Bus: %lu  MaxBus: %lu\n", ConfigInfo.BusNumber, MaxBus);
 
       DeviceFound = TRUE;
     }

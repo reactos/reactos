@@ -48,7 +48,6 @@ WdmAudControlDeviceType(
     IN  PWDMAUD_CLIENT ClientInfo)
 {
     ULONG Result = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
 
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
@@ -75,7 +74,7 @@ WdmAudControlDeviceType(
     /* store result count */
     DeviceInfo->DeviceCount = Result;
 
-    DPRINT("WdmAudControlDeviceType Status %x Devices %u\n", Status, DeviceInfo->DeviceCount);
+    DPRINT("WdmAudControlDeviceType Devices %u\n", DeviceInfo->DeviceCount);
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
 }
 
@@ -389,7 +388,6 @@ IoCompletion (
     PVOID Ctx)
 {
     PKSSTREAM_HEADER Header;
-    ULONG Length = 0;
     PMDL Mdl, NextMdl;
     PWDMAUD_COMPLETION_CONTEXT Context = (PWDMAUD_COMPLETION_CONTEXT)Ctx;
 
@@ -419,7 +417,7 @@ IoCompletion (
 
 
 
-    DPRINT("IoCompletion Irp %p IoStatus %lx Information %lx Length %lu\n", Irp, Irp->IoStatus.Status, Irp->IoStatus.Information, Length);
+    DPRINT("IoCompletion Irp %p IoStatus %lx Information %lx\n", Irp, Irp->IoStatus.Status, Irp->IoStatus.Information);
 
     if (!NT_SUCCESS(Irp->IoStatus.Status))
     {
