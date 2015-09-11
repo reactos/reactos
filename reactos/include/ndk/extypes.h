@@ -470,6 +470,16 @@ typedef struct _EX_PUSH_LOCK
 //
 // Executive Pushlock Wait Block
 //
+
+//
+// The wait block has to be properly aligned
+// on a non-checked build even if the debug data isn't there.
+//
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4324)
+#endif
+
 typedef __ALIGNED(16) struct _EX_PUSH_LOCK_WAIT_BLOCK
 {
     union
@@ -489,6 +499,10 @@ typedef __ALIGNED(16) struct _EX_PUSH_LOCK_WAIT_BLOCK
     PEX_PUSH_LOCK PushLock;
 #endif
 } EX_PUSH_LOCK_WAIT_BLOCK, *PEX_PUSH_LOCK_WAIT_BLOCK;
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 //
 // Callback Object
