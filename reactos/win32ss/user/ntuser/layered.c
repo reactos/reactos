@@ -224,14 +224,14 @@ NtUserGetLayeredWindowAttributes(
    BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetLayeredWindowAttributes\n");
+   UserEnterExclusive();
 
    if (!(pWnd = UserGetWindowObject(hwnd)) ||
        !(pWnd->ExStyle & WS_EX_LAYERED) )
    {
-      return FALSE;
+      ERR("Not a Layered Window!\n");
+      goto Exit;
    }
-
-   UserEnterExclusive();
 
    pLrdProp = UserGetProp(pWnd, AtomLayer);
 
@@ -248,9 +248,21 @@ NtUserGetLayeredWindowAttributes(
 
    _SEH2_TRY
    {
-      if (pcrKey)     *pcrKey = pLrdProp->Key;
-      if (pbAlpha)   *pbAlpha = pLrdProp->Alpha;
-      if (pdwFlags) *pdwFlags = pLrdProp->Flags;
+      if (pcrKey)
+      {
+          ProbeForWrite(pcrKey, sizeof(*pcrKey), 1);
+          *pcrKey = pLrdProp->Key;
+      }
+      if (pbAlpha)
+      {
+          ProbeForWrite(pbAlpha, sizeof(*pbAlpha), 1);
+          *pbAlpha = pLrdProp->Alpha;
+      }
+      if (pdwFlags)
+      {
+          ProbeForWrite(pdwFlags, sizeof(*pdwFlags), 1);
+          *pdwFlags = pLrdProp->Flags;
+      }
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
@@ -322,10 +334,11 @@ NtUserUpdateLayeredWindow(
    BOOL Ret = FALSE;
 
    TRACE("Enter NtUserUpdateLayeredWindow\n");
+   UserEnterExclusive();
 
    if (!(pWnd = UserGetWindowObject(hwnd)))
    {
-      return FALSE;
+      goto Exit;
    }
 
    _SEH2_TRY
@@ -356,11 +369,9 @@ NtUserUpdateLayeredWindow(
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       EngSetLastError( ERROR_INVALID_PARAMETER );
-      _SEH2_YIELD(return FALSE);
+      _SEH2_YIELD(goto Exit);
    }
    _SEH2_END;
-
-   UserEnterExclusive();
 
    if ( GetLayeredStatus(pWnd) ||
         dwFlags & ~(ULW_COLORKEY | ULW_ALPHA | ULW_OPAQUE | ULW_EX_NORESIZE) ||
@@ -373,14 +384,14 @@ NtUserUpdateLayeredWindow(
 
    info.cbSize   = sizeof(info);
    info.hdcDst   = hdcDst;
-   info.pptDst   = pptDst? &Dst : 0;
+   info.pptDst   = pptDst? &Dst : NULL;
    info.psize    = &Size;
    info.hdcSrc   = hdcSrc;
-   info.pptSrc   = pptSrc ? &Src : 0;
+   info.pptSrc   = pptSrc ? &Src : NULL;
    info.crKey    = crKey;
    info.pblend   = &blend;
    info.dwFlags  = dwFlags;
-   info.prcDirty = prcDirty ? &Dirty : 0;
+   info.prcDirty = prcDirty ? &Dirty : NULL;
    Ret = IntUpdateLayeredWindowI( pWnd, &info );
 Exit:
    TRACE("Leave NtUserUpdateLayeredWindow, ret=%i\n", Ret);
