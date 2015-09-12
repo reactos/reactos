@@ -353,22 +353,6 @@ SaveCurrentLocale(
     DWORD valuesize;
     DWORD i;
 
-#if 0
-    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(TCHAR));
-    if (ret == 0)
-    {
-        PrintErrorMsgBox(IDS_ERROR_OEM_CODE_PAGE);
-        return;
-    }
-
-    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, ACPPage, sizeof(ACPPage)/sizeof(TCHAR));
-    if (ret == 0)
-    {
-        PrintErrorMsgBox(IDS_ERROR_ANSI_CODE_PAGE);
-        return;
-    }
-#endif
-
     ret = RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\International",
                         0, KEY_READ | KEY_WRITE, &localeKey);
     if (ret != ERROR_SUCCESS)
@@ -405,47 +389,6 @@ SaveCurrentLocale(
     /* Set the new locale for the current process */
     NtSetDefaultLocale(TRUE, pGlobalData->lcid);
 
-#if 0
-    ret = RegOpenKey(HKEY_USERS, _T(".DEFAULT\\Control Panel\\International"), &localeKey);
-    if (ret != ERROR_SUCCESS)
-    {
-        PrintErrorMsgBox(IDS_ERROR_DEF_INT_KEY_REG);
-        return;
-    }
-
-    wsprintf(value, _T("%08X"), (DWORD)lcid);
-    valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
-
-    RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (BYTE *)value, valuesize);
-    RegCloseKey(localeKey);
-
-    // Set language
-    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"), &langKey);
-    if (ret != ERROR_SUCCESS)
-    {
-        PrintErrorMsgBox(IDS_ERROR_NLS_KEY_REG);
-        return;
-    }
-
-    RegSetValueEx(langKey, _T("Default"), 0, REG_SZ, (BYTE *)value, valuesize );
-    RegSetValueEx(langKey, _T("InstallLanguage"), 0, REG_SZ, (BYTE *)value, valuesize );
-
-    RegCloseKey(langKey);
-
-
-    /* Set language */
-    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"), &langKey);
-    if (ret != ERROR_SUCCESS)
-    {
-        PrintErrorMsgBox(IDS_ERROR_NLS_CODE_REG);
-        return;
-    }
-
-    RegSetValueExW(langKey, _T("OEMCP"), 0, REG_SZ, (BYTE *)OEMPage, (_tcslen(OEMPage) +1 ) * sizeof(TCHAR));
-    RegSetValueExW(langKey, _T("ACP"), 0, REG_SZ, (BYTE *)ACPPage, (_tcslen(ACPPage) +1 ) * sizeof(TCHAR));
-
-    RegCloseKey(langKey);
-#endif
 }
 
 /* Location enumerate procedure */
@@ -660,7 +603,6 @@ GeneralPageProc(HWND hwndDlg,
                     }
 
                     AddNewKbLayoutsByLcid(pGlobalData->lcid);
-                    SetNonUnicodeLang(hwndDlg, pGlobalData->lcid);
                 }
             }
             break;

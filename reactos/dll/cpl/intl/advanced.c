@@ -213,7 +213,7 @@ InitLanguagesList(HWND hwndDlg)
     EnumSystemLocales(LocalesEnumProc, LCID_SUPPORTED);
 
     /* Select current locale */
-    GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(TCHAR));
+    GetLocaleInfo(GetSystemDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(TCHAR));
 
     SendMessage(hLangList, CB_SELECTSTRING, -1, (LPARAM)langSel);
 }
@@ -282,6 +282,63 @@ SetNonUnicodeLang(HWND hwnd, LCID lcid)
     SetupCloseInfFile(hFontInf);
 }
 
+
+static
+VOID
+SaveSystemSettings(
+    LCID lcid)
+{
+    TCHAR ACPPage[9];
+    TCHAR OEMPage[9];
+    HKEY langKey;
+    DWORD ret;
+    WCHAR value[5];
+    DWORD valuesize;
+
+    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(TCHAR));
+    if (ret == 0)
+    {
+        PrintErrorMsgBox(IDS_ERROR_OEM_CODE_PAGE);
+        return;
+    }
+
+    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, ACPPage, sizeof(ACPPage)/sizeof(TCHAR));
+    if (ret == 0)
+    {
+        PrintErrorMsgBox(IDS_ERROR_ANSI_CODE_PAGE);
+        return;
+    }
+
+    /* Set codepages */
+    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"), &langKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        PrintErrorMsgBox(IDS_ERROR_NLS_CODE_REG);
+        return;
+    }
+
+    RegSetValueEx(langKey, _T("OEMCP"), 0, REG_SZ, (BYTE *)OEMPage, (_tcslen(OEMPage) +1 ) * sizeof(TCHAR));
+    RegSetValueEx(langKey, _T("ACP"), 0, REG_SZ, (BYTE *)ACPPage, (_tcslen(ACPPage) +1 ) * sizeof(TCHAR));
+
+    RegCloseKey(langKey);
+
+
+    wsprintf(value, _T("%04hX"), LANGIDFROMLCID(lcid));
+    valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
+
+    /* Set language */
+    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"), &langKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        PrintErrorMsgBox(IDS_ERROR_NLS_KEY_REG);
+        return;
+    }
+
+    RegSetValueEx(langKey, _T("Default"), 0, REG_SZ, (BYTE *)value, valuesize);
+    RegCloseKey(langKey);
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 AdvancedPageProc(HWND hwndDlg,
@@ -332,6 +389,7 @@ AdvancedPageProc(HWND hwndDlg,
                     break;
 
                 SetNonUnicodeLang(hwndDlg, lcid);
+                SaveSystemSettings(lcid);
             }
         }
         break;
