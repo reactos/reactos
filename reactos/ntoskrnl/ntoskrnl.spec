@@ -725,7 +725,7 @@
 @ fastcall -arch=i386,arm KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
-@ fastcall -arch=i386,arm KiCheckForSListAddress(ptr)
+@ fastcall -arch=i386 KiCheckForSListAddress(ptr)
 @ stdcall -arch=i386 KiCoprocessorError()
 ;@ cdecl -arch=x86_64 KiCpuId()
 @ stdcall -arch=i386,arm KiDeliverApc(long ptr ptr)
