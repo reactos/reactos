@@ -43,18 +43,11 @@ typedef struct _VDM_DOS_RECORD
 
 /* FUNCTIONS ******************************************************************/
 
-NTSTATUS NTAPI BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD *Record);
-NTSTATUS NTAPI GetConsoleRecordBySessionId(ULONG TaskId, PVDM_CONSOLE_RECORD *Record);
-ULONG NTAPI GetNextDosSesId(VOID);
-BOOLEAN NTAPI BaseSrvIsVdmAllowed(VOID);
-NTSTATUS NTAPI BaseSrvCreatePairWaitHandles(PHANDLE ServerEvent, PHANDLE ClientEvent);
-VOID NTAPI BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo);
-VOID NTAPI BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess);
-BOOLEAN NTAPI BaseSrvCopyCommand(PBASE_CHECK_VDM CheckVdmRequest, PVDM_DOS_RECORD DosRecord);
-NTSTATUS NTAPI BaseSrvFillCommandInfo(
-    PVDM_COMMAND_INFO CommandInfo,
-    PBASE_GET_NEXT_VDM_COMMAND Message
-);
-VOID NTAPI BaseInitializeVDM(VOID);
+NTSTATUS BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD *Record);
+NTSTATUS GetConsoleRecordBySessionId(ULONG TaskId, PVDM_CONSOLE_RECORD *Record);
+
+BOOLEAN BaseSrvIsVdmAllowed(VOID);
+VOID BaseInitializeVDM(VOID);
+VOID BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess);
 
 #endif // __VDM_H__

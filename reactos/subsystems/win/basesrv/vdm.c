@@ -22,9 +22,31 @@ LIST_ENTRY VDMConsoleListHead;
 RTL_CRITICAL_SECTION DosCriticalSection;
 RTL_CRITICAL_SECTION WowCriticalSection;
 
-/* FUNCTIONS ******************************************************************/
+/* HELPER FUNCTIONS ***********************************************************/
 
-NTSTATUS NTAPI BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD *Record)
+PVDM_CONSOLE_RECORD BaseSrvCreateConsoleRecord(VOID)
+{
+    PVDM_CONSOLE_RECORD ConsoleRecord;
+
+    ConsoleRecord = RtlAllocateHeap(BaseSrvHeap, HEAP_ZERO_MEMORY,
+                                    sizeof(VDM_CONSOLE_RECORD));
+    if (ConsoleRecord == NULL)
+        return NULL;
+
+    /* Initialize the console record */
+    ConsoleRecord->ConsoleHandle = NULL;
+    ConsoleRecord->ProcessHandle = NULL;
+    ConsoleRecord->ServerEvent = ConsoleRecord->ClientEvent = NULL;
+    ConsoleRecord->ReenterCount = 0;
+    ConsoleRecord->CurrentDirs = NULL;
+    ConsoleRecord->CurDirsLength = 0;
+    ConsoleRecord->SessionId = 0;
+    InitializeListHead(&ConsoleRecord->DosListHead);
+
+    return ConsoleRecord;
+}
+
+NTSTATUS BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD *Record)
 {
     PLIST_ENTRY i;
     PVDM_CONSOLE_RECORD CurrentRecord = NULL;
@@ -46,7 +68,31 @@ NTSTATUS NTAPI BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD
     return CurrentRecord ? STATUS_SUCCESS : STATUS_NOT_FOUND;
 }
 
-NTSTATUS NTAPI GetConsoleRecordBySessionId(ULONG TaskId, PVDM_CONSOLE_RECORD *Record)
+VOID BaseSrvDestroyConsoleRecord(PVDM_CONSOLE_RECORD ConsoleRecord)
+{
+    if (ConsoleRecord->CurrentDirs != NULL)
+    {
+        /* Free the current directories */
+        RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord->CurrentDirs);
+        ConsoleRecord->CurrentDirs = NULL;
+        ConsoleRecord->CurDirsLength = 0;
+    }
+
+    /* Close the process handle */
+    if (ConsoleRecord->ProcessHandle)
+        NtClose(ConsoleRecord->ProcessHandle);
+
+    /* Close the event handle */
+    if (ConsoleRecord->ServerEvent)
+        NtClose(ConsoleRecord->ServerEvent);
+
+    /* Remove the console record */
+    // RemoveEntryList(&ConsoleRecord->Entry);
+    RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
+
+}
+
+NTSTATUS GetConsoleRecordBySessionId(ULONG TaskId, PVDM_CONSOLE_RECORD *Record)
 {
     PLIST_ENTRY i;
     PVDM_CONSOLE_RECORD CurrentRecord = NULL;
@@ -65,7 +111,7 @@ NTSTATUS NTAPI GetConsoleRecordBySessionId(ULONG TaskId, PVDM_CONSOLE_RECORD *Re
     return CurrentRecord ? STATUS_SUCCESS : STATUS_NOT_FOUND;
 }
 
-ULONG NTAPI GetNextDosSesId(VOID)
+ULONG GetNextDosSesId(VOID)
 {
     ULONG SessionId;
     PLIST_ENTRY i;
@@ -94,7 +140,7 @@ ULONG NTAPI GetNextDosSesId(VOID)
     return SessionId;
 }
 
-BOOLEAN NTAPI BaseSrvIsVdmAllowed(VOID)
+BOOLEAN BaseSrvIsVdmAllowed(VOID)
 {
     NTSTATUS Status;
     BOOLEAN VdmAllowed = TRUE;
@@ -191,7 +237,7 @@ BOOLEAN NTAPI BaseSrvIsVdmAllowed(VOID)
     return VdmAllowed;
 }
 
-NTSTATUS NTAPI BaseSrvCreatePairWaitHandles(PHANDLE ServerEvent, PHANDLE ClientEvent)
+NTSTATUS BaseSrvCreatePairWaitHandles(PHANDLE ServerEvent, PHANDLE ClientEvent)
 {
     NTSTATUS Status;
 
@@ -212,7 +258,27 @@ NTSTATUS NTAPI BaseSrvCreatePairWaitHandles(PHANDLE ServerEvent, PHANDLE ClientE
     return Status;
 }
 
-VOID NTAPI BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo)
+VOID BaseSrvDestroyPairWaitHandles(HANDLE ServerEvent, HANDLE ClientEvent)
+{
+    if (ServerEvent) NtClose(ServerEvent);
+    if (ClientEvent)
+    {
+        /* Close the remote handle */
+        NtDuplicateObject(CsrGetClientThread()->Process->ProcessHandle,
+                          ClientEvent,
+                          NULL,
+                          NULL,
+                          0,
+                          0,
+                          DUPLICATE_CLOSE_SOURCE);
+    }
+}
+
+/* WOW SUPPORT FUNCTIONS ******************************************************/
+
+/* DOS SUPPORT FUNCTIONS ******************************************************/
+
+VOID BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo)
 {
     /* Free the allocated structure members */
     if (CommandInfo->CmdLine != NULL) RtlFreeHeap(BaseSrvHeap, 0, CommandInfo->CmdLine);
@@ -228,9 +294,7 @@ VOID NTAPI BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo)
     RtlFreeHeap(BaseSrvHeap, 0, CommandInfo);
 }
 
-VOID
-NTAPI
-BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess)
+VOID BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess)
 {
     ULONG ProcessId = HandleToUlong(CsrProcess->ClientId.UniqueProcess);
     PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
@@ -241,22 +305,33 @@ BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess)
     RtlEnterCriticalSection(&DosCriticalSection);
 
     /* Search for a record that has the same process handle */
-    for (i = VDMConsoleListHead.Flink; i != &VDMConsoleListHead; i = i->Flink)
+    i = VDMConsoleListHead.Flink;
+    while (i != &VDMConsoleListHead)
     {
         ConsoleRecord = CONTAINING_RECORD(i, VDM_CONSOLE_RECORD, Entry);
+        i = i->Flink;
 
         if (ConsoleRecord->ProcessId == ProcessId)
         {
+            if (ConsoleRecord->ServerEvent)
+            {
+                NtClose(ConsoleRecord->ServerEvent);
+                ConsoleRecord->ServerEvent = NULL;
+            }
+
             /* Cleanup the DOS records */
-            while (ConsoleRecord->DosListHead.Flink != &ConsoleRecord->DosListHead)
+            while (!IsListEmpty(&ConsoleRecord->DosListHead))
             {
                 DosRecord = CONTAINING_RECORD(ConsoleRecord->DosListHead.Flink,
-                                              VDM_DOS_RECORD,
-                                              Entry);
+                                              VDM_DOS_RECORD, Entry);
 
                 /* Set the event and close it */
-                NtSetEvent(DosRecord->ServerEvent, NULL);
-                NtClose(DosRecord->ServerEvent);
+                if (DosRecord->ServerEvent)
+                {
+                    NtSetEvent(DosRecord->ServerEvent, NULL);
+                    NtClose(DosRecord->ServerEvent);
+                    DosRecord->ServerEvent = NULL;
+                }
 
                 /* Remove the DOS entry */
                 if (DosRecord->CommandInfo) BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
@@ -264,24 +339,9 @@ BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess)
                 RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
             }
 
-            if (ConsoleRecord->CurrentDirs != NULL)
-            {
-                /* Free the current directories */
-                RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord->CurrentDirs);
-                ConsoleRecord->CurrentDirs = NULL;
-                ConsoleRecord->CurDirsLength = 0;
-            }
-
-            /* Close the process handle */
-            if (ConsoleRecord->ProcessHandle) NtClose(ConsoleRecord->ProcessHandle);
-
-            /* Close the event handle */
-            if (ConsoleRecord->ServerEvent) NtClose(ConsoleRecord->ServerEvent);
-
             /* Remove the console record */
-            i = i->Blink;
             RemoveEntryList(&ConsoleRecord->Entry);
-            RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
+            BaseSrvDestroyConsoleRecord(ConsoleRecord);
         }
     }
 
@@ -289,7 +349,7 @@ BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess)
     RtlLeaveCriticalSection(&DosCriticalSection);
 }
 
-BOOLEAN NTAPI BaseSrvCopyCommand(PBASE_CHECK_VDM CheckVdmRequest, PVDM_DOS_RECORD DosRecord)
+BOOLEAN BaseSrvCopyCommand(PBASE_CHECK_VDM CheckVdmRequest, PVDM_DOS_RECORD DosRecord)
 {
     BOOLEAN Success = FALSE;
     PVDM_COMMAND_INFO CommandInfo = NULL;
@@ -436,8 +496,8 @@ Cleanup:
     return Success;
 }
 
-NTSTATUS NTAPI BaseSrvFillCommandInfo(PVDM_COMMAND_INFO CommandInfo,
-                                      PBASE_GET_NEXT_VDM_COMMAND Message)
+NTSTATUS BaseSrvFillCommandInfo(PVDM_COMMAND_INFO CommandInfo,
+                                PBASE_GET_NEXT_VDM_COMMAND Message)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -453,116 +513,84 @@ NTSTATUS NTAPI BaseSrvFillCommandInfo(PVDM_COMMAND_INFO CommandInfo,
     Message->VDMState = CommandInfo->VDMState;
     Message->fComingFromBat = CommandInfo->ComingFromBat;
 
-    if (CommandInfo->CmdLen && Message->CmdLen)
+    if (Message->CmdLen >= CommandInfo->CmdLen)
     {
-        if (Message->CmdLen >= CommandInfo->CmdLen)
-        {
-            /* Copy the command line */
-            RtlMoveMemory(Message->CmdLine, CommandInfo->CmdLine, CommandInfo->CmdLen);
-        }
-        else Status = STATUS_BUFFER_TOO_SMALL;
-
-        Message->CmdLen = CommandInfo->CmdLen;
+        /* Copy the command line */
+        RtlMoveMemory(Message->CmdLine, CommandInfo->CmdLine, CommandInfo->CmdLen);
     }
+    else Status = STATUS_INVALID_PARAMETER;
+    Message->CmdLen = CommandInfo->CmdLen;
 
-    if (CommandInfo->AppLen && Message->AppLen)
+    if (Message->AppLen >= CommandInfo->AppLen)
     {
-        if (Message->AppLen >= CommandInfo->AppLen)
-        {
-            /* Copy the application name */
-            RtlMoveMemory(Message->AppName, CommandInfo->AppName, CommandInfo->AppLen);
-        }
-        else Status = STATUS_BUFFER_TOO_SMALL;
-
-        Message->AppLen = CommandInfo->AppLen;
+        /* Copy the application name */
+        RtlMoveMemory(Message->AppName, CommandInfo->AppName, CommandInfo->AppLen);
     }
+    else Status = STATUS_INVALID_PARAMETER;
+    Message->AppLen = CommandInfo->AppLen;
 
-    if (CommandInfo->PifLen && Message->PifLen)
+    if (Message->PifLen >= CommandInfo->PifLen)
     {
-        if (Message->PifLen >= CommandInfo->PifLen)
-        {
-            /* Copy the PIF file name */
-            RtlMoveMemory(Message->PifFile, CommandInfo->PifFile, CommandInfo->PifLen);
-        }
-        else Status = STATUS_BUFFER_TOO_SMALL;
-
-        Message->PifLen = CommandInfo->PifLen;
+        /* Copy the PIF file name */
+        RtlMoveMemory(Message->PifFile, CommandInfo->PifFile, CommandInfo->PifLen);
     }
+    else Status = STATUS_INVALID_PARAMETER;
+    Message->PifLen = CommandInfo->PifLen;
 
-    if (CommandInfo->CurDirectoryLen && Message->CurDirectoryLen)
+    if (Message->CurDirectoryLen >= CommandInfo->CurDirectoryLen)
     {
-        if (Message->CurDirectoryLen >= CommandInfo->CurDirectoryLen)
-        {
-            /* Copy the current directory */
-            RtlMoveMemory(Message->CurDirectory, CommandInfo->CurDirectory, CommandInfo->CurDirectoryLen);
-        }
-        else Status = STATUS_BUFFER_TOO_SMALL;
-
-        Message->CurDirectoryLen = CommandInfo->CurDirectoryLen;
+        /* Copy the current directory */
+        RtlMoveMemory(Message->CurDirectory, CommandInfo->CurDirectory, CommandInfo->CurDirectoryLen);
     }
+    else Status = STATUS_INVALID_PARAMETER;
+    Message->CurDirectoryLen = CommandInfo->CurDirectoryLen;
 
-    if (CommandInfo->EnvLen && Message->EnvLen)
+    if (Message->EnvLen >= CommandInfo->EnvLen)
     {
-        if (Message->EnvLen >= CommandInfo->EnvLen)
-        {
-            /* Copy the environment */
-            RtlMoveMemory(Message->Env, CommandInfo->Env, CommandInfo->EnvLen);
-        }
-        else Status = STATUS_BUFFER_TOO_SMALL;
-
-        Message->EnvLen = CommandInfo->EnvLen;
+        /* Copy the environment */
+        RtlMoveMemory(Message->Env, CommandInfo->Env, CommandInfo->EnvLen);
     }
+    else Status = STATUS_INVALID_PARAMETER;
+    Message->EnvLen = CommandInfo->EnvLen;
 
     /* Copy the startup info */
     RtlMoveMemory(Message->StartupInfo,
                   &CommandInfo->StartupInfo,
                   sizeof(STARTUPINFOA));
 
-    if (CommandInfo->DesktopLen && Message->DesktopLen)
+    if (Message->DesktopLen >= CommandInfo->DesktopLen)
     {
-        if (Message->DesktopLen >= CommandInfo->DesktopLen)
-        {
-            /* Copy the desktop name */
-            RtlMoveMemory(Message->Desktop, CommandInfo->Desktop, CommandInfo->DesktopLen);
-        }
-        else Status = STATUS_BUFFER_TOO_SMALL;
-
-        Message->DesktopLen = CommandInfo->DesktopLen;
+        /* Copy the desktop name */
+        RtlMoveMemory(Message->Desktop, CommandInfo->Desktop, CommandInfo->DesktopLen);
     }
+    else Status = STATUS_INVALID_PARAMETER;
+    Message->DesktopLen = CommandInfo->DesktopLen;
 
-    if (CommandInfo->TitleLen && Message->TitleLen)
+    if (Message->TitleLen >= CommandInfo->TitleLen)
     {
-        if (Message->TitleLen >= CommandInfo->TitleLen)
-        {
-            /* Copy the title */
-            RtlMoveMemory(Message->Title, CommandInfo->Title, CommandInfo->TitleLen);
-        }
-        else Status = STATUS_BUFFER_TOO_SMALL;
-
-        Message->TitleLen = CommandInfo->TitleLen;
+        /* Copy the title */
+        RtlMoveMemory(Message->Title, CommandInfo->Title, CommandInfo->TitleLen);
     }
+    else Status = STATUS_INVALID_PARAMETER;
+    Message->TitleLen = CommandInfo->TitleLen;
 
-    if (CommandInfo->ReservedLen && Message->ReservedLen)
+    if (Message->ReservedLen >= CommandInfo->ReservedLen)
     {
-        if (Message->ReservedLen >= CommandInfo->ReservedLen)
-        {
-            /* Copy the reserved parameter */
-            RtlMoveMemory(Message->Reserved, CommandInfo->Reserved, CommandInfo->ReservedLen);
-        }
-        else Status = STATUS_BUFFER_TOO_SMALL;
-
-        Message->ReservedLen = CommandInfo->ReservedLen;
+        /* Copy the reserved parameter */
+        RtlMoveMemory(Message->Reserved, CommandInfo->Reserved, CommandInfo->ReservedLen);
     }
+    else Status = STATUS_INVALID_PARAMETER;
+    Message->ReservedLen = CommandInfo->ReservedLen;
 
     return Status;
 }
 
-VOID NTAPI BaseInitializeVDM(VOID)
+VOID BaseInitializeVDM(VOID)
 {
     /* Initialize the list head */
     InitializeListHead(&VDMConsoleListHead);
 
-    /* Initialize the critical section */
+    /* Initialize the critical sections */
     RtlInitializeCriticalSection(&DosCriticalSection);
     RtlInitializeCriticalSection(&WowCriticalSection);
 }
@@ -577,6 +605,7 @@ CSR_API(BaseSrvCheckVDM)
     PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
     PVDM_DOS_RECORD DosRecord = NULL;
     BOOLEAN NewConsoleRecord = FALSE;
+    BOOLEAN NewDosRecord = FALSE;
 
     /* Don't do anything if the VDM has been disabled in the registry */
     if (!BaseSrvIsVdmAllowed()) return STATUS_VDM_DISALLOWED;
@@ -627,52 +656,74 @@ CSR_API(BaseSrvCheckVDM)
         /* Get the console record */
         Status = BaseSrvGetConsoleRecord(CheckVdmRequest->ConsoleHandle,
                                          &ConsoleRecord);
-
         if (!NT_SUCCESS(Status))
         {
             /* Allocate a new console record */
-            ConsoleRecord = (PVDM_CONSOLE_RECORD)RtlAllocateHeap(BaseSrvHeap,
-                                                                 HEAP_ZERO_MEMORY,
-                                                                 sizeof(VDM_CONSOLE_RECORD));
+            ConsoleRecord = BaseSrvCreateConsoleRecord();
             if (ConsoleRecord == NULL)
             {
                 Status = STATUS_NO_MEMORY;
                 goto Cleanup;
             }
 
-            /* Remember that the console record was allocated here */
-            NewConsoleRecord = TRUE;
-
             /* Initialize the console record */
             ConsoleRecord->ConsoleHandle = CheckVdmRequest->ConsoleHandle;
-            ConsoleRecord->ProcessHandle = NULL;
-            ConsoleRecord->ServerEvent = ConsoleRecord->ClientEvent = NULL;
-            ConsoleRecord->ReenterCount = 0;
-            ConsoleRecord->CurrentDirs = NULL;
-            ConsoleRecord->CurDirsLength = 0;
-            ConsoleRecord->SessionId = GetNextDosSesId();
-            InitializeListHead(&ConsoleRecord->DosListHead);
+            if (ConsoleRecord->ConsoleHandle == NULL)
+            {
+                /* The parent doesn't have a console, get a new session ID */
+                ConsoleRecord->SessionId = GetNextDosSesId();
+            }
+            else
+            {
+                /* No session ID is needed */
+                ConsoleRecord->SessionId = 0;
+            }
+
+            /* Remember that the console record was allocated here */
+            NewConsoleRecord = TRUE;
         }
 
-        /* Allocate a new DOS record */
-        DosRecord = (PVDM_DOS_RECORD)RtlAllocateHeap(BaseSrvHeap,
-                                                     HEAP_ZERO_MEMORY,
-                                                     sizeof(VDM_DOS_RECORD));
-        if (DosRecord == NULL)
+        if (!NewConsoleRecord)
         {
-            Status = STATUS_NO_MEMORY;
-            goto Cleanup;
+            /* Get the primary DOS record */
+            DosRecord = (PVDM_DOS_RECORD)CONTAINING_RECORD(ConsoleRecord->DosListHead.Flink,
+                                                           VDM_DOS_RECORD, Entry);
+
+            if (DosRecord->State != VDM_READY) // == VDM_NOT_READY
+            {
+                /* Allocate a new DOS record */
+                DosRecord = (PVDM_DOS_RECORD)RtlAllocateHeap(BaseSrvHeap,
+                                                             HEAP_ZERO_MEMORY,
+                                                             sizeof(VDM_DOS_RECORD));
+                if (DosRecord == NULL)
+                {
+                    Status = STATUS_NO_MEMORY;
+                    goto Cleanup;
+                }
+
+                /* Remember that the DOS record was allocated here */
+                NewDosRecord = TRUE;
+            }
+        }
+        else
+        {
+            /* Allocate a new DOS record */
+            DosRecord = (PVDM_DOS_RECORD)RtlAllocateHeap(BaseSrvHeap,
+                                                         HEAP_ZERO_MEMORY,
+                                                         sizeof(VDM_DOS_RECORD));
+            if (DosRecord == NULL)
+            {
+                Status = STATUS_NO_MEMORY;
+                goto Cleanup;
+            }
+
+            /* Remember that the DOS record was allocated here */
+            NewDosRecord = TRUE;
         }
 
         /* Initialize the DOS record */
-        DosRecord->State = VDM_NOT_LOADED;
+        DosRecord->State = VDM_NOT_READY;
         DosRecord->ExitCode = 0;
-
-        Status = BaseSrvCreatePairWaitHandles(&DosRecord->ServerEvent, &DosRecord->ClientEvent);
-        if (!NT_SUCCESS(Status)) goto Cleanup;
-
-        /* Return the client event handle */
-        CheckVdmRequest->WaitObjectForParent = DosRecord->ClientEvent;
 
         /* Translate the input structure into a VDM command structure and set it in the DOS record */
         if (!BaseSrvCopyCommand(CheckVdmRequest, DosRecord))
@@ -682,9 +733,23 @@ CSR_API(BaseSrvCheckVDM)
             goto Cleanup;
         }
 
-        /* Add the DOS record */
-        InsertHeadList(&ConsoleRecord->DosListHead, &DosRecord->Entry);
+        if (NewDosRecord)
+        {
+            /* Add the DOS record */
+            InsertHeadList(&ConsoleRecord->DosListHead, &DosRecord->Entry);
+        }
 
+        if (!NewConsoleRecord)
+        {
+            Status = BaseSrvCreatePairWaitHandles(&DosRecord->ServerEvent, &DosRecord->ClientEvent);
+            if (!NT_SUCCESS(Status)) goto Cleanup;
+
+            /* Return the client event handle */
+            CheckVdmRequest->WaitObjectForParent = DosRecord->ClientEvent;
+        }
+
+        // FIXME: We may notify ONLY if ConsoleRecord->nReEntrancy is > 0
+        // in case NewConsoleRecord == FALSE AND NewDosRecord == TRUE.
         if (ConsoleRecord->ServerEvent)
         {
             /* Signal the session event */
@@ -697,13 +762,7 @@ CSR_API(BaseSrvCheckVDM)
             InsertTailList(&VDMConsoleListHead, &ConsoleRecord->Entry);
         }
 
-        if (ConsoleRecord->ConsoleHandle == NULL)
-        {
-            /* The parent doesn't have a console, so return the session ID */
-            CheckVdmRequest->iTask = ConsoleRecord->SessionId;
-        }
-        else CheckVdmRequest->iTask = 0;
-
+        CheckVdmRequest->iTask = ConsoleRecord->SessionId;
         CheckVdmRequest->VDMState = NewConsoleRecord ? VDM_NOT_LOADED : VDM_READY;
         Status = STATUS_SUCCESS;
     }
@@ -718,21 +777,13 @@ Cleanup:
     /* Check if it failed */
     if (!NT_SUCCESS(Status))
     {
-        /* Free the DOS record */
-        if (DosRecord != NULL)
+        /* Free the DOS record if it was allocated here */
+        if (NewDosRecord)
         {
-            if (DosRecord->ServerEvent) NtClose(DosRecord->ServerEvent);
-            if (DosRecord->ClientEvent)
-            {
-                /* Close the remote handle */
-                NtDuplicateObject(CsrGetClientThread()->Process->ProcessHandle,
-                                  DosRecord->ClientEvent,
-                                  NULL,
-                                  NULL,
-                                  0,
-                                  0,
-                                  DUPLICATE_CLOSE_SOURCE);
-            }
+            ASSERT(DosRecord != NULL);
+
+            BaseSrvDestroyPairWaitHandles(DosRecord->ServerEvent,
+                                          DosRecord->ClientEvent);
 
             RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
             DosRecord = NULL;
@@ -741,6 +792,8 @@ Cleanup:
         /* Free the console record if it was allocated here */
         if (NewConsoleRecord)
         {
+            ASSERT(ConsoleRecord != NULL);
+
             RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
             ConsoleRecord = NULL;
         }
@@ -787,8 +840,7 @@ CSR_API(BaseSrvUpdateVDMEntry)
 
         /* Get the primary DOS record */
         DosRecord = (PVDM_DOS_RECORD)CONTAINING_RECORD(ConsoleRecord->DosListHead.Flink,
-                                                       VDM_DOS_RECORD,
-                                                       Entry);
+                                                       VDM_DOS_RECORD, Entry);
 
         switch (UpdateVdmEntryRequest->EntryIndex)
         {
@@ -811,10 +863,8 @@ CSR_API(BaseSrvUpdateVDMEntry)
                      */
                     if (ConsoleRecord->DosListHead.Flink == &ConsoleRecord->DosListHead)
                     {
-                        if (ConsoleRecord->ProcessHandle) NtClose(ConsoleRecord->ProcessHandle);
-                        if (ConsoleRecord->ServerEvent) NtClose(ConsoleRecord->ServerEvent);
                         RemoveEntryList(&ConsoleRecord->Entry);
-                        RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
+                        BaseSrvDestroyConsoleRecord(ConsoleRecord);
                     }
                 }
 
@@ -835,6 +885,10 @@ CSR_API(BaseSrvUpdateVDMEntry)
                                            0,
                                            DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
                 if (!NT_SUCCESS(Status)) goto Cleanup;
+
+                //
+                // FIXME! Should we always do the following??
+                //
 
                 /* Create a pair of handles to one event object */
                 Status = BaseSrvCreatePairWaitHandles(&DosRecord->ServerEvent,
@@ -881,7 +935,7 @@ CSR_API(BaseSrvGetNextVDMCommand)
 {
     NTSTATUS Status;
     PBASE_GET_NEXT_VDM_COMMAND GetNextVdmCommandRequest =
-    &((PBASE_API_MESSAGE)ApiMessage)->Data.GetNextVDMCommandRequest;
+        &((PBASE_API_MESSAGE)ApiMessage)->Data.GetNextVDMCommandRequest;
     PRTL_CRITICAL_SECTION CriticalSection;
     PLIST_ENTRY i = NULL;
     PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
@@ -935,7 +989,14 @@ CSR_API(BaseSrvGetNextVDMCommand)
     /* Enter the critical section */
     RtlEnterCriticalSection(CriticalSection);
 
-    if (!(GetNextVdmCommandRequest->VDMState & VDM_FLAG_WOW))
+    if (GetNextVdmCommandRequest->VDMState & VDM_FLAG_WOW)
+    {
+        // TODO: WOW SUPPORT NOT IMPLEMENTED
+        UNIMPLEMENTED;
+        Status = STATUS_NOT_IMPLEMENTED;
+        goto Cleanup;
+    }
+    // else if (!(GetNextVdmCommandRequest->VDMState & VDM_FLAG_WOW))
     {
         if (GetNextVdmCommandRequest->iTask != 0)
         {
@@ -1018,16 +1079,16 @@ CSR_API(BaseSrvGetNextVDMCommand)
             DosRecord->ServerEvent = NULL;
         }
 
-        /* Search for a DOS record that isn't loaded yet */
+        /* Search for a DOS record that is currently running and has command information */
         for (i = ConsoleRecord->DosListHead.Flink; i != &ConsoleRecord->DosListHead; i = i->Flink)
         {
             DosRecord = CONTAINING_RECORD(i, VDM_DOS_RECORD, Entry);
-            if (DosRecord->State == VDM_NOT_LOADED) break;
+            if ((DosRecord->State == VDM_NOT_READY) && (DosRecord->CommandInfo != NULL)) break;
         }
 
+        /* Check if we found any */
         if (i != &ConsoleRecord->DosListHead)
         {
-            /* DOS tasks which haven't been loaded yet should have a command info structure */
             ASSERT(DosRecord->CommandInfo != NULL);
 
             /* Check if the caller only wants environment data */
@@ -1060,22 +1121,22 @@ CSR_API(BaseSrvGetNextVDMCommand)
                 DosRecord->CommandInfo = NULL;
 
                 /* Update the VDM state */
-                GetNextVdmCommandRequest->VDMState = DosRecord->State = VDM_NOT_READY;
+                DosRecord->State = VDM_NOT_READY;
             }
 
             Status = STATUS_SUCCESS;
             goto Cleanup;
         }
     }
-    else
-    {
-        // TODO: WOW SUPPORT NOT IMPLEMENTED
-        Status = STATUS_NOT_IMPLEMENTED;
-        goto Cleanup;
-    }
 
-    /* There is no command yet */
-    if (!(GetNextVdmCommandRequest->VDMState & VDM_FLAG_DONT_WAIT))
+    GetNextVdmCommandRequest->WaitObjectForVDM = NULL;
+
+    /*
+     * There is no command yet. Prepare for waiting if we asked so,
+     * and if we were not retrying a request.
+     */
+    if (!(GetNextVdmCommandRequest->VDMState & VDM_FLAG_DONT_WAIT) ||
+        !(GetNextVdmCommandRequest->VDMState & VDM_FLAG_RETRY))
     {
         if (ConsoleRecord->ServerEvent)
         {
@@ -1122,16 +1183,30 @@ CSR_API(BaseSrvExitVDM)
         Status = BaseSrvGetConsoleRecord(ExitVdmRequest->ConsoleHandle, &ConsoleRecord);
         if (!NT_SUCCESS(Status)) goto Cleanup;
 
+        if (ConsoleRecord->ServerEvent)
+            ExitVdmRequest->WaitObjectForVDM = ConsoleRecord->ClientEvent;
+
+        // NOTE: The following is the same as in BaseSrvCleanupVDMResources.
+
+        if (ConsoleRecord->ServerEvent)
+        {
+            NtClose(ConsoleRecord->ServerEvent);
+            ConsoleRecord->ServerEvent = NULL;
+        }
+
         /* Cleanup the DOS records */
-        while (ConsoleRecord->DosListHead.Flink != &ConsoleRecord->DosListHead)
+        while (!IsListEmpty(&ConsoleRecord->DosListHead))
         {
             DosRecord = CONTAINING_RECORD(ConsoleRecord->DosListHead.Flink,
-                                          VDM_DOS_RECORD,
-                                          Entry);
+                                          VDM_DOS_RECORD, Entry);
 
             /* Set the event and close it */
-            NtSetEvent(DosRecord->ServerEvent, NULL);
-            NtClose(DosRecord->ServerEvent);
+            if (DosRecord->ServerEvent)
+            {
+                NtSetEvent(DosRecord->ServerEvent, NULL);
+                NtClose(DosRecord->ServerEvent);
+                DosRecord->ServerEvent = NULL;
+            }
 
             /* Remove the DOS entry */
             if (DosRecord->CommandInfo) BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
@@ -1139,20 +1214,9 @@ CSR_API(BaseSrvExitVDM)
             RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
         }
 
-        if (ConsoleRecord->CurrentDirs != NULL)
-        {
-            /* Free the current directories */
-            RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord->CurrentDirs);
-            ConsoleRecord->CurrentDirs = NULL;
-            ConsoleRecord->CurDirsLength = 0;
-        }
-
-        /* Close the event handle */
-        if (ConsoleRecord->ServerEvent) NtClose(ConsoleRecord->ServerEvent);
-
         /* Remove the console record */
         RemoveEntryList(&ConsoleRecord->Entry);
-        RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
+        BaseSrvDestroyConsoleRecord(ConsoleRecord);
     }
     else
     {
@@ -1220,6 +1284,8 @@ CSR_API(BaseSrvGetVDMExitCode)
     /* Return the exit code */
     GetVDMExitCodeRequest->ExitCode = DosRecord->ExitCode;
 
+    // FIXME: We may just change DosRecord->State to VDM_READY in some cases...
+
     /* Since this is a zombie task record, remove it */
     if (DosRecord->CommandInfo) BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
     RemoveEntryList(&DosRecord->Entry);
@@ -1245,13 +1311,20 @@ CSR_API(BaseSrvSetReenterCount)
     Status = BaseSrvGetConsoleRecord(SetReenterCountRequest->ConsoleHandle, &ConsoleRecord);
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
-    if (SetReenterCountRequest->fIncDec == VDM_INC_REENTER_COUNT) ConsoleRecord->ReenterCount++;
+    if (SetReenterCountRequest->fIncDec == VDM_INC_REENTER_COUNT)
+    {
+        ConsoleRecord->ReenterCount++;
+    }
     else if (SetReenterCountRequest->fIncDec == VDM_DEC_REENTER_COUNT)
     {
         ConsoleRecord->ReenterCount--;
-        if (ConsoleRecord->ServerEvent != NULL) NtSetEvent(ConsoleRecord->ServerEvent, NULL);
+        if (ConsoleRecord->ServerEvent)
+            NtSetEvent(ConsoleRecord->ServerEvent, NULL);
     }
-    else Status = STATUS_INVALID_PARAMETER;
+    else
+    {
+        Status = STATUS_INVALID_PARAMETER;
+    }
 
 Cleanup:
     /* Leave the critical section */
