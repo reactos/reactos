@@ -18,18 +18,21 @@ typedef struct KnownSections
 static struct KnownSections g_Sections[] = {
     {
         ".text",
-        IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ,
+        IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_NOT_PAGED,
         IMAGE_SCN_MEM_DISCARDABLE
-        // optional: IMAGE_SCN_MEM_NOT_PAGED
     },
     {
         ".data",
-        IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE,
+        IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_NOT_PAGED,
         IMAGE_SCN_MEM_DISCARDABLE
-        // optional: IMAGE_SCN_MEM_NOT_PAGED
     },
     {
         ".rsrc",
+        IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ,
+        IMAGE_SCN_MEM_DISCARDABLE
+    },
+    {
+        ".rdata",
         IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ,
         IMAGE_SCN_MEM_DISCARDABLE
     },
@@ -42,7 +45,6 @@ static struct KnownSections g_Sections[] = {
         "INIT",
         IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_DISCARDABLE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ,
         0
-        // optional?? : IMAGE_SCN_MEM_WRITE
     },
     { NULL, 0 },
 };
