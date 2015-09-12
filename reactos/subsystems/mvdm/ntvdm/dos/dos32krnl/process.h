@@ -109,13 +109,6 @@ DWORD DosLoadExecutable
     IN DWORD ReturnAddress OPTIONAL
 );
 
-DWORD DosStartProcess(
-    IN LPCSTR ExecutablePath,
-    IN LPCSTR CommandLine,
-    IN LPCSTR Environment OPTIONAL,
-    IN DWORD ReturnAddress OPTIONAL
-);
-
 WORD DosCreateProcess
 (
     LPCSTR ProgramName,

@@ -84,6 +84,16 @@ static inline VOID DosSaveState(VOID)
     PDOS_REGISTER_STATE State;
     WORD StackPointer = getSP();
 
+    DPRINT1("\n"
+            "DosSaveState(before) -- SS:SP == %04X:%04X\n"
+            "Original CPU State =\n"
+            "DS = %04X; ES = %04X; AX = %04X; CX = %04X\n"
+            "DX = %04X; BX = %04X; BP = %04X; SI = %04X; DI = %04X"
+            "\n",
+            getSS(), getSP(),
+            getDS(), getES(), getAX(), getCX(),
+            getDX(), getBX(), getBP(), getSI(), getDI());
+
     /*
      * Allocate stack space for the registers. Note that we
      * already have one word allocated (the interrupt number).
@@ -102,6 +112,16 @@ static inline VOID DosSaveState(VOID)
     State->BP = getBP();
     State->SI = getSI();
     State->DI = getDI();
+
+    DPRINT1("\n"
+            "DosSaveState(after) -- SS:SP == %04X:%04X\n"
+            "Saved State =\n"
+            "DS = %04X; ES = %04X; AX = %04X; CX = %04X\n"
+            "DX = %04X; BX = %04X; BP = %04X; SI = %04X; DI = %04X"
+            "\n",
+            getSS(), getSP(),
+            State->DS, State->ES, State->AX, State->CX,
+            State->DX, State->BX, State->BP, State->SI, State->DI);
 }
 
 static inline VOID DosRestoreState(VOID)
@@ -113,6 +133,17 @@ static inline VOID DosRestoreState(VOID)
      * already have one word allocated (the interrupt number).
      */
     State = SEG_OFF_TO_PTR(getSS(), getSP());
+
+    DPRINT1("\n"
+            "DosRestoreState(before) -- SS:SP == %04X:%04X\n"
+            "Saved State =\n"
+            "DS = %04X; ES = %04X; AX = %04X; CX = %04X\n"
+            "DX = %04X; BX = %04X; BP = %04X; SI = %04X; DI = %04X"
+            "\n",
+            getSS(), getSP(),
+            State->DS, State->ES, State->AX, State->CX,
+            State->DX, State->BX, State->BP, State->SI, State->DI);
+
     setSP(getSP() + sizeof(DOS_REGISTER_STATE) - sizeof(WORD));
 
     /* Restore */
@@ -125,6 +156,16 @@ static inline VOID DosRestoreState(VOID)
     setBP(State->BP);
     setSI(State->SI);
     setDI(State->DI);
+
+    DPRINT1("\n"
+            "DosRestoreState(after) -- SS:SP == %04X:%04X\n"
+            "Restored CPU State =\n"
+            "DS = %04X; ES = %04X; AX = %04X; CX = %04X\n"
+            "DX = %04X; BX = %04X; BP = %04X; SI = %04X; DI = %04X"
+            "\n",
+            getSS(), getSP(),
+            getDS(), getES(), getAX(), getCX(),
+            getDX(), getBX(), getBP(), getSI(), getDI());
 }
 
 static WORD DosCopyEnvironmentBlock(IN LPCSTR Environment OPTIONAL,
@@ -251,6 +292,12 @@ VOID DosCreatePsp(WORD Segment, WORD ProgramSize)
         /* Link to the parent's environment block */
         PspBlock->EnvBlock = SEGMENT_TO_PSP(Sda->CurrentPsp)->EnvBlock;
     }
+/*
+    else
+    {
+        PspBlock->EnvBlock = SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0);
+    }
+*/
 
     /* Copy the parent handle table */
     DosCopyHandleTable(PspBlock->HandleTable);
@@ -560,6 +607,9 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
             /* Push the task state */
             DosSaveState();
 
+            DPRINT1("Sda->CurrentPsp = 0x%04x; Old LastStack = 0x%08x, New LastStack = 0x%08x\n",
+                   Sda->CurrentPsp, SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack, MAKELONG(getSP(), getSS()));
+
             /* Update the last stack in the PSP */
             SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
         }
@@ -705,190 +755,38 @@ Cleanup:
     return Result;
 }
 
-DWORD DosStartProcess(IN LPCSTR ExecutablePath,
-                      IN LPCSTR CommandLine,
-                      IN LPCSTR Environment OPTIONAL,
-                      IN DWORD ReturnAddress OPTIONAL)
-{
-    DWORD Result;
-
-    SIZE_T CmdLen = strlen(CommandLine);
-    DPRINT1("Starting '%s' ('%.*s')...\n",
-            ExecutablePath,
-            /* Display the command line without the terminating 0d 0a (and skip the terminating NULL) */
-            CmdLen >= 2 ? (CommandLine[CmdLen - 2] == '\r' ? CmdLen - 2
-                                                           : CmdLen)
-                        : CmdLen,
-            CommandLine);
-
-    Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
-                               ExecutablePath,
-                               NULL,
-                               CommandLine,
-                               Environment,
-                               ReturnAddress);
-
-    if (Result != ERROR_SUCCESS) goto Quit;
-
-#ifndef STANDALONE
-    /* Update console title if we run in a separate console */
-    if (SessionId != 0)
-        SetConsoleTitleA(ExecutablePath);
-#endif
-
-    /* Attach to the console */
-    ConsoleAttach();
-    VidBiosAttachToConsole();
-
-    /* Start simulation */
-    SetEvent(VdmTaskEvent);
-    CpuSimulate();
-
-    /* Detach from the console */
-    VidBiosDetachFromConsole();
-    ConsoleDetach();
-
-Quit:
-    return Result;
-}
-
-#ifndef STANDALONE
 WORD DosCreateProcess(IN LPCSTR ProgramName,
                       IN PDOS_EXEC_PARAM_BLOCK Parameters,
                       IN DWORD ReturnAddress OPTIONAL)
 {
-    DWORD Result;
+    DWORD Result = ERROR_SUCCESS;
     DWORD BinaryType;
-    LPVOID Environment = NULL;
-    VDM_COMMAND_INFO CommandInfo;
-    CHAR CmdLine[MAX_PATH + DOS_CMDLINE_LENGTH + 1];
-    CHAR AppName[MAX_PATH];
-    CHAR PifFile[MAX_PATH];
-    CHAR Desktop[MAX_PATH];
-    CHAR Title[MAX_PATH];
-    LPSTR CmdLinePtr;
-    ULONG CmdLineSize;
-    ULONG EnvSize = 256;
-    PVOID Env;
-    STARTUPINFOA StartupInfo;
-    PROCESS_INFORMATION ProcessInfo;
 
     /* Get the binary type */
     if (!GetBinaryTypeA(ProgramName, &BinaryType)) return GetLastError();
 
-    /* Initialize Win32-VDM environment */
-    Env = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
-    if (Env == NULL) return GetLastError();
-
-    /* Did the caller specify an environment segment? */
-    if (Parameters->Environment)
-    {
-        /* Yes, use it instead of the parent one */
-        Environment = SEG_OFF_TO_PTR(Parameters->Environment, 0);
-    }
-
-    /* Set up the startup info structure */
-    RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
-    StartupInfo.cb = sizeof(StartupInfo);
-
-    /*
-     * Convert the DOS command line to Win32-compatible format, by concatenating
-     * the program name with the converted command line.
-     * Format of the DOS command line: 1 byte for size; 127 bytes for contents.
-     */
-    CmdLinePtr = CmdLine;
-    strncpy(CmdLinePtr, ProgramName, MAX_PATH); // Concatenate the program name
-    CmdLinePtr += strlen(CmdLinePtr);
-    *CmdLinePtr++ = ' ';                        // Add separating space
-
-    CmdLineSize = min(*(PBYTE)FAR_POINTER(Parameters->CommandLine), DOS_CMDLINE_LENGTH);
-    RtlCopyMemory(CmdLinePtr,
-                  (LPSTR)FAR_POINTER(Parameters->CommandLine) + 1,
-                  CmdLineSize);
-    /* NULL-terminate it */
-    CmdLinePtr[CmdLineSize] = '\0';
-
-    /* Remove any trailing return carriage character and NULL-terminate the command line */
-    while (*CmdLinePtr && *CmdLinePtr != '\r' && *CmdLinePtr != '\n') CmdLinePtr++;
-    *CmdLinePtr = '\0';
-
-    /* Create the process */
-    if (!CreateProcessA(ProgramName,
-                        CmdLine,
-                        NULL,
-                        NULL,
-                        FALSE,
-                        0,
-                        Environment,
-                        NULL,
-                        &StartupInfo,
-                        &ProcessInfo))
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Env);
-        return GetLastError();
-    }
-
     /* Check the type of the program */
     switch (BinaryType)
     {
-        /* These are handled by NTVDM */
-        case SCS_DOS_BINARY:
+        /* Those are handled by NTVDM */
         case SCS_WOW_BINARY:
         {
-            /* Clear the structure */
-            RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
-
-            /* Initialize the structure members */
-            CommandInfo.TaskId = SessionId;
-            CommandInfo.VDMState = VDM_FLAG_NESTED_TASK | VDM_FLAG_DONT_WAIT;
-            CommandInfo.CmdLine = CmdLine;
-            CommandInfo.CmdLen = sizeof(CmdLine);
-            CommandInfo.AppName = AppName;
-            CommandInfo.AppLen = sizeof(AppName);
-            CommandInfo.PifFile = PifFile;
-            CommandInfo.PifLen = sizeof(PifFile);
-            CommandInfo.Desktop = Desktop;
-            CommandInfo.DesktopLen = sizeof(Desktop);
-            CommandInfo.Title = Title;
-            CommandInfo.TitleLen = sizeof(Title);
-            CommandInfo.Env = Env;
-            CommandInfo.EnvLen = EnvSize;
-
-Command:
-            /* Get the VDM command information */
-            if (!GetNextVDMCommand(&CommandInfo))
-            {
-                if (CommandInfo.EnvLen > EnvSize)
-                {
-                    /* Expand the environment size */
-                    EnvSize = CommandInfo.EnvLen;
-                    CommandInfo.Env = Env = RtlReAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
-
-                    /* Repeat the request */
-                    CommandInfo.VDMState |= VDM_FLAG_RETRY;
-                    goto Command;
-                }
-
-                /* Shouldn't happen */
-                ASSERT(FALSE);
-            }
-
+            DisplayMessage(L"Trying to load '%S'. WOW16 applications are not supported at the moment.",
+                           ProgramName);
+            // Fall through
+        }
+        case SCS_DOS_BINARY:
+        {
             /* Load the executable */
             Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
-                                       AppName,
+                                       ProgramName,
                                        Parameters,
-                                       CmdLine,
-                                       Env,
+                                       NULL,
+                                       NULL,
                                        ReturnAddress);
-            if (Result == ERROR_SUCCESS)
+            if (Result != ERROR_SUCCESS)
             {
-                /* Increment the re-entry count */
-                CommandInfo.VDMState = VDM_INC_REENTER_COUNT;
-                GetNextVDMCommand(&CommandInfo);
-            }
-            else
-            {
-                DisplayMessage(L"Could not load '%S'. Error: %u", AppName, Result);
+                DisplayMessage(L"Could not load '%S'. Error: %u", ProgramName, Result);
             }
 
             break;
@@ -897,20 +795,53 @@ Command:
         /* Not handled by NTVDM */
         default:
         {
-            /* Wait for the process to finish executing */
-            WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+            LPSTR Environment = NULL;
+            CHAR CmdLine[MAX_PATH + DOS_CMDLINE_LENGTH + 1];
+            LPSTR CmdLinePtr;
+            ULONG CmdLineSize;
+
+            /* Did the caller specify an environment segment? */
+            if (Parameters->Environment)
+            {
+                /* Yes, use it instead of the parent one */
+                Environment = (LPSTR)SEG_OFF_TO_PTR(Parameters->Environment, 0);
+            }
+
+            /*
+             * Convert the DOS command line to Win32-compatible format, by concatenating
+             * the program name with the converted command line.
+             * Format of the DOS command line: 1 byte for size; 127 bytes for contents.
+             */
+            CmdLinePtr = CmdLine;
+            strncpy(CmdLinePtr, ProgramName, MAX_PATH); // Concatenate the program name
+            CmdLinePtr += strlen(CmdLinePtr);
+            *CmdLinePtr++ = ' ';                        // Add separating space
+
+            CmdLineSize = min(*(PBYTE)FAR_POINTER(Parameters->CommandLine), DOS_CMDLINE_LENGTH);
+            RtlCopyMemory(CmdLinePtr,
+                          (LPSTR)FAR_POINTER(Parameters->CommandLine) + 1,
+                          CmdLineSize);
+            /* NULL-terminate it */
+            CmdLinePtr[CmdLineSize] = '\0';
+
+            /* Remove any trailing return carriage character and NULL-terminate the command line */
+            while (*CmdLinePtr && *CmdLinePtr != '\r' && *CmdLinePtr != '\n') CmdLinePtr++;
+            *CmdLinePtr = '\0';
+
+            Result = DosStartProcess32(ProgramName, CmdLine,
+                                       Environment, ReturnAddress,
+                                       TRUE);
+            if (Result != ERROR_SUCCESS)
+            {
+                DisplayMessage(L"Could not load 32-bit '%S'. Error: %u", ProgramName, Result);
+            }
+
+            break;
         }
     }
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Env);
-
-    /* Close the handles */
-    CloseHandle(ProcessInfo.hProcess);
-    CloseHandle(ProcessInfo.hThread);
-
-    return ERROR_SUCCESS;
+    return Result;
 }
-#endif
 
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
 {
@@ -920,9 +851,6 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
     LPWORD Stack;
     BYTE TerminationType;
-#ifndef STANDALONE
-    VDM_COMMAND_INFO CommandInfo;
-#endif
 
     DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X, KeepResident 0x%04X\n",
            Psp, ReturnCode, KeepResident);
@@ -991,35 +919,24 @@ Done:
         DosSetProcessContext(PspBlock->ParentPsp);
         if (Sda->CurrentPsp == SYSTEM_PSP)
         {
-            ResetEvent(VdmTaskEvent);
+            // NOTE: we can also use the DOS BIOS exit code.
             CpuUnsimulate();
             return;
         }
     }
 
-#ifndef STANDALONE
-
-    /* Decrement the re-entry count */
-    CommandInfo.TaskId = SessionId;
-    CommandInfo.VDMState = VDM_DEC_REENTER_COUNT;
-    GetNextVDMCommand(&CommandInfo);
-
-    /* Clear the structure */
-    RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
-
-    /* Update the VDM state of the task */
-    CommandInfo.TaskId = SessionId;
-    CommandInfo.VDMState = VDM_FLAG_DONT_WAIT;
-    GetNextVDMCommand(&CommandInfo);
-
-#endif
-
     /* Save the return code - Normal termination or TSR */
     TerminationType = (KeepResident != 0 ? 0x03 : 0x00);
     Sda->ErrorLevel = MAKEWORD(ReturnCode, TerminationType);
 
+    DPRINT1("PspBlock->ParentPsp = 0x%04x; Sda->CurrentPsp = 0x%04x\n",
+           PspBlock->ParentPsp, Sda->CurrentPsp);
+
     if (Sda->CurrentPsp != SYSTEM_PSP)
     {
+        DPRINT1("Sda->CurrentPsp = 0x%04x; Old SS:SP = %04X:%04X going to be LastStack = 0x%08x\n",
+               Sda->CurrentPsp, getSS(), getSP(), SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack);
+
         /* Restore the parent's stack */
         setSS(HIWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));
         setSP(LOWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));

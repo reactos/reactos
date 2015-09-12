@@ -1351,7 +1351,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             {
                 DOS_EXEC_TYPE LoadType = (DOS_EXEC_TYPE)OrgAL;
 
-#ifndef STANDALONE
                 if (LoadType == DOS_LOAD_AND_EXECUTE)
                 {
                     /* Create a new process */
@@ -1360,7 +1359,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                                                  MAKELONG(Stack[STACK_IP], Stack[STACK_CS]));
                 }
                 else
-#endif
                 {
                     /* Just load an executable */
                     ErrorCode = DosLoadExecutable(LoadType,
@@ -2464,8 +2462,8 @@ BOOLEAN DosKRNLInitialize(VOID)
     /* Load the EMS driver */
     if (!EmsDrvInitialize(EMS_SEGMENT, EMS_TOTAL_PAGES))
     {
-        DPRINT1("Could not initialize EMS. EMS will not be available.\n"
-                "Page frame segment or number of EMS pages invalid.\n");
+        DosDisplayMessage("Could not initialize EMS. EMS will not be available.\n"
+                          "Page frame segment or number of EMS pages invalid.\n");
     }
 
     /* Finally initialize the UMBs */

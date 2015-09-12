@@ -65,6 +65,7 @@ typedef struct _DOS_FCB
     BYTE RecordNumber[3];
 } DOS_FCB, *PDOS_FCB;
 
+// http://www.ctyme.com/intr/rb-2983.htm
 typedef struct _DOS_SYSVARS
 {
     DWORD OemHandler;
@@ -134,6 +135,7 @@ typedef struct _DOS_FIND_FILE_BLOCK
     CHAR FileName[13];
 } DOS_FIND_FILE_BLOCK, *PDOS_FIND_FILE_BLOCK;
 
+// http://www.ctyme.com/intr/rb-3023.htm
 typedef struct _DOS_SDA
 {
     BYTE PrinterEchoFlag;
@@ -309,6 +311,9 @@ do { \
                   (IntNumber), (IntHandler), NULL);         \
 } while(0);
 
+VOID ConDrvInitialize(VOID);
+VOID ConDrvCleanup(VOID);
+
 /*
  * DOS BIOS Functions
  * See bios.c
@@ -318,14 +323,11 @@ BOOLEAN DosCheckInput(VOID);
 VOID DosPrintCharacter(WORD FileHandle, CHAR Character);
 
 BOOLEAN DosBIOSInitialize(VOID);
-VOID ConDrvInitialize(VOID);
-VOID ConDrvCleanup(VOID);
 
 /*
  * DOS Kernel Functions
  * See dos.c
  */
-
 BOOLEAN DosKRNLInitialize(VOID);
 
 #endif // _DOS_H_

@@ -69,8 +69,6 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 
 /* FUNCTIONS ******************************************************************/
 
-extern HANDLE VdmTaskEvent;
-
 // Command line of NTVDM
 extern INT     NtVdmArgc;
 extern WCHAR** NtVdmArgv;

@@ -1,6 +1,15 @@
 
 PROJECT(NTVDM)
 
+#####################################
+# Generate the integrated COMMAND.COM
+#
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/command_com.c ${CMAKE_CURRENT_BINARY_DIR}/command_com.h
+    COMMAND native-bin2c ${CMAKE_CURRENT_BINARY_DIR}/../dos/command.com ${CMAKE_CURRENT_BINARY_DIR}/command_com.c ${CMAKE_CURRENT_BINARY_DIR}/command_com.h BIN CommandCom
+    DEPENDS native-bin2c command)
+#####################################
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)
 
 spec2def(ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
@@ -43,6 +52,7 @@ list(APPEND SOURCE
     dos/dos32krnl/process.c
     dos/dem.c
     dos/mouse32.c
+    ${CMAKE_CURRENT_BINARY_DIR}/command_com.c
     clock.c
     emulator.c
     int32.c

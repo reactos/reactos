@@ -42,6 +42,7 @@
 LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
 
+HANDLE VdmTaskEvent = NULL;
 static HANDLE InputThread = NULL;
 
 LPCWSTR ExceptionName[] =
@@ -108,13 +109,6 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
 
     /* Stop the VDM */
     EmulatorTerminate();
-}
-
-VOID EmulatorTerminate(VOID)
-{
-    /* Stop the VDM */
-    CpuUnsimulate(); // Halt the CPU
-    VdmRunning = FALSE;
 }
 
 VOID EmulatorInterruptSignal(VOID)
@@ -186,63 +180,117 @@ static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 
 static DWORD
 WINAPI
-PumpConsoleInput(LPVOID Parameter)
+ConsoleEventThread(LPVOID Parameter)
 {
     HANDLE ConsoleInput = (HANDLE)Parameter;
-    INPUT_RECORD InputRecord;
-    DWORD Count;
+    HANDLE WaitHandles[2];
+    DWORD  WaitResult;
+
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than five
+     * input records are read. Otherwise a new buffer is used.
+     * The client-side expects that we know this behaviour.
+     * See consrv/coninput.c
+     *
+     * We exploit here this optimization by also using a buffer of 5 records.
+     */
+    INPUT_RECORD InputRecords[5];
+    ULONG NumRecords, i;
+
+    WaitHandles[0] = VdmTaskEvent;
+    WaitHandles[1] = GetConsoleInputWaitHandle();
 
     while (VdmRunning)
     {
         /* Make sure the task event is signaled */
-        WaitForSingleObject(VdmTaskEvent, INFINITE);
+        WaitResult = WaitForMultipleObjects(ARRAYSIZE(WaitHandles),
+                                            WaitHandles,
+                                            TRUE,
+                                            INFINITE);
+        switch (WaitResult)
+        {
+            case WAIT_OBJECT_0 + 0:
+            case WAIT_OBJECT_0 + 1:
+                break;
+            default:
+                return GetLastError();
+        }
 
         /* Wait for an input record */
-        if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
+        if (!ReadConsoleInputExW(ConsoleInput,
+                                 InputRecords,
+                                 ARRAYSIZE(InputRecords),
+                                 &NumRecords,
+                                 CONSOLE_READ_CONTINUE))
         {
             DWORD LastError = GetLastError();
-            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, Count, LastError);
+            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, NumRecords, LastError);
             return LastError;
         }
 
-        ASSERT(Count != 0);
-
-        /* Check the event type */
-        switch (InputRecord.EventType)
+        // ASSERT(NumRecords != 0);
+        if (NumRecords == 0)
         {
-            /*
-             * Hardware events
-             */
-            case KEY_EVENT:
-                KeyboardEventHandler(&InputRecord.Event.KeyEvent);
-                break;
-
-            case MOUSE_EVENT:
-                MouseEventHandler(&InputRecord.Event.MouseEvent);
-                break;
-
-            case WINDOW_BUFFER_SIZE_EVENT:
-                ScreenEventHandler(&InputRecord.Event.WindowBufferSizeEvent);
-                break;
-
-            /*
-             * Interface events
-             */
-            case MENU_EVENT:
-                MenuEventHandler(&InputRecord.Event.MenuEvent);
-                break;
-
-            case FOCUS_EVENT:
-                FocusEventHandler(&InputRecord.Event.FocusEvent);
-                break;
-
-            default:
-                break;
+            DPRINT1("Got NumRecords == 0!\n");
+            continue;
         }
+
+        /* Dispatch the events */
+        for (i = 0; i < NumRecords; i++)
+        {
+            /* Check the event type */
+            switch (InputRecords[i].EventType)
+            {
+                /*
+                 * Hardware events
+                 */
+                case KEY_EVENT:
+                    KeyboardEventHandler(&InputRecords[i].Event.KeyEvent);
+                    break;
+
+                case MOUSE_EVENT:
+                    MouseEventHandler(&InputRecords[i].Event.MouseEvent);
+                    break;
+
+                case WINDOW_BUFFER_SIZE_EVENT:
+                    ScreenEventHandler(&InputRecords[i].Event.WindowBufferSizeEvent);
+                    break;
+
+                /*
+                 * Interface events
+                 */
+                case MENU_EVENT:
+                    MenuEventHandler(&InputRecords[i].Event.MenuEvent);
+                    break;
+
+                case FOCUS_EVENT:
+                    FocusEventHandler(&InputRecords[i].Event.FocusEvent);
+                    break;
+
+                default:
+                    DPRINT1("Unknown input event type 0x%04x\n", InputRecords[i].EventType);
+                    break;
+            }
+        }
+
+        /* Let the console subsystem queue some new events */
+        Sleep(10);
     }
 
     return 0;
 }
+
+static VOID PauseEventThread(VOID)
+{
+    ResetEvent(VdmTaskEvent);
+}
+
+static VOID ResumeEventThread(VOID)
+{
+    SetEvent(VdmTaskEvent);
+}
+
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -356,6 +404,29 @@ VOID DumpMemory(BOOLEAN TextFormat)
     DPRINT1("Memory dump done\n");
 }
 
+VOID EmulatorPause(VOID)
+{
+    /* Pause the VDM */
+    VDDBlockUserHook();
+    VgaRefreshDisplay();
+    PauseEventThread();
+}
+
+VOID EmulatorResume(VOID)
+{
+    /* Resume the VDM */
+    ResumeEventThread();
+    VgaRefreshDisplay();
+    VDDResumeUserHook();
+}
+
+VOID EmulatorTerminate(VOID)
+{
+    /* Stop the VDM */
+    CpuUnsimulate(); // Halt the CPU
+    VdmRunning = FALSE;
+}
+
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
     /* Initialize memory */
@@ -403,11 +474,15 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     MouseInit(1);
 
     /**************** ATTACH INPUT WITH CONSOLE *****************/
+    /* Create the task event */
+    VdmTaskEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    ASSERT(VdmTaskEvent != NULL);
+
     /* Start the input thread */
-    InputThread = CreateThread(NULL, 0, &PumpConsoleInput, ConsoleInput, 0, NULL);
+    InputThread = CreateThread(NULL, 0, &ConsoleEventThread, ConsoleInput, 0, NULL);
     if (InputThread == NULL)
     {
-        DisplayMessage(L"Failed to create the console input thread.");
+        wprintf(L"FATAL: Failed to create the console input thread.\n");
         EmulatorCleanup();
         return FALSE;
     }
@@ -416,7 +491,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     /* Initialize the VGA */
     if (!VgaInitialize(ConsoleOutput))
     {
-        DisplayMessage(L"Failed to initialize VGA support.");
+        wprintf(L"FATAL: Failed to initialize VGA support.\n");
         EmulatorCleanup();
         return FALSE;
     }
@@ -439,6 +514,10 @@ VOID EmulatorCleanup(VOID)
     /* Close the input thread handle */
     if (InputThread != NULL) CloseHandle(InputThread);
     InputThread = NULL;
+
+    /* Close the task event */
+    if (VdmTaskEvent != NULL) CloseHandle(VdmTaskEvent);
+    VdmTaskEvent = NULL;
 
     PS2Cleanup();
 

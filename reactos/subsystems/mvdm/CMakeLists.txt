@@ -3,7 +3,7 @@
 include(asm16.cmake)
 
 add_subdirectory(config)
-#add_subdirectory(dos)
+add_subdirectory(dos)
 add_subdirectory(ntvdm)
 if(ARCH STREQUAL "i386")
 add_subdirectory(samples)

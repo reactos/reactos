@@ -107,11 +107,12 @@ VOID FASTCALL EmulatorFpu
     PFAST486_STATE State
 );
 
+VOID EmulatorInterruptSignal(VOID);
 VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack);
 
+VOID EmulatorPause(VOID);
+VOID EmulatorResume(VOID);
 VOID EmulatorTerminate(VOID);
-
-VOID EmulatorInterruptSignal(VOID);
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
 VOID EmulatorCleanup(VOID);

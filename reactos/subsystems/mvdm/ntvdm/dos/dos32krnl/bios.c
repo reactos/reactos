@@ -14,6 +14,7 @@
 #include "emulator.h"
 #include "int32.h"
 
+#include "../dem.h"
 #include "dos.h"
 #include "dosfiles.h"
 #include "memory.h"
@@ -31,8 +32,6 @@
 #define FreeEnvironmentStrings FreeEnvironmentStringsA
 
 /* PRIVATE VARIABLES **********************************************************/
-
-// CALLBACK16 BiosContext;
 
 /* PUBLIC VARIABLES ***********************************************************/
 
@@ -175,6 +174,7 @@ BOOLEAN DosBIOSInitialize(VOID)
     // FIXME: Add a block of fixed size for the stack in BIOS/DOS_DATA instead!
     setSS(0x0F00);
     setSP(0x0FF0);
+/// setBP(0x091E); // DOS base stack pointer relic value
 
     /*
      * Initialize the INT 13h (BIOS Disk Services) handler chain support.
@@ -207,21 +207,19 @@ BOOLEAN DosBIOSInitialize(VOID)
      * SysInit part...
      */
 
-    // InitializeContext(&DosContext, BIOS_CODE_SEGMENT, 0x0010);
-
     /* Initialize the DOS kernel (DosInit) */
     if (!DosKRNLInitialize())
     {
-        DisplayMessage(L"Failed to load the DOS kernel! Exiting...");
+        BiosDisplayMessage("Failed to load the DOS kernel! Exiting...\n");
         return FALSE;
     }
 
     /* DOS kernel loading succeeded, we can finish the initialization */
 
-    /* Build the system master environment block (inherited by the shell) */
+    /* Build the system master (pre-) environment block (inherited by the shell) */
     if (!DosBuildSysEnvBlock())
     {
-        DPRINT1("An error occurred when setting up the system environment block.\n");
+        DosDisplayMessage("An error occurred when setting up the system environment block.\n");
     }
 
     /* TODO: Read CONFIG.NT/SYS */

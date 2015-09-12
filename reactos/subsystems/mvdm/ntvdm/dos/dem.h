@@ -27,13 +27,29 @@
 
 /* VARIABLES ******************************************************************/
 
-#ifndef STANDALONE
-extern BOOLEAN AcceptCommands;
-extern HANDLE CommandThread;
-extern ULONG SessionId;
-#endif
-
 /* FUNCTIONS ******************************************************************/
+
+typedef VOID (*CHAR_PRINT)(IN CHAR Character);
+VOID BiosCharPrint(CHAR Character);
+VOID DosCharPrint(CHAR Character);
+
+VOID DemDisplayMessage(IN CHAR_PRINT CharPrint,
+                       IN LPCSTR Format, ...);
+
+#define BiosDisplayMessage(Format, ...) \
+    DemDisplayMessage(BiosCharPrint, (Format), ##__VA_ARGS__)
+
+#define DosDisplayMessage(Format, ...)  \
+    DemDisplayMessage(DosCharPrint, (Format), ##__VA_ARGS__)
+
+
+BOOLEAN DosShutdown(BOOLEAN Immediate);
+
+DWORD DosStartProcess32(IN LPCSTR ExecutablePath,
+                        IN LPCSTR CommandLine,
+                        IN LPCSTR Environment OPTIONAL,
+                        IN DWORD ReturnAddress OPTIONAL,
+                        IN BOOLEAN StartComSpec);
 
 DWORD
 WINAPI

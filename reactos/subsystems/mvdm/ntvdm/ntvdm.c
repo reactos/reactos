@@ -16,6 +16,8 @@
 #include "bios/bios.h"
 #include "cpu/cpu.h"
 
+#include "dos/dem.h"
+
 #include "resource.h"
 
 /* VARIABLES ******************************************************************/
@@ -23,8 +25,6 @@
 static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
-
-HANDLE VdmTaskEvent = NULL;
 
 // Command line of NTVDM
 INT     NtVdmArgc;
@@ -275,43 +275,59 @@ DisplayMessage(IN LPCWSTR Format, ...)
 #endif
 }
 
+static VOID
+ConsoleCleanup(VOID);
+
+static VOID
+VdmShutdown(BOOLEAN Immediate)
+{
+    /*
+     * Immediate = TRUE:  Immediate shutdown;
+     *             FALSE: Delayed shutdown.
+     */
+    BOOLEAN MustShutdown;
+
+    /* First notify DOS to see whether we can shut down now */
+    MustShutdown = DosShutdown(Immediate);
+    /*
+     * In case we perform an immediate shutdown, or the DOS says
+     * we can shut down, do it now.
+     */
+    MustShutdown = MustShutdown || Immediate;
+
+    if (MustShutdown)
+    {
+        EmulatorTerminate();
+
+        BiosCleanup();
+        EmulatorCleanup();
+        ConsoleCleanup();
+
+        DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
+        /* Some VDDs rely on the fact that NTVDM calls ExitProcess on Windows */
+        ExitProcess(0);
+    }
+}
+
 static BOOL
 WINAPI
 ConsoleCtrlHandler(DWORD ControlType)
 {
-// HACK: Should be removed!
-#ifndef STANDALONE
-extern BOOLEAN AcceptCommands;
-extern HANDLE CommandThread;
-#endif
-
     switch (ControlType)
     {
         case CTRL_LAST_CLOSE_EVENT:
         {
-            if (WaitForSingleObject(VdmTaskEvent, 0) == WAIT_TIMEOUT)
-            {
-                /* Nothing runs, so exit immediately */
-#ifndef STANDALONE
-                if (CommandThread) TerminateThread(CommandThread, 0);
-#endif
-                EmulatorTerminate();
-            }
-#ifndef STANDALONE
-            else
-            {
-                /* A command is running, let it run, but stop accepting new commands */
-                AcceptCommands = FALSE;
-            }
-#endif
-
+            /* Delayed shutdown */
+            DPRINT1("NTVDM delayed killing in the CTRL_LAST_CLOSE_EVENT CtrlHandler!\n");
+            VdmShutdown(FALSE);
             break;
         }
 
         default:
         {
             /* Stop the VDM if the user logs out or closes the console */
-            EmulatorTerminate();
+            DPRINT1("Killing NTVDM in the 'default' CtrlHandler!\n");
+            VdmShutdown(TRUE);
         }
     }
     return TRUE;
@@ -342,7 +358,7 @@ ConsoleAttach(VOID)
         CloseHandle(ConsoleOutput);
         CloseHandle(ConsoleInput);
         wprintf(L"FATAL: Cannot save console in/out modes\n");
-        // return FALSE;
+        return FALSE;
     }
 
     /* Set the console input mode */
@@ -363,12 +379,12 @@ ConsoleAttach(VOID)
 VOID
 ConsoleDetach(VOID)
 {
+    /* Cleanup the UI */
+    ConsoleCleanupUI();
+
     /* Restore the original input and output console modes */
     SetConsoleMode(ConsoleOutput, OrgConsoleOutputMode);
     SetConsoleMode(ConsoleInput , OrgConsoleInputMode );
-
-    /* Cleanup the UI */
-    ConsoleCleanupUI();
 }
 
 static BOOL
@@ -448,7 +464,11 @@ VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent)
 
         case ID_VDM_QUIT:
             /* Stop the VDM */
-            EmulatorTerminate();
+            // EmulatorTerminate();
+
+            /* Nothing runs, so exit immediately */
+            DPRINT1("Killing NTVDM via console menu!\n");
+            VdmShutdown(TRUE);
             break;
 
         default:
@@ -550,10 +570,6 @@ wmain(INT argc, WCHAR *argv[])
 
     DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
 
-    /* Create the task event */
-    VdmTaskEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    ASSERT(VdmTaskEvent != NULL);
-
     /* Initialize the console */
     if (!ConsoleInit())
     {
@@ -578,19 +594,9 @@ wmain(INT argc, WCHAR *argv[])
     /* Let's go! Start simulation */
     CpuSimulate();
 
-Cleanup:
-    BiosCleanup();
-    EmulatorCleanup();
-    ConsoleCleanup();
-
-#ifndef STANDALONE
-    ExitVDM(FALSE, 0);
-#endif
-
     /* Quit the VDM */
-    DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
-    /* Some VDDs rely on the fact that NTVDM calls ExitProcess on Windows */
-    ExitProcess(0);
+Cleanup:
+    VdmShutdown(TRUE);
     return 0;
 }
 
