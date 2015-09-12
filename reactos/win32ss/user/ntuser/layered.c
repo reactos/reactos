@@ -150,11 +150,11 @@ IntUpdateLayeredWindowI( PWND pWnd,
 
    if (info->hdcSrc)
    {
-      HBRUSH hBr;
-      HDC hdc;
+      HDC hdc, hdcBuffer;
       RECT Rect;
       BLENDFUNCTION blend = { AC_SRC_OVER, 0, 255, 0 };
       COLORREF color_key = (info->dwFlags & ULW_COLORKEY) ? info->crKey : CLR_INVALID;
+      HBITMAP hBitmapBuffer, hOldBitmap;
 
       Rect = Window;
 
@@ -165,13 +165,24 @@ IntUpdateLayeredWindowI( PWND pWnd,
       if (!info->hdcDst) hdc = UserGetDCEx(pWnd, NULL, DCX_USESTYLE);
       else hdc = info->hdcDst;
 
-      hBr = NtGdiCreateSolidBrush(color_key, NULL);
-      if (hBr)
-      {
-         TRACE("Fill Color Key %x\n",color_key);
-         FillRect(hdc, &Rect, hBr);
-      }
+      hdcBuffer = NtGdiCreateCompatibleDC(hdc);
+      hBitmapBuffer = NtGdiCreateCompatibleBitmap(hdc, Rect.right - Rect.left, Rect.bottom - Rect.top);
+      hOldBitmap = (HBITMAP)NtGdiSelectBitmap(hdcBuffer, hBitmapBuffer);
 
+      NtGdiStretchBlt( hdcBuffer,
+                       Rect.left,
+                       Rect.top,
+                       Rect.right - Rect.left,
+                       Rect.bottom - Rect.top,
+                       info->hdcSrc,
+                       Rect.left + (info->pptSrc ? info->pptSrc->x : 0),
+                       Rect.top  + (info->pptSrc ? info->pptSrc->y : 0),
+                       Rect.right - Rect.left,
+                       Rect.bottom - Rect.top,
+                       SRCCOPY,
+                       color_key );
+
+      // Need to test this, Dirty before or after StretchBlt?
       if (info->prcDirty)
       {
          ERR("prcDirty\n");
@@ -182,7 +193,7 @@ IntUpdateLayeredWindowI( PWND pWnd,
       if (info->dwFlags & ULW_ALPHA)
       {
          blend = *info->pblend;
-         TRACE("ULW_ALPHA bop %d scA %d aF %d\n", blend.BlendOp, blend.SourceConstantAlpha, blend.AlphaFormat);
+         TRACE("ULW_ALPHA bop %d Alpha %d aF %d\n", blend.BlendOp, blend.SourceConstantAlpha, blend.AlphaFormat);
       }
 
       ret = NtGdiAlphaBlend( hdc,
@@ -190,14 +201,17 @@ IntUpdateLayeredWindowI( PWND pWnd,
                              Rect.top,
                              Rect.right - Rect.left,
                              Rect.bottom - Rect.top,
-                             info->hdcSrc,
+                             hdcBuffer,
                              Rect.left + (info->pptSrc ? info->pptSrc->x : 0),
-                             Rect.top + (info->pptSrc ? info->pptSrc->y : 0),
-                             Rect.right - Rect.left, Rect.bottom - Rect.top,
+                             Rect.top  + (info->pptSrc ? info->pptSrc->y : 0),
+                             Rect.right - Rect.left,
+                             Rect.bottom - Rect.top,
                              blend,
                              0);
 
-      if (hBr) GreDeleteObject(hBr);
+      NtGdiSelectBitmap(hdcBuffer, hOldBitmap);
+      if (hBitmapBuffer) GreDeleteObject(hBitmapBuffer);
+      if (hdcBuffer) IntGdiDeleteDC(hdcBuffer, FALSE);
       if (!info->hdcDst) UserReleaseDC(pWnd, hdc, FALSE);
    }
    else
