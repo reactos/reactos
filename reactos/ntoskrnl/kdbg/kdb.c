@@ -77,7 +77,7 @@ static KDB_ENTER_CONDITION KdbEnterConditions[][2] =
     { KdbDoNotEnter,      KdbEnterFromKmode },   /* 17: Alignment Check */
     { KdbDoNotEnter,      KdbEnterFromKmode },   /* 18: Machine Check */
     { KdbDoNotEnter,      KdbEnterFromKmode },   /* 19: SIMD fault */
-    { KdbEnterAlways,     KdbEnterAlways },      /* 20: Assertion failure */
+    { KdbEnterFromKmode,  KdbDoNotEnter },       /* 20: Assertion failure */
     { KdbDoNotEnter,      KdbEnterFromKmode }    /* Last entry: used for unknown exceptions */
 };
 
