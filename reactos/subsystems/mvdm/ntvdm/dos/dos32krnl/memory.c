@@ -228,6 +228,7 @@ Done:
     /* If we didn't find a free block, bail out */
     if (Result == 0)
     {
+        DPRINT("DosAllocateMemory FAILED. Maximum available: 0x%04X\n", MaxSize);
         Sda->LastErrorCode = ERROR_NOT_ENOUGH_MEMORY;
         if (MaxAvailable) *MaxAvailable = MaxSize;
         return 0;
@@ -380,7 +381,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
     else if (NewSize < Mcb->Size)
     {
         DPRINT("Shrinking block from 0x%04X to 0x%04X\n",
-                Mcb->Size, NewSize);
+               Mcb->Size, NewSize);
 
         /* Just split the block */
         NextSegment = Segment + NewSize + 1;
@@ -401,8 +402,7 @@ Done:
     /* Check if the operation failed */
     if (!Success)
     {
-        DPRINT("DosResizeMemory FAILED. Maximum available: 0x%04X\n",
-               ReturnSize);
+        DPRINT("DosResizeMemory FAILED. Maximum available: 0x%04X\n", ReturnSize);
 
         /* Return the maximum possible size */
         if (MaxAvailable) *MaxAvailable = ReturnSize;
@@ -418,6 +418,7 @@ BOOLEAN DosFreeMemory(WORD BlockData)
     PDOS_MCB Mcb = SEGMENT_TO_MCB(BlockData - 1);
 
     DPRINT("DosFreeMemory: BlockData 0x%04X\n", BlockData);
+
     if (BlockData == 0)
     {
         Sda->LastErrorCode = ERROR_INVALID_BLOCK;
