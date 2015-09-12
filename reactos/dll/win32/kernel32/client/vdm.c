@@ -312,15 +312,18 @@ BaseCheckVDM(IN ULONG BinaryType,
     AnsiCmdLine = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CmdLen + 2);
     AnsiAppName = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->AppLen);
     AnsiCurDirectory = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CurDirectoryLen);
-    if (StartupInfo->lpDesktop) AnsiDesktop = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                     HEAP_ZERO_MEMORY,
-                                                                     CheckVdm->DesktopLen);
-    if (StartupInfo->lpTitle) AnsiTitle = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                 HEAP_ZERO_MEMORY,
-                                                                 CheckVdm->TitleLen);
-    if (StartupInfo->lpReserved) AnsiReserved = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                       HEAP_ZERO_MEMORY,
-                                                                       CheckVdm->ReservedLen);
+    if (StartupInfo->lpDesktop)
+        AnsiDesktop = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                             HEAP_ZERO_MEMORY,
+                                             CheckVdm->DesktopLen);
+    if (StartupInfo->lpTitle)
+        AnsiTitle = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           CheckVdm->TitleLen);
+    if (StartupInfo->lpReserved)
+        AnsiReserved = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                              HEAP_ZERO_MEMORY,
+                                              CheckVdm->ReservedLen);
 
     if (!AnsiCmdLine
         || !AnsiAppName
@@ -411,7 +414,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     }
 
     /* Fill the ANSI startup info structure */
-    RtlCopyMemory(&AnsiStartupInfo, StartupInfo, sizeof(STARTUPINFO));
+    RtlCopyMemory(&AnsiStartupInfo, StartupInfo, sizeof(AnsiStartupInfo));
     AnsiStartupInfo.lpReserved = AnsiReserved;
     AnsiStartupInfo.lpDesktop = AnsiDesktop;
     AnsiStartupInfo.lpTitle = AnsiTitle;
@@ -426,7 +429,7 @@ BaseCheckVDM(IN ULONG BinaryType,
                                              + CheckVdm->TitleLen
                                              + CheckVdm->ReservedLen
                                              + CheckVdm->EnvLen
-                                             + sizeof(STARTUPINFOA));
+                                             + sizeof(*CheckVdm->StartupInfo));
     if (CaptureBuffer == NULL)
     {
         Status = STATUS_NO_MEMORY;
@@ -462,7 +465,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     /* Capture the startup info structure */
     CsrCaptureMessageBuffer(CaptureBuffer,
                             &AnsiStartupInfo,
-                            sizeof(STARTUPINFOA),
+                            sizeof(*CheckVdm->StartupInfo),
                             (PVOID*)&CheckVdm->StartupInfo);
 
     if (StartupInfo->lpDesktop)
@@ -742,7 +745,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 // Can be put in some .h ??
 #define IS_PATH_SEPARATOR(x)    ((x) == L'\\' || (x) == L'/')
 
-    BOOL Result;
+    BOOL Success = FALSE;
     NTSTATUS Status;
     ULONG RegionSize, EnvironmentSize = 0;
     PWCHAR Environment, NewEnvironment = NULL;
@@ -990,7 +993,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
     else
     {
         /* Everything went okay, so return success */
-        Result = TRUE;
+        Success = TRUE;
         NewEnvironment = NULL;
     }
 
@@ -1015,7 +1018,7 @@ Cleanup:
     }
 
     /* Return the result */
-    return Result;
+    return Success;
 }
 
 BOOL
