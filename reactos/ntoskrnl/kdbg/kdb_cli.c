@@ -85,6 +85,7 @@ static BOOLEAN KdbpCmdPcr(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdTss(ULONG Argc, PCHAR Argv[]);
 
 static BOOLEAN KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdReboot(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdFilter(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
@@ -176,6 +177,7 @@ static const struct
     /* Others */
     { NULL, NULL, "Others", NULL },
     { "bugcheck", "bugcheck", "Bugchecks the system.", KdbpCmdBugCheck },
+    { "reboot", "reboot", "Reboots the system.", KdbpCmdReboot},
     { "filter", "filter [error|warning|trace|info|level]+|-[componentname|default]", "Enable/disable debug channels", KdbpCmdFilter },
     { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
     { "dmesg", "dmesg", "Display debug messages on screen, with navigation on pages.", KdbpCmdDmesg },
@@ -2175,6 +2177,17 @@ KdbpCmdBugCheck(
 
     return FALSE;
 }
+
+static BOOLEAN
+KdbpCmdReboot(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    /* Reboot immediately (we do not return) */
+    HalReturnToFirmware(HalRebootRoutine);
+    return FALSE;
+}
+
 
 VOID
 KdbpPager(
