@@ -2,6 +2,7 @@
 #define _INTL_H
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
@@ -53,7 +54,13 @@ typedef struct _APPLET
 
 typedef struct _GLOBALDATA
 {
+    GEOID geoid;
+    BOOL fGeoIdChanged;
+
     LCID lcid;
+    DWORD dwLocaleCount;
+    PWSTR *pLocaleArray;
+    BOOL fUserLocaleChanged;
 } GLOBALDATA, *PGLOBALDATA;
 
 extern HINSTANCE hApplet;
@@ -113,7 +120,7 @@ ReplaceSubStr(LPCTSTR szSourceStr, LPCTSTR szStrToReplace, LPCTSTR szTempl);
 
 LONG
 APIENTRY
-SetupApplet(HWND hwndDlg, LCID lcid);
+SetupApplet(HWND hwndDlg, PGLOBALDATA pGlobalData);
 
 /* kblayouts.c */
 VOID AddNewKbLayoutsByLcid(LCID Lcid);

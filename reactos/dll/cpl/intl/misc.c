@@ -184,19 +184,16 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, PGLOBALDATA p
 /* Create applets */
 LONG
 APIENTRY
-SetupApplet(HWND hwndDlg, LCID lcid)
+SetupApplet(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
 {
     PROPSHEETPAGE PsPage[NUM_SHEETS + 1];
     PROPSHEETHEADER psh;
-    PGLOBALDATA pGlobalData;
     TCHAR Caption[MAX_STR_SIZE];
     INT ret;
 
     LoadString(hApplet, IDS_CUSTOMIZE_TITLE, Caption, sizeof(Caption) / sizeof(TCHAR));
-
-    pGlobalData = (PGLOBALDATA)malloc(sizeof(GLOBALDATA));
-
-    pGlobalData->lcid = lcid;
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -214,15 +211,13 @@ SetupApplet(HWND hwndDlg, LCID lcid)
     InitPropSheetPage(&PsPage[2], IDD_TIMEPAGE, TimePageProc, pGlobalData);
     InitPropSheetPage(&PsPage[3], IDD_DATEPAGE, DatePageProc, pGlobalData);
 
-    if (IsSortPageNeeded(lcid))
+    if (IsSortPageNeeded(pGlobalData->lcid))
     {
         psh.nPages++;
         InitPropSheetPage(&PsPage[4], IDD_SORTPAGE, SortPageProc, pGlobalData);
     }
 
     ret = PropertySheet(&psh);
-
-    free(pGlobalData);
 
     return (LONG)(ret != -1);
 }

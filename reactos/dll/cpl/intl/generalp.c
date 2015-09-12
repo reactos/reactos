@@ -32,9 +32,56 @@
 #define SAMPLE_NUMBER   _T("123456789")
 #define NO_FLAG         0
 
+typedef struct
+{
+    LCTYPE lcType;
+    PWSTR  pKeyName;
+} LOCALE_KEY_DATA, *PLOCALE_KEY_DATA;
+
 HWND hList;
 HWND hLocaleList, hGeoList;
 BOOL bSpain = FALSE;
+
+LOCALE_KEY_DATA LocaleKeyData[] =
+{
+    {LOCALE_ICALENDARTYPE, L"iCalendarType"},
+    {LOCALE_ICOUNTRY, L"iCountry"},
+    {LOCALE_ICURRDIGITS, L"iCurrDigits"},
+    {LOCALE_ICURRENCY, L"iCurrency"},
+    {LOCALE_IDATE, L"iDate"},
+    {LOCALE_IDIGITS, L"iDigits"},
+    {LOCALE_IFIRSTDAYOFWEEK, L"iFirstDayOfWeek"},
+    {LOCALE_IFIRSTWEEKOFYEAR, L"iFirstWeekOfYear"},
+    {LOCALE_ILZERO, L"iLZero"},
+    {LOCALE_IMEASURE, L"iMeasure"},
+    {LOCALE_INEGCURR, L"iNegCurr"},
+    {LOCALE_INEGNUMBER, L"iNegNumber"},
+    {LOCALE_ITIME, L"iTime"},
+    {LOCALE_ITIMEMARKPOSN, L"iTimePrefix"},
+    {LOCALE_ITLZERO, L"iTLZero"},
+    {LOCALE_IDIGITSUBSTITUTION, L"NumShape"},
+    {LOCALE_S1159, L"s1159"},
+    {LOCALE_S2359, L"s2359"},
+    {LOCALE_SCOUNTRY, L"sCountry"},
+    {LOCALE_SCURRENCY, L"sCurrency"},
+    {LOCALE_SDATE, L"sDate"},
+    {LOCALE_SDECIMAL, L"sDecimal"},
+    {LOCALE_SGROUPING, L"sGrouping"},
+    {LOCALE_SABBREVLANGNAME, L"sLanguage"},
+    {LOCALE_SLIST, L"sList"},
+    {LOCALE_SLONGDATE, L"sLongDate"},
+    {LOCALE_SMONDECIMALSEP, L"sMonDecimalSep"},
+    {LOCALE_SMONGROUPING, L"sMonGrouping"},
+    {LOCALE_SMONTHOUSANDSEP, L"sMonThousandSep"},
+    {LOCALE_SNATIVEDIGITS, L"sNativeDigits"},
+    {LOCALE_SNEGATIVESIGN, L"sNegativeSign"},
+    {LOCALE_SPOSITIVESIGN, L"sPositiveSign"},
+    {LOCALE_SSHORTDATE, L"sShortDate"},
+    {LOCALE_STHOUSAND, L"sThousand"},
+    {LOCALE_STIME, L"sTime"},
+    {LOCALE_STIMEFORMAT, L"sTimeFormat"}
+};
+
 
 static BOOL CALLBACK
 LocalesEnumProc(LPTSTR lpLocale)
@@ -84,42 +131,66 @@ LocalesEnumProc(LPTSTR lpLocale)
     return TRUE;
 }
 
-/* Update all locale samples */
-static VOID
-UpdateLocaleSample(HWND hwndDlg, LCID lcidLocale)
+
+PWSTR
+GetLocaleString(
+    PWSTR *pLocaleArray,
+    LCTYPE lcType)
 {
-    TCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
+    DWORD dwDataCount, i;
+
+    dwDataCount = sizeof(LocaleKeyData) / sizeof(LOCALE_KEY_DATA);
+    for (i = 0; i < dwDataCount; i++)
+    {
+        if (LocaleKeyData[i].lcType == lcType)
+            return pLocaleArray[i];
+    }
+
+    return NULL;
+}
+
+
+/* Update all locale samples */
+static
+VOID
+UpdateLocaleSample(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    WCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
 
     /* Get number format sample */
-    GetNumberFormat(lcidLocale, NO_FLAG, SAMPLE_NUMBER, NULL, OutBuffer,
-                    MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMSAMPLE_EDIT),
-                 WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    GetNumberFormatW(pGlobalData->lcid, NO_FLAG, SAMPLE_NUMBER, NULL,
+                     OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMSAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get monetary format sample */
-    GetCurrencyFormat(lcidLocale, LOCALE_USE_CP_ACP, SAMPLE_NUMBER, NULL,
-                      OutBuffer, MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_MONEYSAMPLE_EDIT),
-                 WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    GetCurrencyFormatW(pGlobalData->lcid, NO_FLAG, SAMPLE_NUMBER, NULL,
+                       OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_MONEYSAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get time format sample */
-    GetTimeFormat(lcidLocale, NO_FLAG, NULL, NULL, OutBuffer, MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_TIMESAMPLE_EDIT),
-        WM_SETTEXT,
-        0,
-        (LPARAM)OutBuffer);
+    GetTimeFormatW(pGlobalData->lcid, NO_FLAG, NULL, NULL,
+                   OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_TIMESAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get short date format sample */
-    GetDateFormat(lcidLocale, DATE_SHORTDATE, NULL, NULL, OutBuffer,
-        MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_SHORTTIMESAMPLE_EDIT), WM_SETTEXT,
-        0, (LPARAM)OutBuffer);
+    GetDateFormatW(pGlobalData->lcid, DATE_SHORTDATE, NULL, NULL,
+                   OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_SHORTTIMESAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
 
     /* Get long date sample */
-    GetDateFormat(lcidLocale, DATE_LONGDATE, NULL, NULL, OutBuffer,
-        MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_FULLTIMESAMPLE_EDIT),
-        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    GetDateFormatW(pGlobalData->lcid, DATE_LONGDATE, NULL, NULL,
+                   OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_FULLTIMESAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
 }
 
 static VOID
@@ -135,9 +206,6 @@ CreateLanguagesList(HWND hwnd)
     /* or should it be System and not user? */
     GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(TCHAR));
 
-    DPRINT("LCID: %08lx\n", GetUserDefaultLCID());
-    DPRINT("Language: %S\n", langSel);
-
     SendMessage(hList,
                 CB_SELECTSTRING,
                 -1,
@@ -145,33 +213,134 @@ CreateLanguagesList(HWND hwnd)
 }
 
 
-static
-VOID
-SetLocaleString(HKEY hKey,
-                LCID lcId,
-                LCTYPE lcType,
-                PWSTR pszValueName)
+BOOL
+LoadCurrentLocale(
+    PGLOBALDATA pGlobalData)
 {
-    WCHAR szBuffer[256];
+    WCHAR szValue[9];
+    PWSTR ptr;
+    HKEY hLocaleKey;
+    DWORD ret;
+    DWORD dwSize;
+    DWORD i;
 
-    if (GetLocaleInfo(lcId,
-                      lcType | LOCALE_NOUSEROVERRIDE,
-                      szBuffer,
-                      256))
+    ret = RegOpenKeyExW(HKEY_CURRENT_USER,
+                        L"Control Panel\\International",
+                        0,
+                        KEY_READ,
+                        &hLocaleKey);
+    if (ret != ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey,
-                       pszValueName,
-                       0,
-                       REG_SZ,
-                       (PBYTE)szBuffer,
-                       (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+        PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+        return FALSE;
+    }
+
+    pGlobalData->dwLocaleCount = sizeof(LocaleKeyData) / sizeof(LOCALE_KEY_DATA);
+
+    pGlobalData->pLocaleArray = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                                          pGlobalData->dwLocaleCount * sizeof(PWSTR));
+    if (pGlobalData->pLocaleArray == NULL)
+    {
+        RegCloseKey(hLocaleKey);
+        return FALSE;
+    }
+
+    dwSize = 9 * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"Locale",
+                     NULL,
+                     NULL,
+                     (PBYTE)szValue,
+                     &dwSize);
+    pGlobalData->lcid = (LCID)wcstoul(szValue, &ptr, 16);
+
+    for (i = 0; i < pGlobalData->dwLocaleCount; i++)
+    {
+        RegQueryValueExW(hLocaleKey,
+                         LocaleKeyData[i].pKeyName,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &dwSize);
+        if (dwSize > 0)
+        {
+            pGlobalData->pLocaleArray[i] = HeapAlloc(GetProcessHeap(), 0, dwSize);
+            if (pGlobalData->pLocaleArray[i])
+            {
+                RegQueryValueExW(hLocaleKey,
+                                 LocaleKeyData[i].pKeyName,
+                                 NULL,
+                                 NULL,
+                                 (LPVOID)pGlobalData->pLocaleArray[i],
+                                 &dwSize);
+            }
+        }
+    }
+
+    RegCloseKey(hLocaleKey);
+
+    return TRUE;
+}
+
+
+VOID
+FreeCurrentLocale(
+    PGLOBALDATA pGlobalData)
+{
+    DWORD i;
+
+    if (pGlobalData == NULL || pGlobalData->pLocaleArray == NULL)
+        return;
+
+    for (i = 0; i < pGlobalData->dwLocaleCount; i++)
+    {
+        if (pGlobalData->pLocaleArray[i])
+            HeapFree(GetProcessHeap(), 0, pGlobalData->pLocaleArray[i]);
+    }
+    HeapFree(GetProcessHeap(), 0, pGlobalData->pLocaleArray);
+}
+
+
+VOID
+SetNewLocale(
+    PGLOBALDATA pGlobalData,
+    LCID lcid)
+{
+    DWORD i, dwSize;
+
+    pGlobalData->lcid = lcid;
+
+    for (i = 0; i < pGlobalData->dwLocaleCount; i++)
+    {
+        if (pGlobalData->pLocaleArray[i])
+        {
+            HeapFree(GetProcessHeap(), 0, pGlobalData->pLocaleArray[i]);
+            pGlobalData->pLocaleArray[i] = NULL;
+        }
+
+        dwSize = GetLocaleInfo(lcid,
+                               LocaleKeyData[i].lcType | LOCALE_NOUSEROVERRIDE,
+                               NULL,
+                               0);
+        if (dwSize > 0)
+        {
+            pGlobalData->pLocaleArray[i] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+            if (pGlobalData->pLocaleArray[i])
+            {
+                GetLocaleInfo(lcid,
+                              LocaleKeyData[i].lcType | LOCALE_NOUSEROVERRIDE,
+                              pGlobalData->pLocaleArray[i],
+                              dwSize);
+            }
+        }
     }
 }
 
 
 /* Sets new locale */
 VOID
-SetNewLocale(LCID lcid)
+SaveCurrentLocale(
+    PGLOBALDATA pGlobalData)
 {
     // HKCU\\Control Panel\\International\\Locale = 0409 (type=0)
     // HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409" (type=0)
@@ -179,12 +348,10 @@ SetNewLocale(LCID lcid)
 
     // Set locale
     HKEY localeKey;
-//    HKEY langKey;
     DWORD ret;
     WCHAR value[9];
     DWORD valuesize;
-//    TCHAR ACPPage[9];
-//    TCHAR OEMPage[9];
+    DWORD i;
 
 #if 0
     ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(TCHAR));
@@ -210,7 +377,7 @@ SetNewLocale(LCID lcid)
         return;
     }
 
-    wsprintf(value, L"%08x", (DWORD)lcid);
+    wsprintf(value, L"%08x", (DWORD)pGlobalData->lcid);
     valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
 
     ret = RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (PBYTE)value, valuesize);
@@ -221,49 +388,22 @@ SetNewLocale(LCID lcid)
         return;
     }
 
-    SetLocaleString(localeKey, lcid, LOCALE_ICALENDARTYPE, L"iCalendarType");
-    SetLocaleString(localeKey, lcid, LOCALE_ICOUNTRY, L"iCountry");
-    SetLocaleString(localeKey, lcid, LOCALE_ICURRDIGITS, L"iCurrDigits");
-    SetLocaleString(localeKey, lcid, LOCALE_ICURRENCY, L"iCurrency");
-    SetLocaleString(localeKey, lcid, LOCALE_IDATE, L"iDate");
-    SetLocaleString(localeKey, lcid, LOCALE_IDIGITS, L"iDigits");
-    SetLocaleString(localeKey, lcid, LOCALE_IFIRSTDAYOFWEEK, L"iFirstDayOfWeek");
-    SetLocaleString(localeKey, lcid, LOCALE_IFIRSTWEEKOFYEAR, L"iFirstWeekOfYear");
-    SetLocaleString(localeKey, lcid, LOCALE_ILZERO, L"iLZero");
-    SetLocaleString(localeKey, lcid, LOCALE_IMEASURE, L"iMeasure");
-    SetLocaleString(localeKey, lcid, LOCALE_INEGCURR, L"iNegCurr");
-    SetLocaleString(localeKey, lcid, LOCALE_INEGNUMBER, L"iNegNumber");
-    SetLocaleString(localeKey, lcid, LOCALE_ITIME, L"iTime");
-    SetLocaleString(localeKey, lcid, LOCALE_ITIMEMARKPOSN, L"iTimePrefix");
-    SetLocaleString(localeKey, lcid, LOCALE_ITLZERO, L"iTLZero");
-    SetLocaleString(localeKey, lcid, LOCALE_IDIGITSUBSTITUTION, L"NumShape");
-    SetLocaleString(localeKey, lcid, LOCALE_S1159, L"s1159");
-    SetLocaleString(localeKey, lcid, LOCALE_S2359, L"s2359");
-    SetLocaleString(localeKey, lcid, LOCALE_SCOUNTRY, L"sCountry");
-    SetLocaleString(localeKey, lcid, LOCALE_SCURRENCY, L"sCurrency");
-    SetLocaleString(localeKey, lcid, LOCALE_SDATE, L"sDate");
-    SetLocaleString(localeKey, lcid, LOCALE_SDECIMAL, L"sDecimal");
-    SetLocaleString(localeKey, lcid, LOCALE_SGROUPING, L"sGrouping");
-    SetLocaleString(localeKey, lcid, LOCALE_SABBREVLANGNAME, L"sLanguage");
-    SetLocaleString(localeKey, lcid, LOCALE_SLIST, L"sList");
-    SetLocaleString(localeKey, lcid, LOCALE_SLONGDATE, L"sLongDate");
-    SetLocaleString(localeKey, lcid, LOCALE_SMONDECIMALSEP, L"sMonDecimalSep");
-    SetLocaleString(localeKey, lcid, LOCALE_SMONGROUPING, L"sMonGrouping");
-    SetLocaleString(localeKey, lcid, LOCALE_SMONTHOUSANDSEP, L"sMonThousandSep");
-    SetLocaleString(localeKey, lcid, LOCALE_SNATIVEDIGITS, L"sNativeDigits");
-    SetLocaleString(localeKey, lcid, LOCALE_SNEGATIVESIGN, L"sNegativeSign");
-    SetLocaleString(localeKey, lcid, LOCALE_SPOSITIVESIGN, L"sPositiveSign");
-    SetLocaleString(localeKey, lcid, LOCALE_SSHORTDATE, L"sShortDate");
-    SetLocaleString(localeKey, lcid, LOCALE_STHOUSAND, L"sThousand");
-    SetLocaleString(localeKey, lcid, LOCALE_STIME, L"sTime");
-    SetLocaleString(localeKey, lcid, LOCALE_STIMEFORMAT, L"sTimeFormat");
+    for (i = 0; i < pGlobalData->dwLocaleCount; i++)
+    {
+        RegSetValueExW(localeKey,
+                       LocaleKeyData[i].pKeyName,
+                       0,
+                       REG_SZ,
+                       (PBYTE)pGlobalData->pLocaleArray[i],
+                       (wcslen(pGlobalData->pLocaleArray[i]) + 1) * sizeof(WCHAR));
+    }
 
     /* Flush and close the locale key */
     RegFlushKey(localeKey);
     RegCloseKey(localeKey);
 
     /* Set the new locale for the current process */
-    NtSetDefaultLocale(TRUE, lcid);
+    NtSetDefaultLocale(TRUE, pGlobalData->lcid);
 
 #if 0
     ret = RegOpenKey(HKEY_USERS, _T(".DEFAULT\\Control Panel\\International"), &localeKey);
@@ -316,7 +456,7 @@ LocationsEnumProc(GEOID gId)
     TCHAR loc[MAX_STR_SIZE];
     INT index;
 
-    if(GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT) == 0)
+    if (GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT) == 0)
         return TRUE;
 
     index = (INT)SendMessage(hGeoList,
@@ -334,7 +474,7 @@ LocationsEnumProc(GEOID gId)
 
 /* Enumerate all system locations identifiers */
 static
-VOID
+GEOID
 CreateLocationsList(HWND hWnd)
 {
     GEOID userGeoID;
@@ -356,6 +496,8 @@ CreateLocationsList(HWND hWnd)
                 CB_SELECTSTRING,
                 (WPARAM) -1,
                 (LPARAM)loc);
+
+    return userGeoID;
 }
 
 DWORD
@@ -396,21 +538,37 @@ GeneralPageProc(HWND hwndDlg,
                 WPARAM wParam,
                 LPARAM lParam)
 {
-    switch(uMsg)
+    PGLOBALDATA pGlobalData;
+
+    pGlobalData = (PGLOBALDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-            CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
-            UpdateLocaleSample(hwndDlg, GetUserDefaultLCID());
-            CreateLocationsList(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO));
-            if (IsUnattendedSetupEnabled)
+            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBALDATA));
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            if (pGlobalData)
             {
-                if (VerifyUnattendLCID(hwndDlg))
+                LoadCurrentLocale(pGlobalData);
+
+                CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
+                UpdateLocaleSample(hwndDlg, pGlobalData);
+                pGlobalData->geoid = CreateLocationsList(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO));
+                if (IsUnattendedSetupEnabled)
                 {
-                    SetNewLocale(UnattendLCID);
-                    PostQuitMessage(0);
-                } else
-                    DPRINT1("VerifyUnattendLCID failed\n");
-                return TRUE;
+                    if (VerifyUnattendLCID(hwndDlg))
+                    {
+                        SetNewLocale(pGlobalData, UnattendLCID);
+                        SaveCurrentLocale(pGlobalData);
+                        PostQuitMessage(0);
+                    }
+                    else
+                    {
+                        DPRINT1("VerifyUnattendLCID failed\n");
+                    }
+                    return TRUE;
+                }
             }
             break;
 
@@ -437,7 +595,9 @@ GeneralPageProc(HWND hwndDlg,
                         if (NewLcid == (LCID)CB_ERR)
                             break;
 
-                        UpdateLocaleSample(hwndDlg, NewLcid);
+                        SetNewLocale(pGlobalData, NewLcid);
+                        UpdateLocaleSample(hwndDlg, pGlobalData);
+                        pGlobalData->fUserLocaleChanged = TRUE;
 
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
@@ -446,30 +606,32 @@ GeneralPageProc(HWND hwndDlg,
                 case IDC_LOCATION_COMBO:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
-                    break;
-                case IDC_SETUP_BUTTON:
-                    {
-                        LCID NewLcid;
+                        GEOID NewGeoID;
                         INT iCurSel;
 
-                        iCurSel = SendMessage(hList,
+                        iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
                                               CB_GETCURSEL,
                                               0,
                                               0);
                         if (iCurSel == CB_ERR)
                             break;
 
-                        NewLcid = SendMessage(hList,
-                                              CB_GETITEMDATA,
-                                              iCurSel,
-                                              0);
-                        if (NewLcid == (LCID)CB_ERR)
+                        NewGeoID = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
+                                               CB_GETITEMDATA,
+                                               iCurSel,
+                                               0);
+                        if (NewGeoID == (GEOID)CB_ERR)
                             break;
 
-                         SetupApplet(GetParent(hwndDlg), NewLcid);
+                        pGlobalData->geoid = NewGeoID;
+                        pGlobalData->fGeoIdChanged = TRUE;
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
+                    break;
+
+                case IDC_SETUP_BUTTON:
+                    SetupApplet(GetParent(hwndDlg), pGlobalData);
                     break;
             }
             break;
@@ -481,47 +643,33 @@ GeneralPageProc(HWND hwndDlg,
                 if (lpnm->code == (UINT)PSN_APPLY)
                 {
                     /* Apply changes */
-                    LCID NewLcid;
-                    GEOID NewGeoID;
-                    INT iCurSel;
-
                     PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
 
-                    /* Acquire new value */
-                    iCurSel = SendMessage(hList,
-                                          CB_GETCURSEL,
-                                          0,
-                                          0);
-                    if (iCurSel == CB_ERR)
-                        break;
-
-                    NewLcid = SendMessage(hList,
-                                          CB_GETITEMDATA,
-                                          iCurSel,
-                                          0);
-                    if (NewLcid == (LCID)CB_ERR)
-                        break;
-
-                    iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
-                                          CB_GETCURSEL,
-                                          0,
-                                          0);
-                    if (iCurSel == CB_ERR)
-                        break;
-
-                    NewGeoID = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
-                                           CB_GETITEMDATA,
-                                           iCurSel,
-                                           0);
-                    if (NewGeoID == (GEOID)CB_ERR)
-                        break;
-
                     /* Set new locale */
-                    SetNewLocale(NewLcid);
-                    AddNewKbLayoutsByLcid(NewLcid);
-                    SetUserGeoID(NewGeoID);
-                    SetNonUnicodeLang(hwndDlg, NewLcid);
+                    if (pGlobalData->fUserLocaleChanged == TRUE)
+                    {
+                        SaveCurrentLocale(pGlobalData);
+                        pGlobalData->fUserLocaleChanged = FALSE;
+                    }
+
+                    /* Set new GEO ID */
+                    if (pGlobalData->fGeoIdChanged == TRUE)
+                    {
+                        SetUserGeoID(pGlobalData->geoid);
+                        pGlobalData->fGeoIdChanged = FALSE;
+                    }
+
+                    AddNewKbLayoutsByLcid(pGlobalData->lcid);
+                    SetNonUnicodeLang(hwndDlg, pGlobalData->lcid);
                 }
+            }
+            break;
+
+        case WM_DESTROY:
+            if (pGlobalData)
+            {
+                FreeCurrentLocale(pGlobalData);
+                HeapFree(GetProcessHeap(), 0, pGlobalData);
             }
             break;
     }
