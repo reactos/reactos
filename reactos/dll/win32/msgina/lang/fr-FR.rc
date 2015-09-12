@@ -25,11 +25,11 @@ CAPTION "Connexion"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "Utilisateur:", IDC_STATIC, 6, 60, 52, 8
+    LTEXT "Utilisateur :", IDC_STATIC, 6, 60, 52, 8
     EDITTEXT IDC_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
-    LTEXT "Mot de passe:", IDC_STATIC, 6, 78, 52, 8
+    LTEXT "Mot de passe :", IDC_STATIC, 6, 78, 52, 8
     EDITTEXT IDC_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Connexion à:", IDC_STATIC, 6, 96, 52, 8
+    LTEXT "Connexion à :", IDC_STATIC, 6, 96, 52, 8
     COMBOBOX IDC_LOGON_TO, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Annuler", IDCANCEL, 160, 122, 50, 14
@@ -75,9 +75,9 @@ BEGIN
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
     LTEXT "Cet ordinateur est actuellement verrouillé.", IDC_STATIC, 36, 61, 232, 8
     LTEXT "Message", IDC_LOCKMSG, 36, 75, 232, 26
-    LTEXT "Utilisateur:", IDC_STATIC, 36, 107, 40, 8
+    LTEXT "Utilisateur :", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
-    LTEXT "Mot de passe:", IDC_STATIC, 36, 125, 50, 8
+    LTEXT "Mot de passe :", IDC_STATIC, 36, 125, 50, 8
     EDITTEXT IDC_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Annuler", IDCANCEL, 144, 154, 50, 14
@@ -89,15 +89,15 @@ CAPTION "Changer le mot de passe"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "Utilisateur:", IDC_STATIC, 7, 61, 78, 8
+    LTEXT "Utilisateur :", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Se connecter à:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Se connecter à :", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
-    LTEXT "Ancien mot de passe:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Ancien mot de passe :", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Nouveau mot de passe:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Nouveau mot de passe :", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirmez le nouveau mot de passe:", IDC_STATIC, 7, 127, 78, 16
+    LTEXT "Confirmez le nouveau mot de passe :", IDC_STATIC, 7, 127, 78, 16
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Annuler", IDCANCEL, 218, 145, 50, 14
@@ -109,7 +109,7 @@ CAPTION "Déconnexion de ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
-    LTEXT "Êtes vous sûr de vouloir vous déconnecter?", IDC_STATIC, 35, 16, 146, 8
+    LTEXT "Êtes-vous sûr de vouloir vous déconnecter?", IDC_STATIC, 35, 16, 146, 8
     PUSHBUTTON "Oui", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Non", IDNO, 95, 39, 50, 14
 END
@@ -162,7 +162,7 @@ BEGIN
     IDS_FORCELOGOFF "Cela déconnectera l'utilisateur en cours et perdra les données non sauvées. Continuer ?"
     IDS_LOCKMSG "Seul %s ou un administrateur peut déverrouiller cet ordinateur."
     IDS_LOGONMSG "Vous êtes connecté en tant que %s."
-    IDS_LOGONDATE "Date de connexion: %s %s"
+    IDS_LOGONDATE "Date de connexion : %s %s"
     IDS_COMPUTERLOCKED "Ordinateur verrouillé"
     IDS_LOCKEDWRONGPASSWORD "Le mot de passe est incorrect. Entrez à nouveau votre mot de passe en respectant les majuscules."
     IDS_LOCKEDWRONGUSER "Cet ordinateur est actuellement verrouillé. Seul %s\\%s ou un administrateur peut déverrouiller cet ordinateur."
