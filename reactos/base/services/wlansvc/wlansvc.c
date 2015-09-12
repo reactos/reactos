@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/wlansvc/wlansvc.c
+ * FILE:             base/services/wlansvc/wlansvc.c
  * PURPOSE:          WLAN Service
  * PROGRAMMER:       Christoph von Wittich
  */

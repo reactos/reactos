@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Service Host
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
- * FILE:        base/services/svchost/security.c
+ * FILE:        base/services/svchost/security.cxx
  * PURPOSE:     Initializes the COM Object Security Model and Parameters
  * PROGRAMMERS: ReactOS Portable Systems Group
  */

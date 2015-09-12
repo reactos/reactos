@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/spoolsv/spoolsv.c
+ * FILE:             base/services/spoolsv/spoolsv.c
  * PURPOSE:          Printer spooler
  * PROGRAMMER:       Eric Kohl
  */

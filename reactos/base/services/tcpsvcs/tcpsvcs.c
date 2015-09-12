@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/services/tcpsvcs/tcpsvcs.c
+ * FILE:        base/services/tcpsvcs/tcpsvcs.c
  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
  * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
