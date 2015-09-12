@@ -1,13 +1,13 @@
 @echo off
 
-:: This is needed so as to avoid static expansion of environment variables
-:: inside if (...) conditionals.
-:: See http://stackoverflow.com/questions/305605/weird-scope-issue-in-bat-file
-:: for more explanation.
-:: Precisely needed for configuring Visual Studio Environment.
+REM This is needed so as to avoid static expansion of environment variables
+REM inside if (...) conditionals.
+REM See http://stackoverflow.com/questions/305605/weird-scope-issue-in-bat-file
+REM for more explanation.
+REM Precisely needed for configuring Visual Studio Environment.
 setlocal enabledelayedexpansion
 
-:: Does the user need help?
+REM Does the user need help?
 if /I "%1" == "help" goto help
 if /I "%1" == "/?" (
 :help
@@ -19,30 +19,29 @@ if /I "%1" == "/?" (
     exit /b
 )
 
-:: Special case %1 = arm_hosttools %2 = vcvarsall.bat %3 = %CMAKE_GENERATOR%
+REM Special case %1 = arm_hosttools %2 = vcvarsall.bat %3 = %CMAKE_GENERATOR%
 if /I "%1" == "arm_hosttools" (
     echo Configuring x86 host tools for ARM cross build
 
-    :: This launches %VSINSTALLDIR%VS\vcvarsall.bat
+    REM This launches %VSINSTALLDIR%VS\vcvarsall.bat
     call %2 x86
 
-    :: Configure host tools for x86
+    REM Configure host tools for x86
     cmake -G %3 -DARCH:STRING=i386 %~dp0
-    endlocal
-    exit /b
+    exit
 )
 
-:: Get the source root directory
+REM Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
 
-:: Set default generator
+REM Set default generator
 set CMAKE_GENERATOR="Ninja"
 set CMAKE_GENERATOR_HOST=!CMAKE_GENERATOR!
 
-:: Detect presence of cmake
+REM Detect presence of cmake
 cmd /c cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
 
-:: Detect build environment (MinGW, VS, WDK, ...)
+REM Detect build environment (MinGW, VS, WDK, ...)
 if defined ROS_ARCH (
     echo Detected RosBE for %ROS_ARCH%
     set BUILD_ENVIRONMENT=MinGW
@@ -50,7 +49,7 @@ if defined ROS_ARCH (
     set MINGW_TOOCHAIN_FILE=toolchain-gcc.cmake
 
 ) else if defined VCINSTALLDIR (
-    :: VS command prompt does not put this in environment vars
+    REM VS command prompt does not put this in environment vars
     cl 2>&1 | find "x86" > NUL && set ARCH=i386
     cl 2>&1 | find "x64" > NUL && set ARCH=amd64
     cl 2>&1 | find "ARM" > NUL && set ARCH=arm
@@ -74,7 +73,7 @@ if defined ROS_ARCH (
     exit /b
 )
 
-:: Checkpoint
+REM Checkpoint
 if not defined ARCH (
     echo Unknown build architecture
     endlocal
@@ -83,7 +82,7 @@ if not defined ARCH (
 
 set NEW_STYLE_BUILD=0
 
-:: Parse command line parameters
+REM Parse command line parameters
 :repeat
     if /I "%1%" == "-DNEW_STYLE_BUILD" (
         set NEW_STYLE_BUILD=%2
@@ -156,17 +155,17 @@ set NEW_STYLE_BUILD=0
         )
     )
 
-    :: Go to next parameter
+    REM Go to next parameter
     SHIFT
     goto repeat
 :continue
 
-:: Inform the user about the default build
+REM Inform the user about the default build
 if "!CMAKE_GENERATOR!" == "Ninja" (
     echo This script defaults to Ninja. Type "configure help" for alternative options.
 )
 
-:: Create directories
+REM Create directories
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
 if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
     echo Creating directories in %REACTOS_OUTPUT_PATH%
@@ -195,9 +194,9 @@ if "%NEW_STYLE_BUILD%"=="0" (
 
     set REACTOS_BUILD_TOOLS_DIR=!CD!
 
-    :: Use x86 for ARM host tools
+    REM Use x86 for ARM host tools
     if "%ARCH%" == "arm" (
-        :: Launch new script instance for x86 host tools configuration
+        REM Launch new script instance for x86 host tools configuration
         start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR_HOST%
     ) else (
         cmake -G %CMAKE_GENERATOR% -DARCH:STRING=%ARCH% "%REACTOS_SOURCE_DIR%"
