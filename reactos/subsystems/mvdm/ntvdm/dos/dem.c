@@ -1300,7 +1300,7 @@ static VOID WINAPI DosStart(LPWORD Stack)
     }
 
     /* Load the mouse driver */
-    // DosMouseInitialize();
+    DosMouseInitialize();
 
 #ifndef STANDALONE
 
