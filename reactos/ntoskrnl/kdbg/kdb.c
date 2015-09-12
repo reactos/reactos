@@ -1371,8 +1371,12 @@ KdbEnterDebuggerException(
     KdbCurrentProcess = PsGetCurrentProcess();
 
     /* Set continue type to kdContinue for single steps and breakpoints */
-    if (ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT)
+    if (ExceptionCode == STATUS_SINGLE_STEP ||
+        ExceptionCode == STATUS_BREAKPOINT ||
+        ExceptionCode == STATUS_ASSERTION_FAILURE)
+    {
         ContinueType = kdContinue;
+    }
 
     /* Check if we should handle the exception. */
     /* FIXME - won't get all exceptions here :( */
