@@ -154,7 +154,8 @@ IntUpdateLayeredWindowI( PWND pWnd,
       RECT Rect;
       BLENDFUNCTION blend = { AC_SRC_OVER, 0, 255, 0 };
       COLORREF color_key = (info->dwFlags & ULW_COLORKEY) ? info->crKey : CLR_INVALID;
-      HBITMAP hBitmapBuffer, hOldBitmap;
+      HBITMAP hOldBitmap, hOldBitmap1, hbmSrc, hbmDst;
+      DIBSECTION dibs;
 
       Rect = Window;
 
@@ -165,9 +166,17 @@ IntUpdateLayeredWindowI( PWND pWnd,
       if (!info->hdcDst) hdc = UserGetDCEx(pWnd, NULL, DCX_USESTYLE);
       else hdc = info->hdcDst;
 
+      hbmSrc = NtGdiCreateCompatibleBitmap(info->hdcSrc, Rect.right - Rect.left, Rect.bottom - Rect.top);
+      hbmDst = NtGdiCreateCompatibleBitmap(info->hdcSrc, Rect.right - Rect.left, Rect.bottom - Rect.top);
+
+      GreGetObject(hbmSrc, sizeof(DIBSECTION), &dibs);
+
+      TRACE("Source Bitmap bc %d\n",dibs.dsBmih.biBitCount);
+
       hdcBuffer = NtGdiCreateCompatibleDC(hdc);
-      hBitmapBuffer = NtGdiCreateCompatibleBitmap(hdc, Rect.right - Rect.left, Rect.bottom - Rect.top);
-      hOldBitmap = (HBITMAP)NtGdiSelectBitmap(hdcBuffer, hBitmapBuffer);
+
+      hOldBitmap = (HBITMAP)NtGdiSelectBitmap(hdcBuffer, hbmSrc);
+      hOldBitmap1 = (HBITMAP)NtGdiSelectBitmap(hdc, hbmDst);
 
       NtGdiStretchBlt( hdcBuffer,
                        Rect.left,
@@ -209,8 +218,10 @@ IntUpdateLayeredWindowI( PWND pWnd,
                              blend,
                              0);
 
+      NtGdiSelectBitmap(hdc, hOldBitmap1);
       NtGdiSelectBitmap(hdcBuffer, hOldBitmap);
-      if (hBitmapBuffer) GreDeleteObject(hBitmapBuffer);
+      if (hbmSrc) GreDeleteObject(hbmSrc);
+      if (hbmDst) GreDeleteObject(hbmDst);
       if (hdcBuffer) IntGdiDeleteDC(hdcBuffer, FALSE);
       if (!info->hdcDst) UserReleaseDC(pWnd, hdc, FALSE);
    }
