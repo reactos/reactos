@@ -157,7 +157,7 @@ endif()
 add_asm_files(freeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE})
 add_library(freeldr_common ${FREELDR_COMMON_SOURCE} ${freeldr_common_asm})
 add_pch(freeldr_common include/freeldr.h FREELDR_COMMON_SOURCE)
-add_dependencies(freeldr_common bugcodes xdk)
+add_dependencies(freeldr_common bugcodes asm xdk)
 
 if(ARCH STREQUAL "i386" AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
