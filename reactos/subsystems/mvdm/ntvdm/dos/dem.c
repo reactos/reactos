@@ -1432,11 +1432,11 @@ extern HANDLE VdmTaskEvent; // see emulator.c
         /* If the list is already empty, or just contains only one element, bail out */
         // FIXME: Question: if the list has only one element, is it ALWAYS RootCmd ??
         // FIXME: The following is hackish.
-        if (IsListEmpty(&ComSpecInfoList) ||
-            (ComSpecInfoList.Flink == &RootCmd.Entry  &&
-             ComSpecInfoList.Blink == &RootCmd.Entry) &&
+        if ((IsListEmpty(&ComSpecInfoList) ||
+            (ComSpecInfoList.Flink == &RootCmd.Entry   &&
+             ComSpecInfoList.Blink == &RootCmd.Entry)) &&
             ReentrancyCount == 0 &&
-            (WaitForSingleObject(VdmTaskEvent, 0) == WAIT_TIMEOUT))
+            WaitForSingleObject(VdmTaskEvent, 0) == WAIT_TIMEOUT)
         {
             /* Nothing runs, so exit immediately */
             ExitVDM(FALSE, 0);
