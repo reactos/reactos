@@ -776,6 +776,7 @@ HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
         {
             /* No need to loop checking for hardware interrupts */
             SWInterruptHandlerTable2[PendingIrql](TrapFrame);
+            UNREACHABLE;
         }
     }
 }
@@ -1241,6 +1242,7 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
             {
                 /* Now handle pending software interrupt */
                 SWInterruptHandlerTable2[PendingIrql](TrapFrame);
+                UNREACHABLE;
             }
         }
     }
@@ -1249,8 +1251,8 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
 /* SOFTWARE INTERRUPT TRAPS ***************************************************/
 
 FORCEINLINE
-VOID
 DECLSPEC_NORETURN
+VOID
 _HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL CurrentIrql;
@@ -1278,8 +1280,8 @@ _HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEoiHelper(TrapFrame);
 }
 
-VOID
 DECLSPEC_NORETURN
+VOID
 FASTCALL
 HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
 {
@@ -1287,8 +1289,8 @@ HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
     _HalpApcInterruptHandler(TrapFrame);
 }
 
-VOID
 DECLSPEC_NORETURN
+VOID
 FASTCALL
 HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
@@ -1327,8 +1329,8 @@ _HalpDispatchInterruptHandler(VOID)
     return CurrentIrql;
 }
 
-VOID
 DECLSPEC_NORETURN
+VOID
 FASTCALL
 HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
 {

@@ -8,10 +8,13 @@
 
 #pragma once
 
-#define UNREACHABLE __assume(0)
-
-#if _MSC_VER
-#define __builtin_expect(a,b) (a)
+#if defined(_MSC_VER)
+#define UNREACHABLE   __assume(0)
+#define               __builtin_expect(a,b) (a)
+#elif defined(__GNUC__)
+#define UNREACHABLE   __builtin_unreachable()
+#else
+#error
 #endif
 
 //
@@ -235,7 +238,6 @@ DECLSPEC_NORETURN VOID FASTCALL KiTrapReturnNoSegments(IN PKTRAP_FRAME TrapFrame
 DECLSPEC_NORETURN VOID FASTCALL KiTrapReturnNoSegmentsRet8(IN PKTRAP_FRAME TrapFrame);
 
 typedef
-ATTRIB_NORETURN
 VOID
 (FASTCALL *PFAST_SYSTEM_CALL_EXIT)(
     IN PKTRAP_FRAME TrapFrame

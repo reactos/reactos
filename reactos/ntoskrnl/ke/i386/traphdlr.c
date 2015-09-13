@@ -173,6 +173,7 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
         {
             /* We can use the sysexit handler */
             KiFastCallExitHandler(TrapFrame);
+            UNREACHABLE;
         }
     }
 
