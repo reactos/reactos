@@ -1,5 +1,5 @@
 set(baseaddress_ntdll                0x7c920000) # should be above 0x7c920000
-set(baseaddress_kernel32             0x7c770000)
+set(baseaddress_kernel32             0x7c76d000)
 set(baseaddress_msvcrt               0x7c6c0000)
 set(baseaddress_advapi32             0x7c610000)
 set(baseaddress_gdi32                0x7c570000)
