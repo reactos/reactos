@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/errcode.h
+ * FILE:            base/setup/usetup/errorcode.h
  * PURPOSE:         
  * PROGRAMMER:      
  */

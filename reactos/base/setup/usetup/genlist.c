@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/genlist.c
+ * FILE:            base/setup/usetup/genlist.c
  * PURPOSE:         Generic list functions
  * PROGRAMMER:      Eric Kohl
  *                  Christoph von Wittich <christoph at reactos.org>

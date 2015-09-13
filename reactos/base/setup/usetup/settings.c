@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/settings.c
+ * FILE:            base/setup/usetup/settings.c
  * PURPOSE:         Device settings support functions
  * PROGRAMMERS:     Eric Kohl
  *                  Colin Finck

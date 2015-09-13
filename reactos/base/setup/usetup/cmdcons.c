@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/cmdcons.c
+ * FILE:            base/setup/usetup/cmdcons.c
  * PURPOSE:         Recovery console
  * PROGRAMMER:      Eric Kohl
  */

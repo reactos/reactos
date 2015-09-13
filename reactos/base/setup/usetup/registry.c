@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/registry.c
+ * FILE:            base/setup/usetup/registry.c
  * PURPOSE:         Registry creation functions
  * PROGRAMMER:      Eric Kohl
  */

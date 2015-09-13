@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/partlist.h
+ * FILE:            base/setup/usetup/progress.h
  * PURPOSE:         Partition list functions
  * PROGRAMMER:      Eric Kohl
  */

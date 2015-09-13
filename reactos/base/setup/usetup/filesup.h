@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/filesup.h
+ * FILE:            base/setup/usetup/filesup.h
  * PURPOSE:         File support functions
  * PROGRAMMER:      Eric Kohl
  */

@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/inffile.c
+ * FILE:            base/setup/usetup/inffile.c
  * PURPOSE:         .inf files support functions
  * PROGRAMMER:      Hervé Poussineau
  */

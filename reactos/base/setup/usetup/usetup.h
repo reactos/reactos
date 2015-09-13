@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/usetup.h
+ * FILE:            base/setup/usetup/usetup.h
  * PURPOSE:         Text-mode setup
  * PROGRAMMER:      Eric Kohl
  */

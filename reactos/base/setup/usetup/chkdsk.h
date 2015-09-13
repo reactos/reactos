@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/chkdsk.h
+ * FILE:            base/setup/usetup/chkdsk.h
  * PURPOSE:         Filesystem chkdsk support functions
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
  */

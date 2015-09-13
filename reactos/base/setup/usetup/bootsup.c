@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/bootsup.c
+ * FILE:            base/setup/usetup/bootsup.c
  * PURPOSE:         Bootloader support functions
  * PROGRAMMER:      Eric Kohl
  */
