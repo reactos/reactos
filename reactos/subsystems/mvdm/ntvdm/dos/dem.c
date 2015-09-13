@@ -601,7 +601,7 @@ static VOID CmdSetExitCode(VOID)
     {
         RemoveComSpecInfo(ComSpecInfo);
 #endif
-        DPRINT1("Exit DOS from ExitCode (prologue)!");
+        DPRINT1("Exit DOS from ExitCode (prologue)!\n");
         setCF(0);
         goto Quit;
 #ifndef STANDALONE

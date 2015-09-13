@@ -72,7 +72,7 @@
 #define ENDS(...) ENDM
 
 #define VAR_STRUCT(name, struct) \
-    struct name
+    name: struct name
 
 #define FIELD(name, field) \
     name##_##field
