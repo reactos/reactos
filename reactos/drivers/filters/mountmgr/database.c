@@ -198,6 +198,39 @@ GetRemoteDatabaseEntry(IN HANDLE Database,
  * @implemented
  */
 NTSTATUS
+WriteRemoteDatabaseEntry(IN HANDLE Database,
+                         IN LONG Offset,
+                         IN PDATABASE_ENTRY Entry)
+{
+    NTSTATUS Status;
+    LARGE_INTEGER ByteOffset;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    ByteOffset.QuadPart = Offset;
+    Status = ZwWriteFile(Database,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         Entry,
+                         Entry->EntrySize,
+                         &ByteOffset,
+                         NULL);
+    if (NT_SUCCESS(Status))
+    {
+        if (IoStatusBlock.Information < Entry->EntrySize)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
 DeleteRemoteDatabaseEntry(IN HANDLE Database,
                           IN LONG StartingOffset)
 {

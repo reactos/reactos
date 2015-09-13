@@ -298,6 +298,36 @@ QueryVolumeName(
     OUT PUNICODE_STRING VolumeName
 );
 
+HANDLE
+OpenRemoteDatabase(
+    IN PDEVICE_INFORMATION DeviceInformation,
+    IN BOOLEAN MigrateDatabase
+);
+
+PDATABASE_ENTRY
+GetRemoteDatabaseEntry(
+    IN HANDLE Database,
+    IN LONG StartingOffset 
+);
+
+NTSTATUS
+WriteRemoteDatabaseEntry(
+    IN HANDLE Database,
+    IN LONG Offset,
+    IN PDATABASE_ENTRY Entry
+);
+
+NTSTATUS
+CloseRemoteDatabase(
+    IN HANDLE Database
+);
+
+NTSTATUS
+AddRemoteDatabaseEntry(
+    IN HANDLE Database,
+    IN PDATABASE_ENTRY Entry
+);
+
 /* device.c */
 
 DRIVER_DISPATCH MountMgrDeviceControl;
@@ -456,6 +486,12 @@ DeleteSymbolicLinkNameFromMemory(
     IN PDEVICE_EXTENSION DeviceExtension,
     IN PUNICODE_STRING SymbolicLink,
     IN BOOLEAN MarkOffline
+);
+
+NTSTATUS
+MountMgrQuerySymbolicLink(
+    IN PUNICODE_STRING SymbolicName,
+    IN OUT PUNICODE_STRING LinkTarget
 );
 
 #endif /* _MNTMGR_H_ */

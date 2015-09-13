@@ -1688,15 +1688,242 @@ Cleanup:
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 MountMgrVolumeMountPointCreated(IN PDEVICE_EXTENSION DeviceExtension,
                                 IN PIRP Irp,
                                 IN NTSTATUS LockStatus)
 {
-    UNREFERENCED_PARAMETER(DeviceExtension);
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(LockStatus);
-    return STATUS_NOT_IMPLEMENTED;
+    LONG Offset;
+    BOOLEAN Found;
+    NTSTATUS Status;
+    HANDLE RemoteDatabase;
+    PMOUNTDEV_UNIQUE_ID UniqueId;
+    PDATABASE_ENTRY DatabaseEntry;
+    PASSOCIATED_DEVICE_ENTRY AssociatedEntry;
+    PDEVICE_INFORMATION DeviceInformation, TargetDeviceInformation;
+    UNICODE_STRING LinkTarget, SourceDeviceName, SourceSymbolicName, TargetVolumeName, VolumeName, DbName;
+
+    /* Initialize string */
+    LinkTarget.Length = 0;
+    LinkTarget.MaximumLength = 0xC8;
+    LinkTarget.Buffer = AllocatePool(LinkTarget.MaximumLength);
+    if (LinkTarget.Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* If the mount point was created, then, it changed!
+     * Also use it to query some information
+     */
+    Status = MountMgrVolumeMountPointChanged(DeviceExtension, Irp, LockStatus, &SourceDeviceName, &SourceSymbolicName, &TargetVolumeName);
+    /* Pending means DB are under synchronization, bail out */
+    if (Status == STATUS_PENDING)
+    {
+        FreePool(LinkTarget.Buffer);
+        FreePool(SourceDeviceName.Buffer);
+        FreePool(SourceSymbolicName.Buffer);
+        return STATUS_PENDING;
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        FreePool(LinkTarget.Buffer);
+        return Status;
+    }
+
+    /* Query the device information */
+    Status = FindDeviceInfo(DeviceExtension, &SourceDeviceName, FALSE, &DeviceInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        /* If it failed, first try to get volume name */
+        Status = QueryVolumeName(0, NULL, &SourceDeviceName, &LinkTarget, &VolumeName);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Then, try to read the symlink */
+            Status = MountMgrQuerySymbolicLink(&SourceDeviceName, &LinkTarget);
+            if (!NT_SUCCESS(Status))
+            {
+                FreePool(LinkTarget.Buffer);
+                FreePool(SourceDeviceName.Buffer);
+                FreePool(SourceSymbolicName.Buffer);
+                return Status;
+            }
+        }
+        else
+        {
+            FreePool(VolumeName.Buffer);
+        }
+
+        FreePool(SourceDeviceName.Buffer);
+
+        SourceDeviceName.Length = LinkTarget.Length;
+        SourceDeviceName.MaximumLength = LinkTarget.MaximumLength;
+        SourceDeviceName.Buffer = LinkTarget.Buffer;
+
+        /* Now that we have the correct source, reattempt to query information */
+        Status = FindDeviceInfo(DeviceExtension, &SourceDeviceName, FALSE, &DeviceInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            FreePool(SourceDeviceName.Buffer);
+            FreePool(SourceSymbolicName.Buffer);
+            return Status;
+        }
+    }
+
+    FreePool(SourceDeviceName.Buffer);
+
+    /* Get information about target device */
+    Status = FindDeviceInfo(DeviceExtension, &TargetVolumeName, FALSE, &TargetDeviceInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        FreePool(SourceSymbolicName.Buffer);
+        return Status;
+    }
+
+    /* Notify if not disabled */
+    if (!TargetDeviceInformation->SkipNotifications)
+    {
+        PostOnlineNotification(DeviceExtension, &TargetDeviceInformation->SymbolicName);
+    }
+
+    /* Open the remote database */
+    RemoteDatabase = OpenRemoteDatabase(DeviceInformation, TRUE);
+    if (RemoteDatabase == 0)
+    {
+        FreePool(SourceSymbolicName.Buffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Browse all the entries */
+    Offset = 0;
+    Found = FALSE;
+    for (;;)
+    {
+        DatabaseEntry = GetRemoteDatabaseEntry(RemoteDatabase, Offset);
+        if (DatabaseEntry == NULL)
+        {
+            break;
+        }
+
+        /* Try to find ourselves */
+        DbName.MaximumLength = DatabaseEntry->SymbolicNameLength;
+        DbName.Length = DbName.MaximumLength;
+        DbName.Buffer = (PWSTR)((ULONG_PTR)DatabaseEntry + DatabaseEntry->SymbolicNameOffset);
+        if (RtlEqualUnicodeString(&TargetVolumeName, &DbName, TRUE))
+        {
+            ++DatabaseEntry->DatabaseOffset;
+            Status = WriteRemoteDatabaseEntry(RemoteDatabase, Offset, DatabaseEntry);
+            FreePool(DatabaseEntry);
+            Found = TRUE;
+            break;
+        }
+
+        Offset += DatabaseEntry->EntrySize;
+        FreePool(DatabaseEntry);
+    }
+
+    /* We couldn't find ourselves, we'll have to add ourselves */
+    if (!Found)
+    {
+        ULONG EntrySize;
+        PUNIQUE_ID_REPLICATE UniqueIdReplicate;
+
+        /* Query the device unique ID */
+        Status = QueryDeviceInformation(&TargetVolumeName, NULL, &UniqueId, NULL, NULL, NULL, NULL, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            FreePool(SourceSymbolicName.Buffer);
+            CloseRemoteDatabase(RemoteDatabase);
+            return Status;
+        }
+
+        /* Allocate a database entry */
+        EntrySize = UniqueId->UniqueIdLength + TargetVolumeName.Length + sizeof(DATABASE_ENTRY);
+        DatabaseEntry = AllocatePool(EntrySize);
+        if (DatabaseEntry == NULL)
+        {
+            FreePool(UniqueId);
+            FreePool(SourceSymbolicName.Buffer);
+            CloseRemoteDatabase(RemoteDatabase);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Fill it in */
+        DatabaseEntry->EntrySize = EntrySize;
+        DatabaseEntry->DatabaseOffset = 1;
+        DatabaseEntry->SymbolicNameOffset = sizeof(DATABASE_ENTRY);
+        DatabaseEntry->SymbolicNameLength = TargetVolumeName.Length;
+        DatabaseEntry->UniqueIdOffset = TargetVolumeName.Length + sizeof(DATABASE_ENTRY);
+        DatabaseEntry->UniqueIdLength = UniqueId->UniqueIdLength;
+        RtlCopyMemory((PVOID)((ULONG_PTR)DatabaseEntry + sizeof(DATABASE_ENTRY)), TargetVolumeName.Buffer, DatabaseEntry->SymbolicNameLength);
+        RtlCopyMemory((PVOID)((ULONG_PTR)DatabaseEntry + DatabaseEntry->UniqueIdOffset), UniqueId->UniqueId, UniqueId->UniqueIdLength);
+
+        /* And write it down */
+        Status = AddRemoteDatabaseEntry(RemoteDatabase, DatabaseEntry);
+        FreePool(DatabaseEntry);
+        if (!NT_SUCCESS(Status))
+        {
+            FreePool(UniqueId);
+            FreePool(SourceSymbolicName.Buffer);
+            CloseRemoteDatabase(RemoteDatabase);
+            return Status;
+        }
+
+        /* And now, allocate an Unique ID item */
+        UniqueIdReplicate = AllocatePool(sizeof(UNIQUE_ID_REPLICATE));
+        if (UniqueIdReplicate == NULL)
+        {
+            FreePool(UniqueId);
+            FreePool(SourceSymbolicName.Buffer);
+            CloseRemoteDatabase(RemoteDatabase);
+            return Status;
+        }
+
+        /* To associate it with the device */
+        UniqueIdReplicate->UniqueId = UniqueId;
+        InsertTailList(&DeviceInformation->ReplicatedUniqueIdsListHead, &UniqueIdReplicate->ReplicatedUniqueIdsListEntry);
+    }
+
+    /* We're done with the remote database */
+    CloseRemoteDatabase(RemoteDatabase);
+
+    /* Check we were find writing the entry */
+    if (!NT_SUCCESS(Status))
+    {
+        FreePool(SourceSymbolicName.Buffer);
+        return Status;
+    }
+
+    /* This is the end, allocate an associated entry */
+    AssociatedEntry = AllocatePool(sizeof(ASSOCIATED_DEVICE_ENTRY));
+    if (AssociatedEntry == NULL)
+    {
+        FreePool(SourceSymbolicName.Buffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Initialize its source name string */
+    AssociatedEntry->String.Length = SourceSymbolicName.Length;
+    AssociatedEntry->String.MaximumLength = AssociatedEntry->String.Length + sizeof(UNICODE_NULL);
+    AssociatedEntry->String.Buffer = AllocatePool(AssociatedEntry->String.MaximumLength);
+    if (AssociatedEntry->String.Buffer == NULL)
+    {
+        FreePool(AssociatedEntry);
+        FreePool(SourceSymbolicName.Buffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Copy data & insert in list */
+    RtlCopyMemory(AssociatedEntry->String.Buffer, SourceSymbolicName.Buffer, SourceSymbolicName.Length);
+    AssociatedEntry->String.Buffer[SourceSymbolicName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    AssociatedEntry->DeviceInformation = DeviceInformation;
+    InsertTailList(&TargetDeviceInformation->AssociatedDevicesHead, &AssociatedEntry->AssociatedDevicesEntry);
+
+    /* We're done! */
+    FreePool(SourceSymbolicName.Buffer);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

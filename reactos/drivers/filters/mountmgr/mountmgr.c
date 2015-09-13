@@ -48,7 +48,6 @@ static const WCHAR Cunc[] = L"\\??\\C:";
  * - MountMgrQueryDosVolumePaths
  * - MountMgrQueryVolumePaths
  * - MountMgrValidateBackPointer
- * - MountMgrVolumeMountPointCreated
  * - MountMgrVolumeMountPointDeleted
  * - ReconcileThisDatabaseWithMasterWorker
  */
