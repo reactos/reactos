@@ -29,10 +29,6 @@
 
 #include <builddir.h>
 
-#if !defined(__RELFILE__)
-#define __RELFILE__ __FILE__
-#endif
-
 #ifdef __WINE_WINE_TEST_H
 #error This file should not be used in Wine tests
 #endif
