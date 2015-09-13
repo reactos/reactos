@@ -1,522 +1,522 @@
-@ stdcall CreateProxyFromTypeInfo(ptr ptr ptr ptr ptr)
-@ stdcall CreateStubFromTypeInfo(ptr ptr ptr ptr)
+1 stdcall CreateProxyFromTypeInfo(ptr ptr ptr ptr ptr)
+2 stdcall CreateStubFromTypeInfo(ptr ptr ptr ptr)
 # I_RpcServerTurnOnOffKeepalives
-@ stdcall CStdStubBuffer_AddRef(ptr)
-@ stdcall CStdStubBuffer_Connect(ptr ptr)
-@ stdcall CStdStubBuffer_CountRefs(ptr)
-@ stdcall CStdStubBuffer_DebugServerQueryInterface(ptr ptr)
-@ stdcall CStdStubBuffer_DebugServerRelease(ptr ptr)
-@ stdcall CStdStubBuffer_Disconnect(ptr)
-@ stdcall CStdStubBuffer_Invoke(ptr ptr ptr)
-@ stdcall CStdStubBuffer_IsIIDSupported(ptr ptr)
-@ stdcall CStdStubBuffer_QueryInterface(ptr ptr ptr)
-@ stdcall DceErrorInqTextA (long ptr)
-@ stdcall DceErrorInqTextW (long ptr)
+4 stdcall CStdStubBuffer_AddRef(ptr)
+5 stdcall CStdStubBuffer_Connect(ptr ptr)
+6 stdcall CStdStubBuffer_CountRefs(ptr)
+7 stdcall CStdStubBuffer_DebugServerQueryInterface(ptr ptr)
+8 stdcall CStdStubBuffer_DebugServerRelease(ptr ptr)
+9 stdcall CStdStubBuffer_Disconnect(ptr)
+10 stdcall CStdStubBuffer_Invoke(ptr ptr ptr)
+11 stdcall CStdStubBuffer_IsIIDSupported(ptr ptr)
+12 stdcall CStdStubBuffer_QueryInterface(ptr ptr ptr)
+13 stdcall DceErrorInqTextA (long ptr)
+14 stdcall DceErrorInqTextW (long ptr)
 # DllGetClassObject
 # DllInstall
 @ stdcall -private DllRegisterServer()
-@ stub GlobalMutexClearExternal
-@ stub GlobalMutexRequestExternal
-@ stdcall IUnknown_AddRef_Proxy(ptr)
-@ stdcall IUnknown_QueryInterface_Proxy(ptr ptr ptr)
-@ stdcall IUnknown_Release_Proxy(ptr)
-@ stdcall I_RpcAbortAsyncCall(ptr long) I_RpcAsyncAbortCall
-@ stdcall I_RpcAllocate(long)
-@ stdcall I_RpcAsyncAbortCall(ptr long)
-@ stdcall I_RpcAsyncSetHandle(ptr ptr)
-@ stub I_RpcBCacheAllocate
-@ stub I_RpcBCacheFree
-@ stub I_RpcBindingCopy
+18 stub GlobalMutexClearExternal
+19 stub GlobalMutexRequestExternal
+20 stdcall IUnknown_AddRef_Proxy(ptr)
+21 stdcall IUnknown_QueryInterface_Proxy(ptr ptr ptr)
+22 stdcall IUnknown_Release_Proxy(ptr)
+23 stdcall I_RpcAbortAsyncCall(ptr long) I_RpcAsyncAbortCall
+24 stdcall I_RpcAllocate(long)
+25 stdcall I_RpcAsyncAbortCall(ptr long)
+26 stdcall I_RpcAsyncSetHandle(ptr ptr)
+27 stub I_RpcBCacheAllocate
+28 stub I_RpcBCacheFree
+29 stub I_RpcBindingCopy
 # I_RpcBindingHandleToAsyncHandle
-@ stub I_RpcBindingInqConnId
-@ stub I_RpcBindingInqDynamicEndPoint
-@ stub I_RpcBindingInqDynamicEndPointA
-@ stub I_RpcBindingInqDynamicEndPointW
-@ stub I_RpcBindingInqLocalClientPID # wxp
+31 stub I_RpcBindingInqConnId
+32 stub I_RpcBindingInqDynamicEndPoint
+33 stub I_RpcBindingInqDynamicEndPointA
+34 stub I_RpcBindingInqDynamicEndPointW
+35 stub I_RpcBindingInqLocalClientPID
 # I_RpcBindingInqMarshalledTargetInfo
-@ stub I_RpcBindingInqSecurityContext
-@ stdcall I_RpcBindingInqTransportType(ptr ptr)
-@ stub I_RpcBindingInqWireIdForSnego
-@ stub I_RpcBindingIsClientLocal
-@ stub I_RpcBindingToStaticStringBindingW
-@ stub I_RpcClearMutex
-@ stub I_RpcConnectionInqSockBuffSize
-@ stub I_RpcConnectionSetSockBuffSize
-@ stub I_RpcDeleteMutex
-@ stub I_RpcEnableWmiTrace # wxp
-@ stdcall I_RpcExceptionFilter(long)
-@ stdcall I_RpcFree(ptr)
-@ stdcall I_RpcFreeBuffer(ptr)
-@ stub I_RpcFreePipeBuffer
-@ stdcall I_RpcGetBuffer(ptr)
-@ stub I_RpcGetBufferWithObject
-@ stdcall I_RpcGetCurrentCallHandle()
-@ stub I_RpcGetExtendedError
-@ stub I_RpcIfInqTransferSyntaxes
-@ stub I_RpcLogEvent
-@ stdcall I_RpcMapWin32Status(long)
+37 stub I_RpcBindingInqSecurityContext
+38 stdcall I_RpcBindingInqTransportType(ptr ptr)
+39 stub I_RpcBindingInqWireIdForSnego
+40 stub I_RpcBindingIsClientLocal
+41 stub I_RpcBindingToStaticStringBindingW
+42 stub I_RpcClearMutex
+43 stub I_RpcConnectionInqSockBuffSize
+44 stub I_RpcConnectionSetSockBuffSize
+45 stub I_RpcDeleteMutex
+46 stub I_RpcEnableWmiTrace
+47 stdcall I_RpcExceptionFilter(long)
+48 stdcall I_RpcFree(ptr)
+49 stdcall I_RpcFreeBuffer(ptr)
+50 stub I_RpcFreePipeBuffer
+51 stdcall I_RpcGetBuffer(ptr)
+52 stub I_RpcGetBufferWithObject
+53 stdcall I_RpcGetCurrentCallHandle()
+54 stub I_RpcGetExtendedError
+55 stub I_RpcIfInqTransferSyntaxes
+56 stub I_RpcLogEvent
+57 stdcall I_RpcMapWin32Status(long)
 # I_RpcNDRCGetWireRepresentation
 # I_RpcNDRSContextEmergencyCleanup
-@ stdcall I_RpcNegotiateTransferSyntax(ptr)
-@ stub I_RpcNsBindingSetEntryName
-@ stub I_RpcNsBindingSetEntryNameA
-@ stub I_RpcNsBindingSetEntryNameW
-@ stub I_RpcNsInterfaceExported
-@ stub I_RpcNsInterfaceUnexported
-@ stub I_RpcParseSecurity
-@ stub I_RpcPauseExecution
-@ stub I_RpcProxyNewConnection # wxp
-@ stub I_RpcReallocPipeBuffer
-@ stdcall I_RpcReceive(ptr)
+60 stdcall I_RpcNegotiateTransferSyntax(ptr)
+61 stub I_RpcNsBindingSetEntryName
+62 stub I_RpcNsBindingSetEntryNameA
+63 stub I_RpcNsBindingSetEntryNameW
+64 stub I_RpcNsInterfaceExported
+65 stub I_RpcNsInterfaceUnexported
+66 stub I_RpcParseSecurity
+67 stub I_RpcPauseExecution
+68 stub I_RpcProxyNewConnection
+69 stub I_RpcReallocPipeBuffer
+70 stdcall I_RpcReceive(ptr)
 # I_RpcRecordCalloutFailure
 # I_RpcReplyToClientWithStatus
-@ stub I_RpcRequestMutex
+73 stub I_RpcRequestMutex
 # I_RpcSNCHOption
-@ stdcall I_RpcSend(ptr)
-@ stdcall I_RpcSendReceive(ptr)
-@ stub I_RpcServerAllocateIpPort
+75 stdcall I_RpcSend(ptr)
+76 stdcall I_RpcSendReceive(ptr)
+77 stub I_RpcServerAllocateIpPort
 # I_RpcServerCheckClientRestriction
-@ stub I_RpcServerInqAddressChangeFn
-@ stub I_RpcServerInqLocalConnAddress # wxp
-@ stub I_RpcServerInqTransportType
+79 stub I_RpcServerInqAddressChangeFn
+80 stub I_RpcServerInqLocalConnAddress
+81 stub I_RpcServerInqTransportType
 # I_RpcServerIsClientDisconnected
-@ stub I_RpcServerRegisterForwardFunction
-@ stub I_RpcServerSetAddressChangeFn
-@ stub I_RpcServerUseProtseq2A
-@ stub I_RpcServerUseProtseq2W
-@ stub I_RpcServerUseProtseqEp2A
-@ stub I_RpcServerUseProtseqEp2W
+83 stub I_RpcServerRegisterForwardFunction
+84 stub I_RpcServerSetAddressChangeFn
+85 stub I_RpcServerUseProtseq2A
+86 stub I_RpcServerUseProtseq2W
+87 stub I_RpcServerUseProtseqEp2A
+88 stub I_RpcServerUseProtseqEp2W
 # I_RpcSessionStrictContextHandle
-@ stub I_RpcSetAsyncHandle
-@ stub I_RpcSsDontSerializeContext
-@ stub I_RpcSystemFunction001 # wxp (oh, brother!)
-@ stub I_RpcTransConnectionAllocatePacket
-@ stub I_RpcTransConnectionFreePacket
-@ stub I_RpcTransConnectionReallocPacket
-@ stub I_RpcTransDatagramAllocate2
-@ stub I_RpcTransDatagramAllocate
-@ stub I_RpcTransDatagramFree
-@ stub I_RpcTransGetThreadEvent
-@ stub I_RpcTransIoCancelled
-@ stub I_RpcTransServerNewConnection
-@ stub I_RpcTurnOnEEInfoPropagation # wxp
-@ stub I_UuidCreate
-@ stub MIDL_wchar_strcpy
-@ stub MIDL_wchar_strlen
-@ stub MesBufferHandleReset
-@ stdcall MesDecodeBufferHandleCreate(ptr long ptr)
-@ stdcall MesDecodeIncrementalHandleCreate(ptr ptr ptr)
-@ stdcall MesEncodeDynBufferHandleCreate(ptr ptr ptr)
-@ stdcall MesEncodeFixedBufferHandleCreate(ptr long ptr ptr)
-@ stdcall MesEncodeIncrementalHandleCreate(ptr ptr ptr ptr)
-@ stdcall MesHandleFree(ptr)
-@ stdcall MesIncrementalHandleReset(ptr ptr ptr ptr ptr long)
-@ stub MesInqProcEncodingId
-@ stdcall NDRCContextBinding(ptr)
-@ stdcall NDRCContextMarshall(ptr ptr)
-@ stdcall NDRCContextUnmarshall(ptr ptr ptr long)
-@ stdcall NDRSContextMarshall2(ptr ptr ptr ptr ptr long)
-@ stdcall NDRSContextMarshall(ptr ptr ptr)
-@ stdcall NDRSContextMarshallEx(ptr ptr ptr ptr)
-@ stdcall NDRSContextUnmarshall2(ptr ptr ptr ptr long)
-@ stdcall NDRSContextUnmarshall(ptr ptr)
-@ stdcall NDRSContextUnmarshallEx(ptr ptr ptr)
-@ stub NDRcopy
-@ stdcall NdrAllocate(ptr long)
-@ varargs NdrAsyncClientCall(ptr ptr)
-@ stub NdrAsyncServerCall
-@ stdcall NdrByteCountPointerBufferSize(ptr ptr ptr)
-@ stdcall NdrByteCountPointerFree(ptr ptr ptr)
-@ stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
-@ stdcall NdrByteCountPointerUnmarshall(ptr ptr ptr long)
-@ stdcall NdrCStdStubBuffer2_Release(ptr ptr)
-@ stdcall NdrCStdStubBuffer_Release(ptr ptr)
-@ stdcall NdrClearOutParameters(ptr ptr ptr)
-@ varargs -arch=i386 NdrClientCall(ptr ptr) NdrClientCall2
-@ varargs NdrClientCall2(ptr ptr)
-@ stdcall NdrClientContextMarshall(ptr ptr long)
-@ stdcall NdrClientContextUnmarshall(ptr ptr ptr)
-@ stub NdrClientInitialize
-@ stdcall NdrClientInitializeNew(ptr ptr ptr long)
-@ stdcall NdrComplexArrayBufferSize(ptr ptr ptr)
-@ stdcall NdrComplexArrayFree(ptr ptr ptr)
-@ stdcall NdrComplexArrayMarshall(ptr ptr ptr)
-@ stdcall NdrComplexArrayMemorySize(ptr ptr)
-@ stdcall NdrComplexArrayUnmarshall(ptr ptr ptr long)
-@ stdcall NdrComplexStructBufferSize(ptr ptr ptr)
-@ stdcall NdrComplexStructFree(ptr ptr ptr)
-@ stdcall NdrComplexStructMarshall(ptr ptr ptr)
-@ stdcall NdrComplexStructMemorySize(ptr ptr)
-@ stdcall NdrComplexStructUnmarshall(ptr ptr ptr long)
-@ stdcall NdrConformantArrayBufferSize(ptr ptr ptr)
-@ stdcall NdrConformantArrayFree(ptr ptr ptr)
-@ stdcall NdrConformantArrayMarshall(ptr ptr ptr)
-@ stdcall NdrConformantArrayMemorySize(ptr ptr)
-@ stdcall NdrConformantArrayUnmarshall(ptr ptr ptr long)
-@ stdcall NdrConformantStringBufferSize(ptr ptr ptr)
-@ stdcall NdrConformantStringMarshall(ptr ptr ptr)
-@ stdcall NdrConformantStringMemorySize(ptr ptr)
-@ stdcall NdrConformantStringUnmarshall(ptr ptr ptr long)
-@ stdcall NdrConformantStructBufferSize(ptr ptr ptr)
-@ stdcall NdrConformantStructFree(ptr ptr ptr)
-@ stdcall NdrConformantStructMarshall(ptr ptr ptr)
-@ stdcall NdrConformantStructMemorySize(ptr ptr)
-@ stdcall NdrConformantStructUnmarshall(ptr ptr ptr long)
-@ stdcall NdrConformantVaryingArrayBufferSize(ptr ptr ptr)
-@ stdcall NdrConformantVaryingArrayFree(ptr ptr ptr)
-@ stdcall NdrConformantVaryingArrayMarshall(ptr ptr ptr)
-@ stdcall NdrConformantVaryingArrayMemorySize(ptr ptr)
-@ stdcall NdrConformantVaryingArrayUnmarshall(ptr ptr ptr long)
-@ stdcall NdrConformantVaryingStructBufferSize(ptr ptr ptr)
-@ stdcall NdrConformantVaryingStructFree(ptr ptr ptr)
-@ stdcall NdrConformantVaryingStructMarshall(ptr ptr ptr)
-@ stdcall NdrConformantVaryingStructMemorySize(ptr ptr)
-@ stdcall NdrConformantVaryingStructUnmarshall(ptr ptr ptr long)
-@ stdcall NdrContextHandleInitialize(ptr ptr)
-@ stdcall NdrContextHandleSize(ptr ptr ptr)
-@ stdcall NdrConvert2(ptr ptr long)
-@ stdcall NdrConvert(ptr ptr)
-@ stdcall NdrCorrelationFree(ptr)
-@ stdcall NdrCorrelationInitialize(ptr ptr long long)
-@ stdcall NdrCorrelationPass(ptr)
+90 stub I_RpcSetAsyncHandle
+91 stub I_RpcSsDontSerializeContext
+92 stub I_RpcSystemFunction001
+93 stub I_RpcTransConnectionAllocatePacket
+94 stub I_RpcTransConnectionFreePacket
+95 stub I_RpcTransConnectionReallocPacket
+96 stub I_RpcTransDatagramAllocate2
+97 stub I_RpcTransDatagramAllocate
+98 stub I_RpcTransDatagramFree
+99 stub I_RpcTransGetThreadEvent
+100 stub I_RpcTransIoCancelled
+101 stub I_RpcTransServerNewConnection
+102 stub I_RpcTurnOnEEInfoPropagation
+103 stub I_UuidCreate
+104 stub MIDL_wchar_strcpy
+105 stub MIDL_wchar_strlen
+106 stub MesBufferHandleReset
+107 stdcall MesDecodeBufferHandleCreate(ptr long ptr)
+108 stdcall MesDecodeIncrementalHandleCreate(ptr ptr ptr)
+109 stdcall MesEncodeDynBufferHandleCreate(ptr ptr ptr)
+110 stdcall MesEncodeFixedBufferHandleCreate(ptr long ptr ptr)
+111 stdcall MesEncodeIncrementalHandleCreate(ptr ptr ptr ptr)
+112 stdcall MesHandleFree(ptr)
+113 stdcall MesIncrementalHandleReset(ptr ptr ptr ptr ptr long)
+114 stub MesInqProcEncodingId
+115 stdcall NDRCContextBinding(ptr)
+116 stdcall NDRCContextMarshall(ptr ptr)
+117 stdcall NDRCContextUnmarshall(ptr ptr ptr long)
+118 stdcall NDRSContextMarshall2(ptr ptr ptr ptr ptr long)
+119 stdcall NDRSContextMarshall(ptr ptr ptr)
+120 stdcall NDRSContextMarshallEx(ptr ptr ptr ptr)
+121 stdcall NDRSContextUnmarshall2(ptr ptr ptr ptr long)
+122 stdcall NDRSContextUnmarshall(ptr ptr)
+123 stdcall NDRSContextUnmarshallEx(ptr ptr ptr)
+124 stub NDRcopy
+125 stdcall NdrAllocate(ptr long)
+126 varargs NdrAsyncClientCall(ptr ptr)
+127 stub NdrAsyncServerCall
+128 stdcall NdrByteCountPointerBufferSize(ptr ptr ptr)
+129 stdcall NdrByteCountPointerFree(ptr ptr ptr)
+130 stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
+131 stdcall NdrByteCountPointerUnmarshall(ptr ptr ptr long)
+132 stdcall NdrCStdStubBuffer2_Release(ptr ptr)
+133 stdcall NdrCStdStubBuffer_Release(ptr ptr)
+134 stdcall NdrClearOutParameters(ptr ptr ptr)
+135 varargs -arch=i386 NdrClientCall(ptr ptr) NdrClientCall2
+136 varargs NdrClientCall2(ptr ptr)
+137 stdcall NdrClientContextMarshall(ptr ptr long)
+138 stdcall NdrClientContextUnmarshall(ptr ptr ptr)
+139 stub NdrClientInitialize
+140 stdcall NdrClientInitializeNew(ptr ptr ptr long)
+141 stdcall NdrComplexArrayBufferSize(ptr ptr ptr)
+142 stdcall NdrComplexArrayFree(ptr ptr ptr)
+143 stdcall NdrComplexArrayMarshall(ptr ptr ptr)
+144 stdcall NdrComplexArrayMemorySize(ptr ptr)
+145 stdcall NdrComplexArrayUnmarshall(ptr ptr ptr long)
+146 stdcall NdrComplexStructBufferSize(ptr ptr ptr)
+147 stdcall NdrComplexStructFree(ptr ptr ptr)
+148 stdcall NdrComplexStructMarshall(ptr ptr ptr)
+149 stdcall NdrComplexStructMemorySize(ptr ptr)
+150 stdcall NdrComplexStructUnmarshall(ptr ptr ptr long)
+151 stdcall NdrConformantArrayBufferSize(ptr ptr ptr)
+152 stdcall NdrConformantArrayFree(ptr ptr ptr)
+153 stdcall NdrConformantArrayMarshall(ptr ptr ptr)
+154 stdcall NdrConformantArrayMemorySize(ptr ptr)
+155 stdcall NdrConformantArrayUnmarshall(ptr ptr ptr long)
+156 stdcall NdrConformantStringBufferSize(ptr ptr ptr)
+157 stdcall NdrConformantStringMarshall(ptr ptr ptr)
+158 stdcall NdrConformantStringMemorySize(ptr ptr)
+159 stdcall NdrConformantStringUnmarshall(ptr ptr ptr long)
+160 stdcall NdrConformantStructBufferSize(ptr ptr ptr)
+161 stdcall NdrConformantStructFree(ptr ptr ptr)
+162 stdcall NdrConformantStructMarshall(ptr ptr ptr)
+163 stdcall NdrConformantStructMemorySize(ptr ptr)
+164 stdcall NdrConformantStructUnmarshall(ptr ptr ptr long)
+165 stdcall NdrConformantVaryingArrayBufferSize(ptr ptr ptr)
+166 stdcall NdrConformantVaryingArrayFree(ptr ptr ptr)
+167 stdcall NdrConformantVaryingArrayMarshall(ptr ptr ptr)
+168 stdcall NdrConformantVaryingArrayMemorySize(ptr ptr)
+169 stdcall NdrConformantVaryingArrayUnmarshall(ptr ptr ptr long)
+170 stdcall NdrConformantVaryingStructBufferSize(ptr ptr ptr)
+171 stdcall NdrConformantVaryingStructFree(ptr ptr ptr)
+172 stdcall NdrConformantVaryingStructMarshall(ptr ptr ptr)
+173 stdcall NdrConformantVaryingStructMemorySize(ptr ptr)
+174 stdcall NdrConformantVaryingStructUnmarshall(ptr ptr ptr long)
+175 stdcall NdrContextHandleInitialize(ptr ptr)
+176 stdcall NdrContextHandleSize(ptr ptr ptr)
+177 stdcall NdrConvert2(ptr ptr long)
+178 stdcall NdrConvert(ptr ptr)
+179 stdcall NdrCorrelationFree(ptr)
+180 stdcall NdrCorrelationInitialize(ptr ptr long long)
+181 stdcall NdrCorrelationPass(ptr)
 # NdrCreateServerInterfaceFromStub
-@ stub NdrDcomAsyncClientCall
-@ stub NdrDcomAsyncStubCall
-@ stdcall NdrDllCanUnloadNow(ptr)
-@ stdcall NdrDllGetClassObject(ptr ptr ptr ptr ptr ptr)
-@ stdcall NdrDllRegisterProxy(long ptr ptr)
-@ stdcall NdrDllUnregisterProxy(long ptr ptr)
-@ stdcall NdrEncapsulatedUnionBufferSize(ptr ptr ptr)
-@ stdcall NdrEncapsulatedUnionFree(ptr ptr ptr)
-@ stdcall NdrEncapsulatedUnionMarshall(ptr ptr ptr)
-@ stdcall NdrEncapsulatedUnionMemorySize(ptr ptr)
-@ stdcall NdrEncapsulatedUnionUnmarshall(ptr ptr ptr long)
-@ stdcall NdrFixedArrayBufferSize(ptr ptr ptr)
-@ stdcall NdrFixedArrayFree(ptr ptr ptr)
-@ stdcall NdrFixedArrayMarshall(ptr ptr ptr)
-@ stdcall NdrFixedArrayMemorySize(ptr ptr)
-@ stdcall NdrFixedArrayUnmarshall(ptr ptr ptr long)
-@ stdcall NdrFreeBuffer(ptr)
-@ stdcall NdrFullPointerFree(ptr ptr)
-@ stdcall NdrFullPointerInsertRefId(ptr long ptr)
-@ stdcall NdrFullPointerQueryPointer(ptr ptr long ptr)
-@ stdcall NdrFullPointerQueryRefId(ptr long long ptr)
-@ stdcall NdrFullPointerXlatFree(ptr)
-@ stdcall NdrFullPointerXlatInit(long long) 
-@ stdcall NdrGetBuffer(ptr long ptr)
-@ stub NdrGetDcomProtocolVersion
-@ stub NdrGetSimpleTypeBufferAlignment # wxp
-@ stub NdrGetSimpleTypeBufferSize # wxp
-@ stub NdrGetSimpleTypeMemorySize # wxp
-@ stub NdrGetTypeFlags # wxp
-@ stdcall NdrGetUserMarshalInfo(ptr long ptr)
-@ stdcall NdrInterfacePointerBufferSize(ptr ptr ptr)
-@ stdcall NdrInterfacePointerFree(ptr ptr ptr)
-@ stdcall NdrInterfacePointerMarshall(ptr ptr ptr)
-@ stdcall NdrInterfacePointerMemorySize(ptr ptr)
-@ stdcall NdrInterfacePointerUnmarshall(ptr ptr ptr long)
-@ stdcall NdrMapCommAndFaultStatus(ptr ptr ptr long)
-@ varargs NdrMesProcEncodeDecode(ptr ptr ptr)
-@ stub NdrMesProcEncodeDecode2
-@ stub NdrMesSimpleTypeAlignSize
-@ stub NdrMesSimpleTypeDecode
-@ stub NdrMesSimpleTypeEncode
-@ stub NdrMesTypeAlignSize2
-@ stub NdrMesTypeAlignSize
-@ stdcall NdrMesTypeDecode2(ptr ptr ptr ptr ptr)
-@ stub NdrMesTypeDecode
-@ stdcall NdrMesTypeEncode2(ptr ptr ptr ptr ptr)
-@ stub NdrMesTypeEncode
-@ stdcall NdrMesTypeFree2(ptr ptr ptr ptr ptr)
-@ stdcall NdrNonConformantStringBufferSize(ptr ptr ptr)
-@ stdcall NdrNonConformantStringMarshall(ptr ptr ptr)
-@ stdcall NdrNonConformantStringMemorySize(ptr ptr)
-@ stdcall NdrNonConformantStringUnmarshall(ptr ptr ptr long)
-@ stdcall NdrNonEncapsulatedUnionBufferSize(ptr ptr ptr)
-@ stdcall NdrNonEncapsulatedUnionFree(ptr ptr ptr)
-@ stdcall NdrNonEncapsulatedUnionMarshall(ptr ptr ptr)
-@ stdcall NdrNonEncapsulatedUnionMemorySize(ptr ptr)
-@ stdcall NdrNonEncapsulatedUnionUnmarshall(ptr ptr ptr long)
-@ stub NdrNsGetBuffer
-@ stub NdrNsSendReceive
-@ stdcall NdrOleAllocate(long)
-@ stdcall NdrOleFree(ptr)
-@ stub NdrOutInit # wxp
-@ stub NdrPartialIgnoreClientBufferSize # wxp
-@ stub NdrPartialIgnoreClientMarshall # wxp
-@ stub NdrPartialIgnoreServerInitialize # wxp
-@ stub NdrPartialIgnoreServerUnmarshall # wxp
-@ stdcall NdrPointerBufferSize(ptr ptr ptr)
-@ stdcall NdrPointerFree(ptr ptr ptr)
-@ stdcall NdrPointerMarshall(ptr ptr ptr)
-@ stdcall NdrPointerMemorySize(ptr ptr)
-@ stdcall NdrPointerUnmarshall(ptr ptr ptr long)
-@ stdcall NdrProxyErrorHandler(long)
-@ stdcall NdrProxyFreeBuffer(ptr ptr)
-@ stdcall NdrProxyGetBuffer(ptr ptr)
-@ stdcall NdrProxyInitialize(ptr ptr ptr ptr long)
-@ stdcall NdrProxySendReceive(ptr ptr)
-@ stdcall NdrRangeUnmarshall(ptr ptr ptr long)
-@ stub NdrRpcSmClientAllocate
-@ stub NdrRpcSmClientFree
-@ stdcall NdrRpcSmSetClientToOsf(ptr)
-@ stub NdrRpcSsDefaultAllocate
-@ stub NdrRpcSsDefaultFree
-@ stub NdrRpcSsDisableAllocate
-@ stub NdrRpcSsEnableAllocate
-@ stdcall NdrSendReceive(ptr ptr)
-@ stdcall NdrServerCall2(ptr)
-@ stdcall NdrServerCall(ptr)
-@ stdcall NdrServerContextMarshall(ptr ptr long)
-@ stdcall NdrServerContextNewMarshall(ptr ptr ptr ptr) # wxp
-@ stdcall NdrServerContextNewUnmarshall(ptr ptr) # wxp
-@ stdcall NdrServerContextUnmarshall(ptr)
-@ stub NdrServerInitialize
-@ stub NdrServerInitializeMarshall
-@ stdcall NdrServerInitializeNew(ptr ptr ptr)
-@ stub NdrServerInitializePartial # wxp
-@ stub NdrServerInitializeUnmarshall
-@ stub NdrServerMarshall
-@ stub NdrServerUnmarshall
-@ stdcall NdrSimpleStructBufferSize(ptr ptr ptr)
-@ stdcall NdrSimpleStructFree(ptr ptr ptr)
-@ stdcall NdrSimpleStructMarshall(ptr ptr ptr)
-@ stdcall NdrSimpleStructMemorySize(ptr ptr)
-@ stdcall NdrSimpleStructUnmarshall(ptr ptr ptr long)
-@ stdcall NdrSimpleTypeMarshall(ptr ptr long)
-@ stdcall NdrSimpleTypeUnmarshall(ptr ptr long)
-@ stdcall NdrStubCall2(ptr ptr ptr ptr)
-@ stdcall NdrStubCall(ptr ptr ptr ptr)
-@ stdcall NdrStubForwardingFunction(ptr ptr ptr ptr)
-@ stdcall NdrStubGetBuffer(ptr ptr ptr)
-@ stdcall NdrStubInitialize(ptr ptr ptr ptr)
-@ stub NdrStubInitializeMarshall
-@ stub NdrTypeFlags # wxp
-@ stub NdrTypeFree # wxp
-@ stub NdrTypeMarshall # wxp
-@ stub NdrTypeSize # wxp
-@ stub NdrTypeUnmarshall # wxp
-@ stub NdrUnmarshallBasetypeInline # wxp
-@ stdcall NdrUserMarshalBufferSize(ptr ptr ptr)
-@ stdcall NdrUserMarshalFree(ptr ptr ptr)
-@ stdcall NdrUserMarshalMarshall(ptr ptr ptr)
-@ stdcall NdrUserMarshalMemorySize(ptr ptr)
-@ stub NdrUserMarshalSimpleTypeConvert
-@ stdcall NdrUserMarshalUnmarshall(ptr ptr ptr long)
-@ stdcall NdrVaryingArrayBufferSize(ptr ptr ptr)
-@ stdcall NdrVaryingArrayFree(ptr ptr ptr)
-@ stdcall NdrVaryingArrayMarshall(ptr ptr ptr)
-@ stdcall NdrVaryingArrayMemorySize(ptr ptr)
-@ stdcall NdrVaryingArrayUnmarshall(ptr ptr ptr long)
-@ stdcall NdrXmitOrRepAsBufferSize(ptr ptr ptr)
-@ stdcall NdrXmitOrRepAsFree(ptr ptr ptr)
-@ stdcall NdrXmitOrRepAsMarshall(ptr ptr ptr)
-@ stdcall NdrXmitOrRepAsMemorySize(ptr ptr)
-@ stdcall NdrXmitOrRepAsUnmarshall(ptr ptr ptr long)
-@ stub NdrpCreateProxy # wxp
-@ stub NdrpCreateStub # wxp
-@ stub NdrpGetProcFormatString # wxp
-@ stub NdrpGetTypeFormatString # wxp
-@ stub NdrpGetTypeGenCookie # wxp
-@ stub NdrpMemoryIncrement # wxp
-@ stub NdrpReleaseTypeFormatString # wxp
-@ stub NdrpReleaseTypeGenCookie # wxp
-@ stub NdrpSetRpcSsDefaults
-@ stub NdrpVarVtOfTypeDesc # wxp
-@ stdcall RpcAbortAsyncCall(ptr long) RpcAsyncAbortCall
-@ stdcall RpcAsyncAbortCall(ptr long)
-@ stdcall RpcAsyncCancelCall(ptr long)
-@ stdcall RpcAsyncCompleteCall(ptr ptr)
-@ stdcall RpcAsyncGetCallStatus(ptr)
-@ stdcall RpcAsyncInitializeHandle(ptr long)
-@ stub RpcAsyncRegisterInfo
-@ stdcall RpcBindingCopy(ptr ptr)
-@ stdcall RpcBindingFree(ptr)
-@ stdcall RpcBindingFromStringBindingA(str  ptr)
-@ stdcall RpcBindingFromStringBindingW(wstr ptr)
-@ stdcall RpcBindingInqAuthClientA(ptr ptr ptr ptr ptr ptr)
-@ stdcall RpcBindingInqAuthClientExA(ptr ptr ptr ptr ptr ptr long)
-@ stdcall RpcBindingInqAuthClientExW(ptr ptr ptr ptr ptr ptr long)
-@ stdcall RpcBindingInqAuthClientW(ptr ptr ptr ptr ptr ptr)
-@ stdcall RpcBindingInqAuthInfoA(ptr ptr ptr ptr ptr ptr)
-@ stdcall RpcBindingInqAuthInfoExA(ptr ptr ptr ptr ptr ptr long ptr)
-@ stdcall RpcBindingInqAuthInfoExW(ptr ptr ptr ptr ptr ptr long ptr)
-@ stdcall RpcBindingInqAuthInfoW(ptr ptr ptr ptr ptr ptr)
-@ stdcall RpcBindingInqObject(ptr ptr)
-@ stub RpcBindingInqOption
-@ stdcall RpcBindingReset(ptr)
-@ stub RpcBindingServerFromClient
-@ stdcall RpcBindingSetAuthInfoA(ptr str long long ptr long)
-@ stdcall RpcBindingSetAuthInfoExA(ptr str long long ptr long ptr)
-@ stdcall RpcBindingSetAuthInfoExW(ptr wstr long long ptr long ptr)
-@ stdcall RpcBindingSetAuthInfoW(ptr wstr long long ptr long)
-@ stdcall RpcBindingSetObject(ptr ptr)
-@ stdcall RpcBindingSetOption(ptr long long)
-@ stdcall RpcBindingToStringBindingA(ptr ptr)
-@ stdcall RpcBindingToStringBindingW(ptr ptr)
-@ stdcall RpcBindingVectorFree(ptr)
-@ stdcall RpcCancelAsyncCall(ptr long) RpcAsyncCancelCall
-@ stdcall RpcCancelThread(ptr)
-@ stdcall RpcCancelThreadEx(ptr long)
-@ stub RpcCertGeneratePrincipalNameA
-@ stub RpcCertGeneratePrincipalNameW
-@ stdcall RpcCompleteAsyncCall(ptr ptr) RpcAsyncCompleteCall
-@ stdcall RpcEpRegisterA(ptr ptr ptr str)
-@ stdcall RpcEpRegisterNoReplaceA(ptr ptr ptr str)
-@ stdcall RpcEpRegisterNoReplaceW(ptr ptr ptr wstr)
-@ stdcall RpcEpRegisterW(ptr ptr ptr wstr)
-@ stdcall RpcEpResolveBinding(ptr ptr)
-@ stdcall RpcEpUnregister(ptr ptr ptr)
-@ stub RpcErrorAddRecord # wxp
-@ stub RpcErrorClearInformation # wxp
-@ stdcall RpcErrorEndEnumeration(ptr)
-@ stdcall RpcErrorGetNextRecord(ptr long ptr)
+183 stub NdrDcomAsyncClientCall
+184 stub NdrDcomAsyncStubCall
+185 stdcall NdrDllCanUnloadNow(ptr)
+186 stdcall NdrDllGetClassObject(ptr ptr ptr ptr ptr ptr)
+187 stdcall NdrDllRegisterProxy(long ptr ptr)
+188 stdcall NdrDllUnregisterProxy(long ptr ptr)
+189 stdcall NdrEncapsulatedUnionBufferSize(ptr ptr ptr)
+190 stdcall NdrEncapsulatedUnionFree(ptr ptr ptr)
+191 stdcall NdrEncapsulatedUnionMarshall(ptr ptr ptr)
+192 stdcall NdrEncapsulatedUnionMemorySize(ptr ptr)
+193 stdcall NdrEncapsulatedUnionUnmarshall(ptr ptr ptr long)
+194 stdcall NdrFixedArrayBufferSize(ptr ptr ptr)
+195 stdcall NdrFixedArrayFree(ptr ptr ptr)
+196 stdcall NdrFixedArrayMarshall(ptr ptr ptr)
+197 stdcall NdrFixedArrayMemorySize(ptr ptr)
+198 stdcall NdrFixedArrayUnmarshall(ptr ptr ptr long)
+199 stdcall NdrFreeBuffer(ptr)
+200 stdcall NdrFullPointerFree(ptr ptr)
+201 stdcall NdrFullPointerInsertRefId(ptr long ptr)
+202 stdcall NdrFullPointerQueryPointer(ptr ptr long ptr)
+203 stdcall NdrFullPointerQueryRefId(ptr long long ptr)
+204 stdcall NdrFullPointerXlatFree(ptr)
+205 stdcall NdrFullPointerXlatInit(long long) 
+206 stdcall NdrGetBuffer(ptr long ptr)
+207 stub NdrGetDcomProtocolVersion
+208 stub NdrGetSimpleTypeBufferAlignment
+209 stub NdrGetSimpleTypeBufferSize
+210 stub NdrGetSimpleTypeMemorySize
+211 stub NdrGetTypeFlags
+212 stdcall NdrGetUserMarshalInfo(ptr long ptr)
+213 stdcall NdrInterfacePointerBufferSize(ptr ptr ptr)
+214 stdcall NdrInterfacePointerFree(ptr ptr ptr)
+215 stdcall NdrInterfacePointerMarshall(ptr ptr ptr)
+216 stdcall NdrInterfacePointerMemorySize(ptr ptr)
+217 stdcall NdrInterfacePointerUnmarshall(ptr ptr ptr long)
+218 stdcall NdrMapCommAndFaultStatus(ptr ptr ptr long)
+219 varargs NdrMesProcEncodeDecode(ptr ptr ptr)
+220 stub NdrMesProcEncodeDecode2
+221 stub NdrMesSimpleTypeAlignSize
+222 stub NdrMesSimpleTypeDecode
+223 stub NdrMesSimpleTypeEncode
+224 stub NdrMesTypeAlignSize2
+225 stub NdrMesTypeAlignSize
+226 stdcall NdrMesTypeDecode2(ptr ptr ptr ptr ptr)
+227 stub NdrMesTypeDecode
+228 stdcall NdrMesTypeEncode2(ptr ptr ptr ptr ptr)
+229 stub NdrMesTypeEncode
+230 stdcall NdrMesTypeFree2(ptr ptr ptr ptr ptr)
+231 stdcall NdrNonConformantStringBufferSize(ptr ptr ptr)
+232 stdcall NdrNonConformantStringMarshall(ptr ptr ptr)
+233 stdcall NdrNonConformantStringMemorySize(ptr ptr)
+234 stdcall NdrNonConformantStringUnmarshall(ptr ptr ptr long)
+235 stdcall NdrNonEncapsulatedUnionBufferSize(ptr ptr ptr)
+236 stdcall NdrNonEncapsulatedUnionFree(ptr ptr ptr)
+237 stdcall NdrNonEncapsulatedUnionMarshall(ptr ptr ptr)
+238 stdcall NdrNonEncapsulatedUnionMemorySize(ptr ptr)
+239 stdcall NdrNonEncapsulatedUnionUnmarshall(ptr ptr ptr long)
+240 stub NdrNsGetBuffer
+241 stub NdrNsSendReceive
+242 stdcall NdrOleAllocate(long)
+243 stdcall NdrOleFree(ptr)
+244 stub NdrOutInit
+245 stub NdrPartialIgnoreClientBufferSize
+246 stub NdrPartialIgnoreClientMarshall
+247 stub NdrPartialIgnoreServerInitialize
+248 stub NdrPartialIgnoreServerUnmarshall
+249 stdcall NdrPointerBufferSize(ptr ptr ptr)
+250 stdcall NdrPointerFree(ptr ptr ptr)
+251 stdcall NdrPointerMarshall(ptr ptr ptr)
+252 stdcall NdrPointerMemorySize(ptr ptr)
+253 stdcall NdrPointerUnmarshall(ptr ptr ptr long)
+254 stdcall NdrProxyErrorHandler(long)
+255 stdcall NdrProxyFreeBuffer(ptr ptr)
+256 stdcall NdrProxyGetBuffer(ptr ptr)
+257 stdcall NdrProxyInitialize(ptr ptr ptr ptr long)
+258 stdcall NdrProxySendReceive(ptr ptr)
+259 stdcall NdrRangeUnmarshall(ptr ptr ptr long)
+260 stub NdrRpcSmClientAllocate
+261 stub NdrRpcSmClientFree
+262 stdcall NdrRpcSmSetClientToOsf(ptr)
+263 stub NdrRpcSsDefaultAllocate
+264 stub NdrRpcSsDefaultFree
+265 stub NdrRpcSsDisableAllocate
+266 stub NdrRpcSsEnableAllocate
+267 stdcall NdrSendReceive(ptr ptr)
+268 stdcall NdrServerCall2(ptr)
+269 stdcall NdrServerCall(ptr)
+270 stdcall NdrServerContextMarshall(ptr ptr long)
+271 stdcall NdrServerContextNewMarshall(ptr ptr ptr ptr)
+272 stdcall NdrServerContextNewUnmarshall(ptr ptr)
+273 stdcall NdrServerContextUnmarshall(ptr)
+274 stub NdrServerInitialize
+275 stub NdrServerInitializeMarshall
+276 stdcall NdrServerInitializeNew(ptr ptr ptr)
+277 stub NdrServerInitializePartial
+278 stub NdrServerInitializeUnmarshall
+279 stub NdrServerMarshall
+280 stub NdrServerUnmarshall
+281 stdcall NdrSimpleStructBufferSize(ptr ptr ptr)
+282 stdcall NdrSimpleStructFree(ptr ptr ptr)
+283 stdcall NdrSimpleStructMarshall(ptr ptr ptr)
+284 stdcall NdrSimpleStructMemorySize(ptr ptr)
+285 stdcall NdrSimpleStructUnmarshall(ptr ptr ptr long)
+286 stdcall NdrSimpleTypeMarshall(ptr ptr long)
+287 stdcall NdrSimpleTypeUnmarshall(ptr ptr long)
+288 stdcall NdrStubCall2(ptr ptr ptr ptr)
+289 stdcall NdrStubCall(ptr ptr ptr ptr)
+290 stdcall NdrStubForwardingFunction(ptr ptr ptr ptr)
+291 stdcall NdrStubGetBuffer(ptr ptr ptr)
+292 stdcall NdrStubInitialize(ptr ptr ptr ptr)
+293 stub NdrStubInitializeMarshall
+294 stub NdrTypeFlags
+295 stub NdrTypeFree
+296 stub NdrTypeMarshall
+297 stub NdrTypeSize
+298 stub NdrTypeUnmarshall
+299 stub NdrUnmarshallBasetypeInline
+300 stdcall NdrUserMarshalBufferSize(ptr ptr ptr)
+301 stdcall NdrUserMarshalFree(ptr ptr ptr)
+302 stdcall NdrUserMarshalMarshall(ptr ptr ptr)
+303 stdcall NdrUserMarshalMemorySize(ptr ptr)
+304 stub NdrUserMarshalSimpleTypeConvert
+305 stdcall NdrUserMarshalUnmarshall(ptr ptr ptr long)
+306 stdcall NdrVaryingArrayBufferSize(ptr ptr ptr)
+307 stdcall NdrVaryingArrayFree(ptr ptr ptr)
+308 stdcall NdrVaryingArrayMarshall(ptr ptr ptr)
+309 stdcall NdrVaryingArrayMemorySize(ptr ptr)
+310 stdcall NdrVaryingArrayUnmarshall(ptr ptr ptr long)
+311 stdcall NdrXmitOrRepAsBufferSize(ptr ptr ptr)
+312 stdcall NdrXmitOrRepAsFree(ptr ptr ptr)
+313 stdcall NdrXmitOrRepAsMarshall(ptr ptr ptr)
+314 stdcall NdrXmitOrRepAsMemorySize(ptr ptr)
+315 stdcall NdrXmitOrRepAsUnmarshall(ptr ptr ptr long)
+316 stub NdrpCreateProxy
+317 stub NdrpCreateStub
+318 stub NdrpGetProcFormatString
+319 stub NdrpGetTypeFormatString
+320 stub NdrpGetTypeGenCookie
+321 stub NdrpMemoryIncrement
+322 stub NdrpReleaseTypeFormatString
+323 stub NdrpReleaseTypeGenCookie
+324 stub NdrpSetRpcSsDefaults
+325 stub NdrpVarVtOfTypeDesc
+326 stdcall RpcAbortAsyncCall(ptr long) RpcAsyncAbortCall
+327 stdcall RpcAsyncAbortCall(ptr long)
+328 stdcall RpcAsyncCancelCall(ptr long)
+329 stdcall RpcAsyncCompleteCall(ptr ptr)
+330 stdcall RpcAsyncGetCallStatus(ptr)
+331 stdcall RpcAsyncInitializeHandle(ptr long)
+332 stub RpcAsyncRegisterInfo
+333 stdcall RpcBindingCopy(ptr ptr)
+334 stdcall RpcBindingFree(ptr)
+335 stdcall RpcBindingFromStringBindingA(str  ptr)
+336 stdcall RpcBindingFromStringBindingW(wstr ptr)
+337 stdcall RpcBindingInqAuthClientA(ptr ptr ptr ptr ptr ptr)
+338 stdcall RpcBindingInqAuthClientExA(ptr ptr ptr ptr ptr ptr long)
+339 stdcall RpcBindingInqAuthClientExW(ptr ptr ptr ptr ptr ptr long)
+340 stdcall RpcBindingInqAuthClientW(ptr ptr ptr ptr ptr ptr)
+341 stdcall RpcBindingInqAuthInfoA(ptr ptr ptr ptr ptr ptr)
+342 stdcall RpcBindingInqAuthInfoExA(ptr ptr ptr ptr ptr ptr long ptr)
+343 stdcall RpcBindingInqAuthInfoExW(ptr ptr ptr ptr ptr ptr long ptr)
+344 stdcall RpcBindingInqAuthInfoW(ptr ptr ptr ptr ptr ptr)
+345 stdcall RpcBindingInqObject(ptr ptr)
+346 stub RpcBindingInqOption
+347 stdcall RpcBindingReset(ptr)
+348 stub RpcBindingServerFromClient
+349 stdcall RpcBindingSetAuthInfoA(ptr str long long ptr long)
+350 stdcall RpcBindingSetAuthInfoExA(ptr str long long ptr long ptr)
+351 stdcall RpcBindingSetAuthInfoExW(ptr wstr long long ptr long ptr)
+352 stdcall RpcBindingSetAuthInfoW(ptr wstr long long ptr long)
+353 stdcall RpcBindingSetObject(ptr ptr)
+354 stdcall RpcBindingSetOption(ptr long long)
+355 stdcall RpcBindingToStringBindingA(ptr ptr)
+356 stdcall RpcBindingToStringBindingW(ptr ptr)
+357 stdcall RpcBindingVectorFree(ptr)
+358 stdcall RpcCancelAsyncCall(ptr long) RpcAsyncCancelCall
+359 stdcall RpcCancelThread(ptr)
+360 stdcall RpcCancelThreadEx(ptr long)
+361 stub RpcCertGeneratePrincipalNameA
+362 stub RpcCertGeneratePrincipalNameW
+363 stdcall RpcCompleteAsyncCall(ptr ptr) RpcAsyncCompleteCall
+364 stdcall RpcEpRegisterA(ptr ptr ptr str)
+365 stdcall RpcEpRegisterNoReplaceA(ptr ptr ptr str)
+366 stdcall RpcEpRegisterNoReplaceW(ptr ptr ptr wstr)
+367 stdcall RpcEpRegisterW(ptr ptr ptr wstr)
+368 stdcall RpcEpResolveBinding(ptr ptr)
+369 stdcall RpcEpUnregister(ptr ptr ptr)
+370 stub RpcErrorAddRecord
+371 stub RpcErrorClearInformation
+372 stdcall RpcErrorEndEnumeration(ptr)
+373 stdcall RpcErrorGetNextRecord(ptr long ptr)
 # RpcErrorGetNumberOfRecords
-@ stdcall RpcErrorLoadErrorInfo(ptr long ptr)
-@ stub RpcErrorResetEnumeration # wxp
-@ stdcall RpcErrorSaveErrorInfo(ptr ptr ptr)
-@ stdcall RpcErrorStartEnumeration(ptr)
-@ stub RpcFreeAuthorizationContext # wxp
-@ stdcall RpcGetAsyncCallStatus(ptr) RpcAsyncGetCallStatus
+375 stdcall RpcErrorLoadErrorInfo(ptr long ptr)
+376 stub RpcErrorResetEnumeration
+377 stdcall RpcErrorSaveErrorInfo(ptr ptr ptr)
+378 stdcall RpcErrorStartEnumeration(ptr)
+379 stub RpcFreeAuthorizationContext
+380 stdcall RpcGetAsyncCallStatus(ptr) RpcAsyncGetCallStatus
 # RpcGetAuthorizationContextForClient
-@ stub RpcIfIdVectorFree
-@ stub RpcIfInqId
-@ stdcall RpcImpersonateClient(ptr)
-@ stdcall RpcInitializeAsyncHandle(ptr long) RpcAsyncInitializeHandle
-@ stdcall RpcMgmtEnableIdleCleanup()
-@ stdcall RpcMgmtEpEltInqBegin(ptr long ptr long ptr ptr)
-@ stub RpcMgmtEpEltInqDone
-@ stub RpcMgmtEpEltInqNextA
-@ stub RpcMgmtEpEltInqNextW
-@ stub RpcMgmtEpUnregister
-@ stub RpcMgmtInqComTimeout
-@ stub RpcMgmtInqDefaultProtectLevel
-@ stdcall RpcMgmtInqIfIds(ptr ptr)
-@ stub RpcMgmtInqServerPrincNameA
-@ stub RpcMgmtInqServerPrincNameW
-@ stdcall RpcMgmtInqStats(ptr ptr)
-@ stdcall RpcMgmtIsServerListening(ptr)
-@ stdcall RpcMgmtSetAuthorizationFn(ptr)
-@ stdcall RpcMgmtSetCancelTimeout(long)
-@ stdcall RpcMgmtSetComTimeout(ptr long)
-@ stdcall RpcMgmtSetServerStackSize(long)
-@ stdcall RpcMgmtStatsVectorFree(ptr)
-@ stdcall RpcMgmtStopServerListening(ptr)
-@ stdcall RpcMgmtWaitServerListen()
-@ stdcall RpcNetworkInqProtseqsA(ptr)
-@ stdcall RpcNetworkInqProtseqsW(ptr)
-@ stdcall RpcNetworkIsProtseqValidA(ptr)
-@ stdcall RpcNetworkIsProtseqValidW(ptr)
-@ stub RpcNsBindingInqEntryNameA
-@ stub RpcNsBindingInqEntryNameW
-@ stub RpcObjectInqType
-@ stub RpcObjectSetInqFn
-@ stdcall RpcObjectSetType(ptr ptr)
-@ stdcall RpcProtseqVectorFreeA(ptr)
-@ stdcall RpcProtseqVectorFreeW(ptr)
-@ stdcall RpcRaiseException(long)
-@ stub RpcRegisterAsyncInfo
-@ stdcall RpcRevertToSelf()
-@ stdcall RpcRevertToSelfEx(ptr)
-@ stdcall RpcServerInqBindings(ptr)
-@ stub RpcServerInqCallAttributesA # wxp
-@ stub RpcServerInqCallAttributesW # wxp
-@ stdcall RpcServerInqDefaultPrincNameA(long ptr)
-@ stdcall RpcServerInqDefaultPrincNameW(long ptr)
-@ stub RpcServerInqIf
-@ stdcall RpcServerListen(long long long)
-@ stdcall RpcServerRegisterAuthInfoA(str  long ptr ptr)
-@ stdcall RpcServerRegisterAuthInfoW(wstr long ptr ptr)
-@ stdcall RpcServerRegisterIf2(ptr ptr ptr long long long ptr)
-@ stdcall RpcServerRegisterIf(ptr ptr ptr)
-@ stdcall RpcServerRegisterIfEx(ptr ptr ptr long long ptr)
-@ stub RpcServerTestCancel
-@ stdcall RpcServerUnregisterIf(ptr ptr long)
-@ stdcall RpcServerUnregisterIfEx(ptr ptr long)
-@ stub RpcServerUseAllProtseqs
-@ stub RpcServerUseAllProtseqsEx
-@ stub RpcServerUseAllProtseqsIf
-@ stub RpcServerUseAllProtseqsIfEx
-@ stdcall RpcServerUseProtseqA(str long ptr)
-@ stdcall RpcServerUseProtseqEpA(str  long str  ptr)
-@ stdcall RpcServerUseProtseqEpExA(str  long str  ptr ptr)
-@ stdcall RpcServerUseProtseqEpExW(wstr long wstr ptr ptr)
-@ stdcall RpcServerUseProtseqEpW(wstr long wstr ptr)
-@ stub RpcServerUseProtseqExA
-@ stub RpcServerUseProtseqExW
-@ stub RpcServerUseProtseqIfA
-@ stub RpcServerUseProtseqIfExA
-@ stub RpcServerUseProtseqIfExW
-@ stub RpcServerUseProtseqIfW
-@ stdcall RpcServerUseProtseqW(wstr long ptr)
-@ stub RpcServerYield
-@ stub RpcSmAllocate
-@ stub RpcSmClientFree
-@ stdcall RpcSmDestroyClientContext(ptr)
-@ stub RpcSmDisableAllocate
-@ stub RpcSmEnableAllocate
-@ stub RpcSmFree
-@ stub RpcSmGetThreadHandle
-@ stub RpcSmSetClientAllocFree
-@ stub RpcSmSetThreadHandle
-@ stub RpcSmSwapClientAllocFree
-@ stub RpcSsAllocate
-@ stub RpcSsContextLockExclusive # wxp
-@ stub RpcSsContextLockShared # wxp
-@ stdcall RpcSsDestroyClientContext(ptr)
-@ stub RpcSsDisableAllocate
-@ stub RpcSsDontSerializeContext
-@ stub RpcSsEnableAllocate
-@ stub RpcSsFree
-@ stub RpcSsGetContextBinding
-@ stub RpcSsGetThreadHandle
-@ stub RpcSsSetClientAllocFree
-@ stub RpcSsSetThreadHandle
-@ stub RpcSsSwapClientAllocFree
-@ stdcall RpcStringBindingComposeA(str  str  str  str  str  ptr)
-@ stdcall RpcStringBindingComposeW(wstr wstr wstr wstr wstr ptr)
-@ stdcall RpcStringBindingParseA(str  ptr ptr ptr ptr ptr)
-@ stdcall RpcStringBindingParseW(wstr ptr ptr ptr ptr ptr)
-@ stdcall RpcStringFreeA(ptr)
-@ stdcall RpcStringFreeW(ptr)
-@ stub RpcTestCancel
-@ stub RpcUserFree # wxp
-@ stub SimpleTypeAlignment # wxp
-@ stub SimpleTypeBufferSize # wxp
-@ stub SimpleTypeMemorySize # wxp
-@ stdcall TowerConstruct(ptr ptr ptr ptr ptr ptr)
-@ stdcall TowerExplode(ptr ptr ptr ptr ptr ptr)
-@ stdcall UuidCompare(ptr ptr ptr)
-@ stdcall UuidCreate(ptr)
-@ stdcall UuidCreateNil(ptr)
-@ stdcall UuidCreateSequential(ptr) # win 2000
-@ stdcall UuidEqual(ptr ptr ptr)
-@ stdcall UuidFromStringA(str ptr)
-@ stdcall UuidFromStringW(wstr ptr)
-@ stdcall UuidHash(ptr ptr)
-@ stdcall UuidIsNil(ptr ptr)
-@ stdcall UuidToStringA(ptr ptr)
-@ stdcall UuidToStringW(ptr ptr)
-@ stub char_array_from_ndr
-@ stub char_from_ndr
-@ stub data_from_ndr
-@ stub data_into_ndr
-@ stub data_size_ndr
-@ stub double_array_from_ndr
-@ stub double_from_ndr
-@ stub enum_from_ndr
-@ stub float_array_from_ndr
-@ stub float_from_ndr
-@ stub long_array_from_ndr
-@ stub long_from_ndr
-@ stub long_from_ndr_temp
-@ stub pfnFreeRoutines # wxp
-@ stub pfnMarshallRouteines # wxp
-@ stub pfnSizeRoutines # wxp
-@ stub pfnUnmarshallRouteines # wxp
-@ stub short_array_from_ndr
-@ stub short_from_ndr
-@ stub short_from_ndr_temp
-@ stub tree_into_ndr
-@ stub tree_peek_ndr
-@ stub tree_size_ndr
+382 stub RpcIfIdVectorFree
+383 stub RpcIfInqId
+384 stdcall RpcImpersonateClient(ptr)
+385 stdcall RpcInitializeAsyncHandle(ptr long) RpcAsyncInitializeHandle
+386 stdcall RpcMgmtEnableIdleCleanup()
+387 stdcall RpcMgmtEpEltInqBegin(ptr long ptr long ptr ptr)
+388 stub RpcMgmtEpEltInqDone
+389 stub RpcMgmtEpEltInqNextA
+390 stub RpcMgmtEpEltInqNextW
+391 stub RpcMgmtEpUnregister
+392 stub RpcMgmtInqComTimeout
+393 stub RpcMgmtInqDefaultProtectLevel
+394 stdcall RpcMgmtInqIfIds(ptr ptr)
+395 stub RpcMgmtInqServerPrincNameA
+396 stub RpcMgmtInqServerPrincNameW
+397 stdcall RpcMgmtInqStats(ptr ptr)
+398 stdcall RpcMgmtIsServerListening(ptr)
+399 stdcall RpcMgmtSetAuthorizationFn(ptr)
+400 stdcall RpcMgmtSetCancelTimeout(long)
+401 stdcall RpcMgmtSetComTimeout(ptr long)
+402 stdcall RpcMgmtSetServerStackSize(long)
+403 stdcall RpcMgmtStatsVectorFree(ptr)
+404 stdcall RpcMgmtStopServerListening(ptr)
+405 stdcall RpcMgmtWaitServerListen()
+406 stdcall RpcNetworkInqProtseqsA(ptr)
+407 stdcall RpcNetworkInqProtseqsW(ptr)
+408 stdcall RpcNetworkIsProtseqValidA(ptr)
+409 stdcall RpcNetworkIsProtseqValidW(ptr)
+410 stub RpcNsBindingInqEntryNameA
+411 stub RpcNsBindingInqEntryNameW
+412 stub RpcObjectInqType
+413 stub RpcObjectSetInqFn
+414 stdcall RpcObjectSetType(ptr ptr)
+415 stdcall RpcProtseqVectorFreeA(ptr)
+416 stdcall RpcProtseqVectorFreeW(ptr)
+417 stdcall RpcRaiseException(long)
+418 stub RpcRegisterAsyncInfo
+419 stdcall RpcRevertToSelf()
+420 stdcall RpcRevertToSelfEx(ptr)
+421 stdcall RpcServerInqBindings(ptr)
+422 stub RpcServerInqCallAttributesA
+423 stub RpcServerInqCallAttributesW
+424 stdcall RpcServerInqDefaultPrincNameA(long ptr)
+425 stdcall RpcServerInqDefaultPrincNameW(long ptr)
+426 stub RpcServerInqIf
+427 stdcall RpcServerListen(long long long)
+428 stdcall RpcServerRegisterAuthInfoA(str  long ptr ptr)
+429 stdcall RpcServerRegisterAuthInfoW(wstr long ptr ptr)
+430 stdcall RpcServerRegisterIf2(ptr ptr ptr long long long ptr)
+431 stdcall RpcServerRegisterIf(ptr ptr ptr)
+432 stdcall RpcServerRegisterIfEx(ptr ptr ptr long long ptr)
+433 stub RpcServerTestCancel
+434 stdcall RpcServerUnregisterIf(ptr ptr long)
+435 stdcall RpcServerUnregisterIfEx(ptr ptr long)
+436 stub RpcServerUseAllProtseqs
+437 stub RpcServerUseAllProtseqsEx
+438 stub RpcServerUseAllProtseqsIf
+439 stub RpcServerUseAllProtseqsIfEx
+440 stdcall RpcServerUseProtseqA(str long ptr)
+441 stdcall RpcServerUseProtseqEpA(str  long str  ptr)
+442 stdcall RpcServerUseProtseqEpExA(str  long str  ptr ptr)
+443 stdcall RpcServerUseProtseqEpExW(wstr long wstr ptr ptr)
+444 stdcall RpcServerUseProtseqEpW(wstr long wstr ptr)
+445 stub RpcServerUseProtseqExA
+446 stub RpcServerUseProtseqExW
+447 stub RpcServerUseProtseqIfA
+448 stub RpcServerUseProtseqIfExA
+449 stub RpcServerUseProtseqIfExW
+450 stub RpcServerUseProtseqIfW
+451 stdcall RpcServerUseProtseqW(wstr long ptr)
+452 stub RpcServerYield
+453 stub RpcSmAllocate
+454 stub RpcSmClientFree
+455 stdcall RpcSmDestroyClientContext(ptr)
+456 stub RpcSmDisableAllocate
+457 stub RpcSmEnableAllocate
+458 stub RpcSmFree
+459 stub RpcSmGetThreadHandle
+460 stub RpcSmSetClientAllocFree
+461 stub RpcSmSetThreadHandle
+462 stub RpcSmSwapClientAllocFree
+463 stub RpcSsAllocate
+464 stub RpcSsContextLockExclusive
+465 stub RpcSsContextLockShared
+466 stdcall RpcSsDestroyClientContext(ptr)
+467 stub RpcSsDisableAllocate
+468 stub RpcSsDontSerializeContext
+469 stub RpcSsEnableAllocate
+470 stub RpcSsFree
+471 stub RpcSsGetContextBinding
+472 stub RpcSsGetThreadHandle
+473 stub RpcSsSetClientAllocFree
+474 stub RpcSsSetThreadHandle
+475 stub RpcSsSwapClientAllocFree
+476 stdcall RpcStringBindingComposeA(str str str str str ptr)
+477 stdcall RpcStringBindingComposeW(wstr wstr wstr wstr wstr ptr)
+478 stdcall RpcStringBindingParseA(str  ptr ptr ptr ptr ptr)
+479 stdcall RpcStringBindingParseW(wstr ptr ptr ptr ptr ptr)
+480 stdcall RpcStringFreeA(ptr)
+481 stdcall RpcStringFreeW(ptr)
+482 stub RpcTestCancel
+483 stub RpcUserFree
+484 stub SimpleTypeAlignment
+485 stub SimpleTypeBufferSize
+486 stub SimpleTypeMemorySize
+487 stdcall TowerConstruct(ptr ptr ptr ptr ptr ptr)
+488 stdcall TowerExplode(ptr ptr ptr ptr ptr ptr)
+489 stdcall UuidCompare(ptr ptr ptr)
+490 stdcall UuidCreate(ptr)
+491 stdcall UuidCreateNil(ptr)
+492 stdcall UuidCreateSequential(ptr)
+493 stdcall UuidEqual(ptr ptr ptr)
+494 stdcall UuidFromStringA(str ptr)
+495 stdcall UuidFromStringW(wstr ptr)
+496 stdcall UuidHash(ptr ptr)
+497 stdcall UuidIsNil(ptr ptr)
+498 stdcall UuidToStringA(ptr ptr)
+499 stdcall UuidToStringW(ptr ptr)
+500 stub char_array_from_ndr
+501 stub char_from_ndr
+502 stub data_from_ndr
+503 stub data_into_ndr
+504 stub data_size_ndr
+505 stub double_array_from_ndr
+506 stub double_from_ndr
+507 stub enum_from_ndr
+508 stub float_array_from_ndr
+509 stub float_from_ndr
+510 stub long_array_from_ndr
+511 stub long_from_ndr
+512 stub long_from_ndr_temp
+513 stub pfnFreeRoutines
+514 stub pfnMarshallRouteines
+515 stub pfnSizeRoutines
+516 stub pfnUnmarshallRouteines
+517 stub short_array_from_ndr
+518 stub short_from_ndr
+519 stub short_from_ndr_temp
+520 stub tree_into_ndr
+521 stub tree_peek_ndr
+522 stub tree_size_ndr
