@@ -109,7 +109,7 @@ if(RUNTIME_CHECKS)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE /IGNORE:4104")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 
 if(CMAKE_DISABLE_NINJA_DEPSLOG)
@@ -354,10 +354,10 @@ function(spec2def _dllname _spec_file)
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     if(__spec2def_ADD_IMPORTLIB)
-        # TODO: NO_PRIVATE_WARNINGS should add /IGNORE:4104 to the link command
-        #       line. However that should be on all command lines outside of
-        #       generate_import_lib in the first place.
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
+        if(__spec2def_NO_PRIVATE_WARNINGS)
+            add_target_property(lib${_file} STATIC_LIBRARY_FLAGS "/ignore:4104")
+        endif()
     endif()
 endfunction()
 
