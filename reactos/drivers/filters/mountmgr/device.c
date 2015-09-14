@@ -1725,7 +1725,7 @@ MountMgrVolumeMountPointCreated(IN PDEVICE_EXTENSION DeviceExtension,
         FreePool(LinkTarget.Buffer);
         FreePool(SourceDeviceName.Buffer);
         FreePool(SourceSymbolicName.Buffer);
-        return STATUS_PENDING;
+        return STATUS_STATUS;
     }
     else if (!NT_SUCCESS(Status))
     {
