@@ -73,10 +73,7 @@ typedef struct
     TCHAR szFileName[MAX_PATH];
     TCHAR szFileTitle[MAX_PATH];
     TCHAR szFilter[2 * MAX_STRING_LEN + 100];
-    LONG lMarginTop;
-    LONG lMarginBottom;
-    LONG lMarginLeft;
-    LONG lMarginRight;
+    RECT lMargins;
     TCHAR szHeader[MAX_PATH];
     TCHAR szFooter[MAX_PATH];
     TCHAR szStatusBarLineCol[MAX_PATH];

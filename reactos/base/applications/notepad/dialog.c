@@ -225,6 +225,31 @@ int GetSelectionText(HWND hWnd, LPTSTR lpString, int nMaxCount)
     }
 }
 
+static RECT
+GetPrintingRect(HDC hdc, RECT margins)
+{
+    int iLogPixelsX, iLogPixelsY;
+    int iHorzRes, iVertRes;
+    int iPhysPageX, iPhysPageY, iPhysPageW, iPhysPageH;
+    RECT rcPrintRect;
+
+    iPhysPageX = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+    iPhysPageY = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+    iPhysPageW = GetDeviceCaps(hdc, PHYSICALWIDTH);
+    iPhysPageH = GetDeviceCaps(hdc, PHYSICALHEIGHT);
+    iLogPixelsX = GetDeviceCaps(hdc, LOGPIXELSX);
+    iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
+    iHorzRes = GetDeviceCaps(hdc, HORZRES);
+    iVertRes = GetDeviceCaps(hdc, VERTRES);
+
+    rcPrintRect.left = (margins.left * iLogPixelsX / 2540) - iPhysPageX;
+    rcPrintRect.top = (margins.top * iLogPixelsY / 2540) - iPhysPageY;
+    rcPrintRect.right = iHorzRes - (((margins.left * iLogPixelsX / 2540) - iPhysPageX) + ((margins.right * iLogPixelsX / 2540) - (iPhysPageW - iPhysPageX - iHorzRes)));
+    rcPrintRect.bottom = iVertRes - (((margins.top * iLogPixelsY / 2540) - iPhysPageY) + ((margins.bottom * iLogPixelsY / 2540) - (iPhysPageH - iPhysPageY - iVertRes)));
+
+    return rcPrintRect;
+}
+
 static BOOL DoSaveFile(VOID)
 {
     BOOL bRet = TRUE;
@@ -518,7 +543,7 @@ VOID DIALOG_FilePrint(VOID)
     TEXTMETRIC tm;
     PRINTDLG printer;
     SIZE szMetric;
-    int cWidthPels, cHeightPels, border;
+    int border;
     int xLeft, yTop, pagecount, dopage, copycount;
     unsigned int i;
     LOGFONT hdrFont;
@@ -526,6 +551,7 @@ VOID DIALOG_FilePrint(VOID)
     DWORD size;
     LPTSTR pTemp;
     static const TCHAR times_new_roman[] = _T("Times New Roman");
+    RECT rcPrintRect;
 
     /* Get a small font and print some header info on each page */
     ZeroMemory(&hdrFont, sizeof(hdrFont));
@@ -591,9 +617,6 @@ VOID DIALOG_FilePrint(VOID)
         return;
     }
 
-    /* Get the page dimensions in pixels. */
-    cWidthPels = GetDeviceCaps(printer.hDC, HORZRES);
-    cHeightPels = GetDeviceCaps(printer.hDC, VERTRES);
 
     /* Get the file text */
     if (printer.Flags & PD_SELECTION)
@@ -623,13 +646,16 @@ VOID DIALOG_FilePrint(VOID)
         size = GetWindowText(Globals.hEdit, pTemp, size);
     }
 
+    /* Get the current printing area */
+    rcPrintRect = GetPrintingRect(printer.hDC, Globals.lMargins);
+
     /* Ensure that each logical unit maps to one pixel */
     SetMapMode(printer.hDC, MM_TEXT);
 
     /* Needed to get the correct height of a text line */
     GetTextMetrics(printer.hDC, &tm);
 
-    border = 150;
+    border = 15;
     for (copycount=1; copycount <= printer.nCopies; copycount++) {
         i = 0;
         pagecount = 1;
@@ -667,8 +693,11 @@ VOID DIALOG_FilePrint(VOID)
                     AlertPrintError();
                     return;
                 }
+
+                SetViewportOrgEx(printer.hDC, rcPrintRect.left, rcPrintRect.top, NULL);
+
                 /* Write a rectangle and header at the top of each page */
-                Rectangle(printer.hDC, border, border, cWidthPels-border, border + tm.tmHeight * 2);
+                Rectangle(printer.hDC, border, border, rcPrintRect.right - border, border + tm.tmHeight * 2);
                 /* I don't know what's up with this TextOut command. This comes out
                 kind of mangled.
                 */
@@ -680,7 +709,7 @@ VOID DIALOG_FilePrint(VOID)
             }
 
             /* The starting point for the main text */
-            xLeft = border * 2;
+            xLeft = 0;
             yTop = border + tm.tmHeight * 4;
 
             SelectObject(printer.hDC, old_font);
@@ -689,7 +718,7 @@ VOID DIALOG_FilePrint(VOID)
              * text one character at a time. */
             do {
                 if (pTemp[i] == '\n') {
-                    xLeft = border * 2;
+                    xLeft = 0;
                     yTop += tm.tmHeight;
                 }
                 else if (pTemp[i] != '\r') {
@@ -701,13 +730,13 @@ VOID DIALOG_FilePrint(VOID)
                     xLeft += szMetric.cx;
 
                     /* Insert a line break if the current line does not fit into the printing area */
-                    if (xLeft > (cWidthPels - border * 2))
+                    if (xLeft > rcPrintRect.right)
                     {
-                        xLeft = border * 2;
+                        xLeft = 0;
                         yTop = yTop + tm.tmHeight;
                     }
                 }
-            } while (i++ < size && yTop < (cHeightPels - border * 2));
+            } while (i++ < size && yTop < rcPrintRect.bottom);
 
             if (dopage)
                 EndPage(printer.hDC);
@@ -1184,10 +1213,7 @@ VOID DIALOG_FilePageSetup(void)
     page.hwndOwner = Globals.hMainWnd;
     page.Flags = PSD_ENABLEPAGESETUPTEMPLATE | PSD_ENABLEPAGESETUPHOOK | PSD_MARGINS;
     page.hInstance = Globals.hInstance;
-    page.rtMargin.left = Globals.lMarginLeft;
-    page.rtMargin.top = Globals.lMarginTop;
-    page.rtMargin.right = Globals.lMarginRight;
-    page.rtMargin.bottom = Globals.lMarginBottom;
+    page.rtMargin = Globals.lMargins;
     page.hDevMode = Globals.hDevMode;
     page.hDevNames = Globals.hDevNames;
     page.lpPageSetupTemplateName = MAKEINTRESOURCE(DIALOG_PAGESETUP);
@@ -1197,10 +1223,7 @@ VOID DIALOG_FilePageSetup(void)
 
     Globals.hDevMode = page.hDevMode;
     Globals.hDevNames = page.hDevNames;
-    Globals.lMarginLeft = page.rtMargin.left;
-    Globals.lMarginTop = page.rtMargin.top;
-    Globals.lMarginRight = page.rtMargin.right;
-    Globals.lMarginBottom = page.rtMargin.bottom;
+    Globals.lMargins = page.rtMargin;
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

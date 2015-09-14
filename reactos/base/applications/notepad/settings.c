@@ -144,10 +144,10 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryBool(hKey, _T("fStatusBar"), &Globals.bShowStatusBar);
         QueryString(hKey, _T("szHeader"), Globals.szHeader, ARRAY_SIZE(Globals.szHeader));
         QueryString(hKey, _T("szTrailer"), Globals.szFooter, ARRAY_SIZE(Globals.szFooter));
-        QueryDword(hKey, _T("iMarginLeft"), (DWORD*)&Globals.lMarginLeft);
-        QueryDword(hKey, _T("iMarginTop"), (DWORD*)&Globals.lMarginTop);
-        QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMarginRight);
-        QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMarginBottom);
+        QueryDword(hKey, _T("iMarginLeft"), (DWORD*)&Globals.lMargins.left);
+        QueryDword(hKey, _T("iMarginTop"), (DWORD*)&Globals.lMargins.top);
+        QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMargins.right);
+        QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMargins.bottom);
 
         QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
         QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
@@ -239,10 +239,10 @@ void NOTEPAD_SaveSettingsToRegistry(void)
         SaveDword(hKey, _T("fStatusBar"), Globals.bShowStatusBar ? 1 : 0);
         SaveString(hKey, _T("szHeader"), Globals.szHeader);
         SaveString(hKey, _T("szTrailer"), Globals.szFooter);
-        SaveDword(hKey, _T("iMarginLeft"), Globals.lMarginLeft);
-        SaveDword(hKey, _T("iMarginTop"), Globals.lMarginTop);
-        SaveDword(hKey, _T("iMarginRight"), Globals.lMarginRight);
-        SaveDword(hKey, _T("iMarginBottom"), Globals.lMarginBottom);
+        SaveDword(hKey, _T("iMarginLeft"), Globals.lMargins.left);
+        SaveDword(hKey, _T("iMarginTop"), Globals.lMargins.top);
+        SaveDword(hKey, _T("iMarginRight"), Globals.lMargins.right);
+        SaveDword(hKey, _T("iMarginBottom"), Globals.lMargins.bottom);
         SaveDword(hKey, _T("iWindowPosX"), Globals.main_rect.left);
         SaveDword(hKey, _T("iWindowPosY"), Globals.main_rect.top);
         SaveDword(hKey, _T("iWindowPosDX"), Globals.main_rect.right - Globals.main_rect.left);
