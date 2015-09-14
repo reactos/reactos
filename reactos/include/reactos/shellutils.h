@@ -68,10 +68,9 @@ public:
     }
     static void Term()
     {
-        ULONG ref;
         if (s_pInstance)
         {
-            ref = s_pInstance->Release();
+            s_pInstance->Release();
             s_pInstance = NULL;
         }
     }
