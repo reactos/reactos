@@ -1813,7 +1813,8 @@ MountMgrVolumeMountPointCreated(IN PDEVICE_EXTENSION DeviceExtension,
         DbName.Buffer = (PWSTR)((ULONG_PTR)DatabaseEntry + DatabaseEntry->SymbolicNameOffset);
         if (RtlEqualUnicodeString(&TargetVolumeName, &DbName, TRUE))
         {
-            ++DatabaseEntry->DatabaseOffset;
+            /* Reference ourselves and update the entry */
+            ++DatabaseEntry->EntryReferences;
             Status = WriteRemoteDatabaseEntry(RemoteDatabase, Offset, DatabaseEntry);
             FreePool(DatabaseEntry);
             Found = TRUE;
@@ -1852,7 +1853,7 @@ MountMgrVolumeMountPointCreated(IN PDEVICE_EXTENSION DeviceExtension,
 
         /* Fill it in */
         DatabaseEntry->EntrySize = EntrySize;
-        DatabaseEntry->DatabaseOffset = 1;
+        DatabaseEntry->EntryReferences = 1;
         DatabaseEntry->SymbolicNameOffset = sizeof(DATABASE_ENTRY);
         DatabaseEntry->SymbolicNameLength = TargetVolumeName.Length;
         DatabaseEntry->UniqueIdOffset = TargetVolumeName.Length + sizeof(DATABASE_ENTRY);
@@ -1926,15 +1927,217 @@ MountMgrVolumeMountPointCreated(IN PDEVICE_EXTENSION DeviceExtension,
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+
 NTSTATUS
 MountMgrVolumeMountPointDeleted(IN PDEVICE_EXTENSION DeviceExtension,
                                 IN PIRP Irp,
                                 IN NTSTATUS LockStatus)
 {
-    UNREFERENCED_PARAMETER(DeviceExtension);
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(LockStatus);
-    return STATUS_NOT_IMPLEMENTED;
+    LONG Offset;
+    NTSTATUS Status;
+    PLIST_ENTRY Entry;
+    HANDLE RemoteDatabase;
+    PDATABASE_ENTRY DatabaseEntry;
+    PUNIQUE_ID_REPLICATE UniqueIdReplicate;
+    PASSOCIATED_DEVICE_ENTRY AssociatedEntry;
+    PDEVICE_INFORMATION DeviceInformation, TargetDeviceInformation;
+    UNICODE_STRING LinkTarget, SourceDeviceName, SourceSymbolicName, TargetVolumeName, VolumeName, DbName;
+
+    /* Initialize string */
+    LinkTarget.Length = 0;
+    LinkTarget.MaximumLength = 0xC8;
+    LinkTarget.Buffer = AllocatePool(LinkTarget.MaximumLength);
+    if (LinkTarget.Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* If the mount point was deleted, then, it changed!
+     * Also use it to query some information
+     */
+    Status = MountMgrVolumeMountPointChanged(DeviceExtension, Irp, LockStatus, &SourceDeviceName, &SourceSymbolicName, &TargetVolumeName);
+    /* Pending means DB are under synchronization, bail out */
+    if (Status == STATUS_PENDING)
+    {
+        FreePool(LinkTarget.Buffer);
+        FreePool(SourceDeviceName.Buffer);
+        FreePool(SourceSymbolicName.Buffer);
+        return STATUS_SUCCESS;
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        FreePool(LinkTarget.Buffer);
+        return Status;
+    }
+
+    /* Query the device information */
+    Status = FindDeviceInfo(DeviceExtension, &SourceDeviceName, FALSE, &DeviceInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        /* If it failed, first try to get volume name */
+        Status = QueryVolumeName(0, NULL, &SourceDeviceName, &LinkTarget, &VolumeName);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Then, try to read the symlink */
+            Status = MountMgrQuerySymbolicLink(&SourceDeviceName, &LinkTarget);
+            if (!NT_SUCCESS(Status))
+            {
+                FreePool(LinkTarget.Buffer);
+                FreePool(SourceDeviceName.Buffer);
+                FreePool(SourceSymbolicName.Buffer);
+                return Status;
+            }
+        }
+        else
+        {
+            FreePool(VolumeName.Buffer);
+        }
+
+        FreePool(SourceDeviceName.Buffer);
+
+        SourceDeviceName.Length = LinkTarget.Length;
+        SourceDeviceName.MaximumLength = LinkTarget.MaximumLength;
+        SourceDeviceName.Buffer = LinkTarget.Buffer;
+
+        /* Now that we have the correct source, reattempt to query information */
+        Status = FindDeviceInfo(DeviceExtension, &SourceDeviceName, FALSE, &DeviceInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            FreePool(SourceDeviceName.Buffer);
+            FreePool(SourceSymbolicName.Buffer);
+            return Status;
+        }
+    }
+
+    FreePool(SourceDeviceName.Buffer);
+
+    /* Get information about target device */
+    Status = FindDeviceInfo(DeviceExtension, &TargetVolumeName, FALSE, &TargetDeviceInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        FreePool(SourceSymbolicName.Buffer);
+        return Status;
+    }
+
+    /* Open the remote database */
+    RemoteDatabase = OpenRemoteDatabase(DeviceInformation, TRUE);
+    if (RemoteDatabase == 0)
+    {
+        FreePool(SourceSymbolicName.Buffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Browse all the entries */
+    Offset = 0;
+    for (;;)
+    {
+        DatabaseEntry = GetRemoteDatabaseEntry(RemoteDatabase, Offset);
+        if (DatabaseEntry == NULL)
+        {
+            /* We didn't find ourselves, that's infortunate! */
+            FreePool(SourceSymbolicName.Buffer);
+            CloseRemoteDatabase(RemoteDatabase);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Try to find ourselves */
+        DbName.MaximumLength = DatabaseEntry->SymbolicNameLength;
+        DbName.Length = DbName.MaximumLength;
+        DbName.Buffer = (PWSTR)((ULONG_PTR)DatabaseEntry + DatabaseEntry->SymbolicNameOffset);
+        if (RtlEqualUnicodeString(&TargetVolumeName, &DbName, TRUE))
+        {
+            break;
+        }
+
+        Offset += DatabaseEntry->EntrySize;
+        FreePool(DatabaseEntry);
+    }
+
+    /* Dereference ourselves */
+    DatabaseEntry->EntryReferences--;
+    if (DatabaseEntry->EntryReferences == 0)
+    {
+        /* If we're still referenced, just update the entry */
+        Status = WriteRemoteDatabaseEntry(RemoteDatabase, Offset, DatabaseEntry);
+    }
+    else
+    {
+        /* Otherwise, delete the entry */
+        Status = DeleteRemoteDatabaseEntry(RemoteDatabase, Offset);
+        if (!NT_SUCCESS(Status))
+        {
+            FreePool(DatabaseEntry);
+            FreePool(SourceSymbolicName.Buffer);
+            CloseRemoteDatabase(RemoteDatabase);
+            return Status;
+        }
+
+        /* Also, delete our unique ID replicated record */
+        for (Entry = DeviceInformation->ReplicatedUniqueIdsListHead.Flink;
+             Entry != &DeviceInformation->ReplicatedUniqueIdsListHead;
+             Entry = Entry->Flink)
+        {
+            UniqueIdReplicate = CONTAINING_RECORD(Entry, UNIQUE_ID_REPLICATE, ReplicatedUniqueIdsListEntry);
+
+            if (UniqueIdReplicate->UniqueId->UniqueIdLength == DatabaseEntry->UniqueIdLength &&
+                RtlCompareMemory(UniqueIdReplicate->UniqueId->UniqueId,
+                                 (PVOID)((ULONG_PTR)DatabaseEntry + DatabaseEntry->UniqueIdOffset),
+                                 DatabaseEntry->UniqueIdLength) == DatabaseEntry->UniqueIdLength)
+            {
+                break;
+            }
+        }
+
+        /* It has to exist! */
+        if (Entry == &DeviceInformation->ReplicatedUniqueIdsListHead)
+        {
+            FreePool(DatabaseEntry);
+            FreePool(SourceSymbolicName.Buffer);
+            CloseRemoteDatabase(RemoteDatabase);
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        /* Remove it and free it */
+        RemoveEntryList(&UniqueIdReplicate->ReplicatedUniqueIdsListEntry);
+        FreePool(UniqueIdReplicate->UniqueId);
+        FreePool(UniqueIdReplicate);
+    }
+
+    /* We're done with the remote database */
+    FreePool(DatabaseEntry);
+    CloseRemoteDatabase(RemoteDatabase);
+
+    /* Check write operation succeed */
+    if (!NT_SUCCESS(Status))
+    {
+        FreePool(SourceSymbolicName.Buffer);
+        return Status;
+    }
+
+    /* Try to find our associated device entry */
+    for (Entry = TargetDeviceInformation->AssociatedDevicesHead.Flink;
+         Entry != &TargetDeviceInformation->AssociatedDevicesHead;
+         Entry = Entry->Flink)
+    {
+        AssociatedEntry = CONTAINING_RECORD(Entry, ASSOCIATED_DEVICE_ENTRY, AssociatedDevicesEntry);
+
+        /* If found, delete it */
+        if (AssociatedEntry->DeviceInformation == DeviceInformation &&
+            RtlEqualUnicodeString(&AssociatedEntry->String, &SourceSymbolicName, TRUE))
+        {
+            RemoveEntryList(&AssociatedEntry->AssociatedDevicesEntry);
+            FreePool(AssociatedEntry->String.Buffer);
+            FreePool(AssociatedEntry);
+            break;
+        }
+    }
+
+    /* We're done! */
+    FreePool(SourceSymbolicName.Buffer);
+    return STATUS_SUCCESS;
 }
 
 /*

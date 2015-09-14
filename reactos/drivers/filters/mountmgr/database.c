@@ -1464,7 +1464,7 @@ ChangeRemoteDatabaseUniqueId(IN PDEVICE_INFORMATION DeviceInformation,
 
         /* Recreate the entry from the previous one */
         NewEntry->EntrySize = Entry->EntrySize + NewUniqueId->UniqueIdLength - OldUniqueId->UniqueIdLength;
-        NewEntry->DatabaseOffset = Entry->DatabaseOffset;
+        NewEntry->EntryReferences = Entry->EntryReferences;
         NewEntry->SymbolicNameOffset = sizeof(DATABASE_ENTRY);
         NewEntry->SymbolicNameLength = Entry->SymbolicNameLength;
         NewEntry->UniqueIdOffset = Entry->SymbolicNameLength + sizeof(DATABASE_ENTRY);

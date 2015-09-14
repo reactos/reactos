@@ -102,7 +102,7 @@ typedef struct _UNIQUE_ID_REPLICATE
 typedef struct _DATABASE_ENTRY
 {
     ULONG EntrySize;                // 0x00
-    ULONG DatabaseOffset;           // 0x04
+    ULONG EntryReferences;          // 0x04
     USHORT SymbolicNameOffset;      // 0x08
     USHORT SymbolicNameLength;      // 0x0A
     USHORT UniqueIdOffset;          // 0x0C
@@ -326,6 +326,12 @@ NTSTATUS
 AddRemoteDatabaseEntry(
     IN HANDLE Database,
     IN PDATABASE_ENTRY Entry
+);
+
+NTSTATUS
+DeleteRemoteDatabaseEntry(
+    IN HANDLE Database,
+    IN LONG StartingOffset
 );
 
 /* device.c */
