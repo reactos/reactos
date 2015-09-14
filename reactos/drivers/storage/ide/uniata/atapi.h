@@ -437,6 +437,7 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_DRIVE_2                  0x10
 #define IDE_DRIVE_SELECT_1           (IDE_DRIVE_SELECT | IDE_DRIVE_1)
 #define IDE_DRIVE_SELECT_2           (IDE_DRIVE_SELECT | IDE_DRIVE_2)
+#define IDE_DRIVE_MASK               (IDE_DRIVE_SELECT_1 | IDE_DRIVE_SELECT_2)
 
 #define IDE_USE_LBA                  0x40
 

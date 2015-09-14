@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2012 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2015 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_probe.cpp
@@ -53,6 +53,10 @@ ULONG         IsaCount = 0;
 ULONG         MCACount = 0;
 
 BOOLEAN FirstMasterOk = FALSE;
+// This is our own resource check,
+// ReactOS allows to allocate same I/O range for both PCI and ISA controllers
+BOOLEAN AtdiskPrimaryClaimed = FALSE;
+BOOLEAN AtdiskSecondaryClaimed = FALSE;
 
 #ifndef UNIATA_CORE
 
@@ -1638,7 +1642,7 @@ UniataFindBusMasterController(
           chan->RegTranslation[IDX_SATA_IO].MemIo ? "mem" : "io"));
 
         if(!(deviceExtension->HwFlags & UNIATA_AHCI)) {
-#if DBG
+#ifdef _DEBUG
             UniataDumpATARegs(chan);
 #endif
 
@@ -1721,6 +1725,7 @@ UniataFindBusMasterController(
             KdPrint2((PRINT_PREFIX "claim Compatible controller\n"));
             if (channel == 0) {
                 KdPrint2((PRINT_PREFIX "claim Primary\n"));
+                AtdiskPrimaryClaimed =
                 ConfigInfo->AtdiskPrimaryClaimed = TRUE;
                 chan->PrimaryAddress = TRUE;
 
@@ -1729,9 +1734,23 @@ UniataFindBusMasterController(
             } else
             if (channel == 1) {
                 KdPrint2((PRINT_PREFIX "claim Secondary\n"));
+                AtdiskSecondaryClaimed =
                 ConfigInfo->AtdiskSecondaryClaimed = TRUE;
 
                 FirstMasterOk = TRUE;
+            }
+        } else {
+            if(chan->RegTranslation[IDX_IO1].Addr == IO_WD1 &&
+               !chan->RegTranslation[IDX_IO1].MemIo) {
+                KdPrint2((PRINT_PREFIX "claim Primary (PCI over ISA range)\n"));
+                AtdiskPrimaryClaimed =
+                ConfigInfo->AtdiskPrimaryClaimed = TRUE;
+            }
+            if(chan->RegTranslation[IDX_IO1].Addr == IO_WD2 &&
+               !chan->RegTranslation[IDX_IO1].MemIo) {
+                KdPrint2((PRINT_PREFIX "claim Secondary (PCI over ISA range)\n"));
+                AtdiskSecondaryClaimed =
+                ConfigInfo->AtdiskSecondaryClaimed = TRUE;
             }
         }
 
@@ -2250,12 +2269,12 @@ AtapiFindController(
         }
         // check if Primary/Secondary Master IDE claimed
         if((ioSpace == (PUCHAR)IO_WD1) &&
-           (ConfigInfo->AtdiskPrimaryClaimed)) {
+           (ConfigInfo->AtdiskPrimaryClaimed || AtdiskPrimaryClaimed)) {
             KdPrint2((PRINT_PREFIX "AtapiFindController: AtdiskPrimaryClaimed\n"));
             goto not_found;
         } else
         if((ioSpace == (PUCHAR)IO_WD2) &&
-           (ConfigInfo->AtdiskSecondaryClaimed)) {
+           (ConfigInfo->AtdiskSecondaryClaimed || AtdiskSecondaryClaimed)) {
             KdPrint2((PRINT_PREFIX "AtapiFindController: AtdiskSecondaryClaimed\n"));
             goto not_found;
         }
@@ -2287,7 +2306,7 @@ AtapiFindController(
         UniataInitMapBase(chan, BaseIoAddress1, BaseIoAddress2);
         UniataInitMapBM(deviceExtension, 0, FALSE);
 
-#if DBG
+#ifdef _DEBUG
         UniataDumpATARegs(chan);
 #endif
 
@@ -2697,6 +2716,7 @@ CheckDevice(
     UCHAR                statusByte;
     ULONG                RetVal=0;
     ULONG                waitCount = 10000;
+    ULONG                at_home = 0;
 
     KdPrint2((PRINT_PREFIX "CheckDevice: Device %#x\n",
                deviceNumber));
@@ -2705,7 +2725,7 @@ CheckDevice(
         return 0;
     }
     if(deviceExtension->HwFlags & UNIATA_AHCI) {
-        if(!UniataAnybodyHome(HwDeviceExtension, lChannel, deviceNumber)) {
+        if(!(at_home = UniataAnybodyHome(HwDeviceExtension, lChannel, deviceNumber))) {
             return 0;
         }
     }
@@ -2713,6 +2733,20 @@ CheckDevice(
 
     if(ResetDev) {
         LunExt->PowerState = 0;
+    }
+
+    if((deviceExtension->HwFlags & UNIATA_SATA) &&
+        !UniataIsSATARangeAvailable(deviceExtension, lChannel) &&
+        deviceNumber) {
+        KdPrint2((PRINT_PREFIX "  SATA w/o i/o registers, check slave presence\n"));
+        SelectDrive(chan, deviceNumber & 0x01);
+        statusByte = AtapiReadPort1(chan, IDX_ATAPI_IO1_i_DriveSelect);
+        KdPrint2((PRINT_PREFIX "  DriveSelect: %#x\n", statusByte));
+        if((statusByte & IDE_DRIVE_MASK) != IDE_DRIVE_SELECT_2) {
+            KdPrint2((PRINT_PREFIX "CheckDevice: (no dev)\n"));
+            UniataForgetDevice(LunExt);
+            return 0;
+        }
     }
 
     if(ResetDev && (deviceExtension->HwFlags & UNIATA_AHCI)) {
@@ -2729,7 +2763,7 @@ CheckDevice(
         // Reset device
         AtapiSoftReset(chan, deviceNumber);
 
-        if(!UniataAnybodyHome(HwDeviceExtension, lChannel, deviceNumber)) {
+        if(!(at_home = UniataAnybodyHome(HwDeviceExtension, lChannel, deviceNumber))) {
             //KdPrint2((PRINT_PREFIX "CheckDevice: nobody at home 1\n"));
             return 0;
         }
@@ -2787,7 +2821,7 @@ CheckDevice(
         // Select the device.
         SelectDrive(chan, deviceNumber);
 
-        if(!UniataAnybodyHome(HwDeviceExtension, lChannel, deviceNumber)) {
+        if(!(at_home = UniataAnybodyHome(HwDeviceExtension, lChannel, deviceNumber))) {
             //KdPrint2((PRINT_PREFIX "CheckDevice: nobody at home 2\n"));
             return 0;
         }
@@ -2842,7 +2876,7 @@ CheckDevice(
         // ATAPI signature found.
         // Issue the ATAPI identify command if this
         // is not for the crash dump utility.
-
+try_atapi:
         if (!deviceExtension->DriverMustPoll) {
 
             // Issue ATAPI packet identify command.
@@ -2872,7 +2906,7 @@ CheckDevice(
                 }
 
             } else {
-
+forget_device:
                 // Indicate no working device.
                 KdPrint2((PRINT_PREFIX "CheckDevice: Device %#x not responding\n",
                            deviceNumber));
@@ -2906,6 +2940,16 @@ CheckDevice(
             RetVal = DFLAGS_DEVICE_PRESENT;
             LunExt->DeviceFlags |= DFLAGS_DEVICE_PRESENT;
             LunExt->DeviceFlags &= ~DFLAGS_ATAPI_DEVICE;
+        } else {
+            // This can be ATAPI on broken hardware
+            GetBaseStatus(chan, statusByte);
+            if(!at_home && UniataAnybodyHome(HwDeviceExtension, lChannel, deviceNumber)) {
+                KdPrint2((PRINT_PREFIX "CheckDevice: nobody at home post IDE\n"));
+                goto forget_device;
+            }
+            KdPrint2((PRINT_PREFIX "CheckDevice: try ATAPI %#x, status %#x\n",
+                       deviceNumber, statusByte));
+            goto try_atapi;
         }
         GetBaseStatus(chan, statusByte);
     }

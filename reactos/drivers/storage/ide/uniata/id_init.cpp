@@ -288,6 +288,21 @@ UniataChipDetectChannels(
             KdPrint2((PRINT_PREFIX "New JMicron PATA 1 chan\n"));
         }
         break;
+    case ATA_CYRIX_ID:
+        if(ChipType == CYRIX_OLD) {
+            UCHAR tmp8;
+            ULONG slotNumber;
+            slotNumber = deviceExtension->slotNumber;
+            KdPrint2((PRINT_PREFIX "Cyrix slot %#x\n", slotNumber));
+            GetPciConfig1(0x60, tmp8);
+            if(tmp8 & (1 << BMList[deviceExtension->DevIndex].channel)) {
+                KdPrint2((PRINT_PREFIX "Old Cyrix chan %d ok\n", BMList[deviceExtension->DevIndex].channel));
+            } else {
+                KdPrint2((PRINT_PREFIX "Old Cyrix no chan %d\n", BMList[deviceExtension->DevIndex].channel));
+                return FALSE;
+            }
+        }
+        break;
     } // end switch(VendorID)
 
     i = AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"NumberChannels", n);
@@ -2094,6 +2109,8 @@ AtapiChipInit(
             KdPrint2((PRINT_PREFIX "Intel SATA\n"));
             if(ChipFlags & UNIATA_AHCI) {
                 KdPrint2((PRINT_PREFIX "Do nothing for AHCI\n"));
+                /* enable PCI interrupt */
+                ChangePciConfig2(offsetof(PCI_COMMON_CONFIG, Command), (a & ~0x0400));
                 break;
             }
             if(c == CHAN_NOT_SPECIFIED) {
@@ -2641,6 +2658,19 @@ AtapiChipInit(
             }
         } else
         if(ChipType == ITE_133_NEW) {
+        }
+        break;
+    case ATA_CYRIX_ID:
+        KdPrint2((PRINT_PREFIX "Cyrix\n"));
+        if(ChipType == CYRIX_OLD) {
+            if(c == CHAN_NOT_SPECIFIED) {
+                GetPciConfig1(0x60, tmp8);
+                if(!(tmp8 & 0x40)) {
+                    KdPrint2((PRINT_PREFIX "Enable DMA\n"));
+                    tmp8 |= 0x40;
+                    SetPciConfig1(0x60, tmp8);
+                }
+            }
         }
         break;
     default:

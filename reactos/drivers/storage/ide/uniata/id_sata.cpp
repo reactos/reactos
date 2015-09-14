@@ -728,12 +728,20 @@ UniataAhciInit(
     }
 
     /* re-enable AHCI mode */
+    /* Linux: Some controllers need AHCI_EN to be written multiple times.
+     * Try a few times before giving up.
+     */
     GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
-    if(!(GHC & AHCI_GHC_AE)) {
-        KdPrint2((PRINT_PREFIX "  re-enable AHCI mode, GHC %#x\n", GHC));
-        UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC,
-            GHC | AHCI_GHC_AE);
-        GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
+    for(i=0; i<5; i++) {
+        if(!(GHC & AHCI_GHC_AE)) {
+            KdPrint2((PRINT_PREFIX "  re-enable AHCI mode, GHC %#x\n", GHC));
+            UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC,
+                GHC | AHCI_GHC_AE);
+            AtapiStallExecution(1000);
+            GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
+        } else {
+            break;
+        }
     }
     KdPrint2((PRINT_PREFIX "  AHCI GHC %#x\n", GHC));
     if(!(GHC & AHCI_GHC_AE)) {
@@ -1980,6 +1988,7 @@ UniataAhciStartFR(
     CMD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD);
     KdPrint2(("  CMD %#x\n", CMD));
     UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CMD, CMD | ATA_AHCI_P_CMD_FRE);
+    UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
 
     return;
 } // end UniataAhciStartFR()
@@ -2039,6 +2048,7 @@ UniataAhciStart(
         CMD |
         ATA_AHCI_P_CMD_ST |
         ((chan->ChannelCtrlFlags & CTRFLAGS_AHCI_PM) ? ATA_AHCI_P_CMD_PMA : 0));
+    UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
 
     return;
 } // end UniataAhciStart()
@@ -2187,15 +2197,24 @@ UniataAhciBeginTransaction(
     if(CMD0 != CMD) {
         KdPrint2(("  send CMD %#x, entries %#x\n", CMD, AHCI_CL->prd_length));
         UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CMD, CMD);
+        UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
     }
 
     /* issue command to controller */
     //UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_ACT, 0x01 << tag);
+    KdPrint2(("  Set CI\n"));
     UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CI, 0x01 << tag);
     chan->AhciPrevCI |= 0x01 << tag;
 
+    KdPrint2(("  Send CMD START\n"));
+    UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CMD,
+        CMD |
+        ATA_AHCI_P_CMD_ST |
+        ((chan->ChannelCtrlFlags & CTRFLAGS_AHCI_PM) ? ATA_AHCI_P_CMD_PMA : 0));
+    UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
+
     if(!ATAPI_DEVICE(chan, DeviceNumber)) {
-        // TODO: check if we send ATA_RESET and wait for ready of so.
+        // TODO: check if we send ATAPI_RESET and wait for ready of so.
         if(AtaReq->ahci.ahci_cmd_ptr->cfis[2] == IDE_COMMAND_ATAPI_RESET) {
             ULONG  TFD;
             ULONG  i;
@@ -2365,6 +2384,7 @@ UniataAhciResume(
 	     (((chan->ChannelCtrlFlags & CTRFLAGS_AHCI_PM)) ? ATA_AHCI_P_CMD_ALPE : 0) |
 	     (((chan->ChannelCtrlFlags & CTRFLAGS_AHCI_PM2)) ? ATA_AHCI_P_CMD_ASP : 0 ))
 	     );
+    UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
 
 #ifdef DBG
     //UniataDumpAhciPortRegs(chan);
@@ -2399,6 +2419,7 @@ UniataAhciSuspend(
     UniataAhciStop(chan);
     UniataAhciStopFR(chan);
     UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CMD, 0);
+    UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
 
     /* Allow everything including partial and slumber modes. */
     UniataSataWritePort4(chan, IDX_SATA_SControl, 0, 0);
