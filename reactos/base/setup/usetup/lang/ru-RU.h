@@ -802,7 +802,7 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
+        "\x07  Нажмите L для создания логического раздела.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -830,7 +830,7 @@ static MUI_ENTRY ruRUConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -908,7 +908,7 @@ static MUI_ENTRY ruRUConfirmDeletePartitionEntries[] =
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "ENTER=Продолжить  ESC=Отмена",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -976,13 +976,13 @@ static MUI_ENTRY ruRUInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Чтобы изменить выбранную директорию, нажмите BACKSPACE и удалите символы,",
+        "Чтобы изменить выбранную директорию, нажмите BACKSPACE для удаления",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "а за тем наберите новое имя директории для установки ReactOS.",
+        "символов, а за тем наберите новое имя директории для установки ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1560,42 +1560,42 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
+        "Не удалось установить geo id.\n"
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        "Неверное название директории.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Нажмите любую клавишу для продолжения."
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        "Выбранный раздел слишком мал для установки ReactOS.\n"
+        "Установочный раздел должен иметь по крайней мере %lu MB пространства.\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения.",
         NULL
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "Вы не можете создать первичный или расширенный раздел в таблице\n"
+        "разделов диска, потому что она заполнена.\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "Вы не можете создать больше одного расширенного раздела на диск.\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения."
     },
     {
         //ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        "Не удалось форматировать раздел:\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         NULL,
@@ -1737,9 +1737,9 @@ MUI_STRING ruRUStrings[] =
     {STRING_NONFORMATTEDPART,
     "Вы выбрали установку ReactOS на новый неотформатированный раздел."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    "Системный раздел не отформатирован."},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    "Новый раздел не отформатирован."},
     {STRING_INSTALLONPART,
     "ReactOS устанавливается на раздел:"},
     {STRING_CHECKINGPART,
