@@ -8035,7 +8035,11 @@ default_no_prep:
             } else {
                 RtlZeroMemory(modeData, sizeof(MODE_POWER_CONDITION_PAGE));
                 modeData->PageCode = MODE_PAGE_POWER_CONDITION;
+#ifdef __REACTOS__
+                modeData->PageLength = sizeof(MODE_POWER_CONDITION_PAGE)-sizeof(MODE_PARAMETER_HEADER);
+#else
                 modeData->PageLength = sizeof(MODE_PAGE_POWER_CONDITION)-sizeof(MODE_PARAMETER_HEADER);
+#endif
                 modeData->Byte3.Fields.Idle = LunExt->PowerState <= StartStop_Power_Idle;
                 modeData->Byte3.Fields.Standby = LunExt->PowerState == StartStop_Power_Standby;
                 Srb->DataTransferLength = sizeof(MODE_POWER_CONDITION_PAGE);

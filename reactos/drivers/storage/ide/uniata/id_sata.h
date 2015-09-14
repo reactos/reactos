@@ -123,7 +123,7 @@ UniataAhciInit(
     IN PVOID HwDeviceExtension
     );
 
-#if DBG
+#ifdef _DEBUG
 VOID
 NTAPI
 UniataDumpAhciPortRegs(

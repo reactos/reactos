@@ -2313,13 +2313,13 @@ UniataAhciEndTransaction(
         KdPrint2(("  Incomplete command, CI %#x, ACT %#x\n", CI, ACT));
         KdPrint2(("  FIS status %#x, error %#x\n", RCV_FIS[2], RCV_FIS[3]));
 
-#if DBG
+#ifdef _DEBUG
         UniataDumpAhciPortRegs(chan);
 #endif
         if(!UniataAhciAbortOperation(chan)) {
             KdPrint2(("  Abort failed, need RESET\n"));
         }
-#if DBG
+#ifdef _DEBUG
         UniataDumpAhciPortRegs(chan);
 #endif
         chan->AhciPrevCI = CI & ~((ULONG)1 << tag);
