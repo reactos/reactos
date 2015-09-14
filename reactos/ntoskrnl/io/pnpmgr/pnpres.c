@@ -1204,7 +1204,7 @@ IopDetectResourceConflict(
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING KeyName;
-   HANDLE ResourceMapKey = INVALID_HANDLE_VALUE, ChildKey2 = INVALID_HANDLE_VALUE, ChildKey3 = INVALID_HANDLE_VALUE;
+   HANDLE ResourceMapKey = NULL, ChildKey2 = NULL, ChildKey3 = NULL;
    ULONG KeyInformationLength, RequiredLength, KeyValueInformationLength, KeyNameInformationLength;
    PKEY_BASIC_INFORMATION KeyInformation;
    PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation;
@@ -1213,7 +1213,11 @@ IopDetectResourceConflict(
    NTSTATUS Status;
 
    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
-   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, 0, NULL);
+   InitializeObjectAttributes(&ObjectAttributes,
+                              &KeyName,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                              NULL,
+                              NULL);
    Status = ZwOpenKey(&ResourceMapKey, KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE, &ObjectAttributes);
    if (!NT_SUCCESS(Status))
    {
@@ -1234,7 +1238,9 @@ IopDetectResourceConflict(
       else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
           KeyInformationLength = RequiredLength;
-          KeyInformation = ExAllocatePool(PagedPool, KeyInformationLength);
+          KeyInformation = ExAllocatePoolWithTag(PagedPool,
+                                                 KeyInformationLength,
+                                                 TAG_IO);
           if (!KeyInformation)
           {
               Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1252,17 +1258,22 @@ IopDetectResourceConflict(
          goto cleanup;
       ChildKeyIndex1++;
       if (!NT_SUCCESS(Status))
+      {
+          ExFreePoolWithTag(KeyInformation, TAG_IO);
           goto cleanup;
+      }
 
       KeyName.Buffer = KeyInformation->Name;
       KeyName.MaximumLength = KeyName.Length = (USHORT)KeyInformation->NameLength;
       InitializeObjectAttributes(&ObjectAttributes,
                                  &KeyName,
-                                 OBJ_CASE_INSENSITIVE,
+                                 OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                  ResourceMapKey,
                                  NULL);
-      Status = ZwOpenKey(&ChildKey2, KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE, &ObjectAttributes);
-      ExFreePool(KeyInformation);
+      Status = ZwOpenKey(&ChildKey2,
+                         KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                         &ObjectAttributes);
+      ExFreePoolWithTag(KeyInformation, TAG_IO);
       if (!NT_SUCCESS(Status))
           goto cleanup;
 
@@ -1279,7 +1290,9 @@ IopDetectResourceConflict(
           else if (Status == STATUS_BUFFER_TOO_SMALL)
           {
               KeyInformationLength = RequiredLength;
-              KeyInformation = ExAllocatePool(PagedPool, KeyInformationLength);
+              KeyInformation = ExAllocatePoolWithTag(PagedPool,
+                                                     KeyInformationLength,
+                                                     TAG_IO);
               if (!KeyInformation)
               {
                   Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1297,17 +1310,20 @@ IopDetectResourceConflict(
               goto cleanup;
           ChildKeyIndex2++;
           if (!NT_SUCCESS(Status))
+          {
+              ExFreePoolWithTag(KeyInformation, TAG_IO);
               goto cleanup;
+          }
 
           KeyName.Buffer = KeyInformation->Name;
           KeyName.MaximumLength = KeyName.Length = (USHORT)KeyInformation->NameLength;
           InitializeObjectAttributes(&ObjectAttributes,
                                      &KeyName,
-                                     OBJ_CASE_INSENSITIVE,
+                                     OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                      ChildKey2,
                                      NULL);
           Status = ZwOpenKey(&ChildKey3, KEY_QUERY_VALUE, &ObjectAttributes);
-          ExFreePool(KeyInformation);
+          ExFreePoolWithTag(KeyInformation, TAG_IO);
           if (!NT_SUCCESS(Status))
               goto cleanup;
 
@@ -1324,7 +1340,9 @@ IopDetectResourceConflict(
               else if (Status == STATUS_BUFFER_TOO_SMALL)
               {
                   KeyValueInformationLength = RequiredLength;
-                  KeyValueInformation = ExAllocatePool(PagedPool, KeyValueInformationLength);
+                  KeyValueInformation = ExAllocatePoolWithTag(PagedPool,
+                                                              KeyValueInformationLength,
+                                                              TAG_IO);
                   if (!KeyValueInformation)
                   {
                       Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1341,7 +1359,10 @@ IopDetectResourceConflict(
               else
                   goto cleanup;
               if (!NT_SUCCESS(Status))
+              {
+                  ExFreePoolWithTag(KeyValueInformation, TAG_IO);
                   goto cleanup;
+              }
 
               Status = ZwEnumerateValueKey(ChildKey3,
                                            ChildKeyIndex3,
@@ -1352,7 +1373,9 @@ IopDetectResourceConflict(
               if (Status == STATUS_BUFFER_TOO_SMALL)
               {
                   KeyNameInformationLength = RequiredLength;
-                  KeyNameInformation = ExAllocatePool(PagedPool, KeyNameInformationLength + sizeof(WCHAR));
+                  KeyNameInformation = ExAllocatePoolWithTag(PagedPool,
+                                                             KeyNameInformationLength + sizeof(WCHAR),
+                                                             TAG_IO);
                   if (!KeyNameInformation)
                   {
                       Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1368,45 +1391,47 @@ IopDetectResourceConflict(
               }
               else
                   goto cleanup;
-
               ChildKeyIndex3++;
-
               if (!NT_SUCCESS(Status))
+              {
+                  ExFreePoolWithTag(KeyNameInformation, TAG_IO);
                   goto cleanup;
+              }
 
               KeyNameInformation->Name[KeyNameInformation->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
 
               /* Skip translated entries */
               if (wcsstr(KeyNameInformation->Name, L".Translated"))
               {
-                  ExFreePool(KeyNameInformation);
+                  ExFreePoolWithTag(KeyNameInformation, TAG_IO);
+                  ExFreePoolWithTag(KeyValueInformation, TAG_IO);
                   continue;
               }
 
-              ExFreePool(KeyNameInformation);
+              ExFreePoolWithTag(KeyNameInformation, TAG_IO);
 
               if (IopCheckForResourceConflict(ResourceList,
                                               (PCM_RESOURCE_LIST)KeyValueInformation->Data,
                                               Silent,
                                               ConflictingDescriptor))
               {
-                  ExFreePool(KeyValueInformation);
+                  ExFreePoolWithTag(KeyValueInformation, TAG_IO);
                   Status = STATUS_CONFLICTING_ADDRESSES;
                   goto cleanup;
               }
 
-              ExFreePool(KeyValueInformation);
+              ExFreePoolWithTag(KeyValueInformation, TAG_IO);
           }
       }
    }
 
 cleanup:
-   if (ResourceMapKey != INVALID_HANDLE_VALUE)
-       ZwClose(ResourceMapKey);
-   if (ChildKey2 != INVALID_HANDLE_VALUE)
-       ZwClose(ChildKey2);
-   if (ChildKey3 != INVALID_HANDLE_VALUE)
-       ZwClose(ChildKey3);
+   if (ResourceMapKey != NULL)
+       ObCloseHandle(ResourceMapKey, KernelMode);
+   if (ChildKey2 != NULL)
+       ObCloseHandle(ChildKey2, KernelMode);
+   if (ChildKey3 != NULL)
+       ObCloseHandle(ChildKey3, KernelMode);
 
    if (Status == STATUS_NO_MORE_ENTRIES)
        Status = STATUS_SUCCESS;
