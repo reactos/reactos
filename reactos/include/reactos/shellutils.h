@@ -72,9 +72,6 @@ public:
         if (s_pInstance)
         {
             ref = s_pInstance->Release();
-#ifdef ASSERT
-            ASSERT(ref == 0);
-#endif
             s_pInstance = NULL;
         }
     }
