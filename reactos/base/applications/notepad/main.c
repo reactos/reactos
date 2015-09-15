@@ -587,7 +587,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     MONITORINFO info;
     INT x, y;
 
-    static const TCHAR className[] = _T("NPClass");
+    static const TCHAR className[] = _T("Notepad");
     static const TCHAR winName[] = _T("Notepad");
 
     switch (GetUserDefaultUILanguage())
