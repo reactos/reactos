@@ -4,10 +4,14 @@ PROJECT(NTVDM)
 #####################################
 # Generate the integrated COMMAND.COM
 #
+
+# Retrieve the full path to the generated file of the 'command' target
+get_target_property(_command_com_file command LOCATION)
+
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/command_com.c ${CMAKE_CURRENT_BINARY_DIR}/command_com.h
-    COMMAND native-bin2c ${CMAKE_CURRENT_BINARY_DIR}/../dos/command.com ${CMAKE_CURRENT_BINARY_DIR}/command_com.c ${CMAKE_CURRENT_BINARY_DIR}/command_com.h BIN CommandCom
-    DEPENDS native-bin2c command)
+    COMMAND native-bin2c ${_command_com_file} ${CMAKE_CURRENT_BINARY_DIR}/command_com.c ${CMAKE_CURRENT_BINARY_DIR}/command_com.h BIN CommandCom
+    DEPENDS native-bin2c command ${_command_com_file})
 #####################################
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)

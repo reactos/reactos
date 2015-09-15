@@ -38,6 +38,7 @@ function(add_asm16_bin _target _binary_file _base_address)
     # many ASM files is by concatenating them into a single one and
     # compile the resulting file.
     concatenate_files(${_concatenated_asm_file} ${_source_file_list})
+    set_source_files_properties(${_concatenated_asm_file} PROPERTIES GENERATED TRUE)
 
     ##
     ## All this part is the same as CreateBootSectorTarget
@@ -53,9 +54,11 @@ function(add_asm16_bin _target _binary_file _base_address)
         # COMMAND objcopy --output-target binary --image-base 0x${_base_address} ${_object_file} ${_binary_file}
         DEPENDS ${_object_file} native-obj2bin)
 
-    set_source_files_properties(${_object_file} ${_binary_file} PROPERTIES GENERATED TRUE)
-
     add_custom_target(${_target} ALL DEPENDS ${_binary_file})
+    # set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_target} SUFFIX ".bin")
+    set_target_properties(${_target} PROPERTIES LOCATION_${CMAKE_BUILD_TYPE} ${_binary_file}) ## Support of $<TARGET_FILE:xxx> is limited to add_executable() or add_library()
+    set_target_properties(${_target} PROPERTIES LOCATION ${_binary_file})                     ## Support of $<TARGET_FILE:xxx> is limited to add_executable() or add_library()
+    add_clean_target(${_target})
 endfunction()
 
 else()
@@ -93,6 +96,7 @@ function(add_asm16_bin _target _binary_file _base_address)
     # many ASM files is by concatenating them into a single one and
     # compile the resulting file.
     concatenate_files(${_concatenated_asm_file} ${_source_file_list})
+    set_source_files_properties(${_concatenated_asm_file} PROPERTIES GENERATED TRUE)
 
     ##
     ## All this part is the same as CreateBootSectorTarget
@@ -113,9 +117,11 @@ function(add_asm16_bin _target _binary_file _base_address)
         COMMAND native-obj2bin ${_object_file} ${_binary_file} ${_base_address}
         DEPENDS ${_object_file} native-obj2bin)
 
-    set_source_files_properties(${_object_file} ${_preprocessed_asm_file} ${_binary_file} PROPERTIES GENERATED TRUE)
-
     add_custom_target(${_target} ALL DEPENDS ${_binary_file})
+    # set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_target} SUFFIX ".bin")
+    set_target_properties(${_target} PROPERTIES LOCATION_${CMAKE_BUILD_TYPE} ${_binary_file}) ## Support of $<TARGET_FILE:xxx> is limited to add_executable() or add_library()
+    set_target_properties(${_target} PROPERTIES LOCATION ${_binary_file})                     ## Support of $<TARGET_FILE:xxx> is limited to add_executable() or add_library()
+    add_clean_target(${_target})
 endfunction()
 
 endif()

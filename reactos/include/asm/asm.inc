@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/include/amd64/asmmacro.S
+ * FILE:            include/asm/asm.inc
  * PURPOSE:         ASM macros for GAS and MASM/ML64
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -315,15 +315,14 @@ code = 1
 
 .macro absolute address
     __absolute__address__ = \address
-ENDM
+.endm
 
 .macro resb name, size
     \name = __absolute__address__
     __absolute__address__ = __absolute__address__ + \size
-ENDM
+.endm
 
 .macro UNIMPLEMENTED2 file, line, func
-
     jmp 3f
 1:  .asciz "\func"
 2:  .asciz \file
