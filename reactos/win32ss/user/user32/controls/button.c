@@ -408,7 +408,6 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             break;
         }
         SendMessageW( hWnd, BM_SETSTATE, FALSE, 0 );
-        ReleaseCapture();
         GetClientRect( hWnd, &rect );
 	if (uMsg == WM_KEYUP || PtInRect( &rect, pt ))
         {
@@ -428,6 +427,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             }
             BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
         }
+        ReleaseCapture();
         break;
 
     case WM_CAPTURECHANGED:
