@@ -528,7 +528,7 @@
 #define IDI_SHELL_WEB_BROWSER      512
 #define IDI_SHELL_IDEA             1001
 #define IDI_SHELL_PRINTER_OK2      1002
-#define IDI_SHELL_SERVEROK         1003
+#define IDI_SHELL_SERVER_OK        1003
 #define IDI_SHELL_HELP_FILE1       1004
 #define IDI_SHELL_FILE_MOVE1       1005
 #define IDI_SHELL_FILE_PRINT       1006
