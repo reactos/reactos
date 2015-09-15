@@ -11,12 +11,6 @@
 #endif
 
 
-#ifdef _MSC_VER
-#define REGISTERCALL FASTCALL
-#else
-#define REGISTERCALL __attribute__((regparm(3)))
-#endif
-
 #ifdef CONFIG_SMP
 #define HAL_BUILD_TYPE (DBG ? PRCB_BUILD_DEBUG : 0)
 #else
@@ -430,14 +424,14 @@ typedef struct _PIC_MASK
 
 typedef
 BOOLEAN
-( REGISTERCALL *PHAL_DISMISS_INTERRUPT)(
+(NTAPI *PHAL_DISMISS_INTERRUPT)(
     IN KIRQL Irql,
     IN ULONG Irq,
     OUT PKIRQL OldIrql
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrqGeneric(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -445,7 +439,7 @@ HalpDismissIrqGeneric(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq15(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -453,7 +447,7 @@ HalpDismissIrq15(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq13(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -461,7 +455,7 @@ HalpDismissIrq13(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq07(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -469,7 +463,7 @@ HalpDismissIrq07(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrqLevel(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -477,7 +471,7 @@ HalpDismissIrqLevel(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq15Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -485,7 +479,7 @@ HalpDismissIrq15Level(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq13Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -493,7 +487,7 @@ HalpDismissIrq13Level(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq07Level(
     IN KIRQL Irql,
     IN ULONG Irq,

@@ -843,7 +843,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
 }
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrqGeneric(IN KIRQL Irql,
                       IN ULONG Irq,
                       OUT PKIRQL OldIrql)
@@ -853,7 +853,7 @@ HalpDismissIrqGeneric(IN KIRQL Irql,
 }
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq15(IN KIRQL Irql,
                  IN ULONG Irq,
                  OUT PKIRQL OldIrql)
@@ -889,7 +889,7 @@ HalpDismissIrq15(IN KIRQL Irql,
 
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq13(IN KIRQL Irql,
                  IN ULONG Irq,
                  OUT PKIRQL OldIrql)
@@ -902,7 +902,7 @@ HalpDismissIrq13(IN KIRQL Irql,
 }
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq07(IN KIRQL Irql,
                  IN ULONG Irq,
                  OUT PKIRQL OldIrql)
@@ -986,7 +986,7 @@ _HalpDismissIrqLevel(IN KIRQL Irql,
 }
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrqLevel(IN KIRQL Irql,
                     IN ULONG Irq,
                     OUT PKIRQL OldIrql)
@@ -996,7 +996,7 @@ HalpDismissIrqLevel(IN KIRQL Irql,
 }
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq15Level(IN KIRQL Irql,
                       IN ULONG Irq,
                       OUT PKIRQL OldIrql)
@@ -1031,7 +1031,7 @@ HalpDismissIrq15Level(IN KIRQL Irql,
 }
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq13Level(IN KIRQL Irql,
                       IN ULONG Irq,
                       OUT PKIRQL OldIrql)
@@ -1044,7 +1044,7 @@ HalpDismissIrq13Level(IN KIRQL Irql,
 }
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq07Level(IN KIRQL Irql,
                       IN ULONG Irq,
                       OUT PKIRQL OldIrql)
