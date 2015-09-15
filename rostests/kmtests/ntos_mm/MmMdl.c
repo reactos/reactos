@@ -120,8 +120,11 @@ TestMmAllocatePagesForMdl(VOID)
         ok(MdlPageCount < 2UL * 1024 * 1024 * 1024 / PAGE_SIZE, "MdlPageCount = %lu\n", MdlPageCount);
         for (i = 0; i < MdlPageCount; i++)
         {
-            ok(MdlPages[i] != 0 && MdlPages[i] != (PFN_NUMBER)-1,
-               "MdlPages[%lu] = 0x%I64x\n", i, (ULONGLONG)MdlPages[i]);
+            if (MdlPages[i] == 0 ||
+                MdlPages[i] == (PFN_NUMBER)-1)
+            {
+                ok(0, "MdlPages[%lu] = 0x%I64x\n", i, (ULONGLONG)MdlPages[i]);
+            }
         }
         SystemVa = MmMapLockedPagesSpecifyCache(Mdl,
                                                 KernelMode,
