@@ -54,7 +54,7 @@ typedef struct _MSFS_MESSAGE
 
 
 #define KeLockMutex(x) KeWaitForSingleObject(x, \
-                                             UserRequest, \
+                                             Executive, \
                                              KernelMode, \
                                              FALSE, \
                                              NULL);

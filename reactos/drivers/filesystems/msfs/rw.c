@@ -29,6 +29,7 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
     ULONG LengthRead = 0;
     PVOID Buffer;
     NTSTATUS Status;
+    PLARGE_INTEGER Timeout;
 
     DPRINT("MsfsRead(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -52,16 +53,21 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
 
     Length = IoStack->Parameters.Read.Length;
     if (Irp->MdlAddress)
-        Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+        Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
     else
         Buffer = Irp->UserBuffer;
 
+    if (Fcb->TimeOut.QuadPart == -1LL)
+        Timeout = NULL;
+    else
+        Timeout = &Fcb->TimeOut;
+
     Status = KeWaitForSingleObject(&Fcb->MessageEvent,
                                    UserRequest,
-                                   KernelMode,
+                                   UserMode,
                                    FALSE,
-                                   &Fcb->TimeOut);
-    if (NT_SUCCESS(Status))
+                                   Timeout);
+    if (Status != STATUS_USER_APC)
     {
         if (Fcb->MessageCount > 0)
         {
@@ -84,7 +90,7 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
                 KeClearEvent(&Fcb->MessageEvent);
             }
         }
-        else if (Fcb->TimeOut.QuadPart != 0LL)
+        else
         {
             /* No message found after waiting */
             Status = STATUS_IO_TIMEOUT;
@@ -135,7 +141,7 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
 
     Length = IoStack->Parameters.Write.Length;
     if (Irp->MdlAddress)
-        Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+        Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
     else
         Buffer = Irp->UserBuffer;
 
