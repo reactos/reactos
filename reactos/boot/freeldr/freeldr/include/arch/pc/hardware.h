@@ -44,13 +44,13 @@ VOID DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 VOID DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* i386pnp.S */
-ULONG_PTR PnpBiosSupported(VOID);
-ULONG PnpBiosGetDeviceNodeCount(ULONG *NodeSize,
+ULONG_PTR __cdecl PnpBiosSupported(VOID);
+ULONG __cdecl PnpBiosGetDeviceNodeCount(ULONG *NodeSize,
                   ULONG *NodeCount);
-ULONG PnpBiosGetDeviceNode(UCHAR *NodeId,
+ULONG __cdecl PnpBiosGetDeviceNode(UCHAR *NodeId,
              UCHAR *NodeBuffer);
 
 /* i386pxe.S */
-USHORT PxeCallApi(USHORT Segment, USHORT Offset, USHORT Service, VOID* Parameter);
+USHORT __cdecl PxeCallApi(USHORT Segment, USHORT Offset, USHORT Service, VOID* Parameter);
 
 /* EOF */

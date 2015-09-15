@@ -26,7 +26,7 @@ DBG_DEFAULT_CHANNEL(WARNING);
 
 /* FUNCTIONS ******************************************************************/
 
-VOID BootMain(LPSTR CmdLine)
+VOID __cdecl BootMain(LPSTR CmdLine)
 {
     CmdLineParse(CmdLine);
     MachInit(CmdLine);

@@ -128,8 +128,8 @@ typedef struct
 } LINUX_SETUPSECTOR, *PLINUX_SETUPSECTOR;
 #include <poppack.h>
 
-VOID    BootNewLinuxKernel(VOID);                // Implemented in linux.S
-VOID    BootOldLinuxKernel(ULONG KernelSize);        // Implemented in linux.S
+VOID    __cdecl BootNewLinuxKernel(VOID);                // Implemented in linux.S
+VOID    __cdecl BootOldLinuxKernel(ULONG KernelSize);        // Implemented in linux.S
 
 VOID
 LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
