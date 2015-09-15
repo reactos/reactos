@@ -100,9 +100,10 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
             hFileDest = CreateFile(dest, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
                 0, NULL);
 
-            if (hFileSrc == INVALID_HANDLE_VALUE)
+            if (hFileDest == INVALID_HANDLE_VALUE)
             {
                 ConOutResPrintf(STRING_COPY_ERROR1, dest);
+                CloseHandle (hFileSrc);
                 return 0;
             }
 
