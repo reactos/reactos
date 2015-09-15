@@ -672,6 +672,7 @@ extern "C" {
 
   _CRTIMP
   wchar_t*
+  __cdecl
   wcsncat(
     wchar_t *_Dest,
     const wchar_t *_Source,

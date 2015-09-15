@@ -641,7 +641,7 @@ QueryEnvironmentVariable(PUNICODE_STRING Name,
    return(STATUS_VARIABLE_NOT_FOUND);
 }
 
-static int
+static int __cdecl
 DbgCompareChannels(const void * a, const void * b)
 {
     return wcscmp((WCHAR*)a, ((DBG_CHANNEL*)b)->Name);

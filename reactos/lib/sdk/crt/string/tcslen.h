@@ -6,7 +6,7 @@
 #pragma function(_tcslen)
 #endif /* _MSC_VER */
 
-size_t _tcslen(const _TCHAR * str)
+size_t __cdecl _tcslen(const _TCHAR * str)
 {
  const _TCHAR * s;
 

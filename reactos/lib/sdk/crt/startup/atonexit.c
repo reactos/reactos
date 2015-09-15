@@ -24,7 +24,7 @@
 _PVFV *__onexitbegin;
 _PVFV *__onexitend;
 
-extern _CRTIMP _onexit_t __dllonexit (_onexit_t, _PVFV**, _PVFV**);
+extern _CRTIMP _onexit_t __cdecl __dllonexit (_onexit_t, _PVFV**, _PVFV**);
 extern _onexit_t (__cdecl * __MINGW_IMP_SYMBOL(_onexit)) (_onexit_t func);
 
 /* Choose a different name to prevent name conflicts. The CRT one works fine.  */

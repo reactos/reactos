@@ -388,10 +388,10 @@ extern "C" {
 #ifdef _USE_32BIT_TIME_T
 /* Do it like this to be compatible to msvcrt.dll on 32 bit windows XP and before */
 __CRT_INLINE wchar_t *__cdecl _wctime32(const time_t *_Time) { return _wctime(_Time); }
-__CRT_INLINE errno_t _wctime32_s(wchar_t *_Buffer, size_t _SizeInWords,const __time32_t *_Time) { return _wctime32_s(_Buffer, _SizeInWords, _Time); }
+__CRT_INLINE errno_t  __cdecl _wctime32_s(wchar_t *_Buffer, size_t _SizeInWords,const __time32_t *_Time) { return _wctime32_s(_Buffer, _SizeInWords, _Time); }
 #else
 __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_Time); }
-__CRT_INLINE errno_t _wctime_s(wchar_t *_Buffer, size_t _SizeInWords,const time_t *_Time) { return _wctime64_s(_Buffer, _SizeInWords, _Time); }
+__CRT_INLINE errno_t  __cdecl _wctime_s(wchar_t *_Buffer, size_t _SizeInWords,const time_t *_Time) { return _wctime64_s(_Buffer, _SizeInWords, _Time); }
 #endif
 #endif
 

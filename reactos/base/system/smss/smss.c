@@ -445,6 +445,7 @@ SmpUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
 }
 
 NTSTATUS
+__cdecl
 _main(IN INT argc,
       IN PCHAR argv[],
       IN PCHAR envp[],

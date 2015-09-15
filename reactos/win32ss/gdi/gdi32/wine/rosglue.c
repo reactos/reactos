@@ -511,6 +511,7 @@ SetWorldTransformForMetafile(
 }
 
 void
+__cdecl
 _assert (
     const char *exp,
     const char *file,

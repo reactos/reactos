@@ -37,7 +37,7 @@ LRESULT CALLBACK    ConnectionDialogProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK    CaptureDialogProc(HWND, UINT, WPARAM, LPARAM);
 VOID                EnableFileMenuItemByID(UINT Id, BOOL Enable);
 VOID                CheckLocalEchoMenuItem(BOOL Checked);
-VOID                Rs232Thread(VOID* Parameter);
+VOID __cdecl        Rs232Thread(VOID* Parameter);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                        HINSTANCE hPrevInstance,
@@ -437,7 +437,7 @@ VOID CheckLocalEchoMenuItem(BOOL Checked)
     CheckMenuItem(hFileMenu, IDM_FILE_LOCALECHO, MF_BYCOMMAND|(Checked ? MF_CHECKED : MF_UNCHECKED));
 }
 
-VOID Rs232Thread(VOID* Parameter)
+VOID __cdecl Rs232Thread(VOID* Parameter)
 {
     BYTE    Byte;
     TCHAR    String[MAX_PATH];

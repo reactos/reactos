@@ -2450,7 +2450,7 @@ EngSetPrinterData(
     _In_ DWORD cjPrinterData);
 #endif /* !USERMODE_DRIVER */
 
-typedef int (CDECL *SORTCOMP)(const void *pv1, const void *pv2);
+typedef int (__cdecl /*CDECL*/ *SORTCOMP)(const void *pv1, const void *pv2);
 
 ENGAPI
 VOID

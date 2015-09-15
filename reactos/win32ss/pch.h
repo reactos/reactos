@@ -43,6 +43,10 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <math.h>
 #include <intrin.h>
 
+// Needed because windef.h messes up CDECL for whatever
+#undef CDECL
+#define CDECL __cdecl
+
 /* Avoid type casting, by defining RECT to RECTL */
 #define RECT RECTL
 #define PRECT PRECTL
