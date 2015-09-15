@@ -16,7 +16,7 @@ static _invalid_parameter_handler invalid_parameter_handler = NULL;
 /*********************************************************************
  *		_errno (MSVCRT.@)
  */
-int CDECL *_errno(void)
+int* CDECL _errno(void)
 {
     return &(msvcrt_get_thread_data()->thread_errno);
 }
