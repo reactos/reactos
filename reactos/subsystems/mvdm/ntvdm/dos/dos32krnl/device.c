@@ -58,8 +58,8 @@ static VOID DosCallDriver(DWORD Driver, PDOS_REQUEST_HEADER Request)
     RtlMoveMemory(&Sda->Request, Request, Request->RequestLength);
 
     /* Call the strategy routine, and then the interrupt routine */
-    Call16(HIWORD(Driver), DriverBlock->StrategyRoutine);
-    Call16(HIWORD(Driver), DriverBlock->InterruptRoutine);
+    RunCallback16(&DosContext, MAKELONG(DriverBlock->StrategyRoutine , HIWORD(Driver)));
+    RunCallback16(&DosContext, MAKELONG(DriverBlock->InterruptRoutine, HIWORD(Driver)));
 
     /* Get the request structure from ES:BX */
     RtlMoveMemory(Request, &Sda->Request, Request->RequestLength);
