@@ -14,7 +14,7 @@
 #include <debug.h>
 #include <setjmp.h>
 
-void HalpTrap0D();
+void __cdecl HalpTrap0D();
 
 /* GLOBALS ********************************************************************/
 

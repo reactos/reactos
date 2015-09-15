@@ -13,6 +13,7 @@
  * @implemented
  */
 char *
+CDECL
 strstr(const char *s, const char *find)
 {
   char c, sc;

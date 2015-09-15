@@ -1,6 +1,7 @@
 #include <precomp.h>
 
 unsigned long long
+CDECL
 strtoull(const char *nptr, char **endptr, int base)
 {
   const char *s = nptr;

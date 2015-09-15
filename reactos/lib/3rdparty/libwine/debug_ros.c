@@ -9,24 +9,24 @@
 #include "debug.c"
 
 __MINGW_ATTRIB_MALLOC
-void *malloc(size_t size)
+void * __cdecl malloc(size_t size)
 {
     return LocalAlloc(0, size);
 }
 
-void free(void *ptr)
+void __cdecl free(void *ptr)
 {
     LocalFree(ptr);
 }
 
-void *realloc(void *ptr, size_t size)
+void * __cdecl realloc(void *ptr, size_t size)
 {
     if (ptr == NULL) return malloc(size);
     return LocalReAlloc(ptr, size, LMEM_MOVEABLE);
 }
 
 __MINGW_ATTRIB_MALLOC
-char *_strdup(const char *str)
+char * __cdecl _strdup(const char *str)
 {
     char *newstr = malloc(strlen(str) + 1);
     if (newstr) strcpy(newstr, str);

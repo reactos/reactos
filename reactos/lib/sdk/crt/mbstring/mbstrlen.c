@@ -22,7 +22,7 @@ int isleadbyte(int byte);
 /*
  * @implemented
  */
-size_t _mbstrlen( const char *str )
+size_t __cdecl _mbstrlen( const char *str )
 {
   size_t len = 0;
   while(*str)

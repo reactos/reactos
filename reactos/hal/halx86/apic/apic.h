@@ -276,5 +276,5 @@ VOID
 NTAPI
 ApicInitializeTimer(ULONG Cpu);
 
-VOID ApicSpuriousService(VOID);
+VOID __cdecl ApicSpuriousService(VOID);
 

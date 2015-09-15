@@ -5,6 +5,7 @@
  * @implemented
  */
 int
+CDECL
 _memicmp(const void *s1, const void *s2, size_t n)
 {
   if (n != 0)

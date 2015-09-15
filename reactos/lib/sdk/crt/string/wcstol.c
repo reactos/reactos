@@ -13,6 +13,7 @@
  * @implemented
  */
 long
+CDECL
 wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
 {
   const wchar_t *s = nptr;

@@ -10,6 +10,7 @@
  * @implemented
  */
 unsigned long
+CDECL
 wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
 {
   const wchar_t *s = nptr;

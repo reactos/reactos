@@ -26,7 +26,7 @@
 /*
  * @implemented
  */
-int _isnan(double __x)
+int CDECL _isnan(double __x)
 {
 	union
 	{
@@ -40,7 +40,7 @@ int _isnan(double __x)
 /*
  * @implemented
  */
-int _finite(double __x)
+int CDECL _finite(double __x)
 {
 	union
 	{

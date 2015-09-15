@@ -6,6 +6,7 @@
  * @implemented
  */
 int
+CDECL
 _ttoi(const _TCHAR *str)
 {
   return (int)_ttoi64(str);

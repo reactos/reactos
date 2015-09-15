@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-size_t wcscspn(const wchar_t *str,const wchar_t *reject)
+size_t CDECL wcscspn(const wchar_t *str,const wchar_t *reject)
 {
 	wchar_t *s;
 	wchar_t *t;

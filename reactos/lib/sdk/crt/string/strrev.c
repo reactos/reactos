@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-char * _strrev(char *s)
+char * CDECL _strrev(char *s)
 {
 	char a, *b, *e;
 	b=e=s;

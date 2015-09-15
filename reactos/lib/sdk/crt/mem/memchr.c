@@ -5,7 +5,7 @@
 #pragma function(memchr)
 #endif /* _MSC_VER */
 
-void* memchr(const void *s, int c, size_t n)
+void* __cdecl memchr(const void *s, int c, size_t n)
 {
     if (n)
     {

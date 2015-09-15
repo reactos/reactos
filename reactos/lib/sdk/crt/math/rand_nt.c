@@ -9,7 +9,7 @@ static unsigned __int64 next = 0;
 /*
  * @implemented
  */
-int rand(void)
+int __cdecl rand(void)
 {
 #if defined(__GNUC__)
 	next = next * 0x5deece66dLL + 11;
@@ -23,7 +23,7 @@ int rand(void)
 /*
  * @implemented
  */
-void srand(unsigned seed)
+void __cdecl srand(unsigned seed)
 {
 	next = seed;
 }

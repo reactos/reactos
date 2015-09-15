@@ -13,7 +13,7 @@
 /*
  * @unimplemented
  */
-int _wcsncoll (const wchar_t *s1, const wchar_t *s2, size_t c)
+int CDECL _wcsncoll (const wchar_t *s1, const wchar_t *s2, size_t c)
 {
   /* FIXME: handle collates */
   return wcsncmp(s1,s2,c);
@@ -22,7 +22,7 @@ int _wcsncoll (const wchar_t *s1, const wchar_t *s2, size_t c)
 /*
  * @unimplemented
  */
-int _wcsnicoll (const wchar_t *s1, const wchar_t *s2, size_t c)
+int CDECL _wcsnicoll (const wchar_t *s1, const wchar_t *s2, size_t c)
 {
   /* FIXME: handle collates */
   return _wcsnicmp(s1,s2,c);

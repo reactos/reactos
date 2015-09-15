@@ -5,7 +5,7 @@
 
 #ifndef __ASM__
 
-void TscCalibrationISR(void);
+void __cdecl TscCalibrationISR(void);
 extern LARGE_INTEGER HalpCpuClockFrequency;
 VOID NTAPI HalpInitializeTsc();
 

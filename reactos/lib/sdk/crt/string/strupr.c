@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-char *_strupr(char *x)
+char * CDECL _strupr(char *x)
 {
 	char  *y=x;
 

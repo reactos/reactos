@@ -4,6 +4,7 @@
  * @implemented
  */
 long
+CDECL
 strtol(const char *nptr, char **endptr, int base)
 {
   const char *s = nptr;

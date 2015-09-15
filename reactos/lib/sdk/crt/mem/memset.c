@@ -5,7 +5,7 @@
 #pragma function(memset)
 #endif /* _MSC_VER */
 
-void* memset(void* src, int val, size_t count)
+void* __cdecl memset(void* src, int val, size_t count)
 {
     char *char_src = (char *)src;
 

@@ -6,6 +6,7 @@
  * @implemented
  */
 char *
+CDECL
 _i64toa(__int64 value, char *string, int radix)
 {
     ULONGLONG  val;
@@ -125,6 +126,7 @@ int CDECL _i64toa_s(__int64 value, char *str, size_t size, int radix)
  * @implemented
  */
 char *
+CDECL
 _ui64toa(unsigned __int64 value, char *string, int radix)
 {
     char buffer[65];
@@ -199,6 +201,7 @@ int CDECL _itoa_s(int value, char *str, size_t size, int radix)
  * @implemented
  */
 char *
+CDECL
 _itoa(int value, char *string, int radix)
 {
   return _ltoa(value, string, radix);
@@ -208,6 +211,7 @@ _itoa(int value, char *string, int radix)
  * @implemented
  */
 char *
+CDECL
 _ltoa(long value, char *string, int radix)
 {
     unsigned long val;
@@ -328,6 +332,7 @@ int CDECL _ltoa_s(long value, char *str, size_t size, int radix)
  * @implemented
  */
 char *
+CDECL
 _ultoa(unsigned long value, char *string, int radix)
 {
     char buffer[33];

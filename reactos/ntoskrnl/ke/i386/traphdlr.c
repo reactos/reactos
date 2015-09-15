@@ -12,8 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID KiFastCallEntry(VOID);
-VOID KiFastCallEntryWithSingleStep(VOID);
+VOID __cdecl KiFastCallEntry(VOID);
+VOID __cdecl KiFastCallEntryWithSingleStep(VOID);
 
 extern PVOID FrRestore;
 VOID FASTCALL Ke386LoadFpuState(IN PFX_SAVE_AREA SaveArea);

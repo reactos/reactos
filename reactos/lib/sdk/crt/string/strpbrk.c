@@ -4,7 +4,7 @@
 
 #define BIT_SIZE (CHAR_BIT * sizeof(unsigned long) / sizeof(char))
 
-char* strpbrk(const char *s1, const char *s2)
+char* __cdecl strpbrk(const char *s1, const char *s2)
 {
     if (*s2 == 0)
     {

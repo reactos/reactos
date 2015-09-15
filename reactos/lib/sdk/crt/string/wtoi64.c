@@ -14,6 +14,7 @@
  * @implemented
  */
 __int64
+CDECL
 _wtoi64 (const wchar_t *nptr)
 {
    int c;
@@ -50,6 +51,7 @@ _wtoi64 (const wchar_t *nptr)
  * @unimplemented
  */
 __int64
+CDECL
 _wcstoi64 (const wchar_t *nptr, wchar_t **endptr, int base)
 {
    TRACE("_wcstoi64 is UNIMPLEMENTED\n");
@@ -60,6 +62,7 @@ _wcstoi64 (const wchar_t *nptr, wchar_t **endptr, int base)
  * @unimplemented
  */
 unsigned __int64
+CDECL
 _wcstoui64 (const wchar_t *nptr, wchar_t **endptr, int base)
 {
    TRACE("_wcstoui64 is UNIMPLEMENTED\n");

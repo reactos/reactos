@@ -330,8 +330,9 @@ KIRQL SWInterruptLookUpTable[8] =
 #if defined(__GNUC__)
 
 #define HalpDelayedHardwareInterrupt(x)                             \
-    VOID HalpHardwareInterrupt##x(VOID);                            \
+    VOID __cdecl HalpHardwareInterrupt##x(VOID);                    \
     VOID                                                            \
+    __cdecl                                                         \
     HalpHardwareInterrupt##x(VOID)                                  \
     {                                                               \
         asm volatile ("int $%c0\n"::"i"(PRIMARY_VECTOR_BASE + x));  \
@@ -340,8 +341,9 @@ KIRQL SWInterruptLookUpTable[8] =
 #elif defined(_MSC_VER)
 
 #define HalpDelayedHardwareInterrupt(x)                             \
-    VOID HalpHardwareInterrupt##x(VOID);                            \
+    VOID __cdecl HalpHardwareInterrupt##x(VOID);                    \
     VOID                                                            \
+    __cdecl                                                         \
     HalpHardwareInterrupt##x(VOID)                                  \
     {                                                               \
         __asm                                                       \
@@ -375,10 +377,10 @@ HalpDelayedHardwareInterrupt(15);
 /* Handlers for pending interrupts */
 PHAL_SW_INTERRUPT_HANDLER SWInterruptHandlerTable[20] =
 {
-    KiUnexpectedInterrupt,
+    (PHAL_SW_INTERRUPT_HANDLER)KiUnexpectedInterrupt,
     HalpApcInterrupt,
     HalpDispatchInterrupt2,
-    KiUnexpectedInterrupt,
+    (PHAL_SW_INTERRUPT_HANDLER)KiUnexpectedInterrupt,
     HalpHardwareInterrupt0,
     HalpHardwareInterrupt1,
     HalpHardwareInterrupt2,
@@ -1067,6 +1069,7 @@ HalpDismissIrq07Level(IN KIRQL Irql,
 }
 
 VOID
+__cdecl
 HalpHardwareInterruptLevel(VOID)
 {
     PKPCR Pcr = KeGetPcr();
@@ -1347,6 +1350,7 @@ HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
+__cdecl
 HalpDispatchInterrupt2(VOID)
 {
     ULONG PendingIrqlMask, PendingIrql;

@@ -42,7 +42,7 @@ typedef struct _HAL_BIOS_FRAME
 
 typedef
 VOID
-(*PHAL_SW_INTERRUPT_HANDLER)(
+(__cdecl *PHAL_SW_INTERRUPT_HANDLER)(
     VOID
 );
 
@@ -501,6 +501,7 @@ HalpDismissIrq07Level(
 );
 
 VOID
+__cdecl
 HalpHardwareInterruptLevel(
     VOID
 );
@@ -575,9 +576,9 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
 
 /* pic.c */
 VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
-VOID HalpApcInterrupt(VOID);
-VOID HalpDispatchInterrupt(VOID);
-VOID HalpDispatchInterrupt2(VOID);
+VOID __cdecl HalpApcInterrupt(VOID);
+VOID __cdecl HalpDispatchInterrupt(VOID);
+VOID __cdecl HalpDispatchInterrupt2(VOID);
 DECLSPEC_NORETURN VOID FASTCALL HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 DECLSPEC_NORETURN VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 
@@ -586,8 +587,8 @@ extern BOOLEAN HalpProfilingStopped;
 
 /* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
-VOID HalpClockInterrupt(VOID);
-VOID HalpProfileInterrupt(VOID);
+VOID __cdecl HalpClockInterrupt(VOID);
+VOID __cdecl HalpProfileInterrupt(VOID);
 
 VOID
 NTAPI
@@ -695,7 +696,7 @@ HalpExitToV86(
 );
 
 VOID
-DECLSPEC_NORETURN
+__cdecl
 HalpRealModeStart(
     VOID
 );

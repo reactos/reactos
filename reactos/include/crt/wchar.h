@@ -2450,6 +2450,7 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
     _In_ size_t _N);
 
   int
+  __cdecl
   wmemcmp(
     _In_reads_(_N) const wchar_t *_S1,
     _In_reads_(_N) const wchar_t *_S2,

@@ -15,6 +15,7 @@
 int __cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
 
 int
+__cdecl
 _vscwprintf(
    const wchar_t *format,
    va_list argptr)

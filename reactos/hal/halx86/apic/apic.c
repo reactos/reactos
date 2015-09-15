@@ -16,7 +16,7 @@
 #include <debug.h>
 
 #include "apic.h"
-void HackEoi(void);
+void __cdecl HackEoi(void);
 
 #ifndef _M_AMD64
 #define APIC_LAZY_IRQL

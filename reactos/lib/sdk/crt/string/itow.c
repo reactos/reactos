@@ -13,6 +13,7 @@
  * @implemented
  */
 wchar_t *
+CDECL
 _i64tow(__int64 value, wchar_t *string, int radix)
 {
     ULONGLONG val;
@@ -56,6 +57,7 @@ _i64tow(__int64 value, wchar_t *string, int radix)
  * @implemented
  */
 int
+CDECL
 _i64tow_s(__int64 value, wchar_t *str, size_t size, int radix)
 {
     unsigned __int64 val;
@@ -136,6 +138,7 @@ _i64tow_s(__int64 value, wchar_t *str, size_t size, int radix)
  * @implemented
  */
 wchar_t *
+CDECL
 _ui64tow(unsigned __int64 value, wchar_t *string, int radix)
 {
     WCHAR buffer[65];
@@ -165,6 +168,7 @@ _ui64tow(unsigned __int64 value, wchar_t *string, int radix)
  * @implemented
  */
 int
+CDECL
 _ui64tow_s( unsigned __int64 value, wchar_t *str,
                              size_t size, int radix )
 {
@@ -204,6 +208,7 @@ _ui64tow_s( unsigned __int64 value, wchar_t *str,
  * @implemented
  */
 wchar_t *
+CDECL
 _itow(int value, wchar_t *string, int radix)
 {
   return _ltow(value, string, radix);
@@ -213,6 +218,7 @@ _itow(int value, wchar_t *string, int radix)
  * @implemented
  */
 int
+CDECL
 _itow_s(int value, wchar_t *str, size_t size, int radix)
 {
     return _ltow_s(value, str, size, radix);
@@ -222,6 +228,7 @@ _itow_s(int value, wchar_t *str, size_t size, int radix)
  * @implemented
  */
 wchar_t *
+CDECL
 _ltow(long value, wchar_t *string, int radix)
 {
     unsigned long val;
@@ -265,6 +272,7 @@ _ltow(long value, wchar_t *string, int radix)
  * @implemented
  */
 int
+CDECL
 _ltow_s(long value, wchar_t *str, size_t size, int radix)
 {
     unsigned long val;
@@ -345,6 +353,7 @@ _ltow_s(long value, wchar_t *str, size_t size, int radix)
  * @implemented
  */
 wchar_t *
+CDECL
 _ultow(unsigned long value, wchar_t *string, int radix)
 {
     WCHAR buffer[33];

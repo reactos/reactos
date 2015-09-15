@@ -5,7 +5,7 @@
 #endif /* _MSC_VER */
 
 /* NOTE: This code is a duplicate of memmove implementation! */
-void* memcpy(void* dest, const void* src, size_t count)
+void* __cdecl memcpy(void* dest, const void* src, size_t count)
 {
     char *char_dest = (char *)dest;
     char *char_src = (char *)src;

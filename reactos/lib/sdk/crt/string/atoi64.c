@@ -14,6 +14,7 @@
  * @implemented
  */
 __int64
+CDECL
 _atoi64(const char *nptr)
 {
   char *s = (char *)nptr;
