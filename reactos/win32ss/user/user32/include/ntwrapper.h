@@ -10,11 +10,13 @@
 
 BOOL FASTCALL TestState(PWND, UINT);
 
+#if 0
 EXTINLINE BOOL WINAPI
 GetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
     return NtUserGetScrollBarInfo(hWnd, idObject, psbi);
 }
+#endif
 
 EXTINLINE BOOL WINAPI
 ShowScrollBar(HWND hWnd, INT wBar, BOOL bShow)
