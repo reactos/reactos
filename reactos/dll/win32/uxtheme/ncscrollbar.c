@@ -399,13 +399,13 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
         return;
     }
 
-    /* The scrollbar rect is in screen coordinates */
-    OffsetRect(&sbi.rcScrollBar, -context.wi.rcWindow.left, -context.wi.rcWindow.top);
-
     if ((SCROLL_trackHitTest == SCROLL_NOWHERE) && (msg != WM_LBUTTONDOWN))
 		  return;
     
     ThemeInitDrawContext(&context, hwnd, 0);
+
+    /* The scrollbar rect is in screen coordinates */
+    OffsetRect(&sbi.rcScrollBar, -context.wi.rcWindow.left, -context.wi.rcWindow.top);
 
     hwndOwner = (nBar == SB_CTL) ? GetParent(hwnd) : hwnd;
     hwndCtl   = (nBar == SB_CTL) ? hwnd : 0;
