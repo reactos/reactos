@@ -398,6 +398,8 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 	    break;
 	/* fall through */
     case WM_LBUTTONUP:
+    {
+        BOOL TellParent = FALSE; //// ReactOS see note below.
         state = get_button_state( hWnd );
         if (!(state & BUTTON_BTNPRESSED)) break;
         state &= BUTTON_NSTATES;
@@ -425,9 +427,11 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
                                 (state & BST_INDETERMINATE) ? 0 : ((state & 3) + 1), 0 );
                 break;
             }
-            BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
+            TellParent = TRUE; // <---- Fix CORE-10194, Notify parent after capture is released.
         }
         ReleaseCapture();
+        if (TellParent) BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
+    }
         break;
 
     case WM_CAPTURECHANGED:
