@@ -345,7 +345,7 @@
 342 stdcall GetReasonTitleFromReasonCode(long long long)
 343 stdcall GetRegisteredRawInputDevices(ptr ptr long)
 # GetRipFlags
-345 stdcall GetScrollBarInfo(long long ptr) NtUserGetScrollBarInfo
+345 stdcall GetScrollBarInfo(long long ptr) ; NtUserGetScrollBarInfo
 346 stdcall GetScrollInfo(long long ptr)
 347 stdcall GetScrollPos(long long)
 348 stdcall GetScrollRange(long long ptr ptr)

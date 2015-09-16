@@ -1502,6 +1502,21 @@ RealGetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 /*
  * @implemented
  */
+BOOL WINAPI GetScrollBarInfo(HWND hwnd, LONG idObject, LPSCROLLBARINFO info)
+{
+    BOOL Ret;
+    PWND pWnd = ValidateHwnd(hwnd);
+    TRACE("hwnd=%p idObject=%d info=%p\n", hwnd, idObject, info);
+    if (!pWnd) return FALSE;
+    Ret = NtUserGetScrollBarInfo(hwnd, idObject, info); // This will be fixed once SB is server side.
+    /* rcScrollBar needs to be in screen coordinates */
+    OffsetRect( &(info->rcScrollBar), pWnd->rcWindow.left, pWnd->rcWindow.top );
+    return Ret;
+}
+
+/*
+ * @implemented
+ */
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
