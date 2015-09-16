@@ -1502,7 +1502,7 @@ RealGetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 /*
  * @implemented
  */
-BOOL WINAPI GetScrollBarInfo(HWND hwnd, LONG idObject, LPSCROLLBARINFO info)
+BOOL WINAPI GetScrollBarInfo( _In_ HWND hwnd, _In_ LONG idObject, _Inout_ LPSCROLLBARINFO info)
 {
     BOOL Ret;
     PWND pWnd = ValidateHwnd(hwnd);
