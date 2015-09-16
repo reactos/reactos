@@ -237,8 +237,15 @@ HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 HKCR,".xml","",0x00000000,"xmlfile"
 HKCR,"xmlfile","",0x00000000,"XML Document"
 HKCR,".xml","Content Type",0x00000000,"text/xml"
-HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
+HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,0"
 HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+
+; XSL Stylesheets
+HKCR,".xsl","",0x00000000,"xslfile"
+HKCR,"xslfile","",0x00000000,"XSL Stylesheet"
+HKCR,".xsl","Content Type",0x00000000,"text/xml"
+HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
+HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
 ; MSI files
 HKCR,".msi","",0x00000000,"MSI.Package"
