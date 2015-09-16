@@ -433,11 +433,11 @@ HardwareProfileProperties(
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPTITLE;
+    psh.dwFlags = PSH_PROPTITLE;
     psh.hwndParent = hwndDlg;
     psh.hInstance = hApplet;
     psh.hIcon = NULL;
-    psh.pszCaption = NULL;
+    psh.pszCaption = pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex].szFriendlyName;
     psh.nPages = 1;
     psh.nStartPage = 0;
     psh.phpage = &hpsp;
