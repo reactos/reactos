@@ -15,5 +15,9 @@ CDPath = none
 [Section.0407]
 Description = Ein instant messaging-Programm, welches läßt Sie zu Konten auf mehreren Chat-Netzwerken gleichzeitig anmelden.
 
+[Section.0418]
+Description = Program de mesagerie instantă. Permite autentificarea simultană în diverse rețele de conversație.
+Size = 9,22 Mo
+
 [Section.0804]
 Description = 该对话框允许您登录到帐户多个聊天网络上同时即时消息程序。

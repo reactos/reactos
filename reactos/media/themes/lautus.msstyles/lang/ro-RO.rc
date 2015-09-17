@@ -28,11 +28,11 @@ STRINGTABLE
 STRINGTABLE
 {
 5000, "Lautus"
-5001, "Visual Style"
-5002, "ReactOS Foundation"
-5003, "Pisarz, based on Luna Inspirat"
-5004, "Released under GNU/GPL 2.0, 2011"
+5001, "Stil vizual"
+5002, "Fundația ReactOS"
+5003, "Pisarz, bazat pe Luna Inspirat"
+5004, "Publicat sub GNU/GPL 2.0, 2011"
 5005, "http://www.reactos.org"
 5006, "1.0"
-5007, "Visual Style for ReactOS"
+5007, "Stil vizual pentru ReactOS"
 }

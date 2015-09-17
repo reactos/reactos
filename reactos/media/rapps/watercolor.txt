@@ -6,7 +6,7 @@
 Name = Watercolor
 Version = 4.3
 License = Freeware
-Description = A Windows theme based on the look of Windows Codename Whistler. 
+Description = A Windows theme based on the look of Windows Codename Whistler.
 Size = 861 kB
 Category = 15
 URLSite = http://www.neowin.net/forum/topic/32604-watercolor-v43/
@@ -15,6 +15,11 @@ CDPath = none
 
 [Section.0407]
 Description = Ein Windows Design basierend auf dem Aussehenvon Windows Codename Whistler.
+
+[Section.0418]
+License = Gratuită
+Description = O temă pentru Windows bazată pe Windows Codename Whistler.
+Size = 861 ko
 
 [Section.041f]
 License = Ücretsiz

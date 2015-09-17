@@ -1,7 +1,7 @@
 /*
-Translators: Petru Dumitriu (petrimetri at gmail dot com)
-             Ștefan Fulea (stefan dot fulea at mail dot md)
-*/
+ * Translators: Petru Dimitriu (petrimetri at gmail dot com)
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -16,7 +16,7 @@ BEGIN
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "&Păstrare…", IDC_SAVEAS_BTN, 124, 72, 55, 14, WS_DISABLED
     PUSHBUTTON "Șt&erge", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
-    GROUPBOX "Unknown", IDC_GRPDETAIL, 6, 95, 240, 136
+    GROUPBOX "Nespecificat", IDC_GRPDETAIL, 6, 95, 240, 136
     LTEXT "Când calculatorul este:", IDC_SAT, 12, 109, 75, 12
     LTEXT "În priză", IDC_SAC, 123, 110, 45, 15
     ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
@@ -43,30 +43,30 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Alarmă baterie decongestionată", -1, 6, 7, 239, 104
     CONTROL "Alarmează „baterie &decongestionată” când se ajunge la:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
-    LTEXT "unknown", IDC_ALARMVALUE1, 215, 20, 20, 10
+    LTEXT "nespecificat", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
     LTEXT "100%", -1, 214, 43, 25, 10
     PUSHBUTTON "A&cțiune alarmă…", -1, 17, 69, 70, 14, WS_DISABLED
     LTEXT "Notificare:", -1, 95, 71, 57, 10
-    LTEXT "Unknown", IDC_ALARMMSG1, 154, 71, 84, 10
+    LTEXT "Nespecificat", IDC_ALARMMSG1, 154, 71, 84, 10
     LTEXT "Acțiune:", -1, 95, 83, 55, 10
-    LTEXT "Unknown", IDC_ALARMAKTION1, 154, 83, 84, 10
+    LTEXT "Nespecificat", IDC_ALARMAKTION1, 154, 83, 84, 10
     LTEXT "Exec. program:", -1, 95, 95, 55, 10
-    LTEXT "Unknown", IDC_ALARMPROG1, 154, 95, 84, 10
+    LTEXT "Nespecificat", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Alarmă baterie descărcată", -1, 6, 120, 239, 106
     CONTROL "Alarmează „baterie d&escărcată” când se ajunge la:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
-    LTEXT "unknown", IDC_ALARMVALUE2, 209, 133, 33, 10
+    LTEXT "nespecificat", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
     LTEXT "100%", -1, 214, 154, 25, 10
     PUSHBUTTON "Acți&une alarmă…", -1, 17, 183, 70, 14, WS_DISABLED
     LTEXT "Notificare:", -1, 95, 185, 50, 10
-    LTEXT "Unknown", IDC_ALARMMSG2, 154, 185, 84, 10
+    LTEXT "Nespecificat", IDC_ALARMMSG2, 154, 185, 84, 10
     LTEXT "Acțiune:", -1, 95, 198, 45, 10
-    LTEXT "Unknown", IDC_ALARMAKTION2, 154, 198, 84, 10
+    LTEXT "Nespecificat", IDC_ALARMAKTION2, 154, 198, 84, 10
     LTEXT "Exec. program:", -1, 95, 211, 50, 10
-    LTEXT "Unknown", IDC_ALARMPROG2, 154, 211, 84, 10
+    LTEXT "Nespecificat", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 237
@@ -100,9 +100,9 @@ BEGIN
     CONTROL "Doresc folosirea funcționalității &Hibernare", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
     GROUPBOX "Spațiul necesar pentru hibernare", -1, 6, 80, 240, 76
     LTEXT "Spațiul de stocare disponibil:", -1, 15, 95, 140, 10
-    LTEXT "Unknown", IDC_FREESPACE, 160, 95, 80, 10
+    LTEXT "Nespecificat", IDC_FREESPACE, 160, 95, 80, 10
     LTEXT "Spațiul necesar pentru hibernare:", -1, 15, 115, 140, 10
-    LTEXT "Unknown", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
+    LTEXT "Nespecificat", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
     LTEXT "Este necesar mai mult spațiu liber pe dispozitivul de stocare înainte de a putea activa funcționalitatea de hibernare.", IDC_TOLESSFREESPACE, 15, 135, 224, 30
 END
 

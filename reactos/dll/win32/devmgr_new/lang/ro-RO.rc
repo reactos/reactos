@@ -1,5 +1,5 @@
 /*
- * Translators: Petru Dumitriu (petrimetri at gmail dot com)
+ * Translators: Petru Dimitriu (petrimetri at gmail dot com)
  *              Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
@@ -35,7 +35,7 @@ BEGIN
     IDS_RESOURCE_MEMORY_RANGE "Domeniu de memorie"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
-    IDS_RESOURCE_PORT "Domeniu I/O"
+    IDS_RESOURCE_PORT "Domeniu In/Ex"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */

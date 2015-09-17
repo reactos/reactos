@@ -45,4 +45,3 @@ Description = Відкритий .NET Фреймворк.
 
 [Section.0804]
 Description = 开放源码 .NET 框架。
-

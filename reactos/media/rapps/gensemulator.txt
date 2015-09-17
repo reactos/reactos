@@ -15,6 +15,9 @@ CDPath = none
 [Section.0407]
 Description = Ein Win32 Sega Genesis / Sega CD / Sega 32X Emulator.
 
+[Section.0418]
+Description = Un emulator Win32 pentru Sega Genesis / Sega CD / Sega 32x.
+Size = 573 ko
+
 [Section.0804]
 Description = Win32 ÊÀ¼Î Genesis / ÊÀ¼Î CD / ÊÀ¼Î 32X ·ÂÕæÆ÷¡£
-

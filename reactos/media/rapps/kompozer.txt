@@ -16,6 +16,10 @@ CDPath = none
 [Section.0407]
 Description = Ein vollständiges Web-Authoring-System, welches Web-Datei-Management und leicht zu bedienende WYSIWYG Web-Seite Bearbeitung verbindet. Ein Werkzeug wie 7-Zip ist zum extrahieren notwendig.
 
+[Section.0418]
+Description = Sistem complet de autorizare web care combină gestiunea fișierelor web și modul de editare directă a paginilor. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 7,58 Mo
+
 [Section.041f]
 Description = Umûmî Ağ kütük yönetimiyle kullanımı kolay WYSIWYG Umûmî Ağ sayfası düzenlemesini birleştiren eksiksiz bir Umûmî Ağ yazarlık dizgesidir. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 7,58 MB

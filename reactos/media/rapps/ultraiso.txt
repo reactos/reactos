@@ -13,6 +13,11 @@ URLSite = https://www.ezbsystems.com/ultraiso/
 URLDownload = http://dw.ezbsys.net/uiso9_pe.exe
 CDPath = none
 
+[Section.0418]
+License = Versiune de evaluare
+Description = Un instrument pentru crearea/editarea/conversia fișierelor de tip imagine ISO CD/DVD. Permite editarea copierea fișierelor ISO de pe o unitate CD/DVD, extracția din asemenea fișiere, și editarea directă, inclusiv pentru medii de inițializare.
+Size = 4.19 Mo
+
 [Section.041f]
 License = Deneme sürümü
 Description = CD/DVD kalıp kütüğünü doğrudan düzenleyebilmekle ve ondan kütükleri ve dizinleri çıkartabilmekle birlikte CD/DVD-ROM diskinizden ya da sâbit diskinizden doğrudan ISO kütükleri oluşturabilen bir ISO CD/DVD kalıp kütüğü oluşturma, düzenleme, dönüştürme uygulaması ve bir ön yüklenebilir CD/DVD oluşturucusudur.

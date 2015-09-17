@@ -16,6 +16,10 @@ CDPath = none
 [Section.0407]
 Description = Freie, quelloffene Cross-Plattform Software zur Aufnahme und Bearbeitung von Sounds.
 
+[Section.0418]
+Description = Un program gratuit, multiplatformă, cu surse deschise pentru înregistrarea și editarea de sunete.
+Size = 24,0 Mo
+
 [Section.041f]
 Description = Sesleri kaydetme ve düzenleme için özgür, açık kaynak ve çapraz platform yazılımdır.
 Size = 24,0 MB

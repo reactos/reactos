@@ -15,6 +15,11 @@ CDPath = none
 [Section.0407]
 Description = Ein nützliches Werkzeug für Programmierer, das verwendet werden kann, um die Eigenschaften jedes Fensters im System sehen zu können. Ein Werkzeug wie 7-Zip ist zum extrahieren notwendig.
 
+[Section.0418]
+License = Gratuită
+Description = Un utilitar pentru programatori care poate fi utilizat pentru a selecta și a inspecta proprietățile unei ferestre din sistem. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 58,33 ko
+
 [Section.041f]
 License = Ücretsiz
 Description = Dizgedeki bir pencerenin husûsiyetlerini görüntülemek ve seçmek için kullanılabilecek bir usta izlencecinin aracı. Onu çıkartmak için 7-Zip gibi bir araç gereklidir.

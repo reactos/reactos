@@ -55,13 +55,13 @@ MENU_POPUP MENU
     POPUP "" /* Options */
     {
         MENUITEM "", IDTB_EXPAND
-        MENUITEM "Sinc&r", IDTB_SYNC
+        MENUITEM "Sinc&ronizează", IDTB_SYNC
         MENUITEM "Înap&oi", IDTB_BACK
         MENUITEM "În&ainte", IDTB_FORWARD
         MENUITEM "A&casă", IDTB_HOME
         MENUITEM "Opr&ește", IDTB_STOP
         MENUITEM "Împrospătea&ză", IDTB_REFRESH
-        MENUITEM "I&mprimă…", IDTB_PRINT
+        MENUITEM "I&mprimare…", IDTB_PRINT
     }
 }
 
@@ -69,24 +69,24 @@ MENU_WEBBROWSER MENU
 {
     POPUP ""
     {
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "Înap&oi", IDTB_BACK
+        MENUITEM "În&ainte", IDTB_FORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "S&electează tot", MIID_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM "Afișează s&ursa paginii", MIID_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "&Print...", IDTB_PRINT
-        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "I&mprimare…", IDTB_PRINT
+        MENUITEM "Împrospătea&ză", IDTB_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Proper&ties", MIID_PROPERTIES
+        MENUITEM "&Proprietăți", MIID_PROPERTIES
     }
     POPUP ""
     {
-        MENUITEM "Cu&t", MIID_CUT
-        MENUITEM "&Copy", MIID_COPY
-        MENUITEM "Paste", MIID_PASTE
-        MENUITEM "Select &All", MIID_SELECTALL
-        MENUITEM "&Print", IDTB_PRINT
+        MENUITEM "&Decupează", MIID_CUT
+        MENUITEM "&Copiază", MIID_COPY
+        MENUITEM "&Lipește", MIID_PASTE
+        MENUITEM "S&electează tot", MIID_SELECTALL
+        MENUITEM "I&mprimă", IDTB_PRINT
     }
 }

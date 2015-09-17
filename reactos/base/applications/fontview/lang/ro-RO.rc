@@ -1,4 +1,4 @@
-/* 2012.09.09 - Fulea Ștefan: update caused by r56898, corrections */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -12,9 +12,9 @@ BEGIN
     IDS_ERROR_NOMEM "Nu e destulă memorie pentru a încheia operația."
     IDS_ERROR_NOFONT "Fișierul «%1» este un fișier font deteriorat."
     IDS_ERROR_NOCLASS "Nu s-a putut inițializa clasa de ferestre."
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
-TrueType Font (*.ttf)\0*.ttf\0\
-OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
-All Files (*.*)\0*.*\0"
+    IDS_FILTER_LIST "Toate fonturile recunoscute (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+Fonturi de tip TrueType (*.ttf)\0*.ttf\0\
+Fonturi de tip OpenType (*.otf)\0*.otf\0\
+Fișiere de tip Font (*.fon)\0*.fon\0\
+Orice fișier (*.*)\0*.*\0"
 END

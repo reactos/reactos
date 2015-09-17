@@ -753,11 +753,11 @@ BEGIN
     IDS_NEWFOLDER "Dosar nou"
 
     IDS_DRIVE_FIXED "Disc local"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "Unitate CD"
     IDS_DRIVE_NETWORK "Disc din rețea"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_FLOPPY "Dischetă de 3.5"
+    IDS_DRIVE_REMOVABLE "Disc detașabil"
+    IDS_FS_UNKNOWN "Nespecificat"
 
     /* Open With */
     IDS_OPEN_WITH "Deschide cu"

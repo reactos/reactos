@@ -16,6 +16,12 @@ CDPath = none
 [Section.0407]
 Description = Freie Brennsoftware mit vollem Funktionsumfang, um CDs, DVDs und Blu-Ray Disks aller Arten zu erstellen.
 
+[Section.0418]
+Name = BurnAware Gratuit
+License = Gratuit pentru uz necomercial
+Description = Program de inscripționare gratuit, complet, pentru discuri CD, DVD și Blue-ray de toate tipurile.
+Size = 8,03 Mo
+
 [Section.041f]
 Name = BurnAware Ücretsiz
 License = Tecimlik olmayan kullanımlar için ücretsiz

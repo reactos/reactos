@@ -15,5 +15,10 @@ CDPath = none
 [Section.0407]
 Description = Ein HEX-Editor für Windows.
 
+[Section.0418]
+License = Gratuită
+Description = Un editor hexazecimal de fișiere pentru Windows.
+Size = 146,28 ko
+
 [Section.0804]
 Description = 一个十六进制文件编辑器。

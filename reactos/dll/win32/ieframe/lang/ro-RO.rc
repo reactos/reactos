@@ -1,38 +1,39 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDR_BROWSE_MAIN_MENU MENU
 {
-    POPUP "&Dosar"
+    POPUP "&Fișier"
     {
         POPUP "&Nou"
         {
-            MENUITEM "&Fereastrã",              ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Fereastră",              ID_BROWSE_NEW_WINDOW
         }
-        MENUITEM "&Deschide...",                ID_BROWSE_OPEN
-        MENUITEM "&Salveazã",                   ID_BROWSE_SAVE
-        MENUITEM "Salveazã &ca...",             ID_BROWSE_SAVE_AS
+        MENUITEM "&Deschidere…",                ID_BROWSE_OPEN
+        MENUITEM "&Păstrează",                  ID_BROWSE_SAVE
+        MENUITEM "Păst&rare în…",               ID_BROWSE_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Tipareate &formateazã...",    ID_BROWSE_PRINT_FORMAT
-        MENUITEM "Tipã&reste...",               ID_BROWSE_PRINT
-        MENUITEM "Previzualizare tipãri&re",    ID_BROWSE_PRINT_PREVIEW
+        MENUITEM "Formatare imprima&bil…",      ID_BROWSE_PRINT_FORMAT
+        MENUITEM "I&mprimare…",                 ID_BROWSE_PRINT
+        MENUITEM "Pre&vizionează pagină",       ID_BROWSE_PRINT_PREVIEW
         MENUITEM SEPARATOR
-        MENUITEM "&Proprietãti",                ID_BROWSE_PROPERTIES
-        MENUITEM "&Inchide",                    ID_BROWSE_QUIT
+        MENUITEM "Pr&oprietăți…",               ID_BROWSE_PROPERTIES
+        MENUITEM "I&eșire",                     ID_BROWSE_QUIT
     }
-    POPUP "&View"
+    POPUP "&Afișare"
     {
-        POPUP "&Toolbars"
+        POPUP "&Bare"
         {
-            MENUITEM "&Bara standard",          ID_BROWSE_BAR_STD
-            MENUITEM "&Bara adresã",            ID_BROWSE_BAR_ADDR
+            MENUITEM "Bară stan&dard",          ID_BROWSE_BAR_STD
+            MENUITEM "Bară de &adrasă",         ID_BROWSE_BAR_ADDR
         }
     }
-    POPUP "&Favorites"
+    POPUP "Fa&vorite"
     {
-        MENUITEM "&Adaugã la Favorite...",      ID_BROWSE_ADDFAV
+        MENUITEM "&Adaugă la Favorite…",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
-    POPUP "&Ajutor"
+    POPUP "Aj&utor"
     {
         MENUITEM "&Despre Internet Explorer",   ID_BROWSE_ABOUT
     }
@@ -40,39 +41,39 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
-    IDS_TB_BACK             "Inapoi"
-    IDS_TB_FORWARD          "Inainte"
-    IDS_TB_STOP             "Opreste"
-    IDS_TB_REFRESH          "Improspateazã"
-    IDS_TB_HOME             "Acasã"
-    IDS_TB_PRINT            "Tipãreste..."
+    IDS_TB_BACK             "Înapoi"
+    IDS_TB_FORWARD          "Înainte"
+    IDS_TB_STOP             "Oprește"
+    IDS_TB_REFRESH          "Împrospătează"
+    IDS_TB_HOME             "Acasă"
+    IDS_TB_PRINT            "Imprimare…"
 }
 
 STRINGTABLE
 {
-    IDS_ADDRESS             "Adresã"
+    IDS_ADDRESS             "Adresă"
 }
 
 STRINGTABLE
 {
-    IDS_FINDINGRESOURCE     "Cautã %s"
-    IDS_BEGINDOWNLOADDATA   "Porneste descãrcarea %s"
-    IDS_ENDDOWNLOADDATA     "Descarcã %s"
-    IDS_SENDINGREQUEST      "Intreabã de %s"
+    IDS_FINDINGRESOURCE     "Se caută %s"
+    IDS_BEGINDOWNLOADDATA   "Începe a se descărca %s"
+    IDS_ENDDOWNLOADDATA     "Se descarcă %s"
+    IDS_SENDINGREQUEST      "Se solicită %s"
 }
 
 
-IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
+IDD_BROWSE_OPEN DIALOG 10, 10, 200, 70
+STYLE DS_MODALFRAME | WS_CAPTION
 CAPTION "Deschide URL"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Specificã adresa URL pe care vrei s-o deschizi in Internet Explorer",-1, 35,5,160,25
+    LTEXT "Specificați adresa URL pe care doriți s-o deschideți în Internet Explorer",-1, 35,5,160,25
     LTEXT "Deschide:", -1, 5, 32, 30, 15
 #ifdef __REACTOS__
     ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
 #endif
     EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
-    DEFPUSHBUTTON "Gata", IDOK, 90, 50, 50, 14
-    PUSHBUTTON "Renuntã", IDCANCEL, 145, 50, 50, 14
+    DEFPUSHBUTTON "Con&firmă", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 145, 50, 50, 14
 }

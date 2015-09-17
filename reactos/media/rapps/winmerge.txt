@@ -16,6 +16,10 @@ CDPath = none
 [Section.0407]
 Description = Werkzeug zur grafischen Darstellung und Zusammenführen von Dateien und Ordnern.
 
+[Section.0418]
+Description = Un instrument pentru inspecția vizuală a diferențelor și unificarea de fișiere și dosare.
+Size = 6,13 Mo
+
 [Section.041f]
 License = GPL sürüm 2
 Description = Kütükler ve dizinler için, görmelik ayrım görüntüleme ve birleştirme için bir araç.

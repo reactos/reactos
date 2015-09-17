@@ -59,4 +59,3 @@ Description = 一个免费的应用程序，允许您读取 Kindle 电子书。
 
 [Section.0813]
 Description = Een gratis toepassing waarmee u Lees Kindle boeken.
-

@@ -1,4 +1,4 @@
-/* Romanian translation by Ștefan Fulea */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -42,32 +42,32 @@ BEGIN
     IDS_LIST_DISK_HEAD "\n  Disc ###  Stare       Dimensiune  Liber    Dyn  Gpt\n"
     IDS_LIST_DISK_LINE "  --------  ----------  ----------  -------  ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
-    IDS_LIST_PARTITION_HEAD "\n  Partition      Type              Size     Offset\n"
+    IDS_LIST_PARTITION_HEAD "\n  Partiție       Tip               Dim.     Depl. \n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
-    IDS_LIST_PARTITION_FORMAT "%c Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
-    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
+    IDS_LIST_PARTITION_FORMAT "%c Partiție  %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_NO_DISK "\nNu există niciun disc pentru a afișa partiții.\nSelectați un disc apoi reîncercați.\n\n"
     IDS_LIST_VOLUME_HEAD "Volum ###\tLtr\tEtichetă\n"
 END
 
 /* RESCAN command string */
 STRINGTABLE
 BEGIN
-    IDS_RESCAN_START "\nPlease wait while DiskPart scans your configuration...\n"
-    IDS_RESCAN_END "\nDiskPart has finished scanning your configuration.\n\n"
+    IDS_RESCAN_START "\nAșteptați scanarea configurației...\n"
+    IDS_RESCAN_END "\nScanarea configurației a fost finalizată.\n\n"
 END
 
 /* SELECT command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
-    IDS_SELECT_DISK_INVALID "\nInvalid disk.\n\n"
-    IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
-    IDS_SELECT_PARTITION_NO_DISK "\nThere is no disk for selecting a partition.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
-    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
-    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
+    IDS_SELECT_NO_DISK "\nMomentan nu există niciun disc selectat.\nSelectați un disc apoi reîncercați.\n\n"
+    IDS_SELECT_DISK "\nDisul %lu este selectat acum.\n\n"
+    IDS_SELECT_DISK_INVALID "\nDisc nevalid.\n\n"
+    IDS_SELECT_NO_PARTITION "\nMomentan nu există nicio partiție selectată.\nSelectați un disc apoi reîncercați.\n\n"
+    IDS_SELECT_PARTITION "\nPartiția %lu este selectată acum.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nNu există niciun disc pentru partiția selectată.\nSelectați un disc apoi reîncercați.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nPartiție nevalidă.\n\n"
+    IDS_SELECT_NO_VOLUME "\nMomentan nu există niciun volum selectat.\nSelectați un disc apoi reîncercați.\n\n"
+    IDS_SELECT_VOLUME "\nVolumul %lu este selectat acum.\n\n"
 END
 
 /* Disk Status */
@@ -123,7 +123,7 @@ BEGIN
     IDS_HELP_CMD_DESC_REM "REM\t\t- Utilizat pentru comentarii în script.\n"
     IDS_HELP_CMD_DESC_REMOVE "REMOVE\t\t- Elimină un punct de montaj sau litera unei unități.\n"
     IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- Repară un volum RAID-5 cu unul din membri deteriorat.\n"
-    IDS_HELP_CMD_DESC_RESCAN "RESCAN\t\t- Rescandarea calculatorului căutând discuri și volume.\n"
+    IDS_HELP_CMD_DESC_RESCAN "RESCAN\t\t- Rescanarea calculatorului căutând discuri și volume.\n"
     IDS_HELP_CMD_DESC_RETAIN "RETAIN\t\t- Reține și plasează o partiție ca simplu volum.\n"
     IDS_HELP_CMD_DESC_SAN "SAN\t\t- Afișează sau instituie politica SAN pentru SO încărcat la moment.\n"
     IDS_HELP_CMD_DESC_SELECT "SELECT\t\t- Schimbă obiectul viitoarelor acțiuni.\n"
@@ -137,7 +137,7 @@ STRINGTABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Eroare la deschiderea fișierului script: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Eroare la prelucrarea argumentului: %s\n"
-    IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
+    IDS_ERROR_INVALID_ARGS "Argumente nevalide\n"
 END
 
 /* Active help descriptions */

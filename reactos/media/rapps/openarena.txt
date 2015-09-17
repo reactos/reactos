@@ -16,6 +16,10 @@ CDPath = none
 [Section.0407]
 Description = Ein Community-produziertes Deathmatch-FPS-Spiel basierend auf GPL idTech3 Technologie. Ein Werkzeug wie 7-Zip ist zum extrahieren notwendig.
 
+[Section.0418]
+Description = Joc FPS de tip duel în grup, produs de comunitate, bazat pe tehnologia GPL idTech3. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 405 Mo
+
 [Section.041f]
 Description = GPL idTech3 uygulayım bilimi tabanlı, topluluk üretimi, ölüm karşılaşmalı bir FPS oyunudur. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.
 

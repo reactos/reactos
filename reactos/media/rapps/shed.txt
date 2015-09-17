@@ -15,6 +15,10 @@ CDPath = none
 [Section.0407]
 Description = Ein Single-Player-Kartenspiel für Windows. Es basiert auf dem beliebten Kartenpiel "Arschloch".
 
+[Section.0418]
+License = Gratuită
+Description = Un joc de cărți pentru Windows. Este bazat pe popularul joc de cărți studențesc „Shit-head”.
+Size = 65,79 ko
+
 [Section.0804]
 Description = 单人卡游戏窗口。它基于"屎头"受欢迎的学生纸牌游戏。
-

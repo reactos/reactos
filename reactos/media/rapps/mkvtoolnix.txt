@@ -13,6 +13,10 @@ URLDownload = https://www.bunkus.org/videotools/mkvtoolnix/win32/mkvtoolnix-unic
 [Section.0407]
 Description = Sammlung von Werkzeugen zum Bearbeiten von MKV Dateien.
 
+[Section.0407]
+Description = Grup de instrumente pentru formatul de fișiere MKV.
+Size = 5,3 Mo
+
 [Section.0419]
 Description = Набор инструментов для работы с файлами формата mkv.
 

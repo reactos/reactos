@@ -857,7 +857,7 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
+        "\x07  Tastaîi L pentru a crea o partiîie logicÇ.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -891,79 +891,79 @@ static MUI_ENTRY roROConfirmDeletePartitionEntries[] =
     {
         6,
         8,
-        "You asked Setup to delete the system partition.",
+        "Aîi solicitat ­tergerea partiîiei de sistem.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnose programs, hardware configuration",
+        "Partiîiile de sistem pot conîine programe de diagnozÇ, programe de con-",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "figurare a echipamentelor, programe de lansare a unui sistem de operare",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "(ca ReactOS) ­i alte programe furnizate de producÇtorii calculorului.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "¸tergeîi o partiîie de sistem doar cƒnd sunteîi siguri cÇ nu existÇ a­a",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partiton, or when you are sure you want to delete them.",
+        "programe pe partiîie, sau cƒnd sunteîi siguri cÇ doriîi sÇ le ­tergeîi.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "¸tergƒnd partiîia se poate sÇ nu mai puteîi porni calculatorul de pe",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "discul local decƒt dupÇ finalizarea instalÇrii ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  ApÇsaîi ENTER pentru a ­terge partiîia de sistem. Vi se va",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   cere sÇ confirmaîi din nou aceastÇ ­tergere a partiîiei.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  ApÇsaîi ESC pentru a reveni la pagina precedentÇ. Partiîia",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "   nu va fi ­tearsÇ.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "ENTER = Continuare   ESC = Anulare",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1662,10 +1662,10 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        "Nu s-a reu­it formatarea partiîiei:\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "ENTER = Repornire calculator"
     },
     {
         NULL,
@@ -1806,9 +1806,9 @@ MUI_STRING roROStrings[] =
     {STRING_NONFORMATTEDPART,
     "Alegeîi sÇ instalaîi ReactOS pe partiîie nouÇ sau neformatatÇ."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    "Partiîia de sistem ŒncÇ nu a fost formatatÇ."},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    "Noua partiîie ŒncÇ nu a fost formatatÇ."},
     {STRING_INSTALLONPART,
     "ReactOS va fi instalat pe partiîia"},
     {STRING_CHECKINGPART,

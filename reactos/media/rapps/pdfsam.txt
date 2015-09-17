@@ -16,6 +16,10 @@ CDPath = none
 [Section.0407]
 Description = Freies, quelloffenes, Plattformunabhängiges Werkzeug zum spiltten, zusammenfügen und anderer Manipulationen an PDF Dokumenten. Java Runtime benötigt!
 
+[Section.0418]
+Description = Un instrument gratuit, cu surse deschise, multiplatformă, pentru împărțirea, unirea, și manipularea documentelor PDF. Este necesară Java Runtime!
+Size = 15,6 Mo
+
 [Section.041f]
 License = GPL sürüm 2
 Description = PDF belgesi üzerinde bölme, birleştirme ve başka oynamalar yapmak için tasarlanmış, ücretsiz, açık kaynak, platform bağımsız bir araç. Java Yürütücüsü gereklidir!

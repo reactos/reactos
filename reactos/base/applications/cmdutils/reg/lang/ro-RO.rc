@@ -1,8 +1,8 @@
 /*
-Translators: Claudia Cotună
-             Michael Stefaniuc
-             Ștefan Fulea (stefan dot fulea at mail dot md)
-*/
+ * Translators: Claudia Cotună
+ *              Michael Stefaniuc
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -17,7 +17,7 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Eroare: Parametri nevalizi pentru linia de comandă\n"
     STRING_NO_REMOTE, "Eroare: Nu se pot adăuga chei pe calculatorul de la distanță\n"
     STRING_CANNOT_FIND, "Eroare: Sistemul nu a putut găsi cheia sau valoarea de registru specificată\n"
-    STRING_ERROR, "Unexpected error: "
-    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
-    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
+    STRING_ERROR, "Eroare neașteptată: "
+    STRING_UNSUPPORTED_TYPE, "Eroare: Tip nerecunoscut\n"
+    STRING_INVALID_DWORD, "Eroare: /d trebuie să fie număr pozitiv\n"
 }

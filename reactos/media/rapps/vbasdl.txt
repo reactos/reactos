@@ -16,6 +16,11 @@ CDPath = none
 [Section.0407]
 Description = Ein Gameboy und Gameboy Advance System Emulator. Ein Werkzeug wie 7-Zip ist zum extrahieren notwendig.
 
+[Section.0418]
+Name = VisualBoyAdvance (versiune SDL)
+Description = Un emulator pentru sistemele Gameboy și GameboyAdvance. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 438 ko
+
 [Section.041f]
 Name = VisualBoyAdvance (SDL sürümü)
 Description = Gameboy ve GameboyAdvance dizgeleri için bir öykünücü. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.

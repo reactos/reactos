@@ -3,7 +3,8 @@
  * LICENSE:     LGPL
  * FILE:        base/applications/mspaint/lang/ro-RO.rc
  * PURPOSE:     Romanian Language resource file
- * TRANSLATORS: Petru Dimitriu, Ștefan Fulea
+ * TRANSLATORS: Petru Dimitriu (petrimetri at gmail dot com)
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -17,9 +18,9 @@ BEGIN
         MENUITEM "&Păstrează\tCtrl+S", IDM_FILESAVE
         MENUITEM "Păst&rare în…", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Pre&vizionează pagina", IDM_FILEPAGEVIEW
+        MENUITEM "C&onfigurare pagină…", IDM_FILEPAGESETUP
+        MENUITEM "I&mprimă…\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Decor de birou (în c&arou)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Decor de birou (&centrat)", IDM_FILEASWALLPAPERCENTERED
@@ -218,5 +219,5 @@ BEGIN
     IDS_PERCENTAGE "Procentajul trebuie să fie între 1 și 500."
     IDS_ANGLE "Unghiul trebuie să fie între -89 și 89."
     IDS_LOADERRORTEXT "Fișierul %s nu poate fi încărcat."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_ENLARGEPROMPTTEXT "Imaginea din memorie este mai mare decât suprafața curent disponibilă în aplicație.\nDoriți să redimensionați suprafața de desen disponibilă?"
 END
