@@ -1,4 +1,4 @@
 #include "resource.h"
 
 IDI_XML_FILE ICON "res/128.ico"
-IDI_XML_SYSTEM ICON "res/129.ico"
+IDI_XSL_FILE ICON "res/129.ico"
