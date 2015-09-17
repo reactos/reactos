@@ -77,7 +77,7 @@ ULONG LdrpActiveUnloadCount;
 
 //extern LIST_ENTRY RtlCriticalSectionList;
 
-VOID RtlpInitializeVectoredExceptionHandling(VOID);
+VOID NTAPI RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
 VOID NTAPI RtlInitializeHeapManager(VOID);
 extern BOOLEAN RtlpPageHeapEnabled;

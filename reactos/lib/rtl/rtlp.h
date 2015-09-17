@@ -67,6 +67,13 @@ RtlCallVectoredExceptionHandlers(
     IN PCONTEXT Context
 );
 
+VOID
+NTAPI
+RtlCallVectoredContinueHandlers(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context
+);
+
 typedef struct _DISPATCHER_CONTEXT
 {
     PEXCEPTION_REGISTRATION_RECORD RegistrationPointer;

@@ -13,201 +13,328 @@
 #define NDEBUG
 #include <debug.h>
 
-static RTL_CRITICAL_SECTION RtlpVectoredExceptionLock;
-static LIST_ENTRY RtlpVectoredExceptionHead;
-static volatile LONG RtlpVectoredExceptionsInstalled;
+RTL_CRITICAL_SECTION RtlpVectoredHandlerLock;
+LIST_ENTRY RtlpVectoredExceptionList, RtlpVectoredContinueList;
 
-typedef struct _RTL_VECTORED_EXCEPTION_HANDLER
+typedef struct _RTL_VECTORED_HANDLER_ENTRY
 {
-  LIST_ENTRY ListEntry;
-  PVECTORED_EXCEPTION_HANDLER VectoredHandler;
-  ULONG Refs;
-  BOOLEAN Deleted;
-} RTL_VECTORED_EXCEPTION_HANDLER, *PRTL_VECTORED_EXCEPTION_HANDLER;
+    LIST_ENTRY ListEntry;
+    PVECTORED_EXCEPTION_HANDLER VectoredHandler;
+    ULONG Refs;
+} RTL_VECTORED_HANDLER_ENTRY, *PRTL_VECTORED_HANDLER_ENTRY;
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN
-NTAPI
-RtlCallVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
-                                 IN PCONTEXT  Context)
-{
-  PLIST_ENTRY CurrentEntry;
-  PRTL_VECTORED_EXCEPTION_HANDLER veh = NULL;
-  PVECTORED_EXCEPTION_HANDLER VectoredHandler;
-  EXCEPTION_POINTERS ExceptionInfo;
-  BOOLEAN Remove = FALSE;
-  BOOLEAN Ret = FALSE;
-
-  ExceptionInfo.ExceptionRecord = ExceptionRecord;
-  ExceptionInfo.ContextRecord = Context;
-
-  if(RtlpVectoredExceptionsInstalled)
-  {
-    RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
-    CurrentEntry = RtlpVectoredExceptionHead.Flink;
-    while (CurrentEntry != &RtlpVectoredExceptionHead)
-    {
-      veh = CONTAINING_RECORD(CurrentEntry,
-                              RTL_VECTORED_EXCEPTION_HANDLER,
-                              ListEntry);
-      veh->Refs++;
-      RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
-      
-      VectoredHandler = RtlDecodePointer(veh->VectoredHandler);
-      if(VectoredHandler(&ExceptionInfo) == EXCEPTION_CONTINUE_EXECUTION)
-      {
-        RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
-        if (--veh->Refs == 0)
-        {
-          RemoveEntryList (&veh->ListEntry);
-          InterlockedDecrement (&RtlpVectoredExceptionsInstalled);
-          Remove = TRUE;
-        }
-        Ret = TRUE;
-        break;
-      }
-
-      RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
-      
-      if (--veh->Refs == 0)
-      {
-        CurrentEntry = veh->ListEntry.Flink;
-        RemoveEntryList (&veh->ListEntry);
-        InterlockedDecrement (&RtlpVectoredExceptionsInstalled);
-        RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
-        
-        RtlFreeHeap(RtlGetProcessHeap(),
-                    0,
-                    veh);
-        RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
-      }
-      else
-        CurrentEntry = CurrentEntry->Flink;
-    }
-    
-    RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
-  }
-  
-  if (Remove)
-  {
-    RtlFreeHeap(RtlGetProcessHeap(),
-                0,
-                veh);
-  }
-
-  return Ret;
-}
-
 VOID
+NTAPI
 RtlpInitializeVectoredExceptionHandling(VOID)
 {
-  InitializeListHead(&RtlpVectoredExceptionHead);
-  RtlInitializeCriticalSection(&RtlpVectoredExceptionLock);
-  RtlpVectoredExceptionsInstalled = 0;
+    /* Initialize our two lists and the common lock */
+    RtlInitializeCriticalSection(&RtlpVectoredHandlerLock);
+    InitializeListHead(&RtlpVectoredExceptionList);
+    InitializeListHead(&RtlpVectoredContinueList);
 }
 
-
-/*
- * @implemented
- */
-PVOID NTAPI DECLSPEC_HOTPATCH
-RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
-                               IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
+BOOLEAN
+NTAPI
+RtlpCallVectoredHandlers(IN PEXCEPTION_RECORD ExceptionRecord,
+                         IN PCONTEXT Context,
+                         IN PLIST_ENTRY VectoredHandlerList)
 {
-  PRTL_VECTORED_EXCEPTION_HANDLER veh;
+    PLIST_ENTRY CurrentEntry;
+    PRTL_VECTORED_HANDLER_ENTRY VectoredExceptionHandler;
+    PVECTORED_EXCEPTION_HANDLER VectoredHandler;
+    EXCEPTION_POINTERS ExceptionInfo;
+    BOOLEAN HandlerRemoved;
+    LONG HandlerReturn;
 
-  veh = RtlAllocateHeap(RtlGetProcessHeap(),
-                        0,
-                        sizeof(RTL_VECTORED_EXCEPTION_HANDLER));
-  if(veh != NULL)
-  {
-    veh->VectoredHandler = RtlEncodePointer(VectoredHandler);
-    veh->Refs = 1;
-    veh->Deleted = FALSE;
-    RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
-    if(FirstHandler != 0)
+    /*
+     * Initialize these in case there are no entries,
+     * or if no one handled the exception
+     */
+    HandlerRemoved = FALSE;
+    HandlerReturn = EXCEPTION_CONTINUE_SEARCH;
+
+    /* Set up the data to pass to the handler */
+    ExceptionInfo.ExceptionRecord = ExceptionRecord;
+    ExceptionInfo.ContextRecord = Context;
+
+    /* Grab the lock */
+    RtlEnterCriticalSection(&RtlpVectoredHandlerLock);
+
+    /* Loop entries */
+    CurrentEntry = VectoredHandlerList->Flink;
+    while (CurrentEntry != VectoredHandlerList)
     {
-      InsertHeadList(&RtlpVectoredExceptionHead,
-                     &veh->ListEntry);
-    }
-    else
-    {
-      InsertTailList(&RtlpVectoredExceptionHead,
-                     &veh->ListEntry);
-    }
-    InterlockedIncrement (&RtlpVectoredExceptionsInstalled);
-    RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
-  }
+        /* Get the struct */
+        VectoredExceptionHandler = CONTAINING_RECORD(CurrentEntry,
+                                                     RTL_VECTORED_HANDLER_ENTRY,
+                                                     ListEntry);
 
-  return veh;
-}
+        /* Reference it so it doesn't go away while we are using it */
+        VectoredExceptionHandler->Refs++;
 
+        /* Drop the lock before calling the handler */
+        RtlLeaveCriticalSection(&RtlpVectoredHandlerLock);
 
-/*
- * @implemented
- */
-ULONG NTAPI
-RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
-{
-  PLIST_ENTRY CurrentEntry;
-  PRTL_VECTORED_EXCEPTION_HANDLER veh = NULL;
-  BOOLEAN Remove = FALSE;
-  ULONG Ret = FALSE;
+        /*
+         * Get the function pointer, decoding it so we will crash
+         * if malicious code has altered it. That is, if something has
+         * set VectoredHandler to a non-encoded pointer
+         */
+        VectoredHandler = RtlDecodePointer(VectoredExceptionHandler->VectoredHandler);
 
-  RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
-  for(CurrentEntry = RtlpVectoredExceptionHead.Flink;
-      CurrentEntry != &RtlpVectoredExceptionHead;
-      CurrentEntry = CurrentEntry->Flink)
-  {
-    veh = CONTAINING_RECORD(CurrentEntry,
-                            RTL_VECTORED_EXCEPTION_HANDLER,
-                            ListEntry);
-    if(veh == VectoredHandlerHandle)
-    {
-      if (!veh->Deleted)
-      {
-        if (--veh->Refs == 0)
+        /* Call the handler */
+        HandlerReturn = VectoredHandler(&ExceptionInfo);
+
+        /* Handler called -- grab the lock to dereference */
+        RtlEnterCriticalSection(&RtlpVectoredHandlerLock);
+
+        /* Dereference and see if it got deleted */
+        VectoredExceptionHandler->Refs--;
+        if (VectoredExceptionHandler->Refs == 0)
         {
-          RemoveEntryList (&veh->ListEntry);
-          Remove = TRUE;
+            /* It did -- do we have to free it now? */
+            if (HandlerReturn == EXCEPTION_CONTINUE_EXECUTION)
+            {
+                /* We don't, just remove it from the list and break out */
+                RemoveEntryList(&VectoredExceptionHandler->ListEntry);
+                HandlerRemoved = TRUE;
+                break;
+            }
+
+            /*
+             * Get the next entry before freeing,
+             * and remove the current one from the list
+             */
+            CurrentEntry = VectoredExceptionHandler->ListEntry.Flink;
+            RemoveEntryList(&VectoredExceptionHandler->ListEntry);
+
+            /* Free the entry outside of the lock, then reacquire it */
+            RtlLeaveCriticalSection(&RtlpVectoredHandlerLock);
+            RtlFreeHeap(RtlGetProcessHeap(),
+                        0,
+                        VectoredExceptionHandler);
+            RtlEnterCriticalSection(&RtlpVectoredHandlerLock);
         }
-        veh->Deleted = TRUE;
-        Ret = TRUE;
-        break;
-      }
+        else
+        {
+            /* No delete -- should we continue execution? */
+            if (HandlerReturn == EXCEPTION_CONTINUE_EXECUTION)
+            {
+                /* Break out */
+                break;
+            }
+            else
+            {
+                /* Continue searching the list */
+                CurrentEntry = CurrentEntry->Flink;
+            }
+        }
     }
-  }
-  RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
 
-  if(Remove)
-  {
-    RtlFreeHeap(RtlGetProcessHeap(),
-                0,
-                veh);
-  }
+    /* Let go of the lock now */
+    RtlLeaveCriticalSection(&RtlpVectoredHandlerLock);
 
-  return Ret;
+    /* Anything to free? */
+    if (HandlerRemoved)
+    {
+        /* Get rid of it */
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    VectoredExceptionHandler);
+    }
+
+    /* Return whether to continue execution (ignored for continue handlers) */
+    return (HandlerReturn == EXCEPTION_CONTINUE_EXECUTION) ? TRUE : FALSE;
 }
 
 PVOID
 NTAPI
-DECLSPEC_HOTPATCH
-RtlAddVectoredContinueHandler(
-    IN ULONG FirstHandler,
-    IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
+RtlpAddVectoredHandler(IN ULONG FirstHandler,
+                       IN PVECTORED_EXCEPTION_HANDLER VectoredHandler,
+                       IN PLIST_ENTRY VectoredHandlerList)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    PRTL_VECTORED_HANDLER_ENTRY VectoredHandlerEntry;
+
+    /* Allocate our structure */
+    VectoredHandlerEntry = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           0,
+                                           sizeof(RTL_VECTORED_HANDLER_ENTRY));
+    if (!VectoredHandlerEntry) return NULL;
+
+    /* Set it up, encoding the pointer for security */
+    VectoredHandlerEntry->VectoredHandler = RtlEncodePointer(VectoredHandler);
+    VectoredHandlerEntry->Refs = 1;
+
+    /* Lock the list before modifying it */
+    RtlEnterCriticalSection(&RtlpVectoredHandlerLock);
+
+    /*
+     * While holding the list lock, insert the handler
+     * at beginning or end of list according to caller.
+     */
+    if (FirstHandler)
+    {
+        InsertHeadList(VectoredHandlerList,
+                       &VectoredHandlerEntry->ListEntry);
+    }
+    else
+    {
+        InsertTailList(VectoredHandlerList,
+                       &VectoredHandlerEntry->ListEntry);
+    }
+
+    /* Done with the list, unlock it */
+    RtlLeaveCriticalSection(&RtlpVectoredHandlerLock);
+
+    /* Return pointer to the structure as the handle */
+    return VectoredHandlerEntry;
 }
 
 ULONG
 NTAPI
-RtlRemoveVectoredContinueHandler(
-    IN PVOID VectoredHandlerHandle)
+RtlpRemoveVectoredHandler(IN PVOID VectoredHandlerHandle,
+                          IN PLIST_ENTRY VectoredHandlerList)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PLIST_ENTRY CurrentEntry;
+    PRTL_VECTORED_HANDLER_ENTRY VectoredExceptionHandler;
+    BOOLEAN HandlerRemoved;
+    BOOLEAN HandlerFound;
+
+    /* Initialize these in case we don't find anything */
+    HandlerRemoved = FALSE;
+    HandlerFound = FALSE;
+
+    /* Acquire list lock */
+    RtlEnterCriticalSection(&RtlpVectoredHandlerLock);
+
+    /* Loop the list */
+    CurrentEntry = VectoredHandlerList->Flink;
+    while (CurrentEntry != VectoredHandlerList)
+    {
+        /* Get the struct */
+        VectoredExceptionHandler = CONTAINING_RECORD(CurrentEntry,
+                                                     RTL_VECTORED_HANDLER_ENTRY,
+                                                     ListEntry);
+
+        /* Does it match? */
+        if (VectoredExceptionHandler == VectoredHandlerHandle)
+        {
+            /*
+             * Great, this means it is a valid entry.
+             * However, it may be in use by the exception
+             * dispatcher, so we have a ref count to respect.
+             * If we can't remove it now then it will be done
+             * right after it is not in use anymore.
+             *
+             * Caller is supposed to keep track of if it has deleted the
+             * entry and should not call us twice for the same entry.
+             * We could maybe throw in some kind of ASSERT to detect this
+             * if this was to become a problem.
+             */
+            VectoredExceptionHandler->Refs--;
+            if (VectoredExceptionHandler->Refs == 0)
+            {
+                /* Not in use, ok to remove and free */
+                RemoveEntryList(&VectoredExceptionHandler->ListEntry);
+                HandlerRemoved = TRUE;
+            }
+
+            /* Found what we are looking for, stop searching */
+            HandlerFound = TRUE;
+            break;
+        }
+        else
+        {
+            /* Get the next entry */
+            CurrentEntry = CurrentEntry->Flink;
+        }
+    }
+
+    /* Done with the list, let go of the lock */
+    RtlLeaveCriticalSection(&RtlpVectoredHandlerLock);
+
+    /* Can we free what we found? */
+    if (HandlerRemoved)
+    {
+        /* Do it */
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    VectoredExceptionHandler);
+    }
+
+    /* Return whether we found it */
+    return (ULONG)HandlerFound;
+}
+
+BOOLEAN
+NTAPI
+RtlCallVectoredExceptionHandlers(IN PEXCEPTION_RECORD ExceptionRecord,
+                                 IN PCONTEXT Context)
+{
+    /* Call the shared routine */
+    return RtlpCallVectoredHandlers(ExceptionRecord,
+                                    Context,
+                                    &RtlpVectoredExceptionList);
+}
+
+VOID
+NTAPI
+RtlCallVectoredContinueHandlers(IN PEXCEPTION_RECORD ExceptionRecord,
+                                IN PCONTEXT Context)
+{
+    /*
+     * Call the shared routine (ignoring result,
+     * execution always continues at this point)
+     */
+    (VOID)RtlpCallVectoredHandlers(ExceptionRecord,
+                                   Context,
+                                   &RtlpVectoredContinueList);
+}
+
+DECLSPEC_HOTPATCH
+PVOID
+NTAPI
+RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
+                               IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
+{
+    /* Call the shared routine */
+    return RtlpAddVectoredHandler(FirstHandler,
+                                  VectoredHandler,
+                                  &RtlpVectoredExceptionList);
+}
+
+DECLSPEC_HOTPATCH
+PVOID
+NTAPI
+RtlAddVectoredContinueHandler(IN ULONG FirstHandler,
+                              IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
+{
+    /* Call the shared routine */
+    return RtlpAddVectoredHandler(FirstHandler,
+                                  VectoredHandler,
+                                  &RtlpVectoredContinueList);
+}
+
+//DECLSPEC_HOTPATCH
+ULONG
+NTAPI
+RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
+{
+    /* Call the shared routine */
+    return RtlpRemoveVectoredHandler(VectoredHandlerHandle,
+                                     &RtlpVectoredExceptionList);
+}
+
+//DECLSPEC_HOTPATCH
+ULONG
+NTAPI
+RtlRemoveVectoredContinueHandler(IN PVOID VectoredHandlerHandle)
+{
+    /* Call the shared routine */
+    return RtlpRemoveVectoredHandler(VectoredHandlerHandle,
+                                     &RtlpVectoredContinueList);
 }
 
 /* EOF */

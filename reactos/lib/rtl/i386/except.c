@@ -74,10 +74,13 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     ULONG_PTR StackLow, StackHigh;
     ULONG_PTR RegistrationFrameEnd;
 
-    /* Perform vectored exception handling (a dummy in kernel mode) */
+    /* Perform vectored exception handling for user mode */
     if (RtlCallVectoredExceptionHandlers(ExceptionRecord, Context))
     {
-        /* Exception handled, continue execution */
+        /* Exception handled, now call vectored continue handlers */
+        RtlCallVectoredContinueHandlers(ExceptionRecord, Context);
+
+        /* Continue execution */
         return TRUE;
     }
 
@@ -139,7 +142,7 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Handle the dispositions */
         switch (Disposition)
         {
-            /* Continue searching */
+            /* Continue execution */
             case ExceptionContinueExecution:
 
                 /* Check if it was non-continuable */
@@ -157,7 +160,11 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 }
                 else
                 {
-                    /* Return to caller */
+                    /* In user mode, call any registered vectored continue handlers */
+                    RtlCallVectoredContinueHandlers(ExceptionRecord,
+                                                    Context);
+
+                    /* Execution continues */
                     return TRUE;
                 }
 

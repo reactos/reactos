@@ -764,12 +764,20 @@ RtlpSafeCopyMemory(
 
 BOOLEAN
 NTAPI
-RtlCallVectoredExceptionHandlers(
-    _In_ PEXCEPTION_RECORD ExceptionRecord,
-    _In_ PCONTEXT Context)
+RtlCallVectoredExceptionHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
+                                 _In_ PCONTEXT Context)
 {
     /* In the kernel we don't have vectored exception handlers */
     return FALSE;
+}
+
+VOID
+NTAPI
+RtlCallVectoredContinueHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
+                                _In_ PCONTEXT Context)
+{
+    /* No vectored continue handlers either in kernel mode */
+    return;
 }
 
 /* EOF */
