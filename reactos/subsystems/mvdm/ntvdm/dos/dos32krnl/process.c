@@ -334,6 +334,7 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
     DWORD Result = ERROR_SUCCESS;
     WORD Segment = 0;
     WORD EnvBlock = 0;
+    WORD ExeSignature;
     WORD LoadSegment;
     WORD MaxAllocSize;
 
@@ -428,62 +429,84 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
         }
     }
 
-    /* Check if this is an EXE file or a COM file */
-    if (ExeBuffer[0] == 'M' && ExeBuffer[1] == 'Z')
+    /*
+     * Check if this is an EXE file or a COM file by looking
+     * at the MZ signature:
+     * 0x4D5A 'MZ': old signature (stored as 0x5A, 0x4D)
+     * 0x5A4D 'ZM': new signature (stored as 0x4D, 0x5A)
+     */
+    ExeSignature = *(PWORD)ExeBuffer;
+    if (ExeSignature == 'MZ' || ExeSignature == 'ZM')
     {
         /* EXE file */
         PIMAGE_DOS_HEADER Header;
-        DWORD BaseSize, i;
+        DWORD BaseSize;
         PDWORD RelocationTable;
         PWORD RelocWord;
         WORD RelocFactor;
-        BOOLEAN LoadHigh = FALSE;
+        WORD i;
 
         /* Get the MZ header */
         Header = (PIMAGE_DOS_HEADER)ExeBuffer;
 
         /* Get the base size of the file, in paragraphs (rounded up) */
-        BaseSize = ((((Header->e_cp - (Header->e_cblp != 0)) * 512)
-                   + Header->e_cblp + 0x0F) >> 4) - Header->e_cparhdr;
+#if 0   // Normally this is not needed to check for the number of bytes in the last pages.
+        BaseSize = ((((Header->e_cp - (Header->e_cblp != 0)) * 512) + Header->e_cblp) >> 4)
+                    - Header->e_cparhdr;
+#else
+        // e_cp is the number of 512-byte blocks. 512 == (1 << 9)
+        // so this corresponds to (1 << 5) number of paragraphs.
+        //
+        // For DOS compatibility we need to truncate BaseSize to a WORD value.
+        // This fact is exploited by some EXEs which are bigger than 1 Mb while
+        // being able to load on DOS, the main EXE code loads the remaining data.
+
+        BaseSize = ((Header->e_cp << 5) - Header->e_cparhdr) & 0xFFFF;
+#endif
 
         if (LoadType != DOS_LOAD_OVERLAY)
         {
-            DWORD TotalSize = BaseSize;
+            BOOLEAN LoadHigh = FALSE;
+            DWORD TotalSize;
 
-            /* Add the PSP size, in paragraphs */
-            TotalSize += sizeof(DOS_PSP) >> 4;
+            /* Find the maximum amount of memory that can be allocated */
+            DosAllocateMemory(0xFFFF, &MaxAllocSize);
 
-            /* Add the maximum size that should be allocated */
-            TotalSize += Header->e_maxalloc;
+            /* Compute the total needed size, in paragraphs */
+            TotalSize = BaseSize + (sizeof(DOS_PSP) >> 4);
 
+            /* We must have the required minimum amount of memory. If not, bail out. */
+            if (MaxAllocSize < TotalSize + Header->e_minalloc)
+            {
+                Result = ERROR_NOT_ENOUGH_MEMORY;
+                goto Cleanup;
+            }
+
+            /* Check if the program should be loaded high */
             if (Header->e_minalloc == 0 && Header->e_maxalloc == 0)
             {
-                /* This program should be loaded high */
-                LoadHigh = TRUE;
-                TotalSize = 0xFFFF;
+                /* Yes it should. Use all the available memory. */
+                LoadHigh  = TRUE;
+                TotalSize = MaxAllocSize;
             }
-
-            /* Make sure it does not pass 0xFFFF */
-            if (TotalSize > 0xFFFF) TotalSize = 0xFFFF;
+            else
+            {
+                /* Compute the maximum memory size that can be allocated */
+                if (Header->e_maxalloc != 0)
+                    TotalSize = min(TotalSize + Header->e_maxalloc, MaxAllocSize);
+                else
+                    TotalSize = MaxAllocSize; // Use all the available memory
+            }
 
             /* Try to allocate that much memory */
-            Segment = DosAllocateMemory((WORD)TotalSize, &MaxAllocSize);
+            Segment = DosAllocateMemory((WORD)TotalSize, NULL);
             if (Segment == 0)
             {
-                /* Check if there's at least enough memory for the minimum size */
-                if (MaxAllocSize < (BaseSize + (sizeof(DOS_PSP) >> 4) + Header->e_minalloc))
-                {
-                    Result = Sda->LastErrorCode;
-                    goto Cleanup;
-                }
-
-                /* Allocate that minimum amount */
-                TotalSize = MaxAllocSize;
-                Segment = DosAllocateMemory((WORD)TotalSize, NULL);
-                ASSERT(Segment != 0);
+                Result = Sda->LastErrorCode;
+                goto Cleanup;
             }
 
-            /* The process owns its own memory */
+            /* The process owns its memory */
             DosChangeMemoryOwner(Segment , Segment);
             DosChangeMemoryOwner(EnvBlock, Segment);
 
@@ -560,7 +583,7 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
                 goto Cleanup;
             }
 
-            /* The process owns its own memory */
+            /* The process owns its memory */
             DosChangeMemoryOwner(Segment , Segment);
             DosChangeMemoryOwner(EnvBlock, Segment);
 
