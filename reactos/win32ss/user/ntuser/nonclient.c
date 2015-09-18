@@ -1096,11 +1096,12 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
 
       if (Active)
       {
-         if (!(pWnd->state & WNDS_ACTIVEFRAME))
+         if (pWnd->state & WNDS_ACTIVEFRAME)
+            Flags |= DC_ACTIVE;
+         else
          {
             ERR("Wnd is active and not set active!\n");
          }
-         Flags |= DC_ACTIVE;
       }
 
       TempRect = CurrentRect;
