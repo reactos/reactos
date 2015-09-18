@@ -559,7 +559,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &CapturedFileName,
-                               0,
+                               OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -625,7 +625,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     Status = ObReferenceObjectByHandle(FileHandle,
                                        FILE_ALL_ACCESS,
                                        IoFileObjectType,
-                                       PreviousMode,
+                                       KernelMode,
                                        (PVOID*)&FileObject,
                                        NULL);
     if (!NT_SUCCESS(Status))

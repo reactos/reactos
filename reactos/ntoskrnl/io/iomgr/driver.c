@@ -1510,7 +1510,7 @@ try_again:
     ObjectSize = sizeof(DRIVER_OBJECT) + sizeof(EXTENDED_DRIVER_EXTENSION);
     InitializeObjectAttributes(&ObjectAttributes,
                                &LocalDriverName,
-                               OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                               OBJ_PERMANENT | OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 

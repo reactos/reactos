@@ -699,7 +699,7 @@ IopUpdateControlKeyWithResources(IN PDEVICE_NODE DeviceNode)
    /* Create/Open the Control key */
    InitializeObjectAttributes(&ObjectAttributes,
                               &Control,
-                              OBJ_CASE_INSENSITIVE,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               InstanceKey,
                               NULL);
    Status = ZwCreateKey(&ControlKey,
@@ -772,8 +772,8 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
                L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
   InitializeObjectAttributes(&ObjectAttributes,
                  &KeyName,
-                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-                 0,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE,
+                 NULL,
                  NULL);
   Status = ZwCreateKey(&ResourceMapKey,
                KEY_ALL_ACCESS,
@@ -788,7 +788,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
   RtlInitUnicodeString(&KeyName, Level1Key);
   InitializeObjectAttributes(&ObjectAttributes,
                  &KeyName,
-                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE,
                  ResourceMapKey,
                  NULL);
   Status = ZwCreateKey(&PnpMgrLevel1,
@@ -805,7 +805,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
   RtlInitUnicodeString(&KeyName, Level2Key);
   InitializeObjectAttributes(&ObjectAttributes,
                  &KeyName,
-                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE,
                  PnpMgrLevel1,
                  NULL);
   Status = ZwCreateKey(&PnpMgrLevel2,

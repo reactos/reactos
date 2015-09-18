@@ -1203,7 +1203,7 @@ CmpGetRegistryPath(IN PWCHAR ConfigPath)
         /* Setup the object attributes */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
         /* Open the key */
@@ -2185,7 +2185,7 @@ CmpSetVersionData(VOID)
     RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\MACHINE\\SOFTWARE");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = NtCreateKey(&SoftwareKeyHandle,
@@ -2204,7 +2204,7 @@ CmpSetVersionData(VOID)
     RtlInitUnicodeString(&KeyName, L"Microsoft");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                SoftwareKeyHandle,
                                NULL);
     Status = NtCreateKey(&MicrosoftKeyHandle,
@@ -2223,7 +2223,7 @@ CmpSetVersionData(VOID)
     RtlInitUnicodeString(&KeyName, L"Windows NT");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                MicrosoftKeyHandle,
                                NULL);
     Status = NtCreateKey(&WindowsNtKeyHandle,
@@ -2242,7 +2242,7 @@ CmpSetVersionData(VOID)
     RtlInitUnicodeString(&KeyName, L"CurrentVersion");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                WindowsNtKeyHandle,
                                NULL);
     Status = NtCreateKey(&CurrentVersionKeyHandle,

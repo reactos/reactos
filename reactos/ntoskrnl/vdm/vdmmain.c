@@ -54,7 +54,7 @@ KeI386VdmInitialize(VOID)
                          L"Control\\Wow");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(&RegHandle, KEY_READ, &ObjectAttributes);
@@ -99,7 +99,7 @@ VdmpInitialize(PVOID ControlData)
     /* Open the physical memory section */
     InitializeObjectAttributes(&ObjectAttributes,
                                &PhysMemName,
-                               0,
+                               OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenSection(&PhysMemHandle,

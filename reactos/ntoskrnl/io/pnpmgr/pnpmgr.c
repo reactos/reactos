@@ -805,7 +805,7 @@ IopStartDevice(
    RtlInitUnicodeString(&KeyName, L"Control");
    InitializeObjectAttributes(&ObjectAttributes,
                               &KeyName,
-                              OBJ_CASE_INSENSITIVE,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               InstanceHandle,
                               NULL);
    Status = ZwCreateKey(&ControlHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
@@ -1474,7 +1474,7 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
         /* Open key */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    hParent,
                                    NULL);
         Status = ZwCreateKey(&hKey,
@@ -1531,7 +1531,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
    RtlInitUnicodeString(&KeyName, L"LogConf");
    InitializeObjectAttributes(&ObjectAttributes,
                               &KeyName,
-                              OBJ_CASE_INSENSITIVE,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               InstanceKey,
                               NULL);
    Status = ZwCreateKey(&LogConfKey,
@@ -1599,7 +1599,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
    RtlInitUnicodeString(&KeyName, L"Control");
    InitializeObjectAttributes(&ObjectAttributes,
                               &KeyName,
-                              OBJ_CASE_INSENSITIVE,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               InstanceKey,
                               NULL);
    Status = ZwCreateKey(&ControlHandle, 0, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
@@ -4298,8 +4298,11 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
     */
 
    RtlInitUnicodeString(&KeyName, DeviceParametersKeyName);
-   InitializeObjectAttributes(&ObjectAttributes, &KeyName,
-                              OBJ_CASE_INSENSITIVE, *DevInstRegKey, NULL);
+   InitializeObjectAttributes(&ObjectAttributes,
+                              &KeyName,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                              *DevInstRegKey,
+                              NULL);
    Status = ZwCreateKey(DevInstRegKey, DesiredAccess, &ObjectAttributes,
                         0, NULL, ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0, NULL);
    ZwClose(ObjectAttributes.RootDirectory);
