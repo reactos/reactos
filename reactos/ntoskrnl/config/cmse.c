@@ -86,14 +86,14 @@ CmpHiveRootSecurityDescriptor(VOID)
     if (!NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 11, 4, Status, 0);
 
     /* Phase 5: Build the ACL */
-    Status = RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_ALL_ACCESS, Sid[0]);
-    Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_ALL_ACCESS, Sid[1]);
-    Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_READ, Sid[2]);
-    Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_READ, Sid[3]);
+    Status = RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_ALL_ACCESS, Sid[2]);
+    Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_ALL_ACCESS, Sid[3]);
+    Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_READ, Sid[0]);
+    Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_READ, Sid[1]);
     if (!NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 11, 5, Status, 0);
 
     /* Phase 5: Make the ACEs inheritable */
-    Status = RtlGetAce(Acl, 0,( PVOID*)&AceHeader);
+    Status = RtlGetAce(Acl, 0, (PVOID*)&AceHeader);
     ASSERT(NT_SUCCESS(Status));
     AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
     Status = RtlGetAce(Acl, 1, (PVOID*)&AceHeader);
