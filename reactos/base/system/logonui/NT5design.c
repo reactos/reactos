@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Logon User Interface Host
- * FILE:        subsys/system/logonui/NT5design.c
+ * FILE:        base/system/logonui/NT5design.c
  * PROGRAMMERS: Ged Murphy (gedmurphy@reactos.org)
  */
 

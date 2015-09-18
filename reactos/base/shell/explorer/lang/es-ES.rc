@@ -1,7 +1,7 @@
 /*
  * PROJECT:    ReactOS Explorer
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/shell/explorer-new/lang/es-ES.rc
+ * FILE:       base/shell/explorer/lang/es-ES.rc
  * PURPOSE:    Spanish Language File for ReactOS Explorer
  * TRANSLATOR: 2007       Marc Piulachs              (marc [dot] piulachs [at] codexchange [dot] net)
  * UPDATED:    2009-07    Gabriel Ilardi             (gabrielilardi [at] hotmail [dot] it)

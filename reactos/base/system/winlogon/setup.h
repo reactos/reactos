@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
- * FILE:            subsys/system/winlogon/setup.h
+ * FILE:            base/system/winlogon/setup.h
  * PURPOSE:         Setup support functions
  * PROGRAMMER:      Eric Kohl
  */
