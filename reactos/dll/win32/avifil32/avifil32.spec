@@ -1,79 +1,76 @@
-@ stdcall AVIBuildFilter(str long long) AVIBuildFilterA
-@ stdcall AVIBuildFilterA(str long long)
-@ stdcall AVIBuildFilterW(wstr long long)
-@ stdcall AVIClearClipboard()
-@ stdcall AVIFileAddRef(ptr)
-@ stdcall AVIFileCreateStream(ptr ptr ptr) AVIFileCreateStreamA
-@ stdcall AVIFileCreateStreamA(ptr ptr ptr)
-@ stdcall AVIFileCreateStreamW(ptr ptr ptr)
-@ stdcall AVIFileEndRecord(ptr)
-@ stdcall AVIFileExit()
-@ stdcall AVIFileGetStream(ptr ptr long long)
-@ stdcall AVIFileInfo (ptr ptr long) AVIFileInfoA # A in both Win95 and NT
-@ stdcall AVIFileInfoA(ptr ptr long)
-@ stdcall AVIFileInfoW(ptr ptr long)
-@ stdcall AVIFileInit()
-@ stdcall AVIFileOpen(ptr str long ptr) AVIFileOpenA
-@ stdcall AVIFileOpenA(ptr str long ptr)
-@ stdcall AVIFileOpenW(ptr wstr long ptr)
-@ stdcall AVIFileReadData(ptr long ptr ptr)
-@ stdcall AVIFileRelease(ptr)
-@ stdcall AVIFileWriteData(ptr long ptr long)
-@ stdcall AVIGetFromClipboard(ptr)
-@ stdcall AVIMakeCompressedStream(ptr ptr ptr ptr)
-@ stdcall AVIMakeFileFromStreams(ptr long ptr)
-@ stdcall AVIMakeStreamFromClipboard(long long ptr)
-@ stdcall AVIPutFileOnClipboard(ptr)
-@ varargs AVISave(str ptr ptr long ptr ptr) AVISaveA
-@ varargs AVISaveA(str ptr ptr long ptr ptr)
-@ stdcall AVISaveOptions(long long long ptr ptr)
-@ stdcall AVISaveOptionsFree(long ptr)
-@ stdcall AVISaveV(str ptr ptr long ptr ptr) AVISaveVA
-@ stdcall AVISaveVA(str ptr ptr long ptr ptr)
-@ stdcall AVISaveVW(wstr ptr ptr long ptr ptr)
-@ varargs AVISaveW(wstr ptr ptr long ptr ptr)
-@ stdcall AVIStreamAddRef(ptr)
-@ stdcall AVIStreamBeginStreaming(ptr long long long)
-@ stdcall AVIStreamCreate(ptr long long ptr)
-@ stdcall AVIStreamEndStreaming(ptr) 
-@ stdcall AVIStreamFindSample(ptr long long)
-@ stdcall AVIStreamGetFrame(ptr long)
-@ stdcall AVIStreamGetFrameClose(ptr)
-@ stdcall AVIStreamGetFrameOpen(ptr ptr)
-@ stdcall AVIStreamInfo (ptr ptr long) AVIStreamInfoA
-@ stdcall AVIStreamInfoA(ptr ptr long)
-@ stdcall AVIStreamInfoW(ptr ptr long)
-@ stdcall AVIStreamLength(ptr)
-@ stdcall AVIStreamOpenFromFile (ptr str long long long ptr) AVIStreamOpenFromFileA
-@ stdcall AVIStreamOpenFromFileA(ptr str long long long ptr)
-@ stdcall AVIStreamOpenFromFileW(ptr wstr long long long ptr)
-@ stdcall AVIStreamRead(ptr long long ptr long ptr ptr)
-@ stdcall AVIStreamReadData(ptr long ptr ptr)
-@ stdcall AVIStreamReadFormat(ptr long ptr long)
-@ stdcall AVIStreamRelease(ptr)
-@ stdcall AVIStreamSampleToTime(ptr long)
-@ stdcall AVIStreamSetFormat(ptr long ptr long)
-@ stdcall AVIStreamStart(ptr)
-@ stdcall AVIStreamTimeToSample(ptr long)
-@ stdcall AVIStreamWrite(ptr long long ptr long long ptr ptr)
-@ stdcall AVIStreamWriteData(ptr long ptr long)
-@ extern  CLSID_AVISimpleUnMarshal
-@ stdcall CreateEditableStream(ptr ptr)
+1 stdcall AVIBuildFilter(str long long) AVIBuildFilterA
+2 stdcall AVIBuildFilterA(str long long)
+3 stdcall AVIBuildFilterW(wstr long long)
+4 stdcall AVIClearClipboard()
+5 stdcall AVIFileAddRef(ptr)
+6 stdcall AVIFileCreateStream(ptr ptr ptr) AVIFileCreateStreamW
+7 stdcall AVIFileCreateStreamA(ptr ptr ptr)
+8 stdcall AVIFileCreateStreamW(ptr ptr ptr)
+9 stdcall AVIFileEndRecord(ptr)
+10 stdcall AVIFileExit()
+11 stdcall AVIFileGetStream(ptr ptr long long)
+12 stdcall AVIFileInfo (ptr ptr long) AVIFileInfoA # A in both Win95 and NT
+13 stdcall AVIFileInfoA(ptr ptr long)
+14 stdcall AVIFileInfoW(ptr ptr long)
+15 stdcall AVIFileInit()
+16 stdcall AVIFileOpen(ptr str long ptr) AVIFileOpenA
+17 stdcall AVIFileOpenA(ptr str long ptr)
+18 stdcall AVIFileOpenW(ptr wstr long ptr)
+19 stdcall AVIFileReadData(ptr long ptr ptr)
+20 stdcall AVIFileRelease(ptr)
+21 stdcall AVIFileWriteData(ptr long ptr long)
+22 stdcall AVIGetFromClipboard(ptr)
+23 stdcall AVIMakeCompressedStream(ptr ptr ptr ptr)
+24 stdcall AVIMakeFileFromStreams(ptr long ptr)
+25 stdcall AVIMakeStreamFromClipboard(long long ptr)
+26 stdcall AVIPutFileOnClipboard(ptr)
+27 varargs AVISave(str ptr ptr long ptr ptr) AVISaveA
+28 varargs AVISaveA(str ptr ptr long ptr ptr)
+29 stdcall AVISaveOptions(long long long ptr ptr)
+30 stdcall AVISaveOptionsFree(long ptr)
+31 stdcall AVISaveV(str ptr ptr long ptr ptr) AVISaveVA
+32 stdcall AVISaveVA(str ptr ptr long ptr ptr)
+33 stdcall AVISaveVW(wstr ptr ptr long ptr ptr)
+34 varargs AVISaveW(wstr ptr ptr long ptr ptr)
+35 stdcall AVIStreamAddRef(ptr)
+36 stdcall AVIStreamBeginStreaming(ptr long long long)
+37 stdcall AVIStreamCreate(ptr long long ptr)
+38 stdcall AVIStreamEndStreaming(ptr)
+39 stdcall AVIStreamFindSample(ptr long long)
+40 stdcall AVIStreamGetFrame(ptr long)
+41 stdcall AVIStreamGetFrameClose(ptr)
+42 stdcall AVIStreamGetFrameOpen(ptr ptr)
+43 stdcall AVIStreamInfo (ptr ptr long) AVIStreamInfoA
+44 stdcall AVIStreamInfoA(ptr ptr long)
+45 stdcall AVIStreamInfoW(ptr ptr long)
+46 stdcall AVIStreamLength(ptr)
+47 stdcall AVIStreamOpenFromFile (ptr str long long long ptr) AVIStreamOpenFromFileA
+48 stdcall AVIStreamOpenFromFileA(ptr str long long long ptr)
+49 stdcall AVIStreamOpenFromFileW(ptr wstr long long long ptr)
+50 stdcall AVIStreamRead(ptr long long ptr long ptr ptr)
+51 stdcall AVIStreamReadData(ptr long ptr ptr)
+52 stdcall AVIStreamReadFormat(ptr long ptr long)
+53 stdcall AVIStreamRelease(ptr)
+54 stdcall AVIStreamSampleToTime(ptr long)
+55 stdcall AVIStreamSetFormat(ptr long ptr long)
+56 stdcall AVIStreamStart(ptr)
+57 stdcall AVIStreamTimeToSample(ptr long)
+58 stdcall AVIStreamWrite(ptr long long ptr long long ptr ptr)
+59 stdcall AVIStreamWriteData(ptr long ptr long)
+60 stdcall CreateEditableStream(ptr ptr)
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
-@ stdcall -private DllRegisterServer()
-@ stdcall -private DllUnregisterServer()
-@ stdcall EditStreamClone(ptr ptr)
-@ stdcall EditStreamCopy(ptr ptr ptr ptr)
-@ stdcall EditStreamCut(ptr ptr ptr ptr)
-@ stdcall EditStreamPaste(ptr ptr ptr ptr long long)
-@ stdcall EditStreamSetInfo(ptr ptr long) EditStreamSetInfoA
-@ stdcall EditStreamSetInfoA(ptr ptr long)
-@ stdcall EditStreamSetInfoW(ptr ptr long)
-@ stdcall EditStreamSetName(ptr str) EditStreamSetNameA
-@ stdcall EditStreamSetNameA(ptr str)
-@ stdcall EditStreamSetNameW(ptr wstr)
-@ extern  IID_IAVIEditStream
-@ extern  IID_IAVIFile
-@ extern  IID_IAVIStream
-@ extern  IID_IGetFrame
+63 stdcall EditStreamClone(ptr ptr)
+64 stdcall EditStreamCopy(ptr ptr ptr ptr)
+65 stdcall EditStreamCut(ptr ptr ptr ptr)
+66 stdcall EditStreamPaste(ptr ptr ptr ptr long long)
+67 stdcall EditStreamSetInfo(ptr ptr long) EditStreamSetInfoA
+68 stdcall EditStreamSetInfoA(ptr ptr long)
+69 stdcall EditStreamSetInfoW(ptr ptr long)
+70 stdcall EditStreamSetName(ptr str) EditStreamSetNameA
+71 stdcall EditStreamSetNameA(ptr str)
+72 stdcall EditStreamSetNameW(ptr wstr)
+73 extern IID_IAVIEditStream
+74 extern IID_IAVIFile
+75 extern IID_IAVIStream
+76 extern IID_IGetFrame
