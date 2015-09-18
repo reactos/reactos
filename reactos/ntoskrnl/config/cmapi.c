@@ -2252,10 +2252,10 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
     /* Delete the flusher lock */
     ExDeleteResourceLite(CmHive->FlusherLock);
-    ExFreePoolWithTag(CmHive->FlusherLock, TAG_CM);
+    ExFreePoolWithTag(CmHive->FlusherLock, TAG_CMHIVE);
 
     /* Delete the view lock */
-    ExFreePoolWithTag(CmHive->ViewLock, TAG_CM);
+    ExFreePoolWithTag(CmHive->ViewLock, TAG_CMHIVE);
 
     /* Free the hive */
     CmpFree(CmHive, TAG_CM);

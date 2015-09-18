@@ -84,7 +84,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     }
 
     /* Allocate the hive */
-    Hive = ExAllocatePoolWithTag(NonPagedPool, sizeof(CMHIVE), TAG_CM);
+    Hive = ExAllocatePoolWithTag(NonPagedPool, sizeof(CMHIVE), TAG_CMHIVE);
     if (!Hive) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Setup null fields */
@@ -115,23 +115,23 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     /* Allocate the view log */
     Hive->ViewLock = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(KGUARDED_MUTEX),
-                                           TAG_CM);
+                                           TAG_CMHIVE);
     if (!Hive->ViewLock)
     {
         /* Cleanup allocation and fail */
-        ExFreePoolWithTag(Hive, TAG_CM);
+        ExFreePoolWithTag(Hive, TAG_CMHIVE);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Allocate the flush lock */
     Hive->FlusherLock = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(ERESOURCE),
-                                              TAG_CM);
+                                              TAG_CMHIVE);
     if (!Hive->FlusherLock)
     {
         /* Cleanup allocations and fail */
-        ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
-        ExFreePoolWithTag(Hive, TAG_CM);
+        ExFreePoolWithTag(Hive->ViewLock, TAG_CMHIVE);
+        ExFreePoolWithTag(Hive, TAG_CMHIVE);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -202,9 +202,9 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     {
         /* Cleanup allocations and fail */
         ExDeleteResourceLite(Hive->FlusherLock);
-        ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);
-        ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
-        ExFreePoolWithTag(Hive, TAG_CM);
+        ExFreePoolWithTag(Hive->FlusherLock, TAG_CMHIVE);
+        ExFreePoolWithTag(Hive->ViewLock, TAG_CMHIVE);
+        ExFreePoolWithTag(Hive, TAG_CMHIVE);
         return Status;
     }
 
@@ -220,9 +220,9 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
         {
             /* Cleanup allocations and fail */
             ExDeleteResourceLite(Hive->FlusherLock);
-            ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);
-            ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
-            ExFreePoolWithTag(Hive, TAG_CM);
+            ExFreePoolWithTag(Hive->FlusherLock, TAG_CMHIVE);
+            ExFreePoolWithTag(Hive->ViewLock, TAG_CMHIVE);
+            ExFreePoolWithTag(Hive, TAG_CMHIVE);
             return STATUS_REGISTRY_CORRUPT;
         }
     }
@@ -252,10 +252,10 @@ CmpDestroyHive(IN PCMHIVE CmHive)
 
     /* Delete the flusher lock */
     ExDeleteResourceLite(CmHive->FlusherLock);
-    ExFreePoolWithTag(CmHive->FlusherLock, TAG_CM);
+    ExFreePoolWithTag(CmHive->FlusherLock, TAG_CMHIVE);
 
     /* Delete the view lock */
-    ExFreePoolWithTag(CmHive->ViewLock, TAG_CM);
+    ExFreePoolWithTag(CmHive->ViewLock, TAG_CMHIVE);
 
     /* Destroy the security descriptor cache */
     CmpDestroySecurityCache(CmHive);

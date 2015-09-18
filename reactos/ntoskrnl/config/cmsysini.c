@@ -980,7 +980,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  SecurityDescriptor);
 
     /* Free the security descriptor */
-    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CMSD);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Add the hive to the hive list */
@@ -1124,7 +1124,7 @@ CmpCreateRegistryRoot(VOID)
                             0,
                             0,
                             (PVOID*)&RootKey);
-    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CMSD);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Sanity check, and get the key cell */
@@ -1551,7 +1551,7 @@ CmpInitializeHiveList(IN USHORT Flag)
     }
 
     /* Get rid of the SD */
-    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CMSD);
 
     /* Link SECURITY to SAM */
     CmpLinkKeyToHive(L"\\Registry\\Machine\\Security\\SAM",
@@ -1747,7 +1747,7 @@ CmInitSystem1(VOID)
     CmpAddToHiveFileList(HardwareHive);
 
     /* Free the security descriptor */
-    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CMSD);
 
     /* Fill out the Hardware key with the ARC Data from the Loader */
     Status = CmpInitializeHardwareConfiguration(KeLoaderBlock);

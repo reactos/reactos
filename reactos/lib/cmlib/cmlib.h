@@ -143,7 +143,10 @@
 #endif
 #endif
 
-#define TAG_CM 'CM25'
+#define TAG_CM     '  MC'
+#define TAG_KCB    'bkMC'
+#define TAG_CMHIVE 'vHMC'
+#define TAG_CMSD   'DSMC'
 
 #define CMAPI NTAPI
 
