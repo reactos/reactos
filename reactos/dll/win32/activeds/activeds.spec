@@ -5,6 +5,8 @@
 7 stdcall ADsBuildVarArrayStr(ptr long ptr)
 8 stdcall ADsBuildVarArrayInt(ptr long ptr)
 9 stdcall ADsOpenObject(wstr wstr wstr long ptr ptr)
+#@ stdcall -private DllCanUnloadNow()
+#@ stdcall -private DllGetClassObject(ptr ptr ptr)
 12 stdcall ADsSetLastError(long ptr ptr)
 13 stdcall ADsGetLastError(ptr ptr long ptr long)
 14 stdcall AllocADsMem(long)
@@ -22,7 +24,8 @@
 26 cdecl PropVariantToAdsType2() # unknown prototype
 27 cdecl ConvertSecDescriptorToVariant() # unknown prototype
 28 cdecl ConvertSecurityDescriptorToSecDes() # unknown prototype
-#@ stdcall -private DllCanUnloadNow()
-#@ stdcall -private DllGetClassObject(ptr ptr ptr)
+# BinarySDToSecurityDescriptor
+# SecurityDescriptorToBinarySD
+# ConvertTrusteeToSid
 #@ stdcall -private DllRegisterServer()
 #@ stdcall -private DllUnregisterServer()
