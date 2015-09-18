@@ -74,3 +74,7 @@
 74 extern IID_IAVIFile
 75 extern IID_IAVIStream
 76 extern IID_IGetFrame
+
+# FIXME: Not in native
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
