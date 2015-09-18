@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            keyboard.h
+ * FILE:            subsystems/mvdm/ntvdm/hardware/keyboard.h
  * PURPOSE:         Keyboard emulation
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

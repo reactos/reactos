@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            mouse.h
+ * FILE:            subsystems/mvdm/ntvdm/hardware/mouse.h
  * PURPOSE:         PS/2 Mouse emulation
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

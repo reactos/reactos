@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            speaker.c
+ * FILE:            subsystems/mvdm/ntvdm/hardware/sound/speaker.c
  * PURPOSE:         PC Speaker emulation
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

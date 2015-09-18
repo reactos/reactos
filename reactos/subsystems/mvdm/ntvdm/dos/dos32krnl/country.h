@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dos/dos32krnl/country.h
+ * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/country.h
  * PURPOSE:         DOS32 Country support
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *

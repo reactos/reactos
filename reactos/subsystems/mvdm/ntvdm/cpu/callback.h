@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            callback.h
+ * FILE:            subsystems/mvdm/ntvdm/cpu/callback.h
  * PURPOSE:         32-bit Interrupt Handlers
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

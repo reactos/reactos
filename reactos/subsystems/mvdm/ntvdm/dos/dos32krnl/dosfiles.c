@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dos/dos32krnl/dosfiles.c
+ * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/dosfiles.c
  * PURPOSE:         DOS32 Files Support
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

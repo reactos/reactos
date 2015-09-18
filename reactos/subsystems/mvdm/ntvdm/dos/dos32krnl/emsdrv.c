@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            emsdrv.c
+ * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/emsdrv.c
  * PURPOSE:         DOS EMS Driver
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *

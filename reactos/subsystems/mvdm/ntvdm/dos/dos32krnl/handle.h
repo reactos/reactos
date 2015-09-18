@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dos/dos32krnl/handle.h
+ * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/handle.h
  * PURPOSE:         DOS32 Handles (Job File Table)
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

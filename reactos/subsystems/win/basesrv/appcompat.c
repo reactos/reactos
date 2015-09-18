@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Base API Server DLL
- * FILE:            subsystems/win/basesrv/init.c
+ * FILE:            subsystems/win/basesrv/appcompat.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */

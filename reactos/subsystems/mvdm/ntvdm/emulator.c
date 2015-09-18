@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            emulator.c
+ * FILE:            subsystems/mvdm/ntvdm/emulator.c
  * PURPOSE:         Minimal x86 machine emulator for the VDM
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

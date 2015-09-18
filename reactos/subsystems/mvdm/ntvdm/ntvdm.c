@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            ntvdm.c
+ * FILE:            subsystems/mvdm/ntvdm/ntvdm.c
  * PURPOSE:         Virtual DOS Machine
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

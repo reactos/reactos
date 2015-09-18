@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            cmos.c
+ * FILE:            subsystems/mvdm/ntvdm/hardware/cmos.c
  * PURPOSE:         CMOS Real Time Clock emulation
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            svga.c
+ * FILE:            subsystems/mvdm/ntvdm/hardware/video/svga.c
  * PURPOSE:         SuperVGA hardware emulation (Cirrus Logic CL-GD5434 compatible)
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

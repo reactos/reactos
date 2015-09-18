@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dos/dos32krnl/bios.c
+ * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/bios.c
  * PURPOSE:         DOS32 Bios
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

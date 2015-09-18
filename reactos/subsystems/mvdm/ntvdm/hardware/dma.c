@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dma.c
+ * FILE:            subsystems/mvdm/ntvdm/hardware/dma.c
  * PURPOSE:         ISA DMA - Direct Memory Access Controller emulation -
  *                  i8237A compatible with 74LS612 Memory Mapper extension
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

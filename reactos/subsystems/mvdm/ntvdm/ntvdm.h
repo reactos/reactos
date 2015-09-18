@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            ntvdm.h
+ * FILE:            subsystems/mvdm/ntvdm/ntvdm.h
  * PURPOSE:         Header file to define commonly used stuff
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

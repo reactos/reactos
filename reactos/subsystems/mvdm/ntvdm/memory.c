@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            memory.c
+ * FILE:            subsystems/mvdm/ntvdm/memory.c
  * PURPOSE:         Memory Management
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

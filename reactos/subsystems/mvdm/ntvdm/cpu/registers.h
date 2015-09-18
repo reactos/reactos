@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            registers.c
+ * FILE:            subsystems/mvdm/ntvdm/cpu/registers.h
  * PURPOSE:         Exported functions for manipulating registers
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

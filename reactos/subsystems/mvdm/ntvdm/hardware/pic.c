@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            pic.c
+ * FILE:            subsystems/mvdm/ntvdm/hardware/pic.c
  * PURPOSE:         Programmable Interrupt Controller emulation
  *                  (Interrupt Controller Adapter (ICA) in Windows terminology)
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

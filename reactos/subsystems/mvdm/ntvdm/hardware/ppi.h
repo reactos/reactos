@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            ppi.h
+ * FILE:            subsystems/mvdm/ntvdm/hardware/ppi.h
  * PURPOSE:         Programmable Peripheral Interface emulation -
  *                  i8255A-5 compatible
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

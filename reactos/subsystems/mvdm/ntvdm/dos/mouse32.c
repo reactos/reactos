@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            mouse32.c
+ * FILE:            subsystems/mvdm/ntvdm/dos/mouse32.c
  * PURPOSE:         VDM 32-bit compatible PS/2 MOUSE.COM driver
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */

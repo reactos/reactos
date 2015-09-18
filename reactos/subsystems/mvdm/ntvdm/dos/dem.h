@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dem.h
+ * FILE:            subsystems/mvdm/ntvdm/dos/dem.h
  * PURPOSE:         DOS 32-bit Emulation Support Library -
  *                  This library is used by the built-in NTVDM DOS32 and by
  *                  the NT 16-bit DOS in Windows (via BOPs). It also exposes
