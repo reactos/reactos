@@ -1114,7 +1114,7 @@ CmpCreateRegistryRoot(VOID)
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
-                               NULL);
+                               SecurityDescriptor);
     Status = ObCreateObject(KernelMode,
                             CmpKeyObjectType,
                             &ObjectAttributes,
