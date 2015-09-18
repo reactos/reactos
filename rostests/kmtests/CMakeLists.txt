@@ -35,6 +35,7 @@ list(APPEND KMTEST_DRV_SOURCE
     npfs/NpfsHelpers.c
     npfs/NpfsReadWrite.c
     npfs/NpfsVolumeInfo.c
+    ntos_cm/CmSecurity.c
     ntos_ex/ExCallback.c
     ntos_ex/ExDoubleList.c
     ntos_ex/ExFastMutex.c
