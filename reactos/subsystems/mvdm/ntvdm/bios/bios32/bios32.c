@@ -721,7 +721,30 @@ static VOID WINAPI BiosTimerIrq(LPWORD Stack)
      * because some programs may hook only BIOS_SYS_TIMER_INTERRUPT
      * for their purpose...
      */
+
+    WORD AX = getAX();
+    WORD CX = getCX();
+    WORD DX = getDX();
+    WORD BX = getBX();
+    WORD BP = getBP();
+    WORD SI = getSI();
+    WORD DI = getDI();
+    WORD DS = getDS();
+    WORD ES = getES();
+
     Int32Call(&BiosContext, BIOS_SYS_TIMER_INTERRUPT);
+
+    setAX(AX);
+    setCX(CX);
+    setDX(DX);
+    setBX(BX);
+    setBP(BP);
+    setSI(SI);
+    setDI(DI);
+    setDS(DS);
+    setES(ES);
+    setCF(0);
+
     // BiosSystemTimerInterrupt(Stack);
     PicIRQComplete(LOBYTE(Stack[STACK_INT_NUM]));
 }

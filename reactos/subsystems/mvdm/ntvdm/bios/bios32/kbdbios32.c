@@ -209,8 +209,15 @@ VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
      * In return, if CF is set we continue processing the scan code
      * stored in AL, and if not, we skip it.
      */
-    BYTE CF = getCF();
     WORD AX = getAX();
+    WORD CX = getCX();
+    WORD DX = getDX();
+    WORD BX = getBX();
+    WORD BP = getBP();
+    WORD SI = getSI();
+    WORD DI = getDI();
+    WORD DS = getDS();
+    WORD ES = getES();
 
     setCF(1);
     setAL(IOReadB(PS2_DATA_PORT));
@@ -222,7 +229,15 @@ VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
     ScanCode = getAL();
 
     setAX(AX);
-    setCF(CF);
+    setCX(CX);
+    setDX(DX);
+    setBX(BX);
+    setBP(BP);
+    setSI(SI);
+    setDI(DI);
+    setDS(DS);
+    setES(ES);
+    setCF(0);
 
     if (ScanCode == 0xE0)
     {
