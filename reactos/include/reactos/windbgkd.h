@@ -113,6 +113,15 @@
 #define DbgKdSwitchPartition                0x0000315D
 #define DbgKdMaximumManipulate              0x0000315E
 
+/*
+ * Three possible new API messages as well as the new Max
+ * if these were to be added. Be careful about implementing these.
+ */
+//#define DbgKdWriteCustomBreakpointApi     0x0000315E
+//#define DbgKdGetContextExApi              0x0000315F
+//#define DbgKdSetContextExApi              0x00003160
+//#define DbgKdMaximumManipulate            0x00003161
+
 //
 // Debug I/O Types
 //
@@ -868,6 +877,22 @@ typedef struct _DBGKD_TRACE_IO
        DBGKD_PRINT_TRACE PrintTrace;
    } u;
 } DBGKD_TRACE_IO, *PDBGKD_TRACE_IO;
+
+typedef struct _DBGKD_WRITE_CUSTOM_BREAKPOINT
+{
+   ULONG64 BreakPointAddress;
+   ULONG64 BreakPointInstruction;
+   ULONG BreakPointHandle;
+   UCHAR BreakPointInstructionSize;
+   UCHAR BreakPointInstructionAlignment;
+} DBGKD_WRITE_CUSTOM_BREAKPOINT, *PDBGKD_WRITE_CUSTOM_BREAKPOINT;
+
+typedef struct _DBGKD_CONTEXT_EX
+{
+   ULONG Offset;
+   ULONG ByteCount;
+   ULONG BytesCopied;
+} DBGKD_CONTEXT_EX, *PDBGKD_CONTEXT_EX;
 
 static
 __inline

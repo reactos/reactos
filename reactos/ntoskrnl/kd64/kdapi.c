@@ -1359,24 +1359,29 @@ SendPacket:
                 KdpNotSupported(&ManipulateState);
                 break;
 
-            case 0x315f: // This one is unknown, but used by WinDbg, keep silent!
-
-                /* Setup an empty message, with failure */
-                Data.Length = 0;
-                ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
-
-                /* Send it */
-                KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
-                             &Header,
-                             &Data,
-                             &KdpContext);
-                break;
-
-            /* Unsupported Message */
+            /* Unsupported Messages */
             default:
 
-                /* Setup an empty message, with failure */
+                /* Send warning */
                 KdpDprintf("Received Unhandled API %lx\n", ManipulateState.ApiNumber);
+
+            /*
+             * These 3 messages are unimplemented by us, but one (DbgKdGetContextExApi)
+             * is sent by WinDbg as of late during kernel debugging for some reason even though
+             * our MaxManipulate in the version block does not report it as being available.
+             *
+             * Any of these being sent to begin with is most likely a bug in WinDbg, so these
+             * are ignored and do not print a warning message to not spam the debug output.
+             * So far, WinDbg seems perfectly fine with this.
+             *
+             * DbgKdSetContextExApi complements the Get and DbgKdWriteCustomBreakpointApi
+             * fills the gap after DbgKdSwitchPartition (0x315D).
+             */
+            case 0x315E: // DbgKdWriteCustomBreakpointApi
+            case 0x315F: // DbgKdGetContextExApi
+            case 0x3160: // DbgKdSetContextExApi
+
+                /* Setup an empty message, with failure */
                 Data.Length = 0;
                 ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
 
