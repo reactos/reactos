@@ -222,8 +222,131 @@ TestEventConcurrent(
     }
 }
 
+#define NUM_SCHED_TESTS 1000
+
+typedef struct
+{
+    KEVENT Event;
+    KEVENT WaitEvent;
+    ULONG Counter;
+    KPRIORITY PriorityIncrement;
+    ULONG CounterValues[NUM_SCHED_TESTS];
+} COUNT_THREAD_DATA, *PCOUNT_THREAD_DATA;
+
+static
+VOID
+NTAPI
+CountThread(
+    IN OUT PVOID Context)
+{
+    PCOUNT_THREAD_DATA ThreadData = Context;
+    PKEVENT Event = &ThreadData->Event;
+    volatile ULONG *Counter = &ThreadData->Counter;
+    ULONG *CounterValue = ThreadData->CounterValues;
+    KPRIORITY Priority;
+
+    Priority = KeQueryPriorityThread(KeGetCurrentThread());
+    ok_eq_long(Priority, 8L);
+
+    while (CounterValue < &ThreadData->CounterValues[NUM_SCHED_TESTS])
+    {
+        KeSetEvent(&ThreadData->WaitEvent, IO_NO_INCREMENT, TRUE);
+        KeWaitForSingleObject(Event, Executive, KernelMode, FALSE, NULL);
+        *CounterValue++ = *Counter;
+    }
+
+    Priority = KeQueryPriorityThread(KeGetCurrentThread());
+    ok_eq_long(Priority, 8L + min(ThreadData->PriorityIncrement, 7));
+}
+
+static
+VOID
+NTAPI
+TestEventScheduling(
+    _In_ PVOID Context)
+{
+    PCOUNT_THREAD_DATA ThreadData;
+    PKTHREAD Thread;
+    NTSTATUS Status;
+    LONG PreviousState;
+    ULONG i;
+    volatile ULONG *Counter;
+    KPRIORITY PriorityIncrement;
+    KPRIORITY Priority;
+
+    UNREFERENCED_PARAMETER(Context);
+
+    ThreadData = ExAllocatePoolWithTag(PagedPool, sizeof(*ThreadData), 'CEmK');
+    if (skip(ThreadData != NULL, "Out of memory\n"))
+    {
+        return;
+    }
+    KeInitializeEvent(&ThreadData->Event, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&ThreadData->WaitEvent, SynchronizationEvent, FALSE);
+    Counter = &ThreadData->Counter;
+
+    for (PriorityIncrement = 0; PriorityIncrement <= 8; PriorityIncrement++)
+    {
+        ThreadData->PriorityIncrement = PriorityIncrement;
+        ThreadData->Counter = 0;
+        RtlFillMemory(ThreadData->CounterValues,
+                      sizeof(ThreadData->CounterValues),
+                      0xFE);
+        Thread = KmtStartThread(CountThread, ThreadData);
+        Priority = KeQueryPriorityThread(KeGetCurrentThread());
+        ok(Priority == 8, "[%lu] Priority = %lu\n", PriorityIncrement, Priority);
+        for (i = 1; i <= NUM_SCHED_TESTS; i++)
+        {
+            Status = KeWaitForSingleObject(&ThreadData->WaitEvent, Executive, KernelMode, FALSE, NULL);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+            PreviousState = KeSetEvent(&ThreadData->Event, PriorityIncrement, FALSE);
+            *Counter = i;
+            ok_eq_long(PreviousState, 0L);
+        }
+        Priority = KeQueryPriorityThread(KeGetCurrentThread());
+        ok(Priority == 8, "[%lu] Priority = %lu\n", PriorityIncrement, Priority);
+        KmtFinishThread(Thread, NULL);
+
+        if (PriorityIncrement == 0)
+        {
+            /* Both threads have the same priority, so either can win the race */
+            ok(ThreadData->CounterValues[0] == 0 || ThreadData->CounterValues[0] == 1,
+               "[%lu] Counter 0 = %lu\n",
+               PriorityIncrement, ThreadData->CounterValues[0]);
+        }
+        else
+        {
+            /* CountThread has the higher priority, it will always win */
+            ok(ThreadData->CounterValues[0] == 0,
+               "[%lu] Counter 0 = %lu\n",
+               PriorityIncrement, ThreadData->CounterValues[0]);
+        }
+        for (i = 1; i < NUM_SCHED_TESTS; i++)
+        {
+            if (PriorityIncrement == 0)
+            {
+                ok(ThreadData->CounterValues[i] == i ||
+                   ThreadData->CounterValues[i] == i + 1,
+                   "[%lu] Counter %lu = %lu, expected %lu or %lu\n",
+                   PriorityIncrement, i,
+                   ThreadData->CounterValues[i], i, i + 1);
+            }
+            else
+            {
+                ok(ThreadData->CounterValues[i] == ThreadData->CounterValues[i - 1] + 1,
+                   "[%lu] Counter %lu = %lu, expected %lu\n",
+                   PriorityIncrement, i,
+                   ThreadData->CounterValues[i], ThreadData->CounterValues[i - 1] + 1);
+            }
+        }
+    }
+
+    ExFreePoolWithTag(ThreadData, 'CEmK');
+}
+
 START_TEST(KeEvent)
 {
+    PKTHREAD Thread;
     KEVENT Event;
     KIRQL Irql;
     KIRQL Irqls[] = { PASSIVE_LEVEL, APC_LEVEL, DISPATCH_LEVEL };
@@ -264,4 +387,7 @@ START_TEST(KeEvent)
 
     ok_irql(PASSIVE_LEVEL);
     KmtSetIrql(PASSIVE_LEVEL);
+
+    Thread = KmtStartThread(TestEventScheduling, NULL);
+    KmtFinishThread(Thread, NULL);
 }
