@@ -34,7 +34,7 @@ enum _DCFLAGS
     DC_IN_CLONEPDEV      = 0x1000,
     DC_REDIRECTION       = 0x2000,
     DC_SHAREACCESS       = 0x4000,
-#ifdef DBG
+#if DBG
     DC_PREPARED          = 0x8000
 #endif
 };

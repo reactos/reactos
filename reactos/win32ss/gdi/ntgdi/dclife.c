@@ -556,7 +556,7 @@ DC_vPrepareDCsForBlit(
                                prcFirst->bottom) ;
     }
 
-#ifdef DBG
+#if DBG
     pdcFirst->fs |= DC_PREPARED;
 #endif
 
@@ -586,7 +586,7 @@ DC_vPrepareDCsForBlit(
                                prcSecond->bottom) ;
     }
 
-#ifdef DBG
+#if DBG
     pdcSecond->fs |= DC_PREPARED;
 #endif
 }
@@ -601,7 +601,7 @@ DC_vFinishBlit(PDC pdc1, PDC pdc2)
         MouseSafetyOnDrawEnd(pdc1->ppdev);
         EngReleaseSemaphore(pdc1->ppdev->hsemDevLock);
     }
-#ifdef DBG
+#if DBG
     pdc1->fs &= ~DC_PREPARED;
 #endif
 
@@ -612,7 +612,7 @@ DC_vFinishBlit(PDC pdc1, PDC pdc2)
             MouseSafetyOnDrawEnd(pdc2->ppdev);
             EngReleaseSemaphore(pdc2->ppdev->hsemDevLock);
         }
-#ifdef DBG
+#if DBG
         pdc2->fs &= ~DC_PREPARED;
 #endif
     }
