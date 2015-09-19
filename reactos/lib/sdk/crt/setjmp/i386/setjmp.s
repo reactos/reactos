@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Implementation of _setjmp/longjmp
- * FILE:              lib/msvcrt/i386/setjmp.s
+ * FILE:              lib/sdk/crt/setjmp/i386/setjmp.s
  * PROGRAMMER:        Ge van Geldorp (ge@gse.nl)
  * NOTES:             Implementation is not complete, see Wine source for a more
  *                    complete implementation

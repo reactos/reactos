@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/errno.c
+ * FILE:        lib/sdk/crt/stdlib/errno.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  *

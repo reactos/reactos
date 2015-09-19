@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/process/cwait.c
+ * FILE:        lib/sdk/crt/process/_cwait.c
  * PURPOSE:     Waits for a process to exit
  */
 

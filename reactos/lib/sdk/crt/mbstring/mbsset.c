@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/mbsset.c
+ * FILE:        lib/sdk/crt/mbstring/mbsset.c
  * PURPOSE:     Fills a string with a multibyte character
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

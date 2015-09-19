@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/sdk/crt/mbstring/ismbpun.c
+ * FILE:        lib/sdk/crt/mbstring/mbsspn.c
  * PURPOSE:
  * PROGRAMER:   
  * UPDATE HISTORY:

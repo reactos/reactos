@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/swprintf.c
+ * FILE:            lib/sdk/crt/printf/_sxprintf.c
  * PURPOSE:         Implementation of swprintf
  * PROGRAMMER:      Timo Kreuzer
  */

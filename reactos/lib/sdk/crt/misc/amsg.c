@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/misc/amsg.c
+ * FILE:        lib/sdk/crt/misc/amsg.c
  * PURPOSE:     Print runtime error messages
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

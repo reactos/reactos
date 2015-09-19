@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Run-Time Library
- * FILE:              lib/rtl/i386/floor.S
+ * FILE:              lib/sdk/crt/math/i386/floor_asm.s
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
  *
  * Copyright (C) 2002 Michael Ringgaard.

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/process/dll.c
+ * FILE:        lib/sdk/crt/process/dll.c
  * PURPOSE:     Dll support routines
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

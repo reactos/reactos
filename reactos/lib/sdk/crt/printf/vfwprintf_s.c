@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/vfwprintf.c
+ * FILE:            lib/sdk/crt/printf/vfwprintf_s.c
  * PURPOSE:         Implementation of vfwprintf
  * PROGRAMMER:      Timo Kreuzer
  *                  Samuel Serapión

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/sdk/crt/itow.c
+ * FILE:        lib/sdk/crt/string/itow.c
  * PURPOSE:     converts a integer to wchar_t
  * PROGRAMER:
  * UPDATE HISTORY:

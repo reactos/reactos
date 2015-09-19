@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/mbsrchr.c
+ * FILE:        lib/sdk/crt/mbstring/mbsrchr.c
  * PURPOSE:     Searches for a character in reverse
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

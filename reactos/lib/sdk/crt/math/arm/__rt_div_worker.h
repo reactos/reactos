@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       BSD - See COPYING.ARM in the top level directory
  * PROJECT:         ReactOS CRT library
- * FILE:            lib/sdk/crt/math/arm/__rt_udiv.c
+ * FILE:            lib/sdk/crt/math/arm/__rt_div_worker.h
  * PURPOSE:         Implementation of __rt_udiv
  * PROGRAMMER:      Timo Kreuzer
  * REFERENCE:       http://research.microsoft.com/pubs/70645/tr-2008-141.pdf

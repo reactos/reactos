@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/_vscprintf.c
+ * FILE:            lib/sdk/crt/printf/_vscwprintf.c
  * PURPOSE:         Implementation of _vscprintf
  */
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS CRT
- * FILE:             lib/crt/math/sin.c
+ * FILE:             lib/sdk/crt/math/sin.c
  * PURPOSE:          Generic C Implementation of sin
  * PROGRAMMER:       Timo Kreuzer (timo.kreuzer@reactos.org)
  */
