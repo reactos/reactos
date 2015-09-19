@@ -468,7 +468,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                     if (HandleTable[i].Allocated &&
                         RtlCompareMemory(HandleName,
                                          HandleTable[i].Name,
-                                         sizeof(HandleTable[i].Name)) != 0)
+                                         sizeof(HandleTable[i].Name)) == sizeof(HandleTable[i].Name))
                     {
                         HandleFound = &HandleTable[i];
                         break;
