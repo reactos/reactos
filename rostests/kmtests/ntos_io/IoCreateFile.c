@@ -454,7 +454,7 @@ UserModeTest(VOID)
     ok_eq_hex(IoStatusBlock.Status, 0xFFFFFFFF);
     if (Status == STATUS_SUCCESS)
     {
-        ObCloseHandle(ParentHandle, KernelMode);
+        ObCloseHandle(ParentHandle, UserMode);
     }
 
     /* Attempt relative target open */
@@ -462,7 +462,7 @@ UserModeTest(VOID)
     IoStatusBlock.Information = 0xFFFFFFFF;
     InitializeObjectAttributes(&ObjectAttributes,
                                &SystemRoot,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL, NULL);
     Status = ZwOpenFile(&SystemRootHandle,
                         GENERIC_WRITE | GENERIC_READ | SYNCHRONIZE,
@@ -478,7 +478,7 @@ UserModeTest(VOID)
         IoStatusBlock.Information = 0xFFFFFFFF;
         InitializeObjectAttributes(&ObjectAttributes,
                                    &Regedit,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    SystemRootHandle,
                                    NULL);
         Status = IoCreateFile(&ParentHandle,

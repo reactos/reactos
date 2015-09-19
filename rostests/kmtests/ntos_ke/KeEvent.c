@@ -155,6 +155,7 @@ TestEventConcurrent(
     PVOID ThreadObjects[RTL_NUMBER_OF(Threads)];
     LONG State;
     PKTHREAD Thread = KeGetCurrentThread();
+    OBJECT_ATTRIBUTES ObjectAttributes;
 
     LongTimeout.QuadPart = -100 * MILLISECOND;
     ShortTimeout.QuadPart = -1 * MILLISECOND;
@@ -165,7 +166,12 @@ TestEventConcurrent(
     {
         Threads[i].Event = Event;
         Threads[i].Signal = FALSE;
-        Status = PsCreateSystemThread(&Threads[i].Handle, GENERIC_ALL, NULL, NULL, NULL, WaitForEventThread, &Threads[i]);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   NULL,
+                                   OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   NULL);
+        Status = PsCreateSystemThread(&Threads[i].Handle, GENERIC_ALL, &ObjectAttributes, NULL, NULL, WaitForEventThread, &Threads[i]);
         ok_eq_hex(Status, STATUS_SUCCESS);
         Status = ObReferenceObjectByHandle(Threads[i].Handle, SYNCHRONIZE, *PsThreadType, KernelMode, (PVOID *)&Threads[i].Thread, NULL);
         ok_eq_hex(Status, STATUS_SUCCESS);

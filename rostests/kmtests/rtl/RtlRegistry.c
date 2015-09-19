@@ -8,12 +8,6 @@
 #define KMT_EMULATE_KERNEL
 #include <kmt_test.h>
 
-#ifdef KMT_KERNEL_MODE
-#define KMT_KERNEL_HANDLE OBJ_KERNEL_HANDLE
-#else
-#define KMT_KERNEL_HANDLE 0
-#endif
-
 #ifndef RTL_NUMBER_OF
 #define RTL_NUMBER_OF(x) (sizeof(x) / sizeof(x[0]))
 #endif
@@ -212,7 +206,7 @@ START_TEST(RtlRegistry)
     RtlInitUnicodeString(&KeyName, L"\\Registry\\MACHINE\\Software");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE | KMT_KERNEL_HANDLE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(&SoftwareHandle,
@@ -225,7 +219,7 @@ START_TEST(RtlRegistry)
     RtlInitUnicodeString(&KeyName, L"RtlRegistryKmtestKey");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE | KMT_KERNEL_HANDLE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                SoftwareHandle,
                                NULL);
     Status = ZwCreateKey(&KeyHandle,
