@@ -23,7 +23,7 @@
     for (TheIndex = 0; TheIndex < (ThreadCount); ++TheIndex)                    \
     {                                                                           \
         TheThread = CONTAINING_RECORD(TheEntry, KTHREAD,                        \
-                                        WaitBlock[0].WaitListEntry);            \
+                                      WaitBlock[0].WaitListEntry);              \
         ok_eq_pointer(TheThread, (ThreadList)[TheIndex]);                       \
         ok_eq_pointer(TheEntry->Flink->Blink, TheEntry);                        \
         TheEntry = TheEntry->Flink;                                             \
@@ -153,8 +153,8 @@ TestEventConcurrent(
     KPRIORITY Priority;
     LARGE_INTEGER LongTimeout, ShortTimeout;
     INT i;
-    KWAIT_BLOCK WaitBlock[MAXIMUM_WAIT_OBJECTS];
-    PVOID ThreadObjects[MAXIMUM_WAIT_OBJECTS];
+    KWAIT_BLOCK WaitBlock[RTL_NUMBER_OF(Threads)];
+    PVOID ThreadObjects[RTL_NUMBER_OF(Threads)];
     LONG State;
     PKTHREAD Thread = KeGetCurrentThread();
 
@@ -226,10 +226,10 @@ START_TEST(KeEvent)
     KEVENT Event;
     KIRQL Irql;
     KIRQL Irqls[] = { PASSIVE_LEVEL, APC_LEVEL, DISPATCH_LEVEL };
-    INT i;
+    ULONG i;
     KPRIORITY PriorityIncrement;
 
-    for (i = 0; i < sizeof Irqls / sizeof Irqls[0]; ++i)
+    for (i = 0; i < RTL_NUMBER_OF(Irqls); ++i)
     {
         KeRaiseIrql(Irqls[i], &Irql);
         TestEventFunctional(&Event, NotificationEvent, Irqls[i]);
@@ -237,7 +237,7 @@ START_TEST(KeEvent)
         KeLowerIrql(Irql);
     }
 
-    for (i = 0; i < sizeof Irqls / sizeof Irqls[0]; ++i)
+    for (i = 0; i < RTL_NUMBER_OF(Irqls); ++i)
     {
         /* creating threads above DISPATCH_LEVEL... nope */
         if (Irqls[i] >= DISPATCH_LEVEL)
@@ -246,6 +246,8 @@ START_TEST(KeEvent)
         trace("IRQL: %u\n", Irqls[i]);
         for (PriorityIncrement = -1; PriorityIncrement <= 8; ++PriorityIncrement)
         {
+            if (PriorityIncrement < 0 && KmtIsCheckedBuild)
+                continue;
             trace("PriorityIncrement: %ld\n", PriorityIncrement);
             trace("-> Checking KeSetEvent, NotificationEvent\n");
             TestEventConcurrent(&Event, NotificationEvent, Irqls[i], KeSetEvent, PriorityIncrement, 1, TRUE);
