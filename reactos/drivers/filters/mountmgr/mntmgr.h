@@ -420,6 +420,18 @@ HasNoDriveLetterEntry(
     IN PMOUNTDEV_UNIQUE_ID UniqueId
 );
 
+VOID
+UpdateReplicatedUniqueIds(
+    IN PDEVICE_INFORMATION DeviceInformation,
+    IN PDATABASE_ENTRY DatabaseEntry 
+);
+
+BOOLEAN
+IsUniqueIdPresent(
+    IN PDEVICE_EXTENSION DeviceExtension,
+    IN PDATABASE_ENTRY DatabaseEntry 
+);
+
 /* point.c */
 NTSTATUS
 MountMgrCreatePointWorker(

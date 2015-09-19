@@ -44,11 +44,6 @@ LONG Unloading;
 static const WCHAR Cunc[] = L"\\??\\C:";
 
 /*
- * TODO:
- * - ReconcileThisDatabaseWithMasterWorker
- */
-
-/*
  * @implemented
  */
 BOOLEAN
