@@ -243,7 +243,7 @@ static VOID FromMouseCoordinates(PCOORD Position)
 static VOID CallMouseUserHandlers(USHORT CallMask)
 {
     USHORT i;
-    USHORT AX, BX, CX, DX, SI, DI;
+    USHORT AX, BX, CX, DX, BP, SI, DI, DS, ES;
     COORD Position = DriverState.Position;
 
     ToMouseCoordinates(&Position);
@@ -262,8 +262,11 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
         BX = getBX();
         CX = getCX();
         DX = getDX();
+        BP = getBP();
         SI = getSI();
         DI = getDI();
+        DS = getDS();
+        ES = getES();
 
         setAX(CallMask);
         setBX(DriverState.ButtonState);
@@ -284,8 +287,11 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
         setBX(BX);
         setCX(CX);
         setDX(DX);
+        setBP(BP);
         setSI(SI);
         setDI(DI);
+        setDS(DS);
+        setES(ES);
     }
 
     for (i = 0; i < ARRAYSIZE(DriverState.Handlers); ++i)
