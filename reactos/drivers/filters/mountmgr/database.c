@@ -32,7 +32,6 @@ PWSTR DatabasePath = L"\\Registry\\Machine\\System\\MountedDevices";
 PWSTR OfflinePath = L"\\Registry\\Machine\\System\\MountedDevices\\Offline";
 
 UNICODE_STRING RemoteDatabase = RTL_CONSTANT_STRING(L"\\System Volume Information\\MountPointManagerRemoteDatabase");
-UNICODE_STRING RemoteDatabaseFile = RTL_CONSTANT_STRING(L"\\:$MountMgrRemoteDatabase");
 
 /*
  * @implemented
@@ -1664,22 +1663,16 @@ ReconcileAllDatabasesWithMaster(IN PDEVICE_EXTENSION DeviceExtension)
  */
 VOID
 NTAPI
-MigrateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
-                            IN PVOID Context)
+CreateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
+                           IN PVOID Context)
 {
-    ULONG Length;
     NTSTATUS Status;
-    PVOID TmpBuffer;
-    CHAR Disposition;
-    LARGE_INTEGER ByteOffset;
+    HANDLE Database = 0;
+    UNICODE_STRING DatabaseName;
     PMIGRATE_WORK_ITEM WorkItem;
     IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE Migrate = 0, Database = 0;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     PDEVICE_INFORMATION DeviceInformation;
-    BOOLEAN PreviousMode, Complete = FALSE;
-    UNICODE_STRING DatabaseName, DatabaseFile;
-    OBJECT_ATTRIBUTES ObjectAttributes, MigrateAttributes;
-#define TEMP_BUFFER_SIZE 0x200
 
     UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -1690,15 +1683,8 @@ MigrateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
     /* Reconstruct appropriate string */
     DatabaseName.Length = DeviceInformation->DeviceName.Length + RemoteDatabase.Length;
     DatabaseName.MaximumLength = DatabaseName.Length + sizeof(WCHAR);
-
-    DatabaseFile.Length = DeviceInformation->DeviceName.Length + RemoteDatabaseFile.Length;
-    DatabaseFile.MaximumLength = DatabaseFile.Length + sizeof(WCHAR);
-
     DatabaseName.Buffer = AllocatePool(DatabaseName.MaximumLength);
-    DatabaseFile.Buffer = AllocatePool(DatabaseFile.MaximumLength);
-    /* Allocate buffer that will be used to swap contents */
-    TmpBuffer = AllocatePool(TEMP_BUFFER_SIZE);
-    if (!DatabaseName.Buffer || !DatabaseFile.Buffer || !TmpBuffer)
+    if (DatabaseName.Buffer == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Cleanup;
@@ -1715,13 +1701,9 @@ MigrateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
 
     /* Finish initating strings */
     RtlCopyMemory(DatabaseName.Buffer, DeviceInformation->DeviceName.Buffer, DeviceInformation->DeviceName.Length);
-    RtlCopyMemory(DatabaseFile.Buffer, DeviceInformation->DeviceName.Buffer, DeviceInformation->DeviceName.Length);
     RtlCopyMemory(DatabaseName.Buffer + (DeviceInformation->DeviceName.Length / sizeof(WCHAR)),
                   RemoteDatabase.Buffer, RemoteDatabase.Length);
-    RtlCopyMemory(DatabaseFile.Buffer + (DeviceInformation->DeviceName.Length / sizeof(WCHAR)),
-                  RemoteDatabaseFile.Buffer, RemoteDatabaseFile.Length);
     DatabaseName.Buffer[DatabaseName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    DatabaseFile.Buffer[DatabaseFile.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Create database */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -1730,7 +1712,7 @@ MigrateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
                                NULL,
                                NULL);
 
-    Status = ZwCreateFile(&Database,
+    Status = IoCreateFile(&Database,
                           SYNCHRONIZE | READ_CONTROL | FILE_WRITE_ATTRIBUTES |
                           FILE_READ_ATTRIBUTES | FILE_WRITE_PROPERTIES | FILE_READ_PROPERTIES |
                           FILE_APPEND_DATA | FILE_WRITE_DATA | FILE_READ_DATA,
@@ -1742,123 +1724,32 @@ MigrateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
                           FILE_CREATE,
                           FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_ALERT,
                           NULL,
-                          0);
+                          0,
+                          CreateFileTypeNone,
+                          NULL,
+                          IO_STOP_ON_SYMLINK);
     if (!NT_SUCCESS(Status))
     {
+        if (Status == STATUS_STOPPED_ON_SYMLINK)
+        {
+            DPRINT1("Attempt to exploit CVE-2015-1769. See CORE-10216\n");
+        }
+
         Database = 0;
         goto Cleanup;
     }
 
-    InitializeObjectAttributes(&MigrateAttributes,
-                               &DatabaseFile,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL,
-                               NULL);
-
-    /* Disable hard errors and open the database that will be copied */
-    PreviousMode = IoSetThreadHardErrorMode(FALSE);
-    Status = ZwCreateFile(&Migrate,
-                          SYNCHRONIZE | READ_CONTROL | FILE_WRITE_ATTRIBUTES |
-                          FILE_READ_ATTRIBUTES | FILE_WRITE_PROPERTIES | FILE_READ_PROPERTIES |
-                          FILE_APPEND_DATA | FILE_WRITE_DATA | FILE_READ_DATA,
-                          &MigrateAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN,
-                          0,
-                          FILE_OPEN,
-                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_ALERT,
-                          NULL,
-                          0);
-    IoSetThreadHardErrorMode(PreviousMode);
-    if (!NT_SUCCESS(Status))
-    {
-        Migrate = 0;
-    }
-    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-        Status = STATUS_SUCCESS;
-        Complete = TRUE;
-    }
-    if (!NT_SUCCESS(Status) || Complete)
-    {
-        goto Cleanup;
-    }
-
-    ByteOffset.QuadPart = 0LL;
-    PreviousMode = IoSetThreadHardErrorMode(FALSE);
-    /* Now, loop as long it's possible */
-    while (Status == STATUS_SUCCESS)
-    {
-        /* Read data from existing database */
-        Status = ZwReadFile(Migrate,
-                            NULL,
-                            NULL,
-                            NULL,
-                            &IoStatusBlock,
-                            TmpBuffer,
-                            TEMP_BUFFER_SIZE,
-                            &ByteOffset,
-                            NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            break;
-        }
-
-        /* And write them into new database */
-        Length = (ULONG)IoStatusBlock.Information;
-        Status = ZwWriteFile(Database,
-                             NULL,
-                             NULL,
-                             NULL,
-                             &IoStatusBlock,
-                             TmpBuffer,
-                             Length,
-                             &ByteOffset,
-                             NULL);
-        ByteOffset.QuadPart += Length;
-    }
-    IoSetThreadHardErrorMode(PreviousMode);
-
-    /* Delete old databse if it was well copied */
-    if (Status == STATUS_END_OF_FILE)
-    {
-        Disposition = 1;
-        Status = ZwSetInformationFile(Migrate,
-                                      &IoStatusBlock,
-                                      &Disposition,
-                                      sizeof(Disposition),
-                                      FileDispositionInformation);
-    }
-
-    /* Migration is over */
-
 Cleanup:
-    if (TmpBuffer)
-    {
-        FreePool(TmpBuffer);
-    }
-
-    if (DatabaseFile.Buffer)
-    {
-        FreePool(DatabaseFile.Buffer);
-    }
-
     if (DatabaseName.Buffer)
     {
         FreePool(DatabaseName.Buffer);
-    }
-
-    if (Migrate)
-    {
-        ZwClose(Migrate);
     }
 
     if (NT_SUCCESS(Status))
     {
         DeviceInformation->Migrated = 1;
     }
-    else if (Database)
+    else if (Database != 0)
     {
         ZwClose(Database);
     }
@@ -1870,15 +1761,14 @@ Cleanup:
     WorkItem->Database = Database;
 
     KeSetEvent(WorkItem->Event, 0, FALSE);
-#undef TEMP_BUFFER_SIZE
 }
 
 /*
  * @implemented
  */
 NTSTATUS
-MigrateRemoteDatabase(IN PDEVICE_INFORMATION DeviceInformation,
-                      IN OUT PHANDLE Database)
+CreateRemoteDatabase(IN PDEVICE_INFORMATION DeviceInformation,
+                     IN OUT PHANDLE Database)
 {
     KEVENT Event;
     NTSTATUS Status;
@@ -1907,7 +1797,7 @@ MigrateRemoteDatabase(IN PDEVICE_INFORMATION DeviceInformation,
 
     /* And queue it */
     IoQueueWorkItem(WorkItem->WorkItem,
-                    MigrateRemoteDatabaseWorker,
+                    CreateRemoteDatabaseWorker,
                     DelayedWorkQueue,
                     WorkItem);
 
@@ -1960,7 +1850,7 @@ OpenRemoteDatabase(IN PDEVICE_INFORMATION DeviceInformation,
     /* Disable hard errors */
     PreviousMode = IoSetThreadHardErrorMode(FALSE);
 
-    Status = ZwCreateFile(&Database,
+    Status = IoCreateFile(&Database,
                           SYNCHRONIZE | READ_CONTROL | FILE_WRITE_ATTRIBUTES |
                           FILE_READ_ATTRIBUTES | FILE_WRITE_PROPERTIES | FILE_READ_PROPERTIES |
                           FILE_APPEND_DATA | FILE_WRITE_DATA | FILE_READ_DATA,
@@ -1972,12 +1862,19 @@ OpenRemoteDatabase(IN PDEVICE_INFORMATION DeviceInformation,
                           (!MigrateDatabase || DeviceInformation->Migrated == 0) ? FILE_OPEN_IF : FILE_OPEN,
                           FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_ALERT,
                           NULL,
-                          0);
+                          0,
+                          CreateFileTypeNone,
+                          NULL,
+                          IO_STOP_ON_SYMLINK);
+    if (Status == STATUS_STOPPED_ON_SYMLINK)
+    {
+        DPRINT1("Attempt to exploit CVE-2015-1769. See CORE-10216\n");
+    }
 
     /* If base it to be migrated and was opened successfully, go ahead */
     if (MigrateDatabase && NT_SUCCESS(Status))
     {
-        MigrateRemoteDatabase(DeviceInformation, &Database);
+        CreateRemoteDatabase(DeviceInformation, &Database);
     }
 
     IoSetThreadHardErrorMode(PreviousMode);
