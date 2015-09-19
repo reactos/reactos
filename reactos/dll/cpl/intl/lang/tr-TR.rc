@@ -196,6 +196,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Change default settings"
+    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
+These changes apply to the logon screen and new user accounts.\n\
+The computer must be rebooted, in order to apply the changes to some system services."
+END
+
+STRINGTABLE
+BEGIN
     IDS_ERROR "Yanlışlık"
     IDS_ERROR_SYMBOL_SEPARATE "Kısa târih bileşenleri ayıracı yanlış simge(ler) içeriyor."
     IDS_ERROR_SYMBOL_FORMAT_SHORT "Kısa târih biçimi yanlış simge(ler) içeriyor."

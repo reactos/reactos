@@ -346,28 +346,51 @@ AdvancedPageProc(HWND hwndDlg,
                  WPARAM wParam,
                  LPARAM lParam)
 {
-    switch(uMsg)
+    PGLOBALDATA pGlobalData;
+
+    pGlobalData = (PGLOBALDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
+            pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
             InitLanguagesList(hwndDlg);
             InitCodePagesList(hwndDlg);
-        }
-        break;
+            break;
 
         case WM_COMMAND:
-        {
             switch (LOWORD(wParam))
             {
                 case IDC_LANGUAGE_COMBO:
-                {
                     if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                }
-                break;
+                    }
+                    break;
+
+                case IDC_APPLY_CUR_USER_DEF_PROFILE:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        if (SendDlgItemMessageW(hwndDlg, IDC_APPLY_CUR_USER_DEF_PROFILE, BM_GETCHECK, 0, 0))
+                        {
+                            ResourceMessageBox(hwndDlg,
+                                               MB_OK | MB_ICONWARNING,
+                                               IDS_APPLY_DEFAULT_TITLE,
+                                               IDS_APPLY_DEFAULT_TEXT);
+                            pGlobalData->bApplyToDefaultUser = TRUE;
+                        }
+                        else
+                        {
+                            pGlobalData->bApplyToDefaultUser = FALSE;
+                        }
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
             }
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {

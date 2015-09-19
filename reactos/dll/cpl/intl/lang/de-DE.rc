@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON "&Details...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Zusätzliche Sprachunterstützung", -1, 5, 62, 234, 82
     LTEXT "Die meisten Sprachen sind standardmäßig installiert. Um weitere Sprachen zu installieren, aktivieren Sie die unteren Kontrollkästchen.", -1, 12, 72, 220, 18
-    CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links-Schreibstil installieren.", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "Dateien für &ostasiatische Sprachen installieren.", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    AUTOCHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links-Schreibstil installieren.", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    AUTOCHECKBOX "Dateien für &ostasiatische Sprachen installieren.", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -52,7 +52,7 @@ BEGIN
     GROUPBOX "Codepage Konvertierungstabellen", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Standardeinstellungen für Benutzerkonten", -1, 5, 193, 234, 30
-    CHECKBOX "Einstellungen &auf das aktive und das Standardkonto anwenden.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    AUTOCHECKBOX "Einstellungen &auf das aktive und das Standardkonto anwenden.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -190,6 +190,15 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Regionale Einstellungen"
     IDS_CPLDESCRIPTION "Wählen Sie Anzeigeeinstellungen für Sprache, Zahlen, Währung, Uhrzeit und Datum aus."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Standardeinstellungen ändern"
+    IDS_APPLY_DEFAULT_TEXT "Die Einstellungen sollen auf das Standardbenutzerprofil angewendet werden.\n\n\
+Diese Änderungen gelten für den Anmeldebildschirm und alle neuen Benutzerkonten.\n\
+Der Computer muss neu gestartet werden, damit die Änderungen für einige Systemdienste\n\
+übernommen werden können."
 END
 
 STRINGTABLE

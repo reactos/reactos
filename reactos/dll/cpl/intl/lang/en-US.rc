@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON "De&tails...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Additional language support", -1, 5, 62, 234, 82
     LTEXT "Most languages are installed by default. To install additional languages, select the appropriate check box below.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstall files for complex script and right-to-left languages", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "In&stall files for East Asian languages", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    AUTOCHECKBOX "I&nstall files for complex script and right-to-left languages", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    AUTOCHECKBOX "In&stall files for East Asian languages", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -52,7 +52,7 @@ BEGIN
     GROUPBOX "Code page conversion tables", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Default user account settings", -1, 5, 193, 234, 30
-    CHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    AUTOCHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -190,6 +190,14 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Regional Options"
     IDS_CPLDESCRIPTION "Select languages and format numbers, currencies, times and date."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Change default settings"
+    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
+These changes apply to the logon screen and new user accounts.\n\
+The computer must be rebooted, in order to apply the changes to some system services."
 END
 
 STRINGTABLE

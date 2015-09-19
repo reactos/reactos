@@ -195,3 +195,26 @@ BEGIN
     IDS_CPLNAME "Alternativat Rajonale"
     IDS_CPLDESCRIPTION "Zgjidhni gjuhën dhe formatin e numrave, monedhat, orën dhe datën."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Change default settings"
+    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
+These changes apply to the logon screen and new user accounts.\n\
+The computer must be rebooted, in order to apply the changes to some system services."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Error"
+    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
+    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
+    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
+    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+END

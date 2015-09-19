@@ -298,6 +298,7 @@ FreeCurrentLocale(
             HeapFree(GetProcessHeap(), 0, pGlobalData->pLocaleArray[i]);
     }
     HeapFree(GetProcessHeap(), 0, pGlobalData->pLocaleArray);
+    pGlobalData->pLocaleArray = NULL;
 }
 
 
@@ -342,16 +343,50 @@ VOID
 SaveCurrentLocale(
     PGLOBALDATA pGlobalData)
 {
-    // HKCU\\Control Panel\\International\\Locale = 0409 (type=0)
-    // HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409" (type=0)
-    // HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409" (type=0)
-
-    // Set locale
     HKEY localeKey;
     DWORD ret;
     WCHAR value[9];
     DWORD valuesize;
     DWORD i;
+
+    wsprintf(value, L"%08x", (DWORD)pGlobalData->lcid);
+    valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
+
+    if (pGlobalData->bApplyToDefaultUser)
+    {
+        ret = RegOpenKeyExW(HKEY_USERS,
+                            L".DEFAULT\\Control Panel\\International",
+                            0,
+                            KEY_WRITE,
+                            &localeKey);
+        if (ret != ERROR_SUCCESS)
+        {
+            PrintErrorMsgBox(IDS_ERROR_DEF_INT_KEY_REG);
+            return;
+        }
+
+        ret = RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (PBYTE)value, valuesize);
+        if (ret != ERROR_SUCCESS)
+        {
+            RegCloseKey(localeKey);
+            PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+            return;
+        }
+
+        for (i = 0; i < pGlobalData->dwLocaleCount; i++)
+        {
+            RegSetValueExW(localeKey,
+                           LocaleKeyData[i].pKeyName,
+                           0,
+                           REG_SZ,
+                           (PBYTE)pGlobalData->pLocaleArray[i],
+                           (wcslen(pGlobalData->pLocaleArray[i]) + 1) * sizeof(WCHAR));
+        }
+
+        /* Flush and close the locale key */
+        RegFlushKey(localeKey);
+        RegCloseKey(localeKey);
+    }
 
     ret = RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\International",
                         0, KEY_READ | KEY_WRITE, &localeKey);
@@ -360,9 +395,6 @@ SaveCurrentLocale(
         PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
         return;
     }
-
-    wsprintf(value, L"%08x", (DWORD)pGlobalData->lcid);
-    valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
 
     ret = RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (PBYTE)value, valuesize);
     if (ret != ERROR_SUCCESS)
@@ -488,7 +520,7 @@ GeneralPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBALDATA));
+            pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
             if (pGlobalData)
@@ -611,7 +643,6 @@ GeneralPageProc(HWND hwndDlg,
             if (pGlobalData)
             {
                 FreeCurrentLocale(pGlobalData);
-                HeapFree(GetProcessHeap(), 0, pGlobalData);
             }
             break;
     }

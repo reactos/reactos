@@ -199,6 +199,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Change default settings"
+    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
+These changes apply to the logon screen and new user accounts.\n\
+The computer must be rebooted, in order to apply the changes to some system services."
+END
+
+STRINGTABLE
+BEGIN
     IDS_ERROR "Error"
     IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
     IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"

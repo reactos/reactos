@@ -54,6 +54,8 @@ typedef struct _APPLET
 
 typedef struct _GLOBALDATA
 {
+    BOOL bApplyToDefaultUser;
+
     GEOID geoid;
     BOOL fGeoIdChanged;
 
@@ -69,6 +71,13 @@ extern DWORD UnattendLCID;
 
 /* intl.c */
 VOID PrintErrorMsgBox(UINT msg);
+
+VOID
+ResourceMessageBox(
+    HWND hwnd,
+    UINT uType,
+    UINT uCaptionId,
+    UINT uMessageId);
 
 /* languages.c */
 INT_PTR CALLBACK

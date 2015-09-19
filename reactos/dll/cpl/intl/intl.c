@@ -60,8 +60,24 @@ PrintErrorMsgBox(UINT msg)
     MessageBox(NULL, szErrorText, szErrorCaption, MB_OK | MB_ICONERROR);
 }
 
+VOID
+ResourceMessageBox(
+    HWND hwnd,
+    UINT uType,
+    UINT uCaptionId,
+    UINT uMessageId)
+{
+    WCHAR szErrorText[BUFFERSIZE];
+    WCHAR szErrorCaption[BUFFERSIZE];
+
+    LoadStringW(hApplet, uMessageId, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
+    LoadStringW(hApplet, uCaptionId, szErrorCaption, sizeof(szErrorCaption) / sizeof(WCHAR));
+
+    MessageBoxW(hwnd, szErrorText, szErrorCaption, uType);
+}
+
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPARAM lParam)
 {
     ZeroMemory(psp, sizeof(PROPSHEETPAGE));
     psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -69,6 +85,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
     psp->hInstance = hApplet;
     psp->pszTemplate = MAKEINTRESOURCE(idDlg);
     psp->pfnDlgProc = DlgProc;
+    psp->lParam = lParam;
 }
 
 BOOL
@@ -135,14 +152,18 @@ ParseSetupInf(VOID)
 static LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
+    TCHAR Caption[BUFFERSIZE];
     PROPSHEETPAGE psp[3];
     PROPSHEETHEADER psh;
-    TCHAR Caption[BUFFERSIZE];
+    PGLOBALDATA pGlobalData;
+    LONG ret;
 
     if (OpenSetupInf())
     {
         ParseSetupInf();
     }
+
+    pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBALDATA));
 
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
@@ -157,11 +178,15 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_GENERALPAGE, GeneralPageProc);
-    InitPropSheetPage(&psp[1], IDD_LANGUAGESPAGE, LanguagesPageProc);
-    InitPropSheetPage(&psp[2], IDD_ADVANCEDPAGE, AdvancedPageProc);
+    InitPropSheetPage(&psp[0], IDD_GENERALPAGE, GeneralPageProc, (LPARAM)pGlobalData);
+    InitPropSheetPage(&psp[1], IDD_LANGUAGESPAGE, LanguagesPageProc, (LPARAM)pGlobalData);
+    InitPropSheetPage(&psp[2], IDD_ADVANCEDPAGE, AdvancedPageProc, (LPARAM)pGlobalData);
 
-    return (LONG)(PropertySheet(&psh) != -1);
+    ret = (LONG)(PropertySheet(&psh) != -1);
+
+    HeapFree(GetProcessHeap(), 0, pGlobalData);
+
+    return ret;
 }
 
 
