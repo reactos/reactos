@@ -523,7 +523,7 @@ RtlpGetRegistryHandle(IN ULONG RelativeTo,
     /* Initialize the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -742,19 +742,21 @@ RtlFormatCurrentUserKeyPath(OUT PUNICODE_STRING KeyPath)
     PAGED_CODE_RTL();
 
     /* Open the thread token */
-    Status = ZwOpenThreadToken(NtCurrentThread(),
-                               TOKEN_QUERY,
-                               TRUE,
-                               &TokenHandle);
+    Status = ZwOpenThreadTokenEx(NtCurrentThread(),
+                                 TOKEN_QUERY,
+                                 TRUE,
+                                 OBJ_KERNEL_HANDLE,
+                                 &TokenHandle);
     if (!NT_SUCCESS(Status))
     {
         /* We failed, is it because we don't have a thread token? */
         if (Status != STATUS_NO_TOKEN) return Status;
 
         /* It is, so use the process token */
-        Status = ZwOpenProcessToken(NtCurrentProcess(),
-                                    TOKEN_QUERY,
-                                    &TokenHandle);
+        Status = ZwOpenProcessTokenEx(NtCurrentProcess(),
+                                      TOKEN_QUERY,
+                                      OBJ_KERNEL_HANDLE,
+                                      &TokenHandle);
         if (!NT_SUCCESS(Status)) return Status;
     }
 
