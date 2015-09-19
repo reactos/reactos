@@ -4,6 +4,7 @@
 #include <ntifs.h>
 #include <mountdev.h>
 #include <ntddvol.h>
+#include <ntdddisk.h>
 #include <wdmguid.h>
 #include <ndk/psfuncs.h>
 #include <ntdddisk.h>
@@ -23,8 +24,6 @@
 
 #define FILE_READ_PROPERTIES  0x00000008
 #define FILE_WRITE_PROPERTIES 0x00000010
-
-#define GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER 0x80000000
 /* Leave FIXME */
 
 typedef struct _DEVICE_EXTENSION

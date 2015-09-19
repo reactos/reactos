@@ -1161,6 +1161,9 @@ MountMgrValidateBackPointer(IN PASSOCIATED_DEVICE_ENTRY AssociatedDeviceEntry,
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 MountMgrQueryVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
                          IN PDEVICE_INFORMATION DeviceInformation,
@@ -1448,6 +1451,9 @@ MountMgrQueryVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
                             IN PIRP Irp)
