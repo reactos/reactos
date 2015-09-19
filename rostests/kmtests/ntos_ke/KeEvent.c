@@ -225,15 +225,12 @@ START_TEST(KeEvent)
 {
     KEVENT Event;
     KIRQL Irql;
-    KIRQL Irqls[] = { PASSIVE_LEVEL, APC_LEVEL, DISPATCH_LEVEL, HIGH_LEVEL };
+    KIRQL Irqls[] = { PASSIVE_LEVEL, APC_LEVEL, DISPATCH_LEVEL };
     INT i;
     KPRIORITY PriorityIncrement;
 
     for (i = 0; i < sizeof Irqls / sizeof Irqls[0]; ++i)
     {
-        /* DRIVER_IRQL_NOT_LESS_OR_EQUAL (TODO: on MP only?) */
-        if (Irqls[i] > DISPATCH_LEVEL && KmtIsCheckedBuild)
-            return;
         KeRaiseIrql(Irqls[i], &Irql);
         TestEventFunctional(&Event, NotificationEvent, Irqls[i]);
         TestEventFunctional(&Event, SynchronizationEvent, Irqls[i]);
@@ -243,7 +240,7 @@ START_TEST(KeEvent)
     for (i = 0; i < sizeof Irqls / sizeof Irqls[0]; ++i)
     {
         /* creating threads above DISPATCH_LEVEL... nope */
-        if (Irqls[i] >= DISPATCH_LEVEL && KmtIsCheckedBuild)
+        if (Irqls[i] >= DISPATCH_LEVEL)
             continue;
         KeRaiseIrql(Irqls[i], &Irql);
         trace("IRQL: %u\n", Irqls[i]);
