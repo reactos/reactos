@@ -7,8 +7,6 @@
 
 #include <kmt_test.h>
 
-/* TODO: why does GCC have 3 tests less than MSVC?! */
-
 #define CheckEvent(Event, ExpectedType, State, ExpectedWaitNext,                \
                             Irql, ThreadList, ThreadCount) do                   \
 {                                                                               \
@@ -177,7 +175,10 @@ TestEventConcurrent(
         while (!Threads[i].Signal)
         {
             Status = KeDelayExecutionThread(KernelMode, FALSE, &ShortTimeout);
-            ok_eq_hex(Status, STATUS_SUCCESS);
+            if (Status != STATUS_SUCCESS)
+            {
+                ok_eq_hex(Status, STATUS_SUCCESS);
+            }
         }
         CheckEvent(Event, Type, 0L, FALSE, OriginalIrql, ThreadObjects, i + 1);
     }
