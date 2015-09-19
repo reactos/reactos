@@ -1467,6 +1467,7 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
     ULONG Attempts, OutputLength;
     PMOUNTMGR_TARGET_NAME Target;
     PMOUNTMGR_VOLUME_PATHS Paths, Output;
+    RECONCILE_WORK_ITEM_CONTEXT ReconcileContext;
     PDEVICE_INFORMATION DeviceInformation, ListDeviceInfo, FailedDevice;
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -1535,8 +1536,10 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
         }
 
         /* Reconcile database */
+        ReconcileContext.DeviceExtension = DeviceExtension;
+        ReconcileContext.DeviceInformation = FailedDevice;
         KeReleaseSemaphore(&DeviceExtension->DeviceLock, IO_NO_INCREMENT, 1, FALSE);
-        ReconcileThisDatabaseWithMasterWorker(&DeviceExtension);
+        ReconcileThisDatabaseWithMasterWorker(&ReconcileContext);
         KeWaitForSingleObject(&DeviceExtension->DeviceLock, Executive, KernelMode, FALSE, NULL);
 
         /* Look for our device, to check it's online */

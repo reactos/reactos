@@ -128,14 +128,19 @@ typedef struct _ONLINE_NOTIFICATION_WORK_ITEM
     UNICODE_STRING SymbolicName;                                  // 0x14
 } ONLINE_NOTIFICATION_WORK_ITEM, *PONLINE_NOTIFICATION_WORK_ITEM; // 0x1C
 
+typedef struct _RECONCILE_WORK_ITEM_CONTEXT
+{
+    PDEVICE_EXTENSION DeviceExtension;
+    PDEVICE_INFORMATION DeviceInformation;
+} RECONCILE_WORK_ITEM_CONTEXT, *PRECONCILE_WORK_ITEM_CONTEXT;
+
 typedef struct _RECONCILE_WORK_ITEM
 {
     LIST_ENTRY WorkerQueueListEntry;            // 0x00
     PIO_WORKITEM WorkItem;                      // 0x08
     PWORKER_THREAD_ROUTINE WorkerRoutine;       // 0x0C
     PVOID Context;                              // 0x10
-    PDEVICE_EXTENSION DeviceExtension;          // 0x14
-    PDEVICE_INFORMATION DeviceInformation;      // 0x18
+    RECONCILE_WORK_ITEM_CONTEXT;                // 0x14
 } RECONCILE_WORK_ITEM, *PRECONCILE_WORK_ITEM;   // 0x1C
 
 typedef struct _MIGRATE_WORK_ITEM
