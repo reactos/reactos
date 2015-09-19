@@ -45,9 +45,6 @@ static const WCHAR Cunc[] = L"\\??\\C:";
 
 /*
  * TODO:
- * - MountMgrQueryDosVolumePaths
- * - MountMgrQueryVolumePaths
- * - MountMgrValidateBackPointer
  * - ReconcileThisDatabaseWithMasterWorker
  */
 
@@ -952,7 +949,7 @@ MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
 NTSTATUS
 MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
                              IN PUNICODE_STRING SymbolicName,
-                             IN BOOLEAN FromVolume)
+                             IN BOOLEAN ManuallyRegistered)
 {
     WCHAR Letter;
     GUID StableGuid;
@@ -994,7 +991,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
     /* Copy symbolic name */
     RtlCopyMemory(DeviceInformation->SymbolicName.Buffer, SymbolicName->Buffer, SymbolicName->Length);
     DeviceInformation->SymbolicName.Buffer[DeviceInformation->SymbolicName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    DeviceInformation->Volume = FromVolume;
+    DeviceInformation->ManuallyRegistered = ManuallyRegistered;
     DeviceInformation->DeviceExtension = DeviceExtension;
 
     /* Query as much data as possible about device */
@@ -1376,8 +1373,8 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         }
     }
 
-    /* If required, register for notifications about the device */
-    if (!FromVolume)
+    /* If that's a PnP device, register for notifications */
+    if (!ManuallyRegistered)
     {
         RegisterForTargetDeviceNotification(DeviceExtension, DeviceInformation);
     }

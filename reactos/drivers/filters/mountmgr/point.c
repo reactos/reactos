@@ -221,7 +221,7 @@ MountMgrCreatePointWorker(IN PDEVICE_EXTENSION DeviceExtension,
     FreePool(SymLink.Buffer);
     MountMgrNotify(DeviceExtension);
 
-    if (!DeviceInformation->Volume)
+    if (!DeviceInformation->ManuallyRegistered)
     {
         MountMgrNotifyNameChange(DeviceExtension, DeviceName, FALSE);
     }

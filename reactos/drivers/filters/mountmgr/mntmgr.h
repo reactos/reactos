@@ -67,7 +67,7 @@ typedef struct _DEVICE_INFORMATION
     UNICODE_STRING DeviceName;              // 0x2C
     BOOLEAN KeepLinks;                      // 0x34
     UCHAR SuggestedDriveLetter;             // 0x35
-    BOOLEAN Volume;                         // 0x36
+    BOOLEAN ManuallyRegistered;             // 0x36
     BOOLEAN Removable;                      // 0x37
     BOOLEAN LetterAssigned;                 // 0x38
     BOOLEAN NeedsReconcile;                 // 0x39
@@ -115,6 +115,12 @@ typedef struct _ASSOCIATED_DEVICE_ENTRY
     PDEVICE_INFORMATION DeviceInformation;            // 0x08
     UNICODE_STRING String;                            // 0x0C
 } ASSOCIATED_DEVICE_ENTRY, *PASSOCIATED_DEVICE_ENTRY; // 0x14
+
+typedef struct _DEVICE_INFORMATION_ENTRY
+{
+    LIST_ENTRY DeviceInformationEntry;                  // 0x00
+    PDEVICE_INFORMATION DeviceInformation;              // 0x08
+} DEVICE_INFORMATION_ENTRY, *PDEVICE_INFORMATION_ENTRY; // 0x0C
 
 typedef struct _ONLINE_NOTIFICATION_WORK_ITEM
 {
@@ -332,6 +338,12 @@ NTSTATUS
 DeleteRemoteDatabaseEntry(
     IN HANDLE Database,
     IN LONG StartingOffset
+);
+
+VOID
+NTAPI
+ReconcileThisDatabaseWithMasterWorker(
+    IN PVOID Parameter
 );
 
 /* device.c */
