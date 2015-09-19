@@ -47,8 +47,15 @@ static PDOS_REQUEST_HEADER DeviceRequest;
 static VOID DosCallDriver(DWORD Driver, PDOS_REQUEST_HEADER Request)
 {
     PDOS_DRIVER DriverBlock = (PDOS_DRIVER)FAR_POINTER(Driver);
-    WORD ES = getES();
+    WORD AX = getAX();
+    WORD CX = getCX();
+    WORD DX = getDX();
     WORD BX = getBX();
+    WORD BP = getBP();
+    WORD SI = getSI();
+    WORD DI = getDI();
+    WORD DS = getDS();
+    WORD ES = getES();
 
     /* Set ES:BX to the location of the request */
     setES(DOS_DATA_SEGMENT);
@@ -64,9 +71,16 @@ static VOID DosCallDriver(DWORD Driver, PDOS_REQUEST_HEADER Request)
     /* Get the request structure from ES:BX */
     RtlMoveMemory(Request, &Sda->Request, Request->RequestLength);
 
-    /* Restore ES:BX */
-    setES(ES);
+    /* Restore the registers */
+    setAX(AX);
+    setCX(CX);
+    setDX(DX);
     setBX(BX);
+    setBP(BP);
+    setSI(SI);
+    setDI(DI);
+    setDS(DS);
+    setES(ES);
 }
 
 static inline WORD NTAPI DosDriverReadInternal(PDOS_DEVICE_NODE DeviceNode,

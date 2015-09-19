@@ -310,8 +310,11 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
             BX = getBX();
             CX = getCX();
             DX = getDX();
+            BP = getBP();
             SI = getSI();
             DI = getDI();
+            DS = getDS();
+            ES = getES();
 
             setAX(CallMask);
             setBX(DriverState.ButtonState);
@@ -333,8 +336,11 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
             setBX(BX);
             setCX(CX);
             setDX(DX);
+            setBP(BP);
             setSI(SI);
             setDI(DI);
+            setDS(DS);
+            setES(ES);
         }
     }
 }
