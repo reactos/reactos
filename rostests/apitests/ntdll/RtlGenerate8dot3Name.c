@@ -19,15 +19,15 @@ RtlGenerate8dot3Name(
   _Inout_ PGENERATE_NAME_CONTEXT Context,
   _Inout_ PUNICODE_STRING Name8dot3);
 
-PWSTR Names[] = { L"Menu Démarrer", L"Sélecteur de configuration clavier.lnk", L"éèàùç.txt", L"éèàùçeeauc.txt" };
-PWSTR ShortNames1[] = { L"MENUDM~1", L"SLECTE~1.LNK", L"5C2D~1.TXT", L"EEAUC~1.TXT" };
-PWSTR ShortNames2[] = { L"MENUDM~2", L"SLECTE~2.LNK", L"5C2D~2.TXT", L"EEAUC~2.TXT" };
+PWSTR Names[] = { L"Menu Démarrer", L"Sélecteur de configuration clavier.lnk", L"éèàùç.txt", L"éèàùçeeauc.txt", L"Long file name.txt", L"Long file name", L"Longfilename.txt", L"Longfilename" };
+PWSTR ShortNames1[] = { L"MENUDM~1", L"SLECTE~1.LNK", L"5C2D~1.TXT", L"EEAUC~1.TXT", L"LONGFI~1.TXT", L"LONGFI~1", L"LONGFI~1.TXT", L"LONGFI~1" };
+PWSTR ShortNames2[] = { L"MENUDM~2", L"SLECTE~2.LNK", L"5C2D~2.TXT", L"EEAUC~2.TXT", L"LONGFI~2.TXT", L"LONGFI~2", L"LONGFI~2.TXT", L"LONGFI~2" };
 
 START_TEST(RtlGenerate8dot3Name)
 {
     USHORT i;
 
-    for (i = 0; i < 4; ++i)
+    for (i = 0; i < 8; ++i)
     {
         WCHAR Buffer[12];
         GENERATE_NAME_CONTEXT Context;
