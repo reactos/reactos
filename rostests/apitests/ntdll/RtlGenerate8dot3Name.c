@@ -36,13 +36,14 @@ START_TEST(RtlGenerate8dot3Name)
         RtlZeroMemory(&Context, sizeof(GENERATE_NAME_CONTEXT));
         RtlInitUnicodeString(&LongName, Names[i]);
         ShortName.Buffer = Buffer;
-        ShortName.Length = sizeof(Buffer);
+        ShortName.Length = 0;
         ShortName.MaximumLength = sizeof(Buffer);
 
         RtlGenerate8dot3Name(&LongName, FALSE, &Context, &ShortName);
         RtlInitUnicodeString(&Expected, ShortNames1[i]);
         ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length, ShortName.Buffer, Expected.Length, Expected.Buffer);
 
+        ShortName.Length = 0;
         RtlGenerate8dot3Name(&LongName, FALSE, &Context, &ShortName);
         RtlInitUnicodeString(&Expected, ShortNames2[i]);
         ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length, ShortName.Buffer, Expected.Length, Expected.Buffer);
