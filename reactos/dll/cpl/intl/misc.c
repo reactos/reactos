@@ -3,25 +3,25 @@
 #define NUM_SHEETS           4
 
 /* Insert the space  */
-LPTSTR
-InsSpacePos(LPCTSTR szInsStr, const int nPos)
+PWSTR
+InsSpacePos(PCWSTR szInsStr, const int nPos)
 {
-    LPTSTR pszDestStr;
+    PWSTR pszDestStr;
     INT nDestStrCnt = 0;
     INT nStrCnt;
     INT nStrSize;
 
-    pszDestStr = (LPTSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(TCHAR));
+    pszDestStr = (PWSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
-    _tcscpy(pszDestStr, szInsStr);
+    wcscpy(pszDestStr, szInsStr);
 
-    nStrSize = _tcslen(szInsStr);
+    nStrSize = wcslen(szInsStr);
 
     for (nStrCnt = 0; nStrCnt < nStrSize; nStrCnt++)
     {
         if (nStrCnt == nStrSize - nPos)
         {
-            pszDestStr[nDestStrCnt] = _T(' ');
+            pszDestStr[nDestStrCnt] = L' ';
             nDestStrCnt++;
         }
 
@@ -29,38 +29,38 @@ InsSpacePos(LPCTSTR szInsStr, const int nPos)
         nDestStrCnt++;
     }
 
-    pszDestStr[nDestStrCnt] = _T('\0');
+    pszDestStr[nDestStrCnt] = L'\0';
 
     return pszDestStr;
 }
 
 /* Insert the spaces by format string separated by ';' */
-LPTSTR
-InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr)
+PWSTR
+InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr)
 {
-    LPTSTR pszDestStr;
-    LPTSTR pszTempStr;
-    TCHAR szFmtVal[255];
+    PWSTR pszDestStr;
+    PWSTR pszTempStr;
+    WCHAR szFmtVal[255];
     UINT nFmtCount = 0;
     INT nValCount = 0;
     INT nLastVal = 0;
     INT nSpaceOffset = 0;
     BOOL wasNul=FALSE;
 
-    pszDestStr = (LPTSTR)malloc(255 * sizeof(TCHAR));
+    pszDestStr = (PWSTR)malloc(255 * sizeof(WCHAR));
 
-    _tcscpy(pszDestStr, szSourceStr);
+    wcscpy(pszDestStr, szSourceStr);
 
     /* If format is clean return source string */
     if (!*szFmtStr)
         return pszDestStr;
 
     /* Search for all format values */
-    for (nFmtCount = 0; nFmtCount <= _tcslen(szFmtStr); nFmtCount++)
+    for (nFmtCount = 0; nFmtCount <= wcslen(szFmtStr); nFmtCount++)
     {
-        if (szFmtStr[nFmtCount] == _T(';') || szFmtStr[nFmtCount] == _T('\0'))
+        if (szFmtStr[nFmtCount] == L';' || szFmtStr[nFmtCount] == L'\0')
         {
-            if (_ttoi(szFmtVal) == 0 && !wasNul)
+            if (_wtoi(szFmtVal) == 0 && !wasNul)
             {
                 wasNul=TRUE;
                 break;
@@ -73,22 +73,22 @@ InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr)
             }
             else
             {
-                nSpaceOffset += _ttoi(szFmtVal);
+                nSpaceOffset += _wtoi(szFmtVal);
             }
 
-            szFmtVal[nValCount] = _T('\0');
+            szFmtVal[nValCount] = L'\0';
             nValCount=0;
 
             /* Insert space to finded position plus all pos before */
             pszTempStr = InsSpacePos(pszDestStr, nSpaceOffset);
-            _tcscpy(pszDestStr,pszTempStr);
+            wcscpy(pszDestStr,pszTempStr);
             free(pszTempStr);
 
             /* Num of spaces total increment */
             if (!wasNul)
             {
                 nSpaceOffset++;
-                nLastVal = _ttoi(szFmtVal);
+                nLastVal = _wtoi(szFmtVal);
             }
         }
         else
@@ -100,10 +100,10 @@ InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr)
     /* Create spaces for rest part of string */
     if (wasNul && nLastVal != 0)
     {
-        for (nFmtCount = nSpaceOffset + nLastVal; nFmtCount < _tcslen(pszDestStr); nFmtCount += nLastVal + 1)
+        for (nFmtCount = nSpaceOffset + nLastVal; nFmtCount < wcslen(pszDestStr); nFmtCount += nLastVal + 1)
         {
             pszTempStr = InsSpacePos(pszDestStr, nFmtCount);
-            _tcscpy(pszDestStr, pszTempStr);
+            wcscpy(pszDestStr, pszTempStr);
             free(pszTempStr);
         }
     }
@@ -112,30 +112,30 @@ InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr)
 }
 
 /* Replace given template in source string with string to replace and return received string */
-LPTSTR
-ReplaceSubStr(LPCTSTR szSourceStr,
-              LPCTSTR szStrToReplace,
-              LPCTSTR szTempl)
+PWSTR
+ReplaceSubStr(PCWSTR szSourceStr,
+              PCWSTR szStrToReplace,
+              PCWSTR szTempl)
 {
-    LPTSTR szDestStr;
+    PWSTR szDestStr;
     UINT nCharCnt;
     UINT nSubStrCnt;
     UINT nDestStrCnt;
     UINT nFirstCharCnt;
 
-    szDestStr = (LPTSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(TCHAR));
+    szDestStr = (PWSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     nDestStrCnt = 0;
     nFirstCharCnt = 0;
 
-    _tcscpy(szDestStr, _T(""));
+    wcscpy(szDestStr, L"");
 
-    while (nFirstCharCnt < _tcslen(szSourceStr))
+    while (nFirstCharCnt < wcslen(szSourceStr))
     {
         if (szSourceStr[nFirstCharCnt] == szTempl[0])
         {
             nSubStrCnt = 0;
-            for (nCharCnt = nFirstCharCnt; nCharCnt < nFirstCharCnt + _tcslen(szTempl); nCharCnt++)
+            for (nCharCnt = nFirstCharCnt; nCharCnt < nFirstCharCnt + wcslen(szTempl); nCharCnt++)
             {
                 if (szSourceStr[nCharCnt] == szTempl[nSubStrCnt])
                 {
@@ -146,11 +146,11 @@ ReplaceSubStr(LPCTSTR szSourceStr,
                     break;
                 }
 
-                if (_tcslen(szTempl) == nSubStrCnt)
+                if (wcslen(szTempl) == nSubStrCnt)
                 {
-                    _tcscat(szDestStr, szStrToReplace);
-                    nDestStrCnt = _tcslen(szDestStr);
-                    nFirstCharCnt += _tcslen(szTempl) - 1;
+                    wcscat(szDestStr, szStrToReplace);
+                    nDestStrCnt = wcslen(szDestStr);
+                    nFirstCharCnt += wcslen(szTempl) - 1;
                     break;
                 }
             }
@@ -158,7 +158,7 @@ ReplaceSubStr(LPCTSTR szSourceStr,
         else
         {
             szDestStr[nDestStrCnt++] = szSourceStr[nFirstCharCnt];
-            szDestStr[nDestStrCnt] = _T('\0');
+            szDestStr[nDestStrCnt] = L'\0';
         }
 
         nFirstCharCnt++;
@@ -169,10 +169,10 @@ ReplaceSubStr(LPCTSTR szSourceStr,
 
 
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, PGLOBALDATA pGlobalData)
+InitPropSheetPage(PROPSHEETPAGEW *psp, WORD idDlg, DLGPROC DlgProc, PGLOBALDATA pGlobalData)
 {
-  ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-  psp->dwSize = sizeof(PROPSHEETPAGE);
+  ZeroMemory(psp, sizeof(PROPSHEETPAGEW));
+  psp->dwSize = sizeof(PROPSHEETPAGEW);
   psp->dwFlags = PSP_DEFAULT;
   psp->hInstance = hApplet;
   psp->pszTemplate = MAKEINTRESOURCE(idDlg);
@@ -188,16 +188,16 @@ SetupApplet(
     HWND hwndDlg,
     PGLOBALDATA pGlobalData)
 {
-    PROPSHEETPAGE PsPage[NUM_SHEETS + 1];
-    PROPSHEETHEADER psh;
-    TCHAR Caption[MAX_STR_SIZE];
-    INT ret;
+    PROPSHEETPAGEW PsPage[NUM_SHEETS + 1];
+    PROPSHEETHEADERW psh;
+    WCHAR Caption[MAX_STR_SIZE];
+    INT_PTR ret;
 
-    LoadString(hApplet, IDS_CUSTOMIZE_TITLE, Caption, sizeof(Caption) / sizeof(TCHAR));
+    LoadStringW(hApplet, IDS_CUSTOMIZE_TITLE, Caption, sizeof(Caption) / sizeof(TCHAR));
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK;
     psh.hwndParent = hwndDlg;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
@@ -217,7 +217,7 @@ SetupApplet(
         InitPropSheetPage(&PsPage[4], IDD_SORTPAGE, SortPageProc, pGlobalData);
     }
 
-    ret = PropertySheet(&psh);
+    ret = PropertySheetW(&psh);
 
     return (LONG)(ret != -1);
 }

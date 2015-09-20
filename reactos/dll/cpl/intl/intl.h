@@ -12,7 +12,6 @@
 #include <winuser.h>
 #include <cpl.h>
 #include <setupapi.h>
-#include <tchar.h>
 #include <malloc.h>
 #include <ndk/exfuncs.h>
 
@@ -121,11 +120,11 @@ INT_PTR CALLBACK
 SortPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* misc.c */
-LPTSTR
-InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr);
+PWSTR
+InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr);
 
-LPTSTR
-ReplaceSubStr(LPCTSTR szSourceStr, LPCTSTR szStrToReplace, LPCTSTR szTempl);
+PWSTR
+ReplaceSubStr(PCWSTR szSourceStr, PCWSTR szStrToReplace, PCWSTR szTempl);
 
 LONG
 APIENTRY

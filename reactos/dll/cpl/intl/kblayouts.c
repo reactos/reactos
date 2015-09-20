@@ -16,47 +16,47 @@
 
 /* szLayoutID like 00000409, szLangID like 00000409 */
 static BOOL
-IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID)
+IsLayoutExists(PWSTR szLayoutID, PWSTR szLangID)
 {
     HKEY hKey, hSubKey;
-    TCHAR szPreload[CCH_LAYOUT_ID + 1], szLayoutNum[3 + 1],
+    WCHAR szPreload[CCH_LAYOUT_ID + 1], szLayoutNum[3 + 1],
           szTmp[CCH_LAYOUT_ID + 1], szOldLangID[CCH_LAYOUT_ID + 1];
     DWORD dwIndex = 0, dwType, dwSize;
     BOOL IsLangExists = FALSE;
     LANGID langid;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"),
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload",
         0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         dwSize = sizeof(szLayoutNum);
 
-        while (RegEnumValue(hKey, dwIndex, szLayoutNum, &dwSize, NULL, &dwType, NULL, NULL) == ERROR_SUCCESS)
+        while (RegEnumValueW(hKey, dwIndex, szLayoutNum, &dwSize, NULL, &dwType, NULL, NULL) == ERROR_SUCCESS)
         {
             dwSize = sizeof(szPreload);
-            if (RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szPreload, &dwSize) != ERROR_SUCCESS)
+            if (RegQueryValueExW(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szPreload, &dwSize) != ERROR_SUCCESS)
             {
                 RegCloseKey(hKey);
                 return FALSE;
             }
 
-            langid = (LANGID)_tcstoul(szPreload, NULL, 16);
-            GetLocaleInfo(langid, LOCALE_ILANGUAGE, szTmp, sizeof(szTmp) / sizeof(TCHAR));
-            wsprintf(szOldLangID, _T("0000%s"), szTmp);
+            langid = (LANGID)wcstoul(szPreload, NULL, 16);
+            GetLocaleInfoW(langid, LOCALE_ILANGUAGE, szTmp, sizeof(szTmp) / sizeof(WCHAR));
+            wsprintf(szOldLangID, L"0000%s", szTmp);
 
-            if (_tcscmp(szOldLangID, szLangID) == 0)
+            if (wcscmp(szOldLangID, szLangID) == 0)
                 IsLangExists = TRUE;
             else
                 IsLangExists = FALSE;
 
             if (szPreload[0] == 'd')
             {
-                if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"),
+                if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes",
                                  0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
                 {
                     dwSize = sizeof(szTmp);
-                    RegQueryValueEx(hSubKey, szPreload, NULL, NULL, (LPBYTE)szTmp, &dwSize);
+                    RegQueryValueExW(hSubKey, szPreload, NULL, NULL, (LPBYTE)szTmp, &dwSize);
 
-                    if ((_tcscmp(szTmp, szLayoutID) == 0)&&(IsLangExists))
+                    if ((wcscmp(szTmp, szLayoutID) == 0)&&(IsLangExists))
                     {
                         RegCloseKey(hSubKey);
                         RegCloseKey(hKey);
@@ -66,7 +66,7 @@ IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID)
             }
             else
             {
-                if ((_tcscmp(szPreload, szLayoutID) == 0) && (IsLangExists))
+                if ((wcscmp(szPreload, szLayoutID) == 0) && (IsLangExists))
                 {
                     RegCloseKey(hKey);
                     return TRUE;
@@ -85,14 +85,14 @@ IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID)
 }
 
 static INT
-GetLayoutCount(LPTSTR szLang)
+GetLayoutCount(PWSTR szLang)
 {
     HKEY hKey;
-    TCHAR szLayoutID[3 + 1], szPreload[CCH_LAYOUT_ID + 1], szLOLang[MAX_PATH];
+    WCHAR szLayoutID[3 + 1], szPreload[CCH_LAYOUT_ID + 1], szLOLang[MAX_PATH];
     DWORD dwIndex = 0, dwType, dwSize;
     UINT Count = 0, i, j;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"),
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload",
         0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         dwSize = sizeof(szLayoutID);
@@ -100,12 +100,12 @@ GetLayoutCount(LPTSTR szLang)
         while (RegEnumValue(hKey, dwIndex, szLayoutID, &dwSize, NULL, &dwType, NULL, NULL) == ERROR_SUCCESS)
         {
             dwSize = sizeof(szPreload);
-            RegQueryValueEx(hKey, szLayoutID, NULL, NULL, (LPBYTE)szPreload, &dwSize);
+            RegQueryValueExW(hKey, szLayoutID, NULL, NULL, (LPBYTE)szPreload, &dwSize);
 
-            for (i = 4, j = 0; i < _tcslen(szPreload)+1; i++, j++)
+            for (i = 4, j = 0; i < wcslen(szPreload)+1; i++, j++)
                 szLOLang[j] = szPreload[i];
 
-            if (_tcscmp(szLOLang, szLang) == 0) Count += 1;
+            if (wcscmp(szLOLang, szLang) == 0) Count += 1;
 
             dwSize = sizeof(szLayoutID);
             dwIndex++;
@@ -119,24 +119,24 @@ GetLayoutCount(LPTSTR szLang)
 
 /* szLayoutID like 00000409, szLangID like 00000409 */
 static BOOL
-AddNewLayout(LPTSTR szLayoutID, LPTSTR szLangID)
+AddNewLayout(PWSTR szLayoutID, PWSTR szLangID)
 {
-    TCHAR NewLayout[CCH_ULONG_DEC + 1], Lang[MAX_PATH],
+    WCHAR NewLayout[CCH_ULONG_DEC + 1], Lang[MAX_PATH],
           LangID[CCH_LAYOUT_ID + 1], SubPath[CCH_LAYOUT_ID + 1];
     HKEY hKey, hSubKey;
     DWORD cValues;
     LCID lcid;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
     {
         if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &cValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
-            _ultot(cValues + 1, NewLayout, 10);
+            _ultow(cValues + 1, NewLayout, 10);
 
-            lcid = _tcstoul(szLangID, NULL, 16);
+            lcid = wcstoul(szLangID, NULL, 16);
 
-            GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Lang, sizeof(Lang) / sizeof(TCHAR));
-            wsprintf(LangID, _T("0000%s"), Lang);
+            GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Lang, sizeof(Lang) / sizeof(WCHAR));
+            wsprintf(LangID, L"0000%s", Lang);
 
             if (IsLayoutExists(szLayoutID, LangID))
             {
@@ -146,22 +146,22 @@ AddNewLayout(LPTSTR szLayoutID, LPTSTR szLangID)
 
             if (GetLayoutCount(Lang) >= 1)
             {
-                wsprintf(SubPath, _T("d%03d%s"), GetLayoutCount(Lang), Lang);
+                wsprintf(SubPath, L"d%03d%s", GetLayoutCount(Lang), Lang);
             }
-            else if ((_tcscmp(LangID, szLayoutID) != 0) && (GetLayoutCount(Lang) == 0))
+            else if ((wcscmp(LangID, szLayoutID) != 0) && (GetLayoutCount(Lang) == 0))
             {
-                wsprintf(SubPath, _T("d%03d%s"), 0, Lang);
+                wsprintf(SubPath, L"d%03d%s", 0, Lang);
             }
-            else SubPath[0] = '\0';
+            else SubPath[0] = L'\0';
 
-            if (_tcslen(SubPath) != 0)
+            if (wcslen(SubPath) != 0)
             {
-                if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, NULL,
-                                   REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-                                   NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+                if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0, NULL,
+                                    REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
+                                    NULL, &hSubKey, NULL) == ERROR_SUCCESS)
                 {
-                    if (RegSetValueEx(hSubKey, SubPath, 0, REG_SZ, (LPBYTE)szLayoutID,
-                                      (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR))) != ERROR_SUCCESS)
+                    if (RegSetValueExW(hSubKey, SubPath, 0, REG_SZ, (LPBYTE)szLayoutID,
+                                       (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(WCHAR))) != ERROR_SUCCESS)
                     {
                         RegCloseKey(hSubKey);
                         RegCloseKey(hKey);
@@ -172,12 +172,12 @@ AddNewLayout(LPTSTR szLayoutID, LPTSTR szLangID)
                 lstrcpy(szLayoutID, SubPath);
             }
 
-            RegSetValueEx(hKey,
-                          NewLayout,
-                          0,
-                          REG_SZ,
-                          (LPBYTE)szLayoutID,
-                          (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR)));
+            RegSetValueExW(hKey,
+                           NewLayout,
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szLayoutID,
+                           (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(WCHAR)));
         }
         RegCloseKey(hKey);
     }
@@ -189,16 +189,16 @@ VOID
 AddNewKbLayoutsByLcid(LCID Lcid)
 {
     HINF hIntlInf;
-    TCHAR szLang[CCH_LAYOUT_ID + 1], szLangID[CCH_LAYOUT_ID + 1];
-    TCHAR szLangStr[MAX_STR_SIZE], szLayoutStr[MAX_STR_SIZE], szStr[MAX_STR_SIZE];
+    WCHAR szLang[CCH_LAYOUT_ID + 1], szLangID[CCH_LAYOUT_ID + 1];
+    WCHAR szLangStr[MAX_STR_SIZE], szLayoutStr[MAX_STR_SIZE], szStr[MAX_STR_SIZE];
     INFCONTEXT InfContext;
     LONG Count;
     DWORD FieldCount, Index;
 
-    GetLocaleInfo(MAKELCID(Lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, szLang, sizeof(szLang) / sizeof(TCHAR));
-    wsprintf(szLangID, _T("0000%s"), szLang);
+    GetLocaleInfoW(MAKELCID(Lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, szLang, sizeof(szLang) / sizeof(WCHAR));
+    wsprintf(szLangID, L"0000%s", szLang);
 
-    hIntlInf = SetupOpenInfFile(_T("intl.inf"), NULL, INF_STYLE_WIN4, NULL);
+    hIntlInf = SetupOpenInfFileW(L"intl.inf", NULL, INF_STYLE_WIN4, NULL);
 
     if (hIntlInf == INVALID_HANDLE_VALUE)
         return;
@@ -210,10 +210,10 @@ AddNewKbLayoutsByLcid(LCID Lcid)
         return;
     }
 
-    Count = SetupGetLineCount(hIntlInf, _T("Locales"));
+    Count = SetupGetLineCount(hIntlInf, L"Locales");
     if (Count <= 0) return;
 
-    if (SetupFindFirstLine(hIntlInf, _T("Locales"), szLangID, &InfContext))
+    if (SetupFindFirstLine(hIntlInf, L"Locales", szLangID, &InfContext))
     {
         FieldCount = SetupGetFieldCount(&InfContext);
 
@@ -225,12 +225,12 @@ AddNewKbLayoutsByLcid(LCID Lcid)
                 {
                     INT i, j;
 
-                    if (_tcslen(szStr) != 13) continue;
+                    if (wcslen(szStr) != 13) continue;
 
-                    wsprintf(szLangStr, _T("0000%s"), szStr);
-                    szLangStr[8] = '\0';
+                    wsprintf(szLangStr, L"0000%s", szStr);
+                    szLangStr[8] = L'\0';
 
-                    for (i = 5, j = 0; i <= _tcslen(szStr); i++, j++)
+                    for (i = 5, j = 0; i <= wcslen(szStr); i++, j++)
                         szLayoutStr[j] = szStr[i];
 
                     AddNewLayout(szLayoutStr, szLangStr);

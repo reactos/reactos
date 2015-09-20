@@ -91,26 +91,26 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPARAM lParam
 BOOL
 OpenSetupInf(VOID)
 {
-    LPTSTR lpCmdLine;
-    LPTSTR lpSwitch;
+    PWSTR lpCmdLine;
+    PWSTR lpSwitch;
     size_t len;
 
-    lpCmdLine = GetCommandLine();
+    lpCmdLine = GetCommandLineW();
 
-    lpSwitch = _tcsstr(lpCmdLine, _T("/f:\""));
+    lpSwitch = wcsstr(lpCmdLine, L"/f:\"");
     if (!lpSwitch)
         return FALSE;
 
-    len = _tcslen(lpSwitch);
-    if (len < 5 || lpSwitch[len-1] != _T('\"'))
+    len = wcslen(lpSwitch);
+    if (len < 5 || lpSwitch[len-1] != L'\"')
     {
         DPRINT1("Invalid switch: %ls\n", lpSwitch);
         return FALSE;
     }
 
-    lpSwitch[len-1] = _T('\0');
+    lpSwitch[len-1] = L'\0';
 
-    hSetupInf = SetupOpenInfFile(&lpSwitch[4], NULL, INF_STYLE_OLDNT, NULL);
+    hSetupInf = SetupOpenInfFileW(&lpSwitch[4], NULL, INF_STYLE_OLDNT, NULL);
     if (hSetupInf == INVALID_HANDLE_VALUE)
     {
         DPRINT1("Failed to open INF file: %ls\n", &lpSwitch[4]);
@@ -124,27 +124,27 @@ VOID
 ParseSetupInf(VOID)
 {
     INFCONTEXT InfContext;
-    TCHAR szBuffer[30];
+    WCHAR szBuffer[30];
 
-    if (!SetupFindFirstLine(hSetupInf,
-                            _T("Unattend"),
-                            _T("LocaleID"),
-                            &InfContext))
+    if (!SetupFindFirstLineW(hSetupInf,
+                             L"Unattend",
+                             L"LocaleID",
+                             &InfContext))
     {
         SetupCloseInfFile(hSetupInf);
         DPRINT1("SetupFindFirstLine failed\n");
         return;
     }
 
-    if (!SetupGetStringField(&InfContext, 1, szBuffer,
-                             sizeof(szBuffer) / sizeof(TCHAR), NULL))
+    if (!SetupGetStringFieldW(&InfContext, 1, szBuffer,
+                              sizeof(szBuffer) / sizeof(WCHAR), NULL))
     {
         SetupCloseInfFile(hSetupInf);
         DPRINT1("SetupGetStringField failed\n");
         return;
     }
 
-    UnattendLCID = _tcstoul(szBuffer, NULL, 16);
+    UnattendLCID = wcstoul(szBuffer, NULL, 16);
     IsUnattendedSetupEnabled = 1;
     SetupCloseInfFile(hSetupInf);
 }
@@ -169,7 +169,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPSHEETPAGE;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));

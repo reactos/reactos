@@ -25,12 +25,12 @@ GetSupportedCP(VOID)
     CPINFOEX cpInfEx;
     //TCHAR Section[MAX_PATH];
 
-    Count = SetupGetLineCount(hIntlInf, _T("CodePages"));
+    Count = SetupGetLineCountW(hIntlInf, L"CodePages");
     if (Count <= 0) return FALSE;
 
     for (Number = 0; Number < (UINT)Count; Number++)
     {
-        if (SetupGetLineByIndex(hIntlInf, _T("CodePages"), Number, &infCont) &&
+        if (SetupGetLineByIndexW(hIntlInf, L"CodePages", Number, &infCont) &&
             SetupGetIntField(&infCont, 0, (PINT)&uiCPage))
         {
             if (!(hCPage = GlobalAlloc(GHND, sizeof(CPAGE)))) return FALSE;
@@ -43,9 +43,9 @@ GetSupportedCP(VOID)
 
             if (GetCPInfoEx(uiCPage, 0, &cpInfEx))
             {
-                _tcscpy(lpCPage->Name, cpInfEx.CodePageName);
+                wcscpy(lpCPage->Name, cpInfEx.CodePageName);
             }
-            else if (!SetupGetStringField(&infCont, 1, lpCPage->Name, MAX_PATH, NULL))
+            else if (!SetupGetStringFieldW(&infCont, 1, lpCPage->Name, MAX_PATH, NULL))
             {
                 GlobalUnlock(hCPage);
                 GlobalFree(hCPage);
@@ -61,13 +61,13 @@ GetSupportedCP(VOID)
 }
 
 static BOOL CALLBACK
-InstalledCPProc(LPTSTR lpStr)
+InstalledCPProc(PWSTR lpStr)
 {
     LPCPAGE lpCP;
     UINT uiCP;
 
     lpCP = PCPage;
-    uiCP = _ttol(lpStr);
+    uiCP = _wtol(lpStr);
 
     for (;;)
     {
@@ -95,7 +95,7 @@ InitCodePagesList(HWND hwndDlg)
 
     hList = GetDlgItem(hwndDlg, IDC_CONV_TABLES);
 
-    hIntlInf = SetupOpenInfFile(_T("intl.inf"), NULL, INF_STYLE_WIN4, NULL);
+    hIntlInf = SetupOpenInfFileW(L"intl.inf", NULL, INF_STYLE_WIN4, NULL);
 
     if (hIntlInf == INVALID_HANDLE_VALUE)
         return;
@@ -159,21 +159,21 @@ InitCodePagesList(HWND hwndDlg)
 }
 
 static BOOL CALLBACK
-LocalesEnumProc(LPTSTR lpLocale)
+LocalesEnumProc(PWSTR lpLocale)
 {
     LCID lcid;
-    TCHAR lang[255];
+    WCHAR lang[255];
     INT index;
     BOOL bNoShow = FALSE;
 
-    lcid = _tcstoul(lpLocale, NULL, 16);
+    lcid = wcstoul(lpLocale, NULL, 16);
 
     if (lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) ||
         lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT))
     {
         if (bSpain == FALSE)
         {
-            LoadString(hApplet, IDS_SPAIN, lang, 255);
+            LoadStringW(hApplet, IDS_SPAIN, lang, 255);
             bSpain = TRUE;
         }
         else
@@ -183,20 +183,20 @@ LocalesEnumProc(LPTSTR lpLocale)
     }
     else
     {
-        GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang)/sizeof(TCHAR));
+        GetLocaleInfoW(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang)/sizeof(WCHAR));
     }
 
     if (bNoShow == FALSE)
     {
-    index = SendMessage(hLangList,
-                        CB_ADDSTRING,
-                        0,
-                        (LPARAM)lang);
+    index = SendMessageW(hLangList,
+                         CB_ADDSTRING,
+                         0,
+                         (LPARAM)lang);
 
-    SendMessage(hLangList,
-                CB_SETITEMDATA,
-                index,
-                (LPARAM)lcid);
+    SendMessageW(hLangList,
+                 CB_SETITEMDATA,
+                 index,
+                 (LPARAM)lcid);
     }
 
     return TRUE;
@@ -205,17 +205,17 @@ LocalesEnumProc(LPTSTR lpLocale)
 static VOID
 InitLanguagesList(HWND hwndDlg)
 {
-    TCHAR langSel[255];
+    WCHAR langSel[255];
 
     hLangList = GetDlgItem(hwndDlg, IDC_LANGUAGE_COMBO);
 
     bSpain = FALSE;
-    EnumSystemLocales(LocalesEnumProc, LCID_SUPPORTED);
+    EnumSystemLocalesW(LocalesEnumProc, LCID_SUPPORTED);
 
     /* Select current locale */
-    GetLocaleInfo(GetSystemDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(TCHAR));
+    GetLocaleInfoW(GetSystemDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(WCHAR));
 
-    SendMessage(hLangList, CB_SELECTSTRING, -1, (LPARAM)langSel);
+    SendMessageW(hLangList, CB_SELECTSTRING, -1, (LPARAM)langSel);
 }
 
 static VOID
@@ -224,26 +224,26 @@ GetCurrentDPI(LPTSTR szDPI)
     DWORD dwType, dwSize, dwDPI, dwDefDPI = 0x00000060; // Default 96 DPI
     HKEY hKey;
 
-    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontDPI"), 0, NULL,
-                       REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontDPI", 0, NULL,
+                        REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL) != ERROR_SUCCESS)
     {
-        _tcscpy(szDPI, _T("96"));
+        wcscpy(szDPI, L"96");
         return;
     }
 
     dwType = REG_DWORD;
     dwSize = sizeof(DWORD);
 
-    if (RegQueryValueEx(hKey, _T("LogPixels"), NULL, &dwType, (LPBYTE)&dwDPI, &dwSize) != ERROR_SUCCESS)
+    if (RegQueryValueExW(hKey, L"LogPixels", NULL, &dwType, (LPBYTE)&dwDPI, &dwSize) != ERROR_SUCCESS)
     {
-        if (RegSetValueEx(hKey, _T("LogPixels"), 0, REG_DWORD, (LPBYTE)&dwDefDPI, sizeof(DWORD)) == ERROR_SUCCESS)
+        if (RegSetValueExW(hKey, L"LogPixels", 0, REG_DWORD, (LPBYTE)&dwDefDPI, sizeof(DWORD)) == ERROR_SUCCESS)
         {
-            _tcscpy(szDPI, _T("96"));
+            wcscpy(szDPI, L"96");
             RegCloseKey(hKey);
             return;
         }
     }
-    else wsprintf(szDPI, _T("%d"), dwDPI);
+    else wsprintf(szDPI, L"%d", dwDPI);
 
     RegCloseKey(hKey);
 }
@@ -251,16 +251,16 @@ GetCurrentDPI(LPTSTR szDPI)
 VOID
 SetNonUnicodeLang(HWND hwnd, LCID lcid)
 {
-    TCHAR szDefCP[5 + 1], szSection[MAX_PATH], szDPI[3 + 1];
+    WCHAR szDefCP[5 + 1], szSection[MAX_PATH], szDPI[3 + 1];
     HINF hFontInf;
     UINT Count;
 
-    GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, szDefCP, sizeof(szDefCP) / sizeof(TCHAR));
+    GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, szDefCP, sizeof(szDefCP) / sizeof(WCHAR));
     GetCurrentDPI(szDPI);
 
-    wsprintf(szSection, _T("Font.CP%s.%s"), szDefCP, szDPI);
+    wsprintf(szSection, L"Font.CP%s.%s", szDefCP, szDPI);
 
-    hFontInf = SetupOpenInfFile(_T("font.inf"), NULL, INF_STYLE_WIN4, NULL);
+    hFontInf = SetupOpenInfFileW(L"font.inf", NULL, INF_STYLE_WIN4, NULL);
 
     if (hFontInf == INVALID_HANDLE_VALUE)
         return;
@@ -274,9 +274,9 @@ SetNonUnicodeLang(HWND hwnd, LCID lcid)
     Count = (UINT) SetupGetLineCount(hFontInf, szSection);
     if (Count <= 0) return;
 
-    if (!SetupInstallFromInfSection(hwnd, hFontInf, szSection, SPINST_REGISTRY & ~SPINST_FILES,
-                                    NULL, NULL, 0, NULL, NULL, NULL, NULL))
-        MessageBox(hwnd, _T("Unable to install a new language for programs don't support unicode!"),
+    if (!SetupInstallFromInfSectionW(hwnd, hFontInf, szSection, SPINST_REGISTRY & ~SPINST_FILES,
+                                     NULL, NULL, 0, NULL, NULL, NULL, NULL))
+        MessageBoxW(hwnd, L"Unable to install a new language for programs don't support unicode!",
                    NULL, MB_ICONERROR | MB_OK);
 
     SetupCloseInfFile(hFontInf);
@@ -288,21 +288,21 @@ VOID
 SaveSystemSettings(
     LCID lcid)
 {
-    TCHAR ACPPage[9];
-    TCHAR OEMPage[9];
+    WCHAR ACPPage[9];
+    WCHAR OEMPage[9];
     HKEY langKey;
     DWORD ret;
     WCHAR value[5];
     DWORD valuesize;
 
-    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(TCHAR));
+    ret = GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(WCHAR));
     if (ret == 0)
     {
         PrintErrorMsgBox(IDS_ERROR_OEM_CODE_PAGE);
         return;
     }
 
-    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, ACPPage, sizeof(ACPPage)/sizeof(TCHAR));
+    ret = GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, ACPPage, sizeof(ACPPage)/sizeof(WCHAR));
     if (ret == 0)
     {
         PrintErrorMsgBox(IDS_ERROR_ANSI_CODE_PAGE);
@@ -310,31 +310,31 @@ SaveSystemSettings(
     }
 
     /* Set codepages */
-    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"), &langKey);
+    ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage", &langKey);
     if (ret != ERROR_SUCCESS)
     {
         PrintErrorMsgBox(IDS_ERROR_NLS_CODE_REG);
         return;
     }
 
-    RegSetValueEx(langKey, _T("OEMCP"), 0, REG_SZ, (BYTE *)OEMPage, (_tcslen(OEMPage) +1 ) * sizeof(TCHAR));
-    RegSetValueEx(langKey, _T("ACP"), 0, REG_SZ, (BYTE *)ACPPage, (_tcslen(ACPPage) +1 ) * sizeof(TCHAR));
+    RegSetValueExW(langKey, L"OEMCP", 0, REG_SZ, (BYTE *)OEMPage, (wcslen(OEMPage) +1 ) * sizeof(WCHAR));
+    RegSetValueExW(langKey, L"ACP", 0, REG_SZ, (BYTE *)ACPPage, (wcslen(ACPPage) +1 ) * sizeof(WCHAR));
 
     RegCloseKey(langKey);
 
 
-    wsprintf(value, _T("%04hX"), LANGIDFROMLCID(lcid));
-    valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
+    wsprintf(value, L"%04hX", LANGIDFROMLCID(lcid));
+    valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
 
     /* Set language */
-    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"), &langKey);
+    ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language", &langKey);
     if (ret != ERROR_SUCCESS)
     {
         PrintErrorMsgBox(IDS_ERROR_NLS_KEY_REG);
         return;
     }
 
-    RegSetValueEx(langKey, _T("Default"), 0, REG_SZ, (BYTE *)value, valuesize);
+    RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, valuesize);
     RegCloseKey(langKey);
 }
 

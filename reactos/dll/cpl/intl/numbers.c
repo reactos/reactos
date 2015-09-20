@@ -25,8 +25,8 @@
 
 #include "intl.h"
 
-#define SAMPLE_NUMBER               _T("123456789")
-#define SAMPLE_NEG_NUMBER           _T("-123456789")
+#define SAMPLE_NUMBER               L"123456789"
+#define SAMPLE_NEG_NUMBER           L"-123456789"
 #define MAX_NUM_SEP_SAMPLES         2
 #define MAX_FRAC_NUM_SAMPLES        10
 #define MAX_FIELD_SEP_SAMPLES       1
@@ -37,222 +37,221 @@
 #define MAX_LIST_SEP_SAMPLES        1
 #define MAX_UNITS_SYS_SAMPLES       2
 
-static LPTSTR lpNumSepSamples[MAX_NUM_SEP_SAMPLES] =
-    {_T(","), _T(".")};
-static LPTSTR lpFieldSepSamples[MAX_FIELD_SEP_SAMPLES] =
-    {_T(" ")};
-static LPTSTR lpFieldDigNumSamples[MAX_FIELD_DIG_SAMPLES] =
-    {_T("0;0"), _T("3;0"), _T("3;2;0")};
-static LPTSTR lpNegSignSamples[MAX_NEG_SIGN_SAMPLES] =
-    {_T("-")};
-static LPTSTR lpNegNumFmtSamples[MAX_NEG_NUMBERS_SAMPLES] =
-    {_T("(1,1)"), _T("-1,1"), _T("- 1,1"), _T("1,1-"), _T("1,1 -")};
-static LPTSTR lpLeadNumFmtSamples[MAX_LEAD_ZEROES_SAMPLES] =
-    {_T(",7"), _T("0,7")};
-static LPTSTR lpListSepSamples[MAX_LIST_SEP_SAMPLES] =
-    {_T(";")};
+static PWSTR lpNumSepSamples[MAX_NUM_SEP_SAMPLES] =
+    {L",", L"."};
+static PWSTR lpFieldSepSamples[MAX_FIELD_SEP_SAMPLES] =
+    {L" "};
+static PWSTR lpFieldDigNumSamples[MAX_FIELD_DIG_SAMPLES] =
+    {L"0;0", L"3;0", L"3;2;0"};
+static PWSTR lpNegSignSamples[MAX_NEG_SIGN_SAMPLES] =
+    {L"-"};
+static PWSTR lpNegNumFmtSamples[MAX_NEG_NUMBERS_SAMPLES] =
+    {L"(1,1)", L"-1,1", L"- 1,1", L"1,1-", L"1,1 -"};
+static PWSTR lpLeadNumFmtSamples[MAX_LEAD_ZEROES_SAMPLES] =
+    {L",7", L"0,7"};
+static PWSTR lpListSepSamples[MAX_LIST_SEP_SAMPLES] =
+    {L";"};
 
 
 /* Init num decimal separator control box */
 static VOID
-InitNumDecimalSepCB(HWND hwndDlg, LCID lcid)
+InitNumDecimalSepCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    TCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
+    WCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
     INT nRetCode;
 
     /* Limit text length */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
-                CB_LIMITTEXT,
-                MAX_NUMBERDSYMBOL,
-                0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
+                        CB_LIMITTEXT,
+                        MAX_NUMBERDSYMBOL,
+                        0);
 
     /* Get current decimal separator */
-    GetLocaleInfo(lcid,
-                  LOCALE_SDECIMAL,
-                  szNumSep,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_SDECIMAL,
+                   szNumSep,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Create standard list of decimal separators */
     for (nCBIndex = 0; nCBIndex < MAX_NUM_SEP_SAMPLES; nCBIndex++)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)lpNumSepSamples[nCBIndex]);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)lpNumSepSamples[nCBIndex]);
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
-                           CB_SELECTSTRING,
-                           -1,
-                           (LPARAM)(LPCSTR)szNumSep);
+    nRetCode = SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
+                                   CB_SELECTSTRING,
+                                   -1,
+                                   (LPARAM)(LPCSTR)szNumSep);
 
     /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
-                    CB_ADDSTRING,
-                    MAX_NUM_SEP_SAMPLES,
-                    (LPARAM)szNumSep);
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
-                    CB_SELECTSTRING,
-                    -1,
-                    (LPARAM)szNumSep);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
+                            CB_ADDSTRING,
+                            MAX_NUM_SEP_SAMPLES,
+                            (LPARAM)szNumSep);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
+                            CB_SELECTSTRING,
+                            -1,
+                            (LPARAM)szNumSep);
     }
 }
 
 /* Init number of fractional symbols control box */
 static VOID
-InitNumOfFracSymbCB(HWND hwndDlg, LCID lcid)
+InitNumOfFracSymbCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    TCHAR szFracNum[MAX_SAMPLES_STR_SIZE];
-    TCHAR szFracCount[MAX_SAMPLES_STR_SIZE];
+    WCHAR szFracNum[MAX_SAMPLES_STR_SIZE];
+    WCHAR szFracCount[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
 
     /* Get current number of fractional symbols */
-    GetLocaleInfo(lcid,
-                  LOCALE_IDIGITS,
-                  szFracNum,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_IDIGITS,
+                   szFracNum,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNDIGDEC,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Create standard list of fractional symbols */
     for (nCBIndex = 0; nCBIndex < MAX_FRAC_NUM_SAMPLES; nCBIndex++)
     {
         /* Convert to wide char */
-        _itot(nCBIndex, szFracCount, DECIMAL_RADIX);
+        _itow(nCBIndex, szFracCount, DECIMAL_RADIX);
 
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)szFracCount);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNDIGDEC,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)szFracCount);
     }
 
     /* Set current item to value from registry */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
-                CB_SETCURSEL,
-                (WPARAM)_ttoi(szFracNum),
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNDIGDEC,
+                        CB_SETCURSEL,
+                        (WPARAM)_wtoi(szFracNum),
+                        (LPARAM)0);
 }
 
 /* Init field separator control box */
 static VOID
-InitNumFieldSepCB(HWND hwndDlg, LCID lcid)
+InitNumFieldSepCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    TCHAR szFieldSep[MAX_SAMPLES_STR_SIZE];
+    WCHAR szFieldSep[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
     INT nRetCode;
 
     /* Limit text length */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
-                CB_LIMITTEXT,
-                MAX_NUMBERSDIGITGRSYM,
-                0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
+                        CB_LIMITTEXT,
+                        MAX_NUMBERSDIGITGRSYM,
+                        0);
 
     /* Get current field separator */
-    GetLocaleInfo(lcid,
-                  LOCALE_STHOUSAND,
-                  szFieldSep,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_STHOUSAND,
+                   szFieldSep,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Create standard list of field separators */
     for (nCBIndex = 0; nCBIndex < MAX_FIELD_SEP_SAMPLES; nCBIndex++)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)lpFieldSepSamples[nCBIndex]);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)lpFieldSepSamples[nCBIndex]);
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
-                           CB_SELECTSTRING,
-                           -1,
-                           (LPARAM)szFieldSep);
+    nRetCode = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
+                                   CB_SELECTSTRING,
+                                   -1,
+                                   (LPARAM)szFieldSep);
 
     /* If it is not success, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)szFieldSep);
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
-                    CB_SELECTSTRING,
-                    -1,
-                    (LPARAM)szFieldSep);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)szFieldSep);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
+                            CB_SELECTSTRING,
+                            -1,
+                            (LPARAM)szFieldSep);
     }
 }
 
 /* Init number of digits in field control box */
 static VOID
-InitFieldDigNumCB(HWND hwndDlg, LCID lcid)
+InitFieldDigNumCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    TCHAR szFieldDigNum[MAX_SAMPLES_STR_SIZE];
-    LPTSTR pszFieldDigNumSmpl;
+    WCHAR szFieldDigNum[MAX_SAMPLES_STR_SIZE];
+    PWSTR pszFieldDigNumSmpl;
     INT nCBIndex;
     INT nRetCode;
 
     /* Get current field digits num */
-    GetLocaleInfo(lcid,
-                  LOCALE_SGROUPING,
-                  szFieldDigNum,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_SGROUPING,
+                   szFieldDigNum,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Create standard list of field digits num */
     for (nCBIndex = 0; nCBIndex < MAX_FIELD_DIG_SAMPLES; nCBIndex++)
     {
-
         pszFieldDigNumSmpl = InsSpacesFmt(SAMPLE_NUMBER, lpFieldDigNumSamples[nCBIndex]);
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)pszFieldDigNumSmpl);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)pszFieldDigNumSmpl);
         free(pszFieldDigNumSmpl);
     }
 
     pszFieldDigNumSmpl = InsSpacesFmt(SAMPLE_NUMBER, szFieldDigNum);
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
-                           CB_SELECTSTRING,
-                           -1,
-                           (LPARAM)pszFieldDigNumSmpl);
+    nRetCode = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
+                                   CB_SELECTSTRING,
+                                   -1,
+                                   (LPARAM)pszFieldDigNumSmpl);
 
     /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)pszFieldDigNumSmpl);
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
-                    CB_SELECTSTRING,
-                    -1,
-                    (LPARAM)pszFieldDigNumSmpl);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)pszFieldDigNumSmpl);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
+                            CB_SELECTSTRING,
+                            -1,
+                            (LPARAM)pszFieldDigNumSmpl);
     }
 
     free(pszFieldDigNumSmpl);
@@ -260,93 +259,93 @@ InitFieldDigNumCB(HWND hwndDlg, LCID lcid)
 
 /* Init negative sign control box */
 static VOID
-InitNegSignCB(HWND hwndDlg, LCID lcid)
+InitNegSignCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    TCHAR szNegSign[MAX_SAMPLES_STR_SIZE];
+    WCHAR szNegSign[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
     INT nRetCode;
 
     /* Limit text length */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
-                CB_LIMITTEXT,
-                MAX_NUMBERSNSIGNSYM,
-                0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
+                        CB_LIMITTEXT,
+                        MAX_NUMBERSNSIGNSYM,
+                        0);
 
     /* Get current negative sign */
-    GetLocaleInfo(lcid,
-                  LOCALE_SNEGATIVESIGN,
-                  szNegSign,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_SNEGATIVESIGN,
+                   szNegSign,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Create standard list of signs */
     for (nCBIndex = 0; nCBIndex < MAX_NEG_SIGN_SAMPLES; nCBIndex++)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)lpNegSignSamples[nCBIndex]);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)lpNegSignSamples[nCBIndex]);
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
-                           CB_SELECTSTRING,
-                           -1,
-                           (LPARAM)szNegSign);
+    nRetCode = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
+                                   CB_SELECTSTRING,
+                                   -1,
+                                   (LPARAM)szNegSign);
 
     /* If  it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)szNegSign);
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
-                    CB_SELECTSTRING,
-                    -1,
-                    (LPARAM)szNegSign);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)szNegSign);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
+                            CB_SELECTSTRING,
+                            -1,
+                            (LPARAM)szNegSign);
     }
 }
 
 /* Init negative numbers format control box */
 static VOID
-InitNegNumFmtCB(HWND hwndDlg, LCID lcid)
+InitNegNumFmtCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    TCHAR szNegNumFmt[MAX_SAMPLES_STR_SIZE];
-    TCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
-    TCHAR szNegSign[MAX_SAMPLES_STR_SIZE];
-    TCHAR szNewSample[MAX_SAMPLES_STR_SIZE];
-    LPTSTR pszResultStr;
+    WCHAR szNegNumFmt[MAX_SAMPLES_STR_SIZE];
+    WCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
+    WCHAR szNegSign[MAX_SAMPLES_STR_SIZE];
+    WCHAR szNewSample[MAX_SAMPLES_STR_SIZE];
+    PWSTR pszResultStr;
     INT nCBIndex;
 
     /* Get current negative numbers format */
-    GetLocaleInfo(lcid,
-                  LOCALE_INEGNUMBER,
-                  szNegNumFmt,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_INEGNUMBER,
+                   szNegNumFmt,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Get current decimal separator */
-    GetLocaleInfo(lcid,
-                  LOCALE_SDECIMAL,
-                  szNumSep,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_SDECIMAL,
+                   szNumSep,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Get current negative sign */
-    GetLocaleInfo(lcid,
-                  LOCALE_SNEGATIVESIGN,
-                  szNegSign,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_SNEGATIVESIGN,
+                   szNegSign,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Create standard list of negative numbers formats */
     for (nCBIndex = 0; nCBIndex < MAX_NEG_NUMBERS_SAMPLES; nCBIndex++)
@@ -354,217 +353,218 @@ InitNegNumFmtCB(HWND hwndDlg, LCID lcid)
         /* Replace standard separator to setted */
         pszResultStr = ReplaceSubStr(lpNegNumFmtSamples[nCBIndex],
                                      szNumSep,
-                                     _T(","));
-        _tcscpy(szNewSample, pszResultStr);
+                                     L",");
+        wcscpy(szNewSample, pszResultStr);
         free(pszResultStr);
+
         /* Replace standard negative sign to setted */
         pszResultStr = ReplaceSubStr(szNewSample,
                                      szNegSign,
-                                     _T("-"));
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)pszResultStr);
+                                     L"-");
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)pszResultStr);
         free(pszResultStr);
     }
 
     /* Set current item to value from registry */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
-                CB_SETCURSEL,
-                (WPARAM)_ttoi(szNegNumFmt),
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
+                        CB_SETCURSEL,
+                        (WPARAM)_wtoi(szNegNumFmt),
+                        (LPARAM)0);
 }
 
 /* Init leading zeroes control box */
 static VOID
-InitLeadingZeroesCB(HWND hwndDlg, LCID lcid)
+InitLeadingZeroesCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    TCHAR szLeadNumFmt[MAX_SAMPLES_STR_SIZE];
-    TCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
-    LPTSTR pszResultStr;
+    WCHAR szLeadNumFmt[MAX_SAMPLES_STR_SIZE];
+    WCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
+    PWSTR pszResultStr;
     INT nCBIndex;
 
     /* Get current leading zeroes format */
-    GetLocaleInfo(lcid,
-                  LOCALE_ILZERO,
-                  szLeadNumFmt,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_ILZERO,
+                   szLeadNumFmt,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDISPLEADZER,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Get current decimal separator */
-    GetLocaleInfo(lcid,
-                  LOCALE_SDECIMAL,
-                  szNumSep,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_SDECIMAL,
+                   szNumSep,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Create list of standard leading zeroes formats */
     for (nCBIndex = 0; nCBIndex < MAX_LEAD_ZEROES_SAMPLES; nCBIndex++)
     {
         pszResultStr = ReplaceSubStr(lpLeadNumFmtSamples[nCBIndex],
                                      szNumSep,
-                                     _T(","));
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)pszResultStr);
+                                     L",");
+        SendDlgItemMessage(hwndDlg, IDC_NUMBERSDISPLEADZER,
+                           CB_ADDSTRING,
+                           0,
+                           (LPARAM)pszResultStr);
         free(pszResultStr);
     }
 
     /* Set current item to value from registry */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
-                CB_SETCURSEL,
-                (WPARAM)_ttoi(szLeadNumFmt),
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDISPLEADZER,
+                        CB_SETCURSEL,
+                        (WPARAM)_wtoi(szLeadNumFmt),
+                        (LPARAM)0);
 }
 
 static VOID
 InitListSepCB(HWND hwndDlg,
-              LCID lcid)
+              PGLOBALDATA pGlobalData)
 {
-    TCHAR szListSep[MAX_SAMPLES_STR_SIZE];
+    WCHAR szListSep[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
     INT nRetCode;
 
     /* Limit text length */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
-                CB_LIMITTEXT,
-                MAX_NUMBERSLSEP,
-                0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
+                        CB_LIMITTEXT,
+                        MAX_NUMBERSLSEP,
+                        0);
 
     /* Get current list separator */
-    GetLocaleInfo(lcid,
-                  LOCALE_SLIST,
-                  szListSep,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_SLIST,
+                   szListSep,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Create standard list of signs */
     for (nCBIndex = 0; nCBIndex < MAX_LIST_SEP_SAMPLES; nCBIndex++)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)lpListSepSamples[nCBIndex]);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)lpListSepSamples[nCBIndex]);
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
-                           CB_SELECTSTRING,
-                           -1,
-                           (LPARAM)szListSep);
+    nRetCode = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
+                                   CB_SELECTSTRING,
+                                   -1,
+                                   (LPARAM)szListSep);
 
     /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)szListSep);
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
-                    CB_SELECTSTRING,
-                    -1,
-                    (LPARAM)szListSep);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)szListSep);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
+                            CB_SELECTSTRING,
+                            -1,
+                            (LPARAM)szListSep);
     }
 }
 
 /* Init system of units control box */
 static VOID
 InitUnitsSysCB(HWND hwndDlg,
-               LCID lcid)
+               PGLOBALDATA pGlobalData)
 {
-    TCHAR szUnitsSys[MAX_SAMPLES_STR_SIZE];
-    TCHAR szUnitName[128];
+    WCHAR szUnitsSys[MAX_SAMPLES_STR_SIZE];
+    WCHAR szUnitName[128];
     INT nCBIndex;
 
     /* Get current system of units */
-    GetLocaleInfo(lcid,
-                  LOCALE_IMEASURE,
-                  szUnitsSys,
-                  MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfoW(pGlobalData->lcid,
+                   LOCALE_IMEASURE,
+                   szUnitsSys,
+                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSMEASSYS),
-                CB_RESETCONTENT,
-                (WPARAM)0,
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSMEASSYS,
+                        CB_RESETCONTENT,
+                        (WPARAM)0,
+                        (LPARAM)0);
 
     /* Create list of standard system of units */
     for (nCBIndex = 0; nCBIndex < MAX_UNITS_SYS_SAMPLES; nCBIndex++)
     {
-        LoadString(hApplet, IDS_METRIC + nCBIndex, szUnitName, 128);
+        LoadStringW(hApplet, IDS_METRIC + nCBIndex, szUnitName, 128);
 
-        SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSMEASSYS),
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)szUnitName);
+        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSMEASSYS,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)szUnitName);
     }
 
     /* Set current item to value from registry */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSMEASSYS),
-                CB_SETCURSEL,
-                (WPARAM)_ttoi(szUnitsSys),
-                (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSMEASSYS,
+                        CB_SETCURSEL,
+                        (WPARAM)_wtoi(szUnitsSys),
+                        (LPARAM)0);
 }
 
 /* Update all numbers locale samples */
 static VOID
 UpdateNumSamples(HWND hwndDlg,
-                 LCID lcid)
+                 PGLOBALDATA pGlobalData)
 {
-    TCHAR OutBuffer[MAX_FMT_SIZE];
+    WCHAR OutBuffer[MAX_FMT_SIZE];
 
     /* Get positive number format sample */
-    GetNumberFormat(lcid,
-                    0,
-                    SAMPLE_NUMBER,
-                    NULL,
-                    OutBuffer,
-                    MAX_FMT_SIZE);
+    GetNumberFormatW(pGlobalData->lcid,
+                     0,
+                     SAMPLE_NUMBER,
+                     NULL,
+                     OutBuffer,
+                     MAX_FMT_SIZE);
 
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSPOSSAMPLE),
-                WM_SETTEXT,
-                0,
-                (LPARAM)OutBuffer);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSPOSSAMPLE,
+                        WM_SETTEXT,
+                        0,
+                        (LPARAM)OutBuffer);
 
     /* Get positive number format sample */
-    GetNumberFormat(lcid,
-                    0,
-                    SAMPLE_NEG_NUMBER,
-                    NULL,
-                    OutBuffer,
-                    MAX_FMT_SIZE);
+    GetNumberFormatW(pGlobalData->lcid,
+                     0,
+                     SAMPLE_NEG_NUMBER,
+                     NULL,
+                     OutBuffer,
+                     MAX_FMT_SIZE);
 
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNEGSAMPLE),
-                WM_SETTEXT,
-                0,
-                (LPARAM)OutBuffer);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNEGSAMPLE,
+                        WM_SETTEXT,
+                        0,
+                        (LPARAM)OutBuffer);
 }
 
 /* Set num decimal separator */
 static BOOL
 SetNumDecimalSep(HWND hwndDlg,
-                 LCID lcid)
+                 PGLOBALDATA pGlobalData)
 {
-    TCHAR szDecimalSep[MAX_SAMPLES_STR_SIZE];
+    WCHAR szDecimalSep[MAX_SAMPLES_STR_SIZE];
 
     /* Get setted decimal separator */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
-                WM_GETTEXT,
-                (WPARAM)MAX_SAMPLES_STR_SIZE,
-                (LPARAM)szDecimalSep);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
+                        WM_GETTEXT,
+                        (WPARAM)MAX_SAMPLES_STR_SIZE,
+                        (LPARAM)szDecimalSep);
 
     /* Save decimal separator */
-    SetLocaleInfo(lcid, LOCALE_SDECIMAL, szDecimalSep);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SDECIMAL, szDecimalSep);
 
     return TRUE;
 }
@@ -572,22 +572,22 @@ SetNumDecimalSep(HWND hwndDlg,
 /* Set number of fractional symbols */
 static BOOL
 SetFracSymNum(HWND hwndDlg,
-                 LCID lcid)
+              PGLOBALDATA pGlobalData)
 {
-    TCHAR szFracSymNum[MAX_SAMPLES_STR_SIZE];
+    WCHAR szFracSymNum[MAX_SAMPLES_STR_SIZE];
     INT nCurrSel;
 
     /* Get setted number of fractional symbols */
-    nCurrSel = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
-                           CB_GETCURSEL,
-                           (WPARAM)0,
-                           (LPARAM)0);
+    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNDIGDEC,
+                                   CB_GETCURSEL,
+                                   (WPARAM)0,
+                                   (LPARAM)0);
 
     /* Convert to wide char */
-    _itot(nCurrSel, szFracSymNum, DECIMAL_RADIX);
+    _itow(nCurrSel, szFracSymNum, DECIMAL_RADIX);
 
     /* Save number of fractional symbols */
-    SetLocaleInfo(lcid, LOCALE_IDIGITS, szFracSymNum);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_IDIGITS, szFracSymNum);
 
     return TRUE;
 }
@@ -595,18 +595,18 @@ SetFracSymNum(HWND hwndDlg,
 /* Set field separator */
 static BOOL
 SetNumFieldSep(HWND hwndDlg,
-               LCID lcid)
+               PGLOBALDATA pGlobalData)
 {
-    TCHAR szFieldSep[MAX_SAMPLES_STR_SIZE];
+    WCHAR szFieldSep[MAX_SAMPLES_STR_SIZE];
 
     /* Get setted field separator */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
-                WM_GETTEXT,
-                (WPARAM)MAX_SAMPLES_STR_SIZE,
-                (LPARAM)szFieldSep);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
+                        WM_GETTEXT,
+                        (WPARAM)MAX_SAMPLES_STR_SIZE,
+                        (LPARAM)szFieldSep);
 
     /* Save field separator */
-    SetLocaleInfo(lcid, LOCALE_STHOUSAND, szFieldSep);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_STHOUSAND, szFieldSep);
 
     return TRUE;
 }
@@ -614,18 +614,18 @@ SetNumFieldSep(HWND hwndDlg,
 /* Set number of digits in field  */
 static BOOL
 SetFieldDigNum(HWND hwndDlg,
-               LCID lcid)
+               PGLOBALDATA pGlobalData)
 {
-    TCHAR szFieldDigNum[MAX_SAMPLES_STR_SIZE];
+    WCHAR szFieldDigNum[MAX_SAMPLES_STR_SIZE];
 
     /* Get setted number of digidts in field */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
-                WM_GETTEXT,
-                (WPARAM)MAX_SAMPLES_STR_SIZE,
-                (LPARAM)szFieldDigNum);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
+                        WM_GETTEXT,
+                        (WPARAM)MAX_SAMPLES_STR_SIZE,
+                        (LPARAM)szFieldDigNum);
 
     /* Save number of digits in field */
-    SetLocaleInfo(lcid, LOCALE_SGROUPING, szFieldDigNum);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SGROUPING, szFieldDigNum);
 
     return TRUE;
 }
@@ -633,18 +633,18 @@ SetFieldDigNum(HWND hwndDlg,
 /* Set negative sign */
 static BOOL
 SetNumNegSign(HWND hwndDlg,
-              LCID lcid)
+              PGLOBALDATA pGlobalData)
 {
-    TCHAR szNegSign[MAX_SAMPLES_STR_SIZE];
+    WCHAR szNegSign[MAX_SAMPLES_STR_SIZE];
 
     /* Get setted negative sign */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
-                WM_GETTEXT,
-                (WPARAM)MAX_SAMPLES_STR_SIZE,
-                (LPARAM)szNegSign);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
+                        WM_GETTEXT,
+                        (WPARAM)MAX_SAMPLES_STR_SIZE,
+                        (LPARAM)szNegSign);
 
     /* Save negative sign */
-    SetLocaleInfo(lcid, LOCALE_SNEGATIVESIGN, szNegSign);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SNEGATIVESIGN, szNegSign);
 
     return TRUE;
 }
@@ -652,22 +652,22 @@ SetNumNegSign(HWND hwndDlg,
 /* Set negative sum format */
 static BOOL
 SetNegSumFmt(HWND hwndDlg,
-             LCID lcid)
+             PGLOBALDATA pGlobalData)
 {
-    TCHAR szNegSumFmt[MAX_SAMPLES_STR_SIZE];
+    WCHAR szNegSumFmt[MAX_SAMPLES_STR_SIZE];
     INT nCurrSel;
 
     /* Get setted negative sum format */
-    nCurrSel = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
-                           CB_GETCURSEL,
-                           (WPARAM)0,
-                           (LPARAM)0);
+    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
+                                   CB_GETCURSEL,
+                                   (WPARAM)0,
+                                   (LPARAM)0);
 
     /* convert to wide char */
-    _itot(nCurrSel, szNegSumFmt,DECIMAL_RADIX);
+    _itow(nCurrSel, szNegSumFmt,DECIMAL_RADIX);
 
     /* Save negative sum format */
-    SetLocaleInfo(lcid, LOCALE_INEGNUMBER, szNegSumFmt);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_INEGNUMBER, szNegSumFmt);
 
     return TRUE;
 }
@@ -675,22 +675,22 @@ SetNegSumFmt(HWND hwndDlg,
 /* Set leading zero */
 static BOOL
 SetNumLeadZero(HWND hwndDlg,
-                 LCID lcid)
+               PGLOBALDATA pGlobalData)
 {
-    TCHAR szLeadZero[MAX_SAMPLES_STR_SIZE];
+    WCHAR szLeadZero[MAX_SAMPLES_STR_SIZE];
     INT nCurrSel;
 
     /* Get setted leading zero format */
-    nCurrSel = SendMessageW(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
-                            CB_GETCURSEL,
-                            (WPARAM)0,
-                            (LPARAM)0);
+    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDISPLEADZER,
+                                   CB_GETCURSEL,
+                                   (WPARAM)0,
+                                   (LPARAM)0);
 
     /* Convert to wide char */
-    _itot(nCurrSel, szLeadZero, DECIMAL_RADIX);
+    _itow(nCurrSel, szLeadZero, DECIMAL_RADIX);
 
     /* Save leading zero format */
-    SetLocaleInfo(lcid, LOCALE_ILZERO, szLeadZero);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_ILZERO, szLeadZero);
 
     return TRUE;
 }
@@ -698,18 +698,18 @@ SetNumLeadZero(HWND hwndDlg,
 /* Set elements list separator */
 static BOOL
 SetNumListSep(HWND hwndDlg,
-                 LCID lcid)
+              PGLOBALDATA pGlobalData)
 {
-    TCHAR szListSep[MAX_SAMPLES_STR_SIZE];
+    WCHAR szListSep[MAX_SAMPLES_STR_SIZE];
 
     /* Get setted list separator */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
-                WM_GETTEXT,
-                (WPARAM)MAX_SAMPLES_STR_SIZE,
-                (LPARAM)szListSep);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
+                        WM_GETTEXT,
+                        (WPARAM)MAX_SAMPLES_STR_SIZE,
+                        (LPARAM)szListSep);
 
     /* Save list separator */
-    SetLocaleInfo(lcid, LOCALE_SLIST, szListSep);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SLIST, szListSep);
 
     return TRUE;
 }
@@ -717,22 +717,22 @@ SetNumListSep(HWND hwndDlg,
 /* Set units system */
 static BOOL
 SetNumUnitsSys(HWND hwndDlg,
-               LCID lcid)
+               PGLOBALDATA pGlobalData)
 {
-    TCHAR szUnitsSys[MAX_SAMPLES_STR_SIZE];
+    WCHAR szUnitsSys[MAX_SAMPLES_STR_SIZE];
     INT nCurrSel;
 
     /* Get setted units system */
-    nCurrSel = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSMEASSYS),
-                           CB_GETCURSEL,
-                           (WPARAM)0,
-                           (LPARAM)0);
+    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSMEASSYS,
+                                   CB_GETCURSEL,
+                                   (WPARAM)0,
+                                   (LPARAM)0);
 
     /* convert to wide char */
-    _itot(nCurrSel, szUnitsSys, DECIMAL_RADIX);
+    _itow(nCurrSel, szUnitsSys, DECIMAL_RADIX);
 
     /* Save units system */
-    SetLocaleInfo(lcid, LOCALE_IMEASURE, szUnitsSys);
+    SetLocaleInfoW(pGlobalData->lcid, LOCALE_IMEASURE, szUnitsSys);
 
     return TRUE;
 }
@@ -754,16 +754,16 @@ NumbersPageProc(HWND hwndDlg,
             pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            InitNumDecimalSepCB(hwndDlg, pGlobalData->lcid);
-            InitNumOfFracSymbCB(hwndDlg, pGlobalData->lcid);
-            InitNumFieldSepCB(hwndDlg, pGlobalData->lcid);
-            InitFieldDigNumCB(hwndDlg, pGlobalData->lcid);
-            InitNegSignCB(hwndDlg, pGlobalData->lcid);
-            InitNegNumFmtCB(hwndDlg, pGlobalData->lcid);
-            InitLeadingZeroesCB(hwndDlg, pGlobalData->lcid);
-            InitListSepCB(hwndDlg, pGlobalData->lcid);
-            InitUnitsSysCB(hwndDlg, pGlobalData->lcid);
-            UpdateNumSamples(hwndDlg, pGlobalData->lcid);
+            InitNumDecimalSepCB(hwndDlg, pGlobalData);
+            InitNumOfFracSymbCB(hwndDlg, pGlobalData);
+            InitNumFieldSepCB(hwndDlg, pGlobalData);
+            InitFieldDigNumCB(hwndDlg, pGlobalData);
+            InitNegSignCB(hwndDlg, pGlobalData);
+            InitNegNumFmtCB(hwndDlg, pGlobalData);
+            InitLeadingZeroesCB(hwndDlg, pGlobalData);
+            InitListSepCB(hwndDlg, pGlobalData);
+            InitUnitsSysCB(hwndDlg, pGlobalData);
+            UpdateNumSamples(hwndDlg, pGlobalData);
             break;
 
         case WM_COMMAND:
@@ -790,34 +790,34 @@ NumbersPageProc(HWND hwndDlg,
             /* If push apply button */
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                if (!SetNumDecimalSep(hwndDlg, pGlobalData->lcid))
+                if (!SetNumDecimalSep(hwndDlg, pGlobalData))
                     break;
 
-                if (!SetFracSymNum(hwndDlg, pGlobalData->lcid))
+                if (!SetFracSymNum(hwndDlg, pGlobalData))
                     break;
 
-                if (!SetNumFieldSep(hwndDlg, pGlobalData->lcid))
+                if (!SetNumFieldSep(hwndDlg, pGlobalData))
                     break;
 
-                if (!SetFieldDigNum(hwndDlg, pGlobalData->lcid))
+                if (!SetFieldDigNum(hwndDlg, pGlobalData))
                     break;
 
-                if (!SetNumNegSign(hwndDlg, pGlobalData->lcid))
+                if (!SetNumNegSign(hwndDlg, pGlobalData))
                     break;
 
-                if (!SetNegSumFmt(hwndDlg, pGlobalData->lcid))
+                if (!SetNegSumFmt(hwndDlg, pGlobalData))
                     break;
 
-                if (!SetNumLeadZero(hwndDlg, pGlobalData->lcid))
+                if (!SetNumLeadZero(hwndDlg, pGlobalData))
                     break;
 
-                if (!SetNumListSep(hwndDlg, pGlobalData->lcid))
+                if (!SetNumListSep(hwndDlg, pGlobalData))
                     break;
 
-                if (!SetNumUnitsSys(hwndDlg, pGlobalData->lcid))
+                if (!SetNumUnitsSys(hwndDlg, pGlobalData))
                     break;
 
-                UpdateNumSamples(hwndDlg, pGlobalData->lcid);
+                UpdateNumSamples(hwndDlg, pGlobalData);
             }
             break;
     }

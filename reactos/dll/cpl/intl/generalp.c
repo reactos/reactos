@@ -29,7 +29,7 @@
 
 #include <debug.h>
 
-#define SAMPLE_NUMBER   _T("123456789")
+#define SAMPLE_NUMBER   L"123456789"
 #define NO_FLAG         0
 
 typedef struct
@@ -87,11 +87,11 @@ static BOOL CALLBACK
 LocalesEnumProc(LPTSTR lpLocale)
 {
     LCID lcid;
-    TCHAR lang[255];
+    WCHAR lang[255];
     INT index;
     BOOL bNoShow = FALSE;
 
-    lcid = _tcstoul(lpLocale, NULL, 16);
+    lcid = wcstoul(lpLocale, NULL, 16);
 
     /* Display only languages with installed support */
     if (!IsValidLocale(lcid, LCID_INSTALLED))
@@ -102,7 +102,7 @@ LocalesEnumProc(LPTSTR lpLocale)
     {
         if (bSpain == FALSE)
         {
-            LoadString(hApplet, IDS_SPAIN, lang, 255);
+            LoadStringW(hApplet, IDS_SPAIN, lang, 255);
             bSpain = TRUE;
         }
         else
@@ -112,20 +112,20 @@ LocalesEnumProc(LPTSTR lpLocale)
     }
     else
     {
-        GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang)/sizeof(TCHAR));
+        GetLocaleInfoW(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang)/sizeof(WCHAR));
     }
 
     if (bNoShow == FALSE)
     {
-    index = SendMessage(hList,
-                        CB_ADDSTRING,
-                        0,
-                        (LPARAM)lang);
+    index = SendMessageW(hList,
+                         CB_ADDSTRING,
+                         0,
+                         (LPARAM)lang);
 
-    SendMessage(hList,
-                CB_SETITEMDATA,
-                index,
-                (LPARAM)lcid);
+    SendMessageW(hList,
+                 CB_SETITEMDATA,
+                 index,
+                 (LPARAM)lcid);
     }
 
     return TRUE;
@@ -196,20 +196,20 @@ UpdateLocaleSample(
 static VOID
 CreateLanguagesList(HWND hwnd)
 {
-    TCHAR langSel[255];
+    WCHAR langSel[255];
 
     hList = hwnd;
     bSpain = FALSE;
-    EnumSystemLocales(LocalesEnumProc, LCID_SUPPORTED);
+    EnumSystemLocalesW(LocalesEnumProc, LCID_SUPPORTED);
 
     /* Select current locale */
     /* or should it be System and not user? */
-    GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(TCHAR));
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(WCHAR));
 
-    SendMessage(hList,
-                CB_SELECTSTRING,
-                -1,
-                (LPARAM)langSel);
+    SendMessageW(hList,
+                 CB_SELECTSTRING,
+                 -1,
+                 (LPARAM)langSel);
 }
 
 
@@ -428,21 +428,21 @@ BOOL
 CALLBACK
 LocationsEnumProc(GEOID gId)
 {
-    TCHAR loc[MAX_STR_SIZE];
+    WCHAR loc[MAX_STR_SIZE];
     INT index;
 
-    if (GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT) == 0)
+    if (GetGeoInfoW(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT) == 0)
         return TRUE;
 
-    index = (INT)SendMessage(hGeoList,
-                             CB_ADDSTRING,
-                             0,
-                             (LPARAM)loc);
+    index = (INT)SendMessageW(hGeoList,
+                              CB_ADDSTRING,
+                              0,
+                              (LPARAM)loc);
 
-    SendMessage(hGeoList,
-                CB_SETITEMDATA,
-                index,
-                (LPARAM)gId);
+    SendMessageW(hGeoList,
+                 CB_SETITEMDATA,
+                 index,
+                 (LPARAM)gId);
 
     return TRUE;
 }
@@ -453,7 +453,7 @@ GEOID
 CreateLocationsList(HWND hWnd)
 {
     GEOID userGeoID;
-    TCHAR loc[MAX_STR_SIZE];
+    WCHAR loc[MAX_STR_SIZE];
 
     hGeoList = hWnd;
 
@@ -461,16 +461,16 @@ CreateLocationsList(HWND hWnd)
 
     /* Select current location */
     userGeoID = GetUserGeoID(GEOCLASS_NATION);
-    GetGeoInfo(userGeoID,
-               GEO_FRIENDLYNAME,
-               loc,
-               MAX_STR_SIZE,
-               LANG_SYSTEM_DEFAULT);
+    GetGeoInfoW(userGeoID,
+                GEO_FRIENDLYNAME,
+                loc,
+                MAX_STR_SIZE,
+                LANG_SYSTEM_DEFAULT);
 
-    SendMessage(hGeoList,
-                CB_SELECTSTRING,
-                (WPARAM) -1,
-                (LPARAM)loc);
+    SendMessageW(hGeoList,
+                 CB_SELECTSTRING,
+                 (WPARAM) -1,
+                 (LPARAM)loc);
 
     return userGeoID;
 }
