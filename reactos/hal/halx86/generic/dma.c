@@ -153,6 +153,7 @@ HalpInitDma(VOID)
     WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2), 0x2A);
     if (READ_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2)) == 0x2A)
     {
+        DPRINT1("Machine supports EISA DMA. Bus type: %lu\n", HalpBusType);
         HalpEisaDma = TRUE;
     }
 
