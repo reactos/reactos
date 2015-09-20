@@ -22,6 +22,7 @@ list(APPEND SOURCE
     RtlDosPathNameToNtPathName_U.c
     RtlDosSearchPath_U.c
     RtlDosSearchPath_Ustr.c
+    RtlGenerate8dot3Name.c
     RtlGetFullPathName_U.c
     RtlGetFullPathName_Ustr.c
     RtlGetFullPathName_UstrEx.c
