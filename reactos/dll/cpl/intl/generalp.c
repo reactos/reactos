@@ -475,6 +475,76 @@ CreateLocationsList(HWND hWnd)
     return userGeoID;
 }
 
+VOID
+SaveGeoID(
+    PGLOBALDATA pGlobalData)
+{
+    HKEY hGeoKey;
+    WCHAR value[15];
+    DWORD valuesize;
+    DWORD ret;
+
+    wsprintf(value, L"%lu", (DWORD)pGlobalData->geoid);
+    valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
+
+    if (pGlobalData->bApplyToDefaultUser)
+    {
+        ret = RegOpenKeyExW(HKEY_USERS,
+                            L".DEFAULT\\Control Panel\\International\\Geo",
+                            0,
+                            KEY_WRITE,
+                            &hGeoKey);
+        if (ret != ERROR_SUCCESS)
+        {
+            PrintErrorMsgBox(IDS_ERROR_DEF_INT_KEY_REG);
+            return;
+        }
+
+        ret = RegSetValueExW(hGeoKey,
+                             L"Nation",
+                             0,
+                             REG_SZ,
+                             (PBYTE)value,
+                             valuesize);
+
+        RegFlushKey(hGeoKey);
+        RegCloseKey(hGeoKey);
+
+        if (ret != ERROR_SUCCESS)
+        {
+            PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+            return;
+        }
+    }
+
+    ret = RegOpenKeyExW(HKEY_CURRENT_USER,
+                        L"Control Panel\\International\\Geo",
+                        0,
+                        KEY_WRITE,
+                        &hGeoKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+        return;
+    }
+
+    ret = RegSetValueExW(hGeoKey,
+                         L"Nation",
+                         0,
+                         REG_SZ,
+                         (PBYTE)value,
+                         valuesize);
+
+    RegFlushKey(hGeoKey);
+    RegCloseKey(hGeoKey);
+
+    if (ret != ERROR_SUCCESS)
+    {
+        PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+        return;
+    }
+}
+
 DWORD
 VerifyUnattendLCID(HWND hwndDlg)
 {
@@ -630,7 +700,7 @@ GeneralPageProc(HWND hwndDlg,
                     /* Set new GEO ID */
                     if (pGlobalData->fGeoIdChanged == TRUE)
                     {
-                        SetUserGeoID(pGlobalData->geoid);
+                        SaveGeoID(pGlobalData);
                         pGlobalData->fGeoIdChanged = FALSE;
                     }
 
