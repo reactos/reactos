@@ -1727,7 +1727,7 @@ CreateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
                           0,
                           CreateFileTypeNone,
                           NULL,
-                          IO_STOP_ON_SYMLINK);
+                          IO_STOP_ON_SYMLINK | IO_NO_PARAMETER_CHECKING);
     if (!NT_SUCCESS(Status))
     {
         if (Status == STATUS_STOPPED_ON_SYMLINK)
@@ -1865,7 +1865,7 @@ OpenRemoteDatabase(IN PDEVICE_INFORMATION DeviceInformation,
                           0,
                           CreateFileTypeNone,
                           NULL,
-                          IO_STOP_ON_SYMLINK);
+                          IO_STOP_ON_SYMLINK | IO_NO_PARAMETER_CHECKING);
     if (Status == STATUS_STOPPED_ON_SYMLINK)
     {
         DPRINT1("Attempt to exploit CVE-2015-1769. See CORE-10216\n");
