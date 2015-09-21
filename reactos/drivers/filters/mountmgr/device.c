@@ -1108,7 +1108,7 @@ MountMgrValidateBackPointer(IN PASSOCIATED_DEVICE_ENTRY AssociatedDeviceEntry,
     }
 
     /* Allocate a buffer big enough to read reparse data */
-    ReparseData = AllocatePool(0x4000);
+    ReparseData = AllocatePool(MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
     if (ReparseData == NULL)
     {
         ZwClose(Handle);
@@ -1121,7 +1121,7 @@ MountMgrValidateBackPointer(IN PASSOCIATED_DEVICE_ENTRY AssociatedDeviceEntry,
                              &IoStatusBlock,
                              FSCTL_GET_REPARSE_POINT,
                              NULL, 0,
-                             ReparseData, 0x4000);
+                             ReparseData, MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
     ZwClose(Handle);
 
     if (!NT_SUCCESS(Status))
