@@ -31,6 +31,19 @@ _MiAddressToPte(PVOID Address)
 #endif
 
 static
+_Must_inspect_result_
+_IRQL_requires_max_ (DISPATCH_LEVEL)
+PMDL
+(NTAPI
+*pMmAllocatePagesForMdlEx)(
+    _In_ PHYSICAL_ADDRESS LowAddress,
+    _In_ PHYSICAL_ADDRESS HighAddress,
+    _In_ PHYSICAL_ADDRESS SkipBytes,
+    _In_ SIZE_T TotalBytes,
+    _In_ MEMORY_CACHING_TYPE CacheType,
+    _In_ ULONG Flags);
+
+static
 BOOLEAN
 ValidateMapping(
     _In_ PVOID BaseAddress,
@@ -84,16 +97,21 @@ TestMap(
     PPFN_NUMBER MdlPages;
     ULONG i;
 
+    if (skip(pMmAllocatePagesForMdlEx != NULL, "MmAllocatePagesForMdlEx unavailable\n"))
+    {
+        return;
+    }
+
     ZeroPhysical.QuadPart = 0;
     MaxPhysical.QuadPart = 0xffffffffffffffffLL;
 
     /* Create a one-page MDL and map it */
-    Mdl = MmAllocatePagesForMdlEx(ZeroPhysical,
-                                  MaxPhysical,
-                                  ZeroPhysical,
-                                  PAGE_SIZE,
-                                  MmCached,
-                                  0);
+    Mdl = pMmAllocatePagesForMdlEx(ZeroPhysical,
+                                   MaxPhysical,
+                                   ZeroPhysical,
+                                   PAGE_SIZE,
+                                   MmCached,
+                                   0);
     if (skip(Mdl != NULL, "No MDL\n"))
     {
         return;
@@ -153,12 +171,12 @@ TestMap(
     MmFreePagesFromMdl(Mdl);
 
     /* Map all pages */
-    Mdl = MmAllocatePagesForMdlEx(ZeroPhysical,
-                                  MaxPhysical,
-                                  ZeroPhysical,
-                                  TotalPtes * PAGE_SIZE,
-                                  MmCached,
-                                  0);
+    Mdl = pMmAllocatePagesForMdlEx(ZeroPhysical,
+                                   MaxPhysical,
+                                   ZeroPhysical,
+                                   TotalPtes * PAGE_SIZE,
+                                   MmCached,
+                                   0);
     if (skip(Mdl != NULL, "No MDL\n"))
     {
         return;
@@ -196,12 +214,12 @@ TestMap(
     MmFreePagesFromMdl(Mdl);
 
     /* Try to map more pages than we reserved */
-    Mdl = MmAllocatePagesForMdlEx(ZeroPhysical,
-                                  MaxPhysical,
-                                  ZeroPhysical,
-                                  (TotalPtes + 1) * PAGE_SIZE,
-                                  MmCached,
-                                  0);
+    Mdl = pMmAllocatePagesForMdlEx(ZeroPhysical,
+                                   MaxPhysical,
+                                   ZeroPhysical,
+                                   (TotalPtes + 1) * PAGE_SIZE,
+                                   MmCached,
+                                   0);
     if (skip(Mdl != NULL, "No MDL\n"))
     {
         return;
@@ -225,6 +243,8 @@ TestMap(
 START_TEST(MmReservedMapping)
 {
     PVOID Mapping;
+
+    pMmAllocatePagesForMdlEx = KmtGetSystemRoutineAddress(L"MmAllocatePagesForMdlEx");
 
     /* one byte - single page */
     Mapping = MmAllocateMappingAddress(1, 'MRmK');
