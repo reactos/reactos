@@ -1,6 +1,6 @@
 /*
  * PROJECT:         input.dll
- * FILE:            dll/win32/input/advsettings.c
+ * FILE:            dll/cpl/input/advsettings.c
  * PURPOSE:         input.dll
  * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *

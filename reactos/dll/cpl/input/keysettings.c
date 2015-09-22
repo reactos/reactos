@@ -1,6 +1,6 @@
 /*
  * PROJECT:         input.dll
- * FILE:            dll/win32/input/keysettings.c
+ * FILE:            dll/cpl/input/keysettings.c
  * PURPOSE:         input.dll
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  *                  Colin Finck

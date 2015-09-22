@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/console/layout.c
+ * FILE:            dll/cpl/console/layout.c
  * PURPOSE:         Layout dialog
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

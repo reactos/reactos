@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/console/options.c
+ * FILE:            dll/cpl/console/options.c
  * PURPOSE:         Options dialog
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
