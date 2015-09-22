@@ -23,46 +23,20 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-/*
-This folder should not exist. It is just a file system folder... The \windows\fonts
-directory contains a hidden desktop.ini with a UIHandler entry that specifies a class
-that lives in fontext.dll. The UI handler creates a custom view for the folder, which
-is what we normally see. However, the folder is a perfectly normal CFSFolder.
-*/
-
-/***********************************************************************
-*   IShellFolder implementation
-*/
-
 CFontsFolder::CFontsFolder()
 {
     m_pisfInner = NULL;
-    m_pisf2Inner = NULL;
-
-    pidlRoot = NULL;
-    apidl = NULL;
 }
 
 CFontsFolder::~CFontsFolder()
 {
-    TRACE("-- destroying IShellFolder(%p)\n", this);
-    SHFree(pidlRoot);
-}
-
-static LPITEMIDLIST _ILCreateFont(void)
-{
-    return _ILCreateGuid(PT_GUID, CLSID_FontsFolderShortcut);
 }
 
 HRESULT WINAPI CFontsFolder::FinalConstruct()
 {
     HRESULT hr;
     CComPtr<IPersistFolder3> ppf3;
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder, &m_pisfInner));
-    if (FAILED(hr))
-        return hr;
-
-    hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IShellFolder2, &m_pisf2Inner));
+    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder2, &m_pisfInner));
     if (FAILED(hr))
         return hr;
 
@@ -70,11 +44,17 @@ HRESULT WINAPI CFontsFolder::FinalConstruct()
     if (FAILED(hr))
         return hr;
 
+    LPITEMIDLIST pidl = _ILCreateGuid(PT_GUID, CLSID_FontsFolderShortcut);
+    if (!pidl)
+        return E_OUTOFMEMORY;
+        
     PERSIST_FOLDER_TARGET_INFO info;
     ZeroMemory(&info, sizeof(PERSIST_FOLDER_TARGET_INFO));
     info.csidl = CSIDL_FONTS;
-    hr = ppf3->InitializeEx(NULL, _ILCreateFont(), &info);
+    hr = ppf3->InitializeEx(NULL, pidl, &info);
 
+    ILFree(pidl);
+    
     return hr;
 }
 
@@ -114,28 +94,22 @@ HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY ap
     static const DWORD dwFontsAttributes =
         SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR | 
         SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
-
+    
     if(cidl)
-    {
         return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
-    }
-    else
-    {
-        if (!rgfInOut)
-            return E_INVALIDARG;
-        if (cidl && !apidl)
-            return E_INVALIDARG;
 
-        if (*rgfInOut == 0)
-            *rgfInOut = ~0;
+    if (!rgfInOut || !apidl)
+        return E_INVALIDARG;
 
-        *rgfInOut &= dwFontsAttributes;
+    if (*rgfInOut == 0)
+        *rgfInOut = ~0;
 
-        /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
-        *rgfInOut &= ~SFGAO_VALIDATE;
+    *rgfInOut &= dwFontsAttributes;
 
-        return S_OK;
-    }
+    /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
+    *rgfInOut &= ~SFGAO_VALIDATE;
+
+    return S_OK;
 }
 
 HRESULT WINAPI CFontsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
@@ -146,39 +120,26 @@ HRESULT WINAPI CFontsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_
 
 HRESULT WINAPI CFontsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
+    if (!strRet || !pidl)
+        return E_INVALIDARG;
+
+    /* If we got an fs item just forward to the fs folder */
     if (!_ILIsSpecialFolder(pidl))
         return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
 
-    TRACE ("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
-    pdump (pidl);
-
-    if (!strRet)
-        return E_INVALIDARG;
-
-if (!pidl->mkid.cb)
+    /* The caller wants our path. Let fs folder handle it */
+    if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
+        (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
     {
-        WCHAR wszPath[MAX_PATH];
+        /* Give an empty pidl to the fs folder to tell us its path */
+        if (pidl->mkid.cb)
+            pidl = ILGetNext(pidl);
 
-        if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
-        {
-            if (!SHGetSpecialFolderPathW(NULL, wszPath, CSIDL_FONTS, FALSE))
-                return E_FAIL;
-        }
-        else if (!HCR_GetClassNameW(CLSID_FontsFolderShortcut, wszPath, MAX_PATH))
-            return E_FAIL;
-
-        strRet->pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(wszPath) + 1) * sizeof(WCHAR));
-        if (!strRet->pOleStr)
-            return E_OUTOFMEMORY;
-
-        wcscpy(strRet->pOleStr, wszPath);
-        strRet->uType = STRRET_WSTR;
-
-        return S_OK;
+        return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
-    else
-        return E_INVALIDARG;
+
+    /* Return the display name from the registry */
+    return HCR_GetClassName(CLSID_FontsFolderShortcut, strRet);
 }
 
 HRESULT WINAPI CFontsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
@@ -189,46 +150,41 @@ HRESULT WINAPI CFontsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    
 
 HRESULT WINAPI CFontsFolder::GetDefaultSearchGUID(GUID *pguid)
 {
-    return m_pisf2Inner->GetDefaultSearchGUID(pguid);
+    return m_pisfInner->GetDefaultSearchGUID(pguid);
 }
 
 HRESULT WINAPI CFontsFolder::EnumSearches(IEnumExtraSearch ** ppenum)
 {
-    return m_pisf2Inner->EnumSearches(ppenum);
+    return m_pisfInner->EnumSearches(ppenum);
 }
 
 HRESULT WINAPI CFontsFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
-    return m_pisf2Inner->GetDefaultColumn(dwRes, pSort, pDisplay);
+    return m_pisfInner->GetDefaultColumn(dwRes, pSort, pDisplay);
 }
 
 HRESULT WINAPI CFontsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    return m_pisf2Inner->GetDefaultColumnState(iColumn, pcsFlags);
+    return m_pisfInner->GetDefaultColumnState(iColumn, pcsFlags);
 }
 
 HRESULT WINAPI CFontsFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    return m_pisf2Inner->GetDetailsEx(pidl, pscid, pv);
+    return m_pisfInner->GetDetailsEx(pidl, pscid, pv);
 }
 
 HRESULT WINAPI CFontsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    return m_pisf2Inner->GetDetailsOf(pidl, iColumn, psd);
+    return m_pisfInner->GetDetailsOf(pidl, iColumn, psd);
 }
 
 HRESULT WINAPI CFontsFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    return m_pisf2Inner->MapColumnToSCID(column, pscid);
+    return m_pisfInner->MapColumnToSCID(column, pscid);
 }
 
-/************************************************************************
- *    CFontsFolder::GetClassID
- */
 HRESULT WINAPI CFontsFolder::GetClassID(CLSID *lpClassId)
 {
-    TRACE ("(%p)\n", this);
-
     if (!lpClassId)
         return E_POINTER;
 
@@ -237,29 +193,17 @@ HRESULT WINAPI CFontsFolder::GetClassID(CLSID *lpClassId)
     return S_OK;
 }
 
-/************************************************************************
- *    CFontsFolder::Initialize
- *
- * NOTES: it makes no sense to change the pidl
- */
 HRESULT WINAPI CFontsFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    TRACE ("(%p)->(%p)\n", this, pidl);
-
     return S_OK;
 }
 
-/**************************************************************************
- *    CFontsFolder::GetCurFolder
- */
 HRESULT WINAPI CFontsFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {
-    TRACE ("(%p)->(%p)\n", this, pidl);
-
     if (!pidl)
         return E_POINTER;
 
-    *pidl = ILClone(pidlRoot);
+    *pidl = _ILCreateGuid(PT_GUID, CLSID_FontsFolderShortcut);
 
     return S_OK;
 }

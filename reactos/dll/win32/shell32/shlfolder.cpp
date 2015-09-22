@@ -376,6 +376,17 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
     return hr;
 }
 
+HRESULT HCR_GetClassName(REFIID riid, LPSTRRET strRet)
+{
+    BOOL bRet;
+    WCHAR wstrName[MAX_PATH+1];
+    bRet = HCR_GetClassNameW(CLSID_MyDocuments, wstrName, MAX_PATH);
+    if (!bRet)
+        return E_FAIL;
+
+    return SHSetStrRet(strRet, wstrName);
+}
+
 HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPath, PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     HRESULT hr;

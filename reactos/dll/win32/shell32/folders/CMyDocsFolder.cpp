@@ -23,55 +23,22 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (mydocs);
 
-/*
-CFileSysEnumX should not exist. CMyDocsFolder should aggregate a CFSFolder which always
-maps the contents of CSIDL_PERSONAL. Therefore, CMyDocsFolder::EnumObjects simply calls
-CFSFolder::EnumObjects.
-*/
-
-/***********************************************************************
-*     MyDocumentsfolder implementation
-*/
-
 CMyDocsFolder::CMyDocsFolder()
 {
     m_pisfInner = NULL;
-    m_pisf2Inner = NULL;
-    pidlRoot = NULL;
-    sPathTarget = NULL;
 }
 
 CMyDocsFolder::~CMyDocsFolder()
 {
-    SHFree(pidlRoot);
-    if (sPathTarget)
-        HeapFree(GetProcessHeap(), 0, sPathTarget);
     m_pisfInner.Release();
-    m_pisf2Inner.Release();
 }
 
 HRESULT WINAPI CMyDocsFolder::FinalConstruct()
 {
-    WCHAR szMyPath[MAX_PATH];
-
-    if (!SHGetSpecialFolderPathW(0, szMyPath, CSIDL_PERSONAL, TRUE))
-        return E_UNEXPECTED;
-
-    pidlRoot = _ILCreateMyDocuments();    /* my qualified pidl */
-    sPathTarget = (LPWSTR)SHAlloc((wcslen(szMyPath) + 1) * sizeof(WCHAR));
-    wcscpy(sPathTarget, szMyPath);
-
-    WCHAR szPath[MAX_PATH];
-    lstrcpynW(szPath, sPathTarget, MAX_PATH);
-
     HRESULT hr;
     CComPtr<IPersistFolder3> ppf3;
 
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder, &m_pisfInner));
-    if (FAILED(hr))
-        return hr;
-
-    hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IShellFolder2, &m_pisf2Inner));
+    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder2, &m_pisfInner));
     if (FAILED(hr))
         return hr;
 
@@ -79,10 +46,14 @@ HRESULT WINAPI CMyDocsFolder::FinalConstruct()
     if (FAILED(hr))
         return hr;
 
+    LPITEMIDLIST pidlRoot = _ILCreateMyDocuments();
+
     PERSIST_FOLDER_TARGET_INFO info;
     ZeroMemory(&info, sizeof(PERSIST_FOLDER_TARGET_INFO));
     info.csidl = CSIDL_PERSONAL;
     hr = ppf3->InitializeEx(NULL, pidlRoot, &info);
+
+    SHFree(pidlRoot);
 
     return hr;
 }
@@ -125,26 +96,20 @@ HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
 
     if(cidl)
-    {
         return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
-    }
-    else
-    {
-        if (!rgfInOut)
-            return E_INVALIDARG;
-        if (cidl && !apidl)
-            return E_INVALIDARG;
 
-        if (*rgfInOut == 0)
-            *rgfInOut = ~0;
+    if (!rgfInOut || !apidl)
+        return E_INVALIDARG;
 
-        *rgfInOut &= dwMyDocumentsAttributes;
+    if (*rgfInOut == 0)
+        *rgfInOut = ~0;
 
-        /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
-        *rgfInOut &= ~SFGAO_VALIDATE;
+    *rgfInOut &= dwMyDocumentsAttributes;
 
-        return S_OK;
-    }
+    /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
+    *rgfInOut &= ~SFGAO_VALIDATE;
+
+    return S_OK;
 }
 
 HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
@@ -155,48 +120,25 @@ HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID
 
 HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
+    if (!strRet || !pidl)
+        return E_INVALIDARG;
+
+    /* If we got an fs item just forward to the fs folder */
     if (!_ILIsSpecialFolder(pidl))
         return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
 
-    HRESULT hr = S_OK;
-    LPWSTR pszPath;
-
-    TRACE ("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
-    pdump (pidl);
-
-    if (!strRet)
-        return E_INVALIDARG;
-
-    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
-    if (!pszPath)
-        return E_OUTOFMEMORY;
-
-    ZeroMemory(pszPath, (MAX_PATH + 1) * sizeof(WCHAR));
-
-    if (_ILIsMyDocuments (pidl) || !pidl->mkid.cb)
+    /* The caller wants our path. Let fs folder handle it */
+    if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
+        (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
     {
-        if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
-            wcscpy(pszPath, sPathTarget);
-        else
-            HCR_GetClassNameW(CLSID_MyDocuments, pszPath, MAX_PATH);
-        TRACE("CP\n");
-    }
-    else 
-    {
-        hr = E_INVALIDARG;
+        /* Give an empty pidl to the fs folder to make it tell us its path */
+        if (pidl->mkid.cb)
+            pidl = ILGetNext(pidl);
+        return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
-    if (SUCCEEDED(hr))
-    {
-        strRet->uType = STRRET_WSTR;
-        strRet->pOleStr = pszPath;
-    }
-    else
-        CoTaskMemFree(pszPath);
-
-    TRACE ("-- (%p)->(%s,0x%08x)\n", this, debugstr_w(strRet->pOleStr), hr);
-    return hr;
+    /* Return the display name from the registry */
+    return HCR_GetClassName(CLSID_MyDocuments, strRet);
 }
 
 HRESULT WINAPI CMyDocsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
@@ -207,43 +149,41 @@ HRESULT WINAPI CMyDocsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,   
 
 HRESULT WINAPI CMyDocsFolder::GetDefaultSearchGUID(GUID *pguid)
 {
-    return m_pisf2Inner->GetDefaultSearchGUID(pguid);
+    return m_pisfInner->GetDefaultSearchGUID(pguid);
 }
 
 HRESULT WINAPI CMyDocsFolder::EnumSearches(IEnumExtraSearch ** ppenum)
 {
-    return m_pisf2Inner->EnumSearches(ppenum);
+    return m_pisfInner->EnumSearches(ppenum);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
-    return m_pisf2Inner->GetDefaultColumn(dwRes, pSort, pDisplay);
+    return m_pisfInner->GetDefaultColumn(dwRes, pSort, pDisplay);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    return m_pisf2Inner->GetDefaultColumnState(iColumn, pcsFlags);
+    return m_pisfInner->GetDefaultColumnState(iColumn, pcsFlags);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    return m_pisf2Inner->GetDetailsEx(pidl, pscid, pv);
+    return m_pisfInner->GetDetailsEx(pidl, pscid, pv);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    return m_pisf2Inner->GetDetailsOf(pidl, iColumn, psd);
+    return m_pisfInner->GetDetailsOf(pidl, iColumn, psd);
 }
 
 HRESULT WINAPI CMyDocsFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    return m_pisf2Inner->MapColumnToSCID(column, pscid);
+    return m_pisfInner->MapColumnToSCID(column, pscid);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetClassID(CLSID *lpClassId)
 {
-    TRACE ("(%p)\n", this);
-
     if (!lpClassId)
         return E_POINTER;
 
@@ -254,16 +194,13 @@ HRESULT WINAPI CMyDocsFolder::GetClassID(CLSID *lpClassId)
 
 HRESULT WINAPI CMyDocsFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    TRACE ("(%p)->(%p)\n", this, pidl);
-
     return S_OK;
 }
 
 HRESULT WINAPI CMyDocsFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {
-    TRACE ("(%p)->(%p)\n", this, pidl);
-
-    if (!pidl) return E_POINTER;
-    *pidl = ILClone (pidlRoot);
+    if (!pidl)
+        return E_POINTER;
+    *pidl = _ILCreateMyDocuments();
     return S_OK;
 }

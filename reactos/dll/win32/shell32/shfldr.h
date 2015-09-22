@@ -39,6 +39,9 @@ typedef struct {
 LPCWSTR GetNextElementW (LPCWSTR pszNext, LPWSTR pszOut, DWORD dwOut);
 HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc, LPITEMIDLIST * pidlInOut,
                   LPOLESTR szNext, DWORD * pEaten, DWORD * pdwAttributes);
+
+HRESULT HCR_GetClassName(REFIID riid, LPSTRRET strRet);
+
 HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf, LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet);
 
 HRESULT SHELL32_BindToFS (LPCITEMIDLIST pidlRoot,

@@ -29,12 +29,7 @@ class CMyDocsFolder :
     public IPersistFolder2
 {
     private:
-        CComPtr<IShellFolder> m_pisfInner;
-        CComPtr<IShellFolder2> m_pisf2Inner;
-
-        /* both paths are parsible from the MyDocuments */
-        LPWSTR sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
-        LPITEMIDLIST pidlRoot;  /* absolute pidl */
+        CComPtr<IShellFolder2> m_pisfInner;
     public:
         CMyDocsFolder();
         ~CMyDocsFolder();

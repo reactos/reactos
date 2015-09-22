@@ -23,43 +23,22 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-/*
-This folder should not exist. It is just a file system folder...
-*/
-
-/* List shortcuts of
- * CSIDL_COMMON_ADMINTOOLS
- * Note: CSIDL_ADMINTOOLS is ignored, tested with Window XP SP3+
- */
-
-/***********************************************************************
- *     AdminTools folder implementation
- */
-
 CAdminToolsFolder::CAdminToolsFolder()
 {
     m_pisfInner = NULL;
-    m_pisf2Inner = NULL;
-
-    szTarget = NULL;
 }
 
 CAdminToolsFolder::~CAdminToolsFolder()
 {
-    HeapFree(GetProcessHeap(), 0, szTarget);
     m_pisfInner.Release();
-    m_pisf2Inner.Release();
 }
 
 HRESULT WINAPI CAdminToolsFolder::FinalConstruct()
 {
     HRESULT hr;
     CComPtr<IPersistFolder3> ppf3;
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder, &m_pisfInner));
-    if (FAILED(hr))
-        return hr;
 
-    hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IShellFolder2, &m_pisf2Inner));
+    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder2, &m_pisfInner));
     if (FAILED(hr))
         return hr;
 
@@ -67,18 +46,16 @@ HRESULT WINAPI CAdminToolsFolder::FinalConstruct()
     if (FAILED(hr))
         return hr;
 
+    LPITEMIDLIST pidlRoot = _ILCreateAdminTools();
+
     PERSIST_FOLDER_TARGET_INFO info;
     ZeroMemory(&info, sizeof(PERSIST_FOLDER_TARGET_INFO));
     info.csidl = CSIDL_COMMON_ADMINTOOLS;
-    hr = ppf3->InitializeEx(NULL, _ILCreateAdminTools(), &info);
+    hr = ppf3->InitializeEx(NULL, pidlRoot, &info);
 
-    szTarget = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    if (szTarget == NULL)
-        return E_OUTOFMEMORY;
-    if (!SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_COMMON_ADMINTOOLS, FALSE))
-        return E_FAIL;
+    SHFree(pidlRoot);
 
-    return S_OK;
+    return hr;
 }
 
 HRESULT WINAPI CAdminToolsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
@@ -117,28 +94,22 @@ HRESULT WINAPI CAdminToolsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARR
     static const DWORD dwAdminToolsAttributes =
         SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR | 
         SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
-
+        
     if(cidl)
-    {
         return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
-    }
-    else
-    {
-        if (!rgfInOut)
-            return E_INVALIDARG;
-        if (cidl && !apidl)
-            return E_INVALIDARG;
 
-        if (*rgfInOut == 0)
-            *rgfInOut = ~0;
+    if (!rgfInOut || !apidl)
+        return E_INVALIDARG;
 
-        *rgfInOut &= dwAdminToolsAttributes;
+    if (*rgfInOut == 0)
+        *rgfInOut = ~0;
 
-        /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
-        *rgfInOut &= ~SFGAO_VALIDATE;
+    *rgfInOut &= dwAdminToolsAttributes;
 
-        return S_OK;
-    }
+    /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
+    *rgfInOut &= ~SFGAO_VALIDATE;
+
+    return S_OK;
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
@@ -149,43 +120,25 @@ HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUIT
 
 HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
+    if (!strRet || !pidl)
+        return E_INVALIDARG;
+
+    /* If we got an fs item just forward to the fs folder */
     if (!_ILIsSpecialFolder(pidl))
         return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
 
-    HRESULT hr = S_OK;
-    LPWSTR pszPath;
-
-    TRACE ("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
-    pdump (pidl);
-
-    if (!strRet)
-        return E_INVALIDARG;
-
-    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
-    if (!pszPath)
-        return E_OUTOFMEMORY;
-
-    ZeroMemory(pszPath, (MAX_PATH + 1) * sizeof(WCHAR));
-
-    if (!pidl->mkid.cb)
+    /* The caller wants our path. Let fs folder handle it */
+    if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
+        (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
     {
-        if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
-            wcscpy(pszPath, szTarget);
-        else if (!HCR_GetClassNameW(CLSID_AdminFolderShortcut, pszPath, MAX_PATH))
-            hr = E_FAIL;
+        /* Give an empty pidl to the fs folder to make it tell us its path */
+        if (pidl->mkid.cb)
+            pidl = ILGetNext(pidl);
+        return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
-    if (SUCCEEDED(hr))
-    {
-        strRet->uType = STRRET_WSTR;
-        strRet->pOleStr = pszPath;
-        TRACE ("-- (%p)->(%s,0x%08x)\n", this, debugstr_w(strRet->pOleStr), hr);
-    }
-    else
-        CoTaskMemFree(pszPath);
-
-    return hr;
+    /* Return the display name from the registry */
+    return HCR_GetClassName(CLSID_AdminFolderShortcut, strRet);
 }
 
 HRESULT WINAPI CAdminToolsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
@@ -196,66 +149,58 @@ HRESULT WINAPI CAdminToolsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl
 
 HRESULT WINAPI CAdminToolsFolder::GetDefaultSearchGUID(GUID *pguid)
 {
-    return m_pisf2Inner->GetDefaultSearchGUID(pguid);
+    return m_pisfInner->GetDefaultSearchGUID(pguid);
 }
 
 HRESULT WINAPI CAdminToolsFolder::EnumSearches(IEnumExtraSearch ** ppenum)
 {
-    return m_pisf2Inner->EnumSearches(ppenum);
+    return m_pisfInner->EnumSearches(ppenum);
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
-    return m_pisf2Inner->GetDefaultColumn(dwRes, pSort, pDisplay);
+    return m_pisfInner->GetDefaultColumn(dwRes, pSort, pDisplay);
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    return m_pisf2Inner->GetDefaultColumnState(iColumn, pcsFlags);
+    return m_pisfInner->GetDefaultColumnState(iColumn, pcsFlags);
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    return m_pisf2Inner->GetDetailsEx(pidl, pscid, pv);
+    return m_pisfInner->GetDetailsEx(pidl, pscid, pv);
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    return m_pisf2Inner->GetDetailsOf(pidl, iColumn, psd);
+    return m_pisfInner->GetDetailsOf(pidl, iColumn, psd);
 }
 
 HRESULT WINAPI CAdminToolsFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    return m_pisf2Inner->MapColumnToSCID(column, pscid);
+    return m_pisfInner->MapColumnToSCID(column, pscid);
 }
 
-/************************************************************************
- *    CAdminToolsFolder::GetClassID
- */
 HRESULT WINAPI CAdminToolsFolder::GetClassID(CLSID *lpClassId)
 {
-    TRACE ("(%p)\n", this);
+    if (!lpClassId)
+        return E_POINTER;
 
     memcpy(lpClassId, &CLSID_AdminFolderShortcut, sizeof(CLSID));
 
     return S_OK;
 }
 
-/************************************************************************
- *    CAdminToolsFolder::Initialize
- *
- */
 HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
 {
     return S_OK;
 }
 
-/**************************************************************************
- *    CAdminToolsFolder::GetCurFolder
- */
 HRESULT WINAPI CAdminToolsFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {
-    CComPtr<IPersistFolder2> ppf2;
-    m_pisfInner->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
-    return ppf2->GetCurFolder(pidl);
+    if (!pidl)
+        return E_POINTER;
+    *pidl = _ILCreateAdminTools();
+    return S_OK;
 }

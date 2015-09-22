@@ -29,12 +29,7 @@ class CFontsFolder :
     public IPersistFolder2
 {
     private:
-        CComPtr<IShellFolder> m_pisfInner;
-        CComPtr<IShellFolder2> m_pisf2Inner;
-
-        /* both paths are parsible from the desktop */
-        LPITEMIDLIST pidlRoot;  /* absolute pidl */
-        LPCITEMIDLIST apidl;    /* currently focused font item */
+        CComPtr<IShellFolder2> m_pisfInner;
     public:
         CFontsFolder();
         ~CFontsFolder();

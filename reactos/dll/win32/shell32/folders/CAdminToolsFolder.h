@@ -29,10 +29,8 @@ class CAdminToolsFolder :
     public IPersistFolder2
 {
     private:
-        CComPtr<IShellFolder> m_pisfInner;
-        CComPtr<IShellFolder2> m_pisf2Inner;
-        LPWSTR szTarget;
-    public:
+        CComPtr<IShellFolder2> m_pisfInner;
+        public:
         CAdminToolsFolder();
         ~CAdminToolsFolder();
         HRESULT WINAPI FinalConstruct();
