@@ -25,8 +25,10 @@
  *      2005/11/24  Created
  */
 
-#include "precomp.h"
-
+#include "stdafx.h"
+#include <devmgr\devmgr.h>"
+#include "properties.h"
+#include "resource.h"
 
 HINSTANCE hDllInstance = NULL;
 
@@ -49,7 +51,7 @@ LengthOfStrResource(IN HINSTANCE hInst,
     /* Find the string table block */
     if ((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
         (hRes = LoadResource(hInst, hrSrc)) &&
-        (lpStr = LockResource(hRes)))
+        (lpStr = (LPWSTR)LockResource(hRes)))
     {
         UINT x;
 
@@ -251,9 +253,9 @@ ConvertMultiByteToUnicode(IN LPCSTR lpMultiByteStr,
     if (nLength == 0)
         return NULL;
 
-    lpUnicodeStr = HeapAlloc(GetProcessHeap(),
-                             0,
-                             nLength * sizeof(WCHAR));
+    lpUnicodeStr = (LPWSTR)HeapAlloc(GetProcessHeap(),
+                                     0,
+                                     nLength * sizeof(WCHAR));
     if (lpUnicodeStr == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -462,7 +464,7 @@ GetDeviceStatusString(IN DEVINST DevInst,
         {
             UINT uRet;
 
-            uRet = DeviceProblemText(hMachine,
+            uRet = DeviceProblemTextW(hMachine,
                                      DevInst,
                                      ProblemNumber,
                                      szBuffer,
@@ -925,7 +927,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                   IN PSP_DEVINFO_DATA DeviceInfoData,
                   OUT PSP_DRVINFO_DATA DriverInfoData)
 {
-    HKEY hKey = INVALID_HANDLE_VALUE;
+    HKEY hKey = (HKEY)INVALID_HANDLE_VALUE;
     SP_DEVINSTALL_PARAMS InstallParams = {0};
     SP_DRVINFO_DETAIL_DATA DriverInfoDetailData = {0};
     WCHAR InfPath[MAX_PATH];
@@ -1078,7 +1080,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
             ERR("SetupDiGetDriverInfoDetail() failed with error 0x%lx\n", GetLastError());
             goto Cleanup;
         }
-        if (!wcsicmp(DriverInfoDetailData.SectionName,
+        if (!_wcsicmp(DriverInfoDetailData.SectionName,
                      InfSection) != 0)
         {
             /* We have found the right driver */

@@ -27,7 +27,10 @@
  *      04-04-2004  Created
  */
 
-#include "precomp.h"
+#include "stdafx.h"
+#include <devmgr\devmgr.h>"
+#include "properties.h"
+#include "resource.h"
 
 #include <winver.h>
 
@@ -768,9 +771,9 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
     if (dwType == REG_SZ)
         dwSize += sizeof(WCHAR);
 
-    lpBuffer = HeapAlloc(GetProcessHeap(),
-                         HEAP_ZERO_MEMORY,
-                         dwSize);
+    lpBuffer = (LPBYTE)HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 dwSize);
     if (lpBuffer == NULL)
     {
         SetListViewText(hwndListView, 0, L"Error: Allocating the buffer failed!");
@@ -1075,7 +1078,7 @@ DisplayClassCoinstallers(IN PDEVADVPROP_INFO dap,
     HDEVINFO DeviceInfoSet;
     PSP_DEVINFO_DATA DeviceInfoData;
     WCHAR szClassGuid[45];
-    HKEY hKey = INVALID_HANDLE_VALUE;
+    HKEY hKey = (HKEY)INVALID_HANDLE_VALUE;
     DWORD dwSize;
     DWORD dwType;
     LPBYTE lpBuffer = NULL;
@@ -1126,9 +1129,9 @@ DisplayClassCoinstallers(IN PDEVADVPROP_INFO dap,
     if (dwSize == 0)
         goto done;
 
-    lpBuffer = HeapAlloc(GetProcessHeap(),
-                         HEAP_ZERO_MEMORY,
-                         dwSize);
+    lpBuffer = (LPBYTE)HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 dwSize);
 
     RegQueryValueEx(hKey,
                     szClassGuid,
@@ -1201,9 +1204,9 @@ DisplayDeviceCoinstallers(IN PDEVADVPROP_INFO dap,
             dwSize > 0)
         {
 
-            lpBuffer = HeapAlloc(GetProcessHeap(),
-                                 HEAP_ZERO_MEMORY,
-                                 dwSize);
+            lpBuffer = (LPBYTE)HeapAlloc(GetProcessHeap(),
+                                         HEAP_ZERO_MEMORY,
+                                         dwSize);
 
             RegQueryValueEx(hKey,
                             L"CoInstallers32",
@@ -1288,9 +1291,9 @@ DisplayClassProperties(IN PDEVADVPROP_INFO dap,
                             &dwSize) == ERROR_SUCCESS &&
             dwSize > 0)
         {
-            lpBuffer = HeapAlloc(GetProcessHeap(),
-                                 HEAP_ZERO_MEMORY,
-                                 dwSize);
+            lpBuffer = (LPBYTE)HeapAlloc(GetProcessHeap(),
+                                         HEAP_ZERO_MEMORY,
+                                         dwSize);
 
             RegQueryValueEx(hKey,
                             lpProperty,
@@ -1347,9 +1350,9 @@ DisplayDeviceRelations(
     if (ret != CR_SUCCESS)
         return;
 
-    pszBuffer = HeapAlloc(GetProcessHeap(),
-                          HEAP_ZERO_MEMORY,
-                          ulLength);
+    pszBuffer = (LPWSTR)HeapAlloc(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  ulLength);
     if (pszBuffer == NULL)
         return;
 
@@ -1774,8 +1777,6 @@ UpdateDevInfo(IN HWND hwndDlg,
     DWORD nDriverPages = 0;
     BOOL RecalcPages = FALSE;
 
-    TRACE("UpdateDevInfo()\n");
-
     hPropSheetDlg = GetParent(hwndDlg);
 
     if (dap->PageInitialized)
@@ -2171,7 +2172,6 @@ GetParentNode:
                                           dap->PropertySheetType) &&
         nDriverPages != 0 && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
-TRACE("Count %d additional pages!\n", nDriverPages);
         dap->nDevPropSheets += nDriverPages;
     }
     else
@@ -2193,10 +2193,9 @@ TRACE("Count %d additional pages!\n", nDriverPages);
     /* add the device property sheets */
     if (dap->nDevPropSheets != 0)
     {
-TRACE("Show %d pages!\n", dap->nDevPropSheets);
-        dap->DevPropSheets = HeapAlloc(GetProcessHeap(),
-                                       HEAP_ZERO_MEMORY,
-                                       dap->nDevPropSheets * sizeof(HPROPSHEETPAGE));
+        dap->DevPropSheets = (HPROPSHEETPAGE *)HeapAlloc(GetProcessHeap(),
+                                                         HEAP_ZERO_MEMORY,
+                                                         dap->nDevPropSheets * sizeof(HPROPSHEETPAGE));
         if (dap->DevPropSheets != NULL)
         {
             if (nDriverPages != 0)
@@ -2216,17 +2215,10 @@ TRACE("Show %d pages!\n", dap->nDevPropSheets);
                          iPage < nDriverPages;
                          iPage++)
                     {
-TRACE("Add page %d\n", iPage);
-TRACE("Sheet %p\n", dap->DevPropSheets[iPage]);
-
                         if (PropSheet_AddPage(hPropSheetDlg,
                                               dap->DevPropSheets[iPage]))
                         {
                             RecalcPages = TRUE;
-                        }
-                        else
-                        {
-TRACE("PropSheet_AddPage() failed\n");
                         }
                     }
 
@@ -2234,7 +2226,6 @@ TRACE("PropSheet_AddPage() failed\n");
                 }
                 else
                 {
-TRACE("SetupDiGetClassDevPropertySheets() failed\n");
                     /* cleanup, we were unable to get the device property sheets */
                     iPage = nDriverPages;
                     dap->nDevPropSheets -= nDriverPages;
@@ -2602,11 +2593,11 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
 
     /* create the internal structure associated with the "General",
        "Driver", ... pages */
-    DevAdvPropInfo = HeapAlloc(GetProcessHeap(),
-                               HEAP_ZERO_MEMORY,
-                               FIELD_OFFSET(DEVADVPROP_INFO,
-                                            szDeviceID) +
-                                   (DevIdSize * sizeof(WCHAR)));
+    DevAdvPropInfo = (PDEVADVPROP_INFO)HeapAlloc(GetProcessHeap(),
+                                                 HEAP_ZERO_MEMORY,
+                                                 FIELD_OFFSET(DEVADVPROP_INFO,
+                                                              szDeviceID) +
+                                                     (DevIdSize * sizeof(WCHAR)));
     if (DevAdvPropInfo == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -2645,7 +2636,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
     DevAdvPropInfo->pCreatePropertySheetPageW = pCreatePropertySheetPageW;
     DevAdvPropInfo->pDestroyPropertySheetPage = pDestroyPropertySheetPage;
 
-    DevAdvPropInfo->IsAdmin = IsUserAdmin();
+    DevAdvPropInfo->IsAdmin = TRUE;// IsUserAdmin();
     DevAdvPropInfo->DoDefaultDevAction = ((dwFlags & DPF_DEVICE_STATUS_ACTION) != 0);
     DevAdvPropInfo->Extended = ((dwFlags & DPF_EXTENDED) != 0);
 
@@ -2658,9 +2649,9 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                             DIGCDP_FLAG_REMOTE_ADVANCED :
                                             DIGCDP_FLAG_ADVANCED;
 
-    psh.phpage = HeapAlloc(GetProcessHeap(),
-                           HEAP_ZERO_MEMORY,
-                           1 * sizeof(HPROPSHEETPAGE));
+    psh.phpage = (HPROPSHEETPAGE *)HeapAlloc(GetProcessHeap(),
+                                             HEAP_ZERO_MEMORY,
+                                             1 * sizeof(HPROPSHEETPAGE));
     if (psh.phpage == NULL)
     {
         goto Cleanup;

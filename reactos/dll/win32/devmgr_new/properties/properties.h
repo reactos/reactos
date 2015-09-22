@@ -1,26 +1,7 @@
 #ifndef __DEVMGR_H
 #define __DEVMGR_H
 
-#include <stdarg.h>
-#include <stdlib.h> 
-
-#define WIN32_NO_STATUS
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winnls.h>
-#include <winuser.h>
-#include <wchar.h>
-#include <regstr.h>
-#include <setupapi.h>
-#include <cfgmgr32.h>
-#include <dll/newdevp.h>
-#include <dll/devmgr/devmgr.h>
-#include <wine/debug.h>
-
-#include "resource.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
+//WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
 
 extern HINSTANCE hDllInstance;
 

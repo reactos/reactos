@@ -9,8 +9,8 @@
 #define REACTOS_STR_INTERNAL_NAME     "devmgr"
 #define REACTOS_STR_ORIGINAL_FILENAME "devmgr.dll"
 
-#include <reactos/version.rc>
-#include <reactos/manifest_dll.rc>
+//#include <reactos/version.rc>
+//#include <reactos/manifest_dll.rc>
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

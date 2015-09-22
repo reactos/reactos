@@ -25,7 +25,10 @@
  *      04-04-2004  Created
  */
 
-#include "precomp.h"
+#include "stdafx.h"
+#include <devmgr\devmgr.h>"
+#include "properties.h"
+#include "resource.h"
 
 
 typedef struct _HWDEVINFO
@@ -301,11 +304,11 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
 
                 if (ClassDevInfo->HwDevInfo != NULL)
                 {
-                    PHWDEVINFO HwNewDevInfo = HeapReAlloc(GetProcessHeap(),
-                                                          0,
-                                                          ClassDevInfo->HwDevInfo,
-                                                          (ClassDevInfo->ItemCount + 1) *
-                                                              sizeof(HWDEVINFO));
+                    PHWDEVINFO HwNewDevInfo = (PHWDEVINFO)HeapReAlloc(GetProcessHeap(),
+                                                                      0,
+                                                                      ClassDevInfo->HwDevInfo,
+                                                                      (ClassDevInfo->ItemCount + 1) *
+                                                                          sizeof(HWDEVINFO));
                     if (HwNewDevInfo != NULL)
                     {
                         ClassDevInfo->HwDevInfo = HwNewDevInfo;
@@ -319,9 +322,9 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                 }
                 else
                 {
-                    ClassDevInfo->HwDevInfo = HeapAlloc(GetProcessHeap(),
-                                                        0,
-                                                        sizeof(HWDEVINFO));
+                    ClassDevInfo->HwDevInfo = (PHWDEVINFO)HeapAlloc(GetProcessHeap(),
+                                                                    0,
+                                                                    sizeof(HWDEVINFO));
                     if (ClassDevInfo->HwDevInfo == NULL)
                     {
                         ERR("Unable to allocate memory for a SP_DEVINFO_DATA structures!\n");
@@ -364,9 +367,9 @@ DeviceIdMatch(IN HDEVINFO DeviceInfoSet,
     {
         if (DevIdLen == wcslen(lpDeviceId) + 1)
         {
-            lpQueriedDeviceId = HeapAlloc(GetProcessHeap(),
-                                          0,
-                                          DevIdLen * sizeof(WCHAR));
+            lpQueriedDeviceId = (LPWSTR)HeapAlloc(GetProcessHeap(),
+                                                  0,
+                                                  DevIdLen * sizeof(WCHAR));
             if (lpQueriedDeviceId != NULL)
             {
                 if (SetupDiGetDeviceInstanceId(DeviceInfoSet,
@@ -414,8 +417,8 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd,
             LastHwDevInfo = HwDevInfo + ClassDevInfo->ItemCount;
 
             SelectedInClass = (SelectedClassGuid != NULL &&
-                               IsEqualGUID(SelectedClassGuid,
-                                           &ClassDevInfo->Guid));
+                               IsEqualGUID(*SelectedClassGuid,
+                                           ClassDevInfo->Guid));
             while (HwDevInfo != LastHwDevInfo)
             {
                 INT iItem;
@@ -497,9 +500,9 @@ UpdateDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
             GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
             SelectedClassGuid = HwDevInfo->DevInfoData.ClassGuid;
-            lpDeviceId = HeapAlloc(GetProcessHeap(),
-                                   0,
-                                   DevIdLen * sizeof(WCHAR));
+            lpDeviceId = (LPWSTR)HeapAlloc(GetProcessHeap(),
+                                           0,
+                                           DevIdLen * sizeof(WCHAR));
             if (lpDeviceId != NULL &&
                 !SetupDiGetDeviceInstanceId(HwDevInfo->ClassDevInfo->hDevInfo,
                                             &HwDevInfo->DevInfoData,
@@ -1029,10 +1032,10 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
     /* allocate the HARDWARE_PAGE_DATA structure. Make sure it is
        zeroed because the initialization code assumes that in
        failure cases! */
-    hpd = HeapAlloc(GetProcessHeap(),
-                    HEAP_ZERO_MEMORY,
-                    FIELD_OFFSET(HARDWARE_PAGE_DATA,
-                                 ClassDevInfo[uNumberOfGuids]));
+    hpd = (PHARDWARE_PAGE_DATA)HeapAlloc(GetProcessHeap(),
+                                         HEAP_ZERO_MEMORY,
+                                         FIELD_OFFSET(HARDWARE_PAGE_DATA,
+                                                      ClassDevInfo[uNumberOfGuids]));
     if (hpd != NULL)
     {
         HWND hWnd;

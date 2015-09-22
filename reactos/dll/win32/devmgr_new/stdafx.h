@@ -12,7 +12,7 @@
 #include <Cfgmgr32.h>
 #include <devguid.h>
 #include <process.h>
-
+#include <RegStr.h>
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
 #include <tchar.h>
@@ -21,6 +21,20 @@
 #include <atlcoll.h>
 
 #include <strsafe.h>
+
+#define ERR printf
+#define FIXME printf
+
+DWORD WINAPI pSetupGuidFromString(PCWSTR pString, LPGUID lpGUID);
+
+BOOL
+WINAPI
+InstallDevInst(
+IN HWND hWndParent,
+IN LPCWSTR InstanceId,
+IN BOOL bUpdate,
+OUT LPDWORD lpReboot);
+
 #else
 
 #include <string.h>

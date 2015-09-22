@@ -819,17 +819,3 @@ HandleDefaultMessage:
 
     return RetCode;
 }
-
-
-#if 1 // test
-BOOL
-WINAPI
-DeviceManager_ExecuteW(HWND hWndParent,
-                       HINSTANCE hInst,
-                       LPCWSTR lpMachineName,
-                       int nCmdShow)
-{
-    CDeviceManager DevMgr;
-    return DevMgr.Create(hWndParent, hInst, lpMachineName, nCmdShow);
-}
-#endif

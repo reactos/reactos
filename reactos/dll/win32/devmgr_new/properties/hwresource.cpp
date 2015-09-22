@@ -7,7 +7,10 @@
  *      2005/11/24  Created
  */
 
-#include "precomp.h"
+#include "stdafx.h"
+#include <devmgr\devmgr.h>"
+#include "properties.h"
+#include "resource.h"
 
 
 typedef struct
@@ -47,7 +50,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
     } Interrupt;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     struct {
-      _ANONYMOUS_UNION union {
+      union {
         struct {
 #if defined(NT_PROCESSOR_GROUPS)
           USHORT Group;

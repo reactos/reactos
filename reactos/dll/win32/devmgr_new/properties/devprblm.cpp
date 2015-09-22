@@ -25,7 +25,10 @@
  *      04-04-2004  Created
  */
 
-#include "precomp.h"
+#include "stdafx.h"
+#include <devmgr\devmgr.h>"
+#include "properties.h"
+#include "resource.h"
 
 
 BOOL
@@ -423,9 +426,9 @@ DeviceProblemTextA(IN HMACHINE hMachine  OPTIONAL,
 
     if (uMaxString != 0)
     {
-        lpBuffer = HeapAlloc(GetProcessHeap(),
-                             0,
-                             (uMaxString + 1) * sizeof(WCHAR));
+        lpBuffer = (LPWSTR)HeapAlloc(GetProcessHeap(),
+                                     0,
+                                     (uMaxString + 1) * sizeof(WCHAR));
         if (lpBuffer == NULL)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
