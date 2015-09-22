@@ -988,6 +988,15 @@ VOID UserDrawCaptionBar(
 
    if (!(Style & WS_MINIMIZE))
    {
+      PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
+      /* Draw menu bar */
+      if (menu && !(Style & WS_CHILD))
+      {
+          TempRect = CurrentRect;
+          TempRect.bottom = TempRect.top + menu->cyMenu;
+          CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+      }
+
       if (ExStyle & WS_EX_CLIENTEDGE)
       {
           DrawEdge(hDC, &CurrentRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
@@ -1014,7 +1023,6 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
    PWND Parent;
    RECT WindowRect, CurrentRect, TempRect;
    BOOL Active = FALSE;
-   PCURICON_OBJECT pIcon = NULL;
 
    if (!IntIsWindowVisible(pWnd) ||
        (pWnd->state & WNDS_NONCPAINT && !(pWnd->state & WNDS_FORCEMENUDRAW)) ||
@@ -1118,7 +1126,7 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
          CurrentRect.top += UserGetSystemMetrics(SM_CYCAPTION);
       }
 
-      UserDrawCaption(pWnd, hDC, &TempRect, NULL, pIcon ? UserHMGetHandle(pIcon) : NULL, NULL, Flags);
+      UserDrawCaption(pWnd, hDC, &TempRect, NULL, NULL, NULL, Flags);
 
       /* Draw buttons */
       if (Style & WS_SYSMENU)

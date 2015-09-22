@@ -1092,8 +1092,11 @@ static void MDI_UpdateFrameText( HWND frame, HWND hClient, BOOL repaint, LPCWSTR
     DefWindowProcW( frame, WM_SETTEXT, 0, (LPARAM)lpBuffer );
 
     if (repaint)
+    {
+       if (!NtUserCallTwoParam((DWORD_PTR)frame,DC_ACTIVE,TWOPARAM_ROUTINE_REDRAWTITLE))
         SetWindowPos( frame, 0,0,0,0,0, SWP_FRAMECHANGED |
                       SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER );
+    }
 }
 
 

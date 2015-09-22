@@ -382,6 +382,7 @@ UserPaintCaption(PWND pwnd, INT Flags)
         ReleaseDC(UserHMGetHandle(pwnd), hDC);
     }
   }
+  //NtUserCallTwoParam((DWORD_PTR)UserHMGetHandle(pwnd),Flags,TWOPARAM_ROUTINE_REDRAWTITLE)
 }
 
 LRESULT FASTCALL

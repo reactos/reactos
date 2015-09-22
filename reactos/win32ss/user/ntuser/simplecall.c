@@ -380,6 +380,13 @@ NtUserCallTwoParam(
 
    switch(Routine)
    {
+      case TWOPARAM_ROUTINE_REDRAWTITLE:
+         {
+           DWORD_PTR Ret;
+           Window = UserGetWindowObject((HWND)Param1);
+           Ret = (DWORD_PTR)UserPaintCaption(Window, (INT)Param2);
+           RETURN(Ret);
+         }
       case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
          {
             DWORD_PTR Ret;
