@@ -9,6 +9,7 @@
 
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_FindFile;
+KMT_TESTFUNC Test_IoCreateFile;
 KMT_TESTFUNC Test_IoDeviceObject;
 KMT_TESTFUNC Test_IoReadWrite;
 KMT_TESTFUNC Test_RtlAvlTree;
@@ -27,6 +28,7 @@ const KMT_TEST TestList[] =
 {
     { "-Example",           Test_Example },
     { "FindFile",           Test_FindFile },
+    { "IoCreateFile",       Test_IoCreateFile },
     { "IoDeviceObject",     Test_IoDeviceObject },
     { "IoReadWrite",        Test_IoReadWrite },
     { "RtlAvlTree",         Test_RtlAvlTree },
