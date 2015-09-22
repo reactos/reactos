@@ -26,7 +26,7 @@
  */
 
 #include "stdafx.h"
-#include <devmgr\devmgr.h>"
+#include <devmgr\devmgr.h>
 #include "properties.h"
 #include "resource.h"
 

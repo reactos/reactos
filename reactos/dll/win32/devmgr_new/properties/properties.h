@@ -1,7 +1,7 @@
 #ifndef __DEVMGR_H
 #define __DEVMGR_H
 
-//WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
+WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
 
 extern HINSTANCE hDllInstance;
 

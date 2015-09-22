@@ -53,6 +53,8 @@ OUT LPDWORD lpReboot);
 #include <process.h>
 #include <WindowsX.h>
 #include <strsafe.h>
+#include <regstr.h>
+#include <newdevp.h>
 
 #include <setupapi.h>
 #include <commctrl.h>
@@ -63,5 +65,9 @@ OUT LPDWORD lpReboot);
 #include <atlbase.h>
 #include <atlstr.h>
 #include <atlcoll.h>
+
+#include <wine/debug.h>
+
+//WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
 
 #endif
