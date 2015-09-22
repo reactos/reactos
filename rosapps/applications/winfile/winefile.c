@@ -1323,9 +1323,17 @@ static ChildWnd* alloc_child_window(LPCWSTR path, LPITEMIDLIST pidl, HWND hwnd)
 
 	if (path)
 	{
-		lstrcpyW(child->path, path);
+        int pathlen = strlenW(path);
+        const WCHAR *npath = path;
 
-		_wsplitpath(path, drv, dir, name, ext);
+        if (path[0] == '"' && path[pathlen - 1] == '"')
+        {
+            npath++;
+            pathlen--;
+        }
+        lstrcpynW(child->path, npath, pathlen + 1);
+        
+        _wsplitpath(child->path, drv, dir, name, ext);
 	}
 
 	lstrcpyW(child->filter_pattern, sAsterics);
@@ -1757,11 +1765,11 @@ static void PropDlg_DisplayValue(HWND hlbox, HWND hedit)
 
 static void CheckForFileInfo(struct PropertiesDialog* dlg, HWND hwnd, LPCWSTR strFilename)
 {
-	static WCHAR sBackSlash[] = {'\\','\0'};
-	static WCHAR sTranslation[] = {'\\','V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n','\0'};
-	static WCHAR sStringFileInfo[] = {'\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o','\\',
+	static const WCHAR sBackSlash[] = {'\\','\0'};
+	static const WCHAR sTranslation[] = {'\\','V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n','\0'};
+	static const WCHAR sStringFileInfo[] = {'\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o','\\',
 										'%','0','4','x','%','0','4','x','\\','%','s','\0'};
-        static WCHAR sFmt[] = {'%','d','.','%','d','.','%','d','.','%','d','\0'};
+        static const WCHAR sFmt[] = {'%','d','.','%','d','.','%','d','.','%','d','\0'};
 	DWORD dwVersionDataLen = GetFileVersionInfoSizeW(strFilename, NULL);
 
 	if (dwVersionDataLen) {

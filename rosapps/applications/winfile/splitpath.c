@@ -35,9 +35,8 @@ void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* 
 	} else if (drv)
 		*drv = '\0';
 
-	/* search for end of string or stream separator */
-	for(end=path; *end && *end!=':'; )
-		end++;
+    /* Don't parse colons as stream separators when splitting paths */
+    end = path + lstrlenW(path);
 
 	/* search for begin of file extension */
 	for(p=end; p>path && *--p!='\\' && *p!='/'; )
