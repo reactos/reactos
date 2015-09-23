@@ -5,8 +5,8 @@ set_cpp(WITH_RTTI WITH_RUNTIME)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/dll
-	${REACTOS_SOURCE_DIR}/lib/atl 
-	includes)
+    ${REACTOS_SOURCE_DIR}/lib/atl 
+    includes)
 
 list(APPEND SOURCE
     stdafx.h

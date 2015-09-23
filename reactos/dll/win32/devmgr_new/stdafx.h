@@ -24,6 +24,8 @@
 
 #define ERR printf
 #define FIXME printf
+#define UNIMPLEMENTED
+#define WINE_DEFAULT_DEBUG_CHANNEL(t)
 
 DWORD WINAPI pSetupGuidFromString(PCWSTR pString, LPGUID lpGUID);
 
