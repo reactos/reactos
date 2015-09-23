@@ -25,7 +25,8 @@ START_TEST(NtOpenThreadToken)
                                TRUE,
                                &TokenHandle);
     ok(Status == STATUS_NO_TOKEN, "Status = %lx\n", Status);
-    ok(TokenHandle == NULL, "TokenHandle = %p\n", TokenHandle);
+    ok(TokenHandle == (HANDLE)0x55555555 /* 2003 */ ||
+       TokenHandle == NULL /* Win7 */, "TokenHandle = %p\n", TokenHandle);
 
     Status = RtlImpersonateSelf(SecurityImpersonation);
     ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
