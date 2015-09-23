@@ -1,4 +1,8 @@
 
+set_cpp(WITH_RTTI WITH_RUNTIME)
+
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/dll)
+
 list(APPEND SOURCE
     devmgmt.cpp)
 
