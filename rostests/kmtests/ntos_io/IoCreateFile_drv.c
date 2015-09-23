@@ -57,6 +57,8 @@ TestUnload(
     PAGED_CODE();
 }
 
+static volatile long gNoLinks = FALSE;
+
 static
 NTSTATUS
 TestIrpHandler(
@@ -80,7 +82,7 @@ TestIrpHandler(
     if (IoStack->MajorFunction == IRP_MJ_CREATE)
     {
         ok((IoStack->Parameters.Create.Options & FILE_OPEN_REPARSE_POINT) == 0, "FILE_OPEN_REPARSE_POINT set\n");
-        ok((IoStack->Flags == 0) || (IoStack->Flags == SL_STOP_ON_SYMLINK), "IoStack->Flags = %lx\n", IoStack->Flags);
+        ok((IoStack->Flags == 0 && !gNoLinks) || (IoStack->Flags == SL_STOP_ON_SYMLINK && gNoLinks), "IoStack->Flags = %lx\n", IoStack->Flags);
 
         if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR))
         {
@@ -155,17 +157,8 @@ TestIrpHandler(
         Status = STATUS_SUCCESS;
     }
 
-    if (Status == STATUS_PENDING)
-    {
-        IoMarkIrpPending(Irp);
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        Status = STATUS_PENDING;
-    }
-    else
-    {
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 }
@@ -176,8 +169,7 @@ static UNICODE_STRING DocumentsAndSettings = RTL_CONSTANT_STRING(L"\\Documents a
 static
 NTSTATUS
 TestIoCreateFile(
-    IN PUNICODE_STRING Path,
-    IN BOOLEAN NoLinks)
+    IN PUNICODE_STRING Path)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -203,7 +195,7 @@ TestIoCreateFile(
                           0,
                           CreateFileTypeNone,
                           NULL,
-                          IO_NO_PARAMETER_CHECKING | (NoLinks ? IO_STOP_ON_SYMLINK : 0));
+                          IO_NO_PARAMETER_CHECKING | (gNoLinks ? IO_STOP_ON_SYMLINK : 0));
     if (NT_SUCCESS(Status))
     {
         NTSTATUS IntStatus;
@@ -222,7 +214,9 @@ TestIoCreateFile(
                "Expected: %wZ or %wZ. Opened: %wZ\n", &FileObjectFileName, &DocumentsAndSettings, &FileObject->FileName);
             ObDereferenceObject(FileObject);
         }
-        NtClose(Handle);
+
+        IntStatus = ObCloseHandle(Handle, KernelMode);
+        ok_eq_hex(IntStatus, STATUS_SUCCESS);
     }
 
     return Status;
@@ -243,8 +237,16 @@ TestMessageHandler(
 
     switch (ControlCode)
     {
-        case IOCTL_CREATE_SYMLINK:
-        case IOCTL_CREATE_NO_SYMLINK:
+        case IOCTL_DISABLE_SYMLINK:
+        {
+            if (InterlockedExchange(&gNoLinks, TRUE) == TRUE)
+            {
+                Status = STATUS_UNSUCCESSFUL;
+            }
+
+            break;
+        }
+        case IOCTL_CALL_CREATE:
         {
             ANSI_STRING Path;
             UNICODE_STRING PathW;
@@ -256,7 +258,7 @@ TestMessageHandler(
             Status = RtlAnsiStringToUnicodeString(&PathW, &Path, TRUE);
             ok_eq_hex(Status, STATUS_SUCCESS);
 
-            Status = TestIoCreateFile(&PathW, (ControlCode == IOCTL_CREATE_NO_SYMLINK));
+            Status = TestIoCreateFile(&PathW);
 
             RtlFreeUnicodeString(&PathW);
 

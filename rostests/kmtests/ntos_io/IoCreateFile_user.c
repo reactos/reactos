@@ -21,18 +21,21 @@ START_TEST(IoCreateFile)
     KmtLoadDriver(L"IoCreateFile", FALSE);
     KmtOpenDriver();
 
-    Error = KmtSendStringToDriver(IOCTL_CREATE_SYMLINK, NonSymlinkedFileName);
+    Error = KmtSendStringToDriver(IOCTL_CALL_CREATE, NonSymlinkedFileName);
     ok(Error == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lx\n", Error);
-    Error = KmtSendStringToDriver(IOCTL_CREATE_SYMLINK, SymlinkedFileName);
+    Error = KmtSendStringToDriver(IOCTL_CALL_CREATE, SymlinkedFileName);
     ok(Error == ERROR_CANT_ACCESS_FILE, "Expected ERROR_CANT_ACCESS_FILE, got %lx\n", Error); /* FIXME */
-    Error = KmtSendStringToDriver(IOCTL_CREATE_SYMLINK, MountedPointFileName);
+    Error = KmtSendStringToDriver(IOCTL_CALL_CREATE, MountedPointFileName);
     ok(Error == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lx\n", Error);
 
-    Error = KmtSendStringToDriver(IOCTL_CREATE_NO_SYMLINK, NonSymlinkedFileName);
+    Error = KmtSendToDriver(IOCTL_DISABLE_SYMLINK);
     ok(Error == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lx\n", Error);
-    Error = KmtSendStringToDriver(IOCTL_CREATE_NO_SYMLINK, SymlinkedFileName);
+
+    Error = KmtSendStringToDriver(IOCTL_CALL_CREATE, NonSymlinkedFileName);
+    ok(Error == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lx\n", Error);
+    Error = KmtSendStringToDriver(IOCTL_CALL_CREATE, SymlinkedFileName);
     ok(Error == ERROR_MR_MID_NOT_FOUND, "Expected ERROR_MR_MID_NOT_FOUND, got %lx\n", Error);
-    Error = KmtSendStringToDriver(IOCTL_CREATE_NO_SYMLINK, MountedPointFileName);
+    Error = KmtSendStringToDriver(IOCTL_CALL_CREATE, MountedPointFileName);
     ok(Error == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lx\n", Error);
 
     KmtCloseDriver();
