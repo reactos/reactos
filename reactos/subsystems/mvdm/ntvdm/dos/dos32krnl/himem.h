@@ -13,8 +13,8 @@
 /* DEFINITIONS ****************************************************************/
 
 #define XMS_ADDRESS     0x110000        // Just above HMA
-#define XMS_BLOCKS      0x3BC0          // XMS_ADDRESS + (XMS_BLOCKS * XMS_BLOCK_SIZE) == 16 MB
 #define XMS_BLOCK_SIZE  1024
+#define XMS_BLOCKS      ((MAX_ADDRESS - XMS_ADDRESS) / XMS_BLOCK_SIZE)
 #define XMS_MAX_HANDLES 16              // Specification: min 1, max 128, default 32
 
 #define XMS_STATUS_SUCCESS              0x00

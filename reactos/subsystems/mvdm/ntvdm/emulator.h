@@ -23,6 +23,7 @@
 #define MAX_SEGMENT 0xFFFF
 #define MAX_OFFSET  0xFFFF
 #define MAX_ADDRESS 0x1000000 // 16 MB of RAM; see also: kernel32/client/vdm.c!BaseGetVdmConfigInfo
+C_ASSERT(0x100000 <= MAX_ADDRESS);  // A minimum of 1 MB is required for PC emulation.
 
 #define SEG_OFF_TO_PTR(seg, off)    \
     (PVOID)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), (off)))
