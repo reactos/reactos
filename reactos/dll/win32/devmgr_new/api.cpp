@@ -19,7 +19,9 @@
 #include "stdafx.h"
 #include "devmgmt\MainWindow.h"
 
-#define UNIMPLEMENTED
+HINSTANCE hDllInstance = NULL;
+
+WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
 
 
 /***************************************************************************
@@ -91,8 +93,8 @@ DeviceManager_ExecuteW(HWND hWndParent,
                        LPCWSTR lpMachineName,
                        int nCmdShow)
 {
-    //
-    // This needs to create the mmc process which will load the device manager in-proc
+    // FIXME: Call mmc with devmgmt.msc
+
     CDeviceManager DevMgr;
     return DevMgr.Create(hWndParent, hInst, lpMachineName, nCmdShow);
 }
@@ -259,4 +261,49 @@ DeviceManagerPrintW(LPCWSTR lpMachineName,
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+
+BOOL
+WINAPI
+DllMain(IN HINSTANCE hinstDLL,
+IN DWORD dwReason,
+IN LPVOID lpvReserved)
+{
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            hDllInstance = hinstDLL;
+            break;
+    }
+
+    return TRUE;
+}
+
+class CDevMgrUIModule : public CComModule
+{
+public:
+};
+
+CDevMgrUIModule gModule;
+
+STDAPI DllCanUnloadNow()
+{
+    return gModule.DllCanUnloadNow();
+}
+
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+{
+    return gModule.DllGetClassObject(rclsid, riid, ppv);
+}
+
+STDAPI DllRegisterServer()
+{
+    return gModule.DllRegisterServer(FALSE);
+}
+
+STDAPI DllUnregisterServer()
+{
+    return gModule.DllUnregisterServer(FALSE);
 }

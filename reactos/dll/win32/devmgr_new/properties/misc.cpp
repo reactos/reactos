@@ -30,7 +30,7 @@
 #include "properties.h"
 #include "resource.h"
 
-HINSTANCE hDllInstance = NULL;
+
 
 INT
 LengthOfStrResource(IN HINSTANCE hInst,
@@ -1128,22 +1128,4 @@ LoadAndInitComctl32(VOID)
     }
 
     return hComCtl32;
-}
-
-
-BOOL
-WINAPI
-DllMain(IN HINSTANCE hinstDLL,
-        IN DWORD dwReason,
-        IN LPVOID lpvReserved)
-{
-    switch (dwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            hDllInstance = hinstDLL;
-            break;
-    }
-
-    return TRUE;
 }

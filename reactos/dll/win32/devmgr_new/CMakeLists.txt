@@ -21,8 +21,7 @@ list(APPEND SOURCE
     devmgmt/DeviceView.cpp
     devmgmt/MainWindow.cpp
     devmgmt/Node.cpp
-    devmgmt/RootNode.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/devmgr_stubs.c)
+    devmgmt/RootNode.cpp)
 
 add_library(devmgr SHARED
     ${SOURCE}
