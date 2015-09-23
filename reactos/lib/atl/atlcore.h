@@ -204,8 +204,99 @@ public:
     {
         return m_hInstResource;
     }
+
+    HINSTANCE SetResourceInstance(HINSTANCE hInst)
+    {
+        return static_cast< HINSTANCE >(InterlockedExchangePointer((void**)&m_hInstResource, hInst));
+    }
+
+    HINSTANCE GetHInstanceAt(int i);
 };
 
 extern CAtlBaseModule _AtlBaseModule;
+
+
+///
+// String Resource helper functions
+//
+
+#pragma warning(push)
+#pragma warning(disable: 4200)
+struct ATLSTRINGRESOURCEIMAGE
+{
+    WORD nLength;
+    WCHAR achString[];
+};
+#pragma warning(pop)
+
+inline const ATLSTRINGRESOURCEIMAGE* _AtlGetStringResourceImage(
+    _In_ HINSTANCE hInstance,
+    _In_ HRSRC hResource,
+    _In_ UINT id)
+{
+    const ATLSTRINGRESOURCEIMAGE* pImage;
+    const ATLSTRINGRESOURCEIMAGE* pImageEnd;
+    ULONG nResourceSize;
+    HGLOBAL hGlobal;
+    UINT iIndex;
+
+    hGlobal = ::LoadResource(hInstance, hResource);
+    if (hGlobal == NULL) return NULL;
+
+    pImage = (const ATLSTRINGRESOURCEIMAGE*)::LockResource(hGlobal);
+    if (pImage == NULL) return NULL;
+
+    nResourceSize = ::SizeofResource(hInstance, hResource);
+    pImageEnd = (const ATLSTRINGRESOURCEIMAGE*)(LPBYTE(pImage) + nResourceSize);
+    iIndex = id & 0x000f;
+
+    while ((iIndex > 0) && (pImage < pImageEnd))
+    {
+        pImage = (const ATLSTRINGRESOURCEIMAGE*)(LPBYTE(pImage) + (sizeof(ATLSTRINGRESOURCEIMAGE) + (pImage->nLength * sizeof(WCHAR))));
+        iIndex--;
+    }
+
+    if (pImage >= pImageEnd) return NULL;
+    if (pImage->nLength == 0) return NULL;
+
+    return pImage;
+}
+
+inline const ATLSTRINGRESOURCEIMAGE* AtlGetStringResourceImage(
+    _In_ HINSTANCE hInstance,
+    _In_ UINT id) throw()
+{
+    HRSRC hResource;
+    hResource = ::FindResourceW(hInstance, MAKEINTRESOURCEW((((id >> 4) + 1) & static_cast<WORD>(~0))), (LPWSTR)RT_STRING);
+    if (hResource == NULL) return NULL;
+    return _AtlGetStringResourceImage(hInstance, hResource, id);
+}
+
+inline const ATLSTRINGRESOURCEIMAGE* AtlGetStringResourceImage(
+    _In_ HINSTANCE hInstance,
+    _In_ UINT id,
+    _In_ WORD wLanguage)
+{
+    HRSRC hResource;
+    hResource = ::FindResourceExW(hInstance, (LPWSTR)RT_STRING, MAKEINTRESOURCEW((((id >> 4) + 1) & static_cast<WORD>(~0))), wLanguage);
+    if (hResource == NULL) return NULL;
+    return _AtlGetStringResourceImage(hInstance, hResource, id);
+}
+
+inline HINSTANCE AtlFindStringResourceInstance(
+    UINT nID,
+    WORD wLanguage = 0)
+{
+    const ATLSTRINGRESOURCEIMAGE* strRes = NULL;
+    HINSTANCE hInst = _AtlBaseModule.GetHInstanceAt(0);
+
+    for (int i = 1; hInst != NULL && strRes == NULL; hInst = _AtlBaseModule.GetHInstanceAt(i++))
+    {
+        strRes = AtlGetStringResourceImage(hInst, nID, wLanguage);
+        if (strRes != NULL) return hInst;
+    }
+
+    return NULL;
+}
 
 }; // namespace ATL
