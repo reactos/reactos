@@ -1405,7 +1405,8 @@ NTAPI
 KeDeregisterNmiCallback(IN PVOID Handle)
 {
     KIRQL OldIrql;
-    PKNMI_HANDLER_CALLBACK NmiData, Previous;
+    PKNMI_HANDLER_CALLBACK NmiData;
+    PKNMI_HANDLER_CALLBACK* Previous;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Find in the list the NMI callback corresponding to the handle */
