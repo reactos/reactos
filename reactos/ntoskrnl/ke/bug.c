@@ -28,8 +28,10 @@ ULONG KeBugCheckCount = 1;
 ULONG KiHardwareTrigger;
 PUNICODE_STRING KiBugCheckDriver;
 ULONG_PTR KiBugCheckData[5];
-PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
+
+PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead = NULL;
 KSPIN_LOCK KiNmiCallbackListLock;
+#define TAG_KNMI 'IMNK'
 
 /* Bugzilla Reporting */
 UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
@@ -1374,9 +1376,7 @@ KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Allocate NMI callback data */
-    NmiData = ExAllocatePoolWithTag(NonPagedPool,
-                                    sizeof(KNMI_HANDLER_CALLBACK),
-                                    'IMNK');
+    NmiData = ExAllocatePoolWithTag(NonPagedPool, sizeof(*NmiData), TAG_KNMI);
     if (!NmiData) return NULL;
 
     /* Fill in the information */
@@ -1402,10 +1402,42 @@ KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
  */
 NTSTATUS
 NTAPI
-KeDeregisterNmiCallback(PVOID Handle)
+KeDeregisterNmiCallback(IN PVOID Handle)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    KIRQL OldIrql;
+    PKNMI_HANDLER_CALLBACK NmiData, Previous;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Find in the list the NMI callback corresponding to the handle */
+    KiAcquireNmiListLock(&OldIrql);
+    Previous = &KiNmiCallbackListHead;
+    NmiData = *Previous;
+    while (NmiData)
+    {
+        if (NmiData->Handle == Handle)
+        {
+            /* The handle is the pointer to the callback itself */
+            ASSERT(Handle == NmiData);
+
+            /* Found it, remove from the list */
+            *Previous = NmiData->Next;
+            break;
+        }
+
+        /* Not found; try again */
+        Previous = &NmiData->Next;
+        NmiData = *Previous;
+    }
+    KiReleaseNmiListLock(OldIrql);
+
+    /* If we have found the entry, free it */
+    if (NmiData)
+    {
+        ExFreePoolWithTag(NmiData, TAG_KNMI);
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_INVALID_HANDLE;
 }
 
 /*
