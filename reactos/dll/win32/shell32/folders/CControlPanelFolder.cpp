@@ -294,63 +294,8 @@ HRESULT WINAPI CControlPanelFolder::ParseDisplayName(
     PIDLIST_RELATIVE *ppidl,
     DWORD *pdwAttributes)
 {
-    WCHAR szElement[MAX_PATH];
-    LPCWSTR szNext = NULL;
-    LPITEMIDLIST pidlTemp = NULL;
-    HRESULT hr = S_OK;
-    CLSID clsid;
-
-    TRACE ("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
-           this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
-           pchEaten, ppidl, pdwAttributes);
-
-    if (!lpszDisplayName || !ppidl)
-        return E_INVALIDARG;
-
-    *ppidl = 0;
-
-    if (pchEaten)
-        *pchEaten = 0;        /* strange but like the original */
-
-    if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
-    {
-        szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
-        TRACE ("-- element: %s\n", debugstr_w (szElement));
-        CLSIDFromString (szElement + 2, &clsid);
-        pidlTemp = _ILCreateGuid (PT_GUID, clsid);
-    }
-    else if( (pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName)) )
-    {
-        *ppidl = pidlTemp;
-        return S_OK;
-    }
-
-    if (SUCCEEDED(hr) && pidlTemp)
-    {
-        if (szNext && *szNext)
-        {
-            hr = SHELL32_ParseNextElement(this, hwndOwner, pbc,
-                                          &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
-        }
-        else
-        {
-            if (pdwAttributes && *pdwAttributes)
-            {
-                if (_ILIsCPanelStruct(pidlTemp))
-                    *pdwAttributes &= SFGAO_CANLINK;
-                else if (_ILIsSpecialFolder(pidlTemp))
-                    SHELL32_GetGuidItemAttributes(this, pidlTemp, pdwAttributes);
-                else
-                    ERR("Got an unkown pidl here!\n");
-            }
-        }
-    }
-
-    *ppidl = pidlTemp;
-
-    TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
-
-    return hr;
+    /* We only support parsing guid names */
+    return SH_ParseGuidDisplayName(this, hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
 }
 
 /**************************************************************************
@@ -626,46 +571,36 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHC
 
 HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    HRESULT hr;
-
-    TRACE("(%p)->(%p %i %p)\n", this, pidl, iColumn, psd);
-
     if (!psd || iColumn >= CONROLPANELSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
 
-    if (!pidl) {
+    if (!pidl) 
+    {
         psd->fmt = ControlPanelSFHeader[iColumn].fmt;
         psd->cxChar = ControlPanelSFHeader[iColumn].cxChar;
         return SHSetStrRet(&psd->str, shell32_hInstance, ControlPanelSFHeader[iColumn].colnameid);
-    } else {
-        switch(iColumn) {
+    }
+    else if (_ILIsSpecialFolder(pidl))
+    {
+        return SHELL32_GetDetailsOfGuidItem(this, pidl, iColumn, psd);
+    }
+    else 
+    {
+        PIDLCPanelStruct *pCPanel = _ILGetCPanelPointer(pidl);
+
+        if (!pCPanel)
+            return E_FAIL;
+
+        switch(iColumn) 
+        {
             case 0:        /* name */
-                hr = GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-                break;
+                return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsDispName);
             case 1:        /* comment */
-            {
-                PIDLCPanelStruct* pCPanel = _ILGetCPanelPointer(pidl);
-                if (pCPanel)
-                    return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsComment);
-                if (_ILIsSpecialFolder(pidl))
-                {
-                    HKEY hKey;
-                    GUID *pGuid = _ILGetGUIDPointer(pidl);
-                    if (HCR_RegOpenClassIDKey(*pGuid, &hKey))
-                    {
-                        psd->str.cStr[0] = 0x00;
-                        psd->str.uType = STRRET_CSTR;
-                        RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
-                        RegCloseKey(hKey);
-                    }
-                }
-                break;
-            }
+                return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsComment);
         }
-        hr = S_OK;
     }
 
-    return hr;
+    return S_OK;
 }
 
 HRESULT WINAPI CControlPanelFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)

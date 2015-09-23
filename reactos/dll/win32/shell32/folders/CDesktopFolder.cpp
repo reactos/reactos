@@ -315,12 +315,10 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     PIDLIST_RELATIVE *ppidl,
     DWORD *pdwAttributes)
 {
-    WCHAR szElement[MAX_PATH];
     LPCWSTR szNext = NULL;
     LPITEMIDLIST pidlTemp = NULL;
     PARSEDURLW urldata;
     HRESULT hr = S_OK;
-    CLSID clsid;
 
     TRACE ("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
            this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
@@ -329,13 +327,10 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     if (!ppidl)
         return E_INVALIDARG;
 
-    if (!lpszDisplayName)
-    {
-        *ppidl = NULL;
-        return E_INVALIDARG;
-    }
-
     *ppidl = NULL;
+
+    if (!lpszDisplayName)
+        return E_INVALIDARG;
 
     if (pchEaten)
         *pchEaten = 0;        /* strange but like the original */
@@ -344,10 +339,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
 
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
     {
-        szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
-        TRACE ("-- element: %s\n", debugstr_w (szElement));
-        CLSIDFromString (szElement + 2, &clsid);
-        pidlTemp = _ILCreateGuid (PT_GUID, clsid);
+        return SH_ParseGuidDisplayName(this, hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
     }
     else if (PathGetDriveNumberW (lpszDisplayName) >= 0)
     {
@@ -370,8 +362,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
         if (urldata.nScheme == URL_SCHEME_SHELL) /* handle shell: urls */
         {
             TRACE ("-- shell url: %s\n", debugstr_w(urldata.pszSuffix));
-            SHCLSIDFromStringW (urldata.pszSuffix + 2, &clsid);
-            pidlTemp = _ILCreateGuid (PT_GUID, clsid);
+            pidlTemp = _ILCreateGuidFromStrW(urldata.pszSuffix + 2);
         }
         else
             return IEParseDisplayNameWithBCW(CP_ACP, lpszDisplayName, pbc, ppidl);
@@ -449,7 +440,7 @@ HRESULT WINAPI CDesktopFolder::BindToObject(
     if (_ILIsSpecialFolder(pidl))
         return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
 
-    return SHELL32_BindToFS( pidlRoot, sPathTarget, pidl, riid, ppvOut );
+    return m_DesktopFSFolder->BindToObject(pidl, pbcReserved, riid, ppvOut );
 }
 
 /**************************************************************************
@@ -773,13 +764,7 @@ HRESULT WINAPI CDesktopFolder::SetNameOf(
            debugstr_w (lpName), dwFlags, pPidlOut);
 
     if (_ILGetGUIDPointer(pidl))
-    {
-        if (SUCCEEDED(BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder2, &psf))))
-        {
-            hr = psf->SetNameOf(hwndOwner, pidl, lpName, dwFlags, pPidlOut);
-            return hr;
-        }
-    }
+        return SHELL32_SetNameOfGuidItem(pidl, lpName, dwFlags, pPidlOut);
 
     /* build source path */
     lstrcpynW(szSrc, sPathTarget, MAX_PATH);
@@ -896,6 +881,10 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
         LoadStringA (shell32_hInstance, DesktopSFHeader[iColumn].colnameid,
                      psd->str.cStr, MAX_PATH);
         return S_OK;
+    }
+    else if (_ILIsSpecialFolder(pidl))
+    {
+        return SHELL32_GetDetailsOfGuidItem(this, pidl, iColumn, psd);
     }
 
     /* the data from the pidl */

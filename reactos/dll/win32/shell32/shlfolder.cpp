@@ -682,6 +682,120 @@ HRESULT SHELL32_CompareIDs(IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pi
     return nReturn;
 }
 
+HRESULT SH_ParseGuidDisplayName(IShellFolder * pFolder,
+                                HWND hwndOwner,
+                                LPBC pbc,
+                                LPOLESTR lpszDisplayName,
+                                DWORD *pchEaten,
+                                PIDLIST_RELATIVE *ppidl,
+                                DWORD *pdwAttributes)
+{
+    LPITEMIDLIST pidl;
+
+    if (!lpszDisplayName || !ppidl)
+        return E_INVALIDARG;
+
+    *ppidl = 0;
+
+    if (pchEaten)
+        *pchEaten = 0;
+
+    UINT cch = wcslen(lpszDisplayName);
+    if (cch < 40)
+        return E_FAIL;
+
+    if (lpszDisplayName[0] != L':' || lpszDisplayName[1] != L':' || lpszDisplayName[2] != L'{' || lpszDisplayName[40] != L'}')
+        return E_FAIL;
+
+    pidl = _ILCreateGuidFromStrW(lpszDisplayName + 2);
+    if (pidl == NULL)
+        return E_FAIL;
+
+    if (cch < 42)
+    {
+        *ppidl = pidl;
+        if (pdwAttributes && *pdwAttributes)
+        {
+            SHELL32_GetGuidItemAttributes(pFolder, *ppidl, pdwAttributes);
+        }
+    }
+    else
+    {
+        IShellFolder* psf;
+        LPITEMIDLIST pidlChild;
+        HRESULT hres;
+
+        hres = SHELL32_BindToGuidItem(NULL, pidl, NULL, IID_PPV_ARG(IShellFolder, &psf));
+        if (SUCCEEDED(hres))
+        {
+            return psf->ParseDisplayName(hwndOwner, pbc, lpszDisplayName + 42, pchEaten, &pidlChild, pdwAttributes);
+        }
+    }
+
+    return S_OK;
+}
+
+HRESULT SHELL32_SetNameOfGuidItem(PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
+{
+    GUID const *clsid = _ILGetGUIDPointer (pidl);
+    LPOLESTR pStr;
+    HRESULT hr;
+    WCHAR szName[100];
+
+    if (!clsid)
+    {
+        ERR("Pidl is not reg item!\n");
+        return E_FAIL;
+    }
+
+    hr = StringFromCLSID(*clsid, &pStr);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    swprintf(szName, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", pStr);
+
+    DWORD cbData = (wcslen(lpName) + 1) * sizeof(WCHAR);
+    LONG res = SHSetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, lpName, cbData);
+
+    CoTaskMemFree(pStr);
+
+    if (res == ERROR_SUCCESS)
+    {
+        *pPidlOut = ILClone(pidl);
+        return S_OK;
+    }
+
+    return E_FAIL;
+}
+
+HRESULT SHELL32_GetDetailsOfGuidItem(IShellFolder2* psf, PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
+{
+    GUID const *clsid = _ILGetGUIDPointer (pidl);
+
+    if (!clsid)
+    {
+        ERR("Pidl is not reg item!\n");
+        return E_FAIL;
+    }
+
+    switch(iColumn)
+    {
+        case 0:        /* name */
+            return psf->GetDetailsOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, psd);
+        case 1:        /* comment */
+            HKEY hKey;
+            if (HCR_RegOpenClassIDKey(*clsid, &hKey))
+            {
+                psd->str.cStr[0] = 0x00;
+                psd->str.uType = STRRET_CSTR;
+                RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
+                RegCloseKey(hKey);
+                return S_OK;
+            }
+    }
+    return E_FAIL;
+}
+
 /***********************************************************************
  *  SHCreateLinks
  *

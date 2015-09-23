@@ -62,6 +62,18 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
 
 HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPath, PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
 
+HRESULT SHELL32_SetNameOfGuidItem(PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
+
+HRESULT SHELL32_GetDetailsOfGuidItem(IShellFolder2* psf, PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
+
+HRESULT SH_ParseGuidDisplayName(IShellFolder * pFolder,
+                                HWND hwndOwner,
+                                LPBC pbc,
+                                LPOLESTR lpszDisplayName,
+                                DWORD *pchEaten,
+                                PIDLIST_RELATIVE *ppidl,
+                                DWORD *pdwAttributes);
+
 extern "C"
 BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
 
