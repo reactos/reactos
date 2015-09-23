@@ -219,15 +219,18 @@ extern CAtlBaseModule _AtlBaseModule;
 ///
 // String Resource helper functions
 //
-
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4200)
+#endif
 struct ATLSTRINGRESOURCEIMAGE
 {
     WORD nLength;
     WCHAR achString[];
 };
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 inline const ATLSTRINGRESOURCEIMAGE* _AtlGetStringResourceImage(
     _In_ HINSTANCE hInstance,
