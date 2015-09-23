@@ -13,6 +13,8 @@ extern void func_NtDeleteKey(void);
 extern void func_NtFreeVirtualMemory(void);
 extern void func_NtMapViewOfSection(void);
 extern void func_NtMutant(void);
+extern void func_NtOpenProcessToken(void);
+extern void func_NtOpenThreadToken(void);
 extern void func_NtProtectVirtualMemory(void);
 extern void func_NtQueryKey(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
@@ -50,6 +52,8 @@ const struct test winetest_testlist[] =
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
     { "NtMutant",                       func_NtMutant },
+    { "NtOpenProcessToken",             func_NtOpenProcessToken },
+    { "NtOpenThreadToken",              func_NtOpenThreadToken },
     { "NtProtectVirtualMemory",         func_NtProtectVirtualMemory },
     { "NtQueryKey",                     func_NtQueryKey },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },

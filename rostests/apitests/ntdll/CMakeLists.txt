@@ -10,6 +10,8 @@ list(APPEND SOURCE
     NtFreeVirtualMemory.c
     NtMapViewOfSection.c
     NtMutant.c
+    NtOpenProcessToken.c
+    NtOpenThreadToken.c
     NtProtectVirtualMemory.c
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
