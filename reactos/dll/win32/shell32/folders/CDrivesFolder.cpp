@@ -485,7 +485,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     }
     else if (!_ILIsDesktop(pidl) && _ILIsSpecialFolder(pidl))
     {
-        return SHELL32_GetDisplayNameOfGUIDItem(this, L"", pidl, dwFlags, strRet);
+        return SHELL32_GetDisplayNameOfGUIDItem(this, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", pidl, dwFlags, strRet);
     }
     else if (pidl->mkid.cb && !_ILIsDrive(pidl))
     {
