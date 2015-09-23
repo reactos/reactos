@@ -784,7 +784,7 @@ pSetupStringTableStringFromIdEx(HSTRING_TABLE hStringTable,
         return FALSE;
     }
 
-    dwLength = (lstrlenW(pStringTable->pSlots[dwId - 1].pString) + 1) * sizeof(WCHAR);
+    dwLength = (lstrlenW(pStringTable->pSlots[dwId - 1].pString) + 1);
     if (dwLength <= *lpBufferLength)
     {
         lstrcpyW(lpBuffer, pStringTable->pSlots[dwId - 1].pString);
