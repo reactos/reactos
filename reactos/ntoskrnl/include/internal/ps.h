@@ -452,6 +452,7 @@ extern PVOID PspSystemDllBase;
 extern BOOLEAN PspUseJobSchedulingClasses;
 extern CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES];
 extern ULONG PsRawPrioritySeparation;
+extern ULONG PsPrioritySeparation;
 extern POBJECT_TYPE _PsThreadType, _PsProcessType;
 extern PTOKEN PspBootAccessToken;
 extern GENERIC_MAPPING PspJobMapping;

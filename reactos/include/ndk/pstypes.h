@@ -129,8 +129,11 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 //
 // Process Priority Separation Values (OR)
 //
-#define PSP_VARIABLE_QUANTUMS                   4
-#define PSP_LONG_QUANTUMS                       16
+#define PSP_DEFAULT_QUANTUMS                    0x00
+#define PSP_VARIABLE_QUANTUMS                   0x04
+#define PSP_FIXED_QUANTUMS                      0x08
+#define PSP_LONG_QUANTUMS                       0x10
+#define PSP_SHORT_QUANTUMS                      0x20
 
 #ifndef NTOS_MODE_USER
 //

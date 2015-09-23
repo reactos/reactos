@@ -172,6 +172,14 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
                 /* Calculate the new priority after the increment */
                 OldPriority = Thread->BasePriority + Thread->AdjustIncrement;
 
+                /* Check if this is a foreground process */
+                if (CONTAINING_RECORD(Thread->ApcState.Process, EPROCESS, Pcb)->
+                    Vm.Flags.MemoryPriority == MEMORY_PRIORITY_FOREGROUND)
+                {
+                    /* Apply the foreground boost */
+                    OldPriority += PsPrioritySeparation;
+                }
+
                 /* Check if this new priority is higher */
                 if (OldPriority > Thread->Priority)
                 {

@@ -765,7 +765,7 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"PriorityControl",
         L"Win32PrioritySeparation",
-        &DummyData,
+        &PsRawPrioritySeparation,
         NULL,
         NULL
     },

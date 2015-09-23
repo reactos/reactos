@@ -1495,7 +1495,7 @@ try_again:
         /* Create a random name and set up the string*/
         NameLength = (USHORT)swprintf(NameBuffer,
                                       DRIVER_ROOT_NAME L"%08u",
-                                      KeTickCount);
+                                      KeTickCount.LowPart);
         LocalDriverName.Length = NameLength * sizeof(WCHAR);
         LocalDriverName.MaximumLength = LocalDriverName.Length + sizeof(UNICODE_NULL);
         LocalDriverName.Buffer = NameBuffer;
