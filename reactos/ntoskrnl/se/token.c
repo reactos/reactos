@@ -2952,10 +2952,12 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         _SEH2_END;
     }
 
+    /* Validate object attributes */
+    HandleAttributes = ObpValidateAttributes(HandleAttributes, PreviousMode);
+
     /*
      * At first open the thread token for information access and verify
-     * that the token associated with thread is valid.
-     */
+     * that the token associated with thread is valid.     */
 
     Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_QUERY_INFORMATION,
                                        PsThreadType, PreviousMode, (PVOID*)&Thread,

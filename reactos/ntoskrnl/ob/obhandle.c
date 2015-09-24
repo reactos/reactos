@@ -807,6 +807,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     KIRQL CalloutIrql;
     KPROCESSOR_MODE ProbeMode;
     ULONG Total;
+    POBJECT_HEADER_NAME_INFO NameInfo;
     PAGED_CODE();
 
     /* Get the object header and type */
@@ -868,6 +869,16 @@ ObpIncrementHandleCount(IN PVOID Object,
              (OBJECT_HEADER_TO_EXCLUSIVE_PROCESS(ObjectHeader)))
     {
         /* Caller didn't want exclusive access, but the object is exclusive */
+        Status = STATUS_ACCESS_DENIED;
+        goto Quickie;
+    }
+
+    /* Check for exclusive kernel object */
+    NameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    if ((NameInfo) && (NameInfo->QueryReferences & OB_FLAG_KERNEL_EXCLUSIVE) &&
+        (ProbeMode != KernelMode))
+    {
+        /* Caller is not kernel, but the object is kernel exclusive */
         Status = STATUS_ACCESS_DENIED;
         goto Quickie;
     }

@@ -1054,7 +1054,9 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                          sizeof(OBJECT_ATTRIBUTES),
                          sizeof(ULONG));
             HasObjectName = (ObjectAttributes->ObjectName != NULL);
-            Attributes = ObjectAttributes->Attributes;
+
+            /* Validate user attributes */
+            Attributes = ObpValidateAttributes(ObjectAttributes->Attributes, PreviousMode);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1067,7 +1069,9 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     {
         /* Otherwise just get the data directly */
         HasObjectName = (ObjectAttributes->ObjectName != NULL);
-        Attributes = ObjectAttributes->Attributes;
+
+        /* Still have to sanitize attributes */
+        Attributes = ObpValidateAttributes(ObjectAttributes->Attributes, PreviousMode);
     }
 
     /* Can't pass both, fail */

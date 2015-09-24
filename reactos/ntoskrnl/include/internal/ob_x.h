@@ -19,6 +19,24 @@
 
 FORCEINLINE
 ULONG
+ObpValidateAttributes(IN ULONG Attributes,
+                      IN KPROCESSOR_MODE PreviousMode)
+{
+    if (PreviousMode == KernelMode)
+    {
+        /* For kernel, allow any valid attributes */
+        return Attributes & OBJ_VALID_KERNEL_ATTRIBUTES;
+    }
+    else
+    {
+        /* For user, mask out kernel-only attributes */
+        return (Attributes & OBJ_VALID_ATTRIBUTES) &
+               ~(OBJ_KERNEL_HANDLE);
+    }
+}
+
+FORCEINLINE
+ULONG
 ObpSelectObjectLockSlot(IN POBJECT_HEADER ObjectHeader)
 {
     /* We have 4 locks total, this will return a 0-index slot */

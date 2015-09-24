@@ -731,10 +731,10 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         /* Check if this is a call with the special protection flag */
         if ((PreviousMode == KernelMode) &&
             (ObjectCreateInfo) &&
-            (ObjectCreateInfo->Attributes & 0x10000))
+            (ObjectCreateInfo->Attributes & OBJ_KERNEL_EXCLUSIVE))
         {
             /* Set flag which will make the object protected from user-mode */
-            NameInfo->QueryReferences |= 0x40000000;
+            NameInfo->QueryReferences |= OB_FLAG_KERNEL_EXCLUSIVE;
         }
 
         /* Set the header pointer */
