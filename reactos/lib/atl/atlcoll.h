@@ -2,7 +2,7 @@
 #define __ATLCOLL_H__
 
 #pragma once
-#include <atlbase.h>
+#include "atlbase.h"
 
 
 struct __POSITION

@@ -25,8 +25,8 @@
  *      2005/11/24  Created
  */
 
-#include "stdafx.h"
-#include <devmgr\devmgr.h>
+#include "precomp.h"
+#include <devmgr/devmgr.h>
 #include "properties.h"
 #include "resource.h"
 

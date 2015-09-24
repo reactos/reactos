@@ -2,11 +2,11 @@
 #define __CSTRINGT_H__
 
 #pragma once
-#include <atlsimpstr.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <wchar.h>
-#include <atlmem.h>
+#include "atlmem.h"
+#include "atlsimpstr.h"
 
 namespace ATL
 {
@@ -90,7 +90,8 @@ public:
 
     static void __cdecl Construct(_In_ CStringT* pString)
     {
-        new pString (CStringT);
+        // new pString(CStringT);
+        new (pString) CStringT;
     }
 
     CStringT(_In_ const CStringT& strSrc) :

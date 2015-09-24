@@ -8,7 +8,7 @@
 
 
 
-#include "stdafx.h"
+#include "precomp.h"
 #include "devmgmt.h"
 #include "DeviceView.h"
 

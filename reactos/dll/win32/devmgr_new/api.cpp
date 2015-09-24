@@ -16,8 +16,8 @@
 *      04-04-2004  Created
 */
 
-#include "stdafx.h"
-#include "devmgmt\MainWindow.h"
+#include "precomp.h"
+#include "devmgmt/MainWindow.h"
 
 HINSTANCE hDllInstance = NULL;
 

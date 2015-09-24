@@ -2,12 +2,22 @@
 #define __ATLMEM_H__
 
 #pragma once
-#include <atlcore.h>
+#include "atlcore.h"
+
+// HACK HACK! This must be placed in another global ATL header!!
+// Placement new operator
+void *operator new (size_t, void *buf)
+{
+    return buf;
+}
 
 namespace ATL
 {
 
-__interface __declspec(uuid("654F7EF5-CFDF-4df9-A450-6C6A13C622C0")) IAtlMemMgr
+interface DECLSPEC_UUID("654F7EF5-CFDF-4df9-A450-6C6A13C622C0") IAtlMemMgr;
+// #undef INTERFACE
+// #define INTERFACE IAtlMemMgr
+DECLARE_INTERFACE(IAtlMemMgr)
 {
 public:
     _Ret_maybenull_ _Post_writable_byte_size_(SizeBytes) void* Allocate(
@@ -65,6 +75,7 @@ public:
         if (Buffer)
         {
             BOOL FreeOk;
+            UNREFERENCED_PARAMETER(FreeOk);
             FreeOk = ::HeapFree(m_hHeap, 0, Buffer);
             ATLASSERT(FreeOk == TRUE);
         }

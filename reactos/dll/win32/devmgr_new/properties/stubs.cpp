@@ -16,7 +16,7 @@
  *      04-04-2004  Created
  */
 
-#include "stdafx.h"
+#include "precomp.h"
 
 // remove me
 BOOL

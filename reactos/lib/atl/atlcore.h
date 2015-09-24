@@ -221,7 +221,7 @@ extern CAtlBaseModule _AtlBaseModule;
 //
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 4200)
+#pragma warning(disable:4200)
 #endif
 struct ATLSTRINGRESOURCEIMAGE
 {

@@ -7,7 +7,7 @@
 *
 */
 
-#include "stdafx.h"
+#include "precomp.h"
 #include "devmgmt.h"
 #include "DeviceNode.h"
 

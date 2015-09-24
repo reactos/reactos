@@ -2,8 +2,8 @@
 #define __ATLSTR_H__
 
 #pragma once
-#include <atlbase.h>
-#include <cstringt.h>
+#include "atlbase.h"
+#include "cstringt.h"
 
 namespace ATL
 {

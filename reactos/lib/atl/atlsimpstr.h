@@ -3,14 +3,17 @@
 
 #pragma once
 
-#include <atlcore.h>
+#include "atlcore.h"
 
 
 namespace ATL
 {
 struct CStringData;
 
-__interface IAtlStringMgr
+interface IAtlStringMgr;
+// #undef INTERFACE
+// #define INTERFACE IAtlStringMgr
+DECLARE_INTERFACE(IAtlStringMgr)
 {
 public:
 
@@ -387,6 +390,31 @@ private:
 
         GetData()->nDataLength = nLength;
         m_pszData[nLength] = 0;
+    }
+
+    static CStringData* __cdecl CloneData(_Inout_ CStringData* pData)
+    {
+        CStringData* pNewData = NULL;
+
+        IAtlStringMgr* pNewStringMgr = pData->pStringMgr->Clone();
+        if (!pData->IsLocked() && (pNewStringMgr == pData->pStringMgr))
+        {
+            pNewData = pData;
+            pNewData->AddRef();
+        }
+        else
+        {
+            pNewData = pNewStringMgr->Allocate(pData->nDataLength, sizeof(XCHAR));
+            if (pNewData == NULL)
+            {
+                throw; // ThrowMemoryException();
+            }
+            pNewData->nDataLength = pData->nDataLength;
+            CopyChars(PXSTR(pNewData->data()), pData->nDataLength + 1,
+                      PCXSTR(pData->data()), pData->nDataLength + 1);
+        }
+
+        return( pNewData );
     }
 
 };
