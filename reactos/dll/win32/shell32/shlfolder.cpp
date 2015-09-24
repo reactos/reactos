@@ -781,7 +781,7 @@ HRESULT SHELL32_GetDetailsOfGuidItem(IShellFolder2* psf, PCUITEMID_CHILD pidl, U
     switch(iColumn)
     {
         case 0:        /* name */
-            return psf->GetDetailsOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, psd);
+            return psf->GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
         case 1:        /* comment */
             HKEY hKey;
             if (HCR_RegOpenClassIDKey(*clsid, &hKey))
