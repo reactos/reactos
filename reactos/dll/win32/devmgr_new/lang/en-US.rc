@@ -247,7 +247,7 @@ BEGIN
   BEGIN
     MENUITEM "E&xit",                       IDC_EXIT
   END
-  MENUITEM "Action"                         IDC_ACTIONMENU
+  MENUITEM "Action",                        IDC_ACTIONMENU
   POPUP "View"
   BEGIN
     MENUITEM "Devices by type",             IDC_DEVBYTYPE
