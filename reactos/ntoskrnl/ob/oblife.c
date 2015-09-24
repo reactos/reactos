@@ -474,7 +474,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
             /* Validate the Size and Attributes */
             if ((ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES)) ||
-                (ObjectAttributes->Attributes & ~OBJ_VALID_ATTRIBUTES))
+                (ObjectAttributes->Attributes & ~OBJ_VALID_KERNEL_ATTRIBUTES))
             {
                 /* Invalid combination, fail */
                 _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
@@ -482,7 +482,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
             /* Set some Create Info and do not allow user-mode kernel handles */
             ObjectCreateInfo->RootDirectory = ObjectAttributes->RootDirectory;
-            ObjectCreateInfo->Attributes = ObjectAttributes->Attributes & OBJ_VALID_ATTRIBUTES;
+            ObjectCreateInfo->Attributes = ObjectAttributes->Attributes & OBJ_VALID_KERNEL_ATTRIBUTES;
             if (CreatorMode != KernelMode) ObjectCreateInfo->Attributes &= ~OBJ_KERNEL_HANDLE;
             LocalObjectName = ObjectAttributes->ObjectName;
             SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
@@ -1041,7 +1041,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         (TypeName->Length % sizeof(WCHAR)) ||
         !(ObjectTypeInitializer) ||
         (ObjectTypeInitializer->Length != sizeof(*ObjectTypeInitializer)) ||
-        (ObjectTypeInitializer->InvalidAttributes & ~OBJ_VALID_ATTRIBUTES) ||
+        (ObjectTypeInitializer->InvalidAttributes & ~OBJ_VALID_KERNEL_ATTRIBUTES) ||
         (ObjectTypeInitializer->MaintainHandleCount &&
          (!(ObjectTypeInitializer->OpenProcedure) &&
           !ObjectTypeInitializer->CloseProcedure)) ||
