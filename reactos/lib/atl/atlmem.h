@@ -14,28 +14,28 @@ void *operator new (size_t, void *buf)
 namespace ATL
 {
 
-interface DECLSPEC_UUID("654F7EF5-CFDF-4df9-A450-6C6A13C622C0") IAtlMemMgr;
-// #undef INTERFACE
-// #define INTERFACE IAtlMemMgr
-DECLARE_INTERFACE(IAtlMemMgr)
+//__interface __declspec(uuid("654F7EF5-CFDF-4df9-A450-6C6A13C622C0")) 
+class IAtlMemMgr
 {
 public:
-    _Ret_maybenull_ _Post_writable_byte_size_(SizeBytes) void* Allocate(
+    virtual ~IAtlMemMgr() {};
+
+    virtual _Ret_maybenull_ _Post_writable_byte_size_(SizeBytes) void* Allocate(
         _In_ size_t SizeBytes
-        );
+        ) = 0;
 
-    void Free(
+    virtual void Free(
         _Inout_opt_ void* Buffer
-        );
+        ) = 0;
 
-    _Ret_maybenull_ _Post_writable_byte_size_(SizeBytes) void* Reallocate(
+    virtual _Ret_maybenull_ _Post_writable_byte_size_(SizeBytes) void* Reallocate(
         _Inout_updates_bytes_opt_(SizeBytes) void* Buffer,
         _In_ size_t SizeBytes
-        );
+        ) = 0;
 
-    size_t GetSize(
+    virtual size_t GetSize(
         _In_ void* Buffer
-        );
+        ) = 0;
 };
 
 class CWin32Heap : public IAtlMemMgr
@@ -74,10 +74,8 @@ public:
     {
         if (Buffer)
         {
-            BOOL FreeOk;
-            UNREFERENCED_PARAMETER(FreeOk);
-            FreeOk = ::HeapFree(m_hHeap, 0, Buffer);
-            ATLASSERT(FreeOk == TRUE);
+            if (!::HeapFree(m_hHeap, 0, Buffer))
+                ATLASSERT(FALSE);
         }
     }
 

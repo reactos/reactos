@@ -3,39 +3,39 @@
 
 #pragma once
 
-#include "atlcore.h"
+#include <atlcore.h>
 
 
 namespace ATL
 {
 struct CStringData;
 
-interface IAtlStringMgr;
-// #undef INTERFACE
-// #define INTERFACE IAtlStringMgr
-DECLARE_INTERFACE(IAtlStringMgr)
+// Pure virtual interface
+class IAtlStringMgr
 {
 public:
 
-    _Ret_maybenull_ _Post_writable_byte_size_(sizeof(CStringData) + nAllocLength*nCharSize)
+    virtual ~IAtlStringMgr() {}
+
+    virtual _Ret_maybenull_ _Post_writable_byte_size_(sizeof(CStringData) + nAllocLength*nCharSize)
         CStringData* Allocate(
         _In_ int nAllocLength,
         _In_ int nCharSize
-        );
+        ) = 0;
 
-    void Free(
+    virtual void Free(
         _Inout_ CStringData* pData
-        );
+        ) = 0;
 
     virtual _Ret_maybenull_ _Post_writable_byte_size_(sizeof(CStringData) + nAllocLength*nCharSize)
         CStringData* Reallocate(
         _Inout_ CStringData* pData,
         _In_ int nAllocLength,
         _In_ int nCharSize
-        );
+        ) = 0;
 
-    CStringData* GetNilString(void);
-    IAtlStringMgr* Clone(void);
+    virtual CStringData* GetNilString(void) = 0;
+    virtual IAtlStringMgr* Clone(void) = 0;
 };
 
 
@@ -243,6 +243,11 @@ public:
         return m_pszData;
     }
 
+    _Ret_notnull_ _Post_writable_size_(nMinBufferLength + 1) PXSTR GetBuffer(_In_ int nMinBufferLength)
+    {
+        return PrepareWrite(nMinBufferLength);
+    }
+
     int GetAllocLength() const throw()
     {
         return GetData()->nAllocLength;
@@ -267,11 +272,6 @@ public:
     bool IsEmpty() const throw()
     {
         return (GetLength() == 0);
-    }
-
-    _Ret_notnull_ _Post_writable_size_(nMinBufferLength + 1) PXSTR GetBuffer(_In_ int nMinBufferLength)
-    {
-        return PrepareWrite(nMinBufferLength);
     }
 
     CStringData* GetData() const throw()
@@ -405,16 +405,14 @@ private:
         else
         {
             pNewData = pNewStringMgr->Allocate(pData->nDataLength, sizeof(XCHAR));
-            if (pNewData == NULL)
-            {
-                throw; // ThrowMemoryException();
-            }
+            if (pNewData == NULL) throw;
+
             pNewData->nDataLength = pData->nDataLength;
             CopyChars(PXSTR(pNewData->data()), pData->nDataLength + 1,
                       PCXSTR(pData->data()), pData->nDataLength + 1);
         }
 
-        return( pNewData );
+        return(pNewData);
     }
 
 };

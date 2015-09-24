@@ -73,7 +73,7 @@ public:
         nDataBytes = nChars * nCharSize;
         SizeBytes = sizeof(CStringData) + nDataBytes;
 
-        pNewData = static_cast< CStringData* >(m_MemMgr->Reallocate(StrData, SizeBytes));
+        pNewData = static_cast<CStringData*>(m_MemMgr->Reallocate(StrData, SizeBytes));
         if (pNewData == NULL) return NULL;
 
         pNewData->nAllocLength = nChars - 1;
@@ -97,43 +97,43 @@ private:
     }
 };
 
-
-template<typename _BaseType = char, class StringIterator = ChTraitsOS<_BaseType>>
-class StrTraitATL :
-    public StringIterator
-{
-public:
-    static HINSTANCE FindStringResourceInstance(_In_ UINT nID) throw()
-    {
-        return AtlFindStringResourceInstance(nID);
-    }
-
-    static IAtlStringMgr* GetDefaultManager() throw()
-    {
-        return CAtlStringMgr::GetInstance();
-    }
-};
-
-
-template< typename _CharType = wchar_t>
-class ChTraitsOS :
-    public ChTraitsBase<_CharType>
-{
-protected:
-
-public:
-
-};
-
-#ifndef _ATL_CSTRING_NO_CRT
-    typedef CStringT<wchar_t, StrTraitATL<wchar_t, ChTraitsCRT<wchar_t>>> CAtlStringW;
-#else
-    typedef CStringT<wchar_t, StrTraitATL<wchar_t>> CAtlStringW;
-#endif
-
-#ifndef _AFX
-    typedef CAtlStringW CStringW;
-#endif
+//
+//template class <typename _BaseType = char, class StringIterator = ChTraitsOS<_BaseType>>
+//class StrTraitATL :
+//    public StringIterator
+//{
+//public:
+//    static HINSTANCE FindStringResourceInstance(_In_ UINT nID) throw()
+//    {
+//        return AtlFindStringResourceInstance(nID);
+//    }
+//
+//    static IAtlStringMgr* GetDefaultManager() throw()
+//    {
+//        return CAtlStringMgr::GetInstance();
+//    }
+//};
+//
+//
+//template< typename _CharType = wchar_t>
+//class ChTraitsOS :
+//    public ChTraitsBase<_CharType>
+//{
+//protected:
+//
+//public:
+//
+//};
+//
+//#ifndef _ATL_CSTRING_NO_CRT
+//    typedef CStringT<wchar_t, StrTraitATL<wchar_t, ChTraitsCRT<wchar_t>>> CAtlStringW;
+//#else
+//    typedef CStringT<wchar_t, StrTraitATL<wchar_t>> CAtlStringW;
+//#endif
+//
+//#ifndef _AFX
+//    typedef CAtlStringW CStringW;
+//#endif
 
 
 } //namespace ATL

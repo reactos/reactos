@@ -2,11 +2,11 @@
 #define __CSTRINGT_H__
 
 #pragma once
+#include <atlsimpstr.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <wchar.h>
-#include "atlmem.h"
-#include "atlsimpstr.h"
+#include <atlmem.h>
 
 namespace ATL
 {
@@ -90,8 +90,7 @@ public:
 
     static void __cdecl Construct(_In_ CStringT* pString)
     {
-        // new pString(CStringT);
-        new (pString) CStringT;
+        pString = new CStringT;
     }
 
     CStringT(_In_ const CStringT& strSrc) :
@@ -112,9 +111,9 @@ public:
         if (pImage == NULL) return FALSE;
 
         int nLength = StringTraits::GetBaseTypeLength(pImage->achString, pImage->nLength);
-        PXSTR pszBuffer = GetBuffer(nLength);
+        PXSTR pszBuffer = CThisSimpleString::GetBuffer(nLength);
         StringTraits::ConvertToBaseType(pszBuffer, nLength, pImage->achString, pImage->nLength);
-        ReleaseBufferSetLength(nLength);
+        CThisSimpleString::ReleaseBufferSetLength(nLength);
 
         return TRUE;
     }
