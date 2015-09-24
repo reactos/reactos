@@ -78,7 +78,7 @@ CDeviceView::Initialize()
                                   0, 0, 0, 0,
                                   m_hMainWnd,
                                   (HMENU)IDC_TREEVIEW,
-                                  g_hInstance,
+                                  g_hThisInstance,
                                   NULL);
     if (m_hTreeView)
     {
@@ -204,7 +204,7 @@ CDeviceView::Refresh(
     m_ViewType = Type;
 
     RefreshThreadData *ThreadData;
-    ThreadData = new RefreshThreadData();
+    ThreadData = new RefreshThreadData;
     ThreadData->This = this;
     ThreadData->ScanForChanges = ScanForChanges;
     ThreadData->UpdateView = UpdateView;
@@ -222,11 +222,10 @@ CDeviceView::Refresh(
     HANDLE hThread;
     hThread = (HANDLE)_beginthreadex(NULL,
                                      0,
-                                     &RefreshThread,
+                                     RefreshThread,
                                      ThreadData,
                                      0,
                                      NULL);
-
     if (hThread) CloseHandle(hThread);
 }
 
@@ -479,7 +478,7 @@ CDeviceView::ListDevicesByType()
 
             // Get the cached class node
             ClassNode = GetClassNode(&ClassGuid);
-            if (ClassNode == NULL)
+            if (ClassNode == nullptr)
             {
                 ATLASSERT(FALSE);
                 ClassIndex++;
@@ -520,7 +519,7 @@ CDeviceView::ListDevicesByType()
 
                     // Get the cached device node
                     DeviceNode = GetDeviceNode(DeviceInfoData.DevInst);
-                    if (DeviceNode == NULL)
+                    if (DeviceNode == nullptr)
                     {
                         ATLASSERT(bClassUnknown == true);
                         DeviceIndex++;
@@ -720,7 +719,7 @@ CDeviceView::EnableSelectedDevice(
     if (Enable == false)
     {
         CAtlStringW str;
-        if (str.LoadStringW(g_hInstance, IDS_CONFIRM_DISABLE))
+        if (str.LoadStringW(g_hThisInstance, IDS_CONFIRM_DISABLE))
         {
             if (MessageBoxW(m_hMainWnd,
                 str,
@@ -841,7 +840,7 @@ CDeviceView::BuildActionMenuForNode(
 
         if (DeviceNode->CanUpdate())
         {
-            String.LoadStringW(g_hInstance, IDS_MENU_UPDATE);
+            String.LoadStringW(g_hThisInstance, IDS_MENU_UPDATE);
             MenuItemInfo.wID = IDC_UPDATE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
@@ -850,7 +849,7 @@ CDeviceView::BuildActionMenuForNode(
 
         if (DeviceNode->IsDisabled())
         {
-            String.LoadStringW(g_hInstance, IDS_MENU_ENABLE);
+            String.LoadStringW(g_hThisInstance, IDS_MENU_ENABLE);
             MenuItemInfo.wID = IDC_ENABLE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
@@ -859,7 +858,7 @@ CDeviceView::BuildActionMenuForNode(
 
         if (DeviceNode->CanDisable() && !DeviceNode->IsDisabled())
         {
-            String.LoadStringW(g_hInstance, IDS_MENU_DISABLE);
+            String.LoadStringW(g_hThisInstance, IDS_MENU_DISABLE);
             MenuItemInfo.wID = IDC_DISABLE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
@@ -868,7 +867,7 @@ CDeviceView::BuildActionMenuForNode(
 
         if (DeviceNode->CanUninstall())
         {
-            String.LoadStringW(g_hInstance, IDS_MENU_UNINSTALL);
+            String.LoadStringW(g_hThisInstance, IDS_MENU_UNINSTALL);
             MenuItemInfo.wID = IDC_UNINSTALL_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
@@ -880,7 +879,7 @@ CDeviceView::BuildActionMenuForNode(
     }
 
     // All nodes have the scan option
-    String.LoadStringW(g_hInstance, IDS_MENU_SCAN);
+    String.LoadStringW(g_hThisInstance, IDS_MENU_SCAN);
     MenuItemInfo.wID = IDC_SCAN_HARDWARE;
     MenuItemInfo.dwTypeData = String.GetBuffer();
     InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
@@ -888,7 +887,7 @@ CDeviceView::BuildActionMenuForNode(
 
     if ((Node->GetNodeType() == RootNode) || (MainMenu == true))
     {
-        String.LoadStringW(g_hInstance, IDS_MENU_ADD);
+        String.LoadStringW(g_hThisInstance, IDS_MENU_ADD);
         MenuItemInfo.wID = IDC_ADD_HARDWARE;
         MenuItemInfo.dwTypeData = String.GetBuffer();
         InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
@@ -900,7 +899,7 @@ CDeviceView::BuildActionMenuForNode(
         InsertMenuItemW(OwnerMenu, i, TRUE, &MenuSeperator);
         i++;
 
-        String.LoadStringW(g_hInstance, IDS_MENU_PROPERTIES);
+        String.LoadStringW(g_hThisInstance, IDS_MENU_PROPERTIES);
         MenuItemInfo.wID = IDC_PROPERTIES;
         MenuItemInfo.dwTypeData = String.GetBuffer();
         InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
@@ -1021,13 +1020,14 @@ CDeviceView::GetClassNode(
     CClassNode *Node;
 
     Pos = m_ClassNodeList.GetHeadPosition();
+    if (Pos == NULL) return nullptr;
 
     do
     {
         Node = m_ClassNodeList.GetNext(Pos);
         if (IsEqualGUID(*Node->GetClassGuid(), *ClassGuid))
         {
-            //ATLASSERT(Node->GetType() == NodeClass);
+            ATLASSERT(Node->GetNodeType() == ClassNode);
             break;
         }
 
@@ -1047,13 +1047,14 @@ CDeviceView::GetDeviceNode(
     CDeviceNode *Node;
 
     Pos = m_DeviceNodeList.GetHeadPosition();
+    if (Pos == NULL) return nullptr;
 
     do
     {
         Node = m_DeviceNodeList.GetNext(Pos);
         if (Node->GetDeviceInst() == Device)
         {
-            //ATLASSERT(Node->GetType() == NodeDevice);
+            ATLASSERT(Node->GetNodeType() == DeviceNode);
             break;
         }
 
@@ -1112,6 +1113,7 @@ CDeviceView::RefreshDeviceList()
     if (m_RootNode) delete m_RootNode;
     m_RootNode = new CRootNode(&m_ImageListData);
     m_RootNode->SetupNode();
+
     // Loop through all the classes
     do
     {
@@ -1155,6 +1157,11 @@ CDeviceView::RefreshDeviceList()
         {
             m_DeviceNodeList.AddTail(DeviceNode);
         }
+        else
+        {
+            ATLASSERT(FALSE);
+        }
+
     }
 
     SetupDiDestroyDeviceInfoList(hDevInfo);
