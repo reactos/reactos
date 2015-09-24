@@ -1,28 +1,30 @@
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+/* Greek translation by Apostolos Alexiadis, 2009-01-25 */
+
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NAME "Name"
-    IDS_TYPE "Type"
-    IDS_MANUFACTURER "Manufacturer: %1"
-    IDS_LOCATION "Location: %1"
-    IDS_STATUS "Device Status: %1"
-    IDS_UNKNOWN "Unknown"
-    IDS_LOCATIONSTR "Location %1!u! (%2)"
+    IDS_NAME "Όνομα"
+    IDS_TYPE "Τύπος"
+    IDS_MANUFACTURER "Κατασκευαστής: %1"
+    IDS_LOCATION "Τοποθεσία: %1"
+    IDS_STATUS "Κατάσταση Συσκευής: %1"
+    IDS_UNKNOWN "Άγνωστο"
+    IDS_LOCATIONSTR "Τοποθεσία  %1!u! (%2)"
     IDS_DEVCODE " (Code %1!u!)"
     IDS_DEVCODE2 " (Code %2!u!)"
-    IDS_ENABLEDEVICE "Use this device (enable)"
-    IDS_DISABLEDEVICE "Do not use this device (disable)"
-    IDS_UNKNOWNDEVICE "Unknown device"
-    IDS_NODRIVERLOADED "No drivers are installed for this device."
-    IDS_DEVONPARENT "on %1"
-    IDS_TROUBLESHOOTDEV "&Troubleshoot..."
-    IDS_ENABLEDEV "E&nable Device"
-    IDS_REINSTALLDRV "Re&install Driver"
-    IDS_PROPERTIES "P&roperties"
-    IDS_UPDATEDRV "U&pdate Driver..."
-    IDS_REBOOT "Restart &Computer..."
-    IDS_NOTAVAILABLE "Not available"
+    IDS_ENABLEDEVICE "Χρήση αυτής της συσκευής (ενεργοποίηση)"
+    IDS_DISABLEDEVICE "Μη χρήση αυτής της συσκευής (απενεργοποίηση)"
+    IDS_UNKNOWNDEVICE "Άγνωστη συσκευή"
+    IDS_NODRIVERLOADED "Δεν έχουν εγκατασταθεί οδηγοί για αυτή τη συσκευή."
+    IDS_DEVONPARENT "στο %1"
+    IDS_TROUBLESHOOTDEV "&Αντιμετώπιση προβλημάτων..."
+    IDS_ENABLEDEV "Ε&νεργοποίηση Συσκευής"
+    IDS_REINSTALLDRV "Ε&πανεγκατάσταση Οδηγού"
+    IDS_PROPERTIES "Ι&διότητες"
+    IDS_UPDATEDRV "Α&ναβάθμιση Οδηγού..."
+    IDS_REBOOT "Επανεκκίνηση &Υπολογιστή..."
+    IDS_NOTAVAILABLE "Μη διαθέσιμο"
     IDS_NOTDIGITALLYSIGNED "Not digitally signed"
     IDS_NODRIVERS "No driver files are required or have been loaded for this device."
     IDS_RESOURCE_COLUMN "Resource type"
@@ -36,35 +38,35 @@ END
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "This device is working properly."
-    IDS_DEV_NOT_CONFIGURED "This device is not configured correctly."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS  could not load the driver for this device because the computer is reporting two %1 bus types."
+    IDS_DEV_NO_PROBLEM "Αυτή η συσκευή λειτουργεί κανονικά."
+    IDS_DEV_NOT_CONFIGURED "Αυτή η συσκευή δεν έχει διαμορφωθεί σωστά."
+    IDS_DEV_DEVLOADER_FAILED "Το ReactOS δε μπόρεσε να φορτώσει τον οδηγό για αυτή τη συσκευή γιατί ο υπολογιστής αναφέρει 2 %1 bus τύπους."
     IDS_DEV_DEVLOADER_FAILED2 "The %1 device loader(s) for this device could not load the device driver."
-    IDS_DEV_OUT_OF_MEMORY "The driver for this device may be bad, or your system may be running low on memory or other resources."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "This device is not working properly because one of its drivers may be bad, or your registry may be bad."
+    IDS_DEV_OUT_OF_MEMORY "Ο οδηγός για αυτή τη συσκευή μπορεί να είναι λανθασμένος, ή το σύστημά σας μπορεί να έχει λίγη μνήμη ή άλλους πόρους."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Αυτή η συσκευή δε λειτουργεί κανονικά επειδή ένας από τους οδηγούς τους πιθανόν να είναι λανθασμένος, ή το μητρώο σας ενδέχεται να έχει λάθη."
     IDS_DEV_LACKED_ARBITRATOR "The driver for this device requested a resource that ReactOS does not know how to handle."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Another device is using the resources this device needs."
-    IDS_DEV_FAILED_FILTER "The drivers for this device need to be reinstalled."
-    IDS_DEV_DEVLOADER_NOT_FOUND "This device is not working properly because ReactOS cannot load the file %1 that loads the drivers for the device."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "This device is not working properly because the file %1 that loads the drivers for this device is bad."
+    IDS_DEV_FAILED_FILTER "Οι οδηγοί για αυτή τη συσκευή πρέπει να επανεγκατασταθούν."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Αυτή η συσκευή δε λειτουργεί κανονικά επειδή το ReactOS δε μπορεί να φορτώσει το αρχείο %1 που φορτώνει τους οδηγούς για τη συσκευή."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Αυτή η συσκευή δε λειτουργεί κανονικά επειδή το αρχείο %1 που φορτώνει τους οδηγούς για αυτή τη συσκευή είναι λανθασμένο."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Device failure: Try changing the driver for this device. If that doesn't work, see your hardware documentation."
     IDS_DEV_INVALID_DATA "This device is not working properly because the BIOS in your computer is reporting the resources for the device incorrectly."
     IDS_DEV_INVALID_DATA2 "This device is not working properly because the BIOS in the device is reporting the resources for the device incorrectly. "
     IDS_DEV_FAILED_START "This device is either not present, not working properly, or does not have all the drivers installed."
     IDS_DEV_LIAR "ReactOS stopped responding while attempting to start this device, and therefore will never attempt to start this device again."
     IDS_DEV_NORMAL_CONFLICT "This device cannot find any free %1 resources to use."
-    IDS_DEV_NOT_VERIFIED "This device is either not present, not working properly, or does not have all the drivers installed."
-    IDS_DEV_NEED_RESTART "This device cannot work properly until you restart your computer."
+    IDS_DEV_NOT_VERIFIED "Αυτή η συσκευή μπορεί να μην είναι παρούσα, να μη λειτουργεί σωστά, ή να μην έχει όλους τους οδηγούς της εγκατεστημένους."
+    IDS_DEV_NEED_RESTART "Αυτή η συσκευή δε μπορεί να λειτουργήσει κανονικά μέχρι να επανεκκινήσετε τον υπολογιστή σας."
     IDS_DEV_REENUMERATION "This device is causing a resource conflict."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS could not identify all the resources this device uses."
     IDS_DEV_UNKNOWN_RESOURCE "The driver information file %1 is telling this child device to use a resource that the parent device does not have or recognize."
-    IDS_DEV_REINSTALL "The drivers for this device need to be reinstalled."
-    IDS_DEV_REGISTRY "Your registry may be bad."
-    IDS_DEV_WILL_BE_REMOVED "ReactOS is removing this device."
-    IDS_DEV_DISABLED "This device is not started."
-    IDS_DEV_DISABLED2 "This device is disabled."
+    IDS_DEV_REINSTALL "Οι οδηγοί για αυτή τη συσκευή πρέπει να επανεγκατασταθούν."
+    IDS_DEV_REGISTRY "Το μητρώο σας ενδέχεται να έχει λάθη."
+    IDS_DEV_WILL_BE_REMOVED "Το ReactOS αφαιρεί αυτή τη συσκευή."
+    IDS_DEV_DISABLED "Αυτή η συσκευή δεν ξεκίνησε."
+    IDS_DEV_DISABLED2 "Αυτή η συσκευή είναι απενεργοποιημένη."
     IDS_DEV_DEVLOADER_NOT_READY "The loaders for this device cannot load the required drivers."
-    IDS_DEV_DEVLOADER_NOT_READY2 "This display adapter is functioning correctly."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Αυτός ο προσαρμογέας οθόνης λειτουργεί κανονικά."
     IDS_DEV_DEVLOADER_NOT_READY3 "The loaders for this device cannot load the required drivers."
     IDS_DEV_DEVICE_NOT_THERE "This device is either not present, not working properly, or does not have all the drivers installed."
     IDS_DEV_MOVED "ReactOS is in the process of setting up this device."
@@ -127,53 +129,53 @@ IDD_HARDWARE DIALOGEX 0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Devices:", IDC_DEVICES, 7, 6, 196, 10
+    LTEXT "&Συσκευές:", IDC_DEVICES, 7, 6, 196, 10
     CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
-    GROUPBOX "Device Properties", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    GROUPBOX "Ιδιότητες Συσκευής", IDC_PROPERTIESGROUP, 7, 76, 196, 105
     LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_STATUS, 14, 112, 183, 30
-    PUSHBUTTON "&Troubleshoot...", IDC_TROUBLESHOOT, 80, 140, 60, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "P&roperties", IDC_PROPERTIES, 146, 140, 50, 14
+    PUSHBUTTON "&Αντιμετώπιση προβλημάτων...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Ι&διότητες", IDC_PROPERTIES, 146, 140, 50, 14
 END
 
 IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Γενικά"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Device type:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "Τύπος συσκευής:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Manufacturer:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Κατασκευαστής:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Location:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "Τοποθεσία:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    GROUPBOX "Device status", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    GROUPBOX "Κατάσταση συσκευής", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-    PUSHBUTTON "&Troubleshoot...", IDC_DEVPROBLEM, 148, 163, 90, 15
-    LTEXT "&Device usage:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    PUSHBUTTON "&Αντιμετώπιση προβλημάτων...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "&Χρήση συσκευής:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
 IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Driver"
+CAPTION "Οδηγός"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Driver provider:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "Προμηθευτής οδηγού:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Driver date:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Ημερομηνία οδηγού:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Driver version:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "Έκδοση οδηγού:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    PUSHBUTTON "&Λεπτομέρειες οδηγού...", IDC_DRIVERDETAILS, 7, 106, 75, 15
     LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 126, 75, 15
     LTEXT "Update the device driver.", -1, 91, 130, 154, 17, SS_NOPREFIX
@@ -181,20 +183,20 @@ END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Driver File Details"
+CAPTION "Λεπτομέρειες Αρχείων Οδηγού"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "&Driver files:", -1, 7, 36, 204, 8
+    LTEXT "&Αρχεία οδηγού:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
-    LTEXT "Provider:", -1, 14, 134, 50, 8
+    LTEXT "Προμηθευτής:", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "File version:", -1, 14, 150, 50, 8
+    LTEXT "Έκδοση αρχείου:", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Copyright:", -1, 14, 166, 50, 8
+    LTEXT "Δικαιώματα:", -1, 14, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Digital Signer:", -1, 14, 182, 50, 8
     EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY

@@ -1,0 +1,242 @@
+/* FILE:       dll/win32/devmgr/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2013-06-01
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NAME "Název"
+    IDS_TYPE "Typ"
+    IDS_MANUFACTURER "Výrobce: %1"
+    IDS_LOCATION "Umístění: %1"
+    IDS_STATUS "Status zařízení: %1"
+    IDS_UNKNOWN "Neznámý"
+    IDS_LOCATIONSTR "Umístění %1!u! (%2)"
+    IDS_DEVCODE " (Kód %1!u!)"
+    IDS_DEVCODE2 " (Kód %2!u!)"
+    IDS_ENABLEDEVICE "Používat toto zařízení (zapnout)"
+    IDS_DISABLEDEVICE "Nepoužívat toto zařízení (vypnout)"
+    IDS_UNKNOWNDEVICE "Neznámé zařízení"
+    IDS_NODRIVERLOADED "Pro toto zařízení nejsou nainstalovány žádné ovladače."
+    IDS_DEVONPARENT "na %1"
+    IDS_TROUBLESHOOTDEV "Ř&ešení problémů..."
+    IDS_ENABLEDEV "Povolit zaříze&ní"
+    IDS_REINSTALLDRV "Pře&instalovat ovladač"
+    IDS_PROPERTIES "Vlas&tnosti"
+    IDS_UPDATEDRV "A&ktualizovat ovladač..."
+    IDS_REBOOT "Resta&rtovat počítač..."
+    IDS_NOTAVAILABLE "Není dostupné"
+    IDS_NOTDIGITALLYSIGNED "Není digitálně podepsáno"
+    IDS_NODRIVERS "Pro toto zařízení nejsou vyžadovány nebo nebyly načteny žádné soubory ovladačů."
+    IDS_RESOURCE_COLUMN "Resource type"
+    IDS_SETTING_COLUMN "Setting"
+    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "I/O range"
+END
+
+/* puvodni anglicke error messages prevzaty z: http://www.z123.org/techsupport/medm.htm */
+STRINGTABLE
+BEGIN
+    IDS_DEV_NO_PROBLEM "Toto zařízení funguje správně."
+    IDS_DEV_NOT_CONFIGURED "Toto zařízení není správně nastaveno."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS nemohl načíst ovladač pro toto zařízení, protože počítač hlásí dva typy sběrnice %1."
+    IDS_DEV_DEVLOADER_FAILED2 "Device loader %1 nemohl načíst ovladač tohoto zařízení."
+    IDS_DEV_OUT_OF_MEMORY "Ovladač tohoto zařízení je poškozený nebo má systém málo paměti či jiných zdrojů."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Toto zařízení nefunguje správně, protože je špatný některý z jeho ovladačů nebo registr."
+    IDS_DEV_LACKED_ARBITRATOR "Ovladač tohoto zařízení požaduje zdroj, který ReactOS neumí zpracovat."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Zdroje, které toto zařízení vyžaduje, jsou už používány jiným zařízením."
+    IDS_DEV_FAILED_FILTER "Ovladače tohoto zařízení musí být přeinstalovány."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Toto zařízení nefunguje správně, protože ReactOS nedokáže načíst soubor %1, který načítá ovladače pro toto zařízení."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Toto zařízení nefunguje správně, protože soubor %1, který načítá ovladače pro toto zařízení, je poškozený."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Selhání zařízení: Zkuste změnit ovladač tohoto zařízení nebo konzultujte manuál."
+    IDS_DEV_INVALID_DATA "Toto zařízení nefunguje správně, protože BIOS v počítači nesprávně hlásí zdroje zařízení."
+    IDS_DEV_INVALID_DATA2 "Toto zařízení nefunguje správně, protože BIOS v zařízení nesprávně hlásí zdroje zařízení."
+    IDS_DEV_FAILED_START "Zařízení není přítomno, nepracuje správně nebo nemá nainstalované všechny ovladače."
+    IDS_DEV_LIAR "ReactOS přestal odpovídat při pokusu o spuštění tohoto zařízení, a proto se nebude znovu pokoušet spustit zařízení."
+    IDS_DEV_NORMAL_CONFLICT "Toto zařízení nedokáže nalézt volné %1 zdroje."
+    IDS_DEV_NOT_VERIFIED "Zařízení není přítomno, nepracuje správně nebo nemá nainstalované všechny ovladače."
+    IDS_DEV_NEED_RESTART "Toto zařízení nebude pracovat správně, dokud nebude počítač zrestartován."
+    IDS_DEV_REENUMERATION "Toto zařízení způsobuje konflikt zdrojů."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS nedokázal identifikovat všechny zdroje, které toto zařízení užívá."
+    IDS_DEV_UNKNOWN_RESOURCE "Informační soubor ovladače %1 požaduje po tomto zařízení použití zdroje, který jeho rodičovské zařízení nemá nebo nepoznává."
+    IDS_DEV_REINSTALL "Ovladače tohoto zařízení musí být přeinstalovány."
+    IDS_DEV_REGISTRY "Registry jsou možná poškozeny."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS odstraňuje toto zařízení."
+    IDS_DEV_DISABLED "Toto zařízení není spuštěno."
+    IDS_DEV_DISABLED2 "Toto zařízení je vypnuto."
+    IDS_DEV_DEVLOADER_NOT_READY "Loadery tohoto zařízení nemohou načíst požadované ovladače."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Tento zobrazovací adaptér funguje správně."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Loadery tohoto zařízení nemohou načíst požadované ovladače."
+    IDS_DEV_DEVICE_NOT_THERE "Zařízení není přítomno, nepracuje správně nebo nemá nainstalované všechny ovladače."
+    IDS_DEV_MOVED "ReactOS právě nastavuje toto zařízení."
+    IDS_DEV_TOO_EARLY "ReactOS právě nastavuje toto zařízení."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS nemohl určit zdroje tohoto zařízení."
+    IDS_DEV_FAILED_INSTALL "Ovladače tohoto zařízení nejsou naintalovány."
+    IDS_DEV_HARDWARE_DISABLED "Toto zařízení je vypnuto, protože mu BIOS nepřiřadil žádné zdroje."
+    IDS_DEV_CANT_SHARE_IRQ "Toto zařízení využívá IRQ, které je využíváno jiným zařízením a nemůže být sdíleno.\nJe potřeba změnit konfliktní nastavení nebo odebrat ovladač způsobující konflikt."
+    IDS_DEV_FAILED_ADD "Toto zařízení nepracuje správně, protože %1 nepracuje správně."
+    IDS_DEV_DISABLED_SERVICE "ReactOS nemůže nainstalovat ovladače tohoto zařízení, protože nemá přístup na disk nebo síťové umístění, na kterém se nacházejí instalační soubory."
+    IDS_DEV_TRANSLATION_FAILED "Toto zařízení neodpovídá svému ovladači."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS nedokáže určit nastavení tohoto zařízení. Konzultujte manuál, který byl přibalen k zařízení a použijte záložku ""Zdroje"" k vybrání nastavení."
+    IDS_DEV_BIOS_TABLE "Firmware tohoto počítače nezahrnuje dost informací nutných pro správné nastavení a použití tohoto zařízení.\nAby bylo možné použít toto zařízení, kontaktujte výrobce počítače k získání novější verze firmwaru nebo BIOSu."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Toto zařízení požaduje PCI přerušení, ale je konfigurováno pro ISA přerušení (či naopak).\nProsím, nastavte správně přerušení pro toto zařízení."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS nemůže incializovat ovladač zařízení pro toto zařízení."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS nemůže načíst ovladač pro toto zařízení, protože předchozí instance ovladače je stále v paměti."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS nemůže načíst ovladač pro toto zařízení. Ovladač může být poškozený nebo chybět."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS nemůže získat přístup k tomuto zařízení, protože jeho service key informace v registru chybí nebo je zapsána nesprávně."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS úspěšně načetl ovladač zařízení, ale nemůže najít zařízení."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS nemůže načíst ovladač tohoto zařízení, protože v systému už je spuštěno duplicitní zařízení."
+    IDS_DEV_FAILED_POST_START "ReactOS zastavil toto zařízení, protože způsobovalo problémy."
+    IDS_DEV_HALTED "Aplikace nebo služba zastavila toto zařízení."
+    IDS_DEV_PHANTOM "Toto zařízení nyní není připojeno k počítači."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS nemohl získat přístup k tomuto zařízení, protože operační systém se právě vypíná."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS nemůže používat toto zařízení, protože bylo připraveno pro bezpečné odebrání a ještě nebylo odebráno."
+    IDS_DEV_DRIVER_BLOCKED "Softwaru tohoto zařízení nebylo dovoleno spuštění, protože způsobuje v systému ReactOS problémy. Kontaktujte prodejce pro nový ovladač."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS nemůže spustit nové zařízení, protože systémová složka registru je příliš velká (překračuje limit velikosti registru)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS nedokázal změnit nastavení tohoto zařízení."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROP_DEVICEID "Device Instance ID"
+    IDS_PROP_HARDWAREIDS "Hardware IDs"
+    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
+    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
+    IDS_PROP_SERVICE "Service"
+    IDS_PROP_ENUMERATOR "Enumerator"
+    IDS_PROP_CAPABILITIES "Capabilities"
+    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
+    IDS_PROP_CONFIGFLAGS "Config Flags"
+    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
+    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
+    IDS_PROP_REMOVALRELATIONS "Removal Relations"
+    IDS_PROP_BUSRELATIONS "Bus Relations"
+    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
+    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
+    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
+    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
+    IDS_PROP_CLASSINSTALLER "Class Installers"
+    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
+    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
+    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
+    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
+    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
+    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 300, 400
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Zařízení:", IDC_DEVICES, 7, 6, 196, 10
+    CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
+    GROUPBOX "Vlastnosti zařízení", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_STATUS, 14, 112, 183, 30
+    PUSHBUTTON "Ř&ešení problémů...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Vlas&tnosti", IDC_PROPERTIES, 146, 140, 50, 14
+END
+
+IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Obecné"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Typ zařízení:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Výrobce:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Umístění:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX "Stav zařízení", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON "Ř&ešení problémů...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "Využití &zařízení:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+END
+
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ovladač"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Zprostředkovatel:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Datum ovladače:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Verze ovladače:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Digitální podpis:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "&Detaily ovladače...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "Zobrazí detaily souborů ovladače.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Aktualizovat ovladač...", IDC_UPDATEDRIVER, 7, 126, 75, 15
+    LTEXT "Aktualizuje ovladač zařízení.", -1, 91, 130, 154, 17, SS_NOPREFIX
+END
+
+IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Detaily souborů ovladače"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Soubory ovla&dače:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "Zprostředkovatel:", -1, 14, 134, 66, 8
+    EDITTEXT IDC_FILEPROVIDER, 80, 134, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Verze souboru:", -1, 14, 150, 66, 8
+    EDITTEXT IDC_FILEVERSION, 80, 150, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Autorská práva:", -1, 14, 166, 66, 8
+    EDITTEXT IDC_FILECOPYRIGHT, 80, 166, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Digitální podpis:", -1, 14, 182, 66, 8
+    EDITTEXT IDC_DIGITALSIGNER, 80, 182, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
+END
+
+IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Detaily"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    COMBOBOX IDC_DETAILSPROPNAME, 7, 36, 238, 165, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_DETAILSPROPVALUE, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
+END
+
+IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Resources"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
+END
+
+IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Napájení"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END

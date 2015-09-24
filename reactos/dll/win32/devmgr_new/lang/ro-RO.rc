@@ -1,0 +1,242 @@
+/*
+ * Translators: Petru Dimitriu (petrimetri at gmail dot com)
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NAME "Nume"
+    IDS_TYPE "Tip"
+    IDS_MANUFACTURER "Producător: %1"
+    IDS_LOCATION "Locație: %1"
+    IDS_STATUS "Stare dispozitiv: %1"
+    IDS_UNKNOWN "Necunoscut"
+    IDS_LOCATIONSTR "Locație %1!u! (%2)"
+    IDS_DEVCODE " (Cod %1!u!)"
+    IDS_DEVCODE2 " (Cod %2!u!)"
+    IDS_ENABLEDEVICE "Folosește acest dispozitiv (activare)"
+    IDS_DISABLEDEVICE "Nu folosi acest dispozitiv (dezactivare)"
+    IDS_UNKNOWNDEVICE "Dispozitiv necunoscut"
+    IDS_NODRIVERLOADED "Pentru acest dispozitiv nu sunt instalate modúle-pilot."
+    IDS_DEVONPARENT "pe %1"
+    IDS_TROUBLESHOOTDEV "&Depanare…"
+    IDS_ENABLEDEV "A&ctivare"
+    IDS_REINSTALLDRV "Re&instalează modulul-pilot"
+    IDS_PROPERTIES "P&roprietăți"
+    IDS_UPDATEDRV "A&ctualizare modúl-pilot…"
+    IDS_REBOOT "Repornire &calculator…"
+    IDS_NOTAVAILABLE "Indisponibil"
+    IDS_NOTDIGITALLYSIGNED "Nesemnat digital"
+    IDS_NODRIVERS "Fie nu sunt necesare modúle-pilot, fie nu a fost încărcat niciunul."
+    IDS_RESOURCE_COLUMN "Tip de resursă"
+    IDS_SETTING_COLUMN "Configuraţie"
+    IDS_RESOURCE_MEMORY_RANGE "Domeniu de memorie"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "Domeniu In/Ex"
+END
+
+/* error messages, source: http://www.z123.org/techsupport/medm.htm */
+STRINGTABLE
+BEGIN
+    IDS_DEV_NO_PROBLEM "Acest dispozitiv funcționează corect."
+    IDS_DEV_NOT_CONFIGURED "Acest dispozitiv nu este configurat corect."
+    IDS_DEV_DEVLOADER_FAILED "Nu s-a putut încărca modulul-pilot deoarece calculatorul indică două tipuri de magistrale %1."
+    IDS_DEV_DEVLOADER_FAILED2 "S-a eșuat la încărcarea modulelor-pilot pentru dispozitivul %1."
+    IDS_DEV_OUT_OF_MEMORY "Fie modulul-pilot este defect, fie sistemul are carențe de memorie sau de alte resurse."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Acest dispozitiv nu funcționează corect deoarece fie modulul-pilot nu este corect, fie registrul de sistem este deteriorat."
+    IDS_DEV_LACKED_ARBITRATOR "Modulul-pilot al acestui dispozitiv solicită o resursă necunoscută în actualul sistem de operare."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Resursele necesare pentru acest dispozitiv sunt ocupate de un alt dispozitiv."
+    IDS_DEV_FAILED_FILTER "Modulele-pilot pentru acest dispozitiv necesită reinstalare."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Acest dispozitiv nu funcționează corect deoarece nu se poate porni mecanismul (ce conține fișierul %1), necesar pentru încărcarea modulelor-pilot."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Acest dispozitiv nu funcționează corect deoare fișierul %1 care încarcă modulele-pilot pentru acest dispozitiv, este deteriorat."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Defecțiune dispozitiv: Încercați alte modúle-pilot pentru acest dispozitiv. Dacă problema persistă, consultați documentația din dotare."
+    IDS_DEV_INVALID_DATA "Acest dispozitiv nu funcționează corect, deoarece BIOS din calculator nu raportează corect resursele dispozitivului."
+    IDS_DEV_INVALID_DATA2 "Acest dispozitiv nu funcționează corect, deoarece BIOS din dispozitiv nu raportează corect resursele dispozitivului. "
+    IDS_DEV_FAILED_START "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele-pilot."
+    IDS_DEV_LIAR "Încercarea de a activa acest dispozitiv a provocat un blocaj în sistem. Prin urmare, nu mai este recomandată reactivarea acestui dispozitiv."
+    IDS_DEV_NORMAL_CONFLICT "Acest dispozitiv nu are la dispoziție resursele %1 necesare pentru a funcționa."
+    IDS_DEV_NOT_VERIFIED "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele-pilot."
+    IDS_DEV_NEED_RESTART "Funcționarea corectă a acestui dispozitiv necesită repornirea sistemului."
+    IDS_DEV_REENUMERATION "Acest dispoztiv provoacă un conflict de resurse."
+    IDS_DEV_PARTIAL_LOG_CONF "Nu au putut fi identificate toate resursele utilizate de către acest dispozitiv."
+    IDS_DEV_UNKNOWN_RESOURCE "Fișierul de informații %1 cere acestui sub-dispozitiv folosirea unei resurse pe care dispozitivul-parinte nu o are sau nu o recunoaște."
+    IDS_DEV_REINSTALL "Este necesară reinstalarea modulelor-pilot ale acestui dispozitiv."
+    IDS_DEV_REGISTRY "Este posibil ca registrul să fie deteriorat."
+    IDS_DEV_WILL_BE_REMOVED "Acest dispozitiv este pregătit pentru a fi deconectat."
+    IDS_DEV_DISABLED "Acest dispozitiv nu este pornit."
+    IDS_DEV_DISABLED2 "Acest dispozitiv este dezactivat."
+    IDS_DEV_DEVLOADER_NOT_READY "Nu se pot încărca toate modulele-pilot necesare."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Nu se pot încărca toate modulele-pilot necesare."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Nu se pot încărca toate modulele-pilot necesare."
+    IDS_DEV_DEVICE_NOT_THERE "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele-pilot."
+    IDS_DEV_MOVED "Pentru moment acest dispozitiv încă nu este pe deplin instalat."
+    IDS_DEV_TOO_EARLY "Pentru moment acest dispozitiv încă nu este pe deplin instalat."
+    IDS_DEV_NO_VALID_LOG_CONF "Nu se pot specifica resoursele necesare pentru acest dispozitiv."
+    IDS_DEV_FAILED_INSTALL "Modulele-pilot ale acestui dispozitiv nu sunt instalate."
+    IDS_DEV_HARDWARE_DISABLED "Acest dispozitiv este dezactivat deoarece BIOS nu i-a alocat resursele necesare."
+    IDS_DEV_CANT_SHARE_IRQ "Acest dispozitiv necesită o cerere de întrerupere (IRQ) care este folosită deja de alt dispozitiv și care nu poate fi folosită în comun.\nFie modificați configurația dispozitivelor pentru a rezolva problema gestiunii cererilor de întreruperi, fie eliminați modulul-pilot de mod-real care provoacă acest conflict."
+    IDS_DEV_FAILED_ADD "Acest dispozitiv nu funcționează corect deoarcere %1 nu funcționează corect."
+    IDS_DEV_DISABLED_SERVICE "Nu se pot instala modulele-pilot pentru acest dispozitiv deoarece nu se poate accesa locația de stocare a fișierelor necesare pentru instalare."
+    IDS_DEV_TRANSLATION_FAILED "Acest dispozitiv nu răspunde la comenzile modulului-pilot."
+    IDS_DEV_NO_SOFTCONFIG "Nu se poate determina configurația acestui dispozitiv. Consultați-i documentația din dotare și utilizați compartimentul „Resurse” pentru a-i stabili configurația corectă."
+    IDS_DEV_BIOS_TABLE "Microprogramele din sistemul calculatorului dumneavoastră nu conțin suficiente informații pentru a configura și a putea utiliza acest dispozitiv. \nPentru a utiliza acest dispozitiv, contactați producatorul calculatorului în vederea obținerii de actualizări pentru microprograme sau BIOS."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Acest dispozitiv a solicitat o întrerupere PCI însă este configurat pentru întreruperi ISA (sau viceversa). \nUtilizați programele de configurare din dotare pentru a reconfigura întreruperile pentru acest dispozitiv."
+    IDS_DEV_FAILED_DRIVER_ENTRY "Nu se poate iniția modulul-pilot al acestui dispozitiv."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "Nu se poate încărca modulul-pilot al acestui dispozitiv deoarece acesta deja a fost încărcat în memorie."
+    IDS_DEV_DRIVER_FAILED_LOAD "Nu se poate încărca modulul-pilot al acestui dispozitiv deoarece fie lipsește, fie este deteriorat."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "Nu se poate accesa acest dispozitiv deoarece informația cheii din registru fie lipsește, fie a fost înregistrată incorect."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "Modulul-pilot pentru acest dispozitiv a fost încărcat cu succes, însă dispozitivul nu mai poate fi găsit."
+    IDS_DEV_DUPLICATE_DEVICE "Nu se poate încărca modulul-pilot deoarece în sistem deja exista un dispozitiv în funcțiune de acest fel."
+    IDS_DEV_FAILED_POST_START "Acest dispozitiv a fost oprit deoarece au fost depistate probleme cu el."
+    IDS_DEV_HALTED "O aplicație sau un serviciu a oprit acest dispozitiv."
+    IDS_DEV_PHANTOM "La moment, acest dispozitiv nu este conectat la calculator."
+    IDS_DEV_SYSTEM_SHUTDOWN "Nu se poate accesa dispozitivul deoarece sistemul de operare este în curs de închidere."
+    IDS_DEV_HELD_FOR_EJECT "Nu se poate folosi acest dispozitiv deoarece acesta a fost deja pregătit pentru a fi deconectat."
+    IDS_DEV_DRIVER_BLOCKED "Modulul-pilot al acestui dispozitiv a fost oprit din cauza unor probleme de compatibilitate. Contactați furnizorul dispozitivului pentru o versiune compatibilă."
+    IDS_DEV_REGISTRY_TOO_LARGE "Nu se poate porni acest dispozitiv deoarece secțiunea registrului de sistem este prea mare (depășind limita admisă a dimensiunii totale a registrului)."
+    IDS_DEV_SETPROPERTIES_FAILED "Configurația acestui dispozitiv nu a putut fi modificată."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROP_DEVICEID "identificatorul instanței dispozitivului"
+    IDS_PROP_HARDWAREIDS "identificatori de componentă fizică"
+    IDS_PROP_COMPATIBLEIDS "identificatori compatibili"
+    IDS_PROP_MATCHINGDEVICEID "identificator de concordanță"
+    IDS_PROP_SERVICE "serviciu"
+    IDS_PROP_ENUMERATOR "enumerator"
+    IDS_PROP_CAPABILITIES "capabilități"
+    IDS_PROP_DEVNODEFLAGS "marcatori Devnode"
+    IDS_PROP_CONFIGFLAGS "marcatori Config"
+    IDS_PROP_CSCONFIGFLAGS "marcatori CSConfig"
+    IDS_PROP_EJECTIONRELATIONS "relații de ejecție"
+    IDS_PROP_REMOVALRELATIONS "relații de eliminare"
+    IDS_PROP_BUSRELATIONS "relații de magistrală"
+    IDS_PROP_DEVUPPERFILTERS "filtre superioare de dispozitiv"
+    IDS_PROP_DEVLOWERFILTERS "filtre inferioare de dispozitiv"
+    IDS_PROP_CLASSUPPERFILTERS "filtre superioare de clasă"
+    IDS_PROP_CLASSLOWERFILTERS "filtre inferioare de clasă"
+    IDS_PROP_CLASSINSTALLER "instalatori de clasă"
+    IDS_PROP_CLASSCOINSTALLER "coinstalatori de clasă"
+    IDS_PROP_DEVICECOINSTALLER "coinstalatori de dispozitiv"
+    IDS_PROP_FIRMWAREREVISION "revizie microprogram"
+    IDS_PROP_CURRENTPOWERSTATE "starea curentă de alimentare"
+    IDS_PROP_POWERCAPABILITIES "capabilitățile de alimentare"
+    IDS_PROP_POWERSTATEMAPPINGS "corelația punctelor de alimentare"
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 300, 400
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Dispo&zitive:", IDC_DEVICES, 7, 6, 196, 10
+    CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
+    GROUPBOX "Proprietăți dispozitiv", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_STATUS, 14, 112, 183, 30
+    PUSHBUTTON "&Depanare…", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "P&roprietăți", IDC_PROPERTIES, 146, 140, 50, 14
+END
+
+IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Generale"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Tip dispozitiv:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Producător:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Locație:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX "Stare dispozitiv", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON "&Depanare", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "&Utilizare dispozitiv:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+END
+
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Modúle-pilot"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Furnizor:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Dată:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Versiune:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Semnatar digital:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "&Detalii…", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "Mai multe detalii despre modulele-pilot.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Actualizare…", IDC_UPDATEDRIVER, 7, 126, 75, 15
+    LTEXT "Actualizați modulul-pilot pentru dispozitiv.", -1, 91, 130, 154, 17, SS_NOPREFIX
+END
+
+IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Detalii modúl-pilot"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Fișiere:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "Furnizor:", -1, 14, 134, 50, 8
+    EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Versiune fișier:", -1, 14, 150, 50, 8
+    EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Drept de autor:", -1, 14, 166, 50, 8
+    EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Semnatar digital:", -1, 14, 182, 50, 8
+    EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON "Î&nchide", IDOK, 167, 208, 50, 14
+END
+
+IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Detalii"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    COMBOBOX IDC_DETAILSPROPNAME, 7, 36, 238, 165, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_DETAILSPROPVALUE, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
+END
+
+IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Resurse"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Configurație de resurse:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
+END
+
+IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Alimentare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END

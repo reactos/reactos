@@ -1,0 +1,239 @@
+/* Italian translation by Paolo Devoti, devotip@tiscali.it, 2007-01-10 */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NAME "Nome"
+    IDS_TYPE "Tipo"
+    IDS_MANUFACTURER "Produttore: %1"
+    IDS_LOCATION "Località: %1"
+    IDS_STATUS "Stato del dispositivo: %1"
+    IDS_UNKNOWN "Sconosciuto"
+    IDS_LOCATIONSTR "Località %1!u! (%2)"
+    IDS_DEVCODE " (Codice %1!u!)"
+    IDS_DEVCODE2 " (Codice %2!u!)"
+    IDS_ENABLEDEVICE "Usa questo dispositivo (abilita)"
+    IDS_DISABLEDEVICE "Non usare questo dispositivo (disabilita)"
+    IDS_UNKNOWNDEVICE "Dispositivo sconosciuto"
+    IDS_NODRIVERLOADED "Nessun driver è installato per questo dispositivo."
+    IDS_DEVONPARENT "su %1"
+    IDS_TROUBLESHOOTDEV "&Verifiche di funzionamento..."
+    IDS_ENABLEDEV "&Abilita il dispositivo"
+    IDS_REINSTALLDRV "Re&installe il Driver"
+    IDS_PROPERTIES "P&roprietà"
+    IDS_UPDATEDRV "&Aggiorna il Driver..."
+    IDS_REBOOT "Riavvia il &Computer..."
+    IDS_NOTAVAILABLE "Non disponibile"
+    IDS_NOTDIGITALLYSIGNED "Manca la firma digitale"
+    IDS_NODRIVERS "Nessun driver è necessario o è stato caricato per questo dispositivo."
+    IDS_RESOURCE_COLUMN "Resource type"
+    IDS_SETTING_COLUMN "Setting"
+    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "I/O range"
+END
+
+/* error messages, source: http://www.z123.org/techsupport/medm.htm */
+STRINGTABLE
+BEGIN
+    IDS_DEV_NO_PROBLEM "Questo dispositivo funziona regolarmente."
+    IDS_DEV_NOT_CONFIGURED "Questo dispositivo non è configurato correttamente."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS non può caricare il driver di questo dispositivo perchè il computer stà rilevando due tipi di bus %1 ."
+    IDS_DEV_DEVLOADER_FAILED2 "Il loader %1 per questo dispositivo non puo' caricare il driver."
+    IDS_DEV_OUT_OF_MEMORY "Il driver di questo dispositivo potrebbe essere sbagliato, o il sistema potrebbe non avere sufficiente memoria o altre risorse."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Questo dispositivo non funziona regolarmente perchè uno dei driver è sbagliato, o è sbagliato il registry."
+    IDS_DEV_LACKED_ARBITRATOR "Il drive di questo dispositivo ha richiesto delle risorse che ReactOS non sa come gestire."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Un altro dispositivo stà usando le risorse richieste da questo dispositivo."
+    IDS_DEV_FAILED_FILTER "Il driver di questo dispositivo deve essere reinstallato."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Questo dispositivo non funziona regolarmente perchè ReactOS non può caricare il file %1 che carica i driver per questo dispositivo."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Questo dispositivo non funziona regolarmente perchè il file %1 che carica i driver per questo dispositivo è sbagliato."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Anomalia del dispositivo: Prova a cambiare il driver. Se non ha effetto verifica la documentazione dell'hardware."
+    IDS_DEV_INVALID_DATA "Questo dispositivo non funziona regolarmente perchè il BIOS del computer indica in modo errato le risorse per il dispositivo."
+    IDS_DEV_INVALID_DATA2 "Questo dispositivo non funziona regolarmente perchè il BIOS del dispositivo indica in modo errato le risorse per il dispositivo. "
+    IDS_DEV_FAILED_START "Il dispositivo può essere assente, malfunzionante o non ha tutti i driver necessari."
+    IDS_DEV_LIAR "ReactOS si è bloccato durante il tentativo di avvio di questo dispositivo, di conseguenza non verranno fatti ulteriori tentativi di avvio di questo dispositivo."
+    IDS_DEV_NORMAL_CONFLICT "Impossibile trovare %1 libera da usare."
+    IDS_DEV_NOT_VERIFIED "Il dispositivo può essere assente, malfunzionante o non ha tutti i driver necessari."
+    IDS_DEV_NEED_RESTART "Il dispositivo non funzionerà regolarmente prima del riavvio del computer."
+    IDS_DEV_REENUMERATION "Conflitto nell'uso delle risorse."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS non può identificare tutte le risorse usate da questo dispositivo."
+    IDS_DEV_UNKNOWN_RESOURCE "Il file %1 con le informazioni sul driver dichiara che il dispositivo dipendente deve usare risorse che non sono a disposizione del dispositivo base."
+    IDS_DEV_REINSTALL "Il driver di questo dispositivo deve essere reinstallato."
+    IDS_DEV_REGISTRY "Il registry potrebbe essere sbagliato."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS sta rimuovendo questo dispositivo."
+    IDS_DEV_DISABLED "Questo dispositivo non è avviato."
+    IDS_DEV_DISABLED2 "Questo dispositivo è disabilitato."
+    IDS_DEV_DEVLOADER_NOT_READY "Il loader del dispositivo non può caricare i driver necessari."
+    IDS_DEV_DEVLOADER_NOT_READY2 "L'adattatore per il monitor funziona regolarmente."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Il loader del dispositivo non può caricare i driver necessari."
+    IDS_DEV_DEVICE_NOT_THERE "Il dispositivo può essere assente, malfunzionante o non ha tutti i driver necessari."
+    IDS_DEV_MOVED "ReactOS sta per attivare questo dispositivo."
+    IDS_DEV_TOO_EARLY "ReactOS sta per attivare questo dispositivo."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS non può indicare le risorse per questo dispositivo."
+    IDS_DEV_FAILED_INSTALL "I driver non sono installati."
+    IDS_DEV_HARDWARE_DISABLED "Disabilitato perchè il BIOS del dispositivo non ha assegnato nessuna risorsa."
+    IDS_DEV_CANT_SHARE_IRQ "Questo dispositivo usa un Interrupt Request (IRQ) che è già in uso e non può essere condiviso.\nDevi cambiare l'impostazione in conflitto o togliere il driver ""real-mode"" che provoca il conflitto."
+    IDS_DEV_FAILED_ADD "Non funziona regolarmente a causa di %1 ."
+    IDS_DEV_DISABLED_SERVICE "ReactOS non può installare i driver del dispositivo perchè non è possibile accedere al disco o alla rete dove si trovano i file di setup."
+    IDS_DEV_TRANSLATION_FAILED "Il dispositivo non risponde ai suoi driver."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS non può individuare le impostazioni necessarie. Verificate la documentazione e usate il tab Risorse per impostare la configurazione."
+    IDS_DEV_BIOS_TABLE "Il firmware di sistema del vostro con contiene sufficienti informazioni per configurare correttamente questo dispositivo. \nPer utilizzare questo dispositivo contattate il costruttore per richiedere un aggiornamento del firmware o del BIOS."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "E' necessario un Interrupt PCI ma ne è configurato uno ISA o viceversa. \nUsate il setup di sistema del computer per riconfigurare l'Interrupt."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS non può inizializzare il driver di questo hardware."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS non puo' caricare il driver perchè si trova in memoria una attivazione precedente."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS non puo' caricare il driver, potrebbe essere corrotto o assente."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS non può accedere a questo hardware perchè le informazioni nel registry sono mancanti o memorizzate in modo errato."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS ha caricato regolarmente il driver ma non ha rilevato l'hardware."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS non puo' caricare il driver perchè si trova nel sistema un suo duplicato già attivo."
+    IDS_DEV_FAILED_POST_START "ReactOS ha fermato il driver perchè sono stati rileveti dei problemi."
+    IDS_DEV_HALTED "Una applicazione o un servizio ha disattivato il dispositivo hardware."
+    IDS_DEV_PHANTOM "Al momento l'hardware non è collegato al computer."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS Non può accede a questo  hardware perchè il sistema operativo si stà spegnendo."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS non può accedere al dispositivo perchè è stato predisposto per la rimozione ma non è ancora stato rimosso"
+    IDS_DEV_DRIVER_BLOCKED "Il software per questo dispositivo non può essere avviato perchè è noto che ha problemi con ReactOS. Contate il venditore hardware per un aggiornamento del driver."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS non può avviare il nuovo hardware perchè il contesto di sistema è troppo grande (supera i limiti della dimensione del Registry)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS non può modificare le impostazioni di questo dispositivo."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROP_DEVICEID "Device Instance ID"
+    IDS_PROP_HARDWAREIDS "Hardware IDs"
+    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
+    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
+    IDS_PROP_SERVICE "Service"
+    IDS_PROP_ENUMERATOR "Enumerator"
+    IDS_PROP_CAPABILITIES "Capabilities"
+    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
+    IDS_PROP_CONFIGFLAGS "Config Flags"
+    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
+    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
+    IDS_PROP_REMOVALRELATIONS "Removal Relations"
+    IDS_PROP_BUSRELATIONS "Bus Relations"
+    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
+    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
+    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
+    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
+    IDS_PROP_CLASSINSTALLER "Class Installers"
+    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
+    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
+    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
+    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
+    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
+    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 300, 400
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Dispositivi:", IDC_DEVICES, 7, 6, 196, 10
+    CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
+    GROUPBOX "Proprieta dei dispositivi", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_STATUS, 14, 112, 183, 30
+    PUSHBUTTON "&Verifiche di funzionamento...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "P&roprietà", IDC_PROPERTIES, 146, 140, 50, 14
+END
+
+IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Generale"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Tipo:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Produttore:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Località:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX "Stato del dispositivo", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON "&Verifiche di funzionamento...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "&Uso del dispositivo:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+END
+
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Driver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Fornitore del Driver:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Data del Driver:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Versione del Driver:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Firmatario digitale:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "Dettagli del &Driver...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "Per vedere i dettagli sui file del driver.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Aggiorna il Driver...", IDC_UPDATEDRIVER, 7, 126, 75, 15
+    LTEXT "Aggiorna il Driver.", -1, 91, 130, 154, 17, SS_NOPREFIX
+END
+
+IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Dettagli sui file del driver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "File del &Driver:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "Fornitore del Driver:", -1, 14, 134, 50, 8
+    EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Versione:", -1, 14, 150, 50, 8
+    EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Copyright:", -1, 14, 166, 50, 8
+    EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Firmatario digitale:", -1, 14, 182, 50, 8
+    EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
+END
+
+IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Dettagli"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    COMBOBOX IDC_DETAILSPROPNAME, 7, 36, 238, 165, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_DETAILSPROPVALUE, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
+END
+
+IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Resources"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
+END
+
+IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Power"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END

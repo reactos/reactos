@@ -1,30 +1,32 @@
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+/* Hebrew translation by Baruch Rutman */
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NAME "Name"
-    IDS_TYPE "Type"
-    IDS_MANUFACTURER "Manufacturer: %1"
-    IDS_LOCATION "Location: %1"
-    IDS_STATUS "Device Status: %1"
-    IDS_UNKNOWN "Unknown"
-    IDS_LOCATIONSTR "Location %1!u! (%2)"
-    IDS_DEVCODE " (Code %1!u!)"
-    IDS_DEVCODE2 " (Code %2!u!)"
-    IDS_ENABLEDEVICE "Use this device (enable)"
-    IDS_DISABLEDEVICE "Do not use this device (disable)"
-    IDS_UNKNOWNDEVICE "Unknown device"
-    IDS_NODRIVERLOADED "No drivers are installed for this device."
-    IDS_DEVONPARENT "on %1"
-    IDS_TROUBLESHOOTDEV "&Troubleshoot..."
-    IDS_ENABLEDEV "E&nable Device"
-    IDS_REINSTALLDRV "Re&install Driver"
-    IDS_PROPERTIES "P&roperties"
-    IDS_UPDATEDRV "U&pdate Driver..."
-    IDS_REBOOT "Restart &Computer..."
-    IDS_NOTAVAILABLE "Not available"
-    IDS_NOTDIGITALLYSIGNED "Not digitally signed"
-    IDS_NODRIVERS "No driver files are required or have been loaded for this device."
+    IDS_NAME "שם"
+    IDS_TYPE "סוג"
+    IDS_MANUFACTURER "יצרן: %1"
+    IDS_LOCATION "מיקום: %1"
+    IDS_STATUS "מצב ההתקן: %1"
+    IDS_UNKNOWN "לא ידוע"
+    IDS_LOCATIONSTR "מיקום %1!u! (%2)"
+    IDS_DEVCODE " (קוד %1!u!)"
+    IDS_DEVCODE2 " (קוד %2!u!)"
+    IDS_ENABLEDEVICE "התשמש בהתקן זה (אפשר)"
+    IDS_DISABLEDEVICE "אל תשתמש בהתקן זה (הפסק)"
+    IDS_UNKNOWNDEVICE "התקן לא ידוע"
+    IDS_NODRIVERLOADED "אין מנהלי התקנים מותקנים עבור התקן זה"
+    IDS_DEVONPARENT "על %1"
+    IDS_TROUBLESHOOTDEV "פתור בעיות..."
+    IDS_ENABLEDEV "אפשר התקן"
+    IDS_REINSTALLDRV "התקן מחדש את מנהל ההתקן"
+    IDS_PROPERTIES "מאפיינים"
+    IDS_UPDATEDRV "עדכן מנהל התקן..."
+    IDS_REBOOT "הפעל מחדש את המחשב..."
+    IDS_NOTAVAILABLE "לא זמין"
+    IDS_NOTDIGITALLYSIGNED "לא חתום דיגיטלית"
+    IDS_NODRIVERS "קבצי מנהל ההתקן עבור התקן זה אינם דרושים ולא נטענו."
     IDS_RESOURCE_COLUMN "Resource type"
     IDS_SETTING_COLUMN "Setting"
     IDS_RESOURCE_MEMORY_RANGE "Memory range"
@@ -36,7 +38,7 @@ END
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "This device is working properly."
+    IDS_DEV_NO_PROBLEM "התקן זה פועל כראוי"
     IDS_DEV_NOT_CONFIGURED "This device is not configured correctly."
     IDS_DEV_DEVLOADER_FAILED "ReactOS  could not load the driver for this device because the computer is reporting two %1 bus types."
     IDS_DEV_DEVLOADER_FAILED2 "The %1 device loader(s) for this device could not load the device driver."
@@ -127,83 +129,83 @@ IDD_HARDWARE DIALOGEX 0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Devices:", IDC_DEVICES, 7, 6, 196, 10
+    LTEXT "התקנים:", IDC_DEVICES, 7, 6, 196, 10
     CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
-    GROUPBOX "Device Properties", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    GROUPBOX "מאפייני התקן", IDC_PROPERTIESGROUP, 7, 76, 196, 105
     LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_STATUS, 14, 112, 183, 30
-    PUSHBUTTON "&Troubleshoot...", IDC_TROUBLESHOOT, 80, 140, 60, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "P&roperties", IDC_PROPERTIES, 146, 140, 50, 14
+    PUSHBUTTON "פתירת בעיות...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "מאפיינים", IDC_PROPERTIES, 146, 140, 50, 14
 END
 
 IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "כללי"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Device type:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "סוג התקן:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Manufacturer:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "יצרן:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Location:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "מיקום:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    GROUPBOX "Device status", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    GROUPBOX "מצב ההתקן", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-    PUSHBUTTON "&Troubleshoot...", IDC_DEVPROBLEM, 148, 163, 90, 15
-    LTEXT "&Device usage:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    PUSHBUTTON "פתירת בעיות...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "שימוש של ההתקן:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
 IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Driver"
+CAPTION "מנהל התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Driver provider:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "ספק מנהל התקן:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Driver date:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "תאריך מנהל התקן:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Driver version:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "גירסת מנהל התקן:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    LTEXT "יוצר חתימה דיגיטלית:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 75, 15
-    LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "פרטי מנהל ההתקן...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "לשם הצגת פרטים אודות קבצי מנהל ההתקן.", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 126, 75, 15
     LTEXT "Update the device driver.", -1, 91, 130, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Driver File Details"
+CAPTION "פרטי קובץ מנהל התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "&Driver files:", -1, 7, 36, 204, 8
+    LTEXT "קבצי מנהל התקן:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
-    LTEXT "Provider:", -1, 14, 134, 50, 8
+    LTEXT "ספק:", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "File version:", -1, 14, 150, 50, 8
+    LTEXT "גרסת קובץ:", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Copyright:", -1, 14, 166, 50, 8
+    LTEXT "זכויות יוצרים:", -1, 14, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Digital Signer:", -1, 14, 182, 50, 8
+    LTEXT "יוצר חתימה דיגיטלית:", -1, 14, 182, 50, 8
     EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
+    DEFPUSHBUTTON "אישור", IDOK, 167, 208, 50, 14
 END
 
 IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "פרטים"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -229,7 +231,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "צריכת חשמל"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20

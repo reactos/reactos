@@ -7,27 +7,25 @@ typedef struct _MENU_HINT
     UINT HintId;
 } MENU_HINT, *PMENU_HINT;
 
-class CDeviceManager
+class CMainWindow
 {
     CAtlStringW m_szMainWndClass;
     CDeviceView *m_DeviceView;
     HWND m_hMainWnd;
     HWND m_hStatusBar;
     HWND m_hToolBar;
+    HIMAGELIST m_ToolbarhImageList;
     HMENU m_hMenu;
     HMENU m_hActionMenu;
     int m_CmdShow;
 
 public:
-    CDeviceManager(void);
-    ~CDeviceManager(void);
+    CMainWindow(void);
+    ~CMainWindow(void);
 
-    bool Create(
-        _In_ HWND hWndParent,
-        _In_ HINSTANCE hInst,
-        _In_opt_z_ LPCWSTR lpMachineName,
-        _In_ int nCmdShow
-        );
+    bool Initialize(LPCTSTR lpCaption, int nCmdShow);
+    int Run();
+    void Uninitialize();
 
 private:
     static LRESULT CALLBACK MainWndProc(
@@ -37,44 +35,24 @@ private:
         LPARAM lParam
         );
 
-    bool Initialize(
-        _In_z_ LPCTSTR lpCaption,
-        _In_ int nCmdShow
+    LRESULT OnCreate(HWND hwnd);
+    LRESULT OnDestroy();
+    LRESULT OnSize();
+    LRESULT OnNotify(LPARAM lParam);
+    LRESULT OnContext(LPARAM lParam);
+    LRESULT OnCommand(WPARAM wParam, LPARAM lParam);
+
+    bool CreateToolBar();
+    bool CreateStatusBar();
+
+    void UpdateToolbar(
         );
-
-    int Run();
-    void Uninitialize(void);
-
-    LRESULT OnCreate(
-        _In_ HWND hwnd
-        );
-
-    LRESULT OnDestroy(void);
-    LRESULT OnSize(void);
-
-    LRESULT OnNotify(
-        _In_ LPARAM lParam
-        );
-
-    LRESULT OnContext(
-        _In_ LPARAM lParam
-        );
-
-    LRESULT OnCommand(
-        _In_ WPARAM wParam,
-        LPARAM lParam
-        );
-
-    bool CreateToolBar(void);
-    bool CreateStatusBar(void);
-
-    void UpdateToolbar(void);
 
     bool StatusBarLoadString(
-        _In_ HWND hStatusBar,
-        _In_ INT PartId,
-        _In_ HINSTANCE hInstance,
-        _In_ UINT uID
+        HWND hStatusBar,
+        INT PartId,
+        HINSTANCE hInstance,
+        UINT uID
         );
 
     void UpdateStatusBar(
@@ -82,14 +60,14 @@ private:
         );
 
     bool MainWndMenuHint(
-        _In_ WORD CmdId,
-        _In_ const MENU_HINT *HintArray,
-        _In_ DWORD HintsCount,
-        _In_ UINT DefHintId
+        WORD CmdId,
+        const MENU_HINT *HintArray,
+        DWORD HintsCount,
+        UINT DefHintId
         );
 
     bool RefreshView(
-        _In_ ViewType Type
+        ViewType Type
         );
 };
 

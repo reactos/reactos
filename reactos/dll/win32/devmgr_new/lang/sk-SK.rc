@@ -1,29 +1,34 @@
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+/* TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.: 30-05-2008
+ * LAST CHANGE: 31-05-2010
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NAME "Name"
-    IDS_TYPE "Type"
-    IDS_MANUFACTURER "Manufacturer: %1"
-    IDS_LOCATION "Location: %1"
-    IDS_STATUS "Device Status: %1"
-    IDS_UNKNOWN "Unknown"
-    IDS_LOCATIONSTR "Location %1!u! (%2)"
-    IDS_DEVCODE " (Code %1!u!)"
-    IDS_DEVCODE2 " (Code %2!u!)"
-    IDS_ENABLEDEVICE "Use this device (enable)"
-    IDS_DISABLEDEVICE "Do not use this device (disable)"
-    IDS_UNKNOWNDEVICE "Unknown device"
-    IDS_NODRIVERLOADED "No drivers are installed for this device."
-    IDS_DEVONPARENT "on %1"
-    IDS_TROUBLESHOOTDEV "&Troubleshoot..."
+    IDS_NAME "Názov"
+    IDS_TYPE "Typ"
+    IDS_MANUFACTURER "Výrobca: %1"
+    IDS_LOCATION "Umiestnenie: %1"
+    IDS_STATUS "Stav zariadenia: %1"
+    IDS_UNKNOWN "Neznáme"
+    IDS_LOCATIONSTR "Umiestnenie %1!u! (%2)"
+    IDS_DEVCODE " (Kód %1!u!)"
+    IDS_DEVCODE2 " (Kód %2!u!)"
+    IDS_ENABLEDEVICE "Používať toto zariadenie (povolené)"
+    IDS_DISABLEDEVICE "Nepoužívať toto zariadenie (zakázané)"
+    IDS_UNKNOWNDEVICE "Neznáme zariadenie"
+    IDS_NODRIVERLOADED "Pre toto zariadenie nie sú nainštalované žiadne ovládače."
+    IDS_DEVONPARENT "na %1"
+    IDS_TROUBLESHOOTDEV "&Riešenie problémov..."
     IDS_ENABLEDEV "E&nable Device"
     IDS_REINSTALLDRV "Re&install Driver"
     IDS_PROPERTIES "P&roperties"
-    IDS_UPDATEDRV "U&pdate Driver..."
+    IDS_UPDATEDRV "&Aktualizovať ovládač..."
     IDS_REBOOT "Restart &Computer..."
-    IDS_NOTAVAILABLE "Not available"
-    IDS_NOTDIGITALLYSIGNED "Not digitally signed"
+    IDS_NOTAVAILABLE "Nie je k dispozícii" //Not available
+    IDS_NOTDIGITALLYSIGNED "Digitálne nepodpísaný"
     IDS_NODRIVERS "No driver files are required or have been loaded for this device."
     IDS_RESOURCE_COLUMN "Resource type"
     IDS_SETTING_COLUMN "Setting"
@@ -36,14 +41,14 @@ END
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "This device is working properly."
-    IDS_DEV_NOT_CONFIGURED "This device is not configured correctly."
+    IDS_DEV_NO_PROBLEM "Toto zariadenie pracuje správne."
+    IDS_DEV_NOT_CONFIGURED "Toto zariadenie nie je správne nastavené."
     IDS_DEV_DEVLOADER_FAILED "ReactOS  could not load the driver for this device because the computer is reporting two %1 bus types."
     IDS_DEV_DEVLOADER_FAILED2 "The %1 device loader(s) for this device could not load the device driver."
     IDS_DEV_OUT_OF_MEMORY "The driver for this device may be bad, or your system may be running low on memory or other resources."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "This device is not working properly because one of its drivers may be bad, or your registry may be bad."
     IDS_DEV_LACKED_ARBITRATOR "The driver for this device requested a resource that ReactOS does not know how to handle."
-    IDS_DEV_BOOT_CONFIG_CONFLICT "Another device is using the resources this device needs."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Iné zariadenie používa prostriedky, ktoré potrebuje toto zariadenie."
     IDS_DEV_FAILED_FILTER "The drivers for this device need to be reinstalled."
     IDS_DEV_DEVLOADER_NOT_FOUND "This device is not working properly because ReactOS cannot load the file %1 that loads the drivers for the device."
     IDS_DEV_DEVLOADER_NOT_FOUND2 "This device is not working properly because the file %1 that loads the drivers for this device is bad."
@@ -54,15 +59,15 @@ BEGIN
     IDS_DEV_LIAR "ReactOS stopped responding while attempting to start this device, and therefore will never attempt to start this device again."
     IDS_DEV_NORMAL_CONFLICT "This device cannot find any free %1 resources to use."
     IDS_DEV_NOT_VERIFIED "This device is either not present, not working properly, or does not have all the drivers installed."
-    IDS_DEV_NEED_RESTART "This device cannot work properly until you restart your computer."
+    IDS_DEV_NEED_RESTART "Toto zariadenie nemože správne pracovať, kým nereštartujete počítač."
     IDS_DEV_REENUMERATION "This device is causing a resource conflict."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS could not identify all the resources this device uses."
     IDS_DEV_UNKNOWN_RESOURCE "The driver information file %1 is telling this child device to use a resource that the parent device does not have or recognize."
-    IDS_DEV_REINSTALL "The drivers for this device need to be reinstalled."
+    IDS_DEV_REINSTALL "Je potrebné preinštalovať ovládače pre toto zariadenie."
     IDS_DEV_REGISTRY "Your registry may be bad."
     IDS_DEV_WILL_BE_REMOVED "ReactOS is removing this device."
-    IDS_DEV_DISABLED "This device is not started."
-    IDS_DEV_DISABLED2 "This device is disabled."
+    IDS_DEV_DISABLED "Toto zariadenie nie je spustené."
+    IDS_DEV_DISABLED2 "Toto zariadenie je zakázané."
     IDS_DEV_DEVLOADER_NOT_READY "The loaders for this device cannot load the required drivers."
     IDS_DEV_DEVLOADER_NOT_READY2 "This display adapter is functioning correctly."
     IDS_DEV_DEVLOADER_NOT_READY3 "The loaders for this device cannot load the required drivers."
@@ -85,8 +90,8 @@ BEGIN
     IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS cannot access this hardware because its service key information in the registry is missing or recorded incorrectly."
     IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS successfully loaded the device driver for this hardware but cannot find the hardware device."
     IDS_DEV_DUPLICATE_DEVICE "ReactOS cannot load the device driver for this hardware because there is a duplicate device already running in the system."
-    IDS_DEV_FAILED_POST_START "ReactOS has stopped this device because it has reported problems."
-    IDS_DEV_HALTED "An application or service has shut down this hardware device."
+    IDS_DEV_FAILED_POST_START "Systém ReactOS zastavil toto zariadenie lebo ohlásilo problémy."
+    IDS_DEV_HALTED "Aplikácia alebo služba vypla toto hardvérové zariadenie."
     IDS_DEV_PHANTOM "Currently, this hardware device is not connected to the computer."
     IDS_DEV_SYSTEM_SHUTDOWN "ReactOS cannot gain access to this hardware device because the operating system is in the process of shutting down."
     IDS_DEV_HELD_FOR_EJECT "ReactOS cannot use this hardware device because it has been prepared for safe removal, but it has not been removed from the computer"
@@ -127,51 +132,51 @@ IDD_HARDWARE DIALOGEX 0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Devices:", IDC_DEVICES, 7, 6, 196, 10
+    LTEXT "&Zariadenia:", IDC_DEVICES, 7, 6, 196, 10
     CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
-    GROUPBOX "Device Properties", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    GROUPBOX "Vlastnosti zariadenia", IDC_PROPERTIESGROUP, 7, 76, 196, 105
     LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_STATUS, 14, 112, 183, 30
-    PUSHBUTTON "&Troubleshoot...", IDC_TROUBLESHOOT, 80, 140, 60, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "P&roperties", IDC_PROPERTIES, 146, 140, 50, 14
+    PUSHBUTTON "&Riešenie problémov...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Vl&astnosti", IDC_PROPERTIES, 146, 140, 50, 14
 END
 
 IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Všeobecné"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Device type:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "Typ zariadenia:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Manufacturer:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Výrobca:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Location:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "Umiestnenie:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    GROUPBOX "Device status", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    GROUPBOX "Stav zariadenia", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-    PUSHBUTTON "&Troubleshoot...", IDC_DEVPROBLEM, 148, 163, 90, 15
-    LTEXT "&Device usage:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    PUSHBUTTON "&Riešenie problémov...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "&Využitie zariadenia:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
 IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Driver"
+CAPTION "Ovládač"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Driver provider:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "Poskytovateľ ovládača:", -1, 34, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Driver date:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Dátum ovládača:", -1, 34, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Driver version:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "Verzia ovládača:", -1, 34, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    LTEXT "Digitálne podpísal:", -1, 34, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 75, 15
     LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
@@ -181,29 +186,29 @@ END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Driver File Details"
+CAPTION "Detaily o súboroch ovládača"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "&Driver files:", -1, 7, 36, 204, 8
+    LTEXT "&Súbory ovládača:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
-    LTEXT "Provider:", -1, 14, 134, 50, 8
-    EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "File version:", -1, 14, 150, 50, 8
-    EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Copyright:", -1, 14, 166, 50, 8
-    EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Digital Signer:", -1, 14, 182, 50, 8
-    EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Poskytovateľ:", -1, 14, 134, 66, 8
+    EDITTEXT IDC_FILEPROVIDER, 80, 134, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Verzia súboru:", -1, 14, 150, 66, 8
+    EDITTEXT IDC_FILEVERSION, 80, 150, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Autorské práva:", -1, 14, 166, 66, 8
+    EDITTEXT IDC_FILECOPYRIGHT, 80, 166, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Digitálne podpísal:", -1, 14, 182, 66, 8
+    EDITTEXT IDC_DIGITALSIGNER, 80, 182, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
 END
 
 IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Detaily"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20

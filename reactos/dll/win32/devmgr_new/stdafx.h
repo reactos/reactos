@@ -53,7 +53,7 @@ OUT LPDWORD lpReboot);
 #include <shlwapi.h>
 #include <strsafe.h>
 #include <process.h>
-#include <windowsx.h>
+#include <WindowsX.h>
 #include <strsafe.h>
 #include <regstr.h>
 #include <newdevp.h>
@@ -61,7 +61,7 @@ OUT LPDWORD lpReboot);
 #include <setupapi.h>
 #include <commctrl.h>
 #include <cfgmgr32.h>
-#include <uxtheme.h>
+#include <Uxtheme.h>
 #include <devguid.h>
 
 #include <atlbase.h>
