@@ -1015,7 +1015,7 @@ DWORD DosStartProcess32(IN LPCSTR ExecutablePath,
                         sizeof(*DosStartProc32.ComSpecInfo));
     ASSERT(DosStartProc32.ComSpecInfo);
 
-    DosStartProc32.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    DosStartProc32.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     ASSERT(DosStartProc32.hEvent);
 #endif
 

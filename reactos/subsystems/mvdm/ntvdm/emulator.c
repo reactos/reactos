@@ -475,7 +475,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
     /**************** ATTACH INPUT WITH CONSOLE *****************/
     /* Create the task event */
-    VdmTaskEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    VdmTaskEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     ASSERT(VdmTaskEvent != NULL);
 
     /* Start the input thread */
@@ -486,6 +486,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         EmulatorCleanup();
         return FALSE;
     }
+    ResumeEventThread();
     /************************************************************/
 
     /* Initialize the VGA */

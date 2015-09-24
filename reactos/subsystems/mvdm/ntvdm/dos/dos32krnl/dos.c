@@ -2184,8 +2184,16 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
                     PVOID PointerFromFarPointer2 = SEG_OFF_TO_PTR(getES(), getDI());
                     BOOLEAN AreEqual = (PointerFromFarPointer1 == PointerFromFarPointer2);
 
-                    setZF(AreEqual);
-                    setCF(!AreEqual);
+                    if (AreEqual)
+                    {
+                        Stack[STACK_FLAGS] |=  EMULATOR_FLAG_ZF;
+                        Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    }
+                    else
+                    {
+                        Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
+                        Stack[STACK_FLAGS] |=  EMULATOR_FLAG_CF;
+                    }
                     break;
                 }
 
