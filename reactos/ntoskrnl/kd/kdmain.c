@@ -377,7 +377,7 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
         Level = 1 << Level;
 
     /* Check if it is not the default component */
-    if (ComponentId != DPFLTR_DEFAULT_ID)
+    if (ComponentId != MAXULONG)
     {
         /* No, search for an existing entry in the table */
         for (i = 0; i < KdComponentTableEntries; i++)
@@ -409,7 +409,7 @@ NtSetDebugFilterState(IN ULONG ComponentId,
     Level &= ~DPFLTR_MASK;
 
     /* Check if it is the default component */
-    if (ComponentId == DPFLTR_DEFAULT_ID)
+    if (ComponentId == MAXULONG)
     {
         /* Yes, modify the default mask */
         if (State)

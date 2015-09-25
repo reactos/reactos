@@ -90,7 +90,6 @@ RtlAssert(
 #define __NOTICE(level, fmt, ...)   DbgPrint(#level ":  %s at %s:%d " fmt, __FUNCTION__, __RELFILE__, __LINE__, ##__VA_ARGS__)
 
 /* Print stuff only on Debug Builds*/
-#define DPFLTR_DEFAULT_ID -1
 #if DBG
 
     /* These are always printed */

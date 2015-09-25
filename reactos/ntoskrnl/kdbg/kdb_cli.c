@@ -210,7 +210,7 @@ KdbpGetComponentId(
     }
     ComponentTable[] =
     {
-        { "DEFAULT", DPFLTR_DEFAULT_ID },
+        { "DEFAULT", MAXULONG },
         { "SYSTEM", DPFLTR_SYSTEM_ID },
         { "SMSS", DPFLTR_SMSS_ID },
         { "SETUP", DPFLTR_SETUP_ID },
