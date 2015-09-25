@@ -25,16 +25,6 @@ typedef struct _EX_KEYED_EVENT
     } HashTable[NUM_KEY_HASH_BUCKETS];
 } EX_KEYED_EVENT, *PEX_KEYED_EVENT;
 
-NTSTATUS
-NTAPI
-ZwCreateKeyedEvent(
-    _Out_ PHANDLE OutHandle,
-    _In_ ACCESS_MASK AccessMask,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
-    _In_ ULONG Flags);
-
-#define KeGetCurrentProcess() ((PKPROCESS)PsGetCurrentProcess())
-
 /* GLOBALS *******************************************************************/
 
 PEX_KEYED_EVENT ExpCritSecOutOfMemoryEvent;
@@ -128,14 +118,14 @@ ExpReleaseOrWaitForKeyedEvent(
     _In_ BOOLEAN Release)
 {
     PETHREAD Thread, CurrentThread;
-    PKPROCESS CurrentProcess;
+    PEPROCESS CurrentProcess;
     PLIST_ENTRY ListEntry, WaitListHead1, WaitListHead2;
     NTSTATUS Status;
     ULONG_PTR HashIndex;
     PVOID PreviousKeyedWaitValue;
 
     /* Get the current process */
-    CurrentProcess = KeGetCurrentProcess();
+    CurrentProcess = PsGetCurrentProcess();
 
     /* Calculate the hash index */
     HashIndex = (ULONG_PTR)KeyedWaitValue >> 5;
@@ -171,7 +161,7 @@ ExpReleaseOrWaitForKeyedEvent(
         ListEntry = ListEntry->Flink;
 
         /* Check if this thread is a correct waiter */
-        if ((Thread->Tcb.Process == CurrentProcess) &&
+        if ((Thread->Tcb.Process == &CurrentProcess->Pcb) &&
             (Thread->KeyedWaitValue == KeyedWaitValue))
         {
             /* Remove the thread from the list */

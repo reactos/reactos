@@ -673,6 +673,17 @@ ZwCreateEventPair(
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwCreateKeyedEvent(
+    _Out_ PHANDLE OutHandle,
+    _In_ ACCESS_MASK AccessMask,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG Flags
+);
+
 NTSYSAPI
 NTSTATUS
 NTAPI

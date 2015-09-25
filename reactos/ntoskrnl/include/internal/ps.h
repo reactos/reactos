@@ -417,7 +417,6 @@ PspIsProcessExiting(IN PEPROCESS Process);
 //
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 ApphelpCacheInitialize(VOID);
 
 VOID
