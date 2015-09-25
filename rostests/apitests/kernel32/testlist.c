@@ -10,6 +10,7 @@ extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
 extern void func_interlck(void);
 extern void func_lstrcpynW(void);
+extern void func_Mailslot(void);
 extern void func_MultiByteToWideChar(void);
 extern void func_PrivMoveFileIdentityW(void);
 extern void func_SetCurrentDirectory(void);
@@ -26,6 +27,7 @@ const struct test winetest_testlist[] =
     { "GetModuleFileName",           func_GetModuleFileName },
     { "interlck",                    func_interlck },
     { "lstrcpynW",                   func_lstrcpynW },
+    { "Mailslot",                    func_Mailslot },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
     { "SetCurrentDirectory",         func_SetCurrentDirectory },

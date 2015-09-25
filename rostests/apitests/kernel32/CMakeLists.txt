@@ -13,7 +13,8 @@ list(APPEND SOURCE
     SetUnhandledExceptionFilter.c
     TerminateProcess.c
     TunnelCache.c
-    testlist.c)
+    testlist.c
+    Mailslot.c)
 
 add_executable(kernel32_apitest ${SOURCE})
 target_link_libraries(kernel32_apitest wine ${PSEH_LIB})
