@@ -725,7 +725,8 @@ WORD DosReadFile(WORD FileHandle,
 
                     Character = Sda->ByteBuffer;
 
-                    if (LineSize == 127 && Character != '\r' && Character != '\b')
+                    if (LineSize == sizeof(DosData->UnreadConInputBuffer)-1 &&
+                        Character != '\r' && Character != '\b')
                     {
                         /* Line buffer full */
                         // TODO: Should we beep?
@@ -843,7 +844,7 @@ WORD DosReadFile(WORD FileHandle,
     else
     {
         DWORD BytesRead32 = 0;
-        LPVOID LocalBuffer;
+        PVOID LocalBuffer;
 
         if (Count <= sizeof(StaticBuffer))
         {
@@ -913,7 +914,7 @@ WORD DosWriteFile(WORD FileHandle,
     else
     {
         DWORD BytesWritten32 = 0;
-        LPVOID LocalBuffer;
+        PVOID LocalBuffer;
 
         /*
          * Writing zero bytes truncates or extends the file
@@ -1015,7 +1016,7 @@ WORD DosSeekFile(WORD FileHandle,
         return Result;
     }
 
-    /* Update the descriptor */
+    /* Update the position */
     Descriptor->Position = FilePointer;
 
     /* Return the file pointer, if requested */
