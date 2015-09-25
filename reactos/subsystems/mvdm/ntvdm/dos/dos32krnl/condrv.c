@@ -63,15 +63,8 @@ WORD NTAPI ConDrvReadInput(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length)
 
         Pointer[BytesRead++] = Character;
 
-        if (Character != 0 && DoEcho)
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-
         /* Stop on first carriage return */
-        if (Character == '\r')
-        {
-            if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
-            break;
-        }
+        if (Character == '\r') break;
     }
 
     *Length = BytesRead;

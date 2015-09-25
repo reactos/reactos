@@ -17,6 +17,7 @@
 #include "../dem.h"
 #include "dos.h"
 #include "dosfiles.h"
+#include "handle.h"
 #include "memory.h"
 #include "bios/bios.h"
 
@@ -45,6 +46,16 @@ PBIOS_DATA BiosData;
 CHAR DosReadCharacter(WORD FileHandle)
 {
     WORD BytesRead;
+    PDOS_FILE_DESCRIPTOR Descriptor = NULL;
+    WORD OldDeviceInfo;
+    
+    /* Find the standard input descriptor and switch it to binary mode */
+    Descriptor = DosGetHandleFileDescriptor(FileHandle);
+    if (Descriptor)
+    {
+        OldDeviceInfo = Descriptor->DeviceInfo;
+        Descriptor->DeviceInfo |= FILE_INFO_BINARY;
+    }
 
     Sda->ByteBuffer = '\0';
     DPRINT("DosReadCharacter\n");
@@ -55,6 +66,8 @@ CHAR DosReadCharacter(WORD FileHandle)
                 1,
                 &BytesRead);
 
+    /* Restore the old mode and return the character */
+    if (Descriptor) Descriptor->DeviceInfo = OldDeviceInfo;
     return Sda->ByteBuffer;
 }
 

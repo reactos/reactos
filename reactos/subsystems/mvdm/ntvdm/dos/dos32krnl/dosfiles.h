@@ -8,6 +8,9 @@
 
 /* DEFINES ********************************************************************/
 
+#define FILE_INFO_STDIN  (1 << 0)
+#define FILE_INFO_STDOUT (1 << 1)
+#define FILE_INFO_BINARY (1 << 5)
 #define FILE_INFO_DEVICE (1 << 7)
 
 #pragma pack(push, 1)

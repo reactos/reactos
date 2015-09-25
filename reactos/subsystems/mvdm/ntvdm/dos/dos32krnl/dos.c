@@ -45,9 +45,6 @@ PDOS_DATA DosData;
 PDOS_SYSVARS SysVars;
 PDOS_SDA Sda;
 
-/* Echo state for INT 21h, AH = 01h and AH = 3Fh */
-BOOLEAN DoEcho = FALSE;
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static BOOLEAN DosChangeDrive(BYTE Drive)
@@ -162,7 +159,54 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     return TRUE;
 }
 
-static BOOLEAN DosControlBreak(VOID)
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID DosEchoCharacter(CHAR Character)
+{
+    switch (Character)
+    {
+        case '\0':
+        {
+            /* Nothing */
+            break;
+        }
+
+        case '\r':
+        case '\n':
+        {
+            /* Print both a carriage return and a newline */
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\r');
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
+            break;
+        }
+
+        case '\b':
+        {
+            /* Erase the character */
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, ' ');
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
+            break;
+        }
+
+        default:
+        {
+            /* Check if this is a special character */
+            if (Character < 0x20)
+            {
+                DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
+                Character += 'A' - 1;
+            }
+            else
+            {
+                /* Echo the character */
+                DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+            }
+        }
+    }
+}
+
+BOOLEAN DosControlBreak(VOID)
 {
     setCF(0);
 
@@ -177,8 +221,6 @@ static BOOLEAN DosControlBreak(VOID)
 
     return FALSE;
 }
-
-/* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID WINAPI DosInt20h(LPWORD Stack)
 {
@@ -217,14 +259,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             DPRINT("INT 21h, AH = 01h\n");
 
-            // FIXME: Under DOS 2+, input / output handle may be redirected!!!!
-            DoEcho = TRUE;
             Character = DosReadCharacter(DOS_INPUT_HANDLE);
-            DoEcho = FALSE;
-
-            // FIXME: Check whether Ctrl-C / Ctrl-Break is pressed, and call INT 23h if so.
-            // Check also Ctrl-P and set echo-to-printer flag.
-            // Ctrl-Z is not interpreted.
+            DosEchoCharacter(Character);
+            if (Character == 0x03 && DosControlBreak()) break;
 
             setAL(Character);
             break;
@@ -300,8 +337,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 /* Input */
                 if (DosCheckInput())
                 {
+                    CHAR Character = DosReadCharacter(DOS_INPUT_HANDLE);
+                    DosEchoCharacter(Character);
+
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
-                    setAL(DosReadCharacter(DOS_INPUT_HANDLE));
+                    setAL(Character);
                 }
                 else
                 {
@@ -314,17 +354,21 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Character Input without Echo */
+        /* Direct Character Input without Echo */
         case 0x07:
+        {
+            DPRINT("Direct char input without echo\n");
+            setAL(DosReadCharacter(DOS_INPUT_HANDLE));
+            break;
+        }
+
+        /* Character Input without Echo */
         case 0x08:
         {
             DPRINT("Char input without echo\n");
 
             Character = DosReadCharacter(DOS_INPUT_HANDLE);
-
-            // FIXME: For 0x07, do not check Ctrl-C/Break.
-            //        For 0x08, do check those control sequences and if needed,
-            //        call INT 0x23.
+            if (Character == 0x03 && DosControlBreak()) break;
 
             setAL(Character);
             break;
@@ -353,82 +397,19 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Read Buffered Input */
         case 0x0A:
         {
-            WORD Count = 0;
+            WORD BytesRead;
             PDOS_INPUT_BUFFER InputBuffer = (PDOS_INPUT_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
 
             DPRINT("Read Buffered Input\n");
+            if (InputBuffer->MaxLength == 0) break;
 
-            while (Count < InputBuffer->MaxLength)
-            {
-                /* Try to read a character (wait) */
-                Character = DosReadCharacter(DOS_INPUT_HANDLE);
+            /* Read from standard input */
+            DosReadFile(DOS_INPUT_HANDLE,
+                        MAKELONG(getDX() + FIELD_OFFSET(DOS_INPUT_BUFFER, Buffer), getDS()),
+                        InputBuffer->MaxLength,
+                        &BytesRead);
 
-                switch (Character)
-                {
-                    /* Extended character */
-                    case '\0':
-                    {
-                        /* Read the scancode */
-                        DosReadCharacter(DOS_INPUT_HANDLE);
-                        break;
-                    }
-
-                    /* Ctrl-C */
-                    case 0x03:
-                    {
-                        DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
-                        DosPrintCharacter(DOS_OUTPUT_HANDLE, 'C');
-
-                        if (DosControlBreak())
-                        {
-                            /* Set the character to a newline to exit the loop */
-                            Character = '\r';
-                        }
-
-                        break;
-                    }
-
-                    /* Backspace */
-                    case '\b':
-                    {
-                        if (Count > 0)
-                        {
-                            Count--;
-
-                            /* Erase the character */
-                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
-                            DosPrintCharacter(DOS_OUTPUT_HANDLE, ' ');
-                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
-                        }
-
-                        break;
-                    }
-
-                    default:
-                    {
-                        /* Append it to the buffer */
-                        InputBuffer->Buffer[Count] = Character;
-
-                        /* Check if this is a special character */
-                        if (Character < 0x20 && Character != 0x0A && Character != 0x0D)
-                        {
-                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
-                            Character += 'A' - 1;
-                        }
-
-                        /* Echo the character */
-                        DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-                    }
-                }
-
-                if (Character == '\r') break;
-                if (Character == '\b') continue;
-                Count++; /* Carriage returns are NOT counted */
-            }
-
-            /* Update the length */
-            InputBuffer->Length = Count;
-
+            InputBuffer->Length = LOBYTE(BytesRead);
             break;
         }
 
@@ -1054,12 +1035,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             DPRINT("DosReadFile(0x%04X)\n", getBX());
 
-            DoEcho = TRUE;
             ErrorCode = DosReadFile(getBX(),
                                     MAKELONG(getDX(), getDS()),
                                     getCX(),
                                     &BytesRead);
-            DoEcho = FALSE;
 
             if (ErrorCode == ERROR_SUCCESS)
             {

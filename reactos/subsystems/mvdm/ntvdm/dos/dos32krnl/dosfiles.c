@@ -691,9 +691,154 @@ WORD DosReadFile(WORD FileHandle,
         PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
         if (!Node->ReadRoutine) return ERROR_INVALID_FUNCTION;
 
-        /* Read the device */
-        Node->ReadRoutine(Node, Buffer, &Count);
-        *BytesRead = Count;
+        if (Descriptor->DeviceInfo & FILE_INFO_BINARY)
+        {
+            /* Read from the device directly */
+            Node->ReadRoutine(Node, Buffer, &Count);
+            *BytesRead = Count;
+        }
+        else if (Descriptor->DeviceInfo & FILE_INFO_STDIN)
+        {
+            /* Line-buffered CON input */
+            PCHAR ConBuffer = NULL;
+            PCHAR Pointer = FAR_POINTER(Buffer);
+
+            /* Check if the buffer is empty */
+            if (!SysVars->UnreadConInput)
+            {
+                ULONG LineSize = 0;
+
+                SysVars->UnreadConInput = FIELD_OFFSET(DOS_DATA, UnreadConInputBuffer);
+                ConBuffer = (PCHAR)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, SysVars->UnreadConInput);
+
+                while (TRUE)
+                {
+                    USHORT Amount = 1;
+                    CHAR Character;
+
+                    /* Read a character from the CON device */
+                    Node->ReadRoutine(Node,
+                                      MAKELONG(DOS_DATA_OFFSET(Sda.ByteBuffer),
+                                               DOS_DATA_SEGMENT),
+                                      &Amount);
+                    if (Amount == 0) break;
+
+                    Character = Sda->ByteBuffer;
+
+                    if (LineSize == 127 && Character != '\r' && Character != '\b')
+                    {
+                        /* Line buffer full */
+                        // TODO: Should we beep?
+                        continue;
+                    }
+
+                    switch (Character)
+                    {
+                        /* Extended character */
+                        case '\0':
+                        {
+                            /* Read the scancode and discard it */
+                            Amount = 1;
+                            Node->ReadRoutine(Node,
+                                              MAKELONG(DOS_DATA_OFFSET(Sda.ByteBuffer),
+                                                       DOS_DATA_SEGMENT),
+                                              &Amount);
+                            break;
+                        }
+
+                        /* Ctrl-C */
+                        case 0x03:
+                        {
+                            DosEchoCharacter(Character);
+
+                            if (DosControlBreak())
+                            {
+                                /* Set the character to CR to end the loop */
+                                Character = '\r';
+                            }
+
+                            break;
+                        }
+
+                        case '\b':
+                        {
+                            if (LineSize > 0)
+                            {
+                                LineSize--;
+                                if (ConBuffer[LineSize] == 0) LineSize--;
+
+                                DosEchoCharacter(Character);
+                            }
+
+                            break;
+                        }
+
+                        default:
+                        {
+                            /* Store the character in the buffer */
+                            ConBuffer[LineSize++] = Character;
+                            DosEchoCharacter(Character);
+                        }
+                    }
+
+                    /* Stop on a carriage return */
+                    if (Character == '\r') break;
+                }
+            }
+
+            *BytesRead = 0;
+            ConBuffer = (PCHAR)SEG_OFF_TO_PTR(DOS_DATA_SEGMENT, SysVars->UnreadConInput);
+
+            while (*BytesRead < Count)
+            {
+                Pointer[(*BytesRead)++] = *ConBuffer;
+
+                if (*ConBuffer == '\r')
+                {
+                    /* A carriage return turns into a line feed */
+                    *ConBuffer = '\n';
+                }
+                else if (*ConBuffer == '\n')
+                {
+                    /* A line feed marks the true end of the line */
+                    SysVars->UnreadConInput = 0;
+                    break;
+                }
+                else
+                {
+                    /* Move to the next character */
+                    SysVars->UnreadConInput++;
+                    ConBuffer++;
+                }
+            }
+        }
+        else
+        {
+            /* Translated input from a character device that isn't CON */
+            PCHAR Pointer = FAR_POINTER(Buffer);
+
+            while (*BytesRead < Count)
+            {
+                USHORT Amount = 1;
+                CHAR Character;
+
+                /* Read a character from the device */
+                Node->ReadRoutine(Node,
+                                  MAKELONG(DOS_DATA_OFFSET(Sda.ByteBuffer),
+                                           DOS_DATA_SEGMENT),
+                                  &Amount);
+                if (Amount == 0) break;
+
+                Character = Sda->ByteBuffer;
+                // TODO: Process it somehow?
+
+                /* Store the character in the output buffer */
+                Pointer[(*BytesRead)++] = Character;
+
+                /* Check for EOF */
+                if (Character == 0x1A) break;
+            }
+        }
     }
     else
     {

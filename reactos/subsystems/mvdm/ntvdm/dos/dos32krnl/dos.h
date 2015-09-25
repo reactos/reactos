@@ -246,6 +246,7 @@ typedef struct _DOS_DATA
     WORD DosVersion; // DOS version to report to programs (can be different from the true one)
     DOS_SDA Sda;
     CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
+    BYTE UnreadConInputBuffer[128];
     BYTE DosStack[384];
     BYTE Sft[ANYSIZE_ARRAY];
 } DOS_DATA, *PDOS_DATA;
@@ -293,7 +294,6 @@ C_ASSERT(sizeof(BIOS_DATA) == 0x100);
 
 /* VARIABLES ******************************************************************/
 
-extern BOOLEAN DoEcho;  // FIXME: Maybe move inside BiosData? (it's set by BIOS but used by CON driver in DOS BIOS)
 extern PBIOS_DATA BiosData;
 extern PDOS_DATA DosData;
 extern PDOS_SYSVARS SysVars;
@@ -323,6 +323,9 @@ BOOLEAN DosCheckInput(VOID);
 VOID DosPrintCharacter(WORD FileHandle, CHAR Character);
 
 BOOLEAN DosBIOSInitialize(VOID);
+
+BOOLEAN DosControlBreak(VOID);
+VOID DosEchoCharacter(CHAR Character);
 
 /*
  * DOS Kernel Functions
