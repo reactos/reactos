@@ -27,7 +27,7 @@ const struct test winetest_testlist[] =
     { "GetModuleFileName",           func_GetModuleFileName },
     { "interlck",                    func_interlck },
     { "lstrcpynW",                   func_lstrcpynW },
-    { "Mailslot",                    func_Mailslot },
+    { "MailslotRead",                func_Mailslot },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
     { "SetCurrentDirectory",         func_SetCurrentDirectory },
