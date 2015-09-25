@@ -161,51 +161,6 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID DosEchoCharacter(CHAR Character)
-{
-    switch (Character)
-    {
-        case '\0':
-        {
-            /* Nothing */
-            break;
-        }
-
-        case '\r':
-        case '\n':
-        {
-            /* Print both a carriage return and a newline */
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\r');
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
-            break;
-        }
-
-        case '\b':
-        {
-            /* Erase the character */
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, ' ');
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
-            break;
-        }
-
-        default:
-        {
-            /* Check if this is a special character */
-            if (Character < 0x20)
-            {
-                DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
-                Character += 'A' - 1;
-            }
-            else
-            {
-                /* Echo the character */
-                DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-            }
-        }
-    }
-}
-
 BOOLEAN DosControlBreak(VOID)
 {
     setCF(0);
@@ -260,7 +215,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             DPRINT("INT 21h, AH = 01h\n");
 
             Character = DosReadCharacter(DOS_INPUT_HANDLE);
-            DosEchoCharacter(Character);
             if (Character == 0x03 && DosControlBreak()) break;
 
             setAL(Character);
@@ -337,11 +291,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 /* Input */
                 if (DosCheckInput())
                 {
-                    CHAR Character = DosReadCharacter(DOS_INPUT_HANDLE);
-                    DosEchoCharacter(Character);
-
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
-                    setAL(Character);
+                    setAL(DosReadCharacter(DOS_INPUT_HANDLE));
                 }
                 else
                 {

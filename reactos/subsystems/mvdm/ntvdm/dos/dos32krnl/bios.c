@@ -43,6 +43,51 @@ PBIOS_DATA BiosData;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+VOID DosEchoCharacter(CHAR Character)
+{
+    switch (Character)
+    {
+        case '\0':
+        {
+            /* Nothing */
+            break;
+        }
+
+        case '\r':
+        case '\n':
+        {
+            /* Print both a carriage return and a newline */
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\r');
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
+            break;
+        }
+
+        case '\b':
+        {
+            /* Erase the character */
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, ' ');
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
+            break;
+        }
+
+        default:
+        {
+            /* Check if this is a special character */
+            if (Character < 0x20)
+            {
+                DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
+                Character += 'A' - 1;
+            }
+            else
+            {
+                /* Echo the character */
+                DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+            }
+        }
+    }
+}
+
 CHAR DosReadCharacter(WORD FileHandle)
 {
     WORD BytesRead;
@@ -65,6 +110,13 @@ CHAR DosReadCharacter(WORD FileHandle)
                 MAKELONG(DOS_DATA_OFFSET(Sda.ByteBuffer), DOS_DATA_SEGMENT),
                 1,
                 &BytesRead);
+
+    /* Check if the file is actually the CON device */
+    if (Descriptor && Descriptor->DeviceInfo & FILE_INFO_DEVICE)
+    {
+        /* Echo the character */
+        DosEchoCharacter(Sda->ByteBuffer);
+    }
 
     /* Restore the old mode and return the character */
     if (Descriptor) Descriptor->DeviceInfo = OldDeviceInfo;
