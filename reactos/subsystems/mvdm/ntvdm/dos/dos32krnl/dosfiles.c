@@ -675,11 +675,11 @@ BYTE DosReadLineBuffered(WORD FileHandle, DWORD Buffer, BYTE MaxSize)
     PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
     BYTE LineSize = 0;
     PCHAR Pointer = FAR_POINTER(Buffer);
+    CHAR Character;
 
-    while (TRUE)
+    do
     {
         USHORT Amount = 1;
-        CHAR Character;
 
         /* Read a character from the device */
         Node->ReadRoutine(Node,
@@ -757,9 +757,8 @@ BYTE DosReadLineBuffered(WORD FileHandle, DWORD Buffer, BYTE MaxSize)
             }
         }
 
-        /* Stop on a carriage return */
-        if (Character == '\r') break;
-    }
+    /* Stop on a carriage return */
+    } while (Character != '\r');
 
     return LineSize - 1;
 }
@@ -841,11 +840,11 @@ WORD DosReadFile(WORD FileHandle,
         {
             /* Translated input from a character device that isn't CON */
             PCHAR Pointer = FAR_POINTER(Buffer);
+            CHAR Character;
 
             while (*BytesRead < Count)
             {
                 USHORT Amount = 1;
-                CHAR Character;
 
                 /* Read a character from the device */
                 Node->ReadRoutine(Node,

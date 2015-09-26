@@ -165,6 +165,10 @@ BOOLEAN DosControlBreak(VOID)
 {
     setCF(0);
 
+    /* Print an extra newline */
+    DosPrintCharacter(DOS_OUTPUT_HANDLE, '\r');
+    DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
+
     /* Call interrupt 0x23 */
     Int32Call(&DosContext, 0x23);
 

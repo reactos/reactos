@@ -68,7 +68,7 @@ VOID DosEchoCharacter(CHAR Character)
              * Check if this is a special character
              * NOTE: \r and \n are handled by the underlying driver!
              */
-            if (Character < 0x20 && Character != 0x0A && Character != 0x0D)
+            if (Character < 0x20 && Character != '\r' && Character != '\n')
             {
                 DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
                 Character += 'A' - 1;
