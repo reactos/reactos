@@ -285,7 +285,14 @@ VdmShutdown(BOOLEAN Immediate)
      * Immediate = TRUE:  Immediate shutdown;
      *             FALSE: Delayed shutdown.
      */
-    BOOLEAN MustShutdown;
+    static BOOLEAN MustShutdown = FALSE;
+
+    /* If a shutdown is ongoing, just return */
+    if (MustShutdown)
+    {
+        DPRINT1("Shutdown is ongoing...\n");
+        return;
+    }
 
     /* First notify DOS to see whether we can shut down now */
     MustShutdown = DosShutdown(Immediate);
