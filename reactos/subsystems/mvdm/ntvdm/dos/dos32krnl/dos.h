@@ -318,7 +318,7 @@ VOID ConDrvCleanup(VOID);
  * DOS BIOS Functions
  * See bios.c
  */
-CHAR DosReadCharacter(WORD FileHandle);
+CHAR DosReadCharacter(WORD FileHandle, BOOLEAN Echo);
 BOOLEAN DosCheckInput(VOID);
 VOID DosPrintCharacter(WORD FileHandle, CHAR Character);
 

@@ -123,6 +123,7 @@ WORD DosSeekFile
     LPDWORD NewOffset
 );
 
+BYTE DosReadLineBuffered(WORD FileHandle, DWORD Buffer, BYTE MaxSize);
 BOOL DosFlushFileBuffers(WORD FileHandle);
 BOOLEAN DosLockFile(WORD DosHandle, DWORD Offset, DWORD Size);
 BOOLEAN DosUnlockFile(WORD DosHandle, DWORD Offset, DWORD Size);

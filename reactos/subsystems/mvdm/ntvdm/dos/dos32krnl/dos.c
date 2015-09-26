@@ -214,7 +214,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             DPRINT("INT 21h, AH = 01h\n");
 
-            Character = DosReadCharacter(DOS_INPUT_HANDLE);
+            Character = DosReadCharacter(DOS_INPUT_HANDLE, TRUE);
             if (Character == 0x03 && DosControlBreak()) break;
 
             setAL(Character);
@@ -292,7 +292,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 if (DosCheckInput())
                 {
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
-                    setAL(DosReadCharacter(DOS_INPUT_HANDLE));
+                    setAL(DosReadCharacter(DOS_INPUT_HANDLE, FALSE));
                 }
                 else
                 {
@@ -309,7 +309,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x07:
         {
             DPRINT("Direct char input without echo\n");
-            setAL(DosReadCharacter(DOS_INPUT_HANDLE));
+            setAL(DosReadCharacter(DOS_INPUT_HANDLE, FALSE));
             break;
         }
 
@@ -318,7 +318,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             DPRINT("Char input without echo\n");
 
-            Character = DosReadCharacter(DOS_INPUT_HANDLE);
+            Character = DosReadCharacter(DOS_INPUT_HANDLE, FALSE);
             if (Character == 0x03 && DosControlBreak()) break;
 
             setAL(Character);
@@ -348,19 +348,18 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Read Buffered Input */
         case 0x0A:
         {
-            WORD BytesRead;
             PDOS_INPUT_BUFFER InputBuffer = (PDOS_INPUT_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
 
             DPRINT("Read Buffered Input\n");
             if (InputBuffer->MaxLength == 0) break;
 
             /* Read from standard input */
-            DosReadFile(DOS_INPUT_HANDLE,
-                        MAKELONG(getDX() + FIELD_OFFSET(DOS_INPUT_BUFFER, Buffer), getDS()),
-                        InputBuffer->MaxLength,
-                        &BytesRead);
+            InputBuffer->Length = DosReadLineBuffered(
+                DOS_INPUT_HANDLE,
+                MAKELONG(getDX() + FIELD_OFFSET(DOS_INPUT_BUFFER, Buffer), getDS()),
+                InputBuffer->MaxLength
+            );
 
-            InputBuffer->Length = LOBYTE(BytesRead);
             break;
         }
 

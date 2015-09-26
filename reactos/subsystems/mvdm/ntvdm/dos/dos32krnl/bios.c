@@ -79,16 +79,14 @@ VOID DosEchoCharacter(CHAR Character)
                 DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
                 Character += 'A' - 1;
             }
-            else
-            {
-                /* Echo the character */
-                DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-            }
+
+            /* Echo the character */
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
         }
     }
 }
 
-CHAR DosReadCharacter(WORD FileHandle)
+CHAR DosReadCharacter(WORD FileHandle, BOOLEAN Echo)
 {
     WORD BytesRead;
     PDOS_FILE_DESCRIPTOR Descriptor = NULL;
@@ -111,8 +109,8 @@ CHAR DosReadCharacter(WORD FileHandle)
                 1,
                 &BytesRead);
 
-    /* Check if the file is actually the CON device */
-    if (Descriptor && Descriptor->DeviceInfo & FILE_INFO_DEVICE)
+    /* Check if we should echo and the file is actually the CON device */
+    if (Echo && Descriptor && Descriptor->DeviceInfo & FILE_INFO_DEVICE)
     {
         /* Echo the character */
         DosEchoCharacter(Sda->ByteBuffer);
