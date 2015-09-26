@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
  * PROJECT:         ReactOS UEFI Boot Manager
- * FILE:            boot/environ/app/bootmgr.c
+ * FILE:            boot/environ/app/bootmgr/bootmgr.c
  * PURPOSE:         Boot Manager Entrypoint
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
  */

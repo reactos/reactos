@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/infcache.c
+ * FILE:            boot/freeldr/freeldr/lib/inffile/inffile.c
  * PURPOSE:         INF file parser that caches contents of INF file in memory
  * PROGRAMMER:      Royce Mitchell III
  *                  Eric Kohl

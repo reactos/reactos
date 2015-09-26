@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/arch/arm/loader.c
+ * FILE:            boot/freeldr/freeldr/arch/arm/winldr.c
  * PURPOSE:         ARM Kernel Loader
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

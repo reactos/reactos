@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/cmdline.c
+ * FILE:            boot/freeldr/freeldr/cmdline.c
  * PURPOSE:         FreeLDR Command Line Parsing
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

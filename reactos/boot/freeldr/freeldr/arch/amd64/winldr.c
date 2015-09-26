@@ -1,7 +1,7 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            freeldr/amd64/wlmemory.c
+ * FILE:            boot/freeldr/freeldr/arch/amd64/winldr.c
  * PURPOSE:         Memory related routines
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */

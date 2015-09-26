@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/include/ramdisk.h
+ * FILE:            boot/freeldr/freeldr/include/ramdisk.h
  * PURPOSE:         Header file for ramdisk support
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

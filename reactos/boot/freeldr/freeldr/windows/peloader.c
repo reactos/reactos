@@ -1,7 +1,7 @@
 /*
  * PROJECT:         FreeLoader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            freeldr/winldr/peloader.c
+ * FILE:            boot/freeldr/freeldr/windows/peloader.c
  * PURPOSE:         Provides routines for loading PE files. To be merged with
  *                  arch/i386/loader.c in future
  *                  This article was very handy during development:

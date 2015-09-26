@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader (FreeLDR)
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            boot/freeldr/freeldr/reactos/archwsup.c
+ * FILE:            boot/freeldr/freeldr/arch/archwsup.c
  * PURPOSE:         Routines for ARC Hardware Tree and Configuration Data
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

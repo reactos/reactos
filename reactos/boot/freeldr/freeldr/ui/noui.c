@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         FreeLoader
- * FILE:            freeldr/ui/noui.c
+ * FILE:            boot/freeldr/freeldr/ui/noui.c
  * PURPOSE:         No Text UI interface
  * PROGRAMMERS:     Hervé Poussineau
  */

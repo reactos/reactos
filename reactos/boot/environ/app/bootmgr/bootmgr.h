@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
  * PROJECT:         ReactOS UEFI Boot Manager
- * FILE:            boot/environ/app/bootmgr.h
+ * FILE:            boot/environ/app/bootmgr/bootmgr.h
  * PURPOSE:         Main Boot Manager Header
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
 */

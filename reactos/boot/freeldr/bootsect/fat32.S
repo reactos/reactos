@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Bootsector
- * FILE:
+ * FILE:            boot/freeldr/bootsect/fat32.S
  * PURPOSE:
  * PROGRAMMERS:     ?
  */

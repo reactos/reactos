@@ -1,7 +1,7 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            freeldr/winldr/i386/wlmemory.c
+ * FILE:            boot/freeldr/freeldr/arch/i386/winldr.c
  * PURPOSE:         Memory related routines
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */

@@ -1,7 +1,7 @@
 /*
 * COPYRIGHT:       See COPYING.ARM in the top level directory
 * PROJECT:         ReactOS UEFI Boot Manager
-* FILE:            boot/environ/app/rtlcompat.c
+* FILE:            boot/environ/app/bootmgr/rtlcompat.c
 * PURPOSE:         RTL Library Compatibility Routines
 * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
 */
