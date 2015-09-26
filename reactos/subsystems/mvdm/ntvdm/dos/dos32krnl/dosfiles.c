@@ -725,14 +725,25 @@ BYTE DosReadLineBuffered(WORD FileHandle, DWORD Buffer, BYTE MaxSize)
                 break;
             }
 
+            case '\n':
+            {
+                DosEchoCharacter('\r');
+                DosEchoCharacter('\n');
+                break;
+            }
+
             case '\b':
             {
                 if (LineSize > 0)
                 {
                     LineSize--;
-                    if (Pointer[LineSize] == 0) LineSize--;
-
                     DosEchoCharacter(Character);
+
+                    /* Erase the '^' too */
+                    if (Pointer[LineSize] > 0x00 && Pointer[LineSize] < 0x20)
+                    {
+                        DosEchoCharacter(Character);
+                    }
                 }
 
                 break;
@@ -813,6 +824,9 @@ WORD DosReadFile(WORD FileHandle,
                 {
                     /* A line feed marks the true end of the line */
                     SysVars->UnreadConInput = 0;
+
+                    /* Echo the line feed */
+                    DosEchoCharacter('\n');
                     break;
                 }
                 else

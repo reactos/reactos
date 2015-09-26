@@ -53,15 +53,6 @@ VOID DosEchoCharacter(CHAR Character)
             break;
         }
 
-        case '\r':
-        case '\n':
-        {
-            /* Print both a carriage return and a newline */
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\r');
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
-            break;
-        }
-
         case '\b':
         {
             /* Erase the character */
@@ -73,8 +64,11 @@ VOID DosEchoCharacter(CHAR Character)
 
         default:
         {
-            /* Check if this is a special character */
-            if (Character < 0x20)
+            /*
+             * Check if this is a special character
+             * NOTE: \r and \n are handled by the underlying driver!
+             */
+            if (Character < 0x20 && Character != 0x0A && Character != 0x0D)
             {
                 DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
                 Character += 'A' - 1;
