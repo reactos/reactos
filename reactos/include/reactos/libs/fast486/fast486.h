@@ -288,6 +288,7 @@ typedef struct _FAST486_TASK_REG
     USHORT Selector;
     ULONG Base;
     ULONG Limit;
+    BOOLEAN Modern;
 } FAST486_TASK_REG, *PFAST486_TASK_REG;
 
 #include <pshpack1.h>
