@@ -235,12 +235,9 @@ static BYTE WINAPI CmosReadData(USHORT Port)
 
         case CMOS_REG_STATUS_C:
         {
-            /* Return the old value */
+            /* Return the old status register value, then clear it */
             Value = CmosMemory.StatusRegC;
-
-            /* Clear status register C */
             CmosMemory.StatusRegC = 0x00;
-
             break;
         }
 
@@ -370,8 +367,7 @@ static VOID WINAPI CmosWriteData(USHORT Port, BYTE Data)
             ChangeTime = TRUE;
 
             /* Clear everything except the century */
-            CurrentTime.wYear = (CurrentTime.wYear / 100) * 100;
-
+            CurrentTime.wYear  = (CurrentTime.wYear / 100) * 100;
             CurrentTime.wYear += WRITE_CMOS_DATA(CmosMemory, Data);
             break;
         }
@@ -405,8 +401,8 @@ static VOID WINAPI CmosWriteData(USHORT Port, BYTE Data)
         case CMOS_REG_ACTUAL_EXT_MEMORY_LOW:
         {
             /* Sync EMS and UMS */
-            CmosMemory.Regs[CMOS_REG_EXT_MEMORY_LOW]        =
-            CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_LOW] = Data;
+            CmosMemory.ExtMemoryLow       =
+            CmosMemory.ActualExtMemoryLow = Data;
             break;
         }
 
@@ -415,8 +411,8 @@ static VOID WINAPI CmosWriteData(USHORT Port, BYTE Data)
         case CMOS_REG_ACTUAL_EXT_MEMORY_HIGH:
         {
             /* Sync EMS and UMS */
-            CmosMemory.Regs[CMOS_REG_EXT_MEMORY_HIGH]        =
-            CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_HIGH] = Data;
+            CmosMemory.ExtMemoryHigh       =
+            CmosMemory.ActualExtMemoryHigh = Data;
             break;
         }
 
@@ -470,7 +466,7 @@ VOID CmosInitialize(VOID)
         Success = ReadFile(hCmosRam, &CmosMemory, CmosSize, &CmosSize, NULL);
         if (CmosSize != sizeof(CmosMemory))
         {
-            /* Bad CMOS Ram file. Reinitialize the CMOS memory. */
+            /* Bad CMOS RAM file. Reinitialize the CMOS memory. */
             DPRINT1("Invalid CMOS file, read bytes %u, expected bytes %u\n", CmosSize, sizeof(CmosMemory));
             RtlZeroMemory(&CmosMemory, sizeof(CmosMemory));
         }
@@ -485,6 +481,7 @@ VOID CmosInitialize(VOID)
     CmosMemory.StatusRegD     = CMOS_BATTERY_OK; // Our CMOS battery works perfectly forever.
     CmosMemory.Diagnostics    = 0x00;            // Diagnostics must not find any errors.
     CmosMemory.ShutdownStatus = 0x00;
+    CmosMemory.EquipmentList  = CMOS_EQUIPMENT_LIST;
 
     /* Memory settings */
 
@@ -494,14 +491,13 @@ VOID CmosInitialize(VOID)
      * and see Ralf Brown: http://www.ctyme.com/intr/rb-0598.htm
      * for more information.
      */
-    CmosMemory.Regs[CMOS_REG_BASE_MEMORY_LOW ] = LOBYTE(0x0280);
-    CmosMemory.Regs[CMOS_REG_BASE_MEMORY_HIGH] = HIBYTE(0x0280);
+    CmosMemory.BaseMemoryLow  = LOBYTE(0x0280);
+    CmosMemory.BaseMemoryHigh = HIBYTE(0x0280);
 
-    CmosMemory.Regs[CMOS_REG_EXT_MEMORY_LOW]         =
-    CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_LOW]  = LOBYTE((MAX_ADDRESS - 0x100000) / 1024);
-
-    CmosMemory.Regs[CMOS_REG_EXT_MEMORY_HIGH]        =
-    CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_HIGH] = HIBYTE((MAX_ADDRESS - 0x100000) / 1024);
+    CmosMemory.ExtMemoryLow        =
+    CmosMemory.ActualExtMemoryLow  = LOBYTE((MAX_ADDRESS - 0x100000) / 1024);
+    CmosMemory.ExtMemoryHigh       =
+    CmosMemory.ActualExtMemoryHigh = HIBYTE((MAX_ADDRESS - 0x100000) / 1024);
 
     /* Register the I/O Ports */
     RegisterIoPort(CMOS_ADDRESS_PORT,         NULL, CmosWriteAddress);

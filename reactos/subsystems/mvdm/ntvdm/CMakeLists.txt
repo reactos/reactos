@@ -20,10 +20,11 @@ spec2def(ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bios/bios32/bios32.c
+    bios/bios32/dskbios32.c
     bios/bios32/kbdbios32.c
+    bios/bios32/moubios32.c
     bios/bios32/vbe.c
     bios/bios32/vidbios32.c
-    bios/bios32/moubios32.c
     bios/bios.c
     bios/kbdbios.c
     bios/rom.c
@@ -34,6 +35,7 @@ list(APPEND SOURCE
     cpu/cpu.c
     cpu/registers.c
     hardware/cmos.c
+    hardware/disk.c
     hardware/dma.c
     hardware/keyboard.c
     hardware/mouse.c

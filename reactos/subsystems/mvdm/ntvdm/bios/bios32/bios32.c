@@ -25,6 +25,7 @@
 #include <bios/rom.h>
 #include "bios32.h"
 #include "bios32p.h"
+#include "dskbios32.h"
 #include "kbdbios32.h"
 #include "vidbios32.h"
 #include "moubios32.h"
@@ -512,7 +513,8 @@ static VOID WINAPI BiosRomBasic(LPWORD Stack)
 }
 
 
-VOID DosBootsectorInitialize(VOID);
+extern VOID DosBootsectorInitialize(VOID);
+extern VOID WINAPI BiosDiskService(LPWORD Stack);
 
 static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
 {
@@ -525,9 +527,68 @@ static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
 
     DPRINT("BiosBootstrapLoader -->\n");
 
-    /* Load DOS */
+    {
+        USHORT i;
+
+        USHORT AX, BX, CX, DX, ES;
+        AX = getAX();
+        BX = getBX();
+        CX = getCX();
+        DX = getDX();
+        ES = getES();
+
+        // i = 0;
+        i = 1;
+        do
+        {
+            if (i == 0)
+            {
+                /* Boot from 1st floppy drive */
+
+                setAH(0x02); // Read sectors
+                setAL(0x01); // Number of sectors
+                setDH(0x00); // First head
+                setCH(0x00); // First cylinder
+                setCL(0x01); // First sector
+                setDL(0x00); // First diskette drive (used by loader code, so should not be cleared)
+                setES(0x0000);  // Place data in 0000:7C00
+                setBX(0x7C00);
+                BiosDiskService(Stack);
+                if (!(Stack[STACK_FLAGS] & EMULATOR_FLAG_CF)) goto Quit;
+                DPRINT1("An error happened while loading the bootsector from floppy 0, error = %d\n", getAH());
+            }
+            else if (i == 1)
+            {
+                /* Boot from 1st HDD drive */
+
+                setAH(0x02); // Read sectors
+                setAL(0x01); // Number of sectors
+                setDH(0x00); // First head
+                setCH(0x00); // First cylinder
+                setCL(0x01); // First sector
+                setDL(0x80); // First HDD drive (used by loader code, so should not be cleared)
+                setES(0x0000);  // Place data in 0000:7C00
+                setBX(0x7C00);
+                BiosDiskService(Stack);
+                if (!(Stack[STACK_FLAGS] & EMULATOR_FLAG_CF)) goto Quit;
+                DPRINT1("An error happened while loading the bootsector from HDD 0, error = %d\n", getAH());
+            }
+        // } while (i++ < 1);
+        } while (i-- > 0);
+
+        /* Clear everything, we are going to load DOS32 */
+        setAX(AX);
+        setBX(BX);
+        setCX(CX);
+        setDX(DX);
+        setES(ES);
+        Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+    }
+
+    /* Load our DOS */
     DosBootsectorInitialize();
 
+Quit:
     /*
      * Position CPU to 0000:7C00 to boot the OS.
      *
@@ -848,7 +909,7 @@ static VOID InitializeBiosInt32(VOID)
     // BIOS_VIDEO_INTERRUPT  : 0x10 (vidbios32.c)
     RegisterBiosInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
     RegisterBiosInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
-    // BIOS_DISK_INTERRUPT   : 0x13 -- UNIMPLEMENTED
+    // BIOS_DISK_INTERRUPT   : 0x13 (dskbios32.c)
     // BIOS_SERIAL_INTERRUPT : 0x14 -- UNIMPLEMENTED
     RegisterBiosInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
     // BIOS_KBD_INTERRUPT    : 0x16 (kbdbios32.c)
@@ -860,7 +921,6 @@ static VOID InitializeBiosInt32(VOID)
     RegisterBiosInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
 
     /* Vectors that should be implemented (see above) */
-    RegisterBiosInt32(0x13, NULL);
     RegisterBiosInt32(0x14, NULL);
     RegisterBiosInt32(0x17, NULL);
     RegisterBiosInt32(0x1B, NULL);
@@ -896,11 +956,18 @@ static VOID InitializeBiosData(VOID)
 
     /* Initialize the BDA contents */
     RtlZeroMemory(Bda, sizeof(*Bda));
-    Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
+
+    /*
+     * Retrieve the basic equipment list from the CMOS
+     */
+    IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_EQUIPMENT_LIST | CMOS_DISABLE_NMI);
+    Bda->EquipmentList = IOReadB(CMOS_DATA_PORT);
+    // TODO: Update it if required.
+    Bda->EquipmentList &= 0x00FF; // High byte cleared for now...
 
     /*
      * Retrieve the conventional memory size
-     * in kB from CMOS, typically 640 kB.
+     * in kB from the CMOS, typically 640 kB.
      */
     IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_BASE_MEMORY_LOW  | CMOS_DISABLE_NMI);
     Low  = IOReadB(CMOS_DATA_PORT);
@@ -1069,6 +1136,7 @@ Bios32Post(LPWORD Stack)
     KbdBios32Post();
     VidBiosPost();
     MouseBios32Post();
+    DiskBios32Post();
 
     // WriteProtectRom(...);
 
@@ -1118,7 +1186,7 @@ BOOLEAN Bios32Initialize(VOID)
     *(PBYTE)(SEG_OFF_TO_PTR(BIOS_SEGMENT, 0xFFFE)) = BIOS_MODEL;
 
     /* Initialize the Keyboard and Video BIOS */
-    if (!KbdBiosInitialize() || !VidBiosInitialize() || !MouseBiosInitialize())
+    if (!KbdBiosInitialize() || !VidBiosInitialize() || !MouseBiosInitialize() || !DiskBios32Initialize())
     {
         /* Stop the VDM */
         EmulatorTerminate();
@@ -1137,6 +1205,7 @@ BOOLEAN Bios32Initialize(VOID)
 
 VOID Bios32Cleanup(VOID)
 {
+    DiskBios32Cleanup();
     MouseBios32Cleanup();
     VidBios32Cleanup();
     KbdBiosCleanup();

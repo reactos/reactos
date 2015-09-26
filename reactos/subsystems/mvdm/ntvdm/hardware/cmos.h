@@ -37,6 +37,10 @@
 #define CMOS_DEFAULT_STA    0x26
 #define CMOS_DEFAULT_STB    CMOS_STB_24HOUR
 
+// Bit 0: Floppy, Bit 1: FPU, Bit 2: Mouse, Bits 4-5: 80x25 Color Video, Bits 6-7: 2 floppy drives
+#define CMOS_EQUIPMENT_LIST 0x6F
+
+
 #define WRITE_CMOS_DATA(Cmos, Value)    \
     ((Cmos).StatusRegB & CMOS_STB_BINARY) ? (Value) : BCD_TO_BINARY(Value)
 
@@ -61,6 +65,7 @@ typedef enum _CMOS_REGISTERS
     CMOS_REG_STATUS_D,
     CMOS_REG_DIAGNOSTICS,
     CMOS_REG_SHUTDOWN_STATUS,
+    CMOS_REG_EQUIPMENT_LIST         = 0x14,
     CMOS_REG_BASE_MEMORY_LOW        = 0x15,
     CMOS_REG_BASE_MEMORY_HIGH       = 0x16,
     CMOS_REG_EXT_MEMORY_LOW         = 0x17,
@@ -105,16 +110,28 @@ typedef struct
     {
         struct
         {
-            CMOS_CLOCK;             // 0x00 - 0x0b
-            BYTE StatusRegC;        // 0x0c
-            BYTE StatusRegD;        // 0x0d
-            BYTE Diagnostics;       // 0x0e
-            BYTE ShutdownStatus;    // 0x0f
-            BYTE Padding[0x22];     // 0x10
-            BYTE Century;           // 0x32
+            CMOS_CLOCK;                 // 0x00 - 0x0b
+            BYTE StatusRegC;            // 0x0c
+            BYTE StatusRegD;            // 0x0d
+            BYTE Diagnostics;           // 0x0e
+            BYTE ShutdownStatus;        // 0x0f
+            BYTE FloppyDrivesType;      // 0x10
+            BYTE Reserved0;             // 0x11
+            BYTE HardDrivesType;        // 0x12
+            BYTE Reserved1;             // 0x13
+            BYTE EquipmentList;         // 0x14
+            BYTE BaseMemoryLow;         // 0x15
+            BYTE BaseMemoryHigh;        // 0x16
+            BYTE ExtMemoryLow;          // 0x17
+            BYTE ExtMemoryHigh;         // 0x18
+            BYTE ExtHardDrivesType[2];  // 0x19 - 0x1a
+            BYTE Reserved2[0x15];       // 0x1b
+            BYTE ActualExtMemoryLow;    // 0x30
+            BYTE ActualExtMemoryHigh;   // 0x31
+            BYTE Century;               // 0x32
         };
-        BYTE Regs1[0x10];           // 0x00 - 0x0f
-        BYTE Regs [0x40];           // 0x00 - 0x3f
+        BYTE Regs1[0x10];               // 0x00 - 0x0f
+        BYTE Regs [0x40];               // 0x00 - 0x3f
     };
 
     /*

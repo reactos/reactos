@@ -24,6 +24,7 @@
 #include "clock.h"
 #include "bios/rom.h"
 #include "hardware/cmos.h"
+#include "hardware/disk.h"
 #include "hardware/dma.h"
 #include "hardware/keyboard.h"
 #include "hardware/mouse.h"
@@ -497,6 +498,14 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         return FALSE;
     }
 
+    /* Initialize the disk controller */
+    if (!DiskCtrlInitialize())
+    {
+        wprintf(L"FATAL: Failed to completely initialize the disk controller.\n");
+        EmulatorCleanup();
+        return FALSE;
+    }
+
     /* Initialize the software callback system and register the emulator BOPs */
     InitializeInt32();
     RegisterBop(BOP_DEBUGGER  , EmulatorDebugBreakBop);
@@ -510,6 +519,8 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
 VOID EmulatorCleanup(VOID)
 {
+    DiskCtrlCleanup();
+
     VgaCleanup();
 
     /* Close the input thread handle */

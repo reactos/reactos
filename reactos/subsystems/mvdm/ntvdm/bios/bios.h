@@ -28,8 +28,6 @@
 #define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
 
-#define BIOS_EQUIPMENT_LIST 0x2E    // Bit1: FPU, Bit 2: Mouse
-
 #pragma pack(push, 1)
 
 /*
@@ -78,7 +76,7 @@ typedef struct
 
     DWORD TickCounter;                          // 0x6c
     BYTE MidnightPassed;                        // 0x70
-    BYTE BreakFlag;                             // 0x71
+    BYTE CtrlBreakFlag;                         // 0x71
     WORD SoftReset;                             // 0x72
     BYTE LastDiskOperation;                     // 0x74
     BYTE NumDisks;                              // 0x75
@@ -96,7 +94,7 @@ typedef struct
     BYTE VGADccIDActive;                        // 0x8a
     DWORD Reserved3;                            // 0x8b
     BYTE Reserved4;                             // 0x8f
-    BYTE Reserved5[2];                          // 0x90
+    BYTE FloppyDriveState[2];                   // 0x90
     BYTE Reserved6[2];                          // 0x92
     BYTE Reserved7[2];                          // 0x94
     BYTE KeybdStatusFlags;                      // 0x96
