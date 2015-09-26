@@ -1960,6 +1960,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
             State->TaskReg.Selector = Selector;
             State->TaskReg.Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
             State->TaskReg.Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
+            State->TaskReg.Modern = GdtEntry.Signature == FAST486_TSS_SIGNATURE
+                                    || GdtEntry.Signature == FAST486_BUSY_TSS_SIGNATURE;
 
             if (GdtEntry.Granularity)
             {
