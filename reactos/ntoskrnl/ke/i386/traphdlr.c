@@ -683,7 +683,7 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
         }
 
         /* Go to APC level */
-        OldIrql = KfRaiseIrql(APC_LEVEL);
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
         _enable();
 
         /* Check for BOP */
@@ -694,7 +694,7 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
         }
 
         /* Bring IRQL back */
-        KfLowerIrql(OldIrql);
+        KeLowerIrql(OldIrql);
         _disable();
 
         /* Do a quick V86 exit if possible */
@@ -938,7 +938,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         }
 
         /* Go to APC level */
-        OldIrql = KfRaiseIrql(APC_LEVEL);
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
         _enable();
 
         /* Handle the V86 opcode */
@@ -949,7 +949,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         }
 
         /* Bring IRQL back */
-        KfLowerIrql(OldIrql);
+        KeLowerIrql(OldIrql);
         _disable();
 
         /* Do a quick V86 exit if possible */
@@ -1522,7 +1522,17 @@ VOID
 FASTCALL
 KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
 {
-    UNIMPLEMENTED_DBGBREAK();
+    /* Save trap frame */
+    KiEnterTrap(TrapFrame);
+
+    /*
+     * Just fail the request
+     */
+    DbgPrint("INT 0x2A attempted, returning 0 tick count\n");
+    TrapFrame->Eax = 0;
+
+    /* Exit the trap */
+    KiEoiHelper(TrapFrame);
 }
 
 VOID
@@ -1756,7 +1766,7 @@ NTAPI
 Kei386EoiHelper(VOID)
 {
     /* We should never see this call happening */
-    ERROR_FATAL("Mismatched NT/HAL version");
+    KeBugCheck(MISMATCHED_HAL);
 }
 
 /* EOF */

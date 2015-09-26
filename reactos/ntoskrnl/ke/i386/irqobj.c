@@ -587,7 +587,8 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
     KIRQL OldIrql;
 
     /* Raise IRQL */
-    OldIrql = KfRaiseIrql(Interrupt->SynchronizeIrql);
+    KeRaiseIrql(Interrupt->SynchronizeIrql,
+                &OldIrql);
 
     /* Acquire interrupt spinlock */
     KeAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
@@ -599,7 +600,7 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
     KeReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
 
     /* Lower IRQL */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 
     /* Return status */
     return Success;

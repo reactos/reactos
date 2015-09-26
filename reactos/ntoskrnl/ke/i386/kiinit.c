@@ -31,9 +31,9 @@ ULONGLONG BootCycles, BootCyclesEnd;
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitMachineDependent(VOID)
 {
     ULONG CpuCount;
@@ -324,9 +324,9 @@ KiInitMachineDependent(VOID)
     KiSetCR0Bits();
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKIPCR Pcr,
                 IN PKIDTENTRY Idt,
@@ -386,9 +386,9 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->PrcbData.MultiThreadProcessorSet = Pcr->PrcbData.SetMember;
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKTHREAD InitThread,
                    IN PVOID IdleStack,
@@ -401,6 +401,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG PageDirectory[2];
     PVOID DpcStack;
     ULONG Vendor[3];
+    KIRQL DummyIrql;
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -593,7 +594,8 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     }
 
     /* Raise to Dispatch */
-    KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL,
+                &DummyIrql);
 
     /* Set the Idle Priority to 0. This will jump into Phase 1 */
     KeSetPriorityThread(InitThread, 0);
@@ -604,13 +606,14 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     KiReleasePrcbLock(Prcb);
 
     /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
-    KfRaiseIrql(HIGH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL,
+                &DummyIrql);
     LoaderBlock->Prcb = 0;
 }
 
+INIT_SECTION
 VOID
 FASTCALL
-INIT_FUNCTION
 KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIDTENTRY *Idt,
                          IN PKIPCR *Pcr,
@@ -649,9 +652,9 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                               TssSelector.HighWord.Bytes.BaseHi << 24);
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiSystemStartupBootStack(VOID)
 {
     PKTHREAD Thread;
@@ -670,7 +673,7 @@ KiSystemStartupBootStack(VOID)
 
     /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
     _enable();
-    KfLowerIrql(DISPATCH_LEVEL);
+    KeLowerIrql(DISPATCH_LEVEL);
 
     /* Set the right wait IRQL */
     Thread->WaitIrql = DISPATCH_LEVEL;
@@ -701,9 +704,9 @@ KiMarkPageAsReadOnly(
     __invlpg(Address);
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
@@ -714,6 +717,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KIDTENTRY NmiEntry, DoubleFaultEntry;
     PKTSS Tss;
     PKIPCR Pcr;
+    KIRQL DummyIrql;
 
     /* Boot cycles timestamp */
     BootCycles = __rdtsc();
@@ -825,7 +829,8 @@ AppCpuInit:
     }
 
     /* Raise to HIGH_LEVEL */
-    KfRaiseIrql(HIGH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL,
+                &DummyIrql);
 
     /* Switch to new kernel stack and start kernel bootstrapping */
     KiSwitchToBootStack(InitialStack & ~3);
