@@ -16,6 +16,8 @@ list(APPEND SOURCE
     sort.c
     intl.h)
 
+add_rc_deps(intl.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
+
 add_library(intl SHARED
     ${SOURCE}
     intl.rc

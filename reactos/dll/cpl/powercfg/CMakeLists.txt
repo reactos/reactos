@@ -9,6 +9,9 @@ list(APPEND SOURCE
     hibernate.c
     powercfg.h)
 
+file(GLOB powercfg_rc_deps resources/*.*)
+add_rc_deps(powercfg.rc ${powercfg_rc_deps})
+
 add_library(powercfg SHARED
     ${SOURCE}
     powercfg.rc

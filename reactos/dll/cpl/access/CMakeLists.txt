@@ -10,6 +10,8 @@ list(APPEND SOURCE
     sound.c
     access.h)
 
+add_rc_deps(access.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
+
 add_library(access SHARED
     ${SOURCE}
     access.rc

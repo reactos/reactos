@@ -1,5 +1,6 @@
 
 spec2def(telephon.cpl telephon.spec)
+add_rc_deps(telephon.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
 add_library(telephon SHARED
     telephon.c

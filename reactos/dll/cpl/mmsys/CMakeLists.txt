@@ -9,6 +9,9 @@ list(APPEND SOURCE
     voice.c
     mmsys.h)
 
+file(GLOB mmsys_rc_deps resources/*.*)
+add_rc_deps(mmsys.rc ${mmsys_rc_deps})
+
 add_library(mmsys SHARED
     ${SOURCE}
     mmsys.rc

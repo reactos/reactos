@@ -9,6 +9,9 @@ list(APPEND SOURCE
     security.c
     inetcpl.h)
 
+file(GLOB inetcpl_rc_deps resources/*.*)
+add_rc_deps(inetcpl.rc ${inetcpl_rc_deps})
+
 add_library(inetcpl SHARED
     ${SOURCE}
     inetcpl.rc

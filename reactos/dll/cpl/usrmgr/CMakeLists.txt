@@ -12,6 +12,9 @@ list(APPEND SOURCE
     usrmgr.c
     usrmgr.h)
 
+file(GLOB usrmgr_rc_deps resources/*.*)
+add_rc_deps(usrmgr.rc ${usrmgr_rc_deps})
+
 add_library(usrmgr SHARED
     ${SOURCE}
     usrmgr.rc

@@ -1,5 +1,6 @@
 
 spec2def(joy.cpl joy.spec)
+add_rc_deps(joy.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
 add_library(joy SHARED
     joy.c

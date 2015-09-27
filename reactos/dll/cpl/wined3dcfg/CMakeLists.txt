@@ -6,6 +6,8 @@ list(APPEND SOURCE
     general.c
     wined3dcfg.h)
 
+add_rc_deps(wined3dcfg.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/wined3dcfg.ico)
+
 add_library(wined3dcfg SHARED
     ${SOURCE}
     wined3dcfg.rc

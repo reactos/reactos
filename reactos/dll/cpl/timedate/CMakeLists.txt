@@ -11,6 +11,9 @@ list(APPEND SOURCE
     timezone.c
     timedate.h)
 
+file(GLOB timedate_rc_deps resources/*.*)
+add_rc_deps(timedate.rc ${timedate_rc_deps})
+
 add_library(timedate SHARED
     ${SOURCE}
     timedate.rc

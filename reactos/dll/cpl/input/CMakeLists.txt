@@ -10,6 +10,8 @@ list(APPEND SOURCE
     changekeyseq.c
     input.h)
 
+add_rc_deps(input.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/keyboard-shortcuts.ico)
+
 add_library(input SHARED
     ${SOURCE}
     input.rc

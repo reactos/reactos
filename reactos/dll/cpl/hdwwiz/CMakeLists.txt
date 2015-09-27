@@ -1,5 +1,7 @@
 
 spec2def(hdwwiz.cpl hdwwiz.spec)
+file(GLOB hdwwiz_rc_deps resources/*.*)
+add_rc_deps(hdwwiz.rc ${hdwwiz_rc_deps})
 
 add_library(hdwwiz SHARED
     hdwwiz.c

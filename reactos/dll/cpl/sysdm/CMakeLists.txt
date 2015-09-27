@@ -14,6 +14,9 @@ list(APPEND SOURCE
     virtmem.c
     precomp.h)
 
+file(GLOB sysdm_rc_deps resources/*.*)
+add_rc_deps(sysdm.rc ${sysdm_rc_deps})
+
 add_library(sysdm SHARED
     ${SOURCE}
     sysdm.rc

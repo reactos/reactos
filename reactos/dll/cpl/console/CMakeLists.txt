@@ -12,6 +12,8 @@ list(APPEND SOURCE
     colors.c
     console.h)
 
+add_rc_deps(console.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/terminal.ico)
+
 add_library(console SHARED
     ${SOURCE}
     console.rc

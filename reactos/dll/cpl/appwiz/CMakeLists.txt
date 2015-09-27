@@ -12,6 +12,9 @@ list(APPEND SOURCE
     createlink.c
     appwiz.h)
 
+file(GLOB appwiz_rc_deps resources/*.*)
+add_rc_deps(appwiz.rc ${appwiz_rc_deps})
+
 add_library(appwiz SHARED
     ${SOURCE}
     appwiz.rc

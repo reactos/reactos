@@ -23,6 +23,9 @@ list(APPEND SOURCE
     muireg.c
     desk.h)
 
+file(GLOB desk_rc_deps resources/*.*)
+add_rc_deps(desk.rc ${desk_rc_deps})
+
 add_library(desk SHARED
     ${SOURCE}
     guid.c

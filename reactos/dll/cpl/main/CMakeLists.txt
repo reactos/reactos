@@ -7,6 +7,9 @@ list(APPEND SOURCE
     mouse.c
     main.h)
 
+file(GLOB main_rc_deps resources/*.*)
+add_rc_deps(main.rc ${main_rc_deps})
+
 add_library(main SHARED
     ${SOURCE}
     main.rc
