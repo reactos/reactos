@@ -13,4 +13,5 @@ add_executable(mmdevapi_winetest
 set_module_type(mmdevapi_winetest win32cui)
 target_link_libraries(mmdevapi_winetest uuid)
 add_importlibs(mmdevapi_winetest ole32 user32 advapi32 msvcrt kernel32 ntdll)
+add_dependencies(mmdevapi_winetest dxsdk)
 add_cd_file(TARGET mmdevapi_winetest DESTINATION reactos/bin FOR all)
