@@ -9,14 +9,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VDM_DUMPMEM_TXT ,   "Dump Memory (&Text)"
-    IDS_VDM_DUMPMEM_BIN ,   "Dump Memory (&Binary)"
-    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
-    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
+    IDS_VDM_DUMPMEM_TXT ,   "Speicherabbild erstellen (&Text)"
+    IDS_VDM_DUMPMEM_BIN ,   "Speicherabbild erstellen (&Binär)"
+    IDS_VDM_MOUNT_FLOPPY,   "Eine Diskette in Laufwerk %d <%s> einlegen..."
+    IDS_VDM_EJECT_FLOPPY,   "Disktette aus Laufwerk %d auswerfen"
     IDS_VDM_QUIT        ,   "ReactOS VDM b&eenden"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_MEDIA,   "No media"
+    IDS_NO_MEDIA,   "Kein Medium"
 END
