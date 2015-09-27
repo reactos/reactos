@@ -669,21 +669,26 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
         switch (iColumn)
         {
             case 0:        /* name */
-                hr = GetDisplayNameOf(pidl,
-                                      SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
+                hr = GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
             case 1:        /* type */
                 _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
                 break;
             case 2:        /* total size */
                 _ILSimpleGetText (pidl, szPath, MAX_PATH);
-                GetDiskFreeSpaceExA (szPath, NULL, &ulBytes, NULL);
-                StrFormatByteSize64A (ulBytes.QuadPart, psd->str.cStr, MAX_PATH);
+                if (GetVolumeInformationA(szPath, NULL, 0, NULL, NULL, NULL, NULL, 0))
+                {
+                    GetDiskFreeSpaceExA(szPath, NULL, &ulBytes, NULL);
+                    StrFormatByteSize64A(ulBytes.QuadPart, psd->str.cStr, MAX_PATH);
+                }
                 break;
             case 3:        /* free size */
                 _ILSimpleGetText (pidl, szPath, MAX_PATH);
-                GetDiskFreeSpaceExA (szPath, &ulBytes, NULL, NULL);
-                StrFormatByteSize64A (ulBytes.QuadPart, psd->str.cStr, MAX_PATH);
+                if (GetVolumeInformationA(szPath, NULL, 0, NULL, NULL, NULL, NULL, 0))
+                {
+                    GetDiskFreeSpaceExA(szPath, &ulBytes, NULL, NULL);
+                    StrFormatByteSize64A(ulBytes.QuadPart, psd->str.cStr, MAX_PATH);
+                }
                 break;
         }
         hr = S_OK;
