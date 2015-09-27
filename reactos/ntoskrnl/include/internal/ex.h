@@ -1032,7 +1032,6 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 
     /* Sanity checks */
     ASSERT(PushLock->Locked);
-    ASSERT(PushLock->Waiting || PushLock->Shared > 0);
 }
 
 /*++
@@ -1133,7 +1132,6 @@ ExReleasePushLockShared(PEX_PUSH_LOCK PushLock)
 
     /* Sanity checks */
     ASSERT(PushLock->Locked);
-    ASSERT(PushLock->Waiting || PushLock->Shared > 0);
 
     /* Try to clear the pushlock */
     OldValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
@@ -1173,7 +1171,6 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 
     /* Sanity checks */
     ASSERT(PushLock->Locked);
-    ASSERT(PushLock->Waiting || PushLock->Shared == 0);
 
     /* Unlock the pushlock */
     OldValue.Value = InterlockedExchangeAddSizeT((PSIZE_T)PushLock,
