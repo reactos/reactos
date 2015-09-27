@@ -30,17 +30,42 @@ RtlpIsShortIllegal(CHAR Char)
 static USHORT
 RtlpGetCheckSum(PUNICODE_STRING Name)
 {
-   USHORT Hash = 0;
-   ULONG Length;
-   PWCHAR c;
+   USHORT Hash, Saved;
+   WCHAR * CurChar;
+   USHORT Len;
 
-   Length = Name->Length / sizeof(WCHAR);
-   c = Name->Buffer;
-   while(Length--)
+   if (Name->Length == 0)
    {
-      Hash = (Hash + (*c << 4) + (*c >> 4)) * 11;
-      c++;
+      return 0;
    }
+
+   if (Name->Length == sizeof(WCHAR))
+   {
+      return Name->Buffer[0];
+   }
+
+   CurChar = Name->Buffer;
+   Hash = (*CurChar << 8) + *(CurChar + 1);
+   if (Name->Length == 2 * sizeof(WCHAR))
+   {
+      return Hash;
+   }
+
+   Saved = Hash;
+   Len = 2;
+   do
+   {
+      CurChar = CurChar + 2;
+      Hash = (Hash << 7) + *CurChar;
+      Hash = (Saved >> 1) + (Hash << 8);
+      if (Len + 1 < Name->Length / sizeof(WCHAR))
+      {
+         Hash += *(CurChar + 1);
+      }
+      Saved = Hash;
+      Len += 2;
+   } while (Len < Name->Length / sizeof(WCHAR));
+
    return Hash;
 }
 
@@ -78,7 +103,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    ULONG IndexLength;
    ULONG CurrentIndex;
    USHORT Checksum;
-   CHAR c;
+   WCHAR c;
 
    StrLength = Name->Length / sizeof(WCHAR);
    DPRINT("StrLength: %lu\n", StrLength);
@@ -98,15 +123,27 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    /* Copy name (6 valid characters max) */
    for (i = 0, NameLength = 0; NameLength < 6 && i < DotPos; i++)
    {
-      c = 0;
-      RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
-      if (Count != 1 || c == 0 || RtlpIsShortIllegal(c))
+      c = UNICODE_NULL;
+      if (AllowExtendedCharacters)
+      {
+          c = RtlUpcaseUnicodeChar(Name->Buffer[i]);
+          Count = 1;
+      }
+      else
+      {
+          RtlUpcaseUnicodeToOemN((CHAR *)&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
+      }
+
+      if (Count != 1 || c == UNICODE_NULL || RtlpIsShortIllegal(c))
       {
          NameBuffer[NameLength++] = L'_';
       }
-      else if (c != '.' && c != ' ')
+      else if (c != L'.' && c != L' ')
       {
-         NameBuffer[NameLength++] = (WCHAR)c;
+         if (isgraph(c) || (AllowExtendedCharacters && iswgraph(c)))
+         {
+            NameBuffer[NameLength++] = c;
+         }
       }
    }
 
@@ -118,15 +155,27 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    {
       for (i = DotPos, ExtLength = 0; ExtLength < 4 && i < StrLength; i++)
       {
-         c = 0;
-         RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
-         if (Count != 1 || c == 0 || RtlpIsShortIllegal(c))
+          c = UNICODE_NULL;
+          if (AllowExtendedCharacters)
+          {
+              c = RtlUpcaseUnicodeChar(Name->Buffer[i]);
+              Count = 1;
+          }
+          else
+          {
+              RtlUpcaseUnicodeToOemN((CHAR *)&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
+          }
+
+         if (Count != 1 || c == UNICODE_NULL || RtlpIsShortIllegal(c))
          {
             ExtBuffer[ExtLength++] = L'_';
          }
-         else if (c != ' ')
+         else if (c != L' ')
          {
-            ExtBuffer[ExtLength++] = c;
+            if (isgraph(c) || c == L'.' || (AllowExtendedCharacters && iswgraph(c)))
+            {
+               ExtBuffer[ExtLength++] = c;
+            }
          }
       }
    }
@@ -171,7 +220,15 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    else
    {
       Context->LastIndexValue = 1;
-      Context->CheckSumInserted = FALSE;
+      if (NameLength == 0)
+      {
+         Context->CheckSumInserted = TRUE;
+         Context->Checksum = RtlpGetCheckSum(Name);
+      }
+      else
+      {
+         Context->CheckSumInserted = FALSE;
+      }
    }
 
    IndexLength = RtlpGetIndexLength(Context->LastIndexValue);
@@ -192,12 +249,11 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    j = CopyLength;
    if (Context->CheckSumInserted)
    {
-      j += 3;
       Checksum = Context->Checksum;
       for (i = 0; i < 4; i++)
       {
-         Name8dot3->Buffer[j--] = (Checksum % 16) > 9 ? (Checksum % 16) + L'A' - 10 : (Checksum % 16) + L'0';
-         Checksum /= 16;
+         Name8dot3->Buffer[j++] = (Checksum & 0xF) > 9 ? (Checksum & 0xF) + L'A' - 10 : (Checksum & 0xF) + L'0';
+         Checksum >>= 4;
       }
       j = CopyLength + 4;
    }
