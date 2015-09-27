@@ -719,8 +719,8 @@ HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
         /* Hardcode the command here; Executing a cpl file would be fine but we also need to run things like console.dll */
         WCHAR wszParams[MAX_PATH];
-        PWSTR wszFile = L"rundll32.exe";
-        PWSTR wszFormat = L"shell32.dll,Control_RunDLL %s,%s";
+        PCWSTR wszFile = L"rundll32.exe";
+        PCWSTR wszFormat = L"shell32.dll,Control_RunDLL %s,%s";
 
         wsprintfW(wszParams, wszFormat, pCPanel->szName, pCPanel->szName + pCPanel->offsDispName);
 
