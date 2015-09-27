@@ -581,6 +581,10 @@ MountDisk(IN DISK_TYPE DiskType,
         DisplayMessage(L"MountDisk: Failed to mount disk file '%S' in 0x%p.", FileName, DiskImage);
         goto Quit;
     }
+
+    /* Update its read/write state */
+    DiskImage->ReadOnly = ReadOnly;
+
     Success = TRUE;
 
 Quit:
