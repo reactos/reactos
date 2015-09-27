@@ -475,8 +475,8 @@ typedef struct _DISK_MOUNT_INFO
 
 static DISK_MOUNT_INFO DiskMountInfo[MAX_DISK_TYPE] =
 {
-    {XDCFloppyDrive, ARRAYSIZE(XDCFloppyDrive), MountFDI},
-    {XDCHardDrive  , ARRAYSIZE(XDCHardDrive)  , MountHDD},
+    {XDCFloppyDrive, _ARRAYSIZE(XDCFloppyDrive), MountFDI},
+    {XDCHardDrive  , _ARRAYSIZE(XDCHardDrive)  , MountHDD},
 };
 
 PDISK_IMAGE
