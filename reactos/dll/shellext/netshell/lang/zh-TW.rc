@@ -1,7 +1,7 @@
 /*
  * PROJECT:    ReactOS Netshell
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       dll/win32/netshell/lang/zh-TW.rc
+ * FILE:       dll/shellext/netshell/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language File
  * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
  */

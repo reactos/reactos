@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS Compatibility Layer Shell Extension
- * FILE:            lib/shellext/cplsample/cplsample.c
+ * FILE:            dll/shellext/slayer/slayer.c
  * PURPOSE:         ReactOS Compatibility Layer Shell Extension
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:

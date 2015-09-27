@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll\win32\stobject\stobject.cpp
+ * FILE:        dll/shellext/stobject/csystray.h
  * PURPOSE:     Systray shell service object
  * PROGRAMMERS: Robert Naumann
  David Quintana <gigaherz@gmail.com>

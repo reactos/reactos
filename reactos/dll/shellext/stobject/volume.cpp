@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll\win32\stobject\volume.cpp
+ * FILE:        dll/shellext/stobject/volume.cpp
  * PURPOSE:     Volume notification icon handler
  * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
  */

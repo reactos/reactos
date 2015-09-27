@@ -1,7 +1,7 @@
 /*
  * PROJECT:     Network Connections Shell Folder
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/netshell/lang/uk-UA.rc
+ * FILE:        dll/shellext/netshell/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for netshell
  * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */

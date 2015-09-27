@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Advanced display adapter properties
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/shellext/deskadp/lang/uk-UA.rc
+ * FILE:        dll/shellext/deskadp/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for deskadp.dll
  * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */
