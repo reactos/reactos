@@ -43,9 +43,8 @@ typedef struct _ENV_INFO
 
 /* GLOBALS ********************************************************************/
 
-// NOTE: We cannot use ARRAYSIZE in this macro. GCC would complain otherwise.
 #define ENV_NAME_ENTRY(type, name)  \
-    {(type), (sizeof(name)/sizeof(*((ENV_INFO*)0)->Name)) - 1, (name)}
+    {(type), _ARRAYSIZE(name) - 1, (name)}
 
 static ENV_INFO BasepEnvNameType[] =
 {
