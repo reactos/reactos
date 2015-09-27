@@ -24,6 +24,8 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <winuser.h>
+#include <commdlg.h>
+
 #include <subsys/win/vdm.h>
 
 // Do not include stuff that is only defined
@@ -72,6 +74,8 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 // Command line of NTVDM
 extern INT     NtVdmArgc;
 extern WCHAR** NtVdmArgv;
+
+extern HWND hConsoleWnd;
 
 
 /*

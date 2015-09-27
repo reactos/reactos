@@ -39,9 +39,12 @@ typedef struct _DISK_IMAGE
 
 } DISK_IMAGE, *PDISK_IMAGE;
 
-// HACKHACK! For dskbios32.c
-extern DISK_IMAGE XDCFloppyDrive[];
-extern DISK_IMAGE XDCHardDrive[];
+typedef enum _DISK_TYPE
+{
+    FLOPPY_DISK,
+    HARD_DISK,
+    MAX_DISK_TYPE
+} DISK_TYPE;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -67,6 +70,20 @@ WriteDisk(IN PDISK_IMAGE DiskImage,
           IN BYTE Head,
           IN BYTE Sector,
           IN BYTE NumSectors);
+
+PDISK_IMAGE
+RetrieveDisk(IN DISK_TYPE DiskType,
+             IN ULONG DiskNumber);
+
+BOOLEAN
+MountDisk(IN DISK_TYPE DiskType,
+          IN ULONG DiskNumber,
+          IN PCSTR FileName,
+          IN BOOLEAN ReadOnly);
+
+BOOLEAN
+UnmountDisk(IN DISK_TYPE DiskType,
+            IN ULONG DiskNumber);
 
 BOOLEAN DiskCtrlInitialize(VOID);
 VOID DiskCtrlCleanup(VOID);

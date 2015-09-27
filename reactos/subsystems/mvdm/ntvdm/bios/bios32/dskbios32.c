@@ -686,9 +686,9 @@ BOOLEAN DiskBios32Initialize(VOID)
 
     /* Detect and initialize the supported disks */
     // TODO: the "Detect" part is missing.
-    FloppyDrive[0] = &XDCFloppyDrive[0];
-    FloppyDrive[1] = &XDCFloppyDrive[1];
-    HardDrive[0]   = &XDCHardDrive[0];
+    FloppyDrive[0] = RetrieveDisk(FLOPPY_DISK, 0);
+    FloppyDrive[1] = RetrieveDisk(FLOPPY_DISK, 1);
+    HardDrive[0]   = RetrieveDisk(HARD_DISK, 0);
 
     return TRUE;
 }

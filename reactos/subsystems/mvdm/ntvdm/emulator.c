@@ -405,6 +405,51 @@ VOID DumpMemory(BOOLEAN TextFormat)
     DPRINT1("Memory dump done\n");
 }
 
+VOID MountFloppy(IN ULONG DiskNumber)
+{
+// FIXME: This should be present in PSDK commdlg.h
+//
+// FlagsEx Values
+#if (_WIN32_WINNT >= 0x0500)
+#define  OFN_EX_NOPLACESBAR         0x00000001
+#endif // (_WIN32_WINNT >= 0x0500)
+
+    OPENFILENAMEA ofn;
+    CHAR szFile[MAX_PATH] = "";
+
+    RtlZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize  = sizeof(ofn);
+    ofn.hwndOwner    = hConsoleWnd;
+    ofn.lpstrTitle   = "Select a virtual floppy image";
+    ofn.Flags        = OFN_EXPLORER | OFN_ENABLESIZING | OFN_LONGNAMES | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+//  ofn.FlagsEx      = OFN_EX_NOPLACESBAR;
+    ofn.lpstrFilter  = "Virtual floppy images (*.vfd;*.img;*.ima;*.dsk)\0*.vfd\0All files (*.*)\0*.*\0";
+    ofn.lpstrDefExt  = "vfd";
+    ofn.nFilterIndex = 0;
+    ofn.lpstrFile    = szFile;
+    ofn.nMaxFile     = ARRAYSIZE(szFile);
+
+    if (!GetOpenFileNameA(&ofn))
+    {
+        DPRINT1("CommDlgExtendedError = %d\n", CommDlgExtendedError());
+        return;
+    }
+
+    // TODO: Refresh the menu state
+
+    if (!MountDisk(FLOPPY_DISK, DiskNumber, szFile, !!(ofn.Flags & OFN_READONLY)))
+        DisplayMessage(L"An error happened when mounting disk %d", DiskNumber);
+}
+
+VOID EjectFloppy(IN ULONG DiskNumber)
+{
+    // TODO: Refresh the menu state
+
+    if (!UnmountDisk(FLOPPY_DISK, DiskNumber))
+        DisplayMessage(L"An error happened when ejecting disk %d", DiskNumber);
+}
+
+
 VOID EmulatorPause(VOID)
 {
     /* Pause the VDM */
@@ -505,6 +550,18 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         EmulatorCleanup();
         return FALSE;
     }
+
+#if 0
+    // The following commands are examples of MountDisk usage.
+    // NOTE: Those values are hardcoded paths on my local test machines!!
+
+    // MountDisk(FLOPPY_DISK, 0, "H:\\trunk\\ntvdm_studies\\diskette_high.vfd", TRUE);
+    // MountDisk(FLOPPY_DISK, 0, "H:\\DOS_tests\\Dos5.0.img", TRUE);
+    // MountDisk(FLOPPY_DISK, 0, "H:\\trunk\\ntvdm_studies\\hdd_10Mo_fixed.vhd", TRUE);
+    // MountDisk(FLOPPY_DISK, 0, "H:\\DOS_tests\\diskette_test.vfd", FALSE);
+
+    MountDisk(HARD_DISK, 0, "H:\\DOS_tests\\MS-DOS 6_fixed_size.vhd", FALSE);
+#endif
 
     /* Initialize the software callback system and register the emulator BOPs */
     InitializeInt32();

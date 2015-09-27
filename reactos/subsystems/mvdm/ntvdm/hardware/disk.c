@@ -156,8 +156,7 @@ calculate_geometry(ULONG64 total_sectors, PUSHORT cyls,
 /*************************** FLOPPY DISK CONTROLLER ***************************/
 
 // A Floppy Controller can support up to 4 floppy drives.
-/*static*/
-DISK_IMAGE XDCFloppyDrive[4];
+static DISK_IMAGE XDCFloppyDrive[4];
 
 // Taken from DOSBox
 typedef struct _DISK_GEO
@@ -239,8 +238,7 @@ MountFDI(IN PDISK_IMAGE DiskImage,
 // An IDE Hard Disk Controller can support up to 4 drives:
 // Primary Master Drive, Primary Slave Drive,
 // Secondary Master Drive, Secondary Slave Drive.
-/*static*/
-DISK_IMAGE XDCHardDrive[4];
+static DISK_IMAGE XDCHardDrive[4];
 
 BOOLEAN
 MountHDD(IN PDISK_IMAGE DiskImage,
@@ -468,21 +466,59 @@ WriteDisk(IN PDISK_IMAGE DiskImage,
 
 typedef BOOLEAN (*MOUNT_DISK_HANDLER)(IN PDISK_IMAGE DiskImage, IN HANDLE hFile);
 
+typedef struct _DISK_MOUNT_INFO
+{
+    PDISK_IMAGE DiskArray;
+    ULONG NumDisks;
+    MOUNT_DISK_HANDLER MountDiskHelper;
+} DISK_MOUNT_INFO, *PDISK_MOUNT_INFO;
+
+static DISK_MOUNT_INFO DiskMountInfo[MAX_DISK_TYPE] =
+{
+    {XDCFloppyDrive, ARRAYSIZE(XDCFloppyDrive), MountFDI},
+    {XDCHardDrive  , ARRAYSIZE(XDCHardDrive)  , MountHDD},
+};
+
+PDISK_IMAGE
+RetrieveDisk(IN DISK_TYPE DiskType,
+             IN ULONG DiskNumber)
+{
+    ASSERT(DiskType < MAX_DISK_TYPE);
+
+    if (DiskNumber >= DiskMountInfo[DiskType].NumDisks)
+    {
+        DisplayMessage(L"RetrieveDisk: Disk number %d:%d invalid.", DiskType, DiskNumber);
+        return NULL;
+    }
+
+    return &DiskMountInfo[DiskType].DiskArray[DiskNumber];
+}
+
 BOOLEAN
-MountDisk(IN PDISK_IMAGE DiskImage,
-          MOUNT_DISK_HANDLER MountDiskHelper,
+MountDisk(IN DISK_TYPE DiskType,
+          IN ULONG DiskNumber,
           IN PCSTR FileName,
           IN BOOLEAN ReadOnly)
 {
     BOOLEAN Success = FALSE;
+    PDISK_IMAGE DiskImage;
     HANDLE hFile;
 
     BY_HANDLE_FILE_INFORMATION FileInformation;
 
+    ASSERT(DiskType < MAX_DISK_TYPE);
+
+    if (DiskNumber >= DiskMountInfo[DiskType].NumDisks)
+    {
+        DisplayMessage(L"MountDisk: Disk number %d:%d invalid.", DiskType, DiskNumber);
+        return FALSE;
+    }
+
+    DiskImage = &DiskMountInfo[DiskType].DiskArray[DiskNumber];
     if (IsDiskPresent(DiskImage))
     {
-        DisplayMessage(L"MountDisk: Disk 0x%p already in use.", DiskImage);
-        return FALSE;
+        DPRINT1("MountDisk: Disk %d:%d:0x%p already in use, recycling...\n", DiskType, DiskNumber, DiskImage);
+        UnmountDisk(DiskType, DiskNumber);
     }
 
     /* Try to open the file */
@@ -540,7 +576,7 @@ MountDisk(IN PDISK_IMAGE DiskImage,
     }
 
     /* Success, mount the image */
-    if (!MountDiskHelper(DiskImage, hFile))
+    if (!DiskMountInfo[DiskType].MountDiskHelper(DiskImage, hFile))
     {
         DisplayMessage(L"MountDisk: Failed to mount disk file '%S' in 0x%p.", FileName, DiskImage);
         goto Quit;
@@ -553,11 +589,23 @@ Quit:
 }
 
 BOOLEAN
-UnmountDisk(IN PDISK_IMAGE DiskImage)
+UnmountDisk(IN DISK_TYPE DiskType,
+            IN ULONG DiskNumber)
 {
+    PDISK_IMAGE DiskImage;
+
+    ASSERT(DiskType < MAX_DISK_TYPE);
+
+    if (DiskNumber >= DiskMountInfo[DiskType].NumDisks)
+    {
+        DisplayMessage(L"UnmountDisk: Disk number %d:%d invalid.", DiskType, DiskNumber);
+        return FALSE;
+    }
+
+    DiskImage = &DiskMountInfo[DiskType].DiskArray[DiskNumber];
     if (!IsDiskPresent(DiskImage))
     {
-        DisplayMessage(L"UnmountDisk: Disk 0x%p is already unmounted.", DiskImage);
+        DPRINT1("UnmountDisk: Disk %d:%d:0x%p is already unmounted\n", DiskType, DiskNumber, DiskImage);
         return FALSE;
     }
 
@@ -573,28 +621,20 @@ UnmountDisk(IN PDISK_IMAGE DiskImage)
 
 BOOLEAN DiskCtrlInitialize(VOID)
 {
-#if 0
-    // The following commands are examples of MountDisk usage.
-    // NOTE: Those values are hardcoded paths on my local test machines!!
-
-    // MountDisk(&XDCFloppyDrive[0], MountFDI, "H:\\trunk\\ntvdm_studies\\diskette_high.vfd", TRUE);
-    // MountDisk(&XDCFloppyDrive[0], MountFDI, "H:\\DOS_tests\\Dos5.0.img", TRUE);
-    // MountDisk(&XDCHardDrive[0]  , MountHDD, "H:\\trunk\\ntvdm_studies\\hdd_10Mo_fixed.vhd", TRUE);
-
-    MountDisk(&XDCFloppyDrive[0], MountFDI, "H:\\DOS_tests\\diskette_test.vfd", FALSE);
-    MountDisk(&XDCHardDrive[0]  , MountHDD, "H:\\DOS_tests\\MS-DOS 6_fixed_size.vhd", FALSE);
-#endif
-
     return TRUE;
 }
 
 VOID DiskCtrlCleanup(VOID)
 {
-#if 0
-    // The following commands are examples of UnmountDisk usage.
-    UnmountDisk(&XDCHardDrive[0]);
-    UnmountDisk(&XDCFloppyDrive[0]);
-#endif
+    ULONG DiskNumber;
+
+    /* Unmount all the floppy disk drives */
+    for (DiskNumber = 0; DiskNumber < DiskMountInfo[FLOPPY_DISK].NumDisks; ++DiskNumber)
+        UnmountDisk(FLOPPY_DISK, DiskNumber);
+
+    /* Unmount all the hard disk drives */
+    for (DiskNumber = 0; DiskNumber < DiskMountInfo[HARD_DISK].NumDisks; ++DiskNumber)
+        UnmountDisk(HARD_DISK, DiskNumber);
 }
 
 /* EOF */

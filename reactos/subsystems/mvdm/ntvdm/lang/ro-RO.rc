@@ -9,7 +9,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VDM_DUMPMEM_TXT,    "Captură memorie (te&xt)"
-    IDS_VDM_DUMPMEM_BIN,    "Captură memorie (&binară)"
-    IDS_VDM_QUIT       ,    "I&eșire din ReactOS VDM"
+    IDS_VDM_DUMPMEM_TXT ,   "Captură memorie (te&xt)"
+    IDS_VDM_DUMPMEM_BIN ,   "Captură memorie (&binară)"
+    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
+    IDS_VDM_QUIT        ,   "I&eșire din ReactOS VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NO_MEDIA,   "No media"
 END

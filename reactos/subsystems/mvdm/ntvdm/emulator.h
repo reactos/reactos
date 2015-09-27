@@ -98,6 +98,9 @@ extern BOOLEAN VdmRunning;
 
 VOID DumpMemory(BOOLEAN TextFormat);
 
+VOID MountFloppy(IN ULONG DiskNumber);
+VOID EjectFloppy(IN ULONG DiskNumber);
+
 UCHAR FASTCALL EmulatorIntAcknowledge
 (
     PFAST486_STATE State

@@ -11,7 +11,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VDM_DUMPMEM_TXT,    "Zrzut pamięci (&Tekst)"
-    IDS_VDM_DUMPMEM_BIN,    "Zrzut pamięci (&Binarny)"
-    IDS_VDM_QUIT       ,    "&Wyjdź z ReactOS VDM"
+    IDS_VDM_DUMPMEM_TXT ,   "Zrzut pamięci (&Tekst)"
+    IDS_VDM_DUMPMEM_BIN ,   "Zrzut pamięci (&Binarny)"
+    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
+    IDS_VDM_QUIT        ,   "&Wyjdź z ReactOS VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NO_MEDIA,   "No media"
 END

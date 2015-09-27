@@ -30,7 +30,7 @@ static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
 INT     NtVdmArgc;
 WCHAR** NtVdmArgv;
 
-
+HWND hConsoleWnd = NULL;
 static HMENU hConsoleMenu  = NULL;
 static INT   VdmMenuPos    = -1;
 static BOOLEAN ShowPointer = FALSE;
@@ -42,13 +42,17 @@ typedef struct _VDM_MENUITEM
 {
     UINT uID;
     const struct _VDM_MENUITEM *SubMenu;
-    WORD wCmdID;
+    UINT_PTR uCmdID;
 } VDM_MENUITEM, *PVDM_MENUITEM;
 
 static const VDM_MENUITEM VdmMenuItems[] =
 {
     { IDS_VDM_DUMPMEM_TXT, NULL, ID_VDM_DUMPMEM_TXT },
     { IDS_VDM_DUMPMEM_BIN, NULL, ID_VDM_DUMPMEM_BIN },
+    { -1, NULL, 0 },    /* Separator */
+    // { IDS_VDM_MOUNT_FLOPPY, NULL, ID_VDM_DRIVES },
+    // { IDS_VDM_EJECT_FLOPPY, NULL, ID_VDM_DRIVES },
+    { -1, NULL, 0 },    /* Separator */
     { IDS_VDM_QUIT       , NULL, ID_VDM_QUIT        },
 
     { 0, NULL, 0 }      /* End of list */
@@ -57,7 +61,7 @@ static const VDM_MENUITEM VdmMenuItems[] =
 static const VDM_MENUITEM VdmMainMenuItems[] =
 {
     { -1, NULL, 0 },    /* Separator */
-    { IDS_HIDE_MOUSE,   NULL, ID_SHOWHIDE_MOUSE },  /* Hide mouse; can be renamed to Show mouse */
+    { IDS_HIDE_MOUSE,   NULL, ID_SHOWHIDE_MOUSE },  /* "Hide mouse"; can be renamed to "Show mouse" */
     { IDS_VDM_MENU  ,   VdmMenuItems,         0 },  /* ReactOS VDM Menu */
 
     { 0, NULL, 0 }      /* End of list */
@@ -68,7 +72,7 @@ AppendMenuItems(HMENU hMenu,
                 const VDM_MENUITEM *Items)
 {
     UINT i = 0;
-    WCHAR szMenuString[255];
+    WCHAR szMenuString[256];
     HMENU hSubMenu;
 
     do
@@ -100,7 +104,7 @@ AppendMenuItems(HMENU hMenu,
                 {
                     AppendMenuW(hMenu,
                                 MF_STRING,
-                                Items[i].wCmdID,
+                                Items[i].uCmdID,
                                 szMenuString);
                 }
             }
@@ -113,7 +117,7 @@ AppendMenuItems(HMENU hMenu,
                         NULL);
         }
         i++;
-    } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
+    } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].uCmdID == 0));
 }
 
 BOOL
@@ -138,9 +142,15 @@ VdmMenuExists(HMENU hConsoleMenu)
 /*static*/ VOID
 CreateVdmMenu(HANDLE ConOutHandle)
 {
+    HMENU hVdmSubMenu;
+    UINT_PTR ItemID = ID_VDM_DRIVES;
+    UINT Pos;
+    WCHAR szNoMedia[100];
+    WCHAR szMenuString1[256], szMenuString2[256];
+
     hConsoleMenu = ConsoleMenuControl(ConOutHandle,
                                       ID_SHOWHIDE_MOUSE,
-                                      ID_VDM_QUIT);
+                                      ID_VDM_DRIVES + 4);
     if (hConsoleMenu == NULL) return;
 
     /* Get the position where we are going to insert our menu items */
@@ -149,8 +159,52 @@ CreateVdmMenu(HANDLE ConOutHandle)
     /* Really add the menu if it doesn't already exist (in case eg. NTVDM crashed) */
     if (!VdmMenuExists(hConsoleMenu))
     {
+        /* Add all the menu entries */
         AppendMenuItems(hConsoleMenu, VdmMainMenuItems);
-        DrawMenuBar(GetConsoleWindow());
+
+        /* Add the removable drives menu entries */
+        hVdmSubMenu = GetSubMenu(hConsoleMenu, VdmMenuPos + 2); // VdmMenuItems
+        Pos = 3; // After the 2 items and the separator in VdmMenuItems
+
+        LoadStringW(GetModuleHandle(NULL),
+                    IDS_NO_MEDIA,
+                    szNoMedia,
+                    ARRAYSIZE(szNoMedia));
+
+        LoadStringW(GetModuleHandle(NULL),
+                    IDS_VDM_MOUNT_FLOPPY,
+                    szMenuString1,
+                    ARRAYSIZE(szMenuString1));
+
+        /* Drive 0 -- Mount */
+        _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, 0, szNoMedia);
+        szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
+        InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 0, szMenuString2);
+
+        /* Drive 1 -- Mount */
+        _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, 1, szNoMedia);
+        szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
+        InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 2, szMenuString2);
+
+        LoadStringW(GetModuleHandle(NULL),
+                    IDS_VDM_EJECT_FLOPPY,
+                    szMenuString1,
+                    ARRAYSIZE(szMenuString1));
+
+        /* Drive 0 -- Eject */
+        _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, 0);
+        szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
+        InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 1, szMenuString2);
+
+        /* Drive 1 -- Eject */
+        _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, 1);
+        szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
+        InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 3, szMenuString2);
+
+        // TODO: Refresh the menu state
+
+        /* Refresh the menu */
+        DrawMenuBar(hConsoleWnd);
     }
 }
 
@@ -164,14 +218,14 @@ DestroyVdmMenu(VOID)
     {
         DeleteMenu(hConsoleMenu, VdmMenuPos, MF_BYPOSITION);
         i++;
-    } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
+    } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].uCmdID == 0));
 
-    DrawMenuBar(GetConsoleWindow());
+    DrawMenuBar(hConsoleWnd);
 }
 
 static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
 {
-    WCHAR szMenuString[255] = L"";
+    WCHAR szMenuString[256];
 
     if (ShowPtr)
     {
@@ -267,7 +321,7 @@ DisplayMessage(IN LPCWSTR Format, ...)
 
     /* Display the message */
     DPRINT1("\n\nNTVDM Subsystem\n%S\n\n", Buffer);
-    MessageBoxW(NULL, Buffer, L"NTVDM Subsystem", MB_OK);
+    MessageBoxW(hConsoleWnd, Buffer, L"NTVDM Subsystem", MB_OK);
 
 #ifndef WIN2K_COMPLIANT
     /* Free the buffer if needed */
@@ -291,6 +345,7 @@ VdmShutdown(BOOLEAN Immediate)
     if (MustShutdown)
     {
         DPRINT1("Shutdown is ongoing...\n");
+        Sleep(INFINITE);
         return;
     }
 
@@ -343,6 +398,7 @@ ConsoleCtrlHandler(DWORD ControlType)
 static VOID
 ConsoleInitUI(VOID)
 {
+    hConsoleWnd = GetConsoleWindow();
     CreateVdmMenu(ConsoleOutput);
 }
 
@@ -468,6 +524,26 @@ VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent)
         case ID_VDM_DUMPMEM_BIN:
             DumpMemory(FALSE);
             break;
+
+        /* Drive 0 -- Mount */
+        /* Drive 1 -- Mount */
+        case ID_VDM_DRIVES + 0:
+        case ID_VDM_DRIVES + 2:
+        {
+            ULONG DiskNumber = (MenuEvent->dwCommandId - ID_VDM_DRIVES) / 2;
+            MountFloppy(DiskNumber);
+            break;
+        }
+
+        /* Drive 0 -- Eject */
+        /* Drive 1 -- Eject */
+        case ID_VDM_DRIVES + 1:
+        case ID_VDM_DRIVES + 3:
+        {
+            ULONG DiskNumber = (MenuEvent->dwCommandId - ID_VDM_DRIVES - 1) / 2;
+            EjectFloppy(DiskNumber);
+            break;
+        }
 
         case ID_VDM_QUIT:
             /* Stop the VDM */
