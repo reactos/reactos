@@ -14,6 +14,9 @@ include_directories(
 
 spec2def(ntobjshex.dll ntobjshex.spec)
 
+file(GLOB_RECURSE ntobjshex_rc_deps resources/*.*)
+add_rc_deps(ntobjshex.rc ${ntobjshex_rc_deps})
+
 add_library(ntobjshex SHARED
     ntobjenum.cpp
     ntobjfolder.cpp
@@ -21,9 +24,6 @@ add_library(ntobjshex SHARED
     ntobjshex.rc
     regfolder.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/ntobjshex.def)
-
-list(APPEND atl_rc_deps
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/rgs/ntobjectfolder.rgs)
 
 set_module_type(ntobjshex win32dll UNICODE)
 target_link_libraries(ntobjshex uuid wine atlnew)

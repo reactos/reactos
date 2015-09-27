@@ -6,6 +6,8 @@ list(APPEND SOURCE
     shxiface.c
     precomp.h)
 
+add_rc_deps(deskadp.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/adapter.ico)
+
 add_library(deskadp SHARED
     ${SOURCE}
     deskadp.rc

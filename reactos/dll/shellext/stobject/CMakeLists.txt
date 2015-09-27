@@ -14,6 +14,9 @@ include_directories(
 
 spec2def(stobject.dll stobject.spec)
 
+file(GLOB_RECURSE stobject_rc_deps resources/*.*)
+add_rc_deps(stobject.rc ${stobject_rc_deps})
+
 add_library(stobject SHARED
     csystray.cpp
     stobject.cpp

@@ -24,6 +24,9 @@ list(APPEND SOURCE
     lanstatusui.cpp
     precomp.h)
 
+file(GLOB netshell_rc_deps res/*.*)
+add_rc_deps(netshell.rc ${netshell_rc_deps})
+
 add_library(netshell SHARED
     ${SOURCE}
     netshell.rc

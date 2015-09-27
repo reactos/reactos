@@ -6,6 +6,8 @@ list(APPEND SOURCE
     shxiface.c
     precomp.h)
 
+add_rc_deps(deskmon.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/monitor.ico)
+
 add_library(deskmon SHARED
     ${SOURCE}
     deskmon.rc
