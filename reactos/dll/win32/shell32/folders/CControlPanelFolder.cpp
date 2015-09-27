@@ -717,13 +717,15 @@ HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_OPEN)) //FIXME
     {
+        /* Hardcode the command here; Executing a cpl file would be fine but we also need to run things like console.dll */
         WCHAR wszParams[MAX_PATH];
+        PWSTR wszFile = L"rundll32.exe";
+        PWSTR wszFormat = L"shell32.dll,Control_RunDLL %s,%s";
 
-        wcscpy(wszParams, pCPanel->szName);
-        wcscat(wszParams, L",");
-        wcscat(wszParams, pCPanel->szName + pCPanel->offsDispName);
+        wsprintfW(wszParams, wszFormat, pCPanel->szName, pCPanel->szName + pCPanel->offsDispName);
 
-        Control_RunDLLW (NULL, NULL, wszParams, SW_NORMAL);
+        /* Note: we pass the applet name to Control_RunDLL to distinguish between multiple applets in one .cpl file */
+        ShellExecuteW(NULL, NULL, wszFile, wszParams, NULL, 0);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME
     {
