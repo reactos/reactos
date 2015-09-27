@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 lib/ddraw/ddraw.c
+ * FILE:                 dll/directx/ddraw/startup.c
  * PURPOSE:              DirectDraw Library
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *

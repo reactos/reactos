@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Network Provider for MPEG2 based networks
- * FILE:            dll/directx/msdvbnp/enumpins.cpp
+ * FILE:            dll/directx/ksproxy/enumpins.cpp
  * PURPOSE:         IEnumPins interface
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

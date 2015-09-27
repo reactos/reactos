@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
- * FILE:            dll/directx/ksproxy/ksproxy.c
+ * FILE:            dll/directx/ksproxy/ksproxy.cpp
  * PURPOSE:         ActiveMovie Proxy functions
  *
  * PROGRAMMERS:     Dmitry Chapyshev
