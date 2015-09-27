@@ -66,7 +66,7 @@ HRESULT SHELL32_SetNameOfGuidItem(PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD 
 
 HRESULT SHELL32_GetDetailsOfGuidItem(IShellFolder2* psf, PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
 
-HRESULT SH_ParseGuidDisplayName(IShellFolder * pFolder,
+HRESULT SH_ParseGuidDisplayName(IShellFolder2 * pFolder,
                                 HWND hwndOwner,
                                 LPBC pbc,
                                 LPOLESTR lpszDisplayName,

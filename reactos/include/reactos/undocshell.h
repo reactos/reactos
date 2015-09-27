@@ -550,6 +550,11 @@ INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateD
 
 HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv);
 
+BOOL WINAPI GUIDFromStringW(
+    _In_   PCWSTR psz,
+    _Out_  LPGUID pguid
+    );
+    
 static inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {

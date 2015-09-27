@@ -1654,6 +1654,7 @@ LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid)
     return pidlOut;
 }
 
+#ifndef __REACTOS__
 LPITEMIDLIST _ILCreateGuidFromStrA(LPCSTR szGUID)
 {
     IID iid;
@@ -1665,12 +1666,17 @@ LPITEMIDLIST _ILCreateGuidFromStrA(LPCSTR szGUID)
     }
     return _ILCreateGuid(PT_GUID, &iid);
 }
+#endif
 
 LPITEMIDLIST _ILCreateGuidFromStrW(LPCWSTR szGUID)
 {
     IID iid;
 
+#ifndef __REACTOS__
     if (FAILED(SHCLSIDFromStringW(szGUID, &iid)))
+#else
+    if (!GUIDFromStringW(szGUID, &iid))
+#endif
     {
         ERR("%s is not a GUID\n", debugstr_w(szGUID));
         return NULL;

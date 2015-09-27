@@ -682,7 +682,7 @@ HRESULT SHELL32_CompareIDs(IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pi
     return nReturn;
 }
 
-HRESULT SH_ParseGuidDisplayName(IShellFolder * pFolder,
+HRESULT SH_ParseGuidDisplayName(IShellFolder2 * pFolder,
                                 HWND hwndOwner,
                                 LPBC pbc,
                                 LPOLESTR lpszDisplayName,
@@ -701,17 +701,14 @@ HRESULT SH_ParseGuidDisplayName(IShellFolder * pFolder,
         *pchEaten = 0;
 
     UINT cch = wcslen(lpszDisplayName);
-    if (cch < 40)
-        return E_FAIL;
-
-    if (lpszDisplayName[0] != L':' || lpszDisplayName[1] != L':' || lpszDisplayName[2] != L'{' || lpszDisplayName[40] != L'}')
+    if (cch < 39 || lpszDisplayName[0] != L':' || lpszDisplayName[1] != L':')
         return E_FAIL;
 
     pidl = _ILCreateGuidFromStrW(lpszDisplayName + 2);
     if (pidl == NULL)
         return E_FAIL;
 
-    if (cch < 42)
+    if (cch < 41)
     {
         *ppidl = pidl;
         if (pdwAttributes && *pdwAttributes)
@@ -721,15 +718,12 @@ HRESULT SH_ParseGuidDisplayName(IShellFolder * pFolder,
     }
     else
     {
-        IShellFolder* psf;
-        LPITEMIDLIST pidlChild;
-        HRESULT hres;
-
-        hres = SHELL32_BindToGuidItem(NULL, pidl, NULL, IID_PPV_ARG(IShellFolder, &psf));
-        if (SUCCEEDED(hres))
+        HRESULT hr = SHELL32_ParseNextElement(pFolder, hwndOwner, pbc, &pidl, lpszDisplayName + 41, pchEaten, pdwAttributes);
+        if (SUCCEEDED(hr))
         {
-            return psf->ParseDisplayName(hwndOwner, pbc, lpszDisplayName + 42, pchEaten, &pidlChild, pdwAttributes);
+            *ppidl = pidl;
         }
+        return hr;
     }
 
     return S_OK;
