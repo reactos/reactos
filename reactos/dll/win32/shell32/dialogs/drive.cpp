@@ -124,7 +124,8 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
     PROPSHEETHEADERW psh;
     CComObject<CDrvDefExt> *pDrvDefExt = NULL;
-    
+    WCHAR wszName[256];
+
     ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
     psh.dwSize = sizeof(PROPSHEETHEADERW);
     psh.dwFlags = 0; // FIXME: make it modeless
@@ -132,33 +133,17 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST
     psh.nStartPage = 0;
     psh.phpage = hpsp;
 
-    WCHAR wszName[256];
-    if (GetVolumeInformationW(pwszDrive, wszName, _countof(wszName), NULL, NULL, NULL, NULL, 0))
+    LPITEMIDLIST completePidl = ILCombine(pidlFolder, apidl[0]);
+    if (!completePidl)
+        return FALSE;
+
+    if (ILGetDisplayNameExW(NULL, completePidl, wszName, ILGDN_NORMAL))
     {
         psh.pszCaption = wszName;
         psh.dwFlags |= PSH_PROPTITLE;
-        pwszDrive[2] = 0;
-        if (wszName[0] == UNICODE_NULL)
-        {
-            UINT len;
-            switch (GetDriveTypeW(pwszDrive))
-            {
-                case DRIVE_CDROM:
-                    len = LoadStringW(shell32_hInstance, IDS_DRIVE_CDROM, wszName, _countof(wszName));
-                    break;
-                case DRIVE_REMOTE:
-                    len = LoadStringW(shell32_hInstance, IDS_DRIVE_NETWORK, wszName, _countof(wszName));
-                    break;
-                case DRIVE_FIXED:
-                default:
-                    len = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, wszName, _countof(wszName));
-                    break;
-            }
-            StringCchPrintf(wszName + len, _countof(wszName) - len, L" (%s)", pwszDrive);
-        }
-        else
-            StringCchPrintf(wszName + wcslen(wszName), _countof(wszName) - wcslen(wszName), L" (%s)", pwszDrive);
     }
+    
+    ILFree(completePidl);
 
     CComPtr<IDataObject> pDataObj;
     HRESULT hr = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
