@@ -49,12 +49,12 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                          IN BOOLEAN Alertable,
                          IN PLARGE_INTEGER TimeOut OPTIONAL)
 {
-    PKWAIT_BLOCK WaitBlockArray = NULL;
+    PKWAIT_BLOCK WaitBlockArray;
     HANDLE Handles[MAXIMUM_WAIT_OBJECTS], KernelHandle;
     PVOID Objects[MAXIMUM_WAIT_OBJECTS];
     PVOID WaitObjects[MAXIMUM_WAIT_OBJECTS];
-    ULONG i = 0, ReferencedObjects = 0, j;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    ULONG i, ReferencedObjects, j;
+    KPROCESSOR_MODE PreviousMode;
     LARGE_INTEGER SafeTimeOut;
     BOOLEAN LockInUse;
     PHANDLE_TABLE_ENTRY HandleEntry;
@@ -65,31 +65,26 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     NTSTATUS Status;
     PAGED_CODE();
 
-    /* Enter a critical region since we'll play with handles */
-    LockInUse = TRUE;
-    KeEnterCriticalRegion();
-
     /* Check for valid Object Count */
     if ((ObjectCount > MAXIMUM_WAIT_OBJECTS) || !(ObjectCount))
     {
         /* Fail */
-        Status = STATUS_INVALID_PARAMETER_1;
-        goto Quickie;
+        return STATUS_INVALID_PARAMETER_1;
     }
 
     /* Check for valid Wait Type */
     if ((WaitType != WaitAll) && (WaitType != WaitAny))
     {
         /* Fail */
-        Status = STATUS_INVALID_PARAMETER_3;
-        goto Quickie;
+        return STATUS_INVALID_PARAMETER_3;
     }
 
-    /* Enter SEH */
-    _SEH2_TRY
+    /* Enter SEH for user mode */
+    PreviousMode = ExGetPreviousMode();
+    if (PreviousMode != KernelMode)
     {
-        /* Check if the call came from user mode */
-        if (PreviousMode != KernelMode)
+        /* Enter SEH */
+        _SEH2_TRY
         {
             /* Check if we have a timeout */
             if (TimeOut)
@@ -103,24 +98,30 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
             ProbeForRead(HandleArray,
                          ObjectCount * sizeof(HANDLE),
                          sizeof(HANDLE));
-        }
 
-       /*
-        * Make a copy so we don't have to guard with SEH later and keep
-        * track of what objects we referenced if dereferencing pointers
-        * suddenly fails
-        */
+           /*
+            * Make a copy so we don't have to guard with SEH later and keep
+            * track of what objects we referenced if dereferencing pointers
+            * suddenly fails
+            */
+            RtlCopyMemory(Handles,
+                          HandleArray,
+                          ObjectCount * sizeof(HANDLE));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* This is kernel mode, no need to wrap in SEH */
         RtlCopyMemory(Handles,
                       HandleArray,
                       ObjectCount * sizeof(HANDLE));
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Return the exception code */
-        Status = _SEH2_GetExceptionCode();
-        _SEH2_YIELD(goto Quickie);
-    }
-    _SEH2_END;
 
     /* Check if we can use the internal Wait Array */
     if (ObjectCount > THREAD_WAIT_OBJECTS)
@@ -133,12 +134,22 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         if (!WaitBlockArray)
         {
             /* Fail */
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto Quickie;
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
     }
+    else
+    {
+        /* No need for the array  */
+        WaitBlockArray = NULL;   
+    }
+
+    /* Enter a critical region since we'll play with handles */
+    LockInUse = TRUE;
+    KeEnterCriticalRegion();
 
     /* Start the loop */
+    i = 0;
+    ReferencedObjects = 0;
     do
     {
         /* Use the right Executive Handle */
@@ -240,7 +251,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         } while (i < ObjectCount);
     }
 
-    /* Now we can finally wait. Use SEH since it can raise an exception */
+    /* Now we can finally wait. Always use SEH since it can raise an exception */
     _SEH2_TRY
     {
         /* We're done playing with handles */
@@ -257,7 +268,9 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                                           TimeOut,
                                           WaitBlockArray);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_EXCEPT((_SEH2_GetExceptionCode() == STATUS_MUTANT_LIMIT_EXCEEDED) ?
+                 EXCEPTION_EXECUTE_HANDLER :
+                 EXCEPTION_CONTINUE_SEARCH)
     {
         /* Get the exception code */
         Status = _SEH2_GetExceptionCode();
@@ -358,11 +371,12 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
                       IN PLARGE_INTEGER TimeOut  OPTIONAL)
 {
     PVOID Object, WaitableObject;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
     LARGE_INTEGER SafeTimeOut;
     NTSTATUS Status;
 
     /* Check if we came with a timeout from user mode */
+    PreviousMode = ExGetPreviousMode();
     if ((TimeOut) && (PreviousMode != KernelMode))
     {
         /* Enter SEH for proving */
@@ -410,7 +424,9 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
                                            Alertable,
                                            TimeOut);
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        _SEH2_EXCEPT((_SEH2_GetExceptionCode() == STATUS_MUTANT_LIMIT_EXCEEDED) ?
+                     EXCEPTION_EXECUTE_HANDLER :
+                     EXCEPTION_CONTINUE_SEARCH)
         {
             /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
@@ -459,7 +475,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
                                IN BOOLEAN Alertable,
                                IN PLARGE_INTEGER TimeOut OPTIONAL)
 {
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
     POBJECT_TYPE Type;
     PVOID SignalObj, WaitObj, WaitableObject;
     LARGE_INTEGER SafeTimeOut;
@@ -467,6 +483,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     NTSTATUS Status;
 
     /* Check if we came with a timeout from user mode */
+    PreviousMode = ExGetPreviousMode();
     if ((TimeOut) && (PreviousMode != KernelMode))
     {
         /* Enter SEH for probing */
@@ -542,7 +559,10 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
             /* Release the mutant */
             KeReleaseMutant(SignalObj, MUTANT_INCREMENT, FALSE, TRUE);
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        _SEH2_EXCEPT(((_SEH2_GetExceptionCode() == STATUS_ABANDONED) ||
+                      (_SEH2_GetExceptionCode() == STATUS_MUTANT_NOT_OWNED)) ?
+                      EXCEPTION_EXECUTE_HANDLER :
+                      EXCEPTION_CONTINUE_SEARCH)
         {
             /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
@@ -566,7 +586,9 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
             /* Release the semaphore */
             KeReleaseSemaphore(SignalObj, SEMAPHORE_INCREMENT, 1, TRUE);
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        _SEH2_EXCEPT((_SEH2_GetExceptionCode() == STATUS_SEMAPHORE_LIMIT_EXCEEDED) ?
+                     EXCEPTION_EXECUTE_HANDLER :
+                     EXCEPTION_CONTINUE_SEARCH)
         {
             /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
@@ -592,7 +614,9 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
                                            Alertable,
                                            TimeOut);
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        _SEH2_EXCEPT((_SEH2_GetExceptionCode() == STATUS_MUTANT_LIMIT_EXCEEDED) ?
+                     EXCEPTION_EXECUTE_HANDLER :
+                     EXCEPTION_CONTINUE_SEARCH)
         {
             /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
