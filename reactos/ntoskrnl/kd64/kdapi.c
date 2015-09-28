@@ -315,6 +315,28 @@ KdpRestoreBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
+KdpWriteCustomBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
+                         IN PSTRING Data,
+                         IN PCONTEXT Context)
+{
+    //PDBGKD_WRITE_CUSTOM_BREAKPOINT = &State->u.WriteCustomBreakpoint;
+    STRING Header;
+
+    /* Not supported */
+    KdpDprintf("Custom Breakpoint Write is unimplemented\n");
+
+    /* Send a failure packet */
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
 DumpTraceData(IN PSTRING TraceData)
 {
     /* Update the buffer */
@@ -726,7 +748,8 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     ASSERT(Data->Length == sizeof(CONTEXT));
 
     /* Make sure that this is a valid request */
-    if ((State->Processor < KeNumberProcessors) && (KdpContextSent != FALSE))
+    if ((State->Processor < KeNumberProcessors) &&
+        (KdpContextSent))
     {
         /* Check if the request is for this CPU */
         if (State->Processor == KeGetCurrentPrcb()->Number)
@@ -750,6 +773,130 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     else
     {
         /* Invalid request */
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpGetContextEx(IN PDBGKD_MANIPULATE_STATE64 State,
+                IN PSTRING Data,
+                IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_CONTEXT_EX ContextEx;
+    PCONTEXT TargetContext;
+    ASSERT(Data->Length == 0);
+
+    /* Get our struct */
+    ContextEx = &State->u.ContextEx;
+
+    /* Set up the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Make sure that this is a valid request */
+    if ((State->Processor < KeNumberProcessors) &&
+        (ContextEx->Offset + ContextEx->ByteCount) <= sizeof(CONTEXT))
+    {
+        /* Check if the request is for this CPU */
+        if (State->Processor == KeGetCurrentPrcb()->Number)
+        {
+            /* We're just copying our own context */
+            TargetContext = Context;
+        }
+        else
+        {
+            /* Get the context from the PRCB array */
+            TargetContext = &KiProcessorBlock[State->Processor]->
+                            ProcessorState.ContextFrame;
+        }
+
+        /* Copy what is requested */
+        RtlCopyMemory(Data->Buffer,
+                      (PVOID)((ULONG_PTR)TargetContext + ContextEx->Offset),
+                      ContextEx->ByteCount);
+
+        /* KD copies all */
+        Data->Length = ContextEx->BytesCopied = ContextEx->ByteCount;
+
+        /* Let the debugger set the context now */
+        KdpContextSent = TRUE;
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid request */
+        ContextEx->BytesCopied = 0;
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpSetContextEx(IN PDBGKD_MANIPULATE_STATE64 State,
+                IN PSTRING Data,
+                IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_CONTEXT_EX ContextEx;
+    PCONTEXT TargetContext;
+
+    /* Get our struct */
+    ContextEx = &State->u.ContextEx;
+    ASSERT(Data->Length == ContextEx->ByteCount);
+
+    /* Set up the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Make sure that this is a valid request */
+    if ((State->Processor < KeNumberProcessors) &&
+        ((ContextEx->Offset + ContextEx->ByteCount) <= sizeof(CONTEXT)) &&
+        (KdpContextSent))
+    {
+        /* Check if the request is for this CPU */
+        if (State->Processor == KeGetCurrentPrcb()->Number)
+        {
+            /* We're just copying our own context */
+            TargetContext = Context;
+        }
+        else
+        {
+            /* Get the context from the PRCB array */
+            TargetContext = &KiProcessorBlock[State->Processor]->
+                            ProcessorState.ContextFrame;
+        }
+
+        /* Copy what is requested */
+        RtlCopyMemory((PVOID)((ULONG_PTR)TargetContext + ContextEx->Offset),
+                      Data->Buffer,
+                      ContextEx->ByteCount);
+
+        /* KD copies all */
+        ContextEx->BytesCopied = ContextEx->ByteCount;
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid request */
+        ContextEx->BytesCopied = 0;
         State->ReturnStatus = STATUS_UNSUCCESSFUL;
     }
 
@@ -1359,27 +1506,29 @@ SendPacket:
                 KdpNotSupported(&ManipulateState);
                 break;
 
+            case DbgKdWriteCustomBreakpointApi:
+
+                /* Write the customized breakpoint */
+                KdpWriteCustomBreakpoint(&ManipulateState, &Data, Context);
+                break;
+
+            case DbgKdGetContextExApi:
+            
+                /* Extended Context Get */
+                KdpGetContextEx(&ManipulateState, &Data, Context);
+                break;
+
+            case DbgKdSetContextExApi:
+
+                /* Extended Context Set */
+                KdpSetContextEx(&ManipulateState, &Data, Context);
+                break;
+
             /* Unsupported Messages */
             default:
 
                 /* Send warning */
-                KdpDprintf("Received Unhandled API %lx\n", ManipulateState.ApiNumber);
-
-            /*
-             * These 3 messages are unimplemented by us, but one (DbgKdGetContextExApi)
-             * is sent by WinDbg as of late during kernel debugging for some reason even though
-             * our MaxManipulate in the version block does not report it as being available.
-             *
-             * Any of these being sent to begin with is most likely a bug in WinDbg, so these
-             * are ignored and do not print a warning message to not spam the debug output.
-             * So far, WinDbg seems perfectly fine with this.
-             *
-             * DbgKdSetContextExApi complements the Get and DbgKdWriteCustomBreakpointApi
-             * fills the gap after DbgKdSwitchPartition (0x315D).
-             */
-            case 0x315E: // DbgKdWriteCustomBreakpointApi
-            case 0x315F: // DbgKdGetContextExApi
-            case 0x3160: // DbgKdSetContextExApi
+                KdpDprintf("Received Unrecognized API 0x%lx\n", ManipulateState.ApiNumber);
 
                 /* Setup an empty message, with failure */
                 Data.Length = 0;

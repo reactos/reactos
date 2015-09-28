@@ -19,11 +19,11 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 //
 // Apply the KIPCR WDK workaround for x86 and AMD64
 //
-#if defined(_X86_) || defined(_AMD64_)
+#if defined(_M_IX86) || defined(_M_AMD64)
 #define KPCR KIPCR
 #endif
 
-#if defined(_X86_)
+#if defined(_M_IX86)
 
 #define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, Self)
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
@@ -33,7 +33,7 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 #define KPRCB_PCR_PAGE_OFFSET          0
 #define CBSTACK_FRAME_POINTER          Ebp
 
-#elif defined(_AMD64_)
+#elif defined(_M_AMD64)
 
 #define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, Self)
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, CurrentPrcb)
@@ -43,7 +43,7 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 #define KPRCB_PCR_PAGE_OFFSET          0
 #define CBSTACK_FRAME_POINTER          Rbp
 
-#elif defined(_ARM_)
+#elif defined(_M_ARM)
 
 #define KPCR_SELF_PCR_OFFSET           0
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KIPCR, Prcb)
@@ -374,7 +374,7 @@ DBGKD_GET_VERSION64 KdVersionBlock =
     0,
     DBGKD_64BIT_PROTOCOL_VERSION2,
     CURRENT_KD_SECONDARY_VERSION,
-#if defined(_WIN64)
+#if defined(_M_AMD64) || defined(_M_ARM64)
     DBGKD_VERS_FLAG_DATA | DBGKD_VERS_FLAG_PTR64,
 #else
     DBGKD_VERS_FLAG_DATA,
@@ -521,7 +521,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     KPRCB_PCR_PAGE_OFFSET,
 #endif
     FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
-#if defined(_X86_)
+#if defined(_M_IX86)
     //
     // x86 GDT/LDT/TSS constants
     //
@@ -535,7 +535,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     KGDT_TSS,
     0,
     0,
-#elif defined(_AMD64_)
+#elif defined(_M_AMD64)
     //
     // AMD64 GDT/LDT/TSS constants
     //
