@@ -67,11 +67,11 @@ BEGIN
     PUSHBUTTON "&Sélectionner", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Supprimer l'installateur du programme après l'installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Proxy", -1, 4, 116, 240, 76
-    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Paramètres du proxy système", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (Pas de proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
     CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    LTEXT "Pas de proxy pour", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Par défaut", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
     PUSHBUTTON "Accepter", IDOK, 116, 195, 60, 14
@@ -195,7 +195,7 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spécifié n'existe pas. Le créer ?"
     IDS_APP_REG_REMOVE "Etes-vous sûr de vouloir supprimer les données du programme installé du registre ?"
     IDS_INFORMATION "Information"
-    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_DOWNLOAD "Impossible de télécharger le paquet : adresse non trouvée !"
     IDS_UNABLE_TO_REMOVE "Impossible de supprimer les données du programme du registre !"
-    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
+    IDS_CERT_DOES_NOT_MATCH "Vérification du certificat SSL échouée."    
 END
