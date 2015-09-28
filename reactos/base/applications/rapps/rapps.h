@@ -26,8 +26,7 @@
 
 #include "resource.h"
 
-/* FIXME: this should be downloaded by HTTPS once is supported */
-#define APPLICATION_DATABASE_URL L"http://svn.reactos.org/packages/rappmgr.cab"
+#define APPLICATION_DATABASE_URL L"https://svn.reactos.org/packages/rappmgr.cab"
 
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256
