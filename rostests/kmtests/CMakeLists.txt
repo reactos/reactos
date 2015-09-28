@@ -74,6 +74,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ob/ObReference.c
     ntos_ob/ObType.c
     ntos_ob/ObTypes.c
+    ntos_ob/ObWait.c
     ntos_ps/PsNotify.c
     ntos_se/SeHelpers.c
     ntos_se/SeInheritance.c

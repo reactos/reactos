@@ -66,6 +66,7 @@ KMT_TESTFUNC Test_RtlUnicodeString;
 KMT_TESTFUNC Test_ZwAllocateVirtualMemory;
 KMT_TESTFUNC Test_ZwCreateSection;
 KMT_TESTFUNC Test_ZwMapViewOfSection;
+KMT_TESTFUNC Test_ZwWaitForMultipleObjects;
 
 const KMT_TEST TestList[] =
 {
@@ -128,5 +129,6 @@ const KMT_TEST TestList[] =
     { "ZwAllocateVirtualMemory",            Test_ZwAllocateVirtualMemory },
     { "ZwCreateSection",                    Test_ZwCreateSection },
     { "ZwMapViewOfSection",                 Test_ZwMapViewOfSection },
+    { "ZwWaitForMultipleObjects",           Test_ZwWaitForMultipleObjects},
     { NULL,                                 NULL }
 };
