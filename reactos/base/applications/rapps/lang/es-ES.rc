@@ -200,4 +200,5 @@ BEGIN
     IDS_INFORMATION "Información"
     IDS_UNABLE_TO_DOWNLOAD "No se pudo descargar el paquete. No se ha encontrado la dirección de Internet."
     IDS_UNABLE_TO_REMOVE "No se pudieron borrar del Registro los datos de instalación del programa."
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
 END

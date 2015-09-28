@@ -203,4 +203,5 @@ BEGIN
     IDS_INFORMATION "Informație"
     IDS_UNABLE_TO_DOWNLOAD "Pachetul nu poate fi descărcat! Adresa nu este găsită!"
     IDS_UNABLE_TO_REMOVE "Nu se pot elimina datele din registru pentru acest program!"
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
 END

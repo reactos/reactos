@@ -201,6 +201,58 @@ CreateDl(HWND Dlg, BOOL *pbCancelled)
     return (IBindStatusCallback*) This;
 }
 
+#ifdef USE_CERT_PINNING
+static BOOL CertIsValid(HINTERNET hInternet, LPWSTR lpszHostName)
+{
+    HINTERNET hConnect;
+    HINTERNET hRequest;
+    DWORD certInfoLength;
+    BOOL Ret = FALSE;
+    INTERNET_CERTIFICATE_INFOW certInfo;
+
+    hConnect = InternetConnectW(hInternet, lpszHostName, INTERNET_DEFAULT_HTTPS_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, INTERNET_FLAG_SECURE, 0); 
+    if (hConnect)
+    {
+        hRequest = HttpOpenRequestW(hConnect, L"HEAD", NULL, NULL, NULL, NULL, INTERNET_FLAG_SECURE, 0);
+        if (hRequest != NULL)
+        {  
+            Ret = HttpSendRequestW(hRequest, L"", 0, NULL, 0);
+            if (Ret) 
+            { 
+                certInfoLength = sizeof(INTERNET_CERTIFICATE_INFOW);
+                Ret = InternetQueryOptionW(hRequest,
+                                           INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT,
+                                           &certInfo,
+                                           &certInfoLength);
+                if (Ret)
+                {
+                    if (certInfo.lpszEncryptionAlgName) 
+                        LocalFree(certInfo.lpszEncryptionAlgName);
+                    if (certInfo.lpszIssuerInfo)
+                    {
+                        if (strcmp((LPSTR)certInfo.lpszIssuerInfo, CERT_ISSUER_INFO) != 0)
+                            Ret = FALSE;
+                        LocalFree(certInfo.lpszIssuerInfo);
+                    }
+                    if (certInfo.lpszProtocolName) 
+                        LocalFree(certInfo.lpszProtocolName);
+                    if (certInfo.lpszSignatureAlgName) 
+                        LocalFree(certInfo.lpszSignatureAlgName);
+                    if (certInfo.lpszSubjectInfo) 
+                    {
+                        if (strcmp((LPSTR)certInfo.lpszSubjectInfo, CERT_SUBJECT_INFO) != 0)
+                            Ret = FALSE;
+                        LocalFree(certInfo.lpszSubjectInfo);
+                    }
+                }
+            }
+            InternetCloseHandle(hRequest);
+        }
+    }
+    return Ret;
+}
+#endif
+
 static
 DWORD WINAPI
 ThreadFunc(LPVOID Context)
@@ -307,6 +359,8 @@ ThreadFunc(LPVOID Context)
     
     urlComponents.dwSchemeLength = urlLength*sizeof(WCHAR);
     urlComponents.lpszScheme = malloc(urlComponents.dwSchemeLength);
+    urlComponents.dwHostNameLength = urlLength*sizeof(WCHAR);
+    urlComponents.lpszHostName = malloc(urlComponents.dwHostNameLength);
     
     if(!InternetCrackUrlW(AppInfo->szUrlDownload, urlLength+1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
         goto end;
@@ -317,7 +371,21 @@ ThreadFunc(LPVOID Context)
     if(urlComponents.nScheme == INTERNET_SCHEME_FTP)
         dwContentLen = FtpGetFileSize(hFile, &dwStatus);
 
+#ifdef USE_CERT_PINNING
+    if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) && (!CertIsValid(hOpen, urlComponents.lpszHostName)))
+    {
+        WCHAR szMsgText[MAX_STR_LEN];
+
+        if (!LoadStringW(hInst, IDS_CERT_DOES_NOT_MATCH, szMsgText, sizeof(szMsgText) / sizeof(WCHAR)))
+            goto end;
+
+        MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
+        goto end;
+    }
+#endif
+
     free(urlComponents.lpszScheme);
+    free(urlComponents.lpszHostName);
 
     hOut = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
 

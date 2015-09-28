@@ -197,4 +197,5 @@ BEGIN
     IDS_INFORMATION "Informationen"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry löschen!"
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
 END

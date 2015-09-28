@@ -26,6 +26,11 @@
 
 #include "resource.h"
 
+#ifdef USE_CERT_PINNING
+  #define CERT_ISSUER_INFO "BE\r\nGlobalSign nv-sa\r\nGlobalSign Domain Validation CA - SHA256 - G2"
+  #define CERT_SUBJECT_INFO "Domain Control Validated\r\n*.reactos.org"
+#endif
+
 #define APPLICATION_DATABASE_URL L"https://svn.reactos.org/packages/rappmgr.cab"
 
 #define SPLIT_WIDTH 4

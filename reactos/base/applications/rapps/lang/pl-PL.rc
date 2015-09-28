@@ -205,4 +205,5 @@ BEGIN
     IDS_INFORMATION "Informacja"
     IDS_UNABLE_TO_DOWNLOAD "Nie można pobrać pakietu! Nie znaleziono adresu!"
     IDS_UNABLE_TO_REMOVE "Nie można było usunąć wpisu z rejestru!"
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
 END

@@ -199,4 +199,5 @@ BEGIN
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
     IDS_UNABLE_TO_REMOVE "İzlencenin girişi değer defterinden silinemiyor."
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
 END

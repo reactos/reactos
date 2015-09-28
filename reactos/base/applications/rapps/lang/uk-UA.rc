@@ -205,4 +205,5 @@ BEGIN
     IDS_INFORMATION "Інформація"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
 END

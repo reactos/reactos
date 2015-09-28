@@ -201,4 +201,5 @@ BEGIN
     IDS_INFORMATION "Сведения"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Премахването на данните за приложението от регистъра е невъзможно!"
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
 END

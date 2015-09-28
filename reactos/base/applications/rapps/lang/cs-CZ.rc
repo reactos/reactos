@@ -202,4 +202,5 @@ BEGIN
     IDS_INFORMATION "Informace"
     IDS_UNABLE_TO_DOWNLOAD "Soubor se nepodařilo stáhnout! Adresa nenalezena!"
     IDS_UNABLE_TO_REMOVE "Nepodařilo se odstranit data programu z registru!"
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
 END
