@@ -2180,6 +2180,10 @@ ScsiCdRomStartIo(
             return;
         }
 
+        case IOCTL_DISK_GET_LENGTH_INFO:
+        case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX:
+        case IOCTL_DISK_GET_DRIVE_GEOMETRY:
+        case IOCTL_CDROM_GET_DRIVE_GEOMETRY_EX:
         case IOCTL_CDROM_GET_DRIVE_GEOMETRY: {
 
             //
