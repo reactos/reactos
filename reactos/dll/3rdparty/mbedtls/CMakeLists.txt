@@ -76,6 +76,7 @@ list(APPEND src
 
 add_library(mbedtls SHARED
     ${src}
+    mbedtls.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mbedtls.def)
 
 set_module_type(mbedtls win32dll)
