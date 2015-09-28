@@ -69,7 +69,17 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 #define ADVANCED_DEBUGGING_LEVEL    1
 #endif
 
-/* FUNCTIONS ******************************************************************/
+
+/* VARIABLES ******************************************************************/
+
+typedef struct _NTVDM_SETTINGS
+{
+    ANSI_STRING BiosFileName;
+    ANSI_STRING RomFiles;
+    ANSI_STRING HardDisks[4];
+} NTVDM_SETTINGS, *PNTVDM_SETTINGS;
+
+extern NTVDM_SETTINGS GlobalSettings;
 
 // Command line of NTVDM
 extern INT     NtVdmArgc;
@@ -77,6 +87,8 @@ extern WCHAR** NtVdmArgv;
 
 extern HWND hConsoleWnd;
 
+
+/* FUNCTIONS ******************************************************************/
 
 /*
  * Interface functions

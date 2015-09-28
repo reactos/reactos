@@ -26,6 +26,8 @@ static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
 
+NTVDM_SETTINGS GlobalSettings;
+
 // Command line of NTVDM
 INT     NtVdmArgc;
 WCHAR** NtVdmArgv;
@@ -276,6 +278,215 @@ static VOID EnableExtraHardware(HANDLE ConsoleInput)
     }
 }
 
+
+static NTSTATUS
+NTAPI
+NtVdmConfigureBios(IN PWSTR ValueName,
+                   IN ULONG ValueType,
+                   IN PVOID ValueData,
+                   IN ULONG ValueLength,
+                   IN PVOID Context,
+                   IN PVOID EntryContext)
+{
+    PNTVDM_SETTINGS Settings = (PNTVDM_SETTINGS)Context;
+    UNICODE_STRING ValueString;
+
+    /* Check for the type of the value */
+    if (ValueType != REG_SZ)
+    {
+        RtlInitEmptyAnsiString(&Settings->BiosFileName, NULL, 0);
+        return STATUS_SUCCESS;
+    }
+
+    /* Convert the UNICODE string to ANSI and store it */
+    RtlInitEmptyUnicodeString(&ValueString, (PWCHAR)ValueData, ValueLength);
+    ValueString.Length = ValueString.MaximumLength;
+    RtlUnicodeStringToAnsiString(&Settings->BiosFileName, &ValueString, TRUE);
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+NTAPI
+NtVdmConfigureRom(IN PWSTR ValueName,
+                  IN ULONG ValueType,
+                  IN PVOID ValueData,
+                  IN ULONG ValueLength,
+                  IN PVOID Context,
+                  IN PVOID EntryContext)
+{
+    PNTVDM_SETTINGS Settings = (PNTVDM_SETTINGS)Context;
+    UNICODE_STRING ValueString;
+
+    /* Check for the type of the value */
+    if (ValueType != REG_MULTI_SZ)
+    {
+        RtlInitEmptyAnsiString(&Settings->RomFiles, NULL, 0);
+        return STATUS_SUCCESS;
+    }
+
+    /* Convert the UNICODE string to ANSI and store it */
+    RtlInitEmptyUnicodeString(&ValueString, (PWCHAR)ValueData, ValueLength);
+    ValueString.Length = ValueString.MaximumLength;
+    RtlUnicodeStringToAnsiString(&Settings->RomFiles, &ValueString, TRUE);
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+NTAPI
+NtVdmConfigureHDD(IN PWSTR ValueName,
+                  IN ULONG ValueType,
+                  IN PVOID ValueData,
+                  IN ULONG ValueLength,
+                  IN PVOID Context,
+                  IN PVOID EntryContext)
+{
+    PNTVDM_SETTINGS Settings = (PNTVDM_SETTINGS)Context;
+    UNICODE_STRING ValueString;
+    ULONG DiskNumber = (ULONG)EntryContext;
+
+    ASSERT(DiskNumber < ARRAYSIZE(Settings->HardDisks));
+
+    /* Check whether the Hard Disk entry was not already configured */
+    if (Settings->HardDisks[DiskNumber].Buffer != NULL)
+    {
+        DPRINT1("Hard Disk %d -- '%Z' already configured\n", DiskNumber, &Settings->HardDisks[DiskNumber]);
+        return STATUS_SUCCESS;
+    }
+
+    /* Check for the type of the value */
+    if (ValueType != REG_SZ)
+    {
+        RtlInitEmptyAnsiString(&Settings->HardDisks[DiskNumber], NULL, 0);
+        return STATUS_SUCCESS;
+    }
+
+    /* Convert the UNICODE string to ANSI and store it */
+    RtlInitEmptyUnicodeString(&ValueString, (PWCHAR)ValueData, ValueLength);
+    ValueString.Length = ValueString.MaximumLength;
+    RtlUnicodeStringToAnsiString(&Settings->HardDisks[DiskNumber], &ValueString, TRUE);
+
+    return STATUS_SUCCESS;
+}
+
+static RTL_QUERY_REGISTRY_TABLE
+NtVdmConfigurationTable[] =
+{
+    {
+        NtVdmConfigureBios,
+        0,
+        L"BiosFile",
+        NULL,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        NtVdmConfigureRom,
+        RTL_QUERY_REGISTRY_NOEXPAND,
+        L"RomFiles",
+        NULL,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        NtVdmConfigureHDD,
+        0,
+        L"HardDisk0",
+        (PVOID)0,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        NtVdmConfigureHDD,
+        0,
+        L"HardDisk1",
+        (PVOID)1,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        NtVdmConfigureHDD,
+        0,
+        L"HardDisk2",
+        (PVOID)2,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        NtVdmConfigureHDD,
+        0,
+        L"HardDisk3",
+        (PVOID)3,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    /* End of table */
+    {0}
+};
+
+static BOOL
+LoadGlobalSettings(IN PNTVDM_SETTINGS Settings)
+{
+    NTSTATUS Status;
+
+    ASSERT(Settings);
+
+    /*
+     * Now we can do:
+     * - CPU core choice
+     * - Video choice
+     * - Sound choice
+     * - Mem?
+     * - ...
+     * - Standalone mode?
+     * - Debug settings
+     */
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                    L"NTVDM",
+                                    NtVdmConfigurationTable,
+                                    Settings,
+                                    NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NTVDM registry settings cannot be fully initialized, using default ones. Status = 0x%08lx\n", Status);
+    }
+
+    return NT_SUCCESS(Status);
+}
+
+static VOID
+FreeGlobalSettings(IN PNTVDM_SETTINGS Settings)
+{
+    USHORT i;
+
+    ASSERT(Settings);
+
+    if (Settings->BiosFileName.Buffer)
+        RtlFreeAnsiString(&Settings->BiosFileName);
+
+    if (Settings->RomFiles.Buffer)
+        RtlFreeAnsiString(&Settings->RomFiles);
+
+    for (i = 0; i < ARRAYSIZE(Settings->HardDisks); ++i)
+    {
+        if (Settings->HardDisks[i].Buffer)
+            RtlFreeAnsiString(&Settings->HardDisks[i]);
+    }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
@@ -364,6 +575,8 @@ VdmShutdown(BOOLEAN Immediate)
         BiosCleanup();
         EmulatorCleanup();
         ConsoleCleanup();
+
+        FreeGlobalSettings(&GlobalSettings);
 
         DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
         /* Some VDDs rely on the fact that NTVDM calls ExitProcess on Windows */
@@ -564,53 +777,6 @@ VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent)
     DPRINT1("Focus events not handled\n");
 }
 
-static BOOL
-LoadGlobalSettings(VOID)
-{
-// FIXME: These strings should be localized.
-#define ERROR_MEMORYVDD L"Insufficient memory to load installable Virtual Device Drivers."
-#define ERROR_REGVDD    L"Virtual Device Driver format in the registry is invalid."
-#define ERROR_LOADVDD   L"An installable Virtual Device Driver failed Dll initialization."
-
-    BOOL  Success = TRUE;
-    LONG  Error   = 0;
-
-    HKEY    hNTVDMKey;
-    LPCWSTR NTVDMKeyName   = L"SYSTEM\\CurrentControlSet\\Control\\NTVDM";
-
-    /* Try to open the NTVDM registry key */
-    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                          NTVDMKeyName,
-                          0,
-                          KEY_QUERY_VALUE,
-                          &hNTVDMKey);
-    if (Error == ERROR_FILE_NOT_FOUND)
-    {
-        /* If the key just doesn't exist, don't do anything else */
-        return TRUE;
-    }
-    else if (Error != ERROR_SUCCESS)
-    {
-        /* The key exists but there was an access error: display an error and quit */
-        DisplayMessage(ERROR_REGVDD);
-        return FALSE;
-    }
-
-    /*
-     * Now we can do:
-     * - CPU core choice
-     * - Video choice
-     * - Sound choice
-     * - Mem?
-     * - ...
-     * - Standalone mode?
-     * - Debug settings
-     */
-
-// Quit:
-    RegCloseKey(hNTVDMKey);
-    return Success;
-}
 
 INT
 wmain(INT argc, WCHAR *argv[])
@@ -649,7 +815,7 @@ wmain(INT argc, WCHAR *argv[])
 #endif
 
     /* Load global VDM settings */
-    LoadGlobalSettings();
+    LoadGlobalSettings(&GlobalSettings);
 
     DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
 
@@ -668,7 +834,8 @@ wmain(INT argc, WCHAR *argv[])
     }
 
     /* Initialize the system BIOS and option ROMs */
-    if (!BiosInitialize(NULL, NULL))
+    if (!BiosInitialize(GlobalSettings.BiosFileName.Buffer,
+                        GlobalSettings.RomFiles.Buffer))
     {
         wprintf(L"FATAL: Failed to initialize the VDM BIOS.\n");
         goto Cleanup;

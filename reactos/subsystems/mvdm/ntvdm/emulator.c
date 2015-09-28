@@ -475,6 +475,8 @@ VOID EmulatorTerminate(VOID)
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
+    USHORT i;
+
     /* Initialize memory */
     if (!MemInitialize())
     {
@@ -551,17 +553,16 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         return FALSE;
     }
 
-#if 0
-    // The following commands are examples of MountDisk usage.
-    // NOTE: Those values are hardcoded paths on my local test machines!!
-
-    // MountDisk(FLOPPY_DISK, 0, "H:\\trunk\\ntvdm_studies\\diskette_high.vfd", TRUE);
-    // MountDisk(FLOPPY_DISK, 0, "H:\\DOS_tests\\Dos5.0.img", TRUE);
-    // MountDisk(FLOPPY_DISK, 0, "H:\\trunk\\ntvdm_studies\\hdd_10Mo_fixed.vhd", TRUE);
-    // MountDisk(FLOPPY_DISK, 0, "H:\\DOS_tests\\diskette_test.vfd", FALSE);
-
-    MountDisk(HARD_DISK, 0, "H:\\DOS_tests\\MS-DOS 6_fixed_size.vhd", FALSE);
-#endif
+    /* Mount the available hard disks */
+    for (i = 0; i < ARRAYSIZE(GlobalSettings.HardDisks); ++i)
+    {
+        if (GlobalSettings.HardDisks[i].Length != 0 &&
+            GlobalSettings.HardDisks[i].Buffer      &&
+            GlobalSettings.HardDisks[i].Buffer != '\0')
+        {
+            MountDisk(HARD_DISK, i, GlobalSettings.HardDisks[i].Buffer, FALSE);
+        }
+    }
 
     /* Initialize the software callback system and register the emulator BOPs */
     InitializeInt32();
