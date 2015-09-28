@@ -1388,28 +1388,40 @@ ExTryToAcquireResourceExclusiveLite(
 );
 
 NTSTATUS
-ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
+ExpSetTimeZoneInformation(
+    IN PTIME_ZONE_INFORMATION TimeZoneInformation
+);
 
 BOOLEAN
 NTAPI
-ExAcquireTimeRefreshLock(BOOLEAN Wait);
+ExAcquireTimeRefreshLock(
+    IN BOOLEAN Wait
+);
 
 VOID
 NTAPI
-ExReleaseTimeRefreshLock(VOID);
+ExReleaseTimeRefreshLock(
+    VOID
+);
 
 VOID
 NTAPI
-ExUpdateSystemTimeFromCmos(IN BOOLEAN UpdateInterruptTime,
-                           IN ULONG MaxSepInSeconds);
-
-NTSTATUS
-NTAPI
-ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
+ExUpdateSystemTimeFromCmos(
+    IN BOOLEAN UpdateInterruptTime,
+    IN ULONG MaxSepInSeconds
+);
 
 VOID
 NTAPI
-ExTimerRundown(VOID);
+ExAllocateLocallyUniqueId(
+    OUT LUID *LocallyUniqueId
+);
+
+VOID
+NTAPI
+ExTimerRundown(
+    VOID
+);
 
 VOID
 NTAPI

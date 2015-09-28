@@ -393,12 +393,7 @@ SepDuplicateToken(PTOKEN Token,
     /* Zero out the buffer */
     RtlZeroMemory(AccessToken, sizeof(TOKEN));
 
-    Status = ZwAllocateLocallyUniqueId(&AccessToken->TokenId);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(AccessToken);
-        return Status;
-    }
+    ExAllocateLocallyUniqueId(&AccessToken->TokenId);
 
     AccessToken->TokenLock = &SepTokenLock;
 
@@ -722,13 +717,8 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         }
     }
 
-    Status = ZwAllocateLocallyUniqueId(&TokenId);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Status = ZwAllocateLocallyUniqueId(&ModifiedId);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    ExAllocateLocallyUniqueId(&TokenId);
+    ExAllocateLocallyUniqueId(&ModifiedId);
 
     Status = ObCreateObject(PreviousMode,
                             SeTokenObjectType,

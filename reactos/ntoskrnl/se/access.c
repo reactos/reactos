@@ -403,7 +403,7 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
     /* Set Access State Data */
     AccessState->RemainingDesiredAccess = AccessMask;
     AccessState->OriginalDesiredAccess = AccessMask;
-    ExpAllocateLocallyUniqueId(&AccessState->OperationID);
+    ExAllocateLocallyUniqueId(&AccessState->OperationID);
 
     /* Get the Token to use */
     Token = SeQuerySubjectContextToken(&AccessState->SubjectSecurityContext);
