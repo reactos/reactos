@@ -43,22 +43,22 @@ START_TEST(RtlGenerate8dot3Name)
 
         RtlGenerate8dot3Name(&LongName, FALSE, &Context, &ShortName);
         RtlInitUnicodeString(&Expected, ShortNames1[i]);
-        ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length, ShortName.Buffer, Expected.Length, Expected.Buffer);
+        ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length / sizeof(WCHAR), ShortName.Buffer, Expected.Length / sizeof(WCHAR), Expected.Buffer);
 
         ShortName.Length = 0;
         RtlGenerate8dot3Name(&LongName, FALSE, &Context, &ShortName);
         RtlInitUnicodeString(&Expected, ShortNames2[i]);
-        ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length, ShortName.Buffer, Expected.Length, Expected.Buffer);
+        ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length / sizeof(WCHAR), ShortName.Buffer, Expected.Length / sizeof(WCHAR), Expected.Buffer);
 
         RtlZeroMemory(&Context, sizeof(GENERATE_NAME_CONTEXT));
         ShortName.Length = 0;
         RtlGenerate8dot3Name(&LongName, TRUE, &Context, &ShortName);
         RtlInitUnicodeString(&Expected, ExShortNames1[i]);
-        ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length, ShortName.Buffer, Expected.Length, Expected.Buffer);
+        ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length / sizeof(WCHAR), ShortName.Buffer, Expected.Length / sizeof(WCHAR), Expected.Buffer);
 
         ShortName.Length = 0;
         RtlGenerate8dot3Name(&LongName, TRUE, &Context, &ShortName);
         RtlInitUnicodeString(&Expected, ExShortNames2[i]);
-        ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length, ShortName.Buffer, Expected.Length, Expected.Buffer);
+        ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "Generated: %.*S. Expected: %.*S\n", ShortName.Length / sizeof(WCHAR), ShortName.Buffer, Expected.Length / sizeof(WCHAR), Expected.Buffer);
     }
 }
