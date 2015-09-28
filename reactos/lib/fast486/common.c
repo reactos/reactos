@@ -716,7 +716,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (!Fast486ReadLinearMemory(State,
                                  NewTssAddress,
                                  &NewTss,
-                                 NewTssLimit >= (sizeof(FAST486_TSS) - 1)
+                                 (NewTssDescriptor.Signature == FAST486_TSS_SIGNATURE)
+                                 || (NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE)
                                  ? sizeof(FAST486_TSS) : sizeof(FAST486_LEGACY_TSS),
                                  FALSE))
     {
@@ -756,8 +757,37 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     else
     {
         /* Store the link */
-        if (NewTssLimit >= (sizeof(FAST486_TSS) - 1)) NewTss.Link = State->TaskReg.Selector;
-        else NewLegacyTss->Link = State->TaskReg.Selector;
+        if ((NewTssDescriptor.Signature == FAST486_TSS_SIGNATURE)
+            || (NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE))
+        {
+            NewTss.Link = State->TaskReg.Selector;
+
+            /* Write back the new TSS link */
+            if (!Fast486WriteLinearMemory(State,
+                                          NewTssAddress,
+                                          &NewTss.Link,
+                                          sizeof(NewTss.Link),
+                                          FALSE))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+        else
+        {
+            NewLegacyTss->Link = State->TaskReg.Selector;
+
+            /* Write back the new legacy TSS link */
+            if (!Fast486WriteLinearMemory(State,
+                                          NewTssAddress,
+                                          &NewLegacyTss->Link,
+                                          sizeof(NewLegacyTss->Link),
+                                          FALSE))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
     }
 
     /* Save the current task into the TSS */
@@ -814,7 +844,17 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     }
 
     /* Mark the new task as busy */
-    NewTssDescriptor.Signature = FAST486_BUSY_TSS_SIGNATURE;
+    if (NewTssDescriptor.Signature == FAST486_TSS_SIGNATURE
+        || NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE)
+    {
+        /* 32-bit TSS */
+        NewTssDescriptor.Signature = FAST486_BUSY_TSS_SIGNATURE;
+    }
+    else
+    {
+        /* 16-bit TSS */
+        NewTssDescriptor.Signature = FAST486_BUSY_TSS_16_SIGNATURE;
+    }
 
     /* Write back the new TSS descriptor */
     if (!Fast486WriteLinearMemory(State,
@@ -835,7 +875,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     State->TaskReg.Base = NewTssAddress;
     State->TaskReg.Limit = NewTssLimit;
 
-    if (NewTssLimit >= (sizeof(FAST486_TSS) - 1))
+    if (NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE)
     {
         /* Change the page directory */
         State->ControlRegisters[FAST486_REG_CR3] = NewTss.Cr3;
@@ -845,8 +885,14 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     Fast486FlushTlb(State);
 
     /* Update the CPL */
-    if (NewTssLimit >= (sizeof(FAST486_TSS) - 1)) State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
-    else State->Cpl = GET_SEGMENT_RPL(NewLegacyTss->Cs);
+    if (NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE)
+    {
+        State->Cpl = GET_SEGMENT_RPL(NewTss.Cs);
+    }
+    else
+    {
+        State->Cpl = GET_SEGMENT_RPL(NewLegacyTss->Cs);
+    }
 
 #ifndef FAST486_NO_PREFETCH
     /* Context switching invalidates the prefetch */
@@ -854,7 +900,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
 #endif
 
     /* Load the registers */
-    if (NewTssLimit >= (sizeof(FAST486_TSS) - 1))
+    if (NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE)
     {
         State->InstPtr.Long = State->SavedInstPtr.Long = NewTss.Eip;
         State->Flags.Long = NewTss.Eflags;
@@ -970,7 +1016,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         return FALSE;
     }
 
-    if (NewTssLimit >= (sizeof(FAST486_TSS) - 1))
+    if (NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE)
     {
         if (!Fast486LoadSegmentInternal(State,
                                         FAST486_REG_FS,
