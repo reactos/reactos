@@ -553,6 +553,17 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         return FALSE;
     }
 
+    /* Mount the available floppy disks */
+    for (i = 0; i < ARRAYSIZE(GlobalSettings.FloppyDisks); ++i)
+    {
+        if (GlobalSettings.FloppyDisks[i].Length != 0 &&
+            GlobalSettings.FloppyDisks[i].Buffer      &&
+            GlobalSettings.FloppyDisks[i].Buffer != '\0')
+        {
+            MountDisk(FLOPPY_DISK, i, GlobalSettings.FloppyDisks[i].Buffer, FALSE);
+        }
+    }
+
     /* Mount the available hard disks */
     for (i = 0; i < ARRAYSIZE(GlobalSettings.HardDisks); ++i)
     {

@@ -32,7 +32,7 @@
 // they will be arrays of objects containing disk information needed by
 // the BIOS only.
 static PDISK_IMAGE FloppyDrive[2] = {NULL};
-static PDISK_IMAGE HardDrive[1]   = {NULL};
+static PDISK_IMAGE HardDrive[4]   = {NULL};
 
 #pragma pack(push, 1)
 
@@ -689,6 +689,9 @@ BOOLEAN DiskBios32Initialize(VOID)
     FloppyDrive[0] = RetrieveDisk(FLOPPY_DISK, 0);
     FloppyDrive[1] = RetrieveDisk(FLOPPY_DISK, 1);
     HardDrive[0]   = RetrieveDisk(HARD_DISK, 0);
+    HardDrive[1]   = RetrieveDisk(HARD_DISK, 1);
+    HardDrive[2]   = RetrieveDisk(HARD_DISK, 2);
+    HardDrive[3]   = RetrieveDisk(HARD_DISK, 3);
 
     return TRUE;
 }

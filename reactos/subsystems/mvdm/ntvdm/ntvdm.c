@@ -335,6 +335,43 @@ NtVdmConfigureRom(IN PWSTR ValueName,
 
 static NTSTATUS
 NTAPI
+NtVdmConfigureFloppy(IN PWSTR ValueName,
+                     IN ULONG ValueType,
+                     IN PVOID ValueData,
+                     IN ULONG ValueLength,
+                     IN PVOID Context,
+                     IN PVOID EntryContext)
+{
+    PNTVDM_SETTINGS Settings = (PNTVDM_SETTINGS)Context;
+    UNICODE_STRING ValueString;
+    ULONG DiskNumber = (ULONG)EntryContext;
+
+    ASSERT(DiskNumber < ARRAYSIZE(Settings->FloppyDisks));
+
+    /* Check whether the Hard Disk entry was not already configured */
+    if (Settings->FloppyDisks[DiskNumber].Buffer != NULL)
+    {
+        DPRINT1("Floppy Disk %d -- '%Z' already configured\n", DiskNumber, &Settings->FloppyDisks[DiskNumber]);
+        return STATUS_SUCCESS;
+    }
+
+    /* Check for the type of the value */
+    if (ValueType != REG_SZ)
+    {
+        RtlInitEmptyAnsiString(&Settings->FloppyDisks[DiskNumber], NULL, 0);
+        return STATUS_SUCCESS;
+    }
+
+    /* Convert the UNICODE string to ANSI and store it */
+    RtlInitEmptyUnicodeString(&ValueString, (PWCHAR)ValueData, ValueLength);
+    ValueString.Length = ValueString.MaximumLength;
+    RtlUnicodeStringToAnsiString(&Settings->FloppyDisks[DiskNumber], &ValueString, TRUE);
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+NTAPI
 NtVdmConfigureHDD(IN PWSTR ValueName,
                   IN ULONG ValueType,
                   IN PVOID ValueData,
@@ -388,6 +425,26 @@ NtVdmConfigurationTable[] =
         RTL_QUERY_REGISTRY_NOEXPAND,
         L"RomFiles",
         NULL,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        NtVdmConfigureFloppy,
+        0,
+        L"FloppyDisk0",
+        (PVOID)0,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        NtVdmConfigureFloppy,
+        0,
+        L"FloppyDisk1",
+        (PVOID)1,
         REG_NONE,
         NULL,
         0
@@ -479,6 +536,12 @@ FreeGlobalSettings(IN PNTVDM_SETTINGS Settings)
 
     if (Settings->RomFiles.Buffer)
         RtlFreeAnsiString(&Settings->RomFiles);
+
+    for (i = 0; i < ARRAYSIZE(Settings->FloppyDisks); ++i)
+    {
+        if (Settings->FloppyDisks[i].Buffer)
+            RtlFreeAnsiString(&Settings->FloppyDisks[i]);
+    }
 
     for (i = 0; i < ARRAYSIZE(Settings->HardDisks); ++i)
     {
