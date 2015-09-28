@@ -33,7 +33,7 @@
 
 #define __wine_dbch_secur32 __wine_dbch_schannel
 
-#if defined(SONAME_LIBGNUTLS) && !defined(HAVE_SECURITY_SECURITY_H)
+#if defined(SONAME_LIBGNUTLS) && !defined(HAVE_SECURITY_SECURITY_H) && !defined(SONAME_LIBMBEDTLS)
 
 static void *libgnutls_handle;
 
@@ -602,4 +602,4 @@ void schan_imp_deinit(void)
     libgnutls_handle = NULL;
 }
 
-#endif /* SONAME_LIBGNUTLS && !HAVE_SECURITY_SECURITY_H */
+#endif /* SONAME_LIBGNUTLS && !HAVE_SECURITY_SECURITY_H && !SONAME_LIBMBEDTLS */

@@ -1227,7 +1227,7 @@
 /* #undef SONAME_LIBGLU */
 
 /* Define to the soname of the libgnutls library. */
-#define SONAME_LIBGNUTLS L"gnutls\\libgnutls-28.dll"
+/* #undef SONAME_LIBGNUTLS */
 
 /* Define to the soname of the libgsm library. */
 /* #undef SONAME_LIBGSM */
@@ -1240,6 +1240,9 @@
 
 /* Define to the soname of the libjpeg library. */
 #define SONAME_LIBJPEG "libjpeg"
+
+/* Define to the soname of the libmbedtls library. */
+#define SONAME_LIBMBEDTLS L"mbedtls"
 
 /* Define to the soname of the libncurses library. */
 /* #undef SONAME_LIBNCURSES */

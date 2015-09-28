@@ -1,3 +1,6 @@
+
+spec2def(mbedtls.dll mbedtls.spec ADD_IMPORTLIB)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/mbedtls
                     ${REACTOS_SOURCE_DIR}/include/reactos/zlib)
 
@@ -71,7 +74,10 @@ list(APPEND src
      x509write_csr.c
      xtea.c)
 
-add_library(mbedtls SHARED ${src})
+add_library(mbedtls SHARED
+    ${src}
+    ${CMAKE_CURRENT_BINARY_DIR}/mbedtls.def)
+
 set_module_type(mbedtls win32dll)
 target_link_libraries(mbedtls zlib)
 add_importlibs(mbedtls advapi32 ws2_32 msvcrt kernel32)
@@ -87,4 +93,3 @@ if(NOT MSVC)
         add_target_compile_flags(mbedtls "-Wno-unused-but-set-variable")
     endif()
 endif()
-
