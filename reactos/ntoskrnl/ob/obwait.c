@@ -79,12 +79,12 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         return STATUS_INVALID_PARAMETER_3;
     }
 
-    /* Enter SEH for user mode */
+    /* Enter SEH */
     PreviousMode = ExGetPreviousMode();
-    if (PreviousMode != KernelMode)
+    _SEH2_TRY
     {
-        /* Enter SEH */
-        _SEH2_TRY
+        /* Probe for user mode */
+        if (PreviousMode != KernelMode)
         {
             /* Check if we have a timeout */
             if (TimeOut)
@@ -94,34 +94,34 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                 TimeOut = &SafeTimeOut;
             }
 
-            /* Probe all the handles */
+             /* Probe all the handles */
             ProbeForRead(HandleArray,
                          ObjectCount * sizeof(HANDLE),
                          sizeof(HANDLE));
+        }
 
-           /*
-            * Make a copy so we don't have to guard with SEH later and keep
-            * track of what objects we referenced if dereferencing pointers
-            * suddenly fails
-            */
-            RtlCopyMemory(Handles,
-                          HandleArray,
-                          ObjectCount * sizeof(HANDLE));
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Return the exception code */
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
-        }
-        _SEH2_END;
-    }
-    else
-    {
-        /* This is kernel mode, no need to wrap in SEH */
+        /*
+         * Make a copy so we don't have to guard with SEH later and keep
+         * track of what objects we referenced if dereferencing pointers
+         * suddenly fails
+         */
         RtlCopyMemory(Handles,
                       HandleArray,
                       ObjectCount * sizeof(HANDLE));
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) //ExSystemExceptionFilter()
+    {
+        /* Cover up for kernel mode */
+        if (PreviousMode == KernelMode)
+        {
+            /* But don't fail silently */
+            DbgPrint("Mon dieu! Covering up for BAD driver passing invalid pointer (0x%p)! Hon hon hon!\n", HandleArray);
+        }
+
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     /* Check if we can use the internal Wait Array */
     if (ObjectCount > THREAD_WAIT_OBJECTS)
