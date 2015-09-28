@@ -211,8 +211,8 @@ static VOID EraseMouseCursor(VOID)
 static VOID ToMouseCoordinates(PCOORD Position)
 {
     COORD Resolution = VgaGetDisplayResolution();
-    WORD Width = DriverState.MaxX - DriverState.MinX + 1;
-    WORD Height = DriverState.MaxY - DriverState.MinY + 1;
+    DWORD Width = DriverState.MaxX - DriverState.MinX + 1;
+    DWORD Height = DriverState.MaxY - DriverState.MinY + 1;
 
     if (!VgaGetDoubleVisionState(NULL, NULL))
     {
@@ -227,8 +227,8 @@ static VOID ToMouseCoordinates(PCOORD Position)
 static VOID FromMouseCoordinates(PCOORD Position)
 {
     COORD Resolution = VgaGetDisplayResolution();
-    WORD Width = DriverState.MaxX - DriverState.MinX + 1;
-    WORD Height = DriverState.MaxY - DriverState.MinY + 1;
+    DWORD Width = DriverState.MaxX - DriverState.MinX + 1;
+    DWORD Height = DriverState.MaxY - DriverState.MinY + 1;
 
     if (!VgaGetDoubleVisionState(NULL, NULL))
     {
