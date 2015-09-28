@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
- * FILE:            tools/mkhive/reginf.h
+ * FILE:            tools/mkhive/reginf.c
  * PURPOSE:         Inf file import code
  * PROGRAMMER:      Eric Kohl
  *                  Hervé Poussineau

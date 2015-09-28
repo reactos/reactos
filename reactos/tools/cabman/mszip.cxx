@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS cabinet manager
- * FILE:        tools/cabman/mszip.cpp
+ * FILE:        tools/cabman/mszip.cxx
  * PURPOSE:     CAB codec for MSZIP compressed data
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Colin Finck <mail@colinfinck.de>
