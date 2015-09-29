@@ -287,7 +287,19 @@ START_TEST(RtlMemory)
     KeRaiseIrql(HIGH_LEVEL, &Irql);
 
     /* RtlEqualMemory */
-    /* TODO: where is memcmp? */
+    MakePattern(Buffer, 8, HalfSize / 8 - 1, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0,
+                        1, 1,                0x12,
+                        8, HalfSize / 8,     0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0,
+                        1, 7,                0x12, 0);
+                        
+    ok_bool_true(RtlEqualMemory((PVOID)1, (PVOID)2, 0),
+                 "RtlEqualMemory returned");
+    ok_bool_true(RtlEqualMemory(Buffer, Buffer + HalfSize - 7, HalfSize - 8),
+                 "RtlEqualMemory returned");
+    ok_bool_true(RtlEqualMemory(Buffer, Buffer + HalfSize - 7, HalfSize - 8 + 1),
+                 "RtlEqualMemory returned");
+    ok_bool_false(RtlEqualMemory(Buffer, Buffer + HalfSize - 7, HalfSize - 8 + 2),
+                  "RtlEqualMemory returned");
 
     /* RtlCompareMemory */
     MakePattern(Buffer, 8, HalfSize / 8 - 1, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0,
