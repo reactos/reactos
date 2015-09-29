@@ -1480,17 +1480,6 @@ extern struct _LOADER_PARAMETER_BLOCK NTSYSAPI *KeLoaderBlock;
 //
 // Exported Hardware Data
 //
-extern KAFFINITY NTSYSAPI KeActiveProcessors;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-extern volatile CCHAR NTSYSAPI KeNumberProcessors;
-#else
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-extern CCHAR NTSYSAPI KeNumberProcessors;
-#else
-//extern PCCHAR KeNumberProcessors;
-extern NTSYSAPI CCHAR KeNumberProcessors; //FIXME: Note to Alex: I won't fix this atm, since I prefer to discuss this with you first.
-#endif
-#endif
 extern ULONG NTSYSAPI KiDmaIoCoherency;
 extern ULONG NTSYSAPI KeMaximumIncrement;
 extern ULONG NTSYSAPI KeMinimumIncrement;

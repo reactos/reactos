@@ -385,7 +385,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeLoaderBlock = LoaderBlock;
 
     /* Get the current CPU number */
-    Cpu = (CCHAR)KeNumberProcessors++; // FIXME
+    Cpu = KeNumberProcessors++; // FIXME
 
     /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)

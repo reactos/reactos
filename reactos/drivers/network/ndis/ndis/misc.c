@@ -324,7 +324,7 @@ EXPORT
 NdisSystemProcessorCount(
     VOID)
 {
-	return (CCHAR)KeNumberProcessors;
+	return KeNumberProcessors;
 }
 
 

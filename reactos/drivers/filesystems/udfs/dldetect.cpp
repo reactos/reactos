@@ -50,7 +50,7 @@ THREAD_REC_BLOCK DLDThreadAcquireChain[DLD_MAX_REC_LEVEL];
 /// Initialize deadlock detector
 VOID DLDInit(ULONG MaxThrdCount /// Maximum supported number of threads
 ) {
-    if (*KeNumberProcessors>1) {
+    if (KeNumberProcessors>1) {
         KdPrint(("Deadlock Detector is designed for uniprocessor machines only!\n"));
         BrutePoint();
     }

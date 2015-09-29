@@ -88,11 +88,6 @@
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
 
-//
-// Define the internal versions of external and public global data
-//
-#define KeNumberProcessors              _KeNumberProcessors
-extern UCHAR _KeNumberProcessors;
 #define ExRaiseStatus RtlRaiseStatus
 
 //
