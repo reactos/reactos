@@ -49,7 +49,7 @@ FsRtlCheckOplock(IN POPLOCK Oplock,
                  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL)
 {
     /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -72,13 +72,13 @@ NTAPI
 FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
 {
     /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNIMPLEMENTED;
     return FALSE;
 }
 
 /*++
  * @name FsRtlInitializeOplock
- * @unimplemented
+ * @implemented
  *
  * FILLME
  *
@@ -94,7 +94,7 @@ VOID
 NTAPI
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
 {
-    UNIMPLEMENTED;
+    PAGED_CODE();
 }
 
 /*++
@@ -124,7 +124,7 @@ FsRtlOplockFsctrl(IN POPLOCK Oplock,
                   IN ULONG OpenCount)
 {
     /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
