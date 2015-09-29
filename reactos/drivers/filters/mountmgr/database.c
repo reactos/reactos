@@ -1714,7 +1714,7 @@ CreateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
 
     Status = IoCreateFile(&Database,
                           SYNCHRONIZE | READ_CONTROL | FILE_WRITE_ATTRIBUTES |
-                          FILE_READ_ATTRIBUTES | FILE_WRITE_PROPERTIES | FILE_READ_PROPERTIES |
+                          FILE_READ_ATTRIBUTES | FILE_WRITE_EA | FILE_READ_EA |
                           FILE_APPEND_DATA | FILE_WRITE_DATA | FILE_READ_DATA,
                           &ObjectAttributes,
                           &IoStatusBlock,
@@ -1852,7 +1852,7 @@ OpenRemoteDatabase(IN PDEVICE_INFORMATION DeviceInformation,
 
     Status = IoCreateFile(&Database,
                           SYNCHRONIZE | READ_CONTROL | FILE_WRITE_ATTRIBUTES |
-                          FILE_READ_ATTRIBUTES | FILE_WRITE_PROPERTIES | FILE_READ_PROPERTIES |
+                          FILE_READ_ATTRIBUTES | FILE_WRITE_EA | FILE_READ_EA |
                           FILE_APPEND_DATA | FILE_WRITE_DATA | FILE_READ_DATA,
                           &ObjectAttributes,
                           &IoStatusBlock,

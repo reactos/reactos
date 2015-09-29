@@ -15,11 +15,6 @@
 #define INIT_SECTION /* Done via alloc_text for MSC */
 #endif
 
-/* Enter FIXME */
-#define FILE_READ_PROPERTIES  0x00000008
-#define FILE_WRITE_PROPERTIES 0x00000010
-/* Leave FIXME */
-
 typedef struct _DEVICE_EXTENSION
 {
     PDEVICE_OBJECT DeviceObject;           // 0x0
