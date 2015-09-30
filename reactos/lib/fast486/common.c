@@ -313,7 +313,13 @@ Fast486InterruptInternal(PFAST486_STATE State,
         if (IdtEntry->Type == FAST486_TASK_GATE_SIGNATURE)
         {
             /* Task call */
-            return Fast486TaskSwitch(State, FAST486_TASK_CALL, IdtEntry->Selector);
+            if (!Fast486TaskSwitch(State, FAST486_TASK_CALL, IdtEntry->Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            goto Finish;
         }
 
         /* Check if the interrupt handler is more privileged or if we're in V86 mode */
@@ -428,7 +434,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
         }
 
         /* Clear NT */
-       State->Flags.Nt = FALSE;
+        State->Flags.Nt = FALSE;
 
         if (OldVm)
         {
@@ -496,6 +502,8 @@ Fast486InterruptInternal(PFAST486_STATE State,
 
     /* Push the instruction pointer */
     if (!Fast486StackPushInternal(State, GateSize, OldEip)) return FALSE;
+
+Finish:
 
     if (PushErrorCode)
     {
@@ -908,15 +916,45 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         State->GeneralRegs[FAST486_REG_ECX].Long = NewTss.Ecx;
         State->GeneralRegs[FAST486_REG_EDX].Long = NewTss.Edx;
         State->GeneralRegs[FAST486_REG_EBX].Long = NewTss.Ebx;
-        State->GeneralRegs[FAST486_REG_ESP].Long = NewTss.Esp;
         State->GeneralRegs[FAST486_REG_EBP].Long = NewTss.Ebp;
         State->GeneralRegs[FAST486_REG_ESI].Long = NewTss.Esi;
         State->GeneralRegs[FAST486_REG_EDI].Long = NewTss.Edi;
         NewEs = NewTss.Es;
         NewCs = NewTss.Cs;
-        NewSs = NewTss.Ss;
         NewDs = NewTss.Ds;
         NewLdtr = NewTss.Ldtr;
+
+        if (Type == FAST486_TASK_CALL && State->Cpl < 3)
+        {
+            switch (State->Cpl)
+            {
+                case 0:
+                {
+                    State->GeneralRegs[FAST486_REG_ESP].Long = NewTss.Esp0;
+                    NewSs = NewTss.Ss0;
+                    break;
+                }
+
+                case 1:
+                {
+                    State->GeneralRegs[FAST486_REG_ESP].Long = NewTss.Esp1;
+                    NewSs = NewTss.Ss1;
+                    break;
+                }
+
+                case 2:
+                {
+                    State->GeneralRegs[FAST486_REG_ESP].Long = NewTss.Esp2;
+                    NewSs = NewTss.Ss2;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            State->GeneralRegs[FAST486_REG_ESP].Long = NewTss.Esp;
+            NewSs = NewTss.Ss;
+        }
     }
     else
     {
@@ -926,15 +964,45 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         State->GeneralRegs[FAST486_REG_ECX].LowWord = NewLegacyTss->Cx;
         State->GeneralRegs[FAST486_REG_EDX].LowWord = NewLegacyTss->Dx;
         State->GeneralRegs[FAST486_REG_EBX].LowWord = NewLegacyTss->Bx;
-        State->GeneralRegs[FAST486_REG_ESP].LowWord = NewLegacyTss->Sp;
         State->GeneralRegs[FAST486_REG_EBP].LowWord = NewLegacyTss->Bp;
         State->GeneralRegs[FAST486_REG_ESI].LowWord = NewLegacyTss->Si;
         State->GeneralRegs[FAST486_REG_EDI].LowWord = NewLegacyTss->Di;
         NewEs = NewLegacyTss->Es;
         NewCs = NewLegacyTss->Cs;
-        NewSs = NewLegacyTss->Ss;
         NewDs = NewLegacyTss->Ds;
         NewLdtr = NewLegacyTss->Ldtr;
+
+        if (Type == FAST486_TASK_CALL && State->Cpl < 3)
+        {
+            switch (State->Cpl)
+            {
+                case 0:
+                {
+                    State->GeneralRegs[FAST486_REG_ESP].Long = NewLegacyTss->Sp0;
+                    NewSs = NewLegacyTss->Ss0;
+                    break;
+                }
+
+                case 1:
+                {
+                    State->GeneralRegs[FAST486_REG_ESP].Long = NewLegacyTss->Sp1;
+                    NewSs = NewLegacyTss->Ss1;
+                    break;
+                }
+
+                case 2:
+                {
+                    State->GeneralRegs[FAST486_REG_ESP].Long = NewLegacyTss->Sp2;
+                    NewSs = NewLegacyTss->Ss2;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            State->GeneralRegs[FAST486_REG_ESP].Long = NewLegacyTss->Sp;
+            NewSs = NewLegacyTss->Ss;
+        }
     }
 
     /* Set the NT flag if nesting */
