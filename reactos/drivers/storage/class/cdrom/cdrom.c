@@ -4727,12 +4727,48 @@ RetryControl:
         return STATUS_PENDING;
     }
 
+    case IOCTL_DISK_GET_DRIVE_GEOMETRY:
     case IOCTL_CDROM_GET_DRIVE_GEOMETRY: {
 
         DebugPrint((2,"CdRomDeviceControl: Get drive geometry\n"));
 
         if ( irpStack->Parameters.DeviceIoControl.OutputBufferLength <
             sizeof( DISK_GEOMETRY ) ) {
+
+            status = STATUS_INFO_LENGTH_MISMATCH;
+            break;
+        }
+
+        IoMarkIrpPending(Irp);
+        IoStartPacket(DeviceObject,Irp, NULL,NULL);
+
+        return STATUS_PENDING;
+    }
+
+    case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX:
+    case IOCTL_CDROM_GET_DRIVE_GEOMETRY_EX: {
+
+        DebugPrint((2,"CdRomDeviceControl: Get drive geometry ex\n"));
+
+        if ( irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof( DISK_GEOMETRY_EX ) ) {
+
+            status = STATUS_INFO_LENGTH_MISMATCH;
+            break;
+        }
+
+        IoMarkIrpPending(Irp);
+        IoStartPacket(DeviceObject,Irp, NULL,NULL);
+
+        return STATUS_PENDING;
+    }
+
+    case IOCTL_DISK_GET_LENGTH_INFO: {
+
+        DebugPrint((2,"CdRomDeviceControl: Get length info\n"));
+
+        if ( irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof( GET_LENGTH_INFORMATION ) ) {
 
             status = STATUS_INFO_LENGTH_MISMATCH;
             break;
