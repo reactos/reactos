@@ -423,7 +423,7 @@ VOID MountFloppy(IN ULONG DiskNumber)
     ofn.lpstrTitle   = "Select a virtual floppy image";
     ofn.Flags        = OFN_EXPLORER | OFN_ENABLESIZING | OFN_LONGNAMES | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 //  ofn.FlagsEx      = OFN_EX_NOPLACESBAR;
-    ofn.lpstrFilter  = "Virtual floppy images (*.vfd;*.img;*.ima;*.dsk)\0*.vfd\0All files (*.*)\0*.*\0";
+    ofn.lpstrFilter  = "Virtual floppy images (*.vfd;*.img;*.ima;*.dsk)\0*.vfd;*.img;*.ima;*.dsk\0All files (*.*)\0*.*\0\0";
     ofn.lpstrDefExt  = "vfd";
     ofn.nFilterIndex = 0;
     ofn.lpstrFile    = szFile;
