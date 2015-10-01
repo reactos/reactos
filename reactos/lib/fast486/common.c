@@ -628,8 +628,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     PFAST486_LEGACY_TSS NewLegacyTss = (PFAST486_LEGACY_TSS)&NewTss;
     USHORT NewLdtr, NewEs, NewCs, NewSs, NewDs;
 
-    if (State->TaskReg.Limit < (sizeof(FAST486_TSS) - 1)
-        && State->TaskReg.Limit != (sizeof(FAST486_LEGACY_TSS) - 1))
+    if ((State->TaskReg.Modern && State->TaskReg.Limit < (sizeof(FAST486_TSS) - 1))
+        || (!State->TaskReg.Modern && State->TaskReg.Limit < (sizeof(FAST486_LEGACY_TSS) - 1)))
     {
         /* Invalid task register limit */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, State->TaskReg.Selector);
@@ -882,6 +882,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     State->TaskReg.Selector = Selector;
     State->TaskReg.Base = NewTssAddress;
     State->TaskReg.Limit = NewTssLimit;
+    State->TaskReg.Modern = (NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE);
 
     if (NewTssDescriptor.Signature == FAST486_BUSY_TSS_SIGNATURE)
     {

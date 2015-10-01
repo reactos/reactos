@@ -790,6 +790,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInByte)
         Port = State->GeneralRegs[FAST486_REG_EDX].LowWord;
     }
 
+    if (!Fast486IoPrivilegeCheck(State, Port)) return;
+
     /* Read a byte from the I/O port */
     State->IoReadCallback(State, Port, &Data, 1, sizeof(UCHAR));
 
@@ -827,6 +829,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIn)
         /* The port number is in DX */
         Port = State->GeneralRegs[FAST486_REG_EDX].LowWord;
     }
+
+    if (!Fast486IoPrivilegeCheck(State, Port)) return;
 
     if (Size)
     {
@@ -876,6 +880,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOutByte)
         Port = State->GeneralRegs[FAST486_REG_EDX].LowWord;
     }
 
+    if (!Fast486IoPrivilegeCheck(State, Port)) return;
+
     /* Read the value from AL */
     Data = State->GeneralRegs[FAST486_REG_EAX].LowByte;
 
@@ -913,6 +919,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
         /* The port number is in DX */
         Port = State->GeneralRegs[FAST486_REG_EDX].LowWord;
     }
+
+    if (!Fast486IoPrivilegeCheck(State, Port)) return;
 
     if (Size)
     {
@@ -5836,6 +5844,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
     TOGGLE_OPSIZE(OperandSize);
     TOGGLE_ADSIZE(AddressSize);
 
+    if (!Fast486IoPrivilegeCheck(State, State->GeneralRegs[FAST486_REG_EDX].LowWord)) return;
+
     /* Calculate the size */
     if (Opcode == 0x6C) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
@@ -5973,6 +5983,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
 
     TOGGLE_OPSIZE(OperandSize);
     TOGGLE_ADSIZE(AddressSize);
+
+    if (!Fast486IoPrivilegeCheck(State, State->GeneralRegs[FAST486_REG_EDX].LowWord)) return;
 
     /* Calculate the size */
     if (Opcode == 0x6E) DataSize = sizeof(UCHAR);

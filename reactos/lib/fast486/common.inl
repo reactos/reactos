@@ -1599,6 +1599,54 @@ Fast486WriteModrmDwordOperands(PFAST486_STATE State,
     return TRUE;
 }
 
+FORCEINLINE
+BOOLEAN
+FASTCALL
+Fast486IoPrivilegeCheck(PFAST486_STATE State, USHORT Port)
+{
+    UCHAR Bits;
+    ULONG Location;
+    FAST486_TSS Tss;
+
+    /* Access is always allowed if the CPL is less than or equal to the IOPL */
+    if (State->Cpl <= State->Flags.Iopl) return TRUE;
+
+    /* Legacy Task State Segments have no IOPB */
+    if (!State->TaskReg.Modern) return FALSE;
+
+    /* Read the TSS */
+    if (!Fast486ReadLinearMemory(State, State->TaskReg.Base, &Tss, sizeof(FAST486_TSS), FALSE))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    Location = State->TaskReg.Base + HIWORD(Tss.IopbOffset) + (Port >> 3);
+
+    if (Location > State->TaskReg.Limit)
+    {
+        /* Access denied */
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    /* Read the appropriate bit from the TSS IOPB */
+    if (!Fast486ReadLinearMemory(State, Location, &Bits, sizeof(UCHAR), FALSE))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (Bits & (1 << (Port & 0x07)))
+    {
+        /* Access denied */
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 #ifndef FAST486_NO_FPU
 
 FORCEINLINE
