@@ -20,6 +20,7 @@
 #include "cpu/cpu.h" // for EMULATOR_FLAG_CF
 #include "cpu/bop.h"
 #include "int32.h"
+#include <isvbop.h>
 
 #include <bios/bios.h>
 #include <bios/rom.h>
@@ -155,7 +156,8 @@ static const BYTE PostCode[] =
 {
     LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_RESET,  // Call BIOS POST
     0xCD, BIOS_BOOTSTRAP_LOADER,                            // INT 0x19
-//  LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_UNSIMULATE
+    0xCD, BIOS_ROM_BASIC,                                   // INT 0x18
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_UNSIMULATE
 };
 
 

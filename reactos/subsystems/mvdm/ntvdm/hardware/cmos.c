@@ -483,6 +483,9 @@ VOID CmosInitialize(VOID)
     CmosMemory.ShutdownStatus = 0x00;
     CmosMemory.EquipmentList  = CMOS_EQUIPMENT_LIST;
 
+    // HACK: For the moment, set the boot sequence to:  1-Floppy, 2-Hard Disk .
+    CmosMemory.Regs[CMOS_REG_SYSOP] |= (1 << 5);
+
     /* Memory settings */
 
     /*
