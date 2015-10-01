@@ -6,6 +6,7 @@
  *              Copyright 2004 Mike McCormack (for CodeWeavers)
  *              Copyright 2005 Ge van Geldorp (gvg@reactos.org)
  *              Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
 /*
  * Based on Wine dlls/shdocvw/shdocvw_main.c
@@ -37,6 +38,7 @@ typedef struct _IBindStatusCallbackImpl
     LONG ref;
     HWND hDialog;
     BOOL *pbCancelled;
+    BOOL UrlHasBeenCopied;
 } IBindStatusCallbackImpl;
 
 static
@@ -111,7 +113,6 @@ dlOnProgress(IBindStatusCallback* iface,
     IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
     HWND Item;
     LONG r;
-    WCHAR OldText[100];
 
     Item = GetDlgItem(This->hDialog, IDC_DOWNLOAD_PROGRESS);
     if (Item && ulProgressMax)
@@ -120,13 +121,29 @@ dlOnProgress(IBindStatusCallback* iface,
     }
 
     Item = GetDlgItem(This->hDialog, IDC_DOWNLOAD_STATUS);
-    if (Item && szStatusText)
+    if (Item && szStatusText && wcslen(szStatusText) > 0 && This->UrlHasBeenCopied == FALSE)
     {
-        SendMessageW(Item, WM_GETTEXT, sizeof(OldText) / sizeof(OldText[0]), (LPARAM) OldText);
-        if (sizeof(OldText) / sizeof(OldText[0]) - 1 <= wcslen(OldText) || 0 != wcscmp(OldText, szStatusText))
+        DWORD len = wcslen(szStatusText) * sizeof(WCHAR);
+        PWSTR buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+
+        if (buf)
         {
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) szStatusText);
+            /* beautify our url for display purposes */
+            InternetCanonicalizeUrl(szStatusText, buf, &len, ICU_DECODE | ICU_NO_ENCODE);
+
+            /* paste it into our dialog, free the temp buffer
+               and don't do it again in this instance */
+            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)buf);
+            HeapFree(GetProcessHeap(), 0, buf);
         }
+        else
+        {
+            /* our computer is old and rusty and does not have enough ram for this,
+               use the ugly version and call it a day */
+            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)szStatusText);
+        }
+
+        This->UrlHasBeenCopied = TRUE;
     }
 
     SetLastError(0);
