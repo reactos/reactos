@@ -161,6 +161,31 @@ static const BYTE PostCode[] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static VOID BiosCharPrint(CHAR Character)
+{
+    /* Save AX and BX */
+    USHORT AX = getAX();
+    USHORT BX = getBX();
+
+    /*
+     * Set the parameters:
+     * AL contains the character to print,
+     * BL contains the character attribute,
+     * BH contains the video page to use.
+     */
+    setAL(Character);
+    setBL(DEFAULT_ATTRIBUTE);
+    setBH(Bda->VideoPage);
+
+    /* Call the BIOS INT 10h, AH=0Eh "Teletype Output" */
+    setAH(0x0E);
+    Int32Call(&BiosContext, BIOS_VIDEO_INTERRUPT);
+
+    /* Restore AX and BX */
+    setBX(BX);
+    setAX(AX);
+}
+
 static VOID WINAPI BiosException(LPWORD Stack)
 {
     /* Get the exception number and call the emulator API */
@@ -505,6 +530,8 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
 
 static VOID WINAPI BiosRomBasic(LPWORD Stack)
 {
+    PrintMessageAnsi(BiosCharPrint, "FATAL: INT18: BOOT FAILURE.");
+
     /* ROM Basic is unsupported, display a message to the user */
     DisplayMessage(L"NTVDM doesn't support ROM Basic. The VDM is closing.");
 
@@ -518,79 +545,110 @@ extern VOID WINAPI BiosDiskService(LPWORD Stack);
 
 static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
 {
+    USHORT BootOrder;
+
+    USHORT AX, BX, CX, DX, ES;
+    AX = getAX();
+    BX = getBX();
+    CX = getCX();
+    DX = getDX();
+    ES = getES();
+
     /*
-     * In real BIOSes one loads the bootsector read from a diskette
-     * or from a disk, copy it to 0000:7C00 and then boot it.
-     * Since we are 32-bit VM and we hardcode our DOS at the moment,
-     * just call the DOS 32-bit initialization code.
+     * Read the boot sequence order from the CMOS, old behaviour AMI-style.
+     * 
+     * For more information, see:
+     * http://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/BIOS/orgs.asm
+     * http://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/BIOS/boot.c
+     * http://bochs.sourceforge.net/cgi-bin/lxr/source/iodev/cmos.cc
+     * https://web.archive.org/web/20111209041013/http://www-ivs.cs.uni-magdeburg.de/~zbrog/asm/cmos.html
+     * http://www.bioscentral.com/misc/cmosmap.htm
+     */
+    IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_SYSOP);
+    BootOrder = (IOReadB(CMOS_DATA_PORT) & 0x20) >> 5;
+
+    /*
+     * BootOrder =
+     * 0: Hard Disk, then Floppy Disk
+     * 1: Floppy Disk, then Hard Disk
+     * In all cases, if booting from those devices failed,
+     * ROM DOS-32 is started. If it fails, INT 18h is called.
      */
 
-    DPRINT("BiosBootstrapLoader -->\n");
+    DPRINT("BiosBootstrapLoader (BootOrder = 0x%02X) -->\n", BootOrder);
 
+    /*
+     * Format of the BootOrder command:
+     * 2 bytes. Each half-byte contains the ID of the drive to boot.
+     * Currently defined:
+     * 0x0: 1st Floppy disk
+     * 0x1: 1st Hard disk
+     * Other, or 0xF: Stop boot sequence.
+     */
+    BootOrder = 0xFF00 | ((1 << (4 * BootOrder)) & 0xFF);
+
+Retry:
+    switch (BootOrder & 0x0F)
     {
-        USHORT i;
-
-        USHORT AX, BX, CX, DX, ES;
-        AX = getAX();
-        BX = getBX();
-        CX = getCX();
-        DX = getDX();
-        ES = getES();
-
-        // i = 0;
-        i = 1;
-        do
+        /* Boot from 1st floppy drive */
+        case 0:
         {
-            if (i == 0)
-            {
-                /* Boot from 1st floppy drive */
+            setAH(0x02); // Read sectors
+            setAL(0x01); // Number of sectors
+            setDH(0x00); // Head 0
+            setCH(0x00); // Cylinder 0
+            setCL(0x01); // Sector 1
+            setDL(0x00); // First diskette drive (used by loader code, so should not be cleared)
+            setES(0x0000);  // Write data in 0000:7C00
+            setBX(0x7C00);
+            BiosDiskService(Stack);
+            if (!(Stack[STACK_FLAGS] & EMULATOR_FLAG_CF)) goto Quit;
+            DPRINT1("An error happened while loading the bootsector from floppy 0, error = %d\n", getAH());
 
-                setAH(0x02); // Read sectors
-                setAL(0x01); // Number of sectors
-                setDH(0x00); // First head
-                setCH(0x00); // First cylinder
-                setCL(0x01); // First sector
-                setDL(0x00); // First diskette drive (used by loader code, so should not be cleared)
-                setES(0x0000);  // Place data in 0000:7C00
-                setBX(0x7C00);
-                BiosDiskService(Stack);
-                if (!(Stack[STACK_FLAGS] & EMULATOR_FLAG_CF)) goto Quit;
-                DPRINT1("An error happened while loading the bootsector from floppy 0, error = %d\n", getAH());
-            }
-            else if (i == 1)
-            {
-                /* Boot from 1st HDD drive */
+            break;
+        }
 
-                setAH(0x02); // Read sectors
-                setAL(0x01); // Number of sectors
-                setDH(0x00); // First head
-                setCH(0x00); // First cylinder
-                setCL(0x01); // First sector
-                setDL(0x80); // First HDD drive (used by loader code, so should not be cleared)
-                setES(0x0000);  // Place data in 0000:7C00
-                setBX(0x7C00);
-                BiosDiskService(Stack);
-                if (!(Stack[STACK_FLAGS] & EMULATOR_FLAG_CF)) goto Quit;
-                DPRINT1("An error happened while loading the bootsector from HDD 0, error = %d\n", getAH());
-            }
-        // } while (i++ < 1);
-        } while (i-- > 0);
+        /* Boot from 1st HDD drive */
+        case 1:
+        {
+            setAH(0x02); // Read sectors
+            setAL(0x01); // Number of sectors
+            setDH(0x00); // Head 0
+            setCH(0x00); // Cylinder 0
+            setCL(0x01); // Sector 1
+            setDL(0x80); // First HDD drive (used by loader code, so should not be cleared)
+            setES(0x0000);  // Write data in 0000:7C00
+            setBX(0x7C00);
+            BiosDiskService(Stack);
+            if (!(Stack[STACK_FLAGS] & EMULATOR_FLAG_CF)) goto Quit;
+            DPRINT1("An error happened while loading the bootsector from HDD 0, error = %d\n", getAH());
 
-        /* Clear everything, we are going to load DOS32 */
-        setAX(AX);
-        setBX(BX);
-        setCX(CX);
-        setDX(DX);
-        setES(ES);
-        Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            break;
+        }
+
+        default:
+            goto StartDos;
     }
+
+    /* Go to next drive and invalidate the last half-byte. */
+    BootOrder = (BootOrder >> 4) | 0xF000;
+    goto Retry;
+
+StartDos:
+    /* Clear everything, we are going to load DOS32 */
+    setAX(AX);
+    setBX(BX);
+    setCX(CX);
+    setDX(DX);
+    setES(ES);
+    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
     /* Load our DOS */
     DosBootsectorInitialize();
 
 Quit:
     /*
-     * Position CPU to 0000:7C00 to boot the OS.
+     * Jump to 0000:7C00 to boot the OS.
      *
      * Since we are called via the INT32 mechanism, we need to correctly set
      * CS:IP, not by changing the current one (otherwise the interrupt could

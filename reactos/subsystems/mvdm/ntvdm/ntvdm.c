@@ -562,9 +562,9 @@ DisplayMessage(IN LPCWSTR Format, ...)
     WCHAR  Buffer[2048]; // Large enough. If not, increase it by hand.
 #endif
     size_t MsgLen;
-    va_list Parameters;
+    va_list args;
 
-    va_start(Parameters, Format);
+    va_start(args, Format);
 
 #ifndef WIN2K_COMPLIANT
     /*
@@ -572,7 +572,7 @@ DisplayMessage(IN LPCWSTR Format, ...)
      * an auxiliary buffer; otherwise use the static buffer.
      * The string is built to be NULL-terminated.
      */
-    MsgLen = _vscwprintf(Format, Parameters);
+    MsgLen = _vscwprintf(Format, args);
     if (MsgLen >= ARRAYSIZE(StaticBuffer))
     {
         Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, (MsgLen + 1) * sizeof(WCHAR));
@@ -589,13 +589,83 @@ DisplayMessage(IN LPCWSTR Format, ...)
 #endif
 
     RtlZeroMemory(Buffer, (MsgLen + 1) * sizeof(WCHAR));
-    _vsnwprintf(Buffer, MsgLen, Format, Parameters);
+    _vsnwprintf(Buffer, MsgLen, Format, args);
 
-    va_end(Parameters);
+    va_end(args);
 
     /* Display the message */
     DPRINT1("\n\nNTVDM Subsystem\n%S\n\n", Buffer);
     MessageBoxW(hConsoleWnd, Buffer, L"NTVDM Subsystem", MB_OK);
+
+#ifndef WIN2K_COMPLIANT
+    /* Free the buffer if needed */
+    if (Buffer != StaticBuffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+#endif
+}
+
+/*
+ * This function, derived from DisplayMessage, is used by the BIOS and
+ * the DOS to display messages to an output device. A printer function
+ * is given for printing the characters.
+ */
+VOID
+PrintMessageAnsi(IN CHAR_PRINT CharPrint,
+                 IN LPCSTR Format, ...)
+{
+    static CHAR CurChar = 0;
+    LPSTR str;
+
+#ifndef WIN2K_COMPLIANT
+    CHAR  StaticBuffer[256];
+    LPSTR Buffer = StaticBuffer; // Use the static buffer by default.
+#else
+    CHAR  Buffer[2048]; // Large enough. If not, increase it by hand.
+#endif
+    size_t MsgLen;
+    va_list args;
+
+    va_start(args, Format);
+
+#ifndef WIN2K_COMPLIANT
+    /*
+     * Retrieve the message length and if it is too long, allocate
+     * an auxiliary buffer; otherwise use the static buffer.
+     * The string is built to be NULL-terminated.
+     */
+    MsgLen = _vscprintf(Format, args);
+    if (MsgLen >= ARRAYSIZE(StaticBuffer))
+    {
+        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, (MsgLen + 1) * sizeof(CHAR));
+        if (Buffer == NULL)
+        {
+            /* Allocation failed, use the static buffer and display a suitable error message */
+            Buffer = StaticBuffer;
+            Format = "DisplayMessageAnsi()\nOriginal message is too long and allocating an auxiliary buffer failed.";
+            MsgLen = strlen(Format);
+        }
+    }
+#else
+    MsgLen = ARRAYSIZE(Buffer) - 1;
+#endif
+
+    RtlZeroMemory(Buffer, (MsgLen + 1) * sizeof(CHAR));
+    _vsnprintf(Buffer, MsgLen, Format, args);
+
+    va_end(args);
+
+    /* Display the message */
+    // DPRINT1("\n\nNTVDM DOS32\n%s\n\n", Buffer);
+
+    MsgLen = strlen(Buffer);
+    str = Buffer;
+    while (MsgLen--)
+    {
+        if (*str == '\n' && CurChar != '\r')
+            CharPrint('\r');
+
+        CurChar = *str++;
+        CharPrint(CurChar);
+    }
 
 #ifndef WIN2K_COMPLIANT
     /* Free the buffer if needed */
@@ -877,7 +947,7 @@ wmain(INT argc, WCHAR *argv[])
     }
 #endif
 
-    /* Load global VDM settings */
+    /* Load the global VDM settings */
     LoadGlobalSettings(&GlobalSettings);
 
     DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");

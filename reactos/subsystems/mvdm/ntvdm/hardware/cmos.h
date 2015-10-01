@@ -70,6 +70,7 @@ typedef enum _CMOS_REGISTERS
     CMOS_REG_BASE_MEMORY_HIGH       = 0x16,
     CMOS_REG_EXT_MEMORY_LOW         = 0x17,
     CMOS_REG_EXT_MEMORY_HIGH        = 0x18,
+    CMOS_REG_SYSOP                  = 0x2D,
     CMOS_REG_ACTUAL_EXT_MEMORY_LOW  = 0x30,
     CMOS_REG_ACTUAL_EXT_MEMORY_HIGH = 0x31,
     CMOS_REG_CENTURY                = 0x32,

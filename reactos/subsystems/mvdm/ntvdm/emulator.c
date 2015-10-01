@@ -564,14 +564,22 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         }
     }
 
-    /* Mount the available hard disks */
+    /*
+     * Mount the available hard disks. Contrary to floppies, failing
+     * mounting a hard disk is considered as an unrecoverable error.
+     */
     for (i = 0; i < ARRAYSIZE(GlobalSettings.HardDisks); ++i)
     {
         if (GlobalSettings.HardDisks[i].Length != 0 &&
             GlobalSettings.HardDisks[i].Buffer      &&
             GlobalSettings.HardDisks[i].Buffer != '\0')
         {
-            MountDisk(HARD_DISK, i, GlobalSettings.HardDisks[i].Buffer, FALSE);
+            if (!MountDisk(HARD_DISK, i, GlobalSettings.HardDisks[i].Buffer, FALSE))
+            {
+                wprintf(L"FATAL: Failed to mount hard disk file '%Z'.\n", &GlobalSettings);
+                EmulatorCleanup();
+                return FALSE;
+            }
         }
     }
 

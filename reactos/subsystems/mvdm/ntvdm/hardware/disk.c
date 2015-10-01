@@ -199,7 +199,7 @@ MountFDI(IN PDISK_IMAGE DiskImage,
     if (FileSize == INVALID_FILE_SIZE && GetLastError() != ERROR_SUCCESS)
     {
         /* We failed, bail out */
-        DisplayMessage(L"Error when retrieving file size, or size too large (%d).", FileSize);
+        DisplayMessage(L"MountFDI: Error when retrieving file size, or size too large (%d).", FileSize);
         return FALSE;
     }
 
@@ -547,7 +547,11 @@ MountDisk(IN DISK_TYPE DiskType,
             FileName, hFile != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
 
     /* If we failed, bail out */
-    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        DisplayMessage(L"MountDisk: Error when opening disk file '%S' (Error: %u).", FileName, GetLastError());
+        return FALSE;
+    }
 
     /* OK, we have a handle to the file */
 
@@ -563,7 +567,7 @@ MountDisk(IN DISK_TYPE DiskType,
         GetLastError() == ERROR_INVALID_FUNCTION)
     {
         /* Objects other than real files are not supported */
-        DisplayMessage(L"'%S' is not a valid disk file.", FileName);
+        DisplayMessage(L"MountDisk: '%S' is not a valid disk file.", FileName);
         goto Quit;
     }
     SetLastError(0);
@@ -571,7 +575,7 @@ MountDisk(IN DISK_TYPE DiskType,
         GetLastError() == ERROR_INVALID_FUNCTION)
     {
         /* Objects other than real files are not supported */
-        DisplayMessage(L"'%S' is not a valid disk file.", FileName);
+        DisplayMessage(L"MountDisk: '%S' is not a valid disk file.", FileName);
         goto Quit;
     }
 

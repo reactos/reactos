@@ -94,7 +94,10 @@ extern HWND hConsoleWnd;
 /*
  * Interface functions
  */
+typedef VOID (*CHAR_PRINT)(IN CHAR Character);
 VOID DisplayMessage(IN LPCWSTR Format, ...);
+VOID PrintMessageAnsi(IN CHAR_PRINT CharPrint,
+                      IN LPCSTR Format, ...);
 
 /*static*/ VOID
 CreateVdmMenu(HANDLE ConOutHandle);
