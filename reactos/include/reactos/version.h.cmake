@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
- * FILE:        include/internal/version.h
+ * FILE:        include/reactos/version.h.cmake
  * PURPOSE:     Defines the current version
  * PROGRAMMER:  David Welch (welch@mcmail.com)
  * REVISIONS:

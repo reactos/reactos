@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            include/lsass/lsass.h
+ * FILE:            include/reactos/subsys/lsass/lsass.h
  * PURPOSE:         LSASS API declarations
  * UPDATE HISTORY:
  *                  Created 05/08/00
