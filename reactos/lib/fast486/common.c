@@ -42,6 +42,8 @@ Fast486ReadMemory(PFAST486_STATE State,
 {
     ULONG LinearAddress;
     PFAST486_SEG_REG CachedDescriptor;
+    FAST486_EXCEPTIONS Exception = SegmentReg != FAST486_REG_SS
+                                   ? FAST486_EXCEPTION_GP : FAST486_EXCEPTION_SS;
 
     ASSERT(SegmentReg < FAST486_NUM_SEG_REGS);
 
@@ -53,7 +55,7 @@ Fast486ReadMemory(PFAST486_STATE State,
         if ((Offset + Size - 1) > CachedDescriptor->Limit)
         {
             /* Read beyond limit */
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
     }
@@ -62,7 +64,7 @@ Fast486ReadMemory(PFAST486_STATE State,
         if (Offset < CachedDescriptor->Limit)
         {
             /* Read beyond limit */
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
     }
@@ -74,14 +76,14 @@ Fast486ReadMemory(PFAST486_STATE State,
 
         if (!CachedDescriptor->Present)
         {
-            Fast486Exception(State, FAST486_EXCEPTION_NP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
 
         if ((!InstFetch && (CachedDescriptor->Rpl > CachedDescriptor->Dpl))
             || (Fast486GetCurrentPrivLevel(State) > CachedDescriptor->Dpl))
         {
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
 
@@ -90,7 +92,7 @@ Fast486ReadMemory(PFAST486_STATE State,
             if (!CachedDescriptor->Executable)
             {
                 /* Data segment not executable */
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486Exception(State, Exception);
                 return FALSE;
             }
         }
@@ -99,7 +101,7 @@ Fast486ReadMemory(PFAST486_STATE State,
             if (CachedDescriptor->Executable && (!CachedDescriptor->ReadWrite))
             {
                 /* Code segment not readable */
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486Exception(State, Exception);
                 return FALSE;
             }
         }
@@ -166,6 +168,8 @@ Fast486WriteMemory(PFAST486_STATE State,
 {
     ULONG LinearAddress;
     PFAST486_SEG_REG CachedDescriptor;
+    FAST486_EXCEPTIONS Exception = SegmentReg != FAST486_REG_SS
+                                   ? FAST486_EXCEPTION_GP : FAST486_EXCEPTION_SS;
 
     ASSERT(SegmentReg < FAST486_NUM_SEG_REGS);
 
@@ -177,7 +181,7 @@ Fast486WriteMemory(PFAST486_STATE State,
         if ((Offset + Size - 1) > CachedDescriptor->Limit)
         {
             /* Write beyond limit */
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
     }
@@ -185,8 +189,8 @@ Fast486WriteMemory(PFAST486_STATE State,
     {
         if (Offset < CachedDescriptor->Limit)
         {
-            /* Read beyond limit */
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            /* Write beyond limit */
+            Fast486Exception(State, Exception);
             return FALSE;
         }
     }
@@ -198,27 +202,27 @@ Fast486WriteMemory(PFAST486_STATE State,
 
         if (!CachedDescriptor->Present)
         {
-            Fast486Exception(State, FAST486_EXCEPTION_NP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
 
         if ((CachedDescriptor->Rpl > CachedDescriptor->Dpl)
             || (Fast486GetCurrentPrivLevel(State) > CachedDescriptor->Dpl))
         {
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
 
         if (CachedDescriptor->Executable)
         {
             /* Code segment not writable */
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
         else if (!CachedDescriptor->ReadWrite)
         {
             /* Data segment not writeable */
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            Fast486Exception(State, Exception);
             return FALSE;
         }
     }
