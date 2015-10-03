@@ -180,13 +180,13 @@ void Test_DesktopAccess()
     ret = GetCursorPos(&curPoint);
     ok(ret == FALSE, "GetCursorPos should fail\n");
 
-    ok(GetLastError() == ERROR_ACCESS_DENIED, "Expected ERROR_ACCESS_DENIED got 0x%lu\n", GetLastError());
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "Expected ERROR_ACCESS_DENIED got 0x%lx\n", GetLastError());
     SetLastError(0xdeadbeef);
 
     ret = SetCursorPos(2,2);
     ok(ret == FALSE, "SetCursorPos should fail\n");
 
-    ok(GetLastError() == 0xdeadbeef, "Wrong last error, got 0x%lu\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef, "Wrong last error, got 0x%lx\n", GetLastError());
 
     ret = GetCursorPos(&curPoint);
     ok(ret == FALSE, "GetCursorPos should fail\n");
