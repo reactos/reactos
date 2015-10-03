@@ -8,9 +8,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
-
 #include "ntvdm.h"
+
+#define NDEBUG
+#include <debug.h>
 
 #include "kbdbios32.h"
 #include <bios/kbdbios.h>

@@ -10,16 +10,18 @@
 /******************************************************************************\
 |   WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING!
 |
-|   Callbacks support supposes implicitely that the callbacks are used
+|   Callbacks support supposes implicitly that the callbacks are used
 |   in the SAME thread as the CPU thread, otherwise messing in parallel
 |   with the CPU registers is 100% prone to bugs!!
 \******************************************************************************/
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
-
 #include "ntvdm.h"
+
+#define NDEBUG
+#include <debug.h>
+
 #include "emulator.h"
 #include "callback.h"
 

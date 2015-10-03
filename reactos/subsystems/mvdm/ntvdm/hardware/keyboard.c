@@ -8,9 +8,11 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
-
 #include "ntvdm.h"
+
+#define NDEBUG
+#include <debug.h>
+
 #include "keyboard.h"
 #include "ps2.h"
 

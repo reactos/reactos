@@ -8,9 +8,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
-
 #include "ntvdm.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

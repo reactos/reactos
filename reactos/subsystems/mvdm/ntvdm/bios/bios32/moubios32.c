@@ -11,9 +11,11 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
-
 #include "ntvdm.h"
+
+#define NDEBUG
+#include <debug.h>
+
 #include "emulator.h"
 #include "cpu/cpu.h" // for EMULATOR_FLAG_CF
 

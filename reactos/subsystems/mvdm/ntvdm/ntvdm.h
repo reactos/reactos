@@ -45,8 +45,6 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
-#include <debug.h>
-
 /*
  * Activate this line if you want to run NTVDM in standalone mode with:
  * ntvdm.exe <program>

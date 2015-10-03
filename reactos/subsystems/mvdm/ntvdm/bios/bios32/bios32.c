@@ -9,13 +9,15 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
+#include "ntvdm.h"
 
 /* BIOS Version number and Copyright */
 #include <reactos/buildno.h>
 #include <reactos/version.h>
 
-#include "ntvdm.h"
+#define NDEBUG
+#include <debug.h>
+
 #include "emulator.h"
 #include "cpu/cpu.h" // for EMULATOR_FLAG_CF
 #include "cpu/bop.h"

@@ -8,9 +8,11 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
-
 #include "ntvdm.h"
+
+#define NDEBUG
+#include <debug.h>
+
 #include "emulator.h"
 #include "svga.h"
 #include <bios/vidbios.h>

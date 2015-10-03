@@ -9,9 +9,11 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
-
 #include "ntvdm.h"
+
+#define NDEBUG
+#include <debug.h>
+
 #include "emulator.h"
 #include "io.h"
 
