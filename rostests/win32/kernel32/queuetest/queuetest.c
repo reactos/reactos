@@ -15,7 +15,7 @@ BOOL WINAPI QueueUserWorkItem(LPTHREAD_START_ROUTINE,PVOID,ULONG);
 #define TestProc(n) \
 DWORD CALLBACK TestProc##n(void *ctx)\
 {\
-    printf("TestProc%d thread 0x%lu context 0x%p\n", n, GetCurrentThreadId(), ctx);\
+    printf("TestProc%d thread 0x%lx context 0x%p\n", n, GetCurrentThreadId(), ctx);\
     return 0;\
 }
 
