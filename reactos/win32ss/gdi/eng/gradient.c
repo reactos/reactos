@@ -161,7 +161,7 @@ IntEngGradientFillRect(
     do
     {
         RECTL FillRect;
-        ULONG Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red, v1->Green, v1->Blue));
+        ULONG Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red >> 8, v1->Green >> 8, v1->Blue >> 8));
 
         EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
         for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
