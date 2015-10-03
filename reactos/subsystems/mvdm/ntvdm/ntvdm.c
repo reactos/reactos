@@ -163,19 +163,20 @@ UpdateVdmMenuMouse(VOID)
 UpdateVdmMenuDisks(VOID)
 {
     UINT_PTR ItemID;
+    UNICODE_STRING ValueString;
     USHORT i;
 
-    CHAR szNoMedia[100];
-    CHAR szMenuString1[256], szMenuString2[256];
+    WCHAR szNoMedia[100];
+    WCHAR szMenuString1[256], szMenuString2[256];
 
     /* Update the disks menu items */
 
-    LoadStringA(GetModuleHandle(NULL),
+    LoadStringW(GetModuleHandle(NULL),
                 IDS_NO_MEDIA,
                 szNoMedia,
                 ARRAYSIZE(szNoMedia));
 
-    LoadStringA(GetModuleHandle(NULL),
+    LoadStringW(GetModuleHandle(NULL),
                 IDS_VDM_MOUNT_FLOPPY,
                 szMenuString1,
                 ARRAYSIZE(szMenuString1));
@@ -188,10 +189,15 @@ UpdateVdmMenuDisks(VOID)
             GlobalSettings.FloppyDisks[i].Buffer      &&
             GlobalSettings.FloppyDisks[i].Buffer != '\0')
         {
+            /* Convert the ANSI string to UNICODE */
+            RtlAnsiStringToUnicodeString(&ValueString, &GlobalSettings.FloppyDisks[i], TRUE);
+
             /* Update item text */
-            _snprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, GlobalSettings.FloppyDisks[i].Buffer);
-            szMenuString2[ARRAYSIZE(szMenuString2) - 1] = ANSI_NULL;
-            ModifyMenuA(hConsoleMenu, ItemID, MF_BYCOMMAND | MF_STRING, ItemID, szMenuString2);
+            _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, ValueString.Buffer);
+            szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
+            ModifyMenuW(hConsoleMenu, ItemID, MF_BYCOMMAND | MF_STRING, ItemID, szMenuString2);
+
+            RtlFreeUnicodeString(&ValueString);
 
             /* Enable the eject item */
             EnableMenuItem(hConsoleMenu, ItemID + 1, MF_BYCOMMAND | MF_ENABLED);
@@ -199,9 +205,9 @@ UpdateVdmMenuDisks(VOID)
         else
         {
             /* Update item text */
-            _snprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, szNoMedia);
-            szMenuString2[ARRAYSIZE(szMenuString2) - 1] = ANSI_NULL;
-            ModifyMenuA(hConsoleMenu, ItemID, MF_BYCOMMAND | MF_STRING, ItemID, szMenuString2);
+            _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, szNoMedia);
+            szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
+            ModifyMenuW(hConsoleMenu, ItemID, MF_BYCOMMAND | MF_STRING, ItemID, szMenuString2);
 
             /* Disable the eject item */
             EnableMenuItem(hConsoleMenu, ItemID + 1, MF_BYCOMMAND | MF_GRAYED);
@@ -209,46 +215,27 @@ UpdateVdmMenuDisks(VOID)
     }
 }
 
-static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
-{
-    if (ShowPtr)
-    {
-        /* Be sure the cursor will be shown */
-        while (ShowConsoleCursor(ConOutHandle, TRUE) < 0) ;
-    }
-    else
-    {
-        /* Be sure the cursor will be hidden */
-        while (ShowConsoleCursor(ConOutHandle, FALSE) >= 0) ;
-    }
-}
-
 static VOID
 UpdateVdmMenu(VOID)
 {
-    // This is a temporary HACK until I find the most elegant way
-    // to synchronize mouse cursor display with console screenbuffer switches.
-    ShowHideMousePointer(CurrentConsoleOutput, ShowPointer);
-
     UpdateVdmMenuMouse();
     UpdateVdmMenuDisks();
 }
 
-/*static*/ VOID
+static VOID
 CreateVdmMenu(HANDLE ConOutHandle)
 {
     HMENU hVdmSubMenu;
-    UINT_PTR ItemID = ID_VDM_DRIVES;
+    UINT_PTR ItemID;
     UINT Pos;
+    USHORT i;
     WCHAR szNoMedia[100];
     WCHAR szMenuString1[256], szMenuString2[256];
 
     hConsoleMenu = ConsoleMenuControl(ConOutHandle,
                                       ID_SHOWHIDE_MOUSE,
-                                      ID_VDM_DRIVES + 4);
+                                      ID_VDM_DRIVES + (2 * ARRAYSIZE(GlobalSettings.FloppyDisks)));
     if (hConsoleMenu == NULL) return;
-
-    CurrentConsoleOutput = ConOutHandle;
 
     /* Get the position where we are going to insert our menu items */
     VdmMenuPos = GetMenuItemCount(hConsoleMenu);
@@ -273,30 +260,32 @@ CreateVdmMenu(HANDLE ConOutHandle)
                     szMenuString1,
                     ARRAYSIZE(szMenuString1));
 
-        /* Drive 0 -- Mount */
-        _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, 0, szNoMedia);
-        szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
-        InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 0, szMenuString2);
+        /* Drive 'x' -- Mount */
+        for (i = 0; i < ARRAYSIZE(GlobalSettings.FloppyDisks); ++i)
+        {
+            ItemID = ID_VDM_DRIVES + (2 * i);
 
-        /* Drive 1 -- Mount */
-        _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, 1, szNoMedia);
-        szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
-        InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 2, szMenuString2);
+            /* Add the item */
+            _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, szNoMedia);
+            szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
+            InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID, szMenuString2);
+        }
 
         LoadStringW(GetModuleHandle(NULL),
                     IDS_VDM_EJECT_FLOPPY,
                     szMenuString1,
                     ARRAYSIZE(szMenuString1));
 
-        /* Drive 0 -- Eject */
-        _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, 0);
-        szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
-        InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 1, szMenuString2);
+        /* Drive 'x' -- Eject */
+        for (i = 0; i < ARRAYSIZE(GlobalSettings.FloppyDisks); ++i)
+        {
+            ItemID = ID_VDM_DRIVES + (2 * i);
 
-        /* Drive 1 -- Eject */
-        _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, 1);
-        szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
-        InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 3, szMenuString2);
+            /* Add the item */
+            _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i);
+            szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
+            InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 1, szMenuString2);
+        }
 
         /* Refresh the menu state */
         UpdateVdmMenu();
@@ -304,7 +293,7 @@ CreateVdmMenu(HANDLE ConOutHandle)
     }
 }
 
-/*static*/ VOID
+static VOID
 DestroyVdmMenu(VOID)
 {
     UINT i = 0;
@@ -317,8 +306,20 @@ DestroyVdmMenu(VOID)
     } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].uCmdID == 0));
 
     DrawMenuBar(hConsoleWnd);
+}
 
-    CurrentConsoleOutput = INVALID_HANDLE_VALUE;
+static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
+{
+    if (ShowPtr)
+    {
+        /* Be sure the cursor will be shown */
+        while (ShowConsoleCursor(ConOutHandle, TRUE) < 0) ;
+    }
+    else
+    {
+        /* Be sure the cursor will be hidden */
+        while (ShowConsoleCursor(ConOutHandle, FALSE) >= 0) ;
+    }
 }
 
 static VOID EnableExtraHardware(HANDLE ConsoleInput)
@@ -865,6 +866,17 @@ ConsoleDetach(VOID)
     /* Restore the original input and output console modes */
     SetConsoleMode(ConsoleOutput, OrgConsoleOutputMode);
     SetConsoleMode(ConsoleInput , OrgConsoleInputMode );
+}
+
+VOID
+ConsoleReattach(HANDLE ConOutHandle)
+{
+    DestroyVdmMenu();
+    CurrentConsoleOutput = ConOutHandle;
+    CreateVdmMenu(ConOutHandle);
+
+    /* Synchronize mouse cursor display with console screenbuffer switches */
+    ShowHideMousePointer(CurrentConsoleOutput, ShowPointer);
 }
 
 static BOOL

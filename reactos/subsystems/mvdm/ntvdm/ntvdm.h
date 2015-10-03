@@ -100,14 +100,11 @@ VOID PrintMessageAnsi(IN CHAR_PRINT CharPrint,
                       IN LPCSTR Format, ...);
 
 /*static*/ VOID
-CreateVdmMenu(HANDLE ConOutHandle);
-/*static*/ VOID
-DestroyVdmMenu(VOID);
-/*static*/ VOID
 UpdateVdmMenuDisks(VOID);
 
 BOOL ConsoleAttach(VOID);
 VOID ConsoleDetach(VOID);
+VOID ConsoleReattach(HANDLE ConOutHandle);
 VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent);
 VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent);
 

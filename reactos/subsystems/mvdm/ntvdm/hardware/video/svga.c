@@ -961,12 +961,9 @@ static VOID VgaSetActiveScreenBuffer(HANDLE ScreenBuffer)
 {
     ASSERT(ScreenBuffer);
 
-    /* Set the active buffer */
+    /* Set the active buffer and reattach the VDM UI to it */
     SetConsoleActiveScreenBuffer(ScreenBuffer);
-
-    /* Reinitialize the VDM menu */
-    DestroyVdmMenu();
-    CreateVdmMenu(ScreenBuffer);
+    ConsoleReattach(ScreenBuffer);
 }
 
 static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
