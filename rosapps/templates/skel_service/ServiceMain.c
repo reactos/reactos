@@ -54,7 +54,7 @@ UpdateStatus(PSERVICEINFO pServInfo,
 
     _sntprintf(szSet,
                49,
-               _T("Service state 0x%lu, CheckPoint %lu"),
+               _T("Service state 0x%lx, CheckPoint %lu"),
                pServInfo->servStatus.dwCurrentState,
                pServInfo->servStatus.dwCheckPoint);
     LogEvent(szSet, 0, 0, LOG_FILE);

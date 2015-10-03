@@ -50,7 +50,7 @@ UpdateStatus(PSERVICEINFO pServInfo,
 
     _snwprintf(szSet,
                49,
-               L"Service state 0x%lu, CheckPoint %lu",
+               L"Service state 0x%lx, CheckPoint %lu",
                pServInfo->servStatus.dwCurrentState,
                pServInfo->servStatus.dwCheckPoint);
     LogEvent(szSet, 0, 0, LOG_FILE);
