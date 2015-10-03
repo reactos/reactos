@@ -21,5 +21,3 @@ BOOLEAN DiskBios32Initialize(VOID);
 VOID DiskBios32Cleanup(VOID);
 
 #endif /* _DSKBIOS32_H_ */
-
-/* EOF */

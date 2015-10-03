@@ -50,6 +50,4 @@ ULONGLONG GetCycleSpeed(VOID);
 VOID ClockUpdate(VOID);
 BOOLEAN ClockInitialize(VOID);
 
-#endif // _CLOCK_H_
-
-/* EOF */
+#endif /* _CLOCK_H_ */

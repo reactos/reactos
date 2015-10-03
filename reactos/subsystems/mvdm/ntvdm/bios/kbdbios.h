@@ -20,6 +20,4 @@
 BOOLEAN KbdBiosInitialize(VOID);
 VOID KbdBiosCleanup(VOID);
 
-#endif // _KBDBIOS_H_
-
-/* EOF */
+#endif /* _KBDBIOS_H_ */

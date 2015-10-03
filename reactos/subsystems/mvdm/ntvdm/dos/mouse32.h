@@ -78,6 +78,4 @@ typedef struct _MOUSE_DRIVER_STATE
 BOOLEAN DosMouseInitialize(VOID);
 VOID DosMouseCleanup(VOID);
 
-#endif // _MOUSE32_H_
-
-/* EOF */
+#endif /* _MOUSE32_H_ */

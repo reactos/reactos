@@ -6,6 +6,8 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
+#pragma once
+
 /* DEFINITIONS ****************************************************************/
 
 #define DOS_CMDLINE_LENGTH   127

@@ -151,6 +151,4 @@ DWORD RtcGetTicksPerSecond(VOID);
 VOID CmosInitialize(VOID);
 VOID CmosCleanup(VOID);
 
-#endif // _CMOS_H_
-
-/* EOF */
+#endif /* _CMOS_H_ */

@@ -16,6 +16,4 @@ VOID SpeakerChange(UCHAR Port61hValue);
 VOID SpeakerInitialize(VOID);
 VOID SpeakerCleanup(VOID);
 
-#endif // _SPEAKER_H_
-
-/* EOF */
+#endif /* _SPEAKER_H_ */

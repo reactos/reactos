@@ -10,10 +10,6 @@
 #ifndef _INT32_H_
 #define _INT32_H_
 
-/* INCLUDES *******************************************************************/
-
-#include "cpu/callback.h"
-
 /* DEFINES ********************************************************************/
 
 /* 32-bit Interrupt Identifiers */
@@ -60,6 +56,4 @@ Int32Call(IN PCALLBACK16 Context,
 
 VOID InitializeInt32(VOID);
 
-#endif // _INT32_H_
-
-/* EOF */
+#endif /* _INT32_H_ */

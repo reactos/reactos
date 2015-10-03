@@ -88,6 +88,4 @@ UnmountDisk(IN DISK_TYPE DiskType,
 BOOLEAN DiskCtrlInitialize(VOID);
 VOID DiskCtrlCleanup(VOID);
 
-#endif // _DISK_H_
-
-/* EOF */
+#endif /* _DISK_H_ */

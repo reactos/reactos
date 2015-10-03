@@ -57,6 +57,4 @@ BOOLEAN PS2PortQueueRead(BYTE PS2Port);
 BOOLEAN PS2Initialize(VOID);
 VOID PS2Cleanup(VOID);
 
-#endif // _PS2_H_
-
-/* EOF */
+#endif /* _PS2_H_ */

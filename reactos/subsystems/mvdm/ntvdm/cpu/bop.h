@@ -23,6 +23,4 @@ typedef VOID (WINAPI *EMULATOR_BOP_PROC)(LPWORD Stack);
 VOID RegisterBop(BYTE BopCode, EMULATOR_BOP_PROC BopHandler);
 VOID FASTCALL EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode);
 
-#endif // _BOP_H_
-
-/* EOF */
+#endif /* _BOP_H_ */

@@ -7,22 +7,10 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-
-#include "bios/umamgr.h" // HACK until we correctly call XMS services for UMBs.
-
-#include "dos.h"
-#include "dos/dem.h"
-#include "memory.h"
-#include "process.h"
-#include "himem.h"
 
 // FIXME: Should be dynamically initialized!
 #define FIRST_MCB_SEGMENT   (SYSTEM_ENV_BLOCK + 0x200)  // old value: 0x1000

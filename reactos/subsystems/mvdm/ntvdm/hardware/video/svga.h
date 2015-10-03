@@ -385,6 +385,4 @@ BOOLEAN VgaGetDoubleVisionState(PBOOLEAN Horizontal, PBOOLEAN Vertical);
 BOOLEAN VgaInitialize(HANDLE TextHandle);
 VOID VgaCleanup(VOID);
 
-#endif // _SVGA_H_
-
-/* EOF */
+#endif /* _SVGA_H_ */

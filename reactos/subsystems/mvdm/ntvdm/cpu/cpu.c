@@ -6,33 +6,10 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-#include "cpu.h"
-
-#include "memory.h"
-#include "callback.h"
-#include "bop.h"
-#include <isvbop.h>
-
-#include "clock.h"
-#include "bios/rom.h"
-#include "hardware/cmos.h"
-#include "hardware/keyboard.h"
-#include "hardware/mouse.h"
-#include "hardware/pic.h"
-#include "hardware/ps2.h"
-#include "hardware/sound/speaker.h"
-#include "hardware/pit.h"
-#include "hardware/video/svga.h"
-
-#include "io.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

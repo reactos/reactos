@@ -9,10 +9,6 @@
 #ifndef _CPU_H_
 #define _CPU_H_
 
-/* INCLUDES *******************************************************************/
-
-#include <fast486.h>
-
 /* DEFINES ********************************************************************/
 
 /* FLAGS */
@@ -74,6 +70,4 @@ VOID EmulatorTerminate(VOID);
 BOOLEAN CpuInitialize(VOID);
 VOID CpuCleanup(VOID);
 
-#endif // _CPU_H_
-
-/* EOF */
+#endif /* _CPU_H_ */

@@ -113,6 +113,4 @@ VOID VidBiosPost(VOID);
 BOOLEAN VidBiosInitialize(VOID);
 VOID VidBiosCleanup(VOID);
 
-#endif // _VIDBIOS_H_
-
-/* EOF */
+#endif /* _VIDBIOS_H_ */

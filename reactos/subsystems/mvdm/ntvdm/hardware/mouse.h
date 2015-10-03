@@ -66,4 +66,4 @@ VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent);
 VOID MouseGetDataFast(PCOORD CurrentPosition, PBYTE CurrentButtonState);
 BOOLEAN MouseInit(BYTE PS2Connector);
 
-#endif // _MOUSE_H_
+#endif /* _MOUSE_H_ */

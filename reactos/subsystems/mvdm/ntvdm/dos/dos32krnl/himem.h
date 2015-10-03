@@ -65,6 +65,4 @@ BOOLEAN XmsGetDriverEntry(PDWORD Pointer);
 VOID XmsInitialize(VOID);
 VOID XmsCleanup(VOID);
 
-#endif // _HIMEM_H_
-
-/* EOF */
+#endif /* _HIMEM_H_ */

@@ -58,6 +58,4 @@ RegisterCallback16(IN  ULONG   FarPtr,
                    IN  SIZE_T  CallbackSize,
                    OUT PSIZE_T CodeSize OPTIONAL);
 
-#endif // _CALLBACK_H_
-
-/* EOF */
+#endif /* _CALLBACK_H_ */

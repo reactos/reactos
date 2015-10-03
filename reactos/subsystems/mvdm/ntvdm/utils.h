@@ -24,6 +24,4 @@ FileLoadByHandle(IN  HANDLE FileHandle,
                  IN  ULONG  FileSize,
                  OUT PULONG BytesRead);
 
-#endif // _UTILS_H_
-
-/* EOF */
+#endif /* _UTILS_H_ */

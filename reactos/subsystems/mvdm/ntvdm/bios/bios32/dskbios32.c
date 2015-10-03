@@ -6,25 +6,10 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-// #include "../../memory.h"
-// #include "cpu/bop.h"
-#include "cpu/cpu.h" // for EMULATOR_FLAG_ZF
-#include "int32.h"
-
-#include "dskbios32.h"
-// #include <bios/dskbios.h>
-#include "bios32p.h"
-
-#include "hardware/disk.h"
-
 
 /* DEFINES ********************************************************************/
 

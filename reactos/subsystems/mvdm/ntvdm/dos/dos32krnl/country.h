@@ -96,4 +96,4 @@ VOID DosToUpperStrZ(PSTR DestStr, PSTR SrcStr);
 
 BOOLEAN DosCountryInitialize(VOID);
 
-#endif
+#endif /* _COUNTRY_H_ */

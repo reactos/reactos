@@ -22,4 +22,4 @@
 VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent);
 BOOLEAN KeyboardInit(BYTE PS2Connector);
 
-#endif // _KEYBOARD_H_
+#endif /* _KEYBOARD_H_ */

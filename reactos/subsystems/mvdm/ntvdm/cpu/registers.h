@@ -116,6 +116,4 @@ VOID   WINAPI setMSW(USHORT);
 
 #endif
 
-#endif // _REGISTERS_H_
-
-/* EOF */
+#endif /* _REGISTERS_H_ */

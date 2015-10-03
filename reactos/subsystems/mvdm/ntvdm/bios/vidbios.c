@@ -7,31 +7,10 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-/* BIOS Version number and Copyright */
-#include <reactos/buildno.h>
-#include <reactos/version.h>
-
-#include "emulator.h"
-#include "cpu/cpu.h"
-#include "cpu/bop.h"
-#include "memory.h"
-
-#include "bios.h"
-#include "bios32/bios32p.h"
-#include "rom.h"
-#include "bios32/vbe.h"
-// #include "vidbios.h"
-#include "bios32/vidbios32.h"
-
-#include "io.h"
-#include "hardware/video/svga.h"
 
 /* MACROS *********************************************************************/
 

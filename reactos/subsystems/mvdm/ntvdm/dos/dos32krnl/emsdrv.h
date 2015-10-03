@@ -100,6 +100,4 @@ typedef struct _EMS_HARDWARE_INFO
 BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages);
 VOID EmsDrvCleanup(VOID);
 
-#endif // _EMSDRV_H_
-
-/* EOF */
+#endif /* _EMSDRV_H_ */

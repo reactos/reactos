@@ -208,6 +208,4 @@ VOID DeviceStrategyBop(VOID);
 VOID DeviceInterruptBop(VOID);
 DWORD DosLoadDriver(LPCSTR DriverFile);
 
-#endif // _DEVICE_H_
-
-/* EOF */
+#endif /* _DEVICE_H_ */

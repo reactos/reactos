@@ -6,18 +6,10 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-#include "vddsup.h"
-
-#include "cpu/bop.h"
-#include <isvbop.h>
 
 typedef VOID (WINAPI *VDD_PROC)(VOID);
 

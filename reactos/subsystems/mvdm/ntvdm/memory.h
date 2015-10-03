@@ -92,6 +92,4 @@ MemQueryMemoryZone
     PBOOLEAN Hooked
 );
 
-#endif // _MEMORY_H_
-
-/* EOF */
+#endif /* _MEMORY_H_ */

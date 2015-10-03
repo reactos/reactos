@@ -21,5 +21,3 @@ BOOLEAN VidBios32Initialize(VOID);
 VOID VidBios32Cleanup(VOID);
 
 #endif /* _VIDBIOS32_H_ */
-
-/* EOF */

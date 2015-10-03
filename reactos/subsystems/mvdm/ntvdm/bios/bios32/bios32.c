@@ -7,38 +7,10 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
-
-/* BIOS Version number and Copyright */
-#include <reactos/buildno.h>
-#include <reactos/version.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-#include "cpu/cpu.h" // for EMULATOR_FLAG_CF
-#include "cpu/bop.h"
-#include "int32.h"
-#include <isvbop.h>
-
-#include <bios/bios.h>
-#include <bios/rom.h>
-#include "bios32.h"
-#include "bios32p.h"
-#include "dskbios32.h"
-#include "kbdbios32.h"
-#include "vidbios32.h"
-#include "moubios32.h"
-
-#include "memory.h"
-#include "io.h"
-#include "hardware/cmos.h"
-#include "hardware/pic.h"
-#include "hardware/pit.h"
-#include "hardware/ps2.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -165,7 +137,7 @@ static const BYTE PostCode[] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID BiosCharPrint(CHAR Character)
+static VOID Bios32CharPrint(CHAR Character)
 {
     /* Save AX and BX */
     USHORT AX = getAX();
@@ -534,7 +506,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
 
 static VOID WINAPI BiosRomBasic(LPWORD Stack)
 {
-    PrintMessageAnsi(BiosCharPrint, "FATAL: INT18: BOOT FAILURE.");
+    PrintMessageAnsi(Bios32CharPrint, "FATAL: INT18: BOOT FAILURE.");
 
     /* ROM Basic is unsupported, display a message to the user */
     DisplayMessage(L"NTVDM doesn't support ROM Basic. The VDM is closing.");

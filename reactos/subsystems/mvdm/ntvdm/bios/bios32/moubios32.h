@@ -20,5 +20,3 @@ BOOLEAN MouseBiosInitialize(VOID);
 VOID MouseBios32Cleanup(VOID);
 
 #endif /* _MOUBIOS32_H_ */
-
-/* EOF */

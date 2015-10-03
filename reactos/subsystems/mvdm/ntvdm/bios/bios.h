@@ -9,11 +9,6 @@
 #ifndef _BIOS_H_
 #define _BIOS_H_
 
-/* INCLUDES *******************************************************************/
-
-#include "kbdbios.h"
-#include "vidbios.h"
-
 /* DEFINES ********************************************************************/
 
 /* BOP Identifiers */
@@ -165,6 +160,4 @@ BiosInitialize(IN LPCSTR BiosFileName,
 VOID
 BiosCleanup(VOID);
 
-#endif // _BIOS_H_
-
-/* EOF */
+#endif /* _BIOS_H_ */

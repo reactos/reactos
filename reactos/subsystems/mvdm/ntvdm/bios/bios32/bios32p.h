@@ -9,12 +9,6 @@
 #ifndef _BIOS32P_H_
 #define _BIOS32P_H_
 
-/* INCLUDES *******************************************************************/
-
-#include <bios/bios.h>
-
-/**/ #include "int32.h" /**/
-
 /* DEFINES ********************************************************************/
 
 #define BIOS_PIC_MASTER_INT 0x08
@@ -42,6 +36,4 @@ do { \
 VOID EnableHwIRQ(UCHAR hwirq, EMULATOR_INT32_PROC func);
 VOID PicIRQComplete(BYTE IntNum);
 
-#endif // _BIOS32P_H_
-
-/* EOF */
+#endif /* _BIOS32P_H_ */

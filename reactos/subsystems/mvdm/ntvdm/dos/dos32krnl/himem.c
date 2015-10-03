@@ -44,20 +44,10 @@
  * of the internal Upper Memory Area Manager, in umamgr.c
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-#include "cpu/bop.h"
-#include "../../memory.h"
-#include "bios/umamgr.h"
-
-#include "device.h"
-#include "himem.h"
 
 #define XMS_DEVICE_NAME "XMSXXXX0"
 

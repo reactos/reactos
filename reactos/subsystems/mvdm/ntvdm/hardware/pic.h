@@ -37,6 +37,4 @@ BYTE PicGetInterrupt(VOID);
 
 VOID PicInitialize(VOID);
 
-#endif // _PIC_H_
-
-/* EOF */
+#endif /* _PIC_H_ */

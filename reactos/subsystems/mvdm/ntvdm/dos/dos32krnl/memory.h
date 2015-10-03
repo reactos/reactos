@@ -50,6 +50,4 @@ VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner);
 VOID DosInitializeUmb(VOID);
 VOID DosInitializeMemory(VOID);
 
-#endif // _DOS_MEMORY_H_
-
-/* EOF */
+#endif /* _DOS_MEMORY_H_ */

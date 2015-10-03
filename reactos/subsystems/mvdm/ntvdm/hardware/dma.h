@@ -59,6 +59,4 @@ DWORD DmaRequest(IN WORD      iChannel,
 
 VOID DmaInitialize(VOID);
 
-#endif // _DMA_H_
-
-/* EOF */
+#endif /* _DMA_H_ */

@@ -18,6 +18,4 @@ VOID VDDResumeUserHook(VOID);
 
 VOID VDDSupInitialize(VOID);
 
-#endif // _VDDSUP_H_
-
-/* EOF */
+#endif /* _VDDSUP_H_ */

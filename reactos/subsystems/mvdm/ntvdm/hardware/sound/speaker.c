@@ -6,15 +6,10 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "speaker.h"
-#include "hardware/pit.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/iofuncs.h>

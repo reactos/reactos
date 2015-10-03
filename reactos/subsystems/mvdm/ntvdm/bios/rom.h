@@ -43,6 +43,4 @@ LoadRom(IN  PCSTR  RomFileName,
 VOID
 SearchAndInitRoms(IN PCALLBACK16 Context);
 
-#endif // _ROM_H_
-
-/* EOF */
+#endif /* _ROM_H_ */

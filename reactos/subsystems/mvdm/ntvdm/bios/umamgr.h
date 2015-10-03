@@ -29,6 +29,4 @@ BOOLEAN UmaDescReallocate(IN USHORT UmbSegment, IN OUT PUSHORT Size);
 BOOLEAN UmaMgrInitialize(VOID);
 VOID UmaMgrCleanup(VOID);
 
-#endif // _UMAMGR_H_
-
-/* EOF */
+#endif /* _UMAMGR_H_ */

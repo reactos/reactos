@@ -6,21 +6,10 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-
-#include "dos.h"
-#include "dos/dem.h"
-#include "dosfiles.h"
-#include "handle.h"
-#include "memory.h"
-#include "process.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

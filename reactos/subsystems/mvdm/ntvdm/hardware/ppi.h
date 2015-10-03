@@ -21,6 +21,4 @@ extern BYTE Port61hState;
 
 VOID PpiInitialize(VOID);
 
-#endif // _PPI_H_
-
-/* EOF */
+#endif /* _PPI_H_ */

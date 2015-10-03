@@ -77,6 +77,4 @@ WORD PitGetReloadValue(BYTE Channel);
 
 VOID PitInitialize(VOID);
 
-#endif // _PIT_H_
-
-/* EOF */
+#endif /* _PIT_H_ */

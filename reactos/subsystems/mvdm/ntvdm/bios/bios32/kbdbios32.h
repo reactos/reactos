@@ -39,5 +39,3 @@
 VOID KbdBios32Post(VOID);
 
 #endif /* _KBDBIOS32_H_ */
-
-/* EOF */

@@ -6,6 +6,8 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
+#pragma once
+
 /* DEFINES ********************************************************************/
 
 #define FILE_INFO_STDIN  (1 << 0)

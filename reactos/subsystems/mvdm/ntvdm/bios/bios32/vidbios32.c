@@ -8,20 +8,10 @@
  * NOTE:            All of the real code is in bios/vidbios.c
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-#include "cpu/bop.h"
-#include "int32.h"
-
-#include "vidbios32.h"
-#include <bios/vidbios.h>
-#include "bios32p.h"
 
 /* DEFINES ********************************************************************/
 

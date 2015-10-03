@@ -9,10 +9,6 @@
 #ifndef _EMULATOR_H_
 #define _EMULATOR_H_
 
-/* INCLUDES *******************************************************************/
-
-#include <fast486.h>
-
 /* DEFINES ********************************************************************/
 
 /* Basic Memory Management */
@@ -121,6 +117,4 @@ VOID EmulatorTerminate(VOID);
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
 VOID EmulatorCleanup(VOID);
 
-#endif // _EMULATOR_H_
-
-/* EOF */
+#endif /* _EMULATOR_H_ */

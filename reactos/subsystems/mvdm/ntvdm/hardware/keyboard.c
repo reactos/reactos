@@ -6,15 +6,10 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "keyboard.h"
-#include "ps2.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

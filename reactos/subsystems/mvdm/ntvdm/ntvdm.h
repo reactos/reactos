@@ -45,6 +45,58 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
+#include <reactos/buildno.h>
+#include <reactos/version.h>
+
+#include <fast486.h>
+#include <isvbop.h>
+
+#include "bios/bios32/bios32.h"
+#include "bios/bios32/dskbios32.h"
+#include "bios/bios32/kbdbios32.h"
+#include "bios/bios32/moubios32.h"
+#include "bios/bios32/vidbios32.h"
+#include "bios/vidbios.h"
+#include "bios/bios.h"
+#include "bios/kbdbios.h"
+#include "bios/umamgr.h"
+#include "cpu/callback.h"
+#include "bios/rom.h"
+#include "clock.h"
+#include "cpu/bop.h"
+#include "cpu/cpu.h"
+#include "dos/dem.h"
+#include "dos/mouse32.h"
+#include "dos/dos32krnl/country.h"
+#include "dos/dos32krnl/device.h"
+#include "dos/dos32krnl/dos.h"
+#include "dos/dos32krnl/dosfiles.h"
+#include "dos/dos32krnl/emsdrv.h"
+#include "dos/dos32krnl/handle.h"
+#include "dos/dos32krnl/himem.h"
+#include "dos/dos32krnl/process.h"
+#include "emulator.h"
+#include "hardware/cmos.h"
+#include "hardware/disk.h"
+#include "hardware/dma.h"
+#include "hardware/keyboard.h"
+#include "hardware/mouse.h"
+#include "hardware/pic.h"
+#include "hardware/pit.h"
+#include "hardware/ppi.h"
+#include "hardware/ps2.h"
+#include "hardware/sound/speaker.h"
+#include "hardware/video/svga.h"
+#include "bios/bios32/vbe.h"
+#include "int32.h"
+#include "bios/bios32/bios32p.h"
+#include "io.h"
+#include "utils.h"
+#include "vddsup.h"
+
+#include "memory.h"
+#include "dos/dos32krnl/memory.h"
+
 /*
  * Activate this line if you want to run NTVDM in standalone mode with:
  * ntvdm.exe <program>
@@ -106,6 +158,4 @@ VOID ConsoleReattach(HANDLE ConOutHandle);
 VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent);
 VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent);
 
-#endif // _NTVDM_H_
-
-/* EOF */
+#endif /* _NTVDM_H_ */

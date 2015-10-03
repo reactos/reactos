@@ -103,6 +103,4 @@ VOID FASTCALL EmulatorWriteIo
     UCHAR DataSize
 );
 
-#endif // _IO_H_
-
-/* EOF */
+#endif /* _IO_H_ */

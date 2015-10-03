@@ -7,18 +7,10 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-/* INCLUDES *******************************************************************/
-
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "emulator.h"
-#include "dma.h"
-
-#include "io.h"
-#include "memory.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

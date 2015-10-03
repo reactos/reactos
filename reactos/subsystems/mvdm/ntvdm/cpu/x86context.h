@@ -134,6 +134,4 @@ typedef struct _X86CONTEXT
 } X86CONTEXT;
 #include "poppack.h"
 
-#endif // __X86CONTEXT_H__
-
-/* EOF */
+#endif /* __X86CONTEXT_H__ */
