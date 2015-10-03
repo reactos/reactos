@@ -414,39 +414,69 @@ VOID MountFloppy(IN ULONG DiskNumber)
 #define  OFN_EX_NOPLACESBAR         0x00000001
 #endif // (_WIN32_WINNT >= 0x0500)
 
-    OPENFILENAMEA ofn;
-    CHAR szFile[MAX_PATH] = "";
+    OPENFILENAMEW ofn;
+    WCHAR szFile[MAX_PATH] = L"";
+    UNICODE_STRING ValueString;
+
+    ASSERT(DiskNumber < ARRAYSIZE(GlobalSettings.FloppyDisks));
 
     RtlZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize  = sizeof(ofn);
     ofn.hwndOwner    = hConsoleWnd;
-    ofn.lpstrTitle   = "Select a virtual floppy image";
+    ofn.lpstrTitle   = L"Select a virtual floppy image";
     ofn.Flags        = OFN_EXPLORER | OFN_ENABLESIZING | OFN_LONGNAMES | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 //  ofn.FlagsEx      = OFN_EX_NOPLACESBAR;
-    ofn.lpstrFilter  = "Virtual floppy images (*.vfd;*.img;*.ima;*.dsk)\0*.vfd;*.img;*.ima;*.dsk\0All files (*.*)\0*.*\0\0";
-    ofn.lpstrDefExt  = "vfd";
+    ofn.lpstrFilter  = L"Virtual floppy images (*.vfd;*.img;*.ima;*.dsk)\0*.vfd;*.img;*.ima;*.dsk\0All files (*.*)\0*.*\0\0";
+    ofn.lpstrDefExt  = L"vfd";
     ofn.nFilterIndex = 0;
     ofn.lpstrFile    = szFile;
     ofn.nMaxFile     = ARRAYSIZE(szFile);
 
-    if (!GetOpenFileNameA(&ofn))
+    if (!GetOpenFileNameW(&ofn))
     {
         DPRINT1("CommDlgExtendedError = %d\n", CommDlgExtendedError());
         return;
     }
 
-    // TODO: Refresh the menu state
+    /* Free the old string */
+    if (GlobalSettings.FloppyDisks[DiskNumber].Buffer)
+        RtlFreeAnsiString(&GlobalSettings.FloppyDisks[DiskNumber]);
 
-    if (!MountDisk(FLOPPY_DISK, DiskNumber, szFile, !!(ofn.Flags & OFN_READONLY)))
+    /* Convert the UNICODE string to ANSI and store it */
+    RtlInitEmptyUnicodeString(&ValueString, szFile, wcslen(szFile) * sizeof(WCHAR));
+    ValueString.Length = ValueString.MaximumLength;
+    RtlUnicodeStringToAnsiString(&GlobalSettings.FloppyDisks[DiskNumber], &ValueString, TRUE);
+
+    /* Mount the disk */
+    if (!MountDisk(FLOPPY_DISK, DiskNumber, GlobalSettings.FloppyDisks[DiskNumber].Buffer, !!(ofn.Flags & OFN_READONLY)))
+    {
         DisplayMessage(L"An error happened when mounting disk %d", DiskNumber);
+        RtlFreeAnsiString(&GlobalSettings.FloppyDisks[DiskNumber]);
+        RtlInitEmptyAnsiString(&GlobalSettings.FloppyDisks[DiskNumber], NULL, 0);
+        return;
+    }
+
+    /* Refresh the menu state */
+    UpdateVdmMenuDisks();
 }
 
 VOID EjectFloppy(IN ULONG DiskNumber)
 {
-    // TODO: Refresh the menu state
+    ASSERT(DiskNumber < ARRAYSIZE(GlobalSettings.FloppyDisks));
 
+    /* Unmount the disk */
     if (!UnmountDisk(FLOPPY_DISK, DiskNumber))
         DisplayMessage(L"An error happened when ejecting disk %d", DiskNumber);
+
+    /* Free the old string */
+    if (GlobalSettings.FloppyDisks[DiskNumber].Buffer)
+    {
+        RtlFreeAnsiString(&GlobalSettings.FloppyDisks[DiskNumber]);
+        RtlInitEmptyAnsiString(&GlobalSettings.FloppyDisks[DiskNumber], NULL, 0);
+    }
+
+    /* Refresh the menu state */
+    UpdateVdmMenuDisks();
 }
 
 
@@ -560,7 +590,12 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
             GlobalSettings.FloppyDisks[i].Buffer      &&
             GlobalSettings.FloppyDisks[i].Buffer != '\0')
         {
-            MountDisk(FLOPPY_DISK, i, GlobalSettings.FloppyDisks[i].Buffer, FALSE);
+            if (!MountDisk(FLOPPY_DISK, i, GlobalSettings.FloppyDisks[i].Buffer, FALSE))
+            {
+                DPRINT1("Failed to mount floppy disk file '%Z'.\n", &GlobalSettings.FloppyDisks[i]);
+                RtlFreeAnsiString(&GlobalSettings.FloppyDisks[i]);
+                RtlInitEmptyAnsiString(&GlobalSettings.FloppyDisks[i], NULL, 0);
+            }
         }
     }
 
@@ -576,12 +611,15 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         {
             if (!MountDisk(HARD_DISK, i, GlobalSettings.HardDisks[i].Buffer, FALSE))
             {
-                wprintf(L"FATAL: Failed to mount hard disk file '%Z'.\n", &GlobalSettings);
+                wprintf(L"FATAL: Failed to mount hard disk file '%Z'.\n", &GlobalSettings.HardDisks[i]);
                 EmulatorCleanup();
                 return FALSE;
             }
         }
     }
+
+    /* Refresh the menu state */
+    UpdateVdmMenuDisks();
 
     /* Initialize the software callback system and register the emulator BOPs */
     InitializeInt32();

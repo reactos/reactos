@@ -103,6 +103,8 @@ VOID PrintMessageAnsi(IN CHAR_PRINT CharPrint,
 CreateVdmMenu(HANDLE ConOutHandle);
 /*static*/ VOID
 DestroyVdmMenu(VOID);
+/*static*/ VOID
+UpdateVdmMenuDisks(VOID);
 
 BOOL ConsoleAttach(VOID);
 VOID ConsoleDetach(VOID);

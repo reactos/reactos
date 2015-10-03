@@ -22,6 +22,8 @@
 
 /* VARIABLES ******************************************************************/
 
+static HANDLE CurrentConsoleOutput = INVALID_HANDLE_VALUE;
+
 static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
@@ -35,7 +37,7 @@ WCHAR** NtVdmArgv;
 HWND hConsoleWnd = NULL;
 static HMENU hConsoleMenu  = NULL;
 static INT   VdmMenuPos    = -1;
-static BOOLEAN ShowPointer = FALSE;
+static BOOLEAN ShowPointer = TRUE;
 
 /*
  * Those menu helpers were taken from the GUI frontend in winsrv.dll
@@ -141,6 +143,97 @@ VdmMenuExists(HMENU hConsoleMenu)
     return FALSE;
 }
 
+static VOID
+UpdateVdmMenuMouse(VOID)
+{
+    WCHAR szMenuString[256];
+
+    /* Update "Hide/Show mouse" menu item */
+    if (LoadStringW(GetModuleHandle(NULL),
+                    (!ShowPointer ? IDS_SHOW_MOUSE : IDS_HIDE_MOUSE),
+                    szMenuString,
+                    ARRAYSIZE(szMenuString)) > 0)
+    {
+        ModifyMenuW(hConsoleMenu, ID_SHOWHIDE_MOUSE,
+                    MF_BYCOMMAND, ID_SHOWHIDE_MOUSE, szMenuString);
+    }
+}
+
+/*static*/ VOID
+UpdateVdmMenuDisks(VOID)
+{
+    UINT_PTR ItemID;
+    USHORT i;
+
+    CHAR szNoMedia[100];
+    CHAR szMenuString1[256], szMenuString2[256];
+
+    /* Update the disks menu items */
+
+    LoadStringA(GetModuleHandle(NULL),
+                IDS_NO_MEDIA,
+                szNoMedia,
+                ARRAYSIZE(szNoMedia));
+
+    LoadStringA(GetModuleHandle(NULL),
+                IDS_VDM_MOUNT_FLOPPY,
+                szMenuString1,
+                ARRAYSIZE(szMenuString1));
+
+    for (i = 0; i < ARRAYSIZE(GlobalSettings.FloppyDisks); ++i)
+    {
+        ItemID = ID_VDM_DRIVES + (2 * i);
+
+        if (GlobalSettings.FloppyDisks[i].Length != 0 &&
+            GlobalSettings.FloppyDisks[i].Buffer      &&
+            GlobalSettings.FloppyDisks[i].Buffer != '\0')
+        {
+            /* Update item text */
+            _snprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, GlobalSettings.FloppyDisks[i].Buffer);
+            szMenuString2[ARRAYSIZE(szMenuString2) - 1] = ANSI_NULL;
+            ModifyMenuA(hConsoleMenu, ItemID, MF_BYCOMMAND | MF_STRING, ItemID, szMenuString2);
+
+            /* Enable the eject item */
+            EnableMenuItem(hConsoleMenu, ItemID + 1, MF_BYCOMMAND | MF_ENABLED);
+        }
+        else
+        {
+            /* Update item text */
+            _snprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, szNoMedia);
+            szMenuString2[ARRAYSIZE(szMenuString2) - 1] = ANSI_NULL;
+            ModifyMenuA(hConsoleMenu, ItemID, MF_BYCOMMAND | MF_STRING, ItemID, szMenuString2);
+
+            /* Disable the eject item */
+            EnableMenuItem(hConsoleMenu, ItemID + 1, MF_BYCOMMAND | MF_GRAYED);
+        }
+    }
+}
+
+static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
+{
+    if (ShowPtr)
+    {
+        /* Be sure the cursor will be shown */
+        while (ShowConsoleCursor(ConOutHandle, TRUE) < 0) ;
+    }
+    else
+    {
+        /* Be sure the cursor will be hidden */
+        while (ShowConsoleCursor(ConOutHandle, FALSE) >= 0) ;
+    }
+}
+
+static VOID
+UpdateVdmMenu(VOID)
+{
+    // This is a temporary HACK until I find the most elegant way
+    // to synchronize mouse cursor display with console screenbuffer switches.
+    ShowHideMousePointer(CurrentConsoleOutput, ShowPointer);
+
+    UpdateVdmMenuMouse();
+    UpdateVdmMenuDisks();
+}
+
 /*static*/ VOID
 CreateVdmMenu(HANDLE ConOutHandle)
 {
@@ -154,6 +247,8 @@ CreateVdmMenu(HANDLE ConOutHandle)
                                       ID_SHOWHIDE_MOUSE,
                                       ID_VDM_DRIVES + 4);
     if (hConsoleMenu == NULL) return;
+
+    CurrentConsoleOutput = ConOutHandle;
 
     /* Get the position where we are going to insert our menu items */
     VdmMenuPos = GetMenuItemCount(hConsoleMenu);
@@ -203,9 +298,8 @@ CreateVdmMenu(HANDLE ConOutHandle)
         szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
         InsertMenuW(hVdmSubMenu, Pos++, MF_STRING | MF_BYPOSITION, ItemID + 3, szMenuString2);
 
-        // TODO: Refresh the menu state
-
-        /* Refresh the menu */
+        /* Refresh the menu state */
+        UpdateVdmMenu();
         DrawMenuBar(hConsoleWnd);
     }
 }
@@ -223,31 +317,8 @@ DestroyVdmMenu(VOID)
     } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].uCmdID == 0));
 
     DrawMenuBar(hConsoleWnd);
-}
 
-static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
-{
-    WCHAR szMenuString[256];
-
-    if (ShowPtr)
-    {
-        /* Be sure the cursor will be shown */
-        while (ShowConsoleCursor(ConOutHandle, TRUE) < 0) ;
-    }
-    else
-    {
-        /* Be sure the cursor will be hidden */
-        while (ShowConsoleCursor(ConOutHandle, FALSE) >= 0) ;
-    }
-
-    if (LoadStringW(GetModuleHandle(NULL),
-                    (!ShowPtr ? IDS_SHOW_MOUSE : IDS_HIDE_MOUSE),
-                    szMenuString,
-                    ARRAYSIZE(szMenuString)) > 0)
-    {
-        ModifyMenu(hConsoleMenu, ID_SHOWHIDE_MOUSE,
-                   MF_BYCOMMAND, ID_SHOWHIDE_MOUSE, szMenuString);
-    }
+    CurrentConsoleOutput = INVALID_HANDLE_VALUE;
 }
 
 static VOID EnableExtraHardware(HANDLE ConsoleInput)
@@ -859,8 +930,9 @@ VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent)
     switch (MenuEvent->dwCommandId)
     {
         case ID_SHOWHIDE_MOUSE:
-            ShowHideMousePointer(ConsoleOutput, ShowPointer);
             ShowPointer = !ShowPointer;
+            ShowHideMousePointer(CurrentConsoleOutput, ShowPointer);
+            UpdateVdmMenuMouse();
             break;
 
         case ID_VDM_DUMPMEM_TXT:
