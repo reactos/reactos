@@ -67,10 +67,12 @@ list(APPEND SOURCE
     utils.c
     vddsup.c
     ntvdm.c
-    ntvdm.rc
+    ntvdm.h
     ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)
 
-add_executable(ntvdm ${SOURCE})
+add_rc_deps(ntvdm.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/ntvdm.ico)
+add_executable(ntvdm ${SOURCE} ntvdm.rc)
+add_pch(ntvdm ntvdm.h SOURCE)
 set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)
 target_link_libraries(ntvdm fast486 ${PSEH_LIB})
 add_importlibs(ntvdm user32 gdi32 advapi32 comdlg32 msvcrt kernel32 ntdll)

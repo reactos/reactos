@@ -13,10 +13,10 @@ BEGIN
     IDS_VDM_DUMPMEM_BIN ,   "Vidage Mémoire (&Binaire)"
     IDS_VDM_MOUNT_FLOPPY,   "Insérer une disquette dans le lecteur %d <%s>..."
     IDS_VDM_EJECT_FLOPPY,   "Éjecter la disquette du lecteur %d"
-    IDS_VDM_QUIT        ,   "&Quitter la ReactOS VDM"
+    IDS_VDM_QUIT        ,   "&Quitter ReactOS VDM"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_MEDIA,   "No media"
+    IDS_NO_MEDIA,   "Aucun média"
 END
