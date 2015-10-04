@@ -205,6 +205,72 @@ Quickie:
 }
 
 NTSTATUS
+MmUnmapVirtualAddress (
+    _Inout_ PVOID* VirtualAddress,
+    _Inout_ PULONGLONG Size
+    )
+{
+    NTSTATUS Status;
+
+    /* Make sure parameters were passed in and are valid */
+    if ((VirtualAddress) && (Size) && (*Size <= 0xFFFFFFFF))
+    {
+        /* Nothing to do if translation isn't active */
+        if (MmTranslationType == BlNone)
+        {
+            Status = STATUS_SUCCESS;
+        }
+
+        /* TODO */
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
+    else
+    {
+        /* Fail */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+BlMmUnmapVirtualAddressEx (
+    _In_ PVOID VirtualAddress,
+    _In_ ULONGLONG Size
+    )
+{
+    NTSTATUS Status;
+
+    /* Increment call depth */
+    ++MmDescriptorCallTreeCount;
+
+    /* Make sure all parameters are tehre */
+    if ((VirtualAddress) && (Size))
+    {
+        /* Unmap the virtual address */
+        Status = MmUnmapVirtualAddress(&VirtualAddress, &Size);
+
+        /* Check if we actually had a virtual mapping active */
+        if ((NT_SUCCESS(Status)) && (MmTranslationType != BlNone))
+        {
+            /* TODO */
+            Status = STATUS_NOT_IMPLEMENTED;
+        }
+    }
+    else
+    {
+        /* Fail */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* Cleanup descriptors and reduce depth */
+    MmMdFreeGlobalDescriptors();
+    --MmDescriptorCallTreeCount;
+    return Status;
+}
+
+NTSTATUS
 BlpMmInitialize (
     _In_ PBL_MEMORY_DATA MemoryData,
     _In_ BL_TRANSLATION_TYPE TranslationType, 

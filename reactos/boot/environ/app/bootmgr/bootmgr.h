@@ -29,6 +29,28 @@
 /* BCD Headers */
 #include <bcd.h>
 
+/* STRUCTURES ****************************************************************/
+
+typedef struct _BL_BOOT_ERROR
+{
+    ULONG ErrorCode;
+    NTSTATUS ErrorStatus;
+    ULONG Unknown1;
+    PWCHAR ErrorString;
+    PWCHAR FileName;
+    ULONG HelpMsgId;
+    ULONG Unknown2;
+} BL_BOOT_ERROR, *PBL_BOOT_ERROR;
+
+typedef struct _BL_PACKED_BOOT_ERROR
+{
+    PBL_BOOT_ERROR BootError;
+    ULONG Unknown;
+    ULONG Size;
+} BL_PACKED_BOOT_ERROR, *PBL_PACKED_BOOT_ERROR;
+
+#define BL_FATAL_ERROR_BCD_READ 0x02
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS

@@ -568,4 +568,33 @@ MmPaInitialize (
     return Status;
 }
 
+NTSTATUS
+BlMmAllocatePhysicalPages( 
+    _In_ PPHYSICAL_ADDRESS Address,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _In_ ULONGLONG PageCount,
+    _In_ ULONG Attributes,
+    _In_ ULONG Alignment
+    )
+{
+    /* Call the physical allocator */
+    return MmPapAllocatePhysicalPagesInRange(Address,
+                                             MemoryType,
+                                             PageCount,
+                                             Attributes,
+                                             Alignment,
+                                             &MmMdlUnmappedAllocated,
+                                             NULL,
+                                             0);
+}
 
+NTSTATUS
+BlMmFreePhysicalPages (
+    _In_ PHYSICAL_ADDRESS Address
+    )
+{
+    /* Call the physical allocator */
+    EfiPrintf(L"Leaking memory!\r\n");
+    return STATUS_SUCCESS;
+    //return MmPapFreePhysicalPages(4, 0, Address);
+}

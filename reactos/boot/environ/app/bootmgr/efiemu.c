@@ -9,7 +9,6 @@
 /* INCLUDES ******************************************************************/
 
 #include "bootmgr.h"
-#include <bcd.h>
 
 /* DATA STRUCTURES ***********************************************************/
 
@@ -206,8 +205,7 @@ EfiInitpConvertEfiFilePath (
     )
 {
     ULONG BytesAppended, DataSize, StringLength;
-    PBCDE_STRING StringEntry;
-    PWCHAR PathString;
+    PWCHAR StringEntry, PathString;
     FILEPATH_DEVICE_PATH *FilePath;
     NTSTATUS Status;
 
@@ -227,8 +225,8 @@ EfiInitpConvertEfiFilePath (
     Option->DataOffset = sizeof(*Option);
 
     /* Extract the string option */
-    StringEntry = (PBCDE_STRING)(Option + 1);
-    PathString = StringEntry->String;
+    StringEntry = (PWCHAR)(Option + 1);
+    PathString = StringEntry;
 
     /* Start parsing the device path */
     FilePath = (FILEPATH_DEVICE_PATH*)DevicePath;
@@ -282,7 +280,7 @@ EfiInitpConvertEfiFilePath (
     DataSize += sizeof(UNICODE_NULL);
 
     /* Check if all of this has amounted to a single NULL-char */
-    if (PathString == StringEntry->String)
+    if (PathString == StringEntry)
     {
         /* Then this option is empty */
         Option->Empty = TRUE;
@@ -520,7 +518,7 @@ EfiInitpConvertEfiDevicePath (
     _In_ ULONG MaximumLength
     )
 {
-    PBCDE_DEVICE DeviceEntry;
+    PBCD_DEVICE_OPTION BcdDevice;
     NTSTATUS Status;
 
     /* Make sure we have enough space for the option */
@@ -534,15 +532,17 @@ EfiInitpConvertEfiDevicePath (
     RtlZeroMemory(Option, sizeof(*Option));
 
     /* Make sure we have enough space for the device entry */
-    if ((MaximumLength - sizeof(*Option)) < (ULONG)FIELD_OFFSET(BCDE_DEVICE, Device))
+    if ((MaximumLength - sizeof(*Option)) <
+        (ULONG)FIELD_OFFSET(BCD_DEVICE_OPTION, DeviceDescriptor))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Quickie;
     }
 
     /* Fill it out */
-    DeviceEntry = (PBCDE_DEVICE)(Option + 1);
-    Status = EfiInitTranslateDevicePath(DevicePath, &DeviceEntry->Device);
+    BcdDevice = (PBCD_DEVICE_OPTION)(Option + 1);
+    Status = EfiInitTranslateDevicePath(DevicePath,
+                                        &BcdDevice->DeviceDescriptor);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
@@ -551,8 +551,8 @@ EfiInitpConvertEfiDevicePath (
     /* Fill out the rest of the option structure */
     Option->DataOffset = sizeof(*Option);
     Option->Type = DeviceType;
-    Option->DataSize = FIELD_OFFSET(BCDE_DEVICE, Device) +
-                       DeviceEntry->Device.Size;
+    Option->DataSize = FIELD_OFFSET(BCD_DEVICE_OPTION, DeviceDescriptor) +
+                       BcdDevice->DeviceDescriptor.Size;
     Status = STATUS_SUCCESS;
 
 Quickie:
@@ -618,7 +618,7 @@ EfiInitpCreateApplicationEntry (
     NTSTATUS Status;
     UNICODE_STRING GuidString;
     GUID ObjectGuid;
-    PBCDE_DEVICE BcdDevice;
+    PBCD_DEVICE_OPTION BcdDevice;
     BOOLEAN HaveBinaryOptions, HaveGuid;
     PBL_FILE_PATH_DESCRIPTOR OsPath;
     EFI_DEVICE_PATH *OsDevicePath;
@@ -719,7 +719,7 @@ EfiInitpCreateApplicationEntry (
 
     /* Extract the device descriptor and return it */
     BcdDevice = (PVOID)((ULONG_PTR)&Entry->BcdData + Entry->BcdData.DataOffset);
-    *AppEntryDevice = &BcdDevice->Device;
+    *AppEntryDevice = &BcdDevice->DeviceDescriptor;
 
     /* Calculate how big this option was and consume that from the buffer */
     TotalOptionSize = BlGetBootOptionSize(&Entry->BcdData);

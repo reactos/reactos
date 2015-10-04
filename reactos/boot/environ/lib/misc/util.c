@@ -28,7 +28,46 @@ ULONG UtlNextUpdatePercentage;
 BOOLEAN UtlProgressNeedsInfoUpdate;
 PVOID UtlProgressInfo;
 
+PVOID ResRootDirectory;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+BlUtlUpdateProgress (
+    _In_ ULONG Percentage,
+    _Out_opt_ PBOOLEAN Completed
+    )
+{
+    if (UtlProgressRoutine)
+    {
+        EfiPrintf(L"Unimplemented\r\n");
+    }
+    else if (*Completed)
+    {
+        *Completed = TRUE;
+    }
+}
+
+PWCHAR
+BlResourceFindMessage (
+    _In_ ULONG MsgId
+    )
+{
+    PWCHAR Message;
+
+    /* Assume failure */
+    Message = NULL;
+
+    /* Check if we've loaded resources */
+    if (ResRootDirectory)
+    {
+        /* Not yet handled */
+        EfiPrintf(L"Not implemented\r\n");
+    }
+
+    /* Return the message for this ID */
+    return Message;
+}
 
 /*++
  * @name EfiGetEfiStatusCode

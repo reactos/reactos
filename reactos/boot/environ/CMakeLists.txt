@@ -10,8 +10,10 @@ add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 list(APPEND BOOTLIB_SOURCE
      app/bootmgr/bootmgr.h
      lib/bootlib.c
+     lib/misc/debug.c
      lib/misc/bcd.c
      lib/misc/util.c
+     lib/misc/image.c
      lib/firmware/efi/firmware.c
      lib/mm/mm.c
      lib/mm/pagealloc.c

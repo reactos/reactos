@@ -1,4 +1,4 @@
-/*
+/*b
  * COPYRIGHT:       See COPYING.ARM in the top level directory
  * PROJECT:         ReactOS UEFI Boot Library
  * FILE:            boot/environ/include/bl.h
@@ -29,6 +29,10 @@
 #include <GraphicsOutput.h>
 #include <UgaDraw.h>
 #include <BlockIo.h>
+
+/* Registry Headers */
+#define __FREELDR_H
+#include <cmlib.h>
 
 /* DEFINES *******************************************************************/
 
@@ -84,6 +88,30 @@
 #define BL_BLOCK_DEVICE_REMOVABLE_FLAG                  0x01
 
 #define BL_MEMORY_CLASS_SHIFT                           28
+
+#define BL_FILE_READ_ACCESS                             0x01
+#define BL_FILE_WRITE_ACCESS                            0x02
+#define BL_DIRECTORY_ACCESS                             0x04
+#define BL_UNKNOWN_ACCESS                               0x10
+
+#define BL_DEVICE_ENTRY_OPENED                          0x01
+#define BL_DEVICE_ENTRY_READ_ACCESS                     0x02
+#define BL_DEVICE_ENTRY_WRITE_ACCESS                    0x04
+
+#define BL_FILE_ENTRY_OPENED                            0x01
+#define BL_FILE_ENTRY_READ_ACCESS                       0x02
+#define BL_FILE_ENTRY_WRITE_ACCESS                      0x04
+#define BL_FILE_ENTRY_UNKNOWN_ACCESS                    0x10
+
+#define BL_IMG_VALID_FILE                               0x01
+#define BL_IMG_MEMORY_FILE                              0x02
+#define BL_IMG_REMOTE_FILE                              0x04
+
+#define BL_LOAD_IMG_VIRTUAL_BUFFER                      0x01
+#define BL_LOAD_IMG_EXISTING_BUFFER                     0x04
+#define BL_LOAD_IMG_UNKNOWN_BUFFER_FLAG                 0x08
+#define BL_LOAD_IMG_COMPUTE_SIGNATURE                   0x10
+#define BL_LOAD_IMG_COMPUTE_HASH                        0x40000
 
 /* ENUMERATIONS **************************************************************/
 
@@ -169,6 +197,7 @@ typedef enum _BL_PARTITION_TYPE
 //
 typedef enum _BL_PATH_TYPE
 {
+    InternalPath = 3,
     EfiPath = 4
 } BL_PATH_TYPE;
 
@@ -266,6 +295,7 @@ typedef enum _BL_MEMORY_ATTR
 /* CALLBACKS *****************************************************************/
 
 struct _BL_FILE_ENTRY;
+struct _BL_FILE_INFORMATION;
 typedef
 NTSTATUS
 (*PBL_FILE_OPEN) (
@@ -284,7 +314,10 @@ NTSTATUS
 typedef
 NTSTATUS
 (*PBL_FILE_READ) (
-    VOID
+    _In_ struct _BL_FILE_ENTRY* FileEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_ PULONG BytesRead
     );
 
 typedef
@@ -302,13 +335,15 @@ NTSTATUS
 typedef
 NTSTATUS
 (*PBL_FILE_GET_INFO) (
-    VOID
+    _In_ struct _BL_FILE_ENTRY* FileEntry,
+    _Out_ struct _BL_FILE_INFORMATION* FileInfo
     );
 
 typedef
 NTSTATUS
 (*PBL_FILE_SET_INFO) (
-    VOID
+    _In_ struct _BL_FILE_ENTRY* FileEntry,
+    _In_ struct _BL_FILE_INFORMATION* FileInfo
     );
 
 typedef
@@ -745,6 +780,12 @@ typedef struct _BL_ADDRESS_RANGE
     ULONGLONG Maximum;
 } BL_ADDRESS_RANGE, *PBL_ADDRESS_RANGE;
 
+typedef struct _BL_FILE_INFORMATION
+{
+    ULONGLONG FileSize;
+    ULONGLONG CurrentOffset;
+} BL_FILE_INFORMATION, *PBL_FILE_INFORMATION;
+
 typedef struct _BL_FILE_CALLBACKS
 {
     PBL_FILE_OPEN Open;
@@ -767,7 +808,6 @@ typedef struct _BL_FILE_ENTRY
     ULONGLONG Unknown1;
     ULONGLONG Unknown2;
     BL_FILE_CALLBACKS Callbacks;
-    //PBL_FILE_DESTROY_CALLBACK DestroyCallback;
     PVOID FsSpecificData;
 } BL_FILE_ENTRY, *PBL_FILE_ENTRY;
 
@@ -965,6 +1005,18 @@ typedef struct _BL_DEVICE_ENTRY
     PVOID DeviceSpecificData;
     PBL_DEVICE_DESCRIPTOR DeviceDescriptor;
 } BL_DEVICE_ENTRY, *PBL_DEVICE_ENTRY;
+
+typedef struct _BL_IMG_FILE
+{
+    UCHAR Flags;
+    union
+    {
+        PVOID BaseAddress;
+        ULONG FileId;
+    };
+    ULONG FileSize;
+    PWCHAR FileName;
+} BL_IMG_FILE, *PBL_IMG_FILE;
 
 /* INLINE ROUTINES ***********************************************************/
 
@@ -1238,7 +1290,43 @@ EtfsMount (
     _Out_ PBL_FILE_ENTRY* FileEntry
     );
 
+/* DEBUG ROUTINES ************************************************************/
+
+
+BOOLEAN
+BlBdDebuggerEnabled (
+    VOID
+    );
+
+NTSTATUS
+BlBdPullRemoteFile (
+    _In_ PWCHAR FilePath,
+    _Out_ PVOID BaseAddress,
+    _Out_ PULONGLONG FileSize
+    );
+
+VOID
+BlStatusPrint (
+    _In_ PCWCH Format,
+    ...
+    );
+
+VOID
+BlStatusError (
+    _In_ ULONG ErrorCode,
+    _In_ ULONG Parameter1,
+    _In_ ULONG_PTR Parameter2,
+    _In_ ULONG_PTR Parameter3,
+    _In_ ULONG_PTR Parameter4
+    );
+
 /* UTILITY ROUTINES **********************************************************/
+
+VOID
+BlUtlUpdateProgress (
+    _In_ ULONG Percentage,
+    _Out_opt_ PBOOLEAN Completed
+    );
 
 EFI_STATUS
 EfiGetEfiStatusCode(
@@ -1263,6 +1351,11 @@ BlFwReboot (
 PGUID
 BlGetApplicationIdentifier (
     VOID
+    );
+
+PWCHAR
+BlResourceFindMessage (
+    _In_ ULONG MsgId
     );
 
 /* TABLE ROUTINES ************************************************************/
@@ -1353,6 +1446,14 @@ BlGetBootOptionBoolean (
     _Out_ PBOOLEAN Value
     );
 
+NTSTATUS
+BlGetBootOptionDevice (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type,
+    _Out_ PBL_DEVICE_DESCRIPTOR* Value,
+    _In_opt_ PBL_BCD_OPTION* ExtraOptions
+    );
+
 /* CONTEXT ROUTINES **********************************************************/
 
 VOID
@@ -1424,6 +1525,20 @@ MmMdFreeDescriptor (
 /* PAGE ALLOCATOR ROUTINES ***************************************************/
 
 NTSTATUS
+BlMmAllocatePhysicalPages(
+    _Inout_ PPHYSICAL_ADDRESS Address,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _In_ ULONGLONG PageCount,
+    _In_ ULONG Attributes,
+    _In_ ULONG Alignment
+    );
+
+NTSTATUS
+BlMmFreePhysicalPages (
+    _In_ PHYSICAL_ADDRESS Address
+    );
+
+NTSTATUS
 MmPapAllocatePagesInRange (
     _Inout_ PVOID* PhysicalAddress,
     _In_ BL_MEMORY_TYPE MemoryType,
@@ -1448,6 +1563,12 @@ BlMmMapPhysicalAddressEx (
     _In_ ULONG Attributes,
     _In_ ULONGLONG Size,
     _In_ PHYSICAL_ADDRESS PhysicalAddress
+    );
+
+NTSTATUS
+BlMmUnmapVirtualAddressEx (
+    _In_ PVOID VirtualAddress,
+    _In_ ULONGLONG Size
     );
 
 /* BLOCK ALLOCATOR ROUTINES **************************************************/
@@ -1526,10 +1647,26 @@ BlFileClose (
     );
 
 NTSTATUS
+BlFileReadAtOffsetEx (
+    _In_ ULONG FileId,
+    _In_ ULONG Size,
+    _In_ ULONGLONG ByteOffset,
+    _In_ PVOID Buffer,
+    _Out_ PULONG BytesReturned,
+    _In_ ULONG Flags
+    );
+
+NTSTATUS
+BlFileGetInformation (
+    _In_ ULONG FileId,
+    _In_ PBL_FILE_INFORMATION FileInfo
+    );
+
+NTSTATUS
 BlFileOpen (
     _In_ ULONG DeviceId,
     _In_ PWCHAR FileName,
-    _In_ ULONG OpenFlags,
+    _In_ ULONG Flags,
     _Out_ PULONG FileId
     );
 
@@ -1691,4 +1828,5 @@ extern BL_DISPLAY_MODE ConsoleGraphicalResolutionList[];
 extern BL_DISPLAY_MODE ConsoleTextResolutionList[];
 extern ULONG ConsoleGraphicalResolutionListSize;
 extern PVOID DspRemoteInputConsole;
+extern WCHAR BlScratchBuffer[8192];
 #endif
