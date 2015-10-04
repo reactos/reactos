@@ -9,6 +9,12 @@
 #ifndef _DOS_H_
 #define _DOS_H_
 
+/* INCLUDES *******************************************************************/
+
+#include "device.h"
+
+/**/ #include "int32.h" /**/
+
 /* DEFINES ********************************************************************/
 
 //
@@ -327,4 +333,6 @@ VOID DosEchoCharacter(CHAR Character);
  */
 BOOLEAN DosKRNLInitialize(VOID);
 
-#endif /* _DOS_H_ */
+#endif // _DOS_H_
+
+/* EOF */

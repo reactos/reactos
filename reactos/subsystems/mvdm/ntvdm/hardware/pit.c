@@ -8,10 +8,19 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "pit.h"
+
+#include "io.h"
+#include "pic.h"
+#include "clock.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

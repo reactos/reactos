@@ -6,10 +6,22 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "int32.h"
+
+#include "../dem.h"
+#include "dos.h"
+#include "dosfiles.h"
+#include "handle.h"
+#include "memory.h"
+#include "bios/bios.h"
 
 // This is needed because on UNICODE this symbol is redirected to
 // GetEnvironmentStringsW whereas on ANSI it corresponds to the real

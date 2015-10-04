@@ -18,10 +18,21 @@
  *         in little endian) *MUST* be fixed!
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "disk.h"
+
+// #include "io.h"
+#include "memory.h"
+
+#include "utils.h"
+
 
 /**************** HARD DRIVES -- VHD FIXED DISK FORMAT SUPPORT ****************/
 

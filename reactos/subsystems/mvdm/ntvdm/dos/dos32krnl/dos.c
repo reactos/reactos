@@ -7,10 +7,33 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "cpu/cpu.h"
+#include "int32.h"
+
+#include "dos.h"
+#include "dos/dem.h"
+#include "country.h"
+#include "device.h"
+#include "handle.h"
+#include "dosfiles.h"
+#include "memory.h"
+#include "process.h"
+#include "himem.h"
+
+#include "bios/bios.h"
+
+#include "io.h"
+#include "hardware/ps2.h"
+
+#include "emsdrv.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

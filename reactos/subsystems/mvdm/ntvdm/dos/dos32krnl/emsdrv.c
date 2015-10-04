@@ -9,10 +9,22 @@
  *                  LIM EMS v4.0: http://www.phatcode.net/res/218/files/limems40.txt
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "../../memory.h"
+#include "bios/umamgr.h"
+
+#include "dos.h"
+#include "dos/dem.h"
+#include "device.h"
+
+#include "emsdrv.h"
 
 #define EMS_DEVICE_NAME     "EMMXXXX0"
 

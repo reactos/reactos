@@ -9,6 +9,10 @@
 #ifndef _BIOS32_H_
 #define _BIOS32_H_
 
+/* INCLUDES *******************************************************************/
+
+// #include <bios/bios.h>
+
 /* DEFINES ********************************************************************/
 
 enum
@@ -37,4 +41,6 @@ typedef struct
 BOOLEAN Bios32Initialize(VOID);
 VOID Bios32Cleanup(VOID);
 
-#endif /* _BIOS32_H_ */
+#endif // _BIOS32_H_
+
+/* EOF */

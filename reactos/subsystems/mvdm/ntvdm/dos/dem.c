@@ -10,10 +10,29 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include <isvbop.h>
+
+#include "utils.h"
+
+#include "dem.h"
+#include "dos/dos32krnl/device.h"
+#include "dos/dos32krnl/memory.h"
+#include "dos/dos32krnl/process.h"
+#include "cpu/bop.h"
+#include "cpu/cpu.h"
+
+#include "bios/bios.h"
+#include "mouse32.h"
+
+#include "vddsup.h"
 
 /*
  * EXPERIMENTAL!

@@ -11,10 +11,20 @@
  *        - This controller is here only for having ports 61h and 62h working.
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "ppi.h"
+
+#include "hardware/pit.h"
+#include "hardware/sound/speaker.h"
+
+#include "io.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

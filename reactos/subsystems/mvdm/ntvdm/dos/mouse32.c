@@ -6,10 +6,33 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+/* Driver Version number and Copyright */
+#include <reactos/buildno.h>
+#include <reactos/version.h>
+
+#include "emulator.h"
+
+#include "cpu/cpu.h"
+#include "int32.h"
+#include "hardware/mouse.h"
+#include "hardware/ps2.h"
+#include "hardware/pic.h"
+#include "hardware/video/svga.h"
+
+#include "mouse32.h"
+#include "bios/bios.h"
+#include "bios/bios32/bios32p.h"
+
+#include "memory.h"
+#include "io.h"
+#include "dos32krnl/memory.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

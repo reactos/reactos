@@ -9,10 +9,22 @@
  * NOTE: Based from VirtualBox OSE ROM BIOS, and SeaBIOS.
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "cpu/cpu.h" // for EMULATOR_FLAG_CF
+
+#include "moubios32.h"
+#include "bios32p.h"
+
+#include "io.h"
+#include "hardware/mouse.h"
+#include "hardware/ps2.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

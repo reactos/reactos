@@ -13,6 +13,10 @@
 #ifndef _DEM_H_
 #define _DEM_H_
 
+/* INCLUDES *******************************************************************/
+
+#include "dos32krnl/dos.h"
+
 /* DEFINES ********************************************************************/
 
 /* BOP Identifiers */
@@ -97,4 +101,6 @@ demSetCurrentDirectoryGetDrive
     OUT PUCHAR DriveNumber
 );
 
-#endif /* _DEM_H_ */
+#endif // _DEM_H_
+
+/* EOF */

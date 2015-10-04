@@ -9,6 +9,8 @@
 #ifndef _VBE_H_
 #define _VBE_H_
 
+#include "hardware/video/svga.h"
+
 /* DEFINITIONS ****************************************************************/
 
 #define OEM_NAME     "Cirrus Logic GD-5434 VGA"
@@ -103,4 +105,4 @@ typedef struct _VBE_MODE
 VOID WINAPI VbeService(LPWORD Stack);
 BOOLEAN VbeInitialize(VOID);
 
-#endif /* _VBE_H_ */
+#endif // _VBE_H_

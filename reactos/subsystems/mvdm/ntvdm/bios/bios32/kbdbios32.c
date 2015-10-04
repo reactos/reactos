@@ -6,10 +6,21 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "kbdbios32.h"
+#include <bios/kbdbios.h>
+#include "bios32p.h"
+
+#include "int32.h"
+#include "cpu/cpu.h" // for EMULATOR_FLAG_ZF
+#include "io.h"
+#include "hardware/ps2.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

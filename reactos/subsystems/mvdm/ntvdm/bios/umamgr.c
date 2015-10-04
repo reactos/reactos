@@ -9,10 +9,17 @@
  *       indirectly by the DOS EMS Driver, and by VDD memory management functions.
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "memory.h"
+
+#include "umamgr.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

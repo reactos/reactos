@@ -7,10 +7,22 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "clock.h"
+
+#include "cpu/cpu.h"
+#include "hardware/cmos.h"
+#include "hardware/ps2.h"
+#include "hardware/pit.h"
+#include "hardware/video/svga.h"
+#include "hardware/mouse.h"
 
 /* DEFINES ********************************************************************/
 

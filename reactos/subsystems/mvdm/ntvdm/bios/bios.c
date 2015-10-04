@@ -6,10 +6,24 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "cpu/callback.h"
+#include "cpu/bop.h"
+
+#include "bios.h"
+#include "bios32/bios32.h"
+#include "rom.h"
+#include "umamgr.h"
+
+#include "io.h"
+#include "hardware/cmos.h"
 
 #include <stdlib.h>
 

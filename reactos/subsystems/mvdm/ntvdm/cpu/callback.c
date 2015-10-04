@@ -15,10 +15,19 @@
 |   with the CPU registers is 100% prone to bugs!!
 \******************************************************************************/
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "callback.h"
+
+#include "cpu.h"
+#include "bop.h"
+#include <isvbop.h>
 
 /* PRIVATE VARIABLES **********************************************************/
 

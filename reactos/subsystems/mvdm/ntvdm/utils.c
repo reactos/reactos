@@ -6,10 +6,14 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+/* PRIVATE FUNCTIONS **********************************************************/
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

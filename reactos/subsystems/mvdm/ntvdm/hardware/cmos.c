@@ -6,10 +6,19 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "cmos.h"
+
+#include "io.h"
+#include "pic.h"
+#include "clock.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

@@ -11,10 +11,20 @@
  *                  http://www.computer-engineering.org/ps2keyboard/
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "emulator.h"
+#include "ps2.h"
+
+#include "memory.h"
+#include "io.h"
+#include "pic.h"
+#include "clock.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
