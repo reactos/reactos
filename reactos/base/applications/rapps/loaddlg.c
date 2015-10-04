@@ -127,11 +127,16 @@ dlOnProgress(IBindStatusCallback* iface,
         SendMessageW(Item, PBM_SETPOS, uiPercentage, 0);
 
         /* format the bits and bytes into pretty and accesible units... */
-        StrFormatByteSizeW(ulProgress, szProgress, sizeof(szProgress));
-        StrFormatByteSizeW(ulProgressMax, szProgressMax, sizeof(szProgressMax));
+        StrFormatByteSizeW(ulProgress, szProgress, _countof(szProgress));
+        StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
 
         /* ...and post all of it to our subclassed progress bar text subroutine */
-        swprintf(This->ProgressText, L"%u%% — %s / %s", uiPercentage, szProgress, szProgressMax);
+        StringCbPrintfW(This->ProgressText,
+                        sizeof(This->ProgressText),
+                        L"%u%% \x2014 %ls / %ls",
+                        uiPercentage,
+                        szProgress,
+                        szProgressMax);
         SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)This->ProgressText);
     }
 
@@ -493,7 +498,11 @@ DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PT
         case WM_SETTEXT:
         {
             if (lParam)
-                wcscpy(szProgressText, (WCHAR *)lParam);
+            {
+                StringCbCopyW(szProgressText,
+                              sizeof(szProgressText),
+                              (PCWSTR)lParam);
+            }
         }
 
         case WM_ERASEBKGND:
@@ -546,7 +555,7 @@ DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PT
           (http://blogs.msdn.com/b/oldnewthing/archive/2003/11/11/55653.aspx) */
         case WM_NCDESTROY:
         {
-            ZeroMemory(szProgressText, MAX_STR_LEN);
+            ZeroMemory(szProgressText, sizeof(szProgressText));
             RemoveWindowSubclass(hWnd, DownloadProgressProc, uIdSubclass);
         }
 
@@ -592,7 +601,7 @@ DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             /* add a neat placeholder until the download URL is retrieved */
             Item = GetDlgItem(Dlg, IDC_DOWNLOAD_STATUS);
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) L"• • •");
+            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)L"\x2022 \x2022 \x2022");
 
             Thread = CreateThread(NULL, 0, ThreadFunc, Dlg, 0, &ThreadId);
             if (!Thread)
