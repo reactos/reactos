@@ -12,8 +12,6 @@
 #define NDEBUG
 #include "debug.h"
 
-#define SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
-
 /* GLOBALS *******************************************************************/
 
 ULONG CmpMaxFastIndexPerHblock =
@@ -161,9 +159,7 @@ CmpFindSubKeyInRoot(IN PHHIVE Hive,
     while (TRUE)
     {
         /* Choose next entry */
-#ifdef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
         i = ((High - Low) / 2) + Low;
-#endif
 
         /* Get the leaf cell and then the leaf itself */
         LeafCell = Index->List[i];
@@ -193,7 +189,6 @@ CmpFindSubKeyInRoot(IN PHHIVE Hive,
                 goto Return;
             }
 
-#ifdef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
             /* Check for negative result */
             if (Result < 0)
             {
@@ -232,7 +227,6 @@ CmpFindSubKeyInRoot(IN PHHIVE Hive,
                 /* Update the base to this index, since we know it's not lower. */
                 Low = i;
             }
-#endif
         }
         else
         {
@@ -247,16 +241,6 @@ Big:
 
         /* Release the leaf cell */
         HvReleaseCell(Hive, LeafCell);
-
-#ifndef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
-        /* Go to the next index, and return failure if we reach the end */
-        if (++i > High)
-        {
-            /* Return failure */
-            *SubKey = HCELL_NIL;
-            return 0;
-        }
-#endif
     }
 
     /* Make sure we got here for the right reasons */
@@ -386,11 +370,7 @@ CmpFindSubKeyInLeaf(IN PHHIVE Hive,
 
     /* Get the upper bound and middle entry */
     High = Index->Count - 1;
-#ifdef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
     i = High / 2;
-#else
-    i = 0;
-#endif
 
     /* Check if we don't actually have any entries */
     if (!Index->Count)
@@ -415,7 +395,6 @@ CmpFindSubKeyInLeaf(IN PHHIVE Hive,
         /* Check if we got lucky and found it */
         if (!Result) return i;
 
-#ifdef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
         /* Check if the result is below us */
         if (Result < 0)
         {
@@ -435,14 +414,6 @@ CmpFindSubKeyInLeaf(IN PHHIVE Hive,
 
         /* Set the new index */
         i = ((High - Low) / 2) + Low;
-#else
-        if (++i > High)
-        {
-            /* Return failure */
-            *SubKey = HCELL_NIL;
-            return 0;
-        }
-#endif
     }
 
     /*
@@ -735,33 +706,6 @@ CmpFindSubKeyByName(IN PHHIVE Hive,
             /* Check if this is another index root */
             if (IndexRoot->Signature == CM_KEY_INDEX_ROOT)
             {
-
-#ifndef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
-                /* CmpFindSubKeyInRoot is useless for actually finding the correct leaf when keys are not sorted */
-                LONG ii;
-                PCM_KEY_INDEX Leaf;
-                /* Loop through each leaf in the index root */
-                for (ii=0; ii<IndexRoot->Count; ii++)
-                {
-                    Leaf = HvGetCell(Hive, IndexRoot->List[ii]);
-                    if (Leaf)
-                    {
-                        Found = CmpFindSubKeyInLeaf(Hive, Leaf, SearchName, &SubKey);
-                        HvReleaseCell(Hive, IndexRoot->List[ii]);
-                        if (Found & 0x80000000)
-                        {
-                            HvReleaseCell(Hive, CellToRelease);
-                            return HCELL_NIL;
-                        }
-
-                        if (SubKey != HCELL_NIL)
-                        {
-                            HvReleaseCell(Hive, CellToRelease);
-                            return SubKey;
-                        }
-                    }
-                 }
-#endif
                 /* Lookup the name in the root */
                 Found = CmpFindSubKeyInRoot(Hive,
                                             IndexRoot,
