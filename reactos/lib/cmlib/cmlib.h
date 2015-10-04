@@ -99,6 +99,8 @@
     #define EX_PUSH_LOCK PULONG_PTR
 
     #define CMLTRACE(x, ...)
+    #undef PAGED_CODE
+    #define PAGED_CODE()
 #else
     //
     // Debug/Tracing support
