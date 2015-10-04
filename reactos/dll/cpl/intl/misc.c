@@ -1,7 +1,5 @@
 #include "intl.h"
 
-#define NUM_SHEETS           4
-
 /* Insert the space  */
 PWSTR
 InsSpacePos(PCWSTR szInsStr, const int nPos)
@@ -165,61 +163,6 @@ ReplaceSubStr(PCWSTR szSourceStr,
     }
 
     return szDestStr;
-}
-
-
-static VOID
-InitPropSheetPage(PROPSHEETPAGEW *psp, WORD idDlg, DLGPROC DlgProc, PGLOBALDATA pGlobalData)
-{
-  ZeroMemory(psp, sizeof(PROPSHEETPAGEW));
-  psp->dwSize = sizeof(PROPSHEETPAGEW);
-  psp->dwFlags = PSP_DEFAULT;
-  psp->hInstance = hApplet;
-  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-  psp->pfnDlgProc = DlgProc;
-  psp->lParam = (LPARAM)pGlobalData;
-}
-
-
-/* Create applets */
-LONG
-APIENTRY
-SetupApplet(
-    HWND hwndDlg,
-    PGLOBALDATA pGlobalData)
-{
-    PROPSHEETPAGEW PsPage[NUM_SHEETS + 1];
-    PROPSHEETHEADERW psh;
-    WCHAR Caption[MAX_STR_SIZE];
-    INT_PTR ret;
-
-    LoadStringW(hApplet, IDS_CUSTOMIZE_TITLE, Caption, sizeof(Caption) / sizeof(TCHAR));
-
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-    psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK;
-    psh.hwndParent = hwndDlg;
-    psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-    psh.pszCaption = Caption;
-    psh.nPages = (sizeof(PsPage) / sizeof(PROPSHEETPAGE)) - 1;
-    psh.nStartPage = 0;
-    psh.ppsp = PsPage;
-
-    InitPropSheetPage(&PsPage[0], IDD_NUMBERSPAGE, NumbersPageProc, pGlobalData);
-    InitPropSheetPage(&PsPage[1], IDD_CURRENCYPAGE, CurrencyPageProc, pGlobalData);
-    InitPropSheetPage(&PsPage[2], IDD_TIMEPAGE, TimePageProc, pGlobalData);
-    InitPropSheetPage(&PsPage[3], IDD_DATEPAGE, DatePageProc, pGlobalData);
-
-    if (IsSortPageNeeded(pGlobalData->lcid))
-    {
-        psh.nPages++;
-        InitPropSheetPage(&PsPage[4], IDD_SORTPAGE, SortPageProc, pGlobalData);
-    }
-
-    ret = PropertySheetW(&psh);
-
-    return (LONG)(ret != -1);
 }
 
 /* EOF */

@@ -159,7 +159,7 @@ SortPageProc(HWND hwndDlg,
             pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            CreateSortList(GetDlgItem(hwndDlg, IDC_SORTLIST_COMBO), pGlobalData->lcid);
+            CreateSortList(GetDlgItem(hwndDlg, IDC_SORTLIST_COMBO), pGlobalData->UserLCID);
             break;
 
         case WM_COMMAND:
@@ -168,28 +168,6 @@ SortPageProc(HWND hwndDlg,
                 case IDC_SORTLIST_COMBO:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        LCID NewLcid;
-                        INT iCurSel;
-
-                        iCurSel = SendDlgItemMessage(hwndDlg,
-                                                     IDC_SORTLIST_COMBO,
-                                                     CB_GETCURSEL,
-                                                     0,
-                                                     0);
-                        if (iCurSel == CB_ERR)
-                            break;
-
-                        NewLcid = SendDlgItemMessage(hwndDlg,
-                                                     IDC_SORTLIST_COMBO,
-                                                     CB_GETITEMDATA,
-                                                     iCurSel,
-                                                     0);
-                        if (NewLcid == (LCID)CB_ERR)
-                            break;
-
-                        /* Save the new LCID */
-                        pGlobalData->lcid = NewLcid;
-
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -199,7 +177,28 @@ SortPageProc(HWND hwndDlg,
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                /* FIXME: Set locale ID: pGlobalData->lcid */
+                LCID NewLcid;
+                INT iCurSel;
+
+                iCurSel = SendDlgItemMessage(hwndDlg,
+                                             IDC_SORTLIST_COMBO,
+                                             CB_GETCURSEL,
+                                             0,
+                                             0);
+                if (iCurSel == CB_ERR)
+                    break;
+
+                NewLcid = SendDlgItemMessage(hwndDlg,
+                                             IDC_SORTLIST_COMBO,
+                                             CB_GETITEMDATA,
+                                             iCurSel,
+                                             0);
+                if (NewLcid == (LCID)CB_ERR)
+                    break;
+
+                /* Save the new LCID */
+                pGlobalData->UserLCID = NewLcid;
+                pGlobalData->fUserLocaleChanged = TRUE;
             }
             break;
     }

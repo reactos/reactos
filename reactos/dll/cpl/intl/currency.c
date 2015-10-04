@@ -27,7 +27,6 @@
 
 #define POSITIVE_EXAMPLE   L"123456789.00"
 #define NEGATIVE_EXAMPLE   L"-123456789.00"
-#define MAX_FIELD_DIG_SAMPLES       3
 
 
 static VOID
@@ -36,14 +35,14 @@ UpdateExamples(HWND hwndDlg, PGLOBALDATA pGlobalData)
     WCHAR szBuffer[MAX_FMT_SIZE];
 
     /* Positive example */
-    GetCurrencyFormatW(pGlobalData->lcid, 0,
+    GetCurrencyFormatW(pGlobalData->UserLCID, 0,
                        POSITIVE_EXAMPLE,
                        NULL, szBuffer, MAX_FMT_SIZE);
 
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYPOSSAMPLE, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
     /* Negative example */
-    GetCurrencyFormatW(pGlobalData->lcid, 0,
+    GetCurrencyFormatW(pGlobalData->UserLCID, 0,
                        NEGATIVE_EXAMPLE,
                        NULL, szBuffer, MAX_FMT_SIZE);
 
@@ -54,23 +53,17 @@ UpdateExamples(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitCurrencySymbols(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szBuffer[MAX_FMT_SIZE];
-
     /* Limit text length */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYSYMBOL,
                         CB_LIMITTEXT,
-                        MAX_CURRENCYSYMBOL,
+                        MAX_CURRSYMBOL - 1,
                         0);
 
     /* Set currency symbols */
-    GetLocaleInfoW(pGlobalData->lcid,
-                   LOCALE_SCURRENCY,
-                   szBuffer, MAX_FMT_SIZE);
-
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYSYMBOL,
                         CB_ADDSTRING,
                         0,
-                        (LPARAM)szBuffer);
+                        (LPARAM)pGlobalData->szCurrSymbol);
 
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYSYMBOL,
                         CB_SETCURSEL,
@@ -82,65 +75,23 @@ InitCurrencySymbols(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitCurrencyPositiveFormats(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szDecimalSep[MAX_FMT_SIZE];
-    WCHAR szThousandSep[MAX_FMT_SIZE];
-    WCHAR szCurrencySymbol[MAX_FMT_SIZE];
     WCHAR szBuffer[MAX_FMT_SIZE];
     CURRENCYFMTW cyFmt;
-    INT nPositiveOrder = 0;
-    INT ret;
     INT i;
 
-
-    /* Get positive format */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_ICURRENCY,
-                         szBuffer, MAX_FMT_SIZE);
-    if (ret != 0)
-    {
-        nPositiveOrder = _wtoi(szBuffer);
-    }
-
-    /* Get number of fractional digits */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_ICURRDIGITS,
-                         szBuffer, MAX_FMT_SIZE);
-    if (ret != 0)
-    {
-        cyFmt.NumDigits = _wtoi(szBuffer);
-    }
-    else
-    {
-        cyFmt.NumDigits = 0;
-    }
-
-    /* Get decimal separator */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_SMONDECIMALSEP,
-                         szDecimalSep, MAX_FMT_SIZE);
-
-    /* Get group separator */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_SMONTHOUSANDSEP,
-                         szThousandSep, MAX_FMT_SIZE);
-
-    /* Get currency symbol */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_SCURRENCY,
-                         szCurrencySymbol, MAX_FMT_SIZE);
-
     /* positive currency values */
+    cyFmt.NumDigits = pGlobalData->nCurrDigits;
     cyFmt.LeadingZero = 0;
     cyFmt.Grouping = 3;
-    cyFmt.lpDecimalSep = szDecimalSep;
-    cyFmt.lpThousandSep = szThousandSep;
-    cyFmt.lpCurrencySymbol = szCurrencySymbol;
+    cyFmt.lpDecimalSep = pGlobalData->szCurrDecimalSep;
+    cyFmt.lpThousandSep = pGlobalData->szCurrThousandSep;
+    cyFmt.lpCurrencySymbol = pGlobalData->szCurrSymbol;
     cyFmt.NegativeOrder = 0;
 
     for (i = 0; i < 4; i++)
     {
         cyFmt.PositiveOrder = i;
-        GetCurrencyFormatW(pGlobalData->lcid, 0,
+        GetCurrencyFormatW(pGlobalData->UserLCID, 0,
                            L"1.1",
                            &cyFmt, szBuffer, MAX_FMT_SIZE);
 
@@ -152,7 +103,7 @@ InitCurrencyPositiveFormats(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYPOSVALUE,
                         CB_SETCURSEL,
-                        nPositiveOrder,
+                        pGlobalData->nCurrPosFormat,
                         0);
 }
 
@@ -160,64 +111,23 @@ InitCurrencyPositiveFormats(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitCurrencyNegativeFormats(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szDecimalSep[MAX_FMT_SIZE];
-    WCHAR szThousandSep[MAX_FMT_SIZE];
-    WCHAR szCurrencySymbol[MAX_FMT_SIZE];
     WCHAR szBuffer[MAX_FMT_SIZE];
     CURRENCYFMTW cyFmt;
-    INT nNegativeOrder = 0;
-    INT ret;
     int i;
 
-    /* Get negative format */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_INEGCURR,
-                         szBuffer, MAX_FMT_SIZE);
-    if (ret != 0)
-    {
-        nNegativeOrder = _wtoi(szBuffer);
-    }
-
-    /* Get number of fractional digits */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_ICURRDIGITS,
-                         szBuffer, MAX_FMT_SIZE);
-    if (ret != 0)
-    {
-        cyFmt.NumDigits = _wtoi(szBuffer);
-    }
-    else
-    {
-        cyFmt.NumDigits = 0;
-    }
-
-    /* Get decimal separator */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_SMONDECIMALSEP,
-                         szDecimalSep, MAX_FMT_SIZE);
-
-    /* Get group separator */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_SMONTHOUSANDSEP,
-                         szThousandSep, MAX_FMT_SIZE);
-
-    /* Get currency symbol */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_SCURRENCY,
-                         szCurrencySymbol, MAX_FMT_SIZE);
-
     /* negative currency values */
+    cyFmt.NumDigits = pGlobalData->nCurrDigits;
     cyFmt.LeadingZero = 0;
     cyFmt.Grouping = 3;
-    cyFmt.lpDecimalSep = szDecimalSep;
-    cyFmt.lpThousandSep = szThousandSep;
-    cyFmt.lpCurrencySymbol = szCurrencySymbol;
+    cyFmt.lpDecimalSep = pGlobalData->szCurrDecimalSep;
+    cyFmt.lpThousandSep = pGlobalData->szCurrThousandSep;
+    cyFmt.lpCurrencySymbol = pGlobalData->szCurrSymbol;
     cyFmt.PositiveOrder = 0;
 
     for (i = 0; i < 16; i++)
     {
         cyFmt.NegativeOrder = i;
-        GetCurrencyFormatW(pGlobalData->lcid, 0,
+        GetCurrencyFormatW(pGlobalData->UserLCID, 0,
                            L"-1.1",
                            &cyFmt, szBuffer, MAX_FMT_SIZE);
 
@@ -229,7 +139,7 @@ InitCurrencyNegativeFormats(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYNEGVALUE,
                         CB_SETCURSEL,
-                        nNegativeOrder,
+                        pGlobalData->nCurrNegFormat,
                         0);
 }
 
@@ -237,24 +147,17 @@ InitCurrencyNegativeFormats(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitCurrencyDecimalSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szBuffer[MAX_FMT_SIZE];
-
     /* Limit text length */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYDECSEP,
                         CB_LIMITTEXT,
-                        MAX_CURRENCYDECSEP,
+                        MAX_CURRDECIMALSEP - 1,
                         0);
-
-    /* Get decimal separator */
-    GetLocaleInfoW(pGlobalData->lcid,
-                   LOCALE_SMONDECIMALSEP,
-                   szBuffer, MAX_FMT_SIZE);
 
     /* Decimal separator */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYDECSEP,
                         CB_ADDSTRING,
                         0,
-                        (LPARAM)szBuffer);
+                        (LPARAM)pGlobalData->szCurrDecimalSep);
 
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYDECSEP,
                         CB_SETCURSEL,
@@ -268,7 +171,6 @@ static VOID
 InitCurrencyNumFracDigits(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
     WCHAR szBuffer[MAX_FMT_SIZE];
-    int ret;
     int i;
 
     /* Create standard list of fractional symbols */
@@ -282,24 +184,10 @@ InitCurrencyNumFracDigits(HWND hwndDlg, PGLOBALDATA pGlobalData)
                             (LPARAM)szBuffer);
     }
 
-    /* Get number of fractional digits */
-    ret = GetLocaleInfoW(pGlobalData->lcid,
-                         LOCALE_ICURRDIGITS,
-                         szBuffer, MAX_FMT_SIZE);
-    if (ret != 0)
-    {
-        SendDlgItemMessageW(hwndDlg, IDC_CURRENCYDECNUM,
-                            CB_SETCURSEL,
-                            _wtoi(szBuffer),
-                            0);
-    }
-    else
-    {
-        SendDlgItemMessageW(hwndDlg, IDC_CURRENCYDECNUM,
-                            CB_SETCURSEL,
-                            0,
-                            0);
-    }
+    SendDlgItemMessageW(hwndDlg, IDC_CURRENCYDECNUM,
+                        CB_SETCURSEL,
+                        pGlobalData->nCurrDigits,
+                        0);
 }
 
 
@@ -307,24 +195,17 @@ InitCurrencyNumFracDigits(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitCurrencyGroupSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szBuffer[MAX_FMT_SIZE];
-
     /* Limit text length */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPSEP,
                         CB_LIMITTEXT,
-                        MAX_CURRENCYGRPSEP,
+                        MAX_CURRTHOUSANDSEP - 1,
                         0);
-
-    /* Get group separator */
-    GetLocaleInfoW(pGlobalData->lcid,
-                   LOCALE_SMONTHOUSANDSEP,
-                   szBuffer, MAX_FMT_SIZE);
 
     /* Digit group separator */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPSEP,
                         CB_ADDSTRING,
                         0,
-                        (LPARAM)szBuffer);
+                        (LPARAM)pGlobalData->szCurrThousandSep);
 
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPSEP,
                         CB_SETCURSEL,
@@ -336,32 +217,19 @@ InitCurrencyGroupSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szThousandSep[MAX_FMT_SIZE];
-    WCHAR szGrouping[MAX_FMT_SIZE];
     WCHAR szBuffer[MAX_FMT_SIZE];
     CURRENCYFMTW cyFmt;
-    INT i;
-
-    /* Get group separator */
-    GetLocaleInfoW(pGlobalData->lcid,
-                   LOCALE_SMONTHOUSANDSEP,
-                   szThousandSep, MAX_FMT_SIZE);
-
-    /* Get grouping */
-    GetLocaleInfoW(pGlobalData->lcid,
-                   LOCALE_SMONGROUPING,
-                   szGrouping, MAX_FMT_SIZE);
 
     /* Digit grouping */
     cyFmt.NumDigits = 0;
     cyFmt.LeadingZero = 0;
     cyFmt.lpDecimalSep = L"";
-    cyFmt.lpThousandSep = szThousandSep;
+    cyFmt.lpThousandSep = pGlobalData->szCurrThousandSep;
     cyFmt.PositiveOrder = 0;
     cyFmt.NegativeOrder = 0;
     cyFmt.lpCurrencySymbol = L"";
     cyFmt.Grouping = 0;
-    GetCurrencyFormatW(pGlobalData->lcid, 0,
+    GetCurrencyFormatW(pGlobalData->UserLCID, 0,
                        L"123456789",
                        &cyFmt, szBuffer, MAX_FMT_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPNUM,
@@ -370,7 +238,7 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
                         (LPARAM)szBuffer);
 
     cyFmt.Grouping = 3;
-    GetCurrencyFormatW(pGlobalData->lcid, 0,
+    GetCurrencyFormatW(pGlobalData->UserLCID, 0,
                        L"123456789",
                        &cyFmt, szBuffer, MAX_FMT_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPNUM,
@@ -379,7 +247,7 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
                         (LPARAM)szBuffer);
 
     cyFmt.Grouping = 32;
-    GetCurrencyFormatW(pGlobalData->lcid, 0,
+    GetCurrencyFormatW(pGlobalData->UserLCID, 0,
                        L"123456789",
                        &cyFmt, szBuffer, MAX_FMT_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPNUM,
@@ -387,19 +255,9 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
                         -1,
                         (LPARAM)szBuffer);
 
-    i = 0;
-    if (szGrouping[0] == L'3')
-    {
-        if ((szGrouping[1] == L';') &&
-            (szGrouping[2] == L'2'))
-            i = 2;
-        else
-            i = 1;
-    }
-
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPNUM,
                         CB_SETCURSEL,
-                        i, /* Index */
+                        pGlobalData->nCurrGrouping, /* Index */
                         0);
 }
 
@@ -408,14 +266,7 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static BOOL
 SetCurrencyDigNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    PWSTR szFieldDigNumSamples[MAX_FIELD_DIG_SAMPLES]=
-    {
-        L"0;0",
-        L"3;0",
-        L"3;2;0"
-    };
-
-    int nCurrSel;
+    INT nCurrSel;
 
     /* Get setted number of digits in field */
     nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPNUM,
@@ -425,7 +276,7 @@ SetCurrencyDigNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     /* Save number of digits in field */
     if (nCurrSel != CB_ERR)
-        SetLocaleInfoW(pGlobalData->lcid, LOCALE_SMONGROUPING, szFieldDigNumSamples[nCurrSel]);
+        pGlobalData->nCurrGrouping = nCurrSel;
 
     return TRUE;
 }
@@ -434,16 +285,11 @@ SetCurrencyDigNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static BOOL
 SetCurrencyFieldSep(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szCurrencyFieldSep[MAX_SAMPLES_STR_SIZE];
-
     /* Get setted currency field separator */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPSEP,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)szCurrencyFieldSep);
-
-    /* Save currency field separator */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SMONTHOUSANDSEP, szCurrencyFieldSep);
+                        (LPARAM)pGlobalData->szCurrThousandSep);
 
     return TRUE;
 }
@@ -452,7 +298,6 @@ SetCurrencyFieldSep(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static BOOL
 SetCurrencyFracSymNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szCurrencyFracSymNum[MAX_SAMPLES_STR_SIZE];
     INT nCurrSel;
 
     /* Get setted number of fractional symbols */
@@ -460,12 +305,10 @@ SetCurrencyFracSymNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
                                    CB_GETCURSEL,
                                    (WPARAM)0,
                                    (LPARAM)0);
+    if (nCurrSel == CB_ERR)
+        return FALSE;
 
-    /* Convert to wide char */
-    _itow(nCurrSel, szCurrencyFracSymNum, DECIMAL_RADIX);
-
-    /* Save number of fractional symbols */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_ICURRDIGITS, szCurrencyFracSymNum);
+    pGlobalData->nCurrDigits = nCurrSel;
 
     return TRUE;
 }
@@ -474,18 +317,11 @@ SetCurrencyFracSymNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static BOOL
 SetCurrencySep(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szCurrencySep[MAX_SAMPLES_STR_SIZE];
-
     /* Get setted currency decimal separator */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYDECSEP,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)szCurrencySep);
-
-    /* TODO: Add check for correctly input */
-
-    /* Save currency separator */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SMONDECIMALSEP, szCurrencySep);
+                        (LPARAM)pGlobalData->szCurrDecimalSep);
 
     return TRUE;
 }
@@ -494,7 +330,6 @@ SetCurrencySep(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static BOOL
 SetNegCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szNegCurrencySumFmt[MAX_SAMPLES_STR_SIZE];
     INT nCurrSel;
 
     /* Get setted currency unit */
@@ -502,12 +337,10 @@ SetNegCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
                                    CB_GETCURSEL,
                                    (WPARAM)0,
                                    (LPARAM)0);
+    if (nCurrSel == CB_ERR)
+        return FALSE;
 
-    /* Convert to wide char */
-    _itow(nCurrSel, szNegCurrencySumFmt, DECIMAL_RADIX);
-
-    /* Save currency sum format */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_INEGCURR, szNegCurrencySumFmt);
+    pGlobalData->nCurrNegFormat = nCurrSel;
 
     return TRUE;
 }
@@ -516,7 +349,6 @@ SetNegCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static BOOL
 SetPosCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szPosCurrencySumFmt[MAX_SAMPLES_STR_SIZE];
     INT nCurrSel;
 
     /* Get setted currency unit */
@@ -524,30 +356,23 @@ SetPosCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
                                    CB_GETCURSEL,
                                    (WPARAM)0,
                                    (LPARAM)0);
+    if (nCurrSel == CB_ERR)
+        return FALSE;
 
-    /* Convert to wide char */
-    _itow(nCurrSel, szPosCurrencySumFmt, DECIMAL_RADIX);
-
-    /* Save currency sum format */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_ICURRENCY, szPosCurrencySumFmt);
+    pGlobalData->nCurrPosFormat = nCurrSel;
 
     return TRUE;
 }
 
-/* Set currency unit */
+/* Set currency symbol */
 static BOOL
-SetCurrencyUnit(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetCurrencySymbol(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szCurrencyUnit[MAX_SAMPLES_STR_SIZE];
-
     /* Get setted currency unit */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYSYMBOL,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)(PCWSTR)szCurrencyUnit);
-
-    /* Save currency unit */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SCURRENCY, szCurrencyUnit);
+                        (LPARAM)(PCWSTR)pGlobalData->szCurrSymbol);
 
     return TRUE;
 }
@@ -598,34 +423,32 @@ CurrencyPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                LPNMHDR lpnm = (LPNMHDR)lParam;
-                /* If push apply button */
-                if (lpnm->code == (UINT)PSN_APPLY)
-                {
-                    if (!SetCurrencyDigNum(hwndDlg, pGlobalData))
-                        break;
+                if (!SetCurrencySymbol(hwndDlg, pGlobalData))
+                    break;
 
-                    if (!SetCurrencyUnit(hwndDlg, pGlobalData))
-                        break;
+                if (!SetCurrencyDigNum(hwndDlg, pGlobalData))
+                    break;
 
-                    if (!SetPosCurrencySumFmt(hwndDlg, pGlobalData))
-                        break;
+                if (!SetPosCurrencySumFmt(hwndDlg, pGlobalData))
+                    break;
 
-                    if (!SetNegCurrencySumFmt(hwndDlg, pGlobalData))
-                        break;
+                if (!SetNegCurrencySumFmt(hwndDlg, pGlobalData))
+                    break;
 
-                    if (!SetCurrencySep(hwndDlg, pGlobalData))
-                        break;
+                if (!SetCurrencySep(hwndDlg, pGlobalData))
+                    break;
 
-                    if (!SetCurrencyFracSymNum(hwndDlg, pGlobalData))
-                        break;
+                if (!SetCurrencyFracSymNum(hwndDlg, pGlobalData))
+                    break;
 
-                    if (!SetCurrencyFieldSep(hwndDlg, pGlobalData))
-                        break;
+                if (!SetCurrencyFieldSep(hwndDlg, pGlobalData))
+                    break;
 
-                    UpdateExamples(hwndDlg, pGlobalData);
-                }
+                pGlobalData->fUserLocaleChanged = TRUE;
+
+                UpdateExamples(hwndDlg, pGlobalData);
             }
             break;
     }

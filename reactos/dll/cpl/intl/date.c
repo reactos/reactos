@@ -93,13 +93,13 @@ SetShortDateSep(HWND hwndDlg, PGLOBALDATA pGlobalData)
     INT nSepStrSize;
     INT nSepCount;
 
-    /* Get setted separator */
+    /* Get separator */
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
                         (LPARAM)szShortDateSep);
 
-    /* Get setted separator string size */
+    /* Get separator string size */
     nSepStrSize = wcslen(szShortDateSep);
 
     /* Check date components */
@@ -113,7 +113,7 @@ SetShortDateSep(HWND hwndDlg, PGLOBALDATA pGlobalData)
     }
 
     /* Save date separator */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SDATE, szShortDateSep);
+    wcscpy(pGlobalData->szDateSep, szShortDateSep);
 
     return TRUE;
 }
@@ -131,19 +131,19 @@ SetShortDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
     INT nFmtStrSize;
     INT nDateCompCount;
 
-    /* Get setted format */
+    /* Get format */
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATEFMT_COMBO,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
                         (LPARAM)szShortDateFmt);
 
-    /* Get setted separator */
+    /* Get separator */
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
                         (LPARAM)szShortDateSep);
 
-    /* Get setted format-string size */
+    /* Get format-string size */
     nFmtStrSize = wcslen(szShortDateFmt);
 
     /* Check date components */
@@ -178,11 +178,11 @@ SetShortDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
     wcscpy(szShortDateFmt, pszResultStr);
     free(pszResultStr);
 
-    if(pszFoundSep)
+    if (pszFoundSep)
         free(pszFoundSep);
 
     /* Save short date format */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SSHORTDATE, szShortDateFmt);
+    wcscpy(pGlobalData->szShortDateFormat, szShortDateFmt);
 
     return TRUE;
 }
@@ -196,13 +196,13 @@ SetLongDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
     INT nFmtStrSize;
     INT nDateCompCount;
 
-    /* Get setted format */
+    /* Get format */
     SendDlgItemMessageW(hwndDlg, IDC_LONGDATEFMT_COMBO,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
                         (LPARAM)szLongDateFmt);
 
-    /* Get setted format string size */
+    /* Get format string size */
     nFmtStrSize = wcslen(szLongDateFmt);
 
     /* Check date components */
@@ -229,8 +229,8 @@ SetLongDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
         return FALSE;
     }
 
-    /* Save short date format */
-    SetLocaleInfoW(pGlobalData->lcid, LOCALE_SLONGDATE, szLongDateFmt);
+    /* Save long date format */
+    wcscpy(pGlobalData->szLongDateFormat, szLongDateFmt);
 
     return TRUE;
 }
@@ -245,15 +245,8 @@ InitShortDateSepSamples(HWND hwndDlg, PGLOBALDATA pGlobalData)
         L"/",
         L"-"
     };
-    WCHAR szShortDateSep[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
     INT nRetCode;
-
-    /* Get current short date separator */
-    GetLocaleInfoW(pGlobalData->lcid,
-                   LOCALE_SDATE,
-                   szShortDateSep,
-                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
@@ -274,7 +267,7 @@ InitShortDateSepSamples(HWND hwndDlg, PGLOBALDATA pGlobalData)
     nRetCode = SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
                                    CB_SELECTSTRING,
                                    -1,
-                                   (LPARAM)szShortDateSep);
+                                   (LPARAM)pGlobalData->szDateSep);
 
     /* If it is not successful, add new value to list and select them */
     if (nRetCode == CB_ERR)
@@ -282,11 +275,11 @@ InitShortDateSepSamples(HWND hwndDlg, PGLOBALDATA pGlobalData)
         SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
                             CB_ADDSTRING,
                             0,
-                            (LPARAM)szShortDateSep);
+                            (LPARAM)pGlobalData->szDateSep);
         SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
                             CB_SELECTSTRING,
                             -1,
-                            (LPARAM)szShortDateSep);
+                            (LPARAM)pGlobalData->szDateSep);
     }
 }
 
@@ -305,24 +298,17 @@ ShortDateFormatEnumProc(PWSTR lpTimeFormatString)
 VOID
 InitShortDateCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szShortDateFmt[MAX_SAMPLES_STR_SIZE];
     INT nRetCode;
 
     /* Limit text lengths */
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATEFMT_COMBO,
                         CB_LIMITTEXT,
-                        MAX_SHRTDATEFMT,
+                        MAX_SHORTDATEFORMAT,
                         0);
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
                         CB_LIMITTEXT,
-                        MAX_SHRTDATESEP,
+                        MAX_DATESEPARATOR,
                         0);
-
-    /* Get current short date format */
-    GetLocaleInfoW(pGlobalData->lcid,
-                   LOCALE_SSHORTDATE,
-                   szShortDateFmt,
-                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATEFMT_COMBO,
@@ -332,13 +318,13 @@ InitShortDateCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     /* Enumerate short date formats */
     hwndEnum = GetDlgItem(hwndDlg, IDC_SHRTDATEFMT_COMBO);
-    EnumDateFormatsW(ShortDateFormatEnumProc, pGlobalData->lcid, DATE_SHORTDATE);
+    EnumDateFormatsW(ShortDateFormatEnumProc, pGlobalData->UserLCID, DATE_SHORTDATE);
 
     /* Set current item to value from registry */
     nRetCode = SendDlgItemMessageW(hwndDlg, IDC_SHRTDATEFMT_COMBO,
                                    CB_SELECTSTRING,
                                    -1,
-                                   (LPARAM)szShortDateFmt);
+                                   (LPARAM)pGlobalData->szShortDateFormat);
 
     /* If it is not successful, add new value to list and select them */
     if (nRetCode == CB_ERR)
@@ -346,11 +332,11 @@ InitShortDateCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
         SendDlgItemMessageW(hwndDlg, IDC_SHRTDATEFMT_COMBO,
                             CB_ADDSTRING,
                             0,
-                            (LPARAM)szShortDateFmt);
+                            (LPARAM)pGlobalData->szShortDateFormat);
         SendDlgItemMessageW(hwndDlg, IDC_SHRTDATEFMT_COMBO,
                             CB_SELECTSTRING,
                             -1,
-                            (LPARAM)szShortDateFmt);
+                            (LPARAM)pGlobalData->szShortDateFormat);
     }
 }
 
@@ -358,20 +344,13 @@ InitShortDateCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitLongDateCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szLongDateFmt[MAX_SAMPLES_STR_SIZE];
     INT nRetCode;
 
     /* Limit text length */
     SendDlgItemMessageW(hwndDlg, IDC_LONGDATEFMT_COMBO,
                         CB_LIMITTEXT,
-                        MAX_LONGDATEFMT,
+                        MAX_LONGDATEFORMAT,
                         0);
-
-    /* Get current long date format */
-    GetLocaleInfoW(pGlobalData->lcid,
-                   LOCALE_SLONGDATE,
-                   szLongDateFmt,
-                   MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
     SendDlgItemMessageW(hwndDlg, IDC_LONGDATEFMT_COMBO,
@@ -381,13 +360,13 @@ InitLongDateCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     /* Enumerate short long formats */
     hwndEnum = GetDlgItem(hwndDlg, IDC_LONGDATEFMT_COMBO);
-    EnumDateFormatsW(ShortDateFormatEnumProc, pGlobalData->lcid, DATE_LONGDATE);
+    EnumDateFormatsW(ShortDateFormatEnumProc, pGlobalData->UserLCID, DATE_LONGDATE);
 
     /* Set current item to value from registry */
     nRetCode = SendDlgItemMessageW(hwndDlg, IDC_LONGDATEFMT_COMBO,
                                    CB_SELECTSTRING,
                                    -1,
-                                   (LPARAM)szLongDateFmt);
+                                   (LPARAM)pGlobalData->szLongDateFormat);
 
     /* If it is not successful, add new value to list and select them */
     if (nRetCode == CB_ERR)
@@ -395,11 +374,11 @@ InitLongDateCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
         SendDlgItemMessageW(hwndDlg, IDC_LONGDATEFMT_COMBO,
                             CB_ADDSTRING,
                             0,
-                            (LPARAM)szLongDateFmt);
+                            (LPARAM)pGlobalData->szLongDateFormat);
         SendDlgItemMessageW(hwndDlg, IDC_LONGDATEFMT_COMBO,
                             CB_SELECTSTRING,
                             -1,
-                            (LPARAM)szLongDateFmt);
+                            (LPARAM)pGlobalData->szLongDateFormat);
     }
 }
 
@@ -447,7 +426,7 @@ GetMaxDate(LCID lcid)
 
 /* Set's MIN data edit control value to MAX-99 */
 static VOID
-SetMinData(HWND hwndDlg)
+SetMinDate(HWND hwndDlg)
 {
     WCHAR OutBuffer[YEAR_STR_MAX_SIZE];
     HWND hWndYearSpin;
@@ -489,14 +468,14 @@ InitMinMaxDateSpin(HWND hwndDlg, PGLOBALDATA pGlobalData)
     hWndYearSpin = GetDlgItem(hwndDlg, IDC_SCR_MAX_YEAR);
 
     /* Init max date value */
-    wsprintf(OutBuffer, L"%04d", (DWORD)GetMaxDate(pGlobalData->lcid));
+    wsprintf(OutBuffer, L"%04d", (DWORD)GetMaxDate(pGlobalData->UserLCID));
     SendDlgItemMessageW(hwndDlg, IDC_SECONDYEAR_EDIT,
                         WM_SETTEXT,
                         0,
                         (LPARAM)OutBuffer);
 
     /* Init min date value */
-    wsprintf(OutBuffer, L"%04d", (DWORD)GetMaxDate(pGlobalData->lcid) - YEAR_DIFF);
+    wsprintf(OutBuffer, L"%04d", (DWORD)GetMaxDate(pGlobalData->UserLCID) - YEAR_DIFF);
     SendDlgItemMessageW(hwndDlg, IDC_FIRSTYEAR_EDIT,
                         WM_SETTEXT,
                         0,
@@ -513,7 +492,7 @@ InitMinMaxDateSpin(HWND hwndDlg, PGLOBALDATA pGlobalData)
     SendMessageW(hWndYearSpin,
                  UDM_SETPOS,
                  0,
-                 MAKELONG(GetMaxDate(pGlobalData->lcid),0));
+                 MAKELONG(GetMaxDate(pGlobalData->UserLCID),0));
 }
 
 /* Update all date locale samples */
@@ -524,13 +503,13 @@ UpdateDateLocaleSamples(HWND hwndDlg,
     WCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
 
     /* Get short date format sample */
-    GetDateFormatW(pGlobalData->lcid, DATE_SHORTDATE, NULL, NULL, OutBuffer,
+    GetDateFormatW(pGlobalData->UserLCID, DATE_SHORTDATE, NULL, NULL, OutBuffer,
                    MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESAMPLE_EDIT, WM_SETTEXT,
                         0, (LPARAM)OutBuffer);
 
     /* Get long date sample */
-    GetDateFormatW(pGlobalData->lcid, DATE_LONGDATE, NULL, NULL, OutBuffer,
+    GetDateFormatW(pGlobalData->UserLCID, DATE_LONGDATE, NULL, NULL, OutBuffer,
                    MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_LONGDATESAMPLE_EDIT,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);
@@ -562,56 +541,54 @@ DatePageProc(HWND hwndDlg,
             break;
 
         case WM_COMMAND:
-    {
-        switch (LOWORD(wParam))
-        {
-            case IDC_SECONDYEAR_EDIT:
+            switch (LOWORD(wParam))
             {
-                if(HIWORD(wParam)==EN_CHANGE)
-                {
-                    SetMinData(hwndDlg);
-                }
-            }
-            case IDC_SCR_MAX_YEAR:
-            {
-                /* Set "Apply" button enabled */
-                /* FIXME */
-                //PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-            }
-            break;
-            case IDC_CALTYPE_COMBO:
-            case IDC_HIJCHRON_COMBO:
-            case IDC_SHRTDATEFMT_COMBO:
-            case IDC_SHRTDATESEP_COMBO:
-            case IDC_LONGDATEFMT_COMBO:
-            {
-                if (HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_EDITCHANGE)
-                {
+                case IDC_SECONDYEAR_EDIT:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        SetMinDate(hwndDlg);
+                    }
+                    break;
+
+                case IDC_SCR_MAX_YEAR:
                     /* Set "Apply" button enabled */
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                }
+                    /* FIXME */
+                    //PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+
+                case IDC_CALTYPE_COMBO:
+                case IDC_HIJCHRON_COMBO:
+                case IDC_SHRTDATEFMT_COMBO:
+                case IDC_LONGDATEFMT_COMBO:
+                case IDC_SHRTDATESEP_COMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_EDITCHANGE)
+                    {
+                        /* Set "Apply" button enabled */
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
             }
             break;
-        }
-    }
-    break;
-    case WM_NOTIFY:
-    {
-        LPNMHDR lpnm = (LPNMHDR)lParam;
-        /* If push apply button */
-        if (lpnm->code == (UINT)PSN_APPLY)
-        {
-            SetMaxDate(hwndDlg, pGlobalData->lcid);
-            if(!SetShortDateSep(hwndDlg, pGlobalData)) break;
-            if(!SetShortDateFormat(hwndDlg, pGlobalData)) break;
-            if(!SetLongDateFormat(hwndDlg, pGlobalData)) break;
-            InitShortDateCB(hwndDlg, pGlobalData);
-            /* FIXME: */
-            //Sleep(15);
-            UpdateDateLocaleSamples(hwndDlg, pGlobalData);
-        }
-    }
-    break;
+
+        case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            {
+                if (!SetLongDateFormat(hwndDlg, pGlobalData))
+                    break;
+
+                if (!SetShortDateFormat(hwndDlg, pGlobalData))
+                    break;
+
+                if (!SetShortDateSep(hwndDlg, pGlobalData))
+                    break;
+
+                pGlobalData->fUserLocaleChanged = TRUE;
+
+                SetMaxDate(hwndDlg, pGlobalData->UserLCID);
+                InitShortDateCB(hwndDlg, pGlobalData);
+                UpdateDateLocaleSamples(hwndDlg, pGlobalData);
+            }
+            break;
     }
 
     return FALSE;
