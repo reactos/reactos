@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/bootlog.c
+ * FILE:            ntoskrnl/io/iomgr/bootlog.c
  * PURPOSE:         Boot log file support
  *
  * PROGRAMMERS:     Eric Kohl

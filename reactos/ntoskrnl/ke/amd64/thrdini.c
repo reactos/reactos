@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/i386/thread.c
+ * FILE:            ntoskrnl/ke/amd64/thrdini.c
  * PURPOSE:         amd64 Thread Context Creation
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  *                  Alex Ionescu (alex@relsoft.net)

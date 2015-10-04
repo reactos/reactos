@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/adapter.c
+ * FILE:            ntoskrnl/io/iomgr/adapter.c
  * PURPOSE:         I/O Wrappers for HAL Adapter APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)

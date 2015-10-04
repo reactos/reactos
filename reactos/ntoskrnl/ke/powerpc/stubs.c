@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/vdm/vdmmain.c
+ * FILE:            ntoskrnl/ke/powerpc/stubs.c
  * PURPOSE:         VDM Support Services
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/dbg/kdb_symbols.c
+ * FILE:            ntoskrnl/kdbg/kdb_symbols.c
  * PURPOSE:         Getting symbol information...
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)

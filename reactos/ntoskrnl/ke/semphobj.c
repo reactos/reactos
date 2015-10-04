@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/sem.c
+ * FILE:            ntoskrnl/ke/semphobj.c
  * PURPOSE:         Implements the Semaphore Dispatcher Object
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

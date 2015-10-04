@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/powerpc/thread.c
+ * FILE:            ntoskrnl/ke/powerpc/thrdini.c
  * PURPOSE:         i386 Thread Context Creation
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  *                  arty (ppc adaptation)

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/symlink.c
+ * FILE:            ntoskrnl/io/iomgr/symlink.c
  * PURPOSE:         I/O Wrappers for Symbolic Links
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl

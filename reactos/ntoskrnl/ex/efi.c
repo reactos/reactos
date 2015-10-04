@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/efi.c
+ * FILE:            ntoskrnl/ex/efi.c
  * PURPOSE:         I/O Functions for EFI Machines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

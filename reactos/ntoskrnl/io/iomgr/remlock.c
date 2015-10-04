@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/remlock.c
+ * FILE:            ntoskrnl/io/iomgr/remlock.c
  * PURPOSE:         Remove Lock Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/cm/cm.h
+ * FILE:            ntoskrnl/include/internal/cm.h
  * PURPOSE:         Internal header for the Configuration Manager
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

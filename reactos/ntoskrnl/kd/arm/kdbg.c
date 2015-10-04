@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            drivers/base/kdcom/arm/kdbg.c
+ * FILE:            ntoskrnl/kd/arm/kdbg.c
  * PURPOSE:         Serial Port Kernel Debugging Transport Library
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

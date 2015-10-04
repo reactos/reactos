@@ -1,7 +1,7 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/ob_x.h
+* FILE:            ntoskrnl/include/internal/ob_x.h
 * PURPOSE:         Intenral Inlined Functions for the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */

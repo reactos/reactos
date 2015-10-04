@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/include/kd64.h
+ * FILE:            ntoskrnl/include/internal/kd64.h
  * PURPOSE:         Internal header for the KD64 Library
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

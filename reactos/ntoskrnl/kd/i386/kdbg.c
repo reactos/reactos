@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            drivers/base/kdcom/kdbg.c
+ * FILE:            ntoskrnl/kd/i386/kdbg.c
  * PURPOSE:         Serial i/o functions for the kernel debugger.
  * PROGRAMMER:      Alex Ionescu
  *                  Hervé Poussineau

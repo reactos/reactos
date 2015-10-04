@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/include/fsrtl.h
+ * FILE:            ntoskrnl/include/internal/fsrtl.h
  * PURPOSE:         Internal header for the File System Runtime Library
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

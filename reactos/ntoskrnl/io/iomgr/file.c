@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/file.c
+ * FILE:            ntoskrnl/io/iomgr/file.c
  * PURPOSE:         Functions that deal with managing the FILE_OBJECT itself.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gunnar Dalsnes

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/i386/irq.c
+ * FILE:            ntoskrnl/ke/i386/irqobj.c
  * PURPOSE:         Manages the Kernel's IRQ support for external drivers,
  *                  for the purposes of connecting, disconnecting and setting
  *                  up ISRs for drivers. The backend behind the Io* Interrupt

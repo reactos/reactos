@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/cache/logsup.c
+ * FILE:            ntoskrnl/cache/mdlsup.c
  * PURPOSE:         Logging and configuration routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

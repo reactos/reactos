@@ -17,7 +17,7 @@
  *
  *
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/section/fault.c
+ * FILE:            ntoskrnl/cache/section/fault.c
  * PURPOSE:         Consolidate fault handlers for sections
  *
  * PROGRAMMERS:     Arty
