@@ -9,8 +9,6 @@ include_directories(
 list(APPEND SOURCE
     binhive.c
     cmi.c
-    cmindex.c
-    cmname.c
     mkhive.c
     reginf.c
     registry.c
