@@ -55,6 +55,8 @@
     #define OBJ_CASE_INSENSITIVE             0x00000040L
     #define USHORT_MAX                       USHRT_MAX
 
+    #define OBJ_NAME_PATH_SEPARATOR          ((WCHAR)L'\\')
+
     VOID NTAPI
     KeQuerySystemTime(
         OUT PLARGE_INTEGER CurrentTime);
@@ -114,6 +116,8 @@
 
     #include <ntdef.h>
     #include <ntddk.h>
+    #undef PAGED_CODE
+    #define PAGED_CODE()
 
     /* Prevent inclusion of Windows headers through <wine/unicode.h> */
     #define _WINDEF_
@@ -248,7 +252,7 @@ typedef struct _HV_TRACK_CELL_REF
 extern ULONG CmlibTraceLevel;
 
 /*
- * Public functions.
+ * Public Hive functions.
  */
 NTSTATUS CMAPI
 HvInitialize(
@@ -336,6 +340,41 @@ BOOLEAN CMAPI
 HvWriteHive(
    PHHIVE RegistryHive);
 
+BOOLEAN
+CMAPI
+HvTrackCellRef(
+    PHV_TRACK_CELL_REF CellRef,
+    PHHIVE Hive,
+    HCELL_INDEX Cell
+);
+
+VOID
+CMAPI
+HvReleaseFreeCellRefArray(
+    PHV_TRACK_CELL_REF CellRef
+);
+
+/*
+ * Private functions.
+ */
+
+PHBIN CMAPI
+HvpAddBin(
+   PHHIVE RegistryHive,
+   ULONG Size,
+   HSTORAGE_TYPE Storage);
+
+NTSTATUS CMAPI
+HvpCreateHiveFreeCellList(
+   PHHIVE Hive);
+
+ULONG CMAPI
+HvpHiveHeaderChecksum(
+   PHBASE_BLOCK HiveHeader);
+
+
+/* Old-style Public "Cmlib" functions */
+
 BOOLEAN CMAPI
 CmCreateRootNode(
    PHHIVE Hive,
@@ -389,36 +428,54 @@ CmCopyKeyValueName(
     _Out_ PWCHAR ValueNameBuffer,
     _Inout_ ULONG BufferLength);
 
-BOOLEAN
-CMAPI
-HvTrackCellRef(
-    PHV_TRACK_CELL_REF CellRef,
-    PHHIVE Hive,
-    HCELL_INDEX Cell
-);
+/* NT-style Public Cm functions */
+
+LONG
+NTAPI
+CmpCompareCompressedName(
+    IN PCUNICODE_STRING SearchName,
+    IN PWCHAR CompressedName,
+    IN ULONG NameLength
+    );
+
+USHORT
+NTAPI
+CmpCompressedNameSize(
+    IN PWCHAR Name,
+    IN ULONG Length
+    );
+
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByName(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE Parent,
+    IN PCUNICODE_STRING SearchName
+    );
+
+/* To be implemented by the user of this library */
+PVOID
+NTAPI
+CmpAllocate(
+    IN SIZE_T Size,
+    IN BOOLEAN Paged,
+    IN ULONG Tag
+    );
 
 VOID
-CMAPI
-HvReleaseFreeCellRefArray(
-    PHV_TRACK_CELL_REF CellRef
-);
+NTAPI
+CmpFree(
+    IN PVOID Ptr,
+    IN ULONG Quota
+    );
 
-/*
- * Private functions.
- */
-
-PHBIN CMAPI
-HvpAddBin(
-   PHHIVE RegistryHive,
-   ULONG Size,
-   HSTORAGE_TYPE Storage);
-
-NTSTATUS CMAPI
-HvpCreateHiveFreeCellList(
-   PHHIVE Hive);
-
-ULONG CMAPI
-HvpHiveHeaderChecksum(
-   PHBASE_BLOCK HiveHeader);
+VOID
+NTAPI
+CmpCopyCompressedName(
+    IN PWCHAR Destination,
+    IN ULONG DestinationLength,
+    IN PWCHAR Source,
+    IN ULONG SourceLength
+    );
 
 #endif /* _CMLIB_H_ */

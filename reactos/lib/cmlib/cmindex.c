@@ -1,14 +1,14 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         ReactOS Registry Library
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmindex.c
+ * FILE:            lib/cmlib/cmindex.c
  * PURPOSE:         Configuration Manager - Cell Indexes
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
-#include "ntoskrnl.h"
+#include "cmlib.h"
 #define NDEBUG
 #include "debug.h"
 
