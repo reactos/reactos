@@ -1,23 +1,22 @@
 /**
  *  \brief HAVEGE: HArdware Volatile Entropy Gathering and Expansion
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  The HAVEGE RNG was designed by Andre Seznec in 2002.
@@ -27,21 +26,21 @@
  *  Contact: seznec(at)irisa_dot_fr - orocheco(at)irisa_dot_fr
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_HAVEGE_C)
+#if defined(MBEDTLS_HAVEGE_C)
 
-#include "polarssl/havege.h"
-#include "polarssl/timing.h"
+#include "mbedtls/havege.h"
+#include "mbedtls/timing.h"
 
 #include <string.h>
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
@@ -82,7 +81,7 @@ static void polarssl_zeroize( void *v, size_t n ) {
     PTX = (PT1 >> 18) & 7;                              \
     PT1 &= 0x1FFF;                                      \
     PT2 &= 0x1FFF;                                      \
-    CLK = (int) hardclock();                            \
+    CLK = (int) mbedtls_timing_hardclock();                            \
                                                         \
     i = 0;                                              \
     A = &WALK[PT1    ]; RES[i++] ^= *A;                 \
@@ -105,7 +104,7 @@ static void polarssl_zeroize( void *v, size_t n ) {
                                                         \
     IN = (*A >> (5)) ^ (*A << (27)) ^ CLK;              \
     *A = (*B >> (6)) ^ (*B << (26)) ^ CLK;              \
-    *B = IN; CLK = (int) hardclock();                   \
+    *B = IN; CLK = (int) mbedtls_timing_hardclock();                   \
     *C = (*C >> (7)) ^ (*C << (25)) ^ CLK;              \
     *D = (*D >> (8)) ^ (*D << (24)) ^ CLK;              \
                                                         \
@@ -156,12 +155,12 @@ static void polarssl_zeroize( void *v, size_t n ) {
     PT1 ^= (PT2 ^ 0x10) & 0x10;                         \
                                                         \
     for( n++, i = 0; i < 16; i++ )                      \
-        hs->pool[n % COLLECT_SIZE] ^= RES[i];
+        hs->pool[n % MBEDTLS_HAVEGE_COLLECT_SIZE] ^= RES[i];
 
 /*
  * Entropy gathering function
  */
-static void havege_fill( havege_state *hs )
+static void havege_fill( mbedtls_havege_state *hs )
 {
     int i, n = 0;
     int  U1,  U2, *A, *B, *C, *D;
@@ -177,7 +176,7 @@ static void havege_fill( havege_state *hs )
 
     memset( RES, 0, sizeof( RES ) );
 
-    while( n < COLLECT_SIZE * 4 )
+    while( n < MBEDTLS_HAVEGE_COLLECT_SIZE * 4 )
     {
         ONE_ITERATION
         ONE_ITERATION
@@ -189,35 +188,35 @@ static void havege_fill( havege_state *hs )
     hs->PT2 = PT2;
 
     hs->offset[0] = 0;
-    hs->offset[1] = COLLECT_SIZE / 2;
+    hs->offset[1] = MBEDTLS_HAVEGE_COLLECT_SIZE / 2;
 }
 
 /*
  * HAVEGE initialization
  */
-void havege_init( havege_state *hs )
+void mbedtls_havege_init( mbedtls_havege_state *hs )
 {
-    memset( hs, 0, sizeof( havege_state ) );
+    memset( hs, 0, sizeof( mbedtls_havege_state ) );
 
     havege_fill( hs );
 }
 
-void havege_free( havege_state *hs )
+void mbedtls_havege_free( mbedtls_havege_state *hs )
 {
     if( hs == NULL )
         return;
 
-    polarssl_zeroize( hs, sizeof( havege_state ) );
+    mbedtls_zeroize( hs, sizeof( mbedtls_havege_state ) );
 }
 
 /*
  * HAVEGE rand function
  */
-int havege_random( void *p_rng, unsigned char *buf, size_t len )
+int mbedtls_havege_random( void *p_rng, unsigned char *buf, size_t len )
 {
     int val;
     size_t use_len;
-    havege_state *hs = (havege_state *) p_rng;
+    mbedtls_havege_state *hs = (mbedtls_havege_state *) p_rng;
     unsigned char *p = buf;
 
     while( len > 0 )
@@ -226,7 +225,7 @@ int havege_random( void *p_rng, unsigned char *buf, size_t len )
         if( use_len > sizeof(int) )
             use_len = sizeof(int);
 
-        if( hs->offset[1] >= COLLECT_SIZE )
+        if( hs->offset[1] >= MBEDTLS_HAVEGE_COLLECT_SIZE )
             havege_fill( hs );
 
         val  = hs->pool[hs->offset[0]++];
@@ -241,4 +240,4 @@ int havege_random( void *p_rng, unsigned char *buf, size_t len )
     return( 0 );
 }
 
-#endif /* POLARSSL_HAVEGE_C */
+#endif /* MBEDTLS_HAVEGE_C */

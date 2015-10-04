@@ -1,45 +1,49 @@
 /*
  *  An 32-bit implementation of the XTEA algorithm
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_XTEA_C)
+#if defined(MBEDTLS_XTEA_C)
 
-#include "polarssl/xtea.h"
+#include "mbedtls/xtea.h"
 
-#if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include <string.h>
+
+#if defined(MBEDTLS_SELF_TEST)
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
 #else
-#define polarssl_printf printf
-#endif
+#include <stdio.h>
+#define mbedtls_printf printf
+#endif /* MBEDTLS_PLATFORM_C */
+#endif /* MBEDTLS_SELF_TEST */
 
-#if !defined(POLARSSL_XTEA_ALT)
+#if !defined(MBEDTLS_XTEA_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
@@ -66,27 +70,27 @@ static void polarssl_zeroize( void *v, size_t n ) {
 }
 #endif
 
-void xtea_init( xtea_context *ctx )
+void mbedtls_xtea_init( mbedtls_xtea_context *ctx )
 {
-    memset( ctx, 0, sizeof( xtea_context ) );
+    memset( ctx, 0, sizeof( mbedtls_xtea_context ) );
 }
 
-void xtea_free( xtea_context *ctx )
+void mbedtls_xtea_free( mbedtls_xtea_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    polarssl_zeroize( ctx, sizeof( xtea_context ) );
+    mbedtls_zeroize( ctx, sizeof( mbedtls_xtea_context ) );
 }
 
 /*
  * XTEA key schedule
  */
-void xtea_setup( xtea_context *ctx, const unsigned char key[16] )
+void mbedtls_xtea_setup( mbedtls_xtea_context *ctx, const unsigned char key[16] )
 {
     int i;
 
-    memset( ctx, 0, sizeof(xtea_context) );
+    memset( ctx, 0, sizeof(mbedtls_xtea_context) );
 
     for( i = 0; i < 4; i++ )
     {
@@ -97,7 +101,7 @@ void xtea_setup( xtea_context *ctx, const unsigned char key[16] )
 /*
  * XTEA encrypt function
  */
-int xtea_crypt_ecb( xtea_context *ctx, int mode,
+int mbedtls_xtea_crypt_ecb( mbedtls_xtea_context *ctx, int mode,
                     const unsigned char input[8], unsigned char output[8])
 {
     uint32_t *k, v0, v1, i;
@@ -107,7 +111,7 @@ int xtea_crypt_ecb( xtea_context *ctx, int mode,
     GET_UINT32_BE( v0, input, 0 );
     GET_UINT32_BE( v1, input, 4 );
 
-    if( mode == XTEA_ENCRYPT )
+    if( mode == MBEDTLS_XTEA_ENCRYPT )
     {
         uint32_t sum = 0, delta = 0x9E3779B9;
 
@@ -118,7 +122,7 @@ int xtea_crypt_ecb( xtea_context *ctx, int mode,
             v1 += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + k[(sum>>11) & 3]);
         }
     }
-    else /* XTEA_DECRYPT */
+    else /* MBEDTLS_XTEA_DECRYPT */
     {
         uint32_t delta = 0x9E3779B9, sum = delta * 32;
 
@@ -136,11 +140,11 @@ int xtea_crypt_ecb( xtea_context *ctx, int mode,
     return( 0 );
 }
 
-#if defined(POLARSSL_CIPHER_MODE_CBC)
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
 /*
  * XTEA-CBC buffer encryption/decryption
  */
-int xtea_crypt_cbc( xtea_context *ctx, int mode, size_t length,
+int mbedtls_xtea_crypt_cbc( mbedtls_xtea_context *ctx, int mode, size_t length,
                     unsigned char iv[8], const unsigned char *input,
                     unsigned char *output)
 {
@@ -148,14 +152,14 @@ int xtea_crypt_cbc( xtea_context *ctx, int mode, size_t length,
     unsigned char temp[8];
 
     if( length % 8 )
-        return( POLARSSL_ERR_XTEA_INVALID_INPUT_LENGTH );
+        return( MBEDTLS_ERR_XTEA_INVALID_INPUT_LENGTH );
 
-    if( mode == XTEA_DECRYPT )
+    if( mode == MBEDTLS_XTEA_DECRYPT )
     {
         while( length > 0 )
         {
             memcpy( temp, input, 8 );
-            xtea_crypt_ecb( ctx, mode, input, output );
+            mbedtls_xtea_crypt_ecb( ctx, mode, input, output );
 
             for( i = 0; i < 8; i++ )
                 output[i] = (unsigned char)( output[i] ^ iv[i] );
@@ -174,7 +178,7 @@ int xtea_crypt_cbc( xtea_context *ctx, int mode, size_t length,
             for( i = 0; i < 8; i++ )
                 output[i] = (unsigned char)( input[i] ^ iv[i] );
 
-            xtea_crypt_ecb( ctx, mode, output, output );
+            mbedtls_xtea_crypt_ecb( ctx, mode, output, output );
             memcpy( iv, output, 8 );
 
             input  += 8;
@@ -185,13 +189,10 @@ int xtea_crypt_cbc( xtea_context *ctx, int mode, size_t length,
 
     return( 0 );
 }
-#endif /* POLARSSL_CIPHER_MODE_CBC */
-#endif /* !POLARSSL_XTEA_ALT */
+#endif /* MBEDTLS_CIPHER_MODE_CBC */
+#endif /* !MBEDTLS_XTEA_ALT */
 
-#if defined(POLARSSL_SELF_TEST)
-
-#include <string.h>
-#include <stdio.h>
+#if defined(MBEDTLS_SELF_TEST)
 
 /*
  * XTEA tests vectors (non-official)
@@ -236,45 +237,45 @@ static const unsigned char xtea_test_ct[6][8] =
 /*
  * Checkup routine
  */
-int xtea_self_test( int verbose )
+int mbedtls_xtea_self_test( int verbose )
 {
     int i, ret = 0;
     unsigned char buf[8];
-    xtea_context ctx;
+    mbedtls_xtea_context ctx;
 
-    xtea_init( &ctx );
+    mbedtls_xtea_init( &ctx );
     for( i = 0; i < 6; i++ )
     {
         if( verbose != 0 )
-            polarssl_printf( "  XTEA test #%d: ", i + 1 );
+            mbedtls_printf( "  XTEA test #%d: ", i + 1 );
 
         memcpy( buf, xtea_test_pt[i], 8 );
 
-        xtea_setup( &ctx, xtea_test_key[i] );
-        xtea_crypt_ecb( &ctx, XTEA_ENCRYPT, buf, buf );
+        mbedtls_xtea_setup( &ctx, xtea_test_key[i] );
+        mbedtls_xtea_crypt_ecb( &ctx, MBEDTLS_XTEA_ENCRYPT, buf, buf );
 
         if( memcmp( buf, xtea_test_ct[i], 8 ) != 0 )
         {
             if( verbose != 0 )
-                polarssl_printf( "failed\n" );
+                mbedtls_printf( "failed\n" );
 
             ret = 1;
             goto exit;
         }
 
         if( verbose != 0 )
-            polarssl_printf( "passed\n" );
+            mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        polarssl_printf( "\n" );
+        mbedtls_printf( "\n" );
 
 exit:
-    xtea_free( &ctx );
+    mbedtls_xtea_free( &ctx );
 
     return( ret );
 }
 
-#endif /* POLARSSL_SELF_TEST */
+#endif /* MBEDTLS_SELF_TEST */
 
-#endif /* POLARSSL_XTEA_C */
+#endif /* MBEDTLS_XTEA_C */

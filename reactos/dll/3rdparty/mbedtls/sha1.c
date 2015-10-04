@@ -1,23 +1,22 @@
 /*
  *  FIPS-180-1 compliant SHA-1 implementation
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  The SHA-1 standard was published by NIST in 1993.
@@ -25,32 +24,33 @@
  *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_SHA1_C)
+#if defined(MBEDTLS_SHA1_C)
 
-#include "polarssl/sha1.h"
+#include "mbedtls/sha1.h"
 
-#if defined(POLARSSL_FS_IO) || defined(POLARSSL_SELF_TEST)
+#include <string.h>
+
+#if defined(MBEDTLS_SELF_TEST)
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
+#else
 #include <stdio.h>
-#endif
+#define mbedtls_printf printf
+#endif /* MBEDTLS_PLATFORM_C */
+#endif /* MBEDTLS_SELF_TEST */
 
-#if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
-#else
-#define polarssl_printf printf
-#endif
+#if !defined(MBEDTLS_SHA1_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
-
-#if !defined(POLARSSL_SHA1_ALT)
 
 /*
  * 32-bit integer manipulation macros (big endian)
@@ -75,23 +75,29 @@ static void polarssl_zeroize( void *v, size_t n ) {
 }
 #endif
 
-void sha1_init( sha1_context *ctx )
+void mbedtls_sha1_init( mbedtls_sha1_context *ctx )
 {
-    memset( ctx, 0, sizeof( sha1_context ) );
+    memset( ctx, 0, sizeof( mbedtls_sha1_context ) );
 }
 
-void sha1_free( sha1_context *ctx )
+void mbedtls_sha1_free( mbedtls_sha1_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    polarssl_zeroize( ctx, sizeof( sha1_context ) );
+    mbedtls_zeroize( ctx, sizeof( mbedtls_sha1_context ) );
+}
+
+void mbedtls_sha1_clone( mbedtls_sha1_context *dst,
+                         const mbedtls_sha1_context *src )
+{
+    *dst = *src;
 }
 
 /*
  * SHA-1 context setup
  */
-void sha1_starts( sha1_context *ctx )
+void mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
 {
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -103,7 +109,8 @@ void sha1_starts( sha1_context *ctx )
     ctx->state[4] = 0xC3D2E1F0;
 }
 
-void sha1_process( sha1_context *ctx, const unsigned char data[64] )
+#if !defined(MBEDTLS_SHA1_PROCESS_ALT)
+void mbedtls_sha1_process( mbedtls_sha1_context *ctx, const unsigned char data[64] )
 {
     uint32_t temp, W[16], A, B, C, D, E;
 
@@ -258,11 +265,12 @@ void sha1_process( sha1_context *ctx, const unsigned char data[64] )
     ctx->state[3] += D;
     ctx->state[4] += E;
 }
+#endif /* !MBEDTLS_SHA1_PROCESS_ALT */
 
 /*
  * SHA-1 process buffer
  */
-void sha1_update( sha1_context *ctx, const unsigned char *input, size_t ilen )
+void mbedtls_sha1_update( mbedtls_sha1_context *ctx, const unsigned char *input, size_t ilen )
 {
     size_t fill;
     uint32_t left;
@@ -282,7 +290,7 @@ void sha1_update( sha1_context *ctx, const unsigned char *input, size_t ilen )
     if( left && ilen >= fill )
     {
         memcpy( (void *) (ctx->buffer + left), input, fill );
-        sha1_process( ctx, ctx->buffer );
+        mbedtls_sha1_process( ctx, ctx->buffer );
         input += fill;
         ilen  -= fill;
         left = 0;
@@ -290,7 +298,7 @@ void sha1_update( sha1_context *ctx, const unsigned char *input, size_t ilen )
 
     while( ilen >= 64 )
     {
-        sha1_process( ctx, input );
+        mbedtls_sha1_process( ctx, input );
         input += 64;
         ilen  -= 64;
     }
@@ -310,7 +318,7 @@ static const unsigned char sha1_padding[64] =
 /*
  * SHA-1 final digest
  */
-void sha1_finish( sha1_context *ctx, unsigned char output[20] )
+void mbedtls_sha1_finish( mbedtls_sha1_context *ctx, unsigned char output[20] )
 {
     uint32_t last, padn;
     uint32_t high, low;
@@ -326,8 +334,8 @@ void sha1_finish( sha1_context *ctx, unsigned char output[20] )
     last = ctx->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    sha1_update( ctx, sha1_padding, padn );
-    sha1_update( ctx, msglen, 8 );
+    mbedtls_sha1_update( ctx, sha1_padding, padn );
+    mbedtls_sha1_update( ctx, msglen, 8 );
 
     PUT_UINT32_BE( ctx->state[0], output,  0 );
     PUT_UINT32_BE( ctx->state[1], output,  4 );
@@ -336,142 +344,27 @@ void sha1_finish( sha1_context *ctx, unsigned char output[20] )
     PUT_UINT32_BE( ctx->state[4], output, 16 );
 }
 
-#endif /* !POLARSSL_SHA1_ALT */
+#endif /* !MBEDTLS_SHA1_ALT */
 
 /*
  * output = SHA-1( input buffer )
  */
-void sha1( const unsigned char *input, size_t ilen, unsigned char output[20] )
+void mbedtls_sha1( const unsigned char *input, size_t ilen, unsigned char output[20] )
 {
-    sha1_context ctx;
+    mbedtls_sha1_context ctx;
 
-    sha1_init( &ctx );
-    sha1_starts( &ctx );
-    sha1_update( &ctx, input, ilen );
-    sha1_finish( &ctx, output );
-    sha1_free( &ctx );
+    mbedtls_sha1_init( &ctx );
+    mbedtls_sha1_starts( &ctx );
+    mbedtls_sha1_update( &ctx, input, ilen );
+    mbedtls_sha1_finish( &ctx, output );
+    mbedtls_sha1_free( &ctx );
 }
 
-#if defined(POLARSSL_FS_IO)
-/*
- * output = SHA-1( file contents )
- */
-int sha1_file( const char *path, unsigned char output[20] )
-{
-    FILE *f;
-    size_t n;
-    sha1_context ctx;
-    unsigned char buf[1024];
-
-    if( ( f = fopen( path, "rb" ) ) == NULL )
-        return( POLARSSL_ERR_SHA1_FILE_IO_ERROR );
-
-    sha1_init( &ctx );
-    sha1_starts( &ctx );
-
-    while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
-        sha1_update( &ctx, buf, n );
-
-    sha1_finish( &ctx, output );
-    sha1_free( &ctx );
-
-    if( ferror( f ) != 0 )
-    {
-        fclose( f );
-        return( POLARSSL_ERR_SHA1_FILE_IO_ERROR );
-    }
-
-    fclose( f );
-    return( 0 );
-}
-#endif /* POLARSSL_FS_IO */
-
-/*
- * SHA-1 HMAC context setup
- */
-void sha1_hmac_starts( sha1_context *ctx, const unsigned char *key,
-                       size_t keylen )
-{
-    size_t i;
-    unsigned char sum[20];
-
-    if( keylen > 64 )
-    {
-        sha1( key, keylen, sum );
-        keylen = 20;
-        key = sum;
-    }
-
-    memset( ctx->ipad, 0x36, 64 );
-    memset( ctx->opad, 0x5C, 64 );
-
-    for( i = 0; i < keylen; i++ )
-    {
-        ctx->ipad[i] = (unsigned char)( ctx->ipad[i] ^ key[i] );
-        ctx->opad[i] = (unsigned char)( ctx->opad[i] ^ key[i] );
-    }
-
-    sha1_starts( ctx );
-    sha1_update( ctx, ctx->ipad, 64 );
-
-    polarssl_zeroize( sum, sizeof( sum ) );
-}
-
-/*
- * SHA-1 HMAC process buffer
- */
-void sha1_hmac_update( sha1_context *ctx, const unsigned char *input,
-                       size_t ilen )
-{
-    sha1_update( ctx, input, ilen );
-}
-
-/*
- * SHA-1 HMAC final digest
- */
-void sha1_hmac_finish( sha1_context *ctx, unsigned char output[20] )
-{
-    unsigned char tmpbuf[20];
-
-    sha1_finish( ctx, tmpbuf );
-    sha1_starts( ctx );
-    sha1_update( ctx, ctx->opad, 64 );
-    sha1_update( ctx, tmpbuf, 20 );
-    sha1_finish( ctx, output );
-
-    polarssl_zeroize( tmpbuf, sizeof( tmpbuf ) );
-}
-
-/*
- * SHA1 HMAC context reset
- */
-void sha1_hmac_reset( sha1_context *ctx )
-{
-    sha1_starts( ctx );
-    sha1_update( ctx, ctx->ipad, 64 );
-}
-
-/*
- * output = HMAC-SHA-1( hmac key, input buffer )
- */
-void sha1_hmac( const unsigned char *key, size_t keylen,
-                const unsigned char *input, size_t ilen,
-                unsigned char output[20] )
-{
-    sha1_context ctx;
-
-    sha1_init( &ctx );
-    sha1_hmac_starts( &ctx, key, keylen );
-    sha1_hmac_update( &ctx, input, ilen );
-    sha1_hmac_finish( &ctx, output );
-    sha1_free( &ctx );
-}
-
-#if defined(POLARSSL_SELF_TEST)
+#if defined(MBEDTLS_SELF_TEST)
 /*
  * FIPS-180-1 test vectors
  */
-static unsigned char sha1_test_buf[3][57] =
+static const unsigned char sha1_test_buf[3][57] =
 {
     { "abc" },
     { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq" },
@@ -494,82 +387,16 @@ static const unsigned char sha1_test_sum[3][20] =
 };
 
 /*
- * RFC 2202 test vectors
- */
-static unsigned char sha1_hmac_test_key[7][26] =
-{
-    { "\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B"
-      "\x0B\x0B\x0B\x0B" },
-    { "Jefe" },
-    { "\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA"
-      "\xAA\xAA\xAA\xAA" },
-    { "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10"
-      "\x11\x12\x13\x14\x15\x16\x17\x18\x19" },
-    { "\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C"
-      "\x0C\x0C\x0C\x0C" },
-    { "" }, /* 0xAA 80 times */
-    { "" }
-};
-
-static const int sha1_hmac_test_keylen[7] =
-{
-    20, 4, 20, 25, 20, 80, 80
-};
-
-static unsigned char sha1_hmac_test_buf[7][74] =
-{
-    { "Hi There" },
-    { "what do ya want for nothing?" },
-    { "\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD"
-      "\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD"
-      "\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD"
-      "\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD"
-      "\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD" },
-    { "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
-      "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
-      "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
-      "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
-      "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD" },
-    { "Test With Truncation" },
-    { "Test Using Larger Than Block-Size Key - Hash Key First" },
-    { "Test Using Larger Than Block-Size Key and Larger"
-      " Than One Block-Size Data" }
-};
-
-static const int sha1_hmac_test_buflen[7] =
-{
-    8, 28, 50, 50, 20, 54, 73
-};
-
-static const unsigned char sha1_hmac_test_sum[7][20] =
-{
-    { 0xB6, 0x17, 0x31, 0x86, 0x55, 0x05, 0x72, 0x64, 0xE2, 0x8B,
-      0xC0, 0xB6, 0xFB, 0x37, 0x8C, 0x8E, 0xF1, 0x46, 0xBE, 0x00 },
-    { 0xEF, 0xFC, 0xDF, 0x6A, 0xE5, 0xEB, 0x2F, 0xA2, 0xD2, 0x74,
-      0x16, 0xD5, 0xF1, 0x84, 0xDF, 0x9C, 0x25, 0x9A, 0x7C, 0x79 },
-    { 0x12, 0x5D, 0x73, 0x42, 0xB9, 0xAC, 0x11, 0xCD, 0x91, 0xA3,
-      0x9A, 0xF4, 0x8A, 0xA1, 0x7B, 0x4F, 0x63, 0xF1, 0x75, 0xD3 },
-    { 0x4C, 0x90, 0x07, 0xF4, 0x02, 0x62, 0x50, 0xC6, 0xBC, 0x84,
-      0x14, 0xF9, 0xBF, 0x50, 0xC8, 0x6C, 0x2D, 0x72, 0x35, 0xDA },
-    { 0x4C, 0x1A, 0x03, 0x42, 0x4B, 0x55, 0xE0, 0x7F, 0xE7, 0xF2,
-      0x7B, 0xE1 },
-    { 0xAA, 0x4A, 0xE5, 0xE1, 0x52, 0x72, 0xD0, 0x0E, 0x95, 0x70,
-      0x56, 0x37, 0xCE, 0x8A, 0x3B, 0x55, 0xED, 0x40, 0x21, 0x12 },
-    { 0xE8, 0xE9, 0x9D, 0x0F, 0x45, 0x23, 0x7D, 0x78, 0x6D, 0x6B,
-      0xBA, 0xA7, 0x96, 0x5C, 0x78, 0x08, 0xBB, 0xFF, 0x1A, 0x91 }
-};
-
-/*
  * Checkup routine
  */
-int sha1_self_test( int verbose )
+int mbedtls_sha1_self_test( int verbose )
 {
     int i, j, buflen, ret = 0;
     unsigned char buf[1024];
     unsigned char sha1sum[20];
-    sha1_context ctx;
+    mbedtls_sha1_context ctx;
 
-    sha1_init( &ctx );
+    mbedtls_sha1_init( &ctx );
 
     /*
      * SHA-1
@@ -577,82 +404,45 @@ int sha1_self_test( int verbose )
     for( i = 0; i < 3; i++ )
     {
         if( verbose != 0 )
-            polarssl_printf( "  SHA-1 test #%d: ", i + 1 );
+            mbedtls_printf( "  SHA-1 test #%d: ", i + 1 );
 
-        sha1_starts( &ctx );
+        mbedtls_sha1_starts( &ctx );
 
         if( i == 2 )
         {
             memset( buf, 'a', buflen = 1000 );
 
             for( j = 0; j < 1000; j++ )
-                sha1_update( &ctx, buf, buflen );
+                mbedtls_sha1_update( &ctx, buf, buflen );
         }
         else
-            sha1_update( &ctx, sha1_test_buf[i],
+            mbedtls_sha1_update( &ctx, sha1_test_buf[i],
                                sha1_test_buflen[i] );
 
-        sha1_finish( &ctx, sha1sum );
+        mbedtls_sha1_finish( &ctx, sha1sum );
 
         if( memcmp( sha1sum, sha1_test_sum[i], 20 ) != 0 )
         {
             if( verbose != 0 )
-                polarssl_printf( "failed\n" );
+                mbedtls_printf( "failed\n" );
 
             ret = 1;
             goto exit;
         }
 
         if( verbose != 0 )
-            polarssl_printf( "passed\n" );
+            mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        polarssl_printf( "\n" );
-
-    for( i = 0; i < 7; i++ )
-    {
-        if( verbose != 0 )
-            polarssl_printf( "  HMAC-SHA-1 test #%d: ", i + 1 );
-
-        if( i == 5 || i == 6 )
-        {
-            memset( buf, '\xAA', buflen = 80 );
-            sha1_hmac_starts( &ctx, buf, buflen );
-        }
-        else
-            sha1_hmac_starts( &ctx, sha1_hmac_test_key[i],
-                                    sha1_hmac_test_keylen[i] );
-
-        sha1_hmac_update( &ctx, sha1_hmac_test_buf[i],
-                                sha1_hmac_test_buflen[i] );
-
-        sha1_hmac_finish( &ctx, sha1sum );
-
-        buflen = ( i == 4 ) ? 12 : 20;
-
-        if( memcmp( sha1sum, sha1_hmac_test_sum[i], buflen ) != 0 )
-        {
-            if( verbose != 0 )
-                polarssl_printf( "failed\n" );
-
-            ret = 1;
-            goto exit;
-        }
-
-        if( verbose != 0 )
-            polarssl_printf( "passed\n" );
-    }
-
-    if( verbose != 0 )
-        polarssl_printf( "\n" );
+        mbedtls_printf( "\n" );
 
 exit:
-    sha1_free( &ctx );
+    mbedtls_sha1_free( &ctx );
 
     return( ret );
 }
 
-#endif /* POLARSSL_SELF_TEST */
+#endif /* MBEDTLS_SELF_TEST */
 
-#endif /* POLARSSL_SHA1_C */
+#endif /* MBEDTLS_SHA1_C */

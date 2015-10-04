@@ -1,122 +1,142 @@
 /*
  *  Entropy accumulator implementation
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_ENTROPY_C)
+#if defined(MBEDTLS_ENTROPY_C)
 
-#include "polarssl/entropy.h"
-#include "polarssl/entropy_poll.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/entropy_poll.h"
 
-#if defined(POLARSSL_FS_IO)
+#include <string.h>
+
+#if defined(MBEDTLS_FS_IO)
 #include <stdio.h>
 #endif
 
-#if defined(POLARSSL_HAVEGE_C)
-#include "polarssl/havege.h"
+#if defined(MBEDTLS_SELF_TEST)
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
+#else
+#include <stdio.h>
+#define mbedtls_printf     printf
+#endif /* MBEDTLS_PLATFORM_C */
+#endif /* MBEDTLS_SELF_TEST */
+
+#if defined(MBEDTLS_HAVEGE_C)
+#include "mbedtls/havege.h"
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 #define ENTROPY_MAX_LOOP    256     /**< Maximum amount to loop before error */
 
-void entropy_init( entropy_context *ctx )
+void mbedtls_entropy_init( mbedtls_entropy_context *ctx )
 {
-    memset( ctx, 0, sizeof(entropy_context) );
+    memset( ctx, 0, sizeof(mbedtls_entropy_context) );
 
-#if defined(POLARSSL_THREADING_C)
-    polarssl_mutex_init( &ctx->mutex );
+#if defined(MBEDTLS_THREADING_C)
+    mbedtls_mutex_init( &ctx->mutex );
 #endif
 
-#if defined(POLARSSL_ENTROPY_SHA512_ACCUMULATOR)
-    sha512_starts( &ctx->accumulator, 0 );
+#if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
+    mbedtls_sha512_starts( &ctx->accumulator, 0 );
 #else
-    sha256_starts( &ctx->accumulator, 0 );
+    mbedtls_sha256_starts( &ctx->accumulator, 0 );
 #endif
-#if defined(POLARSSL_HAVEGE_C)
-    havege_init( &ctx->havege_data );
+#if defined(MBEDTLS_HAVEGE_C)
+    mbedtls_havege_init( &ctx->havege_data );
 #endif
 
-#if !defined(POLARSSL_NO_DEFAULT_ENTROPY_SOURCES)
-#if !defined(POLARSSL_NO_PLATFORM_ENTROPY)
-    entropy_add_source( ctx, platform_entropy_poll, NULL,
-                        ENTROPY_MIN_PLATFORM );
+#if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
+#if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
+    mbedtls_entropy_add_source( ctx, mbedtls_platform_entropy_poll, NULL,
+                                MBEDTLS_ENTROPY_MIN_PLATFORM,
+                                MBEDTLS_ENTROPY_SOURCE_STRONG );
 #endif
-#if defined(POLARSSL_TIMING_C)
-    entropy_add_source( ctx, hardclock_poll, NULL, ENTROPY_MIN_HARDCLOCK );
+#if defined(MBEDTLS_TIMING_C)
+    mbedtls_entropy_add_source( ctx, mbedtls_hardclock_poll, NULL,
+                                MBEDTLS_ENTROPY_MIN_HARDCLOCK,
+                                MBEDTLS_ENTROPY_SOURCE_WEAK );
 #endif
-#if defined(POLARSSL_HAVEGE_C)
-    entropy_add_source( ctx, havege_poll, &ctx->havege_data,
-                        ENTROPY_MIN_HAVEGE );
+#if defined(MBEDTLS_HAVEGE_C)
+    mbedtls_entropy_add_source( ctx, mbedtls_havege_poll, &ctx->havege_data,
+                                MBEDTLS_ENTROPY_MIN_HAVEGE,
+                                MBEDTLS_ENTROPY_SOURCE_STRONG );
 #endif
-#endif /* POLARSSL_NO_DEFAULT_ENTROPY_SOURCES */
+#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+    mbedtls_entropy_add_source( ctx, mbedtls_hardware_poll, NULL,
+                                MBEDTLS_ENTROPY_MIN_HARDWARE,
+                                MBEDTLS_ENTROPY_SOURCE_STRONG );
+#endif
+#endif /* MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES */
 }
 
-void entropy_free( entropy_context *ctx )
+void mbedtls_entropy_free( mbedtls_entropy_context *ctx )
 {
-#if defined(POLARSSL_HAVEGE_C)
-    havege_free( &ctx->havege_data );
+#if defined(MBEDTLS_HAVEGE_C)
+    mbedtls_havege_free( &ctx->havege_data );
 #endif
-    polarssl_zeroize( ctx, sizeof( entropy_context ) );
-#if defined(POLARSSL_THREADING_C)
-    polarssl_mutex_free( &ctx->mutex );
+#if defined(MBEDTLS_THREADING_C)
+    mbedtls_mutex_free( &ctx->mutex );
 #endif
+    mbedtls_zeroize( ctx, sizeof( mbedtls_entropy_context ) );
 }
 
-int entropy_add_source( entropy_context *ctx,
-                        f_source_ptr f_source, void *p_source,
-                        size_t threshold )
+int mbedtls_entropy_add_source( mbedtls_entropy_context *ctx,
+                        mbedtls_entropy_f_source_ptr f_source, void *p_source,
+                        size_t threshold, int strong )
 {
     int index, ret = 0;
 
-#if defined(POLARSSL_THREADING_C)
-    if( ( ret = polarssl_mutex_lock( &ctx->mutex ) ) != 0 )
+#if defined(MBEDTLS_THREADING_C)
+    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
     index = ctx->source_count;
-    if( index >= ENTROPY_MAX_SOURCES )
+    if( index >= MBEDTLS_ENTROPY_MAX_SOURCES )
     {
-        ret = POLARSSL_ERR_ENTROPY_MAX_SOURCES;
+        ret = MBEDTLS_ERR_ENTROPY_MAX_SOURCES;
         goto exit;
     }
 
-    ctx->source[index].f_source = f_source;
-    ctx->source[index].p_source = p_source;
+    ctx->source[index].f_source  = f_source;
+    ctx->source[index].p_source  = p_source;
     ctx->source[index].threshold = threshold;
+    ctx->source[index].strong    = strong;
 
     ctx->source_count++;
 
 exit:
-#if defined(POLARSSL_THREADING_C)
-    if( polarssl_mutex_unlock( &ctx->mutex ) != 0 )
-        return( POLARSSL_ERR_THREADING_MUTEX_ERROR );
+#if defined(MBEDTLS_THREADING_C)
+    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
     return( ret );
@@ -125,54 +145,54 @@ exit:
 /*
  * Entropy accumulator update
  */
-static int entropy_update( entropy_context *ctx, unsigned char source_id,
+static int entropy_update( mbedtls_entropy_context *ctx, unsigned char source_id,
                            const unsigned char *data, size_t len )
 {
     unsigned char header[2];
-    unsigned char tmp[ENTROPY_BLOCK_SIZE];
+    unsigned char tmp[MBEDTLS_ENTROPY_BLOCK_SIZE];
     size_t use_len = len;
     const unsigned char *p = data;
 
-    if( use_len > ENTROPY_BLOCK_SIZE )
+    if( use_len > MBEDTLS_ENTROPY_BLOCK_SIZE )
     {
-#if defined(POLARSSL_ENTROPY_SHA512_ACCUMULATOR)
-        sha512( data, len, tmp, 0 );
+#if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
+        mbedtls_sha512( data, len, tmp, 0 );
 #else
-        sha256( data, len, tmp, 0 );
+        mbedtls_sha256( data, len, tmp, 0 );
 #endif
         p = tmp;
-        use_len = ENTROPY_BLOCK_SIZE;
+        use_len = MBEDTLS_ENTROPY_BLOCK_SIZE;
     }
 
     header[0] = source_id;
     header[1] = use_len & 0xFF;
 
-#if defined(POLARSSL_ENTROPY_SHA512_ACCUMULATOR)
-    sha512_update( &ctx->accumulator, header, 2 );
-    sha512_update( &ctx->accumulator, p, use_len );
+#if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
+    mbedtls_sha512_update( &ctx->accumulator, header, 2 );
+    mbedtls_sha512_update( &ctx->accumulator, p, use_len );
 #else
-    sha256_update( &ctx->accumulator, header, 2 );
-    sha256_update( &ctx->accumulator, p, use_len );
+    mbedtls_sha256_update( &ctx->accumulator, header, 2 );
+    mbedtls_sha256_update( &ctx->accumulator, p, use_len );
 #endif
 
     return( 0 );
 }
 
-int entropy_update_manual( entropy_context *ctx,
+int mbedtls_entropy_update_manual( mbedtls_entropy_context *ctx,
                            const unsigned char *data, size_t len )
 {
     int ret;
 
-#if defined(POLARSSL_THREADING_C)
-    if( ( ret = polarssl_mutex_lock( &ctx->mutex ) ) != 0 )
+#if defined(MBEDTLS_THREADING_C)
+    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
-    ret = entropy_update( ctx, ENTROPY_SOURCE_MANUAL, data, len );
+    ret = entropy_update( ctx, MBEDTLS_ENTROPY_SOURCE_MANUAL, data, len );
 
-#if defined(POLARSSL_THREADING_C)
-    if( polarssl_mutex_unlock( &ctx->mutex ) != 0 )
-        return( POLARSSL_ERR_THREADING_MUTEX_ERROR );
+#if defined(MBEDTLS_THREADING_C)
+    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
     return( ret );
@@ -181,23 +201,26 @@ int entropy_update_manual( entropy_context *ctx,
 /*
  * Run through the different sources to add entropy to our accumulator
  */
-static int entropy_gather_internal( entropy_context *ctx )
+static int entropy_gather_internal( mbedtls_entropy_context *ctx )
 {
-    int ret, i;
-    unsigned char buf[ENTROPY_MAX_GATHER];
+    int ret, i, have_one_strong = 0;
+    unsigned char buf[MBEDTLS_ENTROPY_MAX_GATHER];
     size_t olen;
 
     if( ctx->source_count == 0 )
-        return( POLARSSL_ERR_ENTROPY_NO_SOURCES_DEFINED );
+        return( MBEDTLS_ERR_ENTROPY_NO_SOURCES_DEFINED );
 
     /*
      * Run through our entropy sources
      */
     for( i = 0; i < ctx->source_count; i++ )
     {
+        if( ctx->source[i].strong == MBEDTLS_ENTROPY_SOURCE_STRONG )
+            have_one_strong = 1;
+
         olen = 0;
         if( ( ret = ctx->source[i].f_source( ctx->source[i].p_source,
-                        buf, ENTROPY_MAX_GATHER, &olen ) ) != 0 )
+                        buf, MBEDTLS_ENTROPY_MAX_GATHER, &olen ) ) != 0 )
         {
             return( ret );
         }
@@ -212,42 +235,45 @@ static int entropy_gather_internal( entropy_context *ctx )
         }
     }
 
+    if( have_one_strong == 0 )
+        return( MBEDTLS_ERR_ENTROPY_NO_STRONG_SOURCE );
+
     return( 0 );
 }
 
 /*
  * Thread-safe wrapper for entropy_gather_internal()
  */
-int entropy_gather( entropy_context *ctx )
+int mbedtls_entropy_gather( mbedtls_entropy_context *ctx )
 {
     int ret;
 
-#if defined(POLARSSL_THREADING_C)
-    if( ( ret = polarssl_mutex_lock( &ctx->mutex ) ) != 0 )
+#if defined(MBEDTLS_THREADING_C)
+    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
     ret = entropy_gather_internal( ctx );
 
-#if defined(POLARSSL_THREADING_C)
-    if( polarssl_mutex_unlock( &ctx->mutex ) != 0 )
-        return( POLARSSL_ERR_THREADING_MUTEX_ERROR );
+#if defined(MBEDTLS_THREADING_C)
+    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
     return( ret );
 }
 
-int entropy_func( void *data, unsigned char *output, size_t len )
+int mbedtls_entropy_func( void *data, unsigned char *output, size_t len )
 {
-    int ret, count = 0, i, reached;
-    entropy_context *ctx = (entropy_context *) data;
-    unsigned char buf[ENTROPY_BLOCK_SIZE];
+    int ret, count = 0, i, done;
+    mbedtls_entropy_context *ctx = (mbedtls_entropy_context *) data;
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE];
 
-    if( len > ENTROPY_BLOCK_SIZE )
-        return( POLARSSL_ERR_ENTROPY_SOURCE_FAILED );
+    if( len > MBEDTLS_ENTROPY_BLOCK_SIZE )
+        return( MBEDTLS_ERR_ENTROPY_SOURCE_FAILED );
 
-#if defined(POLARSSL_THREADING_C)
-    if( ( ret = polarssl_mutex_lock( &ctx->mutex ) ) != 0 )
+#if defined(MBEDTLS_THREADING_C)
+    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
@@ -258,52 +284,51 @@ int entropy_func( void *data, unsigned char *output, size_t len )
     {
         if( count++ > ENTROPY_MAX_LOOP )
         {
-            ret = POLARSSL_ERR_ENTROPY_SOURCE_FAILED;
+            ret = MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
             goto exit;
         }
 
         if( ( ret = entropy_gather_internal( ctx ) ) != 0 )
             goto exit;
 
-        reached = 0;
-
+        done = 1;
         for( i = 0; i < ctx->source_count; i++ )
-            if( ctx->source[i].size >= ctx->source[i].threshold )
-                reached++;
+            if( ctx->source[i].size < ctx->source[i].threshold )
+                done = 0;
     }
-    while( reached != ctx->source_count );
+    while( ! done );
 
-    memset( buf, 0, ENTROPY_BLOCK_SIZE );
+    memset( buf, 0, MBEDTLS_ENTROPY_BLOCK_SIZE );
 
-#if defined(POLARSSL_ENTROPY_SHA512_ACCUMULATOR)
-    sha512_finish( &ctx->accumulator, buf );
+#if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
+    mbedtls_sha512_finish( &ctx->accumulator, buf );
 
     /*
      * Reset accumulator and counters and recycle existing entropy
      */
-    memset( &ctx->accumulator, 0, sizeof( sha512_context ) );
-    sha512_starts( &ctx->accumulator, 0 );
-    sha512_update( &ctx->accumulator, buf, ENTROPY_BLOCK_SIZE );
+    memset( &ctx->accumulator, 0, sizeof( mbedtls_sha512_context ) );
+    mbedtls_sha512_starts( &ctx->accumulator, 0 );
+    mbedtls_sha512_update( &ctx->accumulator, buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
 
     /*
      * Perform second SHA-512 on entropy
      */
-    sha512( buf, ENTROPY_BLOCK_SIZE, buf, 0 );
-#else /* POLARSSL_ENTROPY_SHA512_ACCUMULATOR */
-    sha256_finish( &ctx->accumulator, buf );
+    mbedtls_sha512( buf, MBEDTLS_ENTROPY_BLOCK_SIZE, buf, 0 );
+#else /* MBEDTLS_ENTROPY_SHA512_ACCUMULATOR */
+    mbedtls_sha256_finish( &ctx->accumulator, buf );
 
     /*
      * Reset accumulator and counters and recycle existing entropy
      */
-    memset( &ctx->accumulator, 0, sizeof( sha256_context ) );
-    sha256_starts( &ctx->accumulator, 0 );
-    sha256_update( &ctx->accumulator, buf, ENTROPY_BLOCK_SIZE );
+    memset( &ctx->accumulator, 0, sizeof( mbedtls_sha256_context ) );
+    mbedtls_sha256_starts( &ctx->accumulator, 0 );
+    mbedtls_sha256_update( &ctx->accumulator, buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
 
     /*
      * Perform second SHA-256 on entropy
      */
-    sha256( buf, ENTROPY_BLOCK_SIZE, buf, 0 );
-#endif /* POLARSSL_ENTROPY_SHA512_ACCUMULATOR */
+    mbedtls_sha256( buf, MBEDTLS_ENTROPY_BLOCK_SIZE, buf, 0 );
+#endif /* MBEDTLS_ENTROPY_SHA512_ACCUMULATOR */
 
     for( i = 0; i < ctx->source_count; i++ )
         ctx->source[i].size = 0;
@@ -313,30 +338,30 @@ int entropy_func( void *data, unsigned char *output, size_t len )
     ret = 0;
 
 exit:
-#if defined(POLARSSL_THREADING_C)
-    if( polarssl_mutex_unlock( &ctx->mutex ) != 0 )
-        return( POLARSSL_ERR_THREADING_MUTEX_ERROR );
+#if defined(MBEDTLS_THREADING_C)
+    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
     return( ret );
 }
 
-#if defined(POLARSSL_FS_IO)
-int entropy_write_seed_file( entropy_context *ctx, const char *path )
+#if defined(MBEDTLS_FS_IO)
+int mbedtls_entropy_write_seed_file( mbedtls_entropy_context *ctx, const char *path )
 {
-    int ret = POLARSSL_ERR_ENTROPY_FILE_IO_ERROR;
+    int ret = MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR;
     FILE *f;
-    unsigned char buf[ENTROPY_BLOCK_SIZE];
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE];
 
     if( ( f = fopen( path, "wb" ) ) == NULL )
-        return( POLARSSL_ERR_ENTROPY_FILE_IO_ERROR );
+        return( MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR );
 
-    if( ( ret = entropy_func( ctx, buf, ENTROPY_BLOCK_SIZE ) ) != 0 )
+    if( ( ret = mbedtls_entropy_func( ctx, buf, MBEDTLS_ENTROPY_BLOCK_SIZE ) ) != 0 )
         goto exit;
 
-    if( fwrite( buf, 1, ENTROPY_BLOCK_SIZE, f ) != ENTROPY_BLOCK_SIZE )
+    if( fwrite( buf, 1, MBEDTLS_ENTROPY_BLOCK_SIZE, f ) != MBEDTLS_ENTROPY_BLOCK_SIZE )
     {
-        ret = POLARSSL_ERR_ENTROPY_FILE_IO_ERROR;
+        ret = MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR;
         goto exit;
     }
 
@@ -347,45 +372,37 @@ exit:
     return( ret );
 }
 
-int entropy_update_seed_file( entropy_context *ctx, const char *path )
+int mbedtls_entropy_update_seed_file( mbedtls_entropy_context *ctx, const char *path )
 {
     FILE *f;
     size_t n;
-    unsigned char buf[ ENTROPY_MAX_SEED_SIZE ];
+    unsigned char buf[ MBEDTLS_ENTROPY_MAX_SEED_SIZE ];
 
     if( ( f = fopen( path, "rb" ) ) == NULL )
-        return( POLARSSL_ERR_ENTROPY_FILE_IO_ERROR );
+        return( MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR );
 
     fseek( f, 0, SEEK_END );
     n = (size_t) ftell( f );
     fseek( f, 0, SEEK_SET );
 
-    if( n > ENTROPY_MAX_SEED_SIZE )
-        n = ENTROPY_MAX_SEED_SIZE;
+    if( n > MBEDTLS_ENTROPY_MAX_SEED_SIZE )
+        n = MBEDTLS_ENTROPY_MAX_SEED_SIZE;
 
     if( fread( buf, 1, n, f ) != n )
     {
         fclose( f );
-        return( POLARSSL_ERR_ENTROPY_FILE_IO_ERROR );
+        return( MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR );
     }
 
     fclose( f );
 
-    entropy_update_manual( ctx, buf, n );
+    mbedtls_entropy_update_manual( ctx, buf, n );
 
-    return( entropy_write_seed_file( ctx, path ) );
+    return( mbedtls_entropy_write_seed_file( ctx, path ) );
 }
-#endif /* POLARSSL_FS_IO */
+#endif /* MBEDTLS_FS_IO */
 
-#if defined(POLARSSL_SELF_TEST)
-
-#if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
-#else
-#include <stdio.h>
-#define polarssl_printf     printf
-#endif
-
+#if defined(MBEDTLS_SELF_TEST)
 /*
  * Dummy source function
  */
@@ -405,31 +422,33 @@ static int entropy_dummy_source( void *data, unsigned char *output,
  * test that the functions don't cause errors and write the correct
  * amount of data to buffers.
  */
-int entropy_self_test( int verbose )
+int mbedtls_entropy_self_test( int verbose )
 {
     int ret = 0;
-    entropy_context ctx;
-    unsigned char buf[ENTROPY_BLOCK_SIZE] = { 0 };
-    unsigned char acc[ENTROPY_BLOCK_SIZE] = { 0 };
+    mbedtls_entropy_context ctx;
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE] = { 0 };
+    unsigned char acc[MBEDTLS_ENTROPY_BLOCK_SIZE] = { 0 };
     size_t i, j;
 
     if( verbose != 0 )
-        polarssl_printf( "  ENTROPY test: " );
+        mbedtls_printf( "  ENTROPY test: " );
 
-    entropy_init( &ctx );
+    mbedtls_entropy_init( &ctx );
 
-    ret = entropy_add_source( &ctx, entropy_dummy_source, NULL, 16 );
+    /* First do a gather to make sure we have default sources */
+    if( ( ret = mbedtls_entropy_gather( &ctx ) ) != 0 )
+        goto cleanup;
+
+    ret = mbedtls_entropy_add_source( &ctx, entropy_dummy_source, NULL, 16,
+                                      MBEDTLS_ENTROPY_SOURCE_WEAK );
     if( ret != 0 )
         goto cleanup;
 
-    if( ( ret = entropy_gather( &ctx ) ) != 0 )
-        goto cleanup;
-
-    if( ( ret = entropy_update_manual( &ctx, buf, sizeof buf ) ) != 0 )
+    if( ( ret = mbedtls_entropy_update_manual( &ctx, buf, sizeof buf ) ) != 0 )
         goto cleanup;
 
     /*
-     * To test that entropy_func writes correct number of bytes:
+     * To test that mbedtls_entropy_func writes correct number of bytes:
      * - use the whole buffer and rely on ASan to detect overruns
      * - collect entropy 8 times and OR the result in an accumulator:
      *   any byte should then be 0 with probably 2^(-64), so requiring
@@ -438,7 +457,7 @@ int entropy_self_test( int verbose )
      */
     for( i = 0; i < 8; i++ )
     {
-        if( ( ret = entropy_func( &ctx, buf, sizeof( buf ) ) ) != 0 )
+        if( ( ret = mbedtls_entropy_func( &ctx, buf, sizeof( buf ) ) ) != 0 )
             goto cleanup;
 
         for( j = 0; j < sizeof( buf ); j++ )
@@ -455,20 +474,20 @@ int entropy_self_test( int verbose )
     }
 
 cleanup:
-    entropy_free( &ctx );
+    mbedtls_entropy_free( &ctx );
 
     if( verbose != 0 )
     {
         if( ret != 0 )
-            polarssl_printf( "failed\n" );
+            mbedtls_printf( "failed\n" );
         else
-            polarssl_printf( "passed\n" );
+            mbedtls_printf( "passed\n" );
 
-        polarssl_printf( "\n" );
+        mbedtls_printf( "\n" );
     }
 
     return( ret != 0 );
 }
-#endif /* POLARSSL_SELF_TEST */
+#endif /* MBEDTLS_SELF_TEST */
 
-#endif /* POLARSSL_ENTROPY_C */
+#endif /* MBEDTLS_ENTROPY_C */

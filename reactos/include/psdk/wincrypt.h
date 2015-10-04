@@ -1688,6 +1688,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_TYPE_STREAM                 (4 << 9)
 #define ALG_TYPE_DH                     (5 << 9)
 #define ALG_TYPE_SECURECHANNEL          (6 << 9)
+#define ALG_TYPE_DH_EPHEM               (7 << 9) /* FIXME: find the real TYPE name */
 
 /* SIDs */
 #define ALG_SID_ANY                     (0)
@@ -1718,12 +1719,13 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_AES_192                15
 #define ALG_SID_AES_256                16
 #define ALG_SID_AES                    17
-/* Diffie-Hellmans SIDs */
+/* Diffie-Hellman SIDs */
 #define ALG_SID_DH_SANDF                1
 #define ALG_SID_DH_EPHEM                2
 #define ALG_SID_AGREED_KEY_ANY          3
 #define ALG_SID_KEA                     4
 #define ALG_SID_ECDH                    5
+#define ALG_SID_ECDH_EPHEM              6 /* FIXME: find the real SID name */
 /* RC2 SIDs */
 #define ALG_SID_RC4                     1
 #define ALG_SID_RC2                     2
@@ -1775,6 +1777,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_DH_EPHEM             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_DH_EPHEM)
 #define CALG_RSA_KEYX             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_RSA           | ALG_SID_RSA_ANY)
 #define CALG_ECDH                 (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_ECDH)
+#define CALG_ECDH_EPHEM           (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH_EPHEM      | ALG_SID_ECDH_EPHEM) /* FIXME: find the original TYPE and SID names */
 #define CALG_ECMQV                (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_ANY           | ALG_SID_ECMQV)
 #define CALG_DES                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_DES)
 #define CALG_RC2                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_RC2)

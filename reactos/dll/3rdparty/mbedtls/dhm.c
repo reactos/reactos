@@ -1,23 +1,22 @@
 /*
  *  Diffie-Hellman-Merkle key exchange
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  Reference:
@@ -25,58 +24,61 @@
  *  http://www.cacr.math.uwaterloo.ca/hac/ (chapter 12)
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_DHM_C)
+#if defined(MBEDTLS_DHM_C)
 
-#include "polarssl/dhm.h"
+#include "mbedtls/dhm.h"
 
-#if defined(POLARSSL_PEM_PARSE_C)
-#include "polarssl/pem.h"
+#include <string.h>
+
+#if defined(MBEDTLS_PEM_PARSE_C)
+#include "mbedtls/pem.h"
 #endif
 
-#if defined(POLARSSL_ASN1_PARSE_C)
-#include "polarssl/asn1.h"
+#if defined(MBEDTLS_ASN1_PARSE_C)
+#include "mbedtls/asn1.h"
 #endif
 
-#if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
 #else
 #include <stdlib.h>
-#define polarssl_printf     printf
-#define polarssl_malloc     malloc
-#define polarssl_free       free
+#include <stdio.h>
+#define mbedtls_printf     printf
+#define mbedtls_calloc    calloc
+#define mbedtls_free       free
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 /*
- * helper to validate the mpi size and import it
+ * helper to validate the mbedtls_mpi size and import it
  */
-static int dhm_read_bignum( mpi *X,
+static int dhm_read_bignum( mbedtls_mpi *X,
                             unsigned char **p,
                             const unsigned char *end )
 {
     int ret, n;
 
     if( end - *p < 2 )
-        return( POLARSSL_ERR_DHM_BAD_INPUT_DATA );
+        return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
     n = ( (*p)[0] << 8 ) | (*p)[1];
     (*p) += 2;
 
     if( (int)( end - *p ) < n )
-        return( POLARSSL_ERR_DHM_BAD_INPUT_DATA );
+        return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
-    if( ( ret = mpi_read_binary( X, *p, n ) ) != 0 )
-        return( POLARSSL_ERR_DHM_READ_PARAMS_FAILED + ret );
+    if( ( ret = mbedtls_mpi_read_binary( X, *p, n ) ) != 0 )
+        return( MBEDTLS_ERR_DHM_READ_PARAMS_FAILED + ret );
 
     (*p) += n;
 
@@ -92,36 +94,36 @@ static int dhm_read_bignum( mpi *X,
  *  http://www.cl.cam.ac.uk/~rja14/Papers/psandqs.pdf
  *  http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2005-2643
  */
-static int dhm_check_range( const mpi *param, const mpi *P )
+static int dhm_check_range( const mbedtls_mpi *param, const mbedtls_mpi *P )
 {
-    mpi L, U;
-    int ret = POLARSSL_ERR_DHM_BAD_INPUT_DATA;
+    mbedtls_mpi L, U;
+    int ret = MBEDTLS_ERR_DHM_BAD_INPUT_DATA;
 
-    mpi_init( &L ); mpi_init( &U );
+    mbedtls_mpi_init( &L ); mbedtls_mpi_init( &U );
 
-    MPI_CHK( mpi_lset( &L, 2 ) );
-    MPI_CHK( mpi_sub_int( &U, P, 2 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &L, 2 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_sub_int( &U, P, 2 ) );
 
-    if( mpi_cmp_mpi( param, &L ) >= 0 &&
-        mpi_cmp_mpi( param, &U ) <= 0 )
+    if( mbedtls_mpi_cmp_mpi( param, &L ) >= 0 &&
+        mbedtls_mpi_cmp_mpi( param, &U ) <= 0 )
     {
         ret = 0;
     }
 
 cleanup:
-    mpi_free( &L ); mpi_free( &U );
+    mbedtls_mpi_free( &L ); mbedtls_mpi_free( &U );
     return( ret );
 }
 
-void dhm_init( dhm_context *ctx )
+void mbedtls_dhm_init( mbedtls_dhm_context *ctx )
 {
-    memset( ctx, 0, sizeof( dhm_context ) );
+    memset( ctx, 0, sizeof( mbedtls_dhm_context ) );
 }
 
 /*
  * Parse the ServerKeyExchange parameters
  */
-int dhm_read_params( dhm_context *ctx,
+int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
                      unsigned char **p,
                      const unsigned char *end )
 {
@@ -135,7 +137,7 @@ int dhm_read_params( dhm_context *ctx,
     if( ( ret = dhm_check_range( &ctx->GY, &ctx->P ) ) != 0 )
         return( ret );
 
-    ctx->len = mpi_size( &ctx->P );
+    ctx->len = mbedtls_mpi_size( &ctx->P );
 
     return( 0 );
 }
@@ -143,7 +145,7 @@ int dhm_read_params( dhm_context *ctx,
 /*
  * Setup and write the ServerKeyExchange parameters
  */
-int dhm_make_params( dhm_context *ctx, int x_size,
+int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
                      unsigned char *output, size_t *olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
@@ -152,28 +154,28 @@ int dhm_make_params( dhm_context *ctx, int x_size,
     size_t n1, n2, n3;
     unsigned char *p;
 
-    if( mpi_cmp_int( &ctx->P, 0 ) == 0 )
-        return( POLARSSL_ERR_DHM_BAD_INPUT_DATA );
+    if( mbedtls_mpi_cmp_int( &ctx->P, 0 ) == 0 )
+        return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
     /*
      * Generate X as large as possible ( < P )
      */
     do
     {
-        mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
+        mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
 
-        while( mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
-            MPI_CHK( mpi_shift_r( &ctx->X, 1 ) );
+        while( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
+            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->X, 1 ) );
 
         if( count++ > 10 )
-            return( POLARSSL_ERR_DHM_MAKE_PARAMS_FAILED );
+            return( MBEDTLS_ERR_DHM_MAKE_PARAMS_FAILED );
     }
     while( dhm_check_range( &ctx->X, &ctx->P ) != 0 );
 
     /*
      * Calculate GX = G^X mod P
      */
-    MPI_CHK( mpi_exp_mod( &ctx->GX, &ctx->G, &ctx->X,
+    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &ctx->GX, &ctx->G, &ctx->X,
                           &ctx->P , &ctx->RP ) );
 
     if( ( ret = dhm_check_range( &ctx->GX, &ctx->P ) ) != 0 )
@@ -183,13 +185,13 @@ int dhm_make_params( dhm_context *ctx, int x_size,
      * export P, G, GX
      */
 #define DHM_MPI_EXPORT(X,n)                     \
-    MPI_CHK( mpi_write_binary( X, p + 2, n ) ); \
+    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( X, p + 2, n ) ); \
     *p++ = (unsigned char)( n >> 8 );           \
     *p++ = (unsigned char)( n      ); p += n;
 
-    n1 = mpi_size( &ctx->P  );
-    n2 = mpi_size( &ctx->G  );
-    n3 = mpi_size( &ctx->GX );
+    n1 = mbedtls_mpi_size( &ctx->P  );
+    n2 = mbedtls_mpi_size( &ctx->G  );
+    n3 = mbedtls_mpi_size( &ctx->GX );
 
     p = output;
     DHM_MPI_EXPORT( &ctx->P , n1 );
@@ -203,7 +205,7 @@ int dhm_make_params( dhm_context *ctx, int x_size,
 cleanup:
 
     if( ret != 0 )
-        return( POLARSSL_ERR_DHM_MAKE_PARAMS_FAILED + ret );
+        return( MBEDTLS_ERR_DHM_MAKE_PARAMS_FAILED + ret );
 
     return( 0 );
 }
@@ -211,16 +213,16 @@ cleanup:
 /*
  * Import the peer's public value G^Y
  */
-int dhm_read_public( dhm_context *ctx,
+int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
                      const unsigned char *input, size_t ilen )
 {
     int ret;
 
     if( ctx == NULL || ilen < 1 || ilen > ctx->len )
-        return( POLARSSL_ERR_DHM_BAD_INPUT_DATA );
+        return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
-    if( ( ret = mpi_read_binary( &ctx->GY, input, ilen ) ) != 0 )
-        return( POLARSSL_ERR_DHM_READ_PUBLIC_FAILED + ret );
+    if( ( ret = mbedtls_mpi_read_binary( &ctx->GY, input, ilen ) ) != 0 )
+        return( MBEDTLS_ERR_DHM_READ_PUBLIC_FAILED + ret );
 
     return( 0 );
 }
@@ -228,7 +230,7 @@ int dhm_read_public( dhm_context *ctx,
 /*
  * Create own private value X and export G^X
  */
-int dhm_make_public( dhm_context *ctx, int x_size,
+int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
                      unsigned char *output, size_t olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
@@ -236,38 +238,38 @@ int dhm_make_public( dhm_context *ctx, int x_size,
     int ret, count = 0;
 
     if( ctx == NULL || olen < 1 || olen > ctx->len )
-        return( POLARSSL_ERR_DHM_BAD_INPUT_DATA );
+        return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
-    if( mpi_cmp_int( &ctx->P, 0 ) == 0 )
-        return( POLARSSL_ERR_DHM_BAD_INPUT_DATA );
+    if( mbedtls_mpi_cmp_int( &ctx->P, 0 ) == 0 )
+        return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
     /*
      * generate X and calculate GX = G^X mod P
      */
     do
     {
-        mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
+        mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
 
-        while( mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
-            MPI_CHK( mpi_shift_r( &ctx->X, 1 ) );
+        while( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
+            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->X, 1 ) );
 
         if( count++ > 10 )
-            return( POLARSSL_ERR_DHM_MAKE_PUBLIC_FAILED );
+            return( MBEDTLS_ERR_DHM_MAKE_PUBLIC_FAILED );
     }
     while( dhm_check_range( &ctx->X, &ctx->P ) != 0 );
 
-    MPI_CHK( mpi_exp_mod( &ctx->GX, &ctx->G, &ctx->X,
+    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &ctx->GX, &ctx->G, &ctx->X,
                           &ctx->P , &ctx->RP ) );
 
     if( ( ret = dhm_check_range( &ctx->GX, &ctx->P ) ) != 0 )
         return( ret );
 
-    MPI_CHK( mpi_write_binary( &ctx->GX, output, olen ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->GX, output, olen ) );
 
 cleanup:
 
     if( ret != 0 )
-        return( POLARSSL_ERR_DHM_MAKE_PUBLIC_FAILED + ret );
+        return( MBEDTLS_ERR_DHM_MAKE_PUBLIC_FAILED + ret );
 
     return( 0 );
 }
@@ -275,10 +277,10 @@ cleanup:
 /*
  * Use the blinding method and optimisation suggested in section 10 of:
  *  KOCHER, Paul C. Timing attacks on implementations of Diffie-Hellman, RSA,
- *  DSS, and other systems. In : Advances in Cryptology—CRYPTO’96. Springer
+ *  DSS, and other systems. In : Advances in Cryptology-CRYPTO'96. Springer
  *  Berlin Heidelberg, 1996. p. 104-113.
  */
-static int dhm_update_blinding( dhm_context *ctx,
+static int dhm_update_blinding( mbedtls_dhm_context *ctx,
                     int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
     int ret, count;
@@ -287,11 +289,11 @@ static int dhm_update_blinding( dhm_context *ctx,
      * Don't use any blinding the first time a particular X is used,
      * but remember it to use blinding next time.
      */
-    if( mpi_cmp_mpi( &ctx->X, &ctx->pX ) != 0 )
+    if( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->pX ) != 0 )
     {
-        MPI_CHK( mpi_copy( &ctx->pX, &ctx->X ) );
-        MPI_CHK( mpi_lset( &ctx->Vi, 1 ) );
-        MPI_CHK( mpi_lset( &ctx->Vf, 1 ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &ctx->pX, &ctx->X ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &ctx->Vi, 1 ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &ctx->Vf, 1 ) );
 
         return( 0 );
     }
@@ -300,13 +302,13 @@ static int dhm_update_blinding( dhm_context *ctx,
      * Ok, we need blinding. Can we re-use existing values?
      * If yes, just update them by squaring them.
      */
-    if( mpi_cmp_int( &ctx->Vi, 1 ) != 0 )
+    if( mbedtls_mpi_cmp_int( &ctx->Vi, 1 ) != 0 )
     {
-        MPI_CHK( mpi_mul_mpi( &ctx->Vi, &ctx->Vi, &ctx->Vi ) );
-        MPI_CHK( mpi_mod_mpi( &ctx->Vi, &ctx->Vi, &ctx->P ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &ctx->Vi, &ctx->Vi, &ctx->Vi ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &ctx->Vi, &ctx->Vi, &ctx->P ) );
 
-        MPI_CHK( mpi_mul_mpi( &ctx->Vf, &ctx->Vf, &ctx->Vf ) );
-        MPI_CHK( mpi_mod_mpi( &ctx->Vf, &ctx->Vf, &ctx->P ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &ctx->Vf, &ctx->Vf, &ctx->Vf ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &ctx->Vf, &ctx->Vf, &ctx->P ) );
 
         return( 0 );
     }
@@ -319,19 +321,19 @@ static int dhm_update_blinding( dhm_context *ctx,
     count = 0;
     do
     {
-        mpi_fill_random( &ctx->Vi, mpi_size( &ctx->P ), f_rng, p_rng );
+        mbedtls_mpi_fill_random( &ctx->Vi, mbedtls_mpi_size( &ctx->P ), f_rng, p_rng );
 
-        while( mpi_cmp_mpi( &ctx->Vi, &ctx->P ) >= 0 )
-            MPI_CHK( mpi_shift_r( &ctx->Vi, 1 ) );
+        while( mbedtls_mpi_cmp_mpi( &ctx->Vi, &ctx->P ) >= 0 )
+            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->Vi, 1 ) );
 
         if( count++ > 10 )
-            return( POLARSSL_ERR_MPI_NOT_ACCEPTABLE );
+            return( MBEDTLS_ERR_MPI_NOT_ACCEPTABLE );
     }
-    while( mpi_cmp_int( &ctx->Vi, 1 ) <= 0 );
+    while( mbedtls_mpi_cmp_int( &ctx->Vi, 1 ) <= 0 );
 
     /* Vf = Vi^-X mod P */
-    MPI_CHK( mpi_inv_mod( &ctx->Vf, &ctx->Vi, &ctx->P ) );
-    MPI_CHK( mpi_exp_mod( &ctx->Vf, &ctx->Vf, &ctx->X, &ctx->P, &ctx->RP ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_inv_mod( &ctx->Vf, &ctx->Vi, &ctx->P ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &ctx->Vf, &ctx->Vf, &ctx->X, &ctx->P, &ctx->RP ) );
 
 cleanup:
     return( ret );
@@ -340,52 +342,52 @@ cleanup:
 /*
  * Derive and export the shared secret (G^Y)^X mod P
  */
-int dhm_calc_secret( dhm_context *ctx,
-                     unsigned char *output, size_t *olen,
+int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
+                     unsigned char *output, size_t output_size, size_t *olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
     int ret;
-    mpi GYb;
+    mbedtls_mpi GYb;
 
-    if( ctx == NULL || *olen < ctx->len )
-        return( POLARSSL_ERR_DHM_BAD_INPUT_DATA );
+    if( ctx == NULL || output_size < ctx->len )
+        return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
     if( ( ret = dhm_check_range( &ctx->GY, &ctx->P ) ) != 0 )
         return( ret );
 
-    mpi_init( &GYb );
+    mbedtls_mpi_init( &GYb );
 
     /* Blind peer's value */
     if( f_rng != NULL )
     {
-        MPI_CHK( dhm_update_blinding( ctx, f_rng, p_rng ) );
-        MPI_CHK( mpi_mul_mpi( &GYb, &ctx->GY, &ctx->Vi ) );
-        MPI_CHK( mpi_mod_mpi( &GYb, &GYb, &ctx->P ) );
+        MBEDTLS_MPI_CHK( dhm_update_blinding( ctx, f_rng, p_rng ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &GYb, &ctx->GY, &ctx->Vi ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &GYb, &GYb, &ctx->P ) );
     }
     else
-        MPI_CHK( mpi_copy( &GYb, &ctx->GY ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &GYb, &ctx->GY ) );
 
     /* Do modular exponentiation */
-    MPI_CHK( mpi_exp_mod( &ctx->K, &GYb, &ctx->X,
+    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &ctx->K, &GYb, &ctx->X,
                           &ctx->P, &ctx->RP ) );
 
     /* Unblind secret value */
     if( f_rng != NULL )
     {
-        MPI_CHK( mpi_mul_mpi( &ctx->K, &ctx->K, &ctx->Vf ) );
-        MPI_CHK( mpi_mod_mpi( &ctx->K, &ctx->K, &ctx->P ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &ctx->K, &ctx->K, &ctx->Vf ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &ctx->K, &ctx->K, &ctx->P ) );
     }
 
-    *olen = mpi_size( &ctx->K );
+    *olen = mbedtls_mpi_size( &ctx->K );
 
-    MPI_CHK( mpi_write_binary( &ctx->K, output, *olen ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->K, output, *olen ) );
 
 cleanup:
-    mpi_free( &GYb );
+    mbedtls_mpi_free( &GYb );
 
     if( ret != 0 )
-        return( POLARSSL_ERR_DHM_CALC_SECRET_FAILED + ret );
+        return( MBEDTLS_ERR_DHM_CALC_SECRET_FAILED + ret );
 
     return( 0 );
 }
@@ -393,35 +395,39 @@ cleanup:
 /*
  * Free the components of a DHM key
  */
-void dhm_free( dhm_context *ctx )
+void mbedtls_dhm_free( mbedtls_dhm_context *ctx )
 {
-    mpi_free( &ctx->pX); mpi_free( &ctx->Vf ); mpi_free( &ctx->Vi );
-    mpi_free( &ctx->RP ); mpi_free( &ctx->K ); mpi_free( &ctx->GY );
-    mpi_free( &ctx->GX ); mpi_free( &ctx->X ); mpi_free( &ctx->G );
-    mpi_free( &ctx->P );
+    mbedtls_mpi_free( &ctx->pX); mbedtls_mpi_free( &ctx->Vf ); mbedtls_mpi_free( &ctx->Vi );
+    mbedtls_mpi_free( &ctx->RP ); mbedtls_mpi_free( &ctx->K ); mbedtls_mpi_free( &ctx->GY );
+    mbedtls_mpi_free( &ctx->GX ); mbedtls_mpi_free( &ctx->X ); mbedtls_mpi_free( &ctx->G );
+    mbedtls_mpi_free( &ctx->P );
 
-    polarssl_zeroize( ctx, sizeof( dhm_context ) );
+    mbedtls_zeroize( ctx, sizeof( mbedtls_dhm_context ) );
 }
 
-#if defined(POLARSSL_ASN1_PARSE_C)
+#if defined(MBEDTLS_ASN1_PARSE_C)
 /*
  * Parse DHM parameters
  */
-int dhm_parse_dhm( dhm_context *dhm, const unsigned char *dhmin,
+int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
                    size_t dhminlen )
 {
     int ret;
     size_t len;
     unsigned char *p, *end;
-#if defined(POLARSSL_PEM_PARSE_C)
-    pem_context pem;
+#if defined(MBEDTLS_PEM_PARSE_C)
+    mbedtls_pem_context pem;
 
-    pem_init( &pem );
+    mbedtls_pem_init( &pem );
 
-    ret = pem_read_buffer( &pem,
-                           "-----BEGIN DH PARAMETERS-----",
-                           "-----END DH PARAMETERS-----",
-                           dhmin, NULL, 0, &dhminlen );
+    /* Avoid calling mbedtls_pem_read_buffer() on non-null-terminated string */
+    if( dhminlen == 0 || dhmin[dhminlen - 1] != '\0' )
+        ret = MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT;
+    else
+        ret = mbedtls_pem_read_buffer( &pem,
+                               "-----BEGIN DH PARAMETERS-----",
+                               "-----END DH PARAMETERS-----",
+                               dhmin, NULL, 0, &dhminlen );
 
     if( ret == 0 )
     {
@@ -430,61 +436,80 @@ int dhm_parse_dhm( dhm_context *dhm, const unsigned char *dhmin,
          */
         dhminlen = pem.buflen;
     }
-    else if( ret != POLARSSL_ERR_PEM_NO_HEADER_FOOTER_PRESENT )
+    else if( ret != MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT )
         goto exit;
 
     p = ( ret == 0 ) ? pem.buf : (unsigned char *) dhmin;
 #else
     p = (unsigned char *) dhmin;
-#endif /* POLARSSL_PEM_PARSE_C */
+#endif /* MBEDTLS_PEM_PARSE_C */
     end = p + dhminlen;
 
     /*
      *  DHParams ::= SEQUENCE {
-     *      prime            INTEGER,  -- P
-     *      generator        INTEGER,  -- g
+     *      prime              INTEGER,  -- P
+     *      generator          INTEGER,  -- g
+     *      privateValueLength INTEGER OPTIONAL
      *  }
      */
-    if( ( ret = asn1_get_tag( &p, end, &len,
-            ASN1_CONSTRUCTED | ASN1_SEQUENCE ) ) != 0 )
+    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
+            MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 )
     {
-        ret = POLARSSL_ERR_DHM_INVALID_FORMAT + ret;
+        ret = MBEDTLS_ERR_DHM_INVALID_FORMAT + ret;
         goto exit;
     }
 
     end = p + len;
 
-    if( ( ret = asn1_get_mpi( &p, end, &dhm->P  ) ) != 0 ||
-        ( ret = asn1_get_mpi( &p, end, &dhm->G ) ) != 0 )
+    if( ( ret = mbedtls_asn1_get_mpi( &p, end, &dhm->P  ) ) != 0 ||
+        ( ret = mbedtls_asn1_get_mpi( &p, end, &dhm->G ) ) != 0 )
     {
-        ret = POLARSSL_ERR_DHM_INVALID_FORMAT + ret;
+        ret = MBEDTLS_ERR_DHM_INVALID_FORMAT + ret;
         goto exit;
     }
 
     if( p != end )
     {
-        ret = POLARSSL_ERR_DHM_INVALID_FORMAT +
-              POLARSSL_ERR_ASN1_LENGTH_MISMATCH;
-        goto exit;
+        /* This might be the optional privateValueLength.
+         * If so, we can cleanly discard it */
+        mbedtls_mpi rec;
+        mbedtls_mpi_init( &rec );
+        ret = mbedtls_asn1_get_mpi( &p, end, &rec );
+        mbedtls_mpi_free( &rec );
+        if ( ret != 0 )
+        {
+            ret = MBEDTLS_ERR_DHM_INVALID_FORMAT + ret;
+            goto exit;
+        }
+        if ( p != end )
+        {
+            ret = MBEDTLS_ERR_DHM_INVALID_FORMAT +
+                MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;
+            goto exit;
+        }
     }
 
     ret = 0;
 
-    dhm->len = mpi_size( &dhm->P );
+    dhm->len = mbedtls_mpi_size( &dhm->P );
 
 exit:
-#if defined(POLARSSL_PEM_PARSE_C)
-    pem_free( &pem );
+#if defined(MBEDTLS_PEM_PARSE_C)
+    mbedtls_pem_free( &pem );
 #endif
     if( ret != 0 )
-        dhm_free( dhm );
+        mbedtls_dhm_free( dhm );
 
     return( ret );
 }
 
-#if defined(POLARSSL_FS_IO)
+#if defined(MBEDTLS_FS_IO)
 /*
  * Load all data from a file into a given buffer.
+ *
+ * The file is expected to contain either PEM or DER encoded data.
+ * A terminating null byte is always appended. It is included in the announced
+ * length only if the data looks like it is PEM encoded.
  */
 static int load_file( const char *path, unsigned char **buf, size_t *n )
 {
@@ -492,35 +517,38 @@ static int load_file( const char *path, unsigned char **buf, size_t *n )
     long size;
 
     if( ( f = fopen( path, "rb" ) ) == NULL )
-        return( POLARSSL_ERR_DHM_FILE_IO_ERROR );
+        return( MBEDTLS_ERR_DHM_FILE_IO_ERROR );
 
     fseek( f, 0, SEEK_END );
     if( ( size = ftell( f ) ) == -1 )
     {
         fclose( f );
-        return( POLARSSL_ERR_DHM_FILE_IO_ERROR );
+        return( MBEDTLS_ERR_DHM_FILE_IO_ERROR );
     }
     fseek( f, 0, SEEK_SET );
 
     *n = (size_t) size;
 
     if( *n + 1 == 0 ||
-        ( *buf = (unsigned char *) polarssl_malloc( *n + 1 ) ) == NULL )
+        ( *buf = mbedtls_calloc( 1, *n + 1 ) ) == NULL )
     {
         fclose( f );
-        return( POLARSSL_ERR_DHM_MALLOC_FAILED );
+        return( MBEDTLS_ERR_DHM_ALLOC_FAILED );
     }
 
     if( fread( *buf, 1, *n, f ) != *n )
     {
         fclose( f );
-        polarssl_free( *buf );
-        return( POLARSSL_ERR_DHM_FILE_IO_ERROR );
+        mbedtls_free( *buf );
+        return( MBEDTLS_ERR_DHM_FILE_IO_ERROR );
     }
 
     fclose( f );
 
     (*buf)[*n] = '\0';
+
+    if( strstr( (const char *) *buf, "-----BEGIN " ) != NULL )
+        ++*n;
 
     return( 0 );
 }
@@ -528,7 +556,7 @@ static int load_file( const char *path, unsigned char **buf, size_t *n )
 /*
  * Load and parse DHM parameters
  */
-int dhm_parse_dhmfile( dhm_context *dhm, const char *path )
+int mbedtls_dhm_parse_dhmfile( mbedtls_dhm_context *dhm, const char *path )
 {
     int ret;
     size_t n;
@@ -537,59 +565,60 @@ int dhm_parse_dhmfile( dhm_context *dhm, const char *path )
     if( ( ret = load_file( path, &buf, &n ) ) != 0 )
         return( ret );
 
-    ret = dhm_parse_dhm( dhm, buf, n );
+    ret = mbedtls_dhm_parse_dhm( dhm, buf, n );
 
-    polarssl_zeroize( buf, n + 1 );
-    polarssl_free( buf );
+    mbedtls_zeroize( buf, n );
+    mbedtls_free( buf );
 
     return( ret );
 }
-#endif /* POLARSSL_FS_IO */
-#endif /* POLARSSL_ASN1_PARSE_C */
+#endif /* MBEDTLS_FS_IO */
+#endif /* MBEDTLS_ASN1_PARSE_C */
 
-#if defined(POLARSSL_SELF_TEST)
+#if defined(MBEDTLS_SELF_TEST)
 
-#include "polarssl/certs.h"
+static const char mbedtls_test_dhm_params[] =
+"-----BEGIN DH PARAMETERS-----\r\n"
+"MIGHAoGBAJ419DBEOgmQTzo5qXl5fQcN9TN455wkOL7052HzxxRVMyhYmwQcgJvh\r\n"
+"1sa18fyfR9OiVEMYglOpkqVoGLN7qd5aQNNi5W7/C+VBdHTBJcGZJyyP5B3qcz32\r\n"
+"9mLJKudlVudV0Qxk5qUJaPZ/xupz0NyoVpviuiBOI1gNi8ovSXWzAgEC\r\n"
+"-----END DH PARAMETERS-----\r\n";
+
+static const size_t mbedtls_test_dhm_params_len = sizeof( mbedtls_test_dhm_params );
 
 /*
  * Checkup routine
  */
-int dhm_self_test( int verbose )
+int mbedtls_dhm_self_test( int verbose )
 {
-#if defined(POLARSSL_CERTS_C)
     int ret;
-    dhm_context dhm;
+    mbedtls_dhm_context dhm;
 
-    dhm_init( &dhm );
+    mbedtls_dhm_init( &dhm );
 
     if( verbose != 0 )
-        polarssl_printf( "  DHM parameter load: " );
+        mbedtls_printf( "  DHM parameter load: " );
 
-    if( ( ret = dhm_parse_dhm( &dhm, (const unsigned char *) test_dhm_params,
-                               strlen( test_dhm_params ) ) ) != 0 )
+    if( ( ret = mbedtls_dhm_parse_dhm( &dhm,
+                    (const unsigned char *) mbedtls_test_dhm_params,
+                    mbedtls_test_dhm_params_len ) ) != 0 )
     {
         if( verbose != 0 )
-            polarssl_printf( "failed\n" );
+            mbedtls_printf( "failed\n" );
 
         ret = 1;
         goto exit;
     }
 
     if( verbose != 0 )
-        polarssl_printf( "passed\n\n" );
+        mbedtls_printf( "passed\n\n" );
 
 exit:
-    dhm_free( &dhm );
+    mbedtls_dhm_free( &dhm );
 
     return( ret );
-#else
-    if( verbose != 0 )
-        polarssl_printf( "  DHM parameter load: skipped\n" );
-
-    return( 0 );
-#endif /* POLARSSL_CERTS_C */
 }
 
-#endif /* POLARSSL_SELF_TEST */
+#endif /* MBEDTLS_SELF_TEST */
 
-#endif /* POLARSSL_DHM_C */
+#endif /* MBEDTLS_DHM_C */

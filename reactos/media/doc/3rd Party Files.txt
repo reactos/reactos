@@ -1,6 +1,6 @@
-Files synched with Wine can be found in /media/doc/README.WINE
+Files synced with Wine can be found in /media/doc/README.WINE
 
-Other Things synched with other projects:
+Other things synced with other projects:
 
 Title: Liberation Fonts
 Used Version: 2.00.1
@@ -79,7 +79,7 @@ Used Version: 9a
 Website: http://www.ijg.org/
 
 Title: mbed TLS
-Used Version: 1.3.10
+Used Version: 2.1.1
 Website: https://tls.mbed.org/
 
 Title: libpng

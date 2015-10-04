@@ -1,23 +1,22 @@
 /*
  *  NIST SP800-38C compliant CCM implementation
  *
- *  Copyright (C) 2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 /*
@@ -29,18 +28,29 @@
  * RFC 5116 "An Interface and Algorithms for Authenticated Encryption"
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_CCM_C)
+#if defined(MBEDTLS_CCM_C)
 
-#include "polarssl/ccm.h"
+#include "mbedtls/ccm.h"
+
+#include <string.h>
+
+#if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
+#else
+#include <stdio.h>
+#define mbedtls_printf printf
+#endif /* MBEDTLS_PLATFORM_C */
+#endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
@@ -50,28 +60,33 @@ static void polarssl_zeroize( void *v, size_t n ) {
 /*
  * Initialize context
  */
-int ccm_init( ccm_context *ctx, cipher_id_t cipher,
-              const unsigned char *key, unsigned int keysize )
+void mbedtls_ccm_init( mbedtls_ccm_context *ctx )
+{
+    memset( ctx, 0, sizeof( mbedtls_ccm_context ) );
+}
+
+int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
+                        mbedtls_cipher_id_t cipher,
+                        const unsigned char *key,
+                        unsigned int keybits )
 {
     int ret;
-    const cipher_info_t *cipher_info;
+    const mbedtls_cipher_info_t *cipher_info;
 
-    memset( ctx, 0, sizeof( ccm_context ) );
-
-    cipher_init( &ctx->cipher_ctx );
-
-    cipher_info = cipher_info_from_values( cipher, keysize, POLARSSL_MODE_ECB );
+    cipher_info = mbedtls_cipher_info_from_values( cipher, keybits, MBEDTLS_MODE_ECB );
     if( cipher_info == NULL )
-        return( POLARSSL_ERR_CCM_BAD_INPUT );
+        return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
     if( cipher_info->block_size != 16 )
-        return( POLARSSL_ERR_CCM_BAD_INPUT );
+        return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
-    if( ( ret = cipher_init_ctx( &ctx->cipher_ctx, cipher_info ) ) != 0 )
+    mbedtls_cipher_free( &ctx->cipher_ctx );
+
+    if( ( ret = mbedtls_cipher_setup( &ctx->cipher_ctx, cipher_info ) ) != 0 )
         return( ret );
 
-    if( ( ret = cipher_setkey( &ctx->cipher_ctx, key, keysize,
-                               POLARSSL_ENCRYPT ) ) != 0 )
+    if( ( ret = mbedtls_cipher_setkey( &ctx->cipher_ctx, key, keybits,
+                               MBEDTLS_ENCRYPT ) ) != 0 )
     {
         return( ret );
     }
@@ -82,10 +97,10 @@ int ccm_init( ccm_context *ctx, cipher_id_t cipher,
 /*
  * Free context
  */
-void ccm_free( ccm_context *ctx )
+void mbedtls_ccm_free( mbedtls_ccm_context *ctx )
 {
-    cipher_free( &ctx->cipher_ctx );
-    polarssl_zeroize( ctx, sizeof( ccm_context ) );
+    mbedtls_cipher_free( &ctx->cipher_ctx );
+    mbedtls_zeroize( ctx, sizeof( mbedtls_ccm_context ) );
 }
 
 /*
@@ -101,7 +116,7 @@ void ccm_free( ccm_context *ctx )
     for( i = 0; i < 16; i++ )                                               \
         y[i] ^= b[i];                                                       \
                                                                             \
-    if( ( ret = cipher_update( &ctx->cipher_ctx, y, 16, y, &olen ) ) != 0 ) \
+    if( ( ret = mbedtls_cipher_update( &ctx->cipher_ctx, y, 16, y, &olen ) ) != 0 ) \
         return( ret );
 
 /*
@@ -110,7 +125,7 @@ void ccm_free( ccm_context *ctx )
  * This avoids allocating one more 16 bytes buffer while allowing src == dst.
  */
 #define CTR_CRYPT( dst, src, len  )                                            \
-    if( ( ret = cipher_update( &ctx->cipher_ctx, ctr, 16, b, &olen ) ) != 0 )  \
+    if( ( ret = mbedtls_cipher_update( &ctx->cipher_ctx, ctr, 16, b, &olen ) ) != 0 )  \
         return( ret );                                                         \
                                                                                \
     for( i = 0; i < len; i++ )                                                 \
@@ -119,7 +134,7 @@ void ccm_free( ccm_context *ctx )
 /*
  * Authenticated encryption or decryption
  */
-static int ccm_auth_crypt( ccm_context *ctx, int mode, size_t length,
+static int ccm_auth_crypt( mbedtls_ccm_context *ctx, int mode, size_t length,
                            const unsigned char *iv, size_t iv_len,
                            const unsigned char *add, size_t add_len,
                            const unsigned char *input, unsigned char *output,
@@ -127,7 +142,7 @@ static int ccm_auth_crypt( ccm_context *ctx, int mode, size_t length,
 {
     int ret;
     unsigned char i;
-    unsigned char q = 16 - 1 - iv_len;
+    unsigned char q;
     size_t len_left, olen;
     unsigned char b[16];
     unsigned char y[16];
@@ -141,14 +156,16 @@ static int ccm_auth_crypt( ccm_context *ctx, int mode, size_t length,
      * 'length' checked later (when writing it to the first block)
      */
     if( tag_len < 4 || tag_len > 16 || tag_len % 2 != 0 )
-        return( POLARSSL_ERR_CCM_BAD_INPUT );
+        return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
     /* Also implies q is within bounds */
     if( iv_len < 7 || iv_len > 13 )
-        return( POLARSSL_ERR_CCM_BAD_INPUT );
+        return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
     if( add_len > 0xFF00 )
-        return( POLARSSL_ERR_CCM_BAD_INPUT );
+        return( MBEDTLS_ERR_CCM_BAD_INPUT );
+
+    q = 16 - 1 - (unsigned char) iv_len;
 
     /*
      * First block B_0:
@@ -173,7 +190,7 @@ static int ccm_auth_crypt( ccm_context *ctx, int mode, size_t length,
         b[15-i] = (unsigned char)( len_left & 0xFF );
 
     if( len_left > 0 )
-        return( POLARSSL_ERR_CCM_BAD_INPUT );
+        return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
 
     /* Start CBC-MAC with first block */
@@ -241,7 +258,7 @@ static int ccm_auth_crypt( ccm_context *ctx, int mode, size_t length,
 
     while( len_left > 0 )
     {
-        unsigned char use_len = len_left > 16 ? 16 : len_left;
+        size_t use_len = len_left > 16 ? 16 : len_left;
 
         if( mode == CCM_ENCRYPT )
         {
@@ -287,7 +304,7 @@ static int ccm_auth_crypt( ccm_context *ctx, int mode, size_t length,
 /*
  * Authenticated encryption
  */
-int ccm_encrypt_and_tag( ccm_context *ctx, size_t length,
+int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                          const unsigned char *iv, size_t iv_len,
                          const unsigned char *add, size_t add_len,
                          const unsigned char *input, unsigned char *output,
@@ -300,7 +317,7 @@ int ccm_encrypt_and_tag( ccm_context *ctx, size_t length,
 /*
  * Authenticated decryption
  */
-int ccm_auth_decrypt( ccm_context *ctx, size_t length,
+int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
                       const unsigned char *iv, size_t iv_len,
                       const unsigned char *add, size_t add_len,
                       const unsigned char *input, unsigned char *output,
@@ -324,23 +341,15 @@ int ccm_auth_decrypt( ccm_context *ctx, size_t length,
 
     if( diff != 0 )
     {
-        polarssl_zeroize( output, length );
-        return( POLARSSL_ERR_CCM_AUTH_FAILED );
+        mbedtls_zeroize( output, length );
+        return( MBEDTLS_ERR_CCM_AUTH_FAILED );
     }
 
     return( 0 );
 }
 
 
-#if defined(POLARSSL_SELF_TEST) && defined(POLARSSL_AES_C)
-
-#if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
-#else
-#include <stdio.h>
-#define polarssl_printf printf
-#endif
-
+#if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
 /*
  * Examples 1 to 3 from SP800-38C Appendix C
  */
@@ -388,17 +397,19 @@ static const unsigned char res[NB_TESTS][32] = {
         0x48, 0x43, 0x92, 0xfb, 0xc1, 0xb0, 0x99, 0x51 }
 };
 
-int ccm_self_test( int verbose )
+int mbedtls_ccm_self_test( int verbose )
 {
-    ccm_context ctx;
+    mbedtls_ccm_context ctx;
     unsigned char out[32];
     size_t i;
     int ret;
 
-    if( ccm_init( &ctx, POLARSSL_CIPHER_ID_AES, key, 8 * sizeof key ) != 0 )
+    mbedtls_ccm_init( &ctx );
+
+    if( mbedtls_ccm_setkey( &ctx, MBEDTLS_CIPHER_ID_AES, key, 8 * sizeof key ) != 0 )
     {
         if( verbose != 0 )
-            polarssl_printf( "  CCM: setup failed" );
+            mbedtls_printf( "  CCM: setup failed" );
 
         return( 1 );
     }
@@ -406,9 +417,9 @@ int ccm_self_test( int verbose )
     for( i = 0; i < NB_TESTS; i++ )
     {
         if( verbose != 0 )
-            polarssl_printf( "  CCM-AES #%u: ", (unsigned int) i + 1 );
+            mbedtls_printf( "  CCM-AES #%u: ", (unsigned int) i + 1 );
 
-        ret = ccm_encrypt_and_tag( &ctx, msg_len[i],
+        ret = mbedtls_ccm_encrypt_and_tag( &ctx, msg_len[i],
                                    iv, iv_len[i], ad, add_len[i],
                                    msg, out,
                                    out + msg_len[i], tag_len[i] );
@@ -417,12 +428,12 @@ int ccm_self_test( int verbose )
             memcmp( out, res[i], msg_len[i] + tag_len[i] ) != 0 )
         {
             if( verbose != 0 )
-                polarssl_printf( "failed\n" );
+                mbedtls_printf( "failed\n" );
 
             return( 1 );
         }
 
-        ret = ccm_auth_decrypt( &ctx, msg_len[i],
+        ret = mbedtls_ccm_auth_decrypt( &ctx, msg_len[i],
                                 iv, iv_len[i], ad, add_len[i],
                                 res[i], out,
                                 res[i] + msg_len[i], tag_len[i] );
@@ -431,23 +442,23 @@ int ccm_self_test( int verbose )
             memcmp( out, msg, msg_len[i] ) != 0 )
         {
             if( verbose != 0 )
-                polarssl_printf( "failed\n" );
+                mbedtls_printf( "failed\n" );
 
             return( 1 );
         }
 
         if( verbose != 0 )
-            polarssl_printf( "passed\n" );
+            mbedtls_printf( "passed\n" );
     }
 
-    ccm_free( &ctx );
+    mbedtls_ccm_free( &ctx );
 
     if( verbose != 0 )
-        polarssl_printf( "\n" );
+        mbedtls_printf( "\n" );
 
     return( 0 );
 }
 
-#endif /* POLARSSL_SELF_TEST && POLARSSL_AES_C */
+#endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
 
-#endif /* POLARSSL_CCM_C */
+#endif /* MBEDTLS_CCM_C */

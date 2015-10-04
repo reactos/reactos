@@ -1,23 +1,22 @@
 /*
  *  RFC 1186/1320 compliant MD4 implementation
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  The MD4 algorithm was designed by Ron Rivest in 1990.
@@ -26,32 +25,33 @@
  *  http://www.ietf.org/rfc/rfc1320.txt
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_MD4_C)
+#if defined(MBEDTLS_MD4_C)
 
-#include "polarssl/md4.h"
+#include "mbedtls/md4.h"
 
-#if defined(POLARSSL_FS_IO) || defined(POLARSSL_SELF_TEST)
+#include <string.h>
+
+#if defined(MBEDTLS_SELF_TEST)
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
+#else
 #include <stdio.h>
-#endif
+#define mbedtls_printf printf
+#endif /* MBEDTLS_PLATFORM_C */
+#endif /* MBEDTLS_SELF_TEST */
 
-#if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
-#else
-#define polarssl_printf printf
-#endif
+#if !defined(MBEDTLS_MD4_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
-
-#if !defined(POLARSSL_MD4_ALT)
 
 /*
  * 32-bit integer manipulation macros (little endian)
@@ -76,23 +76,29 @@ static void polarssl_zeroize( void *v, size_t n ) {
 }
 #endif
 
-void md4_init( md4_context *ctx )
+void mbedtls_md4_init( mbedtls_md4_context *ctx )
 {
-    memset( ctx, 0, sizeof( md4_context ) );
+    memset( ctx, 0, sizeof( mbedtls_md4_context ) );
 }
 
-void md4_free( md4_context *ctx )
+void mbedtls_md4_free( mbedtls_md4_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    polarssl_zeroize( ctx, sizeof( md4_context ) );
+    mbedtls_zeroize( ctx, sizeof( mbedtls_md4_context ) );
+}
+
+void mbedtls_md4_clone( mbedtls_md4_context *dst,
+                        const mbedtls_md4_context *src )
+{
+    *dst = *src;
 }
 
 /*
  * MD4 context setup
  */
-void md4_starts( md4_context *ctx )
+void mbedtls_md4_starts( mbedtls_md4_context *ctx )
 {
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -103,7 +109,8 @@ void md4_starts( md4_context *ctx )
     ctx->state[3] = 0x10325476;
 }
 
-void md4_process( md4_context *ctx, const unsigned char data[64] )
+#if !defined(MBEDTLS_MD4_PROCESS_ALT)
+void mbedtls_md4_process( mbedtls_md4_context *ctx, const unsigned char data[64] )
 {
     uint32_t X[16], A, B, C, D;
 
@@ -205,11 +212,12 @@ void md4_process( md4_context *ctx, const unsigned char data[64] )
     ctx->state[2] += C;
     ctx->state[3] += D;
 }
+#endif /* !MBEDTLS_MD4_PROCESS_ALT */
 
 /*
  * MD4 process buffer
  */
-void md4_update( md4_context *ctx, const unsigned char *input, size_t ilen )
+void mbedtls_md4_update( mbedtls_md4_context *ctx, const unsigned char *input, size_t ilen )
 {
     size_t fill;
     uint32_t left;
@@ -230,7 +238,7 @@ void md4_update( md4_context *ctx, const unsigned char *input, size_t ilen )
     {
         memcpy( (void *) (ctx->buffer + left),
                 (void *) input, fill );
-        md4_process( ctx, ctx->buffer );
+        mbedtls_md4_process( ctx, ctx->buffer );
         input += fill;
         ilen  -= fill;
         left = 0;
@@ -238,7 +246,7 @@ void md4_update( md4_context *ctx, const unsigned char *input, size_t ilen )
 
     while( ilen >= 64 )
     {
-        md4_process( ctx, input );
+        mbedtls_md4_process( ctx, input );
         input += 64;
         ilen  -= 64;
     }
@@ -261,7 +269,7 @@ static const unsigned char md4_padding[64] =
 /*
  * MD4 final digest
  */
-void md4_finish( md4_context *ctx, unsigned char output[16] )
+void mbedtls_md4_finish( mbedtls_md4_context *ctx, unsigned char output[16] )
 {
     uint32_t last, padn;
     uint32_t high, low;
@@ -277,8 +285,8 @@ void md4_finish( md4_context *ctx, unsigned char output[16] )
     last = ctx->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    md4_update( ctx, (unsigned char *) md4_padding, padn );
-    md4_update( ctx, msglen, 8 );
+    mbedtls_md4_update( ctx, (unsigned char *) md4_padding, padn );
+    mbedtls_md4_update( ctx, msglen, 8 );
 
     PUT_UINT32_LE( ctx->state[0], output,  0 );
     PUT_UINT32_LE( ctx->state[1], output,  4 );
@@ -286,138 +294,23 @@ void md4_finish( md4_context *ctx, unsigned char output[16] )
     PUT_UINT32_LE( ctx->state[3], output, 12 );
 }
 
-#endif /* !POLARSSL_MD4_ALT */
+#endif /* !MBEDTLS_MD4_ALT */
 
 /*
  * output = MD4( input buffer )
  */
-void md4( const unsigned char *input, size_t ilen, unsigned char output[16] )
+void mbedtls_md4( const unsigned char *input, size_t ilen, unsigned char output[16] )
 {
-    md4_context ctx;
+    mbedtls_md4_context ctx;
 
-    md4_init( &ctx );
-    md4_starts( &ctx );
-    md4_update( &ctx, input, ilen );
-    md4_finish( &ctx, output );
-    md4_free( &ctx );
+    mbedtls_md4_init( &ctx );
+    mbedtls_md4_starts( &ctx );
+    mbedtls_md4_update( &ctx, input, ilen );
+    mbedtls_md4_finish( &ctx, output );
+    mbedtls_md4_free( &ctx );
 }
 
-#if defined(POLARSSL_FS_IO)
-/*
- * output = MD4( file contents )
- */
-int md4_file( const char *path, unsigned char output[16] )
-{
-    FILE *f;
-    size_t n;
-    md4_context ctx;
-    unsigned char buf[1024];
-
-    if( ( f = fopen( path, "rb" ) ) == NULL )
-        return( POLARSSL_ERR_MD4_FILE_IO_ERROR );
-
-    md4_init( &ctx );
-    md4_starts( &ctx );
-
-    while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
-        md4_update( &ctx, buf, n );
-
-    md4_finish( &ctx, output );
-    md4_free( &ctx );
-
-    if( ferror( f ) != 0 )
-    {
-        fclose( f );
-        return( POLARSSL_ERR_MD4_FILE_IO_ERROR );
-    }
-
-    fclose( f );
-    return( 0 );
-}
-#endif /* POLARSSL_FS_IO */
-
-/*
- * MD4 HMAC context setup
- */
-void md4_hmac_starts( md4_context *ctx, const unsigned char *key,
-                      size_t keylen )
-{
-    size_t i;
-    unsigned char sum[16];
-
-    if( keylen > 64 )
-    {
-        md4( key, keylen, sum );
-        keylen = 16;
-        key = sum;
-    }
-
-    memset( ctx->ipad, 0x36, 64 );
-    memset( ctx->opad, 0x5C, 64 );
-
-    for( i = 0; i < keylen; i++ )
-    {
-        ctx->ipad[i] = (unsigned char)( ctx->ipad[i] ^ key[i] );
-        ctx->opad[i] = (unsigned char)( ctx->opad[i] ^ key[i] );
-    }
-
-    md4_starts( ctx );
-    md4_update( ctx, ctx->ipad, 64 );
-
-    polarssl_zeroize( sum, sizeof( sum ) );
-}
-
-/*
- * MD4 HMAC process buffer
- */
-void md4_hmac_update( md4_context *ctx, const unsigned char *input,
-                      size_t ilen )
-{
-    md4_update( ctx, input, ilen );
-}
-
-/*
- * MD4 HMAC final digest
- */
-void md4_hmac_finish( md4_context *ctx, unsigned char output[16] )
-{
-    unsigned char tmpbuf[16];
-
-    md4_finish( ctx, tmpbuf );
-    md4_starts( ctx );
-    md4_update( ctx, ctx->opad, 64 );
-    md4_update( ctx, tmpbuf, 16 );
-    md4_finish( ctx, output );
-
-    polarssl_zeroize( tmpbuf, sizeof( tmpbuf ) );
-}
-
-/*
- * MD4 HMAC context reset
- */
-void md4_hmac_reset( md4_context *ctx )
-{
-    md4_starts( ctx );
-    md4_update( ctx, ctx->ipad, 64 );
-}
-
-/*
- * output = HMAC-MD4( hmac key, input buffer )
- */
-void md4_hmac( const unsigned char *key, size_t keylen,
-               const unsigned char *input, size_t ilen,
-               unsigned char output[16] )
-{
-    md4_context ctx;
-
-    md4_init( &ctx );
-    md4_hmac_starts( &ctx, key, keylen );
-    md4_hmac_update( &ctx, input, ilen );
-    md4_hmac_finish( &ctx, output );
-    md4_free( &ctx );
-}
-
-#if defined(POLARSSL_SELF_TEST)
+#if defined(MBEDTLS_SELF_TEST)
 
 /*
  * RFC 1320 test vectors
@@ -455,7 +348,7 @@ static const unsigned char md4_test_sum[7][16] =
 /*
  * Checkup routine
  */
-int md4_self_test( int verbose )
+int mbedtls_md4_self_test( int verbose )
 {
     int i;
     unsigned char md4sum[16];
@@ -463,29 +356,29 @@ int md4_self_test( int verbose )
     for( i = 0; i < 7; i++ )
     {
         if( verbose != 0 )
-            polarssl_printf( "  MD4 test #%d: ", i + 1 );
+            mbedtls_printf( "  MD4 test #%d: ", i + 1 );
 
-        md4( (unsigned char *) md4_test_str[i],
+        mbedtls_md4( (unsigned char *) md4_test_str[i],
              strlen( md4_test_str[i] ), md4sum );
 
         if( memcmp( md4sum, md4_test_sum[i], 16 ) != 0 )
         {
             if( verbose != 0 )
-                polarssl_printf( "failed\n" );
+                mbedtls_printf( "failed\n" );
 
             return( 1 );
         }
 
         if( verbose != 0 )
-            polarssl_printf( "passed\n" );
+            mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        polarssl_printf( "\n" );
+        mbedtls_printf( "\n" );
 
     return( 0 );
 }
 
-#endif /* POLARSSL_SELF_TEST */
+#endif /* MBEDTLS_SELF_TEST */
 
-#endif /* POLARSSL_MD4_C */
+#endif /* MBEDTLS_MD4_C */

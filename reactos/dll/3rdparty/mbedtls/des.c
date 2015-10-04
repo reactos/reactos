@@ -1,23 +1,22 @@
 /*
  *  FIPS-46-3 compliant Triple-DES implementation
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  DES, on which TDES is based, was originally designed by Horst Feistel
@@ -26,26 +25,31 @@
  *  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_DES_C)
+#if defined(MBEDTLS_DES_C)
 
-#include "polarssl/des.h"
+#include "mbedtls/des.h"
 
-#if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include <string.h>
+
+#if defined(MBEDTLS_SELF_TEST)
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
 #else
-#define polarssl_printf printf
-#endif
+#include <stdio.h>
+#define mbedtls_printf printf
+#endif /* MBEDTLS_PLATFORM_C */
+#endif /* MBEDTLS_SELF_TEST */
 
-#if !defined(POLARSSL_DES_ALT)
+#if !defined(MBEDTLS_DES_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
@@ -302,30 +306,30 @@ static const uint32_t RHs[16] =
 
 #define SWAP(a,b) { uint32_t t = a; a = b; b = t; t = 0; }
 
-void des_init( des_context *ctx )
+void mbedtls_des_init( mbedtls_des_context *ctx )
 {
-    memset( ctx, 0, sizeof( des_context ) );
+    memset( ctx, 0, sizeof( mbedtls_des_context ) );
 }
 
-void des_free( des_context *ctx )
+void mbedtls_des_free( mbedtls_des_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    polarssl_zeroize( ctx, sizeof( des_context ) );
+    mbedtls_zeroize( ctx, sizeof( mbedtls_des_context ) );
 }
 
-void des3_init( des3_context *ctx )
+void mbedtls_des3_init( mbedtls_des3_context *ctx )
 {
-    memset( ctx, 0, sizeof( des3_context ) );
+    memset( ctx, 0, sizeof( mbedtls_des3_context ) );
 }
 
-void des3_free( des3_context *ctx )
+void mbedtls_des3_free( mbedtls_des3_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    polarssl_zeroize( ctx, sizeof( des3_context ) );
+    mbedtls_zeroize( ctx, sizeof( mbedtls_des3_context ) );
 }
 
 static const unsigned char odd_parity_table[128] = { 1,  2,  4,  7,  8,
@@ -339,22 +343,22 @@ static const unsigned char odd_parity_table[128] = { 1,  2,  4,  7,  8,
         227, 229, 230, 233, 234, 236, 239, 241, 242, 244, 247, 248, 251, 253,
         254 };
 
-void des_key_set_parity( unsigned char key[DES_KEY_SIZE] )
+void mbedtls_des_key_set_parity( unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
     int i;
 
-    for( i = 0; i < DES_KEY_SIZE; i++ )
+    for( i = 0; i < MBEDTLS_DES_KEY_SIZE; i++ )
         key[i] = odd_parity_table[key[i] / 2];
 }
 
 /*
  * Check the given key's parity, returns 1 on failure, 0 on SUCCESS
  */
-int des_key_check_key_parity( const unsigned char key[DES_KEY_SIZE] )
+int mbedtls_des_key_check_key_parity( const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
     int i;
 
-    for( i = 0; i < DES_KEY_SIZE; i++ )
+    for( i = 0; i < MBEDTLS_DES_KEY_SIZE; i++ )
         if( key[i] != odd_parity_table[key[i] / 2] )
             return( 1 );
 
@@ -384,7 +388,7 @@ int des_key_check_key_parity( const unsigned char key[DES_KEY_SIZE] )
 
 #define WEAK_KEY_COUNT 16
 
-static const unsigned char weak_key_table[WEAK_KEY_COUNT][DES_KEY_SIZE] =
+static const unsigned char weak_key_table[WEAK_KEY_COUNT][MBEDTLS_DES_KEY_SIZE] =
 {
     { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 },
     { 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE },
@@ -405,18 +409,19 @@ static const unsigned char weak_key_table[WEAK_KEY_COUNT][DES_KEY_SIZE] =
     { 0xFE, 0xE0, 0xFE, 0xE0, 0xFE, 0xF1, 0xFE, 0xF1 }
 };
 
-int des_key_check_weak( const unsigned char key[DES_KEY_SIZE] )
+int mbedtls_des_key_check_weak( const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
     int i;
 
     for( i = 0; i < WEAK_KEY_COUNT; i++ )
-        if( memcmp( weak_key_table[i], key, DES_KEY_SIZE) == 0 )
+        if( memcmp( weak_key_table[i], key, MBEDTLS_DES_KEY_SIZE) == 0 )
             return( 1 );
 
     return( 0 );
 }
 
-static void des_setkey( uint32_t SK[32], const unsigned char key[DES_KEY_SIZE] )
+#if !defined(MBEDTLS_DES_SETKEY_ALT)
+void mbedtls_des_setkey( uint32_t SK[32], const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
     int i;
     uint32_t X, Y, T;
@@ -484,13 +489,14 @@ static void des_setkey( uint32_t SK[32], const unsigned char key[DES_KEY_SIZE] )
                 | ((Y <<  2) & 0x00000004) | ((Y >> 21) & 0x00000002);
     }
 }
+#endif /* !MBEDTLS_DES_SETKEY_ALT */
 
 /*
  * DES key schedule (56-bit, encryption)
  */
-int des_setkey_enc( des_context *ctx, const unsigned char key[DES_KEY_SIZE] )
+int mbedtls_des_setkey_enc( mbedtls_des_context *ctx, const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
-    des_setkey( ctx->sk, key );
+    mbedtls_des_setkey( ctx->sk, key );
 
     return( 0 );
 }
@@ -498,11 +504,11 @@ int des_setkey_enc( des_context *ctx, const unsigned char key[DES_KEY_SIZE] )
 /*
  * DES key schedule (56-bit, decryption)
  */
-int des_setkey_dec( des_context *ctx, const unsigned char key[DES_KEY_SIZE] )
+int mbedtls_des_setkey_dec( mbedtls_des_context *ctx, const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
     int i;
 
-    des_setkey( ctx->sk, key );
+    mbedtls_des_setkey( ctx->sk, key );
 
     for( i = 0; i < 16; i += 2 )
     {
@@ -515,12 +521,12 @@ int des_setkey_dec( des_context *ctx, const unsigned char key[DES_KEY_SIZE] )
 
 static void des3_set2key( uint32_t esk[96],
                           uint32_t dsk[96],
-                          const unsigned char key[DES_KEY_SIZE*2] )
+                          const unsigned char key[MBEDTLS_DES_KEY_SIZE*2] )
 {
     int i;
 
-    des_setkey( esk, key );
-    des_setkey( dsk + 32, key + 8 );
+    mbedtls_des_setkey( esk, key );
+    mbedtls_des_setkey( dsk + 32, key + 8 );
 
     for( i = 0; i < 32; i += 2 )
     {
@@ -541,13 +547,13 @@ static void des3_set2key( uint32_t esk[96],
 /*
  * Triple-DES key schedule (112-bit, encryption)
  */
-int des3_set2key_enc( des3_context *ctx,
-                      const unsigned char key[DES_KEY_SIZE * 2] )
+int mbedtls_des3_set2key_enc( mbedtls_des3_context *ctx,
+                      const unsigned char key[MBEDTLS_DES_KEY_SIZE * 2] )
 {
     uint32_t sk[96];
 
     des3_set2key( ctx->sk, sk, key );
-    polarssl_zeroize( sk,  sizeof( sk ) );
+    mbedtls_zeroize( sk,  sizeof( sk ) );
 
     return( 0 );
 }
@@ -555,13 +561,13 @@ int des3_set2key_enc( des3_context *ctx,
 /*
  * Triple-DES key schedule (112-bit, decryption)
  */
-int des3_set2key_dec( des3_context *ctx,
-                      const unsigned char key[DES_KEY_SIZE * 2] )
+int mbedtls_des3_set2key_dec( mbedtls_des3_context *ctx,
+                      const unsigned char key[MBEDTLS_DES_KEY_SIZE * 2] )
 {
     uint32_t sk[96];
 
     des3_set2key( sk, ctx->sk, key );
-    polarssl_zeroize( sk,  sizeof( sk ) );
+    mbedtls_zeroize( sk,  sizeof( sk ) );
 
     return( 0 );
 }
@@ -572,9 +578,9 @@ static void des3_set3key( uint32_t esk[96],
 {
     int i;
 
-    des_setkey( esk, key );
-    des_setkey( dsk + 32, key +  8 );
-    des_setkey( esk + 64, key + 16 );
+    mbedtls_des_setkey( esk, key );
+    mbedtls_des_setkey( dsk + 32, key +  8 );
+    mbedtls_des_setkey( esk + 64, key + 16 );
 
     for( i = 0; i < 32; i += 2 )
     {
@@ -592,13 +598,13 @@ static void des3_set3key( uint32_t esk[96],
 /*
  * Triple-DES key schedule (168-bit, encryption)
  */
-int des3_set3key_enc( des3_context *ctx,
-                      const unsigned char key[DES_KEY_SIZE * 3] )
+int mbedtls_des3_set3key_enc( mbedtls_des3_context *ctx,
+                      const unsigned char key[MBEDTLS_DES_KEY_SIZE * 3] )
 {
     uint32_t sk[96];
 
     des3_set3key( ctx->sk, sk, key );
-    polarssl_zeroize( sk,  sizeof( sk ) );
+    mbedtls_zeroize( sk,  sizeof( sk ) );
 
     return( 0 );
 }
@@ -606,13 +612,13 @@ int des3_set3key_enc( des3_context *ctx,
 /*
  * Triple-DES key schedule (168-bit, decryption)
  */
-int des3_set3key_dec( des3_context *ctx,
-                      const unsigned char key[DES_KEY_SIZE * 3] )
+int mbedtls_des3_set3key_dec( mbedtls_des3_context *ctx,
+                      const unsigned char key[MBEDTLS_DES_KEY_SIZE * 3] )
 {
     uint32_t sk[96];
 
     des3_set3key( sk, ctx->sk, key );
-    polarssl_zeroize( sk,  sizeof( sk ) );
+    mbedtls_zeroize( sk,  sizeof( sk ) );
 
     return( 0 );
 }
@@ -620,7 +626,8 @@ int des3_set3key_dec( des3_context *ctx,
 /*
  * DES-ECB block encryption/decryption
  */
-int des_crypt_ecb( des_context *ctx,
+#if !defined(MBEDTLS_DES_CRYPT_ECB_ALT)
+int mbedtls_des_crypt_ecb( mbedtls_des_context *ctx,
                     const unsigned char input[8],
                     unsigned char output[8] )
 {
@@ -647,12 +654,13 @@ int des_crypt_ecb( des_context *ctx,
 
     return( 0 );
 }
+#endif /* !MBEDTLS_DES_CRYPT_ECB_ALT */
 
-#if defined(POLARSSL_CIPHER_MODE_CBC)
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
 /*
  * DES-CBC buffer encryption/decryption
  */
-int des_crypt_cbc( des_context *ctx,
+int mbedtls_des_crypt_cbc( mbedtls_des_context *ctx,
                     int mode,
                     size_t length,
                     unsigned char iv[8],
@@ -663,16 +671,16 @@ int des_crypt_cbc( des_context *ctx,
     unsigned char temp[8];
 
     if( length % 8 )
-        return( POLARSSL_ERR_DES_INVALID_INPUT_LENGTH );
+        return( MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH );
 
-    if( mode == DES_ENCRYPT )
+    if( mode == MBEDTLS_DES_ENCRYPT )
     {
         while( length > 0 )
         {
             for( i = 0; i < 8; i++ )
                 output[i] = (unsigned char)( input[i] ^ iv[i] );
 
-            des_crypt_ecb( ctx, output, output );
+            mbedtls_des_crypt_ecb( ctx, output, output );
             memcpy( iv, output, 8 );
 
             input  += 8;
@@ -680,12 +688,12 @@ int des_crypt_cbc( des_context *ctx,
             length -= 8;
         }
     }
-    else /* DES_DECRYPT */
+    else /* MBEDTLS_DES_DECRYPT */
     {
         while( length > 0 )
         {
             memcpy( temp, input, 8 );
-            des_crypt_ecb( ctx, input, output );
+            mbedtls_des_crypt_ecb( ctx, input, output );
 
             for( i = 0; i < 8; i++ )
                 output[i] = (unsigned char)( output[i] ^ iv[i] );
@@ -700,12 +708,13 @@ int des_crypt_cbc( des_context *ctx,
 
     return( 0 );
 }
-#endif /* POLARSSL_CIPHER_MODE_CBC */
+#endif /* MBEDTLS_CIPHER_MODE_CBC */
 
 /*
  * 3DES-ECB block encryption/decryption
  */
-int des3_crypt_ecb( des3_context *ctx,
+#if !defined(MBEDTLS_DES3_CRYPT_ECB_ALT)
+int mbedtls_des3_crypt_ecb( mbedtls_des3_context *ctx,
                      const unsigned char input[8],
                      unsigned char output[8] )
 {
@@ -744,12 +753,13 @@ int des3_crypt_ecb( des3_context *ctx,
 
     return( 0 );
 }
+#endif /* !MBEDTLS_DES3_CRYPT_ECB_ALT */
 
-#if defined(POLARSSL_CIPHER_MODE_CBC)
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
 /*
  * 3DES-CBC buffer encryption/decryption
  */
-int des3_crypt_cbc( des3_context *ctx,
+int mbedtls_des3_crypt_cbc( mbedtls_des3_context *ctx,
                      int mode,
                      size_t length,
                      unsigned char iv[8],
@@ -760,16 +770,16 @@ int des3_crypt_cbc( des3_context *ctx,
     unsigned char temp[8];
 
     if( length % 8 )
-        return( POLARSSL_ERR_DES_INVALID_INPUT_LENGTH );
+        return( MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH );
 
-    if( mode == DES_ENCRYPT )
+    if( mode == MBEDTLS_DES_ENCRYPT )
     {
         while( length > 0 )
         {
             for( i = 0; i < 8; i++ )
                 output[i] = (unsigned char)( input[i] ^ iv[i] );
 
-            des3_crypt_ecb( ctx, output, output );
+            mbedtls_des3_crypt_ecb( ctx, output, output );
             memcpy( iv, output, 8 );
 
             input  += 8;
@@ -777,12 +787,12 @@ int des3_crypt_cbc( des3_context *ctx,
             length -= 8;
         }
     }
-    else /* DES_DECRYPT */
+    else /* MBEDTLS_DES_DECRYPT */
     {
         while( length > 0 )
         {
             memcpy( temp, input, 8 );
-            des3_crypt_ecb( ctx, input, output );
+            mbedtls_des3_crypt_ecb( ctx, input, output );
 
             for( i = 0; i < 8; i++ )
                 output[i] = (unsigned char)( output[i] ^ iv[i] );
@@ -797,14 +807,11 @@ int des3_crypt_cbc( des3_context *ctx,
 
     return( 0 );
 }
-#endif /* POLARSSL_CIPHER_MODE_CBC */
+#endif /* MBEDTLS_CIPHER_MODE_CBC */
 
-#endif /* !POLARSSL_DES_ALT */
+#endif /* !MBEDTLS_DES_ALT */
 
-#if defined(POLARSSL_SELF_TEST)
-
-#include <stdio.h>
-
+#if defined(MBEDTLS_SELF_TEST)
 /*
  * DES and 3DES test vectors from:
  *
@@ -836,7 +843,7 @@ static const unsigned char des3_test_ecb_enc[3][8] =
     { 0xDD, 0x17, 0xE8, 0xB8, 0xB4, 0x37, 0xD2, 0x32 }
 };
 
-#if defined(POLARSSL_CIPHER_MODE_CBC)
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
 static const unsigned char des3_test_iv[8] =
 {
     0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF,
@@ -855,24 +862,24 @@ static const unsigned char des3_test_cbc_enc[3][8] =
     { 0x35, 0x76, 0x11, 0x56, 0x5F, 0xA1, 0x8E, 0x4D },
     { 0xCB, 0x19, 0x1F, 0x85, 0xD1, 0xED, 0x84, 0x39 }
 };
-#endif /* POLARSSL_CIPHER_MODE_CBC */
+#endif /* MBEDTLS_CIPHER_MODE_CBC */
 
 /*
  * Checkup routine
  */
-int des_self_test( int verbose )
+int mbedtls_des_self_test( int verbose )
 {
     int i, j, u, v, ret = 0;
-    des_context ctx;
-    des3_context ctx3;
+    mbedtls_des_context ctx;
+    mbedtls_des3_context ctx3;
     unsigned char buf[8];
-#if defined(POLARSSL_CIPHER_MODE_CBC)
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
     unsigned char prv[8];
     unsigned char iv[8];
 #endif
 
-    des_init( &ctx );
-    des3_init( &ctx3 );
+    mbedtls_des_init( &ctx );
+    mbedtls_des3_init( &ctx3 );
     /*
      * ECB mode
      */
@@ -882,36 +889,36 @@ int des_self_test( int verbose )
         v = i  & 1;
 
         if( verbose != 0 )
-            polarssl_printf( "  DES%c-ECB-%3d (%s): ",
+            mbedtls_printf( "  DES%c-ECB-%3d (%s): ",
                              ( u == 0 ) ? ' ' : '3', 56 + u * 56,
-                             ( v == DES_DECRYPT ) ? "dec" : "enc" );
+                             ( v == MBEDTLS_DES_DECRYPT ) ? "dec" : "enc" );
 
         memcpy( buf, des3_test_buf, 8 );
 
         switch( i )
         {
         case 0:
-            des_setkey_dec( &ctx, des3_test_keys );
+            mbedtls_des_setkey_dec( &ctx, des3_test_keys );
             break;
 
         case 1:
-            des_setkey_enc( &ctx, des3_test_keys );
+            mbedtls_des_setkey_enc( &ctx, des3_test_keys );
             break;
 
         case 2:
-            des3_set2key_dec( &ctx3, des3_test_keys );
+            mbedtls_des3_set2key_dec( &ctx3, des3_test_keys );
             break;
 
         case 3:
-            des3_set2key_enc( &ctx3, des3_test_keys );
+            mbedtls_des3_set2key_enc( &ctx3, des3_test_keys );
             break;
 
         case 4:
-            des3_set3key_dec( &ctx3, des3_test_keys );
+            mbedtls_des3_set3key_dec( &ctx3, des3_test_keys );
             break;
 
         case 5:
-            des3_set3key_enc( &ctx3, des3_test_keys );
+            mbedtls_des3_set3key_enc( &ctx3, des3_test_keys );
             break;
 
         default:
@@ -921,31 +928,31 @@ int des_self_test( int verbose )
         for( j = 0; j < 10000; j++ )
         {
             if( u == 0 )
-                des_crypt_ecb( &ctx, buf, buf );
+                mbedtls_des_crypt_ecb( &ctx, buf, buf );
             else
-                des3_crypt_ecb( &ctx3, buf, buf );
+                mbedtls_des3_crypt_ecb( &ctx3, buf, buf );
         }
 
-        if( ( v == DES_DECRYPT &&
+        if( ( v == MBEDTLS_DES_DECRYPT &&
                 memcmp( buf, des3_test_ecb_dec[u], 8 ) != 0 ) ||
-            ( v != DES_DECRYPT &&
+            ( v != MBEDTLS_DES_DECRYPT &&
                 memcmp( buf, des3_test_ecb_enc[u], 8 ) != 0 ) )
         {
             if( verbose != 0 )
-                polarssl_printf( "failed\n" );
+                mbedtls_printf( "failed\n" );
 
             ret = 1;
             goto exit;
         }
 
         if( verbose != 0 )
-            polarssl_printf( "passed\n" );
+            mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        polarssl_printf( "\n" );
+        mbedtls_printf( "\n" );
 
-#if defined(POLARSSL_CIPHER_MODE_CBC)
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
     /*
      * CBC mode
      */
@@ -955,9 +962,9 @@ int des_self_test( int verbose )
         v = i  & 1;
 
         if( verbose != 0 )
-            polarssl_printf( "  DES%c-CBC-%3d (%s): ",
+            mbedtls_printf( "  DES%c-CBC-%3d (%s): ",
                              ( u == 0 ) ? ' ' : '3', 56 + u * 56,
-                             ( v == DES_DECRYPT ) ? "dec" : "enc" );
+                             ( v == MBEDTLS_DES_DECRYPT ) ? "dec" : "enc" );
 
         memcpy( iv,  des3_test_iv,  8 );
         memcpy( prv, des3_test_iv,  8 );
@@ -966,41 +973,41 @@ int des_self_test( int verbose )
         switch( i )
         {
         case 0:
-            des_setkey_dec( &ctx, des3_test_keys );
+            mbedtls_des_setkey_dec( &ctx, des3_test_keys );
             break;
 
         case 1:
-            des_setkey_enc( &ctx, des3_test_keys );
+            mbedtls_des_setkey_enc( &ctx, des3_test_keys );
             break;
 
         case 2:
-            des3_set2key_dec( &ctx3, des3_test_keys );
+            mbedtls_des3_set2key_dec( &ctx3, des3_test_keys );
             break;
 
         case 3:
-            des3_set2key_enc( &ctx3, des3_test_keys );
+            mbedtls_des3_set2key_enc( &ctx3, des3_test_keys );
             break;
 
         case 4:
-            des3_set3key_dec( &ctx3, des3_test_keys );
+            mbedtls_des3_set3key_dec( &ctx3, des3_test_keys );
             break;
 
         case 5:
-            des3_set3key_enc( &ctx3, des3_test_keys );
+            mbedtls_des3_set3key_enc( &ctx3, des3_test_keys );
             break;
 
         default:
             return( 1 );
         }
 
-        if( v == DES_DECRYPT )
+        if( v == MBEDTLS_DES_DECRYPT )
         {
             for( j = 0; j < 10000; j++ )
             {
                 if( u == 0 )
-                    des_crypt_cbc( &ctx, v, 8, iv, buf, buf );
+                    mbedtls_des_crypt_cbc( &ctx, v, 8, iv, buf, buf );
                 else
-                    des3_crypt_cbc( &ctx3, v, 8, iv, buf, buf );
+                    mbedtls_des3_crypt_cbc( &ctx3, v, 8, iv, buf, buf );
             }
         }
         else
@@ -1010,9 +1017,9 @@ int des_self_test( int verbose )
                 unsigned char tmp[8];
 
                 if( u == 0 )
-                    des_crypt_cbc( &ctx, v, 8, iv, buf, buf );
+                    mbedtls_des_crypt_cbc( &ctx, v, 8, iv, buf, buf );
                 else
-                    des3_crypt_cbc( &ctx3, v, 8, iv, buf, buf );
+                    mbedtls_des3_crypt_cbc( &ctx3, v, 8, iv, buf, buf );
 
                 memcpy( tmp, prv, 8 );
                 memcpy( prv, buf, 8 );
@@ -1022,33 +1029,33 @@ int des_self_test( int verbose )
             memcpy( buf, prv, 8 );
         }
 
-        if( ( v == DES_DECRYPT &&
+        if( ( v == MBEDTLS_DES_DECRYPT &&
                 memcmp( buf, des3_test_cbc_dec[u], 8 ) != 0 ) ||
-            ( v != DES_DECRYPT &&
+            ( v != MBEDTLS_DES_DECRYPT &&
                 memcmp( buf, des3_test_cbc_enc[u], 8 ) != 0 ) )
         {
             if( verbose != 0 )
-                polarssl_printf( "failed\n" );
+                mbedtls_printf( "failed\n" );
 
             ret = 1;
             goto exit;
         }
 
         if( verbose != 0 )
-            polarssl_printf( "passed\n" );
+            mbedtls_printf( "passed\n" );
     }
-#endif /* POLARSSL_CIPHER_MODE_CBC */
+#endif /* MBEDTLS_CIPHER_MODE_CBC */
 
     if( verbose != 0 )
-        polarssl_printf( "\n" );
+        mbedtls_printf( "\n" );
 
 exit:
-    des_free( &ctx );
-    des3_free( &ctx3 );
+    mbedtls_des_free( &ctx );
+    mbedtls_des3_free( &ctx3 );
 
     return( ret );
 }
 
-#endif /* POLARSSL_SELF_TEST */
+#endif /* MBEDTLS_SELF_TEST */
 
-#endif /* POLARSSL_DES_C */
+#endif /* MBEDTLS_DES_C */

@@ -24,28 +24,38 @@ static void *libmbedtls_handle;
 
 #define MAKE_FUNCPTR(f) static typeof(f) * p##f;
 
-MAKE_FUNCPTR(ctr_drbg_free)
-MAKE_FUNCPTR(ctr_drbg_init)
-MAKE_FUNCPTR(ctr_drbg_random)
-MAKE_FUNCPTR(entropy_free)
-MAKE_FUNCPTR(entropy_func)
-MAKE_FUNCPTR(entropy_init)
-MAKE_FUNCPTR(ssl_ciphersuite_from_id)
-MAKE_FUNCPTR(ssl_free)
-MAKE_FUNCPTR(ssl_get_ciphersuite)
-MAKE_FUNCPTR(ssl_get_ciphersuite_id)
-MAKE_FUNCPTR(ssl_get_version)
-MAKE_FUNCPTR(ssl_handshake)
-MAKE_FUNCPTR(ssl_init)
-MAKE_FUNCPTR(ssl_read)
-MAKE_FUNCPTR(ssl_set_authmode)
-MAKE_FUNCPTR(ssl_set_bio)
-MAKE_FUNCPTR(ssl_set_endpoint)
-MAKE_FUNCPTR(ssl_set_hostname)
-MAKE_FUNCPTR(ssl_set_max_version)
-MAKE_FUNCPTR(ssl_set_min_version)
-MAKE_FUNCPTR(ssl_set_rng)
-MAKE_FUNCPTR(ssl_write)
+MAKE_FUNCPTR(mbedtls_ctr_drbg_free)
+MAKE_FUNCPTR(mbedtls_ctr_drbg_init)
+MAKE_FUNCPTR(mbedtls_ctr_drbg_random)
+MAKE_FUNCPTR(mbedtls_entropy_free)
+MAKE_FUNCPTR(mbedtls_entropy_func)
+MAKE_FUNCPTR(mbedtls_entropy_init)
+MAKE_FUNCPTR(mbedtls_ssl_ciphersuite_from_id)
+MAKE_FUNCPTR(mbedtls_ssl_free)
+MAKE_FUNCPTR(mbedtls_ssl_get_ciphersuite)
+MAKE_FUNCPTR(mbedtls_ssl_get_ciphersuite_id)
+MAKE_FUNCPTR(mbedtls_ssl_get_max_frag_len)
+MAKE_FUNCPTR(mbedtls_ssl_get_version)
+MAKE_FUNCPTR(mbedtls_ssl_handshake)
+MAKE_FUNCPTR(mbedtls_ssl_init)
+MAKE_FUNCPTR(mbedtls_ssl_read)
+MAKE_FUNCPTR(mbedtls_ssl_conf_authmode)
+MAKE_FUNCPTR(mbedtls_ssl_set_bio)
+MAKE_FUNCPTR(mbedtls_ssl_conf_endpoint)
+MAKE_FUNCPTR(mbedtls_ssl_set_hostname)
+MAKE_FUNCPTR(mbedtls_ssl_conf_max_version)
+MAKE_FUNCPTR(mbedtls_ssl_conf_min_version)
+MAKE_FUNCPTR(mbedtls_ssl_conf_rng)
+MAKE_FUNCPTR(mbedtls_ssl_write)
+MAKE_FUNCPTR(mbedtls_ssl_get_peer_cert)
+MAKE_FUNCPTR(mbedtls_ssl_config_init)
+MAKE_FUNCPTR(mbedtls_ssl_config_defaults)
+MAKE_FUNCPTR(mbedtls_ssl_conf_dbg)
+MAKE_FUNCPTR(mbedtls_ssl_setup)
+MAKE_FUNCPTR(mbedtls_cipher_info_from_type)
+MAKE_FUNCPTR(mbedtls_md_info_from_type)
+MAKE_FUNCPTR(mbedtls_pk_get_bitlen)
+MAKE_FUNCPTR(mbedtls_ctr_drbg_seed)
 
 #undef MAKE_FUNCPTR
 
@@ -68,28 +78,38 @@ BOOL schan_imp_init(void)
         goto fail; \
     }
 
-	LOAD_FUNCPTR(ctr_drbg_free)
-	LOAD_FUNCPTR(ctr_drbg_init)
-	LOAD_FUNCPTR(ctr_drbg_random)
-	LOAD_FUNCPTR(entropy_free)
-	LOAD_FUNCPTR(entropy_func)
-	LOAD_FUNCPTR(entropy_init)
-	LOAD_FUNCPTR(ssl_ciphersuite_from_id)
-	LOAD_FUNCPTR(ssl_free)
-	LOAD_FUNCPTR(ssl_get_ciphersuite)
-	LOAD_FUNCPTR(ssl_get_ciphersuite_id)
-	LOAD_FUNCPTR(ssl_get_version)
-	LOAD_FUNCPTR(ssl_handshake)
-	LOAD_FUNCPTR(ssl_init)
-	LOAD_FUNCPTR(ssl_read)
-	LOAD_FUNCPTR(ssl_set_authmode)
-	LOAD_FUNCPTR(ssl_set_bio)
-	LOAD_FUNCPTR(ssl_set_endpoint)
-	LOAD_FUNCPTR(ssl_set_hostname)
-	LOAD_FUNCPTR(ssl_set_max_version)
-	LOAD_FUNCPTR(ssl_set_min_version)
-	LOAD_FUNCPTR(ssl_set_rng)
-	LOAD_FUNCPTR(ssl_write)
+    LOAD_FUNCPTR(mbedtls_ctr_drbg_free)
+    LOAD_FUNCPTR(mbedtls_ctr_drbg_init)
+    LOAD_FUNCPTR(mbedtls_ctr_drbg_random)
+    LOAD_FUNCPTR(mbedtls_entropy_free)
+    LOAD_FUNCPTR(mbedtls_entropy_func)
+    LOAD_FUNCPTR(mbedtls_entropy_init)
+    LOAD_FUNCPTR(mbedtls_ssl_ciphersuite_from_id)
+    LOAD_FUNCPTR(mbedtls_ssl_free)
+    LOAD_FUNCPTR(mbedtls_ssl_get_ciphersuite)
+    LOAD_FUNCPTR(mbedtls_ssl_get_ciphersuite_id)
+    LOAD_FUNCPTR(mbedtls_ssl_get_max_frag_len)
+    LOAD_FUNCPTR(mbedtls_ssl_get_version)
+    LOAD_FUNCPTR(mbedtls_ssl_handshake)
+    LOAD_FUNCPTR(mbedtls_ssl_init)
+    LOAD_FUNCPTR(mbedtls_ssl_read)
+    LOAD_FUNCPTR(mbedtls_ssl_conf_authmode)
+    LOAD_FUNCPTR(mbedtls_ssl_set_bio)
+    LOAD_FUNCPTR(mbedtls_ssl_conf_endpoint)
+    LOAD_FUNCPTR(mbedtls_ssl_set_hostname)
+    LOAD_FUNCPTR(mbedtls_ssl_conf_max_version)
+    LOAD_FUNCPTR(mbedtls_ssl_conf_min_version)
+    LOAD_FUNCPTR(mbedtls_ssl_conf_rng)
+    LOAD_FUNCPTR(mbedtls_ssl_write)
+    LOAD_FUNCPTR(mbedtls_ssl_get_peer_cert)
+    LOAD_FUNCPTR(mbedtls_ssl_config_init)
+    LOAD_FUNCPTR(mbedtls_ssl_config_defaults)
+    LOAD_FUNCPTR(mbedtls_ssl_conf_dbg)
+    LOAD_FUNCPTR(mbedtls_ssl_setup)
+    LOAD_FUNCPTR(mbedtls_cipher_info_from_type)
+    LOAD_FUNCPTR(mbedtls_md_info_from_type)
+    LOAD_FUNCPTR(mbedtls_pk_get_bitlen)
+    LOAD_FUNCPTR(mbedtls_ctr_drbg_seed)
 
 #undef LOAD_FUNCPTR
 
@@ -112,30 +132,40 @@ void schan_imp_deinit(void)
 /* now that we have overridden the initialization functions
    cancel out the original stubs used when dynamically linking */
 
-#define schan_imp_init          schan_imp_init_unused
-#define schan_imp_deinit        schan_imp_deinit_unused
+#define schan_imp_init                  schan_imp_init_unused
+#define schan_imp_deinit                schan_imp_deinit_unused
 
 /* seamlessly redirect the function pointers with some preprocessor magic */
 
-#define ctr_drbg_free           pctr_drbg_free
-#define ctr_drbg_init           pctr_drbg_init
-#define ctr_drbg_random         pctr_drbg_random
-#define entropy_free            pentropy_free
-#define entropy_func            pentropy_func
-#define entropy_init            pentropy_init
-#define ssl_ciphersuite_from_id pssl_ciphersuite_from_id
-#define ssl_free                pssl_free
-#define ssl_get_ciphersuite     pssl_get_ciphersuite
-#define ssl_get_ciphersuite_id  pssl_get_ciphersuite_id
-#define ssl_get_version         pssl_get_version
-#define ssl_handshake           pssl_handshake
-#define ssl_init                pssl_init
-#define ssl_read                pssl_read
-#define ssl_set_authmode        pssl_set_authmode
-#define ssl_set_bio             pssl_set_bio
-#define ssl_set_endpoint        pssl_set_endpoint
-#define ssl_set_hostname        pssl_set_hostname
-#define ssl_set_max_version     pssl_set_max_version
-#define ssl_set_min_version     pssl_set_min_version
-#define ssl_set_rng             pssl_set_rng
-#define ssl_write               pssl_write
+#define mbedtls_ctr_drbg_free           mbedtls_ctr_drbg_free
+#define mbedtls_ctr_drbg_init           mbedtls_ctr_drbg_init
+#define mbedtls_ctr_drbg_random         mbedtls_ctr_drbg_random
+#define mbedtls_entropy_free            mbedtls_entropy_free
+#define mbedtls_entropy_func            mbedtls_entropy_func
+#define mbedtls_entropy_init            mbedtls_entropy_init
+#define mbedtls_ssl_ciphersuite_from_id mbedtls_ssl_ciphersuite_from_id
+#define mbedtls_ssl_free                mbedtls_ssl_free
+#define mbedtls_ssl_get_ciphersuite     mbedtls_ssl_get_ciphersuite
+#define mbedtls_ssl_get_ciphersuite_id  mbedtls_ssl_get_ciphersuite_id
+#define mbedtls_ssl_get_max_frag_len    mbedtls_ssl_get_max_frag_len
+#define mbedtls_ssl_get_version         mbedtls_ssl_get_version
+#define mbedtls_ssl_handshake           mbedtls_ssl_handshake
+#define mbedtls_ssl_init                mbedtls_ssl_init
+#define mbedtls_ssl_read                mbedtls_ssl_read
+#define mbedtls_ssl_conf_authmode       mbedtls_ssl_conf_authmode 
+#define mbedtls_ssl_set_bio             mbedtls_ssl_set_bio
+#define mbedtls_ssl_conf_endpoint       mbedtls_ssl_conf_endpoint
+#define mbedtls_ssl_set_hostname        mbedtls_ssl_set_hostname
+#define mbedtls_ssl_conf_max_version    mbedtls_ssl_conf_max_version
+#define mbedtls_ssl_conf_min_version    mbedtls_ssl_conf_min_version
+#define mbedtls_ssl_conf_rng            mbedtls_ssl_conf_rng
+#define mbedtls_ssl_write               mbedtls_ssl_write
+#define mbedtls_ssl_get_peer_cert       mbedtls_ssl_get_peer_cert
+#define mbedtls_ssl_config_init         mbedtls_ssl_config_init
+#define mbedtls_ssl_config_defaults     mbedtls_ssl_config_defaults
+#define mbedtls_ssl_conf_dbg            mbedtls_ssl_conf_dbg
+#define mbedtls_ssl_setup               mbedtls_ssl_setup
+#define mbedtls_cipher_info_from_type   mbedtls_cipher_info_from_type      
+#define mbedtls_md_info_from_type       mbedtls_md_info_from_type
+#define mbedtls_pk_get_bitlen           mbedtls_pk_get_bitlen
+#define mbedtls_ctr_drbg_seed           mbedtls_ctr_drbg_seed

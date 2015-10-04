@@ -1,99 +1,101 @@
 /*
  *  Public Key abstraction layer: wrapper functions
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_PK_C)
-
-#include "polarssl/pk_wrap.h"
+#if defined(MBEDTLS_PK_C)
+#include "mbedtls/pk_internal.h"
 
 /* Even if RSA not activated, for the sake of RSA-alt */
-#include "polarssl/rsa.h"
+#include "mbedtls/rsa.h"
 
-#if defined(POLARSSL_ECP_C)
-#include "polarssl/ecp.h"
+#include <string.h>
+
+#if defined(MBEDTLS_ECP_C)
+#include "mbedtls/ecp.h"
 #endif
 
-#if defined(POLARSSL_ECDSA_C)
-#include "polarssl/ecdsa.h"
+#if defined(MBEDTLS_ECDSA_C)
+#include "mbedtls/ecdsa.h"
 #endif
 
-#if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
 #else
 #include <stdlib.h>
-#define polarssl_malloc     malloc
-#define polarssl_free       free
+#define mbedtls_calloc    calloc
+#define mbedtls_free       free
 #endif
 
+#if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
+#endif
 
-#if defined(POLARSSL_RSA_C)
-static int rsa_can_do( pk_type_t type )
+#if defined(MBEDTLS_RSA_C)
+static int rsa_can_do( mbedtls_pk_type_t type )
 {
-    return( type == POLARSSL_PK_RSA ||
-            type == POLARSSL_PK_RSASSA_PSS );
+    return( type == MBEDTLS_PK_RSA ||
+            type == MBEDTLS_PK_RSASSA_PSS );
 }
 
-static size_t rsa_get_size( const void *ctx )
+static size_t rsa_get_bitlen( const void *ctx )
 {
-    return( 8 * ((const rsa_context *) ctx)->len );
+    return( 8 * ((const mbedtls_rsa_context *) ctx)->len );
 }
 
-static int rsa_verify_wrap( void *ctx, md_type_t md_alg,
+static int rsa_verify_wrap( void *ctx, mbedtls_md_type_t md_alg,
                    const unsigned char *hash, size_t hash_len,
                    const unsigned char *sig, size_t sig_len )
 {
     int ret;
 
-    if( sig_len < ((rsa_context *) ctx)->len )
-        return( POLARSSL_ERR_RSA_VERIFY_FAILED );
+    if( sig_len < ((mbedtls_rsa_context *) ctx)->len )
+        return( MBEDTLS_ERR_RSA_VERIFY_FAILED );
 
-    if( ( ret = rsa_pkcs1_verify( (rsa_context *) ctx, NULL, NULL,
-                                  RSA_PUBLIC, md_alg,
+    if( ( ret = mbedtls_rsa_pkcs1_verify( (mbedtls_rsa_context *) ctx, NULL, NULL,
+                                  MBEDTLS_RSA_PUBLIC, md_alg,
                                   (unsigned int) hash_len, hash, sig ) ) != 0 )
         return( ret );
 
-    if( sig_len > ((rsa_context *) ctx)->len )
-        return( POLARSSL_ERR_PK_SIG_LEN_MISMATCH );
+    if( sig_len > ((mbedtls_rsa_context *) ctx)->len )
+        return( MBEDTLS_ERR_PK_SIG_LEN_MISMATCH );
 
     return( 0 );
 }
 
-static int rsa_sign_wrap( void *ctx, md_type_t md_alg,
+static int rsa_sign_wrap( void *ctx, mbedtls_md_type_t md_alg,
                    const unsigned char *hash, size_t hash_len,
                    unsigned char *sig, size_t *sig_len,
                    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    *sig_len = ((rsa_context *) ctx)->len;
+    *sig_len = ((mbedtls_rsa_context *) ctx)->len;
 
-    return( rsa_pkcs1_sign( (rsa_context *) ctx, f_rng, p_rng, RSA_PRIVATE,
+    return( mbedtls_rsa_pkcs1_sign( (mbedtls_rsa_context *) ctx, f_rng, p_rng, MBEDTLS_RSA_PRIVATE,
                 md_alg, (unsigned int) hash_len, hash, sig ) );
 }
 
@@ -102,11 +104,11 @@ static int rsa_decrypt_wrap( void *ctx,
                     unsigned char *output, size_t *olen, size_t osize,
                     int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    if( ilen != ((rsa_context *) ctx)->len )
-        return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
+    if( ilen != ((mbedtls_rsa_context *) ctx)->len )
+        return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
 
-    return( rsa_pkcs1_decrypt( (rsa_context *) ctx, f_rng, p_rng,
-                RSA_PRIVATE, olen, input, output, osize ) );
+    return( mbedtls_rsa_pkcs1_decrypt( (mbedtls_rsa_context *) ctx, f_rng, p_rng,
+                MBEDTLS_RSA_PRIVATE, olen, input, output, osize ) );
 }
 
 static int rsa_encrypt_wrap( void *ctx,
@@ -114,54 +116,54 @@ static int rsa_encrypt_wrap( void *ctx,
                     unsigned char *output, size_t *olen, size_t osize,
                     int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    *olen = ((rsa_context *) ctx)->len;
+    *olen = ((mbedtls_rsa_context *) ctx)->len;
 
     if( *olen > osize )
-        return( POLARSSL_ERR_RSA_OUTPUT_TOO_LARGE );
+        return( MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE );
 
-    return( rsa_pkcs1_encrypt( (rsa_context *) ctx,
-                f_rng, p_rng, RSA_PUBLIC, ilen, input, output ) );
+    return( mbedtls_rsa_pkcs1_encrypt( (mbedtls_rsa_context *) ctx,
+                f_rng, p_rng, MBEDTLS_RSA_PUBLIC, ilen, input, output ) );
 }
 
 static int rsa_check_pair_wrap( const void *pub, const void *prv )
 {
-    return( rsa_check_pub_priv( (const rsa_context *) pub,
-                                (const rsa_context *) prv ) );
+    return( mbedtls_rsa_check_pub_priv( (const mbedtls_rsa_context *) pub,
+                                (const mbedtls_rsa_context *) prv ) );
 }
 
 static void *rsa_alloc_wrap( void )
 {
-    void *ctx = polarssl_malloc( sizeof( rsa_context ) );
+    void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_rsa_context ) );
 
     if( ctx != NULL )
-        rsa_init( (rsa_context *) ctx, 0, 0 );
+        mbedtls_rsa_init( (mbedtls_rsa_context *) ctx, 0, 0 );
 
     return( ctx );
 }
 
 static void rsa_free_wrap( void *ctx )
 {
-    rsa_free( (rsa_context *) ctx );
-    polarssl_free( ctx );
+    mbedtls_rsa_free( (mbedtls_rsa_context *) ctx );
+    mbedtls_free( ctx );
 }
 
-static void rsa_debug( const void *ctx, pk_debug_item *items )
+static void rsa_debug( const void *ctx, mbedtls_pk_debug_item *items )
 {
-    items->type = POLARSSL_PK_DEBUG_MPI;
+    items->type = MBEDTLS_PK_DEBUG_MPI;
     items->name = "rsa.N";
-    items->value = &( ((rsa_context *) ctx)->N );
+    items->value = &( ((mbedtls_rsa_context *) ctx)->N );
 
     items++;
 
-    items->type = POLARSSL_PK_DEBUG_MPI;
+    items->type = MBEDTLS_PK_DEBUG_MPI;
     items->name = "rsa.E";
-    items->value = &( ((rsa_context *) ctx)->E );
+    items->value = &( ((mbedtls_rsa_context *) ctx)->E );
 }
 
-const pk_info_t rsa_info = {
-    POLARSSL_PK_RSA,
+const mbedtls_pk_info_t mbedtls_rsa_info = {
+    MBEDTLS_PK_RSA,
     "RSA",
-    rsa_get_size,
+    rsa_get_bitlen,
     rsa_can_do,
     rsa_verify_wrap,
     rsa_sign_wrap,
@@ -172,108 +174,108 @@ const pk_info_t rsa_info = {
     rsa_free_wrap,
     rsa_debug,
 };
-#endif /* POLARSSL_RSA_C */
+#endif /* MBEDTLS_RSA_C */
 
-#if defined(POLARSSL_ECP_C)
+#if defined(MBEDTLS_ECP_C)
 /*
  * Generic EC key
  */
-static int eckey_can_do( pk_type_t type )
+static int eckey_can_do( mbedtls_pk_type_t type )
 {
-    return( type == POLARSSL_PK_ECKEY ||
-            type == POLARSSL_PK_ECKEY_DH ||
-            type == POLARSSL_PK_ECDSA );
+    return( type == MBEDTLS_PK_ECKEY ||
+            type == MBEDTLS_PK_ECKEY_DH ||
+            type == MBEDTLS_PK_ECDSA );
 }
 
-static size_t eckey_get_size( const void *ctx )
+static size_t eckey_get_bitlen( const void *ctx )
 {
-    return( ((ecp_keypair *) ctx)->grp.pbits );
+    return( ((mbedtls_ecp_keypair *) ctx)->grp.pbits );
 }
 
-#if defined(POLARSSL_ECDSA_C)
+#if defined(MBEDTLS_ECDSA_C)
 /* Forward declarations */
-static int ecdsa_verify_wrap( void *ctx, md_type_t md_alg,
+static int ecdsa_verify_wrap( void *ctx, mbedtls_md_type_t md_alg,
                        const unsigned char *hash, size_t hash_len,
                        const unsigned char *sig, size_t sig_len );
 
-static int ecdsa_sign_wrap( void *ctx, md_type_t md_alg,
+static int ecdsa_sign_wrap( void *ctx, mbedtls_md_type_t md_alg,
                    const unsigned char *hash, size_t hash_len,
                    unsigned char *sig, size_t *sig_len,
                    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng );
 
-static int eckey_verify_wrap( void *ctx, md_type_t md_alg,
+static int eckey_verify_wrap( void *ctx, mbedtls_md_type_t md_alg,
                        const unsigned char *hash, size_t hash_len,
                        const unsigned char *sig, size_t sig_len )
 {
     int ret;
-    ecdsa_context ecdsa;
+    mbedtls_ecdsa_context ecdsa;
 
-    ecdsa_init( &ecdsa );
+    mbedtls_ecdsa_init( &ecdsa );
 
-    if( ( ret = ecdsa_from_keypair( &ecdsa, ctx ) ) == 0 )
+    if( ( ret = mbedtls_ecdsa_from_keypair( &ecdsa, ctx ) ) == 0 )
         ret = ecdsa_verify_wrap( &ecdsa, md_alg, hash, hash_len, sig, sig_len );
 
-    ecdsa_free( &ecdsa );
+    mbedtls_ecdsa_free( &ecdsa );
 
     return( ret );
 }
 
-static int eckey_sign_wrap( void *ctx, md_type_t md_alg,
+static int eckey_sign_wrap( void *ctx, mbedtls_md_type_t md_alg,
                    const unsigned char *hash, size_t hash_len,
                    unsigned char *sig, size_t *sig_len,
                    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
     int ret;
-    ecdsa_context ecdsa;
+    mbedtls_ecdsa_context ecdsa;
 
-    ecdsa_init( &ecdsa );
+    mbedtls_ecdsa_init( &ecdsa );
 
-    if( ( ret = ecdsa_from_keypair( &ecdsa, ctx ) ) == 0 )
+    if( ( ret = mbedtls_ecdsa_from_keypair( &ecdsa, ctx ) ) == 0 )
         ret = ecdsa_sign_wrap( &ecdsa, md_alg, hash, hash_len, sig, sig_len,
                                f_rng, p_rng );
 
-    ecdsa_free( &ecdsa );
+    mbedtls_ecdsa_free( &ecdsa );
 
     return( ret );
 }
 
-#endif /* POLARSSL_ECDSA_C */
+#endif /* MBEDTLS_ECDSA_C */
 
 static int eckey_check_pair( const void *pub, const void *prv )
 {
-    return( ecp_check_pub_priv( (const ecp_keypair *) pub,
-                                (const ecp_keypair *) prv ) );
+    return( mbedtls_ecp_check_pub_priv( (const mbedtls_ecp_keypair *) pub,
+                                (const mbedtls_ecp_keypair *) prv ) );
 }
 
 static void *eckey_alloc_wrap( void )
 {
-    void *ctx = polarssl_malloc( sizeof( ecp_keypair ) );
+    void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_ecp_keypair ) );
 
     if( ctx != NULL )
-        ecp_keypair_init( ctx );
+        mbedtls_ecp_keypair_init( ctx );
 
     return( ctx );
 }
 
 static void eckey_free_wrap( void *ctx )
 {
-    ecp_keypair_free( (ecp_keypair *) ctx );
-    polarssl_free( ctx );
+    mbedtls_ecp_keypair_free( (mbedtls_ecp_keypair *) ctx );
+    mbedtls_free( ctx );
 }
 
-static void eckey_debug( const void *ctx, pk_debug_item *items )
+static void eckey_debug( const void *ctx, mbedtls_pk_debug_item *items )
 {
-    items->type = POLARSSL_PK_DEBUG_ECP;
+    items->type = MBEDTLS_PK_DEBUG_ECP;
     items->name = "eckey.Q";
-    items->value = &( ((ecp_keypair *) ctx)->Q );
+    items->value = &( ((mbedtls_ecp_keypair *) ctx)->Q );
 }
 
-const pk_info_t eckey_info = {
-    POLARSSL_PK_ECKEY,
+const mbedtls_pk_info_t mbedtls_eckey_info = {
+    MBEDTLS_PK_ECKEY,
     "EC",
-    eckey_get_size,
+    eckey_get_bitlen,
     eckey_can_do,
-#if defined(POLARSSL_ECDSA_C)
+#if defined(MBEDTLS_ECDSA_C)
     eckey_verify_wrap,
     eckey_sign_wrap,
 #else
@@ -291,16 +293,16 @@ const pk_info_t eckey_info = {
 /*
  * EC key restricted to ECDH
  */
-static int eckeydh_can_do( pk_type_t type )
+static int eckeydh_can_do( mbedtls_pk_type_t type )
 {
-    return( type == POLARSSL_PK_ECKEY ||
-            type == POLARSSL_PK_ECKEY_DH );
+    return( type == MBEDTLS_PK_ECKEY ||
+            type == MBEDTLS_PK_ECKEY_DH );
 }
 
-const pk_info_t eckeydh_info = {
-    POLARSSL_PK_ECKEY_DH,
+const mbedtls_pk_info_t mbedtls_eckeydh_info = {
+    MBEDTLS_PK_ECKEY_DH,
     "EC_DH",
-    eckey_get_size,         /* Same underlying key structure */
+    eckey_get_bitlen,         /* Same underlying key structure */
     eckeydh_can_do,
     NULL,
     NULL,
@@ -311,70 +313,59 @@ const pk_info_t eckeydh_info = {
     eckey_free_wrap,        /* Same underlying key structure */
     eckey_debug,            /* Same underlying key structure */
 };
-#endif /* POLARSSL_ECP_C */
+#endif /* MBEDTLS_ECP_C */
 
-#if defined(POLARSSL_ECDSA_C)
-static int ecdsa_can_do( pk_type_t type )
+#if defined(MBEDTLS_ECDSA_C)
+static int ecdsa_can_do( mbedtls_pk_type_t type )
 {
-    return( type == POLARSSL_PK_ECDSA );
+    return( type == MBEDTLS_PK_ECDSA );
 }
 
-static int ecdsa_verify_wrap( void *ctx, md_type_t md_alg,
+static int ecdsa_verify_wrap( void *ctx, mbedtls_md_type_t md_alg,
                        const unsigned char *hash, size_t hash_len,
                        const unsigned char *sig, size_t sig_len )
 {
     int ret;
     ((void) md_alg);
 
-    ret = ecdsa_read_signature( (ecdsa_context *) ctx,
+    ret = mbedtls_ecdsa_read_signature( (mbedtls_ecdsa_context *) ctx,
                                 hash, hash_len, sig, sig_len );
 
-    if( ret == POLARSSL_ERR_ECP_SIG_LEN_MISMATCH )
-        return( POLARSSL_ERR_PK_SIG_LEN_MISMATCH );
+    if( ret == MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH )
+        return( MBEDTLS_ERR_PK_SIG_LEN_MISMATCH );
 
     return( ret );
 }
 
-static int ecdsa_sign_wrap( void *ctx, md_type_t md_alg,
+static int ecdsa_sign_wrap( void *ctx, mbedtls_md_type_t md_alg,
                    const unsigned char *hash, size_t hash_len,
                    unsigned char *sig, size_t *sig_len,
                    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    /* Use deterministic ECDSA by default if available */
-#if defined(POLARSSL_ECDSA_DETERMINISTIC)
-    ((void) f_rng);
-    ((void) p_rng);
-
-    return( ecdsa_write_signature_det( (ecdsa_context *) ctx,
-                hash, hash_len, sig, sig_len, md_alg ) );
-#else
-    ((void) md_alg);
-
-    return( ecdsa_write_signature( (ecdsa_context *) ctx,
-                hash, hash_len, sig, sig_len, f_rng, p_rng ) );
-#endif /* POLARSSL_ECDSA_DETERMINISTIC */
+    return( mbedtls_ecdsa_write_signature( (mbedtls_ecdsa_context *) ctx,
+                md_alg, hash, hash_len, sig, sig_len, f_rng, p_rng ) );
 }
 
 static void *ecdsa_alloc_wrap( void )
 {
-    void *ctx = polarssl_malloc( sizeof( ecdsa_context ) );
+    void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_ecdsa_context ) );
 
     if( ctx != NULL )
-        ecdsa_init( (ecdsa_context *) ctx );
+        mbedtls_ecdsa_init( (mbedtls_ecdsa_context *) ctx );
 
     return( ctx );
 }
 
 static void ecdsa_free_wrap( void *ctx )
 {
-    ecdsa_free( (ecdsa_context *) ctx );
-    polarssl_free( ctx );
+    mbedtls_ecdsa_free( (mbedtls_ecdsa_context *) ctx );
+    mbedtls_free( ctx );
 }
 
-const pk_info_t ecdsa_info = {
-    POLARSSL_PK_ECDSA,
+const mbedtls_pk_info_t mbedtls_ecdsa_info = {
+    MBEDTLS_PK_ECDSA,
     "ECDSA",
-    eckey_get_size,     /* Compatible key structures */
+    eckey_get_bitlen,     /* Compatible key structures */
     ecdsa_can_do,
     ecdsa_verify_wrap,
     ecdsa_sign_wrap,
@@ -385,34 +376,35 @@ const pk_info_t ecdsa_info = {
     ecdsa_free_wrap,
     eckey_debug,        /* Compatible key structures */
 };
-#endif /* POLARSSL_ECDSA_C */
+#endif /* MBEDTLS_ECDSA_C */
 
+#if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
 /*
  * Support for alternative RSA-private implementations
  */
 
-static int rsa_alt_can_do( pk_type_t type )
+static int rsa_alt_can_do( mbedtls_pk_type_t type )
 {
-    return( type == POLARSSL_PK_RSA );
+    return( type == MBEDTLS_PK_RSA );
 }
 
-static size_t rsa_alt_get_size( const void *ctx )
+static size_t rsa_alt_get_bitlen( const void *ctx )
 {
-    const rsa_alt_context *rsa_alt = (const rsa_alt_context *) ctx;
+    const mbedtls_rsa_alt_context *rsa_alt = (const mbedtls_rsa_alt_context *) ctx;
 
     return( 8 * rsa_alt->key_len_func( rsa_alt->key ) );
 }
 
-static int rsa_alt_sign_wrap( void *ctx, md_type_t md_alg,
+static int rsa_alt_sign_wrap( void *ctx, mbedtls_md_type_t md_alg,
                    const unsigned char *hash, size_t hash_len,
                    unsigned char *sig, size_t *sig_len,
                    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    rsa_alt_context *rsa_alt = (rsa_alt_context *) ctx;
+    mbedtls_rsa_alt_context *rsa_alt = (mbedtls_rsa_alt_context *) ctx;
 
     *sig_len = rsa_alt->key_len_func( rsa_alt->key );
 
-    return( rsa_alt->sign_func( rsa_alt->key, f_rng, p_rng, RSA_PRIVATE,
+    return( rsa_alt->sign_func( rsa_alt->key, f_rng, p_rng, MBEDTLS_RSA_PRIVATE,
                 md_alg, (unsigned int) hash_len, hash, sig ) );
 }
 
@@ -421,74 +413,74 @@ static int rsa_alt_decrypt_wrap( void *ctx,
                     unsigned char *output, size_t *olen, size_t osize,
                     int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    rsa_alt_context *rsa_alt = (rsa_alt_context *) ctx;
+    mbedtls_rsa_alt_context *rsa_alt = (mbedtls_rsa_alt_context *) ctx;
 
     ((void) f_rng);
     ((void) p_rng);
 
     if( ilen != rsa_alt->key_len_func( rsa_alt->key ) )
-        return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
+        return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
 
     return( rsa_alt->decrypt_func( rsa_alt->key,
-                RSA_PRIVATE, olen, input, output, osize ) );
+                MBEDTLS_RSA_PRIVATE, olen, input, output, osize ) );
 }
 
-#if defined(POLARSSL_RSA_C)
+#if defined(MBEDTLS_RSA_C)
 static int rsa_alt_check_pair( const void *pub, const void *prv )
 {
-    unsigned char sig[POLARSSL_MPI_MAX_SIZE];
+    unsigned char sig[MBEDTLS_MPI_MAX_SIZE];
     unsigned char hash[32];
     size_t sig_len = 0;
     int ret;
 
-    if( rsa_alt_get_size( prv ) != rsa_get_size( pub ) )
-        return( POLARSSL_ERR_RSA_KEY_CHECK_FAILED );
+    if( rsa_alt_get_bitlen( prv ) != rsa_get_bitlen( pub ) )
+        return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED );
 
     memset( hash, 0x2a, sizeof( hash ) );
 
-    if( ( ret = rsa_alt_sign_wrap( (void *) prv, POLARSSL_MD_NONE,
+    if( ( ret = rsa_alt_sign_wrap( (void *) prv, MBEDTLS_MD_NONE,
                                    hash, sizeof( hash ),
                                    sig, &sig_len, NULL, NULL ) ) != 0 )
     {
         return( ret );
     }
 
-    if( rsa_verify_wrap( (void *) pub, POLARSSL_MD_NONE,
+    if( rsa_verify_wrap( (void *) pub, MBEDTLS_MD_NONE,
                          hash, sizeof( hash ), sig, sig_len ) != 0 )
     {
-        return( POLARSSL_ERR_RSA_KEY_CHECK_FAILED );
+        return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED );
     }
 
     return( 0 );
 }
-#endif /* POLARSSL_RSA_C */
+#endif /* MBEDTLS_RSA_C */
 
 static void *rsa_alt_alloc_wrap( void )
 {
-    void *ctx = polarssl_malloc( sizeof( rsa_alt_context ) );
+    void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_rsa_alt_context ) );
 
     if( ctx != NULL )
-        memset( ctx, 0, sizeof( rsa_alt_context ) );
+        memset( ctx, 0, sizeof( mbedtls_rsa_alt_context ) );
 
     return( ctx );
 }
 
 static void rsa_alt_free_wrap( void *ctx )
 {
-    polarssl_zeroize( ctx, sizeof( rsa_alt_context ) );
-    polarssl_free( ctx );
+    mbedtls_zeroize( ctx, sizeof( mbedtls_rsa_alt_context ) );
+    mbedtls_free( ctx );
 }
 
-const pk_info_t rsa_alt_info = {
-    POLARSSL_PK_RSA_ALT,
+const mbedtls_pk_info_t mbedtls_rsa_alt_info = {
+    MBEDTLS_PK_RSA_ALT,
     "RSA-alt",
-    rsa_alt_get_size,
+    rsa_alt_get_bitlen,
     rsa_alt_can_do,
     NULL,
     rsa_alt_sign_wrap,
     rsa_alt_decrypt_wrap,
     NULL,
-#if defined(POLARSSL_RSA_C)
+#if defined(MBEDTLS_RSA_C)
     rsa_alt_check_pair,
 #else
     NULL,
@@ -498,4 +490,6 @@ const pk_info_t rsa_alt_info = {
     NULL,
 };
 
-#endif /* POLARSSL_PK_C */
+#endif /* MBEDTLS_PK_RSA_ALT_SUPPORT */
+
+#endif /* MBEDTLS_PK_C */

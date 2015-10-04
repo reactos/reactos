@@ -1,23 +1,22 @@
 /*
  *  PKCS#12 Personal Information Exchange Syntax
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
  *
- *  This file is part of mbed TLS (https://polarssl.org)
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  The PKCS #12 Personal Information Exchange Syntax Standard v1.1
@@ -26,33 +25,35 @@
  *  ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1-1.asn
  */
 
-#if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
 #else
-#include POLARSSL_CONFIG_FILE
+#include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(POLARSSL_PKCS12_C)
+#if defined(MBEDTLS_PKCS12_C)
 
-#include "polarssl/pkcs12.h"
-#include "polarssl/asn1.h"
-#include "polarssl/cipher.h"
+#include "mbedtls/pkcs12.h"
+#include "mbedtls/asn1.h"
+#include "mbedtls/cipher.h"
 
-#if defined(POLARSSL_ARC4_C)
-#include "polarssl/arc4.h"
+#include <string.h>
+
+#if defined(MBEDTLS_ARC4_C)
+#include "mbedtls/arc4.h"
 #endif
 
-#if defined(POLARSSL_DES_C)
-#include "polarssl/des.h"
+#if defined(MBEDTLS_DES_C)
+#include "mbedtls/des.h"
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void polarssl_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
-static int pkcs12_parse_pbe_params( asn1_buf *params,
-                                    asn1_buf *salt, int *iterations )
+static int pkcs12_parse_pbe_params( mbedtls_asn1_buf *params,
+                                    mbedtls_asn1_buf *salt, int *iterations )
 {
     int ret;
     unsigned char **p = &params->p;
@@ -65,37 +66,37 @@ static int pkcs12_parse_pbe_params( asn1_buf *params,
      *  }
      *
      */
-    if( params->tag != ( ASN1_CONSTRUCTED | ASN1_SEQUENCE ) )
-        return( POLARSSL_ERR_PKCS12_PBE_INVALID_FORMAT +
-                POLARSSL_ERR_ASN1_UNEXPECTED_TAG );
+    if( params->tag != ( MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) )
+        return( MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT +
+                MBEDTLS_ERR_ASN1_UNEXPECTED_TAG );
 
-    if( ( ret = asn1_get_tag( p, end, &salt->len, ASN1_OCTET_STRING ) ) != 0 )
-        return( POLARSSL_ERR_PKCS12_PBE_INVALID_FORMAT + ret );
+    if( ( ret = mbedtls_asn1_get_tag( p, end, &salt->len, MBEDTLS_ASN1_OCTET_STRING ) ) != 0 )
+        return( MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT + ret );
 
     salt->p = *p;
     *p += salt->len;
 
-    if( ( ret = asn1_get_int( p, end, iterations ) ) != 0 )
-        return( POLARSSL_ERR_PKCS12_PBE_INVALID_FORMAT + ret );
+    if( ( ret = mbedtls_asn1_get_int( p, end, iterations ) ) != 0 )
+        return( MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT + ret );
 
     if( *p != end )
-        return( POLARSSL_ERR_PKCS12_PBE_INVALID_FORMAT +
-                POLARSSL_ERR_ASN1_LENGTH_MISMATCH );
+        return( MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT +
+                MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
 
     return( 0 );
 }
 
-static int pkcs12_pbe_derive_key_iv( asn1_buf *pbe_params, md_type_t md_type,
+static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_type_t md_type,
                                      const unsigned char *pwd,  size_t pwdlen,
                                      unsigned char *key, size_t keylen,
                                      unsigned char *iv,  size_t ivlen )
 {
     int ret, iterations;
-    asn1_buf salt;
+    mbedtls_asn1_buf salt;
     size_t i;
     unsigned char unipwd[258];
 
-    memset( &salt, 0, sizeof(asn1_buf) );
+    memset( &salt, 0, sizeof(mbedtls_asn1_buf) );
     memset( &unipwd, 0, sizeof(unipwd) );
 
     if( ( ret = pkcs12_parse_pbe_params( pbe_params, &salt,
@@ -105,9 +106,9 @@ static int pkcs12_pbe_derive_key_iv( asn1_buf *pbe_params, md_type_t md_type,
     for( i = 0; i < pwdlen; i++ )
         unipwd[i * 2 + 1] = pwd[i];
 
-    if( ( ret = pkcs12_derivation( key, keylen, unipwd, pwdlen * 2 + 2,
+    if( ( ret = mbedtls_pkcs12_derivation( key, keylen, unipwd, pwdlen * 2 + 2,
                                    salt.p, salt.len, md_type,
-                                   PKCS12_DERIVE_KEY, iterations ) ) != 0 )
+                                   MBEDTLS_PKCS12_DERIVE_KEY, iterations ) ) != 0 )
     {
         return( ret );
     }
@@ -115,21 +116,21 @@ static int pkcs12_pbe_derive_key_iv( asn1_buf *pbe_params, md_type_t md_type,
     if( iv == NULL || ivlen == 0 )
         return( 0 );
 
-    if( ( ret = pkcs12_derivation( iv, ivlen, unipwd, pwdlen * 2 + 2,
+    if( ( ret = mbedtls_pkcs12_derivation( iv, ivlen, unipwd, pwdlen * 2 + 2,
                                    salt.p, salt.len, md_type,
-                                   PKCS12_DERIVE_IV, iterations ) ) != 0 )
+                                   MBEDTLS_PKCS12_DERIVE_IV, iterations ) ) != 0 )
     {
         return( ret );
     }
     return( 0 );
 }
 
-int pkcs12_pbe_sha1_rc4_128( asn1_buf *pbe_params, int mode,
+int mbedtls_pkcs12_pbe_sha1_rc4_128( mbedtls_asn1_buf *pbe_params, int mode,
                              const unsigned char *pwd,  size_t pwdlen,
                              const unsigned char *data, size_t len,
                              unsigned char *output )
 {
-#if !defined(POLARSSL_ARC4_C)
+#if !defined(MBEDTLS_ARC4_C)
     ((void) pbe_params);
     ((void) mode);
     ((void) pwd);
@@ -137,36 +138,36 @@ int pkcs12_pbe_sha1_rc4_128( asn1_buf *pbe_params, int mode,
     ((void) data);
     ((void) len);
     ((void) output);
-    return( POLARSSL_ERR_PKCS12_FEATURE_UNAVAILABLE );
+    return( MBEDTLS_ERR_PKCS12_FEATURE_UNAVAILABLE );
 #else
     int ret;
     unsigned char key[16];
-    arc4_context ctx;
+    mbedtls_arc4_context ctx;
     ((void) mode);
 
-    arc4_init( &ctx );
+    mbedtls_arc4_init( &ctx );
 
-    if( ( ret = pkcs12_pbe_derive_key_iv( pbe_params, POLARSSL_MD_SHA1,
+    if( ( ret = pkcs12_pbe_derive_key_iv( pbe_params, MBEDTLS_MD_SHA1,
                                           pwd, pwdlen,
                                           key, 16, NULL, 0 ) ) != 0 )
     {
         return( ret );
     }
 
-    arc4_setup( &ctx, key, 16 );
-    if( ( ret = arc4_crypt( &ctx, len, data, output ) ) != 0 )
+    mbedtls_arc4_setup( &ctx, key, 16 );
+    if( ( ret = mbedtls_arc4_crypt( &ctx, len, data, output ) ) != 0 )
         goto exit;
 
 exit:
-    polarssl_zeroize( key, sizeof( key ) );
-    arc4_free( &ctx );
+    mbedtls_zeroize( key, sizeof( key ) );
+    mbedtls_arc4_free( &ctx );
 
     return( ret );
-#endif /* POLARSSL_ARC4_C */
+#endif /* MBEDTLS_ARC4_C */
 }
 
-int pkcs12_pbe( asn1_buf *pbe_params, int mode,
-                cipher_type_t cipher_type, md_type_t md_type,
+int mbedtls_pkcs12_pbe( mbedtls_asn1_buf *pbe_params, int mode,
+                mbedtls_cipher_type_t cipher_type, mbedtls_md_type_t md_type,
                 const unsigned char *pwd,  size_t pwdlen,
                 const unsigned char *data, size_t len,
                 unsigned char *output )
@@ -174,15 +175,15 @@ int pkcs12_pbe( asn1_buf *pbe_params, int mode,
     int ret, keylen = 0;
     unsigned char key[32];
     unsigned char iv[16];
-    const cipher_info_t *cipher_info;
-    cipher_context_t cipher_ctx;
+    const mbedtls_cipher_info_t *cipher_info;
+    mbedtls_cipher_context_t cipher_ctx;
     size_t olen = 0;
 
-    cipher_info = cipher_info_from_type( cipher_type );
+    cipher_info = mbedtls_cipher_info_from_type( cipher_type );
     if( cipher_info == NULL )
-        return( POLARSSL_ERR_PKCS12_FEATURE_UNAVAILABLE );
+        return( MBEDTLS_ERR_PKCS12_FEATURE_UNAVAILABLE );
 
-    keylen = cipher_info->key_length / 8;
+    keylen = cipher_info->key_bitlen / 8;
 
     if( ( ret = pkcs12_pbe_derive_key_iv( pbe_params, md_type, pwd, pwdlen,
                                           key, keylen,
@@ -191,33 +192,33 @@ int pkcs12_pbe( asn1_buf *pbe_params, int mode,
         return( ret );
     }
 
-    cipher_init( &cipher_ctx );
+    mbedtls_cipher_init( &cipher_ctx );
 
-    if( ( ret = cipher_init_ctx( &cipher_ctx, cipher_info ) ) != 0 )
+    if( ( ret = mbedtls_cipher_setup( &cipher_ctx, cipher_info ) ) != 0 )
         goto exit;
 
-    if( ( ret = cipher_setkey( &cipher_ctx, key, 8 * keylen, mode ) ) != 0 )
+    if( ( ret = mbedtls_cipher_setkey( &cipher_ctx, key, 8 * keylen, (mbedtls_operation_t) mode ) ) != 0 )
         goto exit;
 
-    if( ( ret = cipher_set_iv( &cipher_ctx, iv, cipher_info->iv_size ) ) != 0 )
+    if( ( ret = mbedtls_cipher_set_iv( &cipher_ctx, iv, cipher_info->iv_size ) ) != 0 )
         goto exit;
 
-    if( ( ret = cipher_reset( &cipher_ctx ) ) != 0 )
+    if( ( ret = mbedtls_cipher_reset( &cipher_ctx ) ) != 0 )
         goto exit;
 
-    if( ( ret = cipher_update( &cipher_ctx, data, len,
+    if( ( ret = mbedtls_cipher_update( &cipher_ctx, data, len,
                                 output, &olen ) ) != 0 )
     {
         goto exit;
     }
 
-    if( ( ret = cipher_finish( &cipher_ctx, output + olen, &olen ) ) != 0 )
-        ret = POLARSSL_ERR_PKCS12_PASSWORD_MISMATCH;
+    if( ( ret = mbedtls_cipher_finish( &cipher_ctx, output + olen, &olen ) ) != 0 )
+        ret = MBEDTLS_ERR_PKCS12_PASSWORD_MISMATCH;
 
 exit:
-    polarssl_zeroize( key, sizeof( key ) );
-    polarssl_zeroize( iv,  sizeof( iv  ) );
-    cipher_free( &cipher_ctx );
+    mbedtls_zeroize( key, sizeof( key ) );
+    mbedtls_zeroize( iv,  sizeof( iv  ) );
+    mbedtls_cipher_free( &cipher_ctx );
 
     return( ret );
 }
@@ -237,38 +238,38 @@ static void pkcs12_fill_buffer( unsigned char *data, size_t data_len,
     }
 }
 
-int pkcs12_derivation( unsigned char *data, size_t datalen,
+int mbedtls_pkcs12_derivation( unsigned char *data, size_t datalen,
                        const unsigned char *pwd, size_t pwdlen,
                        const unsigned char *salt, size_t saltlen,
-                       md_type_t md_type, int id, int iterations )
+                       mbedtls_md_type_t md_type, int id, int iterations )
 {
     int ret;
     unsigned int j;
 
     unsigned char diversifier[128];
     unsigned char salt_block[128], pwd_block[128], hash_block[128];
-    unsigned char hash_output[POLARSSL_MD_MAX_SIZE];
+    unsigned char hash_output[MBEDTLS_MD_MAX_SIZE];
     unsigned char *p;
     unsigned char c;
 
     size_t hlen, use_len, v, i;
 
-    const md_info_t *md_info;
-    md_context_t md_ctx;
+    const mbedtls_md_info_t *md_info;
+    mbedtls_md_context_t md_ctx;
 
     // This version only allows max of 64 bytes of password or salt
     if( datalen > 128 || pwdlen > 64 || saltlen > 64 )
-        return( POLARSSL_ERR_PKCS12_BAD_INPUT_DATA );
+        return( MBEDTLS_ERR_PKCS12_BAD_INPUT_DATA );
 
-    md_info = md_info_from_type( md_type );
+    md_info = mbedtls_md_info_from_type( md_type );
     if( md_info == NULL )
-        return( POLARSSL_ERR_PKCS12_FEATURE_UNAVAILABLE );
+        return( MBEDTLS_ERR_PKCS12_FEATURE_UNAVAILABLE );
 
-    md_init( &md_ctx );
+    mbedtls_md_init( &md_ctx );
 
-    if( ( ret = md_init_ctx( &md_ctx, md_info ) ) != 0 )
+    if( ( ret = mbedtls_md_setup( &md_ctx, md_info, 0 ) ) != 0 )
         return( ret );
-    hlen = md_get_size( md_info );
+    hlen = mbedtls_md_get_size( md_info );
 
     if( hlen <= 32 )
         v = 64;
@@ -284,25 +285,25 @@ int pkcs12_derivation( unsigned char *data, size_t datalen,
     while( datalen > 0 )
     {
         // Calculate hash( diversifier || salt_block || pwd_block )
-        if( ( ret = md_starts( &md_ctx ) ) != 0 )
+        if( ( ret = mbedtls_md_starts( &md_ctx ) ) != 0 )
             goto exit;
 
-        if( ( ret = md_update( &md_ctx, diversifier, v ) ) != 0 )
+        if( ( ret = mbedtls_md_update( &md_ctx, diversifier, v ) ) != 0 )
             goto exit;
 
-        if( ( ret = md_update( &md_ctx, salt_block, v ) ) != 0 )
+        if( ( ret = mbedtls_md_update( &md_ctx, salt_block, v ) ) != 0 )
             goto exit;
 
-        if( ( ret = md_update( &md_ctx, pwd_block, v ) ) != 0 )
+        if( ( ret = mbedtls_md_update( &md_ctx, pwd_block, v ) ) != 0 )
             goto exit;
 
-        if( ( ret = md_finish( &md_ctx, hash_output ) ) != 0 )
+        if( ( ret = mbedtls_md_finish( &md_ctx, hash_output ) ) != 0 )
             goto exit;
 
         // Perform remaining ( iterations - 1 ) recursive hash calculations
         for( i = 1; i < (size_t) iterations; i++ )
         {
-            if( ( ret = md( md_info, hash_output, hlen, hash_output ) ) != 0 )
+            if( ( ret = mbedtls_md( md_info, hash_output, hlen, hash_output ) ) != 0 )
                 goto exit;
         }
 
@@ -344,14 +345,14 @@ int pkcs12_derivation( unsigned char *data, size_t datalen,
     ret = 0;
 
 exit:
-    polarssl_zeroize( salt_block, sizeof( salt_block ) );
-    polarssl_zeroize( pwd_block, sizeof( pwd_block ) );
-    polarssl_zeroize( hash_block, sizeof( hash_block ) );
-    polarssl_zeroize( hash_output, sizeof( hash_output ) );
+    mbedtls_zeroize( salt_block, sizeof( salt_block ) );
+    mbedtls_zeroize( pwd_block, sizeof( pwd_block ) );
+    mbedtls_zeroize( hash_block, sizeof( hash_block ) );
+    mbedtls_zeroize( hash_output, sizeof( hash_output ) );
 
-    md_free( &md_ctx );
+    mbedtls_md_free( &md_ctx );
 
     return( ret );
 }
 
-#endif /* POLARSSL_PKCS12_C */
+#endif /* MBEDTLS_PKCS12_C */
