@@ -20,11 +20,13 @@
 #define UDFS_AVDP_SECTOR       256
 
 /* Non-standard rounding macros */
+#ifndef ROUND_UP
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
+#endif
 
 /* Conversion types and macros taken from internal ntifs headers */
 typedef union _UCHAR1
