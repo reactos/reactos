@@ -143,27 +143,28 @@ dlOnProgress(IBindStatusCallback* iface,
     Item = GetDlgItem(This->hDialog, IDC_DOWNLOAD_STATUS);
     if (Item && szStatusText && wcslen(szStatusText) > 0 && This->UrlHasBeenCopied == FALSE)
     {
-        DWORD len = wcslen(szStatusText) * sizeof(WCHAR);
-        PWSTR buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+        DWORD len = wcslen(szStatusText) + 1;
+        PWSTR buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
 
         if (buf)
         {
             /* beautify our url for display purposes */
             InternetCanonicalizeUrl(szStatusText, buf, &len, ICU_DECODE | ICU_NO_ENCODE);
-
-            /* paste it into our dialog, free the temp buffer
-               and don't do it again in this instance */
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)buf);
-            HeapFree(GetProcessHeap(), 0, buf);
         }
         else
         {
-            /* our computer is old and rusty and does not have enough ram for this,
-               use the ugly version and call it a day */
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)szStatusText);
+            /* just use the original */
+            buf = (PWSTR)szStatusText;
         }
 
+        /* paste it into our dialog and don't do it again in this instance */
+        SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)buf);
         This->UrlHasBeenCopied = TRUE;
+
+        if (buf != szStatusText)
+        {
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
     }
 
     SetLastError(0);
