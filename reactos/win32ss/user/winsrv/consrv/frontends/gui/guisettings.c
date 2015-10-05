@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/frontends/gui/guisettings.c
+ * FILE:            win32ss/user/winsrv/consrv/frontends/gui/guisettings.c
  * PURPOSE:         GUI Terminal Front-End Settings Management
  * PROGRAMMERS:     Johannes Anderwald
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

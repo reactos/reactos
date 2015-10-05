@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            frontends/gui/conwnd.c
+ * FILE:            win32ss/user/winsrv/consrv/frontends/gui/conwnd.c
  * PURPOSE:         GUI Console Window Class
  * PROGRAMMERS:     Gé van Geldorp
  *                  Johannes Anderwald

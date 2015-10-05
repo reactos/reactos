@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Driver DLL
- * FILE:            consrv/condrv/text.c
+ * FILE:            win32ss/user/winsrv/consrv/condrv/text.c
  * PURPOSE:         Console Output Functions for text-mode screen-buffers
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

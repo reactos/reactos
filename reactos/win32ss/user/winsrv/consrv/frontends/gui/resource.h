@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/resource.h
+ * FILE:            win32ss/user/winsrv/consrv/frontends/gui/resource.h
  * PURPOSE:         Resource #defines
  */
 

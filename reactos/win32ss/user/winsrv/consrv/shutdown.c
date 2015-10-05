@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/shutdown.c
+ * FILE:            win32ss/user/winsrv/consrv/shutdown.c
  * PURPOSE:         Processes Shutdown
  * PROGRAMMERS:     Alex Ionescu
  */

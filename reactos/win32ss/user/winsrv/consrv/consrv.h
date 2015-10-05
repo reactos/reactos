@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/consrv.h
+ * FILE:            win32ss/user/winsrv/consrv/consrv.h
  * PURPOSE:         Main header - Definitions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

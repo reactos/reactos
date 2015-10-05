@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/conoutput.c
+ * FILE:            win32ss/user/winsrv/consrv_new/conoutput.c
  * PURPOSE:         General Console Output Functions
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

@@ -1,7 +1,7 @@
 /*
  * LICENSE:         GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/history.c
+ * FILE:            win32ss/user/winsrv/consrv/history.c
  * PURPOSE:         Console line input functions
  * PROGRAMMERS:     Jeffrey Morlan
  */

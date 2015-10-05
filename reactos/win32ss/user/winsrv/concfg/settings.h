@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            concfg/settings.h
+ * FILE:            win32ss/user/winsrv/concfg/settings.h
  * PURPOSE:         Public Console Settings Management Interface
  * PROGRAMMERS:     Johannes Anderwald
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

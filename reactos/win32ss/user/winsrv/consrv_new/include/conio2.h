@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/conio.h
+ * FILE:            win32ss/user/winsrv/consrv_new/include/conio2.h
  * PURPOSE:         Internal Console I/O Interface
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

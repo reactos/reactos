@@ -1,7 +1,7 @@
 /*
  * LICENSE:         GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/alias.c
+ * FILE:            win32ss/user/winsrv/consrv/alias.c
  * PURPOSE:         Alias support functions
  * PROGRAMMERS:     Christoph Wittich
  *                  Johannes Anderwald

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/frontends/gui/graphics.c
+ * FILE:            win32ss/user/winsrv/consrv/frontends/gui/graphics.c
  * PURPOSE:         GUI Terminal Front-End - Support for graphics-mode screen-buffers
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

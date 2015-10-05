@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            frontends/terminal.c
+ * FILE:            win32ss/user/winsrv/consrv/frontends/terminal.c
  * PURPOSE:         ConSrv terminal.
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

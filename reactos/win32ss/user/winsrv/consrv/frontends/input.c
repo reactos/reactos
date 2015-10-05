@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/frontends/input.c
+ * FILE:            win32ss/user/winsrv/consrv/frontends/input.c
  * PURPOSE:         Common Front-Ends Input functions
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

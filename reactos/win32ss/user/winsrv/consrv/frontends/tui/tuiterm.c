@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/frontends/tui/tuiterm.c
+ * FILE:            win32ss/user/winsrv/consrv/frontends/tui/tuiterm.c
  * PURPOSE:         TUI Terminal Front-End - Virtual Consoles...
  * PROGRAMMERS:     David Welch
  *                  Gé van Geldorp

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/include/term.h
+ * FILE:            win32ss/user/winsrv/consrv/include/term.h
  * PURPOSE:         Internal Frontend Interface
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

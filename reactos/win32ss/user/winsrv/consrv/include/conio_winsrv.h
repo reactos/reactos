@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/include/conio_winsrv.h
+ * FILE:            win32ss/user/winsrv/consrv/include/conio_winsrv.h
  * PURPOSE:         Public Console I/O Interface - Offers wrap-up structures
  *                  over the console objects exposed by the console driver.
  * PROGRAMMERS:     Gé van Geldorp
