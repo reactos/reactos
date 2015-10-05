@@ -451,15 +451,18 @@ BlGetBootOptionBoolean (
     return Status;
 }
 
-#define BI_FLUSH_HIVE   0x01
+#define BI_FLUSH_HIVE       0x01
+#define BI_HIVE_WRITEABLE   0x02
 
 typedef struct _BI_KEY_HIVE
 {
-    PVOID ImageBase;
+    PHBASE_BLOCK BaseBlock;
+    ULONG HiveSize;
     PBL_FILE_PATH_DESCRIPTOR FilePath;
     CMHIVE Hive;
     LONG ReferenceCount;
     ULONG Flags;
+    PCM_KEY_NODE RootNode;
 } BI_KEY_HIVE, *PBI_KEY_HIVE;
 
 typedef struct _BI_KEY_OBJECT
@@ -646,7 +649,7 @@ BiOpenKey(
         }
 
         /* We found it -- get the key node out of it */
-        ParentNode = (PCM_KEY_NODE)Hive->GetCellRoutine(Hive, KeyCell);
+        ParentNode = (PCM_KEY_NODE)HvGetCell(Hive, KeyCell);
         if (!ParentNode)
         {
             Status = STATUS_REGISTRY_CORRUPT;
@@ -699,16 +702,386 @@ Quickie:
     return Status;
 }
 
+BOOLEAN BiHiveHashLibraryInitialized;
+ULONGLONG HvSymcryptSeed;
+
+BOOLEAN
+HvIsInPlaceBaseBlockValid (
+    _In_ PHBASE_BLOCK BaseBlock
+    )
+{
+    ULONG HiveLength, HeaderSum;
+    BOOLEAN Valid;
+
+    /* Assume failure */
+    Valid = FALSE;
+
+    /* Check for incorrect signature, type, version, or format */
+    if ((BaseBlock->Signature == 'fger') &&
+        (BaseBlock->Type == 0) &&
+        (BaseBlock->Major <= 1) &&
+        (BaseBlock->Minor <= 5) &&
+        (BaseBlock->Minor >= 3) &&
+        (BaseBlock->Format == 1))
+    {
+        /* Check for invalid hive size */
+        HiveLength = BaseBlock->Length;
+        if (HiveLength)
+        {
+            /* Check for misaligned or too large hive size */
+            if (!(HiveLength & 0xFFF) && HiveLength <= 0x7FFFE000)
+            {
+                /* Check for invalid header checksum */
+                HeaderSum = HvpHiveHeaderChecksum(BaseBlock);
+                if (HeaderSum == BaseBlock->CheckSum)
+                {
+                    /* All good */
+                    Valid = TRUE;
+                }
+            }
+        }
+    }
+
+    /* Return validity */
+    return Valid;
+}
+
+NTSTATUS
+BiInitializeAndValidateHive (
+    _In_ PBI_KEY_HIVE Hive
+    )
+{
+    ULONG HiveSize;
+    NTSTATUS Status;
+
+    /* Make sure the hive is at least the size of a base block */
+    if (Hive->HiveSize < sizeof(HBASE_BLOCK))
+    {
+        return STATUS_REGISTRY_CORRUPT;
+    }
+
+    /* Make sure that the base block accurately describes the size of the hive */
+    HiveSize = Hive->BaseBlock->Length + sizeof(HBASE_BLOCK);
+    if ((HiveSize < sizeof(HBASE_BLOCK)) || (HiveSize > Hive->HiveSize))
+    {
+        return STATUS_REGISTRY_CORRUPT;
+    }
+
+    /* Initialize a flat memory hive */
+    RtlZeroMemory(&Hive->Hive, sizeof(Hive->Hive));
+    Status = HvInitialize(&Hive->Hive.Hive,
+                          HINIT_FLAT,
+                          0,
+                          0,
+                          Hive->BaseBlock,
+                          CmpAllocate,
+                          CmpFree,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          0,
+                          NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Cleanup volatile/old data */
+        CmPrepareHive(&Hive->Hive.Hive); // CmCheckRegistry 
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Return the final status */
+    return Status;
+}
+
 NTSTATUS
 BiLoadHive (
     _In_ PBL_FILE_PATH_DESCRIPTOR FilePath,
     _Out_ PHANDLE HiveHandle
     )
 {
-    /* This is TODO */
-    EfiPrintf(L"Loading a hive is not yet implemented\r\n");
-    *HiveHandle = NULL;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG DeviceId;
+    PHBASE_BLOCK BaseBlock, NewBaseBlock;
+    PBI_KEY_OBJECT KeyObject;
+    PBI_KEY_HIVE BcdHive;
+    PBL_DEVICE_DESCRIPTOR BcdDevice;
+    ULONG PathLength, DeviceLength, HiveSize, HiveLength, NewHiveSize;
+    PWCHAR HiveName, LogName;
+    BOOLEAN HaveWriteAccess;
+    NTSTATUS Status;
+    PVOID LogData;
+    PHHIVE Hive;
+    UNICODE_STRING KeyString;
+    PCM_KEY_NODE RootNode;
+    HCELL_INDEX CellIndex;
+
+    /* Initialize variables */
+    DeviceId = -1;
+    BaseBlock = NULL;
+    BcdHive = NULL;
+    KeyObject = NULL;
+    LogData = NULL;
+    LogName = NULL;
+
+    /* Initialize the crypto seed */
+    if (!BiHiveHashLibraryInitialized)
+    {
+        HvSymcryptSeed = 0x82EF4D887A4E55C5;
+        BiHiveHashLibraryInitialized = TRUE;
+    }
+
+    /* Extract and validate the input path */
+    BcdDevice = (PBL_DEVICE_DESCRIPTOR)&FilePath->Path;
+    PathLength = FilePath->Length;
+    DeviceLength = BcdDevice->Size;
+    HiveName = (PWCHAR)((ULONG_PTR)BcdDevice + BcdDevice->Size);
+    if (PathLength <= DeviceLength)
+    {
+        /* Doesn't make sense, bail out */
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    /* Attempt to open the underlying device for RW access */
+    HaveWriteAccess = TRUE;
+    Status = BlpDeviceOpen(BcdDevice,
+                           BL_DEVICE_READ_ACCESS | BL_DEVICE_WRITE_ACCESS,
+                           0,
+                           &DeviceId);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Try for RO access instead */
+        HaveWriteAccess = FALSE;
+        Status = BlpDeviceOpen(BcdDevice, BL_DEVICE_READ_ACCESS, 0, &DeviceId);
+        if (!NT_SUCCESS(Status))
+        {
+            /* No access at all -- bail out */
+            goto Quickie;
+        }
+    }
+
+    /* Now try to load the hive on disk */
+    Status = BlImgLoadImageWithProgress2(DeviceId,
+                                         BlLoaderRegistry,
+                                         HiveName,
+                                         (PVOID*)&BaseBlock,
+                                         &HiveSize,
+                                         0,
+                                         FALSE,
+                                         NULL,
+                                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"Hive read failure: % lx\r\n", Status);
+        goto Quickie;
+    }
+
+    /* Allocate a hive structure */
+    BcdHive = BlMmAllocateHeap(sizeof(*BcdHive));
+    if (!BcdHive)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Initialize it */
+    RtlZeroMemory(BcdHive, sizeof(*BcdHive));
+    BcdHive->BaseBlock = BaseBlock;
+    BcdHive->HiveSize = HiveSize;
+    if (HaveWriteAccess)
+    {
+        BcdHive->Flags |= BI_HIVE_WRITEABLE;
+    }
+
+    /* Make sure the hive was at least one bin long */
+    if (HiveSize < sizeof(*BaseBlock))
+    {
+        Status = STATUS_REGISTRY_CORRUPT;
+        goto Quickie;
+    }
+
+    /* Make sure the hive contents are at least one bin long */
+    HiveLength = BaseBlock->Length;
+    if (BaseBlock->Length < sizeof(*BaseBlock))
+    {
+        Status = STATUS_REGISTRY_CORRUPT;
+        goto Quickie;
+    }
+
+    /* Validate the initial bin (the base block) */
+    if (!HvIsInPlaceBaseBlockValid(BaseBlock))
+    {
+        EfiPrintf(L"Recovery not implemented\r\n");
+        Status = STATUS_REGISTRY_CORRUPT;
+        goto Quickie;
+    }
+
+    /* Check if there's log recovery that needs to happen */
+    if (BaseBlock->Sequence1 != BaseBlock->Sequence2)
+    {
+        EfiPrintf(L"Log fix not implemented: %lx %lx\r\n");
+        Status = STATUS_REGISTRY_CORRUPT;
+        goto Quickie;
+    }
+
+    /*
+     * Check if the whole hive doesn't fit in the buffer.
+     * Note: HiveLength does not include the size of the baseblock itself
+     */
+    if (HiveSize < (HiveLength + sizeof(*BaseBlock)))
+    {
+        EfiPrintf(L"Need bigger hive buffer path\r\n");
+
+        /* Allocate a slightly bigger buffer */
+        NewHiveSize = HiveLength + sizeof(*BaseBlock);
+        Status = MmPapAllocatePagesInRange((PVOID*)&NewBaseBlock,
+                                           BlLoaderRegistry,
+                                           NewHiveSize >> PAGE_SHIFT,
+                                           0,
+                                           0,
+                                           NULL,
+                                           0);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Quickie;
+        }
+
+        /* Copy the current data in there */
+        RtlCopyMemory(NewBaseBlock, BaseBlock, HiveSize);
+
+        /* Free the old data */
+        EfiPrintf(L"Leaking old hive buffer\r\n");
+        //MmPapFreePages(BaseBlock, 1);
+
+        /* Update our pointers */
+        BaseBlock = NewBaseBlock;
+        HiveSize = NewHiveSize;
+        BcdHive->BaseBlock = BaseBlock;
+        BcdHive->HiveSize = HiveSize;
+    }
+
+    /* Check if any log stuff needs to happen */
+    if (LogData)
+    {
+        EfiPrintf(L"Log fix not implemented: %lx %lx\r\n");
+        Status = STATUS_REGISTRY_CORRUPT;
+        goto Quickie;
+    }
+
+    /* Call Hv to setup the hive library */
+    Status = BiInitializeAndValidateHive(BcdHive);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Now get the root node */
+    Hive = &BcdHive->Hive.Hive;
+    RootNode = (PCM_KEY_NODE)HvGetCell(Hive, Hive->BaseBlock->RootCell);
+    if (!RootNode)
+    {
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quickie;
+    }
+
+    /* Find the Objects subkey under it to see if it's a real BCD hive */
+    RtlInitUnicodeString(&KeyString, L"Objects");
+    CellIndex = CmpFindSubKeyByName(Hive, RootNode, &KeyString);
+    if (CellIndex == HCELL_NIL)
+    {
+        EfiPrintf(L"No OBJECTS subkey found!\r\n");
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quickie;
+    }
+
+    /* This is a valid BCD hive, store its root node here */
+    BcdHive->RootNode = RootNode;
+
+    /* Allocate a copy of the file path */
+    BcdHive->FilePath = BlMmAllocateHeap(FilePath->Length);
+    if (!BcdHive->FilePath)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Make a copy of it */
+    RtlCopyMemory(BcdHive->FilePath, FilePath, FilePath->Length);
+
+    /* Create a key object to describe the rot */
+    KeyObject = BlMmAllocateHeap(sizeof(*KeyObject));
+    if (!KeyObject)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Fill out the details */
+    KeyObject->KeyNode = RootNode;
+    KeyObject->KeyHive = BcdHive;
+    KeyObject->KeyName = NULL;
+    KeyObject->KeyCell = Hive->BaseBlock->RootCell;
+
+    /* One reference for the key object, plus one lifetime reference */
+    BcdHive->ReferenceCount = 2;
+
+    /* This is the hive handle */
+    *HiveHandle  = KeyObject;
+
+    /* We're all good */
+    Status = STATUS_SUCCESS;
+
+Quickie:
+    /* If we had a log name, free it */
+    if (LogName)
+    {
+        BlMmFreeHeap(LogName);
+    }
+
+    /* If we had logging data, free it */
+    if (LogData)
+    {
+        EfiPrintf(L"Leaking log buffer\r\n");
+        //MmPapFreePages(LogData, 1);
+    }
+
+    /* Check if this is the failure path */
+    if (!NT_SUCCESS(Status))
+    {
+        /* If we mapped the hive, free it */
+        if (BaseBlock)
+        {
+            EfiPrintf(L"Leaking base block on failure\r\n");
+            //MmPapFreePages(BaseBlock, 1u);
+        }
+
+        /* If we opened the device, close it */
+        if (DeviceId != -1)
+        {
+            BlDeviceClose(DeviceId);
+        }
+
+        /* Did we create a hive object? */
+        if (BcdHive)
+        {
+            /* Free the file path if we made a copy of it */
+            if (BcdHive->FilePath)
+            {
+                BlMmFreeHeap(BcdHive->FilePath);
+            }
+
+            /* Free the hive itself */
+            BlMmFreeHeap(BcdHive);
+        }
+
+        /* Finally, free the root key object if we created one */
+        if (KeyObject)
+        {
+            BlMmFreeHeap(KeyObject);
+        }
+    }
+
+    /* Return the final status */
+    return Status;
 }
 
 NTSTATUS
@@ -759,7 +1132,6 @@ BcdOpenStoreFromFile (
 
     /* Assume failure */
     LocalHandle = NULL;
-    EfiPrintf(L"Opening BCD store: %wZ\n", FileName);
 
     /* Allocate a path descriptor */
     Length = FileName->Length + sizeof(*FilePath);

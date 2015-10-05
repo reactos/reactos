@@ -373,7 +373,7 @@ BmFatalErrorEx (
 
             /* Build the error string */
             swprintf(FormatString,
-                     L"\nAn error occurred (%08x) while attempting"
+                     L"\nAn error occurred (%08x) while attempting "
                      L"to read the boot configuration data file %s\n",
                      ErrorStatus,
                      Buffer);
@@ -685,7 +685,7 @@ BmMain (
     PBL_RETURN_ARGUMENTS ReturnArguments;
     BOOLEAN RebootOnError;
     PGUID AppIdentifier;
-   // HANDLE BcdHandle;
+    HANDLE BcdHandle;
 
     EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\n");
 
@@ -733,8 +733,8 @@ BmMain (
     BmFwInitializeBootDirectoryPath();
 
     /* Load and initialize the boot configuration database (BCD) */
-    //Status = BmOpenDataStore(&BcdHandle);
-    //EfiPrintf(L"BCD Open: %lx\r\n", Status);
+    Status = BmOpenDataStore(&BcdHandle);
+    EfiPrintf(L"BCD Open: %lx\r\n", Status);
 
     /* do more stuff!! */
     EfiPrintf(L"We are A-OK!\r\n");
