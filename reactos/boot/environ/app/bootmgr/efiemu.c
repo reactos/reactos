@@ -803,7 +803,7 @@ EfiInitpCreateApplicationEntry (
             /* Calculate where the next option should go */
             Option = (PVOID)((ULONG_PTR)Option + Size);
 
-            /* Convert the path oprtion */
+            /* Convert the path option */
             Status = EfiInitpConvertEfiFilePath(OsDevicePath,
                                                 BcdOSLoaderString_SystemRoot,
                                                 Option,

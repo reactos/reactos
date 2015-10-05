@@ -20,7 +20,7 @@ MiscGetBootOption (
     )
 {
     ULONG_PTR NextOption = 0, ListOption;
-    PBL_BCD_OPTION Option;
+    PBL_BCD_OPTION Option, FoundOption;
 
     /* No options, bail out */
     if (!List)
@@ -29,12 +29,14 @@ MiscGetBootOption (
     }
 
     /* Loop while we find an option */
-    while (TRUE)
+    FoundOption = NULL;
+    do
     {
         /* Get the next option and see if it matches the type */
         Option = (PBL_BCD_OPTION)((ULONG_PTR)List + NextOption);
         if ((Option->Type == Type) && !(Option->Empty))
         {
+            FoundOption = Option;
             break;
         }
 
@@ -49,20 +51,18 @@ MiscGetBootOption (
             Option = MiscGetBootOption((PBL_BCD_OPTION)((ULONG_PTR)Option +
                                        ListOption),
                                        Type);
-
-            /* Found one, return it */
             if (Option)
             {
-                return Option;
+                /* Return it */
+                FoundOption = Option;
+                break;
             }
         }
-    }
+    } while (NextOption);
 
-    /* We found the option, return it */
-    return Option;
+    /* Return the option that was found, if any */
+    return FoundOption;
 }
-
-
 
 /*++
  * @name BlGetBootOptionListSize
@@ -94,7 +94,7 @@ BlGetBootOptionListSize (
 
         /* Update the offset */
         NextOffset = NextOption->NextEntryOffset;
-    } while (NextOffset != 0);
+    } while (NextOffset);
 
     /* Return final computed size */
     return Size;
@@ -119,7 +119,7 @@ BlGetBootOptionSize (
     ULONG Size, Offset;
 
     /* Check if there's any data */
-    if (BcdOption->DataOffset != 0)
+    if (BcdOption->DataOffset)
     {
         /* Add the size of the data */
         Size = BcdOption->DataOffset + BcdOption->DataSize;
@@ -132,7 +132,7 @@ BlGetBootOptionSize (
 
     /* Any associated options? */
     Offset = BcdOption->ListOffset;
-    if (Offset != 0)
+    if (Offset)
     {
         /* Go get those too */
         Size += BlGetBootOptionListSize((PVOID)((ULONG_PTR)BcdOption + Offset));
@@ -167,11 +167,13 @@ BlGetBootOptionString (
     {
         /* Extract the string */
         String = (PWCHAR)((ULONG_PTR)Option + Option->DataOffset);
+        Status = STATUS_SUCCESS;
     }
     else
     {
         /* No string is present */
         String = NULL;
+        Status = STATUS_NOT_FOUND;
     }
 
     /* Compute the data size */
@@ -182,9 +184,7 @@ BlGetBootOptionString (
     AppIdentifier = BlGetApplicationIdentifier();
     Status = BlpBootOptionCallbackString(AppIdentifier, Type, String, StringLength, &String, &StringLength);
 #else
-    Status = STATUS_SUCCESS;
 #endif
-
     /* Check if we have space for one more character */
     CopyLength = StringLength + 1;
     if (CopyLength < StringLength)
@@ -192,11 +192,6 @@ BlGetBootOptionString (
         /* Nope, we'll overflow */
         CopyLength = -1;
         Status = STATUS_INTEGER_OVERFLOW;
-    }
-    else
-    {
-        /* Go ahead */
-        Status = STATUS_SUCCESS;
     }
 
     /* No overflow? */
@@ -331,7 +326,6 @@ BlGetBootOptionDevice (
     }
 #else
     /* No secure boot, so the secure descriptors are the standard ones */
-    Status = STATUS_SUCCESS;
     SecureDescriptor = DeviceDescriptor;
     SecureListData = ListCopy;
 #endif
@@ -765,6 +759,7 @@ BcdOpenStoreFromFile (
 
     /* Assume failure */
     LocalHandle = NULL;
+    EfiPrintf(L"Opening BCD store: %wZ\n", FileName);
 
     /* Allocate a path descriptor */
     Length = FileName->Length + sizeof(*FilePath);

@@ -505,6 +505,7 @@ BmOpenDataStore (
     PVOID FinalBuffer;
     UNICODE_STRING BcdString;
 
+    /* Initialize variables */
     PathBuffer = NULL;
     BcdDevice = NULL;
     BcdPath = NULL;
@@ -559,6 +560,7 @@ BmOpenDataStore (
 
     /* Otherwise, compute the hardcoded path of the BCD */
     Status = BmpFwGetFullPath(L"\\BCD", &FullPath);
+    EfiPrintf(L"Status: %lx %s\r\n", Status, FullPath);
     if (!NT_SUCCESS(Status))
     {
         /* User the raw path */
