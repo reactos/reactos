@@ -408,10 +408,11 @@ ThreadFunc(LPVOID Context)
     if(FAILED(StringCbLengthW(AppInfo->szUrlDownload, sizeof(AppInfo->szUrlDownload), &urlLength)))
         goto end;
 
-    urlComponents.dwSchemeLength = urlLength*sizeof(WCHAR);
-    urlComponents.lpszScheme = malloc(urlComponents.dwSchemeLength);
-    urlComponents.dwHostNameLength = urlLength*sizeof(WCHAR);
-    urlComponents.lpszHostName = malloc(urlComponents.dwHostNameLength);
+    urlLength /= sizeof(WCHAR);
+    urlComponents.dwSchemeLength = urlLength + 1;
+    urlComponents.lpszScheme = malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
+    urlComponents.dwHostNameLength = urlLength + 1;
+    urlComponents.lpszHostName = malloc(urlComponents.dwHostNameLength * sizeof(WCHAR));
 
     if(!InternetCrackUrlW(AppInfo->szUrlDownload, urlLength+1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
         goto end;
