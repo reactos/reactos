@@ -53,11 +53,13 @@ static const WCHAR HKCU[] = {'H','K','C','U',0};
 static const WCHAR HKLM[] = {'H','K','L','M',0};
 static const WCHAR HKU[] = {'H','K','U',0};
 static const WCHAR HKR[] = {'H','K','R',0};
+static const WCHAR BCD[] = {'B','C','D',0};
 
 static const WCHAR HKCRPath[] = {'\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\','S','O','F','T','W','A','R','E','\\','C','l','a','s','s','e','s','\\',0};
 static const WCHAR HKCUPath[] = {'\\','R','e','g','i','s','t','r','y','\\','U','s','e','r','\\','.','D','E','F','A','U','L','T','\\',0};
 static const WCHAR HKLMPath[] = {'\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\',0};
 static const WCHAR HKUPath[] = {'\\','R','e','g','i','s','t','r','y','\\','U','s','e','r','\\',0};
+static const WCHAR BCDPath[] = {'\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\',0};
 
 static const WCHAR AddReg[] = {'A','d','d','R','e','g',0};
 static const WCHAR DelReg[] = {'D','e','l','R','e','g',0};
@@ -88,6 +90,12 @@ GetRootKey (PWCHAR Name)
     if (!strcmpiW (Name, HKU))
     {
         strcpyW (Name, HKUPath);
+        return TRUE;
+    }
+
+    if (!strcmpiW (Name, BCD))
+    {
+        strcpyW (Name, BCDPath);
         return TRUE;
     }
 

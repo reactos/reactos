@@ -47,6 +47,7 @@ CMHIVE SamHive;      /* \Registry\Machine\SAM */
 CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
 CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
 CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
+CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
 
 static PMEMKEY
 CreateInMemoryStructure(
@@ -551,6 +552,11 @@ RegInitializeRegistry(VOID)
     ConnectRegistry(NULL,
                     &SoftwareHive,
                     L"Registry\\Machine\\SOFTWARE");
+
+    /* Create BCD key */
+    ConnectRegistry(NULL,
+                    &BcdHive,
+                    L"Registry\\Machine\\BCD00000000");
 
     /* Create SYSTEM key */
     ConnectRegistry(NULL,

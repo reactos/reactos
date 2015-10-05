@@ -30,6 +30,7 @@ extern CMHIVE SamHive;      /* \Registry\Machine\SAM */
 extern CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
 extern CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
 extern CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
+extern CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
 
 #define ERROR_SUCCESS                    0L
 #define ERROR_UNSUCCESSFUL               1L
