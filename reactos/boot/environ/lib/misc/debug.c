@@ -83,11 +83,19 @@ BlStatusPrint (
     va_start(va, Format);
 
     /* Check if the boot debugger is enabled */
-    if (BlBdDebuggerEnabled())
+    if (BlBdDebuggerEnabled()
+#if (defined(DBG))
+        || TRUE
+#endif
+    )
     {
         /* Print the string out into a buffer */
         if (vswprintf(BlScratchBuffer, Format, va) > 0)
         {
+#if defined(DBG)
+            EfiPrintf(BlScratchBuffer);
+            EfiPrintf(L"\r\n");
+#endif
             /* Make it a UNICODE_STRING */
             RtlInitUnicodeString(&UnicodeString, BlScratchBuffer);
 

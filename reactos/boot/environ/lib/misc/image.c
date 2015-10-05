@@ -39,8 +39,8 @@ ImgpGetFileSize (
         }
 
         /* We only support files less than 4GB in the Image Mapped */
-        Size = FileInformation.FileSize;
-        if (FileInformation.FileSize > ULONG_MAX)
+        Size = FileInformation.Size;
+        if (FileInformation.Size > ULONG_MAX)
         {
             return STATUS_NOT_SUPPORTED;
         }
@@ -392,6 +392,7 @@ BlImgLoadImageWithProgress2 (
     Status = ImgpOpenFile(DeviceId, FileName, DeviceId, &FileHandle);
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"Error opening file: %lx\r\n", Status);
         goto Quickie;
     }
 
@@ -399,6 +400,7 @@ BlImgLoadImageWithProgress2 (
     Status = ImgpGetFileSize(&FileHandle, &ImageSize);
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"Error getting file size: %lx\r\n", Status);
         goto Quickie;
     }
 

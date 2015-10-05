@@ -321,7 +321,7 @@ NTSTATUS
     _In_ struct _BL_FILE_ENTRY* FileEntry,
     _In_ PVOID Buffer,
     _In_ ULONG Size,
-    _Out_ PULONG BytesRead
+    _Out_opt_ PULONG BytesRead
     );
 
 typedef
@@ -786,8 +786,10 @@ typedef struct _BL_ADDRESS_RANGE
 
 typedef struct _BL_FILE_INFORMATION
 {
-    ULONGLONG FileSize;
-    ULONGLONG CurrentOffset;
+    ULONGLONG Size;
+    ULONGLONG Offset;
+    PWCHAR FsName;
+    ULONG Flags;
 } BL_FILE_INFORMATION, *PBL_FILE_INFORMATION;
 
 typedef struct _BL_FILE_CALLBACKS
@@ -809,7 +811,7 @@ typedef struct _BL_FILE_ENTRY
     ULONG Flags;
     ULONG ReferenceCount;
     ULONG Unknown;
-    ULONGLONG Unknown1;
+    ULONGLONG TotalBytesRead;
     ULONGLONG Unknown2;
     BL_FILE_CALLBACKS Callbacks;
     PVOID FsSpecificData;

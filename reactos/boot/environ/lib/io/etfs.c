@@ -36,12 +36,12 @@ typedef struct _BL_ETFS_DEVICE
 
 typedef struct _BL_ETFS_FILE
 {
+    ULONG DiskOffset;
     ULONG DirOffset;
     ULONG DirEntOffset;
-    ULONGLONG Size;
-    ULONGLONG Offset;
-    PWCHAR FsName;
-    ULONG Flags;
+
+    BL_FILE_INFORMATION;
+
     ULONG DeviceId;
 } BL_ETFS_FILE, *PBL_ETFS_FILE;
 
@@ -56,9 +56,35 @@ EtfsOpen (
     _Out_ PBL_FILE_ENTRY *FileEntry
     );
 
+NTSTATUS
+EtfsGetInformation (
+    _In_ PBL_FILE_ENTRY FileEntry,
+    _Out_ PBL_FILE_INFORMATION FileInfo
+    );
+
+NTSTATUS
+EtfsSetInformation (
+    _In_ PBL_FILE_ENTRY FileEntry,
+    _In_ PBL_FILE_INFORMATION FileInfo
+    );
+
+NTSTATUS
+EtfsRead (
+    _In_ PBL_FILE_ENTRY FileEntry,
+    _In_ PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_opt_ PULONG BytesReturned
+    );
+
 BL_FILE_CALLBACKS EtfsFunctionTable =
 {
     EtfsOpen,
+    NULL,
+    EtfsRead,
+    NULL,
+    NULL,
+    EtfsGetInformation,
+    EtfsSetInformation
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -205,7 +231,7 @@ EtfspGetDirent (
 
     EtfsFile = DirectoryEntry->FsSpecificData;
     DeviceId = EtfsFile->DeviceId;
-    FileOffset = EtfsFile->Offset;
+    FileOffset = EtfsFile->DiskOffset;
     EtfsDevice = EtfsDeviceTable[DeviceId];
 
     DirectoryOffset = *DirentOffset;
@@ -362,7 +388,7 @@ EtfspCachedSearchForDirent (
     DirentOffset = EtfsFile->DirEntOffset;
 
     if ((KeepOffset) ||
-        (ALIGN_DOWN_BY((DirentOffset + EtfsFile->Offset), CD_SECTOR_SIZE) ==
+        (ALIGN_DOWN_BY((DirentOffset + EtfsFile->DiskOffset), CD_SECTOR_SIZE) ==
          EtfsDevice->Offset))
     {
         Status = EtfspGetDirent(DirectoryEntry, &Dirent, &DirentOffset);
@@ -404,6 +430,108 @@ EtfspCachedSearchForDirent (
     }
 
     return Status;
+}
+
+NTSTATUS
+EtfsRead (
+    _In_ PBL_FILE_ENTRY FileEntry,
+    _In_ PVOID Buffer, 
+    _In_ ULONG Size,
+    _Out_opt_ PULONG BytesReturned
+    )
+{
+    ULONG BytesRead;
+    PBL_ETFS_FILE EtfsFile;
+    NTSTATUS Status;
+
+    /* Assume failure for now */
+    BytesRead = 0;
+
+    /* Make sure that the read is within the file's boundaries */
+    EtfsFile = FileEntry->FsSpecificData;
+    if ((Size + EtfsFile->Offset) > EtfsFile->Size)
+    {
+        /* Bail out otherwise */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Read the offset that matches this file's offset, on the disk */
+        Status = BlDeviceReadAtOffset(FileEntry->DeviceId,
+                                      Size,
+                                      EtfsFile->Offset + EtfsFile->DiskOffset,
+                                      Buffer,
+                                      &BytesRead);
+        if (NT_SUCCESS(Status))
+        {
+            /* Update the file offset and return the size as having been read */
+            EtfsFile->Offset += Size;
+            BytesRead = Size;
+        }
+    }
+
+    /* Check if caller wanted to know how many bytes were read */
+    if (BytesReturned)
+    {
+        /* Return the value */
+        *BytesReturned = BytesRead;
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+EtfsSetInformation (
+    _In_ PBL_FILE_ENTRY FileEntry,
+    _In_ PBL_FILE_INFORMATION FileInfo
+    )
+{
+    PBL_ETFS_FILE EtfsFile;
+    BL_FILE_INFORMATION LocalFileInfo;
+
+    /* Get the underlying ETFS file data structure */
+    EtfsFile = (PBL_ETFS_FILE)FileEntry->FsSpecificData;
+
+    /* Make a copy of the incoming attributes, but ignore the new offset */
+    LocalFileInfo = *FileInfo;
+    LocalFileInfo.Offset = EtfsFile->Offset;
+
+    /* Check if these match exactly the current file */
+    if (!RtlEqualMemory(&LocalFileInfo, &EtfsFile->Size, sizeof(*FileInfo)))
+    {
+        /* Nope -- which means caller is trying to change an immutable */
+        EfiPrintf(L"Incorrect information change\r\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Is the offset past the end of the file? */
+    if (FileInfo->Offset >= EtfsFile->Size)
+    {
+        /* Don't allow EOF */
+        EfiPrintf(L"Offset too large: %lx vs %lx \r\n", FileInfo->Offset, EtfsFile->Size);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Update the offset */
+    EtfsFile->Offset = FileInfo->Offset;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+EtfsGetInformation (
+    _In_ PBL_FILE_ENTRY FileEntry,
+    _Out_ PBL_FILE_INFORMATION FileInfo
+    )
+{
+    PBL_ETFS_FILE EtfsFile;
+
+    /* Get the underlying ETFS file data structure */
+    EtfsFile = (PBL_ETFS_FILE)FileEntry->FsSpecificData;
+
+    /* Copy the cached information structure within it */
+    RtlCopyMemory(FileInfo, &EtfsFile->Size, sizeof(*FileInfo));
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -486,7 +614,7 @@ EtfsOpen (
     RtlCopyMemory(&NewFile->Callbacks,
                   &EtfsFunctionTable,
                   sizeof(NewFile->Callbacks));
-    EtfsFile->Offset = FileOffset;
+    EtfsFile->DiskOffset = FileOffset;
     EtfsFile->DirOffset = DirOffset;
     EtfsFile->Size = FileSize;
     EtfsFile->DeviceId = DeviceId;
@@ -794,7 +922,7 @@ EtfsMount (
     RootEntry->FsSpecificData = EtfsFile;
     EtfsFile->DeviceId = DeviceId;
     EtfsFile->Flags |= 1;
-    EtfsFile->Offset = EtfsDevice->RootDirOffset;
+    EtfsFile->DiskOffset = EtfsDevice->RootDirOffset;
     EtfsFile->DirOffset = 0;
     EtfsFile->Size = EtfsDevice->RootDirSize;
     EtfsFile->FsName = L"cdfs";

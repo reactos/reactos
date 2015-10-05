@@ -434,7 +434,7 @@ FileOpened:
     if (++FileEntry->ReferenceCount == 1)
     {
         /* Reset unknowns */
-        FileEntry->Unknown1 = 0;
+        FileEntry->TotalBytesRead = 0;
         FileEntry->Unknown2 = 0;
     }
 
@@ -548,7 +548,7 @@ BlFileSetInformation (
     }
 
     /* Validate file ID */
-    if (FileEntries > FileId)
+    if (FileId > FileEntries)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -579,7 +579,7 @@ BlFileGetInformation (
     }
 
     /* Validate file ID */
-    if (FileEntries > FileId)
+    if (FileId > FileEntries)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -612,7 +612,7 @@ FileInformationCheck (
     Size = 0;
 
     /* Make sure we didn't overshoot */
-    if (FileInformation->CurrentOffset > FileInformation->FileSize)
+    if (FileInformation->Offset > FileInformation->Size)
     {
         /* Bail out */
         Status = STATUS_INVALID_PARAMETER;
@@ -621,9 +621,9 @@ FileInformationCheck (
 
     /* Compute the appropriate 32-bit size of this read, based on file size */
     Size = ULONG_MAX;
-    if ((FileInformation->FileSize - FileInformation->CurrentOffset) <= ULONG_MAX)
+    if ((FileInformation->Size - FileInformation->Offset) <= ULONG_MAX)
     {
-        Size = (ULONG)(FileInformation->FileSize) - (ULONG)(FileInformation->CurrentOffset);
+        Size = (ULONG)(FileInformation->Size) - (ULONG)(FileInformation->Offset);
     }
 
     /* Check if the caller has an input buffer */
@@ -683,7 +683,7 @@ BlFileReadEx (
     }
 
     /* Bail out of the file ID is invalid */
-    if (FileEntries > FileId)
+    if (FileId > FileEntries)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -774,7 +774,7 @@ BlFileReadEx (
     }
 
     /* Increment the number of bytes read */
-    FileEntry->Unknown1 += RequiredSize;
+    FileEntry->TotalBytesRead += RequiredSize;
 
     /* Check if the unknown flag on the device was changed during this routine */
     if (ChangedUnknown)
@@ -811,8 +811,8 @@ BlFileReadAtOffsetEx (
     }
 
     /* Save the current offset, and overwrite it with the one we want */
-    FileOffset = FileInfo.CurrentOffset;
-    FileInfo.CurrentOffset = ByteOffset;
+    FileOffset = FileInfo.Offset;
+    FileInfo.Offset = ByteOffset;
 
     /* Check the validity of the read and the actual size to read */
     RequiredSize = Size;
@@ -824,11 +824,12 @@ BlFileReadAtOffsetEx (
     if (!NT_SUCCESS(Status))
     {
         /* Bail out if the read is invalid */
+        EfiPrintf(L"File info check failure: %lx\n", Status);
         return Status;
     }
 
     /* Check if the offset we're requesting is not the current offset */
-    if (FileInfo.CurrentOffset != FileOffset)
+    if (FileInfo.Offset != FileOffset)
     {
         /* Set the new offset to use */
         Status = BlFileSetInformation(FileId, &FileInfo);
@@ -848,10 +849,10 @@ BlFileReadAtOffsetEx (
     if (!NT_SUCCESS(Status))
     {
         /* The read failed -- had we modified the offset? */
-        if (FileInfo.CurrentOffset != FileOffset)
+        if (FileInfo.Offset != FileOffset)
         {
             /* Restore the offset back to its original value */
-            FileInfo.CurrentOffset = FileOffset;
+            FileInfo.Offset = FileOffset;
             BlFileSetInformation(FileId, &FileInfo);
         }
     }
