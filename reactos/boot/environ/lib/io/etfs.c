@@ -797,7 +797,6 @@ EtfsMount (
     EtfsFile->Offset = EtfsDevice->RootDirOffset;
     EtfsFile->DirOffset = 0;
     EtfsFile->Size = EtfsDevice->RootDirSize;
-    EfiPrintf(L"Root offset: %I64x Size: %I64x\r\n", EtfsFile->Offset, EtfsFile->Size);
     EtfsFile->FsName = L"cdfs";
     *FileEntry = RootEntry;
 

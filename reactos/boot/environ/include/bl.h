@@ -94,6 +94,9 @@
 #define BL_DIRECTORY_ACCESS                             0x04
 #define BL_UNKNOWN_ACCESS                               0x10
 
+#define BL_DEVICE_READ_ACCESS                           0x01
+#define BL_DEVICE_WRITE_ACCESS                          0x02
+
 #define BL_DEVICE_ENTRY_OPENED                          0x01
 #define BL_DEVICE_ENTRY_READ_ACCESS                     0x02
 #define BL_DEVICE_ENTRY_WRITE_ACCESS                    0x04
@@ -226,6 +229,7 @@ typedef enum _BL_MEMORY_TYPE
     BlLoaderReferencePage = 0xD0000007,
     BlLoaderRamDisk = 0xD0000008,
     BlLoaderData = 0xD000000A,
+    BlLoaderRegistry = 0xD000000B,
     BlLoaderBlockMemory = 0xD000000C,
     BlLoaderSelfMap = 0xD000000F,
 
@@ -1637,6 +1641,21 @@ BlDeviceReadAtOffset (
     _In_ ULONGLONG Offset,
     _In_ PVOID Buffer,
     _Out_ PULONG BytesRead
+    );
+
+/* IMAGE ROUTINES ************************************************************/
+
+NTSTATUS
+BlImgLoadImageWithProgress2 (
+    _In_ ULONG DeviceId,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _In_ PWCHAR FileName,
+    _Inout_ PVOID* MappedBase,
+    _Inout_ PULONG MappedSize,
+    _In_ ULONG ImageFlags,
+    _In_ BOOLEAN ShowProgress,
+    _Out_opt_ PUCHAR* HashBuffer,
+    _Out_opt_ PULONG HashSize
     );
 
 /* FILE I/O ROUTINES *********************************************************/

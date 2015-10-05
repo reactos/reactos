@@ -345,7 +345,7 @@ FileIoOpen (
                             Unknown,
                             FileTableCompareWithSubsetAttributes,
                             &DirectoryEntry);
-        if (NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             goto Quickie;
         }

@@ -1914,8 +1914,8 @@ BlpDeviceOpen (
         goto Quickie;
     }
 
-    /* Check for unsupported flags */
-    if (!(Flags & 3))
+    /* Make sure both read and write access are set */
+    if (!(Flags & (BL_DEVICE_READ_ACCESS | BL_DEVICE_WRITE_ACCESS)))
     {
         /* Bail out */
         Status = STATUS_INVALID_PARAMETER;
@@ -1982,7 +1982,9 @@ BlpDeviceOpen (
     /* Fill it out */
     RtlZeroMemory(DeviceEntry, sizeof(*DeviceEntry));
     DeviceEntry->ReferenceCount = 1;
-    DeviceEntry->Flags |= 7;
+    DeviceEntry->Flags |= (BL_DEVICE_ENTRY_OPENED |
+                           BL_DEVICE_ENTRY_READ_ACCESS |
+                           BL_DEVICE_ENTRY_WRITE_ACCESS);
     DeviceEntry->Unknown = Unknown;
 
     /* Save flag 8 if needed */

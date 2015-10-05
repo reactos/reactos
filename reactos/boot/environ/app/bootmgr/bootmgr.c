@@ -196,7 +196,7 @@ BmFwInitializeBootDirectoryPath (
     }
 
     /* Save the boot directory */
-    BootDirectory = L"\\EFI\\Microsoft\\Boot";
+    BootDirectory = L"\\EFI\\Boot"; /* Should be EFI\\ReactOS\\Boot */
 
 Quickie:
     /* Free all the allocations we made */
@@ -560,7 +560,6 @@ BmOpenDataStore (
 
     /* Otherwise, compute the hardcoded path of the BCD */
     Status = BmpFwGetFullPath(L"\\BCD", &FullPath);
-    EfiPrintf(L"Status: %lx %s\r\n", Status, FullPath);
     if (!NT_SUCCESS(Status))
     {
         /* User the raw path */
@@ -686,7 +685,7 @@ BmMain (
     PBL_RETURN_ARGUMENTS ReturnArguments;
     BOOLEAN RebootOnError;
     PGUID AppIdentifier;
-    HANDLE BcdHandle;
+   // HANDLE BcdHandle;
 
     EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\n");
 
@@ -734,8 +733,8 @@ BmMain (
     BmFwInitializeBootDirectoryPath();
 
     /* Load and initialize the boot configuration database (BCD) */
-    Status = BmOpenDataStore(&BcdHandle);
-    EfiPrintf(L"BCD Open: %lx\r\n", Status);
+    //Status = BmOpenDataStore(&BcdHandle);
+    //EfiPrintf(L"BCD Open: %lx\r\n", Status);
 
     /* do more stuff!! */
     EfiPrintf(L"We are A-OK!\r\n");
