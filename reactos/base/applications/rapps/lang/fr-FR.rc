@@ -6,7 +6,7 @@ BEGIN
     BEGIN
         MENUITEM "&Configuration", ID_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "S&ortir", ID_EXIT
+        MENUITEM "&Quitter", ID_EXIT
     END
     POPUP "&Programmes"
     BEGIN
@@ -59,10 +59,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Général", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Enregistrer la position de la fenêtre", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Mettre à jour la liste des programmes accessibles au démarage", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Journal de l'installation de la suppression des programmes", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "&Mettre à jour la liste des programmes accessibles au démarrage", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Journal de l'installation et de la suppression des programmes", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "Téléchargement", -1, 4, 65, 240, 51
-    LTEXT "Fichier des téléchargements :", -1, 16, 75, 100, 9
+    LTEXT "Dossier des téléchargements :", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Sélectionner", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Supprimer l'installateur du programme après l'installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
@@ -92,7 +92,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Télécharger..."
+CAPTION "Téléchargement..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -184,7 +184,7 @@ BEGIN
     IDS_UNINSTALL "Désinstaller"
     IDS_MODIFY "Modifier"
     IDS_APPS_COUNT "Nombre d'applications : %d"
-    IDS_WELCOME_TITLE "Bienvenue à ReactOS Applications Manager!\n\n"
+    IDS_WELCOME_TITLE "Bienvenue dans ReactOS Applications Manager !\n\n"
     IDS_WELCOME_TEXT "Choisissez une catégorie à gauche, ensuite choisissez une application à installer ou désinstaller.\nSite internet de ReactOS : "
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "Installé"
@@ -193,11 +193,11 @@ BEGIN
     IDS_APPLICATIONS "Applications"
     IDS_CHOOSE_FOLDER_TEXT "Choisissez un dossier dans lequel les programmes seront téléchargés :"
     IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spécifié n'existe pas. Le créer ?"
-    IDS_APP_REG_REMOVE "Etes-vous sûr de vouloir supprimer les données du programme installé du registre ?"
+    IDS_APP_REG_REMOVE "Êtes-vous sûr de vouloir supprimer du registre les données du programme installé ?"
     IDS_INFORMATION "Information"
-    IDS_UNABLE_TO_DOWNLOAD "Impossible de télécharger le paquet : adresse non trouvée !"
-    IDS_UNABLE_TO_REMOVE "Impossible de supprimer les données du programme du registre !"
-    IDS_CERT_DOES_NOT_MATCH "Vérification du certificat SSL échouée."    
-    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
-    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
+    IDS_UNABLE_TO_DOWNLOAD "Impossible de télécharger le paquet : adresse introuvable !"
+    IDS_UNABLE_TO_REMOVE "Impossible de supprimer du registre les données du programme !"
+    IDS_CERT_DOES_NOT_MATCH "La vérification du certificat SSL a échoué."
+    IDS_INTEG_CHECK_TITLE "Vérification de l'intégrité du paquet..."
+    IDS_INTEG_CHECK_FAIL "Le contrôle d'intégrité du paquet a échoué, il se peut qu'il ait été corrompu ou altéré au cours du téléchargement. L'exécution du programme n'est pas recommandée."
 END
