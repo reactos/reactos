@@ -205,7 +205,7 @@ BEGIN
     IDS_INFORMATION "Informacja"
     IDS_UNABLE_TO_DOWNLOAD "Nie można pobrać pakietu! Nie znaleziono adresu!"
     IDS_UNABLE_TO_REMOVE "Nie można było usunąć wpisu z rejestru!"
-    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
 END

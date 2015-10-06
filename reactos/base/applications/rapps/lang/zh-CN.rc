@@ -200,7 +200,7 @@ BEGIN
     IDS_INFORMATION "信息"
     IDS_UNABLE_TO_DOWNLOAD "无法下载该软件包 ！找不到网络的地址 ！"
     IDS_UNABLE_TO_REMOVE "无法从注册表删除该程序的数据！"
-    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
 END
