@@ -11,6 +11,7 @@ Size = 1.38 MB
 Category = 15
 URLSite = http://www.dosbox.com/
 URLDownload = http://download.sourceforge.net/project/dosbox/dosbox/0.74/DOSBox0.74-win32-installer.exe
+SHA1 = b4d671ed3fc1fc36aaf8abc1341d2ddaaafa8f88
 CDPath = none
 
 [Section.0407]

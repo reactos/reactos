@@ -11,6 +11,7 @@ Size = 1.14 MB
 Category = 12
 URLSite = http://www.7-zip.org/
 URLDownload = http://www.7-zip.org/a/7z1505.exe
+SHA1 = ece8bbd4c8903095d44e99196219c953a1d47bfd
 CDPath = none
 
 [Section.0407]

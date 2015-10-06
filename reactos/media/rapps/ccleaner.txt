@@ -12,6 +12,7 @@ Size = 6.25 MB
 Category = 12
 URLSite = http://www.piriform.com/ccleaner
 URLDownload = http://download.piriform.com/ccsetup508.exe
+SHA1 = aa7affcbdaf13c3872f32eaccf3befb92fd0fa80
 CDPath = none
 
 [Section.0407]

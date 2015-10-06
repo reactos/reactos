@@ -201,4 +201,6 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD "No se pudo descargar el paquete. No se ha encontrado la dirección de Internet."
     IDS_UNABLE_TO_REMOVE "No se pudieron borrar del Registro los datos de instalación del programa."
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
+    IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete..."
+    IDS_INTEG_CHECK_FAIL "El paquete no ha pasado la comprobación de integridad, puede haber sido alterado o estar corrupto. No se recomienda ejecutarlo."
 END

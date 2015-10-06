@@ -8,6 +8,7 @@
  */
 
 #include "rapps.h"
+#include <sha1.h>
 
 /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
@@ -495,4 +496,62 @@ UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName)
     RtlUnicodeStringToInteger(&BufferW, 0, &Result);
 
     return Result;
+}
+
+BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName)
+{
+    BOOL ret = FALSE;
+    const unsigned char *file_map;
+    HANDLE file, map;
+
+    ULONG sha[5];
+    WCHAR buf[40 + 1];
+    SHA_CTX ctx;
+
+    LARGE_INTEGER size;
+    UINT i;
+
+    /* first off, does it exist at all? */
+    file = CreateFileW(lpFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+
+    if (file == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    /* let's grab the actual file size to organize the mmap'ing rounds */
+    GetFileSizeEx(file, &size);
+
+    /* retrieve a handle to map the file contents to memory */
+    map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (!map)
+        goto cleanup;
+
+    /* initialize the SHA-1 context */
+    A_SHAInit(&ctx);
+
+    /* map that thing in address space */
+    file_map = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
+    if (!file_map)
+        goto cleanup;
+
+    /* feed the data to the cookie monster */
+    A_SHAUpdate(&ctx, file_map, size.LowPart);
+
+    /* cool, we don't need this anymore */
+    UnmapViewOfFile(file_map);
+
+    /* we're done, compute the final hash */
+    A_SHAFinal(&ctx, sha);
+
+    for (i = 0; i < sizeof(sha); i++)
+        swprintf(buf + 2 * i, L"%02x", ((unsigned char *)sha)[i]);
+
+    /* does the resulting SHA1 match with the provided one? */
+    if (!_wcsicmp(buf, lpSHA1Hash))
+        ret = TRUE;
+
+cleanup:
+    CloseHandle(map);
+    CloseHandle(file);
+
+    return ret;
 }

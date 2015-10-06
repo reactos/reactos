@@ -97,6 +97,8 @@
 #define IDS_UNABLE_TO_REMOVE     118
 #define IDS_UNABLE_TO_DOWNLOAD   119
 #define IDS_CERT_DOES_NOT_MATCH  120
+#define IDS_INTEG_CHECK_TITLE    121
+#define IDS_INTEG_CHECK_FAIL     122
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

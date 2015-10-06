@@ -355,6 +355,14 @@ ThreadFunc(LPVOID Context)
     if (FAILED(StringCbCatNW(path, sizeof(path), p + 1, filenameLength)))
         goto end;
 
+    /* is the file already there? let's avoid having to download it */
+    if (!bCab && AppInfo->szSHA1[0] != 0 && GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES)
+    {
+        /* only open it in case of total correctness */
+        if (VerifyInteg(AppInfo->szSHA1, path))
+            goto run;
+    }
+
     /* create an async download context for it */
     bTempfile = TRUE;
     dl = CreateDl(Context, &bCancelled);
@@ -462,8 +470,32 @@ ThreadFunc(LPVOID Context)
     if (bCancelled)
         goto end;
 
+    /* if this thing isn't a RAPPS update and it has a SHA-1 checksum
+       verify its integrity by using the native advapi32.A_SHA1 functions */
+    if (!bCab && AppInfo->szSHA1[0] != 0)
+    {
+        WCHAR szMsgText[MAX_STR_LEN];
+
+        /* change a few strings in the download dialog to reflect the verification process */
+        LoadStringW(hInst, IDS_INTEG_CHECK_TITLE, szMsgText, _countof(szMsgText));
+
+        SetWindowText(Dlg, szMsgText);
+        SendMessageW(GetDlgItem(Dlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM)path);
+
+        /* this may take a while, depending on the file size */
+        if (!VerifyInteg(AppInfo->szSHA1, path))
+        {
+            if (!LoadStringW(hInst, IDS_INTEG_CHECK_FAIL, szMsgText, _countof(szMsgText)))
+                goto end;
+
+            MessageBoxW(Dlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
+            goto end;
+        }
+    }
+
     ShowWindow(Dlg, SW_HIDE);
 
+run:
     /* run it */
     if (!bCab)
         ShellExecuteW( NULL, L"open", path, NULL, NULL, SW_SHOWNORMAL );

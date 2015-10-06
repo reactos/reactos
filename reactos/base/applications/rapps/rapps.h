@@ -91,10 +91,12 @@ typedef struct
     FILETIME ftCacheStamp;
     LIST_ENTRY List;
 
-    /* optional integrity checks */
-    BYTE MD5Checksum[16];
+    /* optional integrity checks (SHA-1 digests are 160 bit = 40 characters in hex string form) */
+    WCHAR szSHA1[40 + 1];
 
 } APPLICATION_INFO, *PAPPLICATION_INFO;
+
+BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName);
 
 typedef struct
 {

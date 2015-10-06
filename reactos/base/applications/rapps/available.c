@@ -260,6 +260,7 @@ skip_if_cached:
             GET_STRING2(L"Size",        Info->szSize);
             GET_STRING2(L"URLSite",     Info->szUrlSite);
             GET_STRING2(L"CDPath",      Info->szCDPath);
+            GET_STRING2(L"SHA1",        Info->szSHA1);
         }
 
         if (!lpEnumProc(Info))

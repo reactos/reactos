@@ -204,4 +204,6 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD "Pachetul nu poate fi descărcat! Adresa nu este găsită!"
     IDS_UNABLE_TO_REMOVE "Nu se pot elimina datele din registru pentru acest program!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
+    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
+    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
 END
