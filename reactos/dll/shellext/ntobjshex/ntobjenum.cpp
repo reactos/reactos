@@ -250,7 +250,8 @@ public:
             entry->cb += sizeof(WCHAR);
         }
 
-        *ppidl = (LPITEMIDLIST) entry;
+        if (ppidl)
+            *ppidl = (LPITEMIDLIST) entry;
         return S_OK;
     }
 
@@ -409,7 +410,8 @@ public:
             entry->cb += entry->contentsLength + sizeof(WCHAR);
         }
 
-        *ppidl = (LPITEMIDLIST) entry;
+        if (ppidl)
+            *ppidl = (LPITEMIDLIST) entry;
         return S_OK;
     }
 
@@ -480,7 +482,8 @@ public:
 
         }
 
-        *ppidl = (LPITEMIDLIST) entry;
+        if (ppidl)
+            *ppidl = (LPITEMIDLIST) entry;
         return S_OK;
     }
 
@@ -596,12 +599,13 @@ public:
         if (!NT_SUCCESS(NtQueryDirectoryObject(m_directory, dirbuffer, 2048, TRUE, m_first, &m_enumContext, NULL)))
             return S_FALSE;
 
+        m_first = FALSE;
+
         // if ppidl is NULL, assume the caller was Skip(),
         // so we don't care about the info
         if (!ppidl)
             return S_OK;
 
-        m_first = FALSE;
         POBJECT_DIRECTORY_INFORMATION info = (POBJECT_DIRECTORY_INFORMATION) dirbuffer;
 
         if (info->Name.Buffer)
