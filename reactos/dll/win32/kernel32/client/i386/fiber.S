@@ -26,6 +26,7 @@ FUNC _BaseFiberStartup@0
     /* Start the thread with our parameters */
     push dword ptr [eax+FIBER_CONTEXT_EBX]
     push dword ptr [eax+FIBER_CONTEXT_EAX]
+    push 0
     jmp _BaseThreadStartup@8
 
 ENDFUNC
