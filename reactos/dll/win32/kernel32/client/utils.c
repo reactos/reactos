@@ -548,7 +548,7 @@ BaseInitializeContext(IN PCONTEXT Context,
 
         /* Is FPU state required? */
         Context->ContextFlags |= ContextFlags;
-        if (ContextFlags == CONTEXT_FLOATING_POINT)
+        if ((ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
         {
             /* Set an initial state */
             Context->FloatSave.ControlWord = 0x27F;

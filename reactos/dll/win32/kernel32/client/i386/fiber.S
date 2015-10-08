@@ -15,21 +15,26 @@ EXTERN _BaseThreadStartup@8:PROC
 .code
 
 PUBLIC _BaseFiberStartup@0
-.PROC _BaseFiberStartup@0
-    /* Frame pointer is zeroed */
+FUNC _BaseFiberStartup@0
     FPO 0, 0, 0, 0, 0, FRAME_FPO
+
+    /* Note that EBP is already zeroed for us during fiber creation */
 
     /* Get the fiber data */
     mov eax, fs:[TEB_FIBER_DATA]
 
-    push dword ptr [eax+FIBER_CONTEXT_EBX] /* Parameter */
-    push dword ptr [eax+FIBER_CONTEXT_EAX] /* Start Address */
-    call _BaseThreadStartup@8
-.ENDP
+    /* Start the thread with our parameters */
+    push dword ptr [eax+FIBER_CONTEXT_EBX]
+    push dword ptr [eax+FIBER_CONTEXT_EAX]
+    jmp _BaseThreadStartup@8
+
+ENDFUNC
 
 
 PUBLIC _SwitchToFiber@4
-_SwitchToFiber@4:
+FUNC _SwitchToFiber@4
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
+
     /* Get the TEB */
     mov edx, fs:[TEB_SELF]
 
@@ -51,7 +56,7 @@ _SwitchToFiber@4:
     fnstcw [eax+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
 
     /* Check if the CPU supports SIMD MXCSR State Save */
-    cmp byte ptr ds:[PF_XMMI_INSTRUCTIONS_AVAILABLE], 1
+    cmp byte ptr ds:[USER_SHARED_DATA + USER_SHARED_DATA_PROCESSOR_FEATURES + PF_XMMI_INSTRUCTIONS_AVAILABLE], 1
     jnz NoFpuStateSave
     stmxcsr [eax+FIBER_CONTEXT_DR6]
 
@@ -109,13 +114,13 @@ NoFpuStateSave:
 StatusWordChanged:
 
     /* Load the new one */
-    mov word ptr [ecx+FIBER_CONTEXT_FLOAT_SAVE_TAG_WORD], HEX(0FFFF)
+    mov word ptr [ecx+FIBER_CONTEXT_FLOAT_SAVE_TAG_WORD], HEX(FFFF)
     fldenv [ecx+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
 
 ControlWordEqual:
 
     /* Load the new one */
-    cmp byte ptr ds:[PF_XMMI_INSTRUCTIONS_AVAILABLE], 1
+    cmp byte ptr ds:[USER_SHARED_DATA + USER_SHARED_DATA_PROCESSOR_FEATURES + PF_XMMI_INSTRUCTIONS_AVAILABLE], 1
     jnz NoFpuStateRestore
     ldmxcsr [ecx+FIBER_CONTEXT_DR6]
 
@@ -136,6 +141,7 @@ NoFpuStateRestore:
     mov esp, [ecx+FIBER_CONTEXT_ESP]
     ret 4
 
+ENDFUNC
 
 END
 /* EOF */

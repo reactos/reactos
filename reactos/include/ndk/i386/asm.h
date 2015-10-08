@@ -315,13 +315,14 @@ Author:
 #define FRAME_EDITED                            0xFFF8
 
 //
-// KUSER_SHARED_DATA Offsets
+// USER_SHARED_DATA Offsets
 //
 #ifdef __ASM__
 #define USER_SHARED_DATA                        0xFFDF0000
 #endif
 #define USER_SHARED_DATA_INTERRUPT_TIME         0x8
 #define USER_SHARED_DATA_SYSTEM_TIME            0x14
+#define USER_SHARED_DATA_PROCESSOR_FEATURES     0x274
 #define USER_SHARED_DATA_TICK_COUNT             0x320
 
 //

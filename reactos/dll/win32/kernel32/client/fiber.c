@@ -27,10 +27,9 @@ C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStackPointer) == 0x2E8);
 
 VOID
 WINAPI
-BaseRundownFls(IN PVOID FlsData)
+BaseRundownFls(_In_ PVOID FlsData)
 {
     /* No FLS support yet */
-
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -55,16 +54,18 @@ ConvertFiberToThread(VOID)
         return FALSE;
     }
 
-    /* this thread won't run a fiber anymore */
+    /* This thread won't run a fiber anymore */
     Teb->HasFiberData = FALSE;
     FiberData = Teb->NtTib.FiberData;
     Teb->NtTib.FiberData = NULL;
 
     /* Free the fiber */
     ASSERT(FiberData != NULL);
-    RtlFreeHeap(GetProcessHeap(), 0, FiberData);
+    RtlFreeHeap(GetProcessHeap(),
+                0,
+                FiberData);
 
-    /* success */
+    /* Success */
     return TRUE;
 }
 
@@ -73,15 +74,15 @@ ConvertFiberToThread(VOID)
  */
 LPVOID
 WINAPI
-ConvertThreadToFiberEx(LPVOID lpParameter,
-                       DWORD dwFlags)
+ConvertThreadToFiberEx(_In_opt_ LPVOID lpParameter,
+                       _In_ DWORD dwFlags)
 {
     PTEB Teb;
     PFIBER Fiber;
     DPRINT1("Converting Thread to Fiber\n");
 
     /* Check for invalid flags */
-    if (dwFlags &~ FIBER_FLAG_FLOAT_SWITCH)
+    if (dwFlags & ~FIBER_FLAG_FLOAT_SWITCH)
     {
         /* Fail */
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -98,9 +99,12 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
     }
 
     /* Allocate the fiber */
-    Fiber = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(FIBER));
+    Fiber = RtlAllocateHeap(RtlGetProcessHeap(),
+                            0,
+                            sizeof(FIBER));
     if (!Fiber)
     {
+        /* Fail */
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
@@ -114,13 +118,11 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
     Fiber->FlsData = Teb->FlsData;
     Fiber->GuaranteedStackBytes = Teb->GuaranteedStackBytes;
     Fiber->ActivationContextStackPointer = Teb->ActivationContextStackPointer;
-    Fiber->FiberContext.ContextFlags = CONTEXT_FULL;
 
-    /* Save FPU State if requested */
-    if (dwFlags & FIBER_FLAG_FLOAT_SWITCH)
-    {
-        Fiber->FiberContext.ContextFlags |= CONTEXT_FLOATING_POINT;
-    }
+    /* Save FPU State if requested, otherwise just the basic registers */
+    Fiber->FiberContext.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ?
+                                       (CONTEXT_FULL | CONTEXT_FLOATING_POINT) :
+                                       CONTEXT_FULL;
 
     /* Associate the fiber to the current thread */
     Teb->NtTib.FiberData = Fiber;
@@ -135,10 +137,11 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
  */
 LPVOID
 WINAPI
-ConvertThreadToFiber(LPVOID lpParameter)
+ConvertThreadToFiber(_In_opt_ LPVOID lpParameter)
 {
     /* Call the newer function */
-    return ConvertThreadToFiberEx(lpParameter, 0);
+    return ConvertThreadToFiberEx(lpParameter,
+                                  0);
 }
 
 /*
@@ -146,12 +149,16 @@ ConvertThreadToFiber(LPVOID lpParameter)
  */
 LPVOID
 WINAPI
-CreateFiber(SIZE_T dwStackSize,
-            LPFIBER_START_ROUTINE lpStartAddress,
-            LPVOID lpParameter)
+CreateFiber(_In_ SIZE_T dwStackSize,
+            _In_ LPFIBER_START_ROUTINE lpStartAddress,
+            _In_opt_ LPVOID lpParameter)
 {
     /* Call the Newer Function */
-    return CreateFiberEx(dwStackSize, 0, 0, lpStartAddress, lpParameter);
+    return CreateFiberEx(dwStackSize,
+                         0,
+                         0,
+                         lpStartAddress,
+                         lpParameter);
 }
 
 /*
@@ -159,20 +166,20 @@ CreateFiber(SIZE_T dwStackSize,
  */
 LPVOID
 WINAPI
-CreateFiberEx(SIZE_T dwStackCommitSize,
-              SIZE_T dwStackReserveSize,
-              DWORD dwFlags,
-              LPFIBER_START_ROUTINE lpStartAddress,
-              LPVOID lpParameter)
+CreateFiberEx(_In_ SIZE_T dwStackCommitSize,
+              _In_ SIZE_T dwStackReserveSize,
+              _In_ DWORD dwFlags,
+              _In_ LPFIBER_START_ROUTINE lpStartAddress,
+              _In_opt_ LPVOID lpParameter)
 {
     PFIBER Fiber;
     NTSTATUS Status;
     INITIAL_TEB InitialTeb;
-    PACTIVATION_CONTEXT_STACK ActivationContextStackPointer = NULL;
+    PACTIVATION_CONTEXT_STACK ActivationContextStackPointer;
     DPRINT("Creating Fiber\n");
 
     /* Check for invalid flags */
-    if (dwFlags &~ FIBER_FLAG_FLOAT_SWITCH)
+    if (dwFlags & ~FIBER_FLAG_FLOAT_SWITCH)
     {
         /* Fail */
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -180,6 +187,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     }
 
     /* Allocate the Activation Context Stack */
+    ActivationContextStackPointer = NULL;
     Status = RtlAllocateActivationContextStack(&ActivationContextStackPointer);
     if (!NT_SUCCESS(Status))
     {
@@ -189,7 +197,9 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     }
 
     /* Allocate the fiber */
-    Fiber = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(FIBER));
+    Fiber = RtlAllocateHeap(RtlGetProcessHeap(),
+                            0,
+                            sizeof(FIBER));
     if (!Fiber)
     {
         /* Free the activation context stack */
@@ -208,7 +218,9 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     if (!NT_SUCCESS(Status))
     {
         /* Free the fiber */
-        RtlFreeHeap(GetProcessHeap(), 0, Fiber);
+        RtlFreeHeap(GetProcessHeap(),
+                    0,
+                    Fiber);
 
         /* Free the activation context stack */
         RtlFreeActivationContextStack(ActivationContextStackPointer);
@@ -219,7 +231,8 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     }
 
     /* Clear the context */
-    RtlZeroMemory(&Fiber->FiberContext, sizeof(CONTEXT));
+    RtlZeroMemory(&Fiber->FiberContext,
+                  sizeof(CONTEXT));
 
     /* Copy the data into the fiber */
     Fiber->StackBase = InitialTeb.StackBase;
@@ -230,12 +243,13 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     Fiber->GuaranteedStackBytes = 0;
     Fiber->FlsData = NULL;
     Fiber->ActivationContextStackPointer = ActivationContextStackPointer;
-    Fiber->FiberContext.ContextFlags = CONTEXT_FULL;
 
-    /* Save FPU State if requested */
-    Fiber->FiberContext.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ? CONTEXT_FLOATING_POINT : 0;
+    /* Save FPU State if requested, otherwise just the basic registers */
+    Fiber->FiberContext.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ?
+                                       (CONTEXT_FULL | CONTEXT_FLOATING_POINT) :
+                                       CONTEXT_FULL;
 
-    /* initialize the context for the fiber */
+    /* Initialize the context for the fiber */
     BaseInitializeContext(&Fiber->FiberContext,
                           lpParameter,
                           lpStartAddress,
@@ -251,17 +265,24 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
  */
 VOID
 WINAPI
-DeleteFiber(LPVOID lpFiber)
+DeleteFiber(_In_ LPVOID lpFiber)
 {
-    SIZE_T Size = 0;
-    PFIBER Fiber = (PFIBER)lpFiber;
+    SIZE_T Size;
+    PFIBER Fiber;
     PTEB Teb;
 
-    /* First, exit the thread */
+    /* Are we deleting ourselves? */
     Teb = NtCurrentTeb();
-    if ((Teb->HasFiberData) && (Teb->NtTib.FiberData == Fiber)) ExitThread(1);
+    Fiber = (PFIBER)lpFiber;
+    if ((Teb->HasFiberData) &&
+        (Teb->NtTib.FiberData == Fiber))
+    {
+        /* Just exit */
+        ExitThread(1);
+    }
 
-    /* Now de-allocate the stack */
+    /* Not ourselves, de-allocate the stack */
+    Size = 0 ;
     NtFreeVirtualMemory(NtCurrentProcess(),
                         &Fiber->DeallocationStack,
                         &Size,
@@ -274,7 +295,9 @@ DeleteFiber(LPVOID lpFiber)
     RtlFreeActivationContextStack(Fiber->ActivationContextStackPointer);
 
     /* Free the fiber data */
-    RtlFreeHeap(GetProcessHeap(), 0, lpFiber);
+    RtlFreeHeap(GetProcessHeap(),
+                0,
+                lpFiber);
 }
 
 /*
@@ -284,6 +307,7 @@ BOOL
 WINAPI
 IsThreadAFiber(VOID)
 {
+    /* Return flag in the TEB */
     return NtCurrentTeb()->HasFiberData;
 }
 
@@ -349,7 +373,8 @@ l_InvalidParam:
  */
 BOOL
 WINAPI
-FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
+FlsSetValue(DWORD dwFlsIndex,
+            PVOID lpFlsData)
 {
     PVOID *ppFlsSlots;
     TEB *pTeb = NtCurrentTeb();
