@@ -190,7 +190,7 @@
 190 stdcall NtDelayExecution(long ptr)
 191 stdcall NtDeleteAtom(long)
 192 stdcall NtDeleteBootEntry(long)
-# NtDeleteDriverEntry
+193 stdcall NtDeleteDriverEntry(long)
 194 stdcall NtDeleteFile(ptr)
 195 stdcall NtDeleteKey(long)
 196 stdcall NtDeleteObjectAuditAlarm(ptr ptr long)
@@ -200,7 +200,7 @@
 200 stdcall NtDuplicateObject(long long long ptr long long long)
 201 stdcall NtDuplicateToken(long long long long long long)
 202 stdcall NtEnumerateBootEntries(ptr ptr)
-# stdcall NtEnumerateDriverEntries(ptr ptr)
+203 stdcall NtEnumerateDriverEntries(ptr ptr)
 204 stdcall NtEnumerateKey (long long long long long long)
 205 stdcall NtEnumerateSystemEnvironmentValuesEx(long ptr long)
 206 stdcall NtEnumerateValueKey(long long long long long long)
@@ -232,7 +232,7 @@
 232 stdcall NtLoadDriver(ptr)
 233 stdcall NtLoadKey2(ptr ptr long)
 234 stdcall NtLoadKey(ptr ptr)
-# stdcall NtLoadKeyEx(ptr ptr long ptr)
+235 stdcall NtLoadKeyEx(ptr ptr long ptr)
 236 stdcall NtLockFile(long long ptr ptr ptr ptr ptr ptr long long)
 237 stdcall NtLockProductActivationKeys(ptr ptr)
 238 stdcall NtLockRegistryKey(ptr)
@@ -243,7 +243,7 @@
 243 stdcall NtMapUserPhysicalPagesScatter(ptr ptr ptr)
 244 stdcall NtMapViewOfSection(long long ptr long long ptr ptr long long long)
 245 stdcall NtModifyBootEntry(ptr)
-# NtModifyDriverEntry
+246 stdcall NtModifyDriverEntry(ptr)
 247 stdcall NtNotifyChangeDirectoryFile(long long ptr ptr ptr ptr long long long)
 248 stdcall NtNotifyChangeKey(long long ptr ptr ptr long long ptr long long)
 249 stdcall NtNotifyChangeMultipleKeys(ptr long ptr ptr ptr ptr ptr long long ptr long long)
@@ -282,7 +282,7 @@
 282 stdcall NtQueryDefaultUILanguage(ptr)
 283 stdcall NtQueryDirectoryFile(long long ptr ptr ptr ptr long long long ptr long)
 284 stdcall NtQueryDirectoryObject(long ptr long long long ptr ptr)
-# stdcall NtQueryDriverEntryOrder(ptr ptr)
+285 stdcall NtQueryDriverEntryOrder(ptr ptr)
 286 stdcall NtQueryEaFile(long ptr ptr long long ptr long ptr long)
 287 stdcall NtQueryEvent(long long ptr long ptr)
 288 stdcall NtQueryFullAttributesFile(ptr ptr)
@@ -301,7 +301,7 @@
 301 stdcall NtQueryMutant(long long ptr long ptr)
 302 stdcall NtQueryObject(long long long long long)
 303 stdcall NtQueryOpenSubKeys(ptr ptr)
-# stdcall NtQueryOpenSubKeysEx(ptr long ptr ptr)
+304 stdcall NtQueryOpenSubKeysEx(ptr long ptr ptr)
 305 stdcall NtQueryPerformanceCounter(ptr ptr)
 306 stdcall NtQueryPortInformationProcess()
 307 stdcall NtQueryQuotaInformationFile(ptr ptr ptr long long ptr long ptr long)
@@ -357,7 +357,7 @@
 357 stdcall NtSetDefaultHardErrorPort(ptr)
 358 stdcall NtSetDefaultLocale(long long)
 359 stdcall NtSetDefaultUILanguage(long)
-# stdcall NtSetDriverEntryOrder(ptr ptr)
+360 stdcall NtSetDriverEntryOrder(ptr ptr)
 361 stdcall NtSetEaFile(long ptr ptr long)
 362 stdcall NtSetEvent(long long)
 363 stdcall NtSetEventBoostPriority(ptr)
@@ -403,7 +403,7 @@
 403 stdcall NtTraceEvent(long long long ptr)
 404 stdcall NtTranslateFilePath(ptr long ptr long)
 405 stdcall NtUnloadDriver(ptr)
-# stdcall NtUnloadKey2(ptr long)
+406 stdcall NtUnloadKey2(ptr long)
 407 stdcall NtUnloadKey(long)
 408 stdcall NtUnloadKeyEx(ptr ptr)
 409 stdcall NtUnlockFile(long ptr ptr ptr ptr)
@@ -412,7 +412,7 @@
 412 stdcall NtVdmControl(long ptr)
 413 stdcall NtWaitForDebugEvent(ptr long ptr ptr)
 414 stdcall NtWaitForKeyedEvent(ptr ptr long ptr)
-# stdcall NtWaitForMultipleObjects32(long ptr long long ptr)
+415 stdcall NtWaitForMultipleObjects32(long ptr long long ptr)
 416 stdcall NtWaitForMultipleObjects(long ptr long long ptr)
 417 stdcall NtWaitForSingleObject(long long long)
 418 stdcall NtWaitHighEventPair(ptr)
@@ -981,7 +981,7 @@
 973 stdcall ZwAccessCheckByTypeResultListAndAuditAlarmByHandle(ptr ptr ptr ptr ptr ptr ptr long long long ptr long ptr long ptr ptr ptr) NtAccessCheckByTypeResultListAndAuditAlarmByHandle
 974 stdcall ZwAddAtom(ptr long ptr) NtAddAtom
 975 stdcall ZwAddBootEntry(ptr long)
-# ZwAddDriverEntry
+976 stdcall ZwAddDriverEntry(ptr long)
 977 stdcall ZwAdjustGroupsToken(long long long long long long) NtAdjustGroupsToken
 978 stdcall ZwAdjustPrivilegesToken(long long long long long long) NtAdjustPrivilegesToken
 979 stdcall ZwAlertResumeThread(long ptr) NtAlertResumeThread
@@ -990,7 +990,7 @@
 982 stdcall ZwAllocateUserPhysicalPages(ptr ptr ptr)
 983 stdcall ZwAllocateUuids(ptr ptr ptr ptr) NtAllocateUuids
 984 stdcall ZwAllocateVirtualMemory(long ptr ptr ptr long long) NtAllocateVirtualMemory
-# ZwApphelpCacheControl
+985 stdcall ZwApphelpCacheControl(long ptr)
 986 stdcall ZwAreMappedFilesTheSame(ptr ptr) NtAreMappedFilesTheSame
 987 stdcall ZwAssignProcessToJobObject(long long) NtAssignProcessToJobObject
 988 stdcall ZwCallbackReturn(ptr long long)
@@ -1036,7 +1036,7 @@
 1028 stdcall ZwDelayExecution(long ptr) NtDelayExecution
 1029 stdcall ZwDeleteAtom(long) NtDeleteAtom
 1030 stdcall ZwDeleteBootEntry(long) NtDeleteBootEntry
-# ZwDeleteDriverEntry
+1031 stdcall ZwDeleteDriverEntry(long)
 1032 stdcall ZwDeleteFile(ptr) NtDeleteFile
 1033 stdcall ZwDeleteKey(long) NtDeleteKey
 1034 stdcall ZwDeleteObjectAuditAlarm(ptr ptr long)
@@ -1046,7 +1046,7 @@
 1038 stdcall ZwDuplicateObject(long long long ptr long long long) NtDuplicateObject
 1039 stdcall ZwDuplicateToken(long long long long long long) NtDuplicateToken
 1040 stdcall ZwEnumerateBootEntries(ptr ptr)
-# ZwEnumerateDriverEntries
+1041 stdcall ZwEnumerateDriverEntries(ptr ptr)
 1042 stdcall ZwEnumerateKey(long long long ptr long ptr) NtEnumerateKey
 1043 stdcall ZwEnumerateSystemEnvironmentValuesEx(long ptr long) NtEnumerateSystemEnvironmentValuesEx
 1044 stdcall ZwEnumerateValueKey(long long long ptr long ptr) NtEnumerateValueKey
@@ -1077,7 +1077,7 @@
 1069 stdcall ZwLoadDriver(ptr) NtLoadDriver
 1070 stdcall ZwLoadKey2(ptr ptr long) NtLoadKey2
 1071 stdcall ZwLoadKey(ptr ptr) NtLoadKey
-# ZwLoadKeyEx
+1072 stdcall ZwLoadKeyEx(ptr ptr long ptr)
 1073 stdcall ZwLockFile(long long ptr ptr ptr ptr ptr ptr long long) NtLockFile
 1074 stdcall ZwLockProductActivationKeys(ptr ptr) NtLockProductActivationKeys
 1075 stdcall ZwLockRegistryKey(ptr) NtLockRegistryKey
@@ -1088,7 +1088,7 @@
 1080 stdcall ZwMapUserPhysicalPagesScatter(ptr ptr ptr)
 1081 stdcall ZwMapViewOfSection(long long ptr long long ptr ptr long long long) NtMapViewOfSection
 1082 stdcall ZwModifyBootEntry(ptr) NtModifyBootEntry
-# ZwModifyDriverEntry
+1083 stdcall ZwModifyDriverEntry(ptr)
 1084 stdcall ZwNotifyChangeDirectoryFile(long long ptr ptr ptr ptr long long long) NtNotifyChangeDirectoryFile
 1085 stdcall ZwNotifyChangeKey(long long ptr ptr ptr long long ptr long long) NtNotifyChangeKey
 1086 stdcall ZwNotifyChangeMultipleKeys(ptr long ptr ptr ptr ptr ptr long long ptr long long) NtNotifyChangeMultipleKeys
@@ -1127,7 +1127,7 @@
 1119 stdcall ZwQueryDefaultUILanguage(ptr) NtQueryDefaultUILanguage
 1120 stdcall ZwQueryDirectoryFile(long long ptr ptr ptr ptr long long long ptr long) NtQueryDirectoryFile
 1121 stdcall ZwQueryDirectoryObject(long ptr long long long ptr ptr) NtQueryDirectoryObject
-# ZwQueryDriverEntryOrder
+1122 stdcall ZwQueryDriverEntryOrder(ptr ptr)
 1123 stdcall ZwQueryEaFile(long ptr ptr long long ptr long ptr long) NtQueryEaFile
 1124 stdcall ZwQueryEvent(long long ptr long ptr) NtQueryEvent
 1125 stdcall ZwQueryFullAttributesFile(ptr ptr) NtQueryFullAttributesFile
@@ -1146,7 +1146,7 @@
 1138 stdcall ZwQueryMutant(long long ptr long ptr) NtQueryMutant
 1139 stdcall ZwQueryObject(long long long long long) NtQueryObject
 1140 stdcall ZwQueryOpenSubKeys(ptr ptr) NtQueryOpenSubKeys
-# ZwQueryOpenSubKeysEx
+1141 stdcall ZwQueryOpenSubKeysEx(ptr long ptr ptr)
 1142 stdcall ZwQueryPerformanceCounter (long long) NtQueryPerformanceCounter
 1143 stdcall ZwQueryPortInformationProcess() NtQueryPortInformationProcess
 1144 stdcall ZwQueryQuotaInformationFile(ptr ptr ptr long long ptr long ptr long) NtQueryQuotaInformationFile
@@ -1202,7 +1202,7 @@
 1194 stdcall ZwSetDefaultHardErrorPort(ptr)
 1195 stdcall ZwSetDefaultLocale(long long)
 1196 stdcall ZwSetDefaultUILanguage(long)
-# ZwSetDriverEntryOrder
+1197 stdcall ZwSetDriverEntryOrder(ptr ptr)
 1198 stdcall ZwSetEaFile(long ptr ptr long)
 1199 stdcall ZwSetEvent(long long)
 1200 stdcall ZwSetEventBoostPriority(ptr)
@@ -1248,7 +1248,7 @@
 1240 stdcall ZwTraceEvent(long long long ptr)
 1241 stdcall ZwTranslateFilePath(ptr long ptr long)
 1242 stdcall ZwUnloadDriver(ptr)
-# ZwUnloadKey2
+1243 stdcall ZwUnloadKey2(ptr long)
 1244 stdcall ZwUnloadKey(long)
 1245 stdcall ZwUnloadKeyEx(ptr ptr)
 1246 stdcall ZwUnlockFile(long ptr ptr ptr ptr)
@@ -1257,7 +1257,7 @@
 1249 stdcall ZwVdmControl(long ptr)
 1250 stdcall ZwWaitForDebugEvent(ptr long ptr ptr)
 1251 stdcall ZwWaitForKeyedEvent(ptr ptr long ptr)
-# ZwWaitForMultipleObjects32
+1252 stdcall ZwWaitForMultipleObjects32(long ptr long long ptr)
 1253 stdcall ZwWaitForMultipleObjects(long ptr long long ptr)
 1254 stdcall ZwWaitForSingleObject(long long long)
 1255 stdcall ZwWaitHighEventPair(ptr)
