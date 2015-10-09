@@ -819,6 +819,6 @@ BEGIN
     IDS_EXE_DESCRIPTION "Beschreibung:"
 
     IDS_MENU_EMPTY "(Leer)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_OBJECTS "%d Objekte"
+    IDS_OBJECTS_SELECTED "%d Objekte ausgewählt"
 END
