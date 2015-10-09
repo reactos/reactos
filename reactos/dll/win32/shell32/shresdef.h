@@ -225,6 +225,8 @@
 #define IDS_MYCOMPUTER             9216
 #define IDS_PERSONAL               9227
 #define IDS_NETWORKPLACE           9217
+#define IDS_OBJECTS                6466
+#define IDS_OBJECTS_SELECTED       6477
 
 /* Dialogs */
 

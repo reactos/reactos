@@ -825,4 +825,6 @@ BEGIN
     IDS_EXE_DESCRIPTION "描述："
 
     IDS_MENU_EMPTY "(空)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

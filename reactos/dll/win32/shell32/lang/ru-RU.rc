@@ -820,4 +820,6 @@ BEGIN
     IDS_EXE_DESCRIPTION "Описание:"
 
     IDS_MENU_EMPTY "(пусто)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

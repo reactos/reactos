@@ -820,4 +820,6 @@ BEGIN
     IDS_EXE_DESCRIPTION "Descriere:"
 
     IDS_MENU_EMPTY "(Gol)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

@@ -125,6 +125,7 @@ class CDefView :
         HRESULT IncludeObject(PCUITEMID_CHILD pidl);
         HRESULT OnDefaultCommand();
         HRESULT OnStateChange(UINT uFlags);
+        void UpdateStatusbar();
         void CheckToolbar();
         void SetStyle(DWORD dwAdd, DWORD dwRemove);
         BOOL CreateList();
@@ -467,6 +468,26 @@ void CDefView::CheckToolbar()
         m_pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON,
                                       FCIDM_TB_REPORTVIEW, TRUE, &result);
     }
+}
+
+void CDefView::UpdateStatusbar()
+{
+    WCHAR szFormat[MAX_PATH] = {0};
+    WCHAR szObjects[MAX_PATH] = {0};
+    UINT cSelectedItems;
+
+    cSelectedItems = m_ListView.GetSelectedCount();
+    if (cSelectedItems)
+    {
+        LoadStringW(shell32_hInstance, IDS_OBJECTS_SELECTED, szFormat, _countof(szFormat));
+        StringCchPrintfW(szObjects, MAX_PATH, szFormat, cSelectedItems);
+    }
+    else
+    {
+        LoadStringW(shell32_hInstance, IDS_OBJECTS, szFormat, _countof(szFormat));
+        StringCchPrintfW(szObjects, MAX_PATH, szFormat, m_ListView.GetItemCount());
+    }
+    m_pShellBrowser->SetStatusTextSB(szObjects);
 }
 
 /**********************************************************
@@ -1070,6 +1091,8 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     }
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
+
+    UpdateStatusbar();
 
     return S_OK;
 }
@@ -1822,6 +1845,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         case LVN_ITEMCHANGED:
             TRACE("-- LVN_ITEMCHANGED %p\n", this);
             OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
+            UpdateStatusbar();
             break;
 
         case LVN_BEGINDRAG:
