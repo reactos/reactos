@@ -1979,7 +1979,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     TRACE("(%p)(%p,%p,0x%08x)\n", this, Pidls[0], Pidls[1], lParam);
 
-    switch (lParam)
+    switch (lParam &~ SHCNE_INTERRUPT)
     {
         case SHCNE_MKDIR:
         case SHCNE_CREATE:

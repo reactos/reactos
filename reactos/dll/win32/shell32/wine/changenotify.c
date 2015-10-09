@@ -378,11 +378,11 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     }
 
     if( ( ( wEventId & SHCNE_NOITEMEVENTS ) && 
-          ( wEventId & ~SHCNE_NOITEMEVENTS ) ) ||
+          ( wEventId & ~(SHCNE_NOITEMEVENTS | SHCNE_INTERRUPT) ) ) ||
         ( ( wEventId & SHCNE_ONEITEMEVENTS ) && 
-          ( wEventId & ~SHCNE_ONEITEMEVENTS ) ) ||
+          ( wEventId & ~(SHCNE_ONEITEMEVENTS | SHCNE_INTERRUPT) ) ) ||
         ( ( wEventId & SHCNE_TWOITEMEVENTS ) && 
-          ( wEventId & ~SHCNE_TWOITEMEVENTS ) ) )
+          ( wEventId & ~(SHCNE_TWOITEMEVENTS | SHCNE_INTERRUPT) ) ) )
     {
         WARN("mutually incompatible events listed\n");
         return;
@@ -692,12 +692,14 @@ _NotificationCompletion(DWORD dwErrorCode, // completion code
     LPNOTIFYREGISTER item = (LPNOTIFYREGISTER) lpOverlapped->hEvent;
     TRACE("_NotificationCompletion\n");
 
+#if 0
     if (dwErrorCode == ERROR_OPERATION_ABORTED)
     {
         /* Command was induced by CancelIo in the shutdown procedure. */
         TRACE("_NotificationCompletion ended.\n");
         return;
     }
+#endif
 
     /* This likely means overflow, so force whole directory refresh. */
     if (!dwNumberOfBytesTransfered)
