@@ -48,6 +48,7 @@ public:
     virtual ~CAddressBand();
 private:
     void FocusChange(BOOL bFocus);
+    void CreateGoButton();
 public:
     // *** IDeskBand methods ***
     virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi);

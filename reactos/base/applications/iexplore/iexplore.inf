@@ -23,6 +23,7 @@ HKCR,"CLSID\%CLSID_Internet%\Shell\OpenHomePage\Command",,,"""%16422%\Internet E
 HKCR,"CLSID\%CLSID_Internet%\ShellFolder",,2,"0x24"
 
 [Settings.Reg]
+HKCU,"Software\Microsoft\Internet Explorer\Main","ShowGoButton",2,"yes"
 #HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"http://www.winehq.org"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"http://www.reactos.org"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",2,"http://www.google.com"

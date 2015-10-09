@@ -34,8 +34,6 @@ TODO:
 ****Add command handler for show/hide Go button to OnWinEvent
 ****Add tooltip notify handler
   **Properly implement GetBandInfo
-  **Add support for showing/hiding Go button
-  **Fix so Go button will be shown/hidden properly on load
   **Add correct text to Go button
   **Implement TranslateAcceleratorIO
     Implement Exec
@@ -112,6 +110,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     HWND                                    parentWindow;
     HWND                                    combobox;
     HRESULT                                 hResult;
+    IImageList                              *piml;
 
     if (pUnkSite == NULL)
     {
@@ -136,10 +135,20 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     // create combo box ex
     combobox = CreateWindowEx(WS_EX_TOOLWINDOW, WC_COMBOBOXEXW, NULL, WS_CHILD | WS_VISIBLE |
         WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED,
-                    0, 0, 500, 250, parentWindow, (HMENU)0xa205, _AtlBaseModule.GetModuleInstance(), 0);
+                    0, 0, 500, 250, parentWindow, (HMENU)IDM_TOOLBARS_ADDRESSBAR, _AtlBaseModule.GetModuleInstance(), 0);
     if (combobox == NULL)
         return E_FAIL;
     SubclassWindow(combobox);
+
+    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        SendMessageW(combobox, CBEM_SETIMAGELIST, 0, 0);
+    }
+    else
+    {
+        SendMessageW(combobox, CBEM_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
+    }
 
     SendMessage(CBEM_SETEXTENDEDSTYLE,
         CBES_EX_CASESENSITIVE | CBES_EX_NOSIZELIMIT, CBES_EX_CASESENSITIVE | CBES_EX_NOSIZELIMIT);
@@ -170,47 +179,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    // TODO: properly initialize this from registry
-    fGoButtonShown = true;
-
+    fGoButtonShown = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
     if (fGoButtonShown)
-    {
-        const TBBUTTON buttonInfo [] = { { 0, 1, TBSTATE_ENABLED, 0 } };
-        HIMAGELIST            normalImagelist;
-        HIMAGELIST            hotImageList;
-        HINSTANCE             shellInstance;
-
-        shellInstance = GetModuleHandle(_T("shell32.dll"));
-        normalImagelist = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_NORMAL),
-            20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
-        hotImageList = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_HOT),
-            20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
-
-        fGoButton = CreateWindowEx(WS_EX_TOOLWINDOW, TOOLBARCLASSNAMEW, 0, WS_CHILD | WS_CLIPSIBLINGS |
-            WS_CLIPCHILDREN | TBSTYLE_LIST | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | CCS_NODIVIDER |
-            CCS_NOPARENTALIGN | CCS_NORESIZE,
-            0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
-        SendMessage(fGoButton, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-        SendMessage(fGoButton, TB_SETMAXTEXTROWS, 1, 0);
-        if (normalImagelist)
-            SendMessage(fGoButton, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(normalImagelist));
-        if (hotImageList)
-            SendMessage(fGoButton, TB_SETHOTIMAGELIST, 0, reinterpret_cast<LPARAM>(hotImageList));
-        SendMessage(fGoButton, TB_ADDSTRINGW,
-            reinterpret_cast<WPARAM>(_AtlBaseModule.GetResourceInstance()), IDS_GOBUTTONLABEL);
-        SendMessage(fGoButton, TB_ADDBUTTONSW, 1, (LPARAM) &buttonInfo);
-
-        IImageList * piml;
-        HRESULT hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
-        if (FAILED_UNEXPECTEDLY(hr))
-        {
-            SendMessageW(combobox, CBEM_SETIMAGELIST, 0, 0);
-        }
-        else
-        {
-            SendMessageW(combobox, CBEM_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
-        }
-    }
+        CreateGoButton();
 
     // take advice to watch events
     hResult = IUnknown_QueryService(pUnkSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
@@ -333,6 +304,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::OnWinEvent(
 {
     CComPtr<IWinEventHandler>               winEventHandler;
     HRESULT                                 hResult;
+    RECT                                    rect;
 
     *theResult = 0;
 
@@ -343,8 +315,13 @@ HRESULT STDMETHODCALLTYPE CAddressBand::OnWinEvent(
         case WM_COMMAND:
             if (wParam == IDM_TOOLBARS_GOBUTTON)
             {
-                // toggle whether the Go button is displayed
-                // setting is Yes or No, stored in key "Software\Microsoft\Internet Explorer\Main" in value ShowGoButton
+                fGoButtonShown = !SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+                SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", REG_SZ, fGoButtonShown ? (LPVOID)L"yes" : (LPVOID)L"no", fGoButtonShown ? 8 : 6, SHREGSET_FORCE_HKCU);
+                if (!fGoButton)
+                    CreateGoButton();
+                ::ShowWindow(fGoButton,fGoButtonShown ? SW_HIDE : SW_SHOW);
+                GetWindowRect(&rect);
+                SendMessage(m_hWnd,WM_SIZE,0,MAKELPARAM(rect.right-rect.left,rect.bottom-rect.top));
                 // broadcast change notification to all explorer windows
             }
             break;
@@ -600,6 +577,9 @@ LRESULT CAddressBand::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     newHeight = HIWORD(lParam);
     newWidth = LOWORD(lParam);
 
+    if (!fGoButton)
+        CreateGoButton();
+
     SendMessage(fGoButton, TB_GETITEMRECT, 0, reinterpret_cast<LPARAM>(&buttonBounds));
     buttonWidth = buttonBounds.right - buttonBounds.left;
     buttonHeight = buttonBounds.bottom - buttonBounds.top;
@@ -636,6 +616,9 @@ LRESULT CAddressBand::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPara
         return 0;
     }
 
+    if (!fGoButton)
+        CreateGoButton();
+
     positionInfoCopy = *reinterpret_cast<WINDOWPOS *>(lParam);
     newHeight = positionInfoCopy.cy;
     newWidth = positionInfoCopy.cx;
@@ -662,4 +645,33 @@ LRESULT CAddressBand::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPara
 HRESULT CreateAddressBand(REFIID riid, void **ppv)
 {
     return ShellObjectCreator<CAddressBand>(riid, ppv);
+}
+
+void CAddressBand::CreateGoButton()
+{
+    const TBBUTTON buttonInfo [] = { { 0, 1, TBSTATE_ENABLED, 0 } };
+    HIMAGELIST            normalImagelist;
+    HIMAGELIST            hotImageList;
+    HINSTANCE             shellInstance;
+
+
+    shellInstance = GetModuleHandle(_T("shell32.dll"));
+    normalImagelist = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_NORMAL),
+                                           20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
+    hotImageList = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_HOT),
+                                        20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
+
+    fGoButton = CreateWindowEx(WS_EX_TOOLWINDOW, TOOLBARCLASSNAMEW, 0, WS_CHILD | WS_CLIPSIBLINGS |
+                               WS_CLIPCHILDREN | TBSTYLE_LIST | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | CCS_NODIVIDER |
+                               CCS_NOPARENTALIGN | CCS_NORESIZE,
+                               0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
+    SendMessage(fGoButton, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+    SendMessage(fGoButton, TB_SETMAXTEXTROWS, 1, 0);
+    if (normalImagelist)
+        SendMessage(fGoButton, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(normalImagelist));
+    if (hotImageList)
+        SendMessage(fGoButton, TB_SETHOTIMAGELIST, 0, reinterpret_cast<LPARAM>(hotImageList));
+    SendMessage(fGoButton, TB_ADDSTRINGW,
+                reinterpret_cast<WPARAM>(_AtlBaseModule.GetResourceInstance()), IDS_GOBUTTONLABEL);
+    SendMessage(fGoButton, TB_ADDBUTTONSW, 1, (LPARAM) &buttonInfo);
 }

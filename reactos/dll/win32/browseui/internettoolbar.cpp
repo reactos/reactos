@@ -1663,6 +1663,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     RBHITTESTINFO                           hitTestInfo;
     REBARBANDINFOW                          rebarBandInfo;
     int                                     bandID;
+    BOOL                                    goButtonChecked;
 
     clickLocation.x = LOWORD(lParam);
     clickLocation.y = HIWORD(lParam);
@@ -1712,6 +1713,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, fLocked);
+    goButtonChecked = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, goButtonChecked);
 
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
@@ -1729,6 +1732,9 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
             break;
         case IDM_TOOLBARS_CUSTOMIZE:    // customize
             SendMessage(fToolbarWindow, TB_CUSTOMIZE, 0, 0);
+            break;
+        case IDM_TOOLBARS_GOBUTTON:
+            SendMessage(fNavigationWindow, WM_COMMAND, IDM_TOOLBARS_GOBUTTON, 0);
             break;
     }
 
