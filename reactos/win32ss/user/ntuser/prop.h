@@ -12,8 +12,7 @@ UserGetProp(
     _In_ PWND Window,
     _In_ ATOM Atom);
 
-_Success_(return)
-BOOL
+HANDLE
 FASTCALL
 IntRemoveProp(
     _In_ PWND Window,

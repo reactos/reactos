@@ -58,25 +58,27 @@ UserGetProp(
 }
 
 _Success_(return)
-BOOL
+HANDLE
 FASTCALL
 IntRemoveProp(
     _In_ PWND Window,
     _In_ ATOM Atom)
 {
     PPROPERTY Prop;
+    HANDLE Data;
 
     NT_ASSERT(UserIsEnteredExclusive());
     Prop = IntGetProp(Window, Atom);
     if (Prop == NULL)
     {
-        return FALSE;
+        return NULL;
     }
 
+    Data = Prop->Data;
     RemoveEntryList(&Prop->PropListEntry);
     UserHeapFree(Prop);
     Window->PropListItems--;
-    return TRUE;
+    return Data;
 }
 
 _Success_(return)
@@ -215,7 +217,6 @@ NtUserRemoveProp(
     _In_ ATOM Atom)
 {
     PWND Window;
-    PPROPERTY Prop;
     HANDLE Data = NULL;
 
     TRACE("Enter NtUserRemoveProp\n");
@@ -227,16 +228,7 @@ NtUserRemoveProp(
         goto Exit;
     }
 
-    Prop = IntGetProp(Window, Atom);
-    if (Prop == NULL)
-    {
-        goto Exit;
-    }
-
-    Data = Prop->Data;
-    RemoveEntryList(&Prop->PropListEntry);
-    UserHeapFree(Prop);
-    Window->PropListItems--;
+    Data = IntRemoveProp(Window, Atom);
 
 Exit:
     TRACE("Leave NtUserRemoveProp, ret=%p\n", Data);
