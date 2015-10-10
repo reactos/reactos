@@ -601,20 +601,17 @@ NtUserCallHwnd(
       {
          PWND Window;
          DWORD HelpId;
-         USER_REFERENCE_ENTRY Ref;
 
-         UserEnterExclusive();
+         UserEnterShared();
 
          if (!(Window = UserGetWindowObject(hWnd)))
          {
             UserLeave();
             return 0;
          }
-         UserRefObjectCo(Window, &Ref);
 
          HelpId = (DWORD)(DWORD_PTR)UserGetProp(Window, gpsi->atomContextHelpIdProp);
 
-         UserDerefObjectCo(Window);
          UserLeave();
          return HelpId;
       }
