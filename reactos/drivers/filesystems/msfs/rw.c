@@ -107,10 +107,12 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    KeInitializeEvent(&Context->Event, SynchronizationEvent, FALSE);
     IoCsqInsertIrp(&Fcb->CancelSafeQueue, Irp, &Context->CsqContext);
     Timer = &Context->Timer;
     Dpc = &Context->Dpc;
     Context->Csq = &Fcb->CancelSafeQueue;
+    Irp->Tail.Overlay.DriverContext[0] = Context;
 
     /* No timer for INFINITY_WAIT */
     if (Timeout.QuadPart != -1)
@@ -139,6 +141,7 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
     ULONG Length;
     PVOID Buffer;
     PIRP CsqIrp;
+    PMSFS_DPC_CTX Context;
 
     DPRINT("MsfsWrite(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -193,7 +196,16 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
     CsqIrp = IoCsqRemoveNextIrp(&Fcb->CancelSafeQueue, NULL);
     if (CsqIrp != NULL)
     {
-        /* FIXME: It is necessary to reset the timers. */
+        /* Get the context */
+        Context = CsqIrp->Tail.Overlay.DriverContext[0];
+        /* DPC was queued, wait for it to fail (IRP is ours) */
+        if (Fcb->TimeOut.QuadPart != -1 && !KeCancelTimer(&Context->Timer))
+        {
+            KeWaitForSingleObject(&Context->Event, Executive, KernelMode, FALSE, NULL);
+        }
+
+        /* Free context & attempt read */
+        ExFreePoolWithTag(Context, 'NFsM');
         MsfsRead(DeviceObject, CsqIrp);
     }
 

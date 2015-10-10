@@ -117,14 +117,20 @@ MsfsTimeout(PKDPC Dpc,
 
     Context = (PMSFS_DPC_CTX)DeferredContext;
 
+    /* Try to get the IRP */
     Irp = IoCsqRemoveIrp(Context->Csq, &Context->CsqContext);
     if (Irp != NULL)
     {
+        /* It timed out, complete it (it's ours) and free context */
         Irp->IoStatus.Status = STATUS_IO_TIMEOUT;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        ExFreePoolWithTag(Context, 'NFsM');
     }
-
-    ExFreePool(Context);
+    else
+    {
+        /* We were racing with writing and failed, signal we're done */
+        KeSetEvent(&Context->Event, IO_NO_INCREMENT, FALSE);
+    }
 }
 
 /* EOF */

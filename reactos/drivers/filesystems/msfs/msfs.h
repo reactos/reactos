@@ -46,6 +46,7 @@ typedef struct _MSFS_DPC_CTX
     KTIMER Timer;
     KDPC Dpc;
     PIO_CSQ Csq;
+    KEVENT Event;
     IO_CSQ_IRP_CONTEXT CsqContext;
 } MSFS_DPC_CTX, *PMSFS_DPC_CTX;
 
