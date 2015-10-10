@@ -353,8 +353,12 @@ IoCsqRemoveIrp(
 
         Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchangePointer(&Irp->Tail.Overlay.DriverContext[3], NULL);
 
-        if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
+        if (Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
+        {
             Context->Irp = NULL;
+
+            ASSERT(Context->Csq == Csq);
+        }        
     }
     while(0);
 
