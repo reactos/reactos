@@ -164,6 +164,10 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     }
 
     pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBALDATA));
+    if (pGlobalData == NULL)
+        return FALSE;
+
+    pGlobalData->SystemLCID = GetSystemDefaultLCID();
 
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 

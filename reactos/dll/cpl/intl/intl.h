@@ -107,6 +107,7 @@ typedef struct _GLOBALDATA
     INT nMiscCountry;
 
     LCID UserLCID;
+    LCID SystemLCID;
     BOOL fUserLocaleChanged;
     BOOL bApplyToDefaultUser;
 

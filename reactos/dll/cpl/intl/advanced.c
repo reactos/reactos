@@ -203,7 +203,9 @@ LocalesEnumProc(PWSTR lpLocale)
 }
 
 static VOID
-InitLanguagesList(HWND hwndDlg)
+InitLanguagesList(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
 {
     WCHAR langSel[255];
 
@@ -213,7 +215,7 @@ InitLanguagesList(HWND hwndDlg)
     EnumSystemLocalesW(LocalesEnumProc, LCID_SUPPORTED);
 
     /* Select current locale */
-    GetLocaleInfoW(GetSystemDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(WCHAR));
+    GetLocaleInfoW(pGlobalData->SystemLCID, LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(WCHAR));
 
     SendMessageW(hLangList, CB_SELECTSTRING, -1, (LPARAM)langSel);
 }
@@ -248,14 +250,17 @@ GetCurrentDPI(LPTSTR szDPI)
     RegCloseKey(hKey);
 }
 
+static
 VOID
-SetNonUnicodeLang(HWND hwnd, LCID lcid)
+SaveFontSubstitutionSettings(
+    HWND hwnd,
+    PGLOBALDATA pGlobalData)
 {
     WCHAR szDefCP[5 + 1], szSection[MAX_PATH], szDPI[3 + 1];
     HINF hFontInf;
     UINT Count;
 
-    GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, szDefCP, sizeof(szDefCP) / sizeof(WCHAR));
+    GetLocaleInfoW(MAKELCID(pGlobalData->SystemLCID, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, szDefCP, sizeof(szDefCP) / sizeof(WCHAR));
     GetCurrentDPI(szDPI);
 
     wsprintf(szSection, L"Font.CP%s.%s", szDefCP, szDPI);
@@ -285,8 +290,18 @@ SetNonUnicodeLang(HWND hwnd, LCID lcid)
 
 static
 VOID
+SaveFontLinkingSettings(
+    HWND hwnd,
+    PGLOBALDATA pGlobalData)
+{
+    /* TODO */
+}
+
+
+static
+VOID
 SaveSystemSettings(
-    LCID lcid)
+    PGLOBALDATA pGlobalData)
 {
     WCHAR ACPPage[9];
     WCHAR OEMPage[9];
@@ -295,14 +310,14 @@ SaveSystemSettings(
     WCHAR value[5];
     DWORD valuesize;
 
-    ret = GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(WCHAR));
+    ret = GetLocaleInfoW(MAKELCID(pGlobalData->SystemLCID, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(WCHAR));
     if (ret == 0)
     {
         PrintErrorMsgBox(IDS_ERROR_OEM_CODE_PAGE);
         return;
     }
 
-    ret = GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, ACPPage, sizeof(ACPPage)/sizeof(WCHAR));
+    ret = GetLocaleInfoW(MAKELCID(pGlobalData->SystemLCID, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, ACPPage, sizeof(ACPPage)/sizeof(WCHAR));
     if (ret == 0)
     {
         PrintErrorMsgBox(IDS_ERROR_ANSI_CODE_PAGE);
@@ -323,7 +338,7 @@ SaveSystemSettings(
     RegCloseKey(langKey);
 
 
-    wsprintf(value, L"%04hX", LANGIDFROMLCID(lcid));
+    wsprintf(value, L"%04hX", LANGIDFROMLCID(pGlobalData->SystemLCID));
     valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
 
     /* Set language */
@@ -356,7 +371,7 @@ AdvancedPageProc(HWND hwndDlg,
             pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            InitLanguagesList(hwndDlg);
+            InitLanguagesList(hwndDlg, pGlobalData);
             InitCodePagesList(hwndDlg);
             break;
 
@@ -366,6 +381,19 @@ AdvancedPageProc(HWND hwndDlg,
                 case IDC_LANGUAGE_COMBO:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
+                        LCID lcid;
+                        INT iIndex;
+
+                        iIndex = SendMessage(hLangList, CB_GETCURSEL, 0, 0);
+                        if (iIndex == CB_ERR)
+                            break;
+
+                        lcid = SendMessage(hLangList, CB_GETITEMDATA, iIndex, 0);
+                        if (lcid == (LCID)CB_ERR)
+                            break;
+
+                        pGlobalData->SystemLCID = lcid;
+
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -398,21 +426,11 @@ AdvancedPageProc(HWND hwndDlg,
 
             if (lpnm->code == (UINT)PSN_APPLY)
             {
-                LCID lcid;
-                INT iIndex;
-
                 PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
 
-                iIndex = SendMessage(hLangList, CB_GETCURSEL, 0, 0);
-                if (iIndex == CB_ERR)
-                    break;
-
-                lcid = SendMessage(hLangList, CB_GETITEMDATA, iIndex, 0);
-                if (lcid == (LCID)CB_ERR)
-                    break;
-
-                SetNonUnicodeLang(hwndDlg, lcid);
-                SaveSystemSettings(lcid);
+                SaveSystemSettings(pGlobalData);
+                SaveFontSubstitutionSettings(hwndDlg, pGlobalData);
+                SaveFontLinkingSettings(hwndDlg, pGlobalData);
             }
         }
         break;
