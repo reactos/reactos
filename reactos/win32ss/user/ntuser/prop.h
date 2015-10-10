@@ -1,11 +1,5 @@
 #pragma once
 
-PPROPERTY
-FASTCALL
-IntGetProp(
-    _In_ PWND Window,
-    _In_ ATOM Atom);
-
 HANDLE
 FASTCALL
 UserGetProp(

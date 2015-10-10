@@ -369,16 +369,16 @@ IntGetWindow(HWND hWnd,
 
 DWORD FASTCALL IntGetWindowContextHelpId( PWND pWnd )
 {
-   PPROPERTY HelpId;
+   DWORD HelpId;
 
    do
    {
-      HelpId = IntGetProp(pWnd, gpsi->atomContextHelpIdProp);
+      HelpId = (DWORD)(DWORD_PTR)UserGetProp(pWnd, gpsi->atomContextHelpIdProp);
       if (!HelpId) break;
       pWnd = IntGetParent(pWnd);
    }
    while (pWnd && pWnd->fnid != FNID_DESKTOP);
-   return (DWORD) (HelpId ? HelpId->Data : 0 );
+   return HelpId;
 }
 
 /***********************************************************************

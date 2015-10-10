@@ -600,7 +600,7 @@ NtUserCallHwnd(
       case HWND_ROUTINE_GETWNDCONTEXTHLPID:
       {
          PWND Window;
-         PPROPERTY HelpId;
+         DWORD HelpId;
          USER_REFERENCE_ENTRY Ref;
 
          UserEnterExclusive();
@@ -612,11 +612,11 @@ NtUserCallHwnd(
          }
          UserRefObjectCo(Window, &Ref);
 
-         HelpId = IntGetProp(Window, gpsi->atomContextHelpIdProp);
+         HelpId = (DWORD)(DWORD_PTR)UserGetProp(Window, gpsi->atomContextHelpIdProp);
 
          UserDerefObjectCo(Window);
          UserLeave();
-         return (DWORD)HelpId->Data;
+         return HelpId;
       }
       case HWND_ROUTINE_REGISTERSHELLHOOKWINDOW:
          if (IntIsWindow(hWnd))

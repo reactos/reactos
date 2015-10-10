@@ -962,15 +962,12 @@ UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
   XCLIPOBJ* Clip;
   PWND Wnd;
   HWND hWnd;
-  PPROPERTY pprop;
 
   hWnd = IntWindowFromDC(hdc);
 
   if (hWnd && (Wnd = UserGetWindowObject(hWnd)))
   {
-     pprop = IntGetProp(Wnd, AtomWndObj);
-
-     Clip = (XCLIPOBJ*)pprop->Data;
+     Clip = (XCLIPOBJ*)UserGetProp(Wnd, AtomWndObj);
 
      if ( Clip && Clip->Hwnd == hWnd )
      {
