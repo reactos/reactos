@@ -133,7 +133,7 @@ BOOL UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT, BOOL down );
 HWND* WIN_ListChildren (HWND hWndparent);
 VOID DeleteFrameBrushes(VOID);
 BOOL WINAPI GdiValidateHandle(HGDIOBJ);
-HANDLE FASTCALL UserGetProp(HWND hWnd, ATOM Atom);
+HANDLE FASTCALL UserGetProp(HWND hWnd, ATOM Atom, BOOLEAN SystemProp);
 BOOL WINAPI InitializeImmEntryTable(VOID);
 
 /* EOF */

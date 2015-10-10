@@ -15,11 +15,13 @@ PPROPERTY
 FASTCALL
 IntGetProp(
     _In_ PWND Window,
-    _In_ ATOM Atom)
+    _In_ ATOM Atom,
+    _In_ BOOLEAN SystemProp)
 {
     PLIST_ENTRY ListEntry;
     PPROPERTY Property;
     UINT i;
+    WORD SystemFlag = SystemProp ? PROPERTY_FLAG_SYSTEM : 0;
 
     NT_ASSERT(UserIsEntered());
     ListEntry = Window->PropListHead.Flink;
@@ -27,33 +29,29 @@ IntGetProp(
     for (i = 0; i < Window->PropListItems; i++)
     {
         Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-
-        if (ListEntry == NULL)
-        {
-            ERR("Corrupted (or uninitialized?) property list for window %p. Prop count %u. Atom %u.\n",
-                Window, Window->PropListItems, Atom);
-            return NULL;
-        }
-
-        if (Property->Atom == Atom)
-        {
-            return(Property);
-        }
         ListEntry = ListEntry->Flink;
+
+        if (Property->Atom == Atom &&
+            (Property->fs & PROPERTY_FLAG_SYSTEM) == SystemFlag)
+        {
+            return Property;
+        }
     }
-    return(NULL);
+    NT_ASSERT(ListEntry == &Window->PropListHead);
+    return NULL;
 }
 
 HANDLE
 FASTCALL
 UserGetProp(
     _In_ PWND Window,
-    _In_ ATOM Atom)
+    _In_ ATOM Atom,
+    _In_ BOOLEAN SystemProp)
 {
     PPROPERTY Prop;
 
     NT_ASSERT(UserIsEntered());
-    Prop = IntGetProp(Window, Atom);
+    Prop = IntGetProp(Window, Atom, SystemProp);
     return Prop ? Prop->Data : NULL;
 }
 
@@ -62,13 +60,14 @@ HANDLE
 FASTCALL
 UserRemoveProp(
     _In_ PWND Window,
-    _In_ ATOM Atom)
+    _In_ ATOM Atom,
+    _In_ BOOLEAN SystemProp)
 {
     PPROPERTY Prop;
     HANDLE Data;
 
     NT_ASSERT(UserIsEnteredExclusive());
-    Prop = IntGetProp(Window, Atom);
+    Prop = IntGetProp(Window, Atom, SystemProp);
     if (Prop == NULL)
     {
         return NULL;
@@ -87,12 +86,13 @@ FASTCALL
 UserSetProp(
     _In_ PWND Window,
     _In_ ATOM Atom,
-    _In_ HANDLE Data)
+    _In_ HANDLE Data,
+    _In_ BOOLEAN SystemProp)
 {
     PPROPERTY Prop;
 
     NT_ASSERT(UserIsEnteredExclusive());
-    Prop = IntGetProp(Window, Atom);
+    Prop = IntGetProp(Window, Atom, SystemProp);
     if (Prop == NULL)
     {
         Prop = UserHeapAlloc(sizeof(PROPERTY));
@@ -101,6 +101,7 @@ UserSetProp(
             return FALSE;
         }
         Prop->Atom = Atom;
+        Prop->fs = SystemProp ? PROPERTY_FLAG_SYSTEM : 0;
         InsertTailList(&Window->PropListHead, &Prop->PropListEntry);
         Window->PropListItems++;
     }
@@ -171,24 +172,28 @@ NtUserBuildPropList(
                (ListEntry != &Window->PropListHead))
         {
             Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-            listitem.Atom = Property->Atom;
-            listitem.Data = Property->Data;
-
-            Status = MmCopyToCaller(li, &listitem, sizeof(PROPLISTITEM));
-            if (!NT_SUCCESS(Status))
-            {
-                goto Exit;
-            }
-
-            BufferSize -= sizeof(PROPLISTITEM);
-            Cnt++;
-            li++;
             ListEntry = ListEntry->Flink;
+            if (!(Property->fs & PROPERTY_FLAG_SYSTEM))
+            {
+                listitem.Atom = Property->Atom;
+                listitem.Data = Property->Data;
+
+                Status = MmCopyToCaller(li, &listitem, sizeof(PROPLISTITEM));
+                if (!NT_SUCCESS(Status))
+                {
+                    goto Exit;
+                }
+
+                BufferSize -= sizeof(PROPLISTITEM);
+                Cnt++;
+                li++;
+            }
         }
 
     }
     else
     {
+        /* FIXME: This counts user and system props */
         Cnt = Window->PropListItems * sizeof(PROPLISTITEM);
     }
 
@@ -228,7 +233,7 @@ NtUserRemoveProp(
         goto Exit;
     }
 
-    Data = UserRemoveProp(Window, Atom);
+    Data = UserRemoveProp(Window, Atom, FALSE);
 
 Exit:
     TRACE("Leave NtUserRemoveProp, ret=%p\n", Data);
@@ -257,7 +262,7 @@ NtUserSetProp(
         goto Exit;
     }
 
-    Ret = UserSetProp(Window, Atom, Data);
+    Ret = UserSetProp(Window, Atom, Data, FALSE);
 
 Exit:
     TRACE("Leave NtUserSetProp, ret=%i\n", Ret);

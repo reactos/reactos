@@ -606,8 +606,8 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
    //FIXME: This is bad and we should feel bad.
    //FIXME: Stop whining over wine code.
 
-   hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp);
-   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp);
+   hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
+   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
 
    if (!hIcon && pWnd->pcls->spicnSm)
        return pWnd->pcls->spicnSm;

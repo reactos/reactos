@@ -441,8 +441,8 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-    hIconSmall = UserGetProp(pWnd, gpsi->atomIconSmProp);
-    hIcon      = UserGetProp(pWnd, gpsi->atomIconProp);
+    hIconSmall = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
+    hIcon      = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
 
     hIconOld = wParam == ICON_BIG ? hIcon : hIconSmall;
 
@@ -460,8 +460,8 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
             break;
     }
 
-    UserSetProp(pWnd, gpsi->atomIconProp, hIcon);
-    UserSetProp(pWnd, gpsi->atomIconSmProp, hIconSmall);
+    UserSetProp(pWnd, gpsi->atomIconProp, hIcon, TRUE);
+    UserSetProp(pWnd, gpsi->atomIconSmProp, hIconSmall, TRUE);
 
     if ((pWnd->style & WS_CAPTION ) == WS_CAPTION)
        UserPaintCaption(pWnd, DC_ICON);
@@ -481,11 +481,11 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     switch(wParam)
     {
         case ICON_BIG:
-            hIconRet = UserGetProp(pWnd, gpsi->atomIconProp);
+            hIconRet = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
             break;
         case ICON_SMALL:
         case ICON_SMALL2:
-            hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp);
+            hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
             break;
         default:
             break;

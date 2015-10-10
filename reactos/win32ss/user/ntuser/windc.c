@@ -967,7 +967,7 @@ UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
 
   if (hWnd && (Wnd = UserGetWindowObject(hWnd)))
   {
-     Clip = (XCLIPOBJ*)UserGetProp(Wnd, AtomWndObj);
+     Clip = (XCLIPOBJ*)UserGetProp(Wnd, AtomWndObj, TRUE);
 
      if ( Clip && Clip->Hwnd == hWnd )
      {

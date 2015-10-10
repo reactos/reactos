@@ -1029,6 +1029,8 @@ typedef struct _PROPLISTITEM
     HANDLE Data;
 } PROPLISTITEM, *PPROPLISTITEM;
 
+#define PROPERTY_FLAG_SYSTEM 1
+
 typedef struct _PROPERTY
 {
     LIST_ENTRY PropListEntry;

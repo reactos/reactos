@@ -35,12 +35,13 @@
 
 HANDLE
 FASTCALL
-IntGetProp(HWND hWnd, ATOM Atom)
+IntGetProp(HWND hWnd, ATOM Atom, BOOLEAN SystemProp)
 {
   PLIST_ENTRY ListEntry, temp;
   PPROPERTY Property;
   PWND pWnd;
   int i;
+  WORD SystemFlag = SystemProp ? PROPERTY_FLAG_SYSTEM : 0;
 
   pWnd = ValidateHwnd(hWnd);
   if (!pWnd) return NULL;
@@ -49,7 +50,8 @@ IntGetProp(HWND hWnd, ATOM Atom)
   for (i = 0; i < pWnd->PropListItems; i++ )
   {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-      if (Property->Atom == Atom)
+      if (Property->Atom == Atom &&
+          (Property->fs & PROPERTY_FLAG_SYSTEM) == SystemFlag)
       {
          return(Property);
       }
@@ -61,10 +63,10 @@ IntGetProp(HWND hWnd, ATOM Atom)
 
 HANDLE
 FASTCALL
-UserGetProp(HWND hWnd, ATOM Atom)
+UserGetProp(HWND hWnd, ATOM Atom, BOOLEAN SystemProp)
 {
   PPROPERTY Prop;
-  Prop = IntGetProp(hWnd, Atom);
+  Prop = IntGetProp(hWnd, Atom, SystemProp);
   return Prop ? Prop->Data : NULL;
 }
 
@@ -383,7 +385,7 @@ GetPropW(HWND hWnd, LPCWSTR lpString)
   {
      Atom = LOWORD((DWORD_PTR)lpString);
   }
-  Prop = IntGetProp(hWnd, Atom);
+  Prop = IntGetProp(hWnd, Atom, FALSE);
   if (Prop != NULL) Data = Prop->Data;
   return Data;
 }

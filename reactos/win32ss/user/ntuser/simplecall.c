@@ -610,7 +610,7 @@ NtUserCallHwnd(
             return 0;
          }
 
-         HelpId = (DWORD)(DWORD_PTR)UserGetProp(Window, gpsi->atomContextHelpIdProp);
+         HelpId = (DWORD)(DWORD_PTR)UserGetProp(Window, gpsi->atomContextHelpIdProp, TRUE);
 
          UserLeave();
          return HelpId;
@@ -666,9 +666,9 @@ NtUserCallHwndParam(
          }
 
          if ( Param )
-            UserSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param);
+            UserSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param, TRUE);
          else
-            UserRemoveProp(Window, gpsi->atomContextHelpIdProp);
+            UserRemoveProp(Window, gpsi->atomContextHelpIdProp, TRUE);
 
          UserLeave();
          return TRUE;

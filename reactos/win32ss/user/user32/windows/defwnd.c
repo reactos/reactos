@@ -397,11 +397,11 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     switch(wParam)
     {
         case ICON_BIG:
-            hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconProp);
+            hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconProp, TRUE);
             break;
         case ICON_SMALL:
         case ICON_SMALL2:
-            hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp);
+            hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp, TRUE);
             break;
         default:
             break;

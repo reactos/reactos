@@ -339,7 +339,7 @@ IntDdeGetMessageHook(PMSG pMsg, LONG_PTR ExtraInfo)
 
    if (pMsg->message == WM_DDE_TERMINATE)
    {
-      pddeProp = (PDDE_PROP)UserGetProp(pWnd, AtomDDETrack);
+      pddeProp = (PDDE_PROP)UserGetProp(pWnd, AtomDDETrack, TRUE);
       if (pddeProp)
       {
          pWndClient = UserGetWindowObject((HWND)pMsg->wParam);
@@ -348,7 +348,7 @@ IntDdeGetMessageHook(PMSG pMsg, LONG_PTR ExtraInfo)
             ERR("DDE Get Client WM_DDE_TERMINATE\n");
          }
 
-         UserRemoveProp(pWnd, AtomDDETrack);
+         UserRemoveProp(pWnd, AtomDDETrack, TRUE);
          ExFreePoolWithTag(pddeProp, USERTAG_DDE1);
       }
       return TRUE;
@@ -419,7 +419,7 @@ IntDdeSendMessageHook(PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       pddeProp->spwnd        = pWndServer;
       pddeProp->spwndPartner = pWnd;
 
-      UserSetProp(pWndServer, AtomDDETrack, (HANDLE)pddeProp);
+      UserSetProp(pWndServer, AtomDDETrack, (HANDLE)pddeProp, TRUE);
    }
    return TRUE;
 }

@@ -104,7 +104,7 @@ IntEngWindowChanged(
 
     ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
-    Clip = UserGetProp(Window, AtomWndObj);
+    Clip = UserGetProp(Window, AtomWndObj, TRUE);
     if (!Clip)
     {
         return;
@@ -208,7 +208,7 @@ EngCreateWnd(
     Clip->PixelFormat = iPixelFormat;
 
     /* associate object with window */
-    UserSetProp(Window, AtomWndObj, Clip);
+    UserSetProp(Window, AtomWndObj, Clip, TRUE);
     ++gcountPWO;
 
     TRACE("EngCreateWnd: SUCCESS: %p!\n", WndObjUser);
@@ -253,7 +253,7 @@ EngDeleteWnd(
     else
     {
         /* Remove object from window */
-        UserRemoveProp(Window, AtomWndObj);
+        UserRemoveProp(Window, AtomWndObj, TRUE);
     }
     --gcountPWO;
 

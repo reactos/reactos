@@ -22,7 +22,7 @@ typedef struct _LRD_PROP
 BOOL FASTCALL
 GetLayeredStatus(PWND pWnd)
 {
-   PLRD_PROP pLrdProp = UserGetProp(pWnd, AtomLayer);
+   PLRD_PROP pLrdProp = UserGetProp(pWnd, AtomLayer, TRUE);
    if (pLrdProp)
    {
       return pLrdProp->is_Layered;
@@ -33,7 +33,7 @@ GetLayeredStatus(PWND pWnd)
 BOOL FASTCALL
 SetLayeredStatus(PWND pWnd, BYTE set)
 {
-   PLRD_PROP pLrdProp = UserGetProp(pWnd, AtomLayer);
+   PLRD_PROP pLrdProp = UserGetProp(pWnd, AtomLayer, TRUE);
    if (pLrdProp)
    {
       pLrdProp->is_Layered = set;
@@ -57,7 +57,7 @@ IntSetLayeredWindowAttributes(PWND pWnd,
       return FALSE;
    }
 
-   pLrdProp = UserGetProp(pWnd, AtomLayer);
+   pLrdProp = UserGetProp(pWnd, AtomLayer, TRUE);
 
    if (!pLrdProp)
    {
@@ -68,7 +68,7 @@ IntSetLayeredWindowAttributes(PWND pWnd,
          return FALSE;
       }
       RtlZeroMemory(pLrdProp, sizeof(LRD_PROP));
-      UserSetProp(pWnd, AtomLayer, (HANDLE)pLrdProp);
+      UserSetProp(pWnd, AtomLayer, (HANDLE)pLrdProp, TRUE);
    }
 
    if (pLrdProp)
@@ -258,7 +258,7 @@ NtUserGetLayeredWindowAttributes(
       goto Exit;
    }
 
-   pLrdProp = UserGetProp(pWnd, AtomLayer);
+   pLrdProp = UserGetProp(pWnd, AtomLayer, TRUE);
 
    if (!pLrdProp)
    {
