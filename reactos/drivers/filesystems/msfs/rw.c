@@ -33,6 +33,7 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
     PKTIMER Timer;
     PMSFS_DPC_CTX Context;
     PKDPC Dpc;
+    PLIST_ENTRY Entry;
 
     DPRINT("MsfsRead(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -63,17 +64,14 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
 
     if (Fcb->MessageCount > 0)
     {
-        /* copy current message into buffer */
-        Message = CONTAINING_RECORD(Fcb->MessageListHead.Flink,
-                                    MSFS_MESSAGE,
-                                    MessageListEntry);
+        KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
+        Entry = RemoveHeadList(&Fcb->MessageListHead);
+        KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
+        /* copy current message into buffer */
+        Message = CONTAINING_RECORD(Entry, MSFS_MESSAGE, MessageListEntry);
         memcpy(Buffer, &Message->Buffer, min(Message->Size,Length));
         LengthRead = Message->Size;
-
-        KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
-        RemoveHeadList(&Fcb->MessageListHead);
-        KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
         ExFreePoolWithTag(Message, 'rFsM');
         Fcb->MessageCount--;
