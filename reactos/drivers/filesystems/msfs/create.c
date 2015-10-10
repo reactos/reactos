@@ -4,6 +4,7 @@
  * FILE:       drivers/filesystems/msfs/create.c
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Eric Kohl
+ *             Nikita Pechenkin (n.pechenkin@mail.ru)
  */
 
 /* INCLUDES ******************************************************************/
@@ -182,6 +183,17 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 
     InitializeListHead(&Fcb->MessageListHead);
     KeInitializeSpinLock(&Fcb->MessageListLock);
+
+    Fcb->WaitCount = 0;
+    KeInitializeSpinLock(&Fcb->QueueLock);
+    InitializeListHead(&Fcb->PendingIrpQueue);
+    IoCsqInitialize(&Fcb->CancelSafeQueue,
+                    MsfsInsertIrp,
+                    MsfsRemoveIrp,
+                    MsfsPeekNextIrp,
+                    MsfsAcquireLock,
+                    MsfsReleaseLock,
+                    MsfsCompleteCanceledIrp);
 
     KeLockMutex(&DeviceExtension->FcbListLock);
     current_entry = DeviceExtension->FcbListHead.Flink;

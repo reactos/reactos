@@ -4,12 +4,14 @@
  * FILE:       drivers/filesystems/msfs/msfs.h
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Eric Kohl
+ *             Nikita Pechenkin (n.pechenkin@mail.ru)
  */
 
 #ifndef __DRIVERS_FS_MS_MSFS_H
 #define __DRIVERS_FS_MS_MSFS_H
 
 #include <ntifs.h>
+#include <wdm.h>
 
 #define DEFAULTAPI NTAPI
 
@@ -35,7 +37,20 @@ typedef struct _MSFS_FCB
     ULONG MessageCount;
     KSPIN_LOCK MessageListLock;
     LIST_ENTRY MessageListHead;
+    IO_CSQ CancelSafeQueue;
+    KSPIN_LOCK QueueLock;
+    LIST_ENTRY PendingIrpQueue;
+    ULONG WaitCount;
 } MSFS_FCB, *PMSFS_FCB;
+
+
+typedef struct _MSFS_DPC_CTX
+{
+    KTIMER Timer;
+    KDPC Dpc;
+    PIO_CSQ Csq;
+    IO_CSQ_IRP_CONTEXT CsqContext;
+} MSFS_DPC_CTX, *PMSFS_DPC_CTX;
 
 
 typedef struct _MSFS_CCB
@@ -88,5 +103,36 @@ NTSTATUS DEFAULTAPI MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath);
+
+IO_CSQ_INSERT_IRP MsfsInsertIrp;
+VOID NTAPI
+MsfsInsertIrp(PIO_CSQ Csq, PIRP Irp);
+
+IO_CSQ_REMOVE_IRP MsfsRemoveIrp;
+VOID NTAPI
+MsfsRemoveIrp(PIO_CSQ Csq, PIRP Irp);
+
+IO_CSQ_PEEK_NEXT_IRP MsfsPeekNextIrp;
+PIRP NTAPI
+MsfsPeekNextIrp(PIO_CSQ Csq, PIRP Irp, PVOID PeekContext);
+
+IO_CSQ_ACQUIRE_LOCK MsfsAcquireLock;
+VOID NTAPI
+MsfsAcquireLock(PIO_CSQ Csq, PKIRQL Irql);
+
+IO_CSQ_RELEASE_LOCK MsfsReleaseLock;
+VOID NTAPI
+MsfsReleaseLock(PIO_CSQ Csq, KIRQL Irql);
+
+IO_CSQ_COMPLETE_CANCELED_IRP MsfsCompleteCanceledIrp;
+VOID NTAPI
+MsfsCompleteCanceledIrp(PIO_CSQ pCsq, PIRP Irp);
+
+KDEFERRED_ROUTINE MsfsTimeout;
+VOID NTAPI
+MsfsTimeout(PKDPC Dpc,
+            PVOID DeferredContext,
+            PVOID SystemArgument1,
+            PVOID SystemArgument2);
 
 #endif /* __DRIVERS_FS_MS_MSFS_H */

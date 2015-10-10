@@ -5,6 +5,7 @@ list(APPEND SOURCE
     fsctrl.c
     msfs.c
     rw.c
+    msfssup.c
     msfs.h)
 
 add_library(msfs SHARED ${SOURCE} msfs.rc)
