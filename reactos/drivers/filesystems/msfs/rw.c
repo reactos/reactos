@@ -62,10 +62,11 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
         Buffer = Irp->UserBuffer;
 
 
+    KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
     if (Fcb->MessageCount > 0)
     {
-        KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
         Entry = RemoveHeadList(&Fcb->MessageListHead);
+        Fcb->MessageCount--;
         KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
         /* copy current message into buffer */
@@ -74,13 +75,16 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
         LengthRead = Message->Size;
 
         ExFreePoolWithTag(Message, 'rFsM');
-        Fcb->MessageCount--;
 
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = LengthRead;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
         return STATUS_SUCCESS;
+    }
+    else
+    {
+        KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
     }
 
     Timeout = Fcb->TimeOut;
@@ -116,7 +120,6 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
         KeSetTimer(Timer, Timeout, Dpc);
     }
 
-    Fcb->WaitCount++;
     IoMarkIrpPending(Irp);
 
     return STATUS_PENDING;
@@ -184,16 +187,14 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
 
     KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
     InsertTailList(&Fcb->MessageListHead, &Message->MessageListEntry);
+    Fcb->MessageCount++;
     KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
-    Fcb->MessageCount++;
-
-    if (Fcb->WaitCount > 0)
+    CsqIrp = IoCsqRemoveNextIrp(&Fcb->CancelSafeQueue, NULL);
+    if (CsqIrp != NULL)
     {
-        CsqIrp = IoCsqRemoveNextIrp(&Fcb->CancelSafeQueue, NULL);
         /* FIXME: It is necessary to reset the timers. */
         MsfsRead(DeviceObject, CsqIrp);
-        Fcb->WaitCount--;
     }
 
     Irp->IoStatus.Status = STATUS_SUCCESS;

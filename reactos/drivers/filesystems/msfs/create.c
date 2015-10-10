@@ -181,7 +181,6 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
     InitializeListHead(&Fcb->MessageListHead);
     KeInitializeSpinLock(&Fcb->MessageListLock);
 
-    Fcb->WaitCount = 0;
     KeInitializeSpinLock(&Fcb->QueueLock);
     InitializeListHead(&Fcb->PendingIrpQueue);
     IoCsqInitialize(&Fcb->CancelSafeQueue,

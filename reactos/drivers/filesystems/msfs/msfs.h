@@ -38,7 +38,6 @@ typedef struct _MSFS_FCB
     IO_CSQ CancelSafeQueue;
     KSPIN_LOCK QueueLock;
     LIST_ENTRY PendingIrpQueue;
-    ULONG WaitCount;
 } MSFS_FCB, *PMSFS_FCB;
 
 
