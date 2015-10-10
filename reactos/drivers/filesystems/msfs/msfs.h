@@ -31,7 +31,6 @@ typedef struct _MSFS_FCB
     struct _MSFS_CCB *ServerCcb;
     ULONG ReferenceCount;
     LARGE_INTEGER TimeOut;
-    KEVENT MessageEvent;
     ULONG MaxMessageSize;
     ULONG MessageCount;
     KSPIN_LOCK MessageListLock;

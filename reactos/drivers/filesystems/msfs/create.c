@@ -177,9 +177,6 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
     Fcb->MaxMessageSize = Buffer->MaximumMessageSize;
     Fcb->MessageCount = 0;
     Fcb->TimeOut = Buffer->ReadTimeout;
-    KeInitializeEvent(&Fcb->MessageEvent,
-                      NotificationEvent,
-                      FALSE);
 
     InitializeListHead(&Fcb->MessageListHead);
     KeInitializeSpinLock(&Fcb->MessageListLock);

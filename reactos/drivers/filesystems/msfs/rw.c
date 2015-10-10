@@ -75,10 +75,6 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
 
         ExFreePoolWithTag(Message, 'rFsM');
         Fcb->MessageCount--;
-        if (Fcb->MessageCount == 0)
-        {
-            KeClearEvent(&Fcb->MessageEvent);
-        }
 
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = LengthRead;
@@ -191,12 +187,6 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
     KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
     Fcb->MessageCount++;
-    if (Fcb->MessageCount == 1)
-    {
-        KeSetEvent(&Fcb->MessageEvent,
-                   0,
-                   FALSE);
-    }
 
     if (Fcb->WaitCount > 0)
     {
