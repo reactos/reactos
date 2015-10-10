@@ -11,7 +11,6 @@
 #define __DRIVERS_FS_MS_MSFS_H
 
 #include <ntifs.h>
-#include <wdm.h>
 
 #define DEFAULTAPI NTAPI
 

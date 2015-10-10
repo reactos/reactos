@@ -123,8 +123,6 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
     }
 
     Fcb->WaitCount++;
-    Irp->IoStatus.Status = STATUS_PENDING;
-    Irp->IoStatus.Information = 0;
     IoMarkIrpPending(Irp);
 
     return STATUS_PENDING;

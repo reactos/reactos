@@ -4,8 +4,8 @@ list(APPEND SOURCE
     finfo.c
     fsctrl.c
     msfs.c
-    rw.c
     msfssup.c
+    rw.c
     msfs.h)
 
 add_library(msfs SHARED ${SOURCE} msfs.rc)
