@@ -497,7 +497,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                        // Only the windows that overlap will be redrawn.
                        if (RECTL_bIntersectRect( &rect, &pwnd->rcWindow, &pwndTemp->rcWindow ))
                        {
-                          co_UserRedrawWindow( pwndTemp, NULL, NULL, RDW_UPDATENOW | RDW_NOCHILDREN);
+                          co_UserRedrawWindow( pwndTemp, NULL, NULL, RDW_UPDATENOW | RDW_ALLCHILDREN);
                        }
                     }
                  }
