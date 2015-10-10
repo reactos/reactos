@@ -630,7 +630,7 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    if (Window->PropListItems)
    {
-      IntRemoveWindowProp(Window);
+      UserRemoveWindowProps(Window);
       TRACE("Window->PropListItems %lu\n",Window->PropListItems);
       ASSERT(Window->PropListItems==0);
    }

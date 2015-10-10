@@ -666,9 +666,9 @@ NtUserCallHwndParam(
          }
 
          if ( Param )
-            IntSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param);
+            UserSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param);
          else
-            IntRemoveProp(Window, gpsi->atomContextHelpIdProp);
+            UserRemoveProp(Window, gpsi->atomContextHelpIdProp);
 
          UserLeave();
          return TRUE;

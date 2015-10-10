@@ -208,7 +208,7 @@ EngCreateWnd(
     Clip->PixelFormat = iPixelFormat;
 
     /* associate object with window */
-    IntSetProp(Window, AtomWndObj, Clip);
+    UserSetProp(Window, AtomWndObj, Clip);
     ++gcountPWO;
 
     TRACE("EngCreateWnd: SUCCESS: %p!\n", WndObjUser);
@@ -253,7 +253,7 @@ EngDeleteWnd(
     else
     {
         /* Remove object from window */
-        IntRemoveProp(Window, AtomWndObj);
+        UserRemoveProp(Window, AtomWndObj);
     }
     --gcountPWO;
 

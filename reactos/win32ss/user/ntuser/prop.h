@@ -8,19 +8,19 @@ UserGetProp(
 
 HANDLE
 FASTCALL
-IntRemoveProp(
+UserRemoveProp(
     _In_ PWND Window,
     _In_ ATOM Atom);
 
 _Success_(return)
 BOOL
 FASTCALL
-IntSetProp(
+UserSetProp(
     _In_ PWND Window,
     _In_ ATOM Atom,
     _In_ HANDLE Data);
 
 VOID
 FASTCALL
-IntRemoveWindowProp(
+UserRemoveWindowProps(
     _In_ PWND Window);

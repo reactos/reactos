@@ -60,7 +60,7 @@ UserGetProp(
 _Success_(return)
 HANDLE
 FASTCALL
-IntRemoveProp(
+UserRemoveProp(
     _In_ PWND Window,
     _In_ ATOM Atom)
 {
@@ -84,7 +84,7 @@ IntRemoveProp(
 _Success_(return)
 BOOL
 FASTCALL
-IntSetProp(
+UserSetProp(
     _In_ PWND Window,
     _In_ ATOM Atom,
     _In_ HANDLE Data)
@@ -111,7 +111,7 @@ IntSetProp(
 
 VOID
 FASTCALL
-IntRemoveWindowProp(
+UserRemoveWindowProps(
     _In_ PWND Window)
 {
     PLIST_ENTRY ListEntry;
@@ -228,7 +228,7 @@ NtUserRemoveProp(
         goto Exit;
     }
 
-    Data = IntRemoveProp(Window, Atom);
+    Data = UserRemoveProp(Window, Atom);
 
 Exit:
     TRACE("Leave NtUserRemoveProp, ret=%p\n", Data);
@@ -257,7 +257,7 @@ NtUserSetProp(
         goto Exit;
     }
 
-    Ret = IntSetProp(Window, Atom, Data);
+    Ret = UserSetProp(Window, Atom, Data);
 
 Exit:
     TRACE("Leave NtUserSetProp, ret=%i\n", Ret);

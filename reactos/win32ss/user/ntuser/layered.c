@@ -68,7 +68,7 @@ IntSetLayeredWindowAttributes(PWND pWnd,
          return FALSE;
       }
       RtlZeroMemory(pLrdProp, sizeof(LRD_PROP));
-      IntSetProp(pWnd, AtomLayer, (HANDLE)pLrdProp);
+      UserSetProp(pWnd, AtomLayer, (HANDLE)pLrdProp);
    }
 
    if (pLrdProp)

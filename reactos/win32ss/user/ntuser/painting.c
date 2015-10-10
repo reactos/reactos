@@ -1267,7 +1267,7 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
          IntKillTimer(pWnd, ID_EVENT_SYSTIMER_FLASHWIN, TRUE);
       }
 
-      IntRemoveProp(pWnd, AtomFlashWndState);
+      UserRemoveProp(pWnd, AtomFlashWndState);
    }
    else
    {  // Have a count and started, set timer.
@@ -1305,7 +1305,7 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
          FlashState ^= (FlashState ^ pfwi->dwFlags) & (FLASHW_MASK & ~FLASHW_TIMER);
       }
       FlashState = MAKELONG(LOWORD(FlashState),uCount);
-      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
+      UserSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
    }
    return Ret;
 }
