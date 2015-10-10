@@ -337,6 +337,8 @@ IoCsqRemoveIrp(
         if(!Irp)
             break;
 
+        ASSERT(Context->Csq == Csq);
+
         /* Unset the cancel routine and see if it has already been canceled */
         if(!IoSetCancelRoutine(Irp, NULL))
         {
@@ -348,6 +350,8 @@ IoCsqRemoveIrp(
             break;
         }
 
+        ASSERT(Context == Irp->Tail.Overlay.DriverContext[3]);
+
         /* This IRP is valid and is ours.  Dequeue it, fix it up, and return */
         Csq->CsqRemoveIrp(Csq, Irp);
 
@@ -358,7 +362,7 @@ IoCsqRemoveIrp(
             Context->Irp = NULL;
 
             ASSERT(Context->Csq == Csq);
-        }        
+        }
     }
     while(0);
 
@@ -412,8 +416,12 @@ IoCsqRemoveNextIrp(
         /* Unset the context stuff and return */
         Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchangePointer(&Irp->Tail.Overlay.DriverContext[3], NULL);
 
-        if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
+        if (Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
+        {
             Context->Irp = NULL;
+
+            ASSERT(Context->Csq == Csq);
+        }
 
         break;
     }
