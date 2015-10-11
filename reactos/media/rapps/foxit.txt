@@ -11,6 +11,7 @@ Size = 42.00 MB
 Category = 6
 URLSite = http://www.foxitsoftware.com/Secure_PDF_Reader/
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.2/en_us/FoxitReader720.0722_prom_enu_Setup.exe
+SHA1 = bebe3c6c814045c95a068d9b2a5609fa4ee3fefb
 CDPath = none
 
 [Section.0407]
@@ -18,12 +19,14 @@ Version = 7.0.8.1216
 Description = Alternativer PDF Reader. Neben Adobe Reader der beste PDF Reader.
 Size = 50.62 MB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.0/L10N/FoxitReader708.1216_prom_L10N_Setup.exe
+SHA1 = b0efb5b90244993180cb5a78bb7a5ce84e453275
 
 [Section.0a]
 Version = 7.0.8.1216
 License = Gratuito
 Description = Uno de los mejores lectores de PDF, parecido a Adobe Reader.
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.0/L10N/FoxitReader708.1216_prom_L10N_Setup.exe
+SHA1 = b0efb5b90244993180cb5a78bb7a5ce84e453275
 
 [Section.0418]
 License = Gratuită
@@ -37,9 +40,11 @@ License = Ücretsiz
 Description = Adobe Okuyucu'nun kendisine yakın en iyi PDF okuyucusu.
 Size = 50,62 MB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.0/L10N/FoxitReader708.1216_prom_L10N_Setup.exe
+SHA1 = b0efb5b90244993180cb5a78bb7a5ce84e453275
 
 [Section.0804]
 Version = 7.1.4.330
 Description = 替代的 PDF 阅读器，媲美 Adobe Reader 功能智者。
 Size = 43,60 MB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.1/zh_cn/FoxitReader714.330_zh_cn_Setup.exe
+SHA1 = 8c4385f4e7b70a31e805a55e538c9ae925b3456d

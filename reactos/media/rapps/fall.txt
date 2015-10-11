@@ -11,6 +11,7 @@ Size = 371 kB
 Category = 4
 URLSite = http://insomnia.sourceforge.net/fall/fall.html
 URLDownload = http://download.sourceforge.net/project/insomnia/fall/stable/Fall-win32.zip
+SHA1 = b8364dd7a015c1b9d5dbb2e8ac3cad34f803f0cb
 CDPath = none
 
 [Section.0407]

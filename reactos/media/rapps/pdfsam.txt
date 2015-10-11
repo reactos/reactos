@@ -11,6 +11,7 @@ Size = 15.6 MB
 Category = 6
 URLSite = http://www.pdfsam.org/
 URLDownload = http://download.sourceforge.net/project/pdfsam/pdfsam/2.2.4/pdfsam-v2_2_4.msi
+SHA1 = e406c16e0816e5792bcca161ec9aaf1df3ecf910
 CDPath = none
 
 [Section.0407]

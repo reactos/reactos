@@ -11,6 +11,7 @@ Size = 2.35 MB
 Category = 12
 URLSite = http://sourceforge.net/projects/mcwin32/
 URLDownload = http://download.sourceforge.net/project/mcwin32/mcwin32-build189-setup.exe
+SHA1 = d30c5807b411f5f8a2d2daa2a9eb301bb795a5a3
 CDPath = none
 
 [Section.0407]

@@ -11,6 +11,7 @@ Size = 548.02 kB
 Category = 14
 URLSite = http://www.libsdl.org/projects/SDL_mixer/
 URLDownload = http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.12-win32.zip
+SHA1 = 9d4629ce5fa07549b3a12766281017f74d4c2069
 CDPath = none
 
 [Section.0405]

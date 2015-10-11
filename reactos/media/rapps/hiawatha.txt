@@ -11,6 +11,7 @@ Size = 3.4 MB
 Category = 5
 URLSite = https://www.hiawatha-webserver.org/
 URLDownload = https://www.hiawatha-webserver.org/files/hiawatha-9.14.zip
+SHA1 = 998db525c99564f8c7ccb823fa05024eada53614
 CDPath = none
 
 [Section.0407]
@@ -22,8 +23,5 @@ Description = G眉venlik 眉zerine odakl谋 a莽谋k kaynak bir Um没m卯 A臒 sunucusu.
 Size = 3,4 MB
 
 [Section.0418]
-Description = Server web cu surse deschise, av鈔d securitatea 頽 prim plan.
+Description = Server web cu surse deschise, av芒nd securitatea 卯n prim plan.
 Size = 3,4 Mo
-
-[Section.0804]
-Description = 强调在安全的开源网络服务器。

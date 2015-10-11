@@ -11,6 +11,7 @@ Size = 136.67 kB
 Category = 14
 URLSite = http://www.libsdl.org/
 URLDownload = http://www.libsdl.org/release/SDL-1.2.15-win32.zip
+SHA1 = 84a5c93097bef703bc74ff5eb5c4943fda449629
 CDPath = none
 
 [Section.0405]

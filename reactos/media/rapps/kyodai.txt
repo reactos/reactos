@@ -12,6 +12,7 @@ Size = 13.8 MB
 Category = 4
 URLSite = http://cynagames.com/
 URLDownload = http://files.cynagames.com/kyo2006.exe
+SHA1 = 2f877cd6f01cfd25a8fc5e48715602bea03f05f3
 CDPath = none
 
 [Section.0407]

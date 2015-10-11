@@ -11,6 +11,7 @@ Size = 100 MB
 Category = 7
 URLSite = http://www.codeblocks.org/
 URLDownload = http://download.sourceforge.net/project/codeblocks/Binaries/13.12/Windows/codeblocks-13.12mingw-setup-TDM-GCC-481.exe
+SHA1 = 477f75876e9c454168c27c151019687dcf0899ac
 CDPath = none
 
 [Section.0407]

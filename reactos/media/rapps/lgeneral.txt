@@ -11,6 +11,7 @@ Size = 1.92 MB
 Category = 4
 URLSite = http://lgames.sourceforge.net/index.php?project=LGeneral
 URLDownload = http://download.sourceforge.net/project/lgames/binaries/lgeneral-1.1-win32.exe
+SHA1 = 69c9bb23410de915e490e782830a53af65f2c376
 CDPath = none
 
 [Section.0407]

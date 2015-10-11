@@ -11,6 +11,7 @@ Size = 37.0 MB
 Category = 6
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=3
 URLDownload = http://download.microsoft.com/download/9/2/2/9222D67F-7630-4F49-BD26-476B51517FC1/FileFormatConverters.exe
+SHA1 = 455b076bc8c805225f65c8935378d2c3906c4ec2
 CDPath = none
 
 [Section.0407]

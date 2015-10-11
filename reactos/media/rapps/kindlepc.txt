@@ -10,6 +10,7 @@ Size = 39.00 MB
 Category = 6
 URLSite = www.amazon.com/kindleforpc
 URLDownload = http://kindleforpc.amazon.com/40666/KindleForPC-installer.exe
+SHA1 = 10e8c82587f8c08b77e5ed55dd94d9851a2a899c
 CDPath = none
 
 [Section.0405]

@@ -11,6 +11,7 @@ Size = 892 kB
 Category = 4
 URLSite = http://www.blueskied.com/xmas/christmas_main.htm
 URLDownload = http://www.blueskied.com/xmas/ChristmasBound_setup.exe
+SHA1 = cc8bef8e9060b1838f63af2864dc1f91abe60ea0
 CDPath = none
 
 [Section.0407]
@@ -21,7 +22,7 @@ License = Gratuito
 Description = Un juego similar a Frozen Fruits.
 
 [Section.0410]
-Description = Un gioco simile a Frozen Fuits.
+Description = Un gioco simile a Frozen Fruits.
 
 [Section.0418]
 License = Gratuită

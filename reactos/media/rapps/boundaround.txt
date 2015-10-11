@@ -10,6 +10,7 @@ Size = 1.95 MB
 Category = 4
 URLSite = http://www.blueskied.com/boundaround.htm
 URLDownload = http://www.blueskied.com/BoundAround_Demo.exe
+SHA1 = 06907f4f3ff6fb9be2f64ff7056b9bb1623a48b9
 CDPath = none
 
 [Section.0407]

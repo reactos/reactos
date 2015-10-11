@@ -12,6 +12,7 @@ Size = 62.3 MB
 Category = 4
 URLSite = http://www.boswars.org
 URLDownload = http://www.boswars.org/dist/releases/BosWars-2.6.1.exe
+SHA1 = d3f12d5f8529edfb924dca789f779f6b593a2221
 CDPath = none
 
 [Section.0407]

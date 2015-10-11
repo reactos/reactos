@@ -11,6 +11,7 @@ Size = 2.0 MB
 Category = 5
 URLSite = http://www.tightvnc.com/
 URLDownload = http://www.tightvnc.com/download/2.7.10/tightvnc-2.7.10-setup-32bit.msi
+SHA1 = f619e5c7fbc63744ad8606f20ac11d237eabb132
 CDPath = none
 
 [Section.0407]

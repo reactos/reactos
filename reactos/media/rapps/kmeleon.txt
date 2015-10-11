@@ -11,6 +11,7 @@ Size = 26.1 MB
 Category = 5
 URLSite = http://kmeleon.sourceforge.net
 URLDownload = http://download.sourceforge.net/project/kmeleon/k-meleon/75.0/K-Meleon75.0.exe
+SHA1 = d26ce565f019062c27dc220294b576dcdf0024e5
 CDPath = none
 
 [Section.0407]

@@ -9,6 +9,7 @@ Size = 33.0 MB
 Category = 8
 URLSite = http://scratch.mit.edu/
 URLDownload = http://download.scratch.mit.edu/ScratchInstaller1.4.exe
+SHA1 = fc48f579616cab2c2986c018745852e6c8817460
 
 [Section.0407]
 Description = Visuelle objektorientierte Programmierumgebug für Kinder.

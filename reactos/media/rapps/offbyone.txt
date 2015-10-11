@@ -11,6 +11,7 @@ Size = 1010.89 kB
 Category = 5
 URLSite = http://offbyone.com/
 URLDownload = http://offbyone.com/offbyone/images/OffByOneSetup.exe
+SHA1 = d222bcf691c98d97144a16ffbc669ef88196a643
 CDPath = none
 
 [Section.0405]

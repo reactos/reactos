@@ -11,6 +11,7 @@ Size = 969.59 kB
 Category = 14
 URLSite = http://support.microsoft.com/kb/180071/
 URLDownload = http://download.microsoft.com/download/vb50pro/utility/1/win98/en-us/msvbvm50.exe
+SHA1 = 28bfaf09b8ac32cf5ffa81252f3e2fadcb3a8f27
 CDPath = none
 
 [Section.0407]

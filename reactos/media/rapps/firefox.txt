@@ -11,6 +11,7 @@ Size = 37.79 MB
 Category = 5
 URLSite = http://www.mozilla.org/en-US/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/en-US/Firefox%20Setup%2039.0.3.exe
+SHA1 = 817e09c06b5c2271e6dfef2dcb2f0cdf2511afde
 CDPath = none
 
 [Section.0405]
@@ -18,86 +19,101 @@ Description = Nejpopulárnější a jeden z nejlepších svobodných webových p
 Size = 37.62 MB
 URLSite = http://www.mozilla.org/cs/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/cs/Firefox%20Setup%2039.0.3.exe
+SHA1 = bc1d80c1c35e269ebe92760531948145aa5b292d
 
 [Section.0407]
 Description = Populärer, freier und quelloffener Webbrowser.
 Size = 37.62 MB
 URLSite = http://www.mozilla.org/de/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/de/Firefox%20Setup%2039.0.3.exe
+SHA1 = 3b12eb428d4730273c4c1bd1df4be20174df19b8
 
 [Section.0a]
 Description = Navegador web popular, libre y gratuito.
 Size = 37.54 MB
 URLSite = http://www.mozilla.org/es-ES/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/es-ES/Firefox%20Setup%2039.0.3.exe
+SHA1 = 2004a0657b8951c542f2d6acbe6b16ec5144888a
 
 [Section.040c]
 Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
 Size = 37,91 Mo
 URLSite = http://www.mozilla.org/fr/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/fr/Firefox%20Setup%2039.0.3.exe
+SHA1 = 120153d030cd37bb45f598ba0ae172d580a4d492
 
 [Section.0410]
 Description = Il più popolare e uno dei migliori web browser gratuiti.
 Size = 37.53 MB
 URLSite = http://www.mozilla.org/it/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/it/Firefox%20Setup%2039.0.3.exe
+SHA1 = 4c723ee4da7f5c72762c8517af2428b42ab1a0ca
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis Web browsers.
 Size = 38.25 MB
 URLSite = http://www.mozilla.org/nl/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/nl/Firefox%20Setup%2039.0.3.exe
+SHA1 = 6e50eb12ebfb2e1a8f9a538cb1574604ee3568fa
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
 Size = 37.60 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/nb-NO/Firefox%20Setup%2039.0.3.exe
+SHA1 = a0e445b13cefdd43d199497020ea239d7094f816
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 38.46 MB
 URLSite = http://www.mozilla.org/pl/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/pl/Firefox%20Setup%2039.0.3.exe
+SHA1 = b2d0b6197c7f4b2c4b47dd38fd646f91dab63997
 
 [Section.0418]
 Description = Navigator web popular. Gratuit, cu surse deschise, creat de o comunitate globală.
 Size = 38,11 Mo
 URLSite = http://www.mozilla.org/ro/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/ro/Firefox%20Setup%2039.0.3.exe
+SHA1 = 91256463068e4b8c90379884c6f2f462b3a22b7e
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
 Size = 37.98 MB
 URLSite = http://www.mozilla.org/ru/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/ru/Firefox%20Setup%2039.0.3.exe
+SHA1 = 0f1fb3aafaf7c8e756c24fe4a06f0f61816a4a67
 
 [Section.041b] 
 Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
 Size = 38.28 MB
 URLSite = http://www.mozilla.org/sk/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/sk/Firefox%20Setup%2039.0.3.exe
+SHA1 = 969ff37e4bfd04d5a064856e0b2dd4f54fb68dd1
 
 [Section.041f]
 Description = Özgür Umûmî Ağ tarayıcıları arasında en tutulanı ve en iyilerinden biri.
 Size = 37,65 MB
 URLSite = http://www.mozilla.org/tr/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/tr/Firefox%20Setup%2039.0.3.exe
+SHA1 = 32faceb5d34f29f44bc2079a37e4319ae0a41df2
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
 Size = 38.03 MB
 URLSite = http://www.mozilla.org/uk/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/uk/Firefox%20Setup%2039.0.3.exe
+SHA1 = 4ef315a887ab3f88ac4d548e7424ca6c5ec84b69
 
 [Section.0804]
 Description = 一个流行的网页浏览器。自由和开放源码，由一个全球社区作出。
 Size = 37.65 MB
 URLSite = https://www.mozilla.org/zh-CN/firefox/new/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/zh-CN/Firefox%20Setup%2039.0.3.exe
+SHA1 = a7655bd9534db1a1fbbbb17068ff9ffa59243dd8
 
 [Section.0813]
 Description = De meest populaire en een van de beste gratis Web browsers.
 Size = 39.43 MB
 URLSite = http://www.mozilla.org/nl/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/39.0.3/win32/nl/Firefox%20Setup%2039.0.3.exe
+SHA1 = 6e50eb12ebfb2e1a8f9a538cb1574604ee3568fa

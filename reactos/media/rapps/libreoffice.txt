@@ -11,6 +11,7 @@ Size = 213.93 MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
 URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.5/win/x86/LibreOffice_4.4.5_Win_x86.msi
+SHA1 = 2d8bcd51cc2ab3ff5e321b25ff86fe1b04df8315
 CDPath = none
 
 [Section.0407]

@@ -11,6 +11,7 @@ Size = 6.1 MB
 Category = 12
 URLSite = http://peazip.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/peazip/5.7.0/peazip-5.7.0.WINDOWS.exe
+SHA1 = 97cad78d1f9a998050e07553f3d4fa4379eecb93
 CDPath = none
 
 [Section.0407]

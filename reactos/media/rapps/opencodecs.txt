@@ -12,6 +12,7 @@ Size = 2.53 MB
 Category = 1
 URLSite = http://xiph.org/dshow/
 URLDownload = http://downloads.xiph.org/releases/oggdsf/opencodecs_0.85.17777.exe
+SHA1 = 386cf7cd29ffcbf8705eff8c8233de448ecf33ab
 CDPath = none
 
 [Section.0407]

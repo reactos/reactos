@@ -10,7 +10,8 @@ Description = An emulator for Gameboy and GameboyAdvance systems. You will need 
 Size = 438 kB
 Category = 4
 URLSite = http://sourceforge.net/projects/vba/
-URLDownload = http://cznic.dl.sourceforge.net/project/vba/VisualBoyAdvance/1.7.2/VisualBoyAdvance-1.7.2-SDL-Win32.zip
+URLDownload = http://download.sourceforge.net/project/vba/VisualBoyAdvance/1.7.2/VisualBoyAdvance-1.7.2-SDL-Win32.zip
+SHA1 = 550882e10d873b84a2034d68fe66e4c470eb1b57
 CDPath = none
 
 [Section.0407]

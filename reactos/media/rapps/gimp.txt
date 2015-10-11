@@ -11,6 +11,7 @@ Size = 87.7 MB
 Category = 3
 URLSite = http://www.gimp.org/
 URLDownload = http://download.gimp.org/pub/gimp/v2.8/windows/gimp-2.8.14-setup-1.exe
+SHA1 = 69ff003647df30653a4d23d26c57ebafda75825b
 CDPath = none
 
 [Section.0407]

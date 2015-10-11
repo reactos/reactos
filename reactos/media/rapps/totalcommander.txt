@@ -11,6 +11,7 @@ Size = 3.55 MB
 Category = 12
 URLSite = http://www.ghisler.com/
 URLDownload = http://totalcmd2.s3.amazonaws.com/tcmd851ax32.exe
+SHA1 = 8d3c71d63c878a037bdffb7660f5e26e0c9d7c09
 CDPath = none
 
 [Section.0407]

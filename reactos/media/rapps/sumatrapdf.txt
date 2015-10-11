@@ -11,6 +11,7 @@ Size = 4.34 MB
 Category = 6
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader.html
 URLDownload = http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.0-install.exe
+SHA1 = 053e718ceb12c99bf83750a97e42035b3c60ed3d
 CDPath = none
 
 [Section.0407]

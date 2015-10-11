@@ -11,6 +11,7 @@ Size = 861 kB
 Category = 15
 URLSite = http://www.neowin.net/forum/topic/32604-watercolor-v43/
 URLDownload = http://homepage.ntlworld.com/sherry.ponting/Junk/Watercolor43.exe
+SHA1 = 069be12175d80a0f3c76daa5b90eeca8f547dd28
 CDPath = none
 
 [Section.0407]

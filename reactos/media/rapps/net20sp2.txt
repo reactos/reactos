@@ -11,6 +11,7 @@ Size = 23.84 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-US/download/details.aspx?id=1639
 URLDownload = http://download.microsoft.com/download/c/6/e/c6e88215-0178-4c6c-b5f3-158ff77b1f38/NetFx20SP2_x86.exe
+SHA1 = 22d776d4d204863105a5db99e8b8888be23c61a7
 CDPath = none
 
 [Section.0407]

@@ -11,6 +11,7 @@ Size = 1.84 MB
 Category = 5
 URLSite = http://www.chiark.greenend.org.uk/~sgtatham/putty/
 URLDownload = http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.65-installer.exe
+SHA1 = 119261bd53b792e13e7fd27384e86ea960597a7e
 CDPath = none
 
 [Section.0407]

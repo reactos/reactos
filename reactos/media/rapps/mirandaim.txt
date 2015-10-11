@@ -11,6 +11,7 @@ Size = 7.6 MB
 Category = 5
 URLSite = http://www.miranda-im.org/
 URLDownload = http://download.sourceforge.net/project/miranda/miranda-im/0.10.34.0/miranda-im-v0.10.34-unicode.exe?nowrap
+SHA1 = c3b9bfe1013c39892c799ad587d8509b35887c59
 CDPath = none
 
 [Section.0407]

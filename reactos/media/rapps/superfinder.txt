@@ -11,6 +11,7 @@ Size = 4.94 MB
 Category = 12
 URLSite = http://fsl.sytes.net/ssearchxt.html
 URLDownload = http://www.webalice.it/guido.vinaio/releases/setup_SuperFinderXT.exe
+SHA1 = 11dc368582e7055cbc19d9b1a8a30b2f6e2e3601
 CDPath = none
 
 [Section.0407]

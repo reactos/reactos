@@ -11,6 +11,7 @@ Size = 9.4 MB
 Category = 6
 URLSite = http://www.abisource.com/
 URLDownload = http://www.abisource.com/downloads/abiword/2.9.4/Windows/abiword-setup-2.9.4.exe
+SHA1 = ad6163ab21b1a48975a3f966699963334aedb4d0
 CDPath = none
 
 [Section.0407]

@@ -10,6 +10,7 @@ Description = Audio driver for SoundBlaster-compatible devices. Unzip in the Rea
 Size = 2.22 MB
 Category = 13
 URLDownload = http://svn.reactos.org/packages/sb_vmware.exe
+SHA1 = d731e7490e5d287fff41d1cc19598fad48b743cd
 CDPath = none
 
 [Section.0405]

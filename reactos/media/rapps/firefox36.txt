@@ -11,6 +11,7 @@ Size = 8.22 MB
 Category = 5
 URLSite = http://www.mozilla.org/en-US/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/en-US/Firefox%20Setup%203.6.28.exe
+SHA1 = 3657287c2cff34f5edc237de954a9cc6f2ca465a
 CDPath = none
 
 [Section.0405]
@@ -18,86 +19,101 @@ Description = Nejpopulárnější a jeden z nejlepších svobodných webových p
 Size = 8.06 MB
 URLSite = http://www.mozilla.org/cs/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/cs/Firefox%20Setup%203.6.28.exe
+SHA1 = 746c91b3660a2845c935ae9904d9bd10d367e4c9
 
 [Section.0407]
 Description = Populärer, freier und quelloffener Webbrowser.
 Size = 8.22 MB
 URLSite = http://www.mozilla.org/de/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/de/Firefox%20Setup%203.6.28.exe
+SHA1 = 17c100fa1ecb36d6751dc72004b24eb84b251fc5
 
 [Section.0a]
 Description = Navegador web popular, libre y gratuito.
 Size = 8.05 MB
 URLSite = http://www.mozilla.org/es-ES/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/es-ES/Firefox%20Setup%203.6.28.exe
+SHA1 = ad49dd088ed934504c30ee122abacc6cf774d65a
 
 [Section.040c]
 Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
 Size = 8,28 Mo
 URLSite = http://www.mozilla.org/fr/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/fr/Firefox%20Setup%203.6.28.exe
+SHA1 = 2621a0556e1f6a0dd3961f36dac5ba1a446ced45
 
 [Section.0410]
 Description = Il più popolare e uno dei migliori web browser gratuiti.
 Size = 8.05 MB
 URLSite = http://www.mozilla.org/it/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/it/Firefox%20Setup%203.6.28.exe
+SHA1 = 3058403fe2cc9e0674ee343d5bf2c3725ff0f2c4
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis Web browsers.
 Size = 8.87 MB
 URLSite = http://www.mozilla.org/nl/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/nl/Firefox%20Setup%203.6.28.exe
+SHA1 = fa90bf528e5d10872fc37956e44f4c53df322f75
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
 Size = 8.06 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/nb-NO/Firefox%20Setup%203.6.28.exe
+SHA1 = 6f2ed637478667cd207a72f8353fdd3ed912bfa4
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 8.90 MB
 URLSite = http://www.mozilla.org/pl/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/pl/Firefox%20Setup%203.6.28.exe
+SHA1 = 97769435a039c1f34b051595f213f3d1915c8bcf
 
 [Section.0418]
 Description = Navigator web popular. Este gratuit, cu surse deschise, creat de o comunitate globală.
 Size = 8,46 Mo
 URLSite = http://www.mozilla.org/ro/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/ro/Firefox%20Setup%203.6.28.exe
+SHA1 = 218aacd48c7455d45db3c59aa5771153b330b4e3
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
 Size = 8.46 MB
 URLSite = http://www.mozilla.org/ru/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/ru/Firefox%20Setup%203.6.28.exe
+SHA1 = 2ff80e64b501d46f77a873e27b9293a49a24001d
 
 [Section.041b] 
 Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
 Size = 8.53 MB
 URLSite = http://www.mozilla.org/sk/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/sk/Firefox%20Setup%203.6.28.exe
+SHA1 = de198b1fdfb2cf3e6e52d49fe2f9ed41f3744909
 
 [Section.041f]
 Description = Özgür Umûmî Ağ tarayıcıları arasında en tutulanı ve en iyilerinden biri.
 Size = 8,07 MB
 URLSite = http://www.mozilla.org/tr/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/tr/Firefox%20Setup%203.6.28.exe
+SHA1 = 7c26bc6156cb165bb5f81bdb78d7fbcc798ea802
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
 Size = 8.45 MB
 URLSite = http://www.mozilla.org/uk/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/uk/Firefox%20Setup%203.6.28.exe
+SHA1 = 51fdd49bfc53bd06e239d11050a3daa86350811e
 
 [Section.0804]
 Description = 一个流行的网页浏览器。自由和开放源码，由一个全球社区作出。
 Size = 8.10 MB
 URLSite = https://www.mozilla.org/zh-CN/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/zh-CN/Firefox%20Setup%203.6.28.exe
+SHA1 = b2c51a9293bbf48d90119dd40723a60bfebcc470
 
 [Section.0813]
 Description = De meest populaire en een van de beste gratis Web browsers.
 Size = 8.87 MB
 URLSite = http://www.mozilla.org/nl/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/nl/Firefox%20Setup%203.6.28.exe
+SHA1 = fa90bf528e5d10872fc37956e44f4c53df322f75

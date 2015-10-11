@@ -10,7 +10,8 @@ Description = Viewer for all kinds of graphics/audio files/video files.
 Size = 2.00 MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://files01.techspot.com/temp/iview440_setup.exe
+URLDownload = ftp://ftp.uibk.ac.at/pub/software/win32/iview440g_setup.exe
+SHA1 = 31d8180c35a92f7ee0eac9d555f1990d23fe5d86
 CDPath = none
 
 [Section.0407]

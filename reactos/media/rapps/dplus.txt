@@ -11,6 +11,7 @@ Size = 1.36 MB
 Category = 5
 URLSite = http://dplus-browser.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/dplus-browser/Releases/dplus-0.5b/dplus-0.5b-setup.exe
+SHA1 = 26fa54b8fbe66e7172bdf217cce247f49f7d92e6
 CDPath = none
 
 [Section.0a]

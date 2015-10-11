@@ -11,6 +11,7 @@ Size = 2.36 MB
 Category = 5
 URLSite = http://www.mirc.com/
 URLDownload = http://download.mirc.com/13/mirc743.exe
+SHA1 = 4c779241fc6ea84d981bc0e720594bc610da0109
 CDPath = none
 
 [Section.0407]

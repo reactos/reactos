@@ -10,7 +10,8 @@ Description = KDE for Windows.
 Size = 2.16 MB
 Category = 15
 URLSite = http://www.winkde.org/
-URLDownload = http://www.winkde.org/pub/kde/ports/win32/installer/kdewin-installer-gui-1.0.0.exe
+URLDownload = http://download.kde.org/stable/kdewin/installer/kdewin-installer-gui-1.0.0.exe
+SHA1 = 0d798facb7fbf11529e7ecd067e875d76adb9d78
 CDPath = none
 
 [Section.0407]

@@ -11,6 +11,7 @@ Size = 764 kB
 Category = 4
 URLSite = http://www.blueskied.com/summer_bound.htm
 URLDownload = http://www.blueskied.com/summer/SummerBound_setup.exe
+SHA1 = 5ac90ccde964a6ad51b35bae0a405b7bb6e4b311
 CDPath = none
 
 [Section.0407]

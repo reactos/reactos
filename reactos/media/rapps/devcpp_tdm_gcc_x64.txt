@@ -10,6 +10,7 @@ Size = 48.1 MB
 Category = 7
 URLSite = http://orwelldevcpp.blogspot.com/
 URLDownload = http://download.sourceforge.net/project/orwelldevcpp/Setup%20Releases/Dev-Cpp%205.11%20TDM-GCC%204.9.2%20Setup.exe
+SHA1 = 599853e3331311f9ef81b1e633d7713dd258f81d
 CDPath = none
 
 [Section.0407]

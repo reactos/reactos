@@ -12,6 +12,7 @@ Size = 2.86 MB
 Category = 4
 URLSite = http://www.blitwise.com/ptanks.html
 URLDownload = http://www.blitwise.com/ptanks.exe
+SHA1 = 1f10dd5830eecf117bc10daf7e85d29f364dbdc2
 CDPath = none
 
 [Section.0407]

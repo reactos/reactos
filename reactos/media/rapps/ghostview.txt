@@ -11,6 +11,7 @@ Size = 1.94 MB
 Category = 6
 URLSite = http://pages.cs.wisc.edu/~ghost/gsview/
 URLDownload = http://pages.cs.wisc.edu/~ghost/gsview/download/gsv50w32.exe
+SHA1 = e2a99a0725769f9e0c622ca37adead6fe32ea165
 CDPath = none
 
 [Section.0407]

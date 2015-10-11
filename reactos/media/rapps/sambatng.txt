@@ -11,6 +11,7 @@ Size = 2.13 MB
 Category = 5
 URLSite = http://samba-tng.org/
 URLDownload = http://svn.reactos.org/packages/samba-tng.exe
+SHA1 = 23daea49ec9fb08cbee044fa49dfbcc195073c62
 CDPath = none
 
 [Section.0407]

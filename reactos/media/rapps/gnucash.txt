@@ -12,6 +12,7 @@ Size = 92.8 MB
 Category = 10
 URLSite = http://gnucash.org/
 URLDownload = http://downloads.sourceforge.net/sourceforge/gnucash/gnucash%20%28stable%29/2.6.7/gnucash-2.6.7-setup.exe
+SHA1 = 7fcdd842de45b0724947e21c9dc674d77b7740f5
 CDPath = none
 
 [Section.0407]

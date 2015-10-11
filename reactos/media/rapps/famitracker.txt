@@ -11,6 +11,7 @@ Size = 1.53 MB
 Category = 1
 URLSite = http://famitracker.com/index.php
 URLDownload = http://famitracker.com/files/FamiTracker-v0.4.6.zip
+SHA1 = b80c9630b2e08f04c0b512ab5ba573d79d47c275
 CDPath = none
 
 [Section.0407]

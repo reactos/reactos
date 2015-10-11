@@ -11,6 +11,7 @@ Size = 1.61 MB
 Category = 5
 URLSite = http://www.bittorrent.com/
 URLDownload = http://download-new.utorrent.com/endpoint/bittorrent/os/windows/track/stable/BitTorrent.exe
+SHA1 = cff989b71728cfdd0add54004298c6f5d00408aa
 CDPath = none
 
 [Section.0407]

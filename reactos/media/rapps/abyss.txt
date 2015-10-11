@@ -11,6 +11,7 @@ Size = 2.09 MB
 Category = 5
 URLSite = http://www.aprelium.com/
 URLDownload = http://www.aprelium.com/data/abwsx1.exe
+SHA1 = 1da144f56f10697cf258fb1a52cea29e5ccf7c8e
 CDPath = none
 
 [Section.0407]

@@ -12,6 +12,7 @@ Size = 108 MB
 Category = 7
 URLSite = http://www.lazarus.freepascal.org/
 URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.4.2/lazarus-1.4.2-fpc-2.6.4-win32.exe
+SHA1 = 77b0a6914a9b4b5416b4cb4d14e867cbfa89c635
 CDPath = none
 
 [Section.0407]

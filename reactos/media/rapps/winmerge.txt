@@ -11,6 +11,7 @@ Size = 6.13 MB
 Category = 12
 URLSite = http://winmerge.org/
 URLDownload = http://downloads.sourceforge.net/project/winmerge/stable/2.14.0/WinMerge-2.14.0-Setup.exe
+SHA1 = 4006203d4fc3542e765212e1a78f115fb3f946d2
 CDPath = none
 
 [Section.0407]

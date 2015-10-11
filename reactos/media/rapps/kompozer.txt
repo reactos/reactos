@@ -11,6 +11,7 @@ Size = 7.58 MB
 Category = 5
 URLSite = http://www.kompozer.net/
 URLDownload = http://downloads.sourceforge.net/project/kompozer/current/0.7.10/kompozer-0.7.10-win32.zip
+SHA1 = cb0fbb2f9d4a547131176158e9e7185ee525a8a3
 CDPath = none
 
 [Section.0407]

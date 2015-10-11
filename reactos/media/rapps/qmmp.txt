@@ -12,6 +12,7 @@ Size = 12.76 MB
 Category = 1
 URLSite = http://qmmp.ylsoftware.com/
 URLDownload = http://qmmp.ylsoftware.com/files/windows/qmmp-0.8.5-win32.exe
+SHA1 = f7d3c78b3d47de7521f2f7f3225e7cafd159de6b
 CDPath = none
 
 [Section.0407]

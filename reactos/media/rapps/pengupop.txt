@@ -11,6 +11,7 @@ Description = The purpose of this game is to shoot colored orbs into your playfi
 Size = 384 kB
 Category = 4 
 URLDownload = http://svn.reactos.org/packages/Pengupop.exe
+SHA1 = 59b87b20244cf13136f59c31b962a0521486a359
 CDPath = none
 
 [Section.0407]

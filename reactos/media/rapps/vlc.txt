@@ -10,7 +10,8 @@ Description = A fully featured FOSS media player with built-in codecs.
 Size = 27.51 MB
 Category = 2
 URLSite = http://www.videolan.org/vlc/
-URLDownload = http://mirror.netcologne.de/videolan.org/vlc/2.2.1/win32/vlc-2.2.1-win32.exe
+URLDownload = https://get.videolan.org/vlc/2.2.1/win32/vlc-2.2.1-win32.exe
+SHA1 = 4cbcea9764b6b657d2147645eeb5b973b642530e
 CDPath = none
 
 [Section.0407]

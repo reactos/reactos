@@ -11,6 +11,7 @@ Size = 11.7 MB
 Category = 2
 URLSite = http://mpc-hc.org/
 URLDownload = http://download.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-%20Win32/MPC-HC_v1.7.9_x86/MPC-HC.1.7.9.x86.exe
+SHA1 = 2c56080fb85bb1cc77a7310260f7f02d41d90690
 CDPath = none
 
 [Section.0407]

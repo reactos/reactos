@@ -11,6 +11,7 @@ Size = 20.7 MB
 Category = 2
 URLSite = http://smplayer.sourceforge.net/en/
 URLDownload = http://download.sourceforge.net/project/smplayer/SMPlayer/14.9.0/smplayer-14.9.0-win32.exe
+SHA1 = 3ca93ed3aca05b91217453d8091f30ab53c49466
 CDPath = none
 
 [Section.0407]

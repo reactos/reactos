@@ -11,6 +11,7 @@ Size = 29.2 MB
 Category = 7
 URLSite = http://www.codeblocks.org/
 URLDownload = http://download.sourceforge.net/project/codeblocks/Binaries/13.12/Windows/codeblocks-13.12-setup.exe
+SHA1 = 2d908cbcea04408fe5869584e49097c288936b27
 CDPath = none
 
 [Section.0407]

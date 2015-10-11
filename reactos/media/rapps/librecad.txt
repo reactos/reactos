@@ -11,6 +11,7 @@ Size = 25.5 MB
 Category = 3
 URLSite = http://librecad.org/
 URLDownload = http://download.sourceforge.net/librecad/Windows/2.0.7/LibreCAD-Installer-2.0.7.exe
+SHA1 = 214a0478e9ca9f3ab5212da565bd89f708c3c669
 CDPath = none
 
 [Section.0407]

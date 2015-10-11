@@ -12,6 +12,7 @@ Size = 2.3 MB
 Category = 4
 URLSite = http://chromium-bsu.sourceforge.net
 URLDownload = http://download.sourceforge.net/project/chromium-bsu/Chromium%20B.S.U.%20Win32%20binary/chromium-0.9.13.2.exe
+SHA1 = 1dadfa58e602ee7cd478e90de1697b6d1f081e43
 CDPath = none
 
 [Section.0407]

@@ -5,13 +5,14 @@
 
 [Section]
 Name = PSPad
-Version = 4.5.9
+Version = 4.6.0
 License = Freeware
 Description = A lightweight text editor.
-Size = 4.50 MB
+Size = 5.0 MB
 Category = 6
 URLSite = http://www.pspad.com
-URLDownload = http://fossies.org/windows/misc/pspad459inst_en.exe
+URLDownload = http://fossies.org/windows/misc/pspad460_setup.exe
+SHA1 = 35e2505eabd064c452a567a196837121f09e07b4
 CDPath = none
 
 [Section.0407]

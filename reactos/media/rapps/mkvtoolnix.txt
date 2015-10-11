@@ -8,7 +8,8 @@ Description = Set of tools for working with files mkv format.
 Size = 5.3 MB
 Category = 2
 URLSite = https://www.bunkus.org/
-URLDownload = https://www.bunkus.org/videotools/mkvtoolnix/win32/mkvtoolnix-unicode-3.1.0-setup.exe
+URLDownload = https://www.bunkus.org/videotools/mkvtoolnix/windows/releases/3.1.0/mkvtoolnix-unicode-3.1.0-setup.exe
+SHA1 = ed3addfe6e78cfbb6d306b621ba4a9ee9a389de6
 
 [Section.0407]
 Description = Sammlung von Werkzeugen zum Bearbeiten von MKV Dateien.

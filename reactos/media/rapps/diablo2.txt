@@ -6,18 +6,20 @@
 Name = Diablo II (Shareware)
 Version = 1.4
 License = Shareware
-Description = Zeckensack's Glide wrapper is required to run it.
+Description = Demo version of the game. Zeckensack's Glide wrapper is required to run it.
 Size = 131.9 MB
 Category = 4
 URLSite = http://www.blizzard.com/diablo2/
-URLDownload = http://pub.zoneofgames.ru/demos/diabloiidemo.exe
+#URLDownload = http://pub.zoneofgames.ru/demos/diabloiidemo.exe
+URLdownload = https://bitbucket.org/Swyter/tld-downloads/downloads/diabloiidemo.exe
+SHA1 = f7aa7f76b9f4c7584d4980cb32a7de97394a3f05
 CDPath = none
 
 [Section.0407]
 Description = Zeckensacks Glide Wrapper wird zum Ausführen benötigt.
 
 [Section.0a]
-Description = El adaptador de compatibilidad para Glide de Zeckensack es necesario para poder ejecutar el juego.
+Description = Versión de demostración. El adaptador de compatibilidad para Glide de Zeckensack es necesario para poder ejecutar el juego.
 
 [Section.040c]
 Description = Zeckensack's Glide wrapper est requis pour le faire tourner.

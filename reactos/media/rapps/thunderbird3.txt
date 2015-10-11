@@ -11,6 +11,7 @@ Size = 9.06 MB
 Category = 5
 URLSite = http://www.mozilla.org/en-US/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/en-US/Thunderbird%20Setup%203.1.20.exe
+SHA1 = c60318ae183d61cbdc76a570a3557d1b308b05f2
 CDPath = none
 
 [Section.0407]
@@ -18,69 +19,81 @@ Description = Populärer und quelloffener E-Mail-Client.
 Size = 8.91 MB
 URLSite = https://www.mozilla.org/de/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/de/Thunderbird%20Setup%203.1.20.exe
+SHA1 = 60d0824eb22c843137801b8eea76bee4b810eeca
 
 [Section.0a]
 Description = Cliente de correo electrónico popular y de código abierto.
 Size = 8.88 MB
 URLSite = https://www.mozilla.org/es-ES/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/es-ES/Thunderbird%20Setup%203.1.20.exe
+SHA1 = 4313ca4bc8100e71b1a0d4e405259e3b1c1fb28c
 
 [Section.040c]
 Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
 Size = 9,13 Mo
 URLSite = https://www.mozilla.org/fr/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/fr/Thunderbird%20Setup%203.1.20.exe
+SHA1 = b46b0db19fb755964ac1ab64c324c82d6fc548ab
 
 [Section.0410]
 Description = Il più popolare e il migliore Client mail gratuito.
 Size = 8.88 MB
 URLSite = https://www.mozilla.org/it/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/it/Thunderbird%20Setup%203.1.20.exe
+SHA1 = 144c29b00fb9f101e9a31d2e034ccfd0c6e65090
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
 Size = 9.71 MB
 URLSite = https://www.mozilla.org/nl/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/nl/Thunderbird%20Setup%203.1.20.exe
+SHA1 = a8ea5f8bf03e2473691babcef4695ddf240c341f
 
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
 Size = 9.73 MB
 URLSite = https://www.mozilla.org/pl/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/pl/Thunderbird%20Setup%203.1.20.exe
+SHA1 = c6bb07f2ffbee4285e3cbfbcf291d223a0c9da52
 
 [Section.0418]
 Description = Client de poștă electronică gratuit, cu surse deschise.
 Size = 9,31 Mo
 URLSite = https://www.mozilla.org/ro/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/ro/Thunderbird%20Setup%203.1.20.exe
+SHA1 = 663954b75ee6613ecfd83186d2f8bbbda0b6bd14
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
 Size = 9.29 MB
 URLSite = https://www.mozilla.org/ru/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/ru/Thunderbird%20Setup%203.1.20.exe
+SHA1 = 0d2cb1b8d781c2e8c7be2f78ee7c7687f62dc360
 
 [Section.041f]
 Description = Özgür posta istemcileri arasında en tutulanı ve en iyilerinden biri.
 Size = 8,91 MB
 URLSite = https://www.mozilla.org/tr/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/tr/Thunderbird%20Setup%203.1.20.exe
+SHA1 = b5035f4979cb7783a4aa1c4e82ec343c1f635ca7
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
 Size = 9.29 MB
 URLSite = https://www.mozilla.org/uk/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/uk/Thunderbird%20Setup%203.1.20.exe
+SHA1 = cf5d53b3e29570a10c6a35510dede4c7c8dd278a
 
 [Section.0804]
 Description = 最受欢迎的开源电子邮件客户端。
 Size = 9.00 MB
 URLSite = https://www.mozilla.org/zh-CN/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/zh-CN/Thunderbird%20Setup%203.1.20.exe
+SHA1 = ef09890e85de9131d73fc2288c2e3b5962dc9433
 
 [Section.0813]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
 Size = 9.71 MB
 URLSite = https://www.mozilla.org/nl/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/nl/Thunderbird%20Setup%203.1.20.exe
+SHA1 = a8ea5f8bf03e2473691babcef4695ddf240c341f

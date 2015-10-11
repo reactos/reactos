@@ -12,6 +12,7 @@ Size = 1.11 MB
 Category = 6
 URLSite = http://akelpad.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/akelpad/AkelPad%204/4.9.4/AkelPad-4.9.4-setup.exe
+SHA1 = 97da86b5bf0e53fb8faaaa6e3788ddea2a516ce1
 CDPath = none
 
 [Section.0a]

@@ -11,6 +11,7 @@ Size = 1.22 MB
 Category = 5
 URLSite = http://nginx.org/
 URLDownload = http://nginx.org/download/nginx-1.9.3.zip
+SHA1 = 20630c962754abe6b9855b33dec8de9440ee31eb
 CDPath = none
 
 [Section.0407]

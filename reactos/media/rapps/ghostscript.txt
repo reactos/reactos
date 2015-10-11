@@ -11,6 +11,7 @@ Size = 13.48 MB
 Category = 6
 URLSite =  http://www.ghostscript.com/
 URLDownload = http://downloads.ghostscript.com/public/gs916w32.exe
+SHA1 = f52a4ebe7b73c167ca4b12e43b6524f1f9718763
 CDPath = none
 
 [Section.0407]

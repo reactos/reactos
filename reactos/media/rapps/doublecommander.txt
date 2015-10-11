@@ -12,6 +12,7 @@ Size = 8.8 MB
 Category = 12
 URLSite = http://doublecmd.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windows%2032%20bit/Double%20Commander%200.6.4%20beta/doublecmd-0.6.4.i386-win32.exe
+SHA1 = 4d6a5d395b6530fee0a47f0988835afb7840a1e7
 CDPath = none
 
 [Section.0407]

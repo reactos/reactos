@@ -11,6 +11,7 @@ Size = 1.02 MB
 Category = 14
 URLSite = http://support.microsoft.com/kb/192461/
 URLDownload = http://download.microsoft.com/download/5/a/d/5ad868a0-8ecd-4bb0-a882-fe53eb7ef348/VB6.0-KB290887-X86.exe
+SHA1 = 73ef177008005675134d2f02c6f580515ab0d842
 CDPath = none
 
 [Section.0407]

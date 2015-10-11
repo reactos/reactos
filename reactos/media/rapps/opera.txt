@@ -11,6 +11,7 @@ Size = 12.57 MB
 Category = 5
 URLSite = http://www.opera.com/
 URLDownload = http://ftp.opera.com/pub/opera/win/1217/int/Opera_1217_int_Setup.exe
+SHA1 = 466f87164de1cbf7e96832771287c2bfee87734b
 CDPath = none
 
 [Section.0405]

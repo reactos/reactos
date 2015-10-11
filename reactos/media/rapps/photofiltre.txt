@@ -12,6 +12,7 @@ Size = 5.0 MB
 Category = 3
 URLSite = http://www.photofiltre-studio.com/pf7-en.htm
 URLDownload = http://static.infomaniak.ch/photofiltre/utils/pf7/pf7-setup-en-7.2.1.exe
+SHA1 = d4f9a0b0d7bdd82e21aa9f16a0728e7787f4eb0e
 CDPath = none
 
 [Section.0407]

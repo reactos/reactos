@@ -11,6 +11,7 @@ Size = 405 MB
 Category = 4
 URLSite = http://www.openarena.ws/
 URLDownload = http://download.tuxfamily.org/openarena/rel/088/openarena-0.8.8.zip
+SHA1 = 37ab41990b37459822ce8c2fe590607616e1f6d1
 CDPath = none
 
 [Section.0407]

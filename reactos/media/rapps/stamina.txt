@@ -12,6 +12,7 @@ URLSite = http://stamina.ru
 Size = 4.8 MB
 Category = 8
 URLDownload = http://stamina.ru/files/StaminaSetup.exe
+SHA1 = 14d250be52868dc5d4791f19a1e2ca8ac45581ae
 CDPath = none
 
 [Section.0407]

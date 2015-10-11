@@ -12,6 +12,7 @@ Size = 104.69 MB
 Category = 7
 URLSite = http://www.qb64.net/
 URLDownload = http://www.qb64.net/release/official/2015_03_12__02_08_19__v0000/windows/qb64v1000-win.zip
+SHA1 = 2f5ef738da9851b54e6bb25dab96829d161ee65b
 CDPath = none
 
 [Section.0407]

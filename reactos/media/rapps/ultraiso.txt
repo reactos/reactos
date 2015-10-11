@@ -11,6 +11,7 @@ Size = 4.19 MB
 Category = 12
 URLSite = https://www.ezbsystems.com/ultraiso/
 URLDownload = http://dw.ezbsys.net/uiso9_pe.exe
+SHA1 = 7ca082c507012bc524d4294c20a2b7b1ad7b7bcd
 CDPath = none
 
 [Section.0418]

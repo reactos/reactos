@@ -11,6 +11,7 @@ Size = 5.4 MB
 Category = 6
 URLSite = http://notepad-plus-plus.org/
 URLDownload = https://notepad-plus-plus.org/repository/6.x/6.8.1/npp.6.8.1.Installer.exe
+SHA1 = d2ce3ab2d7dee81d065a4a700c8c233c252a22d2
 CDPath = none
 
 [Section.0407]

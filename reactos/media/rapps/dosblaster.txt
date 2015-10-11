@@ -11,6 +11,7 @@ Size = 2.05 MB
 Category = 15
 URLSite = http://dosblaster.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/dosblaster/DosBlaster%202.5%20%28x86%29/Downloads/DosbasterSetup_2_5.exe
+SHA1 = 900927b51b67e09d83d924670e0ca72ba8151901
 CDPath = none
 
 [Section.0407]

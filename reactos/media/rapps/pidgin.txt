@@ -10,6 +10,7 @@ Size = 9.22 MB
 Category = 5
 URLSite = https://pidgin.im/
 URLDownload = http://downloads.sourceforge.net/project/pidgin/Pidgin/2.10.11/pidgin-2.10.11.exe
+SHA1 = feb284436e68f2289e396014163cf9a883a3be43
 CDPath = none
 
 [Section.0407]

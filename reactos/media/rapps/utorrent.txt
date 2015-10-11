@@ -11,6 +11,7 @@ Size = 1.66 MB
 Category = 5
 URLSite = http://www.utorrent.com/
 URLDownload = http://download-new.utorrent.com/endpoint/utorrent/os/windows/track/stable/utorrent.exe
+SHA1 = 8fffab0df9bf581c209337fc07ea93d2ba22cc8c
 CDPath = none
 
 [Section.0407]

@@ -11,6 +11,7 @@ Size = 54 kB
 Category = 12
 URLSite = http://p-nand-q.com/download/rfstool/index.html
 URLDownload = http://p-nand-q.com/download/rfstool/rfstool-0.14.zip
+SHA1 = 137131e26c8fefa38d13e4e51c26b8750285c0f2
 CDPath = none
 
 [Section.0407]

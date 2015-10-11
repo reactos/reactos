@@ -11,10 +11,14 @@ Size = 8.03 MB
 Category = 12
 URLSite = http://www.burnaware.com/
 URLDownload = http://download.betanews.com/download/1212419334-2/burnaware_free.exe
+SHA1 = a4df8b2354502de14fa52e426369bf88cc7c7454
 CDPath = none
 
 [Section.0407]
 Description = Freie Brennsoftware mit vollem Funktionsumfang, um CDs, DVDs und Blu-Ray Disks aller Arten zu erstellen.
+
+[Section.0a]
+Description = Completa suite de grabación gratuita con la que crear CDs, DVDs y BluRay de todo tipo.
 
 [Section.0418]
 Name = BurnAware Gratuit

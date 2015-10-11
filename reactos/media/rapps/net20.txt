@@ -11,6 +11,7 @@ Size = 22.42 MB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=0856eacb-4362-4b0d-8edd-aab15c5e04f5
 URLDownload = http://download.microsoft.com/download/5/6/7/567758a3-759e-473e-bf8f-52154438565a/dotnetfx.exe
+SHA1 = a3625c59d7a2995fb60877b5f5324892a1693b2a
 CDPath = none
 
 [Section.0407]

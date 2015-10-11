@@ -10,6 +10,7 @@ Size = 17.5 MB
 Category = 7
 URLSite = http://www.python.org/
 URLDownload = http://www.python.org/ftp/python/2.7.9/python-2.7.9.msi
+SHA1 = 719832e0159eebf9cd48104c7db49aa978f6156c
 CDPath = none
 
 [Section.0407]

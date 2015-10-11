@@ -11,6 +11,7 @@ Size = 5.93 MB
 Category = 4
 URLSite = http://www.gnu.org/software/xboard/
 URLDownload = http://ftp.gnu.org/old-gnu/xboard/winboard/winboard-4_2_7b.exe
+SHA1 = 25dc71fe77a009b6d243f08003b1e2d4f8b7f537
 CDPath = none
 
 [Section.0407]

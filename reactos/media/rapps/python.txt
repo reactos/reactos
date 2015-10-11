@@ -11,6 +11,7 @@ Size = 27.1 MB
 Category = 7
 URLSite = http://www.python.org/
 URLDownload = http://www.python.org/ftp/python/3.5.0/python-3.5.0b4.exe
+SHA1 = 80cfc2a128d14fcdf89b461c6b01ec85d4bf2a77
 CDPath = none
 
 [Section.0407]

@@ -13,6 +13,7 @@ Size = 2.36 MB
 Category = 14
 URLSite = https://github.com/mozilla/Fira
 URLDownload = http://svn.reactos.org/packages/Fira.exe
+SHA1 = e6ebd913a13a3170c0e880321467703b1eaf24a3
 CDPath = none
 
 [Section.0407]

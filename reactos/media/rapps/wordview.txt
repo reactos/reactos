@@ -11,6 +11,7 @@ Size = 24.5 MB
 Category = 6
 URLSite = http://support.microsoft.com/kb/180071/
 URLDownload = http://download.microsoft.com/download/6/a/6/6a689355-b155-4fa7-ad8a-dfe150fe7ac6/wordview_en-us.exe
+SHA1 = e6dfdc8a1545d45ef5840ba513a5c4036bf154bc
 CDPath = none
 
 [Section.0407]
@@ -18,6 +19,7 @@ License = Unbekannt
 Description = Freeware Dokumentbetrachter für Office-Formate (*.doc).
 Size = 24.56 MB
 URLDownload = http://download.microsoft.com/download/d/4/b/d4b23f0e-c8b6-4383-878d-1a8184b7db56/wordview_de-de.exe
+SHA1 = 679d2c80bb33ca262b9cf55626ce36e23fd67293
 
 [Section.0a]
 Name = Visor de Microsoft Word
@@ -25,32 +27,38 @@ Description = Visor gratuito de documentos en formato Office (*.doc)
 License = Desconocida
 Size = 24.53 MB
 URLDownload = http://download.microsoft.com/download/4/4/c/44c2d552-8b40-464f-8470-b4976d7ba60b/wordview_es-es.exe
+SHA1 = 6c83c4418f384ea9a0ddb81c8c5bcdb183dba3d8
 
 [Section.040c]
 License = Inconnue
 Size = 24,55 Mo
 URLDownload = http://download.microsoft.com/download/b/f/3/bf36c75d-2e93-4db1-ace2-1425e5219260/wordview_fr-fr.exe
+SHA1 = dce603d9bed87170c86f51f6e0f4935ccedd92e6
 
 [Section.0410]
 License = Sconosciuta
 Size = 24.52 MB
 URLDownload = http://download.microsoft.com/download/f/8/e/f8e9dadd-70bd-4317-a7fe-25d7bfb54b71/wordview_it-it.exe
+SHA1 = bee3dd1c27291a3a1233ac092911685ee95bcc13
 
 [Section.0413]
 License = Ongekend
 Size = 24.54 MB
 URLDownload = http://download.microsoft.com/download/c/1/0/c10e009e-61e2-4b54-8d21-aff378679527/wordview_nl-nl.exe
+SHA1 = ff39a41cdaf2be65408d10a4a1da01ab9469906c
 
 [Section.0415]
 License = Nieznana
 Size = 24.58 MB
 URLDownload = http://download.microsoft.com/download/c/e/1/ce1e1286-67a2-4069-a8c4-b3552f18dfa8/wordview_pl-pl.exe
+SHA1 = 02a6c2be40f0163bcb89953c1da6bda47b2ea8db
 
 [Section.0418]
 License = Nespecificată
 Description = Aplicație de lectură a documentelor de tip Microsoft Office Word (*.doc)
 Size = 24,56 Mo
 URLDownload = http://download.microsoft.com/download/1/2/3/123d3dc8-6f3f-473f-ac1d-3e38969605e8/wordview_ro-ro.exe
+SHA1 = 22728a9442043478065c5e4b923a0eb53fdc6bae
 
 [Section.041f]
 Name = Microsoft Word Görüntüleyici
@@ -58,19 +66,23 @@ License = Bilinmiyor
 Description = Microsoft Word Görüntüleyici
 Size = 24,55 MB
 URLDownload = http://download.microsoft.com/download/7/6/e/76efefb4-9575-4903-ac2a-180c280ab6c7/wordview_tr-tr.exe
+SHA1 = ce83185c354fd8bd1288dc1541aebbe7eaf3b9e5
 
 [Section.0422]
 License = Невідома
 Size = 24.56 MB
 URLDownload = http://download.microsoft.com/download/2/b/d/2bd08f27-822b-4c20-936a-0f1d91cb9e69/wordview_uk-ua.exe
+SHA1 = b3615522dfc69496aca84a1f5b5ac44f4134955b
 
 [Section.0804]
 License = 未知
 Description = 查看应用程序对于 Office 格式的免费软件文档 (*.doc)
 Size = 24.50MB
 URLDownload = http://download.microsoft.com/download/3/a/c/3ac87e64-8099-46d6-8e04-363d2da30f5a/wordview_zh-cn.exe
+SHA1 = b0f98fef2b5c1e12c0850c4a9188f9ec3c52e1b4
 
 [Section.0813]
 License = Ongekend
 Size = 24.54 MB
 URLDownload = http://download.microsoft.com/download/c/1/0/c10e009e-61e2-4b54-8d21-aff378679527/wordview_nl-nl.exe
+SHA1 = ff39a41cdaf2be65408d10a4a1da01ab9469906c

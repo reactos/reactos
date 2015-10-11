@@ -11,6 +11,7 @@ Size = 28.3 MB
 Category = 7
 URLSite = http://reactos.org/wiki/Build_Environment
 URLDownload = http://download.sourceforge.net/reactos/RosBE-2.1.1.exe
+SHA1 = 3daec4a5df5adf5679eaba25c39b4779afea3b4f
 CDPath = none
 
 [Section.0405]

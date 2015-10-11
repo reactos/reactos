@@ -6,15 +6,19 @@
 Name = Java SE Runtime Environment 7
 Version = 7u80
 License = Oracle Binary Code License
-Description = Do you want to run Java programs? If so, download the Java Runtime Environment.
+Description = Platform and libraries needed for running Java-based programs.
 Size = 28.14 MB
 Category = 14
 URLSite = http://www.oracle.com/technetwork/java/javase/downloads/jre7-downloads-1880261.html
 URLDownload = http://svn.reactos.org/packages/jre-7u80-windows-i586.exe
+SHA1 = 305c1493fca53ab63ba1686c9afdfb65142e59d3
 CDPath = none
 
 [Section.0407]
 Description = Sie wollen Java Programme nutzen? Wenn ja, laden Sie die Java Runtime Environment herunter.
+
+[Section.0a]
+Description = Plataforma y bibliotecas necesarias para la ejecución de aplicaciones programadas en Java.
 
 [Section.041f]
 Name = Java SE Yürütücü Ortamı 7

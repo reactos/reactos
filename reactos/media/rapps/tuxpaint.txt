@@ -11,6 +11,7 @@ Size = 13.5 MB
 Category = 3
 URLSite = http://tuxpaint.org/
 URLDownload = http://download.sourceforge.net/project/tuxpaint/tuxpaint/0.9.22/tuxpaint-0.9.22-win32-installer.exe
+SHA1 = 1ceeb1cba00d939f41e9b1e6d5aa82d071b010d5
 CDPath = none
 
 [Section.0405]

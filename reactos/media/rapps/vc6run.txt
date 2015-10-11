@@ -11,6 +11,7 @@ Size = 1.75 MB
 Category = 14
 URLSite = http://support.microsoft.com/kb/259403/
 URLDownload = http://download.microsoft.com/download/vc60pro/Update/2/W9XNT4/EN-US/VC6RedistSetup_deu.exe
+SHA1 = a8c4dd33e281c166488846a10edf97ff0ce37044
 CDPath = none
 
 [Section.0407]

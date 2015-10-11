@@ -11,6 +11,7 @@ Size = 6.20 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=40784
 URLDownload = http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe
+SHA1 = df7f0a73bfa077e483e51bfb97f5e2eceedfb6a3
 CDPath = none
 
 [Section.0407]

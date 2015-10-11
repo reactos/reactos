@@ -10,11 +10,15 @@ Description = Free, open source, cross-platform software for recording and editi
 Size = 24.0 MB
 Category = 1
 URLSite = http://audacityteam.org/
-URLDownload = http://svn.reactos.org/packages/audacity-win-2.1.1.exe
+URLDownload = https://svn.reactos.org/packages/audacity-win-2.1.1.exe
+SHA1 = e72f196e390bf348b84fc3305f27bebbd2104fc3
 CDPath = none
 
 [Section.0407]
 Description = Freie, quelloffene Cross-Plattform Software zur Aufnahme und Bearbeitung von Sounds.
+
+[Section.0a]
+Description = Programa libre, gratuito y multiplataforma para grabar y editar audio y música.
 
 [Section.0418]
 Description = Un program gratuit, multiplatformă, cu surse deschise pentru înregistrarea și editarea de sunete.

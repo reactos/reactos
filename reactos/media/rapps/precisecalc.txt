@@ -11,6 +11,7 @@ Size = 151 kB
 Category = 11
 URLSite = http://preccalc.sourceforge.net
 URLDownload = http://download.sourceforge.net/preccalc/preccalc-32bit.zip
+SHA1 = a6e71ef3cbfcb6a448b4b6d53aec938fc37e9d1b
 CDPath = none
 
 [Section.0407]

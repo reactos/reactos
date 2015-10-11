@@ -11,6 +11,7 @@ Size = 1.67 MB
 Category = 5
 URLSite = http://www.mirc.com/
 URLDownload = http://svn.reactos.org/packages/mirc635.exe
+SHA1 = d9c26f7e40298b20f553934ed69dcbe6223c1101
 CDPath = none
 
 [Section.0407]

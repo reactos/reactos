@@ -11,6 +11,7 @@ Size = 15.50 MB
 Category = 3
 URLSite = http://www.irfanview.com/
 URLDownload = ftp://ftp.uibk.ac.at/pub/software/win32/irfanview_plugins_440_setup.exe
+SHA1 = 5a7f6b42bf3b6e56fef148761fb316e2582aaa47
 CDPath = none
 
 [Section.0407]

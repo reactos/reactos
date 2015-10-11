@@ -11,6 +11,7 @@ Size = 1.15 MB
 Category = 4
 URLSite = http://remood.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/remood/ReMooD/0.8a/remoodsetup-win32_08a.exe
+SHA1 = 3d91e4feb9f56616a17baeedafc55fd7fe30d560
 CDPath = none
 
 [Section.0407]

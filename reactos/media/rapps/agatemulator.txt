@@ -10,11 +10,16 @@ Description = Apple ][ and Agat 7/9 software simulation program for Win32.
 Size = 6.06 MB
 Category = 15
 URLSite = http://agatemulator.sourceforge.net/
-URLDownload = http://netcologne.dl.sourceforge.net/project/agatemulator/agatemulator/1.26.1/agatemulator-1.26.1.exe
+URLDownload = http://download.sourceforge.net/project/agatemulator/agatemulator/1.26.1/agatemulator-1.26.1.exe
+SHA1 = 3cebac333dc9489187508106af260a96d9e47445
 CDPath = none
 
 [Section.0407]
 Description = Apple ][ und Agat 7/9 Emulator für Win32.
+
+[Section.0a]
+Name = Emulador Agat
+Description = Emulador de Apple ][ y Agat 7/9 para Win32.
 
 [Section.0418]
 Description = Eimulator de Apple ][ și Agat 7/9 pentru Win32.

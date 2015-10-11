@@ -10,7 +10,8 @@ Description = Freeware virtual keyboard application.
 Size = 1.3 MB
 Category = 12
 URLSite = http://cnt.lakefolks.com
-URLDownload = http://svn.reactos.org/packages/CNTzip.exe
+URLDownload = https://svn.reactos.org/packages/CNTzip.exe
+SHA1 = 5aac6280bd28308a1a92a0053fc550ea8e647eb3
 CDPath = none
 
 [Section.0407]

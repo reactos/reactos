@@ -8,7 +8,8 @@ Description = A FB2 eBook Reader. Supported read formats: fb2, fbz, txt, epub, h
 URLSite = http://www.alreader.com
 Size = 4.56 MB
 Category = 6
-URLDownload = http://svn.reactos.org/packages/AlReader2Setup.exe
+URLDownload = https://svn.reactos.org/packages/AlReader2Setup.exe
+SHA1 = 84093c0a4af21e733357c20b649d2cec20ea67bb
 CDPath = none
 
 [Section.0407]

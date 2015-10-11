@@ -10,7 +10,9 @@ Description = Convert and broadcast audio and video in Windows Media formats.
 Size = 9.46 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=17792
-URLDownload = http://download.microsoft.com/download/8/1/f/81f9402f-efdd-439d-b2a4-089563199d47/WMEncoder.exe
+#URLDownload = http://download.microsoft.com/download/8/1/f/81f9402f-efdd-439d-b2a4-089563199d47/WMEncoder.exe
+URLDownload = https://people.ok.ubc.ca/mberger/MiscSW/WMEncoder.exe
+SHA1 = 7a3f8781f3e5705651992ef0150ee30bc1295116
 CDPath = none
 
 [Section.0407]

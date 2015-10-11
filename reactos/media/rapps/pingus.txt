@@ -12,6 +12,7 @@ Size = 16.0 MB
 Category = 4
 URLSite = http://pingus.seul.org
 URLDownload = http://pingus.googlecode.com/files/Pingus-0.7.6.exe
+SHA1 = 925d9a46eb1e063a3f792b9205cac7a01741632c
 CDPath = none
 
 [Section.0407]

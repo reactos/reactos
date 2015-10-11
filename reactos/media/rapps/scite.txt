@@ -11,6 +11,7 @@ Size = 756 kB
 Category = 7
 URLSite = http://www.scintilla.org/
 URLDownload = http://download.sourceforge.net/project/scintilla/SciTE/3.6.0/Sc360.exe
+SHA1 = 5250125d03d197285bf983e765fa06e01b97a892
 CDPath = none
 
 [Section.0407]

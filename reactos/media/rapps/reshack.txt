@@ -12,6 +12,7 @@ Size = 2.7 MB
 Category = 7
 URLSite = http://www.angusj.com/resourcehacker/
 URLDownload = http://www.angusj.com/resourcehacker/reshacker_setup.exe
+SHA1 = 3bc80905009a69f03651c0f3ceae7223bc3d52bd
 CDPath = none
 
 [Section.0407]

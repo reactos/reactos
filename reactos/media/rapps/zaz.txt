@@ -12,6 +12,7 @@ Size = 21.0 MB
 Category = 4
 URLSite = http://zaz.sourceforge.net
 URLDownload = http://download.sourceforge.net/project/zaz/Zaz-1.0.0-Setup.exe
+SHA1 = e4f40943dbdc71bfbeca2dfaecf7747dda3ec27a
 CDPath = none
 
 [Section.0407]

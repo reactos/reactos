@@ -11,6 +11,7 @@ Size = 1.9 MB
 Category = 1
 URLSite = http://foxaudioplayer.sourceforge.net/
 URLDownload = http://svn.reactos.org/packages/fap-0.10.2-win32.exe
+SHA1 = f5ffcecf7adbce9145a7fe209ec1797bf22b0ceb
 CDPath = none
 
 [Section.0407]

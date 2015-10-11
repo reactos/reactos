@@ -11,6 +11,7 @@ Size = 1.85 MB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=28494391-052B-42FF-9674-F752BDCA9582&displaylang=en
 URLDownload = ftp://ftp.uni-rostock.de/pub/tools/microsoft/XML/US/msxml3.msi
+SHA1 = 352e3825dc392b3fc63cf002ac22da8da841e60a
 CDPath = none
 
 [Section.0407]

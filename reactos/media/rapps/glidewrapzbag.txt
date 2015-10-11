@@ -11,6 +11,7 @@ Size = 249.02 kB
 Category = 3
 URLSite = http://www.zeckensack.de/glide/
 URLDownload = http://www.zeckensack.de/glide/archive/GlideWrapper084c.exe
+SHA1 = 7a9d60a18b660473742b476465e9aea7bd5ab6f8
 CDPath = none
 
 [Section.0407]

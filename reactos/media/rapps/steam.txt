@@ -10,6 +10,7 @@ Size = 1.08 MB
 Category = 4
 URLSite = http://store.steampowered.com/
 URLDownload = http://media.steampowered.com/client/installer/SteamSetup.exe
+SHA1 = 0e8046d40c38d817338135ec73a5b217cc340cf5
 CDPath = none
 
 [Section.0407]

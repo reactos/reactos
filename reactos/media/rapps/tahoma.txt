@@ -11,6 +11,7 @@ Size = 305.12 kB
 Category = 14
 URLSite = http://support.microsoft.com/
 URLDownload = http://download.microsoft.com/download/office97pro/fonts/1/w95/en-us/tahoma32.exe
+SHA1 = 888ce7b7ab5fd41f9802f3a65fd0622eb651a068
 CDPath = none
 
 [Section.0407]

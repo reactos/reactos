@@ -11,6 +11,7 @@ Size = 76.52 MB
 Category = 3
 URLSite = http://www.scribus.net/
 URLDownload = http://downloads.sourceforge.net/project/scribus/scribus/1.4.5/scribus-1.4.5-windows.exe
+SHA1 = bbd723bb539681989edfe952ad36b9b647f788a4
 CDPath = none
 
 [Section.0405]

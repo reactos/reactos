@@ -2,12 +2,11 @@
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
-
 [Section]
 Name = CCleaner
 Version = 5.08
 License = Freeware
-Description = Very good tool for cleaning your PC.
+Description = A decent tool for cleaning temporary files and general computer maintenance.
 Size = 6.25 MB
 Category = 12
 URLSite = http://www.piriform.com/ccleaner
@@ -17,6 +16,10 @@ CDPath = none
 
 [Section.0407]
 Description = Sehr gutes Bereinigungswerkzeug für den PC.
+
+[Section.0a]
+License = Gratuita
+Description = Una herramienta de limpieza y mantenimiento con la que borrar archivos temporales.
 
 [Section.041f]
 License = Ücretsiz

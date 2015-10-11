@@ -12,6 +12,7 @@ Size = 7.3 MB
 Category = 4
 URLSite = http://www.supertux.lethargik.org
 URLDownload = http://download.sourceforge.net/project/supertux.berlios/supertux-0.1.3-setup.exe
+SHA1 = 58cd8c443bcb9f4dda73a49630eca21c82795b81
 CDPath = none
 
 [Section.0407]

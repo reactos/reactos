@@ -11,6 +11,7 @@ Size = 74.14 MB
 Category = 6
 URLSite = http://support.microsoft.com/kb/180071/
 URLDownload = http://download.microsoft.com/download/e/a/9/ea913c8b-51a7-41b7-8697-9f0d0a7274aa/ExcelViewer.exe
+SHA1 = 610cdc9a6684a5ef57ee5b4c1ca127384f3fb7e1
 CDPath = none
 
 [Section.0407]
@@ -18,6 +19,7 @@ License = Unbekannt
 Description = Freeware Tabellenbetrachter für Office-Formate (* .xls).
 Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/F/8/8/F88CB355-ECAA-4B74-87D6-C05C81D215BF/ExcelViewer.exe
+SHA1 = f386b822000c24cb46782b3f8dbc32e617bc09bd
 
 [Section.0a]
 Name = Visor de Microsoft Excel
@@ -25,32 +27,38 @@ Description = Visor gratuito de hojas de cálculo en formato Office (*.xls).
 License = Desconocida
 Size = 51.11 MB
 URLDownload = http://download.microsoft.com/download/5/D/9/5D9E41A4-22CE-4497-BD7D-368883EF92F7/ExcelViewer.exe
+SHA1 = d589d62072e31ead801318065758b77df16452fa
 
 [Section.040c]
 License = Inconnue
 Size = 51,13 Mo
 URLDownload = http://download.microsoft.com/download/0/0/E/00EE9DCF-7BCA-4414-837E-BC3AA23DCC8D/ExcelViewer.exe
+SHA1 = 4a90df602abb28ed9229722695ea2aea14f3d049
 
 [Section.0410]
 License = Sconosciuta
 Size = 51.1 MB
 URLDownload = http://download.microsoft.com/download/0/C/2/0C2ED9D9-6961-47F3-91E0-916E19F330E2/ExcelViewer.exe
+SHA1 = f0d3e949d9911d17ace08fb5e3b5b2083bd46a07
 
 [Section.0413]
 License = Ongekend
 Size = 50.97 MB
 URLDownload = http://download.microsoft.com/download/C/C/6/CC663715-AB58-4CDE-90F1-5A8CF7472500/ExcelViewer.exe
+SHA1 = 19db0e35ccdd2e0ab9f25d57232fa137990b8ac3
 
 [Section.0415]
 License = Nieznana
 Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/5/B/A/5BAB0B5A-706D-444C-B90A-1D97DB4C43A8/ExcelViewer.exe
+SHA1 = afd50f7c95d477befe3850cae9d314efed20f0ba
 
 [Section.0418]
 License = Nespecificată
 Description = Aplicație de lectură a foilor de calcul de tip Microsoft Office Excel (*.xls)
 Size = 51,14 Mo
 URLDownload = http://download.microsoft.com/download/D/D/2/DD28D077-97F3-47C0-9389-0B987918888B/ExcelViewer.exe
+SHA1 = c5b2e5bc0d4247ae2809c4dff23e9737d257f615
 
 [Section.041f]
 Name = Microsoft Excel Görüntüleyici
@@ -58,11 +66,13 @@ License = Bilinmiyor
 Description = Microsoft Excel Görüntüleyici
 Size = 51,1 MB
 URLDownload = http://download.microsoft.com/download/8/5/D/85DCDD24-8237-4334-866D-417F74F37C47/ExcelViewer.exe
+SHA1 = a62f68e8d7cae5ede773998a9ccf6a823753974a
 
 [Section.0422]
 License = Невідома
 Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/7/4/9/749A8D59-A2D5-4A64-99CF-5FF4DD7C5AC6/ExcelViewer.exe
+SHA1 = 5c3227d253f9ff1eabd3a8f2d1408228c7e6f134
 
 [Section.0804]
 Description = 免费软件电子表格查看器 Office 格式 (*.xls)。
@@ -71,3 +81,4 @@ Description = 免费软件电子表格查看器 Office 格式 (*.xls)。
 License = Ongekend
 Size = 50.97 MB
 URLDownload = http://download.microsoft.com/download/C/C/6/CC663715-AB58-4CDE-90F1-5A8CF7472500/ExcelViewer.exe
+SHA1 = 19db0e35ccdd2e0ab9f25d57232fa137990b8ac3

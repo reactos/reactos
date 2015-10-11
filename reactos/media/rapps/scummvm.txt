@@ -11,6 +11,7 @@ Size = 6.9 MB
 Category = 4
 URLSite = http://scummvm.org/
 URLDownload = http://download.sourceforge.net/project/scummvm/scummvm/1.7.0/scummvm-1.7.0-win32.exe
+SHA1 = 29f6a33fd0cfa37daad7ea06f8d95790012586e6
 CDPath = none
 
 [Section.0407]

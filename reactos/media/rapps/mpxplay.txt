@@ -12,6 +12,7 @@ Size = 520 kB
 Category = 1
 URLSite = http://mpxplay.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/mpxplay/Mpxplay/Mpxplay%20v1.60%20final/mpxp160w.zip
+SHA1 = d2b1ad5cd95a7b0b16391888ba40aafaf0918518
 CDPath = none
 
 [Section.0407]

@@ -12,6 +12,7 @@ Size = 1.2 MB
 Category = 12
 URLSite = http://dwn.alter.org.ua/
 URLDownload = http://dwn.alter.org.ua/downloads/dwn_1_5_12_sp2.zip
+SHA1 = 52ff824dc8363e4e6323f3417dbd337cb21d7f98
 CDPath = none
 
 [Section.0407]

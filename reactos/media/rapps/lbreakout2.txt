@@ -11,6 +11,7 @@ Size = 3.03 MB
 Category = 4
 URLSite = http://lgames.sourceforge.net/index.php?project=LBreakout2
 URLDownload = http://download.sourceforge.net/project/lgames/binaries/lbreakout2-2.4.1-win32.exe
+SHA1 = 98204a126662fd8246e8a9fd01c7376fd3c016d4
 CDPath = none
 
 [Section.0407]

@@ -9,6 +9,7 @@ Size = 631 kB
 Category = 12
 URLSite = http://windirstat.info/
 URLDownload = https://download.sourceforge.net/project/windirstat/windirstat/1.1.2%20installer%20re-release%20(more%20languages!)/windirstat1_1_2_setup.exe
+SHA1 = 6fa92dd2ca691c11dfbfc0a239e34369897a7fab
 
 [Section.0407]
 Description = Programm zur Laufwerkanalyse und Bereinigung.
