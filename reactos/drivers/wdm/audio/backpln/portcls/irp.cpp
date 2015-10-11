@@ -112,7 +112,7 @@ PortClsPnp(
             DeviceExt->SystemPowerState = PowerSystemWorking;
 
             // notify power manager of current state
-            PowerState = *((POWER_STATE*)&DeviceExt->DevicePowerState);
+            PowerState.DeviceState = DeviceExt->DevicePowerState;
             PoSetPowerState(DeviceObject, DevicePowerState, PowerState);
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -271,7 +271,7 @@ PortClsPower(
             if (DeviceExtension->AdapterPowerManagement)
             {
                 // it is query if the change can be changed
-                PowerState = *((POWER_STATE*)&IoStack->Parameters.Power.State.DeviceState);
+                PowerState = IoStack->Parameters.Power.State;
                 Status = DeviceExtension->AdapterPowerManagement->QueryPowerChangeState(PowerState);
 
                 // sanity check
@@ -294,7 +294,7 @@ PortClsPower(
         else
         {
             // set power state
-            PowerState = *((POWER_STATE*)&IoStack->Parameters.Power.State.DeviceState);
+            PowerState = IoStack->Parameters.Power.State;
             PoSetPowerState(DeviceObject, DevicePowerState, PowerState);
 
             // check if there is a registered adapter power management
@@ -307,7 +307,7 @@ PortClsPower(
             // FIXME call all registered IPowerNotify interfaces via ISubdevice interface
 
             // store new power state
-           DeviceExtension->DevicePowerState = IoStack->Parameters.Power.State.DeviceState;
+            DeviceExtension->DevicePowerState = IoStack->Parameters.Power.State.DeviceState;
 
             // complete request
             Irp->IoStatus.Status = Status;
@@ -348,7 +348,7 @@ PortClsPower(
             PwrContext->DeviceObject = DeviceObject;
 
             // pass the irp down
-            PowerState = *((POWER_STATE*)IoStack->Parameters.Power.State.SystemState);
+            PowerState = IoStack->Parameters.Power.State;
             Status = PoRequestPowerIrp(DeviceExtension->PhysicalDeviceObject, IoStack->MinorFunction, PowerState, PwrCompletionFunction, (PVOID)PwrContext, NULL);
 
             // check for success
