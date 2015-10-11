@@ -1930,8 +1930,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         return NULL;
     }
 
-    if (Flags & (HEAP_CREATE_ENABLE_TRACING |
-                 HEAP_CREATE_ALIGN_16))
+    if (Flags & (HEAP_CREATE_ENABLE_TRACING))
     {
         DPRINT1("HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n", Flags);
     }
