@@ -138,7 +138,7 @@ RequestedPowerCompletion(
     ok_eq_uint(Irp->CurrentLocation, 4);
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     ok_eq_pointer(IoStackLocation->Parameters.Others.Argument1, DeviceObject);
-    ok_eq_pointer(IoStackLocation->Parameters.Others.Argument2, (PVOID)MinorFunction);
+    ok_eq_pointer(IoStackLocation->Parameters.Others.Argument2, (PVOID)(ULONG_PTR)MinorFunction);
     ok_eq_pointer(IoStackLocation->Parameters.Others.Argument3, (PVOID)PowerState.SystemState);
     ok_eq_pointer(IoStackLocation->Parameters.Others.Argument4, Context);
 }
