@@ -310,8 +310,6 @@ DriverDispatch(
     PIO_STACK_LOCATION IoStackLocation;
     int i;
 
-    PAGED_CODE();
-
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
     DPRINT("DriverDispatch: Function=%s, Device=%p\n",

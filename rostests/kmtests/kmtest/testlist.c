@@ -12,6 +12,7 @@ KMT_TESTFUNC Test_FindFile;
 KMT_TESTFUNC Test_IoCreateFile;
 KMT_TESTFUNC Test_IoDeviceObject;
 KMT_TESTFUNC Test_IoReadWrite;
+KMT_TESTFUNC Test_PoIrp;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
 KMT_TESTFUNC Test_RtlIntSafe;
@@ -31,6 +32,7 @@ const KMT_TEST TestList[] =
     { "IoCreateFile",       Test_IoCreateFile },
     { "IoDeviceObject",     Test_IoDeviceObject },
     { "IoReadWrite",        Test_IoReadWrite },
+    { "PoIrp",              Test_PoIrp },
     { "RtlAvlTree",         Test_RtlAvlTree },
     { "RtlException",       Test_RtlException },
     { "RtlIntSafe",         Test_RtlIntSafe },
