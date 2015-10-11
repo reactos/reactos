@@ -136,10 +136,15 @@ RequestedPowerCompletion(
 
     ok_eq_uint(Irp->StackCount, 5);
     ok_eq_uint(Irp->CurrentLocation, 4);
+    ok_eq_pointer(Irp->Tail.Overlay.Thread, NULL);
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    ok_eq_uint(IoStackLocation->MajorFunction, 0);
+    ok_eq_uint(IoStackLocation->MinorFunction, 0);
+    ok_eq_pointer(IoStackLocation->CompletionRoutine, NULL);
+    ok_eq_pointer(IoStackLocation->Context, NULL);
     ok_eq_pointer(IoStackLocation->Parameters.Others.Argument1, DeviceObject);
     ok_eq_pointer(IoStackLocation->Parameters.Others.Argument2, (PVOID)(ULONG_PTR)MinorFunction);
-    ok_eq_pointer(IoStackLocation->Parameters.Others.Argument3, (PVOID)PowerState.SystemState);
+    ok_eq_pointer(IoStackLocation->Parameters.Others.Argument3, (PVOID)(ULONG_PTR)PowerState.SystemState);
     ok_eq_pointer(IoStackLocation->Parameters.Others.Argument4, Context);
 }
 
@@ -158,8 +163,10 @@ RequestedPowerIrpHandler(
     ok_eq_uint(Irp->StackCount, 5);
     ok_eq_ulongptr(Irp->IoStatus.Information, 0);
     ok_eq_hex(Irp->IoStatus.Status, STATUS_NOT_SUPPORTED);
+    ok_eq_pointer(Irp->Tail.Overlay.Thread, NULL);
     ok_eq_uint(IoStackLocation->MajorFunction, IRP_MJ_POWER);
     ok_eq_uint(IoStackLocation->MinorFunction, IRP_MN_SET_POWER);
+    ok_eq_pointer(IoStackLocation->Context, RequestedPowerCompletion);
     ok_eq_uint(IoStackLocation->Parameters.Power.Type, DevicePowerState);
     ok_eq_uint(IoStackLocation->Parameters.Power.State.DeviceState, PowerDeviceD0);
 
