@@ -41,9 +41,11 @@ TimeFormatEnumProc(PWSTR lpTimeFormatString)
 static VOID
 UpdateTimeSample(HWND hWnd, PGLOBALDATA pGlobalData)
 {
-    WCHAR szBuffer[80];
+    WCHAR szBuffer[MAX_SAMPLES_STR_SIZE];
 
-    GetTimeFormatW(pGlobalData->UserLCID, 0, NULL, pGlobalData->szTimeFormat, szBuffer, 80);
+    GetTimeFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szTimeFormat, szBuffer,
+                   MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hWnd, IDC_TIMESAMPLE, WM_SETTEXT, 0, (LPARAM)szBuffer);
 }
 

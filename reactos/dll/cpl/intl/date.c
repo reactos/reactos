@@ -503,13 +503,15 @@ UpdateDateLocaleSamples(HWND hwndDlg,
     WCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
 
     /* Get short date format sample */
-    GetDateFormatW(pGlobalData->UserLCID, DATE_SHORTDATE, NULL, NULL, OutBuffer,
+    GetDateFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szShortDateFormat, OutBuffer,
                    MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESAMPLE_EDIT, WM_SETTEXT,
                         0, (LPARAM)OutBuffer);
 
     /* Get long date sample */
-    GetDateFormatW(pGlobalData->UserLCID, DATE_LONGDATE, NULL, NULL, OutBuffer,
+    GetDateFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szLongDateFormat, OutBuffer,
                    MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_LONGDATESAMPLE_EDIT,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);

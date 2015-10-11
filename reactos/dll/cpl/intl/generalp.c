@@ -127,20 +127,23 @@ UpdateLocaleSample(
     ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get time format sample */
-    GetTimeFormatW(pGlobalData->UserLCID, NO_FLAG, NULL, NULL,
+    GetTimeFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szTimeFormat,
                    OutBuffer, MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_TIMESAMPLE_EDIT,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);
     ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get short date format sample */
-    GetDateFormatW(pGlobalData->UserLCID, DATE_SHORTDATE, NULL, NULL,
+    GetDateFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szShortDateFormat,
                    OutBuffer, MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_SHORTTIMESAMPLE_EDIT,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);
 
     /* Get long date sample */
-    GetDateFormatW(pGlobalData->UserLCID, DATE_LONGDATE, NULL, NULL,
+    GetDateFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szLongDateFormat,
                    OutBuffer, MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_FULLTIMESAMPLE_EDIT,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);
