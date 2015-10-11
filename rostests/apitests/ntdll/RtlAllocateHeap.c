@@ -46,7 +46,7 @@ START_TEST(RtlAllocateHeap)
 
     for (i = 0; i < 0x100; ++i)
     {
-        Buffers[i] = RtlAllocateHeap(RtlGetProcessHeap(), 0, (i % 16 ) + 1);
+        Buffers[i] = RtlAllocateHeap(hHeap, 0, (i % 16 ) + 1);
         ASSERT(Buffers[i] != NULL);
         if (!((ULONG_PTR)Buffers[i] & 0x2))
         {
@@ -56,7 +56,7 @@ START_TEST(RtlAllocateHeap)
 
     for (i = 0; i < 0x100; ++i)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffers[i]);
+        RtlFreeHeap(hHeap, 0, Buffers[i]);
     }
 
     RtlDestroyHeap(hHeap);
