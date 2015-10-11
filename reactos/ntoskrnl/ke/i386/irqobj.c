@@ -454,10 +454,8 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
              */
 #if defined(CONFIG_SMP)
             ASSERT(Irql <= SYNCH_LEVEL);
-#elif (NTDDI_VERSION >= NTDDI_WS03)
-            ASSERT(Irql <= (IPI_LEVEL - 2));
 #else
-            ASSERT(Irql <= (IPI_LEVEL - 1));
+            ASSERT(Irql <= (IPI_LEVEL - 2));
 #endif
 
             /* Check if this is the first chain */
@@ -526,7 +524,11 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
         if (Dispatch.Type == ChainConnect)
         {
             /* Check if the top-level interrupt is being removed */
+#if defined(CONFIG_SMP)
             ASSERT(Irql <= SYNCH_LEVEL);
+#else
+            ASSERT(Irql <= (IPI_LEVEL - 2));
+#endif
             if (Interrupt == Dispatch.Interrupt)
             {
                 /* Get the next one */
