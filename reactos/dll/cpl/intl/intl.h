@@ -49,6 +49,8 @@
 #define MAX_MISCCOUNTRY        80
 #define MAX_MISCLANGUAGE       80
 
+#define MAX_GROUPINGFORMATS     3
+
 
 typedef struct _APPLET
 {
@@ -116,9 +118,16 @@ typedef struct _GLOBALDATA
 
 } GLOBALDATA, *PGLOBALDATA;
 
+typedef struct
+{
+    UINT nInteger;
+    PWSTR pszString;
+} GROUPINGDATA;
+
 extern HINSTANCE hApplet;
 extern DWORD IsUnattendedSetupEnabled;
 extern DWORD UnattendLCID;
+extern GROUPINGDATA GroupingFormats[MAX_GROUPINGFORMATS];
 
 /* intl.c */
 VOID PrintErrorMsgBox(UINT msg);

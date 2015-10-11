@@ -420,12 +420,20 @@ UpdateNumSamples(HWND hwndDlg,
                  PGLOBALDATA pGlobalData)
 {
     WCHAR OutBuffer[MAX_FMT_SIZE];
+    NUMBERFMT NumberFormat;
+
+    NumberFormat.NumDigits = pGlobalData->nNumDigits;
+    NumberFormat.LeadingZero = pGlobalData->nNumLeadingZero;
+    NumberFormat.Grouping = GroupingFormats[pGlobalData->nNumGrouping].nInteger;
+    NumberFormat.lpDecimalSep = pGlobalData->szNumDecimalSep;
+    NumberFormat.lpThousandSep = pGlobalData->szNumThousandSep;
+    NumberFormat.NegativeOrder = pGlobalData->nNumNegFormat;
 
     /* Get positive number format sample */
     GetNumberFormatW(pGlobalData->UserLCID,
                      0,
                      SAMPLE_NUMBER,
-                     NULL,
+                     &NumberFormat,
                      OutBuffer,
                      MAX_FMT_SIZE);
 
@@ -438,7 +446,7 @@ UpdateNumSamples(HWND hwndDlg,
     GetNumberFormatW(pGlobalData->UserLCID,
                      0,
                      SAMPLE_NEG_NUMBER,
-                     NULL,
+                     &NumberFormat,
                      OutBuffer,
                      MAX_FMT_SIZE);
 

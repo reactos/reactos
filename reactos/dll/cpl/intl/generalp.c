@@ -30,28 +30,22 @@
 #include <debug.h>
 
 #define SAMPLE_NUMBER   L"123456789"
-#define NO_FLAG         0
 
 #define NUM_SHEETS      4
 
 #define MAX_FIELD_DIG_SAMPLES       3
 
-typedef struct
-{
-    LCTYPE lcType;
-    PWSTR  pKeyName;
-} LOCALE_KEY_DATA, *PLOCALE_KEY_DATA;
 
 HWND hList;
 HWND hLocaleList, hGeoList;
 BOOL bSpain = FALSE;
 
-
-PWSTR szCurrencyGrouping[3] =
+GROUPINGDATA
+GroupingFormats[MAX_GROUPINGFORMATS] =
 {
-    L"0;0",
-    L"3;0",
-    L"3;2;0"
+    {0, L"0;0"},
+    {3, L"3;0"},
+    {32, L"3;2;0"}
 };
 
 static BOOL CALLBACK
@@ -111,16 +105,36 @@ UpdateLocaleSample(
     PGLOBALDATA pGlobalData)
 {
     WCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
+    NUMBERFMT NumberFormat;
+    CURRENCYFMTW CurrencyFormat;
+
+    NumberFormat.NumDigits = pGlobalData->nNumDigits;
+    NumberFormat.LeadingZero = pGlobalData->nNumLeadingZero;
+    NumberFormat.Grouping = GroupingFormats[pGlobalData->nNumGrouping].nInteger;
+    NumberFormat.lpDecimalSep = pGlobalData->szNumDecimalSep;
+    NumberFormat.lpThousandSep = pGlobalData->szNumThousandSep;
+    NumberFormat.NegativeOrder = pGlobalData->nNumNegFormat;
+
+    CurrencyFormat.NumDigits = pGlobalData->nCurrDigits;
+    CurrencyFormat.LeadingZero = pGlobalData->nNumLeadingZero;
+    CurrencyFormat.Grouping = GroupingFormats[pGlobalData->nCurrGrouping].nInteger;
+    CurrencyFormat.lpDecimalSep = pGlobalData->szCurrDecimalSep;
+    CurrencyFormat.lpThousandSep = pGlobalData->szCurrThousandSep;
+    CurrencyFormat.NegativeOrder = pGlobalData->nCurrNegFormat;
+    CurrencyFormat.PositiveOrder = pGlobalData->nCurrPosFormat;
+    CurrencyFormat.lpCurrencySymbol = pGlobalData->szCurrSymbol;
 
     /* Get number format sample */
-    GetNumberFormatW(pGlobalData->UserLCID, NO_FLAG, SAMPLE_NUMBER, NULL,
+    GetNumberFormatW(pGlobalData->UserLCID, 0, SAMPLE_NUMBER,
+                     &NumberFormat,
                      OutBuffer, MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_NUMSAMPLE_EDIT,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);
     ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get monetary format sample */
-    GetCurrencyFormatW(pGlobalData->UserLCID, NO_FLAG, SAMPLE_NUMBER, NULL,
+    GetCurrencyFormatW(pGlobalData->UserLCID, 0, SAMPLE_NUMBER,
+                       &CurrencyFormat,
                        OutBuffer, MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hwndDlg, IDC_MONEYSAMPLE_EDIT,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);
@@ -833,8 +847,8 @@ SaveUserLocale(
                    L"sGrouping",
                    0,
                    REG_SZ,
-                   (PBYTE)szCurrencyGrouping[pGlobalData->nNumGrouping],
-                   (wcslen(szCurrencyGrouping[pGlobalData->nNumGrouping]) + 1) * sizeof(WCHAR));
+                   (PBYTE)GroupingFormats[pGlobalData->nNumGrouping].pszString,
+                   (wcslen(GroupingFormats[pGlobalData->nNumGrouping].pszString) + 1) * sizeof(WCHAR));
 
     RegSetValueExW(hLocaleKey,
                    L"sList",
@@ -921,8 +935,8 @@ SaveUserLocale(
                    L"sMonGrouping",
                    0,
                    REG_SZ,
-                   (PBYTE)szCurrencyGrouping[pGlobalData->nCurrGrouping],
-                   (wcslen(szCurrencyGrouping[pGlobalData->nCurrGrouping]) + 1) * sizeof(WCHAR));
+                   (PBYTE)GroupingFormats[pGlobalData->nCurrGrouping].pszString,
+                   (wcslen(GroupingFormats[pGlobalData->nCurrGrouping].pszString) + 1) * sizeof(WCHAR));
 
     _itow(pGlobalData->nCurrPosFormat,
           szBuffer, DECIMAL_RADIX);
