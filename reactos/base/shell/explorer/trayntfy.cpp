@@ -163,14 +163,8 @@ public:
 
         if (iconData->uFlags & NIF_ICON)
         {
-            TBBUTTONINFO tbbiOld = { 0 };
-            tbbiOld.cbSize = sizeof(tbbiOld);
-            tbbiOld.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
-
-            GetButtonInfo(index, &tbbiOld);
-
             tbbi.dwMask |= TBIF_IMAGE;
-            tbbi.iImage = ImageList_ReplaceIcon(m_ImageList, tbbiOld.iImage, iconData->hIcon);
+            tbbi.iImage = ImageList_ReplaceIcon(m_ImageList, index, iconData->hIcon);
         }
 
         if (iconData->uFlags & NIF_TIP)
@@ -215,22 +209,28 @@ public:
         if (index < 0)
             return FALSE;
 
-        TBBUTTONINFO tbbiOld = { 0 };
-        tbbiOld.cbSize = sizeof(tbbiOld);
-        tbbiOld.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
-
-        GetButtonInfo(index, &tbbiOld);
-
-        ImageList_Remove(m_ImageList, tbbiOld.iImage);
-
-        DeleteButton(index);
-
         if (!(notifyItem->dwState & NIS_HIDDEN))
         {
             m_VisibleButtonCount--;
         }
 
         delete notifyItem;
+
+        ImageList_Remove(m_ImageList, index);
+
+        int count = GetButtonCount();
+
+        /* shift all buttons one index to the left -- starting one index right
+           from item to delete -- to preserve their correct icon and tip */
+        for (int i = index; i < count - 1; i++)
+        {
+            notifyItem = GetItemData(i + 1);
+            SetItemData(i, notifyItem);
+            UpdateButton(notifyItem);
+        }
+
+        /* Delete the right-most, now obsolete button */
+        DeleteButton(count - 1);
 
         return TRUE;
     }
@@ -322,7 +322,7 @@ private:
     LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        
+
         INT iBtn = HitTest(&pt);
 
         if (iBtn >= 0)
