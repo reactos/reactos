@@ -21,10 +21,13 @@ OPTION DOTNAME
 ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 #endif
 
-/* Hex numbers need to be in 01ABh format */
+/* Explicit radix in MASM syntax  */
+#define BIN(x) x##y
+#define OCT(x) x##q
+#define DEC(x) x##t
 #define HEX(x) 0##x##h
 
-/* Macro values need to be marked */
+/* Macro values need not be marked */
 #define VAL(x) x
 
 /* MASM/ML doesn't want explicit [rip] addressing */
@@ -49,6 +52,11 @@ ENDM
     %__current_function_name ENDP
 ENDM
 #define ENDFUNC .ENDP
+
+/* Global labels need an extra colon */
+GLOBAL_LABEL MACRO label
+    %label::
+ENDM
 
 /* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
    and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
@@ -193,8 +201,11 @@ ENDM
 
 .altmacro
 
-/* Hex numbers need to be in 0x1AB format */
-#define HEX(y) 0x##y
+/* Explicit radix in GAS syntax */
+#define BIN(x) 0b##x
+#define OCT(x) 0##x
+#define DEC(x) x
+#define HEX(x) 0x##x
 
 /* Macro values need to be marked */
 #define VAL(x) \x
@@ -226,6 +237,11 @@ ENDM
 /* MASM compatible PUBLIC */
 .macro PUBLIC symbol
     .global \symbol
+.endm
+
+/* No special marking of global labels */
+.macro GLOBAL_LABEL label
+    \label:
 .endm
 
 /* Dummy ASSUME */

@@ -8,48 +8,62 @@
 
 #include <asm.inc>
 
-/* GLOBALS ****************************************************************/
-
-PUBLIC _DbgBreakPoint@0
-PUBLIC _DbgBreakPointWithStatus@4
-PUBLIC _DbgUserBreakPoint@0
-PUBLIC _DebugService@20
-PUBLIC _DebugService2@12
-PUBLIC _DbgBreakPointNoBugCheck@0
-PUBLIC _RtlpBreakWithStatusInstruction@0
-
 /* FUNCTIONS ***************************************************************/
 
 .code
 
+PUBLIC _DbgBreakPointNoBugCheck@0
 FUNC _DbgBreakPointNoBugCheck@0
     FPO 0, 0, 0, 0, 0, FRAME_FPO
+
+    /* Do breakpoint */
     int 3
     ret
+
 ENDFUNC
 
+
+PUBLIC _DbgUserBreakPoint@0
 _DbgUserBreakPoint@0:
+PUBLIC _DbgBreakPoint@0
 FUNC _DbgBreakPoint@0
     FPO 0, 0, 0, 0, 0, FRAME_FPO
+
+    /* Do breakpoint */
     int 3
     ret
+
 ENDFUNC
 
+
+PUBLIC _DbgBreakPointWithStatus@4
 FUNC _DbgBreakPointWithStatus@4
     FPO 0, 1, 0, 0, 0, FRAME_FPO
-    mov eax, [esp+4]
-ENDFUNC
 
-FUNC _RtlpBreakWithStatusInstruction@0
-    FPO 0, 0, 0, 0, 0, FRAME_FPO
+    /* Put Status in EAX */
+    mov eax, [esp+4]
+
+PUBLIC _RtlpBreakWithStatusInstruction@0
+GLOBAL_LABEL _RtlpBreakWithStatusInstruction@0
+
+    /*
+     * Do a "labeled" breakpoint -- the KD data block has a "BreakpointWithStatus" field
+     * pointing to this label, letting a debugger easily check that a breakpoint has occured here
+     * and thereby know that there is a Status for it to retrieve from EAX
+     *
+     * In other words, Status is passed as an argument directly to the debugger
+     */
     int 3
     ret 4
+
 ENDFUNC
 
+
+PUBLIC _DebugService2@12
 FUNC _DebugService2@12
     FPO 0, 3, 3, 0, 1, FRAME_NONFPO
 
-    /* Setup the stack */
+    /* Set up the stack */
     push ebp
     mov ebp, esp
 
@@ -60,19 +74,22 @@ FUNC _DebugService2@12
     int HEX(2D)
     int 3
 
-    /* Restore stack */
+    /* Return */
     pop ebp
     ret 12
+
 ENDFUNC
 
+
+PUBLIC _DebugService@20
 FUNC _DebugService@20
     FPO 0, 5, 3, 0, 1, FRAME_NONFPO
 
-    /* Setup the stack */
+    /* Set up the stack */
     push ebp
     mov ebp, esp
 
-    /* Save the registers */
+    /* Save non-volatiles */
     push ebx
     push edi
 
@@ -85,13 +102,14 @@ FUNC _DebugService@20
     int HEX(2D)
     int 3
 
-    /* Restore registers */
+    /* Restore non-volatiles */
     pop edi
     pop ebx
 
     /* Return */
     pop ebp
     ret 20
+
 ENDFUNC
 
 END
