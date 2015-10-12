@@ -46,7 +46,8 @@ typedef __u64       u64;
 // gcc special keyworks
 //
 #if defined(_MSC_VER) || !defined(__REACTOS__)
-    #define __attribute__(x)
+/* FIXME: Inspect why this is needed */
+#define __attribute__(x)
 #endif
 #define __bitwise
 #define __releases(x)
