@@ -23,7 +23,7 @@ START_TEST(RtlAllocateHeap)
     {
         Buffers[i] = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_CREATE_ALIGN_16, (i % 16 ) + 1);
         ASSERT(Buffers[i] != NULL);
-        if (!((ULONG_PTR)Buffers[i] & 0x2))
+        if (!((ULONG_PTR)Buffers[i] & 0xF))
         {
             Aligned = FALSE;
         }
@@ -34,7 +34,7 @@ START_TEST(RtlAllocateHeap)
         RtlFreeHeap(RtlGetProcessHeap(), 0, Buffers[i]);
     }
 
-    ok(Aligned  == FALSE, "No unaligned address returned\n");
+    ok(Aligned == FALSE, "No unaligned address returned\n");
 
     Aligned = TRUE;
     Parameters.Length = sizeof(Parameters);
@@ -48,7 +48,7 @@ START_TEST(RtlAllocateHeap)
     {
         Buffers[i] = RtlAllocateHeap(hHeap, 0, (i % 16 ) + 1);
         ASSERT(Buffers[i] != NULL);
-        if (!((ULONG_PTR)Buffers[i] & 0x2))
+        if (!((ULONG_PTR)Buffers[i] & 0xF))
         {
             Aligned = FALSE;
         }
@@ -61,5 +61,5 @@ START_TEST(RtlAllocateHeap)
 
     RtlDestroyHeap(hHeap);
 
-    ok(Aligned  == FALSE, "No unaligned address returned\n");
+    ok(Aligned == TRUE, "Unaligned address returned\n");
 }
