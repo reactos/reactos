@@ -5,8 +5,9 @@ class CDeviceNode : public CNode
 {
 private:
     SP_DEVINFO_DATA m_DevinfoData;
-    HDEVINFO m_hDevInfo;
     DEVINST m_DevInst;
+    HDEVINFO m_hDevInfo;
+    
     ULONG m_Status;
     ULONG m_ProblemNumber;
     int m_OverlayImage;

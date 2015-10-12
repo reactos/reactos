@@ -12,12 +12,12 @@ enum NodeType
 class CNode
 {
 protected:
+    NodeType m_NodeType;
     PSP_CLASSIMAGELIST_DATA m_ImageListData;
     LPWSTR m_DeviceId;
     WCHAR m_DisplayName[DISPLAY_NAME_LEN];
     GUID  m_ClassGuid;
     INT m_ClassImage;
-    NodeType m_NodeType;
 
 public:
     CNode(
@@ -25,7 +25,7 @@ public:
         _In_ PSP_CLASSIMAGELIST_DATA ImageListData
         );
 
-    ~CNode();
+    virtual ~CNode();
 
     virtual bool SetupNode() = 0;
 

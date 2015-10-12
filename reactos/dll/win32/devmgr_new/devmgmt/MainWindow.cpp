@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Device Manager
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/devmgr/devmgr/MainWindow.cpp
+ * FILE:        dll/win32/devmgr/devmgmt/MainWindow.cpp
  * PURPOSE:     Implements the main container window for the device view
  * COPYRIGHT:   Copyright 2014 - 2015 Ged Murphy <gedmurphy@reactos.org>
  */
@@ -60,18 +60,18 @@ static const MENU_HINT SystemMenuHintTable[] =
     {SC_SIZE,       IDS_HINT_SYS_SIZE},
     {SC_MINIMIZE,   IDS_HINT_SYS_MINIMIZE},
     {SC_MAXIMIZE,   IDS_HINT_SYS_MAXIMIZE},
-    {SC_CLOSE,      IDS_HINT_SYS_CLOSE},
+    {SC_CLOSE,      IDS_HINT_SYS_CLOSE}
 };
 
 static TBBUTTON TbButtons[] =
 {
-    { BTN_PROPERTIES, IDC_PROPERTIES, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { BTN_SCAN_HARDWARE, IDC_SCAN_HARDWARE, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { 2, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, 0, 0 },
-    { BTN_ENABLE_DRV, IDC_ENABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { BTN_DISABLE_DRV, IDC_DISABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { BTN_UPDATE_DRV, IDC_UPDATE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { BTN_UNINSTALL_DRV, IDC_UNINSTALL_DRV, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 }
+    { BTN_PROPERTIES, IDC_PROPERTIES, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_SCAN_HARDWARE, IDC_SCAN_HARDWARE, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { 2, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
+    { BTN_ENABLE_DRV, IDC_ENABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_DISABLE_DRV, IDC_DISABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_UPDATE_DRV, IDC_UPDATE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_UNINSTALL_DRV, IDC_UNINSTALL_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 }
 };
 
 
@@ -245,7 +245,6 @@ bool
 CDeviceManager::RefreshView(_In_ ViewType Type)
 {
     UINT CheckId = 0;
-    BOOL bSuccess;
 
     // Refreshed the cached view
     m_DeviceView->Refresh(Type, FALSE, TRUE, NULL);
@@ -261,20 +260,19 @@ CDeviceManager::RefreshView(_In_ ViewType Type)
     }
 
     // Set the new check item
-    bSuccess = CheckMenuRadioItem(m_hMenu,
-                                  IDC_DEVBYTYPE,
-                                  IDC_RESBYCONN,
-                                  CheckId,
-                                  MF_BYCOMMAND);
+    CheckMenuRadioItem(m_hMenu,
+                       IDC_DEVBYTYPE,
+                       IDC_RESBYCONN,
+                       CheckId,
+                       MF_BYCOMMAND);
 
-    return TRUE;
+    return true;
 }
 
 bool
 CDeviceManager::CreateToolBar(void)
 {
     TBADDBITMAP TbAddBitmap;
-    INT Index;
 
     DWORD dwStyles = WS_CHILDWINDOW | TBSTYLE_FLAT | TBSTYLE_WRAPABLE | TBSTYLE_TOOLTIPS | CCS_NODIVIDER;
     DWORD dwExStyles = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR;
@@ -307,7 +305,7 @@ CDeviceManager::CreateToolBar(void)
 
     TbAddBitmap.hInst = g_hThisInstance;
     TbAddBitmap.nID = IDB_TOOLBAR;
-    Index = SendMessageW(m_hToolBar, TB_ADDBITMAP, _countof(TbButtons), (LPARAM)&TbAddBitmap);
+    SendMessageW(m_hToolBar, TB_ADDBITMAP, _countof(TbButtons), (LPARAM)&TbAddBitmap);
 
     SendMessageW(m_hToolBar, TB_ADDBUTTONSW, _countof(TbButtons), (LPARAM)TbButtons);
     SendMessageW(m_hToolBar, TB_AUTOSIZE, 0, 0);
@@ -496,7 +494,7 @@ LRESULT
 CDeviceManager::OnNotify(_In_ LPARAM lParam)
 {
     LPNMHDR NmHdr = (LPNMHDR)lParam;
-    LRESULT Ret;
+    LRESULT Ret = 0;
 
     switch (NmHdr->code)
     {
@@ -556,7 +554,7 @@ CDeviceManager::OnNotify(_In_ LPARAM lParam)
         }
     }
 
-    return 0;
+    return Ret;
 }
 
 LRESULT
