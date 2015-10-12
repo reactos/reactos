@@ -2351,6 +2351,7 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
     size_t dn_size, total_dn_size; /* excluding length bytes */
     size_t ct_len, sa_len; /* including length bytes */
     unsigned char *buf, *p;
+    const unsigned char * const end = ssl->out_msg + MBEDTLS_SSL_MAX_CONTENT_LEN;
     const mbedtls_x509_crt *crt;
     int authmode;
 
@@ -2471,10 +2472,14 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
     total_dn_size = 0;
     while( crt != NULL && crt->version != 0 )
     {
-        if( p - buf > 4096 )
-            break;
-
         dn_size = crt->subject_raw.len;
+
+        if( end < p || (size_t)( end - p ) < 2 + dn_size )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "skipping CAs: buffer too short" ) );
+            break;
+        }
+
         *p++ = (unsigned char)( dn_size >> 8 );
         *p++ = (unsigned char)( dn_size      );
         memcpy( p, crt->subject_raw.p, dn_size );

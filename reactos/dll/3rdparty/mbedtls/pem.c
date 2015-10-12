@@ -316,6 +316,9 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
           ( MBEDTLS_AES_C || MBEDTLS_DES_C ) */
     }
 
+    if( s1 == s2 )
+        return( MBEDTLS_ERR_PEM_INVALID_DATA );
+
     ret = mbedtls_base64_decode( NULL, 0, &len, s1, s2 - s1 );
 
     if( ret == MBEDTLS_ERR_BASE64_INVALID_CHARACTER )

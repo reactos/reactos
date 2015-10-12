@@ -5707,7 +5707,9 @@ int mbedtls_ssl_conf_psk( mbedtls_ssl_config *conf,
         ( conf->psk_identity = mbedtls_calloc( 1, psk_identity_len ) ) == NULL )
     {
         mbedtls_free( conf->psk );
+        mbedtls_free( conf->psk_identity );
         conf->psk = NULL;
+        conf->psk_identity = NULL;
         return( MBEDTLS_ERR_SSL_ALLOC_FAILED );
     }
 
@@ -5730,7 +5732,7 @@ int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *ssl,
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
 
     if( ssl->handshake->psk != NULL )
-        mbedtls_free( ssl->conf->psk );
+        mbedtls_free( ssl->handshake->psk );
 
     if( ( ssl->handshake->psk = mbedtls_calloc( 1, psk_len ) ) == NULL )
     {
@@ -5831,6 +5833,9 @@ int mbedtls_ssl_set_hostname( mbedtls_ssl_context *ssl, const char *hostname )
     hostname_len = strlen( hostname );
 
     if( hostname_len + 1 == 0 )
+        return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
+
+    if( hostname_len > MBEDTLS_SSL_MAX_HOST_NAME_LEN )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
 
     ssl->hostname = mbedtls_calloc( 1, hostname_len + 1 );
@@ -6993,7 +6998,7 @@ static mbedtls_ecp_group_id ssl_preset_suiteb_curves[] = {
 #endif
 
 /*
- * Load default in mbetls_ssl_config
+ * Load default in mbedtls_ssl_config
  */
 int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
                                  int endpoint, int transport, int preset )

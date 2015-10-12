@@ -86,6 +86,8 @@ static int pkcs12_parse_pbe_params( mbedtls_asn1_buf *params,
     return( 0 );
 }
 
+#define PKCS12_MAX_PWDLEN 128
+
 static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_type_t md_type,
                                      const unsigned char *pwd,  size_t pwdlen,
                                      unsigned char *key, size_t keylen,
@@ -94,7 +96,10 @@ static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_ty
     int ret, iterations;
     mbedtls_asn1_buf salt;
     size_t i;
-    unsigned char unipwd[258];
+    unsigned char unipwd[PKCS12_MAX_PWDLEN * 2 + 2];
+
+    if( pwdlen > PKCS12_MAX_PWDLEN )
+        return( MBEDTLS_ERR_PKCS12_BAD_INPUT_DATA );
 
     memset( &salt, 0, sizeof(mbedtls_asn1_buf) );
     memset( &unipwd, 0, sizeof(unipwd) );
@@ -124,6 +129,8 @@ static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_ty
     }
     return( 0 );
 }
+
+#undef PKCS12_MAX_PWDLEN
 
 int mbedtls_pkcs12_pbe_sha1_rc4_128( mbedtls_asn1_buf *pbe_params, int mode,
                              const unsigned char *pwd,  size_t pwdlen,
