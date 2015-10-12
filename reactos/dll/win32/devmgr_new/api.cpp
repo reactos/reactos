@@ -2,7 +2,7 @@
 *
 * COPYRIGHT:       See COPYING in the top level directory
 * PROJECT:         ReactOS devmgr.dll
-* FILE:            lib/devmgr/stubs.c
+* FILE:            dll/win32/devmgr/api.cpp
 * PURPOSE:         devmgr.dll stubs
 * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
 *                  Ged Murphy (gedmurphy@reactos.org)

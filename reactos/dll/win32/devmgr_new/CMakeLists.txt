@@ -7,6 +7,7 @@ set_cpp(WITH_RTTI WITH_RUNTIME)
 if(NOT MSVC)
     # HACK: this should be enabled globally!
     add_compile_flags_language("-std=c++11" "CXX")
+    add_compile_flags("-fexceptions")
 endif()
 
 include_directories(

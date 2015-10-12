@@ -518,7 +518,8 @@ DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
     }
     else
     {
-        LPWSTR szProblem, szInfo = L"FIXME";
+        LPWSTR szProblem;
+        WCHAR szInfo[] = L"FIXME";
         DWORD dwRet;
         BOOL AdvFormat = FALSE;
         UINT StringIDs[] =

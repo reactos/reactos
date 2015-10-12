@@ -613,7 +613,7 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
 static VOID
 SetListViewText(HWND hwnd,
                 INT iItem,
-                LPWSTR lpText)
+                LPCWSTR lpText)
 {
     LVITEM li;
 
@@ -622,7 +622,7 @@ SetListViewText(HWND hwnd,
     li.iSubItem = 0;
     li.state = 0; //(li.iItem == 0 ? LVIS_SELECTED : 0);
     li.stateMask = LVIS_SELECTED;
-    li.pszText = lpText;
+    li.pszText = (LPWSTR)lpText;
     (void)ListView_InsertItem(hwnd,
                               &li);
 }
@@ -1240,7 +1240,7 @@ DisplayDeviceCoinstallers(IN PDEVADVPROP_INFO dap,
 static VOID
 DisplayClassProperties(IN PDEVADVPROP_INFO dap,
                        IN HWND hwndListView,
-                       IN LPWSTR lpProperty)
+                       IN LPCWSTR lpProperty)
 {
     HDEVINFO DeviceInfoSet;
     PSP_DEVINFO_DATA DeviceInfoData;
