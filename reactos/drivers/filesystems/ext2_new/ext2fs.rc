@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "Linux ext2 IFS Driver"
+#define REACTOS_STR_INTERNAL_NAME     "ext2fs"
+#define REACTOS_STR_ORIGINAL_FILENAME "ext2fs.sys"
+#include <reactos/version.rc>

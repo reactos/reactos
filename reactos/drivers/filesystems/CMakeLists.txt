@@ -1,6 +1,7 @@
 
 add_subdirectory(cdfs)
 add_subdirectory(ext2)
+#add_subdirectory(ext2_new)
 add_subdirectory(fastfat)
 #add_subdirectory(fastfat_new)
 add_subdirectory(fs_rec)
