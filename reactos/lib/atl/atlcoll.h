@@ -137,7 +137,6 @@ class CElementTraits :
 {
 };
 
-
 template<typename E, class ETraits = CElementTraits<E>>
 class CAtlList
 {
@@ -209,13 +208,12 @@ private:
 
 template<typename E, class ETraits>
 CAtlList< E, ETraits >::CAtlList(_In_ UINT nBlockSize) :
-    m_NumElements(0),
+    m_Blocks(NULL),
+    m_BlockSize(nBlockSize),
     m_HeadNode(NULL),
     m_TailNode(NULL),
     m_FreeNode(NULL),
-    m_Blocks(NULL),
-    
-    m_BlockSize(nBlockSize)
+    m_NumElements(0)
 {
     ATLASSERT(nBlockSize > 0);
 }

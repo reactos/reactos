@@ -4,12 +4,6 @@
 #pragma once
 #include "atlcore.h"
 
-// HACK HACK! This must be placed in another global ATL header!!
-// Placement new operator
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
 
 namespace ATL
 {

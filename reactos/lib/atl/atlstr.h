@@ -98,7 +98,15 @@ private:
 };
 
 
-template <typename _BaseType = char, class StringIterator = ChTraitsOS<_BaseType>>
+template< typename _CharType = wchar_t >
+class ChTraitsOS :
+    public ChTraitsBase < _CharType >
+{
+
+};
+
+
+template <typename _BaseType = wchar_t, class StringIterator = ChTraitsOS<_BaseType>>
 class StrTraitATL :
     public StringIterator
 {

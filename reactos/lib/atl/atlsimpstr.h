@@ -102,20 +102,9 @@ public:
     wchar_t achNil[2];
 };
 
-template< typename BaseType = char >
-class ChTraitsBase
-{
-public:
-    typedef char XCHAR;
-    typedef LPSTR PXSTR;
-    typedef LPCSTR PCXSTR;
-    typedef wchar_t YCHAR;
-    typedef LPWSTR PYSTR;
-    typedef LPCWSTR PCYSTR;
-};
 
-template<>
-class ChTraitsBase< wchar_t >
+template< typename BaseType = wchar_t >
+class ChTraitsBase
 {
 public:
     typedef wchar_t XCHAR;
@@ -125,8 +114,6 @@ public:
     typedef LPSTR PYSTR;
     typedef LPCSTR PCYSTR;
 };
-
-
 
 template< typename BaseType, bool t_bMFCDLL = false>
 class CSimpleStringT
@@ -156,12 +143,6 @@ public:
         Attach(pNewData);
     }
 
-    CSimpleStringT(_In_ const CSimpleStringT<BaseType, !t_bMFCDLL>& strSrc)
-    {
-        CStringData* pSrcData = strSrc.GetData();
-        CStringData* pNewData = CloneData(pSrcData);
-        Attach(pNewData);
-    }
 
     CSimpleStringT& operator=(_In_opt_z_ PCXSTR pszSrc)
     {
