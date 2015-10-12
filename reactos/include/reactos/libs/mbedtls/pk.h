@@ -44,6 +44,11 @@
 #include "ecdsa.h"
 #endif
 
+#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
+    !defined(inline) && !defined(__cplusplus)
+#define inline __inline
+#endif
+
 #define MBEDTLS_ERR_PK_ALLOC_FAILED        -0x3F80  /**< Memory allocation failed. */
 #define MBEDTLS_ERR_PK_TYPE_MISMATCH       -0x3F00  /**< Type mismatch, eg attempt to encrypt with an ECDSA key */
 #define MBEDTLS_ERR_PK_BAD_INPUT_DATA      -0x3E80  /**< Bad input parameters to function. */
@@ -58,7 +63,6 @@
 #define MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE -0x3A00  /**< Elliptic curve is unsupported (only NIST curves are supported). */
 #define MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE -0x3980  /**< Unavailable feature, e.g. RSA disabled for RSA key. */
 #define MBEDTLS_ERR_PK_SIG_LEN_MISMATCH    -0x3900  /**< The signature is valid but its length is less than expected. */
-
 
 #ifdef __cplusplus
 extern "C" {

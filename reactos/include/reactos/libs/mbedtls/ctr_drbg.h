@@ -111,7 +111,7 @@ mbedtls_ctr_drbg_context;
 
 /**
  * \brief               CTR_DRBG context initialization
- *                      Makes the context ready for mbetls_ctr_drbg_seed() or
+ *                      Makes the context ready for mbedtls_ctr_drbg_seed() or
  *                      mbedtls_ctr_drbg_free().
  *
  * \param ctx           CTR_DRBG context to be initialized

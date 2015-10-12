@@ -139,6 +139,8 @@
 #define MBEDTLS_SSL_TRANSPORT_STREAM            0   /*!< TLS      */
 #define MBEDTLS_SSL_TRANSPORT_DATAGRAM          1   /*!< DTLS     */
 
+#define MBEDTLS_SSL_MAX_HOST_NAME_LEN           255 /*!< Maximum host name defined in RFC 1035 */
+
 /* RFC 6066 section 4, see also mfl_code_to_length in ssl_tls.c
  * NONE must be zero so that memset()ing structure to zero works */
 #define MBEDTLS_SSL_MAX_FRAG_LEN_NONE           0   /*!< don't use this extension   */
@@ -840,7 +842,7 @@ int mbedtls_ssl_get_ciphersuite_id( const char *ciphersuite_name );
 
 /**
  * \brief          Initialize an SSL context
- *                 Just makes the context ready for mbetls_ssl_setup() or
+ *                 Just makes the context ready for mbedtls_ssl_setup() or
  *                 mbedtls_ssl_free()
  *
  * \param ssl      SSL context

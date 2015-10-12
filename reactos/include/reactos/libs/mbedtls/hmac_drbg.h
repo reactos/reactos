@@ -98,7 +98,7 @@ typedef struct
 
 /**
  * \brief               HMAC_DRBG context initialization
- *                      Makes the context ready for mbetls_hmac_drbg_seed(),
+ *                      Makes the context ready for mbedtls_hmac_drbg_seed(),
  *                      mbedtls_hmac_drbg_seed_buf() or
  *                      mbedtls_hmac_drbg_free().
  *

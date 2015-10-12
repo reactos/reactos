@@ -37,7 +37,8 @@
 
 #include <pkcs11-helper-1.0/pkcs11h-certificate.h>
 
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && !defined(inline)
+#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
+    !defined(inline) && !defined(__cplusplus)
 #define inline __inline
 #endif
 
@@ -54,7 +55,7 @@ typedef struct {
 } mbedtls_pkcs11_context;
 
 /**
- * Initialize a mbetls_pkcs11_context.
+ * Initialize a mbedtls_pkcs11_context.
  * (Just making memory references valid.)
  */
 void mbedtls_pkcs11_init( mbedtls_pkcs11_context *ctx );

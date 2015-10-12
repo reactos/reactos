@@ -92,7 +92,7 @@ void mbedtls_set_alarm( int seconds );
  *                 (See \c mbedtls_timing_get_delay().)
  *
  * \param data     Pointer to timing data
- *                 Must point to a valid \c mbetls_timing_delay_context struct.
+ *                 Must point to a valid \c mbedtls_timing_delay_context struct.
  * \param int_ms   First (intermediate) delay in milliseconds.
  * \param fin_ms   Second (final) delay in milliseconds.
  *                 Pass 0 to cancel the current delay.
@@ -104,7 +104,7 @@ void mbedtls_timing_set_delay( void *data, uint32_t int_ms, uint32_t fin_ms );
  *                 (Memory helper: number of delays passed.)
  *
  * \param data     Pointer to timing data
- *                 Must point to a valid \c mbetls_timing_delay_context struct.
+ *                 Must point to a valid \c mbedtls_timing_delay_context struct.
  *
  * \return         -1 if cancelled (fin_ms = 0)
  *                  0 if none of the delays are passed,
