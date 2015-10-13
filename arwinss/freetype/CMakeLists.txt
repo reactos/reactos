@@ -14,6 +14,7 @@ list(APPEND SOURCE
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftbitmap.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftcid.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftdebug.c
+  ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftfntfmt.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftfstype.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftgasp.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftglyph.c
@@ -29,7 +30,6 @@ list(APPEND SOURCE
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftsystem.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/fttype1.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftwinfnt.c
-  ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/base/ftxf86.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/bdf/bdf.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/cache/ftcache.c
   ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/src/cff/cff.c
