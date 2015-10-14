@@ -31,7 +31,7 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winerror.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "winnt.h"
 #include "gdi_private.h"
 #include "wine/debug.h"

@@ -56,7 +56,7 @@
 #include "wingdi.h"
 #include "winreg.h"
 #include "winnls.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "gdi_private.h"
 #include "wine/debug.h"
 
@@ -394,7 +394,6 @@ static BOOL MF_PlayMetaFile( HDC hdc, METAHEADER *mh)
     WORD i;
     HPEN hPen;
     HBRUSH hBrush;
-    HFONT hFont;
     HPALETTE hPal;
     HRGN hRgn;
     BOOL loaded = FALSE;
@@ -409,7 +408,6 @@ static BOOL MF_PlayMetaFile( HDC hdc, METAHEADER *mh)
     /* save DC */
     hPen = GetCurrentObject(hdc, OBJ_PEN);
     hBrush = GetCurrentObject(hdc, OBJ_BRUSH);
-    hFont = GetCurrentObject(hdc, OBJ_FONT);
     hPal = GetCurrentObject(hdc, OBJ_PAL);
 
     hRgn = CreateRectRgn(0, 0, 0, 0);

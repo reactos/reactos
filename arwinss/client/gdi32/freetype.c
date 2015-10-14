@@ -1653,7 +1653,7 @@ static BOOL init_system_links(void)
 {
     HANDLE hkey;
     BOOL ret = FALSE;
-    DWORD type, max_val, max_data, val_len, data_len, index;
+    DWORD /*type,*/max_val, max_data, val_len, data_len, index;
     WCHAR *value, *data;
     WCHAR *entry, *next;
     SYSTEM_LINKS *font_link, *system_font_link;
@@ -1729,7 +1729,7 @@ static BOOL init_system_links(void)
             }
 
             /* Copy type and data length */
-            type = info->Type;
+            //type = info->Type;
             data_len = info->DataLength;
 
 
