@@ -891,15 +891,15 @@ KeFlushCurrentTb(VOID)
     {
         ULONG Cr4;
 
-        /* Disable PGE */
-        Cr4 = __readcr4() & ~CR4_PGE;
-        __writecr4(Cr4);
+        /* Disable PGE (Note: may not have been enabled yet) */
+        Cr4 = __readcr4();
+        __writecr4(Cr4 & ~CR4_PGE);
 
         /* Flush everything */
         __writecr3(__readcr3());
 
         /* Re-enable PGE */
-        __writecr4(Cr4 | CR4_PGE);
+        __writecr4(Cr4);
     }
     else
     {
