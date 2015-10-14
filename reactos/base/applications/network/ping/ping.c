@@ -249,7 +249,15 @@ static BOOL ParseCmdline(int argc, LPWSTR argv[])
                 case L'a': ResolveAddresses = TRUE; break;
                 case L'n':
                     if (i + 1 < argc)
+                    {
                         PingCount = wcstoul(argv[++i], NULL, 0);
+
+                        if (PingCount == 0)
+                        {
+                            FormatOutput(IDS_BAD_VALUE_OPTION_N, UINT_MAX);
+                            return FALSE;
+                        }
+                    }
                     else
                         InvalidOption = TRUE;
                     break;

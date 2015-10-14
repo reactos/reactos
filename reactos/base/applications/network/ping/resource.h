@@ -23,3 +23,4 @@
 #define IDS_REQUEST_TIMEOUT            20
 #define IDS_MS                         21
 #define IDS_1MS                        22
+#define IDS_BAD_VALUE_OPTION_N         23

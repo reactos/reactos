@@ -27,6 +27,7 @@ BEGIN
     IDS_BAD_OPTION_FORMAT "错误选项格式 %1。\n\0"
     IDS_BAD_OPTION "错误选项 %1。\n\0"
     IDS_BAD_VALUE_OPTION_L "-l 选项的值无效，有效的范围是从 0 到 %1!d!。\n\0"
+    IDS_BAD_VALUE_OPTION_N "-n 选项的值无效，有效的范围是从 1 到 %1!u!。\n\0"
     IDS_REPLY_FROM "来自 %1 的回复：字节数=%2!d! 时间%3%4 TTL=%5!d!\n\0"
     IDS_DEST_UNREACHABLE "目标主机不可到达。\n\0"
     IDS_COULD_NOT_TRANSMIT "无法发送数据 (%1!d!)。\n\0"
