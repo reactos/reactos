@@ -878,8 +878,37 @@ VOID
 NTAPI
 KeFlushCurrentTb(VOID)
 {
+
+#if !defined(_GLOBAL_PAGES_ARE_AWESOME_)
+
     /* Flush the TLB by resetting CR3 */
     __writecr3(__readcr3());
+
+#else
+
+    /* Check if global pages are enabled */
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+    {
+        ULONG Cr4;
+
+        /* Disable PGE */
+        Cr4 = __readcr4() & ~CR4_PGE;
+        __writecr4(Cr4);
+
+        /* Flush everything */
+        __writecr3(__readcr3());
+
+        /* Re-enable PGE */
+        __writecr4(Cr4 | CR4_PGE);
+    }
+    else
+    {
+        /* No global pages, resetting CR3 is enough */
+        __writecr3(__readcr3());
+    }
+
+#endif
+
 }
 
 VOID

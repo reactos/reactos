@@ -98,6 +98,14 @@
 #define ASSERT NT_ASSERT
 #endif
 
+
+//
+// Switch for enabling global page support
+//
+
+//#define _GLOBAL_PAGES_ARE_AWESOME_
+
+
 /* Internal Headers */
 #include "internal/ntoskrnl.h"
 #include "config.h"
