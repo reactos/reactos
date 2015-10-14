@@ -263,7 +263,7 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         RECTL*  DestRect,  RECTL *SourceRect,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG RoundedRight, X, Y, SourceX = 0, SourceY = 0, Source, wd, Dest;
+  ULONG RoundedRight, X, Y, SourceX = 0, SourceY = 0, Source/*, wd*/, Dest;
   ULONG *DestBits;
 
   LONG DstHeight;
@@ -279,7 +279,7 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x3);
   DestBits = (ULONG*)((PBYTE)DestSurf->pvScan0 + DestRect->left +
                       (DestRect->top * DestSurf->lDelta));
-  wd = DestSurf->lDelta - (DestRect->right - DestRect->left);
+  //wd = DestSurf->lDelta - (DestRect->right - DestRect->left);
 
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {

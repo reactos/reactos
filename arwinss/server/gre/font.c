@@ -318,6 +318,8 @@ static void SmoothGlyphGray(PDC physDev, INT x, INT y,
 
     /* Release the surface and delete the bitmap */
     GreDeleteObject(charBitmap);
+
+    UNREFERENCED_LOCAL_VARIABLE(bRet);
 }
 
 static void SmoothGlyphColor(PDC physDev, INT x, INT y,
@@ -456,6 +458,8 @@ static void SmoothGlyphColor(PDC physDev, INT x, INT y,
 
     /* Release the surface and delete the bitmap */
     GreDeleteObject(charBitmap);
+
+    UNREFERENCED_LOCAL_VARIABLE(bRet);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

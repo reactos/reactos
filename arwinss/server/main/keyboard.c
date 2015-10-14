@@ -591,6 +591,8 @@ RosUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    //      ret = 0;
    //}
 
+   UNREFERENCED_LOCAL_VARIABLE(KeyNames);
+
 cleanup:
    //UserLeave();
    return ret;

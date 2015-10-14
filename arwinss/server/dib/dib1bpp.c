@@ -82,7 +82,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
   int dy2; // dest y end
   int sy1; // src y start
 
-  int dx;
+  //int dx;
   int shift;
   BYTE srcmask, dstmask, xormask;
 
@@ -139,12 +139,12 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     pd = d;
     ps = s;
     srcmask = 0xff;
-    dx = dwx; /* dest x for this pass */
+    //dx = dwx; /* dest x for this pass */
     if ( dwx < dl )
     {
       int diff = dl-dwx;
       srcmask &= (1<<(8-diff))-1;
-      dx = dl;
+      //dx = dl;
     }
     if ( dwx+7 > dr )
     {

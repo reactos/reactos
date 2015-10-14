@@ -1264,10 +1264,10 @@ GrepFillArc( PDC dc,
 {
   int Start = ceil(StartArc);
   int End   = ceil(EndArc);
-  BOOL Chord = (arctype == GdiTypeChord), ret;
+  BOOL Chord = (arctype == GdiTypeChord);
 
   // Sort out alignment here.
-  ret = app_fill_arc(dc, rect( XLeft, YLeft, Width, Height),
+  app_fill_arc(dc, rect( XLeft, YLeft, Width, Height),
                     -End, //(dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -End : -Start,
                     -Start, //(dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
                      dc->dclevel.pbrFill, BrushOrigin, Chord);

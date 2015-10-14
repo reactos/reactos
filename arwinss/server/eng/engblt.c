@@ -315,7 +315,7 @@ EngpStretchBlt(SURFOBJ *psoDest,
 {
     BOOLEAN ret;
     COLORADJUSTMENT ca;
-    POINT MaskOrigin;
+    //POINT MaskOrigin;
     SURFACE *psurfDest;
     SURFACE *psurfSource = NULL;
     RECTL InputClippedRect;
@@ -380,10 +380,10 @@ EngpStretchBlt(SURFOBJ *psoDest,
         OutputRect = InputClippedRect;
     }
     
-    if (pMaskOrigin != NULL)
+    /*if (pMaskOrigin != NULL)
     {
         MaskOrigin.x = pMaskOrigin->x; MaskOrigin.y = pMaskOrigin->y;
-    }
+    }*/
 
     /* No success yet */
     ret = FALSE;
@@ -711,11 +711,11 @@ EngBitBlt(SURFOBJ *DestObj,
     POINTL             Pt;
     ULONG              Direction;
     BOOL               UsesSource;
-    BOOL               UsesPattern;
+    //BOOL               UsesPattern;
     POINTL             AdjustedBrushOrigin;
 
     UsesSource = ROP4_USES_SOURCE(rop4);
-    UsesPattern = ROP4_USES_PATTERN(rop4);
+    //UsesPattern = ROP4_USES_PATTERN(rop4);
     if (R4_NOOP == rop4)
     {
         /* Copy destination onto itself: nop */

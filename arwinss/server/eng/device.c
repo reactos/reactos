@@ -737,6 +737,8 @@ GreChangeDisplaySettings(
         SetPrimary = TRUE;
     dwflags &= ~(CDS_RESET | CDS_SET_PRIMARY);
 
+    DPRINT1("Global: %d, SetPrimary: %d\n", Global, SetPrimary);
+
     if (Reset && NoReset)
         return DISP_CHANGE_BADFLAGS;
 

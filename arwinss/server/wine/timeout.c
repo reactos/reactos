@@ -212,7 +212,7 @@ TimerThreadMain(PVOID StartContext)
         ProcessTimers();
         UserLeave();
     }
-    DPRINT1("Timer thread exit!\n");
+    DPRINT1("Timer thread exit! Status 0x%08X\n", Status);
 }
 
 VOID

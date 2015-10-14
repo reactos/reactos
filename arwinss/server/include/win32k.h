@@ -45,11 +45,11 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <pseh/pseh2.h>
 
 /* Public Win32K Headers */
-#include <include/callback.h>
-#include <include/ntusrtyp.h>
-#include <include/ntuser.h>
-#include <include/ntgdityp.h>
-#include <include/ntgdihdl.h>
+#include <ntusrtyp.h>
+#include <ntuser.h>
+#include <callback.h>
+#include <ntgdityp.h>
+#include <ntgdihdl.h>
 #include <ntgdi.h>
 
 /* Internal  Win32K Header */

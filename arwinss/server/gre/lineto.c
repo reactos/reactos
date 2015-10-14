@@ -103,7 +103,6 @@ GrePolyline(PDC pDC,
            const POINT *ptPoints,
            INT count)
 {
-    BOOLEAN bRet;
     POINT ptLine[2];
     RECTL DestRect;
     MIX Mix;
@@ -125,7 +124,7 @@ GrePolyline(PDC pDC,
             DestRect.right = max(ptLine[0].x, ptLine[1].x);
             DestRect.bottom = max(ptLine[0].y, ptLine[1].y);
 
-            bRet = GreLineTo(&pDC->dclevel.pSurface->SurfObj,
+            GreLineTo(&pDC->dclevel.pSurface->SurfObj,
                              pDC->CombinedClip,
                              &pDC->eboLine.BrushObject,
                              ptLine[0].x,

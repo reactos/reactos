@@ -3,7 +3,7 @@ spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
 include_directories(
     .
     include
-    ${REACTOS_SOURCE_DIR}/win32ss
+    ${REACTOS_SOURCE_DIR}/win32ss/include
     ${REACTOS_SOURCE_DIR}/ntoskrnl/include
     ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys

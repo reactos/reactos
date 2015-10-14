@@ -57,6 +57,7 @@ GreRectangle(PDC pDC,
                                &BrushOrigin,
                                ROP3_TO_ROP4(PATCOPY),
                                TRUE);
+            UNREFERENCED_LOCAL_VARIABLE(bRet);
         }
     }
 
@@ -102,7 +103,6 @@ GrePolygon(PDC pDC,
            INT count,
            PRECTL DestRect)
 {
-    BOOLEAN bRet;
     MIX Mix;
     INT i;
     POINTL BrushOrigin;
@@ -131,7 +131,7 @@ GrePolygon(PDC pDC,
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         for (i=0; i<count-1; i++)
         {
-            bRet = GreLineTo(&pDC->dclevel.pSurface->SurfObj,
+            GreLineTo(&pDC->dclevel.pSurface->SurfObj,
                              pDC->CombinedClip,
                              &pDC->eboLine.BrushObject,
                              ptPoints[i].x,

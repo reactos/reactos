@@ -1087,7 +1087,7 @@ GreSetDIBitsToDevice(
     EXLATEOBJ exlo;
     PPALETTE pDDBPalette, pDIBPalette;
     HPALETTE DDBPalette, DIBPalette = NULL;
-    ULONG DDBPaletteType, DIBPaletteType;
+    ULONG /*DDBPaletteType,*/ DIBPaletteType;
 
     if (!Bits) return 0;
 
@@ -1145,7 +1145,7 @@ GreSetDIBitsToDevice(
         goto Exit;
     }
 
-    DDBPaletteType = pDDBPalette->Mode;
+    //DDBPaletteType = pDDBPalette->Mode;
 
     DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
     if (!DIBPalette)
