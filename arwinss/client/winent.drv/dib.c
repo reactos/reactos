@@ -136,7 +136,7 @@ INT CDECL RosDrv_SetDIBitsToDevice( PDC_ATTR pdcattr, INT xDest, INT yDest, DWOR
 INT CDECL RosDrv_SetDIBits( PDC_ATTR pdcattr, HBITMAP hbitmap, UINT startscan,
                             UINT lines, LPCVOID bits, const BITMAPINFO *info, UINT coloruse )
 {
-    LONG height, width, tmpheight;
+    LONG height, width;
     WORD infoBpp, compression;
     PVOID safeBits = NULL;
     INT result, bitsSize;
@@ -146,7 +146,6 @@ INT CDECL RosDrv_SetDIBits( PDC_ATTR pdcattr, HBITMAP hbitmap, UINT startscan,
         &infoBpp, &compression ) == -1)
         return 0;
 
-    tmpheight = height;
     if (height < 0) height = -height;
     if (!lines || (startscan >= height))
         return 0;

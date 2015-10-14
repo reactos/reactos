@@ -269,14 +269,13 @@ static Window thread_selection_wnd(void)
 void NTDRV_InitClipboard(void)
 {
     UINT i;
-    WINE_CLIPFORMAT *format;
 
     /* Register known mapping between window formats and X properties */
     for (i = 0; i < sizeof(PropertyFormatMap)/sizeof(PropertyFormatMap[0]); i++)
         NTDRV_CLIPBOARD_InsertClipboardFormat(PropertyFormatMap[i].lpszFormat);
 
     /* Set up a conversion function from "HTML Format" to "text/html" */
-    format = NTDRV_CLIPBOARD_InsertClipboardFormat(wszHTMLFormat);
+    (VOID)NTDRV_CLIPBOARD_InsertClipboardFormat(wszHTMLFormat);
 }
 
 #if 0

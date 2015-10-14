@@ -317,7 +317,7 @@ void sync_window_position( struct ntdrv_win_data *data,
 {
     //DWORD style = GetWindowLongW( data->hwnd, GWL_STYLE );
     LONG width, height;
-    LONG x, y;
+    //LONG x, y;
 
     SwmPosChanged(data->whole_window, &data->whole_rect, old_whole_rect, NULL, swp_flags);
 
@@ -331,12 +331,12 @@ void sync_window_position( struct ntdrv_win_data *data,
     //GrResizeWindow(data->whole_window, width, height);
 
     /* only the size is allowed to change for the desktop window */
-    if (data->whole_window != root_window)
+    /*if (data->whole_window != root_window)
     {
         x = data->whole_rect.left;
         y = data->whole_rect.top;
-        //GrMoveWindow(data->whole_window, x, y);
-    }
+        GrMoveWindow(data->whole_window, x, y);
+    }*/
 
     if (!(swp_flags & SWP_NOZORDER) || (swp_flags & SWP_SHOWWINDOW))
     {
@@ -375,7 +375,7 @@ static void sync_client_position( struct ntdrv_win_data *data,
                                   const RECT *old_whole_rect )
 {
     LONG width, height;
-    BOOL resize = FALSE;
+    //BOOL resize = FALSE;
     RECT old = *old_client_rect;
     RECT new = data->client_rect;
 
@@ -388,13 +388,13 @@ static void sync_client_position( struct ntdrv_win_data *data,
     {
         if ((width = new.right - new.left) <= 0) width = 1;
         else if (width > 65535) width = 65535;
-        resize = TRUE;
+        //resize = TRUE;
     }
     if (old.bottom - old.top != new.bottom - new.top)
     {
         if ((height = new.bottom - new.top) <= 0) height = 1;
         else if (height > 65535) height = 65535;
-        resize = TRUE;
+        //resize = TRUE;
     }
 
     TRACE( "setting client win %lx pos %d,%d,%dx%d\n",

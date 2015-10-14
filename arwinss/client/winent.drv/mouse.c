@@ -117,6 +117,8 @@ static void queue_raw_mouse_message( UINT message, HWND hwnd, DWORD x, DWORD y,
         cursor = (reply->count >= 0) ? wine_server_ptr_handle(reply->cursor) : 0;
     }
     SERVER_END_REQ;
+
+    TRACE("cursor: 0x%x\n", cursor);
 }
 
 /***********************************************************************
