@@ -291,7 +291,7 @@ NdisOpenProtocolConfiguration(
 
     RtlCopyUnicodeString(&KeyNameU, ProtocolSection);
     RtlAppendUnicodeToString(&KeyNameU, PARAMETERS_KEY);
-    InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
     *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
@@ -908,7 +908,7 @@ NdisOpenConfigurationKeyByIndex(
     wcsncpy(KeyName->Buffer, KeyInformation->Name, KeyName->MaximumLength/sizeof(WCHAR));
     KeyName->Length = (USHORT)min(KeyInformation->NameLength, KeyName->MaximumLength);
 
-    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, NULL);
+    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, ConfigurationHandle, NULL);
 
     *Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
@@ -971,7 +971,7 @@ NdisOpenConfigurationKeyByName(
 
     *KeyHandle = NULL;
 
-    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, 0);
+    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, ConfigurationHandle, 0);
     *Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
     if(*Status != STATUS_SUCCESS)

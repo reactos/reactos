@@ -933,7 +933,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
     RtlInitUnicodeString(&RegistryPath, RegistryPathStr);
     NDIS_DbgPrint(MAX_TRACE, ("Opening configuration key: %wZ\n", &RegistryPath));
 
-    InitializeObjectAttributes(&ObjectAttributes, &RegistryPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &RegistryPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     NtStatus = ZwOpenKey(&DriverKeyHandle, KEY_READ, &ObjectAttributes);
 
     ExFreePool(RegistryPathStr);
