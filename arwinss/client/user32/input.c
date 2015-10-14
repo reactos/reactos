@@ -39,7 +39,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "winerror.h"
 #include "win.h"
 #include "user_private.h"

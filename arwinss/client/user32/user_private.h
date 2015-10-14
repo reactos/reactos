@@ -28,7 +28,7 @@
 #include "winuser.h"
 #include "winreg.h"
 #include <windowsx.h>
-#include "winternl.h"
+#include "wine/winternl.h"
 
 #define GET_WORD(ptr)  (*(const WORD *)(ptr))
 #define GET_DWORD(ptr) (*(const DWORD *)(ptr))

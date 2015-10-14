@@ -25,7 +25,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "dlgs.h"
 #include "user_private.h"
 #include "wine/debug.h"

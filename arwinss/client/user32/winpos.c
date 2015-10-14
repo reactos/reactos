@@ -30,7 +30,7 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winerror.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "wine/server.h"
 #include "controls.h"
 #include "user_private.h"

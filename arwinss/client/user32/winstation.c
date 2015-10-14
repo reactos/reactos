@@ -28,7 +28,7 @@
 #include "winerror.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "wine/server.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"

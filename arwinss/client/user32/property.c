@@ -28,7 +28,7 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "wine/unicode.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "user_private.h"
 #include "wine/server.h"
 

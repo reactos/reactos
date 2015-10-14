@@ -28,6 +28,7 @@
 
 /* CSRSS Headers */
 #include <subsys/csr/csr.h>
+#include <csr_shared.h>
 #include <subsys/win/winmsg.h>
 
 #include "wine/debug.h"
@@ -44,9 +45,10 @@ BOOL WINAPI ExitWindowsEx( UINT uFlags, DWORD dwReserved )
 {
     NTSTATUS Status;
     USER_API_MESSAGE ApiMessage;
+    PUSER_EXIT_REACTOS ExitReactOSRequest = &ApiMessage.Data.ExitReactOSRequest;
 
-    ApiMessage.Data.ExitReactosRequest.Flags = uFlags;
-    ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
+    ExitReactOSRequest->Flags = uFlags;
+    //ExitReactOSRequest->Reserved = dwReserved;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -55,6 +57,7 @@ BOOL WINAPI ExitWindowsEx( UINT uFlags, DWORD dwReserved )
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
+        ExitReactOSRequest->Success = FALSE;
         return FALSE;
     }
 

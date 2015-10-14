@@ -45,7 +45,7 @@
 #include "user_private.h"
 #include "win.h"
 #include "controls.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(combo);

@@ -78,7 +78,7 @@
 #include "wine/server.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(hook);
 WINE_DECLARE_DEBUG_CHANNEL(relay);
