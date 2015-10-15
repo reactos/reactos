@@ -508,12 +508,12 @@ InitThreadCallback(PETHREAD Thread)
         goto error;
     }
     Status = ObReferenceObjectByHandle(ptiCurrent->hEventQueueClient, 0,
-                                       *ExEventObjectType, KernelMode,
+                                       *ExEventObjectType, UserMode,
                                        (PVOID*)&ptiCurrent->pEventQueueServer, NULL);
     if (!NT_SUCCESS(Status))
     {
         ERR_CH(UserThread, "Failed referencing the event object, Status 0x%08x.\n", Status);
-        ZwClose(ptiCurrent->hEventQueueClient);
+        ObCloseHandle(ptiCurrent->hEventQueueClient, UserMode);
         ptiCurrent->hEventQueueClient = NULL;
         goto error;
     }
@@ -818,7 +818,7 @@ ExitThreadCallback(PETHREAD Thread)
 
     if (ptiCurrent->hEventQueueClient != NULL)
     {
-       ZwClose(ptiCurrent->hEventQueueClient);
+       ObCloseHandle(ptiCurrent->hEventQueueClient, UserMode);
        ObDereferenceObject(ptiCurrent->pEventQueueServer);
     }
     ptiCurrent->hEventQueueClient = NULL;
