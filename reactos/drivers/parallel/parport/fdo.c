@@ -292,7 +292,7 @@ FdoCreateRawParallelPdo(
                          L"\\Registry\\Machine\\HARDWARE\\DeviceMap\\PARALLEL PORTS");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
