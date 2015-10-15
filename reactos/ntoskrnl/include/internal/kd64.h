@@ -352,6 +352,24 @@ KdpCopyMemoryChunks(
 );
 
 //
+// Internal memory handling routines for KD isolation
+//
+VOID
+NTAPI
+KdpMoveMemory(
+    IN PVOID Destination,
+    IN PVOID Source,
+    IN SIZE_T Length
+);
+
+VOID
+NTAPI
+KdpZeroMemory(
+    IN PVOID Destination,
+    IN SIZE_T Length
+);
+
+//
 // Low Level Support Routines for the KD API
 //
 

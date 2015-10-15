@@ -15,6 +15,32 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+KdpMoveMemory(IN PVOID Destination,
+              IN PVOID Source,
+              IN SIZE_T Length)
+{
+    PCHAR DestinationBytes, SourceBytes;
+
+    /* Copy the buffers 1 byte at a time */
+    DestinationBytes = Destination;
+    SourceBytes = Source;
+    while (Length--) *DestinationBytes++ = *SourceBytes++;
+}
+
+VOID
+NTAPI
+KdpZeroMemory(IN PVOID Destination,
+              IN SIZE_T Length)
+{
+    PCHAR DestinationBytes;
+
+    /* Zero the buffer 1 byte at a time */
+    DestinationBytes = Destination;
+    while (Length--) *DestinationBytes++ = 0;
+}
+
 NTSTATUS
 NTAPI
 KdpCopyMemoryChunks(IN ULONG64 Address,
@@ -368,7 +394,7 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->ProgramCounter = (ULONG64)(LONG_PTR)KeGetContextPc(Context);
 
     /* Zero out the entire Control Report */
-    RtlZeroMemory(&WaitStateChange->AnyControlReport,
+    KdpZeroMemory(&WaitStateChange->AnyControlReport,
                   sizeof(DBGKD_ANY_CONTROL_REPORT));
 
     /* Now copy the instruction stream and set the count */
@@ -402,7 +428,9 @@ NTAPI
 KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
 {
     /* Copy the version block */
-    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
+    KdpMoveMemory(Version,
+                  &KdVersionBlock,
+                  sizeof(DBGKD_GET_VERSION64));
 }
 
 VOID
@@ -711,7 +739,9 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         }
 
         /* Copy it over to the debugger */
-        RtlCopyMemory(Data->Buffer, TargetContext, sizeof(CONTEXT));
+        KdpMoveMemory(Data->Buffer,
+                      TargetContext,
+                      sizeof(CONTEXT));
         Data->Length = sizeof(CONTEXT);
 
         /* Let the debugger set the context now */
@@ -765,7 +795,9 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         }
 
         /* Copy the new context to it */
-        RtlCopyMemory(TargetContext, Data->Buffer, sizeof(CONTEXT));
+        KdpMoveMemory(TargetContext,
+                      Data->Buffer,
+                      sizeof(CONTEXT));
 
         /* Finish up */
         State->ReturnStatus = STATUS_SUCCESS;
@@ -819,7 +851,7 @@ KdpGetContextEx(IN PDBGKD_MANIPULATE_STATE64 State,
         }
 
         /* Copy what is requested */
-        RtlCopyMemory(Data->Buffer,
+        KdpMoveMemory(Data->Buffer,
                       (PVOID)((ULONG_PTR)TargetContext + ContextEx->Offset),
                       ContextEx->ByteCount);
 
@@ -883,7 +915,7 @@ KdpSetContextEx(IN PDBGKD_MANIPULATE_STATE64 State,
         }
 
         /* Copy what is requested */
-        RtlCopyMemory((PVOID)((ULONG_PTR)TargetContext + ContextEx->Offset),
+        KdpMoveMemory((PVOID)((ULONG_PTR)TargetContext + ContextEx->Offset),
                       Data->Buffer,
                       ContextEx->ByteCount);
 
@@ -1639,7 +1671,7 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
         KdpSetContextState(&WaitStateChange, Context);
 
         /* Clear the command string structure */
-        RtlZeroMemory(&WaitStateChange.u.CommandString,
+        KdpZeroMemory(&WaitStateChange.u.CommandString,
                       sizeof(DBGKD_COMMAND_STRING));
 
         /* Normalize name string to max */
@@ -1709,15 +1741,22 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Build the architecture common parts of the message */
         KdpSetCommonState(DbgKdExceptionStateChange, Context, &WaitStateChange);
 
-        /* Copy the Exception Record and set First Chance flag */
 #if !defined(_WIN64)
+
+        /* Convert it and copy it over */
         ExceptionRecord32To64((PEXCEPTION_RECORD32)ExceptionRecord,
                               &WaitStateChange.u.Exception.ExceptionRecord);
+
 #else
-        RtlCopyMemory(&WaitStateChange.u.Exception.ExceptionRecord,
+
+        /* Just copy it directly, no need to convert */
+        KdpMoveMemory(&WaitStateChange.u.Exception.ExceptionRecord,
                       ExceptionRecord,
                       sizeof(EXCEPTION_RECORD));
+
 #endif
+
+        /* Set the First Chance flag */
         WaitStateChange.u.Exception.FirstChance = !SecondChanceException;
 
         /* Now finish creating the structure */

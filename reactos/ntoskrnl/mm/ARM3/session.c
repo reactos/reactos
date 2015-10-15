@@ -44,6 +44,14 @@ MiInitializeSessionWsSupport(VOID)
     InitializeListHead(&MmWorkingSetExpansionHead);
 }
 
+BOOLEAN
+NTAPI
+MmIsSessionAddress(IN PVOID Address)
+{
+    /* Check if it is in range */
+    return MI_IS_SESSION_ADDRESS(Address) ? TRUE : FALSE;
+}
+
 LCID
 NTAPI
 MmGetSessionLocaleId(VOID)
