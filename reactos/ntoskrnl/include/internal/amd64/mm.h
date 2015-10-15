@@ -85,7 +85,6 @@
 #define PFN_FROM_PXE(v) ((v)->u.Hard.PageFrameNumber)
 
 /* Macros for portable PTE modification */
-#define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.Global = 0)
 #define MI_MAKE_DIRTY_PAGE(x)      ((x)->u.Hard.Dirty = 1)
 #define MI_MAKE_CLEAN_PAGE(x)      ((x)->u.Hard.Dirty = 0)
 #define MI_MAKE_ACCESSED_PAGE(x)   ((x)->u.Hard.Accessed = 1)

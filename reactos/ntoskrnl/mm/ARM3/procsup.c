@@ -1163,10 +1163,8 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     HyperTable = MiPteToAddress(PointerPte);
 
     /* Now write the PTE/PDE entry for the working set list index itself */
-    TempPte = ValidKernelPte;
+    TempPte = ValidKernelPteLocal;
     TempPte.u.Hard.PageFrameNumber = WsListIndex;
-    /* Hyperspace is local */
-    MI_MAKE_LOCAL_PAGE(&TempPte);
     PdeOffset = MiAddressToPteOffset(MmWorkingSetList);
     HyperTable[PdeOffset] = TempPte;
 

@@ -44,9 +44,8 @@ MiMapPageInHyperSpace(IN PEPROCESS Process,
     //
     // Build the PTE
     //
-    TempPte = ValidKernelPte;
+    TempPte = ValidKernelPteLocal;
     TempPte.u.Hard.PageFrameNumber = Page;
-    MI_MAKE_LOCAL_PAGE(&TempPte); // Hyperspace is local!
 
     //
     // Pick the first hyperspace PTE

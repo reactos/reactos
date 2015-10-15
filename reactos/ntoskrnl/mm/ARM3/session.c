@@ -162,9 +162,9 @@ MiSessionLeader(IN PEPROCESS Process)
     KIRQL OldIrql;
 
     /* Set the flag while under the expansion lock */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueueExpansionLock);
+    OldIrql = MiAcquireExpansionLock();
     Process->Vm.Flags.SessionLeader = TRUE;
-    KeReleaseQueuedSpinLock(LockQueueExpansionLock, OldIrql);
+    MiReleaseExpansionLock(OldIrql);
 }
 
 ULONG
@@ -517,7 +517,7 @@ MiSessionInitializeWorkingSetList(VOID)
         }
 
         /* Write a valid PDE for it */
-        TempPde.u.Long = ValidKernelPdeLocal.u.Long;
+        TempPde = ValidKernelPdeLocal;
         TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
         MI_WRITE_VALID_PDE(PointerPde, TempPde);
 
@@ -548,7 +548,7 @@ MiSessionInitializeWorkingSetList(VOID)
     }
 
     /* Write a valid PTE for it */
-    TempPte.u.Long = ValidKernelPteLocal.u.Long;
+    TempPte = ValidKernelPteLocal;
     MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
 
@@ -667,7 +667,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Loop the global PTEs */
-    TempPte.u.Long = ValidKernelPte.u.Long;
+    TempPte = ValidKernelPte;
     for (i = 0; i < MiSessionDataPages; i++)
     {
         /* Get a zeroed colored zero page */
@@ -707,7 +707,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     }
 
     /* Fill the PTE out */
-    TempPde.u.Long = ValidKernelPdeLocal.u.Long;
+    TempPde = ValidKernelPdeLocal;
     TempPde.u.Hard.PageFrameNumber = SessionPageDirIndex;
 
     /* Setup, allocate, fill out the MmSessionSpace PTE */
@@ -720,7 +720,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     ASSERT(MI_PFN_ELEMENT(SessionPageDirIndex)->u1.WsIndex == 0);
 
      /* Loop all the local PTEs for it */
-    TempPte.u.Long = ValidKernelPteLocal.u.Long;
+    TempPte = ValidKernelPteLocal;
     PointerPte = MiAddressToPte(MmSessionSpace);
     for (i = 0; i < MiSessionDataPages; i++)
     {

@@ -492,8 +492,8 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
     MI_SET_PROCESS2("Kernel");
     PageFrameIndex = MiRemoveAnyPage(0);
+    TempPde = ValidKernelPdeLocal;
     TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
-    TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
     MI_WRITE_VALID_PTE(StartPde, TempPde);
 
     /* Flush the TLB */
@@ -542,6 +542,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
     MI_SET_PROCESS2("Kernel WS List");
     PageFrameIndex = MiRemoveAnyPage(0);
+    TempPte = ValidKernelPteLocal;
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
 
     /* Map the working set list */
