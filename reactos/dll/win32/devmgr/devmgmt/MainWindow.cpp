@@ -1,13 +1,13 @@
 /*
  * PROJECT:     ReactOS Device Manager
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/devmgr/devmgr/MainWindow.cpp
+ * FILE:        dll/win32/devmgr/devmgmt/MainWindow.cpp
  * PURPOSE:     Implements the main container window for the device view
  * COPYRIGHT:   Copyright 2014 - 2015 Ged Murphy <gedmurphy@reactos.org>
  */
 
 
-#include "stdafx.h"
+#include "precomp.h"
 #include "devmgmt.h"
 #include "MainWindow.h"
 
@@ -21,6 +21,8 @@
 #define BTN_UPDATE_DRV      4
 #define BTN_UNINSTALL_DRV   5
 
+HINSTANCE g_hThisInstance = NULL;
+HINSTANCE g_hParentInstance = NULL;
 
 // menu hints
 static const MENU_HINT MainMenuHintTable[] =
@@ -58,25 +60,24 @@ static const MENU_HINT SystemMenuHintTable[] =
     {SC_SIZE,       IDS_HINT_SYS_SIZE},
     {SC_MINIMIZE,   IDS_HINT_SYS_MINIMIZE},
     {SC_MAXIMIZE,   IDS_HINT_SYS_MAXIMIZE},
-    {SC_CLOSE,      IDS_HINT_SYS_CLOSE},
+    {SC_CLOSE,      IDS_HINT_SYS_CLOSE}
 };
 
 static TBBUTTON TbButtons[] =
 {
-    { BTN_PROPERTIES, IDC_PROPERTIES, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { BTN_SCAN_HARDWARE, IDC_SCAN_HARDWARE, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { 2, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, 0, 0 },
-    { BTN_ENABLE_DRV, IDC_ENABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { BTN_DISABLE_DRV, IDC_DISABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { BTN_UPDATE_DRV, IDC_UPDATE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 },
-    { BTN_UNINSTALL_DRV, IDC_UNINSTALL_DRV, TBSTATE_ENABLED, BTNS_BUTTON, 0, 0 }
+    { BTN_PROPERTIES, IDC_PROPERTIES, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_SCAN_HARDWARE, IDC_SCAN_HARDWARE, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { 2, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
+    { BTN_ENABLE_DRV, IDC_ENABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_DISABLE_DRV, IDC_DISABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_UPDATE_DRV, IDC_UPDATE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_UNINSTALL_DRV, IDC_UNINSTALL_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 }
 };
 
 
 /* PUBLIC METHODS **********************************************/
 
-CMainWindow::CMainWindow(void) :
-    m_ToolbarhImageList(NULL),
+CDeviceManager::CDeviceManager(void) :
     m_hMainWnd(NULL),
     m_hStatusBar(NULL),
     m_hToolBar(NULL),
@@ -85,15 +86,55 @@ CMainWindow::CMainWindow(void) :
     m_szMainWndClass = L"DevMgmtWndClass";
 }
 
-CMainWindow::~CMainWindow(void)
+CDeviceManager::~CDeviceManager(void)
 {
-    // Destroy any previous list
-    if (m_ToolbarhImageList) ImageList_Destroy(m_ToolbarhImageList);
 }
 
+
 bool
-CMainWindow::Initialize(LPCTSTR lpCaption,
-                        int nCmdShow)
+CDeviceManager::Create(_In_ HWND /*hWndParent*/,
+                       _In_ HINSTANCE hInst,
+                       _In_opt_z_ LPCWSTR /*lpMachineName*/,
+                       _In_ int nCmdShow)
+{
+    CDeviceManager MainWindow;
+    INITCOMMONCONTROLSEX icex;
+    CAtlStringW szAppName;
+    int Ret = 1;
+
+    // Store the instances
+    g_hParentInstance = hInst;
+    g_hThisInstance = GetModuleHandleW(L"devmgr.dll");
+
+    // Initialize common controls
+    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icex.dwICC = ICC_BAR_CLASSES | ICC_COOL_CLASSES;
+    InitCommonControlsEx(&icex);
+
+    // Load the application name
+    if (szAppName.LoadStringW(g_hThisInstance, IDS_APPNAME))
+    {
+        // Initialize the main window
+        if (MainWindow.Initialize(szAppName, nCmdShow))
+        {
+            // Run the application
+            Ret = MainWindow.Run();
+
+            // Uninitialize the main window
+            MainWindow.Uninitialize();
+        }
+    }
+
+    return (Ret == 0);
+}
+
+
+
+/* PRIVATE METHODS **********************************************/
+
+bool
+CDeviceManager::Initialize(_In_z_ LPCTSTR lpCaption,
+                           _In_ int nCmdShow)
 {
     CAtlStringW szCaption;
     WNDCLASSEXW wc = {0};
@@ -104,13 +145,13 @@ CMainWindow::Initialize(LPCTSTR lpCaption,
     // Setup the window class struct
     wc.cbSize = sizeof(WNDCLASSEXW);
     wc.lpfnWndProc = MainWndProc;
-    wc.hInstance = g_hInstance;
-    wc.hIcon = LoadIcon(g_hInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON));
+    wc.hInstance = g_hThisInstance;
+    wc.hIcon = LoadIcon(g_hThisInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON));
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MAINMENU);
     wc.lpszClassName = m_szMainWndClass;
-    wc.hIconSm = (HICON)LoadImage(g_hInstance,
+    wc.hIconSm = (HICON)LoadImage(g_hThisInstance,
                                   MAKEINTRESOURCE(IDI_MAIN_ICON),
                                   IMAGE_ICON,
                                   16,
@@ -131,7 +172,7 @@ CMainWindow::Initialize(LPCTSTR lpCaption,
                                      500,
                                      NULL,
                                      NULL,
-                                     g_hInstance,
+                                     g_hThisInstance,
                                      this);
     }
 
@@ -140,14 +181,14 @@ CMainWindow::Initialize(LPCTSTR lpCaption,
 }
 
 void
-CMainWindow::Uninitialize()
+CDeviceManager::Uninitialize(void)
 {
     // Unregister the window class 
-    UnregisterClassW(m_szMainWndClass, g_hInstance);
+    UnregisterClassW(m_szMainWndClass, g_hThisInstance);
 }
 
 int
-CMainWindow::Run()
+CDeviceManager::Run(void)
 {
     MSG Msg;
 
@@ -161,14 +202,11 @@ CMainWindow::Run()
     return 0;
 }
 
-
-/* PRIVATE METHODS **********************************************/
-
 bool
-CMainWindow::MainWndMenuHint(WORD CmdId,
-                             const MENU_HINT *HintArray,
-                             DWORD HintsCount,
-                             UINT DefHintId)
+CDeviceManager::MainWndMenuHint(_In_ WORD CmdId,
+                                _In_ const MENU_HINT *HintArray,
+                                _In_ DWORD HintsCount,
+                                _In_ UINT DefHintId)
 {
     bool Found = false;
     const MENU_HINT *LastHint;
@@ -188,16 +226,14 @@ CMainWindow::MainWndMenuHint(WORD CmdId,
 
     StatusBarLoadString(m_hStatusBar,
                         SB_SIMPLEID,
-                        g_hInstance,
+                        g_hThisInstance,
                         HintId);
 
     return Found;
 }
 
 void
-CMainWindow::UpdateStatusBar(
-    _In_ bool InMenuLoop
-    )
+CDeviceManager::UpdateStatusBar(_In_ bool InMenuLoop)
 {
     SendMessageW(m_hStatusBar,
                  SB_SIMPLE,
@@ -206,10 +242,9 @@ CMainWindow::UpdateStatusBar(
 }
 
 bool
-CMainWindow::RefreshView(ViewType Type)
+CDeviceManager::RefreshView(_In_ ViewType Type)
 {
     UINT CheckId = 0;
-    BOOL bSuccess;
 
     // Refreshed the cached view
     m_DeviceView->Refresh(Type, FALSE, TRUE, NULL);
@@ -225,20 +260,19 @@ CMainWindow::RefreshView(ViewType Type)
     }
 
     // Set the new check item
-    bSuccess = CheckMenuRadioItem(m_hMenu,
-                                  IDC_DEVBYTYPE,
-                                  IDC_RESBYCONN,
-                                  CheckId,
-                                  MF_BYCOMMAND);
+    CheckMenuRadioItem(m_hMenu,
+                       IDC_DEVBYTYPE,
+                       IDC_RESBYCONN,
+                       CheckId,
+                       MF_BYCOMMAND);
 
-    return TRUE;
+    return true;
 }
 
 bool
-CMainWindow::CreateToolBar()
+CDeviceManager::CreateToolBar(void)
 {
     TBADDBITMAP TbAddBitmap;
-    INT Index;
 
     DWORD dwStyles = WS_CHILDWINDOW | TBSTYLE_FLAT | TBSTYLE_WRAPABLE | TBSTYLE_TOOLTIPS | CCS_NODIVIDER;
     DWORD dwExStyles = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR;
@@ -251,7 +285,7 @@ CMainWindow::CreateToolBar()
                                  0, 0, 0, 0,
                                  m_hMainWnd,
                                  (HMENU)IDC_TOOLBAR,
-                                 g_hInstance,
+                                 g_hThisInstance,
                                  NULL);
     if (m_hToolBar == NULL) return FALSE;
 
@@ -269,9 +303,9 @@ CMainWindow::CreateToolBar()
                  sizeof(TBBUTTON),
                  0);
 
-    TbAddBitmap.hInst = g_hInstance;
+    TbAddBitmap.hInst = g_hThisInstance;
     TbAddBitmap.nID = IDB_TOOLBAR;
-    Index = SendMessageW(m_hToolBar, TB_ADDBITMAP, _countof(TbButtons), (LPARAM)&TbAddBitmap);
+    SendMessageW(m_hToolBar, TB_ADDBITMAP, _countof(TbButtons), (LPARAM)&TbAddBitmap);
 
     SendMessageW(m_hToolBar, TB_ADDBUTTONSW, _countof(TbButtons), (LPARAM)TbButtons);
     SendMessageW(m_hToolBar, TB_AUTOSIZE, 0, 0);
@@ -285,7 +319,7 @@ CMainWindow::CreateToolBar()
 }
 
 bool
-CMainWindow::CreateStatusBar()
+CDeviceManager::CreateStatusBar(void)
 {
     int StatWidths[] = {110, -1}; // widths of status bar
     bool bRet = FALSE;
@@ -298,7 +332,7 @@ CMainWindow::CreateStatusBar()
                                    0, 0, 0, 0,
                                    m_hMainWnd,
                                    (HMENU)IDC_STATUSBAR,
-                                   g_hInstance,
+                                   g_hThisInstance,
                                    NULL);
     if (m_hStatusBar)
     {
@@ -312,7 +346,7 @@ CMainWindow::CreateStatusBar()
     return bRet;
 }
 
-void CMainWindow::UpdateToolbar()
+void CDeviceManager::UpdateToolbar()
 {
     WORD State;
 
@@ -367,10 +401,10 @@ void CMainWindow::UpdateToolbar()
 
 
 bool
-CMainWindow::StatusBarLoadString(IN HWND hStatusBar,
-                                 IN INT PartId,
-                                 IN HINSTANCE hInstance,
-                                 IN UINT uID)
+CDeviceManager::StatusBarLoadString(_In_ HWND hStatusBar,
+                                    _In_ INT PartId,
+                                    _In_ HINSTANCE hInstance,
+                                    _In_ UINT uID)
 {
     CAtlStringW szMessage;
     bool bRet = false;
@@ -389,7 +423,7 @@ CMainWindow::StatusBarLoadString(IN HWND hStatusBar,
 }
 
 LRESULT
-CMainWindow::OnCreate(HWND hwnd)
+CDeviceManager::OnCreate(_In_ HWND hwnd)
 {
     LRESULT RetCode;
 
@@ -422,7 +456,7 @@ CMainWindow::OnCreate(HWND hwnd)
 }
 
 LRESULT
-CMainWindow::OnSize()
+CDeviceManager::OnSize(void)
 {
     RECT rcClient, rcTool, rcStatus;
     INT lvHeight, iToolHeight, iStatusHeight;
@@ -457,10 +491,10 @@ CMainWindow::OnSize()
 }
 
 LRESULT
-CMainWindow::OnNotify(LPARAM lParam)
+CDeviceManager::OnNotify(_In_ LPARAM lParam)
 {
     LPNMHDR NmHdr = (LPNMHDR)lParam;
-    LRESULT Ret;
+    LRESULT Ret = 0;
 
     switch (NmHdr->code)
     {
@@ -491,6 +525,7 @@ CMainWindow::OnNotify(LPARAM lParam)
         case TTN_GETDISPINFO:
         {
              LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lParam;
+             lpttt->hinst = g_hThisInstance;
 
             UINT_PTR idButton = lpttt->hdr.idFrom;
             switch (idButton)
@@ -502,34 +537,35 @@ CMainWindow::OnNotify(LPARAM lParam)
                     lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_SCAN);
                     break;
                 case IDC_ENABLE_DRV:
-                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_ENABLE);
+                    lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_ENABLE);
                     break;
                 case IDC_DISABLE_DRV:
-                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_DISABLE);
+                    lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_DISABLE);
                     break;
                 case IDC_UPDATE_DRV:
-                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_UPDATE);
+                    lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UPDATE);
                     break;
                 case IDC_UNINSTALL_DRV:
-                    lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_UNINSTALL);
+                    lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UNINSTALL);
                     break;
             }
+            idButton = idButton;
             break;
         }
     }
 
-    return 0;
+    return Ret;
 }
 
 LRESULT
-CMainWindow::OnContext(LPARAM lParam)
+CDeviceManager::OnContext(_In_ LPARAM lParam)
 {
     return m_DeviceView->OnContextMenu(lParam);
 }
 
 LRESULT
-CMainWindow::OnCommand(WPARAM wParam,
-                       LPARAM /*lParam*/)
+CDeviceManager::OnCommand(_In_ WPARAM wParam,
+                          _In_ LPARAM /*lParam*/)
 {
     LRESULT RetCode = 0;
     WORD Msg;
@@ -641,7 +677,7 @@ CMainWindow::OnCommand(WPARAM wParam,
 }
 
 LRESULT
-CMainWindow::OnDestroy()
+CDeviceManager::OnDestroy(void)
 {
     // Uninitialize the device view
     m_DeviceView->Uninitialize();
@@ -660,16 +696,16 @@ CMainWindow::OnDestroy()
 }
 
 LRESULT CALLBACK
-CMainWindow::MainWndProc(HWND hwnd,
-                         UINT msg,
-                         WPARAM wParam,
-                         LPARAM lParam)
+CDeviceManager::MainWndProc(_In_ HWND hwnd,
+                            _In_ UINT msg,
+                            _In_ WPARAM wParam,
+                            _In_ LPARAM lParam)
 {
-    CMainWindow *This;
+    CDeviceManager *This;
     LRESULT RetCode = 0;
 
     // Get the object pointer from window context
-    This = (CMainWindow *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    This = (CDeviceManager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (This == NULL)
     {
         // Check that this isn't a create message
@@ -685,7 +721,7 @@ CMainWindow::MainWndProc(HWND hwnd,
         case WM_CREATE:
         {
             // Get the object pointer from the create param
-            This = (CMainWindow *)((LPCREATESTRUCT)lParam)->lpCreateParams;
+            This = (CDeviceManager *)((LPCREATESTRUCT)lParam)->lpCreateParams;
 
             // Store the pointer in the window's global user data
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)This);
@@ -780,48 +816,4 @@ HandleDefaultMessage:
     }
 
     return RetCode;
-}
-
-
-//////// MOVE ME ////////////////
-
-HINSTANCE g_hInstance = NULL;
-HANDLE ProcessHeap = NULL;
-
-BOOL
-WINAPI
-DeviceManager_ExecuteW(HWND /*hWndParent*/,
-                       HINSTANCE hInst,
-                       LPCWSTR /*lpMachineName*/,
-                       int nCmdShow)
-{
-    CMainWindow MainWindow;
-    INITCOMMONCONTROLSEX icex;
-    CAtlStringW szAppName;
-    int Ret = 1;
-
-    // Store the global values
-    g_hInstance = hInst;
-    ProcessHeap = GetProcessHeap();
-
-    // Initialize common controls
-    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC = ICC_BAR_CLASSES | ICC_COOL_CLASSES;
-    InitCommonControlsEx(&icex);
-
-    // Load the application name
-    if (szAppName.LoadStringW(g_hInstance, IDS_APPNAME))
-    {
-        // Initialize the main window
-        if (MainWindow.Initialize(szAppName, nCmdShow))
-        {
-            // Run the application
-            Ret = MainWindow.Run();
-
-            // Uninitialize the main window
-            MainWindow.Uninitialize();
-        }
-    }
-
-    return Ret;
 }

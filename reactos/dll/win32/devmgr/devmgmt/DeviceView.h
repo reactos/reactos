@@ -14,10 +14,7 @@ enum ViewType
 
 class CDeviceView
 {
-    CRootNode *m_RootNode;
-    CAtlList<CClassNode *> m_ClassNodeList;
-    CAtlList<CDeviceNode *> m_DeviceNodeList;
-    SP_CLASSIMAGELIST_DATA m_ImageListData;
+
     HWND m_hMainWnd;
     HWND m_hTreeView;
     HWND m_hPropertyDialog;
@@ -25,6 +22,11 @@ class CDeviceView
     ViewType m_ViewType;
     HTREEITEM m_hTreeRoot;
     bool m_ShowHidden;
+
+    CRootNode *m_RootNode;
+    CAtlList<CClassNode *> m_ClassNodeList;
+    CAtlList<CDeviceNode *> m_DeviceNodeList;
+    SP_CLASSIMAGELIST_DATA m_ImageListData;
 
 public:
     CDeviceView(

@@ -1,13 +1,13 @@
 /*
 * PROJECT:     ReactOS Device Manager
 * LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll/win32/devmgr/devmgr/ClassNode.cpp
+* FILE:        dll/win32/devmgr/devmgmt/ClassNode.cpp
 * PURPOSE:     Class object for
 * COPYRIGHT:   Copyright 2015 Ged Murphy <gedmurphy@reactos.org>
 *
 */
 
-#include "stdafx.h"
+#include "precomp.h"
 #include "devmgmt.h"
 #include "DeviceNode.h"
 
@@ -116,6 +116,7 @@ CDeviceNode::SetupNode()
                               &m_ClassGuid,
                               &m_ClassImage);
 
+
     // Get the description for the device
     ulLength = DISPLAY_NAME_LEN * sizeof(WCHAR);
     cr = CM_Get_DevNode_Registry_PropertyW(m_DevInst,
@@ -136,11 +137,11 @@ CDeviceNode::SetupNode()
 
     }
 
-    // Cleanup if something failed
     if (cr != CR_SUCCESS)
     {
-        Cleanup();
-        return false;
+        CAtlStringW str;
+        if (str.LoadStringW(g_hThisInstance, IDS_UNKNOWNDEVICE))
+            StringCchCopyW(m_DisplayName, MAX_PATH, str.GetBuffer());
     }
 
     return true;

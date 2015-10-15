@@ -1,46 +1,98 @@
 #pragma once
 
-#define IDI_DEVMGR 100
+#define IDC_STATIC          -1
 
-#define IDD_HARDWARE        100
-#define IDD_DEVICEGENERAL   101
-#define IDD_DEVICEDRIVER    102
-#define IDD_DEVICERESOURCES 103
-#define IDD_DRIVERDETAILS   104
-#define IDD_DEVICEDETAILS   105
-#define IDD_DEVICEPOWER     106
+#define IDS_APPNAME         10
 
-#define IDC_DEVICON          0x57B
-#define IDC_DEVNAME          0x57C
-#define IDC_DEVTYPE          0x57D
-#define IDC_DEVMANUFACTURER  0x57E
-#define IDC_DEVLOCATION      0x57F
-#define IDC_DEVSTATUSGROUP   0x580
-#define IDC_DEVSTATUS        0x581
-#define IDC_DEVUSAGE         0x582
-#define IDC_DEVICES          0x583
-#define IDC_LV_DEVICES       0x584
-#define IDC_PROPERTIESGROUP  0x585
-#define IDC_MANUFACTURER     0x587
-#define IDC_LOCATION         0x588
-#define IDC_STATUS           0x586
-#define IDC_TROUBLESHOOT     0x589
-#define IDC_PROPERTIES       0x58A
-#define IDC_DEVUSAGELABEL    0x58B
-#define IDC_DEVPROBLEM       0x58C
-#define IDC_DRVPROVIDER      0x58D
-#define IDC_DRVDATE          0x58E
-#define IDC_DRVVERSION       0x58F
-#define IDC_DIGITALSIGNER    0x590
-#define IDC_DRIVERDETAILS    0x591
-#define IDC_DRIVERFILES      0x592
-#define IDC_FILEPROVIDER     0x593
-#define IDC_FILEVERSION      0x594
-#define IDC_FILECOPYRIGHT    0x595
-#define IDC_DETAILSPROPNAME  0x596
-#define IDC_DETAILSPROPVALUE 0x597
-#define IDC_UPDATEDRIVER     0x598
-#define IDC_DRIVERRESOURCES  0x599
+#define IDI_MAIN_ICON       20
+#define IDB_ROOT_IMAGE      21
+#define IDB_TOOLBAR         22
+
+/* windows */
+#define IDC_TREEVIEW        30
+#define IDC_TOOLBAR         31
+#define IDC_STATUSBAR       32
+#define IDR_MAINMENU        33
+#define IDR_POPUP           34
+
+/* Actions */
+#define IDC_PROPERTIES      40
+#define IDC_SCAN_HARDWARE   41
+#define IDC_ENABLE_DRV      42
+#define IDC_DISABLE_DRV     43
+#define IDC_UPDATE_DRV      44
+#define IDC_UNINSTALL_DRV   45
+#define IDC_ADD_HARDWARE    46
+
+/* Menu items */
+#define IDC_ACTIONMENU      50
+#define IDC_ABOUT           51
+#define IDC_EXIT            52
+
+
+/* view menu */
+#define IDC_DEVBYTYPE       60
+#define IDC_DEVBYCONN       61
+#define IDC_RESBYTYPE       62
+#define IDC_RESBYCONN       63
+#define IDC_SHOWHIDDEN      64
+
+
+/* tooltips */
+#define IDS_TOOLTIP_PROPERTIES  70
+#define IDS_TOOLTIP_SCAN        71
+#define IDS_TOOLTIP_ENABLE      72
+#define IDS_TOOLTIP_DISABLE     73
+#define IDS_TOOLTIP_UPDATE      74
+#define IDS_TOOLTIP_UNINSTALL   75
+
+/* General strings */
+#define IDS_CONFIRM_DISABLE     80
+
+/* Menu strings */
+#define IDS_MENU_UPDATE         90
+#define IDS_MENU_ENABLE         91
+#define IDS_MENU_DISABLE        92
+#define IDS_MENU_UNINSTALL      93
+#define IDS_MENU_SCAN           94
+#define IDS_MENU_ADD            95
+#define IDS_MENU_PROPERTIES     96
+
+
+/* menu hints */
+#define IDS_HINT_BLANK          100
+#define IDS_HINT_PROPERTIES     101
+#define IDS_HINT_SCAN           102
+#define IDS_HINT_ENABLE         103
+#define IDS_HINT_DISABLE        104
+#define IDS_HINT_UPDATE         105
+#define IDS_HINT_UNINSTALL      106
+#define IDS_HINT_ADD            107
+#define IDS_HINT_ABOUT          108
+#define IDS_HINT_EXIT           109
+
+#define IDS_HINT_DEV_BY_TYPE    120
+#define IDS_HINT_DEV_BY_CONN    121
+#define IDS_HINT_RES_BY_TYPE    123
+#define IDS_HINT_RES_BY_CONN    124
+#define IDS_HINT_SHOW_HIDDEN    125
+
+/* system menu hints */
+#define IDS_HINT_SYS_RESTORE    130
+#define IDS_HINT_SYS_MOVE       131
+#define IDS_HINT_SYS_SIZE       132
+#define IDS_HINT_SYS_MINIMIZE   133
+#define IDS_HINT_SYS_MAXIMIZE   134
+#define IDS_HINT_SYS_CLOSE      135
+
+
+
+
+
+
+
+
+#define IDI_DEVMGR 255
 
 #define IDS_NAME                  0x100
 #define IDS_TYPE                  0x101
@@ -154,3 +206,43 @@
 #define IDS_PROP_CURRENTPOWERSTATE  0x315
 #define IDS_PROP_POWERCAPABILITIES  0x316
 #define IDS_PROP_POWERSTATEMAPPINGS 0x317
+
+#define IDD_HARDWARE        0x400
+#define IDD_DEVICEGENERAL   0x401
+#define IDD_DEVICEDRIVER    0x402
+#define IDD_DEVICERESOURCES 0x403
+#define IDD_DRIVERDETAILS   0x404
+#define IDD_DEVICEDETAILS   0x405
+#define IDD_DEVICEPOWER     0x406
+
+#define IDC_DEVICON          0x57B
+#define IDC_DEVNAME          0x57C
+#define IDC_DEVTYPE          0x57D
+#define IDC_DEVMANUFACTURER  0x57E
+#define IDC_DEVLOCATION      0x57F
+#define IDC_DEVSTATUSGROUP   0x580
+#define IDC_DEVSTATUS        0x581
+#define IDC_DEVUSAGE         0x582
+#define IDC_DEVICES          0x583
+#define IDC_LV_DEVICES       0x584
+#define IDC_PROPERTIESGROUP  0x585
+#define IDC_MANUFACTURER     0x587
+#define IDC_LOCATION         0x588
+#define IDC_STATUS           0x586
+#define IDC_TROUBLESHOOT     0x589
+#define IDC_PROPERTIES2      0x58A
+#define IDC_DEVUSAGELABEL    0x58B
+#define IDC_DEVPROBLEM       0x58C
+#define IDC_DRVPROVIDER      0x58D
+#define IDC_DRVDATE          0x58E
+#define IDC_DRVVERSION       0x58F
+#define IDC_DIGITALSIGNER    0x590
+#define IDC_DRIVERDETAILS    0x591
+#define IDC_DRIVERFILES      0x592
+#define IDC_FILEPROVIDER     0x593
+#define IDC_FILEVERSION      0x594
+#define IDC_FILECOPYRIGHT    0x595
+#define IDC_DETAILSPROPNAME  0x596
+#define IDC_DETAILSPROPVALUE 0x597
+#define IDC_UPDATEDRIVER     0x598
+#define IDC_DRIVERRESOURCES  0x599
