@@ -182,17 +182,25 @@ ApphelpCacheQueryInfo(
     FILE_STANDARD_INFORMATION FileStandard;
     NTSTATUS Status;
 
-    Status = ZwQueryInformationFile(ImageHandle, &IoStatusBlock,
-        &FileBasic, sizeof(FileBasic), FileBasicInformation);
+    Status = ZwQueryInformationFile(ImageHandle,
+                                    &IoStatusBlock,
+                                    &FileBasic,
+                                    sizeof(FileBasic),
+                                    FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = ZwQueryInformationFile(ImageHandle,
+                                    &IoStatusBlock,
+                                    &FileStandard,
+                                    sizeof(FileStandard),
+                                    FileStandardInformation);
     if (NT_SUCCESS(Status))
     {
-        Status = ZwQueryInformationFile(ImageHandle, &IoStatusBlock,
-            &FileStandard, sizeof(FileStandard), FileStandardInformation);
-        if (NT_SUCCESS(Status))
-        {
-            Entry->Persistent.DateTime = FileBasic.LastWriteTime;
-            Entry->Persistent.FileSize = FileStandard.EndOfFile;
-        }
+        Entry->Persistent.DateTime = FileBasic.LastWriteTime;
+        Entry->Persistent.FileSize = FileStandard.EndOfFile;
     }
     return Status;
 }
@@ -204,14 +212,21 @@ ApphelpShimCacheCompareRoutine(
     _In_ PVOID FirstStruct,
     _In_ PVOID SecondStruct)
 {
-    LONG lResult = RtlCompareUnicodeString(
-        &((PSHIM_CACHE_ENTRY)FirstStruct)->Persistent.ImageName,
-        &((PSHIM_CACHE_ENTRY)SecondStruct)->Persistent.ImageName, TRUE);
+    PSHIM_CACHE_ENTRY FirstEntry = FirstStruct;
+    PSHIM_CACHE_ENTRY SecondEntry = SecondStruct;
+    LONG Result;
 
-    if (lResult < 0)
+    Result = RtlCompareUnicodeString(&FirstEntry->Persistent.ImageName,
+                                     &SecondEntry->Persistent.ImageName,
+                                     TRUE);
+    if (Result < 0)
+    {
         return GenericLessThan;
-    else if (lResult == 0)
+    }
+    else if (Result == 0)
+    {
         return GenericEqual;
+    }
     return GenericGreaterThan;
 }
 
@@ -239,47 +254,53 @@ ApphelpCacheParse(
     _In_ ULONG DataLength)
 {
     PSHIM_PERSISTENT_CACHE_HEADER Header = (PSHIM_PERSISTENT_CACHE_HEADER)Data;
+    ULONG Cur;
+    ULONG NumEntries;
+    UNICODE_STRING String;
+    SHIM_CACHE_ENTRY Entry = EMPTY_SHIM_ENTRY;
+    PSHIM_CACHE_ENTRY Result;
+    PSHIM_PERSISTENT_CACHE_ENTRY Persistent;
 
     if (DataLength < CACHE_HEADER_SIZE_NT_52)
     {
         DPRINT1("SHIMS: ApphelpCacheParse not enough data for a minimal header (0x%x)\n", DataLength);
         return STATUS_INVALID_PARAMETER;
     }
-    if (Header->Magic == SHIM_CACHE_MAGIC)
-    {
-        ULONG Cur;
-        ULONG NumEntries = Header->NumEntries;
-        DPRINT1("SHIMS: ApphelpCacheParse walking %d entries\n", NumEntries);
-        for (Cur = 0; Cur < NumEntries; ++Cur)
-        {
-            UNICODE_STRING String;
-            SHIM_CACHE_ENTRY Entry = EMPTY_SHIM_ENTRY;
-            PSHIM_CACHE_ENTRY Result;
-            PSHIM_PERSISTENT_CACHE_ENTRY pPersistent =
-                (PSHIM_PERSISTENT_CACHE_ENTRY)(Data + SHIM_CACHE_HEADER_SIZE +
-                                                (Cur * SHIM_PERSISTENT_CACHE_ENTRY_SIZE));
-            /* The entry in the Persitent storage is not really a UNICODE_STRING,
-                so we have to convert the offset into a real pointer before using it. */
-            String.Length = pPersistent->ImageName.Length;
-            String.MaximumLength = pPersistent->ImageName.MaximumLength;
-            String.Buffer = (PWCHAR)((ULONG_PTR)pPersistent->ImageName.Buffer + Data);
 
-            /* Now we copy all data to a local buffer, that can be safely duplicated by RtlInsert */
-            Entry.Persistent = *pPersistent;
-            ApphelpDuplicateUnicodeString(&Entry.Persistent.ImageName, &String);
-            Result = RtlInsertElementGenericTableAvl(&ApphelpShimCache, &Entry, sizeof(Entry), NULL);
-            if (!Result)
-            {
-                DPRINT1("SHIMS: ApphelpCacheParse insert failed\n");
-                ApphelpFreeUnicodeString(&Entry.Persistent.ImageName);
-                return STATUS_INVALID_PARAMETER;
-            }
-            InsertTailList(&ApphelpShimCacheAge, &Result->List);
-        }
-        return STATUS_SUCCESS;
+    if (Header->Magic != SHIM_CACHE_MAGIC)
+    {
+        DPRINT1("SHIMS: ApphelpCacheParse found invalid magic (0x%x)\n", Header->Magic);
+        return STATUS_INVALID_PARAMETER;
     }
-    DPRINT1("SHIMS: ApphelpCacheParse found invalid magic (0x%x)\n", Header->Magic);
-    return STATUS_INVALID_PARAMETER;
+
+    NumEntries = Header->NumEntries;
+    DPRINT1("SHIMS: ApphelpCacheParse walking %d entries\n", NumEntries);
+    for (Cur = 0; Cur < NumEntries; ++Cur)
+    {
+        Persistent = (PSHIM_PERSISTENT_CACHE_ENTRY)(Data + SHIM_CACHE_HEADER_SIZE +
+                                                    (Cur * SHIM_PERSISTENT_CACHE_ENTRY_SIZE));
+        /* The entry in the Persistent storage is not really a UNICODE_STRING,
+            so we have to convert the offset into a real pointer before using it. */
+        String.Length = Persistent->ImageName.Length;
+        String.MaximumLength = Persistent->ImageName.MaximumLength;
+        String.Buffer = (PWCHAR)((ULONG_PTR)Persistent->ImageName.Buffer + Data);
+
+        /* Now we copy all data to a local buffer, that can be safely duplicated by RtlInsert */
+        Entry.Persistent = *Persistent;
+        ApphelpDuplicateUnicodeString(&Entry.Persistent.ImageName, &String);
+        Result = RtlInsertElementGenericTableAvl(&ApphelpShimCache,
+                                                 &Entry,
+                                                 sizeof(Entry),
+                                                 NULL);
+        if (!Result)
+        {
+            DPRINT1("SHIMS: ApphelpCacheParse insert failed\n");
+            ApphelpFreeUnicodeString(&Entry.Persistent.ImageName);
+            return STATUS_INVALID_PARAMETER;
+        }
+        InsertTailList(&ApphelpShimCacheAge, &Result->List);
+    }
+    return STATUS_SUCCESS;
 }
 
 BOOLEAN
@@ -292,33 +313,37 @@ ApphelpCacheRead(VOID)
     ULONG KeyInfoSize, ResultSize;
 
     Status = ZwOpenKey(&KeyHandle, KEY_QUERY_VALUE, &AppCompatKeyAttributes);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SHIMS: ApphelpCacheRead could not even open Session Manager\\AppCompatCache (0x%x)\n", Status);
         return FALSE;
     }
 
-    Status = ZwQueryValueKey(KeyHandle, &AppCompatCacheValue,
-            KeyValuePartialInformation, KeyValueInformation,
-            sizeof(KeyValueObject), &ResultSize);
-
+    Status = ZwQueryValueKey(KeyHandle,
+                             &AppCompatCacheValue,
+                             KeyValuePartialInformation,
+                             KeyValueInformation,
+                             sizeof(KeyValueObject),
+                             &ResultSize);
     if (Status == STATUS_BUFFER_OVERFLOW)
     {
         KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + KeyValueInformation->DataLength;
         KeyValueInformation = ApphelpAlloc(KeyInfoSize);
         if (KeyValueInformation != NULL)
         {
-            Status = ZwQueryValueKey(KeyHandle, &AppCompatCacheValue,
-                        KeyValuePartialInformation, KeyValueInformation,
-                        KeyInfoSize, &ResultSize);
+            Status = ZwQueryValueKey(KeyHandle,
+                                     &AppCompatCacheValue,
+                                     KeyValuePartialInformation,
+                                     KeyValueInformation,
+                                     KeyInfoSize,
+                                     &ResultSize);
         }
     }
 
     if (NT_SUCCESS(Status) && KeyValueInformation->Type == REG_BINARY)
     {
         Status = ApphelpCacheParse(KeyValueInformation->Data,
-                                    KeyValueInformation->DataLength);
+                                   KeyValueInformation->DataLength);
     }
     else
     {
@@ -326,7 +351,9 @@ ApphelpCacheRead(VOID)
     }
 
     if (KeyValueInformation != &KeyValueObject && KeyValueInformation != NULL)
+    {
         ApphelpFree(KeyValueInformation);
+    }
 
     ZwClose(KeyHandle);
     return NT_SUCCESS(Status);
@@ -389,7 +416,12 @@ ApphelpCacheWrite(VOID)
     Status = ZwOpenKey(&KeyHandle, KEY_SET_VALUE, &AppCompatKeyAttributes);
     if (NT_SUCCESS(Status))
     {
-        Status = ZwSetValueKey(KeyHandle, &AppCompatCacheValue, 0, REG_BINARY, Buffer, Length);
+        Status = ZwSetValueKey(KeyHandle,
+                               &AppCompatCacheValue,
+                               0,
+                               REG_BINARY,
+                               Buffer,
+                               Length);
         ZwClose(KeyHandle);
     }
     else
@@ -418,10 +450,10 @@ ApphelpCacheInitialize(VOID)
     {
         ExInitializeResourceLite(&ApphelpCacheLock);
         RtlInitializeGenericTableAvl(&ApphelpShimCache,
-            ApphelpShimCacheCompareRoutine,
-            ApphelpShimCacheAllocateRoutine,
-            ApphelpShimCacheFreeRoutine,
-            NULL);
+                                     ApphelpShimCacheCompareRoutine,
+                                     ApphelpShimCacheAllocateRoutine,
+                                     ApphelpShimCacheFreeRoutine,
+                                     NULL);
         InitializeListHead(&ApphelpShimCacheAge);
         ApphelpCacheEnabled = ApphelpCacheRead();
     }
@@ -452,12 +484,16 @@ ApphelpValidateData(
         UNICODE_STRING LocalImageName;
         _SEH2_TRY
         {
-            ProbeForRead(ServiceData, sizeof(APPHELP_CACHE_SERVICE_LOOKUP), sizeof(ULONG));
+            ProbeForRead(ServiceData,
+                         sizeof(APPHELP_CACHE_SERVICE_LOOKUP),
+                         sizeof(ULONG));
             LocalImageName = ServiceData->ImageName;
             *ImageHandle = ServiceData->ImageHandle;
             if (LocalImageName.Length && LocalImageName.Buffer)
             {
-                ProbeForRead(LocalImageName.Buffer, LocalImageName.Length * sizeof(WCHAR), 1);
+                ProbeForRead(LocalImageName.Buffer,
+                             LocalImageName.Length * sizeof(WCHAR),
+                             1);
                 ApphelpDuplicateUnicodeString(ImageName, &LocalImageName);
                 Status = STATUS_SUCCESS;
             }
@@ -484,7 +520,9 @@ ApphelpCacheRemoveEntryNolock(
         PWSTR Buffer = Entry->Persistent.ImageName.Buffer;
         RemoveEntryList(&Entry->List);
         if (RtlDeleteElementGenericTableAvl(&ApphelpShimCache, Entry))
+        {
             ApphelpFree(Buffer);
+        }
         return STATUS_SUCCESS;
     }
     return STATUS_NOT_FOUND;
@@ -496,45 +534,52 @@ ApphelpCacheLookupEntry(
     _In_ HANDLE ImageHandle)
 {
     NTSTATUS Status = STATUS_NOT_FOUND;
+    SHIM_CACHE_ENTRY Lookup = EMPTY_SHIM_ENTRY;
+    PSHIM_CACHE_ENTRY Entry;
 
-    if (ApphelpCacheTryAcquireLock())
+    if (!ApphelpCacheTryAcquireLock())
     {
-        SHIM_CACHE_ENTRY Lookup = EMPTY_SHIM_ENTRY;
-        PSHIM_CACHE_ENTRY Entry;
-        Lookup.Persistent.ImageName = *ImageName;
-        Entry = RtlLookupElementGenericTableAvl(&ApphelpShimCache, &Lookup);
-        if (Entry)
+        return Status;
+    }
+
+    Lookup.Persistent.ImageName = *ImageName;
+    Entry = RtlLookupElementGenericTableAvl(&ApphelpShimCache, &Lookup);
+    if (Entry == NULL)
+    {
+        DPRINT1("SHIMS: ApphelpCacheLookupEntry: could not find %wZ\n", ImageName);
+        goto Cleanup;
+    }
+
+    DPRINT1("SHIMS: ApphelpCacheLookupEntry: found %wZ\n", ImageName);
+    if (ImageHandle == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("SHIMS: ApphelpCacheLookupEntry: ok\n");
+        /* just return if we know it, do not query file info */
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = ApphelpCacheQueryInfo(ImageHandle, &Lookup);
+        if (NT_SUCCESS(Status) &&
+            Lookup.Persistent.DateTime.QuadPart == Entry->Persistent.DateTime.QuadPart &&
+            Lookup.Persistent.FileSize.QuadPart == Entry->Persistent.FileSize.QuadPart)
         {
-            DPRINT1("SHIMS: ApphelpCacheLookupEntry: found %wZ\n", ImageName);
-            if (ImageHandle == INVALID_HANDLE_VALUE)
-            {
-                DPRINT1("SHIMS: ApphelpCacheLookupEntry: ok\n");
-                /* just return if we know it, do not query file info */
-                Status = STATUS_SUCCESS;
-            }
-            else if (NT_SUCCESS(ApphelpCacheQueryInfo(ImageHandle, &Lookup)) &&
-                Lookup.Persistent.DateTime.QuadPart == Entry->Persistent.DateTime.QuadPart &&
-                Lookup.Persistent.FileSize.QuadPart == Entry->Persistent.FileSize.QuadPart)
-            {
-                DPRINT1("SHIMS: ApphelpCacheLookupEntry: found & validated\n");
-                Status = STATUS_SUCCESS;
-                /* move it to the front to keep it alive */
-                RemoveEntryList(&Entry->List);
-                InsertHeadList(&ApphelpShimCacheAge, &Entry->List);
-            }
-            else
-            {
-                DPRINT1("SHIMS: ApphelpCacheLookupEntry: file info mismatch\n");
-                /* Could not read file info, or it did not match, drop it from the cache */
-                ApphelpCacheRemoveEntryNolock(Entry);
-            }
+            DPRINT1("SHIMS: ApphelpCacheLookupEntry: found & validated\n");
+            Status = STATUS_SUCCESS;
+            /* move it to the front to keep it alive */
+            RemoveEntryList(&Entry->List);
+            InsertHeadList(&ApphelpShimCacheAge, &Entry->List);
         }
         else
         {
-            DPRINT1("SHIMS: ApphelpCacheLookupEntry: could not find %wZ\n", ImageName);
+            DPRINT1("SHIMS: ApphelpCacheLookupEntry: file info mismatch\n");
+            /* Could not read file info, or it did not match, drop it from the cache */
+            ApphelpCacheRemoveEntryNolock(Entry);
         }
-        ApphelpCacheReleaseLock();
     }
+
+Cleanup:
+    ApphelpCacheReleaseLock();
     return Status;
 }
 
@@ -584,49 +629,57 @@ ApphelpCacheUpdateEntry(
     if (ImageHandle != INVALID_HANDLE_VALUE)
     {
         Status = ApphelpCacheQueryInfo(ImageHandle, &Entry);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
     }
 
-    if (NT_SUCCESS(Status))
+    /* Use ImageName for the lookup, don't actually duplicate it */
+    Entry.Persistent.ImageName = *ImageName;
+    Lookup = RtlLookupElementGenericTableFullAvl(&ApphelpShimCache,
+                                                 &Entry,
+                                                 &NodeOrParent, &SearchResult);
+    if (Lookup)
     {
-        /* Use ImageName for the lookup, don't actually duplicate it */
-        Entry.Persistent.ImageName = *ImageName;
-        Lookup = RtlLookupElementGenericTableFullAvl(&ApphelpShimCache, &Entry,
-                                                    &NodeOrParent, &SearchResult);
-        if (Lookup)
+        DPRINT1("SHIMS: ApphelpCacheUpdateEntry: Entry already exists, reusing it\n");
+        /* Unlink the found item, so we can put it back at the front,
+            and copy the earlier obtained file info*/
+        RemoveEntryList(&Lookup->List);
+        Lookup->Persistent.DateTime = Entry.Persistent.DateTime;
+        Lookup->Persistent.FileSize = Entry.Persistent.FileSize;
+    }
+    else
+    {
+        DPRINT1("SHIMS: ApphelpCacheUpdateEntry: Inserting new Entry\n");
+        /* Insert a new entry, with its own copy of the ImageName */
+        ApphelpDuplicateUnicodeString(&Entry.Persistent.ImageName, ImageName);
+        Lookup = RtlInsertElementGenericTableFullAvl(&ApphelpShimCache,
+                                                     &Entry,
+                                                     sizeof(Entry),
+                                                     0,
+                                                     NodeOrParent,
+                                                     SearchResult);
+        if (!Lookup)
         {
-            DPRINT1("SHIMS: ApphelpCacheUpdateEntry: Entry already exists, reusing it\n");
-            /* Unlink the found item, so we can put it back at the front,
-                and copy the earlier obtained file info*/
-            RemoveEntryList(&Lookup->List);
-            Lookup->Persistent.DateTime = Entry.Persistent.DateTime;
-            Lookup->Persistent.FileSize = Entry.Persistent.FileSize;
-        }
-        else
-        {
-            DPRINT1("SHIMS: ApphelpCacheUpdateEntry: Inserting new Entry\n");
-            /* Insert a new entry, with its own copy of the ImageName */
-            ApphelpDuplicateUnicodeString(&Entry.Persistent.ImageName, ImageName);
-            Lookup = RtlInsertElementGenericTableFullAvl(&ApphelpShimCache,
-                        &Entry, sizeof(Entry), 0, NodeOrParent, SearchResult);
-            if (!Lookup)
-            {
-                ApphelpFreeUnicodeString(&Entry.Persistent.ImageName);
-                Status = STATUS_NO_MEMORY;
-            }
-        }
-        if (Lookup)
-        {
-            /* Either we re-used an existing item, or we inserted a new one, keep it alive */
-            InsertHeadList(&ApphelpShimCacheAge, &Lookup->List);
-            if (RtlNumberGenericTableElementsAvl(&ApphelpShimCache) > MAX_SHIM_ENTRIES)
-            {
-                PSHIM_CACHE_ENTRY Remove;
-                DPRINT1("SHIMS: ApphelpCacheUpdateEntry: Cache growing too big, dropping oldest item\n");
-                Remove = CONTAINING_RECORD(ApphelpShimCacheAge.Blink, SHIM_CACHE_ENTRY, List);
-                Status = ApphelpCacheRemoveEntryNolock(Remove);
-            }
+            ApphelpFreeUnicodeString(&Entry.Persistent.ImageName);
+            Status = STATUS_NO_MEMORY;
         }
     }
+    if (Lookup)
+    {
+        /* Either we re-used an existing item, or we inserted a new one, keep it alive */
+        InsertHeadList(&ApphelpShimCacheAge, &Lookup->List);
+        if (RtlNumberGenericTableElementsAvl(&ApphelpShimCache) > MAX_SHIM_ENTRIES)
+        {
+            PSHIM_CACHE_ENTRY Remove;
+            DPRINT1("SHIMS: ApphelpCacheUpdateEntry: Cache growing too big, dropping oldest item\n");
+            Remove = CONTAINING_RECORD(ApphelpShimCacheAge.Blink, SHIM_CACHE_ENTRY, List);
+            Status = ApphelpCacheRemoveEntryNolock(Remove);
+        }
+    }
+
+Cleanup:
     ApphelpCacheReleaseLock();
     return Status;
 }
@@ -650,18 +703,17 @@ NTSTATUS
 ApphelpCacheDump(VOID)
 {
     PLIST_ENTRY ListEntry;
+    PSHIM_CACHE_ENTRY Entry;
 
     DPRINT1("SHIMS: NtApphelpCacheControl( Dumping entries, newset to oldest )\n");
     ApphelpCacheAcquireLock();
     ListEntry = ApphelpShimCacheAge.Flink;
     while (ListEntry != &ApphelpShimCacheAge)
     {
-        PSHIM_CACHE_ENTRY Entry = CONTAINING_RECORD(ListEntry, SHIM_CACHE_ENTRY, List);
-        DPRINT1("Entry: %S\n", Entry->Persistent.ImageName.Buffer);
-        DPRINT1("DateTime High: 0x%x, Low: 0x%x\n",
-            Entry->Persistent.DateTime.HighPart, Entry->Persistent.DateTime.LowPart);
-        DPRINT1("FileSize High: 0x%x, Low: 0x%x\n",
-            Entry->Persistent.FileSize.HighPart, Entry->Persistent.FileSize.LowPart);
+        Entry = CONTAINING_RECORD(ListEntry, SHIM_CACHE_ENTRY, List);
+        DPRINT1("Entry: %wZ\n", &Entry->Persistent.ImageName);
+        DPRINT1("DateTime: 0x%I64x\n", Entry->Persistent.DateTime.QuadPart);
+        DPRINT1("FileSize: 0x%I64x\n", Entry->Persistent.FileSize.QuadPart);
         DPRINT1("Flags: 0x%x\n", Entry->CompatFlags);
         ListEntry = ListEntry->Flink;
     }
