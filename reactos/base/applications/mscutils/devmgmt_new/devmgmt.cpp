@@ -1,7 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <cfgmgr32.h>
-#include <devmgr\devmgr.h>
+#include <devmgr/devmgr.h>
 
 int WINAPI
 wWinMain(HINSTANCE hThisInstance,

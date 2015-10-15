@@ -3,8 +3,7 @@ set_cpp(WITH_RTTI WITH_RUNTIME)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/dll)
 
-list(APPEND SOURCE
-    devmgmt.cpp)
+list(APPEND SOURCE devmgmt.cpp)
 
 add_executable(devmgmt ${SOURCE} devmgmt.rc)
 set_module_type(devmgmt win32gui UNICODE)
