@@ -379,11 +379,7 @@ AllocW32Thread(IN  PETHREAD Thread,
 
     /* Check that we were not called with an already existing Win32 thread info */
     ptiCurrent = PsGetThreadWin32Thread(Thread);
-    if (ptiCurrent)
-    {
-        ERR_CH(UserThread, "PsGetThreadWin32Thread returned non-NULL thread info!!\n");
-        // return STATUS_SUCCESS;
-    }
+    NT_ASSERT(ptiCurrent == NULL);
 
     /* Allocate a new Win32 thread info */
     ptiCurrent = ExAllocatePoolWithTag(NonPagedPool,

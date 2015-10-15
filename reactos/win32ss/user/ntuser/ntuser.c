@@ -113,7 +113,9 @@ UserInitialize(VOID)
     HBITMAP hPattern55AABitmap = NULL;
     NTSTATUS Status;
 
-// Create Event for Diconnect Desktop.
+    NT_ASSERT(PsGetCurrentThreadWin32Thread() != NULL);
+
+// Create Event for Disconnect Desktop.
 
     Status = UserCreateWinstaDirectory();
     if (!NT_SUCCESS(Status)) return Status;
@@ -128,14 +130,7 @@ UserInitialize(VOID)
 //     Update Shared Device Caps.
 //     Initialize User Screen.
 // }
-// Create ThreadInfo for this Thread!
-// {
 
-    /* Initialize the current thread */
-    Status = InitThreadCallback(PsGetCurrentThread());
-    if (!NT_SUCCESS(Status)) return Status;
-
-// }
 // Set Global SERVERINFO Error flags.
 // Load Resources.
 
