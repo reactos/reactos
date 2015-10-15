@@ -129,6 +129,11 @@ HINSTANCE
 LoadAndInitComctl32(VOID);
 
 BOOL
+GetDeviceAndComputerName(LPWSTR lpString,
+                         WCHAR szDeviceID[],
+                         WCHAR szMachineName[]);
+
+BOOL
 GetDeviceManufacturerString(IN HDEVINFO DeviceInfoSet,
                             IN PSP_DEVINFO_DATA DeviceInfoData,
                             OUT LPWSTR szBuffer,

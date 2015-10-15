@@ -1129,3 +1129,61 @@ LoadAndInitComctl32(VOID)
 
     return hComCtl32;
 }
+
+
+BOOL
+GetDeviceAndComputerName(LPWSTR lpString,
+                         WCHAR szDeviceID[],
+                         WCHAR szMachineName[])
+{
+    BOOL ret = FALSE;
+
+    szDeviceID[0] = L'\0';
+    szMachineName[0] = L'\0';
+
+    while (*lpString != L'\0')
+    {
+        if (*lpString == L'/')
+        {
+            lpString++;
+            if (!_wcsnicmp(lpString, L"DeviceID", 8))
+            {
+                lpString += 9;
+                if (*lpString != L'\0')
+                {
+                    int i = 0;
+                    while ((*lpString != L' ') &&
+                           (*lpString != L'\0') &&
+                           (i <= MAX_DEVICE_ID_LEN))
+                    {
+                        szDeviceID[i++] = *lpString++;
+                    }
+                    szDeviceID[i] = L'\0';
+                    ret = TRUE;
+                }
+            }
+            else if (!_wcsnicmp(lpString, L"MachineName", 11))
+            {
+                lpString += 12;
+                if (*lpString != L'\0')
+                {
+                    int i = 0;
+                    while ((*lpString != L' ') &&
+                           (*lpString != L'\0') &&
+                           (i <= MAX_COMPUTERNAME_LENGTH))
+                    {
+                        szMachineName[i++] = *lpString++;
+                    }
+                    szMachineName[i] = L'\0';
+                }
+            }
+            /* knock the pointer back one and let the next
+            * pointer deal with incrementing, otherwise we
+            * go past the end of the string */
+            lpString--;
+        }
+        lpString++;
+    }
+
+    return ret;
+}
