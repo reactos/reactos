@@ -1204,7 +1204,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                   PAGE_SIZE - PdeOffset * sizeof(MMPTE));
 
     /* Now write the PTE/PDE entry for hyperspace itself */
-    TempPte = ValidKernelPte;
+    TempPte = ValidKernelPteLocal;
     TempPte.u.Hard.PageFrameNumber = HyperIndex;
     PdeOffset = MiGetPdeOffset(HYPER_SPACE);
     SystemTable[PdeOffset] = TempPte;
