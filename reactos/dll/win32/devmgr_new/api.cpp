@@ -17,6 +17,7 @@
 */
 
 #include "precomp.h"
+#include <devmgr/devmgr.h>
 #include "devmgmt/MainWindow.h"
 
 HINSTANCE hDllInstance = NULL;

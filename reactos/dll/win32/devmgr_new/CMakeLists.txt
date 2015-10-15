@@ -2,12 +2,11 @@ PROJECT(DEVMGR)
 
 spec2def(devmgr.dll devmgr.spec ADD_IMPORTLIB)
 
-set_cpp(WITH_RTTI WITH_RUNTIME)
+set_cpp(WITH_RTTI WITH_RUNTIME WITH_EXCEPTIONS)
 
 if(NOT MSVC)
     # HACK: this should be enabled globally!
     add_compile_flags_language("-std=c++11" "CXX")
-    add_compile_flags("-fexceptions")
 endif()
 
 include_directories(
