@@ -858,6 +858,7 @@ SetKeyboardLayoutName(HWND hwnd)
 static BOOL
 RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
 {
+	MSG msg;
     if (pwszCPLParameters)
     {
         STARTUPINFOW StartupInfo;
@@ -885,7 +886,14 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
             return FALSE;
         }
 
-        WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+        while((MsgWaitForMultipleObjects(1, ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
+        { 
+           while(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+           {
+               TranslateMessage(&msg);
+               DispatchMessage(&msg);
+           }
+        }
         CloseHandle(ProcessInformation.hThread);
         CloseHandle(ProcessInformation.hProcess);
         return TRUE;
