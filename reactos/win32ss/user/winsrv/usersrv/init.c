@@ -102,7 +102,7 @@ NTAPI
 CreateSystemThreads(PVOID pParam)
 {
     NtUserCallOneParam((DWORD)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
-    DPRINT1("This thread should not terminate!\n");
+    RtlExitUserThread(0);
     return 0;
 }
 

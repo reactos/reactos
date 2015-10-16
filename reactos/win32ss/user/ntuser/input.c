@@ -132,10 +132,12 @@ RawInputThreadMain(VOID)
     PFILE_OBJECT pKbdDevice = NULL, pMouDevice = NULL;
     LARGE_INTEGER ByteOffset;
     //LARGE_INTEGER WaitTimeout;
-    PVOID WaitObjects[3], pSignaledObject = NULL;
-    ULONG cWaitObjects = 0, cMaxWaitObjects = 1;
+    PVOID WaitObjects[4], pSignaledObject = NULL;
+    KWAIT_BLOCK WaitBlockArray[RTL_NUMBER_OF(WaitObjects)];
+    ULONG cWaitObjects = 0, cMaxWaitObjects = 2;
     MOUSE_INPUT_DATA MouseInput;
     KEYBOARD_INPUT_DATA KeyInput;
+    PVOID ShutdownEvent;
 
     ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
@@ -156,6 +158,7 @@ RawInputThreadMain(VOID)
     NT_ASSERT(ghMouseDevice == NULL);
     NT_ASSERT(ghKeyboardDevice == NULL);
 
+    PoRequestShutdownEvent(&ShutdownEvent);
     for (;;)
     {
         if (!ghMouseDevice)
@@ -189,6 +192,7 @@ RawInputThreadMain(VOID)
 
         /* Reset WaitHandles array */
         cWaitObjects = 0;
+        WaitObjects[cWaitObjects++] = ShutdownEvent;
         WaitObjects[cWaitObjects++] = MasterTimer;
 
         if (ghMouseDevice)
@@ -241,7 +245,7 @@ RawInputThreadMain(VOID)
                                               KernelMode,
                                               TRUE,
                                               NULL,//&WaitTimeout,
-                                              NULL);
+                                              WaitBlockArray);
 
             if ((Status >= STATUS_WAIT_0) &&
                 (Status < (STATUS_WAIT_0 + (LONG)cWaitObjects)))
@@ -263,6 +267,10 @@ RawInputThreadMain(VOID)
                 else if (pSignaledObject == MasterTimer)
                 {
                     ProcessTimers();
+                }
+                else if (pSignaledObject == ShutdownEvent)
+                {
+                    break;
                 }
                 else ASSERT(FALSE);
             }
@@ -302,6 +310,23 @@ RawInputThreadMain(VOID)
         else if (KbdStatus != STATUS_PENDING)
             ERR("Failed to read from keyboard: %x.\n", KbdStatus);
     }
+
+    if (ghMouseDevice)
+    {
+        (void)ZwCancelIoFile(ghMouseDevice, &MouIosb);
+        ObCloseHandle(ghMouseDevice, KernelMode);
+        ObDereferenceObject(pMouDevice);
+        ghMouseDevice = NULL;
+    }
+
+    if (ghKeyboardDevice)
+    {
+        (void)ZwCancelIoFile(ghKeyboardDevice, &KbdIosb);
+        ObCloseHandle(ghKeyboardDevice, KernelMode);
+        ObDereferenceObject(pKbdDevice);
+        ghKeyboardDevice = NULL;
+    }
+
     ERR("Raw Input Thread Exit!\n");
 }
 
