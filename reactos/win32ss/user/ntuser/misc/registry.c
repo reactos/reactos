@@ -28,7 +28,7 @@ RegOpenKey(
     /* Initialize object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                &ustrKeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -209,7 +209,7 @@ RegReadUserSetting(
     /* Initialize object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                &usKeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -316,7 +316,7 @@ RegWriteUserSetting(
     /* Initialize object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                &usKeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 

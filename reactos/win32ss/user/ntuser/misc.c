@@ -67,10 +67,10 @@ UserGetLanguageID(VOID)
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
 
   InitializeObjectAttributes( &ObAttr,
-                            &Language,
-                 OBJ_CASE_INSENSITIVE,
-                                 NULL,
-                                 NULL);
+                              &Language,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                              NULL,
+                              NULL);
 
   if ( NT_SUCCESS(ZwOpenKey(&KeyHandle, KEY_READ, &ObAttr)))
   {

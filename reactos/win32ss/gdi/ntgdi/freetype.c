@@ -232,7 +232,7 @@ IntLoadSystemFonts(VOID)
     InitializeObjectAttributes(
         &ObjectAttributes,
         &Directory,
-        OBJ_CASE_INSENSITIVE,
+        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
         NULL,
         NULL);
 
@@ -447,7 +447,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     {
         IntLockGlobalFonts;
         InsertTailList(&FontListHead, &Entry->ListEntry);
-        InitializeObjectAttributes(&ObjectAttributes, &FontRegPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+        InitializeObjectAttributes(&ObjectAttributes, &FontRegPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
         Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
         if (NT_SUCCESS(Status))
         {
@@ -2994,7 +2994,7 @@ IntGetFullFileName(
 
     InitializeObjectAttributes(&ObjectAttributes,
                                FileName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 

@@ -100,7 +100,7 @@ OpenInputDevice(PHANDLE pHandle, PFILE_OBJECT *ppObject, CONST WCHAR *pszDeviceN
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &DeviceName,
-                               0,
+                               OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
