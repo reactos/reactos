@@ -1140,7 +1140,7 @@ BuildWindowStationNameList(
       if (!NT_SUCCESS(Status))
       {
          ERR("ZwQueryDirectoryObject failed\n");
-         ObDereferenceObject(DirectoryHandle);
+         ZwClose(DirectoryHandle);
          return Status;
       }
 
@@ -1148,7 +1148,7 @@ BuildWindowStationNameList(
       Buffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_WINSTA);
       if (NULL == Buffer)
       {
-         ObDereferenceObject(DirectoryHandle);
+         ZwClose(DirectoryHandle);
          return STATUS_NO_MEMORY;
       }
 
@@ -1162,7 +1162,7 @@ BuildWindowStationNameList(
       {
          /* Something went wrong, maybe someone added a directory entry? Just give up. */
          ExFreePoolWithTag(Buffer, TAG_WINSTA);
-         ObDereferenceObject(DirectoryHandle);
+         ZwClose(DirectoryHandle);
          return NT_SUCCESS(Status) ? STATUS_INTERNAL_ERROR : Status;
       }
    }
