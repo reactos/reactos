@@ -19,6 +19,7 @@
 #include <ntifs.h>
 #include <ntddmou.h>
 #include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/mmfuncs.h>
