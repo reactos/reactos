@@ -22,7 +22,10 @@
 #include <ole2.h>
 #include <commctrl.h>
 #include <prsht.h>
+
+#ifndef INITGUID
 #include <shlguid.h>
+#endif
 
 #ifdef WINE_NO_UNICODE_MACROS
 #undef GetObject
