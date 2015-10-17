@@ -460,9 +460,6 @@ GetCharacterPlacementW(
     if(lpResults->lpOutString)
         lstrcpynW( lpResults->lpOutString, lpString, nSet );
 
-    if(lpResults->lpGlyphs)
-        lstrcpynW( lpResults->lpGlyphs, lpString, nSet );
-
     if(lpResults->lpOrder)
     {
         for(i = 0; i < nSet; i++)
@@ -495,8 +492,8 @@ GetCharacterPlacementW(
                 lpResults->lpCaretPos[i] = (pos += size.cx);
     }
 
-    /*if(lpResults->lpGlyphs)
-      NtGdiGetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);*/
+    if (lpResults->lpGlyphs)
+        NtGdiGetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);
 
     if (GetTextExtentPoint32W(hdc, lpString, uCount, &size))
         ret = MAKELONG(size.cx, size.cy);
