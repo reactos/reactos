@@ -47,7 +47,7 @@ Size = 1,75 Mo
 [Section.041f]
 Name = Microsoft Visual C++ 6 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
-Description = Microsoft Visual Studio 6 Yürütücü. Şunları içerir: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Visual Studio 6 ile derlenmiş uygulamalar eliyle gereklidir. Şunları içerir: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 Size = 1,75 MB
 
 [Section.0422]

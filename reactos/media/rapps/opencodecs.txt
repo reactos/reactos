@@ -32,7 +32,7 @@ Description = Filtrele DirectShow pentru formaturile de fișiere audio/video: Og
 Size = 2,53 Mo
 
 [Section.041f]
-Description = Ogg Vorbis, Speex, Theora, FLAC ve WebM kütük biçimleri için DirectShow süzgeçleri.
+Description = Ogg Vorbis, Speex, Theora, FLAC ve WebM ses ve vidyo kütük biçimleri için DirectShow süzgeçleri.
 Size = 2,53 MB
 
 [Section.0804]

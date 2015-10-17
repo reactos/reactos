@@ -63,7 +63,7 @@ SHA1 = 22728a9442043478065c5e4b923a0eb53fdc6bae
 [Section.041f]
 Name = Microsoft Word Görüntüleyici
 License = Bilinmiyor
-Description = Microsoft Word Görüntüleyici
+Description = Office biçimleri (*.doc) için ücretsiz belge görüntüleme uygulaması.
 Size = 24,55 MB
 URLDownload = http://download.microsoft.com/download/7/6/e/76efefb4-9575-4903-ac2a-180c280ab6c7/wordview_tr-tr.exe
 SHA1 = ce83185c354fd8bd1288dc1541aebbe7eaf3b9e5

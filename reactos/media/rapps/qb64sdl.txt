@@ -35,7 +35,7 @@ Size = 104,69 Mo
 [Section.041f]
 Name = QB64 (SDL sürümü)
 License = Ücretsiz
-Description = QB64; Microsoft Windows, Linux ve Mac OS X için, Microsoft QBasic ve Microsoft QuickBASIC ile uyumlu olacak biçimde tasarlanmış, kendi kendini derleyen bir BASIC derleyicisidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
+Description = Microsoft Windows, Linux ve Mac OS X için, Microsoft QBasic ve Microsoft QuickBASIC ile uyumlu olacak biçimde tasarlanmış, kendi kendini derleyen bir BASIC derleyicisidir. Çıkartmak için 7-Zip benzeri bir araca gereksinim duyacaksınız.
 Size = 104,69 MB
 
 [Section.0804]

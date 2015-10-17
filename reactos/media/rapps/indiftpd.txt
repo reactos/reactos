@@ -33,7 +33,7 @@ Size = 556 ko
 
 [Section.041f]
 Version = 1.0.9 Gelişme
-Description = IndiFTPD, bir tek çalıştırılabilir kütükten çalışan tek başına bir FTP sunucusudur. Bir kullanıcının, çabucak, çalışan bir sunucuya iye olmak istediği ve dizgesinde bir sunucu kurmak/yapılandırmak istemediği (veyâ bunu yapmaya izni olmadığı) durumlar için tasarlanmıştır.
+Description = Bir tek çalıştırılabilir kütükten çalışan tek başına bir FTP sunucusudur. Bir kullanıcının, çabucak, çalışan bir sunucuya iye olmak istediği ve dizgesinde bir sunucu kurmak/yapılandırmak istemediği (veyâ bunu yapmaya izni olmadığı) durumlar için tasarlanmıştır.
 Size = 556 KB
 
 [Section.0804]

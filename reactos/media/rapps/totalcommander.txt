@@ -37,7 +37,7 @@ Size = 3,55 Mo
 
 [Section.041f]
 License = Paylaşımlı
-Description = Total Commander, yan yana iki bölmeli bir kütük yöneticisidir.
+Description = Güçlü kullanıcılar için yan yana iki bölmeli bir kütük yöneticisi.
 Size = 3,55 MB
 
 [Section.0804]

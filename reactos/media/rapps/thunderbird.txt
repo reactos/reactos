@@ -71,7 +71,7 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0
 SHA1 = 947ed054ee2f45b172d327b5363c4f67b4010e05
 
 [Section.041f]
-Description = Özgür posta istemcileri arasında en tutulanı ve en iyilerinden biri.
+Description = Tutulan ve açık kaynak posta istemcisi.
 Size = 27,44 MB
 URLSite = https://www.mozilla.org/tr/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/tr/Thunderbird%20Setup%2038.1.0.exe

@@ -61,7 +61,7 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33.1/w
 SHA1 = 26ac920313caa8b7c3e4a8bff671ac22ea626a2c
 
 [Section.041f]
-Description = Mozilla Bohçası sağ. Bu, bir gereksinim duymayacağınız, yalnızca Tarayıcı, Posta, Söyleşi ve Yazar bohçasıdır.
+Description = Mozilla Bohçası sağ. Bu, bir gereksinim duymayacağınız, Tarayıcı, Posta, Söyleşi ve Yazar'ı kapsayan bir bohçadır.
 Size = 29,89 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33.1/win32/tr/SeaMonkey%20Setup%202.33.1.exe
 SHA1 = c83fc6997bba977c4cc9ab762c897205b8bf397f

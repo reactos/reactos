@@ -47,7 +47,7 @@ Size = 1,02 Mo
 [Section.041f]
 Name = Microsoft Visual Basic 6 Yürütücü
 License = Bilinmiyor
-Description = Microsoft Visual Basic 6 Yürütücü. Şunları içerir: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Description = Visual Basic 6'da yazılmış uygulamalar eliyle gereklidir. Şunları içerir: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
 Size = 1,02 MB
 
 [Section.0422]

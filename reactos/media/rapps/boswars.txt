@@ -32,7 +32,7 @@ Description = Joc de strategie futurist, în timp real. Necesită „Microsoft V
 Size = 62,3 Mo
 
 [Section.041f]
-Description = Bos Wars, gelecekçi ve gerçek zamanlı bir izlem oyunudur. Oyunu başlatmak için Microsoft Visual C++ 2008 Yürütücü'yü kurunuz.
+Description = Gelecekçi ve gerçek zamanlı bir izlem oyunu. Çalıştırmak için Microsoft Visual C++ 2008 Yürütücü gerekir.
 Size = 62,3 MB
 
 [Section.0804]

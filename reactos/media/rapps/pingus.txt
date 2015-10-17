@@ -32,7 +32,7 @@ Description = Joc-enigmă asemănător cu „Lemmings”.
 Size = 16,0 Mo
 
 [Section.041f]
-Description = Pingus, ücretsiz, Lemmings gibi bir bulmaca oyunudur.
+Description = Ücretsiz, Lemmings gibi bir bulmaca oyunudur.
 Size = 16,0 MB
 
 [Section.0804]

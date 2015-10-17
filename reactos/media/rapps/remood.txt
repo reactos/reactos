@@ -41,7 +41,7 @@ Description = O portare a codului Doom Legacy, având ca scop de a oferi clasica
 Size = 1,15 Mo
 
 [Section.041f]
-Description = ReMooD, Doom Legacy'in bir kaynak kodu uyarlamasıdır. Yeni husûsiyetlerle ve daha çok kararlılıkla kökleşik Legacy deneyimini sağlamayı amaçlar.
+Description = Doom Legacy'in bir kaynak kodu uyarlamasıdır. Yeni husûsiyetlerle ve daha çok kararlılıkla kökleşik eski deneyimini sağlamayı amaçlar.
 Size = 1,15 MB
 
 [Section.0422]

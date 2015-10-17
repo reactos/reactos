@@ -47,7 +47,7 @@ Size = 4,27 Mo
 [Section.041f]
 Name = Microsoft Visual C++ 2008 SP1 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
-Description = Microsoft Visual Studio 2008 SP1 Yürütücü. Şunları içerir: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
+Description = Visual Studio 2008 ile derlenmiş uygulamalar eliyle gereklidir. Şunları içerir: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
 Size = 4,27 MB
 
 [Section.0422]

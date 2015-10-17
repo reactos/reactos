@@ -38,7 +38,7 @@ Description = Reimplementarea în surse deschise a motoarelor clasice de jocuri 
 Size = 6,9 Mo
 
 [Section.041f]
-Description = ReactOS üzerinde Sam ve Max, Day of the Tentacle gibi vidyo oyunlarının oyun motorlarının çalışmasını taklit eden yazılım.
+Description = Sam ve Max, Day of the Tentacle, Monkey Island gibi kökleşik mâcera vidyo oyunlarının oyun motorlarının ReactOS üzerinde çalışmasını sağlayan açık kaynak uyarlaması.
 Size = 6,9 MB
 
 [Section.0422]

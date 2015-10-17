@@ -34,7 +34,7 @@ Size = 5,0 Mo
 
 [Section.041f]
 License = Ücretsiz
-Description = Bu sürüm, katmanlarla gelmektedir ancak Studio X sürümünden daha kısıtlıdır. PhotoFiltre Studio eksiksiz bir resim düzeltme yazılımıdır.
+Description = Eksiksiz bir resim düzeltme yazılımı. Bu sürüm, katmanlarla gelmektedir ancak Studio X sürümünden daha kısıtlıdır.
 Size = 5,0 MB
 
 [Section.0804]

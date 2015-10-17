@@ -37,7 +37,7 @@ Size = 53,7 Mo
 [Section.041f]
 Name = Wine Mono .NET Çatısı
 License = GPL sürüm 2, LGPL sürüm 2, MIT, BSD, MS-PL, MPL sürüm 1.1
-Description = Wine Mono .NET Çatısı
+Description = Wine kitaplıkları eliyle kullanılan .NET Çatısı'nın özgür uyarlaması.
 Size = 53,7 MB
 
 Section.0804]

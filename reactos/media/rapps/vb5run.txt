@@ -47,7 +47,7 @@ Size = 969,59 ko
 [Section.041f]
 Name = Microsoft Visual Basic 5 Yürütücü
 License = Bilinmiyor
-Description = Microsoft Visual Basic 5 Yürütücü. Şunları içerir: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+Description = Visual Basic 5'te yazılmış uygulamalar eliyle gereklidir. Şunları içerir: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
 Size = 969,59 KB
 
 [Section.0422]

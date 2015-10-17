@@ -46,7 +46,7 @@ URLSite = http://store.steampowered.com/?l=romanian
 
 [Section.041f]
 License = Ücretsiz
-Description = Bugünlerde Steam oyun platformu birçok oyun eliyle kullanılmaktadır.
+Description = Tutulan Umûmî Ağ oyun dağıtım platformu ve toplumluk ağ. DRM içerir.
 Size = 1,08 MB
 URLSite = http://store.steampowered.com/?l=turkish
 

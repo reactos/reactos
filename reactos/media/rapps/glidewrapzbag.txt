@@ -41,8 +41,9 @@ Description = O interfață Glide (de emulare a cartelelor grafice 3dfx cu OpenG
 Size = 249,02 ko
 
 [Section.041f]
+Name = Zeckensack Eliyle Glide wrapper
 License = Ücretsiz
-Description = glidewrapper, ReactOS'ta Diablo 2'yi çalıştırmak için gereklidir.
+Description = Bir Glide API dolgusu (OpenGL ile 3dfx kartlarını öykünen), ReactOS'ta Diablo 2'yi çalıştırmak için gereklidir.
 Size = 249,02 KB
 
 [Section.0422]

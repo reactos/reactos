@@ -45,7 +45,7 @@ Description = Текстовый редактор.
 Description = Textový editor.
 
 [Section.041f]
-Description = Bir metin düzenleyicisi.
+Description = Birçok eklentilerle, tüm husûsiyetli ücretsiz bir metin düzenleyicisi.
 Size = 5,4 MB
 
 [Section.0422]

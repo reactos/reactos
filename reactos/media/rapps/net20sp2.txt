@@ -44,7 +44,7 @@ Size = 23,84 Mo
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 2.0 Hizmet Paketi 2
 License = Bilinmiyor
-Description = Microsoft .NET Çatısı Sürüm 2.0 - Hizmet Paketi 2
+Description = C# gibi orta düzey bir dilde derlenmiş yönetilen Windows uygulamalarını çalıştırmak için gerekli bileşenler.
 Size = 23,84 MB
 URLSite = http://www.microsoft.com/tr-TR/download/details.aspx?id=1639
 

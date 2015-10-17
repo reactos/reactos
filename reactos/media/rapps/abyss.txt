@@ -43,7 +43,7 @@ Size = 2,09 Mo
 [Section.041f]
 Name = Abyss Umûmî Ağ Sunucusu X1
 License = Ücretsiz
-Description = Abyss Umûmî Ağ Sunucusu, bilgisayarınızda Umûmî Ağ sitelerinizin barındırılmasına olanak sağlar. Umûmî Ağ uygulayım biliminin bir geniş yelpâzesiyle birlikte güvenli SSL/TLS bağlantılarını (HTTPS) destekler. Ayrıca MySQL, SQLite, MS SQL Server, MS Access, ve Oracle gibi veri tabanlarıyla desteklenebilen gelişmiş PHP, Perl, Python, ASP, ASP.NET ve Rails üzerinde Ruby Umûmî Ağ uygulamalarını çalıştırabilir.
+Description = Bilgisayarınızda Umûmî Ağ sitelerinizin barındırılmasına olanak sağlar. Umûmî Ağ uygulayım biliminin bir geniş yelpâzesiyle birlikte güvenli SSL/TLS bağlantılarını (HTTPS) destekler. Ayrıca MySQL, SQLite, MS SQL Server, MS Access, ve Oracle gibi veri tabanlarıyla desteklenebilen gelişmiş PHP, Perl, Python, ASP, ASP.NET ve Rails üzerinde Ruby Umûmî Ağ uygulamalarını çalıştırabilir.
 Size = 2,09 MB
 
 [Section.0422]

@@ -26,7 +26,7 @@ Size = 41,31 Mo
 Description = Un editor de gráficos vectoriales bajo la licencia GNU GPL.
 
 [Section.041f]
-Description = Inkscape, GNU Umûmî Kamu Ruhsatı altında ruhsatlanmış bir yöney çizge düzenleyicisidir.
+Description = GNU Umûmî Kamu Ruhsatı altında ruhsatlanmış bir yöney çizge düzenleyicisidir.
 Size = 41,31 MB
 
 [Section.0804]

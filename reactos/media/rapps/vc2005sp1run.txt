@@ -47,7 +47,7 @@ Size = 2,58 Mo
 [Section.041f]
 Name = Microsoft Visual C++ 2005 SP1 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
-Description = Microsoft Visual Studio 2005 Yürütücü SP1. Şunları içerir: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Description = Visual Studio 2005 ile derlenmiş uygulamalar eliyle gereklidir. Şunları içerir: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 Size = 2,58 MB
 
 [Section.0422]

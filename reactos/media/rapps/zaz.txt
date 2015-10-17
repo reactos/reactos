@@ -32,7 +32,7 @@ Description = Joc de acțiune de tip enigmă/arcadă, asemănător cu „Frozen 
 Size = 21,0 Mo
 
 [Section.041f]
-Description = Zaz; ücretsiz, atari salonu oyunu türünde, devingen bir bulmaca oyunudur, birazcık Frozen Bubble'a benzer.
+Description = Ücretsiz, atari salonu oyunu türünde, devingen bir bulmaca oyunudur, birazcık Frozen Bubble'a benzer.
 Size = 21,0 MB
 
 [Section.0804]

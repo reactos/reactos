@@ -46,7 +46,7 @@ Size = 1,85 Mo
 
 [Section.041f]
 License = Bilinmiyor
-Description = MSXML3, birtakım Microsoft Yükleyicileri için gereklidir. Şunları içerir: msxml3.dll, msxml3a.dll, msxml3r.dll.
+Description = Birtakım Microsoft Yükleyicileri için gereklidir. Şunları içerir: msxml3.dll, msxml3a.dll, msxml3r.dll.
 Size = 1,85 MB
 
 [Section.0422]

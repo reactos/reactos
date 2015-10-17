@@ -63,7 +63,7 @@ Description = Pазархивируйте содержимое в папку "Re
 [Section.041f]
 Name = VMWare için SoundBlaster Sürücüsü
 License = Bilinmiyor
-Description = ReactOS'un dizinine çıkartınız, sonra bilgisayarı iki kez yeniden başlatınız.
+Description = SoundBlaster uyumlu aygıtlar için ses sürücüsü. ReactOS dizinine çıkartınız ve bilgisayarı iki kez yeniden başlatınız.
 Size = 2,22 MB
 
 [Section.0422]

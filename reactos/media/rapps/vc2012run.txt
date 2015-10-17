@@ -47,7 +47,7 @@ Size = 6,25 Mo
 [Section.041f]
 Name = Microsoft Visual C++ 2012 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
-Description = Microsoft Visual Studio 2012 Update 4 Yürütücü. Şunları içerir: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+Description = Visual Studio 2012 ile derlenmiş uygulamalar eliyle gereklidir. Şunları içerir: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
 Size = 6,25 MB
 
 [Section.0422]

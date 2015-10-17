@@ -40,8 +40,9 @@ Description = Pentru execuție este necesar (pachetul) Zeckensack's Glide wrappe
 Size = 131,9 Mo
 
 [Section.041f]
+Name = Diablo II (Paylaşımlı)
 License = Paylaşımlı
-Description = Çalıştırmak için Zeckensack'ın Glide wrapper'ı gereklidir.
+Description = Oyunun göstermelik sürümü. Çalıştırmak için Zeckensack'ın Glide wrapper'ı gereklidir.
 Size = 131,9 MB
 
 [Section.0422]

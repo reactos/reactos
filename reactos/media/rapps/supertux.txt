@@ -32,7 +32,7 @@ Description = Joc 2D gratuit, cu surse deschise.
 Size = 7,3 Mo
 
 [Section.041f]
-Description = SuperTux, ücretsiz, açık kaynak ve iki boyutlu bir platform oyunudur.
+Description = Ücretsiz, açık kaynak ve iki boyutlu bir platform oyunu.
 Size = 7,3 MB
 
 [Section.0804]

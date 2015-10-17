@@ -32,7 +32,7 @@ Description = Joc de strategie în timp real. Jocul minimizează microgestiunea 
 Size = 13,5 Mo
 
 [Section.041f]
-Description = Globulation 2, gerçek zamanlı bir izlem oyunudur. Bu oyun, birimlere kendiliğinden görevler atayarak oyun mikro yönetimini en aza indirir.
+Description = Gerçek zamanlı bir izlem oyunu. Bu oyun, birimlere kendiliğinden görevler atayarak oyun mikro yönetimini en aza indirir.
 Size = 13,5 MB
 
 [Section.0804]

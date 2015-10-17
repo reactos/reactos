@@ -32,7 +32,7 @@ Size = 6,1 Mo
 
 [Section.041f]
 License = LGPL sürüm 3, OpenCandy EULA
-Description = PeaZip; ücretsiz, çapraz platform, açık kaynak kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.
+Description = Ücretsiz, çapraz platform, açık kaynak bir kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.
 Size = 6,1 MB
 
 [Section.0804]

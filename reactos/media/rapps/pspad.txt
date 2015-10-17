@@ -53,7 +53,7 @@ URLSite = http://www.pspad.com/sk/
 
 [Section.041f]
 License = Ücretsiz
-Description = Bir metin düzenleyicisi.
+Description = Yeğni bir metin düzenleyicisi.
 Size = 4,50 MB
 
 [Section.0422]

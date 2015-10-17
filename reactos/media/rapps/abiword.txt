@@ -38,7 +38,7 @@ Description = Procesor de text.
 Size = 9,4 Mo
 
 [Section.041f]
-Description = Sözcük işlemcisi.
+Description = Canlı ve açık kaynak sözcük işlemcisi.
 Size = 9,4 MB
 
 [Section.0422]

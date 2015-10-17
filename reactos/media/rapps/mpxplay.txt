@@ -35,7 +35,7 @@ Size = 520 ko
 Description = Mpxplay - 32-разрядный консольный аудиоплеер для Windows. Вам нужен 7-Zip или подобная утилита для его распаковки.
 
 [Section.041f]
-Description = Mpxplay; Windows için, 32 bitlik, konsolluk bir ses oynatıcısıdır. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
+Description = Windows için, 32 bitlik, konsolluk bir ses oynatıcısıdır. Çıkartmak için 7-Zip benzeri bir araç gerekir.
 Size = 520 KB
 
 [Section.0804]

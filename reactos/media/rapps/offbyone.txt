@@ -44,7 +44,7 @@ Size = 1010,89 ko
 [Section.041f]
 Name = Off By One Tarayıcı
 License = Ücretsiz
-Description = Off By One Tarayıcı, eksiksiz HTML 3.2 desteğiyle çok küçük ve hızlı bir Umûmî Ağ tarayıcısıdır.
+Description = Eksiksiz HTML 3.2 desteğiyle çok küçük ve hızlı bir Umûmî Ağ tarayıcısıdır.
 Size = 1010,89 KB
 
 [Section.0422]

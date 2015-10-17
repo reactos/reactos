@@ -43,7 +43,7 @@ URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
 
 [Section.041f]
 License = GPL sürüm 3
-Description = SumatraPDF; yeğni, ücretsiz ve açık kaynak bir PDF okuyucusudur. Kutunun dışında taşınabilirdir.
+Description = Yeğni, ücretsiz ve açık kaynak bir PDF okuyucusu. Kutunun dışında taşınabilirdir.
 Size = 4,34 MB
 
 [Section.0804]

@@ -28,7 +28,7 @@ Size = 944 ko
 [Section.041f]
 Name = Etkili Kütük Arama
 Licence = Ücretsiz
-Description = ReactOS'la uyumlu kütük arama.
+Description = ReactOS'la uyumlu kütük arama aracı.
 Size = 944 KB
 
 [Section.0804]

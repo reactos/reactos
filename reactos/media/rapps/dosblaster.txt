@@ -38,7 +38,7 @@ Description = O extensie a interfeței de utilizator a sistemului, cu posibilita
 Size = 2,05 Mo
 
 [Section.041f]
-Description = DosBlaster, bir DOS uygulamasını DOSBox'ta sağ tıklamayla açtırılabilmesini olanaklı duruma getiren bir kabuk uzantısıdır. Bu sürüm DOSBox 0.70 içerir ancak daha yeni bir DOSBox'u DosBlaster dizinlerinin içine kurarak kolayca şimdikileştirilebilir.
+Description = Bir DOS uygulamasını DOSBox'ta sağ tıklamayla açtırılabilmesini olanaklı duruma getiren bir kabuk uzantısıdır. Bu sürüm DOSBox 0.70 içerir ancak daha yeni bir DOSBox'u DosBlaster dizinlerinin içine kurarak kolayca şimdikileştirilebilir.
 Size = 2,05 MB
 
 [Section.0422]

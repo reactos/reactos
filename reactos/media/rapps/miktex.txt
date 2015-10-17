@@ -29,7 +29,7 @@ Size = 170 Mo
 
 [Section.041f]
 License = Ücretsiz
-Description = MiKTeX, Windows için, TeX'in, LaTeX'in ve ilişkili izlencelerin bir şimdiki uygulaması.
+Description = Windows için, TeX'in, LaTeX'in ve ilişkili izlencelerin bir şimdiki uygulaması.
 Size = 170 MB
 
 [Section.0804]

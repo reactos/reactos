@@ -38,7 +38,7 @@ Description = Instrument care permite accesarea în ReactOS a dosarelor și impr
 Size = 2,13 Mo
 
 [Section.041f]
-Description = Bu araç, size, ReactOS'la Windows paylaşılan dizinlerinize ve paylaşılan yazıcılarınıza erişime olanak sağlar.
+Description = Size, ReactOS'la Windows paylaşılan dizinlere ve paylaşılan yazıcılara erişime olanak sağlar.
 Size = 2,13 MB
 
 [Section.0422]

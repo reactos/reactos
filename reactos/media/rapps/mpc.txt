@@ -44,7 +44,7 @@ Description = Мультимедийный проигрыватель.
 Description = Multimediálny prehrávač.
 
 [Section.041f]
-Description = Bir ortam oynatıcısı.
+Description = Başka bir ortam oynatıcı.
 Size = 11,7 MB
 
 [Section.0422]

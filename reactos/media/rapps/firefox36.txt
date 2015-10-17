@@ -91,7 +91,7 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win
 SHA1 = de198b1fdfb2cf3e6e52d49fe2f9ed41f3744909
 
 [Section.041f]
-Description = Özgür Umûmî Ağ tarayıcıları arasında en tutulanı ve en iyilerinden biri.
+Description = Tutulan bir Umûmî Ağ tarayıcısı. Ücretsiz ve açık kaynaktır, yeryüzülük bir topluluk eliyle yapılmıştır.
 Size = 8,07 MB
 URLSite = http://www.mozilla.org/tr/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/tr/Firefox%20Setup%203.6.28.exe

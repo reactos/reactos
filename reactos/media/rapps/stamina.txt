@@ -32,6 +32,7 @@ Description = Tutor gratuit pentru dactilografiere.
 Size = 4,8 Mo
 
 [Section.041f]
+License = Ücretsiz
 Description = Ücretsiz düğme takımında yazma öğreticisi.
 Size = 4,8 MB
 

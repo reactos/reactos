@@ -33,7 +33,7 @@ Size = 4,8 Mo
 
 [Section.041f]
 License = LGPL sürüm 2
-Description = Bochs; çok taşınabilir, C++ ile yazılmış, en yaygın platformlarda çalışan, açık kaynak bir IA-32 (x86) PC öykünücüsüdür.
+Description = Çok taşınabilir, C++ ile yazılmış, en yaygın platformlarda çalışan, açık kaynak bir IA-32 (x86) PC öykünücüsüdür.
 Size = 4,8 MB
 
 [Section.0804]

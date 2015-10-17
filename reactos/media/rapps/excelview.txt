@@ -63,7 +63,7 @@ SHA1 = c5b2e5bc0d4247ae2809c4dff23e9737d257f615
 [Section.041f]
 Name = Microsoft Excel Görüntüleyici
 License = Bilinmiyor
-Description = Microsoft Excel Görüntüleyici
+Description = Office biçimleri (*.xls) için ücretsiz elektronik çizelge görüntüleyicisi.
 Size = 51,1 MB
 URLDownload = http://download.microsoft.com/download/8/5/D/85DCDD24-8237-4334-866D-417F74F37C47/ExcelViewer.exe
 SHA1 = a62f68e8d7cae5ede773998a9ccf6a823753974a

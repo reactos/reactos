@@ -38,7 +38,7 @@ Description = Procesor de text, rapid, cu surse deschise.
 Size = 5,64 Mo
 
 [Section.041f]
-Description = Sözcük işlemcisi.
+Description = Canlı ve açık kaynak sözcük işlemcisi.
 Size = 5,64 MB
 
 [Section.0422]

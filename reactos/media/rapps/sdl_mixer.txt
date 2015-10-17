@@ -42,7 +42,7 @@ Size = 548,02 ko
 
 [Section.041f]
 Name = SDL (Bayağı Doğrudan Ortam Katmanı) Karıştırıcısı
-Description = Birtakım açık kaynak oyunları çalıştırmak için gereklidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
+Description = Birtakım açık kaynak oyunları çalıştırmak için gereklidir. Çıkartmak için Zip gibi bir araca gereksinim duyacaksınız.
 Size = 548,02 KB
 
 [Section.0422]

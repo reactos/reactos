@@ -27,7 +27,7 @@ Description = Una calculadora científica gratuita y de código abierto. Es nece
 [Section.041f]
 Name = Precise Hesap Makinesi
 License = GPL sürüm 3
-Description = Precise Hesap Makinesi, Windows için özgür ve açık kaynak bir bilimlik hesap makinesidir. Kurmak için bir ZIP çıkartma izlencesi gerekir.
+Description = Windows için özgür ve açık kaynak bir bilimlik hesap makinesidir. Kurmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 151 KB
 
 [Section.0804]

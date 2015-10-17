@@ -71,7 +71,7 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20
 SHA1 = 0d2cb1b8d781c2e8c7be2f78ee7c7687f62dc360
 
 [Section.041f]
-Description = Özgür posta istemcileri arasında en tutulanı ve en iyilerinden biri.
+Description = Tutulan ve açık kaynak posta istemcisi.
 Size = 8,91 MB
 URLSite = https://www.mozilla.org/tr/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/tr/Thunderbird%20Setup%203.1.20.exe

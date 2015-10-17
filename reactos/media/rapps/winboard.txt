@@ -39,7 +39,7 @@ Size = 5,93 Mo
 
 [Section.041f]
 License = GPL sürüm 3
-Description = WinBoard, Umûmî Ağ satranç sunucularına ve postayla yazışmalı satranca GNU Chess, Crafty ve başka satranç motorlarını bir kullanıcı arayüzü olarak sunabilen, Windows/ReactOS için bir çizgelik satranç tahtasıdır.
+Description = Umûmî Ağ satranç sunucularına ve postayla yazışmalı satranca GNU Chess, Crafty ve başka satranç motorlarını bir kullanıcı arayüzü olarak sunabilen, Windows/ReactOS için bir çizgelik satranç tahtasıdır.
 Size = 5,93 MB
 
 [Section.0422]

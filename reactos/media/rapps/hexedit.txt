@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
@@ -20,6 +21,11 @@ Description = Ein HEX-Editor für Windows.
 License = Gratuită
 Description = Un editor hexazecimal de fișiere pentru Windows.
 Size = 146,28 ko
+
+[Section.041f]
+License = Ücretsiz
+Description = Windows için bir onaltılık kütük düzenleyicisi.
+Size = 146,28 KB
 
 [Section.0804]
 Description = 一个十六进制文件编辑器。

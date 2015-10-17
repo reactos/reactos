@@ -38,7 +38,7 @@ Size = 7,15 Mo
 
 [Section.041f]
 License = GPL sürüm 2
-Description = "Transport Tycoon Deluxe" oyun motorunun açık kaynak taklidi. Transport Tycoon'un bir kopyası gerekir.
+Description = "Transport Tycoon Deluxe" oyun motorunun açık kaynak taklidi. Transport Tycoon'un bir kopyası gerekebilir.
 Size = 7,15 MB
 
 [Section.0422]

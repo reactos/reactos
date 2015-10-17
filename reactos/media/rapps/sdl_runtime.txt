@@ -44,7 +44,7 @@ Size = 136,67 ko
 
 [Section.041f]
 Name = SDL (Bayağı Doğrudan Ortam Katmanı) Yürütücü
-Description = Birçok açık kaynak oyunu çalıştırmak için gereklidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
+Description = Birçok açık kaynak oyunu çalıştırmak için gereklidir. Çıkartmak için Zip gibi bir araca gereksinim duyacaksınız.
 Size = 136,67 KB
 
 [Section.0422]

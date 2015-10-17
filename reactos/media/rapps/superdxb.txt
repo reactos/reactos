@@ -34,7 +34,7 @@ Size = 3,8 Mo
 
 [Section.041f]
 License = Paylaşımlı
-Description = Super DX-Ball canlı ve renkli bir tuğla kırma oyunudur.
+Description = Canlı ve renkli bir tuğla kırma oyunu.
 Size = 3,8 MB
 
 [Section.0804]

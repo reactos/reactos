@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Spanish translation by Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
@@ -20,6 +21,10 @@ Description = Akronym für GNU Image Manipulation Program. Es ist ein frei verf�
 [Section.0418]
 Description = Acronim pentru „GNU Image Manipulation Program” (program GNU de manipulare a imaginilor). Este un program gratuit pentru retușare foto, compoziție de imagine și creare de imagini.
 Size = 87,7 Mo
+
+[Section.041f]
+Description = GNU Resim Oynama İzlencesi (GNU Image Manipulation Program) için bir kısaltma. Fotoğraf düzeltme, resim birleştirme ve resim oluşturma gibi görevler için özgürce dağıtılan bir izlencedir.
+Size = 87,7 MB
 
 [Section.0a]
 Description = Es un acrónimo en inglés de «Programa de Manipulación de Imágenes GNU». Se distribuye libremente y está pensado para el retoque fotográfico, composición de imágenes y dibujo.

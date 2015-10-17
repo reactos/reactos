@@ -64,7 +64,7 @@ SHA1 = 5cf30cc86d5bc76f7c715a1d07499f21b9f57bac
 [Section.041f]
 Name = Microsoft Powerpoint Görüntüleyici
 License = Bilinmiyor
-Description = Microsoft Powerpoint Görüntüleyici
+Description = Office biçimleri (*.ppt) için ücretsiz sunum görüntüleyicisi.
 Size = 60,4 MB
 URLDownload = http://download.microsoft.com/download/4/6/4/4641DACB-5DE8-4E3A-B8F4-39A1C73889D3/PowerPointViewer.exe
 SHA1 = 06d07e03b06fd92d3be3161025dfe6e334aad55e

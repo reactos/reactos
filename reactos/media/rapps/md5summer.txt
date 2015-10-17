@@ -24,7 +24,7 @@ Size = 452 ko
 
 [Section.041f]
 License = Ücretsiz
-Description = MD5summer, md5 sağlama toplamlarını oluşturan ve doğrulayan, Microsoft Windows için bir uygulamadır.
+Description = MD5 sağlama toplamlarını oluşturan ve doğrulayan bir uygulamadır.
 Size = 452 KB
 
 [Section.0804]
