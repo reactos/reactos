@@ -698,12 +698,12 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Confirmar el reemplazo de archivo"
     IDS_OVERWRITEFOLDER_TEXT "Esta carpeta ya contiene una carpeta con el nombre '%1'.\n\nSi los archivos de la carpeta existente tienen el mismo nombre que los\narchivos de la carpeta que está moviendo o copiando, serán\nreemplazados. ¿Desea mover o copiar la carpeta de todas formas?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_COPYING "Copiando..."
+    IDS_FILEOOP_MOVING "Moviendo..."
+    IDS_FILEOOP_DELETING "Borrando..."
+    IDS_FILEOOP_FROM_TO "%1 a %2"
+    IDS_FILEOOP_FROM "%1"
+    IDS_FILEOOP_PREFLIGHT "Comprobando"
 
     /* message box strings */
     IDS_RESTART_TITLE "Reiniciar"
@@ -752,11 +752,11 @@ BEGIN
     IDS_NEWFOLDER "Nueva carpeta"
 
     IDS_DRIVE_FIXED "Disco local"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "Unidad de CD"
     IDS_DRIVE_NETWORK "Unidad de red"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_FLOPPY "Disquete"
+    IDS_DRIVE_REMOVABLE "Disco extraible"
+    IDS_FS_UNKNOWN "Desconocido"
 
     /* Open With */
     IDS_OPEN_WITH "Abrir con"
@@ -819,6 +819,6 @@ BEGIN
     IDS_EXE_DESCRIPTION "Descripción:"
 
     IDS_MENU_EMPTY "(Vacío)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_OBJECTS "%d elementos"
+    IDS_OBJECTS_SELECTED "%d elementos seleccionados"
 END

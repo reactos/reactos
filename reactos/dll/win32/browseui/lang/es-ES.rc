@@ -80,12 +80,12 @@ END
 
 IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
-	POPUP "&Toolbars", -1, MFT_STRING, MFS_ENABLED, 0
+	POPUP "&Barras de herramientas", -1, MFT_STRING, MFS_ENABLED, 0
 	BEGIN
-		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
-		MENUITEM "&Quick Launch", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Escritorio", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Inicio rápido", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "&New Toolbar...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Nueva barra de herramientas...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
 	END
 END
 
@@ -101,7 +101,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
     LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
-    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "Cancelar", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
 }
 
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
@@ -137,33 +137,33 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CANCELLING "Canceling..."
-    IDS_REMAINING  "Remaining"
+    IDS_CANCELLING "Cancelando..."
+    IDS_REMAINING  "restantes"
 END
 
 STRINGTABLE
 BEGIN
-    800 "Contiene comandos para trabajar con los elementos seleccionados."
+    800 "Contiene órdenes para trabajar con los elementos seleccionados."
 END
 
 STRINGTABLE
 BEGIN
-    864 "Contiene comandos de edición."
+    864 "Contiene órdenes de edición."
 END
 
 STRINGTABLE
 BEGIN
-    928 "Contiene comandos para manipular la vista."
+    928 "Contiene órdenes para manipular la vista."
 END
 
 STRINGTABLE
 BEGIN
-    992 "Contiene comandos de herramientas."
+    992 "Contiene órdenes de herramientas."
 END
 
 STRINGTABLE
 BEGIN
-    1056 "Contiene comandos para mostrar la Ayuda."
+    1056 "Contiene órdenes para mostrar la Ayuda."
 END
 
 STRINGTABLE
@@ -271,5 +271,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|Atrás|Adelante|Arriba|Búsqueda|Carpetas|Mover a|Copiar a|Borrar|Deshacer|Vistas|Detener|Recargar|Inicio|Montar disco|Desconectar|Favoritos|Historial|Pantalla completa|Propiedades|Cortar|Copiar|Pegar|Opciones de carpeta||"
 END

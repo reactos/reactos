@@ -30,7 +30,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Administrador de dispositivos ", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "El Administrador de dispositivos muestra una lista de todos los dispositivos de hardware instalados en su equipo. Puede usarlo para cambiar las propiedades de cualquier dispositivo.", IDC_STATIC, 42, 18, 204, 24
+    LTEXT "El administrador de dispositivos muestra una lista con todos los dispositivos de hardware instalados en su equipo. Puede usarse para cambiar las propiedades de cualquier dispositivo.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Administrador de dispositivos...", IDC_HARDWARE_DEVICE_MANAGER, 138, 48, 106, 15
     GROUPBOX "Asistente de instalación de hardware ", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
@@ -38,7 +38,7 @@ BEGIN
     PUSHBUTTON "&Asistente de hardware...", IDC_HARDWARE_WIZARD, 138, 120, 106, 15
     GROUPBOX "Perfiles de hardware ", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT "Los perfiles de hardware le ofrecen una forma de definir y almacenar diferentes configuraciones de hardware.", IDC_STATIC, 42, 160, 204, 24
+    LTEXT "Los perfiles de hardware ofrecen una forma de definir y almacenar diferentes configuraciones de hardware.", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON "Perfiles de hard&ware...", IDC_HARDWARE_PROFILE, 138, 190, 106, 15
 END
 
@@ -49,7 +49,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Debe iniciar la sesión como Administrador para cambiar la mayoría de las opciones contenidas en esta pestaña.", IDC_STATIC, 12, 5, 236, 17
     GROUPBOX "Rendimiento ", IDC_STATIC, 6, 27, 244, 50
-    LTEXT "Efectos visuales, programación del precesador, uso de memoria y memoria virtual.", IDC_STATIC, 16, 38, 210, 17
+    LTEXT "Efectos visuales, programación del procesador, uso de memoria y memoria virtual.", IDC_STATIC, 16, 38, 210, 17
     PUSHBUTTON "Configuración", IDC_PERFOR, 194, 57, 50, 15
     GROUPBOX "Perfiles de usuario ", IDC_STATIC, 6, 84, 244, 48
     LTEXT "Configuración del escritorio relacionada con su inicio de sesión", IDC_STATIC, 16, 97, 210, 20
@@ -86,10 +86,10 @@ BEGIN
     PUSHBUTTON "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON "&Propiedades", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Copiar", IDC_HRDPROFCOPY, 63, 106, 40, 14, WS_DISABLED
-    PUSHBUTTON "Cambiar No&mbre", IDC_HRDPROFRENAME, 108, 106, 60, 14, WS_DISABLED
+    PUSHBUTTON "Cambiar no&mbre", IDC_HRDPROFRENAME, 108, 106, 60, 14, WS_DISABLED
     PUSHBUTTON "&Eliminar", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Selección de perfiles de hardware ", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "Cuando inicie ReactOS:", IDC_STATIC, 13, 142, 210, 8
+    LTEXT "Cuando se inicie ReactOS:", IDC_STATIC, 13, 142, 210, 8
     AUTORADIOBUTTON "Esperar &hasta que seleccione un perfil de hardware", IDC_HRDPROFWAIT, 13, 158, 190, 8, WS_GROUP
     AUTORADIOBUTTON "&Seleccionar el primer perfil de la lista si no se seleccciona uno tras", IDC_HRDPROFSELECT, 13, 173, 230, 8
     LTEXT "segundos", IDC_STATIC, 65, 187, 35, 8
@@ -107,17 +107,17 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
     LTEXT "", IDC_HWPPROP_PROFILE, 48, 16, 150, 8
-    LTEXT "Dock ID:", IDC_STATIC, 10, 42, 43, 8
+    LTEXT "ID de anclaje:", IDC_STATIC, 10, 42, 43, 8
     LTEXT "", IDC_HWPPROP_DOCKID, 64, 42, 135, 8
-    LTEXT "Serial Number:", IDC_STATIC, 10, 55, 52, 8
+    LTEXT "Número de serie:", IDC_STATIC, 10, 55, 52, 8
     LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
     GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
-    AUTOCHECKBOX "This is a &portable computer", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "The docking &state is unknown", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "The computer is &docked", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
-    AUTORADIOBUTTON "The computer is &undocked", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
-    GROUPBOX "Hardware profiles selection", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Always &include this profile as an option when ReactOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "Es un equipo &portátil", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Se desconoce el estado de anclaje", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "El equipo está &anclado", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "El equipo está &desanclado", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
+    GROUPBOX "Selección de perfiles de hardware", IDC_STATIC, 10, 138, 192, 42
+    AUTOCHECKBOX "Siempre &incluir este perfil como opción al arrancar ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
@@ -284,7 +284,7 @@ BEGIN
     IDS_VARIABLE "Variable"
     IDS_VALUE "Valor"
     IDS_NO_DUMP "(Ninguno)"
-    IDS_MINI_DUMP "Mini volcado de memoria (64KB)"
+    IDS_MINI_DUMP "Minivolcado de memoria (64KB)"
     IDS_KERNEL_DUMP "Volcado de memoria del Kernel"
     IDS_FULL_DUMP "Volcado de memoria completo"
     IDS_USERPROFILE_NAME "Nombre"
@@ -301,9 +301,9 @@ BEGIN
     IDS_PAGEFILE_SYSTEM "administrado por el sistema"
     IDS_INFOREBOOT "Es necesario reiniciar el equipo para que se apliquen los cambios."
     IDS_DEVS "\nEquipo de ReactOS\n\nCoordinador del proyecto\n\nAleksey Bragin\n\nEquipo de desarrollo\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKamil Horníček\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nIngenieros de publicación de versión\n\nColin Finck\nZ98\n\nEquipo Web\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nEquipo multimedia\n\nMindflyer\nWierd_W\n\nqueremos agradecer especialmente el trabajo realizado por\n\ntodos los colaboradores\nEl equipo de Wine\n\n"
-    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
-    IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
-    IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
-    IDS_HWPROFILE_PROFILE "Profile"
-    IDS_HWPROFILE_WARNING "Warning"
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirmar el borrado del perfil"
+    IDS_HWPROFILE_CONFIRM_DELETE "¿Seguro que quiere borrar el perfil de hardware «%s»?"
+    IDS_HWPROFILE_ALREADY_IN_USE "El nombre de perfil ya está en uso."
+    IDS_HWPROFILE_PROFILE "Perfil"
+    IDS_HWPROFILE_WARNING "Advertencia"
 END
