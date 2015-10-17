@@ -25,6 +25,8 @@
 #define IsUserHandle(h)   (((ULONG_PTR)(h) & KERNEL_HANDLE_FLAG) == 0)
 #define IsKernelHandle(h) (((ULONG_PTR)(h) & KERNEL_HANDLE_FLAG) == KERNEL_HANDLE_FLAG)
 
+static HANDLE SystemProcessHandle;
+
 static
 VOID
 TestDuplicate(
@@ -81,6 +83,34 @@ TestDuplicate(
             CheckObject(Handle, 2UL, 1UL, 0UL, DIRECTORY_ALL_ACCESS);
         }
     }
+
+    /* If TargetProcess is the System process, we do get a kernel handle */
+    Status = ZwDuplicateObject(ZwCurrentProcess(),
+                               Handle,
+                               SystemProcessHandle,
+                               &NewHandle,
+                               DIRECTORY_ALL_ACCESS,
+                               OBJ_KERNEL_HANDLE,
+                               0);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (!skip(NT_SUCCESS(Status), "DuplicateHandle failed\n"))
+    {
+        ok(IsKernelHandle(NewHandle), "New handle = %p\n", NewHandle);
+        CheckObject(NewHandle, 3UL, 2UL, 0, DIRECTORY_ALL_ACCESS);
+        CheckObject(Handle, 3UL, 2UL, 0UL, DIRECTORY_ALL_ACCESS);
+
+        Status = ObCloseHandle(NewHandle, UserMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        CheckObject(NewHandle, 3UL, 2UL, 0, DIRECTORY_ALL_ACCESS);
+        CheckObject(Handle, 3UL, 2UL, 0UL, DIRECTORY_ALL_ACCESS);
+
+        if (IsKernelHandle(NewHandle))
+        {
+            Status = ObCloseHandle(NewHandle, KernelMode);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+            CheckObject(Handle, 2UL, 1UL, 0UL, DIRECTORY_ALL_ACCESS);
+        }
+    }
 }
 
 START_TEST(ObHandle)
@@ -89,6 +119,19 @@ START_TEST(ObHandle)
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KernelDirectoryHandle;
     HANDLE UserDirectoryHandle;
+
+    Status = ObOpenObjectByPointer(PsInitialSystemProcess,
+                                   OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   PROCESS_ALL_ACCESS,
+                                   *PsProcessType,
+                                   KernelMode,
+                                   &SystemProcessHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (skip(NT_SUCCESS(Status), "No handle for system process\n"))
+    {
+        SystemProcessHandle = NULL;
+    }
 
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
@@ -208,4 +251,9 @@ START_TEST(ObHandle)
         Status = ObCloseHandle((HANDLE)123, KernelMode);
         Status = ObCloseHandle((HANDLE)(123 | 0x80000000), KernelMode);*/
     KmtEndSeh(STATUS_SUCCESS);
+
+    if (SystemProcessHandle)
+    {
+        ObCloseHandle(SystemProcessHandle, KernelMode);
+    }
 }
