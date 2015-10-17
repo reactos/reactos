@@ -173,7 +173,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         Globals.lfFont.lfCharSet = 163;
         Globals.lfFont.lfClipPrecision = 2;
         Globals.lfFont.lfEscapement = 0;
-        _tcscpy(Globals.lfFont.lfFaceName, _T("Arial"));
+        _tcscpy(Globals.lfFont.lfFaceName, _T("Lucida Console"));
         Globals.lfFont.lfItalic = 0;
         Globals.lfFont.lfOrientation = 0;
         Globals.lfFont.lfOutPrecision = 3;
