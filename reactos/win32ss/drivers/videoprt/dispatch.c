@@ -588,31 +588,28 @@ IntVideoPortPnPStartDevice(
                       ResourceListSize);
 
         /* Get the interrupt level/vector - needed by HwFindAdapter sometimes */
-        for (FullList = AllocatedResources->List;
-             FullList < AllocatedResources->List + AllocatedResources->Count;
-             FullList++)
-        {
-            INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
-                  FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
+        FullList = AllocatedResources->List;
+        ASSERT(AllocatedResources->Count == 1);
+        INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
+              FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
 
-            /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
-            ASSERT(FullList->InterfaceType == PCIBus);
-            ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
-            ASSERT(1 == FullList->PartialResourceList.Version);
-            ASSERT(1 == FullList->PartialResourceList.Revision);
-            for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
-                 Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
-                 Descriptor++)
+        /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
+        ASSERT(FullList->InterfaceType == PCIBus);
+        ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
+        ASSERT(1 == FullList->PartialResourceList.Version);
+        ASSERT(1 == FullList->PartialResourceList.Revision);
+        for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
+             Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
+             Descriptor++)
+        {
+            if (Descriptor->Type == CmResourceTypeInterrupt)
             {
-                if (Descriptor->Type == CmResourceTypeInterrupt)
-                {
-                    DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
-                    DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
-                    if (Descriptor->ShareDisposition == CmResourceShareShared)
-                        DeviceExtension->InterruptShared = TRUE;
-                    else
-                        DeviceExtension->InterruptShared = FALSE;
-                }
+                DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
+                DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+                if (Descriptor->ShareDisposition == CmResourceShareShared)
+                    DeviceExtension->InterruptShared = TRUE;
+                else
+                    DeviceExtension->InterruptShared = FALSE;
             }
         }
     }

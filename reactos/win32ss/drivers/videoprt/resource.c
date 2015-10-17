@@ -744,71 +744,68 @@ VideoPortGetAccessRanges(
     /* Return the slot number if the caller wants it */
     if (Slot != NULL) *Slot = DeviceExtension->SystemIoBusNumber;
 
-    for (FullList = AllocatedResources->List;
-         FullList < AllocatedResources->List + AllocatedResources->Count;
-         FullList++)
+    FullList = AllocatedResources->List;
+    ASSERT(AllocatedResources->Count == 1);
+    INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n", 
+          FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
+    
+    ASSERT(FullList->InterfaceType == PCIBus);
+    ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
+    ASSERT(1 == FullList->PartialResourceList.Version);
+    ASSERT(1 == FullList->PartialResourceList.Revision);
+    for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
+         Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
+         Descriptor++)
     {
-        INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n", 
-              FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
-        
-        ASSERT(FullList->InterfaceType == PCIBus);
-        ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
-        ASSERT(1 == FullList->PartialResourceList.Version);
-        ASSERT(1 == FullList->PartialResourceList.Revision);
-        for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
-             Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
-             Descriptor++)
+        if ((Descriptor->Type == CmResourceTypeMemory ||
+             Descriptor->Type == CmResourceTypePort) &&
+            AssignedCount >= NumAccessRanges)
         {
-            if ((Descriptor->Type == CmResourceTypeMemory ||
-                 Descriptor->Type == CmResourceTypePort) &&
-                AssignedCount >= NumAccessRanges)
-            {
-                ERR_(VIDEOPRT, "Too many access ranges found\n");
-                return ERROR_NOT_ENOUGH_MEMORY;
-            }
-            if (Descriptor->Type == CmResourceTypeMemory)
-            {
-                INFO_(VIDEOPRT, "Memory range starting at 0x%08x length 0x%08x\n",
-                      Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
-                AccessRanges[AssignedCount].RangeStart = Descriptor->u.Memory.Start;
-                AccessRanges[AssignedCount].RangeLength = Descriptor->u.Memory.Length;
-                AccessRanges[AssignedCount].RangeInIoSpace = 0;
-                AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
-                AccessRanges[AssignedCount].RangeShareable =
-                (Descriptor->ShareDisposition == CmResourceShareShared);
-                AccessRanges[AssignedCount].RangePassive = 0;
-                AssignedCount++;
-            }
-            else if (Descriptor->Type == CmResourceTypePort)
-            {
-                INFO_(VIDEOPRT, "Port range starting at 0x%04x length %d\n",
-                      Descriptor->u.Port.Start.u.LowPart, Descriptor->u.Port.Length);
-                AccessRanges[AssignedCount].RangeStart = Descriptor->u.Port.Start;
-                AccessRanges[AssignedCount].RangeLength = Descriptor->u.Port.Length;
-                AccessRanges[AssignedCount].RangeInIoSpace = 1;
-                AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
-                AccessRanges[AssignedCount].RangeShareable =
-                (Descriptor->ShareDisposition == CmResourceShareShared);
-                AccessRanges[AssignedCount].RangePassive = 0;
-                if (Descriptor->Flags & CM_RESOURCE_PORT_10_BIT_DECODE)
-                    AccessRanges[AssignedCount].RangePassive |= VIDEO_RANGE_10_BIT_DECODE;
-                if (Descriptor->Flags & CM_RESOURCE_PORT_PASSIVE_DECODE)
-                    AccessRanges[AssignedCount].RangePassive |= VIDEO_RANGE_PASSIVE_DECODE;
-                AssignedCount++;
-            }
-            else if (Descriptor->Type == CmResourceTypeInterrupt)
-            {
-                DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
-                DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
-                if (Descriptor->ShareDisposition == CmResourceShareShared)
-                    DeviceExtension->InterruptShared = TRUE;
-                else
-                    DeviceExtension->InterruptShared = FALSE;
-            }
+            ERR_(VIDEOPRT, "Too many access ranges found\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+        if (Descriptor->Type == CmResourceTypeMemory)
+        {
+            INFO_(VIDEOPRT, "Memory range starting at 0x%08x length 0x%08x\n",
+                  Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
+            AccessRanges[AssignedCount].RangeStart = Descriptor->u.Memory.Start;
+            AccessRanges[AssignedCount].RangeLength = Descriptor->u.Memory.Length;
+            AccessRanges[AssignedCount].RangeInIoSpace = 0;
+            AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
+            AccessRanges[AssignedCount].RangeShareable =
+            (Descriptor->ShareDisposition == CmResourceShareShared);
+            AccessRanges[AssignedCount].RangePassive = 0;
+            AssignedCount++;
+        }
+        else if (Descriptor->Type == CmResourceTypePort)
+        {
+            INFO_(VIDEOPRT, "Port range starting at 0x%04x length %d\n",
+                  Descriptor->u.Port.Start.u.LowPart, Descriptor->u.Port.Length);
+            AccessRanges[AssignedCount].RangeStart = Descriptor->u.Port.Start;
+            AccessRanges[AssignedCount].RangeLength = Descriptor->u.Port.Length;
+            AccessRanges[AssignedCount].RangeInIoSpace = 1;
+            AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
+            AccessRanges[AssignedCount].RangeShareable =
+            (Descriptor->ShareDisposition == CmResourceShareShared);
+            AccessRanges[AssignedCount].RangePassive = 0;
+            if (Descriptor->Flags & CM_RESOURCE_PORT_10_BIT_DECODE)
+                AccessRanges[AssignedCount].RangePassive |= VIDEO_RANGE_10_BIT_DECODE;
+            if (Descriptor->Flags & CM_RESOURCE_PORT_PASSIVE_DECODE)
+                AccessRanges[AssignedCount].RangePassive |= VIDEO_RANGE_PASSIVE_DECODE;
+            AssignedCount++;
+        }
+        else if (Descriptor->Type == CmResourceTypeInterrupt)
+        {
+            DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
+            DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+            if (Descriptor->ShareDisposition == CmResourceShareShared)
+                DeviceExtension->InterruptShared = TRUE;
+            else
+                DeviceExtension->InterruptShared = FALSE;
         }
     }
 
-   return NO_ERROR;
+    return NO_ERROR;
 }
 
 /*
