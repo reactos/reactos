@@ -91,6 +91,11 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
         else
             ClusterSize = 2048;
     }
+    else if (!wcsicmp(szFs, L"EXT2"))
+    {
+        // auto block size calculation
+        ClusterSize = 0;
+    }
     else
         return FALSE;
 
@@ -200,7 +205,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     if (SendMessageW(hDlgCtrl, CB_GETLBTEXT, iSelIndex, (LPARAM)wszBuf) == CB_ERR)
         return;
 
-    szDrive[0] = pContext->Drive + 'A';
+    szDrive[0] = pContext->Drive + L'A';
 
     if (!GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailableUser, &TotalNumberOfBytes, NULL))
         return;
@@ -273,6 +278,25 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
                     SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
             }
             ClusterSize *= 2;
+        }
+    }
+    else if (!wcsicmp(wszBuf, L"EXT2"))
+    {
+        if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
+        {
+            TRACE("EXT2 is not supported on hdd larger than 32T current %lu\n", TotalNumberOfBytes.QuadPart);
+            SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
+            return;
+        }
+
+        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, _countof(wszBuf)))
+        {
+            hDlgCtrl = GetDlgItem(hwndDlg, 28680);
+            SendMessageW(hDlgCtrl, CB_RESETCONTENT, 0, 0);
+            lIndex = SendMessageW(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)wszBuf);
+            if (lIndex != CB_ERR)
+                SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
+            SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
     }
     else
@@ -415,7 +439,7 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     DWORD ClusterSize;
 
     /* set volume path */
-    szDrive[0] = pContext->Drive;
+    szDrive[0] = pContext->Drive + L'A';
 
     /* get filesystem */
     hDlgCtrl = GetDlgItem(hwndDlg, 28677);

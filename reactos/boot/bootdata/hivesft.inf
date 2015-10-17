@@ -1094,6 +1094,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tonga Standard Tim
 HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","FAT",0x00000000,"ufat.dll"
 HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","FAT32",0x00000000,"ufat.dll"
 HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","FATX",0x00000000,"ufatx.dll"
+HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","EXT2",0x00000000,"uext2.dll"
 
 ; Winlogon settings
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","ConsoleShell",0x00020000,"%SystemRoot%\system32\cmd.exe"
