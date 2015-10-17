@@ -2150,6 +2150,8 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     PHANDLE_TABLE HandleTable;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     ULONG AuditMask;
+    BOOLEAN KernelHandle = FALSE;
+
     PAGED_CODE();
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Duplicating handle: %p for %p into %p\n",
@@ -2220,6 +2222,14 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         ObDereferenceProcessHandleTable(SourceProcess);
         ObDereferenceObject(SourceObject);
         return Status;
+    }
+
+    /* Create a kernel handle if asked, but only in the system process */
+    if (PreviousMode == KernelMode &&
+        HandleAttributes & OBJ_KERNEL_HANDLE &&
+        TargetProcess == PsInitialSystemProcess)
+    {
+        KernelHandle = TRUE;
     }
 
     /* Get the target handle table */
@@ -2374,6 +2384,12 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         /* Deference the object and set failure status */
         ObDereferenceObject(SourceObject);
         Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Mark it as a kernel handle if requested */
+    if (KernelHandle)
+    {
+        NewHandle = ObMarkHandleAsKernelHandle(NewHandle);
     }
 
     /* Return the handle */
