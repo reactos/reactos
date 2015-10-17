@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
- * FILE:            dll/gdi32/objects/coord.c
+ * FILE:            win32ss/gdi/gdi32/objects/coord.c
  * PURPOSE:         Functions for coordinate transformation
  * PROGRAMMER:
  */

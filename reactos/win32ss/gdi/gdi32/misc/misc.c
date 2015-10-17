@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS gdi32.dll
- * FILE:            dll/win32/gdi32/misc/misc.c
+ * FILE:            win32ss/gdi/gdi32/misc/misc.c
  * PURPOSE:         Miscellaneous functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:

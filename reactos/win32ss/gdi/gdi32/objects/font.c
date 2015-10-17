@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/gdi32/object/font.c
+ * FILE:            win32ss/gdi/gdi32/objects/font.c
  * PURPOSE:
  * PROGRAMMER:
  *
