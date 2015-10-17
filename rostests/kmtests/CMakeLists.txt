@@ -35,7 +35,6 @@ list(APPEND KMTEST_DRV_SOURCE
     npfs/NpfsFileInfo.c
     npfs/NpfsHelpers.c
     npfs/NpfsReadWrite.c
-    npfs/NpfsSecurity.c
     npfs/NpfsVolumeInfo.c
     ntos_cm/CmSecurity.c
     ntos_ex/ExCallback.c
@@ -54,7 +53,6 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoCreateFile.c
     ntos_io/IoDeviceInterface.c
     ntos_io/IoEvent.c
-    ntos_io/IoFilesystem.c
     ntos_io/IoInterrupt.c
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
@@ -62,7 +60,6 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeDevQueue.c
     ntos_ke/KeDpc.c
     ntos_ke/KeEvent.c
-    ntos_ke/KeFloatingPoint.c
     ntos_ke/KeGuardedMutex.c
     ntos_ke/KeIrql.c
     ntos_ke/KeMutex.c

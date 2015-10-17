@@ -26,7 +26,6 @@ KMT_TESTFUNC Test_FsRtlTunnel;
 KMT_TESTFUNC Test_IoCreateFile;
 KMT_TESTFUNC Test_IoDeviceInterface;
 KMT_TESTFUNC Test_IoEvent;
-KMT_TESTFUNC Test_IoFilesystem;
 KMT_TESTFUNC Test_IoInterrupt;
 KMT_TESTFUNC Test_IoIrp;
 KMT_TESTFUNC Test_IoMdl;
@@ -34,7 +33,6 @@ KMT_TESTFUNC Test_KeApc;
 KMT_TESTFUNC Test_KeDeviceQueue;
 KMT_TESTFUNC Test_KeDpc;
 KMT_TESTFUNC Test_KeEvent;
-KMT_TESTFUNC Test_KeFloatingPoint;
 KMT_TESTFUNC Test_KeGuardedMutex;
 KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeMutex;
@@ -49,7 +47,6 @@ KMT_TESTFUNC Test_NpfsConnect;
 KMT_TESTFUNC Test_NpfsCreate;
 KMT_TESTFUNC Test_NpfsFileInfo;
 KMT_TESTFUNC Test_NpfsReadWrite;
-KMT_TESTFUNC Test_NpfsSecurity;
 KMT_TESTFUNC Test_NpfsVolumeInfo;
 KMT_TESTFUNC Test_ObHandle;
 KMT_TESTFUNC Test_ObReference;
@@ -93,7 +90,6 @@ const KMT_TEST TestList[] =
     { "IoCreateFile",                       Test_IoCreateFile },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
     { "IoEvent",                            Test_IoEvent },
-    { "IoFilesystem",                       Test_IoFilesystem },
     { "IoInterrupt",                        Test_IoInterrupt },
     { "IoIrp",                              Test_IoIrp },
     { "IoMdl",                              Test_IoMdl },
@@ -101,7 +97,6 @@ const KMT_TEST TestList[] =
     { "KeDeviceQueue",                      Test_KeDeviceQueue },
     { "KeDpc",                              Test_KeDpc },
     { "KeEvent",                            Test_KeEvent },
-    { "KeFloatingPoint",                    Test_KeFloatingPoint },
     { "KeGuardedMutex",                     Test_KeGuardedMutex },
     { "KeIrql",                             Test_KeIrql },
     { "KeMutex",                            Test_KeMutex },
@@ -116,7 +111,6 @@ const KMT_TEST TestList[] =
     { "NpfsCreate",                         Test_NpfsCreate },
     { "NpfsFileInfo",                       Test_NpfsFileInfo },
     { "NpfsReadWrite",                      Test_NpfsReadWrite },
-    { "NpfsSecurity",                       Test_NpfsSecurity },
     { "NpfsVolumeInfo",                     Test_NpfsVolumeInfo },
     { "ObHandle",                           Test_ObHandle },
     { "ObReference",                        Test_ObReference },
