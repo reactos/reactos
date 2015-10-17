@@ -4457,7 +4457,7 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPWSTR pwc,
+    _In_reads_opt_(cwc) LPCWSTR pwc,
     _In_ INT cwc,
     _Out_writes_opt_(cwc) LPWORD pgi,
     _In_ DWORD iMode)
@@ -4475,7 +4475,7 @@ NtGdiGetGlyphIndicesW(
     PWSTR Buffer = NULL;
     ULONG Size, pwcSize;
     PWSTR Safepwc = NULL;
-    LPWSTR UnSafepwc = pwc;
+    LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
 
     if ((!UnSafepwc) && (!UnSafepgi)) return cwc;
