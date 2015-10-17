@@ -62,8 +62,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,3
- PRODUCTVERSION 0,0,0,3
+ FILEVERSION 0,6,2,0
+ PRODUCTVERSION 0,6,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -81,14 +81,14 @@ BEGIN
             VALUE "Comments", "Ext2 File System Driver\0"
             VALUE "CompanyName", "Purayidathil\0"
             VALUE "FileDescription", "Ext2 File System Driver\0"
-            VALUE "FileVersion", "0, 0, 0, 3\0"
-            VALUE "InternalName", "ext2.sys\0"
-            VALUE "LegalCopyright", "Copyright © 2002 Manoj Paul Joseph\0"
+            VALUE "FileVersion", "0, 6, 2, 0\0"
+            VALUE "InternalName", "ext2fs.sys\0"
+            VALUE "LegalCopyright", "Copyright © 2015 Matt Wu\0"
             VALUE "LegalTrademarks", " - \0"
-            VALUE "OriginalFilename", "ext2.sys\0"
+            VALUE "OriginalFilename", "ext2fs.sys\0"
             VALUE "PrivateBuild", " - \0"
-            VALUE "ProductName", "Ext2 File System Driver for Windows NT\0"
-            VALUE "ProductVersion", "0, 0, 0, 3\0"
+            VALUE "ProductName", "Ext2 File System Driver for Windows\0"
+            VALUE "ProductVersion", "0, 6, 2, 0\0"
             VALUE "SpecialBuild", " - \0"
         END
     END

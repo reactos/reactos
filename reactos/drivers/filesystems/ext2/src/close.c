@@ -1,515 +1,282 @@
-/*************************************************************************
-*
-* File: close.c
-*
-* Module: Ext2 File System Driver (Kernel mode execution only)
-*
-* Description:
-*	Should contain code to handle the "Close" dispatch entry point.
-*	This file serves as a placeholder. Please update this file as part
-*	of designing and implementing your FSD.
-*
-* Author: Manoj Paul Joseph
-*
-*
-*************************************************************************/
+/*
+ * COPYRIGHT:        See COPYRIGHT.TXT
+ * PROJECT:          Ext2 File System Driver for WinNT/2K/XP
+ * FILE:             close.c
+ * PROGRAMMER:       Matt Wu <mattwu@163.com>
+ * HOMEPAGE:         http://www.ext2fsd.com
+ * UPDATE HISTORY:
+ */
 
-#include			"ext2fsd.h"
+/* INCLUDES *****************************************************************/
 
-// define the file specific bug-check id
-#define			EXT2_BUG_CHECK_ID				EXT2_FILE_CLOSE
+#include "ext2fs.h"
 
-#define			DEBUG_LEVEL						(DEBUG_TRACE_CLOSE)
+/* GLOBALS ***************************************************************/
 
+extern PEXT2_GLOBAL Ext2Global;
 
-/*************************************************************************
-*
-* Function: Ext2Close()
-*
-* Description:
-*	The I/O Manager will invoke this routine to handle a close
-*	request
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL (invocation at higher IRQL will cause execution
-*	to be deferred to a worker thread context)
-*
-* Return Value: Does not matter!
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2Close(
-PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
-PIRP					Irp)					// I/O Request Packet
+/* DEFINITIONS *************************************************************/
+
+#ifdef ALLOC_PRAGMA
+#pragma alloc_text(PAGE, Ext2QueueCloseRequest)
+#pragma alloc_text(PAGE, Ext2DeQueueCloseRequest)
+#endif
+
+NTSTATUS
+Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-	BOOLEAN				AreWeTopLevel = FALSE;
+    PDEVICE_OBJECT  DeviceObject;
+    NTSTATUS        Status = STATUS_SUCCESS;
+    PEXT2_VCB       Vcb = NULL;
+    BOOLEAN         VcbResourceAcquired = FALSE;
+    PFILE_OBJECT    FileObject;
+    PEXT2_FCB       Fcb;
+    BOOLEAN         FcbResourceAcquired = FALSE;
+    PEXT2_CCB       Ccb;
+    BOOLEAN         bDeleteVcb = FALSE;
+    BOOLEAN         bBeingClosed = FALSE;
+    BOOLEAN         bSkipLeave = FALSE;
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY, "Close IRP Received...", 0);
-	
+    _SEH2_TRY {
 
-	FsRtlEnterFileSystem();
+        ASSERT(IrpContext != NULL);
+        ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
+               (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
 
-	ASSERT(DeviceObject);
-	ASSERT(Irp);
+        DeviceObject = IrpContext->DeviceObject;
+        if (IsExt2FsDevice(DeviceObject)) {
+            Status = STATUS_SUCCESS;
+            Vcb = NULL;
+            _SEH2_LEAVE;
+        }
 
-	// set the top level context
-	AreWeTopLevel = Ext2IsIrpTopLevel(Irp);
+        Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+        ASSERT(Vcb != NULL);
+        ASSERT((Vcb->Identifier.Type == EXT2VCB) &&
+               (Vcb->Identifier.Size == sizeof(EXT2_VCB)));
 
-	try 
-	{
+        if (!ExAcquireResourceExclusiveLite(
+                    &Vcb->MainResource,
+                    IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
+            DEBUG(DL_INF, ("Ext2Close: PENDING ... Vcb: %xh/%xh\n",
+                           Vcb->OpenHandleCount, Vcb->ReferenceCount));
 
-		// get an IRP context structure and issue the request
-		PtrIrpContext = Ext2AllocateIrpContext(Irp, DeviceObject);
-		ASSERT(PtrIrpContext);
+            Status = STATUS_PENDING;
+            _SEH2_LEAVE;
+        }
+        VcbResourceAcquired = TRUE;
 
-		RC = Ext2CommonClose(PtrIrpContext, Irp, TRUE);
+        bSkipLeave = TRUE;
+        if (IsFlagOn(Vcb->Flags, VCB_BEING_CLOSED)) {
+            bBeingClosed = TRUE;
+        } else {
+            SetLongFlag(Vcb->Flags, VCB_BEING_CLOSED);
+            bBeingClosed = FALSE;
+        }
 
-	}
-	except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-	{
+        if (IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_DELAY_CLOSE)) {
 
-		RC = Ext2ExceptionHandler(PtrIrpContext, Irp);
-		Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-	}
+            FileObject = NULL;
+            Fcb = IrpContext->Fcb;
+            Ccb = IrpContext->Ccb;
 
-	if (AreWeTopLevel) 
-	{
-		IoSetTopLevelIrp(NULL);
-	}
+        } else {
 
-	FsRtlExitFileSystem();
+            FileObject = IrpContext->FileObject;
+            Fcb = (PEXT2_FCB) FileObject->FsContext;
+            if (!Fcb) {
+                Status = STATUS_SUCCESS;
+                _SEH2_LEAVE;
+            }
+            ASSERT(Fcb != NULL);
+            Ccb = (PEXT2_CCB) FileObject->FsContext2;
+        }
 
-	return(RC);
+        DEBUG(DL_INF, ( "Ext2Close: (VCB) bBeingClosed = %d Vcb = %p ReferCount = %d\n",
+                        bBeingClosed, Vcb, Vcb->ReferenceCount));
+
+        if (Fcb->Identifier.Type == EXT2VCB) {
+
+            if (Ccb) {
+
+                Ext2DerefXcb(&Vcb->ReferenceCount);
+                Ext2FreeCcb(Vcb, Ccb);
+
+                if (FileObject) {
+                    FileObject->FsContext2 = Ccb = NULL;
+                }
+            }
+
+            Status = STATUS_SUCCESS;
+            _SEH2_LEAVE;
+        }
+
+        if ( Fcb->Identifier.Type != EXT2FCB ||
+                Fcb->Identifier.Size != sizeof(EXT2_FCB)) {
+            _SEH2_LEAVE;
+        }
+
+        if (!ExAcquireResourceExclusiveLite(
+                    &Fcb->MainResource,
+                    IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
+            Status = STATUS_PENDING;
+            _SEH2_LEAVE;
+        }
+        FcbResourceAcquired = TRUE;
+
+        Fcb->Header.IsFastIoPossible = FastIoIsNotPossible;
+
+        if (!Ccb) {
+            Status = STATUS_SUCCESS;
+            _SEH2_LEAVE;
+        }
+
+        ASSERT((Ccb->Identifier.Type == EXT2CCB) &&
+               (Ccb->Identifier.Size == sizeof(EXT2_CCB)));
+
+        if (IsFlagOn(Fcb->Flags, FCB_STATE_BUSY)) {
+            SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_FILE_BUSY);
+            DEBUG(DL_WRN, ( "Ext2Close: busy bit set: %wZ\n", &Fcb->Mcb->FullName ));
+            Status = STATUS_PENDING;
+            _SEH2_LEAVE;
+        }
+
+        DEBUG(DL_INF, ( "Ext2Close: Fcb = %p OpenHandleCount= %u ReferenceCount=%u NonCachedCount=%u %wZ\n",
+                        Fcb, Fcb->OpenHandleCount, Fcb->ReferenceCount, Fcb->NonCachedOpenCount, &Fcb->Mcb->FullName ));
+
+        if (Ccb) {
+
+            Ext2FreeCcb(Vcb, Ccb);
+
+            if (FileObject) {
+                FileObject->FsContext2 = Ccb = NULL;
+            }
+        }
+
+        if (0 == Ext2DerefXcb(&Fcb->ReferenceCount)) {
+
+            //
+            // Remove Fcb from Vcb->FcbList ...
+            //
+
+            if (FcbResourceAcquired) {
+                ExReleaseResourceLite(&Fcb->MainResource);
+                FcbResourceAcquired = FALSE;
+            }
+
+            Ext2FreeFcb(Fcb);
+
+            if (FileObject) {
+                FileObject->FsContext = Fcb = NULL;
+            }
+        }
+
+        Ext2DerefXcb(&Vcb->ReferenceCount);
+        Status = STATUS_SUCCESS;
+
+    } _SEH2_FINALLY {
+
+        if (NT_SUCCESS(Status) && Vcb != NULL && IsVcbInited(Vcb)) {
+            /* for Ext2Fsd driver open/close, Vcb is NULL */
+            if ((!bBeingClosed) && (Vcb->ReferenceCount == 0)&&
+                (!IsMounted(Vcb) || IsDispending(Vcb))) {
+                bDeleteVcb = TRUE;
+            }
+        }
+
+        if (bSkipLeave && !bBeingClosed) {
+            ClearFlag(Vcb->Flags, VCB_BEING_CLOSED);
+        }
+
+        if (FcbResourceAcquired) {
+            ExReleaseResourceLite(&Fcb->MainResource);
+        }
+
+        if (VcbResourceAcquired) {
+            ExReleaseResourceLite(&Vcb->MainResource);
+        }
+
+        if (!IrpContext->ExceptionInProgress) {
+
+            if (Status == STATUS_PENDING) {
+
+                Ext2QueueCloseRequest(IrpContext);
+
+            } else {
+
+                Ext2CompleteIrpContext(IrpContext, Status);
+
+                if (bDeleteVcb) {
+
+                    PVPB Vpb = Vcb->Vpb;
+                    DEBUG(DL_DBG, ( "Ext2Close: Try to free Vcb %p and Vpb %p\n",
+                                    Vcb, Vpb));
+
+                    Ext2CheckDismount(IrpContext, Vcb, FALSE);
+                }
+            }
+        }
+    } _SEH2_END;
+
+    return Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2CommonClose()
-*
-* Description:
-*	The actual work is performed here. This routine may be invoked in one'
-*	of the two possible contexts:
-*	(a) in the context of a system worker thread
-*	(b) in the context of the original caller
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: Does not matter!
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2CommonClose(
-PtrExt2IrpContext			PtrIrpContext,
-PIRP						PtrIrp,
-BOOLEAN						FirstAttempt )
+VOID
+Ext2QueueCloseRequest (IN PEXT2_IRP_CONTEXT IrpContext)
 {
-	NTSTATUS					RC = STATUS_SUCCESS;
-	PIO_STACK_LOCATION	PtrIoStackLocation = NULL;
-	PFILE_OBJECT			PtrFileObject = NULL;
-	PtrExt2FCB				PtrFCB = NULL;
-	PtrExt2CCB				PtrCCB = NULL;
-	PtrExt2VCB				PtrVCB = NULL;
-	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
-	PERESOURCE				PtrResourceAcquired = NULL;
-	PERESOURCE				PtrPagingIoResourceAcquired = NULL;
+    ASSERT(IrpContext);
+    ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
+           (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
 
-	BOOLEAN					CompleteIrp = TRUE;
-	BOOLEAN					PostRequest = FALSE;
-	BOOLEAN					AcquiredVCB = FALSE;
-	BOOLEAN					BlockForResource;
-	int						i = 1;
+    if (IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_DELAY_CLOSE)) {
 
-	try 
-	{
-		// First, get a pointer to the current I/O stack location
-		PtrIoStackLocation = IoGetCurrentIrpStackLocation(PtrIrp);
-		ASSERT(PtrIoStackLocation);
+        if (IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_FILE_BUSY)) {
+            Ext2Sleep(500); /* 0.5 sec*/
+        } else {
+            Ext2Sleep(50);  /* 0.05 sec*/
+        }
 
-		PtrFileObject = PtrIoStackLocation->FileObject;
-		ASSERT(PtrFileObject);
+    } else {
 
-		if( !PtrFileObject->FsContext2 )
-		{
-			//	This must be a Cleanup request received 
-			//	as a result of IoCreateStreamFileObject
-			//	Only such a File object would have a NULL CCB
+        SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
+        SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_DELAY_CLOSE);
 
-			DebugTrace( DEBUG_TRACE_SPECIAL, " === Close with NULL CCB", 0);
-			if( PtrFileObject )
-			{
-				DebugTrace( DEBUG_TRACE_SPECIAL, "###### File Pointer 0x%LX [Close]", PtrFileObject);
-			}
-			try_return();
-		}
+        IrpContext->Fcb = (PEXT2_FCB) IrpContext->FileObject->FsContext;
+        IrpContext->Ccb = (PEXT2_CCB) IrpContext->FileObject->FsContext2;
+    }
 
-		// Get the FCB and CCB pointers
+    ExInitializeWorkItem(
+        &IrpContext->WorkQueueItem,
+        Ext2DeQueueCloseRequest,
+        IrpContext);
 
-		Ext2GetFCB_CCB_VCB_FromFileObject ( 
-			PtrFileObject, &PtrFCB, &PtrCCB, &PtrVCB );
+    ExQueueWorkItem(&IrpContext->WorkQueueItem, DelayedWorkQueue);
+}
 
-		PtrVCB = (PtrExt2VCB)(PtrIrpContext->TargetDeviceObject->DeviceExtension);
-		ASSERT( PtrVCB );
+VOID NTAPI
+Ext2DeQueueCloseRequest (IN PVOID Context)
+{
+    PEXT2_IRP_CONTEXT IrpContext;
 
-		if( PtrFCB && PtrFCB->FCBName && PtrFCB->FCBName->ObjectName.Length && PtrFCB->FCBName->ObjectName.Buffer )
-		//if( PtrFileObject->FileName.Length && PtrFileObject->FileName.Buffer )
-		{
-			DebugTrace(DEBUG_TRACE_FILE_NAME, " === Close File Name : -%S-", PtrFCB->FCBName->ObjectName.Buffer );
-		}
-		else
-		{
-			DebugTrace(DEBUG_TRACE_FILE_NAME,   " === Close File Name : -null-", 0);
-		}
+    IrpContext = (PEXT2_IRP_CONTEXT) Context;
+    ASSERT(IrpContext);
+    ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
+           (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
 
-		//	(a) Acquiring the VCBResource Exclusively...
-		//	This is done to synchronise with the close and cleanup routines...
-//		if( ExTryToAcquireResourceExclusiveLite(&(PtrVCB->VCBResource) ) )
+    _SEH2_TRY {
 
-		BlockForResource = !FirstAttempt;
-		if( !FirstAttempt )
-		{
-			DebugTrace(DEBUG_TRACE_MISC, "*** Going into a block to acquire VCB Exclusively [Close]", 0);
-		}
-		else
-		{
-			DebugTrace(DEBUG_TRACE_MISC, "*** Attempting to acquire VCB Exclusively [Close]", 0);
-		}
-		if( PtrFileObject )
-		{
-			DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [Close]", PtrFileObject);
-		}
+        _SEH2_TRY {
 
-		i = 1;
-		while( !AcquiredVCB )
-		{
-			DebugTraceState( "VCB       AC:0x%LX   EX:0x%LX   SW:0x%LX   [Close]", PtrVCB->VCBResource.ActiveCount, PtrVCB->VCBResource.NumberOfExclusiveWaiters, PtrVCB->VCBResource.NumberOfSharedWaiters );
-			if(! ExAcquireResourceExclusiveLite( &(PtrVCB->VCBResource), FALSE ) )
-			{
-				DebugTrace(DEBUG_TRACE_MISC,   "*** VCB Acquisition FAILED [Close]", 0);
-				if( BlockForResource && i != 1000 )
-				{
-					LARGE_INTEGER Delay;
-					
-					//KeSetPriorityThread( PsGetCurrentThread(),LOW_REALTIME_PRIORITY	);
+            FsRtlEnterFileSystem();
+            Ext2Close(IrpContext);
 
-					Delay.QuadPart = -500 * i;
-					KeDelayExecutionThread( KernelMode, FALSE, &Delay );
-					DebugTrace(DEBUG_TRACE_MISC,  "*** Retrying... after 50 * %ld ms [Close]", i);
-				}
-				else
-				{
-					if( i == 1000 )
-						DebugTrace(DEBUG_TRACE_MISC,  "*** Reposting... [Close]", 0 );
-					PostRequest = TRUE;
-					try_return( RC = STATUS_PENDING );
-				}
-			}
-			else
-			{
-				DebugTrace(DEBUG_TRACE_MISC,  "*** VCB Acquired in [Close]", 0);
-				AcquiredVCB = TRUE;
-			}
-			i *= 10;
-		}
+        } _SEH2_EXCEPT (Ext2ExceptionFilter(IrpContext, _SEH2_GetExceptionInformation())) {
 
-		//	(b) Acquire the file (FCB) exclusively
-		if( PtrFCB && PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_FCB )
-		{
-			//	This FCB is an FCB indeed. ;)
-			//	So acquiring it exclusively...
-			//	This is done to synchronise with read/write routines...
-			if( !FirstAttempt )
-			{
-				DebugTrace(DEBUG_TRACE_MISC,   "*** Going into a block to acquire FCB Exclusively [Close]", 0);
-			}
-			else
-			{
-				DebugTrace(DEBUG_TRACE_MISC,  "*** Attempting to acquire FCB Exclusively [Close]", 0);
-			}
-			if( PtrFileObject )
-			{
-				DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [Close]", PtrFileObject);
-			}
+            Ext2ExceptionHandler(IrpContext);
+        } _SEH2_END;
 
-			PtrReqdFCB = &PtrFCB->NTRequiredFCB;
+    } _SEH2_FINALLY {
 
-			i = 1;
-			while( !PtrResourceAcquired )
-			{
-				DebugTraceState( "FCBMain   AC:0x%LX   EX:0x%LX   SW:0x%LX   [Close]", PtrReqdFCB->MainResource.ActiveCount, PtrReqdFCB->MainResource.NumberOfExclusiveWaiters, PtrReqdFCB->MainResource.NumberOfSharedWaiters );
-				if(! ExAcquireResourceExclusiveLite( &(PtrReqdFCB->MainResource), FALSE ) )
-				{
-					DebugTrace(DEBUG_TRACE_MISC,   "*** FCB Acquisition FAILED [Close]", 0);
-					if( BlockForResource && i != 1000 )
-					{
-						LARGE_INTEGER Delay;
-						
-						//KeSetPriorityThread( PsGetCurrentThread(),LOW_REALTIME_PRIORITY	);
-
-						Delay.QuadPart = -500 * i;
-						KeDelayExecutionThread( KernelMode, FALSE, &Delay );
-						DebugTrace(DEBUG_TRACE_MISC,  "*** Retrying... after 50 * %ld ms [Close]", i);
-					}
-					else
-					{
-						if( i == 1000 )
-							DebugTrace(DEBUG_TRACE_MISC,  "*** Reposting... [Close]", 0 );
-						PostRequest = TRUE;
-						try_return( RC = STATUS_PENDING );
-					}
-				}
-				else
-				{
-					DebugTrace(DEBUG_TRACE_MISC,  "*** FCB acquired [Close]", 0);
-					PtrResourceAcquired = & ( PtrReqdFCB->MainResource );
-				}
-				i *= 10;
-			}
-
-			i = 1;
-			while( !PtrPagingIoResourceAcquired )
-			{
-				DebugTraceState( "FCBPaging   AC:0x%LX   EX:0x%LX   SW:0x%LX   [Close]", PtrReqdFCB->PagingIoResource.ActiveCount, PtrReqdFCB->PagingIoResource.NumberOfExclusiveWaiters, PtrReqdFCB->PagingIoResource.NumberOfSharedWaiters );
-				if(! ExAcquireResourceExclusiveLite( &(PtrReqdFCB->PagingIoResource), FALSE ) )
-				{
-					DebugTrace(DEBUG_TRACE_MISC,   "*** FCB Acquisition FAILED [Close]", 0);
-					if( BlockForResource && i != 1000 )
-					{
-						LARGE_INTEGER Delay;
-						
-						// KeSetPriorityThread( PsGetCurrentThread(), LOW_REALTIME_PRIORITY );
-
-						Delay.QuadPart = -500 * i;
-						KeDelayExecutionThread( KernelMode, FALSE, &Delay );
-						DebugTrace(DEBUG_TRACE_MISC,  "*** Retrying... after 50 * %ld ms [Close]", i);
-					}
-					else
-					{
-						if( i == 1000 )
-							DebugTrace(DEBUG_TRACE_MISC,  "*** Reposting... [Close]", 0 );
-						PostRequest = TRUE;
-						try_return( RC = STATUS_PENDING );
-					}
-				}
-				else
-				{
-					DebugTrace(DEBUG_TRACE_MISC,  "*** FCB acquired [Close]", 0);
-					PtrPagingIoResourceAcquired = & ( PtrReqdFCB->PagingIoResource );
-				}
-				i *= 10;
-			}
-
-			// (c) Delete the CCB structure (free memory)
-			RemoveEntryList( &PtrCCB->NextCCB );
-			Ext2ReleaseCCB( PtrCCB );
-			PtrFileObject->FsContext2 = NULL;
-
-			// (d) Decrementing the Reference Count...
-			if( PtrFCB->ReferenceCount )
-			{
-				InterlockedDecrement( &PtrFCB->ReferenceCount );
-			}
-			else
-			{
-				Ext2BreakPoint();
-			}	
-			DebugTrace(DEBUG_TRACE_REFERENCE,  "^^^^^ReferenceCount = 0x%lX [Close]", PtrFCB->ReferenceCount );
-			DebugTrace(DEBUG_TRACE_REFERENCE,  "^^^^^OpenHandleCount = 0x%lX [Close]", PtrFCB->OpenHandleCount );
-			if( PtrFCB->ReferenceCount == 0 )
-			{
-
-				//	Attempting to update time stamp values
-				//	Errors are ignored...
-				//	Not considered as critical errors...
-				
-				{
-					ULONG			CreationTime, AccessTime, ModificationTime;
-					EXT2_INODE		Inode;
-
-					CreationTime = (ULONG) ( (PtrFCB->CreationTime.QuadPart 
-									- Ext2GlobalData.TimeDiff.QuadPart) / 10000000 );
-					AccessTime = (ULONG) ( (PtrFCB->LastAccessTime.QuadPart 
-									- Ext2GlobalData.TimeDiff.QuadPart) / 10000000 );
-					ModificationTime = (ULONG) ( (PtrFCB->LastWriteTime.QuadPart
-									- Ext2GlobalData.TimeDiff.QuadPart) / 10000000 );
-					if( NT_SUCCESS( Ext2ReadInode( PtrVCB, PtrFCB->INodeNo, &Inode ) ) )
-					{
-						//	Update time stamps in the inode...
-						Inode.i_ctime = CreationTime;
-						Inode.i_atime = AccessTime;
-						Inode.i_mtime = ModificationTime;
-
-						//	Updating the inode...
-						Ext2WriteInode( NULL, PtrVCB, PtrFCB->INodeNo, &Inode );
-					}
-				}
-
-
-				if( PtrFCB->INodeNo == EXT2_ROOT_INO )
-				{
-					//
-					//	Root Directory FCB
-					//	Preserve this
-					//	FSD has a File Object for this FCB...
-					//
-					DebugTrace(DEBUG_TRACE_MISC,  "^^^^^Root Directory FCB ; leaveing it alone[Close]", 0);
-					//	Do nothing...
-					
-				}
-				else if( PtrFCB->DcbFcb.Dcb.PtrDirFileObject )
-				{
-					//
-					//	If this is a FCB created on the FSD's initiative
-					//	Leave it alone
-					//
-					DebugTrace(DEBUG_TRACE_MISC,  "^^^^^FCB Created  on the FSD's initiative; leaveing it alone[Close]", 0);
-					if( !PtrFCB->ClosableFCBs.OnClosableFCBList )
-					{
-						InsertTailList( &PtrVCB->ClosableFCBs.ClosableFCBListHead,
-							&PtrFCB->ClosableFCBs.ClosableFCBList );
-						PtrVCB->ClosableFCBs.Count++;
-
-						PtrFCB->ClosableFCBs.OnClosableFCBList = TRUE;
-					}
-					
-					if( PtrVCB->ClosableFCBs.Count > EXT2_MAXCLOSABLE_FCBS_UL )
-					{
-						PtrExt2FCB		PtrTempFCB = NULL;
-						//	Checking if Closable FCBs are too many in number...
-						//	Shouldn't block the 
-						//	Should do this asynchronously...
-						//	Maybe later...
-						PLIST_ENTRY		PtrEntry = NULL;
-
-						PtrEntry = RemoveHeadList( &PtrVCB->ClosableFCBs.ClosableFCBListHead );
-						
-						PtrTempFCB = CONTAINING_RECORD( PtrEntry, Ext2FCB, ClosableFCBs.ClosableFCBList );
-						if( Ext2CloseClosableFCB( PtrTempFCB ) )
-						{
-							DebugTrace( DEBUG_TRACE_FREE, "Freeing  = %lX [Close]", PtrTempFCB );
-							ExFreePool( PtrTempFCB );
-							PtrVCB->ClosableFCBs.Count--;
-						}
-						else
-						{
-							//	Put the FCB back in the list...
-							InsertHeadList( &PtrVCB->ClosableFCBs.ClosableFCBListHead,
-								&PtrTempFCB->ClosableFCBs.ClosableFCBList );
-						}
-						DebugTrace( DEBUG_TRACE_SPECIAL, "ClosableFCBs Count = %ld [Close]", PtrVCB->ClosableFCBs.Count );
-					}
-				}
-				else
-				{
-					//	Remove this FCB as well...
-					DebugTrace(DEBUG_TRACE_MISC,  "^^^^^Deleting FCB  [Close]", 0);
-					RemoveEntryList( &PtrFCB->NextFCB );
-
-					if ( PtrPagingIoResourceAcquired )
-					{
-						Ext2ReleaseResource(PtrPagingIoResourceAcquired);
-						DebugTraceState( "Resource     AC:0x%LX   EX:0x%LX   SW:0x%LX   [Close]",
-							PtrPagingIoResourceAcquired->ActiveCount, 
-							PtrPagingIoResourceAcquired->NumberOfExclusiveWaiters, 
-							PtrPagingIoResourceAcquired->NumberOfSharedWaiters );
-
-						PtrPagingIoResourceAcquired = NULL;
-					}
-
-					if ( PtrResourceAcquired ) 
-					{
-						Ext2ReleaseResource(PtrResourceAcquired);
-						DebugTrace(DEBUG_TRACE_MISC,  "*** FCB Released [Close]", 0);
-						DebugTraceState( "Resource     AC:0x%LX   EX:0x%LX   SW:0x%LX   [Close]",
-							PtrResourceAcquired->ActiveCount, 
-							PtrResourceAcquired->NumberOfExclusiveWaiters, 
-							PtrResourceAcquired->NumberOfSharedWaiters );
-
-						if( PtrFileObject )
-						{
-							DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [Close]", PtrFileObject);
-						}
-						PtrResourceAcquired = NULL;
-					}
-
-					Ext2ReleaseFCB( PtrFCB );
-				}
-
-			}
-			CompleteIrp = TRUE;
-		}
-		else
-		{
-			//	This must be a volume close...
-			//	What do I do now? ;)
-			DebugTrace(DEBUG_TRACE_MISC,   "VCB Close Requested !!!", 0);
-			CompleteIrp = TRUE;
-		}
-		try_return();
-		
-		try_exit:	NOTHING;
-
-	} 
-	finally 
-	{
-		if ( PtrPagingIoResourceAcquired )
-		{
-			Ext2ReleaseResource(PtrPagingIoResourceAcquired);
-			DebugTraceState( "Resource     AC:0x%LX   EX:0x%LX   SW:0x%LX   [Close]",
-				PtrPagingIoResourceAcquired->ActiveCount,
-				PtrPagingIoResourceAcquired->NumberOfExclusiveWaiters,
-				PtrPagingIoResourceAcquired->NumberOfSharedWaiters );
-
-			PtrPagingIoResourceAcquired = NULL;
-		}
-
-		if ( PtrResourceAcquired ) 
-		{
-			Ext2ReleaseResource(PtrResourceAcquired);
-			DebugTrace(DEBUG_TRACE_MISC,  "*** FCB Released [Close]", 0);
-			DebugTraceState( "Resource     AC:0x%LX   EX:0x%LX   SW:0x%LX   [Close]",
-				PtrResourceAcquired->ActiveCount, 
-				PtrResourceAcquired->NumberOfExclusiveWaiters, 
-				PtrResourceAcquired->NumberOfSharedWaiters );
-
-			if( PtrFileObject )
-			{
-				DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [Close]", PtrFileObject);
-			}
-			PtrResourceAcquired = NULL;
-		}
-
-		if (AcquiredVCB) 
-		{
-			ASSERT(PtrVCB);
-			Ext2ReleaseResource(&(PtrVCB->VCBResource));
-			DebugTraceState( "VCB       AC:0x%LX   EX:0x%LX   SW:0x%LX   [Close]", PtrVCB->VCBResource.ActiveCount, PtrVCB->VCBResource.NumberOfExclusiveWaiters, PtrVCB->VCBResource.NumberOfSharedWaiters );
-			DebugTrace(DEBUG_TRACE_MISC,   "*** VCB Released [Close]", 0);
-
-			AcquiredVCB = FALSE;
-			if( PtrFileObject )
-			{
-				DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [Close]", PtrFileObject);
-			}
-			
-		}
-
-		if( PostRequest )
-		{
-			RC = Ext2PostRequest(PtrIrpContext, PtrIrp);
-		}
-		else if( CompleteIrp && RC != STATUS_PENDING )
-		{
-			// complete the IRP
-			IoCompleteRequest( PtrIrp, IO_DISK_INCREMENT );
-
-			Ext2ReleaseIrpContext( PtrIrpContext );
-		}
-
-	} // end of "finally" processing
-
-	return(RC);
+        FsRtlExitFileSystem();
+    } _SEH2_END;
 }

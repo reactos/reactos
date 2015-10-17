@@ -1,1675 +1,1977 @@
-/*************************************************************************
-*
-* File: create.c
-*
-* Module: Ext2 File System Driver (Kernel mode execution only)
-*
-* Description:
-*	Contains code to handle the "Create"/"Open" dispatch entry point.
-*
-* Author: Manoj Paul Joseph
-*
-*
-*************************************************************************/
+/*
+ * COPYRIGHT:        See COPYRIGHT.TXT
+ * PROJECT:          Ext2 File System Driver for WinNT/2K/XP
+ * FILE:             create.c
+ * PROGRAMMER:       Matt Wu <mattwu@163.com>
+ * HOMEPAGE:         http://www.ext2fsd.com
+ * UPDATE HISTORY:
+ */
 
-#include			"ext2fsd.h"
+/* INCLUDES *****************************************************************/
 
-// define the file specific bug-check id
-#define			EXT2_BUG_CHECK_ID				EXT2_FILE_CREATE
+#include "ext2fs.h"
 
-#define			DEBUG_LEVEL						(DEBUG_TRACE_CREATE)
- 
+/* GLOBALS *****************************************************************/
 
-/*************************************************************************
-*
-* Function: Ext2Create()
-*
-* Description: 
-*	The I/O Manager will invoke this routine to handle a create/open
-*	request
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL (invocation at higher IRQL will cause execution
-*	to be deferred to a worker thread context)
-*
-* Return Value: STATUS_SUCCESS/Error
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2Create(
-PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
-PIRP					Irp)					// I/O Request Packet
+extern PEXT2_GLOBAL Ext2Global;
+
+/* DEFINITIONS *************************************************************/
+
+#ifdef ALLOC_PRAGMA
+#pragma alloc_text(PAGE, Ext2IsNameValid)
+#pragma alloc_text(PAGE, Ext2FollowLink)
+#pragma alloc_text(PAGE, Ext2IsSpecialSystemFile)
+#pragma alloc_text(PAGE, Ext2LookupFile)
+#pragma alloc_text(PAGE, Ext2ScanDir)
+#pragma alloc_text(PAGE, Ext2CreateFile)
+#pragma alloc_text(PAGE, Ext2CreateVolume)
+#pragma alloc_text(PAGE, Ext2Create)
+#pragma alloc_text(PAGE, Ext2CreateInode)
+#pragma alloc_text(PAGE, Ext2SupersedeOrOverWriteFile)
+#endif
+
+
+BOOLEAN
+Ext2IsNameValid(PUNICODE_STRING FileName)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-    PtrExt2IrpContext	PtrIrpContext;
-	BOOLEAN				AreWeTopLevel = FALSE;
+    USHORT  i = 0;
+    PUSHORT pName = (PUSHORT) FileName->Buffer;
 
-	DebugTrace( DEBUG_TRACE_IRP_ENTRY, "Create Control IRP received...", 0);
+    if (FileName == NULL) {
+        return FALSE;
+    }
 
-	FsRtlEnterFileSystem();
-	
-	//	Ext2BreakPoint();
+    while (i < (FileName->Length / sizeof(WCHAR))) {
 
-	ASSERT(DeviceObject);
-	ASSERT(Irp);
+        if (pName[i] == 0) {
+            break;
+        }
 
-	// sometimes, we may be called here with the device object representing
-	//	the file system (instead of the device object created for a logical
-	//	volume. In this case, there is not much we wish to do (this create
-	//	typically will happen 'cause some process has to open the FSD device
-	//	object so as to be able to send an IOCTL to the FSD)
+        if (pName[i] == L'|'  || pName[i] == L':'  ||
+                pName[i] == L'/'  || pName[i] == L'*'  ||
+                pName[i] == L'?'  || pName[i] == L'\"' ||
+                pName[i] == L'<'  || pName[i] == L'>'   ) {
 
-	//	All of the logical volume device objects we create have a device
-	//	extension whereas the device object representing the FSD has no
-	//	device extension. This seems like a good enough method to identify
-	//	between the two device objects ...
-	if (DeviceObject->Size == (unsigned short)(sizeof(DEVICE_OBJECT))) 
-	{
-		// this is an open of the FSD itself
-		DebugTrace( DEBUG_TRACE_MISC, " === Open for the FSD itself", 0);
-		Irp->IoStatus.Status = RC;
-		Irp->IoStatus.Information = FILE_OPENED;
+            return FALSE;
+        }
 
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		return(RC);
-	}
+        i++;
+    }
 
-	// set the top level context
-	AreWeTopLevel = Ext2IsIrpTopLevel(Irp);
-
-	try 
-	{
-
-		// get an IRP context structure and issue the request
-		PtrIrpContext = Ext2AllocateIrpContext(Irp, DeviceObject);
-		ASSERT(PtrIrpContext);
-
-		RC = Ext2CommonCreate(PtrIrpContext, Irp, TRUE );
-
-	} 
-	except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-	{
-
-		RC = Ext2ExceptionHandler(PtrIrpContext, Irp);
-
-		Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-	}
-
-	if (AreWeTopLevel) 
-	{
-		IoSetTopLevelIrp(NULL);
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(RC);
+    return TRUE;
 }
 
 
-
-/*************************************************************************
-*
-* Function: Ext2CommonCreate()
-*
-* Description:
-*	The actual work is performed here. This routine may be invoked in one'
-*	of the two possible contexts:
-*	(a) in the context of a system worker thread
-*	(b) in the context of the original caller
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: STATUS_SUCCESS/Error
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2CommonCreate(
-PtrExt2IrpContext			PtrIrpContext,
-PIRP						PtrIrp,
-BOOLEAN						FirstAttempt)
+NTSTATUS
+Ext2FollowLink (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_MCB            Parent,
+    IN PEXT2_MCB            Mcb,
+    IN USHORT               Linkdep
+)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PIO_STACK_LOCATION		PtrIoStackLocation = NULL;
-	PIO_SECURITY_CONTEXT	PtrSecurityContext = NULL;
-	PFILE_OBJECT			PtrNewFileObject = NULL;
-	PFILE_OBJECT			PtrRelatedFileObject = NULL;
-	uint32					AllocationSize = 0; 	// if we create a new file
-	PFILE_FULL_EA_INFORMATION	PtrExtAttrBuffer = NULL;
-	unsigned long			RequestedOptions = 0;
-	unsigned long			RequestedDisposition = 0;
-	uint8					FileAttributes = 0;
-	unsigned short			ShareAccess = 0;
-	unsigned long			ExtAttrLength = 0;
-	ACCESS_MASK				DesiredAccess;
-
-	BOOLEAN					DeferredProcessing = FALSE;
-
-	PtrExt2VCB				PtrVCB = NULL;
-	BOOLEAN					AcquiredVCB = FALSE;
-
-	BOOLEAN					DirectoryOnlyRequested = FALSE;
-	BOOLEAN					FileOnlyRequested = FALSE;
-	BOOLEAN					NoBufferingSpecified = FALSE;
-	BOOLEAN					WriteThroughRequested = FALSE;
-	BOOLEAN					DeleteOnCloseSpecified = FALSE;
-	BOOLEAN					NoExtAttrKnowledge = FALSE;
-	BOOLEAN					CreateTreeConnection = FALSE;
-	BOOLEAN					OpenByFileId	= FALSE;
-
-	BOOLEAN					SequentialOnly	= FALSE;
-	BOOLEAN					RandomAccess	= FALSE;
-	
-	// Are we dealing with a page file?
-	BOOLEAN					PageFileManipulation = FALSE;
-
-	// Is this open for a target directory (used in rename operations)?
-	BOOLEAN					OpenTargetDirectory = FALSE;
-
-	// Should we ignore case when attempting to locate the object?
-	BOOLEAN					IgnoreCaseWhenChecking = FALSE;
-
-	PtrExt2CCB				PtrRelatedCCB = NULL, PtrNewCCB = NULL;
-	PtrExt2FCB				PtrRelatedFCB = NULL, PtrNewFCB = NULL;
-
-	unsigned long			ReturnedInformation = -1;
-
-	UNICODE_STRING			TargetObjectName;
-	UNICODE_STRING			RelatedObjectName;
-
-	UNICODE_STRING			AbsolutePathName;
-	UNICODE_STRING			RenameLinkTargetFileName;
-
-    /* Silence GCC warnings */
-    RtlZeroMemory(&RelatedObjectName, sizeof(UNICODE_STRING));
-
-
-	ASSERT(PtrIrpContext);
-	ASSERT(PtrIrp);
-
-	try 
-	{
-
-		AbsolutePathName.Buffer = NULL;
-		AbsolutePathName.Length = AbsolutePathName.MaximumLength = 0;
-
-		// Getting a pointer to the current I/O stack location
-		PtrIoStackLocation = IoGetCurrentIrpStackLocation(PtrIrp);
-		ASSERT(PtrIoStackLocation);
-
-		// Can we block?
-		if (!(PtrIrpContext->IrpContextFlags & EXT2_IRP_CONTEXT_CAN_BLOCK)) 
-		{
-			//	Asynchronous processing required...
-			RC = Ext2PostRequest(PtrIrpContext, PtrIrp);
-			DeferredProcessing = TRUE;
-			try_return();
-		}
-
-		// Obtaining the parameters specified by the user.
-		PtrNewFileObject	= PtrIoStackLocation->FileObject;
-		TargetObjectName	= PtrNewFileObject->FileName;
-		PtrRelatedFileObject = PtrNewFileObject->RelatedFileObject;
-
-		if( PtrNewFileObject->FileName.Length && PtrNewFileObject->FileName.Buffer )
-		{
-			if( PtrNewFileObject->FileName.Buffer[ PtrNewFileObject->FileName.Length/2 ] != 0 )
-			{
-				DebugTrace(DEBUG_TRACE_MISC, "&&&&&&&&&  PtrFileObject->FileName not NULL terminated! [Create]", 0 );
-			}
-			DebugTrace( DEBUG_TRACE_FILE_NAME, " === Create/Open File Name : -%S- [Create]", PtrNewFileObject->FileName.Buffer );
-		}
-		else
-		{
-			DebugTrace( DEBUG_TRACE_FILE_NAME, " === Create/Open File Name : -null- [Create]", 0);
-		}
-
-		// Is this a Relative Create/Open?
-		if (PtrRelatedFileObject) 
-		{
-			PtrRelatedCCB = (PtrExt2CCB)(PtrRelatedFileObject->FsContext2);
-			ASSERT(PtrRelatedCCB);
-			ASSERT(PtrRelatedCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_CCB);
-			// each CCB in turn points to a FCB
-			PtrRelatedFCB = PtrRelatedCCB->PtrFCB;
-			ASSERT(PtrRelatedFCB);
-			if( PtrRelatedFCB->NodeIdentifier.NodeType != EXT2_NODE_TYPE_FCB &&
-				PtrRelatedFCB->NodeIdentifier.NodeType != EXT2_NODE_TYPE_VCB	)
-			{
-				//	How the hell can this happen!!!
-				Ext2BreakPoint();
-			}
-
-			AssertFCBorVCB( PtrRelatedFCB );
-
-			RelatedObjectName = PtrRelatedFileObject->FileName;
-
-			if( PtrRelatedFileObject->FileName.Length && PtrRelatedFileObject->FileName.Buffer )
-			{
-				DebugTrace( DEBUG_TRACE_FILE_NAME, " === Relative to : -%S-", PtrRelatedFileObject->FileName.Buffer );
-			}
-			else
-			{
-				DebugTrace( DEBUG_TRACE_FILE_NAME, " === Relative to : -null-",0);
-			}
-
-		}
-
-
-		AllocationSize    = PtrIrp->Overlay.AllocationSize.LowPart;
-		//	Only 32 bit file sizes supported...
-
-		if (PtrIrp->Overlay.AllocationSize.HighPart) 
-		{
-			RC = STATUS_INVALID_PARAMETER;
-			try_return();
-		}
-
-		// Getting a pointer to the supplied security context
-		PtrSecurityContext = PtrIoStackLocation->Parameters.Create.SecurityContext;
-
-		// Obtaining the desired access 
-		DesiredAccess = PtrSecurityContext->DesiredAccess;
-
-		//	Getting the options supplied by the user...
-		RequestedOptions = (PtrIoStackLocation->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS);
-		RequestedDisposition = ((PtrIoStackLocation->Parameters.Create.Options >> 24) & 0xFF);
-
-		FileAttributes	= (uint8)(PtrIoStackLocation->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_VALID_FLAGS);
-		ShareAccess	= PtrIoStackLocation->Parameters.Create.ShareAccess;
-		PtrExtAttrBuffer	= PtrIrp->AssociatedIrp.SystemBuffer;
-
-		ExtAttrLength		= PtrIoStackLocation->Parameters.Create.EaLength;
-
-		SequentialOnly      = ((RequestedOptions & FILE_SEQUENTIAL_ONLY ) ? TRUE : FALSE);
-		RandomAccess		= ((RequestedOptions & FILE_RANDOM_ACCESS ) ? TRUE : FALSE);
-		
-
-		DirectoryOnlyRequested = ((RequestedOptions & FILE_DIRECTORY_FILE) ? TRUE : FALSE);
-		FileOnlyRequested = ((RequestedOptions & FILE_NON_DIRECTORY_FILE) ? TRUE : FALSE);
-		NoBufferingSpecified = ((RequestedOptions & FILE_NO_INTERMEDIATE_BUFFERING) ? TRUE : FALSE);
-		WriteThroughRequested = ((RequestedOptions & FILE_WRITE_THROUGH) ? TRUE : FALSE);
-		DeleteOnCloseSpecified = ((RequestedOptions & FILE_DELETE_ON_CLOSE) ? TRUE : FALSE);
-		NoExtAttrKnowledge = ((RequestedOptions & FILE_NO_EA_KNOWLEDGE) ? TRUE : FALSE);
-		CreateTreeConnection = ((RequestedOptions & FILE_CREATE_TREE_CONNECTION) ? TRUE : FALSE);
-		OpenByFileId = ((RequestedOptions & FILE_OPEN_BY_FILE_ID) ? TRUE : FALSE);
-		PageFileManipulation = ((PtrIoStackLocation->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE);
-		OpenTargetDirectory = ((PtrIoStackLocation->Flags & SL_OPEN_TARGET_DIRECTORY) ? TRUE : FALSE);
-		IgnoreCaseWhenChecking = ((PtrIoStackLocation->Flags & SL_CASE_SENSITIVE) ? TRUE : FALSE);
-
-		// Ensure that the operation has been directed to a valid VCB ...
-		PtrVCB =	(PtrExt2VCB)(PtrIrpContext->TargetDeviceObject->DeviceExtension);
-		ASSERT(PtrVCB);
-		ASSERT(PtrVCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB);
-
-		
-		if( !PtrNewFileObject->Vpb )
-		{
-			PtrNewFileObject->Vpb = PtrVCB->PtrVPB;
-		}
-
-		//	Acquiring the VCBResource Exclusively...
-		//	This is done to synchronise with the close and cleanup routines...
-		
-		DebugTrace(DEBUG_TRACE_MISC,  "*** Going into a block to acquire VCB Exclusively [Create]", 0);
-		
-		DebugTraceState( "VCB       AC:0x%LX   SW:0x%LX   EX:0x%LX   [Create]", PtrVCB->VCBResource.ActiveCount, PtrVCB->VCBResource.NumberOfExclusiveWaiters, PtrVCB->VCBResource.NumberOfSharedWaiters );
-		ExAcquireResourceExclusiveLite(&(PtrVCB->VCBResource), TRUE);
-				
-		AcquiredVCB = TRUE;
-
-		DebugTrace(DEBUG_TRACE_MISC,   "*** VCB Acquired in Create", 0);
-		if( PtrNewFileObject )
-		{
-			DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [Create]", PtrNewFileObject);
-		}
-
-		//	Verify Volume...
-		//	if (!NT_SUCCESS(RC = Ext2VerifyVolume(PtrVCB))) 
-		//	{
-		//		try_return();
-		//	}
-
-		// If the volume has been locked, fail the request
-
-		if (PtrVCB->VCBFlags & EXT2_VCB_FLAGS_VOLUME_LOCKED) 
-		{
-			DebugTrace(DEBUG_TRACE_MISC,   "Volume locked. Failing Create", 0 );
-			RC = STATUS_ACCESS_DENIED;
-			try_return();
-		}
-
-
-		if ((PtrNewFileObject->FileName.Length == 0) && ((PtrRelatedFileObject == NULL) ||
-			  (PtrRelatedFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB))) 
-		{
-			//
-			//	>>>>>>>>>>>>>	Volume Open requested. <<<<<<<<<<<<<
-			//
-
-			//	Performing validity checks...
-			if ((OpenTargetDirectory) || (PtrExtAttrBuffer)) 
-			{
-				RC = STATUS_INVALID_PARAMETER;
-				try_return();
-			}
-
-			if (DirectoryOnlyRequested) 
-			{
-				// a volume is not a directory
-				RC = STATUS_NOT_A_DIRECTORY;
-				try_return();
-			}
-
-			if ((RequestedDisposition != FILE_OPEN) && (RequestedDisposition != FILE_OPEN_IF)) 
-			{
-				// cannot create a new volume, I'm afraid ...
-				RC = STATUS_ACCESS_DENIED;
-				try_return();
-			}
-			DebugTrace(DEBUG_TRACE_MISC,   "Volume open requested", 0 );
-			RC = Ext2OpenVolume(PtrVCB, PtrIrpContext, PtrIrp, ShareAccess, PtrSecurityContext, PtrNewFileObject);
-			ReturnedInformation = PtrIrp->IoStatus.Information;
-
-			try_return();
-		}
-
-		if (OpenByFileId) 
-		{
-			DebugTrace(DEBUG_TRACE_MISC, "Open by File Id requested", 0 );
-			RC = STATUS_ACCESS_DENIED;
-			try_return();
-		}
-
-		// Relative path name specified...
-		if (PtrRelatedFileObject)
-		{
-
-			if (!(PtrRelatedFCB->FCBFlags & EXT2_FCB_DIRECTORY)) 
-			{
-				// we must have a directory as the "related" object
-				RC = STATUS_INVALID_PARAMETER;
-				try_return();
-			}
-
-			//	Performing validity checks...
-			if ((RelatedObjectName.Length == 0) || (RelatedObjectName.Buffer[0] != L'\\')) 
-			{
-				RC = STATUS_INVALID_PARAMETER;
-				try_return();
-			}
-
-			if ((TargetObjectName.Length != 0) && (TargetObjectName.Buffer[0] == L'\\')) 
-			{
-				RC = STATUS_INVALID_PARAMETER;
-				try_return();
-			}
-
-			// Creating an absolute path-name.
-			{
-				AbsolutePathName.MaximumLength = TargetObjectName.Length + RelatedObjectName.Length + sizeof(WCHAR);
-				if (!(AbsolutePathName.Buffer = Ext2AllocatePool(PagedPool, AbsolutePathName.MaximumLength ))) 
-				{
-					RC = STATUS_INSUFFICIENT_RESOURCES;
-					try_return();
-				}
-
-				RtlZeroMemory(AbsolutePathName.Buffer, AbsolutePathName.MaximumLength);
-
-				RtlCopyMemory((void *)(AbsolutePathName.Buffer), (void *)(RelatedObjectName.Buffer), RelatedObjectName.Length);
-				AbsolutePathName.Length = RelatedObjectName.Length;
-				RtlAppendUnicodeToString(&AbsolutePathName, L"\\");
-				RtlAppendUnicodeToString(&AbsolutePathName, TargetObjectName.Buffer);
-			}
-
-		}
-		//	Absolute Path name specified...
-		else 
-		{
-			
-
-			// Validity Checks...
-			if (TargetObjectName.Buffer[0] != L'\\') 
-			{
-				RC = STATUS_INVALID_PARAMETER;
-				try_return();
-			}
-
-			{
-				AbsolutePathName.MaximumLength = TargetObjectName.Length;
-				if (!(AbsolutePathName.Buffer = Ext2AllocatePool(PagedPool, AbsolutePathName.MaximumLength ))) {
-					RC = STATUS_INSUFFICIENT_RESOURCES;
-					try_return();
-				}
-
-				RtlZeroMemory(AbsolutePathName.Buffer, AbsolutePathName.MaximumLength);
-
-				RtlCopyMemory((void *)(AbsolutePathName.Buffer), (void *)(TargetObjectName.Buffer), TargetObjectName.Length);
-				AbsolutePathName.Length = TargetObjectName.Length;
-			}
-		}
-
-
-		//	Parsing the path...
-		if (AbsolutePathName.Length == 2) 
-		{
-			
-			// this is an open of the root directory, ensure that	the caller has not requested a file only
-			if (FileOnlyRequested || (RequestedDisposition == FILE_SUPERSEDE) || (RequestedDisposition == FILE_OVERWRITE) ||
-				 (RequestedDisposition == FILE_OVERWRITE_IF)) 
-			{
-				RC = STATUS_FILE_IS_A_DIRECTORY;
-				try_return();
-			}
-
-			RC = Ext2OpenRootDirectory(PtrVCB, PtrIrpContext, PtrIrp, ShareAccess, PtrSecurityContext, PtrNewFileObject);
-			DebugTrace(DEBUG_TRACE_MISC,   " === Root directory opened", 0 );
-			try_return();
-		}
-
-
-		{
-			//	Used during parsing the file path...
-			UNICODE_STRING			RemainingName;
-			UNICODE_STRING			CurrentName;
-			UNICODE_STRING			NextRemainingName;
-			ULONG					CurrInodeNo = 0;
-			PtrExt2FCB				PtrCurrFCB = NULL;
-			PtrExt2FCB				PtrNextFCB = NULL;
-			PFILE_OBJECT			PtrCurrFileObject = NULL;
-			ULONG					Type = 0;
-			LARGE_INTEGER ZeroSize;
-			BOOLEAN Found		= FALSE;
-			
-			ZeroSize.QuadPart = 0;
-			if ( PtrRelatedFileObject ) 
-			{
-				CurrInodeNo = PtrRelatedFCB->INodeNo;
-				PtrCurrFCB = PtrRelatedFCB;
-			}
-			else 
-			{
-				CurrInodeNo = PtrVCB->PtrRootDirectoryFCB->INodeNo;
-				PtrCurrFCB = PtrVCB->PtrRootDirectoryFCB;
-
-			}
-
-			//	Ext2ZerooutUnicodeString( &RemainingName );
-			Ext2ZerooutUnicodeString( &CurrentName );
-			Ext2ZerooutUnicodeString( &NextRemainingName );
-
-			RemainingName = TargetObjectName;
-		
-			while ( !Found && CurrInodeNo ) 
-			{
-				FsRtlDissectName ( RemainingName, &CurrentName, &NextRemainingName );
-
-				RemainingName = NextRemainingName;
-				//	CurrInodeNo is the parent inode for the entry I am searching for
-				//	PtrCurrFCB	is the parent's FCB
-				//	Current Name is its name...
-
-
-				PtrNextFCB = Ext2LocateChildFCBInCore ( PtrVCB, &CurrentName, CurrInodeNo );
-				
-				if( PtrNextFCB )
-				{
-					CurrInodeNo = PtrNextFCB->INodeNo;
-	
-					if( NextRemainingName.Length == 0 )
-					{
-						//
-						//	Done Parsing...
-						//	Found the file...
-						//
-						Found = TRUE;
-						
-						if( OpenTargetDirectory )
-						{
-							//
-							//	This is for a rename/move operation...
-							//
-							ReturnedInformation = FILE_EXISTS;
-
-							//	Now replace the file name field with that of the 
-							//	Target file name...
-							Ext2CopyUnicodeString( 
-								&RenameLinkTargetFileName,
-								&CurrentName );
-							/*
-							
-							for( i = 0; i < (CurrentName.Length/2); i++ )
-							{
-								PtrNewFileObject->FileName.Buffer[i] = CurrentName.Buffer[i];
-							}
-							PtrNewFileObject->FileName.Length = CurrentName.Length;
-							*/
-							//	Now open the Parent Directory...
-							PtrNextFCB = PtrCurrFCB;
-							CurrInodeNo = PtrNextFCB->INodeNo;
-						}
-
-						//	
-						//	Relating the FCB to the New File Object
-						//
-						PtrNewFileObject->Vpb = PtrVCB->PtrVPB;
-						PtrNewFileObject->PrivateCacheMap = NULL;
-						PtrNewFileObject->FsContext = (void *)( &(PtrNextFCB->NTRequiredFCB.CommonFCBHeader) );
-						PtrNewFileObject->SectionObjectPointer = &(PtrNextFCB->NTRequiredFCB.SectionObject) ;
-						break;
-					}
-
-					else if( !Ext2IsFlagOn( PtrNextFCB->FCBFlags, EXT2_FCB_DIRECTORY ) )
-					{
-						//	Invalid path...
-						//	Can have only a directory in the middle of the path...
-						//
-						RC = STATUS_OBJECT_PATH_NOT_FOUND;
-						try_return();
-					}
-				}
-				else	//	searching on the disk...
-				{
-					CurrInodeNo = Ext2LocateFileInDisk( PtrVCB, &CurrentName, PtrCurrFCB, &Type );
-					if( !CurrInodeNo )
-					{
-						//
-						//	Not found...
-						//	Quit searching...
-						//	
-					
-						if( ( NextRemainingName.Length == 0 ) && (
-							( RequestedDisposition == FILE_CREATE ) ||
-							( RequestedDisposition == FILE_OPEN_IF) ||
-							( RequestedDisposition == FILE_OVERWRITE_IF) ) )
-
-						{
-							//
-							//	Just the last component was not found...
-							//	A create was requested...
-							//
-							if( DirectoryOnlyRequested )
-							{
-								Type = EXT2_FT_DIR;
-							}
-							else
-							{
-								Type = EXT2_FT_REG_FILE;
-							}
-
-							CurrInodeNo = Ext2CreateFile( PtrIrpContext, PtrVCB, 
-								&CurrentName, PtrCurrFCB, Type );
-							
-							if(	!CurrInodeNo )
-							{
-								RC = STATUS_OBJECT_PATH_NOT_FOUND;
-								try_return();
-							}
-							// Set the allocation size for the object is specified
-							//IoSetShareAccess(DesiredAccess, ShareAccess, PtrNewFileObject, &(PtrNewFCB->FCBShareAccess));
-							//	RC = STATUS_SUCCESS;
-							ReturnedInformation = FILE_CREATED;
-							
-							//	Should also create a CCB structure...
-							//	Doing that a little fathre down... ;)
-
-						}
-						else if( NextRemainingName.Length == 0 && OpenTargetDirectory )
-						{ 
-							//
-							//	This is for a rename/move operation...
-							//	Just the last component was not found...
-							//
-							ReturnedInformation = FILE_DOES_NOT_EXIST;
-
-							//	Now replace the file name field with that of the 
-							//	Target file name...
-							Ext2CopyUnicodeString( 
-								&RenameLinkTargetFileName,
-								&CurrentName );
-							/*
-							for( i = 0; i < (CurrentName.Length/2); i++ )
-							{
-								PtrNewFileObject->FileName.Buffer[i] = CurrentName.Buffer[i];
-							}
-							PtrNewFileObject->FileName.Length = CurrentName.Length;
-							*/
-
-							//	Now open the Parent Directory...
-							PtrNextFCB = PtrCurrFCB;
-							CurrInodeNo = PtrNextFCB->INodeNo;
-							//	Initialize the FsContext
-							PtrNewFileObject->FsContext = &PtrNextFCB->NTRequiredFCB.CommonFCBHeader;
-							//	Initialize the section object pointer...
-							PtrNewFileObject->SectionObjectPointer = &(PtrNextFCB->NTRequiredFCB.SectionObject);
-							PtrNewFileObject->Vpb = PtrVCB->PtrVPB;
-							PtrNewFileObject->PrivateCacheMap = NULL;							
-
-							break;
-						}
-						else
-						{
-							RC = STATUS_OBJECT_PATH_NOT_FOUND;
-							try_return();
-						}
-					}
-
-					if( NextRemainingName.Length )
-					{
-						//	Should be a directory...
-						if( Type != EXT2_FT_DIR )
-						{
-							//	Invalid path...
-							//	Can have only a directory in the middle of the path...
-							//
-							RC = STATUS_OBJECT_PATH_NOT_FOUND;
-							try_return();
-						}
-
-						PtrCurrFileObject = NULL;
-					}
-					else
-					{
-						//
-						//	Done Parsing...
-						//	Found the file...
-						//
-						Found = TRUE;
-						
-						//
-						//	Was I supposed to create a new file?
-						//
-						if (RequestedDisposition == FILE_CREATE &&
-							ReturnedInformation != FILE_CREATED ) 
-						{
-							ReturnedInformation = FILE_EXISTS;
-							RC = STATUS_OBJECT_NAME_COLLISION;
-							try_return();
-						}
-						
-						//	Is this the type of file I was looking for?
-						//	Do some checking here...
-
-						if( Type != EXT2_FT_DIR && Type != EXT2_FT_REG_FILE )
-						{
-							//	Deny access!
-							//	Cannot open a special file...
-							RC = STATUS_ACCESS_DENIED;
-							try_return();
-
-						}
-						if( DirectoryOnlyRequested && Type != EXT2_FT_DIR )
-						{
-							RC = STATUS_NOT_A_DIRECTORY;
-							try_return();
-						}
-						if( FileOnlyRequested && Type == EXT2_FT_DIR )
-						{
-							RC = STATUS_FILE_IS_A_DIRECTORY;
-							try_return();
-						}
-
-						PtrCurrFileObject = PtrNewFileObject;
-						//	Things seem to be ok enough!
-						//	Proceeing with the Open/Create...
-						
-					}
-
-				
-					//
-					//	Create an FCB and initialise it...
-					//
-					{
-						PtrExt2ObjectName		PtrObjectName;
-						
-						//	Initialising the object name...
-						PtrObjectName = Ext2AllocateObjectName();
-						Ext2CopyUnicodeString( &PtrObjectName->ObjectName, &CurrentName ); 
-						//	RtlInitUnicodeString( &PtrObjectName->ObjectName, CurrentName.Buffer );
-
-						if( !NT_SUCCESS( Ext2CreateNewFCB( 
-							&PtrNextFCB,				//	the new FCB
-							ZeroSize,					//	AllocationSize,
-							ZeroSize,					//	EndOfFile,
-             				PtrCurrFileObject,			//	The File Object
-							PtrVCB,
-							PtrObjectName  )  )  )
-						{
-							RC = STATUS_INSUFFICIENT_RESOURCES;
-							try_return();
-						}
-
-						if( Type == EXT2_FT_DIR )
-							PtrNextFCB->FCBFlags |= EXT2_FCB_DIRECTORY;
-						else if( Type != EXT2_FT_REG_FILE )
-							PtrNextFCB->FCBFlags |= EXT2_FCB_SPECIAL_FILE;
-
-						PtrNextFCB->INodeNo = CurrInodeNo ;
-						PtrNextFCB->ParentINodeNo = PtrCurrFCB->INodeNo;
-
-						if( PtrCurrFileObject == NULL && CurrInodeNo != EXT2_ROOT_INO )
-						{
-							//	This is an FCB created to cache the reads done while parsing
-							//	Put this FCB on the ClosableFCBList 
-							if( !PtrNextFCB->ClosableFCBs.OnClosableFCBList )
-							{
-									InsertTailList( &PtrVCB->ClosableFCBs.ClosableFCBListHead,
-										&PtrNextFCB->ClosableFCBs.ClosableFCBList );
-									PtrVCB->ClosableFCBs.Count++;
-									PtrNextFCB->ClosableFCBs.OnClosableFCBList = TRUE;
-							}
-						}
-					}
-				}
-	
-				//
-				//	Still not done parsing...
-				//	miles to go before I open... ;)
-				//
-				PtrCurrFCB = PtrNextFCB;
-			}
-
-			PtrNewFCB = PtrNextFCB;
-		}
-		
-
-		//	If I get this far...
-		//	it means, I have located the file...
-		//	I even have an FCB to represent it!!!
-
-		if ( NT_SUCCESS (RC) ) 
-		{
-
-			if ((PtrNewFCB->FCBFlags & EXT2_FCB_DIRECTORY) && ((RequestedDisposition == FILE_SUPERSEDE) ||
-				  (RequestedDisposition == FILE_OVERWRITE) || (RequestedDisposition == FILE_OVERWRITE_IF ))) 
-			{
-				RC = STATUS_FILE_IS_A_DIRECTORY;
-				try_return();
-			}
-		
-			
-			// Check share access and fail if the share conflicts with an existing
-			// open.
-			
-			if (PtrNewFCB->OpenHandleCount > 0) 
-			{
-				// The FCB is currently in use by some thread.
-				// We must check whether the requested access/share access
-				// conflicts with the existing open operations.
-
-				if (!NT_SUCCESS(RC = IoCheckShareAccess(DesiredAccess, ShareAccess, PtrNewFileObject,
-												&(PtrNewFCB->FCBShareAccess), TRUE))) 
-				{
-					// Ext2CloseCCB(PtrNewCCB);
-					try_return();
-				}
-			} 
-			else 
-			{
-				IoSetShareAccess(DesiredAccess, ShareAccess, PtrNewFileObject, &(PtrNewFCB->FCBShareAccess));
-			}
-
-			//
-			//	Allocating a new CCB Structure...
-			//	
-			Ext2CreateNewCCB( &PtrNewCCB, PtrNewFCB, PtrNewFileObject);
-			PtrNewFileObject->FsContext2 = (void *) PtrNewCCB;
-			Ext2CopyUnicodeString( &(PtrNewCCB->AbsolutePathName), &AbsolutePathName );
-
-			if( ReturnedInformation == -1 )
-			{
-				//	
-				//	ReturnedInformation has not been set so far...
-				//
-				ReturnedInformation = FILE_OPENED;
-			}
-
-			// If a supersede or overwrite was requested, do so now ...
-			if (RequestedDisposition == FILE_SUPERSEDE) 
-			{
-				// Attempt the operation here ...
-				if( Ext2SupersedeFile( PtrNewFCB, PtrIrpContext) )
-				{
-					ReturnedInformation = FILE_SUPERSEDED;
-				}
-			}
-			
-			else if ((RequestedDisposition == FILE_OVERWRITE) || (RequestedDisposition == FILE_OVERWRITE_IF))
-			{
-				// Attempt the overwrite operation...
-				if( Ext2OverwriteFile( PtrNewFCB, PtrIrpContext) )
-				{
-					ReturnedInformation = FILE_OVERWRITTEN;
-				}
-			}
-			if( AllocationSize )
-			{
-				if( ReturnedInformation == FILE_CREATED ||
-					ReturnedInformation == FILE_SUPERSEDED )
-				{
-					ULONG CurrentSize;
-					ULONG LogicalBlockSize = EXT2_MIN_BLOCK_SIZE << PtrVCB->LogBlockSize;
-					
-					for( CurrentSize = 0; CurrentSize < AllocationSize; CurrentSize += LogicalBlockSize )
-					{
-						Ext2AddBlockToFile( PtrIrpContext, PtrVCB, PtrNewFCB, PtrNewFileObject, FALSE );
-					}
-				}
-			}
-
-			if( ReturnedInformation == FILE_CREATED )
-			{
-				//	Allocate some data blocks if 
-				//		1. initial file size has been specified...
-				//		2. if the file is a Directory...
-				//			In case of (2) make entries for '.' and '..'
-				//	Zero out the Blocks...
-
-				UNICODE_STRING		Name;
-
-				if( DirectoryOnlyRequested )
-				{
-
-					Ext2CopyCharToUnicodeString( &Name, ".", 1 );
-					Ext2MakeNewDirectoryEntry( PtrIrpContext, PtrNewFCB, PtrNewFileObject, &Name, EXT2_FT_DIR, PtrNewFCB->INodeNo);
-
-					Name.Buffer[1] = '.';
-					Name.Buffer[2] = '\0';
-					Name.Length += 2;
-					Ext2MakeNewDirectoryEntry( PtrIrpContext, PtrNewFCB, PtrNewFileObject, &Name, EXT2_FT_DIR, PtrNewFCB->ParentINodeNo );
-					Ext2DeallocateUnicodeString( &Name );
-				}
-			}
-			if( OpenTargetDirectory )
-			{
-				//
-				//	Save the taget file name in the CCB...
-				//
-				Ext2CopyUnicodeString( 
-					&PtrNewCCB->RenameLinkTargetFileName,
-					&RenameLinkTargetFileName );
-				Ext2DeallocateUnicodeString( &RenameLinkTargetFileName );
-			}
-		}
-
-		try_exit:	NOTHING;
-
-	}
-	finally 
-	{
-		if (AcquiredVCB) 
-		{
-			ASSERT(PtrVCB);
-			Ext2ReleaseResource(&(PtrVCB->VCBResource));
-
-			AcquiredVCB = FALSE;
-			DebugTrace(DEBUG_TRACE_MISC,   "*** VCB released [Create]", 0);
-
-			if( PtrNewFileObject )
-			{
-				DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [Create]", PtrNewFileObject);
-			}
-		}
-
-		if (AbsolutePathName.Buffer != NULL) 
-		{
-			DebugTrace( DEBUG_TRACE_FREE, "Freeing  = %lX [Create]", AbsolutePathName.Buffer );
-			ExFreePool(AbsolutePathName.Buffer);
-		}
-
-		// Complete the request unless we are here as part of unwinding
-		//	when an exception condition was encountered, OR
-		//	if the request has been deferred (i.e. posted for later handling)
-		if (RC != STATUS_PENDING) 
-		{
-			// If we acquired any FCB resources, release them now ...
-
-			// If any intermediate (directory) open operations were performed,
-			//	implement the corresponding close (do *not* however close
-			//	the target you have opened on behalf of the caller ...).
-
-			if (NT_SUCCESS(RC)) 
-			{
-				// Update the file object such that:
-				//	(a) the FsContext field points to the NTRequiredFCB field
-				//		 in the FCB
-				//	(b) the FsContext2 field points to the CCB created as a
-				//		 result of the open operation
-
-				// If write-through was requested, then mark the file object
-				//	appropriately
-				if (WriteThroughRequested) 
-				{
-					PtrNewFileObject->Flags |= FO_WRITE_THROUGH;
-				}
-				DebugTrace( DEBUG_TRACE_SPECIAL,   " === Create/Open successful", 0 );
-			} 
-			else 
-			{
-				DebugTrace( DEBUG_TRACE_SPECIAL,   " === Create/Open failed", 0 );
-				// Perform failure related post-processing now
-			}
-
-			// As long as this unwinding is not being performed as a result of
-			//	an exception condition, complete the IRP ...
-			if (!(PtrIrpContext->IrpContextFlags & EXT2_IRP_CONTEXT_EXCEPTION)) 
-			{
-				PtrIrp->IoStatus.Status = RC;
-				PtrIrp->IoStatus.Information = ReturnedInformation;
-			
-				// Free up the Irp Context
-				Ext2ReleaseIrpContext(PtrIrpContext);
-				
-				// complete the IRP
-				IoCompleteRequest(PtrIrp, IO_DISK_INCREMENT);
-			}
-		}
-	}
-	return(RC);
+    NTSTATUS        Status = STATUS_LINK_FAILED;
+
+    UNICODE_STRING  UniName;
+    OEM_STRING      OemName;
+    BOOLEAN         bOemBuffer = FALSE;
+
+    PEXT2_MCB       Target = NULL;
+
+    USHORT          i;
+
+    _SEH2_TRY {
+
+        RtlZeroMemory(&UniName, sizeof(UNICODE_STRING));
+        RtlZeroMemory(&OemName, sizeof(OEM_STRING));
+
+        /* exit if we jump into a possible symlink forever loop */
+        if ((Linkdep + 1) > EXT2_MAX_NESTED_LINKS ||
+                IoGetRemainingStackSize() < 1024) {
+            _SEH2_LEAVE;
+        }
+
+        /* read the symlink target path */
+        if (Mcb->Inode.i_size < EXT2_LINKLEN_IN_INODE) {
+
+            OemName.Buffer = (PUCHAR) (&Mcb->Inode.i_block[0]);
+            OemName.Length = (USHORT)Mcb->Inode.i_size;
+            OemName.MaximumLength = OemName.Length + 1;
+
+        } else {
+
+            OemName.Length = (USHORT)Mcb->Inode.i_size;
+            OemName.MaximumLength = OemName.Length + 1;
+            OemName.Buffer = Ext2AllocatePool(PagedPool,
+                                              OemName.MaximumLength,
+                                              'NL2E');
+            if (OemName.Buffer == NULL) {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                _SEH2_LEAVE;
+            }
+            bOemBuffer = TRUE;
+            RtlZeroMemory(OemName.Buffer, OemName.MaximumLength);
+
+            Status = Ext2ReadInode(
+                         IrpContext,
+                         Vcb,
+                         Mcb,
+                         (ULONGLONG)0,
+                         OemName.Buffer,
+                         (ULONG)(Mcb->Inode.i_size),
+                         FALSE,
+                         NULL);
+            if (!NT_SUCCESS(Status)) {
+                _SEH2_LEAVE;
+            }
+        }
+
+        /* convert Linux slash to Windows backslash */
+        for (i=0; i < OemName.Length; i++) {
+            if (OemName.Buffer[i] == '/') {
+                OemName.Buffer[i] = '\\';
+            }
+        }
+
+        /* convert oem string to unicode string */
+        UniName.MaximumLength = (USHORT)Ext2OEMToUnicodeSize(Vcb, &OemName);
+        if (UniName.MaximumLength <= 0) {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
+
+        UniName.MaximumLength += 2;
+        UniName.Buffer = Ext2AllocatePool(PagedPool,
+                                          UniName.MaximumLength,
+                                          'NL2E');
+        if (UniName.Buffer == NULL) {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
+        RtlZeroMemory(UniName.Buffer, UniName.MaximumLength);
+        Status = Ext2OEMToUnicode(Vcb, &UniName, &OemName);
+        if (!NT_SUCCESS(Status)) {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
+
+        /* search the real target */
+        Status = Ext2LookupFile(
+                     IrpContext,
+                     Vcb,
+                     &UniName,
+                     Parent,
+                     &Target,
+                     Linkdep
+                 );
+        if (Target == NULL) {
+            Status = STATUS_LINK_FAILED;
+        }
+
+        if (Target == NULL /* link target doesn't exist */      ||
+                Target == Mcb  /* symlink points to itself */       ||
+                IsMcbSpecialFile(Target) /* target not resolved*/   ||
+                IsFileDeleted(Target)  /* target deleted */         ) {
+
+            if (Target) {
+                ASSERT(Target->Refercount > 0);
+                Ext2DerefMcb(Target);
+            }
+            ClearLongFlag(Mcb->Flags, MCB_TYPE_SYMLINK);
+            SetLongFlag(Mcb->Flags, MCB_TYPE_SPECIAL);
+            Mcb->FileAttr = FILE_ATTRIBUTE_NORMAL;
+            Mcb->Target = NULL;
+
+        } else if (IsMcbSymLink(Target)) {
+
+            ASSERT(Target->Refercount > 0);
+            ASSERT(Target->Target != NULL);
+            Ext2ReferMcb(Target->Target);
+            Mcb->Target = Target->Target;
+            Ext2DerefMcb(Target);
+            ASSERT(!IsMcbSymLink(Target->Target));
+            SetLongFlag(Mcb->Flags, MCB_TYPE_SYMLINK);
+            ClearLongFlag(Mcb->Flags, MCB_TYPE_SPECIAL);
+            ASSERT(Mcb->Target->Refercount > 0);
+            Mcb->FileAttr = Target->FileAttr;
+
+        } else {
+
+            Mcb->Target = Target;
+            SetLongFlag(Mcb->Flags, MCB_TYPE_SYMLINK);
+            ClearLongFlag(Mcb->Flags, MCB_TYPE_SPECIAL);
+            ASSERT(Mcb->Target->Refercount > 0);
+            Mcb->FileAttr = Target->FileAttr;
+        }
+
+    } _SEH2_FINALLY {
+
+        if (bOemBuffer) {
+            Ext2FreePool(OemName.Buffer, 'NL2E');
+        }
+
+        if (UniName.Buffer) {
+            Ext2FreePool(UniName.Buffer, 'NL2E');
+        }
+    } _SEH2_END;
+
+    return Status;
+}
+
+BOOLEAN
+Ext2IsSpecialSystemFile(
+    IN PUNICODE_STRING FileName,
+    IN BOOLEAN         bDirectory
+)
+{
+    PWSTR SpecialFileList[] = {
+        L"pagefile.sys",
+        L"swapfile.sys",
+        L"hiberfil.sys",
+        NULL
+    };
+
+    PWSTR SpecialDirList[] = {
+        L"Recycled",
+        L"RECYCLER",
+        L"$RECYCLE.BIN",
+        NULL
+    };
+
+    PWSTR   entryName;
+    ULONG   length;
+    int     i;
+
+    for (i = 0; TRUE; i++) {
+
+        if (bDirectory) {
+            entryName = SpecialDirList[i];
+        } else {
+            entryName = SpecialFileList[i];
+        }
+
+        if (NULL == entryName) {
+            break;
+        }
+
+        length = wcslen(entryName) * sizeof(WCHAR);
+        if (FileName->Length == length) {
+            if ( 0 == _wcsnicmp( entryName,
+                                 FileName->Buffer,
+                                 length / sizeof(WCHAR) )) {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
+NTSTATUS
+Ext2LookupFile (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PUNICODE_STRING      FullName,
+    IN PEXT2_MCB            Parent,
+    OUT PEXT2_MCB *         Ext2Mcb,
+    IN USHORT               Linkdep
+)
+{
+    NTSTATUS        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+    UNICODE_STRING  FileName;
+    PEXT2_MCB       Mcb = NULL;
+    struct dentry  *de = NULL;
+
+    USHORT          i = 0, End;
+    ULONG           Inode;
+
+    BOOLEAN         bParent = FALSE;
+    BOOLEAN         bDirectory = FALSE;
+    BOOLEAN         LockAcquired = FALSE;
+
+    _SEH2_TRY {
+
+        ExAcquireResourceExclusiveLite(&Vcb->McbLock, TRUE);
+        LockAcquired = TRUE;
+
+        *Ext2Mcb = NULL;
+
+        DEBUG(DL_RES, ("Ext2LookupFile: %wZ\n", FullName));
+
+        /* check names and parameters */
+        if (FullName->Buffer[0] == L'\\') {
+            Parent = Vcb->McbTree;
+        } else if (Parent) {
+            bParent = TRUE;
+        } else {
+            Parent = Vcb->McbTree;
+        }
+
+        /* make sure the parent is NULL */
+        if (!IsMcbDirectory(Parent)) {
+            Status =  STATUS_NOT_A_DIRECTORY;
+            _SEH2_LEAVE;
+        }
+
+        /* use symlink's target as parent directory */
+        if (IsMcbSymLink(Parent)) {
+            Parent = Parent->Target;
+            ASSERT(!IsMcbSymLink(Parent));
+            if (IsFileDeleted(Parent)) {
+                Status =  STATUS_NOT_A_DIRECTORY;
+                _SEH2_LEAVE;
+            }
+        }
+
+        if (NULL == Parent) {
+            Status =  STATUS_NOT_A_DIRECTORY;
+            _SEH2_LEAVE;
+        }
+
+        /* default is the parent Mcb*/
+        Ext2ReferMcb(Parent);
+        Mcb = Parent;
+
+        /* is empty file name or root node */
+        End = FullName->Length/sizeof(WCHAR);
+        if ( (End == 0) || (End == 1 &&
+                            FullName->Buffer[0] == L'\\')) {
+            Status = STATUS_SUCCESS;
+            _SEH2_LEAVE;
+        }
+
+        /* is a directory expected ? */
+        if (FullName->Buffer[End - 1] == L'\\') {
+            bDirectory = TRUE;
+        }
+
+        /* loop with every sub name */
+        while (i < End) {
+
+            USHORT Start = 0;
+
+            /* zero the prefix '\' */
+            while (i < End && FullName->Buffer[i] == L'\\') i++;
+            Start = i;
+
+            /* zero the suffix '\' */
+            while (i < End && (FullName->Buffer[i] != L'\\')) i++;
+
+            if (i > Start) {
+
+                FileName = *FullName;
+                FileName.Buffer += Start;
+                FileName.Length = (USHORT)((i - Start) * 2);
+
+                /* make sure the parent is NULL */
+                if (!IsMcbDirectory(Parent)) {
+                    Status =  STATUS_NOT_A_DIRECTORY;
+                    Ext2DerefMcb(Parent);
+                    break;
+                }
+
+                if (IsMcbSymLink(Parent)) {
+                    if (IsFileDeleted(Parent->Target)) {
+                        Status =  STATUS_NOT_A_DIRECTORY;
+                        Ext2DerefMcb(Parent);
+                        break;
+                    } else {
+                        Ext2ReferMcb(Parent->Target);
+                        Ext2DerefMcb(Parent);
+                        Parent = Parent->Target;
+                    }
+                }
+
+                /* search cached Mcb nodes */
+                Mcb = Ext2SearchMcbWithoutLock(Parent, &FileName);
+
+                if (Mcb) {
+
+                    /* derefer the parent Mcb */
+                    Ext2DerefMcb(Parent);
+                    Status = STATUS_SUCCESS;
+                    Parent = Mcb;
+
+                    if (IsMcbSymLink(Mcb) && IsFileDeleted(Mcb->Target) &&
+                            (Mcb->Refercount == 1)) {
+
+                        ASSERT(Mcb->Target);
+                        ASSERT(Mcb->Target->Refercount > 0);
+                        Ext2DerefMcb(Mcb->Target);
+                        Mcb->Target = NULL;
+                        ClearLongFlag(Mcb->Flags, MCB_TYPE_SYMLINK);
+                        SetLongFlag(Mcb->Flags, MCB_TYPE_SPECIAL);
+                        Mcb->FileAttr = FILE_ATTRIBUTE_NORMAL;
+                    }
+
+                } else {
+
+                    /* need create new Mcb node */
+
+                    /* is a valid ext2 name */
+                    if (!Ext2IsNameValid(&FileName)) {
+                        Status = STATUS_OBJECT_NAME_INVALID;
+                        Ext2DerefMcb(Parent);
+                        break;
+                    }
+
+                    /* seach the disk */
+                    de = NULL;
+                    Status = Ext2ScanDir (
+                                 IrpContext,
+                                 Vcb,
+                                 Parent,
+                                 &FileName,
+                                 &Inode,
+                                 &de);
+
+                    if (NT_SUCCESS(Status)) {
+
+                        /* check it's real parent */
+                        ASSERT (!IsMcbSymLink(Parent));
+
+                        /* allocate Mcb ... */
+                        Mcb = Ext2AllocateMcb(Vcb, &FileName, &Parent->FullName, 0);
+                        if (!Mcb) {
+                            Status = STATUS_INSUFFICIENT_RESOURCES;
+                            Ext2DerefMcb(Parent);
+                            break;
+                        }
+                        Mcb->de = de;
+                        Mcb->de->d_inode = &Mcb->Inode;
+                        Mcb->Inode.i_ino = Inode;
+                        Mcb->Inode.i_sb = &Vcb->sb;
+                        de = NULL;
+
+                        /* load inode information */
+                        if (!Ext2LoadInode(Vcb, &Mcb->Inode)) {
+                            Status = STATUS_CANT_WAIT;
+                            Ext2DerefMcb(Parent);
+                            Ext2FreeMcb(Vcb, Mcb);
+                            break;
+                        }
+
+                        /* set inode attribute */
+                        if (!CanIWrite(Vcb) && Ext2IsOwnerReadOnly(Mcb->Inode.i_mode)) {
+                            SetFlag(Mcb->FileAttr, FILE_ATTRIBUTE_READONLY);
+                        }
+
+                        if (S_ISDIR(Mcb->Inode.i_mode)) {
+                            SetFlag(Mcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY);
+                        } else {
+                            SetFlag(Mcb->FileAttr, FILE_ATTRIBUTE_NORMAL);
+                            if (!S_ISREG(Mcb->Inode.i_mode) &&
+                                    !S_ISLNK(Mcb->Inode.i_mode)) {
+                                SetLongFlag(Mcb->Flags, MCB_TYPE_SPECIAL);
+                            }
+                        }
+
+                        /* process special files under root directory */
+                        if (IsMcbRoot(Parent)) {
+                            /* set hidden and system attributes for
+                               Recycled / RECYCLER / pagefile.sys */
+                            BOOLEAN IsDirectory = IsMcbDirectory(Mcb);
+                            if (Ext2IsSpecialSystemFile(&Mcb->ShortName, IsDirectory)) {
+                                SetFlag(Mcb->FileAttr, FILE_ATTRIBUTE_HIDDEN);
+                                SetFlag(Mcb->FileAttr, FILE_ATTRIBUTE_SYSTEM);
+                            }
+                        }
+
+                        Mcb->CreationTime = Ext2NtTime(Mcb->Inode.i_ctime);
+                        Mcb->LastAccessTime = Ext2NtTime(Mcb->Inode.i_atime);
+                        Mcb->LastWriteTime = Ext2NtTime(Mcb->Inode.i_mtime);
+                        Mcb->ChangeTime = Ext2NtTime(Mcb->Inode.i_mtime);
+
+                        /* process symlink */
+                        if (S_ISLNK(Mcb->Inode.i_mode)) {
+                            Ext2FollowLink( IrpContext,
+                                            Vcb,
+                                            Parent,
+                                            Mcb,
+                                            Linkdep+1
+                                          );
+                        }
+
+                        /* add reference ... */
+                        Ext2ReferMcb(Mcb);
+
+                        /* add Mcb to it's parent tree*/
+                        Ext2InsertMcb(Vcb, Parent, Mcb);
+
+                        /* it's safe to deref Parent Mcb */
+                        Ext2DerefMcb(Parent);
+
+                        /* linking this Mcb*/
+                        Ext2LinkTailMcb(Vcb, Mcb);
+
+                        /* set parent to preare re-scan */
+                        Parent = Mcb;
+
+                    } else {
+
+                        /* derefernce it's parent */
+                        Ext2DerefMcb(Parent);
+                        break;
+                    }
+                }
+
+            } else {
+
+                /* there seems too many \ or / */
+                /* Mcb should be already set to Parent */
+                ASSERT(Mcb == Parent);
+                Status = STATUS_SUCCESS;
+                break;
+            }
+        }
+
+    } _SEH2_FINALLY {
+
+        if (de) {
+            Ext2FreeEntry(de);
+        }
+
+        if (NT_SUCCESS(Status)) {
+            if (bDirectory) {
+                if (IsMcbDirectory(Mcb)) {
+                    *Ext2Mcb = Mcb;
+                } else {
+                    Ext2DerefMcb(Mcb);
+                    Status = STATUS_NOT_A_DIRECTORY;
+                }
+            } else {
+                *Ext2Mcb = Mcb;
+            }
+        }
+
+        if (LockAcquired) {
+            ExReleaseResourceLite(&Vcb->McbLock);
+        }
+    } _SEH2_END;
+
+    return Status;
 }
 
 
-/*************************************************************************
-*
-* Function: Ext2OpenVolume()
-*
-* Description:
-*	Open a logical volume for the caller.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: STATUS_SUCCESS/Error
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2OpenVolume(
-PtrExt2VCB				PtrVCB,					// volume to be opened
-PtrExt2IrpContext		PtrIrpContext,			// IRP context
-PIRP						PtrIrp,					// original/user IRP
-unsigned short			ShareAccess,			// share access
-PIO_SECURITY_CONTEXT	PtrSecurityContext,	// caller's context (incl access)
-PFILE_OBJECT			PtrNewFileObject)		// I/O Mgr. created file object
+NTSTATUS
+Ext2ScanDir (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_MCB            Parent,
+    IN PUNICODE_STRING      FileName,
+    OUT PULONG              Inode,
+    OUT struct dentry     **dentry
+)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2CCB			PtrCCB = NULL;
+    struct ext3_dir_entry_2 *dir_entry = NULL;
+    struct buffer_head     *bh = NULL;
+    struct dentry          *de = NULL;
 
-	try {
-		// check for exclusive open requests (using share modes supplied)
-		//	and determine whether it is even possible to open the volume
-		//	with the specified share modes (e.g. if caller does not
-		//	wish to share read or share write ...)
-	
-		//	Use IoCheckShareAccess() and IoSetShareAccess() here ...	
-		//	They are defined in the DDK.
+    NTSTATUS                Status = STATUS_NO_SUCH_FILE;
 
-		//	You might also wish to check the caller's security context
-		//	to see whether you wish to allow the volume open or not.
-		//	Use the SeAccessCheck() routine described in the DDK for	this purpose.
-	
-		// create a new CCB structure
-		if (!(PtrCCB = Ext2AllocateCCB())) 
-		{
-			RC = STATUS_INSUFFICIENT_RESOURCES;
-			try_return();
-		}
+    DEBUG(DL_RES, ("Ext2ScanDir: %wZ\\%wZ\n", &Parent->FullName, FileName));
 
-		// initialize the CCB
-		PtrCCB->PtrFCB = (PtrExt2FCB)(PtrVCB);
-		InsertTailList(&(PtrVCB->VolumeOpenListHead), &(PtrCCB->NextCCB));
+    _SEH2_TRY {
 
-		// initialize the CCB to point to the file object
-		PtrCCB->PtrFileObject = PtrNewFileObject;
+        /* grab parent's reference first */
+        Ext2ReferMcb(Parent);
 
-		Ext2SetFlag(PtrCCB->CCBFlags, EXT2_CCB_VOLUME_OPEN);
+        /* bad request ! Can a man be pregnant ? Maybe:) */
+        if (!IsMcbDirectory(Parent)) {
+            Status = STATUS_NOT_A_DIRECTORY;
+            _SEH2_LEAVE;
+        }
 
-		// initialize the file object appropriately
-		PtrNewFileObject->FsContext = (void *)( &(PtrVCB->CommonVCBHeader) );
-		PtrNewFileObject->FsContext2 = (void *)(PtrCCB);
+        /* parent is a symlink ? */
+        if IsMcbSymLink(Parent) {
+            if (Parent->Target) {
+                Ext2ReferMcb(Parent->Target);
+                Ext2DerefMcb(Parent);
+                Parent = Parent->Target;
+                ASSERT(!IsMcbSymLink(Parent));
+            } else {
+                DbgBreak();
+                Status = STATUS_NOT_A_DIRECTORY;
+                _SEH2_LEAVE;
+            }
+        }
 
-		// increment the number of outstanding open operations on this
-		//	logical volume (i.e. volume cannot be dismounted)
+        de = Ext2BuildEntry(Vcb, Parent, FileName);
+        if (!de) {
+            DEBUG(DL_ERR, ( "Ex2ScanDir: failed to allocate dentry.\n"));
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
 
-		//	You might be concerned about 32 bit wrap-around though I would
-		//	argue that it is unlikely ... :-)
-		(PtrVCB->VCBOpenCount)++;
-	
-		// now set the IoStatus Information value correctly in the IRP
-		//	(caller will set the status field)
-		PtrIrp->IoStatus.Information = FILE_OPENED;
-	
-		try_exit:	NOTHING;
-	} 
-	finally 
-	{
-		NOTHING;
-	}
+        bh = ext3_find_entry(IrpContext, de, &dir_entry);
+        if (dir_entry) {
+            Status = STATUS_SUCCESS;
+            *Inode = dir_entry->inode;
+            *dentry = de;
+        }
 
-	return(RC);
+    } _SEH2_FINALLY {
+
+        Ext2DerefMcb(Parent);
+
+        if (bh)
+            brelse(bh);
+
+        if (!NT_SUCCESS(Status)) {
+            if (de)
+                Ext2FreeEntry(de);
+        }
+    } _SEH2_END;
+
+    return Status;
 }
 
-/*************************************************************************
-*
-* Function: Ext2InitializeFCB()
-*
-* Description:
-*	Initialize a new FCB structure and also the sent-in file object
-*	(if supplied)
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: None
-*
-*************************************************************************
-void Ext2InitializeFCB(
-PtrExt2FCB				PtrNewFCB,		// FCB structure to be initialized
-PtrExt2VCB				PtrVCB,			// logical volume (VCB) pointer
-PtrExt2ObjectName		PtrObjectName,	// name of the object
-uint32					Flags,			// is this a file/directory, etc.
-PFILE_OBJECT			PtrFileObject)	// optional file object to be initialized
+NTSTATUS Ext2AddDotEntries(struct ext2_icb *icb, struct inode *dir,
+                           struct inode *inode)
 {
-	// Initialize the disk dependent portion as you see fit
+    struct ext3_dir_entry_2 * de;
+    struct buffer_head * bh;
+    ext3_lblk_t block = 0;
+    int rc = 0;
 
-	// Initialize the two ERESOURCE objects
-	ExInitializeResourceLite(&(PtrNewFCB->NTRequiredFCB.MainResource));
-	ExInitializeResourceLite(&(PtrNewFCB->NTRequiredFCB.PagingIoResource));
+    bh = ext3_append(icb, inode, &block, &rc);
+    if (!bh) {
+        goto errorout;
+    }
 
-	PtrNewFCB->FCBFlags |= EXT2_INITIALIZED_MAIN_RESOURCE | EXT2_INITIALIZED_PAGING_IO_RESOURCE | Flags;
+    de = (struct ext3_dir_entry_2 *) bh->b_data;
+    de->inode = cpu_to_le32(inode->i_ino);
+    de->name_len = 1;
+    de->rec_len = cpu_to_le16(EXT3_DIR_REC_LEN(de->name_len));
+    strcpy (de->name, ".");
+    ext3_set_de_type(inode->i_sb, de, S_IFDIR);
+    de = (struct ext3_dir_entry_2 *)
+         ((char *) de + le16_to_cpu(de->rec_len));
+    de->inode = cpu_to_le32(dir->i_ino);
+    de->rec_len = cpu_to_le16(inode->i_sb->s_blocksize-EXT3_DIR_REC_LEN(1));
+    de->name_len = 2;
+    strcpy (de->name, "..");
+    ext3_set_de_type(inode->i_sb, de, S_IFDIR);
+    inode->i_nlink = 2;
+    set_buffer_dirty(bh);
+    ext3_mark_inode_dirty(icb, inode);
 
-	PtrNewFCB->PtrVCB = PtrVCB;
+errorout:
+    if (bh)
+        brelse (bh);
 
-	// caller MUST ensure that VCB has been acquired exclusively
-	InsertTailList(&(PtrVCB->FCBListHead), &(PtrNewFCB->NextFCB));
-
-	// initialize the various list heads
-	InitializeListHead(&(PtrNewFCB->CCBListHead));
-
-//	PtrNewFCB->ReferenceCount = 1;
-//	PtrNewFCB->OpenHandleCount = 1;
-
-	if( PtrObjectName )
-	{
-		PtrNewFCB->FCBName = PtrObjectName;
-	}
-
-	if ( PtrFileObject )
-	{
-		PtrFileObject->FsContext = (void *)(&(PtrNewFCB->NTRequiredFCB));
-	}
-
-	return;
-}
-*/
-
-/*************************************************************************
-*
-* Function: Ext2OpenRootDirectory()
-*
-* Description:
-*	Open the root directory for a volume
-*	
-*
-* Expected Interrupt Level (for execution) :
-*
-*  ???
-*
-* Return Value: None
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2OpenRootDirectory(
-	PtrExt2VCB				PtrVCB,					// volume 
-	PtrExt2IrpContext		PtrIrpContext,			// IRP context
-	PIRP					PtrIrp,					// original/user IRP
-	unsigned short			ShareAccess,			// share access
-	PIO_SECURITY_CONTEXT	PtrSecurityContext,		// caller's context (incl access)
-	PFILE_OBJECT			PtrNewFileObject		// I/O Mgr. created file object
-	)
-{
-	//	Declerations...
-	PtrExt2CCB PtrCCB;
-	
-	ASSERT( PtrVCB );
-	ASSERT( PtrVCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB);
-	ASSERT( PtrVCB->PtrRootDirectoryFCB );
-	AssertFCB( PtrVCB->PtrRootDirectoryFCB );
-		
-	PtrVCB->PtrRootDirectoryFCB->INodeNo = EXT2_ROOT_INO;
-	
-	//	Create a new CCB...
-	Ext2CreateNewCCB( &PtrCCB, PtrVCB->PtrRootDirectoryFCB, PtrNewFileObject);
-	PtrNewFileObject->FsContext = (void *) &(PtrVCB->PtrRootDirectoryFCB->NTRequiredFCB.CommonFCBHeader);
-	PtrVCB->PtrRootDirectoryFCB->FCBFlags |= EXT2_FCB_DIRECTORY;
-	PtrNewFileObject->FsContext2 = (void *) PtrCCB;
-	PtrNewFileObject->SectionObjectPointer = &PtrVCB->PtrRootDirectoryFCB->NTRequiredFCB.SectionObject;
-	PtrNewFileObject->Vpb = PtrVCB->PtrVPB;
-
-	Ext2CopyUnicodeString( &(PtrCCB->AbsolutePathName), &PtrVCB->PtrRootDirectoryFCB->FCBName->ObjectName );
-
-
-	return STATUS_SUCCESS;
+    return Ext2WinntError(rc);
 }
 
-
-
-PtrExt2FCB NTAPI Ext2LocateChildFCBInCore(
-	PtrExt2VCB				PtrVCB,	
-	PUNICODE_STRING			PtrName, 
-	ULONG					ParentInodeNo )
+NTSTATUS
+Ext2CreateFile(
+    PEXT2_IRP_CONTEXT IrpContext,
+    PEXT2_VCB         Vcb,
+    PBOOLEAN          OpPostIrp
+)
 {
+    NTSTATUS            Status = STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION  IrpSp;
+    PEXT2_FCB           Fcb = NULL;
+    PEXT2_MCB           Mcb = NULL;
+    PEXT2_MCB           SymLink = NULL;
+    PEXT2_CCB           Ccb = NULL;
 
-	PtrExt2FCB PtrFCB = NULL;
-	PLIST_ENTRY	PtrEntry;
+    PEXT2_FCB           ParentFcb = NULL;
+    PEXT2_MCB           ParentMcb = NULL;
 
-	if( IsListEmpty( &(PtrVCB->FCBListHead) ) )
-	{
-		return NULL;	//	Failure;
-	}
+    UNICODE_STRING      FileName;
+    PIRP                Irp;
 
-	for( PtrEntry = PtrVCB->FCBListHead.Flink; 
-			PtrEntry != &PtrVCB->FCBListHead; 
-			PtrEntry = PtrEntry->Flink )
-	{
-		PtrFCB = CONTAINING_RECORD( PtrEntry, Ext2FCB, NextFCB );
-		ASSERT( PtrFCB );
-		if( PtrFCB->ParentINodeNo == ParentInodeNo )
-		{
-			if( RtlCompareUnicodeString( &PtrFCB->FCBName->ObjectName, PtrName, TRUE ) == 0 )
-				return PtrFCB;
-		}
-	}
+    ULONG               Options;
+    ULONG               CreateDisposition;
 
-	return NULL;
+    BOOLEAN             bParentFcbCreated = FALSE;
+
+#ifndef __REACTOS__
+    BOOLEAN             bDir = FALSE;
+#endif
+    BOOLEAN             bFcbAllocated = FALSE;
+    BOOLEAN             bCreated = FALSE;
+    BOOLEAN             bMainResourceAcquired = FALSE;
+
+    BOOLEAN             OpenDirectory;
+    BOOLEAN             OpenTargetDirectory;
+    BOOLEAN             CreateDirectory;
+    BOOLEAN             SequentialOnly;
+    BOOLEAN             NoIntermediateBuffering;
+    BOOLEAN             IsPagingFile;
+    BOOLEAN             DirectoryFile;
+    BOOLEAN             NonDirectoryFile;
+    BOOLEAN             NoEaKnowledge;
+    BOOLEAN             DeleteOnClose;
+    BOOLEAN             TemporaryFile;
+    BOOLEAN             CaseSensitive;
+
+    ACCESS_MASK         DesiredAccess;
+    ULONG               ShareAccess;
+
+    RtlZeroMemory(&FileName, sizeof(UNICODE_STRING));
+
+    Irp = IrpContext->Irp;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    Options  = IrpSp->Parameters.Create.Options;
+
+    DirectoryFile = IsFlagOn(Options, FILE_DIRECTORY_FILE);
+    OpenTargetDirectory = IsFlagOn(IrpSp->Flags, SL_OPEN_TARGET_DIRECTORY);
+
+    NonDirectoryFile = IsFlagOn(Options, FILE_NON_DIRECTORY_FILE);
+    SequentialOnly = IsFlagOn(Options, FILE_SEQUENTIAL_ONLY);
+    NoIntermediateBuffering = IsFlagOn( Options, FILE_NO_INTERMEDIATE_BUFFERING );
+    NoEaKnowledge = IsFlagOn(Options, FILE_NO_EA_KNOWLEDGE);
+    DeleteOnClose = IsFlagOn(Options, FILE_DELETE_ON_CLOSE);
+
+    CaseSensitive = IsFlagOn(IrpSp->Flags, SL_CASE_SENSITIVE);
+
+    TemporaryFile = IsFlagOn(IrpSp->Parameters.Create.FileAttributes,
+                             FILE_ATTRIBUTE_TEMPORARY );
+
+    CreateDisposition = (Options >> 24) & 0x000000ff;
+
+    IsPagingFile = IsFlagOn(IrpSp->Flags, SL_OPEN_PAGING_FILE);
+
+    CreateDirectory = (BOOLEAN)(DirectoryFile &&
+                                ((CreateDisposition == FILE_CREATE) ||
+                                 (CreateDisposition == FILE_OPEN_IF)));
+
+    OpenDirectory   = (BOOLEAN)(DirectoryFile &&
+                                ((CreateDisposition == FILE_OPEN) ||
+                                 (CreateDisposition == FILE_OPEN_IF)));
+
+    DesiredAccess = IrpSp->Parameters.Create.SecurityContext->DesiredAccess;
+    ShareAccess   = IrpSp->Parameters.Create.ShareAccess;
+
+    *OpPostIrp = FALSE;
+
+    _SEH2_TRY {
+
+        FileName.MaximumLength = IrpSp->FileObject->FileName.MaximumLength;
+        FileName.Length = IrpSp->FileObject->FileName.Length;
+
+        if (IrpSp->FileObject->RelatedFileObject) {
+            ParentFcb = (PEXT2_FCB)(IrpSp->FileObject->RelatedFileObject->FsContext);
+        }
+
+        if (ParentFcb) {
+            ParentMcb = ParentFcb->Mcb;
+            SetLongFlag(ParentFcb->Flags, FCB_STATE_BUSY);
+            Ext2ReferMcb(ParentMcb);
+        }
+
+        if (FileName.Length == 0) {
+
+            if (ParentFcb) {
+                Mcb = ParentFcb->Mcb;
+                Ext2ReferMcb(Mcb);
+                Status = STATUS_SUCCESS;
+                goto McbExisting;
+            } else {
+                DbgBreak();
+                Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
+        }
+
+        FileName.Buffer = Ext2AllocatePool(
+                              PagedPool,
+                              FileName.MaximumLength,
+                              EXT2_FNAME_MAGIC
+                          );
+
+        if (!FileName.Buffer) {
+            DEBUG(DL_ERR, ( "Ex2CreateFile: failed to allocate FileName.\n"));
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
+
+        INC_MEM_COUNT(PS_FILE_NAME, FileName.Buffer, FileName.MaximumLength);
+
+        RtlZeroMemory(FileName.Buffer, FileName.MaximumLength);
+        RtlCopyMemory(FileName.Buffer, IrpSp->FileObject->FileName.Buffer, FileName.Length);
+
+        if (ParentFcb && FileName.Buffer[0] == L'\\') {
+            Status = STATUS_INVALID_PARAMETER;
+            _SEH2_LEAVE;
+        }
+
+        if ((FileName.Length > sizeof(WCHAR)) &&
+                (FileName.Buffer[1] == L'\\') &&
+                (FileName.Buffer[0] == L'\\')) {
+
+            FileName.Length -= sizeof(WCHAR);
+
+            RtlMoveMemory( &FileName.Buffer[0],
+                           &FileName.Buffer[1],
+                           FileName.Length );
+
+            //
+            //  Bad Name if there are still beginning backslashes.
+            //
+
+            if ((FileName.Length > sizeof(WCHAR)) &&
+                    (FileName.Buffer[1] == L'\\') &&
+                    (FileName.Buffer[0] == L'\\')) {
+
+                Status = STATUS_OBJECT_NAME_INVALID;
+                _SEH2_LEAVE;
+            }
+        }
+
+        if (IsFlagOn(Options, FILE_OPEN_BY_FILE_ID)) {
+            Status = STATUS_NOT_IMPLEMENTED;
+            _SEH2_LEAVE;
+        }
+
+        DEBUG(DL_INF, ( "Ext2CreateFile: %wZ Paging=%d Option: %xh:"
+                        "Dir=%d NonDir=%d OpenTarget=%d NC=%d DeleteOnClose=%d\n",
+                        &FileName, IsPagingFile, IrpSp->Parameters.Create.Options,
+                        DirectoryFile, NonDirectoryFile, OpenTargetDirectory,
+                        NoIntermediateBuffering, DeleteOnClose ));
+
+        DEBUG(DL_RES, ("Ext2CreateFile: Lookup 1st: %wZ at %S\n",
+                       &FileName, ParentMcb ? ParentMcb->FullName.Buffer : L" "));
+        Status = Ext2LookupFile(
+                     IrpContext,
+                     Vcb,
+                     &FileName,
+                     ParentMcb,
+                     &Mcb,
+                     0 );
+McbExisting:
+
+        if (!NT_SUCCESS(Status)) {
+
+            UNICODE_STRING  PathName;
+            UNICODE_STRING  RealName;
+            UNICODE_STRING  RemainName;
+
+#ifndef __REACTOS__
+            LONG            i = 0;
+#endif
+            PathName = FileName;
+            Mcb = NULL;
+
+            if (PathName.Buffer[PathName.Length/2 - 1] == L'\\') {
+                if (DirectoryFile) {
+                    PathName.Length -=2;
+                    PathName.Buffer[PathName.Length/2] = 0;
+                } else {
+                    DirectoryFile = TRUE;
+                }
+            }
+
+            if (!ParentMcb) {
+                if (PathName.Buffer[0] != L'\\') {
+                    Status = STATUS_OBJECT_PATH_NOT_FOUND;
+                    _SEH2_LEAVE;
+                } else {
+                    ParentMcb = Vcb->McbTree;
+                    Ext2ReferMcb(ParentMcb);
+                }
+            }
+
+Dissecting:
+
+            FsRtlDissectName(PathName, &RealName, &RemainName);
+
+            if (((RemainName.Length != 0) && (RemainName.Buffer[0] == L'\\')) ||
+                    (RealName.Length >= 256 * sizeof(WCHAR))) {
+                Status = STATUS_OBJECT_NAME_INVALID;
+                _SEH2_LEAVE;
+            }
+
+            if (RemainName.Length != 0) {
+
+                PEXT2_MCB   RetMcb = NULL;
+
+                DEBUG(DL_RES, ("Ext2CreateFile: Lookup 2nd: %wZ\\%wZ\n",
+                               &ParentMcb->FullName, &RealName));
+
+                Status = Ext2LookupFile (
+                             IrpContext,
+                             Vcb,
+                             &RealName,
+                             ParentMcb,
+                             &RetMcb,
+                             0);
+
+                /* quit name resolving loop */
+                if (!NT_SUCCESS(Status)) {
+                    if (Status == STATUS_NO_SUCH_FILE && RemainName.Length != 0) {
+                        Status = STATUS_OBJECT_PATH_NOT_FOUND;
+                    }
+                    _SEH2_LEAVE;
+                }
+
+                /* deref ParentMcb */
+                Ext2DerefMcb(ParentMcb);
+
+                /* RetMcb is already refered */
+                ParentMcb = RetMcb;
+                PathName  = RemainName;
+
+                /* symlink must use it's target */
+                if (IsMcbSymLink(ParentMcb)) {
+                    Ext2ReferMcb(ParentMcb->Target);
+                    Ext2DerefMcb(ParentMcb);
+                    ParentMcb = ParentMcb->Target;
+                    ASSERT(!IsMcbSymLink(ParentMcb));
+                }
+
+                goto Dissecting;
+            }
+
+            /* is name valid */
+            if ( FsRtlDoesNameContainWildCards(&RealName) ||
+                    !Ext2IsNameValid(&RealName)) {
+                Status = STATUS_OBJECT_NAME_INVALID;
+                _SEH2_LEAVE;
+            }
+
+            /* clear BUSY bit from original ParentFcb */
+            if (ParentFcb) {
+                ClearLongFlag(ParentFcb->Flags, FCB_STATE_BUSY);
+            }
+
+            /* get the ParentFcb, allocate it if needed ... */
+            ParentFcb = ParentMcb->Fcb;
+            if (!ParentFcb) {
+                ParentFcb = Ext2AllocateFcb(Vcb, ParentMcb);
+                if (!ParentFcb) {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    _SEH2_LEAVE;
+                }
+                bParentFcbCreated = TRUE;
+                Ext2ReferXcb(&ParentFcb->ReferenceCount);
+            }
+            SetLongFlag(ParentFcb->Flags, FCB_STATE_BUSY);
+
+            // We need to create a new one ?
+            if ((CreateDisposition == FILE_CREATE ) ||
+                    (CreateDisposition == FILE_SUPERSEDE) ||
+                    (CreateDisposition == FILE_OPEN_IF) ||
+                    (CreateDisposition == FILE_OVERWRITE_IF)) {
+
+                if (IsVcbReadOnly(Vcb)) {
+                    Status = STATUS_MEDIA_WRITE_PROTECTED;
+                    _SEH2_LEAVE;
+                }
+
+                if (!CanIWrite(Vcb) && Ext2IsOwnerReadOnly(ParentFcb->Mcb->Inode.i_mode)) {
+                    Status = STATUS_ACCESS_DENIED;
+                    _SEH2_LEAVE;
+                }
+
+                if (IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
+                    IoSetHardErrorOrVerifyDevice( IrpContext->Irp,
+                                                  Vcb->Vpb->RealDevice );
+                    SetFlag(Vcb->Vpb->RealDevice->Flags, DO_VERIFY_VOLUME);
+                    Ext2RaiseStatus(IrpContext, STATUS_MEDIA_WRITE_PROTECTED);
+                }
+
+                if (DirectoryFile) {
+                    if (TemporaryFile) {
+                        DbgBreak();
+                        Status = STATUS_INVALID_PARAMETER;
+                        _SEH2_LEAVE;
+                    }
+                }
+
+                if (!ParentFcb) {
+                    Status = STATUS_OBJECT_PATH_NOT_FOUND;
+                    _SEH2_LEAVE;
+                }
+
+                /* allocate inode and construct entry for this file */
+                Status = Ext2CreateInode(
+                             IrpContext,
+                             Vcb,
+                             ParentFcb,
+                             DirectoryFile ? EXT2_FT_DIR : EXT2_FT_REG_FILE,
+                             IrpSp->Parameters.Create.FileAttributes,
+                             &RealName
+                         );
+
+                if (!NT_SUCCESS(Status)) {
+                    DbgBreak();
+                    _SEH2_LEAVE;
+                }
+
+                bCreated = TRUE;
+                DEBUG(DL_RES, ("Ext2CreateFile: Confirm creation: %wZ\\%wZ\n",
+                               &ParentMcb->FullName, &RealName));
+
+                Irp->IoStatus.Information = FILE_CREATED;
+                Status = Ext2LookupFile (
+                             IrpContext,
+                             Vcb,
+                             &RealName,
+                             ParentMcb,
+                             &Mcb,
+                             0);
+                if (!NT_SUCCESS(Status)) {
+                    DbgBreak();
+                }
+
+            } else if (OpenTargetDirectory) {
+
+                if (IsVcbReadOnly(Vcb)) {
+                    Status = STATUS_MEDIA_WRITE_PROTECTED;
+                    _SEH2_LEAVE;
+                }
+
+                if (!ParentFcb) {
+                    Status = STATUS_OBJECT_PATH_NOT_FOUND;
+                    _SEH2_LEAVE;
+                }
+
+                RtlZeroMemory( IrpSp->FileObject->FileName.Buffer,
+                               IrpSp->FileObject->FileName.MaximumLength);
+                IrpSp->FileObject->FileName.Length = RealName.Length;
+
+                RtlCopyMemory( IrpSp->FileObject->FileName.Buffer,
+                               RealName.Buffer,
+                               RealName.Length );
+
+                Fcb = ParentFcb;
+                Mcb = Fcb->Mcb;
+                Ext2ReferMcb(Mcb);
+
+                Irp->IoStatus.Information = FILE_DOES_NOT_EXIST;
+                Status = STATUS_SUCCESS;
+
+            } else {
+
+                Status = STATUS_OBJECT_NAME_NOT_FOUND;
+                _SEH2_LEAVE;
+            }
+
+        } else { // File / Dir already exists.
+
+            /* here already get Mcb referred */
+            if (OpenTargetDirectory) {
+
+                UNICODE_STRING  RealName = FileName;
+                USHORT          i = 0;
+
+                while (RealName.Buffer[RealName.Length/2 - 1] == L'\\') {
+                    RealName.Length -= sizeof(WCHAR);
+                    RealName.Buffer[RealName.Length/2] = 0;
+                }
+                i = RealName.Length/2;
+                while (i > 0 && RealName.Buffer[i - 1] != L'\\')
+                    i--;
+
+                if (IsVcbReadOnly(Vcb)) {
+                    Status = STATUS_MEDIA_WRITE_PROTECTED;
+                    Ext2DerefMcb(Mcb);
+                    _SEH2_LEAVE;
+                }
+
+                Irp->IoStatus.Information = FILE_EXISTS;
+                Status = STATUS_SUCCESS;
+
+                RtlZeroMemory( IrpSp->FileObject->FileName.Buffer,
+                               IrpSp->FileObject->FileName.MaximumLength);
+                IrpSp->FileObject->FileName.Length = RealName.Length - i * sizeof(WCHAR);
+                RtlCopyMemory( IrpSp->FileObject->FileName.Buffer, &RealName.Buffer[i],
+                               IrpSp->FileObject->FileName.Length );
+
+                // use's it's parent since it's open-target operation
+                Ext2ReferMcb(Mcb->Parent);
+                Ext2DerefMcb(Mcb);
+                Mcb = Mcb->Parent;
+
+                goto Openit;
+            }
+
+            // We can not create if one exists
+            if (CreateDisposition == FILE_CREATE) {
+                Irp->IoStatus.Information = FILE_EXISTS;
+                Status = STATUS_OBJECT_NAME_COLLISION;
+                Ext2DerefMcb(Mcb);
+                _SEH2_LEAVE;
+            }
+
+            /* directory forbits us to do the followings ... */
+            if (IsMcbDirectory(Mcb)) {
+
+                if ((CreateDisposition != FILE_OPEN) &&
+                        (CreateDisposition != FILE_OPEN_IF)) {
+
+                    Status = STATUS_OBJECT_NAME_COLLISION;
+                    Ext2DerefMcb(Mcb);
+                    _SEH2_LEAVE;
+                }
+
+                if (NonDirectoryFile) {
+                    Status = STATUS_FILE_IS_A_DIRECTORY;
+                    Ext2DerefMcb(Mcb);
+                    _SEH2_LEAVE;
+                }
+
+                if (Mcb->Inode.i_ino == EXT2_ROOT_INO) {
+
+                    if (OpenTargetDirectory) {
+                        DbgBreak();
+                        Status = STATUS_INVALID_PARAMETER;
+                        Ext2DerefMcb(Mcb);
+                        _SEH2_LEAVE;
+                    }
+                }
+
+            } else {
+
+                if (DirectoryFile) {
+                    Status = STATUS_NOT_A_DIRECTORY;;
+                    Ext2DerefMcb(Mcb);
+                    _SEH2_LEAVE;
+                }
+            }
+
+            Irp->IoStatus.Information = FILE_OPENED;
+        }
+
+Openit:
+        /* Mcb should already be referred and symlink is too */
+        if (Mcb) {
+
+            ASSERT(Mcb->Refercount > 0);
+
+            /* refer it's target if it's a symlink, so both refered */
+            if (IsMcbSymLink(Mcb)) {
+                if (IsFileDeleted(Mcb->Target)) {
+                    DbgBreak();
+                    SetLongFlag(Mcb->Flags, MCB_TYPE_SPECIAL);
+                    ClearLongFlag(Mcb->Flags, MCB_TYPE_SYMLINK);
+                    Ext2DerefMcb(Mcb->Target);
+                    Mcb->Target = NULL;
+                } else {
+                    SymLink = Mcb;
+                    Mcb = Mcb->Target;
+                    Ext2ReferMcb(Mcb);
+                    ASSERT (!IsMcbSymLink(Mcb));
+                }
+            }
+
+            // Check readonly flag
+            if (!CanIWrite(Vcb) && Ext2IsOwnerReadOnly(Mcb->Inode.i_mode)) {
+                if (BooleanFlagOn(DesiredAccess,  FILE_WRITE_DATA | FILE_APPEND_DATA |
+                                  FILE_ADD_SUBDIRECTORY | FILE_DELETE_CHILD)) {
+                    Status = STATUS_ACCESS_DENIED;
+                    _SEH2_LEAVE;
+                } else if (IsFlagOn(Options, FILE_DELETE_ON_CLOSE )) {
+                    Status = STATUS_CANNOT_DELETE;
+                    _SEH2_LEAVE;
+                }
+            }
+
+            Fcb = Mcb->Fcb;
+            if (Fcb == NULL) {
+
+                /* allocate Fcb for this file */
+                Fcb = Ext2AllocateFcb (Vcb, Mcb);
+                if (Fcb) {
+                    bFcbAllocated = TRUE;
+                } else {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+            } else {
+                if (IsPagingFile) {
+                    Status = STATUS_SHARING_VIOLATION;
+                    Fcb = NULL;
+                }
+            }
+
+            /* Now it's safe to defer Mcb */
+            Ext2DerefMcb(Mcb);
+        }
+
+        if (Fcb) {
+
+            /* grab Fcb's reference first to avoid the race between
+               Ext2Close  (it could free the Fcb we are accessing) */
+            Ext2ReferXcb(&Fcb->ReferenceCount);
+
+            ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
+            bMainResourceAcquired = TRUE;
+
+            /* Open target directory ? */
+            if (NULL == Mcb) {
+                DbgBreak();
+                Mcb = Fcb->Mcb;
+            }
+
+            /* check Mcb reference */
+            ASSERT(Fcb->Mcb->Refercount > 0);
+
+            /* file delted ? */
+            if (IsFlagOn(Fcb->Mcb->Flags, MCB_FILE_DELETED)) {
+                Status = STATUS_FILE_DELETED;
+                _SEH2_LEAVE;
+            }
+
+            if (DeleteOnClose && NULL == SymLink) {
+                Status = Ext2IsFileRemovable(IrpContext, Vcb, Fcb, Ccb);
+                if (!NT_SUCCESS(Status)) {
+                    _SEH2_LEAVE;
+                }
+            }
+
+            /* check access and oplock access for opened files */
+            if (!bFcbAllocated  && !IsDirectory(Fcb)) {
+
+                /* whether there's batch oplock grabed on the file */
+                if (FsRtlCurrentBatchOplock(&Fcb->Oplock)) {
+
+                    Irp->IoStatus.Information = FILE_OPBATCH_BREAK_UNDERWAY;
+
+                    /* break the batch lock if the sharing check fails */
+                    Status = FsRtlCheckOplock( &Fcb->Oplock,
+                                               IrpContext->Irp,
+                                               IrpContext,
+                                               Ext2OplockComplete,
+                                               Ext2LockIrp );
+
+                    if ( Status != STATUS_SUCCESS &&
+                            Status != STATUS_OPLOCK_BREAK_IN_PROGRESS) {
+                        *OpPostIrp = TRUE;
+                        _SEH2_LEAVE;
+                    }
+                }
+            }
+
+            if (bCreated) {
+
+                //
+                //  This file is just created.
+                //
+
+                if (DirectoryFile) {
+
+                    Status = Ext2AddDotEntries(IrpContext, &ParentMcb->Inode, &Mcb->Inode);
+                    if (!NT_SUCCESS(Status)) {
+                        Ext2DeleteFile(IrpContext, Vcb, Fcb, Mcb);
+                        _SEH2_LEAVE;
+                    }
+
+                } else {
+
+                    if ((LONGLONG)ext3_free_blocks_count(SUPER_BLOCK) <=
+                            Ext2TotalBlocks(Vcb, &Irp->Overlay.AllocationSize, NULL)) {
+                        DbgBreak();
+                        Status = STATUS_DISK_FULL;
+                        _SEH2_LEAVE;
+                    }
+
+                    /* disable data blocks allocation */
+#if 0
+                    Fcb->Header.AllocationSize.QuadPart =
+                        Irp->Overlay.AllocationSize.QuadPart;
+
+                    if (Fcb->Header.AllocationSize.QuadPart > 0) {
+                        Status = Ext2ExpandFile(IrpContext,
+                                                Vcb,
+                                                Fcb->Mcb,
+                                                &(Fcb->Header.AllocationSize)
+                                               );
+                        SetLongFlag(Fcb->Flags, FCB_ALLOC_IN_CREATE);
+                        if (!NT_SUCCESS(Status)) {
+                            Fcb->Header.AllocationSize.QuadPart = 0;
+                            Ext2TruncateFile(IrpContext, Vcb, Fcb->Mcb,
+                                             &Fcb->Header.AllocationSize);
+                            _SEH2_LEAVE;
+                        }
+                    }
+#endif
+                }
+
+            } else {
+
+                //
+                //  This file alreayd exists.
+                //
+
+                if (DeleteOnClose) {
+
+                    if (IsVcbReadOnly(Vcb)) {
+                        Status = STATUS_MEDIA_WRITE_PROTECTED;
+                        _SEH2_LEAVE;
+                    }
+
+                    if (IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
+                        Status = STATUS_MEDIA_WRITE_PROTECTED;
+
+                        IoSetHardErrorOrVerifyDevice( IrpContext->Irp,
+                                                      Vcb->Vpb->RealDevice );
+
+                        SetFlag(Vcb->Vpb->RealDevice->Flags, DO_VERIFY_VOLUME);
+
+                        Ext2RaiseStatus(IrpContext, STATUS_MEDIA_WRITE_PROTECTED);
+                    }
+
+                } else {
+
+                    //
+                    // Just to Open file (Open/OverWrite ...)
+                    //
+
+                    if ((!IsDirectory(Fcb)) && (IsFlagOn(IrpSp->FileObject->Flags,
+                                                         FO_NO_INTERMEDIATE_BUFFERING))) {
+                        Fcb->Header.IsFastIoPossible = FastIoIsPossible;
+
+                        if (Fcb->SectionObject.DataSectionObject != NULL) {
+
+                            if (Fcb->NonCachedOpenCount == Fcb->OpenHandleCount) {
+
+                                if (!IsVcbReadOnly(Vcb)) {
+                                    CcFlushCache(&Fcb->SectionObject, NULL, 0, NULL);
+                                    ClearLongFlag(Fcb->Flags, FCB_FILE_MODIFIED);
+                                }
+
+                                CcPurgeCacheSection(&Fcb->SectionObject,
+                                                    NULL,
+                                                    0,
+                                                    FALSE );
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!IsDirectory(Fcb)) {
+
+                if (!IsVcbReadOnly(Vcb)) {
+                    if ((CreateDisposition == FILE_SUPERSEDE) && !IsPagingFile) {
+                        DesiredAccess |= DELETE;
+                    } else if (((CreateDisposition == FILE_OVERWRITE) ||
+                                (CreateDisposition == FILE_OVERWRITE_IF)) && !IsPagingFile) {
+                        DesiredAccess |= (FILE_WRITE_DATA | FILE_WRITE_EA |
+                                          FILE_WRITE_ATTRIBUTES );
+                    }
+                }
+
+                if (!bFcbAllocated) {
+
+                    //
+                    //  check the oplock state of the file
+                    //
+                    Status = FsRtlCheckOplock(  &Fcb->Oplock,
+                                                IrpContext->Irp,
+                                                IrpContext,
+                                                Ext2OplockComplete,
+                                                Ext2LockIrp );
+
+                    if ( Status != STATUS_SUCCESS &&
+                            Status != STATUS_OPLOCK_BREAK_IN_PROGRESS) {
+                        *OpPostIrp = TRUE;
+                        _SEH2_LEAVE;
+                    }
+                }
+            }
+
+            if (Fcb->OpenHandleCount > 0) {
+
+                /* check the shrae access conflicts */
+                Status = IoCheckShareAccess( DesiredAccess,
+                                             ShareAccess,
+                                             IrpSp->FileObject,
+                                             &(Fcb->ShareAccess),
+                                             TRUE );
+                if (!NT_SUCCESS(Status)) {
+                    _SEH2_LEAVE;
+                }
+
+            } else {
+
+                /* set share access rights */
+                IoSetShareAccess( DesiredAccess,
+                                  ShareAccess,
+                                  IrpSp->FileObject,
+                                  &(Fcb->ShareAccess) );
+            }
+
+            Ccb = Ext2AllocateCcb(SymLink);
+            if (!Ccb) {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                DbgBreak();
+                _SEH2_LEAVE;
+            }
+
+            if (DeleteOnClose)
+                SetLongFlag(Ccb->Flags, CCB_DELETE_ON_CLOSE);
+
+            if (SymLink)
+                Ccb->filp.f_dentry = SymLink->de;
+            else
+                Ccb->filp.f_dentry = Fcb->Mcb->de;
+
+            Ccb->filp.f_version = Fcb->Mcb->Inode.i_version;
+            Ext2ReferXcb(&Fcb->OpenHandleCount);
+            Ext2ReferXcb(&Fcb->ReferenceCount);
+
+            if (!IsDirectory(Fcb)) {
+                if (NoIntermediateBuffering) {
+                    Fcb->NonCachedOpenCount++;
+                    SetFlag(IrpSp->FileObject->Flags, FO_CACHE_SUPPORTED);
+                } else {
+                    SetFlag(IrpSp->FileObject->Flags, FO_CACHE_SUPPORTED);
+                }
+            }
+
+            Ext2ReferXcb(&Vcb->OpenHandleCount);
+            Ext2ReferXcb(&Vcb->ReferenceCount);
+
+            IrpSp->FileObject->FsContext = (void*) Fcb;
+            IrpSp->FileObject->FsContext2 = (void*) Ccb;
+            IrpSp->FileObject->PrivateCacheMap = NULL;
+            IrpSp->FileObject->SectionObjectPointer = &(Fcb->SectionObject);
+
+            DEBUG(DL_INF, ( "Ext2CreateFile: %wZ OpenCount=%u ReferCount=%u NonCachedCount=%u\n",
+                            &Fcb->Mcb->FullName, Fcb->OpenHandleCount, Fcb->ReferenceCount, Fcb->NonCachedOpenCount));
+
+            Status = STATUS_SUCCESS;
+
+            if (bCreated) {
+
+                if (IsDirectory(Fcb)) {
+                    Ext2NotifyReportChange(
+                        IrpContext,
+                        Vcb,
+                        Fcb->Mcb,
+                        FILE_NOTIFY_CHANGE_DIR_NAME,
+                        FILE_ACTION_ADDED );
+                } else {
+                    Ext2NotifyReportChange(
+                        IrpContext,
+                        Vcb,
+                        Fcb->Mcb,
+                        FILE_NOTIFY_CHANGE_FILE_NAME,
+                        FILE_ACTION_ADDED );
+                }
+
+            } else if (!IsDirectory(Fcb)) {
+
+                if ( DeleteOnClose ||
+                        IsFlagOn(DesiredAccess, FILE_WRITE_DATA) ||
+                        (CreateDisposition == FILE_OVERWRITE) ||
+                        (CreateDisposition == FILE_OVERWRITE_IF)) {
+                    if (!MmFlushImageSection( &Fcb->SectionObject,
+                                              MmFlushForWrite )) {
+
+                        Status = DeleteOnClose ? STATUS_CANNOT_DELETE :
+                                 STATUS_SHARING_VIOLATION;
+                        _SEH2_LEAVE;
+                    }
+                }
+
+                if ((CreateDisposition == FILE_SUPERSEDE) ||
+                        (CreateDisposition == FILE_OVERWRITE) ||
+                        (CreateDisposition == FILE_OVERWRITE_IF)) {
+
+                    if (IsDirectory(Fcb)) {
+                        Status = STATUS_FILE_IS_A_DIRECTORY;
+                        _SEH2_LEAVE;
+                    }
+
+                    if (SymLink != NULL) {
+                        DbgBreak();
+                        Status = STATUS_INVALID_PARAMETER;
+                        _SEH2_LEAVE;
+                    }
+
+                    if (IsVcbReadOnly(Vcb)) {
+                        Status = STATUS_MEDIA_WRITE_PROTECTED;
+                        _SEH2_LEAVE;
+                    }
+
+                    if (IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
+
+                        IoSetHardErrorOrVerifyDevice( IrpContext->Irp,
+                                                      Vcb->Vpb->RealDevice );
+                        SetFlag(Vcb->Vpb->RealDevice->Flags, DO_VERIFY_VOLUME);
+                        Ext2RaiseStatus(IrpContext, STATUS_MEDIA_WRITE_PROTECTED);
+                    }
+
+                    Status = Ext2SupersedeOrOverWriteFile(
+                                 IrpContext,
+                                 IrpSp->FileObject,
+                                 Vcb,
+                                 Fcb,
+                                 &Irp->Overlay.AllocationSize,
+                                 CreateDisposition );
+
+                    if (!NT_SUCCESS(Status)) {
+                        DbgBreak();
+                        _SEH2_LEAVE;
+                    }
+
+                    Ext2NotifyReportChange(
+                        IrpContext,
+                        Vcb,
+                        Fcb->Mcb,
+                        FILE_NOTIFY_CHANGE_LAST_WRITE |
+                        FILE_NOTIFY_CHANGE_ATTRIBUTES |
+                        FILE_NOTIFY_CHANGE_SIZE,
+                        FILE_ACTION_MODIFIED );
+
+
+                    if (CreateDisposition == FILE_SUPERSEDE) {
+                        Irp->IoStatus.Information = FILE_SUPERSEDED;
+                    } else {
+                        Irp->IoStatus.Information = FILE_OVERWRITTEN;
+                    }
+                }
+            }
+
+        } else {
+            DbgBreak();
+            _SEH2_LEAVE;
+        }
+
+    } _SEH2_FINALLY {
+
+
+        if (ParentMcb) {
+            Ext2DerefMcb(ParentMcb);
+        }
+
+        /* cleanup Fcb and Ccb, Mcb if necessary */
+        if (!NT_SUCCESS(Status)) {
+
+            if (Ccb != NULL) {
+
+                DbgBreak();
+
+                ASSERT(Fcb != NULL);
+                ASSERT(Fcb->Mcb != NULL);
+
+                DEBUG(DL_ERR, ("Ext2CreateFile: failed to create %wZ status = %xh\n",
+                               &Fcb->Mcb->FullName, Status));
+
+                Ext2DerefXcb(&Fcb->OpenHandleCount);
+                Ext2DerefXcb(&Fcb->ReferenceCount);
+
+                if (!IsDirectory(Fcb)) {
+                    if (NoIntermediateBuffering) {
+                        Fcb->NonCachedOpenCount--;
+                    } else {
+                        ClearFlag(IrpSp->FileObject->Flags, FO_CACHE_SUPPORTED);
+                    }
+                }
+
+                Ext2DerefXcb(&Vcb->OpenHandleCount);
+                Ext2DerefXcb(&Vcb->ReferenceCount);
+
+                IoRemoveShareAccess(IrpSp->FileObject, &Fcb->ShareAccess);
+
+                IrpSp->FileObject->FsContext = NULL;
+                IrpSp->FileObject->FsContext2 = NULL;
+                IrpSp->FileObject->PrivateCacheMap = NULL;
+                IrpSp->FileObject->SectionObjectPointer = NULL;
+
+                Ext2FreeCcb(Vcb, Ccb);
+            }
+        }
+
+        if (Fcb && Ext2DerefXcb(&Fcb->ReferenceCount) == 0) {
+
+            if (IsFlagOn(Fcb->Flags, FCB_ALLOC_IN_CREATE)) {
+
+                LARGE_INTEGER Size;
+                ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, TRUE);
+                _SEH2_TRY {
+                    Size.QuadPart = 0;
+                    Ext2TruncateFile(IrpContext, Vcb, Fcb->Mcb, &Size);
+                } _SEH2_FINALLY {
+                    ExReleaseResourceLite(&Fcb->PagingIoResource);
+                } _SEH2_END;
+            }
+
+            if (bCreated) {
+                Ext2DeleteFile(IrpContext, Vcb, Fcb, Mcb);
+            }
+
+            Ext2FreeFcb(Fcb);
+            Fcb = NULL;
+            bMainResourceAcquired = FALSE;
+        }
+
+        if (bMainResourceAcquired) {
+            ExReleaseResourceLite(&Fcb->MainResource);
+        }
+
+        /* free file name buffer */
+        if (FileName.Buffer) {
+            DEC_MEM_COUNT(PS_FILE_NAME, FileName.Buffer, FileName.MaximumLength);
+            Ext2FreePool(FileName.Buffer, EXT2_FNAME_MAGIC);
+        }
+
+        /* dereference parent Fcb, free it if it goes to zero */
+        if (ParentFcb) {
+            ClearLongFlag(ParentFcb->Flags, FCB_STATE_BUSY);
+            if (bParentFcbCreated) {
+                if (Ext2DerefXcb(&ParentFcb->ReferenceCount) == 0) {
+                    Ext2FreeFcb(ParentFcb);
+                }
+            }
+        }
+
+        /* drop SymLink's refer: If succeeds, Ext2AllocateCcb should refer
+           it already. It fails, we need release the refer to let it freed */
+        if (SymLink) {
+            Ext2DerefMcb(SymLink);
+        }
+    } _SEH2_END;
+
+    return Status;
 }
 
-PtrExt2FCB NTAPI Ext2LocateFCBInCore(
-	PtrExt2VCB				PtrVCB,	
-	ULONG					InodeNo )
+NTSTATUS
+Ext2CreateVolume(PEXT2_IRP_CONTEXT IrpContext, PEXT2_VCB Vcb)
 {
-	PtrExt2FCB PtrFCB = NULL;
-	PLIST_ENTRY	PtrEntry;
+    PIO_STACK_LOCATION  IrpSp;
+    PIRP                Irp;
+    PEXT2_CCB           Ccb;
 
-	if( IsListEmpty( &(PtrVCB->FCBListHead) ) )
-	{
-		return NULL;	//	Failure;
-	}
+    NTSTATUS            Status;
 
-	for( PtrEntry = PtrVCB->FCBListHead.Flink; 
-			PtrEntry != &PtrVCB->FCBListHead; 
-			PtrEntry = PtrEntry->Flink )
-	{
-		PtrFCB = CONTAINING_RECORD( PtrEntry, Ext2FCB, NextFCB );
-		ASSERT( PtrFCB );
-		if( PtrFCB->INodeNo == InodeNo )
-		{
-			return PtrFCB;
-		}
-	}
+    ACCESS_MASK         DesiredAccess;
+    ULONG               ShareAccess;
 
-	return NULL;
+    ULONG               Options;
+    BOOLEAN             DirectoryFile;
+    BOOLEAN             OpenTargetDirectory;
+
+    ULONG               CreateDisposition;
+
+    Irp = IrpContext->Irp;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    Options  = IrpSp->Parameters.Create.Options;
+
+    DirectoryFile = IsFlagOn(Options, FILE_DIRECTORY_FILE);
+    OpenTargetDirectory = IsFlagOn(IrpSp->Flags, SL_OPEN_TARGET_DIRECTORY);
+
+    CreateDisposition = (Options >> 24) & 0x000000ff;
+
+    DesiredAccess = IrpSp->Parameters.Create.SecurityContext->DesiredAccess;
+    ShareAccess   = IrpSp->Parameters.Create.ShareAccess;
+
+    if (DirectoryFile) {
+        return STATUS_NOT_A_DIRECTORY;
+    }
+
+    if (OpenTargetDirectory) {
+        DbgBreak();
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ( (CreateDisposition != FILE_OPEN) &&
+            (CreateDisposition != FILE_OPEN_IF) ) {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    if ( !FlagOn(ShareAccess, FILE_SHARE_READ) &&
+            Vcb->OpenVolumeCount  != 0 ) {
+        return STATUS_SHARING_VIOLATION;
+    }
+
+    Ccb = Ext2AllocateCcb(NULL);
+    if (Ccb == NULL) {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto errorout;
+    }
+
+    Status = STATUS_SUCCESS;
+
+    if (Vcb->OpenVolumeCount > 0) {
+        Status = IoCheckShareAccess( DesiredAccess, ShareAccess,
+                                     IrpSp->FileObject,
+                                     &(Vcb->ShareAccess), TRUE);
+
+        if (!NT_SUCCESS(Status)) {
+            goto errorout;
+        }
+    } else {
+        IoSetShareAccess( DesiredAccess, ShareAccess,
+                          IrpSp->FileObject,
+                          &(Vcb->ShareAccess)   );
+    }
+
+
+    if (Vcb->OpenVolumeCount == 0 &&
+        !IsFlagOn(ShareAccess, FILE_SHARE_READ)  &&
+        !IsFlagOn(ShareAccess, FILE_SHARE_WRITE) ){
+
+        if (!IsVcbReadOnly(Vcb)) {
+            Ext2FlushFiles(IrpContext, Vcb, FALSE);
+            Ext2FlushVolume(IrpContext, Vcb, FALSE);
+        }
+
+        SetLongFlag(Vcb->Flags, VCB_VOLUME_LOCKED);
+        Vcb->LockFile = IrpSp->FileObject;
+    } else {
+        if (FlagOn(DesiredAccess, FILE_READ_DATA | FILE_WRITE_DATA | FILE_APPEND_DATA) ) {
+            if (!IsVcbReadOnly(Vcb)) {
+                Ext2FlushFiles(IrpContext, Vcb, FALSE);
+                Ext2FlushVolume(IrpContext, Vcb, FALSE);
+            }
+        }
+    }
+
+    IrpSp->FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+    IrpSp->FileObject->FsContext  = Vcb;
+    IrpSp->FileObject->FsContext2 = Ccb;
+    IrpSp->FileObject->Vpb = Vcb->Vpb;
+
+    Ext2ReferXcb(&Vcb->ReferenceCount);
+    Ext2ReferXcb(&Vcb->OpenHandleCount);
+    Ext2ReferXcb(&Vcb->OpenVolumeCount);
+
+    Irp->IoStatus.Information = FILE_OPENED;
+
+errorout:
+
+    return Status;
 }
 
 
-ULONG NTAPI Ext2LocateFileInDisk (
-	PtrExt2VCB				PtrVCB,
-	PUNICODE_STRING			PtrCurrentName, 
-	PtrExt2FCB				PtrParentFCB,
-	ULONG					*Type )
+NTSTATUS
+Ext2Create (IN PEXT2_IRP_CONTEXT IrpContext)
 {
+    PDEVICE_OBJECT      DeviceObject;
+    PIRP                Irp;
+    PIO_STACK_LOCATION  IrpSp;
+    PEXT2_VCB           Vcb = 0;
+    NTSTATUS            Status = STATUS_OBJECT_NAME_NOT_FOUND;
+    PEXT2_FCBVCB        Xcb = NULL;
+    BOOLEAN             PostIrp = FALSE;
+    BOOLEAN             VcbResourceAcquired = FALSE;
 
-	PFILE_OBJECT		PtrFileObject = NULL;
-	ULONG				InodeNo = 0;
-	
-	*Type = EXT2_FT_UNKNOWN;
+    DeviceObject = IrpContext->DeviceObject;
+    Irp = IrpContext->Irp;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-	//	1. 
-	//	Initialize the Blocks in the FCB...
-	//
-	Ext2InitializeFCBInodeInfo( PtrParentFCB );
+    Xcb = (PEXT2_FCBVCB) (IrpSp->FileObject->FsContext);
 
-	
-	//	2.
-	//	Is there a file object I can use for caching??
-	//	If not create one...
-	//
-	if( !PtrParentFCB->DcbFcb.Dcb.PtrDirFileObject )
-	{
-		//
-		//	No Directory File Object?
-		//	No problem, will create one...
-		//
+    if (IsExt2FsDevice(DeviceObject)) {
 
-		//	Acquire the MainResource first though...
-			
-			PtrParentFCB->DcbFcb.Dcb.PtrDirFileObject = IoCreateStreamFileObject(NULL, PtrVCB->TargetDeviceObject );
-			PtrFileObject = PtrParentFCB->DcbFcb.Dcb.PtrDirFileObject;
-			
-			if( !PtrFileObject )
-			{
-				Ext2BreakPoint();
-				return 0;
-			}
-			PtrFileObject->ReadAccess = TRUE;
-			PtrFileObject->WriteAccess = TRUE;
+        DEBUG(DL_INF, ( "Ext2Create: Create on main device object.\n"));
 
-			//	Associate the file stream with the Volume parameter block...
-			PtrFileObject->Vpb = PtrVCB->PtrVPB;
+        Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = FILE_OPENED;
 
-			//	No caching as yet...
-			PtrFileObject->PrivateCacheMap = NULL;
+        Ext2CompleteIrpContext(IrpContext, Status);
 
-			//	this establishes the FCB - File Object connection...
-			PtrFileObject->FsContext = (void *)( & (PtrParentFCB->NTRequiredFCB.CommonFCBHeader) );
+        return Status;
+    }
 
-			//	Initialize the section object pointer...
-			PtrFileObject->SectionObjectPointer = &(PtrParentFCB->NTRequiredFCB.SectionObject);
-	}
-	else
-	{
-		//	
-		//	I do have a file object... 
-		//	I am using it now!
-		//
-		PtrFileObject = PtrParentFCB->DcbFcb.Dcb.PtrDirFileObject;
-	}
+    _SEH2_TRY {
 
-	//	3.
-	//	Got hold of a file object? Good	;)
-	//	Now initiating Caching, pinned access to be precise ...
-	//
-	if (PtrFileObject->PrivateCacheMap == NULL) 
-	{
-			CcInitializeCacheMap(PtrFileObject, (PCC_FILE_SIZES)(&(PtrParentFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize)),
-				TRUE,		// We utilize pin access for directories
-				&(Ext2GlobalData.CacheMgrCallBacks), // callbacks
-				PtrParentFCB );		// The context used in callbacks
-	}
+        Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+        ASSERT(Vcb->Identifier.Type == EXT2VCB);
+        IrpSp->FileObject->Vpb = Vcb->Vpb;
 
-	//	4.
-	//	Getting down to the real business now... ;)
-	//	Read in the directory contents and do a search 
-	//	a sequential search to be precise...
-	//	Wish Mm'm Renuga were reading this
-	//	Would feel proud...	;)
-	//
-	{
-		LARGE_INTEGER	StartBufferOffset;
-		ULONG			PinBufferLength;
-		ULONG			BufferIndex;
-		PBCB			PtrBCB = NULL;
-		BYTE *			PtrPinnedBlockBuffer = NULL;
-		PEXT2_DIR_ENTRY	PtrDirEntry = NULL;
-		BOOLEAN			Found;
-		int				i;
+        if (!IsMounted(Vcb)) {
+            DbgBreak();
+            if (IsFlagOn(Vcb->Flags, VCB_DEVICE_REMOVED)) {
+                Status = STATUS_NO_SUCH_DEVICE;
+            } else {
+                Status = STATUS_VOLUME_DISMOUNTED;
+            }
+            _SEH2_LEAVE;
+        }
 
+        if (!ExAcquireResourceExclusiveLite(
+                    &Vcb->MainResource, TRUE)) {
+            Status = STATUS_PENDING;
+            _SEH2_LEAVE;
+        }
+        VcbResourceAcquired = TRUE;
 
-		StartBufferOffset.QuadPart = 0;
+        Ext2VerifyVcb(IrpContext, Vcb);
 
-		//
-		//	Read in the whole damn directory
-		//	**Bad programming**
-		//	Will do for now.
-		//
-		PinBufferLength = PtrParentFCB->NTRequiredFCB.CommonFCBHeader.FileSize.LowPart;
-		if (!CcMapData( PtrFileObject,
-                  &StartBufferOffset,
-                  PinBufferLength,
-                  TRUE,
-                  &PtrBCB,
-                  (PVOID*)&PtrPinnedBlockBuffer ) )
-		{
+        if (FlagOn(Vcb->Flags, VCB_VOLUME_LOCKED)) {
+            Status = STATUS_ACCESS_DENIED;
+            if (IsFlagOn(Vcb->Flags, VCB_DISMOUNT_PENDING)) {
+                Status = STATUS_VOLUME_DISMOUNTED;
+            }
+            _SEH2_LEAVE;
+        }
 
-			
-		}
-		//
-		//	Walking through now...
-		//
-		
-		for( BufferIndex = 0, Found = FALSE; !Found && BufferIndex < ( PtrParentFCB->NTRequiredFCB.CommonFCBHeader.FileSize.QuadPart - 1) ; BufferIndex += PtrDirEntry->rec_len )
-		{
-			PtrDirEntry = (PEXT2_DIR_ENTRY) &PtrPinnedBlockBuffer[ BufferIndex ];
-			if( PtrDirEntry->name_len == 0 || PtrDirEntry->rec_len == 0 || PtrDirEntry->inode == 0)
-			{
-				//	Invalid entry...
-				//  Ignore...
-				continue;
-			}
-			//
-			//	Comparing ( case sensitive )
-			//	Directory entry is not NULL terminated...
-			//	nor is the CurrentName...
-			//
-			if( PtrDirEntry->name_len != (PtrCurrentName->Length / 2) )
-				continue;
-			
-			for( i = 0, Found = TRUE ; i < PtrDirEntry->name_len ; i++ )
-			{
-				if( PtrDirEntry->name[ i ] != PtrCurrentName->Buffer[ i ] )
-				{
-					Found = FALSE;
-					break;
+        if ( ((IrpSp->FileObject->FileName.Length == 0) &&
+                (IrpSp->FileObject->RelatedFileObject == NULL)) ||
+                (Xcb && Xcb->Identifier.Type == EXT2VCB)  ) {
+            Status = Ext2CreateVolume(IrpContext, Vcb);
+        } else {
 
-				}
-			}
-			
-		}
-		if( Found )
-		{
-			InodeNo = PtrDirEntry->inode;
+            Status = Ext2CreateFile(IrpContext, Vcb, &PostIrp);
+        }
 
-			if( PtrDirEntry->file_type == EXT2_FT_UNKNOWN )
-			{
+    } _SEH2_FINALLY {
 
-				//	Old Fashioned Directory entries...
-				//	Will have to read in the Inode to determine the File Type...
-				EXT2_INODE	Inode;
-				//	PtrInode = Ext2AllocatePool( NonPagedPool, sizeof( EXT2_INODE )  );
-				Ext2ReadInode( PtrVCB, InodeNo, &Inode );	
+        if (VcbResourceAcquired) {
+            ExReleaseResourceLite(&Vcb->MainResource);
+        }
 
-				if( Ext2IsModeRegularFile( Inode.i_mode ) )
-				{
-					*Type = EXT2_FT_REG_FILE;
-				}
-				else if ( Ext2IsModeDirectory( Inode.i_mode) )
-				{
-					//	Directory...
-					*Type = EXT2_FT_DIR;
-				}
-				else if( Ext2IsModeSymbolicLink(Inode.i_mode) )
-				{
-					*Type = EXT2_FT_SYMLINK;
-				}
-				else if( Ext2IsModePipe(Inode.i_mode) )
-				{
-					*Type = EXT2_FT_FIFO;
-				}
-				else if( Ext2IsModeCharacterDevice(Inode.i_mode) )
-				{
-					*Type = EXT2_FT_CHRDEV;
-				}
-				else if( Ext2IsModeBlockDevice(Inode.i_mode) )
-				{
-					*Type = EXT2_FT_BLKDEV;
-				}
-				else if( Ext2IsModeSocket(Inode.i_mode) )
-				{
-					*Type = EXT2_FT_SOCK;
-				}
-				else
-				{
-					*Type = EXT2_FT_UNKNOWN;
-				}
-				
-				//DebugTrace( DEBUG_TRACE_FREE, "Freeing  = %lX [Create]", PtrInode );
-				//ExFreePool( PtrInode );
-			}
-			else
-			{
-				*Type = PtrDirEntry->file_type;
-			}
-		}
+        if (!IrpContext->ExceptionInProgress && !PostIrp)  {
+            if ( Status == STATUS_PENDING ||
+                    Status == STATUS_CANT_WAIT) {
+                Status = Ext2QueueRequest(IrpContext);
+            } else {
+                Ext2CompleteIrpContext(IrpContext, Status);
+            }
+        }
+    } _SEH2_END;
 
-		CcUnpinData( PtrBCB );
-		PtrBCB = NULL;
+    return Status;
+}
 
-		return InodeNo;
-	}
+NTSTATUS
+Ext2CreateInode(
+    PEXT2_IRP_CONTEXT   IrpContext,
+    PEXT2_VCB           Vcb,
+    PEXT2_FCB           Parent,
+    ULONG               Type,
+    ULONG               FileAttr,
+    PUNICODE_STRING     FileName)
+{
+    NTSTATUS    Status;
+    ULONG       iGrp;
+    ULONG       iNo;
+    struct inode Inode = { 0 };
+    struct dentry *Dentry = NULL;
+
+    LARGE_INTEGER   SysTime;
+
+    iGrp = (Parent->Inode->i_ino - 1) / BLOCKS_PER_GROUP;
+
+    DEBUG(DL_INF, ("Ext2CreateInode: %S in %S(Inode=%xh)\n",
+                   FileName->Buffer,
+                   Parent->Mcb->ShortName.Buffer,
+                   Parent->Inode->i_ino));
+
+    Status = Ext2NewInode(IrpContext, Vcb, iGrp, Type, &iNo);
+    if (!NT_SUCCESS(Status)) {
+        goto errorout;
+    }
+
+    KeQuerySystemTime(&SysTime);
+    Ext2ClearInode(IrpContext, Vcb, iNo);
+    Inode.i_sb = &Vcb->sb;
+    Inode.i_ino = iNo;
+    Inode.i_ctime = Inode.i_mtime =
+                        Inode.i_atime = Ext2LinuxTime(SysTime);
+    Inode.i_uid = Parent->Inode->i_uid;
+    Inode.i_gid = Parent->Inode->i_gid;
+    Inode.i_generation = Parent->Inode->i_generation;
+    Inode.i_mode = S_IPERMISSION_MASK &
+                   Parent->Inode->i_mode;
+    if (Type == EXT2_FT_DIR)  {
+        Inode.i_mode |= S_IFDIR;
+    } else if (Type == EXT2_FT_REG_FILE) {
+        Inode.i_mode &= S_IFATTR;
+        Inode.i_mode |= S_IFREG;
+    } else {
+        DbgBreak();
+    }
+
+    /* Force using extent */
+    if (IsFlagOn(SUPER_BLOCK->s_feature_incompat, EXT4_FEATURE_INCOMPAT_EXTENTS)) {
+        Inode.i_flags |= EXT2_EXTENTS_FL;
+    }
+
+    /* add new entry to its parent */
+    Status = Ext2AddEntry(
+                 IrpContext,
+                 Vcb,
+                 Parent,
+                 &Inode,
+                 FileName,
+                 &Dentry
+             );
+
+    if (!NT_SUCCESS(Status)) {
+        DbgBreak();
+        Ext2FreeInode(IrpContext, Vcb, iNo, Type);
+        goto errorout;
+    }
+
+    DEBUG(DL_INF, ("Ext2CreateInode: New Inode = %xh (Type=%xh)\n",
+                   Inode.i_ino, Type));
+
+errorout:
+
+    if (Dentry)
+        Ext2FreeEntry(Dentry);
+
+    return Status;
 }
 
 
-/*************************************************************************
-*
-* Function: Ext2CreateFile()
-*
-* Description:
-*	Creates a new file on the disk
-*	
-* Expected Interrupt Level (for execution) :
-*	IRQL_PASSIVE_LEVEL
-*
-* Restrictions:
-*	Expects the VCB to be acquired Exclusively before being invoked
-*
-* Return Value: None
-*
-*************************************************************************/
-ULONG NTAPI Ext2CreateFile( 
-	PtrExt2IrpContext		PtrIrpContext,
-	PtrExt2VCB				PtrVCB,
-	PUNICODE_STRING			PtrName, 
-	PtrExt2FCB				PtrParentFCB,
-	ULONG					Type)
+NTSTATUS
+Ext2SupersedeOrOverWriteFile(
+    IN PEXT2_IRP_CONTEXT IrpContext,
+    IN PFILE_OBJECT      FileObject,
+    IN PEXT2_VCB         Vcb,
+    IN PEXT2_FCB         Fcb,
+    IN PLARGE_INTEGER    AllocationSize,
+    IN ULONG             Disposition
+)
 {
-	EXT2_INODE	Inode, ParentInode;
+    LARGE_INTEGER   CurrentTime;
+    LARGE_INTEGER   Size;
 
-	ULONG		NewInodeNo = 0;
-	BOOLEAN		FCBAcquired = FALSE;
+    KeQuerySystemTime(&CurrentTime);
 
-	ULONG		LogicalBlockSize = 0;
+    Size.QuadPart = 0;
+    if (!MmCanFileBeTruncated(&(Fcb->SectionObject), &(Size))) {
+        return STATUS_USER_MAPPED_FILE;
+    }
 
-	try
-	{
-		
+    /* purge all file cache and shrink cache windows size */
+    CcPurgeCacheSection(&Fcb->SectionObject, NULL, 0, FALSE);
+    Fcb->Header.AllocationSize.QuadPart =
+        Fcb->Header.FileSize.QuadPart =
+            Fcb->Header.ValidDataLength.QuadPart = 0;
+    CcSetFileSizes(FileObject,
+                   (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
 
-		//	0. Verify if the creation is possible,,,
-		if( Type != EXT2_FT_DIR && Type != EXT2_FT_REG_FILE )
-		{
-			//
-			//	Can create only a directory or a regular file...
-			//
-			return 0;
-		}
-		
-		//	1. Allocate an i-node...
-		
-		NewInodeNo = Ext2AllocInode( PtrIrpContext, PtrVCB, PtrParentFCB->INodeNo );
-		
-		//	NewInodeNo = 12;
+    Size.QuadPart = CEILING_ALIGNED(ULONGLONG,
+                                    (ULONGLONG)AllocationSize->QuadPart,
+                                    (ULONGLONG)BLOCK_SIZE);
 
-		if( !NewInodeNo )
-		{
-			return 0;
-		}
-		
-		//	2. Acquire the Parent FCB Exclusively...
-		if( !ExAcquireResourceExclusiveLite(&( PtrParentFCB->NTRequiredFCB.MainResource ), TRUE) )
-		{
-			Ext2DeallocInode( PtrIrpContext, PtrVCB, NewInodeNo );
-			try_return( NewInodeNo = 0);
-		}
-		FCBAcquired = TRUE;
+    if ((loff_t)Size.QuadPart > Fcb->Inode->i_size) {
+        Ext2ExpandFile(IrpContext, Vcb, Fcb->Mcb, &Size);
+    } else {
+        Ext2TruncateFile(IrpContext, Vcb, Fcb->Mcb, &Size);
+    }
 
-		//	3. Make an entry in the parent Directory...		
-		ASSERT( PtrParentFCB->DcbFcb.Dcb.PtrDirFileObject );
-		
-		Ext2MakeNewDirectoryEntry(
-			PtrIrpContext,
-			PtrParentFCB, 
-			PtrParentFCB->DcbFcb.Dcb.PtrDirFileObject, 
-			PtrName, Type, NewInodeNo );
-	
-		
-		//	4. Initialize an inode entry and  write it to disk...
-		LogicalBlockSize = EXT2_MIN_BLOCK_SIZE << PtrVCB->LogBlockSize;
+    Fcb->Header.AllocationSize = Size;
+    if (Fcb->Header.AllocationSize.QuadPart > 0) {
+        SetLongFlag(Fcb->Flags, FCB_ALLOC_IN_CREATE);
+        CcSetFileSizes(FileObject,
+                       (PCC_FILE_SIZES)&Fcb->Header.AllocationSize );
+    }
 
-		{
-			//	To be deleted
-			Ext2ReadInode( PtrVCB, NewInodeNo, &Inode );
-		}
+    /* remove all extent mappings */
+    DEBUG(DL_EXT, ("Ext2SuperSede ...: %wZ\n", &Fcb->Mcb->FullName));
+    Fcb->Inode->i_size = 0;
 
-		RtlZeroMemory( &Inode, sizeof( EXT2_INODE ) );
-		if( Type == EXT2_FT_DIR )
-		{
-			Inode.i_mode = 0x41ff;
+    if (Disposition == FILE_SUPERSEDE) {
+        Fcb->Inode->i_ctime = Ext2LinuxTime(CurrentTime);
+    }
+    Fcb->Inode->i_atime =
+        Fcb->Inode->i_mtime = Ext2LinuxTime(CurrentTime);
+    Ext2SaveInode(IrpContext, Vcb, Fcb->Inode);
 
-			//	In addition to the usual link, 
-			//	there will be an additional link in the directory itself - the '.' entry
-			Inode.i_links_count = 2;
-
-			//	Incrementing the link count for the parent as well...
-			Ext2ReadInode( PtrVCB, PtrParentFCB->INodeNo, &ParentInode );
-			ParentInode.i_links_count++;
-			Ext2WriteInode( PtrIrpContext, PtrVCB, PtrParentFCB->INodeNo, &ParentInode );
-
-		}
-		else
-		{
-			Inode.i_mode = 0x81ff;
-			Inode.i_links_count = 1;
-		}
-
-
-		{
-			//
-			//	Setting the time fields in the inode...
-			//
-			ULONG Time;
-			Time = Ext2GetCurrentTime();
-			Inode.i_ctime = Time;
-			Inode.i_atime = Time;
-			Inode.i_mtime = Time;
-			Inode.i_dtime = 0;			//	Deleted time;
-		}
-
-		Ext2WriteInode( PtrIrpContext, PtrVCB, NewInodeNo, &Inode );
-
-		try_exit:	NOTHING;
-	}
-	finally 
-	{
-		if( FCBAcquired )
-		{
-			Ext2ReleaseResource( &(PtrParentFCB->NTRequiredFCB.MainResource) );
-		}
-	}
-
-	return NewInodeNo ;
-}
-
-/*************************************************************************
-*
-* Function: Ext2CreateFile()
-*
-* Description:
-*	Overwrites an existing file on the disk
-*	
-* Expected Interrupt Level (for execution) :
-*	IRQL_PASSIVE_LEVEL
-*
-* Restrictions:
-*	Expects the VCB to be acquired Exclusively before being invoked
-*
-* Return Value: None
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2OverwriteFile(
-	PtrExt2FCB			PtrFCB,
-	PtrExt2IrpContext	PtrIrpContext)
-{
-	EXT2_INODE			Inode;
-	PtrExt2VCB			PtrVCB = PtrFCB->PtrVCB;
-	ULONG				i;
-	ULONG	Time;
-	Time = Ext2GetCurrentTime();
-
-	Ext2InitializeFCBInodeInfo( PtrFCB );
-	//	1.
-	//	Update the inode...
-	if( !NT_SUCCESS( Ext2ReadInode( PtrVCB, PtrFCB->INodeNo, &Inode ) ) )
-	{
-		return FALSE;
-	}
-
-	Inode.i_size = 0;
-	Inode.i_blocks = 0;
-	Inode.i_atime = Time;
-	Inode.i_mtime = Time;
-	Inode.i_dtime = 0;
-
-	for( i = 0; i < EXT2_N_BLOCKS; i++ )
-	{
-		Inode.i_block[ i ] = 0;
-	}
-
-	if( !NT_SUCCESS( Ext2WriteInode( PtrIrpContext, PtrVCB, PtrFCB->INodeNo, &Inode ) ) )
-	{
-		return FALSE;
-	}
-
-	//	2.
-	//	Release all the data blocks...
-	if( !Ext2ReleaseDataBlocks( PtrFCB, PtrIrpContext) )
-	{
-		return FALSE;
-	}
-	
-	Ext2ClearFlag( PtrFCB->FCBFlags, EXT2_FCB_BLOCKS_INITIALIZED );
-	Ext2InitializeFCBInodeInfo( PtrFCB );
-	
-	return TRUE;
-}
-
-/*************************************************************************
-*
-* Function: Ext2SupersedeFile()
-*
-* Description:
-*	Supersedes an existing file on the disk
-*	
-* Expected Interrupt Level (for execution) :
-*	IRQL_PASSIVE_LEVEL
-*
-* Restrictions:
-*	Expects the VCB to be acquired Exclusively before being invoked
-*
-* Return Value: None
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2SupersedeFile(
-	PtrExt2FCB			PtrFCB,
-	PtrExt2IrpContext	PtrIrpContext)
-{
-	EXT2_INODE			Inode;
-	PtrExt2VCB			PtrVCB = PtrFCB->PtrVCB;
-
-	Ext2InitializeFCBInodeInfo( PtrFCB );
-
-	//	1.
-	//	Initialize the inode...
-	RtlZeroMemory( &Inode, sizeof( EXT2_INODE ) );
-
-	//	Setting the file mode...
-	//	This operation is allowed only for a regular file...
-	Inode.i_mode = 0x81ff;
-
-	//	Maintaining the old link count...
-	Inode.i_links_count = PtrFCB->LinkCount;
-
-	//	Setting the time fields in the inode...
-	{
-		ULONG Time;
-		Time = Ext2GetCurrentTime();
-		Inode.i_ctime = Time;
-		Inode.i_atime = Time;
-		Inode.i_mtime = Time;
-		Inode.i_dtime = 0;			//	Deleted time;
-	}
-
-	if( !NT_SUCCESS( Ext2WriteInode( PtrIrpContext, PtrVCB, PtrFCB->INodeNo, &Inode ) ) )
-	{
-		return FALSE;
-	}
-
-	//	2.
-	//	Release all the data blocks...
-	if( !Ext2ReleaseDataBlocks( PtrFCB, PtrIrpContext) )
-	{
-		return FALSE;
-	}
-	
-	Ext2ClearFlag( PtrFCB->FCBFlags, EXT2_FCB_BLOCKS_INITIALIZED );
-	Ext2InitializeFCBInodeInfo( PtrFCB );
-	
-	return TRUE;
+    return STATUS_SUCCESS;
 }

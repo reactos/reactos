@@ -1,346 +1,268 @@
-/*************************************************************************
-*
-* File: flush.c
-*
-* Module: Ext2 File System Driver (Kernel mode execution only)
-*
-* Description:
-*	Contains code to handle the "Flush Buffers" dispatch entry point.
-*
-* Author: Manoj Paul Joseph
-*
-*
-*************************************************************************/
+/*
+ * COPYRIGHT:        See COPYRIGHT.TXT
+ * PROJECT:          Ext2 File System Driver for WinNT/2K/XP
+ * FILE:             flush.c
+ * PROGRAMMER:       Matt Wu <mattwu@163.com>
+ * HOMEPAGE:         http://www.ext2fsd.com
+ * UPDATE HISTORY:
+ */
 
-#include			"ext2fsd.h"
+/* INCLUDES *****************************************************************/
 
-// define the file specific bug-check id
-#define			EXT2_BUG_CHECK_ID				EXT2_FILE_FLUSH
+#include "ext2fs.h"
 
-#define			DEBUG_LEVEL						(DEBUG_TRACE_FLUSH)
+/* GLOBALS ***************************************************************/
+
+extern PEXT2_GLOBAL Ext2Global;
+
+/* DEFINITIONS *************************************************************/
 
 
-/*************************************************************************
-*
-* Function: Ext2Flush()
-*
-* Description:
-*	The I/O Manager will invoke this routine to handle a flush buffers
-*	request
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL (invocation at higher IRQL will cause execution
-*	to be deferred to a worker thread context)
-*
-* Return Value: STATUS_SUCCESS/Error
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2Flush(
-	PDEVICE_OBJECT		DeviceObject,		//	the logical volume device object
-	PIRP				Irp)				//	I/O Request Packet
+NTSTATUS NTAPI
+Ext2FlushCompletionRoutine (
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context  )
+
 {
-	NTSTATUS			RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-	BOOLEAN				AreWeTopLevel = FALSE;
+    if (Irp->PendingReturned)
+        IoMarkIrpPending( Irp );
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "Flush IRP Received...", 0);
-	
-	// Ext2BreakPoint();
 
-	FsRtlEnterFileSystem();
-	ASSERT(DeviceObject);
-	ASSERT(Irp);
+    if (Irp->IoStatus.Status == STATUS_INVALID_DEVICE_REQUEST)
+        Irp->IoStatus.Status = STATUS_SUCCESS;
 
-	// set the top level context
-	AreWeTopLevel = Ext2IsIrpTopLevel(Irp);
-
-	try 
-	{
-
-		// get an IRP context structure and issue the request
-		PtrIrpContext = Ext2AllocateIrpContext(Irp, DeviceObject);
-		ASSERT(PtrIrpContext);
-
-		RC = Ext2CommonFlush(PtrIrpContext, Irp);
-
-	} except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) {
-
-		RC = Ext2ExceptionHandler(PtrIrpContext, Irp);
-
-		Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-	}
-
-	if (AreWeTopLevel) {
-		IoSetTopLevelIrp(NULL);
-	}
-
-	FsRtlExitFileSystem();
-
-	return(RC);
+    return STATUS_SUCCESS;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2CommonFlush()
-*
-* Description:
-*	The actual work is performed here. This routine may be invoked in one'
-*	of the two possible contexts:
-*	(a) in the context of a system worker thread
-*	(b) in the context of the original caller
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: STATUS_SUCCESS/Error
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2CommonFlush(
-PtrExt2IrpContext			PtrIrpContext,
-PIRP							PtrIrp)
+NTSTATUS
+Ext2FlushFiles(
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN BOOLEAN              bShutDown
+)
 {
-	NTSTATUS					RC = STATUS_SUCCESS;
-	PIO_STACK_LOCATION	PtrIoStackLocation = NULL;
-	PFILE_OBJECT			PtrFileObject = NULL;
-	PtrExt2FCB				PtrFCB = NULL;
-	PtrExt2CCB				PtrCCB = NULL;
-	PtrExt2VCB				PtrVCB = NULL;
-	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
-	BOOLEAN					AcquiredFCB = FALSE;
-	BOOLEAN					PostRequest = FALSE;
-	BOOLEAN					CanWait = TRUE;
+    IO_STATUS_BLOCK    IoStatus;
 
-	try {
-		// First, get a pointer to the current I/O stack location
-		PtrIoStackLocation = IoGetCurrentIrpStackLocation(PtrIrp);
-		ASSERT(PtrIoStackLocation);
+    PEXT2_FCB       Fcb;
+    PLIST_ENTRY     ListEntry;
 
-		PtrFileObject = PtrIoStackLocation->FileObject;
-		ASSERT(PtrFileObject);
+    if (IsVcbReadOnly(Vcb)) {
+        return STATUS_SUCCESS;
+    }
 
-		// Get the FCB and CCB pointers
-		PtrCCB = (PtrExt2CCB)(PtrFileObject->FsContext2);
-		ASSERT(PtrCCB);
-		PtrFCB = PtrCCB->PtrFCB;
-		AssertFCB( PtrFCB );
+    IoStatus.Status = STATUS_SUCCESS;
 
-		/*ASSERT(PtrFCB);
-		ASSERT(PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_FCB );*/
+    DEBUG(DL_INF, ( "Flushing Files ...\n"));
 
-		PtrReqdFCB = &(PtrFCB->NTRequiredFCB);
+    // Flush all Fcbs in Vcb list queue.
+    for (ListEntry = Vcb->FcbList.Flink;
+            ListEntry != &Vcb->FcbList;
+            ListEntry = ListEntry->Flink ) {
 
-		// Get some of the parameters supplied to us
-		CanWait = ((PtrIrpContext->IrpContextFlags & EXT2_IRP_CONTEXT_CAN_BLOCK) ? TRUE : FALSE);
+        Fcb = CONTAINING_RECORD(ListEntry, EXT2_FCB, Next);
+        ExAcquireResourceExclusiveLite(
+            &Fcb->MainResource, TRUE);
+        IoStatus.Status = Ext2FlushFile(IrpContext, Fcb, NULL);
+        ExReleaseResourceLite(&Fcb->MainResource);
+    }
 
-		// If we cannot wait, post the request immediately since a flush is inherently blocking/synchronous.
-		if (!CanWait) {
-			PostRequest = TRUE;
-			try_return();
-		}
-
-		// Check the type of object passed-in. That will determine the course of
-		// action we take.
-		if ((PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB) || (PtrFCB->FCBFlags & EXT2_FCB_ROOT_DIRECTORY)) {
-
-			if (PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB) {
-				PtrVCB = (PtrExt2VCB)(PtrFCB);
-			} else {
-				PtrVCB = PtrFCB->PtrVCB;
-			}
-
-			// The caller wishes to flush all files for the mounted
-			// logical volume. The flush volume routine below should simply
-			// walk through all of the open file streams, acquire the
-			// FCB resource, and request the flush operation from the Cache
-			// Manager. Basically, the sequence of operations listed below
-			// for a single file should be executed on all open files.
-
-			Ext2FlushLogicalVolume(PtrIrpContext, PtrIrp, PtrVCB);
-
-			try_return();
-		}
-
-		if (!(PtrFCB->FCBFlags & EXT2_FCB_DIRECTORY)) 
-		{
-			// This is a regular file.
-			ExAcquireResourceExclusiveLite(&(PtrReqdFCB->MainResource), TRUE);
-			AcquiredFCB = TRUE;
-
-			// Request the Cache Manager to perform a flush operation.
-			// Further, instruct the Cache Manager that we wish to flush the
-			// entire file stream.
-			Ext2FlushAFile(PtrReqdFCB, &(PtrIrp->IoStatus));
-			RC = PtrIrp->IoStatus.Status;
-			// All done. You may want to also flush the directory entry for the
-			// file stream at this time.
-
-			// Some log-based FSD implementations may wish to flush their
-			// log files at this time. Finally, you should update the time-stamp
-			// values for the file stream appropriately. This would involve
-			// obtaining the current time and modifying the appropriate directory
-			// entry fields.
-		}
-
-		try_exit:
-
-		if (AcquiredFCB) 
-		{
-			Ext2ReleaseResource(&(PtrReqdFCB->MainResource));
-			DebugTrace(DEBUG_TRACE_MISC,  "*** FCB Released [Flush]", 0);
-			DebugTraceState( "FCBMain   AC:0x%LX   SW:0x%LX   EX:0x%LX   [Flush]", 
-				PtrReqdFCB->MainResource.ActiveCount, 
-				PtrReqdFCB->MainResource.NumberOfExclusiveWaiters, 
-				PtrReqdFCB->MainResource.NumberOfSharedWaiters );
-
-			AcquiredFCB = FALSE;
-		}
-
-		if (!PostRequest) 
-		{
-			PIO_STACK_LOCATION		PtrNextIoStackLocation = NULL;
-			NTSTATUS						RC1 = STATUS_SUCCESS;
-
-			// Send the request down at this point.
-			// To do this, you must set the next IRP stack location, and
-			// maybe set a completion routine.
-			// Be careful about marking the IRP pending if the lower level
-			// driver returned pending and you do have a completion routine!
-			PtrNextIoStackLocation = IoGetNextIrpStackLocation(PtrIrp);
-			*PtrNextIoStackLocation = *PtrIoStackLocation;
-
-			// Set the completion routine to "eat-up" any
-			// STATUS_INVALID_DEVICE_REQUEST error code returned by the lower
-			// level driver.
-			IoSetCompletionRoutine(PtrIrp, Ext2FlushCompletion, NULL, TRUE, TRUE, TRUE);
-
-			/*
-			 * The exception handlers propably masked out the
-			 * fact that PtrVCB was never set.
-			 * -- Filip Navara, 18/08/2004
-			 */
-			PtrVCB = PtrFCB->PtrVCB;
-			RC1 = IoCallDriver(PtrVCB->TargetDeviceObject, PtrIrp);
-
-			RC = ((RC1 == STATUS_INVALID_DEVICE_REQUEST) ? RC : RC1);
-		}
-
-	} finally {
-		if (PostRequest) {
-			// Nothing to lock now.
-			RC = Ext2PostRequest(PtrIrpContext, PtrIrp);
-		} else {
-			// Release the IRP context at this time.
-  			Ext2ReleaseIrpContext(PtrIrpContext);
-		}
-	}
-
-	return(RC);
+    return IoStatus.Status;
 }
 
-/*************************************************************************
-*
-* Function: Ext2FlushAFile()
-*
-* Description:
-*	Tell the Cache Manager to perform a flush.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: None
-*
-*************************************************************************/
-void NTAPI Ext2FlushAFile(
-PtrExt2NTRequiredFCB	PtrReqdFCB,
-PIO_STATUS_BLOCK		PtrIoStatus)
+NTSTATUS
+Ext2FlushVolume (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN BOOLEAN              bShutDown
+)
 {
-	CcFlushCache(&(PtrReqdFCB->SectionObject), NULL, 0, PtrIoStatus);
-	return;
+    IO_STATUS_BLOCK    IoStatus;
+
+    DEBUG(DL_INF, ( "Ext2FlushVolume: Flushing Vcb ...\n"));
+
+    ExAcquireSharedStarveExclusive(&Vcb->PagingIoResource, TRUE);
+    ExReleaseResourceLite(&Vcb->PagingIoResource);
+
+    CcFlushCache(&(Vcb->SectionObject), NULL, 0, &IoStatus);
+
+    return IoStatus.Status;
 }
 
-/*************************************************************************
-*
-* Function: Ext2FlushLogicalVolume()
-*
-* Description:
-*	Flush everything beginning at root directory.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: None
-*
-*************************************************************************/
-void NTAPI Ext2FlushLogicalVolume(
-PtrExt2IrpContext			PtrIrpContext,
-PIRP							PtrIrp,
-PtrExt2VCB					PtrVCB)
+NTSTATUS
+Ext2FlushFile (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_FCB            Fcb,
+    IN PEXT2_CCB            Ccb
+)
 {
-	BOOLEAN			AcquiredVCB = FALSE;
+    IO_STATUS_BLOCK    IoStatus;
 
-	try {
-		ExAcquireResourceExclusiveLite(&(PtrVCB->VCBResource), TRUE);
+    ASSERT(Fcb != NULL);
+    ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+           (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
 
-		AcquiredVCB = TRUE;
-		DebugTrace(DEBUG_TRACE_MISC,   "*** VCB Acquired Ex [Flush] ", 0);
+    /* update timestamp and achieve attribute */
+    if (Ccb != NULL) {
 
-		// Go through the list of FCB's. You would probably
-		// flush all of the files. Then, you could flush the
-		// directories that you may have have pinned into memory.
+        if (!IsFlagOn(Ccb->Flags, CCB_LAST_WRITE_UPDATED)) {
 
-		// NOTE: This function may also be invoked internally as part of
-		// processing a shutdown request.
+            LARGE_INTEGER   SysTime;
+            KeQuerySystemTime(&SysTime);
 
-	} 
-	finally 
-	{
-		if (AcquiredVCB) 
-		{
-			Ext2ReleaseResource(&(PtrVCB->VCBResource));
-			DebugTrace(DEBUG_TRACE_MISC,  "*** VCB Released [Flush]", 0);
-			DebugTraceState( "VCB       AC:0x%LX   SW:0x%LX   EX:0x%LX   [Flush]", 
-				PtrVCB->VCBResource.ActiveCount, 
-				PtrVCB->VCBResource.NumberOfExclusiveWaiters, 
-				PtrVCB->VCBResource.NumberOfSharedWaiters );
-		}
-	}
+            Fcb->Inode->i_mtime = Ext2LinuxTime(SysTime);
+            Fcb->Mcb->LastWriteTime = Ext2NtTime(Fcb->Inode->i_mtime);
+            Ext2SaveInode(IrpContext, Fcb->Vcb, Fcb->Inode);
+        }
+    }
 
-	return;
+    if (IsDirectory(Fcb)) {
+        return STATUS_SUCCESS;
+    }
+
+    DEBUG(DL_INF, ( "Ext2FlushFile: Flushing File Inode=%xh %S ...\n",
+                    Fcb->Inode->i_ino, Fcb->Mcb->ShortName.Buffer));
+
+    CcFlushCache(&(Fcb->SectionObject), NULL, 0, &IoStatus);
+    ClearFlag(Fcb->Flags, FCB_FILE_MODIFIED);
+
+    return IoStatus.Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2FlushCompletion()
-*
-* Description:
-*	Eat up any bad errors.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: None
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2FlushCompletion(
-PDEVICE_OBJECT	PtrDeviceObject,
-PIRP				PtrIrp,
-PVOID				Context)
+NTSTATUS
+Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
 {
-	if (PtrIrp->PendingReturned) {
-		IoMarkIrpPending(PtrIrp);
-	}
+    NTSTATUS                Status = STATUS_SUCCESS;
 
-	if (PtrIrp->IoStatus.Status == STATUS_INVALID_DEVICE_REQUEST) {
-		// cannot do much here, can we?
-		PtrIrp->IoStatus.Status = STATUS_SUCCESS;
-	}
+    PIRP                    Irp = NULL;
+    PIO_STACK_LOCATION      IrpSp = NULL;
 
-	return(STATUS_SUCCESS);
+    PEXT2_VCB               Vcb = NULL;
+    PEXT2_FCB               Fcb = NULL;
+    PEXT2_FCBVCB            FcbOrVcb = NULL;
+    PEXT2_CCB               Ccb = NULL;
+    PFILE_OBJECT            FileObject = NULL;
+
+    PDEVICE_OBJECT          DeviceObject = NULL;
+
+    BOOLEAN                 MainResourceAcquired = FALSE;
+
+    _SEH2_TRY {
+
+        ASSERT(IrpContext);
+
+        ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
+               (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
+
+        DeviceObject = IrpContext->DeviceObject;
+
+        //
+        // This request is not allowed on the main device object
+        //
+        if (IsExt2FsDevice(DeviceObject)) {
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            _SEH2_LEAVE;
+        }
+
+        Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+        ASSERT(Vcb != NULL);
+        ASSERT((Vcb->Identifier.Type == EXT2VCB) &&
+               (Vcb->Identifier.Size == sizeof(EXT2_VCB)));
+
+        ASSERT(IsMounted(Vcb));
+        if (IsVcbReadOnly(Vcb)) {
+            Status =  STATUS_SUCCESS;
+            _SEH2_LEAVE;
+        }
+
+        Irp = IrpContext->Irp;
+        IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+        FileObject = IrpContext->FileObject;
+        FcbOrVcb = (PEXT2_FCBVCB) FileObject->FsContext;
+        ASSERT(FcbOrVcb != NULL);
+
+        Ccb = (PEXT2_CCB) FileObject->FsContext2;
+        if (Ccb == NULL) {
+            Status =  STATUS_SUCCESS;
+            _SEH2_LEAVE;
+        }
+
+        MainResourceAcquired =
+            ExAcquireResourceExclusiveLite(&FcbOrVcb->MainResource,
+                                           IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT));
+
+        ASSERT(MainResourceAcquired);
+        DEBUG(DL_INF, ("Ext2Flush-pre:  total mcb records=%u\n",
+                       FsRtlNumberOfRunsInLargeMcb(&Vcb->Extents)));
+
+        if (FcbOrVcb->Identifier.Type == EXT2VCB) {
+
+            Ext2VerifyVcb(IrpContext, Vcb);
+            Status = Ext2FlushFiles(IrpContext, (PEXT2_VCB)(FcbOrVcb), FALSE);
+            if (NT_SUCCESS(Status)) {
+                _SEH2_LEAVE;
+            }
+
+            Status = Ext2FlushVolume(IrpContext, (PEXT2_VCB)(FcbOrVcb), FALSE);
+
+            if (NT_SUCCESS(Status) && IsFlagOn(Vcb->Volume->Flags, FO_FILE_MODIFIED)) {
+                ClearFlag(Vcb->Volume->Flags, FO_FILE_MODIFIED);
+            }
+
+        } else if (FcbOrVcb->Identifier.Type == EXT2FCB) {
+
+            Fcb = (PEXT2_FCB)(FcbOrVcb);
+
+            Status = Ext2FlushFile(IrpContext, Fcb, Ccb);
+            if (NT_SUCCESS(Status)) {
+                if (IsFlagOn(FileObject->Flags, FO_FILE_MODIFIED)) {
+                    Fcb->Mcb->FileAttr |= FILE_ATTRIBUTE_ARCHIVE;
+                    ClearFlag(FileObject->Flags, FO_FILE_MODIFIED);
+                }
+            }
+        }
+
+        DEBUG(DL_INF, ("Ext2Flush-post: total mcb records=%u\n",
+                       FsRtlNumberOfRunsInLargeMcb(&Vcb->Extents)));
+
+
+    } _SEH2_FINALLY {
+
+        if (MainResourceAcquired) {
+            ExReleaseResourceLite(&FcbOrVcb->MainResource);
+        }
+
+        if (!IrpContext->ExceptionInProgress) {
+
+            if (Vcb && Irp && IrpSp && !IsVcbReadOnly(Vcb)) {
+
+                // Call the disk driver to flush the physial media.
+                NTSTATUS DriverStatus;
+                PIO_STACK_LOCATION NextIrpSp;
+
+                NextIrpSp = IoGetNextIrpStackLocation(Irp);
+
+                *NextIrpSp = *IrpSp;
+
+                IoSetCompletionRoutine( Irp,
+                                        Ext2FlushCompletionRoutine,
+                                        NULL,
+                                        TRUE,
+                                        TRUE,
+                                        TRUE );
+
+                DriverStatus = IoCallDriver(Vcb->TargetDeviceObject, Irp);
+
+                Status = (DriverStatus == STATUS_INVALID_DEVICE_REQUEST) ?
+                         Status : DriverStatus;
+
+                IrpContext->Irp = Irp = NULL;
+            }
+
+            Ext2CompleteIrpContext(IrpContext, Status);
+        }
+    } _SEH2_END;
+
+    return Status;
 }

@@ -1,1703 +1,980 @@
-/*************************************************************************
-*
-* File: fastio.c
-*
-* Module: Ext2 File System Driver (Kernel mode execution only)
-*
-* Description:
-*	Contains code to handle the various "fast-io" calls.
-*
-* Author: Manoj Paul Joseph
-*
-*
-*************************************************************************/
-
-#include			"ext2fsd.h"
-
-// define the file specific bug-check id
-#define			EXT2_BUG_CHECK_ID				EXT2_FILE_FAST_IO
-
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoCheckIfPossible()
-*
-* Description:
-*	To fast-io or not to fast-io, that is the question ...
-*	This routine helps the I/O Manager determine whether the FSD wishes
-*	to permit fast-io on a specific file stream.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoCheckIfPossible(
-IN PFILE_OBJECT				FileObject,
-IN PLARGE_INTEGER				FileOffset,
-IN ULONG							Length,
-IN BOOLEAN						Wait,
-IN ULONG							LockKey,
-IN BOOLEAN						CheckForReadOperation,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
-{
-	BOOLEAN				ReturnedStatus = FALSE;
-	PtrExt2FCB			PtrFCB = NULL;
-	PtrExt2CCB			PtrCCB = NULL;
-	LARGE_INTEGER		IoLength;
-
-	// Obtain a pointer to the FCB and CCB for the file stream.
-	PtrCCB = (PtrExt2CCB)(FileObject->FsContext2);
-	ASSERT(PtrCCB);
-	PtrFCB = PtrCCB->PtrFCB;
-	ASSERT(PtrFCB);
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoCheckIfPossible - Denying", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-	
-	AssertFCBorVCB( PtrFCB );
-
-/*	if( !( PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_FCB 
-			|| PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB ) )
-	{
-		//	Ext2BreakPoint();
-		DebugTrace(DEBUG_TRACE_ERROR,   "~~~[FastIO call]~~~  Invalid FCB...", 0);
-
-		return FALSE;
-	}
-*/
-
-	return FALSE;
-
-	// Validate that this is a fast-IO request to a regular file.
-	// The sample FSD for example, will not allow fast-IO requests
-	// to volume objects, or to directories.
-	if ((PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB) ||
-		 (PtrFCB->FCBFlags & EXT2_FCB_DIRECTORY)) 
-	{
-		// This is not allowed.
-		return(ReturnedStatus);
-	}
-
-	IoLength = RtlConvertUlongToLargeInteger(Length);
-	
-	// Your FSD can determine the checks that it needs to perform.
-	// Typically, a FSD will check whether there exist any byte-range
-	// locks that would prevent a fast-IO operation from proceeding.
-	
-	// ... (FSD specific checks go here).
-	
-	if (CheckForReadOperation) 
-	{
-		// Chapter 11 describes how to use the FSRTL package for byte-range
-		// lock requests. The following routine is exported by the FSRTL
-		// package and it returns TRUE if the read operation should be
-		// allowed to proceed based on the status of the current byte-range
-		// locks on the file stream. If you do not use the FSRTL package
-		// for byte-range locking support, then you must substitute your
-		// own checks over here.
-		// ReturnedStatus = FsRtlFastCheckLockForRead(&(PtrFCB->FCBByteRangeLock),
-		//							FileOffset, &IoLength, LockKey, FileObject,
-      //                     PsGetCurrentProcess());
-	} 
-	else 
-	{
-		// This is a write request. Invoke the FSRTL byte-range lock package
-		// to see whether the write should be allowed to proceed.
-		// ReturnedStatus = FsRtlFastCheckLockForWrite(&(PtrFCB->FCBByteRangeLock),
-		//							FileOffset, &IoLength, LockKey, FileObject,
-      //                     PsGetCurrentProcess());
-	}
-	
-	return(ReturnedStatus);
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoRead()
-*
-* Description:
-*	Bypass the traditional IRP method to perform a read operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoRead(
-IN PFILE_OBJECT				FileObject,
-IN PLARGE_INTEGER				FileOffset,
-IN ULONG							Length,
-IN BOOLEAN						Wait,
-IN ULONG							LockKey,
-OUT PVOID						Buffer,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
-{
-
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-
-	FsRtlEnterFileSystem();
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoRead", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-	
-
-	try 
-	{
-
-		try 
-		{
-
-			// Chapter 11 describes how to roll your own fast-IO entry points.
-			// Typically, you will acquire appropriate resources here and
-			// then (maybe) forward the request to FsRtlCopyRead().
-			// If you are a suitably complex file system, you may even choose
-			// to do some pre-processing (e.g. prefetching data from someplace)
-			// before passing on the request to the FSRTL package.
-
-			// Of course, you also have the option of bypassing the FSRTL
-			// package completely and simply forwarding the request directly
-			// to the NT Cache Manager.
-
-			// Bottom line is that you have complete flexibility on determining
-			// what you decide to do here. Read Chapter 11 well (and obviously
-			// other related issues) before filling in this and other fast-IO
-			// dispatch entry points.
-
-			NOTHING;
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-	
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-	
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-
-		}
-	} finally {
-
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoWrite()
-*
-* Description:
-*	Bypass the traditional IRP method to perform a write operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoWrite(
-IN PFILE_OBJECT				FileObject,
-IN PLARGE_INTEGER				FileOffset,
-IN ULONG							Length,
-IN BOOLEAN						Wait,
-IN ULONG							LockKey,
-OUT PVOID						Buffer,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
-{
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-
-	FsRtlEnterFileSystem();
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoWrite", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-	try 
-	{
-		try 
-		{
-
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-	
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-	
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-
-		}
-	}
-	finally
-	{
-
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoQueryBasicInfo()
-*
-* Description:
-*	Bypass the traditional IRP method to perform a query basic
-*	information operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoQueryBasicInfo(
-IN PFILE_OBJECT					FileObject,
-IN BOOLEAN							Wait,
-OUT PFILE_BASIC_INFORMATION	Buffer,
-OUT PIO_STATUS_BLOCK 			IoStatus,
-IN PDEVICE_OBJECT					DeviceObject)
-{
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS			RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-
-	FsRtlEnterFileSystem();
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoQueryBasicInfo", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-	try
-	{
-
-		try
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-		}
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally 
-	{
-
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
-}
-
-/*************************************************************************
-*
-* Function: Ext2FastIoQueryStdInfo()
-*
-* Description:
-*	Bypass the traditional IRP method to perform a query standard
-*	information operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoQueryStdInfo(
-IN PFILE_OBJECT						FileObject,
-IN BOOLEAN							Wait,
-OUT PFILE_STANDARD_INFORMATION 		Buffer,
-OUT PIO_STATUS_BLOCK 				IoStatus,
-IN PDEVICE_OBJECT					DeviceObject)
-{
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-
-	FsRtlEnterFileSystem();
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoQueryStdInfo", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-	try 
-	{
-
-		try
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally
-	{
-
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
-}
-
-/*************************************************************************
-*
-* Function: Ext2FastIoLock()
-*
-* Description:
-*	Bypass the traditional IRP method to perform a byte range lock
-*	operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoLock(
-IN PFILE_OBJECT				FileObject,
-IN PLARGE_INTEGER				FileOffset,
-IN PLARGE_INTEGER				Length,
-PEPROCESS						ProcessId,
-ULONG								Key,
-BOOLEAN							FailImmediately,
-BOOLEAN							ExclusiveLock,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
-{
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS			RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-
-	FsRtlEnterFileSystem();
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoLock", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-	
-	try 
-	{
-
-		try 
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-		}
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	} 
-	finally 
-	{
-
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoUnlockSingle()
-*
-* Description:
-*	Bypass the traditional IRP method to perform a byte range unlock
-*	operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoUnlockSingle(
-IN PFILE_OBJECT				FileObject,
-IN PLARGE_INTEGER				FileOffset,
-IN PLARGE_INTEGER				Length,
-PEPROCESS						ProcessId,
-ULONG								Key,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
-{
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-
-	FsRtlEnterFileSystem();
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoUnlockSingle", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-
-	try 
-	{
-
-		try 
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	} 
-	finally 
-	{
-
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoUnlockAll()
-*
-* Description:
-*	Bypass the traditional IRP method to perform multiple byte range unlock
-*	operations.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoUnlockAll(
-IN PFILE_OBJECT				FileObject,
-PEPROCESS						ProcessId,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
-{
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-
-	FsRtlEnterFileSystem();
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoUnlockAll", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-
-	try
-	{
-		try
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally
-	{
-
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoUnlockAllByKey()
-*
-* Description:
-*	Bypass the traditional IRP method to perform multiple byte range unlock
-*	operations.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoUnlockAllByKey(
-IN PFILE_OBJECT				FileObject,
-PVOID						ProcessId,
-ULONG								Key,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
-{
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS			RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-
-	FsRtlEnterFileSystem();
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoUnlockAllByKey", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-	try 
-	{
-
-		try 
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-		}
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally
-	{
-
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoAcqCreateSec()
-*
-* Description:
-*	Not really a fast-io operation. Used by the VMM to acquire FSD resources
-*	before processing a file map (create section object) request.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: None (we must be prepared to handle VMM initiated calls)
-*
-*************************************************************************/
-void NTAPI Ext2FastIoAcqCreateSec(
-IN PFILE_OBJECT			FileObject)
-{
-	PtrExt2FCB			PtrFCB = NULL;
-	PtrExt2CCB			PtrCCB = NULL;
-	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
-
-	// Obtain a pointer to the FCB and CCB for the file stream.
-	PtrCCB = (PtrExt2CCB)(FileObject->FsContext2);
-	ASSERT(PtrCCB);
-	PtrFCB = PtrCCB->PtrFCB;
-	ASSERT(PtrFCB);
-
-	AssertFCB( PtrFCB );
-
-/*	if( PtrFCB->NodeIdentifier.NodeType != EXT2_NODE_TYPE_FCB )
-	{
-		//	Ext2BreakPoint();
-		DebugTrace(DEBUG_TRACE_ERROR,   "~~~[FastIO call]~~~  Invalid FCB...", 0);
-		return;
-	}	*/
-	
-	PtrReqdFCB = &(PtrFCB->NTRequiredFCB);
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~ Ext2FastIoAcqCreateSec", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-
-	// Acquire the MainResource exclusively for the file stream
-	
-	DebugTrace(DEBUG_TRACE_MISC,   "*** Attempting to acquire FCB Exclusively [FastIo]", 0);
-
-	DebugTraceState( "FCBMain   AC:0x%LX   SW:0x%LX   EX:0x%LX   [FastIo]", PtrReqdFCB->MainResource.ActiveCount, PtrReqdFCB->MainResource.NumberOfExclusiveWaiters, PtrReqdFCB->MainResource.NumberOfSharedWaiters );
-	ExAcquireResourceExclusiveLite(&(PtrReqdFCB->MainResource), TRUE);
-
-	DebugTrace(DEBUG_TRACE_MISC,"*** FCB acquired [FastIo]", 0);
-
-	// Although this is typically not required, the sample FSD will
-	// also acquire the PagingIoResource exclusively at this time
-	// to conform with the resource acquisition described in the set
-	// file information routine. Once again though, you will probably
-	// not need to do this.
-	DebugTrace(DEBUG_TRACE_MISC,"*** Attempting to acquire FCBPaging Exclusively [FastIo]", 0);
-	DebugTraceState( "FCBPaging AC:0x%LX   SW:0x%LX   EX:0x%LX   [FastIo]", PtrReqdFCB->PagingIoResource.ActiveCount, PtrReqdFCB->PagingIoResource.NumberOfExclusiveWaiters, PtrReqdFCB->PagingIoResource.NumberOfSharedWaiters );
-	ExAcquireResourceExclusiveLite(&(PtrReqdFCB->PagingIoResource), TRUE);
-	
-	DebugTrace(DEBUG_TRACE_MISC,"*** FCBPaging acquired [FastIo]", 0);
-
-	return;
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoRelCreateSec()
-*
-* Description:
-*	Not really a fast-io operation. Used by the VMM to release FSD resources
-*	after processing a file map (create section object) request.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: None
-*
-*************************************************************************/
-void NTAPI Ext2FastIoRelCreateSec(
-IN PFILE_OBJECT			FileObject)
-{
-
-	PtrExt2FCB			PtrFCB = NULL;
-	PtrExt2CCB			PtrCCB = NULL;
-	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
-
-	// Obtain a pointer to the FCB and CCB for the file stream.
-	PtrCCB = (PtrExt2CCB)(FileObject->FsContext2);
-	ASSERT(PtrCCB);
-	PtrFCB = PtrCCB->PtrFCB;
-	ASSERT(PtrFCB);
-	AssertFCB( PtrFCB );
-
-/*	if( PtrFCB->NodeIdentifier.NodeType != EXT2_NODE_TYPE_FCB )
-	{
-		//	Ext2BreakPoint();
-		DebugTrace(DEBUG_TRACE_ERROR,   "~~~[FastIO call]~~~  Invalid FCB...", 0);
-		return;
-	}*/
-
-	PtrReqdFCB = &(PtrFCB->NTRequiredFCB);
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2FastIoRelCreateSec", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
-
-	// Release the PagingIoResource for the file stream
-	Ext2ReleaseResource(&(PtrReqdFCB->PagingIoResource));
-	DebugTrace(DEBUG_TRACE_MISC, "*** FCBPaging Released in [FastIo]", 0);
-	DebugTraceState( "FCBPaging AC:0x%LX   SW:0x%LX   EX:0x%LX   [FastIo]", 
-		PtrReqdFCB->PagingIoResource.ActiveCount, 
-		PtrReqdFCB->PagingIoResource.NumberOfExclusiveWaiters, 
-		PtrReqdFCB->PagingIoResource.NumberOfSharedWaiters );
-
-	// Release the MainResource for the file stream
-	Ext2ReleaseResource(&(PtrReqdFCB->MainResource));
-	DebugTrace(DEBUG_TRACE_MISC, "*** FCB Released [FastIo]", 0);
-	DebugTraceState( "FCBMain   AC:0x%LX   SW:0x%LX   EX:0x%LX   [FastIo]", 
-		PtrReqdFCB->MainResource.ActiveCount, 
-		PtrReqdFCB->MainResource.NumberOfExclusiveWaiters, 
-		PtrReqdFCB->MainResource.NumberOfSharedWaiters );
-
-	return;
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2AcqLazyWrite()
-*
-* Description:
-*	Not really a fast-io operation. Used by the NT Cache Mgr to acquire FSD
-*	resources before performing a delayed write (write behind/lazy write)
-*	operation.
-*	NOTE: this function really must succeed since the Cache Manager will
-*			typically ignore failure and continue on ...
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE (Cache Manager does not tolerate FALSE well)
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2AcqLazyWrite(
-IN PVOID						Context,
-IN BOOLEAN						Wait)
-{
-	BOOLEAN				ReturnedStatus = TRUE;
-	
-	PtrExt2VCB			PtrVCB = NULL;
-	PtrExt2FCB			PtrFCB = NULL;
-	PtrExt2CCB			PtrCCB = NULL;
-	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
-
-	// The context is whatever we passed to the Cache Manager when invoking
-	// the CcInitializeCacheMaps() function. In the case of the sample FSD
-	// implementation, this context is a pointer to the CCB structure.
-
-	ASSERT(Context);
-	PtrCCB = (PtrExt2CCB)(Context);
-	
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2AcqLazyWrite", 0);
-
-	if(PtrCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_CCB)
-	{
-		//
-		//	Acquiring Resource for a file write...
-		//
-		PtrFCB = PtrCCB->PtrFCB;
-		AssertFCB( PtrFCB );
-	}
-	else if( PtrCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB )
-	{
-		//
-		//	Acquiring Resource for a volume write...
-		//
-		PtrVCB = ( PtrExt2VCB )PtrCCB;
-		PtrCCB = NULL;
-		DebugTrace(DEBUG_TRACE_MISC,"~~~[FastIO call]~~~  Ext2AcqLazyWrite - for Volume", 0);
-		
-		//	Acquire nothing...
-		//	Just proceed...
-		return TRUE;
-
-	}
-	else if( PtrCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_FCB ) 
-	{
-		//
-		//	This must have been a FCB created / maintained on the FSD's initiative...
-		//	This would have been done to cache access to a directory...
-		//
-		PtrFCB = ( PtrExt2FCB )PtrCCB;
-		PtrCCB = NULL;
-	}
-	else
-	{
-		DebugTrace(DEBUG_TRACE_ERROR, "~~~[FastIO call]~~~  Ext2AcqLazyWrite - Invalid context", 0);
-		Ext2BreakPoint();
-		return FALSE;
-	}
-	
-	if( PtrCCB && PtrCCB->PtrFileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", PtrCCB->PtrFileObject );
-	}
-
-	AssertFCB( PtrFCB );
-
-
-	PtrReqdFCB = &(PtrFCB->NTRequiredFCB);
-
-
-	// Acquire the MainResource in the FCB exclusively. Then, set the
-	// lazy-writer thread id in the FCB structure for identification when
-	// an actual write request is received by the FSD.
-	// Note: The lazy-writer typically always supplies WAIT set to TRUE.
-	
-	DebugTrace(DEBUG_TRACE_MISC,"*** Attempting to acquire FCB Exclusively [FastIo]", 0);
-
-	DebugTraceState( "FCBMain   AC:0x%LX   SW:0x%LX   EX:0x%LX   [FastIo]", PtrReqdFCB->MainResource.ActiveCount, PtrReqdFCB->MainResource.NumberOfExclusiveWaiters, PtrReqdFCB->MainResource.NumberOfSharedWaiters );
-	if (!ExAcquireResourceExclusiveLite(&(PtrReqdFCB->MainResource),
-													  Wait)) 
-	{
-		DebugTrace(DEBUG_TRACE_MISC,"*** Attempt to acquire FCB FAILED [FastIo]", 0);
-		ReturnedStatus = FALSE;
-	} 
-	else
-	{
-		DebugTrace(DEBUG_TRACE_MISC,"*** FCB acquired [FastIo]", 0);
-		// Now, set the lazy-writer thread id.
-		ASSERT(!(PtrFCB->LazyWriterThreadID));
-		PtrFCB->LazyWriterThreadID = (unsigned int)(PsGetCurrentThread());
-	}
-
-	// If your FSD needs to perform some special preparations in anticipation
-	// of receving a lazy-writer request, do so now.
-
-	return(ReturnedStatus);
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2RelLazyWrite()
-*
-* Description:
-*	Not really a fast-io operation. Used by the NT Cache Mgr to release FSD
-*	resources after performing a delayed write (write behind/lazy write)
-*	operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: None
-*
-*************************************************************************/
-void NTAPI Ext2RelLazyWrite(
-IN PVOID							Context)
-{
-
-	PtrExt2VCB			PtrVCB = NULL;
-	PtrExt2FCB			PtrFCB = NULL;
-	PtrExt2CCB			PtrCCB = NULL;
-	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
-
-	// The context is whatever we passed to the Cache Manager when invoking
-	// the CcInitializeCacheMaps() function. In the case of the sample FSD
-	// implementation, this context is a pointer to the CCB structure.
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2RelLazyWrite", 0);
-
-	ASSERT(Context);
-	PtrCCB = (PtrExt2CCB)(Context);
-	
-	if(PtrCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_CCB)
-	{
-		PtrFCB = PtrCCB->PtrFCB;
-		AssertFCB( PtrFCB );
-	}
-	else if( PtrCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_VCB )
-	{
-		PtrVCB = ( PtrExt2VCB )PtrCCB;
-		PtrCCB = NULL;
-		DebugTrace(DEBUG_TRACE_MISC,"~~~[FastIO call]~~~  Ext2RelLazyWrite - for Volume", 0);
-		
-		//	Acquire was acquired nothing...
-		//	Just return...
-		return;
-
-	}
-	else if( PtrCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_FCB ) 
-	{
-		//
-		//	This must have been a FCB created / maintained on the FSD's initiative...
-		//	This would have been done to cache access to a directory...
-		//
-		PtrFCB = ( PtrExt2FCB )PtrCCB;
-		PtrCCB = NULL;
-	}
-	else
-	{
-		DebugTrace(DEBUG_TRACE_ERROR, "~~~[FastIO call]~~~  Ext2RelLazyWrite - Invalid context", 0);
-		Ext2BreakPoint();
-		return ;
-	}
-
-	if( PtrCCB && PtrCCB->PtrFileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", PtrCCB->PtrFileObject );
-	}
-
-	PtrReqdFCB = &(PtrFCB->NTRequiredFCB);
-
-	// Remove the current thread-id from the FCB and release the MainResource.
-	ASSERT( (PtrFCB->LazyWriterThreadID) == (unsigned int)PsGetCurrentThread() );
-	PtrFCB->LazyWriterThreadID = 0;
-
-
-	// Release the acquired resource.
-	Ext2ReleaseResource(&(PtrReqdFCB->MainResource));
-	DebugTrace(DEBUG_TRACE_MISC, "*** FCB Released [FastIo]", 0);
-	DebugTraceState( "FCBMain   AC:0x%LX   SW:0x%LX   EX:0x%LX   [FastIo]", 
-		PtrReqdFCB->MainResource.ActiveCount, 
-		PtrReqdFCB->MainResource.NumberOfExclusiveWaiters, 
-		PtrReqdFCB->MainResource.NumberOfSharedWaiters );
-
-	//
-	// Undo whatever else seems appropriate at this time...
-	//
-
-	return;
-}
-
-
-/*************************************************************************
-*
-* Function: Ext2AcqReadAhead()
-*
-* Description:
-*	Not really a fast-io operation. Used by the NT Cache Mgr to acquire FSD
-*	resources before performing a read-ahead operation.
-*	NOTE: this function really must succeed since the Cache Manager will
-*			typically ignore failure and continue on ...
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE (Cache Manager does not tolerate FALSE well)
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2AcqReadAhead(
-IN PVOID						Context,
-IN BOOLEAN						Wait)
-{
-
-	BOOLEAN				ReturnedStatus = TRUE;
-
-	PtrExt2FCB			PtrFCB = NULL;
-	PtrExt2CCB			PtrCCB = NULL;
-	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
-
-	// The context is whatever we passed to the Cache Manager when invoking
-	// the CcInitializeCacheMaps() function. In the case of the sample FSD
-	// implementation, this context is a pointer to the CCB structure.
-	
-	ASSERT(Context);
-	PtrCCB = (PtrExt2CCB)(Context);
-	ASSERT(PtrCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_CCB);
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2AcqReadAhead", 0);
-	if( PtrCCB && PtrCCB->PtrFileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", PtrCCB->PtrFileObject );
-	}
-
-	PtrFCB = PtrCCB->PtrFCB;
-	ASSERT(PtrFCB);
-
-	AssertFCB( PtrFCB );
 /*
-	if( PtrFCB->NodeIdentifier.NodeType != EXT2_NODE_TYPE_FCB )
-	{
-		//	Ext2BreakPoint();
-		DebugTrace(DEBUG_TRACE_ERROR,   "~~~[FastIO call]~~~  Invalid FCB...", 0);
-		return TRUE;
-	}	*/
+ * COPYRIGHT:        See COPYRIGHT.TXT
+ * PROJECT:          Ext2 File System Driver for WinNT/2K/XP
+ * FILE:             fastio.c
+ * PROGRAMMER:       Matt Wu <mattwu@163.com>
+ * HOMEPAGE:         http://www.ext2fsd.com
+ * UPDATE HISTORY:
+ */
 
-	PtrReqdFCB = &(PtrFCB->NTRequiredFCB);
+/* INCLUDES *****************************************************************/
 
-	// Acquire the MainResource in the FCB shared.
-	// Note: The read-ahead thread typically always supplies WAIT set to TRUE.
-	DebugTrace(DEBUG_TRACE_MISC,"*** Attempting to acquire FCB Shared [FastIo]", 0);
+#include "ext2fs.h"
 
-	DebugTraceState( "FCBMain   AC:0x%LX   SW:0x%LX   EX:0x%LX   [FastIo]", PtrReqdFCB->MainResource.ActiveCount, PtrReqdFCB->MainResource.NumberOfExclusiveWaiters, PtrReqdFCB->MainResource.NumberOfSharedWaiters );
-	if (!ExAcquireResourceSharedLite(&(PtrReqdFCB->MainResource), Wait)) 
-	{
-		DebugTrace(DEBUG_TRACE_MISC,"*** Attempt to acquire FCB FAILED [FastIo]", 0);
-		ReturnedStatus = FALSE;
-	}
-	else
-	{
-		DebugTrace(DEBUG_TRACE_MISC,"***  FCB acquired [FastIo]", 0);
-	}
+/* GLOBALS ***************************************************************/
 
-	// If your FSD needs to perform some special preparations in anticipation
-	// of receving a read-ahead request, do so now.
+extern PEXT2_GLOBAL Ext2Global;
 
-	return ReturnedStatus;
-	
-}
+/* DEFINITIONS *************************************************************/
 
+#ifdef ALLOC_PRAGMA
 
+#pragma alloc_text(PAGE, Ext2FastIoRead)
+#pragma alloc_text(PAGE, Ext2FastIoWrite)
+#pragma alloc_text(PAGE, Ext2FastIoCheckIfPossible)
+#pragma alloc_text(PAGE, Ext2FastIoQueryBasicInfo)
+#pragma alloc_text(PAGE, Ext2FastIoQueryStandardInfo)
+#pragma alloc_text(PAGE, Ext2FastIoQueryNetworkOpenInfo)
+#pragma alloc_text(PAGE, Ext2FastIoLock)
+#pragma alloc_text(PAGE, Ext2FastIoUnlockSingle)
+#pragma alloc_text(PAGE, Ext2FastIoUnlockAll)
+#pragma alloc_text(PAGE, Ext2FastIoUnlockAll)
+#endif
 
-/*************************************************************************
-*
-* Function: Ext2RelReadAhead()
-*
-* Description:
-*	Not really a fast-io operation. Used by the NT Cache Mgr to release FSD
-*	resources after performing a read-ahead operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: None
-*
-*************************************************************************/
-void NTAPI Ext2RelReadAhead(
-IN PVOID							Context)
+FAST_IO_POSSIBLE
+Ext2IsFastIoPossible(
+    IN PEXT2_FCB Fcb
+)
 {
-	PtrExt2FCB			PtrFCB = NULL;
-	PtrExt2CCB			PtrCCB = NULL;
-	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
+    FAST_IO_POSSIBLE IsPossible = FastIoIsNotPossible;
 
+    if (!Fcb || !FsRtlOplockIsFastIoPossible(&Fcb->Oplock))
+        return IsPossible;
 
-	// The context is whatever we passed to the Cache Manager when invoking
-	// the CcInitializeCacheMaps() function. In the case of the sample FSD
-	// implementation, this context is a pointer to the CCB structure.
+    IsPossible = FastIoIsQuestionable;
 
-	ASSERT(Context);
-	PtrCCB = (PtrExt2CCB)(Context);
-	ASSERT(PtrCCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_CCB);
+    if (!FsRtlAreThereCurrentFileLocks(&Fcb->FileLockAnchor)) {
+        if (!IsVcbReadOnly(Fcb->Vcb) && !FlagOn(Fcb->Vcb->Flags, VCB_VOLUME_LOCKED)) {
+            IsPossible = FastIoIsPossible;
+        }
+    }
 
-	PtrFCB = PtrCCB->PtrFCB;
-	
-	AssertFCB( PtrFCB );
-	
-	//	ASSERT(PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_FCB );
-
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2RelReadAhead", 0);
-	if( PtrCCB && PtrCCB->PtrFileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", PtrCCB->PtrFileObject );
-	}
-
-/*	if( PtrFCB->NodeIdentifier.NodeType != EXT2_NODE_TYPE_FCB )
-	{
-		//	Ext2BreakPoint();
-		DebugTrace(DEBUG_TRACE_ERROR,   "~~~[FastIO call]~~~  Invalid FCB...", 0);
-		return;
-	}	*/
-
-	PtrReqdFCB = &(PtrFCB->NTRequiredFCB);
-
-
-	// Release the acquired resource.
-	Ext2ReleaseResource(&(PtrReqdFCB->MainResource));
-	DebugTrace(DEBUG_TRACE_MISC, "*** FCB Released [FastIo]", 0);
-	DebugTraceState( "FCBMain   AC:0x%LX   SW:0x%LX   EX:0x%LX   [FastIo]", 
-		PtrReqdFCB->MainResource.ActiveCount, 
-		PtrReqdFCB->MainResource.NumberOfExclusiveWaiters, 
-		PtrReqdFCB->MainResource.NumberOfSharedWaiters );
-
-	// Of course, your FSD should undo whatever else seems appropriate at this
-	// time.
-
-	return;
+    return IsPossible;
 }
 
 
-/* the remaining are only valid under NT Version 4.0 and later */
-#if(_WIN32_WINNT >= 0x0400)
-
-
-/*************************************************************************
-*
-* Function: Ext2FastIoQueryNetInfo()
-*
-* Description:
-*	Get information requested by a redirector across the network. This call
-*	will originate from the LAN Manager server.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoQueryNetInfo(
-IN PFILE_OBJECT									FileObject,
-IN BOOLEAN											Wait,
-OUT PFILE_NETWORK_OPEN_INFORMATION 			Buffer,
-OUT PIO_STATUS_BLOCK 							IoStatus,
-IN PDEVICE_OBJECT									DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoCheckIfPossible (
+    IN PFILE_OBJECT         FileObject,
+    IN PLARGE_INTEGER       FileOffset,
+    IN ULONG                Length,
+    IN BOOLEAN              Wait,
+    IN ULONG                LockKey,
+    IN BOOLEAN              CheckForReadOperation,
+    OUT PIO_STATUS_BLOCK    IoStatus,
+    IN PDEVICE_OBJECT       DeviceObject
+)
 {
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
+    BOOLEAN          bPossible = FastIoIsNotPossible;
+    PEXT2_FCB        Fcb;
+    PEXT2_CCB        Ccb;
+    LARGE_INTEGER    lLength;
 
-	FsRtlEnterFileSystem();
-	
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2FastIoQueryNetInfo", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+    lLength.QuadPart = Length;
 
-	try 
-	{
+    _SEH2_TRY {
 
-		try 
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	} 
-	finally 
-	{
+        FsRtlEnterFileSystem();
 
-	}
-	
-	FsRtlExitFileSystem();
+        _SEH2_TRY {
 
-	return(ReturnedStatus);
+            if (IsExt2FsDevice(DeviceObject)) {
+                _SEH2_LEAVE;
+            }
+
+            Fcb = (PEXT2_FCB) FileObject->FsContext;
+            if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB) {
+                _SEH2_LEAVE;
+            }
+
+            ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+                   (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
+
+            if (IsDirectory(Fcb)) {
+                _SEH2_LEAVE;
+            }
+
+            Ccb = (PEXT2_CCB) FileObject->FsContext2;
+            if (Ccb == NULL) {
+                _SEH2_LEAVE;
+            }
+
+            if (CheckForReadOperation) {
+
+                bPossible = FsRtlFastCheckLockForRead(
+                                &Fcb->FileLockAnchor,
+                                FileOffset,
+                                &lLength,
+                                LockKey,
+                                FileObject,
+                                PsGetCurrentProcess());
+
+            } else {
+
+                if (!IsVcbReadOnly(Fcb->Vcb)) {
+                    bPossible = FsRtlFastCheckLockForWrite(
+                                    &Fcb->FileLockAnchor,
+                                    FileOffset,
+                                    &lLength,
+                                    LockKey,
+                                    FileObject,
+                                    PsGetCurrentProcess());
+                }
+            }
+
+#if EXT2_DEBUG
+            DEBUG(DL_INF, ("Ext2FastIIOCheckPossible: %s %s %wZ\n",
+                           Ext2GetCurrentProcessName(),
+                           "FASTIO_CHECK_IF_POSSIBLE",
+                           &Fcb->Mcb->FullName
+                          ));
+
+            DEBUG(DL_INF, (
+                      "Ext2FastIIOCheckPossible: Offset: %I64xg Length: %xh Key: %u %s %s\n",
+                      FileOffset->QuadPart,
+                      Length,
+                      LockKey,
+                      (CheckForReadOperation ? "CheckForReadOperation:" :
+                       "CheckForWriteOperation:"),
+                      (bPossible ? "Succeeded" : "Failed")));
+#endif
+
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            bPossible = FastIoIsNotPossible;
+        } _SEH2_END;
+
+    } _SEH2_FINALLY {
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+    return bPossible;
 }
 
 
-/*************************************************************************
-*
-* Function: Ext2FastIoMdlRead()
-*
-* Description:
-*	Bypass the traditional IRP method to perform a MDL read operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoMdlRead(
-IN PFILE_OBJECT				FileObject,
-IN PLARGE_INTEGER				FileOffset,
-IN ULONG							Length,
-IN ULONG							LockKey,
-OUT PMDL							*MdlChain,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoRead (IN PFILE_OBJECT         FileObject,
+                IN PLARGE_INTEGER       FileOffset,
+                IN ULONG                Length,
+                IN BOOLEAN              Wait,
+                IN ULONG                LockKey,
+                OUT PVOID               Buffer,
+                OUT PIO_STATUS_BLOCK    IoStatus,
+                IN PDEVICE_OBJECT       DeviceObject)
 {
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
+    PEXT2_FCB    Fcb;
+    BOOLEAN      Status = FALSE;
 
-	FsRtlEnterFileSystem();
+    Fcb = (PEXT2_FCB) FileObject->FsContext;
+    if (Fcb == NULL) {
+        return FALSE;
+    }
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2FastIoMdlRead", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+    ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+           (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
 
-	try 
-	{
+    Status = FsRtlCopyRead (
+                 FileObject, FileOffset, Length, Wait,
+                 LockKey, Buffer, IoStatus, DeviceObject);
 
-		try 
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-	
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	} 
-	finally 
-	{
+    DEBUG(DL_IO, ("Ext2FastIoRead: %wZ Offset: %I64xh Length: %xh Key: %u Status: %d\n",
+                  &Fcb->Mcb->ShortName, FileOffset->QuadPart, Length, LockKey, Status));
 
-	}
-	
-	FsRtlExitFileSystem();
-
-	return(ReturnedStatus);
+    return Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2FastIoMdlReadComplete()
-*
-* Description:
-*	Bypass the traditional IRP method to inform the NT Cache Manager and the
-*	FSD that the caller no longer requires the data locked in the system cache
-*	or the MDL to stay around anymore ..
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoMdlReadComplete(
-IN PFILE_OBJECT				FileObject,
-OUT PMDL							MdlChain,
-IN PDEVICE_OBJECT				DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoWrite (
+    IN PFILE_OBJECT         FileObject,
+    IN PLARGE_INTEGER       FileOffset,
+    IN ULONG                Length,
+    IN BOOLEAN              Wait,
+    IN ULONG                LockKey,
+    OUT PVOID               Buffer,
+    OUT PIO_STATUS_BLOCK    IoStatus,
+    IN PDEVICE_OBJECT       DeviceObject)
 {
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
+    PEXT2_FCB   Fcb = NULL;
+    BOOLEAN     Status = FALSE;
+    BOOLEAN     Locked = FALSE;
 
-	FsRtlEnterFileSystem();
+    Fcb = (PEXT2_FCB) FileObject->FsContext;
+    if (Fcb == NULL)
+        return FALSE;
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2FastIoMdlReadComplete", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+    _SEH2_TRY {
 
-	try 
-	{
+        FsRtlEnterFileSystem();
 
-		try 
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-		
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-	
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-	
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
+        ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+               (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
 
-		}
-	} 
-	finally 
-	{
+        if (IsVcbReadOnly(Fcb->Vcb)) {
+            _SEH2_LEAVE;
+        }
 
-	}
-	
-	FsRtlExitFileSystem();
+        ExAcquireResourceSharedLite(&Fcb->MainResource, TRUE);
+        Locked = TRUE;
 
-	return(ReturnedStatus);
+        if (IsWritingToEof(*FileOffset) ||
+            Fcb->Header.ValidDataLength.QuadPart < FileOffset->QuadPart ||
+            Fcb->Header.FileSize.QuadPart < FileOffset->QuadPart + Length ) {
+            Status = FALSE;
+        } else {
+            ExReleaseResourceLite(&Fcb->MainResource);
+            Locked = FALSE;
+            Status = FsRtlCopyWrite(FileObject, FileOffset, Length, Wait,
+                                    LockKey, Buffer, IoStatus, DeviceObject);
+        }
+
+    } _SEH2_FINALLY {
+
+        if (Locked) {
+            ExReleaseResourceLite(&Fcb->MainResource);
+        }
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+    DEBUG(DL_IO, ("Ext2FastIoWrite: %wZ Offset: %I64xh Length: %xh Key: %xh Status=%d\n",
+                  &Fcb->Mcb->ShortName,  FileOffset->QuadPart, Length, LockKey, Status));
+
+    return Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2FastIoPrepareMdlWrite()
-*
-* Description:
-*	Bypass the traditional IRP method to prepare for a MDL write operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoPrepareMdlWrite(
-IN PFILE_OBJECT				FileObject,
-IN PLARGE_INTEGER				FileOffset,
-IN ULONG							Length,
-IN ULONG							LockKey,
-OUT PMDL							*MdlChain,
-OUT PIO_STATUS_BLOCK			IoStatus,
-IN PDEVICE_OBJECT				DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoQueryBasicInfo (
+    IN PFILE_OBJECT             FileObject,
+    IN BOOLEAN                  Wait,
+    OUT PFILE_BASIC_INFORMATION Buffer,
+    OUT PIO_STATUS_BLOCK        IoStatus,
+    IN PDEVICE_OBJECT           DeviceObject)
 {
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
+    PEXT2_FCB   Fcb = NULL;
+    BOOLEAN     Status = FALSE;
+    BOOLEAN     FcbMainResourceAcquired = FALSE;
 
-	FsRtlEnterFileSystem();
+    _SEH2_TRY {
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2FastIoPrepareMdlWrite", 0);
-	if( FileObject )
-	{
-		DebugTrace(  DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+        FsRtlEnterFileSystem();
 
-	try 
-	{
-		try 
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-		
-		} except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) {
-	
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-	
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
+        _SEH2_TRY {
 
-		}
-	} 
-	finally 
-	{
+            if (IsExt2FsDevice(DeviceObject)) {
+                IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+                _SEH2_LEAVE;
+            }
 
-	}
-	
-	FsRtlExitFileSystem();
+            Fcb = (PEXT2_FCB) FileObject->FsContext;
+            if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB) {
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
 
-	return(ReturnedStatus);
+            ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+                   (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
+#if EXT2_DEBUG
+            DEBUG(DL_INF, (
+                      "Ext2FastIoQueryBasicInfo: %s %s %wZ\n",
+                      Ext2GetCurrentProcessName(),
+                      "FASTIO_QUERY_BASIC_INFO",
+                      &Fcb->Mcb->FullName
+                  ));
+#endif
+            if (!IsFlagOn(Fcb->Flags, FCB_PAGE_FILE)) {
+                if (!ExAcquireResourceSharedLite(
+                            &Fcb->MainResource,
+                            Wait)) {
+                    _SEH2_LEAVE;
+                }
+                FcbMainResourceAcquired = TRUE;
+            }
+
+            RtlZeroMemory(Buffer, sizeof(FILE_BASIC_INFORMATION));
+
+            /*
+            typedef struct _FILE_BASIC_INFORMATION {
+            LARGE_INTEGER   CreationTime;
+            LARGE_INTEGER   LastAccessTime;
+            LARGE_INTEGER   LastWriteTime;
+            LARGE_INTEGER   ChangeTime;
+            ULONG           FileAttributes;
+            } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+            */
+
+            if (IsRoot(Fcb)) {
+                Buffer->CreationTime = Buffer->LastAccessTime =
+                                           Buffer->LastWriteTime = Buffer->ChangeTime = Ext2NtTime(0);
+            } else {
+                Buffer->CreationTime = Fcb->Mcb->CreationTime;
+                Buffer->LastAccessTime = Fcb->Mcb->LastAccessTime;
+                Buffer->LastWriteTime = Fcb->Mcb->LastWriteTime;
+                Buffer->ChangeTime = Fcb->Mcb->ChangeTime;
+            }
+
+            Buffer->FileAttributes = Fcb->Mcb->FileAttr;
+            if (Buffer->FileAttributes == 0) {
+                Buffer->FileAttributes = FILE_ATTRIBUTE_NORMAL;
+            }
+
+            IoStatus->Information = sizeof(FILE_BASIC_INFORMATION);
+            IoStatus->Status = STATUS_SUCCESS;
+
+            Status =  TRUE;
+
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            IoStatus->Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
+
+    } _SEH2_FINALLY {
+
+        if (FcbMainResourceAcquired) {
+            ExReleaseResourceLite(&Fcb->MainResource);
+        }
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+#if EXT2_DEBUG
+
+    if (Status == FALSE) {
+
+        DEBUG(DL_ERR, ("Ext2FastIoQueryBasicInfo: %s %s Status: FALSE ***\n",
+                       Ext2GetCurrentProcessName(),
+                       "FASTIO_QUERY_BASIC_INFO"));
+
+    } else if (IoStatus->Status != STATUS_SUCCESS) {
+
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoQueryBasicInfo: %s %s Status: %#x ***\n",
+                  Ext2FastIoQueryBasicInfo,
+                  "FASTIO_QUERY_BASIC_INFO",
+                  IoStatus->Status
+              ));
+    }
+#endif
+
+    return Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2FastIoMdlWriteComplete()
-*
-* Description:
-*	Bypass the traditional IRP method to inform the NT Cache Manager and the
-*	FSD that the caller has updated the contents of the MDL. This data can
-*	now be asynchronously written out to secondary storage by the Cache Mgr.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: TRUE/FALSE
-*
-*************************************************************************/
-BOOLEAN NTAPI Ext2FastIoMdlWriteComplete(
-IN PFILE_OBJECT				FileObject,
-IN PLARGE_INTEGER				FileOffset,
-OUT PMDL							MdlChain,
-IN PDEVICE_OBJECT				DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoQueryStandardInfo (
+    IN PFILE_OBJECT                 FileObject,
+    IN BOOLEAN                      Wait,
+    OUT PFILE_STANDARD_INFORMATION  Buffer,
+    OUT PIO_STATUS_BLOCK            IoStatus,
+    IN PDEVICE_OBJECT               DeviceObject
+)
 {
-	BOOLEAN				ReturnedStatus = FALSE;		// fast i/o failed/not allowed
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
 
-	FsRtlEnterFileSystem();
+    BOOLEAN     Status = FALSE;
+    PEXT2_VCB   Vcb;
+    PEXT2_FCB   Fcb;
+    BOOLEAN     FcbMainResourceAcquired = FALSE;
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2FastIoMdlWriteComplete", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ, "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+    _SEH2_TRY {
 
-	try
-	{
+        FsRtlEnterFileSystem();
 
-		try
-		{
-	
-			// See description in Ext2FastIoRead() before filling-in the
-			// stub here.
-			NOTHING;
-		
-		}
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally
-	{
+        _SEH2_TRY {
 
-	}
-	
-	FsRtlExitFileSystem();
+            if (IsExt2FsDevice(DeviceObject)) {
+                IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+                _SEH2_LEAVE;
+            }
 
-	return(ReturnedStatus);
+            Fcb = (PEXT2_FCB) FileObject->FsContext;
+            if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB)  {
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
+
+            ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+                   (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
+
+#if EXT2_DEBUG
+            DEBUG(DL_INF, (
+                      "Ext2FastIoQueryStandardInfo: %s %s %wZ\n",
+                      Ext2GetCurrentProcessName(),
+                      "FASTIO_QUERY_STANDARD_INFO",
+                      &Fcb->Mcb->FullName ));
+#endif
+            Vcb = Fcb->Vcb;
+
+            if (!IsFlagOn(Fcb->Flags, FCB_PAGE_FILE)) {
+                if (!ExAcquireResourceSharedLite(
+                            &Fcb->MainResource,
+                            Wait        )) {
+                    _SEH2_LEAVE;
+                }
+                FcbMainResourceAcquired = TRUE;
+            }
+
+            RtlZeroMemory(Buffer, sizeof(FILE_STANDARD_INFORMATION));
+
+            /*
+            typedef struct _FILE_STANDARD_INFORMATION {
+            LARGE_INTEGER   AllocationSize;
+            LARGE_INTEGER   EndOfFile;
+            ULONG           NumberOfLinks;
+            BOOLEAN         DeletePending;
+            BOOLEAN         Directory;
+            } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+            */
+
+            Buffer->NumberOfLinks = Fcb->Inode->i_nlink;
+            Buffer->DeletePending = IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING);
+
+            if (IsDirectory(Fcb)) {
+                Buffer->Directory = IsDirectory(Fcb);
+                Buffer->AllocationSize.QuadPart = 0;
+                Buffer->EndOfFile.QuadPart = 0;
+            } else {
+                Buffer->Directory = FALSE;
+                Buffer->AllocationSize = Fcb->Header.AllocationSize;
+                Buffer->EndOfFile = Fcb->Header.FileSize;
+            }
+
+            IoStatus->Information = sizeof(FILE_STANDARD_INFORMATION);
+            IoStatus->Status = STATUS_SUCCESS;
+#if EXT2_DEBUG
+            DEBUG(DL_INF, ( "Ext2FastIoQueryStandInfo: AllocatieonSize = %I64xh FileSize = %I64xh\n",
+                            Buffer->AllocationSize.QuadPart, Buffer->EndOfFile.QuadPart));
+#endif
+            Status =  TRUE;
+
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            IoStatus->Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
+
+    } _SEH2_FINALLY {
+
+        if (FcbMainResourceAcquired) {
+            ExReleaseResourceLite(&Fcb->MainResource);
+        }
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+#if EXT2_DEBUG
+    if (Status == FALSE) {
+        DEBUG(DL_INF, (
+                  "Ext2FastIoQueryStandardInfo: %s %s Status: FALSE ***\n",
+                  Ext2GetCurrentProcessName(),
+                  "FASTIO_QUERY_STANDARD_INFO"            ));
+    } else if (IoStatus->Status != STATUS_SUCCESS) {
+        DEBUG(DL_INF, (
+                  "Ext2FastIoQueryStandardInfo: %s %s Status: %#x ***\n",
+                  Ext2GetCurrentProcessName(),
+                  "FASTIO_QUERY_STANDARD_INFO",
+                  IoStatus->Status            ));
+    }
+#endif
+
+    return Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2FastIoAcqModWrite()
-*
-* Description:
-*	Not really a fast-io operation. Used by the VMM to acquire FSD resources
-*	before initiating a write operation via the Modified Page/Block Writer.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: STATUS_SUCCESS/Error (try not to return an error, will 'ya ? :-)
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2FastIoAcqModWrite(
-IN PFILE_OBJECT					FileObject,
-IN PLARGE_INTEGER					EndingOffset,
-OUT PERESOURCE						*ResourceToRelease,
-IN PDEVICE_OBJECT					DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoLock (
+    IN PFILE_OBJECT         FileObject,
+    IN PLARGE_INTEGER       FileOffset,
+    IN PLARGE_INTEGER       Length,
+    IN PEPROCESS            Process,
+    IN ULONG                Key,
+    IN BOOLEAN              FailImmediately,
+    IN BOOLEAN              ExclusiveLock,
+    OUT PIO_STATUS_BLOCK    IoStatus,
+    IN PDEVICE_OBJECT       DeviceObject
+)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
+    BOOLEAN     Status = FALSE;
+    PEXT2_FCB   Fcb;
 
-	FsRtlEnterFileSystem();
+    _SEH2_TRY {
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,"~~~[FastIO call]~~~  Ext2FastIoAcqModWrite", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+        FsRtlEnterFileSystem();
 
-	try
-	{
-		try
-		{
+        _SEH2_TRY {
 
-			// You must determine which resource(s) you would like to
-			// acquire at this time. You know that a write is imminent;
-			// you will probably therefore acquire appropriate resources
-			// exclusively.
+            if (IsExt2FsDevice(DeviceObject)) {
+                IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+                _SEH2_LEAVE;
+            }
 
-			// You must first get the FCB and CCB pointers from the file object
-			// that is passed in to this function (as an argument). Note that
-			// the ending offset (when examined in conjunction with current valid data
-			// length) may help you in determining the appropriate resource(s) to acquire.
+            Fcb = (PEXT2_FCB) FileObject->FsContext;
+            if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB) {
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
 
-			// For example, if the ending offset is beyond current valid data length,
-			// you may decide to acquire *both* the MainResource and the PagingIoResource
-			// exclusively; otherwise, you may decide simply to acquire the PagingIoResource.
+            ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+                   (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
 
-			// Consult the text for more information on synchronization in FSDs.
+            if (IsDirectory(Fcb)) {
+                DbgBreak();
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
+#if EXT2_DEBUG
+            DEBUG(DL_INF, (
+                      "Ext2FastIoLock: %s %s %wZ\n",
+                      Ext2GetCurrentProcessName(),
+                      "FASTIO_LOCK",
+                      &Fcb->Mcb->FullName        ));
 
-			// One final note; the VMM expects that you will return a pointer to
-			// the resource that you acquired (single return value). This pointer
-			// will be returned back to you in the release call (below).
+            DEBUG(DL_INF, (
+                      "Ext2FastIoLock: Offset: %I64xh Length: %I64xh Key: %u %s%s\n",
+                      FileOffset->QuadPart,
+                      Length->QuadPart,
+                      Key,
+                      (FailImmediately ? "FailImmediately " : ""),
+                      (ExclusiveLock ? "ExclusiveLock " : "") ));
+#endif
 
-			NOTHING;
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally
-	{
+            if (!FsRtlOplockIsFastIoPossible(&Fcb->Oplock)) {
+                _SEH2_LEAVE;
+            }
 
-	}
-	
-	FsRtlExitFileSystem();
+            Status = FsRtlFastLock(
+                         &Fcb->FileLockAnchor,
+                         FileObject,
+                         FileOffset,
+                         Length,
+                         Process,
+                         Key,
+                         FailImmediately,
+                         ExclusiveLock,
+                         IoStatus,
+                         NULL,
+                         FALSE);
 
-	return(RC);
+            if (Status) {
+                Fcb->Header.IsFastIoPossible = Ext2IsFastIoPossible(Fcb);
+            }
+
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            IoStatus->Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
+
+    } _SEH2_FINALLY {
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+#if EXT2_DEBUG
+    if (Status == FALSE) {
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoLock: %s %s *** Status: FALSE ***\n",
+                  (PUCHAR) Process + ProcessNameOffset,
+                  "FASTIO_LOCK"
+              ));
+    } else if (IoStatus->Status != STATUS_SUCCESS) {
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoLock: %s %s *** Status: %s (%#x) ***\n",
+                  (PUCHAR) Process + ProcessNameOffset,
+                  "FASTIO_LOCK",
+                  Ext2NtStatusToString(IoStatus->Status),
+                  IoStatus->Status
+              ));
+    }
+#endif
+
+    return Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2FastIoRelModWrite()
-*
-* Description:
-*	Not really a fast-io operation. Used by the VMM to release FSD resources
-*	after processing a modified page/block write operation.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: STATUS_SUCCESS/Error (an error returned here is really not expected!)
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2FastIoRelModWrite(
-IN PFILE_OBJECT				FileObject,
-IN PERESOURCE					ResourceToRelease,
-IN PDEVICE_OBJECT				DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoUnlockSingle (
+    IN PFILE_OBJECT         FileObject,
+    IN PLARGE_INTEGER       FileOffset,
+    IN PLARGE_INTEGER       Length,
+    IN PEPROCESS            Process,
+    IN ULONG                Key,
+    OUT PIO_STATUS_BLOCK    IoStatus,
+    IN PDEVICE_OBJECT       DeviceObject
+)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
+    BOOLEAN     Status = FALSE;
+    PEXT2_FCB   Fcb;
 
-	FsRtlEnterFileSystem();
+    _SEH2_TRY {
 
-   	DebugTrace( DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoRelModWrite", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+        FsRtlEnterFileSystem();
 
-	try
-	{
-		try
-		{
+        _SEH2_TRY {
 
-			// The MPW has complete the write for modified pages and therefore
-			// wants you to release pre-acquired resource(s).
+            if (IsExt2FsDevice(DeviceObject)) {
+                IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+                _SEH2_LEAVE;
+            }
 
-			// You must undo here whatever it is that you did in the
-			// Ext2FastIoAcqModWrite() call above.
+            Fcb = (PEXT2_FCB) FileObject->FsContext;
+            if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB) {
+                DbgBreak();
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
 
-			NOTHING;
-	
-		}
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally
-	{
+            ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+                   (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
 
-	}
-	
-	FsRtlExitFileSystem();
+            if (IsDirectory(Fcb)) {
+                DbgBreak();
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
 
-	return(RC);
+#if EXT2_DEBUG
+            DEBUG(DL_INF, (
+                      "Ext2FastIoUnlockSingle: %s %s %wZ\n",
+                      (PUCHAR) Process + ProcessNameOffset,
+                      "FASTIO_UNLOCK_SINGLE",
+                      &Fcb->Mcb->FullName        ));
+
+            DEBUG(DL_INF, (
+                      "Ext2FastIoUnlockSingle: Offset: %I64xh Length: %I64xh Key: %u\n",
+                      FileOffset->QuadPart,
+                      Length->QuadPart,
+                      Key     ));
+#endif
+
+            if (!FsRtlOplockIsFastIoPossible(&Fcb->Oplock)) {
+                _SEH2_LEAVE;
+            }
+
+            IoStatus->Status = FsRtlFastUnlockSingle(
+                                   &Fcb->FileLockAnchor,
+                                   FileObject,
+                                   FileOffset,
+                                   Length,
+                                   Process,
+                                   Key,
+                                   NULL,
+                                   FALSE);
+
+            IoStatus->Information = 0;
+            Status =  TRUE;
+
+            Fcb->Header.IsFastIoPossible = Ext2IsFastIoPossible(Fcb);
+
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            IoStatus->Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
+
+    } _SEH2_FINALLY {
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+#if EXT2_DEBUG
+    if (Status == FALSE) {
+
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoUnlockSingle: %s %s *** Status: FALSE ***\n",
+                  (PUCHAR) Process + ProcessNameOffset,
+                  "FASTIO_UNLOCK_SINGLE"          ));
+    } else if (IoStatus->Status != STATUS_SUCCESS) {
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoUnlockSingle: %s %s *** Status: %s (%#x) ***\n",
+                  (PUCHAR) Process + ProcessNameOffset,
+                  "FASTIO_UNLOCK_SINGLE",
+                  Ext2NtStatusToString(IoStatus->Status),
+                  IoStatus->Status            ));
+    }
+#endif
+
+    return Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2FastIoAcqCcFlush()
-*
-* Description:
-*	Not really a fast-io operation. Used by the NT Cache Mgr to acquire FSD
-*	resources before performing a CcFlush() operation on a specific file
-*	stream.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: STATUS_SUCCESS/Error
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2FastIoAcqCcFlush(
-IN PFILE_OBJECT			FileObject,
-IN PDEVICE_OBJECT			DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoUnlockAll (
+    IN PFILE_OBJECT         FileObject,
+    IN PEPROCESS            Process,
+    OUT PIO_STATUS_BLOCK    IoStatus,
+    IN PDEVICE_OBJECT       DeviceObject)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
+    BOOLEAN     Status = FALSE;
+    PEXT2_FCB   Fcb;
 
-	FsRtlEnterFileSystem();
+    _SEH2_TRY {
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoAcqCcFlush", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+        FsRtlEnterFileSystem();
 
-	try
-	{
-		try
-		{
-			// Acquire appropriate resources that will allow correct synchronization
-			// with a flush call (and avoid deadlock).
-			NOTHING;
-	
-		}
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally
-	{
+        _SEH2_TRY {
 
-	}
-	
-	FsRtlExitFileSystem();
+            if (IsExt2FsDevice(DeviceObject)) {
+                IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+                _SEH2_LEAVE;
+            }
 
-	return(RC);
+            Fcb = (PEXT2_FCB) FileObject->FsContext;
+            if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB) {
+                DbgBreak();
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
+
+            ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+                   (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
+
+            if (IsDirectory(Fcb)) {
+                DbgBreak();
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
+#if EXT2_DEBUG
+            DEBUG(DL_INF, (
+                      "Ext2FastIoUnlockSingle: %s %s %wZ\n",
+                      (PUCHAR) Process + ProcessNameOffset,
+                      "FASTIO_UNLOCK_ALL",
+                      &Fcb->Mcb->FullName
+                  ));
+#endif
+
+            if (!FsRtlOplockIsFastIoPossible(&Fcb->Oplock)) {
+                _SEH2_LEAVE;
+            }
+
+            IoStatus->Status = FsRtlFastUnlockAll(
+                                   &Fcb->FileLockAnchor,
+                                   FileObject,
+                                   Process,
+                                   NULL        );
+
+            IoStatus->Information = 0;
+            Status =  TRUE;
+
+            Fcb->Header.IsFastIoPossible = Ext2IsFastIoPossible(Fcb);
+
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            IoStatus->Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
+
+    } _SEH2_FINALLY {
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+#if EXT2_DEBUG
+    if (Status == FALSE) {
+
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoUnlockSingle: %s %s *** Status: FALSE ***\n",
+                  (PUCHAR) Process + ProcessNameOffset,
+                  "FASTIO_UNLOCK_ALL"
+              ));
+    } else if (IoStatus->Status != STATUS_SUCCESS) {
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoUnlockSingle: %s %s *** Status: %s (%#x) ***\n",
+                  (PUCHAR) Process + ProcessNameOffset,
+                  "FASTIO_UNLOCK_ALL",
+                  Ext2NtStatusToString(IoStatus->Status),
+                  IoStatus->Status
+              ));
+    }
+#endif
+
+    return Status;
 }
 
-
-/*************************************************************************
-*
-* Function: Ext2FastIoRelCcFlush()
-*
-* Description:
-*	Not really a fast-io operation. Used by the NT Cache Mgr to acquire FSD
-*	resources before performing a CcFlush() operation on a specific file
-*	stream.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: STATUS_SUCCESS/Error
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2FastIoRelCcFlush(
-IN PFILE_OBJECT			FileObject,
-IN PDEVICE_OBJECT			DeviceObject)
+BOOLEAN NTAPI
+Ext2FastIoUnlockAllByKey (
+    IN PFILE_OBJECT         FileObject,
+    IN PEPROCESS            Process,
+    IN ULONG                Key,
+    OUT PIO_STATUS_BLOCK    IoStatus,
+    IN PDEVICE_OBJECT       DeviceObject
+)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
+    BOOLEAN     Status = FALSE;
+    PEXT2_FCB   Fcb;
 
-	FsRtlEnterFileSystem();
+    _SEH2_TRY {
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY,   "~~~[FastIO call]~~~  Ext2FastIoRelCcFlush", 0);
-	if( FileObject )
-	{
-		DebugTrace(DEBUG_TRACE_FILE_OBJ,  "###### File Pointer 0x%LX [FastIO]", FileObject);
-	}
+        FsRtlEnterFileSystem();
 
-	try
-	{
-		try
-		{
-			// Release resources acquired in Ext2FastIoAcqCcFlush() above.
-			NOTHING;
-	
-		} 
-		except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-		{
-			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
-			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-		}
-	}
-	finally
-	{
+        _SEH2_TRY {
 
-	}
-	
-	FsRtlExitFileSystem();
+            if (IsExt2FsDevice(DeviceObject)) {
+                IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+                _SEH2_LEAVE;
+            }
 
-	return(RC);
+            Fcb = (PEXT2_FCB) FileObject->FsContext;
+            if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB) {
+                DbgBreak();
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
+
+            ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+                   (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
+
+            if (IsDirectory(Fcb)) {
+                DbgBreak();
+                IoStatus->Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
+
+#if EXT2_DEBUG
+            DEBUG(DL_INF, (
+                      "Ext2FastIoUnlockAllByKey: %s %s %wZ\n",
+                      (PUCHAR) Process + ProcessNameOffset,
+                      "FASTIO_UNLOCK_ALL_BY_KEY",
+                      &Fcb->Mcb->FullName
+                  ));
+
+            DEBUG(DL_INF, (
+                      "Ext2FastIoUnlockAllByKey: Key: %u\n",
+                      Key
+                  ));
+#endif
+
+            if (!FsRtlOplockIsFastIoPossible(&Fcb->Oplock)) {
+                _SEH2_LEAVE;
+            }
+
+            IoStatus->Status = FsRtlFastUnlockAllByKey(
+                                   &Fcb->FileLockAnchor,
+                                   FileObject,
+                                   Process,
+                                   Key,
+                                   NULL
+                               );
+
+            IoStatus->Information = 0;
+            Status =  TRUE;
+
+            Fcb->Header.IsFastIoPossible = Ext2IsFastIoPossible(Fcb);
+
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            IoStatus->Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
+
+    } _SEH2_FINALLY {
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+#if EXT2_DEBUG
+    if (Status == FALSE) {
+
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoUnlockAllByKey: %s %s *** Status: FALSE ***\n",
+                  (PUCHAR) Process + ProcessNameOffset,
+                  "FASTIO_UNLOCK_ALL_BY_KEY"
+              ));
+    } else if (IoStatus->Status != STATUS_SUCCESS) {
+
+        DEBUG(DL_ERR, (
+                  "Ext2FastIoUnlockAllByKey: %s %s *** Status: %s (%#x) ***\n",
+                  (PUCHAR) Process + ProcessNameOffset,
+                  "FASTIO_UNLOCK_ALL_BY_KEY",
+                  Ext2NtStatusToString(IoStatus->Status),
+                  IoStatus->Status
+              ));
+    }
+#endif
+
+    return Status;
 }
 
-#endif	//_WIN32_WINNT >= 0x0400
+
+BOOLEAN NTAPI
+Ext2FastIoQueryNetworkOpenInfo (
+    IN PFILE_OBJECT         FileObject,
+    IN BOOLEAN              Wait,
+    IN OUT PFILE_NETWORK_OPEN_INFORMATION PFNOI,
+    OUT PIO_STATUS_BLOCK    IoStatus,
+    IN PDEVICE_OBJECT       DeviceObject
+)
+{
+    BOOLEAN     bResult = FALSE;
+
+    PEXT2_FCB   Fcb = NULL;
+
+    BOOLEAN FcbResourceAcquired = FALSE;
+
+    _SEH2_TRY {
+
+        FsRtlEnterFileSystem();
+
+        if (IsExt2FsDevice(DeviceObject)) {
+            IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+            _SEH2_LEAVE;
+        }
+
+        Fcb = (PEXT2_FCB) FileObject->FsContext;
+        if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB) {
+            DbgBreak();
+            IoStatus->Status = STATUS_INVALID_PARAMETER;
+            _SEH2_LEAVE;
+        }
+
+        ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
+               (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
+
+#if EXT2_DEBUG
+        DEBUG(DL_INF, (
+                  "%-31s %wZ\n",
+                  "FASTIO_QUERY_NETWORK_OPEN_INFO",
+                  &Fcb->Mcb->FullName
+              ));
+#endif
+
+        if (FileObject->FsContext2) {
+            _SEH2_LEAVE;
+        }
+
+        if (!IsFlagOn(Fcb->Flags, FCB_PAGE_FILE)) {
+
+            if (!ExAcquireResourceSharedLite(
+                        &Fcb->MainResource,
+                        Wait
+                    )) {
+                _SEH2_LEAVE;
+            }
+
+            FcbResourceAcquired = TRUE;
+        }
+
+        if (IsDirectory(Fcb)) {
+            PFNOI->AllocationSize.QuadPart = 0;
+            PFNOI->EndOfFile.QuadPart = 0;
+        } else {
+            PFNOI->AllocationSize = Fcb->Header.AllocationSize;
+            PFNOI->EndOfFile      = Fcb->Header.FileSize;
+        }
+
+        PFNOI->FileAttributes = Fcb->Mcb->FileAttr;
+        if (PFNOI->FileAttributes == 0) {
+            PFNOI->FileAttributes = FILE_ATTRIBUTE_NORMAL;
+        }
+
+        if (IsRoot(Fcb)) {
+            PFNOI->CreationTime =
+                PFNOI->LastAccessTime =
+                    PFNOI->LastWriteTime =
+                        PFNOI->ChangeTime = Ext2NtTime(0);
+        } else {
+            PFNOI->CreationTime   = Fcb->Mcb->CreationTime;
+            PFNOI->LastAccessTime = Fcb->Mcb->LastAccessTime;
+            PFNOI->LastWriteTime  = Fcb->Mcb->LastWriteTime;
+            PFNOI->ChangeTime     = Fcb->Mcb->ChangeTime;
+        }
+
+        bResult = TRUE;
+
+        IoStatus->Status = STATUS_SUCCESS;
+        IoStatus->Information = sizeof(FILE_NETWORK_OPEN_INFORMATION);
+
+    } _SEH2_FINALLY {
+
+        if (FcbResourceAcquired) {
+            ExReleaseResourceLite(&Fcb->MainResource);
+        }
+
+        FsRtlExitFileSystem();
+    } _SEH2_END;
+
+    return bResult;
+}
