@@ -6,8 +6,8 @@
  */
 
 #include <kmt_test.h>
-
-#include <ndk/obfuncs.h>
+#define NDEBUG
+#include <debug.h>
 
 #define CheckObject(Handle, Pointers, Handles, Attrib, Access) do   \
 {                                                                   \
@@ -133,4 +133,79 @@ START_TEST(ObHandle)
         Status = ObCloseHandle(KernelDirectoryHandle, KernelMode);
         ok_eq_hex(Status, STATUS_SUCCESS);
     }
+
+    /* Tests for closing handles */
+    KmtStartSeh()
+        /* NtClose must accept everything */
+        DPRINT("Closing null handle (NtClose)\n");
+        Status = NtClose(NULL);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing null kernel handle (NtClose)\n");
+        Status = NtClose((HANDLE)0x80000000);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing -1 handle (NtClose)\n");
+        Status = NtClose((HANDLE)0x7FFFFFFF);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing -1 kernel handle (NtClose)\n");
+        Status = NtClose((HANDLE)0xFFFFFFFF);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing 123 handle (NtClose)\n");
+        Status = NtClose((HANDLE)123);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing 123 kernel handle (NtClose)\n");
+        Status = NtClose((HANDLE)(123 | 0x80000000));
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+
+        /* ObCloseHandle with UserMode accepts everything */
+        DPRINT("Closing null handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle(NULL, UserMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing null kernel handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle((HANDLE)0x80000000, UserMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing -1 handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle((HANDLE)0x7FFFFFFF, UserMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing -1 kernel handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle((HANDLE)0xFFFFFFFF, UserMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing 123 handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle((HANDLE)123, UserMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing 123 kernel handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle((HANDLE)(123 | 0x80000000), UserMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+
+        /* ZwClose only accepts 0 and -1 */
+        DPRINT("Closing null handle (ZwClose)\n");
+        Status = ZwClose(NULL);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing null kernel handle (ZwClose)\n");
+        Status = ZwClose((HANDLE)0x80000000);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        /* INVALID_KERNEL_HANDLE, 0x7FFFFFFF
+        Status = ZwClose((HANDLE)0x7FFFFFFF);*/
+        DPRINT("Closing -1 kernel handle (ZwClose)\n");
+        Status = ZwClose((HANDLE)0xFFFFFFFF);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        /* INVALID_KERNEL_HANDLE, 0x7B, 1, 0, 0
+        Status = ZwClose((HANDLE)123);
+        Status = ZwClose((HANDLE)(123 | 0x80000000));*/
+
+        /* ObCloseHandle with KernelMode accepts only 0 and -1 */
+        DPRINT("Closing null handle (ObCloseHandle, KernelMode)\n");
+        Status = ObCloseHandle(NULL, KernelMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing null kernel handle (ObCloseHandle, KernelMode)\n");
+        Status = ObCloseHandle((HANDLE)0x80000000, KernelMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        /* INVALID_KERNEL_HANDLE, 0x7FFFFFFF, 1, 0, 0
+        Status = ObCloseHandle((HANDLE)0x7FFFFFFF, KernelMode);*/
+        DPRINT("Closing -1 kernel handle (ObCloseHandle, KernelMode)\n");
+        Status = ObCloseHandle((HANDLE)0xFFFFFFFF, KernelMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        /* INVALID_KERNEL_HANDLE, 0x7B, 1, 0, 0
+        Status = ObCloseHandle((HANDLE)123, KernelMode);
+        Status = ObCloseHandle((HANDLE)(123 | 0x80000000), KernelMode);*/
+    KmtEndSeh(STATUS_SUCCESS);
 }
