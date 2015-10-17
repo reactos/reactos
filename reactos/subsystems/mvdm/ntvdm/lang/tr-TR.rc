@@ -13,12 +13,12 @@ STRINGTABLE
 BEGIN
     IDS_VDM_DUMPMEM_TXT ,   "&Bellek Dökümünü Al (Metin)"
     IDS_VDM_DUMPMEM_BIN ,   "B&ellek Dökümünü Al (İkili)"
-    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
-    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
+    IDS_VDM_MOUNT_FLOPPY,   "%d <%s> Sürücüsüne Bir Disket Ekle..."
+    IDS_VDM_EJECT_FLOPPY,   "%d Sürücüsünden Disketi Çıkar"
     IDS_VDM_QUIT        ,   "&ReactOS VDM'den Çık"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_MEDIA,   "No media"
+    IDS_NO_MEDIA,   "Ortam Yok"
 END

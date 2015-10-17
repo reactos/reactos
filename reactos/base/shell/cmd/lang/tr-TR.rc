@@ -166,7 +166,7 @@ DELAY [/m]n\n\n\
                  G  Önce dizinleri öbekle      -  Ters dizme için ön ek\n\
   /P            Bir bilgi görüntülüğünden sonra duraklatır.\n\
   /Q            Kütüğün iyesini göster.\n\
-  /R          Displays alternate data streams of the files.\n\
+  /R            Kütüklerin başka veri akışlarını görüntüler.\n\
   /S            Belirtilen dizindeki ve tüm alt dizinlerdeki kütükleri\n\
                 görüntüler.\n\
   /T            Dizme için hangi zaman aralığının görüntüleneceğini ya da\n\
