@@ -192,8 +192,12 @@ extern "C" {
 #define PARTITION_PREP                0x41
 #define PARTITION_LDM                 0x42
 #define PARTITION_UNIX                0x63
-#define PARTITION_NTFT                128
+#define PARTITION_NTFT                0x80
 #define VALID_NTFT                    0xC0
+#ifdef __REACTOS__
+#define PARTITION_OLD_LINUX               0x43
+#define PARTITION_LINUX                   0x83
+#endif
 #define SERIAL_LSRMST_ESCAPE          0
 #define SERIAL_LSRMST_LSR_DATA        1
 #define SERIAL_LSRMST_LSR_NODATA      2
@@ -576,6 +580,25 @@ typedef struct {
   UCHAR FileRecordBuffer[1];
 } NTFS_FILE_RECORD_OUTPUT_BUFFER, *PNTFS_FILE_RECORD_OUTPUT_BUFFER;
 
+#ifdef __REACTOS__
+#define IsRecognizedPartition(t)\
+  (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_12))||\
+    ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_16))||\
+    ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_IFS))||\
+    ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_HUGE))||\
+    ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32))||\
+    ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32_XINT13))||\
+    ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13))||\
+    ((t&~PARTITION_NTFT)==PARTITION_FAT_12)||\
+    ((t&~PARTITION_NTFT)==PARTITION_FAT_16)||\
+    ((t&~PARTITION_NTFT)==PARTITION_IFS)||\
+    ((t&~PARTITION_NTFT)==PARTITION_HUGE)||\
+    ((t&~PARTITION_NTFT)==PARTITION_FAT32)||\
+    ((t&~PARTITION_NTFT)==PARTITION_FAT32_XINT13)||\
+    ((t&~PARTITION_NTFT)==PARTITION_XINT13)||\
+    ((t&~PARTITION_NTFT)==PARTITION_LINUX)||\
+    ((t&~PARTITION_NTFT)==PARTITION_OLD_LINUX))
+#else
 #define IsRecognizedPartition(t)\
   (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_12))||\
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_16))||\
@@ -591,6 +614,7 @@ typedef struct {
     ((t&~PARTITION_NTFT)==PARTITION_FAT32)||\
     ((t&~PARTITION_NTFT)==PARTITION_FAT32_XINT13)||\
     ((t&~PARTITION_NTFT)==PARTITION_XINT13))
+#endif
 #define IsContainerPartition(t)\
   (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_EXTENDED))||\
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13_EXTENDED))||\

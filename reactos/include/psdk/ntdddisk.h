@@ -220,6 +220,10 @@ extern "C" {
 #define PARTITION_UNIX                    0x63
 #define VALID_NTFT                        0xC0
 #define PARTITION_NTFT                    0x80
+#ifdef __REACTOS__
+#define PARTITION_OLD_LINUX               0x43
+#define PARTITION_LINUX                   0x83
+#endif
 
 #define IsFTPartition( PartitionType ) \
   (((PartitionType) & PARTITION_NTFT) && \
@@ -229,6 +233,24 @@ extern "C" {
   (((PartitionType) == PARTITION_EXTENDED) || \
   ((PartitionType) == PARTITION_XINT13_EXTENDED))
 
+#ifdef __REACTOS__
+#define IsRecognizedPartition(PartitionType) ( \
+	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT_12)) || \
+	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_HUGE)) || \
+	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_IFS)) || \
+	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32)) || \
+	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32_XINT13)) || \
+	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_XINT13)) || \
+	((PartitionType) == PARTITION_FAT_12) || \
+	((PartitionType) == PARTITION_FAT_16) || \
+	((PartitionType) == PARTITION_HUGE) || \
+	((PartitionType) == PARTITION_IFS) || \
+	((PartitionType) == PARTITION_FAT32) || \
+	((PartitionType) == PARTITION_FAT32_XINT13) || \
+	((PartitionType) == PARTITION_XINT13) || \
+        ((PartitionType) == PARTITION_LINUX) || \
+        ((PartitionType) == PARTITION_OLD_LINUX))
+#else
 #define IsRecognizedPartition(PartitionType) ( \
 	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT_12)) || \
 	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_HUGE)) || \
@@ -243,6 +265,7 @@ extern "C" {
 	((PartitionType) == PARTITION_FAT32) || \
 	((PartitionType) == PARTITION_FAT32_XINT13) || \
 	((PartitionType) == PARTITION_XINT13))
+#endif
 
 #if(_WIN32_WINNT >= 0x0500)
 #define GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY       0x10000000
