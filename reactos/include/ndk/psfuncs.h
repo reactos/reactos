@@ -117,6 +117,13 @@ PsGetThreadProcess(
 );
 
 NTKERNELAPI
+ULONG
+NTAPI
+PsGetThreadFreezeCount(
+    _In_ PETHREAD Thread
+);
+
+NTKERNELAPI
 BOOLEAN
 NTAPI
 PsGetThreadHardErrorsAreDisabled(
