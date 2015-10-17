@@ -215,14 +215,19 @@ NdisOpenConfiguration(
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
     PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
     HANDLE RootKeyHandle = WrapperContext->RegistryHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING NoName = RTL_CONSTANT_STRING(L"");
 
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
     *ConfigurationHandle = NULL;
 
-    *Status = ZwDuplicateObject(NtCurrentProcess(), RootKeyHandle,
-                                NtCurrentProcess(), &KeyHandle, 0, 0,
-                                DUPLICATE_SAME_ACCESS);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NoName,
+                               OBJ_KERNEL_HANDLE,
+                               RootKeyHandle,
+                               NULL);
+    *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
     if(!NT_SUCCESS(*Status))
     {
         NDIS_DbgPrint(MIN_TRACE, ("Failed to open registry configuration for this miniport\n"));
