@@ -78,7 +78,7 @@ typedef unsigned int (__cdecl typeof(png_get_iCCP))(struct png_struct_def *, str
 typedef void (__cdecl typeof(png_set_crc_action))(struct png_struct_def *, int, int);
 
 typedef void *thandle_t_1;
-typedef int (*TIFFReadWriteProc_1)(thandle_t_1, void *, int);
+typedef int (*TIFFReadWriteProc_1)(thandle_t_1, void *, long);
 typedef unsigned int (*TIFFSeekProc_1)(void *, unsigned int, int);
 typedef int (*TIFFCloseProc_1)(thandle_t_1);
 typedef unsigned int (*TIFFSizeProc_1)(thandle_t_1);
