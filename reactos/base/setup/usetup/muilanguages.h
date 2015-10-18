@@ -682,7 +682,7 @@ const MUI_LANGUAGE LanguageList[] =
     {L"0000083E", L"1252", L"850", L"10000", L"Malay (Brunei Darussalam)", L"37", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, msBNLayouts },
 #endif
 #ifdef LANGUAGE_MS_MY
-    {L"0000043E", L"1252", L"850", L"10000", L"Malay (Malaysia)", L"167", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, msMYLayouts },
+    {L"0000043E", L"1252", L"850", L"10000", L"Malay (Malaysia)", L"167", msMYPages, msMYErrorEntries, msMYStrings, LatinFonts, msMYLayouts },
 #endif
 #ifdef LANGUAGE_MR_IN
     {L"0000044E", L"0", L"1", L"2", L"Marathi", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, mrINLayouts },
