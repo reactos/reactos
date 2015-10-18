@@ -4,6 +4,7 @@ add_library(apitest apitest.c)
 add_dependencies(apitest xdk)
 
 add_subdirectory(advapi32)
+add_subdirectory(atl)
 add_subdirectory(browseui)
 add_subdirectory(com)
 add_subdirectory(crt)
