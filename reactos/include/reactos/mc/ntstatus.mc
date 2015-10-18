@@ -1585,12 +1585,52 @@ Language=English
 Indicates two revision levels are incompatible.
 
 .
+MessageId=0x5a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_OWNER
+Language=English
+The specified owner is not valid for this object.
+
+.
+MessageId=0x5b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_PRIMARY_GROUP
+Language=English
+The specified primary group is not valid for this object.
+
+.
 MessageId=0x5c
 Severity=Error
 Facility=System
 SymbolicName=STATUS_NO_IMPERSONATION_TOKEN 
 Language=English
 An attempt has been made to operate on an impersonation token by a thread that is not currently impersonating a client.
+
+.
+MessageId=0x5d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_CANT_DISABLE_MANDATORY
+Language=English
+The specified group cannot be disabled because it is marked as mandatory.
+
+.
+MessageId=0x5e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_NO_LOGON_SERVERS
+Language=English
+The logon failed because no valid logon servers were found.
+
+.
+MessageId=0x5f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_NO_SUCH_LOGON_SESSION
+Language=English
+The specified logon session does not exist.
 
 .
 MessageId=0x60
@@ -1675,12 +1715,52 @@ Indicates the requested operation would disable or delete the last remaining adm
 This is not allowed to prevent creating a situation in which the system cannot be administrated.
 
 .
+MessageId=0x6a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_WRONG_PASSWORD 
+Language=English
+The specified current password is not correct.
+
+.
+MessageId=0x6b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_ILL_FORMED_PASSWORD
+Language=English
+The new password contains invalid characters.
+
+.
 MessageId=0x6c
 Severity=Error
 Facility=System
 SymbolicName=STATUS_PASSWORD_RESTRICTION 
 Language=English
 When trying to update a password, this status indicates that some password update rule has been violated. For example, the password may not meet length criteria.
+
+.
+MessageId=0x6d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_LOGON_FAILURE
+Language=English
+Logon failed because the specified user name or password is incorrect.
+
+.
+MessageId=0x6e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_ACCOUNT_RESTRICTION
+Language=English
+The specified information is valid but an account restriction prevented logon.
+
+.
+MessageId=0x6f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_LOGON_HOURS
+Language=English
+The attempted logon is not allowed at this time.
 
 .
 MessageId=0x70
@@ -1790,6 +1870,30 @@ An attempt was made to reference a token that doesn't exist.
 This is typically done by referencing the token associated with a thread when the thread is not impersonating a client.
 
 .
+MessageId=0x7d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_BAD_INHERITANCE_ACL
+Language=English
+The inherited access control list could not be created.
+
+.
+MessageId=0x7e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_RANGE_NOT_LOCKED
+Language=English
+Attempt to unlock a file range that is not locked.
+
+.
+MessageId=0x7f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DISK_FULL
+Language=English
+The disk is full. Delete files and free up disk space to continue the operation.
+
+.
 MessageId=0x80
 Severity=Error
 Facility=System
@@ -1870,6 +1974,22 @@ Language=English
 Indicates the specified image file did not contain a resource section.
 
 .
+MessageId=0x8a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_RESOURCE_TYPE_NOT_FOUND 
+Language=English
+A resource of the specified type could not be found in the image file.
+
+.
+MessageId=0x8b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_RESOURCE_NAME_NOT_FOUND 
+Language=English
+A resource with the specified name could not be found in the image file.
+
+.
 MessageId=0x8c
 Severity=Error
 Facility=System
@@ -1877,6 +1997,33 @@ SymbolicName=STATUS_ARRAY_BOUNDS_EXCEEDED
 Language=English
 {EXCEPTION}
 Array bounds exceeded.
+
+.
+MessageId=0x8d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_FLOAT_DENORMAL_OPERAND
+Language=English
+{EXCEPTION}
+Floating-point denormal operand.
+
+.
+MessageId=0x8e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_FLOAT_DIVIDE_BY_ZERO
+Language=English
+{EXCEPTION}
+Floating-point division by zero.
+
+.
+MessageId=0x8f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_FLOAT_INEXACT_RESULT
+Language=English
+{EXCEPTION}
+Floating-point inexact result.
 
 .
 MessageId=0x90
@@ -1976,12 +2123,70 @@ Language=English
 Insufficient system resources exist to complete this API.
 
 .
+MessageId=0x9b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DFS_EXIT_PATH_FOUND
+Language=English
+The specified file cannot be opened because it is a DFS exit path file.
+
+.
 MessageId=0x9c
 Severity=Error
 Facility=System
 SymbolicName=STATUS_DEVICE_DATA_ERROR 
 Language=English
 STATUS_DEVICE_DATA_ERROR
+
+.
+MessageId=0x9d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DEVICE_NOT_CONNECTED
+Language=English
+The specified device is not connected.
+
+.
+MessageId=0x9f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_FREE_VM_NOT_AT_BASE
+Language=English
+The specified memory could not be freed because it is not at the start of the allocation.
+
+.
+MessageId=0xa0
+Severity=Error
+Facility=System
+SymbolicName=STATUS_MEMORY_NOT_ALLOCATED
+Language=English
+The specified memory could not be freed because it was not allocated.
+
+.
+MessageId=0xa1
+Severity=Error
+Facility=System
+SymbolicName=STATUS_WORKING_SET_QUOTA
+Language=English
+The process working set quota was exceeded
+
+.
+MessageId=0xa2
+Severity=Error
+Facility=System
+SymbolicName=STATUS_MEDIA_WRITE_PROTECTED
+Language=English
+{Write Protect Error}
+The media in volume %hs cannot be written to because it is write-protected.
+
+.
+MessageId=0xa3
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DEVICE_NOT_READY
+Language=English
+{Device Not Ready}
+The device %hs is not ready.
 
 .
 MessageId=0xc0
