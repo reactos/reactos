@@ -703,7 +703,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
         /* Initialize the attributes and open it */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyPath,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
         Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
@@ -717,7 +717,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
     RtlInitUnicodeString(&KeyPath, RtlpRegPaths[RTL_REGISTRY_USER]);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyPath,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
