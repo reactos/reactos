@@ -2030,7 +2030,11 @@ Ext2FastIoUnlockAll (
 BOOLEAN NTAPI
 Ext2FastIoUnlockAllByKey (
     IN PFILE_OBJECT         FileObject,
+#ifdef __REACTOS__
+    IN PVOID                Process,
+#else
     IN PEPROCESS            Process,
+#endif
     IN ULONG                Key,
     OUT PIO_STATUS_BLOCK    IoStatus,
     IN PDEVICE_OBJECT       DeviceObject

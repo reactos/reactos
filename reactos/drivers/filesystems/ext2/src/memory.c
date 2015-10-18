@@ -2077,7 +2077,12 @@ Ext2ParseRegistryVolumeParams(
                             k < ParamPattern[i].Length &&
                             Params->Buffer[j+k] != L';' &&
                             Params->Buffer[j+k] != L',' ) {
+#ifdef __REACTOS__
+                        ParamPattern[i].uValue[k] = Params->Buffer[j + k];
+                        k++;
+#else
                         ParamPattern[i].uValue[k] = Params->Buffer[j + k++];
+#endif
                     }
                     if (k) {
                         NTSTATUS status;
