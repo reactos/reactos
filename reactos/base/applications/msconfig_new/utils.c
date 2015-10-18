@@ -122,6 +122,29 @@ LoadConditionalResourceStringEx(IN HINSTANCE hInstance,
                                 pSize);
 }
 
+DWORD
+RunCommand(IN LPCWSTR lpszCommand,
+           IN LPCWSTR lpszParameters,
+           IN INT nShowCmd)
+{
+    DWORD dwRes;
+
+    DWORD dwNumOfChars;
+    LPWSTR lpszExpandedCommand;
+
+    dwNumOfChars = ExpandEnvironmentStringsW(lpszCommand, NULL, 0);
+    lpszExpandedCommand = (LPWSTR)MemAlloc(0, dwNumOfChars * sizeof(WCHAR));
+    ExpandEnvironmentStringsW(lpszCommand, lpszExpandedCommand, dwNumOfChars);
+
+    dwRes = (DWORD)ShellExecuteW(NULL, NULL /* and not L"open" !! */,
+                                 lpszExpandedCommand,
+                                 lpszParameters,
+                                 NULL, nShowCmd);
+    MemFree(lpszExpandedCommand);
+
+    return dwRes;
+}
+
 
 ////////////////////  The following comes from MSDN samples  ///////////////////
 // https://msdn.microsoft.com/en-us/library/windows/desktop/dd162826(v=vs.85).aspx

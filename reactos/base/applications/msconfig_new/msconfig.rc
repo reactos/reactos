@@ -4,6 +4,8 @@
 
 #include "resource.h"
 
+#define APP_TOOLS   MSCFGTL.XML
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS System Configuration Tool"
@@ -26,82 +28,109 @@ END
 
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/bg-BG.xml"
 #endif
 #ifdef LANGUAGE_CA_ES
     #include "lang/ca-ES.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/ca-ES.xml"
 #endif
 #ifdef LANGUAGE_CS_CZ
     #include "lang/cs-CZ.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/cs-CZ.xml"
 #endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/de-DE.xml"
 #endif
 #ifdef LANGUAGE_EL_GR
     #include "lang/el-GR.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/el-GR.xml"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/en-US.xml"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/es-ES.xml"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/fr-FR.xml"
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/he-IL.xml"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/hu-HU.xml"
 #endif
 #ifdef LANGUAGE_ID_ID
     #include "lang/id-ID.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/id-ID.xml"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/it-IT.xml"
 #endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/ko-KR.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/ko-KR.xml"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/nl-NL.xml"
 #endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/no-NO.xml"
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/pl-PL.xml"
 #endif
 #ifdef LANGUAGE_PT_BR
     #include "lang/pt-BR.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/pt-BR.xml"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/ro-RO.xml"
 #endif
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/ru-RU.xml"
 #endif
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/sk-SK.xml"
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/sq-AL.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/sq-AL.xml"
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/sv-SE.xml"
 #endif
 #ifdef LANGUAGE_TH_TH
     #include "lang/th-TH.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/th-TH.xml"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/tr-TR.xml"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/uk-UA.xml"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/zh-CN.xml"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/zh-TW.xml"
 #endif

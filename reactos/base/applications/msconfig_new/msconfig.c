@@ -2,9 +2,8 @@
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
  * FILE:        base/applications/msconfig_new/msconfig.c
- * PURPOSE:     msconfig main dialog
+ * PURPOSE:     MSConfig main dialog
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
- *
  */
 
 #include "precomp.h"
@@ -379,6 +378,7 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
     psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_STARTUP_PAGE);
     psp[nPages].pfnDlgProc  = (DLGPROC)StartupPageWndProc;
     ++nPages;
+#endif
 
     /* Tools page */
     psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
@@ -387,7 +387,6 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
     psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_TOOLS_PAGE);
     psp[nPages].pfnDlgProc  = (DLGPROC)ToolsPageWndProc;
     ++nPages;
-#endif
 
     /* Set the total number of created pages */
     psh.nPages = nPages;

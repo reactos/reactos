@@ -9,8 +9,8 @@
 
 #include "precomp.h"
 
-static LPCWSTR lpszRestoreProgPath1 = L"%SystemRoot%\\System32\\rstrui.exe";
-static LPCWSTR lpszRestoreProgPath2 = L"%SystemRoot%\\System32\\restore\\rstrui.exe";
+// static LPCWSTR lpszRestoreProgPath1 = L"%SystemRoot%\\System32\\rstrui.exe";
+// static LPCWSTR lpszRestoreProgPath2 = L"%SystemRoot%\\System32\\restore\\rstrui.exe";
 
 HWND hGeneralPage;
 

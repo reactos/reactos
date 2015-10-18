@@ -17,7 +17,11 @@
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+
 #define NTOS_MODE_USER
+
+#define _FORCENAMELESSUNION
+// #define _WIN32_DCOM // For CoInitializeEx on Win2k and perhaps XP / 2003 ??
 
 #include <windef.h>
 #include <winbase.h>
@@ -26,7 +30,12 @@
 #include <winuser.h>
 #include <winver.h>
 
-#include <shlobj.h>
+#include <initguid.h>
+// #include <shlobj.h> // If used, initguid.h must be included before!
+#include <shlwapi.h>
+#include <shellapi.h>
+#include <commctrl.h>
+#include <prsht.h>
 #include <strsafe.h>
 
 #include "msconfig.h"

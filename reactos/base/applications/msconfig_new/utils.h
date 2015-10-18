@@ -43,6 +43,11 @@ LoadConditionalResourceStringEx(IN HINSTANCE hInstance,
 #define LoadConditionalResourceString(hInst, bCond, uIDifT, uIDifF) \
     LoadConditionalResourceStringEx((hInst), (bCond), (uIDifT), (uIDifF), NULL)
 
+DWORD
+RunCommand(IN LPCWSTR lpszCommand,
+           IN LPCWSTR lpszParameters,
+           IN INT nShowCmd);
+
 
 ////////////////////  The following comes from MSDN samples  ///////////////////
 // https://msdn.microsoft.com/en-us/library/windows/desktop/dd162826(v=vs.85).aspx
