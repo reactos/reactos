@@ -1276,6 +1276,12 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     QUOTA_LIMITS QuotaLimits;
     ULONGLONG PageFile, PhysicalMemory;
 
+    if (lpBuffer->dwLength != sizeof(*lpBuffer))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     /* Query performance information */
     NtQuerySystemInformation(SystemPerformanceInformation,
                              &PerformanceInfo,
@@ -1312,6 +1318,7 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     /* Save the commit limit */
     lpBuffer->ullTotalPageFile = min(QuotaLimits.PagefileLimit,
                                      PerformanceInfo.CommitLimit);
+    lpBuffer->ullTotalPageFile *= BaseStaticServerData->SysInfo.PageSize;
 
     /* Calculate how many pages are left */
     PageFile = PerformanceInfo.CommitLimit - PerformanceInfo.CommittedPages;
@@ -1327,9 +1334,9 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
                                  BaseStaticServerData->SysInfo.MinimumUserModeAddress) + 1;
 
     /* And finally the avilable virtual space */
-    lpBuffer->ullAvailVirtual = lpBuffer->ullTotalVirtual -
-                                VmCounters.VirtualSize;
+    lpBuffer->ullAvailVirtual = lpBuffer->ullTotalVirtual - VmCounters.VirtualSize;
     lpBuffer->ullAvailExtendedVirtual = 0;
+
     return TRUE;
 }
 
@@ -1349,12 +1356,12 @@ GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
         /* Reset the right size and fill out the information */
         lpBuffer->dwLength = sizeof(MEMORYSTATUS);
         lpBuffer->dwMemoryLoad = lpBufferEx.dwMemoryLoad;
-        lpBuffer->dwTotalPhys = (SIZE_T)lpBufferEx.ullTotalPhys;
-        lpBuffer->dwAvailPhys = (SIZE_T)lpBufferEx.ullAvailPhys;
-        lpBuffer->dwTotalPageFile = (SIZE_T)lpBufferEx.ullTotalPageFile;
-        lpBuffer->dwAvailPageFile = (SIZE_T)lpBufferEx.ullAvailPageFile;
-        lpBuffer->dwTotalVirtual = (SIZE_T)lpBufferEx.ullTotalVirtual;
-        lpBuffer->dwAvailVirtual = (SIZE_T)lpBufferEx.ullAvailVirtual;
+        lpBuffer->dwTotalPhys = (SIZE_T)min(lpBufferEx.ullTotalPhys, MAXULONG_PTR);
+        lpBuffer->dwAvailPhys = (SIZE_T)min(lpBufferEx.ullAvailPhys, MAXULONG_PTR);
+        lpBuffer->dwTotalPageFile = (SIZE_T)min(lpBufferEx.ullTotalPageFile, MAXULONG_PTR);
+        lpBuffer->dwAvailPageFile = (SIZE_T)min(lpBufferEx.ullAvailPageFile, MAXULONG_PTR);
+        lpBuffer->dwTotalVirtual = (SIZE_T)min(lpBufferEx.ullTotalVirtual, MAXULONG_PTR);
+        lpBuffer->dwAvailVirtual = (SIZE_T)min(lpBufferEx.ullAvailVirtual, MAXULONG_PTR);
     }
 }
 
