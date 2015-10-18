@@ -63,7 +63,7 @@ BSTR WINAPI ConvertStringToBSTR(const char *pSrc)
     if (!pSrc) return NULL;
 
     /* Compute the needed size with the NULL terminator */
-    cwch = ::MultiByteToWideChar(CP_ACP /* CP_UTF8 */, 0, pSrc, -1, NULL, 0);
+    cwch = ::MultiByteToWideChar(CP_ACP, 0, pSrc, -1, NULL, 0);
     if (cwch == 0) return NULL;
 
     /* Allocate the BSTR (without the NULL terminator) */
@@ -75,7 +75,7 @@ BSTR WINAPI ConvertStringToBSTR(const char *pSrc)
     }
 
     /* Convert the string */
-    if (::MultiByteToWideChar(CP_ACP /* CP_UTF8 */, 0, pSrc, -1, wsOut, cwch) == 0)
+    if (::MultiByteToWideChar(CP_ACP, 0, pSrc, -1, wsOut, cwch) == 0)
     {
         /* We failed, clean everything up */
         cwch = ::GetLastError();
@@ -100,7 +100,7 @@ char* WINAPI ConvertBSTRToString(BSTR pSrc)
     cwch = ::SysStringLen(pSrc) + 1;
 
     /* Compute the needed size with the NULL terminator */
-    cb = ::WideCharToMultiByte(CP_ACP /* CP_UTF8 */, 0, pSrc, cwch, NULL, 0, NULL, NULL);
+    cb = ::WideCharToMultiByte(CP_ACP, 0, pSrc, cwch, NULL, 0, NULL, NULL);
     if (cb == 0)
     {
         cwch = ::GetLastError();
@@ -118,7 +118,7 @@ char* WINAPI ConvertBSTRToString(BSTR pSrc)
 
     /* Convert the string and NULL-terminate */
     szOut[cb - 1] = '\0';
-    if (::WideCharToMultiByte(CP_ACP /* CP_UTF8 */, 0, pSrc, cwch, szOut, cb, NULL, NULL) == 0)
+    if (::WideCharToMultiByte(CP_ACP, 0, pSrc, cwch, szOut, cb, NULL, NULL) == 0)
     {
         /* We failed, clean everything up */
         cwch = ::GetLastError();
