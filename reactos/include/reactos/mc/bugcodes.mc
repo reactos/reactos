@@ -1515,7 +1515,8 @@ Severity=Success
 Facility=System
 SymbolicName=IMPERSONATING_WORKER_THREAD
 Language=English
-A work queue item terminated without properly restoring its impersonation level.
+A worker thread is impersonating another process. The work item forgot to
+disable impersonation before it returned.
 .
 
 MessageId=0xE0
@@ -1662,10 +1663,9 @@ STATUS_REPARSE was returned from a FSD when trying to open a volume.
 MessageId=0xFA
 Severity=Success
 Facility=System
-SymbolicName=IMPERSONATING_WORKER_THREAD
+SymbolicName=HTTP_DRIVER_CORRUPTED
 Language=English
-A worker thread is impersonating another process. The work item forgot to
-disable impersonation before it returned.
+Corruption was detected in the HTTP kernel driver.
 .
 
 MessageId=0xFC
