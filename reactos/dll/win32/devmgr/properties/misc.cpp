@@ -31,7 +31,6 @@
 #include "resource.h"
 
 
-
 INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID)

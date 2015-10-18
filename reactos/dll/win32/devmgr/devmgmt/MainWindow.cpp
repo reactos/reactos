@@ -365,8 +365,6 @@ void CDeviceManager::UpdateToolbar()
     SendMessageW(m_hToolBar, TB_SETSTATE, IDC_UPDATE_DRV, MAKELPARAM(State, 0)); //hack
     SendMessageW(m_hToolBar, TB_SETSTATE, IDC_UNINSTALL_DRV, MAKELPARAM(State, 0)); // hack
 
-
-
     // enable driver button
     if (Node->GetNodeType() == DeviceNode &&
         dynamic_cast<CDeviceNode *>(Node)->IsDisabled())
@@ -391,11 +389,6 @@ void CDeviceManager::UpdateToolbar()
         State = TBSTATE_HIDDEN;
     }
     SendMessageW(m_hToolBar, TB_SETSTATE, IDC_DISABLE_DRV, MAKELPARAM(State, 0));
-
-
-
-    
-
 }
 
 

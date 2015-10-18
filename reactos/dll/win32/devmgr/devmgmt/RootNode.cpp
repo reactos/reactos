@@ -56,6 +56,4 @@ CRootNode::SetupNode()
         _wcslwr(m_DisplayName);
 
     return true;
-
-
 }
