@@ -1316,6 +1316,14 @@ the file signature is not valid and put the original, correct file back
 so that your operating system will continue to function properly.
 .
 
+MessageId=0xC4
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_VERIFIER_DETECTED_VIOLATION
+Language=English
+Driver Verifier has detected a fatal error condition.
+.
+
 MessageId=0xC5
 Severity=Success
 Facility=System
@@ -1422,6 +1430,14 @@ Language=English
 The driver mistakenly marked a part of its image pageable instead of non-pageable.
 .
 
+MessageId=0xD4
+Severity=Success
+Facility=System
+SymbolicName=SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
+Language=English
+The driver unloaded without cancelling pending operations.
+.
+
 MessageId=0xD5
 Severity=Success
 Facility=System
@@ -1454,12 +1470,52 @@ Language=English
 The driver has used an excessive number of system PTEs.
 .
 
-MessageId=0xD4
+MessageId=0xD9
 Severity=Success
 Facility=System
-SymbolicName=SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
+SymbolicName=LOCKED_PAGES_TRACKER_CORRUPTION
 Language=English
-The driver unloaded without cancelling pending operations.
+The system's structures tracking locked pages have been corrupted.
+.
+
+MessageId=0xDA
+Severity=Success
+Facility=System
+SymbolicName=SYSTEM_PTE_MISUSE
+Language=English
+The driver has called a system PTE routine in an improper way.
+.
+
+MessageId=0xDB
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_CORRUPTED_SYSPTES
+Language=English
+The driver has corrupted system PTEs.
+.
+
+MessageId=0xDC
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_INVALID_STACK_ACCESS
+Language=English
+The driver has accessed an invalid stack address.
+.
+
+MessageId=0xDE
+Severity=Success
+Facility=System
+SymbolicName=POOL_CORRUPTION_IN_FILE_AREA
+Language=English
+Kernel pool corruption has been detected in an area marked to be written to disk.
+.
+
+MessageId=0xDF
+Severity=Success
+Facility=System
+SymbolicName=IMPERSONATING_WORKER_THREAD
+Language=English
+A work queue item terminated without properly restoring its impersonation level.
 .
 
 MessageId=0xE0
