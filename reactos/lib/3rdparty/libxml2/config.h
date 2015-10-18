@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
+/* Type cast for the gethostbyname() argument */
+#define GETHOSTBYNAME_ARG_CAST
+
 /* Define to 1 if you have the <ansidecl.h> header file. */
 /* #undef HAVE_ANSIDECL_H */
 
@@ -297,11 +300,17 @@
 /* Define to the version of this package. */
 #define PACKAGE_VERSION ""
 
+/* Type cast for the send() function 2nd arg */
+#define SEND_ARG2_CAST
+
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Support for IPv6 */
 /* #undef SUPPORT_IP6 */
+
+/* Define if va_list is an array type */
+/* #undef VA_LIST_IS_ARRAY */
 
 /* Version number of package */
 #define VERSION "2.9.2"
@@ -317,7 +326,6 @@
 /* Using the Win32 Socket implementation */
 //#define _WINSOCKAPI_ 1
 
-
 /* ss_family is not defined here, use __ss_family instead */
 /* #undef ss_family */
 
@@ -325,21 +333,15 @@
    such a type exists and the standard includes do not define it. */
 /* #undef uint32_t */
 
-#if defined(_MSC_VER)
-#define GetModuleHandleA GetModuleHandleA_
-#endif
+#ifdef __REACTOS__
 #if defined(__MINGW32__)
 //#include <windows.h>
 #define WIN32_NO_STATUS
+#define _WINDOWS_
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
 #endif
-#if defined(_MSC_VER)
-#undef GetModuleHandleA
 #endif
-
-#define SEND_ARG2_CAST
-#define GETHOSTBYNAME_ARG_CAST
