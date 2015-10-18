@@ -12,7 +12,7 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "新建\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
     END
@@ -26,13 +26,13 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "新建\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Windows"
+    POPUP "視窗(&W)"
     BEGIN
-        MENUITEM "List", IDM_WINDOWS_LIST
+        MENUITEM "清單", IDM_WINDOWS_LIST
     END
     POPUP "說明(&H)"
     BEGIN

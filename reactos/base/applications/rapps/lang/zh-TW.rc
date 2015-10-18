@@ -68,12 +68,12 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "選擇(&C)", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "在安裝完程式後刪除安裝程式(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Proxy", -1, 4, 116, 240, 76
-    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    GROUPBOX "代理", -1, 4, 116, 240, 76
+    CONTROL "系統代理設置", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "直接 (無代理)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "代理", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    LTEXT "沒有代理", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "預設", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
     PUSHBUTTON "確定", IDOK, 116, 195, 60, 14
@@ -197,9 +197,9 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "您選擇的資料夾不存在。創建嗎？"
     IDS_APP_REG_REMOVE "您確定要從登錄檔刪除該程式的資料嗎？"
     IDS_INFORMATION "資訊"
-    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_DOWNLOAD "無法下載包!找不到的位址!"
     IDS_UNABLE_TO_REMOVE "無法從登錄檔刪除該程式的資料！"
-    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
-    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
-    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
+    IDS_CERT_DOES_NOT_MATCH "SSL 憑證驗證失敗。"
+    IDS_INTEG_CHECK_TITLE "驗證套裝軟體的完整性..."
+    IDS_INTEG_CHECK_FAIL "包沒有通過完整性檢查，它可能已損壞，或者在下載過程中篡改。建議您不要運行該軟體。"
 END

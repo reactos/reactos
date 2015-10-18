@@ -52,14 +52,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
-    IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
-    IDS_MODE_NOT_READY "Not ready"
+    IDS_MODE_UNKNOWN "未知"
+    IDS_MODE_OPEN "已打開"
+    IDS_MODE_STOP "已停止"
+    IDS_MODE_PLAY "播放中"
+    IDS_MODE_PAUSE "已暫停"
+    IDS_MODE_RECORD "錄音中"
+    IDS_MODE_SEEK "尋找中"
+    IDS_MODE_NOT_READY "未準備好"
     IDS_ALL_TYPES_FILTER "所有支援格式"
     IDS_TOOLTIP_PLAY "播放"
     IDS_TOOLTIP_STOP "停止"

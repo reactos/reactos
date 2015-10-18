@@ -10,17 +10,17 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL "Install"
+    IDS_INSTALL "安裝"
     IDS_PRINT "列印"
     IDS_STRING "ReactOS 給所有人一個自由的操作系統！ 1234567890"
-    IDS_OPEN "Open Font..."
+    IDS_OPEN "打開字體..."
     IDS_ERROR "錯誤"
     IDS_ERROR_NOMEM "沒有足夠的記憶體來完成操作。"
     IDS_ERROR_NOFONT "%1 不是一個有效的字體檔案。"
     IDS_ERROR_NOCLASS "窗口無法初始化。"
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
-TrueType Font (*.ttf)\0*.ttf\0\
-OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
-All Files (*.*)\0*.*\0"
+    IDS_FILTER_LIST "所有支援的字體 (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType 字體 (*.ttf)\0*.ttf\0\
+OpenType 字體 (*.otf)\0*.otf\0\
+字體檔 (*.fon)\0*.fon\0\
+所有檔 (*.*)\0*.*\0"
 END

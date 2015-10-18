@@ -3,101 +3,101 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 /* Dialog */
 IDD_GUI DIALOGEX 0, 0, 240, 255
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Remote Shutdown"
+CAPTION "遠端關機"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&OK", IDC_OK, 125, 232, 50, 14
-    PUSHBUTTON "&Cancel", IDC_CANCEL, 178, 232, 50, 14
-    LTEXT "Co&mputers:", IDC_STATIC, 9, 9, 35, 36
+    DEFPUSHBUTTON "確定(&O)", IDC_OK, 125, 232, 50, 14
+    PUSHBUTTON "取消(&C)", IDC_CANCEL, 178, 232, 50, 14
+    LTEXT "電腦:(&M)", IDC_STATIC, 9, 9, 35, 36
     LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
-    PUSHBUTTON "&Add...", IDC_ADD_SYSTEM, 179, 19, 50, 14
-    PUSHBUTTON "&Remove", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Browse...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
-    LTEXT "Action", IDC_ACTION, 11, 81, 20, 14
+    PUSHBUTTON "添加...(&A)", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "刪除(&R)", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
+    PUSHBUTTON "流覽...(&B)", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    LTEXT "行動", IDC_ACTION, 11, 81, 20, 14
     COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
-    CHECKBOX "Warn users", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Display warning for", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    CHECKBOX "警告使用者", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "顯示警告", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
     EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
-    LTEXT "second(s)", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
-    GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 5, 114, 224, 114
-    LTEXT "Reason:", IDC_STATIC, 16, 130, 27, 8
-    CHECKBOX "Planned", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "秒", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
+    GROUPBOX "關閉事件跟蹤程式", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "原因:", IDC_STATIC, 16, 130, 27, 8
+    CHECKBOX "計畫", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
-    LTEXT "Comm&ent:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    LTEXT "評論:(&E)", IDC_COMMENT_CAPTION, 16, 159, 38, 8
     EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
 END
 
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "ReactOS Shutdown Utility\n\
+    IDS_USAGE "電腦關機公用程式\n\
 \n\
-Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+使用方法: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
        [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
 \n\
-    No arguments or /?    Display this help.\n\
-    /i      Show the graphical user interface (GUI). This option must be the\n\
-            first one.\n\
-    /l      Log off on the local system only. Cannot be used with /m or /d.\n\
-    /s      Shutdown the computer.\n\
-    /r      Restart the computer.\n\
-    /g      Restart the computer and restart all the registered applications.\n\
-    /a      Cancel a delayed shutdown. Can only be used during the delay\n\
-            period.\n\
-    /p      Shutdown the local computer without any timeout or warning. Can be\n\
-            used with /d or /f.\n\
-    /h      Hibernate the local computer. Usable with /f.\n\
-    /e      Document the reason for the unexpected computer shutdown.\n\
-    /m \\\\computer  Specify the target computer (UNC/IP address).\n\
-    /t xxx  Set the timeout period to xxx seconds before shutting down.\n\
-            The valid range starts from 0 to 315360000 (10 years),\n\
-            30 being the default value.\n\
-    /c ""comment""  Comment on the reason for shutdown or restart.\n\
-            512 characters maximum allowed.\n\
-    /f      Force running applications to close without warning users. If you\n\
-            do not specify any other parameter, this option will also log off.\n\
-    /d [p|u:]xx:yy  Give the reason code for the shutdown or the restart.\n\
-            p indicates that the shutdown or the restart is planned.\n\
-            u indicates that the reason is defined by the user.\n\
-            If neither p nor u are specified, the shutdown or the restart are\n\
-            not planned.\n\
-            xx is the major reason code (positive integer smaller than 256).\n\
-            yy is the minor reason code (positive integer smaller than 65536).\n"
+    沒有參數或 /?    顯示此説明。\n\
+    /i      顯示圖形化使用者介面 (GUI)。此選項必須是\n\
+            第一個。\n\
+    /l      只在本地系統上登出。不能使用與 /m 或 /d。\n\
+    /s      關閉電腦。\n\
+    /r      重新開機電腦。\n\
+    /g      重新開機電腦並重新啟動所有已註冊的應用程式。\n\
+    /a      取消延遲關閉電源。只有在延遲週期\n\
+            內使用。\n\
+    /p      關閉本地電腦沒有任何超時或警告。 可以\n\
+            用 /d 或 /f。\n\
+    /h      休眠本地電腦。可用與 /f。\n\
+    /e      記錄電腦意外的關機的原因。\n\
+    /m \\\\computer  指定目的電腦 (UNC 或 IP 位址)。\n\
+    /t xxx  將超時時間設置為 xxx 秒後關閉。\n\
+            有效範圍從 0 開始到 315360000 (10 年)，\n\
+            30 的預設值。\n\
+    /c ""comment""  關閉原因發表評論，或重新開機。\n\
+            512 個字元最大允許。\n\
+    /f      強制運行沒有警告使用者關閉應用程式。如果您\n\
+            不指定任何其他參數，此選項將也登出。\n\
+    /d [p|u:]xx:yy  給關機或重新開機的原因代碼。\n\
+            p 指示關機或重新開機計畫。\n\
+            u 表示原因由使用者定義。\n\
+            如果指定了既不是 p 也不是你，不會計畫關機或\n\
+            重新開機。\n\
+            xx 是主要原因代碼 (正整數小於 256)。\n\
+            yy 是次要原因代碼 (小於 65536 正整數)。\n"
 
-    IDS_ERROR_SHUTDOWN_REBOOT "ERROR: Unable to shutdown and restart at the same time.\n"
-    IDS_ERROR_TIMEOUT "ERROR: Timeout value of %u is out of bounds (0-315360000).\n"
-    IDS_ERROR_ABORT "ERROR: Unable to abort the shutdown of the system.\n"
-    IDS_ERROR_LOGOFF "ERROR: Unable to logoff the system.\n"
-    IDS_ERROR_SHUTDOWN "ERROR: Unable to shutdown the system.\n"
-    IDS_ERROR_RESTART "ERROR: Unable to restart the system.\n"
-    IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: Comment length exceeds maximum character limit set by the system.\n"
-    IDS_ERROR_HIBERNATE "ERROR: Unable to send system into hibernation mode.\n"
-    IDS_ERROR_HIBERNATE_LOCAL "ERROR: Hibernation mode cannot be started remotely.\n"
-    IDS_ERROR_HIBERNATE_ENABLED "ERROR: Hibernation mode is not enabled.\n"
-    IDS_ERROR_DIALOG_CAPTION "Remote Shutdown"
-    IDS_ERROR_DIALOG_INIT "Unable to display the graphical user interface."
+    IDS_ERROR_SHUTDOWN_REBOOT "錯誤: 在同一時間無法關機和重新開機。\n"
+    IDS_ERROR_TIMEOUT "錯誤: %u 的超時值為 (0-315360000) 出界。\n"
+    IDS_ERROR_ABORT "錯誤: 無法中止的系統關閉。\n"
+    IDS_ERROR_LOGOFF "錯誤: 無法登出系統。\n"
+    IDS_ERROR_SHUTDOWN "錯誤: 無法關閉系統。\n"
+    IDS_ERROR_RESTART "錯誤: 無法重新開機系統。\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "錯誤: 評論長度超出由系統設置的最大字元數限制。\n"
+    IDS_ERROR_HIBERNATE "錯誤: 無法發送系統進入睡眠模式。\n"
+    IDS_ERROR_HIBERNATE_LOCAL "錯誤: 無法遠端啟動睡眠模式。\n"
+    IDS_ERROR_HIBERNATE_ENABLED "錯誤: 沒有啟用睡眠模式。\n"
+    IDS_ERROR_DIALOG_CAPTION "遠端關機"
+    IDS_ERROR_DIALOG_INIT "無法顯示圖形化使用者介面。"
 END
 
 /* Remote shutdown action strings */
 STRINGTABLE
 BEGIN
-    IDS_ACTION_SHUTDOWN "Shutdown the system"
-    IDS_ACTION_RESTART "Restart the system"
-    IDS_ACTION_UNEXPECTED_SHUTDOWN "Annotate the unexpected shutdown"
+    IDS_ACTION_SHUTDOWN "關閉系統"
+    IDS_ACTION_RESTART "重新開機系統"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "注釋意外的關閉"
 END
 
 /* Remote shutdown reason strings */
 STRINGTABLE
 BEGIN
-    IDS_REASON_OTHER "Other"
-    IDS_REASON_HARDWARE_MAINTENANCE "Hardware: Maintenance"
-    IDS_REASON_HARDWARE_INSTALL "Hardware: Installation"
-    IDS_REASON_OS_RECOVER "Operating System: Recovery"
-    IDS_REASON_OS_RECONFIGURE "Operating System: Reconfigure"
-    IDS_REASON_APP_MAINTENANCE "Application: Maintenance"
-    IDS_REASON_APP_INSTALL "Application: Installation"
-    IDS_REASON_APP_UNRESPONSIVE "Application: Unresponsive"
-    IDS_REASON_APP_UNSTABLE "Application: Unstable"
-    IDS_REASON_SECURITY "Security Issue"
-    IDS_REASON_NETWORK "Loss of network connectivity"
+    IDS_REASON_OTHER "其他"
+    IDS_REASON_HARDWARE_MAINTENANCE "硬體: 維護"
+    IDS_REASON_HARDWARE_INSTALL "硬體: 安裝"
+    IDS_REASON_OS_RECOVER "作業系統: 恢復"
+    IDS_REASON_OS_RECONFIGURE "作業系統: 重新配置"
+    IDS_REASON_APP_MAINTENANCE "應用程式: 維護"
+    IDS_REASON_APP_INSTALL "應用程式: 安裝"
+    IDS_REASON_APP_UNRESPONSIVE "應用程式: 沒有反應"
+    IDS_REASON_APP_UNSTABLE "應用程式: 不穩定"
+    IDS_REASON_SECURITY "安全問題"
+    IDS_REASON_NETWORK "網路連接丟失"
 END

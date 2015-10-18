@@ -54,17 +54,17 @@ BEGIN
         MENUITEM "層疊(&C)", ID_WINDOWS_CASCADE
         MENUITEM "前置(&B)", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "關閉(&U)"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "待機(&B)",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "休眠(&H)",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "關閉電源(&U)",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "重新開機(&R)",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "登出 %s (&L)",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "切換使用者(&S)\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "鎖定電腦(&K)\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "斷開連接(&D)",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "彈出電腦(&E)",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "說明(&H)"
     BEGIN
@@ -240,7 +240,7 @@ END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Debug Channels"
+CAPTION "調試頻道"
 FONT 9, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
@@ -323,7 +323,7 @@ BEGIN
     CONTROL "I/O 寫入位元組", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "其他 I/O", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "其他 I/O 位元組", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
-    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
+    CONTROL "命令列(&L)", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -332,19 +332,19 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "工作管理員"
     IDC_TASKMGR "工作管理員"
-    IDS_IDLE_PROCESS "System Idle Process"
+    IDS_IDLE_PROCESS "系統空閒進程"
 END
 
 STRINGTABLE
 BEGIN
     ID_FILE_NEW "新程序"
-    ID_OPTIONS_ALWAYSONTOP "Task Manager remains in front of all other windows unless minimized"
-    ID_OPTIONS_MINIMIZEONUSE "Task Manager is minimized when a SwitchTo operation is performed"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Hide the Task Manager when it is minimized"
-    ID_VIEW_REFRESH "Force Task Manager to update now, regardless of Update Speed setting"
-    ID_VIEW_LARGE "Displays tasks by using large icons"
-    ID_VIEW_SMALL "Displays tasks by using small icons"
-    ID_VIEW_DETAILS "Displays information about each task"
+    ID_OPTIONS_ALWAYSONTOP "工作管理員仍然是所有其他視窗的前面，除非最小化"
+    ID_OPTIONS_MINIMIZEONUSE "工作管理員最小化執行 SwitchTo 操作時"
+    ID_OPTIONS_HIDEWHENMINIMIZED "隱藏工作管理員當它最小化時"
+    ID_VIEW_REFRESH "強制工作管理員立即更新，忽略更新速度設置"
+    ID_VIEW_LARGE "用大圖示顯示任務"
+    ID_VIEW_SMALL "用小圖示顯示任務"
+    ID_VIEW_DETAILS "顯示有關每個任務的資訊"
     ID_VIEW_UPDATESPEED_HIGH "每秒更新兩次"
     ID_VIEW_UPDATESPEED_NORMAL "每兩秒更新一次"
     ID_VIEW_UPDATESPEED_LOW "每四秒更新一次"
@@ -352,32 +352,32 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Does not automatically update"
-    ID_WINDOWS_TILEHORIZONTALLY "Tiles the windows horizontally on the desktop"
-    ID_WINDOWS_TILEVERTICALLY "Tiles the windows vertically on the desktop"
-    ID_WINDOWS_MINIMIZE "Minimizes the windows"
-    ID_WINDOWS_MAXIMIZE "Maximizes the windows"
-    ID_WINDOWS_CASCADE "Cascades the windows diagonally on the desktop"
-    ID_WINDOWS_BRINGTOFRONT "Brings the window front, but does not switch to it"
-    ID_HELP_TOPICS "Displays Task Manager help topics"
-    ID_HELP_ABOUT "Displays program information, version number, and copyright"
-    ID_FILE_EXIT "Exits the Task Manager application"
-    ID_OPTIONS_SHOW16BITTASKS "Shows 16-bit tasks under the associated ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS "Select which columns will be visible on the Process page"
-    ID_VIEW_SHOWKERNELTIMES "Displays kernel time in the performance graphs"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "A single history graph shows total CPU usage"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Each CPU has its own history graph"
-    ID_APPLICATION_PAGE_SWITCHTO "Brings a task to the foreground, switch focus to that task"
+    ID_VIEW_UPDATESPEED_PAUSED "不自動更新"
+    ID_WINDOWS_TILEHORIZONTALLY "視窗在桌面上水準平鋪"
+    ID_WINDOWS_TILEVERTICALLY "視窗在桌面上垂直平鋪"
+    ID_WINDOWS_MINIMIZE "最小化視窗"
+    ID_WINDOWS_MAXIMIZE "最大化視窗"
+    ID_WINDOWS_CASCADE "層疊對角桌面上的視窗"
+    ID_WINDOWS_BRINGTOFRONT "將視窗前置，但不能切換到它"
+    ID_HELP_TOPICS "顯示工作管理員說明主題"
+    ID_HELP_ABOUT "顯示程式資訊、 版本號和版權資訊"
+    ID_FILE_EXIT "退出工作管理員應用程式"
+    ID_OPTIONS_SHOW16BITTASKS "顯示關聯 ntvdm.exe 下的 16 位任務"
+    ID_VIEW_SELECTCOLUMNS "選擇哪一列將可見的進程頁"
+    ID_VIEW_SHOWKERNELTIMES "在績效圖中顯示核心程式的時間"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "單一歷史記錄圖表顯示出總的 CPU 使用率"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "每個 CPU 都有其自身的歷史圖"
+    ID_APPLICATION_PAGE_SWITCHTO "帶來的前景，將焦點切換到該任務的任務"
 END
 
 STRINGTABLE
 BEGIN
-    ID_ENDTASK "Tells the selected tasks to close"
-    ID_GOTOPROCESS "Switches the focus to the process of the selected task"
-    ID_RESTORE "Restores the Task Manager from its hidden state"
-    ID_PROCESS_PAGE_ENDPROCESS "Removes the process from the system"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Removes this process and all descendants from the system"
-    ID_PROCESS_PAGE_DEBUG "Attaches the debugger to this process"
+    ID_ENDTASK "告訴要關閉所選的任務"
+    ID_GOTOPROCESS "將焦點切換到所選任務的過程"
+    ID_RESTORE "從其隱藏狀態恢復工作管理器"
+    ID_PROCESS_PAGE_ENDPROCESS "從系統中刪除的過程"
+    ID_PROCESS_PAGE_ENDPROCESSTREE "從系統中刪除此進程及其所有子體"
+    ID_PROCESS_PAGE_DEBUG "將調試器附加到該進程"
     ID_PROCESS_PAGE_SETAFFINITY "控制程序允許在哪個處理器運行"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME "設定程序優先順序為即時"
     ID_PROCESS_PAGE_SETPRIORITY_HIGH "設定程序優先順序為高"
@@ -419,7 +419,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O 讀取位元組"
     IDS_TAB_IOWRITESBYTES "I/O 寫入位元組"
     IDS_TAB_IOOTHERBYTES "其他 I/O 位元組"
-    IDS_TAB_COMMANDLINE "Command Line"
+    IDS_TAB_COMMANDLINE "命令列"
     IDS_MENU_SELECTCOLUMNS "選擇列(&S)..."
     IDS_MENU_16BITTASK "顯示 16 位工作(&S)"
     IDS_MENU_WINDOWS "窗口(&W)"
@@ -440,7 +440,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "工作管理員警告"
     IDS_MSG_WARNINGTERMINATING "警告: 結束程序可能導政資料遺失或系統不穩定。\n程序在結束時將不能儲存任何資料。\n你是否確定要繼續？"
     IDS_MSG_UNABLETERMINATEPRO "無法結束處理程序"
-    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
+    IDS_MSG_CLOSESYSTEMPROCESS "這是一個關鍵的系統過程。工作管理員不會結束這一進程。"
     IDS_MSG_UNABLECHANGEPRIORITY "無法更改優先順序"
     IDS_MSG_WARNINGCHANGEPRIORITY "警告: 更改此程序的優先順序可能導致系統不穩定。\n你是否確定要更改優先順序？"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情況: %d%%"
