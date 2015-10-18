@@ -1084,6 +1084,12 @@ static HRESULT WINAPI ProtocolSink_ReportResult(IInternetProtocolSink *iface, HR
     else
         ok(hrResult == expect_hrResult, "hrResult = %08x, expected: %08x\n",
            hrResult, expect_hrResult);
+#ifdef __REACTOS__
+    if(!winetest_interactive && tested_protocol != FTP_TEST && hrResult != expect_hrResult) {
+        skip("CORE-10360/ROSTESTS-192: Test might hang, skipping the rest!\n");
+        exit(1);
+    }
+#endif
     if(SUCCEEDED(hrResult) || tested_protocol == FTP_TEST || test_abort)
         ok(dwError == ERROR_SUCCESS, "dwError = %d, expected ERROR_SUCCESS\n", dwError);
     else
