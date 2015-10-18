@@ -373,6 +373,9 @@ TranslateNtStatusError(NTSTATUS Status)
        case STATUS_ACCESS_VIOLATION:
           return WSAEFAULT;
 
+       case STATUS_ACCESS_DENIED:
+          return WSAEACCES;
+
        default:
           ERR("MSAFD: Unhandled NTSTATUS value: 0x%x\n", Status);
           return WSAENETDOWN;
