@@ -653,4 +653,17 @@ RestoreGenericListState(
     List->CurrentEntry = List->BackupEntry;
 }
 
+
+BOOL
+GenericListHasSingleEntry(
+    PGENERIC_LIST List)
+{
+    if (!IsListEmpty(&List->ListHead) && List->ListHead.Flink == List->ListHead.Blink)
+        return TRUE;
+
+    /* if both list head pointers (which normally point to the first and last list member, respectively)
+       point to the same entry then it means that there's just a single thing in there, otherwise... false! */
+    return FALSE;
+}
+
 /* EOF */

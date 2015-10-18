@@ -633,6 +633,12 @@ LanguagePage(PINPUT_RECORD Ir)
     /* Load the font */
     SelectedLanguageId = DefaultLanguage;
     SetConsoleCodePage();
+    UpdateKBLayout();
+
+    /* If there's just a single language in the list skip
+     * the language selection process altogether! */
+    if (GenericListHasSingleEntry(LanguageList))
+        return INTRO_PAGE;
 
     DrawGenericList(LanguageList,
                     2,

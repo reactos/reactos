@@ -55,10 +55,6 @@ DrawGenericList(
     SHORT Bottom);
 
 VOID
-DrawScrollBarGenericLis(
-    PGENERIC_LIST List);
-
-VOID
 ScrollDownGenericList(
     PGENERIC_LIST List);
 
@@ -120,5 +116,9 @@ VOID
 GenericListKeyPress(
     PGENERIC_LIST List,
     CHAR AsciChar);
+
+BOOL
+GenericListHasSingleEntry(
+    PGENERIC_LIST List);
 
 /* EOF */
