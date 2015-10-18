@@ -235,7 +235,8 @@ CcRosFlushDirtyPages (
         KeAcquireGuardedMutex(&ViewLock);
         CcRosVacbDecRefCount(current);
 
-        if (!NT_SUCCESS(Status) &&  (Status != STATUS_END_OF_FILE))
+        if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE) &&
+            (Status != STATUS_MEDIA_WRITE_PROTECTED))
         {
             DPRINT1("CC: Failed to flush VACB.\n");
         }
