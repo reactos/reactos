@@ -44,7 +44,7 @@ ConsoleCreateRemoteConsole (
 
     /* Construct it */
     Status = ConsoleRemoteConstruct(RemoteConsole);
-    if (!NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
     {
         /* Failed to construct it, delete it */
         BlMmFreeHeap(RemoteConsole);
