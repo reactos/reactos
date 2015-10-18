@@ -70,6 +70,8 @@ add_dependencies(libxml2 psdk)
 if(MSVC)
     # Formal parameter different from declaration
     add_target_compile_flags(libxml2 "/wd4101")
+    # Local variable initialized but not referenced
+    replace_compile_flags("/we4189" " ")
 else()
     add_target_compile_flags(libxml2 "-w")
 endif()
