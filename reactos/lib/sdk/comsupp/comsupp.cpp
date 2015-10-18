@@ -62,13 +62,12 @@ BSTR WINAPI ConvertStringToBSTR(const char *pSrc)
 
     if (!pSrc) return NULL;
 
-    /* Compute the needed size without the NULL terminator */
+    /* Compute the needed size with the NULL terminator */
     cwch = ::MultiByteToWideChar(CP_ACP /* CP_UTF8 */, 0, pSrc, -1, NULL, 0);
     if (cwch == 0) return NULL;
-    cwch--;
 
-    /* Allocate the BSTR */
-    wsOut = ::SysAllocStringLen(NULL, cwch);
+    /* Allocate the BSTR (without the NULL terminator) */
+    wsOut = ::SysAllocStringLen(NULL, cwch - 1);
     if (!wsOut)
     {
         ::_com_issue_error(HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY));
@@ -97,11 +96,11 @@ char* WINAPI ConvertBSTRToString(BSTR pSrc)
 
     if (!pSrc) return NULL;
 
-    /* Retrieve the size of the BSTR without the NULL terminator */
-    cwch = ::SysStringLen(pSrc);
+    /* Retrieve the size of the BSTR with the NULL terminator */
+    cwch = ::SysStringLen(pSrc) + 1;
 
     /* Compute the needed size with the NULL terminator */
-    cb = ::WideCharToMultiByte(CP_ACP /* CP_UTF8 */, 0, pSrc, cwch + 1, NULL, 0, NULL, NULL);
+    cb = ::WideCharToMultiByte(CP_ACP /* CP_UTF8 */, 0, pSrc, cwch, NULL, 0, NULL, NULL);
     if (cb == 0)
     {
         cwch = ::GetLastError();
@@ -118,8 +117,8 @@ char* WINAPI ConvertBSTRToString(BSTR pSrc)
     }
 
     /* Convert the string and NULL-terminate */
-    szOut[cb - 1]  = '\0';
-    if (::WideCharToMultiByte(CP_ACP /* CP_UTF8 */, 0, pSrc, cwch + 1, szOut, cb, NULL, NULL) == 0)
+    szOut[cb - 1] = '\0';
+    if (::WideCharToMultiByte(CP_ACP /* CP_UTF8 */, 0, pSrc, cwch, szOut, cb, NULL, NULL) == 0)
     {
         /* We failed, clean everything up */
         cwch = ::GetLastError();
