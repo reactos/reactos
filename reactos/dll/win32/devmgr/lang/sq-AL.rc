@@ -323,3 +323,4 @@ BEGIN
   IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
   IDS_HINT_SYS_CLOSE    " Closes this window."
 END
+
