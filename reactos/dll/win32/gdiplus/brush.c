@@ -18,18 +18,19 @@
 
 #include "gdiplus_private.h"
 
+#ifdef __REACTOS__
 /*
     Unix stuff
     Code from http://www.johndcook.com/blog/2009/01/19/stand-alone-error-function-erf/
 */
 double erf(double x)
 {
-    const float a1 =  0.254829592;
-    const float a2 = -0.284496736;
-    const float a3 =  1.421413741;
-    const float a4 = -1.453152027;
-    const float a5 =  1.061405429;
-    const float p  =  0.3275911;
+    const float a1 =  0.254829592f;
+    const float a2 = -0.284496736f;
+    const float a3 =  1.421413741f;
+    const float a4 = -1.453152027f;
+    const float a5 =  1.061405429f;
+    const float p  =  0.3275911f;
     float t, y, sign;
 
     /* Save the sign of x */
@@ -44,6 +45,7 @@ double erf(double x)
 
     return sign*y;
 }
+#endif
 
 /******************************************************************************
  * GdipCloneBrush [GDIPLUS.@]
