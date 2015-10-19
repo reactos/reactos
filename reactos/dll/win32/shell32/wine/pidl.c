@@ -2597,15 +2597,15 @@ void _ILFreeaPidl(LPITEMIDLIST * apidl, UINT cidl)
  *
  * copies an aPidl struct
  */
-LPITEMIDLIST* _ILCopyaPidl(const LPCITEMIDLIST * apidlsrc, UINT cidl)
+PITEMID_CHILD* _ILCopyaPidl(PCUITEMID_CHILD_ARRAY apidlsrc, UINT cidl)
 {
     UINT i;
-    LPITEMIDLIST *apidldest;
+    PITEMID_CHILD *apidldest;
 
     if (!apidlsrc)
         return NULL;
 
-    apidldest = SHAlloc(cidl * sizeof(LPITEMIDLIST));
+    apidldest = SHAlloc(cidl * sizeof(PITEMID_CHILD));
 
     for (i = 0; i < cidl; i++)
         apidldest[i] = ILClone(apidlsrc[i]);

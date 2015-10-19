@@ -1746,10 +1746,10 @@ SHCreateDefaultContextMenu(
 HRESULT
 WINAPI
 CDefFolderMenu_Create2(
-    LPCITEMIDLIST pidlFolder,
+    PCIDLIST_ABSOLUTE pidlFolder,
     HWND hwnd,
     UINT cidl,
-    LPCITEMIDLIST *apidl,
+    PCUITEMID_CHILD_ARRAY apidl,
     IShellFolder *psf,
     LPFNDFMCALLBACK lpfn,
     UINT nKeys,

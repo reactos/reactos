@@ -147,7 +147,7 @@ class CIDLDataObj :
 {
 private:
     LPITEMIDLIST    pidl;
-    LPITEMIDLIST *    apidl;
+    PIDLIST_RELATIVE *apidl;
     UINT        cidl;
     DWORD        dropeffect;
 
@@ -160,7 +160,7 @@ private:
 public:
     CIDLDataObj();
     ~CIDLDataObj();
-    HRESULT WINAPI Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidlx, UINT cidlx);
+    HRESULT WINAPI Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidlx, UINT cidlx);
 
     ///////////
     virtual HRESULT WINAPI GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium);
@@ -204,7 +204,7 @@ CIDLDataObj::~CIDLDataObj()
     ILFree(pidl);
 }
 
-HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidlx, UINT cidlx)
+HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidlx, UINT cidlx)
 {
     pidl = ILClone(pMyPidl);
     apidl = _ILCopyaPidl(apidlx, cidlx);
@@ -408,7 +408,7 @@ HRESULT WINAPI CIDLDataObj::EndOperation(HRESULT hResult, IBindCtx *pbcReserved,
 /**************************************************************************
 *  IDataObject_Constructor
 */
-HRESULT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidl, UINT cidl, IDataObject **dataObject)
+HRESULT IDataObject_Constructor(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidl, UINT cidl, IDataObject **dataObject)
 {
     return ShellObjectCreatorInit<CIDLDataObj>(hwndOwner, pMyPidl, apidl, cidl, IID_IDataObject, dataObject);
 }
@@ -418,7 +418,7 @@ HRESULT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMID
  *
  */
 
-HRESULT WINAPI SHCreateDataObject(LPCITEMIDLIST pidlFolder, UINT cidl, LPCITEMIDLIST* apidl, IDataObject *pdtInner, REFIID riid, void **ppv)
+HRESULT WINAPI SHCreateDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject *pdtInner, REFIID riid, void **ppv)
 {
     if (IsEqualIID(riid, IID_IDataObject))
     {

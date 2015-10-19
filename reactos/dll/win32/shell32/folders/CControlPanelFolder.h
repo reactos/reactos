@@ -89,7 +89,7 @@ class CCPLItemMenu:
     public IContextMenu2
 {
 private:
-    LPCITEMIDLIST *m_apidl;
+    PITEMID_CHILD *m_apidl;
     UINT m_cidl;
 
 public:

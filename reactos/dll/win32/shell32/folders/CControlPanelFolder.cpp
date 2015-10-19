@@ -673,7 +673,7 @@ CCPLItemMenu::CCPLItemMenu()
 HRESULT WINAPI CCPLItemMenu::Initialize(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 {
     m_cidl = cidl;
-    m_apidl = const_cast<PCUITEMID_CHILD_ARRAY>(_ILCopyaPidl(apidl, m_cidl));
+    m_apidl = _ILCopyaPidl(apidl, m_cidl);
     if (m_cidl && !m_apidl)
         return E_OUTOFMEMORY;
 
@@ -682,7 +682,7 @@ HRESULT WINAPI CCPLItemMenu::Initialize(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 
 CCPLItemMenu::~CCPLItemMenu()
 {
-    _ILFreeaPidl(const_cast<PITEMID_CHILD *>(m_apidl), m_cidl);
+    _ILFreeaPidl(m_apidl, m_cidl);
 }
 
 HRESULT WINAPI CCPLItemMenu::QueryContextMenu(

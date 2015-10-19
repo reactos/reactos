@@ -1837,9 +1837,9 @@ void WINAPI SHDestroyPropSheetExtArray(HPSXA hpsxa)
  *  Create IDataObject from PIDLs??
  */
 HRESULT WINAPI CIDLData_CreateFromIDArray(
-	LPCITEMIDLIST pidlFolder,
+	PCIDLIST_ABSOLUTE pidlFolder,
     UINT cpidlFiles,
-	LPCITEMIDLIST *lppidlFiles,
+	PCUIDLIST_RELATIVE_ARRAY lppidlFiles,
 	LPDATAOBJECT *ppdataObject)
 {
     UINT i;

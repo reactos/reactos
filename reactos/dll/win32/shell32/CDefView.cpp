@@ -92,7 +92,7 @@ class CDefView :
         BOOL                      m_menusLoaded;
         UINT                      m_uState;
         UINT                      m_cidl;
-        PCUITEMID_CHILD_ARRAY     m_apidl;
+        PCUITEMID_CHILD          *m_apidl;
         PIDLIST_ABSOLUTE          m_pidlParent;
         LISTVIEW_SORT_INFO        m_sortInfo;
         ULONG                     m_hNotify;            /* change notification handle */
@@ -1227,7 +1227,7 @@ UINT CDefView::GetSelections()
     SHFree(m_apidl);
 
     m_cidl = m_ListView.GetSelectedCount();
-    m_apidl = reinterpret_cast<PCUITEMID_CHILD_ARRAY>(SHAlloc(m_cidl * sizeof(PCUITEMID_CHILD)));
+    m_apidl = static_cast<PCUITEMID_CHILD*>(SHAlloc(m_cidl * sizeof(PCUITEMID_CHILD)));
     if (!m_apidl)
     {
         m_cidl = 0;
