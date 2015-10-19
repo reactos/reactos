@@ -2139,10 +2139,10 @@ typedef struct
 {
   HWND hwnd;
   IContextMenuCB *pcmcb;
-  LPCITEMIDLIST pidlFolder;
+  PCIDLIST_ABSOLUTE pidlFolder;
   IShellFolder *psf;
   UINT cidl;
-  LPCITEMIDLIST* apidl;
+  PCUITEMID_CHILD_ARRAY apidl;
   IUnknown *punkAssociationInfo;
   UINT cKeys;
   const HKEY *aKeys;
@@ -2167,10 +2167,10 @@ typedef HRESULT
 HRESULT
 WINAPI
 CDefFolderMenu_Create2(
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCIDLIST_ABSOLUTE,
   _In_opt_ HWND,
   UINT cidl,
-  _In_reads_opt_(cidl) LPCITEMIDLIST*,
+  _In_reads_opt_(cidl) PCUITEMID_CHILD_ARRAY,
   _In_opt_ IShellFolder*,
   _In_opt_ LPFNDFMCALLBACK,
   UINT nKeys,
@@ -2190,9 +2190,9 @@ SHCreateDefaultExtractIcon(
  */
 
 HRESULT WINAPI SHCreateDataObject(
-  _In_opt_ LPCITEMIDLIST pidlFolder,
+  _In_opt_ PCIDLIST_ABSOLUTE pidlFolder,
   _In_ UINT cidl,
-  _In_reads_opt_(cidl) LPCITEMIDLIST* apidl,
+  _In_reads_opt_(cidl) PCUITEMID_CHILD_ARRAY apidl,
   _In_opt_ IDataObject *pdtInner,
   _In_ REFIID riid,
   _Outptr_ void **ppv);
@@ -2202,9 +2202,9 @@ HRESULT WINAPI SHCreateDataObject(
  */
 
 HRESULT WINAPI CIDLData_CreateFromIDArray(
-  _In_ LPCITEMIDLIST pidlFolder,
+  _In_ PCIDLIST_ABSOLUTE pidlFolder,
   _In_ UINT cidl,
-  _In_reads_opt_(cidl) LPCITEMIDLIST* apidl,
+  _In_reads_opt_(cidl) PCUIDLIST_RELATIVE_ARRAY apidl,
   _Outptr_ IDataObject **ppdtobj);
 
 /****************************************************************************
