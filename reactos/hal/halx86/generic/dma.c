@@ -146,15 +146,18 @@ HalpInitDma(VOID)
     HalpDmaOperations.FreeMapRegisters = (PFREE_MAP_REGISTERS)IoFreeMapRegisters;
     HalpDmaOperations.MapTransfer = (PMAP_TRANSFER)IoMapTransfer;
 
-    /*
-     * Check if Extended DMA is available. We're just going to do a random
-     * read and write.
-     */
-    WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2), 0x2A);
-    if (READ_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2)) == 0x2A)
+    if (HalpBusType == MACHINE_TYPE_EISA)
     {
-        DPRINT1("Machine supports EISA DMA. Bus type: %lu\n", HalpBusType);
-        HalpEisaDma = TRUE;
+        /*
+        * Check if Extended DMA is available. We're just going to do a random
+        * read and write.
+        */
+        WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2), 0x2A);
+        if (READ_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2)) == 0x2A)
+        {
+            DPRINT1("Machine supports EISA DMA. Bus type: %lu\n", HalpBusType);
+            HalpEisaDma = TRUE;
+        }
     }
 
     /*
