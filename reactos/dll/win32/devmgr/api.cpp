@@ -784,24 +784,6 @@ DeviceManagerPrintW(LPCWSTR lpMachineName,
     return FALSE;
 }
 
-
-BOOL
-WINAPI
-DllMain(IN HINSTANCE hinstDLL,
-IN DWORD dwReason,
-IN LPVOID lpvReserved)
-{
-    switch (dwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            hDllInstance = hinstDLL;
-            break;
-    }
-
-    return TRUE;
-}
-
 class CDevMgrUIModule : public CComModule
 {
 public:
@@ -827,4 +809,24 @@ STDAPI DllRegisterServer()
 STDAPI DllUnregisterServer()
 {
     return gModule.DllUnregisterServer(FALSE);
+}
+
+extern "C" {
+
+BOOL
+WINAPI
+DllMain(_In_ HINSTANCE hinstDLL,
+        _In_ DWORD dwReason,
+        _In_ LPVOID lpvReserved)
+{
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            hDllInstance = hinstDLL;
+            break;
+    }
+
+    return TRUE;
+}
 }
