@@ -271,7 +271,8 @@ CDeviceView::OnAction(
 
         case IDC_UPDATE_DRV:
         {
-            MessageBox(m_hMainWnd, L"Not yet implemented", L"Update Driver", MB_OK);
+            bool NeedsReboot;
+            UpdateSelectedDevice(NeedsReboot);
             break;
         }
 
@@ -741,11 +742,41 @@ CDeviceView::EnableSelectedDevice(
 }
 
 bool
+CDeviceView::UpdateSelectedDevice(
+    _Out_ bool &NeedsReboot
+    )
+{
+    CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
+    if (Node == nullptr) return false;
+
+    DWORD dwReboot;
+    if (InstallDevInst(m_hMainWnd, Node->GetDeviceId(), TRUE, &dwReboot))
+    {
+        NeedsReboot = false;
+        return true;
+    }
+
+    return false;
+}
+
+bool
 CDeviceView::UninstallSelectedDevice(
     )
 {
     CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
     if (Node == nullptr) return false;
+
+    CAtlStringW str;
+    if (str.LoadStringW(g_hThisInstance, IDS_CONFIRM_UNINSTALL))
+    {
+        if (MessageBoxW(m_hMainWnd,
+            str,
+            Node->GetDisplayName(),
+            MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
+        {
+            return false;
+        }
+    }
 
     return Node->UninstallDevice();
 }

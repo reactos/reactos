@@ -115,6 +115,10 @@ private:
         _Out_ bool &NeedsReboot
         );
 
+    bool UpdateSelectedDevice(
+        _Out_ bool &NeedsReboot
+        );
+
     bool UninstallSelectedDevice(
         );
 
