@@ -268,6 +268,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Device Manager"
   IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
+  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN

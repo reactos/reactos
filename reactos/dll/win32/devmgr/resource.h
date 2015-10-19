@@ -48,6 +48,7 @@
 
 /* General strings */
 #define IDS_CONFIRM_DISABLE     80
+#define IDS_CONFIRM_UNINSTALL   81
 
 /* Menu strings */
 #define IDS_MENU_UPDATE         90
