@@ -22,6 +22,8 @@
 
 #include <strsafe.h>
 
+#include <devmgr/devmgr.h>
+
 #define ERR printf
 #define FIXME printf
 #define UNIMPLEMENTED
@@ -68,6 +70,7 @@ OUT LPDWORD lpReboot);
 #include <atlstr.h>
 #include <atlcoll.h>
 
+#include <devmgr/devmgr.h>
 #include <wine/debug.h>
 
 //WINE_DEFAULT_DEBUG_CHANNEL(devmgr);

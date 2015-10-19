@@ -122,6 +122,9 @@ private:
     bool UninstallSelectedDevice(
         );
 
+    bool RunAddHardwareWizard(
+        );
+
     bool GetChildDevice(
         _In_ DEVINST ParentDevInst,
         _Out_ PDEVINST DevInst

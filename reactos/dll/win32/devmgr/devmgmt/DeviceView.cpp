@@ -19,18 +19,8 @@
 #define CLASS_DESC_LEN      256
 #define ROOT_NAME_SIZE      MAX_COMPUTERNAME_LENGTH + 1
 
-extern "C" {
-INT_PTR
-WINAPI
-DevicePropertiesExW(
-    IN HWND hWndParent OPTIONAL,
-    IN LPCWSTR lpMachineName OPTIONAL,
-    IN LPCWSTR lpDeviceID OPTIONAL,
-    IN DWORD dwFlags OPTIONAL,
-    IN BOOL bShowDevMgr
-);
-}
-typedef INT_PTR(WINAPI *pDevicePropertiesExW)(HWND,LPCWSTR,LPCWSTR,DWORD,BOOL);
+
+typedef VOID(WINAPI *PADDHARDWAREWIZARD)(HWND hwnd, LPWSTR lpName);
 
 struct RefreshThreadData
 {
@@ -284,7 +274,7 @@ CDeviceView::OnAction(
 
         case IDC_ADD_HARDWARE:
         {
-            MessageBox(m_hMainWnd, L"Not yet implemented", L"Add Hardware", MB_OK);
+            RunAddHardwareWizard();
             break;
         }
     }
@@ -295,24 +285,6 @@ CDeviceView::OnAction(
 void
 CDeviceView::DisplayPropertySheet()
 {
-    //
-    // In ReactOS we can link to DevicePropertiesEx but
-    // not in windows as it's not part of the SDK 
-
-#ifndef __REACTOS__
-    HMODULE hModule = LoadLibraryW(L"devmgr.dll");
-    if (hModule == NULL) return;
-
-    pDevicePropertiesExW DevicePropertiesExW;
-    DevicePropertiesExW = (pDevicePropertiesExW)GetProcAddress(hModule,
-                                                               "DevicePropertiesExW");
-    if (DevicePropertiesExW == NULL)
-    {
-        FreeLibrary(hModule);
-        return;
-    }
-#endif
-
     CNode *Node = GetSelectedNode();
     if (Node && Node->HasProperties())
     {
@@ -322,10 +294,6 @@ CDeviceView::DisplayPropertySheet()
                             1,//DPF_EXTENDED,
                             FALSE);
     }
-
-#ifndef __REACTOS__
-    FreeLibrary(hModule);
-#endif
 }
 
 void
@@ -779,6 +747,29 @@ CDeviceView::UninstallSelectedDevice(
     }
 
     return Node->UninstallDevice();
+}
+
+bool
+CDeviceView::RunAddHardwareWizard()
+{
+    PADDHARDWAREWIZARD pAddHardwareWizard;
+    HMODULE hModule;
+
+    hModule = LoadLibraryW(L"hdwwiz.cpl");
+    if (hModule == NULL) return false;
+
+    pAddHardwareWizard = (PADDHARDWAREWIZARD)GetProcAddress(hModule,
+                                                            "AddHardwareWizard");
+    if (pAddHardwareWizard == NULL)
+    {
+        FreeLibrary(hModule);
+        return false;
+    }
+
+    pAddHardwareWizard(m_hMainWnd, NULL);
+
+    FreeLibrary(hModule);
+    return true;
 }
 
 bool

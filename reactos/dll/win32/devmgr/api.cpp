@@ -17,7 +17,6 @@
 */
 
 #include "precomp.h"
-#include <devmgr/devmgr.h>
 #include "devmgmt/MainWindow.h"
 #include "properties/properties.h"
 
