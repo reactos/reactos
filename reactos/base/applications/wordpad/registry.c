@@ -156,9 +156,9 @@ static void format_filelist_filename(LPWSTR file, LPWSTR out)
 {
     LPWSTR pos_basename;
     LPWSTR truncpos1, truncpos2;
-    WCHAR myDocs[MAX_STRING_LEN];
+    WCHAR myDocs[MAX_PATH];
 
-    SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, (LPWSTR)&myDocs);
+    SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, myDocs);
     pos_basename = file_basename(file);
     truncpos1 = NULL;
     truncpos2 = NULL;

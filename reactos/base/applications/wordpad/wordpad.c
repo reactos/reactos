@@ -1229,7 +1229,7 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
         if (pFr->lpstrFindWhat != custom_data->findBuffer)
         {
             lstrcpynW(custom_data->findBuffer, pFr->lpstrFindWhat,
-                      sizeof(custom_data->findBuffer));
+                      _countof(custom_data->findBuffer));
             pFr->lpstrFindWhat = custom_data->findBuffer;
         }
 
