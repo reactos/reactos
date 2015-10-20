@@ -371,11 +371,11 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 
             StrFormatByteSizeW(CommitChargeTotal * 1024,
                                szChargeTotalFormat,
-                               sizeof(szChargeTotalFormat));
+                               _countof(szChargeTotalFormat));
 
             StrFormatByteSizeW(CommitChargeLimit * 1024,
                                szChargeLimitFormat,
-                               sizeof(szChargeLimitFormat));
+                               _countof(szChargeLimitFormat));
 
             if (!bInMenuLoop)
             {
