@@ -505,16 +505,20 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     if (!Expanded)
     {
         DPRINT("Error allocating memory for boot driver name!\n");
+        RtlFreeUnicodeString(&NtPathName);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     ExpandedLen = NtPathName.Length / sizeof(WCHAR);
     wcsncpy(Expanded, NtPathName.Buffer, ExpandedLen);
     Expanded[ExpandedLen] = UNICODE_NULL;
+    RtlFreeUnicodeString(&NtPathName);
 
     if (ServiceNameLen > ExpandedLen &&
         !_wcsnicmp(Expanded, CanonName, ExpandedLen))
     {
+        HeapFree(GetProcessHeap(), 0, Expanded);
+
         /* Only \SystemRoot\ is missing */
         *RelativeName = HeapAlloc(GetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
@@ -522,16 +526,17 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         if (*RelativeName == NULL)
         {
             DPRINT("Error allocating memory for boot driver name!\n");
-            HeapFree(GetProcessHeap(), 0, Expanded);
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
         wcscpy(*RelativeName, L"\\SystemRoot\\");
         wcscat(*RelativeName, CanonName + ExpandedLen);
 
-        RtlFreeUnicodeString(&NtPathName);
         return ERROR_SUCCESS;
     }
+
+    /* No longer need this */
+    HeapFree(GetProcessHeap(), 0, Expanded);
 
     /* The most complex case starts here */
     RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot");
@@ -543,24 +548,20 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
     /* Open this symlink */
     Status = NtOpenSymbolicLinkObject(&SymbolicLinkHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
-
     if (NT_SUCCESS(Status))
     {
-        LinkTarget.Length = 0;
-        LinkTarget.MaximumLength = 0;
-
         DPRINT("Opened symbolic link object\n");
 
+        RtlInitEmptyUnicodeString(&LinkTarget, NULL, 0);
         Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
         if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
         {
             /* Check if required buffer size is sane */
-            if (BufferSize > 0xFFFD)
+            if (BufferSize > UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL))
             {
                 DPRINT("Too large buffer required\n");
 
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                HeapFree(GetProcessHeap(), 0, Expanded);
+                NtClose(SymbolicLinkHandle);
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
 
@@ -573,13 +574,13 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             if (!LinkTarget.Buffer)
             {
                 DPRINT("Unable to alloc buffer\n");
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                HeapFree(GetProcessHeap(), 0, Expanded);
+                NtClose(SymbolicLinkHandle);
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
 
             /* Do a real query now */
             Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
+            NtClose(SymbolicLinkHandle);
             if (NT_SUCCESS(Status))
             {
                 DPRINT("LinkTarget: %wZ\n", &LinkTarget);
@@ -595,9 +596,6 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
                     if (*RelativeName == NULL)
                     {
                         DPRINT("Unable to alloc buffer\n");
-                        if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                        HeapFree(GetProcessHeap(), 0, Expanded);
-                        RtlFreeUnicodeString(&NtPathName);
                         return ERROR_NOT_ENOUGH_MEMORY;
                     }
 
@@ -606,37 +604,24 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
                     wcscpy(*RelativeName, L"\\SystemRoot\\");
                     wcscat(*RelativeName, CanonName+ExpandedLen+1);
 
-                    /* Cleanup */
-                    if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                    HeapFree(GetProcessHeap(), 0, Expanded);
-                    RtlFreeUnicodeString(&NtPathName);
-
                     /* Return success */
                     return ERROR_SUCCESS;
                 }
                 else
                 {
-                    if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                    HeapFree(GetProcessHeap(), 0, Expanded);
-                    RtlFreeUnicodeString(&NtPathName);
                     return ERROR_INVALID_PARAMETER;
                 }
             }
             else
             {
                 DPRINT("Error, Status = %08X\n", Status);
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                HeapFree(GetProcessHeap(), 0, Expanded);
-                RtlFreeUnicodeString(&NtPathName);
                 return ERROR_INVALID_PARAMETER;
             }
         }
         else
         {
             DPRINT("Error, Status = %08X\n", Status);
-            if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-            HeapFree(GetProcessHeap(), 0, Expanded);
-            RtlFreeUnicodeString(&NtPathName);
+            NtClose(SymbolicLinkHandle);
             return ERROR_INVALID_PARAMETER;
         }
     }
@@ -644,7 +629,6 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     {
         /* Failure */
         DPRINT("Error, Status = %08X\n", Status);
-        HeapFree(GetProcessHeap(), 0, Expanded);
         return ERROR_INVALID_PARAMETER;
     }
 }
@@ -5897,7 +5881,8 @@ DWORD REnumServicesStatusExA(
         if (!pszGroupNameW)
         {
              DPRINT("Failed to allocate buffer!\n");
-             return ERROR_NOT_ENOUGH_MEMORY;
+             dwError = ERROR_NOT_ENOUGH_MEMORY;
+             goto Done;
         }
 
         MultiByteToWideChar(CP_ACP,
@@ -5914,7 +5899,8 @@ DWORD REnumServicesStatusExA(
         if (!lpStatusPtrW)
         {
             DPRINT("Failed to allocate buffer!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto Done;
         }
     }
 
