@@ -259,7 +259,7 @@ static void LISTBOX_UpdateScroll( LB_DESCR *descr )
         if (descr->style & WS_VSCROLL)
             SetScrollInfo( descr->self, SB_VERT, &info, TRUE );
 
-        if (descr->style & WS_HSCROLL)
+        if (descr->style & WS_HSCROLL && descr->horz_extent)
         {
             info.nPos  = descr->horz_pos;
             info.nPage = descr->width;
@@ -267,6 +267,20 @@ static void LISTBOX_UpdateScroll( LB_DESCR *descr )
             if (descr->style & LBS_DISABLENOSCROLL)
                 info.fMask |= SIF_DISABLENOSCROLL;
             SetScrollInfo( descr->self, SB_HORZ, &info, TRUE );
+        }
+        else
+        {
+            if (descr->style & LBS_DISABLENOSCROLL)
+            {
+                info.nMin  = 0;
+                info.nMax  = 0;
+                info.fMask = SIF_RANGE | SIF_DISABLENOSCROLL;
+                SetScrollInfo( descr->self, SB_HORZ, &info, TRUE );
+            }
+            else
+            {
+                ShowScrollBar( descr->self, SB_HORZ, FALSE );
+            }
         }
     }
 }
@@ -313,7 +327,8 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
         ScrollWindowEx( descr->self, 0, diff, NULL, NULL, 0, NULL,
                         SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
     }
-    if (!scroll) InvalidateRect( descr->self, NULL, TRUE );
+    else
+        InvalidateRect( descr->self, NULL, TRUE );
     descr->top_item = index;
     LISTBOX_UpdateScroll( descr );
     return LB_OKAY;
@@ -1244,6 +1259,8 @@ static LRESULT LISTBOX_SetHorizontalExtent( LB_DESCR *descr, INT extent )
         info.nMin  = 0;
         info.nMax = descr->horz_extent ? descr->horz_extent - 1 : 0;
         info.fMask = SIF_RANGE;
+        if (descr->style & LBS_DISABLENOSCROLL)
+            info.fMask |= SIF_DISABLENOSCROLL;
         SetScrollInfo( descr->self, SB_HORZ, &info, TRUE );
     }
     if (descr->horz_pos > extent - descr->width)
@@ -2908,7 +2925,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
 
     case LB_SETCURSEL:
         if (IS_MULTISELECT(descr)) return LB_ERR;
-        LISTBOX_SetCaretIndex( descr, wParam, FALSE );
+        LISTBOX_SetCaretIndex( descr, wParam, TRUE );
         ret = LISTBOX_SetSelection( descr, wParam, TRUE, FALSE );
 	if (ret != LB_ERR) ret = descr->selected_item;
 	return ret;
