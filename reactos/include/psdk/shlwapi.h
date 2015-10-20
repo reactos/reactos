@@ -21,7 +21,7 @@
 #ifndef __WINE_SHLWAPI_H
 #define __WINE_SHLWAPI_H
 
-/* FIXME: #include <specstrings.h> */
+#include <specstrings.h>
 #include <objbase.h>
 #include <shtypes.h>
 

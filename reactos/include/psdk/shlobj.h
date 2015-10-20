@@ -968,6 +968,7 @@ typedef struct tagBROWSEINFOW {
 #define BIF_BROWSEFORCOMPUTER  0x1000
 #define BIF_BROWSEFORPRINTER   0x2000
 #define BIF_BROWSEINCLUDEFILES 0x4000
+#define BIF_SHAREABLE          0x8000
 
 /* message from browser */
 #define BFFM_INITIALIZED        1
