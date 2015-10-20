@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/msconfig_new/toolspage.cpp
+ * FILE:        base/applications/msconfig_new/toolspage.h
  * PURPOSE:     Tools page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *              Copyright 2011-2012 Hermes BELUSCA - MAITO <hermes.belusca@sfr.fr>

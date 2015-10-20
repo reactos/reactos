@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Applications
+ * LICENSE:     LGPL - See COPYING in the top level directory
+ * FILE:        base/applications/msconfig_new/utils.c
+ * PURPOSE:     Memory Management, Resources, ... Utility Functions
+ * COPYRIGHT:   Copyright 2011-2012 Hermes BELUSCA - MAITO <hermes.belusca@sfr.fr>
+ */
+
 #ifndef __UTILS_H__
 #define __UTILS_H__
 

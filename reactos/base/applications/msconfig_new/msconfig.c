@@ -116,7 +116,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 
-/* Message handler for dialog box. */
+/* Message handler for dialog box */
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam)
 {
     switch (uMessage)

@@ -10,11 +10,11 @@ include_directories(
 
 list(APPEND C_SOURCE
     comctl32ex/listviewfuncs.c
-    # toolspage.c
     # srvpage.c
     # systempage.c
     # startuppage.c
     # freeldrpage.c
+    fileutils.c
     generalpage.c
     msconfig.c
     stringutils.c

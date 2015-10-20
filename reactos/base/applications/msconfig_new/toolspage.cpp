@@ -16,7 +16,7 @@ static HWND hToolsPage     = NULL;
 static HWND hToolsListCtrl = NULL;
 static int  iSortedColumn  = 0;
 
-typedef struct TOOL
+struct TOOL
 {
     TOOL(const _bstr_t& Command,
          const _bstr_t& DefParam,
@@ -37,8 +37,7 @@ typedef struct TOOL
     _bstr_t m_Command;
     _bstr_t m_DefParam;
     _bstr_t m_AdvParam;
-
-} *PTOOL;
+};
 
 static void AddTool(IXMLDOMElement*, BOOL);
 
@@ -120,7 +119,7 @@ ParseToolsList(IXMLDOMDocument* pXMLDom, BOOL bIsStandard)
 }
 
 static void
-AddItem(BOOL bIsStandard, const _bstr_t& name, const _bstr_t& descr, PTOOL tool)
+AddItem(BOOL bIsStandard, const _bstr_t& name, const _bstr_t& descr, TOOL* tool)
 {
     LPTSTR lpszStandard;
     LVITEM item = {};
@@ -155,7 +154,7 @@ AddItem(BOOL bIsStandard, const _bstr_t& name, const _bstr_t& descr, PTOOL tool)
 static void
 AddTool(IXMLDOMElement* pXMLTool, BOOL bIsStandard)
 {
-    PTOOL tool;
+    TOOL* tool;
     _variant_t varLocID, varName, varPath,
                varDefOpt, varAdvOpt, varHelp;
 
@@ -234,7 +233,7 @@ BuildCommandLine(LPWSTR lpszDest, LPCWSTR lpszCmdLine, LPCWSTR lpszParam, size_t
 
 static void Update_States(int iSelectedItem)
 {
-    PTOOL tool;
+    TOOL* tool;
     LVITEM item = {};
 
     assert(hToolsPage);
@@ -246,7 +245,7 @@ static void Update_States(int iSelectedItem)
     {
         LPTSTR lpszCmdLine = NULL;
         size_t numOfChars  = 0;
-        tool = reinterpret_cast<PTOOL>(item.lParam);
+        tool = reinterpret_cast<TOOL*>(item.lParam);
 
         ListView_EnsureVisible(hToolsListCtrl, item.iItem, FALSE);
 
@@ -308,7 +307,7 @@ static BOOL RunSelectedTool(VOID)
             bUseAdvParams = FALSE;
 
         // Values greater (strictly) than 32 indicate success (see MSDN documentation for ShellExecute(...) API).
-        bRetVal = (reinterpret_cast<PTOOL>(item.lParam)->Run(bUseAdvParams) > 32);
+        bRetVal = (reinterpret_cast<TOOL*>(item.lParam)->Run(bUseAdvParams) > 32);
     }
 
     return bRetVal;
@@ -386,7 +385,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 ListView_GetItem(hToolsListCtrl, &lvitem);
 
-                delete reinterpret_cast<PTOOL>(lvitem.lParam);
+                delete reinterpret_cast<TOOL*>(lvitem.lParam);
                 lvitem.lParam = NULL;
             }
             ListView_DeleteAllItems(hToolsListCtrl);
@@ -418,16 +417,16 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WM_NOTIFY:
         {
-            if (reinterpret_cast<LPNMHDR>(lParam)->hwndFrom == hToolsListCtrl)
+            if (((LPNMHDR)lParam)->hwndFrom == hToolsListCtrl)
             {
-                switch (reinterpret_cast<LPNMHDR>(lParam)->code)
+                switch (((LPNMHDR)lParam)->code)
                 {
                     case LVN_ITEMCHANGED:
                     {
-                        if ( (reinterpret_cast<LPNMLISTVIEW>(lParam)->uChanged  & LVIF_STATE) && /* The state has changed */
-                             (reinterpret_cast<LPNMLISTVIEW>(lParam)->uNewState & LVIS_SELECTED) /* The item has been (de)selected */ )
+                        if ( (((LPNMLISTVIEW)lParam)->uChanged  & LVIF_STATE) && /* The state has changed */
+                             (((LPNMLISTVIEW)lParam)->uNewState & LVIS_SELECTED) /* The item has been (de)selected */ )
                         {
-                            Update_States(reinterpret_cast<LPNMLISTVIEW>(lParam)->iItem);
+                            Update_States(((LPNMLISTVIEW)lParam)->iItem);
                         }
 
                         return TRUE;
@@ -442,7 +441,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     case LVN_COLUMNCLICK:
                     {
-                        int iSortingColumn = reinterpret_cast<LPNMLISTVIEW>(lParam)->iSubItem;
+                        int iSortingColumn = ((LPNMLISTVIEW)lParam)->iSubItem;
 
                         ListView_SortEx(hToolsListCtrl, iSortingColumn, iSortedColumn);
                         iSortedColumn = iSortingColumn;
@@ -456,7 +455,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
             else
             {
-                switch (reinterpret_cast<LPNMHDR>(lParam)->code)
+                switch (((LPNMHDR)lParam)->code)
                 {
                     case PSN_APPLY:
                     {
@@ -469,7 +468,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     case PSN_HELP:
                     {
-                        MessageBox(hToolsPage, _T("Help not implemented yet!"), _T("Help"), MB_ICONINFORMATION | MB_OK);
+                        MessageBoxW(hToolsPage, L"Help not implemented yet!", L"Help", MB_ICONINFORMATION | MB_OK);
                         return TRUE;
                     }
                 
