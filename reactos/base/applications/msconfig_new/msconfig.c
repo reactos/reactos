@@ -126,7 +126,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
             switch (LOWORD(wParam) /*GET_WM_COMMAND_ID(wParam, lParam)*/)
             {
                 case IDM_ABOUT:
-                    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                    DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_ABOUTBOX), hWnd, About);
                     // break;
                     return TRUE;
             }
@@ -140,7 +140,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
             switch (LOWORD(wParam) /*GET_WM_COMMAND_ID(wParam, lParam)*/)
             {
                 case IDM_ABOUT:
-                    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                    DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_ABOUTBOX), hWnd, About);
                     // break;
                     return TRUE;
             }

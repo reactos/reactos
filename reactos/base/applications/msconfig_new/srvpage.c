@@ -192,7 +192,7 @@ GetServices ( void )
                     {
                         if (pServiceFailureActions->cActions && pServiceFailureActions->lpsaActions[0].Type == SC_ACTION_REBOOT)
                         {
-                                LoadString(hInst, IDS_SERVICES_YES, szStatus, 128);
+                                LoadString(hInst, IDS_YES, szStatus, 128);
                                 item.pszText = szStatus;
                                 item.iSubItem = 1;
                                 SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);

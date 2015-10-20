@@ -11,13 +11,14 @@
 #include "fileutils.h"
 #include "utils.h"
 #include "commctrldefs.h"
+#include "fileextractdialog.h"
 
 static LPCWSTR lpszRestoreProgPath1 = L"%SystemRoot%\\System32\\rstrui.exe";
 static LPCWSTR lpszRestoreProgPath2 = L"%SystemRoot%\\System32\\restore\\rstrui.exe";
 
 static HWND hGeneralPage       = NULL;
 static BOOL bIsOriginalBootIni    = TRUE;
-static BOOL bIsStartupNotModified = TRUE;
+// static BOOL bIsStartupNotModified = TRUE;
 
 static VOID EnableSelectiveStartupControls(BOOL bEnable)
 {
@@ -142,9 +143,9 @@ GeneralPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 }
 
-                // case IDC_BTN_FILE_EXTRACTION:
-                    // DialogBox(hInst, MAKEINTRESOURCE(IDD_FILE_EXTRACT_DIALOG), hGeneralPage /* GetParent(hGeneralPage) */, FileExtractDialogWndProc);
-                    // break;
+                case IDC_BTN_FILE_EXTRACTION:
+                    DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_FILE_EXTRACT_DIALOG), hGeneralPage /* GetParent(hGeneralPage) */, FileExtractDialogWndProc);
+                    break;
 
                 default:
                     //break;

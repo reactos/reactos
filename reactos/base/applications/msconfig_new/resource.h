@@ -13,9 +13,6 @@
 #define IDD_SYSTEM_PAGE           107
 #define IDD_FREELDR_ADVANCED_PAGE 108
 
-#define IDC_TAB                       1001
-#define IDC_BTN_APPLY                 1002
-#define IDC_BTN_HELP                  1003
 #define IDC_SERVICES_LIST             1006
 #define IDC_STARTUP_LIST              1008
 #define IDC_BTN_SERVICES_ACTIVATE     1009
@@ -43,6 +40,15 @@
 #define IDS_TOOLS_COLUMN_NAME           2010
 #define IDS_TOOLS_COLUMN_DESCR          2011
 #define IDS_TOOLS_COLUMN_STANDARD       2006
+
+/* File extract dialog */
+#define IDD_FILE_EXTRACT_DIALOG         1500
+#define IDC_BTN_BROWSE_ALL_FILES        1501
+#define IDC_BTN_BROWSE_CAB_FILES        1502
+#define IDC_BTN_BROWSE_DIRS             1503
+#define IDC_TXT_FILE_TO_RESTORE         1504
+#define IDC_DRP_CAB_FILE                1505
+#define IDC_DRP_DEST_DIR                1506
 
 #define IDC_LIST_BOX                  1019
 #define IDC_BTN_CHECK_BOOT_PATH       1020
@@ -101,7 +107,6 @@
 
 #define IDS_SERVICES_STATUS_STOPPED 2200
 #define IDS_SERVICES_STATUS_RUNNING 2201
-#define IDS_SERVICES_YES            2202
 #define IDS_SERVICES_UNKNOWN        2203
 
 

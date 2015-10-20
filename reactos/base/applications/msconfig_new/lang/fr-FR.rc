@@ -133,6 +133,25 @@ BEGIN
     PUSHBUTTON "Annuler", IDC_CANCEL, 100, 160, 50, 12
 END
 
+IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Décompression de fichiers à partir de la source d'installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Indiquez les fichiers que vous voulez restaurer, l'emplacement de la source contenant les fichiers d'installation ainsi que l'emplacement de destination des fichiers.", IDC_STATIC, 7, 7, 339, 17
+    LTEXT           "&Fichiers à restaurer :", IDC_STATIC, 7, 34, 93, 10
+    EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
+    PUSHBUTTON      "Parco&urir les fichiers...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
+    LTEXT           "&Restaurer à partir de :", IDC_STATIC, 7, 55, 93, 10
+    COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Parcourir &depuis...", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
+    LTEXT           "&Enregistrer les fichiers dans :", IDC_STATIC, 7, 76, 93, 10
+    COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Parcourir &vers...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
+    DEFPUSHBUTTON   "Décompresser", IDOK, 179, 96, 82, 14
+    PUSHBUTTON      "Annuler", IDCANCEL, 264, 96, 82, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_MSCONFIG            "Utilitaire de configuration système"
@@ -176,6 +195,5 @@ STRINGTABLE
 BEGIN
     IDS_SERVICES_STATUS_RUNNING "En cours d'exécution"
     IDS_SERVICES_STATUS_STOPPED "Arrêté"
-    IDS_SERVICES_YES "Oui"
     IDS_SERVICES_UNKNOWN "Inconnu"
 END

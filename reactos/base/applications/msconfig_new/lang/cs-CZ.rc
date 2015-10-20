@@ -139,6 +139,25 @@ BEGIN
     PUSHBUTTON "Storno", IDC_CANCEL, 100, 160, 50, 12
 END
 
+IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Expand Files from an Installation Source"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Specify the files you want to restore, the source location containing the installation files, and the destination location for the files.", IDC_STATIC, 7, 7, 339, 17
+    LTEXT           "F&iles to restore:", IDC_STATIC, 7, 34, 93, 10
+    EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse Files...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
+    LTEXT           "&Restore from:", IDC_STATIC, 7, 55, 93, 10
+    COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Browse &From...", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
+    LTEXT           "&Save files in:", IDC_STATIC, 7, 76, 93, 10
+    COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Browse &To...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
+    DEFPUSHBUTTON   "Expand", IDOK, 179, 96, 82, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 264, 96, 82, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_MSCONFIG            "Nástroj pro konfiguraci systému"
@@ -182,6 +201,5 @@ STRINGTABLE
 BEGIN
     IDS_SERVICES_STATUS_RUNNING "Spuštěno"
     IDS_SERVICES_STATUS_STOPPED "Zastaveno"
-    IDS_SERVICES_YES "Ano"
     IDS_SERVICES_UNKNOWN "Neznámý"
 END
