@@ -431,7 +431,7 @@ UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPC
 
         /* copy the locale-dependent string into the buffer of the future neutral one */
         StringCbCopyW(szCachedINISectionLocaleNeutral,
-                      sizeof(szCachedINISectionLocale),
+                      sizeof(szCachedINISectionLocaleNeutral),
                       szCachedINISectionLocale);
 
         /* turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part */
