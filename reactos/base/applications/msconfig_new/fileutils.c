@@ -56,7 +56,8 @@ FileQueryFiles(IN LPCWSTR Path,
     LPWSTR lpszExpandedQuery;
     HANDLE search;
 
-    lpszQuery = (LPWSTR)MemAlloc(0, (wcslen(Path) + 1 + wcslen(FileNamesQuery) + 1) * sizeof(WCHAR));
+    dwNumOfChars = wcslen(Path) + 1 + wcslen(FileNamesQuery) + 1;
+    lpszQuery = (LPWSTR)MemAlloc(0, dwNumOfChars * sizeof(WCHAR));
     wcscpy(lpszQuery, Path);
     wcscat(lpszQuery, L"\\");
     wcscat(lpszQuery, FileNamesQuery);
@@ -87,4 +88,36 @@ FileQueryFiles(IN LPCWSTR Path,
     MemFree(lpszExpandedQuery);
 
     return res;
+}
+
+BOOL BackupIniFile(IN LPCWSTR lpszIniFile)
+{
+    BOOL Success = FALSE;
+    DWORD dwNumOfChars = 0;
+    LPWSTR SourceFile, DestFile;
+    LPWSTR lpName, lpPath;
+
+    dwNumOfChars = ExpandEnvironmentStringsW(lpszIniFile, NULL, 0);
+    SourceFile = (LPWSTR)MemAlloc(0, dwNumOfChars * sizeof(WCHAR));
+    ExpandEnvironmentStringsW(lpszIniFile, SourceFile, dwNumOfChars);
+
+    lpName = wcsrchr(SourceFile, L'\\');
+    lpName = (lpName ? lpName + 1 : SourceFile);
+    dwNumOfChars = wcslen(L"%SystemRoot%\\pss\\") + wcslen(lpName) + 7 + 1;
+    lpPath = (LPWSTR)MemAlloc(0, dwNumOfChars * sizeof(WCHAR));
+    wcscpy(lpPath, L"%SystemRoot%\\pss\\");
+    wcscat(lpPath, lpName);
+    wcscat(lpPath, L".backup");
+
+    dwNumOfChars = ExpandEnvironmentStringsW(lpPath, NULL, 0);
+    DestFile = (LPWSTR)MemAlloc(0, dwNumOfChars * sizeof(WCHAR));
+    ExpandEnvironmentStringsW(lpPath, DestFile, dwNumOfChars);
+    MemFree(lpPath);
+
+    Success = CopyFileW(SourceFile, DestFile, TRUE /* don't overwrite */ /* FALSE */ /* overwrite */);
+
+    MemFree(DestFile);
+    MemFree(SourceFile);
+
+    return Success;
 }

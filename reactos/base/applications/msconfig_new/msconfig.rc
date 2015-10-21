@@ -21,6 +21,14 @@ BEGIN
     VK_F1,  IDM_ABOUT,  VIRTKEY,    SHIFT,  NOINVERT
 END
 
+STRINGTABLE
+BEGIN
+    IDS_TAB_SYSTEM          "SYSTEM.INI"
+    IDS_TAB_WIN             "WIN.INI"
+    IDS_TAB_FREELDR         "FREELDR.INI"
+    IDS_TAB_BOOT            "BOOT.INI"
+END
+
 #include <reactos/manifest_exe.rc>
 
 /* UTF-8 */

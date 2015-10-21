@@ -290,7 +290,7 @@ static void Update_States(int iSelectedItem)
 
 static BOOL RunSelectedTool(VOID)
 {
-    BOOL bRetVal = FALSE;
+    BOOL Success = FALSE;
     BOOL bUseAdvParams;
 
     LVITEM item = {};
@@ -307,10 +307,10 @@ static BOOL RunSelectedTool(VOID)
             bUseAdvParams = FALSE;
 
         // Values greater (strictly) than 32 indicate success (see MSDN documentation for ShellExecute(...) API).
-        bRetVal = (reinterpret_cast<TOOL*>(item.lParam)->Run(bUseAdvParams) > 32);
+        Success = (reinterpret_cast<TOOL*>(item.lParam)->Run(bUseAdvParams) > 32);
     }
 
-    return bRetVal;
+    return Success;
 }
 
 extern "C" {

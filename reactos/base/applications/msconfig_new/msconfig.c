@@ -7,13 +7,14 @@
  */
 
 #include "precomp.h"
+#include "fileutils.h"
 #include "utils.h"
 
 #include "toolspage.h"
-#include "srvpage.h"
-#include "startuppage.h"
+// #include "srvpage.h"
+// #include "startuppage.h"
 #include "freeldrpage.h"
-#include "systempage.h"
+// #include "systempage.h"
 #include "generalpage.h"
 
 /* Allow only for a single instance of MSConfig */
@@ -330,12 +331,13 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
             BackupIniFile(lpszWinIni);
         }
     }
+#endif
 
     /* FreeLdr page */
-    // TODO: Program the interface for Vista : "light" BCD editor...
+    // TODO: Program the interface for Vista: "light" BCD editor...
     if (!bIsWindows || (bIsWindows && bIsOSVersionLessThanVista))
     {
-        LPCTSTR lpszLoaderIniFile = NULL;
+        LPCWSTR lpszLoaderIniFile = NULL;
         DWORD   dwTabNameId       = 0;
         if (bIsWindows)
         {
@@ -363,6 +365,7 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
         }
     }
 
+#if 0
     /* Services page */
     psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
     psp[nPages].dwFlags     = PSP_HASHELP;

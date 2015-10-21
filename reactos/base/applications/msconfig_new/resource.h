@@ -32,6 +32,26 @@
 #define IDC_BTN_SYSTEM_RESTORE_START    1318
 #define IDC_BTN_FILE_EXTRACTION         1418
 
+/* FreeLdr page controls */
+#define IDS_TAB_FREELDR                 2003
+#define IDS_TAB_BOOT                    2004
+#define IDC_LIST_BOX                    1019
+#define IDC_BTN_CHECK_BOOT_PATH         1020
+#define IDC_BTN_SET_DEFAULT_BOOT        1021
+#define IDC_BTN_MOVE_UP_BOOT_OPTION     1022
+#define IDC_BTN_MOVE_DOWN_BOOT_OPTION   1023
+#define IDC_CBX_SAFE_BOOT               1024
+#define IDC_CBX_NO_GUI_BOOT             1025
+#define IDC_CBX_BOOT_LOG                1026
+#define IDC_CBX_BASE_VIDEO              1027
+#define IDC_CBX_SOS                     1028
+#define IDC_BTN_ADVANCED_OPTIONS        1029
+#define IDC_TXT_BOOT_TIMEOUT            1030
+#define IDC_RADIO1                      1077 // FIXME!
+#define IDC_RADIO2                      1078 // FIXME!
+#define IDC_RADIO3                      1079 // FIXME!
+#define IDC_RADIO4                      1080 // FIXME!
+
 /* Tools page controls */
 #define IDC_TOOLS_LIST                  1007
 #define IDC_TOOLS_CMDLINE               1004
@@ -39,7 +59,7 @@
 #define IDC_CBX_TOOLS_ADVOPT            1081
 #define IDS_TOOLS_COLUMN_NAME           2010
 #define IDS_TOOLS_COLUMN_DESCR          2011
-#define IDS_TOOLS_COLUMN_STANDARD       2006
+#define IDS_TOOLS_COLUMN_STANDARD       2009
 
 /* File extract dialog */
 #define IDD_FILE_EXTRACT_DIALOG         1500
@@ -50,18 +70,6 @@
 #define IDC_DRP_CAB_FILE                1505
 #define IDC_DRP_DEST_DIR                1506
 
-#define IDC_LIST_BOX                  1019
-#define IDC_BTN_CHECK_BOOT_PATH       1020
-#define IDC_BTN_SET_DEFAULT_BOOT      1021
-#define IDC_BTN_MOVE_UP_BOOT_OPTION   1022
-#define IDC_BTN_MOVE_DOWN_BOOT_OPTION 1023
-#define IDC_CBX_SAFE_BOOT             1024
-#define IDC_CBX_NO_GUI_BOOT           1025
-#define IDC_CBX_BOOT_LOG              1026
-#define IDC_CBX_BASE_VIDEO            1027
-#define IDC_CBX_SOS                   1028
-#define IDC_BTN_ADVANCED_OPTIONS      1029
-#define IDC_TXT_BOOT_TIMEOUT          1030
 #define IDC_CBX_MAX_MEM               1031
 #define IDC_TXT_MAX_MEM               1032
 #define IDC_SCR_MAX_MEM               1033
@@ -92,10 +100,10 @@
 #define IDC_BTN_SYSTEM_ACTIVATE       1058
 #define IDC_BTN_SYSTEM_DEACTIVATE     1059
 
-#define IDS_TAB_SYSTEM   2002
-#define IDS_TAB_FREELDR  2003
-#define IDS_TAB_STARTUP  2004
-#define IDS_TAB_SERVICES 2005
+#define IDS_TAB_SYSTEM   2005
+#define IDS_TAB_WIN      2006
+#define IDS_TAB_STARTUP  2007
+#define IDS_TAB_SERVICES 2008
 
 #define IDS_SERVICES_COLUMN_SERVICE 2012
 #define IDS_SERVICES_COLUMN_REQ     2013
@@ -107,7 +115,7 @@
 
 #define IDS_SERVICES_STATUS_STOPPED 2200
 #define IDS_SERVICES_STATUS_RUNNING 2201
-#define IDS_SERVICES_UNKNOWN        2203
+#define IDS_SERVICES_UNKNOWN        2202
 
 
 

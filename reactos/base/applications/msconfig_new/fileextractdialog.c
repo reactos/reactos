@@ -71,10 +71,7 @@ FileExtractDialogWndProc(HWND hDlg,
             {
                 case IDOK:
                 {
-                    LPWSTR szCabPathFileName;
-                    LPWSTR szFileName;
-                    LPWSTR szDestDir;
-
+                    LPWSTR szCabPathFileName, szFileName, szDestDir;
                     size_t cabPathNum, fileNameNum, destDirNum;
 
                     cabPathNum = GetWindowTextLengthW(GetDlgItem(hDlg, IDC_DRP_CAB_FILE)) + 1;

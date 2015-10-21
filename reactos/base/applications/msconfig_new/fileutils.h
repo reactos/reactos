@@ -55,6 +55,8 @@ FileQueryFiles(IN LPCWSTR Path,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+BOOL BackupIniFile(IN LPCWSTR lpszIniFile);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
