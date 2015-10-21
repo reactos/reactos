@@ -246,79 +246,78 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&File"
+  POPUP "&Datei"
   BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
+    MENUITEM "&Beenden",                       IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "Ak&tion",                          IDC_ACTIONMENU
+  POPUP "&Ansicht"
   BEGIN
-    MENUITEM "Devices by type",             IDC_DEVBYTYPE
-    MENUITEM "Devices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM "Geräte nach &Typ",               IDC_DEVBYTYPE
+    MENUITEM "Garäte nach &Verbindung",        IDC_DEVBYCONN
+    MENUITEM "Ressourcen nac&h Typ",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ressourcen nach V&erbindung",    IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Ausgeblendete &Geräte anzeigen", IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "&Hilfe"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "Ü&ber",                          IDC_ABOUT
   END
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "ReactOS Device Manager"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_APPNAME               "ReactOS Geräte-Manager"
+  IDS_CONFIRM_DISABLE       "Dieses Gerät zu deaktivieren wird dessen Funktion einstellen.\r\nWollen Sie es wirklich deaktivieren?"
+  IDS_CONFIRM_UNINSTALL     "Warnung: Sie sind dabei, dieses Gerät deinstallieren\r\nMöchten Sie den Vorgang fortsetzen?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Update driver software..."
-  IDS_MENU_ENABLE           "Enable"
-  IDS_MENU_DISABLE          "Disable"
-  IDS_MENU_UNINSTALL        "Uninstall"
-  IDS_MENU_SCAN             "Scan for hardware changes"
-  IDS_MENU_ADD              "Add hardware"
-  IDS_MENU_PROPERTIES       "Properties"
+  IDS_MENU_UPDATE           "Treibersoftware aktualisieren ..."
+  IDS_MENU_ENABLE           "Aktivieren"
+  IDS_MENU_DISABLE          "Deaktivieren"
+  IDS_MENU_UNINSTALL        "Deinstallieren"
+  IDS_MENU_SCAN             "Nach geänderter Hardware suchen"
+  IDS_MENU_ADD              "Hardware hinzufügen"
+  IDS_MENU_PROPERTIES       "Eigenschaften"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Properties"
-  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
-  IDS_TOOLTIP_ENABLE        "Enable"
-  IDS_TOOLTIP_DISABLE       "Disable"
-  IDS_TOOLTIP_UPDATE        "Update Driver Software"
-  IDS_TOOLTIP_UNINSTALL     "Uninstall"
+  IDS_TOOLTIP_PROPERTIES    "Eigenschaften"
+  IDS_TOOLTIP_SCAN          "Nach geänderter Hardware suchen"
+  IDS_TOOLTIP_ENABLE        "Aktivieren"
+  IDS_TOOLTIP_DISABLE       "Deaktivieren"
+  IDS_TOOLTIP_UPDATE        "Treibersoftware aktualisieren"
+  IDS_TOOLTIP_UNINSTALL     "Deinstallieren"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
-  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
-  IDS_HINT_ENABLE       " Enables the selected device."
-  IDS_HINT_DISABLE      " Disables the selected device."
-  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
-  IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
-  IDS_HINT_ABOUT        " About ReactOS Device Manager."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_PROPERTIES   " Öffnet Eigenschaftsdialog für die aktuelle Auswahl."
+  IDS_HINT_SCAN         " Nach geänderten oder neuen Plug & Play-Geräten suchen."
+  IDS_HINT_ENABLE       " Aktiviert das ausgewählte Gerät."
+  IDS_HINT_DISABLE      " Deaktiviert das ausgewählte Gerät."
+  IDS_HINT_UPDATE       " Startet den Treibersoftware aktualisieren Assistenten für das ausgewählte Gerät."
+  IDS_HINT_UNINSTALL    " Deinstalliert den Treiber für das ausgewählte Gerät."
+  IDS_HINT_ADD          " Fügt ein Legacy (nicht Plug & Play) Gerät dem Computer hinzu."
+  IDS_HINT_ABOUT        " Über ReactOS Geräte-Manager."
+  IDS_HINT_EXIT         " Beendet das Programm."
 
-  IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
-  IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
-  IDS_HINT_RES_BY_TYPE  " Displays resources by type."
-  IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
-  IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
+  IDS_HINT_DEV_BY_TYPE  " Zeigt Geräte nach Hardwaretyp an."
+  IDS_HINT_DEV_BY_CONN  " Zeigt Geräte nach Verbindung an."
+  IDS_HINT_RES_BY_TYPE  " Zeigt Ressourcen nach Typ an."
+  IDS_HINT_RES_BY_CONN  " Zeigt Ressourcen nach Verbindungstyp an."
+  IDS_HINT_SHOW_HIDDEN  " Zeigt Legacy-Geräte und Geräte, die nicht mehr installiert sind an."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Stellt dieses Fenster auf die normale Größe zurück."
+  IDS_HINT_SYS_MOVE     " Verschiebt das Fenster."
+  IDS_HINT_SYS_SIZE     " Ändert die Größe dieses Fensters."
+  IDS_HINT_SYS_MINIMIZE " Reduziert dieses Fenster zu einem Symbol."
+  IDS_HINT_SYS_MAXIMIZE " Erweitert dieses Fenster, um den Bildschirm zu füllen."
+  IDS_HINT_SYS_CLOSE    " Schließt dieses Fenster."
 END
-
