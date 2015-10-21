@@ -750,7 +750,7 @@ static void cache_containers_init(void)
     /* ReactOS r50916 */
     if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
     {
-        TRACE("Environment variable 'USERPROFILE' does not exist!\n");
+        ERR("Environment variable 'USERPROFILE' does not exist!\n");
         return;
     }
 
