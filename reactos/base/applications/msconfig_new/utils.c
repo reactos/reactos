@@ -41,42 +41,40 @@ LPWSTR
 FormatDateTime(IN LPSYSTEMTIME pDateTime)
 {
     LPWSTR lpszDateTime = NULL;
+    int iDateBufSize, iTimeBufSize;
 
-    if (pDateTime)
+    if (pDateTime == NULL) return NULL;
+
+    iDateBufSize = GetDateFormatW(LOCALE_USER_DEFAULT,
+                                  /* Only for Windows 7 : DATE_AUTOLAYOUT | */ DATE_SHORTDATE,
+                                  pDateTime,
+                                  NULL,
+                                  NULL,
+                                  0);
+    iTimeBufSize = GetTimeFormatW(LOCALE_USER_DEFAULT,
+                                  0,
+                                  pDateTime,
+                                  NULL,
+                                  NULL,
+                                  0);
+
+    if ( (iDateBufSize > 0) && (iTimeBufSize > 0) )
     {
-        int iDateBufSize = 0, iTimeBufSize = 0;
+        lpszDateTime = (LPWSTR)MemAlloc(0, (iDateBufSize + iTimeBufSize) * sizeof(TCHAR));
 
-        iDateBufSize = GetDateFormatW(LOCALE_USER_DEFAULT,
-                                      /* Only for Windows 7 : DATE_AUTOLAYOUT | */ DATE_SHORTDATE,
-                                      pDateTime,
-                                      NULL,
-                                      NULL,
-                                      0);
-        iTimeBufSize = GetTimeFormatW(LOCALE_USER_DEFAULT,
-                                      0,
-                                      pDateTime,
-                                      NULL,
-                                      NULL,
-                                      0);
-
-        if ( (iDateBufSize > 0) && (iTimeBufSize > 0) )
-        {
-            lpszDateTime = (LPWSTR)MemAlloc(0, (iDateBufSize + iTimeBufSize) * sizeof(TCHAR));
-
-            GetDateFormatW(LOCALE_USER_DEFAULT,
-                           /* Only for Windows 7 : DATE_AUTOLAYOUT | */ DATE_SHORTDATE,
-                           pDateTime,
-                           NULL,
-                           lpszDateTime,
-                           iDateBufSize);
-            if (iDateBufSize > 0) lpszDateTime[iDateBufSize-1] = L' ';
-            GetTimeFormatW(LOCALE_USER_DEFAULT,
-                           0,
-                           pDateTime,
-                           NULL,
-                           lpszDateTime + iDateBufSize,
-                           iTimeBufSize);
-        }
+        GetDateFormatW(LOCALE_USER_DEFAULT,
+                       /* Only for Windows 7 : DATE_AUTOLAYOUT | */ DATE_SHORTDATE,
+                       pDateTime,
+                       NULL,
+                       lpszDateTime,
+                       iDateBufSize);
+        if (iDateBufSize > 0) lpszDateTime[iDateBufSize-1] = L' ';
+        GetTimeFormatW(LOCALE_USER_DEFAULT,
+                       0,
+                       pDateTime,
+                       NULL,
+                       lpszDateTime + iDateBufSize,
+                       iTimeBufSize);
     }
 
     return lpszDateTime;

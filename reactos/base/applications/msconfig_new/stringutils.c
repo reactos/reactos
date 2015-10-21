@@ -15,15 +15,17 @@
 //
 LPTSTR FormatStringV(LPCTSTR str, va_list args)
 {
-    LPTSTR lpszString = NULL;
+    LPTSTR lpszString;
+    size_t strLenPlusNull;
 
-    if (str)
-    {
-        size_t strLenPlusNull = _vsctprintf(str, args) + 1;
-        lpszString = (LPTSTR)MemAlloc(0, strLenPlusNull * sizeof(TCHAR));
-        if (lpszString)
-            StringCchVPrintf(lpszString, strLenPlusNull, str, args);
-    }
+    if (!str) return NULL;
+
+    strLenPlusNull = _vsctprintf(str, args) + 1;
+
+    lpszString = (LPTSTR)MemAlloc(0, strLenPlusNull * sizeof(TCHAR));
+    if (!lpszString) return NULL;
+
+    StringCchVPrintf(lpszString, strLenPlusNull, str, args);
 
     return lpszString;
 }
@@ -45,114 +47,112 @@ LPTSTR FormatString(LPCTSTR str, ...)
 //
 LPSTR UnicodeToAnsi(LPCWSTR strW)
 {
-    LPSTR strA = NULL;
+    LPSTR strA;
+    int iNeededChars;
 
-    if (strW)
-    {
-        int iNeededChars = WideCharToMultiByte(CP_ACP,
-                                               WC_COMPOSITECHECK /* | WC_NO_BEST_FIT_CHARS */,
-                                               strW, -1, NULL, 0, NULL, NULL);
+    if (!strW) return NULL;
 
-        strA = (LPSTR)MemAlloc(0, iNeededChars * sizeof(CHAR));
-        if (strA)
-        {
-            WideCharToMultiByte(CP_ACP,
-                                WC_COMPOSITECHECK /* | WC_NO_BEST_FIT_CHARS */,
-                                strW, -1, strA, iNeededChars, NULL, NULL);
-        }
-    }
+    iNeededChars = WideCharToMultiByte(CP_ACP,
+                                       WC_COMPOSITECHECK /* | WC_NO_BEST_FIT_CHARS */,
+                                       strW, -1, NULL, 0, NULL, NULL);
+
+    strA = (LPSTR)MemAlloc(0, iNeededChars * sizeof(CHAR));
+    if (!strA) return NULL;
+
+    WideCharToMultiByte(CP_ACP,
+                        WC_COMPOSITECHECK /* | WC_NO_BEST_FIT_CHARS */,
+                        strW, -1, strA, iNeededChars, NULL, NULL);
 
     return strA;
 }
 
 LPWSTR AnsiToUnicode(LPCSTR strA)
 {
-    LPWSTR strW = NULL;
+    LPWSTR strW;
+    int iNeededChars;
 
-    if (strA)
-    {
-        int iNeededChars = MultiByteToWideChar(CP_ACP,
-                                               MB_PRECOMPOSED,
-                                               strA, -1, NULL, 0);
+    if (!strA) return NULL;
 
-        strW = (LPWSTR)MemAlloc(0, iNeededChars * sizeof(WCHAR));
-        if (strW)
-        {
-            MultiByteToWideChar(CP_ACP,
-                                MB_PRECOMPOSED,
-                                strA, -1, strW, iNeededChars);
-        }
-    }
+    iNeededChars = MultiByteToWideChar(CP_ACP,
+                                       MB_PRECOMPOSED,
+                                       strA, -1, NULL, 0);
+
+    strW = (LPWSTR)MemAlloc(0, iNeededChars * sizeof(WCHAR));
+    if (!strW) return NULL;
+
+    MultiByteToWideChar(CP_ACP,
+                        MB_PRECOMPOSED,
+                        strA, -1, strW, iNeededChars);
 
     return strW;
 }
 
 LPSTR DuplicateStringA(LPCSTR str)
 {
-    LPSTR dupStr = NULL;
+    LPSTR dupStr;
+    size_t strSizePlusNull;
 
-    if (str)
-    {
-        size_t strSizePlusNull = strlen(str) + 1;
+    if (!str) return NULL;
 
-        dupStr = (LPSTR)MemAlloc(0, strSizePlusNull * sizeof(CHAR));
-        if (dupStr)
-            StringCchCopyA(dupStr, strSizePlusNull, str);
-    }
+    strSizePlusNull = strlen(str) + 1;
+
+    dupStr = (LPSTR)MemAlloc(0, strSizePlusNull * sizeof(CHAR));
+    if (!dupStr) return NULL;
+
+    StringCchCopyA(dupStr, strSizePlusNull, str);
 
     return dupStr;
 }
 
 LPWSTR DuplicateStringW(LPCWSTR str)
 {
-    LPWSTR dupStr = NULL;
+    LPWSTR dupStr;
+    size_t strSizePlusNull;
 
-    if (str)
-    {
-        size_t strSizePlusNull = wcslen(str) + 1;
+    if (!str) return NULL;
 
-        dupStr = (LPWSTR)MemAlloc(0, strSizePlusNull * sizeof(WCHAR));
-        if (dupStr)
-            StringCchCopyW(dupStr, strSizePlusNull, str);
-    }
+    strSizePlusNull = wcslen(str) + 1;
+
+    dupStr = (LPWSTR)MemAlloc(0, strSizePlusNull * sizeof(WCHAR));
+    if (!dupStr) return NULL;
+
+    StringCchCopyW(dupStr, strSizePlusNull, str);
 
     return dupStr;
 }
 
 LPSTR DuplicateStringAEx(LPCSTR str, size_t numOfChars)
 {
-    LPSTR dupStr = NULL;
+    LPSTR dupStr;
+    size_t strSize;
 
-    if (str)
-    {
-        size_t strSize = min(strlen(str), numOfChars);
+    if (!str) return NULL;
 
-        dupStr = (LPSTR)MemAlloc(0, (strSize + 1) * sizeof(CHAR));
-        if (dupStr)
-        {
-            StringCchCopyNA(dupStr, strSize + 1, str, strSize);
-            dupStr[strSize] = '\0';
-        }
-    }
+    strSize = min(strlen(str), numOfChars);
+
+    dupStr = (LPSTR)MemAlloc(0, (strSize + 1) * sizeof(CHAR));
+    if (!dupStr) return NULL;
+
+    StringCchCopyNA(dupStr, strSize + 1, str, strSize);
+    dupStr[strSize] = '\0';
 
     return dupStr;
 }
 
 LPWSTR DuplicateStringWEx(LPCWSTR str, size_t numOfChars)
 {
-    LPWSTR dupStr = NULL;
+    LPWSTR dupStr;
+    size_t strSize;
 
-    if (str)
-    {
-        size_t strSize = min(wcslen(str), numOfChars);
+    if (!str) return NULL;
 
-        dupStr = (LPWSTR)MemAlloc(0, (strSize + 1) * sizeof(WCHAR));
-        if (dupStr)
-        {
-            StringCchCopyNW(dupStr, strSize + 1, str, strSize);
-            dupStr[strSize] = L'\0';
-        }
-    }
+    strSize = min(wcslen(str), numOfChars);
+
+    dupStr = (LPWSTR)MemAlloc(0, (strSize + 1) * sizeof(WCHAR));
+    if (!dupStr) return NULL;
+
+    StringCchCopyNW(dupStr, strSize + 1, str, strSize);
+    dupStr[strSize] = L'\0';
 
     return dupStr;
 }
