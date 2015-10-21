@@ -1058,6 +1058,13 @@ co_MsqSendMessage(PTHREADINFO ptirec,
        return STATUS_UNSUCCESSFUL;
    }
 
+   if (IsThreadSuspended(ptirec))
+   {
+      ERR("Sending to Suspended Thread Msg %lx\n",Msg);
+      if (uResult) *uResult = -1;
+      return STATUS_UNSUCCESSFUL;
+   }
+
    // Should we do the same for No Wait?
    if ( HookMessage == MSQ_NORMAL )
    {
@@ -2037,7 +2044,28 @@ MsqIsHung(PTHREADINFO pti)
    LARGE_INTEGER LargeTickCount;
 
    KeQueryTickCount(&LargeTickCount);
-   return ((LargeTickCount.u.LowPart - pti->timeLast) > MSQ_HUNG);
+
+   if ((LargeTickCount.u.LowPart - pti->timeLast) > MSQ_HUNG &&
+       !(pti->pcti->fsWakeMask & QS_INPUT) &&
+       !PsGetThreadFreezeCount(pti->pEThread) &&
+       !(pti->ppi->W32PF_flags & W32PF_APPSTARTING))
+       return TRUE;
+
+   return FALSE;
+}
+
+BOOL FASTCALL
+IsThreadSuspended(PTHREADINFO pti)
+{
+   if (pti->pEThread)
+   {
+      BOOL Ret = TRUE;
+      ObReferenceObject(pti->pEThread);
+      if (!(pti->pEThread->Tcb.SuspendCount) && !PsGetThreadFreezeCount(pti->pEThread)) Ret = FALSE;
+      ObDereferenceObject(pti->pEThread);
+      return Ret;
+   }
+   return FALSE;
 }
 
 VOID

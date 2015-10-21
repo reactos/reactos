@@ -1094,7 +1094,7 @@ IntDefWindowProc(
 
       case WM_NCCALCSIZE:
       {
-         return NC_HandleNCCalcSize( Wnd, wParam, (RECTL *)lParam );
+         return NC_HandleNCCalcSize( Wnd, wParam, (RECTL *)lParam, FALSE );
       }
 
       case WM_NCACTIVATE:

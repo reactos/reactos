@@ -510,7 +510,7 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 {
    HWND hWnd = Wnd->head.h;
 
-   if ((Wnd->hrgnUpdate != NULL || Wnd->state & WNDS_INTERNALPAINT))
+   if ( Wnd->hrgnUpdate != NULL || Wnd->state & WNDS_INTERNALPAINT )
    {
       if (Wnd->hrgnUpdate)
       {
@@ -1002,6 +1002,106 @@ co_UserRedrawWindow(
    TRACE("co_UserRedrawWindow exit\n");
 
    return TRUE;
+}
+
+VOID FASTCALL
+PaintSuspendedWindow(PWND pwnd, HRGN hrgnOrig)
+{
+   if (pwnd->hrgnUpdate)
+   {
+      HDC hDC;
+      INT Flags = DC_NC|DC_NOSENDMSG;
+      HRGN hrgnTemp;
+      RECT Rect;
+      INT type;
+      PREGION prgn;
+
+      if (pwnd->hrgnUpdate > HRGN_WINDOW)
+      {
+         hrgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
+         type = NtGdiCombineRgn( hrgnTemp, pwnd->hrgnUpdate, 0, RGN_COPY);
+         if (type == ERROR)
+         {
+            GreDeleteObject(hrgnTemp);
+            hrgnTemp = HRGN_WINDOW;
+         }
+      }
+      else
+      {
+         hrgnTemp = GreCreateRectRgnIndirect(&pwnd->rcWindow);
+      }
+
+      if ( hrgnOrig &&
+           hrgnTemp > HRGN_WINDOW &&
+           NtGdiCombineRgn(hrgnTemp, hrgnTemp, hrgnOrig, RGN_AND) == NULLREGION)
+      {
+         GreDeleteObject(hrgnTemp);
+         return;
+      }
+
+      hDC = UserGetDCEx(pwnd, hrgnTemp, DCX_WINDOW|DCX_INTERSECTRGN|DCX_USESTYLE|DCX_KEEPCLIPRGN);
+
+      Rect = pwnd->rcWindow;
+      RECTL_vOffsetRect(&Rect, -pwnd->rcWindow.left, -pwnd->rcWindow.top);
+
+      // Clear out client area!
+      FillRect(hDC, &Rect, IntGetSysColorBrush(COLOR_WINDOW));
+
+      NC_DoNCPaint(pwnd, hDC, Flags); // Redraw without MENUs.
+
+      UserReleaseDC(pwnd, hDC, FALSE);
+
+      prgn = REGION_LockRgn(hrgnTemp);
+      IntInvalidateWindows(pwnd, prgn, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE | RDW_ALLCHILDREN);
+      REGION_UnlockRgn(prgn);
+
+      // Set updates for this window.
+      pwnd->state |= WNDS_SENDNCPAINT|WNDS_SENDERASEBACKGROUND|WNDS_UPDATEDIRTY;
+
+      // DCX_KEEPCLIPRGN is set. Check it anyway.
+      if (hrgnTemp > HRGN_WINDOW && GreIsHandleValid(hrgnTemp)) GreDeleteObject(hrgnTemp);
+   }
+}
+
+VOID FASTCALL
+UpdateTheadChildren(PWND pWnd, HRGN hRgn)
+{
+   PaintSuspendedWindow( pWnd, hRgn );
+
+   if (!(pWnd->style & WS_CLIPCHILDREN))
+      return;
+
+   pWnd = pWnd->spwndChild; // invalidate children if any.
+   while (pWnd)
+   {
+      UpdateTheadChildren( pWnd, hRgn );
+      pWnd = pWnd->spwndNext;
+   }
+}
+
+VOID FASTCALL
+UpdateThreadWindows(PWND pWnd, PTHREADINFO pti, HRGN hRgn)
+{
+   PWND pwndTemp;
+
+   for ( pwndTemp = pWnd;
+         pwndTemp;
+         pwndTemp = pwndTemp->spwndNext )
+   {
+      if (pwndTemp->head.pti == pti)
+      {
+          UserUpdateWindows(pwndTemp, RDW_ALLCHILDREN);
+      }
+      else
+      {
+          if (IsThreadSuspended(pwndTemp->head.pti))
+          {
+             UpdateTheadChildren(pwndTemp, hRgn);
+          }
+          else
+             UserUpdateWindows(pwndTemp, RDW_ALLCHILDREN);
+      }
+   }
 }
 
 BOOL FASTCALL
@@ -1631,7 +1731,7 @@ co_UserGetUpdateRgn(PWND Window, HRGN hRgn, BOOL bErase)
       {
          if (hrgnTemp) GreDeleteObject(hrgnTemp);
          NtGdiSetRectRgn(hRgn, 0, 0, 0, 0);
-         return NULLREGION;
+         return RegionType;
       }
 
       if (Window != UserGetDesktopWindow()) // Window->fnid == FNID_DESKTOP
@@ -1684,9 +1784,23 @@ co_UserGetUpdateRect(PWND Window, PRECT pRect, BOOL bErase)
 
       if (IntIntersectWithParents(Window, pRect))
       {
-         RECTL_vOffsetRect(pRect,
-                          -Window->rcClient.left,
-                          -Window->rcClient.top);
+         if (Window != UserGetDesktopWindow()) // Window->fnid == FNID_DESKTOP
+         {
+            RECTL_vOffsetRect(pRect,
+                              -Window->rcClient.left,
+                              -Window->rcClient.top);
+         }
+         if (Window->pcls->style & CS_OWNDC)
+         {
+            HDC hdc;
+            //DWORD layout;
+            hdc = UserGetDCEx(Window, NULL, DCX_USESTYLE);
+            //layout = NtGdiSetLayout(hdc, -1, 0);
+            //IntMapWindowPoints( 0, Window, (LPPOINT)pRect, 2 );
+            GreDPtoLP( hdc, (LPPOINT)pRect, 2 );
+            //NtGdiSetLayout(hdc, -1, layout);
+            UserReleaseDC(Window, hdc, FALSE);
+         }
       }
       else
       {

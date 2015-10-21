@@ -131,7 +131,7 @@ VOID FASTCALL DefWndDoSizeMove(PWND pwnd, WORD wParam);
 LRESULT NC_DoNCPaint(PWND,HDC,INT);
 void FASTCALL NC_GetSysPopupPos(PWND, RECT *);
 LRESULT NC_HandleNCActivate( PWND Wnd, WPARAM wParam, LPARAM lParam );
-LRESULT NC_HandleNCCalcSize( PWND wnd, WPARAM wparam, RECTL *winRect );
+LRESULT NC_HandleNCCalcSize( PWND wnd, WPARAM wparam, RECTL *winRect, BOOL Suspended );
 VOID NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyle);
 VOID UserDrawCaptionBar( PWND pWnd, HDC hDC, INT Flags);
 void UserGetInsideRectNC(PWND Wnd, RECT *rect);

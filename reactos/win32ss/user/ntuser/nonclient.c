@@ -477,7 +477,12 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                      UserDrawMovingFrame( hdc, &newRect, thickframe );
                  else
                  {  // Moving the whole window now!
-                    PWND pwndTemp;
+                    HRGN hrgnNew;
+                    HRGN hrgnOrig = GreCreateRectRgnIndirect(&pwnd->rcWindow);
+
+                    if (pwnd->hrgnClip != NULL)
+                       NtGdiCombineRgn(hrgnOrig, hrgnOrig, pwnd->hrgnClip, RGN_AND);
+
                     //// This causes the mdi child window to jump up when it is moved.
                     //IntMapWindowPoints( 0, pWndParent, (POINT *)&rect, 2 );
 		    co_WinPosSetWindowPos( pwnd,
@@ -488,18 +493,29 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 				           newRect.bottom - newRect.top,
 				          ( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
 
-                    // Update all the windows after the move or size, including this window.
-                    for ( pwndTemp = pwnd->head.rpdesk->pDeskInfo->spwnd->spwndChild;
-                          pwndTemp;
-                          pwndTemp = pwndTemp->spwndNext )
+                    hrgnNew = GreCreateRectRgnIndirect(&pwnd->rcWindow);
+                    if (pwnd->hrgnClip != NULL)
+                       NtGdiCombineRgn(hrgnNew, hrgnNew, pwnd->hrgnClip, RGN_AND);
+
+                    if (hrgnNew)
                     {
-                       RECTL rect;
-                       // Only the windows that overlap will be redrawn.
-                       if (RECTL_bIntersectRect( &rect, &pwnd->rcWindow, &pwndTemp->rcWindow ))
+                       if (hrgnOrig)
+                          NtGdiCombineRgn(hrgnOrig, hrgnOrig, hrgnNew, RGN_DIFF);
+                    }
+                    else
+                    {
+                       if (hrgnOrig)
                        {
-                          co_UserRedrawWindow( pwndTemp, NULL, NULL, RDW_UPDATENOW | RDW_ALLCHILDREN);
+                          GreDeleteObject(hrgnOrig);
+                          hrgnOrig = 0;
                        }
                     }
+
+                    // Update all the windows after the move or size, including this window.
+                    UpdateThreadWindows(UserGetDesktopWindow()->spwndChild, pti, hrgnOrig);
+
+                    if (hrgnOrig) GreDeleteObject(hrgnOrig);
+                    if (hrgnNew) GreDeleteObject(hrgnNew);
                  }
               }
               sizingRect = newRect;
@@ -1163,7 +1179,7 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
      {
          TempRect = CurrentRect;
          TempRect.bottom = TempRect.top + menu->cyMenu;
-         CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+         if (!(Flags & DC_NOSENDMSG)) CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
      }
 
      if (ExStyle & WS_EX_CLIENTEDGE)
@@ -1214,7 +1230,7 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
    return 0; // For WM_NCPAINT message, return 0.
 }
 
-LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect )
+LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspended )
 {
    LRESULT Result = 0;
    SIZE WindowBorders;
@@ -1277,7 +1293,7 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect )
            CliRect.right -= OrigRect.left;
            CliRect.left -= OrigRect.left;
            CliRect.top -= OrigRect.top;
-           Rect->top += MENU_DrawMenuBar(hDC, &CliRect, Wnd, TRUE);
+           if (!Suspended) Rect->top += MENU_DrawMenuBar(hDC, &CliRect, Wnd, TRUE);
            UserReleaseDC(Wnd, hDC, FALSE);
          }
       }
