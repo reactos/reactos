@@ -1507,7 +1507,7 @@ NtUserSetCursorIconData(
     PINT ajifRate;
     UINT cjSize;
     NTSTATUS status;
-    BOOL bResult;
+    BOOL bResult = FALSE;
 
     TRACE("Enter NtUserSetCursorIconData\n");
 
@@ -1531,7 +1531,6 @@ NtUserSetCursorIconData(
             {
                 ERR("Range error (cpcur = %u, cicur = %u)\n",
                     cursordata.cpcur, cursordata.cicur);
-                bResult = FALSE;
                 goto Exit;
             }
 
@@ -1547,7 +1546,6 @@ NtUserSetCursorIconData(
             {
                 ERR("Failed to allocate memory (cpcur = %u, cicur = %u)\n",
                     cursordata.cpcur, cursordata.cicur);
-                bResult = FALSE;
                 goto Exit;
             }
 
@@ -1590,7 +1588,6 @@ NtUserSetCursorIconData(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        bResult = FALSE;
         goto Exit;
     }
     _SEH2_END
