@@ -3906,7 +3906,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
         IntTranslateKbdMessage(&msg, 0);
         mt.Pt = msg.pt;
 
-        if ( (msg.hwnd == mt.CurrentMenu->hWnd) || ((msg.message!=WM_TIMER) || (msg.message!=WM_SYSTIMER)) )
+        if ( (msg.hwnd == mt.CurrentMenu->hWnd) || ((msg.message!=WM_TIMER) && (msg.message!=WM_SYSTIMER)) )
             enterIdleSent=FALSE;
 
         fRemove = FALSE;
