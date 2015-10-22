@@ -62,7 +62,7 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
       if (co_IntSendMessageNoWait(hWndPrev, WM_NCACTIVATE, FALSE, 0)) //(LPARAM)hWnd))
       {
          co_IntSendMessageNoWait(hWndPrev, WM_ACTIVATE,
-                    MAKEWPARAM(WA_INACTIVE, WndPrev->style & WS_MINIMIZE),
+                    MAKEWPARAM(WA_INACTIVE, (WndPrev->style & WS_MINIMIZE) != 0),
                     (LPARAM)hWnd);
 
          if (WndPrev)
@@ -248,7 +248,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
 
       co_IntSendMessage( UserHMGetHandle(Window),
                          WM_ACTIVATE,
-                         MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE, Window->style & WS_MINIMIZE),
+                         MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE, (Window->style & WS_MINIMIZE) != 0),
                         (LPARAM)(WindowPrev ? UserHMGetHandle(WindowPrev) : 0));
 
       if (Window->spwndParent == UserGetDesktopWindow() &&
