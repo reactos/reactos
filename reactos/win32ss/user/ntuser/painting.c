@@ -1327,7 +1327,7 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
       // Set previous window state.
       Ret = !!(FlashState & FLASHW_ACTIVE);
 
-      if ( pfwi->dwFlags & FLASHW_TIMERNOFG &&
+      if ( (pfwi->dwFlags & FLASHW_TIMERNOFG) == FLASHW_TIMERNOFG &&
            gpqForeground == pWnd->head.pti->MessageQueue )
       {
           // Flashing until foreground, set this to Stop.
@@ -1636,30 +1636,27 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
    PWND pWnd;
    FLASHWINFO finfo = {0};
-   BOOL Ret = TRUE;
+   BOOL Ret = FALSE;
 
    UserEnterExclusive();
 
    _SEH2_TRY
    {
-      ProbeForRead(pfwi, sizeof(FLASHWINFO), sizeof(ULONG));
+      ProbeForRead(pfwi, sizeof(FLASHWINFO), 1);
       RtlCopyMemory(&finfo, pfwi, sizeof(FLASHWINFO));
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       SetLastNtError(_SEH2_GetExceptionCode());
-      Ret = FALSE;
+      _SEH2_YIELD(goto Exit);
    }
    _SEH2_END
 
-   if (!Ret) goto Exit;
-
-   if (!( pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, TYPE_WINDOW)) ||
+   if (!( pWnd = ValidateHwndNoErr(finfo.hwnd)) ||
         finfo.cbSize != sizeof(FLASHWINFO) ||
         finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      Ret = FALSE;
       goto Exit;
    }
 
