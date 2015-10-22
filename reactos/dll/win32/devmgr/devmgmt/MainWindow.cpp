@@ -786,7 +786,7 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
                 // we set a timer to run in 500ms, which should leave enough time for all
                 // the messages to come through. Wrap so we don't set multiple timers
                 //
-                if (InterlockedCompareExchange((LONG *)&This->m_RefreshPending, true, false) == false)
+                if (InterlockedCompareExchange((LONG *)&This->m_RefreshPending, TRUE, FALSE) == FALSE)
                 {
                     SetTimer(hwnd, REFRESH_TIMER, 500, NULL);
                 }
@@ -807,7 +807,7 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
                 KillTimer(hwnd, REFRESH_TIMER);
 
                 // Allow more change notifications
-                InterlockedExchange((LONG *)&This->m_RefreshPending, false);
+                InterlockedExchange((LONG *)&This->m_RefreshPending, FALSE);
             }
             break;
         }
