@@ -1529,7 +1529,7 @@ GreCreateDIBitmapInternal(
         planes = 0;
         compression = 0;
     }
-    Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, planes, compression, fInit, pjInit, pbmi, iUsage);
+    Bmp = IntCreateDIBitmap(Dc, cx, cy, planes, bpp, compression, fInit, pjInit, pbmi, iUsage);
     DC_UnlockDc(Dc);
 
     if(!hDc)
