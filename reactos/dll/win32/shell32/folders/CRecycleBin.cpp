@@ -1030,10 +1030,14 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
     InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
 
     /* Handle cfShellIDList Drop objects here, otherwise send the approriate message to other software */
-    if (SUCCEEDED(pDataObject->QueryGetData(&fmt))) {
-        IStream *s;
-        CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDataObject, &s);
-        SHCreateThread(DoDeleteThreadProc, s, NULL, NULL);
+    if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
+    {
+        DWORD fMask = 0;
+
+        if ((dwKeyState & MK_SHIFT) == MK_SHIFT)
+            fMask |= CMIC_MASK_SHIFT_DOWN;
+
+        DoDeleteAsync(pDataObject, fMask);
     }
     else
     {
@@ -1045,20 +1049,7 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
     return S_OK;
 }
 
-DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter)
-{
-    CoInitialize(NULL);
-    CComPtr<IDataObject> pDataObject;
-    HRESULT hr = CoGetInterfaceAndReleaseStream (static_cast<IStream*>(lpParameter), IID_PPV_ARG(IDataObject, &pDataObject));
-    if (SUCCEEDED(hr))
-    {
-        DoDeleteDataObject(pDataObject);
-    }
-    CoUninitialize();
-    return 0;
-}
-
-HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
+HRESULT WINAPI DoDeleteDataObject(IDataObject *pda, DWORD fMask)
 {
     TRACE("performing delete");
     HRESULT hr;
@@ -1160,7 +1151,8 @@ HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
     ZeroMemory(&FileOp, sizeof(FileOp));
     FileOp.wFunc = FO_DELETE;
     FileOp.pFrom = pwszPaths;
-    FileOp.fFlags = FOF_ALLOWUNDO;
+    if ((fMask & CMIC_MASK_SHIFT_DOWN) == 0)
+        FileOp.fFlags = FOF_ALLOWUNDO;
 
     if (SHFileOperationW(&FileOp) != 0)
     {
@@ -1174,6 +1166,35 @@ HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
     ReleaseStgMedium(&medium);
 
     return hr;
+}
+
+struct DeleteThreadData {
+    IStream *s;
+    DWORD fMask;
+};
+
+DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter)
+{
+    DeleteThreadData *data = static_cast<DeleteThreadData*>(lpParameter);
+    CoInitialize(NULL);
+    IDataObject *pDataObject;
+    HRESULT hr = CoGetInterfaceAndReleaseStream (data->s, IID_PPV_ARG(IDataObject, &pDataObject));
+    if (SUCCEEDED(hr))
+    {
+        DoDeleteDataObject(pDataObject, data->fMask);
+    }
+    pDataObject->Release();
+    CoUninitialize();
+    HeapFree(GetProcessHeap(), 0, data);
+    return 0;
+}
+
+void DoDeleteAsync(IDataObject *pda, DWORD fMask)
+{
+    DeleteThreadData *data = static_cast<DeleteThreadData*>(HeapAlloc(GetProcessHeap(), 0, sizeof(DeleteThreadData)));
+    data->fMask = fMask;
+    CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pda, &data->s);
+    SHCreateThread(DoDeleteThreadProc, data, NULL, NULL);
 }
 
 /*************************************************************************

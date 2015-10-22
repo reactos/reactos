@@ -151,6 +151,7 @@ class CDefView :
         void OnDeactivate();
         void DoActivate(UINT uState);
         HRESULT drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+        HRESULT InvokeContextMenuCommand(UINT uCommand);
         LRESULT OnExplorerCommand(UINT uCommand, BOOL bUseSelection);
 
         // *** IOleWindow methods ***
@@ -1250,13 +1251,30 @@ UINT CDefView::GetSelections()
     return m_cidl;
 }
 
+HRESULT CDefView::InvokeContextMenuCommand(UINT uCommand)
+{
+    CMINVOKECOMMANDINFO cmi;
+
+    ZeroMemory(&cmi, sizeof(cmi));
+    cmi.cbSize = sizeof(cmi);
+    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
+    cmi.hwnd = m_hWnd;
+
+    if (GetKeyState(VK_SHIFT) & 0x8000)
+        cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
+
+    if (GetKeyState(VK_CONTROL) & 0x8000)
+        cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
+
+    return m_pCM->InvokeCommand(&cmi);
+}
+
 /**********************************************************
  *    ShellView_OpenSelectedItems()
  */
 HRESULT CDefView::OpenSelectedItems()
 {
     HMENU hMenu;
-    CMINVOKECOMMANDINFO cmi;
     UINT uCommand;
     HRESULT hResult;
 
@@ -1287,12 +1305,7 @@ HRESULT CDefView::OpenSelectedItems()
         goto cleanup;
     }
 
-    ZeroMemory(&cmi, sizeof(cmi));
-    cmi.cbSize = sizeof(cmi);
-    cmi.lpVerb = (LPCSTR)MAKEINTRESOURCEA(uCommand);
-    cmi.hwnd = m_hWnd;
-
-    hResult = m_pCM->InvokeCommand(&cmi);
+    InvokeContextMenuCommand(uCommand);
 
 cleanup:
     
@@ -1314,7 +1327,6 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     WORD                 y;
     UINT                 uCommand;
     HMENU                hMenu;
-    CMINVOKECOMMANDINFO  cmi;
     HRESULT              hResult;
 
     // for some reason I haven't figured out, we sometimes recurse into this method
@@ -1340,9 +1352,6 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (FAILED( hResult))
         goto cleanup;
 
-    if (m_FolderSettings.fFlags & FWF_DESKTOP)
-        SetMenuDefaultItem(hMenu, FCIDM_SHVIEW_OPEN, MF_BYCOMMAND);
-
     uCommand = TrackPopupMenu(hMenu,
                               TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
                               x, y, 0, m_hWnd, NULL);
@@ -1352,14 +1361,9 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (uCommand == FCIDM_SHVIEW_OPEN && OnDefaultCommand() == S_OK)
         goto cleanup;
 
-    ZeroMemory(&cmi, sizeof(cmi));
-    cmi.cbSize = sizeof(cmi);
-    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
-    cmi.hwnd = m_hWnd;
-    m_pCM->InvokeCommand(&cmi);
+    InvokeContextMenuCommand(uCommand);
 
 cleanup:
-    
     if (m_pCM)
         m_pCM.Release();
 
@@ -1372,7 +1376,6 @@ cleanup:
 LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
 {
     HRESULT hResult;
-    CMINVOKECOMMANDINFO cmi;
     HMENU hMenu;
 
     hMenu = CreatePopupMenu();
@@ -1387,14 +1390,9 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     if (FAILED( hResult))
         goto cleanup;
 
-    ZeroMemory(&cmi, sizeof(cmi));
-    cmi.cbSize = sizeof(cmi);
-    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
-    cmi.hwnd = m_hWnd;
-    m_pCM->InvokeCommand(&cmi);
+    InvokeContextMenuCommand(uCommand);
 
 cleanup:
-
     if (m_pCM)
         m_pCM.Release();
 

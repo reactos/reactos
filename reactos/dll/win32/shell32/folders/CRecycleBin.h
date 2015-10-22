@@ -22,8 +22,7 @@
 #ifndef _SHFLDR_RECYCLEBIN_H_
 #define _SHFLDR_RECYCLEBIN_H_
 
-DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter);
-HRESULT WINAPI DoDeleteDataObject(IDataObject *pda);
+void DoDeleteAsync(IDataObject *pda, DWORD fMask);
 
 BOOL TRASH_CanTrashFile(LPCWSTR wszPath);
 BOOL TRASH_TrashFile(LPCWSTR wszPath);
