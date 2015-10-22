@@ -67,8 +67,6 @@ BltMask(SURFOBJ* psoDest,
     ASSERT(IS_VALID_ROP4(Rop4));
     ASSERT(psoMask->iBitmapFormat == BMF_1BPP);
 
-    if (!psoMask) return FALSE;
-
     fgndRop = ROP4_FGND(Rop4);
     bkgndRop = ROP4_BKGND(Rop4);
 

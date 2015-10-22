@@ -386,7 +386,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     ASSERT(psoDest);
     //ASSERT(psoSource); // FIXME!
     ASSERT(DestRect);
-    //ASSERT(SourceRect); // FIXME!
+    ASSERT(SourceRect);
     //ASSERT(!RECTL_bIsEmptyRect(SourceRect)); // FIXME!
 
     /* If no clip object is given, use trivial one */
@@ -427,7 +427,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         InputClippedRect.bottom = DestRect->top;
     }
 
-    if (NULL == SourceRect || NULL == psoSource)
+    if (NULL == psoSource)
     {
         return FALSE;
     }
