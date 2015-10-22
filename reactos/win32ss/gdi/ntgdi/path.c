@@ -1644,6 +1644,7 @@ PATH_StrokePath(
                         if (!Realloc)
                         {
                             DPRINT1("Can't allocate pool!\n");
+                            ExFreePoolWithTag(pBzrPts, TAG_BEZIER);
                             goto end;
                         }
 
