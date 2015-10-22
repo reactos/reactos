@@ -12,6 +12,7 @@
 #include <Cfgmgr32.h>
 #include <devguid.h>
 #include <process.h>
+#include <dbt.h>
 #include <RegStr.h>
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
@@ -59,6 +60,7 @@ OUT LPDWORD lpReboot);
 #include <strsafe.h>
 #include <regstr.h>
 #include <newdevp.h>
+#include <dbt.h>
 
 #include <setupapi.h>
 #include <commctrl.h>

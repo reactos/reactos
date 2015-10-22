@@ -21,6 +21,8 @@
 #define BTN_UPDATE_DRV      4
 #define BTN_UNINSTALL_DRV   5
 
+#define REFRESH_TIMER       1
+
 HINSTANCE g_hThisInstance = NULL;
 HINSTANCE g_hParentInstance = NULL;
 
@@ -81,7 +83,8 @@ CDeviceManager::CDeviceManager(void) :
     m_hMainWnd(NULL),
     m_hStatusBar(NULL),
     m_hToolBar(NULL),
-    m_CmdShow(0)
+    m_CmdShow(0),
+    m_RefreshPending(false)
 {
     m_szMainWndClass = L"DevMgmtWndClass";
 }
@@ -769,6 +772,42 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
             {
                 // Hand it off to the default message handler
                 goto HandleDefaultMessage;
+            }
+            break;
+        }
+
+        case WM_DEVICECHANGE:
+        {
+            if (wParam == DBT_DEVNODES_CHANGED)
+            {
+                //
+                // The OS can send multiple change messages in quick sucsession. To avoid
+                // refreshing multiple times (and to avoid waiting in the message thread)
+                // we set a timer to run in 500ms, which should leave enough time for all
+                // the messages to come through. Wrap so we don't set multiple timers
+                //
+                if (InterlockedCompareExchange((LONG *)&This->m_RefreshPending, true, false) == false)
+                {
+                    SetTimer(hwnd, REFRESH_TIMER, 500, NULL);
+                }
+            }
+            break;
+        }
+        case WM_TIMER:
+        {
+            if (wParam == REFRESH_TIMER)
+            {
+                // Schedule a refresh (this just creates a thread and returns)
+                This->m_DeviceView->Refresh(This->m_DeviceView->GetCurrentView(),
+                                            true,
+                                            true,
+                                            NULL);
+
+                // Cleanup the timer
+                KillTimer(hwnd, REFRESH_TIMER);
+
+                // Allow more change notifications
+                InterlockedExchange((LONG *)&This->m_RefreshPending, false);
             }
             break;
         }

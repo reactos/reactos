@@ -700,13 +700,7 @@ CDeviceView::EnableSelectedDevice(
         }
     }
 
-    if (Node->EnableDevice(Enable, NeedsReboot))
-    {
-        Refresh(m_ViewType, true, true, Node->GetDeviceId());
-        return true;
-    }
-
-    return false;
+    return Node->EnableDevice(Enable, NeedsReboot);
 }
 
 bool
