@@ -750,6 +750,7 @@ IntDispatchMessage(PMSG pMsg)
                                                  pMsg->wParam,
                                                  pMsg->lParam,
                                                 &retval);
+            break;
           case FNID_MENU:
             DoCallBack = !PopupMenuWndProc( Window,
                                             pMsg->message,
