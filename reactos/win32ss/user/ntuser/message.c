@@ -2760,7 +2760,7 @@ NtUserMessageCall( HWND hWnd,
                 _SEH2_END;
             }
 
-            Ret = co_IntDoSendMessage( hWnd, Msg, wParam, lParam, &dsm );
+            Ret = co_IntDoSendMessage( hWnd, Msg, wParam, lParam, pdsm ? &dsm : NULL );
 
             if (pdsm)
             {
