@@ -4519,7 +4519,7 @@ NtGdiGetGlyphIndicesW(
         potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
         if (!potm)
         {
-            Status = ERROR_NOT_ENOUGH_MEMORY;
+            Status = STATUS_NO_MEMORY;
             goto ErrorRet;
         }
         IntGetOutlineTextMetrics(FontGDI, Size, potm);
@@ -4532,8 +4532,8 @@ NtGdiGetGlyphIndicesW(
 
     if (!Safepwc)
     {
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return GDI_ERROR;
+        Status = STATUS_NO_MEMORY;
+        goto ErrorRet;
     }
 
     _SEH2_TRY
@@ -4587,7 +4587,7 @@ ErrorRet:
         ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
     }
     if (NT_SUCCESS(Status)) return cwc;
-    EngSetLastError(Status);
+    SetLastNtError(Status);
     return GDI_ERROR;
 }
 
