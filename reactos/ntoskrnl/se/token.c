@@ -2852,6 +2852,10 @@ NtCreateToken(
                                NonPagedPool,
                                FALSE,
                                &CapturedDefaultDacl);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
     }
 
     /* Call the internal function */
