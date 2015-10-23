@@ -245,12 +245,13 @@ CDeviceManager::UpdateStatusBar(_In_ bool InMenuLoop)
 }
 
 bool
-CDeviceManager::RefreshView(_In_ ViewType Type)
+CDeviceManager::RefreshView(_In_ ViewType Type,
+                            _In_ bool ScanForChanges)
 {
     UINT CheckId = 0;
 
     // Refreshed the cached view
-    m_DeviceView->Refresh(Type, FALSE, TRUE, NULL);
+    m_DeviceView->Refresh(Type, ScanForChanges, true);
 
     // Get the menu item id
     switch (Type)
@@ -437,10 +438,7 @@ CDeviceManager::OnCreate(_In_ HWND hwnd)
         if (m_DeviceView->Initialize())
         {
             // Do the initial scan
-            m_DeviceView->Refresh(m_DeviceView->GetCurrentView(),
-                                  true,
-                                  true,
-                                  NULL);
+            RefreshView(m_DeviceView->GetCurrentView(), true);
 
             // Display the window according to the user request
             ShowWindow(hwnd, m_CmdShow);
@@ -608,13 +606,13 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
 
         case IDC_DEVBYTYPE:
         {
-            RefreshView(DevicesByType);
+            RefreshView(DevicesByType, false);
             break;
         }
 
         case IDC_DEVBYCONN:
         {
-            RefreshView(DevicesByConnection);
+            RefreshView(DevicesByConnection, false);
             break;
         }
 
@@ -633,10 +631,7 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
                 CheckMenuItem(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND | MF_CHECKED);
             }
             // Refresh the device view
-            m_DeviceView->Refresh(m_DeviceView->GetCurrentView(),
-                                  false,
-                                  true,
-                                  NULL);
+            RefreshView(m_DeviceView->GetCurrentView(), false);
             break;
         }
 
@@ -798,10 +793,7 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
             if (wParam == REFRESH_TIMER)
             {
                 // Schedule a refresh (this just creates a thread and returns)
-                This->m_DeviceView->Refresh(This->m_DeviceView->GetCurrentView(),
-                                            true,
-                                            true,
-                                            NULL);
+                This->RefreshView(This->m_DeviceView->GetCurrentView(), true);
 
                 // Cleanup the timer
                 KillTimer(hwnd, REFRESH_TIMER);

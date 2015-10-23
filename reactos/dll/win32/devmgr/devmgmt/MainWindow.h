@@ -90,7 +90,8 @@ private:
         );
 
     bool RefreshView(
-        _In_ ViewType Type
+        _In_ ViewType Type,
+        _In_ bool ScanForChanges
         );
 };
 

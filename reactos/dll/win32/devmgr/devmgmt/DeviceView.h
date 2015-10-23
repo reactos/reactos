@@ -60,8 +60,7 @@ public:
     VOID Refresh(
         _In_ ViewType Type,
         _In_ bool ScanForChanges,
-        _In_ bool UpdateView,
-        _In_opt_ LPWSTR DeviceId
+        _In_ bool UpdateView
         );
 
     VOID DisplayPropertySheet();

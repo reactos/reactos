@@ -188,8 +188,7 @@ void
 CDeviceView::Refresh(
     _In_ ViewType Type,
     _In_ bool ScanForChanges,
-    _In_ bool UpdateView,
-    _In_opt_ LPWSTR DeviceId
+    _In_ bool UpdateView
     )
 {
     // Enum devices on a seperate thread to keep the gui responsive
@@ -230,8 +229,7 @@ CDeviceView::OnAction(
         {
             Refresh(GetCurrentView(),
                     true,
-                    true,
-                    NULL);
+                    true);
             break;
         }
 
