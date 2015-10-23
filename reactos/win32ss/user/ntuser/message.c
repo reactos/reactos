@@ -1300,7 +1300,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     INT lParamBufferSize;
     LPARAM lParamPacked;
     PTHREADINFO Win32Thread, ptiSendTo = NULL;
-    ULONG_PTR Hi, Lo, Result = 0;
+    ULONG_PTR Result = 0;
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
     BOOL DoCallBack = TRUE;
@@ -1348,9 +1348,8 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
         {
            TRACE("SMT: Server Side Window Procedure\n");
-           IoGetStackLimits(&Lo, &Hi);
            // Handle it here. Safeguard against excessive recursions.
-           if (((ULONG_PTR)&uResult - Lo) < 4096 )
+           if (IoGetRemainingStackSize() < PAGE_SIZE)
            {
               ERR("Server Callback Exceeded Stack!\n");
               RETURN( FALSE);
