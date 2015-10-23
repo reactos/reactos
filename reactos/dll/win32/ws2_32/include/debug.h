@@ -28,8 +28,9 @@
 extern DWORD DebugTraceLevel;
 
 #define WS_DbgPrint(_t_, _x_) \
-    if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
-        ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
+    if ((_t_ > NORMAL_MASK) \
+        ? (DebugTraceLevel & _t_) > NORMAL_MASK \
+        : (DebugTraceLevel & NORMAL_MASK) >= _t_) { \
         DbgPrint("(%hS:%d)(%hS) ", __FILE__, __LINE__, __FUNCTION__); \
 		DbgPrint _x_; \
     }

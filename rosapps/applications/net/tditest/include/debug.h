@@ -28,8 +28,9 @@ extern ULONG DebugTraceLevel;
 #ifdef _MSC_VER
 
 #define TDI_DbgPrint(_t_, _x_) \
-    if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
-        ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
+    if ((_t_ > NORMAL_MASK) \
+        ? (DebugTraceLevel & _t_) > NORMAL_MASK \
+        : (DebugTraceLevel & NORMAL_MASK) >= _t_) { \
         DbgPrint("(%s:%d) ", __FILE__, __LINE__); \
         DbgPrint _x_ ; \
     }
@@ -37,8 +38,9 @@ extern ULONG DebugTraceLevel;
 #else /* _MSC_VER */
 
 #define TDI_DbgPrint(_t_, _x_) \
-    if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
-        ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
+    if ((_t_ > NORMAL_MASK) \
+        ? (DebugTraceLevel & _t_) > NORMAL_MASK \
+        : (DebugTraceLevel & NORMAL_MASK) >= _t_) { \
         DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
         DbgPrint _x_ ; \
     }
