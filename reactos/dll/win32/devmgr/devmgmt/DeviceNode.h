@@ -20,6 +20,10 @@ public:
 
     ~CDeviceNode();
 
+    CDeviceNode(
+        _In_ const CDeviceNode &Node
+        );
+
     virtual bool SetupNode();
 
     DEVINST GetDeviceInst() { return m_DevInst; }

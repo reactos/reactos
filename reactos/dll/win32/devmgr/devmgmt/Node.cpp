@@ -25,6 +25,17 @@ CNode::CNode(_In_ NodeType Type,
     m_ClassGuid = GUID_NULL;
 }
 
+CNode::CNode(const CNode &Node)
+{
+    m_NodeType = Node.m_NodeType;
+    m_ImageListData = Node.m_ImageListData;
+    m_DeviceId = Node.m_DeviceId;
+    m_ClassImage = Node.m_ClassImage;
+
+    StringCbCopyW(m_DisplayName, DISPLAY_NAME_LEN, Node.m_DisplayName);
+    CopyMemory(&m_ClassGuid, &Node.m_ClassGuid, sizeof(GUID));
+}
+
 CNode::~CNode()
 {
 }

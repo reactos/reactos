@@ -27,7 +27,6 @@ struct RefreshThreadData
     CDeviceView *This;
     BOOL ScanForChanges;
     BOOL UpdateView;
-    LPWSTR DeviceId;
 };
 
 
@@ -79,6 +78,10 @@ CDeviceView::Initialize()
 
         // Give the treeview arrows instead of +/- boxes (on Win7)
         SetWindowTheme(m_hTreeView, L"explorer", NULL);
+
+        // Create the root node
+        m_RootNode = new CRootNode(&m_ImageListData);
+        m_RootNode->SetupNode();
     }
 
 
@@ -198,15 +201,6 @@ CDeviceView::Refresh(
     ThreadData->This = this;
     ThreadData->ScanForChanges = ScanForChanges;
     ThreadData->UpdateView = UpdateView;
-    ThreadData->DeviceId = NULL;
-
-    if (DeviceId)
-    {
-        // Node gets deleted on refresh so we copy it to another block
-        size_t Length = wcslen(DeviceId) + 1;
-        ThreadData->DeviceId = new WCHAR[Length];
-        StringCbCopyW(ThreadData->DeviceId, Length, DeviceId);
-    }
 
 
     HANDLE hThread;
@@ -377,13 +371,29 @@ unsigned int __stdcall CDeviceView::RefreshThread(void *Param)
     RefreshThreadData *ThreadData = (RefreshThreadData *)Param;
     CDeviceView *This = ThreadData->This;
 
+    // Get a copy of the currently selected node
+    CNode *LastSelectedNode = This->GetSelectedNode();
+    if (LastSelectedNode == nullptr || (LastSelectedNode->GetNodeType() == RootNode))
+    {
+        LastSelectedNode = new CRootNode(*This->m_RootNode);
+    }
+    else if (LastSelectedNode->GetNodeType() == ClassNode)
+    {
+        LastSelectedNode = new CClassNode(*dynamic_cast<CClassNode *>(LastSelectedNode));
+    }
+    else if (LastSelectedNode->GetNodeType() == DeviceNode)
+    {
+        LastSelectedNode = new CDeviceNode(*dynamic_cast<CDeviceNode *>(LastSelectedNode));
+    }
 
     // Empty the treeview
     This->EmptyDeviceView();
-    This->m_hTreeRoot = NULL;
 
-    // Refresh the devices only if requested. This means
-    // switching views uses the cache and remains fast
+    // Re-add the root node to the tree
+    if (This->AddRootDevice() == false)
+        return 0;
+
+    // Refresh the devices only if requested
     if (ThreadData->ScanForChanges)
     {
         This->RefreshDeviceList();
@@ -408,10 +418,8 @@ unsigned int __stdcall CDeviceView::RefreshThread(void *Param)
     }
 
 
-    This->SelectNode(ThreadData->DeviceId);
+    This->SelectNode(LastSelectedNode);
 
-    if (ThreadData->DeviceId)
-        delete[] ThreadData->DeviceId;
     delete ThreadData;
 
     return 0;
@@ -428,10 +436,6 @@ CDeviceView::ListDevicesByType()
     GUID ClassGuid;
     INT ClassIndex;
     BOOL bClassSuccess, bSuccess;
-
-    // Start by adding the root node to the tree
-    bSuccess = AddRootDevice();
-    if (bSuccess == false) return false;
 
     ClassIndex = 0;
     do
@@ -564,12 +568,6 @@ CDeviceView::ListDevicesByType()
 bool
 CDeviceView::ListDevicesByConnection()
 {
-    bool bSuccess;
-
-    // Start by adding the root node to the tree
-    bSuccess = AddRootDevice();
-    if (bSuccess == false) return false;
-
     // Walk the device tree and add all the devices 
     (void)RecurseChildDevices(m_RootNode->GetDeviceInst(), m_hTreeRoot);
 
@@ -928,13 +926,13 @@ CDeviceView::BuildActionMenuForNode(
 HTREEITEM
 CDeviceView::RecurseFindDevice(
     _In_ HTREEITEM hParentItem,
-    _In_ LPWSTR DeviceId
+    _In_ CNode *Node
     )
 {
     HTREEITEM FoundItem;
     HTREEITEM hItem;
     TVITEMW tvItem;
-    CNode *Node;
+    CNode *FoundNode;
 
     // Check if this node has any children
     hItem = TreeView_GetChild(m_hTreeView, hParentItem);
@@ -946,17 +944,22 @@ CDeviceView::RecurseFindDevice(
     if (TreeView_GetItem(m_hTreeView, &tvItem) &&
         tvItem.lParam != NULL)
     {
-        // check for a matching deviceid
-        Node = reinterpret_cast<CNode *>(tvItem.lParam);
-        if (Node->GetDeviceId() &&
-            (wcscmp(Node->GetDeviceId(), DeviceId) == 0))
+        // check for a matching node
+        FoundNode = reinterpret_cast<CNode *>(tvItem.lParam);
+        if ((FoundNode->GetNodeType() == Node->GetNodeType()) &&
+            (IsEqualGUID(*FoundNode->GetClassGuid(), *Node->GetClassGuid())))
         {
-            return hItem;
+            // check if this is a class node, or a device with matching ID's
+            if ((FoundNode->GetNodeType() == ClassNode) ||
+                (wcscmp(FoundNode->GetDeviceId(), Node->GetDeviceId()) == 0))
+            {
+                return hItem;
+            }
         }
     }
 
     // This node may have its own children
-    FoundItem = RecurseFindDevice(hItem, DeviceId);
+    FoundItem = RecurseFindDevice(hItem, Node);
     if (FoundItem) return FoundItem;
 
     // Loop all the siblings
@@ -971,17 +974,22 @@ CDeviceView::RecurseFindDevice(
         tvItem.mask = TVIF_PARAM;
         if (TreeView_GetItem(m_hTreeView, &tvItem))
         {
-            // check for a matching deviceid
-            Node = reinterpret_cast<CNode *>(tvItem.lParam);
-            if (Node->GetDeviceId() && 
-                wcscmp(Node->GetDeviceId(), DeviceId) == 0)
+            // check for a matching class
+            FoundNode = reinterpret_cast<CNode *>(tvItem.lParam);
+            if ((FoundNode->GetNodeType() == Node->GetNodeType()) &&
+                (IsEqualGUID(*FoundNode->GetClassGuid(), *Node->GetClassGuid())))
             {
-                return hItem;
+                // check if this is a class node, or a device with matching ID's
+                if ((FoundNode->GetNodeType() == ClassNode) ||
+                    (wcscmp(FoundNode->GetDeviceId(), Node->GetDeviceId()) == 0))
+                {
+                    return hItem;
+                }
             }
         }
 
         // This node may have its own children 
-        FoundItem = RecurseFindDevice(hItem, DeviceId);
+        FoundItem = RecurseFindDevice(hItem, Node);
         if (FoundItem) return FoundItem;
     }
 
@@ -990,7 +998,7 @@ CDeviceView::RecurseFindDevice(
 
 void
 CDeviceView::SelectNode(
-    _In_ LPWSTR DeviceId
+    _In_ CNode *Node
     )
 {
     HTREEITEM hRoot, hItem;
@@ -1000,18 +1008,17 @@ CDeviceView::SelectNode(
     if (hRoot == NULL) return;
 
     // If we don't want to set select a node, just select root
-    if (DeviceId == NULL)
+    if (Node == nullptr || Node->GetNodeType() == RootNode)
     {
         TreeView_SelectItem(m_hTreeView, hRoot);
         return;
     }
 
     // Scan the tree looking for the node we want
-    hItem = RecurseFindDevice(hRoot, DeviceId);
+    hItem = RecurseFindDevice(hRoot, Node);
     if (hItem)
     {
         TreeView_SelectItem(m_hTreeView, hItem);
-        TreeView_Expand(m_hTreeView, hItem, TVM_EXPAND);
     }
     else
     {
@@ -1033,7 +1040,7 @@ CDeviceView::GetClassNode(
     )
 {
     POSITION Pos;
-    CClassNode *Node;
+    CClassNode *Node = nullptr;
 
     Pos = m_ClassNodeList.GetHeadPosition();
     if (Pos == NULL) return nullptr;
@@ -1047,7 +1054,7 @@ CDeviceView::GetClassNode(
             break;
         }
 
-        Node = NULL;
+        Node = nullptr;
 
     } while (Pos != NULL);
 
@@ -1060,7 +1067,7 @@ CDeviceView::GetDeviceNode(
     )
 {
     POSITION Pos;
-    CDeviceNode *Node;
+    CDeviceNode *Node = nullptr;
 
     Pos = m_DeviceNodeList.GetHeadPosition();
     if (Pos == NULL) return nullptr;
@@ -1074,7 +1081,7 @@ CDeviceView::GetDeviceNode(
             break;
         }
 
-        Node = NULL;
+        Node = nullptr;
 
     } while (Pos != NULL);
 
@@ -1090,7 +1097,7 @@ CNode* CDeviceView::GetNode(
     {
         return (CNode *)TvItem->lParam;
     }
-    return NULL;
+    return nullptr;
 }
 
 void

@@ -148,11 +148,11 @@ private:
 
     HTREEITEM RecurseFindDevice(
         _In_ HTREEITEM hParentItem,
-        _In_ LPWSTR DeviceId
+        _In_ CNode *Node
         );
 
     void SelectNode(
-        _In_ LPWSTR DeviceId
+        _In_ CNode *Node
         );
 
     void EmptyDeviceView(

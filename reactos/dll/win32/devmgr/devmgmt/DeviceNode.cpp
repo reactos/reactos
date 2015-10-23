@@ -26,6 +26,24 @@ CDeviceNode::CDeviceNode(
     ZeroMemory(&m_DevinfoData, sizeof(SP_DEVINFO_DATA));
 }
 
+CDeviceNode::CDeviceNode(
+    _In_ const CDeviceNode &Node
+    ) :
+    CNode(Node)
+{
+    m_DevInst = Node.m_DevInst;
+    m_hDevInfo = Node.m_hDevInfo;
+    m_Status = Node.m_Status;
+    m_ProblemNumber = Node.m_ProblemNumber;
+    m_OverlayImage = Node.m_OverlayImage;
+    CopyMemory(&m_DevinfoData, &Node.m_DevinfoData, sizeof(SP_DEVINFO_DATA));
+
+    size_t size = wcslen(Node.m_DeviceId) + 1;
+    m_DeviceId = new WCHAR[size];
+    StringCbCopyW(m_DeviceId, size * sizeof(WCHAR), Node.m_DeviceId);
+
+}
+
 CDeviceNode::~CDeviceNode()
 {
     Cleanup();
@@ -290,7 +308,7 @@ CDeviceNode::EnableDevice(
     for (int i = 0; i < 2; i++)
     {
         // Check globally first, then check config specific
-        pcp.Scope = (i == 0) ? DICS_FLAG_GLOBAL : DICS_FLAG_CONFIGSPECIFIC;
+        pcp.Scope = (i == 0) ? DICS_FLAG_CONFIGGENERAL : DICS_FLAG_CONFIGSPECIFIC;
 
         if (SetupDiSetClassInstallParamsW(m_hDevInfo,
                                           &m_DevinfoData,
@@ -319,6 +337,7 @@ CDeviceNode::EnableDevice(
         {
             SetupDiChangeState(m_hDevInfo, &m_DevinfoData);
         }
+
 
         if (Enable)
         {

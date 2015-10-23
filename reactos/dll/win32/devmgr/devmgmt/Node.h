@@ -25,6 +25,10 @@ public:
         _In_ PSP_CLASSIMAGELIST_DATA ImageListData
         );
 
+    CNode(
+        _In_ const CNode& Node
+        );
+
     virtual ~CNode();
 
     virtual bool SetupNode() = 0;
