@@ -1216,7 +1216,11 @@ BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source
             SetLastError( ERROR_NOT_ENOUGH_MEMORY );
             return FALSE;
         }
-        if (!SetupGetStringFieldW( inf_context, 1, inf_source, len, NULL )) return FALSE;
+        if (!SetupGetStringFieldW( inf_context, 1, inf_source, len, NULL ))
+        {
+            HeapFree( GetProcessHeap(), 0, inf_source );
+            return FALSE;
+        }
         source = inf_source;
     }
     else if (!source)
