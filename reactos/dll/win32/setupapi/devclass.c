@@ -552,6 +552,9 @@ cleanup:
     if (hKey != INVALID_HANDLE_VALUE)
         RegCloseKey(hKey);
 
+    if (Buffer && !ret)
+        MyFree(Buffer);
+
     return ret;
 }
 
