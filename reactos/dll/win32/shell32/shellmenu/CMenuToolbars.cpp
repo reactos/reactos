@@ -1321,6 +1321,7 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
     // If no items were added, show the "empty" placeholder
     if (DPA_GetPtrCount(dpaSort) == 0)
     {
+        DPA_Destroy(dpaSort);
         return AddPlaceholder();
     }
 
@@ -1341,7 +1342,10 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
 
         hr = m_shellFolder->GetDisplayNameOf(item, SIGDN_NORMALDISPLAY, &sr);
         if (FAILED_UNEXPECTEDLY(hr))
+        {
+            DPA_Destroy(dpaSort);
             return hr;
+        }
 
         StrRetToStr(&sr, NULL, &MenuString);
 
