@@ -356,7 +356,10 @@ static LPWSTR get_source_id( HINF hinf, PINFCONTEXT context, PCWSTR filename )
     }
 
     if (!SetupDiGetActualSectionToInstallW(hinf, source_disks_names, Section, MAX_PATH, NULL, NULL))
+    {
+        HeapFree( GetProcessHeap(), 0, source_id );
         return NULL;
+    }
 
     if (!SetupFindFirstLineW( hinf, Section, source_id, context ) &&
         !SetupFindFirstLineW( hinf, source_disks_names, source_id, context ))
