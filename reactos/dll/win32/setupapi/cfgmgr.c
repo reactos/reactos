@@ -555,7 +555,7 @@ CONFIGRET WINAPI CM_Connect_MachineW(
         }
     }
 
-    phMachine = (PHMACHINE)pMachine;
+    *phMachine = (PHMACHINE)pMachine;
 
     return CR_SUCCESS;
 }
