@@ -80,7 +80,7 @@ if not defined ARCH (
     exit /b
 )
 
-set NEW_STYLE_BUILD=0
+set NEW_STYLE_BUILD=1
 
 REM Parse command line parameters
 :repeat
