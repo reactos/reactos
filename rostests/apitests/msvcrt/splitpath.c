@@ -22,11 +22,13 @@ START_TEST(splitpath)
 
     Major = (DWORD)(LOBYTE(LOWORD(GetVersion())));
 
+    drive[2] = 0xFF;
     _splitpath("c:\\dir1\\dir2\\file.ext", drive, dir, fname, ext);
     ok_str(drive, "c:");
     ok_str(dir, "\\dir1\\dir2\\");
     ok_str(fname, "file");
     ok_str(ext, ".ext");
+    ok_int(drive[2], 0);
 
     *_errno() = 0;
     _splitpath("c:\\dir1\\dir2\\file.ext", 0, 0, 0, 0);
