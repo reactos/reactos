@@ -5777,6 +5777,8 @@ cleanup:
         RegCloseKey(hEnumKey);
     if (hKey != NULL && hKey != key)
         RegCloseKey(hKey);
+    if (DriverKey)
+        HeapFree(GetProcessHeap(), 0, DriverKey);
     return key;
 }
 
