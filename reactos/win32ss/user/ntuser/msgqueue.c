@@ -2080,7 +2080,6 @@ HungAppSysTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 BOOLEAN FASTCALL
 MsqInitializeMessageQueue(PTHREADINFO pti, PUSER_MESSAGE_QUEUE MessageQueue)
 {
-   MessageQueue->CaretInfo = (PTHRDCARETINFO)(MessageQueue + 1);
    InitializeListHead(&MessageQueue->HardwareMessagesListHead); // Keep here!
    MessageQueue->spwndFocus = NULL;
    MessageQueue->iCursorLevel = 0;
@@ -2269,16 +2268,16 @@ MsqCreateMessageQueue(PTHREADINFO pti)
 {
    PUSER_MESSAGE_QUEUE MessageQueue;
 
-   MessageQueue = (PUSER_MESSAGE_QUEUE)ExAllocatePoolWithTag(NonPagedPool,
-                  sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO),
-                  USERTAG_Q);
+   MessageQueue = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(*MessageQueue),
+                                        USERTAG_Q);
 
    if (!MessageQueue)
    {
       return NULL;
    }
 
-   RtlZeroMemory(MessageQueue, sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO));
+   RtlZeroMemory(MessageQueue, sizeof(*MessageQueue));
    /* hold at least one reference until it'll be destroyed */
    IntReferenceMessageQueue(MessageQueue);
    /* initialize the queue */
@@ -2406,9 +2405,8 @@ MsqSetStateWindow(PTHREADINFO pti, ULONG Type, HWND hWnd)
          MessageQueue->MoveSize = hWnd;
          return Prev;
       case MSQ_STATE_CARET:
-         ASSERT(MessageQueue->CaretInfo);
-         Prev = MessageQueue->CaretInfo->hWnd;
-         MessageQueue->CaretInfo->hWnd = hWnd;
+         Prev = MessageQueue->CaretInfo.hWnd;
+         MessageQueue->CaretInfo.hWnd = hWnd;
          return Prev;
    }
 

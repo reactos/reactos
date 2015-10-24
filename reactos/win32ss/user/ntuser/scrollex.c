@@ -27,7 +27,7 @@ co_IntFixCaret(PWND Window, RECTL *lprc, UINT flags)
    Desktop = pti->rpdesk;
    ActiveMessageQueue = Desktop->ActiveMessageQueue;
    if (!ActiveMessageQueue) return 0;
-   CaretInfo = ActiveMessageQueue->CaretInfo;
+   CaretInfo = &ActiveMessageQueue->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
 
    WndCaret = ValidateHwndNoErr(hWndCaret);

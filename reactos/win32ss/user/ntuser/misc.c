@@ -394,7 +394,7 @@ NtUserGetGUIThreadInfo(
       if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
    }
 
-   CaretInfo = MsgQueue->CaretInfo;
+   CaretInfo = &MsgQueue->CaretInfo;
 
    SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
 /*

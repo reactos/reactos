@@ -524,9 +524,9 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
               ptiTo->MessageQueue->spwndFocus   = ptiFrom->MessageQueue->spwndFocus;
               ptiTo->MessageQueue->spwndCapture = ptiFrom->MessageQueue->spwndCapture;
               ptiTo->MessageQueue->QF_flags    ^= ((ptiTo->MessageQueue->QF_flags ^ ptiFrom->MessageQueue->QF_flags) & QF_CAPTURELOCKED);
-              RtlCopyMemory(ptiTo->MessageQueue->CaretInfo,
-                            ptiFrom->MessageQueue->CaretInfo,
-                            sizeof(*ptiTo->MessageQueue->CaretInfo));
+              RtlCopyMemory(&ptiTo->MessageQueue->CaretInfo,
+                            &ptiFrom->MessageQueue->CaretInfo,
+                            sizeof(ptiTo->MessageQueue->CaretInfo));
               IntSetFocusMessageQueue(NULL);
               IntSetFocusMessageQueue(ptiTo->MessageQueue);
               gptiForeground = ptiTo;

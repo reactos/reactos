@@ -67,8 +67,6 @@ typedef struct _USER_MESSAGE_QUEUE
   HWND MenuOwner;
   /* Identifes the menu state */
   BYTE MenuState;
-  /* Caret information for this queue */
-  PTHRDCARETINFO CaretInfo;
   /* Message Queue Flags */
   DWORD QF_flags;
   DWORD cThreads; // Shared message queue counter.
@@ -85,6 +83,8 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Cursor object */
   PCURICON_OBJECT CursorObject;
 
+  /* Caret information for this queue */
+  THRDCARETINFO CaretInfo;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 #define QF_UPDATEKEYSTATE         0x00000001

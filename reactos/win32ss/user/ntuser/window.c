@@ -417,7 +417,7 @@ static void IntSendDestroyMsg(HWND hWnd)
          }
       }
 
-      if (ti->MessageQueue->CaretInfo->hWnd == UserHMGetHandle(Window))
+      if (ti->MessageQueue->CaretInfo.hWnd == UserHMGetHandle(Window))
       {
          co_IntDestroyCaret(ti);
       }

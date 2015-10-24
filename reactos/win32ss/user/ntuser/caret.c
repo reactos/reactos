@@ -101,7 +101,7 @@ CaretSystemTimerProc(HWND hwnd,
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if (ThreadQueue->CaretInfo->hWnd != hwnd)
+   if (ThreadQueue->CaretInfo.hWnd != hwnd)
    {
       TRACE("Not the same caret window!\n");
       return;
@@ -126,8 +126,8 @@ CaretSystemTimerProc(HWND hwnd,
    {
       case IDCARETTIMER:
       {
-         ThreadQueue->CaretInfo->Showing = (ThreadQueue->CaretInfo->Showing ? 0 : 1);
-         co_IntDrawCaret(pWnd, ThreadQueue->CaretInfo);
+         ThreadQueue->CaretInfo.Showing = (ThreadQueue->CaretInfo.Showing ? 0 : 1);
+         co_IntDrawCaret(pWnd, &ThreadQueue->CaretInfo);
       }
    }
    return;
@@ -155,18 +155,18 @@ co_IntDestroyCaret(PTHREADINFO Win32Thread)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
    PWND pWnd;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)Win32Thread->MessageQueue;
+   ThreadQueue = Win32Thread->MessageQueue;
 
-   if(!ThreadQueue || !ThreadQueue->CaretInfo)
+   if (!ThreadQueue)
       return FALSE;
 
-   pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo->hWnd);
-   co_IntHideCaret(ThreadQueue->CaretInfo);
-   ThreadQueue->CaretInfo->Bitmap = (HBITMAP)0;
-   ThreadQueue->CaretInfo->hWnd = (HWND)0;
-   ThreadQueue->CaretInfo->Size.cx = ThreadQueue->CaretInfo->Size.cy = 0;
-   ThreadQueue->CaretInfo->Showing = 0;
-   ThreadQueue->CaretInfo->Visible = 0;
+   pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo.hWnd);
+   co_IntHideCaret(&ThreadQueue->CaretInfo);
+   ThreadQueue->CaretInfo.Bitmap = (HBITMAP)0;
+   ThreadQueue->CaretInfo.hWnd = (HWND)0;
+   ThreadQueue->CaretInfo.Size.cx = ThreadQueue->CaretInfo.Size.cy = 0;
+   ThreadQueue->CaretInfo.Showing = 0;
+   ThreadQueue->CaretInfo.Visible = 0;
    if (pWnd)
    {
       IntNotifyWinEvent(EVENT_OBJECT_DESTROY, pWnd, OBJID_CARET, CHILDID_SELF, 0);
@@ -201,16 +201,16 @@ co_IntSetCaretPos(int X, int Y)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(ThreadQueue->CaretInfo->hWnd)
+   if(ThreadQueue->CaretInfo.hWnd)
    {
-      pWnd = UserGetWindowObject(ThreadQueue->CaretInfo->hWnd);
-      if(ThreadQueue->CaretInfo->Pos.x != X || ThreadQueue->CaretInfo->Pos.y != Y)
+      pWnd = UserGetWindowObject(ThreadQueue->CaretInfo.hWnd);
+      if(ThreadQueue->CaretInfo.Pos.x != X || ThreadQueue->CaretInfo.Pos.y != Y)
       {
-         co_IntHideCaret(ThreadQueue->CaretInfo);
-         ThreadQueue->CaretInfo->Showing = 1;
-         ThreadQueue->CaretInfo->Pos.x = X;
-         ThreadQueue->CaretInfo->Pos.y = Y;
-         co_IntDrawCaret(pWnd, ThreadQueue->CaretInfo);
+         co_IntHideCaret(&ThreadQueue->CaretInfo);
+         ThreadQueue->CaretInfo.Showing = 1;
+         ThreadQueue->CaretInfo.Pos.x = X;
+         ThreadQueue->CaretInfo.Pos.y = Y;
+         co_IntDrawCaret(pWnd, &ThreadQueue->CaretInfo);
 
          IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM);
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_CARET, CHILDID_SELF, 0);
@@ -237,20 +237,20 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(Window && ThreadQueue->CaretInfo->hWnd != Window->head.h)
+   if(Window && ThreadQueue->CaretInfo.hWnd != Window->head.h)
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
-   if(ThreadQueue->CaretInfo->Visible)
+   if(ThreadQueue->CaretInfo.Visible)
    {
-      PWND pwnd = UserGetWindowObject(ThreadQueue->CaretInfo->hWnd);
+      PWND pwnd = UserGetWindowObject(ThreadQueue->CaretInfo.hWnd);
       IntKillTimer(pwnd, IDCARETTIMER, TRUE);
 
-      co_IntHideCaret(ThreadQueue->CaretInfo);
-      ThreadQueue->CaretInfo->Visible = 0;
-      ThreadQueue->CaretInfo->Showing = 0;
+      co_IntHideCaret(&ThreadQueue->CaretInfo);
+      ThreadQueue->CaretInfo.Visible = 0;
+      ThreadQueue->CaretInfo.Showing = 0;
    }
 
    return TRUE;
@@ -273,17 +273,17 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(Window && ThreadQueue->CaretInfo->hWnd != Window->head.h)
+   if(Window && ThreadQueue->CaretInfo.hWnd != Window->head.h)
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
-   if (!ThreadQueue->CaretInfo->Visible)
+   if (!ThreadQueue->CaretInfo.Visible)
    {
-      ThreadQueue->CaretInfo->Visible = 1;
-      pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo->hWnd);
-      if (!ThreadQueue->CaretInfo->Showing && pWnd)
+      ThreadQueue->CaretInfo.Visible = 1;
+      pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo.hWnd);
+      if (!ThreadQueue->CaretInfo.Showing && pWnd)
       {
          IntNotifyWinEvent(EVENT_OBJECT_SHOW, pWnd, OBJID_CARET, OBJID_CARET, 0);
       }
@@ -324,17 +324,17 @@ NtUserCreateCaret(
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if (ThreadQueue->CaretInfo->Visible)
+   if (ThreadQueue->CaretInfo.Visible)
    {
       IntKillTimer(Window, IDCARETTIMER, TRUE);
-      co_IntHideCaret(ThreadQueue->CaretInfo);
+      co_IntHideCaret(&ThreadQueue->CaretInfo);
    }
 
-   ThreadQueue->CaretInfo->hWnd = hWnd;
+   ThreadQueue->CaretInfo.hWnd = hWnd;
    if(hBitmap)
    {
-      ThreadQueue->CaretInfo->Bitmap = hBitmap;
-      ThreadQueue->CaretInfo->Size.cx = ThreadQueue->CaretInfo->Size.cy = 0;
+      ThreadQueue->CaretInfo.Bitmap = hBitmap;
+      ThreadQueue->CaretInfo.Size.cx = ThreadQueue->CaretInfo.Size.cy = 0;
    }
    else
    {
@@ -346,12 +346,12 @@ NtUserCreateCaret(
       {
           nHeight = UserGetSystemMetrics(SM_CYBORDER);
       }
-      ThreadQueue->CaretInfo->Bitmap = (HBITMAP)0;
-      ThreadQueue->CaretInfo->Size.cx = nWidth;
-      ThreadQueue->CaretInfo->Size.cy = nHeight;
+      ThreadQueue->CaretInfo.Bitmap = (HBITMAP)0;
+      ThreadQueue->CaretInfo.Size.cx = nWidth;
+      ThreadQueue->CaretInfo.Size.cy = nHeight;
    }
-   ThreadQueue->CaretInfo->Visible = 0;
-   ThreadQueue->CaretInfo->Showing = 0;
+   ThreadQueue->CaretInfo.Visible = 0;
+   ThreadQueue->CaretInfo.Showing = 0;
 
    IntSetTimer( Window, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM );
 
@@ -396,7 +396,7 @@ NtUserGetCaretPos(
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   Status = MmCopyToCaller(lpPoint, &(ThreadQueue->CaretInfo->Pos), sizeof(POINT));
+   Status = MmCopyToCaller(lpPoint, &ThreadQueue->CaretInfo.Pos, sizeof(POINT));
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
