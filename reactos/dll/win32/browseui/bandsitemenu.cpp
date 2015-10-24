@@ -63,7 +63,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
 
     ret = InsertMenuItemW(hmenu, 0, TRUE, &mii);
 
-    delete mii.dwTypeData;
+    delete[] mii.dwTypeData;
 
     RemoveMenu(hm, 0, MF_BYPOSITION);
 
