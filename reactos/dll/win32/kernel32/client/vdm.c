@@ -101,7 +101,7 @@ BaseCheckVDM(IN ULONG BinaryType,
 {
     NTSTATUS Status;
     PBASE_CHECK_VDM CheckVdm = &ApiMessage->Data.CheckVDMRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
     PWCHAR CurrentDir = NULL;
     PWCHAR ShortAppName = NULL;
     PWCHAR ShortCurrentDir = NULL;
@@ -517,7 +517,7 @@ Cleanup:
     if (AnsiReserved) RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiReserved);
 
     /* Free the capture buffer */
-    CsrFreeCaptureBuffer(CaptureBuffer);
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
     /* Free the current directory, if it was allocated here, and its short path */
     if (ShortCurrentDir) RtlFreeHeap(RtlGetProcessHeap(), 0, ShortCurrentDir);
