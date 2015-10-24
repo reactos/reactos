@@ -941,6 +941,11 @@ public:
         ::SysFreeString(m_str);
         m_str = NULL;
     }
+    
+    operator BSTR () const
+    {
+        return m_str;
+    }
 };
 
 class CComVariant : public tagVARIANT
