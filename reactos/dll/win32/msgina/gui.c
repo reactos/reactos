@@ -1306,7 +1306,10 @@ DoUnlock(
     BOOL res = FALSE;
 
     if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
+    {
+        HeapFree(GetProcessHeap(), 0, UserName);
         return FALSE;
+    }
 
     if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password))
     {
