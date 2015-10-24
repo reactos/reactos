@@ -219,7 +219,7 @@ InstallScreenSaverW(
     IN UINT nCmdShow)
 {
     WCHAR pszSystemDir[MAX_PATH];
-    WCHAR pszDrive[2];
+    WCHAR pszDrive[3];
     WCHAR pszPath[MAX_PATH];
     WCHAR pszFilename[MAX_PATH];
     WCHAR pszExt[MAX_PATH];
