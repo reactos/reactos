@@ -664,15 +664,15 @@ HRESULT SHELL32_CompareIDs(IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pi
 
     if (isEmpty1 && isEmpty2) 
     {
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
+        nReturn = MAKE_HRESULT( SEVERITY_SUCCESS, 0, 0 );
     }
     else if (isEmpty1) 
     {
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (WORD) -1);
+        nReturn = MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
     }
     else if (isEmpty2)
     {
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
+        nReturn = MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
         /* optimizing end */
     }
     else if (SUCCEEDED(iface->BindToObject(firstpidl, NULL, IID_PPV_ARG(IShellFolder, &psf)))) {
