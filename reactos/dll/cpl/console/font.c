@@ -305,7 +305,7 @@ FontTypeChange(HWND hwndDlg,
                                       LB_GETTEXT, nSel, (LPARAM)FaceName);
     FaceName[Length] = '\0';
 
-    Length = min(Length/*wcslen(FaceName) + 1*/, LF_FACESIZE); // wcsnlen
+    Length = min(Length/*wcslen(FaceName) + 1*/, LF_FACESIZE - 1); // wcsnlen
     wcsncpy(pConInfo->FaceName, FaceName, LF_FACESIZE);
     pConInfo->FaceName[Length] = L'\0';
     DPRINT1("pConInfo->FaceName = '%S'\n", pConInfo->FaceName);
