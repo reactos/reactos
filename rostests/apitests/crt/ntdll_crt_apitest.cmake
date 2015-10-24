@@ -71,7 +71,7 @@ list(APPEND SOURCE_NTDLL
 #    isxdigit.c
 #    labs.c
 #    log.c
-#    mbstowcs.c
+    mbstowcs.c
 #    memchr.c
 #    memcmp.c
     # memcpy == memmove
@@ -120,7 +120,7 @@ list(APPEND SOURCE_NTDLL
 #    wcsstr.c
 #    wcstok.c
 #    wcstol.c
-#    wcstombs.c
+    wcstombs.c
 #    wcstoul.c
 )
 

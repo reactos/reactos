@@ -12,15 +12,19 @@ extern void func__vscwprintf(void);
 #endif
 extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
+extern void func_mbstowcs(void);
 extern void func_sprintf(void);
 extern void func_strcpy(void);
+extern void func_wcstombs(void);
 
 const struct test winetest_testlist[] =
 {
     { "_vsnprintf", func__vsnprintf },
     { "_vsnwprintf", func__vsnwprintf },
+    { "mbstowcs", func_mbstowcs },
     { "sprintf", func_sprintf },
     { "strcpy", func_strcpy },
+    { "wcstombs", func_wcstombs },
 #if defined(TEST_CRTDLL) || defined(TEST_MSVCRT) || defined(TEST_STATIC_CRT)
     // ...
 #endif
