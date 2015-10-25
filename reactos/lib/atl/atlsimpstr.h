@@ -103,8 +103,20 @@ public:
 };
 
 
-template< typename BaseType = wchar_t >
+template< typename BaseType = char >
 class ChTraitsBase
+{
+public:
+    typedef char XCHAR;
+    typedef LPSTR PXSTR;
+    typedef LPCSTR PCXSTR;
+    typedef wchar_t YCHAR;
+    typedef LPWSTR PYSTR;
+    typedef LPCWSTR PCYSTR;
+};
+
+template<>
+class ChTraitsBase<wchar_t>
 {
 public:
     typedef wchar_t XCHAR;
@@ -118,9 +130,6 @@ public:
 template< typename BaseType, bool t_bMFCDLL = false>
 class CSimpleStringT
 {
-private:
-    LPWSTR m_pszData;
-
 public:
     typedef typename ChTraitsBase<BaseType>::XCHAR XCHAR;
     typedef typename ChTraitsBase<BaseType>::PXSTR PXSTR;
@@ -128,6 +137,9 @@ public:
     typedef typename ChTraitsBase<BaseType>::YCHAR YCHAR;
     typedef typename ChTraitsBase<BaseType>::PYSTR PYSTR;
     typedef typename ChTraitsBase<BaseType>::PCYSTR PCYSTR;
+
+private:
+    PXSTR m_pszData;
 
 public:
     explicit CSimpleStringT(_Inout_ IAtlStringMgr* pStringMgr)
@@ -143,6 +155,44 @@ public:
         Attach(pNewData);
     }
 
+    CSimpleStringT(
+        _In_z_ PCXSTR pszSrc,
+        _Inout_ IAtlStringMgr* pStringMgr)
+    {
+        int nLength = StringLength(pszSrc);
+        CStringData* pData = pStringMgr->Allocate(nLength, sizeof(XCHAR));
+        if (pData == NULL)
+        {
+            throw; // ThrowMemoryException();
+        }
+        Attach(pData);
+        SetLength(nLength);
+        CopyChars(m_pszData, nLength, pszSrc, nLength);
+    }
+
+    CSimpleStringT(
+        _In_count_(nLength) const XCHAR* pchSrc,
+        _In_ int nLength,
+        _Inout_ IAtlStringMgr* pStringMgr)
+    {
+        if (pchSrc == NULL && nLength != 0)
+            throw;
+
+        CStringData* pData = pStringMgr->Allocate(nLength, sizeof(XCHAR));
+        if (pData == NULL)
+        {
+            throw; // ThrowMemoryException();
+        }
+        Attach(pData);
+        SetLength(nLength);
+        CopyChars(m_pszData, nLength, pchSrc, nLength);
+    }
+
+    ~CSimpleStringT() throw()
+    {
+        CStringData* pData = GetData();
+        pData->Release();
+    }
 
     CSimpleStringT& operator=(_In_opt_z_ PCXSTR pszSrc)
     {
@@ -150,12 +200,22 @@ public:
         return *this;
     }
 
+    CSimpleStringT& operator+=(_In_ const CSimpleStringT& strSrc)
+    {
+        Append(strSrc);
+        return *this;
+    }
+
+    CSimpleStringT& operator+=(_In_z_ PCXSTR pszSrc)
+    {
+        Append(pszSrc);
+        return *this;
+    }
 
     operator PCXSTR() const throw()
     {
         return m_pszData;
     }
-
 
     void Empty() throw()
     {
@@ -173,6 +233,44 @@ public:
             CStringData* pNewData = pStringMgr->GetNilString();
             Attach(pNewData);
         }
+    }
+
+    void Append(
+        _In_count_(nLength) PCXSTR pszSrc,
+        _In_ int nLength)
+    {
+        UINT_PTR nOffset = pszSrc - GetString();
+
+        int nOldLength = GetLength();
+        if (nOldLength < 0)
+            nOldLength = 0;
+
+        ATLASSERT(nLength >= 0);
+
+#if 0 // FIXME: See comment for StringLengthN below.
+        nLength = StringLengthN(pszSrc, nLength);
+        if (!(INT_MAX - nLength >= nOldLength))
+            throw;
+#endif
+
+        int nNewLength = nOldLength + nLength;
+        PXSTR pszBuffer = GetBuffer(nNewLength);
+        if (nOffset <= (UINT_PTR)nOldLength)
+        {
+            pszSrc = pszBuffer + nOffset;
+        }
+        CopyChars(pszBuffer + nOldLength, nLength, pszSrc, nLength);
+        ReleaseBufferSetLength(nNewLength);
+    }
+
+    void Append(_In_z_ PCXSTR pszSrc)
+    {
+        Append(pszSrc, StringLength(pszSrc));
+    }
+
+    void Append(_In_ const CSimpleStringT& strSrc)
+    {
+        Append(strSrc.GetString(), strSrc.GetLength());
     }
 
     void SetString(_In_opt_z_ PCXSTR pszSrc)
@@ -204,12 +302,6 @@ public:
             }
             ReleaseBufferSetLength(nLength);
         }
-    }
-
-    static int __cdecl StringLength(_In_opt_z_ const wchar_t* psz) throw()
-    {
-        if (psz == NULL) return 0;
-        return (int)wcslen(psz);
     }
 
     PXSTR GetBuffer()
@@ -257,7 +349,41 @@ public:
 
     CStringData* GetData() const throw()
     {
-        return reinterpret_cast<CStringData*>(m_pszData) - 1;
+        return (reinterpret_cast<CStringData*>(m_pszData) - 1);
+    }
+
+    IAtlStringMgr* GetManager() const throw()
+    {
+        IAtlStringMgr* pStringMgr = GetData()->pStringMgr;
+        return (pStringMgr ? pStringMgr->Clone() : NULL);
+    }
+
+public:
+    friend CSimpleStringT operator+(
+        _In_ const CSimpleStringT& str1,
+        _In_ const CSimpleStringT& str2)
+    {
+        CSimpleStringT s(str1.GetManager());
+        Concatenate(s, str1, str1.GetLength(), str2, str2.GetLength());
+        return s;
+    }
+
+    friend CSimpleStringT operator+(
+        _In_ const CSimpleStringT& str1,
+        _In_z_ PCXSTR psz2)
+    {
+        CSimpleStringT s(str1.GetManager());
+        Concatenate(s, str1, str1.GetLength(), psz2, StringLength(psz2));
+        return s;
+    }
+
+    friend CSimpleStringT operator+(
+        _In_z_ PCXSTR psz1,
+        _In_ const CSimpleStringT& str2)
+    {
+        CSimpleStringT s(str2.GetManager());
+        Concatenate(s, psz1, StringLength(psz1), str2, str2.GetLength());
+        return s;
     }
 
     static void __cdecl CopyChars(
@@ -278,13 +404,58 @@ public:
         memmove(pchDest, pchSrc, nChars * sizeof(XCHAR));
     }
 
+    static int __cdecl StringLength(_In_opt_z_ const char* psz) throw()
+    {
+        if (psz == NULL) return 0;
+        return (int)strlen(psz);
+    }
+
+    static int __cdecl StringLength(_In_opt_z_ const wchar_t* psz) throw()
+    {
+        if (psz == NULL) return 0;
+        return (int)wcslen(psz);
+    }
+
+#if 0 // For whatever reason we do not link with strnlen / wcsnlen. Please investigate!
+      // strnlen / wcsnlen are available in MSVCRT starting Vista+.
+    static int __cdecl StringLengthN(
+        _In_opt_z_count_(sizeInXChar) const char* psz,
+        _In_ size_t sizeInXChar) throw()
+    {
+        if (psz == NULL) return 0;
+        return (int)strnlen(psz, sizeInXChar);
+    }
+
+    static int __cdecl StringLengthN(
+        _In_opt_z_count_(sizeInXChar) const wchar_t* psz,
+        _In_ size_t sizeInXChar) throw()
+    {
+        if (psz == NULL) return 0;
+        return (int)wcsnlen(psz, sizeInXChar);
+    }
+#endif
+
+protected:
+    static void __cdecl Concatenate(
+        _Inout_ CSimpleStringT& strResult,
+        _In_count_(nLength1) PCXSTR psz1,
+        _In_ int nLength1,
+        _In_count_(nLength2) PCXSTR psz2,
+        _In_ int nLength2)
+    {
+        int nNewLength = nLength1 + nLength2;
+        PXSTR pszBuffer = strResult.GetBuffer(nNewLength);
+        CopyChars(pszBuffer, nLength1, psz1, nLength1);
+        CopyChars(pszBuffer + nLength1, nLength2, psz2, nLength2);
+        strResult.ReleaseBufferSetLength(nNewLength);
+    }
 
 private:
-
     void Attach(_Inout_ CStringData* pData) throw()
     {
         m_pszData = static_cast<PXSTR>(pData->data());
     }
+
     __declspec(noinline) void Fork(_In_ int nLength)
     {
         CStringData* pOldData = GetData();
@@ -301,7 +472,6 @@ private:
         pOldData->Release();
         Attach(pNewData);
     }
-
 
     PXSTR PrepareWrite(_In_ int nLength)
     {
@@ -356,7 +526,10 @@ private:
             return;
         }
         CStringData* pNewData = pStringMgr->Reallocate(pOldData, nLength, sizeof(XCHAR));
-        if (pNewData == NULL) throw;
+        if (pNewData == NULL)
+        {
+            throw; // ThrowMemoryException();
+        }
 
         Attach(pNewData);
     }
@@ -386,14 +559,17 @@ private:
         else
         {
             pNewData = pNewStringMgr->Allocate(pData->nDataLength, sizeof(XCHAR));
-            if (pNewData == NULL) throw;
+            if (pNewData == NULL)
+            {
+                throw; // ThrowMemoryException();
+            }
 
             pNewData->nDataLength = pData->nDataLength;
             CopyChars(PXSTR(pNewData->data()), pData->nDataLength + 1,
                       PCXSTR(pData->data()), pData->nDataLength + 1);
         }
 
-        return(pNewData);
+        return pNewData;
     }
 
 };

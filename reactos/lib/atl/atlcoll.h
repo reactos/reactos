@@ -54,12 +54,11 @@ public:
     inline void Destroy()
     {
         CAtlPlex* Block;
+        CAtlPlex* Next;
 
         Block = this;
         while (Block != NULL)
         {
-            CAtlPlex* Next;
-
             Next = Block->m_Next;
             HeapFree(GetProcessHeap(), 0, Block);
             Block = Next;
@@ -170,20 +169,32 @@ public:
     CAtlList(_In_ UINT nBlockSize = 10);
     ~CAtlList();
 
+    size_t GetCount() const;
     bool IsEmpty() const;
 
     POSITION GetHeadPosition() const;
+    POSITION GetTailPosition() const;
 
-    E& GetNext(
-        _Inout_ POSITION &Position
-        );
+    E& GetNext(_Inout_ POSITION& pos);
+    const E& GetNext(_Inout_ POSITION& pos) const;
+    E& GetPrev(_Inout_ POSITION& pos);
+    const E& GetPrev(_Inout_ POSITION& pos) const throw();
 
-    POSITION AddTail(
-        INARGTYPE element
-        );
+    E& GetAt(_In_ POSITION pos);
+    const E& GetAt(_In_ POSITION pos) const;
 
+    POSITION AddHead(INARGTYPE element);
+    POSITION AddTail(INARGTYPE element);
+
+    E RemoveHead();
     E RemoveTail();
     void RemoveAll();
+    void RemoveAt(_In_ POSITION pos) throw();
+
+    POSITION Find(
+        INARGTYPE element,
+        _In_opt_ POSITION posStartAfter = NULL) const;
+    POSITION FindIndex(_In_ size_t iElement) const;
 
 private:
     CNode* CreateNode(
@@ -225,31 +236,94 @@ CAtlList<E, ETraits >::~CAtlList(void)
 }
 
 template<typename E, class ETraits>
-inline bool CAtlList< E, ETraits >::IsEmpty(void) const
+inline size_t CAtlList< E, ETraits >::GetCount() const
+{
+    return m_NumElements;
+}
+
+template<typename E, class ETraits>
+inline bool CAtlList< E, ETraits >::IsEmpty() const
 {
     return (m_NumElements == 0);
 }
 
 template<typename E, class ETraits>
-inline POSITION CAtlList<E, ETraits>::GetHeadPosition(void) const
+inline POSITION CAtlList<E, ETraits>::GetHeadPosition() const
 {
     return (POSITION)m_HeadNode;
 }
 
 template<typename E, class ETraits>
-inline E& CAtlList< E, ETraits >::GetNext(
-    _Inout_ POSITION& Position
-    )
+inline POSITION CAtlList<E, ETraits>::GetTailPosition() const
 {
-    CNode* Node = (CNode*)Position;
-    Position = (POSITION)Node->m_Next;
+    return (POSITION)m_TailNode;
+}
+
+template<typename E, class ETraits>
+inline E& CAtlList< E, ETraits >::GetNext(_Inout_ POSITION& pos)
+{
+    CNode* Node = (CNode*)pos;
+    pos = (POSITION)Node->m_Next;
     return Node->m_Element;
 }
 
 template<typename E, class ETraits>
-POSITION CAtlList<E, ETraits>::AddTail(
-    INARGTYPE element
-    )
+inline const E& CAtlList< E, ETraits >::GetNext(_Inout_ POSITION& pos) const
+{
+    CNode* Node = (CNode*)pos;
+    pos = (POSITION)Node->m_Next;
+    return Node->m_Element;
+}
+
+template<typename E, class ETraits>
+inline E& CAtlList< E, ETraits >::GetPrev(_Inout_ POSITION& pos)
+{
+    CNode* Node = (CNode*)pos;
+    pos = (POSITION)Node->m_Prev;
+    return Node->m_Element;
+}
+
+template<typename E, class ETraits>
+inline const E& CAtlList< E, ETraits >::GetPrev(_Inout_ POSITION& pos) const
+{
+    CNode* Node = (CNode*)pos;
+    pos = (POSITION)Node->m_Prev;
+    return Node->m_Element;
+}
+
+template<typename E, class ETraits>
+inline E& CAtlList< E, ETraits >::GetAt(_In_ POSITION pos)
+{
+    CNode* Node = (CNode*)pos;
+    return Node->m_Element;
+}
+
+template<typename E, class ETraits>
+inline const E& CAtlList< E, ETraits >::GetAt(_In_ POSITION pos) const
+{
+    CNode* Node = (CNode*)pos;
+    return Node->m_Element;
+}
+
+template<typename E, class ETraits>
+POSITION CAtlList<E, ETraits>::AddHead(INARGTYPE element)
+{
+    CNode* Node = CreateNode(element, NULL, m_HeadNode);
+    if (m_HeadNode)
+    {
+        m_HeadNode->m_Prev = Node;
+    }
+    else
+    {
+        m_TailNode = Node;
+    }
+    m_HeadNode = Node;
+
+    return (POSITION)Node;
+}
+
+template<typename E, class ETraits>
+POSITION CAtlList<E, ETraits>::AddTail(INARGTYPE element)
 {
     CNode* Node = CreateNode(element, m_TailNode, NULL);
     if (m_TailNode)
@@ -266,10 +340,29 @@ POSITION CAtlList<E, ETraits>::AddTail(
 }
 
 template<typename E, class ETraits>
-E CAtlList<E, ETraits>::RemoveTail(void)
+E CAtlList<E, ETraits>::RemoveHead()
+{
+    CNode* Node = m_HeadNode;
+    E Element(Node->m_Element);
+
+    m_HeadNode = Node->m_Next;
+    if (m_HeadNode)
+    {
+        m_HeadNode->m_Prev = NULL;
+    }
+    else
+    {
+        m_TailNode = NULL;
+    }
+    FreeNode(Node);
+
+    return Element;
+}
+
+template<typename E, class ETraits>
+E CAtlList<E, ETraits>::RemoveTail()
 {
     CNode* Node = m_TailNode;
-
     E Element(Node->m_Element);
 
     m_TailNode = Node->m_Prev;
@@ -287,7 +380,7 @@ E CAtlList<E, ETraits>::RemoveTail(void)
 }
 
 template<typename E, class ETraits>
-void CAtlList<E, ETraits >::RemoveAll(void)
+void CAtlList<E, ETraits >::RemoveAll()
 {
     while (m_NumElements > 0)
     {
@@ -305,6 +398,73 @@ void CAtlList<E, ETraits >::RemoveAll(void)
         m_Blocks->Destroy();
         m_Blocks = NULL;
     }
+}
+
+template<typename E, class ETraits>
+void CAtlList<E, ETraits >::RemoveAt(_In_ POSITION pos)
+{
+    ATLASSERT(pos != NULL);
+
+    CNode* OldNode = (CNode*)pos;
+    if (OldNode == m_HeadNode)
+    {
+        m_HeadNode = OldNode->m_Next;
+    }
+    else
+    {
+        OldNode->m_Prev->m_Next = OldNode->m_Next;
+    }
+    if (OldNode == m_TailNode)
+    {
+        m_TailNode = OldNode->m_Prev;
+    }
+    else
+    {
+        OldNode->m_Next->m_Prev = OldNode->m_Prev;
+    }
+    FreeNode(OldNode);
+}
+
+template<typename E, class ETraits>
+POSITION CAtlList< E, ETraits >::Find(
+    INARGTYPE element,
+    _In_opt_ POSITION posStartAfter) const
+{
+    CNode* Node = (CNode*)posStartAfter;
+    if (Node == NULL)
+    {
+        Node = m_HeadNode;
+    }
+    else
+    {
+        Node = Node->m_Next;
+    }
+
+    for (; Node != NULL; Node = Node->m_Next)
+    {
+        if (ETraits::CompareElements(Node->m_Element, element))
+            return (POSITION)Node;
+    }
+
+    return NULL;
+}
+
+template<typename E, class ETraits>
+POSITION CAtlList< E, ETraits >::FindIndex(_In_ size_t iElement) const
+{
+    if (iElement >= m_NumElements)
+        return NULL;
+
+    if (m_HeadNode == NULL)
+        return NULL;
+
+    CNode* Node = m_HeadNode;
+    for (size_t i = 0; i < iElement; i++)
+    {
+        Node = Node->m_Next;
+    }
+
+    return (POSITION)Node;
 }
 
 
@@ -351,7 +511,7 @@ void CAtlList<E, ETraits>::FreeNode(
 }
 
 template<typename E, class ETraits>
-typename CAtlList<E, ETraits>::CNode* CAtlList< E, ETraits>::GetFreeNode(void)
+typename CAtlList<E, ETraits>::CNode* CAtlList< E, ETraits>::GetFreeNode()
 {
     if (m_FreeNode)
     {

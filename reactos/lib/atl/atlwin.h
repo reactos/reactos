@@ -154,7 +154,8 @@ struct thunkCode
         m_mov = 0x042444C7;
         m_this = PtrToUlong(pThis);
         m_jmp = 0xe9;
-        m_relproc = DWORD(reinterpret_cast<char *>(proc) - (reinterpret_cast<char *>(this) + sizeof(thunkCode)));
+        m_relproc = DWORD((INT_PTR)proc - (INT_PTR)this + sizeof(thunkCode)));
+        FlushInstructionCache(GetCurrentProcess(), this, sizeof(thunkCode));
     }
 };
 #pragma pack(pop)
@@ -178,6 +179,7 @@ struct thunkCode
         m_mov_rax = 0xb848;
         m_proc = (ULONG64)proc;
         m_jmp = 0xe0ff;
+        FlushInstructionCache(GetCurrentProcess(), this, sizeof(thunkCode));
     }
 };
 #pragma pack(pop)
@@ -199,6 +201,7 @@ struct thunkCode
         m_mov_pc = 0xE59FF000;
         m_this = (DWORD)pThis;
         m_proc = (DWORD)proc;
+        FlushInstructionCache(GetCurrentProcess(), this, sizeof(thunkCode));
     }
 };
 #pragma pack(pop)

@@ -98,9 +98,43 @@ public:
     {
     }
 
+    CStringT(_In_opt_z_ const XCHAR* pszSrc) :
+        CThisSimpleString( StringTraits::GetDefaultManager() )
+    {
+        // FIXME: Check whether pszSrc is not a resource string ID!
+        *this = pszSrc;
+    }
+
+    CStringT(
+            _In_opt_z_ const XCHAR* pszSrc,
+            _In_ IAtlStringMgr* pStringMgr) :
+        CThisSimpleString( pStringMgr )
+    {
+        // FIXME: Check whether pszSrc is not a resource string ID!
+        *this = pszSrc;
+    }
+
+    CStringT& operator=(_In_ const CStringT& strSrc)
+    {
+        CThisSimpleString::operator=(strSrc);
+        return *this;
+    }
+
     CStringT& operator=(_In_opt_z_ PCXSTR pszSrc)
     {
         CThisSimpleString::operator=(pszSrc);
+        return *this;
+    }
+
+    CStringT& operator+=(_In_ const CThisSimpleString& str)
+    {
+        CThisSimpleString::operator+=(str);
+        return *this;
+    }
+
+    CStringT& operator+=(_In_z_ PCXSTR pszSrc)
+    {
+        CThisSimpleString::operator+=(pszSrc);
         return *this;
     }
 
