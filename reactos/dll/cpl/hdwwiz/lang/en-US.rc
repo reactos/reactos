@@ -135,7 +135,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Add hardware"
+    IDS_CPLNAME "Add Hardware"
     IDS_CPLDESCRIPTION "Add hardware to your computer."
     IDS_SEARCHTITLE "Please wait while the wizard searches..."
     IDS_SEARCHTEXT "This wizard is searching for hardware that has been connected to your computer recently but has not yet been installed."

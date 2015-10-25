@@ -93,8 +93,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "New hardware wizard"
-    IDS_UPDATEWIZARDTITLE "Update driver wizard"
+    IDS_INSTALLWIZARDTITLE "New Hardware Wizard"
+    IDS_UPDATEWIZARDTITLE "Update Driver Wizard"
     IDS_CHSOURCE_TITLE "Choose search and install options"
     IDS_SEARCHDRV_TITLE "Searching..."
     IDS_INSTALLDRV_TITLE "Installing..."
