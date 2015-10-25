@@ -397,8 +397,6 @@ unknown_dev:
         if(!UniataAllocateLunExt(deviceExtension, UNIATA_ALLOCATE_NEW_LUNS)) {
             return STATUS_UNSUCCESSFUL;
         }
-        // DEBUG, we shall return success when AHCI is completly supported
-        //return STATUS_NOT_FOUND;
         return STATUS_SUCCESS;
     }
 
@@ -570,8 +568,7 @@ unknown_dev:
                 ScsiPortFreeDeviceBase(HwDeviceExtension,
                                        deviceExtension->BaseIoAddressBM_0);
 
-            deviceExtension->BaseIoAddressBM_0.Addr = 0;
-            deviceExtension->BaseIoAddressBM_0.MemIo = 0;
+            UniataInitIoResEx(&deviceExtension->BaseIoAddressBM_0, 0, FALSE, FALSE);
             deviceExtension->BusMaster = DMA_MODE_NONE;
             deviceExtension->MaxTransferMode = ATA_PIO4;
             break;
@@ -648,15 +645,24 @@ for_ugly_chips:
                 deviceExtension->HwFlags &= ~UNIATA_AHCI;
             }
             break;
+        default:
+            if(!ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[5].RangeStart)) {
+                KdPrint2((PRINT_PREFIX "No BAR5, try BM\n"));
+                ChipFlags &= ~UNIATA_AHCI;
+                deviceExtension->HwFlags &= ~UNIATA_AHCI;
+            }
+            break;
         }
     }
 
     if(ChipFlags & UNIATA_AHCI) {
+
         deviceExtension->NumberChannels = 0;
         if(!UniataAhciDetect(HwDeviceExtension, pciData, ConfigInfo)) {
             KdPrint2((PRINT_PREFIX "  AHCI detect failed\n"));
             return STATUS_UNSUCCESSFUL;
         }
+
     } else
     if(!UniataChipDetectChannels(HwDeviceExtension, pciData, DeviceNumber, ConfigInfo)) {
         return STATUS_UNSUCCESSFUL;
@@ -682,13 +688,13 @@ for_ugly_chips:
                 chan = &deviceExtension->chan[c];
 
                 for (i=0; i<=IDX_IO1_SZ; i++) {
-                    chan->RegTranslation[IDX_IO1+i].Addr           = BaseIoAddress1  + i + (unit10 ? 8 : 0);
+                    UniataInitIoRes(chan, IDX_IO1+i, BaseIoAddress1 + i + (unit10 ? 8 : 0), FALSE, FALSE);
                 }
-                chan->RegTranslation[IDX_IO2_AltStatus].Addr       = BaseIoAddress2  + 2 + (unit10 ? 4 : 0);
+                UniataInitIoRes(chan, IDX_IO2_AltStatus, BaseIoAddress2  + 2 + (unit10 ? 4 : 0), FALSE, FALSE);
                 UniataInitSyncBaseIO(chan);
 
                 for (i=0; i<=IDX_BM_IO_SZ; i++) {
-                    chan->RegTranslation[IDX_BM_IO+i].Addr         = BaseIoAddressBM + i + (c * sizeof(IDE_BUSMASTER_REGISTERS));
+                    UniataInitIoRes(chan, IDX_BM_IO+i, BaseIoAddressBM + i + (c * sizeof(IDE_BUSMASTER_REGISTERS)), FALSE, FALSE);
                 }
 
                 // SATA not supported yet
@@ -714,17 +720,13 @@ for_ugly_chips:
                 KdPrint2((PRINT_PREFIX "MemIo\n"));
                 MemIo = TRUE;
             }
-            deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
-            deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
+            UniataInitIoResEx(&deviceExtension->BaseIoAddressSATA_0, BaseMemAddress, MemIo, FALSE);
             for(c=0; c<deviceExtension->NumberChannels; c++) {
                 chan = &deviceExtension->chan[c];
 
-                chan->RegTranslation[IDX_SATA_SStatus].Addr   = BaseMemAddress +     (c << 6);
-                chan->RegTranslation[IDX_SATA_SStatus].MemIo  = MemIo;
-                chan->RegTranslation[IDX_SATA_SError].Addr    = BaseMemAddress + 4 + (c << 6);
-                chan->RegTranslation[IDX_SATA_SError].MemIo   = MemIo;
-                chan->RegTranslation[IDX_SATA_SControl].Addr  = BaseMemAddress + 8 + (c << 6);
-                chan->RegTranslation[IDX_SATA_SControl].MemIo = MemIo;
+                UniataInitIoRes(chan, IDX_SATA_SStatus,  BaseMemAddress +     (c << 6), MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_SATA_SError,   BaseMemAddress + 4 + (c << 6), MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_SATA_SControl, BaseMemAddress + 8 + (c << 6), MemIo, FALSE);
 
                 chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
             }
@@ -751,8 +753,7 @@ for_ugly_chips:
             KdPrint2((PRINT_PREFIX "MemIo\n"));
             MemIo = TRUE;
         }
-        deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
-        deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
+        UniataInitIoResEx(&deviceExtension->BaseIoAddressSATA_0, BaseMemAddress, MemIo, FALSE);
 
         /* BAR3 -> res2 */
         BaseMemAddress = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
@@ -765,8 +766,7 @@ for_ugly_chips:
             KdPrint2((PRINT_PREFIX "MemIo\n"));
             MemIo = TRUE;
         }
-        deviceExtension->BaseIoAddressBM_0.Addr  = BaseMemAddress;
-        deviceExtension->BaseIoAddressBM_0.MemIo = MemIo;
+        UniataInitIoResEx(&deviceExtension->BaseIoAddressBM_0, BaseMemAddress, MemIo, FALSE);
 
         if(!(ChipFlags & UNIATA_SATA)) {
             UCHAR reg48;
@@ -789,31 +789,23 @@ for_ugly_chips:
             offs7 = c << 7;
 
             for (i=0; i<=IDX_IO1_SZ; i++) {
-                chan->RegTranslation[IDX_IO1+i].Addr           = BaseMemAddress + 0x200 + (i << 2) + offs7;
-                chan->RegTranslation[IDX_IO1+i].MemIo          = MemIo;
+                UniataInitIoRes(chan, IDX_IO1+i,          BaseMemAddress + 0x200 + (i << 2) + offs8, MemIo, FALSE);
             }
-            chan->RegTranslation[IDX_IO2_AltStatus].Addr       = BaseMemAddress + 0x238 + offs7;
-            chan->RegTranslation[IDX_IO2_AltStatus].MemIo      = MemIo;
+            UniataInitIoRes(chan, IDX_IO2_AltStatus,      BaseMemAddress + 0x238 + offs7, MemIo, FALSE);
 
             UniataInitSyncBaseIO(chan);
 
-            chan->RegTranslation[IDX_BM_Command].Addr          = BaseMemAddress + 0x260 + offs7;
-            chan->RegTranslation[IDX_BM_Command].MemIo         = MemIo;
-            chan->RegTranslation[IDX_BM_PRD_Table].Addr        = BaseMemAddress + 0x244 + offs7;
-            chan->RegTranslation[IDX_BM_PRD_Table].MemIo       = MemIo;
-            chan->RegTranslation[IDX_BM_DeviceSpecific0].Addr  = BaseMemAddress + (c << 2);
-            chan->RegTranslation[IDX_BM_DeviceSpecific0].MemIo = MemIo;
+            UniataInitIoRes(chan, IDX_BM_Command,         BaseMemAddress + 0x260 + offs7, MemIo, FALSE);
+            UniataInitIoRes(chan, IDX_BM_PRD_Table,       BaseMemAddress + 0x244 + offs7, MemIo, FALSE);
+            UniataInitIoRes(chan, IDX_BM_DeviceSpecific0, BaseMemAddress + (c << 2),      MemIo, FALSE);
 
             if((ChipFlags & PRSATA) ||
                ((ChipFlags & PRCMBO) && c<2)) {
                 KdPrint2((PRINT_PREFIX "Promise SATA\n"));
 
-                chan->RegTranslation[IDX_SATA_SStatus].Addr        = BaseMemAddress + 0x400 + offs7;
-                chan->RegTranslation[IDX_SATA_SStatus].MemIo       = MemIo;
-                chan->RegTranslation[IDX_SATA_SError].Addr         = BaseMemAddress + 0x404 + offs7;
-                chan->RegTranslation[IDX_SATA_SError].MemIo        = MemIo;
-                chan->RegTranslation[IDX_SATA_SControl].Addr       = BaseMemAddress + 0x408 + offs7;
-                chan->RegTranslation[IDX_SATA_SControl].MemIo      = MemIo;
+                UniataInitIoRes(chan, IDX_SATA_SStatus,  BaseMemAddress + 0x400 + offs7, MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_SATA_SError,   BaseMemAddress + 0x404 + offs7, MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_SATA_SControl, BaseMemAddress + 0x408 + offs7, MemIo, FALSE);
 
                 chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
             } else {
@@ -864,8 +856,7 @@ for_ugly_chips:
             KdPrint2((PRINT_PREFIX "MemIo\n"));
             MemIo = TRUE;
         }
-        deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
-        deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
+        UniataInitIoResEx(&deviceExtension->BaseIoAddressSATA_0, BaseMemAddress, MemIo, FALSE);
 
         for(c=0; c<deviceExtension->NumberChannels; c++) {
             ULONG unit01 = (c & 1);
@@ -875,25 +866,16 @@ for_ugly_chips:
 
             if(deviceExtension->AltRegMap) {
                 for (i=0; i<=IDX_IO1_SZ; i++) {
-                    chan->RegTranslation[IDX_IO1+i].Addr           = BaseMemAddress + 0x80 + i + (unit01 << 6) + (unit10 << 8);
-                    chan->RegTranslation[IDX_IO1+i].MemIo          = MemIo;
+                    UniataInitIoRes(chan, IDX_IO1+i, BaseMemAddress + 0x80 + i + (unit01 << 6) + (unit10 << 8), MemIo, FALSE);
                 }
-                chan->RegTranslation[IDX_IO2_AltStatus].Addr       = BaseMemAddress + 0x8a + (unit01 << 6) + (unit10 << 8);
-                chan->RegTranslation[IDX_IO2_AltStatus].MemIo      = MemIo;
+                UniataInitIoRes(chan, IDX_IO2_AltStatus, BaseMemAddress + 0x8a + (unit01 << 6) + (unit10 << 8), MemIo, FALSE);
                 UniataInitSyncBaseIO(chan);
 
-                chan->RegTranslation[IDX_BM_Command].Addr          = BaseMemAddress + 0x00 + (unit01 << 3) + (unit10 << 8);
-                chan->RegTranslation[IDX_BM_Command].MemIo         = MemIo;
-                chan->RegTranslation[IDX_BM_Status].Addr           = BaseMemAddress + 0x02 + (unit01 << 3) + (unit10 << 8);
-                chan->RegTranslation[IDX_BM_Status].MemIo          = MemIo;
-                chan->RegTranslation[IDX_BM_PRD_Table].Addr        = BaseMemAddress + 0x04 + (unit01 << 3) + (unit10 << 8);
-                chan->RegTranslation[IDX_BM_PRD_Table].MemIo       = MemIo;
-                //chan->RegTranslation[IDX_BM_DeviceSpecific0].Addr  = BaseMemAddress + 0xa1 + (unit01 << 6) + (unit10 << 8);
-                //chan->RegTranslation[IDX_BM_DeviceSpecific0].MemIo = MemIo;
-                chan->RegTranslation[IDX_BM_DeviceSpecific0].Addr  = BaseMemAddress + 0x10 + (unit01 << 3) + (unit10 << 8);
-                chan->RegTranslation[IDX_BM_DeviceSpecific0].MemIo = MemIo;
-                chan->RegTranslation[IDX_BM_DeviceSpecific1].Addr  = BaseMemAddress + 0x40 + (unit01 << 2) + (unit10 << 8);
-                chan->RegTranslation[IDX_BM_DeviceSpecific1].MemIo = MemIo;
+                UniataInitIoRes(chan, IDX_BM_Command,   BaseMemAddress + 0x00 + (unit01 << 3) + (unit10 << 8), MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_BM_Status,    BaseMemAddress + 0x02 + (unit01 << 3) + (unit10 << 8), MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_BM_PRD_Table, BaseMemAddress + 0x04 + (unit01 << 3) + (unit10 << 8), MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_BM_DeviceSpecific0, BaseMemAddress + 0x10 + (unit01 << 3) + (unit10 << 8), MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_BM_DeviceSpecific1, BaseMemAddress + 0x40 + (unit01 << 2) + (unit10 << 8), MemIo, FALSE);
             }
 
             if(chan->MaxTransferMode < ATA_SA150) {
@@ -901,12 +883,9 @@ for_ugly_chips:
                 KdPrint2((PRINT_PREFIX "No SATA regs for PATA part\n"));
             } else
             if(ChipFlags & UNIATA_SATA) {
-                chan->RegTranslation[IDX_SATA_SStatus].Addr        = BaseMemAddress + 0x104 + (unit01 << 7) + (unit10 << 8);
-                chan->RegTranslation[IDX_SATA_SStatus].MemIo       = MemIo;
-                chan->RegTranslation[IDX_SATA_SError].Addr         = BaseMemAddress + 0x108 + (unit01 << 7) + (unit10 << 8);
-                chan->RegTranslation[IDX_SATA_SError].MemIo        = MemIo;
-                chan->RegTranslation[IDX_SATA_SControl].Addr       = BaseMemAddress + 0x100 + (unit01 << 7) + (unit10 << 8);
-                chan->RegTranslation[IDX_SATA_SControl].MemIo      = MemIo;
+                UniataInitIoRes(chan, IDX_SATA_SStatus,  BaseMemAddress + 0x104 + (unit01 << 7) + (unit10 << 8), MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_SATA_SError,   BaseMemAddress + 0x108 + (unit01 << 2) + (unit10 << 8), MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_SATA_SControl, BaseMemAddress + 0x100 + (unit01 << 2) + (unit10 << 8), MemIo, FALSE);
 
                 chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
             }
@@ -935,34 +914,25 @@ for_ugly_chips:
             KdPrint2((PRINT_PREFIX "MemIo\n"));
             MemIo = TRUE;
         }
-        deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
-        deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
+        UniataInitIoResEx(&deviceExtension->BaseIoAddressSATA_0, BaseMemAddress, MemIo, FALSE);
 
         for(c=0; c<deviceExtension->NumberChannels; c++) {
             ULONG offs = c*0x100;
 
             chan = &deviceExtension->chan[c];
             for (i=0; i<=IDX_IO1_SZ; i++) {
-                chan->RegTranslation[IDX_IO1+i].Addr           = BaseMemAddress + offs + i*4;
-                chan->RegTranslation[IDX_IO1+i].MemIo          = MemIo;
+                UniataInitIoRes(chan, IDX_IO1+i, BaseMemAddress + offs + i*4, MemIo, FALSE);
             }
-            chan->RegTranslation[IDX_IO2_AltStatus].Addr       = BaseMemAddress + offs + 0x20;
-            chan->RegTranslation[IDX_IO2_AltStatus].MemIo      = MemIo;
+            UniataInitIoRes(chan, IDX_IO2_AltStatus, BaseMemAddress + offs + 0x20, MemIo, FALSE);
             UniataInitSyncBaseIO(chan);
 
-            chan->RegTranslation[IDX_BM_Command].Addr          = BaseMemAddress + offs + 0x30;
-            chan->RegTranslation[IDX_BM_Command].MemIo         = MemIo;
-            chan->RegTranslation[IDX_BM_Status].Addr           = BaseMemAddress + offs + 0x32;
-            chan->RegTranslation[IDX_BM_Status].MemIo          = MemIo;
-            chan->RegTranslation[IDX_BM_PRD_Table].Addr        = BaseMemAddress + offs + 0x34;
-            chan->RegTranslation[IDX_BM_PRD_Table].MemIo       = MemIo;
+            UniataInitIoRes(chan, IDX_BM_Command,   BaseMemAddress + offs + 0x30, MemIo, FALSE);
+            UniataInitIoRes(chan, IDX_BM_Status,    BaseMemAddress + offs + 0x32, MemIo, FALSE);
+            UniataInitIoRes(chan, IDX_BM_PRD_Table, BaseMemAddress + offs + 0x34, MemIo, FALSE);
 
-            chan->RegTranslation[IDX_SATA_SStatus].Addr        = BaseMemAddress + offs + 0x40;
-            chan->RegTranslation[IDX_SATA_SStatus].MemIo       = MemIo;               
-            chan->RegTranslation[IDX_SATA_SError].Addr         = BaseMemAddress + offs + 0x44;
-            chan->RegTranslation[IDX_SATA_SError].MemIo        = MemIo;               
-            chan->RegTranslation[IDX_SATA_SControl].Addr       = BaseMemAddress + offs + 0x48;
-            chan->RegTranslation[IDX_SATA_SControl].MemIo      = MemIo;
+            UniataInitIoRes(chan, IDX_SATA_SStatus,  BaseMemAddress + offs + 0x40, MemIo, FALSE);
+            UniataInitIoRes(chan, IDX_SATA_SError,   BaseMemAddress + offs + 0x44, MemIo, FALSE);
+            UniataInitIoRes(chan, IDX_SATA_SControl, BaseMemAddress + offs + 0x48, MemIo, FALSE);
 
             chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
         }
@@ -1039,19 +1009,15 @@ for_ugly_chips:
                         KdPrint2((PRINT_PREFIX "MemIo\n"));
                         MemIo = TRUE;
                     }
-                    deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
-                    deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
+                    UniataInitIoResEx(&deviceExtension->BaseIoAddressSATA_0, BaseMemAddress, MemIo, FALSE);
 
                     for(c=0; c<deviceExtension->NumberChannels; c++) {
                         ULONG offs = c << (SIS_182 ? 5 : 6);
 
                         chan = &deviceExtension->chan[c];
-                        chan->RegTranslation[IDX_SATA_SStatus].Addr        = BaseMemAddress + 0 + offs;
-                        chan->RegTranslation[IDX_SATA_SStatus].MemIo       = MemIo;
-                        chan->RegTranslation[IDX_SATA_SError].Addr         = BaseMemAddress + 4 + offs;
-                        chan->RegTranslation[IDX_SATA_SError].MemIo        = MemIo;
-                        chan->RegTranslation[IDX_SATA_SControl].Addr       = BaseMemAddress + 8 + offs;
-                        chan->RegTranslation[IDX_SATA_SControl].MemIo      = MemIo;
+                        UniataInitIoRes(chan, IDX_SATA_SStatus,  BaseMemAddress + 0 + offs, MemIo, FALSE);
+                        UniataInitIoRes(chan, IDX_SATA_SError,   BaseMemAddress + 4 + offs, MemIo, FALSE);
+                        UniataInitIoRes(chan, IDX_SATA_SControl, BaseMemAddress + 8 + offs, MemIo, FALSE);
 
                         chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
                     }
@@ -1092,8 +1058,7 @@ for_ugly_chips:
                     KdPrint2((PRINT_PREFIX "MemIo\n"));
                     MemIo = TRUE;
                 }
-                deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
-                deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
+                UniataInitIoResEx(&deviceExtension->BaseIoAddressSATA_0, BaseMemAddress, MemIo, FALSE);
             }
             if(/*deviceExtension->*/BaseMemAddress) {
                 KdPrint2((PRINT_PREFIX "UniataChipDetect: BAR5 %x\n", /*deviceExtension->*/BaseMemAddress));
@@ -1114,13 +1079,13 @@ for_ugly_chips:
                         BaseIo = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber, c, 0, /*0x80*/ sizeof(IDE_REGISTERS_1) + sizeof(IDE_REGISTERS_2)*2);
 
                         for (i=0; i<=IDX_IO1_SZ; i++) {
-                            chan->RegTranslation[IDX_IO1+i].Addr           = BaseIo + i;
+                            UniataInitIoRes(chan, IDX_IO1+i, BaseIo + i, FALSE, FALSE);
                         }
-                        chan->RegTranslation[IDX_IO2_AltStatus].Addr       = BaseIo + sizeof(IDE_REGISTERS_1) + 2;
+                        UniataInitIoRes(chan, IDX_IO2_AltStatus, BaseIo + sizeof(IDE_REGISTERS_1) + 2, FALSE, FALSE);
                         UniataInitSyncBaseIO(chan);
 
                         for (i=0; i<=IDX_BM_IO_SZ; i++) {
-                            chan->RegTranslation[IDX_BM_IO+i].Addr         = BaseIoAddressBM_0 + sizeof(IDE_BUSMASTER_REGISTERS)*c + i;
+                            UniataInitIoRes(chan, IDX_BM_IO+i, BaseIoAddressBM_0 + sizeof(IDE_BUSMASTER_REGISTERS)*c + i, FALSE, FALSE);
                         }
 
                     }
@@ -1130,17 +1095,13 @@ for_ugly_chips:
                     if((ChipFlags & VIABAR) && (c==2)) {
                         // Do not setup SATA registers for PATA part
                         for (i=0; i<=IDX_SATA_IO_SZ; i++) {
-                            chan->RegTranslation[IDX_SATA_IO+i].Addr = 0;
-                            chan->RegTranslation[IDX_SATA_IO+i].MemIo = 0;
+                            UniataInitIoRes(chan, IDX_SATA_IO+i, 0, FALSE, FALSE);
                         }
                         break;
                     }
-                    chan->RegTranslation[IDX_SATA_SStatus].Addr        = BaseMemAddress + (c * IoSize);
-                    chan->RegTranslation[IDX_SATA_SStatus].MemIo       = MemIo;
-                    chan->RegTranslation[IDX_SATA_SError].Addr         = BaseMemAddress + 4 + (c * IoSize);
-                    chan->RegTranslation[IDX_SATA_SError].MemIo        = MemIo;
-                    chan->RegTranslation[IDX_SATA_SControl].Addr       = BaseMemAddress + 8 + (c * IoSize);
-                    chan->RegTranslation[IDX_SATA_SControl].MemIo      = MemIo;
+                    UniataInitIoRes(chan, IDX_SATA_SStatus,  BaseMemAddress + (c * IoSize), MemIo, FALSE);
+                    UniataInitIoRes(chan, IDX_SATA_SError,   BaseMemAddress + 4 + (c * IoSize), MemIo, FALSE);
+                    UniataInitIoRes(chan, IDX_SATA_SControl, BaseMemAddress + 8 + (c * IoSize), MemIo, FALSE);
 
                     chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
                 }
@@ -1169,49 +1130,31 @@ for_ugly_chips:
                 MemIo = TRUE;
             }
             deviceExtension->AltRegMap = TRUE; // inform generic resource allocator
-            deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
-            deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
+            UniataInitIoResEx(&deviceExtension->BaseIoAddressSATA_0, BaseMemAddress, MemIo, FALSE);
 
             for(c=0; c<deviceExtension->NumberChannels; c++) {
                 ULONG offs = 0x200 + c*0x200;
 
                 chan = &deviceExtension->chan[c];
                 for (i=0; i<=IDX_IO1_SZ; i++) {
-                    chan->RegTranslation[IDX_IO1+i].MemIo          = MemIo;
-                    chan->RegTranslation[IDX_IO1_o+i].MemIo        = MemIo;
+                    UniataInitIoRes(chan, IDX_BM_IO+i, BaseMemAddress + i*4 + offs, MemIo, FALSE);
                 }
-
-                chan->RegTranslation[IDX_IO1_i_Data        ].Addr       = BaseMemAddress + 0x00 + offs;
-                chan->RegTranslation[IDX_IO1_i_Error       ].Addr       = BaseMemAddress + 0x04 + offs;
-                chan->RegTranslation[IDX_IO1_i_BlockCount  ].Addr       = BaseMemAddress + 0x08 + offs;
-                chan->RegTranslation[IDX_IO1_i_BlockNumber ].Addr       = BaseMemAddress + 0x0c + offs;
-                chan->RegTranslation[IDX_IO1_i_CylinderLow ].Addr       = BaseMemAddress + 0x10 + offs;
-                chan->RegTranslation[IDX_IO1_i_CylinderHigh].Addr       = BaseMemAddress + 0x14 + offs;
-                chan->RegTranslation[IDX_IO1_i_DriveSelect ].Addr       = BaseMemAddress + 0x18 + offs;
-                chan->RegTranslation[IDX_IO1_i_Status      ].Addr       = BaseMemAddress + 0x1c + offs;
 
                 UniataInitSyncBaseIO(chan);
 
-                chan->RegTranslation[IDX_IO1_o_Command     ].Addr       = BaseMemAddress + 0x1d + offs;
-                chan->RegTranslation[IDX_IO1_o_Feature     ].Addr       = BaseMemAddress + 0x06 + offs;
-                chan->RegTranslation[IDX_IO2_o_Control     ].Addr       = BaseMemAddress + 0x29 + offs;
+                UniataInitIoRes(chan, IDX_IO1_o_Command, BaseMemAddress + 0x1d + offs, MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_IO1_o_Feature, BaseMemAddress + 0x06 + offs, MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_IO2_o_Control, BaseMemAddress + 0x29 + offs, MemIo, FALSE);
 
-                chan->RegTranslation[IDX_IO2_AltStatus].Addr       = BaseMemAddress + 0x28 + offs;
-                chan->RegTranslation[IDX_IO2_AltStatus].MemIo      = MemIo;
+                UniataInitIoRes(chan, IDX_IO2_AltStatus, BaseMemAddress + 0x28 + offs, MemIo, FALSE);
 
-                chan->RegTranslation[IDX_BM_Command].Addr          = BaseMemAddress + offs + 0x70;
-                chan->RegTranslation[IDX_BM_Command].MemIo         = MemIo;
-                chan->RegTranslation[IDX_BM_Status].Addr           = BaseMemAddress + offs + 0x72;
-                chan->RegTranslation[IDX_BM_Status].MemIo          = MemIo;
-                chan->RegTranslation[IDX_BM_PRD_Table].Addr        = BaseMemAddress + offs + 0x74;
-                chan->RegTranslation[IDX_BM_PRD_Table].MemIo       = MemIo;
+                UniataInitIoRes(chan, IDX_BM_Command,   BaseMemAddress + 0x70 + offs, MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_BM_Status,    BaseMemAddress + 0x72 + offs, MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_BM_PRD_Table, BaseMemAddress + 0x74 + offs, MemIo, FALSE);
 
-                chan->RegTranslation[IDX_SATA_SStatus].Addr        = BaseMemAddress + 0x100 + offs;
-                chan->RegTranslation[IDX_SATA_SStatus].MemIo       = MemIo;
-                chan->RegTranslation[IDX_SATA_SError].Addr         = BaseMemAddress + 0x104 + offs;
-                chan->RegTranslation[IDX_SATA_SError].MemIo        = MemIo;
-                chan->RegTranslation[IDX_SATA_SControl].Addr       = BaseMemAddress + 0x108 + offs;
-                chan->RegTranslation[IDX_SATA_SControl].MemIo      = MemIo;
+                UniataInitIoRes(chan, IDX_SATA_SStatus,  BaseMemAddress + 0x100 + offs, MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_SATA_SError,   BaseMemAddress + 0x104 + offs, MemIo, FALSE);
+                UniataInitIoRes(chan, IDX_SATA_SControl, BaseMemAddress + 0x108 + offs, MemIo, FALSE);
 
                 chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
             }
@@ -1232,7 +1175,11 @@ for_ugly_chips:
                     //KdPrint2((PRINT_PREFIX "AHCI not supported yet\n"));
                     //return FALSE;
                     KdPrint2((PRINT_PREFIX "try run AHCI\n"));
-                    break;
+                    if(ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[5].RangeStart)) {
+                        break;
+                    }
+                    KdPrint2((PRINT_PREFIX "No BAR5, try BM\n"));
+                    deviceExtension->HwFlags &= ~UNIATA_AHCI;
                 }
                 BaseIoAddressBM = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
                                         4, 0, sizeof(IDE_BUSMASTER_REGISTERS));
@@ -1243,15 +1190,13 @@ for_ugly_chips:
                         KdPrint2((PRINT_PREFIX "MemIo[4]\n"));
                         MemIo = TRUE;
                     }
-                    deviceExtension->BaseIoAddressBM_0.Addr  = BaseIoAddressBM;
-                    deviceExtension->BaseIoAddressBM_0.MemIo = MemIo;
+                    UniataInitIoResEx(&deviceExtension->BaseIoAddressBM_0, BaseIoAddressBM, MemIo, FALSE);
 
                     tmp8 = AtapiReadPortEx1(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),IDX_BM_Status);
                     KdPrint2((PRINT_PREFIX "BM status: %x\n", tmp8));
                     /* cleanup */
                     ScsiPortFreeDeviceBase(HwDeviceExtension, (PCHAR)BaseIoAddressBM);
-                    deviceExtension->BaseIoAddressBM_0.Addr = 0;
-                    deviceExtension->BaseIoAddressBM_0.MemIo = 0;
+                    UniataInitIoResEx(&deviceExtension->BaseIoAddressBM_0, 0, 0, FALSE);
 
                     if(tmp8 == 0xff) {
                         KdPrint2((PRINT_PREFIX "invalid BM status, keep AHCI mode\n"));
@@ -1287,8 +1232,7 @@ for_ugly_chips:
                     MemIo = TRUE;
                 }
             }
-            deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
-            deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
+            UniataInitIoResEx(&deviceExtension->BaseIoAddressSATA_0, BaseMemAddress, MemIo, FALSE);
 
             for(c=0; c<deviceExtension->NumberChannels; c++) {
                 chan = &deviceExtension->chan[c];
@@ -1337,10 +1281,8 @@ for_ugly_chips:
 
                     if(!(ChipFlags & ICH7) && BaseMemAddress) {
                         KdPrint2((PRINT_PREFIX "BaseMemAddress[5] -> indexed\n"));
-                        chan->RegTranslation[IDX_INDEXED_ADDR].Addr        = BaseMemAddress + 0;
-                        chan->RegTranslation[IDX_INDEXED_ADDR].MemIo       = MemIo;
-                        chan->RegTranslation[IDX_INDEXED_DATA].Addr        = BaseMemAddress + 4;
-                        chan->RegTranslation[IDX_INDEXED_DATA].MemIo       = MemIo;
+                        UniataInitIoRes(chan, IDX_INDEXED_ADDR,   BaseMemAddress + 0, MemIo, FALSE);
+                        UniataInitIoRes(chan, IDX_INDEXED_DATA,   BaseMemAddress + 4, MemIo, FALSE);
                     }
                     if((ChipFlags & ICH5) || BaseMemAddress) {
 
@@ -1353,12 +1295,9 @@ for_ugly_chips:
                         if(ChipFlags & ICH7) {
                             KdPrint2((PRINT_PREFIX "ICH7 way\n"));
                         }
-                        chan->RegTranslation[IDX_SATA_SStatus].Addr        = 0x200*c + 0; // this is fake non-zero value
-                        chan->RegTranslation[IDX_SATA_SStatus].Proc        = 1;
-                        chan->RegTranslation[IDX_SATA_SError].Addr         = 0x200*c + 2; // this is fake non-zero value
-                        chan->RegTranslation[IDX_SATA_SError].Proc         = 1;
-                        chan->RegTranslation[IDX_SATA_SControl].Addr       = 0x200*c + 1; // this is fake non-zero value
-                        chan->RegTranslation[IDX_SATA_SControl].Proc       = 1;
+                        UniataInitIoRes(chan, IDX_SATA_SStatus,  0x200*c + 0, FALSE, TRUE); // this is fake non-zero value
+                        UniataInitIoRes(chan, IDX_SATA_SError,   0x200*c + 2, FALSE, TRUE);
+                        UniataInitIoRes(chan, IDX_SATA_SControl, 0x200*c + 1, FALSE, TRUE);
                     }
                 }
 
@@ -1811,7 +1750,10 @@ UniAtaReadLunConfig(
     if(tmp32) {
         LunExt->DeviceFlags |= DFLAGS_HIDDEN;
     }
-
+    tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"Exclude", 0);
+    if(tmp32) {
+        LunExt->DeviceFlags |= DFLAGS_HIDDEN;
+    }
 
     return;
 } // end UniAtaReadLunConfig()
@@ -2713,8 +2655,7 @@ UniataInitMapBM(
     for(c=0; c<deviceExtension->NumberChannels; c++) {
         chan = &deviceExtension->chan[c];
         for (i=0; i<IDX_BM_IO_SZ; i++) {
-            chan->RegTranslation[IDX_BM_IO+i].Addr  = BaseIoAddressBM_0 ? ((ULONGIO_PTR)BaseIoAddressBM_0 + i) : 0;
-            chan->RegTranslation[IDX_BM_IO+i].MemIo = MemIo;
+            UniataInitIoRes(chan, IDX_BM_IO+i, BaseIoAddressBM_0 ? ((ULONGIO_PTR)BaseIoAddressBM_0 + i) : 0, MemIo, FALSE);
         }
         if(BaseIoAddressBM_0) {
             BaseIoAddressBM_0++;
@@ -2734,12 +2675,10 @@ UniataInitMapBase(
     ULONG i;
 
     for (i=0; i<IDX_IO1_SZ; i++) {
-        chan->RegTranslation[IDX_IO1+i].Addr = BaseIoAddress1 ? ((ULONGIO_PTR)BaseIoAddress1 + i) : 0;
-        chan->RegTranslation[IDX_IO1+i].MemIo = FALSE;
+        UniataInitIoRes(chan, IDX_IO1+i, BaseIoAddress1 ? ((ULONGIO_PTR)BaseIoAddress1 + i) : 0, FALSE, FALSE);
     }
     for (i=0; i<IDX_IO2_SZ; i++) {
-        chan->RegTranslation[IDX_IO2+i].Addr = BaseIoAddress2 ? ((ULONGIO_PTR)BaseIoAddress2 + i) : 0;
-        chan->RegTranslation[IDX_IO2+i].MemIo = FALSE;
+        UniataInitIoRes(chan, IDX_IO2+i, BaseIoAddress2 ? ((ULONGIO_PTR)BaseIoAddress2 + i) : 0, FALSE, FALSE);
     }
     UniataInitSyncBaseIO(chan);
     return;
@@ -2755,6 +2694,39 @@ UniataInitSyncBaseIO(
     RtlCopyMemory(&chan->RegTranslation[IDX_IO2_o], &chan->RegTranslation[IDX_IO2], IDX_IO2_SZ*sizeof(chan->RegTranslation[0]));
     return;
 } // end UniataInitSyncBaseIO()
+
+VOID
+UniataInitIoRes(
+    IN PHW_CHANNEL chan,
+    IN ULONG idx,
+    IN ULONG addr,
+    IN BOOLEAN MemIo,
+    IN BOOLEAN Proc
+    )
+{
+    if(!addr) {
+        MemIo = Proc = FALSE;
+    }
+    chan->RegTranslation[idx].Addr  = addr;
+    chan->RegTranslation[idx].MemIo = MemIo;
+    chan->RegTranslation[idx].Proc  = Proc;
+} // end UniataInitIoRes()
+
+VOID
+UniataInitIoResEx(
+    IN PIORES IoRes,
+    IN ULONG addr,
+    IN BOOLEAN MemIo,
+    IN BOOLEAN Proc
+    )
+{
+    if(!addr) {
+        MemIo = Proc = FALSE;
+    }
+    IoRes->Addr  = addr;
+    IoRes->MemIo = MemIo;
+    IoRes->Proc  = Proc;
+} // end UniataInitIoResEx()
 
 VOID
 NTAPI

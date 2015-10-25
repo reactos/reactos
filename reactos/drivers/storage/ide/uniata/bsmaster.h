@@ -31,7 +31,7 @@ Notes:
 Revision History:
 
     Code was created by
-         Alter, Copyright (c) 2002-2014
+         Alter, Copyright (c) 2002-2015
 
     Some definitions were taken from FreeBSD 4.3-9.2 ATA driver by
          Søren Schmidt, Copyright (c) 1998-2014
@@ -63,6 +63,8 @@ Revision History:
 #include "bm_devs.h"
 
 #include "uata_ctl.h"
+
+#pragma pack(push, 8)
 
 #define MAX_RETRIES                     6
 #define RETRY_UDMA2                     1
@@ -113,6 +115,8 @@ typedef struct _BUSMASTER_CTX {
 #define PCI_DEV_SUBCLASS_SATA           0x06
 
 #define PCI_DEV_PROGIF_AHCI_1_0         0x01
+
+#pragma pack(push, 1)
 
 /* structure for holding DMA address data */
 typedef struct BM_DMA_ENTRY {
@@ -836,6 +840,7 @@ typedef struct _IDE_AHCI_CHANNEL_CTL_BLOCK {
     IDE_AHCI_CMD       cmd; // for single internal commands w/o associated AtaReq
 } IDE_AHCI_CHANNEL_CTL_BLOCK, *PIDE_AHCI_CHANNEL_CTL_BLOCK;
 
+#pragma pack(pop)
 
 #define IsBusMaster(pciData) \
     ( ((pciData)->Command & (PCI_ENABLE_BUS_MASTER/* | PCI_ENABLE_IO_SPACE*/)) == \
@@ -1199,6 +1204,11 @@ typedef struct _HW_LU_EXTENSION {
     struct _HW_CHANNEL* chan;
     ULONG  Lun;
 
+    ULONGLONG errLastLba;
+    ULONG    errBCount;
+    UCHAR    errRetry;
+    UCHAR    errPadding[3];
+
 #ifdef IO_STATISTICS
 
     LONGLONG ModeErrorCount[MAX_RETRIES];
@@ -1479,6 +1489,14 @@ AtapiDmaPioSync(
 extern BOOLEAN
 NTAPI
 AtapiDmaDBSync(
+    PHW_CHANNEL chan,
+    PSCSI_REQUEST_BLOCK Srb
+    );
+
+extern BOOLEAN
+NTAPI
+AtapiDmaDBPreSync(
+    IN PVOID HwDeviceExtension,
     PHW_CHANNEL chan,
     PSCSI_REQUEST_BLOCK Srb
     );
@@ -1865,9 +1883,12 @@ extern ULONG   g_opt_VirtualMachine;
 #define VM_VBOX      0x02
 #define VM_VMWARE    0x03
 #define VM_QEMU      0x04
+#define VM_BOCHS     0x05
 
 #define VM_MAX_KNOWN VM_QEMU
 
 extern BOOLEAN WinVer_WDM_Model;
+
+#pragma pack(pop)
 
 #endif //__IDE_BUSMASTER_H__

@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2014 Alexander A. Telyatnikov (Alter)
+Copyright (c) 2002-2015 Alexander A. Telyatnikov (Alter)
 
 Module Name:
     id_dma.cpp
@@ -254,11 +254,12 @@ AtapiDmaSetup(
     BOOLEAN use_AHCI = (deviceExtension->HwFlags & UNIATA_AHCI) ? TRUE : FALSE;
     ULONG orig_count = count;
     ULONG max_entries = use_AHCI ? ATA_AHCI_DMA_ENTRIES : ATA_DMA_ENTRIES;
-    //ULONG max_frag = use_AHCI ? (0x3fffff+1) : (4096); // DEBUG, replace 4096 for procer chipset-specific value
+    //ULONG max_frag = use_AHCI ? (0x3fffff+1) : (4096); // DEBUG, replace 4096 for proper chipset-specific value
     ULONG max_frag = deviceExtension->DmaSegmentLength;
     ULONG seg_align = deviceExtension->DmaSegmentAlignmentMask;
 
     if(AtaReq->dma_entries) {
+        AtaReq->Flags |= REQ_FLAG_DMA_OPERATION;
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: already setup, %d entries\n", AtaReq->dma_entries));
         return TRUE;
     }
@@ -538,31 +539,22 @@ AtapiDmaDBSync(
     return TRUE;
 } // end AtapiDmaDBSync()
 
-VOID
+BOOLEAN
 NTAPI
-AtapiDmaStart(
+AtapiDmaDBPreSync(
     IN PVOID HwDeviceExtension,
-    IN ULONG DeviceNumber,
-    IN ULONG lChannel,          // logical channel,
-    IN PSCSI_REQUEST_BLOCK Srb
+    PHW_CHANNEL chan,
+    PSCSI_REQUEST_BLOCK Srb
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
-    //PIDE_BUSMASTER_REGISTERS BaseIoAddressBM = deviceExtension->BaseIoAddressBM[lChannel];
     PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
-    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
-
-    ULONG VendorID =  deviceExtension->DevID        & 0xffff;
-    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
-
-    KdPrint2((PRINT_PREFIX "AtapiDmaStart: %s on %#x:%#x\n",
-        (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "read" : "write",
-        lChannel, DeviceNumber ));
 
     if(!AtaReq->ata.dma_base) {
-        KdPrint2((PRINT_PREFIX "AtapiDmaStart: *** !AtaReq->ata.dma_base\n"));
-        return;
+        KdPrint2((PRINT_PREFIX "AtapiDmaDBPreSync: *** !AtaReq->ata.dma_base\n"));
+        return FALSE;
     }
+//    GetStatus(chan, statusByte2);
     if(AtaReq->Flags & REQ_FLAG_DMA_DBUF_PRD) {
         KdPrint2((PRINT_PREFIX "  DBUF_PRD\n"));
         ASSERT(FALSE);
@@ -579,7 +571,56 @@ AtapiDmaStart(
         RtlCopyMemory(chan->DB_IO, AtaReq->DataBuffer,
                               Srb->DataTransferLength);
     }
+    return TRUE;
+} // end AtapiDmaDBPreSync()
 
+VOID
+NTAPI
+AtapiDmaStart(
+    IN PVOID HwDeviceExtension,
+    IN ULONG DeviceNumber,
+    IN ULONG lChannel,          // logical channel,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    //PIDE_BUSMASTER_REGISTERS BaseIoAddressBM = deviceExtension->BaseIoAddressBM[lChannel];
+    PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
+    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+
+    ULONG VendorID =  deviceExtension->DevID        & 0xffff;
+    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
+//    UCHAR statusByte2;
+/*
+    GetStatus(chan, statusByte2);
+    KdPrint2((PRINT_PREFIX "AtapiDmaStart: %s on %#x:%#x\n",
+        (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "read" : "write",
+        lChannel, DeviceNumber ));
+*/
+    if(!AtaReq->ata.dma_base) {
+        KdPrint2((PRINT_PREFIX "AtapiDmaStart: *** !AtaReq->ata.dma_base\n"));
+        return;
+    }
+
+/*
+//    GetStatus(chan, statusByte2);
+    if(AtaReq->Flags & REQ_FLAG_DMA_DBUF_PRD) {
+        KdPrint2((PRINT_PREFIX "  DBUF_PRD\n"));
+        ASSERT(FALSE);
+        if(deviceExtension->HwFlags & UNIATA_AHCI) {
+            RtlCopyMemory(chan->DB_PRD, AtaReq->ahci.ahci_cmd_ptr, sizeof(AtaReq->ahci_cmd0));
+        } else {
+            RtlCopyMemory(chan->DB_PRD, &(AtaReq->dma_tab), sizeof(AtaReq->dma_tab));
+        }
+    }
+    if(!(Srb->SrbFlags & SRB_FLAGS_DATA_IN) &&
+       (AtaReq->Flags & REQ_FLAG_DMA_DBUF)) {
+        KdPrint2((PRINT_PREFIX "  DBUF (Write)\n"));
+        ASSERT(FALSE);
+        RtlCopyMemory(chan->DB_IO, AtaReq->DataBuffer,
+                              Srb->DataTransferLength);
+    }
+*/
     // set flag
     chan->ChannelCtrlFlags |= CTRFLAGS_DMA_ACTIVE;
 
@@ -791,6 +832,9 @@ limit_pio:
         KdPrint2((PRINT_PREFIX
                     "AtapiDmaReinit: restore IO mode on Device %d\n", LunExt->Lun));
         AtapiDmaInit__(deviceExtension, LunExt);
+    } else {
+        KdPrint2((PRINT_PREFIX
+                    "AtapiDmaReinit: LimitedTransferMode == TransferMode = %x (%x)\n", LunExt->TransferMode, LunExt->DeviceFlags));
     }
 
 exit:
@@ -1435,6 +1479,7 @@ dma_cs55xx:
         /* Intel */
         /*********/
 
+        KdPrint2((PRINT_PREFIX "Intel %d\n", Channel));
         BOOLEAN udma_ok = FALSE;
         ULONG  idx = 0;
         ULONG  reg40;
@@ -1451,6 +1496,7 @@ dma_cs55xx:
         UCHAR  intel_utimings[] = { 0x00, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02 };
 
         if(deviceExtension->DevID == ATA_I82371FB) {
+            KdPrint2((PRINT_PREFIX "  I82371FB\n"));
             if (wdmamode >= 2 && apiomode >= 4) {
                 ULONG word40;
 
@@ -1473,6 +1519,7 @@ dma_cs55xx:
 
         if(deviceExtension->DevID == ATA_ISCH) {
             ULONG tim;
+            KdPrint2((PRINT_PREFIX "  ISCH\n"));
             GetPciConfig4(0x80 + dev*4, tim);
 
             for(i=udmamode; i>=0; i--) {
@@ -1556,6 +1603,7 @@ dma_cs55xx:
                 udma_ok = TRUE;
                 idx = i+8;
                 if(ChipFlags & ICH4_FIX) {
+                    KdPrint2((PRINT_PREFIX "  ICH4_FIX udma\n"));
                     return;
                 }
                 break;
@@ -1573,6 +1621,7 @@ dma_cs55xx:
                     udma_ok = TRUE;
                     idx = i+5;
                     if(ChipFlags & ICH4_FIX) {
+                        KdPrint2((PRINT_PREFIX "  ICH4_FIX wdma\n"));
                         return;
                     }
                     break;
@@ -1589,17 +1638,19 @@ dma_cs55xx:
         GetPciConfig1(0x44, reg44);
 
 	/* Allow PIO/WDMA timing controls. */
+	reg40 &= ~0x00ff00ff;
+	reg40 |= 0x40774077;
+
         mask40 = 0x000000ff;
 	/* Set PIO/WDMA timings. */
         if(!(DeviceNumber & 1)) {
-            mask40 |= 0x00003300;
+            mask40 = 0x00003300;
             new40 = ((USHORT)(intel_timings[idx]) << 8);
         } else {
             mask44 = 0x0f;
             new44 = ((intel_timings[idx] & 0x30) >> 2) |
                      (intel_timings[idx] & 0x03);
         }
-        new40 |= 0x00004077;
 
         if (Channel) {
             mask40 <<= 16;
@@ -1608,6 +1659,7 @@ dma_cs55xx:
             new44 <<= 4;
         }
 
+        KdPrint2((PRINT_PREFIX "  0x40 %x/%x, 0x44 %x/%x\n", mask40, new40, mask44, new44));
         SetPciConfig4(0x40, (reg40 & ~mask40) | new40);
         SetPciConfig1(0x44, (reg44 & ~mask44) | new44);
 
@@ -1653,12 +1705,6 @@ dma_cs55xx:
         for(i=wdmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
                 promise_timing(deviceExtension, dev, (UCHAR)(ATA_WDMA0+i));
-                return;
-            }
-        }
-        /* try generic DMA, use hpt_timing() */
-        if (wdmamode >= 0 && apiomode >= 4) {
-            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_DMA)) {
                 return;
             }
         }
@@ -2258,13 +2304,21 @@ promise_timing(
     ULONG slotNumber = deviceExtension->slotNumber;
     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
 
-    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
     //ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
 
-    ULONG timing = 0;
+    ULONG port = 0x60 + (dev<<2);
 
     if(mode == ATA_PIO5)
         mode = ATA_PIO4;
+
+    if(mode < ATA_PIO0)
+        mode = ATA_PIO0;
+
+#if 0
+// **** FreeBSD code ****
+
+    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
+    ULONG timing = 0;
 
     switch(ChipType) {
     case PROLD:
@@ -2306,7 +2360,80 @@ promise_timing(
     default:
         return;
     }
-    SetPciConfig4(0x60 + (dev<<2), timing);
+    if(!timing) {
+        return;
+    }
+    SetPciConfig4(port, timing);
+
+#else
+// **** Linux code ****
+
+    UCHAR r_bp, r_cp, r_ap;
+    ULONG i;
+
+    static UCHAR udma_timing[6][2] = {
+    	{ 0x60, 0x03 },	/* 33 Mhz Clock */
+    	{ 0x40, 0x02 },
+    	{ 0x20, 0x01 },
+    	{ 0x40, 0x02 },	/* 66 Mhz Clock */
+    	{ 0x20, 0x01 },
+    	{ 0x20, 0x01 }
+    };
+    static UCHAR mdma_timing[3][2] = {
+    	{ 0xe0, 0x0f },
+    	{ 0x60, 0x04 },
+    	{ 0x60, 0x03 },
+    };
+    static USHORT pio_timing[5] = {
+    	0x0913, 0x050C , 0x0308, 0x0206, 0x0104
+    };
+
+    if(mode > ATA_UDMA5) {
+        return;
+    }
+
+    if(mode > ATA_WDMA0) {
+
+        GetPciConfig1(port+1, r_bp);
+        GetPciConfig1(port+2, r_cp);
+
+        r_bp &= ~0xE0;
+        r_cp &= ~0x0F;
+
+        if(mode >= ATA_UDMA0) {
+            i = mode - ATA_UDMA0;
+            r_bp |= udma_timing[i][0];
+            r_cp |= udma_timing[i][1];
+
+        } else {
+            i = mode - ATA_WDMA0;
+            r_bp |= mdma_timing[i][0];
+            r_cp |= mdma_timing[i][1];
+        } 
+        SetPciConfig1(port+1, r_bp);
+        SetPciConfig1(port+2, r_cp);
+    } else
+    if(mode <= ATA_PIO5) {
+        GetPciConfig1(port+0, r_ap);
+        GetPciConfig1(port+1, r_bp);
+
+        i = mode - ATA_PIO0;
+	r_ap &= ~0x3F;	/* Preserve ERRDY_EN, SYNC_IN */
+	r_bp &= ~0x1F;
+	r_ap |= (UCHAR)(pio_timing[i] >> 8);
+	r_bp |= (UCHAR)(pio_timing[i] & 0xFF);
+
+//	if (ata_pio_need_iordy(adev))
+		r_ap |= 0x20;	/* IORDY enable */
+//	if (adev->class == ATA_DEV_ATA)
+//		r_ap |= 0x10;	/* FIFO enable */
+
+        SetPciConfig1(port+0, r_ap);
+        SetPciConfig1(port+1, r_bp);
+    }
+
+#endif
+
 } // end promise_timing()
 
 

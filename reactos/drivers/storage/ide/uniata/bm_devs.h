@@ -31,6 +31,11 @@ Revision History:
 
 --*/
 
+#ifndef __IDE_BUSMASTER_DEVICES_H__
+#define __IDE_BUSMASTER_DEVICES_H__
+
+#pragma pack(push, 8)
+
 #define IDE_MAX_CHAN          16
 #define IDE_DEFAULT_MAX_CHAN  2
 // Thanks to SATA Port Multipliers:
@@ -46,9 +51,6 @@ Revision History:
 
 //#define UniataGetPioTiming(LunExt)      ((LunExt->TransferMode <= ATA_PIO0) ? PIO0_TIMING : 0)
 #define UniataGetPioTiming(LunExt)      0 //ktp
-
-#ifndef __IDE_BUSMASTER_DEVICES_H__
-#define __IDE_BUSMASTER_DEVICES_H__
 
 /*#ifdef USER_MODE
 #define PVEN_STR    PCSTR
@@ -1274,5 +1276,7 @@ Ata_is_dev_listed(
      (pciData)->ProgIf == PCI_DEV_PROGIF_AHCI_1_0 && \
      ((pciData)->u.type0.BaseAddresses[5] & ~0x7))
 
+
+#pragma pack(pop)
 
 #endif //__IDE_BUSMASTER_H__

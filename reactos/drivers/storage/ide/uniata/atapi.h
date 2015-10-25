@@ -1486,6 +1486,23 @@ UniataInitSyncBaseIO(
     IN struct _HW_CHANNEL* chan
     );
 
+VOID
+UniataInitIoRes(
+    IN struct _HW_CHANNEL* chan,
+    IN ULONG idx,
+    IN ULONG addr,
+    IN BOOLEAN MemIo,
+    IN BOOLEAN Proc
+    );
+
+VOID
+UniataInitIoResEx(
+    IN struct _IORES* IoRes,
+    IN ULONG addr,
+    IN BOOLEAN MemIo,
+    IN BOOLEAN Proc
+    );
+
 UCHAR
 DDKFASTAPI
 UniataIsIdle(

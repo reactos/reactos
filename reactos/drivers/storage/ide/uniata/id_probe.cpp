@@ -297,6 +297,7 @@ UniataEnumBusMasterController__(
 //    PHW_DEVICE_EXTENSION  deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
 //    PVOID HwDeviceExtension;
     PHW_DEVICE_EXTENSION  deviceExtension = NULL;
+    PCHAR PciDevMap = NULL;
     PCI_SLOT_NUMBER       slotData;
     PCI_COMMON_CONFIG     pciData;
     ULONG                 busNumber;
@@ -336,19 +337,35 @@ UniataEnumBusMasterController__(
     deviceStrPtr = deviceString;
     slotData.u.AsULONG = 0;
 
+    if(!maxPciBus) {
+        return(SP_RETURN_NOT_FOUND);
+    }
     /*HwDeviceExtension =*/
     deviceExtension = (PHW_DEVICE_EXTENSION)ExAllocatePool(NonPagedPool, sizeof(HW_DEVICE_EXTENSION));
     if(!deviceExtension) {
         return(SP_RETURN_NOT_FOUND);
     }
     RtlZeroMemory(deviceExtension, sizeof(HW_DEVICE_EXTENSION));
+    PciDevMap = (PCHAR)ExAllocatePool(NonPagedPool, maxPciBus*PCI_MAX_DEVICES);
+    if(!PciDevMap) {
+        goto exit;
+    }
+    RtlZeroMemory(PciDevMap, maxPciBus*PCI_MAX_DEVICES);
 
     for(pass=0; pass<3; pass++) {
+        no_buses = FALSE;
         for(busNumber=0 ;busNumber<maxPciBus && !no_buses; busNumber++) {
             for(slotNumber=0; slotNumber<PCI_MAX_DEVICES  && !no_buses; slotNumber++) {
             NeedPciAltInit = FALSE;
             for(funcNumber=0; funcNumber<PCI_MAX_FUNCTION && !no_buses; funcNumber++) {
 
+                if(pass) {
+                    if(PciDevMap[busNumber*PCI_MAX_DEVICES + slotNumber] & (1 << funcNumber)) {
+                        // ok
+                    } else {
+                        continue;
+                    }
+                }
 //                KdPrint2((PRINT_PREFIX "-- BusID: %#x:%#x:%#x\n",busNumber,slotNumber,funcNumber));
                 slotData.u.bits.DeviceNumber   = slotNumber;
                 slotData.u.bits.FunctionNumber = funcNumber;
@@ -361,7 +378,7 @@ UniataEnumBusMasterController__(
                                             &pciData, PCI_COMMON_HDR_LENGTH);
                 // no more buses
                 if(!busDataRead) {
-                    no_buses = TRUE;
+                    no_buses = TRUE; // break all nested bus scan loops and continue with next pass
                     maxPciBus = busNumber;
                     break;
                 }
@@ -411,8 +428,13 @@ UniataEnumBusMasterController__(
                     if(g_opt_VirtualMachine == VM_AUTO) {
                         g_opt_VirtualMachine = VM_QEMU;
                     }
+                } else
+                if(VendorID == 0x1234 && DeviceID == 0x1111) {
+                    KdPrint2((PRINT_PREFIX "-- BusID: %#x:%#x:%#x - Bochs\n",busNumber,slotNumber,funcNumber));
+                    if(g_opt_VirtualMachine == VM_AUTO) {
+                        g_opt_VirtualMachine = VM_BOCHS;
+                    }
                 }
-
 
                 if(BaseClass != PCI_DEV_CLASS_STORAGE) {
                     continue;
@@ -484,156 +506,162 @@ UniataEnumBusMasterController__(
                     break;
                 }
 
-                if(found) {
+                if(!found) {
+                    continue;
+                }
 
-                    KdPrint2((PRINT_PREFIX "found, pass %d\n", pass));
+                KdPrint2((PRINT_PREFIX "found, pass %d\n", pass));
 
-                    KdPrint2((PRINT_PREFIX "InterruptPin = %#x\n", pciData.u.type0.InterruptPin));
-                    KdPrint2((PRINT_PREFIX "InterruptLine = %#x\n", pciData.u.type0.InterruptLine));
+                KdPrint2((PRINT_PREFIX "InterruptPin = %#x\n", pciData.u.type0.InterruptPin));
+                KdPrint2((PRINT_PREFIX "InterruptLine = %#x\n", pciData.u.type0.InterruptLine));
 
-                    if(!pass && known) {
-                        UniataEnableIoPCI(busNumber, slotData.u.AsULONG, &pciData);
+                if(!pass && known) {
+                    UniataEnableIoPCI(busNumber, slotData.u.AsULONG, &pciData);
+                }
+                // validate Mem/Io ranges
+                no_ranges = TRUE;
+                for(i=0; i<PCI_TYPE0_ADDRESSES; i++) {
+                    if(pciData.u.type0.BaseAddresses[i] & ~0x7) {
+                        no_ranges = FALSE;
+                        //break;
+                        KdPrint2((PRINT_PREFIX "Range %d = %#x\n", i, pciData.u.type0.BaseAddresses[i]));
                     }
-                    // validate Mem/Io ranges
-                    no_ranges = TRUE;
-                    for(i=0; i<PCI_TYPE0_ADDRESSES; i++) {
-                        if(pciData.u.type0.BaseAddresses[i] & ~0x7) {
-                            no_ranges = FALSE;
-                            //break;
-                            KdPrint2((PRINT_PREFIX "Range %d = %#x\n", i, pciData.u.type0.BaseAddresses[i]));
+                }
+                if(no_ranges) {
+                    KdPrint2((PRINT_PREFIX "No PCI Mem/Io ranges found on device, skip it\n"));
+                    continue;
+                }
+
+                if(pass) {
+                    // fill list of detected devices
+                    // it'll be used for further init
+                    KdPrint2((PRINT_PREFIX "found suitable device\n"));
+                    PBUSMASTER_CONTROLLER_INFORMATION newBMListPtr = BMList+BMListLen;
+
+                    if(pass == 1) {
+                        if(!IsMasterDev(&pciData)) {
+                            continue;
                         }
-                    }
-                    if(no_ranges) {
-                        KdPrint2((PRINT_PREFIX "No PCI Mem/Io ranges found on device, skip it\n"));
-                        continue;
-                    }
+                        if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"NativePCIMode", 0)) {
+                            KdPrint2((PRINT_PREFIX "try switch to native mode\n"));
 
-                    if(pass) {
-                        // fill list of detected devices
-                        // it'll be used for further init
-                        KdPrint2((PRINT_PREFIX "found suitable device\n"));
-                        PBUSMASTER_CONTROLLER_INFORMATION newBMListPtr = BMList+BMListLen;
-
-                        if(pass == 1) {
-                            if(!IsMasterDev(&pciData)) {
-                                continue;
+                            IrqForCompat = (UCHAR)AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"NativePCIModeIRQ", 0xff);
+                            KdPrint2((PRINT_PREFIX "IrqForCompat = %#x\n", IrqForCompat));
+                            if((IrqForCompat & 0xffffff00) /*||
+                               (IrqForCompat & 0xff) > 31*/ ||
+                               (IrqForCompat == 0xff)) {
+                                IrqForCompat = 0x0b;
+                                KdPrint2((PRINT_PREFIX "default to IRQ 11\n"));
                             }
-                            if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"NativePCIMode", 0)) {
-                                KdPrint2((PRINT_PREFIX "try switch to native mode\n"));
 
-                                IrqForCompat = (UCHAR)AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"NativePCIModeIRQ", 0xff);
-                                KdPrint2((PRINT_PREFIX "IrqForCompat = %#x\n", IrqForCompat));
-                                if((IrqForCompat & 0xffffff00) /*||
-                                   (IrqForCompat & 0xff) > 31*/ ||
-                                   (IrqForCompat == 0xff)) {
-                                    IrqForCompat = 0x0b;
-                                    KdPrint2((PRINT_PREFIX "default to IRQ 11\n"));
+                            //ChangePciConfig1(0x09, a | PCI_IDE_PROGIF_NATIVE_ALL); // ProgIf
+                            pciData.ProgIf |= PCI_IDE_PROGIF_NATIVE_ALL;
+                            HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotData.u.AsULONG,
+                                                    &(pciData.ProgIf),
+                                                    offsetof(PCI_COMMON_CONFIG, ProgIf),
+                                                    sizeof(pciData.ProgIf));
+
+                            // reread config space
+                            busDataRead = HalGetBusData(PCIConfiguration, busNumber, slotData.u.AsULONG,
+                                                        &pciData, PCI_COMMON_HDR_LENGTH);
+                            // check if the device have switched to Native Mode
+                            if(IsMasterDev(&pciData)) {
+                                KdPrint2((PRINT_PREFIX "Can't switch to native mode\n"));
+                            } else {
+                                KdPrint2((PRINT_PREFIX "switched to native mode\n"));
+                                KdPrint2((PRINT_PREFIX "InterruptPin = %#x\n", pciData.u.type0.InterruptPin));
+                                KdPrint2((PRINT_PREFIX "InterruptLine = %#x\n", pciData.u.type0.InterruptLine));
+                                // check if IRQ is assigned to device
+                                if(!(pciData.u.type0.InterruptLine) ||
+                                    (pciData.u.type0.InterruptLine == 0xff)) {
+                                    KdPrint2((PRINT_PREFIX "assign interrupt for device\n"));
+                                    pciData.u.type0.InterruptLine = IrqForCompat;
+                                    HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotData.u.AsULONG,
+                                                            &(pciData.u.type0.InterruptLine),
+                                                            offsetof(PCI_COMMON_CONFIG, u.type0.InterruptLine),
+                                                            sizeof(pciData.u.type0.InterruptLine));
+                                } else {
+                                    KdPrint2((PRINT_PREFIX "Auto-assigned interrupt line %#x\n",
+                                        pciData.u.type0.InterruptLine));
+                                    IrqForCompat = pciData.u.type0.InterruptLine;
                                 }
-
-                                //ChangePciConfig1(0x09, a | PCI_IDE_PROGIF_NATIVE_ALL); // ProgIf
-                                pciData.ProgIf |= PCI_IDE_PROGIF_NATIVE_ALL;
-                                HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotData.u.AsULONG,
-                                                        &(pciData.ProgIf),
-                                                        offsetof(PCI_COMMON_CONFIG, ProgIf),
-                                                        sizeof(pciData.ProgIf));
-
+                                KdPrint2((PRINT_PREFIX "reread config space\n"));
                                 // reread config space
                                 busDataRead = HalGetBusData(PCIConfiguration, busNumber, slotData.u.AsULONG,
                                                             &pciData, PCI_COMMON_HDR_LENGTH);
-                                // check if the device have switched to Native Mode
-                                if(IsMasterDev(&pciData)) {
-                                    KdPrint2((PRINT_PREFIX "Can't switch to native mode\n"));
-                                } else {
-                                    KdPrint2((PRINT_PREFIX "switched to native mode\n"));
-                                    KdPrint2((PRINT_PREFIX "InterruptPin = %#x\n", pciData.u.type0.InterruptPin));
-                                    KdPrint2((PRINT_PREFIX "InterruptLine = %#x\n", pciData.u.type0.InterruptLine));
-                                    // check if IRQ is assigned to device
-                                    if(!(pciData.u.type0.InterruptLine) ||
-                                        (pciData.u.type0.InterruptLine == 0xff)) {
-                                        KdPrint2((PRINT_PREFIX "assign interrupt for device\n"));
-                                        pciData.u.type0.InterruptLine = IrqForCompat;
-                                        HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotData.u.AsULONG,
-                                                                &(pciData.u.type0.InterruptLine),
-                                                                offsetof(PCI_COMMON_CONFIG, u.type0.InterruptLine),
-                                                                sizeof(pciData.u.type0.InterruptLine));
-                                    } else {
-                                        KdPrint2((PRINT_PREFIX "Auto-assigned interrupt line %#x\n",
-                                            pciData.u.type0.InterruptLine));
-                                        IrqForCompat = pciData.u.type0.InterruptLine;
-                                    }
-                                    KdPrint2((PRINT_PREFIX "reread config space\n"));
+                                KdPrint2((PRINT_PREFIX "busDataRead = %#x\n", busDataRead));
+                                KdPrint2((PRINT_PREFIX "reread InterruptLine = %#x\n", pciData.u.type0.InterruptLine));
+                                // check if we have successfully assigned IRQ to device
+                                if((pciData.u.type0.InterruptLine != IrqForCompat) ||
+                                   (pciData.u.type0.InterruptLine == 0xff) ||
+                                   !pciData.u.type0.InterruptLine) {
+                                    KdPrint2((PRINT_PREFIX "can't assign interrupt for device, revert to compat mode\n"));
+                                    pciData.u.type0.InterruptLine = 0xff;
+                                    KdPrint2((PRINT_PREFIX "set IntrLine to 0xff\n"));
+                                    HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotData.u.AsULONG,
+                                                            &(pciData.u.type0.InterruptLine),
+                                                            offsetof(PCI_COMMON_CONFIG, u.type0.InterruptLine),
+                                                            sizeof(pciData.u.type0.InterruptLine));
+                                    KdPrint2((PRINT_PREFIX "clear PCI_IDE_PROGIF_NATIVE_ALL\n"));
+                                    pciData.ProgIf &= ~PCI_IDE_PROGIF_NATIVE_ALL;
+                                    HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotData.u.AsULONG,
+                                                            &(pciData.ProgIf),
+                                                            offsetof(PCI_COMMON_CONFIG, ProgIf),
+                                                            sizeof(pciData.ProgIf));
                                     // reread config space
+                                    KdPrint2((PRINT_PREFIX "reread config space on revert\n"));
                                     busDataRead = HalGetBusData(PCIConfiguration, busNumber, slotData.u.AsULONG,
                                                                 &pciData, PCI_COMMON_HDR_LENGTH);
-                                    KdPrint2((PRINT_PREFIX "busDataRead = %#x\n", busDataRead));
-                                    KdPrint2((PRINT_PREFIX "reread InterruptLine = %#x\n", pciData.u.type0.InterruptLine));
-                                    // check if we have successfully assigned IRQ to device
-                                    if((pciData.u.type0.InterruptLine != IrqForCompat) ||
-                                       (pciData.u.type0.InterruptLine == 0xff) ||
-                                       !pciData.u.type0.InterruptLine) {
-                                        KdPrint2((PRINT_PREFIX "can't assign interrupt for device, revert to compat mode\n"));
-                                        pciData.u.type0.InterruptLine = 0xff;
-                                        KdPrint2((PRINT_PREFIX "set IntrLine to 0xff\n"));
-                                        HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotData.u.AsULONG,
-                                                                &(pciData.u.type0.InterruptLine),
-                                                                offsetof(PCI_COMMON_CONFIG, u.type0.InterruptLine),
-                                                                sizeof(pciData.u.type0.InterruptLine));
-                                        KdPrint2((PRINT_PREFIX "clear PCI_IDE_PROGIF_NATIVE_ALL\n"));
-                                        pciData.ProgIf &= ~PCI_IDE_PROGIF_NATIVE_ALL;
-                                        HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotData.u.AsULONG,
-                                                                &(pciData.ProgIf),
-                                                                offsetof(PCI_COMMON_CONFIG, ProgIf),
-                                                                sizeof(pciData.ProgIf));
-                                        // reread config space
-                                        KdPrint2((PRINT_PREFIX "reread config space on revert\n"));
-                                        busDataRead = HalGetBusData(PCIConfiguration, busNumber, slotData.u.AsULONG,
-                                                                    &pciData, PCI_COMMON_HDR_LENGTH);
-                                    } else {
-                                        KdPrint2((PRINT_PREFIX "Assigned interrupt %#x for device\n", IrqForCompat));
-                                        KdPrint2((PRINT_PREFIX "continue detection on next round\n"));
-                                        continue;
-                                    }
+                                } else {
+                                    KdPrint2((PRINT_PREFIX "Assigned interrupt %#x for device\n", IrqForCompat));
+                                    KdPrint2((PRINT_PREFIX "continue detection on next round\n"));
+                                    continue;
                                 }
                             }
-                        } else
-                        if(pass == 2) {
-                            if(IsMasterDev(&pciData))
-                                continue;
                         }
-
-/*                        if(known) {
-                            RtlCopyMemory(newBMListPtr, (PVOID)&(BusMasterAdapters[i]), sizeof(BUSMASTER_CONTROLLER_INFORMATION));
-                        } else {*/
-                        sprintf((PCHAR)vendorStrPtr, "%4.4lx", VendorID);
-                        sprintf((PCHAR)deviceStrPtr, "%4.4lx", DeviceID);
-
-                        RtlCopyMemory(&(newBMListPtr->VendorIdStr), (PCHAR)vendorStrPtr, 4);
-                        RtlCopyMemory(&(newBMListPtr->DeviceIdStr), (PCHAR)deviceStrPtr, 4);
-
-                        newBMListPtr->nVendorId = VendorID;
-                        newBMListPtr->VendorId = (PCHAR)&(newBMListPtr->VendorIdStr);
-                        newBMListPtr->VendorIdLength = 4;
-                        newBMListPtr->nDeviceId = DeviceID;
-                        newBMListPtr->DeviceId = (PCHAR)&(newBMListPtr->DeviceIdStr);
-                        newBMListPtr->DeviceIdLength = 4;
-
-                        newBMListPtr->RaidFlags = RaidFlags;
-//                        }
-                        newBMListPtr->slotNumber = slotData.u.AsULONG;
-                        newBMListPtr->MasterDev = IsMasterDev(&pciData) ? 1 : 0;
-                        newBMListPtr->busNumber = busNumber;
-
-                        newBMListPtr->NeedAltInit = NeedPciAltInit;
-                        newBMListPtr->Known = known;
-
-                        KdPrint2((PRINT_PREFIX "Add to BMList, AltInit %d\n", NeedPciAltInit));
-                    } else {
-                        KdPrint2((PRINT_PREFIX "count: BMListLen++\n"));
+                    } else
+                    if(pass == 2) {
+                        if(IsMasterDev(&pciData))
+                            continue;
                     }
 
-                    BMListLen++;
+/*                        if(known) {
+                        RtlCopyMemory(newBMListPtr, (PVOID)&(BusMasterAdapters[i]), sizeof(BUSMASTER_CONTROLLER_INFORMATION));
+                    } else {*/
+                    sprintf((PCHAR)vendorStrPtr, "%4.4lx", VendorID);
+                    sprintf((PCHAR)deviceStrPtr, "%4.4lx", DeviceID);
+
+                    RtlCopyMemory(&(newBMListPtr->VendorIdStr), (PCHAR)vendorStrPtr, 4);
+                    RtlCopyMemory(&(newBMListPtr->DeviceIdStr), (PCHAR)deviceStrPtr, 4);
+
+                    newBMListPtr->nVendorId = VendorID;
+                    newBMListPtr->VendorId = (PCHAR)&(newBMListPtr->VendorIdStr);
+                    newBMListPtr->VendorIdLength = 4;
+                    newBMListPtr->nDeviceId = DeviceID;
+                    newBMListPtr->DeviceId = (PCHAR)&(newBMListPtr->DeviceIdStr);
+                    newBMListPtr->DeviceIdLength = 4;
+
+                    newBMListPtr->RaidFlags = RaidFlags;
+//                        }
+                    newBMListPtr->slotNumber = slotData.u.AsULONG;
+                    newBMListPtr->MasterDev = IsMasterDev(&pciData) ? 1 : 0;
+                    newBMListPtr->busNumber = busNumber;
+
+                    newBMListPtr->NeedAltInit = NeedPciAltInit;
+                    newBMListPtr->Known = known;
+
+                    KdPrint2((PRINT_PREFIX "Add to BMList, AltInit %d\n", NeedPciAltInit));
+                } else {
+                    KdPrint2((PRINT_PREFIX "count: BMListLen++\n"));
+                    PciDevMap[busNumber*PCI_MAX_DEVICES + slotNumber] |= (1 << funcNumber);
                 }
-            }
+
+                BMListLen++;
+
+            } // Function
+            } // Slot
+            if(!hasPCI) {
+                break;
             }
         }
         if(!pass) {
@@ -650,9 +678,13 @@ UniataEnumBusMasterController__(
              BMListLen=0;
         }
     }
+exit:
     KdPrint2((PRINT_PREFIX "  BMListLen=%x\n", BMListLen));
     if(deviceExtension) {
         ExFreePool(deviceExtension);
+    }
+    if(PciDevMap) {
+        ExFreePool(PciDevMap);
     }
     return(SP_RETURN_NOT_FOUND);
 } // end UniataEnumBusMasterController__()
@@ -1621,25 +1653,10 @@ UniataFindBusMasterController(
         }
         //ioSpace = (PUCHAR)(deviceExtension->BaseIoAddress1[c]);
 
-        KdPrint2((PRINT_PREFIX "IDX_IO1 %x->%x(%s)\n",
-          IDX_IO1,
-          chan->RegTranslation[IDX_IO1].Addr,
-          chan->RegTranslation[IDX_IO1].MemIo ? "mem" : "io"));
-
-        KdPrint2((PRINT_PREFIX "IDX_IO2 %x->%x(%s)\n",
-          IDX_IO2,
-          chan->RegTranslation[IDX_IO2].Addr,
-          chan->RegTranslation[IDX_IO2].MemIo ? "mem" : "io"));
-
-        KdPrint2((PRINT_PREFIX "IDX_BM_IO %x->%x(%s)\n",
-          IDX_BM_IO,
-          chan->RegTranslation[IDX_BM_IO].Addr,
-          chan->RegTranslation[IDX_BM_IO].MemIo ? "mem" : "io"));
-
-        KdPrint2((PRINT_PREFIX "IDX_SATA_IO %x->%x(%s)\n",
-          IDX_SATA_IO,
-          chan->RegTranslation[IDX_SATA_IO].Addr,
-          chan->RegTranslation[IDX_SATA_IO].MemIo ? "mem" : "io"));
+        DbgDumpRegTranslation(chan, IDX_IO1);
+        DbgDumpRegTranslation(chan, IDX_IO2);
+        DbgDumpRegTranslation(chan, IDX_BM_IO);
+        DbgDumpRegTranslation(chan, IDX_SATA_IO);
 
         if(!(deviceExtension->HwFlags & UNIATA_AHCI)) {
 #ifdef _DEBUG
@@ -2302,6 +2319,9 @@ AtapiFindController(
         BaseIoAddress2 = (PIDE_REGISTERS_2)ioSpace;
         KdPrint2((PRINT_PREFIX "  BaseIoAddress1=%x\n", BaseIoAddress1));
         KdPrint2((PRINT_PREFIX "  BaseIoAddress2=%x\n", BaseIoAddress2));
+        if(!irq) {
+            KdPrint2((PRINT_PREFIX "  expected InterruptLevel=%x\n", InterruptLevels[*adapterCount - 1]));
+        }
 
         UniataInitMapBase(chan, BaseIoAddress1, BaseIoAddress2);
         UniataInitMapBM(deviceExtension, 0, FALSE);
@@ -2656,6 +2676,15 @@ legacy_select:
         KdPrint2((PRINT_PREFIX "  AHCI HDD at home\n"));
         return ATA_AT_HOME_HDD;
     }
+    if(g_opt_VirtualMachine /*== VM_BOCHS ||
+       g_opt_VirtualMachine == VM_VBOX*/) {
+        GetStatus(chan, signatureLow);
+        if(!signatureLow) {
+            KdPrint2((PRINT_PREFIX "  0-status VM - not present\n"));
+            UniataForgetDevice(LunExt);
+            return ATA_AT_HOME_NOBODY;
+        }
+    }
 
     AtapiStallExecution(10);
 
@@ -2940,7 +2969,8 @@ forget_device:
             RetVal = DFLAGS_DEVICE_PRESENT;
             LunExt->DeviceFlags |= DFLAGS_DEVICE_PRESENT;
             LunExt->DeviceFlags &= ~DFLAGS_ATAPI_DEVICE;
-        } else {
+        } else
+        if(!g_opt_VirtualMachine) {
             // This can be ATAPI on broken hardware
             GetBaseStatus(chan, statusByte);
             if(!at_home && UniataAnybodyHome(HwDeviceExtension, lChannel, deviceNumber)) {
@@ -2950,6 +2980,9 @@ forget_device:
             KdPrint2((PRINT_PREFIX "CheckDevice: try ATAPI %#x, status %#x\n",
                        deviceNumber, statusByte));
             goto try_atapi;
+        } else {
+            KdPrint2((PRINT_PREFIX "CheckDevice: VM Device %#x not present\n",
+                       deviceNumber));
         }
         GetBaseStatus(chan, statusByte);
     }
