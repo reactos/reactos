@@ -1,0 +1,43 @@
+/*
+ * Copyright 2012 André Hentschel
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "objidl.idl";
+
+[
+    object,
+    uuid(e1cd3524-03d7-11d2-9eed-006097d2d7cf),
+    pointer_default(unique),
+    local
+]
+interface INSSBuffer : IUnknown
+{
+    HRESULT GetLength(
+        [out] DWORD *pdwLength);
+    HRESULT SetLength(
+        [in] DWORD dwLength);
+
+    HRESULT GetMaxLength(
+        [out] DWORD *pdwLength);
+
+    HRESULT GetBuffer(
+        [out] BYTE **ppdwBuffer);
+
+    HRESULT GetBufferAndLength(
+        [out] BYTE **ppdwBuffer,
+        [out] DWORD *pdwLength);
+};
