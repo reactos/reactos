@@ -154,7 +154,7 @@ struct thunkCode
         m_mov = 0x042444C7;
         m_this = PtrToUlong(pThis);
         m_jmp = 0xe9;
-        m_relproc = DWORD((INT_PTR)proc - (INT_PTR)this + sizeof(thunkCode)));
+        m_relproc = DWORD((INT_PTR)proc - (INT_PTR)this + sizeof(thunkCode));
         FlushInstructionCache(GetCurrentProcess(), this, sizeof(thunkCode));
     }
 };
