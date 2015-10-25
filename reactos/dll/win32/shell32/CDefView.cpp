@@ -855,11 +855,13 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
     {
         lvItem.mask = LVIF_PARAM;        /* only the pidl */
         lvItem.iItem = nItem;
+        lvItem.iSubItem = 0;
         m_ListView.GetItem(&lvItem);
 
         SHFree(reinterpret_cast<LPVOID>(lvItem.lParam));
         lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
         lvItem.iItem = nItem;
+        lvItem.iSubItem = 0;
         lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidlNew));    /* set the item's data */
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidlNew, 0);
         m_ListView.SetItem(&lvItem);
@@ -886,6 +888,7 @@ BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
     {
         lvItem.mask = LVIF_IMAGE;
         lvItem.iItem = nItem;
+        lvItem.iSubItem = 0;
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
         m_ListView.SetItem(&lvItem);
         m_ListView.Update(nItem);
@@ -1913,6 +1916,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 {
                     lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
                     lvItem.iItem = lpdi->item.iItem;
+                    lvItem.iSubItem = 0;
                     lvItem.lParam = reinterpret_cast<LPARAM>(pidlNew);
                     lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidlNew, 0);
                     m_ListView.SetItem(&lvItem);
