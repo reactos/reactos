@@ -1421,7 +1421,7 @@ SkipCheck:
 
                 /* Don't do relocation */
                 Status = STATUS_CONFLICTING_ADDRESSES;
-                goto NoRelocNeeded;
+                goto FailRelocate;
             }
 
             /* Change the protection to prepare for relocation */
@@ -1459,7 +1459,7 @@ SkipCheck:
                     Status = LdrpSetProtection(ViewBase, TRUE);
                 }
             }
-//FailRelocate:
+FailRelocate:
             /* Handle any kind of failure */
             if (!NT_SUCCESS(Status))
             {
