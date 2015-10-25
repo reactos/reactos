@@ -35,7 +35,7 @@ public:
         _In_reads_(nLength) LPCWSTR pszSource,
         _In_ int nLength) throw()
     {
-        return ::WideCharToMultiByte(CP_THREAD_ACP, 0, pszSource, nLength, NULL, 0, NULL, NULL);
+        return ::WideCharToMultiByte(_AtlGetConversionACP(), 0, pszSource, nLength, NULL, 0, NULL, NULL);
     }
 
     static void __cdecl ConvertToBaseType(
