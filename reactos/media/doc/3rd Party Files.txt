@@ -11,7 +11,7 @@ Used Version: 2.35
 Website: http://dejavu.sourceforge.net
 
 Title: Ubuntu Fonts
-Used Version: 0.80
+Used Version: 0.83
 Website: http://font.ubuntu.com
 
 Title: Open Sans Fonts
