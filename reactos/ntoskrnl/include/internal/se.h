@@ -267,6 +267,10 @@ BOOLEAN
 NTAPI
 SepInitSDs(VOID);
 
+BOOLEAN
+NTAPI
+SeRmInitPhase1(VOID);
+
 VOID
 NTAPI
 SeDeassignPrimaryToken(struct _EPROCESS *Process);

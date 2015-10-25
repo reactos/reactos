@@ -1950,6 +1950,9 @@ Phase1InitializationDiscard(IN PVOID Context)
     MmFreeLoaderBlock(LoaderBlock);
     LoaderBlock = Context = NULL;
 
+    /* Initialize the SRM in phase 1 */
+    if (!SeRmInitPhase1()) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
+
     /* Update progress bar */
     InbvUpdateProgressBar(100);
 

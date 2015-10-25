@@ -421,6 +421,10 @@ LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg);
 NTSTATUS
 LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg);
 
+/* srm.c */
+NTSTATUS
+LsapRmInitializeServer(VOID);
+
 /* utils.c */
 INT
 LsapLoadString(HINSTANCE hInstance,

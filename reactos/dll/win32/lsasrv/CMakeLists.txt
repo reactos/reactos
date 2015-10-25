@@ -22,6 +22,7 @@ list(APPEND SOURCE
     registry.c
     security.c
     session.c
+    srm.c
     utils.c
     lsasrv.h
     ${CMAKE_CURRENT_BINARY_DIR}/dssetup_s.c

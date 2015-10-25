@@ -6,6 +6,8 @@
  * COPYRIGHT:   Copyright 2006-2009 Eric Kohl
  */
 
+/* INCLUDES ****************************************************************/
+
 #include "lsasrv.h"
 
 /* FUNCTIONS ***************************************************************/
@@ -139,6 +141,14 @@ LsapInitLsa(VOID)
 
     /* Initialize the well known SIDs */
     LsapInitSids();
+
+    /* Initialize the SRM server */
+    Status = LsapRmInitializeServer();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapRmInitializeServer() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
 
     /* Initialize the LSA database */
     LsapInitDatabase();
