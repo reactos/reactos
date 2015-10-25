@@ -136,7 +136,7 @@ class CElementTraits :
 {
 };
 
-template<typename E, class ETraits = CElementTraits<E>>
+template<typename E, class ETraits = CElementTraits<E> >
 class CAtlList
 {
 private:
@@ -178,7 +178,7 @@ public:
     E& GetNext(_Inout_ POSITION& pos);
     const E& GetNext(_Inout_ POSITION& pos) const;
     E& GetPrev(_Inout_ POSITION& pos);
-    const E& GetPrev(_Inout_ POSITION& pos) const throw();
+    const E& GetPrev(_Inout_ POSITION& pos) const;
 
     E& GetAt(_In_ POSITION pos);
     const E& GetAt(_In_ POSITION pos) const;
@@ -189,7 +189,7 @@ public:
     E RemoveHead();
     E RemoveTail();
     void RemoveAll();
-    void RemoveAt(_In_ POSITION pos) throw();
+    void RemoveAt(_In_ POSITION pos);
 
     POSITION Find(
         INARGTYPE element,

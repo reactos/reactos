@@ -106,7 +106,7 @@ class ChTraitsOS :
 };
 
 
-template <typename _BaseType = wchar_t, class StringIterator = ChTraitsOS<_BaseType>>
+template<typename _BaseType = wchar_t, class StringIterator = ChTraitsOS<_BaseType> >
 class StrTraitATL :
     public StringIterator
 {
@@ -123,7 +123,7 @@ public:
 };
 
 
-typedef CStringT<wchar_t, StrTraitATL<wchar_t, ChTraitsCRT<wchar_t>>> CAtlStringW;
+typedef CStringT< wchar_t, StrTraitATL< wchar_t, ChTraitsCRT<wchar_t> > > CAtlStringW;
 
 }
 
