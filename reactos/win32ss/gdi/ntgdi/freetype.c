@@ -13,11 +13,11 @@
 
 #include FT_GLYPH_H
 #include FT_TYPE1_TABLES_H
-#include <tttables.h>
-#include <fttrigon.h>
-#include <ftbitmap.h>
-#include <ftoutln.h>
-#include <ftwinfnt.h>
+#include FT_TRUETYPE_TABLES_H
+#include FT_TRIGONOMETRY_H
+#include FT_BITMAP_H
+#include FT_OUTLINE_H
+#include FT_WINFONTS_H
 
 #include <gdi/eng/floatobj.h>
 
