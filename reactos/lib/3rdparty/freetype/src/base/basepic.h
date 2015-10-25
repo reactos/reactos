@@ -20,9 +20,8 @@
 #define __BASEPIC_H__
 
 
-FT_BEGIN_HEADER
-
 #include FT_INTERNAL_PIC_H
+
 
 #ifndef FT_CONFIG_OPTION_PIC
 
@@ -42,6 +41,8 @@ FT_BEGIN_HEADER
 #include FT_INTERNAL_RFORK_H
 #endif
 
+
+FT_BEGIN_HEADER
 
   typedef struct  BasePIC_
   {
@@ -78,11 +79,11 @@ FT_BEGIN_HEADER
   FT_Error
   ft_base_pic_init( FT_Library  library );
 
+FT_END_HEADER
+
 #endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
-
-FT_END_HEADER
 
 #endif /* __BASEPIC_H__ */
 

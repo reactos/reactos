@@ -24,8 +24,8 @@
   /*                                                                       */
   /* - copy `src/raster/ftraster.c' (this file) to your current directory  */
   /*                                                                       */
-  /* - copy `include/ftimage.h' and `src/raster/ftmisc.h' to your current  */
-  /*   directory                                                           */
+  /* - copy `include/freetype/ftimage.h' and `src/raster/ftmisc.h' to your */
+  /*   current directory                                                   */
   /*                                                                       */
   /* - compile `ftraster' with the _STANDALONE_ macro defined, as in       */
   /*                                                                       */
@@ -450,7 +450,9 @@
 #define CEILING( x )  ( ( (x) + ras.precision - 1 ) & -ras.precision )
 #define TRUNC( x )    ( (Long)(x) >> ras.precision_bits )
 #define FRAC( x )     ( (x) & ( ras.precision - 1 ) )
-#define SCALED( x )   ( ( (Long)(x) << ras.scale_shift ) - ras.precision_half )
+#define SCALED( x )   ( ( (x) < 0 ? -( -(x) << ras.scale_shift )   \
+                                  :  (  (x) << ras.scale_shift ) ) \
+                        - ras.precision_half )
 
 #define IS_BOTTOM_OVERSHOOT( x ) \
           (Bool)( CEILING( x ) - x >= ras.precision_half )
@@ -799,15 +801,14 @@
 
     /* if it is <, simply insert it, ignore if == */
     if ( n >= 0 && y > y_turns[n] )
-      while ( n >= 0 )
+      do
       {
         Int  y2 = (Int)y_turns[n];
 
 
         y_turns[n] = y;
         y = y2;
-        n--;
-      }
+      } while ( --n >= 0 );
 
     if ( n < 0 )
     {
@@ -848,7 +849,7 @@
 
     if ( n > 1 && p )
     {
-      while ( n > 0 )
+      do
       {
         Int  bottom, top;
 
@@ -876,8 +877,7 @@
           return FAILURE;
 
         p = p->link;
-        n--;
-      }
+      } while ( --n );
     }
     else
       ras.fProfile = NULL;
@@ -1248,7 +1248,7 @@
 
     start_arc = arc;
 
-    while ( arc >= start_arc && e <= e2 )
+    do
     {
       ras.joint = FALSE;
 
@@ -1281,7 +1281,7 @@
         }
         arc -= degree;
       }
-    }
+    } while ( arc >= start_arc && e <= e2 );
 
   Fin:
     ras.top  = top;
@@ -2114,7 +2114,7 @@
     while ( current )
     {
       current->X       = *current->offset;
-      current->offset += current->flags & Flow_Up ? 1 : -1;
+      current->offset += ( current->flags & Flow_Up ) ? 1 : -1;
       current->height--;
       current = current->link;
     }

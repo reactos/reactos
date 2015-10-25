@@ -1,5 +1,5 @@
-  FreeType 2.6
-  ============
+  FreeType 2.6.1
+  ==============
 
   Homepage: http://www.freetype.org
 
@@ -24,9 +24,9 @@
 
   and download one of the following files.
 
-    freetype-doc-2.6.tar.bz2
-    freetype-doc-2.6.tar.gz
-    ftdoc26.zip
+    freetype-doc-2.6.1.tar.bz2
+    freetype-doc-2.6.1.tar.gz
+    ftdoc261.zip
 
   To view the documentation online, go to
 
@@ -42,6 +42,7 @@
     general use and discussion:      freetype@nongnu.org
     engine internals, porting, etc.: freetype-devel@nongnu.org
     announcements:                   freetype-announce@nongnu.org
+    git repository tracker:          freetype-commit@nongnu.org
 
   The lists are moderated; see
 

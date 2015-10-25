@@ -1375,13 +1375,13 @@
     }
 
 #ifdef FT_MACINTOSH
-    /* At this point, face_index has served its purpose;      */
+    /* At this point, the face index has served its purpose;  */
     /* whoever calls this function has already used it to     */
     /* locate the correct font data.  We should not propagate */
     /* this index to FT_Open_Face() (unless it is negative).  */
 
     if ( face_index > 0 )
-      face_index = 0;
+      face_index &= 0x7FFF0000L; /* retain GX data */
 #endif
 
     error = FT_Open_Face( library, &args, face_index, aface );
@@ -1495,6 +1495,10 @@
     FT_UNUSED( params );
 
 
+    /* ignore GX stuff */
+    if ( face_index > 0 )
+      face_index &= 0xFFFFL;
+
     pos = FT_STREAM_POS();
 
     error = ft_lookup_PS_in_sfnt_stream( stream,
@@ -1512,8 +1516,10 @@
       goto Exit;
 
     error = FT_Stream_Read( stream, (FT_Byte *)sfnt_ps, length );
-    if ( error )
+    if ( error ) {
+      FT_FREE( sfnt_ps );
       goto Exit;
+    }
 
     error = open_face_from_buffer( library,
                                    sfnt_ps,
@@ -1582,12 +1588,14 @@
       /* FT2 allocator takes signed long buffer length,
        * too large value causing overflow should be checked
        */
-      FT_TRACE4(( "                 POST fragment #%d: length=0x%08x\n",
-                  i, temp));
-      if ( 0x7FFFFFFFUL < temp || pfb_len + temp + 6 < pfb_len )
+      FT_TRACE4(( "                 POST fragment #%d: length=0x%08x"
+                  " total pfb_len=0x%08x\n",
+                  i, temp, pfb_len + temp + 6));
+      if ( FT_MAC_RFORK_MAX_LEN < temp               ||
+           FT_MAC_RFORK_MAX_LEN - temp < pfb_len + 6 )
       {
-        FT_TRACE2(( "             too long fragment length makes"
-                    " pfb_len confused: temp=0x%08x\n", temp ));
+        FT_TRACE2(( "             MacOS resource length cannot exceed"
+                    " 0x%08x\n", FT_MAC_RFORK_MAX_LEN ));
         error = FT_THROW( Invalid_Offset );
         goto Exit;
       }
@@ -1660,7 +1668,7 @@
       else
       {
         FT_TRACE3(( "    Write POST fragment #%d header (4-byte) to buffer"
-                    " 0x%p + 0x%08x\n", i, pfb_data, pfb_lenpos ));
+                    " %p + 0x%08x\n", i, pfb_data, pfb_lenpos ));
         if ( pfb_lenpos + 3 > pfb_len + 2 )
           goto Exit2;
         pfb_data[pfb_lenpos    ] = (FT_Byte)( len );
@@ -1672,7 +1680,7 @@
           break;
 
         FT_TRACE3(( "    Write POST fragment #%d header (6-byte) to buffer"
-                    " 0x%p + 0x%08x\n", i, pfb_data, pfb_pos ));
+                    " %p + 0x%08x\n", i, pfb_data, pfb_pos ));
         if ( pfb_pos + 6 > pfb_len + 2 )
           goto Exit2;
         pfb_data[pfb_pos++] = 0x80;
@@ -1692,7 +1700,7 @@
         goto Exit2;
 
       FT_TRACE3(( "    Load POST fragment #%d (%d byte) to buffer"
-                  " 0x%p + 0x%08x\n", i, rlen, pfb_data, pfb_pos ));
+                  " %p + 0x%08x\n", i, rlen, pfb_data, pfb_pos ));
       error = FT_Stream_Read( stream, (FT_Byte *)pfb_data + pfb_pos, rlen );
       if ( error )
         goto Exit2;
@@ -1737,7 +1745,7 @@
   /* The resource header says we've got resource_cnt `sfnt'      */
   /* (TrueType/OpenType) resources in this file.  Look through   */
   /* them for the one indicated by face_index, load it into mem, */
-  /* pass it on the the truetype driver and return it.           */
+  /* pass it on to the truetype driver, and return it.           */
   /*                                                             */
   static FT_Error
   Mac_Read_sfnt_Resource( FT_Library  library,
@@ -1770,6 +1778,8 @@
       goto Exit;
     if ( rlen == -1 )
       return FT_THROW( Cannot_Open_Resource );
+    if ( (FT_ULong)rlen > FT_MAC_RFORK_MAX_LEN )
+      return FT_THROW( Invalid_Offset );
 
     error = open_face_PS_from_sfnt_stream( library,
                                            stream,
@@ -1786,8 +1796,10 @@
     if ( FT_ALLOC( sfnt_data, rlen ) )
       return error;
     error = FT_Stream_Read( stream, (FT_Byte *)sfnt_data, (FT_ULong)rlen );
-    if ( error )
+    if ( error ) {
+      FT_FREE( sfnt_data );
       goto Exit;
+    }
 
     is_cff = rlen > 4 && !ft_memcmp( sfnt_data, "OTTO", 4 );
     error = open_face_from_buffer( library,
@@ -1889,13 +1901,14 @@
     if ( error )
       goto Exit;
 
-    if (            header[ 0] !=  0 ||
-                    header[74] !=  0 ||
-                    header[82] !=  0 ||
-                    header[ 1] ==  0 ||
-                    header[ 1] >  33 ||
-                    header[63] !=  0 ||
-         header[2 + header[1]] !=  0 )
+    if (            header[ 0] !=   0 ||
+                    header[74] !=   0 ||
+                    header[82] !=   0 ||
+                    header[ 1] ==   0 ||
+                    header[ 1] >   33 ||
+                    header[63] !=   0 ||
+         header[2 + header[1]] !=   0 ||
+                  header[0x53] > 0x7F )
       return FT_THROW( Unknown_File_Format );
 
     dlen = ( header[0x53] << 24 ) |
@@ -2032,7 +2045,11 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_raccess
 
-      FT_TRACE3(( "Try as dfont: %s ...", args->pathname ));
+#ifdef FT_DEBUG_LEVEL_TRACE
+      FT_TRACE3(( "Try as dfont: " ));
+      if ( !( args->flags & FT_OPEN_MEMORY ) )
+        FT_TRACE3(( "%s ...", args->pathname ));
+#endif
 
       error = IsMacResource( library, stream, 0, face_index, aface );
 
@@ -3068,18 +3085,37 @@
 
           if ( kern_mode != FT_KERNING_UNFITTED )
           {
+            FT_Pos  orig_x = akerning->x;
+            FT_Pos  orig_y = akerning->y;
+
+
             /* we scale down kerning values for small ppem values */
             /* to avoid that rounding makes them too big.         */
             /* `25' has been determined heuristically.            */
             if ( face->size->metrics.x_ppem < 25 )
-              akerning->x = FT_MulDiv( akerning->x,
+              akerning->x = FT_MulDiv( orig_x,
                                        face->size->metrics.x_ppem, 25 );
             if ( face->size->metrics.y_ppem < 25 )
-              akerning->y = FT_MulDiv( akerning->y,
+              akerning->y = FT_MulDiv( orig_y,
                                        face->size->metrics.y_ppem, 25 );
 
             akerning->x = FT_PIX_ROUND( akerning->x );
             akerning->y = FT_PIX_ROUND( akerning->y );
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+            {
+              FT_Pos  orig_x_rounded = FT_PIX_ROUND( orig_x );
+              FT_Pos  orig_y_rounded = FT_PIX_ROUND( orig_y );
+
+
+              if ( akerning->x != orig_x_rounded ||
+                   akerning->y != orig_y_rounded )
+                FT_TRACE5(( "FT_Get_Kerning: horizontal kerning"
+                            " (%d, %d) scaled down to (%d, %d) pixels\n",
+                            orig_x_rounded / 64, orig_y_rounded / 64,
+                            akerning->x / 64, akerning->y / 64 ));
+            }
+#endif
           }
         }
       }
@@ -3350,8 +3386,12 @@
         FT_TRACE1(( "FT_Get_Char_Index: too large charcode" ));
         FT_TRACE1(( " 0x%x is truncated\n", charcode ));
       }
+
       result = cmap->clazz->char_index( cmap, (FT_UInt32)charcode );
+      if ( result >= (FT_UInt)face->num_glyphs )
+        result = 0;
     }
+
     return result;
   }
 
@@ -3370,7 +3410,7 @@
     if ( face && face->charmap && face->num_glyphs )
     {
       gindex = FT_Get_Char_Index( face, 0 );
-      if ( gindex == 0 || gindex >= (FT_UInt)face->num_glyphs )
+      if ( gindex == 0 )
         result = FT_Get_Next_Char( face, 0, &gindex );
     }
 

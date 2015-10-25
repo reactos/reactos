@@ -42,17 +42,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Type>                                                                */
-  /*    TT_Instance                                                        */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A handle to a TrueType size object.                                */
-  /*                                                                       */
-  typedef struct TT_SizeRec_*  TT_Size;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
   /*    TT_GlyphSlot                                                       */
   /*                                                                       */
   /* <Description>                                                         */

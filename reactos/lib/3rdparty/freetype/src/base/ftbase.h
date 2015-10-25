@@ -27,6 +27,11 @@
 FT_BEGIN_HEADER
 
 
+  /* MacOS resource fork cannot exceed 16MB at least for Carbon code; */
+  /* see https://support.microsoft.com/en-us/kb/130437                */
+#define FT_MAC_RFORK_MAX_LEN  0x00FFFFFFUL
+
+
   /* Assume the stream is sfnt-wrapped PS Type1 or sfnt-wrapped CID-keyed */
   /* font, and try to load a face specified by the face_index.            */
   FT_LOCAL( FT_Error )

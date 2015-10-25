@@ -330,16 +330,16 @@
   }
 
 
-  static FT_ULong
-  ft_lzw_stream_io( FT_Stream  stream,
-                    FT_ULong   pos,
-                    FT_Byte*   buffer,
-                    FT_ULong   count )
+  static unsigned long
+  ft_lzw_stream_io( FT_Stream       stream,
+                    unsigned long   offset,
+                    unsigned char*  buffer,
+                    unsigned long   count )
   {
     FT_LZWFile  zip = (FT_LZWFile)stream->descriptor.pointer;
 
 
-    return ft_lzw_file_io( zip, pos, buffer, count );
+    return ft_lzw_file_io( zip, offset, buffer, count );
   }
 
 

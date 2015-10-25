@@ -339,7 +339,7 @@
             bot   = zone[1].org_bottom;
             delta = bot - top;
 
-            if ( delta < 2 * fuzz )
+            if ( delta / 2 < fuzz )
               zone[0].org_top = zone[1].org_bottom = top + delta / 2;
             else
             {

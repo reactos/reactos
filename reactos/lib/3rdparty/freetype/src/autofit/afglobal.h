@@ -72,10 +72,16 @@ FT_BEGIN_HEADER
 #endif
   /* default script for OpenType; ignored if HarfBuzz isn't used */
 #define AF_SCRIPT_DEFAULT    AF_SCRIPT_LATN
-  /* a bit mask indicating an uncovered glyph        */
-#define AF_STYLE_UNASSIGNED  0x7F
-  /* if this flag is set, we have an ASCII digit     */
-#define AF_DIGIT             0x80
+
+  /* a bit mask for AF_DIGIT and AF_NONBASE */
+#define AF_STYLE_MASK        0x3FFF
+  /* an uncovered glyph      */
+#define AF_STYLE_UNASSIGNED  AF_STYLE_MASK
+
+  /* if this flag is set, we have an ASCII digit   */
+#define AF_DIGIT             0x8000U
+  /* if this flag is set, we have a non-base character */
+#define AF_NONBASE           0x4000U
 
   /* `increase-x-height' property */
 #define AF_PROP_INCREASE_X_HEIGHT_MIN  6
@@ -100,7 +106,7 @@ FT_BEGIN_HEADER
   {
     FT_Face          face;
     FT_Long          glyph_count;    /* same as face->num_glyphs */
-    FT_Byte*         glyph_styles;
+    FT_UShort*       glyph_styles;
 
 #ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
     hb_font_t*       hb_font;

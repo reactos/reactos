@@ -52,8 +52,9 @@
                         const FT_Outline_Funcs*  func_interface,
                         void*                    user )
   {
-#undef SCALED
-#define SCALED( x )  ( ( (x) << shift ) - delta )
+#undef  SCALED
+#define SCALED( x )  ( ( (x) < 0 ? -( -(x) << shift )             \
+                                 :  (  (x) << shift ) ) - delta )
 
     FT_Vector   v_last;
     FT_Vector   v_control;
@@ -907,8 +908,7 @@
                          FT_Pos       ystrength )
   {
     FT_Vector*  points;
-    FT_Vector   v_prev, v_first, v_next, v_cur;
-    FT_Int      c, n, first;
+    FT_Int      c, first, last;
     FT_Int      orientation;
 
 
@@ -934,87 +934,95 @@
     first = 0;
     for ( c = 0; c < outline->n_contours; c++ )
     {
-      FT_Vector  in, out, shift;
-      FT_Fixed   l_in, l_out, l, q, d;
-      int        last = outline->contours[c];
+      FT_Vector  in, out, anchor, shift;
+      FT_Fixed   l_in, l_out, l_anchor = 0, l, q, d;
+      FT_Int     i, j, k;
 
 
-      v_first = points[first];
-      v_prev  = points[last];
-      v_cur   = v_first;
+      l_in = 0;
+      last = outline->contours[c];
 
-      /* compute incoming normalized vector */
-      in.x = v_cur.x - v_prev.x;
-      in.y = v_cur.y - v_prev.y;
-      l_in = FT_Vector_Length( &in );
-      if ( l_in )
+      /* Counter j cycles though the points; counter i advances only  */
+      /* when points are moved; anchor k marks the first moved point. */
+      for ( i = last, j = first, k = -1;
+            j != i && i != k;
+            j = j < last ? j + 1 : first )
       {
-        in.x = FT_DivFix( in.x, l_in );
-        in.y = FT_DivFix( in.y, l_in );
-      }
-
-      for ( n = first; n <= last; n++ )
-      {
-        if ( n < last )
-          v_next = points[n + 1];
-        else
-          v_next = v_first;
-
-        /* compute outgoing normalized vector */
-        out.x = v_next.x - v_cur.x;
-        out.y = v_next.y - v_cur.y;
-        l_out = FT_Vector_Length( &out );
-        if ( l_out )
+        if ( j != k )
         {
-          out.x = FT_DivFix( out.x, l_out );
-          out.y = FT_DivFix( out.y, l_out );
-        }
+          out.x = points[j].x - points[i].x;
+          out.y = points[j].y - points[i].y;
+          l_out = (FT_Fixed)FT_Vector_NormLen( &out );
 
-        d = FT_MulFix( in.x, out.x ) + FT_MulFix( in.y, out.y );
-
-        /* shift only if turn is less than ~160 degrees */
-        if ( d > -0xF000L )
-        {
-          d = d + 0x10000L;
-
-          /* shift components are aligned along lateral bisector */
-          /* and directed according to the outline orientation.  */
-          shift.x = in.y + out.y;
-          shift.y = in.x + out.x;
-
-          if ( orientation == FT_ORIENTATION_TRUETYPE )
-            shift.x = -shift.x;
-          else
-            shift.y = -shift.y;
-
-          /* restrict shift magnitude to better handle collapsing segments */
-          q = FT_MulFix( out.x, in.y ) - FT_MulFix( out.y, in.x );
-          if ( orientation == FT_ORIENTATION_TRUETYPE )
-            q = -q;
-
-          l = FT_MIN( l_in, l_out );
-
-          /* non-strict inequalities avoid divide-by-zero when q == l == 0 */
-          if ( FT_MulFix( xstrength, q ) <= FT_MulFix( l, d ) )
-            shift.x = FT_MulDiv( shift.x, xstrength, d );
-          else
-            shift.x = FT_MulDiv( shift.x, l, q );
-
-
-          if ( FT_MulFix( ystrength, q ) <= FT_MulFix( l, d ) )
-            shift.y = FT_MulDiv( shift.y, ystrength, d );
-          else
-            shift.y = FT_MulDiv( shift.y, l, q );
+          if ( l_out == 0 )
+            continue;
         }
         else
-          shift.x = shift.y = 0;
+        {
+          out   = anchor;
+          l_out = l_anchor;
+        }
 
-        outline->points[n].x = v_cur.x + xstrength + shift.x;
-        outline->points[n].y = v_cur.y + ystrength + shift.y;
+        if ( l_in != 0 )
+        {
+          if ( k < 0 )
+          {
+            k        = i;
+            anchor   = in;
+            l_anchor = l_in;
+          }
 
-        in    = out;
-        l_in  = l_out;
-        v_cur = v_next;
+          d = FT_MulFix( in.x, out.x ) + FT_MulFix( in.y, out.y );
+
+          /* shift only if turn is less than ~160 degrees */
+          if ( d > -0xF000L )
+          {
+            d = d + 0x10000L;
+
+            /* shift components along lateral bisector in proper orientation */
+            shift.x = in.y + out.y;
+            shift.y = in.x + out.x;
+
+            if ( orientation == FT_ORIENTATION_TRUETYPE )
+              shift.x = -shift.x;
+            else
+              shift.y = -shift.y;
+
+            /* restrict shift magnitude to better handle collapsing segments */
+            q = FT_MulFix( out.x, in.y ) - FT_MulFix( out.y, in.x );
+            if ( orientation == FT_ORIENTATION_TRUETYPE )
+              q = -q;
+
+            l = FT_MIN( l_in, l_out );
+
+            /* non-strict inequalities avoid divide-by-zero when q == l == 0 */
+            if ( FT_MulFix( xstrength, q ) <= FT_MulFix( l, d ) )
+              shift.x = FT_MulDiv( shift.x, xstrength, d );
+            else
+              shift.x = FT_MulDiv( shift.x, l, q );
+
+
+            if ( FT_MulFix( ystrength, q ) <= FT_MulFix( l, d ) )
+              shift.y = FT_MulDiv( shift.y, ystrength, d );
+            else
+              shift.y = FT_MulDiv( shift.y, l, q );
+          }
+          else
+            shift.x = shift.y = 0;
+
+          for ( ;
+                i != j;
+                i = i < last ? i + 1 : first )
+          {
+            points[i].x += xstrength + shift.x;
+            points[i].y += ystrength + shift.y;
+          }
+        }
+        else
+          i = j;
+
+        in   = out;
+        l_in = l_out;
       }
 
       first = last + 1;

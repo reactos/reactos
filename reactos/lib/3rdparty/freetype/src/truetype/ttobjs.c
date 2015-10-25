@@ -191,7 +191,7 @@
   {
     FT_Error   error;
     FT_UInt32  checksum = 0;
-    int        i;
+    FT_UInt    i;
 
 
     if ( FT_FRAME_ENTER( length ) )
@@ -200,8 +200,8 @@
     for ( ; length > 3; length -= 4 )
       checksum += (FT_UInt32)FT_GET_ULONG();
 
-    for ( i = 3; length > 0; length --, i-- )
-      checksum += (FT_UInt32)( FT_GET_BYTE() << ( i * 8 ) );
+    for ( i = 3; length > 0; length--, i-- )
+      checksum += (FT_UInt32)FT_GET_BYTE() << ( i * 8 );
 
     FT_FRAME_EXIT();
 
@@ -490,7 +490,10 @@
   /* <Input>                                                               */
   /*    stream     :: The source font stream.                              */
   /*                                                                       */
-  /*    face_index :: The index of the font face in the resource.          */
+  /*    face_index :: The index of the TrueType font, if we are opening a  */
+  /*                  collection, in bits 0-15.  The numbered instance     */
+  /*                  index~+~1 of a GX (sub)font, if applicable, in bits  */
+  /*                  16-30.                                               */
   /*                                                                       */
   /*    num_params :: Number of additional generic parameters.  Ignored.   */
   /*                                                                       */
@@ -599,7 +602,7 @@
         ttface->face_flags &= ~FT_FACE_FLAG_SCALABLE;
       }
 
-#else
+#else /* !FT_CONFIG_OPTION_INCREMENTAL */
 
       if ( !error )
         error = tt_face_load_loca( face, stream );
@@ -623,9 +626,55 @@
         ttface->face_flags &= ~FT_FACE_FLAG_SCALABLE;
       }
 
-#endif
+#endif /* !FT_CONFIG_OPTION_INCREMENTAL */
 
     }
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+
+    {
+      FT_Int  instance_index = face_index >> 16;
+
+
+      if ( FT_HAS_MULTIPLE_MASTERS( ttface ) &&
+           instance_index > 0                )
+      {
+        error = TT_Get_MM_Var( face, NULL );
+        if ( error )
+          goto Exit;
+
+        if ( face->blend->mmvar->namedstyle )
+        {
+          FT_Memory  memory = ttface->memory;
+
+          FT_Var_Named_Style*  named_style;
+          FT_String*           style_name;
+
+
+          /* in `face_index', the instance index starts with value 1 */
+          named_style = face->blend->mmvar->namedstyle + instance_index - 1;
+          error = sfnt->get_name( face,
+                                  (FT_UShort)named_style->strid,
+                                  &style_name );
+          if ( error )
+            goto Exit;
+
+          /* set style name; if already set, replace it */
+          if ( face->root.style_name )
+            FT_FREE( face->root.style_name );
+          face->root.style_name = style_name;
+
+          /* finally, select the named instance */
+          error = TT_Set_Var_Design( face,
+                                     face->blend->mmvar->num_axis,
+                                     named_style->coords );
+          if ( error )
+            goto Exit;
+        }
+      }
+    }
+
+#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
 
 #if defined( TT_CONFIG_OPTION_UNPATENTED_HINTING    ) && \
     !defined( TT_CONFIG_OPTION_BYTECODE_INTERPRETER )

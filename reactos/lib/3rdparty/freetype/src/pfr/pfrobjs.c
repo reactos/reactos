@@ -109,7 +109,7 @@
     if ( face_index < 0 )
       goto Exit;
 
-    if ( face_index >= pfrface->num_faces )
+    if ( ( face_index & 0xFFFF ) >= pfrface->num_faces )
     {
       FT_ERROR(( "pfr_face_init: invalid face index\n" ));
       error = FT_THROW( Invalid_Argument );
@@ -118,7 +118,7 @@
 
     /* load the face */
     error = pfr_log_font_load(
-               &face->log_font, stream, (FT_UInt)face_index,
+               &face->log_font, stream, (FT_UInt)( face_index & 0xFFFF ),
                face->header.log_dir_offset,
                FT_BOOL( face->header.phy_font_max_size_high != 0 ) );
     if ( error )
@@ -136,7 +136,7 @@
       PFR_PhyFont  phy_font = &face->phy_font;
 
 
-      pfrface->face_index = face_index;
+      pfrface->face_index = face_index & 0xFFFF;
       pfrface->num_glyphs = (FT_Long)phy_font->num_chars + 1;
 
       pfrface->face_flags |= FT_FACE_FLAG_SCALABLE;

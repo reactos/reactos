@@ -1495,9 +1495,9 @@
     if ( pure_cff )
     {
       /* well, we don't really forget the `disabled' fonts... */
-      subfont_index = (FT_UInt)face_index;
+      subfont_index = (FT_UInt)( face_index & 0xFFFF );
 
-      if ( subfont_index >= font->name_index.count )
+      if ( face_index > 0 && subfont_index >= font->name_index.count )
       {
         FT_ERROR(( "cff_font_load:"
                    " invalid subfont index for pure CFF font (%d)\n",

@@ -334,7 +334,7 @@
 
     /* check the face index */
     /* XXX: handle CID fonts with more than a single face */
-    if ( face_index != 0 )
+    if ( ( face_index & 0xFFFF ) != 0 )
     {
       FT_ERROR(( "cid_face_init: invalid face index\n" ));
       error = FT_THROW( Invalid_Argument );
@@ -354,7 +354,7 @@
       cidface->num_glyphs   = (FT_Long)cid->cid_count;
       cidface->num_charmaps = 0;
 
-      cidface->face_index = face_index;
+      cidface->face_index = face_index & 0xFFFF;
 
       cidface->face_flags |= FT_FACE_FLAG_SCALABLE   | /* scalable outlines */
                              FT_FACE_FLAG_HORIZONTAL | /* horizontal data   */

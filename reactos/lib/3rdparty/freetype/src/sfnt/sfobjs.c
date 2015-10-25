@@ -120,27 +120,9 @@
                                                    FT_Memory     memory );
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    tt_face_get_name                                                   */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Returns a given ENGLISH name record in ASCII.                      */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face   :: A handle to the source face object.                      */
-  /*                                                                       */
-  /*    nameid :: The name id of the name record to return.                */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    name   :: The address of a string pointer.  NULL if no name is     */
-  /*              present.                                                 */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  static FT_Error
+  /* documentation is in sfnt.h */
+
+  FT_LOCAL_DEF( FT_Error )
   tt_face_get_name( TT_Face      face,
                     FT_UShort    nameid,
                     FT_String**  name )
@@ -839,13 +821,14 @@
   FT_LOCAL_DEF( FT_Error )
   sfnt_init_face( FT_Stream      stream,
                   TT_Face        face,
-                  FT_Int         face_index,
+                  FT_Int         face_instance_index,
                   FT_Int         num_params,
                   FT_Parameter*  params )
   {
-    FT_Error        error;
-    FT_Library      library = face->root.driver->root.library;
-    SFNT_Service    sfnt;
+    FT_Error      error;
+    FT_Library    library = face->root.driver->root.library;
+    SFNT_Service  sfnt;
+    FT_Int        face_index;
 
 
     /* for now, parameters are unused */
@@ -878,21 +861,64 @@
     /* Stream may have changed in sfnt_open_font. */
     stream = face->root.stream;
 
-    FT_TRACE2(( "sfnt_init_face: %08p, %ld\n", face, face_index ));
+    FT_TRACE2(( "sfnt_init_face: %08p, %ld\n", face, face_instance_index ));
 
-    if ( face_index < 0 )
-      face_index = 0;
+    face_index = FT_ABS( face_instance_index ) & 0xFFFF;
 
     if ( face_index >= face->ttc_header.count )
-      return FT_THROW( Invalid_Argument );
+    {
+      if ( face_instance_index >= 0 )
+        return FT_THROW( Invalid_Argument );
+      else
+        face_index = 0;
+    }
 
     if ( FT_STREAM_SEEK( face->ttc_header.offsets[face_index] ) )
       return error;
 
-    /* check that we have a valid TrueType file */
+    /* check whether we have a valid TrueType file */
     error = sfnt->load_font_dir( face, stream );
     if ( error )
       return error;
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    {
+      FT_ULong   fvar_len;
+      FT_UShort  num_instances;
+      FT_Int     instance_index;
+
+
+      instance_index = FT_ABS( face_instance_index ) >> 16;
+
+      /* test whether current face is a GX font with named instances */
+      if ( face->goto_table( face, TTAG_fvar, stream, &fvar_len ) ||
+           fvar_len < 20                                          ||
+           FT_STREAM_SKIP( 12 )                                   ||
+           FT_READ_USHORT( num_instances )                        )
+        num_instances = 0;
+
+      /* we support at most 2^15 - 1 instances */
+      if ( num_instances >= ( 1U << 15 ) - 1 )
+      {
+        if ( face_instance_index >= 0 )
+          return FT_THROW( Invalid_Argument );
+        else
+          num_instances = 0;
+      }
+
+      /* instance indices in `face_instance_index' start with index 1, */
+      /* thus `>' and not `>='                                         */
+      if ( instance_index > num_instances )
+      {
+        if ( face_instance_index >= 0 )
+          return FT_THROW( Invalid_Argument );
+        else
+          num_instances = 0;
+      }
+
+      face->root.style_flags = (FT_Long)num_instances << 16;
+    }
+#endif
 
     face->root.num_faces  = face->ttc_header.count;
     face->root.face_index = face_index;
@@ -946,7 +972,7 @@
   FT_LOCAL_DEF( FT_Error )
   sfnt_load_face( FT_Stream      stream,
                   TT_Face        face,
-                  FT_Int         face_index,
+                  FT_Int         face_instance_index,
                   FT_Int         num_params,
                   FT_Parameter*  params )
   {
@@ -962,7 +988,7 @@
 
     SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
-    FT_UNUSED( face_index );
+    FT_UNUSED( face_instance_index );
 
 
     /* Check parameters */
@@ -1284,7 +1310,7 @@
           flags |= FT_STYLE_FLAG_ITALIC;
       }
 
-      root->style_flags = flags;
+      root->style_flags |= flags;
 
       /*********************************************************************/
       /*                                                                   */

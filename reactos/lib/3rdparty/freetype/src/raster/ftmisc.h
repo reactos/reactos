@@ -37,7 +37,7 @@
 #define FT_LOCAL_DEF( x )   static x
 
 
-  /* from include/freetype2/fttypes.h */
+  /* from include/freetype/fttypes.h */
 
   typedef unsigned char  FT_Byte;
   typedef signed int     FT_Int;
@@ -54,7 +54,7 @@
               (FT_ULong)_x4         )
 
 
-  /* from include/freetype2/ftsystem.h */
+  /* from include/freetype/ftsystem.h */
 
   typedef struct FT_MemoryRec_*  FT_Memory;
 

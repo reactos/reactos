@@ -1320,7 +1320,7 @@
           /* if `cf2_stack_count' isn't of the form 4n or 4n+1, */
           /* we enforce it by clearing the second bit           */
           /* (and sorting the stack indexing to suit)           */
-          count  = count1 & ~2;
+          count  = count1 & ~2U;
           index += count1 - count;
 
           FT_TRACE4(( " vvcurveto\n" ));
@@ -1365,7 +1365,7 @@
           /* if `cf2_stack_count' isn't of the form 4n or 4n+1, */
           /* we enforce it by clearing the second bit           */
           /* (and sorting the stack indexing to suit)           */
-          count  = count1 & ~2;
+          count  = count1 & ~2U;
           index += count1 - count;
 
           FT_TRACE4(( " hhcurveto\n" ));
@@ -1414,7 +1414,7 @@
           /* 8n+4, or 8n+5, we enforce it by clearing the     */
           /* second bit                                       */
           /* (and sorting the stack indexing to suit)         */
-          count  = count1 & ~2;
+          count  = count1 & ~2U;
           index += count1 - count;
 
           FT_TRACE4(( alternate ? " hvcurveto\n" : " vhcurveto\n" ));

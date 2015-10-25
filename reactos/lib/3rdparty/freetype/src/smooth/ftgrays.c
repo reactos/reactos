@@ -24,8 +24,8 @@
   /*                                                                       */
   /* - copy `src/smooth/ftgrays.c' (this file) to your current directory   */
   /*                                                                       */
-  /* - copy `include/ftimage.h' and `src/smooth/ftgrays.h' to the same     */
-  /*   directory                                                           */
+  /* - copy `include/freetype/ftimage.h' and `src/smooth/ftgrays.h' to the */
+  /*   same directory                                                      */
   /*                                                                       */
   /* - compile `ftgrays' with the _STANDALONE_ macro defined, as in        */
   /*                                                                       */
@@ -317,7 +317,6 @@ typedef ptrdiff_t  FT_PtrDist;
 #undef SCALED
 
 #define ONE_PIXEL       ( 1L << PIXEL_BITS )
-#define PIXEL_MASK      ( -1L << PIXEL_BITS )
 #define TRUNC( x )      ( (TCoord)( (x) >> PIXEL_BITS ) )
 #define SUBPIXELS( x )  ( (TPos)(x) << PIXEL_BITS )
 #define FLOOR( x )      ( (x) & -ONE_PIXEL )
@@ -440,10 +439,7 @@ typedef ptrdiff_t  FT_PtrDist;
     FT_PtrDist  max_cells;
     FT_PtrDist  num_cells;
 
-    TCoord  cx, cy;
     TPos    x,  y;
-
-    TPos    last_ey;
 
     FT_Vector   bez_stack[32 * 3 + 1];
     int         lev_stack[32];
@@ -677,7 +673,6 @@ typedef ptrdiff_t  FT_PtrDist;
     ras.cover   = 0;
     ras.ex      = ex - ras.min_ex;
     ras.ey      = ey - ras.min_ey;
-    ras.last_ey = SUBPIXELS( ey );
     ras.invalid = 0;
 
     gray_set_cell( RAS_VAR_ ex, ey );
@@ -758,7 +753,7 @@ typedef ptrdiff_t  FT_PtrDist;
 
       mod -= (int)dx;
 
-      while ( ex1 != ex2 )
+      do
       {
         delta = lift;
         mod  += rem;
@@ -773,7 +768,7 @@ typedef ptrdiff_t  FT_PtrDist;
         y1        += delta;
         ex1       += incr;
         gray_set_cell( RAS_VAR_ ex1, ey );
-      }
+      } while ( ex1 != ex2 );
     }
 
     delta      = y2 - y1;
@@ -796,29 +791,18 @@ typedef ptrdiff_t  FT_PtrDist;
     int     delta, rem, lift, incr;
 
 
-    ey1 = TRUNC( ras.last_ey );
+    ey1 = TRUNC( ras.y );
     ey2 = TRUNC( to_y );     /* if (ey2 >= ras.max_ey) ey2 = ras.max_ey-1; */
-    fy1 = (TCoord)( ras.y - ras.last_ey );
+    fy1 = (TCoord)( ras.y - SUBPIXELS( ey1 ) );
     fy2 = (TCoord)( to_y - SUBPIXELS( ey2 ) );
 
     dx = to_x - ras.x;
     dy = to_y - ras.y;
 
     /* perform vertical clipping */
-    {
-      TCoord  min, max;
-
-
-      min = ey1;
-      max = ey2;
-      if ( ey1 > ey2 )
-      {
-        min = ey2;
-        max = ey1;
-      }
-      if ( min >= ras.max_ey || max < ras.min_ey )
-        goto End;
-    }
+    if ( ( ey1 >= ras.max_ey && ey2 >= ras.max_ey ) ||
+         ( ey1 <  ras.min_ey && ey2 <  ras.min_ey ) )
+      goto End;
 
     /* everything is on a single scanline */
     if ( ey1 == ey2 )
@@ -896,7 +880,7 @@ typedef ptrdiff_t  FT_PtrDist;
       FT_DIV_MOD( int, p, dy, lift, rem );
       mod -= (int)dy;
 
-      while ( ey1 != ey2 )
+      do
       {
         delta = lift;
         mod  += rem;
@@ -914,7 +898,7 @@ typedef ptrdiff_t  FT_PtrDist;
 
         ey1 += incr;
         gray_set_cell( RAS_VAR_ TRUNC( x ), ey1 );
-      }
+      } while ( ey1 != ey2 );
     }
 
     gray_render_scanline( RAS_VAR_ ey1, x,
@@ -924,7 +908,6 @@ typedef ptrdiff_t  FT_PtrDist;
   End:
     ras.x       = to_x;
     ras.y       = to_y;
-    ras.last_ey = SUBPIXELS( ey2 );
   }
 
 
@@ -1847,7 +1830,7 @@ typedef ptrdiff_t  FT_PtrDist;
       bands[0].max = max;
       band         = bands;
 
-      while ( band >= bands )
+      do
       {
         TPos  bottom, top, middle;
         int   error;
@@ -1923,7 +1906,7 @@ typedef ptrdiff_t  FT_PtrDist;
         band[0].min = middle;
         band[0].max = top;
         band++;
-      }
+      } while ( band >= bands );
     }
 
     if ( ras.band_shoot > 8 && ras.band_size > 16 )

@@ -505,7 +505,9 @@
     PUT_EMBEDDED_BITMAPS( tt_face_set_sbit_strike     ),
     PUT_EMBEDDED_BITMAPS( tt_face_load_strike_metrics ),
 
-    tt_face_get_metrics
+    tt_face_get_metrics,
+
+    tt_face_get_name
   )
 
 

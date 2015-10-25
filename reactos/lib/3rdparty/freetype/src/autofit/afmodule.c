@@ -25,6 +25,10 @@
 #ifdef FT_DEBUG_AUTOFIT
 
 #ifndef FT_MAKE_OPTION_SINGLE_OBJECT
+
+#ifdef __cplusplus
+  extern "C" {
+#endif
   extern void
   af_glyph_hints_dump_segments( AF_GlyphHints  hints,
                                 FT_Bool        to_stdout );
@@ -34,6 +38,10 @@
   extern void
   af_glyph_hints_dump_edges( AF_GlyphHints  hints,
                              FT_Bool        to_stdout );
+#ifdef __cplusplus
+  }
+#endif
+
 #endif
 
   int  _af_debug_disable_horz_hints;

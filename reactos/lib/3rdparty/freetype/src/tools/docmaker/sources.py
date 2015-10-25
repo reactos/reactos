@@ -150,10 +150,11 @@ re_crossref = re.compile( r'@((?:\w|-)*)(.*)' )    #  @foo
 # Group 1 is the markup, group 2 the rest of the line.
 #
 # Note that the markup is limited to words consisting of letters, digits,
-# the character `_', or an apostrophe (but not as the first character).
+# the characters `_' and `-', or an apostrophe (but not as the first
+# character).
 #
-re_italic = re.compile( r"_(\w(?:\w|')*)_(.*)" )     #  _italic_
-re_bold   = re.compile( r"\*(\w(?:\w|')*)\*(.*)" )   #  *bold*
+re_italic = re.compile( r"_((?:\w|-)(?:\w|'|-)*)_(.*)" )     #  _italic_
+re_bold   = re.compile( r"\*((?:\w|-)(?:\w|'|-)*)\*(.*)" )   #  *bold*
 
 #
 # This regular expression code to identify an URL has been taken from

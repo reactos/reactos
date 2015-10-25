@@ -354,8 +354,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    {                                                                  */
   /*      FT_Load_Glyph( face, index, FT_LOAD_DEFAULT );                   */
-  /*      if ( face->slot->format == FT_GLYPH_FORMAT_OUTLINE )             */
-  /*        FT_Outline_Embolden( &face->slot->outline, strength );         */
+  /*      if ( face->glyph->format == FT_GLYPH_FORMAT_OUTLINE )            */
+  /*        FT_Outline_Embolden( &face->glyph->outline, strength );        */
   /*    }                                                                  */
   /*                                                                       */
   /*    To get meaningful results, font scaling values must be set with    */

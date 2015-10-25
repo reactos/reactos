@@ -167,6 +167,7 @@
       matrix = &dict->font_matrix;
       offset = &dict->font_offset;
 
+      /* input is scaled by 1000 to accommodate default FontMatrix */
       result = cid_parser_to_fixed_array( parser, 6, temp, 3 );
 
       if ( result < 6 )
@@ -180,15 +181,12 @@
         return FT_THROW( Invalid_File_Format );
       }
 
-      /* Set Units per EM based on FontMatrix values.  We set the value to */
-      /* 1000 / temp_scale, because temp_scale was already multiplied by   */
-      /* 1000 (in t1_tofixed, from psobjs.c).                              */
-
-      root->units_per_EM = (FT_UShort)FT_DivFix( 1000, temp_scale );
-
-      /* we need to scale the values by 1.0/temp[3] */
+      /* atypical case */
       if ( temp_scale != 0x10000L )
       {
+        /* set units per EM based on FontMatrix values */
+        root->units_per_EM = (FT_UShort)FT_DivFix( 1000, temp_scale );
+
         temp[0] = FT_DivFix( temp[0], temp_scale );
         temp[1] = FT_DivFix( temp[1], temp_scale );
         temp[2] = FT_DivFix( temp[2], temp_scale );

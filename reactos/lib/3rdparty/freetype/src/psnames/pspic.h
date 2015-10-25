@@ -20,9 +20,8 @@
 #define __PSPIC_H__
 
 
-FT_BEGIN_HEADER
-
 #include FT_INTERNAL_PIC_H
+
 
 #ifndef FT_CONFIG_OPTION_PIC
 
@@ -32,6 +31,9 @@ FT_BEGIN_HEADER
 #else /* FT_CONFIG_OPTION_PIC */
 
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
+
+
+FT_BEGIN_HEADER
 
   typedef struct  PSModulePIC_
   {
@@ -54,11 +56,11 @@ FT_BEGIN_HEADER
   FT_Error
   psnames_module_class_pic_init( FT_Library  library );
 
+FT_END_HEADER
+
 #endif /* FT_CONFIG_OPTION_PIC */
 
  /* */
-
-FT_END_HEADER
 
 #endif /* __PSPIC_H__ */
 

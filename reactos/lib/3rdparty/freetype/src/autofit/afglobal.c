@@ -47,6 +47,7 @@
             af_ ## s ## _script_class,      \
             AF_SCRIPT_ ## S,                \
             af_ ## s ## _uniranges,         \
+            af_ ## s ## _nonbase_uniranges, \
             sc1, sc2, sc3 )
 
 #include "afscript.h"
@@ -135,16 +136,15 @@
     FT_Error    error;
     FT_Face     face        = globals->face;
     FT_CharMap  old_charmap = face->charmap;
-    FT_Byte*    gstyles     = globals->glyph_styles;
+    FT_UShort*  gstyles     = globals->glyph_styles;
     FT_UInt     ss;
     FT_UInt     i;
     FT_UInt     dflt        = ~0U; /* a non-valid value */
 
 
     /* the value AF_STYLE_UNASSIGNED means `uncovered glyph' */
-    FT_MEM_SET( globals->glyph_styles,
-                AF_STYLE_UNASSIGNED,
-                globals->glyph_count );
+    for ( i = 0; i < (FT_UInt)globals->glyph_count; i++ )
+      gstyles[i] = AF_STYLE_UNASSIGNED;
 
     error = FT_Select_Charmap( face, FT_ENCODING_UNICODE );
     if ( error )
@@ -190,10 +190,10 @@
 
           gindex = FT_Get_Char_Index( face, charcode );
 
-          if ( gindex != 0                             &&
-               gindex < (FT_ULong)globals->glyph_count &&
-               gstyles[gindex] == AF_STYLE_UNASSIGNED  )
-            gstyles[gindex] = (FT_Byte)ss;
+          if ( gindex != 0                                                &&
+               gindex < (FT_ULong)globals->glyph_count                    &&
+               ( gstyles[gindex] & AF_STYLE_MASK ) == AF_STYLE_UNASSIGNED )
+            gstyles[gindex] = (FT_UShort)ss;
 
           for (;;)
           {
@@ -202,9 +202,38 @@
             if ( gindex == 0 || charcode > range->last )
               break;
 
-            if ( gindex < (FT_ULong)globals->glyph_count &&
-                 gstyles[gindex] == AF_STYLE_UNASSIGNED  )
-              gstyles[gindex] = (FT_Byte)ss;
+            if ( gindex < (FT_ULong)globals->glyph_count                    &&
+                 ( gstyles[gindex] & AF_STYLE_MASK ) == AF_STYLE_UNASSIGNED )
+              gstyles[gindex] = (FT_UShort)ss;
+          }
+        }
+
+        /* do the same for the script's non-base characters */
+        for ( range = script_class->script_uni_nonbase_ranges;
+              range->first != 0;
+              range++ )
+        {
+          FT_ULong  charcode = range->first;
+          FT_UInt   gindex;
+
+
+          gindex = FT_Get_Char_Index( face, charcode );
+
+          if ( gindex != 0                                          &&
+               gindex < (FT_ULong)globals->glyph_count              &&
+               ( gstyles[gindex] & AF_STYLE_MASK ) == (FT_UShort)ss )
+            gstyles[gindex] |= AF_NONBASE;
+
+          for (;;)
+          {
+            charcode = FT_Get_Next_Char( face, charcode, &gindex );
+
+            if ( gindex == 0 || charcode > range->last )
+              break;
+
+            if ( gindex < (FT_ULong)globals->glyph_count              &&
+                 ( gstyles[gindex] & AF_STYLE_MASK ) == (FT_UShort)ss )
+              gstyles[gindex] |= AF_NONBASE;
           }
         }
       }
@@ -250,9 +279,9 @@
 
       for ( nn = 0; nn < globals->glyph_count; nn++ )
       {
-        if ( ( gstyles[nn] & ~AF_DIGIT ) == AF_STYLE_UNASSIGNED )
+        if ( ( gstyles[nn] & AF_STYLE_MASK ) == AF_STYLE_UNASSIGNED )
         {
-          gstyles[nn] &= ~AF_STYLE_UNASSIGNED;
+          gstyles[nn] &= ~AF_STYLE_MASK;
           gstyles[nn] |= globals->module->fallback_style;
         }
       }
@@ -276,7 +305,7 @@
 
       for ( idx = 0; idx < globals->glyph_count; idx++ )
       {
-        if ( ( gstyles[idx] & ~AF_DIGIT ) == style_class->style )
+        if ( ( gstyles[idx] & AF_STYLE_MASK ) == style_class->style )
         {
           if ( !( count % 10 ) )
             FT_TRACE4(( " " ));
@@ -314,14 +343,17 @@
 
     memory = face->memory;
 
+    /* we allocate an AF_FaceGlobals structure together */
+    /* with the glyph_styles array                      */
     if ( FT_ALLOC( globals,
                    sizeof ( *globals ) +
-                     (FT_ULong)face->num_glyphs * sizeof ( FT_Byte ) ) )
+                     (FT_ULong)face->num_glyphs * sizeof ( FT_UShort ) ) )
       goto Exit;
 
     globals->face         = face;
     globals->glyph_count  = face->num_glyphs;
-    globals->glyph_styles = (FT_Byte*)( globals + 1 );
+    /* right after the globals structure come the glyph styles */
+    globals->glyph_styles = (FT_UShort*)( globals + 1 );
     globals->module       = module;
 
 #ifdef FT_CONFIG_OPTION_USE_HARFBUZZ

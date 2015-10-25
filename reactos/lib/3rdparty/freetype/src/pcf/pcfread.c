@@ -1272,44 +1272,84 @@ THE SOFTWARE.
 
         FT_MEM_ZERO( bsize, sizeof ( FT_Bitmap_Size ) );
 
+        /* for simplicity, we take absolute values of integer properties */
+
 #if 0
         bsize->height = face->accel.maxbounds.ascent << 6;
 #endif
-        bsize->height = (FT_Short)( face->accel.fontAscent +
-                                    face->accel.fontDescent );
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+        if ( face->accel.fontAscent + face->accel.fontDescent < 0 )
+          FT_TRACE0(( "pcf_load_font: negative height\n" ));
+#endif
+        bsize->height = FT_ABS( (FT_Short)( face->accel.fontAscent +
+                                            face->accel.fontDescent ) );
 
         prop = pcf_find_property( face, "AVERAGE_WIDTH" );
         if ( prop )
-          bsize->width = (FT_Short)( ( prop->value.l + 5 ) / 10 );
+        {
+#ifdef FT_DEBUG_LEVEL_TRACE
+          if ( prop->value.l < 0 )
+            FT_TRACE0(( "pcf_load_font: negative average width\n" ));
+#endif
+          bsize->width = FT_ABS( (FT_Short)( ( prop->value.l ) + 5 ) / 10 );
+        }
         else
-          bsize->width = (FT_Short)( bsize->height * 2/3 );
+          bsize->width = (FT_Short)FT_MulDiv( bsize->height, 2, 3 );
 
         prop = pcf_find_property( face, "POINT_SIZE" );
         if ( prop )
+        {
+#ifdef FT_DEBUG_LEVEL_TRACE
+          if ( prop->value.l < 0 )
+            FT_TRACE0(( "pcf_load_font: negative point size\n" ));
+#endif
           /* convert from 722.7 decipoints to 72 points per inch */
-          bsize->size =
-            (FT_Pos)( ( prop->value.l * 64 * 7200 + 36135L ) / 72270L );
+          bsize->size = FT_MulDiv( FT_ABS( prop->value.l ),
+                                   64 * 7200,
+                                   72270L );
+        }
 
         prop = pcf_find_property( face, "PIXEL_SIZE" );
         if ( prop )
-          bsize->y_ppem = (FT_Short)prop->value.l << 6;
+        {
+#ifdef FT_DEBUG_LEVEL_TRACE
+          if ( prop->value.l < 0 )
+            FT_TRACE0(( "pcf_load_font: negative pixel size\n" ));
+#endif
+          bsize->y_ppem = FT_ABS( (FT_Short)prop->value.l ) << 6;
+        }
 
         prop = pcf_find_property( face, "RESOLUTION_X" );
         if ( prop )
-          resolution_x = (FT_Short)prop->value.l;
+        {
+#ifdef FT_DEBUG_LEVEL_TRACE
+          if ( prop->value.l < 0 )
+            FT_TRACE0(( "pcf_load_font: negative X resolution\n" ));
+#endif
+          resolution_x = FT_ABS( (FT_Short)prop->value.l );
+        }
 
         prop = pcf_find_property( face, "RESOLUTION_Y" );
         if ( prop )
-          resolution_y = (FT_Short)prop->value.l;
+        {
+#ifdef FT_DEBUG_LEVEL_TRACE
+          if ( prop->value.l < 0 )
+            FT_TRACE0(( "pcf_load_font: negative Y resolution\n" ));
+#endif
+          resolution_y = FT_ABS( (FT_Short)prop->value.l );
+        }
 
         if ( bsize->y_ppem == 0 )
         {
           bsize->y_ppem = bsize->size;
           if ( resolution_y )
-            bsize->y_ppem = bsize->y_ppem * resolution_y / 72;
+            bsize->y_ppem = FT_MulDiv( bsize->y_ppem, resolution_y, 72 );
         }
         if ( resolution_x && resolution_y )
-          bsize->x_ppem = bsize->y_ppem * resolution_x / resolution_y;
+          bsize->x_ppem = FT_MulDiv( bsize->y_ppem,
+                                     resolution_x,
+                                     resolution_y );
         else
           bsize->x_ppem = bsize->y_ppem;
       }

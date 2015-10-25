@@ -2949,7 +2949,6 @@
       {
         FT_BBox            cbox;
         FT_Glyph_Metrics*  metrics = &glyph->root.metrics;
-        FT_Vector          advance;
         FT_Bool            has_vertical_info;
 
 
@@ -3014,26 +3013,27 @@
 
         glyph->root.outline.flags |= FT_OUTLINE_REVERSE_FILL;
 
-        if ( !( font_matrix.xx == 0x10000L &&
-                font_matrix.yy == 0x10000L &&
-                font_matrix.xy == 0        &&
-                font_matrix.yx == 0        ) )
+        /* apply the font matrix, if any */
+        if ( font_matrix.xx != 0x10000L || font_matrix.yy != 0x10000L ||
+             font_matrix.xy != 0        || font_matrix.yx != 0        )
+        {
           FT_Outline_Transform( &glyph->root.outline, &font_matrix );
 
-        if ( !( font_offset.x == 0 &&
-                font_offset.y == 0 ) )
+          metrics->horiAdvance = FT_MulFix( metrics->horiAdvance,
+                                            font_matrix.xx );
+          metrics->vertAdvance = FT_MulFix( metrics->vertAdvance,
+                                            font_matrix.yy );
+        }
+
+        if ( font_offset.x || font_offset.y )
+        {
           FT_Outline_Translate( &glyph->root.outline,
-                                font_offset.x, font_offset.y );
+                                font_offset.x,
+                                font_offset.y );
 
-        advance.x = metrics->horiAdvance;
-        advance.y = 0;
-        FT_Vector_Transform( &advance, &font_matrix );
-        metrics->horiAdvance = advance.x + font_offset.x;
-
-        advance.x = 0;
-        advance.y = metrics->vertAdvance;
-        FT_Vector_Transform( &advance, &font_matrix );
-        metrics->vertAdvance = advance.y + font_offset.y;
+          metrics->horiAdvance += font_offset.x;
+          metrics->vertAdvance += font_offset.y;
+        }
 
         if ( ( load_flags & FT_LOAD_NO_SCALE ) == 0 || force_scaling )
         {
@@ -3064,9 +3064,7 @@
         metrics->width  = cbox.xMax - cbox.xMin;
         metrics->height = cbox.yMax - cbox.yMin;
 
-        if ( !face->horizontal.number_Of_HMetrics )
-          metrics->horiBearingX = cbox.xMin;
-
+        metrics->horiBearingX = cbox.xMin;
         metrics->horiBearingY = cbox.yMax;
 
         if ( has_vertical_info )

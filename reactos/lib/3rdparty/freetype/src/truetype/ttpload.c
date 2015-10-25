@@ -152,6 +152,14 @@
           FT_TRACE2(( "adjusting num_locations to %d\n",
                       face->num_locations ));
         }
+        else
+        {
+          face->root.num_glyphs = face->num_locations
+                                    ? (FT_Long)face->num_locations - 1 : 0;
+
+          FT_TRACE2(( "adjusting num_glyphs to %d\n",
+                      face->root.num_glyphs ));
+        }
       }
     }
 

@@ -98,7 +98,7 @@
   FT_Error
   af_get_coverage( AF_FaceGlobals  globals,
                    AF_StyleClass   style_class,
-                   FT_Byte*        gstyles )
+                   FT_UShort*      gstyles )
   {
     hb_face_t*  face;
 
@@ -363,7 +363,7 @@
         continue;
 
       if ( gstyles[idx] == AF_STYLE_UNASSIGNED )
-        gstyles[idx] = (FT_Byte)style_class->style;
+        gstyles[idx] = (FT_UShort)style_class->style;
 #ifdef FT_DEBUG_LEVEL_TRACE
       else
         FT_TRACE4(( "*" ));
@@ -509,7 +509,7 @@
   FT_Error
   af_get_coverage( AF_FaceGlobals  globals,
                    AF_StyleClass   style_class,
-                   FT_Byte*        gstyles )
+                   FT_UShort*      gstyles )
   {
     FT_UNUSED( globals );
     FT_UNUSED( style_class );

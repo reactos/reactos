@@ -254,15 +254,15 @@
         metrics->x_ppem = (FT_UShort)strike[44];
         metrics->y_ppem = (FT_UShort)strike[45];
 
-        metrics->ascender  = (FT_Char)strike[16] << 6;  /* hori.ascender  */
-        metrics->descender = (FT_Char)strike[17] << 6;  /* hori.descender */
+        metrics->ascender  = (FT_Char)strike[16] * 64;  /* hori.ascender  */
+        metrics->descender = (FT_Char)strike[17] * 64;  /* hori.descender */
         metrics->height    = metrics->ascender - metrics->descender;
 
         /* Is this correct? */
         metrics->max_advance = ( (FT_Char)strike[22] + /* min_origin_SB  */
                                           strike[18] + /* max_width      */
                                  (FT_Char)strike[23]   /* min_advance_SB */
-                                                     ) << 6;
+                                                     ) * 64;
         return FT_Err_Ok;
       }
 

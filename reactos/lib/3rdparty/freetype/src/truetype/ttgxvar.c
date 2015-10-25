@@ -357,8 +357,8 @@
       for ( j = 0; j < segment->pairCount; j++ )
       {
         /* convert to Fixed */
-        segment->correspondence[j].fromCoord = FT_GET_SHORT() << 2;
-        segment->correspondence[j].toCoord   = FT_GET_SHORT() << 2;
+        segment->correspondence[j].fromCoord = FT_GET_SHORT() * 4;
+        segment->correspondence[j].toCoord   = FT_GET_SHORT() * 4;
 
         FT_TRACE5(( "    mapping %.4f to %.4f\n",
                     segment->correspondence[j].fromCoord / 65536.0,
@@ -514,7 +514,7 @@
         for ( j = 0 ; j < (FT_UInt)gvar_head.axisCount; j++ )
         {
           blend->tuplecoords[i * gvar_head.axisCount + j] =
-            FT_GET_SHORT() << 2;                /* convert to FT_Fixed */
+            FT_GET_SHORT() * 4;                 /* convert to FT_Fixed */
           FT_TRACE5(( "%.4f ",
             blend->tuplecoords[i * gvar_head.axisCount + j] / 65536.0 ));
         }
@@ -698,7 +698,8 @@
   /*              TT_Get_MM_Var initializes the blend structure.           */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    master :: The `fvar' data (must be freed by caller).               */
+  /*    master :: The `fvar' data (must be freed by caller).  Can be NULL, */
+  /*              which makes this function simply load MM support.        */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
@@ -1378,7 +1379,7 @@
       if ( tupleIndex & GX_TI_EMBEDDED_TUPLE_COORD )
       {
         for ( j = 0; j < blend->num_axis; j++ )
-          tuple_coords[j] = FT_GET_SHORT() << 2; /* convert from        */
+          tuple_coords[j] = FT_GET_SHORT() * 4;  /* convert from        */
                                                  /* short frac to fixed */
       }
       else
@@ -1396,9 +1397,9 @@
       if ( tupleIndex & GX_TI_INTERMEDIATE_TUPLE )
       {
         for ( j = 0; j < blend->num_axis; j++ )
-          im_start_coords[j] = FT_GET_SHORT() << 2;
+          im_start_coords[j] = FT_GET_SHORT() * 4;
         for ( j = 0; j < blend->num_axis; j++ )
-          im_end_coords[j] = FT_GET_SHORT() << 2;
+          im_end_coords[j] = FT_GET_SHORT() * 4;
       }
 
       apply = ft_var_apply_tuple( blend,
@@ -1649,13 +1650,13 @@
   {
     FT_Vector*  out_points;
 
-    FT_UInt  first_point;
-    FT_UInt  end_point;
+    FT_Int  first_point;
+    FT_Int  end_point;
 
-    FT_UInt  first_delta;
-    FT_UInt  cur_delta;
+    FT_Int  first_delta;
+    FT_Int  cur_delta;
 
-    FT_UInt   point;
+    FT_Int    point;
     FT_Short  contour;
 
 
@@ -1849,7 +1850,7 @@
       if ( tupleIndex & GX_TI_EMBEDDED_TUPLE_COORD )
       {
         for ( j = 0; j < blend->num_axis; j++ )
-          tuple_coords[j] = FT_GET_SHORT() << 2;  /* convert from        */
+          tuple_coords[j] = FT_GET_SHORT() * 4;   /* convert from        */
                                                   /* short frac to fixed */
       }
       else if ( ( tupleIndex & GX_TI_TUPLE_INDEX_MASK ) >= blend->tuplecount )
@@ -1866,9 +1867,9 @@
       if ( tupleIndex & GX_TI_INTERMEDIATE_TUPLE )
       {
         for ( j = 0; j < blend->num_axis; j++ )
-          im_start_coords[j] = FT_GET_SHORT() << 2;
+          im_start_coords[j] = FT_GET_SHORT() * 4;
         for ( j = 0; j < blend->num_axis; j++ )
-          im_end_coords[j] = FT_GET_SHORT() << 2;
+          im_end_coords[j] = FT_GET_SHORT() * 4;
       }
 
       apply = ft_var_apply_tuple( blend,

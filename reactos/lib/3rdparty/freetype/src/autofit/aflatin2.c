@@ -2300,12 +2300,15 @@
 
 
   static FT_Error
-  af_latin2_hints_apply( AF_GlyphHints    hints,
+  af_latin2_hints_apply( FT_UInt          glyph_index,
+                         AF_GlyphHints    hints,
                          FT_Outline*      outline,
                          AF_LatinMetrics  metrics )
   {
     FT_Error  error;
     int       dim;
+
+    FT_UNUSED( glyph_index );
 
 
     error = af_glyph_hints_reload( hints, outline );

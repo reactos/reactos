@@ -24,6 +24,16 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_OBJECTS_H
 
+#include "basepic.h"
+
+
+  /* declare an extern to access `ft_outline_glyph_class' globally     */
+  /* allocated  in `ftglyph.c', and use the FT_OUTLINE_GLYPH_CLASS_GET */
+  /* macro to access it when FT_CONFIG_OPTION_PIC is defined           */
+#ifndef FT_CONFIG_OPTION_PIC
+  FT_CALLBACK_TABLE const FT_Glyph_Class  ft_outline_glyph_class;
+#endif
+
 
   /* documentation is in ftstroke.h */
 
@@ -2283,15 +2293,6 @@
   Invalid_Outline:
     return FT_THROW( Invalid_Outline );
   }
-
-
-  /* declare an extern to access `ft_outline_glyph_class' globally     */
-  /* allocated  in `ftglyph.c', and use the FT_OUTLINE_GLYPH_CLASS_GET */
-  /* macro to access it when FT_CONFIG_OPTION_PIC is defined           */
-#ifndef FT_CONFIG_OPTION_PIC
-  extern const FT_Glyph_Class  ft_outline_glyph_class;
-#endif
-#include "basepic.h"
 
 
   /* documentation is in ftstroke.h */

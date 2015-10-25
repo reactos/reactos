@@ -225,8 +225,8 @@ FT_BEGIN_HEADER
    *
    * @description:
    *   Return the unit vector corresponding to a given angle.  After the
-   *   call, the value of `vec.x' will be `sin(angle)', and the value of
-   *   `vec.y' will be `cos(angle)'.
+   *   call, the value of `vec.x' will be `cos(angle)', and the value of
+   *   `vec.y' will be `sin(angle)'.
    *
    *   This function is useful to retrieve both the sinus and cosinus of a
    *   given angle quickly.

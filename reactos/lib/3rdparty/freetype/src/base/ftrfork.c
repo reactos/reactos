@@ -71,23 +71,34 @@
     if ( error )
       return error;
 
-    *rdata_pos = rfork_offset + ( ( head[0] << 24 ) |
-                                  ( head[1] << 16 ) |
-                                  ( head[2] <<  8 ) |
-                                    head[3]         );
-    map_pos    = rfork_offset + ( ( head[4] << 24 ) |
-                                  ( head[5] << 16 ) |
-                                  ( head[6] <<  8 ) |
-                                    head[7]         );
-    rdata_len = ( head[ 8] << 24 ) |
-                ( head[ 9] << 16 ) |
-                ( head[10] <<  8 ) |
-                  head[11];
+    /* ensure positive values */
+    if ( head[0] >= 0x80 || head[4] >= 0x80 || head[8] >= 0x80 )
+      return FT_THROW( Unknown_File_Format );
+
+    *rdata_pos = ( head[ 0] << 24 ) |
+                 ( head[ 1] << 16 ) |
+                 ( head[ 2] <<  8 ) |
+                   head[ 3];
+    map_pos    = ( head[ 4] << 24 ) |
+                 ( head[ 5] << 16 ) |
+                 ( head[ 6] <<  8 ) |
+                   head[ 7];
+    rdata_len  = ( head[ 8] << 24 ) |
+                 ( head[ 9] << 16 ) |
+                 ( head[10] <<  8 ) |
+                   head[11];
 
     /* map_len = head[12] .. head[15] */
 
-    if ( *rdata_pos + rdata_len != map_pos || map_pos == rfork_offset )
+    if ( *rdata_pos != map_pos - rdata_len || map_pos == 0 )
       return FT_THROW( Unknown_File_Format );
+
+    if ( FT_LONG_MAX - rfork_offset < *rdata_pos ||
+         FT_LONG_MAX - rfork_offset < map_pos    )
+      return FT_THROW( Unknown_File_Format );
+
+    *rdata_pos += rfork_offset;
+    map_pos    += rfork_offset;
 
     error = FT_Stream_Seek( stream, (FT_ULong)map_pos );
     if ( error )

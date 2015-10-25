@@ -335,9 +335,9 @@ FT_BEGIN_HEADER
 #if ( __GNUC__ >= 2                         || \
       defined( __IBM__TYPEOF__ )            || \
       ( __SUNPRO_C >= 0x5110 && !__STDC__ ) )
-#define TYPEOF( type )  (__typeof__ (type))
+#define FT_TYPEOF( type )  (__typeof__ (type))
 #else
-#define TYPEOF( type )  /* empty */
+#define FT_TYPEOF( type )  /* empty */
 #endif
 
 
@@ -387,9 +387,9 @@ FT_BEGIN_HEADER
 #ifndef FT_EXPORT
 
 #ifdef __cplusplus
-#define FT_EXPORT( x )  extern "C"  x __cdecl
+#define FT_EXPORT( x )  extern "C"  x
 #else
-#define FT_EXPORT( x )  extern  x __cdecl
+#define FT_EXPORT( x )  extern  x
 #endif
 
 #endif /* !FT_EXPORT */
@@ -398,9 +398,9 @@ FT_BEGIN_HEADER
 #ifndef FT_EXPORT_DEF
 
 #ifdef __cplusplus
-#define FT_EXPORT_DEF( x )  extern "C"  x __cdecl
+#define FT_EXPORT_DEF( x )  extern "C"  x
 #else
-#define FT_EXPORT_DEF( x )  extern  x __cdecl
+#define FT_EXPORT_DEF( x )  extern  x
 #endif
 
 #endif /* !FT_EXPORT_DEF */

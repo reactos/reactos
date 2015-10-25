@@ -876,17 +876,36 @@ FT_BEGIN_HEADER
   /*                           font formats can have multiple faces in     */
   /*                           a font file.                                */
   /*                                                                       */
-  /*    face_index          :: The index of the face in the font file.  It */
-  /*                           is set to~0 if there is only one face in    */
+  /*    face_index          :: This field holds two different values.      */
+  /*                           Bits 0-15 are the index of the face in the  */
+  /*                           font file (starting with value~0).  They    */
+  /*                           are set to~0 if there is only one face in   */
   /*                           the font file.                              */
+  /*                                                                       */
+  /*                           Bits 16-30 are relevant to GX variation     */
+  /*                           fonts only, holding the named instance      */
+  /*                           index for the current face index (starting  */
+  /*                           with value~1; value~0 indicates font access */
+  /*                           without GX variation data).  For non-GX     */
+  /*                           fonts, bits 16-30 are ignored.  If we have  */
+  /*                           the third named instance of face~4, say,    */
+  /*                           `face_index' is set to 0x00030004.          */
+  /*                                                                       */
+  /*                           Bit 31 is always zero (this is,             */
+  /*                           `face_index' is always a positive value).   */
   /*                                                                       */
   /*    face_flags          :: A set of bit flags that give important      */
   /*                           information about the face; see             */
   /*                           @FT_FACE_FLAG_XXX for the details.          */
   /*                                                                       */
-  /*    style_flags         :: A set of bit flags indicating the style of  */
-  /*                           the face; see @FT_STYLE_FLAG_XXX for the    */
-  /*                           details.                                    */
+  /*    style_flags         :: The lower 16~bits contain a set of bit      */
+  /*                           flags indicating the style of the face; see */
+  /*                           @FT_STYLE_FLAG_XXX for the details.  Bits   */
+  /*                           16-30 hold the number of named instances    */
+  /*                           available for the current face if we have a */
+  /*                           GX variation (sub)font.  Bit 31 is always   */
+  /*                           zero (this is, `style_flags' is always a    */
+  /*                           positive value).                            */
   /*                                                                       */
   /*    num_glyphs          :: The number of glyphs in the face.  If the   */
   /*                           face is scalable and has sbits (see         */
@@ -1392,7 +1411,7 @@ FT_BEGIN_HEADER
   /*    FT_STYLE_FLAG_XXX                                                  */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A list of bit-flags used to indicate the style of a given face.    */
+  /*    A list of bit flags used to indicate the style of a given face.    */
   /*    These are used in the `style_flags' field of @FT_FaceRec.          */
   /*                                                                       */
   /* <Values>                                                              */
@@ -1824,7 +1843,7 @@ FT_BEGIN_HEADER
   /*    FT_OPEN_XXX                                                        */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A list of bit-field constants used within the `flags' field of the */
+  /*    A list of bit field constants used within the `flags' field of the */
   /*    @FT_Open_Args structure.                                           */
   /*                                                                       */
   /* <Values>                                                              */
@@ -1971,13 +1990,12 @@ FT_BEGIN_HEADER
   /* <Input>                                                               */
   /*    pathname   :: A path to the font file.                             */
   /*                                                                       */
-  /*    face_index :: The index of the face within the font.  The first    */
-  /*                  face has index~0.                                    */
+  /*    face_index :: See @FT_Open_Face for a detailed description of this */
+  /*                  parameter.                                           */
   /*                                                                       */
   /* <Output>                                                              */
   /*    aface      :: A handle to a new face object.  If `face_index' is   */
   /*                  greater than or equal to zero, it must be non-NULL.  */
-  /*                  See @FT_Open_Face for more details.                  */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
@@ -2010,13 +2028,12 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    file_size  :: The size of the memory chunk used by the font data.  */
   /*                                                                       */
-  /*    face_index :: The index of the face within the font.  The first    */
-  /*                  face has index~0.                                    */
+  /*    face_index :: See @FT_Open_Face for a detailed description of this */
+  /*                  parameter.                                           */
   /*                                                                       */
   /* <Output>                                                              */
   /*    aface      :: A handle to a new face object.  If `face_index' is   */
   /*                  greater than or equal to zero, it must be non-NULL.  */
-  /*                  See @FT_Open_Face for more details.                  */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
@@ -2048,13 +2065,43 @@ FT_BEGIN_HEADER
   /*    args       :: A pointer to an `FT_Open_Args' structure that must   */
   /*                  be filled by the caller.                             */
   /*                                                                       */
-  /*    face_index :: The index of the face within the font.  The first    */
-  /*                  face has index~0.                                    */
+  /*    face_index :: This field holds two different values.  Bits 0-15    */
+  /*                  are the index of the face in the font file (starting */
+  /*                  with value~0).  Set it to~0 if there is only one     */
+  /*                  face in the font file.                               */
+  /*                                                                       */
+  /*                  Bits 16-30 are relevant to GX variation fonts only,  */
+  /*                  specifying the named instance index for the current  */
+  /*                  face index (starting with value~1; value~0 makes     */
+  /*                  FreeType ignore named instances).  For non-GX fonts, */
+  /*                  bits 16-30 are ignored.  Assuming that you want to   */
+  /*                  access the third named instance in face~4,           */
+  /*                  `face_index' should be set to 0x00030004.  If you    */
+  /*                  want to access face~4 without GX variation handling, */
+  /*                  simply set `face_index' to value~4.                  */
+  /*                                                                       */
+  /*                  FT_Open_Face and its siblings can be used to quickly */
+  /*                  check whether the font format of a given font        */
+  /*                  resource is supported by FreeType.  In general, if   */
+  /*                  the `face_index' argument is negative, the           */
+  /*                  function's return value is~0 if the font format is   */
+  /*                  recognized, or non-zero otherwise.  The function     */
+  /*                  allocates a more or less empty face handle in        */
+  /*                  `*aface' (if `aface' isn't NULL); the only two       */
+  /*                  useful fields in this special case are               */
+  /*                  `face->num_faces' and `face->style_flags'.  For any  */
+  /*                  negative value of `face_index', `face->num_faces'    */
+  /*                  gives the number of faces within the font file.  For */
+  /*                  the negative value `-(N+1)' (with `N' a 16-bit       */
+  /*                  value), bits 16-30 in `face->style_flags' give the   */
+  /*                  number of named instances in face `N' if we have a   */
+  /*                  GX variation font (or zero otherwise).  After        */
+  /*                  examination, the returned @FT_Face structure should  */
+  /*                  be deallocated with a call to @FT_Done_Face.         */
   /*                                                                       */
   /* <Output>                                                              */
   /*    aface      :: A handle to a new face object.  If `face_index' is   */
   /*                  greater than or equal to zero, it must be non-NULL.  */
-  /*                  See note below.                                      */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
@@ -2063,16 +2110,6 @@ FT_BEGIN_HEADER
   /*    Unlike FreeType 1.x, this function automatically creates a glyph   */
   /*    slot for the face object that can be accessed directly through     */
   /*    `face->glyph'.                                                     */
-  /*                                                                       */
-  /*    FT_Open_Face can be used to quickly check whether the font         */
-  /*    format of a given font resource is supported by FreeType.  If the  */
-  /*    `face_index' field is negative, the function's return value is~0   */
-  /*    if the font format is recognized, or non-zero otherwise;           */
-  /*    the function returns a more or less empty face handle in `*aface'  */
-  /*    (if `aface' isn't NULL).  The only useful field in this special    */
-  /*    case is `face->num_faces' that gives the number of faces within    */
-  /*    the font file.  After examination, the returned @FT_Face structure */
-  /*    should be deallocated with a call to @FT_Done_Face.                */
   /*                                                                       */
   /*    Each new face object created with this function also owns a        */
   /*    default @FT_Size object, accessible as `face->size'.               */
@@ -2083,6 +2120,74 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    See the discussion of reference counters in the description of     */
   /*    @FT_Reference_Face.                                                */
+  /*                                                                       */
+  /*    To loop over all faces, use code similar to the following snippet  */
+  /*    (omitting the error handling).                                     */
+  /*                                                                       */
+  /*    {                                                                  */
+  /*      ...                                                              */
+  /*      FT_Face  face;                                                   */
+  /*      FT_Long  i, num_faces;                                           */
+  /*                                                                       */
+  /*                                                                       */
+  /*      error = FT_Open_Face( library, args, -1, &face );                */
+  /*      if ( error ) { ... }                                             */
+  /*                                                                       */
+  /*      num_faces = face->num_faces;                                     */
+  /*      FT_Done_Face( face );                                            */
+  /*                                                                       */
+  /*      for ( i = 0; i < num_faces; i++ )                                */
+  /*      {                                                                */
+  /*        ...                                                            */
+  /*        error = FT_Open_Face( library, args, i, &face );               */
+  /*        ...                                                            */
+  /*        FT_Done_Face( face );                                          */
+  /*        ...                                                            */
+  /*      }                                                                */
+  /*    }                                                                  */
+  /*                                                                       */
+  /*    To loop over all valid values for `face_index', use something      */
+  /*    similar to the following snippet, again without error handling.    */
+  /*    The code accesses all faces immediately (thus only a single call   */
+  /*    of `FT_Open_Face' within the do-loop), with and without named      */
+  /*    instances.                                                         */
+  /*                                                                       */
+  /*    {                                                                  */
+  /*      ...                                                              */
+  /*      FT_Face  face;                                                   */
+  /*                                                                       */
+  /*      FT_Long  num_faces     = 0;                                      */
+  /*      FT_Long  num_instances = 0;                                      */
+  /*                                                                       */
+  /*      FT_Long  face_idx     = 0;                                       */
+  /*      FT_Long  instance_idx = 0;                                       */
+  /*                                                                       */
+  /*                                                                       */
+  /*      do                                                               */
+  /*      {                                                                */
+  /*        FT_Long  id = ( instance_idx << 16 ) + face_idx;               */
+  /*                                                                       */
+  /*                                                                       */
+  /*        error = FT_Open_Face( library, args, id, &face );              */
+  /*        if ( error ) { ... }                                           */
+  /*                                                                       */
+  /*        num_faces     = face->num_faces;                               */
+  /*        num_instances = face->style_flags >> 16;                       */
+  /*                                                                       */
+  /*        ...                                                            */
+  /*                                                                       */
+  /*        FT_Done_Face( face );                                          */
+  /*                                                                       */
+  /*        if ( instance_idx < num_instances )                            */
+  /*          instance_idx++;                                              */
+  /*        else                                                           */
+  /*        {                                                              */
+  /*          face_idx++;                                                  */
+  /*          instance_idx = 0;                                            */
+  /*        }                                                              */
+  /*                                                                       */
+  /*      } while ( face_idx < num_faces )                                 */
+  /*    }                                                                  */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Open_Face( FT_Library           library,
@@ -2521,7 +2626,7 @@ FT_BEGIN_HEADER
    *   FT_LOAD_XXX
    *
    * @description:
-   *   A list of bit-field constants used with @FT_Load_Glyph to indicate
+   *   A list of bit field constants used with @FT_Load_Glyph to indicate
    *   what kind of operations to perform during glyph loading.
    *
    * @values:
@@ -2638,6 +2743,16 @@ FT_BEGIN_HEADER
    *     bitmaps transparently.  Those bitmaps will be in the
    *     @FT_PIXEL_MODE_GRAY format.
    *
+   *   FT_LOAD_COMPUTE_METRICS ::
+   *     This flag sets computing glyph metrics without the use of bundled
+   *     metrics tables (for example, the `hdmx' table in TrueType fonts).
+   *     Well-behaving fonts have optimized bundled metrics and these should
+   *     be used.  This flag is mainly used by font validating or font
+   *     editing applications, which need to ignore, verify, or edit those
+   *     tables.
+   *
+   *     Currently, this flag is only implemented for TrueType fonts.
+   *
    *   FT_LOAD_CROP_BITMAP ::
    *     Ignored.  Deprecated.
    *
@@ -2683,6 +2798,7 @@ FT_BEGIN_HEADER
 #define FT_LOAD_NO_AUTOHINT                  ( 1L << 15 )
   /* Bits 16..19 are used by `FT_LOAD_TARGET_' */
 #define FT_LOAD_COLOR                        ( 1L << 20 )
+#define FT_LOAD_COMPUTE_METRICS              ( 1L << 21 )
 
   /* */
 
@@ -2927,14 +3043,21 @@ FT_BEGIN_HEADER
   /*    @FT_Get_Kerning.                                                   */
   /*                                                                       */
   /* <Values>                                                              */
-  /*    FT_KERNING_DEFAULT  :: Return scaled and grid-fitted kerning       */
-  /*                           distances (value is~0).                     */
+  /*    FT_KERNING_DEFAULT  :: Return grid-fitted kerning distances in     */
+  /*                           pixels (value is~0).  Whether they are      */
+  /*                           scaled depends on @FT_LOAD_NO_SCALE.        */
   /*                                                                       */
-  /*    FT_KERNING_UNFITTED :: Return scaled but un-grid-fitted kerning    */
-  /*                           distances.                                  */
+  /*    FT_KERNING_UNFITTED :: Return un-grid-fitted kerning distances in  */
+  /*                           26.6 fractional pixels.  Whether they are   */
+  /*                           scaled depends on @FT_LOAD_NO_SCALE.        */
   /*                                                                       */
   /*    FT_KERNING_UNSCALED :: Return the kerning vector in original font  */
   /*                           units.                                      */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    FT_KERNING_DEFAULT returns full pixel values; it also makes        */
+  /*    FreeType heuristically scale down kerning distances at small ppem  */
+  /*    values so that they don't become too big.                          */
   /*                                                                       */
   typedef enum  FT_Kerning_Mode_
   {
@@ -2972,9 +3095,10 @@ FT_BEGIN_HEADER
   /*                   kerning vector.                                     */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    akerning    :: The kerning vector.  This is either in font units   */
-  /*                   or in pixels (26.6 format) for scalable formats,    */
-  /*                   and in pixels for fixed-sizes formats.              */
+  /*    akerning    :: The kerning vector.  This is either in font units,  */
+  /*                   fractional pixels (26.6 format), or pixels for      */
+  /*                   scalable formats, and in pixels for fixed-sizes     */
+  /*                   formats.                                            */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
@@ -3259,6 +3383,13 @@ FT_BEGIN_HEADER
   /*      }                                                                */
   /*    }                                                                  */
   /*                                                                       */
+  /*    Be aware that character codes can have values up to 0xFFFFFFFF;    */
+  /*    this might happen for non-Unicode or malformed cmaps.  However,    */
+  /*    even with regular Unicode encoding, so-called `last resort fonts'  */
+  /*    (using SFNT cmap format 13, see function @FT_Get_CMap_Format)      */
+  /*    normally have entries for all Unicode characters up to 0x1FFFFF,   */
+  /*    which can cause *a lot* of iterations.                             */
+  /*                                                                       */
   /*    Note that `*agindex' is set to~0 if the charmap is empty.  The     */
   /*    result itself can be~0 in two cases: if the charmap is empty or    */
   /*    if the value~0 is the first valid character code.                  */
@@ -3454,6 +3585,9 @@ FT_BEGIN_HEADER
   /*      bitmaps available in the font, then the font is unembeddable.    */
   /*                                                                       */
   /* <Note>                                                                */
+  /*    The flags are ORed together, thus more than a single value can be  */
+  /*    returned.                                                          */
+  /*                                                                       */
   /*    While the fsType flags can indicate that a font may be embedded, a */
   /*    license with the font vendor may be separately required to use the */
   /*    font in this way.                                                  */
@@ -3839,7 +3973,8 @@ FT_BEGIN_HEADER
   /*    a :: The number to be rounded.                                     */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    The result of `(a + 0x8000) & -0x10000'.                           */
+  /*    `a' rounded to nearest 16.16 fixed integer, halfway cases away     */
+  /*    from zero.                                                         */
   /*                                                                       */
   FT_EXPORT( FT_Fixed )
   FT_RoundFix( FT_Fixed  a );
@@ -3858,7 +3993,7 @@ FT_BEGIN_HEADER
   /*    a :: The number for which the ceiling function is to be computed.  */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    The result of `(a + 0x10000 - 1) & -0x10000'.                      */
+  /*    `a' rounded towards plus infinity.                                 */
   /*                                                                       */
   FT_EXPORT( FT_Fixed )
   FT_CeilFix( FT_Fixed  a );
@@ -3877,7 +4012,7 @@ FT_BEGIN_HEADER
   /*    a :: The number for which the floor function is to be computed.    */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    The result of `a & -0x10000'.                                      */
+  /*    `a' rounded towards minus infinity.                                */
   /*                                                                       */
   FT_EXPORT( FT_Fixed )
   FT_FloorFix( FT_Fixed  a );
@@ -3958,7 +4093,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  6
-#define FREETYPE_PATCH  0
+#define FREETYPE_PATCH  1
 
 
   /*************************************************************************/

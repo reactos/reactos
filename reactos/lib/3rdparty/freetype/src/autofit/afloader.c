@@ -150,7 +150,8 @@
 
 
         if ( writing_system_class->style_hints_apply )
-          writing_system_class->style_hints_apply( hints,
+          writing_system_class->style_hints_apply( glyph_index,
+                                                   hints,
                                                    &gloader->base.outline,
                                                    metrics );
       }

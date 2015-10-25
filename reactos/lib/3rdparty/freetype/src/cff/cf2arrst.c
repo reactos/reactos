@@ -104,7 +104,7 @@
       size_t  newSize = numElements * arrstack->sizeItem;
 
 
-      if ( numElements > LONG_MAX / arrstack->sizeItem )
+      if ( numElements > FT_LONG_MAX / arrstack->sizeItem )
         goto exit;
 
 

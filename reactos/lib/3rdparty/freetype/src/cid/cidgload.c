@@ -363,7 +363,6 @@
     {
       FT_BBox            cbox;
       FT_Glyph_Metrics*  metrics = &cidglyph->metrics;
-      FT_Vector          advance;
 
 
       /* copy the _unscaled_ advance width */
@@ -383,22 +382,27 @@
       if ( cidsize->metrics.y_ppem < 24 )
         cidglyph->outline.flags |= FT_OUTLINE_HIGH_PRECISION;
 
-      /* apply the font matrix */
-      FT_Outline_Transform( &cidglyph->outline, &font_matrix );
+      /* apply the font matrix, if any */
+      if ( font_matrix.xx != 0x10000L || font_matrix.yy != 0x10000L ||
+           font_matrix.xy != 0        || font_matrix.yx != 0        )
+      {
+        FT_Outline_Transform( &cidglyph->outline, &font_matrix );
 
-      FT_Outline_Translate( &cidglyph->outline,
-                            font_offset.x,
-                            font_offset.y );
+        metrics->horiAdvance = FT_MulFix( metrics->horiAdvance,
+                                          font_matrix.xx );
+        metrics->vertAdvance = FT_MulFix( metrics->vertAdvance,
+                                          font_matrix.yy );
+      }
 
-      advance.x = metrics->horiAdvance;
-      advance.y = 0;
-      FT_Vector_Transform( &advance, &font_matrix );
-      metrics->horiAdvance = advance.x + font_offset.x;
+      if ( font_offset.x || font_offset.y )
+      {
+        FT_Outline_Translate( &cidglyph->outline,
+                              font_offset.x,
+                              font_offset.y );
 
-      advance.x = 0;
-      advance.y = metrics->vertAdvance;
-      FT_Vector_Transform( &advance, &font_matrix );
-      metrics->vertAdvance = advance.y + font_offset.y;
+        metrics->horiAdvance += font_offset.x;
+        metrics->vertAdvance += font_offset.y;
+      }
 
       if ( ( load_flags & FT_LOAD_NO_SCALE ) == 0 )
       {

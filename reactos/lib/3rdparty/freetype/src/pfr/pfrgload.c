@@ -632,14 +632,14 @@
       if ( format & PFR_SUBGLYPH_XSCALE )
       {
         PFR_CHECK( 2 );
-        subglyph->x_scale = PFR_NEXT_SHORT( p ) << 4;
+        subglyph->x_scale = PFR_NEXT_SHORT( p ) * 16;
       }
 
       subglyph->y_scale = 0x10000L;
       if ( format & PFR_SUBGLYPH_YSCALE )
       {
         PFR_CHECK( 2 );
-        subglyph->y_scale = PFR_NEXT_SHORT( p ) << 4;
+        subglyph->y_scale = PFR_NEXT_SHORT( p ) * 16;
       }
 
       /* read offset */

@@ -208,7 +208,7 @@
       goto Exit;
 
     /* check the face index */
-    if ( face_index > 0 )
+    if ( ( face_index & 0xFFFF ) > 0 )
     {
       FT_ERROR(( "T42_Face_Init: invalid face index\n" ));
       error = FT_THROW( Invalid_Argument );
@@ -652,10 +652,15 @@
     FT_Error         error;
     T42_GlyphSlot    t42slot = (T42_GlyphSlot)glyph;
     T42_Size         t42size = (T42_Size)size;
+    T42_Face         t42face = (T42_Face)size->face;
     FT_Driver_Class  ttclazz = ((T42_Driver)glyph->face->driver)->ttclazz;
 
 
     FT_TRACE1(( "T42_GlyphSlot_Load: glyph index %d\n", glyph_index ));
+
+    /* map T42 glyph index to embedded TTF's glyph index */
+    glyph_index = (FT_UInt)ft_atol(
+                    (const char *)t42face->type1.charstrings[glyph_index] );
 
     t42_glyphslot_clear( t42slot->ttslot );
     error = ttclazz->load_glyph( t42slot->ttslot,

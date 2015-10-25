@@ -25,6 +25,10 @@
   /* by a description string.  Then comes the corresponding HarfBuzz  */
   /* script name tag, followed by a string of standard characters (to */
   /* derive the standard width and height of stems).                  */
+  /*                                                                  */
+  /* Note that fallback scripts only have a default style, thus we    */
+  /* use `HB_SCRIPT_INVALID' as the HarfBuzz script name tag for      */
+  /* them.                                                            */
 
   SCRIPT( arab, ARAB,
           "Arabic",
@@ -34,7 +38,7 @@
   SCRIPT( cyrl, CYRL,
           "Cyrillic",
           HB_SCRIPT_CYRILLIC,
-          0x43E, 0x41E, 0x0 ) /* оО */
+          0x43E, 0x41E, 0x0 ) /* о О */
 
   SCRIPT( deva, DEVA,
           "Devanagari",
@@ -44,17 +48,33 @@
   SCRIPT( grek, GREK,
           "Greek",
           HB_SCRIPT_GREEK,
-          0x3BF, 0x39F, 0x0 ) /* οΟ */
+          0x3BF, 0x39F, 0x0 ) /* ο Ο */
 
   SCRIPT( hebr, HEBR,
           "Hebrew",
           HB_SCRIPT_HEBREW,
           0x5DD, 0x0, 0x0 ) /* ם */
 
+  /* only digit zero has a simple shape in the Lao script */
+  SCRIPT( lao, LAO,
+          "Lao",
+          HB_SCRIPT_LAO,
+          0xED0, 0x0, 0x0 ) /* ໐ */
+
   SCRIPT( latn, LATN,
           "Latin",
           HB_SCRIPT_LATIN,
           'o', 'O', '0' )
+
+  SCRIPT( latb, LATB,
+          "Latin Subscript Fallback",
+          HB_SCRIPT_INVALID,
+          0x2092, 0x2080, 0x0 ) /* ₒ ₀ */
+
+  SCRIPT( latp, LATP,
+          "Latin Superscript Fallback",
+          HB_SCRIPT_INVALID,
+          0x1D52, 0x1D3C, 0x2070 ) /* ᵒ ᴼ ⁰ */
 
   SCRIPT( none, NONE,
           "no script",

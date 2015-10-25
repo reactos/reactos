@@ -139,7 +139,7 @@ check_tool_version $LIBTOOLIZE libtoolize LIBTOOLIZE 2.2.4
 check_tool_version $AUTOCONF   autoconf   AUTOCONF   2.62
 
 # This sets freetype_major, freetype_minor, and freetype_patch.
-eval `sed -nf version.sed include/freetype.h`
+eval `sed -nf version.sed include/freetype/freetype.h`
 
 # We set freetype-patch to an empty value if it is zero.
 if test "$freetype_patch" = ".0"; then
@@ -156,7 +156,6 @@ run aclocal -I . --force
 run $LIBTOOLIZE --force --copy --install
 run autoconf --force
 
-chmod +x mkinstalldirs
 chmod +x install-sh
 
 cd ../..

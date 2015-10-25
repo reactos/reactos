@@ -246,13 +246,12 @@
     T42_Parser  parser = &loader->parser;
     FT_Matrix*  matrix = &face->type1.font_matrix;
     FT_Vector*  offset = &face->type1.font_offset;
-    FT_Face     root   = (FT_Face)&face->root;
     FT_Fixed    temp[6];
     FT_Fixed    temp_scale;
     FT_Int      result;
 
 
-    result = T1_ToFixedArray( parser, 6, temp, 3 );
+    result = T1_ToFixedArray( parser, 6, temp, 0 );
 
     if ( result < 6 )
     {
@@ -264,18 +263,12 @@
 
     if ( temp_scale == 0 )
     {
-      FT_ERROR(( "t1_parse_font_matrix: invalid font matrix\n" ));
+      FT_ERROR(( "t42_parse_font_matrix: invalid font matrix\n" ));
       parser->root.error = FT_THROW( Invalid_File_Format );
       return;
     }
 
-    /* Set Units per EM based on FontMatrix values.  We set the value to */
-    /* 1000 / temp_scale, because temp_scale was already multiplied by   */
-    /* 1000 (in t1_tofixed, from psobjs.c).                              */
-
-    root->units_per_EM = (FT_UShort)FT_DivFix( 1000, temp_scale );
-
-    /* we need to scale the values by 1.0/temp_scale */
+    /* atypical case */
     if ( temp_scale != 0x10000L )
     {
       temp[0] = FT_DivFix( temp[0], temp_scale );
@@ -339,9 +332,26 @@
       else
         count = (FT_Int)T1_ToInt( parser );
 
+      /* only composite fonts (which we don't support) */
+      /* can have larger values                        */
+      if ( count > 256 )
+      {
+        FT_ERROR(( "t42_parse_encoding: invalid encoding array size\n" ));
+        parser->root.error = FT_THROW( Invalid_File_Format );
+        return;
+      }
+
       T1_Skip_Spaces( parser );
       if ( parser->root.cursor >= limit )
         return;
+
+      /* PostScript happily allows overwriting of encoding arrays */
+      if ( encode->char_index )
+      {
+        FT_FREE( encode->char_index );
+        FT_FREE( encode->char_name );
+        T1_Release_Table( char_table );
+      }
 
       /* we use a T1_Table to store our charnames */
       loader->num_chars = encode->num_chars = count;
@@ -421,6 +431,13 @@
           {
             charcode = (FT_Int)T1_ToInt( parser );
             T1_Skip_Spaces( parser );
+
+            /* protect against invalid charcode */
+            if ( cur == parser->root.cursor )
+            {
+              parser->root.error = FT_THROW( Unknown_File_Format );
+              return;
+            }
           }
 
           cur = parser->root.cursor;
@@ -455,10 +472,10 @@
             /* immediates-only mode we would get an infinite loop if   */
             /* we don't do anything here.                              */
             /*                                                         */
-            /* This encoding array is not valid according to the type1 */
-            /* specification (it might be an encoding for a CID type1  */
-            /* font, however), so we conclude that this font is NOT a  */
-            /* type1 font.                                             */
+            /* This encoding array is not valid according to the       */
+            /* type42 specification (it might be an encoding for a CID */
+            /* type42 font, however), so we conclude that this font is */
+            /* NOT a type42 font.                                      */
             parser->root.error = FT_THROW( Unknown_File_Format );
             return;
           }
@@ -494,7 +511,7 @@
         face->type1.encoding_type = T1_ENCODING_TYPE_ISOLATIN1;
 
       else
-        parser->root.error = FT_THROW( Ignore );
+        parser->root.error = FT_ERR( Ignore );
     }
   }
 
@@ -823,6 +840,15 @@
     }
 
     /* initialize tables */
+
+    /* contrary to Type1, we disallow multiple CharStrings arrays */
+    if ( swap_table->init )
+    {
+      FT_ERROR(( "t42_parse_charstrings:"
+                 " only one CharStrings array allowed\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Fail;
+    }
 
     error = psaux->ps_table_funcs->init( code_table,
                                          loader->num_glyphs,

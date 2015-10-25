@@ -345,7 +345,7 @@
       goto Exit;
 
     /* check the face index */
-    if ( face_index > 0 )
+    if ( ( face_index & 0xFFFF ) > 0 )
     {
       FT_ERROR(( "T1_Face_Init: invalid face index\n" ));
       error = FT_THROW( Invalid_Argument );
@@ -374,9 +374,6 @@
 
       if ( face->blend )
         root->face_flags |= FT_FACE_FLAG_MULTIPLE_MASTERS;
-
-      /* XXX: TODO -- add kerning with .afm support */
-
 
       /* The following code to extract the family and the style is very   */
       /* simplistic and might get some things wrong.  For a full-featured */

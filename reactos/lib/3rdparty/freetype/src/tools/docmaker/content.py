@@ -53,9 +53,10 @@ re_identifier = re.compile( r'((?:\w|-)*)' )
 
 #
 # We collect macro names ending in `_H' (group 1), as defined in
-# `config/ftheader.h'.  While outputting the object data, we use this info
-# together with the object's file location (group 2) to emit the appropriate
-# header file macro and its associated file name before the object itself.
+# `freetype/config/ftheader.h'.  While outputting the object data, we use
+# this info together with the object's file location (group 2) to emit the
+# appropriate header file macro and its associated file name before the
+# object itself.
 #
 # Example:
 #

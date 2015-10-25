@@ -63,7 +63,7 @@ FT_BEGIN_HEADER
   /*      psaux                                                            */
   /*      pshinter                                                         */
   /*      psnames                                                          */
-  /*      raster1, raster5                                                 */
+  /*      raster1                                                          */
   /*      sfnt                                                             */
   /*      smooth, smooth-lcd, smooth-lcdv                                  */
   /*      truetype                                                         */

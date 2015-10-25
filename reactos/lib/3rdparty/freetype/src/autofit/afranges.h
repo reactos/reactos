@@ -31,6 +31,12 @@ FT_BEGIN_HEADER
 
 #include "afscript.h"
 
+#undef  SCRIPT
+#define SCRIPT( s, S, d, h, sc1, sc2, sc3 )                                     \
+          extern const AF_Script_UniRangeRec  af_ ## s ## _nonbase_uniranges[];
+
+#include "afscript.h"
+
  /* */
 
 FT_END_HEADER

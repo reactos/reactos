@@ -269,15 +269,18 @@
 
   static FT_Error
   fnt_face_get_dll_font( FNT_Face  face,
-                         FT_Int    face_index )
+                         FT_Int    face_instance_index )
   {
     FT_Error         error;
     FT_Stream        stream = FT_FACE( face )->stream;
     FT_Memory        memory = FT_FACE( face )->memory;
     WinMZ_HeaderRec  mz_header;
+    FT_Long          face_index;
 
 
     face->font = NULL;
+
+    face_index = FT_ABS( face_instance_index ) & 0xFFFF;
 
     /* does it begin with an MZ header? */
     if ( FT_STREAM_SEEK( 0 )                                      ||
@@ -316,6 +319,21 @@
           goto Exit;
 
         size_shift = FT_GET_USHORT_LE();
+
+        /* Microsoft's specification of the executable-file header format */
+        /* for `New Executable' (NE) doesn't give a limit for the         */
+        /* alignment shift count; however, in 1985, the year of the       */
+        /* specification release, only 32bit values were supported, thus  */
+        /* anything larger than 16 doesn't make sense in general, given   */
+        /* that file offsets are 16bit values, shifted by the alignment   */
+        /* shift count                                                    */
+        if ( size_shift > 16 )
+        {
+          FT_TRACE2(( "invalid alignment shift count for resource data\n" ));
+          error = FT_THROW( Invalid_File_Format );
+          goto Exit;
+        }
+
 
         for (;;)
         {
@@ -359,13 +377,14 @@
 
         face->root.num_faces = font_count;
 
+        if ( face_instance_index < 0 )
+          goto Exit;
+
         if ( face_index >= font_count )
         {
           error = FT_THROW( Invalid_Argument );
           goto Exit;
         }
-        else if ( face_index < 0 )
-          goto Exit;
 
         if ( FT_NEW( face->font ) )
           goto Exit;
@@ -689,13 +708,14 @@
   static FT_Error
   FNT_Face_Init( FT_Stream      stream,
                  FT_Face        fntface,        /* FNT_Face */
-                 FT_Int         face_index,
+                 FT_Int         face_instance_index,
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
     FNT_Face   face   = (FNT_Face)fntface;
     FT_Error   error;
     FT_Memory  memory = FT_FACE_MEMORY( face );
+    FT_Int     face_index;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
@@ -703,9 +723,11 @@
 
     FT_TRACE2(( "Windows FNT driver\n" ));
 
+    face_index = FT_ABS( face_instance_index ) & 0xFFFF;
+
     /* try to load font from a DLL */
-    error = fnt_face_get_dll_font( face, face_index );
-    if ( !error && face_index < 0 )
+    error = fnt_face_get_dll_font( face, face_instance_index );
+    if ( !error && face_instance_index < 0 )
       goto Exit;
 
     if ( FT_ERR_EQ( error, Unknown_File_Format ) )
@@ -726,10 +748,11 @@
 
       if ( !error )
       {
+        if ( face_instance_index < 0 )
+          goto Exit;
+
         if ( face_index > 0 )
           error = FT_THROW( Invalid_Argument );
-        else if ( face_index < 0 )
-          goto Exit;
       }
     }
 

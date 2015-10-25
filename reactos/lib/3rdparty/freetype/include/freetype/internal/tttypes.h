@@ -1457,11 +1457,23 @@ FT_BEGIN_HEADER
   /* handle to execution context */
   typedef struct TT_ExecContextRec_*  TT_ExecContext;
 
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Type>                                                                */
+  /*    TT_Size                                                            */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A handle to a TrueType size object.                                */
+  /*                                                                       */
+  typedef struct TT_SizeRec_*  TT_Size;
+
+
   /* glyph loader structure */
   typedef struct  TT_LoaderRec_
   {
-    FT_Face          face;
-    FT_Size          size;
+    TT_Face          face;
+    TT_Size          size;
     FT_GlyphSlot     glyph;
     FT_GlyphLoader   gloader;
 

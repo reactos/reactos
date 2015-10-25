@@ -79,7 +79,7 @@ def  check_output():
             if not os.path.isdir( output_dir ):
                 sys.stderr.write( "argument"
                                   + " '" + output_dir + "' "
-                                  + "is not a valid directory" )
+                                  + "is not a valid directory\n" )
                 sys.exit( 2 )
         else:
             output_dir = None

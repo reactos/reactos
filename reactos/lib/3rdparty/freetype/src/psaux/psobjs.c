@@ -594,6 +594,9 @@
       error = FT_THROW( Invalid_File_Format );
     }
 
+    if ( cur > limit )
+      cur = limit;
+
     parser->error  = error;
     parser->cursor = cur;
   }
@@ -1229,15 +1232,17 @@
             if ( result < 0 || (FT_UInt)result < max_objects )
             {
               FT_ERROR(( "ps_parser_load_field:"
-                         " expected %d integers in the %s subarray\n"
+                         " expected %d integer%s in the %s subarray\n"
                          "                     "
                          " of /FontBBox in the /Blend dictionary\n",
-                         max_objects,
+                         max_objects, max_objects > 1 ? "s" : "",
                          i == 0 ? "first"
                                 : ( i == 1 ? "second"
                                            : ( i == 2 ? "third"
                                                       : "fourth" ) ) ));
               error = FT_THROW( Invalid_File_Format );
+
+              FT_FREE( temp );
               goto Exit;
             }
 

@@ -2346,30 +2346,23 @@
       /* Check for the bits per pixel field. */
       if ( p->list.used == 5 )
       {
-        unsigned short bitcount, i, shift;
+        unsigned short bpp;
 
 
-        p->font->bpp = (unsigned short)_bdf_atos( p->list.field[4], 0, 10 );
+        bpp = (unsigned short)_bdf_atos( p->list.field[4], 0, 10 );
 
-        /* Only values 1, 2, 4, 8 are allowed. */
-        shift = p->font->bpp;
-        bitcount = 0;
-        for ( i = 0; shift > 0; i++ )
-        {
-          if ( shift & 1 )
-            bitcount = i;
-          shift >>= 1;
-        }
+        /* Only values 1, 2, 4, 8 are allowed for greymap fonts. */
+        if ( bpp > 4 )
+          p->font->bpp = 8;
+        else if ( bpp > 2 )
+          p->font->bpp = 4;
+        else if ( bpp > 1 )
+          p->font->bpp = 2;
+        else
+          p->font->bpp = 1;
 
-        shift = (unsigned short)( ( bitcount > 3 ) ? 8
-                                                   : ( 1U << bitcount ) );
-
-        if ( p->font->bpp > shift || p->font->bpp != shift )
-        {
-          /* select next higher value */
-          p->font->bpp = (unsigned short)( shift << 1 );
+        if ( p->font->bpp != bpp )
           FT_TRACE2(( "_bdf_parse_start: " ACMSG11, p->font->bpp ));
-        }
       }
       else
         p->font->bpp = 1;

@@ -44,7 +44,9 @@ FT_BEGIN_HEADER
   /*    face       :: A handle to the target face object.                  */
   /*                                                                       */
   /*    face_index :: The index of the TrueType font, if we are opening a  */
-  /*                  collection.                                          */
+  /*                  collection, in bits 0-15.  The numbered instance     */
+  /*                  index~+~1 of a GX (sub)font, if applicable, in bits  */
+  /*                  16-30.                                               */
   /*                                                                       */
   /*    num_params :: The number of additional parameters.                 */
   /*                                                                       */
@@ -87,7 +89,9 @@ FT_BEGIN_HEADER
   /*    face       :: A handle to the target face object.                  */
   /*                                                                       */
   /*    face_index :: The index of the TrueType font, if we are opening a  */
-  /*                  collection.                                          */
+  /*                  collection, in bits 0-15.  The numbered instance     */
+  /*                  index~+~1 of a GX (sub)font, if applicable, in bits  */
+  /*                  16-30.                                               */
   /*                                                                       */
   /*    num_params :: The number of additional parameters.                 */
   /*                                                                       */
@@ -427,6 +431,33 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
+  /*    TT_Get_Name_Func                                                   */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    From the `name' table, return a given ENGLISH name record in       */
+  /*    ASCII.                                                             */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    face     :: A handle to the source face object.                    */
+  /*                                                                       */
+  /*    nameid   :: The name id of the name record to return.              */
+  /*                                                                       */
+  /* <InOut>                                                               */
+  /*    name     :: The address of an allocated string pointer.  NULL if   */
+  /*                no name is present.                                    */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  typedef FT_Error
+  (*TT_Get_Name_Func)( TT_Face      face,
+                       FT_UShort    nameid,
+                       FT_String**  name );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <FuncType>                                                            */
   /*    TT_Load_Table_Func                                                 */
   /*                                                                       */
   /* <Description>                                                         */
@@ -556,6 +587,8 @@ FT_BEGIN_HEADER
 
     TT_Get_Metrics_Func          get_metrics;
 
+    TT_Get_Name_Func             get_name;
+
   } SFNT_Interface;
 
 
@@ -594,7 +627,8 @@ FT_BEGIN_HEADER
           free_eblc_,                    \
           set_sbit_strike_,              \
           load_strike_metrics_,          \
-          get_metrics_ )                 \
+          get_metrics_,                  \
+          get_name_ )                    \
   static const SFNT_Interface  class_ =  \
   {                                      \
     goto_table_,                         \
@@ -626,6 +660,7 @@ FT_BEGIN_HEADER
     set_sbit_strike_,                    \
     load_strike_metrics_,                \
     get_metrics_,                        \
+    get_name_,                           \
   };
 
 #else /* FT_CONFIG_OPTION_PIC */
@@ -663,7 +698,8 @@ FT_BEGIN_HEADER
           free_eblc_,                                   \
           set_sbit_strike_,                             \
           load_strike_metrics_,                         \
-          get_metrics_ )                                \
+          get_metrics_,                                 \
+          get_name_ )                                   \
   void                                                  \
   FT_Init_Class_ ## class_( FT_Library       library,   \
                             SFNT_Interface*  clazz )    \
@@ -699,6 +735,7 @@ FT_BEGIN_HEADER
     clazz->set_sbit_strike     = set_sbit_strike_;      \
     clazz->load_strike_metrics = load_strike_metrics_;  \
     clazz->get_metrics         = get_metrics_;          \
+    clazz->get_name            = get_name_;             \
   }
 
 #endif /* FT_CONFIG_OPTION_PIC */

@@ -69,8 +69,15 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
 
   AF_BLUE_STRING_ARABIC_TOP
     "ا إ ل ك ط ظ"
-  AF_BLUE_STRING_ARABIC_JOIN
+  AF_BLUE_STRING_ARABIC_BOTTOM
     "ت ث ط ظ ك"
+  // We don't necessarily have access to medial forms via Unicode in case
+  // Arabic presentational forms are missing.  The only character that is
+  // guaranteed to have the same vertical position with joining (this is,
+  // non-isolated) forms is U+0640, ARABIC TATWEEL, which must join both
+  // round and flat curves.
+  AF_BLUE_STRING_ARABIC_JOIN
+    "ـ"
 
   AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP
     "БВЕПЗОСЭ"
@@ -113,6 +120,17 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
   AF_BLUE_STRING_HEBREW_DESCENDER
     "קךןףץ"
 
+  AF_BLUE_STRING_LAO_TOP
+    "າ ດ ອ ມ ລ ວ ຣ ງ"
+  AF_BLUE_STRING_LAO_BOTTOM
+    "າ ອ ບ ຍ ຣ ຮ ວ ຢ"
+  AF_BLUE_STRING_LAO_ASCENDER
+    "ປ ຢ ຟ ຝ"
+  AF_BLUE_STRING_LAO_LARGE_ASCENDER
+    "ໂ ໄ ໃ"
+  AF_BLUE_STRING_LAO_DESCENDER
+    "ງ ຊ ຖ ຽ ໆ ຯ"
+
   AF_BLUE_STRING_LATIN_CAPITAL_TOP
     "THEZOCQS"
   AF_BLUE_STRING_LATIN_CAPITAL_BOTTOM
@@ -123,6 +141,31 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
     "xzroesc"
   AF_BLUE_STRING_LATIN_SMALL_DESCENDER
     "pqgjy"
+
+  // we assume that both the subscript and superscript ranges
+  // don't contain oldstyle digits (actually, most fonts probably
+  // have digits only in those ranges)
+  AF_BLUE_STRING_LATIN_SUBS_CAPITAL_TOP
+    "₀₃₅₇₈"
+  AF_BLUE_STRING_LATIN_SUBS_CAPITAL_BOTTOM
+    "₀₁₂₃₈"
+  AF_BLUE_STRING_LATIN_SUBS_SMALL_F_TOP
+    "ᵢⱼₕₖₗ"
+  AF_BLUE_STRING_LATIN_SUBS_SMALL
+    "ₐₑₒₓₙₛᵥᵤᵣ"
+  AF_BLUE_STRING_LATIN_SUBS_SMALL_DESCENDER
+    "ᵦᵧᵨᵩₚ"
+
+  AF_BLUE_STRING_LATIN_SUPS_CAPITAL_TOP
+    "⁰³⁵⁷ᵀᴴᴱᴼ"
+  AF_BLUE_STRING_LATIN_SUPS_CAPITAL_BOTTOM
+    "⁰¹²³ᴱᴸᴼᵁ"
+  AF_BLUE_STRING_LATIN_SUPS_SMALL_F_TOP
+    "ᵇᵈᵏʰʲᶠⁱ"
+  AF_BLUE_STRING_LATIN_SUPS_SMALL
+    "ᵉᵒʳˢˣᶜᶻ"
+  AF_BLUE_STRING_LATIN_SUPS_SMALL_DESCENDER
+    "ᵖʸᵍ"
 
   // we separate the letters with spaces to avoid ligatures;
   // this is just for convenience to simplify reading
@@ -289,9 +332,10 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
 AF_BLUE_STRINGSET_ENUM AF_BLUE_STRINGSETS_ARRAY AF_BLUE_STRINGSET_MAX_LEN:
 
   AF_BLUE_STRINGSET_ARAB
-    { AF_BLUE_STRING_ARABIC_TOP,   AF_BLUE_PROPERTY_LATIN_TOP }
-    { AF_BLUE_STRING_ARABIC_JOIN,  0                          }
-    { AF_BLUE_STRING_MAX,          0                          }
+    { AF_BLUE_STRING_ARABIC_TOP,    AF_BLUE_PROPERTY_LATIN_TOP     }
+    { AF_BLUE_STRING_ARABIC_BOTTOM, 0                              }
+    { AF_BLUE_STRING_ARABIC_JOIN,   AF_BLUE_PROPERTY_LATIN_NEUTRAL }
+    { AF_BLUE_STRING_MAX,           0                              }
 
   AF_BLUE_STRINGSET_CYRL
     { AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
@@ -329,6 +373,15 @@ AF_BLUE_STRINGSET_ENUM AF_BLUE_STRINGSETS_ARRAY AF_BLUE_STRINGSET_MAX_LEN:
     { AF_BLUE_STRING_HEBREW_DESCENDER, 0                             }
     { AF_BLUE_STRING_MAX,              0                             }
 
+  AF_BLUE_STRINGSET_LAO
+    { AF_BLUE_STRING_LAO_TOP,             AF_BLUE_PROPERTY_LATIN_TOP      |
+                                          AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_LAO_BOTTOM,          0                                 }
+    { AF_BLUE_STRING_LAO_ASCENDER,        AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_LAO_LARGE_ASCENDER,  AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_LAO_DESCENDER,       0                                 }
+    { AF_BLUE_STRING_MAX,                 0                                 }
+
   AF_BLUE_STRINGSET_LATN
     { AF_BLUE_STRING_LATIN_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
     { AF_BLUE_STRING_LATIN_CAPITAL_BOTTOM,  0                                 }
@@ -338,6 +391,26 @@ AF_BLUE_STRINGSET_ENUM AF_BLUE_STRINGSETS_ARRAY AF_BLUE_STRINGSET_MAX_LEN:
     { AF_BLUE_STRING_LATIN_SMALL,           0                                 }
     { AF_BLUE_STRING_LATIN_SMALL_DESCENDER, 0                                 }
     { AF_BLUE_STRING_MAX,                   0                                 }
+
+  AF_BLUE_STRINGSET_LATB
+    { AF_BLUE_STRING_LATIN_SUBS_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_LATIN_SUBS_CAPITAL_BOTTOM,  0                                 }
+    { AF_BLUE_STRING_LATIN_SUBS_SMALL_F_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_LATIN_SUBS_SMALL,           AF_BLUE_PROPERTY_LATIN_TOP      |
+                                                 AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_LATIN_SUBS_SMALL,           0                                 }
+    { AF_BLUE_STRING_LATIN_SUBS_SMALL_DESCENDER, 0                                 }
+    { AF_BLUE_STRING_MAX,                        0                                 }
+
+  AF_BLUE_STRINGSET_LATP
+    { AF_BLUE_STRING_LATIN_SUPS_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_LATIN_SUPS_CAPITAL_BOTTOM,  0                                 }
+    { AF_BLUE_STRING_LATIN_SUPS_SMALL_F_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_LATIN_SUPS_SMALL,           AF_BLUE_PROPERTY_LATIN_TOP      |
+                                                 AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_LATIN_SUPS_SMALL,           0                                 }
+    { AF_BLUE_STRING_LATIN_SUPS_SMALL_DESCENDER, 0                                 }
+    { AF_BLUE_STRING_MAX,                        0                                 }
 
   AF_BLUE_STRINGSET_TELU
     { AF_BLUE_STRING_TELUGU_TOP,    AF_BLUE_PROPERTY_LATIN_TOP }

@@ -86,8 +86,7 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_RoundFix( FT_Fixed  a )
   {
-    return a >= 0 ?   ( a + 0x8000L ) & ~0xFFFFL
-                  : -((-a + 0x8000L ) & ~0xFFFFL );
+    return ( a + 0x8000L - ( a < 0 ) ) & ~0xFFFFL;
   }
 
 
@@ -96,8 +95,7 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_CeilFix( FT_Fixed  a )
   {
-    return a >= 0 ?   ( a + 0xFFFFL ) & ~0xFFFFL
-                  : -((-a + 0xFFFFL ) & ~0xFFFFL );
+    return ( a + 0xFFFFL ) & ~0xFFFFL;
   }
 
 
@@ -106,8 +104,7 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_FloorFix( FT_Fixed  a )
   {
-    return a >= 0 ?   a & ~0xFFFFL
-                  : -((-a) & ~0xFFFFL );
+    return a & ~0xFFFFL;
   }
 
 #ifndef FT_MSB
@@ -240,22 +237,10 @@
 
 #else
 
-    FT_Int     s = 1;
-    FT_UInt64  a, b, c;
-    FT_Long    c_;
+    FT_Int64  ab = (FT_Int64)a_ * (FT_Int64)b_;
 
-
-    FT_MOVE_SIGN( a_, s );
-    FT_MOVE_SIGN( b_, s );
-
-    a = (FT_UInt64)a_;
-    b = (FT_UInt64)b_;
-
-    c = ( a * b + 0x8000UL ) >> 16;
-
-    c_ = (FT_Long)c;
-
-    return s < 0 ? -c_ : c_;
+    /* this requires arithmetic right shift of signed numbers */
+    return (FT_Long)( ( ab + 0x8000L - ( ab < 0 ) ) >> 16 );
 
 #endif /* FT_MULFIX_ASSEMBLER */
   }
@@ -437,9 +422,6 @@
 
     /* XXX: this function does not allow 64-bit arguments */
 
-    if ( a_ == 0 || b_ == c_ )
-      return a_;
-
     FT_MOVE_SIGN( a_, s );
     FT_MOVE_SIGN( b_, s );
     FT_MOVE_SIGN( c_, s );
@@ -487,9 +469,6 @@
 
 
     /* XXX: this function does not allow 64-bit arguments */
-
-    if ( a_ == 0 || b_ == c_ )
-      return a_;
 
     FT_MOVE_SIGN( a_, s );
     FT_MOVE_SIGN( b_, s );
@@ -546,9 +525,6 @@
     FT_UInt32  a, b;
 
 
-    if ( a_ == 0 || b_ == 0x10000L )
-      return a_;
-
     /*
      *  This is a clever way of converting a signed number `a' into its
      *  absolute value (stored back into `a') and its sign.  The sign is
@@ -598,9 +574,6 @@
 
 
     /* XXX: this function does not allow 64-bit arguments */
-
-    if ( a_ == 0 || b_ == 0x10000L )
-      return a_;
 
     FT_MOVE_SIGN( a_, s );
     FT_MOVE_SIGN( b_, s );
@@ -785,6 +758,102 @@
   }
 
 
+  /* documentation is in ftcalc.h */
+
+  FT_BASE_DEF( FT_UInt32 )
+  FT_Vector_NormLen( FT_Vector*  vector )
+  {
+    FT_Int32   x_ = vector->x;
+    FT_Int32   y_ = vector->y;
+    FT_Int32   b, z;
+    FT_UInt32  x, y, u, v, l;
+    FT_Int     sx = 1, sy = 1, shift;
+
+
+    FT_MOVE_SIGN( x_, sx );
+    FT_MOVE_SIGN( y_, sy );
+
+    x = (FT_UInt32)x_;
+    y = (FT_UInt32)y_;
+
+    /* trivial cases */
+    if ( x == 0 )
+    {
+      if ( y > 0 )
+        vector->y = sy * 0x10000;
+      return y;
+    }
+    else if ( y == 0 )
+    {
+      if ( x > 0 )
+        vector->x = sx * 0x10000;
+      return x;
+    }
+
+    /* Estimate length and prenormalize by shifting so that */
+    /* the new approximate length is between 2/3 and 4/3.   */
+    /* The magic constant 0xAAAAAAAAUL (2/3 of 2^32) helps  */
+    /* achieve this in 16.16 fixed-point representation.    */
+    l = x > y ? x + ( y >> 1 )
+              : y + ( x >> 1 );
+
+    shift  = 31 - FT_MSB( l );
+    shift -= 15 + ( l >= ( 0xAAAAAAAAUL >> shift ) );
+
+    if ( shift > 0 )
+    {
+      x <<= shift;
+      y <<= shift;
+
+      /* re-estimate length for tiny vectors */
+      l = x > y ? x + ( y >> 1 )
+                : y + ( x >> 1 );
+    }
+    else
+    {
+      x >>= -shift;
+      y >>= -shift;
+      l >>= -shift;
+    }
+
+    /* lower linear approximation for reciprocal length minus one */
+    b = 0x10000 - (FT_Int32)l;
+
+    x_ = (FT_Int32)x;
+    y_ = (FT_Int32)y;
+
+    /* Newton's iterations */
+    do
+    {
+      u = (FT_UInt32)( x_ + ( x_ * b >> 16 ) );
+      v = (FT_UInt32)( y_ + ( y_ * b >> 16 ) );
+
+      /* Normalized squared length in the parentheses approaches 2^32. */
+      /* On two's complement systems, converting to signed gives the   */
+      /* difference with 2^32 even if the expression wraps around.     */
+      z = -(FT_Int32)( u * u + v * v ) / 0x200;
+      z = z * ( ( 0x10000 + b ) >> 8 ) / 0x10000;
+
+      b += z;
+
+    } while ( z > 0 );
+
+    vector->x = sx < 0 ? -(FT_Pos)u : (FT_Pos)u;
+    vector->y = sy < 0 ? -(FT_Pos)v : (FT_Pos)v;
+
+    /* Conversion to signed helps to recover from likely wrap around */
+    /* in calculating the prenormalized length, because it gives the */
+    /* correct difference with 2^32 on two's complement systems.     */
+    l = (FT_UInt32)( 0x10000 + (FT_Int32)( u * x + v * y ) / 0x10000 );
+    if ( shift > 0 )
+      l = ( l + ( 1 << ( shift - 1 ) ) ) >> shift;
+    else
+      l <<= -shift;
+
+    return l;
+  }
+
+
 #if 0
 
   /* documentation is in ftcalc.h */
@@ -832,52 +901,34 @@
                          FT_Pos  out_x,
                          FT_Pos  out_y )
   {
-    FT_Long  result; /* avoid overflow on 16-bit system */
-
-
-    /* deal with the trivial cases quickly */
-    if ( in_y == 0 )
-    {
-      if ( in_x >= 0 )
-        result = out_y;
-      else
-        result = -out_y;
-    }
-    else if ( in_x == 0 )
-    {
-      if ( in_y >= 0 )
-        result = -out_x;
-      else
-        result = out_x;
-    }
-    else if ( out_y == 0 )
-    {
-      if ( out_x >= 0 )
-        result = in_y;
-      else
-        result = -in_y;
-    }
-    else if ( out_x == 0 )
-    {
-      if ( out_y >= 0 )
-        result = -in_x;
-      else
-        result =  in_x;
-    }
-    else /* general case */
-    {
 #ifdef FT_LONG64
 
-      FT_Int64  delta = (FT_Int64)in_x * out_y - (FT_Int64)in_y * out_x;
+    FT_Int64  delta = (FT_Int64)in_x * out_y - (FT_Int64)in_y * out_x;
 
 
-      if ( delta == 0 )
-        result = 0;
-      else
-        result = 1 - 2 * ( delta < 0 );
+    return ( delta > 0 ) - ( delta < 0 );
 
 #else
 
+    FT_Int  result;
+
+
+    if ( (FT_ULong)FT_ABS( in_x ) + (FT_ULong)FT_ABS( out_y ) <= 131071UL &&
+         (FT_ULong)FT_ABS( in_y ) + (FT_ULong)FT_ABS( out_x ) <= 131071UL )
+    {
+      FT_Long  z1 = in_x * out_y;
+      FT_Long  z2 = in_y * out_x;
+
+
+      if ( z1 > z2 )
+        result = +1;
+      else if ( z1 < z2 )
+        result = -1;
+      else
+        result = 0;
+    }
+    else /* products might overflow 32 bits */
+    {
       FT_Int64  z1, z2;
 
 
@@ -895,12 +946,12 @@
         result = -1;
       else
         result = 0;
-
-#endif
     }
 
     /* XXX: only the sign of return value, +1/0/-1 must be used */
-    return (FT_Int)result;
+    return result;
+
+#endif
   }
 
 
