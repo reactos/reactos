@@ -11,15 +11,27 @@
 #include <stdlib.h>
 #include <specstrings.h>
 
-#define StrROS L"ReactOS"
-
+#define LStrROS L"ReactOS"
+#define StrROS "ReactOS"
 
 START_TEST(wcstombs)
 {
     size_t len;
+    char out[ARRAYSIZE(StrROS)];
 
-    len = wcstombs(NULL, StrROS, sizeof(StrROS) / sizeof(StrROS[0]));
+    len = wcstombs(NULL, LStrROS, 0);
     ok(len == 7, "Got len = %u, excepting 7\n", len);
-    len = wcstombs(NULL, StrROS, sizeof(StrROS) / sizeof(StrROS[0]) - 1);
+    len = wcstombs(NULL, LStrROS, 0);
     ok(len == 7, "Got len = %u, excepting 7\n", len);
+    len = wcstombs(NULL, LStrROS, ARRAYSIZE(out));
+    ok(len == 7, "Got len = %u, excepting 7\n", len);
+    len = wcstombs(NULL, LStrROS, ARRAYSIZE(out));
+    ok(len == 7, "Got len = %u, excepting 7\n", len);
+    len = wcstombs(out, LStrROS, ARRAYSIZE(out));
+    ok(len == 7, "Got len = %u, excepting 7\n", len);
+    ok_str(out, StrROS);
+    memset(out, 0, sizeof(out));
+    len = wcstombs(out, LStrROS, ARRAYSIZE(out));
+    ok(len == 7, "Got len = %u, excepting 7\n", len);
+    ok_str(out, StrROS);
 }
