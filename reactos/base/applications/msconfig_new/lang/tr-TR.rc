@@ -74,8 +74,8 @@ BEGIN
     CONTROL         "List1", IDC_TOOLS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 5, 356, 118
     EDITTEXT        IDC_TOOLS_CMDLINE, 5, 139, 356, 14, ES_READONLY
     PUSHBUTTON      "&Çalıştır", IDC_BTN_RUN, 311, 156, 50, 14
-    CONTROL         "&Advanced Options", IDC_CBX_TOOLS_ADVOPT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 134, 12
-    LTEXT           "Selected &Command:", IDC_STATIC, 5, 127, 128, 10
+    CONTROL         "&Gelişmiş Seçenekler", IDC_CBX_TOOLS_ADVOPT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 134, 12
+    LTEXT           "&Seçilen Komut:", IDC_STATIC, 5, 127, 128, 10
 END
 
 IDD_SERVICES_PAGE DIALOGEX 0, 0, 362, 175
@@ -94,29 +94,29 @@ CAPTION "FREELDR.INI"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_LIST_BOX, 5, 5, 356, 61, LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Check All Boot Paths", IDC_BTN_CHECK_BOOT_PATH, 5, 68, 72, 14
-    PUSHBUTTON      "&Set as Default", IDC_BTN_SET_DEFAULT_BOOT, 82, 68, 66, 14
-    PUSHBUTTON      "Move &Up", IDC_BTN_MOVE_UP_BOOT_OPTION, 153, 68, 66, 14
-    PUSHBUTTON      "Move &Down", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 224, 68, 66, 14
-    GROUPBOX        "Boot Options", IDC_STATIC, 5, 84, 285, 86
+    PUSHBUTTON      "&Tüm Ön Yükleme Yollarını Denetle", IDC_BTN_CHECK_BOOT_PATH, 5, 68, 72, 14
+    PUSHBUTTON      "&Ön Tanımlı Yap", IDC_BTN_SET_DEFAULT_BOOT, 82, 68, 66, 14
+    PUSHBUTTON      "&Yukarı Taşı", IDC_BTN_MOVE_UP_BOOT_OPTION, 153, 68, 66, 14
+    PUSHBUTTON      "&Aşağı Taşı", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 224, 68, 66, 14
+    GROUPBOX        "Ön Yükleme Seçenekleri", IDC_STATIC, 5, 84, 285, 86
     GROUPBOX        "", IDC_STATIC, 10, 97, 143, 68
-    CHECKBOX        "Safe boot (/SA&FEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
-    CONTROL         "Minimal (&MINIMAL)", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
-    CONTROL         "Other environment\n(M&INIMAL (ALTERNATESHELL))", IDC_RADIO4, 
+    CHECKBOX        "&Güvenli Ön Yükleme (/SAFEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
+    CONTROL         "&En Az (MINIMAL)", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
+    CONTROL         "&Başka Koşullar\n(MINIMAL (ALTERNATESHELL))", IDC_RADIO4, 
                     "Button", BS_AUTORADIOBUTTON | BS_MULTILINE, 15, 121, 133, 17
-    CONTROL         "Repair ActiveDirectory (DSRE&PAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
-    CONTROL         "Network (NET&WORK)", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
-    CHECKBOX        "No GUI boot\n(/&NOGUIBOOT)", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
-    CHECKBOX        "Boot log (/&BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
-    CHECKBOX        "Base video (/BAS&EVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
-    CHECKBOX        "OS boot information (/S&OS)", IDC_CBX_SOS, 158, 138, 127, 12
-    PUSHBUTTON      "Ad&vanced Options...", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
-    LTEXT           "&Timeout:", IDC_STATIC, 296, 91, 32, 10
+    CONTROL         "A&ctiveDirectory'i Onar (DSREPAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
+    CONTROL         "A&ğ (NETWORK)", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
+    CHECKBOX        "G&UI Ön Yüklemesi Yok\n(/NOGUIBOOT)", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
+    CHECKBOX        "Ö&n Yükleme Kaydı (/BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
+    CHECKBOX        "Taban &Vidyo (/BASEVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
+    CHECKBOX        "&OS Ön Yükleme Bilgisi (/SOS)", IDC_CBX_SOS, 158, 138, 127, 12
+    PUSHBUTTON      "Ge&lişmiş Seçenekler...", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
+    LTEXT           "&Süre Aşımı:", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
-    LTEXT           "seconds", IDC_STATIC, 330, 104, 31, 10
-    CONTROL         "Make &all boot settings permanent", 292, 
+    LTEXT           "sâniye", IDC_STATIC, 330, 104, 31, 10
+    CONTROL         "T&üm Ön Yükleme Ayarlarını Kalıcı Yap", 292, 
                     "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
-    PUSHBUTTON      "&Delete", 1014, 295, 68, 66, 14
+    PUSHBUTTON      "S&il", 1014, 295, 68, 66, 14
 END
 
 IDD_FREELDR_ADVANCED_PAGE DIALOGEX 0, 0, 175, 175
@@ -146,34 +146,34 @@ END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Expand Files from an Installation Source"
+CAPTION "Bir Kurulum Kaynağından Kütükleri Genişlet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Specify the files you want to restore, the source location containing the installation files, and the destination location for the files.", IDC_STATIC, 7, 7, 339, 17
-    LTEXT           "F&iles to restore:", IDC_STATIC, 7, 34, 93, 10
+    LTEXT           "Yenilemek istediğiniz kütükleri, kurulum kütüklerini içeren kaynak konumunu ve kütükler için varış konumunu belirtiniz.", IDC_STATIC, 7, 7, 339, 17
+    LTEXT           "&Yenilemek İçin Kütükler:", IDC_STATIC, 7, 34, 93, 10
     EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
-    PUSHBUTTON      "&Browse Files...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
-    LTEXT           "&Restore from:", IDC_STATIC, 7, 55, 93, 10
+    PUSHBUTTON      "&Kütüklere Göz At...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
+    LTEXT           "&Şuradan Yenile:", IDC_STATIC, 7, 55, 93, 10
     COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Browse &From...", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
-    LTEXT           "&Save files in:", IDC_STATIC, 7, 76, 93, 10
+    PUSHBUTTON      "Ş&uradan Göz At...", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
+    LTEXT           "Şu &İçinde Kütükleri Yaz:", IDC_STATIC, 7, 76, 93, 10
     COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Browse &To...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
-    DEFPUSHBUTTON   "Expand", IDOK, 179, 96, 82, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 264, 96, 82, 14
+    PUSHBUTTON      "Şu&raya Göz At...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
+    DEFPUSHBUTTON   "Genişlet", IDOK, 179, 96, 82, 14
+    PUSHBUTTON      "İptal", IDCANCEL, 264, 96, 82, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_MSCONFIG            "Dizge Yapılandırma İzlencesi"
-    IDS_MSCONFIG_2          "System Configuration"
+    IDS_MSCONFIG_2          "Dizge Yapılandırması"
     IDS_ABOUT               "&Üzerine...\tShift+F1"
 END
 
 STRINGTABLE
 BEGIN
     IDS_YES                 "Evet"
-    IDS_NO                  "No"
+    IDS_NO                  "Hayır"
 END
 
 STRINGTABLE
@@ -192,9 +192,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TOOLS_COLUMN_NAME "Tool Name"
+    IDS_TOOLS_COLUMN_NAME "Araç Adı"
     IDS_TOOLS_COLUMN_DESCR "Açıklama"
-    IDS_TOOLS_COLUMN_STANDARD "Standard"
+    IDS_TOOLS_COLUMN_STANDARD "Ölçünlü"
     IDS_STARTUP_COLUMN_ELEMENT "Öğe"
     IDS_STARTUP_COLUMN_CMD "Komut"
     IDS_STARTUP_COLUMN_PATH "Yol"
