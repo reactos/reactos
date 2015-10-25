@@ -96,17 +96,20 @@ CDeviceNode::SetupNode()
     }
 
 
-    // Set the overlay if the device has a problem
+    // Check if the device has a problem
     if (HasProblem())
     {
-        m_OverlayImage = 1;
+        if (IsDisabled())
+        {
+            m_OverlayImage = OverlayDisabled;
+        }
+        else
+        {
+            m_OverlayImage = OverlayProblem;
+        }
     }
 
-    // The disabled overlay takes precidence over the problem overlay
-    if (IsDisabled())
-    {
-        m_OverlayImage = 2;
-    }
+
 
 
     // Get the class guid for this device
@@ -227,7 +230,7 @@ CDeviceNode::IsDisabled()
                                   NULL);
     if (cr == CR_SUCCESS)
     {
-        return ((m_ProblemNumber & (CM_PROB_DISABLED | CM_PROB_HARDWARE_DISABLED)) != 0);
+        return ((m_ProblemNumber == CM_PROB_DISABLED) || (m_ProblemNumber == CM_PROB_HARDWARE_DISABLED));
     }
 
     return false;

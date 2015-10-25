@@ -1,6 +1,13 @@
 #pragma once
 #include "Node.h"
 
+enum IconOverlays
+{
+    OverlayProblem = 1,
+    OverlayDisabled,
+    OverlayInfo
+};
+
 class CDeviceNode : public CNode
 {
 private:
