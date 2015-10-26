@@ -196,8 +196,13 @@ CDeviceNode::IsHidden()
                                   NULL);
     if (cr == CR_SUCCESS)
     {
-        return ((m_Status & DN_NO_SHOW_IN_DM) != 0);
+        if (m_Status & DN_NO_SHOW_IN_DM)
+            return true;
     }
+
+    if (IsEqualGUID(*GetClassGuid(), GUID_DEVCLASS_LEGACYDRIVER) ||
+        IsEqualGUID(*GetClassGuid(), GUID_DEVCLASS_VOLUME))
+        return true;
 
     return false;
 }

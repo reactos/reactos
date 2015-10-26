@@ -460,6 +460,18 @@ CDeviceView::ListDevicesByType()
             if (IsEqualGUID(ClassGuid, GUID_DEVCLASS_UNKNOWN))
                 bClassUnknown = true;
 
+            // Check if this is a hidden class
+            if (IsEqualGUID(ClassGuid, GUID_DEVCLASS_LEGACYDRIVER) ||
+                IsEqualGUID(ClassGuid, GUID_DEVCLASS_VOLUME))
+            {
+                // Ignore this device if we aren't displaying hidden devices
+                if (m_ShowHidden == FALSE)
+                {
+                    ClassIndex++;
+                    continue;
+                }
+            }
+
             do
             {
                 // Get a handle to all the devices in this class
