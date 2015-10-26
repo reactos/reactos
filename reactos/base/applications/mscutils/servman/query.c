@@ -273,10 +273,10 @@ GetServiceList(PMAIN_WND_INFO Info,
         Info->pAllServices = NULL;
     }
 
-    ScHandle = OpenSCManager(NULL,
-                             NULL,
-                             SC_MANAGER_ENUMERATE_SERVICE);
-    if (ScHandle != INVALID_HANDLE_VALUE)
+    ScHandle = OpenSCManagerW(NULL,
+                              NULL,
+                              SC_MANAGER_ENUMERATE_SERVICE);
+    if (ScHandle != NULL)
     {
         if (!EnumServicesStatusEx(ScHandle,
                                   SC_ENUM_PROCESS_INFO,
@@ -336,16 +336,16 @@ UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService)
     SC_HANDLE hScm;
     BOOL bRet = FALSE;
 
-    hScm = OpenSCManager(NULL,
-                             NULL,
-                             SC_MANAGER_ENUMERATE_SERVICE);
-    if (hScm != INVALID_HANDLE_VALUE)
+    hScm = OpenSCManagerW(NULL,
+                          NULL,
+                          SC_MANAGER_ENUMERATE_SERVICE);
+    if (hScm != NULL)
     {
         SC_HANDLE hService;
 
-        hService = OpenService(hScm,
-                               pService->lpServiceName,
-                               SERVICE_QUERY_STATUS);
+        hService = OpenServiceW(hScm,
+                                pService->lpServiceName,
+                                SERVICE_QUERY_STATUS);
         if (hService)
         {
             DWORD size;

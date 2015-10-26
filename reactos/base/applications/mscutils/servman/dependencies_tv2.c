@@ -17,14 +17,14 @@ TV2_HasDependantServices(LPWSTR lpServiceName)
     DWORD dwBytesNeeded, dwCount;
     BOOL bRet = FALSE;
 
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ALL_ACCESS);
+    hSCManager = OpenSCManagerW(NULL,
+                                NULL,
+                                SC_MANAGER_ALL_ACCESS);
     if (hSCManager)
     {
-        hService = OpenService(hSCManager,
-                               lpServiceName,
-                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
+        hService = OpenServiceW(hSCManager,
+                                lpServiceName,
+                                SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
         if (hService)
         {
             /* Does this have any dependencies? */

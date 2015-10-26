@@ -17,14 +17,14 @@ DoDeleteService(PMAIN_WND_INFO Info,
     SC_HANDLE hSc;
     BOOL bRet = FALSE;
 
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ALL_ACCESS);
+    hSCManager = OpenSCManagerW(NULL,
+                                NULL,
+                                SC_MANAGER_ALL_ACCESS);
     if (hSCManager)
     {
-        hSc = OpenService(hSCManager,
-                          Info->pCurrentService->lpServiceName,
-                          DELETE);
+        hSc = OpenServiceW(hSCManager,
+                           Info->pCurrentService->lpServiceName,
+                           DELETE);
         if (hSc)
         {
             if (DeleteService(hSc))
