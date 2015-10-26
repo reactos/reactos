@@ -1947,6 +1947,12 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
     ParentWindow = hWndParent ? UserGetWindowObject(hWndParent): NULL;
     OwnerWindow = hWndOwner ? UserGetWindowObject(hWndOwner): NULL;
 
+    if (hWndParent && !ParentWindow)
+    {
+        ERR("Got invalid parent window handle\n");
+        goto cleanup;
+    }
+
     /* FIXME: Is this correct? */
     if(OwnerWindow)
         OwnerWindow = UserGetAncestor(OwnerWindow, GA_ROOT);
