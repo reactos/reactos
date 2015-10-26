@@ -170,7 +170,7 @@ GeneralPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     MessageBoxW(hGeneralPage, L"Help not implemented yet!", L"Help", MB_ICONINFORMATION | MB_OK);
                     return TRUE;
                 }
-                
+
                 case PSN_KILLACTIVE: // Is going to lose activation.
                 {
                     // Changes are always valid of course.

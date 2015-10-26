@@ -71,7 +71,7 @@ CreateAndInitXMLDOMDocument(IXMLDOMDocument** ppDoc)
         return hr;
 
     /* These methods should not fail so don't inspect result */
-    (*ppDoc)->put_async(VARIANT_FALSE);  
+    (*ppDoc)->put_async(VARIANT_FALSE);
     (*ppDoc)->put_validateOnParse(VARIANT_FALSE);
     (*ppDoc)->put_resolveExternals(VARIANT_FALSE);
 

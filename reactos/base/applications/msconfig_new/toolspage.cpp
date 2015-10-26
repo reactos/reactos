@@ -121,7 +121,7 @@ ParseToolsList(IXMLDOMDocument* pXMLDom, BOOL bIsStandard)
 static void
 AddItem(BOOL bIsStandard, const _bstr_t& name, const _bstr_t& descr, TOOL* tool)
 {
-    LPTSTR lpszStandard;
+    LPWSTR lpszStandard;
     LVITEM item = {};
 
     assert(tool);
@@ -132,7 +132,7 @@ AddItem(BOOL bIsStandard, const _bstr_t& name, const _bstr_t& descr, TOOL* tool)
     item.pszText  = (LPWSTR)name;
     item.iSubItem = 0;
     // item.iItem    = ListView_GetItemCount(hToolsListCtrl);
-    
+
     ListView_InsertItem(hToolsListCtrl, &item);
 
     if (bIsStandard)
@@ -243,7 +243,7 @@ static void Update_States(int iSelectedItem)
 
     if (ListView_GetItem(hToolsListCtrl, &item)) // (item.iItem > -1) // TODO: corriger ailleurs ce genre de code...
     {
-        LPTSTR lpszCmdLine = NULL;
+        LPWSTR lpszCmdLine = NULL;
         size_t numOfChars  = 0;
         tool = reinterpret_cast<TOOL*>(item.lParam);
 
@@ -266,19 +266,19 @@ static void Update_States(int iSelectedItem)
              (Button_GetCheck(GetDlgItem(hToolsPage, IDC_CBX_TOOLS_ADVOPT)) == BST_CHECKED) )
         {
             numOfChars = BuildCommandLine(NULL, tool->m_Command, tool->m_AdvParam, 0);
-            lpszCmdLine = new WCHAR[numOfChars];
+            lpszCmdLine = (LPWSTR)MemAlloc(0, numOfChars * sizeof(WCHAR));
             BuildCommandLine(lpszCmdLine, tool->m_Command, tool->m_AdvParam, numOfChars);
         }
         else
         {
             numOfChars = BuildCommandLine(NULL, tool->m_Command, tool->m_DefParam, 0);
-            lpszCmdLine = new WCHAR[numOfChars];
+            lpszCmdLine = (LPWSTR)MemAlloc(0, numOfChars * sizeof(WCHAR));
             BuildCommandLine(lpszCmdLine, tool->m_Command, tool->m_DefParam, numOfChars);
         }
 
         SendDlgItemMessage(hToolsPage, IDC_TOOLS_CMDLINE, WM_SETTEXT, 0, (LPARAM)lpszCmdLine);
 
-        delete[] lpszCmdLine;
+        MemFree(lpszCmdLine);
     }
     else
     {
@@ -471,7 +471,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         MessageBoxW(hToolsPage, L"Help not implemented yet!", L"Help", MB_ICONINFORMATION | MB_OK);
                         return TRUE;
                     }
-                
+
                     case PSN_KILLACTIVE: // Is going to lose activation.
                     {
                         // Changes are always valid of course.

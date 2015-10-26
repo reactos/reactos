@@ -7,6 +7,10 @@ extern "C" {
 extern BOOL bIsWindows;
 extern BOOL bIsOSVersionLessThanVista;
 
+extern const LPCWSTR IDS_REACTOS;
+extern const LPCWSTR IDS_MICROSOFT;
+extern const LPCWSTR IDS_WINDOWS;
+
 extern HINSTANCE hInst;
 extern LPWSTR szAppName;
 extern HWND hMainWnd;

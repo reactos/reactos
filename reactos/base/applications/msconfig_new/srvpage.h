@@ -1,9 +1,7 @@
-#ifndef _SVRPAGE_H_
-#define _SVRPAGE_H_
+#ifndef _SRVPAGE_H_
+#define _SRVPAGE_H_
 
-extern HWND hServicesPage;
-extern HWND hServicesListCtrl;
-
+DWORD GetServicesActivation(VOID);
 INT_PTR CALLBACK ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-#endif /* _SVRPAGE_H_ */
+#endif

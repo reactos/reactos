@@ -159,7 +159,7 @@ FreeLdrPageWndProc(HWND   hDlg,
             switch (LOWORD(wParam))
             {
                 case IDC_BTN_ADVANCED_OPTIONS:
-                    // DialogBox(hInst, MAKEINTRESOURCE(IDD_FREELDR_ADVANCED_DIALOG), hDlg /* hMainWnd */, NULL /*FileExtractDialogWndProc*/);
+                    // DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_FREELDR_ADVANCED_DIALOG), hDlg /* hMainWnd */, NULL /*FileExtractDialogWndProc*/);
                     break;
 
                 // default:

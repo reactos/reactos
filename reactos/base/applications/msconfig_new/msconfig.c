@@ -10,12 +10,12 @@
 #include "fileutils.h"
 #include "utils.h"
 
-#include "toolspage.h"
-// #include "srvpage.h"
-// #include "startuppage.h"
-#include "freeldrpage.h"
-// #include "systempage.h"
 #include "generalpage.h"
+// #include "systempage.h"
+#include "freeldrpage.h"
+#include "srvpage.h"
+// #include "startuppage.h"
+#include "toolspage.h"
 
 /* Allow only for a single instance of MSConfig */
 #ifdef _MSC_VER
@@ -30,6 +30,11 @@
 /* Defaults for ReactOS */
 BOOL bIsWindows = FALSE;
 BOOL bIsOSVersionLessThanVista = TRUE;
+
+/* Language-independent Vendor strings */
+const LPCWSTR IDS_REACTOS   = L"ReactOS";
+const LPCWSTR IDS_MICROSOFT = L"Microsoft";
+const LPCWSTR IDS_WINDOWS   = L"Windows";
 
 HINSTANCE hInst = NULL;
 LPWSTR szAppName = NULL;
@@ -46,7 +51,7 @@ WNDPROC wpOrigEditProc = NULL;
 // http://www.catch22.net/software/winspy
 // Copyright (c) 2002 by J Brown
 //
- 
+
 //
 //  Copied from uxtheme.h
 //  If you have this new header, then delete these and
@@ -57,7 +62,7 @@ WNDPROC wpOrigEditProc = NULL;
 #define ETDT_USETABTEXTURE  0x00000004
 #define ETDT_ENABLETAB      (ETDT_ENABLE  | ETDT_USETABTEXTURE)
 
-// 
+//
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 
 //
@@ -72,7 +77,7 @@ BOOL EnableDialogTheme(HWND hwnd)
 
     if(hUXTheme)
     {
-        fnEnableThemeDialogTexture = 
+        fnEnableThemeDialogTexture =
             (ETDTProc)GetProcAddress(hUXTheme, "EnableThemeDialogTexture");
 
         if(fnEnableThemeDialogTexture)
@@ -275,12 +280,12 @@ int CALLBACK PropSheetCallback(HWND hDlg, UINT message, LPARAM lParam)
 HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
 {
     HWND hPropSheet;
-    PROPSHEETHEADER psh;
-    PROPSHEETPAGE   psp[7];
+    PROPSHEETHEADERW psh;
+    PROPSHEETPAGEW   psp[7];
     unsigned int nPages = 0;
-    
+
     /* Header */
-    psh.dwSize      = sizeof(PROPSHEETHEADER);
+    psh.dwSize      = sizeof(psh);
     psh.dwFlags     = PSH_PROPSHEETPAGE | PSH_MODELESS | /*PSH_USEICONID |*/ PSH_HASHELP | /*PSH_NOCONTEXTHELP |*/ PSH_USECALLBACK;
     psh.hInstance   = hInstance;
     psh.hwndParent  = hwndOwner;
@@ -291,7 +296,7 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
     psh.pfnCallback = (PFNPROPSHEETCALLBACK)PropSheetCallback;
 
     /* General page */
-    psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
+    psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
     psp[nPages].dwFlags     = PSP_HASHELP;
     psp[nPages].hInstance   = hInstance;
     psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_GENERAL_PAGE);
@@ -304,7 +309,7 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
         /* SYSTEM.INI page */
         if (MyFileExists(lpszSystemIni, NULL))
         {
-            psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
+            psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
             psp[nPages].dwFlags     = PSP_HASHELP | PSP_USETITLE;
             psp[nPages].hInstance   = hInstance;
             psp[nPages].pszTitle    = MAKEINTRESOURCE(IDS_TAB_SYSTEM);
@@ -319,7 +324,7 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
         /* WIN.INI page */
         if (MyFileExists(lpszWinIni, NULL))
         {
-            psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
+            psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
             psp[nPages].dwFlags     = PSP_HASHELP | PSP_USETITLE;
             psp[nPages].hInstance   = hInstance;
             psp[nPages].pszTitle    = MAKEINTRESOURCE(IDS_TAB_WIN);
@@ -352,7 +357,7 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
 
         if (MyFileExists(lpszLoaderIniFile, NULL))
         {
-            psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
+            psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
             psp[nPages].dwFlags     = PSP_HASHELP | PSP_USETITLE;
             psp[nPages].hInstance   = hInstance;
             psp[nPages].pszTitle    = MAKEINTRESOURCE(dwTabNameId);
@@ -365,17 +370,17 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
         }
     }
 
-#if 0
     /* Services page */
-    psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
+    psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
     psp[nPages].dwFlags     = PSP_HASHELP;
     psp[nPages].hInstance   = hInstance;
     psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_SERVICES_PAGE);
     psp[nPages].pfnDlgProc  = (DLGPROC)ServicesPageWndProc;
     ++nPages;
 
+#if 0
     /* Startup page */
-    psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
+    psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
     psp[nPages].dwFlags     = PSP_HASHELP;
     psp[nPages].hInstance   = hInstance;
     psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_STARTUP_PAGE);
@@ -384,7 +389,7 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
 #endif
 
     /* Tools page */
-    psp[nPages].dwSize      = sizeof(PROPSHEETPAGE);
+    psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
     psp[nPages].dwFlags     = PSP_HASHELP;
     psp[nPages].hInstance   = hInstance;
     psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_TOOLS_PAGE);

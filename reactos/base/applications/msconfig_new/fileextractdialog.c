@@ -77,7 +77,7 @@ FileExtractDialogWndProc(HWND hDlg,
                     cabPathNum = GetWindowTextLengthW(GetDlgItem(hDlg, IDC_DRP_CAB_FILE)) + 1;
                     szCabPathFileName = (LPWSTR)MemAlloc(0, cabPathNum * sizeof(WCHAR));
                     GetDlgItemText(hDlg, IDC_DRP_CAB_FILE, szCabPathFileName, (int)cabPathNum);
-                    
+
                     fileNameNum = GetWindowTextLengthW(GetDlgItem(hDlg, IDC_TXT_FILE_TO_RESTORE)) + 1;
                     szFileName = (LPWSTR)MemAlloc(0, fileNameNum * sizeof(WCHAR));
                     GetDlgItemText(hDlg, IDC_TXT_FILE_TO_RESTORE, szFileName, (int)fileNameNum);

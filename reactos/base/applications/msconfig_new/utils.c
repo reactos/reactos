@@ -60,7 +60,7 @@ FormatDateTime(IN LPSYSTEMTIME pDateTime)
 
     if ( (iDateBufSize > 0) && (iTimeBufSize > 0) )
     {
-        lpszDateTime = (LPWSTR)MemAlloc(0, (iDateBufSize + iTimeBufSize) * sizeof(TCHAR));
+        lpszDateTime = (LPWSTR)MemAlloc(0, (iDateBufSize + iTimeBufSize) * sizeof(WCHAR));
 
         GetDateFormatW(LOCALE_USER_DEFAULT,
                        /* Only for Windows 7 : DATE_AUTOLAYOUT | */ DATE_SHORTDATE,
@@ -97,11 +97,11 @@ LoadResourceStringEx(IN HINSTANCE hInstance,
 
     // When passing a zero-length buffer size, LoadString(...) returns a
     // read-only pointer buffer to the program's resource string.
-    iStrSize = LoadString(hInstance, uID, (LPTSTR)&lpszResourceString, 0);
+    iStrSize = LoadStringW(hInstance, uID, (LPWSTR)&lpszResourceString, 0);
 
     if ( lpszResourceString && ( (lpszDestBuf = (LPWSTR)MemAlloc(0, (iStrSize + 1) * sizeof(WCHAR))) != NULL ) )
     {
-        _tcsncpy(lpszDestBuf, lpszResourceString, iStrSize);
+        wcsncpy(lpszDestBuf, lpszResourceString, iStrSize);
         lpszDestBuf[iStrSize] = L'\0'; // NULL-terminate the string
 
         if (pSize)
@@ -233,8 +233,8 @@ GetExecutableVendor(IN LPCWSTR lpszFilename)
     LPVOID pvData = NULL;
     UINT BufLen = 0;
     WORD wCodePage = 0, wLangID = 0;
-    LPTSTR lpszStrFileInfo = NULL;
-    
+    LPWSTR lpszStrFileInfo = NULL;
+
     LPWSTR lpszData = NULL;
 
     if (lpszFilename == NULL) return NULL;

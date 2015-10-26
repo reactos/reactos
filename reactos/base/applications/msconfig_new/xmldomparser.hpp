@@ -41,7 +41,7 @@
 #ifndef IID_PPV_ARGS
 extern "C++"
 {
-    template<typename T> void** IID_PPV_ARGS_Helper(T** pp) 
+    template<typename T> void** IID_PPV_ARGS_Helper(T** pp)
     {
         static_cast<IUnknown*>(*pp);    // make sure everyone derives from IUnknown
         return reinterpret_cast<void**>(pp);
