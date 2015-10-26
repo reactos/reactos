@@ -24,28 +24,23 @@
  * built according to the columns shown.
  *
  * FIXME: CheckToolbar: handle the "new folder" and "folder up" button
- *
- * FIXME: ShellView_FillList: consider sort orders
  */
 
 /*
 TODO:
-1. Load/Save the view state from/into the stream provided by the ShellBrowser.
-2. Let the shell folder sort items.
-3. Code to merge menus in the shellbrowser is incorrect.
-4. Move the background context menu creation into shell view. It should store the
-    shell view HWND to send commands.
-5. Send init, measure, and draw messages to context menu during tracking.
-6. Shell view should do SetCommandTarget on internet toolbar.
-7. When editing starts on item, set edit text to for editing value.
-8. When shell view is called back for item info, let listview save the value.
-9. Shell view should update status bar.
-10. Fix shell view to handle view mode popup exec.
-11. The background context menu should have a pidl just like foreground menus. This
-    causes crashes when dynamic handlers try to use the NULL pidl.
-12. The SHELLDLL_DefView should not be filled with blue unconditionally. This causes
-    annoying flashing of blue even on XP, and is not correct.
-13. Reorder of columns doesn't work - might be bug in comctl32
+- Load/Save the view state from/into the stream provided by the ShellBrowser.
+- Code to merge menus in the shellbrowser is incorrect.
+- Move the background context menu creation into shell view. It should store the
+   shell view HWND to send commands.
+- Shell view should do SetCommandTarget on internet toolbar.
+- When editing starts on item, set edit text to for editing value.
+- When shell view is called back for item info, let listview save the value.
+- Fix shell view to handle view mode popup exec.
+- The background context menu should have a pidl just like foreground menus. This
+   causes crashes when dynamic handlers try to use the NULL pidl.
+- The SHELLDLL_DefView should not be filled with blue unconditionally. This causes
+   annoying flashing of blue even on XP, and is not correct.
+- Reorder of columns doesn't work - might be bug in comctl32
 */
 
 #include "precomp.h"
