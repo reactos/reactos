@@ -66,8 +66,8 @@ BEGIN
     IDS_DEV_DISABLED "Bu aygıt başlamamış."
     IDS_DEV_DISABLED2 "Bu aygıt edilgin."
     IDS_DEV_DEVLOADER_NOT_READY "Bu aygıt için yükleyiciler gerekli sürücüleri yükleyemiyor."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Bu görüntü bağdaştırıcısı doğru çalışıyor."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Bu aygıt için yükleyiciler gerekli sürücüleri yükleyemiyor."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Bu aygıt; ya yok, ya düzgün çalışmıyor, ya da bu aygıtın kurulu tüm sürücüleri yok."
     IDS_DEV_MOVED "ReactOS, bu aygıtı kurma işleminde."
     IDS_DEV_TOO_EARLY "ReactOS, bu aygıtı kurma işleminde."

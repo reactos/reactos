@@ -66,8 +66,8 @@ BEGIN
     IDS_DEV_DISABLED "Denne enheten er ikke startet."
     IDS_DEV_DISABLED2 "Denne enheten er deaktivert."
     IDS_DEV_DEVLOADER_NOT_READY "Oppstartlasteren for denne enheten kan ikke laste de nødvendige filene."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Dette skjermkortet fungerer som det skal."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Oppstartlasteren for denne enheten kan ikke laste de nødvendige driverene."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Denne enheten er heller ikke valgt, eller vil ikke fungere riktig, eller så har den ikke alle driverene som trengs."
     IDS_DEV_MOVED "ReactOS starter prosessen for å setter opp denne enheten."
     IDS_DEV_TOO_EARLY "ReactOS er i prosessen for å setter opp denne enheten."

@@ -68,8 +68,8 @@ BEGIN
     IDS_DEV_DISABLED "Kjo pajisje nuk është nisur."
     IDS_DEV_DISABLED2 "Kjo pajisje është gjymtuar."
     IDS_DEV_DEVLOADER_NOT_READY "Ngarkuesit për këtë pajisje nuk mund të ngarkojnë komanduesin e kërkuar."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Kjo përshtatës ekrani është duke funksionuar si duhet."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Ngarkuesit për këtë pajisje nuk mund të ngarkojnë komanduesin e kërkuar."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Kjo pajisje ose nuk është e pranishme, nuk punon si duhet, ose nuk ka të gjithë komanduesit e instaluar."
     IDS_DEV_MOVED "ReactOS është në procesin e krijimit të kësaj pajisje."
     IDS_DEV_TOO_EARLY "ReactOS është në procesin e krijimit të kësaj pajisje."

@@ -65,8 +65,8 @@ BEGIN
     IDS_DEV_DISABLED "Ce périphérique n'est pas démarré."
     IDS_DEV_DISABLED2 "Ce périphérique est désactivé."
     IDS_DEV_DEVLOADER_NOT_READY "Les chargeurs de ce périphérique ne peuvent pas charger les drivers requis."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Cet écran fonctionne correctement."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Les chargeurs de ce périphérique ne peuvent pas charger les drivers requis."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Ce périphérique est soit non présent, soit ne fonctionne pas correctement, ou n'a pas tous les pilotes installés."
     IDS_DEV_MOVED "ReactOS est en train de mettre en place ce périphérique."
     IDS_DEV_TOO_EARLY "ReactOS est en train de mettre en place ce périphérique."

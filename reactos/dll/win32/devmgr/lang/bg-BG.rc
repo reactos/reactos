@@ -64,8 +64,8 @@ BEGIN
     IDS_DEV_DISABLED "Устройството не е включено."
     IDS_DEV_DISABLED2 "Устройството е забранено."
     IDS_DEV_DEVLOADER_NOT_READY "Зареждачите за устройството не могат да заредят водачите."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Видеокартата работи правилно."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Зареждачите за устройството не могат да заредят водачите."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Това устройство липсва, не работи правилно или не всичките му водачи са сложени."
     IDS_DEV_MOVED "РеактОС все още настройва устройството."
     IDS_DEV_TOO_EARLY "РеактОС все още настройва устройството."

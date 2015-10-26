@@ -66,8 +66,8 @@ BEGIN
     IDS_DEV_DISABLED "Αυτή η συσκευή δεν ξεκίνησε."
     IDS_DEV_DISABLED2 "Αυτή η συσκευή είναι απενεργοποιημένη."
     IDS_DEV_DEVLOADER_NOT_READY "The loaders for this device cannot load the required drivers."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Αυτός ο προσαρμογέας οθόνης λειτουργεί κανονικά."
-    IDS_DEV_DEVLOADER_NOT_READY3 "The loaders for this device cannot load the required drivers."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "This device is either not present, not working properly, or does not have all the drivers installed."
     IDS_DEV_MOVED "ReactOS is in the process of setting up this device."
     IDS_DEV_TOO_EARLY "ReactOS is in the process of setting up this device."

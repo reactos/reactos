@@ -66,8 +66,8 @@ BEGIN
     IDS_DEV_DISABLED "Это устройство не запущено."
     IDS_DEV_DISABLED2 "Это устройство отключено."
     IDS_DEV_DEVLOADER_NOT_READY "Загрузчик этого устройства не может загрузить необходимые драйверы."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Этот адаптер экрана функционирует корректно."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Загрузчик этого устройства не может загрузить необходимые драйверы."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Устройство отсутствует, работает неправильно или для него установлены не все драйверы."
     IDS_DEV_MOVED "ReactOS настраивает это устройство."
     IDS_DEV_TOO_EARLY "ReactOS настраивает это устройство."

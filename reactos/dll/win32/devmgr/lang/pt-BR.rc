@@ -66,8 +66,8 @@ BEGIN
     IDS_DEV_DISABLED "Este dispositivo não foi inicializado."
     IDS_DEV_DISABLED2 "Este dispositivo está desativado."
     IDS_DEV_DEVLOADER_NOT_READY "Os carregadores para este dispositivo não puderam carregar os drivers necessários."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Este adaptador de vídeo está funcionando corretamente."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Os carregadores para este dispositivo não puderam carregar os drivers necessários."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Este dispositivo não está presente, não está funcionando corretamente ou não tem todos os drivers instalados."
     IDS_DEV_MOVED "O ReactOS está no processo de configuração deste dispositivo."
     IDS_DEV_TOO_EARLY "O ReactOS está no processo de configuração deste dispositivo."

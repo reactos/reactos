@@ -69,8 +69,8 @@ BEGIN
     IDS_DEV_DISABLED "Acest dispozitiv nu este pornit."
     IDS_DEV_DISABLED2 "Acest dispozitiv este dezactivat."
     IDS_DEV_DEVLOADER_NOT_READY "Nu se pot încărca toate modulele-pilot necesare."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Nu se pot încărca toate modulele-pilot necesare."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Nu se pot încărca toate modulele-pilot necesare."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele-pilot."
     IDS_DEV_MOVED "Pentru moment acest dispozitiv încă nu este pe deplin instalat."
     IDS_DEV_TOO_EARLY "Pentru moment acest dispozitiv încă nu este pe deplin instalat."

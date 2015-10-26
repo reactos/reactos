@@ -66,8 +66,8 @@ BEGIN
     IDS_DEV_DISABLED "Device ini tidak dimulai."
     IDS_DEV_DISABLED2 "Device ini dimatikan."
     IDS_DEV_DEVLOADER_NOT_READY "Pengambil device ini tidak bisa mengambil driver yang dibutuhkan."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Adapter tampilan ini berfungsi dengan baik."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Pengambil device ini tidak bisa mengambil driver yang dibutuhkan."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Device ini baik tidak ada, tidak bekerja dengan baik, ataupun drivernya tidak semua terinstalasi."
     IDS_DEV_MOVED "ReactOS sedang dalam proses menyiapkan device ini."
     IDS_DEV_TOO_EARLY "ReactOS sedang dalam proses menyiapkan device ini."

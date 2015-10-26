@@ -66,8 +66,8 @@ BEGIN
     IDS_DEV_DISABLED "Dieses Gerät ist nicht gestartet."
     IDS_DEV_DISABLED2 "Dieses Gerät ist deaktiviert."
     IDS_DEV_DEVLOADER_NOT_READY "Der Lader für dieses Gerät kann die benötigten Treiber nicht laden."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Diese Grafikkarte funktioniert einwandfrei."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Die Lader für dieses Gerät können die benötigten Treiber nicht laden."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Dieses Gerät ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
     IDS_DEV_MOVED "ReactOS ist dabei dieses Gerät zu aktivieren."
     IDS_DEV_TOO_EARLY "ReactOS ist dabei dieses Gerät zu aktivieren."

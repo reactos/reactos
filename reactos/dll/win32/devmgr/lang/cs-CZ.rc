@@ -69,8 +69,8 @@ BEGIN
     IDS_DEV_DISABLED "Toto zařízení není spuštěno."
     IDS_DEV_DISABLED2 "Toto zařízení je vypnuto."
     IDS_DEV_DEVLOADER_NOT_READY "Loadery tohoto zařízení nemohou načíst požadované ovladače."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Tento zobrazovací adaptér funguje správně."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Loadery tohoto zařízení nemohou načíst požadované ovladače."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Zařízení není přítomno, nepracuje správně nebo nemá nainstalované všechny ovladače."
     IDS_DEV_MOVED "ReactOS právě nastavuje toto zařízení."
     IDS_DEV_TOO_EARLY "ReactOS právě nastavuje toto zařízení."

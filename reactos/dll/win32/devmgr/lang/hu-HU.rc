@@ -65,8 +65,8 @@ BEGIN
     IDS_DEV_DISABLED "Az eszköz nincs bekapcsolva."
     IDS_DEV_DISABLED2 "Az eszköz nincs bekapcsolva."
     IDS_DEV_DEVLOADER_NOT_READY "Nem lehet betölteni az igényelt eszköz illesztõprogramjait."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Ez a megjelenítõ megfelelõen mûködik."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Nem lehet betölteni az igényelt eszköz illesztõprogramjait."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Ez az eszköz már nincs jelen, elromlott vagy nincs minden illesztõprogram feltelepítve hozzá."
     IDS_DEV_MOVED "A ReactOS épp az eszközt telepíti."
     IDS_DEV_TOO_EARLY "A ReactOS épp az eszközt telepíti."
