@@ -61,7 +61,7 @@ AddReg=Classes
 11,,jscript.dll,1
 ;11,,ksproxy.ax,1
 11,,mlang.dll,1
-11,,mmdevapi.dll,1
+;11,,mmdevapi.dll,1
 11,,mscat32.dll,1
 11,,msctf.dll,1
 11,,mshtml.dll,3
