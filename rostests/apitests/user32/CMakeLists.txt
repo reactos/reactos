@@ -4,10 +4,12 @@ list(APPEND SOURCE
     helper.c
     CreateDialog.c
     CreateIconFromResourceEx.c
+    CreateWindowEx.c
     DeferWindowPos.c
     DestroyCursorIcon.c
     DrawIconEx.c
     desktop.c
+    DestroyWindow.c
     EnumDisplaySettings.c
     GetDCEx.c
     GetIconInfo.c

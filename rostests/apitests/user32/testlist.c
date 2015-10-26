@@ -6,10 +6,12 @@
 extern void func_AttachThreadInput(void);
 extern void func_CreateDialog(void);
 extern void func_CreateIconFromResourceEx(void);
+extern void func_CreateWindowEx(void);
 extern void func_DeferWindowPos(void);
 extern void func_DestroyCursorIcon(void);
 extern void func_DrawIconEx(void);
 extern void func_desktop(void);
+extern void func_DestroyWindow(void);
 extern void func_EnumDisplaySettings(void);
 extern void func_GetDCEx(void);
 extern void func_GetIconInfo(void);
@@ -41,10 +43,12 @@ const struct test winetest_testlist[] =
     { "AttachThreadInput", func_AttachThreadInput },
     { "CreateDialog", func_CreateDialog },
     { "CreateIconFromResourceEx", func_CreateIconFromResourceEx },
+    { "CreateWindowEx", func_CreateWindowEx },
     { "DeferWindowPos", func_DeferWindowPos },
     { "DestroyCursorIcon", func_DestroyCursorIcon },
     { "DrawIconEx", func_DrawIconEx },
     { "desktop", func_desktop },
+    { "DestroyWindow", func_DestroyWindow },
     { "EnumDisplaySettings", func_EnumDisplaySettings },
     { "GetDCEx", func_GetDCEx },
     { "GetIconInfo", func_GetIconInfo },
