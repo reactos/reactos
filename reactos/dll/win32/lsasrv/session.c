@@ -68,7 +68,7 @@ LsapSetLogonSessionData(IN PLUID LogonId)
 {
     PLSAP_LOGON_SESSION Session;
 
-    TRACE("LsapSetLogonSessionData()\n");
+    TRACE("LsapSetLogonSessionData(%p)\n", LogonId);
 
     Session = LsapGetLogonSession(LogonId);
     if (Session == NULL)
@@ -84,8 +84,9 @@ NTAPI
 LsapCreateLogonSession(IN PLUID LogonId)
 {
     PLSAP_LOGON_SESSION Session;
+    NTSTATUS Status;
 
-    TRACE("()\n");
+    TRACE("LsapCreateLogonSession(%p)\n", LogonId);
 
     /* Fail, if a session already exists */
     if (LsapGetLogonSession(LogonId) != NULL)
@@ -101,6 +102,16 @@ LsapCreateLogonSession(IN PLUID LogonId)
     /* Initialize the session entry */
     RtlCopyLuid(&Session->LogonId, LogonId);
 
+    TRACE("LsapCreateLogonSession(<0x%lx,0x%lx>)\n",
+          LogonId->HighPart, LogonId->LowPart);
+
+    Status = LsapRmCreateLogonSession(LogonId);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Session);
+        return Status;
+    }
+
     /* Insert the new session into the session list */
     InsertHeadList(&SessionListHead, &Session->Entry);
     SessionCount++;
@@ -115,7 +126,7 @@ LsapDeleteLogonSession(IN PLUID LogonId)
 {
     PLSAP_LOGON_SESSION Session;
 
-    TRACE("()\n");
+    TRACE("LsapDeleteLogonSession(%p)\n", LogonId);
 
     /* Fail, if the session does not exist */
     Session = LsapGetLogonSession(LogonId);

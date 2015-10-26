@@ -20,30 +20,6 @@ extern LUID SeAnonymousAuthenticationId;
 
 #define SEP_LOGON_SESSION_TAG 'sLeS'
 
-enum _RM_API_NUMBER
-{
-    RmAuditSetCommand = 1,
-    RmCreateLogonSession = 2,
-    RmDeleteLogonSession = 3
-};
-
-typedef struct _SEP_RM_API_MESSAGE
-{
-    PORT_MESSAGE Header;
-    ULONG ApiNumber;
-    union
-    {
-        UCHAR Fill[PORT_MAXIMUM_MESSAGE_LENGTH - sizeof(PORT_MESSAGE)];
-        NTSTATUS ResultStatus;
-        struct
-        {
-            BOOLEAN Enabled;
-            ULONG Flags[9];
-        } SetAuditEvent;
-        LUID LogonLuid;
-    } u;
-} SEP_RM_API_MESSAGE, *PSEP_RM_API_MESSAGE;
-
 typedef struct _SEP_LOGON_SESSION_REFERENCES
 {
     struct _SEP_LOGON_SESSION_REFERENCES *Next;

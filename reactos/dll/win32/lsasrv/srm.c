@@ -12,28 +12,6 @@
 #include "lsasrv.h"
 #include <ndk/ntndk.h>
 
-typedef struct _LSAP_RM_API_MESSAGE
-{
-    PORT_MESSAGE Header;
-    ULONG ApiNumber;
-    union
-    {
-        UCHAR Fill[PORT_MAXIMUM_MESSAGE_LENGTH - sizeof(PORT_MESSAGE)];
-        struct
-        {
-            ULONG Info1;
-        } WriteLog;
-
-    } u;
-} LSAP_RM_API_MESSAGE, *PLSAP_RM_API_MESSAGE;
-
-enum _LSAP_API_NUMBER
-{
-    LsapAdtWriteLogApi = 1,
-    LsapComponentTestApi,
-    LsapAsyncApi
-};
-
 /* GLOBALS *****************************************************************/
 
 HANDLE SeLsaCommandPort;
@@ -261,4 +239,84 @@ LsapRmInitializeServer(VOID)
     CloseHandle(ThreadHandle);
 
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+LsapRmCreateLogonSession(
+    PLUID LogonId)
+{
+    SEP_RM_API_MESSAGE RequestMessage;
+    SEP_RM_API_MESSAGE ReplyMessage;
+    NTSTATUS Status;
+
+    TRACE("LsapRmCreateLogonSession(%p)\n", LogonId);
+
+    RequestMessage.Header.u2.ZeroInit = 0;
+    RequestMessage.Header.u1.s1.TotalLength =
+        (CSHORT)(sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(LUID));
+    RequestMessage.Header.u1.s1.DataLength =
+        RequestMessage.Header.u1.s1.TotalLength -
+        (CSHORT)sizeof(PORT_MESSAGE);
+
+    RequestMessage.ApiNumber = (ULONG)RmCreateLogonSession;
+    RtlCopyLuid(&RequestMessage.u.LogonLuid, LogonId);
+
+    ReplyMessage.Header.u2.ZeroInit = 0;
+    ReplyMessage.Header.u1.s1.TotalLength =
+        (CSHORT)(sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS));
+    ReplyMessage.Header.u1.s1.DataLength =
+        ReplyMessage.Header.u1.s1.TotalLength -
+        (CSHORT)sizeof(PORT_MESSAGE);
+
+    ReplyMessage.u.ResultStatus = STATUS_SUCCESS;
+
+    Status = NtRequestWaitReplyPort(SeRmCommandPort,
+                                    (PPORT_MESSAGE)&RequestMessage,
+                                    (PPORT_MESSAGE)&ReplyMessage);
+    if (NT_SUCCESS(Status))
+    {
+        Status = ReplyMessage.u.ResultStatus;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+LsapRmDeleteLogonSession(
+    PLUID LogonId)
+{
+    SEP_RM_API_MESSAGE RequestMessage;
+    SEP_RM_API_MESSAGE ReplyMessage;
+    NTSTATUS Status;
+
+    TRACE("LsapRmDeleteLogonSession(%p)\n", LogonId);
+
+    RequestMessage.Header.u2.ZeroInit = 0;
+    RequestMessage.Header.u1.s1.TotalLength =
+        (CSHORT)(sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(LUID));
+    RequestMessage.Header.u1.s1.DataLength =
+        RequestMessage.Header.u1.s1.TotalLength -
+        (CSHORT)sizeof(PORT_MESSAGE);
+
+    RequestMessage.ApiNumber = (ULONG)RmDeleteLogonSession;
+    RtlCopyLuid(&RequestMessage.u.LogonLuid, LogonId);
+
+    ReplyMessage.Header.u2.ZeroInit = 0;
+    ReplyMessage.Header.u1.s1.TotalLength =
+        (CSHORT)(sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS));
+    ReplyMessage.Header.u1.s1.DataLength =
+        ReplyMessage.Header.u1.s1.TotalLength -
+        (CSHORT)sizeof(PORT_MESSAGE);
+
+    ReplyMessage.u.ResultStatus = STATUS_SUCCESS;
+
+    Status = NtRequestWaitReplyPort(SeRmCommandPort,
+                                    (PPORT_MESSAGE)&RequestMessage,
+                                    (PPORT_MESSAGE)&ReplyMessage);
+    if (NT_SUCCESS(Status))
+    {
+        Status = ReplyMessage.u.ResultStatus;
+    }
+
+    return Status;
 }

@@ -33,6 +33,8 @@
 #include <ntlsa.h>
 #include <sddl.h>
 
+#include <srmp.h>
+
 #include <lsass.h>
 #include <lsa_s.h>
 
@@ -424,6 +426,14 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg);
 /* srm.c */
 NTSTATUS
 LsapRmInitializeServer(VOID);
+
+NTSTATUS
+LsapRmCreateLogonSession(
+    PLUID LogonId);
+
+NTSTATUS
+LsapRmDeleteLogonSession(
+    PLUID LogonId);
 
 /* utils.c */
 INT

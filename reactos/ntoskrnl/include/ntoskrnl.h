@@ -88,6 +88,9 @@
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
 
+/* SRM header */
+#include <srmp.h>
+
 #define ExRaiseStatus RtlRaiseStatus
 
 //
