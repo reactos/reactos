@@ -109,7 +109,7 @@ char* WINAPI ConvertBSTRToString(BSTR pSrc)
     }
 
     /* Allocate the string */
-    szOut = new char[cb];
+    szOut = (char*)::operator new(cb * sizeof(char));
     if (!szOut)
     {
         ::_com_issue_error(HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY));
@@ -123,7 +123,7 @@ char* WINAPI ConvertBSTRToString(BSTR pSrc)
         /* We failed, clean everything up */
         cwch = ::GetLastError();
 
-        delete[] szOut;
+        ::operator delete(szOut);
         szOut = NULL;
 
         ::_com_issue_error(!IS_ERROR(cwch) ? HRESULT_FROM_WIN32(cwch) : cwch);
