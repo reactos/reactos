@@ -12,7 +12,7 @@
 #include <share.h>
 
 #include <wingdi.h>
-#include <WindowsX.h>
+#include "commctrldefs.h"
 
 #include "utils.h"
 
