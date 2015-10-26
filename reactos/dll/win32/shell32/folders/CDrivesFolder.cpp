@@ -58,8 +58,8 @@ class CDrivesFolderEnum :
 */
 
 static const shvheader MyComputerSFHeader[] = {
-    {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
-    {IDS_SHV_COLUMN3, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
+    {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
+    {IDS_SHV_COLUMN3, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
     {IDS_SHV_COLUMN6, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
     {IDS_SHV_COLUMN7, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
 };
@@ -298,12 +298,52 @@ HRESULT WINAPI CDrivesFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcRes
 
 HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    int nReturn;
+    if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
+        return SHELL32_CompareGuidItems(this, lParam, pidl1, pidl2);
 
-    TRACE("(%p)->(0x%08lx,pidl1=%p,pidl2=%p)\n", this, lParam, pidl1, pidl2);
-    nReturn = SHELL32_CompareIDs (this, lParam, pidl1, pidl2);
-    TRACE("-- %i\n", nReturn);
-    return nReturn;
+    if (!_ILIsDrive(pidl1) || !_ILIsDrive(pidl2) || LOWORD(lParam) >= MYCOMPUTERSHELLVIEWCOLUMNS)
+        return E_INVALIDARG;
+
+    CHAR* pszDrive1 = _ILGetDataPointer(pidl1)->u.drive.szDriveName;
+    CHAR* pszDrive2 = _ILGetDataPointer(pidl2)->u.drive.szDriveName;
+
+    int result;
+    switch(LOWORD(lParam)) 
+    {
+        case 0:        /* name */
+        {
+            result = stricmp(pszDrive1, pszDrive2);
+            return MAKE_COMPARE_HRESULT(result);
+        }
+        case 1:        /* Type */
+        {
+            return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
+        }
+        case 2:       /* Size */
+        case 3:       /* Size Available */
+        {
+            ULARGE_INTEGER Drive1Available, Drive1Total, Drive2Available, Drive2Total;
+
+            if (GetVolumeInformationA(pszDrive1, NULL, 0, NULL, NULL, NULL, NULL, 0))
+                GetDiskFreeSpaceExA(pszDrive1, &Drive1Available, &Drive1Total, NULL);
+            else
+                Drive1Available.QuadPart = Drive1Total.QuadPart = 0;
+
+            if (GetVolumeInformationA(pszDrive2, NULL, 0, NULL, NULL, NULL, NULL, 0))
+                GetDiskFreeSpaceExA(pszDrive2, &Drive2Available, &Drive2Total, NULL);
+            else
+                Drive2Available.QuadPart = Drive2Total.QuadPart = 0;
+
+            LARGE_INTEGER Diff;
+            if (lParam == 2) /* Size */
+                Diff.QuadPart = Drive1Total.QuadPart - Drive2Total.QuadPart;
+            else /* Size available */
+                Diff.QuadPart = Drive1Available.QuadPart - Drive2Available.QuadPart;
+
+            return MAKE_COMPARE_HRESULT(Diff.QuadPart);
+        }
+    }
+    return E_INVALIDARG;
 }
 
 /**************************************************************************

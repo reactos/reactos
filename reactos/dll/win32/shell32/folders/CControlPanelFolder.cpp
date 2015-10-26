@@ -49,7 +49,7 @@ class CControlPanelEnum :
 */
 
 static const shvheader ControlPanelSFHeader[] = {
-    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},/*FIXME*/
+    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20},/*FIXME*/
     {IDS_SHV_COLUMN9, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 80},/*FIXME*/
 };
 
@@ -336,15 +336,34 @@ HRESULT WINAPI CControlPanelFolder::BindToStorage(
 /**************************************************************************
 *     CControlPanelFolder::CompareIDs
 */
-
 HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    int nReturn;
+    /* Dont use SHELL32_CompareGuidItems because it would cause guid items to come first */
+    if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
+    {
+        return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
+    }
+    PIDLCPanelStruct *pData1 = _ILGetCPanelPointer(pidl1);
+    PIDLCPanelStruct *pData2 = _ILGetCPanelPointer(pidl2);
 
-    TRACE("(%p)->(0x%08lx,pidl1=%p,pidl2=%p)\n", this, lParam, pidl1, pidl2);
-    nReturn = SHELL32_CompareIDs(this, lParam, pidl1, pidl2);
-    TRACE("-- %i\n", nReturn);
-    return nReturn;
+    if (!pData1 || !pData2 || LOWORD(lParam)>= CONROLPANELSHELLVIEWCOLUMNS)
+        return E_INVALIDARG;
+
+    int result;
+    switch(LOWORD(lParam)) 
+    {
+        case 0:        /* name */
+            result = wcsicmp(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
+            break;
+        case 1:        /* comment */
+            result = wcsicmp(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
+            break;
+        default:
+            ERR("Got wrong lParam!\n");
+            return E_INVALIDARG;
+    }
+
+    return MAKE_COMPARE_HRESULT(result);
 }
 
 /**************************************************************************

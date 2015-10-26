@@ -94,11 +94,11 @@ CFSFolder::~CFSFolder()
 
 
 static const shvheader GenericSFHeader[] = {
-    {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
+    {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN2, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN3, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN4, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 12},
-    {IDS_SHV_COLUMN5, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 5}
+    {IDS_SHV_COLUMN3, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
+    {IDS_SHV_COLUMN4, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12},
+    {IDS_SHV_COLUMN5, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10}
 };
 
 #define GENERICSHELLVIEWCOLUMNS 5
@@ -319,12 +319,46 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
                                      PCUIDLIST_RELATIVE pidl1,
                                      PCUIDLIST_RELATIVE pidl2)
 {
-    int nReturn;
+    LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
+    LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
+    FileStructW* pDataW1 = _ILGetFileStructW(pidl1);
+    FileStructW* pDataW2 = _ILGetFileStructW(pidl2);
+    BOOL bIsFolder1 = _ILIsFolder(pidl1);
+    BOOL bIsFolder2 = _ILIsFolder(pidl2);
+    LPWSTR pExtension1, pExtension2;
 
-    TRACE("(%p)->(0x%08lx,pidl1=%p,pidl2=%p)\n", this, lParam, pidl1, pidl2);
-    nReturn = SHELL32_CompareIDs(this, lParam, pidl1, pidl2);
-    TRACE("-- %i\n", nReturn);
-    return nReturn;
+    if (!pDataW1 || !pDataW2 || LOWORD(lParam) >= GENERICSHELLVIEWCOLUMNS)
+        return E_INVALIDARG;
+
+    /* When sorting between a File and a Folder, the Folder gets sorted first */
+    if (bIsFolder1 != bIsFolder2)
+    {
+        return MAKE_COMPARE_HRESULT(bIsFolder1 ? -1 : 1);
+    }
+
+    int result;
+    switch (LOWORD(lParam))
+    {
+        case 0: /* Name */
+            result = wcsicmp(pDataW1->wszName, pDataW2->wszName);
+            break;
+        case 2: /* Type */
+            pExtension1 = PathFindExtensionW(pDataW1->wszName);
+            pExtension2 = PathFindExtensionW(pDataW2->wszName);
+            result = wcsicmp(pExtension1, pExtension2); 
+            break;
+        case 1: /* Size */
+            result = pData1->u.file.dwFileSize - pData2->u.file.dwFileSize;
+            break;
+        case 3: /* Modified */
+            result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
+            if (result == 0)
+                result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
+            break;
+        case 4: /* Attributes */
+            return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
+    }
+    return MAKE_COMPARE_HRESULT(result);
 }
 
 /**************************************************************************

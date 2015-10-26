@@ -514,4 +514,9 @@ HRESULT inline SHSetStrRet(LPSTRRET pStrRet, HINSTANCE hInstance, DWORD resId)
 
 #endif /* __cplusplus */
 
+#define S_LESSTHAN 0xffff
+#define S_EQUAL S_OK
+#define S_GREATERTHAN S_FALSE
+#define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
+
 #endif /* __ROS_SHELL_UTILS_H */

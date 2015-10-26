@@ -492,11 +492,41 @@ HRESULT WINAPI CRecycleBin::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbc, REF
 
 HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    /* TODO */
-    TRACE("(%p, %p, %p, %p)\n", this, (void *)lParam, pidl1, pidl2);
-    if (pidl1->mkid.cb != pidl2->mkid.cb)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, pidl1->mkid.cb - pidl2->mkid.cb);
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (unsigned short)memcmp(pidl1->mkid.abID, pidl2->mkid.abID, pidl1->mkid.cb));
+    PIDLRecycleStruct* pData1 = _ILGetRecycleStruct(pidl1);
+    PIDLRecycleStruct* pData2 = _ILGetRecycleStruct(pidl2);
+    LPWSTR pName1, pName2;
+
+    if(!pData1 || !pData2 || LOWORD(lParam) >= COLUMNS_COUNT)
+        return E_INVALIDARG;
+
+    SHORT result;
+    LONGLONG diff;
+    switch (LOWORD(lParam))
+    {
+        case 0: /* Name */
+            pName1 = PathFindFileNameW(pData1->szName);
+            pName2 = PathFindFileNameW(pData2->szName);
+            result = wcsicmp(pName1, pName2);
+            break;
+        case 1: /* Orig. Location */
+            result = wcsicmp(pData1->szName, pData2->szName);
+            break;
+        case 2: /* Date Deleted */
+            result = CompareFileTime(&pData1->DeletionTime, &pData2->DeletionTime);
+            break;
+        case 3: /* Size */
+            diff = pData1->FileSize.QuadPart - pData2->FileSize.QuadPart;
+            return MAKE_COMPARE_HRESULT(diff);
+        case 4: /* Type */
+            pName1 = PathFindExtensionW(pData1->szName);
+            pName2 = PathFindExtensionW(pData2->szName);
+            result = wcsicmp(pName1, pName2);
+            break;
+        case 5: /* Modified */
+            result = CompareFileTime(&pData1->LastModification, &pData2->LastModification);
+            break;
+    }
+    return MAKE_COMPARE_HRESULT(result);
 }
 
 HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void **ppv)

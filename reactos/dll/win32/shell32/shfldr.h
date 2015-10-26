@@ -47,7 +47,6 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf, LPCITEMIDLIST pidl, 
 HRESULT SHELL32_BindToFS (LPCITEMIDLIST pidlRoot,
                  LPCWSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut);
 
-HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path);
 
 HRESULT SHELL32_BindToGuidItem(LPCITEMIDLIST pidlRoot,
@@ -73,6 +72,10 @@ HRESULT SH_ParseGuidDisplayName(IShellFolder2 * pFolder,
                                 DWORD *pchEaten,
                                 PIDLIST_RELATIVE *ppidl,
                                 DWORD *pdwAttributes);
+
+HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
+
+HRESULT SHELL32_CompareGuidItems(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 
 extern "C"
 BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);

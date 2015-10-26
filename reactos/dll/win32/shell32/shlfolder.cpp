@@ -609,77 +609,43 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     return S_OK;
 }
 
-/***********************************************************************
- *  SHELL32_CompareIDs
- */
-HRESULT SHELL32_CompareIDs(IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
-    int type1,
-        type2;
-    char szTemp1[MAX_PATH];
-    char szTemp2[MAX_PATH];
-    HRESULT nReturn;
-    LPITEMIDLIST firstpidl;
-    LPITEMIDLIST nextpidl1;
-    LPITEMIDLIST nextpidl2;
-    CComPtr<IShellFolder> psf;
+    SHELLDETAILS sd;
+    WCHAR wszItem1[MAX_PATH], wszItem2[MAX_PATH];
 
-    /* test for empty pidls */
-    BOOL isEmpty1 = _ILIsDesktop(pidl1);
-    BOOL isEmpty2 = _ILIsDesktop(pidl2);
+    isf->GetDetailsOf(pidl1, lParam, &sd);
+    StrRetToBufW(&sd.str, pidl1, wszItem1, MAX_PATH);
+    isf->GetDetailsOf(pidl2, lParam, &sd);
+    StrRetToBufW(&sd.str, pidl2, wszItem2, MAX_PATH);
+    int ret = wcsicmp(wszItem1, wszItem2);
 
-    if (isEmpty1 && isEmpty2)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
-    if (isEmpty1)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (WORD) -1);
-    if (isEmpty2)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
+    return MAKE_COMPARE_HRESULT(ret);
+}
 
-    /* test for different types. Sort order is the PT_* constant */
-    type1 = _ILGetDataPointer(pidl1)->type;
-    type2 = _ILGetDataPointer(pidl2)->type;
-    if (type1 < type2)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (WORD) -1);
-    else if (type1 > type2)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
-
-    /* test for name of pidl */
-    _ILSimpleGetText(pidl1, szTemp1, MAX_PATH);
-    _ILSimpleGetText(pidl2, szTemp2, MAX_PATH);
-    nReturn = lstrcmpiA(szTemp1, szTemp2);
-    if (nReturn < 0)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (WORD) -1);
-    else if (nReturn > 0)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
-
-    /* test of complex pidls */
-    firstpidl = ILCloneFirst(pidl1);
-    nextpidl1 = ILGetNext(pidl1);
-    nextpidl2 = ILGetNext(pidl2);
-
-    /* optimizing: test special cases and bind not deeper */
-    /* the deeper shellfolder would do the same */
-    isEmpty1 = _ILIsDesktop(nextpidl1);
-    isEmpty2 = _ILIsDesktop(nextpidl2);
-
-    if (isEmpty1 && isEmpty2) 
+HRESULT SHELL32_CompareGuidItems(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    if (pidl1->mkid.cb == 0 || pidl2->mkid.cb == 0)
     {
-        nReturn = MAKE_HRESULT( SEVERITY_SUCCESS, 0, 0 );
+        ERR("Got an empty pidl!\n");
+        return E_INVALIDARG;
     }
-    else if (isEmpty1) 
+
+    BOOL bIsGuidFolder1 = _ILIsSpecialFolder(pidl1);
+    BOOL bIsGuidFolder2 = _ILIsSpecialFolder(pidl2);
+
+    if (!bIsGuidFolder1 && !bIsGuidFolder2)
     {
-        nReturn = MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
+        ERR("Got no guid pidl!\n");
+        return E_INVALIDARG;
     }
-    else if (isEmpty2)
+    else if (bIsGuidFolder1 && bIsGuidFolder2)
     {
-        nReturn = MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
-        /* optimizing end */
+        return SHELL32_CompareDetails(isf, lParam, pidl1, pidl2);
     }
-    else if (SUCCEEDED(iface->BindToObject(firstpidl, NULL, IID_PPV_ARG(IShellFolder, &psf)))) {
-        nReturn = psf->CompareIDs(lParam, nextpidl1, nextpidl2);
-    }
-    ILFree(firstpidl);
-    return nReturn;
+
+    /* Guid folders come first compared to everything else */
+    return MAKE_COMPARE_HRESULT(bIsGuidFolder1 ? -1 : 1);
 }
 
 HRESULT SH_ParseGuidDisplayName(IShellFolder2 * pFolder,

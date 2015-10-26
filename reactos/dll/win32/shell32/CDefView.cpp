@@ -131,7 +131,6 @@ class CDefView :
         BOOL CreateList();
         void UpdateListColors();
         BOOL InitList();
-        static INT CALLBACK CompareItems(LPVOID lParam1, LPVOID lParam2, LPARAM lpData);
         static INT CALLBACK ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lpData);
 
         PCUITEMID_CHILD _PidlByItem(int i);
@@ -334,13 +333,6 @@ class CDefView :
         COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
         END_COM_MAP()
 };
-
-/* ListView Header ID's */
-#define LISTVIEW_COLUMN_NAME 0
-#define LISTVIEW_COLUMN_SIZE 1
-#define LISTVIEW_COLUMN_TYPE 2
-#define LISTVIEW_COLUMN_TIME 3
-#define LISTVIEW_COLUMN_ATTRIB 4
 
 /*menu items */
 #define IDM_VIEW_FILES  (FCIDM_SHVIEWFIRST + 0x500)
@@ -648,30 +640,6 @@ BOOL CDefView::InitList()
     return TRUE;
 }
 
-/**********************************************************
-* ShellView_CompareItems()
-*
-* NOTES
-*  internal, CALLBACK for DSA_Sort
-*/
-INT CALLBACK CDefView::CompareItems(LPVOID lParam1, LPVOID lParam2, LPARAM lpData)
-{
-    int ret;
-    TRACE("pidl1=%p pidl2=%p lpsf=%p\n", lParam1, lParam2, (LPVOID) lpData);
-
-    if (!lpData)
-        return 0;
-
-    IShellFolder* psf = reinterpret_cast<IShellFolder*>(lpData);
-    PCUIDLIST_RELATIVE pidl1 = reinterpret_cast<PCUIDLIST_RELATIVE>(lParam1);
-    PCUIDLIST_RELATIVE pidl2 = reinterpret_cast<PCUIDLIST_RELATIVE>(lParam2);
-
-    ret = (SHORT)SCODE_CODE(psf->CompareIDs(0, pidl1, pidl2));
-    TRACE("ret=%i\n", ret);
-
-    return ret;
-}
-
 /*************************************************************************
  * ShellView_ListViewCompareItems
  *
@@ -686,89 +654,20 @@ INT CALLBACK CDefView::CompareItems(LPVOID lParam1, LPVOID lParam2, LPARAM lpDat
  *     A negative value if the first item should precede the second,
  *     a positive value if the first item should follow the second,
  *     or zero if the two items are equivalent
- *
- * NOTES
- *    FIXME: function does what ShellView_CompareItems is supposed to do.
- *    unify it and figure out how to use the undocumented first parameter
- *    of IShellFolder_CompareIDs to do the job this function does and
- *    move this code to IShellFolder.
- *    make LISTVIEW_SORT_INFO obsolete
- *    the way this function works is only usable if we had only
- *    filesystemfolders  (25/10/99 jsch)
  */
 INT CALLBACK CDefView::ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lpData)
 {
-    INT nDiff = 0;
-    FILETIME fd1, fd2;
-    char strName1[MAX_PATH], strName2[MAX_PATH];
-    BOOL bIsFolder1, bIsFolder2, bIsBothFolder;
     PCUIDLIST_RELATIVE pidl1 = reinterpret_cast<PCUIDLIST_RELATIVE>(lParam1);
     PCUIDLIST_RELATIVE pidl2 = reinterpret_cast<PCUIDLIST_RELATIVE>(lParam2);
-    LISTVIEW_SORT_INFO *pSortInfo = reinterpret_cast<LPLISTVIEW_SORT_INFO>(lpData);
+    CDefView *pThis = reinterpret_cast<CDefView*>(lpData);
 
+    HRESULT hres = pThis->m_pSFParent->CompareIDs(pThis->m_sortInfo.nHeaderID, pidl1, pidl2);
+    if (FAILED_UNEXPECTEDLY(hres))
+        return 0;
 
-    bIsFolder1 = _ILIsFolder(pidl1);
-    bIsFolder2 = _ILIsFolder(pidl2);
-    bIsBothFolder = bIsFolder1 && bIsFolder2;
-
-    /* When sorting between a File and a Folder, the Folder gets sorted first */
-    if ( (bIsFolder1 || bIsFolder2) && !bIsBothFolder)
-    {
-        nDiff = bIsFolder1 ? -1 : 1;
-    }
-    else
-    {
-        /* Sort by Time: Folders or Files can be sorted */
-
-        if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_TIME)
-        {
-            _ILGetFileDateTime(pidl1, &fd1);
-            _ILGetFileDateTime(pidl2, &fd2);
-            nDiff = CompareFileTime(&fd2, &fd1);
-        }
-        /* Sort by Attribute: Folder or Files can be sorted */
-        else if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_ATTRIB)
-        {
-            _ILGetFileAttributes(pidl1, strName1, MAX_PATH);
-            _ILGetFileAttributes(pidl2, strName2, MAX_PATH);
-            nDiff = lstrcmpiA(strName1, strName2);
-        }
-        /* Sort by FileName: Folder or Files can be sorted */
-        else if (pSortInfo->nHeaderID == LISTVIEW_COLUMN_NAME || bIsBothFolder)
-        {
-            /* Sort by Text */
-            _ILSimpleGetText(pidl1, strName1, MAX_PATH);
-            _ILSimpleGetText(pidl2, strName2, MAX_PATH);
-            nDiff = lstrcmpiA(strName1, strName2);
-        }
-        /* Sort by File Size, Only valid for Files */
-        else if (pSortInfo->nHeaderID == LISTVIEW_COLUMN_SIZE)
-        {
-            nDiff = (INT)(_ILGetFileSize(pidl1, NULL, 0) - _ILGetFileSize(pidl2, NULL, 0));
-        }
-        /* Sort by File Type, Only valid for Files */
-        else if (pSortInfo->nHeaderID == LISTVIEW_COLUMN_TYPE)
-        {
-            /* Sort by Type */
-            _ILGetFileType(pidl1, strName1, MAX_PATH);
-            _ILGetFileType(pidl2, strName2, MAX_PATH);
-            nDiff = lstrcmpiA(strName1, strName2);
-        }
-    }
-    /*  If the Date, FileSize, FileType, Attrib was the same, sort by FileName */
-
-    if (nDiff == 0)
-    {
-        _ILSimpleGetText(pidl1, strName1, MAX_PATH);
-        _ILSimpleGetText(pidl2, strName2, MAX_PATH);
-        nDiff = lstrcmpiA(strName1, strName2);
-    }
-
-    if (!pSortInfo->bIsAscending)
-    {
+    SHORT nDiff = HRESULT_CODE(hres);
+    if (!pThis->m_sortInfo.bIsAscending)
         nDiff = -nDiff;
-    }
-
     return nDiff;
 }
 
@@ -975,13 +874,16 @@ HRESULT CDefView::FillList()
         }
     }
 
-    /* sort the array */
-    DPA_Sort(hdpa, CompareItems, reinterpret_cast<LPARAM>(m_pSFParent.p));
-
     /*turn the listview's redrawing off*/
     m_ListView.SetRedraw(FALSE);
 
     DPA_DestroyCallback( hdpa, fill_list, this);
+
+    /* sort the array */
+    m_pSF2Parent->GetDefaultColumn(NULL, (ULONG*)&m_sortInfo.nHeaderID, NULL);
+    m_sortInfo.bIsAscending = TRUE;
+    m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
+    m_ListView.SortItems(ListViewCompareItems, this);
 
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
@@ -1658,7 +1560,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             m_sortInfo.nHeaderID = dwCmdID - 0x30;
             m_sortInfo.bIsAscending = TRUE;
             m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
-            m_ListView.SortItems(ListViewCompareItems, &m_sortInfo);
+            m_ListView.SortItems(ListViewCompareItems, this);
             break;
 
         case FCIDM_SHVIEW_SELECTALL:
@@ -1788,7 +1690,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 m_sortInfo.bIsAscending = TRUE;
             m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
 
-            m_ListView.SortItems(ListViewCompareItems, &m_sortInfo);
+            m_ListView.SortItems(ListViewCompareItems, this);
             break;
 
         case LVN_GETDISPINFOA:
