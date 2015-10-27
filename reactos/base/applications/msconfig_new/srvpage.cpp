@@ -10,10 +10,11 @@
 
 #include "precomp.h"
 #include "utils.h"
-#include "listviewfuncs.h"
 #include "regutils.h"
 #include "stringutils.h"
 // #include "CmdLineParser.h"
+#include "listviewfuncs.h"
+#include "uxthemesupp.h"
 
 #include <winsvc.h>
 
@@ -666,7 +667,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             //
             DWORD dwStyle = ListView_GetExtendedListViewStyle(hServicesListCtrl);
             ListView_SetExtendedListViewStyle(hServicesListCtrl, dwStyle | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES);
-            /** SetWindowTheme(hServicesListCtrl, _T("Explorer"), NULL); // TODO: activate this only if Windows >= XP **/
+            SetWindowTheme(hServicesListCtrl, L"Explorer", NULL);
 
             //
             // Initialize the application page's controls.

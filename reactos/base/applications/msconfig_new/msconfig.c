@@ -46,61 +46,6 @@ HICON   hIcon          = NULL;
 WNDPROC wpOrigEditProc = NULL;
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Taken from WinSpy++ 1.7
-// http://www.catch22.net/software/winspy
-// Copyright (c) 2002 by J Brown
-//
-
-//
-//  Copied from uxtheme.h
-//  If you have this new header, then delete these and
-//  #include <uxtheme.h> instead!
-//
-#define ETDT_DISABLE        0x00000001
-#define ETDT_ENABLE         0x00000002
-#define ETDT_USETABTEXTURE  0x00000004
-#define ETDT_ENABLETAB      (ETDT_ENABLE  | ETDT_USETABTEXTURE)
-
-//
-typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
-
-//
-//  Try to call EnableThemeDialogTexture, if uxtheme.dll is present
-//
-BOOL EnableDialogTheme(HWND hwnd)
-{
-    HMODULE hUXTheme;
-    ETDTProc fnEnableThemeDialogTexture;
-
-    hUXTheme = LoadLibrary(_T("uxtheme.dll"));
-
-    if(hUXTheme)
-    {
-        fnEnableThemeDialogTexture =
-            (ETDTProc)GetProcAddress(hUXTheme, "EnableThemeDialogTexture");
-
-        if(fnEnableThemeDialogTexture)
-        {
-            fnEnableThemeDialogTexture(hwnd, ETDT_ENABLETAB);
-
-            FreeLibrary(hUXTheme);
-            return TRUE;
-        }
-        else
-        {
-            // Failed to locate API!
-            FreeLibrary(hUXTheme);
-            return FALSE;
-        }
-    }
-    else
-    {
-        // Not running under XP? Just fail gracefully
-        return FALSE;
-    }
-}
-
 /* About Box dialog */
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {

@@ -11,6 +11,7 @@ include_directories(
 
 list(APPEND C_SOURCE
     comctl32ex/listviewfuncs.c
+    comctl32ex/uxthemesupp.c
     fileextractdialog.c
     fileutils.c
     freeldrpage.c

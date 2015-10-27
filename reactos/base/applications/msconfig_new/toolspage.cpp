@@ -11,6 +11,7 @@
 #include "xmldomparser.hpp"
 #include "utils.h"
 #include "listviewfuncs.h"
+#include "uxthemesupp.h"
 
 static HWND hToolsPage     = NULL;
 static HWND hToolsListCtrl = NULL;
@@ -330,7 +331,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             //
             DWORD dwStyle = ListView_GetExtendedListViewStyle(hToolsListCtrl);
             ListView_SetExtendedListViewStyle(hToolsListCtrl, dwStyle | LVS_EX_FULLROWSELECT);
-            /** SetWindowTheme(hToolsListCtrl, _T("Explorer"), NULL); // TODO: activate this only if Windows >= XP **/
+            SetWindowTheme(hToolsListCtrl, L"Explorer", NULL);
 
             //
             // Initialize the application page's controls.
