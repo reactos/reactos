@@ -181,9 +181,112 @@ Test_IoRegisterPlugPlayNotification(VOID)
     }
 }
 
+static
+VOID
+Test_IoSetDeviceInterface(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING SymbolicLinkName;
+    PWCHAR Buffer;
+    ULONG BufferSize;
+
+    /* Invalid prefix or GUID */
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(NULL, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+
+    RtlInitEmptyUnicodeString(&SymbolicLinkName, NULL, 0);
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??");
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\");
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\\\");
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+
+    /* Valid prefix & GUID, invalid device node */
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\X{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\\\?\\X{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\X{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}\\");
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\#{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
+    KmtStartSeh()
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    KmtEndSeh(STATUS_SUCCESS)
+    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
+
+    /* Must not read past the buffer */
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\#{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
+    BufferSize = SymbolicLinkName.Length;
+    Buffer = KmtAllocateGuarded(BufferSize);
+    if (!skip(Buffer != NULL, "Failed to allocate %lu bytes\n", BufferSize))
+    {
+        RtlCopyMemory(Buffer, SymbolicLinkName.Buffer, BufferSize);
+        SymbolicLinkName.Buffer = Buffer;
+        SymbolicLinkName.MaximumLength = BufferSize;
+        KmtStartSeh()
+            Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+        KmtEndSeh(STATUS_SUCCESS)
+        ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
+        KmtFreeGuarded(Buffer);
+    }
+
+    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\#aaaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
+    BufferSize = SymbolicLinkName.Length;
+    Buffer = KmtAllocateGuarded(BufferSize);
+    if (!skip(Buffer != NULL, "Failed to allocate %lu bytes\n", BufferSize))
+    {
+        RtlCopyMemory(Buffer, SymbolicLinkName.Buffer, BufferSize);
+        SymbolicLinkName.Buffer = Buffer;
+        SymbolicLinkName.MaximumLength = BufferSize;
+        KmtStartSeh()
+            Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+        KmtEndSeh(STATUS_SUCCESS)
+        ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+        KmtFreeGuarded(Buffer);
+    }
+}
+
 START_TEST(IoDeviceInterface)
 {
     // FIXME: This test crashes in Windows
     (void)Test_IoRegisterDeviceInterface;
     Test_IoRegisterPlugPlayNotification();
+    Test_IoSetDeviceInterface();
 }
