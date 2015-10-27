@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/msconfig_new/comctl32ex/uxthemesupp.c
+ * FILE:        base/applications/msconfig_new/comctl32ex/uxthemesupp.h
  * PURPOSE:     UX Theming helpers.
  * COPYRIGHT:   Copyright 2015 Hermes BELUSCA - MAITO <hermes.belusca@sfr.fr>
  */

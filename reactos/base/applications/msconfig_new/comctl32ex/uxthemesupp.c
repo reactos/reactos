@@ -25,6 +25,7 @@ InitUxTheme(VOID)
     return TRUE;
 }
 
+#if 0
 static VOID
 CleanupUxTheme(VOID)
 {
@@ -32,7 +33,7 @@ CleanupUxTheme(VOID)
     hUxTheme = NULL;
     // Initialized = FALSE;
 }
-
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
