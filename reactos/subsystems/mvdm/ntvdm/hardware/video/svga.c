@@ -1185,10 +1185,14 @@ static VOID VgaUpdateFramebuffer(VOID)
     DWORD AddressSize = VgaGetAddressSize();
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
     BYTE PresetRowScan = VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F;
+    BYTE BytePanning = (VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3;
     DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
                     + PresetRowScan * ScanlineSize
-                    + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
+                    + BytePanning;
+    WORD LineCompare = VgaCrtcRegisters[VGA_CRTC_LINE_COMPARE_REG]
+                       | ((VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_LC8) << 4);
+    BYTE PixelShift = VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F;
 
     /*
      * If the console framebuffer is NULL, that means something
@@ -1216,9 +1220,38 @@ static VOID VgaUpdateFramebuffer(VOID)
             InterlaceHighBit >>= 1;
         }
 
+        if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
+        {
+            /* Halve the line compare value */
+            LineCompare >>= 1;
+        }
+        else
+        {
+            /* Divide the line compare value by the maximum scan line */
+            LineCompare /= 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
+        }
+
         /* Loop through the scanlines */
         for (i = 0; i < CurrResolution.Y; i++)
         {
+            if (i == LineCompare)
+            {
+                if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_PPM)
+                {
+                    /*
+                     * Disable the pixel shift count and byte panning
+                     * for the rest of the display cycle
+                     */
+                    PixelShift = 0;
+                    BytePanning = 0;
+                }
+
+                /* Reset the address, but assume the preset row scan is 0 */
+                Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
+                                   VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
+                          + BytePanning;
+            }
+
             if ((VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) && (i & 1))
             {
                 /* Odd-numbered line in interlaced mode - set the high bit */
@@ -1233,11 +1266,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                 /* Apply horizontal pixel panning */
                 if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                 {
-                    X = j + ((VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F) >> 1);
+                    X = j + (PixelShift >> 1);
                 }
                 else
                 {
-                    X = j + (VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F);
+                    X = j + PixelShift;
                 }
 
                 /* Check the shifting mode */
