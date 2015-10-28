@@ -1247,9 +1247,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                 }
 
                 /* Reset the address, but assume the preset row scan is 0 */
-                Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
-                                   VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
-                          + BytePanning;
+                Address = BytePanning;
             }
 
             if ((VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) && (i & 1))
