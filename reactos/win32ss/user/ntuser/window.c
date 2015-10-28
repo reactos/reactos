@@ -3357,7 +3357,7 @@ HWND FASTCALL UserGetShellWindow(VOID)
    HWND Ret;
 
    NTSTATUS Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                     KernelMode,
+                     UserMode,
                      0,
                      &WinStaObject,
                      0);
@@ -3407,7 +3407,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    }
 
    Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                     KernelMode,
+                     UserMode,
                      0,
                      &WinStaObject,
                      0);

@@ -599,7 +599,7 @@ NtUserCloseWindowStation(
 
    Status = IntValidateWindowStationHandle(
                hWinSta,
-               KernelMode,
+               UserMode,
                0,
                &Object,
                0);
@@ -901,7 +901,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     if(hWindowStation !=NULL)
     {
         Status = IntValidateWindowStationHandle( hWindowStation,
-                                                 KernelMode,
+                                                 UserMode,
                                                  0,
                                                  &NewWinSta,
                                                  &ObjectHandleInfo);
@@ -1017,7 +1017,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
 
    Status = IntValidateWindowStationHandle(
                hWindowStation,
-               KernelMode,
+               UserMode,
                0,
                &Object,
                0);
@@ -1063,7 +1063,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
 
    Status = IntValidateWindowStationHandle(
                hWindowStation,
-               KernelMode,
+               UserMode,
                0,
                &Object,
                0);
@@ -1274,7 +1274,7 @@ BuildDesktopNameList(
    UNICODE_STRING DesktopName;
 
    Status = IntValidateWindowStationHandle(hWindowStation,
-                                           KernelMode,
+                                           UserMode,
                                            0,
                                            &WindowStation,
                                            0);
@@ -1461,7 +1461,7 @@ NtUserSetWindowStationUser(
    }
 
    Status = IntValidateWindowStationHandle(hWindowStation,
-                                           KernelMode,
+                                           UserMode,
                                            0,
                                            &WindowStation,
                                            0);

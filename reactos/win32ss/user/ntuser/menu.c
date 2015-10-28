@@ -4776,7 +4776,7 @@ HMENU FASTCALL UserCreateMenu(PDESKTOP Desktop, BOOL PopupMenu)
        */
 
       Status = IntValidateWindowStationHandle(CurrentProcess->Win32WindowStation,
-                     KernelMode,
+                     UserMode,
                      0,
                      &WinStaObject,
                      0);

@@ -1534,7 +1534,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     }
 
     Status = IntValidateWindowStationHandle( PsGetCurrentProcess()->Win32WindowStation,
-                                             KernelMode,
+                                             UserMode,
                                              0,
                                             &WinStaObj,
                                              0);

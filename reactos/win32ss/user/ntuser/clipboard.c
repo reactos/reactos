@@ -25,7 +25,7 @@ IntGetWinStaForCbAccess(VOID)
     NTSTATUS Status;
 
     hWinSta = UserGetProcessWindowStation();
-    Status = IntValidateWindowStationHandle(hWinSta, KernelMode, WINSTA_ACCESSCLIPBOARD, &pWinStaObj, 0);
+    Status = IntValidateWindowStationHandle(hWinSta, UserMode, WINSTA_ACCESSCLIPBOARD, &pWinStaObj, 0);
     if (!NT_SUCCESS(Status))
     {
         ERR("Cannot open winsta\n");
