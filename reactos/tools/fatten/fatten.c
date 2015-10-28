@@ -54,6 +54,44 @@ DWORD get_fattime(void)
     }
 }
 
+void print_help(const char* name)
+{
+    printf("\n");
+    printf("Syntax: %s image_file [list of commands]\n\n", name);
+#if _WIN32
+    printf("Commands: [Note: both '/' and '-' are accepted as command prefixes.]\n");
+#else
+    printf("Commands:\n");
+#endif
+    // printf("    -format <sectors> [<filesystem>] [<custom header label>]\n"
+    printf("    -format <sectors> [<custom header label>]\n"
+           "            Formats the disk image.\n");
+    printf("    -boot <sector file>\n"
+           "            Writes a new boot sector.\n");
+    printf("    -add <src path> <dst path>\n"
+           "            Copies an external file or directory into the image.\n");
+    printf("    -extract <src path> <dst path>\n"
+           "            Copies a file or directory from the image into an external file\n"
+           "            or directory.\n");
+    printf("    -move <src path> <new path>\n"
+           "            Moves/renames a file or directory.\n");
+    printf("    -copy <src path> <new path>\n"
+           "            Copies a file or directory.\n");
+    printf("    -mkdir <src path> <new path>\n"
+           "            Creates a directory.\n");
+    printf("    -rmdir <src path> <new path>\n"
+           "            Creates a directory.\n");
+    printf("    -list [<pattern>]\n"
+           "            Lists files a directory (defaults to root).\n");
+}
+
+#define PRINT_HELP_AND_QUIT() \
+    do { \
+        ret = 1; \
+        print_help(oargv[0]); \
+        goto exit; \
+    } while (0)
+
 int is_command(const char* parg)
 {
 #if _WIN32
@@ -88,44 +126,8 @@ int need_mount(void)
     do { ret = need_mount(); if(ret) \
     {\
         printf("Error: could not mount disk (%d).\n", ret); \
-        PRINT_HELP_AND_QUIT(); \
-    } } while(0)
-
-void print_help(char const * const name)
-{
-    printf("Syntax: %s image_file [list of commands]\n\n", name);
-#if _WIN32
-    printf("Commands: [Note: both '/' and '-' are accepted as command prefixes.]\n");
-#else
-    printf("Commands:\n");
-#endif
-    printf("    -format <sectors> [<filesystem>] [<custom header label>]\n"
-           "            Formats the disk image.\n");
-    printf("    -boot <sector file>\n"
-           "            Writes a new boot sector.\n");
-    printf("    -add <src path> <dst path>\n"
-           "            Copies an external file or directory into the image.\n");
-    printf("    -extract <src path> <dst path>\n"
-           "            Copies a file or directory from the image into an external file\n"
-           "            or directory.\n");
-    printf("    -move <src path> <new path>\n"
-           "            Moves/renames a file or directory.\n");
-    printf("    -copy <src path> <new path>\n"
-           "            Copies a file or directory.\n");
-    printf("    -mkdir <src path> <new path>\n"
-           "            Creates a directory.\n");
-    printf("    -rmdir <src path> <new path>\n"
-           "            Creates a directory.\n");
-    printf("    -list [<pattern>]\n"
-           "            Lists files a directory (defaults to root).\n");
-}
-
-#define PRINT_HELP_AND_QUIT() \
-    do { \
-        ret = 1; \
-        print_help(oargv[0]); \
         goto exit; \
-    } while (0)
+    } } while(0)
 
 int main(int oargc, char* oargv[])
 {
@@ -141,14 +143,15 @@ int main(int oargc, char* oargv[])
 
     if (is_command(argv[0]))
     {
-        printf("Error: first parameter must be a filename, found '%s' instead. \n", argv[0]);
+        printf("Error: first parameter must be a filename, found '%s' instead.\n", argv[0]);
         PRINT_HELP_AND_QUIT();
     }
 
     if (disk_openimage(0, argv[0]))
     {
-        printf("Error: could not open image file '%s'. \n", argv[0]);
-        PRINT_HELP_AND_QUIT();
+        printf("Error: could not open image file '%s'.\n", argv[0]);
+        ret = 1;
+        goto exit;
     }
 
     argc--;
@@ -156,13 +159,13 @@ int main(int oargc, char* oargv[])
 
     while (argc > 0)
     {
-        char *parg = *argv;
+        char* parg = *argv;
         int nargs = 0;
         int i = 0;
 
         if (!is_command(parg))
         {
-            printf("Error: Expected a command, found '%s' instead. \n", parg);
+            printf("Error: Expected a command, found '%s' instead.\n", parg);
             PRINT_HELP_AND_QUIT();
         }
 
@@ -199,36 +202,38 @@ int main(int oargc, char* oargv[])
             if (ret)
             {
                 printf("ERROR: Formatting drive: %d.\n", ret);
-                PRINT_HELP_AND_QUIT();
+                goto exit;
             }
 
             // Arg 2: custom header label (optional)
             if (nargs > 1)
             {
-                char label[8];
+                char label[11];
+                char ch;
 
                 int i, invalid = 0;
                 int len = strlen(argv[1]);
 
-                if (len <= 8)
+                if (len <= sizeof(label))
                 {
-                    // Copy and verify each character
+                    // Verify each character (should be printable ASCII)
+                    // and copy it in uppercase.
                     for (i = 0; i < len; i++)
                     {
-                        char ch = argv[1][i];
-                        label[i] = ch;
-
-                        if (!isupper(ch) && !isspace(ch))
+                        ch = toupper(argv[1][i]);
+                        if ((ch < 0x20) || !isprint(ch))
                         {
                             invalid = 1;
                             break;
                         }
+
+                        label[i] = ch;
                     }
                 
                     if (!invalid)
                     {
                         // Pad the label with spaces
-                        while (len < 8)
+                        while (len < sizeof(label))
                         {
                             label[len++] = ' ';
                         }
@@ -241,7 +246,7 @@ int main(int oargc, char* oargv[])
 
                 if (invalid)
                 {
-                    printf("Error: header label is limited to 8 uppercase letters and spaces.");
+                    printf("Error: header label is limited to 11 printable uppercase ASCII symbols.");
                     ret = 1;
                     goto exit;
                 }
@@ -253,14 +258,13 @@ int main(int oargc, char* oargv[])
                     goto exit;
                 }
 
-
                 if (g_Filesystem.fs_type == FS_FAT32)
                 {
-                    memcpy(buff + 71, label, 8);
+                    memcpy(buff + 71, label, sizeof(label));
                 }
                 else
                 {
-                    memcpy(buff + 43, label, 8);
+                    memcpy(buff + 43, label, sizeof(label));
                 }
 
                 if (disk_write(0, buff, 0, 1))
