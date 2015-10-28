@@ -63,9 +63,9 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
     else
         InstanceKeyRealP = &InstanceKeyReal;
 
-    *GuidKeyRealP = INVALID_HANDLE_VALUE;
-    *DeviceKeyRealP = INVALID_HANDLE_VALUE;
-    *InstanceKeyRealP = INVALID_HANDLE_VALUE;
+    *GuidKeyRealP = NULL;
+    *DeviceKeyRealP = NULL;
+    *InstanceKeyRealP = NULL;
 
     BaseKeyU.Buffer = PathBuffer;
     BaseKeyU.Length = 0;
@@ -204,13 +204,13 @@ cleanup:
     }
     else
     {
-       if (*GuidKeyRealP != INVALID_HANDLE_VALUE)
+       if (*GuidKeyRealP != NULL)
           ZwClose(*GuidKeyRealP);
 
-       if (*DeviceKeyRealP != INVALID_HANDLE_VALUE)
+       if (*DeviceKeyRealP != NULL)
           ZwClose(*DeviceKeyRealP);
 
-       if (*InstanceKeyRealP != INVALID_HANDLE_VALUE)
+       if (*InstanceKeyRealP != NULL)
           ZwClose(*InstanceKeyRealP);
     }
 
@@ -261,7 +261,7 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
 
    InitializeObjectAttributes(&ObjectAttributes,
                               &DeviceParametersU,
-                              OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF,
                               InstanceKey,
                               NULL);
    Status = ZwCreateKey(&DeviceParametersKey,
@@ -339,7 +339,7 @@ IopOpenInterfaceKey(IN CONST GUID *InterfaceClassGuid,
     UNICODE_STRING GuidString;
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE InterfaceKey = INVALID_HANDLE_VALUE;
+    HANDLE InterfaceKey = NULL;
     NTSTATUS Status;
 
     GuidString.Buffer = KeyName.Buffer = NULL;
@@ -389,7 +389,7 @@ IopOpenInterfaceKey(IN CONST GUID *InterfaceClassGuid,
     InitializeObjectAttributes(
         &ObjectAttributes,
         &KeyName,
-        OBJ_CASE_INSENSITIVE,
+        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
         NULL,
         NULL);
     Status = ZwOpenKey(
@@ -408,7 +408,7 @@ IopOpenInterfaceKey(IN CONST GUID *InterfaceClassGuid,
 cleanup:
     if (!NT_SUCCESS(Status))
     {
-        if (InterfaceKey != INVALID_HANDLE_VALUE)
+        if (InterfaceKey != NULL)
             ZwClose(InterfaceKey);
     }
     RtlFreeUnicodeString(&GuidString);
@@ -462,10 +462,10 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
 {
     UNICODE_STRING Control = RTL_CONSTANT_STRING(L"Control");
     UNICODE_STRING SymbolicLink = RTL_CONSTANT_STRING(L"SymbolicLink");
-    HANDLE InterfaceKey = INVALID_HANDLE_VALUE;
-    HANDLE DeviceKey = INVALID_HANDLE_VALUE;
-    HANDLE ReferenceKey = INVALID_HANDLE_VALUE;
-    HANDLE ControlKey = INVALID_HANDLE_VALUE;
+    HANDLE InterfaceKey = NULL;
+    HANDLE DeviceKey = NULL;
+    HANDLE ReferenceKey = NULL;
+    HANDLE ControlKey = NULL;
     PKEY_BASIC_INFORMATION DeviceBi = NULL;
     PKEY_BASIC_INFORMATION ReferenceBi = NULL;
     PKEY_VALUE_PARTIAL_INFORMATION bip = NULL;
@@ -557,7 +557,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
         InitializeObjectAttributes(
             &ObjectAttributes,
             &KeyName,
-            OBJ_CASE_INSENSITIVE,
+            OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
             InterfaceKey,
             NULL);
         Status = ZwOpenKey(
@@ -670,7 +670,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             InitializeObjectAttributes(
                 &ObjectAttributes,
                 &KeyName,
-                OBJ_CASE_INSENSITIVE,
+                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                 DeviceKey,
                 NULL);
             Status = ZwOpenKey(
@@ -691,7 +691,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 InitializeObjectAttributes(
                     &ObjectAttributes,
                     &Control,
-                    OBJ_CASE_INSENSITIVE,
+                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                     ReferenceKey,
                     NULL);
                 Status = ZwOpenKey(
@@ -857,15 +857,15 @@ NextReferenceString:
             if (bip)
                 ExFreePool(bip);
             bip = NULL;
-            if (ReferenceKey != INVALID_HANDLE_VALUE)
+            if (ReferenceKey != NULL)
             {
                 ZwClose(ReferenceKey);
-                ReferenceKey = INVALID_HANDLE_VALUE;
+                ReferenceKey = NULL;
             }
-            if (ControlKey != INVALID_HANDLE_VALUE)
+            if (ControlKey != NULL)
             {
                 ZwClose(ControlKey);
-                ControlKey = INVALID_HANDLE_VALUE;
+                ControlKey = NULL;
             }
         }
         if (FoundRightPDO)
@@ -877,7 +877,7 @@ NextReferenceString:
         ExFreePool(DeviceBi);
         DeviceBi = NULL;
         ZwClose(DeviceKey);
-        DeviceKey = INVALID_HANDLE_VALUE;
+        DeviceKey = NULL;
     }
 
     /* Add final NULL to ReturnBuffer */
@@ -907,13 +907,13 @@ NextReferenceString:
 cleanup:
     if (!NT_SUCCESS(Status) && ReturnBuffer.Buffer)
         ExFreePool(ReturnBuffer.Buffer);
-    if (InterfaceKey != INVALID_HANDLE_VALUE)
+    if (InterfaceKey != NULL)
         ZwClose(InterfaceKey);
-    if (DeviceKey != INVALID_HANDLE_VALUE)
+    if (DeviceKey != NULL)
         ZwClose(DeviceKey);
-    if (ReferenceKey != INVALID_HANDLE_VALUE)
+    if (ReferenceKey != NULL)
         ZwClose(ReferenceKey);
-    if (ControlKey != INVALID_HANDLE_VALUE)
+    if (ControlKey != NULL)
         ZwClose(ControlKey);
     if (DeviceBi)
         ExFreePool(DeviceBi);
