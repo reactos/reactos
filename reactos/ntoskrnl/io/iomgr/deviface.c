@@ -16,6 +16,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FIXME: This should be somewhere global instead of having 20 different versions */
+#define GUID_STRING_CHARS 38
+#define GUID_STRING_BYTES (GUID_STRING_CHARS * sizeof(WCHAR))
+C_ASSERT(sizeof(L"{01234567-89ab-cdef-0123-456789abcdef}") == GUID_STRING_BYTES + sizeof(UNICODE_NULL));
+
 /* FUNCTIONS *****************************************************************/
 
 PDEVICE_OBJECT
@@ -1312,8 +1317,6 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 {
     PDEVICE_OBJECT PhysicalDeviceObject;
     UNICODE_STRING GuidString;
-    PWCHAR StartPosition;
-    PWCHAR EndPosition;
     NTSTATUS Status;
     LPCGUID EventGuid;
     HANDLE InstanceHandle, ControlHandle;
@@ -1321,25 +1324,64 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG LinkedValue, Index;
     GUID DeviceGuid;
-
+    UNICODE_STRING DosDevicesPrefix1 = RTL_CONSTANT_STRING(L"\\??\\");
+    UNICODE_STRING DosDevicesPrefix2 = RTL_CONSTANT_STRING(L"\\\\?\\");
+    UNICODE_STRING LinkNameNoPrefix;
+    USHORT i;
+    USHORT ReferenceStringOffset;
 
     if (SymbolicLinkName == NULL)
-        return STATUS_INVALID_PARAMETER_1;
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     DPRINT("IoSetDeviceInterfaceState('%wZ', %u)\n", SymbolicLinkName, Enable);
 
     /* Symbolic link name is \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
-    /* Get GUID from SymbolicLinkName */
-    StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
-    EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
-    if (!StartPosition ||!EndPosition || StartPosition > EndPosition)
+    /* Make sure it starts with the expected prefix */
+    if (!RtlPrefixUnicodeString(&DosDevicesPrefix1, SymbolicLinkName, FALSE) &&
+        !RtlPrefixUnicodeString(&DosDevicesPrefix2, SymbolicLinkName, FALSE))
     {
-        DPRINT1("IoSetDeviceInterfaceState() returning STATUS_INVALID_PARAMETER_1\n");
-        return STATUS_INVALID_PARAMETER_1;
+        DPRINT1("IoSetDeviceInterfaceState() invalid link name '%wZ'\n", SymbolicLinkName);
+        return STATUS_INVALID_PARAMETER;
     }
-    GuidString.Buffer = StartPosition;
-    GuidString.MaximumLength = GuidString.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition);
 
+    /* Make a version without the prefix for further processing */
+    ASSERT(DosDevicesPrefix1.Length == DosDevicesPrefix2.Length);
+    ASSERT(SymbolicLinkName->Length >= DosDevicesPrefix1.Length);
+    LinkNameNoPrefix.Buffer = SymbolicLinkName->Buffer + DosDevicesPrefix1.Length / sizeof(WCHAR);
+    LinkNameNoPrefix.Length = SymbolicLinkName->Length - DosDevicesPrefix1.Length;
+    LinkNameNoPrefix.MaximumLength = LinkNameNoPrefix.Length;
+
+    /* Find the reference string, if any */
+    for (i = 0; i < LinkNameNoPrefix.Length / sizeof(WCHAR); i++)
+    {
+        if (LinkNameNoPrefix.Buffer[i] == L'\\')
+        {
+            break;
+        }
+    }
+    ReferenceStringOffset = i * sizeof(WCHAR);
+
+    /* The GUID is before the reference string or at the end */
+    ASSERT(LinkNameNoPrefix.Length >= ReferenceStringOffset);
+    if (ReferenceStringOffset < GUID_STRING_BYTES + sizeof(WCHAR))
+    {
+        DPRINT1("IoSetDeviceInterfaceState() invalid link name '%wZ'\n", SymbolicLinkName);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    GuidString.Buffer = LinkNameNoPrefix.Buffer + (ReferenceStringOffset - GUID_STRING_BYTES) / sizeof(WCHAR);
+    GuidString.Length = GUID_STRING_BYTES;
+    GuidString.MaximumLength = GuidString.Length;
+    Status = RtlGUIDFromString(&GuidString, &DeviceGuid);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlGUIDFromString() invalid GUID '%wZ' in link name '%wZ'\n", &GuidString, SymbolicLinkName);
+        return Status;
+    }
+
+    /* Open registry keys */
     Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
                                                  KEY_CREATE_SUB_KEY,
                                                  NULL,
@@ -1384,16 +1426,28 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         return Status;
     }
 
-    DeviceInstance.Buffer = ExAllocatePool(PagedPool, (ULONG_PTR)StartPosition - (ULONG_PTR)SymbolicLinkName->Buffer);
+    ASSERT(GuidString.Buffer >= LinkNameNoPrefix.Buffer + 1);
+    DeviceInstance.Length = (GuidString.Buffer - LinkNameNoPrefix.Buffer - 1) * sizeof(WCHAR);
+    if (DeviceInstance.Length == 0)
+    {
+        DPRINT1("No device instance in link name '%wZ'\n", SymbolicLinkName);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+    DeviceInstance.MaximumLength = DeviceInstance.Length;
+    DeviceInstance.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                  DeviceInstance.MaximumLength,
+                                                  TAG_IO);
     if (DeviceInstance.Buffer == NULL)
     {
         /* no memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    DeviceInstance.MaximumLength = DeviceInstance.Length = ((ULONG_PTR)StartPosition - (ULONG_PTR)SymbolicLinkName->Buffer) - 5 * sizeof(WCHAR);
-    RtlCopyMemory(DeviceInstance.Buffer, &SymbolicLinkName->Buffer[4], DeviceInstance.Length);
-    for(Index = 0; Index < DeviceInstance.Length / sizeof(WCHAR); Index++)
+    RtlCopyMemory(DeviceInstance.Buffer,
+                  LinkNameNoPrefix.Buffer,
+                  DeviceInstance.Length);
+
+    for (Index = 0; Index < DeviceInstance.Length / sizeof(WCHAR); Index++)
     {
         if (DeviceInstance.Buffer[Index] == L'#')
         {
@@ -1402,22 +1456,15 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     }
 
     PhysicalDeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    
+
     if (!PhysicalDeviceObject)
     {
-        DPRINT1("IopGetDeviceObjectFromDeviceInstance failed to find status %wZ\n", &DeviceInstance);
-        ExFreePool(DeviceInstance.Buffer);
-        return STATUS_NOT_FOUND;
+        DPRINT1("IopGetDeviceObjectFromDeviceInstance failed to find device object for %wZ\n", &DeviceInstance);
+        ExFreePoolWithTag(DeviceInstance.Buffer, TAG_IO);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-    ExFreePool(DeviceInstance.Buffer);
-    Status = RtlGUIDFromString(&GuidString, &DeviceGuid);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("RtlGUIDFromString() failed with status 0x%08lx\n", Status);
-        ObDereferenceObject(PhysicalDeviceObject);
-        return Status;
-    }
+    ExFreePoolWithTag(DeviceInstance.Buffer, TAG_IO);
 
     EventGuid = Enable ? &GUID_DEVICE_INTERFACE_ARRIVAL : &GUID_DEVICE_INTERFACE_REMOVAL;
     IopNotifyPlugPlayNotification(
