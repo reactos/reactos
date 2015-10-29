@@ -105,6 +105,7 @@ LsapCreateLogonSession(IN PLUID LogonId)
     TRACE("LsapCreateLogonSession(<0x%lx,0x%lx>)\n",
           LogonId->HighPart, LogonId->LowPart);
 
+    /* Tell ntoskrnl to create a new logon session */
     Status = LsapRmCreateLogonSession(LogonId);
     if (!NT_SUCCESS(Status))
     {
@@ -125,6 +126,7 @@ NTAPI
 LsapDeleteLogonSession(IN PLUID LogonId)
 {
     PLSAP_LOGON_SESSION Session;
+    NTSTATUS Status;
 
     TRACE("LsapDeleteLogonSession(%p)\n", LogonId);
 
@@ -132,6 +134,14 @@ LsapDeleteLogonSession(IN PLUID LogonId)
     Session = LsapGetLogonSession(LogonId);
     if (Session == NULL)
         return STATUS_NO_SUCH_LOGON_SESSION;
+
+    TRACE("LsapDeleteLogonSession(<0x%lx,0x%lx>)\n",
+          LogonId->HighPart, LogonId->LowPart);
+
+    /* Tell ntoskrnl to delete the logon session */
+    Status = LsapRmDeleteLogonSession(LogonId);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Remove the session entry from the list */
     RemoveEntryList(&Session->Entry);
