@@ -143,27 +143,39 @@ Cleanup:
 
 BOOLEAN
 NTAPI
-SeRmInitPhase1(VOID)
+SeRmInitPhase0(VOID)
 {
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE ThreadHandle;
     NTSTATUS Status;
 
-    // Windows does this in SeRmInitPhase0, but it should not matter
+    /* Initialize the database lock */
     KeInitializeGuardedMutex(&SepRmDbLock);
 
+    /* Create the system logon session */
     Status = SepRmCreateLogonSession(&SeSystemAuthenticationId);
     if (!NT_VERIFY(NT_SUCCESS(Status)))
     {
         return FALSE;
     }
 
+    /* Create the anonymous logon session */
     Status = SepRmCreateLogonSession(&SeAnonymousAuthenticationId);
     if (!NT_VERIFY(NT_SUCCESS(Status)))
     {
         return FALSE;
     }
+
+    return TRUE;
+}
+
+
+BOOLEAN
+NTAPI
+SeRmInitPhase1(VOID)
+{
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE ThreadHandle;
+    NTSTATUS Status;
 
     /* Create the SeRm command port */
     RtlInitUnicodeString(&Name, L"\\SeRmCommandPort");
@@ -289,8 +301,8 @@ SepRmCreateLogonSession(
     NTSTATUS Status;
     PAGED_CODE();
 
-    DPRINT1("SepRmCreateLogonSession(<0x%lx,0x%lx>)\n",
-            LogonLuid->HighPart, LogonLuid->LowPart);
+    DPRINT("SepRmCreateLogonSession(%08lx:%08lx)\n",
+           LogonLuid->HighPart, LogonLuid->LowPart);
 
     /* Allocate a new session structure */
     NewSession = ExAllocatePoolWithTag(PagedPool,
@@ -347,12 +359,90 @@ NTSTATUS
 SepRmDeleteLogonSession(
     PLUID LogonLuid)
 {
-    DPRINT1("SepRmDeleteLogonSession(<0x%lx,0x%lx>)\n",
-            LogonLuid->HighPart, LogonLuid->LowPart);
+    DPRINT("SepRmDeleteLogonSession(%08lx:%08lx)\n",
+           LogonLuid->HighPart, LogonLuid->LowPart);
 
     UNIMPLEMENTED;
     NT_ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+SepRmReferenceLogonSession(
+    PLUID LogonLuid)
+{
+    PSEP_LOGON_SESSION_REFERENCES CurrentSession;
+
+    PAGED_CODE();
+
+    DPRINT("SepRmReferenceLogonSession(%08lx:%08lx)\n",
+           LogonLuid->HighPart, LogonLuid->LowPart);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop all existing sessions */
+    for (CurrentSession = SepLogonSessions;
+         CurrentSession != NULL;
+         CurrentSession = CurrentSession->Next)
+    {
+        /* Check if the LUID matches the new one */
+        if (RtlEqualLuid(&CurrentSession->LogonId, LogonLuid))
+        {
+            /* Reference the session */
+            CurrentSession->ReferenceCount += 1;
+            DPRINT1("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
+
+            /* Release the database lock */
+            KeReleaseGuardedMutex(&SepRmDbLock);
+
+            return STATUS_SUCCESS;
+        }
+    }
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+
+    return STATUS_NO_SUCH_LOGON_SESSION;
+}
+
+
+NTSTATUS
+SepRmDereferenceLogonSession(
+    PLUID LogonLuid)
+{
+    PSEP_LOGON_SESSION_REFERENCES CurrentSession;
+
+    DPRINT("SepRmDereferenceLogonSession(%08lx:%08lx)\n",
+           LogonLuid->HighPart, LogonLuid->LowPart);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop all existing sessions */
+    for (CurrentSession = SepLogonSessions;
+         CurrentSession != NULL;
+         CurrentSession = CurrentSession->Next)
+    {
+        /* Check if the LUID matches the new one */
+        if (RtlEqualLuid(&CurrentSession->LogonId, LogonLuid))
+        {
+            /* Dereference the session */
+            CurrentSession->ReferenceCount -= 1;
+            DPRINT1("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
+
+            /* Release the database lock */
+            KeReleaseGuardedMutex(&SepRmDbLock);
+
+            return STATUS_SUCCESS;
+        }
+    }
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+
+    return STATUS_NO_SUCH_LOGON_SESSION;
 }
 
 

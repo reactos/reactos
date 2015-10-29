@@ -109,6 +109,9 @@ SepInitializationPhase0(VOID)
     /* Initialize token objects */
     SepInitializeTokenImplementation();
 
+    /* Initialize logon sessions */
+    if (!SeRmInitPhase0()) return FALSE;
+
     /* Clear impersonation info for the idle thread */
     PsGetCurrentThread()->ImpersonationInfo = NULL;
     PspClearCrossThreadFlag(PsGetCurrentThread(),

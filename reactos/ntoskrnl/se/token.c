@@ -480,6 +480,9 @@ SepDuplicateToken(PTOKEN Token,
 
     *NewAccessToken = AccessToken;
 
+    /* Reference the logon session */
+    SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
+
 done:
     if (!NT_SUCCESS(Status))
     {
@@ -609,6 +612,11 @@ SepDeleteToken(PVOID ObjectBody)
 {
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
 
+    DPRINT1("SepDeleteToken()\n");
+
+    /* Dereference the logon session */
+    SepRmDereferenceLogonSession(&AccessToken->AuthenticationId);
+
     if (AccessToken->UserAndGroups)
         ExFreePoolWithTag(AccessToken->UserAndGroups, TAG_TOKEN_USERS);
 
@@ -698,6 +706,8 @@ SepCreateToken(OUT PHANDLE TokenHandle,
     ULONG i;
     NTSTATUS Status;
     ULONG TokenFlags = 0;
+
+    PAGED_CODE();
 
     /* Loop all groups */
     for (i = 0; i < GroupCount; i++)
@@ -885,6 +895,9 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         /* Return pointer instead of handle */
         *TokenHandle = (HANDLE)AccessToken;
     }
+
+    /* Reference the logon session */
+    SepRmReferenceLogonSession(AuthenticationId);
 
 done:
     if (!NT_SUCCESS(Status))

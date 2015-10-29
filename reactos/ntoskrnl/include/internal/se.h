@@ -269,6 +269,10 @@ SepInitSDs(VOID);
 
 BOOLEAN
 NTAPI
+SeRmInitPhase0(VOID);
+
+BOOLEAN
+NTAPI
 SeRmInitPhase1(VOID);
 
 VOID
@@ -502,7 +506,7 @@ SepPropagateAcl(
     _In_ BOOLEAN IsInherited,
     _In_ BOOLEAN IsDirectoryObject,
     _In_ PGENERIC_MAPPING GenericMapping);
-    
+
 PACL
 SepSelectAcl(
     _In_opt_ PACL ExplicitAcl,
@@ -576,6 +580,14 @@ SePrivilegedServiceAuditAlarm(
     _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
     _In_ PPRIVILEGE_SET PrivilegeSet,
     _In_ BOOLEAN AccessGranted);
+
+NTSTATUS
+SepRmReferenceLogonSession(
+    PLUID LogonLuid);
+
+NTSTATUS
+SepRmDereferenceLogonSession(
+    PLUID LogonLuid);
 
 #endif
 
