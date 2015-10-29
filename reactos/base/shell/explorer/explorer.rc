@@ -10,18 +10,53 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-IDI_START ICON "res/start.ico"
-IDB_STARTMENU BITMAP "res/logov.bmp"
+/*******************************************************************************\
+|*                               Icon Resources                                *|
+\*******************************************************************************/
 
-IDB_TASKBARPROP_AUTOHIDE BITMAP "res/auto_hide.bmp"
-IDB_TASKBARPROP_LOCK_GROUP_NOQL BITMAP "res/lock_group_noql.bmp"
-IDB_TASKBARPROP_LOCK_GROUP_QL BITMAP "res/lock_group_ql.bmp"
-IDB_TASKBARPROP_LOCK_NOGROUP_NOQL BITMAP "res/lock_nogroup_noql.bmp"
-IDB_TASKBARPROP_LOCK_NOGROUP_QL BITMAP "res/lock_nogroup_ql.bmp"
-IDB_TASKBARPROP_NOLOCK_GROUP_NOQL BITMAP "res/nolock_group_noql.bmp"
-IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL BITMAP "res/nolock_nogroup_noql.bmp"
-IDB_TASKBARPROP_NOLOCK_NOGROUP_QL BITMAP "res/nolock_nogroup_ql.bmp"
-IDB_TASKBARPROP_NOLOCK_GROUP_QL BITMAP "res/nolock_group_ql.bmp"
+IDI_MAIN            ICON "res/ico/100.ico"
+IDI_CABINET         ICON "res/ico/101.ico"
+IDI_PRINTER         ICON "res/ico/102.ico"
+IDI_DESKTOP         ICON "res/ico/103.ico"
+IDI_PRINTER_PROBLEM ICON "res/ico/104.ico"
+IDI_STARTMENU       ICON "res/ico/107.ico"
+IDI_RECYCLEBIN      ICON "res/ico/108.ico"
+IDI_SHOWINFO        ICON "res/ico/109.ico"
+IDI_SHOWALERT       ICON "res/ico/110.ico"
+IDI_SHOWERROR       ICON "res/ico/111.ico"
+IDI_COMPUTER        ICON "res/ico/205.ico"
+IDI_ARROWLEFT       ICON "res/ico/250.ico"
+IDI_ARROWRIGHT      ICON "res/ico/251.ico"
+IDI_FOLDER          ICON "res/ico/252.ico"
+IDI_INTERNET        ICON "res/ico/253.ico"
+IDI_MAIL            ICON "res/ico/254.ico"
+IDI_MAILSMALL       ICON "res/ico/256.ico"
+IDI_STARTMENU2      ICON "res/ico/257.ico"
+IDI_START           ICON "res/ico/4711.ico"
+
+
+/*******************************************************************************\
+|*                               Bitmap Resources                              *|
+\*******************************************************************************/
+
+IDB_START                           BITMAP "res/bmp/143.bmp"
+IDB_TASKBARPROP_AUTOHIDE            BITMAP "res/bmp/145.bmp"
+IDB_TASKBARPROP_LOCK_GROUP_QL       BITMAP "res/bmp/146.bmp"
+IDB_TASKBARPROP_NOLOCK_GROUP_QL     BITMAP "res/bmp/147.bmp"
+IDB_TASKBARPROP_LOCK_NOGROUP_QL     BITMAP "res/bmp/148.bmp"
+IDB_TASKBARPROP_NOLOCK_NOGROUP_QL   BITMAP "res/bmp/149.bmp"
+IDB_TASKBARPROP_LOCK_GROUP_NOQL     BITMAP "res/bmp/150.bmp"
+IDB_TASKBARPROP_NOLOCK_GROUP_NOQL   BITMAP "res/bmp/151.bmp"
+IDB_TASKBARPROP_LOCK_NOGROUP_NOQL   BITMAP "res/bmp/152.bmp"
+IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL BITMAP "res/bmp/153.bmp"
+IDB_SYSTRAYPROP_SHOW_SECONDS        BITMAP "res/bmp/154.bmp"
+IDB_SYSTRAYPROP_HIDE_SECONDS        BITMAP "res/bmp/155.bmp"
+IDB_STARTMENU                       BITMAP "res/bmp/158.bmp"
+IDB_STARTPREVIEW_CLASSIC            BITMAP "res/bmp/171.bmp"
+IDB_SYSTRAYPROP_HIDE_CLOCK          BITMAP "res/bmp/180.bmp"
+IDB_SYSTRAYPROP_HIDE_NOCLOCK        BITMAP "res/bmp/181.bmp"
+IDB_SYSTRAYPROP_SHOW_CLOCK          BITMAP "res/bmp/182.bmp"
+IDB_SYSTRAYPROP_SHOW_NOCLOCK        BITMAP "res/bmp/183.bmp"
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 
@@ -45,6 +80,10 @@ BEGIN
     "Z", IDMA_RESTORE_OPEN, VIRTKEY, CONTROL
     "M", IDMA_MINIMIZE_ALL, VIRTKEY, ALT
 END
+
+/*******************************************************************************\
+|*                         Language dependent Resources                        *|
+\*******************************************************************************/
 
 /* UTF-8 */
 #pragma code_page(65001)

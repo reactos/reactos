@@ -189,58 +189,6 @@ HandleDefaultMessage:
 }
 
 static INT_PTR CALLBACK
-AdvancedSettingsPageProc(HWND hwndDlg,
-                         UINT uMsg,
-                         WPARAM wParam,
-                         LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-            CheckDlgButton(hwndDlg, IDC_TASKBARPROP_SECONDS, AdvancedSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
-            break;
-
-        case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDC_TASKBARPROP_SECONDS:
-                    if (HIWORD(wParam) == BN_CLICKED)
-                    {
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
-                    break;
-            }
-            break;
-
-        case WM_NOTIFY:
-        {
-            LPNMHDR pnmh = (LPNMHDR)lParam;
-
-            switch (pnmh->code)
-            {
-                case PSN_SETACTIVE:
-                    break;
-
-                case PSN_APPLY:
-                    AdvancedSettings.bShowSeconds = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SECONDS);
-                    SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), AdvancedSettings.bShowSeconds);
-                    break;
-            }
-
-            break;
-        }
-
-        case WM_DESTROY:
-            break;
-
-        default:
-            return FALSE;
-    }
-
-    return FALSE;
-}
-
-static INT_PTR CALLBACK
 StartMenuPageProc(HWND hwndDlg,
                   UINT uMsg,
                   WPARAM wParam,
@@ -274,77 +222,6 @@ StartMenuPageProc(HWND hwndDlg,
     return FALSE;
 }
 
-
-static INT_PTR CALLBACK
-NotificationPageProc(HWND hwndDlg,
-                     UINT uMsg,
-                     WPARAM wParam,
-                     LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-            break;
-
-        case WM_DESTROY:
-            break;
-
-        case WM_NOTIFY:
-        {
-            LPNMHDR pnmh = (LPNMHDR)lParam;
-
-            switch (pnmh->code)
-            {
-                case PSN_SETACTIVE:
-                    break;
-
-                case PSN_APPLY:
-                    break;
-            }
-
-            break;
-        }
-    }
-
-    return FALSE;
-}
-
-
-static INT_PTR CALLBACK
-ToolbarsPageProc(HWND hwndDlg,
-                 UINT uMsg,
-                 WPARAM wParam,
-                 LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-            break;
-
-        case WM_DESTROY:
-            break;
-
-        case WM_NOTIFY:
-        {
-            LPNMHDR pnmh = (LPNMHDR)lParam;
-
-            switch (pnmh->code)
-            {
-                case PSN_SETACTIVE:
-                    break;
-
-                case PSN_APPLY:
-                    break;
-            }
-
-            break;
-        }
-    }
-
-    return FALSE;
-}
-
-
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp,
                   WORD idDlg,
@@ -366,7 +243,7 @@ DisplayTrayProperties(IN HWND hwndOwner)
 {
     PROPSHEET_INFO propInfo;
     PROPSHEETHEADER psh;
-    PROPSHEETPAGE psp[5];
+    PROPSHEETPAGE psp[2];
     WCHAR szCaption[256];
 
     if (!LoadString(hExplorerInstance,
@@ -390,9 +267,6 @@ DisplayTrayProperties(IN HWND hwndOwner)
 
     InitPropSheetPage(&psp[0], IDD_TASKBARPROP_TASKBAR, TaskbarPageProc, (LPARAM)&propInfo);
     InitPropSheetPage(&psp[1], IDD_TASKBARPROP_STARTMENU, StartMenuPageProc, (LPARAM)&propInfo);
-    InitPropSheetPage(&psp[2], IDD_TASKBARPROP_NOTIFICATION, NotificationPageProc, (LPARAM)&propInfo);
-    InitPropSheetPage(&psp[3], IDD_TASKBARPROP_TOOLBARS, ToolbarsPageProc, (LPARAM)&propInfo);
-    InitPropSheetPage(&psp[4], IDD_TASKBARPROP_ADVANCED, AdvancedSettingsPageProc, (LPARAM)&propInfo);
 
     PropertySheet(&psh);
 }

@@ -2,7 +2,55 @@
 
 #define IDC_STATIC -1
 
-#define IDI_START 101
+/*******************************************************************************\
+|*                               Icon Resources                                *|
+\*******************************************************************************/
+
+#define IDI_MAIN            100
+#define IDI_CABINET         101
+#define IDI_PRINTER         102
+#define IDI_DESKTOP         103
+#define IDI_PRINTER_PROBLEM 104
+#define IDI_STARTMENU       107
+#define IDI_RECYCLEBIN      108
+#define IDI_SHOWINFO        109
+#define IDI_SHOWALERT       110
+#define IDI_SHOWERROR       111
+#define IDI_COMPUTER        205
+#define IDI_ARROWLEFT       250
+#define IDI_ARROWRIGHT      251
+#define IDI_FOLDER          252
+#define IDI_INTERNET        253
+#define IDI_MAIL            254
+#define IDI_MAILSMALL       256
+#define IDI_STARTMENU2      257
+#define IDI_START           4711
+
+/*******************************************************************************\
+|*                               Bitmap Resources                              *|
+\*******************************************************************************/
+
+#define IDB_START                           143
+#define IDB_TASKBARPROP_AUTOHIDE            145
+#define IDB_TASKBARPROP_LOCK_GROUP_QL       146
+#define IDB_TASKBARPROP_NOLOCK_GROUP_QL     147
+#define IDB_TASKBARPROP_LOCK_NOGROUP_QL     148
+#define IDB_TASKBARPROP_NOLOCK_NOGROUP_QL   149
+#define IDB_TASKBARPROP_LOCK_GROUP_NOQL     150
+#define IDB_TASKBARPROP_NOLOCK_GROUP_NOQL   151
+#define IDB_TASKBARPROP_LOCK_NOGROUP_NOQL   152
+#define IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL 153
+#define IDB_SYSTRAYPROP_SHOW_SECONDS        154
+#define IDB_SYSTRAYPROP_HIDE_SECONDS        155
+#define IDB_STARTMENU                       158
+#define IDB_STARTPREVIEW                    170
+#define IDB_STARTPREVIEW_CLASSIC            171
+#define IDB_SYSTRAYPROP_HIDE_CLOCK          180
+#define IDB_SYSTRAYPROP_HIDE_NOCLOCK        181
+#define IDB_SYSTRAYPROP_SHOW_CLOCK          182
+#define IDB_SYSTRAYPROP_SHOW_NOCLOCK        183
+
+
 
 #define IDS_START             101
 #define IDS_PROPERTIES        102
@@ -14,8 +62,6 @@
 
 #define IDM_TRAYWND   101
 #define IDM_STARTMENU 102
-
-#define IDB_STARTMENU 101
 
 #define IDA_TASKBAR 251
 
@@ -30,17 +76,15 @@
 #define ID_SHELL_CMD_PROPERTIES         (ID_SHELL_CMD_LAST + 1)
 #define ID_SHELL_CMD_OPEN_ALL_USERS     (ID_SHELL_CMD_LAST + 2)
 #define ID_SHELL_CMD_EXPLORE_ALL_USERS  (ID_SHELL_CMD_LAST + 3)
-
-#define ID_LOCKTASKBAR (ID_SHELL_CMD_LAST + 4)
-
-#define ID_SHELL_CMD_OPEN_TASKMGR (ID_SHELL_CMD_LAST + 5)
-#define ID_SHELL_CMD_UNDO_ACTION  (ID_SHELL_CMD_LAST + 6)
-#define ID_SHELL_CMD_SHOW_DESKTOP (ID_SHELL_CMD_LAST + 7)
-#define ID_SHELL_CMD_TILE_WND_V   (ID_SHELL_CMD_LAST + 8)
-#define ID_SHELL_CMD_TILE_WND_H   (ID_SHELL_CMD_LAST + 9)
-#define ID_SHELL_CMD_CASCADE_WND  (ID_SHELL_CMD_LAST + 10)
-#define ID_SHELL_CMD_CUST_NOTIF   (ID_SHELL_CMD_LAST + 11)
-#define ID_SHELL_CMD_ADJUST_DAT   (ID_SHELL_CMD_LAST + 12)
+#define ID_LOCKTASKBAR                  (ID_SHELL_CMD_LAST + 4)
+#define ID_SHELL_CMD_OPEN_TASKMGR       (ID_SHELL_CMD_LAST + 5)
+#define ID_SHELL_CMD_UNDO_ACTION        (ID_SHELL_CMD_LAST + 6)
+#define ID_SHELL_CMD_SHOW_DESKTOP       (ID_SHELL_CMD_LAST + 7)
+#define ID_SHELL_CMD_TILE_WND_V         (ID_SHELL_CMD_LAST + 8)
+#define ID_SHELL_CMD_TILE_WND_H         (ID_SHELL_CMD_LAST + 9)
+#define ID_SHELL_CMD_CASCADE_WND        (ID_SHELL_CMD_LAST + 10)
+#define ID_SHELL_CMD_CUST_NOTIF         (ID_SHELL_CMD_LAST + 11)
+#define ID_SHELL_CMD_ADJUST_DAT         (ID_SHELL_CMD_LAST + 12)
 
 /* NOTE: The following constants may *NOT* be changed because
          they're hardcoded and need to be the exact values
@@ -79,18 +123,12 @@
 #define IDC_TASKBARPROP_ONTOP         2004
 #define IDC_TASKBARPROP_GROUP         2005
 #define IDC_TASKBARPROP_SHOWQL        2006
-#define IDC_TASKBARPROP_WNDPREV       2007
-
-#define IDB_TASKBARPROP_AUTOHIDE            2050
-#define IDB_TASKBARPROP_LOCK_GROUP_NOQL     2051
-#define IDB_TASKBARPROP_LOCK_GROUP_QL       2052
-#define IDB_TASKBARPROP_LOCK_NOGROUP_NOQL   2053
-#define IDB_TASKBARPROP_LOCK_NOGROUP_QL     2054
-#define IDB_TASKBARPROP_NOLOCK_GROUP_NOQL   2055
-#define IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL 2056
-#define IDB_TASKBARPROP_NOLOCK_NOGROUP_QL   2057
-#define IDB_TASKBARPROP_NOLOCK_GROUP_QL     2058
-#define IDC_TASKBARPROP_SECONDS             2059
+#define IDD_TASKBARPROP_NOTIFICATION       2200
+#define IDC_TASKBARPROP_NOTIFICATIONBITMAP 2201
+#define IDC_TASKBARPROP_HIDEICONS          2202
+#define IDC_TASKBARPROP_ICONCUST           2203
+#define IDC_TASKBARPROP_CLOCK              2204
+#define IDC_TASKBARPROP_SECONDS            2205
 
 /* Taskbar properties, startmenu*/
 #define IDD_TASKBARPROP_STARTMENU            2100
@@ -98,23 +136,7 @@
 #define IDC_TASKBARPROP_STARTMENUCUST        2102
 #define IDC_TASKBARPROP_STARTMENUCLASSIC     2103
 #define IDC_TASKBARPROP_STARTMENUCLASSICCUST 2104
-#define IDC_TASKBARPROP_RECENTFILES          2105
-#define IDC_TASKBARPROP_RECENTFOLDERS        2106
-
-/* Taskbar properties, notification */
-#define IDD_TASKBARPROP_NOTIFICATION       2200
-#define IDC_TASKBARPROP_NOTIFICATIONBITMAP 2201
-#define IDC_TASKBARPROP_HIDEICONS          2202
-#define IDC_TASKBARPROP_ICONCUST           2203
-#define IDC_TASKBARPROP_CLOCK              2204
-#define IDC_TASKBARPROP_VOLUME             2205
-#define IDC_TASKBARPROP_NETWORK            2206
-#define IDC_TASKBARPROP_POWER              2207
-#define IDD_TASKBARPROP_ADVANCED           2208
-
-/* Taskbar properties, toolbars */
-#define IDD_TASKBARPROP_TOOLBARS     2300
-#define IDC_TASKBARPROP_DESKBANDLIST 2301
+#define IDC_TASKBARPROP_STARTMENU_BITMAP     2107
 
 #define IDS_TASKBAR_STARTMENU_PROP_CAPTION 2200
 #define IDS_HELP_COMMAND 732
