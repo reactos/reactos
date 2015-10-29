@@ -29,9 +29,20 @@
 #define IDC_BTN_SYSTEM_RESTORE_START    1008
 #define IDC_BTN_FILE_EXTRACTION         1009
 
-/* Startup page controls */
+/* System page controls */
 #define IDS_TAB_SYSTEM                  2000
 #define IDS_TAB_WIN                     2001
+#define IDC_BTN_SYSTEM_UP               1217
+#define IDC_BTN_SYSTEM_DOWN             1218
+#define IDC_BTN_SYSTEM_ENABLE           1219
+#define IDC_BTN_SYSTEM_DISABLE          1220
+#define IDC_BTN_SYSTEM_FIND             1221
+#define IDC_BTN_SYSTEM_NEW              1222
+#define IDC_BTN_SYSTEM_EDIT             1223
+#define IDC_SYSTEM_TREE                 1224
+#define IDC_BTN_SYSTEM_ENABLE_ALL       1225
+#define IDC_BTN_SYSTEM_DISABLE_ALL      1226
+#define IDC_BTN_SYSTEM_DELETE           1227
 
 /* FreeLdr page controls */
 #define IDS_TAB_FREELDR                 2002
@@ -106,16 +117,6 @@
 #define IDC_CBX_CHANNEL               1214
 #define IDC_TXT_CHANNEL               1215
 #define IDC_SCR_CHANNEL               1216
-#define IDC_BTN_SYSTEM_UP             1217
-#define IDC_BTN_SYSTEM_DOWN           1218
-#define IDC_BTN_SYSTEM_ENABLE         1219
-#define IDC_BTN_SYSTEM_DISABLE        1220
-#define IDC_BTN_SYSTEM_FIND           1221
-#define IDC_BTN_SYSTEM_NEW            1222
-#define IDC_BTN_SYSTEM_EDIT           1223
-#define IDC_SYSTEM_TREE               1224
-#define IDC_BTN_SYSTEM_ACTIVATE       1225
-#define IDC_BTN_SYSTEM_DEACTIVATE     1226
 
 #define IDS_TAB_STARTUP  2023
 
