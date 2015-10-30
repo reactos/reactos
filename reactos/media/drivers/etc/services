@@ -42,6 +42,8 @@ telnet              23/tcp  #Telnet
 telnet              23/udp  #Telnet
 smtp                25/tcp  #Simple Mail Transfer
 smtp                25/udp  #Simple Mail Transfer
+mail                25/tcp  #Simple Mail Transfer
+mail                25/udp  #Simple Mail Transfer
 nsw-fe              27/tcp  #NSW User System FE
 nsw-fe              27/udp  #NSW User System FE
 msg-icp             29/tcp  #MSG ICP

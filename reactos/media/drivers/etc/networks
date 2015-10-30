@@ -1,0 +1,16 @@
+# The ReactOS networks file
+#
+# This file contains network name/network number mappings for 
+# local networks. Network numbers are recognized in dotted decimal form.
+#
+# Format:
+#
+# <network name>  <network number>     [aliases...]  [#<comment>]
+#
+# For example:
+#
+#    loopback     127
+#    campus       284.122.107
+#    london       284.122.108
+
+loopback                 127
