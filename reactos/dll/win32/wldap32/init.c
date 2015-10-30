@@ -302,7 +302,7 @@ ULONG CDECL ldap_connect( WLDAP32_LDAP *ld, struct l_timeval *timeout )
  *
  * See ldap_initW.
  */
-WLDAP32_LDAP *  CDECL ldap_initA( PCHAR hostname, ULONG portnumber )
+WLDAP32_LDAP *  CDECL ldap_initA( const PCHAR hostname, ULONG portnumber )
 {
 #ifdef HAVE_LDAP
     WLDAP32_LDAP *ld = NULL;
@@ -348,7 +348,7 @@ exit:
  *  to this function. The connection will not be made until the first
  *  LDAP function that needs it is called.
  */
-WLDAP32_LDAP * CDECL ldap_initW( PWCHAR hostname, ULONG portnumber )
+WLDAP32_LDAP * CDECL ldap_initW( const PWCHAR hostname, ULONG portnumber )
 {
 #ifdef HAVE_LDAP
     LDAP *ld = NULL;
