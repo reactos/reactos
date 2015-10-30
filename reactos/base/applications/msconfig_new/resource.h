@@ -7,14 +7,14 @@
 #define IDS_UNKNOWN                     102
 
 /* Page & dialog IDs */
-#define IDD_TOOLS_PAGE                  200
-#define IDD_SERVICES_PAGE               201
-#define IDD_GENERAL_PAGE                202
-#define IDD_STARTUP_PAGE                203
-#define IDD_FREELDR_PAGE                204
-#define IDD_SYSTEM_PAGE                 205
-#define IDD_FREELDR_ADVANCED_PAGE       206
-#define IDD_FILE_EXTRACT_DIALOG         207
+#define IDD_GENERAL_PAGE                200
+#define IDD_SYSTEM_PAGE                 201
+#define IDD_FREELDR_PAGE                202
+#define IDD_SERVICES_PAGE               203
+#define IDD_STARTUP_PAGE                204
+#define IDD_TOOLS_PAGE                  205
+#define IDD_FILE_EXTRACT_DIALOG         206
+#define IDD_FREELDR_ADVANCED_PAGE       207
 #define IDD_REQUIRED_SERVICES_DISABLING_DIALOG 208
 
 /* General page controls */
