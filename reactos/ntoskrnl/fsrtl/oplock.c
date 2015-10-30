@@ -50,7 +50,7 @@ FsRtlCheckOplock(IN POPLOCK Oplock,
 {
     /* Unimplemented */
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*++
@@ -147,7 +147,7 @@ NTAPI
 FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
 {
     UNIMPLEMENTED;
-    return FALSE;
+    return TRUE;
 }
 
 /*++
