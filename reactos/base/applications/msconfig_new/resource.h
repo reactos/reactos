@@ -14,8 +14,9 @@
 #define IDD_STARTUP_PAGE                204
 #define IDD_TOOLS_PAGE                  205
 #define IDD_FILE_EXTRACT_DIALOG         206
-#define IDD_FREELDR_ADVANCED_PAGE       207
-#define IDD_REQUIRED_SERVICES_DISABLING_DIALOG 208
+#define IDD_FIND_DIALOG                 207
+#define IDD_FREELDR_ADVANCED_PAGE       208
+#define IDD_REQUIRED_SERVICES_DISABLING_DIALOG 209
 
 /* General page controls */
 #define IDC_RB_NORMAL_STARTUP           1000
@@ -95,9 +96,17 @@
 #define IDC_DRP_CAB_FILE                1043
 #define IDC_DRP_DEST_DIR                1044
 
+/* Find dialog */
+#define IDC_TXT_FIND_TEXT               1045
+#define IDC_CBX_FIND_WHOLE_WORD_ONLY    1046
+#define IDC_CBX_FIND_MATCH_CASE         1047
+#define IDC_CBX_FIND_FROM_BEGINNING     1048
+#define IDC_RB_FIND_UP                  1049
+#define IDC_RB_FIND_DOWN                1050
+
 /* Essential services warning dialog */
-#define IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE 1045
-#define IDC_STATIC_REQSVCSDIS_INFO      1046
+#define IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE 1051
+#define IDC_STATIC_REQSVCSDIS_INFO      1052
 
 
 #define IDC_CBX_MAX_MEM               1200
