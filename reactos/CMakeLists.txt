@@ -120,6 +120,9 @@ else()
         include(cmake/host-tools.cmake)
     endif()
 
+    # Print build type
+    message("-- Build Type: ${CMAKE_BUILD_TYPE}")
+
     # adjust the default behaviour of the FIND_XXX() commands:
     # search headers and libraries in the target environment, search
     # programs in the host environment
