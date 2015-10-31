@@ -867,7 +867,7 @@ FsRtlRemoveBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
         }
         else
         {
-            ASSERT(NeedleRun.RunStartVbn.QuadPart >= HaystackRun->RunStartVbn.QuadPart);
+            //ASSERT(NeedleRun.RunStartVbn.QuadPart >= HaystackRun->RunStartVbn.QuadPart);
             //ASSERT(NeedleRun.RunEndVbn.QuadPart <= HaystackRun->RunEndVbn.QuadPart);
             Mcb->Mapping->Table.CompareRoutine = McbMappingCompare;
             RtlDeleteElementGenericTable(&Mcb->Mapping->Table, HaystackRun);
