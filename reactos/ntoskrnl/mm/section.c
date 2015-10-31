@@ -171,11 +171,6 @@ static GENERIC_MAPPING MmpSectionMapping =
     SECTION_ALL_ACCESS
 };
 
-static const INFORMATION_CLASS_INFO ExSectionInfoClass[] =
-{
-    ICI_SQ_SAME( sizeof(SECTION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionBasicInformation */
-    ICI_SQ_SAME( sizeof(SECTION_IMAGE_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionImageInformation */
-};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -4285,12 +4280,14 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
  *
  * @implemented
  */
-NTSTATUS NTAPI
-NtQuerySection(IN HANDLE SectionHandle,
-               IN SECTION_INFORMATION_CLASS SectionInformationClass,
-               OUT PVOID SectionInformation,
-               IN SIZE_T SectionInformationLength,
-               OUT PSIZE_T ResultLength  OPTIONAL)
+NTSTATUS
+NTAPI
+NtQuerySection(
+    _In_ HANDLE SectionHandle,
+    _In_ SECTION_INFORMATION_CLASS SectionInformationClass,
+    _Out_ PVOID SectionInformation,
+    _In_ SIZE_T SectionInformationLength,
+    _Out_opt_ PSIZE_T ResultLength)
 {
     PROS_SECTION_OBJECT Section;
     KPROCESSOR_MODE PreviousMode;
@@ -4298,20 +4295,44 @@ NtQuerySection(IN HANDLE SectionHandle,
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
-
-    Status = DefaultQueryInfoBufferCheck(SectionInformationClass,
-                                         ExSectionInfoClass,
-                                         sizeof(ExSectionInfoClass) / sizeof(ExSectionInfoClass[0]),
-                                         SectionInformation,
-                                         (ULONG)SectionInformationLength,
-                                         NULL,
-                                         ResultLength,
-                                         PreviousMode);
-
-    if(!NT_SUCCESS(Status))
+    if (PreviousMode != KernelMode)
     {
-        DPRINT1("NtQuerySection() failed, Status: 0x%x\n", Status);
-        return Status;
+        _SEH2_TRY
+        {
+            ProbeForWrite(SectionInformation,
+                          SectionInformationLength,
+                          __alignof(ULONG));
+            if (ResultLength != NULL)
+            {
+                ProbeForWrite(ResultLength,
+                              sizeof(*ResultLength),
+                              __alignof(SIZE_T));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            return _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+
+    if (SectionInformationClass == SectionBasicInformation)
+    {
+        if (SectionInformationLength < sizeof(SECTION_BASIC_INFORMATION))
+        {
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+    }
+    else if (SectionInformationClass == SectionImageInformation)
+    {
+        if (SectionInformationLength < sizeof(SECTION_IMAGE_INFORMATION))
+        {
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+    }
+    else
+    {
+        return STATUS_INVALID_INFO_CLASS;
     }
 
     Status = ObReferenceObjectByHandle(SectionHandle,
@@ -4320,10 +4341,14 @@ NtQuerySection(IN HANDLE SectionHandle,
                                        PreviousMode,
                                        (PVOID*)(PVOID)&Section,
                                        NULL);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        switch (SectionInformationClass)
-        {
+        DPRINT1("Failed to reference section: 0x%lx\n", Status);
+        return Status;
+    }
+
+    switch (SectionInformationClass)
+    {
         case SectionBasicInformation:
         {
             PSECTION_BASIC_INFORMATION Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
@@ -4385,10 +4410,9 @@ NtQuerySection(IN HANDLE SectionHandle,
 
             break;
         }
-        }
-
-        ObDereferenceObject(Section);
     }
+
+    ObDereferenceObject(Section);
 
     return(Status);
 }
