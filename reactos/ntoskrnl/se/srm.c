@@ -392,7 +392,7 @@ SepRmReferenceLogonSession(
         {
             /* Reference the session */
             CurrentSession->ReferenceCount += 1;
-            DPRINT1("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
+            DPRINT("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
 
             /* Release the database lock */
             KeReleaseGuardedMutex(&SepRmDbLock);
@@ -430,7 +430,7 @@ SepRmDereferenceLogonSession(
         {
             /* Dereference the session */
             CurrentSession->ReferenceCount -= 1;
-            DPRINT1("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
+            DPRINT("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
 
             /* Release the database lock */
             KeReleaseGuardedMutex(&SepRmDbLock);

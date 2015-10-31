@@ -615,7 +615,7 @@ SepDeleteToken(PVOID ObjectBody)
 {
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
 
-    DPRINT1("SepDeleteToken()\n");
+    DPRINT("SepDeleteToken()\n");
 
     /* Dereference the logon session */
     SepRmDereferenceLogonSession(&AccessToken->AuthenticationId);
