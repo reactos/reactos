@@ -439,8 +439,8 @@ NtGdiDoPalette(
     _In_ HGDIOBJ hObj,
     _In_ WORD iStart,
     _In_ WORD cEntries,
-    _When_((iFunc == GdiPalGetEntries) || (iFunc == GdiPalGetSystemEntries), _Out_writes_bytes_(cEntries*sizeof(PALETTEENTRY)))
-    _When_((iFunc != GdiPalGetEntries) && (iFunc != GdiPalGetSystemEntries), _In_reads_bytes_(cEntries*sizeof(PALETTEENTRY))) LPVOID pEntries,
+    _When_(bInbound!=0, _In_reads_bytes_(cEntries*sizeof(PALETTEENTRY)))
+    _When_(bInbound==0, _Out_writes_bytes_(cEntries*sizeof(PALETTEENTRY))) LPVOID pEntries,
     _In_ DWORD iFunc,
     _In_ BOOL bInbound);
 

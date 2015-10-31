@@ -1055,39 +1055,38 @@ GreGetSetColorTable(
     return iResult;
 }
 
-W32KAPI
+__kernel_entry
 LONG
 APIENTRY
 NtGdiDoPalette(
-    IN HGDIOBJ hObj,
-    IN WORD iStart,
-    IN WORD cEntries,
-    IN LPVOID pUnsafeEntries,
-    IN DWORD iFunc,
-    IN BOOL bInbound)
+    _In_ HGDIOBJ hObj,
+    _In_ WORD iStart,
+    _In_ WORD cEntries,
+    _When_(bInbound!=0, _In_reads_bytes_(cEntries*sizeof(PALETTEENTRY)))
+    _When_(bInbound==0, _Out_writes_bytes_(cEntries*sizeof(PALETTEENTRY))) LPVOID pUnsafeEntries,
+    _In_ DWORD iFunc,
+    _In_ BOOL bInbound)
 {
 	LONG ret;
 	LPVOID pEntries = NULL;
-
-	/* FIXME: Handle bInbound correctly */
-
-	if (bInbound &&
-	    (pUnsafeEntries == NULL || cEntries == 0))
-	{
-		return 0;
-	}
+	SIZE_T cjSize;
 
 	if (pUnsafeEntries)
 	{
-		pEntries = ExAllocatePoolWithTag(PagedPool, cEntries * sizeof(PALETTEENTRY), TAG_PALETTE);
+		if (cEntries == 0)
+			return 0;
+
+		cjSize = cEntries * sizeof(PALETTEENTRY);
+		pEntries = ExAllocatePoolWithTag(PagedPool, cjSize, TAG_PALETTE);
 		if (!pEntries)
 			return 0;
+
 		if (bInbound)
 		{
 			_SEH2_TRY
 			{
-				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				memcpy(pEntries, pUnsafeEntries, cEntries * sizeof(PALETTEENTRY));
+				ProbeForRead(pUnsafeEntries, cjSize, 1);
+				memcpy(pEntries, pUnsafeEntries, cjSize);
 			}
 			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
@@ -1099,7 +1098,7 @@ NtGdiDoPalette(
 		else
 		{
 		    /* Zero it out, so we don't accidentally leak kernel data */
-		    RtlZeroMemory(pEntries, cEntries * sizeof(PALETTEENTRY));
+		    RtlZeroMemory(pEntries, cjSize);
 		}
 	}
 
@@ -1137,12 +1136,13 @@ NtGdiDoPalette(
 
 	if (pEntries)
 	{
-		if (!bInbound)
+		if (!bInbound && (ret > 0))
 		{
+			cjSize = min(cEntries, ret) * sizeof(PALETTEENTRY);
 			_SEH2_TRY
 			{
-				ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				memcpy(pUnsafeEntries, pEntries, cEntries * sizeof(PALETTEENTRY));
+				ProbeForWrite(pUnsafeEntries, cjSize, 1);
+				memcpy(pUnsafeEntries, pEntries, cjSize);
 			}
 			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
