@@ -53,7 +53,7 @@ BEGIN
     PUSHBUTTON      "De&ğiştir", IDC_BTN_SYSTEM_EDIT, 295, 137, 66, 14
     PUSHBUTTON      "&Tümünü Etkinleştir", IDC_BTN_SYSTEM_ENABLE_ALL, 153, 156, 66, 14
     PUSHBUTTON      "T&ümünü Edilginleştir", IDC_BTN_SYSTEM_DISABLE_ALL, 224, 156, 66, 14
-    PUSHBUTTON      "Delete", IDC_BTN_SYSTEM_DELETE, 295, 156, 66, 14
+    PUSHBUTTON      "&Sil", IDC_BTN_SYSTEM_DELETE, 295, 156, 66, 14
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 366, 175
@@ -95,9 +95,9 @@ BEGIN
     CONTROL         "List1", IDC_SERVICES_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 5, 5, 356, 129
     PUSHBUTTON      "&Tümünü Etkinleştir", IDC_BTN_SERVICES_ACTIVATE, 224, 156, 66, 14
     PUSHBUTTON      "T&ümünü Edilginleştir", IDC_BTN_SERVICES_DEACTIVATE, 295, 156, 66, 14
-    CONTROL         "&Hide all %s services", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS, 
+    CONTROL         "Tü&m %s Hizmetlerini Gizle", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS, 
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 203, 12
-    LTEXT           "Please note that some secure %s services may not be disabled.", IDC_STATIC_SERVICES_WARNING, 5, 138, 220, 17
+    LTEXT           "Birtakım korumalı %s hizmetleri edilginleştirilemeyebilir olduğunu lütfen göz önünde bulundurunuz.", IDC_STATIC_SERVICES_WARNING, 5, 138, 220, 17
 END
 
 IDD_STARTUP_PAGE DIALOGEX 0, 0, 362, 175
@@ -190,9 +190,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dizge Yapılandırma İzlencesi"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK", IDOK, 180, 41, 50, 14
-    LTEXT           "Essential services cannot be disabled. Doing so might prevent %s from running on your computer.", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
-    CONTROL         "&Don't show this message in the future", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE, 
+    DEFPUSHBUTTON   "Tamam", IDOK, 180, 41, 50, 14
+    LTEXT           "Önemli hizmetler edilginleştirilemez. Böyle yapmak bilgisayarınızda %s çalışmasını önleyebilir.", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
+    CONTROL         "&Gelecekte Bu İletiyi Gösterme", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE, 
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 42, 154, 13
 END
 
@@ -208,6 +208,7 @@ BEGIN
     IDS_YES                 "Evet"
     IDS_NO                  "Hayır"
     IDS_UNKNOWN             "Bilinmeyen"
+
 END
 
 STRINGTABLE
@@ -221,7 +222,7 @@ BEGIN
     IDS_SERVICES_COLUMN_REQ "Gerekli"
     IDS_SERVICES_COLUMN_VENDOR "Sağlayıcı"
     IDS_SERVICES_COLUMN_STATUS "Durum"
-    IDS_SERVICES_COLUMN_DATEDISABLED "Date Disabled"
+    IDS_SERVICES_COLUMN_DATEDISABLED "Devre Dışı Bırakıldığı Zaman"
 END
 
 STRINGTABLE
