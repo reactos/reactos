@@ -42,7 +42,7 @@ BEGIN
         MENUITEM "&Lipește inserție", ID_EDIT_PASTE, GRAYED
         MENUITEM "Lipește mi&x", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Inserare fișier…", ID_EDIT_INSERTFILE
+        MENUITEM "I&nserare fișier…", ID_EDIT_INSERTFILE
         MENUITEM "&Mixare cu fișier…", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
         MENUITEM "Șterge în&ainte de poziția curentă",ID_EDIT_DELETEBEFORE, GRAYED

@@ -69,7 +69,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Păstrare imagine în…",               IDM_SAVEPICTURE
         MENUITEM "Transmitere imagine prin &email…",   IDM_MP_EMAILPICTURE
         MENUITEM "Imp&rimă imaginea…",                 IDM_MP_PRINTPICTURE
-        MENUITEM "Deschide „&Imagini”",                IDM_MP_MYPICS
+        MENUITEM "Desc&hide „Imagini”",                IDM_MP_MYPICS
         MENUITEM "Stabilește ca &fundal",              IDM_SETWALLPAPER
         MENUITEM "Definire ca element pe &birou…",     IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR

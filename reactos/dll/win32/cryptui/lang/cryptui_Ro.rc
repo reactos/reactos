@@ -123,7 +123,7 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_NONE "<Niciunul>"
     IDS_PURPOSE_SERVER_AUTH "Asigură identificarea unui calculator de la distanță"
     IDS_PURPOSE_CLIENT_AUTH "Vă dovedește identitatea pentru un calculator de la distanță"
-    IDS_PURPOSE_CODE_SIGNING "Garantează că aplicația provine de la un anumit editor de software\nProtejează aplicația de alterări după publicare"
+    IDS_PURPOSE_CODE_SIGNING "Garantează că aplicația provine de la un anumit autor\nProtejează aplicația de alterări după publicare"
     IDS_PURPOSE_EMAIL_PROTECTION "Protejează mesajele de email"
     IDS_PURPOSE_IPSEC "Permite comunicarea securizată pe Internet"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Permite semnarea datelor cu ora curentă"
@@ -177,7 +177,7 @@ STRINGTABLE
 }
 
 IDD_GENERAL DIALOGEX 0, 0, 255, 236
-CAPTION "General"
+CAPTION "Generale"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN

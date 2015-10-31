@@ -169,7 +169,7 @@ BEGIN
         MENUITEM "&Atașat", ID_MENU_ATTACHED
         MENUITEM "&Primar", ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identificare", ID_MENU_IDENTIFY
+        MENUITEM "I&dentificare", ID_MENU_IDENTIFY
         MENUITEM "P&roprietăți", ID_MENU_PROPERTIES
     END
 END

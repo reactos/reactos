@@ -17,6 +17,10 @@ Description = Ein "Soviet" Echzeitstrategiespiel basierend auf Boswars. (Archiv)
 [Section.0a]
 Description = Un juego de estrategia en tiempo real con tintes soviéticos. Necesitarás un programa como 7-zip para extraerlo.
 
+[Section.0418]
+Description =  O strategie n timp real  cu tematică sovietică bazată pe Boswars. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 261 Mo
+
 [Section.0419]
 Description =  "советская" стратегия реального времени основанная на Boswars. (архив)
 

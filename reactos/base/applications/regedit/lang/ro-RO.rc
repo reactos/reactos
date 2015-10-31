@@ -30,7 +30,7 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Importare…", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "Imp&ortare…", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "E&xportare…", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
         MENUITEM "Î&ncărcare registru…", ID_REGISTRY_LOADHIVE, GRAYED
@@ -39,7 +39,7 @@ BEGIN
         MENUITEM "&Conectare la un registru din rețea…", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Deconectare de la registru din rețea…", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Imprimare…\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "I&mprimare…\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", ID_REGISTRY_EXIT
     END
@@ -53,7 +53,7 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&Valoare tip șir", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valoare 1 &bit", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "Valoare 32 b&iți", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Valoare 32 biți (4 &octeți)", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "Valoare &multi-șir", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valoare șir e&xtensibil", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
@@ -107,7 +107,7 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&Valoare tip șir", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valoare 1 &bit", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "Valoare 32 b&iți", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Valoare 32 biți (4 &octeți)", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "Valoare &multi-șir", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valoare șir e&xtensibil", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
@@ -121,7 +121,7 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&Valoare tip șir", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valoare 1 &bit", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "Valoare 32 b&iți", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Valoare 32 biți (4 &octeți)", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "Valoare &multi-șir", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valoare șir e&xtensibil", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
@@ -390,7 +390,7 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Extinde"
     IDS_COLLAPSE "&Restrânge"
-    IDS_GOTO_SUGGESTED_KEY "&Salt la „%s”"
+    IDS_GOTO_SUGGESTED_KEY "S&alt la „%s”"
     IDS_FINISHEDFIND "Căutarea în registru a fost finalizată."
 END
 
@@ -465,8 +465,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Domeniul de export", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Tot registrul", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 65, 11
-    CONTROL "Doar ramura s&electată", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    CONTROL "T&ot registrul", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 65, 11
+    CONTROL "&Doar ramura selectată", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
@@ -512,9 +512,9 @@ BEGIN
     DEFPUSHBUTTON "&Găsește", IDOK, 197, 7, 50, 14
     PUSHBUTTON "Î&nchide", IDCANCEL, 197, 24, 50, 14
     GROUPBOX "Caută în", IDC_STATIC, 7, 25, 42, 51
-    LTEXT "Cau&tă conținutul:", IDC_STATIC, 7, 8, 57, 10
+    LTEXT "&Caută conținutul:", IDC_STATIC, 7, 8, 57, 10
     EDITTEXT IDC_FINDWHAT, 67, 7, 120, 13, ES_AUTOHSCROLL
-    CONTROL "&Chei", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+    CONTROL "C&hei", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 30, 8
     CONTROL "&Valori", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 48, 30, 8
@@ -522,7 +522,7 @@ BEGIN
             WS_TABSTOP, 14, 60, 30, 8
     CONTROL "&Fără potriviri parțiale", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 58, 32, 94, 13
-    CONTROL "Sensibil la majus&cule", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+    CONTROL "Sensi&bil la majuscule", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 58, 48, 90, 12
 END
 

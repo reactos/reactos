@@ -67,7 +67,7 @@ BEGIN
     IDS_CANCEL "A&nulează"
     IDS_ABORT "Aba&ndon"
     IDS_RETRY "&Reîncearcă"
-    IDS_IGNORE "&Ignoră"
+    IDS_IGNORE "Ign&oră"
     IDS_YES "D&a"
     IDS_NO "N&u"
     IDS_HELP "&Manual…"

@@ -23,7 +23,7 @@ BEGIN
     IDS_DEVONPARENT "pe %1"
     IDS_TROUBLESHOOTDEV "&Depanare…"
     IDS_ENABLEDEV "A&ctivare"
-    IDS_REINSTALLDRV "Re&instalează modulul-pilot"
+    IDS_REINSTALLDRV "Reinstalea&ză modulul-pilot"
     IDS_PROPERTIES "P&roprietăți"
     IDS_UPDATEDRV "A&ctualizare modúl-pilot…"
     IDS_REBOOT "Repornire &calculator…"
@@ -108,7 +108,7 @@ BEGIN
     IDS_PROP_MATCHINGDEVICEID "identificator de concordanță"
     IDS_PROP_SERVICE "serviciu"
     IDS_PROP_ENUMERATOR "enumerator"
-    IDS_PROP_CAPABILITIES "capabilități"
+    IDS_PROP_CAPABILITIES "capacități de funcționalitate"
     IDS_PROP_DEVNODEFLAGS "marcatori Devnode"
     IDS_PROP_CONFIGFLAGS "marcatori Config"
     IDS_PROP_CSCONFIGFLAGS "marcatori CSConfig"
@@ -124,7 +124,7 @@ BEGIN
     IDS_PROP_DEVICECOINSTALLER "coinstalatori de dispozitiv"
     IDS_PROP_FIRMWAREREVISION "revizie microprogram"
     IDS_PROP_CURRENTPOWERSTATE "starea curentă de alimentare"
-    IDS_PROP_POWERCAPABILITIES "capabilitățile de alimentare"
+    IDS_PROP_POWERCAPABILITIES "parametri de alimentare"
     IDS_PROP_POWERSTATEMAPPINGS "corelația punctelor de alimentare"
 END
 
@@ -250,78 +250,78 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&File"
+  POPUP "&Fișier"
   BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
+    MENUITEM "I&eșire",                     IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "A&cțiune",                       IDC_ACTIONMENU
+  POPUP "&Afișare"
   BEGIN
-    MENUITEM "Devices by type",             IDC_DEVBYTYPE
-    MENUITEM "Devices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM "Dispozitive după tip",        IDC_DEVBYTYPE
+    MENUITEM "Dispozitive după conexiune",  IDC_DEVBYCONN
+    MENUITEM "Resurse după tip",            IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resurse după conexiune",      IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Dispozitive ascunse",         IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "Aj&utor"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "&Despre",                     IDC_ABOUT
   END
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "ReactOS Device Manager"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_APPNAME               "Gestionar de dispozitive"
+  IDS_CONFIRM_DISABLE       "Dezactivarea acestui dispozitiv va cauza oprirea funcționării sale.\r\nSigur doriți dezactivarea sa?"
+  IDS_CONFIRM_UNINSTALL     "Avertisment: Urmează să dezinstalați acest dispozitiv din sistem.\r\nContinuați?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Update driver software..."
-  IDS_MENU_ENABLE           "Enable"
-  IDS_MENU_DISABLE          "Disable"
-  IDS_MENU_UNINSTALL        "Uninstall"
-  IDS_MENU_SCAN             "Scan for hardware changes"
-  IDS_MENU_ADD              "Add hardware"
-  IDS_MENU_PROPERTIES       "Properties"
+  IDS_MENU_UPDATE           "Actualizare modúl-pilot…"
+  IDS_MENU_ENABLE           "Activează"
+  IDS_MENU_DISABLE          "Dezactivează"
+  IDS_MENU_UNINSTALL        "Dezinstalează"
+  IDS_MENU_SCAN             "Scanează configurația fizică"
+  IDS_MENU_ADD              "Adăugare dispozitiv…"
+  IDS_MENU_PROPERTIES       "Proprietăți"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Properties"
-  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
-  IDS_TOOLTIP_ENABLE        "Enable"
-  IDS_TOOLTIP_DISABLE       "Disable"
-  IDS_TOOLTIP_UPDATE        "Update Driver Software"
-  IDS_TOOLTIP_UNINSTALL     "Uninstall"
+  IDS_TOOLTIP_PROPERTIES    "Proprietăți"
+  IDS_TOOLTIP_SCAN          "Scanează configurația fizică"
+  IDS_TOOLTIP_ENABLE        "Activează"
+  IDS_TOOLTIP_DISABLE       "Dezactivează"
+  IDS_TOOLTIP_UPDATE        "Actualizează modúl-pilot…"
+  IDS_TOOLTIP_UNINSTALL     "Dezinstalează"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
-  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
-  IDS_HINT_ENABLE       " Enables the selected device."
-  IDS_HINT_DISABLE      " Disables the selected device."
-  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
-  IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
-  IDS_HINT_ABOUT        " About ReactOS Device Manager."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_PROPERTIES   " Inspectare proprietăți pentru selecția curentă."
+  IDS_HINT_SCAN         " Scanare pentru depistarea schimbărilor în configurația sistemului."
+  IDS_HINT_ENABLE       " Activare dispozitiv selectat."
+  IDS_HINT_DISABLE      " Dezactivare dispozitiv selectat."
+  IDS_HINT_UPDATE       " Lansare asistent de actualizare a modulului-pilot pentru dispozitivul selestat."
+  IDS_HINT_UNINSTALL    " Dezinstalare modúl-pilot pentru dispozitivul selectat."
+  IDS_HINT_ADD          " Adăugare dispozitiv non-PNP în calculator." 
+  IDS_HINT_ABOUT        " Despre Gestionarul de dispozitive."
+  IDS_HINT_EXIT         " Ieșire din program."
 
-  IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
-  IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
-  IDS_HINT_RES_BY_TYPE  " Displays resources by type."
-  IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
-  IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
+  IDS_HINT_DEV_BY_TYPE  " Afișare dispozitive fizice după tip."
+  IDS_HINT_DEV_BY_CONN  " Afișare dispozitive fizice după conexiune."
+  IDS_HINT_RES_BY_TYPE  " Afișare resurse după tip."
+  IDS_HINT_RES_BY_CONN  " Afișare dispozitive după tipul conexiunii."
+  IDS_HINT_SHOW_HIDDEN  " Afișare dispozitive de tipul celor fără autodetecție PNP (Plug-and-Play) care nu sunt acum instalate."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Restaurare fereastră la dimensiune normală."
+  IDS_HINT_SYS_MOVE     " Mutare fereastră."
+  IDS_HINT_SYS_SIZE     " Redimensionare fereastră."
+  IDS_HINT_SYS_MINIMIZE " Restrângere fereastră la minim."
+  IDS_HINT_SYS_MAXIMIZE " Extindere fereastră la maxim."
+  IDS_HINT_SYS_CLOSE    " Închidere fereastră."
 END

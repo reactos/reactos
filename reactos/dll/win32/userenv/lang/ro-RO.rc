@@ -31,6 +31,6 @@ BEGIN
     IDS_CACHE "Preferințe locale\\Fișiere de Internet temporare"
     IDS_HISTORY "Preferințe locale\\Istoric"
     IDS_COOKIES "Cookies"
-    IDS_PROGRAMFILES "%SystemDrive%\\Fișiere program"
+    IDS_PROGRAMFILES "%SystemDrive%\\Fișiere de program"
     IDS_COMMONFILES "Fișiere comune"
 END

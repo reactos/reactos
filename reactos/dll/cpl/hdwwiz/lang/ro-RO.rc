@@ -80,7 +80,7 @@ CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dacă nu regăsiți categoria pe care o căutați, specificați „afișează toate”.", IDC_STATUSTEXT, 21, 9, 275, 18
-    LTEXT "&Tipuri obișnuite de dispozitive:", IDC_HWTYPESTEXT, 21, 31, 180, 8
+    LTEXT "Tip&uri obișnuite de dispozitive:", IDC_HWTYPESTEXT, 21, 31, 180, 8
     CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 

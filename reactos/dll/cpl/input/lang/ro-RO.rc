@@ -71,7 +71,7 @@ BEGIN
     AUTOCHECKBOX "Permite combinație de c&omutare șabloane", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 155, 12
     LTEXT "«Shift»", -1, 94, 87, 27, 12
     CTEXT "+", -1, 83, 87, 8, 9
-    AUTORADIOBUTTON "«C&trl»", IDC_CTRL_LAYOUT, 30, 81, 35, 11
+    AUTORADIOBUTTON "«Ct&rl»", IDC_CTRL_LAYOUT, 30, 81, 35, 11
     AUTORADIOBUTTON "«A&lt» (stâng)", IDC_LEFT_ALT_LAYOUT, 30, 95, 66, 12
     DEFPUSHBUTTON "Con&firmă", IDOK, 182, 9, 50, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 182, 27, 50, 14

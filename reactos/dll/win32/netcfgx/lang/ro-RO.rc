@@ -1,8 +1,7 @@
 /* 
  * FILE:       dll/win32/netcfgx/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-09-06  initial translation
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -15,19 +14,19 @@ BEGIN
     LTEXT "Puteți obține automat configurarea adresei IP în rețelele cu DHCP. Altfel, este necesară configurarea manuală de către administratorul de rețea.", -1, 9, 9, 235, 27
     CONTROL "&Obține automat adresă IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
-    CONTROL "Folo&sește adresa următoare:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
-    LTEXT "Adresă &IP:", -1, 14, 75, 135, 8
+    CONTROL "Folosește adresa ur&mătoare:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    LTEXT "Adresă I&P:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
-    LTEXT "Mască de s&ubrețea:", -1, 14, 90, 135, 8
+    LTEXT "Mas&că de subrețea:", -1, 14, 90, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 90 - 2, 80, 12
-    LTEXT "Server „poartă” i&mplicit:", -1, 14, 105, 135, 8
+    LTEXT "S&erver „poartă” implicit:", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
-    CONTROL "O&bține automat adresa serverului DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    CONTROL "Obține a&utomat adresa serverului DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
     GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "Folos&ește adresa DNS următoare", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
+    CONTROL "Folosește adresa &DNS următoare", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
     LTEXT "Server DNS p&referat:", -1, 14, 171, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
-    LTEXT "Server &DNS alternativ:", -1, 14, 186, 135, 8
+    LTEXT "Server DNS &alternativ:", -1, 14, 186, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 186 - 2, 80, 12
     PUSHBUTTON "A&vansate", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
@@ -41,15 +40,15 @@ BEGIN
     CONTROL "Adresă IP p&rivată obținută automat", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "Configurată &manual", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 90, 12
-    LTEXT "Adresă &IP:", -1, 14, 75, 135, 8
+    LTEXT "Adresă I&P:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75, 80, 12
-    LTEXT "Mască de &subrețea:", -1, 14, 95, 135, 8
+    LTEXT "Mască de su&brețea:", -1, 14, 95, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 95, 80, 12
     LTEXT "Server „p&oartă” implicit:", -1, 14, 115, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 115, 80, 12
     LTEXT "Server &DNS preferat:", -1, 14, 150, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 150, 80, 12
-    LTEXT "Ser&ver DNS alternativ:", -1, 14, 165, 180, 8
+    LTEXT "Server DNS &alternativ:", -1, 14, 165, 180, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 165, 80, 12
 END
 
@@ -63,7 +62,7 @@ BEGIN
     PUSHBUTTON "&Adăugare…", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Modificare…", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Elimină", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
-    GROUPBOX "&Servere „porți” implicite:", -1, 5, 100, 240, 90
+    GROUPBOX "Ser&vere „porți” implicite:", -1, 5, 100, 240, 90
     CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "A&dăugare…", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "M&odificare…", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
@@ -88,8 +87,8 @@ BEGIN
     PUSHBUTTON "&Elimină", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
     LTEXT "Următoarele opțiuni sunt aplicate tuturor conexiunilor cu TCP/IP active. Pentru rezoluția numelor necalificate:", -1, 5, 90, 220, 24
     CONTROL "In&clude sufixul DNS primar și de conexiune", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
-    CHECKBOX "Include sufi&xul părinte al sufixului DNS primar", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Include urmă&toarele sufixe DNS (în orine):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
+    CHECKBOX "In&clude sufixul părinte al sufixului DNS primar", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "In&clude următoarele sufixe DNS (în ordine):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
     PUSHBUTTON "S&us", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
     PUSHBUTTON "J&os", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
@@ -120,8 +119,8 @@ CAPTION "Adresa TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
-    LTEXT "Adresă &IP:", -1, 5, 15, 70, 12
-    LTEXT "Mască de &subrețea:", -1, 5, 30, 70, 12
+    LTEXT "Adresă I&P:", -1, 5, 15, 70, 12
+    LTEXT "Mască de su&brețea:", -1, 5, 30, 70, 12
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
     DEFPUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "A&nulează", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -170,22 +169,22 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CHECKBOX "A&ctivează filtrarea TCP/IP (pentru toate adaptoarele)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "", -1, 5, 30, 90, 150
-    CONTROL "Permite tot &TCP", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
-    CONTROL "&Permite doar", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
+    CONTROL "Permite tot TC&P", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
+    CONTROL "Pe&rmite doar:", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
     CONTROL "", IDC_TCP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 11, 62, 72, 75
     PUSHBUTTON "&Adaugă", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Elimină", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 105, 30, 90, 150
-    CONTROL "Permite tot &UDP", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
-    CONTROL "Pe&rmite doar", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
+    CONTROL "Permite tot UD&P", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
+    CONTROL "Pe&rmite doar:", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
     CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
     PUSHBUTTON "A&daugă", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "E&limină", IDC_UDP_DEL, 115, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 205, 30, 90, 150
-    CONTROL "Permite tot &IP", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
-    CONTROL "Permite d&oar", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
+    CONTROL "Permite tot I&P", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
+    CONTROL "Pe&rmite doar:", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
     CONTROL "", IDC_IP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 211, 62, 72, 75
-    PUSHBUTTON "Adau&gă", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Ada&ugă", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Eli&mină", IDC_IP_DEL, 215, 161, 50, 14, WS_TABSTOP
     PUSHBUTTON "Con&firmă", IDC_OK, 150, 190, 50, 14, WS_TABSTOP
     PUSHBUTTON "A&nulează", IDCANCEL, 210, 190, 50, 14, WS_TABSTOP

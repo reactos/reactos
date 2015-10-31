@@ -29,7 +29,7 @@ BEGIN
             MENUITEM "&Ridicată", ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normală", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
             MENUITEM "&Mică", ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "&Stagnantă", ID_VIEW_UPDATESPEED_PAUSED
+            MENUITEM "St&agnantă", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
         MENUITEM "D&ale", ID_VIEW_LARGE
@@ -418,16 +418,16 @@ BEGIN
     IDS_TAB_IOWRITESBYTES "In/Ex octeți scriși"
     IDS_TAB_IOOTHERBYTES "In/Ex octeți din altceva"
     IDS_TAB_COMMANDLINE "Linie de comandă"
-    IDS_MENU_SELECTCOLUMNS "&Selectare coloane…"
+    IDS_MENU_SELECTCOLUMNS "Selectare &coloane…"
     IDS_MENU_16BITTASK "Afișează activități pe 16 &biți"
-    IDS_MENU_WINDOWS "F&erestre"
-    IDS_MENU_LARGEICONS "Pictograme m&ari"
-    IDS_MENU_SMALLICONS "Pictograme m&ici"
+    IDS_MENU_WINDOWS "Fe&restre"
+    IDS_MENU_LARGEICONS "D&ale"
+    IDS_MENU_SMALLICONS "&Pictograme"
     IDS_MENU_DETAILS "&Detalii"
     IDS_MENU_ONEGRAPHALLCPUS "Grafic general &comun"
-    IDS_MENU_ONEGRAPHPERCPU "Grafice &individuale"
-    IDS_MENU_CPUHISTORY "Istoric &procesor"
-    IDS_MENU_SHOWKERNELTIMES "Afișează &timpi nucleu"
+    IDS_MENU_ONEGRAPHPERCPU "Grafice indi&viduale"
+    IDS_MENU_CPUHISTORY "Ist&oric procesor"
+    IDS_MENU_SHOWKERNELTIMES "Afișea&ză timpi nucleu"
     IDS_CREATENEWTASK "Creare activitate nouă"
     IDS_CREATENEWTASK_DESC "Tastați numele unui program, dosar, document, sau a unei resurse de Internet, în vederea deschiderii în ReactOS."
     IDS_MSG_ACCESSPROCESSAFF "Nu se poate accesa/stabili afinitatea."

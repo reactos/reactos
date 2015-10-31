@@ -68,7 +68,7 @@ BEGIN
         MENUITEM "&Manual…", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
         MENUITEM "&Despre…", CMD_ABOUT
-        MENUITEM "&Info…", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "I&nfo…", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -171,7 +171,7 @@ BEGIN
 \nScrieți ceva apoi încercați din nou."
     STRING_DOESNOTEXIST "Fișierul „%s”\nnu există.\n\n \
 Creați un nou fișier ?"
-    STRING_NOTSAVED "Fișierul „%s”\na fost modificat\n\n \
+    STRING_NOTSAVED "Fișierul „%s” a fost modificat!\n\n \
 Păstrați modificările aduse?"
     STRING_NOTFOUND "„%s” nu poate fi găsit."
     STRING_OUT_OF_MEMORY "Nu există suficientă memorie pentru a efectua această operație. \
@@ -184,6 +184,6 @@ Păstrați modificările aduse?"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
-    STRING_LINE_COLUMN "Linie %d, coloană %d"
+    STRING_LINE_COLUMN "Linia %d, coloana %d"
     STRING_PRINTERROR "Nu se poate imprima fișierul '%s'.\n\nAsigurați-vă că imprimanta este pornită și configurată corespunzător."
 END

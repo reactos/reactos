@@ -11,7 +11,7 @@ CAPTION "Regim de consum"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "Alegeți un regim de consum energetic cât mai potrivit pentru dumneavoastră. Aveți în vedere că modificările aduse vor fi memorate în regimul curent.", -1, 37, 6, 209, 36
+    LTEXT "Alegeți un regim de consum al energiei cât mai potrivit pentru dumneavoastră. Aveți în vedere că modificările aduse vor fi memorate în regimul curent.", -1, 37, 6, 209, 36
     GROUPBOX "&Regimuri de consum", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "&Păstrare…", IDC_SAVEAS_BTN, 124, 72, 55, 14, WS_DISABLED
@@ -75,7 +75,7 @@ CAPTION "Avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
-    LTEXT "Specificați opțiunile de economisire a consumului de energie al calculatorului.", -1, 37, 6, 207, 20
+    LTEXT "Specificați opțiunile de economisire ale consumului de energie al calculatorului.", -1, 37, 6, 207, 20
     GROUPBOX "Opțiuni", -1, 6, 30, 240, 65
     CONTROL "Afișează pictogramă în &zona de notificare", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
     CONTROL "Solicită &reautentificare la revenirea din starea de veghe", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10

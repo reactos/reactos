@@ -29,7 +29,7 @@ BEGIN
     BEGIN
         MENUITEM "&Nou…\tCtrl+N",            ID_FILE_NEW
         MENUITEM "&Deschidere…\tCtrl+O",     ID_FILE_OPEN
-        MENUITEM "&Pă&trează\tCtrl+S",       ID_FILE_SAVE
+        MENUITEM "&Pătrează\tCtrl+S",        ID_FILE_SAVE
         MENUITEM "Păst&rare în…",            ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "I&mprimare…\tCtrl+P",      ID_PRINT
@@ -83,10 +83,10 @@ BEGIN
         MENUITEM "&Font…",                       ID_FONTSETTINGS
         MENUITEM "Punct &bulină",                ID_BULLET
         MENUITEM "&Paragraf…",                   ID_PARAFORMAT
-        MENUITEM "&Taburi…",                     ID_TABSTOPS
+        MENUITEM "T&aburi…",                     ID_TABSTOPS
         POPUP "Fun&dal"
         BEGIN
-            MENUITEM "&Sistem\tCtrl+1",         ID_BACK_1
+            MENUITEM "Sist&em\tCtrl+1",          ID_BACK_1
             MENUITEM "&Gălbui de post-it\tCtrl+2",     ID_BACK_2
         END
     END

@@ -110,7 +110,7 @@ STRINGTABLE
     IDS_PKCS_7_ENCRYPTED "PKCS 7 criptat"
     IDS_PREVIOUS_CA_CERT_HASH "Rezumatul certificatului CA anterior"
     IDS_CRL_VIRTUAL_BASE "Baza virtuală a numerelor CRL"
-    IDS_CRL_NEXT_PUBLISH "Următorul editor CRL"
+    IDS_CRL_NEXT_PUBLISH "Următorul autor CRL"
     IDS_CA_EXCHANGE "Certificat de criptare CA"
     IDS_KEY_RECOVERY_AGENT "Agent de recuperare a cheilor"
     IDS_CERTIFICATE_TEMPLATE "Șablon de informații de certificat"
@@ -169,7 +169,7 @@ STRINGTABLE
     IDS_LOCALIZEDNAME_MY "Personale"
     IDS_LOCALIZEDNAME_CA "Autorități intermediare de certificare"
     IDS_LOCALIZEDNAME_ADDRESSBOOK "Alte persoane"
-    IDS_LOCALIZEDNAME_TRUSTEDPUBLISHER "Editor de încredere"
+    IDS_LOCALIZEDNAME_TRUSTEDPUBLISHER "Autori de încredere"
     IDS_LOCALIZEDNAME_DISALLOWED "Lipsite de încredere"
 }
 

@@ -98,7 +98,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Culori"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Text ecran", IDC_RADIO_SCREEN_TEXT, "Button", BS_AUTORADIOBUTTON |
+    CONTROL "T&ext ecran", IDC_RADIO_SCREEN_TEXT, "Button", BS_AUTORADIOBUTTON |
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 12, 112, 10
     CONTROL "F&undal ecran", IDC_RADIO_SCREEN_BACKGROUND, "Button", BS_AUTORADIOBUTTON |
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 30, 112, 10
@@ -158,6 +158,6 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Linie de comandă"
     IDS_CPLDESCRIPTION "Configurarea proprietăților pentru programe linie de comandă."
-    IDS_APPLY_SHORTCUT_ALL "Modifică &scurtătura care a pornit aplicația"
+    IDS_APPLY_SHORTCUT_ALL "Modifică scurtătura care a pornit aplicația"
     IDS_RASTERFONTS "Fonturi rastre"
 END

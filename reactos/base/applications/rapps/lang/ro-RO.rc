@@ -16,7 +16,7 @@ BEGIN
     END
     POPUP "&Programe"
     BEGIN
-        MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
+        MENUITEM "Instalea&ză\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifică", ID_MODIFY
         MENUITEM SEPARATOR
@@ -46,7 +46,7 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
+        MENUITEM "Instalea&ză\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifică", ID_MODIFY
         MENUITEM SEPARATOR
@@ -90,7 +90,7 @@ CAPTION "Instalare aplicație"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "&Instalează de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "Instalea&ză de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Descarcă și instalează", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "Con&firmă", IDOK, 86, 78, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 150, 78, 60, 14
@@ -203,7 +203,7 @@ BEGIN
     IDS_INFORMATION "Informație"
     IDS_UNABLE_TO_DOWNLOAD "Pachetul nu poate fi descărcat! Adresa nu este găsită!"
     IDS_UNABLE_TO_REMOVE "Nu se pot elimina datele din registru pentru acest program!"
-    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."    
-    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
-    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
+    IDS_CERT_DOES_NOT_MATCH "Verificarea certificatului SSL a eșuat."    
+    IDS_INTEG_CHECK_TITLE "Se verifică integritatea pachetului…"
+    IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
 END

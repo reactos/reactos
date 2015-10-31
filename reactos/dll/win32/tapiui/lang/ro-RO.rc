@@ -1,8 +1,7 @@
 /* 
  * FILE:        dll/win32/tapiui/lang/ro-RO.rc
  *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * LAST CHANGE: 2011-12-17  changes in accelerators
+ * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -38,18 +37,18 @@ BEGIN
     EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
     GROUPBOX "Reguli de apel", 2002, 7, 80, 238, 92
     LTEXT "Pentru apelurile din această locație, respectă următoarele reguli:", 2003, 14, 92, 224, 8
-    LTEXT "Formează acest cod pentru a accesa o linie l&ocală:", -1, 14, 106, 170, 8
+    LTEXT "Formea&ză acest cod pentru a accesa o linie locală:", -1, 14, 106, 170, 8
     EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
-    LTEXT "Formează acest cod pentru una &interurbană:", -1, 14, 122, 170, 8
+    LTEXT "Formea&ză acest cod pentru una interurbană:", -1, 14, 122, 170, 8
     EDITTEXT 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
     LTEXT "Prefixul pentru &apeluri interurbane:", -1, 14, 138, 170, 8
     EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
-    LTEXT "Prefixul pentru ap&eluri internaționale:", -1, 14, 154, 170, 8
+    LTEXT "Prefixul pentru &apeluri internaționale:", -1, 14, 154, 170, 8
     EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Dezactivează așteptarea apelurilor, formând:", 1035, 14, 177, 170, 10
     COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
     LTEXT "Apel prin:", -1, 14, 195, 40, 8
-    AUTORADIOBUTTON "&Ton", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "T&on", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&Puls", 1037, 112, 194, 50, 10, NOT WS_TABSTOP
     LTEXT "Numărul de telefon va fi apelat astfel:", 1052, 7, 219, 180, 8
     LTEXT "", 1053, 14, 232, 224, 16
@@ -76,7 +75,7 @@ CAPTION "Cartelă de apel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Alegeți o cartelă de apel existentă, sau adăugați o nouă cartelă.", 2000, 7, 7, 238, 8
-    LTEXT "&Tipuri de cartelă:", -1, 7, 23, 238, 8
+    LTEXT "Tip&uri de cartelă:", -1, 7, 23, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
     PUSHBUTTON "N&ouă…", 1030, 87, 103, 50, 14
     PUSHBUTTON "&Modificare…", 1031, 141, 103, 50, 14
@@ -118,20 +117,20 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apeluri interurbane"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Numărul de acces pentru apelurile &interurbane:", -1, 7, 7, 238, 8
+    LTEXT "Numărul de acces pentru apelurile interurbane:", -1, 7, 7, 238, 8
     EDITTEXT 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "Utilizați butoanele de mai jos pentru a specifica pașii necesari efectuării de apeluri interurbane.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel.", 2000, 7, 40, 238, 24
     LTEXT "Pașii de utili&zare a cartelei:", -1, 7, 72, 120, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "Mută s&us", 1022, 195, 83, 50, 14
     PUSHBUTTON "Mută j&os", 1023, 195, 101, 50, 14
-    PUSHBUTTON "&Elimină", 1024, 195, 119, 50, 14
-    PUSHBUTTON "Nu&mărul de acces", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Eli&mină", 1024, 195, 119, 50, 14
+    PUSHBUTTON "Numărul de &acces", 1025, 7, 161, 90, 14
     PUSHBUTTON "Numărul de &cont", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "Număr &destinație…", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Așteaptare ton…", 1017, 7, 197, 90, 14
-    PUSHBUTTON "&Specifcare cifre…", 1021, 101, 197, 90, 14
+    PUSHBUTTON "Așt&eptare ton…", 1017, 7, 197, 90, 14
+    PUSHBUTTON "Specifca&re cifre…", 1021, 101, 197, 90, 14
 END
 
 107 DIALOGEX 0, 0, 252, 218
@@ -139,20 +138,20 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apeluri internaționale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Numărul de acces pentru apeluri &internaționale:", -1, 7, 7, 238, 8
+    LTEXT "Numărul de acces pentru apeluri internaționale:", -1, 7, 7, 238, 8
     EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "Utilizați butoanele de mai jos pentru a specifica pașii necesari efectuării de apeluri internaționale.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel.", 2000, 7, 40, 244, 24
-    LTEXT "Pașii de u&tilizare a cartelei:", -1, 7, 72, 120, 8
+    LTEXT "Pașii de utili&zare a cartelei:", -1, 7, 72, 120, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "Mută s&us", 1022, 195, 83, 50, 14
     PUSHBUTTON "Mută j&os", 1023, 195, 101, 50, 14
-    PUSHBUTTON "&Elimină", 1024, 195, 119, 50, 14
-    PUSHBUTTON "Nu&mărul de acces", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Eli&mină", 1024, 195, 119, 50, 14
+    PUSHBUTTON "Numărul de &acces", 1025, 7, 161, 90, 14
     PUSHBUTTON "Numărul de &cont", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "Număr &destinație…", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Așteaptare ton…", 1017, 7, 197, 90, 14
-    PUSHBUTTON "&Specificare cifre…", 1021, 101, 197, 90, 14
+    PUSHBUTTON "Așt&eaptare ton…", 1017, 7, 197, 90, 14
+    PUSHBUTTON "Specifica&re cifre…", 1021, 101, 197, 90, 14
 END
 
 108 DIALOGEX 0, 0, 252, 218
@@ -160,20 +159,20 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apeluri locale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Numărul de acces pentru apeluri &locale:", -1, 7, 7, 238, 8
+    LTEXT "Numărul de acces pentru apeluri locale:", -1, 7, 7, 238, 8
     EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "Specificați pașii necesari efectuării de apeluri locale.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel. Pentru a apela fără cartelă, lăsați necompletată această secțiune.", 2000, 7, 40, 238, 24
-    LTEXT "Pașii de u&tilizare a cartelei:", -1, 7, 72, 238, 8
+    LTEXT "Pașii de utili&zare a cartelei:", -1, 7, 72, 238, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "Mută s&us", 1022, 195, 83, 50, 14
     PUSHBUTTON "Mută j&os", 1023, 195, 101, 50, 14
-    PUSHBUTTON "&Elimină", 1024, 195, 119, 50, 14
-    PUSHBUTTON "Nu&mărul de acces", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Eli&mină", 1024, 195, 119, 50, 14
+    PUSHBUTTON "Numărul de &acces", 1025, 7, 161, 90, 14
     PUSHBUTTON "Numărul de &cont", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "Număr &destinație…", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Așteptare ton…", 1017, 7, 197, 90, 14
-    PUSHBUTTON "&Specificare cifre…", 1021, 101, 197, 90, 14
+    PUSHBUTTON "Așt&eptare ton…", 1017, 7, 197, 90, 14
+    PUSHBUTTON "Specifica&re cifre…", 1021, 101, 197, 90, 14
 END
 
 109 DIALOGEX 0, 0, 252, 257
@@ -294,7 +293,7 @@ BEGIN
     LTEXT "Dacă formați un cod pentru liniile e&xterne, care este?", -1, 107, 137, 189, 10
     EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Sistemul de telefonie în această locație folosește:", -1, 107, 168, 189, 10
-    AUTORADIOBUTTON "&Ton", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "T&on", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Puls", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
     DEFPUSHBUTTON "Con&firmă", 1, 192, 204, 50, 14
     PUSHBUTTON "A&nulează", 2, 246, 204, 50, 14
@@ -313,7 +312,7 @@ BEGIN
     LTEXT "Dacă formați un cod pentru liniile e&xterne, care este?", -1, 95, 96, 188, 10
     EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Sistemul de telefonie în această locație folosește:", -1, 95, 129, 159, 10
-    AUTORADIOBUTTON "&Ton", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "T&on", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Puls", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
 END
 

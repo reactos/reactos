@@ -19,7 +19,7 @@ BEGIN
     LTEXT "C&aractere de copiat:", IDC_STATIC, 6, 188, 66, 9
     CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
-    DEFPUSHBUTTON "&Selectează", IDC_SELECT, 194, 186, 44, 13
+    DEFPUSHBUTTON "S&electează", IDC_SELECT, 194, 186, 44, 13
     PUSHBUTTON "&Copiază", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
     CONTROL "Mod a&vansat", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 8, 208, 95, 10
@@ -33,7 +33,7 @@ BEGIN
     COMBOBOX IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Grupare după:", IDC_STATIC, 8, 28, 50, 8
     COMBOBOX IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Cau&tă", IDC_BUTTON_SEARCH, 200, 44, 50, 14
+    PUSHBUTTON "&Caută", IDC_BUTTON_SEARCH, 200, 44, 50, 14
     EDITTEXT IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
     LTEXT "Căuta&re:", IDC_STATIC, 8, 48, 42, 8
     LTEXT "&Unicode:", IDC_STATIC, 200, 8, 30, 8
@@ -45,7 +45,7 @@ CAPTION "Despre"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    LTEXT "Hartă a caracterelor v0.1\nDrept de autor (C) 2007 Ged Murphy (gedmurphy@reactos.org)\nTraducere de Ștefan Fulea (stefan.fulea@mail.md)", IDC_STATIC, 48, 7, 210, 36
+    LTEXT "Hartă de caractere v0.1\nDrept de autor (C) 2007 Ged Murphy (gedmurphy@reactos.org)\nTraducere de Ștefan Fulea (stefan.fulea@mail.md)", IDC_STATIC, 48, 7, 210, 36
     PUSHBUTTON "Î&nchide", IDOK, 105, 162, 44, 15
     ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 254, 107, WS_VISIBLE | WS_VSCROLL |
@@ -56,5 +56,5 @@ STRINGTABLE
 BEGIN
     IDS_LICENSE "Această aplicație este publică; fiind permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_ABOUT "&Despre…"
-    IDS_TITLE "Hartă a caracterelor"
+    IDS_TITLE "Hartă de caractere"
 END

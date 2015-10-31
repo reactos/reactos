@@ -39,7 +39,7 @@ END
 
 IDD_CLICK_LOCK DIALOGEX 0, 0, 240, 78
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
-CAPTION "ÎnțepenireClic"
+CAPTION "ImobilizareClic"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Scurtă", -1, 50, 35, 27, 10
@@ -47,7 +47,7 @@ BEGIN
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
     PUSHBUTTON "Con&firmă", IDOK, 110, 59, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 174, 59, 60, 14
-    LTEXT "&Specificați perioada de menținere apăsată a unui buton pentru a-l înțepeni.", -1, 37, 5, 200, 27
+    LTEXT "Sp&ecificați perioada de menținere apăsată a unui buton pentru a-l imobiliza.", -1, 37, 5, 200, 27
     ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
 END
 
@@ -57,7 +57,7 @@ CAPTION "Butoane"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Configurație butoane", -1, 5, 5, 236, 70
-    CHECKBOX "Co&mută funcția butoanelor primar și secundar", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 159, 10
+    CHECKBOX "&Comută funcția butoanelor primar și secundar", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 159, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
     LTEXT "Bifați pentru interschimbarea funcției butoanelor principale ale șoricelului. Astfel butonul drept va fi cel folosit pentru selectare sau agățare și trasare.", -1, 10, 32, 156, 36
     GROUPBOX "Viteza pentru dublu-clic", -1, 5, 78, 236, 70
@@ -66,8 +66,8 @@ BEGIN
     LTEXT "Mare", -1, 136, 123, 24, 10
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
     CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
-    GROUPBOX "ÎnțepenireClic", -1, 5, 150, 236, 70
-    CHECKBOX "Doresc folosirea de Înțepenire&Clic", IDC_CHECK_CLICK_LOCK, 10, 160, 150, 20
+    GROUPBOX "ImobilizareClic", -1, 5, 150, 236, 70
+    CHECKBOX "Doresc folosirea de I&mobilizareClic", IDC_CHECK_CLICK_LOCK, 10, 160, 150, 20
     PUSHBUTTON "&Parametri…", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
     LTEXT "Această funcționalitate vă permite activarea sau trasarea elementelor fără a ține apăsat încontinuu butonul de șoricel. Pentru a activa/dezactiva, mențineți un pic apăsat butonul de șoricel.", -1, 10, 180, 224, 30
 END
@@ -113,7 +113,7 @@ BEGIN
     ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
     CHECKBOX "Îm&bunătățește precizia indicatorului", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
     GROUPBOX "Autoplasare", -1, 5, 70, 236, 40
-    CHECKBOX "&Mută indicatorul în mod automat pe butonul implicit al unei ferestre de dialog",
+    CHECKBOX "A&mplasează în mod automat indicatorul pe butonul implicit al unei ferestre de dialog",
              IDC_CHECK_SNAP_TO, 52, 84, 183, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_BUTTON, IDC_ICON_SNAP_TO, 18, 83, 15, 15
     GROUPBOX "Vizibilitate", -1, 5, 115, 236, 95
@@ -136,9 +136,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Derulare", -1, 5, 5, 236, 80
     ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
-    LTEXT "La învârtirea rotiței se va derula", -1, 60, 15, 150, 10
-    RADIOBUTTON "&Următorul număr de linii odată:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
-    RADIOBUTTON "&Cuprinsul unui ecran odată", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 100, 10
+    LTEXT "La acționarea rotiței se va derula", -1, 60, 15, 150, 10
+    RADIOBUTTON "Si&multan următorul număr de linii:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    RADIOBUTTON "Câte un &ecran", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 100, 10
     EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
     CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 125, 45, 12, 12
 END

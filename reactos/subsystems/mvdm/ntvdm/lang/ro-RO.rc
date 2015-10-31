@@ -1,3 +1,4 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -11,12 +12,12 @@ STRINGTABLE
 BEGIN
     IDS_VDM_DUMPMEM_TXT ,   "Captură memorie (te&xt)"
     IDS_VDM_DUMPMEM_BIN ,   "Captură memorie (&binară)"
-    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
-    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
+    IDS_VDM_MOUNT_FLOPPY,   "Introduceți o dischetă în dischiera %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Scoateți discheta din dischiera %d"
     IDS_VDM_QUIT        ,   "I&eșire din ReactOS VDM"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_MEDIA,   "No media"
+    IDS_NO_MEDIA,   "Lipsă mediu de stocare"
 END

@@ -217,8 +217,8 @@ BEGIN
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
     LTEXT "Ridicat", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "&Sincronizează mișcarea indicatorilor", 9504, 5, 185, 216, 9
-    PUSHBUTTON "Restabilește &implicite", 9505, 110, 199, 110, 14
+    AUTOCHECKBOX "Sinc&ronizează mișcarea indicatorilor", 9504, 5, 185, 216, 9
+    PUSHBUTTON "Restabilește i&mplicite", 9505, 110, 199, 110, 14
 END
 
 IDD_SETUP2 DIALOGEX 0, 0, 227, 206

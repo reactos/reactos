@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Pornește captură", IDM_FILE_STARTCAPTURE
         MENUITEM "&Oprește captură", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Ecou &local", IDM_FILE_LOCALECHO
+        MENUITEM "Ecou loc&al", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
     END

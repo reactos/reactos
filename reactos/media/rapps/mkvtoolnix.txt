@@ -14,7 +14,7 @@ SHA1 = ed3addfe6e78cfbb6d306b621ba4a9ee9a389de6
 [Section.0407]
 Description = Sammlung von Werkzeugen zum Bearbeiten von MKV Dateien.
 
-[Section.0407]
+[Section.0418]
 Description = Grup de instrumente pentru formatul de fișiere MKV.
 Size = 5,3 Mo
 

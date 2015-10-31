@@ -29,7 +29,7 @@ BEGIN
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "Scoate în siguranță acest dispozitiv"
-    IDS_HOTPLUG_REMOVE_2 "&Scoate în siguranță acest dispozitiv"
+    IDS_HOTPLUG_REMOVE_2 "S&coate în siguranță acest dispozitiv"
     IDS_HOTPLUG_REMOVE_3 "Scoate în siguranță %s"
     IDS_HOTPLUG_COMMA ", "
     IDS_HOTPLUG_DRIVE " - unitate (%s)"

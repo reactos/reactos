@@ -39,7 +39,7 @@ BEGIN
     GROUPBOX "Compatibilitate lingvistică suplimentară", -1, 5, 62, 234, 82
     LTEXT "ReactOS posedă în mod implicit compatibilitate pentru majoritatea limbilor. În caz de necesitate, această compatibilitate se poate extinde prin instalarea de fișiere suplimentare.", -1, 12, 72, 220, 25
     CHECKBOX "Instalează fișierele pentru script-uri comple&xe și pentru limbile cu scriere inversă", IDC_INST_FILES_FOR_RTOL_LANG, 12, 100, 215, 22, BS_MULTILINE
-    CHECKBOX "Instalează fișierele pentru limbile &est-asiatice", IDC_INST_FILES_FOR_ASIAN, 12, 119, 180, 22, BS_MULTILINE
+    CHECKBOX "Instalează fișierele pentru limbile din &estul Asiei", IDC_INST_FILES_FOR_ASIAN, 12, 119, 180, 22, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -49,7 +49,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Limba pentru programe ne-Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Această opțiune specifică limba de afișare pentru programele ce nu utilizează Unicode în textele din meniuri și ferestrele de dialog. Opțiunea nu afectează aplicațiile Unicode, dar va afecta toți utilizatorii din sistem.", -1, 14, 18, 223, 33
+    LTEXT "Această opțiune specifică limba de afișare pentru programele care nu utilizează Unicode în textele din meniuri și ferestrele de dialog. Opțiunea nu afectează aplicațiile Unicode, dar va afecta toți utilizatorii din sistem.", -1, 14, 18, 223, 33
     LTEXT "Alegeți limba ce corespunde cu limba aplicațiilor ne-Unicode pe care doriți să le utilizați:", -1, 14, 55, 223, 18
     GROUPBOX "Tabele de conversie cod-pagină", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
@@ -67,7 +67,7 @@ BEGIN
     EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Negativ:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Separatorul de fracție zecimală:", -1, 8, 67, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "S&eparatorul de fracție zecimală:", -1, 8, 67, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Precizia fracționară (nr. cifre):", -1, 8, 83, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -81,7 +81,7 @@ BEGIN
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Zero întreg din fracție:", -1, 8, 166, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "S&eparator listă:", -1, 8, 181, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Sepa&rator listă:", -1, 8, 181, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Sistemul de măs&ură:", -1, 8, 197, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -121,17 +121,17 @@ BEGIN
     GROUPBOX "Exemplu", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
     LTEXT "Oră:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "F&ormatul de reprezentare a orei:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "For&matul de reprezentare a orei:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Separatorul din reprezentarea orei:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Sepa&ratorul din reprezentarea orei:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMESEPARATOR, 149, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Simbolul A&M:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Simbolul „ant&e meridiem”:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEAMSYMBOL, 149, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Simbolul &PM:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Simbolul „p&ost meridiem”:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
     LTEXT "Notația orei:\n\n\
-h = oră     m = minut    s = secundă   t = AM sau PM\n\n\
+h = oră     m = minut    s = secundă\nt = „ante meridiem” sau „post meridiem”\n\
 h = 12 ore    H = 24 ore \n\
 hh, mm, ss = cu zerouri   h, m, s = fără zerouri", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
@@ -196,10 +196,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPLY_DEFAULT_TITLE "Change default settings"
-    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
-These changes apply to the logon screen and new user accounts.\n\
-The computer must be rebooted, in order to apply the changes to some system services."
+    IDS_APPLY_DEFAULT_TITLE "Modificarea configurației implicite"
+    IDS_APPLY_DEFAULT_TEXT "Configurația va fi aplicată contului implicit de utilizator.\n\n\
+Aceste modificări se referă la ecranul de autentificare și la noile conturi de utilizator.\n\
+Calculatorul trebuie repornit pentru a institui modificări în unele servicii de sistem."
 END
 
 STRINGTABLE

@@ -14,6 +14,10 @@ SHA1 = fc48f579616cab2c2986c018745852e6c8817460
 [Section.0407]
 Description = Visuelle objektorientierte Programmierumgebug für Kinder.
 
+[Section.0418]
+Description = Un mediu de programare orientat pe obiecte adresat copiilor.
+Size = 33.0 Mo
+
 [Section.0419]
 Description = Визуальная объектно-ориентированная среда программирования для детей.
 

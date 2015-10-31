@@ -190,7 +190,7 @@ BEGIN
     COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Comentariu:", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Deschide loc. destinației", 14020, 9, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&Locul țintei", 14020, 9, 172, 70, 14, ES_LEFT
     PUSHBUTTON "&Pictogramă…", 14021, 84, 172, 70, 14, ES_LEFT
     PUSHBUTTON "A&vansate…", 14022, 159, 172, 70, 14, ES_LEFT
 END
@@ -201,7 +201,7 @@ CAPTION "Proprietăți avansate"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
-    LTEXT "Specificați proprietățile avansate dorite pentru această scurtătură.", -1, 5, 30, 210, 10
+    LTEXT "Specificați proprietăți avansate pentru această scurtătură.", -1, 5, 30, 210, 10
     CHECKBOX "Execută sub o identitate explicită", 14000, 25, 50, 150, 10
     LTEXT "Această opțiune vă permite execuția scurtăturii sub autoritatea unui alt utilizator sau continuarea folosirii scurtăturii în mod securizat, protejând astfel calculatorul de activități neautorizate.", -1, 50, 60, 175, 40
     CHECKBOX "Execută în spațiu de memorie separat", 14001, 25, 100, 90, 10, WS_DISABLED
@@ -408,15 +408,15 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Activități", -1, 7, 10, 249, 45
     ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Include în ferestrele dosarelor și acti&viățile comune", 14001, 40, 25, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Incl&ude în ferestrele dosarelor și activiățile comune", 14001, 40, 25, 200, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Prefer aspectul &clasic pentru dosare", 14002, 40, 37, 200, 10, WS_TABSTOP | WS_GROUP
     GROUPBOX "Parcurgere dosare", -1, 7, 60, 249, 45, WS_TABSTOP
     ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "&Parcurge dosarele în aceiași fereastră", 14004, 40, 70, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Desc&hide fiecare dosar în fereastră proprie", 14005, 40, 82, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "D&eschide fiecare dosar în fereastră proprie", 14005, 40, 82, 200, 10, WS_TABSTOP | WS_GROUP
     GROUPBOX "Interacțiune elemente", -1, 7, 110, 249, 60
     ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Deschide prin acțiune &simplă (selecare prin indicare)", 14007, 40, 120, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Deschide prin acțiune si&mplă (selecare prin indicare)", 14007, 40, 120, 200, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Subliniază titlurile la fel ca adresele &web", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Subliniază titlurile doar la pre&zența indicatorului", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Deschide prin acțiune &dublă (selectare prin una simplă)", 14010, 40, 156, 200, 10, WS_TABSTOP | WS_GROUP
@@ -507,7 +507,7 @@ BEGIN
     LTEXT "&Alegeți un tip de conținut și acțiunea executată automat în cazul tipului respectiv utilizat în acest dispozitiv:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Acțiuni", -1, 7, 45, 212, 146
-    AUTORADIOBUTTON "Întotdeauna o anume acțiune bine &specificată:", 1005, 14, 54, 202, 10, WS_GROUP
+    AUTORADIOBUTTON "Înt&otdeauna o anume acțiune bine specificată:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "&Doresc să fiu consultat la moment în vederea acțiunilor întreprinse", 1006, 14, 177, 202, 10
     PUSHBUTTON "&Restabilește implicite", 1008, 108, 197, 110, 14, WS_DISABLED
@@ -575,11 +575,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Formatare unitate de stocare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Pornește", IDOK, 53, 198, 60, 14
+    DEFPUSHBUTTON "&Formatează", IDOK, 53, 198, 60, 14
     PUSHBUTTON "Î&nchide", IDCANCEL, 118, 198, 60, 14
     LTEXT "&Capacitate:", -1, 7, 6, 169, 9
     COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Sistem de fișiere", -1, 7, 35, 170, 9
+    LTEXT "Sist&em de fișiere", -1, 7, 35, 170, 9
     COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
     LTEXT "&Dimensiunea unității de alocare", -1, 7, 64, 170, 9
@@ -699,12 +699,12 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Confirmarea înlocuirii fișierului"
     IDS_OVERWRITEFOLDER_TEXT "Acest dosar deja conține un sub-dosar cu numele „%1”.\n\nDacă fișierele din dosarul de destinație au același nume ca cele din\ndosarul selectat, ele vor fi înlocuite. Sigur doriți să copiați sau\nsă mutați dosarul?"
 
-    IDS_FILEOOP_COPYING "Se copie"
-    IDS_FILEOOP_MOVING "Se mută"
-    IDS_FILEOOP_DELETING "Se șterge"
+    IDS_FILEOOP_COPYING "Se copie…"
+    IDS_FILEOOP_MOVING "Se mută…"
+    IDS_FILEOOP_DELETING "Se șterge…"
     IDS_FILEOOP_FROM_TO "Din %1 în %2"
     IDS_FILEOOP_FROM "Din %1"
-    IDS_FILEOOP_PREFLIGHT "Se verifică"
+    IDS_FILEOOP_PREFLIGHT "Se verifică…"
 
     /* message box strings */
     IDS_RESTART_TITLE "Repornire"
@@ -739,15 +739,15 @@ BEGIN
     IDS_INTERNET_CACHE "Preferințe locale\\Fișiere de Internet temporare"
     IDS_COOKIES "Cookies"
     IDS_HISTORY "Preferințe locale\\Istoric"
-    IDS_PROGRAM_FILES "Fișiere program"
+    IDS_PROGRAM_FILES "Fișiere de program"
     IDS_MYPICTURES "Imagini"
-    IDS_PROGRAM_FILES_COMMON "Fișiere program\\Fișiere comune"
+    IDS_PROGRAM_FILES_COMMON "Fișiere de program\\Fișiere comune"
     IDS_COMMON_DOCUMENTS "Documentele mele"
     IDS_ADMINTOOLS "Meniul Pornire\\Programe\\Administrative"
     IDS_COMMON_MUSIC "Documentele mele\\Audio"
     IDS_COMMON_PICTURES "Documentele mele\\Imagini"
     IDS_COMMON_VIDEO "Documentele mele\\Video"
-    IDS_CDBURN_AREA "Preferințe locale\\Date aplicații\\Microsoft\\Inscriptionare CD"
+    IDS_CDBURN_AREA "Preferințe locale\\Date aplicații\\Microsoft\\Inscripționare CD"
     IDS_NETWORKPLACE "Locații în rețea"
 
     IDS_NEWFOLDER "Dosar nou"
@@ -767,7 +767,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autori"
     IDS_SHELL_ABOUT_BACK "< Înap&oi"
-    FCIDM_SHVIEW_NEW "N&ou"
+    FCIDM_SHVIEW_NEW "&Crează"
     FCIDM_SHVIEW_NEWFOLDER "&Dosar"
     FCIDM_SHVIEW_NEWLINK "Sc&urtătură"
     IDS_FOLDER_OPTIONS "Opțiuni dosar"
@@ -820,6 +820,6 @@ BEGIN
     IDS_EXE_DESCRIPTION "Descriere:"
 
     IDS_MENU_EMPTY "(Gol)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_OBJECTS "%d Obiecte"
+    IDS_OBJECTS_SELECTED "%d Obiecte selectate"
 END

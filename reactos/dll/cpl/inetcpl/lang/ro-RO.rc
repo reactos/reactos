@@ -17,8 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG: 2011-11-09  initial translation
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -67,11 +66,11 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Eliminare istoric de navigare"
 BEGIN
 
-    AUTOCHECKBOX   "Fișierele de internet &temporare\nCópii ale paginilor temporar stocate, imagini și certificate.",
+    AUTOCHECKBOX   "Fișierele de internet t&emporare\nCópii ale paginilor temporar stocate, imagini și certificate.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Informațiile de &conexiune (Cookies)\nFișiere cu date precum informații de autentificare sau preferințe, stocate în calculatorul dumneavoastră din paginile vizitate.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "&Istoricul\nLista paginilor pe care le-ați accesat în timp.",
+    AUTOCHECKBOX   "Ist&oricul\nLista paginilor pe care le-ați accesat în timp.",
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Datele formularelor\nNume de utilizatori și alte informații pe care le-ați introdus prin formulare.",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE

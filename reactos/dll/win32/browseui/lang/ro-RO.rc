@@ -42,7 +42,7 @@ BEGIN
             MENUITEM "&Căutare\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Favorite\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
             MENUITEM "&Media", IDM_EXPLORERBAR_MEDIA
-            MENUITEM "&Istoric\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "Ist&oric\tCtrl+H", IDM_EXPLORERBAR_HISTORY
             MENUITEM "&Dosare", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
@@ -53,7 +53,7 @@ BEGIN
             MENUITEM "În&ainte\tAlt+Right Arrow", IDM_GOTO_FORWARD
             MENUITEM "Un nivel în s&us", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "Pagină &inițială\tAlt+Home", IDM_GOTO_HOMEPAGE
+            MENUITEM "Pagină i&nițială\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
         MENUITEM "Împ&rospătare", IDM_VIEW_REFRESH
     END
@@ -81,12 +81,12 @@ END
 
 IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
-	POPUP "&Bare de instrumente", -1, MFT_STRING, MFS_ENABLED, 0
+	POPUP "Bare de i&nstrumente", -1, MFT_STRING, MFS_ENABLED, 0
 	BEGIN
 		MENUITEM "&Birou", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
 		MENUITEM "&Lansări rapide", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "Bară de instrumente &nouă…", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+		MENUITEM "Bară &nouă…", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
 	END
 END
 
@@ -256,7 +256,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HISTORYTEXT "&Istoric\tCtrl+H"
+    IDS_HISTORYTEXT "Ist&oric\tCtrl+H"
 END
 
 STRINGTABLE
@@ -270,7 +270,3 @@ BEGIN
     IDS_FORWARD "Înainte"
 END
 
-STRINGTABLE
-BEGIN
-    IDS_STANDARD_TOOLBAR, "|Înapoi|Înainte|Sus|Caută|Dosare|Mută în|Copie în|Șterge|Anulează|Afișări|Oprește|Împrospătează|Acasă|Conectează unitate|Deconectează|Favorite|Istoric|Pe tot ecranul|Proprietăți|Decupează|Copie|Lipește|Opțiuni dosar||"
-END

@@ -14,7 +14,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bun venit la Instalarea ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Bun venit la instalarea ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
     LTEXT "ReactOS încă nu poate fi instalat direct de pe acest CD! Pentru a instala ReactOS, reporniți calculatorul și utilizați acest CD în secvența de inițializare.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Apăsați pe „Sfârșit” pentru a ieși.", IDC_STATIC, 115, 169, 195, 17
 END
