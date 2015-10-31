@@ -97,7 +97,7 @@ else()
 endif()
 
 target_link_libraries(ext2fs memcmp ${PSEH_LIB})
-add_definitions(-D__KERNEL__ -D_X86_)
+add_definitions(-D__KERNEL__)
 set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
 add_pch(ext2fs inc/ext2fs.h SOURCE)
