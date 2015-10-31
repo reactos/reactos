@@ -378,20 +378,18 @@ Command:
 
 #endif
 
+    /* Compute the command line length, not counting the terminating "\r\n" */
     CmdLen = strlen(CmdLine);
-    DPRINT1("Starting '%s' ('%.*s')...\n",
-            AppName,
-            /* Display the command line without the terminating 0d 0a (and skip the terminating NULL) */
-            CmdLen >= 2 ? (CmdLine[CmdLen - 2] == '\r' ? CmdLen - 2
-                                                       : CmdLen)
-                        : CmdLen,
-            CmdLine);
+    if (CmdLen >= 2 && CmdLine[CmdLen - 2] == '\r')
+        CmdLen -= 2;
+
+    DPRINT1("Starting '%s' ('%.*s')...\n", AppName, CmdLen, CmdLine);
 
     /* Start the process */
     // FIXME: Merge 'Env' with the master environment SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0)
     // FIXME: Environment
     RtlCopyMemory(SEG_OFF_TO_PTR(DataStruct->AppNameSeg, DataStruct->AppNameOff), AppName, MAX_PATH);
-    *(PBYTE)(SEG_OFF_TO_PTR(DataStruct->CmdLineSeg, DataStruct->CmdLineOff)) = (BYTE)(strlen(CmdLine) - 2);
+    *(PBYTE)(SEG_OFF_TO_PTR(DataStruct->CmdLineSeg, DataStruct->CmdLineOff)) = (BYTE)CmdLen;
     RtlCopyMemory(SEG_OFF_TO_PTR(DataStruct->CmdLineSeg, DataStruct->CmdLineOff + 1), CmdLine, DOS_CMDLINE_LENGTH);
 
 #ifndef STANDALONE
