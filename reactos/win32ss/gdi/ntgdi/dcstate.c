@@ -28,8 +28,6 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
 
     /* Copy DC level */
     pdcDst->dclevel.pColorSpace     = pdcSrc->dclevel.pColorSpace;
-    pdcDst->dclevel.lSaveDepth      = pdcSrc->dclevel.lSaveDepth;
-    pdcDst->dclevel.hdcSave         = pdcSrc->dclevel.hdcSave;
     pdcDst->dclevel.laPath          = pdcSrc->dclevel.laPath;
     pdcDst->dclevel.ca              = pdcSrc->dclevel.ca;
     pdcDst->dclevel.mxWorldToDevice = pdcSrc->dclevel.mxWorldToDevice;
@@ -131,7 +129,7 @@ DC_vRestoreDC(
     HDC hdcSave;
     PDC pdcSave;
 
-    ASSERT(iSaveLevel > 0);
+    NT_ASSERT(iSaveLevel > 0);
     DPRINT("DC_vRestoreDC(%p, %ld)\n", pdc->BaseObject.hHmgr, iSaveLevel);
 
     /* Loop the save levels */
@@ -146,6 +144,7 @@ DC_vRestoreDC(
             /* Could not get ownership. That's bad! */
             DPRINT1("Could not get ownership of saved DC (%p) for hdc %p!\n",
                     hdcSave, pdc->BaseObject.hHmgr);
+            NT_ASSERT(FALSE);
             return;// FALSE;
         }
 
@@ -156,6 +155,7 @@ DC_vRestoreDC(
             /* WTF? Internal error! */
             DPRINT1("Could not lock the saved DC (%p) for dc %p!\n",
                     hdcSave, pdc->BaseObject.hHmgr);
+            NT_ASSERT(FALSE);
             return;// FALSE;
         }
 
@@ -300,6 +300,7 @@ NtGdiSaveDC(
     if (pdcSave->dclevel.hPath) pdcSave->dclevel.flPath |= DCPATH_SAVE;
 
     /* Set new dc as save dc */
+    pdcSave->dclevel.hdcSave = pdc->dclevel.hdcSave;
     pdc->dclevel.hdcSave = hdcSave;
 
     /* Increase save depth, return old value */

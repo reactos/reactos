@@ -392,13 +392,16 @@ DC_vCleanup(PVOID ObjectBody)
     if(pdc->dclevel.pSurface)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
 
-    PDEVOBJ_vRelease(pdc->ppdev) ;
+    PDEVOBJ_vRelease(pdc->ppdev);
 }
 
 VOID
 NTAPI
 DC_vSetOwner(PDC pdc, ULONG ulOwner)
 {
+    /* Delete saved DCs */
+    DC_vRestoreDC(pdc, 1);
+
     if (pdc->dclevel.hPath)
     {
         GreSetObjectOwner(pdc->dclevel.hPath, ulOwner);
