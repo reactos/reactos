@@ -15116,13 +15116,8 @@ START_TEST(msg_menu)
     init_tests();
     test_sys_menu();
     test_menu_messages();
-    if(!winetest_interactive)
-       skip("CORE-8299 : Skip Tracking popup menu tests.\n");
-    else
-    {
     test_TrackPopupMenu();
     test_TrackPopupMenuEmpty();
-    }
     cleanup_tests();
 }
 
