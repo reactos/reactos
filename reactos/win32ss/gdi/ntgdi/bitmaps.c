@@ -107,7 +107,6 @@ GreCreateBitmapEx(
         pvCompressedBits = pvBits;
         pvBits = NULL;
         iFormat = (iFormat == BMF_4RLE) ? BMF_4BPP : BMF_8BPP;
-        cjSizeImage = 0;
     }
 
     /* Allocate a surface */
@@ -117,7 +116,7 @@ GreCreateBitmapEx(
                                  iFormat,
                                  fjBitmap,
                                  cjWidthBytes,
-                                 cjSizeImage,
+                                 pvCompressedBits ? 0 : cjSizeImage,
                                  pvBits);
     if (!psurf)
     {
@@ -136,7 +135,7 @@ GreCreateBitmapEx(
         lDelta = WIDTH_BYTES_ALIGN32(nWidth, gajBitsPerFormat[iFormat]);
 
         pvBits = psurf->SurfObj.pvBits;
-        DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat);
+        DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat, cjSizeImage);
     }
 
     /* Get the handle for the bitmap */

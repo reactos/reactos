@@ -52,4 +52,5 @@ DecompressBitmap(
     BYTE *CompressedBits,
     BYTE *UncompressedBits,
     LONG Delta,
-    ULONG iFormat);
+    ULONG iFormat,
+    ULONG cjSizeImage);
