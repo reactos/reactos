@@ -294,6 +294,9 @@ SeDeassignPrimaryToken(PEPROCESS Process)
 
     /* Mark the Old Token as free */
     OldToken->TokenInUse = 0;
+
+    /* Dereference the Token */
+    ObDereferenceObject(OldToken);
 }
 
 static ULONG
