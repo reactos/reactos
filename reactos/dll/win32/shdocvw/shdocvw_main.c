@@ -244,9 +244,9 @@ DWORD WINAPI RunInstallUninstallStubs(void)
  *
  * Called by Emerge Desktop (alternative Windows Shell).
  */
-DWORD WINAPI RunInstallUninstallStubs2(void)
+DWORD WINAPI RunInstallUninstallStubs2(int arg)
 {
-    FIXME("(), stub!\n");
+    FIXME("(%d), stub!\n", arg);
     return 0x0deadbee;
 }
 
