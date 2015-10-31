@@ -6,7 +6,7 @@
 Name = Christmas Bound
 Version = 1.4
 License = Freeware
-Description = A game similar Frozen Fruits.
+Description = A game similar to Frozen Fruits.
 Size = 892 kB
 Category = 4
 URLSite = http://www.blueskied.com/xmas/christmas_main.htm
