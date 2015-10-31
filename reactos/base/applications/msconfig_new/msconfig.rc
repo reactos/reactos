@@ -13,7 +13,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME "msconfig.exe"
 #include <reactos/version.rc>
 
-IDI_APPICON ICON "res/msconfig.ico"
+IDI_APPICON     ICON    "res/msconfig.ico"
+IDB_2K3CHECK    BITMAP  "res/2k3check.bmp"
+IDB_V7CHECK     BITMAP  "res/v7check.bmp"
 
 IDR_MSCONFIG ACCELERATORS
 BEGIN

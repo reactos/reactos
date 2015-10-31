@@ -10,7 +10,7 @@
 #include "precomp.h"
 #include "xmldomparser.hpp"
 #include "utils.h"
-#include "listviewfuncs.h"
+#include "listview.h"
 #include "uxthemesupp.h"
 
 static HWND hToolsPage     = NULL;
@@ -229,8 +229,6 @@ BuildCommandLine(LPWSTR lpszDest, LPCWSTR lpszCmdLine, LPCWSTR lpszParam, size_t
 
     return numOfChars;
 }
-
-#define Button_IsEnabled(hwndCtl) IsWindowEnabled((hwndCtl))
 
 static void Update_States(int iSelectedItem)
 {

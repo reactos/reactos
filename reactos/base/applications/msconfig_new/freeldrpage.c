@@ -12,7 +12,7 @@
 #include <share.h>
 
 #include <wingdi.h>
-#include "commctrldefs.h"
+#include "comctl32supp.h"
 
 #include "utils.h"
 
@@ -70,41 +70,38 @@ LoadIniFile(HWND hDlg,
     hFont    = (HFONT)SendMessageW(hDlgCtrl, WM_GETFONT, 0, 0);
     hOldFont = (HFONT)SelectObject(hDC, hFont);
 
-    while (!feof(file))
+    while (!feof(file) && fgetws(szBuffer, ARRAYSIZE(szBuffer), file))
     {
-        if (fgetws(szBuffer, ARRAYSIZE(szBuffer), file))
+        length = wcslen(szBuffer);
+        if (length > 1)
         {
-            length = wcslen(szBuffer);
-            if (length > 1)
+            /* Remove \r\n */
+            szBuffer[length-1] = szBuffer[length] = L'\0';
+
+            pos = ListBox_AddString(hDlgCtrl, szBuffer);
+
+            GetTextExtentPoint32W(hDC, szBuffer, (int)wcslen(szBuffer), &size);
+            horzExt = max((LONG)ListBox_GetHorizontalExtent(hDlgCtrl), size.cx + 5); // 5 to have a little room between the text and the end of the list box.
+            ListBox_SetHorizontalExtent(hDlgCtrl, horzExt);
+
+            if (szBuffer[0] == L'[')
+                continue;
+
+            if (!_wcsnicmp(szBuffer, L"timeout=", 8))
             {
-                /* Remove \r\n */
-                szBuffer[length-1] = szBuffer[length] = L'\0';
-
-                pos = ListBox_AddString(hDlgCtrl, szBuffer);
-
-                GetTextExtentPoint32W(hDC, szBuffer, (int)wcslen(szBuffer), &size);
-                horzExt = max((LONG)ListBox_GetHorizontalExtent(hDlgCtrl), size.cx + 5); // 5 to have a little room between the text and the end of the list box.
-                ListBox_SetHorizontalExtent(hDlgCtrl, horzExt);
-
-                if (szBuffer[0] == L'[')
-                    continue;
-
-                if (!_wcsnicmp(szBuffer, L"timeout=", 8))
-                {
-                    Settings.TimeOut = _wtoi(&szBuffer[8]);
-                    continue;
-                }
-
-                if (!_wcsnicmp(szBuffer, L"default=", 8))
-                {
-                    wcscpy(Settings.szDefaultOS, &szBuffer[8]);
-                    continue;
-                }
-                if (pos != LB_ERR)
-                    ListBox_SetItemData(hDlgCtrl, pos, 1); // indicate that this item is a boot entry
-
-                Settings.OSConfigurationCount++;
+                Settings.TimeOut = _wtoi(&szBuffer[8]);
+                continue;
             }
+
+            if (!_wcsnicmp(szBuffer, L"default=", 8))
+            {
+                wcscpy(Settings.szDefaultOS, &szBuffer[8]);
+                continue;
+            }
+            if (pos != LB_ERR)
+                ListBox_SetItemData(hDlgCtrl, pos, 1); // indicate that this item is a boot entry
+
+            Settings.OSConfigurationCount++;
         }
     }
 

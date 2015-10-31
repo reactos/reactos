@@ -17,7 +17,7 @@
 
 // #include <setupapi.h>
 #include "fileextractdialog.h"
-#include "commctrldefs.h"
+#include "comctl32supp.h"
 #include "utils.h"
 
 // #include "callbacks.h"

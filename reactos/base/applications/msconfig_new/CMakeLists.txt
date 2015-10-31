@@ -10,7 +10,9 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/atl)
 
 list(APPEND C_SOURCE
-    comctl32ex/listviewfuncs.c
+    comctl32ex/comctl32supp.c
+    comctl32ex/listview.c
+    comctl32ex/treeview.c
     comctl32ex/uxthemesupp.c
     fileextractdialog.c
     fileutils.c
@@ -18,12 +20,12 @@ list(APPEND C_SOURCE
     generalpage.c
     msconfig.c
     regutils.c
-    # systempage.c
     # startuppage.c
     stringutils.c
     utils.c)
 
 list(APPEND CPP_SOURCE
+    systempage.cpp
     srvpage.cpp
     toolspage.cpp
     xmldomparser.cpp

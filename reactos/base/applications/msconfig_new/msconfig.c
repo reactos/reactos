@@ -11,7 +11,7 @@
 #include "utils.h"
 
 #include "generalpage.h"
-// #include "systempage.h"
+#include "systempage.h"
 #include "freeldrpage.h"
 #include "srvpage.h"
 // #include "startuppage.h"
@@ -40,9 +40,8 @@ HINSTANCE hInst = NULL;
 LPWSTR szAppName = NULL;
 HWND hMainWnd;                   /* Main Window */
 
-HWND hTabWnd;                    /* Tab Control Window */
-// HICON hDialogIcon = NULL;
-HICON   hIcon          = NULL;
+HWND  hTabWnd;                   /* Tab Control Window */
+HICON hIcon = NULL, hIconSm = NULL;
 WNDPROC wpOrigEditProc = NULL;
 
 
@@ -100,22 +99,13 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
             // return FALSE;
         }
 
-#if 0
-        case WM_SYSCOLORCHANGE:
-            /* Forward WM_SYSCOLORCHANGE to common controls */
-            SendMessage(hServicesListCtrl, WM_SYSCOLORCHANGE, 0, 0);
-            SendMessage(hStartupListCtrl, WM_SYSCOLORCHANGE, 0, 0);
-            SendMessage(hToolsListCtrl, WM_SYSCOLORCHANGE, 0, 0);
-            break;
-#endif
-
         case WM_DESTROY:
         {
-            if (hIcon)
-                DestroyIcon(hIcon);
-
             if (wpOrigEditProc)
                 SetWindowLongPtr(hWnd, DWLP_DLGPROC, (LONG_PTR)wpOrigEditProc);
+
+            if (hIcon)   DestroyIcon(hIcon);
+            if (hIconSm) DestroyIcon(hIconSm);
         }
 
         default:
@@ -146,31 +136,6 @@ typedef struct DLGTEMPLATEEX
 } DLGTEMPLATEEX, *LPDLGTEMPLATEEX;
 #include <poppack.h>
 
-
-VOID ModifySystemMenu(HWND hWnd)
-{
-    WCHAR szMenuString[255];
-
-    /* Customize the window's system menu, add items before the "Close" item */
-    HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
-    assert(hSysMenu);
-
-    /* New entries... */
-    if (LoadStringW(hInst,
-                    IDS_ABOUT,
-                    szMenuString,
-                    ARRAYSIZE(szMenuString)) > 0)
-    {
-        /* "About" menu */
-        InsertMenuW(hSysMenu, SC_CLOSE, MF_BYCOMMAND | MF_ENABLED | MF_STRING, IDM_ABOUT, szMenuString);
-        /* Separator */
-        InsertMenuW(hSysMenu, SC_CLOSE, MF_BYCOMMAND | MF_SEPARATOR          , 0 , NULL);
-    }
-
-    DrawMenuBar(hWnd);
-    return;
-}
-
 int CALLBACK PropSheetCallback(HWND hDlg, UINT message, LPARAM lParam)
 {
     switch (message)
@@ -180,20 +145,24 @@ int CALLBACK PropSheetCallback(HWND hDlg, UINT message, LPARAM lParam)
             LPDLGTEMPLATE   dlgTemplate   =   (LPDLGTEMPLATE)lParam;
             LPDLGTEMPLATEEX dlgTemplateEx = (LPDLGTEMPLATEEX)lParam;
 
+            // MFC : DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION;
+            DWORD style   = DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU;
+                         // DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+            DWORD exStyle = WS_EX_CONTROLPARENT | WS_EX_APPWINDOW;
+
+            /* Hide the dialog by default; we will center it on screen later, and then show it */
+            style &= ~WS_VISIBLE;
+
             /* Set the styles of the property sheet dialog */
             if (dlgTemplateEx->signature == 0xFFFF)
             {
-                //// MFC : DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION;
-
-                dlgTemplateEx->style   = DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU;
-                // dlgTemplateEx->style   = DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
-                dlgTemplateEx->exStyle = WS_EX_CONTROLPARENT | WS_EX_APPWINDOW;
+                dlgTemplateEx->style   = style;
+                dlgTemplateEx->exStyle = exStyle;
             }
             else
             {
-                dlgTemplate->style           = DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU;
-                // dlgTemplate->style           = DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
-                dlgTemplate->dwExtendedStyle = WS_EX_CONTROLPARENT | WS_EX_APPWINDOW;
+                dlgTemplate->style           = style;
+                dlgTemplate->dwExtendedStyle = exStyle;
             }
 
             break;
@@ -201,13 +170,28 @@ int CALLBACK PropSheetCallback(HWND hDlg, UINT message, LPARAM lParam)
 
         case PSCB_INITIALIZED:
         {
-            /* Modify the system menu of the property sheet dialog */
-            ModifySystemMenu(hDlg);
+            /* Customize the window's system menu, add items before the "Close" item */
+            LPWSTR szMenuString;
+            HMENU hSysMenu = GetSystemMenu(hDlg, FALSE);
+            assert(hSysMenu);
+
+            szMenuString = LoadResourceString(hInst, IDS_ABOUT);
+            if (szMenuString)
+            {
+                /* "About" menu */
+                InsertMenuW(hSysMenu, SC_CLOSE, MF_BYCOMMAND | MF_ENABLED | MF_STRING, IDM_ABOUT, szMenuString);
+                /* Separator */
+                InsertMenuW(hSysMenu, SC_CLOSE, MF_BYCOMMAND | MF_SEPARATOR          , 0 , NULL);
+
+                MemFree(szMenuString);
+            }
+            DrawMenuBar(hDlg);
 
             /* Set the dialog icons */
-            hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+            hIcon   = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
+            hIconSm = (HICON)CopyImage(hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_COPYFROMRESOURCE);
             SendMessage(hDlg, WM_SETICON, ICON_BIG,   (LPARAM)hIcon);
-            SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+            SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
 
             /* Sub-class the property sheet window procedure */
             wpOrigEditProc = (WNDPROC)SetWindowLongPtr(hDlg, DWLP_DLGPROC, (LONG_PTR)MainWndProc);
@@ -234,22 +218,21 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
     psh.dwFlags     = PSH_PROPSHEETPAGE | PSH_MODELESS | /*PSH_USEICONID |*/ PSH_HASHELP | /*PSH_NOCONTEXTHELP |*/ PSH_USECALLBACK;
     psh.hInstance   = hInstance;
     psh.hwndParent  = hwndOwner;
-    //psh.pszIcon     = MAKEINTRESOURCE(IDI_APPICON); // It's crap... Only works for the small icon and not the big...
+    // psh.pszIcon     = MAKEINTRESOURCEW(IDI_APPICON); // Disabled because it only sets the small icon; the big icon is a stretched version of the small one.
     psh.pszCaption  = lpszTitle;
     psh.nStartPage  = 0;
     psh.ppsp        = psp;
-    psh.pfnCallback = (PFNPROPSHEETCALLBACK)PropSheetCallback;
+    psh.pfnCallback = PropSheetCallback;
 
     /* General page */
     psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
     psp[nPages].dwFlags     = PSP_HASHELP;
     psp[nPages].hInstance   = hInstance;
-    psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_GENERAL_PAGE);
-    psp[nPages].pfnDlgProc  = (DLGPROC)GeneralPageWndProc;
+    psp[nPages].pszTemplate = MAKEINTRESOURCEW(IDD_GENERAL_PAGE);
+    psp[nPages].pfnDlgProc  = GeneralPageWndProc;
     ++nPages;
 
-#if 0
-    if (bIsWindows && bIsOSVersionLessThanVista)
+    // if (bIsOSVersionLessThanVista)
     {
         /* SYSTEM.INI page */
         if (MyFileExists(lpszSystemIni, NULL))
@@ -257,9 +240,9 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
             psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
             psp[nPages].dwFlags     = PSP_HASHELP | PSP_USETITLE;
             psp[nPages].hInstance   = hInstance;
-            psp[nPages].pszTitle    = MAKEINTRESOURCE(IDS_TAB_SYSTEM);
-            psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_SYSTEM_PAGE);
-            psp[nPages].pfnDlgProc  = (DLGPROC)SystemPageWndProc;
+            psp[nPages].pszTitle    = MAKEINTRESOURCEW(IDS_TAB_SYSTEM);
+            psp[nPages].pszTemplate = MAKEINTRESOURCEW(IDD_SYSTEM_PAGE);
+            psp[nPages].pfnDlgProc  = SystemPageWndProc;
             psp[nPages].lParam      = (LPARAM)lpszSystemIni;
             ++nPages;
 
@@ -272,16 +255,15 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
             psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
             psp[nPages].dwFlags     = PSP_HASHELP | PSP_USETITLE;
             psp[nPages].hInstance   = hInstance;
-            psp[nPages].pszTitle    = MAKEINTRESOURCE(IDS_TAB_WIN);
-            psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_SYSTEM_PAGE);
-            psp[nPages].pfnDlgProc  = (DLGPROC)WinPageWndProc;
+            psp[nPages].pszTitle    = MAKEINTRESOURCEW(IDS_TAB_WIN);
+            psp[nPages].pszTemplate = MAKEINTRESOURCEW(IDD_SYSTEM_PAGE);
+            psp[nPages].pfnDlgProc  = WinPageWndProc;
             psp[nPages].lParam      = (LPARAM)lpszWinIni;
             ++nPages;
 
             BackupIniFile(lpszWinIni);
         }
     }
-#endif
 
     /* FreeLdr page */
     // TODO: Program the interface for Vista: "light" BCD editor...
@@ -305,9 +287,9 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
             psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
             psp[nPages].dwFlags     = PSP_HASHELP | PSP_USETITLE;
             psp[nPages].hInstance   = hInstance;
-            psp[nPages].pszTitle    = MAKEINTRESOURCE(dwTabNameId);
-            psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_FREELDR_PAGE);
-            psp[nPages].pfnDlgProc  = (DLGPROC)FreeLdrPageWndProc;
+            psp[nPages].pszTitle    = MAKEINTRESOURCEW(dwTabNameId);
+            psp[nPages].pszTemplate = MAKEINTRESOURCEW(IDD_FREELDR_PAGE);
+            psp[nPages].pfnDlgProc  = FreeLdrPageWndProc;
             psp[nPages].lParam      = (LPARAM)lpszLoaderIniFile;
             ++nPages;
 
@@ -319,8 +301,8 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
     psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
     psp[nPages].dwFlags     = PSP_HASHELP;
     psp[nPages].hInstance   = hInstance;
-    psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_SERVICES_PAGE);
-    psp[nPages].pfnDlgProc  = (DLGPROC)ServicesPageWndProc;
+    psp[nPages].pszTemplate = MAKEINTRESOURCEW(IDD_SERVICES_PAGE);
+    psp[nPages].pfnDlgProc  = ServicesPageWndProc;
     ++nPages;
 
 #if 0
@@ -328,8 +310,8 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
     psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
     psp[nPages].dwFlags     = PSP_HASHELP;
     psp[nPages].hInstance   = hInstance;
-    psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_STARTUP_PAGE);
-    psp[nPages].pfnDlgProc  = (DLGPROC)StartupPageWndProc;
+    psp[nPages].pszTemplate = MAKEINTRESOURCEW(IDD_STARTUP_PAGE);
+    psp[nPages].pfnDlgProc  = StartupPageWndProc;
     ++nPages;
 #endif
 
@@ -337,21 +319,20 @@ HWND CreatePropSheet(HINSTANCE hInstance, HWND hwndOwner, LPCTSTR lpszTitle)
     psp[nPages].dwSize      = sizeof(PROPSHEETPAGEW);
     psp[nPages].dwFlags     = PSP_HASHELP;
     psp[nPages].hInstance   = hInstance;
-    psp[nPages].pszTemplate = MAKEINTRESOURCE(IDD_TOOLS_PAGE);
-    psp[nPages].pfnDlgProc  = (DLGPROC)ToolsPageWndProc;
+    psp[nPages].pszTemplate = MAKEINTRESOURCEW(IDD_TOOLS_PAGE);
+    psp[nPages].pfnDlgProc  = ToolsPageWndProc;
     ++nPages;
 
     /* Set the total number of created pages */
     psh.nPages = nPages;
 
     /* Create the property sheet */
-    hPropSheet = (HWND)PropertySheet(&psh);
+    hPropSheet = (HWND)PropertySheetW(&psh);
     if (hPropSheet)
     {
-        /* Center the property sheet on the desktop */
-        //ShowWindow(hPropSheet, SW_HIDE);
+        /* Center the property sheet on the desktop and show it */
         ClipOrCenterWindowToMonitor(hPropSheet, MONITOR_WORKAREA | MONITOR_CENTER);
-        //ShowWindow(hPropSheet, SW_SHOWNORMAL);
+        ShowWindow(hPropSheet, SW_SHOWNORMAL);
     }
 
     return hPropSheet;
@@ -452,10 +433,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return -1;
     }
 
-    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_MSCONFIG));
+    hAccelTable = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(IDR_MSCONFIG));
 
     /* Message loop */
-    while (IsWindow(hMainWnd) && GetMessage(&msg, NULL, 0, 0))
+    while (IsWindow(hMainWnd) && GetMessageW(&msg, NULL, 0, 0))
     {
         /*
          * PropSheet_GetCurrentPageHwnd returns NULL when the user clicks the OK or Cancel button
@@ -466,7 +447,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
             break;
 
         /* Process the accelerator table */
-        if (!TranslateAccelerator(hMainWnd, hAccelTable, &msg))
+        if (!TranslateAcceleratorW(hMainWnd, hAccelTable, &msg))
         {
             /*
              * If e.g. an item on the tree view is being edited,
@@ -477,7 +458,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
             if (/*g_bDisableDialogDispatch ||*/ !PropSheet_IsDialogMessage(hMainWnd, &msg))
             {
                 TranslateMessage(&msg);
-                DispatchMessage(&msg);
+                DispatchMessageW(&msg);
             }
         }
     }

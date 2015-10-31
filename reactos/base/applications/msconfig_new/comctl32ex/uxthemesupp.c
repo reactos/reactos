@@ -11,17 +11,26 @@
 
 static HMODULE hUxTheme = NULL;
 
+typedef HRESULT (WINAPI* ETDTProc)(HWND, DWORD);
+static ETDTProc fnEnableThemeDialogTexture = NULL;
+
+typedef HRESULT (WINAPI* SWTProc)(HWND, LPCWSTR, LPCWSTR);
+static SWTProc fnSetWindowTheme = NULL;
+
+
 static BOOL
 InitUxTheme(VOID)
 {
-    static BOOL Initialized = FALSE;
-
-    if (Initialized) return TRUE;
+    if (hUxTheme) return TRUE;
 
     hUxTheme = LoadLibraryW(L"uxtheme.dll");
     if (hUxTheme == NULL) return FALSE;
 
-    Initialized = TRUE;
+    fnEnableThemeDialogTexture =
+        (ETDTProc)GetProcAddress(hUxTheme, "EnableThemeDialogTexture");
+    fnSetWindowTheme =
+        (SWTProc)GetProcAddress(hUxTheme, "SetWindowTheme");
+
     return TRUE;
 }
 
@@ -31,7 +40,6 @@ CleanupUxTheme(VOID)
 {
     FreeLibrary(hUxTheme);
     hUxTheme = NULL;
-    // Initialized = FALSE;
 }
 #endif
 
@@ -42,28 +50,19 @@ CleanupUxTheme(VOID)
 // Copyright (c) 2002 by J Brown
 //
 
-typedef HRESULT (WINAPI* ETDTProc)(HWND, DWORD);
-
 HRESULT
 WINAPI
 EnableThemeDialogTexture(_In_ HWND  hwnd,
                          _In_ DWORD dwFlags)
 {
-    ETDTProc fnEnableThemeDialogTexture;
-
     if (!InitUxTheme())
         return HRESULT_FROM_WIN32(GetLastError());
 
-    fnEnableThemeDialogTexture =
-        (ETDTProc)GetProcAddress(hUxTheme, "EnableThemeDialogTexture");
     if (!fnEnableThemeDialogTexture)
         return HRESULT_FROM_WIN32(GetLastError());
 
     return fnEnableThemeDialogTexture(hwnd, dwFlags);
 }
-
-
-typedef HRESULT (WINAPI* SWTProc)(HWND, LPCWSTR, LPCWSTR);
 
 HRESULT
 WINAPI
@@ -71,13 +70,9 @@ SetWindowTheme(_In_ HWND    hwnd,
                _In_ LPCWSTR pszSubAppName,
                _In_ LPCWSTR pszSubIdList)
 {
-    SWTProc fnSetWindowTheme;
-
     if (!InitUxTheme())
         return HRESULT_FROM_WIN32(GetLastError());
 
-    fnSetWindowTheme =
-        (SWTProc)GetProcAddress(hUxTheme, "SetWindowTheme");
     if (!fnSetWindowTheme)
         return HRESULT_FROM_WIN32(GetLastError());
 

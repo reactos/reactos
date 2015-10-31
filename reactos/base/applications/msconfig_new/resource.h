@@ -148,6 +148,9 @@
 #define IDS_MSCONFIG_2  3001
 
 #define IDI_APPICON     3010
+#define IDB_2K3CHECK    3011
+#define IDB_V7CHECK     3012
+
 #define IDR_MSCONFIG    3020
 
 #define IDM_ABOUT       3030

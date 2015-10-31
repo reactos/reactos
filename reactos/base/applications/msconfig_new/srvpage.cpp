@@ -13,7 +13,7 @@
 #include "regutils.h"
 #include "stringutils.h"
 // #include "CmdLineParser.h"
-#include "listviewfuncs.h"
+#include "listview.h"
 #include "uxthemesupp.h"
 
 #include <winsvc.h>

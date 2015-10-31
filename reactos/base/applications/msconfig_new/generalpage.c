@@ -10,7 +10,7 @@
 #include "precomp.h"
 #include "fileutils.h"
 #include "utils.h"
-#include "commctrldefs.h"
+#include "comctl32supp.h"
 #include "fileextractdialog.h"
 
 static LPCWSTR lpszRestoreProgPath1 = L"%SystemRoot%\\System32\\rstrui.exe";

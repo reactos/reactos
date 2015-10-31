@@ -1,13 +1,13 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/msconfig_new/comctl32ex/listviewfuncs.h
+ * FILE:        base/applications/msconfig_new/comctl32ex/listview.h
  * PURPOSE:     List-View helper functions.
  * COPYRIGHT:   Copyright 2011-2012 Hermes BELUSCA - MAITO <hermes.belusca@sfr.fr>
  */
 
-#ifndef __LISTVIEWFUNCS_H__
-#define __LISTVIEWFUNCS_H__
+#ifndef __LISTVIEW_H__
+#define __LISTVIEW_H__
 
 #pragma once
 
@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#include "commctrldefs.h"
+#include "comctl32supp.h"
 
 /////////////  ListView Sorting  /////////////
 
@@ -38,6 +38,6 @@ ListView_SortEx(HWND hListView,
 } // extern "C"
 #endif
 
-#endif // __LISTVIEWFUNCS_H__
+#endif // __LISTVIEW_H__
 
 /* EOF */
