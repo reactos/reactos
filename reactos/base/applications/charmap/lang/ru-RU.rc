@@ -18,7 +18,7 @@ BEGIN
     DEFPUSHBUTTON "Выбрать", IDC_SELECT, 194, 186, 44, 13
     PUSHBUTTON "Копировать", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
     CONTROL "Дополнительные параметры", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 8, 208, 95, 10
+            WS_TABSTOP, 8, 208, 110, 10
 END
 
 IDD_ADVANCED DIALOGEX 0, 0, 292, 64
