@@ -70,7 +70,7 @@ BEGIN
     GROUPBOX        "", IDC_STATIC, 10, 97, 143, 68
     CHECKBOX        "Inițializare securi&zată (/SAFEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
     CONTROL         "&Minimală (MINIMAL)", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
-    CONTROL         "Mediu alternativ\n(MINIMAL (ALTERNATE&SHELL))", IDC_RADIO4, 
+    CONTROL         "Mediu alternativ\n(MINIMAL (ALTERNATE&SHELL))", IDC_RADIO4,
                     "Button", BS_AUTORADIOBUTTON | BS_MULTILINE, 15, 121, 133, 17
     CONTROL         "&Repară ActiveDirectory (DSREPAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
     CONTROL         "Rețea (NET&WORK)", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
@@ -82,7 +82,7 @@ BEGIN
     LTEXT           "&Limită de timp:", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
     LTEXT           "secunde", IDC_STATIC, 330, 104, 31, 10
-    CONTROL         "&Permanenizează configurația de inițializare", 292, 
+    CONTROL         "&Permanenizează configurația de inițializare", 292,
                     "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
     PUSHBUTTON      "&Delete", IDC_BTN_DELETE, 295, 68, 66, 14
 END
@@ -95,7 +95,7 @@ BEGIN
     CONTROL         "List1", IDC_SERVICES_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 5, 5, 356, 129
     PUSHBUTTON      "A&ctivează toate", IDC_BTN_SERVICES_ACTIVATE, 224, 156, 66, 14
     PUSHBUTTON      "D&ezactivează toate", IDC_BTN_SERVICES_DEACTIVATE, 295, 156, 66, 14
-    CONTROL         "Asc&unde toate serviciile %s", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS, 
+    CONTROL         "Asc&unde toate serviciile %s", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 203, 12
     LTEXT           "Rețineți că unele servicii %s securizate nu pot fi dezactivate.", IDC_STATIC_SERVICES_WARNING, 5, 138, 220, 17
 END
@@ -148,7 +148,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Find what:", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
     EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
-    CONTROL         "Match &whole word only", IDC_CBX_FIND_WHOLE_WORD_ONLY, 
+    CONTROL         "Match &whole word only", IDC_CBX_FIND_WHOLE_WORD_ONLY,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
     CONTROL         "Match &case", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
     GROUPBOX        "Direction", IDC_STATIC, 107, 26, 68, 28
@@ -156,7 +156,7 @@ BEGIN
     CONTROL         "&Down", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
     DEFPUSHBUTTON   "Find &Next", IDOK, 182, 5, 50, 14, WS_GROUP
     PUSHBUTTON      "Cancel", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "&Search from the beginning (Direction: Down) or end (Direction: Up)", IDC_CBX_FIND_FROM_BEGINNING, 
+    CONTROL         "&Search from the beginning (Direction: Down) or end (Direction: Up)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 
@@ -192,7 +192,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Î&nchide", IDOK, 180, 41, 50, 14
     LTEXT           "Serviciile esențiale nu pot fi dezactivate. Făcând astfel poate împiedica execuția %s.", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
-    CONTROL         "N&u doresc recurența acestui mesaj", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE, 
+    CONTROL         "N&u doresc recurența acestui mesaj", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 42, 154, 13
 END
 

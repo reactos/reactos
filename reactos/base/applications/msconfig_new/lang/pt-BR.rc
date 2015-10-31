@@ -70,7 +70,7 @@ BEGIN
     GROUPBOX        "", IDC_STATIC, 10, 97, 143, 68
     CHECKBOX        "Safe boot (/SA&FEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
     CONTROL         "Minimal (&MINIMAL)", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
-    CONTROL         "Other environment\n(M&INIMAL (ALTERNATESHELL))", IDC_RADIO4, 
+    CONTROL         "Other environment\n(M&INIMAL (ALTERNATESHELL))", IDC_RADIO4,
                     "Button", BS_AUTORADIOBUTTON | BS_MULTILINE, 15, 121, 133, 17
     CONTROL         "Repair ActiveDirectory (DSRE&PAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
     CONTROL         "Network (NET&WORK)", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
@@ -82,7 +82,7 @@ BEGIN
     LTEXT           "&Timeout:", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
     LTEXT           "seconds", IDC_STATIC, 330, 104, 31, 10
-    CONTROL         "Make &all boot settings permanent", 292, 
+    CONTROL         "Make &all boot settings permanent", 292,
                     "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
     PUSHBUTTON      "&Delete", IDC_BTN_DELETE, 295, 68, 66, 14
 END
@@ -95,7 +95,7 @@ BEGIN
     CONTROL         "List1", IDC_SERVICES_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 5, 5, 356, 129
     PUSHBUTTON      "A&tivar tudo", IDC_BTN_SERVICES_ACTIVATE, 224, 156, 66, 14
     PUSHBUTTON      "D&esativar tudo", IDC_BTN_SERVICES_DEACTIVATE, 295, 156, 66, 14
-    CONTROL         "&Hide all %s services", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS, 
+    CONTROL         "&Hide all %s services", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 203, 12
     LTEXT           "Please note that some secure %s services may not be disabled.", IDC_STATIC_SERVICES_WARNING, 5, 138, 220, 17
 END
@@ -148,7 +148,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Find what:", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
     EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
-    CONTROL         "Match &whole word only", IDC_CBX_FIND_WHOLE_WORD_ONLY, 
+    CONTROL         "Match &whole word only", IDC_CBX_FIND_WHOLE_WORD_ONLY,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
     CONTROL         "Match &case", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
     GROUPBOX        "Direction", IDC_STATIC, 107, 26, 68, 28
@@ -156,7 +156,7 @@ BEGIN
     CONTROL         "&Down", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
     DEFPUSHBUTTON   "Find &Next", IDOK, 182, 5, 50, 14, WS_GROUP
     PUSHBUTTON      "Cancel", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "&Search from the beginning (Direction: Down) or end (Direction: Up)", IDC_CBX_FIND_FROM_BEGINNING, 
+    CONTROL         "&Search from the beginning (Direction: Down) or end (Direction: Up)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 
@@ -192,7 +192,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK", IDOK, 180, 41, 50, 14
     LTEXT           "Essential services cannot be disabled. Doing so might prevent %s from running on your computer.", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
-    CONTROL         "&Don't show this message in the future", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE, 
+    CONTROL         "&Don't show this message in the future", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 42, 154, 13
 END
 
