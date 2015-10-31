@@ -102,7 +102,12 @@ extern "C" {
     COLORREF clrBtnShadow;
   } COLORSCHEME,*LPCOLORSCHEME;
 
-#define COMCTL32_VERSION 6
+#if (_WIN32_IE >= 0x0500)
+#if (_WIN32_WINNT >= 0x0501)
+#define COMCTL32_VERSION  6
+#else
+#define COMCTL32_VERSION  5
+#endif
 
 #define CCM_SETVERSION (CCM_FIRST+0x7)
 #define CCM_GETVERSION (CCM_FIRST+0x8)
