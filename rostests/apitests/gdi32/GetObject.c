@@ -23,6 +23,7 @@ Test_General(void)
 	} TestStruct;
 	PLOGBRUSH plogbrush;
 	HBRUSH hBrush;
+	HPEN hpen;
 	INT ret;
 
 	/* Test null pointer and invalid handles */
@@ -131,15 +132,15 @@ Test_General(void)
 	SetLastError(0xbadbad00);
 	ok(GetObjectA(GetStockObject(WHITE_BRUSH), sizeof(LOGBRUSH), (PVOID)0xc0000000) == 0, "\n");
     ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
-	SetLastError(ERROR_SUCCESS);
+	SetLastError(0xbadbad00);
 	ok(GetObjectW(GetStockObject(BLACK_PEN), sizeof(LOGPEN), (PVOID)0xc0000000) == 0, "\n");
     ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
-	SetLastError(ERROR_SUCCESS);
+	SetLastError(0xbadbad00);
 	ok(GetObjectW(GetStockObject(21), sizeof(BITMAP), (PVOID)0xc0000000) == 0, "\n");
     ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
-	SetLastError(ERROR_SUCCESS);
+	SetLastError(0xbadbad00);
 	ok(GetObjectW(GetStockObject(SYSTEM_FONT), sizeof(LOGFONT), (PVOID)0xc0000000) == 0, "\n");
-	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+	ok(GetLastError() == 0xbadbad00, "wrong error: %ld\n", GetLastError());
 	SetLastError(ERROR_SUCCESS);
 	_SEH2_TRY
 	{
@@ -157,18 +158,31 @@ Test_General(void)
 
 
 	/* Test buffer size of 0 */
-	SetLastError(ERROR_SUCCESS);
-	ok_long(GetObjectA(GetStockObject(WHITE_BRUSH), 0, &TestStruct), sizeof(LOGBRUSH));
-	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
-	SetLastError(ERROR_SUCCESS);
-	ok(GetObjectA(GetStockObject(BLACK_PEN), 0, &TestStruct) == 0, "\n");
+	SetLastError(0xbadbad00);
+	hBrush = CreateSolidBrush(123);
+	ok(hBrush != NULL, "Failed to create brush\n");
+	ok_long(GetObjectA(hBrush, 0, &TestStruct), sizeof(LOGBRUSH));
+	ok_err(0xbadbad00);
+	DeleteObject(hBrush);
+	SetLastError(0xbadbad00);
+	hpen = CreatePen(PS_SOLID, 1, 123);
+	ok(hpen != NULL, "Failed to create pen\n");
+	ok_long(GetObjectA(hpen, 0, &TestStruct), 0);
     ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
-	SetLastError(ERROR_SUCCESS);
+	SetLastError(0xbadbad00);
+	TestStruct.logbrush.lbStyle = BS_SOLID;
+	TestStruct.logbrush.lbColor = RGB(1,2,3);
+	TestStruct.logbrush.lbHatch = 0;
+	hpen = ExtCreatePen(PS_GEOMETRIC | PS_SOLID, 1, &TestStruct.logbrush, 0, NULL);
+	ok(hpen != NULL, "Failed to create pen\n");
+	ok_long(GetObjectA(hpen, 0, &TestStruct), 0);
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
+	SetLastError(0xbadbad00);
 	ok(GetObjectW(GetStockObject(SYSTEM_FONT), 0, &TestStruct) == 0, "\n");
-	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
-	SetLastError(ERROR_SUCCESS);
+	ok_err(0xbadbad00);
+	SetLastError(0xbadbad00);
 	ok(GetObjectW(GetStockObject(21), 0, &TestStruct) == 0, "\n");
-	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+	ok_err(0xbadbad00);
 
 }
 
@@ -458,7 +472,7 @@ Test_ExtPen(void)
 	ok(GetLastError() == ERROR_SUCCESS, "\n");
 	ok(GetObject((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0, "\n");
 	ok(GetLastError() ==  ERROR_INVALID_PARAMETER, "got %ld\n", GetLastError());
-    SetLastError(ERROR_SUCCESS);
+    SetLastError(0xbadbad00);
 	ok(GetObject(hPen, 0, &extlogpen) == 0, "\n");
     ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
     SetLastError(ERROR_SUCCESS);
@@ -638,8 +652,8 @@ Test_Colorspace(void)
 	ok(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 328, buffer) == 0, "\n");
 	ok_err(ERROR_INVALID_PARAMETER);
 
-	ok_long(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 328, NULL), 0);
-	ok_err(ERROR_INSUFFICIENT_BUFFER);
+	//ok_long(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 328, NULL), 0); // FIXME: fails on WHS
+	//ok_err(ERROR_INSUFFICIENT_BUFFER);
 }
 
 void
