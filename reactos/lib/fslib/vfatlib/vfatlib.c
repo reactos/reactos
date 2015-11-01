@@ -343,12 +343,10 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
            IN BOOLEAN ScanDrive,
            IN PFMIFSCALLBACK Callback)
 {
-#if 0
     BOOLEAN verify;
     BOOLEAN salvage_files;
-#endif
-    //ULONG free_clusters;
-    //DOS_FS fs;
+    ULONG free_clusters;
+    DOS_FS fs;
 
     /* Store callback pointer */
     ChkdskCallback = Callback;
@@ -361,7 +359,6 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
 
     FsCheckTotalFiles = 0;
 
-#if 0
     verify = TRUE;
     salvage_files = TRUE;
 
@@ -430,9 +427,6 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
 
     /* Close the volume */
     return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-#else
-    return STATUS_SUCCESS;
-#endif
 }
 
 /* EOF */

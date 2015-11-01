@@ -25,6 +25,8 @@
 #include "check/io.h"
 #include "check/fat.h"
 #include "check/file.h"
+#include "check/check.h"
+#include "check/boot.h"
 
 #include <pshpack1.h>
 typedef struct _FAT16_BOOT_SECTOR
