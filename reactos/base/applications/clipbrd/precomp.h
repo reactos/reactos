@@ -1,7 +1,7 @@
 #ifndef _CLIPBRD_PCH_
 #define _CLIPBRD_PCH_
 
-#pragma once
+// #pragma once
 
 #include <windef.h>
 #include <winbase.h>
