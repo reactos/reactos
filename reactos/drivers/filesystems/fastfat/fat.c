@@ -31,6 +31,7 @@ FAT32GetNextCluster(
     ULONG CurrentCluster,
     PULONG NextCluster)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
     PVOID BaseAddress;
     ULONG FATOffset;
     ULONG ChunkSize;
@@ -49,10 +50,16 @@ FAT32GetNextCluster(
     if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
         CurrentCluster = 0xffffffff;
 
-    ASSERT(CurrentCluster != 0);
+    if (CurrentCluster == 0)
+    {
+        DPRINT1("WARNING: File system corruption detected. You may need to run a disk repair utility.\n");
+        Status = STATUS_FILE_CORRUPT_ERROR;
+        if (VfatGlobalData->Flags & VFAT_BREAK_ON_CORRUPTION)
+            ASSERT(CurrentCluster != 0);
+    }
     CcUnpinData(Context);
     *NextCluster = CurrentCluster;
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
@@ -64,6 +71,7 @@ FAT16GetNextCluster(
     ULONG CurrentCluster,
     PULONG NextCluster)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
     PVOID BaseAddress;
     ULONG FATOffset;
     ULONG ChunkSize;
@@ -81,10 +89,18 @@ FAT16GetNextCluster(
     CurrentCluster = *((PUSHORT)((char*)BaseAddress + (FATOffset % ChunkSize)));
     if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
         CurrentCluster = 0xffffffff;
-    ASSERT(CurrentCluster != 0);
+
+    if (CurrentCluster == 0)
+    {
+        DPRINT1("WARNING: File system corruption detected. You may need to run a disk repair utility.\n");
+        Status = STATUS_FILE_CORRUPT_ERROR;
+        if (VfatGlobalData->Flags & VFAT_BREAK_ON_CORRUPTION)
+            ASSERT(CurrentCluster != 0);
+    }
+
     CcUnpinData(Context);
     *NextCluster = CurrentCluster;
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
@@ -671,8 +687,10 @@ GetNextCluster(
 
     if (CurrentCluster == 0)
     {
-        ASSERT(CurrentCluster != 0);
-        return STATUS_INVALID_PARAMETER;
+        DPRINT1("WARNING: File system corruption detected. You may need to run a disk repair utility.\n");
+        if (VfatGlobalData->Flags & VFAT_BREAK_ON_CORRUPTION)
+            ASSERT(CurrentCluster != 0);
+        return STATUS_FILE_CORRUPT_ERROR;
     }
 
     ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);

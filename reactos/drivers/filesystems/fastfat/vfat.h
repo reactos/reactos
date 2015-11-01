@@ -315,6 +315,8 @@ typedef struct DEVICE_EXTENSION
     PVPB SpareVPB;
 } DEVICE_EXTENSION, VCB, *PVCB;
 
+#define VFAT_BREAK_ON_CORRUPTION 1
+
 typedef struct
 {
     PDRIVER_OBJECT DriverObject;
