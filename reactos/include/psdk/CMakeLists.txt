@@ -43,7 +43,6 @@ list(APPEND SOURCE
     docobj.idl
     docobjectservice.idl
     downloadmgr.idl
-    dxgi.idl
 #   dyngraph.idl
     endpointvolume.idl
     exdisp.idl
@@ -142,7 +141,6 @@ add_custom_target(stdole2 DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb)
 
 add_idl_headers(d3d_idl_headers d3d10.idl d3dcommon.idl)
 
-add_iid_library(dxgi_uuids dxgi.idl)
 add_iid_library(wuguid wuapi.idl)
 add_iid_library(xml_uuids msxml2.idl)
 
