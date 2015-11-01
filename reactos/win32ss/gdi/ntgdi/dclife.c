@@ -17,7 +17,7 @@
 PSURFACE psurfDefaultBitmap = NULL;
 PBRUSH pbrDefaultBrush = NULL;
 
-static const MATRIX	gmxWorldToDeviceDefault =
+const MATRIX gmxWorldToDeviceDefault =
 {
     FLOATOBJ_16, FLOATOBJ_0,
     FLOATOBJ_0, FLOATOBJ_16,
@@ -25,7 +25,7 @@ static const MATRIX	gmxWorldToDeviceDefault =
     0, 0, 0x4b
 };
 
-static const MATRIX	gmxDeviceToWorldDefault =
+const MATRIX gmxDeviceToWorldDefault =
 {
     FLOATOBJ_1_16, FLOATOBJ_0,
     FLOATOBJ_0, FLOATOBJ_1_16,
@@ -33,7 +33,7 @@ static const MATRIX	gmxDeviceToWorldDefault =
     0, 0, 0x53
 };
 
-static const MATRIX	gmxWorldToPageDefault =
+const MATRIX gmxWorldToPageDefault =
 {
     FLOATOBJ_1, FLOATOBJ_0,
     FLOATOBJ_0, FLOATOBJ_1,

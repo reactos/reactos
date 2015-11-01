@@ -30,6 +30,12 @@
        ((DWORD)(BYTE)(ch2) << 8) | (DWORD)(BYTE)(ch3) )
 #endif
 
+extern const MATRIX gmxWorldToDeviceDefault;
+extern const MATRIX gmxWorldToPageDefault;
+
+// HACK!! Fix XFORMOBJ then use 1:16 / 16:1
+#define gmxWorldToDeviceDefault gmxWorldToPageDefault
+
 FT_Library  library;
 
 typedef struct _FONT_ENTRY
@@ -3520,15 +3526,26 @@ GreExtTextOutW(
         goto fail;
     }
 
-    pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-    FtSetCoordinateTransform(face, pmxWorldToDevice);
+    if (dc->dcattr.iGraphicsMode == GM_ADVANCED)
+    {
+        pmxWorldToDevice = DC_pmxWorldToDevice(dc);
+        FtSetCoordinateTransform(face, pmxWorldToDevice);
+
+        fixAscender = ScaleLong(face->size->metrics.ascender, &pmxWorldToDevice->efM22);
+        fixDescender = ScaleLong(face->size->metrics.descender, &pmxWorldToDevice->efM22);
+    }
+    else
+    {
+        pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
+        FtSetCoordinateTransform(face, pmxWorldToDevice);
+
+        fixAscender = face->size->metrics.ascender;
+        fixDescender = face->size->metrics.descender;
+    }
 
     /*
      * Process the vertical alignment and determine the yoff.
      */
-
-    fixAscender = ScaleLong(face->size->metrics.ascender, &pmxWorldToDevice->efM22);
-    fixDescender = ScaleLong(face->size->metrics.descender, &pmxWorldToDevice->efM22);
 
     if (pdcattr->lTextAlign & TA_BASELINE)
         yoff = 0;
