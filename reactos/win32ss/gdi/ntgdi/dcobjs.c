@@ -49,9 +49,8 @@ DC_vUpdateFillBrush(PDC pdc)
     /* Check for DC brush */
     if (pdcattr->hbrush == StockObjects[DC_BRUSH])
     {
-        /* ROS HACK, should use surf xlate */
         /* Update the eboFill's solid color */
-        EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboFill, pdcattr->crPenClr);
+        EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboFill, pdcattr->crBrushClr);
     }
 
     /* Clear flags */
