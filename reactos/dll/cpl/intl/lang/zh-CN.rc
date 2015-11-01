@@ -187,7 +187,7 @@ BEGIN
     IDS_CUSTOMIZE_TITLE "自定义区域选项"
     IDS_SPAIN "西班牙语 (西班牙)"
     IDS_METRIC "公制"
-    IDS_IMPERIAL "Imperial"
+    IDS_IMPERIAL "帝国"
 END
 
 STRINGTABLE
@@ -198,10 +198,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPLY_DEFAULT_TITLE "Change default settings"
-    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
-These changes apply to the logon screen and new user accounts.\n\
-The computer must be rebooted, in order to apply the changes to some system services."
+    IDS_APPLY_DEFAULT_TITLE "更改默认设置"
+    IDS_APPLY_DEFAULT_TEXT "设置将应用于默认的用户帐户。\n\n\
+这些更改应用到登录屏幕和新用户帐户。\n\
+必须重新启动计算机，以便将更改应用于一些系统服务。"
 END
 
 STRINGTABLE

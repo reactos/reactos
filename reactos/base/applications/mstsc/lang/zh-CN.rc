@@ -57,7 +57,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 色 (15 位)"
     IDS_HIGHCOLOR16 "65,536 色 (16 位)"
     IDS_HIGHCOLOR24 "16,777,216 色 (24 位)"
-    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
+    IDS_HIGHCOLOR32 "最高素质 (32 位)"
     IDS_PIXEL "%lux%lu 像素"
     IDS_FULLSCREEN "全屏"
     IDS_BROWSESERVER "<浏览更多...>"

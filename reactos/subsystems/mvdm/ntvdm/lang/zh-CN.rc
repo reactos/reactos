@@ -1,0 +1,17 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_HIDE_MOUSE, "隐藏鼠标指针 (&H)"
+    IDS_SHOW_MOUSE, "显示鼠标指针 (&D)"
+    IDS_VDM_MENU  , "ReactOS DOS 虚拟机 (&V)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_DUMPMEM_TXT,    "内存转储 (文本) (&T)"
+    IDS_VDM_DUMPMEM_BIN,    "内存转储 (二进制) (&B)"
+    IDS_VDM_QUIT       ,    "退出 ReactOS DOS 虚拟机 (&Q)"
+END

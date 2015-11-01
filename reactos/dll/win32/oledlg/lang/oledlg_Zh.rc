@@ -30,8 +30,8 @@ STRINGTABLE
   IDS_BROWSE            "浏览"
   IDS_NOTOLEMOD         "本文件不像是一个有效的 OLE 模型. 不能注册 OLE 控件."
   IDS_NOTOLEMODCAPTION  "添加控件"
-  IDS_VERBMENU_OBJECT   "&Object"
-  IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_OBJECT   "对象 (&O)"
+  IDS_VERBMENU_CONVERT  "转换... (&C)"
 }
 
 STRINGTABLE
@@ -110,8 +110,8 @@ STRINGTABLE
   IDS_BROWSE            "瀏覽"
   IDS_NOTOLEMOD         "本檔案不像是一個有效的 OLE 模型. 不能註冊 OLE 控件."
   IDS_NOTOLEMODCAPTION  "添加控件"
-  IDS_VERBMENU_OBJECT   "&Object"
-  IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_OBJECT   "對象 (&O)"
+  IDS_VERBMENU_CONVERT  "轉換... (&C)"
 }
 
 STRINGTABLE

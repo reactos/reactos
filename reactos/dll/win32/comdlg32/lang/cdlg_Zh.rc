@@ -137,7 +137,7 @@ STRINGTABLE
     IDS_SAVE        "保存"
     IDS_SAVE_AS     "另存为"
     IDS_OPEN_FILE   "打开文件"
-    IDS_SELECT_FOLDER "Select Folder"
+    IDS_SELECT_FOLDER "选择文件夹"
 }
 
 /*
