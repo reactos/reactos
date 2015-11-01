@@ -1,0 +1,61 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "Ö&ffnen...", CMD_OPEN, GRAYED
+        MENUITEM "Speichern &unter...", CMD_SAVE_AS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Beenden", CMD_EXIT
+    END
+    POPUP "&Bearbeiten"
+    BEGIN
+        MENUITEM "&Löschen\tEntf", CMD_DELETE
+    END
+    POPUP "&Anzeige"
+    BEGIN
+        MENUITEM "&Automatisch", CMD_AUTOMATIC
+    END
+    POPUP "&Hilfe"
+    BEGIN
+        MENUITEM "&Hilfethemen", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "Inf&o", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Zwischenablage"
+    STRING_DELETE_MSG "Soll der Inhalt der Zwischenablage gelöscht werden?"
+    STRING_DELETE_TITLE "Zwischenablage löschen"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Unbekanntes Format"
+    STRING_CF_TEXT "Text"
+    STRING_CF_BITMAP "Bitmap"
+    STRING_CF_OEMTEXT "OEM-Text"
+    STRING_CF_UNICODETEXT "Unicodetext"
+    STRING_CF_DIB "DIB-Bitmap"
+    STRING_CF_LOCALE "Gebietsschema"
+    STRING_CF_ENHMETAFILE "Erweiterte Metadatei"
+    STRING_CF_METAFILEPICT "Metadatei"
+    STRING_CF_PALETTE "Farbpalette"
+    STRING_CF_DIBV5 "DIB-Bitmap (Version 5)"
+    STRING_CF_SYLK "Symbolic Link Format"
+    STRING_CF_DIF "Data Interchange Format"
+    STRING_CF_HDROP "Drop-Daten"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "Die Daten in der Zwischenablage liegen in einem Format vor, welches nicht angezeigt werden kann."
+END

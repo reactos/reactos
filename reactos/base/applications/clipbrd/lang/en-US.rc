@@ -1,0 +1,61 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open...", CMD_OPEN, GRAYED
+        MENUITEM "Save &as...", CMD_SAVE_AS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", CMD_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Delete\tDel", CMD_DELETE
+    END
+    POPUP "&Display"
+    BEGIN
+        MENUITEM "&Automatic", CMD_AUTOMATIC
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Clipboard"
+    STRING_DELETE_MSG "Clear contents of the Clipboard?"
+    STRING_DELETE_TITLE "Clear Clipboard"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Unknown Format"
+    STRING_CF_TEXT "Text"
+    STRING_CF_BITMAP "Bitmap"
+    STRING_CF_OEMTEXT "OEM Text"
+    STRING_CF_UNICODETEXT "Unicode Text"
+    STRING_CF_DIB "DIB Bitmap"
+    STRING_CF_LOCALE "Locale Data"
+    STRING_CF_ENHMETAFILE "Enhanced Metafile"
+    STRING_CF_METAFILEPICT "Metafile"
+    STRING_CF_PALETTE "Color Palette"
+    STRING_CF_DIBV5 "DIB Bitmap (Version 5)"
+    STRING_CF_SYLK "Symbolic Link Format"
+    STRING_CF_DIF "Data Interchange Format"
+    STRING_CF_HDROP "Drop Data"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "The clipboard contains data in a format, that cannot be displayed."
+END
