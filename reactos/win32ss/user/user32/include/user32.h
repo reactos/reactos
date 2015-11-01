@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
- * FILE:            lib/user32/include/user32.h
+ * FILE:            win32ss/user/user32/include/user32.h
  * PURPOSE:         Win32 User Library
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */

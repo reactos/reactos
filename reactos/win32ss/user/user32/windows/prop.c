@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            user/user32/windows/prop.c
+ * FILE:            win32ss/user/user32/windows/prop.c
  * PURPOSE:         Window Property
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:

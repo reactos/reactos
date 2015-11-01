@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            user32/windows/menu.c
+ * FILE:            win32ss/user/user32/windows/menu.c
  * PURPOSE:         Menus
  *
  * PROGRAMMERS:     Casper S. Hornstrup

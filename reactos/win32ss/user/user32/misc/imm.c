@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/misc/imm.c
+ * FILE:            win32ss/user/user32/misc/imm.c
  * PURPOSE:         User32.dll Imm functions
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  * UPDATE HISTORY:

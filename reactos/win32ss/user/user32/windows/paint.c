@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/paint.c
+ * FILE:            win32ss/user/user32/windows/paint.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:

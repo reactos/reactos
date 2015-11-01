@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/misc/logon.c
+ * FILE:            win32ss/user/user32/misc/logon.c
  * PURPOSE:         Logon functions
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  */

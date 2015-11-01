@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/dialog.c
+ * FILE:            win32ss/user/user32/windows/dialog.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)

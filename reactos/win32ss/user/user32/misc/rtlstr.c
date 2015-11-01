@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/misc/rtlstr.c
+ * FILE:            win32ss/user/user32/misc/rtlstr.c
  * PURPOSE:         Large Strings
  * PROGRAMMER:
  * UPDATE HISTORY:

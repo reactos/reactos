@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/caret.c
+ * FILE:            win32ss/user/user32/windows/caret.c
  * PURPOSE:         Caret
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:

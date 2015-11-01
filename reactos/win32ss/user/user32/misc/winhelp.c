@@ -18,7 +18,7 @@
  */
 /* 
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/misc/winhelp.c
+ * FILE:            win32ss/user/user32/misc/winhelp.c
  * PURPOSE:         WinHelp
  * PROGRAMMER:      Robert Dickenson(robd@reactos.org)
  * UPDATE HISTORY:

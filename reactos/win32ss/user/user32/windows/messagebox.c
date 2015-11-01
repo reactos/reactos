@@ -19,7 +19,7 @@
 /*
  *
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/messagebox.c
+ * FILE:            win32ss/user/user32/windows/messagebox.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)

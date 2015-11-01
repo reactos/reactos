@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
  * PURPOSE:          Built-in control registration
- * FILE:             dll/win32/user32/controls/regcontrol.c
+ * FILE:             win32ss/user/user32/controls/regcontrol.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  * REVISION HISTORY: 2003/06/16 GvG Created
  * NOTES:            Adapted from Wine

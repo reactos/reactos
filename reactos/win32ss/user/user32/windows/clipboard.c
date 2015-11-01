@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/clipboard.c
+ * FILE:            win32ss/user/user32/windows/clipboard.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Pablo Borobia <pborobia@gmail.com>
