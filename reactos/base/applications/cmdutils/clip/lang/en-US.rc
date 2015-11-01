@@ -3,7 +3,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nType ""CLIP /?"" for usage information.\n"
-    IDS_HELP "\nRedirects the output of command line programs to the clipboard.\n\n\
+    IDS_HELP "\nRedirects the output of command-line programs to the clipboard.\n\n\
 CLIP [/?]\n\n\
     /?  Show this help message.\n"
 END
