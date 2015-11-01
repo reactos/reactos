@@ -60,6 +60,9 @@ IDB_ROSLOGO BITMAP "res/rosbitmap.bmp"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_MS_MY
+    #include "lang/ms-MY.rc"
+#endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
 #endif

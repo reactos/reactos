@@ -1,0 +1,20 @@
+/* Malay translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_MALAY, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALL "Memasang"
+    IDS_PRINT "Mencetak"
+    IDS_STRING "Jackdaws love my big sphinx of quartz. 1234567890"
+    IDS_OPEN "Buka fon..."
+    IDS_ERROR "Ralat"
+    IDS_ERROR_NOMEM "Terdapat tidak cukup ingatan untuk melengkapkan operasi ini."
+    IDS_ERROR_NOFONT "Fail %1 bukanlah fail fon yang sah."
+    IDS_ERROR_NOCLASS "Tidak dapat mengawalkan kelas tetingkap."
+    IDS_FILTER_LIST "Semuanya disokong fon (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+Fon TrueType (*.ttf)\0*.ttf\0\
+Fon OpenType (*.otf)\0*.otf\0\
+Fail fon (*.fon)\0*.fon\0\
+Semua fail (*.*)\0*.*\0"
+END

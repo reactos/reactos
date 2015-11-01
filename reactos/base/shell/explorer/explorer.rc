@@ -121,6 +121,9 @@ END
 #ifdef LANGUAGE_LT_LT
     #include "lang/lt-LT.rc"
 #endif
+#ifdef LANGUAGE_MS_MY
+    #include "lang/ms-MY.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
 #endif

@@ -1,0 +1,41 @@
+/* Malay translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_MALAY, SUBLANG_DEFAULT
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&Fail"
+    BEGIN
+        MENUITEM "Baru\tCtrl+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Keluar(&X)\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "Bantuan(&H)"
+    BEGIN
+        MENUITEM "Tent&ang Konsol Pengurusan ReactOS...", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&Fail"
+    BEGIN
+        MENUITEM "Baru\tCtrl+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Keluar(&X)\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "Tertingkap(&W)"
+    BEGIN
+        MENUITEM "Senarai", IDM_WINDOWS_LIST
+    END
+    POPUP "Bantuan(&H)"
+    BEGIN
+        MENUITEM "Tent&ang Konsol Pengurusan ReactOS...", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Konsol Pengurusan ReactOS"
+    IDS_CONSOLETITLE "Konsol%1!u!"
+END
