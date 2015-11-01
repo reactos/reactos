@@ -49,7 +49,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+                        FILE_GENERIC_READ | FILE_GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &Iosb,
                         FILE_SHARE_READ,
