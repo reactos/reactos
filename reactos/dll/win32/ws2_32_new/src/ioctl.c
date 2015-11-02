@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        ioctl.c
+ * FILE:        dll/win32/ws2_32_new/src/ioctl.c
  * PURPOSE:     Socket I/O Control Code support.
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */

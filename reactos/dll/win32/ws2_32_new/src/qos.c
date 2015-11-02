@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        qos.c
+ * FILE:        dll/win32/ws2_32_new/src/qos.c
  * PURPOSE:     QoS Support
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */

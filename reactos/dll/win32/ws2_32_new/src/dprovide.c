@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dprovide.c
+ * FILE:        dll/win32/ws2_32_new/src/dprovide.c
  * PURPOSE:     Transport Provider Object
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */

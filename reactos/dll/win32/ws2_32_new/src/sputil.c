@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        sputil.c
+ * FILE:        dll/win32/ws2_32_new/src/sputil.c
  * PURPOSE:     Transport Service Provider Utility Functions
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */

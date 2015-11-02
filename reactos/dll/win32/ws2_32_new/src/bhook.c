@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        bhook.c
+ * FILE:        dll/win32/ws2_32_new/src/bhook.c
  * PURPOSE:     Blocking Hook support for 1.x clients
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */

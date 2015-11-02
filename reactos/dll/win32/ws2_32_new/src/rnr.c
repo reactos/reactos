@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        rnr.c
+ * FILE:        dll/win32/ws2_32_new/src/rnr.c
  * PURPOSE:     Registration n' Resolution Support
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
