@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        include/msafd.h
+ * FILE:        dll/win32/msafd/msafd.h
  * PURPOSE:     Ancillary Function Driver DLL header
  */
 

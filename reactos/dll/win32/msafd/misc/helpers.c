@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        misc/helpers.c
+ * FILE:        dll/win32/msafd/misc/helpers.c
  * PURPOSE:     Helper DLL management
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *				Alex Ionescu (alex@relsoft.net)

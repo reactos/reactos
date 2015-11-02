@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        misc/event.c
+ * FILE:        dll/win32/msafd/misc/event.c
  * PURPOSE:     Event handling
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *				Alex Ionescu (alex@relsoft.net)
