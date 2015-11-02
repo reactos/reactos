@@ -25,7 +25,7 @@ WSPAddressToString(
 {
     UNIMPLEMENTED;
 
-    return 0;
+    return SOCKET_ERROR;
 }
 
 
@@ -50,7 +50,7 @@ WSPDuplicateSocket(
 {
     UNIMPLEMENTED;
 
-    return 0;
+    return SOCKET_ERROR;
 }
 
 
@@ -114,7 +114,7 @@ WSPStringToAddress(
 {
     UNIMPLEMENTED;
 
-    return 0;
+    return SOCKET_ERROR;
 }
 
 /* EOF */
