@@ -19,6 +19,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msafd);
 
 HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
+DWORD CatalogEntryId; /* CatalogEntryId for upcalls */
 LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
 PSOCKET_INFORMATION SocketListHead = NULL;
 CRITICAL_SECTION SocketListLock;
@@ -289,7 +290,7 @@ WSPSocket(int AddressFamily,
     CreateContext(Socket);
 
     /* Notify Winsock */
-    Upcalls.lpWPUModifyIFSHandle(1, (SOCKET)Sock, lpErrno);
+    Upcalls.lpWPUModifyIFSHandle(CatalogEntryId, (SOCKET)Sock, lpErrno);
 
     /* Return Socket Handle */
     TRACE("Success %x\n", Sock);
@@ -2403,10 +2404,11 @@ WSPStartup(IN  WORD wVersionRequested,
         lpProcTable->lpWSPStringToAddress = WSPStringToAddress;
         lpWSPData->wVersion     = MAKEWORD(2, 2);
         lpWSPData->wHighVersion = MAKEWORD(2, 2);
+        /* Save CatalogEntryId for all upcalls */
+        CatalogEntryId = lpProtocolInfo->dwCatalogEntryId;
     }
 
     TRACE("Status (%d).\n", Status);
-
     return Status;
 }
 
