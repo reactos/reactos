@@ -2174,6 +2174,14 @@ WSPGetSockOpt(IN SOCKET Handle,
                     Buffer = &IntBuffer;
                     BufferSize = sizeof(INT);
                     break;
+                case SO_SNDTIMEO:
+                    Buffer = &Socket->SharedData.SendTimeout;
+                    BufferSize = sizeof(DWORD);
+                    break;
+                case SO_RCVTIMEO:
+                    Buffer = &Socket->SharedData.RecvTimeout;
+                    BufferSize = sizeof(DWORD);
+                    break;
 
                 case SO_GROUP_ID:
                 case SO_GROUP_PRIORITY:
