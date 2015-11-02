@@ -9,7 +9,7 @@
 #include "iphlpapi_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
-#if 1
+#ifdef GetAdaptersAddressesV2
 /* Helper for GetAdaptersAddresses:
  * Retrieves the list of network adapters from tcpip.sys */
 static
@@ -422,7 +422,11 @@ GetAdaptersAddresses(
                 CurrentAA->Flags = 0; // FIXME!
                 CurrentAA->Mtu = Entry->if_mtu;
                 CurrentAA->IfType = Entry->if_type;
-                CurrentAA->OperStatus = Entry->if_operstatus;
+                if(Entry->if_operstatus >= IF_OPER_STATUS_CONNECTING)
+                    CurrentAA->OperStatus = IfOperStatusUp;
+                else 
+                    CurrentAA->OperStatus = IfOperStatusDown;
+                    
                 /* Next items */
                 Ptr = (BYTE*)(CurrentAA + 1);
 

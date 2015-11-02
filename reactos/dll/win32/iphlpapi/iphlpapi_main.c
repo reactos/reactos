@@ -1517,22 +1517,6 @@ DWORD WINAPI GetOwnerModuleFromTcpEntry( PMIB_TCPROW_OWNER_MODULE pTcpEntry, TCP
 	return ret;	
 }
 
-
-/******************************************************************
- *    GetPerAdapterInfo (IPHLPAPI.@)
- *
- *
- * PARAMS
- *
- *  IfIndex [In]
- *  pPerAdapterInfo [In/Out]
- *  pOutBufLen [In/Out]
- *
- * RETURNS
- *
- *  DWORD
- *
- */
 static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, PVOID Data)
 {
   IP_ADDR_STRING *pNext;
@@ -1563,6 +1547,21 @@ static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, 
   Context->NumServers++;
 }
 
+/******************************************************************
+ *    GetPerAdapterInfo (IPHLPAPI.@)
+ *
+ *
+ * PARAMS
+ *
+ *  IfIndex [In]
+ *  pPerAdapterInfo [In/Out]
+ *  pOutBufLen [In/Out]
+ *
+ * RETURNS
+ *
+ *  DWORD
+ *
+ */
 DWORD WINAPI GetPerAdapterInfo(ULONG IfIndex, PIP_PER_ADAPTER_INFO pPerAdapterInfo, PULONG pOutBufLen)
 {
   HKEY hkey;
@@ -2294,7 +2293,7 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
 /*
  * @implemented
  */
-#if 0
+#ifdef GetAdaptersAddressesV1
 DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
     InterfaceIndexTable *indexTable;
@@ -2308,7 +2307,7 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
     if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
     if (Reserved) return ERROR_INVALID_PARAMETER;
 
-    indexTable = getNonLoopbackInterfaceIndexTable(); //I think we want non-loopback here
+    indexTable = getInterfaceIndexTable();
     if (!indexTable)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -2345,8 +2344,8 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
             /* We're only going to implement what's required for XP SP0 */
         }
     }
-
-    if (*pOutBufLen < requiredSize)
+    TRACE("size: %d, requiredSize: %d\n", *pOutBufLen, requiredSize);
+    if (!pAdapterAddresses || *pOutBufLen < requiredSize)
     {
         *pOutBufLen = requiredSize;
         closeTcpFile(tcpFile);
@@ -2397,16 +2396,15 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
             currentLocation += sizeof(WCHAR);
 
             currentAddress->Next = (PVOID)currentLocation;
+            /* Terminate the last address correctly */
+            if(i==0)
+                currentAddress->Next = NULL;
 
             /* We're only going to implement what's required for XP SP0 */
 
             currentAddress = currentAddress->Next;
         }
     }
-
-    /* Terminate the last address correctly */
-    if (currentAddress)
-        currentAddress->Next = NULL;
 
     /* Now again, for real this time */
 
@@ -2470,7 +2468,10 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
             currentAddress->IfType = ifInfo.if_info.ent.if_type;
 
             /* Operational status */
-            currentAddress->OperStatus = ifInfo.if_info.ent.if_operstatus;
+            if(ifInfo.if_info.ent.if_operstatus >= IF_OPER_STATUS_CONNECTING)
+                currentAddress->OperStatus = IfOperStatusUp;
+            else
+                currentAddress->OperStatus = IfOperStatusDown;
 
             /* We're only going to implement what's required for XP SP0 */
 

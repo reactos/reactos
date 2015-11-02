@@ -6,6 +6,7 @@ include_directories(
 
 spec2def(iphlpapi.dll iphlpapi.spec ADD_IMPORTLIB)
 
+add_definitions(-DGetAdaptersAddressesV2)
 list(APPEND SOURCE
     address.c
     dhcp_reactos.c
