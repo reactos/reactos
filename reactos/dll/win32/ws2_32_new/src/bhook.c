@@ -50,7 +50,7 @@ WSACancelBlockingCall(VOID)
     {
         /* Fail */
         SetLastError(ErrorCode);
-        return ErrorCode;
+        return SOCKET_ERROR;
     }
 
     /* Return success */
