@@ -347,7 +347,7 @@ NtUserInitialize(
   HANDLE  hMediaRequestEvent)
 {
     /* Check the Windows version */
-    if (dwWinVersion != 0)
+    if (dwWinVersion != USER_VERSION)
     {
         return STATUS_UNSUCCESSFUL;
     }
