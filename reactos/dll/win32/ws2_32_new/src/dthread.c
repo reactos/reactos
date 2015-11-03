@@ -123,7 +123,7 @@ WsThreadGetProtoBuffer(IN PWSTHREAD Thread)
     if (!Thread->ProtocolInfo)
     {
         /* We don't have a buffer; allocate it */
-        Thread->ProtocolInfo = HeapAlloc(WsSockHeap, 0, sizeof(PWSPROTO_BUFFER));
+        Thread->ProtocolInfo = HeapAlloc(WsSockHeap, 0, sizeof(WSPROTO_BUFFER));
     }
 
     /* Return it */
