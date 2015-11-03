@@ -33,6 +33,7 @@
 #include <ws2help.h>
 
 #include <nsp_dns.h>
+#include <iptypes.h>
 
 /* Missing definitions */
 #define SO_OPENTYPE                 0x7008
