@@ -220,7 +220,7 @@ gethostbyname(IN const char FAR * name)
     INT ErrorCode;
     CHAR ResultsBuffer[RNR_BUFFER_SIZE];
     PCHAR Results = ResultsBuffer;
-    CHAR szLocalName[200];
+    CHAR szLocalName[MAX_HOSTNAME_LEN];
     PCHAR pszName;
     PWSPROCESS Process;
     PWSTHREAD Thread;
@@ -238,7 +238,7 @@ gethostbyname(IN const char FAR * name)
     if(!name || !*name) 
     {
         /* This means we should do a local lookup first */
-        if(gethostname(szLocalName, 200) != NO_ERROR) return(NULL);
+        if(gethostname(szLocalName, MAX_HOSTNAME_LEN) != NO_ERROR) return(NULL);
         pszName = szLocalName;
     } 
     else 
@@ -277,7 +277,7 @@ gethostbyname(IN const char FAR * name)
     else 
     {
         /* We failed, so zero it out */
-        Hostent = 0;
+        Hostent = NULL;
 
         /* Normalize the error message */
         if(GetLastError() == WSASERVICE_NOT_FOUND) 
