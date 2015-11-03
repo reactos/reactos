@@ -98,47 +98,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(font);
 
 #ifdef HAVE_FT2BUILD_H
 #include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+#include FT_TYPES_H
+#include FT_TRUETYPE_TABLES_H
+#include FT_SFNT_NAMES_H
+#include FT_TRUETYPE_IDS_H
+#include FT_OUTLINE_H
+#include FT_TRIGONOMETRY_H
+#include FT_MODULE_H
+#include FT_WINFONTS_H
+#ifdef FT_LCD_FILTER_H
+#include FT_LCD_FILTER_H
 #endif
-#ifdef HAVE_FREETYPE_FREETYPE_H
-#include <freetype.h>
-#endif
-#ifdef HAVE_FREETYPE_FTGLYPH_H
-#include <ftglyph.h>
-#endif
-#ifdef HAVE_FREETYPE_TTTABLES_H
-#include <tttables.h>
-#endif
-#ifdef HAVE_FREETYPE_FTTYPES_H
-#include <fttypes.h>
-#endif
-#ifdef HAVE_FREETYPE_FTSNAMES_H
-#include <ftsnames.h>
-#else
-# ifdef HAVE_FREETYPE_FTNAMES_H
-# include <ftnames.h>
-# endif
-#endif
-#ifdef HAVE_FREETYPE_TTNAMEID_H
-#include <ttnameid.h>
-#endif
-#ifdef HAVE_FREETYPE_FTOUTLN_H
-#include <ftoutln.h>
-#endif
-#ifdef HAVE_FREETYPE_INTERNAL_SFNT_H
-#include <internal/sfnt.h>
-#endif
-#ifdef HAVE_FREETYPE_FTTRIGON_H
-#include <fttrigon.h>
-#endif
-#ifdef HAVE_FREETYPE_FTWINFNT_H
-#include <ftwinfnt.h>
-#endif
-#ifdef HAVE_FREETYPE_FTMODAPI_H
-#include <ftmodapi.h>
-#endif
-#ifdef HAVE_FREETYPE_FTLCDFIL_H
-#include <ftlcdfil.h>
-#endif
+#endif /* HAVE_FT2BUILD_H */
+
 
 #ifndef HAVE_FT_TRUETYPEENGINETYPE
 typedef enum
