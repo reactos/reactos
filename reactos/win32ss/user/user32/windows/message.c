@@ -2320,6 +2320,7 @@ SendMessageW(HWND Wnd,
 {
   MSG UMMsg, KMMsg;
   LRESULT Result;
+  BOOL Ret;
   PWND Window;
   PTHREADINFO ti = GetW32ThreadInfo();
 
@@ -2365,13 +2366,17 @@ SendMessageW(HWND Wnd,
      return FALSE;
   }
 
-  Result = NtUserMessageCall( Wnd,
-                              KMMsg.message,
-                              KMMsg.wParam,
-                              KMMsg.lParam,
-                             (ULONG_PTR)&Result,
-                              FNID_SENDMESSAGE,
-                              FALSE);
+  Ret = NtUserMessageCall( Wnd,
+                           KMMsg.message,
+                           KMMsg.wParam,
+                           KMMsg.lParam,
+                          (ULONG_PTR)&Result,
+                           FNID_SENDMESSAGE,
+                           FALSE);
+  if (!Ret)
+  {
+     ERR("SendMessageW Error\n");
+  }
 
   MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
@@ -2387,6 +2392,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   MSG AnsiMsg, UcMsg, KMMsg;
   LRESULT Result;
+  BOOL Ret;
   PWND Window;
   PTHREADINFO ti = GetW32ThreadInfo();
 
@@ -2438,13 +2444,17 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       return FALSE;
   }
 
-  Result = NtUserMessageCall( Wnd,
-                              KMMsg.message,
-                              KMMsg.wParam,
-                              KMMsg.lParam,
-                             (ULONG_PTR)&Result,
-                              FNID_SENDMESSAGE,
-                              TRUE);
+  Ret = NtUserMessageCall( Wnd,
+                           KMMsg.message,
+                           KMMsg.wParam,
+                           KMMsg.lParam,
+                          (ULONG_PTR)&Result,
+                           FNID_SENDMESSAGE,
+                           TRUE);
+  if (!Ret)
+  {
+     ERR("SendMessageA Error\n");
+  }
 
   MsgiUMToKMCleanup(&UcMsg, &KMMsg);
   MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result);
@@ -2886,10 +2896,15 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       KMMsg.lParam = (LPARAM) ((char *) CallbackArgs + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS));
      switch(KMMsg.message)
      {
+        case WM_CREATE:
+        {
+            TRACE("WM_CREATE CB %p lParam %p\n",CallbackArgs, KMMsg.lParam);
+            break;
+        }
         case WM_SYSTIMER:
         {
-        ERR("WM_SYSTIMER %p\n",KMMsg.hwnd);
-        break;
+            TRACE("WM_SYSTIMER %p\n",KMMsg.hwnd);
+            break;
         }
         case WM_SIZING:
         {
