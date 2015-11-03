@@ -50,7 +50,7 @@ LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         ok(0, "Got unexpected WM_SYSTIMER in the winproc. wParam=%d\n", wParam);
         break;
     default:
-        RECOND_MESSAGE(iwnd, message, SENT, 0,0);
+        RECORD_MESSAGE(iwnd, message, SENT, 0,0);
     }
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
@@ -58,7 +58,7 @@ LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 static LRESULT CALLBACK MouseLLHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret;
-    RECOND_MESSAGE(0, WH_MOUSE_LL, HOOK, wParam, 0);
+    RECORD_MESSAGE(0, WH_MOUSE_LL, HOOK, wParam, 0);
     ret = CallNextHookEx(hMouseHookLL, nCode, wParam, lParam);
     if(ignore_mousell)
         return TRUE;
@@ -69,7 +69,7 @@ static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     MOUSEHOOKSTRUCT *hs = (MOUSEHOOKSTRUCT*) lParam;
     LRESULT ret;
-    RECOND_MESSAGE(get_iwnd(hs->hwnd), WH_MOUSE, HOOK, wParam, hs->wHitTestCode);
+    RECORD_MESSAGE(get_iwnd(hs->hwnd), WH_MOUSE, HOOK, wParam, hs->wHitTestCode);
     ret = CallNextHookEx(hMouseHook, nCode, wParam, lParam);
     if(ignore_mouse)
         return TRUE;
@@ -87,12 +87,12 @@ static void FlushMessages()
         {
             if(msg.message == WM_SYSTIMER)
             {
-                RECOND_MESSAGE(iwnd, msg.message, POST,msg.wParam,0);
+                RECORD_MESSAGE(iwnd, msg.message, POST,msg.wParam,0);
                 if(ignore_timer)
                     continue;
             }
             else if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-                RECOND_MESSAGE(iwnd, msg.message, POST,0,0);
+                RECORD_MESSAGE(iwnd, msg.message, POST,0,0);
         }
         DispatchMessageA( &msg );
     }

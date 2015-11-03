@@ -77,7 +77,7 @@ WndProc(
     if (message > WM_USER || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProcW(hWnd, message, wParam, lParam);
 
-    RECOND_MESSAGE(iwnd, message, SENT, wParam, lParam);
+    RECORD_MESSAGE(iwnd, message, SENT, wParam, lParam);
 
     switch(message)
     {
@@ -150,7 +150,7 @@ trace("\n");
     {
         int iwnd = get_iwnd(msg.hwnd, FALSE);
         if(!(msg.message > WM_USER || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            RECOND_MESSAGE(iwnd, msg.message, POST, 0, 0);
+            RECORD_MESSAGE(iwnd, msg.message, POST, 0, 0);
         DispatchMessageA( &msg );
     }
 trace("\n");
@@ -181,7 +181,7 @@ trace("\n");
     {
         int iwnd = get_iwnd(msg.hwnd, FALSE);
         if(!(msg.message > WM_USER || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            RECOND_MESSAGE(iwnd, msg.message, POST, 0, 0);
+            RECORD_MESSAGE(iwnd, msg.message, POST, 0, 0);
         DispatchMessageA( &msg );
     }
 trace("\n");

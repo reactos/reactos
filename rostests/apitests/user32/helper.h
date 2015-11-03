@@ -55,7 +55,7 @@ static inline BOOL IseKeyMsg(UINT msg)
 #define COMPARE_CACHE(msg_chain) compare_cache(&default_cache, __FILE__, __LINE__, msg_chain)
 #define TRACE_CACHE() trace_cache(&default_cache, __FILE__, __LINE__)
 #define EMPTY_CACHE() empty_message_cache(&default_cache);
-#define RECOND_MESSAGE(...) record_message(&default_cache, ##__VA_ARGS__);
+#define RECORD_MESSAGE(...) record_message(&default_cache, ##__VA_ARGS__);
 
 #define COMPARE_CACHE_(cache, msg_chain) compare_cache(cache, __FILE__, __LINE__, msg_chain)
 #define TRACE_CACHE_(cache) trace_cache(cache, __FILE__, __LINE__)

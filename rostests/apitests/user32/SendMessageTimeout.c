@@ -62,15 +62,15 @@ WndProc(
 
     if (hWnd == hWndThread1)
     {
-        RECOND_MESSAGE(1, message, SENT, wParam, lParam);
+        RECORD_MESSAGE(1, message, SENT, wParam, lParam);
     }
     else if (hWnd == hWndThread2)
     {
-        RECOND_MESSAGE(2, message, SENT, wParam, lParam);
+        RECORD_MESSAGE(2, message, SENT, wParam, lParam);
     }
     else
     {
-        RECOND_MESSAGE(3, message, SENT, wParam, lParam);
+        RECORD_MESSAGE(3, message, SENT, wParam, lParam);
     }
 
     switch (message)
@@ -115,7 +115,7 @@ Thread1(
     while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
         if (!(msg.message > WM_USER || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            RECOND_MESSAGE(1, msg.message, POST, 0, 0);
+            RECORD_MESSAGE(1, msg.message, POST, 0, 0);
         DispatchMessageA(&msg);
     }
 
@@ -126,7 +126,7 @@ Thread1(
         while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
         {
             if (!(msg.message > WM_USER || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-                RECOND_MESSAGE(1, msg.message, POST, 0, 0);
+                RECORD_MESSAGE(1, msg.message, POST, 0, 0);
             DispatchMessageA(&msg);
         }
     }
@@ -135,7 +135,7 @@ Thread1(
     while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
         if (!(msg.message > WM_USER || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            RECOND_MESSAGE(1, msg.message, POST, 0, 0);
+            RECORD_MESSAGE(1, msg.message, POST, 0, 0);
         DispatchMessageA(&msg);
     }
 
@@ -158,7 +158,7 @@ Thread2(
     while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
         if (!(msg.message > WM_USER || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            RECOND_MESSAGE(2, msg.message, POST, 0, 0);
+            RECORD_MESSAGE(2, msg.message, POST, 0, 0);
         DispatchMessageA(&msg);
     }
 
@@ -169,7 +169,7 @@ Thread2(
     while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
         if (!(msg.message > WM_USER || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            RECOND_MESSAGE(2, msg.message, POST, 0, 0);
+            RECORD_MESSAGE(2, msg.message, POST, 0, 0);
         DispatchMessageA(&msg);
     }
 
@@ -177,7 +177,7 @@ Thread2(
     while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
         if (!(msg.message > WM_USER || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            RECOND_MESSAGE(2, msg.message, POST, 0, 0);
+            RECORD_MESSAGE(2, msg.message, POST, 0, 0);
         DispatchMessageA(&msg);
     }
 
