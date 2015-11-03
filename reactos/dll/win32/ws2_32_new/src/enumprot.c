@@ -22,7 +22,7 @@ CheckProtocolMatch(IN LPINT ProtocolSet,
 {
     BOOL Return = FALSE;
     DWORD i = 0;
-    INT ProtocolId = 0;
+    INT ProtocolId;
 
     /* Make sure we have a set */
     if (ProtocolSet)
