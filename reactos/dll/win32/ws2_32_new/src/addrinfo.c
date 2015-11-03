@@ -132,7 +132,8 @@ NewAddrInfo(IN INT SocketType,
     SockAddress->sin_family = AF_INET;
     SockAddress->sin_port = Port;
     SockAddress->sin_addr.s_addr = Address;
-    
+    ZeroMemory(SockAddress->sin_zero, sizeof(SockAddress->sin_zero));
+
     /* Fill out the addrinfo */
     AddrInfo->ai_family = PF_INET;
     AddrInfo->ai_socktype = SocketType;
