@@ -18,7 +18,7 @@ GamesShortcuts=2, %GAMES%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE_SHORT%, %RAPPS_DESC%, 0
 
 [ProgramShortcuts]
-%SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 0
+%SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 1
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE%, %RAPPS_DESC%, 0
 
 [AdminToolsShortcuts]
