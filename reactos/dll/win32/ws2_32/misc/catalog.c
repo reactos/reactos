@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        misc/catalog.c
+ * FILE:        dll/win32/ws2_32/misc/catalog.c
  * PURPOSE:     Service Provider Catalog
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:

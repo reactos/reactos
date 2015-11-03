@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        include/upcall.h
+ * FILE:        dll/win32/ws2_32/include/upcall.h
  * PURPOSE:     Upcall function defintions
  */
 
