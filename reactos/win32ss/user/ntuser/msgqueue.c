@@ -790,7 +790,7 @@ FreeUserMessage(PUSER_SENT_MESSAGE Message)
    /* Remove it from the list */
    RemoveEntryList(&Message->ListEntry);
 
-   ExFreeToPagedLookasideList(pgMessageLookasideList, Message);
+   ExFreeToPagedLookasideList(pgSendMsgLookasideList, Message);
    SendMsgCount--;
 }
 
