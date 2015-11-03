@@ -262,6 +262,7 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
     RECT r;
     BOOL control, filled, displayall = FALSE;
     int cpt, height, sel;
+    ULONG fetched;
 
     if (!pThis->enabled)
     {
@@ -429,7 +430,7 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
             
             for(cpt = 0;;)
             {
-                hr = pThis->enumstr->Next(1, &strs, NULL);
+                hr = pThis->enumstr->Next(1, &strs, &fetched);
                 if (hr != S_OK)
                     break;
 
