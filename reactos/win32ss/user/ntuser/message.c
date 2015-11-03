@@ -1278,7 +1278,7 @@ co_IntSendMessage( HWND hWnd,
                    LPARAM lParam )
 {
     ULONG_PTR Result = 0;
-    if(co_IntSendMessageTimeout(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
+    if (co_IntSendMessageTimeout(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
     {
         return (LRESULT)Result;
     }
@@ -1399,7 +1399,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
                                                   wParam,
                                                   lParamPacked,
                                                   lParamBufferSize );
-        if(uResult)
+        if (uResult)
         {
             *uResult = Result;
         }
@@ -1697,7 +1697,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         RETURN(TRUE);
     }
 
-    if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
+    if(!(Message = AllocateUserMessage(FALSE)))
     {
         ERR("MsqSendMessage(): Not enough memory to allocate a message");
         RETURN( FALSE);
@@ -1707,19 +1707,18 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->Msg.message = Msg;
     Message->Msg.wParam = wParam;
     Message->Msg.lParam = lParamPacked;
-    Message->CompletionEvent = NULL;
-    Message->Result = 0;
+    Message->pkCompletionEvent = NULL; // No event needed.
     Message->lResult = 0;
     Message->QS_Flags = 0;
     Message->ptiReceiver = ptiSendTo;
     Message->ptiSender = NULL; // mjmartin, you are right! This is null.
     Message->ptiCallBackSender = Win32Thread;
-    InitializeListHead(&Message->DispatchingListEntry);
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
     Message->HookMessage = MSQ_NORMAL;
     Message->HasPackedLParam = (lParamBufferSize > 0);
     Message->QS_Flags = QS_SENDMESSAGE;
+    Message->flags = SMF_RECEIVERFREE;
 
     if (Msg & 0x80000000) // Higher priority event message!
        InsertHeadList(&ptiSendTo->SentMessagesListHead, &Message->ListEntry);
@@ -2723,14 +2722,15 @@ NtUserMessageCall( HWND hWnd,
         break;
     case FNID_SENDMESSAGE:
         {
-            Ret = co_IntDoSendMessage(hWnd, Msg, wParam, lParam, 0);
+            lResult = co_IntDoSendMessage(hWnd, Msg, wParam, lParam, 0);
+            Ret = TRUE;
 
             if (ResultInfo)
             {
                 _SEH2_TRY
                 {
                     ProbeForWrite((PVOID)ResultInfo, sizeof(ULONG_PTR), 1);
-                    RtlCopyMemory((PVOID)ResultInfo, &Ret, sizeof(ULONG_PTR));
+                    RtlCopyMemory((PVOID)ResultInfo, &lResult, sizeof(ULONG_PTR));
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {

@@ -22,19 +22,24 @@ typedef struct _USER_SENT_MESSAGE
   LIST_ENTRY ListEntry;
   MSG Msg;
   DWORD QS_Flags;  // Original QS bits used to create this message.
-  PKEVENT CompletionEvent;
-  LRESULT* Result;
+  PKEVENT pkCompletionEvent;
   LRESULT lResult;
+  DWORD flags;
   PTHREADINFO ptiSender;
   PTHREADINFO ptiReceiver;
   SENDASYNCPROC CompletionCallback;
   PTHREADINFO ptiCallBackSender;
   ULONG_PTR CompletionCallbackContext;
-  /* entry in the dispatching list of the sender's message queue */
-  LIST_ENTRY DispatchingListEntry;
   INT HookMessage;
   BOOL HasPackedLParam;
+  KEVENT CompletionEvent;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
+
+#define SMF_RECEIVERDIED    0x00000002
+#define SMF_SENDERDIED      0x00000004
+#define SMF_RECEIVERFREE    0x00000008
+#define SMF_RECEIVEDMESSAGE 0x00000010
+#define SMF_RECEIVERBUSY    0x00004000
 
 typedef struct _USER_MESSAGE_QUEUE
 {
@@ -116,6 +121,8 @@ enum internal_event_message
 };
 
 #define POSTEVENT_NWE 14
+
+extern LIST_ENTRY usmList;
 
 BOOL FASTCALL MsqIsHung(PTHREADINFO pti);
 VOID CALLBACK HungAppSysTimerProc(HWND,UINT,UINT_PTR,DWORD);
@@ -252,6 +259,9 @@ VOID FASTCALL ClearMsgBitsMask(PTHREADINFO,UINT);
 BOOL FASTCALL IntCallMsgFilter(LPMSG,INT);
 WPARAM FASTCALL MsqGetDownKeyState(PUSER_MESSAGE_QUEUE);
 BOOL FASTCALL IsThreadSuspended(PTHREADINFO);
+PUSER_SENT_MESSAGE FASTCALL AllocateUserMessage(BOOL);
+VOID FASTCALL FreeUserMessage(PUSER_SENT_MESSAGE);
+
 
 int UserShowCursor(BOOL bShow);
 PCURICON_OBJECT

@@ -14,10 +14,12 @@ DBG_DEFAULT_CHANNEL(UserMsgQ);
 /* GLOBALS *******************************************************************/
 
 static PPAGED_LOOKASIDE_LIST pgMessageLookasideList;
+static PPAGED_LOOKASIDE_LIST pgSendMsgLookasideList;
+INT SendMsgCount = 0;
 PUSER_MESSAGE_QUEUE gpqCursor;
 ULONG_PTR gdwMouseMoveExtraInfo = 0;
 DWORD gdwMouseMoveTimeStamp = 0;
-
+LIST_ENTRY usmList;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -26,6 +28,7 @@ NTSTATUS
 NTAPI
 MsqInitializeImpl(VOID)
 {
+   // Setup Post Messages
    pgMessageLookasideList = ExAllocatePoolWithTag(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST), TAG_USRMSG);
    if (!pgMessageLookasideList)
       return STATUS_NO_MEMORY;
@@ -36,6 +39,19 @@ MsqInitializeImpl(VOID)
                                   sizeof(USER_MESSAGE),
                                   TAG_USRMSG,
                                   256);
+   // Setup Send Messages
+   pgSendMsgLookasideList = ExAllocatePoolWithTag(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST), TAG_USRMSG);
+   if (!pgSendMsgLookasideList)
+      return STATUS_NO_MEMORY;
+   ExInitializePagedLookasideList(pgSendMsgLookasideList,
+                                  NULL,
+                                  NULL,
+                                  0,
+                                  sizeof(USER_SENT_MESSAGE),
+                                  TAG_USRMSG,
+                                  16);
+
+   InitializeListHead(&usmList);
 
    return(STATUS_SUCCESS);
 }
@@ -743,6 +759,115 @@ MsqDestroyMessage(PUSER_MESSAGE Message)
    ExFreeToPagedLookasideList(pgMessageLookasideList, Message);
 }
 
+PUSER_SENT_MESSAGE FASTCALL
+AllocateUserMessage(BOOL KEvent)
+{
+   PUSER_SENT_MESSAGE Message;
+
+   if(!(Message = ExAllocateFromPagedLookasideList(pgSendMsgLookasideList)))
+   {
+       ERR("AllocateUserMessage(): Not enough memory to allocate a message");
+       return NULL;
+   }
+   RtlZeroMemory(Message, sizeof(USER_SENT_MESSAGE));
+
+   if (KEvent)
+   {
+      Message->pkCompletionEvent = &Message->CompletionEvent;;
+
+      KeInitializeEvent(Message->pkCompletionEvent, NotificationEvent, FALSE);
+   }
+   SendMsgCount++;
+   //ERR("AUM pti %p msg %p\n",PsGetCurrentThreadWin32Thread(),Message);
+   return Message;
+}
+
+VOID FASTCALL
+FreeUserMessage(PUSER_SENT_MESSAGE Message)
+{
+   Message->pkCompletionEvent = NULL;
+
+   /* Remove it from the list */
+   RemoveEntryList(&Message->ListEntry);
+
+   ExFreeToPagedLookasideList(pgMessageLookasideList, Message);
+   SendMsgCount--;
+}
+
+VOID APIENTRY
+MsqRemoveWindowMessagesFromQueue(PWND Window)
+{
+   PTHREADINFO pti;
+   PUSER_SENT_MESSAGE SentMessage;
+   PUSER_MESSAGE PostedMessage;
+   PLIST_ENTRY CurrentEntry, ListHead;
+
+   ASSERT(Window);
+
+   pti = Window->head.pti;
+
+   /* remove the posted messages for this window */
+   CurrentEntry = pti->PostedMessagesListHead.Flink;
+   ListHead = &pti->PostedMessagesListHead;
+   while (CurrentEntry != ListHead)
+   {
+      PostedMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
+
+      if (PostedMessage->Msg.hwnd == Window->head.h)
+      {
+         if (PostedMessage->Msg.message == WM_QUIT && pti->QuitPosted == 0)
+         {
+            pti->QuitPosted = 1;
+            pti->exitCode = PostedMessage->Msg.wParam;
+         }
+         RemoveEntryList(&PostedMessage->ListEntry);
+         ClearMsgBitsMask(pti, PostedMessage->QS_Flags);
+         MsqDestroyMessage(PostedMessage);
+         CurrentEntry = pti->PostedMessagesListHead.Flink;
+      }
+      else
+      {
+         CurrentEntry = CurrentEntry->Flink;
+      }
+   }
+
+   /* remove the sent messages for this window */
+   CurrentEntry = pti->SentMessagesListHead.Flink;
+   ListHead = &pti->SentMessagesListHead;
+   while (CurrentEntry != ListHead)
+   {
+      SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
+
+      if(SentMessage->Msg.hwnd == Window->head.h)
+      {
+         TRACE("Remove Window Messages From Sent Queue\n");
+
+         ClearMsgBitsMask(pti, SentMessage->QS_Flags);
+
+         /* wake the sender's thread */
+         if (SentMessage->pkCompletionEvent != NULL)
+         {
+            KeSetEvent(SentMessage->pkCompletionEvent, IO_NO_INCREMENT, FALSE);
+         }
+
+         if (SentMessage->HasPackedLParam)
+         {
+            if (SentMessage->Msg.lParam)
+               ExFreePool((PVOID)SentMessage->Msg.lParam);
+         }
+
+         /* free the message */
+         FreeUserMessage(SentMessage);
+
+         CurrentEntry = pti->SentMessagesListHead.Flink;
+      }
+      else
+      {
+         CurrentEntry = CurrentEntry->Flink;
+      }
+   }
+}
+
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(
     _In_ PTHREADINFO pti)
@@ -763,6 +888,9 @@ co_MsqDispatchOneSentMessage(
    Entry = RemoveHeadList(&pti->SentMessagesListHead);
    Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
 
+   // Signal this message is being processed.
+   Message->flags |= SMF_RECEIVERBUSY|SMF_RECEIVEDMESSAGE;
+
    SaveMsg = pti->pusmCurrent;
    pti->pusmCurrent = Message;
 
@@ -773,15 +901,14 @@ co_MsqDispatchOneSentMessage(
       pti->pcti->CTI_flags |= CTI_INSENDMESSAGE; // Let the user know...
    }
 
-   /* insert it to the list of messages that are currently dispatched by this
-      message queue */
-   InsertTailList(&pti->LocalDispatchingMessagesHead, &Message->ListEntry);
+   /* Now insert it to the global list of messages that can be removed Justin Case there's Trouble */
+   InsertTailList(&usmList, &Message->ListEntry);
 
    ClearMsgBitsMask(pti, Message->QS_Flags);
 
    if (Message->HookMessage == MSQ_ISHOOK)
    {  // Direct Hook Call processor
-      Result = co_CallHook( Message->Msg.message,     // HookId
+      Result = co_CallHook( Message->Msg.message,           // HookId
                            (INT)(INT_PTR)Message->Msg.hwnd, // Code
                             Message->Msg.wParam,
                             Message->Msg.lParam);
@@ -810,7 +937,9 @@ co_MsqDispatchOneSentMessage(
          /* The message has not been processed yet, reinsert it. */
          RemoveEntryList(&Message->ListEntry);
          InsertTailList(&Message->ptiCallBackSender->SentMessagesListHead, &Message->ListEntry);
-         TRACE("Callback Message not processed yet. Requeuing the message\n");
+         // List is occupied need to set the bit.
+         MsqWakeQueue(Message->ptiCallBackSender, QS_SENDMESSAGE, TRUE);
+         ERR("Callback Message not processed yet. Requeuing the message\n"); //// <---- Need to see if this happens.
          Ret = FALSE;
          goto Exit;
       }
@@ -823,10 +952,6 @@ co_MsqDispatchOneSentMessage(
                                   Message->Msg.lParam);
    }
 
-   /* remove the message from the local dispatching list, because it doesn't need
-      to be cleaned up on thread termination anymore */
-   RemoveEntryList(&Message->ListEntry);
-
    /* If the message is a callback, insert it in the callback senders MessageQueue */
    if (Message->CompletionCallback)
    {
@@ -836,6 +961,7 @@ co_MsqDispatchOneSentMessage(
          Message->QS_Flags |= QS_SMRESULT;
 
          /* insert it in the callers message queue */
+         RemoveEntryList(&Message->ListEntry);
          InsertTailList(&Message->ptiCallBackSender->SentMessagesListHead, &Message->ListEntry);
          MsqWakeQueue(Message->ptiCallBackSender, QS_SENDMESSAGE, TRUE);
       }
@@ -843,29 +969,14 @@ co_MsqDispatchOneSentMessage(
       goto Exit;
    }
 
-   /* remove the message from the dispatching list if needed, so lock the sender's message queue */
-   if (Message->ptiSender && !(Message->ptiSender->TIF_flags & TIF_INCLEANUP))
-   {
-      if (!IsListEmpty(&Message->DispatchingListEntry))
-      {
-         /* only remove it from the dispatching list if not already removed by a timeout */
-         RemoveEntryList(&Message->DispatchingListEntry);
-         InitializeListHead(&Message->DispatchingListEntry);
-      }
-   }
-
-   /* still keep the sender's message queue locked, so the sender can't exit the
-      MsqSendMessage() function (if timed out) */
+   // Retrieve the result from callback.
    if (Message->QS_Flags & QS_SMRESULT)
    {
       Result = Message->lResult;
    }
 
    /* Let the sender know the result. */
-   if (Message->Result != NULL)
-   {
-      *Message->Result = Result;
-   }
+   Message->lResult = Result;
 
    if (Message->HasPackedLParam)
    {
@@ -873,14 +984,22 @@ co_MsqDispatchOneSentMessage(
          ExFreePool((PVOID)Message->Msg.lParam);
    }
 
+   // Clear busy signal.
+   Message->flags &= ~SMF_RECEIVERBUSY;
+
    /* Notify the sender. */
-   if (Message->CompletionEvent != NULL)
+   if (Message->pkCompletionEvent != NULL)
    {
-      KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      KeSetEvent(Message->pkCompletionEvent, IO_NO_INCREMENT, FALSE);
    }
 
    /* free the message */
-   ExFreePoolWithTag(Message, TAG_USRMSG);
+   if (Message->flags & SMF_RECEIVERFREE)
+   {
+      TRACE("Receiver Freeing Message %p\n",Message);
+      FreeUserMessage(Message);
+   }
+
    Ret = TRUE;
 Exit:
    /* do not hangup on the user if this is reentering */
@@ -888,89 +1007,6 @@ Exit:
    pti->pusmCurrent = SaveMsg;
 
    return Ret;
-}
-
-VOID APIENTRY
-MsqRemoveWindowMessagesFromQueue(PWND Window)
-{
-   PTHREADINFO pti;
-   PUSER_SENT_MESSAGE SentMessage;
-   PUSER_MESSAGE PostedMessage;
-   PLIST_ENTRY CurrentEntry, ListHead;
-
-   ASSERT(Window);
-
-   pti = Window->head.pti;
-
-   /* remove the posted messages for this window */
-   CurrentEntry = pti->PostedMessagesListHead.Flink;
-   ListHead = &pti->PostedMessagesListHead;
-   while (CurrentEntry != ListHead)
-   {
-      PostedMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
-                                        ListEntry);
-      if (PostedMessage->Msg.hwnd == Window->head.h)
-      {
-         if (PostedMessage->Msg.message == WM_QUIT && pti->QuitPosted == 0)
-         {
-            pti->QuitPosted = 1;
-            pti->exitCode = PostedMessage->Msg.wParam;
-         }
-         RemoveEntryList(&PostedMessage->ListEntry);
-         ClearMsgBitsMask(pti, PostedMessage->QS_Flags);
-         MsqDestroyMessage(PostedMessage);
-         CurrentEntry = pti->PostedMessagesListHead.Flink;
-      }
-      else
-      {
-         CurrentEntry = CurrentEntry->Flink;
-      }
-   }
-
-   /* remove the sent messages for this window */
-   CurrentEntry = pti->SentMessagesListHead.Flink;
-   ListHead = &pti->SentMessagesListHead;
-   while (CurrentEntry != ListHead)
-   {
-      SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
-
-      if(SentMessage->Msg.hwnd == Window->head.h)
-      {
-         TRACE("Notify the sender and remove a message from the queue that had not been dispatched\n");
-
-         RemoveEntryList(&SentMessage->ListEntry);
-         ClearMsgBitsMask(pti, SentMessage->QS_Flags);
-
-         /* Only if the message has a sender was the queue referenced */
-         if ((SentMessage->ptiSender) &&
-             (!IsListEmpty(&SentMessage->DispatchingListEntry)))
-         {
-            RemoveEntryList(&SentMessage->DispatchingListEntry);
-            InitializeListHead(&SentMessage->DispatchingListEntry);
-         }
-
-         /* wake the sender's thread */
-         if (SentMessage->CompletionEvent != NULL)
-         {
-            KeSetEvent(SentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
-         }
-
-         if (SentMessage->HasPackedLParam)
-         {
-            if (SentMessage->Msg.lParam)
-               ExFreePool((PVOID)SentMessage->Msg.lParam);
-         }
-
-         /* free the message */
-         ExFreePoolWithTag(SentMessage, TAG_USRMSG);
-
-         CurrentEntry = pti->SentMessagesListHead.Flink;
-      }
-      else
-      {
-         CurrentEntry = CurrentEntry->Flink;
-      }
-   }
 }
 
 BOOL FASTCALL
@@ -988,9 +1024,9 @@ co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
     PTHREADINFO ptiSender;
     PUSER_SENT_MESSAGE Message;
 
-    if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
+    if(!(Message = AllocateUserMessage(FALSE)))
     {
-        ERR("MsqSendMessage(): Not enough memory to allocate a message");
+        ERR("MsqSendMessageAsync(): Not enough memory to allocate a message");
         return FALSE;
     }
 
@@ -1000,18 +1036,15 @@ co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
     Message->Msg.message = Msg;
     Message->Msg.wParam = wParam;
     Message->Msg.lParam = lParam;
-    Message->CompletionEvent = NULL;
-    Message->Result = 0;
-    Message->lResult = 0;
+    Message->pkCompletionEvent = NULL; // No event needed.
     Message->ptiReceiver = ptiReceiver;
-    Message->ptiSender = NULL;
     Message->ptiCallBackSender = ptiSender;
-    InitializeListHead(&Message->DispatchingListEntry);
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
     Message->HookMessage = HookMessage;
     Message->HasPackedLParam = HasPackedLParam;
     Message->QS_Flags = QS_SENDMESSAGE;
+    Message->flags = SMF_RECEIVERFREE;
 
     InsertTailList(&ptiReceiver->SentMessagesListHead, &Message->ListEntry);
     MsqWakeQueue(ptiReceiver, QS_SENDMESSAGE, TRUE);
@@ -1031,12 +1064,12 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                   ULONG_PTR *uResult)
 {
    PTHREADINFO pti;
-   PUSER_SENT_MESSAGE Message;
-   KEVENT CompletionEvent;
+   PUSER_SENT_MESSAGE SaveMsg, Message;
    NTSTATUS WaitStatus;
    LARGE_INTEGER Timeout;
    PLIST_ENTRY Entry;
    PWND pWnd;
+   BOOLEAN SwapStateEnabled;
    LRESULT Result = 0;   //// Result could be trashed. ////
 
    pti = PsGetCurrentThreadWin32Thread();
@@ -1105,57 +1138,57 @@ co_MsqSendMessage(PTHREADINFO ptirec,
       }
    }
 
-   if(!(Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
+   if(!(Message = AllocateUserMessage(TRUE)))
    {
       ERR("MsqSendMessage(): Not enough memory to allocate a message\n");
+      if (uResult) *uResult = -1;
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
-   KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
-
    Timeout.QuadPart = Int32x32To64(-10000,uTimeout); // Pass SMTO test with a TO of 0x80000000.
    TRACE("Timeout val %lld\n",Timeout.QuadPart)
-
-   /* FIXME: Increase reference counter of sender's message queue here */
 
    Message->Msg.hwnd = Wnd;
    Message->Msg.message = Msg;
    Message->Msg.wParam = wParam;
    Message->Msg.lParam = lParam;
-   Message->CompletionEvent = &CompletionEvent;
-   Message->Result = &Result;
-   Message->lResult = 0;
-   Message->QS_Flags = 0;
    Message->ptiReceiver = ptirec;
    Message->ptiSender = pti;
-   Message->ptiCallBackSender = NULL;
-   Message->CompletionCallback = NULL;
-   Message->CompletionCallbackContext = 0;
    Message->HookMessage = HookMessage;
-   Message->HasPackedLParam = FALSE;
+   Message->QS_Flags = QS_SENDMESSAGE;
 
-   /* Add it to the list of pending messages */
-   InsertTailList(&pti->DispatchingMessagesHead, &Message->DispatchingListEntry);
+   SaveMsg = pti->pusmSent;
+   pti->pusmSent = Message;
 
    /* Queue it in the destination's message queue */
    InsertTailList(&ptirec->SentMessagesListHead, &Message->ListEntry);
 
-   Message->QS_Flags = QS_SENDMESSAGE;
    MsqWakeQueue(ptirec, QS_SENDMESSAGE, TRUE);
 
-   /* We can't access the Message anymore since it could have already been deleted! */
+   // First time in, turn off swapping of the stack.
+   if (pti->cEnterCount == 0)
+   {
+      SwapStateEnabled = KeSetKernelStackSwapEnable(FALSE);
+   }
+   pti->cEnterCount++;
 
    if (Block)
    {
       PVOID WaitObjects[2];
 
-      WaitObjects[0] = &CompletionEvent;       // Wait 0
-      WaitObjects[1] = ptirec->pEThread;       // Wait 1
+      WaitObjects[0] = Message->pkCompletionEvent; // Wait 0
+      WaitObjects[1] = ptirec->pEThread;           // Wait 1
 
       UserLeaveCo();
 
-      WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
-                                            UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
+      WaitStatus = KeWaitForMultipleObjects( 2,
+                                             WaitObjects,
+                                             WaitAny,
+                                             UserRequest,
+                                             UserMode,
+                                             FALSE,
+                                            (uTimeout ? &Timeout : NULL),
+                                             NULL );
 
       UserEnterCo();
 
@@ -1168,39 +1201,24 @@ co_MsqSendMessage(PTHREADINFO ptirec,
          {
             if (CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry) == Message)
             {
-               /* We can access Message here, it's secure because the message queue is locked
-                  and the message is still hasn't been dispatched */
-               Message->CompletionEvent = NULL;
-               Message->Result = NULL;
+               Message->pkCompletionEvent = NULL;
                RemoveEntryList(&Message->ListEntry);
-               RemoveEntryList(&Message->DispatchingListEntry);
                ClearMsgBitsMask(ptirec, Message->QS_Flags);
-               ExFreePoolWithTag(Message, TAG_USRMSG);
+               InsertTailList(&usmList, &Message->ListEntry);
                break;
             }
             Entry = Entry->Flink;
          }
 
-         TRACE("MsqSendMessage (blocked) timed out 1 Status %lx\n", WaitStatus);
+         ERR("MsqSendMessage (blocked) timed out 1 Status %lx\n", WaitStatus);
       }
       // Receiving thread passed on and left us hanging with issues still pending.
       else if (WaitStatus == STATUS_WAIT_1)
       {
          ERR("Bk Receiving Thread woken up dead!\n");
-         Entry = pti->DispatchingMessagesHead.Flink;
-         while (Entry != &pti->DispatchingMessagesHead)
-         {
-            if (CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry) == Message)
-            {
-               Message->CompletionEvent = NULL;
-               Message->Result = NULL;
-               RemoveEntryList(&Message->DispatchingListEntry);
-               InitializeListHead(&Message->DispatchingListEntry);
-               break;
-            }
-            Entry = Entry->Flink;
-         }
+         Message->flags |= SMF_RECEIVERDIED;
       }
+
       while (co_MsqDispatchOneSentMessage(pti))
          ;
    }
@@ -1208,16 +1226,22 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    {
       PVOID WaitObjects[3];
 
-      WaitObjects[0] = &CompletionEvent;       // Wait 0
-      WaitObjects[1] = pti->pEventQueueServer; // Wait 1
-      WaitObjects[2] = ptirec->pEThread;       // Wait 2
+      WaitObjects[0] = Message->pkCompletionEvent; // Wait 0
+      WaitObjects[1] = pti->pEventQueueServer;     // Wait 1
+      WaitObjects[2] = ptirec->pEThread;           // Wait 2
 
       do
       {
          UserLeaveCo();
 
-         WaitStatus = KeWaitForMultipleObjects(3, WaitObjects, WaitAny, UserRequest,
-                                               UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
+         WaitStatus = KeWaitForMultipleObjects( 3,
+                                                WaitObjects,
+                                                WaitAny,
+                                                UserRequest,
+                                                UserMode,
+                                                FALSE,
+                                               (uTimeout ? &Timeout : NULL),
+                                                NULL);
 
          UserEnterCo();
 
@@ -1230,41 +1254,23 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             {
                if (CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry) == Message)
                {
-                  /* We can access Message here, it's secure because the message queue is locked
-                     and the message is still hasn't been dispatched */
-                  Message->CompletionEvent = NULL;
-                  Message->Result = NULL;
+                  Message->pkCompletionEvent = NULL;
                   RemoveEntryList(&Message->ListEntry);
-                  RemoveEntryList(&Message->DispatchingListEntry);
-                  InitializeListHead(&Message->DispatchingListEntry);
                   ClearMsgBitsMask(ptirec, Message->QS_Flags);
-                  ExFreePoolWithTag(Message, TAG_USRMSG);
+                  InsertTailList(&usmList, &Message->ListEntry);
                   break;
                }
                Entry = Entry->Flink;
             }
 
-            TRACE("MsqSendMessage timed out 2 Status %lx\n", WaitStatus);
-
+            ERR("MsqSendMessage timed out 2 Status %lx\n", WaitStatus);
             break;
          }
          // Receiving thread passed on and left us hanging with issues still pending.
          else if (WaitStatus == STATUS_WAIT_2)
          {
             ERR("NB Receiving Thread woken up dead!\n");
-            Entry = pti->DispatchingMessagesHead.Flink;
-            while (Entry != &pti->DispatchingMessagesHead)
-            {
-               if (CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry) == Message)
-               {
-                  Message->CompletionEvent = NULL;
-                  Message->Result = NULL;
-                  RemoveEntryList(&Message->DispatchingListEntry);
-                  InitializeListHead(&Message->DispatchingListEntry);
-                  break;
-               }
-               Entry = Entry->Flink;
-            }
+            Message->flags |= SMF_RECEIVERDIED;
             break;
          }
 
@@ -1275,19 +1281,52 @@ co_MsqSendMessage(PTHREADINFO ptirec,
       } while (WaitStatus == STATUS_WAIT_1);
    }
 
+   // Count is nil, restore swapping of the stack.
+   if (--pti->cEnterCount == 0 )
+   {
+      KeSetKernelStackSwapEnable(SwapStateEnabled);
+   }
+
+   // Handle User APC
    if (WaitStatus == STATUS_USER_APC)
    {
      // The current thread is dying!
      TRACE("User APC\n");
+
+     // The Message will be on the Trouble list until Thread cleanup.
+     Message->flags |= SMF_SENDERDIED;
+
      co_IntDeliverUserAPC();
      ERR("User APC Returned\n"); // Should not see this message.
    }
+
+   // Force this thread to wake up for the next go around.
+   KeSetEvent(pti->pEventQueueServer, IO_NO_INCREMENT, FALSE);
+
+   Result = Message->lResult;
+
+   // Determine whether this message is being processed or not.
+   if ((Message->flags & (SMF_RECEIVERBUSY|SMF_RECEIVEDMESSAGE)) != SMF_RECEIVEDMESSAGE)
+   {
+      Message->flags |= SMF_RECEIVERFREE;
+   }
+
+   if (!(Message->flags & SMF_RECEIVERFREE))
+   {
+      TRACE("Sender Freeing Message %p ptirec %p bit %d list empty %d\n",Message,ptirec,!!(ptirec->pcti->fsChangeBits & QS_SENDMESSAGE),IsListEmpty(&ptirec->SentMessagesListHead));
+      // Make it to this point, the message was received.
+      FreeUserMessage(Message);
+   }
+
+   pti->pusmSent = SaveMsg;
+
+   TRACE("MSM Allocation Count %d Status %lx Result %d\n",SendMsgCount,WaitStatus,Result);
 
    if (WaitStatus != STATUS_TIMEOUT)
    {
       if (uResult)
       {
-         *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
+         *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : 0);
       }
    }
 
@@ -2104,6 +2143,23 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    PUSER_MESSAGE CurrentMessage;
    PUSER_SENT_MESSAGE CurrentSentMessage;
 
+   TRACE("MsqCleanupThreadMsgs %p\n",pti);
+
+   // Clear it all out.
+   if (pti->pcti)
+   {
+       pti->pcti->fsWakeBits = 0;
+       pti->pcti->fsChangeBits = 0;
+   }
+
+   pti->nCntsQBits[QSRosKey] = 0;
+   pti->nCntsQBits[QSRosMouseMove] = 0;
+   pti->nCntsQBits[QSRosMouseButton] = 0;
+   pti->nCntsQBits[QSRosPostMessage] = 0;
+   pti->nCntsQBits[QSRosSendMessage] = 0;
+   pti->nCntsQBits[QSRosHotKey] = 0;
+   pti->nCntsQBits[QSRosEvent] = 0;
+
    /* cleanup posted messages */
    while (!IsListEmpty(&pti->PostedMessagesListHead))
    {
@@ -2122,22 +2178,15 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    /* remove the messages that have not yet been dispatched */
    while (!IsListEmpty(&pti->SentMessagesListHead))
    {
-      CurrentEntry = RemoveHeadList(&pti->SentMessagesListHead);
+      CurrentEntry = pti->SentMessagesListHead.Flink;
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
 
-      TRACE("Notify the sender and remove a message from the queue that had not been dispatched\n");
-      /* Only if the message has a sender was the message in the DispatchingList */
-      if ((CurrentSentMessage->ptiSender) &&
-          (!IsListEmpty(&CurrentSentMessage->DispatchingListEntry)))
-      {
-         RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
-         InitializeListHead(&CurrentSentMessage->DispatchingListEntry);
-      }
+      ERR("Thread Cleanup Sent Messages\n");
 
       /* wake the sender's thread */
-      if (CurrentSentMessage->CompletionEvent != NULL)
+      if (CurrentSentMessage->pkCompletionEvent != NULL)
       {
-         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+         KeSetEvent(CurrentSentMessage->pkCompletionEvent, IO_NO_INCREMENT, FALSE);
       }
 
       if (CurrentSentMessage->HasPackedLParam)
@@ -2147,71 +2196,49 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
       }
 
       /* free the message */
-      ExFreePool(CurrentSentMessage);
+      FreeUserMessage(CurrentSentMessage);
    }
 
-   /* notify senders of dispatching messages. This needs to be cleaned up if e.g.
-      ExitThread() was called in a SendMessage() umode callback */
-   while (!IsListEmpty(&pti->LocalDispatchingMessagesHead))
+   // Process Trouble Message List
+   if (!IsListEmpty(&usmList))
    {
-      CurrentEntry = RemoveHeadList(&pti->LocalDispatchingMessagesHead);
-      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
-
-      /* remove the message from the dispatching list */
-      if (!IsListEmpty(&CurrentSentMessage->DispatchingListEntry))
+      CurrentEntry = usmList.Flink;
+      while (CurrentEntry != &usmList)
       {
-         RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
-         InitializeListHead(&CurrentSentMessage->DispatchingListEntry);
-      }
+         CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
+         CurrentEntry = CurrentEntry->Flink;
 
-      TRACE("Notify the sender, the thread has been terminated while dispatching a message!\n");
+         TRACE("Found troubled messages on the list\n");
 
-      /* wake the sender's thread */
-      if (CurrentSentMessage->CompletionEvent != NULL)
-      {
-         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      }
-
-      if (CurrentSentMessage->HasPackedLParam)
-      {
-         if (CurrentSentMessage->Msg.lParam)
+         if ( pti == CurrentSentMessage->ptiReceiver )
          {
-            _PRAGMA_WARNING_SUPPRESS(__WARNING_USING_UNINIT_VAR);
-            ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+            if (CurrentSentMessage->HasPackedLParam)
+            {
+               if (CurrentSentMessage->Msg.lParam)
+                  ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+            }
+
+            /* free the message */
+            FreeUserMessage(CurrentSentMessage);
+         }
+         else if ( pti == CurrentSentMessage->ptiSender ||
+                   pti == CurrentSentMessage->ptiCallBackSender )
+         {
+            if (!(CurrentSentMessage->flags & SMF_RECEIVERFREE))
+            {
+
+               if (CurrentSentMessage->HasPackedLParam)
+               {
+                  if (CurrentSentMessage->Msg.lParam)
+                     ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+               }
+
+               /* free the message */
+               FreeUserMessage(CurrentSentMessage);
+            }
          }
       }
-
-      /* free the message */
-      ExFreePool(CurrentSentMessage);
    }
-
-   /* tell other threads not to bother returning any info to us */
-   while (! IsListEmpty(&pti->DispatchingMessagesHead))
-   {
-      CurrentEntry = RemoveHeadList(&pti->DispatchingMessagesHead);
-      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, DispatchingListEntry);
-      InitializeListHead(&CurrentSentMessage->DispatchingListEntry);
-      CurrentSentMessage->CompletionEvent = NULL;
-      CurrentSentMessage->Result = NULL;
-
-      /* do NOT dereference our message queue as it might get attempted to be
-         locked later */
-   }
-
-   // Clear it all out.
-   if (pti->pcti)
-   {
-       pti->pcti->fsWakeBits = 0;
-       pti->pcti->fsChangeBits = 0;
-   }
-
-   pti->nCntsQBits[QSRosKey] = 0;
-   pti->nCntsQBits[QSRosMouseMove] = 0;
-   pti->nCntsQBits[QSRosMouseButton] = 0;
-   pti->nCntsQBits[QSRosPostMessage] = 0;
-   pti->nCntsQBits[QSRosSendMessage] = 0;
-   pti->nCntsQBits[QSRosHotKey] = 0;
-   pti->nCntsQBits[QSRosEvent] = 0;
 }
 
 VOID FASTCALL
@@ -2364,7 +2391,7 @@ co_MsqReplyMessage( LRESULT lResult )
 
    if (Message->QS_Flags & QS_SMRESULT) return FALSE;
 
-   //     SendMessageXxx    || Callback msg and not a notify msg
+   //     SendMessageXxx  || Callback msg and not a notify msg
    if (Message->ptiSender || Message->CompletionCallback)
    {
       Message->lResult = lResult;

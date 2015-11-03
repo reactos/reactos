@@ -340,7 +340,13 @@ FindRemoveAsyncMsg(PWND Wnd, WPARAM wParam)
          WARN("ASYNC SAW: Found one in the Sent Msg Queue! %p Activate/Deactivate %d\n", Message->Msg.hwnd, !!wParam);
          RemoveEntryList(&Message->ListEntry); // Purge the entry.
          ClearMsgBitsMask(pti, Message->QS_Flags);
-         ExFreePoolWithTag(Message, TAG_USRMSG);
+         InsertTailList(&usmList, &Message->ListEntry);
+         /* Notify the sender. */
+         if (Message->pkCompletionEvent != NULL)
+         {
+            KeSetEvent(Message->pkCompletionEvent, IO_NO_INCREMENT, FALSE);
+         }
+         FreeUserMessage(Message);
       }
    }
 }
@@ -929,7 +935,7 @@ co_UserSetCapture(HWND hWnd)
    {
       if (Window->head.pti->MessageQueue != ThreadQueue)
       {
-         ERR("Window Thread dos not match Current!\n");
+         ERR("Window Thread does not match Current!\n");
          return NULL;
       }
    }

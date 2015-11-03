@@ -488,8 +488,6 @@ InitThreadCallback(PETHREAD Thread)
     InitializeListHead(&ptiCurrent->W32CallbackListHead);
     InitializeListHead(&ptiCurrent->PostedMessagesListHead);
     InitializeListHead(&ptiCurrent->SentMessagesListHead);
-    InitializeListHead(&ptiCurrent->DispatchingMessagesHead);
-    InitializeListHead(&ptiCurrent->LocalDispatchingMessagesHead);
     InitializeListHead(&ptiCurrent->PtiLink);
     for (i = 0; i < NB_HOOKS; i++)
     {
@@ -776,6 +774,12 @@ ExitThreadCallback(PETHREAD Thread)
 
             psle = PopEntryList(&ptiCurrent->ReferencesList);
         }
+    }
+
+    if (ptiCurrent->cEnterCount)
+    {
+       KeSetKernelStackSwapEnable(TRUE);
+       ptiCurrent->cEnterCount = 0;
     }
 
     /* Find the THREADINFO in the PROCESSINFO's list */

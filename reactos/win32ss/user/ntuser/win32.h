@@ -93,8 +93,7 @@ typedef struct _THREADINFO
     struct _CLIENTINFO * pClientInfo;
     FLONG               TIF_flags;
     PUNICODE_STRING     pstrAppName;
-    /* Messages that are currently dispatched to other threads */
-    LIST_ENTRY          DispatchingMessagesHead; // psmsSent
+    struct _USER_SENT_MESSAGE *pusmSent;
     struct _USER_SENT_MESSAGE *pusmCurrent;
     /* Queue of messages sent to the queue. */
     LIST_ENTRY          SentMessagesListHead;    // psmsReceiveList
@@ -127,6 +126,7 @@ typedef struct _THREADINFO
     INT                 iCursorLevel;
     POINT               ptLast;
 
+    INT                 cEnterCount;
     /* Queue of messages posted to the queue. */
     LIST_ENTRY          PostedMessagesListHead; // mlPost
     WORD                fsChangeBitsRemoved;
@@ -146,8 +146,6 @@ typedef struct _THREADINFO
     // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
     DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
 
-    /* Messages that are currently dispatched by this message queue, required for cleanup */
-    LIST_ENTRY LocalDispatchingMessagesHead;
     LIST_ENTRY WindowListHead;
     LIST_ENTRY W32CallbackListHead;
     SINGLE_LIST_ENTRY  ReferencesList;

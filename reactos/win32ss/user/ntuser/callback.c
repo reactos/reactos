@@ -51,12 +51,18 @@ IntCbFreeMemory(PVOID Data)
    PINT_CALLBACK_HEADER Mem;
    PTHREADINFO W32Thread;
 
+   W32Thread = PsGetCurrentThreadWin32Thread();
+   ASSERT(W32Thread);
+
+   if (W32Thread->TIF_flags & TIF_INCLEANUP)
+   {
+      ERR("CbFM Thread is already in cleanup\n");
+      return;
+   }
+
    ASSERT(Data);
 
    Mem = ((PINT_CALLBACK_HEADER)Data - 1);
-
-   W32Thread = PsGetCurrentThreadWin32Thread();
-   ASSERT(W32Thread);
 
    /* Remove the memory block from the thread's callback list */
    RemoveEntryList(&Mem->ListEntry);
@@ -340,8 +346,9 @@ co_IntCallWindowProc(WNDPROC Proc,
                                &ResultLength);
    if (!NT_SUCCESS(Status))
    {
+      ERR("Error Callback to User space Status %lx\n",Status);
       UserEnterCo();
-      return -1;
+      return 0;
    }
 
    _SEH2_TRY
