@@ -840,8 +840,8 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
 
       if(SentMessage->Msg.hwnd == Window->head.h)
       {
-         TRACE("Remove Window Messages From Sent Queue\n");
-
+         ERR("Remove Window Messages %p From Sent Queue\n",SentMessage);
+#if 0 // Should mark these as invalid and allow the rest clean up, so far no harm by just commenting out. See CORE-9210.
          ClearMsgBitsMask(pti, SentMessage->QS_Flags);
 
          /* wake the sender's thread */
@@ -860,6 +860,8 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
          FreeUserMessage(SentMessage);
 
          CurrentEntry = pti->SentMessagesListHead.Flink;
+#endif
+         CurrentEntry = CurrentEntry->Flink;
       }
       else
       {
@@ -2181,7 +2183,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
       CurrentEntry = pti->SentMessagesListHead.Flink;
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
 
-      ERR("Thread Cleanup Sent Messages\n");
+      ERR("Thread Cleanup Sent Messages %p\n",CurrentSentMessage);
 
       /* wake the sender's thread */
       if (CurrentSentMessage->pkCompletionEvent != NULL)
@@ -2208,7 +2210,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
          CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
          CurrentEntry = CurrentEntry->Flink;
 
-         TRACE("Found troubled messages on the list\n");
+         TRACE("Found troubled messages %p on the list\n",CurrentSentMessage);
 
          if ( pti == CurrentSentMessage->ptiReceiver )
          {
