@@ -10,7 +10,6 @@
 
 //#define DUMP_DATA
 #define DUMP_SIZE_INFO
-#define UNICODE
 
 #ifdef DUMP_DATA
 void HexDump(char *buffer, ULONG size)
@@ -116,7 +115,7 @@ int main (int argc, char *argv[])
   sprintf(DriveName, "\\\\.\\PHYSICALDRIVE%lu", ulDrive);
 
   /* Open drive */
-  hDisk = CreateFile(DriveName,
+  hDisk = CreateFileA(DriveName,
 		     GENERIC_READ,
 		     FILE_SHARE_READ | FILE_SHARE_WRITE,
 		     NULL,

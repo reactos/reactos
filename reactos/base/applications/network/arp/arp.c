@@ -39,9 +39,6 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 
-#define UNICODE
-#define _UNICODE
-
 /*
  * Globals
  */
