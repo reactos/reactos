@@ -25,7 +25,7 @@ add_library(iphlpapi SHARED
     iphlpapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/iphlpapi.def)
 
-set_module_type(iphlpapi win32dll UNICODE HOTPATCHABLE)
+set_module_type(iphlpapi win32dll UNICODE)
 target_link_libraries(iphlpapi wine tdilib)
 add_importlibs(iphlpapi icmp dhcpcsvc advapi32 ws2_32 msvcrt kernel32 ntdll)
 add_pch(iphlpapi iphlpapi_private.h SOURCE)

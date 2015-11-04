@@ -24,7 +24,7 @@ add_library(dinput SHARED
 
 add_library(dinput_data_formats data_formats.c)
 add_dependencies(dinput_data_formats psdk)
-set_module_type(dinput win32dll HOTPATCHABLE)
+set_module_type(dinput win32dll)
 target_link_libraries(dinput dxguid uuid wine)
 add_importlibs(dinput comctl32 ole32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(dinput dinput_private.h SOURCE)

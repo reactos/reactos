@@ -103,7 +103,7 @@ add_library(kernel32 SHARED
     kernel32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
-set_module_type(kernel32 win32dll HOTPATCHABLE ENTRYPOINT DllMain 12)
+set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 #############################################
 ## HACK FOR MSVC COMPILATION WITH win32dll ##
 set_subsystem(kernel32 console)

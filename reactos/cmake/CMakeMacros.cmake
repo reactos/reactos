@@ -540,7 +540,7 @@ function(add_importlibs _module)
 endfunction()
 
 function(set_module_type MODULE TYPE)
-    cmake_parse_arguments(__module "UNICODE;HOTPATCHABLE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
+    cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
 
     if(__module_UNPARSED_ARGUMENTS)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
@@ -572,17 +572,6 @@ function(set_module_type MODULE TYPE)
     #set unicode definitions
     if(__module_UNICODE)
         add_target_compile_definitions(${MODULE} UNICODE _UNICODE)
-    endif()
-
-    # Handle hotpatchable images.
-    # GCC has this as a function attribute so we're handling it using DECLSPEC_HOTPATCH
-    if(__module_HOTPATCHABLE AND MSVC AND (NOT ARCH STREQUAL "arm"))
-        if(ARCH STREQUAL "i386")
-            set_property(TARGET ${MODULE} APPEND_STRING PROPERTY COMPILE_FLAGS " /hotpatch")
-            set_property(TARGET ${MODULE} APPEND_STRING PROPERTY LINK_FLAGS " /FUNCTIONPADMIN:5")
-        elseif(ARCH STREQUAL "amd64")
-            set_property(TARGET ${MODULE} APPEND_STRING PROPERTY LINK_FLAGS " /FUNCTIONPADMIN:6")
-        endif()
     endif()
 
     # set entry point

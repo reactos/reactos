@@ -81,7 +81,7 @@ add_library(shell32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
-set_module_type(shell32 win32dll UNICODE HOTPATCHABLE)
+set_module_type(shell32 win32dll UNICODE)
 target_link_libraries(shell32 shellmenu shelldesktop atlnew wine uuid recyclebin)
 add_delay_importlibs(shell32 uxtheme ole32 userenv version fmifs)
 add_importlibs(shell32 advapi32 browseui gdi32 user32 powrprof comctl32 comdlg32 shdocvw shlwapi devmgr winspool winmm msvcrt kernel32 ntdll)

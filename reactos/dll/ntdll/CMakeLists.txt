@@ -43,7 +43,7 @@ add_library(ntdll SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll.def)
 
-set_module_type(ntdll win32dll HOTPATCHABLE ENTRYPOINT 0)
+set_module_type(ntdll win32dll ENTRYPOINT 0)
 #############################################
 ## HACK FOR MSVC COMPILATION WITH win32dll ##
 set_subsystem(ntdll console)
