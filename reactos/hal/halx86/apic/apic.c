@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GNU GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/apic.c
+ * FILE:            hal/halx86/apic/apic.c
  * PURPOSE:         HAL APIC Management and Control Code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  * REFERENCES:      http://www.joseflores.com/docs/ExploringIrql.html

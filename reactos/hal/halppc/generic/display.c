@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/display.c
+ * FILE:            hal/halppc/generic/display.c
  * PURPOSE:         Blue screen display
  * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:

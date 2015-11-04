@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Hardware Abstraction Layer (HAL)
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            halx86/generic/bios.c
+ * FILE:            hal/halx86/generic/bios.c
  * PURPOSE:         BIOS Access Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu (alex.ionescu@reactos.org)

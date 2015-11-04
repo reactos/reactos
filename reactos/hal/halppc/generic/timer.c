@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/timer.c
+ * FILE:            hal/halppc/generic/timer.c
  * PURPOSE:         HAL Timer Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

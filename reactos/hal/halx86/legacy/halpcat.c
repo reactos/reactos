@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/generic/legacy/halpcat.c
+ * FILE:            hal/halx86/legacy/halpcat.c
  * PURPOSE:         HAL Legacy Support Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

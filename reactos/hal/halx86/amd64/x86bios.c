@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL, See COPYING in the top level directory
- * FILE:            hal/halx86/generic/amd64/x86bios.c
+ * FILE:            hal/halx86/amd64/x86bios.c
  * PURPOSE:         
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */

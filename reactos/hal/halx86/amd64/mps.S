@@ -1,7 +1,7 @@
 /* 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/amd64/generic/mps.S
+ * FILE:            hal/halx86/amd64/mps.S
  * PURPOSE:         Intel MultiProcessor specification support
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
