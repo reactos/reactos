@@ -1,0 +1,3 @@
+
+#define IDS_TEST1 2000
+#define IDS_TEST2 2001

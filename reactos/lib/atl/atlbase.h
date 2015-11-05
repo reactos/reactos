@@ -929,6 +929,11 @@ class CComBSTR
 public:
     BSTR m_str;
 public:
+    CComBSTR() :
+        m_str(NULL)
+    {
+    }
+
     CComBSTR(LPCOLESTR pSrc)
     {
         if (pSrc == NULL)
@@ -936,15 +941,115 @@ public:
         else
             m_str = ::SysAllocString(pSrc);
     }
+
+    CComBSTR(int length)
+    {
+        if (length == 0)
+            m_str = NULL;
+        else
+            m_str = ::SysAllocStringLen(NULL, length);
+    }
+
+    CComBSTR(int length, LPCOLESTR pSrc)
+    {
+        if (length == 0)
+            m_str = NULL;
+        else
+            m_str = ::SysAllocStringLen(pSrc, length);
+    }
+
+    CComBSTR(PCSTR pSrc)
+    {
+        if (pSrc)
+        {
+            int len = MultiByteToWideChar(CP_THREAD_ACP, 0, pSrc, -1, NULL, 0);
+            m_str = ::SysAllocStringLen(NULL, len - 1);
+            if (m_str)
+            {
+                int res = MultiByteToWideChar(CP_THREAD_ACP, 0, pSrc, -1, m_str, len);
+                ATLASSERT(res == len);
+                if (res != len)
+                {
+                    ::SysFreeString(m_str);
+                    m_str = NULL;
+                }
+            }
+        }
+        else
+        {
+            m_str = NULL;
+        }
+    }
+
+    CComBSTR(const CComBSTR &other)
+    {
+        m_str = other.Copy();
+    }
+
+    CComBSTR(REFGUID guid)
+    {
+        OLECHAR szGuid[40];
+        ::StringFromGUID2(guid, szGuid, 40);
+        m_str = ::SysAllocString(szGuid);
+    }
+
     ~CComBSTR()
     {
         ::SysFreeString(m_str);
         m_str = NULL;
     }
-    
+
     operator BSTR () const
     {
         return m_str;
+    }
+
+    BSTR *operator & ()
+    {
+        return &m_str;
+    }
+
+    CComBSTR &operator = (const CComBSTR &other)
+    {
+        ::SysFreeString(m_str);
+        m_str = other.Copy();
+        return *this;
+    }
+
+    BSTR Copy() const
+    {
+        if (!m_str)
+            return NULL;
+        return ::SysAllocStringLen(m_str, ::SysStringLen(m_str));
+    }
+
+    HRESULT CopyTo(BSTR *other) const
+    {
+        if (!other)
+            return E_POINTER;
+        *other = Copy();
+        return S_OK;
+    }
+
+    bool LoadString(HMODULE module, DWORD uID)
+    {
+        ::SysFreeString(m_str);
+        m_str = NULL;
+        const wchar_t *ptr = NULL;
+        int len = ::LoadStringW(module, uID, (PWSTR)&ptr, 0);
+        if (len)
+            m_str = ::SysAllocStringLen(ptr, len);
+        return m_str != NULL;
+    }
+
+    unsigned int Length() const
+    {
+        return ::SysStringLen(m_str);
+    }
+
+    unsigned int ByteLength() const
+    {
+        return ::SysStringByteLen(m_str);
     }
 };
 
