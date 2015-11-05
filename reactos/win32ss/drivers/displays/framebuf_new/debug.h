@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Framebuffer Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/displays/framebuf/debug.h
+ * FILE:            win32ss/drivers/displays/framebuf_new/debug.h
  * PURPOSE:         Debug Support Header
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  */

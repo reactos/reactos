@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Framebuffer Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/displays/framebuf/screen.c
+ * FILE:            win32ss/drivers/displays/framebuf_new/screen.c
  * PURPOSE:         Surface, Screen and PDEV support/initialization
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  *                  ReactOS Portable Systems Group
