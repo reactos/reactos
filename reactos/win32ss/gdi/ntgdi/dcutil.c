@@ -46,6 +46,21 @@ GreGetBkMode(HDC hdc)
    return lBkMode;
 }
 
+COLORREF FASTCALL
+GreGetBkColor(HDC hdc)
+{
+   PDC dc;
+   COLORREF crBk;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   crBk = dc->pdcattr->ulBackgroundClr;
+   DC_UnlockDc(dc);
+   return crBk;
+}
+
 int FASTCALL
 GreGetMapMode(HDC hdc)
 {

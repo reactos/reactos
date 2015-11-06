@@ -179,6 +179,7 @@ int FASTCALL GreSetStretchBltMode(HDC hdc, int iStretchMode);
 int FASTCALL GreGetBkMode(HDC);
 int FASTCALL GreGetMapMode(HDC);
 COLORREF FASTCALL GreGetTextColor(HDC);
+COLORREF FASTCALL GreGetBkColor(HDC);
 COLORREF FASTCALL IntSetDCBrushColor(HDC,COLORREF);
 COLORREF FASTCALL IntSetDCPenColor(HDC,COLORREF);
 int FASTCALL GreGetGraphicsMode(HDC);
