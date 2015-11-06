@@ -460,6 +460,93 @@ static VOID VgaUpdateCursorPosition(VOID)
     VgaUpdateTextCursor();
 }
 
+static VOID ResizeTextConsole(PCOORD Resolution, PSMALL_RECT WindowSize OPTIONAL)
+{
+    BOOL Success;
+    SMALL_RECT ConRect;
+    SHORT oldWidth, oldHeight;
+
+    /*
+     * Use this trick to effectively resize the console buffer and window,
+     * because:
+     * - SetConsoleScreenBufferSize fails if the new console screen buffer size
+     *   is smaller than the current console window size, and:
+     * - SetConsoleWindowInfo fails if the new console window size is larger
+     *   than the current console screen buffer size.
+     */
+
+
+    /* Retrieve the latest console information */
+    GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
+
+    oldWidth  = ConsoleInfo.srWindow.Right  - ConsoleInfo.srWindow.Left + 1;
+    oldHeight = ConsoleInfo.srWindow.Bottom - ConsoleInfo.srWindow.Top  + 1;
+
+    /*
+     * If the current console window is too large to hold the full contents
+     * of the new screen buffer, resize it first.
+     */
+    if (oldWidth > Resolution->X || oldHeight > Resolution->Y)
+    {
+        //
+        // NOTE: This is not a problem if we move the window back to (0,0)
+        // because when we resize the screen buffer, the window will move back
+        // to where the cursor is. Or, if the screen buffer is not resized,
+        // when we readjust again the window, we will move back to a correct
+        // position. This is what we wanted after all...
+        //
+
+        ConRect.Left   = ConRect.Top = 0;
+        ConRect.Right  = ConRect.Left + min(oldWidth , Resolution->X) - 1;
+        ConRect.Bottom = ConRect.Top  + min(oldHeight, Resolution->Y) - 1;
+
+        Success = SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
+        if (!Success) DPRINT1("(resize) SetConsoleWindowInfo(1) failed with error %d\n", GetLastError());
+    }
+
+    /* Resize the screen buffer if needed */
+    if (Resolution->X != ConsoleInfo.dwSize.X || Resolution->Y != ConsoleInfo.dwSize.Y)
+    {
+        /*
+         * SetConsoleScreenBufferSize automatically takes into account the current
+         * cursor position when it computes starting which row it should copy text
+         * when resizing the sceenbuffer, and scrolls the console window such that
+         * the cursor is placed in it again. We therefore do not need to care about
+         * the cursor position and do the maths ourselves.
+         */
+        Success = SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
+        if (!Success) DPRINT1("(resize) SetConsoleScreenBufferSize failed with error %d\n", GetLastError());
+
+        /*
+         * Setting a new screen buffer size can change other information,
+         * so update the saved console information.
+         */
+        GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
+    }
+
+    if (!WindowSize)
+    {
+        ConRect.Left   = 0;
+        ConRect.Right  = ConRect.Left + Resolution->X - 1;
+        ConRect.Bottom = max(ConsoleInfo.dwCursorPosition.Y, Resolution->Y - 1);
+        ConRect.Top    = ConRect.Bottom - Resolution->Y + 1;
+
+        // NOTE: We may take ConsoleInfo.dwMaximumWindowSize into account
+    }
+    else
+    {
+        ConRect.Left   = ConRect.Top = 0;
+        ConRect.Right  = ConRect.Left + WindowSize->Right  - WindowSize->Left;
+        ConRect.Bottom = ConRect.Top  + WindowSize->Bottom - WindowSize->Top ;
+    }
+
+    Success = SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
+    if (!Success) DPRINT1("(resize) SetConsoleWindowInfo(2) failed with error %d\n", GetLastError());
+
+    /* Update the saved console information */
+    GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
+}
+
 static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
 {
     BOOL Success;
@@ -484,7 +571,7 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
      * Windows 2k3 winsrv.dll calls NtVdmControl(VdmQueryVdmProcess == 14, &ConsoleHandle);
      * in the two following APIs:
      * SrvRegisterConsoleVDM  (corresponding Win32 API: RegisterConsoleVDM)
-     * SrvVDMConsoleOperation (corresponding Win32 API: ??)
+     * SrvVDMConsoleOperation (corresponding Win32 API: VDMConsoleOperation)
      * to check whether the current process is a VDM process, and fails otherwise
      * with the error 0xC0000022 (STATUS_ACCESS_DENIED).
      *
@@ -520,28 +607,8 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     ASSERT(CharBuff);
 #endif
 
-    /* Retrieve the latest console information */
-    GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
-
     /* Resize the console */
-    ConRect.Left   = 0;
-    ConRect.Right  = ConRect.Left + Resolution->X - 1;
-    ConRect.Bottom = max(ConsoleInfo.dwCursorPosition.Y, Resolution->Y - 1);
-    ConRect.Top    = ConRect.Bottom - Resolution->Y + 1;
-    /*
-     * Use this trick to effectively resize the console buffer and window,
-     * because:
-     * - SetConsoleScreenBufferSize fails if the new console screen buffer size
-     *   is smaller than the current console window size, and:
-     * - SetConsoleWindowInfo fails if the new console window size is larger
-     *   than the current console screen buffer size.
-     */
-    Success = SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
-    DPRINT1("(attach) SetConsoleScreenBufferSize(1) %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
-    Success = SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
-    DPRINT1("(attach) SetConsoleWindowInfo %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
-    Success = SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
-    DPRINT1("(attach) SetConsoleScreenBufferSize(2) %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
+    ResizeTextConsole(Resolution, NULL);
 
     /* Update the saved console information */
     GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
@@ -1095,7 +1162,7 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
      * we get the default palette and our external behaviour is
      * just like Windows' one), but it should success on ReactOS
      * (so that we get console palette changes even for text-mode
-     * screen-buffers, which is a new feature on ReactOS).
+     * screen buffers, which is a new feature on ReactOS).
      */
     SetConsolePalette(TextConsoleBuffer,
                       TextPaletteHandle,
@@ -1542,7 +1609,7 @@ static VOID VgaUpdateTextCursor(VOID)
     Position.X = (SHORT)(Location % ScanlineSize);
     Position.Y = (SHORT)(Location / ScanlineSize);
 
-    DPRINT("VgaUpdateTextCursor: X = %d ; Y = %d\n", Position.X, Position.Y);
+    DPRINT("VgaUpdateTextCursor: (X = %d ; Y = %d)\n", Position.X, Position.Y);
 
     /* Update the physical cursor */
     SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
@@ -2338,7 +2405,42 @@ VOID VgaWriteTextModeFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
 
 VOID ScreenEventHandler(PWINDOW_BUFFER_SIZE_RECORD ScreenEvent)
 {
-    DPRINT1("Screen events not handled\n");
+    /*
+     * This function monitors and allows console resizings only if they are triggered by us.
+     * User-driven resizings via the console properties, or programmatical console resizings
+     * made by explicit calls to SetConsoleScreenBufferSize by external applications, are forbidden.
+     * In that case only a console window resize is done in case the size is reduced.
+     * This protection is enabled in CONSRV side when NTVDM registers as a VDM to CONSRV,
+     * but we also implement it there in case we are running in STANDALONE mode without
+     * CONSRV registration.
+     *
+     * The only potential problem we have is that, when this handler is called,
+     * the console is already resized. In case this corresponds to a forbidden resize,
+     * we resize the console back to its original size from inside the handler.
+     * This will trigger a recursive call to the handler, that should be detected.
+     */
+
+    if (CurrResolution.X == ScreenEvent->dwSize.X &&
+        CurrResolution.Y == ScreenEvent->dwSize.Y)
+    {
+        /* Allowed resize, we are OK */
+        return;
+    }
+
+    DPRINT1("ScreenEventHandler - Detected forbidden resize! Reset console screenbuffer size back to (X = %d ; Y = %d)\n", CurrResolution.X, CurrResolution.Y);
+
+    // FIXME: If we're detaching, then stop monitoring for changes!!
+
+    /* Restore the original console size */
+    ResizeTextConsole(&CurrResolution, NULL);
+
+    /* Force refresh of all the screen */
+    NeedsUpdate = TRUE;
+    UpdateRectangle.Left = 0;
+    UpdateRectangle.Top  = 0;
+    UpdateRectangle.Right  = CurrResolution.X;
+    UpdateRectangle.Bottom = CurrResolution.Y;
+    VgaRefreshDisplay();
 }
 
 BOOL VgaAttachToConsole(VOID)
@@ -2384,10 +2486,6 @@ BOOL VgaAttachToConsole(VOID)
 
 VOID VgaDetachFromConsole(VOID)
 {
-    BOOL Success;
-
-    SMALL_RECT ConRect;
-
     VgaDetachFromConsoleInternal();
 
     /* Save the screen state */
@@ -2401,16 +2499,7 @@ VOID VgaDetachFromConsole(VOID)
     ConsoleFramebuffer = NULL;
 
     /* Restore the original console size */
-    ConRect.Left   = ConRect.Top = 0;
-    ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
-    ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
-    /* See the following trick explanation in VgaAttachToConsoleInternal */
-    Success = SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
-    DPRINT1("(detach) SetConsoleScreenBufferSize(1) %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
-    Success = SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
-    DPRINT1("(detach) SetConsoleWindowInfo %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
-    Success = SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
-    DPRINT1("(detach) SetConsoleScreenBufferSize(2) %s with error %d\n", Success ? "succeeded" : "failed", GetLastError());
+    ResizeTextConsole(&OrgConsoleBufferInfo.dwSize, &OrgConsoleBufferInfo.srWindow);
 
     /* Restore the original cursor shape */
     SetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo);
