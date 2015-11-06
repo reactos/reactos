@@ -49,7 +49,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Lingua per programmi non Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "In base a questa impostazione di sistema è possibile visualizzare menù e finestre di dialogo di programmi non Unicode nella lingua di origine. I programmi Unicode resteranno invariati, ma l'impostazione verrà applicata per tutti gli utenti che utilizzano il computer.", -1, 14, 18, 223, 33 //TOO LONG, MAX 256 CHARS ALLOWED
+    LTEXT "In base a questa impostazione di sistema è possibile visualizzare menù e finestre di dialogo di programmi non Unicode nella lingua di origine.", -1, 14, 18, 223, 17
+    LTEXT "I programmi Unicode resteranno invariati, ma l\'impostazione verrà applicata per tutti gli utenti che utilizzano il computer.", -1, 14, 35, 223, 17
     LTEXT "Selezionare una lingua per i programmi non Unicode da utilizzare:", -1, 14, 55, 223, 18
     GROUPBOX "Tabella di conversione di tabelle codici", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
