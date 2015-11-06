@@ -778,7 +778,7 @@ AllocateUserMessage(BOOL KEvent)
       KeInitializeEvent(Message->pkCompletionEvent, NotificationEvent, FALSE);
    }
    SendMsgCount++;
-   //ERR("AUM pti %p msg %p\n",PsGetCurrentThreadWin32Thread(),Message);
+   TRACE("AUM pti %p msg %p\n",PsGetCurrentThreadWin32Thread(),Message);
    return Message;
 }
 
@@ -2226,6 +2226,12 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
          else if ( pti == CurrentSentMessage->ptiSender ||
                    pti == CurrentSentMessage->ptiCallBackSender )
          {
+            // Determine whether this message is being processed or not.
+            if ((CurrentSentMessage->flags & (SMF_RECEIVERBUSY|SMF_RECEIVEDMESSAGE)) != SMF_RECEIVEDMESSAGE)
+            {
+               CurrentSentMessage->flags |= SMF_RECEIVERFREE;
+            }
+            
             if (!(CurrentSentMessage->flags & SMF_RECEIVERFREE))
             {
 
