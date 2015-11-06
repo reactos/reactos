@@ -431,7 +431,7 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
         if(Source != iTransColor)
         {
-          Dest = (BYTE)XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFFFF;
+          Dest = XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFFFF;
            *(PUSHORT)(DestBits) = Dest & 0xFFFF;
            *(DestBits + 2) = (BYTE)(Dest >> 16);
         }
