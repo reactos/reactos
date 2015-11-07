@@ -275,7 +275,7 @@ getsockopt(IN SOCKET s,
             Status = ERROR_SUCCESS;
             _SEH2_TRY
             {
-                if (!(optlen) || (*optlen < sizeof(INT)))
+                if (!(optlen) || (*optlen < sizeof(DWORD)))
                 {
                     /* Fail */
                     Status = SOCKET_ERROR;
@@ -284,8 +284,8 @@ getsockopt(IN SOCKET s,
                 }
 
                 /* Set the open type */
-                *optval = (CHAR)Thread->OpenType;
-                *optlen = sizeof(INT);
+                *(DWORD*)optval = Thread->OpenType;
+                *optlen = sizeof(DWORD);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -419,7 +419,7 @@ setsockopt(IN SOCKET s,
         if (level == SOL_SOCKET && optname == SO_OPENTYPE)
         {
             /* Validate size */
-            if (optlen < sizeof(INT))
+            if (optlen < sizeof(DWORD))
             {
                 /* Fail */
                 SetLastError(WSAEFAULT);
@@ -430,7 +430,7 @@ setsockopt(IN SOCKET s,
             Status = ERROR_SUCCESS;
             _SEH2_TRY
             {
-                Thread->OpenType = *optval;
+                Thread->OpenType = *(DWORD*)optval;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
