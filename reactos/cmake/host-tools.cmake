@@ -32,6 +32,6 @@ ExternalProject_Add(host-tools
     BUILD_ALWAYS 1
     PREFIX host-tools
     EXCLUDE_FROM_ALL 1
-    CMAKE_ARGS "-DNEW_STYLE_BUILD=1 -DARCH:STRING=${ARCH}"
+    CMAKE_ARGS "-DNEW_STYLE_BUILD=1;-DARCH:STRING=${ARCH}"
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${tools_binaries})
