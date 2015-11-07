@@ -312,6 +312,9 @@ NtUserCreateAcceleratorTable(
 
     /* FIXME: Save HandleTable in a list somewhere so we can clean it up again */
 
+    /* Release the extra reference (UserCreateObject added 2 references) */
+    UserDereferenceObject(Accel);
+
     RETURN(hAccel);
 
 CLEANUP:
