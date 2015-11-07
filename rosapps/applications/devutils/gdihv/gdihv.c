@@ -34,9 +34,9 @@ MyGdiQueryTable()
 	return pPeb->GdiSharedHandleTable;
 }
 
-int WINAPI WinMain (HINSTANCE hThisInstance,
+int WINAPI _tWinMain (HINSTANCE hThisInstance,
                     HINSTANCE hPrevInstance,
-                    LPSTR lpszArgument,
+                    LPTSTR lpszArgument,
                     int nStyle)
 
 {

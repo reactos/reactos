@@ -1,8 +1,7 @@
 #ifndef _GDIHV_H
 #define _GDIHV_H
 
-#define UNICODE
-
+#include <tchar.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <commctrl.h>
