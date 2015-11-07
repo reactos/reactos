@@ -5,6 +5,11 @@ if(SEPARATE_DBG)
     set(CMAKE_LDR_PE_HELPER_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 endif()
 
+if(MSVC)
+    # We don't need it here
+    replace_compile_flags("/hotpatch" " ")
+endif()
+
 spec2def(freeldr.sys freeldr.spec)
 
 if(ARCH STREQUAL "i386")
