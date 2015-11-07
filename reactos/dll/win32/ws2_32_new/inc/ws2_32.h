@@ -28,6 +28,7 @@
 #include <winuser.h>
 #include <ws2spi.h>
 #include <ndk/rtlfuncs.h>
+#include <pseh/pseh2.h>
 
 /* Winsock Helper Header */
 #include <ws2help.h>

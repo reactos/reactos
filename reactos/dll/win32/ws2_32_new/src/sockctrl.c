@@ -272,17 +272,29 @@ getsockopt(IN SOCKET s,
         if ((level == SOL_SOCKET) && (optname == SO_OPENTYPE))
         {
             /* Validate size */
-            if (!(optlen) || (*optlen < sizeof(INT)))
+            Status = ERROR_SUCCESS;
+            _SEH2_TRY
             {
-                /* Fail */
-                SetLastError(WSAEFAULT);
-                return SOCKET_ERROR;
-            }
+                if (!(optlen) || (*optlen < sizeof(INT)))
+                {
+                    /* Fail */
+                    Status = SOCKET_ERROR;
+                    SetLastError(WSAEFAULT);
+                    _SEH2_LEAVE;
+                }
 
-            /* Set the open type */
-            *optval = (CHAR)Thread->OpenType;
-            *optlen = sizeof(INT);
-            return ERROR_SUCCESS;
+                /* Set the open type */
+                *optval = (CHAR)Thread->OpenType;
+                *optlen = sizeof(INT);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = SOCKET_ERROR;
+                SetLastError(WSAEFAULT);
+            }
+            _SEH2_END;
+
+            return Status;
         }
 
         /* Get the Socket Context */
@@ -292,27 +304,42 @@ getsockopt(IN SOCKET s,
             if ((level == SOL_SOCKET) && (optname == SO_PROTOCOL_INFOA))
             {
                 /* Validate size and pointers */
-                if(!(optval) ||
-                   !(optlen) ||
-                   (*optlen < sizeof(WSAPROTOCOL_INFOA)))
+                ErrorCode = NO_ERROR;
+                _SEH2_TRY
                 {
-                    /* Set return size */
-                    *optlen = sizeof(WSAPROTOCOL_INFOA);
+                    if (!(optval) ||
+                        !(optlen) ||
+                        (*optlen < sizeof(WSAPROTOCOL_INFOA)))
+                    {
+                        /* Set return size and error code */
+                        *optlen = sizeof(WSAPROTOCOL_INFOA);
+                        ErrorCode = WSAEFAULT;
+                        _SEH2_LEAVE;
+                    }
 
+                    /* It worked. Save the values */
+                    OldOptLen = *optlen;
+                    OldOptVal = optval;
+
+                    /* Hack them so WSP will know how to deal with it */
+                    *optlen = sizeof(WSAPROTOCOL_INFOW);
+                    optval = (PCHAR)&ProtocolInfo;
+                    optname = SO_PROTOCOL_INFOW;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    ErrorCode = WSAEFAULT;
+                }
+                _SEH2_END;
+
+                /* Did we encounter invalid parameters? */
+                if (ErrorCode != NO_ERROR)
+                {
                     /* Dereference the socket and fail */
                     WsSockDereference(Socket);
-                    SetLastError(WSAEFAULT);
+                    SetLastError(ErrorCode);
                     return SOCKET_ERROR;
                 }
-
-                /* It worked. Save the values */
-                OldOptLen = *optlen;
-                OldOptVal = optval;
-
-                /* Hack them so WSP will know how to deal with it */
-                *optlen = sizeof(WSAPROTOCOL_INFOW);
-                optval = (PCHAR)&ProtocolInfo;
-                optname = SO_PROTOCOL_INFOW;
             }
 
             /* Make the call */
@@ -338,7 +365,15 @@ getsockopt(IN SOCKET s,
                                                          OldOptVal);
 
                 /* Return the length */
-                *optlen = OldOptLen;
+                _SEH2_TRY
+                {
+                    *optlen = OldOptLen;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    ErrorCode = WSAEFAULT;
+                }
+                _SEH2_END;
 
                 /* Return success if this worked */
                 if (ErrorCode == ERROR_SUCCESS) return Status;
@@ -392,8 +427,19 @@ setsockopt(IN SOCKET s,
             }
 
             /* Set the open type */
-            Thread->OpenType = *optval;
-            return ERROR_SUCCESS;
+            Status = ERROR_SUCCESS;
+            _SEH2_TRY
+            {
+                Thread->OpenType = *optval;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = SOCKET_ERROR;
+                SetLastError(WSAEFAULT);
+            }
+            _SEH2_END;
+
+            return Status;
         }
 
         /* Get the Socket Context */
