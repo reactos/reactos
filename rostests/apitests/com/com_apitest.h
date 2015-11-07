@@ -17,7 +17,6 @@
 
 #define COBJMACROS
 #define WIN32_NO_STATUS
-#define UNICODE
 #include <wine/test.h>
 #include <objbase.h>
 #include <objsafe.h>

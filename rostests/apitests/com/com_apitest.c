@@ -443,7 +443,7 @@ TestModuleRegistry(
     HKEY hKeyClasses;
     LONG result;
 
-    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Classes\\CLSID", 0, KEY_ENUMERATE_SUB_KEYS, &hKeyClasses);
+    result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Classes\\CLSID", 0, KEY_ENUMERATE_SUB_KEYS, &hKeyClasses);
     ok(result == NO_ERROR, "Failed to open classes key, error %lu\n", result);
     if (!myskip(result == NO_ERROR, "No classes key\n"))
     {
@@ -464,20 +464,20 @@ TestModuleRegistry(
             if (myskip(NT_SUCCESS(status), "No guid string\n"))
                 continue;
 
-            result = RegOpenKeyEx(hKeyClasses, clsid.Buffer, 0, KEY_ENUMERATE_SUB_KEYS, &hKey);
+            result = RegOpenKeyExW(hKeyClasses, clsid.Buffer, 0, KEY_ENUMERATE_SUB_KEYS, &hKey);
             ok(result == NO_ERROR, "Failed to open key for %s, error %lu\n", class->name, result);
             RtlFreeUnicodeString(&clsid);
             if (myskip(result == NO_ERROR, "No key\n"))
                 continue;
 
-            result = RegOpenKeyEx(hKey, L"InProcServer32", 0, KEY_QUERY_VALUE, &hKeyServer);
+            result = RegOpenKeyExW(hKey, L"InProcServer32", 0, KEY_QUERY_VALUE, &hKeyServer);
             ok(result == NO_ERROR, "Failed to open key for %s, error %lu\n", class->name, result);
             RegCloseKey(hKey);
             if (myskip(result == NO_ERROR, "No key\n"))
                 continue;
 
             dataSize = sizeof(data);
-            result = RegQueryValueEx(hKeyServer, NULL, NULL, &type, (PBYTE)data, &dataSize);
+            result = RegQueryValueExW(hKeyServer, NULL, NULL, &type, (PBYTE)data, &dataSize);
             ok(result == NO_ERROR, "Failed to query value for %s, error %lu\n", class->name, result);
             if (!myskip(result == NO_ERROR, "No module name\n"))
             {
@@ -492,7 +492,7 @@ TestModuleRegistry(
             }
 
             dataSize = sizeof(data);
-            result = RegQueryValueEx(hKeyServer, L"ThreadingModel", NULL, &type, (PBYTE)data, &dataSize);
+            result = RegQueryValueExW(hKeyServer, L"ThreadingModel", NULL, &type, (PBYTE)data, &dataSize);
             ok(result == NO_ERROR, "Failed to query value for %s, error %lu\n", class->name, result);
             if (!myskip(result == NO_ERROR, "No ThreadingModel\n"))
             {
@@ -523,7 +523,7 @@ TestManualInstantiation(
     PCCLASS_AND_INTERFACES class;
     HRESULT (__stdcall *DllGetClassObject)(REFCLSID, REFIID, PVOID *);
 
-    DllGetClassObject = (PVOID)GetProcAddress(GetModuleHandle(ModuleName), "DllGetClassObject");
+    DllGetClassObject = (PVOID)GetProcAddress(GetModuleHandleW(ModuleName), "DllGetClassObject");
     ok(DllGetClassObject != NULL, "DllGetClassObject not found in %ls, error %lu\n", ModuleName, GetLastError());
     if (myskip(DllGetClassObject != NULL, "No DllGetClassObject\n"))
         return;
@@ -580,7 +580,7 @@ TestInterfaceRegistry(
     HKEY hKeyInterface;
     LONG result;
 
-    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Classes\\Interface", 0, KEY_ENUMERATE_SUB_KEYS, &hKeyInterface);
+    result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Classes\\Interface", 0, KEY_ENUMERATE_SUB_KEYS, &hKeyInterface);
     ok(result == NO_ERROR, "Failed to open interface key, error %lu\n", result);
     if (!myskip(result == NO_ERROR, "No interface key\n"))
     {
@@ -601,7 +601,7 @@ TestInterfaceRegistry(
             if (myskip(NT_SUCCESS(status), "No guid string\n"))
                 continue;
 
-            result = RegOpenKeyEx(hKeyInterface, iid.Buffer, 0, KEY_QUERY_VALUE, &hKey);
+            result = RegOpenKeyExW(hKeyInterface, iid.Buffer, 0, KEY_QUERY_VALUE, &hKey);
             if (iface->noreg)
             {
                 ok(result == ERROR_FILE_NOT_FOUND, "RegOpenKeyEx returned %lu for %s\n", result, iface->name);
@@ -616,7 +616,7 @@ TestInterfaceRegistry(
                 continue;
 
             dataSize = sizeof(data);
-            result = RegQueryValueEx(hKey, NULL, NULL, &type, (PBYTE)data, &dataSize);
+            result = RegQueryValueExW(hKey, NULL, NULL, &type, (PBYTE)data, &dataSize);
             ok(result == NO_ERROR, "Failed to query value for %s, error %lu\n", iface->name, result);
             if (!myskip(result == NO_ERROR, "No module name\n"))
             {
