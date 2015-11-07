@@ -431,6 +431,29 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
         return FALSE;
     }
 
+    /* Set 'SystemRoot' variable */
+    Length = MAX_PATH;
+    if (GetEnvironmentVariableW(L"SystemRoot",
+                                Buffer,
+                                Length))
+    {
+        SetUserEnvironmentVariable(lpEnvironment,
+                                   L"SystemRoot",
+                                   Buffer,
+                                   FALSE);
+    }
+
+    /* Set 'SystemDrive' variable */
+    if (GetEnvironmentVariableW(L"SystemDrive",
+                                Buffer,
+                                Length))
+    {
+        SetUserEnvironmentVariable(lpEnvironment,
+                                   L"SystemDrive",
+                                   Buffer,
+                                   FALSE);
+    }
+
     /* Set 'COMPUTERNAME' variable */
     Length = MAX_PATH;
     if (GetComputerNameW(Buffer,
@@ -451,6 +474,17 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                    L"ALLUSERSPROFILE",
                                    Buffer,
                                    FALSE);
+    }
+
+    /* Set 'USERSPROFILE' variable to the default users profile */
+    Length = MAX_PATH;
+    if (GetDefaultUserProfileDirectory(Buffer,
+                                       &Length))
+    {
+        SetUserEnvironmentVariable(lpEnvironment,
+                                   L"USERPROFILE",
+                                   Buffer,
+                                   TRUE);
     }
 
     lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
