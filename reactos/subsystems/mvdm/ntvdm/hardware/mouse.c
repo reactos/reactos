@@ -18,6 +18,9 @@
 
 #include "clock.h"
 #include "video/svga.h"
+/**/
+#include "../console/video.h"
+/**/
 
 /* PRIVATE VARIABLES **********************************************************/
 
