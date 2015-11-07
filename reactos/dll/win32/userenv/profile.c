@@ -464,6 +464,12 @@ GetAllUsersProfileDirectoryW(LPWSTR lpProfileDir,
     HKEY hKey;
     LONG Error;
 
+    if (!lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
                           0,
@@ -585,6 +591,12 @@ GetDefaultUserProfileDirectoryW(LPWSTR lpProfileDir,
     DWORD dwLength;
     HKEY hKey;
     LONG Error;
+
+    if (!lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
@@ -839,9 +851,15 @@ GetUserProfileDirectoryW(HANDLE hToken,
     HKEY hKey;
     LONG Error;
 
+    if (!hToken)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
     if (!lpcchSize)
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
+        SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
