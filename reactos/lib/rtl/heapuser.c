@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/rtl/heap.c
+ * FILE:            lib/rtl/heapuser.c
  * PURPOSE:         RTL Heap backend allocator (user mode only functions)
  * PROGRAMMERS:     Copyright 2010 Aleksey Bragin
  */

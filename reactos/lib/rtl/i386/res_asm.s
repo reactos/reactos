@@ -2,7 +2,7 @@
  * COPYRIGHT:         GNU GPL - See COPYING in the top level directory
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           
- * FILE:              lib/rtl/i386/res_asm.S
+ * FILE:              lib/rtl/i386/res_asm.s
  * PROGRAMER:         
  */
 

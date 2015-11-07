@@ -2,7 +2,7 @@
  * COPYRIGHT:         GNU GPL - See COPYING in the top level directory
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Memory functions
- * FILE:              lib/rtl/i386/rtlswap.S
+ * FILE:              lib/rtl/i386/rtlmem.s
  * PROGRAMER:         Alex Ionescu (alex.ionescu@reactos.org)
  */
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/rtl/mem.c
+ * FILE:            lib/rtl/byteswap.c
  * PURPOSE:         Memory functions
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  */

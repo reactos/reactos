@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Debug Routines
- * FILE:              lib/rtl/i386/debug.S
+ * FILE:              lib/rtl/amd64/debug_asm.S
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
