@@ -687,14 +687,14 @@ GetProfilesDirectoryA(LPSTR lpProfileDir,
                                     lpcchSize);
     if (bResult)
     {
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpBuffer,
-                            -1,
-                            lpProfileDir,
-                            *lpcchSize,
-                            NULL,
-                            NULL);
+        bResult = WideCharToMultiByte(CP_ACP,
+                                      0,
+                                      lpBuffer,
+                                      -1,
+                                      lpProfileDir,
+                                      *lpcchSize,
+                                      NULL,
+                                      NULL);
     }
 
     GlobalFree(lpBuffer);
@@ -713,6 +713,7 @@ GetProfilesDirectoryW(LPWSTR lpProfilesDir,
     DWORD dwLength;
     HKEY hKey;
     LONG Error;
+    BOOL bRet = FALSE;
 
     if (!lpcchSize)
     {
@@ -764,17 +765,22 @@ GetProfilesDirectoryW(LPWSTR lpProfilesDir,
     {
         if (*lpcchSize < dwLength)
         {
-            *lpcchSize = dwLength;
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return FALSE;
         }
-
-        wcscpy(lpProfilesDir, szProfilesPath);
+        else
+        {
+            wcscpy(lpProfilesDir, szProfilesPath);
+            bRet = TRUE;
+        }
+    }
+    else
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
     }
 
     *lpcchSize = dwLength;
 
-    return TRUE;
+    return bRet;
 }
 
 
