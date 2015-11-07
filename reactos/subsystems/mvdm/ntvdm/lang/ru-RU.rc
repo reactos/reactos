@@ -2,9 +2,9 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_HIDE_MOUSE, "&Спрятать указатель мыши"
-    IDS_SHOW_MOUSE, "&Отобразить указатель мыши"
-    IDS_VDM_MENU  , "ReactOS &VDM"
+    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
+    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
 STRINGTABLE

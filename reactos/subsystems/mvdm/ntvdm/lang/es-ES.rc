@@ -2,9 +2,9 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HIDE_MOUSE, "&Ocultar puntero del ratón"
-    IDS_SHOW_MOUSE, "&Mostrar puntero del ratón"
-    IDS_VDM_MENU  , "ReactOS &VDM"
+    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
+    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
 STRINGTABLE

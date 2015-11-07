@@ -2,9 +2,9 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HIDE_MOUSE, "Mas&quer le pointeur de la souris"
-    IDS_SHOW_MOUSE, "&Afficher le pointeur de la souris"
-    IDS_VDM_MENU  , "ReactOS &VDM"
+    IDS_CAPTURE_MOUSE, "&Capturer le pointeur de la souris"
+    IDS_RELEASE_MOUSE, "&Libérer le pointeur de la souris"
+    IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
 STRINGTABLE

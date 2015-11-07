@@ -3,9 +3,9 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HIDE_MOUSE, "Asc&unde indicatorul șoricelului"
-    IDS_SHOW_MOUSE, "Afișea&ză indicatorul șoricelului"
-    IDS_VDM_MENU  , "ReactOS &VDM"
+    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
+    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
 STRINGTABLE

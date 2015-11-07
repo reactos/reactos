@@ -2,9 +2,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_HIDE_MOUSE, "&Hide Mouse Pointer"
-    IDS_SHOW_MOUSE, "&Display Mouse Pointer"
-    IDS_VDM_MENU  , "ReactOS &VDM"
+    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
+    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
 STRINGTABLE

@@ -18,9 +18,9 @@ static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
 
 HWND hConsoleWnd = NULL;
-static HMENU hConsoleMenu  = NULL;
-static INT   VdmMenuPos    = -1;
-static BOOLEAN ShowPointer = TRUE;
+static HMENU hConsoleMenu = NULL;
+static INT   VdmMenuPos   = -1;
+static BOOL  CaptureMouse = FALSE;
 
 /*
  * Those menu helpers were taken from the GUI frontend in winsrv.dll
@@ -48,8 +48,8 @@ static const VDM_MENUITEM VdmMenuItems[] =
 static const VDM_MENUITEM VdmMainMenuItems[] =
 {
     { -1, NULL, 0 },    /* Separator */
-    { IDS_HIDE_MOUSE,   NULL, ID_SHOWHIDE_MOUSE },  /* "Hide mouse"; can be renamed to "Show mouse" */
-    { IDS_VDM_MENU  ,   VdmMenuItems,         0 },  /* ReactOS VDM Menu */
+    { IDS_CAPTURE_MOUSE, NULL, ID_CAPTURE_MOUSE },  /* "Capture mouse"; can be renamed to "Release mouse" */
+    { IDS_VDM_MENU , VdmMenuItems, 0 },             /* ReactOS VDM Menu */
 
     { 0, NULL, 0 }      /* End of list */
 };
@@ -116,7 +116,7 @@ VdmMenuExists(HMENU hConsoleMenu)
     /* Check for the presence of one of the VDM menu items */
     for (i = 0; i <= MenuPos; i++)
     {
-        if (GetMenuItemID(hConsoleMenu, i) == ID_SHOWHIDE_MOUSE)
+        if (GetMenuItemID(hConsoleMenu, i) == ID_CAPTURE_MOUSE)
         {
             /* Set VdmMenuPos to the position of the existing menu */
             VdmMenuPos = i - 1;
@@ -131,14 +131,14 @@ UpdateVdmMenuMouse(VOID)
 {
     WCHAR szMenuString[256];
 
-    /* Update "Hide/Show mouse" menu item */
+    /* Update "Capture/Release mouse" menu item */
     if (LoadStringW(GetModuleHandle(NULL),
-                    (!ShowPointer ? IDS_SHOW_MOUSE : IDS_HIDE_MOUSE),
+                    (CaptureMouse ? IDS_RELEASE_MOUSE : IDS_CAPTURE_MOUSE),
                     szMenuString,
                     ARRAYSIZE(szMenuString)) > 0)
     {
-        ModifyMenuW(hConsoleMenu, ID_SHOWHIDE_MOUSE,
-                    MF_BYCOMMAND, ID_SHOWHIDE_MOUSE, szMenuString);
+        ModifyMenuW(hConsoleMenu, ID_CAPTURE_MOUSE,
+                    MF_BYCOMMAND, ID_CAPTURE_MOUSE, szMenuString);
     }
 }
 
@@ -210,7 +210,7 @@ CreateVdmMenu(HANDLE ConOutHandle)
     WCHAR szMenuString1[256], szMenuString2[256];
 
     hConsoleMenu = ConsoleMenuControl(ConOutHandle,
-                                      ID_SHOWHIDE_MOUSE,
+                                      ID_CAPTURE_MOUSE,
                                       ID_VDM_DRIVES + (2 * ARRAYSIZE(GlobalSettings.FloppyDisks)));
     if (hConsoleMenu == NULL) return;
 
@@ -285,17 +285,33 @@ DestroyVdmMenu(VOID)
     DrawMenuBar(hConsoleWnd);
 }
 
-static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
+static VOID CaptureMousePointer(HANDLE ConOutHandle, BOOLEAN Capture)
 {
-    if (ShowPtr)
+    static BOOL IsClipped = FALSE; // For debugging purposes
+    UNREFERENCED_PARAMETER(IsClipped);
+
+    if (Capture)
     {
-        /* Be sure the cursor will be shown */
-        while (ShowConsoleCursor(ConOutHandle, TRUE) < 0) ;
+        RECT rcClip;
+
+        // if (IsClipped) return;
+
+        /* Be sure the cursor will be hidden */
+        while (ShowConsoleCursor(ConOutHandle, FALSE) >= 0) ;
+
+        GetClientRect(hConsoleWnd, &rcClip);
+        MapWindowPoints(hConsoleWnd, HWND_DESKTOP /*NULL*/, (LPPOINT)&rcClip, 2 /* Magic value when the LPPOINT parameter is a RECT */);
+        IsClipped = ClipCursor(&rcClip);
     }
     else
     {
-        /* Be sure the cursor will be hidden */
-        while (ShowConsoleCursor(ConOutHandle, FALSE) >= 0) ;
+        // if (!IsClipped) return;
+
+        ClipCursor(NULL);
+        IsClipped = FALSE;
+
+        /* Be sure the cursor will be shown */
+        while (ShowConsoleCursor(ConOutHandle, TRUE) < 0) ;
     }
 }
 
@@ -373,7 +389,7 @@ static VOID
 ConsoleCleanupUI(VOID)
 {
     /* Display again properly the mouse pointer */
-    if (ShowPointer) ShowHideMousePointer(ConsoleOutput, ShowPointer);
+    if (CaptureMouse) CaptureMousePointer(ConsoleOutput, !CaptureMouse);
 
     DestroyVdmMenu();
 }
@@ -423,7 +439,7 @@ ConsoleReattach(HANDLE ConOutHandle)
     CreateVdmMenu(ConOutHandle);
 
     /* Synchronize mouse cursor display with console screenbuffer switches */
-    ShowHideMousePointer(CurrentConsoleOutput, ShowPointer);
+    CaptureMousePointer(CurrentConsoleOutput, CaptureMouse);
 }
 
 static BOOL
@@ -493,21 +509,25 @@ VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent)
          */
 
         case WM_INITMENU:
-            DPRINT1("WM_INITMENU\n");
-            break;
-
         case WM_MENUSELECT:
-            DPRINT1("WM_MENUSELECT\n");
+        {
+            /*
+             * If the mouse is captured, release it or recapture it
+             * when the menu opens or closes, respectively.
+             */
+            if (!CaptureMouse) break;
+            CaptureMousePointer(CurrentConsoleOutput, MenuEvent->dwCommandId == WM_INITMENU ? FALSE : TRUE);
             break;
+        }
 
 
         /*
          * User-defined menu commands
          */
 
-        case ID_SHOWHIDE_MOUSE:
-            ShowPointer = !ShowPointer;
-            ShowHideMousePointer(CurrentConsoleOutput, ShowPointer);
+        case ID_CAPTURE_MOUSE:
+            CaptureMouse = !CaptureMouse;
+            CaptureMousePointer(CurrentConsoleOutput, CaptureMouse);
             UpdateVdmMenuMouse();
             break;
 
@@ -555,5 +575,10 @@ VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent)
 
 VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent)
 {
-    DPRINT1("Focus events not handled\n");
+    /*
+     * If the mouse is captured, release it or recapture it
+     * when we lose or regain focus, respectively.
+     */
+    if (!CaptureMouse) return;
+    CaptureMousePointer(CurrentConsoleOutput, FocusEvent->bSetFocus);
 }
