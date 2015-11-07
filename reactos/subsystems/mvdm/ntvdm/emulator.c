@@ -36,6 +36,9 @@
 #include "hardware/ps2.h"
 #include "hardware/sound/speaker.h"
 #include "hardware/video/svga.h"
+/**/
+#include "./console/video.h"
+/**/
 
 #include "vddsup.h"
 #include "io.h"

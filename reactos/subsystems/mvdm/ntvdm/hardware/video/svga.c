@@ -21,16 +21,12 @@
 #include "io.h"
 #include "clock.h"
 
+#include "../../console/video.h"
+
 /* PRIVATE VARIABLES **********************************************************/
 
 static CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
 static CONST DWORD MemorySize[] = { 0x20000, 0x10000, 0x08000, 0x08000 };
-
-/*
- * Activate this line if you want to use the real
- * RegisterConsoleVDM API of ReactOS/Windows.
- */
-// #define USE_REAL_REGISTERCONSOLEVDM
 
 #define USE_REACTOS_COLORS
 // #define USE_DOSBOX_COLORS
@@ -208,34 +204,12 @@ static const COLORREF ConsoleColors[16] =
     RGB(255, 255, 255)  // BLUE  | GREEN | RED | INTENSITY
 };
 
-/*
- * Console interface -- VGA-mode-agnostic
- */
-// WARNING! This structure *MUST BE* in sync with the one in consrv/include/conio_winsrv.h
-typedef struct _CHAR_CELL
-{
-    CHAR Char;
-    BYTE Attributes;
-} CHAR_CELL, *PCHAR_CELL;
-C_ASSERT(sizeof(CHAR_CELL) == 2);
-
-static PVOID ConsoleFramebuffer = NULL; // Active framebuffer, points to
-                                        // either TextFramebuffer or a
-                                        // valid graphics framebuffer.
+/// ConsoleFramebuffer
+static PVOID ActiveFramebuffer = NULL; // Active framebuffer, points to
+                                       // either TextFramebuffer or a
+                                       // valid graphics framebuffer.
 static HPALETTE TextPaletteHandle = NULL;
 static HPALETTE PaletteHandle = NULL;
-
-static HANDLE StartEvent = NULL;
-static HANDLE EndEvent   = NULL;
-static HANDLE AnotherEvent = NULL;
-
-static CONSOLE_CURSOR_INFO         OrgConsoleCursorInfo;
-static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
-
-
-static HANDLE ScreenBufferHandle = NULL;
-static PVOID  OldConsoleFramebuffer = NULL;
-
 
 /*
  * Text mode -- we always keep a valid text mode framebuffer
@@ -244,20 +218,21 @@ static PVOID  OldConsoleFramebuffer = NULL;
  * detaches from the console (and reattaches to it later on),
  * this text mode framebuffer is recreated.
  */
-static HANDLE TextConsoleBuffer = NULL;
-static CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
-static COORD  TextResolution = {0};
 static PCHAR_CELL TextFramebuffer = NULL;
 
 /*
  * Graphics mode
  */
-static HANDLE GraphicsConsoleBuffer = NULL;
-static PVOID  GraphicsFramebuffer = NULL;
-static HANDLE ConsoleMutex = NULL;
-/* DoubleVision support */
-static BOOLEAN DoubleWidth  = FALSE;
-static BOOLEAN DoubleHeight = FALSE;
+static PBYTE GraphicsFramebuffer = NULL;
+
+
+// static HANDLE ConsoleMutex = NULL;
+// /* DoubleVision support */
+// static BOOLEAN DoubleWidth  = FALSE;
+// static BOOLEAN DoubleHeight = FALSE;
+
+
+
 
 
 /*
@@ -318,392 +293,22 @@ static COORD CurrResolution   = {0};
 
 static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 
-/* RegisterConsoleVDM EMULATION ***********************************************/
 
-#include <ntddvdeo.h>
 
-#ifdef USE_REAL_REGISTERCONSOLEVDM
 
-#define __RegisterConsoleVDM        RegisterConsoleVDM
-#define __InvalidateConsoleDIBits   InvalidateConsoleDIBits
+/** HACK!! **/
+#include "../../console/video.c"
+/** HACK!! **/
 
-#else
 
-/*
- * This private buffer, per-console, is used by
- * RegisterConsoleVDM and InvalidateConsoleDIBits.
- */
-static COORD VDMBufferSize  = {0};
-static PCHAR_CELL VDMBuffer = NULL;
 
-static PCHAR_INFO CharBuff  = NULL; // This is a hack, which is unneeded
-                                    // for the real RegisterConsoleVDM and
-                                    // InvalidateConsoleDIBits
 
-BOOL
-WINAPI
-__RegisterConsoleVDM(IN DWORD dwRegisterFlags,
-                     IN HANDLE hStartHardwareEvent,
-                     IN HANDLE hEndHardwareEvent,
-                     IN HANDLE hErrorHardwareEvent,
-                     IN DWORD dwUnusedVar,
-                     OUT LPDWORD lpVideoStateLength,
-                     OUT PVOID* lpVideoState, // PVIDEO_HARDWARE_STATE_HEADER*
-                     IN PVOID lpUnusedBuffer,
-                     IN DWORD dwUnusedBufferLength,
-                     IN COORD dwVDMBufferSize,
-                     OUT PVOID* lpVDMBuffer)
-{
-    UNREFERENCED_PARAMETER(hErrorHardwareEvent);
-    UNREFERENCED_PARAMETER(dwUnusedVar);
-    UNREFERENCED_PARAMETER(lpVideoStateLength);
-    UNREFERENCED_PARAMETER(lpVideoState);
-    UNREFERENCED_PARAMETER(lpUnusedBuffer);
-    UNREFERENCED_PARAMETER(dwUnusedBufferLength);
-
-    SetLastError(0);
-    DPRINT1("__RegisterConsoleVDM(%d)\n", dwRegisterFlags);
-
-    if (lpVDMBuffer == NULL) return FALSE;
-
-    if (dwRegisterFlags != 0)
-    {
-        // if (hStartHardwareEvent == NULL || hEndHardwareEvent == NULL) return FALSE;
-        if (VDMBuffer != NULL) return FALSE;
-
-        VDMBufferSize = dwVDMBufferSize;
-
-        /* HACK: Cache -- to be removed in the real implementation */
-        CharBuff = RtlAllocateHeap(RtlGetProcessHeap(),
-                                   HEAP_ZERO_MEMORY,
-                                   VDMBufferSize.X * VDMBufferSize.Y
-                                                   * sizeof(*CharBuff));
-        ASSERT(CharBuff);
-
-        VDMBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                    HEAP_ZERO_MEMORY,
-                                    VDMBufferSize.X * VDMBufferSize.Y
-                                                    * sizeof(*VDMBuffer));
-        *lpVDMBuffer = VDMBuffer;
-        return (VDMBuffer != NULL);
-    }
-    else
-    {
-        /* HACK: Cache -- to be removed in the real implementation */
-        if (CharBuff) RtlFreeHeap(RtlGetProcessHeap(), 0, CharBuff);
-        CharBuff = NULL;
-
-        if (VDMBuffer) RtlFreeHeap(RtlGetProcessHeap(), 0, VDMBuffer);
-        VDMBuffer = NULL;
-
-        VDMBufferSize.X = VDMBufferSize.Y = 0;
-
-        return TRUE;
-    }
-}
-
-BOOL
-__InvalidateConsoleDIBits(IN HANDLE hConsoleOutput,
-                          IN PSMALL_RECT lpRect)
-{
-    if ((hConsoleOutput == TextConsoleBuffer) && (VDMBuffer != NULL))
-    {
-        /* HACK: Write the cached data to the console */
-
-        COORD Origin = { lpRect->Left, lpRect->Top };
-        SHORT i, j;
-
-        ASSERT(CharBuff);
-
-        for (i = 0; i < VDMBufferSize.Y; i++)
-        {
-            for (j = 0; j < VDMBufferSize.X; j++)
-            {
-                CharBuff[i * VDMBufferSize.X + j].Char.AsciiChar = VDMBuffer[i * VDMBufferSize.X + j].Char;
-                CharBuff[i * VDMBufferSize.X + j].Attributes     = VDMBuffer[i * VDMBufferSize.X + j].Attributes;
-            }
-        }
-
-        WriteConsoleOutputA(hConsoleOutput,
-                            CharBuff,
-                            VDMBufferSize,
-                            Origin,
-                            lpRect);
-    }
-
-    return InvalidateConsoleDIBits(hConsoleOutput, lpRect);
-}
-
-#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-static inline DWORD VgaGetAddressSize(VOID);
-static VOID VgaUpdateTextCursor(VOID);
 
 static inline DWORD VgaGetVideoBaseAddress(VOID)
 {
     return MemoryBase[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
-}
-
-static VOID VgaUpdateCursorPosition(VOID)
-{
-    /*
-     * Update the cursor position in the VGA registers.
-     */
-    WORD Offset = ConsoleInfo.dwCursorPosition.Y * TextResolution.X +
-                  ConsoleInfo.dwCursorPosition.X;
-
-    VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_LOW_REG]  = LOBYTE(Offset);
-    VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_HIGH_REG] = HIBYTE(Offset);
-
-    VgaUpdateTextCursor();
-}
-
-static VOID ResizeTextConsole(PCOORD Resolution, PSMALL_RECT WindowSize OPTIONAL)
-{
-    BOOL Success;
-    SMALL_RECT ConRect;
-    SHORT oldWidth, oldHeight;
-
-    /*
-     * Use this trick to effectively resize the console buffer and window,
-     * because:
-     * - SetConsoleScreenBufferSize fails if the new console screen buffer size
-     *   is smaller than the current console window size, and:
-     * - SetConsoleWindowInfo fails if the new console window size is larger
-     *   than the current console screen buffer size.
-     */
-
-
-    /* Retrieve the latest console information */
-    GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
-
-    oldWidth  = ConsoleInfo.srWindow.Right  - ConsoleInfo.srWindow.Left + 1;
-    oldHeight = ConsoleInfo.srWindow.Bottom - ConsoleInfo.srWindow.Top  + 1;
-
-    /*
-     * If the current console window is too large to hold the full contents
-     * of the new screen buffer, resize it first.
-     */
-    if (oldWidth > Resolution->X || oldHeight > Resolution->Y)
-    {
-        //
-        // NOTE: This is not a problem if we move the window back to (0,0)
-        // because when we resize the screen buffer, the window will move back
-        // to where the cursor is. Or, if the screen buffer is not resized,
-        // when we readjust again the window, we will move back to a correct
-        // position. This is what we wanted after all...
-        //
-
-        ConRect.Left   = ConRect.Top = 0;
-        ConRect.Right  = ConRect.Left + min(oldWidth , Resolution->X) - 1;
-        ConRect.Bottom = ConRect.Top  + min(oldHeight, Resolution->Y) - 1;
-
-        Success = SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
-        if (!Success) DPRINT1("(resize) SetConsoleWindowInfo(1) failed with error %d\n", GetLastError());
-    }
-
-    /* Resize the screen buffer if needed */
-    if (Resolution->X != ConsoleInfo.dwSize.X || Resolution->Y != ConsoleInfo.dwSize.Y)
-    {
-        /*
-         * SetConsoleScreenBufferSize automatically takes into account the current
-         * cursor position when it computes starting which row it should copy text
-         * when resizing the sceenbuffer, and scrolls the console window such that
-         * the cursor is placed in it again. We therefore do not need to care about
-         * the cursor position and do the maths ourselves.
-         */
-        Success = SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
-        if (!Success) DPRINT1("(resize) SetConsoleScreenBufferSize failed with error %d\n", GetLastError());
-
-        /*
-         * Setting a new screen buffer size can change other information,
-         * so update the saved console information.
-         */
-        GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
-    }
-
-    if (!WindowSize)
-    {
-        ConRect.Left   = 0;
-        ConRect.Right  = ConRect.Left + Resolution->X - 1;
-        ConRect.Bottom = max(ConsoleInfo.dwCursorPosition.Y, Resolution->Y - 1);
-        ConRect.Top    = ConRect.Bottom - Resolution->Y + 1;
-
-        // NOTE: We may take ConsoleInfo.dwMaximumWindowSize into account
-    }
-    else
-    {
-        ConRect.Left   = ConRect.Top = 0;
-        ConRect.Right  = ConRect.Left + WindowSize->Right  - WindowSize->Left;
-        ConRect.Bottom = ConRect.Top  + WindowSize->Bottom - WindowSize->Top ;
-    }
-
-    Success = SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
-    if (!Success) DPRINT1("(resize) SetConsoleWindowInfo(2) failed with error %d\n", GetLastError());
-
-    /* Update the saved console information */
-    GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
-}
-
-static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
-{
-    BOOL Success;
-    ULONG Length = 0;
-    PVIDEO_HARDWARE_STATE_HEADER State;
-
-#ifdef USE_REAL_REGISTERCONSOLEVDM
-    PCHAR_INFO CharBuff = NULL;
-#endif
-    SHORT i, j;
-    DWORD AddressSize, ScanlineSize;
-    DWORD Address = 0;
-    DWORD CurrentAddr;
-    SMALL_RECT ConRect;
-    COORD Origin = { 0, 0 };
-
-    ASSERT(TextFramebuffer == NULL);
-
-    TextResolution = *Resolution;
-
-    /*
-     * Windows 2k3 winsrv.dll calls NtVdmControl(VdmQueryVdmProcess == 14, &ConsoleHandle);
-     * in the two following APIs:
-     * SrvRegisterConsoleVDM  (corresponding Win32 API: RegisterConsoleVDM)
-     * SrvVDMConsoleOperation (corresponding Win32 API: VDMConsoleOperation)
-     * to check whether the current process is a VDM process, and fails otherwise
-     * with the error 0xC0000022 (STATUS_ACCESS_DENIED).
-     *
-     * It is worth it to notice that also basesrv.dll does the same only for the
-     * BaseSrvIsFirstVDM API...
-     */
-
-    /* Register with the console server */
-    Success =
-    __RegisterConsoleVDM(1,
-                         StartEvent,
-                         EndEvent,
-                         AnotherEvent, // NULL,
-                         0,
-                         &Length, // NULL, <-- putting this (and null in the next var) makes the API returning error 12 "ERROR_INVALID_ACCESS"
-                         (PVOID*)&State, // NULL,
-                         NULL,
-                         0,
-                         TextResolution,
-                         (PVOID*)&TextFramebuffer);
-    if (!Success)
-    {
-        DisplayMessage(L"RegisterConsoleVDM failed with error %d\n", GetLastError());
-        EmulatorTerminate();
-        return FALSE;
-    }
-
-#ifdef USE_REAL_REGISTERCONSOLEVDM
-    CharBuff = RtlAllocateHeap(RtlGetProcessHeap(),
-                               HEAP_ZERO_MEMORY,
-                               TextResolution.X * TextResolution.Y
-                                                * sizeof(*CharBuff));
-    ASSERT(CharBuff);
-#endif
-
-    /* Resize the console */
-    ResizeTextConsole(Resolution, NULL);
-
-    /* Update the saved console information */
-    GetConsoleScreenBufferInfo(TextConsoleBuffer, &ConsoleInfo);
-
-    /*
-     * Copy console data into VGA memory
-     */
-
-    /* Read the data from the console into the framebuffer... */
-    ConRect.Left   = ConRect.Top = 0;
-    ConRect.Right  = TextResolution.X;
-    ConRect.Bottom = TextResolution.Y;
-
-    ReadConsoleOutputA(TextConsoleBuffer,
-                       CharBuff,
-                       TextResolution,
-                       Origin,
-                       &ConRect);
-
-    /* ... and copy the framebuffer into the VGA memory */
-    AddressSize  = VgaGetAddressSize();
-    ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
-
-    /* Loop through the scanlines */
-    for (i = 0; i < TextResolution.Y; i++)
-    {
-        /* Loop through the characters */
-        for (j = 0; j < TextResolution.X; j++)
-        {
-            CurrentAddr = LOWORD((Address + j) * AddressSize);
-
-            /* Store the character in plane 0 */
-            VgaMemory[CurrentAddr] = CharBuff[i * TextResolution.X + j].Char.AsciiChar;
-
-            /* Store the attribute in plane 1 */
-            VgaMemory[CurrentAddr + VGA_BANK_SIZE] = (BYTE)CharBuff[i * TextResolution.X + j].Attributes;
-        }
-
-        /* Move to the next scanline */
-        Address += ScanlineSize;
-    }
-
-#ifdef USE_REAL_REGISTERCONSOLEVDM
-    if (CharBuff) RtlFreeHeap(RtlGetProcessHeap(), 0, CharBuff);
-#endif
-
-    VgaUpdateCursorPosition();
-
-    return TRUE;
-}
-
-static VOID VgaDetachFromConsoleInternal(VOID)
-{
-    ULONG dummyLength;
-    PVOID dummyPtr;
-    COORD dummySize = {0};
-
-    /* Deregister with the console server */
-    __RegisterConsoleVDM(0,
-                         NULL,
-                         NULL,
-                         NULL,
-                         0,
-                         &dummyLength,
-                         &dummyPtr,
-                         NULL,
-                         0,
-                         dummySize,
-                         &dummyPtr);
-
-    TextFramebuffer = NULL;
-}
-
-static BOOL IsConsoleHandle(HANDLE hHandle)
-{
-    DWORD dwMode;
-
-    /* Check whether the handle may be that of a console... */
-    if ((GetFileType(hHandle) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR)
-        return FALSE;
-
-    /*
-     * It may be. Perform another test... The idea comes from the
-     * MSDN description of the WriteConsole API:
-     *
-     * "WriteConsole fails if it is used with a standard handle
-     *  that is redirected to a file. If an application processes
-     *  multilingual output that can be redirected, determine whether
-     *  the output handle is a console handle (one method is to call
-     *  the GetConsoleMode function and check whether it succeeds).
-     *  If the handle is a console handle, call WriteConsole. If the
-     *  handle is not a console handle, the output is redirected and
-     *  you should call WriteFile to perform the I/O."
-     */
-    return GetConsoleMode(hHandle, &dwMode);
 }
 
 static inline DWORD VgaGetAddressSize(VOID)
@@ -833,25 +438,6 @@ static inline BYTE VgaTranslateByteForWriting(BYTE Data, BYTE Plane)
 
     /* Return the byte */
     return Data;
-}
-
-static inline VOID VgaMarkForUpdate(SHORT Row, SHORT Column)
-{
-    /* Check if this is the first time the rectangle is updated */
-    if (!NeedsUpdate)
-    {
-        UpdateRectangle.Left = UpdateRectangle.Top = MAXSHORT;
-        UpdateRectangle.Right = UpdateRectangle.Bottom = MINSHORT;
-    }
-
-    /* Expand the rectangle to include the point */
-    UpdateRectangle.Left = min(UpdateRectangle.Left, Column);
-    UpdateRectangle.Right = max(UpdateRectangle.Right, Column);
-    UpdateRectangle.Top = min(UpdateRectangle.Top, Row);
-    UpdateRectangle.Bottom = max(UpdateRectangle.Bottom, Row);
-
-    /* Set the update request flag */
-    NeedsUpdate = TRUE;
 }
 
 static inline ULONG VgaGetClockFrequency(VOID)
@@ -1026,158 +612,73 @@ static VOID VgaResetPalette(VOID)
     PaletteChanged = TRUE;
 }
 
-static VOID VgaSetActiveScreenBuffer(HANDLE ScreenBuffer)
+static BOOL VgaEnterNewMode(SCREEN_MODE NewScreenMode, PCOORD Resolution)
 {
-    ASSERT(ScreenBuffer);
-
-    /* Set the active buffer and reattach the VDM UI to it */
-    SetConsoleActiveScreenBuffer(ScreenBuffer);
-    ConsoleReattach(ScreenBuffer);
-}
-
-static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
-{
-    DWORD i;
-    CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
-    BYTE BitmapInfoBuffer[VGA_BITMAP_INFO_SIZE];
-    LPBITMAPINFO BitmapInfo = (LPBITMAPINFO)BitmapInfoBuffer;
-    LPWORD PaletteIndex = (LPWORD)(BitmapInfo->bmiColors);
-
-    LONG Width  = Resolution->X;
-    LONG Height = Resolution->Y;
-
-    /* Use DoubleVision mode if the resolution is too small */
-    DoubleWidth = (Width < VGA_MINIMUM_WIDTH);
-    if (DoubleWidth) Width *= 2;
-    DoubleHeight = (Height < VGA_MINIMUM_HEIGHT);
-    if (DoubleHeight) Height *= 2;
-
-    /* Fill the bitmap info header */
-    RtlZeroMemory(&BitmapInfo->bmiHeader, sizeof(BitmapInfo->bmiHeader));
-    BitmapInfo->bmiHeader.biSize   = sizeof(BitmapInfo->bmiHeader);
-    BitmapInfo->bmiHeader.biWidth  = Width;
-    BitmapInfo->bmiHeader.biHeight = Height;
-    BitmapInfo->bmiHeader.biBitCount = 8;
-    BitmapInfo->bmiHeader.biPlanes   = 1;
-    BitmapInfo->bmiHeader.biCompression = BI_RGB;
-    BitmapInfo->bmiHeader.biSizeImage   = Width * Height /* * 1 == biBitCount / 8 */;
-
-    /* Fill the palette data */
-    for (i = 0; i < (VGA_PALETTE_SIZE / 3); i++) PaletteIndex[i] = (WORD)i;
-
-    /* Fill the console graphics buffer info */
-    GraphicsBufferInfo.dwBitMapInfoLength = VGA_BITMAP_INFO_SIZE;
-    GraphicsBufferInfo.lpBitMapInfo = BitmapInfo;
-    GraphicsBufferInfo.dwUsage = DIB_PAL_COLORS;
-
-    /* Create the buffer */
-    GraphicsConsoleBuffer = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
-                                                      FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                                      NULL,
-                                                      CONSOLE_GRAPHICS_BUFFER,
-                                                      &GraphicsBufferInfo);
-    if (GraphicsConsoleBuffer == INVALID_HANDLE_VALUE) return FALSE;
-
-    /* Save the framebuffer address and mutex */
-    GraphicsFramebuffer = GraphicsBufferInfo.lpBitMap;
-    ConsoleMutex = GraphicsBufferInfo.hMutex;
-
-    /* Clear the framebuffer */
-    RtlZeroMemory(GraphicsFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
-
-    /* Set the active buffer */
-    VgaSetActiveScreenBuffer(GraphicsConsoleBuffer);
-
-    /* The active framebuffer is now the graphics framebuffer */
-    ConsoleFramebuffer = GraphicsFramebuffer;
-
-    /* Set the graphics mode palette */
-    SetConsolePalette(GraphicsConsoleBuffer,
-                      PaletteHandle,
-                      SYSPAL_NOSTATIC256);
-
-    /* Set the screen mode flag */
-    ScreenMode = GRAPHICS_MODE;
-
-    return TRUE;
-}
-
-static VOID VgaLeaveGraphicsMode(VOID)
-{
-    /* Release the console framebuffer mutex */
-    ReleaseMutex(ConsoleMutex);
-
-    /* Switch back to the default console text buffer */
-    // VgaSetActiveScreenBuffer(TextConsoleBuffer);
-
-    /* Cleanup the video data */
-    CloseHandle(ConsoleMutex);
-    ConsoleMutex = NULL;
-    GraphicsFramebuffer = NULL;
-    CloseHandle(GraphicsConsoleBuffer);
-    GraphicsConsoleBuffer = NULL;
-
-    /* Reset the active framebuffer */
-    ConsoleFramebuffer = NULL;
-
-    DoubleWidth  = FALSE;
-    DoubleHeight = FALSE;
-}
-
-static BOOL VgaEnterTextMode(PCOORD Resolution)
-{
-    /* Switch to the text buffer */
-    // FIXME: Wouldn't it be preferrable to switch to it AFTER we reset everything??
-    VgaSetActiveScreenBuffer(TextConsoleBuffer);
-
-    /* Adjust the text framebuffer if we changed the resolution */
-    if (TextResolution.X != Resolution->X ||
-        TextResolution.Y != Resolution->Y)
+    /* Check if the new mode is alphanumeric */
+    if (NewScreenMode == TEXT_MODE)
     {
-        VgaDetachFromConsoleInternal();
+        /* Enter new text mode */
 
-        /*
-         * VgaAttachToConsoleInternal sets TextResolution
-         * to the new resolution and updates ConsoleInfo.
-         */
-        if (!VgaAttachToConsoleInternal(Resolution))
+        if (!VgaConsoleCreateTextScreen(&TextFramebuffer,
+                                        Resolution,
+                                        TextPaletteHandle))
         {
-            DisplayMessage(L"An unexpected error occurred!\n");
+            DisplayMessage(L"An unexpected VGA error occurred while switching into text mode. Error: %u", GetLastError());
             EmulatorTerminate();
             return FALSE;
         }
+
+        /* The active framebuffer is now the text framebuffer */
+        ActiveFramebuffer = TextFramebuffer;
+
+        /* Set the screen mode flag */
+        ScreenMode = TEXT_MODE;
+
+        return TRUE;
     }
     else
     {
-        VgaUpdateCursorPosition();
+        /* Enter graphics mode */
+
+        if (!VgaConsoleCreateGraphicsScreen(&GraphicsFramebuffer,
+                                            Resolution,
+                                            PaletteHandle))
+        {
+            DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode. Error: %u", GetLastError());
+            EmulatorTerminate();
+            return FALSE;
+        }
+
+        /* The active framebuffer is now the graphics framebuffer */
+        ActiveFramebuffer = GraphicsFramebuffer;
+
+        /* Set the screen mode flag */
+        ScreenMode = GRAPHICS_MODE;
+
+        return TRUE;
     }
-
-    /* The active framebuffer is now the text framebuffer */
-    ConsoleFramebuffer = TextFramebuffer;
-
-    /*
-     * Set the text mode palette.
-     *
-     * INFORMATION: This call should fail on Windows (and therefore
-     * we get the default palette and our external behaviour is
-     * just like Windows' one), but it should success on ReactOS
-     * (so that we get console palette changes even for text-mode
-     * screen buffers, which is a new feature on ReactOS).
-     */
-    SetConsolePalette(TextConsoleBuffer,
-                      TextPaletteHandle,
-                      SYSPAL_NOSTATIC256);
-
-    /* Set the screen mode flag */
-    ScreenMode = TEXT_MODE;
-
-    return TRUE;
 }
 
-static VOID VgaLeaveTextMode(VOID)
+static VOID VgaLeaveCurrentMode(VOID)
 {
+    /* Leave the current video mode */
+    if (ScreenMode == GRAPHICS_MODE)
+    {
+        VgaConsoleDestroyGraphicsScreen();
+
+        /* Cleanup the video data */
+        GraphicsFramebuffer = NULL;
+    }
+    else
+    {
+        VgaConsoleDestroyTextScreen();
+
+        /* Cleanup the video data */
+        TextFramebuffer = NULL;
+    }
+
     /* Reset the active framebuffer */
-    ConsoleFramebuffer = NULL;
+    ActiveFramebuffer = NULL;
 }
 
 static VOID VgaChangeMode(VOID)
@@ -1201,37 +702,14 @@ static VOID VgaChangeMode(VOID)
     // *ONLY* if we succeeded in setting the new mode??
 
     /* Leave the current video mode */
-    if (ScreenMode == GRAPHICS_MODE)
-        VgaLeaveGraphicsMode();
-    else
-        VgaLeaveTextMode();
+    VgaLeaveCurrentMode(); // ScreenMode
 
     /* Update the current resolution */
     CurrResolution = NewResolution;
 
-    /* The new screen mode will be updated via the VgaEnterText/GraphicsMode functions */
-
-    /* Check if the new mode is alphanumeric */
-    if (NewScreenMode == TEXT_MODE)
-    {
-        /* Enter new text mode */
-        if (!VgaEnterTextMode(&CurrResolution))
-        {
-            DisplayMessage(L"An unexpected VGA error occurred while switching into text mode. Error: %u", GetLastError());
-            EmulatorTerminate();
-            return;
-        }
-    }
-    else
-    {
-        /* Enter graphics mode */
-        if (!VgaEnterGraphicsMode(&CurrResolution))
-        {
-            DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode. Error: %u", GetLastError());
-            EmulatorTerminate();
-            return;
-        }
-    }
+    /* Change the screen mode */
+    if (!VgaEnterNewMode(NewScreenMode, &CurrResolution))
+        return;
 
 Quit:
 
@@ -1244,6 +722,25 @@ Quit:
 
     /* Reset the mode change flag */
     ModeChanged = FALSE;
+}
+
+static inline VOID VgaMarkForUpdate(SHORT Row, SHORT Column)
+{
+    /* Check if this is the first time the rectangle is updated */
+    if (!NeedsUpdate)
+    {
+        UpdateRectangle.Left = UpdateRectangle.Top = MAXSHORT;
+        UpdateRectangle.Right = UpdateRectangle.Bottom = MINSHORT;
+    }
+
+    /* Expand the rectangle to include the point */
+    UpdateRectangle.Left = min(UpdateRectangle.Left, Column);
+    UpdateRectangle.Right = max(UpdateRectangle.Right, Column);
+    UpdateRectangle.Top = min(UpdateRectangle.Top, Row);
+    UpdateRectangle.Bottom = max(UpdateRectangle.Bottom, Row);
+
+    /* Set the update request flag */
+    NeedsUpdate = TRUE;
 }
 
 static VOID VgaUpdateFramebuffer(VOID)
@@ -1265,13 +762,13 @@ static VOID VgaUpdateFramebuffer(VOID)
      * If the console framebuffer is NULL, that means something
      * went wrong earlier and this is the final display refresh.
      */
-    if (ConsoleFramebuffer == NULL) return;
+    if (ActiveFramebuffer == NULL) return;
 
     /* Check if we are in text or graphics mode */
     if (ScreenMode == GRAPHICS_MODE)
     {
         /* Graphics mode */
-        PBYTE GraphicsBuffer = (PBYTE)ConsoleFramebuffer;
+        PBYTE GraphicsBuffer = (PBYTE)ActiveFramebuffer;
         DWORD InterlaceHighBit = VGA_INTERLACE_HIGH_BIT;
         SHORT X;
 
@@ -1531,7 +1028,7 @@ static VOID VgaUpdateFramebuffer(VOID)
     {
         /* Text mode */
         DWORD CurrentAddr;
-        PCHAR_CELL CharBuffer = (PCHAR_CELL)ConsoleFramebuffer;
+        PCHAR_CELL CharBuffer = (PCHAR_CELL)ActiveFramebuffer;
         CHAR_CELL CharInfo;
 
         /*
@@ -1574,9 +1071,6 @@ static VOID VgaUpdateFramebuffer(VOID)
 
 static VOID VgaUpdateTextCursor(VOID)
 {
-    COORD Position;
-    CONSOLE_CURSOR_INFO CursorInfo;
-
     BOOL CursorVisible = !(VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x20);
     BYTE CursorStart   =   VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x1F;
     BYTE CursorEnd     =   VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG]   & 0x1F;
@@ -1589,31 +1083,11 @@ static VOID VgaUpdateTextCursor(VOID)
     /* Just return if we are not in text mode */
     if (ScreenMode != TEXT_MODE) return;
 
-    if (CursorStart < CursorEnd)
-    {
-        /* Visible cursor */
-        CursorInfo.bVisible = CursorVisible;
-        CursorInfo.dwSize   = (100 * (CursorEnd - CursorStart)) / TextSize;
-    }
-    else
-    {
-        /* Hidden cursor */
-        CursorInfo.bVisible = FALSE;
-        CursorInfo.dwSize   = 1; // The size needs to be non-zero for SetConsoleCursorInfo to succeed.
-    }
-
     /* Add the cursor skew to the location */
     Location += (VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] >> 5) & 0x03;
 
-    /* Find the coordinates of the new position */
-    Position.X = (SHORT)(Location % ScanlineSize);
-    Position.Y = (SHORT)(Location / ScanlineSize);
-
-    DPRINT("VgaUpdateTextCursor: (X = %d ; Y = %d)\n", Position.X, Position.Y);
-
-    /* Update the physical cursor */
-    SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
-    SetConsoleCursorPosition(TextConsoleBuffer, Position);
+    VgaConsoleUpdateTextCursor(CursorVisible, CursorStart, CursorEnd,
+                               TextSize, ScanlineSize, Location);
 
     /* Reset the cursor changed flag */
     CursorChanged = FALSE;
@@ -2119,8 +1593,6 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
 
 static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
 {
-    HANDLE ConsoleBufferHandle = NULL;
-
     UNREFERENCED_PARAMETER(ElapsedTime);
 
     /* Set the vertical retrace cycle */
@@ -2160,32 +1632,7 @@ static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
            UpdateRectangle.Right,
            UpdateRectangle.Bottom);
 
-    /* Check if we are in text or graphics mode */
-    if (ScreenMode == GRAPHICS_MODE)
-    {
-        /* Graphics mode */
-        ConsoleBufferHandle = GraphicsConsoleBuffer;
-
-        /* In DoubleVision mode, scale the update rectangle */
-        if (DoubleWidth)
-        {
-            UpdateRectangle.Left *= 2;
-            UpdateRectangle.Right = UpdateRectangle.Right * 2 + 1;
-        }
-        if (DoubleHeight)
-        {
-            UpdateRectangle.Top *= 2;
-            UpdateRectangle.Bottom = UpdateRectangle.Bottom * 2 + 1;
-        }
-    }
-    else
-    {
-        /* Text mode */
-        ConsoleBufferHandle = TextConsoleBuffer;
-    }
-
-    /* Redraw the screen */
-    __InvalidateConsoleDIBits(ConsoleBufferHandle, &UpdateRectangle);
+    VgaConsoleRepaintScreen(&UpdateRectangle);
 
     /* Clear the update flag */
     NeedsUpdate = FALSE;
@@ -2247,14 +1694,6 @@ COORD VgaGetDisplayResolution(VOID)
 
     /* Return the resolution */
     return Resolution;
-}
-
-BOOLEAN VgaGetDoubleVisionState(PBOOLEAN Horizontal, PBOOLEAN Vertical)
-{
-    if (GraphicsConsoleBuffer == NULL) return FALSE;
-    if (Horizontal) *Horizontal = DoubleWidth;
-    if (Vertical)   *Vertical   = DoubleHeight;
-    return TRUE;
 }
 
 VOID VgaRefreshDisplay(VOID)
@@ -2403,134 +1842,9 @@ VOID VgaWriteTextModeFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
     }
 }
 
-VOID ScreenEventHandler(PWINDOW_BUFFER_SIZE_RECORD ScreenEvent)
-{
-    /*
-     * This function monitors and allows console resizings only if they are triggered by us.
-     * User-driven resizings via the console properties, or programmatical console resizings
-     * made by explicit calls to SetConsoleScreenBufferSize by external applications, are forbidden.
-     * In that case only a console window resize is done in case the size is reduced.
-     * This protection is enabled in CONSRV side when NTVDM registers as a VDM to CONSRV,
-     * but we also implement it there in case we are running in STANDALONE mode without
-     * CONSRV registration.
-     *
-     * The only potential problem we have is that, when this handler is called,
-     * the console is already resized. In case this corresponds to a forbidden resize,
-     * we resize the console back to its original size from inside the handler.
-     * This will trigger a recursive call to the handler, that should be detected.
-     */
-
-    if (CurrResolution.X == ScreenEvent->dwSize.X &&
-        CurrResolution.Y == ScreenEvent->dwSize.Y)
-    {
-        /* Allowed resize, we are OK */
-        return;
-    }
-
-    DPRINT1("ScreenEventHandler - Detected forbidden resize! Reset console screenbuffer size back to (X = %d ; Y = %d)\n", CurrResolution.X, CurrResolution.Y);
-
-    // FIXME: If we're detaching, then stop monitoring for changes!!
-
-    /* Restore the original console size */
-    ResizeTextConsole(&CurrResolution, NULL);
-
-    /* Force refresh of all the screen */
-    NeedsUpdate = TRUE;
-    UpdateRectangle.Left = 0;
-    UpdateRectangle.Top  = 0;
-    UpdateRectangle.Right  = CurrResolution.X;
-    UpdateRectangle.Bottom = CurrResolution.Y;
-    VgaRefreshDisplay();
-}
-
-BOOL VgaAttachToConsole(VOID)
-{
-    if (TextResolution.X == 0 || TextResolution.Y == 0)
-        DPRINT1("VgaAttachToConsole -- TextResolution uninitialized\n");
-
-    if (TextResolution.X == 0) TextResolution.X = 80;
-    if (TextResolution.Y == 0) TextResolution.Y = 25;
-
-    // VgaDetachFromConsoleInternal();
-
-    /*
-     * VgaAttachToConsoleInternal sets TextResolution
-     * to the new resolution and updates ConsoleInfo.
-     */
-    if (!VgaAttachToConsoleInternal(&TextResolution))
-    {
-        DisplayMessage(L"An unexpected error occurred!\n");
-        EmulatorTerminate();
-        return FALSE;
-    }
-
-    /* Restore the original screen buffer */
-    VgaSetActiveScreenBuffer(ScreenBufferHandle);
-    ScreenBufferHandle = NULL;
-
-    /* Restore the screen state */
-    if (ScreenMode == TEXT_MODE)
-    {
-        /* The text mode framebuffer was recreated */
-        ConsoleFramebuffer = TextFramebuffer;
-    }
-    else
-    {
-        /* The graphics mode framebuffer is unchanged */
-        ConsoleFramebuffer = OldConsoleFramebuffer;
-    }
-    OldConsoleFramebuffer = NULL;
-
-    return TRUE;
-}
-
-VOID VgaDetachFromConsole(VOID)
-{
-    VgaDetachFromConsoleInternal();
-
-    /* Save the screen state */
-    if (ScreenMode == TEXT_MODE)
-        ScreenBufferHandle = TextConsoleBuffer;
-    else
-        ScreenBufferHandle = GraphicsConsoleBuffer;
-
-    /* Reset the active framebuffer */
-    OldConsoleFramebuffer = ConsoleFramebuffer;
-    ConsoleFramebuffer = NULL;
-
-    /* Restore the original console size */
-    ResizeTextConsole(&OrgConsoleBufferInfo.dwSize, &OrgConsoleBufferInfo.srWindow);
-
-    /* Restore the original cursor shape */
-    SetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo);
-
-    // FIXME: Should we copy back the screen data to the screen buffer??
-    // WriteConsoleOutputA(...);
-
-    // FIXME: Should we change cursor POSITION??
-    // VgaUpdateTextCursor();
-
-    ///* Update the physical cursor */
-    //SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
-    //SetConsoleCursorPosition(TextConsoleBuffer, Position /*OrgConsoleBufferInfo.dwCursorPosition*/);
-
-    /* Restore the old text-mode screen buffer */
-    VgaSetActiveScreenBuffer(TextConsoleBuffer);
-}
-
 BOOLEAN VgaInitialize(HANDLE TextHandle)
 {
-    /* Save the default text-mode console output handle */
-    if (!IsConsoleHandle(TextHandle)) return FALSE;
-    TextConsoleBuffer = TextHandle;
-
-    /* Save the original cursor and console screen buffer information */
-    if (!GetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo) ||
-        !GetConsoleScreenBufferInfo(TextConsoleBuffer, &OrgConsoleBufferInfo))
-    {
-        return FALSE;
-    }
-    ConsoleInfo = OrgConsoleBufferInfo;
+    if (!VgaConsoleInitialize(TextHandle)) return FALSE;
 
     /* Clear the SEQ, GC, CRTC and AC registers */
     RtlZeroMemory(VgaSeqRegisters , sizeof(VgaSeqRegisters ));
@@ -2541,9 +1855,6 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     /* Initialize the VGA palette and fail if it isn't successfully created */
     if (!VgaInitializePalette()) return FALSE;
     /***/ VgaResetPalette(); /***/
-
-    /* Switch to the text buffer, but do not enter into a text mode */
-    VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
     /* Reset the sequencer */
     VgaResetSequencer();
@@ -2586,17 +1897,11 @@ VOID VgaCleanup(VOID)
     DestroyHardwareTimer(HSyncTimer);
 
     /* Leave the current video mode */
-    if (ScreenMode == GRAPHICS_MODE)
-        VgaLeaveGraphicsMode();
-    else
-        VgaLeaveTextMode();
+    VgaLeaveCurrentMode(); // ScreenMode
 
-    VgaDetachFromConsole();
     MemRemoveFastMemoryHook((PVOID)0xA0000, 0x20000);
 
-    CloseHandle(AnotherEvent);
-    CloseHandle(EndEvent);
-    CloseHandle(StartEvent);
+    VgaConsoleCleanup();
 }
 
 /* EOF */

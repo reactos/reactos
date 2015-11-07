@@ -25,6 +25,9 @@
 #include "hardware/ps2.h"
 #include "hardware/pic.h"
 #include "hardware/video/svga.h"
+/**/
+#include "../console/video.h"
+/**/
 
 #include "mouse32.h"
 #include "bios/bios.h"

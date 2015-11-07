@@ -32,6 +32,9 @@
 
 #include "io.h"
 #include "hardware/video/svga.h"
+/**/
+#include "../console/video.h"
+/**/
 
 /* MACROS *********************************************************************/
 

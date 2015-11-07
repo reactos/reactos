@@ -368,11 +368,19 @@ typedef struct _SVGA_REGISTERS
     UCHAR Attribute[VGA_AC_MAX_REG];
 } SVGA_REGISTERS, *PSVGA_REGISTERS;
 
-/* FUNCTIONS ******************************************************************/
 
-VOID ScreenEventHandler(PWINDOW_BUFFER_SIZE_RECORD ScreenEvent);
-BOOL VgaAttachToConsole(VOID);
-VOID VgaDetachFromConsole(VOID);
+/*
+ * Console interface -- VGA-mode-agnostic
+ */
+// WARNING! This structure *MUST BE* in sync with the one in consrv/include/conio_winsrv.h
+typedef struct _CHAR_CELL
+{
+    CHAR Char;
+    BYTE Attributes;
+} CHAR_CELL, *PCHAR_CELL;
+C_ASSERT(sizeof(CHAR_CELL) == 2);
+
+/* FUNCTIONS ******************************************************************/
 
 COORD VgaGetDisplayResolution(VOID);
 VOID VgaRefreshDisplay(VOID);
@@ -380,7 +388,6 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size);
 BOOLEAN FASTCALL VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size);
 VOID VgaWriteTextModeFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height);
 VOID VgaClearMemory(VOID);
-BOOLEAN VgaGetDoubleVisionState(PBOOLEAN Horizontal, PBOOLEAN Vertical);
 
 BOOLEAN VgaInitialize(HANDLE TextHandle);
 VOID VgaCleanup(VOID);
