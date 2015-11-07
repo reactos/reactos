@@ -72,7 +72,6 @@ typedef struct _SOCK_SHARED_INFO {
 		BOOLEAN					UseSAN:1;
     }; // Flags
     DWORD						CreateFlags;
-    DWORD						CatalogEntryId;
     DWORD						ServiceFlags1;
     DWORD						ProviderFlags;
     GROUP						GroupID;
@@ -106,6 +105,7 @@ typedef struct _SOCKET_INFORMATION {
 	BOOL TrySAN;
 	SOCKADDR WSLocalAddress;
 	SOCKADDR WSRemoteAddress;
+	WSAPROTOCOL_INFOW ProtocolInfo;
 	struct _SOCKET_INFORMATION *NextSocket;
 } SOCKET_INFORMATION, *PSOCKET_INFORMATION;
 

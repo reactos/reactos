@@ -19,7 +19,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msafd);
 
 HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
-DWORD CatalogEntryId; /* CatalogEntryId for upcalls */
 LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
 PSOCKET_INFORMATION SocketListHead = NULL;
 CRITICAL_SECTION SocketListLock;
@@ -116,7 +115,6 @@ WSPSocket(int AddressFamily,
     Socket->SharedData.SizeOfRemoteAddress = HelperData->MaxWSAddressLength;
     Socket->SharedData.UseDelayedAcceptance = HelperData->UseDelayedAcceptance;
     Socket->SharedData.CreateFlags = dwFlags;
-    Socket->SharedData.CatalogEntryId = lpProtocolInfo->dwCatalogEntryId;
     Socket->SharedData.ServiceFlags1 = lpProtocolInfo->dwServiceFlags1;
     Socket->SharedData.ProviderFlags = lpProtocolInfo->dwProviderFlags;
     Socket->SharedData.GroupID = g;
@@ -124,6 +122,7 @@ WSPSocket(int AddressFamily,
     Socket->SharedData.UseSAN = FALSE;
     Socket->SharedData.NonBlocking = FALSE; /* Sockets start blocking */
     Socket->SanData = NULL;
+    RtlCopyMemory(&Socket->ProtocolInfo, lpProtocolInfo, sizeof(Socket->ProtocolInfo));
 
     /* Ask alex about this */
     if( Socket->SharedData.SocketType == SOCK_DGRAM ||
@@ -290,7 +289,7 @@ WSPSocket(int AddressFamily,
     CreateContext(Socket);
 
     /* Notify Winsock */
-    Upcalls.lpWPUModifyIFSHandle(CatalogEntryId, (SOCKET)Sock, lpErrno);
+    Upcalls.lpWPUModifyIFSHandle(Socket->ProtocolInfo.dwCatalogEntryId, (SOCKET)Sock, lpErrno);
 
     /* Return Socket Handle */
     TRACE("Success %x\n", Sock);
@@ -1058,7 +1057,6 @@ WSPAccept(SOCKET Handle,
     PSOCKADDR                   RemoteAddress =  NULL;
     GROUP                       GroupID = 0;
     ULONG                       CallBack;
-    WSAPROTOCOL_INFOW           ProtocolInfo;
     SOCKET                      AcceptSocket;
     PSOCKET_INFORMATION         AcceptSocketInfo;
     UCHAR                       ReceiveBuffer[0x1A];
@@ -1332,14 +1330,10 @@ WSPAccept(SOCKET Handle,
     }
 
     /* Create a new Socket */
-    ProtocolInfo.dwCatalogEntryId = Socket->SharedData.CatalogEntryId;
-    ProtocolInfo.dwServiceFlags1 = Socket->SharedData.ServiceFlags1;
-    ProtocolInfo.dwProviderFlags = Socket->SharedData.ProviderFlags;
-
     AcceptSocket = WSPSocket (Socket->SharedData.AddressFamily,
                               Socket->SharedData.SocketType,
                               Socket->SharedData.Protocol,
-                              &ProtocolInfo,
+                              &Socket->ProtocolInfo,
                               GroupID,
                               Socket->SharedData.CreateFlags,
                               lpErrno);
@@ -2182,11 +2176,14 @@ WSPGetSockOpt(IN SOCKET Handle,
                     Buffer = &Socket->SharedData.RecvTimeout;
                     BufferSize = sizeof(DWORD);
                     break;
+                case SO_PROTOCOL_INFOW:
+                    Buffer = &Socket->ProtocolInfo;
+                    BufferSize = sizeof(Socket->ProtocolInfo);
+                    break;
 
                 case SO_GROUP_ID:
                 case SO_GROUP_PRIORITY:
                 case SO_MAX_MSG_SIZE:
-                case SO_PROTOCOL_INFO:
 
                 default:
                     DbgPrint("MSAFD: Get unknown optname %x\n", OptionName);
@@ -2412,8 +2409,6 @@ WSPStartup(IN  WORD wVersionRequested,
         lpProcTable->lpWSPStringToAddress = WSPStringToAddress;
         lpWSPData->wVersion     = MAKEWORD(2, 2);
         lpWSPData->wHighVersion = MAKEWORD(2, 2);
-        /* Save CatalogEntryId for all upcalls */
-        CatalogEntryId = lpProtocolInfo->dwCatalogEntryId;
     }
 
     TRACE("Status (%d).\n", Status);
