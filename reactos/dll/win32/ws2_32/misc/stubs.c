@@ -497,6 +497,11 @@ WSAEnumProtocolsA(IN      LPINT lpiProtocols,
 {
     UNIMPLEMENTED
 
+    if (lpProtocolBuffer)
+    {
+        RtlZeroMemory(lpProtocolBuffer, *lpdwBufferLength);
+    }
+    *lpdwBufferLength = sizeof(WSAPROTOCOL_INFOA);
     WSASetLastError(WSASYSCALLFAILURE);
     return SOCKET_ERROR;
 }
@@ -513,6 +518,11 @@ WSAEnumProtocolsW(IN      LPINT lpiProtocols,
 {
     UNIMPLEMENTED
 
+    if (lpProtocolBuffer)
+    {
+        RtlZeroMemory(lpProtocolBuffer, *lpdwBufferLength);
+    }
+    *lpdwBufferLength = sizeof(WSAPROTOCOL_INFOW);
     WSASetLastError(WSASYSCALLFAILURE);
     return SOCKET_ERROR;
 }
