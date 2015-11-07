@@ -74,8 +74,8 @@ typedef struct _NTVDM_SETTINGS
 {
     ANSI_STRING BiosFileName;
     ANSI_STRING RomFiles;
-    ANSI_STRING FloppyDisks[2];
-    ANSI_STRING HardDisks[4];
+    UNICODE_STRING FloppyDisks[2];
+    UNICODE_STRING HardDisks[4];
 } NTVDM_SETTINGS, *PNTVDM_SETTINGS;
 
 extern NTVDM_SETTINGS GlobalSettings;

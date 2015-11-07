@@ -146,7 +146,6 @@ UpdateVdmMenuMouse(VOID)
 UpdateVdmMenuDisks(VOID)
 {
     UINT_PTR ItemID;
-    UNICODE_STRING ValueString;
     USHORT i;
 
     WCHAR szNoMedia[100];
@@ -170,17 +169,12 @@ UpdateVdmMenuDisks(VOID)
 
         if (GlobalSettings.FloppyDisks[i].Length != 0 &&
             GlobalSettings.FloppyDisks[i].Buffer      &&
-            GlobalSettings.FloppyDisks[i].Buffer != '\0')
+            GlobalSettings.FloppyDisks[i].Buffer != L'\0')
         {
-            /* Convert the ANSI string to UNICODE */
-            RtlAnsiStringToUnicodeString(&ValueString, &GlobalSettings.FloppyDisks[i], TRUE);
-
             /* Update item text */
-            _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, ValueString.Buffer);
+            _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, GlobalSettings.FloppyDisks[i].Buffer);
             szMenuString2[ARRAYSIZE(szMenuString2) - 1] = UNICODE_NULL;
             ModifyMenuW(hConsoleMenu, ItemID, MF_BYCOMMAND | MF_STRING, ItemID, szMenuString2);
-
-            RtlFreeUnicodeString(&ValueString);
 
             /* Enable the eject item */
             EnableMenuItem(hConsoleMenu, ItemID + 1, MF_BYCOMMAND | MF_ENABLED);

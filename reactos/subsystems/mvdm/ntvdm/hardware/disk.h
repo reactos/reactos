@@ -78,7 +78,7 @@ RetrieveDisk(IN DISK_TYPE DiskType,
 BOOLEAN
 MountDisk(IN DISK_TYPE DiskType,
           IN ULONG DiskNumber,
-          IN PCSTR FileName,
+          IN PCWSTR FileName,
           IN BOOLEAN ReadOnly);
 
 BOOLEAN

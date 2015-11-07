@@ -419,9 +419,9 @@ VOID MountFloppy(IN ULONG DiskNumber)
 #define  OFN_EX_NOPLACESBAR         0x00000001
 #endif // (_WIN32_WINNT >= 0x0500)
 
+    BOOLEAN Success;
     OPENFILENAMEW ofn;
     WCHAR szFile[MAX_PATH] = L"";
-    UNICODE_STRING ValueString;
 
     ASSERT(DiskNumber < ARRAYSIZE(GlobalSettings.FloppyDisks));
 
@@ -445,19 +445,18 @@ VOID MountFloppy(IN ULONG DiskNumber)
 
     /* Free the old string */
     if (GlobalSettings.FloppyDisks[DiskNumber].Buffer)
-        RtlFreeAnsiString(&GlobalSettings.FloppyDisks[DiskNumber]);
+        RtlFreeUnicodeString(&GlobalSettings.FloppyDisks[DiskNumber]);
 
-    /* Convert the UNICODE string to ANSI and store it */
-    RtlInitEmptyUnicodeString(&ValueString, szFile, wcslen(szFile) * sizeof(WCHAR));
-    ValueString.Length = ValueString.MaximumLength;
-    RtlUnicodeStringToAnsiString(&GlobalSettings.FloppyDisks[DiskNumber], &ValueString, TRUE);
+    /* Reinitialize the string */
+    Success = RtlCreateUnicodeString(&GlobalSettings.FloppyDisks[DiskNumber], szFile);
+    ASSERT(Success);
 
     /* Mount the disk */
     if (!MountDisk(FLOPPY_DISK, DiskNumber, GlobalSettings.FloppyDisks[DiskNumber].Buffer, !!(ofn.Flags & OFN_READONLY)))
     {
         DisplayMessage(L"An error happened when mounting disk %d", DiskNumber);
-        RtlFreeAnsiString(&GlobalSettings.FloppyDisks[DiskNumber]);
-        RtlInitEmptyAnsiString(&GlobalSettings.FloppyDisks[DiskNumber], NULL, 0);
+        RtlFreeUnicodeString(&GlobalSettings.FloppyDisks[DiskNumber]);
+        RtlInitEmptyUnicodeString(&GlobalSettings.FloppyDisks[DiskNumber], NULL, 0);
         return;
     }
 
@@ -476,8 +475,8 @@ VOID EjectFloppy(IN ULONG DiskNumber)
     /* Free the old string */
     if (GlobalSettings.FloppyDisks[DiskNumber].Buffer)
     {
-        RtlFreeAnsiString(&GlobalSettings.FloppyDisks[DiskNumber]);
-        RtlInitEmptyAnsiString(&GlobalSettings.FloppyDisks[DiskNumber], NULL, 0);
+        RtlFreeUnicodeString(&GlobalSettings.FloppyDisks[DiskNumber]);
+        RtlInitEmptyUnicodeString(&GlobalSettings.FloppyDisks[DiskNumber], NULL, 0);
     }
 
     /* Refresh the menu state */
@@ -597,9 +596,9 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         {
             if (!MountDisk(FLOPPY_DISK, i, GlobalSettings.FloppyDisks[i].Buffer, FALSE))
             {
-                DPRINT1("Failed to mount floppy disk file '%Z'.\n", &GlobalSettings.FloppyDisks[i]);
-                RtlFreeAnsiString(&GlobalSettings.FloppyDisks[i]);
-                RtlInitEmptyAnsiString(&GlobalSettings.FloppyDisks[i], NULL, 0);
+                DPRINT1("Failed to mount floppy disk file '%wZ'.\n", &GlobalSettings.FloppyDisks[i]);
+                RtlFreeUnicodeString(&GlobalSettings.FloppyDisks[i]);
+                RtlInitEmptyUnicodeString(&GlobalSettings.FloppyDisks[i], NULL, 0);
             }
         }
     }
@@ -612,11 +611,11 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     {
         if (GlobalSettings.HardDisks[i].Length != 0 &&
             GlobalSettings.HardDisks[i].Buffer      &&
-            GlobalSettings.HardDisks[i].Buffer != '\0')
+            GlobalSettings.HardDisks[i].Buffer != L'\0')
         {
             if (!MountDisk(HARD_DISK, i, GlobalSettings.HardDisks[i].Buffer, FALSE))
             {
-                wprintf(L"FATAL: Failed to mount hard disk file '%Z'.\n", &GlobalSettings.HardDisks[i]);
+                wprintf(L"FATAL: Failed to mount hard disk file '%wZ'.\n", &GlobalSettings.HardDisks[i]);
                 EmulatorCleanup();
                 return FALSE;
             }

@@ -93,8 +93,8 @@ NtVdmConfigureFloppy(IN PWSTR ValueName,
                      IN PVOID Context,
                      IN PVOID EntryContext)
 {
+    BOOLEAN Success;
     PNTVDM_SETTINGS Settings = (PNTVDM_SETTINGS)Context;
-    UNICODE_STRING ValueString;
     ULONG DiskNumber = (ULONG)EntryContext;
 
     ASSERT(DiskNumber < ARRAYSIZE(Settings->FloppyDisks));
@@ -102,21 +102,20 @@ NtVdmConfigureFloppy(IN PWSTR ValueName,
     /* Check whether the Hard Disk entry was not already configured */
     if (Settings->FloppyDisks[DiskNumber].Buffer != NULL)
     {
-        DPRINT1("Floppy Disk %d -- '%Z' already configured\n", DiskNumber, &Settings->FloppyDisks[DiskNumber]);
+        DPRINT1("Floppy Disk %d -- '%wZ' already configured\n", DiskNumber, &Settings->FloppyDisks[DiskNumber]);
         return STATUS_SUCCESS;
     }
 
     /* Check for the type of the value */
     if (ValueType != REG_SZ)
     {
-        RtlInitEmptyAnsiString(&Settings->FloppyDisks[DiskNumber], NULL, 0);
+        RtlInitEmptyUnicodeString(&Settings->FloppyDisks[DiskNumber], NULL, 0);
         return STATUS_SUCCESS;
     }
 
-    /* Convert the UNICODE string to ANSI and store it */
-    RtlInitEmptyUnicodeString(&ValueString, (PWCHAR)ValueData, ValueLength);
-    ValueString.Length = ValueString.MaximumLength;
-    RtlUnicodeStringToAnsiString(&Settings->FloppyDisks[DiskNumber], &ValueString, TRUE);
+    /* Initialize the string */
+    Success = RtlCreateUnicodeString(&Settings->FloppyDisks[DiskNumber], (PCWSTR)ValueData);
+    ASSERT(Success);
 
     return STATUS_SUCCESS;
 }
@@ -130,8 +129,8 @@ NtVdmConfigureHDD(IN PWSTR ValueName,
                   IN PVOID Context,
                   IN PVOID EntryContext)
 {
+    BOOLEAN Success;
     PNTVDM_SETTINGS Settings = (PNTVDM_SETTINGS)Context;
-    UNICODE_STRING ValueString;
     ULONG DiskNumber = (ULONG)EntryContext;
 
     ASSERT(DiskNumber < ARRAYSIZE(Settings->HardDisks));
@@ -139,21 +138,20 @@ NtVdmConfigureHDD(IN PWSTR ValueName,
     /* Check whether the Hard Disk entry was not already configured */
     if (Settings->HardDisks[DiskNumber].Buffer != NULL)
     {
-        DPRINT1("Hard Disk %d -- '%Z' already configured\n", DiskNumber, &Settings->HardDisks[DiskNumber]);
+        DPRINT1("Hard Disk %d -- '%wZ' already configured\n", DiskNumber, &Settings->HardDisks[DiskNumber]);
         return STATUS_SUCCESS;
     }
 
     /* Check for the type of the value */
     if (ValueType != REG_SZ)
     {
-        RtlInitEmptyAnsiString(&Settings->HardDisks[DiskNumber], NULL, 0);
+        RtlInitEmptyUnicodeString(&Settings->HardDisks[DiskNumber], NULL, 0);
         return STATUS_SUCCESS;
     }
 
-    /* Convert the UNICODE string to ANSI and store it */
-    RtlInitEmptyUnicodeString(&ValueString, (PWCHAR)ValueData, ValueLength);
-    ValueString.Length = ValueString.MaximumLength;
-    RtlUnicodeStringToAnsiString(&Settings->HardDisks[DiskNumber], &ValueString, TRUE);
+    /* Initialize the string */
+    Success = RtlCreateUnicodeString(&Settings->HardDisks[DiskNumber], (PCWSTR)ValueData);
+    ASSERT(Success);
 
     return STATUS_SUCCESS;
 }
@@ -291,13 +289,13 @@ FreeGlobalSettings(IN PNTVDM_SETTINGS Settings)
     for (i = 0; i < ARRAYSIZE(Settings->FloppyDisks); ++i)
     {
         if (Settings->FloppyDisks[i].Buffer)
-            RtlFreeAnsiString(&Settings->FloppyDisks[i]);
+            RtlFreeUnicodeString(&Settings->FloppyDisks[i]);
     }
 
     for (i = 0; i < ARRAYSIZE(Settings->HardDisks); ++i)
     {
         if (Settings->HardDisks[i].Buffer)
-            RtlFreeAnsiString(&Settings->HardDisks[i]);
+            RtlFreeUnicodeString(&Settings->HardDisks[i]);
     }
 }
 

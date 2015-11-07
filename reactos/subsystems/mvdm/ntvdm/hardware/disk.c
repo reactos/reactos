@@ -499,7 +499,7 @@ RetrieveDisk(IN DISK_TYPE DiskType,
 BOOLEAN
 MountDisk(IN DISK_TYPE DiskType,
           IN ULONG DiskNumber,
-          IN PCSTR FileName,
+          IN PCWSTR FileName,
           IN BOOLEAN ReadOnly)
 {
     BOOLEAN Success = FALSE;
@@ -527,7 +527,7 @@ MountDisk(IN DISK_TYPE DiskType,
     SetLastError(0); // For debugging purposes
     if (ReadOnly)
     {
-        hFile = CreateFileA(FileName,
+        hFile = CreateFileW(FileName,
                             GENERIC_READ,
                             FILE_SHARE_READ,
                             NULL,
@@ -537,7 +537,7 @@ MountDisk(IN DISK_TYPE DiskType,
     }
     else
     {
-        hFile = CreateFileA(FileName,
+        hFile = CreateFileW(FileName,
                             GENERIC_READ | GENERIC_WRITE,
                             0, // No sharing access
                             NULL,
@@ -545,13 +545,13 @@ MountDisk(IN DISK_TYPE DiskType,
                             FILE_ATTRIBUTE_NORMAL,
                             NULL);
     }
-    DPRINT1("File '%s' opening %s ; GetLastError() = %u\n",
+    DPRINT1("File '%S' opening %s ; GetLastError() = %u\n",
             FileName, hFile != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
 
     /* If we failed, bail out */
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        DisplayMessage(L"MountDisk: Error when opening disk file '%S' (Error: %u).", FileName, GetLastError());
+        DisplayMessage(L"MountDisk: Error when opening disk file '%s' (Error: %u).", FileName, GetLastError());
         return FALSE;
     }
 
@@ -569,7 +569,7 @@ MountDisk(IN DISK_TYPE DiskType,
         GetLastError() == ERROR_INVALID_FUNCTION)
     {
         /* Objects other than real files are not supported */
-        DisplayMessage(L"MountDisk: '%S' is not a valid disk file.", FileName);
+        DisplayMessage(L"MountDisk: '%s' is not a valid disk file.", FileName);
         goto Quit;
     }
     SetLastError(0);
@@ -577,14 +577,14 @@ MountDisk(IN DISK_TYPE DiskType,
         GetLastError() == ERROR_INVALID_FUNCTION)
     {
         /* Objects other than real files are not supported */
-        DisplayMessage(L"MountDisk: '%S' is not a valid disk file.", FileName);
+        DisplayMessage(L"MountDisk: '%s' is not a valid disk file.", FileName);
         goto Quit;
     }
 
     /* Success, mount the image */
     if (!DiskMountInfo[DiskType].MountDiskHelper(DiskImage, hFile))
     {
-        DisplayMessage(L"MountDisk: Failed to mount disk file '%S' in 0x%p.", FileName, DiskImage);
+        DisplayMessage(L"MountDisk: Failed to mount disk file '%s' in 0x%p.", FileName, DiskImage);
         goto Quit;
     }
 
