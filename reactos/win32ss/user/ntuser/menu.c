@@ -2291,7 +2291,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
         TRACE("Ownerdraw: Width %d Height %d\n", dis.rcItem.right-dis.rcItem.left, dis.rcItem.bottom-dis.rcItem.top);
         co_IntSendMessage(UserHMGetHandle(WndOwner), WM_DRAWITEM, 0, (LPARAM) &dis);
         /* Draw the popup-menu arrow */
-        if (lpitem->spSubMenu)
+        if (!menuBar && lpitem->spSubMenu)
         {
             RECT rectTemp;
             RtlCopyMemory(&rectTemp, &rect, sizeof(RECT));
