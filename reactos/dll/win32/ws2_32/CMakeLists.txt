@@ -25,7 +25,7 @@ add_library(ws2_32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
 
 set_module_type(ws2_32 win32dll UNICODE)
-target_link_libraries(ws2_32 wine)
+target_link_libraries(ws2_32 wine ${PSEH_LIB})
 add_delay_importlibs(ws2_32 user32)
 add_importlibs(ws2_32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
 add_pch(ws2_32 include/ws2_32.h SOURCE)

@@ -16,10 +16,12 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <winuser.h>
 #include <ws2spi.h>
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
+#include <pseh/pseh2.h>
 
 #include <wsahelp.h>
 
