@@ -447,12 +447,15 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetToolTipText(IUnknown *punk, int iOffset
                             IDS_BACK, (wchar_t*)&resourceString, 0);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        wcscpy(templateString, resourceString);
     }
     else
     {
-        wcscpy(templateString, L"Forward to %s");
+        hResult = LoadStringW(_AtlBaseModule.GetResourceInstance(),
+                            IDS_FORWARD, (wchar_t*)&resourceString, 0);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
     }
+    wcscpy(templateString, resourceString);
     _snwprintf(pwzText, cchText, templateString, tempString);
 
     TRACE("CTravelLog::GetToolTipText for IUnknown punk=%p at offset=%d returning L\"%S\"\n", punk, iOffset, pwzText);
