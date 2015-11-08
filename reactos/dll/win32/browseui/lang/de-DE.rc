@@ -283,7 +283,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_BACK "Zurück zu %s"
-    IDS_FORWARD "Forward to %s"
+    IDS_FORWARD "Vorwärts zu %s"
 END
 
 
