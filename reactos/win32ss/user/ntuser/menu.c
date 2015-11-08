@@ -6216,12 +6216,12 @@ NtUserThunkedMenuItemInfo(
    /* lpszCaption may be NULL, check for it and call RtlInitUnicodeString()
       if bInsert == TRUE call UserInsertMenuItem() else UserSetMenuItemInfo()   */
 
+   RtlInitEmptyUnicodeString(&lstrCaption, NULL, 0);
+
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
       RETURN(FALSE);
    }
-
-   RtlInitUnicodeString(&lstrCaption, 0);
 
    /* Check if we got a Caption */
    if (lpszCaption && lpszCaption->Buffer)
@@ -6243,6 +6243,11 @@ NtUserThunkedMenuItemInfo(
    RETURN( UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption));
 
 CLEANUP:
+   if (lstrCaption.Buffer)
+   {
+      ReleaseCapturedUnicodeString(&lstrCaption, UserMode);
+   }
+
    TRACE("Leave NtUserThunkedMenuItemInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
