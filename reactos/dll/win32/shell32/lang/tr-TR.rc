@@ -427,7 +427,7 @@ CAPTION "Klasör görünümleri"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Klasör görünümü", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Bu klasörde kullandığınız (Ayrıntılar ya da Döşeme gibi)\n görünümleri tüm klasörlere uygulayabilirsiniz.", -1, 60, 20, 180, 20
     PUSHBUTTON "Bütün K&lasörlere Uygula", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Tüm Klasörleri Sıfırla", 14002, 150, 50, 80, 14, WS_TABSTOP

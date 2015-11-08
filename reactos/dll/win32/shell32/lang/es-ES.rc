@@ -428,7 +428,7 @@ CAPTION "Ver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vistas de carpeta", -1, 7, 10, 279, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Puede aplicar la vista que está usando con esta carpeta para el resto (como Detalles o Mosaicos).", -1, 60, 20, 200, 20
     PUSHBUTTON "A&plicar a todas las carpetas", 14001, 60, 50, 100, 14, WS_TABSTOP
     PUSHBUTTON "R&estaurar todas las carpetas", 14002, 165, 50, 100, 14, WS_TABSTOP

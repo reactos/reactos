@@ -431,7 +431,7 @@ CAPTION "Podgląd"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Podgląd folderów", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Możesz użyć podglądów (takich jak Detale lub Tytuły)\nktóre są ustawione dla tego katalogu, dla pozostałych.", -1, 20, 20, 210, 20
     PUSHBUTTON "Zastosuj do w&szystkich Katalogów", 14001, 50, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "Z&resetuj ustawienia", 14002, 150, 50, 80, 14, WS_TABSTOP

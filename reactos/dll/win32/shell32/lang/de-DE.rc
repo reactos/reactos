@@ -427,7 +427,7 @@ CAPTION "Ansicht"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Ordneransicht", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Sie können die Ansicht (Details oder Kacheln), die Sie für\ndiesen Ordner verwenden, auf alle Ordner anwenden.", -1, 60, 20, 180, 20
     PUSHBUTTON "Auf a&lle Ordner anwenden", 14001, 60, 50, 90, 14, WS_TABSTOP
     PUSHBUTTON "&Alle Ordner zurücksetzen", 14002, 160, 50, 90, 14, WS_TABSTOP

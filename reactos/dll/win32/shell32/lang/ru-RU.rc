@@ -429,7 +429,7 @@ CAPTION "Вид"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Представление папок", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Можно применить вид, выбранный для этой папки, например, ""Таблица"" или ""Плитка"", ко всем папкам.", -1, 60, 20, 180, 20
     PUSHBUTTON "&Применить к папкам", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Сброс вида папок", 14002, 150, 50, 80, 14, WS_TABSTOP

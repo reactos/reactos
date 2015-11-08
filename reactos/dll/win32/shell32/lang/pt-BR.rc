@@ -427,7 +427,7 @@ CAPTION "Visualizar"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Visualização de pastas", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Você pode aplicar a visualização (como Detalhes ou Exibição) que\nvocê está usando nesta pasta para todas as pastas.", -1, 60, 20, 180, 20
     PUSHBUTTON "Aplicar a &Todas as Pastas", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Resetar Todas as Pastas", 14002, 150, 50, 80, 14, WS_TABSTOP

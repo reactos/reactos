@@ -427,7 +427,7 @@ CAPTION "Ver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vistas das Pastas", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Pode aplicar a vista (como detalhes ou títulos) que\nestá a usar para esta pasta para todas as pastas.", -1, 60, 20, 180, 20
     PUSHBUTTON "Applicar a T&odas as Pastas", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Reiniciar todas as Pastas", 14002, 150, 50, 80, 14, WS_TABSTOP

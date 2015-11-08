@@ -427,7 +427,7 @@ CAPTION "表示"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     GROUPBOX "フォルダの表示方法", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "このフォルダに使用している表示方法(詳細表示や並べて表示など)\nをすべてのフォルダに適用できます。", -1, 60, 20, 180, 20
     PUSHBUTTON "すべてのフォルダに適用(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "すべてのフォルダをリセット(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP

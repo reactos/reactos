@@ -447,7 +447,7 @@ BEGIN
     PUSHBUTTON "В&идалити", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Подробиці для розширення '%s'", 14003, 7, 130, 249, 70
     LTEXT "Відкривати у:", -1, 12, 140, 48, 10
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Додаток", 14005, 100, 140, 40, 10
     PUSHBUTTON "&Змінити...", 14006, 180, 140, 50, 14, WS_TABSTOP
     LTEXT "", 14007, 12, 155, 160, 40

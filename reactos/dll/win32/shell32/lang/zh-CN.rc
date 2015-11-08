@@ -436,7 +436,7 @@ CAPTION "视图"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "视图", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "您可以应用您正在使用此文件夹的\n所有文件夹的视图 （如详细信息或平铺)。", -1, 60, 20, 180, 20
     PUSHBUTTON "应用到所有文件夹(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "重置所有文件夹(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP

@@ -427,7 +427,7 @@ CAPTION "Vis"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Mappe visning", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Du kan bruke visning (slik som detalj eller Tiles) som\ndu bruker for denne mappen til alle mappene.", -1, 60, 20, 180, 20
     PUSHBUTTON "Bruk til a&lle mappene", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Gjenopprett alle mapper", 14002, 150, 50, 80, 14, WS_TABSTOP

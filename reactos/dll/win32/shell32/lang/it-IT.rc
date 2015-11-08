@@ -427,7 +427,7 @@ CAPTION "Visualizzazione"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vista delle cartelle", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Potete applicare la modalità di visualizzazione attuale\na tutte le cartelle.", -1, 60, 20, 180, 20
     PUSHBUTTON "Applicare a &tutte le cartelle", 14001, 40, 50, 100, 14, WS_TABSTOP
     PUSHBUTTON "&Ripristina tutte le cartelle", 14002, 150, 50, 100, 14, WS_TABSTOP
