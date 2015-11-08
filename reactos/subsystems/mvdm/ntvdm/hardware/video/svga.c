@@ -674,7 +674,8 @@ static VOID VgaLeaveCurrentMode(VOID)
         VgaConsoleDestroyTextScreen();
 
         /* Cleanup the video data */
-        TextFramebuffer = NULL;
+        // TextFramebuffer = NULL;
+        // NEVER SET the ALWAYS-SET TextFramebuffer pointer to NULL!!
     }
 
     /* Reset the active framebuffer */
