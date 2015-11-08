@@ -697,11 +697,11 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Confirmer l'écrasement du fichier"
     IDS_OVERWRITEFOLDER_TEXT "Ce dossier contient déjà un dossier nommé '%1'.\n\nSi les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le\ndossier sélectionné, ils seront remplacés. Voulez-vous toujours déplacer ou copier\nle dossier?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_COPYING "Copie..."
+    IDS_FILEOOP_MOVING "Déplacement..."
+    IDS_FILEOOP_DELETING "Suppression..."
+    IDS_FILEOOP_FROM_TO "Depuis %1 vers %2"
+    IDS_FILEOOP_FROM "Depuis %1"
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
@@ -753,15 +753,15 @@ BEGIN
     IDS_DRIVE_FIXED "Disque local"
     IDS_DRIVE_CDROM "CD Drive"
     IDS_DRIVE_NETWORK "Disque réseau"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_FLOPPY "Disquette 3.5"
+    IDS_DRIVE_REMOVABLE "Disque amovible"
+    IDS_FS_UNKNOWN "Inconnu"
 
     /* Open With */
     IDS_OPEN_WITH "Ouvrir avec"
     IDS_OPEN_WITH_CHOOSE "Choisir le programme..."
     IDS_OPEN_WITH_RECOMMENDED "Programmes recommandés :"
-    IDS_OPEN_WITH_OTHER "Auttres programmes :"
+    IDS_OPEN_WITH_OTHER "Autres programmes :"
 
     IDS_SHELL_ABOUT_AUTHORS "&Auteurs"
     IDS_SHELL_ABOUT_BACK "< Précédent"
@@ -818,6 +818,6 @@ BEGIN
     IDS_EXE_DESCRIPTION "Description :"
 
     IDS_MENU_EMPTY "(Vide)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_OBJECTS "%d objet(s)"
+    IDS_OBJECTS_SELECTED "%d objet(s) sélectionné(s)"
 END
