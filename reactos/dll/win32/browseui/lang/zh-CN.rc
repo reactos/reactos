@@ -284,7 +284,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "后退"
+    IDS_BACK "Back to %s\0"
     IDS_FORWARD "前进"
 END
 

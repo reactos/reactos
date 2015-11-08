@@ -283,7 +283,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Mrapa"
+    IDS_BACK "Back to %s\0"
     IDS_FORWARD "Perpara"
 END
 

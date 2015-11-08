@@ -428,6 +428,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetToolTipText(IUnknown *punk, int iOffset
     CTravelEntry                            *destinationEntry;
     wchar_t                                 tempString[MAX_PATH];
     wchar_t                                 templateString[200];
+    wchar_t                                 *resourceString;
     HRESULT                                 hResult;
 
     if (pwzText == NULL)
@@ -442,7 +443,11 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetToolTipText(IUnknown *punk, int iOffset
         return hResult;
     if (iOffset < 0)
     {
-        wcscpy(templateString, L"Back to %s");
+        hResult = LoadStringW(_AtlBaseModule.GetResourceInstance(),
+                            IDS_BACK, (wchar_t*)&resourceString, 0);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        wcscpy(templateString, resourceString);
     }
     else
     {
