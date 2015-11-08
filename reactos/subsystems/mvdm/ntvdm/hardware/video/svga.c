@@ -619,7 +619,7 @@ static BOOL VgaEnterNewMode(SCREEN_MODE NewScreenMode, PCOORD Resolution)
     {
         /* Enter new text mode */
 
-        if (!VgaConsoleCreateTextScreen(&TextFramebuffer,
+        if (!VgaConsoleCreateTextScreen(// &TextFramebuffer,
                                         Resolution,
                                         TextPaletteHandle))
         {
@@ -640,7 +640,7 @@ static BOOL VgaEnterNewMode(SCREEN_MODE NewScreenMode, PCOORD Resolution)
     {
         /* Enter graphics mode */
 
-        if (!VgaConsoleCreateGraphicsScreen(&GraphicsFramebuffer,
+        if (!VgaConsoleCreateGraphicsScreen(// &GraphicsFramebuffer,
                                             Resolution,
                                             PaletteHandle))
         {

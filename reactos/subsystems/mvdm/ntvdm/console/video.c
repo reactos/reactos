@@ -631,7 +631,7 @@ VgaConsoleUpdateTextCursor(BOOL CursorVisible,
 }
 
 BOOL
-VgaConsoleCreateGraphicsScreen(OUT PBYTE* GraphicsFramebuffer,
+VgaConsoleCreateGraphicsScreen(// OUT PBYTE* GraphicsFramebuffer,
                                IN PCOORD Resolution,
                                IN HANDLE PaletteHandle)
 {
@@ -677,11 +677,13 @@ VgaConsoleCreateGraphicsScreen(OUT PBYTE* GraphicsFramebuffer,
     if (GraphicsConsoleBuffer == INVALID_HANDLE_VALUE) return FALSE;
 
     /* Save the framebuffer address and mutex */
-    *GraphicsFramebuffer = GraphicsBufferInfo.lpBitMap;
+    // *GraphicsFramebuffer = GraphicsBufferInfo.lpBitMap;
+    GraphicsFramebuffer = GraphicsBufferInfo.lpBitMap;
     ConsoleMutex = GraphicsBufferInfo.hMutex;
 
     /* Clear the framebuffer */
-    RtlZeroMemory(*GraphicsFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
+    // RtlZeroMemory(*GraphicsFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
+    RtlZeroMemory(GraphicsFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
 
     /* Set the graphics mode palette */
     SetConsolePalette(GraphicsConsoleBuffer,
@@ -717,7 +719,7 @@ VOID VgaConsoleDestroyGraphicsScreen(VOID)
 }
 
 BOOL
-VgaConsoleCreateTextScreen(OUT PCHAR_CELL* TextFramebuffer,
+VgaConsoleCreateTextScreen(// OUT PCHAR_CELL* TextFramebuffer,
                            IN PCOORD Resolution,
                            IN HANDLE PaletteHandle)
 {

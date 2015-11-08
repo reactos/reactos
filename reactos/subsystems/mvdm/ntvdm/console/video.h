@@ -16,14 +16,14 @@ VgaConsoleUpdateTextCursor(BOOL CursorVisible,
                            WORD Location);
 
 BOOL
-VgaConsoleCreateGraphicsScreen(OUT PBYTE* GraphicsFramebuffer,
+VgaConsoleCreateGraphicsScreen(// OUT PBYTE* GraphicsFramebuffer,
                                IN PCOORD Resolution,
                                IN HANDLE PaletteHandle);
 
 VOID VgaConsoleDestroyGraphicsScreen(VOID);
 
 BOOL
-VgaConsoleCreateTextScreen(OUT PCHAR_CELL* TextFramebuffer,
+VgaConsoleCreateTextScreen(// OUT PCHAR_CELL* TextFramebuffer,
                            IN PCOORD Resolution,
                            IN HANDLE PaletteHandle);
 
