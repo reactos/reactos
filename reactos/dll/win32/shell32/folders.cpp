@@ -289,7 +289,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             switch(GetDriveTypeA(sTemp))
             {
                 case DRIVE_REMOVABLE:
-                    icon_idx = IDI_SHELL_FLOPPY;
+                    icon_idx = IDI_SHELL_3_14_FLOPPY;
                     break;
                 case DRIVE_CDROM:
                     icon_idx = IDI_SHELL_CDROM;

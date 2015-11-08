@@ -319,7 +319,7 @@
 #define IDI_SHELL_FOLDER_OPEN        5
 #define IDI_SHELL_5_12_FLOPPY        6
 #define IDI_SHELL_3_14_FLOPPY        7
-#define IDI_SHELL_FLOPPY             8
+#define IDI_SHELL_REMOVEABLE         8
 #define IDI_SHELL_DRIVE              9
 #define IDI_SHELL_NETDRIVE          10
 #define IDI_SHELL_NETDRIVE_OFF      11
@@ -337,8 +337,8 @@
 #define IDI_SHELL_SEARCH            23
 #define IDI_SHELL_HELP              24
 #define IDI_SHELL_RUN               25
-#define IDI_SHELL_SLEEP				26
-#define IDI_SHELL_HARDWARE_REMOVE	27
+#define IDI_SHELL_SLEEP             26
+#define IDI_SHELL_HARDWARE_REMOVE   27
 #define IDI_SHELL_SHUTDOWN          28
 #define IDI_SHELL_SHARE             29
 #define IDI_SHELL_SHORTCUT          30
@@ -360,6 +360,7 @@
 #define IDI_SHELL_EXPLORER          46
 #define IDI_SHELL_UPDATE            47
 #define IDI_SHELL_LOCKED            48
+#define IDI_SHELL_DISCONN           49
 #define IDI_SHELL_NOT_CONNECTED_HDD 54
 #define IDI_SHELL_MULTIPLE_FILES   133
 #define IDI_SHELL_FIND_IN_FILE     134
@@ -415,7 +416,10 @@
 #define IDI_SHELL_FULL_RECYCLE_BIN1  192
 #define IDI_SHELL_WEB_FOLDERS      193
 #define IDI_SHELL_SECURITY         194
-/* TODO: 196.ico, 197.ico, 198.ico, 199.ico */
+#define IDI_SHELL_FAX              196
+#define IDI_SHELL_FAX_OK           197
+#define IDI_SHELL_NET_FAX_OK       198
+#define IDI_SHELL_NET_FAX          199
 #define IDI_SHELL_NO               200
 #define IDI_SHELL_FOLDER_OPTIONS   210
 #define IDI_SHELL_USERS2           220
@@ -497,10 +501,11 @@
 #define IDI_SHELL_SERVER           300
 #define IDI_SHELL_SERVER1          301
 #define IDI_SHELL_CD_ROM1          302
-/* TODO: 303.ico */
+#define IDI_SHELL_COMPACT_FLASH    303
 #define IDI_SHELL_DVD_ROM1         304
 #define IDI_SHELL_FDD2             305
-/* TODO: 306.ico, 307.ico */
+/* TODO: 306.ico */
+#define IDI_SHELL_SD_MMC           307
 #define IDI_SHELL_SMART_MEDIA      308
 #define IDI_SHELL_CAMERA1          309
 #define IDI_SHELL_PHONE            310
@@ -535,7 +540,10 @@
 #define IDI_SHELL_FILE_MOVE1       1005
 #define IDI_SHELL_FILE_PRINT       1006
 #define IDI_SHELL_FILE_OK          1007
-/* TODO: 1008.ico, 1009.ico, 1010.ico, 1011.ico */
+#define IDI_SHELL_PRINT_PAUSE      1008
+#define IDI_SHELL_PRINT_PLAY       1009
+#define IDI_SHELL_PRINT_SHARE      1010
+#define IDI_SHELL_FAX2             1011
 #define IDI_SHELL_SHUTDOWN2        8240
 
 #define IDI_SHELL_DELETE1 16710

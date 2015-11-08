@@ -303,7 +303,7 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     switch (DriveType)
     {
         case DRIVE_CDROM: IconId = IDI_SHELL_CDROM; TypeStrId = IDS_DRIVE_CDROM; break;
-        case DRIVE_REMOVABLE: IconId = IDI_SHELL_FLOPPY; break;
+        case DRIVE_REMOVABLE: IconId = IDI_SHELL_3_14_FLOPPY; break;
         case DRIVE_RAMDISK: IconId = IDI_SHELL_RAMDISK; break;
         default: IconId = IDI_SHELL_DRIVE; TypeStrId = IDS_DRIVE_FIXED;
     }
