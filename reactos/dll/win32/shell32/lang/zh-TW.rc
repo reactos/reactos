@@ -692,8 +692,8 @@ BEGIN
 
     IDS_CREATEFOLDER_DENIED "Unable to create new Folder: Permission denied."
     IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"
-    IDS_DELETEITEM_CAPTION "Confirm file deletion"
-    IDS_DELETEFOLDER_CAPTION "Confirm folder deletion"
+    IDS_DELETEITEM_CAPTION "Confirm File Deletion"
+    IDS_DELETEFOLDER_CAPTION "Confirm Folder Deletion"
     IDS_DELETEITEM_TEXT "Are you sure you want to delete '%1'?"
     IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
     IDS_DELETESELECTED_TEXT "Are you sure you want to delete the selected item(s)?"
