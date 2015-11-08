@@ -2,8 +2,8 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
-    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_CAPTURE_MOUSE, "Mauszeiger &erfassen"
+    IDS_RELEASE_MOUSE, "Mauszeiger &freigeben"
     IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
