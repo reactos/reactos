@@ -428,7 +428,6 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetToolTipText(IUnknown *punk, int iOffset
     CTravelEntry                            *destinationEntry;
     wchar_t                                 tempString[MAX_PATH];
     wchar_t                                 templateString[200];
-    wchar_t                                 *resourceString;
     HRESULT                                 hResult;
 
     if (pwzText == NULL)
@@ -443,19 +442,16 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetToolTipText(IUnknown *punk, int iOffset
         return hResult;
     if (iOffset < 0)
     {
-        hResult = LoadStringW(_AtlBaseModule.GetResourceInstance(),
-                            IDS_BACK, (wchar_t*)&resourceString, 0);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
+        if(LoadStringW(_AtlBaseModule.GetResourceInstance(),
+                            IDS_BACK, templateString, sizeof(templateString) / sizeof(wchar_t)) == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
     }
     else
     {
-        hResult = LoadStringW(_AtlBaseModule.GetResourceInstance(),
-                            IDS_FORWARD, (wchar_t*)&resourceString, 0);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
+        if(LoadStringW(_AtlBaseModule.GetResourceInstance(),
+                            IDS_FORWARD, templateString, sizeof(templateString) / sizeof(wchar_t)) == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
     }
-    wcscpy(templateString, resourceString);
     _snwprintf(pwzText, cchText, templateString, tempString);
 
     TRACE("CTravelLog::GetToolTipText for IUnknown punk=%p at offset=%d returning L\"%S\"\n", punk, iOffset, pwzText);

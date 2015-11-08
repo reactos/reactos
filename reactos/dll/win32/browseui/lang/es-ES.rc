@@ -265,8 +265,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Volver a %s\0"
-    IDS_FORWARD "Forward to %s\0"
+    IDS_BACK "Volver a %s"
+    IDS_FORWARD "Forward to %s"
 END
 
 STRINGTABLE
