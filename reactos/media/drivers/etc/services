@@ -6399,7 +6399,7 @@ msfw-control        3847/udp  #MS Firewall Control
 item                3848/tcp  #IT Environmental Monitor
 item                3848/udp  #IT Environmental Monitor
 spw-dnspreload      3849/tcp  #SPACEWAY DNS Preload
-spw-dnspreload      3849/udp  #SPACEWAY DNS Prelaod
+spw-dnspreload      3849/udp  #SPACEWAY DNS Preload
 qtms-bootstrap      3850/tcp  #QTMS Bootstrap Protocol
 qtms-bootstrap      3850/udp  #QTMS Bootstrap Protocol
 spectraport         3851/tcp  #SpectraTalk Port
