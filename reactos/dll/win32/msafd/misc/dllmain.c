@@ -2127,6 +2127,11 @@ WSPGetSockOpt(IN SOCKET Handle,
                     break;
 
                 case SO_LINGER:
+                    if (Socket->SharedData.SocketType == SOCK_DGRAM)
+                    {
+                        *lpErrno = WSAENOPROTOOPT;
+                        return SOCKET_ERROR;
+                    }
                     Buffer = &Socket->SharedData.LingerData;
                     BufferSize = sizeof(struct linger);
                     break;
