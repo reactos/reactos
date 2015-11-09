@@ -10,7 +10,7 @@
 
 #include <ws2_32.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* DATA **********************************************************************/

@@ -12,7 +12,7 @@
 
 #include <ws2tcpip.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* DEFINES *******************************************************************/
