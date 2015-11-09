@@ -133,10 +133,10 @@ WsNqBeginEnumerationProc(PVOID Context,
         /* Get the provider */
         if (!(Provider = Entry->Provider))
         {
-            /* None was laoded, load it */
+            /* None was loaded, load it */
             if ((WsNcLoadProvider(EnumContext->Catalog, Entry) != ERROR_SUCCESS))
             {
-                /* return fake success */
+                /* return TRUE to continue enumerating */
                 return TRUE;
             }
 
@@ -447,7 +447,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
     }
     else
     {
-        /* Assume sucess */
+        /* Assume success */
         ErrorCode = ERROR_SUCCESS;
     }
 
