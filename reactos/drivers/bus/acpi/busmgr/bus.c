@@ -1192,14 +1192,6 @@ acpi_bus_add (
 		snprintf(device->pnp.bus_id, sizeof(device->pnp.bus_id), "%s", bus_id);
 		buffer.Pointer = NULL;
 
-		/* HACK: Skip HPET */
-		if (strstr(device->pnp.bus_id, "HPET"))
-		{
-			DPRINT("Using HPET hack\n");
-			result = -1;
-			goto end;
-		}
-
 		break;
 	}
 
