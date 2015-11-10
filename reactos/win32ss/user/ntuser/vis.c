@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Visibility computations
- * FILE:             subsys/win32k/ntuser/vis.c
+ * FILE:             win32ss/user/ntuser/vis.c
  * PROGRAMMER:       Ge van Geldorp (ge@gse.nl)
  */
 

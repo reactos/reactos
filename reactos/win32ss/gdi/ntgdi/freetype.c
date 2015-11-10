@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/freetype.c
+ * FILE:            win32ss/gdi/ntgdi/freetype.c
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMER:      Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.

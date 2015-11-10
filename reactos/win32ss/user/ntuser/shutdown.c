@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Shutdown routines
- * FILE:             subsystems/win32/win32k/ntuser/shutdown.c
+ * FILE:             win32ss/user/ntuser/shutdown.c
  * PROGRAMER:        Hermes Belusca
  */
 

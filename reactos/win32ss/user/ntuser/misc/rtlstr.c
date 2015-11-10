@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS win32k.sys
- * FILE:            subsystems/win32/win32k/misc/rtlstr.c
+ * FILE:            win32ss/user/ntuser/misc/rtlstr.c
  * PURPOSE:         Large Strings
  * PROGRAMMER:
  *

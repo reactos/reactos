@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/dib/stretchblt.c
+ * FILE:            win32ss/gdi/dib/stretchblt.c
  * PURPOSE:         StretchBlt implementation suitable for all bit depths
  * PROGRAMMERS:     Magnus Olsen
  *                  Evgeniy Boltik

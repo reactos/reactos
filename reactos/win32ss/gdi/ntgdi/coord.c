@@ -2,7 +2,7 @@
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Coordinate systems
- * FILE:             subsystems/win32/win32k/objects/coord.c
+ * FILE:             win32ss/gdi/ntgdi/coord.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 

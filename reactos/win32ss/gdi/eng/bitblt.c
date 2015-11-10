@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI BitBlt Functions
- * FILE:             subsystems/win32/win32k/eng/bitblt.c
+ * FILE:             win32ss/gdi/eng/bitblt.c
  * PROGRAMER:        Jason Filby
  *                   Timo Kreuzer
  */

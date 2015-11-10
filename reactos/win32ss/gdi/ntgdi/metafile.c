@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32k Subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32k/objects/metafile.c
+ * FILE:            win32ss/gdi/ntgdi/metafile.c
  * PURPOSE:         Metafile Implementation
  * PROGRAMMERS:     ...
  */

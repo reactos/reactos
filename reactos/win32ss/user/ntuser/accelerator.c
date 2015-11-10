@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window accelerator
- * FILE:             subsystems/win32/win32k/ntuser/accelerator.c
+ * FILE:             win32ss/user/ntuser/accelerator.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Copyright 1993 Martin Ayotte
  *                   Copyright 1994 Alexandre Julliard

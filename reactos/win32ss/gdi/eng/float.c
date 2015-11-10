@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Engine floating point functions
- * FILE:              subsys/win32k/eng/float.c
+ * FILE:              win32ss/gdi/eng/float.c
  * PROGRAMER:         David Welch
  */
 

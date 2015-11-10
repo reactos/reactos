@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          User Atom helper routines
- * FILE:             subsys/win32k/ntuser/useratom.c
+ * FILE:             win32ss/user/ntuser/useratom.c
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>
  */
 

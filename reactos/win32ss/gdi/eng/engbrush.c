@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Brush Functions
- * FILE:              subsystem/win32/win32k/eng/engbrush.c
+ * FILE:              win32ss/gdi/eng/engbrush.c
  * PROGRAMER:         Jason Filby
  *                    Timo Kreuzer
  */

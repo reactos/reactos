@@ -1,7 +1,7 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/dib/dib.c
+ * FILE:            win32ss/gdi/dib/dib.c
  * PURPOSE:         ROP handling, function pointer arrays, misc
  * PROGRAMMERS:     Ge van Geldorp
  */

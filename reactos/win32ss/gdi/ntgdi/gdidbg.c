@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/gdidbg.c
+ * FILE:            win32ss/gdi/ntgdi/gdidbg.c
  * PURPOSE:         Special debugging functions for GDI
  * PROGRAMMERS:     Timo Kreuzer
  */

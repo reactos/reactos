@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Pen functiona
- * FILE:              subsys/win32k/objects/pen.c
+ * FILE:              win32ss/gdi/ntgdi/pen.c
  * PROGRAMER:
  */
 

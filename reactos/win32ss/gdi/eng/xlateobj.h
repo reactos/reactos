@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           XLATEOBJ structures and functions
- * FILE:              subsystem/win32/win32k/eng/objects.h
+ * FILE:              win32ss/gdi/eng/xlateobj.h
  * PROGRAMER:         Timo Kreuzer
  *
  */

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32 Graphical Subsystem (WIN32K)
- * FILE:            include/win32k/ntusrtyp.h
+ * FILE:            win32ss/include/ntusrtyp.h
  * PURPOSE:         Win32 Shared USER Types for NtUser*
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */

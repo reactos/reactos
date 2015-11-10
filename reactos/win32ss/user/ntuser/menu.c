@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Menus
- * FILE:             subsys/win32k/ntuser/menu.c
+ * FILE:             win32ss/user/ntuser/menu.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
  */
 

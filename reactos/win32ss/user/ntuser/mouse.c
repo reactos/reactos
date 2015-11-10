@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse functions
- * FILE:             subsystems/win32/win32k/ntuser/input.c
+ * FILE:             win32ss/user/ntuser/mouse.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Rafal Harabien (rafalh@reactos.org)
  */

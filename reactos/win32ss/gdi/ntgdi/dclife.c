@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Functions for creation and destruction of DCs
- * FILE:              subsystem/win32/win32k/objects/dclife.c
+ * FILE:              win32ss/gdi/ntgdi/dclife.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 

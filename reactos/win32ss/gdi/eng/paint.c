@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Paint Functions
- * FILE:              subsys/win32k/eng/paint.c
+ * FILE:              win32ss/gdi/eng/paint.c
  * PROGRAMERS:        Timo Kreuzer (timo.kreuzer@reactos.org)
  *                    Jason Filby
  */

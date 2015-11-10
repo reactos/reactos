@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GUI state check
- * FILE:             subsys/win32k/ntuser/guicheck.c
+ * FILE:             win32ss/user/ntuser/guicheck.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * NOTES:            The GuiCheck() function performs a few delayed operations:
  *                   1) A GUI process is assigned a window station

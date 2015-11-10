@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:          ReactOS win32 subsystem
  * PURPOSE:
- * FILE:             subsystems/win32k/eng/sort.c
+ * FILE:             win32ss/gdi/eng/sort.c
  * PROGRAMER:        ReactOS Team
  */
 

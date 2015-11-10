@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Device Functions
- * FILE:              subsys/win32k/eng/device.c
+ * FILE:              win32ss/gdi/eng/device.c
  * PROGRAMER:         Jason Filby
  *                    Timo Kreuzer
  */

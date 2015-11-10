@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Various Polygon Filling routines for Polygon()
- * FILE:              subsystems/win32/win32k/objects/polyfill.c
+ * FILE:              win32ss/gdi/ntgdi/polyfill.c
  * PROGRAMER:         Mark Tempel
  */
 

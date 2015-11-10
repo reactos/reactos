@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI Color Translation Functions
- * FILE:             subsystems/win32/win32k/eng/xlate.c
+ * FILE:             win32ss/gdi/eng/xlateobj.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

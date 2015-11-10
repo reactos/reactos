@@ -1,7 +1,7 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/dib/dib24bpp.c
+ * FILE:            win32ss/gdi/dib/dib24bpp.c
  * PURPOSE:         Device Independant Bitmap functions, 24bpp
  * PROGRAMMERS:     Jason Filby
  *                  Thomas Bluemel

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         GNU GPL, see COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/eng/ddidbg.c
+ * FILE:            win32ss/gdi/eng/drvdbg.c
  * PURPOSE:         Debug hooks for display driver callbacks
  * PROGRAMMERS:     Timo Kreuzer
  */

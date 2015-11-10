@@ -2,7 +2,7 @@
  * COPYRIGHT:        GPL, see COPYING in the top level directory
  * PROJECT:          ReactOS win32 kernel mode subsystem server
  * PURPOSE:          Registry loading and storing
- * FILE:             subsystem/win32/win32k/misc/registry.c
+ * FILE:             win32ss/user/ntuser/misc/registry.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

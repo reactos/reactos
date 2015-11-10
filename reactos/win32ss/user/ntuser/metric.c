@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Window classes
- * FILE:             subsystems/win32/win32k/ntuser/metric.c
+ * FILE:             win32ss/user/ntuser/metric.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Timo Kreuzer (timo.kreuzer@reactos.org)
  */

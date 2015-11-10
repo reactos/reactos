@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          NtUserCallXxx call stubs
- * FILE:             subsystem/win32/win32k/ntuser/simplecall.c
+ * FILE:             win32ss/user/ntuser/simplecall.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  */
 

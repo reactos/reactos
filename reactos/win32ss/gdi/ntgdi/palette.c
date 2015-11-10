@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           GDI Palette Functions
- * FILE:              subsystems/win32/win32k/objects/palette.c
+ * FILE:              win32ss/gdi/ntgdi/palette.c
  * PROGRAMERS:        Jason Filby
  *                    Timo Kreuzer
  */

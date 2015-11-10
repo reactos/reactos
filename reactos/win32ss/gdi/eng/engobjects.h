@@ -20,7 +20,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Internal Objects
- * FILE:              subsystem/win32/win32k/eng/objects.h
+ * FILE:              win32ss/gdi/eng/engobjects.h
  * PROGRAMER:         Jason Filby
  * REVISION HISTORY:
  *                 21/8/1999: Created

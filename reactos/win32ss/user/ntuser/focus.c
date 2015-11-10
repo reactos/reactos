@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Focus functions
- * FILE:             subsystems/win32/win32k/ntuser/focus.c
+ * FILE:             win32ss/user/ntuser/focus.c
  * PROGRAMER:        ReactOS Team
  */
 

@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Functions for creation and destruction of DCs
- * FILE:              subsystems/win32/win32k/objects/dcobjs.c
+ * FILE:              win32ss/gdi/ntgdi/dcobjs.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
