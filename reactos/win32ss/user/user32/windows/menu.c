@@ -110,7 +110,7 @@ ITEM *MENU_FindItem( HMENU *hmenu, UINT *nPos, UINT wFlags )
     else
     {
         PITEM item = menu->rgItems ? DesktopPtrToUser(menu->rgItems) : NULL;
-	for (i = 0; item, i < menu->cItems; i++, item++)
+	for (i = 0; item && (i < menu->cItems); i++, item++)
 	{
 	    if (item->spSubMenu)
 	    {
